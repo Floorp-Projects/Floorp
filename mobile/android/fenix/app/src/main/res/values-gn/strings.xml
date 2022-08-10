@@ -76,6 +76,9 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Mboyke</string>
 
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">Mboyke</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Eikotevẽ eike ta’ãngamýime. Eho Android ñembohekópe, eukutu ñemoneĩ ha moneĩ.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -123,11 +126,11 @@
     <string name="recent_tabs_show_all_content_description_2">Ehechauka votõ opaite tendayke ramoguápe</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">Eheka \&quot;%1$s\&quot; rupive</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Eheka \&quot;%1$s\&quot; rupive</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d tendakuéra</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d tendakuéra</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Ehechapaite tendayke mbojuehepyre</string>
@@ -628,9 +631,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Kora’ieta</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Eheka atýhápe</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Eheka atýhápe</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Ambyaty tenda ojueheguáva</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Ambyaty tenda ojueheguáva</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Emboty tendayke</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -1179,7 +1182,18 @@
     <string name="delete_browsing_data_on_quit_action">Ñesẽ</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Oñemboguepáta opaite ne kundahára mba’ekuaarã.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Oñemboguepáta opaite ne kundahára mba’ekuaarã.</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Pa’ũ embogue hag̃ua</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">Embogue tembiasakue (oĩhápe tembiasakue mbojuehepyre ambue mba’e’okagua), kookie ha ambue kundahára mba’ekuaarã.</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Aravo pahápe</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">Ko árape ha kuehe</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Opavave</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s omboguepáta umi kundahára mba’ekuaarã poravopyre.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1193,8 +1207,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Oguepahína kundahára mba’ekuaarã…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">Kóva omboguepáta opaite mba’epuru.</string>
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">Emboguepaite tenda “%s”-pe</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Heja</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1623,8 +1637,6 @@
     <string name="addresses_edit_address">Embosako’i kundaharape</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Kundaharape ñangareko</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Téra ha terajuapy</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">Téra Peteĩha</string>
     <!-- The header for the middle name of an address -->
