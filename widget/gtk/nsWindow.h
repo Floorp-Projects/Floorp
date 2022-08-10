@@ -803,6 +803,7 @@ class nsWindow final : public nsBaseWidget {
   void ShowWaylandToplevelWindow();
   void HideWaylandToplevelWindow();
   void WaylandPopupHideTooltips();
+  void WaylandPopupCloseOrphanedPopups();
   void AppendPopupToHierarchyList(nsWindow* aToplevelWindow);
   void WaylandPopupHierarchyHideTemporary();
   void WaylandPopupHierarchyShowTemporaryHidden();

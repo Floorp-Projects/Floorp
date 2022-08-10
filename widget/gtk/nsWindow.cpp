@@ -1258,6 +1258,24 @@ void nsWindow::WaylandPopupHideTooltips() {
   }
 }
 
+void nsWindow::WaylandPopupCloseOrphanedPopups() {
+  LOG("nsWindow::WaylandPopupCloseOrphanedPopups");
+  MOZ_ASSERT(mWaylandToplevel == nullptr, "Should be called on toplevel only!");
+
+  nsWindow* popup = mWaylandPopupNext;
+  bool dangling = false;
+  while (popup) {
+    if (!dangling &&
+        moz_container_wayland_is_waiting_to_show(popup->GetMozContainer())) {
+      LOG("  popup [%p] is waiting to show, close all child popups", popup);
+      dangling = true;
+    } else if (dangling) {
+      popup->WaylandPopupMarkAsClosed();
+    }
+    popup = popup->mWaylandPopupNext;
+  }
+}
+
 // We can't show popups with remote content or overflow popups
 // on top of regular ones.
 // If there's any remote popup opened, close all parent popups of it.
@@ -1717,6 +1735,14 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
 
   // Hide all tooltips without the last one. Tooltip can't be popup parent.
   mWaylandToplevel->WaylandPopupHideTooltips();
+
+  // See Bug 1709254 / https://gitlab.gnome.org/GNOME/gtk/-/issues/5092
+  // It's possible that Wayland compositor refuses to show
+  // a popup although Gtk claims it's visible.
+  // We don't know if the popup is shown or not.
+  // To avoid application crash refuse to create any child of such invisible
+  // popup and close any child of it now.
+  mWaylandToplevel->WaylandPopupCloseOrphanedPopups();
 
   // Check if we have any remote content / overflow window in hierarchy.
   // We can't attach such widget on top of other popup.
