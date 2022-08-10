@@ -127,7 +127,7 @@ already_AddRefed<Buffer> Device::CreateBuffer(
 }
 
 RefPtr<MappingPromise> Device::MapBufferAsync(RawId aId, uint32_t aMode,
-                                              size_t aOffset, size_t aSize,
+                                              uint64_t aOffset, uint64_t aSize,
                                               ErrorResult& aRv) {
   ffi::WGPUHostMap mode;
   switch (aMode) {
@@ -141,18 +141,7 @@ RefPtr<MappingPromise> Device::MapBufferAsync(RawId aId, uint32_t aMode,
       MOZ_CRASH("should have checked aMode in Buffer::MapAsync");
   }
 
-  const CheckedInt<uint64_t> offset(aOffset);
-  if (!offset.isValid()) {
-    aRv.ThrowRangeError("Mapped offset is too large");
-    return nullptr;
-  }
-  const CheckedInt<uint64_t> size(aSize);
-  if (!size.isValid()) {
-    aRv.ThrowRangeError("Mapped size is too large");
-    return nullptr;
-  }
-
-  return mBridge->SendBufferMap(aId, mode, offset.value(), size.value());
+  return mBridge->SendBufferMap(aId, mode, aOffset, aSize);
 }
 
 void Device::UnmapBuffer(RawId aId, bool aFlush) {
