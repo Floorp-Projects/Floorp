@@ -2377,6 +2377,36 @@ nsWindow::WaylandPopupGetPositionFromLayout() {
       true};
 }
 
+bool nsWindow::WaylandPopupAnchorAnjustForParentPopup(
+    GdkRectangle& aPopupAnchor) {
+  LOG("nsWindow::WaylandPopupAnchorAnjustForParentPopup");
+
+  GtkWindow* parentGtkWindow = gtk_window_get_transient_for(GTK_WINDOW(mShell));
+  if (!parentGtkWindow || !GTK_IS_WIDGET(parentGtkWindow)) {
+    NS_WARNING("Popup has no parent!");
+    return false;
+  }
+  GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(parentGtkWindow));
+  if (!window) {
+    NS_WARNING("Popup parrent is not mapped!");
+    return false;
+  }
+
+  GdkRectangle parentWindowRect = {0, 0, gdk_window_get_width(window),
+                                   gdk_window_get_height(window)};
+  GdkRectangle finalRect;
+  if (!gdk_rectangle_intersect(&aPopupAnchor, &parentWindowRect, &finalRect)) {
+    // Popup anchor is outside of parent window - we can't use move-to-rect
+    LOG("  anchor is ourside of parent window!");
+    return false;
+  }
+
+  aPopupAnchor = finalRect;
+  LOG("  anchor is correct %d,%d -> %d x %d", finalRect.x, finalRect.y,
+      finalRect.width, finalRect.height);
+  return true;
+}
+
 void nsWindow::WaylandPopupMove() {
   LOG("nsWindow::WaylandPopupMove\n");
 
@@ -2404,6 +2434,30 @@ void nsWindow::WaylandPopupMove() {
   if (mPopupUseMoveToRect && !mPopupMoveToRectParams.mAnchorSet) {
     LOG("  can't use move-to-rect due missing anchor");
     mPopupUseMoveToRect = false;
+  }
+
+  GdkRectangle gtkAnchorRect = {};
+  if (mPopupUseMoveToRect) {
+    // Update popup layout coordinates from layout by recent popup hierarchy
+    // (calculate correct position according to parent window)
+    // and convert to Gtk coordinates.
+    LayoutDeviceIntRect anchorRect = mPopupMoveToRectParams.mAnchorRect;
+    if (mWaylandPopupPrev->mWaylandToplevel) {
+      GdkPoint parent = WaylandGetParentPosition();
+      LOG("  subtract parent position from anchor [%d, %d]\n", parent.x,
+          parent.y);
+      anchorRect.MoveBy(-GdkPointToDevicePixels(parent));
+    }
+
+    gtkAnchorRect = DevicePixelsToGdkRectRoundOut(anchorRect);
+    LOG("  move-to-rect call, anchor [%d,%d] -> [%d x %d]", gtkAnchorRect.x,
+        gtkAnchorRect.y, gtkAnchorRect.width, gtkAnchorRect.height);
+
+    if (!WaylandPopupAnchorAnjustForParentPopup(gtkAnchorRect)) {
+      LOG("  can't use move-to-rect, anchor is not placed inside of parent "
+          "window");
+      mPopupUseMoveToRect = false;
+    }
   }
 
   LOG("  popup use move to rect %d\n", mPopupUseMoveToRect);
@@ -2445,21 +2499,6 @@ void nsWindow::WaylandPopupMove() {
   }
   mWaitingForMoveToRectCallback = true;
 
-  // Update popup layout coordinates from layout by recent popup hierarchy
-  // (calculate correct position according to parent window)
-  // and convert to Gtk coordinates.
-  LayoutDeviceIntRect anchorRect = mPopupMoveToRectParams.mAnchorRect;
-  if (mWaylandPopupPrev->mWaylandToplevel) {
-    GdkPoint parent = WaylandGetParentPosition();
-    LOG("  subtract parent position from anchor [%d, %d]\n", parent.x,
-        parent.y);
-    anchorRect.MoveBy(-GdkPointToDevicePixels(parent));
-  }
-  GdkRectangle gtkAnchorRect = DevicePixelsToGdkRectRoundOut(anchorRect);
-
-  LOG("  move-to-rect call, anchor [%d,%d] -> [%d x %d]", gtkAnchorRect.x,
-      gtkAnchorRect.y, mPopupMoveToRectParams.mAnchorRect.width,
-      mPopupMoveToRectParams.mAnchorRect.height);
   sGdkWindowMoveToRect(
       gdkWindow, &gtkAnchorRect, mPopupMoveToRectParams.mAnchorRectType,
       mPopupMoveToRectParams.mPopupAnchorType, mPopupMoveToRectParams.mHints,
