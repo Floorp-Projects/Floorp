@@ -187,7 +187,28 @@ var gPermissionPanel = {
    * Shows the permission popup.
    * @param {Event} event - Event which caused the popup to show.
    */
-  _openPopup(event) {
+  openPopup(event) {
+    // If we are in DOM fullscreen, exit it before showing the permission popup
+    // (see bug 1557041)
+    if (document.fullscreen) {
+      // Open the identity popup after DOM fullscreen exit
+      // We need to wait for the exit event and after that wait for the fullscreen exit transition to complete
+      // If we call openPopup before the fullscreen transition ends it can get cancelled
+      // Only waiting for painted is not sufficient because we could still be in the fullscreen enter transition.
+      this._exitedEventReceived = false;
+      this._event = event;
+      Services.obs.addObserver(this, "fullscreen-painted");
+      window.addEventListener(
+        "MozDOMFullscreen:Exited",
+        () => {
+          this._exitedEventReceived = true;
+        },
+        { once: true }
+      );
+      document.exitFullscreen();
+      return;
+    }
+
     // Make the popup available.
     this._initializePopup();
 
@@ -308,28 +329,7 @@ var gPermissionPanel = {
       return;
     }
 
-    // If we are in DOM fullscreen, exit it before showing the permission popup
-    // (see bug 1557041)
-    if (document.fullscreen) {
-      // Open the identity popup after DOM fullscreen exit
-      // We need to wait for the exit event and after that wait for the fullscreen exit transition to complete
-      // If we call _openPopup before the fullscreen transition ends it can get cancelled
-      // Only waiting for painted is not sufficient because we could still be in the fullscreen enter transition.
-      this._exitedEventReceived = false;
-      this._event = event;
-      Services.obs.addObserver(this, "fullscreen-painted");
-      window.addEventListener(
-        "MozDOMFullscreen:Exited",
-        () => {
-          this._exitedEventReceived = true;
-        },
-        { once: true }
-      );
-      document.exitFullscreen();
-      return;
-    }
-
-    this._openPopup(event);
+    this.openPopup(event);
   },
 
   onPopupShown(event) {
@@ -369,7 +369,7 @@ var gPermissionPanel = {
           return;
         }
         Services.obs.removeObserver(this, "fullscreen-painted");
-        this._openPopup(this._event);
+        this.openPopup(this._event);
         delete this._event;
         break;
       }
