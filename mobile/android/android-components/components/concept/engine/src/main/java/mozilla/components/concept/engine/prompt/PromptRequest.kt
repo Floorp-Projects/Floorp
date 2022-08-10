@@ -193,6 +193,7 @@ sealed class PromptRequest(
         val initialDate: java.util.Date,
         val minimumDate: java.util.Date?,
         val maximumDate: java.util.Date?,
+        val stepValue: String? = null,
         val type: Type = Type.DATE,
         val onConfirm: (java.util.Date) -> Unit,
         val onClear: () -> Unit,

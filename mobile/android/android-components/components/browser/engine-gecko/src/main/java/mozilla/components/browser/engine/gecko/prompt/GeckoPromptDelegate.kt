@@ -27,6 +27,8 @@ import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.net.getFileName
 import mozilla.components.support.ktx.kotlin.toDate
+import mozilla.components.support.utils.TimePicker.shouldShowMillisecondsPicker
+import mozilla.components.support.utils.TimePicker.shouldShowSecondsPicker
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.Autocomplete
 import org.mozilla.geckoview.GeckoResult
@@ -400,7 +402,15 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             DATE -> "yyyy-MM-dd"
             MONTH -> "yyyy-MM"
             WEEK -> "yyyy-'W'ww"
-            TIME -> "HH:mm"
+            TIME -> {
+                if (shouldShowMillisecondsPicker(prompt.stepValue?.toFloat())) {
+                    "HH:mm:ss.SSS"
+                } else if (shouldShowSecondsPicker(prompt.stepValue?.toFloat())) {
+                    "HH:mm:ss"
+                } else {
+                    "HH:mm"
+                }
+            }
             DATETIME_LOCAL -> "yyyy-MM-dd'T'HH:mm"
             else -> {
                 throw InvalidParameterException("${prompt.type} is not a valid DatetimeType")
@@ -412,6 +422,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             initialDateString,
             prompt.minValue,
             prompt.maxValue,
+            prompt.stepValue,
             onClear,
             format,
             onConfirm,
@@ -685,6 +696,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         initialDateString: String,
         minDateString: String?,
         maxDateString: String?,
+        stepValue: String?,
         onClear: () -> Unit,
         format: String,
         onConfirm: (String) -> Unit,
@@ -699,7 +711,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         }
 
         val selectionType = when (format) {
-            "HH:mm" -> PromptRequest.TimeSelection.Type.TIME
+            "HH:mm", "HH:mm:ss", "HH:mm:ss.SSS" -> PromptRequest.TimeSelection.Type.TIME
             "yyyy-MM" -> PromptRequest.TimeSelection.Type.MONTH
             "yyyy-MM-dd'T'HH:mm" -> PromptRequest.TimeSelection.Type.DATE_AND_TIME
             else -> PromptRequest.TimeSelection.Type.DATE
@@ -712,6 +724,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                     initialDate,
                     minDate,
                     maxDate,
+                    stepValue,
                     selectionType,
                     onSelect,
                     onClear,

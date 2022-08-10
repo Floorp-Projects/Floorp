@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:Suppress("TooManyFunctions")
+
 package mozilla.components.feature.prompts.ext
 
 import java.util.Calendar
@@ -9,10 +11,26 @@ import java.util.Date
 
 internal fun Date.toCalendar() = Calendar.getInstance().also { it.time = this }
 
-internal val Calendar.minute: Int
+internal var Calendar.millisecond: Int
+    get() = get(Calendar.MILLISECOND)
+    set(value) {
+        set(Calendar.MILLISECOND, value)
+    }
+internal var Calendar.second: Int
+    get() = get(Calendar.SECOND)
+    set(value) {
+        set(Calendar.SECOND, value)
+    }
+internal var Calendar.minute: Int
     get() = get(Calendar.MINUTE)
-internal val Calendar.hour: Int
+    set(value) {
+        set(Calendar.MINUTE, value)
+    }
+internal var Calendar.hour: Int
     get() = get(Calendar.HOUR_OF_DAY)
+    set(value) {
+        set(Calendar.HOUR_OF_DAY, value)
+    }
 internal var Calendar.day: Int
     get() = get(Calendar.DAY_OF_MONTH)
     set(value) {
@@ -30,6 +48,14 @@ internal var Calendar.month: Int
         set(Calendar.MONTH, value)
     }
 
+internal fun Calendar.minMillisecond(): Int = getActualMinimum(Calendar.MILLISECOND)
+internal fun Calendar.maxMillisecond(): Int = getActualMaximum(Calendar.MILLISECOND)
+internal fun Calendar.minSecond(): Int = getActualMinimum(Calendar.SECOND)
+internal fun Calendar.maxSecond(): Int = getActualMaximum(Calendar.SECOND)
+internal fun Calendar.minMinute(): Int = getActualMinimum(Calendar.MINUTE)
+internal fun Calendar.maxMinute(): Int = getActualMaximum(Calendar.MINUTE)
+internal fun Calendar.minHour(): Int = getActualMinimum(Calendar.HOUR_OF_DAY)
+internal fun Calendar.maxHour(): Int = getActualMaximum(Calendar.HOUR_OF_DAY)
 internal fun Calendar.minMonth(): Int = getMinimum(Calendar.MONTH)
 internal fun Calendar.maxMonth(): Int = getActualMaximum(Calendar.MONTH)
 internal fun Calendar.minDay(): Int = getMinimum(Calendar.DAY_OF_MONTH)

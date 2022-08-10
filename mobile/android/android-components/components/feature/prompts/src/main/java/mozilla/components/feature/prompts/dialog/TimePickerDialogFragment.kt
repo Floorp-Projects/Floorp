@@ -8,6 +8,7 @@ import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.Dialog
 import android.app.TimePickerDialog
+import android.content.Context
 import android.content.DialogInterface
 import android.content.DialogInterface.BUTTON_NEGATIVE
 import android.content.DialogInterface.BUTTON_NEUTRAL
@@ -25,11 +26,15 @@ import androidx.annotation.VisibleForTesting.PRIVATE
 import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.ext.day
 import mozilla.components.feature.prompts.ext.hour
+import mozilla.components.feature.prompts.ext.millisecond
 import mozilla.components.feature.prompts.ext.minute
 import mozilla.components.feature.prompts.ext.month
+import mozilla.components.feature.prompts.ext.second
 import mozilla.components.feature.prompts.ext.toCalendar
 import mozilla.components.feature.prompts.ext.year
 import mozilla.components.feature.prompts.widget.MonthAndYearPicker
+import mozilla.components.feature.prompts.widget.TimePrecisionPicker
+import mozilla.components.support.utils.TimePicker.shouldShowSecondsPicker
 import java.util.Calendar
 import java.util.Date
 
@@ -38,6 +43,7 @@ private const val KEY_MIN_DATE = "KEY_MIN_DATE"
 private const val KEY_MAX_DATE = "KEY_MAX_DATE"
 private const val KEY_SELECTED_DATE = "KEY_SELECTED_DATE"
 private const val KEY_SELECTION_TYPE = "KEY_SELECTION_TYPE"
+private const val KEY_STEP_VALUE = "KEY_STEP_VALUE"
 
 /**
  * [DialogFragment][androidx.fragment.app.DialogFragment] implementation to display date picker with a native dialog.
@@ -49,11 +55,13 @@ internal class TimePickerDialogFragment :
     TimePickerDialog.OnTimeSetListener,
     DatePickerDialog.OnDateSetListener,
     DialogInterface.OnClickListener,
-    MonthAndYearPicker.OnDateSetListener {
+    MonthAndYearPicker.OnDateSetListener,
+    TimePrecisionPicker.OnTimeSetListener {
     private val initialDate: Date by lazy { safeArguments.getSerializable(KEY_INITIAL_DATE) as Date }
     private val minimumDate: Date? by lazy { safeArguments.getSerializable((KEY_MIN_DATE)) as? Date }
     private val maximumDate: Date? by lazy { safeArguments.getSerializable(KEY_MAX_DATE) as? Date }
     private val selectionType: Int by lazy { safeArguments.getInt(KEY_SELECTION_TYPE) }
+    private val stepSize: String? by lazy { safeArguments.getString(KEY_STEP_VALUE) }
 
     @VisibleForTesting(otherwise = PRIVATE)
     internal var selectedDate: Date
@@ -66,15 +74,7 @@ internal class TimePickerDialogFragment :
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val context = requireContext()
         val dialog = when (selectionType) {
-            SELECTION_TYPE_TIME -> initialDate.toCalendar().let { cal ->
-                TimePickerDialog(
-                    context,
-                    this,
-                    cal.hour,
-                    cal.minute,
-                    DateFormat.is24HourFormat(context)
-                )
-            }
+            SELECTION_TYPE_TIME -> createTimePickerDialog(context)
             SELECTION_TYPE_DATE -> initialDate.toCalendar().let { cal ->
                 DatePickerDialog(
                     context,
@@ -116,6 +116,62 @@ internal class TimePickerDialogFragment :
     override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
         onClick(dialog, BUTTON_NEGATIVE)
+    }
+
+    // Create the appropriate time picker dialog for the given step value.
+    private fun createTimePickerDialog(context: Context): AlertDialog {
+
+        // Create the Android time picker dialog
+        fun createTimePickerDialog(): AlertDialog {
+            return initialDate.toCalendar().let { cal ->
+                TimePickerDialog(
+                    context,
+                    this,
+                    cal.hour,
+                    cal.minute,
+                    DateFormat.is24HourFormat(context)
+                )
+            }
+        }
+
+        // Create the custom time picker dialog
+        fun createTimeStepPickerDialog(stepValue: Float): AlertDialog {
+            return AlertDialog.Builder(context)
+                .setTitle(R.string.mozac_feature_prompts_set_time)
+                .setView(
+                    TimePrecisionPicker(
+                        context = requireContext(),
+                        selectedTime = initialDate.toCalendar(),
+                        maxTime = maximumDate?.toCalendar()
+                            ?: MonthAndYearPicker.getDefaultMaxDate(),
+                        minTime = minimumDate?.toCalendar()
+                            ?: MonthAndYearPicker.getDefaultMinDate(),
+                        stepValue = stepValue,
+                        timeSetListener = this
+                    )
+                )
+                .create()
+                .also {
+                    it.setButton(
+                        BUTTON_POSITIVE,
+                        context.getString(R.string.mozac_feature_prompts_set_date),
+                        this
+                    )
+                    it.setButton(
+                        BUTTON_NEGATIVE,
+                        context.getString(R.string.mozac_feature_prompts_cancel),
+                        this
+                    )
+                }
+        }
+
+        return if (!shouldShowSecondsPicker(stepSize?.toFloat())) {
+            createTimePickerDialog()
+        } else {
+            stepSize?.let {
+                createTimeStepPickerDialog(it.toFloat())
+            } ?: createTimePickerDialog()
+        }
     }
 
     @SuppressLint("InflateParams")
@@ -163,6 +219,21 @@ internal class TimePickerDialogFragment :
         maximumDate?.let {
             datePicker.maxDate = it.time
         }
+    }
+
+    override fun onTimeSet(
+        picker: TimePrecisionPicker,
+        hour: Int,
+        minute: Int,
+        second: Int,
+        millisecond: Int
+    ) {
+        val calendar = selectedDate.toCalendar()
+        calendar.hour = hour
+        calendar.minute = minute
+        calendar.second = second
+        calendar.millisecond = millisecond
+        selectedDate = calendar.time
     }
 
     override fun onDateChanged(view: DatePicker?, year: Int, monthOfYear: Int, dayOfMonth: Int) {
@@ -214,6 +285,7 @@ internal class TimePickerDialogFragment :
          * @param selectionType indicate which type of time should be selected, valid values are
          * ([TimePickerDialogFragment.SELECTION_TYPE_DATE], [TimePickerDialogFragment.SELECTION_TYPE_DATE_AND_TIME],
          * and [TimePickerDialogFragment.SELECTION_TYPE_TIME])
+         * @param stepValue value of time jumped whenever the time is incremented/decremented.
          *
          * @return a new instance of [TimePickerDialogFragment]
          */
@@ -225,7 +297,8 @@ internal class TimePickerDialogFragment :
             initialDate: Date,
             minDate: Date?,
             maxDate: Date?,
-            selectionType: Int = SELECTION_TYPE_DATE
+            selectionType: Int = SELECTION_TYPE_DATE,
+            stepValue: String? = null,
         ): TimePickerDialogFragment {
             val fragment = TimePickerDialogFragment()
             val arguments = fragment.arguments ?: Bundle()
@@ -237,6 +310,7 @@ internal class TimePickerDialogFragment :
                 putSerializable(KEY_INITIAL_DATE, initialDate)
                 putSerializable(KEY_MIN_DATE, minDate)
                 putSerializable(KEY_MAX_DATE, maxDate)
+                putString(KEY_STEP_VALUE, stepValue)
                 putInt(KEY_SELECTION_TYPE, selectionType)
             }
             fragment.selectedDate = initialDate

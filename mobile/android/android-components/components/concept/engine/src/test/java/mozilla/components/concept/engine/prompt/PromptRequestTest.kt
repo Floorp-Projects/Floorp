@@ -102,6 +102,7 @@ class PromptRequestTest {
             Date(),
             Date(),
             Date(),
+            "1",
             Type.DATE,
             { _ -> },
             {},
@@ -110,6 +111,7 @@ class PromptRequestTest {
 
         assertEquals(dateRequest.title, "title")
         assertEquals(dateRequest.type, Type.DATE)
+        assertEquals("1", dateRequest.stepValue)
         assertNotNull(dateRequest.initialDate)
         assertNotNull(dateRequest.minimumDate)
         assertNotNull(dateRequest.maximumDate)

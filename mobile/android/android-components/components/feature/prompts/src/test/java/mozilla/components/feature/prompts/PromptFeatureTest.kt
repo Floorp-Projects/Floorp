@@ -884,6 +884,7 @@ class PromptFeatureTest {
                 Date(0),
                 null,
                 null,
+                null,
                 type,
                 { date -> selectedDate = date },
                 { onClearWasCalled = true },

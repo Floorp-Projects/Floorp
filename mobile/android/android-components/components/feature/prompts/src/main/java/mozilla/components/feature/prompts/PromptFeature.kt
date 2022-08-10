@@ -712,7 +712,8 @@ class PromptFeature private constructor(
                         initialDate,
                         minimumDate,
                         maximumDate,
-                        selectionType
+                        selectionType,
+                        stepValue
                     )
                 }
             }
