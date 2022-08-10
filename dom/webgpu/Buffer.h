@@ -57,6 +57,7 @@ class Buffer final : public ObjectBase, public ChildOf<Device> {
   Buffer(Device* const aParent, RawId aId, BufferAddress aSize, uint32_t aUsage,
          ipc::Shmem&& aShmem);
   virtual ~Buffer();
+  Device& GetDevice() { return *mParent; }
   void Cleanup();
   void UnmapArrayBuffers(JSContext* aCx, ErrorResult& aRv);
   void RejectMapRequest(dom::Promise* aPromise, nsACString& message);
