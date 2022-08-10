@@ -101,13 +101,14 @@ IPDLUnitTestParent::~IPDLUnitTestParent() {
 
 bool IPDLUnitTestParent::Start(const char* aName,
                                ipc::IToplevelProtocol* aActor) {
+  nsID channelId = nsID::GenerateUUID();
   auto [parentPort, childPort] =
       ipc::NodeController::GetSingleton()->CreatePortPair();
-  if (!SendStart(nsDependentCString(aName), std::move(childPort))) {
+  if (!SendStart(nsDependentCString(aName), std::move(childPort), channelId)) {
     ADD_FAILURE() << "IPDLUnitTestParent::SendStart failed";
     return false;
   }
-  if (!aActor->Open(std::move(parentPort), OtherPid())) {
+  if (!aActor->Open(std::move(parentPort), channelId, OtherPid())) {
     ADD_FAILURE() << "Unable to open parent actor";
     return false;
   }
@@ -160,7 +161,8 @@ void IPDLUnitTestParent::KillHard() {
 }
 
 ipc::IPCResult IPDLUnitTestChild::RecvStart(const nsCString& aName,
-                                            ipc::ScopedPort aPort) {
+                                            ipc::ScopedPort aPort,
+                                            const nsID& aMessageChannelId) {
   auto* allocChildActor =
       sAllocChildActorRegistry[std::string_view{aName.get()}];
   if (!allocChildActor) {
@@ -174,7 +176,7 @@ ipc::IPCResult IPDLUnitTestChild::RecvStart(const nsCString& aName,
   mojo::core::ports::PortRef port = aPort.Port();
 
   auto* child = allocChildActor();
-  if (!child->Open(std::move(aPort), OtherPid())) {
+  if (!child->Open(std::move(aPort), aMessageChannelId, OtherPid())) {
     ADD_FAILURE() << "Unable to open child actor";
     return IPC_FAIL(this, "Unable to open child actor");
   }
@@ -291,13 +293,14 @@ class IPDLUnitTestProcessChild : public ipc::ProcessChild {
 
 // Defined in nsEmbedFunctions.cpp
 extern UniquePtr<ipc::ProcessChild> (*gMakeIPDLUnitTestProcessChild)(
-    base::ProcessId);
+    base::ProcessId, const nsID&);
 
 // Initialize gMakeIPDLUnitTestProcessChild in a static constructor.
 int _childProcessEntryPointStaticConstructor = ([] {
   gMakeIPDLUnitTestProcessChild =
-      [](base::ProcessId aParentPid) -> UniquePtr<ipc::ProcessChild> {
-    return MakeUnique<IPDLUnitTestProcessChild>(aParentPid);
+      [](base::ProcessId aParentPid,
+         const nsID& aMessageChannelId) -> UniquePtr<ipc::ProcessChild> {
+    return MakeUnique<IPDLUnitTestProcessChild>(aParentPid, aMessageChannelId);
   };
   return 0;
 })();

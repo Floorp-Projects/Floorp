@@ -27,7 +27,7 @@ class ProcessChild : public ChildProcess {
   typedef base::ProcessId ProcessId;
 
  public:
-  explicit ProcessChild(ProcessId aParentPid);
+  explicit ProcessChild(ProcessId aParentPid, const nsID& aMessageChannelId);
 
   ProcessChild(const ProcessChild&) = delete;
   ProcessChild& operator=(const ProcessChild&) = delete;
@@ -66,6 +66,7 @@ class ProcessChild : public ChildProcess {
 
   MessageLoop* mUILoop;
   ProcessId mParentPid;
+  nsID mMessageChannelId;
 };
 
 }  // namespace ipc

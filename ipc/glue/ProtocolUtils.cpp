@@ -597,10 +597,12 @@ void IToplevelProtocol::SetOtherProcessId(base::ProcessId aOtherPid) {
   mOtherPid = aOtherPid;
 }
 
-bool IToplevelProtocol::Open(ScopedPort aPort, base::ProcessId aOtherPid,
+bool IToplevelProtocol::Open(ScopedPort aPort, const nsID& aMessageChannelId,
+                             base::ProcessId aOtherPid,
                              nsISerialEventTarget* aEventTarget) {
   SetOtherProcessId(aOtherPid);
-  return GetIPCChannel()->Open(std::move(aPort), mSide, aEventTarget);
+  return GetIPCChannel()->Open(std::move(aPort), mSide, aMessageChannelId,
+                               aEventTarget);
 }
 
 bool IToplevelProtocol::Open(IToplevelProtocol* aTarget,

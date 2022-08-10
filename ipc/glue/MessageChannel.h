@@ -169,7 +169,7 @@ class MessageChannel : HasResultCodes {
   // valid and connected to a remote.
   //
   // The `aEventTarget` parameter must be on the current thread.
-  bool Open(ScopedPort aPort, Side aSide,
+  bool Open(ScopedPort aPort, Side aSide, const nsID& aMessageChannelId,
             nsISerialEventTarget* aEventTarget = nullptr);
 
   // "Open" a connection to another thread in the same process.
@@ -313,6 +313,11 @@ class MessageChannel : HasResultCodes {
    */
   bool IsCrossProcess() const MOZ_REQUIRES(*mMonitor);
   void SetIsCrossProcess(bool aIsCrossProcess) MOZ_REQUIRES(*mMonitor);
+
+  nsID GetMessageChannelId() const {
+    MonitorAutoLock lock(*mMonitor);
+    return mMessageChannelId;
+  }
 
 #ifdef FUZZING_SNAPSHOT
   Maybe<mojo::core::ports::PortName> GetPortName() {
@@ -583,6 +588,13 @@ class MessageChannel : HasResultCodes {
  private:
   // This will be a string literal, so lifetime is not an issue.
   const char* const mName;
+
+  // ID for each MessageChannel. Set when it is opened, and never cleared
+  // afterwards.
+  //
+  // This ID is only intended for diagnostics, debugging, and reporting
+  // purposes, and shouldn't be used for message routing or permissions checks.
+  nsID mMessageChannelId MOZ_GUARDED_BY(*mMonitor) = {};
 
   // Based on presumption the listener owns and overlives the channel,
   // this is never nullified.
