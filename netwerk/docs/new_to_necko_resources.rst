@@ -11,8 +11,8 @@ Code Generation and IPC
 * `IDL`_
     - Implementing an interface (C++/JS)
     - XPCONNECT (scriptable/builtin)
-    - QueryInterface - do_QueryInterface/do_QueryObject
-    - do_GetService, do_GetInstance
+    - QueryInterface (QI) - do_QueryInterface/do_QueryObject
+    - do_GetService, do_CreateInstance
 * `WebIDL`_
 
 .. _IPC: /toolkit/components/glean/dev/ipc.html
@@ -23,12 +23,15 @@ Code Generation and IPC
 
 Necko interfaces
 ~~~~~~~~~~~~~~~~
-* nsISupports
-* nsIRequest -> nsIChannel -> nsIHttpChannel
-* nsIRequestObserver (onStart/onStopRequest)
-* nsIStreamListener (onDataAvailable)
-* nsIInputStream/nsIOutputStream
 
+* :searchfox:`nsISupports <xpcom/base/nsISupports.idl>`
+* :searchfox:`nsIRequest <netwerk/base/nsIRequest.idl>` ->
+  :searchfox:`nsIChannel <netwerk/base/nsIChannel.idl>` ->
+  :searchfox:`nsIHttpChannel <netwerk/protocol/http/nsIHttpChannel.idl>`
+* :searchfox:`nsIRequestObserver <netwerk/base/nsIRequestObserver.idl>` (onStart/onStopRequest)
+* :searchfox:`nsIStreamListener <netwerk/base/nsIStreamListener.idl>` (onDataAvailable)
+* :searchfox:`nsIInputStream <xpcom/io/nsIInputStream.idl>`/
+  :searchfox:`nsIOutputStream <xpcom/io/nsIOutputStream.idl>`
 
 Libraries
 ~~~~~~~~~
@@ -43,13 +46,9 @@ Libraries
 
 Preferences
 ~~~~~~~~~~~
-* `all.js`_
-* `firefox.js`_
-* `StaticPrefList.yaml`_
-
-.. _all.js: https://searchfox.org/mozilla-central/source/modules/libpref/init/all.js
-.. _firefox.js: https://searchfox.org/mozilla-central/source/browser/app/profile/firefox.js
-.. _StaticPrefList.yaml: https://searchfox.org/mozilla-central/source/modules/libpref/init/StaticPrefList.yaml
+* :searchfox:`all.js <modules/libpref/init/all.js>`
+* :searchfox:`firefox.js <browser/app/profile/firefox.js>`
+* :searchfox:`StaticPrefList.yaml <modules/libpref/init/StaticPrefList.yaml>`
 
 
 Testing
