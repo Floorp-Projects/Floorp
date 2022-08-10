@@ -313,18 +313,19 @@ class GlyphCacheEntry : public CacheEntryImpl<GlyphCacheEntry> {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GlyphCacheEntry, override)
 
   GlyphCacheEntry(const GlyphBuffer& aBuffer, const DeviceColor& aColor,
-                  const Matrix& aTransform, const IntRect& aBounds,
-                  HashNumber aHash);
+                  const Matrix& aTransform, const IntPoint& aQuantizeScale,
+                  const IntRect& aBounds, HashNumber aHash);
   ~GlyphCacheEntry();
 
   const GlyphBuffer& GetGlyphBuffer() const { return mBuffer; }
 
   bool MatchesGlyphs(const GlyphBuffer& aBuffer, const DeviceColor& aColor,
-                     const Matrix& aTransform, const IntRect& aBounds,
+                     const Matrix& aTransform, const IntPoint& aQuantizeScale,
                      HashNumber aHash);
 
   static HashNumber HashGlyphs(const GlyphBuffer& aBuffer,
-                               const Matrix& aTransform);
+                               const Matrix& aTransform,
+                               const IntPoint& aQuantizeScale);
 
  private:
   // The glyph keys used to render the text run.
@@ -345,9 +346,18 @@ class GlyphCache : public LinkedListElement<GlyphCache>,
 
   ScaledFont* GetFont() const { return mFont; }
 
-  already_AddRefed<GlyphCacheEntry> FindOrInsertEntry(
-      const GlyphBuffer& aBuffer, const DeviceColor& aColor,
-      const Matrix& aTransform, const IntRect& aBounds);
+  already_AddRefed<GlyphCacheEntry> FindEntry(const GlyphBuffer& aBuffer,
+                                              const DeviceColor& aColor,
+                                              const Matrix& aTransform,
+                                              const IntPoint& aQuantizeScale,
+                                              HashNumber aHash);
+
+  already_AddRefed<GlyphCacheEntry> InsertEntry(const GlyphBuffer& aBuffer,
+                                                const DeviceColor& aColor,
+                                                const Matrix& aTransform,
+                                                const IntPoint& aQuantizeScale,
+                                                const IntRect& aBounds,
+                                                HashNumber aHash);
 
  private:
   // Weak pointer to the owning font
