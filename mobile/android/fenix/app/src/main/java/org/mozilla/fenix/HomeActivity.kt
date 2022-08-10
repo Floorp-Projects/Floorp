@@ -340,8 +340,13 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             lifecycleScope.launch {
                 // If we're authenticated, kick-off a sync and a device state refresh.
                 components.backgroundServices.accountManager.authenticatedAccount()?.let {
+                    val syncReason = when (isVisuallyComplete) {
+                        true -> SyncReason.User
+                        false -> SyncReason.Startup
+                    }
+
                     components.backgroundServices.accountManager.syncNow(
-                        SyncReason.Startup,
+                        reason = syncReason,
                         debounce = true
                     )
                 }

@@ -60,7 +60,11 @@ class RecentSyncedTabFeature(
                     // Sync tabs storage will fail to retrieve tabs aren't refreshed, as that action
                     // is what populates the device constellation state
                     accountManager.withConstellation { refreshDevices() }
-                    accountManager.syncNow(SyncReason.User, customEngineSubset = listOf(SyncEngine.Tabs))
+                    accountManager.syncNow(
+                        reason = SyncReason.User,
+                        debounce = true,
+                        customEngineSubset = listOf(SyncEngine.Tabs),
+                    )
                 }
             }.launchIn(coroutineScope)
     }
