@@ -24,7 +24,7 @@
 
 namespace mozilla::gfx {
 
-// Inserts (allocated) a rectangle of the requested size into the tree.
+// Inserts (allocates) a rectangle of the requested size into the tree.
 Maybe<IntPoint> TexturePacker::Insert(const IntSize& aSize) {
   // Check if the available space could possibly fit the requested size. If
   // not, there is no reason to continue searching within this sub-tree.
@@ -32,17 +32,17 @@ Maybe<IntPoint> TexturePacker::Insert(const IntSize& aSize) {
       mBounds.width < aSize.width || mBounds.height < aSize.height) {
     return Nothing();
   }
-  if (mChildren[0]) {
+  if (mChildren) {
     // If this node has children, then try to insert into each of the children
     // in turn.
-    Maybe<IntPoint> inserted = mChildren[0]->Insert(aSize);
+    Maybe<IntPoint> inserted = mChildren[0].Insert(aSize);
     if (!inserted) {
-      inserted = mChildren[1]->Insert(aSize);
+      inserted = mChildren[1].Insert(aSize);
     }
     // If the insertion succeeded, adjust the available state to reflect the
     // remaining space in the children.
     if (inserted) {
-      mAvailable = std::max(mChildren[0]->mAvailable, mChildren[1]->mAvailable);
+      mAvailable = std::max(mChildren[0].mAvailable, mChildren[1].mAvailable);
       if (!mAvailable) {
         DiscardChildren();
       }
@@ -60,29 +60,29 @@ Maybe<IntPoint> TexturePacker::Insert(const IntSize& aSize) {
   // most excess space beyond the requested size and split it so that at least
   // one of the children matches the requested size for that axis.
   if (mBounds.width - aSize.width > mBounds.height - aSize.height) {
-    mChildren[0].reset(new TexturePacker(
-        IntRect(mBounds.x, mBounds.y, aSize.width, mBounds.height)));
-    mChildren[1].reset(new TexturePacker(
-        IntRect(mBounds.x + aSize.width, mBounds.y, mBounds.width - aSize.width,
-                mBounds.height)));
+    mChildren.reset(new TexturePacker[2]{
+        TexturePacker(
+            IntRect(mBounds.x, mBounds.y, aSize.width, mBounds.height)),
+        TexturePacker(IntRect(mBounds.x + aSize.width, mBounds.y,
+                              mBounds.width - aSize.width, mBounds.height))});
   } else {
-    mChildren[0].reset(new TexturePacker(
-        IntRect(mBounds.x, mBounds.y, mBounds.width, aSize.height)));
-    mChildren[1].reset(new TexturePacker(
-        IntRect(mBounds.x, mBounds.y + aSize.height, mBounds.width,
-                mBounds.height - aSize.height)));
+    mChildren.reset(new TexturePacker[2]{
+        TexturePacker(
+            IntRect(mBounds.x, mBounds.y, mBounds.width, aSize.height)),
+        TexturePacker(IntRect(mBounds.x, mBounds.y + aSize.height,
+                              mBounds.width, mBounds.height - aSize.height))});
   }
   // After splitting, try to insert into the first child, which should usually
   // be big enough to accomodate the request. Adjust the available state to the
   // remaining space.
-  Maybe<IntPoint> inserted = mChildren[0]->Insert(aSize);
-  mAvailable = std::max(mChildren[0]->mAvailable, mChildren[1]->mAvailable);
+  Maybe<IntPoint> inserted = mChildren[0].Insert(aSize);
+  mAvailable = std::max(mChildren[0].mAvailable, mChildren[1].mAvailable);
   return inserted;
 }
 
 // Removes (frees) a rectangle with the given bounds from the tree.
 bool TexturePacker::Remove(const IntRect& aBounds) {
-  if (!mChildren[0]) {
+  if (!mChildren) {
     // If there are no children, we encountered a leaf node. Non-zero available
     // state means that this node was already removed previously. Also, if the
     // bounds don't contain the request, and assuming the tree was previously
@@ -107,22 +107,24 @@ bool TexturePacker::Remove(const IntRect& aBounds) {
       int split = aBounds.x - mBounds.x > mBounds.XMost() - aBounds.XMost()
                       ? aBounds.x
                       : aBounds.XMost();
-      mChildren[0].reset(new TexturePacker(
-          IntRect(mBounds.x, mBounds.y, split - mBounds.x, mBounds.height),
-          false));
-      mChildren[1].reset(new TexturePacker(
-          IntRect(split, mBounds.y, mBounds.XMost() - split, mBounds.height),
-          false));
+      mChildren.reset(new TexturePacker[2]{
+          TexturePacker(
+              IntRect(mBounds.x, mBounds.y, split - mBounds.x, mBounds.height),
+              false),
+          TexturePacker(IntRect(split, mBounds.y, mBounds.XMost() - split,
+                                mBounds.height),
+                        false)});
     } else {
       int split = aBounds.y - mBounds.y > mBounds.YMost() - aBounds.YMost()
                       ? aBounds.y
                       : aBounds.YMost();
-      mChildren[0].reset(new TexturePacker(
-          IntRect(mBounds.x, mBounds.y, mBounds.width, split - mBounds.y),
-          false));
-      mChildren[1].reset(new TexturePacker(
-          IntRect(mBounds.x, split, mBounds.width, mBounds.YMost() - split),
-          false));
+      mChildren.reset(new TexturePacker[2]{
+          TexturePacker(
+              IntRect(mBounds.x, mBounds.y, mBounds.width, split - mBounds.y),
+              false),
+          TexturePacker(
+              IntRect(mBounds.x, split, mBounds.width, mBounds.YMost() - split),
+              false)});
     }
   }
   // We've encountered a branch node. Determine which of the two child nodes
@@ -130,16 +132,16 @@ bool TexturePacker::Remove(const IntRect& aBounds) {
   // children were split on and then whether the removed bounds on that axis
   // are past the start of the second child. Proceed to recurse into that
   // child node for removal.
-  bool next = mChildren[0]->mBounds.x < mChildren[1]->mBounds.x
-                  ? aBounds.x >= mChildren[1]->mBounds.x
-                  : aBounds.y >= mChildren[1]->mBounds.y;
-  bool removed = mChildren[next ? 1 : 0]->Remove(aBounds);
+  bool next = mChildren[0].mBounds.x < mChildren[1].mBounds.x
+                  ? aBounds.x >= mChildren[1].mBounds.x
+                  : aBounds.y >= mChildren[1].mBounds.y;
+  bool removed = mChildren[next ? 1 : 0].Remove(aBounds);
   if (removed) {
-    if (mChildren[0]->IsFullyAvailable() && mChildren[1]->IsFullyAvailable()) {
+    if (mChildren[0].IsFullyAvailable() && mChildren[1].IsFullyAvailable()) {
       DiscardChildren();
       mAvailable = std::min(mBounds.width, mBounds.height);
     } else {
-      mAvailable = std::max(mChildren[0]->mAvailable, mChildren[1]->mAvailable);
+      mAvailable = std::max(mChildren[0].mAvailable, mChildren[1].mAvailable);
     }
   }
   return removed;
