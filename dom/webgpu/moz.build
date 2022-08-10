@@ -51,6 +51,7 @@ UNIFIED_SOURCES += [x + ".cpp" for x in h_and_cpp]
 
 IPDL_SOURCES += [
     "ipc/PWebGPU.ipdl",
+    "ipc/PWebGPUTypes.ipdlh",
 ]
 
 EXPORTS.mozilla.webgpu += [
