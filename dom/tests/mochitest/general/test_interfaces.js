@@ -48,12 +48,12 @@ const isCrossOriginIsolated = window.crossOriginIsolated;
 
 // IMPORTANT: Do not change this list without review from
 //            a JavaScript Engine peer!
-var wasmGlobalEntry = {
+let wasmGlobalEntry = {
   name: "WebAssembly",
   insecureContext: true,
   disabled: !SpecialPowers.Cu.getJSTestingFunctions().wasmIsSupportedByHardware(),
 };
-var wasmGlobalInterfaces = [
+let wasmGlobalInterfaces = [
   { name: "Module", insecureContext: true },
   { name: "Instance", insecureContext: true },
   { name: "Memory", insecureContext: true },
@@ -78,7 +78,7 @@ var wasmGlobalInterfaces = [
 ];
 // IMPORTANT: Do not change this list without review from
 //            a JavaScript Engine peer!
-var ecmaGlobals = [
+let ecmaGlobals = [
   { name: "AggregateError", insecureContext: true },
   { name: "Array", insecureContext: true },
   { name: "ArrayBuffer", insecureContext: true },
@@ -143,7 +143,7 @@ var ecmaGlobals = [
 // We should never to that again, interfaces in the DOM start with an uppercase
 // letter. If you think you need to add an interface here, DON'T. Rename your
 // interface.
-var legacyMozPrefixedInterfaces = [
+let legacyMozPrefixedInterfaces = [
   "mozContact",
   "mozRTCIceCandidate",
   "mozRTCPeerConnection",
@@ -154,7 +154,7 @@ var legacyMozPrefixedInterfaces = [
 
 // IMPORTANT: Do not change the list below without review from a DOM peer!
 // (You can request review on Phabricator via r=#webidl)
-var interfaceNamesInGlobalScope = [
+let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "AbortController", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
