@@ -16,7 +16,6 @@ const {
 const {
   createContext,
   findSource,
-  getCM,
   hoverOnToken,
   openDebuggerAndLog,
   pauseDebugger,
@@ -182,21 +181,11 @@ async function testOpeningLargeMinifiedFile(tab, toolbox) {
   await waitUntil(() => findSource(dbg, file));
 
   const fileFirstChars = `(()=>{var e,t,n,r,o={82603`;
-  const cm = getCM(dbg);
-  const onCodeMirrorTextRendered = new Promise(res =>
-    cm.on("changes", function onChanges(_, changes) {
-      if (changes.some(change => change.text[0].includes(fileFirstChars))) {
-        cm.off("changes", onChanges);
-        res();
-      }
-    })
-  );
 
   dump("Open minified.js (large minified file)\n");
   const test = runTest("custom.jsdebugger.open-large-minified-file.DAMP");
   await selectSource(dbg, file);
   await waitForText(dbg, file, fileFirstChars);
-  await onCodeMirrorTextRendered;
   test.done();
 
   dbg.actions.closeTabs(dbg.selectors.getContext(dbg.getState()), [file]);
