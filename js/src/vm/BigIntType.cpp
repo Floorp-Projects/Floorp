@@ -1220,7 +1220,7 @@ JSLinearString* BigInt::toStringBasePowerOfTwo(JSContext* cx, HandleBigInt x,
 
   if (charsRequired > JSString::MAX_LENGTH) {
     if constexpr (allowGC) {
-      ReportOutOfMemory(cx);
+      ReportAllocationOverflow(cx);
     }
     return nullptr;
   }
@@ -1368,7 +1368,7 @@ JSLinearString* BigInt::toStringGeneric(JSContext* cx, HandleBigInt x,
   size_t maximumCharactersRequired =
       calculateMaximumCharactersRequired(x, radix);
   if (maximumCharactersRequired > JSString::MAX_LENGTH) {
-    ReportOutOfMemory(cx);
+    ReportAllocationOverflow(cx);
     return nullptr;
   }
 
@@ -1550,7 +1550,7 @@ bool BigInt::calculateMaximumDigitsRequired(JSContext* cx, uint8_t radix,
   uint64_t n = CeilDiv(static_cast<uint64_t>(charcount) * bitsPerChar,
                        DigitBits * bitsPerCharTableMultiplier);
   if (n > MaxDigitLength) {
-    ReportOutOfMemory(cx);
+    ReportAllocationOverflow(cx);
     return false;
   }
 
