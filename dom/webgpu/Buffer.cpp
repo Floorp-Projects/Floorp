@@ -166,8 +166,21 @@ already_AddRefed<dom::Promise> Buffer::MapAsync(
 
   RefPtr<Buffer> self(this);
 
+  ffi::WGPUHostMap mode;
+  switch (aMode) {
+    case dom::GPUMapMode_Binding::READ:
+      mode = ffi::WGPUHostMap_Read;
+      break;
+    case dom::GPUMapMode_Binding::WRITE:
+      mode = ffi::WGPUHostMap_Write;
+      break;
+    default:
+      // TODO: This has to be validated on the device timeline.
+      MOZ_CRASH();
+  }
+
   auto mappingPromise =
-      GetDevice().MapBufferAsync(mId, aMode, aOffset, size, aRv);
+      GetDevice().GetBridge()->SendBufferMap(mId, mode, aOffset, size);
   MOZ_ASSERT(mappingPromise);
 
   mMapRequest = promise;
@@ -291,7 +304,10 @@ void Buffer::Unmap(JSContext* aCx, ErrorResult& aRv) {
     mShmem = ipc::Shmem();
   }
 
-  GetDevice().UnmapBuffer(mId, mMapped->mWritable);
+  if (!GetDevice().IsLost()) {
+    GetDevice().GetBridge()->SendBufferUnmap(mId, mMapped->mWritable);
+  }
+
   mMapped.reset();
 }
 
