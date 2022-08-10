@@ -80,7 +80,8 @@ class SupportedLimits;
 class Texture;
 class WebGPUChild;
 
-using MappingPromise = MozPromise<MaybeShmem, ipc::ResponseRejectReason, true>;
+using MappingPromise =
+    MozPromise<BufferMapResult, ipc::ResponseRejectReason, true>;
 
 class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
  public:
@@ -102,8 +103,7 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
   RefPtr<MappingPromise> MapBufferAsync(RawId aId, uint32_t aMode,
                                         size_t aOffset, size_t aSize,
                                         ErrorResult& aRv);
-  void UnmapBuffer(RawId aId, ipc::Shmem&& aShmem, bool aFlush,
-                   bool aKeepShmem);
+  void UnmapBuffer(RawId aId, bool aFlush);
   already_AddRefed<Texture> InitSwapChain(
       const dom::GPUCanvasConfiguration& aDesc,
       const layers::CompositableHandle& aHandle, gfx::SurfaceFormat aFormat,
