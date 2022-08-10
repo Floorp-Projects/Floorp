@@ -36,9 +36,8 @@ function popupShown()
   var popuprect = menulist.menupopup.getBoundingClientRect();
 
   let marginLeft = parseFloat(getComputedStyle(menulist.menupopup).marginLeft);
-  let marginRight = parseFloat(getComputedStyle(menulist.menupopup).marginRight);
-  ok(isWithinHalfPixel(menurect.left + marginLeft, popuprect.left), `left position: ${menurect.left}, ${popuprect.left}`);
-  ok(isWithinHalfPixel(menurect.right - marginRight, popuprect.right), `right position: ${menurect.right}, ${popuprect.right}`);
+  ok(isWithinHalfPixel(menurect.left + marginLeft, popuprect.left), "left position");
+  ok(isWithinHalfPixel(menurect.right + marginLeft, popuprect.right), "right position");
 
   let index = menulist.selectedIndex;
   if (menulist.selectedItem && navigator.platform.includes("Mac")) {
