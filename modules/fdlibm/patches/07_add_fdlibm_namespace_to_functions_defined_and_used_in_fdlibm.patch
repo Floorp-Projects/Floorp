@@ -1,7 +1,7 @@
 diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private.h
 --- a/modules/fdlibm/src/math_private.h
 +++ b/modules/fdlibm/src/math_private.h
-@@ -872,16 +872,50 @@ irintl(long double x)
+@@ -867,16 +867,53 @@ irintl(long double x)
  #define	__ieee754_j1f	j1f
  #define	__ieee754_y0f	y0f
  #define	__ieee754_y1f	y1f
@@ -14,6 +14,9 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
 +#define asin fdlibm::asin
 +#define atan fdlibm::atan
 +#define atan2 fdlibm::atan2
++#define cos fdlibm::cos
++#define sin fdlibm::sin
++#define tan fdlibm::tan
 +#define cosh fdlibm::cosh
 +#define sinh fdlibm::sinh
 +#define tanh fdlibm::tanh

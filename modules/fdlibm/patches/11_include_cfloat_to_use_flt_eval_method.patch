@@ -14,8 +14,8 @@ diff --git a/modules/fdlibm/src/math_private.h b/modules/fdlibm/src/math_private
  #include <stdint.h>
  #include <sys/types.h>
  
- #include "fdlibm.h"
- 
  #include "mozilla/EndianUtils.h"
+ 
+ #include "fdlibm.h"
  
  /*
