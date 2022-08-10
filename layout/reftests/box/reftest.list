@@ -1,5 +1,4 @@
 == chrome://reftest/content/box/box-as-grid-or-flex-item-1.html chrome://reftest/content/box/box-as-grid-or-flex-item-1-ref.html
-!= chrome://reftest/content/box/flex-emulation-1.xhtml chrome://reftest/content/box/flex-emulation-1-notref.xhtml
 
 == flexbox-abspos-container-1a.html flexbox-abspos-container-1-ref.html
 == flexbox-abspos-container-1b.html flexbox-abspos-container-1-ref.html

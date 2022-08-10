@@ -2482,8 +2482,8 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
   } else if (display->mDisplay == StyleDisplay::Flex ||
              display->mDisplay == StyleDisplay::WebkitBox ||
              display->mDisplay == StyleDisplay::Grid ||
-             (display->mDisplay == StyleDisplay::MozBox &&
-              computedStyle->StyleVisibility()->EmulateMozBoxWithFlex())) {
+             (StaticPrefs::layout_css_emulate_moz_box_with_flex() &&
+              display->mDisplay == StyleDisplay::MozBox)) {
     auto func = display->mDisplay == StyleDisplay::Grid
                     ? NS_NewGridContainerFrame
                     : NS_NewFlexContainerFrame;
@@ -4236,22 +4236,16 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::BeginBuildingScrollFrame(
 
   nsFrameList anonymousList;
 
+  RefPtr<ComputedStyle> contentStyle = aContentStyle;
+
   if (!gfxScrollFrame) {
-    const bool useXULScrollFrame = [&] {
-      if (aContentStyle->StyleVisibility()->EmulateMozBoxWithFlex()) {
-        return false;
-      }
-      const auto& disp = *aContentStyle->StyleDisplay();
-      return disp.DisplayOutside() == StyleDisplayOutside::XUL ||
-             disp.DisplayInside() == StyleDisplayInside::MozBox;
-    }();
     // Build a XULScrollFrame when the child is a box, otherwise an
     // HTMLScrollFrame
-    if (useXULScrollFrame) {
-      gfxScrollFrame = NS_NewXULScrollFrame(mPresShell, aContentStyle, aIsRoot);
+    const nsStyleDisplay* displayStyle = aContentStyle->StyleDisplay();
+    if (displayStyle->IsXULDisplayStyle()) {
+      gfxScrollFrame = NS_NewXULScrollFrame(mPresShell, contentStyle, aIsRoot);
     } else {
-      gfxScrollFrame =
-          NS_NewHTMLScrollFrame(mPresShell, aContentStyle, aIsRoot);
+      gfxScrollFrame = NS_NewHTMLScrollFrame(mPresShell, contentStyle, aIsRoot);
     }
 
     InitAndRestoreFrame(aState, aContent, aParentFrame, gfxScrollFrame);
@@ -4289,7 +4283,7 @@ already_AddRefed<ComputedStyle> nsCSSFrameConstructor::BeginBuildingScrollFrame(
   ServoStyleSet* styleSet = mPresShell->StyleSet();
   RefPtr<ComputedStyle> scrolledChildStyle =
       styleSet->ResolveInheritingAnonymousBoxStyle(aScrolledPseudo,
-                                                   aContentStyle);
+                                                   contentStyle);
 
   gfxScrollFrame->SetInitialChildList(kPrincipalList, anonymousList);
 
@@ -4357,7 +4351,6 @@ void nsCSSFrameConstructor::BuildScrollFrame(nsFrameConstructorState& aState,
 
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
-                                       const StyleMozBoxLayout aMozBoxLayout,
                                        const Element& aElement) {
   static_assert(eParentTypeCount < (1 << (32 - FCDATA_PARENT_TYPE_OFFSET)),
                 "Check eParentTypeCount should not overflow");
@@ -4366,8 +4359,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
   // block-level.
   NS_ASSERTION(
       !(aDisplay.IsFloatingStyle() || aDisplay.IsAbsolutelyPositionedStyle()) ||
-          aDisplay.IsBlockOutsideStyle() ||
-          aDisplay.DisplayOutside() == StyleDisplayOutside::XUL,
+          aDisplay.IsBlockOutsideStyle() || aDisplay.IsXULDisplayStyle(),
       "Style system did not apply CSS2.1 section 9.7 fixups");
 
   // If this is "body", try propagating its scroll style to the viewport
@@ -4509,7 +4501,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
       // fall through (except for scrollcorners which have to be XUL becuase
       // their parent reflows them with BoxReflow() which means they have to get
       // actual-XUL frames).
-      if (aMozBoxLayout == StyleMozBoxLayout::Legacy ||
+      if (!StaticPrefs::layout_css_emulate_moz_box_with_flex() ||
           aElement.IsXULElement(nsGkAtoms::scrollcorner)) {
         static constexpr FrameConstructionData data =
             SCROLLABLE_ABSPOS_CONTAINER_XUL_FCDATA(NS_NewBoxFrame);
@@ -5349,7 +5341,6 @@ nsCSSFrameConstructor::FindElementData(const Element& aElement,
     return &sImgData;
   }
 
-  const auto boxLayout = aStyle.StyleVisibility()->mMozBoxLayout;
   const bool shouldBlockify = aFlags.contains(ItemFlag::IsForRenderedLegend) ||
                               aFlags.contains(ItemFlag::IsForOutsideMarker);
   if (shouldBlockify && !aStyle.StyleDisplay()->IsBlockOutsideStyle()) {
@@ -5359,11 +5350,11 @@ nsCSSFrameConstructor::FindElementData(const Element& aElement,
     uint16_t rawDisplayValue =
         Servo_ComputedValues_BlockifiedDisplay(&aStyle, isRootElement);
     display.mDisplay = StyleDisplay(rawDisplayValue);
-    return FindDisplayData(display, boxLayout, aElement);
+    return FindDisplayData(display, aElement);
   }
 
   const auto& display = *aStyle.StyleDisplay();
-  return FindDisplayData(display, boxLayout, aElement);
+  return FindDisplayData(display, aElement);
 }
 
 const nsCSSFrameConstructor::FrameConstructionData*
