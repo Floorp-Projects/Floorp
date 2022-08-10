@@ -13,10 +13,6 @@ using mozilla::ipc::IOThreadChild;
 
 namespace mozilla {
 
-RemoteSandboxBrokerProcessChild::RemoteSandboxBrokerProcessChild(
-    ProcessId aParentPid)
-    : ProcessChild(aParentPid) {}
-
 RemoteSandboxBrokerProcessChild::~RemoteSandboxBrokerProcessChild() {}
 
 bool RemoteSandboxBrokerProcessChild::Init(int aArgc, char* aArgv[]) {

@@ -32,9 +32,6 @@ namespace net {
 
 LazyLogModule gSocketProcessLog("socketprocess");
 
-SocketProcessImpl::SocketProcessImpl(ProcessId aParentPid)
-    : ProcessChild(aParentPid) {}
-
 SocketProcessImpl::~SocketProcessImpl() = default;
 
 bool SocketProcessImpl::Init(int aArgc, char* aArgv[]) {

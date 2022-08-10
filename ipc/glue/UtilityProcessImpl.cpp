@@ -20,12 +20,7 @@
 
 namespace mozilla::ipc {
 
-UtilityProcessImpl::UtilityProcessImpl(ProcessId aParentPid)
-    : ProcessChild(aParentPid) {
-  mUtility = new UtilityProcessChild();
-}
-
-UtilityProcessImpl::~UtilityProcessImpl() { mUtility = nullptr; }
+UtilityProcessImpl::~UtilityProcessImpl() = default;
 
 bool UtilityProcessImpl::Init(int aArgc, char* aArgv[]) {
   Maybe<uint64_t> sandboxingKind = geckoargs::sSandboxingKind.Get(aArgc, aArgv);

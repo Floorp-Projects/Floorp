@@ -25,7 +25,7 @@ class ContentProcess : public mozilla::ipc::ProcessChild {
   using ProcessChild = mozilla::ipc::ProcessChild;
 
  public:
-  explicit ContentProcess(ProcessId aParentPid) : ProcessChild(aParentPid) {}
+  using ProcessChild::ProcessChild;
 
   ~ContentProcess() = default;
 
@@ -40,10 +40,6 @@ class ContentProcess : public mozilla::ipc::ProcessChild {
   mozilla::mscom::ProcessRuntime mCOMRuntime;
 #endif
   mozilla::ipc::ScopedXREEmbed mXREEmbed;
-
-  ContentProcess(const ContentProcess&) = delete;
-
-  const ContentProcess& operator=(const ContentProcess&) = delete;
 };
 
 }  // namespace mozilla::dom

@@ -19,9 +19,6 @@ namespace mozilla {
 
 using namespace ipc;
 
-RDDProcessImpl::RDDProcessImpl(ProcessId aParentPid)
-    : ProcessChild(aParentPid) {}
-
 RDDProcessImpl::~RDDProcessImpl() = default;
 
 bool RDDProcessImpl::Init(int aArgc, char* aArgv[]) {

@@ -14,9 +14,6 @@ using mozilla::ipc::IOThreadChild;
 
 namespace mozilla::gmp {
 
-GMPProcessChild::GMPProcessChild(ProcessId aParentPid)
-    : ProcessChild(aParentPid) {}
-
 GMPProcessChild::~GMPProcessChild() = default;
 
 bool GMPProcessChild::Init(int aArgc, char* aArgv[]) {

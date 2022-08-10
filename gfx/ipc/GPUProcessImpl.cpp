@@ -20,9 +20,6 @@ namespace gfx {
 
 using namespace ipc;
 
-GPUProcessImpl::GPUProcessImpl(ProcessId aParentPid)
-    : ProcessChild(aParentPid) {}
-
 GPUProcessImpl::~GPUProcessImpl() = default;
 
 bool GPUProcessImpl::Init(int aArgc, char* aArgv[]) {
