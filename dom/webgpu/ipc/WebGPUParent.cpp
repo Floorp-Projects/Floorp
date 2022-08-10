@@ -312,48 +312,48 @@ ipc::IPCResult WebGPUParent::RecvInstanceRequestAdapter(
 }
 
 ipc::IPCResult WebGPUParent::RecvAdapterRequestDevice(
-    RawId aSelfId, const ipc::ByteBuf& aByteBuf, RawId aNewId,
+    RawId aAdapterId, const ipc::ByteBuf& aByteBuf, RawId aDeviceId,
     AdapterRequestDeviceResolver&& resolver) {
   ErrorBuffer error;
   ffi::wgpu_server_adapter_request_device(
-      mContext.get(), aSelfId, ToFFI(&aByteBuf), aNewId, error.ToFFI());
+      mContext.get(), aAdapterId, ToFFI(&aByteBuf), aDeviceId, error.ToFFI());
   if (ForwardError(0, error)) {
     resolver(false);
   } else {
-    mErrorScopeMap.insert({aSelfId, ErrorScopeStack()});
+    mErrorScopeMap.insert({aAdapterId, ErrorScopeStack()});
     resolver(true);
   }
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvAdapterDestroy(RawId aSelfId) {
-  ffi::wgpu_server_adapter_drop(mContext.get(), aSelfId);
+ipc::IPCResult WebGPUParent::RecvAdapterDestroy(RawId aAdapterId) {
+  ffi::wgpu_server_adapter_drop(mContext.get(), aAdapterId);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvDeviceDestroy(RawId aSelfId) {
-  ffi::wgpu_server_device_drop(mContext.get(), aSelfId);
-  mErrorScopeMap.erase(aSelfId);
+ipc::IPCResult WebGPUParent::RecvDeviceDestroy(RawId aDeviceId) {
+  ffi::wgpu_server_device_drop(mContext.get(), aDeviceId);
+  mErrorScopeMap.erase(aDeviceId);
   return IPC_OK();
 }
 
 ipc::IPCResult WebGPUParent::RecvCreateBuffer(
-    RawId aSelfId, RawId aBufferId, dom::GPUBufferDescriptor&& aDesc) {
+    RawId aDeviceId, RawId aBufferId, dom::GPUBufferDescriptor&& aDesc) {
   webgpu::StringHelper label(aDesc.mLabel);
 
   ErrorBuffer error;
-  ffi::wgpu_server_device_create_buffer(mContext.get(), aSelfId, aBufferId,
+  ffi::wgpu_server_device_create_buffer(mContext.get(), aDeviceId, aBufferId,
                                         label.Get(), aDesc.mSize, aDesc.mUsage,
                                         aDesc.mMappedAtCreation, error.ToFFI());
-  ForwardError(aSelfId, error);
+  ForwardError(aDeviceId, error);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvBufferReturnShmem(RawId aSelfId,
+ipc::IPCResult WebGPUParent::RecvBufferReturnShmem(RawId aBufferId,
                                                    Shmem&& aShmem) {
   MOZ_LOG(sLogger, LogLevel::Info,
-          ("RecvBufferReturnShmem %" PRIu64 "\n", aSelfId));
-  mSharedMemoryMap[aSelfId] = aShmem;
+          ("RecvBufferReturnShmem %" PRIu64 "\n", aBufferId));
+  mSharedMemoryMap[aBufferId] = aShmem;
   return IPC_OK();
 }
 
@@ -392,49 +392,49 @@ static void MapCallback(ffi::WGPUBufferMapAsyncStatus status,
   delete req;
 }
 
-ipc::IPCResult WebGPUParent::RecvBufferMap(RawId aSelfId,
+ipc::IPCResult WebGPUParent::RecvBufferMap(RawId aBufferId,
                                            ffi::WGPUHostMap aHostMap,
                                            uint64_t aOffset, uint64_t aSize,
                                            BufferMapResolver&& aResolver) {
   MOZ_LOG(sLogger, LogLevel::Info,
           ("RecvBufferMap %" PRIu64 " offset=%" PRIu64 " size=%" PRIu64 "\n",
-           aSelfId, aOffset, aSize));
-  auto& shmem = mSharedMemoryMap[aSelfId];
+           aBufferId, aOffset, aSize));
+  auto& shmem = mSharedMemoryMap[aBufferId];
   if (!shmem.IsReadable()) {
     aResolver(MaybeShmem(mozilla::null_t()));
     MOZ_LOG(sLogger, LogLevel::Error, ("\tshmem is empty\n"));
     return IPC_OK();
   }
 
-  auto* request = new MapRequest(mContext.get(), aSelfId, aHostMap, aOffset,
+  auto* request = new MapRequest(mContext.get(), aBufferId, aHostMap, aOffset,
                                  std::move(shmem), std::move(aResolver));
   ffi::WGPUBufferMapCallbackC callback = {&MapCallback,
                                           reinterpret_cast<uint8_t*>(request)};
-  ffi::wgpu_server_buffer_map(mContext.get(), aSelfId, aOffset, aSize, aHostMap,
-                              callback);
+  ffi::wgpu_server_buffer_map(mContext.get(), aBufferId, aOffset, aSize,
+                              aHostMap, callback);
 
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvBufferUnmap(RawId aSelfId, Shmem&& aShmem,
+ipc::IPCResult WebGPUParent::RecvBufferUnmap(RawId aBufferId, Shmem&& aShmem,
                                              bool aFlush, bool aKeepShmem) {
   if (aFlush) {
     // TODO: flush exact modified sub-range
     uint8_t* ptr = ffi::wgpu_server_buffer_get_mapped_range(
-        mContext.get(), aSelfId, 0, aShmem.Size<uint8_t>());
+        mContext.get(), aBufferId, 0, aShmem.Size<uint8_t>());
     MOZ_ASSERT(ptr != nullptr);
     memcpy(ptr, aShmem.get<uint8_t>(), aShmem.Size<uint8_t>());
   }
 
-  ffi::wgpu_server_buffer_unmap(mContext.get(), aSelfId);
+  ffi::wgpu_server_buffer_unmap(mContext.get(), aBufferId);
 
   MOZ_LOG(sLogger, LogLevel::Info,
-          ("RecvBufferUnmap %" PRIu64 " flush=%d\n", aSelfId, aFlush));
-  const auto iter = mSharedMemoryMap.find(aSelfId);
+          ("RecvBufferUnmap %" PRIu64 " flush=%d\n", aBufferId, aFlush));
+  const auto iter = mSharedMemoryMap.find(aBufferId);
   if (iter != mSharedMemoryMap.end()) {
     iter->second = aShmem;
   } else if (aKeepShmem) {
-    mSharedMemoryMap[aSelfId] = aShmem;
+    mSharedMemoryMap[aBufferId] = aShmem;
   } else {
     // we are here if the buffer was mapped at creation, but doesn't have any
     // mapping flags
@@ -443,12 +443,12 @@ ipc::IPCResult WebGPUParent::RecvBufferUnmap(RawId aSelfId, Shmem&& aShmem,
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvBufferDestroy(RawId aSelfId) {
-  ffi::wgpu_server_buffer_drop(mContext.get(), aSelfId);
+ipc::IPCResult WebGPUParent::RecvBufferDestroy(RawId aBufferId) {
+  ffi::wgpu_server_buffer_drop(mContext.get(), aBufferId);
   MOZ_LOG(sLogger, LogLevel::Info,
-          ("RecvBufferDestroy %" PRIu64 "\n", aSelfId));
+          ("RecvBufferDestroy %" PRIu64 "\n", aBufferId));
 
-  const auto iter = mSharedMemoryMap.find(aSelfId);
+  const auto iter = mSharedMemoryMap.find(aBufferId);
   if (iter != mSharedMemoryMap.end()) {
     DeallocShmem(iter->second);
     mSharedMemoryMap.erase(iter);
@@ -456,23 +456,23 @@ ipc::IPCResult WebGPUParent::RecvBufferDestroy(RawId aSelfId) {
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvTextureDestroy(RawId aSelfId) {
-  ffi::wgpu_server_texture_drop(mContext.get(), aSelfId);
+ipc::IPCResult WebGPUParent::RecvTextureDestroy(RawId aTextureId) {
+  ffi::wgpu_server_texture_drop(mContext.get(), aTextureId);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvTextureViewDestroy(RawId aSelfId) {
-  ffi::wgpu_server_texture_view_drop(mContext.get(), aSelfId);
+ipc::IPCResult WebGPUParent::RecvTextureViewDestroy(RawId aTextureViewId) {
+  ffi::wgpu_server_texture_view_drop(mContext.get(), aTextureViewId);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvSamplerDestroy(RawId aSelfId) {
-  ffi::wgpu_server_sampler_drop(mContext.get(), aSelfId);
+ipc::IPCResult WebGPUParent::RecvSamplerDestroy(RawId aSamplerId) {
+  ffi::wgpu_server_sampler_drop(mContext.get(), aSamplerId);
   return IPC_OK();
 }
 
 ipc::IPCResult WebGPUParent::RecvCommandEncoderFinish(
-    RawId aSelfId, RawId aDeviceId,
+    RawId aEncoderId, RawId aDeviceId,
     const dom::GPUCommandBufferDescriptor& aDesc) {
   Unused << aDesc;
   ffi::WGPUCommandBufferDescriptor desc = {};
@@ -481,78 +481,78 @@ ipc::IPCResult WebGPUParent::RecvCommandEncoderFinish(
   desc.label = label.Get();
 
   ErrorBuffer error;
-  ffi::wgpu_server_encoder_finish(mContext.get(), aSelfId, &desc,
+  ffi::wgpu_server_encoder_finish(mContext.get(), aEncoderId, &desc,
                                   error.ToFFI());
 
   ForwardError(aDeviceId, error);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvCommandEncoderDestroy(RawId aSelfId) {
-  ffi::wgpu_server_encoder_drop(mContext.get(), aSelfId);
+ipc::IPCResult WebGPUParent::RecvCommandEncoderDestroy(RawId aEncoderId) {
+  ffi::wgpu_server_encoder_drop(mContext.get(), aEncoderId);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvCommandBufferDestroy(RawId aSelfId) {
-  ffi::wgpu_server_command_buffer_drop(mContext.get(), aSelfId);
+ipc::IPCResult WebGPUParent::RecvCommandBufferDestroy(RawId aCommandBufferId) {
+  ffi::wgpu_server_command_buffer_drop(mContext.get(), aCommandBufferId);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvRenderBundleDestroy(RawId aSelfId) {
-  ffi::wgpu_server_render_bundle_drop(mContext.get(), aSelfId);
+ipc::IPCResult WebGPUParent::RecvRenderBundleDestroy(RawId aBundleId) {
+  ffi::wgpu_server_render_bundle_drop(mContext.get(), aBundleId);
   return IPC_OK();
 }
 
 ipc::IPCResult WebGPUParent::RecvQueueSubmit(
-    RawId aSelfId, RawId aDeviceId, const nsTArray<RawId>& aCommandBuffers) {
+    RawId aQueueId, RawId aDeviceId, const nsTArray<RawId>& aCommandBuffers) {
   ErrorBuffer error;
-  ffi::wgpu_server_queue_submit(mContext.get(), aSelfId,
+  ffi::wgpu_server_queue_submit(mContext.get(), aQueueId,
                                 aCommandBuffers.Elements(),
                                 aCommandBuffers.Length(), error.ToFFI());
   ForwardError(aDeviceId, error);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvQueueWriteAction(RawId aSelfId,
+ipc::IPCResult WebGPUParent::RecvQueueWriteAction(RawId aQueueId,
                                                   RawId aDeviceId,
                                                   const ipc::ByteBuf& aByteBuf,
                                                   Shmem&& aShmem) {
   ErrorBuffer error;
-  ffi::wgpu_server_queue_write_action(mContext.get(), aSelfId, ToFFI(&aByteBuf),
-                                      aShmem.get<uint8_t>(),
+  ffi::wgpu_server_queue_write_action(mContext.get(), aQueueId,
+                                      ToFFI(&aByteBuf), aShmem.get<uint8_t>(),
                                       aShmem.Size<uint8_t>(), error.ToFFI());
   ForwardError(aDeviceId, error);
   DeallocShmem(aShmem);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvBindGroupLayoutDestroy(RawId aSelfId) {
-  ffi::wgpu_server_bind_group_layout_drop(mContext.get(), aSelfId);
+ipc::IPCResult WebGPUParent::RecvBindGroupLayoutDestroy(RawId aBindGroupId) {
+  ffi::wgpu_server_bind_group_layout_drop(mContext.get(), aBindGroupId);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvPipelineLayoutDestroy(RawId aSelfId) {
-  ffi::wgpu_server_pipeline_layout_drop(mContext.get(), aSelfId);
+ipc::IPCResult WebGPUParent::RecvPipelineLayoutDestroy(RawId aLayoutId) {
+  ffi::wgpu_server_pipeline_layout_drop(mContext.get(), aLayoutId);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvBindGroupDestroy(RawId aSelfId) {
-  ffi::wgpu_server_bind_group_drop(mContext.get(), aSelfId);
+ipc::IPCResult WebGPUParent::RecvBindGroupDestroy(RawId aBindGroupId) {
+  ffi::wgpu_server_bind_group_drop(mContext.get(), aBindGroupId);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvShaderModuleDestroy(RawId aSelfId) {
-  ffi::wgpu_server_shader_module_drop(mContext.get(), aSelfId);
+ipc::IPCResult WebGPUParent::RecvShaderModuleDestroy(RawId aModuleId) {
+  ffi::wgpu_server_shader_module_drop(mContext.get(), aModuleId);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvComputePipelineDestroy(RawId aSelfId) {
-  ffi::wgpu_server_compute_pipeline_drop(mContext.get(), aSelfId);
+ipc::IPCResult WebGPUParent::RecvComputePipelineDestroy(RawId aPipelineId) {
+  ffi::wgpu_server_compute_pipeline_drop(mContext.get(), aPipelineId);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvRenderPipelineDestroy(RawId aSelfId) {
-  ffi::wgpu_server_render_pipeline_drop(mContext.get(), aSelfId);
+ipc::IPCResult WebGPUParent::RecvRenderPipelineDestroy(RawId aPipelineId) {
+  ffi::wgpu_server_render_pipeline_drop(mContext.get(), aPipelineId);
   return IPC_OK();
 }
 
@@ -568,7 +568,7 @@ ipc::IPCResult WebGPUParent::RecvImplicitLayoutDestroy(
 // TODO: proper destruction
 
 ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
-    RawId aSelfId, RawId aQueueId, const RGBDescriptor& aDesc,
+    RawId aDeviceId, RawId aQueueId, const RGBDescriptor& aDesc,
     const nsTArray<RawId>& aBufferIds, const CompositableHandle& aHandle) {
   switch (aDesc.format()) {
     case gfx::SurfaceFormat::R8G8B8A8:
@@ -613,7 +613,7 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
   auto* textureHostData = new (fallible) uint8_t[wholeTextureSize.value()];
   if (NS_WARN_IF(!textureHostData)) {
     ReportError(
-        aSelfId,
+        aDeviceId,
         "Error in Device::create_swapchain: failed to allocate texture buffer"_ns);
     return IPC_OK();
   }
@@ -632,8 +632,8 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
   textureHost->EnsureRenderTexture(Some(externalId));
 
   auto data = MakeRefPtr<PresentationData>(
-      aSelfId, aQueueId, imageHost.forget(), textureHost.forget(), bufferStride,
-      textureStride, rows.value(), aBufferIds);
+      aDeviceId, aQueueId, imageHost.forget(), textureHost.forget(),
+      bufferStride, textureStride, rows.value(), aBufferIds);
   if (!mCanvasMap.insert({aHandle.Value(), data}).second) {
     NS_ERROR("External image is already registered as WebGPU canvas!");
   }
@@ -641,7 +641,7 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
 }
 
 ipc::IPCResult WebGPUParent::RecvDeviceCreateShaderModule(
-    RawId aSelfId, RawId aBufferId, const nsString& aLabel,
+    RawId aDeviceId, RawId aModuleId, const nsString& aLabel,
     const nsCString& aCode, DeviceCreateShaderModuleResolver&& aOutMessage) {
   // TODO: this should probably be an optional label in the IPC message.
   const nsACString* label = nullptr;
@@ -653,7 +653,7 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateShaderModule(
   ffi::WGPUShaderModuleCompilationMessage message;
 
   bool ok = ffi::wgpu_server_device_create_shader_module(
-      mContext.get(), aSelfId, aBufferId, label, &aCode, &message);
+      mContext.get(), aDeviceId, aModuleId, label, &aCode, &message);
 
   nsTArray<WebGPUCompilationMessage> messages;
 
@@ -935,44 +935,45 @@ void WebGPUParent::ActorDestroy(ActorDestroyReason aWhy) {
   mContext = nullptr;
 }
 
-ipc::IPCResult WebGPUParent::RecvDeviceAction(RawId aSelf,
+ipc::IPCResult WebGPUParent::RecvDeviceAction(RawId aDeviceId,
                                               const ipc::ByteBuf& aByteBuf) {
   ErrorBuffer error;
-  ffi::wgpu_server_device_action(mContext.get(), aSelf, ToFFI(&aByteBuf),
+  ffi::wgpu_server_device_action(mContext.get(), aDeviceId, ToFFI(&aByteBuf),
                                  error.ToFFI());
 
-  ForwardError(aSelf, error);
+  ForwardError(aDeviceId, error);
   return IPC_OK();
 }
 
 ipc::IPCResult WebGPUParent::RecvDeviceActionWithAck(
-    RawId aSelf, const ipc::ByteBuf& aByteBuf,
+    RawId aDeviceId, const ipc::ByteBuf& aByteBuf,
     DeviceActionWithAckResolver&& aResolver) {
   ErrorBuffer error;
-  ffi::wgpu_server_device_action(mContext.get(), aSelf, ToFFI(&aByteBuf),
+  ffi::wgpu_server_device_action(mContext.get(), aDeviceId, ToFFI(&aByteBuf),
                                  error.ToFFI());
 
-  ForwardError(aSelf, error);
+  ForwardError(aDeviceId, error);
   aResolver(true);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvTextureAction(RawId aSelf, RawId aDevice,
+ipc::IPCResult WebGPUParent::RecvTextureAction(RawId aTextureId,
+                                               RawId aDeviceId,
                                                const ipc::ByteBuf& aByteBuf) {
   ErrorBuffer error;
-  ffi::wgpu_server_texture_action(mContext.get(), aSelf, ToFFI(&aByteBuf),
+  ffi::wgpu_server_texture_action(mContext.get(), aTextureId, ToFFI(&aByteBuf),
                                   error.ToFFI());
 
-  ForwardError(aDevice, error);
+  ForwardError(aDeviceId, error);
   return IPC_OK();
 }
 
 ipc::IPCResult WebGPUParent::RecvCommandEncoderAction(
-    RawId aSelf, RawId aDevice, const ipc::ByteBuf& aByteBuf) {
+    RawId aEncoderId, RawId aDeviceId, const ipc::ByteBuf& aByteBuf) {
   ErrorBuffer error;
-  ffi::wgpu_server_command_encoder_action(mContext.get(), aSelf,
+  ffi::wgpu_server_command_encoder_action(mContext.get(), aEncoderId,
                                           ToFFI(&aByteBuf), error.ToFFI());
-  ForwardError(aDevice, error);
+  ForwardError(aDeviceId, error);
   return IPC_OK();
 }
 
@@ -993,8 +994,8 @@ ipc::IPCResult WebGPUParent::RecvBumpImplicitBindGroupLayout(RawId aPipelineId,
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvDevicePushErrorScope(RawId aSelfId) {
-  const auto& lookup = mErrorScopeMap.find(aSelfId);
+ipc::IPCResult WebGPUParent::RecvDevicePushErrorScope(RawId aDeviceId) {
+  const auto& lookup = mErrorScopeMap.find(aDeviceId);
   if (lookup == mErrorScopeMap.end()) {
     NS_WARNING("WebGPU error scopes on a destroyed device!");
     return IPC_OK();
@@ -1005,8 +1006,8 @@ ipc::IPCResult WebGPUParent::RecvDevicePushErrorScope(RawId aSelfId) {
 }
 
 ipc::IPCResult WebGPUParent::RecvDevicePopErrorScope(
-    RawId aSelfId, DevicePopErrorScopeResolver&& aResolver) {
-  const auto& lookup = mErrorScopeMap.find(aSelfId);
+    RawId aDeviceId, DevicePopErrorScopeResolver&& aResolver) {
+  const auto& lookup = mErrorScopeMap.find(aDeviceId);
   if (lookup == mErrorScopeMap.end()) {
     NS_WARNING("WebGPU error scopes on a destroyed device!");
     ScopedError error = {true};
