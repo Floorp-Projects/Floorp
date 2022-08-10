@@ -625,34 +625,6 @@ criteria = "safe-to-deploy"
 version = "0.6.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.fluent]]
-version = "0.16.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.fluent-bundle]]
-version = "0.15.2"
-criteria = "safe-to-deploy"
-
-[[exemptions.fluent-fallback]]
-version = "0.6.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.fluent-langneg]]
-version = "0.13.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.fluent-pseudo]]
-version = "0.3.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.fluent-syntax]]
-version = "0.11.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.fluent-testing]]
-version = "0.0.2"
-criteria = "safe-to-run"
-
 [[exemptions.fnv]]
 version = "1.0.7"
 criteria = "safe-to-deploy"
@@ -867,14 +839,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.instant]]
 version = "0.1.12"
-criteria = "safe-to-deploy"
-
-[[exemptions.intl-memoizer]]
-version = "0.5.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.intl_pluralrules]]
-version = "7.0.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.ioctl-sys]]
@@ -1557,10 +1521,6 @@ criteria = "safe-to-run"
 version = "0.2.4"
 criteria = "safe-to-run"
 
-[[exemptions.tinystr]]
-version = "0.3.4"
-criteria = "safe-to-deploy"
-
 [[exemptions.tokio]]
 version = "1.17.0"
 criteria = "safe-to-run"
@@ -1615,22 +1575,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.typenum]]
 version = "1.15.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.unic-langid]]
-version = "0.9.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.unic-langid-impl]]
-version = "0.9.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.unic-langid-macros]]
-version = "0.9.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.unic-langid-macros-impl]]
-version = "0.9.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.unicase]]
