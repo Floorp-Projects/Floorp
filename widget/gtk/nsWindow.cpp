@@ -2397,6 +2397,14 @@ bool nsWindow::WaylandPopupAnchorAdjustForParentPopup(
   LOG("  parent window size %d x %d", parentWindowRect.width,
       parentWindowRect.height);
 
+  // We can't have rectangle anchor with zero width/height.
+  if (!aPopupAnchor->width) {
+    aPopupAnchor->width = 1;
+  }
+  if (!aPopupAnchor->height) {
+    aPopupAnchor->height = 1;
+  }
+
   GdkRectangle finalRect;
   if (!gdk_rectangle_intersect(aPopupAnchor, &parentWindowRect, &finalRect)) {
     // Popup anchor is outside of parent window - we can't use move-to-rect
