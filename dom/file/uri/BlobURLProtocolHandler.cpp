@@ -156,7 +156,7 @@ void BroadcastBlobURLRegistration(const nsACString& aURI,
 
   dom::ContentChild* cc = dom::ContentChild::GetSingleton();
   Unused << NS_WARN_IF(!cc->SendStoreAndBroadcastBlobURLRegistration(
-      nsCString(aURI), ipcBlob, IPC::Principal(aPrincipal), aAgentClusterId));
+      nsCString(aURI), ipcBlob, aPrincipal, aAgentClusterId));
 }
 
 void BroadcastBlobURLUnregistration(const nsCString& aURI,
@@ -170,8 +170,8 @@ void BroadcastBlobURLUnregistration(const nsCString& aURI,
 
   dom::ContentChild* cc = dom::ContentChild::GetSingleton();
   if (cc) {
-    Unused << NS_WARN_IF(!cc->SendUnstoreAndBroadcastBlobURLUnregistration(
-        aURI, IPC::Principal(aPrincipal)));
+    Unused << NS_WARN_IF(
+        !cc->SendUnstoreAndBroadcastBlobURLUnregistration(aURI, aPrincipal));
   }
 }
 

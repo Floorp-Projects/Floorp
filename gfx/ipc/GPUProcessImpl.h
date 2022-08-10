@@ -20,15 +20,13 @@ namespace gfx {
 // is a GPUParent. It is instantiated as a singleton in XRE_InitChildProcess.
 class GPUProcessImpl final : public ipc::ProcessChild {
  public:
-  explicit GPUProcessImpl(ProcessId aParentPid);
+  using ipc::ProcessChild::ProcessChild;
   virtual ~GPUProcessImpl();
 
   bool Init(int aArgc, char* aArgv[]) override;
   void CleanUp() override;
 
  private:
-  DISALLOW_COPY_AND_ASSIGN(GPUProcessImpl);
-
   GPUParent mGPU;
 
 #if defined(XP_WIN)

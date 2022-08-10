@@ -17338,9 +17338,7 @@ Document::AutomaticStorageAccessPermissionCanBeGranted(bool hasUserActivation) {
     ContentChild* cc = ContentChild::GetSingleton();
     MOZ_ASSERT(cc);
 
-    return cc
-        ->SendAutomaticStorageAccessPermissionCanBeGranted(
-            IPC::Principal(NodePrincipal()))
+    return cc->SendAutomaticStorageAccessPermissionCanBeGranted(NodePrincipal())
         ->Then(GetCurrentSerialEventTarget(), __func__,
                [](const ContentChild::
                       AutomaticStorageAccessPermissionCanBeGrantedPromise::

@@ -9,6 +9,13 @@ add_setup(async function setup_tests() {
 
 add_task(async function colorwaycloset_show_colorway() {
   await testInColorwayClosetModal(document => {
+    is(
+      document.documentElement.style.width,
+      "",
+      "In order for the modal layout to be responsive, the modal document " +
+        "should not have a width set after the dialog frame has been set up"
+    );
+
     const el = getColorwayClosetTestElements(document);
     const expiryL10nAttributes = document.l10n.getAttributes(el.expiryDateSpan);
     is(

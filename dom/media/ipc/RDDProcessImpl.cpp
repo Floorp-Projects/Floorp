@@ -19,9 +19,6 @@ namespace mozilla {
 
 using namespace ipc;
 
-RDDProcessImpl::RDDProcessImpl(ProcessId aParentPid)
-    : ProcessChild(aParentPid) {}
-
 RDDProcessImpl::~RDDProcessImpl() = default;
 
 bool RDDProcessImpl::Init(int aArgc, char* aArgv[]) {
@@ -46,8 +43,7 @@ bool RDDProcessImpl::Init(int aArgc, char* aArgv[]) {
     return false;
   }
 
-  return mRDD.Init(ParentPid(), *parentBuildID,
-                   IOThreadChild::TakeInitialPort());
+  return mRDD.Init(TakeInitialEndpoint(), *parentBuildID);
 }
 
 void RDDProcessImpl::CleanUp() { NS_ShutdownXPCOM(nullptr); }

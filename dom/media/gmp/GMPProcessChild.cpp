@@ -14,9 +14,6 @@ using mozilla::ipc::IOThreadChild;
 
 namespace mozilla::gmp {
 
-GMPProcessChild::GMPProcessChild(ProcessId aParentPid)
-    : ProcessChild(aParentPid) {}
-
 GMPProcessChild::~GMPProcessChild() = default;
 
 bool GMPProcessChild::Init(int aArgc, char* aArgv[]) {
@@ -40,8 +37,7 @@ bool GMPProcessChild::Init(int aArgc, char* aArgv[]) {
 
   BackgroundHangMonitor::Startup();
 
-  return mPlugin.Init(pluginFilename, ParentPid(),
-                      IOThreadChild::TakeInitialPort());
+  return mPlugin.Init(pluginFilename, TakeInitialEndpoint());
 }
 
 void GMPProcessChild::CleanUp() { BackgroundHangMonitor::Shutdown(); }

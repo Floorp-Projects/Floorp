@@ -946,7 +946,8 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       commentOffsets,
     } = oldDeclarations[index] || {};
 
-    const { value: currentValue } = newDeclarations[index] || {};
+    const { value: currentValue, name: currentName } =
+      newDeclarations[index] || {};
     // A declaration is disabled if it has a `commentOffsets` array.
     // Here we type coerce the value to a boolean with double-bang (!!)
     const prevDisabled = !!commentOffsets;
@@ -961,8 +962,10 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         data.type = prevValue ? "declaration-add" : "declaration-update";
         // If `change.newName` is defined, use it because the property is being renamed.
         // Otherwise, a new declaration is being created or the value of an existing
-        // declaration is being updated. In that case, use the provided `change.name`.
-        const name = change.newName ? change.newName : change.name;
+        // declaration is being updated. In that case, use the currentName computed
+        // by the engine.
+        const changeName = currentName || change.name;
+        const name = change.newName ? change.newName : changeName;
         // Append the "!important" string if defined in the incoming priority flag.
 
         const changeValue = currentValue || change.value;

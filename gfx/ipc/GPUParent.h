@@ -36,8 +36,8 @@ class GPUParent final : public PGPUParent {
   // Check for memory pressure and notify the parent process if necessary.
   static bool MaybeFlushMemory();
 
-  bool Init(base::ProcessId aParentPid, const char* aParentBuildID,
-            mozilla::ipc::ScopedPort aPort);
+  bool Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
+            const char* aParentBuildID);
   void NotifyDeviceReset();
   void NotifyOverlayInfo(layers::OverlayInfo aInfo);
 

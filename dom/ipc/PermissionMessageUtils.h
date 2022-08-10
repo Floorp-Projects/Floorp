@@ -12,31 +12,6 @@
 #include "nsCOMPtr.h"
 #include "nsIPrincipal.h"
 
-namespace IPC {
-
-/**
- * Legacy IPC::Principal type. Use nsIPrincipal directly in new IPDL code.
- */
-class Principal {
-  friend struct mozilla::ipc::IPDLParamTraits<Principal>;
-
- public:
-  Principal() = default;
-
-  explicit Principal(nsIPrincipal* aPrincipal) : mPrincipal(aPrincipal) {}
-  Principal(Principal&&) = default;
-
-  Principal& operator=(Principal&& aOther) = default;
-  Principal& operator=(const Principal& aOther) = delete;
-
-  operator nsIPrincipal*() const { return mPrincipal.get(); }
-
- private:
-  RefPtr<nsIPrincipal> mPrincipal;
-};
-
-}  // namespace IPC
-
 namespace mozilla::ipc {
 
 template <>
@@ -55,19 +30,6 @@ struct IPDLParamTraits<nsIPrincipal*> {
     }
     *aResult = std::move(result);
     return true;
-  }
-};
-
-template <>
-struct IPDLParamTraits<IPC::Principal> {
-  typedef IPC::Principal paramType;
-  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
-                    const paramType& aParam) {
-    WriteIPDLParam(aWriter, aActor, aParam.mPrincipal);
-  }
-  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
-                   paramType* aResult) {
-    return ReadIPDLParam(aReader, aActor, &aResult->mPrincipal);
   }
 };
 

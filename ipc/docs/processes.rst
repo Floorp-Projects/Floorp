@@ -560,7 +560,8 @@ behavior is fairly clear:
               return;
             }
 
-            new DemoParent(std::move(host));
+            auto actor = MakeRefPtr<DemoParent>(std::move(host));
+            actor->Init();
           });
     }
 
@@ -579,20 +580,21 @@ the new host, if successful.
 
 In this sample, the ``DemoParent`` is owned (in the reference-counting sense)
 by IPDL, which is why it doesn't get assigned to anything.  This simplifies the
-design dramatically.  IPDL takes ownership when the actor calls ``Open`` in its
-constructor:
+design dramatically.  IPDL takes ownership when the actor calls ``Bind`` from
+the ``Init`` method:
 
 .. code-block:: c++
 
     DemoParent::DemoParent(UniqueHost&& aHost)
-        : mHost(std::move(aHost)) {
-      Open(mHost->TakeInitialPort(),
-           base::GetProcId(mHost->GetChildProcessHandle()));
+        : mHost(std::move(aHost)) {}
+
+    DemoParent::Init() {
+      mHost->TakeInitialEndpoint().Bind(this);
       // ...
       mHost->MakeBridgeAndResolve();
     }
 
-After the ``Open`` call, the actor is live and communication with the new
+After the ``Bind`` call, the actor is live and communication with the new
 process can begin.  The constructor concludes by initiating the process of
 connecting the ``PDemoHelpline`` actors; ``Host::MakeBridgeAndResolve`` will be
 covered in `Creating a New Top Level Actor`_.  However, before we get into
@@ -645,7 +647,7 @@ shutting down or when an IPC error closes the channel.
 
 ``Init`` is given the command line arguments constucted above so it will need
 to be overridden to parse them.  It does this, binds our actor by
-calling ``Open`` as was done with the parent, then initializes a bunch of
+calling ``Bind`` as was done with the parent, then initializes a bunch of
 components that the process expects to use:
 
 .. code-block:: c++
@@ -665,7 +667,7 @@ components that the process expects to use:
         return false;
       }
 
-      if (NS_WARN_IF(!Open(ipc::IOThreadChild::TakeInitialPort(), mParentPid))) {
+      if (NS_WARN_IF(!TakeInitialEndpoint().Bind(this))) {
         return false;
       }
 
@@ -681,7 +683,7 @@ components that the process expects to use:
 This is a slimmed down version of the real ``Init`` method.  We see that it
 establishes a sandbox (more on this later) and then reads the command line and
 preferences that we sent from the main process.  It then initializes the thread
-manager, which is required by for the subsequent ``Open`` call.
+manager, which is required by for the subsequent ``Bind`` call.
 
 Among the list of components we initialize in the sample code, XPCOM is
 special.  XPCOM includes a suite of components, including the component

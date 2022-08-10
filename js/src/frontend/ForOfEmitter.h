@@ -104,7 +104,8 @@ class MOZ_STACK_CLASS ForOfEmitter {
   //   |
   //   forPos
   [[nodiscard]] bool emitIterated();
-  [[nodiscard]] bool emitInitialize(uint32_t forPos);
+  [[nodiscard]] bool emitInitialize(uint32_t forPos,
+                                    bool isIteratorMethodOnStack);
   [[nodiscard]] bool emitBody();
   [[nodiscard]] bool emitEnd(uint32_t iteratedPos);
 };

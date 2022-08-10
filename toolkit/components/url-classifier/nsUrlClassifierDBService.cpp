@@ -1707,11 +1707,10 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
     MOZ_ASSERT(content);
 
     auto actor = static_cast<URLClassifierChild*>(
-        content->AllocPURLClassifierChild(IPC::Principal(aPrincipal), aResult));
+        content->AllocPURLClassifierChild(aPrincipal, aResult));
     MOZ_ASSERT(actor);
 
-    if (!content->SendPURLClassifierConstructor(
-            actor, IPC::Principal(aPrincipal), aResult)) {
+    if (!content->SendPURLClassifierConstructor(actor, aPrincipal, aResult)) {
       *aResult = false;
       return NS_ERROR_FAILURE;
     }

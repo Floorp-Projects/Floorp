@@ -20,12 +20,7 @@
 
 namespace mozilla::ipc {
 
-UtilityProcessImpl::UtilityProcessImpl(ProcessId aParentPid)
-    : ProcessChild(aParentPid) {
-  mUtility = new UtilityProcessChild();
-}
-
-UtilityProcessImpl::~UtilityProcessImpl() { mUtility = nullptr; }
+UtilityProcessImpl::~UtilityProcessImpl() = default;
 
 bool UtilityProcessImpl::Init(int aArgc, char* aArgv[]) {
   Maybe<uint64_t> sandboxingKind = geckoargs::sSandboxingKind.Get(aArgc, aArgv);
@@ -64,8 +59,8 @@ bool UtilityProcessImpl::Init(int aArgc, char* aArgv[]) {
     return false;
   }
 
-  return mUtility->Init(ParentPid(), nsCString(*parentBuildID), *sandboxingKind,
-                        IOThreadChild::TakeInitialPort());
+  return mUtility->Init(TakeInitialEndpoint(), nsCString(*parentBuildID),
+                        *sandboxingKind);
 }
 
 void UtilityProcessImpl::CleanUp() { NS_ShutdownXPCOM(nullptr); }

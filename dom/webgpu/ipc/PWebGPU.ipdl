@@ -11,7 +11,6 @@ using RawId from "mozilla/webgpu/WebGPUTypes.h";
 using dom::GPURequestAdapterOptions from "mozilla/dom/WebGPUBinding.h";
 using dom::GPUCommandBufferDescriptor from "mozilla/dom/WebGPUBinding.h";
 using dom::GPUBufferDescriptor from "mozilla/dom/WebGPUBinding.h";
-using webgpu::ffi::WGPUHostMap from "mozilla/webgpu/ffi/wgpu.h";
 using MaybeScopedError from "mozilla/webgpu/WebGPUTypes.h";
 using WebGPUCompilationMessage from "mozilla/webgpu/WebGPUTypes.h";
 
@@ -20,6 +19,7 @@ include "mozilla/layers/LayersMessageUtils.h";
 include "mozilla/webgpu/WebGPUSerialize.h";
 include "mozilla/layers/WebRenderMessageUtils.h";
 include protocol PCanvasManager;
+include PWebGPUTypes;
 
 namespace mozilla {
 namespace webgpu {
@@ -40,17 +40,17 @@ parent:
   async CommandEncoderAction(RawId selfId, RawId aDeviceId, ByteBuf buf);
   async BumpImplicitBindGroupLayout(RawId pipelineId, bool isCompute, uint32_t index, RawId assignId);
 
-  async CreateBuffer(RawId deviceId, RawId bufferId, GPUBufferDescriptor desc);
+  async CreateBuffer(RawId deviceId, RawId bufferId, GPUBufferDescriptor desc, MaybeShmem shmem);
 
   async InstanceRequestAdapter(GPURequestAdapterOptions options, RawId[] ids) returns (ByteBuf byteBuf);
   async AdapterRequestDevice(RawId selfId, ByteBuf buf, RawId newId) returns (bool success);
   async AdapterDestroy(RawId selfId);
   // TODO: We want to return an array of compilation messages.
   async DeviceCreateShaderModule(RawId selfId, RawId bufferId, nsString label, nsCString code) returns (WebGPUCompilationMessage[] messages);
-  async BufferReturnShmem(RawId selfId, Shmem shmem);
-  async BufferMap(RawId selfId, WGPUHostMap hostMap, uint64_t offset, uint64_t size) returns (Shmem sm);
-  async BufferUnmap(RawId selfId, Shmem shmem, bool flush, bool keepShmem);
+  async BufferMap(RawId selfId, uint32_t aMode, uint64_t offset, uint64_t size) returns (BufferMapResult result);
+  async BufferUnmap(RawId deviceId, RawId bufferId, bool flush);
   async BufferDestroy(RawId selfId);
+  async BufferDrop(RawId selfId);
   async TextureDestroy(RawId selfId);
   async TextureViewDestroy(RawId selfId);
   async SamplerDestroy(RawId selfId);

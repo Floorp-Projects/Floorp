@@ -127,7 +127,7 @@
 
     static get markup() {
       return `
-      <richlistbox class="autocomplete-richlistbox" flex="1"/>
+      <richlistbox class="autocomplete-richlistbox"/>
     `;
     }
 

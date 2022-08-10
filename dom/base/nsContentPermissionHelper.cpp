@@ -293,8 +293,7 @@ nsresult nsContentPermissionUtils::AskPermission(
 
     req->IPDLAddRef();
     ContentChild::GetSingleton()->SendPContentPermissionRequestConstructor(
-        req, permArray, IPC::Principal(principal),
-        IPC::Principal(topLevelPrincipal),
+        req, permArray, principal, topLevelPrincipal,
         hasValidTransientUserGestureActivation,
         isRequestDelegatedToUnsafeThirdParty, child->GetTabId());
     ContentPermissionRequestChildMap()[req.get()] = child->GetTabId();

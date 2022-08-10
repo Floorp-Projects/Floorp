@@ -182,8 +182,7 @@ void UtilityProcessHost::InitAfterConnect(bool aSucceeded) {
   }
 
   mUtilityProcessParent = MakeRefPtr<UtilityProcessParent>(this);
-  DebugOnly<bool> rv = mUtilityProcessParent->Open(
-      TakeInitialPort(), base::GetProcId(GetChildProcessHandle()));
+  DebugOnly<bool> rv = TakeInitialEndpoint().Bind(mUtilityProcessParent.get());
   MOZ_ASSERT(rv);
 
   // Only clear mPrefSerializer in the success case to avoid a

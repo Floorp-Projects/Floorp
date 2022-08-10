@@ -5,10 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef dom_plugins_IOThreadChild_h
-#define dom_plugins_IOThreadChild_h 1
+#define dom_plugins_IOThreadChild_h
 
 #include "chrome/common/child_thread.h"
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/NodeController.h"
+#include "mozilla/ipc/ProcessChild.h"
 
 namespace mozilla {
 namespace ipc {
@@ -27,10 +29,6 @@ class IOThreadChild : public ChildThread {
 
   static MessageLoop* message_loop() {
     return IOThreadChild::current()->Thread::message_loop();
-  }
-
-  static ScopedPort TakeInitialPort() {
-    return IOThreadChild::current()->ChildThread::TakeInitialPort();
   }
 
  protected:

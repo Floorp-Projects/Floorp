@@ -14,6 +14,7 @@
 #include "chrome/common/ipc_message.h"
 #include "mojo/core/ports/port_ref.h"
 
+#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/ipc/NodeChannel.h"
 #include "mozilla/ipc/ScopedPort.h"
@@ -127,7 +128,11 @@ class GeckoChildProcessHost : public ChildProcessHost,
   IPC::Channel* GetChannel() { return channelp(); }
   ChannelId GetChannelId() { return channel_id(); }
 
-  ScopedPort TakeInitialPort() { return std::move(mInitialPort); }
+  UntypedEndpoint TakeInitialEndpoint() {
+    return UntypedEndpoint{PrivateIPDLInterface{}, std::move(mInitialPort),
+                           mInitialChannelId, base::GetCurrentProcId(),
+                           base::GetProcId(mChildProcessHandle)};
+  }
 
   // Returns a "borrowed" handle to the child process - the handle returned
   // by this function must not be closed by the caller.
@@ -198,6 +203,7 @@ class GeckoChildProcessHost : public ChildProcessHost,
   // is set to null to free the options after the child is launched.
   UniquePtr<base::LaunchOptions> mLaunchOptions;
   ScopedPort mInitialPort;
+  nsID mInitialChannelId;
   RefPtr<NodeController> mNodeController;
   RefPtr<NodeChannel> mNodeChannel;
 

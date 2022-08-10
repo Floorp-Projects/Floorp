@@ -12,6 +12,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
+#include "mozilla/webgpu/PWebGPUTypes.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/DOMEventTargetHelper.h"
 
@@ -79,7 +80,8 @@ class SupportedLimits;
 class Texture;
 class WebGPUChild;
 
-using MappingPromise = MozPromise<ipc::Shmem, ipc::ResponseRejectReason, true>;
+using MappingPromise =
+    MozPromise<BufferMapResult, ipc::ResponseRejectReason, true>;
 
 class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
  public:
@@ -98,11 +100,6 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
   static JSObject* CreateExternalArrayBuffer(JSContext* aCx, size_t aOffset,
                                              size_t aSize,
                                              const ipc::Shmem& aShmem);
-  RefPtr<MappingPromise> MapBufferAsync(RawId aId, uint32_t aMode,
-                                        size_t aOffset, size_t aSize,
-                                        ErrorResult& aRv);
-  void UnmapBuffer(RawId aId, ipc::Shmem&& aShmem, bool aFlush,
-                   bool aKeepShmem);
   already_AddRefed<Texture> InitSwapChain(
       const dom::GPUCanvasConfiguration& aDesc,
       const layers::CompositableHandle& aHandle, gfx::SurfaceFormat aFormat,
@@ -112,6 +109,8 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
   void CleanupUnregisteredInParent();
 
   void GenerateError(const nsCString& aMessage);
+
+  bool IsLost() const;
 
  private:
   ~Device();

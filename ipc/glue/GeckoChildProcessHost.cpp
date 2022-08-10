@@ -171,6 +171,7 @@ class BaseProcessLauncher {
         mTmpDirName(aHost->mTmpDirName),
         mChildId(++gChildCounter) {
     SprintfLiteral(mPidString, "%" PRIPID, base::GetCurrentProcId());
+    aHost->mInitialChannelId.ToProvidedString(mInitialChannelIdString);
 
     // Compute the serial event target we'll use for launching.
     nsCOMPtr<nsIEventTarget> threadOrPool = GetIPCLauncher();
@@ -237,6 +238,7 @@ class BaseProcessLauncher {
   int32_t mChildId;
   TimeStamp mStartTimeStamp = TimeStamp::Now();
   char mPidString[32];
+  char mInitialChannelIdString[NSID_LENGTH];
 
   // Set during launch.
   IPC::Channel::ChannelId mChannelId;
@@ -386,6 +388,7 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
       mIsFileContent(aIsFileContent),
       mMonitor("mozilla.ipc.GeckChildProcessHost.mMonitor"),
       mLaunchOptions(MakeUnique<base::LaunchOptions>()),
+      mInitialChannelId(nsID::GenerateUUID()),
       mProcessState(CREATING_CHANNEL),
 #ifdef XP_WIN
       mGroupId(u"-"),
@@ -881,7 +884,7 @@ void BaseProcessLauncher::GetChildLogName(const char* origLogName,
 
   // Append child-specific postfix to name
   buffer.AppendLiteral(".child-");
-  buffer.AppendInt(gChildCounter);
+  buffer.AppendInt(mChildId);
 }
 
 // Windows needs a single dedicated thread for process launching,
@@ -1209,6 +1212,8 @@ bool PosixProcessLauncher::DoSetup() {
 #  endif
   }
 
+  mChildArgv.push_back(mInitialChannelIdString);
+
   mChildArgv.push_back(mPidString);
 
   if (!CrashReporter::IsDummy()) {
@@ -1487,6 +1492,9 @@ bool WindowsProcessLauncher::DoSetup() {
 
   // Win app model id
   mCmdLine->AppendLooseValue(mGroupId.get());
+
+  // Initial MessageChannel id
+  mCmdLine->AppendLooseValue(UTF8ToWide(mInitialChannelIdString));
 
   // Process id
   mCmdLine->AppendLooseValue(UTF8ToWide(mPidString));

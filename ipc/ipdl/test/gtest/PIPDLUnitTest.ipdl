@@ -4,6 +4,7 @@
 
 using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
 [MoveOnly] using class mozilla::ipc::ScopedPort from "mozilla/ipc/ScopedPort.h";
+using struct nsID from "nsID.h";
 
 namespace mozilla {
 namespace _ipdltest {
@@ -21,7 +22,7 @@ struct TestPartResult {
 // Primary actor for the IPDLUnitTest process and thread.
 [NeedsOtherPid] async protocol PIPDLUnitTest {
  child:
-  async Start(nsCString name, ScopedPort port);
+  async Start(nsCString name, ScopedPort port, nsID channelId);
 
  parent:
   async Report(TestPartResult result);

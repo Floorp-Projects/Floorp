@@ -47,6 +47,7 @@ module.exports = {
       globals: {
         // The bytecode compiler special-cases these identifiers.
         allowContentIter: "readonly",
+        allowContentIterWith: "readonly",
         callContentFunction: "readonly",
         callFunction: "readonly",
         constructContentFunction: "readonly",

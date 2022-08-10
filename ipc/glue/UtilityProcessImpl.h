@@ -20,15 +20,14 @@ namespace mozilla::ipc {
 // XRE_InitChildProcess.
 class UtilityProcessImpl final : public ipc::ProcessChild {
  public:
-  explicit UtilityProcessImpl(ProcessId aParentPid);
+  using ipc::ProcessChild::ProcessChild;
   ~UtilityProcessImpl();
 
   bool Init(int aArgc, char* aArgv[]) override;
   void CleanUp() override;
 
  private:
-  RefPtr<UtilityProcessChild> mUtility;
-  DISALLOW_COPY_AND_ASSIGN(UtilityProcessImpl);
+  RefPtr<UtilityProcessChild> mUtility = new UtilityProcessChild();
 
 #if defined(XP_WIN)
   mozilla::mscom::ProcessRuntime mCOMRuntime;

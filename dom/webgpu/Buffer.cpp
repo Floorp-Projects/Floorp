@@ -25,7 +25,7 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(Buffer, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(Buffer, Release)
 NS_IMPL_CYCLE_COLLECTION_CLASS(Buffer)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Buffer)
-  tmp->Cleanup();
+  tmp->Drop();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -43,55 +43,101 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Buffer)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 Buffer::Buffer(Device* const aParent, RawId aId, BufferAddress aSize,
-               uint32_t aUsage)
-    : ChildOf(aParent), mId(aId), mSize(aSize), mUsage(aUsage) {
+               uint32_t aUsage, ipc::Shmem&& aShmem)
+    : ChildOf(aParent), mId(aId), mSize(aSize), mUsage(aUsage), mShmem(aShmem) {
   mozilla::HoldJSObjects(this);
+  MOZ_ASSERT(mParent);
 }
 
 Buffer::~Buffer() {
-  Cleanup();
+  Drop();
   mozilla::DropJSObjects(this);
 }
 
-bool Buffer::Mappable() const {
-  return (mUsage & (dom::GPUBufferUsage_Binding::MAP_WRITE |
-                    dom::GPUBufferUsage_Binding::MAP_READ)) != 0;
-}
+already_AddRefed<Buffer> Buffer::Create(Device* aDevice, RawId aDeviceId,
+                                        const dom::GPUBufferDescriptor& aDesc,
+                                        ErrorResult& aRv) {
+  if (aDevice->IsLost()) {
+    RefPtr<Buffer> buffer =
+        new Buffer(aDevice, 0, aDesc.mSize, 0, ipc::Shmem());
+    return buffer.forget();
+  }
 
-void Buffer::Cleanup() {
-  if (mValid && mParent) {
-    mValid = false;
+  RefPtr<WebGPUChild> actor = aDevice->GetBridge();
 
-    if (mMapped && !mMapped->mArrayBuffers.IsEmpty()) {
-      // The array buffers could live longer than us and our shmem, so make sure
-      // we clear the external buffer bindings.
-      dom::AutoJSAPI jsapi;
-      if (jsapi.Init(mParent->GetOwnerGlobal())) {
-        IgnoredErrorResult rv;
-        UnmapArrayBuffers(jsapi.cx(), rv);
-      }
+  ipc::Shmem shmem;
+  bool hasMapFlags = aDesc.mUsage & (dom::GPUBufferUsage_Binding::MAP_WRITE |
+                                     dom::GPUBufferUsage_Binding::MAP_READ);
+  if (hasMapFlags || aDesc.mMappedAtCreation) {
+    const auto checked = CheckedInt<size_t>(aDesc.mSize);
+    if (!checked.isValid()) {
+      aRv.ThrowRangeError("Mappable size is too large");
+      return nullptr;
+    }
+    size_t size = checked.value();
+    if (size == 0) {
+      // Can't send zero-sized shmems.
+      size = 1;
     }
 
-    auto bridge = mParent->GetBridge();
-    if (bridge && bridge->IsOpen()) {
-      // Note: even if the buffer is considered mapped,
-      // the shmem may be empty before the mapAsync callback
-      // is resolved.
-      if (mMapped && mMapped->mShmem.IsReadable()) {
-        // Note: if the bridge is closed, all associated shmems are already
-        // deleted.
-        bridge->DeallocShmem(mMapped->mShmem);
-      }
-      bridge->SendBufferDestroy(mId);
+    if (!actor->AllocUnsafeShmem(size, &shmem)) {
+      aRv.ThrowAbortError(
+          nsPrintfCString("Unable to allocate shmem of size %" PRIuPTR, size));
+      return nullptr;
+    }
+
+    // zero out memory
+    memset(shmem.get<uint8_t>(), 0, size);
+  }
+
+  MaybeShmem maybeShmem = mozilla::null_t();
+  if (shmem.IsReadable()) {
+    maybeShmem = shmem;
+  }
+  RawId id = actor->DeviceCreateBuffer(aDeviceId, aDesc, std::move(maybeShmem));
+
+  RefPtr<Buffer> buffer =
+      new Buffer(aDevice, id, aDesc.mSize, aDesc.mUsage, std::move(shmem));
+  if (aDesc.mMappedAtCreation) {
+    // Mapped at creation's raison d'être is write access, since the buffer is
+    // being created and there isn't anything interesting to read in it yet.
+    bool writable = true;
+    buffer->SetMapped(0, aDesc.mSize, writable);
+  }
+
+  return buffer.forget();
+}
+
+void Buffer::Drop() {
+  AbortMapRequest();
+
+  if (mMapped && !mMapped->mArrayBuffers.IsEmpty()) {
+    // The array buffers could live longer than us and our shmem, so make sure
+    // we clear the external buffer bindings.
+    dom::AutoJSAPI jsapi;
+    if (jsapi.Init(GetDevice().GetOwnerGlobal())) {
+      IgnoredErrorResult rv;
+      UnmapArrayBuffers(jsapi.cx(), rv);
     }
   }
+  mMapped.reset();
+
+  if (mValid && !GetDevice().IsLost()) {
+    GetDevice().GetBridge()->SendBufferDrop(mId);
+  }
+  mValid = false;
 }
 
-void Buffer::SetMapped(ipc::Shmem&& aShmem, bool aWritable) {
+void Buffer::SetMapped(BufferAddress aOffset, BufferAddress aSize,
+                       bool aWritable) {
   MOZ_ASSERT(!mMapped);
+  MOZ_RELEASE_ASSERT(aOffset <= mSize);
+  MOZ_RELEASE_ASSERT(aSize <= mSize - aOffset);
+
   mMapped.emplace();
-  mMapped->mShmem = std::move(aShmem);
   mMapped->mWritable = aWritable;
+  mMapped->mOffset = aOffset;
+  mMapped->mSize = aSize;
 }
 
 already_AddRefed<dom::Promise> Buffer::MapAsync(
@@ -101,59 +147,63 @@ already_AddRefed<dom::Promise> Buffer::MapAsync(
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
-  if (mMapped) {
-    aRv.ThrowInvalidStateError("Unable to map a buffer that is already mapped");
-    return nullptr;
+
+  if (GetDevice().IsLost()) {
+    promise->MaybeRejectWithOperationError("Device Lost");
+    return promise.forget();
   }
 
-  switch (aMode) {
-    case dom::GPUMapMode_Binding::READ:
-      if ((mUsage & dom::GPUBufferUsage_Binding::MAP_READ) == 0) {
-        promise->MaybeRejectWithOperationError(
-            "mapAsync: 'mode' is GPUMapMode.READ, \
-but GPUBuffer was not created with GPUBufferUsage.MAP_READ");
-        return promise.forget();
-      }
-      break;
-    case dom::GPUMapMode_Binding::WRITE:
-      if ((mUsage & dom::GPUBufferUsage_Binding::MAP_WRITE) == 0) {
-        promise->MaybeRejectWithOperationError(
-            "mapAsync: 'mode' is GPUMapMode.WRITE, \
-but GPUBuffer was not created with GPUBufferUsage.MAP_WRITE");
-        return promise.forget();
-      }
-      break;
-    default:
-      promise->MaybeRejectWithOperationError(
-          "GPUBuffer.mapAsync 'mode' argument \
-must be either GPUMapMode.READ or GPUMapMode.WRITE");
-      return promise.forget();
+  if (mMapRequest) {
+    promise->MaybeRejectWithOperationError("Buffer mapping is already pending");
+    return promise.forget();
   }
 
-  // Initialize with a dummy shmem, it will become real after the promise is
-  // resolved.
-  SetMapped(ipc::Shmem(), aMode == dom::GPUMapMode_Binding::WRITE);
-
-  const auto checked = aSize.WasPassed() ? CheckedInt<size_t>(aSize.Value())
-                                         : CheckedInt<size_t>(mSize) - aOffset;
-  if (!checked.isValid()) {
-    aRv.ThrowRangeError("Mapped size is too large");
-    return nullptr;
+  BufferAddress size = 0;
+  if (aSize.WasPassed()) {
+    size = aSize.Value();
+  } else if (aOffset <= mSize) {
+    // Default to passing the reminder of the buffer after the provided offset.
+    size = mSize - aOffset;
+  } else {
+    // The provided offset is larger than the buffer size.
+    // The parent side will handle the error, we can let the requested size be
+    // zero.
   }
 
-  const auto& size = checked.value();
   RefPtr<Buffer> self(this);
 
-  auto mappingPromise = mParent->MapBufferAsync(mId, aMode, aOffset, size, aRv);
-  if (!mappingPromise) {
-    return nullptr;
-  }
+  auto mappingPromise =
+      GetDevice().GetBridge()->SendBufferMap(mId, aMode, aOffset, size);
+  MOZ_ASSERT(mappingPromise);
+
+  mMapRequest = promise;
 
   mappingPromise->Then(
       GetCurrentSerialEventTarget(), __func__,
-      [promise, self](ipc::Shmem&& aShmem) {
-        self->mMapped->mShmem = std::move(aShmem);
-        promise->MaybeResolve(0);
+      [promise, self](BufferMapResult&& aResult) {
+        // Unmap might have been called while the result was on the way back.
+        if (promise->State() != dom::Promise::PromiseState::Pending) {
+          return;
+        }
+
+        switch (aResult.type()) {
+          case BufferMapResult::TBufferMapSuccess: {
+            auto& success = aResult.get_BufferMapSuccess();
+            self->mMapRequest = nullptr;
+            self->SetMapped(success.offset(), success.size(),
+                            success.writable());
+            promise->MaybeResolve(0);
+            break;
+          }
+          case BufferMapResult::TBufferMapError: {
+            auto& error = aResult.get_BufferMapError();
+            self->RejectMapRequest(promise, error.message());
+            break;
+          }
+          default: {
+            MOZ_CRASH("unreachable");
+          }
+        }
       },
       [promise](const ipc::ResponseRejectReason&) {
         promise->MaybeRejectWithAbortError("Internal communication error!");
@@ -165,27 +215,26 @@ must be either GPUMapMode.READ or GPUMapMode.WRITE");
 void Buffer::GetMappedRange(JSContext* aCx, uint64_t aOffset,
                             const dom::Optional<uint64_t>& aSize,
                             JS::Rooted<JSObject*>* aObject, ErrorResult& aRv) {
+  if (!mMapped || !mShmem.IsReadable()) {
+    aRv.ThrowInvalidStateError("Buffer is not mapped");
+    return;
+  }
+
   const auto checkedOffset = CheckedInt<size_t>(aOffset);
   const auto checkedSize = aSize.WasPassed()
                                ? CheckedInt<size_t>(aSize.Value())
                                : CheckedInt<size_t>(mSize) - aOffset;
   const auto checkedMinBufferSize = checkedOffset + checkedSize;
+
   if (!checkedOffset.isValid() || !checkedSize.isValid() ||
-      !checkedMinBufferSize.isValid()) {
-    aRv.ThrowRangeError("Invalid mapped range");
-    return;
-  }
-  if (!mMapped || !mMapped->IsReady()) {
-    aRv.ThrowInvalidStateError("Buffer is not mapped");
-    return;
-  }
-  if (checkedMinBufferSize.value() > mMapped->mShmem.Size<uint8_t>()) {
-    aRv.ThrowOperationError("Mapped range exceeds buffer size");
+      !checkedMinBufferSize.isValid() || aOffset < mMapped->mOffset ||
+      checkedMinBufferSize.value() > mMapped->mOffset + mMapped->mSize) {
+    aRv.ThrowRangeError("Invalid range");
     return;
   }
 
-  auto* const arrayBuffer = mParent->CreateExternalArrayBuffer(
-      aCx, checkedOffset.value(), checkedSize.value(), mMapped->mShmem);
+  auto* const arrayBuffer = GetDevice().CreateExternalArrayBuffer(
+      aCx, checkedOffset.value(), checkedSize.value(), mShmem);
   if (!arrayBuffer) {
     aRv.NoteJSContextException(aCx);
     return;
@@ -208,10 +257,27 @@ void Buffer::UnmapArrayBuffers(JSContext* aCx, ErrorResult& aRv) {
 
   mMapped->mArrayBuffers.Clear();
 
+  AbortMapRequest();
+
   if (NS_WARN_IF(!detachedArrayBuffers)) {
     aRv.NoteJSContextException(aCx);
     return;
   }
+}
+
+void Buffer::RejectMapRequest(dom::Promise* aPromise, nsACString& message) {
+  if (mMapRequest == aPromise) {
+    mMapRequest = nullptr;
+  }
+
+  aPromise->MaybeRejectWithOperationError(message);
+}
+
+void Buffer::AbortMapRequest() {
+  if (mMapRequest) {
+    mMapRequest->MaybeRejectWithAbortError("Buffer unmapped");
+  }
+  mMapRequest = nullptr;
 }
 
 void Buffer::Unmap(JSContext* aCx, ErrorResult& aRv) {
@@ -220,12 +286,33 @@ void Buffer::Unmap(JSContext* aCx, ErrorResult& aRv) {
   }
 
   UnmapArrayBuffers(aCx, aRv);
-  mParent->UnmapBuffer(mId, std::move(mMapped->mShmem), mMapped->mWritable,
-                       Mappable());
+
+  bool hasMapFlags = mUsage & (dom::GPUBufferUsage_Binding::MAP_WRITE |
+                               dom::GPUBufferUsage_Binding::MAP_READ);
+
+  if (!hasMapFlags) {
+    // We get here if the buffer was mapped at creation without map flags.
+    // It won't be possible to map the buffer again so we can get rid of
+    // our shmem handle on this side. The parent side will deallocate it.
+    mShmem = ipc::Shmem();
+  }
+
+  if (!GetDevice().IsLost()) {
+    GetDevice().GetBridge()->SendBufferUnmap(GetDevice().mId, mId,
+                                             mMapped->mWritable);
+  }
+
   mMapped.reset();
 }
 
-void Buffer::Destroy() {
+void Buffer::Destroy(JSContext* aCx, ErrorResult& aRv) {
+  if (mMapped) {
+    Unmap(aCx, aRv);
+  }
+
+  if (!GetDevice().IsLost()) {
+    GetDevice().GetBridge()->SendBufferDestroy(mId);
+  }
   // TODO: we don't have to implement it right now, but it's used by the
   // examples
 }

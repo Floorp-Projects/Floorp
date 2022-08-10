@@ -50,7 +50,7 @@ var gTests = [
       // the second window.
       ok(permissionPopupHidden(win), "control center should be hidden");
       let activeStreams = webrtcUI.getActiveStreams(true, false, false);
-      webrtcUI.showSharingDoorhanger(activeStreams[0], "Devices");
+      webrtcUI.showSharingDoorhanger(activeStreams[0]);
       // If the popup gets hidden before being shown, by stray focus/activate
       // events, don't bother failing the test. It's enough to know that we
       // started showing the popup.
