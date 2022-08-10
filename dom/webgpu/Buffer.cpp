@@ -302,9 +302,14 @@ void Buffer::Unmap(JSContext* aCx, ErrorResult& aRv) {
   mMapped.reset();
 }
 
-void Buffer::Destroy() {
-  AbortMapRequest();
+void Buffer::Destroy(JSContext* aCx, ErrorResult& aRv) {
+  if (mMapped) {
+    Unmap(aCx, aRv);
+  }
 
+  if (!mParent->IsLost()) {
+    mParent->GetBridge()->SendBufferDestroy(mId);
+  }
   // TODO: we don't have to implement it right now, but it's used by the
   // examples
 }
