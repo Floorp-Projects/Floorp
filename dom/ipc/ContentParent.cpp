@@ -595,7 +595,6 @@ ProcessID GetTelemetryProcessID(const nsACString& remoteType) {
 
 UniquePtr<nsTHashMap<nsUint32HashKey, ContentParent*>>
     ContentParent::sJSPluginContentParents;
-UniquePtr<nsTArray<ContentParent*>> ContentParent::sPrivateContent;
 UniquePtr<LinkedList<ContentParent>> ContentParent::sContentParents;
 StaticRefPtr<ContentParent> ContentParent::sRecycledE10SProcess;
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
@@ -1903,7 +1902,6 @@ void ContentParent::RemoveFromPool(nsTArray<ContentParent*>& aPool) {
 void ContentParent::AssertNotInPool() {
   MOZ_RELEASE_ASSERT(!mIsInPool);
 
-  MOZ_RELEASE_ASSERT(!sPrivateContent || !sPrivateContent->Contains(this));
   MOZ_RELEASE_ASSERT(sRecycledE10SProcess != this);
   if (IsForJSPlugin()) {
     MOZ_RELEASE_ASSERT(!sJSPluginContentParents ||
@@ -1932,13 +1930,6 @@ void ContentParent::RemoveFromList() {
       }
     }
     return;
-  }
-
-  if (sPrivateContent) {
-    sPrivateContent->RemoveElement(this);
-    if (!sPrivateContent->Length()) {
-      sPrivateContent = nullptr;
-    }
   }
 
   if (!mIsInPool) {

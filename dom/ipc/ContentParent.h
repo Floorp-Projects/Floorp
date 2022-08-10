@@ -696,7 +696,6 @@ class ContentParent final : public PContentParent,
    */
   static nsClassHashtable<nsCStringHashKey, nsTArray<ContentParent*>>*
       sBrowserContentParents;
-  static UniquePtr<nsTArray<ContentParent*>> sPrivateContent;
   static UniquePtr<nsTHashMap<nsUint32HashKey, ContentParent*>>
       sJSPluginContentParents;
   static UniquePtr<LinkedList<ContentParent>> sContentParents;
