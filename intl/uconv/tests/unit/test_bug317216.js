@@ -75,14 +75,14 @@ const test = [
   // 10: Lone high surrogate at the end of the input
   [
     "%D8%35%",
-    //    expected: nothing
-    "",
+    //    expected: one replacement char
+    "\uFFFD",
   ],
   // 11: Half code unit at the end of the input
   [
     "%D8",
-    //    expected: nothing
-    "",
+    //    expected: one replacement char
+    "\uFFFD",
   ],
 ];
 
