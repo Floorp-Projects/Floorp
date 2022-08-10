@@ -21,12 +21,12 @@
 
 // IMPORTANT: Do not change this list without review from
 //            a JavaScript Engine peer!
-var wasmGlobalEntry = {
+let wasmGlobalEntry = {
   name: "WebAssembly",
   insecureContext: true,
   disabled: !getJSTestingFunctions().wasmIsSupportedByHardware(),
 };
-var wasmGlobalInterfaces = [
+let wasmGlobalInterfaces = [
   { name: "Module", insecureContext: true },
   { name: "Instance", insecureContext: true },
   { name: "Memory", insecureContext: true },
@@ -51,7 +51,7 @@ var wasmGlobalInterfaces = [
 ];
 // IMPORTANT: Do not change this list without review from
 //            a JavaScript Engine peer!
-var ecmaGlobals = [
+let ecmaGlobals = [
   "AggregateError",
   "Array",
   "ArrayBuffer",
@@ -109,7 +109,7 @@ var ecmaGlobals = [
 //            a JavaScript Engine peer!
 
 // IMPORTANT: Do not change the list below without review from a DOM peer!
-var interfaceNamesInGlobalScope = [
+let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "AbortController",
   // IMPORTANT: Do not change this list without review from a DOM peer!
