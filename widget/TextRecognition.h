@@ -34,12 +34,15 @@ class TextRecognition final {
 
   static void FillShadow(dom::ShadowRoot&, const dom::TextRecognitionResult&);
 
-  static RefPtr<NativePromise> FindText(imgIContainer&);
-  static RefPtr<NativePromise> FindText(gfx::DataSourceSurface&);
+  static RefPtr<NativePromise> FindText(imgIContainer&,
+                                        const nsTArray<nsCString>&);
+  static RefPtr<NativePromise> FindText(gfx::DataSourceSurface&,
+                                        const nsTArray<nsCString>&);
 
  protected:
   // This should be implemented in the OS specific file.
-  static RefPtr<NativePromise> DoFindText(gfx::DataSourceSurface&);
+  static RefPtr<NativePromise> DoFindText(gfx::DataSourceSurface&,
+                                          const nsTArray<nsCString>&);
 
   ~TextRecognition() = default;
 };
