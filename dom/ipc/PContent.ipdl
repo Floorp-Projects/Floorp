@@ -805,7 +805,8 @@ child:
 
     async EndDragSession(bool aDoneDrag, bool aUserCancelled,
                          LayoutDeviceIntPoint aDragEndPoint,
-                         uint32_t aKeyModifiers);
+                         uint32_t aKeyModifiers,
+                         uint32_t aDropEffect);
 
     async DomainSetChanged(uint32_t aSetType, uint32_t aChangeType, nsIURI aDomain);
 
