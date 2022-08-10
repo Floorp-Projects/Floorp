@@ -11,9 +11,9 @@
   --footer-spacing: 80px;
   --card-border-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
 
+  --success-fill-color: #2AC3A2;
   --success-background-color: #87FFD1;
-  --success-border-color: #2AC3A2;
-  --success-color: #15141A;
+  --success-box-text-color: #15141A;
 
   --colorways-figure-size: 225px;
   --colorways-grid-template-areas:
@@ -414,8 +414,29 @@ button.close {
   margin-block: 0 8px;
 }
 
-.setup-step > footer > progress {
+.step-progress {
+  background-color: #E0E0E6;
+  border-radius: 8px;
+  border-style: none;
+  height: 8px;
   margin-block: 0 8px;
+  margin-inline: 0 2px;
+}
+
+.step-progress::-moz-progress-bar {
+  background-color: var(--success-fill-color);
+  border-radius: 8px;
+}
+
+@media (prefers-contrast) {
+  .step-progress {
+    background-color: -moz-Dialog;
+    border: 1px solid ButtonText;
+  }
+
+  .step-progress::-moz-progress-bar {
+    background-color: SelectedItem;
+  }
 }
 
 .message-box {
@@ -441,8 +462,8 @@ button.close {
 
 .confirmation-message-box {
   background-color: var(--success-background-color);
-  color: var(--success-color);
-  border-color: var(--success-border-color);
+  color: var(--success-box-text-color);
+  border-color: var(--success-fill-color);
 }
 .confirmation-message-box > .message-content {
   text-align: center;
@@ -798,7 +819,7 @@ button.close {
 .dot {
   height: 8px;
   width: 8px;
-  background-color: #2AC3A2;
+  background-color: var(--success-fill-color);
   border-radius: 50%;
   display: inline-block;
 }
