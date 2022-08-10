@@ -115,6 +115,7 @@ def bootstrap_path(path, **kwargs):
     @depends(
         "--enable-bootstrap",
         toolchains_base_dir,
+        moz_fetches_dir,
         bootstrap_toolchain_tasks,
         build_environment,
         dependable(path),
@@ -127,7 +128,9 @@ def bootstrap_path(path, **kwargs):
     @imports(_from="importlib", _import="import_module")
     @imports(_from="__builtin__", _import="open")
     @imports(_from="__builtin__", _import="Exception")
-    def bootstrap_path(bootstrap, toolchains_base_dir, tasks, build_env, path):
+    def bootstrap_path(
+        bootstrap, toolchains_base_dir, moz_fetches_dir, tasks, build_env, path
+    ):
         if not path:
             return
         path_parts = path.split("/")
@@ -160,7 +163,9 @@ def bootstrap_path(path, **kwargs):
                 with open(index_file) as fh:
                     index = fh.read().strip()
             except Exception:
-                index = None
+                # On automation, if there's an artifact in MOZ_FETCHES_DIR, we assume it's
+                # up-to-date.
+                index = task_index if moz_fetches_dir else None
             if index == task_index and exists:
                 log.debug("%s is up-to-date", label)
                 return True
