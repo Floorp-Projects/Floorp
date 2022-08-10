@@ -46,6 +46,7 @@ Buffer::Buffer(Device* const aParent, RawId aId, BufferAddress aSize,
                uint32_t aUsage, ipc::Shmem&& aShmem)
     : ChildOf(aParent), mId(aId), mSize(aSize), mUsage(aUsage), mShmem(aShmem) {
   mozilla::HoldJSObjects(this);
+  MOZ_ASSERT(mParent);
 }
 
 Buffer::~Buffer() {
@@ -108,15 +109,15 @@ void Buffer::Cleanup() {
     // The array buffers could live longer than us and our shmem, so make sure
     // we clear the external buffer bindings.
     dom::AutoJSAPI jsapi;
-    if (jsapi.Init(mParent->GetOwnerGlobal())) {
+    if (jsapi.Init(GetDevice().GetOwnerGlobal())) {
       IgnoredErrorResult rv;
       UnmapArrayBuffers(jsapi.cx(), rv);
     }
   }
   mMapped.reset();
 
-  if (mValid && !mParent->IsLost()) {
-    mParent->GetBridge()->SendBufferDestroy(mId);
+  if (mValid && !GetDevice().IsLost()) {
+    GetDevice().GetBridge()->SendBufferDestroy(mId);
   }
   mValid = false;
 }
@@ -141,7 +142,7 @@ already_AddRefed<dom::Promise> Buffer::MapAsync(
     return nullptr;
   }
 
-  if (mParent->IsLost()) {
+  if (GetDevice().IsLost()) {
     promise->MaybeRejectWithOperationError("Device Lost");
     return promise.forget();
   }
@@ -165,7 +166,8 @@ already_AddRefed<dom::Promise> Buffer::MapAsync(
 
   RefPtr<Buffer> self(this);
 
-  auto mappingPromise = mParent->MapBufferAsync(mId, aMode, aOffset, size, aRv);
+  auto mappingPromise =
+      GetDevice().MapBufferAsync(mId, aMode, aOffset, size, aRv);
   MOZ_ASSERT(mappingPromise);
 
   mMapRequest = promise;
@@ -225,7 +227,7 @@ void Buffer::GetMappedRange(JSContext* aCx, uint64_t aOffset,
     return;
   }
 
-  auto* const arrayBuffer = mParent->CreateExternalArrayBuffer(
+  auto* const arrayBuffer = GetDevice().CreateExternalArrayBuffer(
       aCx, checkedOffset.value(), checkedSize.value(), mShmem);
   if (!arrayBuffer) {
     aRv.NoteJSContextException(aCx);
@@ -289,7 +291,7 @@ void Buffer::Unmap(JSContext* aCx, ErrorResult& aRv) {
     mShmem = ipc::Shmem();
   }
 
-  mParent->UnmapBuffer(mId, mMapped->mWritable);
+  GetDevice().UnmapBuffer(mId, mMapped->mWritable);
   mMapped.reset();
 }
 
@@ -298,8 +300,8 @@ void Buffer::Destroy(JSContext* aCx, ErrorResult& aRv) {
     Unmap(aCx, aRv);
   }
 
-  if (!mParent->IsLost()) {
-    mParent->GetBridge()->SendBufferDestroy(mId);
+  if (!GetDevice().IsLost()) {
+    GetDevice().GetBridge()->SendBufferDestroy(mId);
   }
   // TODO: we don't have to implement it right now, but it's used by the
   // examples
