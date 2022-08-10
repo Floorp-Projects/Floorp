@@ -805,6 +805,9 @@ void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
   wr::RenderMacIOSurfaceTextureHost* texture = aExternalImage->AsRenderMacIOSurfaceTextureHost();
   MOZ_ASSERT(texture);
   mTextureHost = texture;
+  if (!mTextureHost) {
+    return;
+  }
 
   gfx::IntSize oldSize = mSize;
   mSize = texture->GetSize(0);
@@ -848,6 +851,9 @@ bool NativeLayerCA::ShouldSpecializeVideo(const MutexAutoLock& aProofOfLock) {
   // Beyond this point, we need to know about the format of the video.
 
   MOZ_ASSERT(mTextureHost);
+  if (!mTextureHost) {
+    return false;
+  }
   MacIOSurface* macIOSurface = mTextureHost->GetSurface();
   if (macIOSurface->GetYUVColorSpace() == gfx::YUVColorSpace::BT2020) {
     // BT2020 is a signifier of HDR color space, whether or not the bit depth
