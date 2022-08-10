@@ -380,17 +380,6 @@ struct MapRequest {
   uint64_t mOffset;
   uint64_t mSize;
   WebGPUParent::BufferMapResolver mResolver;
-  MapRequest(WebGPUParent* aParent, ffi::WGPUGlobal* aContext,
-             ffi::WGPUBufferId aBufferId, ffi::WGPUHostMap aHostMap,
-             uint64_t aOffset, uint64_t aSize,
-             WebGPUParent::BufferMapResolver&& aResolver)
-      : mParent(aParent),
-        mContext(aContext),
-        mBufferId(aBufferId),
-        mHostMap(aHostMap),
-        mOffset(aOffset),
-        mSize(aSize),
-        mResolver(aResolver) {}
 };
 
 static void MapCallback(ffi::WGPUBufferMapAsyncStatus status,
@@ -470,8 +459,9 @@ ipc::IPCResult WebGPUParent::RecvBufferMap(RawId aBufferId, uint32_t aMode,
     return IPC_OK();
   }
 
-  auto* request = new MapRequest(this, mContext.get(), aBufferId, mode, aOffset,
-                                 aSize, std::move(aResolver));
+  auto* request =
+      new MapRequest{this,    mContext.get(), aBufferId,           mode,
+                     aOffset, aSize,          std::move(aResolver)};
 
   ffi::WGPUBufferMapCallbackC callback = {&MapCallback,
                                           reinterpret_cast<uint8_t*>(request)};
