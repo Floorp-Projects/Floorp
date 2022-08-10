@@ -1582,3 +1582,7 @@ linux-chrome-useragent-mode =
  .label = Spoof Chrome on Linux
 mobile-chrome-useragent-mode =
  .label = Impersonate Moblie
+
+## DMR UI
+download-mgr-UI =
+    .label = Use a Simple UI download manager

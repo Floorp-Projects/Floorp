@@ -109,3 +109,19 @@ if (Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", false)) {
     }
    }
  )
+ if (Services.prefs.getBoolPref("floorp.legacy.dlui.enable", false)) {    
+  var Tag = document.createElement("style");
+  Tag.innerText = `@import url(chrome://browser/skin/optioncss/browser-custum-dlmgr.css)`
+  document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
+  Tag.setAttribute("id", "dlmgrcss");
+}
+Services.prefs.addObserver("floorp.legacy.dlui.enable", function(){
+ if (Services.prefs.getBoolPref("floorp.legacy.dlui.enable", false)) {
+   var Tag = document.createElement("style");
+   Tag.innerText = `@import url(chrome://browser/skin/optioncss/browser-custum-dlmgr.css)`
+   document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
+   Tag.setAttribute("id", "dlmgrcss");
+ }
+ else {
+   document.getElementById("dlmgrcss").remove();
+ }});
