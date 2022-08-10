@@ -293,7 +293,6 @@ void LocalesChangedObserver::Unregister() {
 
 void nsBaseWidget::Shutdown() {
   NotifyLiveResizeStopped();
-  RevokeTransactionIdAllocator();
   DestroyCompositor();
   FreeLocalesChangedObserver();
   FreeShutdownObserver();
@@ -305,6 +304,8 @@ void nsBaseWidget::QuitIME() {
 }
 
 void nsBaseWidget::DestroyCompositor() {
+  RevokeTransactionIdAllocator();
+
   // We release this before releasing the compositor, since it may hold the
   // last reference to our ClientLayerManager. ClientLayerManager's dtor can
   // trigger a paint, creating a new compositor, and we don't want to re-use
@@ -396,7 +397,6 @@ nsBaseWidget::~nsBaseWidget() {
 
   FreeLocalesChangedObserver();
   FreeShutdownObserver();
-  RevokeTransactionIdAllocator();
   DestroyLayerManager();
 
 #ifdef NOISY_WIDGET_LEAKS
