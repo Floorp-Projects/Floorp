@@ -809,6 +809,11 @@ nsresult DNSPacket::DecodeInternal(
             parsed.mSvcFieldValue.AppendElement(value);
           }
 
+          if (aType != TRRTYPE_HTTPSSVC) {
+            // Ignore the entry that we just parsed if we didn't ask for it.
+            break;
+          }
+
           // Check for AliasForm
           if (aCname.IsEmpty() && parsed.mSvcFieldPriority == 0) {
             // Alias form SvcDomainName must not have the "." value (empty)
@@ -816,14 +821,11 @@ nsresult DNSPacket::DecodeInternal(
               return NS_ERROR_UNEXPECTED;
             }
             aCname = parsed.mSvcDomainName;
+            // If aliasForm is present, Service form must be ignored.
+            aTypeResult = mozilla::AsVariant(Nothing());
             ToLowerCase(aCname);
             LOG(("DNSPacket::DohDecode HTTPSSVC AliasForm host %s => %s\n",
                  host.get(), aCname.get()));
-            break;
-          }
-
-          if (aType != TRRTYPE_HTTPSSVC) {
-            // Ignore the entry that we just parsed if we didn't ask for it.
             break;
           }
 
