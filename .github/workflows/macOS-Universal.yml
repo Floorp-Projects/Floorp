@@ -3,34 +3,119 @@ name: macOS x64 Universal build
 on: workflow_dispatch
 
 jobs:
-  build:
+  get-buildid:
+    runs-on: ubuntu-latest
+
+    outputs:
+      buildids: ${{ steps.get.outputs.bid }}
+    steps:
+    - id: get
+      shell: bash -xe {0}
+      run: |
+        bdat=`date +"%Y%m%d%I%M%S"`
+        echo "::set-output name=bid::${bdat}"
+
+  build-m1:
     runs-on: macos-latest
+
+    needs: get-buildid
 
     steps:
     - uses: actions/checkout@v2
 
     - name: Create environment
       run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
         git clone https://github.com/floorp-projects/l10n-central
         ./mach bootstrap
-         rustup target add aarch64-apple-darwin
-         echo -e "ac_add_options --disable-updater\\nac_add_options --with-app-name=floorp\\nac_add_options --with-app-basename=Floorp\\nac_add_options --with-branding=browser/branding/official\\nac_add_options --disable-crashreporter\\nac_add_options --enable-proxy-bypass-protection\\nac_add_options --disable-verify-mar\\nac_add_options --enable-update-channel=release\\nMOZ_REQUIRE_SIGNING=\\nMOZ_DATA_REPORTING=\\nMOZ_TELEMETRY_REPORTING=\\nac_add_options --with-mozilla-api-keyfile=/Users/runner/work/Floorp/Floorp/apis/api-mozilla-key\\nac_add_options --with-google-location-service-api-keyfile=/Users/runner/work/Floorp/Floorp/apis/api-google-location-service-key\\nac_add_options --with-google-safebrowsing-api-keyfile=/Users/runner/work/Floorp/Floorp/apis/api-google-safe-browsing-key\\nac_add_options --enable-bootstrap\\nac_add_options --with-l10n-base=/Users/runner/work/Floorp/Floorp/l10n-central/l10n-central\\nac_add_options --enable-optimize='-O2 -march=nehalem -mtune=haswell -w'\\nmk_add_options MOZ_BUILD_PROJECTS='x86_64 aarch64'" >> mozconfig
+        rustup target add aarch64-apple-darwin
+         echo -e "ac_add_options --disable-tests\\nac_add_options --disable-updater\\nac_add_options --with-app-name=floorp\\nac_add_options --with-app-basename=Floorp\\nac_add_options --with-branding=browser/branding/official\\nac_add_options --disable-crashreporter\\nac_add_options --enable-proxy-bypass-protection\\nac_add_options --disable-verify-mar\\nac_add_options --enable-update-channel=release\\nMOZ_REQUIRE_SIGNING=\\nMOZ_DATA_REPORTING=\\nMOZ_TELEMETRY_REPORTING=\\nac_add_options --with-mozilla-api-keyfile=/Users/runner/work/Floorp/Floorp/apis/api-mozilla-key\\nac_add_options --with-google-location-service-api-keyfile=/Users/runner/work/Floorp/Floorp/apis/api-google-location-service-key\\nac_add_options --with-google-safebrowsing-api-keyfile=/Users/runner/work/Floorp/Floorp/apis/api-google-safe-browsing-key\\nac_add_options --enable-bootstrap\\nac_add_options --with-l10n-base=/Users/runner/work/Floorp/Floorp/l10n-central/l10n-central\\nac_add_options --target=aarch64-apple-darwin" >> mozconfig
         ./mach configure
     - name: 🔨Build
-      run: |        
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
         ./mach build
-
     - name: Package
-      run: |       
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
         export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
         ./mach build
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
         AB_CD=multi ./mach package
-        zip -r dist.zip obj-x86_64-apple-darwin20.6.0/dist/
+        tar -Jcf obj-aarch64-apple-darwin.tar.xz obj-aarch64-apple-darwin/
+    - name: Publish
+      uses: actions/upload-artifact@v3
+      with:
+        name: obj-aarch64-apple-darwin
+        path: obj-aarch64-apple-darwin.tar.xz
+  build-intel:
+    runs-on: macos-latest
+
+    needs: get-buildid
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Create environment
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+        git clone https://github.com/floorp-projects/l10n-central
+        ./mach bootstrap
+         echo -e "ac_add_options --disable-tests\\nac_add_options --disable-updater\\nac_add_options --with-app-name=floorp\\nac_add_options --with-app-basename=Floorp\\nac_add_options --with-branding=browser/branding/official\\nac_add_options --disable-crashreporter\\nac_add_options --enable-proxy-bypass-protection\\nac_add_options --disable-verify-mar\\nac_add_options --enable-update-channel=release\\nMOZ_REQUIRE_SIGNING=\\nMOZ_DATA_REPORTING=\\nMOZ_TELEMETRY_REPORTING=\\nac_add_options --with-mozilla-api-keyfile=/Users/runner/work/Floorp/Floorp/apis/api-mozilla-key\\nac_add_options --with-google-location-service-api-keyfile=/Users/runner/work/Floorp/Floorp/apis/api-google-location-service-key\\nac_add_options --with-google-safebrowsing-api-keyfile=/Users/runner/work/Floorp/Floorp/apis/api-google-safe-browsing-key\\nac_add_options --enable-bootstrap\\nac_add_options --with-l10n-base=/Users/runner/work/Floorp/Floorp/l10n-central/l10n-central\\nac_add_options --target=x86_64-apple-darwin\\nac_add_options --enable-optimize='-O2 -march=nehalem -mtune=haswell -w'" >> mozconfig
+        ./mach configure
+    - name: 🔨Build
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+        ./mach build
+
+    - name: Package
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+        export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
+        for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
+        ./mach build
+        for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
+        AB_CD=multi ./mach package
+        tar -Jcf obj-x86_64-apple-darwin.tar.xz obj-x86_64-apple-darwin/
+    - name: Publish
+      uses: actions/upload-artifact@v3
+      with:
+        name: obj-x86_64-apple-darwin
+        path: obj-x86_64-apple-darwin.tar.xz
+  integration:
+    needs: [build-m1, build-intel]
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/download-artifact@v3
+    - name: Create environment
+      shell: bash -xe {0}
+      run: |
+        brew update
+        brew install gnu-tar
+        brew upgrade
+        export PATH=/usr/local/opt/gnu-tar/libexec/gnubin:$PATH
+        tar -xf ./obj-x86_64-apple-darwin/obj-x86_64-apple-darwin.tar.xz -C ./
+        tar -xf ./obj-aarch64-apple-darwin/obj-aarch64-apple-darwin.tar.xz -C ./
+        ls -a
+    - name: Package
+      run: |       
+        ./mach python ./toolkit/mozapps/installer/unify.py ./obj-x86_64-apple-darwin/dist/Floorp/Floorp.app ./obj-aarch64-apple-darwin/dist/Floorp/Floorp.app
+        ./mach python -m mozbuild.action.make_dmg ./obj-x86_64-apple-darwin/dist/Floorp target.dmg
 
     - name: Publish
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v3
       with:
-        name: floorp-Intel-macOS-x64.zip
-        path: dist.zip
+        name: Universal-Artifact
+        path: target.dmg
+  cleanup:
+    needs: integration
+    runs-on: ubuntu-latest
+    steps:
+    - uses: geekyeggo/delete-artifact@v1
+      with:
+        name: |
+         obj-x86_64-apple-darwin
+         obj-aarch64-apple-darwin
