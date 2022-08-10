@@ -45,6 +45,7 @@ struct MozContainerWayland {
   gboolean ready_to_draw;
   gboolean commit_to_parent;
   gboolean before_first_size_alloc;
+  gboolean waiting_to_show;
   int buffer_scale;
   std::vector<std::function<void(void)>> initial_draw_cbs;
   // mozcontainer is used from Compositor and Rendering threads
@@ -88,5 +89,6 @@ gboolean moz_container_wayland_can_draw(MozContainer* container);
 double moz_container_wayland_get_scale(MozContainer* container);
 void moz_container_wayland_set_commit_to_parent(MozContainer* container);
 bool moz_container_wayland_is_commiting_to_parent(MozContainer* container);
+bool moz_container_wayland_is_waiting_to_show(MozContainer* container);
 
 #endif /* __MOZ_CONTAINER_WAYLAND_H__ */

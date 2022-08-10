@@ -1112,7 +1112,7 @@ bool nsWindow::WaylandPopupRemoveNegativePosition(int* aX, int* aY) {
 }
 
 void nsWindow::ShowWaylandPopupWindow() {
-  LOG("nsWindow::ShowWaylandPopupWindow: [%p]\n", this);
+  LOG("nsWindow::ShowWaylandPopupWindow. Expected to see visible.");
   MOZ_ASSERT(IsWaylandPopup());
 
   if (!mPopupTrackInHierarchy) {
