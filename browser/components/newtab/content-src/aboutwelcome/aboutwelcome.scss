@@ -388,6 +388,19 @@ body {
           text-shadow: none;
           margin-inline: 40px 0;
         }
+
+        .hero-image {
+          flex: 1;
+          display: flex;
+          justify-content: center;
+          max-height: 100%;
+
+          img {
+            width: 100%;
+            max-width: 150px;
+            margin: 25px 0;
+          }
+        }
       }
 
       .tiles-theme-container {
@@ -613,6 +626,14 @@ body {
         to {
           background-position: 400%;
         }
+      }
+    }
+
+    .cta-paragraph button {
+      &.text-link {
+        margin: 0;
+        text-decoration: underline;
+        cursor: pointer;
       }
     }
   }

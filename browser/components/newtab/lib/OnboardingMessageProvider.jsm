@@ -14,6 +14,19 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ShellService: "resource:///modules/ShellService.jsm",
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "usesFirefoxSync",
+  "services.sync.username"
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "mobileDevices",
+  "services.sync.clients.devices.mobile",
+  0
+);
+
 const L10N = new Localization([
   "branding/brand.ftl",
   "browser/branding/brandings.ftl",
@@ -225,6 +238,41 @@ const ONBOARDING_MESSAGES = () => [
               label: "Skip this step",
               action: {
                 theme: "automatic",
+                navigate: true,
+              },
+            },
+          },
+        },
+        {
+          id: "UPGRADE_MOBILE_DOWNLOAD",
+          content: {
+            position: "split",
+            background:
+              "radial-gradient(83.12% 83.12% at 80.59% 16.88%, #9059FF 0%, #3A8EE6 54.51%, #A0C4EA 100%)",
+            progress_bar: true,
+            logo: {},
+            title: "Hop from laptop to phone and back again",
+            subtitle:
+              "Grab tabs from one device and pick up where you left off on another. Plus sync your bookmarks and passwords anywhere you use Firefox.",
+            hero_image: {
+              url:
+                "chrome://activity-stream/content/data/content/assets/mobile-download-qr-existing-user.svg",
+            },
+            cta_paragraph: {
+              text: "Scan the QR code to get Firefox for mobile or",
+              button_label: "send yourself a download link.",
+              action: {
+                type: "OPEN_URL",
+                data: {
+                  args:
+                    "https://www.mozilla.org/en-US/firefox/mobile/get-app/?utm_medium=firefox-desktop&utm_source=onboarding-modal&utm_campaign=mr2022&utm_content=existing-global",
+                  where: "tabshifted",
+                },
+              },
+            },
+            secondary_button: {
+              label: "Skip this step",
+              action: {
                 navigate: true,
               },
             },
@@ -721,6 +769,11 @@ const OnboardingMessageProvider = {
 
     if (removeDefault) {
       removeScreens(screen => screen.id?.startsWith("UPGRADE_SET_DEFAULT"));
+    }
+
+    // Remove mobile download screen if user has sync enabled
+    if (lazy.usesFirefoxSync && lazy.mobileDevices > 0) {
+      removeScreens(screen => screen.id === "UPGRADE_MOBILE_DOWNLOAD");
     }
 
     return message;

@@ -9,6 +9,8 @@ import { MobileDownloads } from "./MobileDownloads";
 import { Themes } from "./Themes";
 import { SecondaryCTA, StepsIndicator } from "./MultiStageAboutWelcome";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { LinkText } from "./LinkText";
+import { HeroImage } from "./HeroImage";
 
 export const MultiStageProtonScreen = props => {
   const { autoAdvance, handleAction, order } = props;
@@ -147,16 +149,22 @@ export class ProtonScreen extends React.PureComponent {
         className="section-secondary"
         style={content.background ? { background: content.background } : {}}
       >
-        <div className="message-text">
-          <div className="spacer-top" />
-          <Localized text={content.hero_text}>
-            <h1 />
-          </Localized>
-          <div className="spacer-bottom" />
-        </div>
-        <Localized text={content.help_text}>
-          <span className="attrib-text" />
-        </Localized>
+        {content.hero_image ? (
+          <HeroImage url={content.hero_image.url} />
+        ) : (
+          <React.Fragment>
+            <div className="message-text">
+              <div className="spacer-top" />
+              <Localized text={content.hero_text}>
+                <h1 />
+              </Localized>
+              <div className="spacer-bottom" />
+            </div>
+            <Localized text={content.help_text}>
+              <span className="attrib-text" />
+            </Localized>
+          </React.Fragment>
+        )}
       </div>
     );
   }
@@ -247,6 +255,12 @@ export class ProtonScreen extends React.PureComponent {
                     })}
                   />
                 </Localized>
+                {content.cta_paragraph ? (
+                  <LinkText
+                    content={content.cta_paragraph}
+                    handleAction={this.props.handleAction}
+                  />
+                ) : null}
               </div>
               {this.renderContentTiles()}
               {this.renderLanguageSwitcher()}
