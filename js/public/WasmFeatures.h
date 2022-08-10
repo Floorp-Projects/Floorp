@@ -111,7 +111,8 @@
   EXPERIMENTAL(/* capitalized name   */ FunctionReferences,                   \
                /* lower case name    */ functionReferences,                   \
                /* compile predicate  */ WASM_FUNCTION_REFERENCES_ENABLED,     \
-               /* compiler predicate */ BaselineAvailable(cx),                \
+               /* compiler predicate */ BaselineAvailable(cx) ||              \
+                                        IonAvailable(cx),                     \
                /* flag predicate     */ !IsFuzzingIon(cx),                    \
                /* shell flag         */ "function-references",                \
                /* preference name    */ "function_references")                \

@@ -811,6 +811,103 @@ class FunctionCompiler {
     curBlock_->setSlot(info().localSlot(slot), def);
   }
 
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+  MDefinition* compareIsNull(MDefinition* value, JSOp compareOp) {
+    MDefinition* nullVal = nullRefConstant();
+    if (!nullVal) {
+      return nullptr;
+    }
+    return compare(value, nullVal, compareOp, MCompare::Compare_RefOrNull);
+  }
+
+  bool refAsNonNull(MDefinition* value) {
+    if (inDeadCode()) {
+      return true;
+    }
+
+    MBasicBlock* joinBlock = nullptr;
+    if (!newBlock(curBlock_, &joinBlock)) {
+      return false;
+    }
+
+    MBasicBlock* trapBlock = nullptr;
+    if (!newBlock(curBlock_, &trapBlock)) {
+      return false;
+    }
+    auto* ins = MWasmTrap::New(alloc(), wasm::Trap::NullPointerDereference,
+                               bytecodeOffset());
+    trapBlock->end(ins);
+
+    MDefinition* check = compareIsNull(value, JSOp::Ne);
+    if (!check) {
+      return false;
+    }
+    MTest* test = MTest::New(alloc(), check, joinBlock, trapBlock);
+    curBlock_->end(test);
+    curBlock_ = joinBlock;
+    return true;
+  }
+
+  bool brOnNull(uint32_t relativeDepth, const DefVector& values,
+                const ResultType& type, MDefinition* condition) {
+    if (inDeadCode()) {
+      return true;
+    }
+
+    MBasicBlock* joinBlock = nullptr;
+    if (!newBlock(curBlock_, &joinBlock)) {
+      return false;
+    }
+
+    MDefinition* check = compareIsNull(condition, JSOp::Eq);
+    if (!check) {
+      return false;
+    }
+    MTest* test = MTest::New(alloc(), check, joinBlock);
+    if (!addControlFlowPatch(test, relativeDepth, MTest::TrueBranchIndex)) {
+      return false;
+    }
+
+    if (!pushDefs(values)) {
+      return false;
+    }
+
+    curBlock_->end(test);
+    curBlock_ = joinBlock;
+    return true;
+  }
+
+  bool brOnNonNull(uint32_t relativeDepth, const DefVector& values,
+                   const ResultType& type, MDefinition* condition) {
+    if (inDeadCode()) {
+      return true;
+    }
+
+    MBasicBlock* joinBlock = nullptr;
+    if (!newBlock(curBlock_, &joinBlock)) {
+      return false;
+    }
+
+    MDefinition* check = compareIsNull(condition, JSOp::Ne);
+    if (!check) {
+      return false;
+    }
+    MTest* test = MTest::New(alloc(), check, joinBlock);
+    if (!addControlFlowPatch(test, relativeDepth, MTest::TrueBranchIndex)) {
+      return false;
+    }
+
+    if (!pushDefs(values)) {
+      return false;
+    }
+
+    curBlock_->end(test);
+    curBlock_ = joinBlock;
+    return true;
+  }
+
+#endif  // ENABLE_WASM_FUNCTION_REFERENCES
+
 #ifdef ENABLE_WASM_SIMD
   // About Wasm SIMD as supported by Ion:
   //
@@ -5611,7 +5708,43 @@ static bool EmitStoreLaneSimd128(FunctionCompiler& f, uint32_t laneSize) {
   return true;
 }
 
-#endif
+#endif  // ENABLE_WASM_SIMD
+
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+static bool EmitRefAsNonNull(FunctionCompiler& f) {
+  MDefinition* value;
+  if (!f.iter().readRefAsNonNull(&value)) {
+    return false;
+  }
+
+  return f.refAsNonNull(value);
+}
+
+static bool EmitBrOnNull(FunctionCompiler& f) {
+  uint32_t relativeDepth;
+  ResultType type;
+  DefVector values;
+  MDefinition* condition;
+  if (!f.iter().readBrOnNull(&relativeDepth, &type, &values, &condition)) {
+    return false;
+  }
+
+  return f.brOnNull(relativeDepth, values, type, condition);
+}
+
+static bool EmitBrOnNonNull(FunctionCompiler& f) {
+  uint32_t relativeDepth;
+  ResultType type;
+  DefVector values;
+  MDefinition* condition;
+  if (!f.iter().readBrOnNonNull(&relativeDepth, &type, &values, &condition)) {
+    return false;
+  }
+
+  return f.brOnNonNull(relativeDepth, values, type, condition);
+}
+
+#endif  // ENABLE_WASM_FUNCTION_REFERENCES
 
 static bool EmitIntrinsic(FunctionCompiler& f) {
   const Intrinsic* intrinsic;
@@ -6139,7 +6272,27 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
       case uint16_t(Op::I64Extend32S):
         CHECK(EmitSignExtend(f, 4, 8));
 
-        // Gc operations
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+      case uint16_t(Op::RefAsNonNull):
+        if (!f.moduleEnv().functionReferencesEnabled()) {
+          return f.iter().unrecognizedOpcode(&op);
+        }
+        CHECK(EmitRefAsNonNull(f));
+      case uint16_t(Op::BrOnNull): {
+        if (!f.moduleEnv().functionReferencesEnabled()) {
+          return f.iter().unrecognizedOpcode(&op);
+        }
+        CHECK(EmitBrOnNull(f));
+      }
+      case uint16_t(Op::BrOnNonNull): {
+        if (!f.moduleEnv().functionReferencesEnabled()) {
+          return f.iter().unrecognizedOpcode(&op);
+        }
+        CHECK(EmitBrOnNonNull(f));
+      }
+#endif
+
+      // Gc operations
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::GcPrefix): {
         return f.iter().unrecognizedOpcode(&op);

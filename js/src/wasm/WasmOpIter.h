@@ -2252,7 +2252,7 @@ inline bool OpIter<Policy>::readRefAsNonNull(Value* input) {
   if (type.isBottom()) {
     infalliblePush(type);
   } else {
-    infalliblePush(type.asNonNullable());
+    infalliblePush(TypeAndValue(type.asNonNullable(), *input));
   }
   return true;
 }
@@ -2279,7 +2279,7 @@ inline bool OpIter<Policy>::readBrOnNull(uint32_t* relativeDepth,
   if (refType.isBottom()) {
     return push(refType);
   }
-  return push(refType.asNonNullable());
+  return push(TypeAndValue(refType.asNonNullable(), *condition));
 }
 
 template <typename Policy>
@@ -2313,7 +2313,9 @@ inline bool OpIter<Policy>::readBrOnNonNull(uint32_t* relativeDepth,
 
   // Push non-nullable version of condition reference on the stack, prior
   // checking the target type below.
-  if (!(refType.isBottom() ? push(refType) : push(refType.asNonNullable()))) {
+  if (!(refType.isBottom()
+            ? push(refType)
+            : push(TypeAndValue(refType.asNonNullable(), *condition)))) {
     return false;
   }
 
