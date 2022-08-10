@@ -492,6 +492,8 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
                                              MutableHandle<Shape*> result);
 
   ObjOperandId emitFunCallGuard(Int32OperandId argcId);
+  ObjOperandId emitFunApplyGuard(Int32OperandId argcId,
+                                 CallFlags::ArgFormat format);
 
   AttachDecision tryAttachFunCall(HandleFunction calleeFunc);
   AttachDecision tryAttachFunApply(HandleFunction calleeFunc);

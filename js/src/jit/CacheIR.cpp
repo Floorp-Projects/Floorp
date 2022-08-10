@@ -5493,6 +5493,48 @@ ObjOperandId CallIRGenerator::emitFunCallGuard(Int32OperandId argcId) {
   return writer.guardToObject(thisValId);
 }
 
+ObjOperandId CallIRGenerator::emitFunApplyGuard(Int32OperandId argcId,
+                                                CallFlags::ArgFormat format) {
+  MOZ_ASSERT(argc_ == 2);
+
+  JSFunction* callee = &callee_.toObject().as<JSFunction>();
+  MOZ_ASSERT(callee->native() == fun_apply);
+
+  // Guard that callee is the |fun_apply| native function.
+  ValOperandId calleeValId =
+      writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId);
+  ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
+  writer.guardSpecificFunction(calleeObjId, callee);
+
+  // Guard that |this| is an object.
+  ValOperandId thisValId =
+      writer.loadArgumentDynamicSlot(ArgumentKind::This, argcId);
+  ObjOperandId thisObjId = writer.guardToObject(thisValId);
+
+  ValOperandId argValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+
+  if (format == CallFlags::FunApplyArgsObj) {
+    ObjOperandId argObjId = writer.guardToObject(argValId);
+    if (args_[1].toObject().is<MappedArgumentsObject>()) {
+      writer.guardClass(argObjId, GuardClassKind::MappedArguments);
+    } else {
+      MOZ_ASSERT(args_[1].toObject().is<UnmappedArgumentsObject>());
+      writer.guardClass(argObjId, GuardClassKind::UnmappedArguments);
+    }
+    uint8_t flags = ArgumentsObject::ELEMENT_OVERRIDDEN_BIT |
+                    ArgumentsObject::FORWARDED_ARGUMENTS_BIT;
+    writer.guardArgumentsObjectFlags(argObjId, flags);
+  } else {
+    MOZ_ASSERT(format == CallFlags::FunApplyArray);
+    ObjOperandId argObjId = writer.guardToObject(argValId);
+    writer.guardClass(argObjId, GuardClassKind::Array);
+    writer.guardArrayIsPacked(argObjId);
+  }
+
+  return thisObjId;
+}
+
 AttachDecision InlinableNativeIRGenerator::tryAttachArrayPush() {
   // Only optimize on obj.push(val);
   if (argc_ != 1 || !thisval_.isObject()) {
@@ -9241,37 +9283,7 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
 
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Guard that callee is the |fun_apply| native function.
-  ValOperandId calleeValId =
-      writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId);
-  ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
-  writer.guardSpecificFunction(calleeObjId, calleeFunc);
-
-  // Guard that |this| is an object.
-  ValOperandId thisValId =
-      writer.loadArgumentDynamicSlot(ArgumentKind::This, argcId);
-  ObjOperandId thisObjId = writer.guardToObject(thisValId);
-
-  ValOperandId argValId =
-      writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
-
-  if (format == CallFlags::FunApplyArgsObj) {
-    ObjOperandId argObjId = writer.guardToObject(argValId);
-    if (args_[1].toObject().is<MappedArgumentsObject>()) {
-      writer.guardClass(argObjId, GuardClassKind::MappedArguments);
-    } else {
-      MOZ_ASSERT(args_[1].toObject().is<UnmappedArgumentsObject>());
-      writer.guardClass(argObjId, GuardClassKind::UnmappedArguments);
-    }
-    uint8_t flags = ArgumentsObject::ELEMENT_OVERRIDDEN_BIT |
-                    ArgumentsObject::FORWARDED_ARGUMENTS_BIT;
-    writer.guardArgumentsObjectFlags(argObjId, flags);
-  } else {
-    MOZ_ASSERT(format == CallFlags::FunApplyArray);
-    ObjOperandId argObjId = writer.guardToObject(argValId);
-    writer.guardClass(argObjId, GuardClassKind::Array);
-    writer.guardArrayIsPacked(argObjId);
-  }
+  ObjOperandId thisObjId = emitFunApplyGuard(argcId, format);
 
   CallFlags targetFlags(format);
   if (mode_ == ICState::Mode::Specialized) {
