@@ -367,6 +367,10 @@ static gboolean moz_container_wayland_map_event(GtkWidget* widget,
   // moz_container_wayland_unmap() is called on hide/withdraw.
   gtk_widget_set_mapped(widget, TRUE);
 
+  // Make sure we're on main thread as we can't lock mozContainer here
+  // due to moz_container_wayland_add_initial_draw_callback() call below.
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+
   // Set waiting_to_show flag. It means the mozcontainer is cofigured/mapped
   // and it's supposed to be visible. *But* it's really visible when we get
   // moz_container_wayland_add_initial_draw_callback() which means
@@ -762,9 +766,11 @@ bool moz_container_wayland_is_commiting_to_parent(MozContainer* container) {
 }
 
 bool moz_container_wayland_is_waiting_to_show(MozContainer* container) {
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   return container->wl_container.waiting_to_show;
 }
 
 void moz_container_wayland_clear_waiting_to_show_flag(MozContainer* container) {
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   container->wl_container.waiting_to_show = false;
 }
