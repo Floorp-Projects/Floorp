@@ -31,17 +31,14 @@ class TexturePacker {
   const IntRect& GetBounds() const { return mBounds; }
 
  private:
-  bool IsLeaf() const { return !mChildren[0]; }
+  bool IsLeaf() const { return !mChildren; }
   bool IsFullyAvailable() const { return IsLeaf() && mAvailable > 0; }
 
-  void DiscardChildren() {
-    mChildren[0] = nullptr;
-    mChildren[1] = nullptr;
-  }
+  void DiscardChildren() { mChildren.reset(); }
 
   // If applicable, the two children produced by picking a single axis split
   // within the node's bounds and subdividing the bounds there.
-  UniquePtr<TexturePacker> mChildren[2];
+  UniquePtr<TexturePacker[]> mChildren;
   // The bounds enclosing this node and any children within it.
   IntRect mBounds;
   // For a leaf node, specifies the size of the smallest dimension available to
