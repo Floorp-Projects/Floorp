@@ -20,7 +20,7 @@ diff --git a/modules/fdlibm/src/k_exp.cpp b/modules/fdlibm/src/k_exp.cpp
  /*
   * Compute exp(x), scaled to avoid spurious overflow.  An exponent is
   * returned separately in 'expt'.
-@@ -78,32 +76,8 @@ double
+@@ -78,33 +76,8 @@ __ldexp_exp(double x, int expt)
  	double exp_x, scale;
  	int ex_expt;
  
@@ -33,7 +33,7 @@ diff --git a/modules/fdlibm/src/k_exp.cpp b/modules/fdlibm/src/k_exp.cpp
 -double complex
 -__ldexp_cexp(double complex z, int expt)
 -{
--	double x, y, exp_x, scale1, scale2;
+-	double c, exp_x, s, scale1, scale2, x, y;
 -	int ex_expt, half_expt;
 -
 -	x = creal(z);
@@ -50,6 +50,7 @@ diff --git a/modules/fdlibm/src/k_exp.cpp b/modules/fdlibm/src/k_exp.cpp
 -	half_expt = expt - half_expt;
 -	INSERT_WORDS(scale2, (0x3ff + half_expt) << 20, 0);
 -
--	return (CMPLX(cos(y) * exp_x * scale1 * scale2,
--	    sin(y) * exp_x * scale1 * scale2));
+-	sincos(y, &s, &c);
+-	return (CMPLX(c * exp_x * scale1 * scale2,
+-	    s * exp_x * scale1 * scale2));
 -}

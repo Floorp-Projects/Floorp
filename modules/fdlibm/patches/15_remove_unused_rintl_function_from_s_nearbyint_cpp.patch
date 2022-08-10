@@ -1,7 +1,7 @@
 diff --git a/modules/fdlibm/src/s_nearbyint.cpp b/modules/fdlibm/src/s_nearbyint.cpp
 --- a/modules/fdlibm/src/s_nearbyint.cpp
 +++ b/modules/fdlibm/src/s_nearbyint.cpp
-@@ -53,9 +53,8 @@ fn(type x)			\
+@@ -54,9 +54,8 @@ fn(type x)			\
  	fegetenv(&env);		\
  	ret = rint(x);		\
  	fesetenv(&env);		\

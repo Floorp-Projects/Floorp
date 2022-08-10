@@ -19,7 +19,7 @@ diff --git a/modules/fdlibm/src/e_acos.cpp b/modules/fdlibm/src/e_acos.cpp
  one=  1.00000000000000000000e+00, /* 0x3FF00000, 0x00000000 */
  pi =  3.14159265358979311600e+00, /* 0x400921FB, 0x54442D18 */
  pio2_hi =  1.57079632679489655800e+00; /* 0x3FF921FB, 0x54442D18 */
-@@ -82,23 +83,23 @@ double
+@@ -82,23 +83,23 @@ __ieee754_acos(double x)
  	    p = z*(pS0+z*(pS1+z*(pS2+z*(pS3+z*(pS4+z*pS5)))));
  	    q = one+z*(qS1+z*(qS2+z*(qS3+z*qS4)));
  	    r = p/q;
@@ -66,7 +66,7 @@ diff --git a/modules/fdlibm/src/e_acosh.cpp b/modules/fdlibm/src/e_acosh.cpp
  one	= 1.0,
  ln2	= 6.93147180559945286227e-01;  /* 0x3FE62E42, 0xFEFA39EF */
  
-@@ -50,14 +51,14 @@ double
+@@ -50,14 +51,14 @@ __ieee754_acosh(double x)
  	    if(hx >=0x7ff00000) {	/* x is inf of NaN */
  	        return x+x;
  	    } else 
@@ -104,7 +104,7 @@ diff --git a/modules/fdlibm/src/e_asin.cpp b/modules/fdlibm/src/e_asin.cpp
  one =  1.00000000000000000000e+00, /* 0x3FF00000, 0x00000000 */
  huge =  1.000e+300,
  pio2_hi =  1.57079632679489655800e+00, /* 0x3FF921FB, 0x54442D18 */
-@@ -90,17 +91,17 @@ double
+@@ -90,17 +91,17 @@ __ieee754_asin(double x)
  	    w = p/q;
  	    return x+x*w;
  	}
@@ -144,7 +144,7 @@ diff --git a/modules/fdlibm/src/e_hypot.cpp b/modules/fdlibm/src/e_hypot.cpp
  __ieee754_hypot(double x, double y)
  {
  	double a,b,t1,t2,y1,y2,w;
-@@ -100,26 +101,26 @@ double
+@@ -100,25 +101,25 @@ __ieee754_hypot(double x, double y)
  	    }
  	}
      /* medium size a and b */
@@ -167,16 +167,15 @@ diff --git a/modules/fdlibm/src/e_hypot.cpp b/modules/fdlibm/src/e_hypot.cpp
 +	    w  = std::sqrt(t1*y1-(w*(-w)-(t1*y2+t2*b)));
  	}
  	if(k!=0) {
- 	    u_int32_t high;
- 	    t1 = 1.0;
- 	    GET_HIGH_WORD(high,t1);
- 	    SET_HIGH_WORD(t1,high+(k<<20));
+ 	    t1 = 0.0;
+ 	    SET_HIGH_WORD(t1,(1023+k)<<20);
  	    return t1*w;
  	} else return w;
+ }
 diff --git a/modules/fdlibm/src/e_pow.cpp b/modules/fdlibm/src/e_pow.cpp
 --- a/modules/fdlibm/src/e_pow.cpp
 +++ b/modules/fdlibm/src/e_pow.cpp
-@@ -52,16 +52,18 @@
+@@ -52,16 +52,17 @@
   *
   * Constants :
   * The hexadecimal values are the intended ones for the following
@@ -186,7 +185,6 @@ diff --git a/modules/fdlibm/src/e_pow.cpp b/modules/fdlibm/src/e_pow.cpp
   */
  
 +#include <cmath>
-+
  #include <float.h>
  #include "math_private.h"
  
@@ -195,7 +193,7 @@ diff --git a/modules/fdlibm/src/e_pow.cpp b/modules/fdlibm/src/e_pow.cpp
  dp_h[] = { 0.0, 5.84962487220764160156e-01,}, /* 0x3FE2B803, 0x40000000 */
  dp_l[] = { 0.0, 1.35003920212974897128e-08,}, /* 0x3E4CFDEB, 0x43CFD006 */
  zero    =  0.0,
-@@ -151,17 +153,17 @@ double
+@@ -151,17 +152,17 @@ __ieee754_pow(double x, double y)
  		    return (hy<0)?-y: zero;
  	    }
  	    if(iy==0x3ff00000) {	/* y is  +-1 */
