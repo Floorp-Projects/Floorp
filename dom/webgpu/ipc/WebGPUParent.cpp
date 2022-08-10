@@ -426,7 +426,8 @@ static void MapCallback(ffi::WGPUBufferMapAsyncStatus status,
       }
     }
 
-    result = BufferMapSuccess(offset, size, req->mHostMap == ffi::WGPUHostMap_Write);
+    result =
+        BufferMapSuccess(offset, size, req->mHostMap == ffi::WGPUHostMap_Write);
 
     mapData->mMappedOffset = offset;
     mapData->mMappedSize = size;
@@ -479,7 +480,8 @@ ipc::IPCResult WebGPUParent::RecvBufferMap(RawId aBufferId, uint32_t aMode,
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvBufferUnmap(RawId aBufferId, bool aFlush) {
+ipc::IPCResult WebGPUParent::RecvBufferUnmap(RawId aDeviceId, RawId aBufferId,
+                                             bool aFlush) {
   MOZ_LOG(sLogger, LogLevel::Info,
           ("RecvBufferUnmap %" PRIu64 " flush=%d\n", aBufferId, aFlush));
 
@@ -505,7 +507,9 @@ ipc::IPCResult WebGPUParent::RecvBufferUnmap(RawId aBufferId, bool aFlush) {
     mapData->mMappedSize = 0;
   }
 
-  ffi::wgpu_server_buffer_unmap(mContext.get(), aBufferId);
+  ErrorBuffer error;
+  ffi::wgpu_server_buffer_unmap(mContext.get(), aBufferId, error.ToFFI());
+  ForwardError(aDeviceId, error);
 
   if (mapData && !mapData->mHasMapFlags) {
     // We get here if the buffer was mapped at creation without map flags.
@@ -816,7 +820,13 @@ static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
     } else {
       NS_WARNING("WebGPU present skipped: the swapchain is resized!");
     }
-    wgpu_server_buffer_unmap(req->mContext, bufferId);
+    ErrorBuffer error;
+    wgpu_server_buffer_unmap(req->mContext, bufferId, error.ToFFI());
+    if (auto errorString = error.GetError()) {
+      MOZ_LOG(
+          sLogger, LogLevel::Info,
+          ("WebGPU present: buffer unmap failed: %s\n", errorString->get()));
+    }
   } else {
     // TODO: better handle errors
     NS_WARNING("WebGPU frame mapping failed!");

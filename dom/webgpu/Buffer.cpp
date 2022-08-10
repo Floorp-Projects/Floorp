@@ -292,7 +292,8 @@ void Buffer::Unmap(JSContext* aCx, ErrorResult& aRv) {
   }
 
   if (!GetDevice().IsLost()) {
-    GetDevice().GetBridge()->SendBufferUnmap(mId, mMapped->mWritable);
+    GetDevice().GetBridge()->SendBufferUnmap(GetDevice().mId, mId,
+                                             mMapped->mWritable);
   }
 
   mMapped.reset();

@@ -403,8 +403,10 @@ pub unsafe extern "C" fn wgpu_server_buffer_get_mapped_range(
 }
 
 #[no_mangle]
-pub extern "C" fn wgpu_server_buffer_unmap(global: &Global, buffer_id: id::BufferId) {
-    gfx_select!(buffer_id => global.buffer_unmap(buffer_id)).unwrap();
+pub extern "C" fn wgpu_server_buffer_unmap(global: &Global, buffer_id: id::BufferId, mut error_buf: ErrorBuffer) {
+    if let Err(e) = gfx_select!(buffer_id => global.buffer_unmap(buffer_id)) {
+        error_buf.init(e);
+    }
 }
 
 #[no_mangle]

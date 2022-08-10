@@ -48,7 +48,7 @@ parent:
   // TODO: We want to return an array of compilation messages.
   async DeviceCreateShaderModule(RawId selfId, RawId bufferId, nsString label, nsCString code) returns (WebGPUCompilationMessage[] messages);
   async BufferMap(RawId selfId, uint32_t aMode, uint64_t offset, uint64_t size) returns (BufferMapResult result);
-  async BufferUnmap(RawId selfId, bool flush);
+  async BufferUnmap(RawId deviceId, RawId bufferId, bool flush);
   async BufferDestroy(RawId selfId);
   async TextureDestroy(RawId selfId);
   async TextureViewDestroy(RawId selfId);
