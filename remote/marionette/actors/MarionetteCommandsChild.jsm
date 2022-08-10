@@ -297,7 +297,9 @@ class MarionetteCommandsChild extends JSWindowActorChild {
   async getElementProperty(options = {}) {
     const { name, elem } = options;
 
-    return typeof elem[name] != "undefined" ? elem[name] : null;
+    // Waive Xrays to get unfiltered access to the untrusted element.
+    const el = Cu.waiveXrays(elem);
+    return typeof el[name] != "undefined" ? el[name] : null;
   }
 
   /**
