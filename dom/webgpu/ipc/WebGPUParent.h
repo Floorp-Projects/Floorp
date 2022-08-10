@@ -108,6 +108,8 @@ class WebGPUParent final : public PWebGPUParent {
     Shmem mShmem;
     // True if buffer's usage has MAP_READ or MAP_WRITE set.
     bool mHasMapFlags;
+    uint64_t mMappedOffset;
+    uint64_t mMappedSize;
   };
 
   BufferMapData* GetBufferMapData(RawId aBufferId);

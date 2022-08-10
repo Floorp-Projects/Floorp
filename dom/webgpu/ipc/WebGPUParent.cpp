@@ -354,7 +354,14 @@ ipc::IPCResult WebGPUParent::RecvCreateBuffer(RawId aDeviceId, RawId aBufferId,
   if (aShmem.type() == MaybeShmem::TShmem) {
     bool hasMapFlags = aDesc.mUsage & (dom::GPUBufferUsage_Binding::MAP_WRITE |
                                        dom::GPUBufferUsage_Binding::MAP_READ);
-    mSharedMemoryMap[aBufferId] = {aShmem.get_Shmem(), hasMapFlags};
+    uint64_t offset = 0;
+    uint64_t size = 0;
+    if (aDesc.mMappedAtCreation) {
+      size = aDesc.mSize;
+      MOZ_RELEASE_ASSERT(aShmem.get_Shmem().Size<uint8_t>() >= size);
+    }
+    mSharedMemoryMap[aBufferId] = {aShmem.get_Shmem(), hasMapFlags, offset,
+                                   size};
   }
 
   ErrorBuffer error;
@@ -405,18 +412,24 @@ static void MapCallback(ffi::WGPUBufferMapAsyncStatus status,
     nsCString errorString("mapAsync: Failed to map the buffer");
     result = BufferMapError(errorString);
   } else {
-    if (req->mHostMap == ffi::WGPUHostMap_Read && req->mSize > 0) {
-      auto size = req->mSize;
-      const auto src = ffi::wgpu_server_buffer_get_mapped_range(
-          req->mContext, req->mBufferId, req->mOffset, size);
+    auto size = req->mSize;
+    auto offset = req->mOffset;
 
+    if (req->mHostMap == ffi::WGPUHostMap_Read && size > 0) {
+      const auto src = ffi::wgpu_server_buffer_get_mapped_range(
+          req->mContext, req->mBufferId, offset, size);
+
+      MOZ_RELEASE_ASSERT(mapData->mShmem.Size<uint8_t>() >= offset + size);
       if (src.ptr != nullptr && src.length >= size) {
-        auto dstPtr = mapData->mShmem.get<uint8_t>();
+        auto dstPtr = mapData->mShmem.get<uint8_t>() + offset;
         memcpy(dstPtr, src.ptr, size);
       }
     }
 
-    result = BufferMapSuccess(req->mOffset, req->mSize);
+    result = BufferMapSuccess(offset, size);
+
+    mapData->mMappedOffset = offset;
+    mapData->mMappedSize = size;
   }
 
   req->mResolver(std::move(result));
@@ -439,17 +452,13 @@ ipc::IPCResult WebGPUParent::RecvBufferMap(RawId aBufferId,
     return IPC_OK();
   }
 
-  // TODO: Actually only map the requested range instead of the whole buffer.
-  uint64_t offset = 0;
-  uint64_t size = mapData->mShmem.Size<uint8_t>();
-
   auto* request = new MapRequest(this, mContext.get(), aBufferId, aHostMap,
-                                 offset, size, std::move(aResolver));
+                                 aOffset, aSize, std::move(aResolver));
 
   ffi::WGPUBufferMapCallbackC callback = {&MapCallback,
                                           reinterpret_cast<uint8_t*>(request)};
-  ffi::wgpu_server_buffer_map(mContext.get(), aBufferId, offset, size, aHostMap,
-                              callback);
+  ffi::wgpu_server_buffer_map(mContext.get(), aBufferId, aOffset, aSize,
+                              aHostMap, callback);
 
   return IPC_OK();
 }
@@ -461,17 +470,23 @@ ipc::IPCResult WebGPUParent::RecvBufferUnmap(RawId aBufferId, bool aFlush) {
   auto* mapData = GetBufferMapData(aBufferId);
 
   if (mapData && aFlush) {
-    // TODO: flush exact modified sub-range
-    uint64_t offset = 0;
-    uint64_t size = mapData->mShmem.Size<uint8_t>();
+    uint64_t offset = mapData->mMappedOffset;
+    uint64_t size = mapData->mMappedSize;
+
     uint8_t* srcPtr = mapData->mShmem.get<uint8_t>() + offset;
 
     const auto mapped = ffi::wgpu_server_buffer_get_mapped_range(
         mContext.get(), aBufferId, offset, size);
 
     if (mapped.ptr != nullptr && mapped.length >= size) {
+      auto shmSize = mapData->mShmem.Size<uint8_t>();
+      MOZ_RELEASE_ASSERT(offset <= shmSize);
+      MOZ_RELEASE_ASSERT(size <= shmSize - offset);
       memcpy(mapped.ptr, srcPtr, size);
     }
+
+    mapData->mMappedOffset = 0;
+    mapData->mMappedSize = 0;
   }
 
   ffi::wgpu_server_buffer_unmap(mContext.get(), aBufferId);
