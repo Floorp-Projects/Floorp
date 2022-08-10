@@ -28,7 +28,6 @@ import mozilla.components.support.ktx.android.content.longPreference
 import mozilla.components.support.ktx.android.content.stringPreference
 import mozilla.components.support.ktx.android.content.stringSetPreference
 import mozilla.components.support.locale.LocaleManager
-import org.mozilla.experiments.nimbus.internal.NimbusFeatureException
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
@@ -1204,11 +1203,8 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     private val onboardScreenSection: Map<OnboardingSection, Boolean> get() =
         FxNimbus.features.onboarding.value().sectionsEnabled
 
-    private val homescreenSections: Map<HomeScreenSection, Boolean> get() = try {
+    private val homescreenSections: Map<HomeScreenSection, Boolean> get() =
         FxNimbus.features.homescreen.value().sectionsEnabled
-    } catch (e: NimbusFeatureException) {
-        emptyMap()
-    }
 
     var historyMetadataUIFeature by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_history_metadata_feature),
