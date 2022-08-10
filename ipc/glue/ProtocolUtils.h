@@ -414,7 +414,8 @@ class IToplevelProtocol : public IProtocol {
   virtual void OnChannelError() = 0;
   virtual void ProcessingError(Result aError, const char* aMsgName) {}
 
-  bool Open(ScopedPort aPort, base::ProcessId aOtherPid,
+  bool Open(ScopedPort aPort, const nsID& aMessageChannelId,
+            base::ProcessId aOtherPid,
             nsISerialEventTarget* aEventTarget = nullptr);
 
   bool Open(IToplevelProtocol* aTarget, nsISerialEventTarget* aEventTarget,

@@ -130,7 +130,7 @@ class GeckoChildProcessHost : public ChildProcessHost,
 
   UntypedEndpoint TakeInitialEndpoint() {
     return UntypedEndpoint{PrivateIPDLInterface{}, std::move(mInitialPort),
-                           base::GetCurrentProcId(),
+                           mInitialChannelId, base::GetCurrentProcId(),
                            base::GetProcId(mChildProcessHandle)};
   }
 
@@ -203,6 +203,7 @@ class GeckoChildProcessHost : public ChildProcessHost,
   // is set to null to free the options after the child is launched.
   UniquePtr<base::LaunchOptions> mLaunchOptions;
   ScopedPort mInitialPort;
+  nsID mInitialChannelId;
   RefPtr<NodeController> mNodeController;
   RefPtr<NodeChannel> mNodeChannel;
 

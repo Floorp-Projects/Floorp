@@ -52,9 +52,13 @@ class UntypedEndpoint {
   UntypedEndpoint() = default;
 
   UntypedEndpoint(const PrivateIPDLInterface&, ScopedPort aPort,
+                  const nsID& aMessageChannelId,
                   ProcessId aMyPid = base::kInvalidProcessId,
                   ProcessId aOtherPid = base::kInvalidProcessId)
-      : mPort(std::move(aPort)), mMyPid(aMyPid), mOtherPid(aOtherPid) {}
+      : mPort(std::move(aPort)),
+        mMessageChannelId(aMessageChannelId),
+        mMyPid(aMyPid),
+        mOtherPid(aOtherPid) {}
 
   UntypedEndpoint(const UntypedEndpoint&) = delete;
   UntypedEndpoint(UntypedEndpoint&& aOther) = default;
@@ -74,7 +78,8 @@ class UntypedEndpoint {
     MOZ_RELEASE_ASSERT(mMyPid == base::kInvalidProcessId ||
                        mMyPid == base::GetCurrentProcId());
     MOZ_RELEASE_ASSERT(!aEventTarget || aEventTarget->IsOnCurrentThread());
-    return aActor->Open(std::move(mPort), mOtherPid, aEventTarget);
+    return aActor->Open(std::move(mPort), mMessageChannelId, mOtherPid,
+                        aEventTarget);
   }
 
   bool IsValid() const { return mPort.IsValid(); }
@@ -83,6 +88,7 @@ class UntypedEndpoint {
   friend struct IPC::ParamTraits<UntypedEndpoint>;
 
   ScopedPort mPort;
+  nsID mMessageChannelId{};
   ProcessId mMyPid = base::kInvalidProcessId;
   ProcessId mOtherPid = base::kInvalidProcessId;
 };
@@ -157,8 +163,11 @@ nsresult CreateEndpoints(const PrivateIPDLInterface& aPrivate,
 
   auto [parentPort, childPort] =
       NodeController::GetSingleton()->CreatePortPair();
-  *aParentEndpoint = Endpoint<PFooParent>(aPrivate, std::move(parentPort));
-  *aChildEndpoint = Endpoint<PFooChild>(aPrivate, std::move(childPort));
+  nsID channelId = nsID::GenerateUUID();
+  *aParentEndpoint =
+      Endpoint<PFooParent>(aPrivate, std::move(parentPort), channelId);
+  *aChildEndpoint =
+      Endpoint<PFooChild>(aPrivate, std::move(childPort), channelId);
   return NS_OK;
 }
 
@@ -173,10 +182,12 @@ nsresult CreateEndpoints(const PrivateIPDLInterface& aPrivate,
 
   auto [parentPort, childPort] =
       NodeController::GetSingleton()->CreatePortPair();
-  *aParentEndpoint = Endpoint<PFooParent>(aPrivate, std::move(parentPort),
-                                          aParentDestPid, aChildDestPid);
-  *aChildEndpoint = Endpoint<PFooChild>(aPrivate, std::move(childPort),
-                                        aChildDestPid, aParentDestPid);
+  nsID channelId = nsID::GenerateUUID();
+  *aParentEndpoint =
+      Endpoint<PFooParent>(aPrivate, std::move(parentPort), channelId,
+                           aParentDestPid, aChildDestPid);
+  *aChildEndpoint = Endpoint<PFooChild>(
+      aPrivate, std::move(childPort), channelId, aChildDestPid, aParentDestPid);
   return NS_OK;
 }
 
