@@ -90,7 +90,7 @@ void RefCountedInsideLambdaChecker::check(
     // "Smart Pointer" somehow?
     if (!StrongRefToThisCaptured && Capture.capturesVariable() &&
         Capture.getCaptureKind() == LCK_ByCopy) {
-      const VarDecl *Var = Capture.getCapturedVar();
+      const VarDecl *Var = dyn_cast<VarDecl>(Capture.getCapturedVar());
       if (Var->hasInit()) {
         const Stmt *Init = Var->getInit();
 
@@ -119,7 +119,7 @@ void RefCountedInsideLambdaChecker::check(
   // pointers.
   for (const LambdaCapture &Capture : Lambda->captures()) {
     if (Capture.capturesVariable()) {
-      const VarDecl *Var = Capture.getCapturedVar();
+      const VarDecl *Var = dyn_cast<VarDecl>(Capture.getCapturedVar());
       QualType Pointee = Var->getType()->getPointeeType();
       if (!Pointee.isNull() && isClassRefCounted(Pointee) &&
           !IsKnownLive(Var)) {
