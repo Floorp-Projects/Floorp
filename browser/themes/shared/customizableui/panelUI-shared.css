@@ -236,7 +236,7 @@ toolbarseparator + .panel-subview-body,
 
 #PlacesToolbar menupopup {
   appearance: none;
-  background: var(--arrowpanel-background);
+  --panel-background: var(--arrowpanel-background);
   font: menu;
 }
 
