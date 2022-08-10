@@ -14,9 +14,7 @@ using namespace mozilla::dom;
 
 namespace mozilla::widget {
 
-auto TextRecognition::FindText(imgIContainer& aImage,
-                               const nsTArray<nsCString>& aLanguages)
-    -> RefPtr<NativePromise> {
+auto TextRecognition::FindText(imgIContainer& aImage) -> RefPtr<NativePromise> {
   // TODO: Maybe decode async.
   RefPtr<gfx::SourceSurface> surface = aImage.GetFrame(
       imgIContainer::FRAME_CURRENT,
@@ -29,11 +27,10 @@ auto TextRecognition::FindText(imgIContainer& aImage,
     return NativePromise::CreateAndReject("Failed to get data surface"_ns,
                                           __func__);
   }
-  return FindText(*dataSurface, aLanguages);
+  return FindText(*dataSurface);
 }
 
-auto TextRecognition::FindText(gfx::DataSourceSurface& aSurface,
-                               const nsTArray<nsCString>& aLanguages)
+auto TextRecognition::FindText(gfx::DataSourceSurface& aSurface)
     -> RefPtr<NativePromise> {
   if (XRE_IsContentProcess()) {
     auto* contentChild = ContentChild::GetSingleton();
@@ -43,32 +40,31 @@ auto TextRecognition::FindText(gfx::DataSourceSurface& aSurface,
                                             __func__);
     }
     auto promise = MakeRefPtr<NativePromise::Private>(__func__);
-    contentChild->SendFindImageText(*image, aLanguages)
-        ->Then(
-            GetCurrentSerialEventTarget(), __func__,
-            [promise](TextRecognitionResultOrError&& aResultOrError) {
-              switch (aResultOrError.type()) {
-                case TextRecognitionResultOrError::Type::TTextRecognitionResult:
-                  promise->Resolve(
-                      std::move(aResultOrError.get_TextRecognitionResult()),
-                      __func__);
-                  break;
-                case TextRecognitionResultOrError::Type::TnsCString:
-                  promise->Reject(std::move(aResultOrError.get_nsCString()),
-                                  __func__);
-                  break;
-                default:
-                  MOZ_ASSERT_UNREACHABLE("Unknown result?");
-                  promise->Reject("Unknown error"_ns, __func__);
-                  break;
-              }
-            },
-            [promise](mozilla::ipc::ResponseRejectReason) {
-              promise->Reject("IPC rejection"_ns, __func__);
-            });
+    contentChild->SendFindImageText(*image)->Then(
+        GetCurrentSerialEventTarget(), __func__,
+        [promise](TextRecognitionResultOrError&& aResultOrError) {
+          switch (aResultOrError.type()) {
+            case TextRecognitionResultOrError::Type::TTextRecognitionResult:
+              promise->Resolve(
+                  std::move(aResultOrError.get_TextRecognitionResult()),
+                  __func__);
+              break;
+            case TextRecognitionResultOrError::Type::TnsCString:
+              promise->Reject(std::move(aResultOrError.get_nsCString()),
+                              __func__);
+              break;
+            default:
+              MOZ_ASSERT_UNREACHABLE("Unknown result?");
+              promise->Reject("Unknown error"_ns, __func__);
+              break;
+          }
+        },
+        [promise](mozilla::ipc::ResponseRejectReason) {
+          promise->Reject("IPC rejection"_ns, __func__);
+        });
     return promise;
   }
-  return DoFindText(aSurface, aLanguages);
+  return DoFindText(aSurface);
 }
 
 void TextRecognition::FillShadow(ShadowRoot& aShadow,
@@ -105,8 +101,7 @@ void TextRecognition::FillShadow(ShadowRoot& aShadow,
 }
 
 #ifndef XP_MACOSX
-auto TextRecognition::DoFindText(gfx::DataSourceSurface&,
-                                 const nsTArray<nsCString>&)
+auto TextRecognition::DoFindText(gfx::DataSourceSurface&)
     -> RefPtr<NativePromise> {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess(),
                      "This should only run in the parent process");

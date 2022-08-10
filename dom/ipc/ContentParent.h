@@ -1110,7 +1110,7 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvCopyFavicon(nsIURI* aOldURI, nsIURI* aNewURI,
                                           const bool& aInPrivateBrowsing);
 
-  mozilla::ipc::IPCResult RecvFindImageText(ShmemImage&&, nsTArray<nsCString>&&,
+  mozilla::ipc::IPCResult RecvFindImageText(ShmemImage&&,
                                             FindImageTextResolver&&);
 
   virtual void ProcessingError(Result aCode, const char* aMsgName) override;

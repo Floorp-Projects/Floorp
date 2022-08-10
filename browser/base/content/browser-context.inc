@@ -214,6 +214,9 @@
       <menuitem id="context-copyimage"
                 data-l10n-id="main-context-menu-image-copy-link"
                 oncommand="gContextMenu.copyMediaLocation();"/>
+      <menuitem id="context-imagetext"
+                data-l10n-id="main-context-menu-image-get-text"
+                oncommand="gContextMenu.getImageText()"/>
       <menuitem id="context-copyvideourl"
                 data-l10n-id="main-context-menu-video-copy-link"
                 oncommand="gContextMenu.copyMediaLocation();"/>
@@ -229,9 +232,6 @@
       <menuitem id="context-sendaudio"
                 data-l10n-id="main-context-menu-audio-email"
                 oncommand="gContextMenu.sendMedia();"/>
-      <menuitem id="context-imagetext"
-                data-l10n-id="main-context-menu-image-copy-text"
-                oncommand="gContextMenu.getImageText()"/>
       <menuitem id="context-viewimageinfo"
                 hidden="true"
                 data-l10n-id="main-context-menu-image-info"

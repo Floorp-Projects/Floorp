@@ -17,8 +17,7 @@
 
 namespace mozilla::widget {
 
-auto TextRecognition::DoFindText(gfx::DataSourceSurface& aSurface,
-                                 const nsTArray<nsCString>& aLanguages) -> RefPtr<NativePromise> {
+auto TextRecognition::DoFindText(gfx::DataSourceSurface& aSurface) -> RefPtr<NativePromise> {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK
   if (@available(macOS 10.15, *)) {
     // TODO - Is this the most efficient path? Maybe we can write a new
@@ -31,19 +30,11 @@ auto TextRecognition::DoFindText(gfx::DataSourceSurface& aSurface,
 
     auto promise = MakeRefPtr<NativePromise::Private>(__func__);
 
-    NSMutableArray* recognitionLanguages = [[NSMutableArray alloc] init];
-    for (const auto& locale : aLanguages) {
-      [recognitionLanguages addObject:nsCocoaUtils::ToNSString(locale)];
-    }
-
     NS_DispatchBackgroundTask(
         NS_NewRunnableFunction(
             __func__,
-            [promise, imageRef, recognitionLanguages] {
-              auto unrefImage = MakeScopeExit([&] {
-                ::CGImageRelease(imageRef);
-                [recognitionLanguages release];
-              });
+            [promise, imageRef] {
+              auto unrefImage = MakeScopeExit([&] { ::CGImageRelease(imageRef); });
 
               dom::TextRecognitionResult result;
               dom::TextRecognitionResult* pResult = &result;
@@ -75,10 +66,6 @@ auto TextRecognition::DoFindText(gfx::DataSourceSurface& aSurface,
                           *quad.points().AppendElement() = ToImagePoint(obj.bottomRight);
                         }];
                   }];
-
-              textRecognitionRequest.recognitionLevel = VNRequestTextRecognitionLevelAccurate;
-              textRecognitionRequest.recognitionLanguages = recognitionLanguages;
-              textRecognitionRequest.usesLanguageCorrection = true;
 
               // Send out the request. This blocks execution of this thread with an expensive
               // CPU call.
