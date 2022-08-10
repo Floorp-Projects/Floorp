@@ -426,7 +426,7 @@ static void MapCallback(ffi::WGPUBufferMapAsyncStatus status,
       }
     }
 
-    result = BufferMapSuccess(offset, size);
+    result = BufferMapSuccess(offset, size, req->mHostMap == ffi::WGPUHostMap_Write);
 
     mapData->mMappedOffset = offset;
     mapData->mMappedSize = size;

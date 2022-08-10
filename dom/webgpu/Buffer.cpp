@@ -94,7 +94,8 @@ already_AddRefed<Buffer> Buffer::Create(Device* aDevice, RawId aDeviceId,
   RefPtr<Buffer> buffer =
       new Buffer(aDevice, id, aDesc.mSize, aDesc.mUsage, std::move(shmem));
   if (aDesc.mMappedAtCreation) {
-    buffer->SetMapped(!(aDesc.mUsage & dom::GPUBufferUsage_Binding::MAP_READ));
+    buffer->SetMapped(0, aDesc.mSize,
+                      !(aDesc.mUsage & dom::GPUBufferUsage_Binding::MAP_READ));
   }
 
   return buffer.forget();
@@ -106,6 +107,7 @@ bool Buffer::Mappable() const {
 }
 
 void Buffer::Cleanup() {
+  AbortMapRequest();
   if (mValid && mParent) {
     mValid = false;
 
@@ -128,10 +130,16 @@ void Buffer::Cleanup() {
   }
 }
 
-void Buffer::SetMapped(bool aWritable) {
+void Buffer::SetMapped(BufferAddress aOffset, BufferAddress aSize,
+                       bool aWritable) {
   MOZ_ASSERT(!mMapped);
+  MOZ_RELEASE_ASSERT(aOffset <= mSize);
+  MOZ_RELEASE_ASSERT(aSize <= mSize - aOffset);
+
   mMapped.emplace();
   mMapped->mWritable = aWritable;
+  mMapped->mOffset = aOffset;
+  mMapped->mSize = aSize;
 }
 
 already_AddRefed<dom::Promise> Buffer::MapAsync(
@@ -141,64 +149,56 @@ already_AddRefed<dom::Promise> Buffer::MapAsync(
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
-  if (mMapped) {
-    aRv.ThrowInvalidStateError("Unable to map a buffer that is already mapped");
-    return nullptr;
+
+  if (mParent->IsLost()) {
+    promise->MaybeRejectWithOperationError("Device Lost");
+    return promise.forget();
   }
 
-  switch (aMode) {
-    case dom::GPUMapMode_Binding::READ:
-      if ((mUsage & dom::GPUBufferUsage_Binding::MAP_READ) == 0) {
-        promise->MaybeRejectWithOperationError(
-            "mapAsync: 'mode' is GPUMapMode.READ, \
-but GPUBuffer was not created with GPUBufferUsage.MAP_READ");
-        return promise.forget();
-      }
-      break;
-    case dom::GPUMapMode_Binding::WRITE:
-      if ((mUsage & dom::GPUBufferUsage_Binding::MAP_WRITE) == 0) {
-        promise->MaybeRejectWithOperationError(
-            "mapAsync: 'mode' is GPUMapMode.WRITE, \
-but GPUBuffer was not created with GPUBufferUsage.MAP_WRITE");
-        return promise.forget();
-      }
-      break;
-    default:
-      promise->MaybeRejectWithOperationError(
-          "GPUBuffer.mapAsync 'mode' argument \
-must be either GPUMapMode.READ or GPUMapMode.WRITE");
-      return promise.forget();
+  if (mMapRequest) {
+    promise->MaybeRejectWithOperationError("Buffer mapping is already pending");
+    return promise.forget();
   }
 
-  SetMapped(aMode == dom::GPUMapMode_Binding::WRITE);
-
-  const auto checked = aSize.WasPassed() ? CheckedInt<size_t>(aSize.Value())
-                                         : CheckedInt<size_t>(mSize) - aOffset;
-  if (!checked.isValid()) {
-    aRv.ThrowRangeError("Mapped size is too large");
-    return nullptr;
+  BufferAddress size = 0;
+  if (aSize.WasPassed()) {
+    size = aSize.Value();
+  } else if (aOffset <= mSize) {
+    // Default to passing the reminder of the buffer after the provided offset.
+    size = mSize - aOffset;
+  } else {
+    // The provided offset is larger than the buffer size.
+    // The parent side will handle the error, we can let the requested size be
+    // zero.
   }
 
-  const auto& size = checked.value();
   RefPtr<Buffer> self(this);
 
   auto mappingPromise = mParent->MapBufferAsync(mId, aMode, aOffset, size, aRv);
-  if (!mappingPromise) {
-    return nullptr;
-  }
+  MOZ_ASSERT(mappingPromise);
+
+  mMapRequest = promise;
 
   mappingPromise->Then(
       GetCurrentSerialEventTarget(), __func__,
       [promise, self](BufferMapResult&& aResult) {
+        // Unmap might have been called while the result was on the way back.
+        if (promise->State() != dom::Promise::PromiseState::Pending) {
+          return;
+        }
+
         switch (aResult.type()) {
           case BufferMapResult::TBufferMapSuccess: {
+            auto& success = aResult.get_BufferMapSuccess();
+            self->mMapRequest = nullptr;
+            self->SetMapped(success.offset(), success.size(),
+                            success.writable());
             promise->MaybeResolve(0);
             break;
           }
           case BufferMapResult::TBufferMapError: {
-            // TODO: update mapping state.
             auto& error = aResult.get_BufferMapError();
-            promise->MaybeRejectWithOperationError(error.message());
+            self->RejectMapRequest(promise, error.message());
             break;
           }
           default: {
@@ -259,10 +259,27 @@ void Buffer::UnmapArrayBuffers(JSContext* aCx, ErrorResult& aRv) {
 
   mMapped->mArrayBuffers.Clear();
 
+  AbortMapRequest();
+
   if (NS_WARN_IF(!detachedArrayBuffers)) {
     aRv.NoteJSContextException(aCx);
     return;
   }
+}
+
+void Buffer::RejectMapRequest(dom::Promise* aPromise, nsACString& message) {
+  if (mMapRequest == aPromise) {
+    mMapRequest = nullptr;
+  }
+
+  aPromise->MaybeRejectWithOperationError(message);
+}
+
+void Buffer::AbortMapRequest() {
+  if (mMapRequest) {
+    mMapRequest->MaybeRejectWithAbortError("Buffer unmapped");
+  }
+  mMapRequest = nullptr;
 }
 
 void Buffer::Unmap(JSContext* aCx, ErrorResult& aRv) {
@@ -287,6 +304,8 @@ void Buffer::Unmap(JSContext* aCx, ErrorResult& aRv) {
 }
 
 void Buffer::Destroy() {
+  AbortMapRequest();
+
   // TODO: we don't have to implement it right now, but it's used by the
   // examples
 }
