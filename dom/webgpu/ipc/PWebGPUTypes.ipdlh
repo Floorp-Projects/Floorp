@@ -15,6 +15,7 @@ namespace webgpu {
 struct BufferMapSuccess {
     uint64_t offset;
     uint64_t size;
+    bool writable;
 };
 
 struct BufferMapError {

@@ -101,7 +101,7 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
                                              size_t aSize,
                                              const ipc::Shmem& aShmem);
   RefPtr<MappingPromise> MapBufferAsync(RawId aId, uint32_t aMode,
-                                        size_t aOffset, size_t aSize,
+                                        uint64_t aOffset, uint64_t aSize,
                                         ErrorResult& aRv);
   void UnmapBuffer(RawId aId, bool aFlush);
   already_AddRefed<Texture> InitSwapChain(
