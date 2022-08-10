@@ -560,7 +560,8 @@ behavior is fairly clear:
               return;
             }
 
-            new DemoParent(std::move(host));
+            auto actor = MakeRefPtr<DemoParent>(std::move(host));
+            actor->Init();
           });
     }
 
@@ -579,20 +580,21 @@ the new host, if successful.
 
 In this sample, the ``DemoParent`` is owned (in the reference-counting sense)
 by IPDL, which is why it doesn't get assigned to anything.  This simplifies the
-design dramatically.  IPDL takes ownership when the actor calls ``Open`` in its
-constructor:
+design dramatically.  IPDL takes ownership when the actor calls ``Bind`` from
+the ``Init`` method:
 
 .. code-block:: c++
 
     DemoParent::DemoParent(UniqueHost&& aHost)
-        : mHost(std::move(aHost)) {
-      Open(mHost->TakeInitialPort(),
-           base::GetProcId(mHost->GetChildProcessHandle()));
+        : mHost(std::move(aHost)) {}
+
+    DemoParent::Init() {
+      mHost->TakeInitialEndpoint().Bind(this);
       // ...
       mHost->MakeBridgeAndResolve();
     }
 
-After the ``Open`` call, the actor is live and communication with the new
+After the ``Bind`` call, the actor is live and communication with the new
 process can begin.  The constructor concludes by initiating the process of
 connecting the ``PDemoHelpline`` actors; ``Host::MakeBridgeAndResolve`` will be
 covered in `Creating a New Top Level Actor`_.  However, before we get into

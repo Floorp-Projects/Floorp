@@ -61,9 +61,7 @@ already_AddRefed<IPDLUnitTestParent> IPDLUnitTestParent::CreateCrossProcess() {
     return nullptr;
   }
 
-  if (!parent->Open(
-          parent->mSubprocess->TakeInitialPort(),
-          base::GetProcId(parent->mSubprocess->GetChildProcessHandle()))) {
+  if (!parent->mSubprocess->TakeInitialEndpoint().Bind(parent.get())) {
     ADD_FAILURE() << "Opening the parent actor failed";
     return nullptr;
   }

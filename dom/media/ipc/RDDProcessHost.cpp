@@ -169,8 +169,7 @@ void RDDProcessHost::InitAfterConnect(bool aSucceeded) {
   }
   mProcessToken = ++sRDDProcessTokenCounter;
   mRDDChild = MakeUnique<RDDChild>(this);
-  DebugOnly<bool> rv = mRDDChild->Open(
-      TakeInitialPort(), base::GetProcId(GetChildProcessHandle()));
+  DebugOnly<bool> rv = TakeInitialEndpoint().Bind(mRDDChild.get());
   MOZ_ASSERT(rv);
 
   // Only clear mPrefSerializer in the success case to avoid a

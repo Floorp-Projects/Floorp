@@ -163,8 +163,7 @@ bool VRProcessParent::InitAfterConnect(bool aSucceeded) {
 
     mVRChild = MakeUnique<VRChild>(this);
 
-    DebugOnly<bool> rv = mVRChild->Open(
-        TakeInitialPort(), base::GetProcId(GetChildProcessHandle()));
+    DebugOnly<bool> rv = TakeInitialEndpoint().Bind(mVRChild.get());
     MOZ_ASSERT(rv);
 
     mVRChild->Init();
