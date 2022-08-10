@@ -5191,11 +5191,6 @@ bool ContentParent::DeallocPWebrtcGlobalParent(PWebrtcGlobalParent* aActor) {
 }
 #endif
 
-mozilla::ipc::IPCResult ContentParent::RecvSetOfflinePermission(
-    nsIPrincipal* aPrincipal) {
-  return IPC_OK();
-}
-
 void ContentParent::MaybeInvokeDragSession(BrowserParent* aParent) {
   // dnd uses IPCBlob to transfer data to the content process and the IPC
   // message is sent as normal priority. When sending input events with input

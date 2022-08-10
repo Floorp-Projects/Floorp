@@ -466,8 +466,6 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvNotifyTabDestroying(const TabId& aTabId,
                                                   const ContentParentId& aCpId);
 
-  mozilla::ipc::IPCResult RecvSetOfflinePermission(nsIPrincipal* principal);
-
   mozilla::ipc::IPCResult RecvFinishShutdown();
 
   void MaybeInvokeDragSession(BrowserParent* aParent);
