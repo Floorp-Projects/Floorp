@@ -1622,7 +1622,7 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
       stub->state().canAttachStub()) {
     // Try CacheIR first:
     Rooted<ArrayObject*> aobj(cx, &arr.toObject().as<ArrayObject>());
-    MOZ_ASSERT(aobj->length() == aobj->getDenseInitializedLength());
+    MOZ_ASSERT(IsPackedArray(aobj));
 
     HandleValueArray args = HandleValueArray::fromMarkedLocation(
         aobj->length(), aobj->getDenseElements());
