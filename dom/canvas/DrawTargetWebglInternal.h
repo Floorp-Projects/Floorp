@@ -31,17 +31,14 @@ class TexturePacker {
   const IntRect& GetBounds() const { return mBounds; }
 
  private:
-  bool IsLeaf() const { return !mChildren[0]; }
+  bool IsLeaf() const { return !mChildren; }
   bool IsFullyAvailable() const { return IsLeaf() && mAvailable > 0; }
 
-  void DiscardChildren() {
-    mChildren[0] = nullptr;
-    mChildren[1] = nullptr;
-  }
+  void DiscardChildren() { mChildren.reset(); }
 
   // If applicable, the two children produced by picking a single axis split
   // within the node's bounds and subdividing the bounds there.
-  UniquePtr<TexturePacker> mChildren[2];
+  UniquePtr<TexturePacker[]> mChildren;
   // The bounds enclosing this node and any children within it.
   IntRect mBounds;
   // For a leaf node, specifies the size of the smallest dimension available to
@@ -101,7 +98,6 @@ class CacheEntryImpl : public CacheEntry, public LinkedListElement<RefPtr<T>> {
                  HashNumber aHash)
       : CacheEntry(aTransform, aBounds, aHash) {}
 
- protected:
   void RemoveFromList() override {
     if (ListType::isInList()) {
       ListType::remove();
@@ -112,15 +108,25 @@ class CacheEntryImpl : public CacheEntry, public LinkedListElement<RefPtr<T>> {
 // CacheImpl manages a list of CacheEntry.
 template <typename T>
 class CacheImpl {
+  typedef LinkedList<RefPtr<T>> ListType;
+
+  static constexpr size_t kNumChains = 17;
+
  public:
   ~CacheImpl() {
-    while (RefPtr<T> entry = mEntries.popLast()) {
-      entry->Unlink();
+    for (size_t i = 0; i < kNumChains; ++i) {
+      while (RefPtr<T> entry = mChains[i].popLast()) {
+        entry->Unlink();
+      }
     }
   }
 
  protected:
-  LinkedList<RefPtr<T>> mEntries;
+  ListType& GetChain(HashNumber aHash) { return mChains[aHash % kNumChains]; }
+
+  void Insert(T* aEntry) { GetChain(aEntry->GetHash()).insertFront(aEntry); }
+
+  ListType mChains[kNumChains];
 };
 
 // TextureHandle is an abstract base class for supplying textures to drawing
@@ -304,18 +310,19 @@ class GlyphCacheEntry : public CacheEntryImpl<GlyphCacheEntry> {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GlyphCacheEntry, override)
 
   GlyphCacheEntry(const GlyphBuffer& aBuffer, const DeviceColor& aColor,
-                  const Matrix& aTransform, const IntRect& aBounds,
-                  HashNumber aHash);
+                  const Matrix& aTransform, const IntPoint& aQuantizeScale,
+                  const IntRect& aBounds, HashNumber aHash);
   ~GlyphCacheEntry();
 
   const GlyphBuffer& GetGlyphBuffer() const { return mBuffer; }
 
   bool MatchesGlyphs(const GlyphBuffer& aBuffer, const DeviceColor& aColor,
-                     const Matrix& aTransform, const IntRect& aBounds,
+                     const Matrix& aTransform, const IntPoint& aQuantizeScale,
                      HashNumber aHash);
 
   static HashNumber HashGlyphs(const GlyphBuffer& aBuffer,
-                               const Matrix& aTransform);
+                               const Matrix& aTransform,
+                               const IntPoint& aQuantizeScale);
 
  private:
   // The glyph keys used to render the text run.
@@ -336,9 +343,18 @@ class GlyphCache : public LinkedListElement<GlyphCache>,
 
   ScaledFont* GetFont() const { return mFont; }
 
-  already_AddRefed<GlyphCacheEntry> FindOrInsertEntry(
-      const GlyphBuffer& aBuffer, const DeviceColor& aColor,
-      const Matrix& aTransform, const IntRect& aBounds);
+  already_AddRefed<GlyphCacheEntry> FindEntry(const GlyphBuffer& aBuffer,
+                                              const DeviceColor& aColor,
+                                              const Matrix& aTransform,
+                                              const IntPoint& aQuantizeScale,
+                                              HashNumber aHash);
+
+  already_AddRefed<GlyphCacheEntry> InsertEntry(const GlyphBuffer& aBuffer,
+                                                const DeviceColor& aColor,
+                                                const Matrix& aTransform,
+                                                const IntPoint& aQuantizeScale,
+                                                const IntRect& aBounds,
+                                                HashNumber aHash);
 
  private:
   // Weak pointer to the owning font

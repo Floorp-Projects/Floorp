@@ -28,6 +28,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 
@@ -696,10 +697,9 @@ class ContentParent final : public PContentParent,
    */
   static nsClassHashtable<nsCStringHashKey, nsTArray<ContentParent*>>*
       sBrowserContentParents;
-  static UniquePtr<nsTArray<ContentParent*>> sPrivateContent;
-  static UniquePtr<nsTHashMap<nsUint32HashKey, ContentParent*>>
+  static mozilla::StaticAutoPtr<nsTHashMap<nsUint32HashKey, ContentParent*>>
       sJSPluginContentParents;
-  static UniquePtr<LinkedList<ContentParent>> sContentParents;
+  static mozilla::StaticAutoPtr<LinkedList<ContentParent>> sContentParents;
 
   /**
    * In order to avoid rapidly creating and destroying content processes when
@@ -716,7 +716,7 @@ class ContentParent final : public PContentParent,
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   // Cached Mac sandbox params used when launching content processes.
-  static UniquePtr<std::vector<std::string>> sMacSandboxParams;
+  static mozilla::StaticAutoPtr<std::vector<std::string>> sMacSandboxParams;
 #endif
 
   // Set aLoadUri to true to load aURIToLoad and to false to only create the
@@ -1591,7 +1591,7 @@ class ContentParent final : public PContentParent,
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   mozilla::UniquePtr<SandboxBroker> mSandboxBroker;
-  static mozilla::UniquePtr<SandboxBrokerPolicyFactory>
+  static mozilla::StaticAutoPtr<SandboxBrokerPolicyFactory>
       sSandboxBrokerPolicyFactory;
 #endif
 
