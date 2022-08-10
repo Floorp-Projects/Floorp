@@ -195,11 +195,6 @@ const MultiStageAboutWelcome = props => {
     screens.forEach((screen, order) => {
       if (index === order) {
         _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendImpressionTelemetry(`${props.message_id}_${order}_${screen.id}`);
-      } // For feature callouts, send an update when a new screen will render
-
-
-      if (window.AWNewScreen) {
-        window.AWNewScreen(index);
       }
     }); // Remember that a new screen has loaded for browser navigation
 

@@ -184,6 +184,7 @@ const SpecialMessageActions = {
       "browser.privacySegmentation.enabled",
       "browser.startup.homepage",
       "browser.privacySegmentation.windowSeparation.enabled",
+      "browser.firefox-view.feature-tour",
     ];
 
     if (!allowedPrefs.includes(pref.name)) {

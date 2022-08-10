@@ -5,7 +5,7 @@ $max-z-index: 2147483647;
 
   &,
   & .outer-wrapper {
-    height: 0;
+    height: auto;
   }
 
   // sass-lint:disable no-color-literals

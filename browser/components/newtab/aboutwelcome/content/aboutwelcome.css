@@ -35,7 +35,7 @@ input {
   position: absolute;
 }
 .onboardingContainer.featureCallout, .onboardingContainer.featureCallout .outer-wrapper {
-  height: 0;
+  height: auto;
 }
 .onboardingContainer.featureCallout .screen[pos=callout] {
   z-index: 2147483646;

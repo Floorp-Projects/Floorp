@@ -27,10 +27,6 @@ export const MultiStageAboutWelcome = props => {
           `${props.message_id}_${order}_${screen.id}`
         );
       }
-      // For feature callouts, send an update when a new screen will render
-      if (window.AWNewScreen) {
-        window.AWNewScreen(index);
-      }
     });
 
     // Remember that a new screen has loaded for browser navigation
