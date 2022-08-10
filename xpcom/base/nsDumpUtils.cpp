@@ -39,6 +39,10 @@ using namespace mozilla;
  * This scheme is similar to using signalfd(), except it's portable and it
  * doesn't require the use of sigprocmask, which is problematic because it
  * masks signals received by child processes.
+ *
+ * In theory, we could use Chromium's MessageLoopForIO::CatchSignal() for this.
+ * But that uses libevent, which does not handle the realtime signals (bug
+ * 794074).
  */
 
 // This is the write-end of a pipe that we use to notice when a

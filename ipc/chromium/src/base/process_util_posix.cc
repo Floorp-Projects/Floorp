@@ -187,6 +187,67 @@ void CloseSuperfluousFds(void* aCtx, bool (*aShouldPreserve)(void*, int)) {
   }
 }
 
+bool DidProcessCrash(bool* child_exited, ProcessHandle handle) {
+#ifdef MOZ_ENABLE_FORKSERVER
+  if (mozilla::ipc::ForkServiceChild::Get()) {
+    // We only know if a process exists, but not if it has crashed.
+    //
+    // Since content processes are not direct children of the chrome
+    // process any more, it is impossible to use |waitpid()| to wait for
+    // them.
+    const int r = kill(handle, 0);
+    if (r < 0 && errno == ESRCH) {
+      if (child_exited) *child_exited = true;
+    } else {
+      if (child_exited) *child_exited = false;
+    }
+
+    return false;
+  }
+#endif
+  int status;
+  const int result = HANDLE_EINTR(waitpid(handle, &status, WNOHANG));
+  if (result == -1) {
+    // This shouldn't happen, but sometimes it does.  The error is
+    // probably ECHILD and the reason is probably that a pid was
+    // waited on again after a previous wait reclaimed its zombie.
+    // (It could also occur if the process isn't a direct child, but
+    // don't do that.)  This is bad, because it risks interfering with
+    // an unrelated child process if the pid is reused.
+    //
+    // So, lacking reliable information, we indicate that the process
+    // is dead, in the hope that the caller will give up and stop
+    // calling us.  See also bug 943174 and bug 933680.
+    CHROMIUM_LOG(ERROR) << "waitpid failed pid:" << handle
+                        << " errno:" << errno;
+    if (child_exited) *child_exited = true;
+    return false;
+  } else if (result == 0) {
+    // the child hasn't exited yet.
+    if (child_exited) *child_exited = false;
+    return false;
+  }
+
+  if (child_exited) *child_exited = true;
+
+  if (WIFSIGNALED(status)) {
+    switch (WTERMSIG(status)) {
+      case SIGSYS:
+      case SIGSEGV:
+      case SIGILL:
+      case SIGABRT:
+      case SIGFPE:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  if (WIFEXITED(status)) return WEXITSTATUS(status) != 0;
+
+  return false;
+}
+
 void FreeEnvVarsArray::operator()(char** array) {
   for (char** varPtr = array; *varPtr != nullptr; ++varPtr) {
     free(*varPtr);
