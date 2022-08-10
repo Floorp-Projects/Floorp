@@ -571,9 +571,14 @@ nsBaseDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
     }
   }
 
+  uint32_t dropEffect = nsIDragService::DRAGDROP_ACTION_NONE;
+  if (mDataTransfer) {
+    dropEffect = mDataTransfer->DropEffectInt();
+  }
+
   for (uint32_t i = 0; i < mChildProcesses.Length(); ++i) {
     mozilla::Unused << mChildProcesses[i]->SendEndDragSession(
-        aDoneDrag, mUserCancelled, mEndDragPoint, aKeyModifiers);
+        aDoneDrag, mUserCancelled, mEndDragPoint, aKeyModifiers, dropEffect);
     // Continue sending input events with input priority when stopping the dnd
     // session.
     mChildProcesses[i]->SetInputPriorityEventEnabled(true);
@@ -981,7 +986,8 @@ bool nsBaseDragService::MaybeAddChildProcess(
 bool nsBaseDragService::RemoveAllChildProcesses() {
   for (uint32_t c = 0; c < mChildProcesses.Length(); c++) {
     mozilla::Unused << mChildProcesses[c]->SendEndDragSession(
-        true, false, LayoutDeviceIntPoint(), 0);
+        true, false, LayoutDeviceIntPoint(), 0,
+        nsIDragService::DRAGDROP_ACTION_NONE);
   }
   mChildProcesses.Clear();
   return true;
