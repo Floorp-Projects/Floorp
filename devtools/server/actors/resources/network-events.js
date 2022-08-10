@@ -9,12 +9,22 @@ const { Pool } = require("devtools/shared/protocol/Pool");
 const {
   isWindowGlobalPartOfContext,
 } = require("devtools/server/actors/watcher/browsing-context-helpers.jsm");
+const {
+  WatcherRegistry,
+} = require("devtools/server/actors/watcher/WatcherRegistry.jsm");
+const Targets = require("devtools/server/actors/targets/index");
 
 loader.lazyRequireGetter(
   this,
   "NetworkObserver",
   "devtools/server/actors/network-monitor/network-observer",
   true
+);
+
+loader.lazyRequireGetter(
+  this,
+  "NetworkUtils",
+  "devtools/server/actors/network-monitor/utils/network-utils"
 );
 
 loader.lazyRequireGetter(
@@ -53,7 +63,10 @@ class NetworkEventWatcher {
     this.persist = false;
     this.listener = new NetworkObserver(
       { sessionContext: watcherActor.sessionContext },
-      { onNetworkEvent: this.onNetworkEvent.bind(this) }
+      {
+        onNetworkEvent: this.onNetworkEvent.bind(this),
+        shouldIgnoreChannel: this.shouldIgnoreChannel.bind(this),
+      }
     );
 
     this.listener.init();
@@ -206,6 +219,41 @@ class NetworkEventWatcher {
     }
   }
 
+  /**
+   * Called by NetworkObserver in order to know if the channel should be ignored
+   */
+  shouldIgnoreChannel(channel) {
+    // When we are in the browser toolbox in parent process scope,
+    // the session context is still "all", but we are no longer watching frame and process targets.
+    // In this case, we should ignore all requests belonging to a BrowsingContext that isn't in the parent process
+    // (i.e. the process where this Watcher runs)
+    const isParentProcessOnlyBrowserToolbox =
+      this.watcherActor.sessionContext.type == "all" &&
+      !WatcherRegistry.isWatchingTargets(
+        this.watcherActor,
+        Targets.TYPES.FRAME
+      );
+    if (isParentProcessOnlyBrowserToolbox) {
+      // We should ignore all requests coming from BrowsingContext running in another process
+      const browsingContextID = NetworkUtils.getChannelBrowsingContextID(
+        channel
+      );
+      const browsingContext = BrowsingContext.get(browsingContextID);
+      // We accept any request that isn't bound to any BrowsingContext.
+      // This is most likely a privileged request done from a JSM/C++.
+      // `isInProcess` will be true, when the document executes in the parent process.
+      //
+      // Note that we will still accept all requests that aren't bound to any BrowsingContext
+      // See browser_resources_network_events_parent_process.js test with privileged request
+      // made from the content processes.
+      // We miss some attribute on channel/loadInfo to know that it comes from the content process.
+      if (browsingContext?.currentWindowGlobal.isInProcess === false) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   onNetworkEvent(event) {
     const { channelId } = event;
 
@@ -214,6 +262,7 @@ class NetworkEventWatcher {
         `Got notified about channel ${channelId} more than once.`
       );
     }
+
     const actor = new NetworkEventActor(
       this.watcherActor.conn,
       this.watcherActor.sessionContext,
