@@ -629,6 +629,18 @@ var BackgroundUpdate = {
 
     let snapshot = new lazy.JSONFile({
       beforeSave: async () => {
+        if (Services.startup.shuttingDown) {
+          // Collecting targeting information can be slow and cause shutdown
+          // crashes.  Just write what we have in that case.  During shutdown,
+          // the regular log apparatus is not available, so use `dump`.
+          if (lazy.log.shouldLog("debug")) {
+            dump(
+              `${SLUG}: shutting down, so not updating Firefox Messaging System targeting information\n`
+            );
+          }
+          return;
+        }
+
         lazy.log.debug(
           `${SLUG}: preparing to write Firefox Messaging System targeting information to ${path}`
         );
