@@ -5435,6 +5435,10 @@ void InlinableNativeIRGenerator::emitNativeCalleeGuard() {
   // native from a different realm.
   MOZ_ASSERT(callee_->isNativeWithoutJitEntry());
 
+  MOZ_ASSERT(flags_.getArgFormat() == CallFlags::Standard ||
+             flags_.getArgFormat() == CallFlags::FunCall ||
+             flags_.getArgFormat() == CallFlags::Spread);
+
   ObjOperandId calleeObjId;
   if (flags_.getArgFormat() == CallFlags::FunCall) {
     MOZ_ASSERT(generator_.writer.numOperandIds() > 0, "argcId is initialized");
@@ -9449,6 +9453,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(HandleFunction callee,
                                                          CallFlags flags) {
   MOZ_ASSERT(mode_ == ICState::Mode::Specialized);
   MOZ_ASSERT(callee->isNativeWithoutJitEntry());
+  MOZ_ASSERT(flags.getArgFormat() == CallFlags::Standard ||
+             flags.getArgFormat() == CallFlags::Spread);
 
   // Special case functions are only optimized for normal calls.
   if (op_ != JSOp::Call && op_ != JSOp::CallContent && op_ != JSOp::New &&
@@ -9477,6 +9483,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
 
   // Check for special-cased native constructors.
   if (flags_.isConstructing()) {
+    MOZ_ASSERT(flags_.getArgFormat() == CallFlags::Standard);
+
     // newTarget must match the callee. CacheIR for this is emitted in
     // emitNativeCalleeGuard.
     if (ObjectValue(*callee_) != newTarget_) {
@@ -9507,6 +9515,9 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
     }
     return AttachDecision::NoAction;
   }
+
+  MOZ_ASSERT(flags_.getArgFormat() == CallFlags::Standard ||
+             flags_.getArgFormat() == CallFlags::FunCall);
 
   // Check for special-cased native functions.
   switch (native) {
