@@ -167,11 +167,8 @@ class ContextMenuChild extends JSWindowActorChild {
         let img = lazy.ContentDOMReference.resolve(
           message.data.targetIdentifier
         );
-        const { direction } = this.contentWindow.getComputedStyle(img);
-
-        return img.recognizeCurrentImageText().then(results => {
-          return { results, direction };
-        });
+        img.recognizeCurrentImageText();
+        break;
       }
 
       case "ContextMenu:ToggleRevealPassword": {

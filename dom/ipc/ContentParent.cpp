@@ -4965,25 +4965,23 @@ mozilla::ipc::IPCResult ContentParent::RecvCopyFavicon(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvFindImageText(
-    ShmemImage&& aImage, nsTArray<nsCString>&& aLanguages,
-    FindImageTextResolver&& aResolver) {
+    ShmemImage&& aImage, FindImageTextResolver&& aResolver) {
   RefPtr<DataSourceSurface> surf =
       nsContentUtils::IPCImageToSurface(std::move(aImage), this);
   if (!surf) {
     aResolver(TextRecognitionResultOrError("Failed to read image"_ns));
     return IPC_OK();
   }
-  TextRecognition::FindText(*surf, aLanguages)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [resolver = std::move(aResolver)](
-              TextRecognition::NativePromise::ResolveOrRejectValue&& aValue) {
-            if (aValue.IsResolve()) {
-              resolver(TextRecognitionResultOrError(aValue.ResolveValue()));
-            } else {
-              resolver(TextRecognitionResultOrError(aValue.RejectValue()));
-            }
-          });
+  TextRecognition::FindText(*surf)->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [resolver = std::move(aResolver)](
+          TextRecognition::NativePromise::ResolveOrRejectValue&& aValue) {
+        if (aValue.IsResolve()) {
+          resolver(TextRecognitionResultOrError(aValue.ResolveValue()));
+        } else {
+          resolver(TextRecognitionResultOrError(aValue.RejectValue()));
+        }
+      });
   return IPC_OK();
 }
 

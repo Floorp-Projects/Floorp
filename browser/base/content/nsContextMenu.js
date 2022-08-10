@@ -2301,18 +2301,7 @@ class nsContextMenu {
   }
 
   getImageText() {
-    let dialogBox = gBrowser.getTabDialogBox(this.browser);
-    const imageTextResult = this.actor.getImageText(this.targetIdentifier);
-    const { dialog } = dialogBox.open(
-      "chrome://browser/content/textrecognition/textrecognition.html",
-      {
-        features: "resizable=no",
-        modalType: Services.prompt.MODAL_TYPE_CONTENT,
-      },
-      imageTextResult,
-      () => dialog.resizeVertically(),
-      openLinkIn
-    );
+    this.actor.getImageText(this.targetIdentifier);
   }
 
   drmLearnMore(aEvent) {
