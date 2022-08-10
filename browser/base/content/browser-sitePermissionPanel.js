@@ -30,7 +30,26 @@ var gPermissionPanel = {
     }
   },
 
+  /**
+   * _popupAnchorNode will be set by setAnchor if an outside consumer
+   * of this object wants to override the default anchor for the panel.
+   * If there is no override, this remains null, and the _identityPermissionBox
+   * will be used as the anchor.
+   */
+  _popupAnchorNode: null,
+  _popupPosition: "bottomcenter topleft",
+  setAnchor(anchorNode, popupPosition) {
+    this._popupAnchorNode = anchorNode;
+    this._popupPosition = popupPosition;
+  },
+
   // smart getters
+  get _popupAnchor() {
+    if (this._popupAnchorNode) {
+      return this._popupAnchorNode;
+    }
+    return this._identityPermissionBox;
+  },
   get _identityPermissionBox() {
     delete this._identityPermissionBox;
     return (this._identityPermissionBox = document.getElementById(
@@ -225,14 +244,10 @@ var gPermissionPanel = {
     }
 
     // Now open the popup, anchored off the primary chrome element
-    PanelMultiView.openPopup(
-      this._permissionPopup,
-      this._identityPermissionBox,
-      {
-        position: "bottomcenter topleft",
-        triggerEvent: event,
-      }
-    ).catch(Cu.reportError);
+    PanelMultiView.openPopup(this._permissionPopup, this._popupAnchor, {
+      position: this._popupPosition,
+      triggerEvent: event,
+    }).catch(Cu.reportError);
   },
 
   /**
