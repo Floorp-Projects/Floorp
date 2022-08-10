@@ -53,6 +53,53 @@ Buffer::~Buffer() {
   mozilla::DropJSObjects(this);
 }
 
+already_AddRefed<Buffer> Buffer::Create(Device* aDevice, RawId aDeviceId,
+                                        const dom::GPUBufferDescriptor& aDesc,
+                                        ErrorResult& aRv) {
+  if (aDevice->IsLost()) {
+    RefPtr<Buffer> buffer =
+        new Buffer(aDevice, 0, aDesc.mSize, 0, ipc::Shmem());
+    return buffer.forget();
+  }
+
+  RefPtr<WebGPUChild> actor = aDevice->GetBridge();
+
+  ipc::Shmem shmem;
+  bool hasMapFlags = aDesc.mUsage & (dom::GPUBufferUsage_Binding::MAP_WRITE |
+                                     dom::GPUBufferUsage_Binding::MAP_READ);
+  if (hasMapFlags || aDesc.mMappedAtCreation) {
+    const auto checked = CheckedInt<size_t>(aDesc.mSize);
+    if (!checked.isValid()) {
+      aRv.ThrowRangeError("Mappable size is too large");
+      return nullptr;
+    }
+    const auto& size = checked.value();
+
+    if (!actor->AllocUnsafeShmem(size, &shmem)) {
+      aRv.ThrowAbortError(
+          nsPrintfCString("Unable to allocate shmem of size %" PRIuPTR, size));
+      return nullptr;
+    }
+
+    // zero out memory
+    memset(shmem.get<uint8_t>(), 0, size);
+  }
+
+  MaybeShmem maybeShmem = mozilla::null_t();
+  if (shmem.IsReadable()) {
+    maybeShmem = shmem;
+  }
+  RawId id = actor->DeviceCreateBuffer(aDeviceId, aDesc, std::move(maybeShmem));
+
+  RefPtr<Buffer> buffer =
+      new Buffer(aDevice, id, aDesc.mSize, aDesc.mUsage, std::move(shmem));
+  if (aDesc.mMappedAtCreation) {
+    buffer->SetMapped(!(aDesc.mUsage & dom::GPUBufferUsage_Binding::MAP_READ));
+  }
+
+  return buffer.forget();
+}
+
 bool Buffer::Mappable() const {
   return (mUsage & (dom::GPUBufferUsage_Binding::MAP_WRITE |
                     dom::GPUBufferUsage_Binding::MAP_READ)) != 0;
