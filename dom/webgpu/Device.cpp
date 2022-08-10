@@ -126,30 +126,6 @@ already_AddRefed<Buffer> Device::CreateBuffer(
   return Buffer::Create(this, mId, aDesc, aRv);
 }
 
-RefPtr<MappingPromise> Device::MapBufferAsync(RawId aId, uint32_t aMode,
-                                              uint64_t aOffset, uint64_t aSize,
-                                              ErrorResult& aRv) {
-  ffi::WGPUHostMap mode;
-  switch (aMode) {
-    case dom::GPUMapMode_Binding::READ:
-      mode = ffi::WGPUHostMap_Read;
-      break;
-    case dom::GPUMapMode_Binding::WRITE:
-      mode = ffi::WGPUHostMap_Write;
-      break;
-    default:
-      MOZ_CRASH("should have checked aMode in Buffer::MapAsync");
-  }
-
-  return mBridge->SendBufferMap(aId, mode, aOffset, aSize);
-}
-
-void Device::UnmapBuffer(RawId aId, bool aFlush) {
-  if (mBridge->CanSend()) {
-    mBridge->SendBufferUnmap(aId, aFlush);
-  }
-}
-
 already_AddRefed<Texture> Device::CreateTexture(
     const dom::GPUTextureDescriptor& aDesc) {
   RawId id = 0;

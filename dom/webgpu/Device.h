@@ -100,10 +100,6 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
   static JSObject* CreateExternalArrayBuffer(JSContext* aCx, size_t aOffset,
                                              size_t aSize,
                                              const ipc::Shmem& aShmem);
-  RefPtr<MappingPromise> MapBufferAsync(RawId aId, uint32_t aMode,
-                                        uint64_t aOffset, uint64_t aSize,
-                                        ErrorResult& aRv);
-  void UnmapBuffer(RawId aId, bool aFlush);
   already_AddRefed<Texture> InitSwapChain(
       const dom::GPUCanvasConfiguration& aDesc,
       const layers::CompositableHandle& aHandle, gfx::SurfaceFormat aFormat,
