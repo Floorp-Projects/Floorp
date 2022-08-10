@@ -653,10 +653,7 @@ function TupleFrom(items /*, mapFn, thisArg */) {
       k++;
     };
     /* Step 6b. */
-    /* Following Object.fromEntries(), inline AddEntriesFromiterator */
-    var iteratorRecord = MakeIteratorWrapper(items, usingIterator);
-
-    for (var nextValue of allowContentIter(iteratorRecord)) {
+    for (var nextValue of allowContentIterWith(items, usingIterator)) {
       adder(nextValue);
     }
     /* Step 6c. */
