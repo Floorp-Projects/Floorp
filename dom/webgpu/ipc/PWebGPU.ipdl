@@ -50,6 +50,7 @@ parent:
   async BufferMap(RawId selfId, uint32_t aMode, uint64_t offset, uint64_t size) returns (BufferMapResult result);
   async BufferUnmap(RawId deviceId, RawId bufferId, bool flush);
   async BufferDestroy(RawId selfId);
+  async BufferDrop(RawId selfId);
   async TextureDestroy(RawId selfId);
   async TextureViewDestroy(RawId selfId);
   async SamplerDestroy(RawId selfId);
