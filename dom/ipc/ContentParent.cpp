@@ -2681,9 +2681,7 @@ bool ContentParent::LaunchSubprocessResolve(bool aIsSync,
     sCreatedFirstContentProcess = true;
   }
 
-  base::ProcessId procId =
-      base::GetProcId(mSubprocess->GetChildProcessHandle());
-  Open(mSubprocess->TakeInitialPort(), procId);
+  mSubprocess->TakeInitialEndpoint().Bind(this);
 
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
   if (!cpm) {
