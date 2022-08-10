@@ -22,6 +22,10 @@ class ChildThread : public base::Thread {
   explicit ChildThread(Thread::Options options);
   virtual ~ChildThread();
 
+  mozilla::ipc::ScopedPort TakeInitialPort() {
+    return std::move(initial_port_);
+  }
+
  protected:
   friend class ChildProcess;
 
@@ -31,10 +35,6 @@ class ChildThread : public base::Thread {
  protected:
   // Returns the one child thread.
   static ChildThread* current();
-
-  mozilla::ipc::ScopedPort TakeInitialPort() {
-    return std::move(initial_port_);
-  }
 
   // Thread implementation.
   virtual void Init() override;

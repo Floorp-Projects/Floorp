@@ -64,8 +64,8 @@ bool UtilityProcessImpl::Init(int aArgc, char* aArgv[]) {
     return false;
   }
 
-  return mUtility->Init(ParentPid(), nsCString(*parentBuildID), *sandboxingKind,
-                        IOThreadChild::TakeInitialPort());
+  return mUtility->Init(TakeInitialEndpoint(), nsCString(*parentBuildID),
+                        *sandboxingKind);
 }
 
 void UtilityProcessImpl::CleanUp() { NS_ShutdownXPCOM(nullptr); }

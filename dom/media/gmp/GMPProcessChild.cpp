@@ -40,8 +40,7 @@ bool GMPProcessChild::Init(int aArgc, char* aArgv[]) {
 
   BackgroundHangMonitor::Startup();
 
-  return mPlugin.Init(pluginFilename, ParentPid(),
-                      IOThreadChild::TakeInitialPort());
+  return mPlugin.Init(pluginFilename, TakeInitialEndpoint());
 }
 
 void GMPProcessChild::CleanUp() { BackgroundHangMonitor::Shutdown(); }

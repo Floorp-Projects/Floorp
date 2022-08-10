@@ -259,8 +259,8 @@ class IPDLUnitTestProcessChild : public ipc::ProcessChild {
     }
 
     RefPtr<IPDLUnitTestChild> child = new IPDLUnitTestChild();
-    if (!child->Open(ipc::IOThreadChild::TakeInitialPort(), ParentPid())) {
-      MOZ_CRASH("Open of IPDLUnitTestChild failed");
+    if (!TakeInitialEndpoint().Bind(child.get())) {
+      MOZ_CRASH("Bind of IPDLUnitTestChild failed");
       return false;
     }
 

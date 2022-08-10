@@ -24,8 +24,8 @@ class RDDParent final : public PRDDParent {
 
   ipc::AsyncBlockers& AsyncShutdownService() { return mShutdownBlockers; }
 
-  bool Init(base::ProcessId aParentPid, const char* aParentBuildID,
-            mozilla::ipc::ScopedPort aPort);
+  bool Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
+            const char* aParentBuildID);
 
   mozilla::ipc::IPCResult RecvInit(nsTArray<GfxVarUpdate>&& vars,
                                    const Maybe<ipc::FileDescriptor>& aBrokerFd,

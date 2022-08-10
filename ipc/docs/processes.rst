@@ -645,7 +645,7 @@ shutting down or when an IPC error closes the channel.
 
 ``Init`` is given the command line arguments constucted above so it will need
 to be overridden to parse them.  It does this, binds our actor by
-calling ``Open`` as was done with the parent, then initializes a bunch of
+calling ``Bind`` as was done with the parent, then initializes a bunch of
 components that the process expects to use:
 
 .. code-block:: c++
@@ -665,7 +665,7 @@ components that the process expects to use:
         return false;
       }
 
-      if (NS_WARN_IF(!Open(ipc::IOThreadChild::TakeInitialPort(), mParentPid))) {
+      if (NS_WARN_IF(!TakeInitialEndpoint().Bind(this))) {
         return false;
       }
 
@@ -681,7 +681,7 @@ components that the process expects to use:
 This is a slimmed down version of the real ``Init`` method.  We see that it
 establishes a sandbox (more on this later) and then reads the command line and
 preferences that we sent from the main process.  It then initializes the thread
-manager, which is required by for the subsequent ``Open`` call.
+manager, which is required by for the subsequent ``Bind`` call.
 
 Among the list of components we initialize in the sample code, XPCOM is
 special.  XPCOM includes a suite of components, including the component
