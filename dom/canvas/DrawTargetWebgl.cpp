@@ -2416,6 +2416,37 @@ void DrawTargetWebgl::StrokeGlyphs(ScaledFont* aFont,
   mSkia->StrokeGlyphs(aFont, aBuffer, aPattern, aStrokeOptions, aOptions);
 }
 
+// Depending on whether we enable subpixel position for a given font, Skia may
+// round transformed coordinates differently on each axis. By default, text is
+// subpixel quantized horizontally and snapped to a whole integer vertical
+// baseline. Axis-flip transforms instead snap to horizontal boundaries while
+// subpixel quantizing along the vertical. For other types of transforms, Skia
+// just applies subpixel quantization to both axes.
+// We must duplicate the amount of quantization Skia applies carefully as a
+// boundary value such as 0.49 may round to 0.5 with subpixel quantization,
+// but if Skia actually snapped it to a whole integer instead, it would round
+// down to 0. If a subsequent glyph with offset 0.51 came in, we might
+// mistakenly round it down to 0.5, whereas Skia would round it up to 1. Thus
+// we would alias 0.49 and 0.51 to the same cache entry, while Skia would
+// actually snap the offset to 0 or 1, depending, resulting in mismatched
+// hinting.
+static inline IntPoint QuantizeScale(ScaledFont* aFont,
+                                     const Matrix& aTransform) {
+  if (!aFont->UseSubpixelPosition()) {
+    return {1, 1};
+  }
+  if (aTransform._12 == 0) {
+    // Glyphs are rendered subpixel horizontally, so snap vertically.
+    return {4, 1};
+  }
+  if (aTransform._11 == 0) {
+    // Glyphs are rendered subpixel vertically, so snap horizontally.
+    return {1, 4};
+  }
+  // The transform isn't aligned, so don't snap.
+  return {4, 4};
+}
+
 // Skia only supports subpixel positioning to the nearest 1/4 fraction. It
 // would be wasteful to attempt to cache text runs with positioning that is
 // anymore precise than this. To prevent this cache bloat, we quantize the
@@ -2430,14 +2461,27 @@ static inline IntPoint QuantizePosition(const Matrix& aTransform,
   return RoundedToInt(aTransform.TransformPoint(aPosition)) - aOffset;
 }
 
+// Get a quantized starting offset for the glyph buffer. We want this offset
+// to encapsulate the transform and buffer offset while still preserving the
+// relative subpixel positions of the glyphs this offset is subtracted from.
+static inline IntPoint QuantizeOffset(const Matrix& aTransform,
+                                      const IntPoint& aQuantizeScale,
+                                      const GlyphBuffer& aBuffer) {
+  IntPoint offset =
+      RoundedToInt(aTransform.TransformPoint(aBuffer.mGlyphs[0].mPosition));
+  offset.x &= ~(aQuantizeScale.x - 1);
+  offset.y &= ~(aQuantizeScale.y - 1);
+  return offset;
+}
+
 // Hashes a glyph buffer to a single hash value that can be used for quick
 // comparisons. Each glyph position is transformed and quantized before
 // hashing.
 HashNumber GlyphCacheEntry::HashGlyphs(const GlyphBuffer& aBuffer,
-                                       const Matrix& aTransform) {
+                                       const Matrix& aTransform,
+                                       const IntPoint& aQuantizeScale) {
   HashNumber hash = 0;
-  IntPoint offset =
-      RoundedToInt(aTransform.TransformPoint(aBuffer.mGlyphs[0].mPosition));
+  IntPoint offset = QuantizeOffset(aTransform, aQuantizeScale, aBuffer);
   for (size_t i = 0; i < aBuffer.mNumGlyphs; i++) {
     const Glyph& glyph = aBuffer.mGlyphs[i];
     hash = AddToHash(hash, glyph.mIndex);
@@ -2452,20 +2496,16 @@ HashNumber GlyphCacheEntry::HashGlyphs(const GlyphBuffer& aBuffer,
 bool GlyphCacheEntry::MatchesGlyphs(const GlyphBuffer& aBuffer,
                                     const DeviceColor& aColor,
                                     const Matrix& aTransform,
-                                    const IntRect& aBounds, HashNumber aHash) {
+                                    const IntPoint& aQuantizeScale,
+                                    HashNumber aHash) {
   // First check if the hash matches to quickly reject the text run before any
-  // more expensive checking. If it matches, then check if the color, transform,
-  // and bounds are the same.
+  // more expensive checking. If it matches, then check if the color and
+  // transform are the same.
   if (aHash != mHash || aBuffer.mNumGlyphs != mBuffer.mNumGlyphs ||
-      aColor != mColor || !HasMatchingScale(aTransform, mTransform) ||
-      aBounds.Size() != mBounds.Size()) {
+      aColor != mColor || !HasMatchingScale(aTransform, mTransform)) {
     return false;
   }
-  IntPoint offset =
-      RoundedToInt(aTransform.TransformPoint(aBuffer.mGlyphs[0].mPosition));
-  if (aBounds.TopLeft() - offset != mBounds.TopLeft()) {
-    return false;
-  }
+  IntPoint offset = QuantizeOffset(aTransform, aQuantizeScale, aBuffer);
   // Finally check if all glyphs and their quantized positions match.
   for (size_t i = 0; i < aBuffer.mNumGlyphs; i++) {
     const Glyph& dst = mBuffer.mGlyphs[i];
@@ -2482,15 +2522,16 @@ bool GlyphCacheEntry::MatchesGlyphs(const GlyphBuffer& aBuffer,
 GlyphCacheEntry::GlyphCacheEntry(const GlyphBuffer& aBuffer,
                                  const DeviceColor& aColor,
                                  const Matrix& aTransform,
+                                 const IntPoint& aQuantizeScale,
                                  const IntRect& aBounds, HashNumber aHash)
     : CacheEntryImpl<GlyphCacheEntry>(aTransform, aBounds, aHash),
       mColor(aColor) {
   // Store a copy of the glyph buffer with positions already quantized for fast
   // comparison later.
   Glyph* glyphs = new Glyph[aBuffer.mNumGlyphs];
-  IntPoint offset =
-      RoundedToInt(aTransform.TransformPoint(aBuffer.mGlyphs[0].mPosition));
-  mBounds -= offset;
+  IntPoint offset = QuantizeOffset(aTransform, aQuantizeScale, aBuffer);
+  // Make the bounds relative to the offset so we can add a new offset later.
+  mBounds -= IntPoint(offset.x / aQuantizeScale.x, offset.y / aQuantizeScale.y);
   for (size_t i = 0; i < aBuffer.mNumGlyphs; i++) {
     Glyph& dst = glyphs[i];
     const Glyph& src = aBuffer.mGlyphs[i];
@@ -2503,21 +2544,29 @@ GlyphCacheEntry::GlyphCacheEntry(const GlyphBuffer& aBuffer,
 
 GlyphCacheEntry::~GlyphCacheEntry() { delete[] mBuffer.mGlyphs; }
 
-// Attempt to find a matching entry in the glyph cache. If one isn't found,
-// a new entry will be created. The caller should check whether the contained
-// texture handle is valid to determine if it will need to render the text run
-// or just reuse the cached texture.
-already_AddRefed<GlyphCacheEntry> GlyphCache::FindOrInsertEntry(
+// Attempt to find a matching entry in the glyph cache. The caller should check
+// whether the contained texture handle is valid to determine if it will need to
+// render the text run or just reuse the cached texture.
+already_AddRefed<GlyphCacheEntry> GlyphCache::FindEntry(
     const GlyphBuffer& aBuffer, const DeviceColor& aColor,
-    const Matrix& aTransform, const IntRect& aBounds) {
-  HashNumber hash = GlyphCacheEntry::HashGlyphs(aBuffer, aTransform);
-  for (const RefPtr<GlyphCacheEntry>& entry : GetChain(hash)) {
-    if (entry->MatchesGlyphs(aBuffer, aColor, aTransform, aBounds, hash)) {
+    const Matrix& aTransform, const IntPoint& aQuantizeScale,
+    HashNumber aHash) {
+  for (const RefPtr<GlyphCacheEntry>& entry : GetChain(aHash)) {
+    if (entry->MatchesGlyphs(aBuffer, aColor, aTransform, aQuantizeScale,
+                             aHash)) {
       return do_AddRef(entry);
     }
   }
-  RefPtr<GlyphCacheEntry> entry =
-      new GlyphCacheEntry(aBuffer, aColor, aTransform, aBounds, hash);
+  return nullptr;
+}
+
+// Insert a new entry in the glyph cache.
+already_AddRefed<GlyphCacheEntry> GlyphCache::InsertEntry(
+    const GlyphBuffer& aBuffer, const DeviceColor& aColor,
+    const Matrix& aTransform, const IntPoint& aQuantizeScale,
+    const IntRect& aBounds, HashNumber aHash) {
+  RefPtr<GlyphCacheEntry> entry = new GlyphCacheEntry(
+      aBuffer, aColor, aTransform, aQuantizeScale, aBounds, aHash);
   Insert(entry);
   return entry.forget();
 }
@@ -2565,31 +2614,12 @@ static bool CheckForColorGlyphs(const RefPtr<SourceSurface>& aSurface) {
   return false;
 }
 
+// Draws glyphs to the WebGL target by trying to generate a cached texture for
+// the text run that can be subsequently reused to quickly render the text run
+// without using any software surfaces.
 bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
     ScaledFont* aFont, const GlyphBuffer& aBuffer, const Pattern& aPattern,
     const DrawOptions& aOptions, bool aUseSubpixelAA) {
-  // Draws glyphs to the WebGL target by trying to generate a cached texture for
-  // the text run that can be subsequently reused to quickly render the text run
-  // without using any software surfaces.
-  // Get the local bounds of the text run.
-  Maybe<Rect> bounds = mCurrentTarget->mSkia->GetGlyphLocalBounds(
-      aFont, aBuffer, aPattern, nullptr, aOptions);
-  if (!bounds) {
-    return false;
-  }
-
-  // Transform the local bounds into device space so that we know how big
-  // the cached texture will be.
-  const Matrix& currentTransform = GetTransform();
-  Rect xformBounds = currentTransform.TransformBounds(*bounds).Intersect(
-      Rect(IntRect(IntPoint(), mViewportSize)));
-  if (xformBounds.IsEmpty()) {
-    return true;
-  }
-  // Ensure there is a clear border around the text.
-  xformBounds.Inflate(2);
-  IntRect intBounds = RoundedOut(xformBounds);
-
   // Whether the font may use bitmaps. If so, we need to render the glyphs with
   // color as grayscale bitmaps will use the color while color emoji will not,
   // with no easy way to know ahead of time. We currently have to check the
@@ -2598,39 +2628,6 @@ bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
   // subpixel mask rather than try to interpret it as a normal RGBA result such
   // as for color emoji.
   bool useBitmaps = aFont->MayUseBitmaps();
-
-  // Depending on whether we enable subpixel position for a given font, Skia may
-  // round transformed coordinates differently on each axis. By default, text is
-  // subpixel quantized horizontally and snapped to a whole integer vertical
-  // baseline. Axis-flip transforms instead snap to horizontal boundaries while
-  // subpixel quantizing along the vertical. For other types of transforms, Skia
-  // just applies subpixel quantization to both axes.
-  // We must duplicate the amount of quantization Skia applies carefully as a
-  // boundary value such as 0.49 may round to 0.5 with subpixel quantization,
-  // but if Skia actually snapped it to a whole integer instead, it would round
-  // down to 0. If a subsequent glyph with offset 0.51 came in, we might
-  // mistakenly round it down to 0.5, whereas Skia would round it up to 1. Thus
-  // we would alias 0.49 and 0.51 to the same cache entry, while Skia would
-  // actually snap the offset to 0 or 1, depending, resulting in mismatched
-  // hinting.
-  Matrix quantizeTransform = currentTransform;
-  IntRect quantizeBounds = intBounds;
-  if (aFont->UseSubpixelPosition()) {
-    IntPoint scale;
-    if (currentTransform._12 == 0) {
-      // Glyphs are rendered subpixel horizontally, so snap vertically.
-      scale = {4, 1};
-    } else if (currentTransform._11 == 0) {
-      // Glyphs are rendered subpixel vertically, so snap horizontally.
-      scale = {1, 4};
-    } else {
-      // The transform isn't aligned, so don't snap.
-      scale = {4, 4};
-    }
-    quantizeTransform.PostScale(scale.x, scale.y);
-    // Ensure the bounds are transformed into the quantized space also.
-    quantizeBounds.Scale(scale.x, scale.y);
-  }
 
   // Look for an existing glyph cache on the font. If not there, create it.
   GlyphCache* cache =
@@ -2656,15 +2653,53 @@ bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
   // If the font has bitmaps, use the color directly. Otherwise, the texture
   // will hold a grayscale mask, so encode the key's subpixel and light-or-dark
   // state in the color.
-  RefPtr<GlyphCacheEntry> entry = cache->FindOrInsertEntry(
-      aBuffer,
+  const Matrix& currentTransform = GetTransform();
+  IntPoint quantizeScale = QuantizeScale(aFont, currentTransform);
+  Matrix quantizeTransform = currentTransform;
+  quantizeTransform.PostScale(quantizeScale.x, quantizeScale.y);
+  HashNumber hash =
+      GlyphCacheEntry::HashGlyphs(aBuffer, quantizeTransform, quantizeScale);
+  DeviceColor colorOrMask =
       useBitmaps
           ? color
-          : DeviceColor::Mask(aUseSubpixelAA ? 1 : 0, lightOnDark ? 1 : 0),
-      quantizeTransform, quantizeBounds);
+          : DeviceColor::Mask(aUseSubpixelAA ? 1 : 0, lightOnDark ? 1 : 0);
+  RefPtr<GlyphCacheEntry> entry = cache->FindEntry(
+      aBuffer, colorOrMask, quantizeTransform, quantizeScale, hash);
   if (!entry) {
-    return false;
+    // For small text runs, bounds computations can be expensive relative to the
+    // cost of looking up a cache result. Avoid doing local bounds computations
+    // until actually inserting the entry into the cache.
+    Maybe<Rect> bounds = mCurrentTarget->mSkia->GetGlyphLocalBounds(
+        aFont, aBuffer, aPattern, nullptr, aOptions);
+    if (!bounds) {
+      return true;
+    }
+    // Transform the local bounds into device space so that we know how big
+    // the cached texture will be.
+    Rect xformBounds = currentTransform.TransformBounds(*bounds).Intersect(
+        Rect(IntRect(IntPoint(), mViewportSize)));
+    if (xformBounds.IsEmpty()) {
+      return true;
+    }
+    // Ensure there is a clear border around the text.
+    xformBounds.Inflate(2);
+    IntRect intBounds = RoundedOut(xformBounds);
+    entry = cache->InsertEntry(aBuffer, colorOrMask, quantizeTransform,
+                               quantizeScale, intBounds, hash);
+    if (!entry) {
+      return false;
+    }
   }
+
+  // The bounds of the entry may have a different transform offset from the
+  // bounds of the currently drawn text run. The entry bounds are relative to
+  // the entry's quantized offset already, so just move the bounds to the new
+  // offset.
+  IntRect intBounds = entry->GetBounds();
+  IntPoint newOffset =
+      QuantizeOffset(quantizeTransform, quantizeScale, aBuffer);
+  intBounds +=
+      IntPoint(newOffset.x / quantizeScale.x, newOffset.y / quantizeScale.y);
 
   RefPtr<TextureHandle> handle = entry->GetHandle();
   if (handle && handle->IsValid()) {
