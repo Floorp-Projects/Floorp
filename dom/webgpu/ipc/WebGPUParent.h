@@ -6,6 +6,7 @@
 #ifndef WEBGPU_PARENT_H_
 #define WEBGPU_PARENT_H_
 
+#include "mozilla/webgpu/ffi/wgpu.h"
 #include "mozilla/webgpu/PWebGPUParent.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "WebGPUTypes.h"
