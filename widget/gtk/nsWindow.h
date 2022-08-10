@@ -444,6 +444,10 @@ class nsWindow final : public nsBaseWidget {
   void PauseCompositorFlickering();
   bool IsWaitingForCompositorResume();
 
+  // Force hide this window, remove compositor etc. to avoid
+  // rendering queue blocking (see Bug 1782948).
+  void ClearRenderingQueue();
+
  protected:
   virtual ~nsWindow();
 
