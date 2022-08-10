@@ -2537,7 +2537,11 @@ var CustomizableUIInternal = {
       // to be restored. This can occur when add-ons register widgets for a
       // lazily-restored area before it's been restored.
       if (gFuturePlacements.has(aArea)) {
+        let areaPlacements = gPlacements.get(aArea);
         for (let id of gFuturePlacements.get(aArea)) {
+          if (areaPlacements.includes(id)) {
+            continue;
+          }
           this.addWidgetToArea(id, aArea);
         }
         gFuturePlacements.delete(aArea);
