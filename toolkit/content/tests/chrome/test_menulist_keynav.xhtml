@@ -145,6 +145,15 @@ function differentPressed()
   }
 }
 
+function inputMargin(el) {
+  let cs = getComputedStyle(el);
+  // XXX Internal properties are not exposed in getComputedStyle, so we have to
+  // use margin and rely on our knowledge of them matching negative margins
+  // where appropriate.
+  // return parseFloat(cs.getPropertyValue("-moz-window-input-region-margin"));
+  return ismac ? 0 : Math.max(-parseFloat(cs.marginLeft), 0);
+}
+
 function tabAndScroll()
 {
   list = $("list");
@@ -162,7 +171,7 @@ function tabAndScroll()
     list.appendItem("Item" + i, "item" + i);
   }
   list.open = true;
-  is(list.getBoundingClientRect().width, list.menupopup.getBoundingClientRect().width,
+  is(list.getBoundingClientRect().width, list.menupopup.getBoundingClientRect().width - 2 * inputMargin(list.menupopup),
      "menu and popup width match");
   var minScrollbarWidth = window.matchMedia("(-moz-overlay-scrollbars)").matches ? 0 : 3;
   ok(list.getBoundingClientRect().width >= list.getItemAtIndex(0).getBoundingClientRect().width + minScrollbarWidth,

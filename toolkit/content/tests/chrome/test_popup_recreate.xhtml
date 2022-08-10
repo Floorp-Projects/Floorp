@@ -55,8 +55,9 @@ function checkSize()
   var popuprect = menulist.menupopup.getBoundingClientRect();
 
   let marginLeft = parseFloat(getComputedStyle(menulist.menupopup).marginLeft);
+  let marginRight = parseFloat(getComputedStyle(menulist.menupopup).marginRight);
   ok(isWithinHalfPixel(menurect.left + marginLeft, popuprect.left), "left position " + gState);
-  ok(isWithinHalfPixel(menurect.right + marginLeft, popuprect.right), "right position " + gState);
+  ok(isWithinHalfPixel(menurect.right - marginRight, popuprect.right), "right position " + gState);
   ok(Math.round(popuprect.right) - Math.round(popuprect.left) > 0, "height " + gState)
   document.getElementById("menulist").open = false;
 }
