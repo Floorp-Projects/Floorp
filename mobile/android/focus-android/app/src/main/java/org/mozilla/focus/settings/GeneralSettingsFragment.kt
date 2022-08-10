@@ -122,6 +122,9 @@ class GeneralSettingsFragment :
         if (AppCompatDelegate.getDefaultNightMode() == mode) return
         AppCompatDelegate.setDefaultNightMode(mode)
         activity?.recreate()
+
+        requireComponents.engine.settings.preferredColorScheme = requireComponents.settings.getPreferredColorScheme()
+        requireComponents.sessionUseCases.reload.invoke()
     }
 
     private fun setDefaultTheme() {

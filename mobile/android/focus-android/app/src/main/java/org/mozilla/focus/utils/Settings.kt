@@ -7,11 +7,15 @@ package org.mozilla.focus.utils
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.res.Configuration
 import android.content.res.Resources
 import android.view.accessibility.AccessibilityManager
 import androidx.preference.PreferenceManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
+import mozilla.components.support.ktx.android.content.PreferencesHolder
+import mozilla.components.support.ktx.android.content.booleanPreference
 import org.mozilla.focus.R
 import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsPreferences
@@ -26,7 +30,7 @@ const val ERASE_CFR_LIMIT = 3
 @Suppress("TooManyFunctions", "LargeClass")
 class Settings(
     private val context: Context
-) {
+) : PreferencesHolder {
 
     companion object {
         // Default value is block cross site cookies.
@@ -53,8 +57,6 @@ class Settings(
 
             return false
         }
-
-    private val preferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
 
     fun createTrackingProtectionPolicy(
         shouldBlockCookiesValue: String = shouldBlockCookiesValue()
@@ -336,20 +338,35 @@ class Settings(
         true
     )
 
-    var lightThemeSelected = preferences.getBoolean(
+    var lightThemeSelected by booleanPreference(
         getPreferenceKey(R.string.pref_key_light_theme),
         false
     )
 
-    var darkThemeSelected = preferences.getBoolean(
+    var darkThemeSelected by booleanPreference(
         getPreferenceKey(R.string.pref_key_dark_theme),
         false
     )
 
-    var useDefaultThemeSelected = preferences.getBoolean(
+    var useDefaultThemeSelected by booleanPreference(
         getPreferenceKey(R.string.pref_key_default_theme),
         false
     )
+
+    /**
+     * Sets Preferred Color scheme based on Dark/Light Theme Settings or Current Configuration
+     */
+    fun getPreferredColorScheme(): PreferredColorScheme {
+        val inDark =
+            (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+                Configuration.UI_MODE_NIGHT_YES
+        return when {
+            darkThemeSelected -> PreferredColorScheme.Dark
+            lightThemeSelected -> PreferredColorScheme.Light
+            inDark -> PreferredColorScheme.Dark
+            else -> PreferredColorScheme.Light
+        }
+    }
 
     // Store how many tabs were opened until now, but the max value which can be stored is 4
     // since this values is used to decide if we should display the erase cfr
@@ -398,4 +415,7 @@ class Settings(
 
     private fun getPreferenceKey(resourceId: Int): String =
         context.getString(resourceId)
+
+    override val preferences: SharedPreferences
+        get() = PreferenceManager.getDefaultSharedPreferences(context)
 }

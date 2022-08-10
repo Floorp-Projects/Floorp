@@ -112,7 +112,8 @@ class Components(
             javascriptEnabled = !settings.shouldBlockJavaScript(),
             remoteDebuggingEnabled = settings.shouldEnableRemoteDebugging(),
             webFontsEnabled = !settings.shouldBlockWebFonts(),
-            httpsOnlyMode = settings.getHttpsOnlyMode()
+            httpsOnlyMode = settings.getHttpsOnlyMode(),
+            preferredColorScheme = settings.getPreferredColorScheme()
         )
     }
 
