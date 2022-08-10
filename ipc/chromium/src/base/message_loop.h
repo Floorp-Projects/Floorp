@@ -543,10 +543,6 @@ class MessageLoopForIO : public MessageLoop {
                            FileDescriptorWatcher* controller,
                            Watcher* delegate);
 
-  typedef base::MessagePumpLibevent::SignalEvent SignalEvent;
-  typedef base::MessagePumpLibevent::SignalWatcher SignalWatcher;
-  bool CatchSignal(int sig, SignalEvent* sigevent, SignalWatcher* delegate);
-
 #endif  // defined(OS_POSIX)
 };
 
