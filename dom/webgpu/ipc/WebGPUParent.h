@@ -43,6 +43,7 @@ class WebGPUParent final : public PWebGPUParent {
                                BufferMapResolver&& aResolver);
   ipc::IPCResult RecvBufferUnmap(RawId aDeviceId, RawId aBufferId, bool aFlush);
   ipc::IPCResult RecvBufferDestroy(RawId aBufferId);
+  ipc::IPCResult RecvBufferDrop(RawId aBufferId);
   ipc::IPCResult RecvTextureDestroy(RawId aTextureId);
   ipc::IPCResult RecvTextureViewDestroy(RawId aTextureViewId);
   ipc::IPCResult RecvSamplerDestroy(RawId aSamplerId);
