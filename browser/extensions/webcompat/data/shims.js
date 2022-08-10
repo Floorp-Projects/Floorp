@@ -601,6 +601,7 @@ const AVAILABLE_SHIMS = [
           "*://orangerie.eu/*", // bug 1758442
           "*://web.whatsapp.com/*", // bug 1767407
           "*://www.tripadvisor.com/*", // bug 1779536
+          "*://www.office.com/*", // bug 1783921
         ],
       },
     ],
