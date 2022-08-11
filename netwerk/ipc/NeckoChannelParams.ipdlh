@@ -277,15 +277,15 @@ struct CorsPreflightArgs
 
 struct HttpChannelOpenArgs
 {
-  URIParams                   uri;
+  nsIURI                      uri;
   // - TODO: bug 571161: unclear if any HTTP channel clients ever
   // set originalURI != uri (about:credits?); also not clear if
   // chrome channel would ever need to know.  Get rid of next arg?
-  URIParams?                  original;
-  URIParams?                  doc;
+  nsIURI                      original;
+  nsIURI                      doc;
   nsIReferrerInfo             referrerInfo;
-  URIParams?                  apiRedirectTo;
-  URIParams?                  topWindowURI;
+  nsIURI                      apiRedirectTo;
+  nsIURI                      topWindowURI;
   uint32_t                    loadFlags;
   RequestHeaderTuples         requestHeaders;
   nsCString                   requestMethod;
