@@ -218,7 +218,7 @@ fn main() {
         current_value: 0,
     };
 
-    let opts = webrender::WebRenderOptions {
+    let opts = webrender::RendererOptions {
         ..Default::default()
     };
 
