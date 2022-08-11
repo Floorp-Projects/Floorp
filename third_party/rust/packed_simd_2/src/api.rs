@@ -2,7 +2,7 @@
 
 #[macro_use]
 mod bitmask;
-crate mod cast;
+pub(crate) mod cast;
 #[macro_use]
 mod cmp;
 #[macro_use]
@@ -37,7 +37,7 @@ mod swap_bytes;
 mod bit_manip;
 
 #[cfg(feature = "into_bits")]
-crate mod into_bits;
+pub(crate) mod into_bits;
 
 macro_rules! impl_i {
     ([$elem_ty:ident; $elem_n:expr]: $tuple_id:ident, $mask_ty:ident
