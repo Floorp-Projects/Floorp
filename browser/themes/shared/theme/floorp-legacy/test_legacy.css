@@ -667,14 +667,14 @@ menupopup menuitem[disabled="true"] {
   color: var(--panel-disabled-color) !important;
   background: none !important;
 }
-
+/*
 menupopup menu:hover:not([disabled=true]),
 menupopup menuitem:hover:not([disabled=true]),
 menupopup menu[_moz-menuactive]:not([disabled=true]),
 menupopup menuitem[_moz-menuactive]:not([disabled=true]) {
   background-color: var(--panel-item-hover-bgcolor) !important;
   color: inherit !important;
-}
+}*/
 
 menupopup menuitem:hover:active:not([disabled=true]),
 menupopup menu:hover:active:not([disabled=true]) {
