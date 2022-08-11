@@ -80,7 +80,7 @@ void TransformStreamErrorWritableAndUnblockWrite(JSContext* aCx,
   // Step 3: If stream.[[backpressure]] is true, perform !
   // TransformStreamSetBackpressure(stream, false).
   if (aStream->Backpressure()) {
-    TransformStreamSetBackpressure(aStream, false, aRv);
+    aStream->SetBackpressure(false, aRv);
   }
 }
 
@@ -403,7 +403,7 @@ class TransformStreamUnderlyingSourceAlgorithms final
     MOZ_ASSERT(mStream->BackpressureChangePromise());
 
     // Step 3: Perform ! TransformStreamSetBackpressure(stream, false).
-    TransformStreamSetBackpressure(mStream, false, aRv);
+    mStream->SetBackpressure(false, aRv);
 
     // Step 4: Return stream.[[backpressureChangePromise]].
     return do_AddRef(mStream->BackpressureChangePromise());
@@ -451,26 +451,25 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(
 NS_INTERFACE_MAP_END_INHERITING(TransformStreamUnderlyingSourceAlgorithms)
 
 // https://streams.spec.whatwg.org/#transform-stream-set-backpressure
-void TransformStreamSetBackpressure(TransformStream* aStream,
-                                    bool aBackpressure, ErrorResult& aRv) {
+void TransformStream::SetBackpressure(bool aBackpressure, ErrorResult& aRv) {
   // Step 1. Assert: stream.[[backpressure]] is not backpressure.
-  MOZ_ASSERT(aStream->Backpressure() != aBackpressure);
+  MOZ_ASSERT(Backpressure() != aBackpressure);
 
   // Step 2. If stream.[[backpressureChangePromise]] is not undefined, resolve
   // stream.[[backpressureChangePromise]] with undefined.
-  if (Promise* promise = aStream->BackpressureChangePromise()) {
+  if (Promise* promise = BackpressureChangePromise()) {
     promise->MaybeResolveWithUndefined();
   }
 
   // Step 3. Set stream.[[backpressureChangePromise]] to a new promise.
-  RefPtr<Promise> promise = Promise::Create(aStream->GetParentObject(), aRv);
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aRv);
   if (aRv.Failed()) {
     return;
   }
-  aStream->SetBackpressureChangePromise(promise);
+  mBackpressureChangePromise = promise;
 
   // Step 4. Set stream.[[backpressure]] to backpressure.
-  aStream->SetBackpressure(aBackpressure);
+  mBackpressure = aBackpressure;
 }
 
 // https://streams.spec.whatwg.org/#initialize-transform-stream
@@ -518,7 +517,7 @@ void TransformStream::Initialize(JSContext* aCx, Promise* aStartPromise,
   mBackpressureChangePromise = nullptr;
 
   // Step 10. Perform ! TransformStreamSetBackpressure(stream, true).
-  TransformStreamSetBackpressure(this, true, aRv);
+  SetBackpressure(true, aRv);
   if (aRv.Failed()) {
     return;
   }
