@@ -153,6 +153,16 @@ body:fullscreen #controls[showing]:hover .control-item:not(:hover),
   left: 45%;
 }
 
+body:fullscreen #fullscreen {
+  background-image: url("chrome://global/skin/media/picture-in-picture-exit-fullscreen-button.svg");
+  background-size: auto;
+}
+
+body:not(:fullscreen) #fullscreen {
+  background-image: url("chrome://global/skin/media/picture-in-picture-enter-fullscreen-button.svg");
+  background-size: auto;
+}
+
 #unpip:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
 }
