@@ -30,7 +30,7 @@ class ReadableStreamController;
 class UnderlyingSourceAlgorithmsBase : public nsISupports {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(UnderlyingSourceAlgorithmsBase)
+  NS_DECL_CYCLE_COLLECTION_CLASS(UnderlyingSourceAlgorithmsBase)
 
   MOZ_CAN_RUN_SCRIPT virtual void StartCallback(
       JSContext* aCx, ReadableStreamController& aController,
