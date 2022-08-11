@@ -95,9 +95,9 @@ var gCSSFontFaceDescriptors = {
       "local('Times New Roman')",
       'local("Times New Roman")',
       'local("serif")',
+      "url(404.ttf) format(truetype)",
     ],
     invalid_values: [
-      "url(404.ttf) format(truetype)",
       'url(404.ttf) format("truetype" "opentype")',
       'url(404.ttf) format("truetype",)',
       'local("Times New" Roman)',
