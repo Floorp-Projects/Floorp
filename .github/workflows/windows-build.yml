@@ -11,6 +11,9 @@ jobs:
     - uses: pierotofy/set-swap-space@master
       with:
         swap-size-gb: 13
+    - name: update packages
+      run: |
+          sudo apt-get update
     - uses: tecoli-com/actions-use-apt-tools@v0
       with:
         tools: aria2 ca-certificates git python3 python3-dev zstd rename autoconf autoconf2.13 automake bison build-essential curl cmake flex gawk gcc-multilib gnupg jq libbz2-dev libcurl4-openssl-dev libssl-dev libxml2-dev libtool libucl-dev ninja-build nsis p7zip-full procps python3-pip python-setuptools python3-virtualenv python3-distutils-extra python3-requests python3-pytoml subversion tar upx unzip uuid uuid-dev wget wine zip zlib1g-dev gir1.2-atk-1.0 gir1.2-atspi-2.0 gir1.2-gtk-3.0 gir1.2-harfbuzz-0.0 gir1.2-pango-1.0 libasound2-dev libatk-bridge2.0-dev libatk1.0-dev libatspi2.0-dev libdatrie-dev libdbus-1-dev libdbus-glib-1-dev libdbus-glib-1-dev-bin libdrm-dev libegl-dev libegl-mesa0 libegl1 libegl1-mesa-dev libepoxy-dev libfribidi-dev libgl-dev libgl1-mesa-dev libgles-dev libgles1 libgles2 libglvnd-dev libglx-dev libgraphite2-dev libgtk-3-dev libharfbuzz-dev libharfbuzz-gobject0 libharfbuzz-icu0 libopengl-dev libopengl0 libpango1.0-dev libpangoxft-1.0-0 libpciaccess-dev libpulse-dev libpulse-mainloop-glib0 libthai-dev libwayland-bin libwayland-dev libx11-xcb-dev libxcomposite-dev libxcursor-dev libxdamage-dev libxfixes-dev libxi-dev libxinerama-dev libxkbcommon-dev libxrandr-dev libxtst-dev pango1.0-tools wayland-protocols x11proto-input-dev x11proto-randr-dev x11proto-record-dev x11proto-xinerama-dev
