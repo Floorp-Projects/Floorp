@@ -165,14 +165,6 @@ var PermissionPromptPrototype = {
   },
 
   /**
-   * Indicates what URI should be used as the scope when using temporary
-   * permissions. If undefined, it defaults to the browser.currentURI.
-   */
-  get temporaryPermissionURI() {
-    return undefined;
-  },
-
-  /**
    * These are the options that will be passed to the PopupNotification when it
    * is shown. See the documentation of `PopupNotifications_show` in
    * PopupNotifications.jsm for details.
@@ -382,8 +374,7 @@ var PermissionPromptPrototype = {
       let { state } = lazy.SitePermissions.getForPrincipal(
         this.principal,
         this.permissionKey,
-        this.browser,
-        this.temporaryPermissionURI
+        this.browser
       );
 
       if (state == lazy.SitePermissions.BLOCK) {
@@ -414,8 +405,7 @@ var PermissionPromptPrototype = {
       let { state } = lazy.SitePermissions.getForPrincipal(
         null,
         this.permissionKey,
-        this.browser,
-        this.temporaryPermissionURI
+        this.browser
       );
 
       if (state == lazy.SitePermissions.BLOCK) {
@@ -478,9 +468,7 @@ var PermissionPromptPrototype = {
                 this.permissionKey,
                 promptAction.action,
                 lazy.SitePermissions.SCOPE_TEMPORARY,
-                this.browser,
-                undefined,
-                this.temporaryPermissionURI
+                this.browser
               );
             }
 
@@ -501,9 +489,7 @@ var PermissionPromptPrototype = {
                 this.permissionKey,
                 promptAction.action,
                 lazy.SitePermissions.SCOPE_TEMPORARY,
-                this.browser,
-                undefined,
-                this.temporaryPermissionURI
+                this.browser
               );
             }
           }
@@ -1266,18 +1252,6 @@ PermissionUI.MIDIPermissionPrompt = MIDIPermissionPrompt;
 
 function StorageAccessPermissionPrompt(request) {
   this.request = request;
-  this.siteOption = null;
-
-  let types = this.request.types.QueryInterface(Ci.nsIArray);
-  let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
-  let options = perm.options.QueryInterface(Ci.nsIArray);
-  // If we have an option, we are in a call from requestStorageAccessUnderSite
-  // which means that the embedding principal is not the current top-level.
-  // Instead we have to grab the Site string out of the option and use that
-  // in the UI.
-  if (options.length) {
-    this.siteOption = options.queryElementAt(0, Ci.nsISupportsString).data;
-  }
 }
 
 StorageAccessPermissionPrompt.prototype = {
@@ -1294,13 +1268,6 @@ StorageAccessPermissionPrompt.prototype = {
   get permissionKey() {
     // Make sure this name is unique per each third-party tracker
     return `3rdPartyStorage${lazy.SitePermissions.PERM_KEY_DELIMITER}${this.principal.origin}`;
-  },
-
-  get temporaryPermissionURI() {
-    if (this.siteOption) {
-      return Services.io.newURI(this.siteOption);
-    }
-    return undefined;
   },
 
   prettifyHostPort(hostport) {
@@ -1338,15 +1305,9 @@ StorageAccessPermissionPrompt.prototype = {
   },
 
   get message() {
-    let embeddingHost = this.topLevelPrincipal.host;
-
-    if (this.siteOption) {
-      embeddingHost = this.siteOption.split("://").at(-1);
-    }
-
     return lazy.gBrowserBundle.formatStringFromName("storageAccess4.message", [
       this.prettifyHostPort(this.principal.hostPort),
-      this.prettifyHostPort(embeddingHost),
+      this.prettifyHostPort(this.topLevelPrincipal.hostPort),
     ]);
   },
 
