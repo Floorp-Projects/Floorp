@@ -3495,6 +3495,24 @@ bool CacheIRCompiler::emitStringStartsWithResult(StringOperandId strId,
   return true;
 }
 
+bool CacheIRCompiler::emitStringEndsWithResult(StringOperandId strId,
+                                               StringOperandId searchStrId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register str = allocator.useRegister(masm, strId);
+  Register searchStr = allocator.useRegister(masm, searchStrId);
+
+  callvm.prepare();
+  masm.Push(searchStr);
+  masm.Push(str);
+
+  using Fn = bool (*)(JSContext*, HandleString, HandleString, bool*);
+  callvm.call<Fn, js::StringEndsWith>();
+  return true;
+}
+
 bool CacheIRCompiler::emitStringToLowerCaseResult(StringOperandId strId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 

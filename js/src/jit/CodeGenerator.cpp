@@ -10968,6 +10968,14 @@ void CodeGenerator::visitStringStartsWithInline(LStringStartsWithInline* lir) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitStringEndsWith(LStringEndsWith* lir) {
+  pushArg(ToRegister(lir->searchString()));
+  pushArg(ToRegister(lir->string()));
+
+  using Fn = bool (*)(JSContext*, HandleString, HandleString, bool*);
+  callVM<Fn, js::StringEndsWith>(lir);
+}
+
 void CodeGenerator::visitStringConvertCase(LStringConvertCase* lir) {
   pushArg(ToRegister(lir->string()));
 
