@@ -6,7 +6,7 @@
 use crate::llvm::simd_fsqrt;
 use crate::*;
 
-crate trait Sqrte {
+pub(crate) trait Sqrte {
     fn sqrte(self) -> Self;
 }
 

@@ -192,6 +192,11 @@ Cryptography shenanigans are delegated to the caller so there's no possible
 unsoundness there.
 """
 
+[[audits.packed_simd_2]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.3.7 -> 0.3.8"
+
 [[audits.precomputed-hash]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-deploy"

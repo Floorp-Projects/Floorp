@@ -8,7 +8,7 @@ If you need to continue to use the crate, we have published a "next version" und
 
 Adjust your `[dependencies]` section of `Cargo.toml` to be the following:
 ```toml
-packed_simd = { version = "0.3.6", package = "packed_simd_2" }
+packed_simd = { version = "0.3.8", package = "packed_simd_2" }
 ```
 
 # `Simd<[T; N]>`

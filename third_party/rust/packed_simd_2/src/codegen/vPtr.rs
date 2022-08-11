@@ -5,7 +5,7 @@ macro_rules! impl_simd_ptr {
      | $($tys:ty),*) => {
         #[derive(Copy, Clone)]
         #[repr(simd)]
-        pub struct $tuple_id<$ty>($(crate $tys),*);
+        pub struct $tuple_id<$ty>($(pub(crate) $tys),*);
         //^^^^^^^ leaked through SimdArray
 
         impl<$ty> crate::sealed::Seal for [$ptr_ty; $elem_count] {}
