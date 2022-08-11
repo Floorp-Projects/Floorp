@@ -91,13 +91,10 @@ var gCSSFontFaceDescriptors = {
       'url("404.eot")',
       "url('404.otf')",
       'url(404.ttf) format("truetype")',
-      'url(404.ttf) format("truetype", "opentype")',
-      'url(404.ttf) format("truetype", "opentype"), url(\'404.eot\')',
       "local(Times New Roman)",
       "local('Times New Roman')",
       'local("Times New Roman")',
       'local("serif")',
-      'url(404.ttf) format("truetype", "unknown"), local(Times New Roman), url(\'404.eot\')',
     ],
     invalid_values: [
       "url(404.ttf) format(truetype)",
@@ -109,6 +106,9 @@ var gCSSFontFaceDescriptors = {
       "url(404.ttf) ) foo",
       "url(404.ttf) ! important",
       "url(404.ttf) ! hello",
+      'url(404.ttf) format("truetype", "opentype")',
+      'url(404.ttf) format("truetype", "opentype"), url(\'404.eot\')',
+      'url(404.ttf) format("truetype", "unknown"), local(Times New Roman), url(\'404.eot\')',
     ],
   },
   "unicode-range": {
