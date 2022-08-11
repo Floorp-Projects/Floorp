@@ -8,6 +8,7 @@ transforms:
     - gecko_taskgraph.transforms.release_version_bump:transforms
     - gecko_taskgraph.transforms.task:transforms
 
+
 job-defaults:
     worker-type: tree
     worker:
@@ -18,20 +19,15 @@ job-defaults:
             by-project:
                 mozilla-beta: false
                 default: true
-        ignore-closed-tree:
-            by-project:
-                autoland: true
-                default: false
+        ignore-closed-tree: false
         push:
             by-project:
                 mozilla-(central|beta): true
-                autoland: true
                 default: false
         source-repo:
             by-release-type:
                 beta: https://hg.mozilla.org/releases/mozilla-beta
-                nightly: https://hg.mozilla.org/mozilla-central
-                default: https://hg.mozilla.org/integration/autoland
+                default: https://hg.mozilla.org/mozilla-central
         l10n-bump-info:
             by-release-type:
                 # XXX whenever the `beta` config changes, make sure to make
@@ -56,27 +52,23 @@ job-defaults:
                             - win64-devedition
                             - win64-aarch64
                             - win64-aarch64-devedition
-                    platform-configs:
-                        [
-                            {
-                                "platforms":
-                                    [
-                                        "linux",
-                                        "linux-devedition",
-                                        "linux64",
-                                        "linux64-devedition",
-                                        "macosx64",
-                                        "macosx64-devedition",
-                                        "win32",
-                                        "win32-devedition",
-                                        "win64",
-                                        "win64-devedition",
-                                        "win64-aarch64",
-                                        "win64-aarch64-devedition",
-                                    ],
-                                "path": "browser/locales/shipped-locales",
-                            },
-                        ]
+                    platform-configs: [{
+                        "platforms": [
+                            "linux",
+                            "linux-devedition",
+                            "linux64",
+                            "linux64-devedition",
+                            "macosx64",
+                            "macosx64-devedition",
+                            "win32",
+                            "win32-devedition",
+                            "win64",
+                            "win64-devedition",
+                            "win64-aarch64",
+                            "win64-aarch64-devedition",
+                        ],
+                        "path": "browser/locales/shipped-locales",
+                    }]
                 default:
                     name: Firefox l10n changesets
                     path: browser/locales/l10n-changesets.json
@@ -97,27 +89,23 @@ job-defaults:
                             - win64-devedition
                             - win64-aarch64
                             - win64-aarch64-devedition
-                    platform-configs:
-                        [
-                            {
-                                "platforms":
-                                    [
-                                        "linux",
-                                        "linux-devedition",
-                                        "linux64",
-                                        "linux64-devedition",
-                                        "macosx64",
-                                        "macosx64-devedition",
-                                        "win32",
-                                        "win32-devedition",
-                                        "win64",
-                                        "win64-devedition",
-                                        "win64-aarch64",
-                                        "win64-aarch64-devedition",
-                                    ],
-                                "path": "browser/locales/all-locales",
-                            },
-                        ]
+                    platform-configs: [{
+                        "platforms": [
+                            "linux",
+                            "linux-devedition",
+                            "linux64",
+                            "linux64-devedition",
+                            "macosx64",
+                            "macosx64-devedition",
+                            "win32",
+                            "win32-devedition",
+                            "win64",
+                            "win64-devedition",
+                            "win64-aarch64",
+                            "win64-aarch64-devedition",
+                        ],
+                        "path": "browser/locales/all-locales",
+                    }]
 
 jobs:
     l10n-bumper:
