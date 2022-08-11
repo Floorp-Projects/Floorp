@@ -20,6 +20,7 @@ import androidx.core.content.getSystemService
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.TabData
 import mozilla.components.support.base.log.logger.Logger
+import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.utils.IntentUtils
 
@@ -60,8 +61,11 @@ class NotificationManager(private val context: Context) {
         logger.debug("${filteredTabs.size} tab(s) after filtering for unsupported schemes")
         filteredTabs.forEach { tab ->
             val showReceivedTabsIntentFlags = IntentUtils.defaultIntentPendingFlags or PendingIntent.FLAG_ONE_SHOT
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(tab.url))
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            val intent = Intent(context, IntentReceiverActivity::class.java).apply {
+                action = Intent.ACTION_VIEW
+                data = Uri.parse(tab.url)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
             intent.putExtra(RECEIVE_TABS_TAG, true)
             val pendingIntent: PendingIntent =
                 PendingIntent.getActivity(context, 0, intent, showReceivedTabsIntentFlags)
