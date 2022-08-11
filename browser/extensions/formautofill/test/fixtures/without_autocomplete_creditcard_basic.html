@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Form Autofill Credit Card Demo Page</title>
+</head>
+<body>
+  <h1>Form Autofill Credit Card Demo Page (without Autocomplete attribute)</h1>
+  <form id="form">
+    <p><label>Name: <input id="cc-name" placeholder="Credit Card Name"></label></p>
+    <p><label>Card Number: <input id="cc-number" placeholder="Credit Card Number"></label></p>
+    <p><label>Expiration month: <input id="cc-exp-month" placeholder="Credit Card Expiration Month"></label></p>
+    <p><label>Expiration year: <input id="cc-exp-year" placeholder="Credit Card Expiration Year"></label></p>
+    <p><label>CSC: <input id="cc-csc" placeholder="Credit Card Security Code"></label></p>
+    <p><label>Card Type: <select id="cc-type" placeholder="Credit Card Type">
+      <option></option>
+      <option value="discover">Discover</option>
+      <option value="jcb">JCB</option>
+      <option value="visa">Visa</option>
+      <option value="mastercard">MasterCard</option>
+      <option value="gringotts">Unknown card network</option>
+    </select></label></p>
+    <p>
+      <input type="submit" value="Submit">
+      <button type="reset">Reset</button>
+    </p>
+  </form>
+</body>
+</html>

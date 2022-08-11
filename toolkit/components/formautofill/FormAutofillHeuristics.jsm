@@ -510,6 +510,11 @@ class FieldScanner {
       return [null, null];
     }
 
+    // Used by test ONLY! This ensure testcases always get the same confidence
+    if (lazy.FormAutofillUtils.ccHeuristicTestConfidence != null) {
+      highestConfidence = lazy.FormAutofillUtils.ccHeuristicTestConfidence;
+    }
+
     return [highestField, highestConfidence];
   }
 

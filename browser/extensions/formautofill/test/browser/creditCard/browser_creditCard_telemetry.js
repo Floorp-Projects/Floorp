@@ -193,6 +193,59 @@ add_task(async function test_popup_opened() {
   await SpecialPowers.popPrefEnv();
 });
 
+add_task(async function test_popup_opened_form_without_autocomplete() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [ENABLED_AUTOFILL_CREDITCARDS_PREF, true],
+      [AUTOFILL_CREDITCARDS_AVAILABLE_PREF, "on"],
+      ["extensions.formautofill.creditCards.heuristics.testConfidence", "1"],
+    ],
+  });
+
+  Services.telemetry.clearEvents();
+  Services.telemetry.clearScalars();
+  Services.telemetry.setEventRecordingEnabled("creditcard", true);
+
+  await setStorage(TEST_CREDIT_CARD_1);
+
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_WITHOUT_AUTOCOMPLETE_URL },
+    async function(browser) {
+      const focusInput = "#cc-number";
+
+      await openPopupOn(browser, focusInput);
+
+      // Clean up
+      await closePopup(browser);
+    }
+  );
+
+  await removeAllRecords();
+
+  await assertTelemetry([
+    ccFormArgsv1("detected"),
+    ccFormArgsv2(
+      "detected",
+      buildccFormv2Extra({ cc_number: "1", cc_exp: "false" }, "true")
+    ),
+    ccFormArgsv1("popup_shown"),
+    ccFormArgsv2("popup_shown", { field_name: "cc-number" }),
+  ]);
+
+  TelemetryTestUtils.assertScalar(
+    TelemetryTestUtils.getProcessScalars("content"),
+    "formautofill.creditCards.detected_sections_count",
+    1,
+    "There should be 1 section detected."
+  );
+  TelemetryTestUtils.assertScalarUnset(
+    TelemetryTestUtils.getProcessScalars("content"),
+    "formautofill.creditCards.submitted_sections_count"
+  );
+
+  await SpecialPowers.popPrefEnv();
+});
+
 add_task(async function test_submit_creditCard_new() {
   async function test_per_command(
     command,
