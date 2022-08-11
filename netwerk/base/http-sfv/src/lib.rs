@@ -48,7 +48,7 @@ impl SFVService {
     fn parse_list(&self, header: &nsACString) -> Result<RefPtr<nsISFVList>, nsresult> {
         let parsed_list = Parser::parse_list(&header).map_err(|_| NS_ERROR_FAILURE)?;
 
-        let mut nsi_members = ThinVec::new();
+        let mut nsi_members = Vec::new();
         for item_or_inner_list in parsed_list.iter() {
             nsi_members.push(interface_from_list_entry(item_or_inner_list)?)
         }
@@ -116,22 +116,32 @@ impl SFVService {
         ))
     }
 
-    xpcom_method!(new_inner_list => NewInnerList(items: *const thin_vec::ThinVec<RefPtr<nsISFVItem>>, params:  *const nsISFVParams) -> *const nsISFVInnerList);
+    xpcom_method!(new_inner_list => NewInnerList(items: *const thin_vec::ThinVec<Option<RefPtr<nsISFVItem>>>, params:  *const nsISFVParams) -> *const nsISFVInnerList);
     fn new_inner_list(
         &self,
-        items: &thin_vec::ThinVec<RefPtr<nsISFVItem>>,
+        items: &thin_vec::ThinVec<Option<RefPtr<nsISFVItem>>>,
         params: &nsISFVParams,
     ) -> Result<RefPtr<nsISFVInnerList>, nsresult> {
+        let items = items
+            .iter()
+            .cloned()
+            .map(|item| item.ok_or(NS_ERROR_NULL_POINTER))
+            .collect::<Result<Vec<_>, nsresult>>()?;
         Ok(RefPtr::new(
             SFVInnerList::new(items, params).coerce::<nsISFVInnerList>(),
         ))
     }
 
-    xpcom_method!(new_list => NewList(members: *const thin_vec::ThinVec<RefPtr<nsISFVItemOrInnerList>>) -> *const nsISFVList);
+    xpcom_method!(new_list => NewList(members: *const thin_vec::ThinVec<Option<RefPtr<nsISFVItemOrInnerList>>>) -> *const nsISFVList);
     fn new_list(
         &self,
-        members: &thin_vec::ThinVec<RefPtr<nsISFVItemOrInnerList>>,
+        members: &thin_vec::ThinVec<Option<RefPtr<nsISFVItemOrInnerList>>>,
     ) -> Result<RefPtr<nsISFVList>, nsresult> {
+        let members = members
+            .iter()
+            .cloned()
+            .map(|item| item.ok_or(NS_ERROR_NULL_POINTER))
+            .collect::<Result<Vec<_>, nsresult>>()?;
         Ok(RefPtr::new(SFVList::new(members).coerce::<nsISFVList>()))
     }
 
@@ -508,36 +518,43 @@ impl SFVItem {
 #[xpimplements(nsISFVInnerList, nsISFVItemOrInnerList)]
 #[refcnt = "nonatomic"]
 struct InitSFVInnerList {
-    items: RefCell<thin_vec::ThinVec<RefPtr<nsISFVItem>>>,
+    items: RefCell<Vec<RefPtr<nsISFVItem>>>,
     params: RefPtr<nsISFVParams>,
 }
 
 impl SFVInnerList {
-    fn new(
-        items: &thin_vec::ThinVec<RefPtr<nsISFVItem>>,
-        params: &nsISFVParams,
-    ) -> RefPtr<SFVInnerList> {
+    fn new(items: Vec<RefPtr<nsISFVItem>>, params: &nsISFVParams) -> RefPtr<SFVInnerList> {
         SFVInnerList::allocate(InitSFVInnerList {
-            items: RefCell::new((*items).clone()),
+            items: RefCell::new(items),
             params: RefPtr::new(params),
         })
     }
 
     xpcom_method!(
-        get_items => GetItems() -> thin_vec::ThinVec<RefPtr<nsISFVItem>>
+        get_items => GetItems() -> thin_vec::ThinVec<Option<RefPtr<nsISFVItem>>>
     );
 
-    fn get_items(&self) -> Result<thin_vec::ThinVec<RefPtr<nsISFVItem>>, nsresult> {
-        let items = self.items.borrow().clone();
+    fn get_items(&self) -> Result<thin_vec::ThinVec<Option<RefPtr<nsISFVItem>>>, nsresult> {
+        let items = self.items.borrow().iter().cloned().map(Some).collect();
         Ok(items)
     }
 
     #[allow(non_snake_case)]
-    unsafe fn SetItems(&self, value: *const thin_vec::ThinVec<RefPtr<nsISFVItem>>) -> nsresult {
+    unsafe fn SetItems(
+        &self,
+        value: *const thin_vec::ThinVec<Option<RefPtr<nsISFVItem>>>,
+    ) -> nsresult {
         if value.is_null() {
             return NS_ERROR_NULL_POINTER;
         }
-        *self.items.borrow_mut() = (*value).clone();
+        match (*value)
+            .iter()
+            .map(|v| v.clone().ok_or(NS_ERROR_NULL_POINTER))
+            .collect::<Result<Vec<_>, nsresult>>()
+        {
+            Ok(value) => *self.items.borrow_mut() = value,
+            Err(rv) => return rv,
+        }
         NS_OK
     }
 
@@ -558,33 +575,42 @@ impl SFVInnerList {
 #[xpimplements(nsISFVList, nsISFVSerialize)]
 #[refcnt = "nonatomic"]
 struct InitSFVList {
-    members: RefCell<thin_vec::ThinVec<RefPtr<nsISFVItemOrInnerList>>>,
+    members: RefCell<Vec<RefPtr<nsISFVItemOrInnerList>>>,
 }
 
 impl SFVList {
-    fn new(members: &thin_vec::ThinVec<RefPtr<nsISFVItemOrInnerList>>) -> RefPtr<SFVList> {
+    fn new(members: Vec<RefPtr<nsISFVItemOrInnerList>>) -> RefPtr<SFVList> {
         SFVList::allocate(InitSFVList {
-            members: RefCell::new((*members).clone()),
+            members: RefCell::new(members),
         })
     }
 
     xpcom_method!(
-        get_members => GetMembers() -> thin_vec::ThinVec<RefPtr<nsISFVItemOrInnerList>>
+        get_members => GetMembers() -> thin_vec::ThinVec<Option<RefPtr<nsISFVItemOrInnerList>>>
     );
 
-    fn get_members(&self) -> Result<thin_vec::ThinVec<RefPtr<nsISFVItemOrInnerList>>, nsresult> {
-        Ok(self.members.borrow().clone())
+    fn get_members(
+        &self,
+    ) -> Result<thin_vec::ThinVec<Option<RefPtr<nsISFVItemOrInnerList>>>, nsresult> {
+        Ok(self.members.borrow().iter().cloned().map(Some).collect())
     }
 
     #[allow(non_snake_case)]
     unsafe fn SetMembers(
         &self,
-        value: *const thin_vec::ThinVec<RefPtr<nsISFVItemOrInnerList>>,
+        value: *const thin_vec::ThinVec<Option<RefPtr<nsISFVItemOrInnerList>>>,
     ) -> nsresult {
         if value.is_null() {
             return NS_ERROR_NULL_POINTER;
         }
-        *self.members.borrow_mut() = (*value).clone();
+        match (*value)
+            .iter()
+            .map(|v| v.clone().ok_or(NS_ERROR_NULL_POINTER))
+            .collect::<Result<Vec<_>, nsresult>>()
+        {
+            Ok(value) => *self.members.borrow_mut() = value,
+            Err(rv) => return rv,
+        }
         NS_OK
     }
 
@@ -594,7 +620,8 @@ impl SFVList {
     fn parse_more(&self, header: &nsACString) -> Result<(), nsresult> {
         // create List from SFVList to call parse_more on it
         let mut list = List::new();
-        for interface_entry in self.get_members()?.iter() {
+        let members = self.members.borrow().clone();
+        for interface_entry in members.iter() {
             let item_or_inner_list = list_entry_from_interface(interface_entry)?;
             list.push(item_or_inner_list);
         }
@@ -602,7 +629,7 @@ impl SFVList {
         let _ = list.parse_more(&header).map_err(|_| NS_ERROR_FAILURE)?;
 
         // replace SFVList's members with new_members
-        let mut new_members = ThinVec::new();
+        let mut new_members = Vec::new();
         for item_or_inner_list in list.iter() {
             new_members.push(interface_from_list_entry(item_or_inner_list)?)
         }
@@ -615,8 +642,8 @@ impl SFVList {
     );
     fn serialize(&self) -> Result<nsCString, nsresult> {
         let mut list = List::new();
-
-        for interface_entry in self.get_members()?.iter() {
+        let members = self.members.borrow().clone();
+        for interface_entry in members.iter() {
             let item_or_inner_list = list_entry_from_interface(interface_entry)?;
             list.push(item_or_inner_list);
         }
@@ -855,7 +882,7 @@ fn interface_from_list_entry(
             ))
         }
         ListEntry::InnerList(inner_list) => {
-            let mut nsi_inner_list = ThinVec::new();
+            let mut nsi_inner_list = Vec::new();
             for item in inner_list.items.iter() {
                 let nsi_item = interface_from_item(item)?;
                 nsi_inner_list.push(nsi_item);
@@ -863,7 +890,7 @@ fn interface_from_list_entry(
 
             let nsi_params = interface_from_params(&inner_list.params)?;
             Ok(RefPtr::new(
-                SFVInnerList::new(&nsi_inner_list, &nsi_params).coerce::<nsISFVItemOrInnerList>(),
+                SFVInnerList::new(nsi_inner_list, &nsi_params).coerce::<nsISFVItemOrInnerList>(),
             ))
         }
     }

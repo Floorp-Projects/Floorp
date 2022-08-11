@@ -524,7 +524,7 @@ class Forward(object):
         if rustPreventForward(self.name):
             raise RustNoncompat("forward declaration %s is unsupported" % self.name)
         if calltype == "element":
-            return "RefPtr<%s>" % self.name
+            return "Option<RefPtr<%s>>" % self.name
         return "%s*const %s" % ("*mut" if "out" in calltype else "", self.name)
 
     def __str__(self):
@@ -858,7 +858,7 @@ class Interface(object):
 
     def rustType(self, calltype, const=False):
         if calltype == "element":
-            return "RefPtr<%s>" % self.name
+            return "Option<RefPtr<%s>>" % self.name
         return "%s*const %s" % ("*mut " if "out" in calltype else "", self.name)
 
     def __str__(self):
