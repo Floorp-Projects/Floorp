@@ -1191,14 +1191,6 @@ main.has-snippet {
 }
 
 
-@media (prefers-color-scheme: light) {
-  .search-wrapper .logo-and-wordmark .wordmark {
-    background: url("chrome://branding/content/firefox-wordmark-white.svg") no-repeat center center !important;
-    width: 306px !important;
-  }  
-}
-
-
 @media (max-width: 609px) {
   .search-wrapper .logo-and-wordmark .logo {
     background-size: 64px;
@@ -4750,4 +4742,25 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   margin-inline-start: 18px;
   align-self: flex-end;
   display: flex;
+}
+
+#background{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  animation: fadeIn 1.7s ease 0s 1 normal;
+  opacity: 0.8;
+}
+@keyframes fadeIn { 
+  0% {opacity: 0.1} 
+  100% {opacity: 0.8}
+}
+
+body{
+  background-color: #393939 !important;
 }

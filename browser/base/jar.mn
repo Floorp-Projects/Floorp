@@ -41,6 +41,7 @@ browser.jar:
         content/browser/browser-userChrome.js         (content/browser-userChrome.js)
         content/browser/browser-preferences.js        (content/browser-preferences.js)
         content/browser/browser-command.js            (content/browser-command.js)
+        content/browser/newtabbg.js                   (content/newtabbg.js)
         content/browser/browser.css                   (content/browser.css)
         content/browser/browser.js                    (content/browser.js)
 *       content/browser/browser.xhtml                 (content/browser.xhtml)
