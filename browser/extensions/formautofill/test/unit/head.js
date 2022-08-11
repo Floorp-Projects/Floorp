@@ -194,6 +194,7 @@ function verifySectionFieldDetails(sections, expectedResults) {
       let expectedField = expectedSectionInfo[fieldIndex];
       delete field._reason;
       delete field.elementWeakRef;
+      delete field.confidence;
       Assert.deepEqual(field, expectedField);
     });
   });
