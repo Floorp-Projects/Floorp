@@ -44,7 +44,6 @@ FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["qr-code"] += [
 ]
 
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["webcompat"] += [
-    "webcompat/fix-youtube-comment.css",
     "webcompat/fix-youtube-comment.js",
 ]
 
