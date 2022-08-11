@@ -30,6 +30,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
   {
@@ -45,6 +46,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
   {
@@ -59,6 +61,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
   {
@@ -70,6 +73,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
   {
@@ -81,6 +85,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
   {
@@ -96,6 +101,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
   {
@@ -108,6 +114,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
   {
@@ -120,6 +127,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
   {
@@ -133,6 +141,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
   {
@@ -146,6 +155,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
   {
@@ -159,6 +169,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
   {
@@ -170,6 +181,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
   {
@@ -187,6 +199,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
   {
@@ -198,6 +211,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
   {
@@ -219,6 +233,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
   {
@@ -232,6 +247,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
   {
@@ -246,6 +262,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: 1,
     },
   },
   {
@@ -260,6 +277,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
   {
@@ -273,6 +291,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
   {
@@ -286,6 +305,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
   {
@@ -299,6 +319,7 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
   {
@@ -312,9 +333,23 @@ const TESTCASES = [
       section: "",
       addressType: "",
       contactType: "",
+      confidence: null,
     },
   },
 ];
+
+add_setup(async function() {
+  Services.prefs.setStringPref(
+    "extensions.formautofill.creditCards.heuristics.testConfidence",
+    "1"
+  );
+
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref(
+      "extensions.formautofill.creditCards.heuristics.testConfidence"
+    );
+  });
+});
 
 TESTCASES.forEach(testcase => {
   add_task(async function() {
@@ -371,6 +406,7 @@ add_task(async function test_regexp_list() {
             section: "",
             addressType: "",
             contactType: "",
+            confidence: null,
           }
         : null,
     };
@@ -423,6 +459,7 @@ add_task(async function test_autofill_creditCards_autocomplete_off_pref() {
     section: "",
     addressType: "",
     contactType: "",
+    confidence: 1,
   };
   info(
     `Set pref so that credit card autofill does not respect autocomplete="off"`
@@ -476,6 +513,7 @@ add_task(async function test_autofill_addresses_autocomplete_off_pref() {
     section: "",
     addressType: "",
     contactType: "",
+    confidence: null,
   };
   info(`Set pref so that address autofill does not respect autocomplete="off"`);
   Services.prefs.setBoolPref(

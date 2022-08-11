@@ -1324,3 +1324,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   null,
   pref => parseFloat(pref)
 );
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofillUtils,
+  "ccHeuristicTestConfidence",
+  "extensions.formautofill.creditCards.heuristics.testConfidence",
+  null,
+  null,
+  pref => parseFloat(pref)
+);
