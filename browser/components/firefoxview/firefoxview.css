@@ -56,6 +56,11 @@ body {
   --fxview-text-secondary-color: color-mix(in srgb, currentColor 80%, transparent);
   --newtab-background-color-secondary: #FFF;
   --colorways-no-collection-notice-bg-color: transparent;
+
+  /* ensure utility button hover states match those of the rest of the page */
+  --in-content-button-background-hover: var(--fxview-element-hover-color);
+  --in-content-button-background-active: var(--fxview-element-active-color);
+
   display: flex;
   justify-content: center;
   padding-block: var(--header-spacing) var(--footer-spacing);
@@ -299,6 +304,18 @@ body > main > aside {
   display: none !important;
 }
 
+button.ghost-button,
+button.ghost-button:not(.semi-transparent):enabled:is(:hover, :active) {
+  color: inherit;
+}
+
+@media (prefers-contrast) {
+  button.ghost-button:not(.semi-transparent):enabled:is(:hover, :active) {
+    background-color: ButtonText;
+    color: ButtonFace;
+  }
+}
+
 button.primary {
   white-space: nowrap;
   min-width: fit-content;
@@ -472,9 +489,21 @@ button.close {
   font-size: inherit;
   display: inline;
 }
+/* ensure we get the local color values as container doesnt change color with theme */
 .confirmation-message-box > .icon-button {
-  /* ensure we get the local color value as container doesnt change color with theme */
   color: inherit;
+}
+.confirmation-message-box > button.icon-button:enabled:is(:hover, :active) {
+  background-color: color-mix(in srgb, var(--success-background-color) 90%, currentColor);
+}
+@media (prefers-contrast) {
+  .confirmation-message-box > button.icon-button {
+    border-color: ButtonText;
+  }
+  .confirmation-message-box > button.icon-button:enabled:is(:hover, :active) {
+    background-color: ButtonText;
+    color: ButtonFace;
+  }
 }
 
 /* 117px is the total height of the collapsible-tabs-container; setting that size
@@ -514,14 +543,12 @@ button.close {
   cursor: pointer;
 }
 
-.closed-tab-li:hover,
-.ghost-button:hover {
-  background-color: var(--fxview-element-hover-color) !important;
+.closed-tab-li:hover {
+  background-color: var(--fxview-element-hover-color);
 }
 
-.ghost-button:active,
 .closed-tab-li:active {
-  background-color: var(--fxview-element-active-color) !important;
+  background-color: var(--fxview-element-active-color);
 }
 
 .closed-tab-li-title {
