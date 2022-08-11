@@ -42,7 +42,7 @@
                   command="Browser:Stop"/>
         <menuitem id="context-bookmarkpage"
                   class="menuitem-iconic"
-                  data-l10n-id="main-context-menu-bookmark-add"
+                  data-l10n-id="main-context-menu-bookmark-page"
                   oncommand="gContextMenu.bookmarkThisPage();"/>
       </menugroup>
 #endif
@@ -94,7 +94,7 @@
                 oncommand="gContextMenu.openLinkInPrivateWindow();"/>
       <menuseparator id="context-sep-open"/>
       <menuitem id="context-bookmarklink"
-                data-l10n-id="main-context-menu-bookmark-link"
+                data-l10n-id="main-context-menu-bookmark-link-2"
                 oncommand="gContextMenu.bookmarkLink();"/>
       <menuitem id="context-savelink"
                 data-l10n-id="main-context-menu-save-link"
@@ -252,7 +252,7 @@
       <menuseparator id="context-sep-ctp"/>
 #ifdef XP_MACOSX
       <menuitem id="context-bookmarkpage"
-                data-l10n-id="main-context-menu-bookmark-add-mac"
+                data-l10n-id="main-context-menu-bookmark-page-mac"
                 oncommand="gContextMenu.bookmarkThisPage();"/>
 #endif
       <menuitem id="context-savepage"
@@ -310,7 +310,7 @@
                 data-l10n-id="main-context-menu-reveal-password"
                 oncommand="gContextMenu.toggleRevealPassword();"/>
       <menuitem id="context-print-selection"
-                data-l10n-id="main-context-menu-print-selection"
+                data-l10n-id="main-context-menu-print-selection-2"
                 oncommand="gContextMenu.printSelection();"/>
       <menuseparator id="context-sep-selectall"/>
 
@@ -368,7 +368,7 @@
                     oncommand="gContextMenu.reloadFrame(event);"/>
           <menuseparator/>
           <menuitem id="context-bookmarkframe"
-                    data-l10n-id="main-context-menu-frame-bookmark"
+                    data-l10n-id="main-context-menu-frame-add-bookmark"
                     oncommand="gContextMenu.addBookmarkForFrame();"/>
           <menuitem id="context-saveframe"
                     data-l10n-id="main-context-menu-frame-save-as"
