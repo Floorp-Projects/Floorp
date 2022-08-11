@@ -19,7 +19,7 @@
 namespace mozilla::dom {
 
 class TransformStream;
-class TransformerAlgorithmsBase;
+class TransformerAlgorithms;
 
 class TransformStreamDefaultController final : public nsISupports,
                                                public nsWrapperCache {
@@ -29,8 +29,8 @@ class TransformStreamDefaultController final : public nsISupports,
 
   MOZ_KNOWN_LIVE TransformStream* Stream();
   void SetStream(TransformStream& aStream);
-  TransformerAlgorithmsBase* Algorithms();
-  void SetAlgorithms(TransformerAlgorithmsBase* aTransformerAlgorithms);
+  TransformerAlgorithms* Algorithms();
+  void SetAlgorithms(TransformerAlgorithms* aTransformerAlgorithms);
 
   explicit TransformStreamDefaultController(nsIGlobalObject* aGlobal);
 
@@ -55,13 +55,8 @@ class TransformStreamDefaultController final : public nsISupports,
 
   // Internal slots
   RefPtr<TransformStream> mStream;
-  RefPtr<TransformerAlgorithmsBase> mTransformerAlgorithms;
+  RefPtr<TransformerAlgorithms> mTransformerAlgorithms;
 };
-
-void SetUpTransformStreamDefaultController(
-    JSContext* aCx, TransformStream& aStream,
-    TransformStreamDefaultController& aController,
-    TransformerAlgorithmsBase& aTransformerAlgorithms);
 
 void SetUpTransformStreamDefaultControllerFromTransformer(
     JSContext* aCx, TransformStream& aStream,

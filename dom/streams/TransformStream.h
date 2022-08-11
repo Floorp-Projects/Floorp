@@ -21,26 +21,22 @@ class WritableStream;
 class ReadableStream;
 class UniqueMessagePortId;
 class MessagePort;
-class TransformerAlgorithmsWrapper;
 
 class TransformStream final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TransformStream)
 
-  // https://streams.spec.whatwg.org/#transformstream-set-up
-  // Intended to be used by interfaces using GenericTransformStream mixin.
-  MOZ_CAN_RUN_SCRIPT static already_AddRefed<TransformStream> CreateGeneric(
-      const GlobalObject& aGlobal, TransformerAlgorithmsWrapper& aAlgorithms,
-      ErrorResult& aRv);
-
   TransformStream(nsIGlobalObject* aGlobal, ReadableStream* aReadable,
                   WritableStream* aWritable);
 
   // Internal slot accessors
   bool Backpressure() const { return mBackpressure; }
+  void SetBackpressure(bool aBackpressure) { mBackpressure = aBackpressure; }
   Promise* BackpressureChangePromise() { return mBackpressureChangePromise; }
-  void SetBackpressure(bool aBackpressure, ErrorResult& aRv);
+  void SetBackpressureChangePromise(Promise* aPromise) {
+    mBackpressureChangePromise = aPromise;
+  }
   MOZ_KNOWN_LIVE TransformStreamDefaultController* Controller() {
     return mController;
   }
@@ -48,6 +44,8 @@ class TransformStream final : public nsISupports, public nsWrapperCache {
     MOZ_ASSERT(!mController);
     mController = &aController;
   }
+  MOZ_KNOWN_LIVE ReadableStream* Readable() { return mReadable; }
+  MOZ_KNOWN_LIVE WritableStream* Writable() { return mWritable; }
 
   // [Transferable]
   // https://html.spec.whatwg.org/multipage/structured-data.html#transfer-steps
@@ -82,8 +80,8 @@ class TransformStream final : public nsISupports, public nsWrapperCache {
               const QueuingStrategy& aWritableStrategy,
               const QueuingStrategy& aReadableStrategy, ErrorResult& aRv);
 
-  ReadableStream* Readable() const { return mReadable; }
-  WritableStream* Writable() const { return mWritable; }
+  already_AddRefed<ReadableStream> GetReadable();
+  already_AddRefed<WritableStream> GetWritable();
 
  private:
   nsCOMPtr<nsIGlobalObject> mGlobal;
@@ -105,6 +103,9 @@ MOZ_CAN_RUN_SCRIPT void TransformStreamError(JSContext* aCx,
                                              TransformStream* aStream,
                                              JS::Handle<JS::Value> aError,
                                              ErrorResult& aRv);
+
+void TransformStreamSetBackpressure(TransformStream* aStream,
+                                    bool aBackpressure, ErrorResult& aRv);
 
 }  // namespace mozilla::dom
 
