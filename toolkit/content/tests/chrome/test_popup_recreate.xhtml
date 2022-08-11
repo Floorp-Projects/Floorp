@@ -6,8 +6,8 @@
   onload="setTimeout(init, 0)"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
-  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
 <!--
   This is a test for bug 388361.
@@ -33,6 +33,16 @@ function isWithinHalfPixel(a, b)
   return Math.abs(a - b) <= 0.5;
 }
 
+const ismac = navigator.platform.indexOf("Mac") == 0;
+function inputMargin(el) {
+  let cs = getComputedStyle(el);
+  // XXX Internal properties are not exposed in getComputedStyle, so we have to
+  // use margin and rely on our knowledge of them matching negative margins
+  // where appropriate.
+  // return parseFloat(cs.getPropertyValue("-moz-window-input-region-margin"));
+  return ismac ? 0 : Math.max(-parseFloat(cs.marginLeft), 0);
+}
+
 function recreate()
 {
   if (gState == "before") {
@@ -56,7 +66,7 @@ function checkSize()
 
   let marginLeft = parseFloat(getComputedStyle(menulist.menupopup).marginLeft);
   ok(isWithinHalfPixel(menurect.left + marginLeft, popuprect.left), "left position " + gState);
-  ok(isWithinHalfPixel(menurect.right + marginLeft, popuprect.right), "right position " + gState);
+  ok(isWithinHalfPixel(menurect.right + marginLeft + 2 * inputMargin(menulist.menupopup), popuprect.right), "right position " + gState);
   ok(Math.round(popuprect.right) - Math.round(popuprect.left) > 0, "height " + gState)
   document.getElementById("menulist").open = false;
 }
