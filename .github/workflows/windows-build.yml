@@ -93,13 +93,13 @@ jobs:
         chmod -R 777 /home/runner/work/win-cross
         sed -i '76c //const uint64_t ROOT_CLIP_CHAIN = ~0;' /home/runner/work/Floorp/Floorp/gfx/webrender_bindings/webrender_ffi.h
 
-        tool_msvc_v=$(ls /home/runner/work/win-cross/vc/tools/msvc | grep "14.*")
+        tool_msvc_v=$(ls /home/runner/work/win-cross/vc/tools/msvc | grep "14\.*")
         echo ${tool_msvc_v}
-        red_msvc_v=$(ls /home/runner/work/win-cross/vc/redist/msvc | grep "14.*")
+        red_msvc_v=$(ls /home/runner/work/win-cross/vc/redist/msvc | grep "14\.*")
         echo ${red_msvc_v}
         red_msvc_crt_v=$(ls /home/runner/work/win-cross/vc/redist/msvc/${red_msvc_v}/x64/ | grep "microsoft.*.crt")
         echo ${tool_msvc_crt_v}
-        red_kit_v=$(ls /home/runner/work/win-cross/kits/10/redist/ | grep "10.*")
+        red_kit_v=$(ls /home/runner/work/win-cross/kits/10/redist/ | grep "10\.*")
         echo ${red_kit_v}
         echo 'CROSS_BUILD=1' > mozconfig
         echo 'TOOLS=/home/runner/work/win-cross' >> mozconfig
