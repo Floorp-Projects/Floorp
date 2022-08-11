@@ -40,6 +40,63 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TransformStream)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+// https://streams.spec.whatwg.org/#transformstream-set-up
+// (except this instead creates a new TransformStream rather than accepting an
+// existing instance)
+already_AddRefed<TransformStream> TransformStream::CreateGeneric(
+    const GlobalObject& aGlobal, TransformerAlgorithmsWrapper& aAlgorithms,
+    ErrorResult& aRv) {
+  // Step 1. Let writableHighWaterMark be 1.
+  double writableHighWaterMark = 1;
+
+  // Step 2. Let writableSizeAlgorithm be an algorithm that returns 1.
+  // Note: Callers should recognize nullptr as a callback that returns 1. See
+  // also WritableStream::Constructor for this design decision.
+  RefPtr<QueuingStrategySize> writableSizeAlgorithm;
+
+  // Step 3. Let readableHighWaterMark be 0.
+  double readableHighWaterMark = 0;
+
+  // Step 4. Let readableSizeAlgorithm be an algorithm that returns 1.
+  // Note: Callers should recognize nullptr as a callback that returns 1. See
+  // also ReadableStream::Constructor for this design decision.
+  RefPtr<QueuingStrategySize> readableSizeAlgorithm;
+
+  // Step 5. Let transformAlgorithmWrapper be an algorithm that runs these steps
+  // given a value chunk:
+  // Step 6. Let flushAlgorithmWrapper be an algorithm that runs these steps:
+  // (Done by TransformerAlgorithmsWrapper)
+
+  // Step 7. Let startPromise be a promise resolved with undefined.
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  RefPtr<Promise> startPromise =
+      Promise::CreateResolvedWithUndefined(global, aRv);
+  if (!startPromise) {
+    return nullptr;
+  }
+
+  // Step 8. Perform ! InitializeTransformStream(stream, startPromise,
+  // writableHighWaterMark, writableSizeAlgorithm, readableHighWaterMark,
+  // readableSizeAlgorithm).
+  auto stream = MakeRefPtr<TransformStream>(global, nullptr, nullptr);
+  stream->Initialize(aGlobal.Context(), startPromise, writableHighWaterMark,
+                     writableSizeAlgorithm, readableHighWaterMark,
+                     readableSizeAlgorithm, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // Step 9. Let controller be a new TransformStreamDefaultController.
+  auto controller = MakeRefPtr<TransformStreamDefaultController>(global);
+
+  // Step 10. Perform ! SetUpTransformStreamDefaultController(stream,
+  // controller, transformAlgorithmWrapper, flushAlgorithmWrapper).
+  SetUpTransformStreamDefaultController(aGlobal.Context(), *stream, *controller,
+                                        aAlgorithms);
+
+  return stream.forget();
+}
+
 TransformStream::TransformStream(nsIGlobalObject* aGlobal) : mGlobal(aGlobal) {
   mozilla::HoldJSObjects(this);
 }
