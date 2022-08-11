@@ -42,7 +42,7 @@ object MetricsUtils {
         isDefault: Boolean,
         searchAccessPoint: Source
     ) {
-        val identifier = if (engine.type == SearchEngine.Type.CUSTOM) "custom" else engine.id
+        val identifier = if (engine.type == SearchEngine.Type.CUSTOM) "custom" else engine.id.lowercase()
         val source = searchAccessPoint.name.lowercase()
 
         Metrics.searchCount["$identifier.$source"].add()

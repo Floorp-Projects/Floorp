@@ -211,6 +211,25 @@ class MetricsUtilsTestRobolectric {
     }
 
     @Test
+    fun `given a BUNDLED engine with an uppercase id, when recording a new search with that engine then record using lowercase`() {
+        val searchEngineId = "Uppercase-Id"
+        assertNull(Metrics.searchCount["$searchEngineId.widget"].testGetValue())
+
+        val engine: SearchEngine = mockk(relaxed = true)
+
+        every { engine.id } returns searchEngineId
+        every { engine.type } returns SearchEngine.Type.BUNDLED
+
+        MetricsUtils.recordSearchMetrics(
+            engine,
+            false,
+            MetricsUtils.Source.WIDGET
+        )
+
+        assertNotNull(Metrics.searchCount["${searchEngineId.lowercase()}.widget"].testGetValue())
+    }
+
+    @Test
     fun `given a DEFAULT engine, when the search source is a WIDGET the proper labeled metric is recorded`() {
         assertNull(Events.performedSearch.testGetValue())
 
