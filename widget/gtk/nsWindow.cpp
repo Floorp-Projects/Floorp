@@ -387,6 +387,7 @@ nsWindow::nsWindow()
       mWindowShouldStartDragging(false),
       mHasMappedToplevel(false),
       mRetryPointerGrab(false),
+      mPanInProgress(false),
       mDrawToContainer(false),
       mTitlebarBackdropState(false),
       mIsPIPWindow(false),
