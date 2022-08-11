@@ -436,7 +436,7 @@ CoderResult CodeInitExpr(Coder<mode>& coder, CoderArg<mode, InitExpr> item) {
 
 template <CoderMode mode>
 CoderResult CodeFuncType(Coder<mode>& coder, CoderArg<mode, FuncType> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::FuncType, 336);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::FuncType, 208);
   MOZ_TRY(CodePodVector(coder, &item->results_));
   MOZ_TRY(CodePodVector(coder, &item->args_));
   return Ok();
@@ -453,7 +453,7 @@ CoderResult CodeStructType(Coder<mode>& coder,
 
 template <CoderMode mode>
 CoderResult CodeTypeDef(Coder<mode>& coder, CoderArg<mode, TypeDef> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TypeDef, 344);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TypeDef, 216);
   // TypeDef is a tagged union that begins with kind = None. This implies that
   // we must manually initialize the variant that we decode.
   if constexpr (mode == MODE_DECODE) {
@@ -523,7 +523,7 @@ CoderResult CodeGlobalDesc(Coder<mode>& coder,
 
 template <CoderMode mode>
 CoderResult CodeTagType(Coder<mode>& coder, CoderArg<mode, TagType> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TagType, 224);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TagType, 160);
   MOZ_TRY(CodePodVector(coder, &item->argTypes_));
   MOZ_TRY(CodePodVector(coder, &item->argOffsets_));
   MOZ_TRY(CodePod(coder, &item->size_));
@@ -792,7 +792,7 @@ CoderResult CodeMetadataTier(Coder<mode>& coder,
 template <CoderMode mode>
 CoderResult CodeMetadata(Coder<mode>& coder,
                          CoderArg<mode, wasm::Metadata> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::Metadata, 472);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::Metadata, 464);
   if constexpr (mode == MODE_ENCODE) {
     MOZ_ASSERT(!item->debugEnabled && item->debugFuncArgTypes.empty() &&
                item->debugFuncReturnTypes.empty());
