@@ -10,6 +10,8 @@
  * pippki UI js files.
  */
 
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+
 function setText(id, value) {
   let element = document.getElementById(id);
   if (!element) {
@@ -157,7 +159,7 @@ async function exportToFile(parent, cert) {
       }
       break;
     case 2:
-      // IOUtils.write requires a typed array.
+      // OS.File.writeAtomic requires a utf-8 string or a typed array.
       // nsIX509Cert.getRawDER() returns an array (not a typed array), so we
       // convert it here.
       content = Uint8Array.from(cert.getRawDER());
@@ -176,7 +178,7 @@ async function exportToFile(parent, cert) {
       break;
   }
   try {
-    await IOUtils.write(fp.file.path, content);
+    await OS.File.writeAtomic(fp.file.path, content);
   } catch (ex) {
     let title = await document.l10n.formatValue("write-file-failure");
     alertPromptService(title, ex.toString());
