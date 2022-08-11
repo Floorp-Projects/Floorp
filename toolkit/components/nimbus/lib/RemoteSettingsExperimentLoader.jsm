@@ -175,7 +175,7 @@ class _RemoteSettingsExperimentLoader {
     try {
       result = await targetingContext.evalWithDefault(jexlString);
     } catch (e) {
-      lazy.log.debug("Targeting failed because of an error");
+      lazy.log.debug("Targeting failed because of an error", e);
       Cu.reportError(e);
     }
     return result;

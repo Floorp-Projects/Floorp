@@ -283,7 +283,10 @@ async function runBackgroundTask(commandLine) {
 
   // Here's where we actually start Nimbus and the Firefox Messaging
   // System.
-  await BackgroundTasksUtils.enableNimbus(commandLine);
+  await BackgroundTasksUtils.enableNimbus(
+    commandLine,
+    defaultProfileTargetingSnapshot.environment
+  );
 
   await BackgroundTasksUtils.enableFirefoxMessagingSystem(
     defaultProfileTargetingSnapshot.environment
