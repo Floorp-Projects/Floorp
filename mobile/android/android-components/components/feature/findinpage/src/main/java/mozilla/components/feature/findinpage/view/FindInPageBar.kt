@@ -151,13 +151,21 @@ class FindInPageBar @JvmOverloads constructor(
     private fun bindNextButton() {
         val nextButton = findViewById<AppCompatImageButton>(R.id.find_in_page_next_btn)
         nextButton.setIconTintIfNotDefaultValue(styling.buttonsTint)
-        nextButton.setOnClickListener { listener?.onNextResult() }
+        nextButton.setOnClickListener {
+            if (queryEditText.text.isNotEmpty()) {
+                listener?.onNextResult()
+            }
+        }
     }
 
     private fun bindPreviousButton() {
         val previousButton = findViewById<AppCompatImageButton>(R.id.find_in_page_prev_btn)
         previousButton.setIconTintIfNotDefaultValue(styling.buttonsTint)
-        previousButton.setOnClickListener { listener?.onPreviousResult() }
+        previousButton.setOnClickListener {
+            if (queryEditText.text.isNotEmpty()) {
+                listener?.onPreviousResult()
+            }
+        }
     }
 
     private fun bindCloseButton() {

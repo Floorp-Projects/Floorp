@@ -44,6 +44,7 @@ class FindInPageBarTest {
         val view = FindInPageBar(testContext)
         view.listener = listener
 
+        view.findViewById<EditText>(R.id.find_in_page_query_text).setText("Non empty query")
         view.findViewById<AppCompatImageButton>(R.id.find_in_page_next_btn)
             .performClick()
 
@@ -57,6 +58,7 @@ class FindInPageBarTest {
         val view = FindInPageBar(testContext)
         view.listener = listener
 
+        view.findViewById<EditText>(R.id.find_in_page_query_text).setText("Non empty query")
         view.findViewById<AppCompatImageButton>(R.id.find_in_page_prev_btn)
             .performClick()
 

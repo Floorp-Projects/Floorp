@@ -22,6 +22,9 @@ permalink: /changelog/
 * **feature-search**:
   * Allow the search widget to match the resized width [#12676](https://github.com/mozilla-mobile/android-components/issues/12676).
 
+* **feature-findinpage**:
+  * 🚒 Bug fixed [issue #12637](https://github.com/mozilla-mobile/android-components/issues/12637) Disable find in page previous and forward buttons if the query is empty
+  
 * **feature-search**:
   * Implement the common part of search widget in Android Components [#12565](https://github.com/mozilla-mobile/android-components/issues/12565).
 
