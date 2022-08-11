@@ -24,6 +24,7 @@ import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.appContext
+import org.mozilla.fenix.helpers.TestHelper.generateRandomString
 import org.mozilla.fenix.helpers.TestHelper.openAppFromExternalLink
 import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.ui.robots.addToHomeScreen
@@ -42,7 +43,7 @@ class SettingsPrivacyTest {
 
     private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
-    private val pageShortcutName = "TestShortcut"
+    private val pageShortcutName = generateRandomString(5)
     private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get:Rule

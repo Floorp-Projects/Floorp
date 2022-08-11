@@ -317,4 +317,11 @@ object TestHelper {
             ).click()
         }
     }
+
+    private val charPool: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
+    fun generateRandomString(stringLength: Int) =
+        (1..stringLength)
+            .map { kotlin.random.Random.nextInt(0, charPool.size) }
+            .map(charPool::get)
+            .joinToString("")
 }
