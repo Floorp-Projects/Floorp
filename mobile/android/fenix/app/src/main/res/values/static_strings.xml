@@ -43,6 +43,14 @@
     <string name="preferences_debug_settings_task_continuity" translatable="false">Enable Task Continuity</string>
     <!-- Label for enabling the Unified Search feature -->
     <string name="preferences_debug_settings_unified_search" translatable="false">Enable Unified Search (requires restart)</string>
+    <!-- Title of preference for sync debugging (only shown in the when the secret debug menu is enabled) -->
+    <string name="preferences_sync_debug">Sync Debug</string>
+    <!-- Preference to override the Push server -->
+    <string name="preferences_override_push_server">Custom Push server</string>
+    <!-- Quit app button title for the Sync Debug preferences -->
+    <string name="preferences_sync_debug_quit_button_title">Stop Firefox</string>
+    <!-- Quit app button summary for the Sync Debug preferences -->
+    <string name="preferences_sync_debug_quit_button_summary">Custom server changes will take effect on the next Firefox run.</string>
 
     <!-- A secret menu option in the tabs tray for making a tab inactive for testing. -->
     <string name="inactive_tabs_menu_item">Make inactive</string>

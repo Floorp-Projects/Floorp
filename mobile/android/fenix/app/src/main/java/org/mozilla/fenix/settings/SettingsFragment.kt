@@ -97,7 +97,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             scope = lifecycleScope,
             accountManager = requireComponents.backgroundServices.accountManager,
             httpClient = requireComponents.core.client,
-            updateFxASyncOverrideMenu = ::updateFxASyncOverrideMenu,
             updateFxAAllowDomesticChinaServerMenu = :: updateFxAAllowDomesticChinaServerMenu
         )
 
@@ -281,6 +280,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             resources.getString(R.string.pref_key_data_choices) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToDataChoicesFragment()
             }
+            resources.getString(R.string.pref_key_sync_debug) -> {
+                SettingsFragmentDirections.actionSettingsFragmentToSyncDebugFragment()
+            }
             resources.getString(R.string.pref_key_help) -> {
                 (activity as HomeActivity).openToBrowserAndLoad(
                     searchTermOrURL = SupportUtils.getSumoURLForTopic(
@@ -442,32 +444,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         preferenceOpenLinksInExternalApp?.onPreferenceChangeListener = SharedPreferenceUpdater()
 
-        val preferenceFxAOverride =
-            findPreference<Preference>(getPreferenceKey(R.string.pref_key_override_fxa_server))
-        val preferenceSyncOverride =
-            findPreference<Preference>(getPreferenceKey(R.string.pref_key_override_sync_tokenserver))
-
-        val syncFxAOverrideUpdater = object : StringSharedPreferenceUpdater() {
-            override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
-                return super.onPreferenceChange(preference, newValue).also {
-                    updateFxASyncOverrideMenu()
-                    Toast.makeText(
-                        context,
-                        getString(R.string.toast_override_fxa_sync_server_done),
-                        Toast.LENGTH_LONG
-                    ).show()
-                    Handler(Looper.getMainLooper()).postDelayed(
-                        {
-                            exitProcess(0)
-                        },
-                        FXA_SYNC_OVERRIDE_EXIT_DELAY
-                    )
-                }
-            }
-        }
-        preferenceFxAOverride?.onPreferenceChangeListener = syncFxAOverrideUpdater
-        preferenceSyncOverride?.onPreferenceChangeListener = syncFxAOverrideUpdater
-
         val preferenceStartProfiler =
             findPreference<Preference>(getPreferenceKey(R.string.pref_key_start_profiler))
 
@@ -480,6 +456,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             )?.isVisible = showSecretDebugMenuThisSession
             findPreference<Preference>(
                 getPreferenceKey(R.string.pref_key_secret_debug_info)
+            )?.isVisible = showSecretDebugMenuThisSession
+            findPreference<Preference>(
+                getPreferenceKey(R.string.pref_key_sync_debug)
             )?.isVisible = showSecretDebugMenuThisSession
             preferenceStartProfiler?.isVisible = showSecretDebugMenuThisSession &&
                 (requireContext().components.core.engine.profiler?.isProfilerActive() != null)
@@ -534,30 +513,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             isEnabled = enabled
             isChecked = checked
             isVisible = visible
-        }
-    }
-
-    private fun updateFxASyncOverrideMenu() {
-        val preferenceFxAOverride =
-            findPreference<Preference>(getPreferenceKey(R.string.pref_key_override_fxa_server))
-        val preferenceSyncOverride =
-            findPreference<Preference>(getPreferenceKey(R.string.pref_key_override_sync_tokenserver))
-        val settings = requireContext().settings()
-        val show = settings.overrideFxAServer.isNotEmpty() ||
-            settings.overrideSyncTokenServer.isNotEmpty() ||
-            settings.showSecretDebugMenuThisSession
-        // Only enable changes to these prefs when the user isn't connected to an account.
-        val enabled =
-            requireComponents.backgroundServices.accountManager.authenticatedAccount() == null
-        preferenceFxAOverride?.apply {
-            isVisible = show
-            isEnabled = enabled
-            summary = settings.overrideFxAServer.ifEmpty { null }
-        }
-        preferenceSyncOverride?.apply {
-            isVisible = show
-            isEnabled = enabled
-            summary = settings.overrideSyncTokenServer.ifEmpty { null }
         }
     }
 

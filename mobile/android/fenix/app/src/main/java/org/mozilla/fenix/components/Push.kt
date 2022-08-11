@@ -5,11 +5,14 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
+import androidx.core.net.toUri
 import mozilla.components.feature.push.AutoPushFeature
 import mozilla.components.feature.push.PushConfig
+import mozilla.components.feature.push.Protocol
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.push.FirebasePushService
 
@@ -17,7 +20,7 @@ import org.mozilla.fenix.push.FirebasePushService
  * Component group for push services. These components use services that strongly depend on
  * push messaging (e.g. WebPush, SendTab).
  */
-class Push(context: Context, crashReporter: CrashReporter) {
+class Push(val context: Context, crashReporter: CrashReporter) {
     val feature by lazyMonitored {
         pushConfig?.let { config ->
             AutoPushFeature(
@@ -40,7 +43,22 @@ class Push(context: Context, crashReporter: CrashReporter) {
 
         logger.debug("Creating push configuration for autopush.")
         val projectId = context.resources.getString(resId)
-        PushConfig(projectId)
+        val serverOverride = context.settings().overridePushServer
+        if (serverOverride.isEmpty()) {
+            PushConfig(projectId)
+        } else {
+            val uri = serverOverride.toUri()
+            PushConfig(
+                projectId,
+                serverHost = uri.getHost() ?: "",
+                protocol = if (uri.getScheme() == "http") {
+                    Protocol.HTTP
+                } else {
+                    // Treat any non "http" value as HTTPS, since those are the only 2 options.
+                    Protocol.HTTPS
+                }
+            )
+        }
     }
 
     private val pushService by lazyMonitored { FirebasePushService() }

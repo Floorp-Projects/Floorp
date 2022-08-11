@@ -26,7 +26,6 @@ class AccountUiView(
     private val scope: CoroutineScope,
     private val accountManager: FxaAccountManager,
     private val httpClient: Client,
-    private val updateFxASyncOverrideMenu: () -> Unit,
     private val updateFxAAllowDomesticChinaServerMenu: () -> Unit
 ) {
 
@@ -48,7 +47,6 @@ class AccountUiView(
     fun updateAccountUIState(context: Context, profile: Profile?) {
         val account = accountManager.authenticatedAccount()
 
-        updateFxASyncOverrideMenu()
         updateFxAAllowDomesticChinaServerMenu()
 
         // Signed-in, no problems.

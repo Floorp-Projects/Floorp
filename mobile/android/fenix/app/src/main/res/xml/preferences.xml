@@ -33,18 +33,10 @@
             android:key="@string/pref_key_account_auth_error" />
     </androidx.preference.PreferenceCategory>
 
-    <androidx.preference.EditTextPreference
-        android:key="@string/pref_key_override_fxa_server"
-        android:title="@string/preferences_override_fxa_server"
-        android:inputType="textUri"
+    <androidx.preference.Preference
         app:iconSpaceReserved="false"
-        app:isPreferenceVisible="false" />
-
-    <androidx.preference.EditTextPreference
-        android:key="@string/pref_key_override_sync_tokenserver"
-        android:title="@string/preferences_override_sync_tokenserver"
-        android:inputType="textUri"
-        app:iconSpaceReserved="false"
+        android:key="@string/pref_key_sync_debug"
+        android:title="@string/preferences_sync_debug"
         app:isPreferenceVisible="false" />
 
     <androidx.preference.PreferenceCategory

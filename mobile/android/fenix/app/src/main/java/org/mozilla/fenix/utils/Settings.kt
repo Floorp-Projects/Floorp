@@ -1073,6 +1073,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = ""
     )
 
+    var overridePushServer by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_override_push_server),
+        default = ""
+    )
+
     var overrideAmoUser by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_override_amo_user),
         default = ""
