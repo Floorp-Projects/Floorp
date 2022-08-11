@@ -9585,9 +9585,13 @@ static inline T CopyCharacters(const JSLinearString* str, size_t index) {
   return CopyCharacters<T>(str->twoByteChars(nogc) + index);
 }
 
+enum class CompareDirection { Forward, Backward };
+
+// NOTE: Clobbers the input when CompareDirection is backward.
 static void CompareCharacters(MacroAssembler& masm, Register input,
                               const JSLinearString* str, Register output,
-                              JSOp op, Label* done, Label* oolEntry) {
+                              JSOp op, CompareDirection direction, Label* done,
+                              Label* oolEntry) {
   MOZ_ASSERT(input != output);
 
   size_t length = str->length();
@@ -9620,9 +9624,27 @@ static void CompareCharacters(MacroAssembler& masm, Register input,
     }
   }
 
+#ifdef DEBUG
+  {
+    Label ok;
+    masm.branch32(Assembler::AboveOrEqual,
+                  Address(input, JSString::offsetOfLength()), Imm32(length),
+                  &ok);
+    masm.assumeUnreachable("Input mustn't be smaller than search string");
+    masm.bind(&ok);
+  }
+#endif
+
   // Load the input string's characters.
   Register stringChars = output;
   masm.loadStringChars(input, stringChars, encoding);
+
+  if (direction == CompareDirection::Backward) {
+    masm.loadStringLength(input, input);
+    masm.sub32(Imm32(length), input);
+
+    masm.addToCharPtr(stringChars, input, encoding);
+  }
 
   // Prefer a single compare-and-set instruction if possible.
   if (byteLength == 1 || byteLength == 2 || byteLength == 4 ||
@@ -9792,7 +9814,8 @@ void CodeGenerator::visitCompareSInline(LCompareSInline* lir) {
 
   masm.bind(&compareChars);
 
-  CompareCharacters(masm, input, str, output, op, ool->rejoin(), ool->entry());
+  CompareCharacters(masm, input, str, output, op, CompareDirection::Forward,
+                    ool->rejoin(), ool->entry());
 
   masm.bind(ool->rejoin());
 }
@@ -10962,8 +10985,8 @@ void CodeGenerator::visitStringStartsWithInline(LStringStartsWithInline* lir) {
   }
 
   // Otherwise start comparing character by character.
-  CompareCharacters(masm, temp, searchString, output, JSOp::Eq, ool->rejoin(),
-                    ool->entry());
+  CompareCharacters(masm, temp, searchString, output, JSOp::Eq,
+                    CompareDirection::Forward, ool->rejoin(), ool->entry());
 
   masm.bind(ool->rejoin());
 }
@@ -10974,6 +10997,73 @@ void CodeGenerator::visitStringEndsWith(LStringEndsWith* lir) {
 
   using Fn = bool (*)(JSContext*, HandleString, HandleString, bool*);
   callVM<Fn, js::StringEndsWith>(lir);
+}
+
+void CodeGenerator::visitStringEndsWithInline(LStringEndsWithInline* lir) {
+  Register string = ToRegister(lir->string());
+  Register output = ToRegister(lir->output());
+  Register temp = ToRegister(lir->temp0());
+
+  const JSLinearString* searchString = lir->searchString();
+
+  size_t length = searchString->length();
+  MOZ_ASSERT(length > 0);
+
+  using Fn = bool (*)(JSContext*, HandleString, HandleString, bool*);
+  auto* ool = oolCallVM<Fn, js::StringEndsWith>(
+      lir, ArgList(string, ImmGCPtr(searchString)), StoreRegisterTo(output));
+
+  masm.move32(Imm32(0), output);
+
+  // Can't be a suffix when the string is smaller than the search string.
+  masm.branch32(Assembler::Below, Address(string, JSString::offsetOfLength()),
+                Imm32(length), ool->rejoin());
+
+  // Unwind ropes at the end if possible.
+  Label compare;
+  masm.movePtr(string, temp);
+  masm.branchIfNotRope(temp, &compare);
+
+  Label unwindRope;
+  masm.bind(&unwindRope);
+  masm.loadRopeRightChild(temp, output);
+  masm.movePtr(output, temp);
+
+  // If the right child is smaller than the search string, jump into the VM to
+  // linearize the string.
+  masm.branch32(Assembler::Below, Address(temp, JSString::offsetOfLength()),
+                Imm32(length), ool->entry());
+
+  // Otherwise keep unwinding ropes.
+  masm.branchIfRope(temp, &unwindRope);
+
+  masm.bind(&compare);
+
+  // If operands point to the same instance, it's trivially a suffix.
+  Label notPointerEqual;
+  masm.branchPtr(Assembler::NotEqual, temp, ImmGCPtr(searchString),
+                 &notPointerEqual);
+  masm.move32(Imm32(1), output);
+  masm.jump(ool->rejoin());
+  masm.bind(&notPointerEqual);
+
+  if (searchString->hasTwoByteChars()) {
+    // Pure two-byte strings can't be a suffix of Latin-1 strings.
+    JS::AutoCheckCannotGC nogc;
+    if (!mozilla::IsUtf16Latin1(searchString->twoByteRange(nogc))) {
+      Label compareChars;
+      masm.branchTwoByteString(temp, &compareChars);
+      masm.move32(Imm32(0), output);
+      masm.jump(ool->rejoin());
+      masm.bind(&compareChars);
+    }
+  }
+
+  // Otherwise start comparing character by character.
+  CompareCharacters(masm, temp, searchString, output, JSOp::Eq,
+                    CompareDirection::Backward, ool->rejoin(), ool->entry());
+
+  masm.bind(ool->rejoin());
 }
 
 void CodeGenerator::visitStringConvertCase(LStringConvertCase* lir) {

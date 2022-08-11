@@ -2332,6 +2332,18 @@ void LIRGenerator::visitStringEndsWith(MStringEndsWith* ins) {
   auto* searchStr = ins->searchString();
   MOZ_ASSERT(searchStr->type() == MIRType::String);
 
+  if (searchStr->isConstant()) {
+    JSLinearString* linear = &searchStr->toConstant()->toString()->asLinear();
+
+    if (CanCompareCharactersInline(linear)) {
+      auto* lir = new (alloc())
+          LStringEndsWithInline(useRegister(string), temp(), linear);
+      define(lir, ins);
+      assignSafepoint(lir, ins);
+      return;
+    }
+  }
+
   auto* lir = new (alloc()) LStringEndsWith(useRegisterAtStart(string),
                                             useRegisterAtStart(searchStr));
   defineReturn(lir, ins);

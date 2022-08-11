@@ -1135,6 +1135,20 @@ void MacroAssembler::loadRopeLeftChild(Register str, Register dest) {
   }
 }
 
+void MacroAssembler::loadRopeRightChild(Register str, Register dest) {
+  MOZ_ASSERT(str != dest);
+
+  if (JitOptions.spectreStringMitigations) {
+    // Zero the output register if the input was not a rope.
+    movePtr(ImmWord(0), dest);
+    test32LoadPtr(Assembler::Zero, Address(str, JSString::offsetOfFlags()),
+                  Imm32(JSString::LINEAR_BIT),
+                  Address(str, JSRope::offsetOfRight()), dest);
+  } else {
+    loadPtr(Address(str, JSRope::offsetOfRight()), dest);
+  }
+}
+
 void MacroAssembler::storeRopeChildren(Register left, Register right,
                                        Register str) {
   storePtr(left, Address(str, JSRope::offsetOfLeft()));
