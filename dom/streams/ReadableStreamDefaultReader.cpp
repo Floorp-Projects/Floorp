@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ReadableStreamDefaultReader.h"
+#include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/ReadableStream.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "js/PropertyAndElement.h"
@@ -238,8 +239,7 @@ void ReadableStreamDefaultReaderRead(JSContext* aCx,
 // Return a raw pointer here to avoid refcounting, but make sure it's safe
 // (the object should be kept alive by the callee).
 // https://streams.spec.whatwg.org/#default-reader-read
-already_AddRefed<Promise> ReadableStreamDefaultReader::Read(JSContext* aCx,
-                                                            ErrorResult& aRv) {
+already_AddRefed<Promise> ReadableStreamDefaultReader::Read(ErrorResult& aRv) {
   // Step 1.
   if (!mStream) {
     aRv.ThrowTypeError("Reading is not possible after calling releaseLock.");
@@ -253,7 +253,10 @@ already_AddRefed<Promise> ReadableStreamDefaultReader::Read(JSContext* aCx,
   RefPtr<ReadRequest> request = new Read_ReadRequest(promise);
 
   // Step 4.
-  ReadableStreamDefaultReaderRead(aCx, this, request, aRv);
+  AutoEntryScript aes(mGlobal, "ReadableStreamDefaultReader::Read");
+  JSContext* cx = aes.cx();
+
+  ReadableStreamDefaultReaderRead(cx, this, request, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
