@@ -3,6 +3,19 @@
     {
       "stash": {
         "blocked": [
+          "{ef8811db-22e2-4894-b79b-535d0a6b187b}:1.0.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1659619722331,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1659983707606,
+      "id": "762e7e16-4a5d-4a4d-a5b6-faa9642fa8bc",
+      "last_modified": 1659983847023
+    },
+    {
+      "stash": {
+        "blocked": [
           "{b4f4fa41-f8b0-45e8-91a5-3ac66817fb1b}:10.0",
           "{dc885dca-59cc-4eae-b8f1-1774a0c0d431}:1.3.0",
           "{b4f4fa41-f8b0-45e8-91a5-3ac66817fb1b}:2.0"
@@ -1245,5 +1258,5 @@
       "last_modified": 1656333551168
     }
   ],
-  "timestamp": 1659551840929
+  "timestamp": 1659983847023
 }
