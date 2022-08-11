@@ -312,6 +312,7 @@ class GeckoInstance(object):
                     "devtools.chrome.enabled": True,
                     "devtools.debugger.prompt-connection": False,
                     "devtools.debugger.remote-enabled": True,
+                    "devtools.testing": True,
                 }
             )
 
