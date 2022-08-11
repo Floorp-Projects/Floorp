@@ -752,7 +752,7 @@ class nsContextMenu {
   }
 
   initMiscItems() {
-    // Use "Bookmark This Link" if on a link.
+    // Use "Bookmark Link…" if on a link.
     let bookmarkPage = document.getElementById("context-bookmarkpage");
     this.showItem(
       bookmarkPage,

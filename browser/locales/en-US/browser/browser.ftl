@@ -701,8 +701,8 @@ bookmarks-search =
   .label = Search bookmarks
 bookmarks-tools =
   .label = Bookmarking Tools
-bookmarks-bookmark-edit-panel =
-  .label = Edit this bookmark
+bookmarks-subview-edit-bookmark =
+  .label = Edit this bookmark…
 
 # The aria-label is a spoken label that should not include the word "toolbar" or
 # such, because screen readers already know that this container is a toolbar.
@@ -719,8 +719,8 @@ bookmarks-toolbar-placeholder-button =
   .label = Bookmarks toolbar items
 
 # "Bookmark" is a verb, as in "Add current tab to bookmarks".
-bookmarks-current-tab =
-  .label = Bookmark current tab
+bookmarks-subview-bookmark-tab =
+  .label = Bookmark current tab…
 
 ## Library Panel items
 

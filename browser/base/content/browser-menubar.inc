@@ -310,7 +310,7 @@
       <menuitem id="menu_bookmarkThisPage"
                 command="Browser:AddBookmarkAs"
                 key="addBookmarkAsKb"
-                data-l10n-id="menu-bookmark-current-tab"/>
+                data-l10n-id="menu-bookmark-tab"/>
       <menuitem id="menu_bookmarkAllTabs"
                 class="show-only-for-keyboard"
                 command="Browser:BookmarkAllTabs"

@@ -41,9 +41,9 @@ synced-tabs-context-open-in-private-window =
 # and/or devices in the list. This string is for a menuitem equivalent to one in
 # the tab context menu (activated by right-clicking a tab in the tabstrip). That
 # string is located in tabContextMenu.ftl. So, this string should be translated
-# consistently with the "Bookmark Tab" string there.
-synced-tabs-context-bookmark-tab =
-    .label = Bookmark Tab
+# consistently with the "Bookmark Tab…" string there.
+synced-tabs-context-bookmark =
+    .label = Bookmark Tab…
     .accesskey = B
 synced-tabs-context-copy =
     .label = Copy
