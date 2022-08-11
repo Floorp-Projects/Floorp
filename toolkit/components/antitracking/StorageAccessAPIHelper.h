@@ -163,7 +163,8 @@ class StorageAccessAPIHelper final {
   // trying to perform an "autogrant" if aRequireGrant is true.
   // This will return a promise whose values correspond to those of a
   // ContentBlocking::AllowAccessFor call that ends the function.
-  static RefPtr<StorageAccessPermissionGrantPromise> RequestStorageAccessAsyncHelper(
+  static RefPtr<StorageAccessPermissionGrantPromise>
+  RequestStorageAccessAsyncHelper(
       dom::Document* aDocument, nsPIDOMWindowInner* aInnerWindow,
       dom::BrowsingContext* aBrowsingContext, nsIPrincipal* aPrincipal,
       bool aHasUserInteraction,
