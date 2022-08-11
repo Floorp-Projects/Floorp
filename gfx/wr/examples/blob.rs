@@ -276,7 +276,7 @@ fn main() {
 
     let workers = Arc::new(workers.unwrap());
 
-    let opts = webrender::WebRenderOptions {
+    let opts = webrender::RendererOptions {
         workers: Some(Arc::clone(&workers)),
         // Register our blob renderer, so that WebRender integrates it in the resource cache..
         // Share the same pool of worker threads between WebRender and our blob renderer.

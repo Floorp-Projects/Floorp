@@ -242,7 +242,7 @@ impl Wrench {
             ShaderPrecacheFlags::empty()
         };
 
-        let opts = webrender::WebRenderOptions {
+        let opts = webrender::RendererOptions {
             resource_override_path: shader_override_path,
             use_optimized_shaders,
             enable_subpixel_aa: !no_subpixel_aa,
@@ -274,7 +274,7 @@ impl Wrench {
             Box::new(Notifier(data))
         });
 
-        let (renderer, sender) = webrender::create_webrender_instance(
+        let (renderer, sender) = webrender::Renderer::new(
             window.clone_gl(),
             notifier,
             opts,

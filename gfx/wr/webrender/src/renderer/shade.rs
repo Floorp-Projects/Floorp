@@ -10,7 +10,7 @@ use euclid::default::Transform3D;
 use crate::glyph_rasterizer::GlyphFormat;
 use crate::renderer::{
     desc,
-    BlendMode, DebugFlags, RendererError, WebRenderOptions,
+    BlendMode, DebugFlags, RendererError, RendererOptions,
     TextureSampler, VertexArrayKind, ShaderPrecacheFlags,
 };
 use crate::profiler::{self, TransactionProfile, ns_to_ms};
@@ -650,7 +650,7 @@ impl Shaders {
     pub fn new(
         device: &mut Device,
         gl_type: GlType,
-        options: &WebRenderOptions,
+        options: &RendererOptions,
     ) -> Result<Self, ShaderError> {
         // We have to pass a profile around a bunch but we aren't recording the initialization
         // so use a dummy one.

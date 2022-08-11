@@ -102,6 +102,7 @@ pub trait Example {
 
 pub fn main_wrapper<E: Example>(
     example: &mut E,
+    options: Option<webrender::RendererOptions>,
 ) {
     env_logger::init();
 
@@ -158,13 +159,13 @@ pub fn main_wrapper<E: Example>(
 
     println!("Loading shaders...");
     let mut debug_flags = DebugFlags::ECHO_DRIVER_MESSAGES | DebugFlags::TEXTURE_CACHE_DBG;
-    let opts = webrender::WebRenderOptions {
+    let opts = webrender::RendererOptions {
         resource_override_path: res_path,
         precache_flags: E::PRECACHE_SHADER_FLAGS,
         clear_color: ColorF::new(0.3, 0.0, 0.0, 1.0),
         debug_flags,
         //allow_texture_swizzling: false,
-        ..options.unwrap_or(webrender::WebRenderOptions::default())
+        ..options.unwrap_or(webrender::RendererOptions::default())
     };
 
     let device_size = {
@@ -174,7 +175,7 @@ pub fn main_wrapper<E: Example>(
         DeviceIntSize::new(size.width as i32, size.height as i32)
     };
     let notifier = Box::new(Notifier::new(events_loop.create_proxy()));
-    let (mut renderer, sender) = webrender::create_webrender_instance(
+    let (mut renderer, sender) = webrender::Renderer::new(
         gl.clone(),
         notifier,
         opts,
