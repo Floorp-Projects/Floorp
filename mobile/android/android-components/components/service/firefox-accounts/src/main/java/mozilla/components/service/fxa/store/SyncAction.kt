@@ -19,7 +19,7 @@ sealed class SyncAction : Action {
     /**
      * Update the [SyncState.account] of the [SyncStore].
      */
-    data class UpdateAccount(val account: Account) : SyncAction()
+    data class UpdateAccount(val account: Account?) : SyncAction()
 
     /**
      * Update the [SyncState.constellationState] of the [SyncStore].

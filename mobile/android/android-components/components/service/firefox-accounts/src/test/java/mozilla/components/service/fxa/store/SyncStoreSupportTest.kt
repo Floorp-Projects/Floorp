@@ -42,7 +42,7 @@ class SyncStoreSupportTest {
 
     @Before
     fun setup() {
-        Dispatchers.setMain(StandardTestDispatcher())
+        Dispatchers.setMain(StandardTestDispatcher(coroutineScope.testScheduler))
 
         store = SyncStore()
         syncObserver = AccountSyncObserver(store)
@@ -151,11 +151,20 @@ class SyncStoreSupportTest {
     }
 
     @Test
-    fun `GIVEN account observer WHEN onLoggedOut observed THEN sync status updated`() {
+    fun `GIVEN user is logged in WHEN onLoggedOut observed THEN sync status and account updated`() = coroutineScope.runTest {
+        val account = coMock<OAuthAccount> {
+            whenever(deviceConstellation()).thenReturn(mock())
+            whenever(getProfile()).thenReturn(null)
+        }
+        accountObserver.onAuthenticated(account, mock())
+        runCurrent()
+
         accountObserver.onLoggedOut()
+        runCurrent()
 
         store.waitUntilIdle()
         assertEquals(SyncStatus.LoggedOut, store.state.status)
+        assertEquals(null, store.state.account)
     }
 
     @Test

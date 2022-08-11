@@ -111,6 +111,7 @@ internal class FxaAccountObserver(
 
     override fun onLoggedOut() {
         store.dispatch(SyncAction.UpdateSyncStatus(SyncStatus.LoggedOut))
+        store.dispatch(SyncAction.UpdateAccount(null))
     }
 }
 
