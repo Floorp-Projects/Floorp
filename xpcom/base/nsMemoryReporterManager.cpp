@@ -477,16 +477,15 @@ static bool InSharedRegion(mach_vm_address_t aAddr, cpu_type_t aType) {
   // Roughly based on libtop_update_vm_regions in
   // http://www.opensource.apple.com/source/top/top-100.1.2/libtop.c
   size_t privatePages = 0;
-  mach_vm_size_t topSize = 0;
-  for (mach_vm_address_t addr = MACH_VM_MIN_ADDRESS;; addr += topSize) {
-    vm_region_top_info_data_t topInfo;
-    mach_msg_type_number_t topInfoCount = VM_REGION_TOP_INFO_COUNT;
-    mach_port_t topObjectName;
+  mach_vm_size_t size = 0;
+  for (mach_vm_address_t addr = MACH_VM_MIN_ADDRESS;; addr += size) {
+    vm_region_top_info_data_t info;
+    mach_msg_type_number_t infoCount = VM_REGION_TOP_INFO_COUNT;
+    mach_port_t objectName;
 
     kern_return_t kr = mach_vm_region(
-        aPort ? aPort : mach_task_self(), &addr, &topSize, VM_REGION_TOP_INFO,
-        reinterpret_cast<vm_region_info_t>(&topInfo), &topInfoCount,
-        &topObjectName);
+        aPort ? aPort : mach_task_self(), &addr, &size, VM_REGION_TOP_INFO,
+        reinterpret_cast<vm_region_info_t>(&info), &infoCount, &objectName);
     if (kr == KERN_INVALID_ADDRESS) {
       // Done iterating VM regions.
       break;
@@ -494,57 +493,26 @@ static bool InSharedRegion(mach_vm_address_t aAddr, cpu_type_t aType) {
       return NS_ERROR_FAILURE;
     }
 
-    if (InSharedRegion(addr, cpu_type) && topInfo.share_mode != SM_PRIVATE) {
+    if (InSharedRegion(addr, cpu_type) && info.share_mode != SM_PRIVATE) {
       continue;
     }
 
-    switch (topInfo.share_mode) {
+    switch (info.share_mode) {
       case SM_LARGE_PAGE:
         // NB: Large pages are not shareable and always resident.
       case SM_PRIVATE:
-        privatePages += topInfo.private_pages_resident;
-        privatePages += topInfo.shared_pages_resident;
+        privatePages += info.private_pages_resident;
+        privatePages += info.shared_pages_resident;
         break;
       case SM_COW:
-        privatePages += topInfo.private_pages_resident;
-        if (topInfo.ref_count == 1) {
+        privatePages += info.private_pages_resident;
+        if (info.ref_count == 1) {
           // Treat copy-on-write pages as private if they only have one
           // reference.
-          privatePages += topInfo.shared_pages_resident;
+          privatePages += info.shared_pages_resident;
         }
         break;
-      case SM_SHARED: {
-        // Using mprotect() or similar to protect a page in the middle of a
-        // mapping can create aliased mappings. They look like shared mappings
-        // to the VM_REGION_TOP_INFO interface, so re-check with
-        // VM_REGION_EXTENDED_INFO.
-
-        mach_vm_size_t exSize = 0;
-        vm_region_extended_info_data_t exInfo;
-        mach_msg_type_number_t exInfoCount = VM_REGION_EXTENDED_INFO_COUNT;
-        mach_port_t exObjectName;
-        kr = mach_vm_region(aPort ? aPort : mach_task_self(), &addr, &exSize,
-                            VM_REGION_EXTENDED_INFO,
-                            reinterpret_cast<vm_region_info_t>(&exInfo),
-                            &exInfoCount, &exObjectName);
-        if (kr == KERN_INVALID_ADDRESS) {
-          // Done iterating VM regions.
-          break;
-        } else if (kr != KERN_SUCCESS) {
-          return NS_ERROR_FAILURE;
-        }
-
-        MOZ_ASSERT(topSize == exSize);
-        MOZ_ASSERT(topObjectName == exObjectName);
-        MOZ_ASSERT(exInfo.ref_count == topInfo.ref_count);
-        // The two interfaces don't agree on sharing types or resident memory.
-        // So we don't assert that any of those make sense.
-
-        if (exInfo.share_mode == SM_PRIVATE_ALIASED) {
-          privatePages += exInfo.pages_resident;
-        }
-        break;
-      }
+      case SM_SHARED:
       default:
         break;
     }
