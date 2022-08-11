@@ -2491,6 +2491,29 @@ bool js::str_endsWith(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+bool js::StringEndsWith(JSContext* cx, HandleString string,
+                        HandleString searchString, bool* result) {
+  if (searchString->length() > string->length()) {
+    *result = false;
+    return true;
+  }
+
+  JSLinearString* str = string->ensureLinear(cx);
+  if (!str) {
+    return false;
+  }
+
+  JSLinearString* searchStr = searchString->ensureLinear(cx);
+  if (!searchStr) {
+    return false;
+  }
+
+  uint32_t start = str->length() - searchStr->length();
+
+  *result = HasSubstringAt(str, searchStr, start);
+  return true;
+}
+
 template <typename CharT>
 static void TrimString(const CharT* chars, bool trimStart, bool trimEnd,
                        size_t length, size_t* pBegin, size_t* pEnd) {
@@ -3515,7 +3538,7 @@ static const JSFunctionSpec string_methods[] = {
     JS_FN("indexOf", str_indexOf, 1, 0),
     JS_FN("lastIndexOf", str_lastIndexOf, 1, 0),
     JS_INLINABLE_FN("startsWith", str_startsWith, 1, 0, StringStartsWith),
-    JS_FN("endsWith", str_endsWith, 1, 0),
+    JS_INLINABLE_FN("endsWith", str_endsWith, 1, 0, StringEndsWith),
     JS_FN("trim", str_trim, 0, 0),
     JS_FN("trimStart", str_trimStart, 0, 0),
     JS_FN("trimEnd", str_trimEnd, 0, 0),

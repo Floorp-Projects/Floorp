@@ -272,6 +272,7 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::StringFromCodePoint:
     case InlinableNative::StringCharAt:
     case InlinableNative::StringStartsWith:
+    case InlinableNative::StringEndsWith:
     case InlinableNative::StringToLowerCase:
     case InlinableNative::StringToUpperCase:
     case InlinableNative::Object:

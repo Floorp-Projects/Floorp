@@ -1120,6 +1120,14 @@
     searchString: JSLinearString*
   num_temps: 1
 
+# Test if a string ends with the search string
+- name: StringEndsWith
+  result_type: WordSized
+  operands:
+    string: WordSized
+    searchString: WordSized
+  call_instruction: true
+
 # Calls the ToLowerCase or ToUpperCase case conversion function.
 - name: StringConvertCase
   result_type: WordSized
