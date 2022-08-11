@@ -179,6 +179,20 @@ already_AddRefed<gfxASurface> gfxPlatformMac::CreateOffscreenSurface(
   return newSurface.forget();
 }
 
+bool gfxPlatformMac::IsFontFormatSupported(uint32_t aFormatFlags) {
+  if (gfxPlatform::IsFontFormatSupported(aFormatFlags)) {
+    return true;
+  }
+
+  // If the generic method rejected the format hint, then check for any
+  // platform-specific format we know about.
+  if (aFormatFlags & gfxUserFontSet::FLAG_FORMAT_TRUETYPE_AAT) {
+    return true;
+  }
+
+  return false;
+}
+
 void gfxPlatformMac::GetCommonFallbackFonts(uint32_t aCh, Script aRunScript,
                                             eFontPresentation aPresentation,
                                             nsTArray<const char*>& aFontList) {
