@@ -11,10 +11,44 @@
 #browserContainersExtensionContent{
   display: none !important;
 }
-
-.bottom-link{
-  margin-left: 90px;
+#communityDesc{
+  padding: 25px 0px 25px 0px;
 }
+.floorp-contributor{
+  display: inline;
+  margin-right: 10px;
+}
+.bottom-link{
+  margin-top: 20px;
+  margin-left: 55px;
+}
+#floorp-logos{
+  display: flex;
+  padding: 12px 16px !important;
+  background: var(--card-background) !important;
+  box-shadow: var(--card-shadow) !important;
+  border-radius: 4px !important;
+  border: 0 !important;
+}
+#floorp-discription{
+  padding: 14px;
+  font-size: 1.5em;
+  font-weight: 500;
+  margin-left: 15px;
+}
+#aboutablaze{
+  margin-top: 33px !important;
+}
+
+#floorpimg {
+  list-style-image: url("chrome://browser/skin/floorp.png");
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.5;
+  width: 4.5em;
+  height: 4.5em;
+}
+
 #proton {
   display: block;
   margin: 0 auto;

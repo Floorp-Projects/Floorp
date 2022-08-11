@@ -6,18 +6,23 @@
 
 ## Floorp専用
 
-about-floorp = About Floorp projects
+about-floorp = About Floorp Projects
 about-floorp-sub = The Floorp project is a project under Ablaze, and the Floorp Legacy browser is its development product, based on the Firefox browser developed by Mozilla. The project is developed entirely on a non-profit basis. Enjoy the enhanced browsing experience. The source code can be found at the Github link below.
 
 more-from-moz-category =
   .tooltiptext = about Floorp 
-
+more-from-moz-title = About Ablaze Floorp
 about-floorp-sub-sub = Floorp 
 about-floorp-browser = About Floorp Projects 
+ablaze-floorp = Ablaze Floorp 10 -Catostylus Mosaicus-
 
 about-floorp-discription = <label data-l10n-name="floorp-browser-link">{ -brand-product-name }</label> is one of the domestic browsers developed in Japan. It is based on Firefox and continues to operate under <label data-l10n-name="ablaze-Link">{ -vendor-short-name }</label>, to improve the web. Want to help? <label data-l10n-name="helpus-donateLink">Make a donation</label>
 icon-creator = Icon creator <label data-l10n-name="browser-logo-twitter">@CutterKnife_</label> and <label data-l10n-name="brand-logo-twitter">@mwxdxx.</label>
 contributors = A list of <label data-l10n-name="about-contributor">contributors and Developers</label>
+
+about-ablaze = About Ablaze
+ablaze-twitter = Ablaze URLs : Twitter <label data-l10n-name="ablaze-twitter-id">@Ablaze_MIRAI</label>　Github : <label data-l10n-name="ablaze-github-id">@Ablaze-MIRAI</label>　alexandriteOS  : <label data-l10n-name="alexandriteos-url">official site</label> 
+about-ablaze-sub = Ablaze is a group on top of the Floorp project, which is developing Floorp, and the Floorp project is being run here, with support from Floorp. We also run other projects such as NekoLinux and AlexandriteOS.
 
 ## Floorp 専用終わり
 more-from-moz-mozilla-vpn-title = { -mozilla-vpn-brand-name } Unsuppoted in japan, korea etc...
