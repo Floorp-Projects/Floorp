@@ -120,50 +120,39 @@ void InspectorFontFace::GetLocalName(nsAString& aLocalName) {
   }
 }
 
-static void AppendToFormat(nsAString& aResult, const char* aFormat) {
-  if (!aResult.IsEmpty()) {
-    aResult.Append(',');
-  }
-  aResult.AppendASCII(aFormat);
-}
-
 void InspectorFontFace::GetFormat(nsAString& aFormat) {
   aFormat.Truncate();
   if (mFontEntry->IsUserFont() && !mFontEntry->IsLocalUserFont()) {
     NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
-    uint32_t formatFlags = mFontEntry->mUserFontData->mFormat;
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_OPENTYPE) {
-      AppendToFormat(aFormat, "opentype");
-    }
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_TRUETYPE) {
-      AppendToFormat(aFormat, "truetype");
-    }
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_TRUETYPE_AAT) {
-      AppendToFormat(aFormat, "truetype-aat");
-    }
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_EOT) {
-      AppendToFormat(aFormat, "embedded-opentype");
-    }
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_SVG) {
-      AppendToFormat(aFormat, "svg");
-    }
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_WOFF) {
-      AppendToFormat(aFormat, "woff");
-    }
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_WOFF2) {
-      AppendToFormat(aFormat, "woff2");
-    }
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_OPENTYPE_VARIATIONS) {
-      AppendToFormat(aFormat, "opentype-variations");
-    }
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_TRUETYPE_VARIATIONS) {
-      AppendToFormat(aFormat, "truetype-variations");
-    }
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_WOFF_VARIATIONS) {
-      AppendToFormat(aFormat, "woff-variations");
-    }
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_WOFF2_VARIATIONS) {
-      AppendToFormat(aFormat, "woff2-variations");
+    auto hint =
+        gfxUserFontSet::FormatHint(mFontEntry->mUserFontData->mFormatHint);
+    switch (hint) {
+      case gfxUserFontSet::FormatHint::NONE:
+        break;
+      case gfxUserFontSet::FormatHint::COLLECTION:
+        aFormat.AssignLiteral("collection");
+        break;
+      case gfxUserFontSet::FormatHint::OPENTYPE:
+        aFormat.AssignLiteral("opentype");
+        break;
+      case gfxUserFontSet::FormatHint::TRUETYPE:
+        aFormat.AssignLiteral("truetype");
+        break;
+      case gfxUserFontSet::FormatHint::EOT:
+        aFormat.AssignLiteral("embedded-opentype");
+        break;
+      case gfxUserFontSet::FormatHint::SVG:
+        aFormat.AssignLiteral("svg");
+        break;
+      case gfxUserFontSet::FormatHint::WOFF:
+        aFormat.AssignLiteral("woff");
+        break;
+      case gfxUserFontSet::FormatHint::WOFF2:
+        aFormat.AssignLiteral("woff2");
+        break;
+      case gfxUserFontSet::FormatHint::UNKNOWN:
+        aFormat.AssignLiteral("unknown!");
+        break;
     }
   }
 }
