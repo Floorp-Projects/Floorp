@@ -150,8 +150,8 @@ iframe {
   display: inline;
 }
 
-@supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
-  :root {
+@media (-moz-box-flexbox-emulation) {
+  *|*:root {
     -moz-box-layout: flex;
   }
 
@@ -514,7 +514,7 @@ search-textbox {
   resize: none;
 }
 
-@supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
+@media (-moz-box-flexbox-emulation) {
   html|*.textbox-input {
     /* Be block-level, so that -moz-box-flex can take effect, when we are an item
        in a -moz-box being emulated by modified modern flex. */

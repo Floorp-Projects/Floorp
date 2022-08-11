@@ -153,7 +153,7 @@ panelview[mainview] > .panel-header {
   transition: height var(--panelui-subview-transition-duration);
 }
 
-@supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
+@media (-moz-box-flexbox-emulation) {
   #tabbrowser-tabs {
     /* Without this, the tabs container width extends beyond the window width */
     width: 0;

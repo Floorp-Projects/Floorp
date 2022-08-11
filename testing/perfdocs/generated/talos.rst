@@ -5982,7 +5982,7 @@ Talos test lists
    * description: This test was created as a part of a goal to switch away from xul flexbox to css flexbox
    * Contact: No longer being maintained by any team/individual
    * pine: False
-   * preferences: {'layout.css.emulate-moz-box-with-flex': True}
+   * preferences: {'layout.css.moz-box-flexbox-emulation.enabled': True}
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
@@ -7189,7 +7189,7 @@ Talos test lists
    * description: This test was created as a part of a goal to switch away from xul flexbox to css flexbox
    * Contact: No longer being maintained by any team/individual
    * pine: False
-   * preferences: {'layout.css.emulate-moz-box-with-flex': True}
+   * preferences: {'layout.css.moz-box-flexbox-emulation.enabled': True}
    * **Test Task**:
 
    .. list-table:: **test-linux1804-64-qr/opt**
