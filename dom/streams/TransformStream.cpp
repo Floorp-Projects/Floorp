@@ -648,12 +648,4 @@ already_AddRefed<TransformStream> TransformStream::Constructor(
   return transformStream.forget();
 }
 
-already_AddRefed<ReadableStream> TransformStream::GetReadable() {
-  return mReadable.forget();
-}
-
-already_AddRefed<WritableStream> TransformStream::GetWritable() {
-  return mWritable.forget();
-}
-
 }  // namespace mozilla::dom
