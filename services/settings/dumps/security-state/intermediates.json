@@ -1,6 +1,42 @@
 {
   "data": [
     {
+      "schema": 1660160251622,
+      "derHash": "/AG1j8eLnFkhF4TC4lvx0BKh4j8zchiEemLrQUXuSrY=",
+      "subject": "CN=GeoTrust EV ECC CN CA G2,O=DigiCert Inc,C=US",
+      "subjectDN": "MEcxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxITAfBgNVBAMTGEdlb1RydXN0IEVWIEVDQyBDTiBDQSBHMg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a71cb7825b1dcf648f03a80a46f1bd37d9455ca249fb68a85c6ecf9a15848e99",
+        "size": 1370,
+        "filename": "aDb4btQIVH2hsyd4IxUsJGinBpyh-phY6PF4IHasdAw=.pem",
+        "location": "security-state-staging/intermediates/c09c55b5-14e7-4603-a7a9-e7c0bc70e59b.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "aDb4btQIVH2hsyd4IxUsJGinBpyh+phY6PF4IHasdAw=",
+      "crlite_enrolled": false,
+      "id": "4efbcf92-bf3d-47eb-a092-4b861635e97f",
+      "last_modified": 1660179423123
+    },
+    {
+      "schema": 1659747423666,
+      "derHash": "PzHbdYKNqpbk3luCoGeP4gI71bJGw/klDL9nGOEJWPU=",
+      "subject": "CN=Domain The Net Technologies Ltd CA for EV SSL R2,O=Domain The Net Technologies Ltd,C=IL",
+      "subjectDN": "MHIxCzAJBgNVBAYTAklMMSgwJgYDVQQKDB9Eb21haW4gVGhlIE5ldCBUZWNobm9sb2dpZXMgTHRkMTkwNwYDVQQDDDBEb21haW4gVGhlIE5ldCBUZWNobm9sb2dpZXMgTHRkIENBIGZvciBFViBTU0wgUjI=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "8a4d28681845cdc8a071852db1380fdac3ad47d045153ee6fc939a47193b2bff",
+        "size": 2487,
+        "filename": "Lk19AkNIC7AwHNF5HsU_phCEnUBI-eiA0mbFhxxeQsQ=.pem",
+        "location": "security-state-staging/intermediates/88af22d0-cfec-40f3-bb5e-5e0f70ca65bf.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Lk19AkNIC7AwHNF5HsU/phCEnUBI+eiA0mbFhxxeQsQ=",
+      "crlite_enrolled": false,
+      "id": "ebf62e8f-f268-416f-b7de-23e67b4313c9",
+      "last_modified": 1660093023424
+    },
+    {
       "schema": 1659746933206,
       "derHash": "t2ovsWJyFiIq+ksCXPTaey5Oyh7HvPdcXH8E+gnIJjo=",
       "subject": "CN=TrustOcean SSL CA - ECC - 2018,OU=ECC Domain Validation Secure Server - 2018,O=TrustOcean Ltd.,L=Denver,ST=CO,C=US",
@@ -1385,24 +1421,6 @@
       "crlite_enrolled": true,
       "id": "d340c468-a715-4aa3-a149-c150973125ed",
       "last_modified": 1657328223558
-    },
-    {
-      "schema": 1657327857509,
-      "derHash": "PzHbdYKNqpbk3luCoGeP4gI71bJGw/klDL9nGOEJWPU=",
-      "subject": "CN=Domain The Net Technologies Ltd CA for EV SSL R2,O=Domain The Net Technologies Ltd,C=IL",
-      "subjectDN": "MHIxCzAJBgNVBAYTAklMMSgwJgYDVQQKDB9Eb21haW4gVGhlIE5ldCBUZWNobm9sb2dpZXMgTHRkMTkwNwYDVQQDDDBEb21haW4gVGhlIE5ldCBUZWNobm9sb2dpZXMgTHRkIENBIGZvciBFViBTU0wgUjI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "8a4d28681845cdc8a071852db1380fdac3ad47d045153ee6fc939a47193b2bff",
-        "size": 2487,
-        "filename": "Lk19AkNIC7AwHNF5HsU_phCEnUBI-eiA0mbFhxxeQsQ=.pem",
-        "location": "security-state-staging/intermediates/88af22d0-cfec-40f3-bb5e-5e0f70ca65bf.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Lk19AkNIC7AwHNF5HsU/phCEnUBI+eiA0mbFhxxeQsQ=",
-      "crlite_enrolled": true,
-      "id": "ebf62e8f-f268-416f-b7de-23e67b4313c9",
-      "last_modified": 1657328223546
     },
     {
       "schema": 1657327853123,
@@ -11501,24 +11519,6 @@
       "crlite_enrolled": true,
       "id": "ea3f9292-c7b7-48b2-acef-4af36a5aca25",
       "last_modified": 1643540241826
-    },
-    {
-      "schema": 1643539736453,
-      "derHash": "/AG1j8eLnFkhF4TC4lvx0BKh4j8zchiEemLrQUXuSrY=",
-      "subject": "CN=GeoTrust EV ECC CN CA G2,O=DigiCert Inc,C=US",
-      "subjectDN": "MEcxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxITAfBgNVBAMTGEdlb1RydXN0IEVWIEVDQyBDTiBDQSBHMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a71cb7825b1dcf648f03a80a46f1bd37d9455ca249fb68a85c6ecf9a15848e99",
-        "size": 1370,
-        "filename": "aDb4btQIVH2hsyd4IxUsJGinBpyh-phY6PF4IHasdAw=.pem",
-        "location": "security-state-staging/intermediates/c09c55b5-14e7-4603-a7a9-e7c0bc70e59b.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "aDb4btQIVH2hsyd4IxUsJGinBpyh+phY6PF4IHasdAw=",
-      "crlite_enrolled": true,
-      "id": "4efbcf92-bf3d-47eb-a092-4b861635e97f",
-      "last_modified": 1643540241814
     },
     {
       "schema": 1643539729460,
@@ -25705,5 +25705,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1659747423216
+  "timestamp": 1660179423123
 }
