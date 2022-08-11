@@ -2212,6 +2212,27 @@ bool js::str_indexOf(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+bool js::StringIndexOf(JSContext* cx, HandleString string,
+                       HandleString searchString, int32_t* result) {
+  if (string == searchString) {
+    *result = 0;
+    return true;
+  }
+
+  JSLinearString* text = string->ensureLinear(cx);
+  if (!text) {
+    return false;
+  }
+
+  JSLinearString* searchStr = searchString->ensureLinear(cx);
+  if (!searchStr) {
+    return false;
+  }
+
+  *result = StringMatch(text, searchStr, 0);
+  return true;
+}
+
 template <typename TextChar, typename PatChar>
 static int32_t LastIndexOfImpl(const TextChar* text, size_t textLen,
                                const PatChar* pat, size_t patLen,
@@ -3535,7 +3556,7 @@ static const JSFunctionSpec string_methods[] = {
     JS_SELF_HOSTED_FN("padEnd", "String_pad_end", 2, 0),
     JS_SELF_HOSTED_FN("codePointAt", "String_codePointAt", 1, 0),
     JS_FN("includes", str_includes, 1, 0),
-    JS_FN("indexOf", str_indexOf, 1, 0),
+    JS_INLINABLE_FN("indexOf", str_indexOf, 1, 0, StringIndexOf),
     JS_FN("lastIndexOf", str_lastIndexOf, 1, 0),
     JS_INLINABLE_FN("startsWith", str_startsWith, 1, 0, StringStartsWith),
     JS_INLINABLE_FN("endsWith", str_endsWith, 1, 0, StringEndsWith),

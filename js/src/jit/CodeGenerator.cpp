@@ -10916,6 +10916,14 @@ void CodeGenerator::visitFromCodePoint(LFromCodePoint* lir) {
   masm.bind(done);
 }
 
+void CodeGenerator::visitStringIndexOf(LStringIndexOf* lir) {
+  pushArg(ToRegister(lir->searchString()));
+  pushArg(ToRegister(lir->string()));
+
+  using Fn = bool (*)(JSContext*, HandleString, HandleString, int32_t*);
+  callVM<Fn, js::StringIndexOf>(lir);
+}
+
 void CodeGenerator::visitStringStartsWith(LStringStartsWith* lir) {
   pushArg(ToRegister(lir->searchString()));
   pushArg(ToRegister(lir->string()));
