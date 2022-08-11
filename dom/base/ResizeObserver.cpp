@@ -68,7 +68,8 @@ static nsSize GetContentRectSize(const nsIFrame& aFrame) {
 
 /**
  * Returns |aTarget|'s size in the form of gfx::Size (in pixels).
- * If the target is SVG, width and height are determined from bounding box.
+ * If the target is an SVG that does not participate in CSS layout,
+ * its width and height are determined from bounding box.
  *
  * https://www.w3.org/TR/resize-observer-1/#calculate-box-size
  */
@@ -81,10 +82,10 @@ static gfx::Size CalculateBoxSize(Element* aTarget,
     return size;
   }
 
-  if (aTarget->IsSVGElement()) {
-    // Per the spec, SVG size is always its bounding box size no matter what
-    // box option you choose, because SVG elements do not use standard CSS box
-    // model.
+  if (frame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
+    // Per the spec, this target's SVG size is always its bounding box size no
+    // matter what box option you choose, because SVG elements do not use
+    // standard CSS box model.
     const gfxRect bbox = SVGUtils::GetBBox(frame);
     size.width = static_cast<float>(bbox.width);
     size.height = static_cast<float>(bbox.height);
