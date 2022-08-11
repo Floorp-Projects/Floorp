@@ -165,11 +165,11 @@ class AppStoreTest {
         appStore.dispatch(AppAction.RecentSyncedTabStateChange(loading)).join()
         assertEquals(loading, appStore.state.recentSyncedTabState)
 
-        val recentSyncedTab = RecentSyncedTab("device name", DeviceType.DESKTOP, "title", "url", null)
-        val success = RecentSyncedTabState.Success(recentSyncedTab)
+        val recentSyncedTabs = listOf(RecentSyncedTab("device name", DeviceType.DESKTOP, "title", "url", null))
+        val success = RecentSyncedTabState.Success(recentSyncedTabs)
         appStore.dispatch(AppAction.RecentSyncedTabStateChange(success)).join()
         assertEquals(success, appStore.state.recentSyncedTabState)
-        assertEquals(recentSyncedTab, (appStore.state.recentSyncedTabState as RecentSyncedTabState.Success).tab)
+        assertEquals(recentSyncedTabs, (appStore.state.recentSyncedTabState as RecentSyncedTabState.Success).tabs)
     }
 
     @Test

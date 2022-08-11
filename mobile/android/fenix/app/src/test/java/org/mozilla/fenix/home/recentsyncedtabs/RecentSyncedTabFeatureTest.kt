@@ -178,7 +178,7 @@ class RecentSyncedTabFeatureTest {
         syncStore.setState(status = SyncStatus.Idle)
         runCurrent()
 
-        val expected = activeTab.toRecentSyncedTab(deviceAccessed1)
+        val expected = listOf(activeTab.toRecentSyncedTab(deviceAccessed1))
         verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expected))) }
     }
 
@@ -202,10 +202,10 @@ class RecentSyncedTabFeatureTest {
         syncStore.setState(status = SyncStatus.Idle)
         runCurrent()
 
-        val expectedTab = remoteTab.toRecentSyncedTab(deviceAccessed1)
+        val expectedTabs = listOf(remoteTab.toRecentSyncedTab(deviceAccessed1))
         verify {
             appStore.dispatch(
-                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expectedTab))
+                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expectedTabs))
             )
         }
     }
@@ -229,41 +229,63 @@ class RecentSyncedTabFeatureTest {
         syncStore.setState(status = SyncStatus.Idle)
         runCurrent()
 
-        val expectedTab = remoteTab.toRecentSyncedTab(deviceAccessed1)
+        val expectedTabs = listOf(remoteTab.toRecentSyncedTab(deviceAccessed1))
         verify {
             appStore.dispatch(
-                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expectedTab))
+                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expectedTabs))
             )
         }
     }
 
     @Test
-    fun `GIVEN tabs from different remote devices WHEN dispatching recent synced tab THEN most recently accessed device is used`() = runTest {
-        val account = mockk<Account>()
-        syncStore.setState(account = account)
-        every { appStore.state } returns mockk {
-            every { recentSyncedTabState } returns RecentSyncedTabState.Loading
-        }
-        coEvery { historyStorage.getDetailedVisits(any(), any()) } returns listOf()
-        val firstTab = createActiveTab("first", "https://local.com", null)
-        val secondTab = createActiveTab("remote", "https://mozilla.org", null)
-        val syncedTabs = listOf(
-            SyncedDeviceTabs(deviceAccessed1, listOf(firstTab)),
-            SyncedDeviceTabs(deviceAccessed2, listOf(secondTab))
-        )
-        coEvery { syncedTabsStorage.getSyncedDeviceTabs() } returns syncedTabs
-
-        feature.start()
-        syncStore.setState(status = SyncStatus.Idle)
-        runCurrent()
-
-        val expectedTab = secondTab.toRecentSyncedTab(deviceAccessed2)
-        verify {
-            appStore.dispatch(
-                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expectedTab))
+    fun `GIVEN tabs from different remote devices WHEN dispatching recent synced tab THEN most recently accessed tabs are set in the Success state`() =
+        runTest {
+            val account = mockk<Account>()
+            syncStore.setState(account = account)
+            every { appStore.state } returns mockk {
+                every { recentSyncedTabState } returns RecentSyncedTabState.Loading
+            }
+            coEvery { historyStorage.getDetailedVisits(any(), any()) } returns listOf()
+            val firstDeviceTabs = listOf(
+                createActiveTab("first", "https://local.com", null),
+                createActiveTab("second", "https://github.com", null)
             )
+            val secondDeviceTabs = listOf(
+                createActiveTab("first", "https://mozilla.org", null),
+                createActiveTab("second", "https://www.mozilla.org/en-US/firefox", null)
+            )
+            val currentTime = System.currentTimeMillis()
+            // Delay used to change last used times of tabs
+            val usedDelay = 5 * 60 * 1000
+            every { firstDeviceTabs[0].lastUsed } returns currentTime
+            every { firstDeviceTabs[1].lastUsed } returns currentTime - 2 * usedDelay
+            every { secondDeviceTabs[0].lastUsed } returns currentTime - usedDelay
+            every { secondDeviceTabs[1].lastUsed } returns currentTime - 3 * usedDelay
+            val syncedTabs = listOf(
+                SyncedDeviceTabs(deviceAccessed1, firstDeviceTabs),
+                SyncedDeviceTabs(deviceAccessed2, secondDeviceTabs)
+            )
+            coEvery { syncedTabsStorage.getSyncedDeviceTabs() } returns syncedTabs
+
+            feature.start()
+            syncStore.setState(status = SyncStatus.Idle)
+            runCurrent()
+
+            // The order of the tabs should be given by the `lastUsed` property
+            val expectedTabs =
+                (firstDeviceTabs + secondDeviceTabs).sortedByDescending { it.lastUsed }.map {
+                    if (it in firstDeviceTabs) {
+                        it.toRecentSyncedTab(deviceAccessed1)
+                    } else {
+                        it.toRecentSyncedTab(deviceAccessed2)
+                    }
+                }
+            verify {
+                appStore.dispatch(
+                    AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expectedTabs))
+                )
+            }
         }
-    }
 
     @Test
     fun `GIVEN sync tabs are disabled WHEN dispatching recent synced tab THEN dispatch none`() = runTest {
@@ -421,7 +443,7 @@ class RecentSyncedTabFeatureTest {
         syncStore.setState(status = SyncStatus.LoggedOut)
         runCurrent()
 
-        val expected = tab.toRecentSyncedTab(deviceAccessed1)
+        val expected = listOf(tab.toRecentSyncedTab(deviceAccessed1))
         verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expected))) }
         verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)) }
     }
@@ -450,7 +472,7 @@ class RecentSyncedTabFeatureTest {
         syncStore.setState(status = SyncStatus.Idle)
         runCurrent()
 
-        val expected = activeTab.toRecentSyncedTab(deviceAccessed1, previewUrl)
+        val expected = listOf(activeTab.toRecentSyncedTab(deviceAccessed1, previewUrl))
         verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expected))) }
     }
 
@@ -477,7 +499,7 @@ class RecentSyncedTabFeatureTest {
         syncStore.setState(status = SyncStatus.Idle)
         runCurrent()
 
-        val expected = activeTab.toRecentSyncedTab(deviceAccessed1, null)
+        val expected = listOf(activeTab.toRecentSyncedTab(deviceAccessed1, null))
         verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expected))) }
     }
 
@@ -489,6 +511,7 @@ class RecentSyncedTabFeatureTest {
         val tab = mockk<Tab>()
         val tabEntry = TabEntry(title, url, iconUrl)
         every { tab.active() } returns tabEntry
+        every { tab.lastUsed } returns System.currentTimeMillis()
         return tab
     }
 
