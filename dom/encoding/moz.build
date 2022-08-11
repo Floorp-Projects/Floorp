@@ -9,12 +9,16 @@ with Files("**"):
 
 EXPORTS.mozilla.dom += [
     "TextDecoder.h",
+    "TextDecoderStream.h",
     "TextEncoder.h",
+    "TextEncoderStream.h",
 ]
 
 UNIFIED_SOURCES += [
     "TextDecoder.cpp",
+    "TextDecoderStream.cpp",
     "TextEncoder.cpp",
+    "TextEncoderStream.cpp",
 ]
 
 FINAL_LIBRARY = "xul"

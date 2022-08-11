@@ -18,7 +18,47 @@ namespace mozilla::dom {
 
 class ArrayBufferViewOrArrayBuffer;
 
-class TextDecoder final : public NonRefcountedDOMObject {
+class TextDecoderCommon {
+ public:
+  /**
+   * Decodes incoming byte stream of characters in charset indicated by
+   * encoding.
+   *
+   * The encoding algorithm state is reset if aOptions.mStream is not set.
+   *
+   * If the fatal flag is set then a decoding error will throw EncodingError.
+   * Else the decoder will return a decoded string with replacement
+   * character(s) for unidentified character(s).
+   *
+   * @param      aInput, incoming byte stream of characters to be decoded to
+   *                    to UTF-16 code points.
+   * @param      aStream, indicates if streaming or not.
+   * @param      aOutDecodedString, decoded string of UTF-16 code points.
+   * @param      aRv, error result.
+   */
+  void DecodeNative(mozilla::Span<const uint8_t> aInput, const bool aStream,
+                    nsAString& aOutDecodedString, ErrorResult& aRv);
+
+  /**
+   * Return the encoding name.
+   *
+   * @param aEncoding, current encoding.
+   */
+  void GetEncoding(nsAString& aEncoding);
+
+  bool Fatal() const { return mFatal; }
+
+  bool IgnoreBOM() const { return mIgnoreBOM; }
+
+ protected:
+  mozilla::UniquePtr<mozilla::Decoder> mDecoder;
+  nsCString mEncoding;
+  bool mFatal = false;
+  bool mIgnoreBOM = false;
+};
+
+class TextDecoder final : public NonRefcountedDOMObject,
+                          public TextDecoderCommon {
  public:
   // The WebIDL constructor.
   static TextDecoder* Constructor(const GlobalObject& aGlobal,
@@ -33,9 +73,7 @@ class TextDecoder final : public NonRefcountedDOMObject {
     return txtDecoder.release();
   }
 
-  TextDecoder() : mFatal(false), mIgnoreBOM(false) {
-    MOZ_COUNT_CTOR(TextDecoder);
-  }
+  TextDecoder() { MOZ_COUNT_CTOR(TextDecoder); }
 
   MOZ_COUNTED_DTOR(TextDecoder)
 
@@ -64,45 +102,11 @@ class TextDecoder final : public NonRefcountedDOMObject {
   void InitWithEncoding(NotNull<const Encoding*> aEncoding,
                         const TextDecoderOptions& aOptions);
 
-  /**
-   * Return the encoding name.
-   *
-   * @param aEncoding, current encoding.
-   */
-  void GetEncoding(nsAString& aEncoding);
-
-  /**
-   * Decodes incoming byte stream of characters in charset indicated by
-   * encoding.
-   *
-   * The encoding algorithm state is reset if aOptions.mStream is not set.
-   *
-   * If the fatal flag is set then a decoding error will throw EncodingError.
-   * Else the decoder will return a decoded string with replacement
-   * character(s) for unidentified character(s).
-   *
-   * @param      aView, incoming byte stream of characters to be decoded to
-   *                    to UTF-16 code points.
-   * @param      aOptions, indicates if streaming or not.
-   * @param      aOutDecodedString, decoded string of UTF-16 code points.
-   * @param      aRv, error result.
-   */
-  void Decode(mozilla::Span<const uint8_t> aInput, const bool aStream,
-              nsAString& aOutDecodedString, ErrorResult& aRv);
-
   void Decode(const Optional<ArrayBufferViewOrArrayBuffer>& aBuffer,
               const TextDecodeOptions& aOptions, nsAString& aOutDecodedString,
               ErrorResult& aRv);
 
-  bool Fatal() const { return mFatal; }
-
-  bool IgnoreBOM() const { return mIgnoreBOM; }
-
  private:
-  nsCString mEncoding;
-  mozilla::UniquePtr<mozilla::Decoder> mDecoder;
-  bool mFatal;
-  bool mIgnoreBOM;
 };
 
 }  // namespace mozilla::dom
