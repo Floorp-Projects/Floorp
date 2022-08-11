@@ -6,22 +6,19 @@
 
 ## Floorp専用
 
-about-ablaze = About Ablaze
-ablaze-twitter = Ablaze URLs : Twitter <label data-l10n-name="ablaze-twitter-id">@Ablaze_MIRAI</label>　Github : <label data-l10n-name="ablaze-github-id">@Ablaze-MIRAI</label>　alexandriteOS  : <label data-l10n-name="alexandriteos-url">official site</label> 
-about-ablaze-sub = Ablaze is a group on top of the Floorp project, which is developing Floorp, and the Floorp project is being run here, with support from Floorp. We also run other projects such as NekoLinux and AlexandriteOS.
 about-floorp = About Floorp projects
 about-floorp-sub = The Floorp project is a project under Ablaze, and the Floorp Legacy browser is its development product, based on the Firefox browser developed by Mozilla. The project is developed entirely on a non-profit basis. Enjoy the enhanced browsing experience. The source code can be found at the Github link below.
-floorp-twitter = Floorp URLs : Twitter <label data-l10n-name="floorp-twitter-id">@Floorp_Browser</label>　Github : <label data-l10n-name="floorp-github-id">@Floorp-Projects</label>　official site : <label data-l10n-name="floorp-official-url">Link</label> 
-more-from-moz-title = About Floorp & Ablaze
+
 more-from-moz-category =
-  .tooltiptext = about Floorp Legacy
-more-from-moz-firefox-mobile-title = Alternatives to Floorp for Mobile
-more-from-moz-firefox-mobile-description = Use Firefox for Moble for your phone! Synchronization is possible with Floorp
-more-from-moz-firefox-mobile-description-advanced = Firefox for Mobile can use addon, block tracker and protect your privacy !!. Firefox mobile browsers work overtime to make sure you’re getting the good internet.
-about-floorp-sub-sub = Floorp Legacy
-about-legacy = About Floorp Legacy 
-about-floorp-legacy-sub = Copyright 2022 Floorp Projects & Ablaze. All rights reserved.
-floorp-legacy-links = Floorp was made possible by the open source project <label data-l10n-name="firefox-url">Firefox</label> and other <label data-l10n-name="github-floorp">open source software.</label>
+  .tooltiptext = about Floorp 
+
+about-floorp-sub-sub = Floorp 
+about-floorp-browser = About Floorp Projects 
+
+about-floorp-discription = <label data-l10n-name="floorp-browser-link">{ -brand-product-name }</label> is one of the domestic browsers developed in Japan. It is based on Firefox and continues to operate under <label data-l10n-name="ablaze-Link">{ -vendor-short-name }</label>, to improve the web. Want to help? <label data-l10n-name="helpus-donateLink">Make a donation</label>
+icon-creator = Icon creator <label data-l10n-name="browser-logo-twitter">@CutterKnife_</label> and <label data-l10n-name="brand-logo-twitter">@mwxdxx.</label>
+contributors = A list of <label data-l10n-name="about-contributor">contributors and Developers</label>
+
 ## Floorp 専用終わり
 more-from-moz-mozilla-vpn-title = { -mozilla-vpn-brand-name } Unsuppoted in japan, korea etc...
 more-from-moz-mozilla-vpn-description = Discover an added layer of anonymous browsing and protection.

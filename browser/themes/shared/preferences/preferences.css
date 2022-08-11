@@ -12,6 +12,9 @@
   display: none !important;
 }
 
+.bottom-link{
+  margin-left: 90px;
+}
 #proton {
   display: block;
   margin: 0 auto;
