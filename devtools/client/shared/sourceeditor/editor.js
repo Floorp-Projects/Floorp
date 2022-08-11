@@ -564,13 +564,10 @@ Editor.prototype = {
 
   /**
    * Creates a CodeMirror Document
-   *
-   * @param {String} text: Initial text of the document
-   * @param {Object|String} mode: Mode of the document. See https://codemirror.net/5/doc/manual.html#option_mode
    * @returns CodeMirror.Doc
    */
-  createDocument(text = "", mode) {
-    return new this.Doc(text, mode);
+  createDocument() {
+    return new this.Doc("");
   },
 
   /**
