@@ -10694,7 +10694,6 @@ class MIonToWasmCall final : public MVariadicInstruction,
   void initArg(size_t i, MDefinition* arg) { initOperand(i, arg); }
 
   WasmInstanceObject* instanceObject() const { return instanceObj_; }
-  wasm::Instance* instance() const { return &instanceObj_->instance(); }
   const wasm::FuncExport& funcExport() const { return funcExport_; }
   bool possiblyCalls() const override { return true; }
 #ifdef DEBUG

@@ -363,6 +363,14 @@ const CodeRange* ModuleSegment::lookupRange(const void* pc) const {
   return codeTier().lookupRange(pc);
 }
 
+size_t FuncExport::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
+  return funcType_.sizeOfExcludingThis(mallocSizeOf);
+}
+
+size_t FuncImport::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
+  return funcType_.sizeOfExcludingThis(mallocSizeOf);
+}
+
 size_t CacheableChars::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return mallocSizeOf(get());
 }
@@ -373,8 +381,8 @@ size_t MetadataTier::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
          callSites.sizeOfExcludingThis(mallocSizeOf) +
          tryNotes.sizeOfExcludingThis(mallocSizeOf) +
          trapSites.sizeOfExcludingThis(mallocSizeOf) +
-         funcImports.sizeOfExcludingThis(mallocSizeOf) +
-         funcExports.sizeOfExcludingThis(mallocSizeOf);
+         SizeOfVectorExcludingThis(funcImports, mallocSizeOf) +
+         SizeOfVectorExcludingThis(funcExports, mallocSizeOf);
 }
 
 UniqueLazyStubSegment LazyStubSegment::create(const CodeTier& codeTier,
@@ -397,7 +405,7 @@ bool LazyStubSegment::hasSpace(size_t bytes) const {
   return bytes <= length() && usedBytes_ <= length() - bytes;
 }
 
-bool LazyStubSegment::addStubs(const Metadata& metadata, size_t codeLength,
+bool LazyStubSegment::addStubs(size_t codeLength,
                                const Uint32Vector& funcExportIndices,
                                const FuncExportVector& funcExports,
                                const CodeRangeVector& codeRanges,
@@ -417,8 +425,6 @@ bool LazyStubSegment::addStubs(const Metadata& metadata, size_t codeLength,
 
   size_t i = 0;
   for (uint32_t funcExportIndex : funcExportIndices) {
-    const FuncExport& fe = funcExports[funcExportIndex];
-    const FuncType& funcType = metadata.getFuncExportType(fe);
     const CodeRange& interpRange = codeRanges[i];
     MOZ_ASSERT(interpRange.isInterpEntry());
     MOZ_ASSERT(interpRange.funcIndex() ==
@@ -428,7 +434,7 @@ bool LazyStubSegment::addStubs(const Metadata& metadata, size_t codeLength,
     codeRanges_.back().offsetBy(offsetInSegment);
     i++;
 
-    if (!funcType.canHaveJitEntry()) {
+    if (!funcExports[funcExportIndex].canHaveJitEntry()) {
       continue;
     }
 
@@ -488,7 +494,6 @@ static void PadCodeForSingleStub(MacroAssembler& masm) {
 static constexpr unsigned LAZY_STUB_LIFO_DEFAULT_CHUNK_SIZE = 8 * 1024;
 
 bool LazyStubTier::createManyEntryStubs(const Uint32Vector& funcExportIndices,
-                                        const Metadata& metadata,
                                         const CodeTier& codeTier,
                                         size_t* stubSegmentIndex) {
   MOZ_ASSERT(funcExportIndices.length());
@@ -502,22 +507,21 @@ bool LazyStubTier::createManyEntryStubs(const Uint32Vector& funcExportIndices,
     PadCodeForSingleStub(masm);
   }
 
-  const MetadataTier& metadataTier = codeTier.metadata();
-  const FuncExportVector& funcExports = metadataTier.funcExports;
+  const MetadataTier& metadata = codeTier.metadata();
+  const FuncExportVector& funcExports = metadata.funcExports;
   uint8_t* moduleSegmentBase = codeTier.segment().base();
 
   CodeRangeVector codeRanges;
   DebugOnly<uint32_t> numExpectedRanges = 0;
   for (uint32_t funcExportIndex : funcExportIndices) {
     const FuncExport& fe = funcExports[funcExportIndex];
-    const FuncType& funcType = metadata.getFuncExportType(fe);
     // Exports that don't support a jit entry get only the interp entry.
-    numExpectedRanges += (funcType.canHaveJitEntry() ? 2 : 1);
+    numExpectedRanges += (fe.canHaveJitEntry() ? 2 : 1);
     void* calleePtr =
-        moduleSegmentBase + metadataTier.codeRange(fe).funcUncheckedCallEntry();
+        moduleSegmentBase + metadata.codeRange(fe).funcUncheckedCallEntry();
     Maybe<ImmPtr> callee;
     callee.emplace(calleePtr, ImmPtr::NoCheckToken());
-    if (!GenerateEntryStubs(masm, funcExportIndex, fe, funcType, callee,
+    if (!GenerateEntryStubs(masm, funcExportIndex, fe, callee,
                             /* asmjs */ false, &codeRanges)) {
       return false;
     }
@@ -557,8 +561,8 @@ bool LazyStubTier::createManyEntryStubs(const Uint32Vector& funcExportIndices,
 
   size_t interpRangeIndex;
   uint8_t* codePtr = nullptr;
-  if (!segment->addStubs(metadata, codeLength, funcExportIndices, funcExports,
-                         codeRanges, &codePtr, &interpRangeIndex)) {
+  if (!segment->addStubs(codeLength, funcExportIndices, funcExports, codeRanges,
+                         &codePtr, &interpRangeIndex)) {
     return false;
   }
 
@@ -581,7 +585,6 @@ bool LazyStubTier::createManyEntryStubs(const Uint32Vector& funcExportIndices,
 
   for (uint32_t funcExportIndex : funcExportIndices) {
     const FuncExport& fe = funcExports[funcExportIndex];
-    const FuncType& funcType = metadata.getFuncExportType(fe);
 
     DebugOnly<CodeRange> cr = segment->codeRanges()[interpRangeIndex];
     MOZ_ASSERT(cr.value.isInterpEntry());
@@ -602,14 +605,13 @@ bool LazyStubTier::createManyEntryStubs(const Uint32Vector& funcExportIndices,
         exports_.insert(exports_.begin() + exportIndex, std::move(lazyExport)));
 
     // Exports that don't support a jit entry get only the interp entry.
-    interpRangeIndex += (funcType.canHaveJitEntry() ? 2 : 1);
+    interpRangeIndex += (fe.canHaveJitEntry() ? 2 : 1);
   }
 
   return true;
 }
 
 bool LazyStubTier::createOneEntryStub(uint32_t funcExportIndex,
-                                      const Metadata& metadata,
                                       const CodeTier& codeTier) {
   Uint32Vector funcExportIndexes;
   if (!funcExportIndexes.append(funcExportIndex)) {
@@ -617,19 +619,15 @@ bool LazyStubTier::createOneEntryStub(uint32_t funcExportIndex,
   }
 
   size_t stubSegmentIndex;
-  if (!createManyEntryStubs(funcExportIndexes, metadata, codeTier,
-                            &stubSegmentIndex)) {
+  if (!createManyEntryStubs(funcExportIndexes, codeTier, &stubSegmentIndex)) {
     return false;
   }
 
   const UniqueLazyStubSegment& segment = stubSegments_[stubSegmentIndex];
   const CodeRangeVector& codeRanges = segment->codeRanges();
 
-  const FuncExport& fe = codeTier.metadata().funcExports[funcExportIndex];
-  const FuncType& funcType = metadata.getFuncExportType(fe);
-
   // Exports that don't support a jit entry get only the interp entry.
-  if (!funcType.canHaveJitEntry()) {
+  if (!codeTier.metadata().funcExports[funcExportIndex].canHaveJitEntry()) {
     MOZ_ASSERT(codeRanges.length() >= 1);
     MOZ_ASSERT(codeRanges.back().isInterpEntry());
     return true;
@@ -646,7 +644,6 @@ bool LazyStubTier::createOneEntryStub(uint32_t funcExportIndex,
 }
 
 bool LazyStubTier::createTier2(const Uint32Vector& funcExportIndices,
-                               const Metadata& metadata,
                                const CodeTier& codeTier,
                                Maybe<size_t>* outStubSegmentIndex) {
   if (!funcExportIndices.length()) {
@@ -654,8 +651,7 @@ bool LazyStubTier::createTier2(const Uint32Vector& funcExportIndices,
   }
 
   size_t stubSegmentIndex;
-  if (!createManyEntryStubs(funcExportIndices, metadata, codeTier,
-                            &stubSegmentIndex)) {
+  if (!createManyEntryStubs(funcExportIndices, codeTier, &stubSegmentIndex)) {
     return false;
   }
 
@@ -711,9 +707,46 @@ void LazyStubTier::addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code,
   }
 }
 
+bool MetadataTier::clone(const MetadataTier& src) {
+  if (!funcToCodeRange.appendAll(src.funcToCodeRange)) {
+    return false;
+  }
+  if (!codeRanges.appendAll(src.codeRanges)) {
+    return false;
+  }
+  if (!callSites.appendAll(src.callSites)) {
+    return false;
+  }
+  if (!tryNotes.appendAll(src.tryNotes)) {
+    return false;
+  }
+
+  for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
+    if (!trapSites[trap].appendAll(src.trapSites[trap])) {
+      return false;
+    }
+  }
+
+  if (!funcImports.resize(src.funcImports.length())) {
+    return false;
+  }
+  for (size_t i = 0; i < src.funcImports.length(); i++) {
+    funcImports[i].clone(src.funcImports[i]);
+  }
+
+  if (!funcExports.resize(src.funcExports.length())) {
+    return false;
+  }
+  for (size_t i = 0; i < src.funcExports.length(); i++) {
+    funcExports[i].clone(src.funcExports[i]);
+  }
+
+  return true;
+}
+
 size_t Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return SizeOfVectorExcludingThis(types, mallocSizeOf) +
-         typeIds.sizeOfExcludingThis(mallocSizeOf) +
+         typesRenumbering.sizeOfExcludingThis(mallocSizeOf) +
          globals.sizeOfExcludingThis(mallocSizeOf) +
          tables.sizeOfExcludingThis(mallocSizeOf) +
          tags.sizeOfExcludingThis(mallocSizeOf) +

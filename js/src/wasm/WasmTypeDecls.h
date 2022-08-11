@@ -100,6 +100,7 @@ using UniqueConstBytes = UniquePtr<const Bytes>;
 using UTF8Bytes = Vector<char, 0, SystemAllocPolicy>;
 using InstanceVector = Vector<Instance*, 0, SystemAllocPolicy>;
 using UniqueCharsVector = Vector<UniqueChars, 0, SystemAllocPolicy>;
+using RenumberVector = Vector<uint32_t, 0, SystemAllocPolicy>;
 
 }  // namespace wasm
 }  // namespace js
