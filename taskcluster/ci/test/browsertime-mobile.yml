@@ -5,6 +5,8 @@
 job-defaults:
     max-run-time: 3600
     suite: raptor
+    variants:
+        - geckoview-no-fission
     run-on-projects:
         by-app:
             refbrow: []
@@ -140,6 +142,7 @@ browsertime-tp6m-essential:
 browsertime-youtube-playback-mobile:
     description: Browsertime YouTube Playback on Android
     treeherder-symbol: Btime(ytp)
+    run-without-variant: false
     raptor:
         apps: [fenix, geckoview, refbrow]
         subtests:
@@ -192,6 +195,7 @@ browsertime-youtube-playback-mobile:
 
 browsertime-tp6m-live:
     <<: *tp6m-defaults
+    run-without-variant: false
     raptor:
         apps: [chrome-m, fenix, geckoview]
         run-visual-metrics: true
@@ -257,6 +261,7 @@ browsertime-tp6m-live:
 
 browsertime-tp6m-profiling:
     description: Raptor (browsertime) tp6 page-load tests on android with Gecko profiling
+    run-without-variant: false
     raptor:
         apps: [geckoview]
         test: tp6m
@@ -276,6 +281,7 @@ browsertime-tp6m-profiling:
 
 browsertime-speedometer-mobile:
     description: Browsertime Speedometer on Android
+    run-without-variant: false
     raptor:
         apps: [geckoview, fenix, chrome-m]
     tier:
@@ -301,6 +307,7 @@ browsertime-speedometer-mobile:
 
 browsertime-unity-webgl-mobile:
     description: Browsertime Unity WebGL on Android
+    run-without-variant: false
     raptor:
         apps: [geckoview, refbrow, fenix, chrome-m]
     treeherder-symbol: Btime(ugl)
@@ -329,6 +336,7 @@ browsertime-unity-webgl-mobile:
 
 browsertime-power:
     description: Browsertime Power Usage Tests on Android
+    run-without-variant: false
     raptor:
         apps: [geckoview, fenix, refbrow]
         subtests:
