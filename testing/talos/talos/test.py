@@ -196,7 +196,7 @@ class ts_paint_heavy(ts_paint):
 
 @register_test()
 class ts_paint_flex(ts_paint):
-    preferences = {"layout.css.emulate-moz-box-with-flex": True}
+    preferences = {"layout.css.moz-box-flexbox-emulation.enabled": True}
     pine = False
 
 
@@ -577,7 +577,7 @@ class tart(PageloaderTest):
 
 @register_test()
 class tart_flex(tart):
-    preferences = {"layout.css.emulate-moz-box-with-flex": True}
+    preferences = {"layout.css.moz-box-flexbox-emulation.enabled": True}
     pine = False
 
 
