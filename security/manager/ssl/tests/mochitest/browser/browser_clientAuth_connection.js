@@ -307,10 +307,12 @@ add_task(async function testClearPrivateBrowsingState() {
 // Test that 3rd party certificates are taken into account when filtering client
 // certificates based on the acceptible CA list sent by the server.
 add_task(async function testCertFilteringWithIntermediate() {
-  let intermediateBytes = await IOUtils.readUTF8(
+  let intermediateBytes = await OS.File.read(
     getTestFilePath("intermediate.pem")
   ).then(
-    pem => {
+    data => {
+      let decoder = new TextDecoder();
+      let pem = decoder.decode(data);
       let base64 = pemToBase64(pem);
       let bin = atob(base64);
       let bytes = [];
