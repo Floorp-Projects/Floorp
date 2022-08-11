@@ -119,6 +119,8 @@ const INTEGRATION_TEST_PAGE_SOURCES = [
   "replaced-bundle.js",
   "removed-original.js",
   "named-eval.js",
+  // This is the JS file with encoded characters and custom protocol
+  "文字コード.js",
   // Webpack generated some extra sources:
   "bootstrap 3b1a221408fdde86aa49",
   "bootstrap a1ecee2f86e1d0ea3fb5",
