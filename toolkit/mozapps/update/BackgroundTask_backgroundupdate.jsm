@@ -402,7 +402,7 @@ async function runBackgroundTask(commandLine) {
       //
       // Most meaningful issues with the Nimbus/experiments system will be reported via Glean
       // events.
-      lazy.log.warning(
+      lazy.log.warn(
         `${SLUG}: exception raised from Nimbus/Firefox Messaging System`,
         f
       );
