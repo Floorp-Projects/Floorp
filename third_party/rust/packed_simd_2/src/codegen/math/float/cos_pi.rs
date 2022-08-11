@@ -5,7 +5,7 @@
 
 use crate::*;
 
-crate trait CosPi {
+pub(crate) trait CosPi {
     fn cos_pi(self) -> Self;
 }
 
