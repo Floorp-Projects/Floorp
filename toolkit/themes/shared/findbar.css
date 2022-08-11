@@ -161,22 +161,6 @@ html|input.findbar-textbox[flash="true"] {
   color: var(--error-text-color, color-mix(in srgb, currentColor 40%, #C50042));
 }
 
-@media not (prefers-contrast) {
-/* Revert default placeholder text fade to fade with color below. */
-html|input.findbar-textbox::placeholder {
-  opacity: 1;
-}
-
-html|input.findbar-textbox::placeholder,
-.findbar-highlight,
-.findbar-case-sensitive,
-.findbar-match-diacritics,
-.findbar-entire-word,
-.findbar-label {
-  color: color-mix(in srgb, currentColor 70%, transparent);
-}
-}
-
 .find-status-icon {
   display: none;
 }
@@ -187,9 +171,4 @@ html|input.findbar-textbox::placeholder,
 .close-icon.findbar-closebutton {
   margin: 2px 8px;
   width: 24px;
-}
-
-.findbar-find-status[status="notfound"] {
-  color: var(--error-text-color, color-mix(in srgb, currentColor 40%, #C50042));
-  opacity: 0.8;
 }
