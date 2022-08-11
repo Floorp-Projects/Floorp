@@ -59,7 +59,6 @@ DEFAULTS = dict(
         cleanup=None,
         preferences={},
         pine=True,
-        skip_reason=None,
     ),
 )
 
@@ -238,17 +237,6 @@ def build_manifest(config, is_multidomain, manifestName):
     return newManifestName
 
 
-def skip_test(test_instance, config):
-    # Determines if a test should be skipped, and returns
-    # a message with a reason why or None if it doesn't need
-    # to be skipped
-    if not getattr(test_instance, "pine", True) and config.get(
-        "project", ""
-    ).startswith("pine"):
-        return "Broken on the pine branch"
-    return None
-
-
 def get_test(config, global_overrides, counters, test_instance):
     mozAfterPaint = getattr(test_instance, "tpmozafterpaint", None)
     hero = getattr(test_instance, "tphero", None)
@@ -306,9 +294,6 @@ def get_test(config, global_overrides, counters, test_instance):
             _counters.extend(
                 [counter for counter in counters if counter not in _counters]
             )
-
-    # check if we should skip this test
-    test_instance.skip_reason = skip_test(test_instance, config)
 
     return dict(test_instance.items())
 
