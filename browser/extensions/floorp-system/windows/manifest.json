@@ -17,7 +17,8 @@
     "browserSettings",
     "about:*",
     "about:reader*",
-    "downloads"
+    "downloads",
+    "mozillaAddons"
   ],
   "experiment_apis": {
     "aboutConfigPrefs": {
