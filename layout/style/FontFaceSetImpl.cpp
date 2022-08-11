@@ -553,17 +553,21 @@ FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
                 face->mFormatHint = gfxUserFontSet::FormatHint::EOT;
               } else if (valueString.LowerCaseEqualsASCII("svg")) {
                 face->mFormatHint = gfxUserFontSet::FormatHint::SVG;
-              }  // Non-standard values that Firefox accepted, for back-compat:
-              else if (valueString.LowerCaseEqualsASCII("woff-variations")) {
-                face->mFormatHint = gfxUserFontSet::FormatHint::WOFF;
-              } else if (valueString.LowerCaseEqualsASCII("woff2-variations")) {
-                face->mFormatHint = gfxUserFontSet::FormatHint::WOFF2;
-              } else if (valueString.LowerCaseEqualsASCII(
-                             "opentype-variations")) {
-                face->mFormatHint = gfxUserFontSet::FormatHint::OPENTYPE;
-              } else if (valueString.LowerCaseEqualsASCII(
-                             "truetype-variations")) {
-                face->mFormatHint = gfxUserFontSet::FormatHint::TRUETYPE;
+              } else if (StaticPrefs::layout_css_font_variations_enabled()) {
+                // Non-standard values that Firefox accepted, for back-compat;
+                // these are superseded by the tech() function.
+                if (valueString.LowerCaseEqualsASCII("woff-variations")) {
+                  face->mFormatHint = gfxUserFontSet::FormatHint::WOFF;
+                } else if (valueString.LowerCaseEqualsASCII(
+                               "woff2-variations")) {
+                  face->mFormatHint = gfxUserFontSet::FormatHint::WOFF2;
+                } else if (valueString.LowerCaseEqualsASCII(
+                               "opentype-variations")) {
+                  face->mFormatHint = gfxUserFontSet::FormatHint::OPENTYPE;
+                } else if (valueString.LowerCaseEqualsASCII(
+                               "truetype-variations")) {
+                  face->mFormatHint = gfxUserFontSet::FormatHint::TRUETYPE;
+                }
               } else {
                 // unknown format specified, mark to distinguish from the
                 // case where no format hints are specified
