@@ -1799,24 +1799,25 @@ bool gfxPlatform::UseGraphiteShaping() {
   return StaticPrefs::gfx_font_rendering_graphite_enabled();
 }
 
-bool gfxPlatform::IsFontFormatSupported(uint8_t aHint) {
+bool gfxPlatform::IsFontFormatSupported(
+    StyleFontFaceSourceFormatKeyword aHint) {
   switch (aHint) {
-    case gfxUserFontSet::FormatHint::NONE:
+    case StyleFontFaceSourceFormatKeyword::None:
       return true;
-    case gfxUserFontSet::FormatHint::COLLECTION:
+    case StyleFontFaceSourceFormatKeyword::Collection:
       return false;
-    case gfxUserFontSet::FormatHint::OPENTYPE:
-    case gfxUserFontSet::FormatHint::TRUETYPE:
+    case StyleFontFaceSourceFormatKeyword::Opentype:
+    case StyleFontFaceSourceFormatKeyword::Truetype:
       return true;
-    case gfxUserFontSet::FormatHint::EOT:
+    case StyleFontFaceSourceFormatKeyword::EmbeddedOpentype:
       return false;
-    case gfxUserFontSet::FormatHint::SVG:
+    case StyleFontFaceSourceFormatKeyword::Svg:
       return false;
-    case gfxUserFontSet::FormatHint::WOFF:
+    case StyleFontFaceSourceFormatKeyword::Woff:
       return true;
-    case gfxUserFontSet::FormatHint::WOFF2:
+    case StyleFontFaceSourceFormatKeyword::Woff2:
       return true;
-    case gfxUserFontSet::FormatHint::UNKNOWN:
+    case StyleFontFaceSourceFormatKeyword::Unknown:
       return false;
     default:
       MOZ_ASSERT_UNREACHABLE("bad format hint!");
