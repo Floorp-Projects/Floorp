@@ -2216,7 +2216,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("std_String_fromCodePoint", str_fromCodePoint, 1, 0,
                     StringFromCodePoint),
     JS_FN("std_String_includes", str_includes, 1, 0),
-    JS_FN("std_String_indexOf", str_indexOf, 1, 0),
+    JS_INLINABLE_FN("std_String_indexOf", str_indexOf, 1, 0, StringIndexOf),
     JS_INLINABLE_FN("std_String_startsWith", str_startsWith, 1, 0,
                     StringStartsWith),
 #ifdef ENABLE_RECORD_TUPLE

@@ -820,6 +820,16 @@
   alias_set: none
   clone: true
 
+- name: StringIndexOf
+  operands:
+    string: String
+    searchString: String
+  result_type: Int32
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+  possibly_calls: true
+
 - name: StringStartsWith
   operands:
     string: String
