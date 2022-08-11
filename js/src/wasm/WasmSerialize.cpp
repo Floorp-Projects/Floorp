@@ -488,15 +488,6 @@ CoderResult CodeTypeDef(Coder<mode>& coder, CoderArg<mode, TypeDef> item) {
   return Ok();
 }
 
-template <CoderMode mode>
-CoderResult CodeTypeDefWithId(Coder<mode>& coder,
-                              CoderArg<mode, TypeDefWithId> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TypeDefWithId, 360);
-  MOZ_TRY(CodeTypeDef(coder, item));
-  MOZ_TRY(CodePod(coder, &item->id));
-  return Ok();
-}
-
 // WasmModuleTypes.h
 
 template <CoderMode mode>
@@ -697,24 +688,6 @@ CoderResult CodeStackMaps(Coder<mode>& coder,
 // WasmCode.h
 
 template <CoderMode mode>
-CoderResult CodeFuncExport(Coder<mode>& coder,
-                           CoderArg<mode, wasm::FuncExport> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::FuncExport, 352);
-  MOZ_TRY(CodeFuncType(coder, &item->funcType_));
-  MOZ_TRY(CodePod(coder, &item->pod));
-  return Ok();
-}
-
-template <CoderMode mode>
-CoderResult CodeFuncImport(Coder<mode>& coder,
-                           CoderArg<mode, wasm::FuncImport> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::FuncImport, 352);
-  MOZ_TRY(CodeFuncType(coder, &item->funcType_));
-  MOZ_TRY(CodePod(coder, &item->pod));
-  return Ok();
-}
-
-template <CoderMode mode>
 CoderResult CodeSymbolicLinkArray(
     Coder<mode>& coder,
     CoderArg<mode, wasm::LinkData::SymbolicLinkArray> item) {
@@ -809,10 +782,8 @@ CoderResult CodeMetadataTier(Coder<mode>& coder,
   MOZ_TRY(CodePodVector(coder, &item->codeRanges));
   MOZ_TRY(CodePodVector(coder, &item->callSites));
   MOZ_TRY(CodeTrapSiteVectorArray(coder, &item->trapSites));
-  MOZ_TRY((CodeVector<mode, FuncImport, CodeFuncImport<mode>>(
-      coder, &item->funcImports)));
-  MOZ_TRY((CodeVector<mode, FuncExport, CodeFuncExport<mode>>(
-      coder, &item->funcExports)));
+  MOZ_TRY(CodePodVector(coder, &item->funcImports));
+  MOZ_TRY(CodePodVector(coder, &item->funcExports));
   MOZ_TRY(CodeStackMaps(coder, &item->stackMaps, codeStart));
   MOZ_TRY(CodePodVector(coder, &item->tryNotes));
   return Ok();
@@ -830,9 +801,8 @@ CoderResult CodeMetadata(Coder<mode>& coder,
 
   MOZ_TRY(Magic(coder, Marker::Metadata));
   MOZ_TRY(CodePod(coder, &item->pod()));
-  MOZ_TRY((CodeVector<mode, TypeDefWithId, &CodeTypeDefWithId<mode>>(
-      coder, &item->types)));
-  MOZ_TRY(CodePodVector(coder, &item->typesRenumbering));
+  MOZ_TRY((CodeVector<mode, TypeDef, &CodeTypeDef<mode>>(coder, &item->types)));
+  MOZ_TRY((CodePodVector(coder, &item->typeIds)));
   MOZ_TRY((CodeVector<mode, GlobalDesc, &CodeGlobalDesc<mode>>(
       coder, &item->globals)));
   MOZ_TRY(CodePodVector(coder, &item->tables));
