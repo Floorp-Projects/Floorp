@@ -38,6 +38,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Obtener datos ab le area de transferentia</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Inserer le datos in le area de transferentia</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Bloca contento sur ulle pagina</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Discargar files e leger e modificar le chronologia de discargamentos del navigator</string>
     <!-- Description for downloads_open permission. -->
