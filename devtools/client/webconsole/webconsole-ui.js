@@ -387,6 +387,10 @@ class WebConsoleUI {
   }
 
   async stopWatchingNetworkResources() {
+    if (!this.hud) {
+      return;
+    }
+
     await this.hud.resourceCommand.unwatchResources(
       [
         this.hud.resourceCommand.TYPES.NETWORK_EVENT,
