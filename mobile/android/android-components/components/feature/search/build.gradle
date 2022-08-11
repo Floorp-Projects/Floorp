@@ -45,7 +45,10 @@ dependencies {
     implementation project(':service-location')
     implementation project(':support-utils')
     implementation project(':support-ktx')
+    implementation project(':ui-colors')
+    implementation project(':support-base')
 
+    implementation Dependencies.androidx_core_ktx
     implementation Dependencies.kotlin_stdlib
 
     testImplementation project(':support-test')
