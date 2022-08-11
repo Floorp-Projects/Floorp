@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Image recognition test for Chinese</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <img src="image-zh.png" />
+</div>
+
+<pre id="test">
+<script class="testbody">
+  // Performing text recognition in CI can take some time, and test verify runs have
+  // timed out.
+  SimpleTest.requestLongerTimeout(2);
+
+  /**
+   * This test exercises the code path where the image recognition APIs detect the
+   * document language and use it to choose the language.
+   */
+  add_task(async () => {
+    const img = document.querySelector("#content img");
+
+    info("Recognizing the image text, but not as Chinese");
+    {
+      const result = await img.recognizeCurrentImageText();
+      for (const { string } of result) {
+        isnot(string, "火狐", 'The results are (as expected) incorrect, as Chinese was not set as the language.');
+      }
+    }
+
+    info("Setting the document to Chinese.");
+    document.documentElement.setAttribute("lang", "zh-Hans-CN");
+
+    info("Recognizing the image text");
+    {
+      const result = await img.recognizeCurrentImageText();
+      is(result.length, 1, "One word was found.");
+      is(result[0].string, "火狐", "The Chinese characters for Firefox are found.");
+    }
+
+    document.documentElement.setAttribute("lang", "en-US");
+  });
+</script>
+</pre>
+</body>
+</html>

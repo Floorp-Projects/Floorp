@@ -415,7 +415,7 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvEndDragSession(
       const bool& aDoneDrag, const bool& aUserCancelled,
       const mozilla::LayoutDeviceIntPoint& aEndDragPoint,
-      const uint32_t& aKeyModifiers);
+      const uint32_t& aKeyModifiers, const uint32_t& aDropEffect);
 
   mozilla::ipc::IPCResult RecvPush(const nsCString& aScope,
                                    nsIPrincipal* aPrincipal,

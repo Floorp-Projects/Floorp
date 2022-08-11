@@ -389,6 +389,31 @@ const previewers = {
     },
   ],
 
+  Headers: [
+    function(objectActor, grip) {
+      const enumEntries = PropertyIterators.enumHeadersEntries(objectActor);
+
+      grip.preview = {
+        kind: "MapLike",
+        size: enumEntries.size,
+      };
+
+      if (objectActor.hooks.getGripDepth() > 1) {
+        return true;
+      }
+
+      const entries = (grip.preview.entries = []);
+      for (const entry of enumEntries) {
+        entries.push(entry);
+        if (entries.length == OBJECT_PREVIEW_MAX_ITEMS) {
+          break;
+        }
+      }
+
+      return true;
+    },
+  ],
+
   DOMStringMap: [
     function({ obj, hooks }, grip, rawObj) {
       if (!rawObj) {

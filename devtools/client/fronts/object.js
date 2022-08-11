@@ -142,6 +142,7 @@ class ObjectFront extends FrontClassWithSpec(objectSpec) {
   enumEntries() {
     if (
       ![
+        "Headers",
         "Map",
         "WeakMap",
         "Set",

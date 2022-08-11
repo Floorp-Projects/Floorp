@@ -805,7 +805,8 @@ child:
 
     async EndDragSession(bool aDoneDrag, bool aUserCancelled,
                          LayoutDeviceIntPoint aDragEndPoint,
-                         uint32_t aKeyModifiers);
+                         uint32_t aKeyModifiers,
+                         uint32_t aDropEffect);
 
     async DomainSetChanged(uint32_t aSetType, uint32_t aChangeType, nsIURI aDomain);
 
@@ -1237,7 +1238,8 @@ parent:
 
     async CopyFavicon(nsIURI oldURI, nsIURI newURI, bool isPrivate);
 
-    async FindImageText(ShmemImage image) returns (TextRecognitionResultOrError result);
+    async FindImageText(ShmemImage image, nsCString[] languages)
+        returns (TextRecognitionResultOrError result);
 
     /**
      * Notifies the parent about a recording device is starting or shutdown.

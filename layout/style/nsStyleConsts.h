@@ -559,11 +559,17 @@ enum class StyleTextSizeAdjust : uint8_t {
   Auto,
 };
 
-// See nsStyleText
+// See nsStyleVisibility
 enum class StyleTextOrientation : uint8_t {
   Mixed,
   Upright,
   Sideways,
+};
+
+// Whether to emulate -moz-box with flex. See nsStyleVisibility
+enum class StyleMozBoxLayout : uint8_t {
+  Legacy,
+  Flex,
 };
 
 // See nsStyleText

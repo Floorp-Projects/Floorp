@@ -3192,16 +3192,23 @@ mozilla::ipc::IPCResult ContentChild::RecvInvokeDragSession(
 
 mozilla::ipc::IPCResult ContentChild::RecvEndDragSession(
     const bool& aDoneDrag, const bool& aUserCancelled,
-    const LayoutDeviceIntPoint& aDragEndPoint, const uint32_t& aKeyModifiers) {
+    const LayoutDeviceIntPoint& aDragEndPoint, const uint32_t& aKeyModifiers,
+    const uint32_t& aDropEffect) {
   nsCOMPtr<nsIDragService> dragService =
       do_GetService("@mozilla.org/widget/dragservice;1");
   if (dragService) {
-    if (aUserCancelled) {
-      nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
-      if (dragSession) {
+    nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+    if (dragSession) {
+      if (aUserCancelled) {
         dragSession->UserCancelled();
       }
+
+      RefPtr<DataTransfer> dataTransfer = dragSession->GetDataTransfer();
+      if (dataTransfer) {
+        dataTransfer->SetDropEffectInt(aDropEffect);
+      }
     }
+
     static_cast<nsBaseDragService*>(dragService.get())
         ->SetDragEndPoint(aDragEndPoint);
     dragService->EndDragSession(aDoneDrag, aKeyModifiers);
