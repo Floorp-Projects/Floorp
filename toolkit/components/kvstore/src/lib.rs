@@ -174,18 +174,22 @@ impl KeyValueDatabase {
     xpcom_method!(
         write_many => WriteMany(
             callback: *const nsIKeyValueVoidCallback,
-            pairs: *const ThinVec<RefPtr<nsIKeyValuePair>>
+            pairs: *const ThinVec<Option<RefPtr<nsIKeyValuePair>>>
         )
     );
 
     fn write_many(
         &self,
         callback: &nsIKeyValueVoidCallback,
-        pairs: &ThinVec<RefPtr<nsIKeyValuePair>>,
+        pairs: &ThinVec<Option<RefPtr<nsIKeyValuePair>>>,
     ) -> Result<(), nsresult> {
         let mut entries = Vec::with_capacity(pairs.len());
 
         for pair in pairs {
+            let pair = pair
+                .as_ref()
+                .ok_or(nsresult::from(KeyValueError::UnexpectedValue))?;
+
             let mut key = nsCString::new();
             unsafe { pair.GetKey(&mut *key) }.to_result()?;
             if key.is_empty() {

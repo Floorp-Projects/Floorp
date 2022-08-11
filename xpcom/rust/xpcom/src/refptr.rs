@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::interfaces::nsrefcnt;
+use crate::interfaces::{nsISupports, nsrefcnt};
 use libc;
 use nserror::{nsresult, NS_OK};
 use std::cell::Cell;
@@ -27,6 +27,7 @@ pub unsafe trait RefCounted {
 /// A smart pointer holding a RefCounted object. The object itself manages its
 /// own memory. RefPtr will invoke the addref and release methods at the
 /// appropriate times to facilitate the bookkeeping.
+#[repr(transparent)]
 pub struct RefPtr<T: RefCounted + 'static> {
     _ptr: NonNull<T>,
     // Tell dropck that we own an instance of T.
@@ -115,6 +116,18 @@ impl<T: RefCounted + 'static + fmt::Debug> fmt::Debug for RefPtr<T> {
 // vice-versa.
 unsafe impl<T: RefCounted + 'static + Send + Sync> Send for RefPtr<T> {}
 unsafe impl<T: RefCounted + 'static + Send + Sync> Sync for RefPtr<T> {}
+
+macro_rules! assert_layout_eq {
+    ($T:ty, $U:ty) => {
+        const _: [(); std::mem::size_of::<$T>()] = [(); std::mem::size_of::<$U>()];
+        const _: [(); std::mem::align_of::<$T>()] = [(); std::mem::align_of::<$U>()];
+    };
+}
+
+// Assert that `RefPtr<nsISupports>` has the correct memory layout.
+assert_layout_eq!(RefPtr<nsISupports>, *const nsISupports);
+// Assert that the null-pointer optimization applies to `RefPtr<nsISupports>`.
+assert_layout_eq!(RefPtr<nsISupports>, Option<RefPtr<nsISupports>>);
 
 /// A wrapper that binds a RefCounted value to its original thread,
 /// preventing retrieval from other threads and panicking if the value
