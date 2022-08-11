@@ -28,6 +28,7 @@ use cssparser::{AtRuleParser, DeclarationListParser, DeclarationParser, Parser};
 use cssparser::{CowRcStr, SourceLocation};
 use selectors::parser::SelectorParseErrorKind;
 use std::fmt::{self, Write};
+use style_traits::values::SequenceWriter;
 use style_traits::{Comma, CssWriter, OneOrMoreSeparated, ParseError};
 use style_traits::{StyleParseErrorKind, ToCss};
 
@@ -46,49 +47,20 @@ impl OneOrMoreSeparated for Source {
     type S = Comma;
 }
 
-/// Keywords for the font-face src descriptor's format() function.
-/// ('None' and 'Unknown' are for internal use in gfx, not exposed to CSS.)
-#[derive(Clone, Copy, Debug, Eq, Parse, PartialEq, ToCss, ToShmem)]
-#[repr(u8)]
-#[allow(missing_docs)]
-pub enum FontFaceSourceFormatKeyword {
-    #[css(skip)]
-    None,
-    Collection,
-    EmbeddedOpentype,
-    Opentype,
-    Svg,
-    Truetype,
-    Woff,
-    Woff2,
-    #[css(skip)]
-    Unknown,
-}
-
 /// A POD representation for Gecko. All pointers here are non-owned and as such
 /// can't outlive the rule they came from, but we can't enforce that via C++.
 ///
 /// All the strings are of course utf8.
 #[cfg(feature = "gecko")]
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(u8)]
 #[allow(missing_docs)]
 pub enum FontFaceSourceListComponent {
     Url(*const crate::gecko::url::CssUrl),
     Local(*mut crate::gecko_bindings::structs::nsAtom),
-    FormatHintKeyword(FontFaceSourceFormatKeyword),
-    FormatHintString {
+    FormatHint {
         length: usize,
         utf8_bytes: *const u8,
     },
-}
-
-#[derive(Clone, Debug, Eq, PartialEq, ToCss, ToShmem)]
-#[repr(u8)]
-#[allow(missing_docs)]
-pub enum FontFaceSourceFormat {
-    Keyword(FontFaceSourceFormatKeyword),
-    String(String),
 }
 
 /// A `UrlSource` represents a font-face source that has been specified with a
@@ -100,8 +72,8 @@ pub enum FontFaceSourceFormat {
 pub struct UrlSource {
     /// The specified url.
     pub url: SpecifiedUrl,
-    /// The format hint specified with the `format()` function, if present.
-    pub format_hint: Option<FontFaceSourceFormat>,
+    /// The format hints specified with the `format()` function.
+    pub format_hints: Vec<String>,
 }
 
 impl ToCss for UrlSource {
@@ -110,9 +82,14 @@ impl ToCss for UrlSource {
         W: fmt::Write,
     {
         self.url.to_css(dest)?;
-        if let Some(hint) = &self.format_hint {
+        if !self.format_hints.is_empty() {
             dest.write_str(" format(")?;
-            hint.to_css(dest)?;
+            {
+                let mut writer = SequenceWriter::new(dest, ", ");
+                for hint in self.format_hints.iter() {
+                    writer.item(hint)?;
+                }
+            }
             dest.write_char(')')?;
         }
         Ok(())
@@ -357,11 +334,14 @@ impl<'a> FontFace<'a> {
                 .rev()
                 .filter(|source| {
                     if let Source::Url(ref url_source) = **source {
+                        let hints = &url_source.format_hints;
                         // We support only opentype fonts and truetype is an alias for
                         // that format. Sources without format hints need to be
                         // downloaded in case we support them.
-                        url_source.format_hint.as_ref().map_or(true,
-                            |hint| hint == "truetype" || hint == "opentype" || hint == "woff")
+                        hints.is_empty() ||
+                            hints.iter().any(|hint| {
+                                hint == "truetype" || hint == "opentype" || hint == "woff"
+                            })
                     } else {
                         true
                     }
@@ -413,25 +393,20 @@ impl Parse for Source {
         let url = SpecifiedUrl::parse(context, input)?;
 
         // Parsing optional format()
-        let format_hint = if input
+        let format_hints = if input
             .try_parse(|input| input.expect_function_matching("format"))
             .is_ok()
         {
             input.parse_nested_block(|input| {
-                if let Ok(kw) = input.try_parse(FontFaceSourceFormatKeyword::parse) {
-                    Ok(Some(FontFaceSourceFormat::Keyword(kw)))
-                } else {
-                    let s = input.expect_string()?.as_ref().to_owned();
-                    Ok(Some(FontFaceSourceFormat::String(s)))
-                }
+                input.parse_comma_separated(|input| Ok(input.expect_string()?.as_ref().to_owned()))
             })?
         } else {
-            None
+            vec![]
         };
 
         Ok(Source::Url(UrlSource {
             url: url,
-            format_hint: format_hint,
+            format_hints: format_hints,
         }))
     }
 }

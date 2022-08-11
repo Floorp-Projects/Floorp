@@ -503,10 +503,9 @@ FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
           face->mLocalName.Append(nsAtomCString(atom));
           face->mSourceType = gfxFontFaceSrc::eSourceType_Local;
           face->mURI = nullptr;
-          face->mFormatHint = StyleFontFaceSourceFormatKeyword::None;
+          face->mFormatFlags = 0;
           break;
         }
-
         case StyleFontFaceSourceListComponent::Tag::Url: {
           face->mSourceType = gfxFontFaceSrc::eSourceType_URL;
           const StyleCssUrl* url = component.AsUrl();
@@ -527,72 +526,58 @@ FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
           }
 
           face->mLocalName.Truncate();
-          face->mFormatHint = StyleFontFaceSourceFormatKeyword::None;
+          face->mFormatFlags = 0;
 
-          if (i + 1 < len) {
-            // Check for a format hint.
-            const auto& next = sourceListComponents[i + 1];
-            switch (next.tag) {
-              case StyleFontFaceSourceListComponent::Tag::FormatHintKeyword:
-                face->mFormatHint = next.format_hint_keyword._0;
-                i++;
-                break;
-              case StyleFontFaceSourceListComponent::Tag::FormatHintString: {
-                nsDependentCSubstring valueString(
-                    reinterpret_cast<const char*>(
-                        next.format_hint_string.utf8_bytes),
-                    next.format_hint_string.length);
-
-                if (valueString.LowerCaseEqualsASCII("woff")) {
-                  face->mFormatHint = StyleFontFaceSourceFormatKeyword::Woff;
-                } else if (valueString.LowerCaseEqualsASCII("woff2")) {
-                  face->mFormatHint = StyleFontFaceSourceFormatKeyword::Woff2;
-                } else if (valueString.LowerCaseEqualsASCII("opentype")) {
-                  face->mFormatHint =
-                      StyleFontFaceSourceFormatKeyword::Opentype;
-                } else if (valueString.LowerCaseEqualsASCII("truetype")) {
-                  face->mFormatHint =
-                      StyleFontFaceSourceFormatKeyword::Truetype;
-                } else if (valueString.LowerCaseEqualsASCII("truetype-aat")) {
-                  face->mFormatHint =
-                      StyleFontFaceSourceFormatKeyword::Truetype;
-                } else if (valueString.LowerCaseEqualsASCII(
-                               "embedded-opentype")) {
-                  face->mFormatHint =
-                      StyleFontFaceSourceFormatKeyword::EmbeddedOpentype;
-                } else if (valueString.LowerCaseEqualsASCII("svg")) {
-                  face->mFormatHint = StyleFontFaceSourceFormatKeyword::Svg;
-                } else if (StaticPrefs::layout_css_font_variations_enabled()) {
-                  // Non-standard values that Firefox accepted, for back-compat;
-                  // these are superseded by the tech() function.
-                  if (valueString.LowerCaseEqualsASCII("woff-variations")) {
-                    face->mFormatHint = StyleFontFaceSourceFormatKeyword::Woff;
-                  } else if (valueString.LowerCaseEqualsASCII(
-                                 "woff2-variations")) {
-                    face->mFormatHint = StyleFontFaceSourceFormatKeyword::Woff2;
-                  } else if (valueString.LowerCaseEqualsASCII(
-                                 "opentype-variations")) {
-                    face->mFormatHint =
-                        StyleFontFaceSourceFormatKeyword::Opentype;
-                  } else if (valueString.LowerCaseEqualsASCII(
-                                 "truetype-variations")) {
-                    face->mFormatHint =
-                        StyleFontFaceSourceFormatKeyword::Truetype;
-                  }
-                } else {
-                  // unknown format specified, mark to distinguish from the
-                  // case where no format hints are specified
-                  face->mFormatHint = StyleFontFaceSourceFormatKeyword::Unknown;
-                }
-                i++;
-                break;
-              }
-              case StyleFontFaceSourceListComponent::Tag::Local:
-              case StyleFontFaceSourceListComponent::Tag::Url:
-                break;
+          while (i + 1 < len) {
+            const auto& maybeFontFormat = sourceListComponents[i + 1];
+            if (maybeFontFormat.tag !=
+                StyleFontFaceSourceListComponent::Tag::FormatHint) {
+              break;
             }
-          }
 
+            nsDependentCSubstring valueString(
+                reinterpret_cast<const char*>(
+                    maybeFontFormat.format_hint.utf8_bytes),
+                maybeFontFormat.format_hint.length);
+
+            if (valueString.LowerCaseEqualsASCII("woff")) {
+              face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_WOFF;
+            } else if (valueString.LowerCaseEqualsASCII("woff2")) {
+              face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_WOFF2;
+            } else if (valueString.LowerCaseEqualsASCII("opentype")) {
+              face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_OPENTYPE;
+            } else if (valueString.LowerCaseEqualsASCII("truetype")) {
+              face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE;
+            } else if (valueString.LowerCaseEqualsASCII("truetype-aat")) {
+              face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE_AAT;
+            } else if (valueString.LowerCaseEqualsASCII("embedded-opentype")) {
+              face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_EOT;
+            } else if (valueString.LowerCaseEqualsASCII("svg")) {
+              face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_SVG;
+            } else if (StaticPrefs::layout_css_font_variations_enabled() &&
+                       valueString.LowerCaseEqualsASCII("woff-variations")) {
+              face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_WOFF_VARIATIONS;
+            } else if (StaticPrefs::layout_css_font_variations_enabled() &&
+                       valueString.LowerCaseEqualsASCII("woff2-variations")) {
+              face->mFormatFlags |=
+                  gfxUserFontSet::FLAG_FORMAT_WOFF2_VARIATIONS;
+            } else if (StaticPrefs::layout_css_font_variations_enabled() &&
+                       valueString.LowerCaseEqualsASCII(
+                           "opentype-variations")) {
+              face->mFormatFlags |=
+                  gfxUserFontSet::FLAG_FORMAT_OPENTYPE_VARIATIONS;
+            } else if (StaticPrefs::layout_css_font_variations_enabled() &&
+                       valueString.LowerCaseEqualsASCII(
+                           "truetype-variations")) {
+              face->mFormatFlags |=
+                  gfxUserFontSet::FLAG_FORMAT_TRUETYPE_VARIATIONS;
+            } else {
+              // unknown format specified, mark to distinguish from the
+              // case where no format hints are specified
+              face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_UNKNOWN;
+            }
+            i++;
+          }
           if (!face->mURI) {
             // if URI not valid, omit from src array
             srcArray.RemoveLastElement();
@@ -601,9 +586,7 @@ FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
           }
           break;
         }
-
-        case StyleFontFaceSourceListComponent::Tag::FormatHintKeyword:
-        case StyleFontFaceSourceListComponent::Tag::FormatHintString:
+        case StyleFontFaceSourceListComponent::Tag::FormatHint:
           MOZ_ASSERT_UNREACHABLE(
               "Should always come after a URL source, and be consumed already");
           break;
