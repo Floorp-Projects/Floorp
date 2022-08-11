@@ -2069,7 +2069,7 @@ class FunctionCompiler {
   bool catchableCall(const CallSiteDesc& desc, const CalleeDesc& callee,
                      const MWasmCallBase::Args& args,
                      const ArgTypeVector& argTypes,
-                     MDefinition* index = nullptr) {
+                     MDefinition* indexOrRef = nullptr) {
     MWasmCallTryDesc tryDesc;
     if (!beginTryCall(&tryDesc)) {
       return false;
@@ -2079,11 +2079,11 @@ class FunctionCompiler {
     if (tryDesc.inTry) {
       ins = MWasmCallCatchable::New(alloc(), desc, callee, args,
                                     StackArgAreaSizeUnaligned(argTypes),
-                                    tryDesc, index);
+                                    tryDesc, indexOrRef);
     } else {
-      ins =
-          MWasmCallUncatchable::New(alloc(), desc, callee, args,
-                                    StackArgAreaSizeUnaligned(argTypes), index);
+      ins = MWasmCallUncatchable::New(alloc(), desc, callee, args,
+                                      StackArgAreaSizeUnaligned(argTypes),
+                                      indexOrRef);
     }
     if (!ins) {
       return false;
@@ -2221,6 +2221,28 @@ class FunctionCompiler {
 
     return def ? collectUnaryCallResult(builtin.retType, def) : true;
   }
+
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+  bool callRef(const FuncType& funcType, MDefinition* ref,
+               uint32_t lineOrBytecode, const CallCompileState& call,
+               DefVector* results) {
+    if (inDeadCode()) {
+      return true;
+    }
+
+    CalleeDesc callee = CalleeDesc::wasmFuncRef();
+
+    CallSiteDesc desc(lineOrBytecode, CallSiteDesc::FuncRef);
+    ArgTypeVector args(funcType);
+    ResultType resultType = ResultType::Vector(funcType.results());
+
+    if (!catchableCall(desc, callee, call.regArgs_, args, ref)) {
+      return false;
+    }
+    return collectCallResults(resultType, call.stackResultArea_, results);
+  }
+
+#endif  // ENABLE_WASM_FUNCTION_REFERENCES
 
   /*********************************************** Control flow generation */
 
@@ -5744,6 +5766,40 @@ static bool EmitBrOnNonNull(FunctionCompiler& f) {
   return f.brOnNonNull(relativeDepth, values, type, condition);
 }
 
+static bool EmitCallRef(FunctionCompiler& f) {
+  uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
+
+  const FuncType* funcType;
+  bool maybeNull;
+  MDefinition* callee;
+  DefVector args;
+
+  if (!f.iter().readCallRef(&funcType, &maybeNull, &callee, &args)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  if (maybeNull && !f.refAsNonNull(callee)) {
+    return false;
+  }
+
+  CallCompileState call;
+  if (!EmitCallArgs(f, *funcType, args, &call)) {
+    return false;
+  }
+
+  DefVector results;
+  if (!f.callRef(*funcType, callee, lineOrBytecode, call, &results)) {
+    return false;
+  }
+
+  f.iter().setResults(results.length(), results);
+  return true;
+}
+
 #endif  // ENABLE_WASM_FUNCTION_REFERENCES
 
 static bool EmitIntrinsic(FunctionCompiler& f) {
@@ -6289,6 +6345,12 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           return f.iter().unrecognizedOpcode(&op);
         }
         CHECK(EmitBrOnNonNull(f));
+      }
+      case uint16_t(Op::CallRef): {
+        if (!f.moduleEnv().functionReferencesEnabled()) {
+          return f.iter().unrecognizedOpcode(&op);
+        }
+        CHECK(EmitCallRef(f));
       }
 #endif
 

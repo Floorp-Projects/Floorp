@@ -8079,7 +8079,13 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
       switchRealm = false;
       break;
     case wasm::CalleeDesc::FuncRef:
-      MOZ_CRASH("NYI");
+      // Register reloading and realm switching are handled dynamically inside
+      // wasmCallRef.  There are two return offsets, one for each call
+      // instruction (fast path and slow path).
+      masm.wasmCallRef(desc, callee, &retOffset, &secondRetOffset);
+      reloadRegs = false;
+      switchRealm = false;
+      break;
   }
 
   // Note the assembler offset for the associated LSafePoint.

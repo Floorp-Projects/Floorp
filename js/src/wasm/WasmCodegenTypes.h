@@ -705,6 +705,7 @@ class CalleeDesc {
     MOZ_ASSERT(which_ == Builtin || which_ == BuiltinInstanceMethod);
     return u.builtin_;
   }
+  bool isFuncRef() const { return which_ == FuncRef; }
 };
 
 WASM_DECLARE_CACHEABLE_POD(CalleeDesc);

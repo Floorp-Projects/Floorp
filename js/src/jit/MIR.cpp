@@ -5759,7 +5759,7 @@ MWasmCallCatchable* MWasmCallCatchable::New(TempAllocator& alloc,
                                             const Args& args,
                                             uint32_t stackArgAreaSizeUnaligned,
                                             const MWasmCallTryDesc& tryDesc,
-                                            MDefinition* tableIndex) {
+                                            MDefinition* tableIndexOrRef) {
   MOZ_ASSERT(tryDesc.inTry);
 
   MWasmCallCatchable* call = new (alloc) MWasmCallCatchable(
@@ -5768,8 +5768,8 @@ MWasmCallCatchable* MWasmCallCatchable::New(TempAllocator& alloc,
   call->setSuccessor(FallthroughBranchIndex, tryDesc.fallthroughBlock);
   call->setSuccessor(PrePadBranchIndex, tryDesc.prePadBlock);
 
-  MOZ_ASSERT_IF(callee.isTable(), tableIndex);
-  if (!call->initWithArgs(alloc, call, args, tableIndex)) {
+  MOZ_ASSERT_IF(callee.isTable() || callee.isFuncRef(), tableIndexOrRef);
+  if (!call->initWithArgs(alloc, call, args, tableIndexOrRef)) {
     return nullptr;
   }
 
@@ -5779,12 +5779,12 @@ MWasmCallCatchable* MWasmCallCatchable::New(TempAllocator& alloc,
 MWasmCallUncatchable* MWasmCallUncatchable::New(
     TempAllocator& alloc, const wasm::CallSiteDesc& desc,
     const wasm::CalleeDesc& callee, const Args& args,
-    uint32_t stackArgAreaSizeUnaligned, MDefinition* tableIndex) {
+    uint32_t stackArgAreaSizeUnaligned, MDefinition* tableIndexOrRef) {
   MWasmCallUncatchable* call =
       new (alloc) MWasmCallUncatchable(desc, callee, stackArgAreaSizeUnaligned);
 
-  MOZ_ASSERT_IF(callee.isTable(), tableIndex);
-  if (!call->initWithArgs(alloc, call, args, tableIndex)) {
+  MOZ_ASSERT_IF(callee.isTable() || callee.isFuncRef(), tableIndexOrRef);
+  if (!call->initWithArgs(alloc, call, args, tableIndexOrRef)) {
     return nullptr;
   }
 
