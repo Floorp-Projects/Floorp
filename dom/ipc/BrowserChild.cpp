@@ -1035,7 +1035,8 @@ nsresult BrowserChild::CloneDocumentTreeIntoSelf(
 
   RefPtr<Document> clone;
   {
-    AutoPrintEventDispatcher dispatcher(*sourceDocument);
+    AutoPrintEventDispatcher dispatcher(*sourceDocument, printSettings,
+                                        /* aIsTop = */ false);
     nsAutoScriptBlocker scriptBlocker;
     bool hasInProcessCallbacks = false;
     clone = sourceDocument->CreateStaticClone(ourDocShell, cv, printSettings,
@@ -2534,13 +2535,14 @@ mozilla::ipc::IPCResult BrowserChild::RecvPrint(
   printSettingsSvc->DeserializeToPrintSettings(aPrintData, printSettings);
   {
     IgnoredErrorResult rv;
-    outerWindow->Print(
-        printSettings,
-        static_cast<RemotePrintJobChild*>(aPrintData.remotePrintJobChild()),
-        /* aListener = */ nullptr,
-        /* aWindowToCloneInto = */ nullptr, nsGlobalWindowOuter::IsPreview::No,
-        nsGlobalWindowOuter::IsForWindowDotPrint::No,
-        /* aPrintPreviewCallback = */ nullptr, rv);
+    RefPtr printJob =
+        static_cast<RemotePrintJobChild*>(aPrintData.remotePrintJobChild());
+    outerWindow->Print(printSettings, printJob,
+                       /* aListener = */ nullptr,
+                       /* aWindowToCloneInto = */ nullptr,
+                       nsGlobalWindowOuter::IsPreview::No,
+                       nsGlobalWindowOuter::IsForWindowDotPrint::No,
+                       /* aPrintPreviewCallback = */ nullptr, rv);
     if (NS_WARN_IF(rv.Failed())) {
       return IPC_OK();
     }

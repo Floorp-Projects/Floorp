@@ -595,14 +595,15 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                    nsAString& aReturn, nsIPrincipal& aSubjectPrincipal,
                    mozilla::ErrorResult& aError);
 
-  void PrintOuter(mozilla::ErrorResult& aError);
+  MOZ_CAN_RUN_SCRIPT void PrintOuter(mozilla::ErrorResult& aError);
 
   enum class IsPreview : bool { No, Yes };
   enum class IsForWindowDotPrint : bool { No, Yes };
-  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> Print(
-      nsIPrintSettings*, mozilla::layout::RemotePrintJobChild* aRemotePrintJob,
-      nsIWebProgressListener*, nsIDocShell*, IsPreview, IsForWindowDotPrint,
-      PrintPreviewResolver&&, mozilla::ErrorResult&);
+  MOZ_CAN_RUN_SCRIPT mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder>
+  Print(nsIPrintSettings*,
+        mozilla::layout::RemotePrintJobChild* aRemotePrintJob,
+        nsIWebProgressListener*, nsIDocShell*, IsPreview, IsForWindowDotPrint,
+        PrintPreviewResolver&&, mozilla::ErrorResult&);
   mozilla::dom::Selection* GetSelectionOuter();
   already_AddRefed<mozilla::dom::Selection> GetSelection() override;
   nsScreen* GetScreen();
