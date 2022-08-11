@@ -134,7 +134,8 @@ bool DebugFrame::updateReturnJSValue(JSContext* cx) {
       MutableHandleValue::fromMarkedLocation(&cachedReturnJSValue_);
   rval.setUndefined();
   flags_.hasCachedReturnJSValue = true;
-  ResultType resultType = instance()->debug().debugGetResultType(funcIndex());
+  ResultType resultType = ResultType::Vector(
+      instance()->metadata().debugFuncType(funcIndex()).results());
   Maybe<char*> stackResultsLoc;
   if (ABIResultIter::HasStackResults(resultType)) {
     stackResultsLoc = Some(static_cast<char*>(stackResultsPointer_));

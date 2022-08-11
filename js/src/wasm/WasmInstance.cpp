@@ -1404,7 +1404,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
 
   // Add debug filtering table.
   if (metadata().debugEnabled) {
-    size_t numFuncs = metadata().debugFuncReturnTypes.length();
+    size_t numFuncs = metadata().debugNumFuncs();
     size_t numWords = std::max<size_t>((numFuncs + 31) / 32, 1);
     debugFilter_ = (uint32_t*)js_calloc(numWords, sizeof(uint32_t));
     if (!debugFilter_) {
