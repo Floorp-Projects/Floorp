@@ -28,7 +28,7 @@ use style::data::{self, ElementStyles};
 use style::dom::{ShowSubtreeData, TDocument, TElement, TNode};
 use style::driver;
 use style::error_reporting::{ContextualParseError, ParseErrorReporter};
-use style::font_face::{self, FontFaceSourceListComponent, FontFaceSourceFormat, Source};
+use style::font_face::{self, FontFaceSourceListComponent, Source};
 use style::font_metrics::{get_metrics_provider_for_product, FontMetricsProvider};
 use style::gecko::data::{GeckoStyleSheet, PerDocumentStyleData, PerDocumentStyleDataImpl};
 use style::gecko::restyle_damage::GeckoRestyleDamage;
@@ -3253,7 +3253,8 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetSources(
         };
         let len = sources.iter().fold(0, |acc, src| {
             acc + match *src {
-                Source::Url(ref url) => if url.format_hint.is_some() { 2 } else { 1 },
+                // Each format hint takes one position in the array of mSrc.
+                Source::Url(ref url) => url.format_hints.len() + 1,
                 Source::Local(_) => 1,
             }
         });
@@ -3271,16 +3272,11 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetSources(
                 match *source {
                     Source::Url(ref url) => {
                         set_next(FontFaceSourceListComponent::Url(&url.url));
-                        if let Some(hint) = &url.format_hint {
-                            match hint {
-                                FontFaceSourceFormat::Keyword(kw) =>
-                                    set_next(FontFaceSourceListComponent::FormatHintKeyword(*kw)),
-                                FontFaceSourceFormat::String(s) =>
-                                    set_next(FontFaceSourceListComponent::FormatHintString {
-                                        length: s.len(),
-                                        utf8_bytes: s.as_ptr(),
-                                }),
-                            }
+                        for hint in url.format_hints.iter() {
+                            set_next(FontFaceSourceListComponent::FormatHint {
+                                length: hint.len(),
+                                utf8_bytes: hint.as_ptr(),
+                            });
                         }
                     },
                     Source::Local(ref name) => {
