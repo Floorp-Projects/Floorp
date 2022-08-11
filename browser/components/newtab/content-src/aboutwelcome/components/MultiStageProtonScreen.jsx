@@ -57,12 +57,6 @@ export class ProtonScreen extends React.PureComponent {
     this.mainContentHeader.focus();
   }
 
-  getLogoStyle({ imageURL, height }) {
-    let style = { height };
-    style.backgroundImage = imageURL ? `url(${imageURL})` : null;
-    return style;
-  }
-
   getScreenClassName(
     isFirstCenteredScreen,
     isLastCenteredScreen,
@@ -72,6 +66,29 @@ export class ProtonScreen extends React.PureComponent {
     return `${isFirstCenteredScreen ? `dialog-initial` : ``} ${
       isLastCenteredScreen ? `dialog-last` : ``
     } ${includeNoodles ? `with-noodles` : ``} ${screenClass}`;
+  }
+
+  renderLogo({
+    imageURL = "chrome://branding/content/about-logo.svg",
+    alt = "",
+    darkModeImageURL,
+    height,
+  }) {
+    return (
+      <picture className="logo-container">
+        <source
+          srcSet={darkModeImageURL}
+          media="(prefers-color-scheme: dark)"
+        />
+        <img
+          className="brand-logo"
+          style={{ height }}
+          src={imageURL}
+          alt={alt}
+          role={alt ? null : "presentation"}
+        />
+      </picture>
+    );
   }
 
   renderContentTiles() {
@@ -228,12 +245,9 @@ export class ProtonScreen extends React.PureComponent {
             }
           >
             {content.dismiss_button ? this.renderDismissButton() : null}
-            {content.logo ? (
-              <div
-                className={`brand-logo`}
-                style={this.getLogoStyle(content.logo)}
-              />
-            ) : null}
+
+            {content.logo ? this.renderLogo(content.logo) : null}
+
             <div className={`${isRtamo ? "rtamo-icon" : "hide-rtamo-icon"}`}>
               <img
                 className={`${isTheme ? "rtamo-theme-icon" : ""}`}
