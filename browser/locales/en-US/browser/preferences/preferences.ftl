@@ -1460,6 +1460,7 @@ tabbar-on-bottom =
 treestyletabSettings-l10 = Tree Style vertical tab settings
 treestyletab-Settings = 
  .label = Expand when mouse focus
+treestyletab-open-option = TreeStyleTab Settings
 
 bookmarks-bar-settings = Bookmark Bar Settings (Can`t be used in parallel)
 bookmarks-focus-mode =
@@ -1467,7 +1468,8 @@ bookmarks-focus-mode =
 bookmarks-bottom-mode =
  .label = Bookmark bar at the bottom of the browser
 
-material-effect = Allow Mica for everyone to modify the browser design
+material-effect =
+ .label = Allow Mica for everyone to modify the browser design
 other-preference = Other Preferences
 
 enable-userscript = 
@@ -1549,15 +1551,19 @@ fingerprint-header = Resist Fingerprinting & IP address leak
 block-fingerprint = Fingerprinting is the process by which a website collects personal data and device information. This section provides settings to further increase this protection beyond the default blocker.
 enable-firefox-fingerprint-protections = Enable strong protection against fingerprinting
 about-firefox-fingerprint-protection = Enabling protection by Firefox includes forced light mode, disabling some APIs, etc. Some sites may be broken.
-fingerprint-Protection = Anti-fingerprinting protections
-html5-canvas-prompt-settings = Automatically approve access confirmation prompts for HTML5 image data
+fingerprint-Protection =
+ .label =  Anti-fingerprinting protections
+html5-canvas-prompt-settings =
+ .label =  Automatically approve access confirmation prompts for HTML5 image data
 canvas-prompt = Automatically reject the canvas-reading prompt
-disable-webgl = Disable WebGL
+disable-webgl =
+ .label =  Disable WebGL
 about-webgl = WebGL is a Javascript API used to render graphics, which can be used to identify GPU.
 Canvas-Blocker = Canvas Blocker
 about-CB = This add-on spoofs data used by fingerprinting techniques.
 WebRTC-connection = WebRTC is a standard that provides real-time calling. If you disable this setting, you will not be able to use Discord, etc.
-WebRTC = Enable WebRTC Connection
+WebRTC = 
+ .label = Enable WebRTC Connection
 
 ## download mgr
 download-notification-preferences = Download Notification

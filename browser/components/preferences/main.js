@@ -3847,7 +3847,14 @@ window.setTimeout(function(){
     const addon = await AddonManager.getAddonByID("{036a55b4-5e72-4d05-a06c-cba2dfcc134a}");
     await window.open(addon.optionsURL, '_blank');
   }
-  const el = document.getElementById("translateoption");
-  console.log(el)
+  let el = document.getElementById("translateoption");
   el.addEventListener("click", opentranslateroption, false);
-}, 2000);
+
+  async function opentreestyletaboption(){
+    const addon = await AddonManager.getAddonByID("treestyletab@piro.sakura.ne.jp");
+    await window.open(addon.optionsURL, '_blank');
+  }
+  el = document.getElementById("treestyletaboption");
+  console.log(el)
+  el.addEventListener("click", opentreestyletaboption, false);
+}, 4000);

@@ -138,6 +138,11 @@
 
     <checkbox preference="floorp.Tree-type.verticaltab.optimization" 
               id="treestyletabSettings" data-l10n-id="treestyletab-Settings"/>
+    <hbox>
+     <description flex="1" data-l10n-id="treestyletab-open-option"/>
+     <button data-l10n-id="click-to-option" is="highlightable-button" 
+             id="treestyletaboption" class="accessory-button"/>
+    </hbox>
 </groupbox>
 
 <hbox id="languageAndAppearanceCategory"
@@ -196,12 +201,13 @@
     </radiogroup>
 
   <label><html:h2 data-l10n-id="other-preference"/></label>
-
+  #ifdef XP_WIN
   <hbox>
-    <description data-l10n-id="material-effect"></description>
-    <checkbox preference="floorp.material.effect.enable"/>
+    <checkbox preference="floorp.material.effect.enable"
+              id="micaforeveryone" data-l10n-id="material-effect"/>
     <label class="learnMore" is="text-link" href="https://support.ablaze.one/floorp/452/" data-l10n-id="do-not-track-learn-more"></label>
   </hbox>
+  #endif
 
     <label>
       <html:h2 data-l10n-id="preferences-theme-appearance-header"/>
