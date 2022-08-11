@@ -1274,7 +1274,7 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvReportSecurityMessage(
 }
 
 mozilla::ipc::IPCResult HttpChannelChild::RecvRedirect1Begin(
-    const uint32_t& aRegistrarId, nsIURI* aNewUri,
+    const uint32_t& aRegistrarId, const URIParams& aNewUri,
     const uint32_t& aNewLoadFlags, const uint32_t& aRedirectFlags,
     const ParentLoadInfoForwarderArgs& aLoadInfoForwarder,
     const nsHttpResponseHead& aResponseHead,
@@ -1290,12 +1290,11 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvRedirect1Begin(
   MOZ_ASSERT(!nsHttpResponseHead(aResponseHead).HasHeader(nsHttp::Set_Cookie));
 
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<HttpChannelChild>(this), aRegistrarId,
-             newUri = RefPtr{aNewUri}, aNewLoadFlags, aRedirectFlags,
-             aLoadInfoForwarder, aResponseHead,
+      this, [self = UnsafePtr<HttpChannelChild>(this), aRegistrarId, aNewUri,
+             aNewLoadFlags, aRedirectFlags, aLoadInfoForwarder, aResponseHead,
              aSecurityInfoSerialization = nsCString(aSecurityInfoSerialization),
              aChannelId, aTiming]() {
-        self->Redirect1Begin(aRegistrarId, newUri, aNewLoadFlags,
+        self->Redirect1Begin(aRegistrarId, aNewUri, aNewLoadFlags,
                              aRedirectFlags, aLoadInfoForwarder, aResponseHead,
                              aSecurityInfoSerialization, aChannelId, aTiming);
       }));
@@ -1343,7 +1342,7 @@ nsresult HttpChannelChild::SetupRedirect(nsIURI* uri,
 }
 
 void HttpChannelChild::Redirect1Begin(
-    const uint32_t& registrarId, nsIURI* newOriginalURI,
+    const uint32_t& registrarId, const URIParams& newOriginalURI,
     const uint32_t& newLoadFlags, const uint32_t& redirectFlags,
     const ParentLoadInfoForwarderArgs& loadInfoForwarder,
     const nsHttpResponseHead& responseHead,
@@ -1353,9 +1352,10 @@ void HttpChannelChild::Redirect1Begin(
 
   LOG(("HttpChannelChild::Redirect1Begin [this=%p]\n", this));
 
-  MOZ_ASSERT(newOriginalURI, "newOriginalURI should not be null");
-
   ipc::MergeParentLoadInfoForwarder(loadInfoForwarder, mLoadInfo);
+
+  nsCOMPtr<nsIURI> uri = DeserializeURI(newOriginalURI);
+
   ResourceTimingStructArgsToTimingsStruct(timing, mTransactionTimings);
 
   if (profiler_thread_is_being_profiled_for_markers()) {
@@ -1370,8 +1370,8 @@ void HttpChannelChild::Redirect1Begin(
         0, kCacheUnknown, mLoadInfo->GetInnerWindowID(),
         mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0,
         &mTransactionTimings, std::move(mSource),
-        Some(nsDependentCString(contentType.get())), newOriginalURI,
-        redirectFlags, channelId);
+        Some(nsDependentCString(contentType.get())), uri, redirectFlags,
+        channelId);
   }
 
   if (!securityInfoSerialization.IsEmpty()) {
@@ -1382,7 +1382,7 @@ void HttpChannelChild::Redirect1Begin(
   }
 
   nsCOMPtr<nsIChannel> newChannel;
-  rv = SetupRedirect(newOriginalURI, &responseHead, redirectFlags,
+  rv = SetupRedirect(uri, &responseHead, redirectFlags,
                      getter_AddRefs(newChannel));
 
   if (NS_SUCCEEDED(rv)) {
@@ -1688,9 +1688,8 @@ NS_IMETHODIMP
 HttpChannelChild::OnRedirectVerifyCallback(nsresult aResult) {
   LOG(("HttpChannelChild::OnRedirectVerifyCallback [this=%p]\n", this));
   MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIURI> redirectURI;
-
-  DebugOnly<nsresult> rv;
+  Maybe<URIParams> redirectURI;
+  nsresult rv;
 
   nsCOMPtr<nsIHttpChannel> newHttpChannel =
       do_QueryInterface(mRedirectChannelChild);
@@ -1721,13 +1720,16 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult aResult) {
   nsCOMPtr<nsIHttpChannelChild> newHttpChannelChild =
       do_QueryInterface(mRedirectChannelChild);
   if (newHttpChannelChild && NS_SUCCEEDED(aResult)) {
-    MOZ_ASSERT(NS_SUCCEEDED(newHttpChannelChild->AddCookiesToRequest()));
-
-    MOZ_ASSERT(NS_SUCCEEDED(
-        newHttpChannelChild->GetClientSetRequestHeaders(&headerTuples)));
-
+    rv = newHttpChannelChild->AddCookiesToRequest();
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    rv = newHttpChannelChild->GetClientSetRequestHeaders(&headerTuples);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
     newHttpChannelChild->GetClientSetCorsPreflightParameters(corsPreflightArgs);
   }
+
+  /* If the redirect was canceled, bypass OMR and send an empty API
+   * redirect URI */
+  SerializeURI(nullptr, redirectURI);
 
   if (NS_SUCCEEDED(aResult)) {
     // Note: this is where we would notify "http-on-modify-response" observers.
@@ -1740,8 +1742,14 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult aResult) {
     nsCOMPtr<nsIHttpChannelInternal> newHttpChannelInternal =
         do_QueryInterface(mRedirectChannelChild);
     if (newHttpChannelInternal) {
-      Unused << newHttpChannelInternal->GetApiRedirectToURI(
-          getter_AddRefs(redirectURI));
+      nsCOMPtr<nsIURI> apiRedirectURI;
+      rv = newHttpChannelInternal->GetApiRedirectToURI(
+          getter_AddRefs(apiRedirectURI));
+      if (NS_SUCCEEDED(rv) && apiRedirectURI) {
+        /* If there was an API redirect of this channel, we need to send it
+         * up here, since it can't be sent via SendAsyncOpen. */
+        SerializeURI(apiRedirectURI, redirectURI);
+      }
     }
 
     nsCOMPtr<nsIRequest> request = do_QueryInterface(mRedirectChannelChild);
@@ -2104,10 +2112,10 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   HttpChannelOpenArgs openArgs;
   // No access to HttpChannelOpenArgs members, but they each have a
   // function with the struct name that returns a ref.
-  openArgs.uri() = mURI;
-  openArgs.original() = mOriginalURI;
-  openArgs.doc() = mDocumentURI;
-  openArgs.apiRedirectTo() = mAPIRedirectToURI;
+  SerializeURI(mURI, openArgs.uri());
+  SerializeURI(mOriginalURI, openArgs.original());
+  SerializeURI(mDocumentURI, openArgs.doc());
+  SerializeURI(mAPIRedirectToURI, openArgs.apiRedirectTo());
   openArgs.loadFlags() = mLoadFlags;
   openArgs.requestHeaders() = mClientSetRequestHeaders;
   mRequestHead.Method(openArgs.requestMethod());
@@ -2127,7 +2135,7 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   nsCOMPtr<nsIURI> uri;
   GetTopWindowURI(mURI, getter_AddRefs(uri));
 
-  openArgs.topWindowURI() = mTopWindowURI;
+  SerializeURI(mTopWindowURI, openArgs.topWindowURI());
 
   openArgs.preflightArgs() = optionalCorsPreflightArgs;
 
@@ -2661,8 +2669,9 @@ NS_IMETHODIMP
 HttpChannelChild::RemoveCorsPreflightCacheEntry(
     nsIURI* aURI, nsIPrincipal* aPrincipal,
     const OriginAttributes& aOriginAttributes) {
+  URIParams uri;
+  SerializeURI(aURI, uri);
   PrincipalInfo principalInfo;
-  MOZ_ASSERT(aURI, "aURI should not be null");
   nsresult rv = PrincipalToPrincipalInfo(aPrincipal, &principalInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -2671,7 +2680,7 @@ HttpChannelChild::RemoveCorsPreflightCacheEntry(
   // Be careful to not attempt to send a message to the parent after the
   // actor has been destroyed.
   if (CanSend()) {
-    result = SendRemoveCorsPreflightCacheEntry(aURI, principalInfo,
+    result = SendRemoveCorsPreflightCacheEntry(uri, principalInfo,
                                                aOriginAttributes);
   }
   return result ? NS_OK : NS_ERROR_FAILURE;

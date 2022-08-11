@@ -354,9 +354,10 @@ void HttpChannelParent::InvokeAsyncOpen(nsresult rv) {
 }
 
 bool HttpChannelParent::DoAsyncOpen(
-    nsIURI* aURI, nsIURI* aOriginalURI, nsIURI* aDocURI,
-    nsIReferrerInfo* aReferrerInfo, nsIURI* aAPIRedirectToURI,
-    nsIURI* aTopWindowURI, const uint32_t& aLoadFlags,
+    const URIParams& aURI, const Maybe<URIParams>& aOriginalURI,
+    const Maybe<URIParams>& aDocURI, nsIReferrerInfo* aReferrerInfo,
+    const Maybe<URIParams>& aAPIRedirectToURI,
+    const Maybe<URIParams>& aTopWindowURI, const uint32_t& aLoadFlags,
     const RequestHeaderTuples& requestHeaders, const nsCString& requestMethod,
     const Maybe<IPCStream>& uploadStream, const bool& uploadStreamHasHeaders,
     const int16_t& priority, const ClassOfService& classOfService,
@@ -384,12 +385,20 @@ bool HttpChannelParent::DoAsyncOpen(
     const TimeStamp& aHandleFetchEventEnd,
     const bool& aForceMainDocumentChannel,
     const TimeStamp& aNavigationStartTimeStamp) {
-  MOZ_ASSERT(aURI, "aURI should not be NULL");
+  nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
+  if (!uri) {
+    // URIParams does MOZ_ASSERT if null, but we need to protect opt builds from
+    // null deref here.
+    return false;
+  }
+  nsCOMPtr<nsIURI> originalUri = DeserializeURI(aOriginalURI);
+  nsCOMPtr<nsIURI> docUri = DeserializeURI(aDocURI);
+  nsCOMPtr<nsIURI> apiRedirectToUri = DeserializeURI(aAPIRedirectToURI);
+  nsCOMPtr<nsIURI> topWindowUri = DeserializeURI(aTopWindowURI);
 
   LOG(("HttpChannelParent RecvAsyncOpen [this=%p uri=%s, gid=%" PRIu64
        " top bid=%" PRIx64 "]\n",
-       this, aURI->GetSpecOrDefault().get(), aChannelId,
-       aTopBrowsingContextId));
+       this, uri->GetSpecOrDefault().get(), aChannelId, aTopBrowsingContextId));
 
   nsresult rv;
 
@@ -404,7 +413,7 @@ bool HttpChannelParent::DoAsyncOpen(
   }
 
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannelInternal(getter_AddRefs(channel), aURI, loadInfo, nullptr,
+  rv = NS_NewChannelInternal(getter_AddRefs(channel), uri, loadInfo, nullptr,
                              nullptr, nullptr, aLoadFlags, ios);
   if (NS_FAILED(rv)) {
     return SendFailedAsyncOpen(rv);
@@ -437,14 +446,8 @@ bool HttpChannelParent::DoAsyncOpen(
 
   if (doResumeAt) httpChannel->ResumeAt(startPos, entityID);
 
-  if (aOriginalURI) {
-    httpChannel->SetOriginalURI(aOriginalURI);
-  }
-
-  if (aDocURI) {
-    httpChannel->SetDocumentURI(aDocURI);
-  }
-
+  if (originalUri) httpChannel->SetOriginalURI(originalUri);
+  if (docUri) httpChannel->SetDocumentURI(docUri);
   if (aReferrerInfo) {
     // Referrer header is computed in child no need to recompute here
     rv =
@@ -452,12 +455,9 @@ bool HttpChannelParent::DoAsyncOpen(
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
-  if (aAPIRedirectToURI) {
-    httpChannel->RedirectTo(aAPIRedirectToURI);
-  }
-
-  if (aTopWindowURI) {
-    httpChannel->SetTopWindowURI(aTopWindowURI);
+  if (apiRedirectToUri) httpChannel->RedirectTo(apiRedirectToUri);
+  if (topWindowUri) {
+    httpChannel->SetTopWindowURI(topWindowUri);
   }
 
   if (aLoadFlags != nsIRequest::LOAD_NORMAL) {
@@ -740,7 +740,7 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
     const uint32_t& aSourceRequestBlockingReason,
     const Maybe<ChildLoadInfoForwarderArgs>& aTargetLoadInfoForwarder,
     const uint32_t& loadFlags, nsIReferrerInfo* aReferrerInfo,
-    nsIURI* aAPIRedirectURI,
+    const Maybe<URIParams>& aAPIRedirectURI,
     const Maybe<CorsPreflightArgs>& aCorsPreflightArgs) {
   LOG(("HttpChannelParent::RecvRedirect2Verify [this=%p result=%" PRIx32 "]\n",
        this, static_cast<uint32_t>(aResult)));
@@ -757,8 +757,10 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
         do_QueryInterface(mRedirectChannel);
 
     if (newHttpChannel) {
-      if (aAPIRedirectURI) {
-        rv = newHttpChannel->RedirectTo(aAPIRedirectURI);
+      nsCOMPtr<nsIURI> apiRedirectUri = DeserializeURI(aAPIRedirectURI);
+
+      if (apiRedirectUri) {
+        rv = newHttpChannel->RedirectTo(apiRedirectUri);
         MOZ_ASSERT(NS_SUCCEEDED(rv));
       }
 
@@ -939,9 +941,11 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvDocumentChannelCleanup(
 }
 
 mozilla::ipc::IPCResult HttpChannelParent::RecvRemoveCorsPreflightCacheEntry(
-    nsIURI* uri, const mozilla::ipc::PrincipalInfo& requestingPrincipal,
+    const URIParams& uri,
+    const mozilla::ipc::PrincipalInfo& requestingPrincipal,
     const OriginAttributes& originAttributes) {
-  if (!uri) {
+  nsCOMPtr<nsIURI> deserializedURI = DeserializeURI(uri);
+  if (!deserializedURI) {
     return IPC_FAIL_NO_REASON(this);
   }
   auto principalOrErr = PrincipalInfoToPrincipal(requestingPrincipal);
@@ -949,7 +953,7 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRemoveCorsPreflightCacheEntry(
     return IPC_FAIL_NO_REASON(this);
   }
   nsCOMPtr<nsIPrincipal> principal = principalOrErr.unwrap();
-  nsCORSListenerProxy::RemoveFromCorsPreflightCache(uri, principal,
+  nsCORSListenerProxy::RemoveFromCorsPreflightCache(deserializedURI, principal,
                                                     originAttributes);
   return IPC_OK();
 }
@@ -1700,6 +1704,9 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
   nsCOMPtr<nsIURI> newOriginalURI;
   newChannel->GetOriginalURI(getter_AddRefs(newOriginalURI));
 
+  URIParams uriParams;
+  SerializeURI(newOriginalURI, uriParams);
+
   uint32_t newLoadFlags = nsIRequest::LOAD_NORMAL;
   MOZ_ALWAYS_SUCCEEDS(newChannel->GetLoadFlags(&newLoadFlags));
 
@@ -1738,7 +1745,7 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
   bool result = false;
   if (!mIPCClosed) {
     result = SendRedirect1Begin(
-        mRedirectChannelId, newOriginalURI, newLoadFlags, redirectFlags,
+        mRedirectChannelId, uriParams, newLoadFlags, redirectFlags,
         loadInfoForwarderArg, *responseHead, secInfoSerialization, channelId,
         mChannel->GetPeerAddr(), GetTimingAttributes(mChannel));
   }
