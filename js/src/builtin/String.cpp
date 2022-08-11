@@ -3511,10 +3511,12 @@ static const JSFunctionSpec string_methods[] = {
     JS_SELF_HOSTED_FN("padStart", "String_pad_start", 2, 0),
     JS_SELF_HOSTED_FN("padEnd", "String_pad_end", 2, 0),
     JS_SELF_HOSTED_FN("codePointAt", "String_codePointAt", 1, 0),
-    JS_FN("includes", str_includes, 1, 0), JS_FN("indexOf", str_indexOf, 1, 0),
+    JS_FN("includes", str_includes, 1, 0),
+    JS_FN("indexOf", str_indexOf, 1, 0),
     JS_FN("lastIndexOf", str_lastIndexOf, 1, 0),
     JS_INLINABLE_FN("startsWith", str_startsWith, 1, 0, StringStartsWith),
-    JS_FN("endsWith", str_endsWith, 1, 0), JS_FN("trim", str_trim, 0, 0),
+    JS_FN("endsWith", str_endsWith, 1, 0),
+    JS_FN("trim", str_trim, 0, 0),
     JS_FN("trimStart", str_trimStart, 0, 0),
     JS_FN("trimEnd", str_trimEnd, 0, 0),
 #if JS_HAS_INTL_API
@@ -3561,7 +3563,9 @@ static const JSFunctionSpec string_methods[] = {
     JS_SELF_HOSTED_FN("fontcolor", "String_fontcolor", 1, 0),
     JS_SELF_HOSTED_FN("fontsize", "String_fontsize", 1, 0),
 
-    JS_SELF_HOSTED_SYM_FN(iterator, "String_iterator", 0, 0), JS_FS_END};
+    JS_SELF_HOSTED_SYM_FN(iterator, "String_iterator", 0, 0),
+    JS_FS_END,
+};
 
 // ES6 rev 27 (2014 Aug 24) 21.1.1
 bool js::StringConstructor(JSContext* cx, unsigned argc, Value* vp) {
