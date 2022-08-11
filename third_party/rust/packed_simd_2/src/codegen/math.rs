@@ -1,3 +1,3 @@
 //! Vertical math operations
 
-crate mod float;
+pub(crate) mod float;
