@@ -209,8 +209,7 @@ bool Module::finishTier2(const LinkData& linkData2,
     }
 
     Maybe<size_t> stub2Index;
-    if (!stubs2->createTier2(funcExportIndices, metadata(), *borrowedTier2,
-                             &stub2Index)) {
+    if (!stubs2->createTier2(funcExportIndices, *borrowedTier2, &stub2Index)) {
       return false;
     }
 
@@ -548,12 +547,10 @@ bool Module::instantiateFunctions(JSContext* cx,
     Instance& instance = ExportedFunctionToInstance(f);
     Tier otherTier = instance.code().stableTier();
 
-    const FuncType& exportFuncType = instance.metadata().getFuncExportType(
-        instance.metadata(otherTier).lookupFuncExport(funcIndex));
-    const FuncType& importFuncType =
-        metadata().getFuncImportType(metadata(tier).funcImports[i]);
+    const FuncExport& funcExport =
+        instance.metadata(otherTier).lookupFuncExport(funcIndex);
 
-    if (exportFuncType != importFuncType) {
+    if (funcExport.funcType() != metadata(tier).funcImports[i].funcType()) {
       const Import& import = FindImportFunction(imports_, i);
       UniqueChars importModuleName = import.module.toQuotedString(cx);
       UniqueChars importFieldName = import.field.toQuotedString(cx);

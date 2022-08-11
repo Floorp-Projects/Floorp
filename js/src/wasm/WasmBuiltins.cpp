@@ -778,11 +778,10 @@ static int32_t CoerceInPlace_JitEntry(int funcExportIndex, Instance* instance,
   const Code& code = instance->code();
   const FuncExport& fe =
       code.metadata(code.stableTier()).funcExports[funcExportIndex];
-  const FuncType& funcType = code.metadata().getFuncExportType(fe);
 
-  for (size_t i = 0; i < funcType.args().length(); i++) {
+  for (size_t i = 0; i < fe.funcType().args().length(); i++) {
     HandleValue arg = HandleValue::fromMarkedLocation(&argv[i]);
-    switch (funcType.args()[i].kind()) {
+    switch (fe.funcType().args()[i].kind()) {
       case ValType::I32: {
         int32_t i32;
         if (!ToInt32(cx, arg, &i32)) {
@@ -814,7 +813,7 @@ static int32_t CoerceInPlace_JitEntry(int funcExportIndex, Instance* instance,
         break;
       }
       case ValType::Ref: {
-        switch (funcType.args()[i].refTypeKind()) {
+        switch (fe.funcType().args()[i].refTypeKind()) {
           case RefType::Extern:
             // Leave Object and Null alone, we will unbox inline.  All we need
             // to do is convert other values to an Object representation.

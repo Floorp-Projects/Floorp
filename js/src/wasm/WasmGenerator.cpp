@@ -241,8 +241,12 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
 
     moduleEnv_->funcImportGlobalDataOffsets[i] = globalDataOffset;
 
-    if (!metadataTier_->funcImports.emplaceBack(
-            FuncImport(moduleEnv_->funcs[i].typeIndex, globalDataOffset))) {
+    FuncType copy;
+    if (!copy.clone(*moduleEnv_->funcs[i].type)) {
+      return false;
+    }
+    if (!metadataTier_->funcImports.emplaceBack(std::move(copy),
+                                                globalDataOffset)) {
       return false;
     }
   }
@@ -261,31 +265,15 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
     }
   }
 
-  // Copy type definitions to metadata
-  if (!metadata_->types.resize(moduleEnv_->types->length())) {
-    return false;
-  }
-
-  for (uint32_t i = 0; i < moduleEnv_->types->length(); i++) {
-    const TypeDef& typeDef = (*moduleEnv_->types)[i];
-    if (!metadata_->types[i].clone(typeDef)) {
-      return false;
-    }
-  }
-
-  // Generate type id's for all types. This will be either an immediate that
-  // can be generated, or a slot in global data to load.
-  if (!metadata_->typeIds.resize(moduleEnv_->types->length())) {
-    return false;
-  }
-
-  // asm.js requires no signature checks to be emitted as every table only
-  // stores the same type of func, and so we leave each type id as 'none'.
   if (!isAsmJS()) {
-    for (uint32_t i = 0; i < moduleEnv_->types->length(); i++) {
-      const TypeDef& typeDef = (*moduleEnv_->types)[i];
+    // Copy type definitions to metadata that are required at runtime,
+    // allocating global data so that codegen can find the type id's at
+    // runtime.
+    for (uint32_t typeIndex = 0; typeIndex < moduleEnv_->types->length();
+         typeIndex++) {
+      const TypeDef& typeDef = (*moduleEnv_->types)[typeIndex];
+      TypeIdDesc& typeId = moduleEnv_->typeIds[typeIndex];
 
-      TypeIdDesc typeId;
       if (TypeIdDesc::isGlobal(typeDef)) {
         uint32_t globalDataOffset;
         if (!allocateGlobalBytes(sizeof(void*), sizeof(void*),
@@ -294,12 +282,45 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
         }
 
         typeId = TypeIdDesc::global(typeDef, globalDataOffset);
+
+        TypeDef copy;
+        if (!copy.clone(typeDef)) {
+          return false;
+        }
+
+        if (!metadata_->types.emplaceBack(std::move(copy), typeId)) {
+          return false;
+        }
       } else {
         typeId = TypeIdDesc::immediate(typeDef);
       }
+    }
 
-      moduleEnv_->typeIds[i] = typeId;
-      metadata_->typeIds[i] = typeId;
+    // If we allow type indices, then we need to rewrite the index space to
+    // account for types that are omitted from metadata, such as function
+    // types that fit in an immediate.
+    if (moduleEnv_->functionReferencesEnabled()) {
+      // Do a linear pass to create a map from src index to dest index.
+      RenumberVector renumbering;
+      if (!renumbering.reserve(moduleEnv_->types->length())) {
+        return false;
+      }
+      for (uint32_t srcIndex = 0, destIndex = 0;
+           srcIndex < moduleEnv_->types->length(); srcIndex++) {
+        const TypeDef& typeDef = (*moduleEnv_->types)[srcIndex];
+        if (!TypeIdDesc::isGlobal(typeDef)) {
+          renumbering.infallibleAppend(UINT32_MAX);
+          continue;
+        }
+        MOZ_ASSERT(renumbering.length() == srcIndex);
+        renumbering.infallibleAppend(destIndex++);
+      }
+
+      // Apply the renumbering
+      for (TypeDefWithId& typeDef : metadata_->types) {
+        typeDef.renumber(renumbering);
+      }
+      metadata_->typesRenumbering = std::move(renumbering);
     }
   }
 
@@ -345,8 +366,12 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
       continue;
     }
 
-    metadataTier_->funcExports.infallibleEmplaceBack(
-        FuncExport(func.typeIndex, funcIndex, func.isEager()));
+    FuncType funcType;
+    if (!funcType.clone(*func.type)) {
+      return false;
+    }
+    metadataTier_->funcExports.infallibleEmplaceBack(std::move(funcType),
+                                                     funcIndex, func.isEager());
   }
 
   // Determine whether parallel or sequential compilation is to be used and
@@ -1074,11 +1099,21 @@ SharedMetadata ModuleGenerator::finishMetadata(const Bytes& bytecode) {
     metadata_->debugEnabled = true;
 
     const size_t numFuncs = moduleEnv_->funcs.length();
-    if (!metadata_->debugFuncTypeIndices.resize(numFuncs)) {
+    if (!metadata_->debugFuncArgTypes.resize(numFuncs)) {
+      return nullptr;
+    }
+    if (!metadata_->debugFuncReturnTypes.resize(numFuncs)) {
       return nullptr;
     }
     for (size_t i = 0; i < numFuncs; i++) {
-      metadata_->debugFuncTypeIndices[i] = moduleEnv_->funcs[i].typeIndex;
+      if (!metadata_->debugFuncArgTypes[i].appendAll(
+              moduleEnv_->funcs[i].type->args())) {
+        return nullptr;
+      }
+      if (!metadata_->debugFuncReturnTypes[i].appendAll(
+              moduleEnv_->funcs[i].type->results())) {
+        return nullptr;
+      }
     }
 
     static_assert(sizeof(ModuleHash) <= sizeof(mozilla::SHA1Sum::Hash),
