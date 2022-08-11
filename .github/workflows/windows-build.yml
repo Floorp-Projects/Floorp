@@ -11,9 +11,9 @@ jobs:
     - uses: pierotofy/set-swap-space@master
       with:
         swap-size-gb: 13
-    - name: update packages
+    - name: init
       run: |
-          sudo apt-get update
+        sudo apt update
     - uses: tecoli-com/actions-use-apt-tools@v0
       with:
         tools: aria2 ca-certificates git python3 python3-dev zstd rename autoconf autoconf2.13 automake bison build-essential curl cmake flex gawk gcc-multilib gnupg jq libbz2-dev libcurl4-openssl-dev libssl-dev libxml2-dev libtool libucl-dev ninja-build nsis p7zip-full procps python3-pip python-setuptools python3-virtualenv python3-distutils-extra python3-requests python3-pytoml subversion tar upx unzip uuid uuid-dev wget wine zip zlib1g-dev gir1.2-atk-1.0 gir1.2-atspi-2.0 gir1.2-gtk-3.0 gir1.2-harfbuzz-0.0 gir1.2-pango-1.0 libasound2-dev libatk-bridge2.0-dev libatk1.0-dev libatspi2.0-dev libdatrie-dev libdbus-1-dev libdbus-glib-1-dev libdbus-glib-1-dev-bin libdrm-dev libegl-dev libegl-mesa0 libegl1 libegl1-mesa-dev libepoxy-dev libfribidi-dev libgl-dev libgl1-mesa-dev libgles-dev libgles1 libgles2 libglvnd-dev libglx-dev libgraphite2-dev libgtk-3-dev libharfbuzz-dev libharfbuzz-gobject0 libharfbuzz-icu0 libopengl-dev libopengl0 libpango1.0-dev libpangoxft-1.0-0 libpciaccess-dev libpulse-dev libpulse-mainloop-glib0 libthai-dev libwayland-bin libwayland-dev libx11-xcb-dev libxcomposite-dev libxcursor-dev libxdamage-dev libxfixes-dev libxi-dev libxinerama-dev libxkbcommon-dev libxrandr-dev libxtst-dev pango1.0-tools wayland-protocols x11proto-input-dev x11proto-randr-dev x11proto-record-dev x11proto-xinerama-dev
@@ -31,63 +31,6 @@ jobs:
         key: ${{ runner.os }}
     - name: Create environment
       run: |
-        echo 'CROSS_BUILD=1' > mozconfig
-        echo 'TOOLS=/home/runner/work/win-cross' >> mozconfig
-        echo 'export WINDOWSSDKDIR="${TOOLS}/kits/10"' >> mozconfig
-        echo 'EXTRA_PATH="${TOOLS}/clang/bin:${TOOLS}/vc/tools/msvc/14.32.31326/bin/hostx64/x64:"' >> mozconfig
-        echo 'X=$(($(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)))' >> mozconfig
-
-        echo 'export CC="${TOOLS}/clang/bin/clang-cl"' >> mozconfig
-        echo 'export CXX="${TOOLS}/clang/bin/clang-cl"' >> mozconfig
-        echo 'export DIA_SDK_PATH="${TOOLS}/dia sdk"' >> mozconfig
-        echo 'export HOST_CC="${TOOLS}/clang/bin/clang"' >> mozconfig
-        echo 'export HOST_CXX="${TOOLS}/clang/bin/clang++"' >> mozconfig
-        echo 'export MIDL="${TOOLS}/wine/bin/widl"' >> mozconfig
-        echo 'export MOZ_INCLUDE_SOURCE_INFO=1' >> mozconfig
-        echo 'export MOZ_STUB_INSTALLER=1' >> mozconfig
-        echo 'export RUSTC_OPT_LEVEL=2' >> mozconfig
-        echo 'export WIN32_REDIST_DIR="${TOOLS}/vc/redist/msvc/14.32.31326/x64/microsoft.vc143.crt/"' >> mozconfig
-        echo 'export WIN_UCRT_REDIST_DIR="${WINDOWSSDKDIR}/redist/10.0.19041.0/ucrt/dlls/x64"' >> mozconfig
-        echo 'export WINE="${TOOLS}/wine/bin/wine64"' >> mozconfig
-        echo 'export WINEDEBUG=-all' >> mozconfig
-
-        echo 'mk_add_options "export LD_PRELOAD=${TOOLS}/liblowercase/liblowercase.so"' >> mozconfig
-        echo 'mk_add_options "export LOWERCASE_DIRS=${TOOLS}"' >> mozconfig
-        echo 'mk_add_options "export PATH=$EXTRA_PATH$PATH"' >> mozconfig
-        echo 'mk_add_options MOZ_MAKE_FLAGS=-j${X%.*}' >> mozconfig
-        echo 'ac_add_options --with-app-name=floorp' >> mozconfig
-        echo 'ac_add_options --with-app-basename=Floorp' >> mozconfig
-        echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
-        echo 'ac_add_options --with-l10n-base=/home/runner/work/Floorp/Floorp/l10n-central/l10n-central' >> mozconfig
-        echo 'ac_add_options --with-wasi-sysroot=/home/runner/work/wasi-sysroot/' >> mozconfig
-        echo 'ac_add_options --disable-bits-download' >> mozconfig
-        echo 'ac_add_options --disable-crashreporter' >> mozconfig
-        echo 'ac_add_options --disable-debug' >> mozconfig
-        echo 'ac_add_options --disable-dmd' >> mozconfig
-        echo 'ac_add_options --disable-geckodriver' >> mozconfig
-        echo 'ac_add_options --disable-maintenance-service' >> mozconfig
-        echo 'ac_add_options --disable-parental-controls' >> mozconfig
-        echo 'ac_add_options --disable-profiling' >> mozconfig
-        echo 'ac_add_options --disable-tests' >> mozconfig
-        echo 'ac_add_options --disable-verify-mar' >> mozconfig
-        echo ' if [ -x "$(command -v sccache)" ]; then' >> mozconfig
-        echo '    ac_add_options --with-ccache=sccache' >> mozconfig
-        echo 'elif [ -f "/home/runner/work/.mozbuild/sccache/sccache" ]; then' >> mozconfig
-        echo '    ac_add_options --with-ccache=/home/runner/work/.mozbuild/sccache/sccache' >> mozconfig
-        echo ' fi' >> mozconfig
-        echo 'ac_add_options --enable-install-strip' >> mozconfig
-        echo 'ac_add_options --enable-optimize="-O2 -Qvec -w -clang:-ftree-vectorize -clang:-msse3 -clang:-mssse3 -clang:-msse4.1 -clang:-mtune=haswell"' >> mozconfig
-        echo 'ac_add_options --enable-proxy-bypass-protection' >> mozconfig
-        echo 'ac_add_options --enable-rust-simd' >> mozconfig
-        echo 'ac_add_options --enable-strip' >> mozconfig
-        echo 'ac_add_options --enable-updater' >> mozconfig
-        echo 'ac_add_options --enable-update-agent' >> mozconfig
-        
-
-        echo 'ac_add_options --target=x86_64-pc-mingw32' >> mozconfig
-
-        echo 'MOZ_REQUIRE_SIGNING=' >> mozconfig
-        echo 'MOZ_TELEMETRY_REPORTING=' >> mozconfig
 
         mkdir -p /home/runner/work/win-cross
         git clone --depth 1 https://github.com/Floorp-Projects/l10n-central.git
@@ -149,6 +92,73 @@ jobs:
         fi
         chmod -R 777 /home/runner/work/win-cross
         sed -i '76c //const uint64_t ROOT_CLIP_CHAIN = ~0;' /home/runner/work/Floorp/Floorp/gfx/webrender_bindings/webrender_ffi.h
+
+        tool_msvc_v=$(ls /home/runner/work/win-cross/vc/tools/msvc | grep "14\..*")
+        echo ${tool_msvc_v}
+        red_msvc_v=$(ls /home/runner/work/win-cross/vc/redist/msvc | grep "14\..*")
+        echo ${red_msvc_v}
+        red_msvc_crt_v=$(ls /home/runner/work/win-cross/vc/redist/msvc/${red_msvc_v}/x64/ | grep "microsoft.*.crt")
+        echo ${tool_msvc_crt_v}
+        red_kit_v=$(ls /home/runner/work/win-cross/kits/10/redist/ | grep "10\..*")
+        echo ${red_kit_v}
+        echo 'CROSS_BUILD=1' > mozconfig
+        echo 'TOOLS=/home/runner/work/win-cross' >> mozconfig
+        echo 'export WINDOWSSDKDIR="${TOOLS}/kits/10"' >> mozconfig
+        echo "EXTRA_PATH=\"\${TOOLS}/clang/bin:\${TOOLS}/vc/tools/msvc/${tool_msvc_v}/bin/hostx64/x64:\"" >> mozconfig
+        echo 'X=$(($(getconf _NPROCESSORS_ONLN 2>/dev/null || getconf NPROCESSORS_ONLN)))' >> mozconfig
+
+        echo 'export CC="${TOOLS}/clang/bin/clang-cl"' >> mozconfig
+        echo 'export CXX="${TOOLS}/clang/bin/clang-cl"' >> mozconfig
+        echo 'export DIA_SDK_PATH="${TOOLS}/dia sdk"' >> mozconfig
+        echo 'export HOST_CC="${TOOLS}/clang/bin/clang"' >> mozconfig
+        echo 'export HOST_CXX="${TOOLS}/clang/bin/clang++"' >> mozconfig
+        echo 'export MIDL="${TOOLS}/wine/bin/widl"' >> mozconfig
+        echo 'export MOZ_INCLUDE_SOURCE_INFO=1' >> mozconfig
+        echo 'export MOZ_STUB_INSTALLER=1' >> mozconfig
+        echo 'export RUSTC_OPT_LEVEL=2' >> mozconfig
+        echo "export WIN32_REDIST_DIR="\${TOOLS}/vc/redist/msvc/${red_msvc_v}/x64/${red_msvc_crt_v}/"" >> mozconfig
+        echo "export WIN_UCRT_REDIST_DIR="\${WINDOWSSDKDIR}/redist/${red_kit_v}/ucrt/dlls/x64"" >> mozconfig
+        echo 'export WINE="${TOOLS}/wine/bin/wine64"' >> mozconfig
+        echo 'export WINEDEBUG=-all' >> mozconfig
+
+        echo 'mk_add_options "export LD_PRELOAD=${TOOLS}/liblowercase/liblowercase.so"' >> mozconfig
+        echo 'mk_add_options "export LOWERCASE_DIRS=${TOOLS}"' >> mozconfig
+        echo 'mk_add_options "export PATH=$EXTRA_PATH$PATH"' >> mozconfig
+        echo 'mk_add_options MOZ_MAKE_FLAGS=-j${X%.*}' >> mozconfig
+        echo 'ac_add_options --with-app-name=floorp' >> mozconfig
+        echo 'ac_add_options --with-app-basename=Floorp' >> mozconfig
+        echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
+        echo 'ac_add_options --with-l10n-base=/home/runner/work/Floorp/Floorp/l10n-central/l10n-central' >> mozconfig
+        echo 'ac_add_options --with-wasi-sysroot=/home/runner/work/wasi-sysroot/' >> mozconfig
+        echo 'ac_add_options --disable-bits-download' >> mozconfig
+        echo 'ac_add_options --disable-crashreporter' >> mozconfig
+        echo 'ac_add_options --disable-debug' >> mozconfig
+        echo 'ac_add_options --disable-dmd' >> mozconfig
+        echo 'ac_add_options --disable-geckodriver' >> mozconfig
+        echo 'ac_add_options --disable-maintenance-service' >> mozconfig
+        echo 'ac_add_options --disable-parental-controls' >> mozconfig
+        echo 'ac_add_options --disable-profiling' >> mozconfig
+        echo 'ac_add_options --disable-tests' >> mozconfig
+        echo 'ac_add_options --disable-verify-mar' >> mozconfig
+        echo ' if [ -x "$(command -v sccache)" ]; then' >> mozconfig
+        echo '    ac_add_options --with-ccache=sccache' >> mozconfig
+        echo 'elif [ -f "/home/runner/work/.mozbuild/sccache/sccache" ]; then' >> mozconfig
+        echo '    ac_add_options --with-ccache=/home/runner/work/.mozbuild/sccache/sccache' >> mozconfig
+        echo ' fi' >> mozconfig
+        echo 'ac_add_options --enable-install-strip' >> mozconfig
+        echo 'ac_add_options --enable-optimize="-O2 -Qvec -w -clang:-ftree-vectorize -clang:-msse3 -clang:-mssse3 -clang:-msse4.1 -clang:-mtune=haswell"' >> mozconfig
+        echo 'ac_add_options --enable-proxy-bypass-protection' >> mozconfig
+        echo 'ac_add_options --enable-rust-simd' >> mozconfig
+        echo 'ac_add_options --enable-strip' >> mozconfig
+        echo 'ac_add_options --enable-updater' >> mozconfig
+        echo 'ac_add_options --enable-update-agent' >> mozconfig
+
+
+        echo 'ac_add_options --target=x86_64-pc-mingw32' >> mozconfig
+
+        echo 'MOZ_REQUIRE_SIGNING=' >> mozconfig
+        echo 'MOZ_TELEMETRY_REPORTING=' >> mozconfig
+
         ./mach bootstrap
         source $HOME/.cargo/env
         cargo install sccache
