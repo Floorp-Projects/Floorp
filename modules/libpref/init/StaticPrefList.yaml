@@ -8591,22 +8591,8 @@
 # Prefs starting with "mathml."
 #---------------------------------------------------------------------------
 
-# Whether to disable deprecated style attributes background, color, fontfamily,
-# fontsize, fontstyle and fontweight.
-- name: mathml.deprecated_style_attributes.disabled
-  type: bool
-  value: true
-  mirror: always
-
 # Whether to disable deprecated "radical" notation for the menclose element.
 - name: mathml.deprecated_menclose_notation_radical.disabled
-  type: bool
-  value: true
-  mirror: always
-
-# Whether to disable legacy names "small", "normal" and "big" for the
-# mathsize attribute.
-- name: mathml.mathsize_names.disabled
   type: bool
   value: true
   mirror: always

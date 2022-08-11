@@ -7,27 +7,15 @@
 <p><m:math>
   <m:mstyle><m:mi style="font-size:30px;">Id</m:mi></m:mstyle>
   <m:mstyle><m:mi style="font-size:30px;">Id</m:mi></m:mstyle>
-  <m:mstyle><m:mi style="font-size:30px;">Id</m:mi></m:mstyle>
-  <m:mstyle><m:mi style="font-size:30px;">Id</m:mi></m:mstyle>
 </m:math></p>
 
 <p><m:math>
-  <m:mstyle><m:mi style="font-size:small;">Id</m:mi></m:mstyle>
-  <m:mstyle><m:mi style="font-size:medium;">Id</m:mi></m:mstyle>
-  <m:mstyle><m:mi style="font-size:large;">Id</m:mi></m:mstyle>
   <m:mstyle><m:mi style="font-size:48px;">Id</m:mi></m:mstyle>
   <m:mstyle><m:mi style="font-size:48px;">Id</m:mi></m:mstyle>
   <m:mstyle><m:mi style="font-size:48px;">Id</m:mi></m:mstyle>
 </m:math></p>
 
 <p><m:math>
-  <m:mstyle><m:mi style="font-family:Verdana; font-size:48px;">Id</m:mi></m:mstyle>
-  <m:mstyle><m:mi style="font-family:monospace; font-size:48px;">Id</m:mi></m:mstyle>
-</m:math></p>
-
-<p><m:math>
-  <m:mstyle><m:mi style="font-size:48px; background:green;">Id</m:mi></m:mstyle>
-  <m:mstyle><m:mi style="font-size:48px; background:green;">Id</m:mi></m:mstyle>
   <m:mstyle><m:mi style="font-size:48px; background:green;">Id</m:mi></m:mstyle>
   <m:mstyle><m:mi style="font-size:48px; background:green;">Id</m:mi></m:mstyle>
 </m:math></p>
@@ -38,8 +26,6 @@
 </m:math></p>
 
 <p><m:math>
-  <m:mstyle><m:mi style="font-size:48px; color:green;">Id</m:mi></m:mstyle>
-  <m:mstyle><m:mi style="font-size:48px; color:green;">Id</m:mi></m:mstyle>
   <m:mstyle><m:mi style="font-size:48px; color:green;">Id</m:mi></m:mstyle>
   <m:mstyle><m:mi style="font-size:48px; color:green;">Id</m:mi></m:mstyle>
 </m:math></p>

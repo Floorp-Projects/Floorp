@@ -16,7 +16,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
         stringBundleService.createBundle("chrome://global/locale/mathml/mathml.properties");
 
       const allow_linethickness_names = !SpecialPowers.getBoolPref('mathml.mfrac_linethickness_names.disabled');
-      const allow_mathsize_names = !SpecialPowers.getBoolPref('mathml.mathsize_names.disabled');
       const allow_mathspace_names = !SpecialPowers.getBoolPref('mathml.mathspace_names.disabled');
       const allow_scriptsizemultiplier_attribute = !SpecialPowers.getBoolPref('mathml.scriptsizemultiplier_attribute.disabled');
       
@@ -75,9 +74,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
                      allow_linethickness_names,
                      allow_linethickness_names,
                      allow_linethickness_names,
-                     allow_mathsize_names,
-                     allow_mathsize_names,
-                     allow_mathsize_names,
+                     false,
+                     false,
+                     false,
                      allow_mathspace_names,
                      allow_mathspace_names,
                      allow_mathspace_names,
