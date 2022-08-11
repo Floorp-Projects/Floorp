@@ -268,3 +268,4 @@ skip-if(Android) HTTP load 1728670-1.html
 load 1757923.html
 load 1766472.html
 pref(dom.enable_web_task_scheduling,true) load 1780790.html
+load 1700237.html
