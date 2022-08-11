@@ -36,7 +36,8 @@ add_task(async function() {
         ["f", 9],
         ["g", 10],
         ["h", 11],
-      ])
+      ]),
+      new content.Headers({ a: 1, b: 2, c: 3 })
     );
   });
 
@@ -46,7 +47,7 @@ add_task(async function() {
   const objectInspectors = [...node.querySelectorAll(".tree")];
   is(
     objectInspectors.length,
-    7,
+    8,
     "There is the expected number of object inspectors"
   );
 
@@ -58,6 +59,7 @@ add_task(async function() {
     setOi,
     largeSetOi,
     urlSearchParamsOi,
+    headersOi,
   ] = objectInspectors;
 
   await testSmallMap(smallMapOi);
@@ -67,6 +69,7 @@ add_task(async function() {
   await testSet(setOi);
   await testLargeSet(largeSetOi);
   await testUrlSearchParams(urlSearchParamsOi);
+  await testHeaders(headersOi);
 });
 
 async function testSmallMap(oi) {
@@ -443,4 +446,56 @@ async function testUrlSearchParams(oi) {
     `5: c → "this is 6"`,
     `Sixth entry is displayed as expected`
   );
+}
+
+async function testHeaders(oi) {
+  is(
+    oi.textContent,
+    `Headers(3) { a → "1", b → "2", c → "3" }`,
+    "Headers has expected content"
+  );
+
+  info("Expanding the Headers");
+  let onOiMutation = waitForNodeMutation(oi, {
+    childList: true,
+  });
+
+  oi.querySelector(".arrow").click();
+  await onOiMutation;
+
+  ok(
+    oi.querySelector(".arrow").classList.contains("expanded"),
+    "The arrow of the node has the expected class after clicking on it"
+  );
+
+  let oiNodes = oi.querySelectorAll(".node");
+  // There are 3 nodes: the root, entries and the proto.
+  is(oiNodes.length, 3, "There is the expected number of nodes in the tree");
+
+  const entriesNode = oiNodes[1];
+  is(
+    entriesNode.textContent,
+    "<entries>",
+    "There is the expected <entries> node"
+  );
+
+  info("Expanding the <entries> leaf of the Headers");
+  onOiMutation = waitForNodeMutation(oi, {
+    childList: true,
+  });
+
+  entriesNode.querySelector(".arrow").click();
+  await onOiMutation;
+
+  oiNodes = oi.querySelectorAll(".node");
+  // There are now 6 nodes, the 3 original ones, and the 3 entries.
+  is(oiNodes.length, 6, "There is the expected number of nodes in the tree");
+
+  is(oiNodes[2].textContent, `a: "1"`, "First entry is displayed as expected");
+  is(
+    oiNodes[3].textContent,
+    `b: "2"`,
+    `Second "a" entry is also display although it has the same name as the first entry`
+  );
+  is(oiNodes[4].textContent, `c: "3"`, `Third entry is the expected one...`);
 }
