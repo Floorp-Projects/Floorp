@@ -4,17 +4,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    "session-data",
-]
-
 DevToolsModules(
-    "content-process.js",
+    "blackboxing.js",
+    "breakpoints.js",
+    "event-breakpoints.js",
     "index.js",
-    "parent-process.js",
-    "target-actor-mixin.js",
-    "target-actor-registry.jsm",
-    "webextension.js",
-    "window-global.js",
-    "worker.js",
+    "resources.js",
+    "target-configuration.js",
+    "thread-configuration.js",
+    "xhr-breakpoints.js",
 )
