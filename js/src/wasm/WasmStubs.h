@@ -261,6 +261,7 @@ extern bool GenerateStubs(const ModuleEnvironment& env,
 
 extern bool GenerateEntryStubs(jit::MacroAssembler& masm,
                                size_t funcExportIndex, const FuncExport& fe,
+                               const FuncType& funcType,
                                const Maybe<jit::ImmPtr>& callee, bool isAsmJS,
                                CodeRangeVector* codeRanges);
 
