@@ -2081,7 +2081,17 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
 
   updatePageRange() {
     let isCustom = this._rangePicker.value == "custom";
+    let isCurrent = this._rangePicker.value == "current";
+
+    if (!isCurrent) {
+      this._currentPage = null;
+    }
+
     if (isCustom) {
+      this.validateRangeInput();
+    } else if (isCurrent) {
+      this._currentPage = this._rangeInput.value =
+        this._currentPage || this.getCurrentVisiblePageNumber();
       this.validateRangeInput();
     } else {
       this._pagesSet.clear();
@@ -2183,12 +2193,14 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
 
   update(settings) {
     let { pageRanges, printerName } = settings;
+
     this.toggleAttribute("all-pages", !pageRanges.length);
     if (!this.printerName) {
       this.printerName = printerName;
     }
 
     let isValid = this._rangeInput.checkValidity();
+
     if (this.printerName != printerName && !isValid) {
       this.printerName = printerName;
       this._rangeInput.value = "";
@@ -2273,9 +2285,19 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
   }
 
   validateRangeInput() {
-    let value =
-      this._rangePicker.value == "custom" ? this._rangeInput.value : "";
+    let value = ["custom", "current"].includes(this._rangePicker.value)
+      ? this._rangeInput.value
+      : "";
     this._validateRangeInput(value, this._numPages);
+  }
+
+  getCurrentVisiblePageNumber() {
+    let pageNum = parseInt(
+      PrintEventHandler.printPreviewEl.lastPreviewBrowser.getAttribute(
+        "current-page"
+      )
+    );
+    return isNaN(pageNum) ? 1 : pageNum;
   }
 
   handleEvent(e) {
