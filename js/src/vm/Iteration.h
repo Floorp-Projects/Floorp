@@ -548,6 +548,9 @@ class IteratorHelperObject : public NativeObject {
 
 IteratorHelperObject* NewIteratorHelper(JSContext* cx);
 
+bool IterableToArray(JSContext* cx, HandleValue iterable,
+                     MutableHandle<ArrayObject*> array);
+
 } /* namespace js */
 
 #endif /* vm_Iteration_h */

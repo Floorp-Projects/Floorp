@@ -26,6 +26,7 @@
 #include "gc/GCContext.h"
 #include "gc/Marking.h"
 #include "js/CallAndConstruct.h"      // JS::IsCallable
+#include "js/ForOfIterator.h"         // JS::ForOfIterator
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
 #include "js/Proxy.h"
@@ -1932,4 +1933,33 @@ IteratorHelperObject* js::NewIteratorHelper(JSContext* cx) {
     return nullptr;
   }
   return NewObjectWithGivenProto<IteratorHelperObject>(cx, proto);
+}
+
+bool js::IterableToArray(JSContext* cx, HandleValue iterable,
+                         MutableHandle<ArrayObject*> array) {
+  JS::ForOfIterator iterator(cx);
+  if (!iterator.init(iterable, JS::ForOfIterator::ThrowOnNonIterable)) {
+    return false;
+  }
+
+  array.set(NewDenseEmptyArray(cx));
+  if (!array) {
+    return false;
+  }
+
+  RootedValue nextValue(cx);
+  while (true) {
+    bool done;
+    if (!iterator.next(&nextValue, &done)) {
+      return false;
+    }
+    if (done) {
+      break;
+    }
+
+    if (!NewbornArrayPush(cx, array, nextValue)) {
+      return false;
+    }
+  }
+  return true;
 }
