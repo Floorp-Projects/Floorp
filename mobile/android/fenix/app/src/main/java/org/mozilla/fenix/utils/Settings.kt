@@ -347,7 +347,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = false
     )
 
-    val isFirstRun: Boolean by booleanPreference(
+    var isFirstNimbusRun: Boolean by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_is_first_run),
         default = true
     )
