@@ -38,6 +38,7 @@
 #include "util/Text.h"
 #include "vm/BigIntType.h"
 #include "vm/ErrorObject.h"
+#include "vm/Iteration.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "wasm/TypedObject.h"
 #include "wasm/WasmBuiltins.h"
@@ -149,36 +150,6 @@ TableInstanceData& Instance::tableInstanceData(const TableDesc& td) const {
 
 GCPtr<WasmTagObject*>& Instance::tagInstanceData(const TagDesc& td) const {
   return *(GCPtr<WasmTagObject*>*)(globalData() + td.globalDataOffset);
-}
-
-// TODO(1626251): Consolidate definitions into Iterable.h
-static bool IterableToArray(JSContext* cx, HandleValue iterable,
-                            MutableHandle<ArrayObject*> array) {
-  JS::ForOfIterator iterator(cx);
-  if (!iterator.init(iterable, JS::ForOfIterator::ThrowOnNonIterable)) {
-    return false;
-  }
-
-  array.set(NewDenseEmptyArray(cx));
-  if (!array) {
-    return false;
-  }
-
-  RootedValue nextValue(cx);
-  while (true) {
-    bool done;
-    if (!iterator.next(&nextValue, &done)) {
-      return false;
-    }
-    if (done) {
-      break;
-    }
-
-    if (!NewbornArrayPush(cx, array, nextValue)) {
-      return false;
-    }
-  }
-  return true;
 }
 
 static bool UnpackResults(JSContext* cx, const ValTypeVector& resultTypes,

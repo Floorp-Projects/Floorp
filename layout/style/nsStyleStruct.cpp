@@ -2703,6 +2703,7 @@ nsStyleVisibility::nsStyleVisibility(const Document& aDocument)
       mImageRendering(StyleImageRendering::Auto),
       mWritingMode(StyleWritingModeProperty::HorizontalTb),
       mTextOrientation(StyleTextOrientation::Mixed),
+      mMozBoxLayout(StyleMozBoxLayout::Legacy),
       mPrintColorAdjust(StylePrintColorAdjust::Economy) {
   MOZ_COUNT_CTOR(nsStyleVisibility);
 }
@@ -2714,6 +2715,7 @@ nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
       mImageRendering(aSource.mImageRendering),
       mWritingMode(aSource.mWritingMode),
       mTextOrientation(aSource.mTextOrientation),
+      mMozBoxLayout(aSource.mMozBoxLayout),
       mPrintColorAdjust(aSource.mPrintColorAdjust) {
   MOZ_COUNT_CTOR(nsStyleVisibility);
 }
@@ -2723,39 +2725,39 @@ nsChangeHint nsStyleVisibility::CalcDifference(
   nsChangeHint hint = nsChangeHint(0);
 
   if (mDirection != aNewData.mDirection ||
-      mWritingMode != aNewData.mWritingMode) {
+      mWritingMode != aNewData.mWritingMode ||
+      mMozBoxLayout != aNewData.mMozBoxLayout) {
     // It's important that a change in mWritingMode results in frame
     // reconstruction, because it may affect intrinsic size (see
     // nsSubDocumentFrame::GetIntrinsicISize/BSize).
     // Also, the used writing-mode value is now a field on nsIFrame and some
     // classes (e.g. table rows/cells) copy their value from an ancestor.
-    hint |= nsChangeHint_ReconstructFrame;
-  } else {
-    if ((mImageOrientation != aNewData.mImageOrientation)) {
-      hint |= nsChangeHint_AllReflowHints | nsChangeHint_RepaintFrame;
+    return nsChangeHint_ReconstructFrame;
+  }
+  if (mImageOrientation != aNewData.mImageOrientation) {
+    hint |= nsChangeHint_AllReflowHints | nsChangeHint_RepaintFrame;
+  }
+  if (mVisible != aNewData.mVisible) {
+    if (mVisible == StyleVisibility::Visible ||
+        aNewData.mVisible == StyleVisibility::Visible) {
+      hint |= nsChangeHint_VisibilityChange;
     }
-    if (mVisible != aNewData.mVisible) {
-      if (mVisible == StyleVisibility::Visible ||
-          aNewData.mVisible == StyleVisibility::Visible) {
-        hint |= nsChangeHint_VisibilityChange;
-      }
-      if (StyleVisibility::Collapse == mVisible ||
-          StyleVisibility::Collapse == aNewData.mVisible) {
-        hint |= NS_STYLE_HINT_REFLOW;
-      } else {
-        hint |= NS_STYLE_HINT_VISUAL;
-      }
-    }
-    if (mTextOrientation != aNewData.mTextOrientation) {
+    if (StyleVisibility::Collapse == mVisible ||
+        StyleVisibility::Collapse == aNewData.mVisible) {
       hint |= NS_STYLE_HINT_REFLOW;
+    } else {
+      hint |= NS_STYLE_HINT_VISUAL;
     }
-    if (mImageRendering != aNewData.mImageRendering) {
-      hint |= nsChangeHint_RepaintFrame;
-    }
-    if (mPrintColorAdjust != aNewData.mPrintColorAdjust) {
-      // color-adjust only affects media where dynamic changes can't happen.
-      hint |= nsChangeHint_NeutralChange;
-    }
+  }
+  if (mTextOrientation != aNewData.mTextOrientation) {
+    hint |= NS_STYLE_HINT_REFLOW;
+  }
+  if (mImageRendering != aNewData.mImageRendering) {
+    hint |= nsChangeHint_RepaintFrame;
+  }
+  if (mPrintColorAdjust != aNewData.mPrintColorAdjust) {
+    // color-adjust only affects media where dynamic changes can't happen.
+    hint |= nsChangeHint_NeutralChange;
   }
   return hint;
 }

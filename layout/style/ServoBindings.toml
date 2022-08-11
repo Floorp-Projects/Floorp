@@ -147,6 +147,7 @@ rusty-enums = [
     "mozilla::StyleTopLayer",
     "mozilla::StyleIsolation",
     "mozilla::StyleTextOrientation",
+    "mozilla::StyleMozBoxLayout",
     "mozilla::StyleTableLayout",
     "mozilla::StyleEmptyCells",
     "nsStyleImageType",

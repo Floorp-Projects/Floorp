@@ -264,3 +264,36 @@ addAccessibleTask(
   },
   { iframe: true, remoteIframe: true }
 );
+
+/**
+ * Test rel caching for <label> element with existing "for" attribute.
+ */
+addAccessibleTask(
+  `data:text/html,<label id="label" for="input">label</label><input id="input">`,
+  async function(browser, accDoc) {
+    const input = findAccessibleChildByID(accDoc, "input");
+    const label = findAccessibleChildByID(accDoc, "label");
+    await testCachedRelation(input, RELATION_LABELLED_BY, label);
+    await testCachedRelation(label, RELATION_LABEL_FOR, input);
+  },
+  { iframe: true, remoteIframe: true }
+);
+
+/*
+ * Test caching of relations with respect to label objects that are ancestors of
+ * their target.
+ */
+addAccessibleTask(
+  `
+  <label id="host">
+    <input type="checkbox" id="dependant1">
+  </label>`,
+  async function(browser, accDoc) {
+    const input = findAccessibleChildByID(accDoc, "dependant1");
+    const label = findAccessibleChildByID(accDoc, "host");
+
+    await testCachedRelation(input, RELATION_LABELLED_BY, label);
+    await testCachedRelation(label, RELATION_LABEL_FOR, input);
+  },
+  { iframe: true, remoteIframe: true }
+);

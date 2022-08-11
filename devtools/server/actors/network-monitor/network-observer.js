@@ -97,6 +97,9 @@ const HTTP_TEMPORARY_REDIRECT = 307;
  *          given the initial network request information as an argument.
  *          onNetworkEvent() must return an object which holds several add*()
  *          methods which are used to add further network request/response information.
+ *        - shouldIgnoreChannel(channel) [optional]
+ *          In additional to `NetworkUtils.matchRequest`, allow to ignore even more
+ *          requests.
  */
 function NetworkObserver(filters, owner) {
   this.filters = filters;
@@ -236,12 +239,31 @@ NetworkObserver.prototype = {
     return this._throttler;
   },
 
+  /**
+   * Given a network channel, should this observer ignore this request
+   * based on the filters passed as constructor arguments.
+   *
+   * @param {nsIHttpChannel/nsIWebSocketChannel} channel
+   *        The request that should be inspected or ignored.
+   * @return {boolean}
+   *         Return true, if the request should be ignored.
+   */
+  _shouldIgnoreChannel(channel) {
+    if (
+      typeof this.owner.shouldIgnoreChannel == "function" &&
+      this.owner.shouldIgnoreChannel(channel)
+    ) {
+      return true;
+    }
+    return !NetworkUtils.matchRequest(channel, this.filters);
+  },
+
   _decodedCertificateCache: null,
 
   _serviceWorkerRequest(subject, topic, data) {
     const channel = subject.QueryInterface(Ci.nsIHttpChannel);
 
-    if (!NetworkUtils.matchRequest(channel, this.filters)) {
+    if (this._shouldIgnoreChannel(channel)) {
       return;
     }
 
@@ -268,7 +290,7 @@ NetworkObserver.prototype = {
     }
 
     const channel = subject.QueryInterface(Ci.nsIHttpChannel);
-    if (!NetworkUtils.matchRequest(channel, this.filters)) {
+    if (this._shouldIgnoreChannel(channel)) {
       return;
     }
 
@@ -295,7 +317,7 @@ NetworkObserver.prototype = {
     }
 
     const channel = subject.QueryInterface(Ci.nsIHttpChannel);
-    if (!NetworkUtils.matchRequest(channel, this.filters)) {
+    if (this._shouldIgnoreChannel(channel)) {
       return;
     }
 
@@ -380,7 +402,7 @@ NetworkObserver.prototype = {
     subject.QueryInterface(Ci.nsIClassifiedChannel);
     const channel = subject.QueryInterface(Ci.nsIHttpChannel);
 
-    if (!NetworkUtils.matchRequest(channel, this.filters)) {
+    if (this._shouldIgnoreChannel(channel)) {
       return;
     }
 
@@ -509,14 +531,15 @@ NetworkObserver.prototype = {
     const throttler = this._getThrottler();
     if (throttler) {
       const channel = subject.QueryInterface(Ci.nsIHttpChannel);
-      if (NetworkUtils.matchRequest(channel, this.filters)) {
-        logPlatformEvent("http-on-modify-request", channel);
-
-        // Read any request body here, before it is throttled.
-        const httpActivity = this.createOrGetActivityObject(channel);
-        this._onRequestBodySent(httpActivity);
-        throttler.manageUpload(channel);
+      if (this._shouldIgnoreChannel(channel)) {
+        return;
       }
+      logPlatformEvent("http-on-modify-request", channel);
+
+      // Read any request body here, before it is throttled.
+      const httpActivity = this.createOrGetActivityObject(channel);
+      this._onRequestBodySent(httpActivity);
+      throttler.manageUpload(channel);
     }
   },
 
@@ -749,7 +772,7 @@ NetworkObserver.prototype = {
    * @return void
    */
   _onRequestHeader(channel, timestamp, extraStringData) {
-    if (!NetworkUtils.matchRequest(channel, this.filters)) {
+    if (this._shouldIgnoreChannel(channel)) {
       return;
     }
 

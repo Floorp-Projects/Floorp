@@ -68,6 +68,8 @@ const PropertyIteratorActor = protocol.ActorClassWithSpec(
           this.iterator = enumStorageEntries(objectActor);
         } else if (cls == "URLSearchParams") {
           this.iterator = enumURLSearchParamsEntries(objectActor);
+        } else if (cls == "Headers") {
+          this.iterator = enumHeadersEntries(objectActor);
         } else {
           throw new Error(
             "Unsupported class to enumerate entries from: " + cls
@@ -381,6 +383,29 @@ function enumURLSearchParamsEntries(objectActor) {
   };
 }
 
+function enumHeadersEntries(objectActor) {
+  let raw = objectActor.obj.unsafeDereference();
+  const entries = [...waiveXrays(Headers.prototype.entries.call(raw))];
+
+  return {
+    [Symbol.iterator]: function*() {
+      for (const [key, value] of entries) {
+        yield [key, value];
+      }
+    },
+    size: entries.length,
+    propertyName(index) {
+      return entries[index][0];
+    },
+    propertyDescription(index) {
+      return {
+        enumerable: true,
+        value: gripFromEntry(objectActor, entries[index][1]),
+      };
+    },
+  };
+}
+
 function getWeakMapEntries(obj) {
   // We currently lack XrayWrappers for WeakMap, so when we iterate over
   // the values, the temporary iterator objects get created in the target
@@ -525,6 +550,7 @@ module.exports = {
   enumMapEntries,
   enumSetEntries,
   enumURLSearchParamsEntries,
+  enumHeadersEntries,
   enumWeakMapEntries,
   enumWeakSetEntries,
 };

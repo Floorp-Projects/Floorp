@@ -696,12 +696,27 @@ nsTArray<bool> RemoteAccessibleBase<Derived>::PreProcessRelations(
     AccAttributes* aFields) {
   nsTArray<bool> updateTracker(ArrayLength(kRelationTypeAtoms));
   for (auto const& data : kRelationTypeAtoms) {
-    if (data.mValidTag && TagName() != data.mValidTag) {
-      // If the relation we're currently processing only applies to specific
-      // elements, and we are not one of them, do no pre-processing. Also,
-      // note in our updateTracker that we should do no post-processing.
-      updateTracker.AppendElement(false);
-      continue;
+    if (data.mValidTag) {
+      // The relation we're currently processing only applies to particular
+      // elements. Check to see if we're one of them.
+      nsAtom* tag = TagName();
+      if (!tag) {
+        // TagName() returns null on an initial cache push -- check aFields
+        // for a tag name instead.
+        if (auto maybeTag =
+                aFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::tag)) {
+          tag = *maybeTag;
+        }
+      }
+      MOZ_ASSERT(
+          tag || IsTextLeaf(),
+          "Could not fetch tag via TagName() or from initial cache push!");
+      if (tag != data.mValidTag) {
+        // If this rel doesn't apply to us, do no pre-processing. Also,
+        // note in our updateTracker that we should do no post-processing.
+        updateTracker.AppendElement(false);
+        continue;
+      }
     }
 
     nsStaticAtom* const relAtom = data.mAtom;

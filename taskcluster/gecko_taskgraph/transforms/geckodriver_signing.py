@@ -99,7 +99,7 @@ def make_signing_description(config, jobs):
             worker_type = worker_type_alias_map[worker_type]
 
             task["worker-type"] = worker_type_alias_map[task["worker-type"]]
-            task["worker"]["mac-behavior"] = "mac_geckodriver"
+            task["worker"]["mac-behavior"] = "mac_notarize_geckodriver"
 
         yield task
 

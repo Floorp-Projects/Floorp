@@ -1,0 +1,42 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src chrome:; object-src 'none';">
+  <link rel="stylesheet" type="text/css"
+        href="chrome://global/skin/in-content/common.css">
+  <link rel="stylesheet" type="text/css"
+        href="chrome://browser/content/textrecognition/textrecognition.css">
+  <link rel="localization" href="browser/textRecognition.ftl"/>
+  <script type="module" src="chrome://browser/content/textrecognition/textrecognition.mjs"></script>
+  <!-- The title is available to screen readers only -->
+  <title data-l10n-id="text-recognition-modal-accessible-modal-title"></title>
+</head>
+<body>
+  <div class="textRecognition">
+    <div class="textRecognitionHeader" id="text-recognition-header-loading"">
+      <span class="textRecognitionThrobber"></span>
+      <span data-l10n-id="text-recognition-modal-searching-title"></span>
+    </div>
+    <div class="textRecognitionHeader" id="text-recognition-header-results">
+      <img class="textRecognitionSuccessIcon" src="chrome://global/skin/icons/check.svg" role="presentation"/>
+      <span data-l10n-id="text-recognition-modal-results-title"></span>
+    </div>
+    <div class="textRecognitionHeader" id="text-recognition-header-no-results">
+      <img class="textRecognitionNoResultIcon" src="chrome://global/skin/icons/warning.svg" role="presentation"/>
+      <span data-l10n-id="text-recognition-modal-no-results-title">
+        <a data-l10n-name="error-link" href="https://support.mozilla.org/%LOCALE%/kb/placeholder5"></a>
+      </span>
+    </div>
+    <div class="textRecognitionText" role="document"></div>
+    <div class="textRecognitionFooter">
+      <button data-l10n-id="text-recognition-modal-close-button" type="button" id="text-recognition-close" class="primary"></button>
+    </div>
+  </div>
+</body>
+</html>
