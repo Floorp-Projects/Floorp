@@ -346,13 +346,15 @@ body[lwt-newtab-brighttext] {
   text-decoration: none;
   background-color: var(--in-content-button-background-hover) !important;
 }
+.onboardingContainer .screen[pos=split] .section-main .main-content .logo-container {
+  text-align: start;
+}
+.onboardingContainer .screen[pos=split] .section-main .main-content .logo-container:dir(rtl) {
+  text-align: end;
+}
 .onboardingContainer .screen[pos=split] .section-main .main-content .brand-logo {
   height: 25px;
   margin-block: 0;
-  background-position: left;
-}
-.onboardingContainer .screen[pos=split] .section-main .main-content .brand-logo:dir(rtl) {
-  background-position: right;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .welcome-text {
   margin-inline: 0 10px;
@@ -526,10 +528,6 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer .brand-logo {
   margin-block: 60px 10px;
   transition: var(--transition);
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  background-image: url("chrome://branding/content/about-logo.svg");
   height: 80px;
 }
 .onboardingContainer .brand-logo.cta-top {
