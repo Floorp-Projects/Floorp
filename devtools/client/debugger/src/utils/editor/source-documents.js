@@ -2,11 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { getMode } from "../source";
-
 import { isWasm, getWasmLineNumberFormatter, renderWasmText } from "../wasm";
 import { isMinified } from "../isMinified";
 import { resizeBreakpointGutter, resizeToggleButton } from "../ui";
+import { javascriptLikeExtensions } from "../source";
 
 let sourceDocs = {};
 
@@ -72,10 +71,8 @@ export function updateDocuments(updater) {
 }
 
 export function clearEditor(editor) {
-  const doc = editor.createDocument();
+  const doc = editor.createDocument("", { name: "text" });
   editor.replaceDocument(doc);
-  editor.setText("");
-  editor.setMode({ name: "text" });
   resetLineNumberFormat(editor);
 }
 
@@ -85,11 +82,8 @@ export function showLoading(editor) {
   if (doc) {
     editor.replaceDocument(doc);
   } else {
-    doc = editor.createDocument();
+    doc = editor.createDocument(L10N.getStr("loadingText"), { name: "text" });
     setDocument("loading", doc);
-    doc.setValue(L10N.getStr("loadingText"));
-    editor.replaceDocument(doc);
-    editor.setMode({ name: "text" });
   }
 }
 
@@ -100,36 +94,118 @@ export function showErrorMessage(editor, msg) {
   } else {
     error = L10N.getFormatStr("errorLoadingText3", msg);
   }
-  const doc = editor.createDocument();
+  const doc = editor.createDocument(error, { name: "text" });
   editor.replaceDocument(doc);
-  editor.setText(error);
-  editor.setMode({ name: "text" });
   resetLineNumberFormat(editor);
 }
 
-function setEditorText(editor, sourceId, content) {
-  if (content.type === "wasm") {
-    const wasmLines = renderWasmText(sourceId, content);
-    // cm will try to split into lines anyway, saving memory
-    const wasmText = { split: () => wasmLines, match: () => false };
-    editor.setText(wasmText);
-  } else {
-    editor.setText(content.value);
-  }
-}
+const contentTypeModeMap = {
+  "text/javascript": { name: "javascript" },
+  "text/typescript": { name: "javascript", typescript: true },
+  "text/coffeescript": { name: "coffeescript" },
+  "text/typescript-jsx": {
+    name: "jsx",
+    base: { name: "javascript", typescript: true },
+  },
+  "text/jsx": { name: "jsx" },
+  "text/x-elm": { name: "elm" },
+  "text/x-clojure": { name: "clojure" },
+  "text/x-clojurescript": { name: "clojure" },
+  "text/wasm": { name: "text" },
+  "text/html": { name: "htmlmixed" },
+};
 
-function setMode(editor, source, sourceTextContent, symbols) {
-  // Disable modes for minified files with 1+ million characters Bug 1569829
+const languageMimeMap = [
+  { ext: "c", mode: "text/x-csrc" },
+  { ext: "kt", mode: "text/x-kotlin" },
+  { ext: "cpp", mode: "text/x-c++src" },
+  { ext: "m", mode: "text/x-objectivec" },
+  { ext: "rs", mode: "text/x-rustsrc" },
+  { ext: "hx", mode: "text/x-haxe" },
+];
+
+/**
+ * Returns Code Mirror mode for source content type
+ */
+// eslint-disable-next-line complexity
+export function getMode(source, sourceTextContent, symbols) {
   const content = sourceTextContent.value;
+  // Disable modes for minified files with 1+ million characters (See Bug 1569829).
   if (
     content.type === "text" &&
     isMinified(source, sourceTextContent) &&
     content.value.length > 1000000
   ) {
-    return;
+    return { name: "text" };
   }
 
-  const mode = getMode(source, content, symbols);
+  const extension = source.displayURL.fileExtension;
+
+  if (content.type !== "text") {
+    return { name: "text" };
+  }
+
+  const { contentType, value: text } = content;
+
+  if (extension === "jsx" || (symbols && symbols.hasJsx)) {
+    if (symbols && symbols.hasTypes) {
+      return { name: "text/typescript-jsx" };
+    }
+    return { name: "jsx" };
+  }
+
+  if (symbols && symbols.hasTypes) {
+    if (symbols.hasJsx) {
+      return { name: "text/typescript-jsx" };
+    }
+
+    return { name: "text/typescript" };
+  }
+
+  // check for C and other non JS languages
+  const result = languageMimeMap.find(({ ext }) => extension === ext);
+  if (result !== undefined) {
+    return { name: result.mode };
+  }
+
+  // if the url ends with a known Javascript-like URL, provide JavaScript mode.
+  // uses the first part of the URL to ignore query string
+  if (javascriptLikeExtensions.find(ext => ext === extension)) {
+    return { name: "javascript" };
+  }
+
+  // Use HTML mode for files in which the first non whitespace
+  // character is `<` regardless of extension.
+  const isHTMLLike = text.match(/^\s*</);
+  if (!contentType) {
+    if (isHTMLLike) {
+      return { name: "htmlmixed" };
+    }
+    return { name: "text" };
+  }
+
+  // // @flow or /* @flow */
+  if (text.match(/^\s*(\/\/ @flow|\/\* @flow \*\/)/)) {
+    return contentTypeModeMap["text/typescript"];
+  }
+
+  if (/script|elm|jsx|clojure|wasm|html/.test(contentType)) {
+    if (contentType in contentTypeModeMap) {
+      return contentTypeModeMap[contentType];
+    }
+
+    return contentTypeModeMap["text/javascript"];
+  }
+
+  if (isHTMLLike) {
+    return { name: "htmlmixed" };
+  }
+
+  return { name: "text" };
+}
+
+function setMode(editor, source, sourceTextContent, symbols) {
+  const mode = getMode(source, sourceTextContent, symbols);
   const currentMode = editor.codeMirror.getOption("mode");
   if (!currentMode || currentMode.name != mode.name) {
     editor.setMode(mode);
@@ -154,11 +230,22 @@ export function showSourceText(editor, source, sourceTextContent, symbols) {
     return doc;
   }
 
-  const doc = editor.createDocument();
+  const content = sourceTextContent.value;
+  let editorText;
+  if (content.type === "wasm") {
+    const wasmLines = renderWasmText(source.id, content);
+    // cm will try to split into lines anyway, saving memory
+    editorText = { split: () => wasmLines, match: () => false };
+  } else {
+    editorText = content.value;
+  }
+
+  const doc = editor.createDocument(
+    editorText,
+    getMode(source, sourceTextContent, symbols)
+  );
   setDocument(source.id, doc);
   editor.replaceDocument(doc);
 
-  setEditorText(editor, source.id, sourceTextContent.value);
-  setMode(editor, source, sourceTextContent, symbols);
   updateLineNumberFormat(editor, source.id);
 }
