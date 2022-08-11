@@ -311,7 +311,7 @@ button.close {
 }
 
 .card,
-.synced-tab-li,
+.synced-tab-a,
 .synced-tab-li-placeholder,
 .empty-container {
   background-color: var(--newtab-background-color-secondary);
@@ -539,6 +539,16 @@ button.close {
   text-align: end;
 }
 
+.synced-tab-a,
+.synced-tab-a:hover,
+.synced-tab-a:active,
+.synced-tab-a:hover:active,
+.synced-tab-a:visited {
+  color: inherit;
+  text-decoration: none;
+  height: 100%;
+}
+
 .closed-tab-li-url,
 .closed-tab-li-time,
 .synced-tab-li-device,
@@ -550,13 +560,13 @@ button.close {
 
 .closed-tab-li-title,
 .closed-tab-li-url,
-.synced-tab-li:not(:first-child) > .synced-tab-li-title,
+.synced-tab-li:not(:first-child) > .synced-tab-a > .synced-tab-li-title,
 .synced-tab-li-device {
   overflow: hidden;
 }
 
 .closed-tab-li-title,
-.synced-tab-li:not(:first-child) > .synced-tab-li-title,
+.synced-tab-li:not(:first-child) > .synced-tab-a > .synced-tab-li-title,
 .synced-tab-li-device {
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -580,7 +590,7 @@ button.close {
       "first third";
 }
 
-.synced-tab-li,
+.synced-tab-a,
 .synced-tab-li-placeholder {
   box-sizing: border-box;
   border-radius: 4px;
@@ -594,12 +604,11 @@ button.close {
   "favicon device device time"
 }
 
-.synced-tab-li:hover {
+.synced-tab-a:hover {
   box-shadow: 0px 2px 14px var(--fxview-contrast-border);
-  cursor: pointer;
 }
 
-.synced-tab-li:not(:first-child) {
+.synced-tab-a:not(:first-child) {
   align-content: center;
 }
 
@@ -610,7 +619,7 @@ button.close {
     "favicon domain domain domain"
     "favicon device device device"
   }
-  .synced-tab-li:not(:first-child) > .synced-tab-li-time {
+  .synced-tab-li:not(:first-child) > .synced-tab-a > .synced-tab-li-time {
     display: none;
   }
 }
@@ -648,8 +657,11 @@ button.close {
 }
 
 .synced-tab-li:first-child {
-  padding-top: 20px;
   grid-area: first;
+}
+
+.synced-tab-li:first-child > .synced-tab-a {
+  padding-top: 20px;
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: auto;
   grid-template-areas:
@@ -670,7 +682,7 @@ button.close {
 .synced-tab-li-url,
 .synced-tab-li-device,
 .synced-tab-li-time,
-.synced-tab-li:not(:first-child) > .synced-tab-li-title {
+.synced-tab-li:not(:first-child) > .synced-tab-a > .synced-tab-li-title {
   font-size: .85em;
 }
 
@@ -678,7 +690,7 @@ button.close {
   text-decoration-line: underline;
 }
 
-.synced-tab-li-url {
+.synced-tab-li:first-child > .synced-tab-a > .synced-tab-li-url {
   align-self: end;
   grid-area: domain;
 }
@@ -692,7 +704,7 @@ button.close {
   font-weight: 500;
 }
 
-.synced-tab-li:first-child > .synced-tab-li-title {
+.synced-tab-li:first-child > .synced-tab-a > .synced-tab-li-title {
   color: inherit;
   padding-top: 5px;
   overflow: hidden;
@@ -713,7 +725,7 @@ button.close {
   align-self: end;
 }
 
-.synced-tab-li:first-child > .synced-tab-li-time {
+.synced-tab-li:first-child > .synced-tab-a > .synced-tab-li-time {
   align-self: center;
 }
 
