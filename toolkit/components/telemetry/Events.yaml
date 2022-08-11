@@ -2375,42 +2375,48 @@ networking.captive_portal:
     objects: ["infobar"]
     bug_numbers:
       - 1722834
+      - 1777396
     description: >
       An event fired when the captive portal login infobar is displayed.
     notification_emails:
-      - barret@mozilla.com
+      - omc@mozilla.com
+      - dmose@mozilla.com
     release_channel_collection: opt-out
     products: ["firefox"]
     record_in_processes: ["main"]
-    expiry_version: "105"
+    expiry_version: "112"
 
   login_button_pressed:
     objects: ["login_button"]
     bug_numbers:
       - 1722834
+      - 1777396
     description: >
       An event fired when the login button on the captive portal login infobar
       is clicked.
     notification_emails:
-      - barret@mozilla.com
+      - omc@mozilla.com
+      - dmose@mozilla.com
     release_channel_collection: opt-out
     products: ["firefox"]
     record_in_processes: ["main"]
-    expiry_version: "105"
+    expiry_version: "112"
 
   login_successful:
     objects: ["detector"]
     bug_numbers:
       - 1722834
+      - 1777396
     description: >
       An event fired when the captive portal detector detects that the user has
       successfully logged in to a captive portal.
     notification_emails:
-      - barret@mozilla.com
+      - omc@mozilla.com
+      - dmose@mozilla.com
     release_channel_collection: opt-out
     products: ["firefox"]
     record_in_processes: ["main"]
-    expiry_version: "105"
+    expiry_version: "112"
 
 security:
   fissionPrincipals:
