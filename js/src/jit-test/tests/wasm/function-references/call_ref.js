@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmFunctionReferencesEnabled() || wasmCompileMode() == "ion" 
+// |jit-test| skip-if: !wasmFunctionReferencesEnabled()
 
 let { plusOne } = wasmEvalText(`(module
   (; forward declaration so that ref.func works ;)

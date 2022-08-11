@@ -5566,6 +5566,10 @@ void LIRGenerator::visitWasmCall(MWasmCallT ins) {
     lir->setOperand(ins->numArgs(),
                     useFixedAtStart(index, WasmTableCallIndexReg));
   }
+  if (ins->callee().isFuncRef()) {
+    MDefinition* ref = ins->getOperand(ins->numArgs());
+    lir->setOperand(ins->numArgs(), useFixedAtStart(ref, WasmCallRefReg));
+  }
 
   add(lir, ins);
   assignWasmSafepoint(lir);
