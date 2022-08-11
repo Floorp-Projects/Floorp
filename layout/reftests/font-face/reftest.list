@@ -16,9 +16,13 @@ fails == name-override-1.html name-override-1-ref.html
 random-if(winWidget||gtkWidget) == src-list-2-big-otf.html src-list-2-big-ref.html # bug 470713
 == src-list-format-1.html src-list-format-1-ref.html
 == src-list-format-2.html src-list-format-2-ref.html
+== src-list-format-3.html src-list-format-3-ref.html
 == src-list-format-4.html src-list-format-1-ref.html
 == src-list-format-5.html src-list-format-2-ref.html
-== src-list-format-7.html src-list-format-3-ref.html
+== src-list-format-6.html src-list-format-3-ref.html
+# assumes AAT fonts are only supported on MacOS
+random-if(cocoaWidget) == src-list-format-7.html src-list-format-2-ref.html
+random-if(!cocoaWidget) == src-list-format-7.html src-list-format-3-ref.html
 fails-if(Android) == src-list-local-full.html src-list-local-full-ref.html
 fails-if(Android) == src-list-local-full-quotes.html src-list-local-full-ref.html
 == src-list-local-fallback.html src-list-local-fallback-ref.html
