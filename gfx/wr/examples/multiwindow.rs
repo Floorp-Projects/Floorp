@@ -87,9 +87,9 @@ impl Window {
             glutin::Api::WebGl => unimplemented!(),
         };
 
-        let opts = webrender::RendererOptions {
+        let opts = webrender::WebRenderOptions {
             clear_color,
-            ..webrender::RendererOptions::default()
+            ..webrender::WebRenderOptions::default()
         };
 
         let device_size = {
