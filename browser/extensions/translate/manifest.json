@@ -69,7 +69,11 @@
         "storage",
         "activeTab",
         "contextMenus",
-        "webRequest"
+        "webRequest",
+        "about:*",
+        "about:reader*",
+        "downloads",
+        "mozillaAddons"
     ],
 
     "optional_permissions": [
