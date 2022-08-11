@@ -135,8 +135,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
       LoadingSessionHistoryInfo* aInfo, nsIChannel* aNewChannel);
 
   using PrintPromise = MozPromise</* unused */ bool, nsresult, false>;
-  RefPtr<PrintPromise> Print(nsIPrintSettings*);
-  already_AddRefed<Promise> PrintJS(nsIPrintSettings*, ErrorResult&);
+  MOZ_CAN_RUN_SCRIPT RefPtr<PrintPromise> Print(nsIPrintSettings*);
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> PrintJS(nsIPrintSettings*,
+                                                       ErrorResult&);
 
   // Call the given callback on all top-level descendant BrowsingContexts.
   // Return Callstate::Stop from the callback to stop calling

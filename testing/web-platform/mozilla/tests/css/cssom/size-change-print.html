@@ -1,0 +1,10 @@
+<!doctype html>
+<link rel="mismatch" href="size-change-print-notref.html">
+<div id="target">FAIL</div>
+<script>
+function update() {
+  document.getElementById("target").innerHTML = `${window.innerWidth}x${window.innerHeight}`;
+}
+update();
+window.addEventListener("resize", update);
+</script>
