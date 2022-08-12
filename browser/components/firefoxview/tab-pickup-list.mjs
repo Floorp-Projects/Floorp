@@ -74,7 +74,17 @@ class TabPickupList extends HTMLElement {
       event.type == "click" ||
       (event.type == "keydown" && event.keyCode == KeyEvent.DOM_VK_RETURN)
     ) {
-      this.openTab(event);
+      const item = event.target.closest(".synced-tab-li");
+      let index = [...this.tabsList.children].indexOf(item);
+      Services.telemetry.recordEvent(
+        "firefoxview",
+        "tab_pickup",
+        "tabs",
+        null,
+        {
+          position: (++index).toString(),
+        }
+      );
     }
   }
 
@@ -91,17 +101,6 @@ class TabPickupList extends HTMLElement {
         lazy.timeMsPref
       );
     }
-  }
-  openTab(event) {
-    event.preventDefault();
-    const item = event.target.closest(".synced-tab-li");
-    window.open(item.dataset.targetURI, "_blank");
-
-    let index = [...this.tabsList.children].indexOf(item);
-
-    Services.telemetry.recordEvent("firefoxview", "tab_pickup", "tabs", null, {
-      position: (++index).toString(),
-    });
   }
 
   togglePlaceholderVisibility(visible) {
@@ -174,20 +173,21 @@ class TabPickupList extends HTMLElement {
   generateListItem(tab, index) {
     const li = document.createElement("li");
     li.classList.add("synced-tab-li");
-    li.setAttribute("tabindex", 0);
-    li.setAttribute("role", "button");
+
+    const targetURI = tab.url;
+    const a = document.createElement("a");
+    a.classList.add("synced-tab-a");
+    a.href = targetURI;
+    a.target = "_blank";
+    document.l10n.setAttributes(a, "firefoxview-tabs-list-tab-button", {
+      targetURI,
+    });
 
     const title = document.createElement("span");
     title.textContent = tab.title;
     title.classList.add("synced-tab-li-title");
 
     const favicon = createFaviconElement(tab.icon);
-    const targetURI = tab.url;
-
-    li.dataset.targetURI = targetURI;
-    document.l10n.setAttributes(li, "firefoxview-tabs-list-tab-button", {
-      targetURI,
-    });
 
     const lastUsedMs = tab.lastUsed * 1000;
     const time = document.createElement("span");
@@ -214,11 +214,12 @@ class TabPickupList extends HTMLElement {
     // the first list item is different from the second and third
     if (index == 0) {
       const badge = this.createBadge();
-      li.append(favicon, badge, title, url, device, time);
+      a.append(favicon, badge, title, url, device, time);
     } else {
-      li.append(favicon, title, url, device, time);
+      a.append(favicon, title, url, device, time);
     }
 
+    li.append(a);
     return li;
   }
 

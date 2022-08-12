@@ -258,8 +258,8 @@ static nsresult GetIconHandleFromPathInfo(const IconPathInfo& aPathInfo,
 }
 
 // Match stock icons with names
-static SHSTOCKICONID GetStockIconIDForName(const nsACString& aStockName) {
-  return aStockName.EqualsLiteral("uac-shield") ? SIID_SHIELD : SIID_INVALID;
+static mozilla::Maybe<SHSTOCKICONID> GetStockIconIDForName(const nsACString& aStockName) {
+  return aStockName.EqualsLiteral("uac-shield") ? Some(SIID_SHIELD) : Nothing();
 }
 
 // Specific to Vista and above
@@ -269,8 +269,8 @@ static nsresult GetStockHIcon(nsIMozIconURI* aIconURI, HICON* aIcon) {
   nsAutoCString stockIcon;
   aIconURI->GetStockIcon(stockIcon);
 
-  SHSTOCKICONID stockIconID = GetStockIconIDForName(stockIcon);
-  if (stockIconID == SIID_INVALID) {
+  Maybe<SHSTOCKICONID> stockIconID = GetStockIconIDForName(stockIcon);
+  if (stockIconID.isNothing()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -279,7 +279,7 @@ static nsresult GetStockHIcon(nsIMozIconURI* aIconURI, HICON* aIcon) {
 
   SHSTOCKICONINFO sii = {0};
   sii.cbSize = sizeof(sii);
-  HRESULT hr = SHGetStockIconInfo(stockIconID, infoFlags, &sii);
+  HRESULT hr = SHGetStockIconInfo(*stockIconID, infoFlags, &sii);
   if (FAILED(hr)) {
     return NS_ERROR_FAILURE;
   }

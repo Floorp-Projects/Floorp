@@ -313,14 +313,17 @@ body {
             }
           }
 
+          .logo-container {
+            text-align: start;
+
+            &:dir(rtl) {
+              text-align: end;
+            }
+          }
+
           .brand-logo {
             height: 25px;
             margin-block: 0;
-            background-position: left;
-
-            &:dir(rtl) {
-              background-position: right;
-            }
           }
 
           .welcome-text {
@@ -539,10 +542,6 @@ body {
   .brand-logo {
     margin-block: 60px 10px;
     transition: var(--transition);
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    background-image: url('chrome://branding/content/about-logo.svg');
     height: 80px;
 
     &.cta-top {

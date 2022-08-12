@@ -8,7 +8,7 @@
 // dead) is kept alive so that subsequent, synchronous accesses also return the
 // object.
 
-function testSameZoneWeakRef(
+function testSameCompartmentWeakRef(
   targetReachable,
   weakRefReachable) {
 
@@ -39,16 +39,17 @@ function testSameZoneWeakRef(
 
 let serial = 0;
 
-function testCrossZoneWeakRef(
+function testCrossCompartmentWeakRef(
   targetReachable,
   weakRefReachable,
   collectTargetZone,
-  collectWeakRefZone) {
+  collectWeakRefZone,
+  sameZone) {
 
   gc();
 
   let id = serial++;
-  let global = newGlobal({newCompartment: true});
+  let global = newGlobal(sameZone ? {sameZoneAs: this} : {newCompartment: true});
   global.eval('var target = {};');
   global.target.id = id;
 
@@ -99,7 +100,7 @@ gczeal(0);
 
 for (let targetReachable of [true, false]) {
   for (let weakRefReachable of [true, false]) {
-    testSameZoneWeakRef(targetReachable, weakRefReachable);
+    testSameCompartmentWeakRef(targetReachable, weakRefReachable);
   }
 }
 
@@ -107,8 +108,14 @@ for (let targetReachable of [true, false]) {
   for (let weakRefReachable of [true, false]) {
     for (let collectTargetZone of [true, false]) {
       for (let collectWeakRefZone of [true, false]) {
-            testCrossZoneWeakRef(targetReachable, weakRefReachable,
-                                 collectTargetZone, collectWeakRefZone);
+        for (let sameZone of [true, false]) {
+          if (sameZone && (collectTargetZone != collectWeakRefZone)) {
+            continue;
+          }
+
+          testCrossCompartmentWeakRef(targetReachable, weakRefReachable,
+                                      collectTargetZone, collectWeakRefZone, sameZone);
+        }
       }
     }
   }

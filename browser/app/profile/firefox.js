@@ -2061,8 +2061,8 @@ pref("browser.tabs.crashReporting.includeURL", false);
 // nightly and developer edition.
 pref("extensions.experiments.enabled", false);
 
-#if defined(XP_WIN)
-  // Allows us to deprioritize the processes of background tabs at an OS level
+#if defined(XP_LINUX) || defined(XP_WIN)
+  // Allows us to adjust the priority of child processes at the OS level
   pref("dom.ipc.processPriorityManager.enabled", true);
 #endif
 

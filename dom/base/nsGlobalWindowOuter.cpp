@@ -5251,8 +5251,7 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
       }
     }
 
-    // TODO(emilio): Should dispatch this to OOP iframes too.
-    AutoPrintEventDispatcher dispatcher(*docToPrint);
+    AutoPrintEventDispatcher dispatcher(*docToPrint, ps, /* aIsTop = */ true);
 
     nsAutoScriptBlocker blockScripts;
     RefPtr<Document> clone = docToPrint->CreateStaticClone(

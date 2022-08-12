@@ -1164,7 +1164,23 @@
   args:
     code: Int32Id
 
+- name: StringIndexOfResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    str: StringId
+    searchStr: StringId
+
 - name: StringStartsWithResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    str: StringId
+    searchStr: StringId
+
+- name: StringEndsWithResult
   shared: true
   transpile: true
   cost_estimate: 5

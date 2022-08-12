@@ -8,35 +8,20 @@
 
 <p><m:math><m:mstyle scriptlevel="0" scriptsizemultiplier="0.5" scriptminsize="18px" style="font-size:48px;">
   <m:mstyle mathsize="30px"><m:mi>Id</m:mi></m:mstyle>
-  <m:mstyle fontsize="30px"><m:mi>Id</m:mi></m:mstyle>
-  <!-- mathsize takes priority over fontsize -->
-  <m:mstyle mathsize="30px" fontsize="20px"><m:mi>Id</m:mi></m:mstyle>
-  <!-- CSS takes priority over mathsize and fontsize -->
-  <m:mstyle mathsize="24px" fontsize="20px" style="font-size:30px;"><m:mi>Id</m:mi></m:mstyle>
+  <!-- CSS takes priority over mathsize -->
+  <m:mstyle mathsize="24px" style="font-size:30px;"><m:mi>Id</m:mi></m:mstyle>
 </m:mstyle></m:math></p>
 
 <p><m:math><m:mstyle scriptlevel="0" scriptsizemultiplier="0.5" scriptminsize="18px" style="font-size:48px;">
   <m:mstyle mathsize="small"><m:mi>Id</m:mi></m:mstyle>
   <m:mstyle mathsize="normal"><m:mi>Id</m:mi></m:mstyle>
   <m:mstyle mathsize="big"><m:mi>Id</m:mi></m:mstyle>
-  <!-- check that fontsize doesn't accept those values -->
-  <m:mstyle fontsize="small"><m:mi>Id</m:mi></m:mstyle>
-  <m:mstyle fontsize="normal"><m:mi>Id</m:mi></m:mstyle>
-  <m:mstyle fontsize="big"><m:mi>Id</m:mi></m:mstyle>
-</m:mstyle></m:math></p>
-
-<p><m:math><m:mstyle scriptlevel="0" scriptsizemultiplier="0.5" scriptminsize="18px" style="font-size:48px;">
-  <m:mstyle fontfamily="Verdana"><m:mi>Id</m:mi></m:mstyle>
-  <m:mstyle fontfamily="Verdana" style="font-family:monospace;"><m:mi>Id</m:mi></m:mstyle>
 </m:mstyle></m:math></p>
 
 <p><m:math><m:mstyle scriptlevel="0" scriptsizemultiplier="0.5" scriptminsize="18px" style="font-size:48px;">
   <m:mstyle mathbackground="green"><m:mi>Id</m:mi></m:mstyle>
-  <m:mstyle background="green"><m:mi>Id</m:mi></m:mstyle>
-  <!-- mathsize takes priority over fontsize -->
-  <m:mstyle mathbackground="green" background="red"><m:mi>Id</m:mi></m:mstyle>
-  <!-- CSS takes priority over mathsize and fontsize -->
-  <m:mstyle mathbackground="red" background="yellow" style="background:green;"><m:mi>Id</m:mi></m:mstyle>
+  <!-- CSS takes priority over mathbackground -->
+  <m:mstyle mathbackground="red" style="background:green;"><m:mi>Id</m:mi></m:mstyle>
 </m:mstyle></m:math></p>
 
 <p><m:math><m:mstyle scriptlevel="0" scriptsizemultiplier="0.5" scriptminsize="18px" style="font-size:48px;">
@@ -46,11 +31,8 @@
 
 <p><m:math><m:mstyle scriptlevel="0" scriptsizemultiplier="0.5" scriptminsize="18px" style="font-size:48px;">
   <m:mstyle mathcolor="green"><m:mi>Id</m:mi></m:mstyle>
-  <m:mstyle color="green"><m:mi>Id</m:mi></m:mstyle>
-  <!-- mathsize takes priority over fontsize -->
-  <m:mstyle mathcolor="green" color="red"><m:mi>Id</m:mi></m:mstyle>
-  <!-- CSS takes priority over mathsize and fontsize -->
-  <m:mstyle mathcolor="red" color="yellow" style="color:green;"><m:mi>Id</m:mi></m:mstyle>
+  <!-- CSS takes priority over mathcolor -->
+  <m:mstyle mathcolor="red" style="color:green;"><m:mi>Id</m:mi></m:mstyle>
 </m:mstyle></m:math></p>
 
 <p><m:math><m:mstyle scriptlevel="0" scriptsizemultiplier="0.5" scriptminsize="18px" style="font-size:48px;">

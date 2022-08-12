@@ -658,20 +658,31 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     this.mainContentHeader.focus();
   }
 
-  getLogoStyle({
-    imageURL,
-    height
-  }) {
-    let style = {
-      height
-    };
-    style.backgroundImage = imageURL ? `url(${imageURL})` : null;
-    return style;
-  }
-
   getScreenClassName(isFirstCenteredScreen, isLastCenteredScreen, includeNoodles) {
     const screenClass = `screen-${this.props.order % 2 !== 0 ? 1 : 2}`;
     return `${isFirstCenteredScreen ? `dialog-initial` : ``} ${isLastCenteredScreen ? `dialog-last` : ``} ${includeNoodles ? `with-noodles` : ``} ${screenClass}`;
+  }
+
+  renderLogo({
+    imageURL = "chrome://branding/content/about-logo.svg",
+    alt = "",
+    darkModeImageURL,
+    height
+  }) {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("picture", {
+      className: "logo-container"
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("source", {
+      srcSet: darkModeImageURL,
+      media: "(prefers-color-scheme: dark)"
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", {
+      className: "brand-logo",
+      style: {
+        height
+      },
+      src: imageURL,
+      alt: alt,
+      role: alt ? null : "presentation"
+    }));
   }
 
   renderContentTiles() {
@@ -788,10 +799,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       style: content.background && isCenterPosition ? {
         background: content.background
       } : {}
-    }, content.dismiss_button ? this.renderDismissButton() : null, content.logo ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-      className: `brand-logo`,
-      style: this.getLogoStyle(content.logo)
-    }) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }, content.dismiss_button ? this.renderDismissButton() : null, content.logo ? this.renderLogo(content.logo) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: `${isRtamo ? "rtamo-icon" : "hide-rtamo-icon"}`
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", {
       className: `${isTheme ? "rtamo-theme-icon" : ""}`,

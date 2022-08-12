@@ -90,7 +90,19 @@ const CreditCardTelemetry = {
     let identified = new Set();
     fieldDetails.forEach(detail => {
       identified.add(detail.fieldName);
-      this._ccFormV2SetExtra(ccFormV2Extra, detail.fieldName, "true");
+
+      // confidence exists only when a field is identified by fathom.
+      if (detail.confidence > 0) {
+        // Keep two decimal places is good enough
+        let confidence = Math.floor(100 * detail.confidence) / 100;
+        this._ccFormV2SetExtra(
+          ccFormV2Extra,
+          detail.fieldName,
+          confidence.toString()
+        );
+      } else {
+        this._ccFormV2SetExtra(ccFormV2Extra, detail.fieldName, "true");
+      }
     });
 
     let ccFormExtra = {

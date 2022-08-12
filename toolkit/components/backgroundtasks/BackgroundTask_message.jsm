@@ -145,7 +145,7 @@ async function handleCommandLine(commandLine) {
   };
 
   let targetingSnapshotPath = commandLine.handleFlagWithParam(
-    "--targeting-snapshot",
+    "targeting-snapshot",
     CASE_INSENSITIVE
   );
   if (targetingSnapshotPath) {
@@ -153,7 +153,7 @@ async function handleCommandLine(commandLine) {
       targetingSnapshotPath
     );
     console.log(
-      `Saw --target-snapshot, read snapshot from ${targetingSnapshotPath}`
+      `Saw --targeting-snapshot, read snapshot from ${targetingSnapshotPath}`
     );
   }
   outputInfo({ defaultProfileTargetingSnapshot });
@@ -283,7 +283,10 @@ async function runBackgroundTask(commandLine) {
 
   // Here's where we actually start Nimbus and the Firefox Messaging
   // System.
-  await BackgroundTasksUtils.enableNimbus(commandLine);
+  await BackgroundTasksUtils.enableNimbus(
+    commandLine,
+    defaultProfileTargetingSnapshot.environment
+  );
 
   await BackgroundTasksUtils.enableFirefoxMessagingSystem(
     defaultProfileTargetingSnapshot.environment

@@ -220,11 +220,7 @@ pref("browser.triple_click_selects_paragraph", true);
 pref("pdfjs.annotationMode", 2);
 
 // Enable editing in the PDF viewer.
-#ifdef EARLY_BETA_OR_EARLIER
-  pref("pdfjs.annotationEditorMode", 0);
-#else
-  pref("pdfjs.annotationEditorMode", -1);
-#endif
+pref("pdfjs.annotationEditorMode", 0);
 
 // Enable JavaScript support in the PDF viewer.
 pref("pdfjs.enableScripting", true);
@@ -298,6 +294,7 @@ pref("media.videocontrols.picture-in-picture.video-toggle.position", "right");
 pref("media.videocontrols.picture-in-picture.video-toggle.has-used", false);
 pref("media.videocontrols.picture-in-picture.display-text-tracks.toggle.enabled", true);
 pref("media.videocontrols.picture-in-picture.display-text-tracks.size", "medium");
+pref("media.videocontrols.picture-in-picture.improved-video-controls.enabled", false);
 pref("media.videocontrols.keyboard-tab-to-all-controls", true);
 
 #ifdef MOZ_WEBRTC

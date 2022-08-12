@@ -389,26 +389,6 @@ static void MarkPrincipalChildrenDirty(nsIFrame* aFrame) {
   }
 }
 
-nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowColumns(
-    ReflowOutput& aDesiredSize, const ReflowInput& aReflowInput,
-    nsReflowStatus& aReflowStatus, ReflowConfig& aConfig,
-    bool aUnboundedLastColumn) {
-  const ColumnBalanceData colData = ReflowChildren(
-      aDesiredSize, aReflowInput, aReflowStatus, aConfig, aUnboundedLastColumn);
-
-  if (!colData.mHasExcessBSize) {
-    return colData;
-  }
-
-  aConfig = ChooseColumnStrategy(aReflowInput, true);
-
-  // We need to reflow our children again one last time, otherwise we might
-  // end up with a stale column block-size for some of our columns, since we
-  // bailed out of balancing.
-  return ReflowChildren(aDesiredSize, aReflowInput, aReflowStatus, aConfig,
-                        aUnboundedLastColumn);
-}
-
 static void MoveChildTo(nsIFrame* aChild, LogicalPoint aOrigin, WritingMode aWM,
                         const nsSize& aContainerSize) {
   if (aChild->GetLogicalPosition(aWM, aContainerSize) == aOrigin) {
@@ -483,7 +463,7 @@ nscoord nsColumnSetFrame::GetPrefISize(gfxContext* aRenderingContext) {
   return result;
 }
 
-nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
+nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowColumns(
     ReflowOutput& aDesiredSize, const ReflowInput& aReflowInput,
     nsReflowStatus& aStatus, const ReflowConfig& aConfig,
     bool aUnboundedLastColumn) {
@@ -776,14 +756,6 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
       kidNextInFlow->RemoveStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
     }
 
-    if (contentBEnd > aReflowInput.mCBReflowInput->ComputedMaxBSize() &&
-        aConfig.mIsBalancing) {
-      // We overflowed vertically, but have not exceeded the number of
-      // columns. We're going to go into overflow columns now, so balancing
-      // no longer applies.
-      colData.mHasExcessBSize = true;
-    }
-
     // We have reached the maximum number of columns. If we are balancing, stop
     // this reflow and continue finding the optimal balancing block-size.
     //
@@ -973,6 +945,9 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
                                             ReflowOutput& aDesiredSize,
                                             bool aUnboundedLastColumn,
                                             nsReflowStatus& aStatus) {
+  MOZ_ASSERT(aConfig.mIsBalancing,
+             "Why are we here if we are not balancing columns?");
+
   const nscoord availableContentBSize = aReflowInput.AvailableBSize();
 
   // Termination of the algorithm below is guaranteed because
@@ -1125,16 +1100,9 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
     if (!foundFeasibleBSizeCloserToBest && aColData.mFeasible) {
       foundFeasibleBSizeCloserToBest = true;
     }
-
-    if (!aConfig.mIsBalancing) {
-      // Looks like we had excess block-size when balancing, so we gave up on
-      // trying to balance.
-      break;
-    }
   }
 
-  if (aConfig.mIsBalancing && !aColData.mFeasible &&
-      !aPresContext->HasPendingInterrupt()) {
+  if (!aColData.mFeasible && !aPresContext->HasPendingInterrupt()) {
     // We need to reflow one more time at the feasible block-size to
     // get a valid layout.
     if (aConfig.mKnownInfeasibleBSize >= availableContentBSize) {

@@ -162,7 +162,7 @@ const MESSAGES = [
       },
       {
         id: "FEATURE_CALLOUT_3",
-        parent_selector: "#colorways",
+        parent_selector: "#colorways.content-container",
         content: {
           position: "callout",
           arrow_position: "end",
@@ -380,15 +380,29 @@ function _observeRender(container) {
 }
 
 async function _loadConfig(messageId) {
-  let content = MESSAGES.find(m => m.id === messageId);
-  const screenId = lazy.featureTourProgress.screen;
-  if (content?.screens && screenId) {
-    // Remove screens the user has already seen
-    const screenIndex = content.screens.findIndex(s => s.id === screenId);
-    content.screens = content.screens.filter((s, i) => {
-      return i >= screenIndex;
+  // If the parent element a screen describes doesn't exist, remove screen
+  // and ensure last screen displays the final primary CTA
+  // (for example, when there are no active colorways in about:firefoxview)
+  // If a user has seen a screen, remove it
+  function _getRelevantScreens(screens, index) {
+    const finalCTA = screens[screens.length - 1].content.primary_button;
+    screens = screens.filter((s, i) => {
+      return i >= index && document.querySelector(s.parent_selector);
     });
+    screens[screens.length - 1].content.primary_button = finalCTA;
+    return screens;
   }
+
+  let content = MESSAGES.find(m => m.id === messageId);
+  if (!content?.screens) {
+    return;
+  }
+
+  const screenIndex = content.screens.findIndex(
+    s => s.id === lazy.featureTourProgress.screen
+  );
+  content.screens = _getRelevantScreens(content.screens, screenIndex);
+
   CURRENT_SCREEN = content?.screens[0];
   CONFIG = content;
 }

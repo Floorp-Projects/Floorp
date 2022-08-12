@@ -350,7 +350,7 @@ add_task(async function test_time_updates_correctly() {
         "synced-tab-li-time text has updated"
       );
 
-      document.querySelector("ol.synced-tabs-list > li").click();
+      document.querySelector(".synced-tab-a").click();
 
       await TestUtils.waitForCondition(
         () => {

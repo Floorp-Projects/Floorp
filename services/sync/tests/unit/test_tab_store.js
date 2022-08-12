@@ -55,122 +55,68 @@ add_task(async function test_getAllTabs() {
   let store = await getMockStore();
   let tabs;
 
-  let threeUrls = ["http://foo.com", "http://fuubar.com", "http://barbar.com"];
-
-  store.getWindowEnumerator = mockGetWindowEnumerator.bind(
-    this,
+  store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, [
     "http://bar.com",
-    1,
-    1,
-    () => 2,
-    () => threeUrls
-  );
+  ]);
 
   _("Get all tabs.");
   tabs = await store.getAllTabs();
   _("Tabs: " + JSON.stringify(tabs));
   equal(tabs.length, 1);
   equal(tabs[0].title, "title");
-  equal(tabs[0].urlHistory.length, 2);
-  equal(tabs[0].urlHistory[0], "http://foo.com");
-  equal(tabs[0].urlHistory[1], "http://bar.com");
+  equal(tabs[0].urlHistory.length, 1);
+  equal(tabs[0].urlHistory[0], "http://bar.com/");
   equal(tabs[0].icon, "");
-  equal(tabs[0].lastUsed, 1);
+  equal(tabs[0].lastUsed, 2);
 
   _("Get all tabs, and check that filtering works.");
-  let twoUrls = ["about:foo", "http://fuubar.com"];
-  store.getWindowEnumerator = mockGetWindowEnumerator.bind(
-    this,
+  store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, [
     "http://foo.com",
-    1,
-    1,
-    () => 2,
-    () => twoUrls
-  );
+    "about:foo",
+  ]);
   tabs = await store.getAllTabs(true);
   _("Filtered: " + JSON.stringify(tabs));
-  equal(tabs.length, 0);
-
-  _("Get all tabs, and check that the entries safety limit works.");
-  let allURLs = [];
-  for (let i = 0; i < 50; i++) {
-    allURLs.push("http://foo" + i + ".bar");
-  }
-  allURLs.splice(35, 0, "about:foo", "about:bar", "about:foobar");
-
-  store.getWindowEnumerator = mockGetWindowEnumerator.bind(
-    this,
-    "http://bar.com",
-    1,
-    1,
-    () => 45,
-    () => allURLs
-  );
-  tabs = await store.getAllTabs(url => url.startsWith("about"));
-
-  _("Sliced: " + JSON.stringify(tabs));
   equal(tabs.length, 1);
-  equal(tabs[0].urlHistory.length, 5);
-  equal(tabs[0].urlHistory[0], "http://foo40.bar");
-  equal(tabs[0].urlHistory[4], "http://foo36.bar");
 });
 
 add_task(async function test_createRecord() {
   let store = await getMockStore();
   let record;
 
-  store.getTabState = mockGetTabState;
-  store.shouldSkipWindow = mockShouldSkipWindow;
-  store.getWindowEnumerator = mockGetWindowEnumerator.bind(
-    this,
-    "http://foo.com",
-    1,
-    1
-  );
   // This number is sensitive to our hard-coded default max record payload size
   // in service.js (256 * 1024).
   // It should be larger than how many records we can fit in a single payload.
-  let numtabs = 2700;
+  let numTabs = 2700;
+  let urls = [];
+  for (let i = 0; i < numTabs; i++) {
+    urls.push("http://foo.com" + i + ".bar");
+  }
 
-  store.getWindowEnumerator = mockGetWindowEnumerator.bind(
-    this,
-    "http://foo.com",
-    1,
-    1
-  );
-  record = await store.createRecord("fake-guid");
-  ok(record instanceof TabSetRecord);
-  equal(record.tabs.length, 1);
+  store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, urls, 1, 1);
 
-  _("create a big record");
-  store.getWindowEnumerator = mockGetWindowEnumerator.bind(
-    this,
-    "http://foo.com",
-    1,
-    numtabs
-  );
   record = await store.createRecord("fake-guid");
   ok(record instanceof TabSetRecord);
   // This number is sensitive to our hard-coded default max record payload size
   // in service.js (256 * 1024). Given our mock session-store etc, it is the
   // actual max we can fit.
-  equal(record.tabs.length, 2672);
+  equal(record.tabs.length, 2309);
 
+  // Now increase the max-payload size - the number of tabs we can store should be larger.
   let maxSizeStub = sinon
     .stub(Service, "getMemcacheMaxRecordPayloadSize")
     .callsFake(() => 512 * 1024);
   try {
-    numtabs = 5400;
+    numTabs = 5400;
     _("Modify the max record payload size and create a big record");
-    store.getWindowEnumerator = mockGetWindowEnumerator.bind(
-      this,
-      "http://foo.com",
-      1,
-      numtabs
-    );
+    urls = [];
+    for (let i = 0; i < numTabs; i++) {
+      urls.push("http://foo.com/" + i + ".bar");
+    }
+    store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, urls);
     record = await store.createRecord("fake-guid");
     ok(record instanceof TabSetRecord);
-    equal(record.tabs.length, 5365);
+    // should now be roughly twice what we could fit before.
+    equal(record.tabs.length, 4613);
   } finally {
     maxSizeStub.restore();
   }

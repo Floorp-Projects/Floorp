@@ -1484,7 +1484,7 @@ impl CertStorage {
 
     unsafe fn SetRevocations(
         &self,
-        revocations: *const ThinVec<RefPtr<nsIRevocationState>>,
+        revocations: *const ThinVec<Option<RefPtr<nsIRevocationState>>>,
         callback: *const nsICertStorageCallback,
     ) -> nserror::nsresult {
         if !is_main_thread() {
@@ -1502,7 +1502,7 @@ impl CertStorage {
         // causing sync to fail. We will accumulate telemetry on these failures
         // in bug 1254099.
 
-        for revocation in revocations {
+        for revocation in revocations.iter().flatten() {
             let mut state: i16 = 0;
             try_ns!(revocation.GetState(&mut state).to_result(), or continue);
 
@@ -1577,7 +1577,7 @@ impl CertStorage {
         &self,
         filter: *const ThinVec<u8>,
         enrolled_issuers: *const ThinVec<nsCString>,
-        coverage: *const ThinVec<RefPtr<nsICRLiteCoverage>>,
+        coverage: *const ThinVec<Option<RefPtr<nsICRLiteCoverage>>>,
         callback: *const nsICertStorageCallback,
     ) -> nserror::nsresult {
         if !is_main_thread() {
@@ -1596,7 +1596,7 @@ impl CertStorage {
 
         let coverage = &*coverage;
         let mut coverage_entries = Vec::with_capacity(coverage.len());
-        for entry in coverage {
+        for entry in coverage.iter().flatten() {
             let mut b64_log_id = nsCString::new();
             try_ns!((*entry).GetB64LogID(&mut *b64_log_id).to_result(), or continue);
             let mut min_timestamp: u64 = 0;
@@ -1664,7 +1664,7 @@ impl CertStorage {
         issuer: *const ThinVec<u8>,
         issuerSPKI: *const ThinVec<u8>,
         serialNumber: *const ThinVec<u8>,
-        timestamps: *const ThinVec<RefPtr<nsICRLiteTimestamp>>,
+        timestamps: *const ThinVec<Option<RefPtr<nsICRLiteTimestamp>>>,
         state: *mut i16,
     ) -> nserror::nsresult {
         // TODO (bug 1541212): We really want to restrict this to non-main-threads only, but we
@@ -1679,7 +1679,7 @@ impl CertStorage {
         }
         let timestamps = &*timestamps;
         let mut timestamp_entries = Vec::with_capacity(timestamps.len());
-        for timestamp_entry in timestamps {
+        for timestamp_entry in timestamps.iter().flatten() {
             let mut log_id = ThinVec::with_capacity(32);
             try_ns!(timestamp_entry.GetLogID(&mut log_id).to_result(), or continue);
             let mut timestamp: u64 = 0;
@@ -1698,7 +1698,7 @@ impl CertStorage {
 
     unsafe fn AddCerts(
         &self,
-        certs: *const ThinVec<RefPtr<nsICertInfo>>,
+        certs: *const ThinVec<Option<RefPtr<nsICertInfo>>>,
         callback: *const nsICertStorageCallback,
     ) -> nserror::nsresult {
         if !is_main_thread() {
@@ -1709,7 +1709,7 @@ impl CertStorage {
         }
         let certs = &*certs;
         let mut cert_entries = Vec::with_capacity(certs.len());
-        for cert in certs {
+        for cert in certs.iter().flatten() {
             let mut der = nsCString::new();
             try_ns!((*cert).GetCert(&mut *der).to_result(), or continue);
             let mut subject = nsCString::new();

@@ -14,6 +14,10 @@
 // 3.  We verify that relevant opt-out prefs disable the Nimbus and Firefox
 //     Messaging System experience.
 
+const { ASRouterTargeting } = ChromeUtils.import(
+  "resource://activity-stream/lib/ASRouterTargeting.jsm"
+);
+
 setupProfileService();
 
 let taskProfile;
@@ -242,5 +246,120 @@ add_task(async function test_backgroundtask_optout_preferences() {
 
     // Verify that no toast notication was shown.
     Assert.ok(!("showAlert" in infoMap), `No alert shown with ${option}`);
+  }
+});
+
+const TARGETING_LIST = [
+  // Target based on background task details.
+  ["isBackgroundTaskMode", 1],
+  ["backgroundTaskName == 'message'", 1],
+  ["backgroundTaskName == 'unrecognized'", 0],
+  // Filter based on `defaultProfile` targeting snapshot.
+  ["(currentDate|date - defaultProfile.currentDate|date) > 0", 1],
+  ["(currentDate|date - defaultProfile.currentDate|date) > 999999", 0],
+];
+
+// Test that background tasks targeting works for Nimbus experiments.
+add_task(async function test_backgroundtask_Nimbus_targeting() {
+  let experimentFile = do_get_file("experiment.json");
+  let experimentData = await IOUtils.readJSON(experimentFile.path);
+
+  // We can't take a full environment snapshot under `xpcshell`.  Select a few
+  // items that do work.
+  let target = {
+    currentDate: ASRouterTargeting.Environment.currentDate,
+    firefoxVersion: ASRouterTargeting.Environment.firefoxVersion,
+  };
+  let targetSnapshot = await ASRouterTargeting.getEnvironmentSnapshot(target);
+
+  for (let [targeting, expectedLength] of TARGETING_LIST) {
+    // Start fresh each time.
+    resetProfile(taskProfile);
+
+    let snapshotFile = taskProfile.rootDir.clone();
+    snapshotFile.append("targeting.snapshot.json");
+    await IOUtils.writeJSON(snapshotFile.path, targetSnapshot);
+
+    // Write updated experiment data.
+    experimentData.data.targeting = targeting;
+    let targetingExperimentFile = taskProfile.rootDir.clone();
+    targetingExperimentFile.append("targeting.experiment.json");
+    await IOUtils.writeJSON(targetingExperimentFile.path, experimentData);
+
+    let { infoMap } = await doMessage({
+      extraArgs: [
+        "--experiments",
+        targetingExperimentFile.path,
+        "--targeting-snapshot",
+        snapshotFile.path,
+      ],
+    });
+
+    // Verify that the given targeting generated the expected number of impressions.
+    let impressions = infoMap.ASRouterState.messageImpressions;
+    Assert.equal(
+      Object.keys(impressions).length,
+      expectedLength,
+      `${expectedLength} impressions generated with targeting '${targeting}'`
+    );
+  }
+});
+
+// Test that background tasks targeting works for Firefox Messaging System branches.
+add_task(async function test_backgroundtask_Messaging_targeting() {
+  // Don't target the Nimbus experiment at all.  Use a consistent
+  // randomization ID to always enroll in the first branch.  Target
+  // the first branch of the Firefox Messaging Experiment to the given
+  // targeting.  Therefore, we either get the first branch if the
+  // targeting matches, or nothing at all.
+
+  // This randomization ID was extracted by hand from a Firefox instance.
+  let treatmentARandomizationId = "d0e95fc3-fb15-4bc4-8151-a89582a56e29";
+
+  let experimentFile = do_get_file("experiment.json");
+  let experimentData = await IOUtils.readJSON(experimentFile.path);
+
+  // We can't take a full environment snapshot under `xpcshell`.  Select a few
+  // items that do work.
+  let target = {
+    currentDate: ASRouterTargeting.Environment.currentDate,
+    firefoxVersion: ASRouterTargeting.Environment.firefoxVersion,
+  };
+  let targetSnapshot = await ASRouterTargeting.getEnvironmentSnapshot(target);
+
+  for (let [targeting, expectedLength] of TARGETING_LIST) {
+    // Start fresh each time.
+    resetProfile(taskProfile);
+
+    let snapshotFile = taskProfile.rootDir.clone();
+    snapshotFile.append("targeting.snapshot.json");
+    await IOUtils.writeJSON(snapshotFile.path, targetSnapshot);
+
+    // Write updated experiment data.
+    experimentData.data.targeting = "true";
+    experimentData.data.branches[0].features[0].value.targeting = targeting;
+
+    let targetingExperimentFile = taskProfile.rootDir.clone();
+    targetingExperimentFile.append("targeting.experiment.json");
+    await IOUtils.writeJSON(targetingExperimentFile.path, experimentData);
+
+    let { infoMap } = await doMessage({
+      extraArgs: [
+        "--experiments",
+        targetingExperimentFile.path,
+        "--targeting-snapshot",
+        snapshotFile.path,
+        "--randomizationId",
+        treatmentARandomizationId,
+      ],
+    });
+
+    // Verify that the given targeting generated the expected number of impressions.
+    let impressions = infoMap.ASRouterState.messageImpressions;
+    Assert.equal(
+      Object.keys(impressions).length,
+      expectedLength,
+      `${expectedLength} impressions generated with targeting '${targeting}'`
+    );
   }
 });

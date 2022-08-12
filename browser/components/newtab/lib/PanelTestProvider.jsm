@@ -416,7 +416,11 @@ const MESSAGES = () => [
             title: {
               string_id: "mr1-onboarding-pin-header",
             },
-            logo: {},
+            logo: {
+              darkModeImageURL:
+                "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/a3c640c8-7594-4bb2-bc18-8b4744f3aaf2.gif",
+              alt: "sample alt text",
+            },
             hero_text: {
               string_id: "mr1-welcome-screen-hero-text",
             },

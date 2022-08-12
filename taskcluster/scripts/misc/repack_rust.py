@@ -554,48 +554,6 @@ def repack(
         shutil.move(tar_file, upload_dir)
 
 
-def repack_cargo(host, channel="nightly"):
-    log("Repacking cargo for %s..." % host)
-    # Cargo doesn't seem to have a .toml manifest.
-    base_url = "https://static.rust-lang.org/cargo-dist/"
-    req = requests.get(os.path.join(base_url, "channel-cargo-" + channel))
-    req.raise_for_status()
-    file = ""
-    for line in req.iter_lines():
-        if line.find(host) != -1:
-            file = line.strip()
-    if not file:
-        log("No manifest entry for %s!" % host)
-        return
-    manifest = {
-        "date": req.headers["Last-Modified"],
-        "pkg": {
-            "cargo": {
-                "version": channel,
-                "target": {
-                    host: {
-                        "url": os.path.join(base_url, file),
-                        "hash": None,
-                        "available": True,
-                    },
-                },
-            },
-        },
-    }
-    log("Using manifest for cargo %s." % channel)
-    log("Fetching packages...")
-    cargo = fetch_package(manifest, "cargo", host)
-    log("Installing packages...")
-    install_dir = "cargo"
-    shutil.rmtree(install_dir)
-    install(os.path.basename(cargo["url"]), install_dir)
-    tar_basename = "cargo-%s-repack" % host
-    log("Tarring %s..." % tar_basename)
-    tar_file = tar_basename + ".tar.zst"
-    build_tar_package(tar_file, ".", install_dir)
-    shutil.rmtree(install_dir)
-
-
 def expand_platform(name):
     """Expand a shortcut name to a full Rust platform string."""
     platforms = {

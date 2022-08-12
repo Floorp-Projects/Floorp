@@ -12,10 +12,10 @@ For firefox's purposes, these patches still work fine, and are necessary
 to make -Zbuild-std work in a vendored environment.
 
 diff --git a/src/bootstrap/dist.rs b/src/bootstrap/dist.rs
-index 6181a611ec3..8d99c148dcf 100644
+index 6291b204e48..d4c90d29824 100644
 --- a/src/bootstrap/dist.rs
 +++ b/src/bootstrap/dist.rs
-@@ -824,6 +824,30 @@ fn run(self, builder: &Builder<'_>) -> GeneratedTarball {
+@@ -837,6 +837,30 @@ fn run(self, builder: &Builder<'_>) -> GeneratedTarball {
              builder.copy(&builder.src.join(file), &dst_src.join(file));
          }
  
@@ -47,10 +47,10 @@ index 6181a611ec3..8d99c148dcf 100644
      }
  }
 diff --git a/src/bootstrap/lib.rs b/src/bootstrap/lib.rs
-index a4e35bf6d47..cd5e478bed0 100644
+index f84de73297a..d584444dfd2 100644
 --- a/src/bootstrap/lib.rs
 +++ b/src/bootstrap/lib.rs
-@@ -1418,6 +1418,27 @@ fn tempdir(&self) -> PathBuf {
+@@ -1416,6 +1416,27 @@ fn tempdir(&self) -> PathBuf {
          tmp
      }
  
@@ -77,4 +77,4 @@ index a4e35bf6d47..cd5e478bed0 100644
 +
      /// Copies a file from `src` to `dst`
      pub fn copy(&self, src: &Path, dst: &Path) {
-         if self.config.dry_run {
+         self.copy_internal(src, dst, false);

@@ -110,15 +110,16 @@ MIDIPermissionRequest::Run() {
   }
 
   // If the add-on is not installed, auto-deny (except for localhost).
-  if (!nsContentUtils::HasSitePerm(mPrincipal, kPermName) &&
+  if (StaticPrefs::dom_webmidi_gated() &&
+      !nsContentUtils::HasSitePerm(mPrincipal, kPermName) &&
       !BasePrincipal::Cast(mPrincipal)->IsLoopbackHost()) {
     Cancel();
     return NS_OK;
   }
 
-  // We can only get here for localhost, or if the add-on is installed, but the
-  // user has subsequently changed the permission from ALLOW to ASK. In that
-  // unusual case, throw up a prompt.
+  // We can only get here for localhost, if add-on gating is disabled or if the
+  // add-on is installed but the user has subsequently changed the permission
+  // from ALLOW to ASK. In that unusual case, throw up a prompt.
   if (NS_FAILED(nsContentPermissionUtils::AskPermission(this, mWindow))) {
     Cancel();
     return NS_ERROR_FAILURE;

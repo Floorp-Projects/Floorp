@@ -45,8 +45,15 @@ _Sometimes Complexity of the web-platform leaks into JS Feature works_
   option set than main thread, and it's easy to forget them!) You may want to
   write a mochitest. 
 
+### Syntax Features Checklist
 
-### Testing Consideration Checklist 
+-  ☐ Does `Reflect.parse` correctly parse and return results for your new syntax?
+  - `Reflect.parse` tests are interesting as well, because they can be written
+    for new syntax before bytecode emission is done.
+  -  ☐ Are the locations correct for the new syntax entries in the parse tree?
+-  ☐ Are your errors emitted with sensible location info?
+
+### Testing Consideration Checklist
 
 _There's lots of complexity in SpiderMonkey that isn't always captured by the
 specification, so the below is some useful guidance to behaviour to pay
@@ -62,7 +69,7 @@ attention to that may not be tested by a feature's test262 tests_
   behaviour of promise
   resolution?](https://www.stefanjudis.com/today-i-learned/promise-resolution-with-objects-including-a-then-property/)
 -  ☐ Have you written some OOM tests for your feature to ensure your OOM
-  handling is correct? 
+  handling is correct?
 
 #### Web Platform Testing Considerations
 -  ☐ Does the feature have to handle exotic objects specially? Consider what
@@ -70,4 +77,3 @@ attention to that may not be tested by a feature's test262 tests_
   platform, such as `WindowProxy`, `Location` (cross-origin objects).
 -  ☐ What happens when your feature interacts with
   [X-rays](/dom/scriptSecurity/xray_vision.rst)?
-  

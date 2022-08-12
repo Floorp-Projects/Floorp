@@ -106,7 +106,7 @@ xul|iframe {
   min-height: 10px;
 }
 
-@supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
+@media (-moz-box-flexbox-emulation) {
   /* In emulation, <iframe> is block instead of inline, so reset the width/height */
   xul|iframe {
     width: auto;

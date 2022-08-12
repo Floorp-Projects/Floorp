@@ -3477,6 +3477,24 @@ bool CacheIRCompiler::emitNewStringObjectResult(uint32_t templateObjectOffset,
   return true;
 }
 
+bool CacheIRCompiler::emitStringIndexOfResult(StringOperandId strId,
+                                              StringOperandId searchStrId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register str = allocator.useRegister(masm, strId);
+  Register searchStr = allocator.useRegister(masm, searchStrId);
+
+  callvm.prepare();
+  masm.Push(searchStr);
+  masm.Push(str);
+
+  using Fn = bool (*)(JSContext*, HandleString, HandleString, int32_t*);
+  callvm.call<Fn, js::StringIndexOf>();
+  return true;
+}
+
 bool CacheIRCompiler::emitStringStartsWithResult(StringOperandId strId,
                                                  StringOperandId searchStrId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
@@ -3492,6 +3510,24 @@ bool CacheIRCompiler::emitStringStartsWithResult(StringOperandId strId,
 
   using Fn = bool (*)(JSContext*, HandleString, HandleString, bool*);
   callvm.call<Fn, js::StringStartsWith>();
+  return true;
+}
+
+bool CacheIRCompiler::emitStringEndsWithResult(StringOperandId strId,
+                                               StringOperandId searchStrId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register str = allocator.useRegister(masm, strId);
+  Register searchStr = allocator.useRegister(masm, searchStrId);
+
+  callvm.prepare();
+  masm.Push(searchStr);
+  masm.Push(str);
+
+  using Fn = bool (*)(JSContext*, HandleString, HandleString, bool*);
+  callvm.call<Fn, js::StringEndsWith>();
   return true;
 }
 
