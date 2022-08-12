@@ -14,12 +14,14 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/css/Rule.h"
-#include "mozilla/dom/SanitizerBinding.h"
 #include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/DocumentFragment.h"
-#include "mozilla/dom/ShadowIncludingTreeIterator.h"
+#include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/HTMLUnknownElement.h"
+#include "mozilla/dom/Link.h"
+#include "mozilla/dom/SanitizerBinding.h"
+#include "mozilla/dom/ShadowIncludingTreeIterator.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/NullPrincipal.h"
 #include "nsAtom.h"
@@ -1858,7 +1860,8 @@ void nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
     RefPtr<nsAtom> attrLocal = attrName->LocalName();
 
     if (mIsForSanitizerAPI) {
-      if (MustDropAttribute(aElement, attrNs, attrLocal)) {
+      if (MustDropAttribute(aElement, attrNs, attrLocal) ||
+          MustDropFunkyAttribute(aElement, attrNs, attrLocal)) {
         aElement->UnsetAttr(kNameSpaceID_None, attrLocal, false);
         if (mLogRemovals) {
           LogMessage("Removed unsafe attribute.", aElement->OwnerDoc(),
@@ -2042,6 +2045,60 @@ bool nsTreeSanitizer::MustDropAttribute(Element* aElement,
   }
 
   // Step 7. Return keep.
+  return false;
+}
+
+// https://wicg.github.io/sanitizer-api/#handle-funky-elements
+bool nsTreeSanitizer::MustDropFunkyAttribute(Element* aElement,
+                                             int32_t aAttrNamespace,
+                                             nsAtom* aAttrLocalName) {
+  // Step 1. If element’s element interface is HTMLTemplateElement:
+  // Note: This step is implemented in the main loop of SanitizeChildren.
+
+  // Step 2. If element’s element interface has a HTMLHyperlinkElementUtils
+  // mixin, and if element’s protocol property is "javascript:":
+  // TODO(https://github.com/WICG/sanitizer-api/issues/168)
+  if (aAttrLocalName == nsGkAtoms::href) {
+    if (nsCOMPtr<Link> link = do_QueryInterface(aElement)) {
+      nsCOMPtr<nsIURI> uri = link->GetURI();
+      if (uri && uri->SchemeIs("javascript")) {
+        // Step 2.1. Remove the `href` attribute from element.
+        return true;
+      }
+    }
+  }
+
+  // Step 3. if element’s element interface is HTMLFormElement, and if element’s
+  // action attribute is a URL with "javascript:" protocol:
+  if (auto* form = HTMLFormElement::FromNode(aElement)) {
+    if (aAttrNamespace == kNameSpaceID_None &&
+        aAttrLocalName == nsGkAtoms::action) {
+      nsCOMPtr<nsIURI> uri;
+      form->GetURIAttr(aAttrLocalName, nullptr, getter_AddRefs(uri));
+      if (uri && uri->SchemeIs("javascript")) {
+        // Step 3.1 Remove the `action` attribute from element.
+        return true;
+      }
+    }
+  }
+
+  // Step 4. if element’s element interface is HTMLInputElement or
+  // HTMLButtonElement, and if element’s formaction attribute is a [URL] with
+  // javascript: protocol
+  if (aElement->IsAnyOfHTMLElements(nsGkAtoms::input, nsGkAtoms::button) &&
+      aAttrNamespace == kNameSpaceID_None &&
+      aAttrLocalName == nsGkAtoms::formaction) {
+    // XXX nsGenericHTMLFormControlElementWithState::GetFormAction falls back to
+    // the document URI.
+    nsGenericHTMLElement* el = nsGenericHTMLElement::FromNode(aElement);
+    nsCOMPtr<nsIURI> uri;
+    el->GetURIAttr(aAttrLocalName, nullptr, getter_AddRefs(uri));
+    if (uri && uri->SchemeIs("javascript")) {
+      // Step 4.1 Remove the `formaction` attribute from element.
+      return true;
+    }
+  }
+
   return false;
 }
 
