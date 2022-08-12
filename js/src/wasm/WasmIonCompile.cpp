@@ -5833,7 +5833,7 @@ static bool EmitIntrinsic(FunctionCompiler& f) {
 }
 
 static bool EmitBodyExprs(FunctionCompiler& f) {
-  if (!f.iter().startFunction(f.funcIndex())) {
+  if (!f.iter().startFunction(f.funcIndex(), f.locals())) {
     return false;
   }
 
