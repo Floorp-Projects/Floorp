@@ -945,6 +945,9 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
                                             ReflowOutput& aDesiredSize,
                                             bool aUnboundedLastColumn,
                                             nsReflowStatus& aStatus) {
+  MOZ_ASSERT(aConfig.mIsBalancing,
+             "Why are we here if we are not balancing columns?");
+
   const nscoord availableContentBSize = aReflowInput.AvailableBSize();
 
   // Termination of the algorithm below is guaranteed because
@@ -1097,16 +1100,9 @@ void nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
     if (!foundFeasibleBSizeCloserToBest && aColData.mFeasible) {
       foundFeasibleBSizeCloserToBest = true;
     }
-
-    if (!aConfig.mIsBalancing) {
-      // Looks like we had excess block-size when balancing, so we gave up on
-      // trying to balance.
-      break;
-    }
   }
 
-  if (aConfig.mIsBalancing && !aColData.mFeasible &&
-      !aPresContext->HasPendingInterrupt()) {
+  if (!aColData.mFeasible && !aPresContext->HasPendingInterrupt()) {
     // We need to reflow one more time at the feasible block-size to
     // get a valid layout.
     if (aConfig.mKnownInfeasibleBSize >= availableContentBSize) {
