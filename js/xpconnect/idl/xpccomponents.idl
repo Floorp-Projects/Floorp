@@ -150,9 +150,32 @@ interface nsIXPCComponents_Utils : nsISupports
      *        created explicitly with `Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal);`
      * @param {Object} options
      *        Optional parameters, valid properties are:
+     *        - allowWaivers: {Boolean} Allows the caller to waive Xrays, in case
+     *          Xrays were used. Defaults to true.
+     *        - discardSource: {Boolean} For certain globals, we know enough about
+     *          the code that will run in them that we can discard script source
+     *          entirely. A discarded source will be re-read when stringifying
+     *          functions.
+     *            Defaults to false.
+     *        - forceSecureContext: {Boolean} Determines whether content windows and
+     *          workers are marked as "Secure Context"s. If principal is the system
+     *          principal, the value is forced to true. Otherwise defaults to false.
+     *        - freshCompartment: {Boolean} Whether the sandbox should be created
+     *          using a new compartment. Defaults to false.
      *        - freshZone: {Boolean} if true creates a new GC region separate from
      *          both the calling context's and the sandbox prototype's region.
      *            Defaults to false.
+     *        - invisibleToDebugger: {Boolean} Whether this sandbox and its scripts
+     *          can be accessed by the JavaScript Debugger.
+     *            Defaults to false.
+     *        - isWebExtensionContentScript: {Boolean} Whether this sandbox
+     *          corresponds to a WebExtension content script, and should receive
+     *          various bits of special compatibility behavior.
+     *            Defaults to false.
+     *        - metadata: {Object} Object to use as the metadata for the sandbox. See
+     *          setSandboxMetadata.
+     *        - originAttributes: {Object} Dictionary of origin attributes to use if
+     *          the principal was provided as a string.
      *        - sameZoneAs: {Object} Javascript Object in whose garbage collection
      *          region the sandbox should be created. This helps to improve memory
      *          usage by allowing sandboxes to be discarded when that zone goes away.
@@ -174,6 +197,8 @@ interface nsIXPCComponents_Utils : nsISupports
      *          environment in which javascript code that needs Web APIs (such as
      *          accessing the window's DOM) can be executed without interference from
      *          untrusted content code.
+     *        - userContextId: {Number} The id of the user context this sandbox is
+     *          inside. Defaults to 0.
      *        - wantComponents: {Boolean} Indicates whether the Components object is
      *          available or not in the sandbox. If the sandbox interacts with
      *          untrusted content this should be set to false when possible to
