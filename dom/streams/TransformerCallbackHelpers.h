@@ -77,6 +77,24 @@ class TransformerAlgorithms final : public TransformerAlgorithmsBase {
   MOZ_KNOWN_LIVE RefPtr<TransformerFlushCallback> mFlushCallback;
 };
 
+// https://streams.spec.whatwg.org/#transformstream-set-up
+class TransformerAlgorithmsWrapper : public TransformerAlgorithmsBase {
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> TransformCallback(
+      JSContext*, JS::Handle<JS::Value> aChunk,
+      TransformStreamDefaultController& aController, ErrorResult& aRv) final;
+
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> FlushCallback(
+      JSContext*, TransformStreamDefaultController& aController,
+      ErrorResult& aRv) final;
+
+  MOZ_CAN_RUN_SCRIPT virtual void TransformCallbackImpl(
+      JS::Handle<JS::Value> aChunk,
+      TransformStreamDefaultController& aController, ErrorResult& aRv) = 0;
+
+  MOZ_CAN_RUN_SCRIPT virtual void FlushCallbackImpl(
+      TransformStreamDefaultController& aController, ErrorResult& aRv) = 0;
+};
+
 }  // namespace mozilla::dom
 
 #endif  // DOM_STREAMS_TRANSFORMERCALLBACKHELPERS_H_

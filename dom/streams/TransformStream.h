@@ -21,11 +21,18 @@ class WritableStream;
 class ReadableStream;
 class UniqueMessagePortId;
 class MessagePort;
+class TransformerAlgorithmsWrapper;
 
 class TransformStream final : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TransformStream)
+
+  // https://streams.spec.whatwg.org/#transformstream-set-up
+  // Intended to be used by interfaces using GenericTransformStream mixin.
+  MOZ_CAN_RUN_SCRIPT static already_AddRefed<TransformStream> CreateGeneric(
+      const GlobalObject& aGlobal, TransformerAlgorithmsWrapper& aAlgorithms,
+      ErrorResult& aRv);
 
   TransformStream(nsIGlobalObject* aGlobal, ReadableStream* aReadable,
                   WritableStream* aWritable);
