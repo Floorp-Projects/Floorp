@@ -29,4 +29,8 @@ assert.throws(TypeError, function() {
   dotAll.call(arguments);
 }, 'arguments object');
 
+assert.throws(TypeError, function() {
+  dotAll.call(() => {});
+}, 'function object');
+
 reportCompare(0, 0);
