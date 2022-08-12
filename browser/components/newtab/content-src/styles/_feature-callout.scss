@@ -11,6 +11,11 @@ $max-z-index: 2147483647;
 
   // sass-lint:disable no-color-literals
   .screen {
+    // override transform in about:welcome
+    &:dir(rtl) {
+      transform: none;
+    }
+
     &[pos='callout'] {
       // Max value for z-index
       z-index: $max-z-index - 1;

@@ -37,6 +37,9 @@ input {
 .onboardingContainer.featureCallout, .onboardingContainer.featureCallout .outer-wrapper {
   height: auto;
 }
+.onboardingContainer.featureCallout .screen:dir(rtl) {
+  transform: none;
+}
 .onboardingContainer.featureCallout .screen[pos=callout] {
   z-index: 2147483646;
   height: fit-content;
