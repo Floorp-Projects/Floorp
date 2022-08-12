@@ -1077,9 +1077,6 @@ pref("javascript.options.shared_memory", true);
 pref("javascript.options.throw_on_debuggee_would_run", false);
 pref("javascript.options.dump_stack_on_debuggee_would_run", false);
 
-// Dynamic module import.
-pref("javascript.options.dynamicImport", true);
-
 // advanced prefs
 pref("image.animation_mode",                "normal");
 

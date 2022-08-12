@@ -76,47 +76,35 @@ function MoveHoles(sparse, sparseLen, dense, denseLen) {
 
 // Iterative, bottom up, mergesort.
 function MergeSort(array, len, comparefn) {
-  // To save effort we will do all of our work on a dense list,
-  // then create holes at the end.
-  var denseList = [];
-  var denseLen = 0;
-
-  for (var i = 0; i < len; i++) {
-    if (i in array) {
-      DefineDataProperty(denseList, denseLen++, array[i]);
-    }
-  }
-
-  if (denseLen < 1) {
-    return array;
-  }
+  assert(IsPackedArray(array), "array is packed");
+  assert(array.length === len, "length mismatch");
+  assert(len > 0, "array should be non-empty");
 
   // Insertion sort for small arrays, where "small" is defined by performance
   // testing.
-  if (denseLen < 24) {
-    InsertionSort(denseList, 0, denseLen - 1, comparefn);
-    MoveHoles(array, len, denseList, denseLen);
+  if (len < 24) {
+    InsertionSort(array, 0, len - 1, comparefn);
     return array;
   }
 
   // We do all of our allocating up front
-  var lBuffer = denseList;
+  var lBuffer = array;
   var rBuffer = [];
 
   // Use insertion sort for initial ranges.
   var windowSize = 4;
-  for (var start = 0; start < denseLen - 1; start += windowSize) {
-    var end = std_Math_min(start + windowSize - 1, denseLen - 1);
+  for (var start = 0; start < len - 1; start += windowSize) {
+    var end = std_Math_min(start + windowSize - 1, len - 1);
     InsertionSort(lBuffer, start, end, comparefn);
   }
 
-  for (; windowSize < denseLen; windowSize = 2 * windowSize) {
-    for (var start = 0; start < denseLen; start += 2 * windowSize) {
+  for (; windowSize < len; windowSize = 2 * windowSize) {
+    for (var start = 0; start < len; start += 2 * windowSize) {
       // The midpoint between the two subarrays.
       var mid = start + windowSize - 1;
 
       // To keep from going over the edge.
-      var end = std_Math_min(start + 2 * windowSize - 1, denseLen - 1);
+      var end = std_Math_min(start + 2 * windowSize - 1, len - 1);
 
       Merge(lBuffer, rBuffer, start, mid, end, comparefn);
     }
@@ -126,8 +114,7 @@ function MergeSort(array, len, comparefn) {
     lBuffer = rBuffer;
     rBuffer = swap;
   }
-  MoveHoles(array, len, lBuffer, denseLen);
-  return array;
+  return lBuffer;
 }
 
 // A helper function for MergeSortTypedArray.
@@ -194,12 +181,7 @@ function MergeSortTypedArray(array, len, comparefn) {
   if (len < 8) {
     InsertionSort(lBuffer, 0, len - 1, comparefn);
 
-    // Move the sorted elements into the array.
-    for (var i = 0; i < len; i++) {
-      array[i] = lBuffer[i];
-    }
-
-    return array;
+    return lBuffer;
   }
 
   // We do all of our allocating up front.
@@ -229,10 +211,5 @@ function MergeSortTypedArray(array, len, comparefn) {
     rBuffer = swap;
   }
 
-  // Move the sorted elements into the array.
-  for (var i = 0; i < len; i++) {
-    array[i] = lBuffer[i];
-  }
-
-  return array;
+  return lBuffer;
 }

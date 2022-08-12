@@ -37,7 +37,7 @@ class Sanitizer final : public nsISupports, public nsWrapperCache {
   explicit Sanitizer(nsIGlobalObject* aGlobal, const SanitizerConfig& aOptions)
       : mGlobal(aGlobal), mTreeSanitizer(nsIParserUtils::SanitizerAllowStyle) {
     MOZ_ASSERT(aGlobal);
-    mTreeSanitizer.WithWebSanitizerOptions(aOptions);
+    mTreeSanitizer.WithWebSanitizerOptions(aGlobal, aOptions);
   }
 
   nsIGlobalObject* GetParentObject() const { return mGlobal; }

@@ -33,12 +33,12 @@ void TransformStreamDefaultController::SetStream(TransformStream& aStream) {
   mStream = &aStream;
 }
 
-TransformerAlgorithms* TransformStreamDefaultController::Algorithms() {
+TransformerAlgorithmsBase* TransformStreamDefaultController::Algorithms() {
   return mTransformerAlgorithms;
 }
 
 void TransformStreamDefaultController::SetAlgorithms(
-    TransformerAlgorithms* aTransformerAlgorithms) {
+    TransformerAlgorithmsBase* aTransformerAlgorithms) {
   mTransformerAlgorithms = aTransformerAlgorithms;
 }
 
@@ -139,8 +139,8 @@ void TransformStreamDefaultController::Enqueue(JSContext* aCx,
     // Step 7.1: Assert: backpressure is true.
     MOZ_ASSERT(backpressure);
 
-    // Step 7.2: Perform ! TransformStreamSetBackpressure(stream, true).
-    TransformStreamSetBackpressure(stream, true, aRv);
+    // Step 7.2: Perform ! TransformStreamSetBackpressure(true).
+    stream->SetBackpressure(true, aRv);
   }
 }
 
@@ -196,7 +196,7 @@ void TransformStreamDefaultController::Terminate(JSContext* aCx,
 void SetUpTransformStreamDefaultController(
     JSContext* aCx, TransformStream& aStream,
     TransformStreamDefaultController& aController,
-    TransformerAlgorithms& aTransformerAlgorithms) {
+    TransformerAlgorithmsBase& aTransformerAlgorithms) {
   // Step 1. Assert: stream implements TransformStream.
   // Step 2. Assert: stream.[[controller]] is undefined.
   MOZ_ASSERT(!aStream.Controller());

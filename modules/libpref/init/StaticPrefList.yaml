@@ -3575,6 +3575,12 @@
   value: false
   mirror: always
 
+# Logs elements and attributes removed by the Sanitizer API to the console.
+- name: dom.security.sanitizer.logging
+  type: bool
+  value: false
+  mirror: always
+
 # Whether or not selection events on text controls are enabled.
 - name: dom.select_events.textcontrols.selectionchange.enabled
   type: bool
@@ -5635,7 +5641,11 @@
 #if !defined(MOZ_WIDGET_ANDROID)
 - name: gfx.egl.prefer-gles.enabled
   type: bool
+#if defined(MOZ_WIDGET_GTK) && defined(_ARM64_)
+  value: true
+#else
   value: false
+#endif
   mirror: once
 #endif
 

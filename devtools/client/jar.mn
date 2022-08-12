@@ -17,6 +17,7 @@ devtools.jar:
     content/shared/components/reps/reps.css (shared/components/reps/reps.css)
     content/shared/components/reps/images/input.svg (shared/components/reps/images/input.svg)
     content/shared/components/reps/images/jump-definition.svg (shared/components/reps/images/jump-definition.svg)
+    content/shared/components/reps/images/open-a11y.svg (shared/components/reps/images/open-a11y.svg)
     content/shared/components/reps/images/open-inspector.svg (shared/components/reps/images/open-inspector.svg)
     content/shared/components/tabs/Tabs.css (shared/components/tabs/Tabs.css)
     content/shared/components/NotificationBox.css (shared/components/NotificationBox.css)

@@ -89,6 +89,8 @@ interface PeerConnectionImpl  {
   [Throws]
   Promise<void> onSetDescriptionSuccess(RTCSdpType type, boolean remote);
 
+  void onSetDescriptionError();
+
   /* Attributes */
   /* This provides the implementation with the certificate it uses to
    * authenticate itself.  The JS side must set this before calling

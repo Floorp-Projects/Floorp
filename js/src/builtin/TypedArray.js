@@ -1176,6 +1176,23 @@ function TypedArraySome(callbackfn /*, thisArg*/) {
 // Inlining this enables inlining of the callback function.
 SetIsInlinableLargeFunction(TypedArraySome);
 
+// To satisfy step 6.b from TypedArray SortCompare described in 23.2.3.29 the
+// user supplied comparefn is wrapped.
+function TypedArraySortCompare(comparefn) {
+  return function(x, y) {
+    // Step 6.b.i.
+    var v = +callContentFunction(comparefn, undefined, x, y);
+
+    // Step 6.b.ii.
+    if (v !== v) {
+      return 0;
+    }
+
+    // Step 6.b.iii.
+    return v;
+  };
+}
+
 // ES2019 draft rev 8a16cb8d18660a1106faae693f0f39b9f1a30748
 // 22.2.3.26 %TypedArray%.prototype.sort ( comparefn )
 function TypedArraySort(comparefn) {
@@ -1215,22 +1232,18 @@ function TypedArraySort(comparefn) {
     return TypedArrayNativeSort(obj);
   }
 
-  // To satisfy step 2 from TypedArray SortCompare described in 22.2.3.26
-  // the user supplied comparefn is wrapped.
-  var wrappedCompareFn = function(x, y) {
-    // Step a.
-    var v = +callContentFunction(comparefn, undefined, x, y);
+  // Steps 5-6.
+  var wrappedCompareFn = TypedArraySortCompare(comparefn);
 
-    // Step b.
-    if (v !== v) {
-      return 0;
-    }
+  // Step 7.
+  var sorted = MergeSortTypedArray(obj, len, wrappedCompareFn);
 
-    // Step c.
-    return v;
-  };
+  // Move the sorted elements into the array.
+  for (var i = 0; i < len; i++) {
+    obj[i] = sorted[i];
+  }
 
-  return MergeSortTypedArray(obj, len, wrappedCompareFn);
+  return obj;
 }
 
 // ES2017 draft rev f8a9be8ea4bd97237d176907a1e3080dce20c68f
@@ -2210,19 +2223,44 @@ function TypedArrayToSorted(comparefn) {
     );
   }
 
-  // Step 6. Let A be ? TypedArrayCreateSameType(O, « 𝔽(len) »).
-  var A = TypedArrayCreateSameType(O, len);
+  // Arrays with less than two elements remain unchanged when sorted.
+  if (len <= 1) {
+    // Step 6. Let A be ? TypedArrayCreateSameType(O, « 𝔽(len) »).
+    var A = TypedArrayCreateSameType(O, len);
 
-  // Steps 7-11 not followed exactly; this implementation copies the list and then
-  // sorts the copy, rather than calling a sort method that copies the list and then
-  // copying the result again.
-  // Equivalent to steps 10-11.
-  for (var k = 0; k < len; k++) {
-    A[k] = O[k];
+    // Steps 7-11.
+    if (len > 0) {
+      A[0] = O[0];
+    }
+
+    // Step 12.
+    return A;
   }
 
-  // Equivalent to steps 8-9 and 12.
-  return callFunction(TypedArraySort, A, comparefn);
+  if (comparefn === undefined) {
+    // Step 6. Let A be ? TypedArrayCreateSameType(O, « 𝔽(len) »).
+    var A = TypedArrayCreateSameType(O, len);
+
+    // Steps 7-11 not followed exactly; this implementation copies the list and then
+    // sorts the copy, rather than calling a sort method that copies the list and then
+    // copying the result again.
+
+    // Equivalent to steps 10-11.
+    for (var k = 0; k < len; k++) {
+      A[k] = O[k];
+    }
+
+    // Equivalent to steps 7-9 and 12.
+    return TypedArrayNativeSort(A);
+  }
+
+  // Steps 7-8.
+  var wrappedCompareFn = TypedArraySortCompare(comparefn);
+
+  // Steps 6 and 9-12.
+  //
+  // MergeSortTypedArray returns a sorted copy - exactly what we need to return.
+  return MergeSortTypedArray(O, len, wrappedCompareFn);
 }
 
 #endif

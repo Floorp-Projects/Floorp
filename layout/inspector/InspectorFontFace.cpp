@@ -120,50 +120,37 @@ void InspectorFontFace::GetLocalName(nsAString& aLocalName) {
   }
 }
 
-static void AppendToFormat(nsAString& aResult, const char* aFormat) {
-  if (!aResult.IsEmpty()) {
-    aResult.Append(',');
-  }
-  aResult.AppendASCII(aFormat);
-}
-
 void InspectorFontFace::GetFormat(nsAString& aFormat) {
   aFormat.Truncate();
   if (mFontEntry->IsUserFont() && !mFontEntry->IsLocalUserFont()) {
     NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
-    uint32_t formatFlags = mFontEntry->mUserFontData->mFormat;
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_OPENTYPE) {
-      AppendToFormat(aFormat, "opentype");
-    }
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_TRUETYPE) {
-      AppendToFormat(aFormat, "truetype");
-    }
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_TRUETYPE_AAT) {
-      AppendToFormat(aFormat, "truetype-aat");
-    }
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_EOT) {
-      AppendToFormat(aFormat, "embedded-opentype");
-    }
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_SVG) {
-      AppendToFormat(aFormat, "svg");
-    }
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_WOFF) {
-      AppendToFormat(aFormat, "woff");
-    }
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_WOFF2) {
-      AppendToFormat(aFormat, "woff2");
-    }
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_OPENTYPE_VARIATIONS) {
-      AppendToFormat(aFormat, "opentype-variations");
-    }
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_TRUETYPE_VARIATIONS) {
-      AppendToFormat(aFormat, "truetype-variations");
-    }
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_WOFF_VARIATIONS) {
-      AppendToFormat(aFormat, "woff-variations");
-    }
-    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_WOFF2_VARIATIONS) {
-      AppendToFormat(aFormat, "woff2-variations");
+    switch (mFontEntry->mUserFontData->mFormatHint) {
+      case StyleFontFaceSourceFormatKeyword::None:
+        break;
+      case StyleFontFaceSourceFormatKeyword::Collection:
+        aFormat.AssignLiteral("collection");
+        break;
+      case StyleFontFaceSourceFormatKeyword::Opentype:
+        aFormat.AssignLiteral("opentype");
+        break;
+      case StyleFontFaceSourceFormatKeyword::Truetype:
+        aFormat.AssignLiteral("truetype");
+        break;
+      case StyleFontFaceSourceFormatKeyword::EmbeddedOpentype:
+        aFormat.AssignLiteral("embedded-opentype");
+        break;
+      case StyleFontFaceSourceFormatKeyword::Svg:
+        aFormat.AssignLiteral("svg");
+        break;
+      case StyleFontFaceSourceFormatKeyword::Woff:
+        aFormat.AssignLiteral("woff");
+        break;
+      case StyleFontFaceSourceFormatKeyword::Woff2:
+        aFormat.AssignLiteral("woff2");
+        break;
+      case StyleFontFaceSourceFormatKeyword::Unknown:
+        aFormat.AssignLiteral("unknown!");
+        break;
     }
   }
 }
