@@ -503,7 +503,7 @@ FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
           face->mLocalName.Append(nsAtomCString(atom));
           face->mSourceType = gfxFontFaceSrc::eSourceType_Local;
           face->mURI = nullptr;
-          face->mFormatHint = FormatHint::NONE;
+          face->mFormatHint = StyleFontFaceSourceFormatKeyword::None;
           break;
         }
 
@@ -527,39 +527,14 @@ FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
           }
 
           face->mLocalName.Truncate();
-          face->mFormatHint = FormatHint::NONE;
+          face->mFormatHint = StyleFontFaceSourceFormatKeyword::None;
 
           if (i + 1 < len) {
             // Check for a format hint.
             const auto& next = sourceListComponents[i + 1];
             switch (next.tag) {
               case StyleFontFaceSourceListComponent::Tag::FormatHintKeyword:
-                switch (next.format_hint_keyword._0) {
-                  case StyleFontFaceSourceFormatKeyword::Collection:
-                    face->mFormatHint = gfxUserFontSet::FormatHint::COLLECTION;
-                    break;
-                  case StyleFontFaceSourceFormatKeyword::EmbeddedOpentype:
-                    face->mFormatHint = gfxUserFontSet::FormatHint::EOT;
-                    break;
-                  case StyleFontFaceSourceFormatKeyword::Opentype:
-                    face->mFormatHint = gfxUserFontSet::FormatHint::OPENTYPE;
-                    break;
-                  case StyleFontFaceSourceFormatKeyword::Svg:
-                    face->mFormatHint = gfxUserFontSet::FormatHint::SVG;
-                    break;
-                  case StyleFontFaceSourceFormatKeyword::Truetype:
-                    face->mFormatHint = gfxUserFontSet::FormatHint::TRUETYPE;
-                    break;
-                  case StyleFontFaceSourceFormatKeyword::Woff:
-                    face->mFormatHint = gfxUserFontSet::FormatHint::WOFF;
-                    break;
-                  case StyleFontFaceSourceFormatKeyword::Woff2:
-                    face->mFormatHint = gfxUserFontSet::FormatHint::WOFF2;
-                    break;
-                  default:
-                    MOZ_ASSERT_UNREACHABLE("bad hint!");
-                    break;
-                }
+                face->mFormatHint = next.format_hint_keyword._0;
                 i++;
                 break;
               case StyleFontFaceSourceListComponent::Tag::FormatHintString: {
@@ -569,41 +544,48 @@ FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
                     next.format_hint_string.length);
 
                 if (valueString.LowerCaseEqualsASCII("woff")) {
-                  face->mFormatHint = gfxUserFontSet::FormatHint::WOFF;
+                  face->mFormatHint = StyleFontFaceSourceFormatKeyword::Woff;
                 } else if (valueString.LowerCaseEqualsASCII("woff2")) {
-                  face->mFormatHint = gfxUserFontSet::FormatHint::WOFF2;
+                  face->mFormatHint = StyleFontFaceSourceFormatKeyword::Woff2;
                 } else if (valueString.LowerCaseEqualsASCII("opentype")) {
-                  face->mFormatHint = gfxUserFontSet::FormatHint::OPENTYPE;
+                  face->mFormatHint =
+                      StyleFontFaceSourceFormatKeyword::Opentype;
                 } else if (valueString.LowerCaseEqualsASCII("truetype")) {
-                  face->mFormatHint = gfxUserFontSet::FormatHint::TRUETYPE;
+                  face->mFormatHint =
+                      StyleFontFaceSourceFormatKeyword::Truetype;
                 } else if (valueString.LowerCaseEqualsASCII("truetype-aat")) {
-                  face->mFormatHint = gfxUserFontSet::FormatHint::TRUETYPE;
+                  face->mFormatHint =
+                      StyleFontFaceSourceFormatKeyword::Truetype;
                 } else if (valueString.LowerCaseEqualsASCII(
                                "embedded-opentype")) {
-                  face->mFormatHint = gfxUserFontSet::FormatHint::EOT;
+                  face->mFormatHint =
+                      StyleFontFaceSourceFormatKeyword::EmbeddedOpentype;
                 } else if (valueString.LowerCaseEqualsASCII("svg")) {
-                  face->mFormatHint = gfxUserFontSet::FormatHint::SVG;
+                  face->mFormatHint = StyleFontFaceSourceFormatKeyword::Svg;
                 } else if (StaticPrefs::layout_css_font_variations_enabled()) {
                   // Non-standard values that Firefox accepted, for back-compat;
                   // these are superseded by the tech() function.
                   if (valueString.LowerCaseEqualsASCII("woff-variations")) {
-                    face->mFormatHint = gfxUserFontSet::FormatHint::WOFF;
+                    face->mFormatHint = StyleFontFaceSourceFormatKeyword::Woff;
                   } else if (valueString.LowerCaseEqualsASCII(
                                  "woff2-variations")) {
-                    face->mFormatHint = gfxUserFontSet::FormatHint::WOFF2;
+                    face->mFormatHint = StyleFontFaceSourceFormatKeyword::Woff2;
                   } else if (valueString.LowerCaseEqualsASCII(
                                  "opentype-variations")) {
-                    face->mFormatHint = gfxUserFontSet::FormatHint::OPENTYPE;
+                    face->mFormatHint =
+                        StyleFontFaceSourceFormatKeyword::Opentype;
                   } else if (valueString.LowerCaseEqualsASCII(
                                  "truetype-variations")) {
-                    face->mFormatHint = gfxUserFontSet::FormatHint::TRUETYPE;
+                    face->mFormatHint =
+                        StyleFontFaceSourceFormatKeyword::Truetype;
                   } else {
-                    face->mFormatHint = gfxUserFontSet::FormatHint::UNKNOWN;
+                    face->mFormatHint =
+                        StyleFontFaceSourceFormatKeyword::Unknown;
                   }
                 } else {
                   // unknown format specified, mark to distinguish from the
                   // case where no format hints are specified
-                  face->mFormatHint = gfxUserFontSet::FormatHint::UNKNOWN;
+                  face->mFormatHint = StyleFontFaceSourceFormatKeyword::Unknown;
                 }
                 i++;
                 break;

@@ -78,19 +78,7 @@ struct gfxFontFaceSrc {
   bool mUseOriginPrincipal = false;
 
   // Format hint, if any was specified.
-  enum FormatHint : uint8_t {
-    NONE = 0,  // no hint set
-    COLLECTION = 1,
-    OPENTYPE = 2,
-    TRUETYPE = 3,
-    EOT = 4,
-    SVG = 5,
-    WOFF = 6,
-    WOFF2 = 7,
-    UNKNOWN = 255  // unknown format hint set
-  };
-
-  FormatHint mFormatHint;
+  mozilla::StyleFontFaceSourceFormatKeyword mFormatHint;
 
   nsCString mLocalName;                     // full font name if local
   RefPtr<gfxFontSrcURI> mURI;               // uri if url
@@ -148,7 +136,7 @@ class gfxUserFontData {
   gfxUserFontData()
       : mSrcIndex(0),
         mMetaOrigLen(0),
-        mFormatHint(gfxFontFaceSrc::FormatHint::NONE),
+        mFormatHint(mozilla::StyleFontFaceSourceFormatKeyword::None),
         mCompression(kUnknownCompression),
         mPrivate(false),
         mIsBuffer(false) {}
@@ -164,7 +152,7 @@ class gfxUserFontData {
   nsCString mRealName;    // original fullname from the font resource
   uint32_t mSrcIndex;     // index in the rule's source list
   uint32_t mMetaOrigLen;  // length needed to decompress metadata
-  gfxFontFaceSrc::FormatHint
+  mozilla::StyleFontFaceSourceFormatKeyword
       mFormatHint;       // format hint for the source used, if any
   uint8_t mCompression;  // compression type
   bool mPrivate;         // whether font belongs to a private window
@@ -249,8 +237,6 @@ class gfxUserFontSet {
   gfxUserFontSet();
 
   void Destroy();
-
-  using FormatHint = gfxFontFaceSrc::FormatHint;
 
   // creates a font face without adding it to a particular family
   // weight - [100, 900] (multiples of 100)

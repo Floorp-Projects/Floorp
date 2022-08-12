@@ -124,33 +124,31 @@ void InspectorFontFace::GetFormat(nsAString& aFormat) {
   aFormat.Truncate();
   if (mFontEntry->IsUserFont() && !mFontEntry->IsLocalUserFont()) {
     NS_ASSERTION(mFontEntry->mUserFontData, "missing userFontData");
-    auto hint =
-        gfxUserFontSet::FormatHint(mFontEntry->mUserFontData->mFormatHint);
-    switch (hint) {
-      case gfxUserFontSet::FormatHint::NONE:
+    switch (mFontEntry->mUserFontData->mFormatHint) {
+      case StyleFontFaceSourceFormatKeyword::None:
         break;
-      case gfxUserFontSet::FormatHint::COLLECTION:
+      case StyleFontFaceSourceFormatKeyword::Collection:
         aFormat.AssignLiteral("collection");
         break;
-      case gfxUserFontSet::FormatHint::OPENTYPE:
+      case StyleFontFaceSourceFormatKeyword::Opentype:
         aFormat.AssignLiteral("opentype");
         break;
-      case gfxUserFontSet::FormatHint::TRUETYPE:
+      case StyleFontFaceSourceFormatKeyword::Truetype:
         aFormat.AssignLiteral("truetype");
         break;
-      case gfxUserFontSet::FormatHint::EOT:
+      case StyleFontFaceSourceFormatKeyword::EmbeddedOpentype:
         aFormat.AssignLiteral("embedded-opentype");
         break;
-      case gfxUserFontSet::FormatHint::SVG:
+      case StyleFontFaceSourceFormatKeyword::Svg:
         aFormat.AssignLiteral("svg");
         break;
-      case gfxUserFontSet::FormatHint::WOFF:
+      case StyleFontFaceSourceFormatKeyword::Woff:
         aFormat.AssignLiteral("woff");
         break;
-      case gfxUserFontSet::FormatHint::WOFF2:
+      case StyleFontFaceSourceFormatKeyword::Woff2:
         aFormat.AssignLiteral("woff2");
         break;
-      case gfxUserFontSet::FormatHint::UNKNOWN:
+      case StyleFontFaceSourceFormatKeyword::Unknown:
         aFormat.AssignLiteral("unknown!");
         break;
     }
