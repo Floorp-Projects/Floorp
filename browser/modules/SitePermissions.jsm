@@ -178,18 +178,18 @@ const TemporaryPermissions = {
   },
 
   // Gets a permission with the specified id for the specified browser.
-  get(browser, id) {
+  get(browser, id, browserURI = browser?.currentURI) {
     if (
       !browser ||
       !browser.currentURI ||
-      !SitePermissions.isSupportedScheme(browser.currentURI.scheme) ||
+      !SitePermissions.isSupportedScheme(browserURI.scheme) ||
       !this._stateByBrowser.has(browser)
     ) {
       return null;
     }
     let { uriToPerm } = this._stateByBrowser.get(browser);
 
-    let { strict, nonStrict } = this._getKeysFromURI(browser.currentURI);
+    let { strict, nonStrict } = this._getKeysFromURI(browserURI);
     for (let key of [nonStrict, strict]) {
       if (uriToPerm[key]) {
         let permission = uriToPerm[key][id];
@@ -208,17 +208,17 @@ const TemporaryPermissions = {
   // Gets all permissions for the specified browser.
   // Note that only permissions that apply to the current URI
   // of the passed browser element will be returned.
-  getAll(browser) {
+  getAll(browser, browserURI = browser?.currentURI) {
     let permissions = [];
     if (
-      !SitePermissions.isSupportedScheme(browser.currentURI.scheme) ||
+      !SitePermissions.isSupportedScheme(browserURI.scheme) ||
       !this._stateByBrowser.has(browser)
     ) {
       return permissions;
     }
     let { uriToPerm } = this._stateByBrowser.get(browser);
 
-    let { strict, nonStrict } = this._getKeysFromURI(browser.currentURI);
+    let { strict, nonStrict } = this._getKeysFromURI(browserURI);
     for (let key of [nonStrict, strict]) {
       if (uriToPerm[key]) {
         let perms = uriToPerm[key];
@@ -702,6 +702,9 @@ var SitePermissions = {
    *        The id of the permission.
    * @param {Browser} browser (optional)
    *        The browser object to check for temporary permissions.
+   * @param {nsIURI} browserURI (optional)
+   *        The URI to check for temporary permissions under. Defaults to
+   *        browser's currentURI.
    *
    * @return {Object} an object with the keys:
    *           - state: The current state of the permission
@@ -709,7 +712,12 @@ var SitePermissions = {
    *           - scope: The scope of the permission
    *             (e.g. SitePermissions.SCOPE_PERSISTENT)
    */
-  getForPrincipal(principal, permissionID, browser) {
+  getForPrincipal(
+    principal,
+    permissionID,
+    browser,
+    browserURI = browser?.currentURI
+  ) {
     if (!principal && !browser) {
       throw new Error(
         "Atleast one of the arguments, either principal or browser should not be null."
@@ -749,7 +757,7 @@ var SitePermissions = {
     if (result.state == defaultState) {
       // If there's no persistent permission saved, check if we have something
       // set temporarily.
-      let value = TemporaryPermissions.get(browser, permissionID);
+      let value = TemporaryPermissions.get(browser, permissionID, browserURI);
 
       if (value) {
         result.state = value.state;
