@@ -794,8 +794,7 @@ CoderResult CodeMetadata(Coder<mode>& coder,
                          CoderArg<mode, wasm::Metadata> item) {
   WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::Metadata, 464);
   if constexpr (mode == MODE_ENCODE) {
-    MOZ_ASSERT(!item->debugEnabled && item->debugFuncArgTypes.empty() &&
-               item->debugFuncReturnTypes.empty());
+    MOZ_ASSERT(!item->debugEnabled && item->debugFuncTypeIndices.empty());
     MOZ_ASSERT(!item->isAsmJS());
   }
 
@@ -814,8 +813,7 @@ CoderResult CodeMetadata(Coder<mode>& coder,
 
   if constexpr (mode == MODE_DECODE) {
     item->debugEnabled = false;
-    item->debugFuncArgTypes.clear();
-    item->debugFuncReturnTypes.clear();
+    item->debugFuncTypeIndices.clear();
   }
 
   return Ok();

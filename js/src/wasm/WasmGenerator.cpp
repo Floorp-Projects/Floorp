@@ -1074,21 +1074,11 @@ SharedMetadata ModuleGenerator::finishMetadata(const Bytes& bytecode) {
     metadata_->debugEnabled = true;
 
     const size_t numFuncs = moduleEnv_->funcs.length();
-    if (!metadata_->debugFuncArgTypes.resize(numFuncs)) {
-      return nullptr;
-    }
-    if (!metadata_->debugFuncReturnTypes.resize(numFuncs)) {
+    if (!metadata_->debugFuncTypeIndices.resize(numFuncs)) {
       return nullptr;
     }
     for (size_t i = 0; i < numFuncs; i++) {
-      if (!metadata_->debugFuncArgTypes[i].appendAll(
-              moduleEnv_->funcs[i].type->args())) {
-        return nullptr;
-      }
-      if (!metadata_->debugFuncReturnTypes[i].appendAll(
-              moduleEnv_->funcs[i].type->results())) {
-        return nullptr;
-      }
+      metadata_->debugFuncTypeIndices[i] = moduleEnv_->funcs[i].typeIndex;
     }
 
     static_assert(sizeof(ModuleHash) <= sizeof(mozilla::SHA1Sum::Hash),
