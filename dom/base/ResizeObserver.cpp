@@ -295,6 +295,18 @@ void ResizeObserver::Observe(Element& aTarget,
   observation =
       new ResizeObservation(aTarget, *this, aOptions.mBox,
                             frame ? frame->GetWritingMode() : WritingMode());
+  if (this == mDocument->GetLastRememberedSizeObserver()) {
+    // Resize observations are initialized with a (0, 0) mLastReportedSize,
+    // this means that the callback won't be called if the element is 0x0.
+    // But we need it called for handling the last remembered size, so set
+    // mLastReportedSize to an invalid size to ensure IsActive() is true
+    // for the current element size.
+    // See https://github.com/w3c/csswg-drafts/issues/3664 about doing this in
+    // the general case, then we won't need this hack for the last remembered
+    // size, and will have consistency with IntersectionObserver.
+    observation->UpdateLastReportedSize(gfx::Size(-1, -1));
+    MOZ_ASSERT(observation->IsActive());
+  }
   mObservationList.insertBack(observation);
 
   // Per the spec, we need to trigger notification in event loop that
@@ -489,6 +501,17 @@ void ResizeObserverEntry::SetDevicePixelContentSize(const gfx::Size& aSize) {
   nsIFrame* frame = mTarget->GetPrimaryFrame();
   const WritingMode wm = frame ? frame->GetWritingMode() : WritingMode();
   mDevicePixelContentBoxSize = new ResizeObserverSize(mOwner, aSize, wm);
+}
+
+static void LastRememberedSizeCallback(
+    const Sequence<OwningNonNull<ResizeObserverEntry>>& aEntries,
+    ResizeObserver& aObserver) {
+  // TODO.
+}
+
+/* static */ already_AddRefed<ResizeObserver>
+ResizeObserver::CreateLastRememberedSizeObserver(Document& aDocument) {
+  return do_AddRef(new ResizeObserver(aDocument, LastRememberedSizeCallback));
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ResizeObserverSize, mOwner)
