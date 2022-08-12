@@ -39,4 +39,8 @@ assert.throws(TypeError, function() {
   unicode.call(4);
 });
 
+assert.throws(TypeError, function() {
+  unicode.call(4n);
+}, 'bigint');
+
 reportCompare(0, 0);

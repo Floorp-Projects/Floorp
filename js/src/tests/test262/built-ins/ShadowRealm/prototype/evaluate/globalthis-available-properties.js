@@ -36,7 +36,7 @@ assert.sameValue(
 
 const r = new ShadowRealm();
 
-const properties = [
+let properties = [
   'globalThis',
   'Infinity',
   'NaN',
@@ -95,6 +95,14 @@ const properties = [
   'Math',
   'Reflect',
 ];
+
+// The intention of this test is to ensure that all built-in properties of the
+// global object are also exposed on the ShadowRealm's global object, without
+// penalizing implementations that don't have all of them implemented. Notably,
+// SharedArrayBuffer may still not be (re-)enabled in all circumstances.
+properties = properties.filter(name => {
+    return name in globalThis;
+});
 
 const available = properties.filter(name => {
   // This test is intentionally not using wrapped functions.
