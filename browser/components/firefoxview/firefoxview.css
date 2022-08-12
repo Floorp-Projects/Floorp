@@ -386,6 +386,23 @@ button.close {
   grid-area: desc;
 }
 
+.card-body {
+  display: flex;
+  flex-grow: 1;
+  align-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+@media only screen and (max-width: 45rem) {
+  .card-body {
+    flex-wrap: wrap;
+  }
+}
+
+.card-body > button.primary {
+  margin-inline-start: 0;
+}
+
 .setup-step {
   padding: var(--card-padding);
   margin: 0 0 8px;
@@ -413,15 +430,11 @@ button.close {
   margin-block: 0 8px;
 }
 
-.setup-step > .step-body {
-  display: flex;
-  align-content: space-between;
-  align-items: center;
+.setup-step > .card-body {
   margin-block: 8px;
   padding-block: 8px;
 }
-
-.setup-step > .step-body > .step-content {
+.setup-step > .card-body > .step-content {
   flex: 1 1 auto;
 }
 
@@ -458,7 +471,6 @@ button.close {
 
 .message-box {
   display: flex;
-  align-content: space-between;
   align-items: center;
   margin-block: 8px;
   gap: 8px;
