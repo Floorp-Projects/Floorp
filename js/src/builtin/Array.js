@@ -79,10 +79,6 @@ SetIsInlinableLargeFunction(ArraySome);
 // ES2018 draft rev 3bbc87cd1b9d3bf64c3e68ca2fe9c5a3f2c304c0
 // 22.1.3.25 Array.prototype.sort ( comparefn )
 function ArraySort(comparefn) {
-  return SortArray(this, comparefn);
-}
-
-function SortArray(obj, comparefn) {
   // Step 1.
   if (comparefn !== undefined) {
     if (!IsCallable(comparefn)) {
@@ -91,7 +87,7 @@ function SortArray(obj, comparefn) {
   }
 
   // Step 2.
-  var O = ToObject(obj);
+  var O = ToObject(this);
 
   // First try to sort the array in native code, if that fails, indicated by
   // returning |false| from ArrayNativeSort, sort it in self-hosted code.
@@ -1382,7 +1378,7 @@ function ArrayToSorted(comparefn) {
     DefineDataProperty(items, k, O[k]);
   }
 
-  SortArray(items, comparefn);
+  callFunction(ArraySort, items, comparefn);
 
   /* Step 9. Return A */
   return items;
