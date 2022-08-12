@@ -76,8 +76,31 @@ function ArraySome(callbackfn /*, thisArg*/) {
 // Inlining this enables inlining of the callback function.
 SetIsInlinableLargeFunction(ArraySome);
 
-// ES2018 draft rev 3bbc87cd1b9d3bf64c3e68ca2fe9c5a3f2c304c0
-// 22.1.3.25 Array.prototype.sort ( comparefn )
+// ES2023 draft rev cb4224156c54156f30c18c50784c1b0148ebfae5
+// 23.1.3.30 Array.prototype.sort ( comparefn )
+function ArraySortCompare(comparefn) {
+  return function(x, y) {
+    // Steps 4.a-c.
+    if (x === undefined) {
+      if (y === undefined) {
+        return 0;
+      }
+      return 1;
+    }
+    if (y === undefined) {
+      return -1;
+    }
+
+    // Step 4.d.i.
+    var v = ToNumber(callContentFunction(comparefn, undefined, x, y));
+
+    // Steps 4.d.ii-iii.
+    return v !== v ? 0 : v;
+  };
+}
+
+// ES2023 draft rev cb4224156c54156f30c18c50784c1b0148ebfae5
+// 23.1.3.30 Array.prototype.sort ( comparefn )
 function ArraySort(comparefn) {
   // Step 1.
   if (comparefn !== undefined) {
@@ -98,32 +121,16 @@ function ArraySort(comparefn) {
   // Step 3.
   var len = ToLength(O.length);
 
+  // Arrays with less than two elements remain unchanged when sorted.
   if (len <= 1) {
     return O;
   }
 
-  /* 22.1.3.25.1 Runtime Semantics: SortCompare( x, y ) */
-  var wrappedCompareFn = comparefn;
-  comparefn = function(x, y) {
-    /* Steps 1-3. */
-    if (x === undefined) {
-      if (y === undefined) {
-        return 0;
-      }
-      return 1;
-    }
-    if (y === undefined) {
-      return -1;
-    }
+  // Step 4.
+  var wrappedCompareFn = ArraySortCompare(comparefn);
 
-    /* Step 4.a. */
-    var v = ToNumber(callContentFunction(wrappedCompareFn, undefined, x, y));
-
-    /* Step 4.b-c. */
-    return v !== v ? 0 : v;
-  };
-
-  return MergeSort(O, len, comparefn);
+  // Step 5.
+  return MergeSort(O, len, wrappedCompareFn);
 }
 
 /* ES5 15.4.4.18. */
@@ -1379,10 +1386,22 @@ function ArrayToSorted(comparefn) {
     DefineDataProperty(items, k, O[k]);
   }
 
-  callFunction(ArraySort, items, comparefn);
+  // Arrays with less than two elements remain unchanged when sorted.
+  if (len <= 1) {
+    return items;
+  }
 
-  // Step 9. Return A.
-  return items;
+  // First try to sort the array in native code, if that fails, indicated by
+  // returning |false| from ArrayNativeSort, sort it in self-hosted code.
+  if (callFunction(ArrayNativeSort, items, comparefn)) {
+    return items;
+  }
+
+  // Step 5.
+  var wrappedCompareFn = ArraySortCompare(comparefn);
+
+  // Steps 6-9.
+  return MergeSort(items, len, wrappedCompareFn);
 }
 
 #endif
