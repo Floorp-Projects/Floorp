@@ -8596,14 +8596,24 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
       grid.mGridColEnd = subgrid->mGridColEnd;
       grid.mGridRowEnd = subgrid->mGridRowEnd;
     }
-    gridReflowInput.CalculateTrackSizes(grid, computedSize,
-                                        SizingConstraint::NoConstraint);
     // XXX Technically incorrect: 'contain-intrinsic-block-size: none' is
     // treated as 0, ignoring our row sizes, when really we should use them but
     // *they* should be computed as if we had no children. To be fixed in bug
     // 1488878.
-    if (Maybe<nscoord> containBSize =
-            aReflowInput.mFrame->ContainIntrinsicBSize()) {
+    const Maybe<nscoord> containBSize =
+        aReflowInput.mFrame->ContainIntrinsicBSize();
+    const nscoord trackSizingBSize = [&] {
+      // This clamping only applies to auto sizes.
+      if (containBSize && computedBSize == NS_UNCONSTRAINEDSIZE) {
+        return NS_CSS_MINMAX(*containBSize, aReflowInput.ComputedMinBSize(),
+                             aReflowInput.ComputedMaxBSize());
+      }
+      return computedBSize;
+    }();
+    const LogicalSize containLogicalSize(wm, computedISize, trackSizingBSize);
+    gridReflowInput.CalculateTrackSizes(grid, containLogicalSize,
+                                        SizingConstraint::NoConstraint);
+    if (containBSize) {
       bSize = *containBSize;
     } else {
       if (IsMasonry(eLogicalAxisBlock)) {
