@@ -41,20 +41,3 @@ assertEq(arraysEqual(reversedIntArray, typedArray2), true);
 let sortedIntArray = typedArray2.toSorted();
 assertEq(arraysEqual(typedArray2, new Uint8Array([3, 2, 1])), true);
 assertEq(arraysEqual(sortedIntArray, typedArray), true);
-
-let a_toSpliced1 = typedArray.toSpliced();
-assertEq(arraysEqual(typedArray, typedArray123), true);
-assertEq(arraysEqual(a_toSpliced1, typedArray123), true);
-
-let a_toSpliced2 = typedArray.toSpliced(2);
-assertEq(arraysEqual(typedArray, typedArray123), true);
-assertEq(arraysEqual(a_toSpliced2, new Uint8Array([1, 2])), true);
-
-let typedArray3 = new Uint8Array([1, 2, 3, 4, 5]);
-let a_toSpliced3 = typedArray3.toSpliced(1, 2)
-assertEq(arraysEqual(typedArray3, typedArray12345), true);
-assertEq(arraysEqual(a_toSpliced3, new Uint8Array([1, 4, 5])), true);
-
-let a_toSpliced4 = typedArray3.toSpliced(1, 2, 42, 12)
-assertEq(arraysEqual(typedArray3, typedArray12345), true);
-assertEq(arraysEqual(a_toSpliced4, new Uint8Array([1, 42, 12, 4, 5])), true);
