@@ -1194,37 +1194,38 @@ class RTCPeerConnection {
     }
     this._checkClosed();
     return this._chain(async () => {
+      if (type == "offer" && this.signalingState == "have-local-offer") {
+        await new Promise((resolve, reject) => {
+          this._onSetDescriptionSuccess = resolve;
+          this._onSetDescriptionFailure = reject;
+          this._pc.setLocalDescription(Ci.IPeerConnection.kActionRollback, "");
+        });
+        await this._pc.onSetDescriptionSuccess("rollback", false);
+        this._updateCanTrickle();
+      }
+
+      if (this._closed) {
+        return;
+      }
+
+      const p = this._getPermission();
+
       const haveSetRemote = (async () => {
-        if (type == "offer" && this.signalingState == "have-local-offer") {
-          await new Promise((resolve, reject) => {
-            this._onSetDescriptionSuccess = resolve;
-            this._onSetDescriptionFailure = reject;
-            this._pc.setLocalDescription(
-              Ci.IPeerConnection.kActionRollback,
-              ""
-            );
-          });
-          await this._pc.onSetDescriptionSuccess(type, false);
-          this._updateCanTrickle();
-          if (this._closed) {
-            return;
-          }
-        }
         this._sanityCheckSdp(sdp);
-        const p = this._getPermission();
         await new Promise((resolve, reject) => {
           this._onSetDescriptionSuccess = resolve;
           this._onSetDescriptionFailure = reject;
           this._pc.setRemoteDescription(this._actions[type], sdp);
         });
-        await p;
       })();
 
       if (type != "rollback") {
         // Do setRemoteDescription and identity validation in parallel
         await this._validateIdentity(sdp);
       }
+      await p;
       await haveSetRemote;
+
       await this._pc.onSetDescriptionSuccess(type, true);
       this._updateCanTrickle();
     });
