@@ -27,7 +27,6 @@ EXPORTS.mozilla.dom += [
     "ReadRequest.h",
     "StreamUtils.h",
     "TeeState.h",
-    "TransformerCallbackHelpers.h",
     "TransformStream.h",
     "TransformStreamDefaultController.h",
     "UnderlyingSinkCallbackHelpers.h",
