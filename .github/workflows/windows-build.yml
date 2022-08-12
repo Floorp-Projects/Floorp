@@ -152,6 +152,9 @@ jobs:
         echo 'ac_add_options --enable-strip' >> mozconfig
         echo 'ac_add_options --enable-updater' >> mozconfig
         echo 'ac_add_options --enable-update-agent' >> mozconfig
+        echo 'ac_add_options --with-mozilla-api-keyfile=/home/runner/work/Floorp/Floorp/apis/api-mozilla-key
+        echo 'ac_add_options --with-google-safebrowsing-api-keyfile=home/runner/work/Floorp/Floorp/apis/api-google-safe-browsing-key
+        echo 'ac_add_options --with-google-location-service-api-keyfile=/home/runner/work/Floorp/Floorp/apis/api-google-location-service-key
 
 
         echo 'ac_add_options --target=x86_64-pc-mingw32' >> mozconfig
