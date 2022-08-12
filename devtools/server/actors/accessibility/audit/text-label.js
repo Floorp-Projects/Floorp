@@ -262,15 +262,21 @@ const internalFrameRule = function(accessible) {
       return title && title === name
         ? null
         : { score: FAIL, issue: IFRAME_NO_NAME_FROM_TITLE };
-    case "OBJECT":
+    case "OBJECT": {
       const type = DOMNode.getAttribute("type");
       if (!type || !type.startsWith("image/")) {
         return null;
       }
 
       return imageRule(accessible);
-    case "EMBED":
-      return mustHaveNonEmptyNameRule(EMBED_NO_NAME, accessible);
+    }
+    case "EMBED": {
+      const type = DOMNode.getAttribute("type");
+      if (!type || !type.startsWith("image/")) {
+        return mustHaveNonEmptyNameRule(EMBED_NO_NAME, accessible);
+      }
+      return imageRule(accessible);
+    }
     default:
       return null;
   }
