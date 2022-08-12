@@ -970,6 +970,225 @@ const nsStaticAtom* const kURLAttributesMathML[] = {
     // clang-format on
 };
 
+// https://wicg.github.io/sanitizer-api/#baseline-attribute-allow-list
+constexpr const nsStaticAtom* const kBaselineAttributeAllowlist[] = {
+    // clang-format off
+  nsGkAtoms::abbr,
+  nsGkAtoms::accept,
+  nsGkAtoms::acceptcharset,
+  nsGkAtoms::charset,
+  nsGkAtoms::accesskey,
+  nsGkAtoms::action,
+  nsGkAtoms::align,
+  nsGkAtoms::alink,
+  nsGkAtoms::allow,
+  nsGkAtoms::allowfullscreen,
+  // nsGkAtoms::allowpaymentrequest,
+  nsGkAtoms::alt,
+  nsGkAtoms::anchor,
+  nsGkAtoms::archive,
+  nsGkAtoms::as,
+  nsGkAtoms::async,
+  nsGkAtoms::autocapitalize,
+  nsGkAtoms::autocomplete,
+  // nsGkAtoms::autocorrect,
+  nsGkAtoms::autofocus,
+  // nsGkAtoms::autopictureinpicture,
+  nsGkAtoms::autoplay,
+  nsGkAtoms::axis,
+  nsGkAtoms::background,
+  nsGkAtoms::behavior,
+  nsGkAtoms::bgcolor,
+  nsGkAtoms::border,
+  nsGkAtoms::bordercolor,
+  nsGkAtoms::capture,
+  nsGkAtoms::cellpadding,
+  nsGkAtoms::cellspacing,
+  // nsGkAtoms::challenge,
+  nsGkAtoms::_char,
+  nsGkAtoms::charoff,
+  nsGkAtoms::charset,
+  nsGkAtoms::checked,
+  nsGkAtoms::cite,
+  nsGkAtoms::_class,
+  nsGkAtoms::classid,
+  nsGkAtoms::clear,
+  nsGkAtoms::code,
+  nsGkAtoms::codebase,
+  nsGkAtoms::codetype,
+  nsGkAtoms::color,
+  nsGkAtoms::cols,
+  nsGkAtoms::colspan,
+  nsGkAtoms::compact,
+  nsGkAtoms::content,
+  nsGkAtoms::contenteditable,
+  nsGkAtoms::controls,
+  // nsGkAtoms::controlslist,
+  // nsGkAtoms::conversiondestination,
+  nsGkAtoms::coords,
+  nsGkAtoms::crossorigin,
+  nsGkAtoms::csp,
+  nsGkAtoms::data,
+  nsGkAtoms::datetime,
+  nsGkAtoms::declare,
+  nsGkAtoms::decoding,
+  nsGkAtoms::_default,
+  nsGkAtoms::defer,
+  nsGkAtoms::dir,
+  nsGkAtoms::direction,
+  // nsGkAtoms::dirname,
+  nsGkAtoms::disabled,
+  // nsGkAtoms::disablepictureinpicture,
+  // nsGkAtoms::disableremoteplayback,
+  // nsGkAtoms::disallowdocumentaccess,
+  nsGkAtoms::download,
+  nsGkAtoms::draggable,
+  // nsGkAtoms::elementtiming,
+  nsGkAtoms::enctype,
+  nsGkAtoms::end,
+  nsGkAtoms::enterkeyhint,
+  nsGkAtoms::event,
+  nsGkAtoms::exportparts,
+  nsGkAtoms::face,
+  nsGkAtoms::_for,
+  nsGkAtoms::form,
+  nsGkAtoms::formaction,
+  nsGkAtoms::formenctype,
+  nsGkAtoms::formmethod,
+  nsGkAtoms::formnovalidate,
+  nsGkAtoms::formtarget,
+  nsGkAtoms::frame,
+  nsGkAtoms::frameborder,
+  nsGkAtoms::headers,
+  nsGkAtoms::height,
+  nsGkAtoms::hidden,
+  nsGkAtoms::high,
+  nsGkAtoms::href,
+  nsGkAtoms::hreflang,
+  // nsGkAtoms::hreftranslate,
+  nsGkAtoms::hspace,
+  nsGkAtoms::http,
+  // nsGkAtoms::equiv,
+  nsGkAtoms::id,
+  nsGkAtoms::imagesizes,
+  nsGkAtoms::imagesrcset,
+  // nsGkAtoms::importance,
+  // nsGkAtoms::impressiondata,
+  // nsGkAtoms::impressionexpiry,
+  // nsGkAtoms::incremental,
+  nsGkAtoms::inert,
+  nsGkAtoms::inputmode,
+  nsGkAtoms::integrity,
+  // nsGkAtoms::invisible,
+  nsGkAtoms::is,
+  nsGkAtoms::ismap,
+  // nsGkAtoms::keytype,
+  nsGkAtoms::kind,
+  nsGkAtoms::label,
+  nsGkAtoms::lang,
+  nsGkAtoms::language,
+  // nsGkAtoms::latencyhint,
+  nsGkAtoms::leftmargin,
+  nsGkAtoms::link,
+  // nsGkAtoms::list,
+  nsGkAtoms::loading,
+  nsGkAtoms::longdesc,
+  nsGkAtoms::loop,
+  nsGkAtoms::low,
+  nsGkAtoms::lowsrc,
+  nsGkAtoms::manifest,
+  nsGkAtoms::marginheight,
+  nsGkAtoms::marginwidth,
+  nsGkAtoms::max,
+  nsGkAtoms::maxlength,
+  // nsGkAtoms::mayscript,
+  nsGkAtoms::media,
+  nsGkAtoms::method,
+  nsGkAtoms::min,
+  nsGkAtoms::minlength,
+  nsGkAtoms::multiple,
+  nsGkAtoms::muted,
+  nsGkAtoms::name,
+  nsGkAtoms::nohref,
+  nsGkAtoms::nomodule,
+  nsGkAtoms::nonce,
+  nsGkAtoms::noresize,
+  nsGkAtoms::noshade,
+  nsGkAtoms::novalidate,
+  nsGkAtoms::nowrap,
+  nsGkAtoms::object,
+  nsGkAtoms::open,
+  nsGkAtoms::optimum,
+  nsGkAtoms::part,
+  nsGkAtoms::pattern,
+  nsGkAtoms::ping,
+  nsGkAtoms::placeholder,
+  // nsGkAtoms::playsinline,
+  // nsGkAtoms::policy,
+  nsGkAtoms::poster,
+  nsGkAtoms::preload,
+  // nsGkAtoms::pseudo,
+  nsGkAtoms::readonly,
+  nsGkAtoms::referrerpolicy,
+  nsGkAtoms::rel,
+  // nsGkAtoms::reportingorigin,
+  nsGkAtoms::required,
+  nsGkAtoms::resources,
+  nsGkAtoms::rev,
+  nsGkAtoms::reversed,
+  nsGkAtoms::role,
+  nsGkAtoms::rows,
+  nsGkAtoms::rowspan,
+  nsGkAtoms::rules,
+  nsGkAtoms::sandbox,
+  nsGkAtoms::scheme,
+  nsGkAtoms::scope,
+  // nsGkAtoms::scopes,
+  nsGkAtoms::scrollamount,
+  nsGkAtoms::scrolldelay,
+  nsGkAtoms::scrolling,
+  nsGkAtoms::select,
+  nsGkAtoms::selected,
+  // nsGkAtoms::shadowroot,
+  // nsGkAtoms::shadowrootdelegatesfocus,
+  nsGkAtoms::shape,
+  nsGkAtoms::size,
+  nsGkAtoms::sizes,
+  nsGkAtoms::slot,
+  nsGkAtoms::span,
+  nsGkAtoms::spellcheck,
+  nsGkAtoms::src,
+  nsGkAtoms::srcdoc,
+  nsGkAtoms::srclang,
+  nsGkAtoms::srcset,
+  nsGkAtoms::standby,
+  nsGkAtoms::start,
+  nsGkAtoms::step,
+  nsGkAtoms::style,
+  nsGkAtoms::summary,
+  nsGkAtoms::tabindex,
+  nsGkAtoms::target,
+  nsGkAtoms::text,
+  nsGkAtoms::title,
+  nsGkAtoms::topmargin,
+  nsGkAtoms::translate,
+  nsGkAtoms::truespeed,
+  // nsGkAtoms::trusttoken,
+  nsGkAtoms::type,
+  nsGkAtoms::usemap,
+  nsGkAtoms::valign,
+  nsGkAtoms::value,
+  nsGkAtoms::valuetype,
+  nsGkAtoms::version,
+  // nsGkAtoms::virtualkeyboardpolicy,
+  nsGkAtoms::vlink,
+  nsGkAtoms::vspace,
+  nsGkAtoms::webkitdirectory,
+  nsGkAtoms::width,
+  nsGkAtoms::wrap,
+    // clang-format on
+};
+
 // https://wicg.github.io/sanitizer-api/#baseline-elements
 constexpr const nsStaticAtom* const kBaselineElementAllowlist[] = {
     nsGkAtoms::a,          nsGkAtoms::abbr,      nsGkAtoms::acronym,
@@ -1015,6 +1234,228 @@ constexpr const nsStaticAtom* const kBaselineElementAllowlist[] = {
     nsGkAtoms::track,      nsGkAtoms::tt,        nsGkAtoms::u,
     nsGkAtoms::ul,         nsGkAtoms::var,       nsGkAtoms::video,
     nsGkAtoms::wbr,        nsGkAtoms::xmp,
+};
+
+// https://wicg.github.io/sanitizer-api/#default-configuration
+// default configuration's attribute allow list.
+// Note: Currently all listed attributes are allowed for every element
+// (e.g. they use "*").
+// Compared to kBaselineAttributeAllowlist only deprecated allowpaymentrequest
+// attribute is missing.
+constexpr const nsStaticAtom* const kDefaultConfigurationAttributeAllowlist[] =
+    {
+        nsGkAtoms::abbr,
+        nsGkAtoms::accept,
+        nsGkAtoms::acceptcharset,
+        nsGkAtoms::charset,
+        nsGkAtoms::accesskey,
+        nsGkAtoms::action,
+        nsGkAtoms::align,
+        nsGkAtoms::alink,
+        nsGkAtoms::allow,
+        nsGkAtoms::allowfullscreen,
+        nsGkAtoms::alt,
+        nsGkAtoms::anchor,
+        nsGkAtoms::archive,
+        nsGkAtoms::as,
+        nsGkAtoms::async,
+        nsGkAtoms::autocapitalize,
+        nsGkAtoms::autocomplete,
+        // nsGkAtoms::autocorrect,
+        nsGkAtoms::autofocus,
+        // nsGkAtoms::autopictureinpicture,
+        nsGkAtoms::autoplay,
+        nsGkAtoms::axis,
+        nsGkAtoms::background,
+        nsGkAtoms::behavior,
+        nsGkAtoms::bgcolor,
+        nsGkAtoms::border,
+        nsGkAtoms::bordercolor,
+        nsGkAtoms::capture,
+        nsGkAtoms::cellpadding,
+        nsGkAtoms::cellspacing,
+        // nsGkAtoms::challenge,
+        nsGkAtoms::_char,
+        nsGkAtoms::charoff,
+        nsGkAtoms::charset,
+        nsGkAtoms::checked,
+        nsGkAtoms::cite,
+        nsGkAtoms::_class,
+        nsGkAtoms::classid,
+        nsGkAtoms::clear,
+        nsGkAtoms::code,
+        nsGkAtoms::codebase,
+        nsGkAtoms::codetype,
+        nsGkAtoms::color,
+        nsGkAtoms::cols,
+        nsGkAtoms::colspan,
+        nsGkAtoms::compact,
+        nsGkAtoms::content,
+        nsGkAtoms::contenteditable,
+        nsGkAtoms::controls,
+        // nsGkAtoms::controlslist,
+        // nsGkAtoms::conversiondestination,
+        nsGkAtoms::coords,
+        nsGkAtoms::crossorigin,
+        nsGkAtoms::csp,
+        nsGkAtoms::data,
+        nsGkAtoms::datetime,
+        nsGkAtoms::declare,
+        nsGkAtoms::decoding,
+        nsGkAtoms::_default,
+        nsGkAtoms::defer,
+        nsGkAtoms::dir,
+        nsGkAtoms::direction,
+        // nsGkAtoms::dirname,
+        nsGkAtoms::disabled,
+        // nsGkAtoms::disablepictureinpicture,
+        // nsGkAtoms::disableremoteplayback,
+        // nsGkAtoms::disallowdocumentaccess,
+        nsGkAtoms::download,
+        nsGkAtoms::draggable,
+        // nsGkAtoms::elementtiming,
+        nsGkAtoms::enctype,
+        nsGkAtoms::end,
+        nsGkAtoms::enterkeyhint,
+        nsGkAtoms::event,
+        nsGkAtoms::exportparts,
+        nsGkAtoms::face,
+        nsGkAtoms::_for,
+        nsGkAtoms::form,
+        nsGkAtoms::formaction,
+        nsGkAtoms::formenctype,
+        nsGkAtoms::formmethod,
+        nsGkAtoms::formnovalidate,
+        nsGkAtoms::formtarget,
+        nsGkAtoms::frame,
+        nsGkAtoms::frameborder,
+        nsGkAtoms::headers,
+        nsGkAtoms::height,
+        nsGkAtoms::hidden,
+        nsGkAtoms::high,
+        nsGkAtoms::href,
+        nsGkAtoms::hreflang,
+        // nsGkAtoms::hreftranslate,
+        nsGkAtoms::hspace,
+        nsGkAtoms::http,
+        // nsGkAtoms::equiv,
+        nsGkAtoms::id,
+        nsGkAtoms::imagesizes,
+        nsGkAtoms::imagesrcset,
+        // nsGkAtoms::importance,
+        // nsGkAtoms::impressiondata,
+        // nsGkAtoms::impressionexpiry,
+        // nsGkAtoms::incremental,
+        nsGkAtoms::inert,
+        nsGkAtoms::inputmode,
+        nsGkAtoms::integrity,
+        // nsGkAtoms::invisible,
+        nsGkAtoms::is,
+        nsGkAtoms::ismap,
+        // nsGkAtoms::keytype,
+        nsGkAtoms::kind,
+        nsGkAtoms::label,
+        nsGkAtoms::lang,
+        nsGkAtoms::language,
+        // nsGkAtoms::latencyhint,
+        nsGkAtoms::leftmargin,
+        nsGkAtoms::link,
+        // nsGkAtoms::list,
+        nsGkAtoms::loading,
+        nsGkAtoms::longdesc,
+        nsGkAtoms::loop,
+        nsGkAtoms::low,
+        nsGkAtoms::lowsrc,
+        nsGkAtoms::manifest,
+        nsGkAtoms::marginheight,
+        nsGkAtoms::marginwidth,
+        nsGkAtoms::max,
+        nsGkAtoms::maxlength,
+        // nsGkAtoms::mayscript,
+        nsGkAtoms::media,
+        nsGkAtoms::method,
+        nsGkAtoms::min,
+        nsGkAtoms::minlength,
+        nsGkAtoms::multiple,
+        nsGkAtoms::muted,
+        nsGkAtoms::name,
+        nsGkAtoms::nohref,
+        nsGkAtoms::nomodule,
+        nsGkAtoms::nonce,
+        nsGkAtoms::noresize,
+        nsGkAtoms::noshade,
+        nsGkAtoms::novalidate,
+        nsGkAtoms::nowrap,
+        nsGkAtoms::object,
+        nsGkAtoms::open,
+        nsGkAtoms::optimum,
+        nsGkAtoms::part,
+        nsGkAtoms::pattern,
+        nsGkAtoms::ping,
+        nsGkAtoms::placeholder,
+        // nsGkAtoms::playsinline,
+        // nsGkAtoms::policy,
+        nsGkAtoms::poster,
+        nsGkAtoms::preload,
+        // nsGkAtoms::pseudo,
+        nsGkAtoms::readonly,
+        nsGkAtoms::referrerpolicy,
+        nsGkAtoms::rel,
+        // nsGkAtoms::reportingorigin,
+        nsGkAtoms::required,
+        nsGkAtoms::resources,
+        nsGkAtoms::rev,
+        nsGkAtoms::reversed,
+        nsGkAtoms::role,
+        nsGkAtoms::rows,
+        nsGkAtoms::rowspan,
+        nsGkAtoms::rules,
+        nsGkAtoms::sandbox,
+        nsGkAtoms::scheme,
+        nsGkAtoms::scope,
+        // nsGkAtoms::scopes,
+        nsGkAtoms::scrollamount,
+        nsGkAtoms::scrolldelay,
+        nsGkAtoms::scrolling,
+        nsGkAtoms::select,
+        nsGkAtoms::selected,
+        // nsGkAtoms::shadowroot,
+        // nsGkAtoms::shadowrootdelegatesfocus,
+        nsGkAtoms::shape,
+        nsGkAtoms::size,
+        nsGkAtoms::sizes,
+        nsGkAtoms::slot,
+        nsGkAtoms::span,
+        nsGkAtoms::spellcheck,
+        nsGkAtoms::src,
+        nsGkAtoms::srcdoc,
+        nsGkAtoms::srclang,
+        nsGkAtoms::srcset,
+        nsGkAtoms::standby,
+        nsGkAtoms::start,
+        nsGkAtoms::step,
+        nsGkAtoms::style,
+        nsGkAtoms::summary,
+        nsGkAtoms::tabindex,
+        nsGkAtoms::target,
+        nsGkAtoms::text,
+        nsGkAtoms::title,
+        nsGkAtoms::topmargin,
+        nsGkAtoms::translate,
+        nsGkAtoms::truespeed,
+        // nsGkAtoms::trusttoken,
+        nsGkAtoms::type,
+        nsGkAtoms::usemap,
+        nsGkAtoms::valign,
+        nsGkAtoms::value,
+        nsGkAtoms::valuetype,
+        nsGkAtoms::version,
+        // nsGkAtoms::virtualkeyboardpolicy,
+        nsGkAtoms::vlink,
+        nsGkAtoms::vspace,
+        nsGkAtoms::webkitdirectory,
+        nsGkAtoms::width,
+        nsGkAtoms::wrap,
 };
 
 // https://wicg.github.io/sanitizer-api/#default-configuration
@@ -1068,8 +1509,12 @@ nsTreeSanitizer::AtomsTable* nsTreeSanitizer::sElementsSVG = nullptr;
 nsTreeSanitizer::AtomsTable* nsTreeSanitizer::sAttributesSVG = nullptr;
 nsTreeSanitizer::AtomsTable* nsTreeSanitizer::sElementsMathML = nullptr;
 nsTreeSanitizer::AtomsTable* nsTreeSanitizer::sAttributesMathML = nullptr;
+nsTreeSanitizer::AtomsTable* nsTreeSanitizer::sBaselineAttributeAllowlist =
+    nullptr;
 nsTreeSanitizer::AtomsTable* nsTreeSanitizer::sBaselineElementAllowlist =
     nullptr;
+nsTreeSanitizer::AtomsTable*
+    nsTreeSanitizer::sDefaultConfigurationAttributeAllowlist = nullptr;
 nsTreeSanitizer::AtomsTable*
     nsTreeSanitizer::sDefaultConfigurationElementAllowlist = nullptr;
 nsIPrincipal* nsTreeSanitizer::sNullPrincipal = nullptr;
@@ -1413,31 +1858,7 @@ void nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
     RefPtr<nsAtom> attrLocal = attrName->LocalName();
 
     if (mIsForSanitizerAPI) {
-      bool shouldRemove = true;
-      RefPtr<nsAtom> elemName = aElement->NodeInfo()->NameAtom();
-
-      // check allow list
-      if (mAllowedAttributes) {
-        auto allowedElements = mAllowedAttributes->Lookup(attrLocal);
-        if (allowedElements) {
-          if (allowedElements.Data()->Contains(elemName) ||
-              allowedElements.Data()->Contains(nsGkAtoms::_asterisk)) {
-            shouldRemove = false;
-          }
-        }
-      }
-      // checking drop list last
-      // i.e., if listed as both allowed and dropped, it will still be dropped
-      if (mDroppedAttributes) {
-        auto dropElements = mDroppedAttributes->Lookup(attrLocal);
-        if (dropElements) {
-          if (dropElements.Data()->Contains(elemName) ||
-              dropElements.Data()->Contains(nsGkAtoms::_asterisk)) {
-            shouldRemove = true;
-          }
-        }
-      }
-      if (shouldRemove) {
+      if (MustDropAttribute(aElement, attrNs, attrLocal)) {
         aElement->UnsetAttr(kNameSpaceID_None, attrLocal, false);
         if (mLogRemovals) {
           LogMessage("Removed unsafe attribute.", aElement->OwnerDoc(),
@@ -1538,6 +1959,90 @@ void nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
   if (aElement->IsAnyOfHTMLElements(nsGkAtoms::video, nsGkAtoms::audio)) {
     aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::controls, u""_ns, false);
   }
+}
+
+// https://wicg.github.io/sanitizer-api/#attribute-match-list
+bool nsTreeSanitizer::MatchesAttributeMatchList(
+    ElementToAttributeSetTable& aMatchList, Element& aElement,
+    int32_t aAttrNamespace, nsAtom* aAttrLocalName) {
+  // Step 1. If attribute’s local name does not match the attribute match list
+  // list’s key and if the key is not "*": Return false.
+  DynamicAtomsTable* elements;
+  if (auto lookup = aMatchList.Lookup(aAttrLocalName)) {
+    elements = lookup->get();
+  } else if (auto lookup = aMatchList.Lookup(nsGkAtoms::_asterisk)) {
+    elements = lookup->get();
+  } else {
+    return false;
+  }
+
+  // Step 2. Let element be the attribute’s Element.
+  // Step 3. Let element name be element’s local name.
+  nsAtom* elemName = aElement.NodeInfo()->NameAtom();
+
+  // Step 4. If element is a in either the SVG or MathML namespaces (i.e., it’s
+  // a foreign element), then prefix element name with the appropriate namespace
+  // designator plus a whitespace character.
+  // TODO(bug 1784040) Namespace handling.
+
+  // Step 5. If list’s value does not contain element name and value is not
+  // ["*"]: Return false.
+  if (!elements->Contains(elemName) &&
+      !elements->Contains(nsGkAtoms::_asterisk)) {
+    return false;
+  }
+
+  // Step 6. Return true.
+  return true;
+}
+
+// https://wicg.github.io/sanitizer-api/#sanitize-action-for-an-attribute
+bool nsTreeSanitizer::MustDropAttribute(Element* aElement,
+                                        int32_t aAttrNamespace,
+                                        nsAtom* aAttrLocalName) {
+  // Step 1. Let kind be attribute’s attribute kind.
+  // Step 2. If kind is unknown and if config["allowUnknownMarkup"] does not
+  // exist or it config["allowUnknownMarkup"] is false: Return drop.
+  //
+  // TODO: Not clear how to determine if something is an "unknown" attribute.
+  // https://github.com/WICG/sanitizer-api/issues/147 should probably define
+  // an explicit list.
+
+  // Step 3. If kind is regular and attribute’s local name does not match any
+  // name in the baseline attribute allow list: Return drop.
+  if (!sBaselineAttributeAllowlist->Contains(aAttrLocalName)) {
+    return true;
+  }
+
+  // Step 4. If attribute matches any attribute match list in config’s attribute
+  // drop list: Return drop.
+  if (mDroppedAttributes &&
+      MatchesAttributeMatchList(*mDroppedAttributes, *aElement, aAttrNamespace,
+                                aAttrLocalName)) {
+    return true;
+  }
+
+  // Step 5. If attribute allow list exists in config:
+  if (mAllowedAttributes) {
+    // Step 5.1. Then let allow list be |config|["allowAttributes"].
+    // Step 6. If attribute does not match any attribute match list in allow
+    // list: Return drop.
+    if (!MatchesAttributeMatchList(*mAllowedAttributes, *aElement,
+                                   aAttrNamespace, aAttrLocalName)) {
+      return true;
+    }
+  } else {
+    // Step 5.2. Otherwise: Let allow list be the default configuration's
+    // attribute allow list.
+    // Step 6. If attribute does not match any attribute
+    // match list in allow list: Return drop.
+    if (!sDefaultConfigurationAttributeAllowlist->Contains(aAttrLocalName)) {
+      return true;
+    }
+  }
+
+  // Step 7. Return keep.
+  return false;
 }
 
 bool nsTreeSanitizer::SanitizeURL(mozilla::dom::Element* aElement,
@@ -1824,10 +2329,22 @@ void nsTreeSanitizer::InitializeStatics() {
     sAttributesMathML->Insert(kAttributesMathML[i]);
   }
 
+  sBaselineAttributeAllowlist =
+      new AtomsTable(ArrayLength(kBaselineAttributeAllowlist));
+  for (const auto* atom : kBaselineAttributeAllowlist) {
+    sBaselineAttributeAllowlist->Insert(atom);
+  }
+
   sBaselineElementAllowlist =
       new AtomsTable(ArrayLength(kBaselineElementAllowlist));
   for (const auto* atom : kBaselineElementAllowlist) {
     sBaselineElementAllowlist->Insert(atom);
+  }
+
+  sDefaultConfigurationAttributeAllowlist =
+      new AtomsTable(ArrayLength(kDefaultConfigurationAttributeAllowlist));
+  for (const auto* atom : kDefaultConfigurationAttributeAllowlist) {
+    sDefaultConfigurationAttributeAllowlist->Insert(atom);
   }
 
   sDefaultConfigurationElementAllowlist =
@@ -1863,8 +2380,14 @@ void nsTreeSanitizer::ReleaseStatics() {
   delete sAttributesMathML;
   sAttributesMathML = nullptr;
 
+  delete sBaselineAttributeAllowlist;
+  sBaselineAttributeAllowlist = nullptr;
+
   delete sBaselineElementAllowlist;
   sBaselineElementAllowlist = nullptr;
+
+  delete sDefaultConfigurationAttributeAllowlist;
+  sDefaultConfigurationAttributeAllowlist = nullptr;
 
   delete sDefaultConfigurationElementAllowlist;
   sDefaultConfigurationElementAllowlist = nullptr;
