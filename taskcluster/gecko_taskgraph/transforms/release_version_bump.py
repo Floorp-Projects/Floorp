@@ -21,12 +21,7 @@ def handle_keyed_by(config, tasks):
     ]
     for task in tasks:
         fields = default_fields[:]
-        for additional_field in (
-            "l10n-bump-info",
-            "source-repo",
-            "dontbuild",
-            "ignore-closed-tree",
-        ):
+        for additional_field in ("l10n-bump-info", "source-repo", "dontbuild"):
             if additional_field in task["worker"]:
                 fields.append(f"worker.{additional_field}")
         for field in fields:
