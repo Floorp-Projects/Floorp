@@ -29,8 +29,10 @@ Services.scriptloader.loadSubScript("chrome://browser/content/browser-tabbar.js"
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-userChrome.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-preferences.js", this);
 
+window.setTimeout(() => {
 //shortcutkey
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-command.js", this)
+}, 3000);
 
 if (AppConstants.platform == "macosx") {
   Services.scriptloader.loadSubScript("chrome://global/content/macWindowMenu.js", this);
