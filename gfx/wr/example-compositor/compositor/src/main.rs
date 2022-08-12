@@ -430,12 +430,12 @@ fn main() {
             partial_present: None,
         }
     };
-    let opts = webrender::RendererOptions {
+    let opts = webrender::WebRenderOptions {
         clear_color: ColorF::new(1.0, 1.0, 1.0, 1.0),
         debug_flags,
         compositor_config,
         surface_origin_is_top_left: false,
-        ..webrender::RendererOptions::default()
+        ..webrender::WebRenderOptions::default()
     };
     let (tx, rx) = mpsc::channel();
     let notifier = Box::new(Notifier::new(tx));
