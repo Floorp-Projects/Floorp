@@ -1,0 +1,22 @@
+<script>
+var timeout = async function (cmd) {
+  const timer = new Promise((resolve, reject) => {
+    const id = setTimeout(() => {
+      clearTimeout(id)
+      reject(new Error('Promise timed out!'))
+    }, 750)
+  })
+  return Promise.race([cmd, timer])
+}
+window.addEventListener('load', async () => {
+  let a = new RTCPeerConnection({
+    'iceServers': [{'urls': 'stun:23.21.150.121'}],
+    'peerIdentity': 'x',
+  })
+  let b = await timeout(a.createOffer({ }))
+  a.setLocalDescription(b)
+  try { a.setRemoteDescription(b) } catch (e) {}
+  a.setLocalDescription(b)
+})
+</script>
+
