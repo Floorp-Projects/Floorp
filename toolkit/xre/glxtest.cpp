@@ -94,6 +94,7 @@ typedef void* EGLConfig;
 typedef void* EGLContext;
 typedef void* EGLDeviceEXT;
 typedef void* EGLDisplay;
+typedef unsigned int EGLenum;
 typedef int EGLint;
 typedef void* EGLNativeDisplayType;
 typedef void* EGLSurface;
@@ -110,6 +111,7 @@ typedef void* (*PFNEGLGETPROCADDRESS)(const char*);
 #define EGL_VENDOR 0x3053
 #define EGL_EXTENSIONS 0x3055
 #define EGL_CONTEXT_CLIENT_VERSION 0x3098
+#define EGL_OPENGL_ES_API 0x30A0
 #define EGL_OPENGL_API 0x30A2
 #define EGL_DEVICE_EXT 0x322C
 #define EGL_DRM_DEVICE_FILE_EXT 0x3233
@@ -519,12 +521,18 @@ static bool get_gles_status(EGLDisplay dpy,
     return false;
   }
 
-  if (eglBindAPI(EGL_OPENGL_API) == EGL_FALSE) {
+#if defined(_ARM64_)
+  EGLenum api = EGL_OPENGL_ES_API;
+#else
+  EGLenum api = EGL_OPENGL_API;
+#endif
+
+  if (eglBindAPI(api) == EGL_FALSE) {
     record_warning("eglBindAPI returned an error");
     return false;
   }
 
-  EGLint ctx_attrs[] = {EGL_NONE};
+  EGLint ctx_attrs[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
   EGLContext ectx = eglCreateContext(dpy, config, EGL_NO_CONTEXT, ctx_attrs);
   if (!ectx) {
     record_warning("eglCreateContext returned an error");
