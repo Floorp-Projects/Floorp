@@ -378,6 +378,5 @@ module.exports = {
       "block",
       ["-\\*-(.*)-\\*-", "eslint(.*)", "vim(.*)"],
     ],
-    "consistent-return": "off",
   },
 };
