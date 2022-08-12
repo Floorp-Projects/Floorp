@@ -130,7 +130,29 @@ function ArraySort(comparefn) {
   var wrappedCompareFn = ArraySortCompare(comparefn);
 
   // Step 5.
-  return MergeSort(O, len, wrappedCompareFn);
+  // To save effort we will do all of our work on a dense list, then create
+  // holes at the end.
+  var denseList = [];
+  var denseLen = 0;
+
+  for (var i = 0; i < len; i++) {
+    if (i in O) {
+      DefineDataProperty(denseList, denseLen++, O[i]);
+    }
+  }
+
+  if (denseLen < 1) {
+    return O;
+  }
+
+  var sorted = MergeSort(denseList, denseLen, wrappedCompareFn);
+
+  assert(IsPackedArray(sorted), "sorted is a packed array");
+  assert(sorted.length === denseLen, "sorted array has the correct length");
+
+  MoveHoles(O, len, sorted, denseLen);
+
+  return O;
 }
 
 /* ES5 15.4.4.18. */
@@ -1401,7 +1423,12 @@ function ArrayToSorted(comparefn) {
   var wrappedCompareFn = ArraySortCompare(comparefn);
 
   // Steps 6-9.
-  return MergeSort(items, len, wrappedCompareFn);
+  var sorted = MergeSort(items, len, wrappedCompareFn);
+
+  assert(IsPackedArray(sorted), "sorted is a packed array");
+  assert(sorted.length === len, "sorted array has the correct length");
+
+  return sorted;
 }
 
 #endif
