@@ -106,9 +106,6 @@ with Files("DelayNode.webidl"):
 with Files("DynamicsCompressorNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
-with Files("FakePluginTagInit.webidl"):
-    BUG_COMPONENT = ("Core", "Plug-ins")
-
 with Files("FeaturePolicy.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
