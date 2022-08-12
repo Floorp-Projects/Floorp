@@ -2247,8 +2247,8 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
 #ifdef NIGHTLY_BUILD
   if (key == JSProto_Array &&
       !cx->realm()->creationOptions().getArrayGroupingEnabled() &&
-      (id == NameToId(cx->names().group) ||
-       id == NameToId(cx->names().groupToMap))) {
+      (id == NameToId(cx->names().groupBy) ||
+       id == NameToId(cx->names().groupByToMap))) {
     return true;
   }
 #endif

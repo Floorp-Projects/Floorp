@@ -10,8 +10,7 @@ info: |
   Temporal.ZonedDateTime.prototype.round ( roundTo )
   ...
   18. Let dayLengthNs be ℝ(endNs - startNs).
-  19. If dayLengthNs ≤ 0, then
-    a. Throw a RangeError exception.
+  ...
   20. Let roundResult be ! RoundISODateTime(temporalDateTime.[[ISOYear]],
       temporalDateTime.[[ISOMonth]], temporalDateTime.[[ISODay]], temporalDateTime.[[ISOHour]],
       temporalDateTime.[[ISOMinute]], temporalDateTime.[[ISOSecond]],
@@ -76,12 +75,14 @@ const oneDay = 24n * 60n * 60n * 1000n * 1000n * 1000n
 {
   let tz = new TimeZone(minInstant);
   let zoned = new Temporal.ZonedDateTime(0n, tz);
-  assert.throws(RangeError, () => zoned.round({ smallestUnit: "days" }));
+  let result = zoned.round({ smallestUnit: "days" });
+  assert(zoned.equals(result));
 }
 {
   let tz = new TimeZone(minInstant);
   let zoned = new Temporal.ZonedDateTime(maxInstant - oneDay, tz);
-  assert.throws(RangeError, () => zoned.round({ smallestUnit: "days" }));
+  let result = zoned.round({ smallestUnit: "days" });
+  assert(zoned.equals(result));
 }
 
 reportCompare(0, 0);

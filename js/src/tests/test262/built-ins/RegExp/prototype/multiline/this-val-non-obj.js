@@ -36,8 +36,4 @@ assert.throws(TypeError, function() {
   get.call(symbol);
 }, 'symbol');
 
-assert.throws(TypeError, function() {
-  get.call(4n);
-}, 'bigint');
-
 reportCompare(0, 0);

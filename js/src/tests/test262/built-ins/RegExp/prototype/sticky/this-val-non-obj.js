@@ -39,8 +39,4 @@ assert.throws(TypeError, function() {
   sticky.call(4);
 });
 
-assert.throws(TypeError, function() {
-  sticky.call(4n);
-}, 'bigint');
-
 reportCompare(0, 0);
