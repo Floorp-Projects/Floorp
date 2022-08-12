@@ -17,7 +17,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLFrameElement.h"
-#include "mozilla/dom/ImageDocument.h"
 #include "mozilla/dom/BrowserParent.h"
 
 #include "nsCOMPtr.h"
@@ -74,8 +73,7 @@ nsSubDocumentFrame::nsSubDocumentFrame(ComputedStyle* aStyle,
       mIsInline(false),
       mPostedReflowCallback(false),
       mDidCreateDoc(false),
-      mCallingShow(false),
-      mIsInObjectOrEmbed(false) {}
+      mCallingShow(false) {}
 
 #ifdef ACCESSIBILITY
 a11y::AccType nsSubDocumentFrame::AccessibleType() {
@@ -147,13 +145,7 @@ void nsSubDocumentFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
         frameloader->Hide();
       }
     }
-
-    if (RefPtr<BrowsingContext> bc = frameloader->GetExtantBrowsingContext()) {
-      mIsInObjectOrEmbed = bc->IsEmbedderTypeObjectOrEmbed();
-    }
   }
-
-  MaybeUpdateRemoteStyle();
 
   PropagateIsUnderHiddenEmbedderElementToSubView(
       PresShell()->IsUnderHiddenEmbedderElement() ||
@@ -189,7 +181,7 @@ void nsSubDocumentFrame::ShowViewer() {
   }
 
   RefPtr<nsFrameLoader> frameloader = FrameLoader();
-  if (!frameloader || frameloader->IsDead()) {
+  if (!frameloader) {
     return;
   }
 
@@ -853,50 +845,10 @@ void nsSubDocumentFrame::MaybeUpdateEmbedderColorScheme() {
   Unused << bc->SetEmbedderColorScheme(value);
 }
 
-void nsSubDocumentFrame::MaybeUpdateRemoteStyle(
-    ComputedStyle* aOldComputedStyle) {
-  if (!mIsInObjectOrEmbed) {
-    return;
-  }
-
-  if (aOldComputedStyle &&
-      aOldComputedStyle->StyleVisibility()->mImageRendering ==
-          Style()->StyleVisibility()->mImageRendering) {
-    return;
-  }
-
-  if (!mFrameLoader) {
-    return;
-  }
-
-  if (mFrameLoader->IsRemoteFrame()) {
-    mFrameLoader->UpdateRemoteStyle(
-        Style()->StyleVisibility()->mImageRendering);
-    return;
-  }
-
-  BrowsingContext* context = mFrameLoader->GetExtantBrowsingContext();
-  if (!context) {
-    return;
-  }
-
-  Document* document = context->GetDocument();
-  if (!document) {
-    return;
-  }
-
-  if (document->IsImageDocument()) {
-    document->AsImageDocument()->UpdateRemoteStyle(
-        Style()->StyleVisibility()->mImageRendering);
-  }
-}
-
 void nsSubDocumentFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   nsAtomicContainerFrame::DidSetComputedStyle(aOldComputedStyle);
 
   MaybeUpdateEmbedderColorScheme();
-
-  MaybeUpdateRemoteStyle(aOldComputedStyle);
 
   // If this presshell has invisible ancestors, we don't need to propagate the
   // visibility style change to the subdocument since the subdocument should
@@ -1283,6 +1235,11 @@ nsPoint nsSubDocumentFrame::GetExtraOffset() const {
 }
 
 void nsSubDocumentFrame::SubdocumentIntrinsicSizeOrRatioChanged() {
+  if (MOZ_UNLIKELY(HasAllStateBits(NS_FRAME_IS_DIRTY))) {
+    // We will be reflowed soon anyway.
+    return;
+  }
+
   const nsStylePosition* pos = StylePosition();
   bool dependsOnIntrinsics =
       !pos->mWidth.ConvertsToLength() || !pos->mHeight.ConvertsToLength();
@@ -1291,7 +1248,6 @@ void nsSubDocumentFrame::SubdocumentIntrinsicSizeOrRatioChanged() {
     auto dirtyHint = dependsOnIntrinsics ? IntrinsicDirty::StyleChange
                                          : IntrinsicDirty::Resize;
     PresShell()->FrameNeedsReflow(this, dirtyHint, NS_FRAME_IS_DIRTY);
-    InvalidateFrame();
   }
 }
 

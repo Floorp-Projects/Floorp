@@ -8,15 +8,11 @@
 
 #include "mozilla/Attributes.h"
 #include "imgINotificationObserver.h"
-#include "mozilla/dom/MediaDocument.h"
+#include "MediaDocument.h"
 #include "nsIDOMEventListener.h"
 
-namespace mozilla {
-enum class StyleImageRendering : uint8_t;
-struct IntrinsicSize;
-}  // namespace mozilla
-
 namespace mozilla::dom {
+
 class HTMLImageElement;
 
 class ImageDocument final : public MediaDocument,
@@ -77,8 +73,6 @@ class ImageDocument final : public MediaDocument,
 
   void NotifyPossibleTitleChange(bool aBoundTitleElement) override;
 
-  void UpdateRemoteStyle(StyleImageRendering aImageRendering);
-
  protected:
   virtual ~ImageDocument();
 
@@ -104,16 +98,13 @@ class ImageDocument final : public MediaDocument,
     eNone,
     eShrinkToFit,
     eOverflowingVertical,  // And maybe horizontal too.
-    eOverflowingHorizontalOnly,
-    eIsInObjectOrEmbed
+    eOverflowingHorizontalOnly
   };
   void SetModeClass(eModeClasses mode);
 
   void OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
   void OnLoadComplete(imgIRequest* aRequest, nsresult aStatus);
   void OnHasTransparency();
-
-  void MaybeSendResultToEmbedder(nsresult aResult);
 
   RefPtr<HTMLImageElement> mImageContent;
 
@@ -134,22 +125,9 @@ class ImageDocument final : public MediaDocument,
   bool mTitleUpdateInProgress;
   bool mHasCustomTitle;
 
-  // True iff embedder is either <object> or <embed>.
-  bool mIsInObjectOrEmbed;
-
   float mOriginalZoomLevel;
   float mOriginalResolution;
 };
-
-inline ImageDocument* Document::AsImageDocument() {
-  MOZ_ASSERT(IsImageDocument());
-  return static_cast<ImageDocument*>(this);
-}
-
-inline const ImageDocument* Document::AsImageDocument() const {
-  MOZ_ASSERT(IsImageDocument());
-  return static_cast<const ImageDocument*>(this);
-}
 
 }  // namespace mozilla::dom
 

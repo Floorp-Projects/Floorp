@@ -34,7 +34,6 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSetInlines.h"
-#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_mathml.h"
 #include "mozilla/Unused.h"
@@ -3611,14 +3610,6 @@ nsCSSFrameConstructor::FindInputData(const Element& aElement,
                        ArrayLength(sInputData));
 }
 
-static nsIFrame* NS_NewSubDocumentOrImageFrame(mozilla::PresShell* aPresShell,
-                                               mozilla::ComputedStyle* aStyle) {
-  return StaticPrefs::
-                 browser_opaqueResponseBlocking_syntheticBrowsingContext_AtStartup()
-             ? NS_NewSubDocumentFrame(aPresShell, aStyle)
-             : NS_NewImageFrame(aPresShell, aStyle);
-}
-
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindObjectData(const Element& aElement,
@@ -3649,8 +3640,7 @@ nsCSSFrameConstructor::FindObjectData(const Element& aElement,
                         NS_NewEmptyFrame),
       SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_FALLBACK,
                         ToCreationFunc(NS_NewBlockFrame)),
-      SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_IMAGE,
-                        NS_NewSubDocumentOrImageFrame),
+      SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_IMAGE, NS_NewImageFrame),
       SIMPLE_INT_CREATE(nsIObjectLoadingContent::TYPE_DOCUMENT,
                         NS_NewSubDocumentFrame),
       // Fake plugin handlers load as documents

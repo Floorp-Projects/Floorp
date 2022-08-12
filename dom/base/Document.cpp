@@ -16520,16 +16520,6 @@ Selection* Document::GetSelection(ErrorResult& aRv) {
   return nsGlobalWindowInner::Cast(window)->GetSelection(aRv);
 }
 
-void Document::MakeBrowsingContextNonSynthetic() {
-  if (nsContentUtils::ShouldHideObjectOrEmbedImageDocument()) {
-    if (BrowsingContext* bc = GetBrowsingContext()) {
-      if (bc->GetSyntheticDocumentContainer()) {
-        Unused << bc->SetSyntheticDocumentContainer(false);
-      }
-    }
-  }
-}
-
 nsresult Document::HasStorageAccessSync(bool& aHasStorageAccess) {
   // Step 1: check if cookie permissions are available or denied to this
   // document's principal

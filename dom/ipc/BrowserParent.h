@@ -324,8 +324,6 @@ class BrowserParent final : public PBrowserParent,
       const Maybe<IntrinsicSize>& aIntrinsicSize,
       const Maybe<AspectRatio>& aIntrinsicRatio);
 
-  mozilla::ipc::IPCResult RecvImageLoadComplete(const nsresult& aResult);
-
   mozilla::ipc::IPCResult RecvSyncMessage(
       const nsString& aMessage, const ClonedMessageData& aData,
       nsTArray<ipc::StructuredCloneData>* aRetVal);

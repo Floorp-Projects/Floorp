@@ -3359,19 +3359,6 @@ class nsContentUtils {
   static nsresult AnonymizeId(nsAString& aId, const nsACString& aOriginKey,
                               OriginFormat aFormat = OriginFormat::Base64);
 
-  /**
-   * Return true if we should hide the synthetic browsing context for <object>
-   * or <embed> images in synthetic documents.
-   */
-  static bool ShouldHideObjectOrEmbedImageDocument();
-
-  /**
-   * Returns the object type that the object loading content will actually use
-   * to load the resource. Used for ORB and loading images into synthetic
-   * documents.
-   */
-  static uint32_t ResolveObjectType(uint32_t aType);
-
  private:
   static bool InitializeEventTable();
 

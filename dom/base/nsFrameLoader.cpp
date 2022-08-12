@@ -2495,15 +2495,6 @@ void nsFrameLoader::PropagateIsUnderHiddenEmbedderElement(
   }
 }
 
-void nsFrameLoader::UpdateRemoteStyle(
-    mozilla::StyleImageRendering aImageRendering) {
-  MOZ_DIAGNOSTIC_ASSERT(IsRemoteFrame());
-
-  if (auto* browserBridgeChild = GetBrowserBridgeChild()) {
-    browserBridgeChild->SendUpdateRemoteStyle(aImageRendering);
-  }
-}
-
 void nsFrameLoader::UpdateBaseWindowPositionAndSize(
     nsSubDocumentFrame* aIFrame) {
   nsCOMPtr<nsIBaseWindow> baseWindow = GetDocShell(IgnoreErrors());

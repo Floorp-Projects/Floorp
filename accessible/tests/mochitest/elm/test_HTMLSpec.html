@@ -23,8 +23,6 @@
           src="../name.js"></script>
 
   <script type="application/javascript">
-    const syntheticBrowsingContexts = SpecialPowers.getBoolPref("browser.opaqueResponseBlocking.syntheticBrowsingContext", false);
-
     async function doTest() {
       // ////////////////////////////////////////////////////////////////////////
       // HTML:a@href
@@ -463,21 +461,10 @@
       // ////////////////////////////////////////////////////////////////////////
       // HTML:embed
 
-      if (syntheticBrowsingContexts) {
-        obj = {
-          INTERNAL_FRAME: [ {
-            DOCUMENT: [ {
-              role: ROLE_GRAPHIC,
-              interfaces: [ nsIAccessibleImage ],
-            } ],
-          } ],
-        };
-      } else {
-        obj = {
-          role: ROLE_GRAPHIC,
-          interfaces: [ nsIAccessibleImage ],
-        };
-      }
+      obj = {
+        role: ROLE_GRAPHIC,
+        interfaces: [ nsIAccessibleImage ],
+      };
       testElm("embed_png", obj);
 
       obj = {
@@ -1133,21 +1120,10 @@
       // ////////////////////////////////////////////////////////////////////////
       // HTML:object and HTML:param
 
-      if (syntheticBrowsingContexts) {
-        obj = {
-          INTERNAL_FRAME: [ {
-            DOCUMENT: [ {
-              role: ROLE_GRAPHIC,
-              interfaces: [ nsIAccessibleImage ],
-            } ],
-          } ],
-        };
-      } else {
-        obj = {
-          role: ROLE_GRAPHIC,
-          interfaces: [ nsIAccessibleImage ],
-        };
-      }
+      obj = {
+        role: ROLE_GRAPHIC,
+        interfaces: [ nsIAccessibleImage ],
+      };
       testElm("object_png", obj);
 
       obj = {

@@ -3120,18 +3120,6 @@ mozilla::ipc::IPCResult BrowserParent::RecvIntrinsicSizeOrRatioChanged(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserParent::RecvImageLoadComplete(
-    const nsresult& aResult) {
-  BrowserBridgeParent* bridge = GetBrowserBridgeParent();
-  if (!bridge || !bridge->CanSend()) {
-    return IPC_OK();
-  }
-
-  Unused << bridge->SendImageLoadComplete(aResult);
-
-  return IPC_OK();
-}
-
 bool BrowserParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent) {
   nsCOMPtr<nsIWidget> textInputHandlingWidget = GetTextInputHandlingWidget();
   if (!textInputHandlingWidget) {

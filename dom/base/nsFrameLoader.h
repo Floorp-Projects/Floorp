@@ -147,8 +147,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
   void PropagateIsUnderHiddenEmbedderElement(
       bool aIsUnderHiddenEmbedderElement);
 
-  void UpdateRemoteStyle(mozilla::StyleImageRendering aImageRendering);
-
   // When creating a nsFrameLoaderOwner which is a static clone, a
   // `nsFrameLoader` is not immediately attached to it. Instead, it is added to
   // the static clone document's `PendingFrameStaticClones` list.
