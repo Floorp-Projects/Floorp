@@ -542,8 +542,30 @@ bool nsIFrame::AddXULMaxSize(nsIFrame* aBox, nsSize& aSize, bool& aWidthSet,
   return (aWidthSet || aHeightSet);
 }
 
-int32_t nsIFrame::ComputeXULFlex(nsIFrame* aBox) {
-  return clamped(int32_t(aBox->StyleXUL()->mBoxFlex), 0, nscoord_MAX - 1);
+bool nsIFrame::AddXULFlex(nsIFrame* aBox, nscoord& aFlex) {
+  bool flexSet = false;
+
+  // get the flexibility
+  aFlex = aBox->StyleXUL()->mBoxFlex;
+
+  // attribute value overrides CSS
+  nsIContent* content = aBox->GetContent();
+  if (content && content->IsXULElement()) {
+    nsresult error;
+    nsAutoString value;
+
+    content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::flex, value);
+    if (!value.IsEmpty()) {
+      value.Trim("%");
+      aFlex = value.ToInteger(&error);
+      flexSet = true;
+    }
+  }
+
+  if (aFlex < 0) aFlex = 0;
+  if (aFlex >= nscoord_MAX) aFlex = nscoord_MAX - 1;
+
+  return flexSet || aFlex > 0;
 }
 
 void nsIFrame::AddXULBorderAndPadding(nsSize& aSize) {

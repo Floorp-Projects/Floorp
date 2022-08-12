@@ -11,6 +11,10 @@ interface XULControllers;
 interface XULElement : Element {
   [HTMLConstructor] constructor();
 
+  // Layout properties
+  [SetterThrows]
+  attribute DOMString flex;
+
   // Properties for hiding elements.
   attribute boolean hidden;
   attribute boolean collapsed;

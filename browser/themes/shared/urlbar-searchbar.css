@@ -265,7 +265,6 @@
 
 #urlbar-container {
   -moz-box-align: center;
-  -moz-box-flex: 400;
 }
 
 #urlbar-search-splitter {
@@ -639,7 +638,6 @@
 
 #search-container {
   min-width: 125px;
-  -moz-box-flex: 175;
 }
 
 #search-container[cui-areatype="menu-panel"] > #searchbar:-moz-lwtheme {

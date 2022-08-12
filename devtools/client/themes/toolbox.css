@@ -521,11 +521,6 @@
   -moz-user-focus: ignore;
 }
 
-#toolbox-panel-webconsole {
-  min-height: 75px;
-  -moz-box-flex: 1;
-}
-
 /**
  * Enrure that selected toolbox panel's contents are keyboard accessible as they
  * are explicitly made not to be when hidden (default).
@@ -534,19 +529,9 @@
   -moz-user-focus: normal;
 }
 
+/* Let the component gain focus when a click hits an empty area */
 #toolbox-container {
-  -moz-box-flex: 1;
-  /* Let the component gain focus when a click hits an empty area */
   -moz-user-focus: normal;
-}
-
-#toolbox-deck {
-  min-height: 75px;
-  /* Set large flex to allow the toolbox-panel-webconsole to have a
-     height set to a small value without flexing to fill up extra
-     space. There must be a flex on both to ensure that the console
-     panel itself is sized properly */
-  -moz-box-flex: 10000;
 }
 
 #toolbox-container:focus {

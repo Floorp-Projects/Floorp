@@ -673,10 +673,11 @@ nsSize nsBoxFrame::GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState) {
   return size;
 }
 
-int32_t nsBoxFrame::GetXULFlex() {
+nscoord nsBoxFrame::GetXULFlex() {
   if (XULNeedsRecalc(mFlex)) {
-    mFlex = nsIFrame::ComputeXULFlex(this);
+    nsIFrame::AddXULFlex(this, mFlex);
   }
+
   return mFlex;
 }
 
@@ -843,9 +844,9 @@ nsresult nsBoxFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
       aAttribute == nsGkAtoms::align || aAttribute == nsGkAtoms::valign ||
       aAttribute == nsGkAtoms::minwidth || aAttribute == nsGkAtoms::maxwidth ||
       aAttribute == nsGkAtoms::minheight ||
-      aAttribute == nsGkAtoms::maxheight || aAttribute == nsGkAtoms::orient ||
-      aAttribute == nsGkAtoms::pack || aAttribute == nsGkAtoms::dir ||
-      aAttribute == nsGkAtoms::equalsize) {
+      aAttribute == nsGkAtoms::maxheight || aAttribute == nsGkAtoms::flex ||
+      aAttribute == nsGkAtoms::orient || aAttribute == nsGkAtoms::pack ||
+      aAttribute == nsGkAtoms::dir || aAttribute == nsGkAtoms::equalsize) {
     if (aAttribute == nsGkAtoms::align || aAttribute == nsGkAtoms::valign ||
         aAttribute == nsGkAtoms::orient || aAttribute == nsGkAtoms::pack ||
         aAttribute == nsGkAtoms::dir) {
