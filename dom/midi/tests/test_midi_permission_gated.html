@@ -29,6 +29,7 @@
       await SpecialPowers.pushPrefEnv({
         set: [
           ["dom.webmidi.enabled", true],
+          ["dom.webmidi.gated", false],
           ["midi.testing", true],
         ],
       });
