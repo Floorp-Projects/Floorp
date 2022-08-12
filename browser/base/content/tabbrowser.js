@@ -2161,14 +2161,22 @@
       let notificationbox = document.createXULElement("notificationbox");
       notificationbox.setAttribute("notificationside", "top");
 
+      // We set large flex on both containers to allow the devtools toolbox to
+      // set a flex attribute. We don't want the toolbox to actually take up free
+      // space, but we do want it to collapse when the window shrinks, and with
+      // flex=0 it can't. When the toolbox is on the bottom it's a sibling of
+      // browserStack, and when it's on the side it's a sibling of
+      // browserContainer.
       let stack = document.createXULElement("stack");
       stack.className = "browserStack";
       stack.appendChild(b);
+      stack.setAttribute("flex", "10000");
 
       let browserContainer = document.createXULElement("vbox");
       browserContainer.className = "browserContainer";
       browserContainer.appendChild(notificationbox);
       browserContainer.appendChild(stack);
+      browserContainer.setAttribute("flex", "10000");
 
       let browserSidebarContainer = document.createXULElement("hbox");
       browserSidebarContainer.className = "browserSidebarContainer";

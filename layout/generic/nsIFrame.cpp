@@ -10603,10 +10603,10 @@ nsSize nsIFrame::GetXULMaxSize(nsBoxLayoutState& aState) {
   return size;
 }
 
-int32_t nsIFrame::GetXULFlex() {
+nscoord nsIFrame::GetXULFlex() {
   nsBoxLayoutMetrics* metrics = BoxMetrics();
   if (XULNeedsRecalc(metrics->mFlex)) {
-    metrics->mFlex = nsIFrame::ComputeXULFlex(this);
+    nsIFrame::AddXULFlex(this, metrics->mFlex);
   }
 
   return metrics->mFlex;

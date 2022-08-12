@@ -32,21 +32,8 @@ body {
   min-width: -moz-fit-content;
 }
 
-/* We set large flex on both containers to allow the devtools toolbox to
- * set a flex value itself. We don't want the toolbox to actually take up free
- * space, but we do want it to collapse when the window shrinks, and with
- * flex: 0 it can't.
- *
- * When the toolbox is on the bottom it's a sibling of browserStack, and when
- * it's on the side it's a sibling of browserContainer.
- */
-.browserContainer {
-  -moz-box-flex: 10000;
-}
-
+/* Prevent shrinking the page content to 0 height and width */
 .browserStack {
-  -moz-box-flex: 10000;
-  /* Prevent shrinking the page content to 0 height and width */
   min-height: 25px;
   min-width: 25px;
 }
