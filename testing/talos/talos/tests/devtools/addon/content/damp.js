@@ -39,7 +39,7 @@ function Damp() {}
 Damp.prototype = {
   async garbageCollect() {
     dump("Garbage collect\n");
-    let start = Cu.now();
+    let startTime = Cu.now();
 
     // Minimize memory usage
     // mimic miminizeMemoryUsage, by only flushing JS objects via GC.
@@ -56,7 +56,11 @@ Damp.prototype = {
       Cu.forceGC();
       await new Promise(done => setTimeout(done, 0));
     }
-    ChromeUtils.addProfilerMarker("DAMP", start, "GC");
+    ChromeUtils.addProfilerMarker(
+      "DAMP",
+      { startTime, category: "Test" },
+      "GC"
+    );
   },
 
   async ensureTalosParentProfiler() {
@@ -134,7 +138,11 @@ Damp.prototype = {
       done: () => {
         let end = Cu.now();
         let duration = end - start;
-        ChromeUtils.addProfilerMarker("DAMP", start, label);
+        ChromeUtils.addProfilerMarker(
+          "DAMP",
+          { startTime: start, category: "Test" },
+          label
+        );
         if (record) {
           this._results.push({
             name: label,
@@ -179,14 +187,22 @@ Damp.prototype = {
         window.addEventListener(
           "MozAfterPaint",
           function listener() {
-            ChromeUtils.addProfilerMarker("DAMP", undefined, "pending paint");
+            ChromeUtils.addProfilerMarker(
+              "DAMP",
+              { category: "Test" },
+              "pending paint"
+            );
             done();
           },
           { once: true }
         );
       });
     }
-    ChromeUtils.addProfilerMarker("DAMP", startTime, "pending paints");
+    ChromeUtils.addProfilerMarker(
+      "DAMP",
+      { startTime, category: "Test" },
+      "pending paints"
+    );
   },
 
   reloadPage(onReload) {
@@ -348,7 +364,10 @@ Damp.prototype = {
       this._reportAllResults();
     }
 
-    ChromeUtils.addProfilerMarker("DAMP", this._startTimestamp);
+    ChromeUtils.addProfilerMarker("DAMP", {
+      startTime: this._startTimestamp,
+      category: "Test",
+    });
     this.TalosParentProfiler.pause();
 
     this._unregisterDampLoadActors();
