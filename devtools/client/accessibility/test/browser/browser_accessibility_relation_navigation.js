@@ -3,6 +3,8 @@
 
 "use strict";
 
+const { L10N } = require("devtools/client/accessibility/utils/l10n");
+
 const TEST_URI = `<html>
   <head>
     <meta charset="utf-8"/>
@@ -122,9 +124,19 @@ const tests = [
         // activated.
         nonNegativeTabIndexRule: false,
       });
+
+      const selectElementInTreeButton = containingDocRelation.querySelector(
+        ".open-accessibility-inspector"
+      );
+      ok(!!selectElementInTreeButton, "There's a button to select the element");
+      is(
+        selectElementInTreeButton.getAttribute("title"),
+        L10N.getStr("accessibility.accessible.selectElement.title"),
+        "The button has the expected title"
+      );
       EventUtils.sendMouseEvent(
         { type: "click" },
-        containingDocRelation.querySelector(".open-accessibility-inspector"),
+        selectElementInTreeButton,
         win
       );
       AccessibilityUtils.resetEnv();

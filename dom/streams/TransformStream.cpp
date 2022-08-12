@@ -40,6 +40,63 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TransformStream)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+// https://streams.spec.whatwg.org/#transformstream-set-up
+// (except this instead creates a new TransformStream rather than accepting an
+// existing instance)
+already_AddRefed<TransformStream> TransformStream::CreateGeneric(
+    const GlobalObject& aGlobal, TransformerAlgorithmsWrapper& aAlgorithms,
+    ErrorResult& aRv) {
+  // Step 1. Let writableHighWaterMark be 1.
+  double writableHighWaterMark = 1;
+
+  // Step 2. Let writableSizeAlgorithm be an algorithm that returns 1.
+  // Note: Callers should recognize nullptr as a callback that returns 1. See
+  // also WritableStream::Constructor for this design decision.
+  RefPtr<QueuingStrategySize> writableSizeAlgorithm;
+
+  // Step 3. Let readableHighWaterMark be 0.
+  double readableHighWaterMark = 0;
+
+  // Step 4. Let readableSizeAlgorithm be an algorithm that returns 1.
+  // Note: Callers should recognize nullptr as a callback that returns 1. See
+  // also ReadableStream::Constructor for this design decision.
+  RefPtr<QueuingStrategySize> readableSizeAlgorithm;
+
+  // Step 5. Let transformAlgorithmWrapper be an algorithm that runs these steps
+  // given a value chunk:
+  // Step 6. Let flushAlgorithmWrapper be an algorithm that runs these steps:
+  // (Done by TransformerAlgorithmsWrapper)
+
+  // Step 7. Let startPromise be a promise resolved with undefined.
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  RefPtr<Promise> startPromise =
+      Promise::CreateResolvedWithUndefined(global, aRv);
+  if (!startPromise) {
+    return nullptr;
+  }
+
+  // Step 8. Perform ! InitializeTransformStream(stream, startPromise,
+  // writableHighWaterMark, writableSizeAlgorithm, readableHighWaterMark,
+  // readableSizeAlgorithm).
+  auto stream = MakeRefPtr<TransformStream>(global, nullptr, nullptr);
+  stream->Initialize(aGlobal.Context(), startPromise, writableHighWaterMark,
+                     writableSizeAlgorithm, readableHighWaterMark,
+                     readableSizeAlgorithm, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // Step 9. Let controller be a new TransformStreamDefaultController.
+  auto controller = MakeRefPtr<TransformStreamDefaultController>(global);
+
+  // Step 10. Perform ! SetUpTransformStreamDefaultController(stream,
+  // controller, transformAlgorithmWrapper, flushAlgorithmWrapper).
+  SetUpTransformStreamDefaultController(aGlobal.Context(), *stream, *controller,
+                                        aAlgorithms);
+
+  return stream.forget();
+}
+
 TransformStream::TransformStream(nsIGlobalObject* aGlobal) : mGlobal(aGlobal) {
   mozilla::HoldJSObjects(this);
 }
@@ -80,7 +137,7 @@ void TransformStreamErrorWritableAndUnblockWrite(JSContext* aCx,
   // Step 3: If stream.[[backpressure]] is true, perform !
   // TransformStreamSetBackpressure(stream, false).
   if (aStream->Backpressure()) {
-    TransformStreamSetBackpressure(aStream, false, aRv);
+    aStream->SetBackpressure(false, aRv);
   }
 }
 
@@ -107,7 +164,7 @@ TransformStreamDefaultControllerPerformTransform(
     JS::Handle<JS::Value> aChunk, ErrorResult& aRv) {
   // Step 1: Let transformPromise be the result of performing
   // controller.[[transformAlgorithm]], passing chunk.
-  RefPtr<TransformerAlgorithms> algorithms = aController->Algorithms();
+  RefPtr<TransformerAlgorithmsBase> algorithms = aController->Algorithms();
   RefPtr<Promise> transformPromise =
       algorithms->TransformCallback(aCx, aChunk, *aController, aRv);
   if (aRv.Failed()) {
@@ -280,7 +337,7 @@ class TransformStreamUnderlyingSinkAlgorithms final
 
     // Step 3: Let flushPromise be the result of performing
     // controller.[[flushAlgorithm]].
-    RefPtr<TransformerAlgorithms> algorithms = controller->Algorithms();
+    RefPtr<TransformerAlgorithmsBase> algorithms = controller->Algorithms();
     RefPtr<Promise> flushPromise =
         algorithms->FlushCallback(aCx, *controller, aRv);
     if (aRv.Failed()) {
@@ -403,7 +460,7 @@ class TransformStreamUnderlyingSourceAlgorithms final
     MOZ_ASSERT(mStream->BackpressureChangePromise());
 
     // Step 3: Perform ! TransformStreamSetBackpressure(stream, false).
-    TransformStreamSetBackpressure(mStream, false, aRv);
+    mStream->SetBackpressure(false, aRv);
 
     // Step 4: Return stream.[[backpressureChangePromise]].
     return do_AddRef(mStream->BackpressureChangePromise());
@@ -451,26 +508,25 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(
 NS_INTERFACE_MAP_END_INHERITING(TransformStreamUnderlyingSourceAlgorithms)
 
 // https://streams.spec.whatwg.org/#transform-stream-set-backpressure
-void TransformStreamSetBackpressure(TransformStream* aStream,
-                                    bool aBackpressure, ErrorResult& aRv) {
+void TransformStream::SetBackpressure(bool aBackpressure, ErrorResult& aRv) {
   // Step 1. Assert: stream.[[backpressure]] is not backpressure.
-  MOZ_ASSERT(aStream->Backpressure() != aBackpressure);
+  MOZ_ASSERT(Backpressure() != aBackpressure);
 
   // Step 2. If stream.[[backpressureChangePromise]] is not undefined, resolve
   // stream.[[backpressureChangePromise]] with undefined.
-  if (Promise* promise = aStream->BackpressureChangePromise()) {
+  if (Promise* promise = BackpressureChangePromise()) {
     promise->MaybeResolveWithUndefined();
   }
 
   // Step 3. Set stream.[[backpressureChangePromise]] to a new promise.
-  RefPtr<Promise> promise = Promise::Create(aStream->GetParentObject(), aRv);
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aRv);
   if (aRv.Failed()) {
     return;
   }
-  aStream->SetBackpressureChangePromise(promise);
+  mBackpressureChangePromise = promise;
 
   // Step 4. Set stream.[[backpressure]] to backpressure.
-  aStream->SetBackpressure(aBackpressure);
+  mBackpressure = aBackpressure;
 }
 
 // https://streams.spec.whatwg.org/#initialize-transform-stream
@@ -518,7 +574,7 @@ void TransformStream::Initialize(JSContext* aCx, Promise* aStartPromise,
   mBackpressureChangePromise = nullptr;
 
   // Step 10. Perform ! TransformStreamSetBackpressure(stream, true).
-  TransformStreamSetBackpressure(this, true, aRv);
+  SetBackpressure(true, aRv);
   if (aRv.Failed()) {
     return;
   }
@@ -646,14 +702,6 @@ already_AddRefed<TransformStream> TransformStream::Constructor(
   }
 
   return transformStream.forget();
-}
-
-already_AddRefed<ReadableStream> TransformStream::GetReadable() {
-  return mReadable.forget();
-}
-
-already_AddRefed<WritableStream> TransformStream::GetWritable() {
-  return mWritable.forget();
 }
 
 }  // namespace mozilla::dom

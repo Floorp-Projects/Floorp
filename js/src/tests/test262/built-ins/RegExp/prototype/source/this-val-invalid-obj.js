@@ -25,4 +25,8 @@ assert.throws(TypeError, function() {
   get.call(arguments);
 }, 'arguments object');
 
+assert.throws(TypeError, function() {
+  get.call(() => {});
+}, 'function object');
+
 reportCompare(0, 0);

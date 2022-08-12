@@ -53,15 +53,14 @@ class StorageAccessAPIHelper final {
   //   Ex: example.net import tracker.com/script.js which does opens a popup and
   //   the user interacts with it. tracker.com is allowed when loaded by
   //   example.net.
-  typedef MozPromise<int, bool, true> StorageAccessFinalCheckPromise;
-  typedef std::function<RefPtr<StorageAccessFinalCheckPromise>()>
-      PerformFinalChecks;
   typedef MozPromise<int, bool, true> StorageAccessPermissionGrantPromise;
+  typedef std::function<RefPtr<StorageAccessPermissionGrantPromise>()>
+      PerformPermissionGrant;
   [[nodiscard]] static RefPtr<StorageAccessPermissionGrantPromise>
   AllowAccessFor(
       nsIPrincipal* aPrincipal, dom::BrowsingContext* aParentContext,
       ContentBlockingNotifier::StorageAccessPermissionGrantedReason aReason,
-      const PerformFinalChecks& aPerformFinalChecks = nullptr);
+      const PerformPermissionGrant& aPerformFinalChecks = nullptr);
 
   // This function handles tasks that have to be done in the process
   // of the window that we just grant permission for.
@@ -158,6 +157,20 @@ class StorageAccessAPIHelper final {
   static Maybe<bool> CheckExistingPermissionDecidesStorageAccessAPI(
       dom::Document* aDocument, bool aRequestingStorageAccess);
 
+  // This function performs the asynchronous portion of checking if requests
+  // for storage access will be successful or not. This includes calling
+  // Document member functions that creating a permission prompt request and
+  // trying to perform an "autogrant" if aRequireGrant is true.
+  // This will return a promise whose values correspond to those of a
+  // ContentBlocking::AllowAccessFor call that ends the function.
+  static RefPtr<StorageAccessPermissionGrantPromise>
+  RequestStorageAccessAsyncHelper(
+      dom::Document* aDocument, nsPIDOMWindowInner* aInnerWindow,
+      dom::BrowsingContext* aBrowsingContext, nsIPrincipal* aPrincipal,
+      bool aHasUserInteraction,
+      ContentBlockingNotifier::StorageAccessPermissionGrantedReason aNotifier,
+      bool aRequireGrant);
+
  private:
   friend class dom::ContentParent;
   // This should be running either in the parent process or in the child
@@ -168,7 +181,7 @@ class StorageAccessAPIHelper final {
       nsIPrincipal* aTrackingPrincipal, const nsACString& aTrackingOrigin,
       uint32_t aCookieBehavior,
       ContentBlockingNotifier::StorageAccessPermissionGrantedReason aReason,
-      const PerformFinalChecks& aPerformFinalChecks = nullptr);
+      const PerformPermissionGrant& aPerformFinalChecks = nullptr);
 
   static void UpdateAllowAccessOnCurrentProcess(
       dom::BrowsingContext* aParentContext, const nsACString& aTrackingOrigin);

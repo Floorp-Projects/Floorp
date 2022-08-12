@@ -446,11 +446,17 @@ add_task(async function ensure_fullscreen_button() {
 });
 
 add_task(async function ensure_doubleclick_triggers_fullscreen() {
+  const logger = new EventLogger(1);
+  document.addEventListener("mozfullscreenchange", logger);
   const { x, y } = video.getBoundingClientRect();
   info("attempt double click");
   synthesizeMouse(video, x, y, { clickCount: 2 });
-  await waitForEvent("play");
-  await waitForEvent("mozfullscreenchange");
+  const events = await logger.waitForExpectedEvents();
+  is(
+    events[0].type,
+    "mozfullscreenchange",
+    "Double clicking should trigger fullscreen event"
+  );
 });
 
 </script>

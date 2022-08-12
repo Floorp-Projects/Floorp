@@ -3302,7 +3302,7 @@ static bool array_toSpliced(JSContext* cx, unsigned argc, Value* vp) {
         if (arr->getDenseInitializedLength() == 0) {
           arr->initDenseElements(items.begin(), items.length());
         } else {
-          arr->setDenseInitializedLength(start + items.length());
+          arr->ensureDenseInitializedLength(start, items.length());
           arr->copyDenseElements(start, items.begin(), items.length());
         }
       }
@@ -3315,18 +3315,19 @@ static bool array_toSpliced(JSContext* cx, unsigned argc, Value* vp) {
       // Copy nobj[(start + deleteCount)..length] to
       // arr[(start + insertCount)..newLength].
       if (fromIndex < length) {
-        arr->setDenseInitializedLength(newLength);
-
         uint32_t end = std::min(length, nobj->getDenseInitializedLength());
         if (fromIndex < end) {
           uint32_t count = end - fromIndex;
           if (nobj->denseElementsArePacked()) {
             // Copy all dense elements when no holes are present.
             const Value* src = nobj->getDenseElements() + fromIndex;
+            arr->ensureDenseInitializedLength(toIndex, count);
             arr->copyDenseElements(toIndex, src, count);
             fromIndex += count;
             toIndex += count;
           } else {
+            arr->setDenseInitializedLength(toIndex + count);
+
             // Handle each element separately to filter out holes.
             for (uint32_t i = 0; i < count; i++) {
               Value val = nobj->getDenseElement(fromIndex++);
@@ -3337,6 +3338,8 @@ static bool array_toSpliced(JSContext* cx, unsigned argc, Value* vp) {
             }
           }
         }
+
+        arr->setDenseInitializedLength(newLength);
 
         // Fill trailing holes with undefined.
         while (fromIndex < length) {
@@ -4881,8 +4884,8 @@ static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
 
 #ifdef NIGHTLY_BUILD
   if (cx->realm()->creationOptions().getArrayGroupingEnabled()) {
-    if (!DefineDataProperty(cx, unscopables, cx->names().groupBy, value) ||
-        !DefineDataProperty(cx, unscopables, cx->names().groupByToMap, value)) {
+    if (!DefineDataProperty(cx, unscopables, cx->names().group, value) ||
+        !DefineDataProperty(cx, unscopables, cx->names().groupToMap, value)) {
       return false;
     }
   }

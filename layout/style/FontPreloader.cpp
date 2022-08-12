@@ -78,8 +78,9 @@ void FontPreloader::PrioritizeAsPreload(nsIChannel* aChannel) {
 
       // For WOFF and WOFF2, we should tell servers/proxies/etc NOT to try
       // and apply additional compression at the content-encoding layer
-      if (aFontFaceSrc->mFormatFlags & (gfxUserFontSet::FLAG_FORMAT_WOFF |
-                                        gfxUserFontSet::FLAG_FORMAT_WOFF2)) {
+      if (aFontFaceSrc->mFormatHint == StyleFontFaceSourceFormatKeyword::Woff ||
+          aFontFaceSrc->mFormatHint ==
+              StyleFontFaceSourceFormatKeyword::Woff2) {
         rv = aHttpChannel->SetRequestHeader("Accept-Encoding"_ns, "identity"_ns,
                                             false);
         NS_ENSURE_SUCCESS(rv, rv);

@@ -453,28 +453,26 @@ var popupTests = [
       gMenuPopup.openPopup(gTrigger, step, 0, 0, false, false);
     },
     result(testname, step) {
-      var rightmod =
-        step == "before_end" ||
-        step == "after_end" ||
-        step == "start_before" ||
-        step == "start_after" ||
-        step.match(/topright$/) ||
-        step.match(/bottomright$/);
-      var bottommod =
-        step == "before_start" ||
-        step == "before_end" ||
-        step == "start_after" ||
-        step == "end_after" ||
-        step.match(/bottomleft$/) ||
-        step.match(/bottomright$/);
-      // Negative margins expand available screen position.
-      compareEdge(
-        gTrigger,
-        gMenuPopup,
-        step,
-        rightmod ? 1000 : -1000,
-        bottommod ? 1000 : -1000,
-        testname
+      var popuprect = gMenuPopup.getBoundingClientRect();
+      // using negative margins causes the reverse of positive margins, and
+      // popups will appear on the left or top corners.
+      var expectedleft =
+        step == "before_end" || step == "after_end"
+          ? Math.round(window.innerWidth - gPopupWidth)
+          : 0;
+      var expectedtop =
+        step == "start_after" || step == "end_after"
+          ? Math.round(window.innerHeight - gPopupHeight)
+          : 0;
+      is(
+        Math.round(popuprect.left),
+        expectedleft,
+        testname + " x position " + step
+      );
+      is(
+        Math.round(popuprect.top),
+        expectedtop,
+        testname + " y position " + step
       );
       gMenuPopup.removeAttribute("style");
     },

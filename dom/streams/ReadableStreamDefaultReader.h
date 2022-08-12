@@ -75,8 +75,7 @@ class ReadableStreamDefaultReader final : public ReadableStreamGenericReader,
   static already_AddRefed<ReadableStreamDefaultReader> Constructor(
       const GlobalObject& aGlobal, ReadableStream& stream, ErrorResult& aRv);
 
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Read(JSContext* aCx,
-                                                    ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Read(ErrorResult& aRv);
 
   void ReleaseLock(ErrorResult& aRv);
 

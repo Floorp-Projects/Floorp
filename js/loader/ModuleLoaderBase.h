@@ -290,9 +290,6 @@ class ModuleLoaderBase : public nsISupports {
 
   static void EnsureModuleHooksInitialized();
 
-  static void DynamicImportPrefChangedCallback(const char* aPrefName,
-                                               void* aClosure);
-
   static JSObject* HostResolveImportedModule(
       JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
       JS::Handle<JSObject*> aModuleRequest);

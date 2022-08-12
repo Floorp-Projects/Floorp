@@ -23,8 +23,8 @@ gdbg.executeInGlobal(`
 
 assertEqArray(rv, [
   "EnterFrame", "sort",
-  "comparefn",
+  "ArraySortCompare/<",
   "EnterFrame", "print",
-  "comparefn",
+  "ArraySortCompare/<",
   "EnterFrame", "print",
 ]);

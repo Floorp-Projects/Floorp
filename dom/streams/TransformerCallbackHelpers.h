@@ -15,11 +15,29 @@ namespace mozilla::dom {
 
 class Promise;
 
-// https://streams.spec.whatwg.org/#set-up-transform-stream-default-controller-from-transformer
-class TransformerAlgorithms final {
+class TransformerAlgorithmsBase : public nsISupports {
  public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(TransformerAlgorithms)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(TransformerAlgorithms)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(TransformerAlgorithmsBase)
+
+  MOZ_CAN_RUN_SCRIPT virtual already_AddRefed<Promise> TransformCallback(
+      JSContext* aCx, JS::Handle<JS::Value> aChunk,
+      TransformStreamDefaultController& aController, ErrorResult& aRv) = 0;
+
+  MOZ_CAN_RUN_SCRIPT virtual already_AddRefed<Promise> FlushCallback(
+      JSContext* aCx, TransformStreamDefaultController& aController,
+      ErrorResult& aRv) = 0;
+
+ protected:
+  virtual ~TransformerAlgorithmsBase() = default;
+};
+
+// https://streams.spec.whatwg.org/#set-up-transform-stream-default-controller-from-transformer
+class TransformerAlgorithms final : public TransformerAlgorithmsBase {
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
+      TransformerAlgorithms, TransformerAlgorithmsBase)
 
   TransformerAlgorithms(nsIGlobalObject* aGlobal,
                         JS::Handle<JSObject*> aTransformer,
@@ -42,11 +60,11 @@ class TransformerAlgorithms final {
 
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> TransformCallback(
       JSContext* aCx, JS::Handle<JS::Value> aChunk,
-      TransformStreamDefaultController& aController, ErrorResult& aRv);
+      TransformStreamDefaultController& aController, ErrorResult& aRv) override;
 
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> FlushCallback(
       JSContext* aCx, TransformStreamDefaultController& aController,
-      ErrorResult& aRv);
+      ErrorResult& aRv) override;
 
  protected:
   ~TransformerAlgorithms() { mozilla::DropJSObjects(this); }
@@ -57,6 +75,24 @@ class TransformerAlgorithms final {
   JS::Heap<JSObject*> mTransformer;
   MOZ_KNOWN_LIVE RefPtr<TransformerTransformCallback> mTransformCallback;
   MOZ_KNOWN_LIVE RefPtr<TransformerFlushCallback> mFlushCallback;
+};
+
+// https://streams.spec.whatwg.org/#transformstream-set-up
+class TransformerAlgorithmsWrapper : public TransformerAlgorithmsBase {
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> TransformCallback(
+      JSContext*, JS::Handle<JS::Value> aChunk,
+      TransformStreamDefaultController& aController, ErrorResult& aRv) final;
+
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> FlushCallback(
+      JSContext*, TransformStreamDefaultController& aController,
+      ErrorResult& aRv) final;
+
+  MOZ_CAN_RUN_SCRIPT virtual void TransformCallbackImpl(
+      JS::Handle<JS::Value> aChunk,
+      TransformStreamDefaultController& aController, ErrorResult& aRv) = 0;
+
+  MOZ_CAN_RUN_SCRIPT virtual void FlushCallbackImpl(
+      TransformStreamDefaultController& aController, ErrorResult& aRv) = 0;
 };
 
 }  // namespace mozilla::dom

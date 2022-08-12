@@ -1626,13 +1626,11 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
           GetConstraintRect(anchorRectDevPix, rootScreenRectDevPix, popupLevel);
       nsRect sr = LayoutDeviceIntRect::ToAppUnits(screenRectDevPix, appPerDev);
 
-      // Expand the allowable screen rect by the negative margins. Note that we
-      // intentionally don't include the context menu offset in the margin here.
-      nsMargin rawMargin;
-      if (StyleMargin()->GetMargin(rawMargin)) {
-        rawMargin.EnsureAtMost(nsMargin());
-        sr.Deflate(rawMargin);
-      }
+      // Expand the allowable screen rect by the input margin (which can't be
+      // interacted with).
+      const nscoord inputMargin =
+          StyleUIReset()->mMozWindowInputRegionMargin.ToAppUnits();
+      sr.Inflate(inputMargin);
       return sr;
     }();
 

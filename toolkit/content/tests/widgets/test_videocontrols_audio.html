@@ -4,6 +4,7 @@
   <title>Video controls with Audio file test</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -17,36 +18,6 @@
 <script class="testbody" type="application/javascript">
 
   const video = document.getElementById("video");
-
-  class EventLogger {
-    constructor() {
-      this._log = [];
-      this._xEventsPromise = new Promise(r => this._xReached = r);
-      this._x = Number.MAX_VALUE;
-    }
-    createListener() {
-      return e => {
-        this._log.push(e);
-        if (this._log.length >= this._x) {
-          this._xReached(this._log);
-        }
-      }
-    }
-    waitForXEvents(x) {
-      this._x = x;
-      return this._xEventsPromise;
-    }
-    clearEvents() {
-      this._log = [];
-    }
-  }
-  const logger = new EventLogger();
-
-  video.addEventListener("play", logger.createListener());
-  video.addEventListener("pause", logger.createListener());
-  document.addEventListener("mozfullscreenchange", logger.createListener());
-
-  const InspectorUtils = SpecialPowers.InspectorUtils;
 
   function findElementByAttribute(element, aName, aValue) {
     if (!("getAttribute" in element)) {
@@ -71,9 +42,12 @@
       const { x, y } = video.getBoundingClientRect();
       const controlBar = findElementByAttribute(video, "class", "controlBar");
       is(controlBar.getAttribute("fullscreen-unavailable"), "true", "Fullscreen button is hidden");
-      logger.clearEvents();
+      const eventLogger = new EventLogger(2);
+      video.addEventListener("play", eventLogger);
+      video.addEventListener("pause", eventLogger);
+      document.addEventListener("mozfullscreenchange", eventLogger);
       synthesizeMouse(video, x, y, { clickCount: 2 });
-      const events = await logger.waitForXEvents(2);
+      const events = await eventLogger.waitForExpectedEvents();
       ok(
         !events.find(e => e.type === "mozfullscreenchange"),
         "Double clicking should not trigger fullscreen event"
