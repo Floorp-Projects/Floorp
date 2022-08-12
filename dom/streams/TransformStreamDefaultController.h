@@ -58,6 +58,11 @@ class TransformStreamDefaultController final : public nsISupports,
   RefPtr<TransformerAlgorithmsBase> mTransformerAlgorithms;
 };
 
+void SetUpTransformStreamDefaultController(
+    JSContext* aCx, TransformStream& aStream,
+    TransformStreamDefaultController& aController,
+    TransformerAlgorithmsBase& aTransformerAlgorithms);
+
 void SetUpTransformStreamDefaultControllerFromTransformer(
     JSContext* aCx, TransformStream& aStream,
     JS::Handle<JSObject*> aTransformer, Transformer& aTransformerDict);
