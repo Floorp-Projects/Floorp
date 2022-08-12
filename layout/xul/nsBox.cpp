@@ -543,35 +543,7 @@ bool nsIFrame::AddXULMaxSize(nsIFrame* aBox, nsSize& aSize, bool& aWidthSet,
 }
 
 int32_t nsIFrame::ComputeXULFlex(nsIFrame* aBox) {
-  // Get the flexibility
-  int32_t flex =
-      clamped(int32_t(aBox->StyleXUL()->mBoxFlex), 0, nscoord_MAX - 1);
-
-  // Attribute value overrides CSS
-#ifdef DEBUG
-  nsIContent* content = aBox->GetContent();
-  if (content && content->IsXULElement()) {
-    nsresult error;
-    nsAutoString value;
-
-    content->AsElement()->GetAttr(nsGkAtoms::flex, value);
-
-    if (!value.IsEmpty()) {
-      value.Trim("%");
-      int32_t attr = value.ToInteger(&error);
-      if (attr != flex && !aBox->Style()->IsAnonBox()) {
-        printf_stderr("\n");
-        content->AsElement()->ListAttributes(stderr);
-        printf_stderr("\n");
-        Servo_ComputedValues_DumpMatchedRules(aBox->Style());
-        printf_stderr("\n");
-        MOZ_CRASH_UNSAFE_PRINTF("No-longer-supported flex attribute detected: %d vs. %d", attr, flex);
-      }
-    }
-  }
-#endif
-
-  return flex;
+  return clamped(int32_t(aBox->StyleXUL()->mBoxFlex), 0, nscoord_MAX - 1);
 }
 
 void nsIFrame::AddXULBorderAndPadding(nsSize& aSize) {
