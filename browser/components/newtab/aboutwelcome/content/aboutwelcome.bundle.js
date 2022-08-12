@@ -189,7 +189,7 @@ const MultiStageAboutWelcome = props => {
   let {
     screens
   } = props;
-  const [index, setScreenIndex] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(props.startScreen);
+  const [index, setScreenIndex] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(0);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     // Send impression ping when respective screen first renders
     screens.forEach((screen, order) => {
@@ -1742,7 +1742,6 @@ class AboutWelcome extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       utm_term: props.UTMTerm,
       transitions: props.transitions,
       backdrop: props.backdrop,
-      startScreen: props.startScreen || 0,
       appAndSystemLocaleInfo: props.appAndSystemLocaleInfo
     });
   }
