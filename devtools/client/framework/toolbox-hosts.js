@@ -420,7 +420,7 @@ function focusTab(tab) {
 function createDevToolsFrame(doc, className) {
   const frame = doc.createXULElement("browser");
   frame.setAttribute("type", "content");
-  frame.flex = 1; // Required to be able to shrink when the window shrinks
+  frame.setAttribute("flex", "1"); // Required to be able to shrink when the window shrinks
   frame.className = className;
 
   const inXULDocument = doc.documentElement.namespaceURI === XUL_NS;

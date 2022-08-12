@@ -4210,20 +4210,22 @@ fn dump_properties_and_rules(cv: &ComputedValues, properties: &LonghandIdSet) {
 
 #[cfg(feature = "gecko_debug")]
 fn dump_rules(cv: &ComputedValues) {
-    println_stderr!("  Rules:");
+    println_stderr!("  Rules({:?}):", cv.pseudo());
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
-    for rn in cv.rules().self_and_ancestors() {
-        if rn.importance().important() {
-            continue;
-        }
-        if let Some(d) = rn.style_source().and_then(|s| s.as_declarations()) {
-            println_stderr!("    [DeclarationBlock: {:?}]", d);
-        }
-        if let Some(r) = rn.style_source().and_then(|s| s.as_rule()) {
-            let mut s = nsCString::new();
-            r.read_with(&guard).to_css(&guard, &mut s).unwrap();
-            println_stderr!("    {}", s);
+    if let Some(rules) = cv.rules.as_ref() {
+        for rn in rules.self_and_ancestors() {
+            if rn.importance().important() {
+                continue;
+            }
+            if let Some(d) = rn.style_source().and_then(|s| s.as_declarations()) {
+                println_stderr!("    [DeclarationBlock: {:?}]", d);
+            }
+            if let Some(r) = rn.style_source().and_then(|s| s.as_rule()) {
+                let mut s = nsCString::new();
+                r.read_with(&guard).to_css(&guard, &mut s).unwrap();
+                println_stderr!("    {}", s);
+            }
         }
     }
 }

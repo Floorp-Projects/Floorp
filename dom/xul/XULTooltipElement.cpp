@@ -40,7 +40,6 @@ nsresult XULTooltipElement::Init() {
   NS_ENSURE_SUCCESS(rv, rv);
   description->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
                        u"tooltip-label"_ns, false);
-  description->SetAttr(kNameSpaceID_None, nsGkAtoms::flex, u"true"_ns, false);
   ErrorResult error;
   AppendChild(*description, error);
 

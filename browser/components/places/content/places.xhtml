@@ -341,7 +341,7 @@
       <treechildren flex="1"/>
     </tree>
     <splitter collapse="none" persist="state"></splitter>
-    <vbox id="contentView" flex="4">
+    <vbox id="contentView" style="-moz-box-flex: 4">
       <vbox id="placesViewsBox" flex="1">
         <tree id="placeContent"
               class="plain placesTree"
@@ -365,25 +365,25 @@
               the CSS lives in toolkit/content/widget/tree.js and is specific to
               tree elements.
             -->
-            <treecol data-l10n-id="places-view-sort-col-name" id="placesContentTitle" anonid="title" flex="5" primary="true" ordinal="1"
+            <treecol data-l10n-id="places-view-sort-col-name" id="placesContentTitle" anonid="title" style="-moz-box-flex: 5" primary="true" ordinal="1"
                       persist="width hidden ordinal sortActive sortDirection"/>
             <splitter class="tree-splitter"/>
-            <treecol data-l10n-id="places-view-sort-col-tags" id="placesContentTags" anonid="tags" flex="2"
+            <treecol data-l10n-id="places-view-sort-col-tags" id="placesContentTags" anonid="tags" style="-moz-box-flex: 2"
                       persist="width hidden ordinal sortActive sortDirection"/>
             <splitter class="tree-splitter"/>
-            <treecol data-l10n-id="places-view-sort-col-url" id="placesContentUrl" anonid="url" flex="5"
+            <treecol data-l10n-id="places-view-sort-col-url" id="placesContentUrl" anonid="url" style="-moz-box-flex: 5"
                       persist="width hidden ordinal sortActive sortDirection"/>
             <splitter class="tree-splitter"/>
-            <treecol data-l10n-id="places-view-sort-col-most-recent-visit" id="placesContentDate" anonid="date" flex="1" hidden="true"
+            <treecol data-l10n-id="places-view-sort-col-most-recent-visit" id="placesContentDate" anonid="date" style="-moz-box-flex: 1" hidden="true"
                       persist="width hidden ordinal sortActive sortDirection"/>
             <splitter class="tree-splitter"/>
-            <treecol data-l10n-id="places-view-sort-col-visit-count" id="placesContentVisitCount" anonid="visitCount" flex="1" hidden="true"
+            <treecol data-l10n-id="places-view-sort-col-visit-count" id="placesContentVisitCount" anonid="visitCount" style="-moz-box-flex: 1" hidden="true"
                       persist="width hidden ordinal sortActive sortDirection"/>
             <splitter class="tree-splitter"/>
-            <treecol data-l10n-id="places-view-sort-col-date-added" id="placesContentDateAdded" anonid="dateAdded" flex="1" hidden="true"
+            <treecol data-l10n-id="places-view-sort-col-date-added" id="placesContentDateAdded" anonid="dateAdded" style="-moz-box-flex: 1" hidden="true"
                       persist="width hidden ordinal sortActive sortDirection"/>
             <splitter class="tree-splitter"/>
-            <treecol data-l10n-id="places-view-sort-col-last-modified" id="placesContentLastModified" anonid="lastModified" flex="1" hidden="true"
+            <treecol data-l10n-id="places-view-sort-col-last-modified" id="placesContentLastModified" anonid="lastModified" style="-moz-box-flex: 1" hidden="true"
                       persist="width hidden ordinal sortActive sortDirection"/>
           </treecols>
           <treechildren flex="1" onclick="ContentTree.onClick(event);"/>
@@ -397,12 +397,12 @@
       </vbox>
       <vbox id="detailsPane" style="height: 11em;">
         <vbox id="itemsCountBox" align="center" flex="1" hidden="true">
-          <spacer flex="3"/>
+          <spacer style="-moz-box-flex: 3"/>
           <label id="itemsCountText"/>
           <spacer flex="1"/>
           <description id="selectItemDescription" data-l10n-id="places-details-pane-select-an-item-description">
           </description>
-          <spacer flex="3"/>
+          <spacer style="-moz-box-flex: 3"/>
         </vbox>
         <vbox id="infoBox" flex="1">
 #include editBookmarkPanel.inc.xhtml
