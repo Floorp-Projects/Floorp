@@ -69,87 +69,66 @@ add_task(async function test_aboutwelcome_with_noodles() {
  */
 add_task(async function test_aboutwelcome_with_customized_logo() {
   const TEST_LOGO_URL = "chrome://branding/content/icon64.png";
+  const TEST_LOGO_HEIGHT = "50px";
   const TEST_LOGO_CONTENT = makeTestContent("TEST_LOGO_STEP", {
     logo: {
-      height: "50px",
+      height: TEST_LOGO_HEIGHT,
       imageURL: TEST_LOGO_URL,
     },
   });
   const TEST_LOGO_JSON = JSON.stringify([TEST_LOGO_CONTENT]);
-  const LOGO_HEIGHT = TEST_LOGO_CONTENT.content.logo.height;
   let browser = await openAboutWelcome(TEST_LOGO_JSON);
 
   await test_screen_content(
     browser,
     "renders screen with customized logo",
     // Expected selectors:
-    ["main.TEST_LOGO_STEP[pos='center']", `div.brand-logo`]
+    ["main.TEST_LOGO_STEP[pos='center']", `.brand-logo[src="${TEST_LOGO_URL}"]`]
   );
 
+  // Ensure logo has custom height
   await test_element_styles(
     browser,
-    "div.brand-logo",
+    ".brand-logo",
     // Expected styles:
     {
-      height: LOGO_HEIGHT,
-      "background-image": `url("${TEST_LOGO_URL}")`,
+      // Override default text-link styles
+      height: TEST_LOGO_HEIGHT,
     }
   );
 });
 
 /**
- * Test rendering a screen with a URL value and default color for backdrop
+ * Test rendering a screen with empty logo used for padding
  */
-add_task(async function test_aboutwelcome_with_url_backdrop() {
-  const TEST_BACKDROP_URL = `url("chrome://activity-stream/content/data/content/assets/proton-bkg.avif")`;
-  const TEST_BACKDROP_VALUE = `#212121 ${TEST_BACKDROP_URL} center/cover no-repeat fixed`;
-  const TEST_URL_BACKDROP_CONTENT = makeTestContent("TEST_URL_BACKDROP_STEP");
-
-  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    featureId: "aboutwelcome",
-    value: {
-      enabled: true,
-      backdrop: TEST_BACKDROP_VALUE,
-      screens: [TEST_URL_BACKDROP_CONTENT],
+add_task(async function test_aboutwelcome_with_empty_logo_spacing() {
+  const TEST_LOGO_HEIGHT = "50px";
+  const TEST_LOGO_CONTENT = makeTestContent("TEST_LOGO_STEP", {
+    logo: {
+      height: TEST_LOGO_HEIGHT,
+      imageURL: "none",
     },
   });
-  let browser = await openAboutWelcome();
+  const TEST_LOGO_JSON = JSON.stringify([TEST_LOGO_CONTENT]);
+  let browser = await openAboutWelcome(TEST_LOGO_JSON);
 
   await test_screen_content(
     browser,
-    "renders screen with background image",
+    "renders screen with empty logo element",
     // Expected selectors:
-    [`div.outer-wrapper.onboardingContainer[style*='${TEST_BACKDROP_URL}']`]
-  );
-  await doExperimentCleanup();
-});
-
-/**
- * Test rendering a screen with a color name for backdrop
- */
-add_task(async function test_aboutwelcome_with_color_backdrop() {
-  const TEST_BACKDROP_COLOR = "transparent";
-  const TEST_BACKDROP_COLOR_CONTENT = makeTestContent(
-    "TEST_COLOR_NAME_BACKDROP_STEP"
+    ["main.TEST_LOGO_STEP[pos='center']", ".brand-logo[src='none']"]
   );
 
-  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    featureId: "aboutwelcome",
-    value: {
-      enabled: true,
-      backdrop: TEST_BACKDROP_COLOR,
-      screens: [TEST_BACKDROP_COLOR_CONTENT],
-    },
-  });
-  let browser = await openAboutWelcome();
-
-  await test_screen_content(
+  // Ensure logo has custom height
+  await test_element_styles(
     browser,
-    "renders screen with background color",
-    // Expected selectors:
-    [`div.outer-wrapper.onboardingContainer[style*='${TEST_BACKDROP_COLOR}']`]
+    ".brand-logo",
+    // Expected styles:
+    {
+      // Override default text-link styles
+      height: TEST_LOGO_HEIGHT,
+    }
   );
-  await doExperimentCleanup();
 });
 
 /**
@@ -208,6 +187,134 @@ add_task(async function test_aboutwelcome_with_background() {
     // Expected selectors:
     [`div.main-content[style*='${BACKGROUND_URL}'`]
   );
+});
+
+/**
+ * Test rendering a screen with a dismiss button
+ */
+add_task(async function test_aboutwelcome_dismiss_button() {
+  const TEST_DISMISS_CONTENT = makeTestContent("TEST_DISMISS_STEP", {
+    dismiss_button: {
+      action: {
+        navigate: true,
+      },
+    },
+  });
+
+  const TEST_DISMISS_JSON = JSON.stringify([TEST_DISMISS_CONTENT]);
+  let browser = await openAboutWelcome(TEST_DISMISS_JSON);
+  let aboutWelcomeActor = await getAboutWelcomeParent(browser);
+  let sandbox = sinon.createSandbox();
+
+  // Spy AboutWelcomeParent Content Message Handler
+  sandbox.spy(aboutWelcomeActor, "onContentMessage");
+
+  registerCleanupFunction(() => {
+    sandbox.restore();
+  });
+
+  // Click dismiss button
+  await onButtonClick(browser, "button.dismiss-button");
+  const { callCount } = aboutWelcomeActor.onContentMessage;
+  ok(callCount >= 1, `${callCount} Stub was called`);
+});
+
+/**
+ * Test rendering a screen with the "split" position
+ */
+add_task(async function test_aboutwelcome_split_position() {
+  const TEST_SPLIT_STEP = makeTestContent("TEST_SPLIT_STEP", {
+    position: "split",
+    hero_text: "hero test",
+  });
+
+  const TEST_SPLIT_JSON = JSON.stringify([TEST_SPLIT_STEP]);
+  let browser = await openAboutWelcome(TEST_SPLIT_JSON);
+
+  await test_screen_content(
+    browser,
+    "renders screen secondary section containing hero text",
+    // Expected selectors:
+    [`main.screen[pos="split"]`, `.section-secondary`, `.message-text h1`]
+  );
+
+  // Ensure secondary section has split template styling
+  await test_element_styles(
+    browser,
+    "main.screen .section-secondary",
+    // Expected styles:
+    {
+      display: "flex",
+      margin: "auto 0px auto auto",
+    }
+  );
+
+  // Ensure secondary action has button styling
+  await test_element_styles(
+    browser,
+    ".action-buttons .secondary-cta .secondary",
+    // Expected styles:
+    {
+      // Override default text-link styles
+      "background-color": "rgba(207, 207, 216, 0.33)",
+      color: "rgb(21, 20, 26)",
+    }
+  );
+});
+
+/**
+ * Test rendering a screen with a URL value and default color for backdrop
+ */
+add_task(async function test_aboutwelcome_with_url_backdrop() {
+  const TEST_BACKDROP_URL = `url("chrome://activity-stream/content/data/content/assets/proton-bkg.avif")`;
+  const TEST_BACKDROP_VALUE = `#212121 ${TEST_BACKDROP_URL} center/cover no-repeat fixed`;
+  const TEST_URL_BACKDROP_CONTENT = makeTestContent("TEST_URL_BACKDROP_STEP");
+
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "aboutwelcome",
+    value: {
+      enabled: true,
+      backdrop: TEST_BACKDROP_VALUE,
+      screens: [TEST_URL_BACKDROP_CONTENT],
+    },
+  });
+  let browser = await openAboutWelcome();
+
+  await test_screen_content(
+    browser,
+    "renders screen with background image",
+    // Expected selectors:
+    [`div.outer-wrapper.onboardingContainer[style*='${TEST_BACKDROP_URL}']`]
+  );
+  await doExperimentCleanup();
+});
+
+/**
+ * Test rendering a screen with a color name for backdrop
+ */
+add_task(async function test_aboutwelcome_with_color_backdrop() {
+  const TEST_BACKDROP_COLOR = "transparent";
+  const TEST_BACKDROP_COLOR_CONTENT = makeTestContent(
+    "TEST_COLOR_NAME_BACKDROP_STEP"
+  );
+
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "aboutwelcome",
+    value: {
+      enabled: true,
+      backdrop: TEST_BACKDROP_COLOR,
+      screens: [TEST_BACKDROP_COLOR_CONTENT],
+    },
+  });
+  let browser = await openAboutWelcome();
+
+  await test_screen_content(
+    browser,
+    "renders screen with background color",
+    // Expected selectors:
+    [`div.outer-wrapper.onboardingContainer[style*='${TEST_BACKDROP_COLOR}']`]
+  );
+  await doExperimentCleanup();
 });
 
 /**
@@ -349,79 +456,6 @@ add_task(async function test_aboutwelcome_with_progress_bar() {
 });
 
 /**
- * Test rendering a screen with a dismiss button
- */
-add_task(async function test_aboutwelcome_dismiss_button() {
-  const TEST_DISMISS_CONTENT = makeTestContent("TEST_DISMISS_STEP", {
-    dismiss_button: {
-      action: {
-        navigate: true,
-      },
-    },
-  });
-
-  const TEST_DISMISS_JSON = JSON.stringify([TEST_DISMISS_CONTENT]);
-  let browser = await openAboutWelcome(TEST_DISMISS_JSON);
-  let aboutWelcomeActor = await getAboutWelcomeParent(browser);
-  let sandbox = sinon.createSandbox();
-
-  // Spy AboutWelcomeParent Content Message Handler
-  sandbox.spy(aboutWelcomeActor, "onContentMessage");
-
-  registerCleanupFunction(() => {
-    sandbox.restore();
-  });
-
-  // Click dismiss button
-  await onButtonClick(browser, "button.dismiss-button");
-  const { callCount } = aboutWelcomeActor.onContentMessage;
-  ok(callCount >= 1, `${callCount} Stub was called`);
-});
-
-/**
- * Test rendering a screen with the "split" position
- */
-add_task(async function test_aboutwelcome_split_position() {
-  const TEST_SPLIT_STEP = makeTestContent("TEST_SPLIT_STEP", {
-    position: "split",
-    hero_text: "hero test",
-  });
-
-  const TEST_SPLIT_JSON = JSON.stringify([TEST_SPLIT_STEP]);
-  let browser = await openAboutWelcome(TEST_SPLIT_JSON);
-
-  await test_screen_content(
-    browser,
-    "renders screen secondary section containing hero text",
-    // Expected selectors:
-    [`main.screen[pos="split"]`, `.section-secondary`, `.message-text h1`]
-  );
-
-  // Ensure secondary section has split template styling
-  await test_element_styles(
-    browser,
-    "main.screen .section-secondary",
-    // Expected styles:
-    {
-      display: "flex",
-      margin: "auto 0px auto auto",
-    }
-  );
-
-  // Ensure secondary action has button styling
-  await test_element_styles(
-    browser,
-    ".action-buttons .secondary-cta .secondary",
-    // Expected styles:
-    {
-      // Override default text-link styles
-      "background-color": "rgb(43, 42, 51)",
-      color: "rgb(251, 251, 254)",
-    }
-  );
-});
-
-/**
  * Test rendering a message with session history updates disabled
  */
 add_task(async function test_aboutwelcome_history_updates_disabled() {
@@ -456,6 +490,51 @@ add_task(async function test_aboutwelcome_history_updates_disabled() {
   ok(
     startHistoryLength === endHistoryLength,
     "No entries added to the session's history stack with history updates disabled"
+  );
+
+  await doExperimentCleanup();
+});
+
+/**
+ * Test rendering a screen with a dark mode logo
+ */
+add_task(async function test_aboutwelcome_with_dark_mode_logo() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // Override the system color scheme to dark
+      ["ui.systemUsesDarkTheme", 1],
+    ],
+  });
+
+  let screens = [];
+  // we need at least two screens to test the step indicator
+  for (let i = 0; i < 2; i++) {
+    screens.push(
+      makeTestContent("TEST_TEXT_COLOR_OVERRIDE_STEP", {
+        logo: {
+          darkModeImageURL:
+            "chrome://activity-stream/content/data/content/assets/heart.webp",
+        },
+      })
+    );
+  }
+
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "aboutwelcome",
+    value: {
+      enabled: true,
+      screens,
+    },
+  });
+  let browser = await openAboutWelcome(JSON.stringify(screens));
+
+  await test_screen_content(
+    browser,
+    "renders screen with dark mode logo",
+    // Expected selectors:
+    [
+      '.logo-container source[srcset="chrome://activity-stream/content/data/content/assets/heart.webp"]',
+    ]
   );
 
   await doExperimentCleanup();

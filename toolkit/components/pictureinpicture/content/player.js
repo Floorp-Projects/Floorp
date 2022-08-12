@@ -23,6 +23,8 @@ const CAPTIONS_TOGGLE_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.display-text-tracks.toggle.enabled";
 const TEXT_TRACK_FONT_SIZE_PREF =
   "media.videocontrols.picture-in-picture.display-text-tracks.size";
+const IMPROVED_CONTROLS_ENABLED_PREF =
+  "media.videocontrols.picture-in-picture.improved-video-controls.enabled";
 
 // Time to fade the Picture-in-Picture video controls after first opening.
 const CONTROLS_FADE_TIMEOUT_MS = 3000;
@@ -222,6 +224,12 @@ let Player = {
       audioButton.previousElementSibling.hidden = false;
     }
 
+    if (Services.prefs.getBoolPref(IMPROVED_CONTROLS_ENABLED_PREF, false)) {
+      const fullscreenButton = document.getElementById("fullscreen");
+      fullscreenButton.hidden = false;
+      fullscreenButton.previousElementSibling.hidden = false;
+    }
+
     this.resizeDebouncer = new DeferredTask(() => {
       this.recordEvent("resize", {
         width: window.outerWidth.toString(),
@@ -339,6 +347,14 @@ let Player = {
             Services.obs.notifyObservers(window, "fullscreen-painted");
           }
         });
+
+        // Sets the title for fullscreen button when PIP is in Enter Fullscreen mode and Exit Fullscreen mode
+        const fullscreenButton = document.getElementById("fullscreen");
+        let strId = this.isFullscreen
+          ? `pictureinpicture-exit-fullscreen-cmd`
+          : `pictureinpicture-fullscreen-cmd`;
+        document.l10n.setAttributes(fullscreenButton, strId);
+
         if (this.isFullscreen) {
           window.focus();
           this.actor.sendAsyncMessage("PictureInPicture:EnterFullscreen", {
@@ -405,11 +421,7 @@ let Player = {
 
   onDblClick(event) {
     if (event.target.id == "controls") {
-      if (this.isFullscreen) {
-        document.exitFullscreen();
-      } else {
-        document.body.requestFullscreen();
-      }
+      this.fullscreenModeToggle();
       event.preventDefault();
     }
   },
@@ -460,6 +472,11 @@ let Player = {
         // Early return to prevent hiding the panel below
         return;
       }
+
+      case "fullscreen": {
+        this.fullscreenModeToggle();
+        break;
+      }
     }
     // If the click came from a element that is not inside the subtitles settings panel
     // then we want to hide the panel
@@ -474,6 +491,14 @@ let Player = {
       reason: "pip-closed",
     });
     this.closePipWindow({ reason: "close-button" });
+  },
+
+  fullscreenModeToggle() {
+    if (this.isFullscreen) {
+      document.exitFullscreen();
+    } else {
+      document.body.requestFullscreen();
+    }
   },
 
   onKeyDown(event) {

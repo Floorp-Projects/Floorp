@@ -222,9 +222,9 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   void RequestSHistoryUpdate();
 
-  already_AddRefed<Promise> PrintPreview(nsIPrintSettings* aPrintSettings,
-                                         BrowsingContext* aSourceBC,
-                                         mozilla::ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> PrintPreview(
+      nsIPrintSettings* aPrintSettings, BrowsingContext* aSourceBC,
+      mozilla::ErrorResult& aRv);
 
   void ExitPrintPreview();
 

@@ -671,10 +671,10 @@ PlacesController.prototype = {
       "placesContext_createBookmark"
     );
     createBookmarkItem.label = PlacesUIUtils.getString(
-      `cmd.bookmark${stringId}.label`
+      `cmd.bookmark${stringId}2.label`
     );
     createBookmarkItem.accessKey = PlacesUIUtils.getString(
-      `cmd.bookmark${stringId}.accesskey`
+      `cmd.bookmark${stringId}2.accesskey`
     );
 
     return usableItemCount > 0;

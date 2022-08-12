@@ -742,6 +742,15 @@ bool nsRange::IsPointComparableToRange(const nsINode& aContainer,
     return false;
   }
 
+  auto chromeOnlyAccess = mStart.Container()->ChromeOnlyAccess();
+  NS_ASSERTION(chromeOnlyAccess == mEnd.Container()->ChromeOnlyAccess(),
+               "Start and end of a range must be either both native anonymous "
+               "content or not.");
+  if (aContainer.ChromeOnlyAccess() != chromeOnlyAccess) {
+    aErrorResult.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
+    return false;
+  }
+
   if (aContainer.NodeType() == nsINode::DOCUMENT_TYPE_NODE) {
     aErrorResult.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
     return false;
@@ -777,21 +786,14 @@ int16_t nsRange::ComparePoint(const nsINode& aContainer, uint32_t aOffset,
 
   MOZ_ASSERT(point.IsSetAndValid());
 
-  Maybe<int32_t> order = nsContentUtils::ComparePoints(point, mStart);
-
-  // `order` must contain a value, because `IsPointComparableToRange()` was
-  // checked above.
-  if (*order <= 0) {
-    return *order;
+  if (Maybe<int32_t> order = nsContentUtils::ComparePoints(point, mStart);
+      order && *order <= 0) {
+    return int16_t(*order);
   }
-
-  order = nsContentUtils::ComparePoints(mEnd, point);
-  // `order` must contain a value, because `IsPointComparableToRange()` was
-  // checked above.
-  if (*order == -1) {
+  if (Maybe<int32_t> order = nsContentUtils::ComparePoints(mEnd, point);
+      order && *order == -1) {
     return 1;
   }
-
   return 0;
 }
 

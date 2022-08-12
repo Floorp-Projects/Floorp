@@ -2729,6 +2729,7 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
   [[nodiscard]] MDefinition* tryFoldCharCompare(TempAllocator& alloc);
   [[nodiscard]] MDefinition* tryFoldStringCompare(TempAllocator& alloc);
   [[nodiscard]] MDefinition* tryFoldStringSubstring(TempAllocator& alloc);
+  [[nodiscard]] MDefinition* tryFoldStringIndexOf(TempAllocator& alloc);
 
  public:
   bool congruentTo(const MDefinition* ins) const override {
@@ -10096,7 +10097,8 @@ class MWasmCallBase {
 
   template <class MVariadicT>
   [[nodiscard]] bool initWithArgs(TempAllocator& alloc, MVariadicT* ins,
-                                  const Args& args, MDefinition* tableIndex) {
+                                  const Args& args,
+                                  MDefinition* tableIndexOrRef) {
     if (!argRegs_.init(alloc, args.length())) {
       return false;
     }
@@ -10104,15 +10106,15 @@ class MWasmCallBase {
       argRegs_[i] = args[i].reg;
     }
 
-    if (!ins->init(alloc, argRegs_.length() + (tableIndex ? 1 : 0))) {
+    if (!ins->init(alloc, argRegs_.length() + (tableIndexOrRef ? 1 : 0))) {
       return false;
     }
     // FixedList doesn't initialize its elements, so do an unchecked init.
     for (size_t i = 0; i < argRegs_.length(); i++) {
       ins->initOperand(i, args[i].def);
     }
-    if (tableIndex) {
-      ins->initOperand(argRegs_.length(), tableIndex);
+    if (tableIndexOrRef) {
+      ins->initOperand(argRegs_.length(), tableIndexOrRef);
     }
     return true;
   }
@@ -10167,7 +10169,7 @@ class MWasmCallCatchable final : public MVariadicControlInstruction<2>,
                                  const Args& args,
                                  uint32_t stackArgAreaSizeUnaligned,
                                  const MWasmCallTryDesc& tryDesc,
-                                 MDefinition* tableIndex = nullptr);
+                                 MDefinition* tableIndexOrRef = nullptr);
 
   bool possiblyCalls() const override { return true; }
 
@@ -10194,7 +10196,7 @@ class MWasmCallUncatchable final : public MVariadicInstruction,
                                    const wasm::CalleeDesc& callee,
                                    const Args& args,
                                    uint32_t stackArgAreaSizeUnaligned,
-                                   MDefinition* tableIndex = nullptr);
+                                   MDefinition* tableIndexOrRef = nullptr);
 
   static MWasmCallUncatchable* NewBuiltinInstanceMethodCall(
       TempAllocator& alloc, const wasm::CallSiteDesc& desc,

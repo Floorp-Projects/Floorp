@@ -2300,6 +2300,19 @@ void LIRGenerator::visitFromCodePoint(MFromCodePoint* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitStringIndexOf(MStringIndexOf* ins) {
+  auto* string = ins->string();
+  MOZ_ASSERT(string->type() == MIRType::String);
+
+  auto* searchStr = ins->searchString();
+  MOZ_ASSERT(searchStr->type() == MIRType::String);
+
+  auto* lir = new (alloc())
+      LStringIndexOf(useRegisterAtStart(string), useRegisterAtStart(searchStr));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitStringStartsWith(MStringStartsWith* ins) {
   auto* string = ins->string();
   MOZ_ASSERT(string->type() == MIRType::String);
@@ -2321,6 +2334,31 @@ void LIRGenerator::visitStringStartsWith(MStringStartsWith* ins) {
 
   auto* lir = new (alloc()) LStringStartsWith(useRegisterAtStart(string),
                                               useRegisterAtStart(searchStr));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
+void LIRGenerator::visitStringEndsWith(MStringEndsWith* ins) {
+  auto* string = ins->string();
+  MOZ_ASSERT(string->type() == MIRType::String);
+
+  auto* searchStr = ins->searchString();
+  MOZ_ASSERT(searchStr->type() == MIRType::String);
+
+  if (searchStr->isConstant()) {
+    JSLinearString* linear = &searchStr->toConstant()->toString()->asLinear();
+
+    if (CanCompareCharactersInline(linear)) {
+      auto* lir = new (alloc())
+          LStringEndsWithInline(useRegister(string), temp(), linear);
+      define(lir, ins);
+      assignSafepoint(lir, ins);
+      return;
+    }
+  }
+
+  auto* lir = new (alloc()) LStringEndsWith(useRegisterAtStart(string),
+                                            useRegisterAtStart(searchStr));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }
@@ -5527,6 +5565,10 @@ void LIRGenerator::visitWasmCall(MWasmCallT ins) {
     MDefinition* index = ins->getOperand(ins->numArgs());
     lir->setOperand(ins->numArgs(),
                     useFixedAtStart(index, WasmTableCallIndexReg));
+  }
+  if (ins->callee().isFuncRef()) {
+    MDefinition* ref = ins->getOperand(ins->numArgs());
+    lir->setOperand(ins->numArgs(), useFixedAtStart(ref, WasmCallRefReg));
   }
 
   add(lir, ins);

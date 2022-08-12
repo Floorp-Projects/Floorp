@@ -124,7 +124,9 @@
   _(StringFromCharCode)                            \
   _(StringFromCodePoint)                           \
   _(StringCharAt)                                  \
+  _(StringIndexOf)                                 \
   _(StringStartsWith)                              \
+  _(StringEndsWith)                                \
   _(StringToLowerCase)                             \
   _(StringToUpperCase)                             \
                                                    \

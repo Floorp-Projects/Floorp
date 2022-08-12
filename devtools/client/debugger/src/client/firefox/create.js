@@ -317,15 +317,12 @@ export function createPrettyPrintOriginalSource(id, url, thread) {
 export function createSourceActor(sourceResource, sourceObject) {
   const actorId = sourceResource.actor;
 
-  // As sourceResource is only SourceActor's form and not the SourceFront,
-  // we have to go through the target to retrieve the related ThreadActor's ID.
-  const threadActorID = sourceResource.targetFront.getCachedFront("thread")
-    .actorID;
-
   return {
     id: actorId,
     actor: actorId,
-    thread: threadActorID,
+    // As sourceResource is only SourceActor's form and not the SourceFront,
+    // we have to go through the target to retrieve the related ThreadActor's ID.
+    thread: sourceResource.targetFront.getCachedFront("thread").actorID,
     // `source` is the reducer source ID
     source: makeSourceId(sourceResource),
     sourceObject,
@@ -345,17 +342,19 @@ export async function createPause(thread, packet) {
   };
 }
 
-export function createThread(actor, target) {
-  const name = target.isTopLevel ? L10N.getStr("mainThread") : target.name;
+export function createThread(targetFront) {
+  const name = targetFront.isTopLevel
+    ? L10N.getStr("mainThread")
+    : targetFront.name;
 
   return {
-    actor,
-    url: target.url,
-    isTopLevel: target.isTopLevel,
-    targetType: target.targetType,
+    actor: targetFront.targetForm.threadActor,
+    url: targetFront.url,
+    isTopLevel: targetFront.isTopLevel,
+    targetType: targetFront.targetType,
     name,
-    serviceWorkerStatus: target.debuggerServiceWorkerStatus,
-    isWebExtension: target.isWebExtension,
+    serviceWorkerStatus: targetFront.debuggerServiceWorkerStatus,
+    isWebExtension: targetFront.isWebExtension,
   };
 }
 

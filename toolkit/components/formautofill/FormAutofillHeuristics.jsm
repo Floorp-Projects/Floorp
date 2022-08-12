@@ -316,14 +316,15 @@ class FieldScanner {
     let element = this._elements[elementIndex];
     let info = FormAutofillHeuristics.getInfo(element, this);
     let fieldInfo = {
-      section: info ? info.section : "",
-      addressType: info ? info.addressType : "",
-      contactType: info ? info.contactType : "",
-      fieldName: info ? info.fieldName : "",
+      section: info?.section ?? "",
+      addressType: info?.addressType ?? "",
+      contactType: info?.contactType ?? "",
+      fieldName: info?.fieldName ?? "",
+      confidence: info?.confidence,
       elementWeakRef: Cu.getWeakReference(element),
     };
 
-    if (info && info._reason) {
+    if (info?._reason) {
       fieldInfo._reason = info._reason;
     }
 
@@ -465,7 +466,7 @@ class FieldScanner {
    */
   getFathomField(element, fields) {
     if (!fields.length) {
-      return null;
+      return [null, null];
     }
 
     if (!this._fathomConfidences?.get(element)) {
@@ -488,7 +489,7 @@ class FieldScanner {
 
     let elementConfidences = this._fathomConfidences.get(element);
     if (!elementConfidences) {
-      return null;
+      return [null, null];
     }
 
     let highestField = null;
@@ -505,7 +506,16 @@ class FieldScanner {
       }
     }
 
-    return highestField;
+    if (!highestField) {
+      return [null, null];
+    }
+
+    // Used by test ONLY! This ensure testcases always get the same confidence
+    if (lazy.FormAutofillUtils.ccHeuristicTestConfidence != null) {
+      highestConfidence = lazy.FormAutofillUtils.ccHeuristicTestConfidence;
+    }
+
+    return [highestField, highestConfidence];
   }
 
   /**
@@ -1111,12 +1121,13 @@ FormAutofillHeuristics = {
   },
 
   getInfo(element, scanner) {
-    function infoRecordWithFieldName(fieldName) {
+    function infoRecordWithFieldName(fieldName, confidence = null) {
       return {
         fieldName,
         section: "",
         addressType: "",
         contactType: "",
+        confidence,
       };
     }
 
@@ -1152,10 +1163,13 @@ FormAutofillHeuristics = {
       let fathomFields = fields.filter(r =>
         lazy.creditCardRulesets.types.includes(r)
       );
-      let matchedFieldName = scanner.getFathomField(element, fathomFields);
+      let [matchedFieldName, confidence] = scanner.getFathomField(
+        element,
+        fathomFields
+      );
       // At this point, use fathom's recommendation if it has one
       if (matchedFieldName) {
-        return infoRecordWithFieldName(matchedFieldName);
+        return infoRecordWithFieldName(matchedFieldName, confidence);
       }
 
       // TODO: Do we want to run old heuristics for fields that fathom isn't confident?

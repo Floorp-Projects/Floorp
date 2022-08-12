@@ -313,10 +313,16 @@ void GCRuntime::queueFinalizationRegistryForCleanup(
   queue->setQueuedForCleanup(true);
 }
 
+// Insert a target -> weakRef mapping in the target's Zone so that a dying
+// target will clear out the weakRef's target. If the weakRef is in a different
+// Zone, then the crossZoneWeakRefs table will keep the weakRef alive. If the
+// weakRef is in the same Zone, then it must be the actual WeakRefObject and
+// not a cross-compartment wrapper, since nothing would keep that alive.
 bool GCRuntime::registerWeakRef(HandleObject target, HandleObject weakRef) {
   MOZ_ASSERT(!IsCrossCompartmentWrapper(target));
   MOZ_ASSERT(UncheckedUnwrap(weakRef)->is<WeakRefObject>());
-  MOZ_ASSERT(target->compartment() == weakRef->compartment());
+  MOZ_ASSERT_IF(target->zone() != weakRef->zone(),
+                target->compartment() == weakRef->compartment());
 
   Zone* zone = target->zone();
   return zone->ensureFinalizationObservers() &&

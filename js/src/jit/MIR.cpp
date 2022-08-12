@@ -4516,6 +4516,54 @@ MDefinition* MCompare::tryFoldStringSubstring(TempAllocator& alloc) {
   return MNot::New(alloc, startsWith);
 }
 
+MDefinition* MCompare::tryFoldStringIndexOf(TempAllocator& alloc) {
+  if (compareType() != Compare_Int32) {
+    return this;
+  }
+  if (!IsEqualityOp(jsop())) {
+    return this;
+  }
+
+  auto* left = lhs();
+  MOZ_ASSERT(left->type() == MIRType::Int32);
+
+  auto* right = rhs();
+  MOZ_ASSERT(right->type() == MIRType::Int32);
+
+  // One operand must be a constant integer.
+  if (!left->isConstant() && !right->isConstant()) {
+    return this;
+  }
+
+  // The constant must be zero.
+  auto* constant =
+      left->isConstant() ? left->toConstant() : right->toConstant();
+  if (!constant->isInt32(0)) {
+    return this;
+  }
+
+  // The other operand must be an indexOf operation.
+  auto* operand = left->isConstant() ? right : left;
+  if (!operand->isStringIndexOf()) {
+    return this;
+  }
+
+  // Fold |str.indexOf(searchStr) == 0| to |str.startsWith(searchStr)|.
+
+  auto* indexOf = operand->toStringIndexOf();
+  auto* startsWith =
+      MStringStartsWith::New(alloc, indexOf->string(), indexOf->searchString());
+  if (jsop() == JSOp::Eq || jsop() == JSOp::StrictEq) {
+    return startsWith;
+  }
+
+  // Invert for inequality.
+  MOZ_ASSERT(jsop() == JSOp::Ne || jsop() == JSOp::StrictNe);
+
+  block()->insertBefore(this, startsWith);
+  return MNot::New(alloc, startsWith);
+}
+
 MDefinition* MCompare::foldsTo(TempAllocator& alloc) {
   bool result;
 
@@ -4541,6 +4589,10 @@ MDefinition* MCompare::foldsTo(TempAllocator& alloc) {
   }
 
   if (MDefinition* folded = tryFoldStringSubstring(alloc); folded != this) {
+    return folded;
+  }
+
+  if (MDefinition* folded = tryFoldStringIndexOf(alloc); folded != this) {
     return folded;
   }
 
@@ -5707,7 +5759,7 @@ MWasmCallCatchable* MWasmCallCatchable::New(TempAllocator& alloc,
                                             const Args& args,
                                             uint32_t stackArgAreaSizeUnaligned,
                                             const MWasmCallTryDesc& tryDesc,
-                                            MDefinition* tableIndex) {
+                                            MDefinition* tableIndexOrRef) {
   MOZ_ASSERT(tryDesc.inTry);
 
   MWasmCallCatchable* call = new (alloc) MWasmCallCatchable(
@@ -5716,8 +5768,8 @@ MWasmCallCatchable* MWasmCallCatchable::New(TempAllocator& alloc,
   call->setSuccessor(FallthroughBranchIndex, tryDesc.fallthroughBlock);
   call->setSuccessor(PrePadBranchIndex, tryDesc.prePadBlock);
 
-  MOZ_ASSERT_IF(callee.isTable(), tableIndex);
-  if (!call->initWithArgs(alloc, call, args, tableIndex)) {
+  MOZ_ASSERT_IF(callee.isTable() || callee.isFuncRef(), tableIndexOrRef);
+  if (!call->initWithArgs(alloc, call, args, tableIndexOrRef)) {
     return nullptr;
   }
 
@@ -5727,12 +5779,12 @@ MWasmCallCatchable* MWasmCallCatchable::New(TempAllocator& alloc,
 MWasmCallUncatchable* MWasmCallUncatchable::New(
     TempAllocator& alloc, const wasm::CallSiteDesc& desc,
     const wasm::CalleeDesc& callee, const Args& args,
-    uint32_t stackArgAreaSizeUnaligned, MDefinition* tableIndex) {
+    uint32_t stackArgAreaSizeUnaligned, MDefinition* tableIndexOrRef) {
   MWasmCallUncatchable* call =
       new (alloc) MWasmCallUncatchable(desc, callee, stackArgAreaSizeUnaligned);
 
-  MOZ_ASSERT_IF(callee.isTable(), tableIndex);
-  if (!call->initWithArgs(alloc, call, args, tableIndex)) {
+  MOZ_ASSERT_IF(callee.isTable() || callee.isFuncRef(), tableIndexOrRef);
+  if (!call->initWithArgs(alloc, call, args, tableIndexOrRef)) {
     return nullptr;
   }
 

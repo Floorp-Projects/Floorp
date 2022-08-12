@@ -208,16 +208,10 @@ function mockGetTabState(tab) {
   return tab;
 }
 
-function mockGetWindowEnumerator(url, numWindows, numTabs, indexes, moreURLs) {
+function mockGetWindowEnumerator(urls) {
   let elements = [];
 
-  function url2entry(urlToConvert) {
-    return {
-      url: typeof urlToConvert == "function" ? urlToConvert() : urlToConvert,
-      title: "title",
-    };
-  }
-
+  const numWindows = 1;
   for (let w = 0; w < numWindows; ++w) {
     let tabs = [];
     let win = {
@@ -229,22 +223,16 @@ function mockGetWindowEnumerator(url, numWindows, numTabs, indexes, moreURLs) {
     };
     elements.push(win);
 
-    for (let t = 0; t < numTabs; ++t) {
-      tabs.push(
-        Cu.cloneInto(
-          {
-            index: indexes ? indexes() : 1,
-            entries: (moreURLs ? [url].concat(moreURLs()) : [url]).map(
-              url2entry
-            ),
-            attributes: {
-              image: "image",
-            },
-            lastAccessed: 1499,
-          },
-          {}
-        )
-      );
+    let lastAccessed = 2000;
+    for (let url of urls) {
+      tabs.push({
+        linkedBrowser: {
+          currentURI: Services.io.newURI(url),
+          contentTitle: "title",
+        },
+        lastAccessed,
+      });
+      lastAccessed += 1000;
     }
   }
 

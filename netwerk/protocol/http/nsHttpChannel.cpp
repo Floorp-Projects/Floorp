@@ -314,6 +314,15 @@ nsHttpChannel::nsHttpChannel() : HttpAsyncAborter<nsHttpChannel>(this) {
 nsHttpChannel::~nsHttpChannel() {
   LOG(("Destroying nsHttpChannel [this=%p]\n", this));
 
+  if (LOG_ENABLED()) {
+    nsCString webExtension;
+    this->GetPropertyAsACString(u"cancelledByExtension"_ns, webExtension);
+    if (!webExtension.IsEmpty()) {
+      LOG(("channel [%p] cancelled by extension [id=%s]", this,
+           webExtension.get()));
+    }
+  }
+
   if (mAuthProvider) {
     DebugOnly<nsresult> rv = mAuthProvider->Disconnect(NS_ERROR_ABORT);
     MOZ_ASSERT(NS_SUCCEEDED(rv));

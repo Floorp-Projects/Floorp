@@ -95,43 +95,43 @@ main-context-menu-page-save =
 
 ## Simple menu items
 
-main-context-menu-bookmark-add =
-    .aria-label = Bookmark This Page
+main-context-menu-bookmark-page =
+    .aria-label = Bookmark Page…
     .accesskey = m
-    .tooltiptext = Bookmark this page
+    .tooltiptext = Bookmark page
 
 # This menuitem is only visible on macOS
-# Cannot be shown at the same time as main-context-menu-bookmark-edit-mac,
+# Cannot be shown at the same time as main-context-menu-edit-bookmark-mac,
 # so should probably have the same access key if possible.
-main-context-menu-bookmark-add-mac =
-    .label = Bookmark Page
+main-context-menu-bookmark-page-mac =
+    .label = Bookmark Page…
     .accesskey = m
 
 # This menuitem is only visible on macOS
-# Cannot be shown at the same time as main-context-menu-bookmark-add-mac,
+# Cannot be shown at the same time as main-context-menu-bookmark-page-mac,
 # so should probably have the same access key if possible.
-main-context-menu-bookmark-edit-mac =
-    .label = Edit Bookmark
+main-context-menu-edit-bookmark-mac =
+    .label = Edit Bookmark…
     .accesskey = m
 
 # Variables
 #   $shortcut (String) - A keyboard shortcut for the add bookmark command.
-main-context-menu-bookmark-add-with-shortcut =
-    .aria-label = Bookmark This Page
+main-context-menu-bookmark-page-with-shortcut =
+    .aria-label = Bookmark Page…
     .accesskey = m
-    .tooltiptext = Bookmark this page ({ $shortcut })
+    .tooltiptext = Bookmark page ({ $shortcut })
 
-main-context-menu-bookmark-change =
-    .aria-label = Edit This Bookmark
+main-context-menu-edit-bookmark =
+    .aria-label = Edit Bookmark…
     .accesskey = m
-    .tooltiptext = Edit this bookmark
+    .tooltiptext = Edit bookmark
 
 # Variables
 #   $shortcut (String) - A keyboard shortcut for the edit bookmark command.
-main-context-menu-bookmark-change-with-shortcut =
-    .aria-label = Edit This Bookmark
+main-context-menu-edit-bookmark-with-shortcut =
+    .aria-label = Edit Bookmark…
     .accesskey = m
-    .tooltiptext = Edit this bookmark ({ $shortcut })
+    .tooltiptext = Edit bookmark ({ $shortcut })
 
 main-context-menu-open-link =
     .label = Open Link
@@ -153,8 +153,8 @@ main-context-menu-open-link-new-private-window =
     .label = Open Link in New Private Window
     .accesskey = P
 
-main-context-menu-bookmark-link =
-    .label = Bookmark Link
+main-context-menu-bookmark-link-2 =
+    .label = Bookmark Link…
     .accesskey = B
 
 main-context-menu-save-link =
@@ -393,8 +393,8 @@ main-context-menu-frame-reload =
     .label = Reload Frame
     .accesskey = R
 
-main-context-menu-frame-bookmark =
-    .label = Bookmark This Frame
+main-context-menu-frame-add-bookmark =
+    .label = Bookmark Frame…
     .accesskey = m
 
 main-context-menu-frame-save-as =
@@ -413,8 +413,8 @@ main-context-menu-frame-view-info =
     .label = View Frame Info
     .accesskey = I
 
-main-context-menu-print-selection =
-    .label = Print Selection
+main-context-menu-print-selection-2 =
+    .label = Print Selection…
     .accesskey = r
 
 main-context-menu-view-selection-source =

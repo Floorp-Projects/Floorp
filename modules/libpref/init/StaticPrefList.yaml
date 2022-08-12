@@ -8403,6 +8403,13 @@
   value: true
   mirror: always
 
+# Pref to control whether we emulate all -moz-box with modern flexbox.
+- name: layout.css.moz-box-flexbox-emulation.enabled
+  type: bool
+  value: false
+  mirror: always
+  rust: true
+
 # Pref to control how many consecutive scroll-anchoring adjustments (since the
 # most recent user scroll) we'll average, before we consider whether to
 # automatically turn off scroll anchoring. When we hit this threshold, the
@@ -8591,22 +8598,8 @@
 # Prefs starting with "mathml."
 #---------------------------------------------------------------------------
 
-# Whether to disable deprecated style attributes background, color, fontfamily,
-# fontsize, fontstyle and fontweight.
-- name: mathml.deprecated_style_attributes.disabled
-  type: bool
-  value: true
-  mirror: always
-
 # Whether to disable deprecated "radical" notation for the menclose element.
 - name: mathml.deprecated_menclose_notation_radical.disabled
-  type: bool
-  value: true
-  mirror: always
-
-# Whether to disable legacy names "small", "normal" and "big" for the
-# mathsize attribute.
-- name: mathml.mathsize_names.disabled
   type: bool
   value: true
   mirror: always

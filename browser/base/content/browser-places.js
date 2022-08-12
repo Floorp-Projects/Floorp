@@ -1829,7 +1829,7 @@ var BookmarkingUI = {
     if (!this.starBox) {
       // The BOOKMARK_BUTTON_SHORTCUT exists only in browser.xhtml.
       // Return early if we're not in this context, but still reset the
-      // Bookmark This Page items.
+      // Bookmark Page items.
       this.updateBookmarkPageMenuItem(true);
       return;
     }
@@ -1845,7 +1845,7 @@ var BookmarkingUI = {
       l10nArgs
     );
 
-    // Update the Bookmark This Page menuitem when bookmarked state changes.
+    // Update the Bookmark Page menuitem when bookmarked state changes.
     this.updateBookmarkPageMenuItem();
 
     Services.obs.notifyObservers(
@@ -1856,19 +1856,16 @@ var BookmarkingUI = {
   },
 
   /**
-   * Update the "bookmark this page" menuitems on the menubar, panels, context
+   * Update the "Bookmark Page…" menuitems on the menubar, panels, context
    * menu and page actions.
    * @param {boolean} [forceReset] passed when we're destroyed and the label
-   * should go back to the default (Bookmark This Page), for MacOS.
+   * should go back to the default (Bookmark Page), for MacOS.
    */
   updateBookmarkPageMenuItem(forceReset = false) {
     let isStarred = !forceReset && this._itemGuids.size > 0;
     // Define the l10n id which will be used to localize elements
     // that only require a label using the menubar.ftl messages.
-    let menuItemL10nId = isStarred
-      ? "menu-bookmark-edit"
-      : "menu-bookmark-current-tab";
-
+    let menuItemL10nId = isStarred ? "menu-edit-bookmark" : "menu-bookmark-tab";
     let menuItem = document.getElementById("menu_bookmarkThisPage");
     if (menuItem) {
       // Localize the menubar item.
@@ -1876,8 +1873,8 @@ var BookmarkingUI = {
     }
 
     let panelMenuItemL10nId = isStarred
-      ? "bookmarks-bookmark-edit-panel"
-      : "bookmarks-current-tab";
+      ? "bookmarks-subview-edit-bookmark"
+      : "bookmarks-subview-bookmark-tab";
     let panelMenuToolbarButton = PanelMultiView.getViewNode(
       document,
       "panelMenuBookmarkThisPage"
@@ -1892,8 +1889,8 @@ var BookmarkingUI = {
     if (contextItem) {
       if (AppConstants.platform == "macosx") {
         let contextItemL10nId = isStarred
-          ? "main-context-menu-bookmark-edit-mac"
-          : "main-context-menu-bookmark-add-mac";
+          ? "main-context-menu-edit-bookmark-mac"
+          : "main-context-menu-bookmark-page-mac";
         document.l10n.setAttributes(contextItem, contextItemL10nId);
       } else {
         let shortcutElem = document.getElementById(
@@ -1902,14 +1899,14 @@ var BookmarkingUI = {
         if (shortcutElem) {
           let shortcut = ShortcutUtils.prettifyShortcut(shortcutElem);
           let contextItemL10nId = isStarred
-            ? "main-context-menu-bookmark-change-with-shortcut"
-            : "main-context-menu-bookmark-add-with-shortcut";
+            ? "main-context-menu-edit-bookmark-with-shortcut"
+            : "main-context-menu-bookmark-page-with-shortcut";
           let l10nArgs = { shortcut };
           document.l10n.setAttributes(contextItem, contextItemL10nId, l10nArgs);
         } else {
           let contextItemL10nId = isStarred
-            ? "main-context-menu-bookmark-change"
-            : "main-context-menu-bookmark-add";
+            ? "main-context-menu-edit-bookmark"
+            : "main-context-menu-bookmark-page";
           document.l10n.setAttributes(contextItem, contextItemL10nId);
         }
       }

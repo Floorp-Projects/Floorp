@@ -326,7 +326,7 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
     [
       "div.onboardingContainer",
       "main.AW_STEP3",
-      "div.brand-logo",
+      "img.brand-logo",
       "div.welcome-text",
     ],
     // Unexpected selectors:

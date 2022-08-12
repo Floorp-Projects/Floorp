@@ -689,10 +689,10 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
       const mozilla::dom::RequestOrUSVString& aInput,
       const mozilla::dom::RequestInit& aInit,
       mozilla::dom::CallerType aCallerType, mozilla::ErrorResult& aRv);
-  void Print(mozilla::ErrorResult& aError);
-  mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> PrintPreview(
-      nsIPrintSettings*, nsIWebProgressListener*, nsIDocShell*,
-      mozilla::ErrorResult&);
+  MOZ_CAN_RUN_SCRIPT void Print(mozilla::ErrorResult& aError);
+  MOZ_CAN_RUN_SCRIPT mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder>
+  PrintPreview(nsIPrintSettings*, nsIWebProgressListener*, nsIDocShell*,
+               mozilla::ErrorResult&);
   void PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                       const nsAString& aTargetOrigin,
                       const mozilla::dom::Sequence<JSObject*>& aTransfer,

@@ -31,12 +31,12 @@ add_task(async function thumbnails_bg_bug818225() {
 });
 
 function testIfExists(aPath, aExpected, aMessage) {
-  return OS.File.exists(aPath).then(
+  return IOUtils.exists(aPath).then(
     function onSuccess(exists) {
       is(exists, aExpected, aMessage);
     },
     function onFailure(error) {
-      ok(false, "OS.File.exists() failed " + error);
+      ok(false, `IOUtils.exists() failed ${error}`);
     }
   );
 }

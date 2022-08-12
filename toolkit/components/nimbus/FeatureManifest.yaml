@@ -576,3 +576,8 @@ glean:
       type: "boolean"
       fallbackPref: "browser.newtabpage.ping.enabled"
       description: "Whether to submit the 'newtab' ping"
+majorRelease2022:
+  description: Major Release 2022
+  owner: firefoxview@mozilla.com
+  hasExposure: false
+  isEarlyStartup: true

@@ -1166,8 +1166,9 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
       // We call into the inner because it ensures there's an active document
       // and such, and it also waits until the whole thing completes, which is
       // nice because it allows us to close if needed right here.
-      if (RefPtr<nsPIDOMWindowInner> inner = window->GetCurrentInnerWindow()) {
-        nsGlobalWindowInner::Cast(inner)->Print(IgnoreErrors());
+      if (RefPtr inner =
+              nsGlobalWindowInner::Cast(window->GetCurrentInnerWindow())) {
+        inner->Print(IgnoreErrors());
       }
       if (outerWin->DelayedCloseForPrinting()) {
         outerWin->Close();

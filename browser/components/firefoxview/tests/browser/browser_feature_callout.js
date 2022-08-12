@@ -4,8 +4,9 @@ const { calloutMessages } = ChromeUtils.importESModule(
   "chrome://browser/content/featureCallout.mjs"
 );
 
-const calloutSelector = "#root.featureCallout";
 const featureTourPref = "browser.firefox-view.feature-tour";
+const calloutSelector = "#root.featureCallout";
+const primaryButtonSelector = "#root .primary";
 
 const waitForCalloutRender = async doc => {
   // Wait for callout to be rendered
@@ -45,7 +46,7 @@ const waitForCalloutRemoved = async doc => {
 };
 
 const clickPrimaryButton = doc => {
-  doc.querySelector(".action-buttons .primary").click();
+  doc.querySelector(primaryButtonSelector).click();
 };
 
 add_task(async function feature_callout_renders_in_firefox_view() {
@@ -180,7 +181,7 @@ add_task(
         await waitForCalloutRender(document);
         await waitForCalloutPositioned(document);
         // Advance to second screen
-        clickPrimaryButton(document);
+        await clickPrimaryButton(document);
         await waitForCalloutScreen(document, ".FEATURE_CALLOUT_2");
 
         let parentTop = document
@@ -215,9 +216,9 @@ add_task(
         await waitForCalloutRender(document);
         await waitForCalloutPositioned(document);
         // Advance to third screen
-        clickPrimaryButton(document);
+        await clickPrimaryButton(document);
         await waitForCalloutScreen(document, ".FEATURE_CALLOUT_2");
-        clickPrimaryButton(document);
+        await clickPrimaryButton(document);
         await waitForCalloutScreen(document, ".FEATURE_CALLOUT_3");
 
         let parentLeft = document
@@ -256,9 +257,9 @@ add_task(
         await waitForCalloutRender(document);
         await waitForCalloutPositioned(document);
         // Advance to third screen
-        clickPrimaryButton(document);
+        await clickPrimaryButton(document);
         await waitForCalloutScreen(document, ".FEATURE_CALLOUT_2");
-        clickPrimaryButton(document);
+        await clickPrimaryButton(document);
         await waitForCalloutScreen(document, ".FEATURE_CALLOUT_3");
 
         let parentLeft = document
@@ -313,7 +314,7 @@ add_task(async function feature_callout_syncs_across_visits_and_tabs() {
     "Second tab's Feature Callout shows the tour screen saved in the user pref"
   );
 
-  tab2Doc.querySelector(".action-buttons .primary").click();
+  await clickPrimaryButton(tab2Doc);
 
   await waitForCalloutScreen(tab1Doc, ".FEATURE_CALLOUT_3");
 
@@ -322,7 +323,7 @@ add_task(async function feature_callout_syncs_across_visits_and_tabs() {
     "First tab's Feature Callout advances to the next screen when the tour is advanced in second tab"
   );
 
-  tab1Doc.querySelector(".action-buttons .primary").click();
+  await clickPrimaryButton(tab1Doc);
 
   await waitForCalloutRemoved(tab1Doc);
   await waitForCalloutRemoved(tab2Doc);
@@ -369,6 +370,47 @@ add_task(async function feature_callout_closes_on_dismiss() {
       ok(
         tourComplete,
         `Tour is recorded as complete in ${featureTourPref} preference value`
+      );
+    }
+  );
+});
+
+add_task(async function feature_callout_only_highlights_existing_elements() {
+  // Third comma-separated value of the pref is set to a string value once a user completes the tour
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.firefox-view.feature-tour",
+        '{"message":"FIREFOX_VIEW_FEATURE_TOUR","screen":"FEATURE_CALLOUT_1","complete":false}',
+      ],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+      await waitForCalloutRender(document);
+      await waitForCalloutPositioned(document);
+
+      // Remove parent element for third screen in tour
+      document.querySelector("#colorways").remove();
+      // Advance to second screen
+      await clickPrimaryButton(document);
+      await waitForCalloutScreen(document, ".FEATURE_CALLOUT_2");
+      // This test should be updated when landing localized strings
+      ok(
+        document.querySelector(primaryButtonSelector).innerText === "Finish",
+        "When parent element for third screen isn't present, second screen has CTA to finish tour"
+      );
+      // Click to finish tour
+      await clickPrimaryButton(document);
+      ok(
+        !document.querySelector(calloutSelector),
+        "Feature Callout screen does not render if its parent element does not exist"
       );
     }
   );

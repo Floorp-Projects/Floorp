@@ -64,9 +64,12 @@ bool WeakRefObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  // Wrap the weakRef into the target's compartment.
+  // Wrap the weakRef into the target's Zone. This is a cross-compartment
+  // wrapper if the Zone is different, or same-compartment (the original
+  // object) if the Zone is the same *even if* the compartments are different.
   RootedObject wrappedWeakRef(cx, weakRef);
-  AutoRealm ar(cx, target);
+  bool sameZone = target->zone() == weakRef->zone();
+  AutoRealm ar(cx, sameZone ? weakRef : target);
   if (!JS_WrapObject(cx, &wrappedWeakRef)) {
     return false;
   }

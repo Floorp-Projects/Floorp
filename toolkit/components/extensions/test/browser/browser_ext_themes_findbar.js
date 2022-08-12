@@ -53,8 +53,8 @@ add_task(async function test_support_toolbar_properties_on_findbar() {
   );
   Assert.equal(
     window.getComputedStyle(findbar_button).color,
-    rgbColor.replace(/(\([^)]+)/, "a$1, 0.7"),
-    "Findbar checkbox text color should be faded toolbar text color."
+    rgbColor,
+    "Findbar checkbox text color should be toolbar text color."
   );
 
   // Open a new window to check frame_inactive
