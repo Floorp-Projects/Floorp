@@ -393,18 +393,6 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowColumns(
     ReflowOutput& aDesiredSize, const ReflowInput& aReflowInput,
     nsReflowStatus& aReflowStatus, ReflowConfig& aConfig,
     bool aUnboundedLastColumn) {
-  const ColumnBalanceData colData = ReflowChildren(
-      aDesiredSize, aReflowInput, aReflowStatus, aConfig, aUnboundedLastColumn);
-
-  if (!colData.mHasExcessBSize) {
-    return colData;
-  }
-
-  aConfig = ChooseColumnStrategy(aReflowInput, true);
-
-  // We need to reflow our children again one last time, otherwise we might
-  // end up with a stale column block-size for some of our columns, since we
-  // bailed out of balancing.
   return ReflowChildren(aDesiredSize, aReflowInput, aReflowStatus, aConfig,
                         aUnboundedLastColumn);
 }
@@ -774,14 +762,6 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
       aStatus.SetNextInFlowNeedsReflow();
       reflowNext = true;
       kidNextInFlow->RemoveStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
-    }
-
-    if (contentBEnd > aReflowInput.mCBReflowInput->ComputedMaxBSize() &&
-        aConfig.mIsBalancing) {
-      // We overflowed vertically, but have not exceeded the number of
-      // columns. We're going to go into overflow columns now, so balancing
-      // no longer applies.
-      colData.mHasExcessBSize = true;
     }
 
     // We have reached the maximum number of columns. If we are balancing, stop
