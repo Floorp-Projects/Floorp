@@ -389,14 +389,6 @@ static void MarkPrincipalChildrenDirty(nsIFrame* aFrame) {
   }
 }
 
-nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowColumns(
-    ReflowOutput& aDesiredSize, const ReflowInput& aReflowInput,
-    nsReflowStatus& aReflowStatus, ReflowConfig& aConfig,
-    bool aUnboundedLastColumn) {
-  return ReflowChildren(aDesiredSize, aReflowInput, aReflowStatus, aConfig,
-                        aUnboundedLastColumn);
-}
-
 static void MoveChildTo(nsIFrame* aChild, LogicalPoint aOrigin, WritingMode aWM,
                         const nsSize& aContainerSize) {
   if (aChild->GetLogicalPosition(aWM, aContainerSize) == aOrigin) {
@@ -471,7 +463,7 @@ nscoord nsColumnSetFrame::GetPrefISize(gfxContext* aRenderingContext) {
   return result;
 }
 
-nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
+nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowColumns(
     ReflowOutput& aDesiredSize, const ReflowInput& aReflowInput,
     nsReflowStatus& aStatus, const ReflowConfig& aConfig,
     bool aUnboundedLastColumn) {

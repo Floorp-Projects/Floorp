@@ -145,15 +145,9 @@ class nsColumnSetFrame final : public nsContainerFrame {
 
   ColumnBalanceData ReflowColumns(ReflowOutput& aDesiredSize,
                                   const ReflowInput& aReflowInput,
-                                  nsReflowStatus& aReflowStatus,
-                                  ReflowConfig& aConfig,
+                                  nsReflowStatus& aStatus,
+                                  const ReflowConfig& aConfig,
                                   bool aUnboundedLastColumn);
-
-  ColumnBalanceData ReflowChildren(ReflowOutput& aDesiredSize,
-                                   const ReflowInput& aReflowInput,
-                                   nsReflowStatus& aStatus,
-                                   const ReflowConfig& aConfig,
-                                   bool aUnboundedLastColumn);
 
   /**
    * The basic reflow strategy is to call this function repeatedly to
