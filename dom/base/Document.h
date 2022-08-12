@@ -3748,6 +3748,13 @@ class Document : public nsINode,
   void IncLazyLoadImageStarted() { ++mLazyLoadImageStarted; }
   void IncLazyLoadImageReachViewport(bool aLoading);
 
+  ResizeObserver* GetLastRememberedSizeObserver() {
+    return mLastRememberedSizeObserver;
+  }
+  ResizeObserver& EnsureLastRememberedSizeObserver();
+  void ObserveForLastRememberedSize(Element&);
+  void UnobserveForLastRememberedSize(Element&);
+
   // Dispatch a runnable related to the document.
   nsresult Dispatch(TaskCategory aCategory,
                     already_AddRefed<nsIRunnable>&& aRunnable) final;
@@ -5112,6 +5119,10 @@ class Document : public nsINode,
   RefPtr<DOMIntersectionObserver> mLazyLoadImageObserver;
   // Used to measure how effective the lazyload thresholds are.
   RefPtr<DOMIntersectionObserver> mLazyLoadImageObserverViewport;
+
+  // ResizeObserver for storing and removing the last remembered size.
+  // @see {@link https://drafts.csswg.org/css-sizing-4/#last-remembered}
+  RefPtr<ResizeObserver> mLastRememberedSizeObserver;
 
   // Stack of top layer elements.
   nsTArray<nsWeakPtr> mTopLayer;

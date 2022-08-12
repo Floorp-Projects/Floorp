@@ -180,6 +180,9 @@ class ResizeObserver final : public nsISupports, public nsWrapperCache {
    */
   MOZ_CAN_RUN_SCRIPT uint32_t BroadcastActiveObservations();
 
+  static already_AddRefed<ResizeObserver> CreateLastRememberedSizeObserver(
+      Document&);
+
  protected:
   ~ResizeObserver() { Disconnect(); }
 
