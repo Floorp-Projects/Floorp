@@ -7,6 +7,7 @@ package org.mozilla.fenix.home.blocklist
 import androidx.annotation.VisibleForTesting
 import mozilla.components.support.ktx.kotlin.sha1
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
+import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.utils.Settings
@@ -61,6 +62,18 @@ class BlocklistHandler(private val settings: Settings) {
             filterNot {
                 it is RecentlyVisitedItem.RecentHistoryHighlight &&
                     blocklistContainsUrl(blocklist, it.url)
+            }
+        }
+
+    /**
+     * Filter a list of recently synced tabs by the blocklist. Requires this class to be contextually
+     * in a scope.
+     */
+    @JvmName("filterRecentSyncedTab")
+    fun List<RecentSyncedTab>.filteredByBlocklist(): List<RecentSyncedTab> =
+        settings.homescreenBlocklist.let { blocklist ->
+            filterNot {
+                blocklistContainsUrl(blocklist, it.url)
             }
         }
 

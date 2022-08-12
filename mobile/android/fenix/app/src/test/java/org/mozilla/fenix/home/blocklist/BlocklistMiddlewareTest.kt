@@ -10,6 +10,7 @@ import io.mockk.slot
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -17,6 +18,8 @@ import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
+import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
+import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabState
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.utils.Settings
 
@@ -295,5 +298,47 @@ class BlocklistMiddlewareTest {
         ).joinBlocking()
 
         assertTrue(store.state.recentBookmarks.isEmpty())
+    }
+
+    @Test
+    fun `WHEN new recently synced tabs are submitted THEN urls matching the blocklist should be removed`() {
+        val blockedHost = "https://www.mozilla.org"
+        val blockedTab = RecentSyncedTab(
+            deviceDisplayName = "",
+            deviceType = mock(),
+            title = "",
+            url = "https://www.mozilla.org",
+            previewImageUrl = ""
+        )
+        val allowedTab = RecentSyncedTab(
+            deviceDisplayName = "",
+            deviceType = mock(),
+            title = "",
+            url = "https://github.com",
+            previewImageUrl = ""
+        )
+
+        every { mockSettings.homescreenBlocklist } returns setOf(blockedHost.stripAndHash())
+        val middleware = BlocklistMiddleware(blocklistHandler)
+        val store = AppStore(
+            AppState(),
+            middlewares = listOf(middleware)
+        )
+
+        store.dispatch(
+            AppAction.RecentSyncedTabStateChange(
+                RecentSyncedTabState.Success(
+                    listOf(
+                        blockedTab,
+                        allowedTab
+                    )
+                )
+            )
+        ).joinBlocking()
+
+        assertEquals(
+            allowedTab,
+            (store.state.recentSyncedTabState as RecentSyncedTabState.Success).tabs.single()
+        )
     }
 }
