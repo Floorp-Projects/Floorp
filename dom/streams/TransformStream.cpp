@@ -107,7 +107,7 @@ TransformStreamDefaultControllerPerformTransform(
     JS::Handle<JS::Value> aChunk, ErrorResult& aRv) {
   // Step 1: Let transformPromise be the result of performing
   // controller.[[transformAlgorithm]], passing chunk.
-  RefPtr<TransformerAlgorithms> algorithms = aController->Algorithms();
+  RefPtr<TransformerAlgorithmsBase> algorithms = aController->Algorithms();
   RefPtr<Promise> transformPromise =
       algorithms->TransformCallback(aCx, aChunk, *aController, aRv);
   if (aRv.Failed()) {
@@ -280,7 +280,7 @@ class TransformStreamUnderlyingSinkAlgorithms final
 
     // Step 3: Let flushPromise be the result of performing
     // controller.[[flushAlgorithm]].
-    RefPtr<TransformerAlgorithms> algorithms = controller->Algorithms();
+    RefPtr<TransformerAlgorithmsBase> algorithms = controller->Algorithms();
     RefPtr<Promise> flushPromise =
         algorithms->FlushCallback(aCx, *controller, aRv);
     if (aRv.Failed()) {

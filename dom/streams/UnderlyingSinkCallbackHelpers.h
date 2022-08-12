@@ -26,7 +26,7 @@ class WritableStreamDefaultController;
 class UnderlyingSinkAlgorithmsBase : public nsISupports {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(UnderlyingSinkAlgorithmsBase)
+  NS_DECL_CYCLE_COLLECTION_CLASS(UnderlyingSinkAlgorithmsBase)
 
   MOZ_CAN_RUN_SCRIPT virtual void StartCallback(
       JSContext* aCx, WritableStreamDefaultController& aController,
