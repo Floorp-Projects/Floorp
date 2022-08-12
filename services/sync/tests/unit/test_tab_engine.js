@@ -128,7 +128,7 @@ add_task(async function test_reconcile() {
 add_task(async function test_modified_after_fail() {
   let [engine, store] = await getMocks();
   store.getWindowEnumerator = () =>
-    mockGetWindowEnumerator("http://example.com", 1, 1);
+    mockGetWindowEnumerator(["http://example.com"]);
 
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
@@ -143,9 +143,9 @@ add_task(async function test_modified_after_fail() {
       [
         {
           title: "title",
-          urlHistory: ["http://example.com"],
+          urlHistory: ["http://example.com/"],
           icon: "",
-          lastUsed: 1,
+          lastUsed: 2,
         },
       ],
       "Should upload mock local tabs on first sync"
