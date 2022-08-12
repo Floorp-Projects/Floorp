@@ -2424,9 +2424,7 @@ void nsTreeSanitizer::WithWebSanitizerOptions(
     const Sequence<nsString>& allowedElements = aOptions.mAllowElements.Value();
     mAllowElements = MakeUnique<DynamicAtomsTable>(allowedElements.Length());
     for (const nsString& elem : allowedElements) {
-      nsAutoString lowercaseElem;
-      nsContentUtils::ASCIIToLower(elem, lowercaseElem);
-      RefPtr<nsAtom> elAsAtom = NS_AtomizeMainThread(lowercaseElem);
+      RefPtr<nsAtom> elAsAtom = NS_AtomizeMainThread(elem);
       mAllowElements->Insert(elAsAtom);
     }
   }
@@ -2435,9 +2433,7 @@ void nsTreeSanitizer::WithWebSanitizerOptions(
     const Sequence<nsString>& blockedElements = aOptions.mBlockElements.Value();
     mBlockElements = MakeUnique<DynamicAtomsTable>(blockedElements.Length());
     for (const nsString& elem : blockedElements) {
-      nsAutoString lowercaseElem;
-      nsContentUtils::ASCIIToLower(elem, lowercaseElem);
-      RefPtr<nsAtom> elAsAtom = NS_AtomizeMainThread(lowercaseElem);
+      RefPtr<nsAtom> elAsAtom = NS_AtomizeMainThread(elem);
       mBlockElements->Insert(elAsAtom);
     }
   }
@@ -2446,9 +2442,7 @@ void nsTreeSanitizer::WithWebSanitizerOptions(
     const Sequence<nsString>& dropElements = aOptions.mDropElements.Value();
     mDropElements = MakeUnique<DynamicAtomsTable>(dropElements.Length());
     for (const nsString& elem : dropElements) {
-      nsAutoString lowercaseElem;
-      nsContentUtils::ASCIIToLower(elem, lowercaseElem);
-      RefPtr<nsAtom> elAsAtom = NS_AtomizeMainThread(lowercaseElem);
+      RefPtr<nsAtom> elAsAtom = NS_AtomizeMainThread(elem);
       mDropElements->Insert(elAsAtom);
     }
   }
@@ -2462,14 +2456,10 @@ void nsTreeSanitizer::WithWebSanitizerOptions(
       UniquePtr<DynamicAtomsTable> elems =
           MakeUnique<DynamicAtomsTable>(allowedAttributes.Entries().Length());
       for (const auto& elem : entries.mValue) {
-        nsAutoString lowercaseElem;
-        nsContentUtils::ASCIIToLower(elem, lowercaseElem);
-        RefPtr<nsAtom> elAsAtom = NS_Atomize(lowercaseElem);
+        RefPtr<nsAtom> elAsAtom = NS_AtomizeMainThread(elem);
         elems->Insert(elAsAtom);
       }
-      nsAutoString attrName;
-      nsContentUtils::ASCIIToLower(entries.mKey, attrName);
-      RefPtr<nsAtom> attrAtom = NS_Atomize(attrName);
+      RefPtr<nsAtom> attrAtom = NS_AtomizeMainThread(entries.mKey);
       mAllowedAttributes->InsertOrUpdate(attrAtom, std::move(elems));
     }
   }
@@ -2483,17 +2473,11 @@ void nsTreeSanitizer::WithWebSanitizerOptions(
       UniquePtr<DynamicAtomsTable> elems =
           MakeUnique<DynamicAtomsTable>(droppedAttributes.Entries().Length());
       for (const auto& elem : entries.mValue) {
-        nsAutoString lowercaseElem;
-        nsContentUtils::ASCIIToLower(elem, lowercaseElem);
-        RefPtr<nsAtom> elAsAtom = NS_Atomize(lowercaseElem);
+        RefPtr<nsAtom> elAsAtom = NS_AtomizeMainThread(elem);
         elems->Insert(elAsAtom);
       }
-      nsAutoString attrName;
-      nsContentUtils::ASCIIToLower(entries.mKey, attrName);
-      RefPtr<nsAtom> attrAtom = NS_Atomize(attrName);
+      RefPtr<nsAtom> attrAtom = NS_AtomizeMainThread(entries.mKey);
       mDroppedAttributes->InsertOrUpdate(attrAtom, std::move(elems));
     }
   }
-
-  // TODO(freddy) Add handling of other keys in SanitizerConfig
 }
