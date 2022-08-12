@@ -117,10 +117,12 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
     contentType = TEXT_PLAIN;
   }
 
+  nsresult rv;
+  bool imageDocument = false;
   // Try html or plaintext; both use the same document CID
   if (IsTypeInList(contentType, gHTMLTypes) ||
       nsContentUtils::IsPlainTextType(contentType)) {
-    return CreateDocument(
+    rv = CreateDocument(
         aCommand, aChannel, aLoadGroup, aContainer,
         []() -> already_AddRefed<Document> {
           RefPtr<Document> doc;
@@ -129,11 +131,9 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
           return doc.forget();
         },
         aDocListener, aDocViewer);
-  }
-
-  // Try XML
-  if (IsTypeInList(contentType, gXMLTypes)) {
-    return CreateDocument(
+  }  // Try XML
+  else if (IsTypeInList(contentType, gXMLTypes)) {
+    rv = CreateDocument(
         aCommand, aChannel, aLoadGroup, aContainer,
         []() -> already_AddRefed<Document> {
           RefPtr<Document> doc;
@@ -142,11 +142,9 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
           return doc.forget();
         },
         aDocListener, aDocViewer);
-  }
-
-  // Try SVG
-  if (IsTypeInList(contentType, gSVGTypes)) {
-    return CreateDocument(
+  }  // Try SVG
+  else if (IsTypeInList(contentType, gSVGTypes)) {
+    rv = CreateDocument(
         aCommand, aChannel, aLoadGroup, aContainer,
         []() -> already_AddRefed<Document> {
           RefPtr<Document> doc;
@@ -155,12 +153,10 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
           return doc.forget();
         },
         aDocListener, aDocViewer);
-  }
-
-  if (mozilla::DecoderTraits::ShouldHandleMediaType(
-          contentType.get(),
-          /* DecoderDoctorDiagnostics* */ nullptr)) {
-    return CreateDocument(
+  } else if (mozilla::DecoderTraits::ShouldHandleMediaType(
+                 contentType.get(),
+                 /* DecoderDoctorDiagnostics* */ nullptr)) {
+    rv = CreateDocument(
         aCommand, aChannel, aLoadGroup, aContainer,
         []() -> already_AddRefed<Document> {
           RefPtr<Document> doc;
@@ -169,11 +165,10 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
           return doc.forget();
         },
         aDocListener, aDocViewer);
-  }
-
-  // Try image types
-  if (IsImageContentType(contentType)) {
-    return CreateDocument(
+  }  // Try image types
+  else if (IsImageContentType(contentType)) {
+    imageDocument = true;
+    rv = CreateDocument(
         aCommand, aChannel, aLoadGroup, aContainer,
         []() -> already_AddRefed<Document> {
           RefPtr<Document> doc;
@@ -182,10 +177,18 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
           return doc.forget();
         },
         aDocListener, aDocViewer);
+  } else {
+    // If we get here, then we weren't able to create anything. Sorry!
+    return NS_ERROR_FAILURE;
   }
 
-  // If we get here, then we weren't able to create anything. Sorry!
-  return NS_ERROR_FAILURE;
+  if (NS_SUCCEEDED(rv) && !imageDocument) {
+    Document* doc = (*aDocViewer)->GetDocument();
+    MOZ_ASSERT(doc);
+    doc->MakeBrowsingContextNonSynthetic();
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP

@@ -122,6 +122,9 @@ void WindowContext::AppendChildBrowsingContext(
   MOZ_DIAGNOSTIC_ASSERT(!mChildren.Contains(aBrowsingContext));
 
   mChildren.AppendElement(aBrowsingContext);
+  if (!aBrowsingContext->IsEmbedderTypeObjectOrEmbed()) {
+    mNonSyntheticChildren.AppendElement(aBrowsingContext);
+  }
 
   // If we're the current WindowContext in our BrowsingContext, make sure to
   // clear any cached `children` value.
@@ -136,11 +139,25 @@ void WindowContext::RemoveChildBrowsingContext(
                         "Mismatched groups?");
 
   mChildren.RemoveElement(aBrowsingContext);
+  mNonSyntheticChildren.RemoveElement(aBrowsingContext);
 
   // If we're the current WindowContext in our BrowsingContext, make sure to
   // clear any cached `children` value.
   if (IsCurrent()) {
     BrowsingContext_Binding::ClearCachedChildrenValue(mBrowsingContext);
+  }
+}
+
+void WindowContext::UpdateChildSynthetic(BrowsingContext* aBrowsingContext,
+                                         bool aIsSynthetic) {
+  if (aIsSynthetic) {
+    mNonSyntheticChildren.RemoveElement(aBrowsingContext);
+  } else {
+    // The same BrowsingContext will be reused for error pages, so it can be in
+    // the list already.
+    if (!mNonSyntheticChildren.Contains(aBrowsingContext)) {
+      mNonSyntheticChildren.AppendElement(aBrowsingContext);
+    }
   }
 }
 
@@ -569,12 +586,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(WindowContext)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowsingContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChildren)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mNonSyntheticChildren)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(WindowContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowsingContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildren)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNonSyntheticChildren)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(WindowContext)

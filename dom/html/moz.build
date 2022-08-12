@@ -114,6 +114,7 @@ EXPORTS.mozilla.dom += [
     "HTMLUnknownElement.h",
     "HTMLVideoElement.h",
     "ImageDocument.h",
+    "MediaDocument.h",
     "MediaError.h",
     "nsBrowserElement.h",
     "PlayPromise.h",

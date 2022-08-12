@@ -106,6 +106,7 @@ using mozilla::dom::EmbedderElementEventType from "mozilla/dom/TabMessageTypes.h
 using mozilla::IntrinsicSize from "nsIFrame.h";
 using mozilla::AspectRatio from "mozilla/AspectRatio.h";
 using mozilla::NativeKeyBindingsType from "mozilla/NativeKeyBindingsType.h";
+using mozilla::StyleImageRendering from "mozilla/ServoStyleConsts.h";
 
 namespace mozilla {
 namespace dom {
@@ -574,6 +575,8 @@ parent:
     async IntrinsicSizeOrRatioChanged(IntrinsicSize? aIntrinsicSize,
                                       AspectRatio? aIntrinsicRatio);
 
+    async ImageLoadComplete(nsresult aResult);
+
     /**
      * Child informs the parent that a pointer lock has requested/released.
      */
@@ -710,6 +713,8 @@ child:
                               ScreenRect aRemoteDocumentRect);
 
     async SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
+
+    async UpdateRemoteStyle(StyleImageRendering aImageRendering);
 
     async DynamicToolbarMaxHeightChanged(ScreenIntCoord height);
 

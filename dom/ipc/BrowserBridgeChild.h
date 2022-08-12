@@ -96,6 +96,8 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
       const Maybe<IntrinsicSize>& aIntrinsicSize,
       const Maybe<AspectRatio>& aIntrinsicRatio);
 
+  mozilla::ipc::IPCResult RecvImageLoadComplete(const nsresult& aResult);
+
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvScrollRectIntoView(
       const nsRect& aRect, const ScrollAxis& aVertical,

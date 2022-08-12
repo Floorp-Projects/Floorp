@@ -7,9 +7,11 @@
 #ifndef LAYOUT_GENERIC_LAYOUTMESSAGEUTILS_H_
 #define LAYOUT_GENERIC_LAYOUTMESSAGEUTILS_H_
 
+#include "ipc/EnumSerializer.h"
 #include "ipc/IPCMessageUtils.h"
 #include "nsIFrame.h"
 #include "mozilla/AspectRatio.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 
 namespace IPC {
 
@@ -40,6 +42,12 @@ struct ParamTraits<mozilla::AspectRatio> {
     return ReadParam(aReader, &aResult->mRatio);
   }
 };
+
+template <>
+struct ParamTraits<mozilla::StyleImageRendering>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::StyleImageRendering, mozilla::StyleImageRendering::Auto,
+          mozilla::StyleImageRendering::Optimizequality> {};
 
 }  // namespace IPC
 

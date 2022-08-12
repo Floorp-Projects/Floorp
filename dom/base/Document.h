@@ -270,6 +270,7 @@ class SVGDocument;
 class SVGElement;
 class SVGSVGElement;
 class SVGUseElement;
+class ImageDocument;
 class Touch;
 class TouchList;
 class TreeWalker;
@@ -1255,6 +1256,7 @@ class Document : public nsINode,
 
   Selection* GetSelection(ErrorResult& aRv);
 
+  void MakeBrowsingContextNonSynthetic();
   nsresult HasStorageAccessSync(bool& aHasStorageAccess);
   already_AddRefed<Promise> HasStorageAccess(ErrorResult& aRv);
 
@@ -2200,6 +2202,9 @@ class Document : public nsINode,
    */
   bool IsHTMLDocument() const { return mType == eHTML; }
   bool IsHTMLOrXHTML() const { return mType == eHTML || mType == eXHTML; }
+  bool IsImageDocument() const {
+    return MediaDocumentKind() == MediaDocumentKind::Image;
+  }
   bool IsXMLDocument() const { return !IsHTMLDocument(); }
   bool IsSVGDocument() const { return mType == eSVG; }
   bool IsUnstyledDocument() { return IsLoadedAsData(); }
@@ -3574,6 +3579,13 @@ class Document : public nsINode,
    */
   inline SVGDocument* AsSVGDocument();
   inline const SVGDocument* AsSVGDocument() const;
+
+  /**
+   * Asserts IsImageDocument, and can't return null.
+   * Defined inline in ImageDocument.h
+   */
+  inline ImageDocument* AsImageDocument();
+  inline const ImageDocument* AsImageDocument() const;
 
   /*
    * Given a node, get a weak reference to it and append that reference to

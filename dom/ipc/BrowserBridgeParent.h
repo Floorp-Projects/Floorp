@@ -101,6 +101,9 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
   mozilla::ipc::IPCResult RecvSetIsUnderHiddenEmbedderElement(
       const bool& aIsUnderHiddenEmbedderElement);
 
+  mozilla::ipc::IPCResult RecvUpdateRemoteStyle(
+      const StyleImageRendering& aImageRendering);
+
 #ifdef ACCESSIBILITY
   mozilla::ipc::IPCResult RecvSetEmbedderAccessible(PDocAccessibleParent* aDoc,
                                                     uint64_t aID);

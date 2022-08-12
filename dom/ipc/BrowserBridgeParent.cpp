@@ -257,6 +257,12 @@ IPCResult BrowserBridgeParent::RecvSetIsUnderHiddenEmbedderElement(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserBridgeParent::RecvUpdateRemoteStyle(
+    const StyleImageRendering& aImageRendering) {
+  Unused << mBrowserParent->SendUpdateRemoteStyle(aImageRendering);
+  return IPC_OK();
+}
+
 #ifdef ACCESSIBILITY
 a11y::DocAccessibleParent* BrowserBridgeParent::GetDocAccessibleParent() {
   auto* embeddedBrowser = GetBrowserParent();
