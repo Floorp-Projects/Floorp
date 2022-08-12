@@ -47,7 +47,11 @@ input {
   background-color: transparent;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
-.onboardingContainer.featureCallout .screen[pos=callout] .brand-logo {
+.onboardingContainer.featureCallout .screen[pos=callout] .logo-container {
+  display: flex;
+  justify-content: center;
+}
+.onboardingContainer.featureCallout .screen[pos=callout] .logo-container .brand-logo {
   margin: 30px 45px 0;
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .welcome-text {
