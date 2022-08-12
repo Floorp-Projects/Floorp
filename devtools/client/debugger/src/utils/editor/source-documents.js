@@ -37,9 +37,10 @@ function resetLineNumberFormat(editor) {
   resizeToggleButton(cm);
 }
 
-export function updateLineNumberFormat(editor, sourceId) {
+function updateLineNumberFormat(editor, sourceId) {
   if (!isWasm(sourceId)) {
-    return resetLineNumberFormat(editor);
+    resetLineNumberFormat(editor);
+    return;
   }
   const cm = editor.codeMirror;
   const lineNumberFormatter = getWasmLineNumberFormatter(sourceId);
@@ -151,7 +152,7 @@ export function showSourceText(editor, source, sourceTextContent, symbols) {
     editor.replaceDocument(doc);
     updateLineNumberFormat(editor, source.id);
     setMode(editor, source, sourceTextContent, symbols);
-    return doc;
+    return;
   }
 
   const doc = editor.createDocument();

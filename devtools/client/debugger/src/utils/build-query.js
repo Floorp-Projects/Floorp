@@ -37,6 +37,8 @@ function buildFlags(caseSensitive, isGlobal) {
   if (!caseSensitive && !isGlobal) {
     return "i";
   }
+
+  return null;
 }
 
 export default function buildQuery(
