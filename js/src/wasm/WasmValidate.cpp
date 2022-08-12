@@ -110,10 +110,6 @@ bool wasm::DecodeLocalEntries(Decoder& d, const TypeContext& types,
       return false;
     }
 
-    if (!type.isDefaultable()) {
-      return d.fail("cannot have a non-defaultable local");
-    }
-
     if (!locals->appendN(type, count)) {
       return false;
     }
@@ -178,7 +174,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
                                     const uint8_t* bodyEnd, Decoder* d) {
   ValidatingOpIter iter(env, *d);
 
-  if (!iter.startFunction(funcIndex)) {
+  if (!iter.startFunction(funcIndex, locals)) {
     return false;
   }
 

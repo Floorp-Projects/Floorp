@@ -279,6 +279,74 @@ class ControlStackEntry {
   }
 };
 
+// Track state of the non-defaultable locals. Every time such local is
+// initialized, the stack will record at what depth and which local was set.
+// On a block end, the "unset" state will be rolled back to how it was before
+// the block started.
+//
+// It is very likely only a few functions will have non-defaultable locals and
+// very few locals will be non-defaultable. This class is optimized to be fast
+// for this common case.
+class UnsetLocalsState {
+  struct SetLocalEntry {
+    uint32_t depth;
+    uint32_t localUnsetIndex;
+    SetLocalEntry(uint32_t depth_, uint32_t localUnsetIndex_)
+        : depth(depth_), localUnsetIndex(localUnsetIndex_) {}
+  };
+  using SetLocalsStack = Vector<SetLocalEntry, 16, SystemAllocPolicy>;
+  using UnsetLocals = Vector<uint32_t, 16, SystemAllocPolicy>;
+
+  static constexpr size_t WordSize = 4;
+  static constexpr size_t WordBits = WordSize * 8;
+
+  // Bit array of "unset" function locals. Stores only unset states of the
+  // locals that are declared after the first non-defaultable local.
+  UnsetLocals unsetLocals_;
+  // Stack of "set" operations. Contains pair where the first field is a depth,
+  // and the second field is local id (offset by firstNonDefaultLocal_).
+  SetLocalsStack setLocalsStack_;
+  uint32_t firstNonDefaultLocal_;
+
+ public:
+  [[nodiscard]] bool init(const ValTypeVector& locals, size_t numParams);
+
+  inline bool isUnset(uint32_t id) const {
+    if (MOZ_LIKELY(id < firstNonDefaultLocal_)) {
+      return false;
+    }
+    uint32_t localUnsetIndex = id - firstNonDefaultLocal_;
+    return unsetLocals_[localUnsetIndex / WordBits] &
+           (1 << (localUnsetIndex % WordBits));
+  }
+
+  inline void set(uint32_t id, uint32_t depth) {
+    MOZ_ASSERT(isUnset(id));
+    MOZ_ASSERT(id >= firstNonDefaultLocal_ &&
+               (id - firstNonDefaultLocal_) / WordSize < unsetLocals_.length());
+    uint32_t localUnsetIndex = id - firstNonDefaultLocal_;
+    unsetLocals_[localUnsetIndex / WordBits] ^= 1
+                                                << (localUnsetIndex % WordBits);
+    // The setLocalsStack_ is reserved upfront in the UnsetLocalsState::init.
+    // A SetLocalEntry will be pushed only once per local.
+    setLocalsStack_.infallibleEmplaceBack(depth, localUnsetIndex);
+  }
+
+  inline void resetToBlock(uint32_t controlDepth) {
+    while (MOZ_UNLIKELY(setLocalsStack_.length() > 0) &&
+           setLocalsStack_.back().depth > controlDepth) {
+      uint32_t localUnsetIndex = setLocalsStack_.back().localUnsetIndex;
+      MOZ_ASSERT(!(unsetLocals_[localUnsetIndex / WordBits] &
+                   (1 << (localUnsetIndex % WordBits))));
+      unsetLocals_[localUnsetIndex / WordBits] |=
+          1 << (localUnsetIndex % WordBits);
+      setLocalsStack_.popBack();
+    }
+  }
+
+  int empty() const { return setLocalsStack_.empty(); }
+};
+
 template <typename Value>
 class TypeAndValueT {
   // Use a Pair to optimize away empty Value.
@@ -327,6 +395,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   TypeAndValueStack valueStack_;
   TypeAndValueStack elseParamStack_;
   ControlStack controlStack_;
+  UnsetLocalsState unsetLocals_;
 
 #ifdef DEBUG
   OpBytes op_;
@@ -474,7 +543,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
 
   // Initialization and termination
 
-  [[nodiscard]] bool startFunction(uint32_t funcIndex);
+  [[nodiscard]] bool startFunction(uint32_t funcIndex,
+                                   const ValTypeVector& locals);
   [[nodiscard]] bool endFunction(const uint8_t* bodyEnd);
 
   [[nodiscard]] bool startInitExpr(ValType expected);
@@ -1164,13 +1234,20 @@ inline void OpIter<Policy>::peekOp(OpBytes* op) {
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::startFunction(uint32_t funcIndex) {
+inline bool OpIter<Policy>::startFunction(uint32_t funcIndex,
+                                          const ValTypeVector& locals) {
   MOZ_ASSERT(kind_ == OpIter::Func);
   MOZ_ASSERT(elseParamStack_.empty());
   MOZ_ASSERT(valueStack_.empty());
   MOZ_ASSERT(controlStack_.empty());
   MOZ_ASSERT(op_.b0 == uint16_t(Op::Limit));
   BlockType type = BlockType::FuncResults(*env_.funcs[funcIndex].type);
+
+  size_t numArgs = env_.funcs[funcIndex].type->args().length();
+  if (!unsetLocals_.init(locals, numArgs)) {
+    return false;
+  }
+
   return pushControl(LabelKind::Body, type);
 }
 
@@ -1184,6 +1261,7 @@ inline bool OpIter<Policy>::endFunction(const uint8_t* bodyEnd) {
     return fail("unbalanced function body control flow");
   }
   MOZ_ASSERT(elseParamStack_.empty());
+  MOZ_ASSERT(unsetLocals_.empty());
 
 #ifdef DEBUG
   op_ = OpBytes(Op::Limit);
@@ -1357,6 +1435,7 @@ inline void OpIter<Policy>::popEnd() {
   MOZ_ASSERT(Classify(op_) == OpKind::End);
 
   controlStack_.popBack();
+  unsetLocals_.resetToBlock(controlStack_.length());
 }
 
 template <typename Policy>
@@ -2041,6 +2120,10 @@ inline bool OpIter<Policy>::readGetLocal(const ValTypeVector& locals,
     return fail("local.get index out of range");
   }
 
+  if (unsetLocals_.isUnset(*id)) {
+    return fail("local.get read from unset local");
+  }
+
   return push(locals[*id]);
 }
 
@@ -2057,6 +2140,10 @@ inline bool OpIter<Policy>::readSetLocal(const ValTypeVector& locals,
     return fail("local.set index out of range");
   }
 
+  if (unsetLocals_.isUnset(*id)) {
+    unsetLocals_.set(*id, controlStackDepth());
+  }
+
   return popWithType(locals[*id], value);
 }
 
@@ -2071,6 +2158,10 @@ inline bool OpIter<Policy>::readTeeLocal(const ValTypeVector& locals,
 
   if (*id >= locals.length()) {
     return fail("local.set index out of range");
+  }
+
+  if (unsetLocals_.isUnset(*id)) {
+    unsetLocals_.set(*id, controlStackDepth());
   }
 
   ValueVector single;
