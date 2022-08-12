@@ -1136,14 +1136,17 @@ set_define("_WASI_EMULATED_GETPID", True, when=is_wasi_target)
 
 # Enable change-array-by-copy
 # ===================================================
-def use_change_array_by_copy():
-    return False
+
+
+@depends(milestone.is_nightly)
+def use_change_array_by_copy(is_nightly):
+    return is_nightly
 
 
 option(
     "--enable-change-array-by-copy",
-    default=use_change_array_by_copy(),
-    help="{Enable|Disable} change-array-by-copy method pref/command-line option (disabled by default)",
+    default=use_change_array_by_copy,
+    help="{Enable|Disable} change-array-by-copy method pref/command-line option (disabled by default in Release-or-Beta)",
 )
 
 
