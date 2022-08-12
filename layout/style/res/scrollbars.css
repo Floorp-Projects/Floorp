@@ -39,6 +39,7 @@ scrollbar[root="true"] {
 slider {
   appearance: auto;
   -moz-default-appearance: scrollbartrack-horizontal;
+  -moz-box-flex: 1;
 }
 
 slider[orient="vertical"] {

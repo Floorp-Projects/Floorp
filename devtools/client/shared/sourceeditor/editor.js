@@ -327,7 +327,7 @@ Editor.prototype = {
         env = el.ownerDocument.createElementNS(el.namespaceURI, "iframe");
 
         if (el.namespaceURI === XUL_NS) {
-          env.flex = 1;
+          env.setAttribute("flex", "1");
         }
       }
 

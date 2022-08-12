@@ -846,6 +846,28 @@ nsresult nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                        aSubjectPrincipal, aNotify);
 }
 
+void nsXULElement::GetFlex(DOMString& aValue) const {
+#ifdef DEBUG
+  printf_stderr("\n");
+  ListAttributes(stderr);
+  xpc_DumpJSStack(true, true, false);
+  printf_stderr("\n");
+  MOZ_ASSERT_UNREACHABLE("XULElement.flex getter");
+#endif
+  GetXULAttr(nsGkAtoms::flex, aValue);
+}
+
+void nsXULElement::SetFlex(const nsAString& aValue, ErrorResult& aRv) {
+#ifdef DEBUG
+  printf_stderr("\n");
+  ListAttributes(stderr);
+  xpc_DumpJSStack(true, true, false);
+  printf_stderr("\n");
+  MOZ_ASSERT_UNREACHABLE("XULElement.flex setter");
+#endif
+  SetXULAttr(nsGkAtoms::flex, aValue, aRv);
+}
+
 void nsXULElement::AddTooltipSupport() {
   nsXULTooltipListener* listener = nsXULTooltipListener::GetInstance();
   if (!listener) {

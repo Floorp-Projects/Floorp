@@ -659,22 +659,5 @@ button, image {
 [pack="center"] { -moz-box-pack: center !important; }
 [pack="end"] { -moz-box-pack: end !important; }
 
-@supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
-  /* This isn't a real solution for [flex] and [ordinal], but it covers enough
-     cases to render the browser chrome for us to test emulated flex mode without
-     mass-changing existing markup and CSS.
-     If we get attr() in Bug 435426 this could  work for all cases. */
-  [flex="1"] { -moz-box-flex: 1; }
-  [flex="2"] { -moz-box-flex: 2; }
-  [flex="3"] { -moz-box-flex: 3; }
-  [flex="4"] { -moz-box-flex: 4; }
-  [flex="5"] { -moz-box-flex: 5; }
-  [flex="6"] { -moz-box-flex: 6; }
-  [flex="7"] { -moz-box-flex: 7; }
-  [flex="8"] { -moz-box-flex: 8; }
-  [flex="9"] { -moz-box-flex: 9; }
-  [flex="100"] { -moz-box-flex: 100; }
-  [flex="400"] { -moz-box-flex: 400; }
-  [flex="1000"] { -moz-box-flex: 1000; }
-  [flex="10000"] { -moz-box-flex: 10000; }
-}
+[flex="0"] { -moz-box-flex: 0 !important; }
+[flex="1"] { -moz-box-flex: 1 !important; }
