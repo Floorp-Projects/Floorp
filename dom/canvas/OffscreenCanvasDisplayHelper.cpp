@@ -201,8 +201,6 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
 }
 
 void OffscreenCanvasDisplayHelper::MaybeQueueInvalidateElement() {
-  mMutex.AssertCurrentThreadOwns();
-
   if (!mPendingInvalidate) {
     mPendingInvalidate = true;
     NS_DispatchToMainThread(NS_NewRunnableFunction(
