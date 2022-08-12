@@ -31,9 +31,9 @@ UNSUPPORTED_FEATURES = set(
         "json-modules",
         "resizable-arraybuffer",
         "Temporal",
-        "array-grouping",
         "regexp-v-flag",
         "decorators",
+        "regexp-duplicate-named-groups",
     ]
 )
 FEATURE_CHECK_NEEDED = {
@@ -41,6 +41,8 @@ FEATURE_CHECK_NEEDED = {
     "FinalizationRegistry": "!this.hasOwnProperty('FinalizationRegistry')",
     "SharedArrayBuffer": "!this.hasOwnProperty('SharedArrayBuffer')",
     "WeakRef": "!this.hasOwnProperty('WeakRef')",
+    "array-grouping": "!Array.prototype.group",
+    "change-array-by-copy": "!Array.prototype.with",
 }
 RELEASE_OR_BETA = set(
     [
@@ -50,6 +52,8 @@ RELEASE_OR_BETA = set(
 SHELL_OPTIONS = {
     "import-assertions": "--enable-import-assertions",
     "ShadowRealm": "--enable-shadow-realms",
+    "array-grouping": "--enable-array-grouping",
+    "change-array-by-copy": "--enable-change-array-by-copy",
 }
 
 
