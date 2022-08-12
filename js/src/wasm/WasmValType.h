@@ -519,16 +519,6 @@ class PackedType : public T {
     return RefType(tc_).kind();
   }
 
-  void renumber(const RenumberVector& renumbering) {
-    if (!isTypeIndex()) {
-      return;
-    }
-
-    uint32_t newIndex = renumbering[typeIndex()];
-    MOZ_ASSERT(newIndex != UINT32_MAX);
-    *this = RefType::fromTypeIndex(newIndex, isNullable());
-  }
-
   // Some types are encoded as JS::Value when they escape from Wasm (when passed
   // as parameters to imports or returned from exports).  For ExternRef the
   // Value encoding is pretty much a requirement.  For other types it's a choice
