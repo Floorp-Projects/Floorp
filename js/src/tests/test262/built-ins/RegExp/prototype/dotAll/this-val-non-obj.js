@@ -39,8 +39,4 @@ assert.throws(TypeError, function() {
   dotAll.call(4);
 }, "number");
 
-assert.throws(TypeError, function() {
-  dotAll.call(4n);
-}, "bigint");
-
 reportCompare(0, 0);

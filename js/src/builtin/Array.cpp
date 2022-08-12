@@ -4881,8 +4881,8 @@ static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
 
 #ifdef NIGHTLY_BUILD
   if (cx->realm()->creationOptions().getArrayGroupingEnabled()) {
-    if (!DefineDataProperty(cx, unscopables, cx->names().group, value) ||
-        !DefineDataProperty(cx, unscopables, cx->names().groupToMap, value)) {
+    if (!DefineDataProperty(cx, unscopables, cx->names().groupBy, value) ||
+        !DefineDataProperty(cx, unscopables, cx->names().groupByToMap, value)) {
       return false;
     }
   }

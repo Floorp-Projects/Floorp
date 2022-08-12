@@ -43,7 +43,7 @@ if (typeof getRealmConfiguration === "undefined") {
 }
 
 if (!getBuildConfiguration().release_or_beta && getRealmConfiguration().enableArrayGrouping) {
-    expectedKeys.push("group", "groupToMap");
+    expectedKeys.push("groupBy", "groupByToMap");
 }
 
 if (getBuildConfiguration()['change-array-by-copy'] && getRealmConfiguration().enableChangeArrayByCopy) {
