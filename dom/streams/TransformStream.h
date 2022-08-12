@@ -44,8 +44,6 @@ class TransformStream final : public nsISupports, public nsWrapperCache {
     MOZ_ASSERT(!mController);
     mController = &aController;
   }
-  MOZ_KNOWN_LIVE ReadableStream* Readable() { return mReadable; }
-  MOZ_KNOWN_LIVE WritableStream* Writable() { return mWritable; }
 
   // [Transferable]
   // https://html.spec.whatwg.org/multipage/structured-data.html#transfer-steps
@@ -80,8 +78,8 @@ class TransformStream final : public nsISupports, public nsWrapperCache {
               const QueuingStrategy& aWritableStrategy,
               const QueuingStrategy& aReadableStrategy, ErrorResult& aRv);
 
-  already_AddRefed<ReadableStream> GetReadable();
-  already_AddRefed<WritableStream> GetWritable();
+  ReadableStream* Readable() const { return mReadable; }
+  WritableStream* Writable() const { return mWritable; }
 
  private:
   nsCOMPtr<nsIGlobalObject> mGlobal;
