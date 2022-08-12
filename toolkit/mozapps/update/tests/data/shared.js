@@ -71,6 +71,7 @@ const DIR_TOBEDELETED = "tobedeleted";
 const DIR_UPDATES = "updates";
 const DIR_UPDATED =
   AppConstants.platform == "macosx" ? "Updated.app" : "updated";
+const DIR_DOWNLOADING = "downloading";
 
 const FILE_ACTIVE_UPDATE_XML = "active-update.xml";
 const FILE_ACTIVE_UPDATE_XML_TMP = "active-update.xml.tmp";
@@ -442,9 +443,17 @@ function getFileExtension(aFile) {
  *
  * @param   aLogLeafName
  *          The leafName of the file or directory to get.
+ * @param   aWhichDir
+ *          Since we started having a separate patch directory and downloading
+ *          directory, there are now files with the same name that can be in
+ *          either directory. This argument is optional and defaults to the
+ *          patch directory for historical reasons. But if it is specified as
+ *          DIR_DOWNLOADING, this function will provide the version of the file
+ *          in the downloading directory. For files that aren't in the patch
+ *          directory or the downloading directory, this value is ignored.
  * @return  nsIFile for the file or directory.
  */
-function getUpdateDirFile(aLeafName) {
+function getUpdateDirFile(aLeafName, aWhichDir = null) {
   let file = Services.dirsvc.get(XRE_UPDATE_ROOT_DIR, Ci.nsIFile);
   switch (aLeafName) {
     case undefined:
@@ -460,6 +469,7 @@ function getUpdateDirFile(aLeafName) {
       file.append(aLeafName);
       return file;
     case DIR_PATCH:
+    case DIR_DOWNLOADING:
     case FILE_BACKUP_UPDATE_LOG:
     case FILE_LAST_UPDATE_LOG:
       file.append(DIR_UPDATES);
@@ -472,7 +482,11 @@ function getUpdateDirFile(aLeafName) {
     case FILE_UPDATE_VERSION:
     case FILE_UPDATER_INI:
       file.append(DIR_UPDATES);
-      file.append(DIR_PATCH);
+      if (aWhichDir == DIR_DOWNLOADING) {
+        file.append(DIR_DOWNLOADING);
+      } else {
+        file.append(DIR_PATCH);
+      }
       file.append(aLeafName);
       return file;
   }
@@ -530,25 +544,26 @@ function getStageDirFile(aRelPath) {
  */
 function removeUpdateFiles(aRemoveLogFiles) {
   let files = [
-    FILE_ACTIVE_UPDATE_XML,
-    FILE_UPDATES_XML,
-    FILE_BT_RESULT,
-    FILE_UPDATE_STATUS,
-    FILE_UPDATE_VERSION,
-    FILE_UPDATE_MAR,
-    FILE_UPDATER_INI,
+    [FILE_ACTIVE_UPDATE_XML],
+    [FILE_UPDATES_XML],
+    [FILE_BT_RESULT],
+    [FILE_UPDATE_STATUS],
+    [FILE_UPDATE_VERSION],
+    [FILE_UPDATE_MAR],
+    [FILE_UPDATE_MAR, DIR_DOWNLOADING],
+    [FILE_UPDATER_INI],
   ];
 
   if (aRemoveLogFiles) {
     files = files.concat([
-      FILE_BACKUP_UPDATE_LOG,
-      FILE_LAST_UPDATE_LOG,
-      FILE_UPDATE_LOG,
+      [FILE_BACKUP_UPDATE_LOG],
+      [FILE_LAST_UPDATE_LOG],
+      [FILE_UPDATE_LOG],
     ]);
   }
 
   for (let i = 0; i < files.length; i++) {
-    let file = getUpdateDirFile(files[i]);
+    let file = getUpdateDirFile.apply(null, files[i]);
     try {
       if (file.exists()) {
         file.remove(false);
