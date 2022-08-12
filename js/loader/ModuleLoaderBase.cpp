@@ -582,6 +582,14 @@ nsresult ModuleLoaderBase::HandleResolveFailure(
   return NS_OK;
 }
 
+// Helper for getting import maps pref across main thread and workers
+bool ImportMapsEnabled() {
+  if (NS_IsMainThread()) {
+    return mozilla::StaticPrefs::dom_importMaps_enabled();
+  }
+  return false;
+}
+
 ResolveResult ModuleLoaderBase::ResolveModuleSpecifier(
     LoadedScript* aScript, const nsAString& aSpecifier) {
   // If import map is enabled, forward to the updated 'Resolve a module
@@ -590,7 +598,7 @@ ResolveResult ModuleLoaderBase::ResolveModuleSpecifier(
   // Once import map is enabled by default,
   // ModuleLoaderBase::ResolveModuleSpecifier should be replaced by
   // ImportMap::ResolveModuleSpecifier.
-  if (mozilla::StaticPrefs::dom_importMaps_enabled()) {
+  if (ImportMapsEnabled()) {
     return ImportMap::ResolveModuleSpecifier(mImportMap.get(), mLoader, aScript,
                                              aSpecifier);
   }
@@ -1036,7 +1044,8 @@ nsresult ModuleLoaderBase::EvaluateModule(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->mLoader == this);
 
   mozilla::nsAutoMicroTask mt;
-  mozilla::dom::AutoEntryScript aes(mGlobalObject, "EvaluateModule", true);
+  mozilla::dom::AutoEntryScript aes(mGlobalObject, "EvaluateModule",
+                                    NS_IsMainThread());
 
   return EvaluateModuleInContext(aes.cx(), aRequest,
                                  JS::ReportModuleErrorsAsync);
