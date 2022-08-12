@@ -27,4 +27,8 @@ assert.throws(TypeError, function() {
   unicode.call(arguments);
 }, 'arguments object');
 
+assert.throws(TypeError, function() {
+  unicode.call(() => {});
+}, 'function object');
+
 reportCompare(0, 0);
