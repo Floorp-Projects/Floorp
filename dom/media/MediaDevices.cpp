@@ -6,7 +6,7 @@
 
 #include "AudioDeviceInfo.h"
 #include "MediaEngine.h"
-#include "MediaEngineDefault.h"
+#include "MediaEngineFake.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
@@ -226,7 +226,7 @@ RefPtr<MediaDeviceSetRefCnt> MediaDevices::FilterExposedDevices(
 
   bool resistFingerprinting = nsContentUtils::ShouldResistFingerprinting(doc);
   if (resistFingerprinting) {
-    RefPtr fakeEngine = new MediaEngineDefault();
+    RefPtr fakeEngine = new MediaEngineFake();
     fakeEngine->EnumerateDevices(MediaSourceEnum::Microphone,
                                  MediaSinkEnum::Other, exposed);
     fakeEngine->EnumerateDevices(MediaSourceEnum::Camera, MediaSinkEnum::Other,

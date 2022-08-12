@@ -61,7 +61,7 @@
 #include "pk11pub.h"
 
 /* Using WebRTC backend on Desktops (Mac, Windows, Linux), otherwise default */
-#include "MediaEngineDefault.h"
+#include "MediaEngineFake.h"
 #include "MediaEngineSource.h"
 #if defined(MOZ_WEBRTC)
 #  include "MediaEngineWebRTC.h"
@@ -1829,7 +1829,7 @@ RefPtr<MediaManager::DeviceSetPromise> MediaManager::EnumerateRawDevices(
         // Only enumerate what's asked for, and only fake cams and mics.
         RefPtr<MediaEngine> fakeBackend, realBackend;
         if (hasFakeCams || hasFakeMics) {
-          fakeBackend = new MediaEngineDefault();
+          fakeBackend = new MediaEngineFake();
         }
         if (realDeviceRequested) {
           MediaManager* manager = MediaManager::GetIfExists();
@@ -3058,7 +3058,7 @@ MediaEngine* MediaManager::GetBackend() {
 #if defined(MOZ_WEBRTC)
     mBackend = new MediaEngineWebRTC();
 #else
-    mBackend = new MediaEngineDefault();
+    mBackend = new MediaEngineFake();
 #endif
     mDeviceListChangeListener = mBackend->DeviceListChangeEvent().Connect(
         AbstractThread::MainThread(), this, &MediaManager::DeviceListChanged);
