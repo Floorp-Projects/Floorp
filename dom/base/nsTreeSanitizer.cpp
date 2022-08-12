@@ -10,6 +10,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/BindingStyleRule.h"
 #include "mozilla/DeclarationBlock.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/css/Rule.h"
@@ -1775,8 +1776,13 @@ void nsTreeSanitizer::LogMessage(const char* aMessage, Document* aDoc,
       msg.Append(u" Attribute: "_ns + nsDependentAtomString(aAttr) + u"."_ns);
     }
 
-    nsContentUtils::ReportToConsoleNonLocalized(
-        msg, nsIScriptError::warningFlag, "DOM"_ns, aDoc);
+    if (mInnerWindowID) {
+      nsContentUtils::ReportToConsoleByWindowID(
+          msg, nsIScriptError::warningFlag, "DOM"_ns, mInnerWindowID);
+    } else {
+      nsContentUtils::ReportToConsoleNonLocalized(
+          msg, nsIScriptError::warningFlag, "DOM"_ns, aDoc);
+    }
   }
 }
 
@@ -1867,7 +1873,14 @@ void nsTreeSanitizer::ReleaseStatics() {
 }
 
 void nsTreeSanitizer::WithWebSanitizerOptions(
-    const mozilla::dom::SanitizerConfig& aOptions) {
+    nsIGlobalObject* aGlobal, const mozilla::dom::SanitizerConfig& aOptions) {
+  if (StaticPrefs::dom_security_sanitizer_logging()) {
+    mLogRemovals = true;
+    if (nsPIDOMWindowInner* win = aGlobal->AsInnerWindow()) {
+      mInnerWindowID = win->WindowID();
+    }
+  }
+
   if (!StaticPrefs::dom_security_sanitizer_rewrite_no_bounty()) {
     return;
   }

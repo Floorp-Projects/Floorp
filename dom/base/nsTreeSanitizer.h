@@ -15,6 +15,7 @@
 #include "mozilla/dom/SanitizerBinding.h"
 
 class nsIContent;
+class nsIGlobalObject;
 class nsINode;
 
 namespace mozilla {
@@ -62,7 +63,8 @@ class nsTreeSanitizer {
    * Provides additional options for usage from the Web Sanitizer API
    * which allows modifying the allow-list from above
    */
-  void WithWebSanitizerOptions(const mozilla::dom::SanitizerConfig& aOptions);
+  void WithWebSanitizerOptions(nsIGlobalObject* aGlobal,
+                               const mozilla::dom::SanitizerConfig& aOptions);
 
   /**
    * Removes conditional CSS from this subtree.
@@ -109,6 +111,9 @@ class nsTreeSanitizer {
    * Whether we should notify to the console for anything that's stripped.
    */
   bool mLogRemovals;
+
+  // WindowID used for logging removals.
+  uint64_t mInnerWindowID = 0;
 
   /**
    * We have various tables of static atoms for elements and attributes.
