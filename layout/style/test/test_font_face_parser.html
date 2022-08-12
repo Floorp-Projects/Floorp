@@ -117,6 +117,9 @@ function runTest() {
     { rule: _("src: local(\"老鼠\"), url(\"/fonts/Mouse\") format(\"truetype\");"),
       d: { "src" : "local(\"老鼠\"), url(\"/fonts/Mouse\") format(\"truetype\")" } },
 
+    { rule: _("src: url(\"/fonts/Mouse\") format(truetype);"),
+      d: { "src" : "url(\"/fonts/Mouse\") format(truetype)" } },
+
     // Correct but unusual src:
     { rule: _("src: local(Hoefler Text);"),
       d: {"src" : "local(Hoefler Text)"}, noncanonical: true },
@@ -125,7 +128,6 @@ function runTest() {
     { rule: _("src:"), d: {} },
     { rule: _("src: \"/fonts/Mouse\";"), d: {} },
     { rule: _("src: /fonts/Mouse;"), d: {} },
-    { rule: _("src: url(\"/fonts/Mouse\") format(truetype);"), d: {} },
     { rule: _("src: url(\"/fonts/Mouse\") format(\"truetype\",opentype);"), d: {} },
     { rule: _("src: local(*);"), d: {} },
     { rule: _("src: format(\"truetype\");"), d: {} },
