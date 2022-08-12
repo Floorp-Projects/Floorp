@@ -259,10 +259,17 @@
 /******************************************************************************/
 /* Open DOMNode in inspector or Accessible in accessibility inspector button */
 
-button.open-accessibility-inspector,
+button.open-accessibility-inspector {
+  mask: url("chrome://devtools/content/shared/components/reps/images/open-a11y.svg")
+    no-repeat;
+}
+
 button.open-inspector {
   mask: url("chrome://devtools/content/shared/components/reps/images/open-inspector.svg")
     no-repeat;
+}
+
+button:is(.open-accessibility-inspector,.open-inspector) {
   display: inline-block;
   vertical-align: top;
   height: 15px;
