@@ -176,23 +176,13 @@ fun PocketSponsoredStory(
 
         Spacer(Modifier.height(9.dp))
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                painter = painterResource(id = R.drawable.pocket_star_stroke),
-                contentDescription = null,
-                tint = FirefoxTheme.colors.iconSecondary,
-            )
-
-            Spacer(Modifier.width(8.dp))
-
-            Text(
-                text = stringResource(R.string.pocket_stories_sponsor_indication),
-                color = FirefoxTheme.colors.textSecondary,
-                fontSize = 12.sp,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-            )
-        }
+        Text(
+            text = stringResource(R.string.pocket_stories_sponsor_indication),
+            color = FirefoxTheme.colors.textSecondary,
+            fontSize = 12.sp,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
+        )
 
         Spacer(Modifier.height(7.dp))
 
