@@ -189,8 +189,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
       const mozilla::Maybe<mozilla::IntrinsicSize>& aIntrinsicSize,
       const mozilla::Maybe<mozilla::AspectRatio>& aIntrinsicRatio);
 
-  void SubdocumentImageLoadComplete(nsresult aResult);
-
  protected:
   /**
    * Begins loading the object when called
@@ -450,8 +448,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
    * @param aNotify if false, only need to update the state of our element.
    */
   void NotifyStateChanged(ObjectType aOldType,
-                          mozilla::dom::ElementState aOldState, bool aNotify,
-                          bool aForceRestyle);
+                          mozilla::dom::ElementState aOldState, bool aNotify);
 
   /**
    * Returns a ObjectType value corresponding to the type of content we would
@@ -576,8 +573,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   // comments for details), we change these to try to load HTML5 versions of
   // videos.
   bool mRewrittenYoutubeEmbed : 1;
-
-  bool mLoadingSyntheticDocument : 1;
 
   nsTArray<mozilla::dom::MozPluginParameter> mCachedAttributes;
   nsTArray<mozilla::dom::MozPluginParameter> mCachedParameters;

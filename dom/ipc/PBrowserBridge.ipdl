@@ -30,7 +30,6 @@ using mozilla::dom::EmbedderElementEventType from "mozilla/dom/TabMessageTypes.h
 [RefCounted] using class nsDocShellLoadState from "nsDocShellLoadState.h";
 using mozilla::IntrinsicSize from "nsIFrame.h";
 using mozilla::AspectRatio from "mozilla/AspectRatio.h";
-using mozilla::StyleImageRendering from "mozilla/ServoStyleConsts.h";
 
 namespace mozilla {
 namespace dom {
@@ -79,8 +78,6 @@ child:
   async IntrinsicSizeOrRatioChanged(IntrinsicSize? aIntrinsicSize,
                                     AspectRatio? aIntrinsicRatio);
 
-  async ImageLoadComplete(nsresult aResult);
-
 both:
 
   // Destroy the remote web browser due to the nsFrameLoader going away.
@@ -123,8 +120,6 @@ parent:
   async Deactivate(bool aWindowLowering, uint64_t aActionId);
 
   async SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
-
-  async UpdateRemoteStyle(StyleImageRendering aImageRendering);
 
   async WillChangeProcess();
 

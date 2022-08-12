@@ -416,9 +416,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   mozilla::ipc::IPCResult RecvInsertText(const nsAString& aStringToInsert);
 
-  mozilla::ipc::IPCResult RecvUpdateRemoteStyle(
-      const StyleImageRendering& aImageRendering);
-
   mozilla::ipc::IPCResult RecvNormalPriorityInsertText(
       const nsAString& aStringToInsert);
 

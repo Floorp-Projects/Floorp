@@ -109,7 +109,6 @@
 #include "mozilla/ScrollbarPreferences.h"
 #include "mozilla/Span.h"
 #include "mozilla/StaticAnalysisFunctions.h"
-#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
 #ifdef FUZZING
 #  include "mozilla/StaticPrefs_fuzzing.h"
@@ -10252,7 +10251,7 @@ uint32_t nsContentUtils::HtmlObjectContentTypeForMIMEType(
   }
 
   if (imgLoader::SupportImageWithMimeType(aMIMEType)) {
-    return ResolveObjectType(nsIObjectLoadingContent::TYPE_IMAGE);
+    return nsIObjectLoadingContent::TYPE_IMAGE;
   }
 
   // Faking support of the PDF content as a document for EMBED tags
@@ -10969,28 +10968,6 @@ nsresult nsContentUtils::AnonymizeId(nsAString& aId,
 
   CopyUTF8toUTF16(macBase64, aId);
   return NS_OK;
-}
-
-/* static */
-bool nsContentUtils::ShouldHideObjectOrEmbedImageDocument() {
-  return StaticPrefs::
-             browser_opaqueResponseBlocking_syntheticBrowsingContext_AtStartup() &&
-         StaticPrefs::
-             browser_opaqueResponseBlocking_syntheticBrowsingContext_filter_AtStartup_DoNotUseDirectly();
-}
-
-/* static */
-uint32_t nsContentUtils::ResolveObjectType(uint32_t aType) {
-  if (!StaticPrefs::
-          browser_opaqueResponseBlocking_syntheticBrowsingContext_AtStartup()) {
-    return aType;
-  }
-
-  if (aType != nsIObjectLoadingContent::TYPE_IMAGE) {
-    return aType;
-  }
-
-  return nsIObjectLoadingContent::TYPE_DOCUMENT;
 }
 
 namespace mozilla {

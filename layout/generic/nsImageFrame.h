@@ -370,10 +370,6 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   void InvalidateSelf(const nsIntRect* aLayerInvalidRect,
                       const nsRect* aFrameInvalidRect);
 
-  void MaybeSendIntrinsicSizeAndRatioToEmbedder();
-  void MaybeSendIntrinsicSizeAndRatioToEmbedder(Maybe<mozilla::IntrinsicSize>,
-                                                Maybe<mozilla::AspectRatio>);
-
   RefPtr<nsImageMap> mImageMap;
 
   RefPtr<nsImageListener> mListener;
@@ -400,8 +396,6 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   bool mFirstFrameComplete;
   bool mReflowCallbackPosted;
   bool mForceSyncDecoding;
-
-  bool mIsInObjectOrEmbed = false;
 
   /* loading / broken image icon support */
 

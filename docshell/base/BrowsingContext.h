@@ -234,10 +234,7 @@ enum class ExplicitActiveStatus : uint8_t {
   /* This field only gets incrememented when we start navigations in the      \
    * parent process. This is used for keeping track of the racing navigations \
    * between the parent and content processes. */                             \
-  FIELD(ParentInitiatedNavigationEpoch, uint64_t)                             \
-  /* This browsing context is for a synthetic image document wrapping an      \
-   * image embedded in <object> or <embed>. */                                \
-  FIELD(SyntheticDocumentContainer, bool)
+  FIELD(ParentInitiatedNavigationEpoch, uint64_t)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -369,10 +366,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   Element* GetEmbedderElement() const { return mEmbedderElement; }
   void SetEmbedderElement(Element* aEmbedder);
 
-  // Return true if the type of the embedder element is either object
-  // or embed, false otherwise.
-  bool IsEmbedderTypeObjectOrEmbed();
-
   // Called after the BrowingContext has been embedded in a FrameLoader. This
   // happens after `SetEmbedderElement` is called on the BrowsingContext and
   // after the BrowsingContext has been set on the FrameLoader.
@@ -494,8 +487,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   Span<RefPtr<BrowsingContext>> Children() const;
   void GetChildren(nsTArray<RefPtr<BrowsingContext>>& aChildren);
-
-  Span<RefPtr<BrowsingContext>> NonSyntheticChildren() const;
 
   const nsTArray<RefPtr<WindowContext>>& GetWindowContexts() {
     return mWindowContexts;
@@ -1202,8 +1193,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   bool CanSet(FieldIndex<IDX_IsInBFCache>, bool, ContentParent* aSource);
   void DidSet(FieldIndex<IDX_IsInBFCache>);
-
-  void DidSet(FieldIndex<IDX_SyntheticDocumentContainer>);
 
   // Allow if the process attemping to set field is the same as the owning
   // process. Deprecated. New code that might use this should generally be moved
