@@ -508,6 +508,7 @@ fails-if(!xulRuntime.shell) script test262/built-ins/SharedArrayBuffer/prototype
 fails-if(!xulRuntime.shell) script test262/built-ins/SharedArrayBuffer/prototype/slice/tointeger-conversion-end.js
 fails-if(!xulRuntime.shell) script test262/built-ins/SharedArrayBuffer/prototype/slice/tointeger-conversion-start.js
 fails-if(!xulRuntime.shell) script test262/built-ins/SharedArrayBuffer/prototype/Symbol.toStringTag.js
+fails-if(!xulRuntime.shell) script test262/built-ins/SharedArrayBuffer/prototype/prop-desc.js
 fails-if(!xulRuntime.shell) script test262/built-ins/SharedArrayBuffer/prototype/constructor.js
 fails-if(!xulRuntime.shell) script test262/built-ins/SharedArrayBuffer/allocation-limit.js
 fails-if(!xulRuntime.shell) script test262/built-ins/SharedArrayBuffer/data-allocation-after-object-creation.js
@@ -611,6 +612,14 @@ skip script test262/built-ins/AsyncGeneratorPrototype/return/return-state-comple
 skip script test262/built-ins/AsyncGeneratorPrototype/return/return-suspendedStart-broken-promise.js
 skip script test262/built-ins/AsyncGeneratorPrototype/return/return-suspendedYield-broken-promise-try-catch.js
 
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1781206
+skip script test262/built-ins/RegExp/prototype/Symbol.replace/get-flags-err.js
+skip script test262/built-ins/RegExp/prototype/Symbol.replace/get-unicode-error.js
+skip script test262/built-ins/RegExp/prototype/Symbol.replace/flags-tostring-error.js
+skip script test262/built-ins/RegExp/prototype/Symbol.match/get-flags-err.js
+skip script test262/built-ins/RegExp/prototype/Symbol.match/get-unicode-error.js
+skip script test262/built-ins/RegExp/prototype/Symbol.match/flags-tostring-error.js
+
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
@@ -642,9 +651,6 @@ skip script test262/language/module-code/top-level-await/await-dynamic-import-re
 # hour-cycle to "h24", which isn't allowed per the above CLDR data.
 # https://github.com/tc39/ecma402/issues/402
 skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle-default.js
-
-# Missing "SharedArrayBuffer" features tag
-fails-if(!xulRuntime.shell) script test262/built-ins/SharedArrayBuffer/prototype/prop-desc.js
 
 # Update required for https://github.com/tc39/ecma262/pull/2550
 # See bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1769088
