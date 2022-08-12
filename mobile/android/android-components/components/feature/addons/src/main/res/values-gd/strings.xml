@@ -38,6 +38,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">dàta fhaighinn on stòr-bhòrd</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">dàta a chur air an stòr-bhòrd</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Bac susbaint air duilleag sam bith</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">faidhlichean a luchdadh a-nuas agus eachdraidh nan luchdaidhean a-nuas aig a’ bhrabhsair a leughadh is atharrachadh</string>
     <!-- Description for downloads_open permission. -->

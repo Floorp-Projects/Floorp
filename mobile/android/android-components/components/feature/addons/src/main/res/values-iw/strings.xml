@@ -38,6 +38,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">קבלת נתונים מלוח העריכה</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">הזנת נתונים בלוח העריכה</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">חסימת תוכן בכל עמוד</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">הורדת קבצים, קריאה ועריכת היסטוריית ההורדות של הדפדפן</string>
     <!-- Description for downloads_open permission. -->

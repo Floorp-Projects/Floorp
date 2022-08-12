@@ -38,6 +38,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Lue tietoja leikepöydältä</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Kirjoita tietoja leikepöydälle</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Estä sisältö millä tahansa sivulla</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Lataa tiedostoja sekä lue ja muokkaa selaimen lataushistoriaa</string>
     <!-- Description for downloads_open permission. -->
