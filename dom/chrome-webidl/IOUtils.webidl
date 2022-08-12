@@ -338,20 +338,8 @@ namespace IOUtils {
 
 [Exposed=Window]
 partial namespace IOUtils {
-  /**
-   * The async shutdown client for the profile-before-change shutdown phase.
-   */
   [Throws]
   readonly attribute any profileBeforeChange;
-
-  /**
-   * The async shutdown client for the profile-before-change-telemetry shutdown
-   * phase.
-   *
-   * ONLY telemetry should register blockers on this client.
-   */
-  [Throws]
-  readonly attribute any sendTelemetry;
 };
 
 [Exposed=Worker]

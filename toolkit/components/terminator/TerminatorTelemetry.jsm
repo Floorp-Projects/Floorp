@@ -19,24 +19,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Timer.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PromiseUtils",
-  "resource://gre/modules/PromiseUtils.jsm"
-);
-
-function nsTerminatorTelemetry() {
-  this._wasNotified = false;
-  this._deferred = lazy.PromiseUtils.defer();
-
-  IOUtils.sendTelemetry.addBlocker(
-    "TerminatoryTelemetry: Waiting to submit telemetry",
-    this._deferred.promise,
-    () => ({
-      wasNotified: this._wasNotified,
-    })
-  );
-}
+function nsTerminatorTelemetry() {}
 
 var HISTOGRAMS = {
   "quit-application": "SHUTDOWN_PHASE_DURATION_TICKS_QUIT_APPLICATION",
@@ -62,8 +45,6 @@ nsTerminatorTelemetry.prototype = {
   // nsIObserver
 
   observe: function DS_observe(aSubject, aTopic, aData) {
-    this._wasNotified = true;
-
     (async function() {
       //
       // This data is hardly critical, reading it can wait for a few seconds.
@@ -111,8 +92,6 @@ nsTerminatorTelemetry.prototype = {
         null,
         "shutdown-terminator-telemetry-updated"
       );
-
-      this._deferred.resolve();
     })();
   },
 };
