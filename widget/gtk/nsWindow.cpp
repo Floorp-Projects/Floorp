@@ -161,7 +161,7 @@ typedef enum {
   GDK_TOUCHPAD_GESTURE_PHASE_CANCEL
 } GdkTouchpadGesturePhase;
 
-GdkEventMask GDK_TOUCHPAD_GESTURE_MASK = static_cast<GdkEventMask>(1 << 24);
+gint GDK_TOUCHPAD_GESTURE_MASK = 1 << 24;
 GdkEventType GDK_TOUCHPAD_PINCH = static_cast<GdkEventType>(42);
 
 #endif
