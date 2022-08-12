@@ -97,9 +97,6 @@ with Files("*picker_no_crash*"):
 with Files("*platform_colors*"):
     BUG_COMPONENT = ("Core", "Widget: Cocoa")
 
-with Files("*plugin*"):
-    BUG_COMPONENT = ("Core", "Plug-ins")
-
 with Files("*position_on_resize*"):
     BUG_COMPONENT = ("Core", "Widget: Gtk")
 
