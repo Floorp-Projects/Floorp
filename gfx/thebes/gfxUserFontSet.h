@@ -77,6 +77,9 @@ struct gfxFontFaceSrc {
   // if url, whether to use the origin principal or not
   bool mUseOriginPrincipal = false;
 
+  // Required font technologies.
+  mozilla::StyleFontFaceSourceTechFlags mTechFlags;
+
   // Format hint, if any was specified.
   mozilla::StyleFontFaceSourceFormatKeyword mFormatHint;
 
@@ -113,7 +116,7 @@ inline bool operator==(const gfxFontFaceSrc& a, const gfxFontFaceSrc& b) {
         return false;
       }
       bool equals;
-      return a.mFormatHint == b.mFormatHint &&
+      return a.mFormatHint == b.mFormatHint && a.mTechFlags == b.mTechFlags &&
              (a.mURI == b.mURI || a.mURI->Equals(b.mURI)) &&
              NS_SUCCEEDED(a.mReferrerInfo->Equals(b.mReferrerInfo, &equals)) &&
              equals;
@@ -136,6 +139,7 @@ class gfxUserFontData {
   gfxUserFontData()
       : mSrcIndex(0),
         mMetaOrigLen(0),
+        mTechFlags(mozilla::StyleFontFaceSourceTechFlags::Empty()),
         mFormatHint(mozilla::StyleFontFaceSourceFormatKeyword::None),
         mCompression(kUnknownCompression),
         mPrivate(false),
@@ -152,6 +156,7 @@ class gfxUserFontData {
   nsCString mRealName;    // original fullname from the font resource
   uint32_t mSrcIndex;     // index in the rule's source list
   uint32_t mMetaOrigLen;  // length needed to decompress metadata
+  mozilla::StyleFontFaceSourceTechFlags mTechFlags;  // required font tech
   mozilla::StyleFontFaceSourceFormatKeyword
       mFormatHint;       // format hint for the source used, if any
   uint8_t mCompression;  // compression type

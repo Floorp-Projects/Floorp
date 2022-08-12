@@ -1800,29 +1800,48 @@ bool gfxPlatform::UseGraphiteShaping() {
 }
 
 bool gfxPlatform::IsFontFormatSupported(
-    StyleFontFaceSourceFormatKeyword aHint) {
-  switch (aHint) {
+    StyleFontFaceSourceFormatKeyword aFormatHint,
+    StyleFontFaceSourceTechFlags aTechFlags) {
+  // By default, font resources are assumed to be supported; but if the format
+  // hint or technology flags explicitly indicate something we don't support,
+  // then return false.
+  switch (aFormatHint) {
     case StyleFontFaceSourceFormatKeyword::None:
-      return true;
+      break;
     case StyleFontFaceSourceFormatKeyword::Collection:
       return false;
     case StyleFontFaceSourceFormatKeyword::Opentype:
     case StyleFontFaceSourceFormatKeyword::Truetype:
-      return true;
+      break;
     case StyleFontFaceSourceFormatKeyword::EmbeddedOpentype:
       return false;
     case StyleFontFaceSourceFormatKeyword::Svg:
       return false;
     case StyleFontFaceSourceFormatKeyword::Woff:
-      return true;
+      break;
     case StyleFontFaceSourceFormatKeyword::Woff2:
-      return true;
+      break;
     case StyleFontFaceSourceFormatKeyword::Unknown:
       return false;
     default:
       MOZ_ASSERT_UNREACHABLE("bad format hint!");
       return false;
   }
+  StyleFontFaceSourceTechFlags unsupportedTechnologies =
+      StyleFontFaceSourceTechFlags::INCREMENTAL |
+      StyleFontFaceSourceTechFlags::PALETTES |
+      StyleFontFaceSourceTechFlags::COLOR_COLRV1 |
+      StyleFontFaceSourceTechFlags::COLOR_SBIX;
+  if (!StaticPrefs::gfx_downloadable_fonts_keep_color_bitmaps()) {
+    unsupportedTechnologies |= StyleFontFaceSourceTechFlags::COLOR_CBDT;
+  }
+  if (!StaticPrefs::layout_css_font_variations_enabled()) {
+    unsupportedTechnologies |= StyleFontFaceSourceTechFlags::VARIATIONS;
+  }
+  if (aTechFlags & unsupportedTechnologies) {
+    return false;
+  }
+  return true;
 }
 
 gfxFontGroup* gfxPlatform::CreateFontGroup(
