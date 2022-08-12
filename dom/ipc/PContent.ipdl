@@ -1669,6 +1669,10 @@ parent:
                          nsIPrincipal aPrincipal)
           returns (bool? allowed);
 
+    async TestStorageAccessPermission(nsIPrincipal aEmbeddingPrincipal,
+                         nsCString aEmbeddedOrigin)
+          returns (bool? allowed);
+
    /**
     * When media element's controlled state changed in the content process, we
     * have to notify the chrome process in order to update the status of the
