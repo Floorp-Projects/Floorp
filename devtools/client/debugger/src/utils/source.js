@@ -588,7 +588,7 @@ export function isGenerated(source) {
 
 export function getSourceQueryString(source) {
   if (!source) {
-    return;
+    return "";
   }
 
   return parseURL(getRawSourceURL(source.url)).search;

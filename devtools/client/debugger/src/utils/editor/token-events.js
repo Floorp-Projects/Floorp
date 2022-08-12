@@ -54,7 +54,8 @@ export function onMouseOver(codeMirror) {
 
   function onMouseLeave(event) {
     if (invalidLeaveTarget(event.relatedTarget)) {
-      return addMouseLeave(event.target);
+      addMouseLeave(event.target);
+      return;
     }
 
     prevTokenPos = null;

@@ -96,4 +96,6 @@ export function mergeScopes(scope, parentScope, item, parentItem) {
       type: NODE_TYPES.BLOCK,
     };
   }
+
+  return null;
 }

@@ -119,9 +119,7 @@ function createMakeSource() {
           return false;
         },
         getCachedFront(typeName) {
-          if (typeName == "thread") {
-            return { actorID: "FakeThread" };
-          }
+          return typeName == "thread" ? { actorID: "FakeThread" } : null;
         },
       },
       // Allow to use custom ID's for reducer source objects
