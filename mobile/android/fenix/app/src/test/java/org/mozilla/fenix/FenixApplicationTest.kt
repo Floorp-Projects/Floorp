@@ -203,4 +203,17 @@ class FenixApplicationTest {
         assertEquals(contextId, TopSites.contextId.testGetValue()!!.toString())
         assertEquals(contextId, settings.contileContextId)
     }
+
+    @Test
+    fun `GIVEN the current etp mode is custom WHEN tracking the etp metric THEN track also the cookies option`() {
+        val settings: Settings = mockk(relaxed = true) {
+            every { shouldUseTrackingProtection } returns true
+            every { useCustomTrackingProtection } returns true
+            every { blockCookiesSelectionInCustomTrackingProtection } returns "Test"
+        }
+
+        application.setStartupMetrics(browserStore, settings, browsersCache, mozillaProductDetector)
+
+        assertEquals("Test", Preferences.etpCustomCookiesSelection.testGetValue())
+    }
 }

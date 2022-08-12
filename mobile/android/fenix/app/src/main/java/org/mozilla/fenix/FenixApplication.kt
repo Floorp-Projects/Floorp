@@ -758,6 +758,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                     else -> ""
                 }
             )
+            etpCustomCookiesSelection.set(settings.blockCookiesSelectionInCustomTrackingProtection)
 
             val accessibilitySelection = mutableListOf<String>()
 
