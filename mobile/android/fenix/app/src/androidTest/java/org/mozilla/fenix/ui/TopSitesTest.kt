@@ -238,4 +238,24 @@ class TopSitesTest {
             verifyEmptyHistoryView()
         }
     }
+
+    @SmokeTest
+    @Test
+    fun verifySponsoredShortcutsListTest() {
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openCustomizeHome {
+            verifySponsoredShortcutsCheckBox(true)
+        }.goBack {
+            verifyExistingSponsoredTopSitesTabs(2)
+            verifyExistingSponsoredTopSitesTabs(3)
+        }.openThreeDotMenu {
+        }.openCustomizeHome {
+            clickSponsoredShortcuts()
+            verifySponsoredShortcutsCheckBox(false)
+        }.goBack {
+            verifyNotExistingSponsoredTopSitesList()
+        }
+    }
 }

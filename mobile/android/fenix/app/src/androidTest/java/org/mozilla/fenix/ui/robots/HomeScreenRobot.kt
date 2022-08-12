@@ -26,6 +26,8 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withHint
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withParent
+import androidx.test.espresso.matcher.ViewMatchers.withParentIndex
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiObject
@@ -50,13 +52,13 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
+import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.helpers.matchers.hasItem
 import org.mozilla.fenix.helpers.withBitmapDrawable
-import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.ui.util.STRING_ONBOARDING_ACCOUNT_SIGN_IN_HEADER
 import org.mozilla.fenix.ui.util.STRING_ONBOARDING_TOOLBAR_PLACEMENT_HEADER
 import org.mozilla.fenix.ui.util.STRING_ONBOARDING_TRACKING_PROTECTION_HEADER
@@ -137,7 +139,9 @@ class HomeScreenRobot {
 
     fun verifyExistingTopSitesList() = assertExistingTopSitesList()
     fun verifyNotExistingTopSitesList(title: String) = assertNotExistingTopSitesList(title)
+    fun verifyNotExistingSponsoredTopSitesList() = assertSponsoredTopSitesNotDisplayed()
     fun verifyExistingTopSitesTabs(title: String) = assertExistingTopSitesTabs(title)
+    fun verifyExistingSponsoredTopSitesTabs(position: Int) = assertSponsoredTopSiteIsDisplayed(position)
     fun verifyTopSiteContextMenuItems() = assertTopSiteContextMenuItems()
 
     fun verifyJumpBackInSectionIsDisplayed() = assertJumpBackInSectionIsDisplayed()
@@ -662,12 +666,37 @@ private fun assertExistingTopSitesTabs(title: String) {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
+private fun assertSponsoredTopSiteIsDisplayed(position: Int) {
+    mDevice.findObject(
+        UiSelector()
+            .resourceId("$packageName:id/top_site_subtitle")
+            .textContains(getStringResource(R.string.top_sites_sponsored_label))
+    ).waitForExists(waitingTime)
+
+    onView(
+        allOf(
+            withText(R.string.top_sites_sponsored_label),
+            withParent(withParentIndex(position - 1))
+        )
+    ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
+
 private fun assertNotExistingTopSitesList(title: String) {
     mDevice.findObject(UiSelector().text(title))
         .waitUntilGone(waitingTime)
 
     onView(allOf(withId(R.id.top_sites_list)))
         .check(matches(not(hasItem(hasDescendant(withText(title))))))
+}
+
+private fun assertSponsoredTopSitesNotDisplayed() {
+    assertFalse(
+        mDevice.findObject(
+            UiSelector()
+                .resourceId("$packageName:id/top_site_subtitle")
+                .textContains(getStringResource(R.string.top_sites_sponsored_label))
+        ).waitForExists(waitingTime)
+    )
 }
 
 private fun assertTopSiteContextMenuItems() {
