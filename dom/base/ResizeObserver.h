@@ -291,8 +291,8 @@ class ResizeObserverSize final : public nsISupports, public nsWrapperCache {
     return ResizeObserverSize_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-  double InlineSize() const { return mSize.ISize(); }
-  double BlockSize() const { return mSize.BSize(); }
+  float InlineSize() const { return mSize.ISize(); }
+  float BlockSize() const { return mSize.BSize(); }
 
  protected:
   ~ResizeObserverSize() = default;
