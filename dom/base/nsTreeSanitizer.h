@@ -205,6 +205,8 @@ class nsTreeSanitizer {
   // Currently only used for the Sanitizer API.
   bool MustDropAttribute(mozilla::dom::Element* aElement,
                          int32_t aAttrNamespace, nsAtom* aAttrLocalName);
+  bool MustDropFunkyAttribute(mozilla::dom::Element* aElement,
+                              int32_t aAttrNamespace, nsAtom* aAttrLocalName);
 
   /**
    * Remove the named URL attribute from the element if the URL fails a
