@@ -353,6 +353,12 @@ class nsWindow final : public nsBaseWidget {
                                          LayoutDeviceIntPoint aPoint,
                                          int32_t aModifierFlags) override;
 
+  nsresult SynthesizeNativeTouchpadPan(TouchpadGesturePhase aEventPhase,
+                                       LayoutDeviceIntPoint aPoint,
+                                       double aDeltaX, double aDeltaY,
+                                       int32_t aModifierFlags,
+                                       nsIObserver* aObserver) override;
+
   void GetCompositorWidgetInitData(
       mozilla::widget::CompositorWidgetInitData* aInitData) override;
 
@@ -517,6 +523,9 @@ class nsWindow final : public nsBaseWidget {
 
   void AddCSDDecorationSize(int* aWidth, int* aHeight);
 
+  void CreateAndPutGdkScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
+                                  double aDeltaX, double aDeltaY);
+
   nsCString mGtkWindowAppName;
   nsCString mGtkWindowRoleName;
   void RefreshWindowClass();
@@ -563,6 +572,15 @@ class nsWindow final : public nsBaseWidget {
 
   // Used for synthesizing touchpad pinch gestures
   TouchpadPinchGestureState mCurrentSynthesizedTouchpadPinch;
+
+  // Used for synthesizing touchpad pan gestures
+  struct TouchpadPanGestureState {
+    mozilla::Maybe<TouchpadGesturePhase> mTouchpadGesturePhase;
+    uint64_t mSavedObserver = 0;
+  };
+
+  // Used for synthesizing touchpad pan gestures
+  TouchpadPanGestureState mCurrentSynthesizedTouchpadPan;
 
   // for touch event handling
   nsRefPtrHashtable<nsPtrHashKey<GdkEventSequence>, mozilla::dom::Touch>

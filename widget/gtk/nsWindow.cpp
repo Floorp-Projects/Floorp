@@ -4709,7 +4709,8 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
       // (also known as kinetic/inertial/momentum scrolling)
       GdkDevice* device = gdk_event_get_source_device((GdkEvent*)aEvent);
       GdkInputSource source = gdk_device_get_source(device);
-      if (source == GDK_SOURCE_TOUCHSCREEN || source == GDK_SOURCE_TOUCHPAD) {
+      if (source == GDK_SOURCE_TOUCHSCREEN || source == GDK_SOURCE_TOUCHPAD ||
+          mCurrentSynthesizedTouchpadPan.mTouchpadGesturePhase.isSome()) {
         if (StaticPrefs::apz_gtk_kinetic_scroll_enabled() &&
             gtk_check_version(3, 20, 0) == nullptr) {
           static auto sGdkEventIsScrollStopEvent =
@@ -4726,7 +4727,34 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
           } else if (!mPanInProgress) {
             eventType = PanGestureInput::PANGESTURE_START;
             mPanInProgress = true;
+          } else if (mCurrentSynthesizedTouchpadPan.mTouchpadGesturePhase
+                         .isSome()) {
+            switch (*mCurrentSynthesizedTouchpadPan.mTouchpadGesturePhase) {
+              case PHASE_BEGIN:
+                // we should never hit this because we'll hit the above case
+                // before this.
+                MOZ_ASSERT_UNREACHABLE();
+                eventType = PanGestureInput::PANGESTURE_START;
+                mPanInProgress = true;
+                break;
+              case PHASE_UPDATE:
+                // nothing to do here, eventtype should already be set
+                MOZ_ASSERT(mPanInProgress);
+                MOZ_ASSERT(eventType == PanGestureInput::PANGESTURE_PAN);
+                eventType = PanGestureInput::PANGESTURE_PAN;
+                break;
+              case PHASE_END:
+                MOZ_ASSERT(mPanInProgress);
+                eventType = PanGestureInput::PANGESTURE_END;
+                mPanInProgress = false;
+                break;
+              default:
+                MOZ_ASSERT_UNREACHABLE();
+                break;
+            }
           }
+
+          mCurrentSynthesizedTouchpadPan.mTouchpadGesturePhase.reset();
 
           const bool isPageMode =
               StaticPrefs::apz_gtk_kinetic_scroll_delta_mode() != 2;
@@ -4754,6 +4782,13 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
               SwipeTracker::CanTriggerSwipe(panEvent);
 
           DispatchPanGesture(panEvent);
+
+          if (mCurrentSynthesizedTouchpadPan.mSavedObserver != 0) {
+            mozilla::widget::AutoObserverNotifier::NotifySavedObserver(
+                mCurrentSynthesizedTouchpadPan.mSavedObserver,
+                "touchpadpanevent");
+            mCurrentSynthesizedTouchpadPan.mSavedObserver = 0;
+          }
 
           return;
         }
@@ -8876,16 +8911,8 @@ nsresult nsWindow::SynthesizeNativeMouseEvent(
   return NS_ERROR_UNEXPECTED;
 }
 
-nsresult nsWindow::SynthesizeNativeMouseScrollEvent(
-    mozilla::LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
-    double aDeltaX, double aDeltaY, double aDeltaZ, uint32_t aModifierFlags,
-    uint32_t aAdditionalFlags, nsIObserver* aObserver) {
-  AutoObserverNotifier notifier(aObserver, "mousescrollevent");
-
-  if (!mGdkWindow) {
-    return NS_OK;
-  }
-
+void nsWindow::CreateAndPutGdkScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
+                                          double aDeltaX, double aDeltaY) {
   GdkEvent event;
   memset(&event, 0, sizeof(GdkEvent));
   event.type = GDK_SCROLL;
@@ -8894,6 +8921,8 @@ nsresult nsWindow::SynthesizeNativeMouseScrollEvent(
   // Get device for event source
   GdkDisplay* display = gdk_window_get_display(mGdkWindow);
   GdkDeviceManager* device_manager = gdk_display_get_device_manager(display);
+  // See note in nsWindow::SynthesizeNativeTouchpadPan about the device we use
+  // here.
   event.scroll.device = gdk_device_manager_get_client_pointer(device_manager);
   event.scroll.x_root = DevicePixelsToGdkCoordRoundDown(aPoint.x);
   event.scroll.y_root = DevicePixelsToGdkCoordRoundDown(aPoint.y);
@@ -8909,6 +8938,19 @@ nsresult nsWindow::SynthesizeNativeMouseScrollEvent(
   event.scroll.delta_y = -aDeltaY;
 
   gdk_event_put(&event);
+}
+
+nsresult nsWindow::SynthesizeNativeMouseScrollEvent(
+    mozilla::LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
+    double aDeltaX, double aDeltaY, double aDeltaZ, uint32_t aModifierFlags,
+    uint32_t aAdditionalFlags, nsIObserver* aObserver) {
+  AutoObserverNotifier notifier(aObserver, "mousescrollevent");
+
+  if (!mGdkWindow) {
+    return NS_OK;
+  }
+
+  CreateAndPutGdkScrollEvent(aPoint, aDeltaX, aDeltaY);
 
   return NS_OK;
 }
@@ -9052,6 +9094,40 @@ nsresult nsWindow::SynthesizeNativeTouchPadPinch(
   touchpad_event->state = aModifierFlags;
 
   gdk_event_put(&event);
+
+  return NS_OK;
+}
+
+nsresult nsWindow::SynthesizeNativeTouchpadPan(TouchpadGesturePhase aEventPhase,
+                                               LayoutDeviceIntPoint aPoint,
+                                               double aDeltaX, double aDeltaY,
+                                               int32_t aModifierFlags,
+                                               nsIObserver* aObserver) {
+  AutoObserverNotifier notifier(aObserver, "touchpadpanevent");
+
+  if (!mGdkWindow) {
+    return NS_OK;
+  }
+
+  // This should/could maybe send GdkEventTouchpadSwipe events, however we don't
+  // currently consume those (either real user input or testing events). So we
+  // send gdk scroll events to be more like what we do for real user input. If
+  // we start consuming GdkEventTouchpadSwipe and get those hooked up to swipe
+  // to nav, then maybe we should test those too.
+
+  mCurrentSynthesizedTouchpadPan.mTouchpadGesturePhase = Some(aEventPhase);
+  MOZ_ASSERT(mCurrentSynthesizedTouchpadPan.mSavedObserver == 0);
+  mCurrentSynthesizedTouchpadPan.mSavedObserver = notifier.SaveObserver();
+
+  // Note that CreateAndPutGdkScrollEvent sets the device source for the created
+  // event as the "client pointer" (a kind of default device) which will
+  // probably be of type mouse. We would ideally want to set the device of the
+  // created event to be a touchpad, but the system might not have a touchpad.
+  // To get around this we use
+  // mCurrentSynthesizedTouchpadPan.mTouchpadGesturePhase being something to
+  // indicate that we should treat the source of the event as touchpad in
+  // OnScrollEvent.
+  CreateAndPutGdkScrollEvent(aPoint, aDeltaX, aDeltaY);
 
   return NS_OK;
 }

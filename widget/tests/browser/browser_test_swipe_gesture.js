@@ -21,6 +21,14 @@ async function waitForWhile() {
   await new Promise(r => requestAnimationFrame(r));
 }
 
+const NativePanHandlerForLinux = {
+  beginPhase: SpecialPowers.DOMWindowUtils.PHASE_BEGIN,
+  updatePhase: SpecialPowers.DOMWindowUtils.PHASE_UPDATE,
+  endPhase: SpecialPowers.DOMWindowUtils.PHASE_END,
+  promiseNativePanEvent: promiseNativeTouchpadPanEventAndWaitForObserver,
+  deltaOnRTL: -50,
+};
+
 const NativePanHandlerForWindows = {
   beginPhase: SpecialPowers.DOMWindowUtils.PHASE_BEGIN,
   updatePhase: SpecialPowers.DOMWindowUtils.PHASE_UPDATE,
@@ -40,6 +48,8 @@ const NativePanHandlerForMac = {
 
 function getPanHandler() {
   switch (getPlatform()) {
+    case "linux":
+      return NativePanHandlerForLinux;
     case "windows":
       return NativePanHandlerForWindows;
     case "mac":
