@@ -76,23 +76,7 @@ void ModuleLoaderBase::EnsureModuleHooksInitialized() {
   JS::SetScriptPrivateReferenceHooks(rt, HostAddRefTopLevelScript,
                                      HostReleaseTopLevelScript);
   JS::SetSupportedAssertionsHook(rt, HostGetSupportedImportAssertions);
-
-  Preferences::RegisterCallbackAndCall(DynamicImportPrefChangedCallback,
-                                       "javascript.options.dynamicImport",
-                                       (void*)nullptr);
-}
-
-// static
-void ModuleLoaderBase::DynamicImportPrefChangedCallback(const char* aPrefName,
-                                                        void* aClosure) {
-  bool enabled = Preferences::GetBool(aPrefName);
-  JS::ModuleDynamicImportHook hook =
-      enabled ? HostImportModuleDynamically : nullptr;
-
-  AutoJSAPI jsapi;
-  jsapi.Init();
-  JSRuntime* rt = JS_GetRuntime(jsapi.cx());
-  JS::SetModuleDynamicImportHook(rt, hook);
+  JS::SetModuleDynamicImportHook(rt, HostImportModuleDynamically);
 }
 
 // 8.1.3.8.1 HostResolveImportedModule(referencingModule, moduleRequest)
