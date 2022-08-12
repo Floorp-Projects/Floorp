@@ -1002,7 +1002,7 @@ impl RenderApiSender {
     /// Creates a new resource API object with a dedicated namespace.
     /// Namespace id is allocated by client.
     ///
-    /// The function could be used only when RendererOptions::namespace_alloc_by_client is true.
+    /// The function could be used only when WebRenderOptions::namespace_alloc_by_client is true.
     /// When the option is true, create_api() could not be used to prevent namespace id conflict.
     pub fn create_api_by_client(&self, namespace_id: IdNamespace) -> RenderApi {
         let msg = ApiMsg::CloneApiByClient(namespace_id);

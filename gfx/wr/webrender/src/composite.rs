@@ -247,7 +247,7 @@ pub struct ResolvedExternalSurface {
     pub update_params: Option<(NativeSurfaceId, DeviceIntSize)>,
 }
 
-/// Public interface specified in `RendererOptions` that configures
+/// Public interface specified in `WebRenderOptions` that configures
 /// how WR compositing will operate.
 pub enum CompositorConfig {
     /// Let WR draw tiles via normal batching. This requires no special OS support.

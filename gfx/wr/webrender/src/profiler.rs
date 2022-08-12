@@ -24,7 +24,7 @@ use crate::renderer::DebugRenderer;
 use crate::device::query::GpuTimer;
 use euclid::{Point2D, Rect, Size2D, vec2, default};
 use crate::internal_types::FastHashMap;
-use crate::renderer::{FullFrameStats, MAX_VERTEX_TEXTURE_WIDTH, wr_has_been_initialized};
+use crate::renderer::{FullFrameStats, MAX_VERTEX_TEXTURE_WIDTH, init::wr_has_been_initialized};
 use api::units::DeviceIntSize;
 use std::collections::vec_deque::VecDeque;
 use std::fmt::{Write, Debug};

@@ -15,6 +15,7 @@ use api::{NotificationRequest, Checkpoint, QualitySettings};
 use api::{PrimitiveKeyKind, RenderReasons};
 use api::units::*;
 use api::channel::{single_msg_channel, Sender, Receiver};
+use crate::AsyncPropertySampler;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::render_api::CaptureBits;
 #[cfg(feature = "replay")]
@@ -41,7 +42,7 @@ use crate::prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData};
 use crate::prim_store::interned::*;
 use crate::profiler::{self, TransactionProfile};
 use crate::render_task_graph::RenderTaskGraphBuilder;
-use crate::renderer::{AsyncPropertySampler, FullFrameStats, PipelineInfo};
+use crate::renderer::{FullFrameStats, PipelineInfo};
 use crate::resource_cache::ResourceCache;
 #[cfg(feature = "replay")]
 use crate::resource_cache::PlainCacheOwn;

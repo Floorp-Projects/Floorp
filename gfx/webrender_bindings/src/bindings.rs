@@ -40,9 +40,9 @@ use webrender::{
     api::units::*, api::*, render_api::*, set_profiler_hooks, AsyncPropertySampler, AsyncScreenshotHandle, Compositor,
     CompositorCapabilities, CompositorConfig, CompositorSurfaceTransform, DebugFlags, Device, MappableCompositor,
     MappedTileInfo, NativeSurfaceId, NativeSurfaceInfo, NativeTileId, PartialPresentCompositor, PipelineInfo,
-    ProfilerHooks, RecordedFrameHandle, Renderer, RendererOptions, RendererStats, SWGLCompositeSurfaceInfo,
+    ProfilerHooks, RecordedFrameHandle, Renderer, WebRenderOptions, RendererStats, SWGLCompositeSurfaceInfo,
     SceneBuilderHooks, ShaderPrecacheFlags, Shaders, SharedShaders, TextureCacheConfig, UploadMethod, WindowVisibility,
-    ONE_TIME_USAGE_HINT,
+    create_webrender_instance, ONE_TIME_USAGE_HINT,
 };
 use wr_malloc_size_of::MallocSizeOfOps;
 
@@ -1632,7 +1632,7 @@ pub extern "C" fn wr_window_new(
         }
     };
 
-    let opts = RendererOptions {
+    let opts = WebRenderOptions {
         enable_aa: true,
         force_subpixel_aa: false,
         enable_subpixel_aa: cfg!(not(target_os = "android")),
@@ -1688,7 +1688,7 @@ pub extern "C" fn wr_window_new(
 
     let window_size = DeviceIntSize::new(window_width, window_height);
     let notifier = Box::new(CppNotifier { window_id });
-    let (renderer, sender) = match Renderer::new(gl, notifier, opts, shaders.map(|sh| &sh.0)) {
+    let (renderer, sender) = match create_webrender_instance(gl, notifier, opts, shaders.map(|sh| &sh.0)) {
         Ok((renderer, sender)) => (renderer, sender),
         Err(e) => {
             warn!(" Failed to create a Renderer: {:?}", e);
@@ -3971,7 +3971,7 @@ pub extern "C" fn wr_shaders_new(
         ShaderPrecacheFlags::ASYNC_COMPILE
     };
 
-    let opts = RendererOptions {
+    let opts = WebRenderOptions {
         precache_flags,
         ..Default::default()
     };
