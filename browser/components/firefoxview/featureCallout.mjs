@@ -376,19 +376,34 @@ async function _addScriptsAndRender(container) {
 }
 
 function _observeRender(container) {
-  RENDER_OBSERVER?.observe(container, { childList: true });
+  RENDER_OBSERVER.observe(container, { childList: true });
 }
 
 async function _loadConfig(messageId) {
-  let content = MESSAGES.find(m => m.id === messageId);
-  const screenId = lazy.featureTourProgress.screen;
-  let screenIndex;
-  if (content?.screens && screenId) {
-    // Update the message to reflect screens the user has seen
-    screenIndex = content.screens.findIndex(s => s.id === screenId);
-    content.startScreen = screenIndex;
+  // If the parent element a screen describes doesn't exist, remove screen
+  // and ensure last screen displays the final primary CTA
+  // (for example, when there are no active colorways in about:firefoxview)
+  // If a user has seen a screen, remove it
+  function _getRelevantScreens(screens, index) {
+    const finalCTA = screens[screens.length - 1].content.primary_button;
+    screens = screens.filter((s, i) => {
+      return i >= index && document.querySelector(s.parent_selector);
+    });
+    screens[screens.length - 1].content.primary_button = finalCTA;
+    return screens;
   }
-  CURRENT_SCREEN = content?.screens?.[screenIndex || 0];
+
+  let content = MESSAGES.find(m => m.id === messageId);
+  if (!content?.screens) {
+    return;
+  }
+
+  const screenIndex = content.screens.findIndex(
+    s => s.id === lazy.featureTourProgress.screen
+  );
+  content.screens = _getRelevantScreens(content.screens, screenIndex);
+
+  CURRENT_SCREEN = content?.screens[0];
   CONFIG = content;
 }
 
