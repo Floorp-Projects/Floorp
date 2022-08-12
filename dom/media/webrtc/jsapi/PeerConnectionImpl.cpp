@@ -2632,6 +2632,10 @@ void PeerConnectionImpl::DoSetDescriptionSuccessPostProcessing(
       }));
 }
 
+void PeerConnectionImpl::OnSetDescriptionError() {
+  mUncommittedJsepSession = nullptr;
+}
+
 RTCSignalingState PeerConnectionImpl::GetSignalingState() const {
   switch (mJsepSession->GetState()) {
     case kJsepStateStable:
