@@ -47,5 +47,7 @@ window.setTimeout( function(){
      imgfile[40] = 'photo-1498637841888-108c6b723fcb?ixid=MnwxMTI1OHwwfDF8cmFuZG9tfHx8fHx8fHx8MTY2MDIwNjE3NA&ixlib=rb-1.2.1&q=85&w=1920'
   const n = Math.floor(Math.random() * imgfile.length);
   document.getElementById("background").style.backgroundImage = 'url(' + imgpass + imgfile[n] + ')'
-}, 100
-)
+  try{
+   document.querySelector('.darkreader').remove()}catch(e){};
+}, 100)
+document.querySelector('.darkreader').remove() 

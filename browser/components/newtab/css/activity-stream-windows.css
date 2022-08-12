@@ -2,11 +2,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* This is the windows variant */
+/* This is the linux variant */
 html {
   box-sizing: border-box;
 }
-
 
 *,
 *::before,
@@ -1189,14 +1188,6 @@ main.has-snippet {
   height: 100px;
   margin-inline-start: 25px;
   width: 300px;
-}
-
-
-@media (prefers-color-scheme: light) {
-  .search-wrapper .logo-and-wordmark .wordmark {
-    background: url("chrome://branding/content/firefox-wordmark-white.svg") no-repeat center center !important;
-    width: 306px !important;
-  }  
 }
 
 
@@ -4751,4 +4742,38 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   margin-inline-start: 18px;
   align-self: flex-end;
   display: flex;
+}
+
+#background{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  animation: fadeIn 1.7s ease 0s 1 normal;
+  opacity: 0.8;
+}
+@keyframes fadeIn { 
+  0% {opacity: 0.1} 
+  100% {opacity: 0.8}
+}
+
+#floorp {
+  position: fixed;
+  bottom: 2.5em;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.releasenote {
+  position: fixed;
+  font-size: 1.2em;
+  right: 1.5em;
+  color: #ffffff8e;
+}
+
+body{
+  background: rgba(0, 0, 0, 0.5);
 }

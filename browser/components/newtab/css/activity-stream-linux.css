@@ -4761,6 +4761,19 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   100% {opacity: 0.8}
 }
 
+#floorp {
+  position: fixed;
+  bottom: 2.5em;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.releasenote {
+  position: fixed;
+  font-size: 1.2em;
+  right: 1.5em;
+  color: #ffffff8e;
+}
+
 body{
-  background-color: #393939 !important;
+  background: rgba(0, 0, 0, 0.5);
 }

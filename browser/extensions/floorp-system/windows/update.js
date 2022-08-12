@@ -9,8 +9,11 @@ const Notify = (url) =>{
         "message": msg.getMessage("notificationContent")
     });
     browser.notifications.onClicked.addListener(() =>{
-        window.location.href = url
+        browser.tabs.create({
+            "url": url
+        });
     });
+    return null;
 };
 
 const CheckUpdate = async () =>{
