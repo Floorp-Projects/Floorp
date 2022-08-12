@@ -123,6 +123,100 @@ interface nsIXPCComponents_Utils : nsISupports
     [implicit_jscontext]
     void reportError(in jsval error, [optional] in jsval stack);
 
+
+    /**
+     * Cu.Sandbox is used to create a sandbox object
+     *
+     *     let sandbox = Cu.Sandbox(principal[, options]);
+     *
+     * Using new Cu.Sandbox(...) to create a sandbox has the same effect as
+     * calling Cu.Sandbox(...) without new.
+     *
+     * In JS, Cu.Sandbox uses the following parameters:
+     *
+     * @param {Principal} principal
+     *        The security principal defined for a sandbox determines what code
+     *        running in that sandbox will be allowed to do. The principal may be one
+     *        of four types: the system principal, a content principal, an expanded
+     *        principal or a null principal. Depending on the principal type,
+     *        this argument can be a nsIPrincipal, a Window, a String, an Array
+     *        or null. See below.
+     *          A content principal can be provided by passing a nsIPrincipal, a
+     *        DOM Window, or a string URI (not recommended).
+     *          An expanded (or extended) principal is an array of principals,
+     *        where each item can be either a nsIPrincipal, a DOM window or a
+     *        string URI.
+     *          A null principal can either be specified by passing `null` or
+     *        created explicitly with `Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal);`
+     * @param {Object} options
+     *        Optional parameters, valid properties are:
+     *        - freshZone: {Boolean} if true creates a new GC region separate from
+     *          both the calling context's and the sandbox prototype's region.
+     *            Defaults to false.
+     *        - sameZoneAs: {Object} Javascript Object in whose garbage collection
+     *          region the sandbox should be created. This helps to improve memory
+     *          usage by allowing sandboxes to be discarded when that zone goes away.
+     *          It also improves performance and memory usage by allowing strings
+     *          to be passed between the compartments without copying or using
+     *          wrappers.
+     *            Content scripts should pass the window they're running in as this
+     *          parameter, in order to ensure that the script is cleaned up at the
+     *          same time as the content itself.
+     *        - sandboxName: {String} Identifies the sandbox in about:memory. This
+     *          property is optional, but very useful for tracking memory usage. A
+     *          recommended value for this property is an absolute path to the script
+     *          responsible for creating the sandbox. If you don't specify a sandbox
+     *          name it will default to the caller's filename.
+     *        - sandboxPrototype: {Object} Prototype object for the sandbox. The
+     *          sandbox will inherit the contents of this object if it's provided.
+     *          Passing a content window object, setting wantXrays:true (default) and
+     *          using an extended principal provides a clean, isolated execution
+     *          environment in which javascript code that needs Web APIs (such as
+     *          accessing the window's DOM) can be executed without interference from
+     *          untrusted content code.
+     *        - wantComponents: {Boolean} Indicates whether the Components object is
+     *          available or not in the sandbox. If the sandbox interacts with
+     *          untrusted content this should be set to false when possible to
+     *          further reduce possible attack surface.
+     *            Defaults to true.
+     *        - wantExportHelpers: {Boolean} if true, then createObjectIn(),
+     *          evalInWindow(), and exportFunction() are available in the sandbox.
+     *            Defaults to false.
+     *        - wantGlobalProperties: {Array<String>} Each string is the name of an
+     *          object that you want to make available as a global to code running in
+     *          the sandbox. Possible values: Blob, ChromeUtils, CSS, CSSRule,
+     *          Directory, DOMParser, Element, Event, File, FileReader, FormData,
+     *          InspectorUtils, MessageChannel, Node, NodeFilter, PromiseDebugging,
+     *          TextDecoder, TextEncoder, URL, URLSearchParams, XMLHttpRequest,
+     *          XMLSerializer, atob, btoa, caches, crypto, fetch, indexedDB,
+     *          rtcIdentityProvider
+     *        - wantXrays: {Boolean} Whether the sandbox wants Xray vision with
+     *          respect to same-origin objects outside the sandbox.
+     *            Note that wantXrays is essentially deprecated. The preferred method
+     *          of handling this now is to give the sandbox an expanded principal
+     *          which inherits from the principal of the content compartment the
+     *          sandbox will interact with. That lets the sandbox see the content
+     *          compartment through X-ray wrappers, and gives any object passed from
+     *          the sandbox to the content compartment opaque security wrappers unless
+     *          export helpers are explicitly used.
+     *            "Xray vision" is exactly the same Xray behavior that script always
+     *          gets, by default, when working with DOM objects across origin
+     *          boundaries. This is primarily visible for chrome code accessing
+     *          content. However, it also occurs during cross-origin access between
+     *          two content pages, since each page sees a "vanilla" view of the
+     *          other. The protection is bidirectional: the caller sees the bonafide
+     *          DOM objects without being confused by sneakily-redefined properties,
+     *          and the target receives appropriate privacy from having its expandos
+     *          inspected by untrusted callers. In situations where only
+     *          unidirectional protection is needed, callers have the option to waive
+     *          the X-ray behavior using wrappedJSObject or XPCNativeWrapper.unwrap().
+     *            In general, when accessing same-origin content, script gets a
+     *          Transparent wrapper rather than an Xray wrapper. However, sandboxes
+     *          are often used when chrome wants to run script as another origin,
+     *          possibly to interact with the page. In this case, same-origin Xrays
+     *          are desirable, and wantXrays should be set to true.
+     *            Defaults to true.
+     */
     readonly attribute nsIXPCComponents_utils_Sandbox Sandbox;
 
     [implicit_jscontext]
