@@ -2521,6 +2521,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOnloadBlocker)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLazyLoadImageObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLazyLoadImageObserverViewport)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLastRememberedSizeObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMImplementation)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mImageMaps)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOrientationPendingPromise)
@@ -2640,6 +2641,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDisplayDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLazyLoadImageObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLazyLoadImageObserverViewport)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLastRememberedSizeObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFontFaceSet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadyForIdle)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentL10n)
@@ -15786,6 +15788,27 @@ void Document::IncLazyLoadImageReachViewport(bool aLoading) {
     ++mLazyLoadImageReachViewportLoading;
   } else {
     ++mLazyLoadImageReachViewportLoaded;
+  }
+}
+
+ResizeObserver& Document::EnsureLastRememberedSizeObserver() {
+  if (!mLastRememberedSizeObserver) {
+    mLastRememberedSizeObserver =
+        ResizeObserver::CreateLastRememberedSizeObserver(*this);
+  }
+  return *mLastRememberedSizeObserver;
+}
+
+void Document::ObserveForLastRememberedSize(Element& aElement) {
+  // Options are initialized with ResizeObserverBoxOptions::Content_box by
+  // default, which is what we want.
+  static ResizeObserverOptions options;
+  EnsureLastRememberedSizeObserver().Observe(aElement, options);
+}
+
+void Document::UnobserveForLastRememberedSize(Element& aElement) {
+  if (mLastRememberedSizeObserver) {
+    mLastRememberedSizeObserver->Unobserve(aElement);
   }
 }
 
