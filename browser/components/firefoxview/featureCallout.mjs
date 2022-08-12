@@ -424,9 +424,9 @@ async function _loadConfig(messageId) {
 
 async function _renderCallout() {
   let container = _createContainer();
-  _observeRender(container);
   // This results in rendering the Feature Callout
   await _addScriptsAndRender(container);
+  _observeRender(container);
 }
 /**
  * Render content based on about:welcome multistage template.

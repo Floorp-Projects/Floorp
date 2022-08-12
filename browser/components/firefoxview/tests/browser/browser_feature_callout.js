@@ -57,6 +57,7 @@ add_task(async function feature_callout_renders_in_firefox_view() {
     },
     async browser => {
       const { document } = browser.contentWindow;
+      await waitForCalloutRender(document);
       ok(
         document.querySelector(calloutSelector),
         "Feature Callout element exists"
@@ -79,7 +80,6 @@ add_task(async function feature_callout_moves_on_screen_change() {
       const { document } = browser.contentWindow;
       const buttonSelector = "#root .primary";
 
-      // Wait for callout to be rendered
       await waitForCalloutRender(document);
 
       const callout = document.querySelector(calloutSelector);
@@ -319,7 +319,38 @@ add_task(async function feature_callout_syncs_across_visits_and_tabs() {
     "First tab's Feature Callout advances to the next screen when the tour is advanced in second tab"
   );
 
-  await clickPrimaryButton(tab1Doc);
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
+});
+
+add_task(async function feature_callout_syncs_dismissal_across_tabs() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        featureTourPref,
+        '{"message":"FIREFOX_VIEW_FEATURE_TOUR","screen":"","complete":false}',
+      ],
+    ],
+  });
+  // Open an about:firefoxview tab
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:firefoxview"
+  );
+  let tab1Doc = tab1.linkedBrowser.contentWindow.document;
+  await waitForCalloutRender(tab1Doc);
+  await waitForCalloutPositioned(tab1Doc);
+
+  // Open a second about:firefoxview tab
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:firefoxview"
+  );
+  let tab2Doc = tab2.linkedBrowser.contentWindow.document;
+  await waitForCalloutRender(tab2Doc);
+  await waitForCalloutPositioned(tab2Doc);
+
+  tab1Doc.querySelector(`${calloutSelector} .dismiss-button`).click();
 
   await waitForCalloutRemoved(tab1Doc);
   await waitForCalloutRemoved(tab2Doc);
