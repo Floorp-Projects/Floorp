@@ -1,9 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
-const { calloutMessages } = ChromeUtils.importESModule(
-  "chrome://browser/content/featureCallout.mjs"
-);
-
 const featureTourPref = "browser.firefox-view.feature-tour";
 const calloutSelector = "#root.featureCallout";
 const primaryButtonSelector = "#root .primary";
