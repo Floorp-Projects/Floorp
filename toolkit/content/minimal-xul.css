@@ -48,6 +48,7 @@
     -moz-control-character-visibility: initial;
     -moz-font-smoothing-background-color: initial;
     -moz-min-font-size-ratio: initial;
+    -moz-box-layout: initial;
     math-depth: initial;
     /* As long as inert implies pointer-events: none as it does now, we're
      * good. */

@@ -23,19 +23,15 @@
 
   <script src="chrome://devtools/content/framework/toolbox-init.js"/>
 
-  <vbox id="toolbox-container" flex="1" role="group">
+  <vbox id="toolbox-container" role="group">
     <div xmlns="http://www.w3.org/1999/xhtml" id="toolbox-error-mount"/>
     <div xmlns="http://www.w3.org/1999/xhtml" id="toolbox-notificationbox"/>
     <div xmlns="http://www.w3.org/1999/xhtml" id="toolbox-toolbar-mount"
          role="toolbar" />
     <vbox flex="1" class="theme-body">
-      <!-- Set large flex to allow the toolbox-panel-webconsole to have a
-           height set to a small value without flexing to fill up extra
-           space. There must be a flex on both to ensure that the console
-           panel itself is sized properly -->
-      <box id="toolbox-deck" flex="10000" minheight="75" />
+      <box id="toolbox-deck" />
       <splitter id="toolbox-console-splitter" class="devtools-horizontal-splitter" hidden="true" />
-      <box minheight="75" flex="1" id="toolbox-panel-webconsole" collapsed="true" />
+      <box id="toolbox-panel-webconsole" collapsed="true" />
     </vbox>
     <tooltip id="aHTMLTooltip" page="true" />
   </vbox>

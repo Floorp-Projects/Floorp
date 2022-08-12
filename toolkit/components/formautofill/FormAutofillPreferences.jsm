@@ -160,7 +160,7 @@ FormAutofillPreferences.prototype = {
       }
 
       addressAutofillCheckboxGroup.setAttribute("align", "center");
-      addressAutofillCheckboxGroup.flex = 1;
+      addressAutofillCheckboxGroup.setAttribute("flex", "1");
 
       formAutofillGroup.appendChild(addressAutofill);
       addressAutofill.appendChild(addressAutofillCheckboxGroup);
@@ -230,7 +230,7 @@ FormAutofillPreferences.prototype = {
       }
 
       creditCardAutofillCheckboxGroup.setAttribute("align", "center");
-      creditCardAutofillCheckboxGroup.flex = 1;
+      creditCardAutofillCheckboxGroup.setAttribute("flex", "1");
 
       formAutofillGroup.appendChild(creditCardAutofill);
       creditCardAutofill.appendChild(creditCardAutofillCheckboxGroup);
@@ -288,7 +288,7 @@ FormAutofillPreferences.prototype = {
         }
 
         reauthCheckboxGroup.setAttribute("align", "center");
-        reauthCheckboxGroup.flex = 1;
+        reauthCheckboxGroup.setAttribute("flex", "1");
 
         formAutofillGroup.appendChild(reauth);
         reauth.appendChild(reauthCheckboxGroup);
