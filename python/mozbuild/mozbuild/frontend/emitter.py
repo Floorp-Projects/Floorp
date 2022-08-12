@@ -983,17 +983,16 @@ class TreeMetadataEmitter(LoggingMixin):
         if not (linkables or host_linkables or wasm_linkables):
             return
 
+        # TODO: objdirs with only host things in them shouldn't need target
+        # flags, but there's at least one Makefile.in (in
+        # build/unix/elfhack) that relies on the value of LDFLAGS being
+        # passed to one-off rules.
         self._compile_dirs.add(context.objdir)
 
-        if host_linkables and not all(
-            isinstance(l, HostRustLibrary) for l in host_linkables
+        if host_linkables or any(
+            isinstance(l, (RustLibrary, RustProgram)) for l in linkables
         ):
             self._host_compile_dirs.add(context.objdir)
-            # TODO: objdirs with only host things in them shouldn't need target
-            # flags, but there's at least one Makefile.in (in
-            # build/unix/elfhack) that relies on the value of LDFLAGS being
-            # passed to one-off rules.
-            self._compile_dirs.add(context.objdir)
 
         sources = defaultdict(list)
         gen_sources = defaultdict(list)
