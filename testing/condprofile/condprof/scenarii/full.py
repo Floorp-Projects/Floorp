@@ -6,7 +6,7 @@ from __future__ import absolute_import
 import random
 import os
 import asyncio
-from arsenic.errors import UnknownError
+from arsenic.errors import UnknownError, UnknownArsenicError
 
 
 from condprof.util import logger, get_credentials
@@ -16,7 +16,7 @@ from condprof.helpers import TabSwitcher, execute_async_script, is_mobile
 BOOKMARK_FREQUENCY = 5
 MAX_URLS = 150
 MAX_BOOKMARKS = 250
-CallErrors = asyncio.TimeoutError, UnknownError
+CallErrors = asyncio.TimeoutError, UnknownError, UnknownArsenicError
 
 
 class Builder:
