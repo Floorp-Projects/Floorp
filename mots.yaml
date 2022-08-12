@@ -2,13 +2,13 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-07-29T14:34:09.303444'
+updated_at: '2022-08-11T13:07:31.289055'
 export:
   path: ./docs/mots/index.rst
   format: rst
   searchfox_enabled: true
 description: |
-  Mozilla operates under a `module ownership governance system <http://www.mozilla.org/hacking/module-ownership.html>`_. A module is a discrete unit of code or activity. An owner is the person in charge of a module or sub-module. A peer is a person whom the owner has appointed to help them. A module may have multiple peers and, very occasionally, multiple owners.
+  Mozilla operates under a `module ownership governance system <https://www.mozilla.org/hacking/module-ownership.html>`_. A module is a discrete unit of code or activity. An owner is the person in charge of a module or sub-module. A peer is a person whom the owner has appointed to help them. A module may have multiple peers and, very occasionally, multiple owners.
 
   The system is overseen by the owner and peers of the Module Ownership module. For the modules that make up Firefox, oversight is provided by the Firefox Technical Leadership module. Owners may add and remove peers from their modules as they wish, without reference to anyone else.
 
@@ -235,7 +235,7 @@ people:
     nick: dminor
   - &dmosedale
     bmo_id: 1537
-    name: Dan Mosedale - Away From Bugmail Until Aug 9th
+    name: Dan Mosedale
     nick: dmosedale
   - &dragana
     bmo_id: 508195
@@ -3607,5 +3607,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: be08cfdb5c6a98a46a1218b5dcd638e779910d5b
-  export: 8fdf75bd25328e606621d418e75482497dbf8d6f
+  config: 94b11222bd4d452c7e55cd605834609f9b1bfae9
+  export: 8c296abc98008b6a2e09bb13401043d95218d526
