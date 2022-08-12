@@ -157,3 +157,19 @@ HTTP == size-32x32.png encoder.html?img=size-32x32.png&mime=image/vnd.microsoft.
 HTTP == size-33x33.png encoder.html?img=size-33x33.png&mime=image/vnd.microsoft.icon&options=-moz-parse-options%3Aformat%3Dpng
 HTTP == size-256x256.png encoder.html?img=size-256x256.png&mime=image/vnd.microsoft.icon&options=-moz-parse-options%3Aformat%3Dpng
 
+# WEBP
+HTTP == size-1x1.png   encoder.html?img=size-1x1.png&mime=image/webp&options=1
+HTTP == size-2x2.png   encoder.html?img=size-2x2.png&mime=image/webp&options=1
+HTTP == size-3x3.png   encoder.html?img=size-3x3.png&mime=image/webp&options=1
+HTTP == size-4x4.png   encoder.html?img=size-4x4.png&mime=image/webp&options=1
+HTTP == size-5x5.png   encoder.html?img=size-5x5.png&mime=image/webp&options=1
+HTTP == size-6x6.png   encoder.html?img=size-6x6.png&mime=image/webp&options=1
+HTTP == size-7x7.png   encoder.html?img=size-7x7.png&mime=image/webp&options=1
+HTTP == size-8x8.png   encoder.html?img=size-8x8.png&mime=image/webp&options=1
+HTTP == size-9x9.png   encoder.html?img=size-9x9.png&mime=image/webp&options=1
+HTTP == size-15x15.png encoder.html?img=size-15x15.png&mime=image/webp&options=1
+HTTP == size-16x16.png encoder.html?img=size-16x16.png&mime=image/webp&options=1
+HTTP == size-17x17.png encoder.html?img=size-17x17.png&mime=image/webp&options=1
+HTTP == size-31x31.png encoder.html?img=size-31x31.png&mime=image/webp&options=1
+HTTP == size-32x32.png encoder.html?img=size-32x32.png&mime=image/webp&options=1
+HTTP == size-33x33.png encoder.html?img=size-33x33.png&mime=image/webp&options=1

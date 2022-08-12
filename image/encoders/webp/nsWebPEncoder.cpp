@@ -104,11 +104,15 @@ nsWebPEncoder::InitFromData(const uint8_t* aData,
   size_t size = 0;
 
   if (aInputFormat == INPUT_FORMAT_RGB) {
-    size =
-        WebPEncodeRGB(aData, aWidth, aHeight, aStride, quality, &mImageBuffer);
+    size = quality == 100 ? WebPEncodeLosslessRGB(aData, aWidth, aHeight,
+                                                  aStride, &mImageBuffer)
+                          : WebPEncodeRGB(aData, aWidth, aHeight, aStride,
+                                          quality, &mImageBuffer);
   } else if (aInputFormat == INPUT_FORMAT_RGBA) {
-    size =
-        WebPEncodeRGBA(aData, aWidth, aHeight, aStride, quality, &mImageBuffer);
+    size = quality == 100 ? WebPEncodeLosslessRGBA(aData, aWidth, aHeight,
+                                                   aStride, &mImageBuffer)
+                          : WebPEncodeRGBA(aData, aWidth, aHeight, aStride,
+                                           quality, &mImageBuffer);
   } else if (aInputFormat == INPUT_FORMAT_HOSTARGB) {
     UniquePtr<uint8_t[]> aDest = MakeUnique<uint8_t[]>(aStride * aHeight);
 
@@ -135,8 +139,10 @@ nsWebPEncoder::InitFromData(const uint8_t* aData,
       }
     }
 
-    size = WebPEncodeRGBA(aDest.get(), aWidth, aHeight, aStride, quality,
-                          &mImageBuffer);
+    size = quality == 100 ? WebPEncodeLosslessRGBA(aDest.get(), aWidth, aHeight,
+                                                   aStride, &mImageBuffer)
+                          : WebPEncodeRGBA(aDest.get(), aWidth, aHeight,
+                                           aStride, quality, &mImageBuffer);
   }
 
   mFinished = true;
