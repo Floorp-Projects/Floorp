@@ -80,6 +80,7 @@ class InputMap extends Component {
         return div(
           {
             className: "tabpanel-summary-container http-custom-input",
+            id: `http-custom-${item.name.toLowerCase()}`,
             key: index,
           },
           input({
