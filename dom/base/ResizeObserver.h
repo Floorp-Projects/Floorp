@@ -186,7 +186,7 @@ class ResizeObserver final : public nsISupports, public nsWrapperCache {
   // we want is to check if there are any skipped targets (i.e. existence).
   // Therefore, we use a boolean value to represent the existence of skipped
   // targets.
-  bool mHasSkippedTargets;
+  bool mHasSkippedTargets = false;
 
   // Combination of HashTable and LinkedList so we can iterate through
   // the elements of HashTable in order of insertion time, so we can deliver
