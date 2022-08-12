@@ -45,7 +45,7 @@ runNetworkTest(async () => {
       const remoteVideo = test.pcRemote.remoteMediaElements
         .find(e => e instanceof HTMLVideoElement);
       // We check a pixel somewhere away from the top left corner since
-      // MediaEngineDefault puts semi-transparent time indicators there.
+      // MediaEngineFake puts semi-transparent time indicators there.
       const offsetX = 50;
       const offsetY = 50;
       const threshold = 128;

@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MEDIAENGINEDEFAULT_H_
-#define MEDIAENGINEDEFAULT_H_
+#ifndef MEDIAENGINEFAKE_H_
+#define MEDIAENGINEFAKE_H_
 
 #include "nsTArrayForwardDeclare.h"
 #include "MediaEngine.h"
@@ -14,11 +14,11 @@ template <typename...>
 class MediaEventProducer;
 
 /**
- * The default implementation of the MediaEngine interface.
+ * The fake implementation of the MediaEngine interface.
  */
-class MediaEngineDefault : public MediaEngine {
+class MediaEngineFake : public MediaEngine {
  public:
-  MediaEngineDefault();
+  MediaEngineFake();
 
   void EnumerateDevices(dom::MediaSourceEnum, MediaSinkEnum,
                         nsTArray<RefPtr<MediaDevice>>*) override;
@@ -31,10 +31,10 @@ class MediaEngineDefault : public MediaEngine {
   bool IsFake() const override { return true; }
 
  private:
-  ~MediaEngineDefault();
+  ~MediaEngineFake();
   MediaEventProducer<void> mDeviceListChangeEvent;
 };
 
 }  // namespace mozilla
 
-#endif /* NSMEDIAENGINEDEFAULT_H_ */
+#endif /* NSMEDIAENGINEFAKE_H_ */
