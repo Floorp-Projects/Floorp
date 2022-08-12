@@ -3253,7 +3253,9 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetSources(
         };
         let len = sources.iter().fold(0, |acc, src| {
             acc + match *src {
-                Source::Url(ref url) => if url.format_hint.is_some() { 2 } else { 1 },
+                Source::Url(ref url) =>
+                    (if url.format_hint.is_some() { 2 } else { 1 }) +
+                    (if url.tech_flags.is_empty() { 0 } else { 1 }),
                 Source::Local(_) => 1,
             }
         });
@@ -3281,6 +3283,9 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetSources(
                                         utf8_bytes: s.as_ptr(),
                                 }),
                             }
+                        }
+                        if !url.tech_flags.is_empty() {
+                            set_next(FontFaceSourceListComponent::TechFlags(url.tech_flags));
                         }
                     },
                     Source::Local(ref name) => {
