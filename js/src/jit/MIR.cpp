@@ -37,6 +37,7 @@
 #include "wasm/WasmCode.h"
 
 #include "vm/JSAtom-inl.h"
+#include "wasm/WasmInstance-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -6733,7 +6734,9 @@ AliasSet MMapObjectGetValueVMCall::getAliasSet() const {
 MIonToWasmCall* MIonToWasmCall::New(TempAllocator& alloc,
                                     WasmInstanceObject* instanceObj,
                                     const wasm::FuncExport& funcExport) {
-  const wasm::ValTypeVector& results = funcExport.funcType().results();
+  const wasm::FuncType& funcType =
+      instanceObj->instance().metadata().getFuncExportType(funcExport);
+  const wasm::ValTypeVector& results = funcType.results();
   MIRType resultType = MIRType::Value;
   // At the JS boundary some wasm types must be represented as a Value, and in
   // addition a void return requires an Undefined value.
@@ -6744,7 +6747,7 @@ MIonToWasmCall* MIonToWasmCall::New(TempAllocator& alloc,
   }
 
   auto* ins = new (alloc) MIonToWasmCall(instanceObj, resultType, funcExport);
-  if (!ins->init(alloc, funcExport.funcType().args().length())) {
+  if (!ins->init(alloc, funcType.args().length())) {
     return nullptr;
   }
   return ins;
@@ -6752,8 +6755,9 @@ MIonToWasmCall* MIonToWasmCall::New(TempAllocator& alloc,
 
 #ifdef DEBUG
 bool MIonToWasmCall::isConsistentFloat32Use(MUse* use) const {
-  return funcExport_.funcType().args()[use->index()].kind() ==
-         wasm::ValType::F32;
+  const wasm::FuncType& funcType =
+      instance()->metadata().getFuncExportType(funcExport_);
+  return funcType.args()[use->index()].kind() == wasm::ValType::F32;
 }
 #endif
 
