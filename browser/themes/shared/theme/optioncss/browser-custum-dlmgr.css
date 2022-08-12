@@ -32,6 +32,10 @@
   .downloadTarget {
     font-size: 13.5px;
   }
+
+  #downloadsContextMenu{
+     border: none !important;
+  }
   
   @media (prefers-color-scheme: dark) {
    .downloadDetails {
