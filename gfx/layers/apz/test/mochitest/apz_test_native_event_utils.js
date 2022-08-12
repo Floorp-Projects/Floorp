@@ -476,7 +476,7 @@ async function synthesizeNativePanGestureEvent(
 
 // Sends a native touchpad pan event and resolve the returned promise once the
 // request has been successfully made to the OS.
-// NOTE: This works only on Windows.
+// NOTE: This works only on Windows and Linux.
 // You can specify nsIDOMWindowUtils.PHASE_BEGIN, PHASE_UPDATE and PHASE_END
 // for |aPhase|.
 async function promiseNativeTouchpadPanEventAndWaitForObserver(
@@ -487,7 +487,7 @@ async function promiseNativeTouchpadPanEventAndWaitForObserver(
   aDeltaY,
   aPhase
 ) {
-  if (getPlatform() != "windows") {
+  if (getPlatform() != "windows" && getPlatform() != "linux") {
     throw new Error(
       `promiseNativeTouchpadPanEventAndWaitForObserver doesn't work on ${getPlatform()}`
     );
