@@ -282,6 +282,13 @@ fn prepare_interned_prim_for_render(
                                     .ceil().to_i32();
                 }
 
+                // It's plausible, due to float accuracy issues that the line decoration may be considered
+                // visible even if the scale factors are ~0. However, the render task allocation below requires
+                // that the size of the task is > 0. To work around this, ensure that the task size is at least
+                // 1x1 pixels
+                task_size.width = task_size.width.max(1);
+                task_size.height = task_size.height.max(1);
+
                 // Request a pre-rendered image task.
                 // TODO(gw): This match is a bit untidy, but it should disappear completely
                 //           once the prepare_prims and batching are unified. When that
