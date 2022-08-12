@@ -39,4 +39,8 @@ assert.throws(TypeError, function() {
   hasIndices.call(4);
 }, "number");
 
+assert.throws(TypeError, function() {
+  hasIndices.call(4n);
+}, "bigint");
+
 reportCompare(0, 0);

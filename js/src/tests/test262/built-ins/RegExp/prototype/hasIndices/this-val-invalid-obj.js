@@ -29,4 +29,8 @@ assert.throws(TypeError, function() {
   hasIndices.call(arguments);
 }, 'arguments object');
 
+assert.throws(TypeError, function() {
+  hasIndices.call(() => {});
+}, 'function object');
+
 reportCompare(0, 0);
