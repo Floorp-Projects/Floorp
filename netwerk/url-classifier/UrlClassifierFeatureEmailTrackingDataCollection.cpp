@@ -7,6 +7,7 @@
 #include "UrlClassifierFeatureEmailTrackingDataCollection.h"
 
 #include "mozilla/AntiTrackingUtils.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ContentBlockingNotifier.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
@@ -43,6 +44,18 @@ namespace {
 
 StaticRefPtr<UrlClassifierFeatureEmailTrackingDataCollection>
     gFeatureEmailTrackingDataCollection;
+StaticAutoPtr<nsCString> gEmailWebAppDomainsPref;
+static constexpr char kEmailWebAppDomainPrefName[] =
+    "privacy.trackingprotection.emailtracking.webapp.domains";
+
+void EmailWebAppDomainPrefChangeCallback(const char* aPrefName, void*) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!strcmp(aPrefName, kEmailWebAppDomainPrefName));
+  MOZ_ASSERT(gEmailWebAppDomainsPref);
+
+  Preferences::GetCString(kEmailWebAppDomainPrefName, *gEmailWebAppDomainsPref);
+}
+
 }  // namespace
 
 UrlClassifierFeatureEmailTrackingDataCollection::
@@ -171,8 +184,22 @@ UrlClassifierFeatureEmailTrackingDataCollection::ProcessChannel(
   RefPtr<dom::WindowGlobalParent> topWindowParent =
       bc->Canonical()->GetTopWindowContext();
 
-  bool isTopEmailWebApp = topWindowParent->DocumentPrincipal()->IsURIInPrefList(
-      "privacy.trackingprotection.emailtracking.webapp.domains");
+  // Cache the email webapp domains pref value and register the callback
+  // function to update the cached value when the pref changes.
+  if (!gEmailWebAppDomainsPref) {
+    gEmailWebAppDomainsPref = new nsCString();
+
+    Preferences::RegisterCallbackAndCall(EmailWebAppDomainPrefChangeCallback,
+                                         kEmailWebAppDomainPrefName);
+    RunOnShutdown([]() {
+      Preferences::UnregisterCallback(EmailWebAppDomainPrefChangeCallback,
+                                      kEmailWebAppDomainPrefName);
+      gEmailWebAppDomainsPref = nullptr;
+    });
+  }
+
+  bool isTopEmailWebApp = topWindowParent->DocumentPrincipal()->IsURIInList(
+      *gEmailWebAppDomainsPref);
 
   uint32_t flags = UrlClassifierCommon::TablesToClassificationFlags(
       aList, sClassificationData,
