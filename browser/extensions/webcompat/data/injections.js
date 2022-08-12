@@ -613,6 +613,20 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
+    id: "bug1784302",
+    platform: "android",
+    domain: "open.toutiao.com",
+    bug: "1784302",
+    contentScripts: {
+      matches: ["*://open.toutiao.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1784302-effectiveType-shim.js",
+        },
+      ],
+    },
+  },
+  {
     id: "bug1784309",
     platform: "all",
     domain: "bet365.com",
