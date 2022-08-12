@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -27,14 +25,9 @@ async function handlePrefChange(prefName, prevVal, newVal) {
     _endTour();
   } else {
     READY = false;
-    let container = document.getElementById(CONTAINER_ID);
-    container?.classList.add("hidden");
-    // wait for fade out transition
-    setTimeout(async () => {
-      _loadConfig(lazy.featureTourProgress.message);
-      container?.remove();
-      await _renderCallout();
-    }, TRANSITION_MS);
+    _loadConfig(lazy.featureTourProgress.message);
+    document.getElementById(CONTAINER_ID)?.remove();
+    await _renderCallout();
   }
 }
 
@@ -70,7 +63,6 @@ let CONFIG;
 let RENDER_OBSERVER;
 let READY = false;
 
-const TRANSITION_MS = 500;
 const CONTAINER_ID = "root";
 const MESSAGES = [
   {
@@ -220,7 +212,7 @@ const MESSAGES = [
 
 function _createContainer() {
   let container = document.createElement("div");
-  container.classList.add("onboardingContainer", "featureCallout", "hidden");
+  container.classList.add("onboardingContainer", "featureCallout");
   container.id = CONTAINER_ID;
   document.body.appendChild(container);
   return container;
@@ -315,8 +307,6 @@ function _positionCallout() {
   } else {
     positioners[arrowPosition]();
   }
-
-  container.classList.remove("hidden");
 }
 
 function _addPositionListeners() {
@@ -351,14 +341,9 @@ function _setupWindowFunctions() {
 }
 
 function _endTour() {
-  // wait for fade out transition
-  let container = document.getElementById(CONTAINER_ID);
-  container?.classList.add("hidden");
-  setTimeout(() => {
-    container?.remove();
-    _removePositionListeners();
-    RENDER_OBSERVER?.disconnect();
-  }, TRANSITION_MS);
+  document.getElementById(CONTAINER_ID)?.remove();
+  _removePositionListeners();
+  RENDER_OBSERVER?.disconnect();
 }
 
 async function _addScriptsAndRender(container) {
@@ -391,7 +376,7 @@ async function _addScriptsAndRender(container) {
 }
 
 function _observeRender(container) {
-  RENDER_OBSERVER?.observe(container, { childList: true });
+  RENDER_OBSERVER.observe(container, { childList: true });
 }
 
 async function _loadConfig(messageId) {
@@ -457,11 +442,3 @@ export async function showFeatureCallout(messageId) {
   _setupWindowFunctions();
   await _renderCallout();
 }
-
-window.addEventListener("DOMContentLoaded", () => {
-  // Get the message id from the feature tour pref
-  // (If/when this surface is used with other pages,
-  // add logic to select the correct pref for a given
-  // page's tour using its location)
-  showFeatureCallout(lazy.featureTourProgress.message);
-});
