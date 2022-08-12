@@ -398,9 +398,6 @@ class nsXULElement : public nsStyledElement {
   }
 
   // WebIDL API
-  void GetFlex(DOMString& aValue) const;
-  void SetFlex(const nsAString& aValue, mozilla::ErrorResult&);
-
   bool Hidden() const { return BoolAttrIsTrue(nsGkAtoms::hidden); }
   void SetHidden(bool aHidden) { SetXULBoolAttr(nsGkAtoms::hidden, aHidden); }
   bool Collapsed() const { return BoolAttrIsTrue(nsGkAtoms::collapsed); }
