@@ -451,7 +451,7 @@ load 656130-2.html
 load 660416.html
 load 665853.html
 load 667025.html
-asserts(3-9) load 673770.html # nested multicols and bogus sizes, e.g. Init: bad caller: height WAS 2147478130
+asserts(9-17) load 673770.html # nested multicols and bogus sizes, e.g. Init: bad caller: height WAS 2147478130
 load 679933-1.html
 load 681489-1.html
 load 682649-1.html
