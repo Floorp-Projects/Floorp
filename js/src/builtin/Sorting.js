@@ -194,12 +194,7 @@ function MergeSortTypedArray(array, len, comparefn) {
   if (len < 8) {
     InsertionSort(lBuffer, 0, len - 1, comparefn);
 
-    // Move the sorted elements into the array.
-    for (var i = 0; i < len; i++) {
-      array[i] = lBuffer[i];
-    }
-
-    return array;
+    return lBuffer;
   }
 
   // We do all of our allocating up front.
@@ -229,10 +224,5 @@ function MergeSortTypedArray(array, len, comparefn) {
     rBuffer = swap;
   }
 
-  // Move the sorted elements into the array.
-  for (var i = 0; i < len; i++) {
-    array[i] = lBuffer[i];
-  }
-
-  return array;
+  return lBuffer;
 }
