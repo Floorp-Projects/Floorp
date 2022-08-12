@@ -404,7 +404,6 @@ nsresult nsScrollbarFrame::CreateAnonymousContent(
         nodeInfoManager->GetNodeInfo(nsGkAtoms::slider, nullptr,
                                      kNameSpaceID_XUL, nsINode::ELEMENT_NODE));
     mSlider->SetAttr(kNameSpaceID_None, nsGkAtoms::orient, orient, false);
-    mSlider->SetAttr(kNameSpaceID_None, nsGkAtoms::flex, u"1"_ns, false);
 
     aElements.AppendElement(ContentInfo(mSlider, key));
 

@@ -41,7 +41,7 @@ let gSiteDataSettings = {
     function addColumnItem(l10n, flexWidth, tooltipText) {
       let box = document.createXULElement("hbox");
       box.className = "item-box";
-      box.setAttribute("flex", flexWidth);
+      box.setAttribute("style", `-moz-box-flex: ${flexWidth}`);
       let label = document.createXULElement("label");
       label.setAttribute("crop", "end");
       if (l10n) {

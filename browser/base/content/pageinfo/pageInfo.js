@@ -833,17 +833,17 @@ function onImageSelect() {
     previewBox.collapsed = true;
     mediaSaveBox.collapsed = true;
     splitter.collapsed = true;
-    tree.flex = 1;
+    tree.setAttribute("flex", "1");
   } else if (count > 1) {
     splitter.collapsed = true;
     previewBox.collapsed = true;
     mediaSaveBox.collapsed = false;
-    tree.flex = 1;
+    tree.setAttribute("flex", "1");
   } else {
     mediaSaveBox.collapsed = true;
     splitter.collapsed = false;
     previewBox.collapsed = false;
-    tree.flex = 0;
+    tree.setAttribute("flex", "0");
     makePreview(getSelectedRows(tree)[0]);
   }
 }
