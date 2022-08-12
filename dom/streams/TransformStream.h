@@ -32,11 +32,8 @@ class TransformStream final : public nsISupports, public nsWrapperCache {
 
   // Internal slot accessors
   bool Backpressure() const { return mBackpressure; }
-  void SetBackpressure(bool aBackpressure) { mBackpressure = aBackpressure; }
   Promise* BackpressureChangePromise() { return mBackpressureChangePromise; }
-  void SetBackpressureChangePromise(Promise* aPromise) {
-    mBackpressureChangePromise = aPromise;
-  }
+  void SetBackpressure(bool aBackpressure, ErrorResult& aRv);
   MOZ_KNOWN_LIVE TransformStreamDefaultController* Controller() {
     return mController;
   }
@@ -101,9 +98,6 @@ MOZ_CAN_RUN_SCRIPT void TransformStreamError(JSContext* aCx,
                                              TransformStream* aStream,
                                              JS::Handle<JS::Value> aError,
                                              ErrorResult& aRv);
-
-void TransformStreamSetBackpressure(TransformStream* aStream,
-                                    bool aBackpressure, ErrorResult& aRv);
 
 }  // namespace mozilla::dom
 
