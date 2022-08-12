@@ -41,7 +41,6 @@ input {
   z-index: 2147483646;
   height: fit-content;
   min-height: unset;
-  background-color: transparent;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .brand-logo {
@@ -136,9 +135,6 @@ body[lwt-newtab-brighttext] {
 :root[dialogroot] .onboardingContainer:dir(rtl) {
   transform: unset;
 }
-:root[dialogroot] .onboardingContainer .screen {
-  background-color: transparent;
-}
 :root[dialogroot] .onboardingContainer .screen:dir(rtl) {
   transform: unset;
 }
@@ -232,7 +228,6 @@ body[lwt-newtab-brighttext] {
   display: none;
 }
 .onboardingContainer .screen {
-  background-color: rgba(21, 20, 26, 0.5);
   display: flex;
   position: relative;
   flex-flow: row nowrap;
@@ -274,6 +269,7 @@ body[lwt-newtab-brighttext] {
   transform: rotateY(180deg);
 }
 .onboardingContainer .screen[pos=center] {
+  background-color: rgba(21, 20, 26, 0.5);
   min-width: 504px;
 }
 .onboardingContainer .screen[pos=center].with-noodles {
@@ -285,8 +281,6 @@ body[lwt-newtab-brighttext] {
 }
 .onboardingContainer .screen[pos=split] {
   margin: auto;
-  background-color: var(--mr-welcome-background-color);
-  background-image: var(--mr-welcome-background-gradient);
 }
 .onboardingContainer .screen[pos=split] .section-secondary,
 .onboardingContainer .screen[pos=split] .section-main {
@@ -1185,7 +1179,6 @@ body[lwt-newtab-brighttext] {
   fill: #FFA437;
 }
 .onboardingContainer [pos=corner] {
-  background-color: transparent;
   min-width: 700px;
 }
 .onboardingContainer [pos=corner] .section-secondary {
