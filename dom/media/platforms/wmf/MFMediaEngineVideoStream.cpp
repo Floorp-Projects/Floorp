@@ -4,7 +4,6 @@
 
 #include "MFMediaEngineVideoStream.h"
 
-#include "mozilla/layers/DcompSurfaceImage.h"
 #include "MFMediaEngineUtils.h"
 
 namespace mozilla {
@@ -26,30 +25,13 @@ MFMediaEngineVideoStream* MFMediaEngineVideoStream::Create(
           &stream, aStreamId, aInfo, aParentSource))) {
     return nullptr;
   }
-  stream->mStreamType =
-      GetStreamTypeFromMimeType(aInfo.GetAsVideoInfo()->mMimeType);
-  MOZ_ASSERT(StreamTypeIsVideo(stream->mStreamType));
-  stream->mHasReceivedInitialCreateDecoderConfig = false;
-  stream->SetDCompSurfaceHandle(INVALID_HANDLE_VALUE);
   return stream;
-}
-
-void MFMediaEngineVideoStream::SetDCompSurfaceHandle(
-    HANDLE aDCompSurfaceHandle) {
-  MutexAutoLock lock(mMutex);
-  if (mDCompSurfaceHandle == aDCompSurfaceHandle) {
-    return;
-  }
-  mDCompSurfaceHandle = aDCompSurfaceHandle;
-  mNeedRecreateImage = true;
-  LOGV("Set DCompSurfaceHandle, handle=%p", mDCompSurfaceHandle);
 }
 
 HRESULT MFMediaEngineVideoStream::CreateMediaType(const TrackInfo& aInfo,
                                                   IMFMediaType** aMediaType) {
-  auto& videoInfo = *aInfo.GetAsVideoInfo();
-
-  GUID subType = VideoMimeTypeToMediaFoundationSubtype(videoInfo.mMimeType);
+  const VideoInfo& info = *aInfo.GetAsVideoInfo();
+  GUID subType = VideoMimeTypeToMediaFoundationSubtype(info.mMimeType);
   NS_ENSURE_TRUE(subType != GUID_NULL, MF_E_TOPO_CODEC_NOT_FOUND);
 
   // https://docs.microsoft.com/en-us/windows/win32/medfound/media-type-attributes
@@ -58,18 +40,14 @@ HRESULT MFMediaEngineVideoStream::CreateMediaType(const TrackInfo& aInfo,
   RETURN_IF_FAILED(mediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video));
   RETURN_IF_FAILED(mediaType->SetGUID(MF_MT_SUBTYPE, subType));
 
-  const auto& image = videoInfo.mImage;
+  const auto& image = info.mImage;
   UINT32 imageWidth = image.Width();
   UINT32 imageHeight = image.Height();
   RETURN_IF_FAILED(MFSetAttributeSize(mediaType.Get(), MF_MT_FRAME_SIZE,
                                       imageWidth, imageHeight));
 
-  UINT32 displayWidth = videoInfo.mDisplay.Width();
-  UINT32 displayHeight = videoInfo.mDisplay.Height();
-  {
-    MutexAutoLock lock(mMutex);
-    mDisplay = videoInfo.mDisplay;
-  }
+  UINT32 displayWidth = info.mDisplay.Width();
+  UINT32 displayHeight = info.mDisplay.Height();
   // PAR = DAR / SAR = (DW / DH) / (SW / SH) = (DW * SH) / (DH * SW)
   RETURN_IF_FAILED(MFSetAttributeRatio(
       mediaType.Get(), MF_MT_PIXEL_ASPECT_RATIO, displayWidth * imageHeight,
@@ -84,8 +62,8 @@ HRESULT MFMediaEngineVideoStream::CreateMediaType(const TrackInfo& aInfo,
     return offset;
   };
   MFVideoArea area;
-  area.OffsetX = ToMFOffset(videoInfo.ImageRect().x);
-  area.OffsetY = ToMFOffset(videoInfo.ImageRect().y);
+  area.OffsetX = ToMFOffset(info.ImageRect().x);
+  area.OffsetY = ToMFOffset(info.ImageRect().y);
   area.Area = {(LONG)imageWidth, (LONG)imageHeight};
   RETURN_IF_FAILED(mediaType->SetBlob(MF_MT_GEOMETRIC_APERTURE, (UINT8*)&area,
                                       sizeof(area)));
@@ -106,7 +84,7 @@ HRESULT MFMediaEngineVideoStream::CreateMediaType(const TrackInfo& aInfo,
             return MFVideoRotationFormat_270;
         }
       };
-  const auto rotation = ToMFVideoRotationFormat(videoInfo.mRotation);
+  const auto rotation = ToMFVideoRotationFormat(info.mRotation);
   RETURN_IF_FAILED(mediaType->SetUINT32(MF_MT_VIDEO_ROTATION, rotation));
 
   static const auto ToMFVideoTransFunc =
@@ -128,7 +106,7 @@ HRESULT MFMediaEngineVideoStream::CreateMediaType(const TrackInfo& aInfo,
             return MFVideoTransFunc_Unknown;
         }
       };
-  const auto transFunc = ToMFVideoTransFunc(videoInfo.mColorSpace);
+  const auto transFunc = ToMFVideoTransFunc(info.mColorSpace);
   RETURN_IF_FAILED(mediaType->SetUINT32(MF_MT_TRANSFER_FUNCTION, transFunc));
 
   static const auto ToMFVideoPrimaries =
@@ -151,7 +129,7 @@ HRESULT MFMediaEngineVideoStream::CreateMediaType(const TrackInfo& aInfo,
             return MFVideoPrimaries_Unknown;
         }
       };
-  const auto videoPrimaries = ToMFVideoPrimaries(videoInfo.mColorSpace);
+  const auto videoPrimaries = ToMFVideoPrimaries(info.mColorSpace);
   RETURN_IF_FAILED(mediaType->SetUINT32(MF_MT_VIDEO_PRIMARIES, videoPrimaries));
 
   LOGV(
@@ -170,79 +148,6 @@ bool MFMediaEngineVideoStream::HasEnoughRawData() const {
   // video.
   static const int64_t VIDEO_VIDEO_USECS = 500000;
   return mRawDataQueue.Duration() >= VIDEO_VIDEO_USECS;
-}
-
-already_AddRefed<MediaData> MFMediaEngineVideoStream::OutputData(
-    MediaRawData* aSample) {
-  MutexAutoLock lock(mMutex);
-  if (!mDCompSurfaceHandle || mDCompSurfaceHandle == INVALID_HANDLE_VALUE) {
-    LOGV("Can't create image without a valid dcomp surface handle");
-    return nullptr;
-  }
-
-  if (!mKnowsCompositor) {
-    LOGV("Can't create image without the knows compositor");
-    return nullptr;
-  }
-
-  if (!mDcompSurfaceImage || mNeedRecreateImage) {
-    // DirectComposition only supports RGBA. We use DXGI_FORMAT_B8G8R8A8_UNORM
-    // as a default because we can't know what format the dcomp surface is.
-    // https://docs.microsoft.com/en-us/windows/win32/api/dcomp/nf-dcomp-idcompositionsurfacefactory-createsurface
-    mDcompSurfaceImage = new layers::DcompSurfaceImage(
-        mDCompSurfaceHandle, mDisplay, gfx::SurfaceFormat::B8G8R8A8,
-        mKnowsCompositor);
-    mNeedRecreateImage = false;
-    LOGV("Created dcomp surface image, handle=%p, size=[%u,%u]",
-         mDCompSurfaceHandle, mDisplay.Width(), mDisplay.Height());
-  }
-
-  return VideoData::CreateFromImage(mDisplay, aSample->mOffset, aSample->mTime,
-                                    aSample->mDuration, mDcompSurfaceImage,
-                                    aSample->mKeyframe, aSample->mTimecode);
-}
-
-MediaDataDecoder::ConversionRequired MFMediaEngineVideoStream::NeedsConversion()
-    const {
-  return mStreamType == WMFStreamType::H264
-             ? MediaDataDecoder::ConversionRequired::kNeedAnnexB
-             : MediaDataDecoder::ConversionRequired::kNeedNone;
-}
-
-void MFMediaEngineVideoStream::SetConfig(const TrackInfo& aConfig) {
-  MOZ_ASSERT(aConfig.IsVideo());
-  ComPtr<MFMediaEngineStream> self = this;
-  Unused << mTaskQueue->Dispatch(
-      NS_NewRunnableFunction("MFMediaEngineStream::SetConfig",
-                             [self, info = *aConfig.GetAsVideoInfo(), this]() {
-                               if (mHasReceivedInitialCreateDecoderConfig) {
-                                 // Here indicating a new config for video,
-                                 // which is triggered by the media change
-                                 // monitor, so we need to update the config.
-                                 UpdateConfig(info);
-                               }
-                               mHasReceivedInitialCreateDecoderConfig = true;
-                             }));
-}
-
-void MFMediaEngineVideoStream::UpdateConfig(const VideoInfo& aInfo) {
-  AssertOnTaskQueue();
-  // Disable explicit format change event for H264 to allow switching to the
-  // new stream without a full re-create, which will be much faster. This is
-  // also due to the fact that the MFT decoder can handle some format changes
-  // without a format change event. For format changes that the MFT decoder
-  // cannot support (e.g. codec change), the playback will fail later with
-  // MF_E_INVALIDMEDIATYPE (0xC00D36B4).
-  if (mStreamType == WMFStreamType::H264) {
-    return;
-  }
-
-  LOGV("Video config changed, will update stream descriptor");
-  ComPtr<IMFMediaType> mediaType;
-  RETURN_VOID_IF_FAILED(CreateMediaType(aInfo, mediaType.GetAddressOf()));
-  RETURN_VOID_IF_FAILED(GenerateStreamDescriptor(mediaType));
-  RETURN_VOID_IF_FAILED(mMediaEventQueue->QueueEventParamUnk(
-      MEStreamFormatChanged, GUID_NULL, S_OK, mediaType.Get()));
 }
 
 #undef LOGV

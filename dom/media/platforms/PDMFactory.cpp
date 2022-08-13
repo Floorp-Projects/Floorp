@@ -791,10 +791,13 @@ media::MediaCodecsSupported PDMFactory::Supported(bool aForceRefresh) {
 DecodeSupportSet PDMFactory::SupportsMimeType(
     const nsACString& aMimeType, const MediaCodecsSupported& aSupported,
     RemoteDecodeIn aLocation) {
-  const TrackSupportSet supports =
-      RemoteDecoderManagerChild::GetTrackSupport(aLocation);
+  const bool videoSupport = aLocation != RemoteDecodeIn::UtilityProcess;
+  const bool audioSupport = (aLocation == RemoteDecodeIn::UtilityProcess &&
+                             StaticPrefs::media_utility_process_enabled()) ||
+                            (aLocation == RemoteDecodeIn::RddProcess &&
+                             !StaticPrefs::media_utility_process_enabled());
 
-  if (supports.contains(TrackSupport::Video)) {
+  if (videoSupport) {
     if (MP4Decoder::IsH264(aMimeType)) {
       return MCSInfo::GetDecodeSupportSet(MediaCodec::H264, aSupported);
     }
@@ -813,8 +816,7 @@ DecodeSupportSet PDMFactory::SupportsMimeType(
       return MCSInfo::GetDecodeSupportSet(MediaCodec::Theora, aSupported);
     }
   }
-
-  if (supports.contains(TrackSupport::Audio)) {
+  if (audioSupport) {
     if (MP4Decoder::IsAAC(aMimeType)) {
       return MCSInfo::GetDecodeSupportSet(MediaCodec::AAC, aSupported);
     }

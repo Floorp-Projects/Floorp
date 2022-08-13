@@ -28,7 +28,6 @@ class RenderAndroidSurfaceTextureHost;
 class RenderCompositor;
 class RenderDXGITextureHost;
 class RenderDXGIYCbCrTextureHost;
-class RenderDcompSurfaceTextureHost;
 class RenderMacIOSurfaceTextureHost;
 class RenderBufferTextureHost;
 class RenderTextureHostSWGL;
@@ -88,10 +87,6 @@ class RenderTextureHost {
   }
 
   virtual RenderTextureHostSWGL* AsRenderTextureHostSWGL() { return nullptr; }
-
-  virtual RenderDcompSurfaceTextureHost* AsRenderDcompSurfaceTextureHost() {
-    return nullptr;
-  }
 
  protected:
   virtual ~RenderTextureHost();

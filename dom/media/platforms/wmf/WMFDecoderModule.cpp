@@ -55,6 +55,11 @@ static void MOZ_FORMAT_PRINTF(2, 3)
   LOG("%s", markerString.get());
 }
 
+static const GUID CLSID_CMSVPXDecMFT = {
+    0xe3aaf548,
+    0xc9a4,
+    0x4c6e,
+    {0x23, 0x4d, 0x5a, 0xda, 0x37, 0x4b, 0x00, 0x00}};
 static const GUID CLSID_CMSAACDecMFT = {
     0x32D186A7,
     0x218F,

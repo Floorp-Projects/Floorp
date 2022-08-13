@@ -14,7 +14,7 @@ using mozilla::ipc::IPCResult;
 
 class RemoteAudioDecoderChild final : public RemoteDecoderChild {
  public:
-  explicit RemoteAudioDecoderChild(RemoteDecodeIn aLocation);
+  explicit RemoteAudioDecoderChild();
 
   MOZ_IS_CLASS_INIT
   MediaResult InitIPDL(const AudioInfo& aAudioInfo,

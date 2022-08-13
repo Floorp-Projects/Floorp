@@ -98,12 +98,6 @@ enum class ImageFormat {
    * data in DMABUF memory. Used by VAAPI decoder on Linux.
    */
   DMABUF,
-
-  /**
-   * A Wrapper of Dcomp surface handle, used by the windows media foundation
-   * media engine playback.
-   */
-  DCOMP_SURFACE,
 };
 
 enum class StereoMode {

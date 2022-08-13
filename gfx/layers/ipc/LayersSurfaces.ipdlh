@@ -105,18 +105,12 @@ namespace layers {
   bool hasAlpha;
 };
 
-[Comparable] struct SurfaceDescriptorDcompSurface {
-  FileDescriptor handle;
-  IntSize size;
-  SurfaceFormat format;
-};
 
 [Comparable] union RemoteDecoderVideoSubDescriptor {
   SurfaceDescriptorD3D10;
   SurfaceDescriptorDXGIYCbCr;
   SurfaceDescriptorDMABuf;
   SurfaceDescriptorMacIOSurface;
-  SurfaceDescriptorDcompSurface;
   null_t;
 };
 
@@ -196,7 +190,6 @@ namespace layers {
   SurfaceDescriptorGPUVideo;
   SurfaceDescriptorRecorded;
   SurfaceDescriptorRemoteTexture;
-  SurfaceDescriptorDcompSurface;
   null_t;
 };
 

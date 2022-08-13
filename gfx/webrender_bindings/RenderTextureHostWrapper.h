@@ -40,7 +40,6 @@ class RenderTextureHostWrapper final : public RenderTextureHostSWGL {
   RenderMacIOSurfaceTextureHost* AsRenderMacIOSurfaceTextureHost() override;
   RenderDXGITextureHost* AsRenderDXGITextureHost() override;
   RenderDXGIYCbCrTextureHost* AsRenderDXGIYCbCrTextureHost() override;
-  RenderDcompSurfaceTextureHost* AsRenderDcompSurfaceTextureHost() override;
 
   // RenderTextureHostSWGL
   size_t GetPlaneCount() const override;
