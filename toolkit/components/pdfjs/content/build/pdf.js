@@ -1109,7 +1109,7 @@ exports.isNodeJS = isNodeJS;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.StatTimer = exports.RenderingCancelledException = exports.PixelsPerInch = exports.PageViewport = exports.PDFDateString = exports.DOMStandardFontDataFactory = exports.DOMSVGFactory = exports.DOMCanvasFactory = exports.DOMCMapReaderFactory = void 0;
+exports.StatTimer = exports.RenderingCancelledException = exports.PixelsPerInch = exports.PageViewport = exports.PDFDateString = exports.DOMStandardFontDataFactory = exports.DOMSVGFactory = exports.DOMCanvasFactory = exports.DOMCMapReaderFactory = exports.AnnotationPrefix = void 0;
 exports.binarySearchFirstItem = binarySearchFirstItem;
 exports.deprecated = deprecated;
 exports.getColorValues = getColorValues;
@@ -1129,6 +1129,8 @@ var _base_factory = __w_pdfjs_require__(5);
 var _util = __w_pdfjs_require__(1);
 
 const SVG_NS = "http://www.w3.org/2000/svg";
+const AnnotationPrefix = "pdfjs_internal_id_";
+exports.AnnotationPrefix = AnnotationPrefix;
 
 class PixelsPerInch {
   static CSS = 96.0;
@@ -1866,7 +1868,7 @@ function getDocument(src) {
     };
   } else {
     if (typeof src !== "object") {
-      throw new Error("Invalid parameter in getDocument, " + "need either string, URL, Uint8Array, or parameter object.");
+      throw new Error("Invalid parameter in getDocument, " + "need either string, URL, TypedArray, or parameter object.");
     }
 
     if (!src.url && !src.data && !src.range) {
@@ -1917,7 +1919,7 @@ function getDocument(src) {
         } else if ((0, _util.isArrayBuffer)(value)) {
           params[key] = new Uint8Array(value);
         } else {
-          throw new Error("Invalid PDF binary data: either typed array, " + "string, or array-like object is expected in the data property.");
+          throw new Error("Invalid PDF binary data: either TypedArray, " + "string, or array-like object is expected in the data property.");
         }
 
         continue;
@@ -2058,7 +2060,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.16.33',
+    apiVersion: '2.16.52',
     source: {
       data: source.data,
       url: source.url,
@@ -4111,9 +4113,9 @@ class InternalRenderTask {
 
 }
 
-const version = '2.16.33';
+const version = '2.16.52';
 exports.version = version;
-const build = '40f9f7e90';
+const build = '3cf31a8b1';
 exports.build = build;
 
 /***/ }),
@@ -4599,10 +4601,6 @@ class AnnotationEditor {
 
   enableEditing() {}
 
-  getIdForTextLayer() {
-    return this.id;
-  }
-
   get propertiesToUpdate() {
     return {};
   }
@@ -4931,7 +4929,6 @@ class AnnotationEditorUIManager {
   #boundKeydown = this.keydown.bind(this);
   #boundOnEditingAction = this.onEditingAction.bind(this);
   #boundOnPageChanging = this.onPageChanging.bind(this);
-  #boundOnTextLayerRendered = this.onTextLayerRendered.bind(this);
   #previousStates = {
     isEditing: false,
     isEmpty: true,
@@ -4950,8 +4947,6 @@ class AnnotationEditorUIManager {
     this.#eventBus._on("editingaction", this.#boundOnEditingAction);
 
     this.#eventBus._on("pagechanging", this.#boundOnPageChanging);
-
-    this.#eventBus._on("textlayerrendered", this.#boundOnTextLayerRendered);
   }
 
   destroy() {
@@ -4960,8 +4955,6 @@ class AnnotationEditorUIManager {
     this.#eventBus._off("editingaction", this.#boundOnEditingAction);
 
     this.#eventBus._off("pagechanging", this.#boundOnPageChanging);
-
-    this.#eventBus._off("textlayerrendered", this.#boundOnTextLayerRendered);
 
     for (const layer of this.#allLayers.values()) {
       layer.destroy();
@@ -4979,14 +4972,6 @@ class AnnotationEditorUIManager {
     pageNumber
   }) {
     this.#currentPageIndex = pageNumber - 1;
-  }
-
-  onTextLayerRendered({
-    pageNumber
-  }) {
-    const pageIndex = pageNumber - 1;
-    const layer = this.#allLayers.get(pageIndex);
-    layer?.onTextLayerRendered();
   }
 
   focusMainContainer() {
@@ -10508,26 +10493,23 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.AnnotationEditorLayer = void 0;
 
-var _util = __w_pdfjs_require__(1);
-
 var _tools = __w_pdfjs_require__(9);
 
-var _display_utils = __w_pdfjs_require__(4);
+var _util = __w_pdfjs_require__(1);
 
 var _freetext = __w_pdfjs_require__(22);
 
 var _ink = __w_pdfjs_require__(23);
 
 class AnnotationEditorLayer {
+  #accessibilityManager;
   #allowClick = false;
   #boundPointerup = this.pointerup.bind(this);
   #boundPointerdown = this.pointerdown.bind(this);
   #editors = new Map();
+  #hadPointerDown = false;
   #isCleaningUp = false;
-  #textLayerMap = new WeakMap();
-  #textNodes = new Map();
   #uiManager;
-  #waitingEditors = new Set();
   static _initialized = false;
 
   constructor(options) {
@@ -10545,36 +10527,8 @@ class AnnotationEditorLayer {
     this.annotationStorage = options.annotationStorage;
     this.pageIndex = options.pageIndex;
     this.div = options.div;
+    this.#accessibilityManager = options.accessibilityManager;
     this.#uiManager.addLayer(this);
-  }
-
-  get textLayerElements() {
-    const textLayer = this.div.parentNode.getElementsByClassName("textLayer").item(0);
-
-    if (!textLayer) {
-      return (0, _util.shadow)(this, "textLayerElements", null);
-    }
-
-    let textChildren = this.#textLayerMap.get(textLayer);
-
-    if (textChildren) {
-      return textChildren;
-    }
-
-    textChildren = textLayer.querySelectorAll(`span[role="presentation"]`);
-
-    if (textChildren.length === 0) {
-      return (0, _util.shadow)(this, "textLayerElements", null);
-    }
-
-    textChildren = Array.from(textChildren);
-    textChildren.sort(AnnotationEditorLayer.#compareElementPositions);
-    this.#textLayerMap.set(textLayer, textChildren);
-    return textChildren;
-  }
-
-  get #hasTextLayer() {
-    return !!this.div.parentNode.querySelector(".textLayer .endOfContent");
   }
 
   updateToolbar(mode) {
@@ -10665,7 +10619,7 @@ class AnnotationEditorLayer {
 
   detach(editor) {
     this.#editors.delete(editor.id);
-    this.removePointerInTextLayer(editor);
+    this.#accessibilityManager?.removePointerInTextLayer(editor.contentDiv);
   }
 
   remove(editor) {
@@ -10704,121 +10658,6 @@ class AnnotationEditorLayer {
     }
   }
 
-  static #compareElementPositions(e1, e2) {
-    const rect1 = e1.getBoundingClientRect();
-    const rect2 = e2.getBoundingClientRect();
-
-    if (rect1.y + rect1.height <= rect2.y) {
-      return -1;
-    }
-
-    if (rect2.y + rect2.height <= rect1.y) {
-      return +1;
-    }
-
-    const centerX1 = rect1.x + rect1.width / 2;
-    const centerX2 = rect2.x + rect2.width / 2;
-    return centerX1 - centerX2;
-  }
-
-  onTextLayerRendered() {
-    this.#textNodes.clear();
-
-    for (const editor of this.#waitingEditors) {
-      if (editor.isAttachedToDOM) {
-        this.addPointerInTextLayer(editor);
-      }
-    }
-
-    this.#waitingEditors.clear();
-  }
-
-  removePointerInTextLayer(editor) {
-    if (!this.#hasTextLayer) {
-      this.#waitingEditors.delete(editor);
-      return;
-    }
-
-    const {
-      id
-    } = editor;
-    const node = this.#textNodes.get(id);
-
-    if (!node) {
-      return;
-    }
-
-    this.#textNodes.delete(id);
-    let owns = node.getAttribute("aria-owns");
-
-    if (owns?.includes(id)) {
-      owns = owns.split(" ").filter(x => x !== id).join(" ");
-
-      if (owns) {
-        node.setAttribute("aria-owns", owns);
-      } else {
-        node.removeAttribute("aria-owns");
-        node.setAttribute("role", "presentation");
-      }
-    }
-  }
-
-  addPointerInTextLayer(editor) {
-    if (!this.#hasTextLayer) {
-      this.#waitingEditors.add(editor);
-      return;
-    }
-
-    this.removePointerInTextLayer(editor);
-    const children = this.textLayerElements;
-
-    if (!children) {
-      return;
-    }
-
-    const {
-      contentDiv
-    } = editor;
-    const id = editor.getIdForTextLayer();
-    const index = (0, _display_utils.binarySearchFirstItem)(children, node => AnnotationEditorLayer.#compareElementPositions(contentDiv, node) < 0);
-    const node = children[Math.max(0, index - 1)];
-    const owns = node.getAttribute("aria-owns");
-
-    if (!owns?.includes(id)) {
-      node.setAttribute("aria-owns", owns ? `${owns} ${id}` : id);
-    }
-
-    node.removeAttribute("role");
-    this.#textNodes.set(id, node);
-  }
-
-  moveDivInDOM(editor) {
-    this.addPointerInTextLayer(editor);
-    const {
-      div,
-      contentDiv
-    } = editor;
-
-    if (!this.div.hasChildNodes()) {
-      this.div.append(div);
-      return;
-    }
-
-    const children = Array.from(this.div.childNodes).filter(node => node !== div);
-
-    if (children.length === 0) {
-      return;
-    }
-
-    const index = (0, _display_utils.binarySearchFirstItem)(children, node => AnnotationEditorLayer.#compareElementPositions(contentDiv, node) < 0);
-
-    if (index === 0) {
-      children[0].before(div);
-    } else {
-      children[index - 1].after(div);
-    }
-  }
-
   add(editor) {
     this.#changeParent(editor);
     this.#uiManager.addEditor(editor);
@@ -10830,9 +10669,13 @@ class AnnotationEditorLayer {
       editor.isAttachedToDOM = true;
     }
 
-    this.moveDivInDOM(editor);
+    this.moveEditorInDOM(editor);
     editor.onceAdded();
     this.addToAnnotationStorage(editor);
+  }
+
+  moveEditorInDOM(editor) {
+    this.#accessibilityManager?.moveElementInDOM(this.div, editor.div, editor.contentDiv, true);
   }
 
   addToAnnotationStorage(editor) {
@@ -10952,6 +10795,12 @@ class AnnotationEditorLayer {
       return;
     }
 
+    if (!this.#hadPointerDown) {
+      return;
+    }
+
+    this.#hadPointerDown = false;
+
     if (!this.#allowClick) {
       this.#allowClick = true;
       return;
@@ -10971,6 +10820,7 @@ class AnnotationEditorLayer {
       return;
     }
 
+    this.#hadPointerDown = true;
     const editor = this.#uiManager.getActive();
     this.#allowClick = !editor || editor.isEmpty();
   }
@@ -10990,7 +10840,7 @@ class AnnotationEditorLayer {
     const endX = event.clientX - rect.x;
     const endY = event.clientY - rect.y;
     editor.translate(endX - editor.startX, endY - editor.startY);
-    this.moveDivInDOM(editor);
+    this.moveEditorInDOM(editor);
     editor.div.focus();
   }
 
@@ -11004,16 +10854,14 @@ class AnnotationEditorLayer {
     }
 
     for (const editor of this.#editors.values()) {
-      this.removePointerInTextLayer(editor);
+      this.#accessibilityManager?.removePointerInTextLayer(editor.contentDiv);
       editor.isAttachedToDOM = false;
       editor.div.remove();
       editor.parent = null;
     }
 
-    this.#textNodes.clear();
     this.div = null;
     this.#editors.clear();
-    this.#waitingEditors.clear();
     this.#uiManager.removeLayer(this);
   }
 
@@ -11362,10 +11210,6 @@ class FreeTextEditor extends _editor.AnnotationEditor {
   enableEditing() {
     this.editorDiv.setAttribute("role", "textbox");
     this.editorDiv.setAttribute("aria-multiline", true);
-  }
-
-  getIdForTextLayer() {
-    return this.editorDiv.id;
   }
 
   render() {
@@ -11857,7 +11701,7 @@ class InkEditor extends _editor.AnnotationEditor {
     this.div.classList.add("disabled");
     this.#fitToContent(true);
     this.parent.addInkEditorIfNeeded(true);
-    this.parent.moveDivInDOM(this);
+    this.parent.moveEditorInDOM(this);
     this.div.focus();
   }
 
@@ -12229,8 +12073,8 @@ class InkEditor extends _editor.AnnotationEditor {
     }
 
     const bbox = editor.#getBbox();
-    editor.#baseWidth = bbox[2] - bbox[0];
-    editor.#baseHeight = bbox[3] - bbox[1];
+    editor.#baseWidth = Math.max(RESIZER_SIZE, bbox[2] - bbox[0]);
+    editor.#baseHeight = Math.max(RESIZER_SIZE, bbox[3] - bbox[1]);
     editor.#setScaleFactor(width, height);
     return editor;
   }
@@ -14446,7 +14290,7 @@ class PopupElement {
 
     if (this.hideElement.hidden) {
       this.hideElement.hidden = false;
-      this.container.style.zIndex += 1;
+      this.container.style.zIndex = parseInt(this.container.style.zIndex) + 1000;
     }
   }
 
@@ -14457,7 +14301,7 @@ class PopupElement {
 
     if (!this.hideElement.hidden && !this.pinned) {
       this.hideElement.hidden = true;
-      this.container.style.zIndex -= 1;
+      this.container.style.zIndex = parseInt(this.container.style.zIndex) - 1000;
     }
   }
 
@@ -14479,6 +14323,7 @@ class FreeTextAnnotationElement extends AnnotationElement {
     if (this.textContent) {
       const content = document.createElement("div");
       content.className = "annotationTextContent";
+      content.setAttribute("role", "comment");
 
       for (const line of this.textContent) {
         const lineSpan = document.createElement("span");
@@ -14885,13 +14730,22 @@ class FileAttachmentAnnotationElement extends AnnotationElement {
 }
 
 class AnnotationLayer {
+  static #appendElement(element, id, div, accessibilityManager) {
+    const contentElement = element.firstChild || element;
+    contentElement.id = `${_display_utils.AnnotationPrefix}${id}`;
+    div.append(element);
+    accessibilityManager?.moveElementInDOM(div, element, contentElement, false);
+  }
+
   static render(parameters) {
     const {
       annotations,
       div,
-      viewport
+      viewport,
+      accessibilityManager
     } = parameters;
     this.#setDimensions(div, viewport);
+    let zIndex = 0;
 
     for (const data of annotations) {
       if (data.annotationType !== _util.AnnotationType.POPUP) {
@@ -14933,13 +14787,16 @@ class AnnotationLayer {
 
         if (Array.isArray(rendered)) {
           for (const renderedElement of rendered) {
-            div.append(renderedElement);
+            renderedElement.style.zIndex = zIndex++;
+            AnnotationLayer.#appendElement(renderedElement, data.id, div, accessibilityManager);
           }
         } else {
+          rendered.style.zIndex = zIndex++;
+
           if (element instanceof PopupAnnotationElement) {
             div.prepend(rendered);
           } else {
-            div.append(rendered);
+            AnnotationLayer.#appendElement(rendered, data.id, div, accessibilityManager);
           }
         }
       }
@@ -16446,8 +16303,8 @@ var _svg = __w_pdfjs_require__(30);
 
 var _xfa_layer = __w_pdfjs_require__(28);
 
-const pdfjsVersion = '2.16.33';
-const pdfjsBuild = '40f9f7e90';
+const pdfjsVersion = '2.16.52';
+const pdfjsBuild = '3cf31a8b1';
 ;
 })();
 
