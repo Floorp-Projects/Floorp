@@ -148,14 +148,13 @@ fun Context.shareMedia(
         if (message != null) {
             putExtra(EXTRA_TEXT, message)
         }
-    }
-
-    val shareIntent = Intent.createChooser(intent, getString(R.string.mozac_support_ktx_menu_share_with)).apply {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             // Android Q allows us to show a thumbnail preview of the file to be shared.
             clipData = ClipData.newRawUri(contentUri.toString(), contentUri)
         }
+    }
 
+    val shareIntent = Intent.createChooser(intent, getString(R.string.mozac_support_ktx_menu_share_with)).apply {
         flags = FLAG_ACTIVITY_NEW_TASK or FLAG_GRANT_READ_URI_PERMISSION
     }
 

@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
 
+* **support-ktx**
+  * 🚒 Bug fixed [issue #12689](https://github.com/mozilla-mobile/android-components/issues/12689)  Make `Context.shareMedia` work with Android Direct Share.
+
 # 105.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v104.0.0...v105.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/152?closed=1)
