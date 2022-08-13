@@ -94,6 +94,10 @@ class MFMediaEngineStream
     return nullptr;
   }
 
+  virtual MediaDataDecoder::ConversionRequired NeedsConversion() const {
+    return MediaDataDecoder::ConversionRequired::kNeedNone;
+  }
+
  protected:
   HRESULT GenerateStreamDescriptor(uint64_t aStreamId, const TrackInfo& aInfo);
 
@@ -176,6 +180,7 @@ class MFMediaEngineStreamWrapper : public MediaDataDecoder {
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
   nsCString GetDescriptionName() const override;
+  ConversionRequired NeedsConversion() const override;
 
  private:
   Microsoft::WRL::ComPtr<MFMediaEngineStream> mStream;

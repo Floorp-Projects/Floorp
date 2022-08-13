@@ -102,6 +102,12 @@ nsCString MFMediaEngineStreamWrapper::GetDescriptionName() const {
   return mStream ? mStream->GetDescriptionName() : nsLiteralCString("none");
 }
 
+MediaDataDecoder::ConversionRequired
+MFMediaEngineStreamWrapper::NeedsConversion() const {
+  return mStream ? mStream->NeedsConversion()
+                 : MediaDataDecoder::ConversionRequired::kNeedNone;
+}
+
 MFMediaEngineStreamWrapper::FakeDecodedDataCreator::FakeDecodedDataCreator(
     const CreateDecoderParams& aParams) {
   if (aParams.mConfig.IsVideo()) {
