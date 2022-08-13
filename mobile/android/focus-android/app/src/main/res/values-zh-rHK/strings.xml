@@ -150,10 +150,10 @@
     <string name="preference_search_engine_label">搜尋引擎</string>
 
     <!-- Text that is shown below a "switch" preference that is enabled. -->
-    <string name="preference_state_on">打開</string>
+    <string name="preference_state_on">開咗</string>
 
     <!-- Text that is shown below a "switch" preference that is disabled. -->
-    <string name="preference_state_off">關閉</string>
+    <string name="preference_state_off">冇開</string>
 
     <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
     <string name="preference_subitem_autocomplete">自動完成網址</string>
@@ -173,6 +173,9 @@
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ 加入自訂網頁</string>
 
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">你嘅自動完成列表：</string>
+
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add2">加入網址</string>
 
@@ -181,6 +184,9 @@
 
     <!-- Label for the button to quick add custom autocomplete URLs. -->
     <string name="custom_autocomplete_quick_add">加入自訂網址</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">加入自動完成嘅連結</string>
 
     <!-- Preference category for settings about cookies and site data -->
     <string name="preference_category_cookies">Cookies 同網站數據</string>
@@ -193,6 +199,9 @@
 
     <!-- A link to SUMO at autocomplete settings. -->
     <string name="preference_autocomplete_learn_more">想知多啲</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">加入並管理自訂自動完成嘅URLs。</string>
 
     <!-- Label for the "custom autocomplete URL" input field -->
     <string name="preference_autocomplete_add_title">加入嘅網址</string>
@@ -332,6 +341,11 @@
      history and go back to the home screen. -->
     <string name="content_description_erase">刪除瀏覽紀錄</string>
 
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">開咗嘅分頁：%1$s 個</string>
+
     <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
      https pages.. -->
     <string name="content_description_lock">安全連線</string>
@@ -389,6 +403,19 @@
     <string name="download_snackbar_open">開啟</string>
 
     <string name="error_hostLookup_title">搵唔到伺服器</string>
+
+    <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">歡迎嚟到%1$s！</string>
+
+    <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">升級你嘅個人私隱</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">你想點搜尋，就點搜尋</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">喺你嘅主頁加入捷徑</string>
 
     <!-- First run tour (Privacy): Title -->
     <string name="firstrun_privacy_title">私隱就習以為常</string>
