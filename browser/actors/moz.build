@@ -23,7 +23,7 @@ with Files("PageStyleChild.jsm"):
     BUG_COMPONENT = ("Firefox", "Menus")
 
 with Files("PluginChild.jsm"):
-    BUG_COMPONENT = ("Core", "Plug-ins")
+    BUG_COMPONENT = ("Core", "Audio/Video: GMP")
 
 with Files("ScreenshotsComponentChild.jsm"):
     BUG_COMPONENT = ("Firefox", "Screenshots")

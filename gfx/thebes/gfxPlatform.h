@@ -498,7 +498,8 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   // Default implementation checks for "common" formats that we support across
   // all platforms, but individual platform implementations may override.
   virtual bool IsFontFormatSupported(
-      mozilla::StyleFontFaceSourceFormatKeyword aFormatHint);
+      mozilla::StyleFontFaceSourceFormatKeyword aFormatHint,
+      mozilla::StyleFontFaceSourceTechFlags aTechFlags);
 
   virtual bool DidRenderingDeviceReset(
       DeviceResetReason* aResetReason = nullptr) {

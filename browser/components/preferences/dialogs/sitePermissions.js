@@ -351,18 +351,18 @@ var gSitePermissionsManager = {
     let richlistitem = document.createXULElement("richlistitem");
     richlistitem.setAttribute("origin", permission.origin);
     let row = document.createXULElement("hbox");
-    row.setAttribute("flex", "1");
+    row.setAttribute("style", "-moz-box-flex: 1");
 
     let hbox = document.createXULElement("hbox");
     let website = document.createXULElement("label");
     website.setAttribute("value", permission.origin);
     website.setAttribute("width", width);
     hbox.setAttribute("class", "website-name");
-    hbox.setAttribute("flex", "3");
+    hbox.setAttribute("style", "-moz-box-flex: 1");
     hbox.appendChild(website);
 
     let menulist = document.createXULElement("menulist");
-    menulist.setAttribute("flex", "1");
+    menulist.setAttribute("style", "-moz-box-flex: 1");
     menulist.setAttribute("width", width);
     menulist.setAttribute("class", "website-status");
     let states = SitePermissions.getAvailableStates(permission.type);

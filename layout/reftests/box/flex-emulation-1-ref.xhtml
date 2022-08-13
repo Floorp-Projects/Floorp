@@ -6,7 +6,6 @@
   <head>
     <style>
       :root {
-        /* Only legacy nsBoxFrame looks at flex="" attributes, so rendering is expected to differ */
         -moz-box-layout: flex;
       }
       hbox {
@@ -16,8 +15,8 @@
   </head>
   <body>
     <xul:hbox>
-      <xul:description>A</xul:description>
-      <xul:description flex="1" style="background: blue">B</xul:description>
+      <xul:description>X</xul:description>
+      <xul:description flex="1" style="background: blue">X</xul:description>
     </xul:hbox>
   </body>
 </html>

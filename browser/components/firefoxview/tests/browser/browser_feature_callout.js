@@ -415,3 +415,62 @@ add_task(async function feature_callout_only_highlights_existing_elements() {
     }
   );
 });
+
+add_task(async function feature_callout_arrow_class_exists() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.firefox-view.feature-tour", "{}"],
+      ["intl.l10n.pseudo", ""],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+
+      await waitForCalloutRender(document);
+      await waitForCalloutPositioned(document);
+
+      const arrowParent = document.querySelector(".callout-arrow.arrow-top");
+      ok(arrowParent, "Arrow class exists on parent container");
+    }
+  );
+});
+
+add_task(async function feature_callout_arrow_is_not_flipped_on_ltr() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.firefox-view.feature-tour", "{}"],
+      ["intl.l10n.pseudo", ""],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+
+      await waitForCalloutRender(document);
+      await waitForCalloutPositioned(document);
+      // Advance to third screen
+      clickPrimaryButton(document);
+      await waitForCalloutScreen(document, ".FEATURE_CALLOUT_2");
+      clickPrimaryButton(document);
+      await waitForCalloutScreen(document, ".FEATURE_CALLOUT_3");
+      let arrowParent = document.querySelector(
+        ".callout-arrow.arrow-inline-end"
+      );
+      ok(
+        arrowParent,
+        "Feature Callout arrow parent has arrow-end class when arrow direction is set to 'end'"
+      );
+    }
+  );
+});

@@ -56,7 +56,7 @@ with Files("test/permissions/**"):
     BUG_COMPONENT = ("Firefox", "Site Permissions")
 
 with Files("test/plugins/**"):
-    BUG_COMPONENT = ("Core", "Plug-ins")
+    BUG_COMPONENT = ("Core", "Audio/Video: GMP")
 
 with Files("test/popupNotifications/**"):
     BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")

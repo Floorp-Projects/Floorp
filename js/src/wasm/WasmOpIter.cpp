@@ -783,4 +783,45 @@ OpKind wasm::Classify(OpBytes op) {
 #  undef WASM_GC_OP
 #  undef WASM_REF_OP
 
-#endif
+#endif  // DEBUG
+
+bool UnsetLocalsState::init(const ValTypeVector& locals, size_t numParams) {
+  MOZ_ASSERT(setLocalsStack_.empty());
+
+  // Find the first and total count of non-defaultable locals.
+  size_t firstNonDefaultable = UINT32_MAX;
+  size_t countNonDefaultable = 0;
+  for (size_t i = numParams; i < locals.length(); i++) {
+    if (!locals[i].isDefaultable()) {
+      firstNonDefaultable = std::min(i, firstNonDefaultable);
+      countNonDefaultable++;
+    }
+  }
+  firstNonDefaultLocal_ = firstNonDefaultable;
+  if (countNonDefaultable == 0) {
+    // No locals to track, saving CPU cycles.
+    MOZ_ASSERT(firstNonDefaultable == UINT32_MAX);
+    return true;
+  }
+
+  // setLocalsStack_ cannot be deeper than amount of non-defaultable locals.
+  if (!setLocalsStack_.reserve(countNonDefaultable)) {
+    return false;
+  }
+
+  // Allocate a bitmap for locals starting at the first non-defaultable local.
+  size_t bitmapSize =
+      ((locals.length() - firstNonDefaultable) + (WordBits - 1)) / WordBits;
+  if (!unsetLocals_.resize(bitmapSize)) {
+    return false;
+  }
+  memset(unsetLocals_.begin(), 0, bitmapSize * WordSize);
+  for (size_t i = firstNonDefaultable; i < locals.length(); i++) {
+    if (!locals[i].isDefaultable()) {
+      size_t localUnsetIndex = i - firstNonDefaultable;
+      unsetLocals_[localUnsetIndex / WordBits] |=
+          1 << (localUnsetIndex % WordBits);
+    }
+  }
+  return true;
+}

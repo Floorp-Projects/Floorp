@@ -205,7 +205,7 @@ TalosPowersService.prototype = {
    *
    */
   addInstantMarker(marker) {
-    ChromeUtils.addProfilerMarker("Talos", undefined, marker);
+    ChromeUtils.addProfilerMarker("Talos", { category: "Test" }, marker);
   },
 
   /**
@@ -219,7 +219,11 @@ TalosPowersService.prototype = {
    *        undefined, a single instance marker will be placed.
    */
   addIntervalMarker(marker, startTime) {
-    ChromeUtils.addProfilerMarker("Talos", startTime, marker);
+    ChromeUtils.addProfilerMarker(
+      "Talos",
+      { startTime, category: "Test" },
+      marker
+    );
   },
 
   receiveProfileCommand(message) {

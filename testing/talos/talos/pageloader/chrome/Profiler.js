@@ -180,14 +180,16 @@ var Profiler;
           _profiler.ResumeSampling();
         }
         ChromeUtils.addProfilerMarker(
-          explicit ? name : 'Start of test "' + (name || test_name) + '"'
+          explicit ? name : 'Start of test "' + (name || test_name) + '"',
+          { category: "Test" }
         );
       }
     },
     pause: function Profiler__pause(name, explicit) {
       if (_profiler) {
         ChromeUtils.addProfilerMarker(
-          explicit ? name : 'End of test "' + (name || test_name) + '"'
+          explicit ? name : 'End of test "' + (name || test_name) + '"',
+          { category: "Test" }
         );
         _profiler.PauseSampling();
       }
@@ -195,7 +197,8 @@ var Profiler;
     mark: function Profiler__mark(marker, explicit) {
       if (_profiler) {
         ChromeUtils.addProfilerMarker(
-          explicit ? marker : 'Profiler: "' + (marker || test_name) + '"'
+          explicit ? marker : 'Profiler: "' + (marker || test_name) + '"',
+          { category: "Test" }
         );
       }
     },

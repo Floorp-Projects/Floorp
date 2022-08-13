@@ -30,7 +30,7 @@ with Files("third_party_build/**"):
 EXPORTS += [
     "CubebDeviceEnumerator.h",
     "MediaEngine.h",
-    "MediaEngineDefault.h",
+    "MediaEngineFake.h",
     "MediaEnginePrefs.h",
     "MediaEngineSource.h",
     "MediaTrackConstraints.h",
@@ -96,7 +96,7 @@ PREPROCESSED_IPDL_SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
-    "MediaEngineDefault.cpp",
+    "MediaEngineFake.cpp",
     "MediaEngineSource.cpp",
     "MediaTrackConstraints.cpp",
     "PeerIdentity.cpp",

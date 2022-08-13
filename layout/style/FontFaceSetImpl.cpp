@@ -528,6 +528,7 @@ FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
 
           face->mLocalName.Truncate();
           face->mFormatHint = StyleFontFaceSourceFormatKeyword::None;
+          face->mTechFlags = StyleFontFaceSourceTechFlags::Empty();
 
           if (i + 1 < len) {
             // Check for a format hint.
@@ -590,9 +591,19 @@ FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
                 i++;
                 break;
               }
+              case StyleFontFaceSourceListComponent::Tag::TechFlags:
               case StyleFontFaceSourceListComponent::Tag::Local:
               case StyleFontFaceSourceListComponent::Tag::Url:
                 break;
+            }
+          }
+
+          if (i + 1 < len) {
+            // Check for a set of font-technologies flags.
+            const auto& next = sourceListComponents[i + 1];
+            if (next.IsTechFlags()) {
+              face->mTechFlags = next.AsTechFlags();
+              i++;
             }
           }
 
@@ -607,6 +618,7 @@ FontFaceSetImpl::FindOrCreateUserFontEntryFromFontFace(
 
         case StyleFontFaceSourceListComponent::Tag::FormatHintKeyword:
         case StyleFontFaceSourceListComponent::Tag::FormatHintString:
+        case StyleFontFaceSourceListComponent::Tag::TechFlags:
           MOZ_ASSERT_UNREACHABLE(
               "Should always come after a URL source, and be consumed already");
           break;

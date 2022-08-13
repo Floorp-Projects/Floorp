@@ -37,6 +37,8 @@ class TaggedValue {
     PointerKind2 = 3
   };
   using PackedRepr = uintptr_t;
+  static_assert(std::is_same<PackedTypeCode::PackedRepr, uint32_t>(),
+                "can use pointer tagging with PackedTypeCode");
 
  private:
   PackedRepr bits_;
@@ -88,10 +90,6 @@ class TaggedValue {
     return reinterpret_cast<PointerType*>(bits() & ~KindMask);
   }
 };
-
-static_assert(
-    std::is_same<TaggedValue<void*>::PackedRepr, PackedTypeCode::PackedRepr>(),
-    "can use pointer tagging with PackedTypeCode");
 
 // ResultType represents the WebAssembly spec's `resulttype`. Semantically, a
 // result type is just a vec(valtype).  For effiency, though, the ResultType
