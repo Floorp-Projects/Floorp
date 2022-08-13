@@ -18,7 +18,7 @@ const TRANSITION_OUT_TIME = 1000;
 export const MultiStageAboutWelcome = props => {
   let { screens } = props;
 
-  const [index, setScreenIndex] = useState(props.startScreen);
+  const [index, setScreenIndex] = useState(0);
   useEffect(() => {
     // Send impression ping when respective screen first renders
     screens.forEach((screen, order) => {
