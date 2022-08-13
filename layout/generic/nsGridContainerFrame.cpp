@@ -4541,9 +4541,19 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
                              subgridAxisIsSameDirection);
 
   if (!aState.mFrame->IsRowSubgrid()) {
+    const Maybe<nscoord> containBSize = aState.mFrame->ContainIntrinsicBSize();
+    const nscoord repeatTrackSizingBSize = [&] {
+      // This clamping only applies to auto sizes.
+      if (containBSize &&
+          aSizes.mSize.BSize(aState.mWM) == NS_UNCONSTRAINEDSIZE) {
+        return NS_CSS_MINMAX(*containBSize, aSizes.mMin.BSize(aState.mWM),
+                             aSizes.mMax.BSize(aState.mWM));
+      }
+      return aSizes.mSize.BSize(aState.mWM);
+    }();
     aState.mRowFunctions.InitRepeatTracks(
         gridStyle->mRowGap, aSizes.mMin.BSize(aState.mWM),
-        aSizes.mSize.BSize(aState.mWM), aSizes.mMax.BSize(aState.mWM));
+        repeatTrackSizingBSize, aSizes.mMax.BSize(aState.mWM));
     uint32_t areaRows = areas ? areas->strings.Length() + 1 : 1;
     mExplicitGridRowEnd = aState.mRowFunctions.ComputeExplicitGridEnd(areaRows);
     parentLineNameMap = nullptr;
