@@ -245,12 +245,12 @@ wine:
         strip-components: 1
         add-prefix: wine-source/
 
-cbindgen-0.23.0:
+cbindgen-0.24.2:
     description: cbindgen source code
     fetch:
         type: git
         repo: https://github.com/eqrion/cbindgen
-        revision: 798cfab52bced65a749443faa16990ec3a8e0cfe
+        revision: 3d06ae1fc4984b82ada2d84ce74c7af06ffd499d
 
 cctools-port:
     description: cctools-port source code
