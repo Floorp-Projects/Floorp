@@ -173,6 +173,11 @@ HRESULT MFCreatePresentationDescriptor(
 
 HRESULT MFCreateMemoryBuffer(DWORD cbMaxLength, IMFMediaBuffer** ppBuffer);
 
+HRESULT MFLockDXGIDeviceManager(UINT* pResetToken,
+                                IMFDXGIDeviceManager** ppManager);
+
+HRESULT MFUnlockDXGIDeviceManager();
+
 }  // namespace mozilla::wmf
 
 #endif

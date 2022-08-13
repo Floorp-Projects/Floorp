@@ -952,6 +952,41 @@ RefPtr<ID3D11Device> DeviceManagerDx::CreateDecoderDevice(
   return device;
 }
 
+// ID3D11DeviceChild, IDXGIObject and ID3D11Device implement SetPrivateData with
+// the exact same parameters.
+template <typename T>
+static HRESULT SetDebugName(T* d3d11Object, const char* debugString) {
+  return d3d11Object->SetPrivateData(WKPDID_D3DDebugObjectName,
+                                     strlen(debugString), debugString);
+}
+
+RefPtr<ID3D11Device> DeviceManagerDx::CreateMediaEngineDevice() {
+  if (!sD3D11CreateDeviceFn) {
+    // We should just be on Windows Vista or XP in this case.
+    return nullptr;
+  }
+
+  HRESULT hr;
+  RefPtr<ID3D11Device> device;
+  UINT flags = D3D11_CREATE_DEVICE_VIDEO_SUPPORT |
+               D3D11_CREATE_DEVICE_BGRA_SUPPORT |
+               D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS;
+  if (!CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, flags, hr, device)) {
+    return nullptr;
+  }
+  if (FAILED(hr) || !device || !D3D11Checks::DoesDeviceWork()) {
+    return nullptr;
+  }
+  Unused << SetDebugName(device.get(), "MFMediaEngineDevice");
+
+  RefPtr<ID3D10Multithread> multi;
+  device->QueryInterface(__uuidof(ID3D10Multithread), getter_AddRefs(multi));
+  if (multi) {
+    multi->SetMultithreadProtected(TRUE);
+  }
+  return device;
+}
+
 void DeviceManagerDx::ResetDevices() {
   MutexAutoLock lock(mDeviceLock);
 
