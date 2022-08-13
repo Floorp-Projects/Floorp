@@ -6,6 +6,8 @@
 #define DOM_MEDIA_PLATFORM_WMF_MFMEDIAENGINEVIDEOSTREAM_H
 
 #include "MFMediaEngineStream.h"
+#include "WMFUtils.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Mutex.h"
 
 namespace mozilla {
@@ -46,11 +48,14 @@ class MFMediaEngineVideoStream final : public MFMediaEngineStream {
 
   MFMediaEngineVideoStream* AsVideoStream() override { return this; }
 
-  layers::Image* GetDcompSurfaceImage();
-
   already_AddRefed<MediaData> OutputData(MediaRawData* aSample) override;
 
   MediaDataDecoder::ConversionRequired NeedsConversion() const override;
+
+  // Called by MFMediaEngineParent when we are creating a video decoder for
+  // the remote decoder. This is used to detect if the inband video config
+  // change happens during playback.
+  void SetConfig(const TrackInfo& aConfig);
 
  private:
   HRESULT
@@ -58,18 +63,26 @@ class MFMediaEngineVideoStream final : public MFMediaEngineStream {
 
   bool HasEnoughRawData() const override;
 
-  // This info will be set inside the ctor of video stream, and shouldn't be
-  // changed after that.
-  VideoInfo mInfo;
+  void UpdateConfig(const VideoInfo& aInfo);
 
   Mutex mMutex{"MFMediaEngineVideoStream"};
 
   HANDLE mDCompSurfaceHandle MOZ_GUARDED_BY(mMutex);
   bool mNeedRecreateImage MOZ_GUARDED_BY(mMutex);
   RefPtr<layers::KnowsCompositor> mKnowsCompositor MOZ_GUARDED_BY(mMutex);
+  gfx::IntSize mDisplay MOZ_GUARDED_BY(mMutex);
+
+  // Set on the initialization, won't be changed after that.
+  WMFStreamType mStreamType;
 
   // Created and accessed in the decoder thread.
   RefPtr<layers::DcompSurfaceImage> mDcompSurfaceImage;
+
+  // This flag is used to check if the video config changes detected by the
+  // media config monitor. When the video decoder get created first, we will set
+  // this flag to true, then we know any config being set afterward indicating
+  // a new config change.
+  bool mHasReceivedInitialCreateDecoderConfig;
 };
 
 }  // namespace mozilla
