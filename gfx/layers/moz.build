@@ -52,6 +52,13 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
             "d3d11/CompositorD3D11.cpp",
             "d3d11/DeviceAttachmentsD3D11.cpp",
         ]
+    if CONFIG["MOZ_WMF_MEDIA_ENGINE"]:
+        EXPORTS.mozilla.layers += [
+            "DcompSurfaceImage.h",
+        ]
+        UNIFIED_SOURCES += [
+            "DcompSurfaceImage.cpp",
+        ]
 
 EXPORTS.gfxipc += [
     "ipc/ShadowLayerUtils.h",
