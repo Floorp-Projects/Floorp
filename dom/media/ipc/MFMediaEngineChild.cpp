@@ -236,7 +236,7 @@ void MFMediaEngineWrapper::SetPlaybackRate(double aPlaybackRate) {
   Unused << ManagerThread()->Dispatch(
       NS_NewRunnableFunction("MFMediaEngineWrapper::SetPlaybackRate",
                              [engine = mEngine, aPlaybackRate] {
-                               engine->SendSetVolume(aPlaybackRate);
+                               engine->SendSetPlaybackRate(aPlaybackRate);
                              }));
 }
 

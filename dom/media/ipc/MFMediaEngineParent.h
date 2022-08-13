@@ -117,6 +117,8 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
   // When it's true, the media engine will output decoded video frames to a
   // shareable dcomp surface.
   bool mIsEnableDcompMode = false;
+
+  float mPlaybackRate = 1.0;
 };
 
 }  // namespace mozilla
