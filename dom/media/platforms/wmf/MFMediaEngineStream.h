@@ -137,9 +137,6 @@ class MFMediaEngineStream
   // Modify on the task queue, access from any threads.
   Atomic<bool> mReceivedEOS;
 
-  // Only serve samples when the stream is already started.
-  Atomic<bool> mShouldServeSmamples;
-
   // A thread-safe queue storing input sample.
   MediaQueue<MediaRawData> mRawDataQueue;
 
