@@ -50,6 +50,8 @@ class MFMediaEngineVideoStream final : public MFMediaEngineStream {
 
   already_AddRefed<MediaData> OutputData(MediaRawData* aSample) override;
 
+  MediaDataDecoder::ConversionRequired NeedsConversion() const override;
+
  private:
   HRESULT
   CreateMediaType(const TrackInfo& aInfo, IMFMediaType** aMediaType) override;
