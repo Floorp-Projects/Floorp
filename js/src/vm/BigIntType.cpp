@@ -3615,8 +3615,7 @@ static inline BigInt* ParseStringBigIntLiteral(JSContext* cx,
 }
 
 // Called from BigInt constructor.
-JS::Result<BigInt*, JS::OOM> js::StringToBigInt(JSContext* cx,
-                                                HandleString str) {
+JS::Result<BigInt*> js::StringToBigInt(JSContext* cx, HandleString str) {
   JSLinearString* linear = str->ensureLinear(cx);
   if (!linear) {
     return cx->alreadyReportedOOM();
@@ -3635,9 +3634,9 @@ JS::Result<BigInt*, JS::OOM> js::StringToBigInt(JSContext* cx,
     res = ParseStringBigIntLiteral(cx, chars.twoByteRange(), &parseError);
   }
 
-  // A nullptr result can indicate either a parse error or out-of-memory.
+  // A nullptr result can indicate either a parse error or generic error.
   if (!res && !parseError) {
-    return cx->alreadyReportedOOM();
+    return cx->alreadyReportedError();
   }
 
   return res;
