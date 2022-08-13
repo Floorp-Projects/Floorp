@@ -798,6 +798,15 @@ DecodeSupportSet PDMFactory::SupportsMimeType(
                              !StaticPrefs::media_utility_process_enabled());
 
   if (videoSupport) {
+#ifdef MOZ_WMF_MEDIA_ENGINE
+    // Force to use RDD for video decoding in order to use media engine.
+    // TODO : this should be only enabled for encrypted video, need to find a
+    // way to use GPU for non-encrypted video still.
+    if (StaticPrefs::media_wmf_media_engine_enabled() &&
+        aLocation == RemoteDecodeIn::GpuProcess) {
+      return false;
+    }
+#endif
     if (MP4Decoder::IsH264(aMimeType)) {
       return MCSInfo::GetDecodeSupportSet(MediaCodec::H264, aSupported);
     }
