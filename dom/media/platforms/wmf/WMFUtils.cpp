@@ -602,5 +602,16 @@ HRESULT MFCreateMemoryBuffer(DWORD cbMaxLength, IMFMediaBuffer** ppBuffer) {
   return (MFCreateMemoryBufferPtr)(cbMaxLength, ppBuffer);
 }
 
+HRESULT MFLockDXGIDeviceManager(UINT* pResetToken,
+                                IMFDXGIDeviceManager** ppManager) {
+  ENSURE_FUNCTION_PTR(MFLockDXGIDeviceManager, mfplat.dll);
+  return (MFLockDXGIDeviceManagerPtr)(pResetToken, ppManager);
+}
+
+HRESULT MFUnlockDXGIDeviceManager() {
+  ENSURE_FUNCTION_PTR(MFUnlockDXGIDeviceManager, mfplat.dll);
+  return (MFUnlockDXGIDeviceManagerPtr)();
+}
+
 }  // end namespace wmf
 }  // end namespace mozilla

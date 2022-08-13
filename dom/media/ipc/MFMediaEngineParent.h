@@ -5,6 +5,7 @@
 #ifndef DOM_MEDIA_IPC_MFMEDIAENGINEPARENT_H_
 #define DOM_MEDIA_IPC_MFMEDIAENGINEPARENT_H_
 
+#include <Mfidl.h>
 #include <wrl.h>
 
 #include "MediaInfo.h"
@@ -65,6 +66,9 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
 
   void CreateMediaEngine();
 
+  void InitializeVirtualVideoWindow();
+  void InitializeDXGIDeviceManager();
+
   void AssertOnManagerThread() const;
 
   void HandleMediaEngineEvent(MFMediaEngineEventWrapper aEvent);
@@ -96,8 +100,12 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
 
   MediaEventListener mMediaEngineEventListener;
   MediaEventListener mRequestSampleListener;
-  MediaEventListener mTimeUpdateListener;
   bool mIsCreatedMediaEngine = false;
+
+  // A fake window handle passed to MF-based rendering pipeline for OPM.
+  HWND mVirtualVideoWindow = nullptr;
+
+  Microsoft::WRL::ComPtr<IMFDXGIDeviceManager> mDXGIDeviceManager;
 };
 
 }  // namespace mozilla
