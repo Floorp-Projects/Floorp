@@ -3855,6 +3855,5 @@ window.setTimeout(function(){
     await window.open(addon.optionsURL, '_blank');
   }
   el = document.getElementById("treestyletaboption");
-  console.log(el)
   el.addEventListener("click", opentreestyletaboption, false);
 }, 4000);
