@@ -70,7 +70,8 @@ function init() {
   // perhaps by running it inline (not as an onload handler) or something.
 
   // workaround bug 936936
-  document.body.style.display="block";
+  document.body.style.display = "block";
+  document.body.getBoundingClientRect();
 
   document.getElementById('rtl_auto').scrollLeft=999999;
 

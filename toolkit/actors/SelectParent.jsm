@@ -84,6 +84,7 @@ var SelectParentHelper = {
    * @param {Array<Object>}  uniqueItemStyles
    * @param {Number}         selectedIndex
    * @param {Number}         zoom
+   * @param {Boolean}        custom
    * @param {Boolean}        isDarkBackground
    * @param {Object}         uaStyle
    * @param {Object}         selectStyle
@@ -94,6 +95,7 @@ var SelectParentHelper = {
     uniqueItemStyles,
     selectedIndex,
     zoom,
+    custom,
     isDarkBackground,
     uaStyle,
     selectStyle
@@ -119,7 +121,7 @@ var SelectParentHelper = {
 
     let sheet = stylesheet.sheet;
 
-    if (!lazy.CUSTOM_STYLING_ENABLED) {
+    if (!custom) {
       selectStyle = uaStyle;
     }
 
@@ -137,7 +139,7 @@ var SelectParentHelper = {
       selectStyle["background-color"] != uaStyle["background-color"] ||
       selectStyle.color != uaStyle.color;
 
-    if (lazy.CUSTOM_STYLING_ENABLED) {
+    if (custom) {
       if (selectStyle["text-shadow"] != "none") {
         sheet.insertRule(
           `#ContentSelectDropdown > menupopup > :is(menuitem, menucaption)[_moz-menuactive="true"] {
@@ -215,60 +217,61 @@ var SelectParentHelper = {
       rule.direction = style.direction;
       rule.fontSize = zoom * parseFloat(style["font-size"], 10) + "px";
 
-      if (lazy.CUSTOM_STYLING_ENABLED) {
-        let optionBackgroundIsTransparent =
-          style["background-color"] == "rgba(0, 0, 0, 0)";
-        let optionBackgroundSet =
-          !optionBackgroundIsTransparent || style.color != selectStyle.color;
-
-        if (optionBackgroundIsTransparent && style.color != selectStyle.color) {
-          style["background-color"] = selectStyle["background-color"];
-        }
-
-        if (style.color == style["background-color"]) {
-          style.color = selectStyle.color;
-        }
-
-        let inactiveRule = null;
-        for (const property of SUPPORTED_OPTION_OPTGROUP_PROPERTIES) {
-          let shouldSkip = (function() {
-            if (property == "direction" || property == "font-size") {
-              // Handled elsewhere.
-              return true;
-            }
-            if (!style[property]) {
-              return true;
-            }
-            if (property == "background-color" || property == "color") {
-              // This also depends on whether "color" is set.
-              return !optionBackgroundSet;
-            }
-            return style[property] == selectStyle[property];
-          })();
-          if (shouldSkip) {
-            continue;
-          }
-          if (PROPERTIES_RESET_WHEN_ACTIVE.includes(property)) {
-            if (!inactiveRule) {
-              sheet.insertRule(
-                `#ContentSelectDropdown .ContentSelectDropdown-item-${i}:not([_moz-menuactive="true"]) {}`,
-                0
-              );
-              inactiveRule = sheet.cssRules[0].style;
-            }
-            inactiveRule[property] = style[property];
-          } else {
-            rule[property] = style[property];
-          }
-        }
-        style.customStyling = selectBackgroundSet || optionBackgroundSet;
+      if (!custom) {
+        continue;
       }
+      let optionBackgroundIsTransparent =
+        style["background-color"] == "rgba(0, 0, 0, 0)";
+      let optionBackgroundSet =
+        !optionBackgroundIsTransparent || style.color != selectStyle.color;
+
+      if (optionBackgroundIsTransparent && style.color != selectStyle.color) {
+        style["background-color"] = selectStyle["background-color"];
+      }
+
+      if (style.color == style["background-color"]) {
+        style.color = selectStyle.color;
+      }
+
+      let inactiveRule = null;
+      for (const property of SUPPORTED_OPTION_OPTGROUP_PROPERTIES) {
+        let shouldSkip = (function() {
+          if (property == "direction" || property == "font-size") {
+            // Handled elsewhere.
+            return true;
+          }
+          if (!style[property]) {
+            return true;
+          }
+          if (property == "background-color" || property == "color") {
+            // This also depends on whether "color" is set.
+            return !optionBackgroundSet;
+          }
+          return style[property] == selectStyle[property];
+        })();
+        if (shouldSkip) {
+          continue;
+        }
+        if (PROPERTIES_RESET_WHEN_ACTIVE.includes(property)) {
+          if (!inactiveRule) {
+            sheet.insertRule(
+              `#ContentSelectDropdown .ContentSelectDropdown-item-${i}:not([_moz-menuactive="true"]) {}`,
+              0
+            );
+            inactiveRule = sheet.cssRules[0].style;
+          }
+          inactiveRule[property] = style[property];
+        } else {
+          rule[property] = style[property];
+        }
+      }
+      style.customStyling = selectBackgroundSet || optionBackgroundSet;
     }
 
     // We only set the `customoptionstyling` if the background has been
     // manually set. This prevents the overlap between moz-appearance and
     // background-color. `color` and `text-shadow` do not interfere with it.
-    if (lazy.CUSTOM_STYLING_ENABLED && selectBackgroundSet) {
+    if (custom && selectBackgroundSet) {
       menulist.menupopup.setAttribute("customoptionstyling", "true");
     } else {
       menulist.menupopup.removeAttribute("customoptionstyling");
@@ -437,6 +440,7 @@ var SelectParentHelper = {
         options.uniqueStyles,
         selectedIndex,
         this._currentZoom,
+        msg.data.custom && lazy.CUSTOM_STYLING_ENABLED,
         msg.data.isDarkBackground,
         msg.data.defaultStyle,
         msg.data.style
@@ -787,6 +791,7 @@ class SelectParent extends JSWindowActorParent {
           // We only want to apply the full zoom. The text zoom is already
           // applied in the font-size.
           this.manager.browsingContext.fullZoom,
+          data.custom && lazy.CUSTOM_STYLING_ENABLED,
           data.isDarkBackground,
           data.defaultStyle,
           data.style

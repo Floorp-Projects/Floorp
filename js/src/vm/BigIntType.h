@@ -455,8 +455,8 @@ extern JS::BigInt* NumberToBigInt(JSContext* cx, double d);
 
 // Parse a BigInt from a string, using the method specified for StringToBigInt.
 // Used by the BigInt constructor among other places.
-extern JS::Result<JS::BigInt*, JS::OOM> StringToBigInt(
-    JSContext* cx, JS::Handle<JSString*> str);
+extern JS::Result<JS::BigInt*> StringToBigInt(JSContext* cx,
+                                              JS::Handle<JSString*> str);
 
 // Parse a BigInt from an already-validated numeric literal.  Used by the
 // parser.  Can only fail in out-of-memory situations.
