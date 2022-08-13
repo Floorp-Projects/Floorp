@@ -6,6 +6,7 @@
 #define DOM_MEDIA_IPC_MFMEDIAENGINEPARENT_H_
 
 #include <Mfidl.h>
+#include <winnt.h>
 #include <wrl.h>
 
 #include "MediaInfo.h"
@@ -78,6 +79,8 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
 
   void DestroyEngineIfExists(const Maybe<MediaResult>& aError = Nothing());
 
+  void EnsureDcompSurfaceHandle();
+
   // This generates unique id for each MFMediaEngineParent instance, and it
   // would be increased monotonically.
   static inline uint64_t sMediaEngineIdx = 0;
@@ -106,6 +109,14 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
   HWND mVirtualVideoWindow = nullptr;
 
   Microsoft::WRL::ComPtr<IMFDXGIDeviceManager> mDXGIDeviceManager;
+
+  // These will be always zero for audio playback.
+  DWORD mDisplayWidth = 0;
+  DWORD mDisplayHeight = 0;
+
+  // When it's true, the media engine will output decoded video frames to a
+  // shareable dcomp surface.
+  bool mIsEnableDcompMode = false;
 };
 
 }  // namespace mozilla

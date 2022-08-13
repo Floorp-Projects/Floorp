@@ -613,5 +613,11 @@ HRESULT MFUnlockDXGIDeviceManager() {
   return (MFUnlockDXGIDeviceManagerPtr)();
 }
 
+HRESULT MFPutWorkItem(DWORD dwQueue, IMFAsyncCallback* pCallback,
+                      IUnknown* pState) {
+  ENSURE_FUNCTION_PTR(MFPutWorkItem, mfplat.dll);
+  return (MFPutWorkItemPtr)(dwQueue, pCallback, pState);
+}
+
 }  // end namespace wmf
 }  // end namespace mozilla
