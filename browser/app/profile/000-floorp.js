@@ -54,7 +54,6 @@ pref("privacy.restrict3rdpartystorage.rollout.enabledByDefault", true);
 
 //新しいタブの検索を「ウェブを検索」に変更
 pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
-pref("browser.newtabpage.activity-stream.feeds.section.highlights", true);
 
 pref("floorp.memory.free.button", true);
 pref("floorp.entable.deepl.translate", false);
