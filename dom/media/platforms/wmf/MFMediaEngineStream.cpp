@@ -124,10 +124,7 @@ MFMediaEngineStreamWrapper::FakeDecodedDataCreator::FakeDecodedDataCreator(
 }
 
 MFMediaEngineStream::MFMediaEngineStream()
-    : mIsShutdown(false),
-      mIsSelected(false),
-      mReceivedEOS(false),
-      mShouldServeSmamples(false) {}
+    : mIsShutdown(false), mIsSelected(false), mReceivedEOS(false) {}
 
 MFMediaEngineStream::~MFMediaEngineStream() { MOZ_ASSERT(IsShutdown()); }
 
@@ -165,7 +162,12 @@ HRESULT MFMediaEngineStream::Start(const PROPVARIANT* aPosition) {
   }
   SLOG("Start");
   RETURN_IF_FAILED(QueueEvent(MEStreamStarted, GUID_NULL, S_OK, aPosition));
-  mShouldServeSmamples = true;
+  Unused << mTaskQueue->Dispatch(NS_NewRunnableFunction(
+      "MFMediaEngineStream::Start", [self = RefPtr{this}]() {
+        // Process any pending requests (if any) which happens when the stream
+        // wasn't allowed to serve samples.
+        self->ReplySampleRequestIfPossible();
+      }));
   return S_OK;
 }
 
@@ -177,7 +179,6 @@ HRESULT MFMediaEngineStream::Seek(const PROPVARIANT* aPosition) {
   }
   SLOG("Seek");
   RETURN_IF_FAILED(QueueEvent(MEStreamSeeked, GUID_NULL, S_OK, aPosition));
-  mShouldServeSmamples = true;
   return S_OK;
 }
 
@@ -189,7 +190,6 @@ HRESULT MFMediaEngineStream::Stop() {
   }
   SLOG("Stop");
   RETURN_IF_FAILED(QueueEvent(MEStreamStopped, GUID_NULL, S_OK, nullptr));
-  mShouldServeSmamples = false;
   return S_OK;
 }
 
@@ -201,7 +201,6 @@ HRESULT MFMediaEngineStream::Pause() {
   }
   SLOG("Pause");
   RETURN_IF_FAILED(QueueEvent(MEStreamPaused, GUID_NULL, S_OK, nullptr));
-  mShouldServeSmamples = false;
   return S_OK;
 }
 
