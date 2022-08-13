@@ -791,22 +791,10 @@ media::MediaCodecsSupported PDMFactory::Supported(bool aForceRefresh) {
 DecodeSupportSet PDMFactory::SupportsMimeType(
     const nsACString& aMimeType, const MediaCodecsSupported& aSupported,
     RemoteDecodeIn aLocation) {
-  const bool videoSupport = aLocation != RemoteDecodeIn::UtilityProcess;
-  const bool audioSupport = (aLocation == RemoteDecodeIn::UtilityProcess &&
-                             StaticPrefs::media_utility_process_enabled()) ||
-                            (aLocation == RemoteDecodeIn::RddProcess &&
-                             !StaticPrefs::media_utility_process_enabled());
+  const TrackSupportSet supports =
+      RemoteDecoderManagerChild::GetTrackSupport(aLocation);
 
-  if (videoSupport) {
-#ifdef MOZ_WMF_MEDIA_ENGINE
-    // Force to use RDD for video decoding in order to use media engine.
-    // TODO : this should be only enabled for encrypted video, need to find a
-    // way to use GPU for non-encrypted video still.
-    if (StaticPrefs::media_wmf_media_engine_enabled() &&
-        aLocation == RemoteDecodeIn::GpuProcess) {
-      return false;
-    }
-#endif
+  if (supports.contains(TrackSupport::Video)) {
     if (MP4Decoder::IsH264(aMimeType)) {
       return MCSInfo::GetDecodeSupportSet(MediaCodec::H264, aSupported);
     }
@@ -825,7 +813,8 @@ DecodeSupportSet PDMFactory::SupportsMimeType(
       return MCSInfo::GetDecodeSupportSet(MediaCodec::Theora, aSupported);
     }
   }
-  if (audioSupport) {
+
+  if (supports.contains(TrackSupport::Audio)) {
     if (MP4Decoder::IsAAC(aMimeType)) {
       return MCSInfo::GetDecodeSupportSet(MediaCodec::AAC, aSupported);
     }
