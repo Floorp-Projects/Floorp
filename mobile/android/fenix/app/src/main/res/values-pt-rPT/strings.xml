@@ -75,6 +75,9 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Dispensar</string>
 
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">Dispensar</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">É necessário acesso à câmara. Aceda às definições do Android, toque em permissões e toque em permitir.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -122,11 +125,11 @@
     <string name="recent_tabs_show_all_content_description_2">Mostrar botão todos os separadores recentes</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">A sua pesquisa por \&quot;%1$s\&quot;</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">A sua pesquisa por \&quot;%1$s\&quot;</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d sites</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d sites</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Ver todos os separadores sincronizados</string>
@@ -622,9 +625,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Grelha</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Pesquisar grupos</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Pesquisar grupos</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Agrupar sites relacionados</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Agrupar sites relacionados</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Fechar separadores</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -1602,8 +1605,6 @@
     <string name="addresses_edit_address">Editar endereço</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Gerir endereços</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Nome completo</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">Primeiro nome</string>
     <!-- The header for the middle name of an address -->

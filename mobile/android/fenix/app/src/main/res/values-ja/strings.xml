@@ -78,6 +78,9 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">閉じる</string>
 
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">閉じる</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">カメラへのアクセスが必要です。Android の設定から、権限をタップし、許可をタップしてください。</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -126,11 +129,11 @@
     <string name="recent_tabs_show_all_content_description_2">最近のタブをすべて表示するボタンです</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">\&quot;%1$s\&quot; についての検索</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">\&quot;%1$s\&quot; についての検索</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d サイト</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d サイト</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">同期したタブをすべて見る</string>
@@ -630,9 +633,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">グリッド</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">タブグループを検索</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">タブグループを検索</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">関連サイトをグループ化します</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">関連サイトをグループ化します</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">タブを閉じる期間</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -1178,7 +1181,18 @@
     <string name="delete_browsing_data_on_quit_action">終了</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">この操作はすべての閲覧データを削除します。</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">この操作はすべての閲覧データを削除します。</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">削除する期間</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">履歴 (他の端末から同期されたものを含む)、Cookie および他のブラウジングデータを削除します。</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">1 時間以内</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">昨日と今日</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">すべての履歴</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">選択した閲覧データを %s から削除します。</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1191,8 +1205,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">閲覧データを削除しています...</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">この操作はすべての項目を削除します。</string>
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">“%s” のすべてのサイトを削除しますか？</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">キャンセル</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1611,8 +1625,6 @@
     <string name="addresses_edit_address">住所の編集</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">アドレスの管理</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">フルネーム</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">名</string>
     <!-- The header for the middle name of an address -->

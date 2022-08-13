@@ -77,6 +77,9 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">知道了</string>
 
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">知道了</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">需要访问相机。转到 Android 设置，点按权限，然后点按允许。</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -124,11 +127,11 @@
     <string name="recent_tabs_show_all_content_description_2">显示所有近期标签页按钮</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">“%1$s”的搜索结果</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">“%1$s”的搜索结果</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d 个网站</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d 个网站</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">查看所有同步的标签页</string>
@@ -639,9 +642,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">网格</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">搜索分组</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">搜索分组</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">将有关联的网站分组归并</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">将有关联的网站分组归并</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">关闭标签页</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -1646,8 +1649,6 @@
     <string name="addresses_edit_address">编辑地址</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">管理地址</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">全名</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">名</string>
     <!-- The header for the middle name of an address -->

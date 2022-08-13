@@ -95,4 +95,706 @@
     <string name="tab_tray_inactive_onboarding_message">Àwọn táàbù tí o kò tí ì wò fún ọ̀sẹ̀ méjì ti lo sí ibí.</string>
 
 
+    <!-- Text for the action link to go to Settings for inactive tabs. -->
+    <string name="tab_tray_inactive_onboarding_button_text">Pa á nínú àwọn ètò</string>
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Títì-fún-ra-ẹ̀ lẹ́yìn oṣù kan?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">%1$s lè ti àwọn táàbù tí o kò tíì wò ní oṣù tó kọjá.</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Tì</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">Tan títí-fún-ra-ẹ̀</string>
+
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">Táàbù tuntun</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">Táàbù ìkọ̀kọ̀ tuntun</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Fò wọlé padà</string>
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">Ṣàfihàn gbogbo rẹ̀</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description_2">Ṣàfihàn gbogbo bọ́tìnì àwọn táàbù tuntun</string>
+    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
+        The first parameter is the search term that the user used. (for example: your search for "cat")-->
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Ìwádìí rẹ fún \&quot;%1$s\&quot;</string>
+    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
+        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d àwọn sáìtì</string>
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">Rí gbogbo táàbù tó ń ṣiṣẹ́ pọ̀</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">Ẹ̀rọ tó ń ṣiṣẹ́ pọ̀</string>
+
+
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Yọ kúrò</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">Ṣàbẹ̀wò láìpẹ́</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">Yọ kúrò</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description_2">Ṣàfihàn àwọn ìwádìí tó kojá</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">Padà                </string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">Síwájú</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">Sọ dọ̀tun</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">Dúró</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">Àwọn àfikún</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Kò sí àwọn àfikún níbí</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">Ìràǹwọ́</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Kíni tuntun</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">Àwọn aatò</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">Ilé-ìkàwé</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">Sáìtì dẹ́sítọọ̀pù</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Ṣàfikún sí Síkíríìnì àkọ́ọ́kàn</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Ṣàgbékalẹ̀</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Sopọ̀ padà</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">Wá lórí ojú-ìwé</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">Fipamọ́ sí àkójọ</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">Pín</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">Ṣí i ní %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">OLÙGBỌ̀WỌ́ JẸ́ %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">Olùgbọ̀wọ́ jẹ́ %1$s</string>
+    <!-- Browser menu button to put the current page in reader mode -->
+    <string name="browser_menu_read">Èrò olùkà</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Pa èrò olùkà dé</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">Ṣí i nínú áàpù</string>
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">Ṣètò àkànṣe ìran pàtàkì fún olùkà</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Ṣàfikún</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Ṣàtúnṣe</string>
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">Ṣètò àkanṣe ojúùwé-àkọ́ọ́kàn</string>
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Síkíríìnì àkọ́ọ́kàn</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">Èdè tí a yàn</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">Tèlé èdè ẹ̀rọ</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">Wá èdè</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">Àyẹ̀wò aláwòrán</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">Ẹ̀rọ ìwádìí</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">Àwọn ààtò ẹ̀rọ ìwádìí</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">Fọwọ́sí líǹkì láti orí kílípúbọọ̀dù</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">Gbà á láàyè</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">Má fàyègbàá</string>
+
+
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">Gba àwọn ìmọ̀ràn ìwádìí láàyè ní àwọn àsìkò ìkọ̀kọ̀ bí?</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s yóó pín gbogbo ohun to bá tẹ̀ sí ààyè ìfi-àdírẹ̀sì-sí pẹ̀lú ẹ̀rọ ìwádìí rẹ gangan.</string>
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">Wádìí %s</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Wá tààrà láti ààyè ìfi-àdírẹ̀sì-sí</string>
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Àwọn ètò ìwádìí</string>
+
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_title_3">Kíni tuntun ní %1$s</string>
+    <!-- Onboarding home screen dialog description text. -->
+    <string name="onboarding_home_screen_description_2">Ó ti rọrùn láti tún bẹ̀rẹ̀ láti ibi tí o ti parí.</string>
+    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_section_home_title_3">Ojúùwé àkọọ́kàn %1$s tara-ẹni</string>
+
+
+    <!-- Onboarding home screen dialog description text for the home section. -->
+    <string name="onboarding_home_screen_section_home_description_2">Lọ sí orí àwọn táàbù rẹ tó wà ní ṣíṣí, àwọn búkúmaakì, àti àwọn ìtàn bíráwúsìnnì.</string>
+
+
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Àwọn táàbù tó wà ní títò, tó mọ̀</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Kó ìrújúpọ̀ táàbù kúrò pẹ̀lú ìgbélélẹ̀ tó ti ní ìdàgbàsókè si àti àwọn táàbù tó ń padé fún ra wọn.</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_title_2">Àwọn ìwádìí àìpẹ́</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_description_2">Tún ṣe àbẹ̀wò sí àwọn ìwádìì tuntun rẹ láti ojú-ìwé akọ́ọ́kàn àti àwọn táàbù rẹ.</string>
+
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Ojú-ìwé akọ́ọ́kàn Firefox rẹ ti jẹ́ kí ó rọrùn láti bẹ̀rẹ̀ ní ibití ó parí rẹ̀ sí. Wá àwọn táàbù àìpẹ́ rẹ, àwọn búkúmaakì, àti àwọn èsì ìwádìí.</string>
+
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Ṣí táàbù tuntun %1$s</string>
+
+
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Wá</string>
+
+
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Wá lórí wẹ́ẹ̀bù</string>
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Wíwá pẹ̀lú ohùn</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">Àwọn ààtò</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Gbogbogbò</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">Nípa</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">Ẹ̀rọ ìwádìí ìbẹ̀rẹ̀pẹ̀pẹ̀</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Wá</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">Pẹpẹ àdìrẹ́sì</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">Ṣe òṣùwọ̀n lórí Google Play</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">Nípa %1$s</string>
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">Yàn ní bíráwúsà ìbẹ̀rẹ̀pẹ̀pẹ̀</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">Ìlọsíwájú</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Ìkọ̀kọ̀ àti ààbò</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">Àwọn ìgbaniláàyè sáìtì</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Bíráwúsìnnì ìkọ̀kọ̀</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Ṣí àwọn líǹkì nínú táàbù tuntun</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Fàyègba àwọn sikirinṣọ́ọ̀tì nínú bíráwúsìnnì ìkọ̀kọ̀</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Tí ìgbàláàyè bá wà, àwọn táàbù ìkọ̀kọ̀ náà ma hàn nígbà tí ọ̀pọ̀ áàpù bá wà ní ṣíṣí</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Ṣàfikún ọ̀nà-àbùjá bíráwúsìnnì ìkọ̀kọ̀</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">Ìlànà HTTPS-Nìkan</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">Ìgbìnyànjú ẹsẹ̀kẹsẹ̀ láti so mọ́ àwọn sáìtì tó ń lo ìlànà ìfipamọ́ HTTPS fún ààbò tó lékún.</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">Tàn án</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">Pa á</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">Kọ́ si</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">Gbàáláyè nínú gbogbo àwọn táàbù</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Gbàáláyè nínú táàbù ìkọ̀kọ̀ nìkan</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">Kò sí ààyè fún ìdáábòbò sáìtì</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">Ó ṣeéṣe, kí ojú òpó wẹ́ẹ̀bù má ṣe àtìlẹ́yìn fún HTTPS.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Síbẹ̀síbẹ̀, ó tún ṣeéṣe kí àsakọlù kan lọ́wọ́ nínú ẹ̀. Tí o bá tẹ̀síwájú sí wẹ́íbúsaìtì náà, o kò gbọdọ̀ tẹ alàyé tó bá gbẹgẹ́. Tí o bá tẹ̀síwájú, ipò HTTPS-Nìkan yóó wà ní pípa fún ìgbà díẹ̀ fún sáìtì náà.</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">Ìgbaniláàyè</string>
+
+
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Sáfà taraẹni akáǹtì Firefox</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Sáfà taraẹni onísopọ̀</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Àkáǹtì Firefox/Ṣíṣàtúnṣe ìṣiṣẹ́pọ̀ sáfà. Jíjáwọ́ kúrò nínu áàpù láti ṣàmúlò àwọn àyípadà…</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">Àkáǹtì</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">Pẹpẹ irinṣẹ́</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Kókó</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Ojú ìwé ìbẹ̀rẹ̀</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Àwọn ìfarajúwèé</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Ìsọditaraẹni</string>
+    <!-- Preference description for banner about signing in -->
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">So àwọn búkúmaakì pọ̀, ìtàn, àti díẹ̀ si pẹ̀lú àkáńtì Firefox rẹ</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Wọlé láti so táàbù pọ̀, àwọn búkúmaakì, àwọn ọ̀rọ̀ ìpamọ́, àti díẹ̀ si. </string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Àkáǹtì Firefox</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Tún darapọ̀ láti tún bẹ̀rẹ̀ ìṣiṣẹ́pọ̀ padà</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">Èdè</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Àwọn dátà tó wunni</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Gbígba àwọn dátà</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">Ìṣàtúnṣe láti ọ̀nà jíjìn nípaṣẹ̀ USB</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Fi àwọn ẹ̀rọ̀ ìwádìí hàn</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">Ṣàfihàn àwọn àbá wíwá</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Ṣàfihàn wíwá ohun</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">Fi àwọn ìgbà ìkọ̀kọ̀ hàn</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Ṣàfihàn àwọn àbá kílípíbọọ̀dù</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Wá àwọn ìtàn bíráwúsìnnì</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Wá àwọn búkúmaakì</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Wá àwọn táàbù tó ti wà ní sísopọ̀</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">Àwọn ètò àkáńtì</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Ìdápé-aláìfọwọ́sí àwọn URL</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Ṣí àwọn ọ̀nà àsopọ̀ nínú awọn áápù</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Alákòóso ìgbàsílẹ̀ ìta</string>
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Àwọn àfikún</string>
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Àwọn ìfitónilétí</string>
+
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">Ó DA</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Paárẹ́</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Àkójọpọ̀ orúkọ</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Àkọ́jọpọ̀ ẹni (ID Aṣàmúlò)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Ṣàfikún títún àkójọpọ̀ ṣe. Jíjáwọ́ kúrò nínu ààpù láti ṣàmúlò àwọn àyípadà…</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Wọlé padà sínu</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">Àwọn búkúmaakì àìpẹ́</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is
+    a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Ìṣàbẹ̀wò láìpẹ́</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket">Àpò</string>
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">Àwọn onígbọ̀wọ́ ìtan</string>
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">Àwọn ìṣẹ̀ṣọ́ ògiri</string>
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">Àwọn ọ̀nà- àbùjá tí a ṣe onígbọ̀wọ́</string>
+
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">Ohun Ìṣẹ̀ṣọ́ ògiri: %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">Ìsọdọ̀tun ìṣẹ̀sọ́ ògiri!</string>
+    <!-- Snackbar label for action to view selected wallpaper -->
+    <string name="wallpaper_updated_snackbar_action">Wòó</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">Ṣe àyípadà ìṣẹ́ṣọ ògiri nípa títẹ ààmì ojú-ìwé Firefox</string>
+    <!-- This is the accessibility content description for the wallpapers functionality. Users are
+    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
+    <string name="wallpaper_logo_content_description">Lógò Firefox - ṣàyípada sí ìṣẹ̀ṣọ́ ògiri, bọ́tìnì</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Kò sí àtìlẹ́yìn fún àfikún</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">A ti fi àfikún si tẹ́lẹ̀</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">Ṣepọ̀ nísìyín</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Yan ohun tí o fẹ́ ṣepọ̀</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">Ìtàn</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">Àwọn búkúmaàkì</string>
+
+
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins"> Àwọn lọ́giìnì</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Ṣí táàbù</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Jáde</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Orúkọ ẹ̀rọ</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">Orúkọ ẹ̀rọ ò lè jẹ́ òfìfo.</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">Ó ń sopọ̀…</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">Àwọn ìṣepọ̀ kùnà. Àṣeyọrí ìkẹhìn: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Àwọn ìṣepọ̀ kùnà. Àwọn ìṣepọ̀ ìkẹhìn: láíláí</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">Ìṣepọ̀ ìkẹhìn: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Ìṣepọ̀ ìkẹhìn: láíláí</string>
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name_2">%1$s lórí %2$s %3$s</string>
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Àwọn káàdì kírẹ́dítì</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Àwọn àdírẹ́ẹ̀sì</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Àwọn táàbù tí a gbà</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Àwọn ìfitónilétí fún àwọn táàbù tí a gbà láti àwọn Firefox mìíràn.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">T́áàbù tí a gbà</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Táàbù láti %s</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">Àwọn àyàfi</string>
+
+
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Tàn-án fún gbogbo àwọn sáìtì</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Àwọn ìyọkúrò jẹ́ kí o pa ààbò ìtọpaṣẹ̀ fún àwọn sáìtì tí o yàn.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Kọ́ si</string>
+
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Lílò àti dátà iṣẹ́ ọnà</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">Pín àwọn iṣẹ́ ṣíṣe, lílò, hádíwiẹ̀ àti dátà ìsọdi tẹni nípa bíráwúsà rẹ pẹ̀lú Mozilla láti ṣe ìrànlọ́wọ́ fún wa láti jẹ́ kí ó %1$s dára</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Pípolówó dátà</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Pín ìlò dátà ìpìnlẹ̀ pẹ̀lú Adjust, òǹtajà ìtajà alágbéká wa</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Àwọn àyẹ̀wò</string>
+
+
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Fàyègba Mozilla láàyè láti wọlé sórí ẹ̀rọ kó sì ṣe àwọn ayẹ̀wò</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Tan ìṣepọ̀</string>
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">Ṣe ìṣepọ̀ kí o sì fi dátà rẹ pamọ́</string>
+
+
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">Wọlé láti tún-un sopọ̀</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Yọ àkáǹtì kúrò</string>
+
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2"><![CDATA[Ṣàyẹ̀wò aláwòrán fún QR koòdù tó hàn ní <b>firefox.com/pair</b>]]></string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Òkè</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Ìsàlẹ̀</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Ìmọ́lẹ̀</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Òkùnkùn</string>
+
+
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Tẹ̀lé àkóórí ẹ̀rọ</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Fàá láti sọ́dọ̀tun</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Yí i lọ láti tọ́jú pẹpẹ irinṣẹ́</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Fa pẹpẹ irinṣẹ́ sí ẹ̀gbẹ́ kan láti yí àwọn táàbù </string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Fa pẹpẹ irinṣẹ́ sí òkè láti ṣí àwọn táàbù</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">Àwọn ìgbàsílẹ̀</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">Àwọn búkúmaàkì</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">Àwọn búkúmaàkì dẹ́sítọpù</string>
+
+
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">Àwọn Àtẹ búkúmaàkì</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Àwọn Pẹpẹ irinṣẹ́ búkúmaàkì</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">Àwọn búkúmaàkì mìíràn</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">Ìtàn</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Táàbù tuntun</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">Àwọn ààtò</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">Padé</string>
+
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">%d sáìtì</string>
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">%d àwọn sáìtì</string>
+
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">Àwọn táàbù tí o tì láìpẹ́</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">Fi ìtàn kíkún hàn</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d àwọn táàbù</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d táàbù</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">Kò sí àwọn táàbù tó ṣẹ̀ padé ní àìpẹ́ níbí</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Àwọn táàbù</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Wíwo táàbù</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Àtòkọ</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Gírìdì</string>
+    <!-- Option for search term tab groups -->
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Wá àwọn ẹgbẹ́</string>
+    <!-- Summary text for search term tab groups -->
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Fi àwọn sáìtì tó jẹmọ́ ara wọn sí ọ̀wọ́ kan náà</string>
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Pa àwọn táàbù dé</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">Láéláé</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Lẹ́yìn ọjọ́ kan</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Lẹ́yìn ọ̀sẹ̀ kan</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Lẹ́yìn oṣù kan</string>
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Pa àwọn táàbù tó wà ní ṣíṣí sílẹ̀ dé láìfọwọ́paádé</string>
+
+    <!-- Opening screen -->
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Ṣíṣí síkírínì</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Ojú ìwé ìbẹ̀rẹ̀</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Táàbù tó kẹ́yìn</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Abala ojú-ilé lẹ́yìn wákàtí mẹ́rìn láìṣiṣẹ́</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Padé pẹ̀lú ọwọ́</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Padé lẹ́yìn ọjọ́ kan</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Padé lẹ́yìn ọ̀sẹ̀ kan</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Padé lẹ́yìn oṣù kan</string>
+
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">Gbé àwọn táàbù  àtijọ́ lọ sí àìṣiṣẹ́</string>
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">Àwọn táàbù tí o kò tíì wò fún ọ̀sẹ̀ méjì má a lọ sí abala àìṣiṣẹ́.</string>
+
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Yọ kúrò</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Tí ó ń ṣiṣẹ́</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s lè fi sórí ẹ̀rọ kí o sì ṣe àwọn àyẹ̀wò láti ìgbàdégbà.  </string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Kọ́ si</string>
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">Áàpù náà yóó dáwọ́ dúró láti ṣàmúlò àwọn àyípadà</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">Ó DA</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Parẹ́</string>
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Pípa áàpù náà láti ṣàmúlò àyípadà…</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">Ṣí àwọn táàbù</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">Àwọn táàbù ìkọ̀kọ̀</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Àwọn táàbù tọ́ ti ṣepọ̀</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">Ṣàfikún táàbù</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Ṣàfikún táàbù ìkọ̀kọ̀</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Ikọkọ</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Ìṣepọ̀</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Pín gbogbo àwọn táàbù </string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Àwọn táàbù tí a ṣẹ̀ṣẹ̀ padé</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Ṣẹ̀ṣẹ̀ padé</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Àwọn ètò àkáńtì</string>
+
+
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Àwọn ètò táàbù</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Pa gbogbo táàbù dé</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">Búkúmaàkì</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">Padé</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">Pín àwọn táàbù tí a yàn</string>
+
+
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">Yan àwọn àtẹ táàbù</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Yọ táàbù kúrò nínu àkójọpọ̀</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">Yan àwọn táàbù</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">Pa táàbù dé</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Pa táàbù dé %s</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Ṣí àwọn àtẹ táàbù</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">Tọ́jú àwọn táàbù sínú àkójọpọ̀</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Àtẹ táàbù</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">Pa àkójọpọ̀ rẹ́</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">Tún orúkọ míìràn fún àkójọpọ̀</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">Ṣí àwọn táàbù</string>
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Orúkọ àkójọpọ̀</string>
+	<!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Ṣàtúnfúnlórúkọ</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Yọ kúrò</string>
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Parẹ́ kúrò nínú ìtan</string>
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s  (Móòdù ìkọ̀kọ̀)</string>
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Àwọn táàbù míìràn</string>
+
+    <!-- History -->
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Tẹ àwọn ọ̀rọ̀ wíwá si</string>
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">Pa ìtàn rẹ́</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Ìtàn ti Parẹ́</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">Parẹ́ %1$s</string>
+    <!-- Context description text for the button to delete a single history item -->
+    <string name="history_delete_item">Parẹ́</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">%1$d ti yàn</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Òní</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Àná</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Ọjọ́ méje sẹ́yìn</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Ọgbọ̀n ọjọ́ sẹ́yìn</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">Ti pẹ́ jù</string>
+
+
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Kò sí ìtàn níbí</string>
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">Ìṣiṣẹ́pọ̀ láti àwọn ẹ̀rọ míràn</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string name="history_from_other_devices">Láti inú àwọn ẹ̀rọ mìíràn</string>
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">Forúkọsílẹ̀-wọlé láti rí ìtan nípasẹ̀ ìṣiṣẹ́pọ̀ láti àwọn ẹ̀rọ̀ rẹ míràn.</string>
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">Ìforúkọsílẹ̀-wọlé</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>Tàbí ṣẹ̀dá àkáńtì Firefox láti bẹ̀rẹ̀ sí ní ṣiṣẹ́pọ̀</u>]]></string>
+
+
     </resources>
