@@ -99,7 +99,8 @@ class MFMediaEngineStream
   }
 
  protected:
-  HRESULT GenerateStreamDescriptor(uint64_t aStreamId, const TrackInfo& aInfo);
+  HRESULT GenerateStreamDescriptor(
+      Microsoft::WRL::ComPtr<IMFMediaType>& aMediaType);
 
   // Create a IMFMediaType which includes the details about the stream.
   // https://docs.microsoft.com/en-us/windows/win32/medfound/media-type-attributes
@@ -123,6 +124,10 @@ class MFMediaEngineStream
 
   // This an unique ID retrieved from the IMFStreamDescriptor.
   DWORD mStreamDescriptorId = 0;
+
+  // A unique ID assigned by MFMediaSource, which won't be changed after first
+  // assignment.
+  uint64_t mStreamId = 0;
 
   RefPtr<TaskQueue> mTaskQueue;
 

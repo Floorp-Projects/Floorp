@@ -138,20 +138,22 @@ HRESULT MFMediaEngineStream::RuntimeClassInitialize(
     uint64_t aStreamId, const TrackInfo& aInfo, MFMediaSource* aParentSource) {
   mParentSource = aParentSource;
   mTaskQueue = aParentSource->GetTaskQueue();
+  mStreamId = aStreamId;
   RETURN_IF_FAILED(wmf::MFCreateEventQueue(&mMediaEventQueue));
-  RETURN_IF_FAILED(GenerateStreamDescriptor(aStreamId, aInfo));
+
+  ComPtr<IMFMediaType> mediaType;
+  // The inherited stream would return different type based on their media info.
+  RETURN_IF_FAILED(CreateMediaType(aInfo, mediaType.GetAddressOf()));
+  RETURN_IF_FAILED(GenerateStreamDescriptor(mediaType));
   SLOG("Initialized %s (id=%" PRIu64 ", descriptorId=%lu)",
        GetDescriptionName().get(), aStreamId, mStreamDescriptorId);
   return S_OK;
 }
 
-HRESULT MFMediaEngineStream::GenerateStreamDescriptor(uint64_t aStreamId,
-                                                      const TrackInfo& aInfo) {
-  ComPtr<IMFMediaType> mediaType;
-  // The inherited stream would return different type based on their media info.
-  RETURN_IF_FAILED(CreateMediaType(aInfo, mediaType.GetAddressOf()));
+HRESULT MFMediaEngineStream::GenerateStreamDescriptor(
+    ComPtr<IMFMediaType>& aMediaType) {
   RETURN_IF_FAILED(wmf::MFCreateStreamDescriptor(
-      aStreamId, 1 /* stream amount */, mediaType.GetAddressOf(),
+      mStreamId, 1 /* stream amount */, aMediaType.GetAddressOf(),
       &mStreamDescriptor));
   RETURN_IF_FAILED(
       mStreamDescriptor->GetStreamIdentifier(&mStreamDescriptorId));
