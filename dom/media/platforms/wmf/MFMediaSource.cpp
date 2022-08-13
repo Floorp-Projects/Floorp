@@ -34,7 +34,8 @@ HRESULT MFMediaSource::RuntimeClassInitialize(const Maybe<AudioInfo>& aAudio,
   mTaskQueue = TaskQueue::Create(
       GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER), "MFMediaSource");
   if (aAudio) {
-    mAudioStream = MFMediaEngineAudioStream::Create(streamId++, *aAudio, this);
+    mAudioStream.Attach(
+        MFMediaEngineAudioStream::Create(streamId++, *aAudio, this));
     if (!mAudioStream) {
       NS_WARNING("Failed to create audio stream");
       return E_FAIL;
@@ -47,8 +48,8 @@ HRESULT MFMediaSource::RuntimeClassInitialize(const Maybe<AudioInfo>& aAudio,
   // output implementation. Our first step is to make audio playback work.
   if (StaticPrefs::media_wmf_media_engine_video_output_enabled()) {
     if (aVideo) {
-      mVideoStream =
-          MFMediaEngineVideoStream::Create(streamId++, *aVideo, this);
+      mVideoStream.Attach(
+          MFMediaEngineVideoStream::Create(streamId++, *aVideo, this));
       if (!mVideoStream) {
         NS_WARNING("Failed to create video stream");
         return E_FAIL;
