@@ -243,13 +243,18 @@ void MFMediaEngineParent::HandleMediaEngineEvent(
     case MF_MEDIA_ENGINE_EVENT_SEEKED:
     case MF_MEDIA_ENGINE_EVENT_BUFFERINGSTARTED:
     case MF_MEDIA_ENGINE_EVENT_BUFFERINGENDED:
-    case MF_MEDIA_ENGINE_EVENT_ENDED:
     case MF_MEDIA_ENGINE_EVENT_PLAYING:
       Unused << SendNotifyEvent(aEvent.mEvent);
       break;
+    case MF_MEDIA_ENGINE_EVENT_ENDED: {
+      Unused << SendNotifyEvent(aEvent.mEvent);
+      UpdateStatisticsData();
+      break;
+    }
     case MF_MEDIA_ENGINE_EVENT_TIMEUPDATE: {
       auto currentTimeInSeconds = mMediaEngine->GetCurrentTime();
       Unused << SendUpdateCurrentTime(currentTimeInSeconds);
+      UpdateStatisticsData();
       break;
     }
     default:
@@ -514,6 +519,58 @@ void MFMediaEngineParent::EnsureDcompSurfaceHandle() {
     mMediaSource->SetDCompSurfaceHandle(surfaceHandle);
   } else {
     NS_WARNING("SurfaceHandle is not ready yet");
+  }
+}
+
+void MFMediaEngineParent::UpdateStatisticsData() {
+  AssertOnManagerThread();
+  ComPtr<IMFMediaEngineEx> mediaEngineEx;
+  RETURN_VOID_IF_FAILED(mMediaEngine.As(&mediaEngineEx));
+
+  struct scopePropVariant : public PROPVARIANT {
+    scopePropVariant() { PropVariantInit(this); }
+    ~scopePropVariant() { PropVariantClear(this); }
+    scopePropVariant(scopePropVariant const&) = delete;
+    scopePropVariant& operator=(scopePropVariant const&) = delete;
+  };
+
+  // https://docs.microsoft.com/en-us/windows/win32/api/mfmediaengine/ne-mfmediaengine-mf_media_engine_statistic
+  scopePropVariant renderedFramesProp, droppedFramesProp;
+  RETURN_VOID_IF_FAILED(mediaEngineEx->GetStatistics(
+      MF_MEDIA_ENGINE_STATISTIC_FRAMES_RENDERED, &renderedFramesProp));
+  RETURN_VOID_IF_FAILED(mediaEngineEx->GetStatistics(
+      MF_MEDIA_ENGINE_STATISTIC_FRAMES_DROPPED, &droppedFramesProp));
+
+  const unsigned long renderedFrames = renderedFramesProp.ulVal;
+  const unsigned long droppedFrames = droppedFramesProp.ulVal;
+
+  // As the amount of rendered frame MUST increase monotonically. If the new
+  // statistic data show the decreasing, which means the media engine has reset
+  // the statistic data and started a new one. (That will happens after calling
+  // flush internally)
+  if (renderedFrames < mCurrentPlaybackStatisticData.renderedFrames()) {
+    mPrevPlaybackStatisticData =
+        StatisticData{mPrevPlaybackStatisticData.renderedFrames() +
+                          mCurrentPlaybackStatisticData.renderedFrames(),
+                      mPrevPlaybackStatisticData.droppedFrames() +
+                          mCurrentPlaybackStatisticData.droppedFrames()};
+    mCurrentPlaybackStatisticData = StatisticData{};
+  }
+
+  if (mCurrentPlaybackStatisticData.renderedFrames() != renderedFrames ||
+      mCurrentPlaybackStatisticData.droppedFrames() != droppedFrames) {
+    mCurrentPlaybackStatisticData =
+        StatisticData{renderedFrames, droppedFrames};
+    const uint64_t totalRenderedFrames =
+        mPrevPlaybackStatisticData.renderedFrames() +
+        mCurrentPlaybackStatisticData.renderedFrames();
+    const uint64_t totalDroppedFrames =
+        mPrevPlaybackStatisticData.droppedFrames() +
+        mCurrentPlaybackStatisticData.droppedFrames();
+    LOG("Update statistic data, rendered=%" PRIu64 ", dropped=%" PRIu64,
+        totalRenderedFrames, totalDroppedFrames);
+    Unused << SendUpdateStatisticData(
+        StatisticData{totalRenderedFrames, totalDroppedFrames});
   }
 }
 

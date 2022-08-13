@@ -10,6 +10,7 @@
 #include "TimeUnits.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/PMFMediaEngineChild.h"
+#include "mozilla/NotNull.h"
 
 namespace mozilla {
 
@@ -25,7 +26,8 @@ class MFMediaEngineChild final : public PMFMediaEngineChild {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MFMediaEngineChild);
 
-  explicit MFMediaEngineChild(MFMediaEngineWrapper* aOwner);
+  MFMediaEngineChild(MFMediaEngineWrapper* aOwner,
+                     FrameStatistics* aFrameStats);
 
   void OwnerDestroyed();
   void IPDLActorDestroyed();
@@ -39,6 +41,7 @@ class MFMediaEngineChild final : public PMFMediaEngineChild {
   mozilla::ipc::IPCResult RecvUpdateCurrentTime(double aCurrentTimeInSecond);
   mozilla::ipc::IPCResult RecvNotifyEvent(MFMediaEngineEvent aEvent);
   mozilla::ipc::IPCResult RecvNotifyError(const MediaResult& aError);
+  mozilla::ipc::IPCResult RecvUpdateStatisticData(const StatisticData& aData);
 
   nsISerialEventTarget* ManagerThread() { return mManagerThread; }
   void AssertOnManagerThread() const {
@@ -65,6 +68,9 @@ class MFMediaEngineChild final : public PMFMediaEngineChild {
 
   MozPromiseHolder<GenericNonExclusivePromise> mInitPromiseHolder;
   MozPromiseRequestHolder<InitMediaEnginePromise> mInitEngineRequest;
+
+  // This is guaranteed always being alive in our lifetime.
+  NotNull<FrameStatistics*> const MOZ_NON_OWNING_REF mFrameStats;
 };
 
 /**
@@ -75,7 +81,8 @@ class MFMediaEngineChild final : public PMFMediaEngineChild {
  */
 class MFMediaEngineWrapper final : public ExternalPlaybackEngine {
  public:
-  explicit MFMediaEngineWrapper(ExternalEngineStateMachine* aOwner);
+  MFMediaEngineWrapper(ExternalEngineStateMachine* aOwner,
+                       FrameStatistics* aFrameStats);
   ~MFMediaEngineWrapper();
 
   // Methods for ExternalPlaybackEngine

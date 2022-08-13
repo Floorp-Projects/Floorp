@@ -81,6 +81,8 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
 
   void EnsureDcompSurfaceHandle();
 
+  void UpdateStatisticsData();
+
   // This generates unique id for each MFMediaEngineParent instance, and it
   // would be increased monotonically.
   static inline uint64_t sMediaEngineIdx = 0;
@@ -119,6 +121,14 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
   bool mIsEnableDcompMode = false;
 
   float mPlaybackRate = 1.0;
+
+  // When flush happens inside the media engine, it will reset the statistic
+  // data. Therefore, whenever the statistic data gets reset, we will use
+  // `mCurrentPlaybackStatisticData` to track new data and store previous data
+  // to `mPrevPlaybackStatisticData`. The sum of these two data is the total
+  // statistic data for playback.
+  StatisticData mCurrentPlaybackStatisticData;
+  StatisticData mPrevPlaybackStatisticData;
 };
 
 }  // namespace mozilla
