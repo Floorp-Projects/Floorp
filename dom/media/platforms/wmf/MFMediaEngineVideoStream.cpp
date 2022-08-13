@@ -6,6 +6,7 @@
 
 #include "mozilla/layers/DcompSurfaceImage.h"
 #include "MFMediaEngineUtils.h"
+#include "MP4Decoder.h"
 
 namespace mozilla {
 
@@ -198,6 +199,13 @@ already_AddRefed<MediaData> MFMediaEngineVideoStream::OutputData(
   return VideoData::CreateFromImage(mInfo.mDisplay, aSample->mOffset,
                                     aSample->mTime, aSample->mDuration, image,
                                     aSample->mKeyframe, aSample->mTimecode);
+}
+
+MediaDataDecoder::ConversionRequired MFMediaEngineVideoStream::NeedsConversion()
+    const {
+  return MP4Decoder::IsH264(mInfo.mMimeType)
+             ? MediaDataDecoder::ConversionRequired::kNeedAnnexB
+             : MediaDataDecoder::ConversionRequired::kNeedNone;
 }
 
 #undef LOGV
