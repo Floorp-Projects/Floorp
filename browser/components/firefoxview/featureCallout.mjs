@@ -247,6 +247,12 @@ function _positionCallout() {
   function clearPosition() {
     positions.forEach(position => {
       container.style[position] = "unset";
+      if (container.classList.contains(`arrow-${position}`)) {
+        container.classList.remove(`arrow-${position}`);
+      }
+      if (container.classList.contains(`arrow-inline-${position}`)) {
+        container.classList.remove(`arrow-inline-${position}`);
+      }
     });
   }
 
@@ -270,6 +276,7 @@ function _positionCallout() {
         containerTop
       )}px`;
       centerHorizontally(container, parentEl);
+      container.classList.add("arrow-top");
     },
     // Point to an element below the callout
     bottom() {
@@ -277,6 +284,7 @@ function _positionCallout() {
         getOffset(parentEl).top - container.clientHeight + margin;
       container.style.top = `${Math.max(containerTop, 0)}px`;
       centerHorizontally(container, parentEl);
+      container.classList.add("arrow-bottom");
     },
     // Point to an element to the right of the callout
     left() {
@@ -286,6 +294,7 @@ function _positionCallout() {
         containerLeft
       )}px`;
       container.style.top = `${getOffset(parentEl).top}px`;
+      container.classList.add("arrow-inline-start");
     },
     // Point to an element to the left of the callout
     right() {
@@ -293,10 +302,15 @@ function _positionCallout() {
         getOffset(parentEl).left - container.offsetWidth + margin;
       container.style.left = `${Math.max(containerLeft, margin)}px`;
       container.style.top = `${getOffset(parentEl).top}px`;
+      container.classList.add("arrow-inline-end");
     },
   };
 
   clearPosition(container);
+
+  if (!container.classList.contains("callout-arrow")) {
+    container.classList.add("callout-arrow");
+  }
 
   if (["start", "end"].includes(arrowPosition)) {
     if (RTL) {

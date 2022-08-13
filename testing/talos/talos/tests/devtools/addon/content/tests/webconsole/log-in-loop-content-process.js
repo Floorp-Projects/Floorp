@@ -41,7 +41,11 @@ module.exports = async function() {
           const s = Cu.now();
           content.wrappedJSObject.doLogs(data, ${TOTAL_MESSAGES});
           sendAsyncMessage('logs-done',  Cu.now() - s);
-          ChromeUtils.addProfilerMarker("DAMP", s, "console.log-in-loop-content-process-" + data);
+          ChromeUtils.addProfilerMarker(
+            "DAMP",
+            { startTime: s, category: "Test" },
+            "console.log-in-loop-content-process-" + data
+          );
         });
       }`
     )})()`,

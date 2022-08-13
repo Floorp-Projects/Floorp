@@ -1653,10 +1653,11 @@ class TestEmitterBasic(unittest.TestCase):
         )
         objs = self.read_topsrcdir(reader)
 
-        self.assertEqual(len(objs), 3)
-        ldflags, lib, cflags = objs
+        self.assertEqual(len(objs), 4)
+        ldflags, host_cflags, lib, cflags = objs
         self.assertIsInstance(ldflags, ComputedFlags)
         self.assertIsInstance(cflags, ComputedFlags)
+        self.assertIsInstance(host_cflags, ComputedFlags)
         self.assertIsInstance(lib, RustLibrary)
         self.assertRegex(lib.lib_name, "random_crate")
         self.assertRegex(lib.import_name, "random_crate")
@@ -1681,10 +1682,11 @@ class TestEmitterBasic(unittest.TestCase):
         )
         objs = self.read_topsrcdir(reader)
 
-        self.assertEqual(len(objs), 3)
-        ldflags, lib, cflags = objs
+        self.assertEqual(len(objs), 4)
+        ldflags, host_cflags, lib, cflags = objs
         self.assertIsInstance(ldflags, ComputedFlags)
         self.assertIsInstance(cflags, ComputedFlags)
+        self.assertIsInstance(host_cflags, ComputedFlags)
         self.assertIsInstance(lib, RustLibrary)
         self.assertEqual(lib.features, ["musthave", "cantlivewithout"])
 
@@ -1740,10 +1742,11 @@ class TestEmitterBasic(unittest.TestCase):
         )
         objs = self.read_topsrcdir(reader)
 
-        self.assertEqual(len(objs), 3)
-        ldflags, cflags, prog = objs
+        self.assertEqual(len(objs), 4)
+        ldflags, host_cflags, cflags, prog = objs
         self.assertIsInstance(ldflags, ComputedFlags)
         self.assertIsInstance(cflags, ComputedFlags)
+        self.assertIsInstance(host_cflags, ComputedFlags)
         self.assertIsInstance(prog, RustProgram)
         self.assertEqual(prog.name, "some")
 
@@ -1776,10 +1779,11 @@ class TestEmitterBasic(unittest.TestCase):
         )
         objs = self.read_topsrcdir(reader)
 
-        self.assertEqual(len(objs), 3)
-        ldflags, lib, cflags = objs
+        self.assertEqual(len(objs), 4)
+        ldflags, host_cflags, lib, cflags = objs
         self.assertIsInstance(ldflags, ComputedFlags)
         self.assertIsInstance(cflags, ComputedFlags)
+        self.assertIsInstance(host_cflags, ComputedFlags)
         self.assertIsInstance(lib, HostRustLibrary)
         self.assertRegex(lib.lib_name, "host_lib")
         self.assertRegex(lib.import_name, "host_lib")
@@ -1792,10 +1796,11 @@ class TestEmitterBasic(unittest.TestCase):
         )
         objs = self.read_topsrcdir(reader)
 
-        self.assertEqual(len(objs), 3)
-        ldflags, lib, cflags = objs
+        self.assertEqual(len(objs), 4)
+        ldflags, host_cflags, lib, cflags = objs
         self.assertIsInstance(ldflags, ComputedFlags)
         self.assertIsInstance(cflags, ComputedFlags)
+        self.assertIsInstance(host_cflags, ComputedFlags)
         self.assertIsInstance(lib, RustLibrary)
 
     def test_install_shared_lib(self):

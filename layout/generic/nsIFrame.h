@@ -4265,7 +4265,7 @@ class nsIFrame : public nsQueryFrame {
    */
   virtual nsSize GetXULMaxSize(nsBoxLayoutState& aBoxLayoutState);
 
-  virtual nscoord GetXULFlex();
+  virtual int32_t GetXULFlex();
   virtual nscoord GetXULBoxAscent(nsBoxLayoutState& aBoxLayoutState);
   virtual bool IsXULCollapsed();
   // This does not alter the overflow area. If the caller is changing
@@ -4310,7 +4310,7 @@ class nsIFrame : public nsQueryFrame {
                             bool& aHeightSet);
   static bool AddXULMaxSize(nsIFrame* aBox, nsSize& aSize, bool& aWidth,
                             bool& aHeightSet);
-  static bool AddXULFlex(nsIFrame* aBox, nscoord& aFlex);
+  static int32_t ComputeXULFlex(nsIFrame* aBox);
 
   void AddXULBorderAndPadding(nsSize& aSize);
 

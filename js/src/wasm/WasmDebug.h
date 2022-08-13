@@ -150,12 +150,6 @@ class DebugState {
                                         ValTypeVector* locals,
                                         size_t* argsLength,
                                         StackResults* stackResults);
-  // Invariant: the result of getDebugResultType can only be used as long as
-  // code_->metadata() is live.  See MetaData::getFuncResultType for more
-  // information.
-  ResultType debugGetResultType(uint32_t funcIndex) const {
-    return metadata().getFuncResultType(funcIndex);
-  }
   [[nodiscard]] bool getGlobal(Instance& instance, uint32_t globalIndex,
                                MutableHandleValue vp);
 

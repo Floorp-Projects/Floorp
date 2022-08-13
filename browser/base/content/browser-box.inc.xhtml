@@ -5,20 +5,16 @@
 <hbox flex="1" id="browser">
   <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
     <box id="sidebar-header" align="center">
-      <toolbarbutton id="sidebar-switcher-target" flex="1" class="tabbable">
+      <toolbarbutton id="sidebar-switcher-target" class="tabbable">
         <image id="sidebar-icon" consumeanchor="sidebar-switcher-target"/>
-        <label id="sidebar-title" crop="end" flex="1" control="sidebar"/>
+        <label id="sidebar-title" crop="end" control="sidebar"/>
         <image id="sidebar-switcher-arrow"/>
       </toolbarbutton>
       <image id="sidebar-throbber"/>
-# To ensure the button label's intrinsic width doesn't expand the sidebar
-# if the label is long, the button needs flex=1.
-# To ensure the button doesn't expand unnecessarily for short labels, the
-# spacer should significantly out-flex the button.
-      <spacer flex="1000"/>
+      <spacer id="sidebar-spacer"/>
       <toolbarbutton id="sidebar-close" class="close-icon tabbable" data-l10n-id="sidebar-close-button" oncommand="SidebarUI.hide();"/>
     </box>
-    <browser id="sidebar" flex="1" autoscroll="false" disablehistory="true" disablefullscreen="true"
+    <browser id="sidebar" autoscroll="false" disablehistory="true" disablefullscreen="true"
               style="min-width: 14em; width: 18em; max-width: 36em;" tooltip="aHTMLTooltip"/>
   </vbox>
 

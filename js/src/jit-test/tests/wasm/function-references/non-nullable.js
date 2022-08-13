@@ -20,10 +20,65 @@ wasmFailValidateText(`(module
   )
 )`, /expression has type externref but expected \(ref extern\)/);
 
-// cannot have non-defaultable local
-wasmFailValidateText(`(module
+// can have non-defaultable local, but not use/get if unset.
+wasmValidateText(`(module
   (func (local (ref extern)))
-)`, /cannot have a non-defaultable local/);
+)`);
+wasmFailValidateText(`(module
+  (func (local (ref extern))
+    local.get 0
+    drop
+  )
+)`, /local\.get read from unset local/);
+wasmFailValidateText(`(module
+  (func
+    (local (ref extern))
+    unreachable
+    block
+      local.get 0
+      drop
+    end
+  )
+)`, /local\.get read from unset local/);
+wasmFailValidateText(`(module
+  (func (param funcref) (result funcref) (local (ref func))
+    block
+      local.get 0
+      ref.as_non_null
+      local.set 1
+    end
+    local.get 1
+  )
+)`, /local\.get read from unset local/);
+wasmValidateText(`(module
+  (func (param $r (ref extern))
+    (local $var (ref extern))
+    local.get $r
+    ref.as_non_null
+    local.set $var
+    block block block
+    local.get $var
+    drop
+    end end end
+  )
+  (func
+    (param (ref null func) (ref null func) (ref func))
+    (result funcref)
+    (local (ref func) i32 (ref func) (ref null func))
+    local.get 0
+    ref.as_non_null
+    local.tee 3
+    block
+      local.get 6
+      ref.as_non_null
+      local.set 5 
+    end
+    local.get 2
+    drop
+    local.tee 5
+  )  
+)`);
+
 
 // exported funcs can't take null in non-nullable params
 let {a} = wasmEvalText(`(module

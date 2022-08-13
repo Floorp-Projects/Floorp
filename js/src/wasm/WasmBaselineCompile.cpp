@@ -8392,7 +8392,7 @@ bool BaseCompiler::emitBody() {
 
   MOZ_ASSERT(stackMapGenerator_.framePushedAtEntryToBody.isSome());
 
-  if (!iter_.startFunction(func_.index)) {
+  if (!iter_.startFunction(func_.index, locals_)) {
     return false;
   }
 

@@ -11,7 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
-#include "webrtc/MediaEngineDefault.h"
+#include "webrtc/MediaEngineFake.h"
 
 using ::testing::Return;
 using namespace mozilla;
@@ -36,14 +36,14 @@ RefPtr<AudioDeviceInfo> MakeAudioDeviceInfo(const nsAString& aName,
 
 RefPtr<MediaDevice> MakeCameraDevice(const nsString& aName,
                                      const nsString& aGroupId) {
-  return new MediaDevice(new MediaEngineDefault(), dom::MediaSourceEnum::Camera,
+  return new MediaDevice(new MediaEngineFake(), dom::MediaSourceEnum::Camera,
                          aName, u""_ns, aGroupId, MediaDevice::IsScary::No);
 }
 
 RefPtr<MediaDevice> MakeMicDevice(const nsString& aName,
                                   const nsString& aGroupId) {
   return new MediaDevice(
-      new MediaEngineDefault(),
+      new MediaEngineFake(),
       MakeAudioDeviceInfo(aName, aGroupId, AudioDeviceInfo::TYPE_INPUT),
       u""_ns);
 }
@@ -51,7 +51,7 @@ RefPtr<MediaDevice> MakeMicDevice(const nsString& aName,
 RefPtr<MediaDevice> MakeSpeakerDevice(const nsString& aName,
                                       const nsString& aGroupId) {
   return new MediaDevice(
-      new MediaEngineDefault(),
+      new MediaEngineFake(),
       MakeAudioDeviceInfo(aName, aGroupId, AudioDeviceInfo::TYPE_OUTPUT),
       u"ID"_ns);
 }

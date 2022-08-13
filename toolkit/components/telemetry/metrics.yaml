@@ -34,7 +34,10 @@ legacy.telemetry:
       - chutten@mozilla.com
       - glean-team@mozilla.com
     expires: never
+    no_lint:
+      - BASELINE_PING
     send_in_pings:
       - 'metrics'
       - 'events'
       - 'newtab'
+      - 'baseline'

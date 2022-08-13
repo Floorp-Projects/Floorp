@@ -251,56 +251,40 @@ extern void StaticallyUnlink(uint8_t* base, const LinkData& linkData);
 // function definition index.
 
 class FuncExport {
- public:
-  struct CacheablePod {
-    uint32_t funcIndex_;
-    uint32_t eagerInterpEntryOffset_;  // Machine code offset
-    bool hasEagerStubs_;
+  uint32_t typeIndex_;
+  uint32_t funcIndex_;
+  uint32_t eagerInterpEntryOffset_;  // Machine code offset
+  bool hasEagerStubs_;
 
-    WASM_CHECK_CACHEABLE_POD(funcIndex_, eagerInterpEntryOffset_,
-                             hasEagerStubs_);
-  };
-
- private:
-  FuncType funcType_;
-  MOZ_INIT_OUTSIDE_CTOR CacheablePod pod;
+  WASM_CHECK_CACHEABLE_POD(typeIndex_, funcIndex_, eagerInterpEntryOffset_,
+                           hasEagerStubs_);
 
  public:
   FuncExport() = default;
-  explicit FuncExport(FuncType&& funcType, uint32_t funcIndex,
-                      bool hasEagerStubs)
-      : funcType_(std::move(funcType)) {
-    pod.funcIndex_ = funcIndex;
-    pod.eagerInterpEntryOffset_ = UINT32_MAX;
-    pod.hasEagerStubs_ = hasEagerStubs;
+  explicit FuncExport(uint32_t typeIndex, uint32_t funcIndex,
+                      bool hasEagerStubs) {
+    typeIndex_ = typeIndex;
+    funcIndex_ = funcIndex;
+    eagerInterpEntryOffset_ = UINT32_MAX;
+    hasEagerStubs_ = hasEagerStubs;
   }
   void initEagerInterpEntryOffset(uint32_t entryOffset) {
-    MOZ_ASSERT(pod.eagerInterpEntryOffset_ == UINT32_MAX);
+    MOZ_ASSERT(eagerInterpEntryOffset_ == UINT32_MAX);
     MOZ_ASSERT(hasEagerStubs());
-    pod.eagerInterpEntryOffset_ = entryOffset;
+    eagerInterpEntryOffset_ = entryOffset;
   }
 
-  bool hasEagerStubs() const { return pod.hasEagerStubs_; }
-  const FuncType& funcType() const { return funcType_; }
-  uint32_t funcIndex() const { return pod.funcIndex_; }
+  bool hasEagerStubs() const { return hasEagerStubs_; }
+  uint32_t typeIndex() const { return typeIndex_; }
+  uint32_t funcIndex() const { return funcIndex_; }
   uint32_t eagerInterpEntryOffset() const {
-    MOZ_ASSERT(pod.eagerInterpEntryOffset_ != UINT32_MAX);
+    MOZ_ASSERT(eagerInterpEntryOffset_ != UINT32_MAX);
     MOZ_ASSERT(hasEagerStubs());
-    return pod.eagerInterpEntryOffset_;
+    return eagerInterpEntryOffset_;
   }
-
-  bool canHaveJitEntry() const { return funcType_.canHaveJitEntry(); }
-
-  bool clone(const FuncExport& src) {
-    mozilla::PodAssign(&pod, &src.pod);
-    return funcType_.clone(src.funcType_);
-  }
-
-  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-  WASM_DECLARE_FRIEND_SERIALIZE(FuncExport);
 };
 
-WASM_DECLARE_CACHEABLE_POD(FuncExport::CacheablePod);
+WASM_DECLARE_CACHEABLE_POD(FuncExport);
 
 using FuncExportVector = Vector<FuncExport, 0, SystemAllocPolicy>;
 
@@ -311,56 +295,45 @@ using FuncExportVector = Vector<FuncExport, 0, SystemAllocPolicy>;
 // dynamically patched at runtime.
 
 class FuncImport {
- public:
-  struct CacheablePod {
-    uint32_t instanceOffset_;
-    uint32_t interpExitCodeOffset_;  // Machine code offset
-    uint32_t jitExitCodeOffset_;     // Machine code offset
-
-    WASM_CHECK_CACHEABLE_POD(instanceOffset_, interpExitCodeOffset_,
-                             jitExitCodeOffset_);
-  };
-
  private:
-  FuncType funcType_;
-  CacheablePod pod = {};
+  uint32_t typeIndex_;
+  uint32_t instanceOffset_;
+  uint32_t interpExitCodeOffset_;  // Machine code offset
+  uint32_t jitExitCodeOffset_;     // Machine code offset
+
+  WASM_CHECK_CACHEABLE_POD(typeIndex_, instanceOffset_, interpExitCodeOffset_,
+                           jitExitCodeOffset_);
 
  public:
-  FuncImport() = default;
+  FuncImport()
+      : typeIndex_(0),
+        instanceOffset_(0),
+        interpExitCodeOffset_(0),
+        jitExitCodeOffset_(0) {}
 
-  FuncImport(FuncType&& funcType, uint32_t instanceOffset)
-      : funcType_(std::move(funcType)) {
-    pod.instanceOffset_ = instanceOffset;
-    pod.interpExitCodeOffset_ = 0;
-    pod.jitExitCodeOffset_ = 0;
+  FuncImport(uint32_t typeIndex, uint32_t instanceOffset) {
+    typeIndex_ = typeIndex;
+    instanceOffset_ = instanceOffset;
+    interpExitCodeOffset_ = 0;
+    jitExitCodeOffset_ = 0;
   }
 
   void initInterpExitOffset(uint32_t off) {
-    MOZ_ASSERT(!pod.interpExitCodeOffset_);
-    pod.interpExitCodeOffset_ = off;
+    MOZ_ASSERT(!interpExitCodeOffset_);
+    interpExitCodeOffset_ = off;
   }
   void initJitExitOffset(uint32_t off) {
-    MOZ_ASSERT(!pod.jitExitCodeOffset_);
-    pod.jitExitCodeOffset_ = off;
+    MOZ_ASSERT(!jitExitCodeOffset_);
+    jitExitCodeOffset_ = off;
   }
 
-  const FuncType& funcType() const { return funcType_; }
-  uint32_t instanceOffset() const { return pod.instanceOffset_; }
-  uint32_t interpExitCodeOffset() const { return pod.interpExitCodeOffset_; }
-  uint32_t jitExitCodeOffset() const { return pod.jitExitCodeOffset_; }
-
-  bool clone(const FuncImport& src) {
-    mozilla::PodAssign(&pod, &src.pod);
-    return funcType_.clone(src.funcType_);
-  }
-
-  bool canHaveJitExit() const { return funcType_.canHaveJitExit(); }
-
-  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-  WASM_DECLARE_FRIEND_SERIALIZE(FuncImport);
+  uint32_t typeIndex() const { return typeIndex_; }
+  uint32_t instanceOffset() const { return instanceOffset_; }
+  uint32_t interpExitCodeOffset() const { return interpExitCodeOffset_; }
+  uint32_t jitExitCodeOffset() const { return jitExitCodeOffset_; }
 };
 
-WASM_DECLARE_CACHEABLE_POD(FuncImport::CacheablePod)
+WASM_DECLARE_CACHEABLE_POD(FuncImport)
 
 using FuncImportVector = Vector<FuncImport, 0, SystemAllocPolicy>;
 
@@ -399,12 +372,10 @@ struct MetadataCacheablePod {
 WASM_DECLARE_CACHEABLE_POD(MetadataCacheablePod)
 
 typedef uint8_t ModuleHash[8];
-using FuncArgTypesVector = Vector<ValTypeVector, 0, SystemAllocPolicy>;
-using FuncReturnTypesVector = Vector<ValTypeVector, 0, SystemAllocPolicy>;
 
 struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
-  TypeDefWithIdVector types;
-  RenumberVector typesRenumbering;
+  TypeDefVector types;
+  TypeIdDescVector typeIds;
   GlobalDescVector globals;
   TableDescVector tables;
   TagDescVector tags;
@@ -420,8 +391,7 @@ struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
 
   // Debug-enabled code is not serialized.
   bool debugEnabled;
-  FuncArgTypesVector debugFuncArgTypes;
-  FuncReturnTypesVector debugFuncReturnTypes;
+  Uint32Vector debugFuncTypeIndices;
   ModuleHash debugHash;
 
   explicit Metadata(ModuleKind kind = ModuleKind::Wasm)
@@ -436,12 +406,18 @@ struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
     return memory.isSome() && memory->isShared();
   }
 
-  // Invariant: The result of getFuncResultType can only be used as long as
-  // MetaData is live, because the returned ResultType may encode a pointer to
-  // debugFuncReturnTypes.
-  ResultType getFuncResultType(uint32_t funcIndex) const {
-    return ResultType::Vector(debugFuncReturnTypes[funcIndex]);
-  };
+  const FuncType& getFuncImportType(const FuncImport& funcImport) const {
+    return types[funcImport.typeIndex()].funcType();
+  }
+  const FuncType& getFuncExportType(const FuncExport& funcExport) const {
+    return types[funcExport.typeIndex()].funcType();
+  }
+
+  size_t debugNumFuncs() const { return debugFuncTypeIndices.length(); }
+  const FuncType& debugFuncType(uint32_t funcIndex) const {
+    MOZ_ASSERT(debugEnabled);
+    return types[debugFuncTypeIndices[funcIndex]].funcType();
+  }
 
   // AsmJSMetadata derives Metadata iff isAsmJS(). Mostly this distinction is
   // encapsulated within AsmJS.cpp, but the additional virtual functions allow
@@ -508,8 +484,6 @@ struct MetadataTier {
     return codeRanges[funcToCodeRange[funcExport.funcIndex()]];
   }
 
-  bool clone(const MetadataTier& src);
-
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
@@ -543,7 +517,7 @@ class LazyStubSegment : public CodeSegment {
   }
 
   bool hasSpace(size_t bytes) const;
-  [[nodiscard]] bool addStubs(size_t codeLength,
+  [[nodiscard]] bool addStubs(const Metadata& metadata, size_t codeLength,
                               const Uint32Vector& funcExportIndices,
                               const FuncExportVector& funcExports,
                               const CodeRangeVector& codeRanges,
@@ -587,6 +561,7 @@ class LazyStubTier {
   size_t lastStubSegmentIndex_;
 
   [[nodiscard]] bool createManyEntryStubs(const Uint32Vector& funcExportIndices,
+                                          const Metadata& metadata,
                                           const CodeTier& codeTier,
                                           size_t* stubSegmentIndex);
 
@@ -596,6 +571,7 @@ class LazyStubTier {
   // Creates one lazy stub for the exported function, for which the jit entry
   // will be set to the lazily-generated one.
   [[nodiscard]] bool createOneEntryStub(uint32_t funcExportIndex,
+                                        const Metadata& metadata,
                                         const CodeTier& codeTier);
 
   bool entryStubsEmpty() const { return stubSegments_.empty(); }
@@ -610,6 +586,7 @@ class LazyStubTier {
   // setJitEntries() is actually called, after the Code owner has committed
   // tier2.
   [[nodiscard]] bool createTier2(const Uint32Vector& funcExportIndices,
+                                 const Metadata& metadata,
                                  const CodeTier& codeTier,
                                  Maybe<size_t>* stubSegmentIndex);
   void setJitEntries(const Maybe<size_t>& stubSegmentIndex, const Code& code);

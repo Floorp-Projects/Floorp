@@ -35,7 +35,7 @@ add_task(async function() {
   toolbox.doc.querySelector("#command-button-screenshot").click();
   const filePath = await onScreenshotDownloaded;
 
-  ok(filePath, "The screenshot was taken");
+  ok(!!filePath, "The screenshot was taken");
 
   info("Create an image using the downloaded file as source");
   const image = new Image();
@@ -78,7 +78,49 @@ add_task(async function() {
     `The warning message is rendered as expected (${message})`
   );
 
-  //Remove the downloaded screenshot file
+  // Remove the downloaded screenshot file
   await IOUtils.remove(filePath);
+
+  info(
+    "Check that taking a screenshot in a private window doesn't appear in the non-private window"
+  );
+  const privateWindow = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+  ok(PrivateBrowsingUtils.isWindowPrivate(privateWindow), "window is private");
+  const privateBrowser = privateWindow.gBrowser;
+  privateBrowser.selectedTab = BrowserTestUtils.addTab(
+    privateBrowser,
+    TEST_URL
+  );
+
+  info("private tab opened");
+  ok(
+    PrivateBrowsingUtils.isBrowserPrivate(privateBrowser.selectedBrowser),
+    "tab window is private"
+  );
+
+  const privateToolbox = await gDevTools.showToolboxForTab(
+    privateBrowser.selectedTab
+  );
+
+  const onPrivateScreenshotDownloaded = waitUntilScreenshot({
+    isWindowPrivate: true,
+  });
+  privateToolbox.doc.querySelector("#command-button-screenshot").click();
+  const privateScreenshotFilePath = await onPrivateScreenshotDownloaded;
+  ok(
+    !!privateScreenshotFilePath,
+    "The screenshot was taken in the private window"
+  );
+
+  // Remove the downloaded screenshot file
+  await IOUtils.remove(privateScreenshotFilePath);
+
+  // cleanup the downloads
   await resetDownloads();
+
+  const closePromise = BrowserTestUtils.windowClosed(privateWindow);
+  privateWindow.BrowserTryToCloseWindow();
+  await closePromise;
 });

@@ -236,14 +236,15 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
   Tier tier = code().bestTier();
 
   const FuncImport& fi = metadata(tier).funcImports[funcImportIndex];
+  const FuncType& funcType = metadata().getFuncImportType(fi);
 
-  ArgTypeVector argTypes(fi.funcType());
+  ArgTypeVector argTypes(funcType);
   InvokeArgs args(cx);
   if (!args.init(cx, argTypes.lengthWithoutStackResults())) {
     return false;
   }
 
-  if (fi.funcType().hasUnexposableArgOrRet()) {
+  if (funcType.hasUnexposableArgOrRet()) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_VAL_TYPE);
     return false;
@@ -258,7 +259,7 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
       continue;
     }
     size_t naturalIndex = argTypes.naturalIndex(i);
-    ValType type = fi.funcType().args()[naturalIndex];
+    ValType type = funcType.args()[naturalIndex];
     MutableHandleValue argValue = args[naturalIndex];
     if (!ToJSValue(cx, rawArgLoc, type, argValue)) {
       return false;
@@ -276,8 +277,7 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
     return false;
   }
 
-  if (!UnpackResults(cx, fi.funcType().results(), stackResultPointer, argv,
-                     &rval)) {
+  if (!UnpackResults(cx, funcType.results(), stackResultPointer, argv, &rval)) {
     return false;
   }
 
@@ -306,7 +306,7 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
   }
 
   // Skip if the function does not have a signature that allows for a JIT exit.
-  if (!fi.canHaveJitExit()) {
+  if (!funcType.canHaveJitExit()) {
     return true;
   }
 
@@ -1359,6 +1359,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
   for (size_t i = 0; i < metadata(callerTier).funcImports.length(); i++) {
     JSFunction* f = funcImports[i];
     const FuncImport& fi = metadata(callerTier).funcImports[i];
+    const FuncType& funcType = metadata().getFuncImportType(fi);
     FuncImportInstanceData& import = funcImportInstanceData(fi);
     import.fun = f;
     if (!isAsmJS() && IsWasmExportedFunction(f)) {
@@ -1372,7 +1373,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
       import.realm = f->realm();
       import.code = calleeInstance.codeBase(calleeTier) +
                     codeRange.funcUncheckedCallEntry();
-    } else if (void* thunk = MaybeGetBuiltinThunk(f, fi.funcType())) {
+    } else if (void* thunk = MaybeGetBuiltinThunk(f, funcType)) {
       import.instance = this;
       import.realm = f->realm();
       import.code = thunk;
@@ -1403,7 +1404,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
 
   // Add debug filtering table.
   if (metadata().debugEnabled) {
-    size_t numFuncs = metadata().debugFuncReturnTypes.length();
+    size_t numFuncs = metadata().debugNumFuncs();
     size_t numWords = std::max<size_t>((numFuncs + 31) / 32, 1);
     debugFilter_ = (uint32_t*)js_calloc(numWords, sizeof(uint32_t));
     if (!debugFilter_) {
@@ -1430,14 +1431,16 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
     if (GcAvailable(cx)) {
       // Transfer and allocate type objects for the struct types in the module
       MutableTypeContext tycx = js_new<TypeContext>();
-      if (!tycx || !tycx->cloneDerived(metadata().types)) {
+      if (!tycx || !tycx->clone(metadata().types)) {
         return false;
       }
 
       for (uint32_t typeIndex = 0; typeIndex < metadata().types.length();
            typeIndex++) {
-        const TypeDefWithId& typeDef = metadata().types[typeIndex];
-        if (!typeDef.isStructType() && !typeDef.isArrayType()) {
+        const TypeDef& typeDef = metadata().types[typeIndex];
+        const TypeIdDesc& typeId = metadata().typeIds[typeIndex];
+        if (!typeId.isGlobal() ||
+            (!typeDef.isStructType() && !typeDef.isArrayType())) {
           continue;
         }
 
@@ -1449,7 +1452,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
         // We do not need to use a barrier here because RttValue is always
         // tenured
         MOZ_ASSERT(rttValue.get()->isTenured());
-        *((GCPtr<JSObject*>*)addressOfTypeId(typeDef.id)) = rttValue;
+        *((GCPtr<JSObject*>*)addressOfTypeId(typeId)) = rttValue;
         hasGcTypes_ = true;
       }
     }
@@ -1460,7 +1463,13 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
     ExclusiveData<FuncTypeIdSet>::Guard lockedFuncTypeIdSet =
         funcTypeIdSet.lock();
 
-    for (const TypeDefWithId& typeDef : metadata().types) {
+    for (uint32_t typeIndex = 0; typeIndex < metadata().types.length();
+         typeIndex++) {
+      const TypeDef& typeDef = metadata().types[typeIndex];
+      const TypeIdDesc& typeId = metadata().typeIds[typeIndex];
+      if (!typeId.isGlobal()) {
+        continue;
+      }
       switch (typeDef.kind()) {
         case TypeDefKind::Func: {
           const FuncType& funcType = typeDef.funcType();
@@ -1469,7 +1478,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
                                                        &funcTypeId)) {
             return false;
           }
-          *addressOfTypeId(typeDef.id) = funcTypeId;
+          *addressOfTypeId(typeId) = funcTypeId;
           break;
         }
         case TypeDefKind::Struct:
@@ -1561,12 +1570,15 @@ Instance::~Instance() {
     ExclusiveData<FuncTypeIdSet>::Guard lockedFuncTypeIdSet =
         funcTypeIdSet.lock();
 
-    for (const TypeDefWithId& typeDef : metadata().types) {
-      if (!typeDef.isFuncType()) {
+    for (uint32_t typeIndex = 0; typeIndex < metadata().types.length();
+         typeIndex++) {
+      const TypeDef& typeDef = metadata().types[typeIndex];
+      const TypeIdDesc& typeId = metadata().typeIds[typeIndex];
+      if (!typeDef.isFuncType() || !typeId.isGlobal()) {
         continue;
       }
       const FuncType& funcType = typeDef.funcType();
-      if (const void* funcTypeId = *addressOfTypeId(typeDef.id)) {
+      if (const void* funcTypeId = *addressOfTypeId(typeId)) {
         lockedFuncTypeIdSet->deallocateFuncTypeId(funcType, funcTypeId);
       }
     }
@@ -1662,11 +1674,15 @@ void Instance::tracePrivate(JSTracer* trc) {
   TraceNullableEdge(trc, &memory_, "wasm buffer");
 #ifdef ENABLE_WASM_GC
   if (hasGcTypes_) {
-    for (const TypeDefWithId& typeDef : metadata().types) {
-      if (!typeDef.isStructType() && !typeDef.isArrayType()) {
+    for (uint32_t typeIndex = 0; typeIndex < metadata().types.length();
+         typeIndex++) {
+      const TypeDef& typeDef = metadata().types[typeIndex];
+      const TypeIdDesc& typeId = metadata().typeIds[typeIndex];
+      if (!typeId.isGlobal() ||
+          (!typeDef.isStructType() && !typeDef.isArrayType())) {
         continue;
       }
-      TraceNullableEdge(trc, ((GCPtr<JSObject*>*)addressOfTypeId(typeDef.id)),
+      TraceNullableEdge(trc, ((GCPtr<JSObject*>*)addressOfTypeId(typeId)),
                         "wasm rtt value");
     }
   }
@@ -1847,9 +1863,10 @@ static bool EnsureEntryStubs(const Instance& instance, uint32_t funcIndex,
   // The best tier might have changed after we've taken the lock.
   Tier prevTier = tier;
   tier = instance.code().bestTier();
+  const Metadata& metadata = instance.metadata();
   const CodeTier& codeTier = instance.code(tier);
   if (tier == prevTier) {
-    if (!stubs->createOneEntryStub(funcExportIndex, codeTier)) {
+    if (!stubs->createOneEntryStub(funcExportIndex, metadata, codeTier)) {
       return false;
     }
 
@@ -1865,7 +1882,7 @@ static bool EnsureEntryStubs(const Instance& instance, uint32_t funcIndex,
   // shouldn't have made one in the second tier.
   MOZ_ASSERT(!stubs2->hasEntryStub(fe.funcIndex()));
 
-  if (!stubs2->createOneEntryStub(funcExportIndex, codeTier)) {
+  if (!stubs2->createOneEntryStub(funcExportIndex, metadata, codeTier)) {
     return false;
   }
 
@@ -1883,12 +1900,14 @@ static bool GetInterpEntryAndEnsureStubs(JSContext* cx, Instance& instance,
     return false;
   }
 
+  *funcType = &instance.metadata().getFuncExportType(*funcExport);
+
 #ifdef DEBUG
   // EnsureEntryStubs() has ensured proper jit-entry stubs have been created and
   // installed in funcIndex's JumpTable entry, so check against the presence of
   // the provisional lazy stub.  See also
   // WasmInstanceObject::getExportedFunction().
-  if (!funcExport->hasEagerStubs() && funcExport->canHaveJitEntry()) {
+  if (!funcExport->hasEagerStubs() && (*funcType)->canHaveJitEntry()) {
     if (!EnsureBuiltinThunksInitialized()) {
       return false;
     }
@@ -1899,8 +1918,6 @@ static bool GetInterpEntryAndEnsureStubs(JSContext* cx, Instance& instance,
     MOZ_ASSERT(*callee.wasmJitEntry() != provisionalLazyJitEntryStub);
   }
 #endif
-
-  *funcType = &funcExport->funcType();
   return true;
 }
 

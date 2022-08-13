@@ -4130,50 +4130,6 @@ BrowserGlue.prototype = {
       lazy.UrlbarPrefs.migrateResultGroups();
     }
 
-    if (currentUIVersion < 119 && AppConstants.NIGHTLY_BUILD) {
-      // Uninstall outdated monochromatic themes for the following UI versions:
-      // 118: Uninstall prototype monochromatic purple theme.
-      // 119 (bug 1732957): Uninstall themes with old IDs.
-      const themeIdsToMigrate = [
-        "firefox-monochromatic-purple@mozilla.org",
-        "firefox-lush-soft@mozilla.org",
-        "firefox-lush-balanced@mozilla.org",
-        "firefox-lush-bold@mozilla.org",
-        "firefox-abstract-soft@mozilla.org",
-        "firefox-abstract-balanced@mozilla.org",
-        "firefox-abstract-bold@mozilla.org",
-        "firefox-elemental-soft@mozilla.org",
-        "firefox-elemental-balanced@mozilla.org",
-        "firefox-elemental-bold@mozilla.org",
-        "firefox-cheers-soft@mozilla.org",
-        "firefox-cheers-balanced@mozilla.org",
-        "firefox-cheers-bold@mozilla.org",
-        "firefox-graffiti-soft@mozilla.org",
-        "firefox-graffiti-balanced@mozilla.org",
-        "firefox-graffiti-bold@mozilla.org",
-        "firefox-foto-soft@mozilla.org",
-        "firefox-foto-balanced@mozilla.org",
-        "firefox-foto-bold@mozilla.org",
-      ];
-      try {
-        for (let id of themeIdsToMigrate) {
-          lazy.AddonManager.getAddonByID(id).then(addon => {
-            if (!addon) {
-              // Either the addon wasn't installed, or the call to getAddonByID failed.
-              return;
-            }
-            addon.uninstall().catch(Cu.reportError);
-          }, Cu.reportError);
-        }
-      } catch (error) {
-        Cu.reportError(
-          "Could not access the AddonManager to upgrade the profile. This is most " +
-            "likely because the upgrader is being run from an xpcshell test where " +
-            "the AddonManager is not initialized."
-        );
-      }
-    }
-
     if (currentUIVersion < 120) {
       // Migrate old titlebar bool pref to new int-based one.
       const oldPref = "browser.tabs.drawInTitlebar";

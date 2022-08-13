@@ -53,15 +53,17 @@ layers::CompositableHandle OffscreenCanvasDisplayHelper::GetCompositableHandle()
 
 void OffscreenCanvasDisplayHelper::UpdateContext(
     CanvasContextType aType, const Maybe<int32_t>& aChildId) {
-  MutexAutoLock lock(mMutex);
-
+  RefPtr<layers::ImageContainer> imageContainer;
   if (aType != CanvasContextType::WebGPU) {
-    mImageContainer = MakeRefPtr<layers::ImageContainer>(
+    imageContainer = MakeRefPtr<layers::ImageContainer>(
         layers::ImageContainer::ASYNCHRONOUS);
   }
 
+  MutexAutoLock lock(mMutex);
+
   mType = aType;
   mContextChildId = aChildId;
+  mImageContainer = std::move(imageContainer);
 
   if (aChildId) {
     mContextManagerId = Some(gfx::CanvasManagerChild::Get()->Id());
@@ -125,15 +127,39 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
     return false;
   }
 
-  if (mData.mDoPaintCallbacks) {
-    aContext->OnBeforePaintTransaction();
-  }
-
+  bool paintCallbacks = mData.mDoPaintCallbacks;
   RefPtr<layers::Image> image;
   RefPtr<gfx::SourceSurface> surface;
+  Maybe<layers::SurfaceDescriptor> desc;
 
-  Maybe<layers::SurfaceDescriptor> desc =
-      aContext->PresentFrontBuffer(nullptr, aTextureType);
+  {
+    MutexAutoUnlock unlock(mMutex);
+    if (paintCallbacks) {
+      aContext->OnBeforePaintTransaction();
+    }
+
+    desc = aContext->PresentFrontBuffer(nullptr, aTextureType);
+    if (!desc) {
+      surface =
+          aContext->GetFrontBufferSnapshot(/* requireAlphaPremult */ false);
+      if (surface && surface->GetType() == gfx::SurfaceType::WEBGL) {
+        // Ensure we can map in the surface. If we get a SourceSurfaceWebgl
+        // surface, then it may not be backed by raw pixels yet. We need to map
+        // it on the owning thread rather than the ImageBridge thread.
+        gfx::DataSourceSurface::ScopedMap map(
+            static_cast<gfx::DataSourceSurface*>(surface.get()),
+            gfx::DataSourceSurface::READ);
+        if (!map.IsMapped()) {
+          surface = nullptr;
+        }
+      }
+    }
+
+    if (paintCallbacks) {
+      aContext->OnDidPaintTransaction();
+    }
+  }
+
   if (desc) {
     if (desc->type() ==
         layers::SurfaceDescriptor::TSurfaceDescriptorRemoteTexture) {
@@ -150,30 +176,10 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
             texture, gfx::IntRect(gfx::IntPoint(0, 0), mData.mSize));
       }
     }
-  } else {
-    surface = aContext->GetFrontBufferSnapshot(/* requireAlphaPremult */ false);
-    if (surface) {
-      bool usable = true;
-      if (surface->GetType() == gfx::SurfaceType::WEBGL) {
-        // Ensure we can map in the surface. If we get a SourceSurfaceWebgl
-        // surface, then it may not be backed by raw pixels yet. We need to map
-        // it on the owning thread rather than the ImageBridge thread.
-        gfx::DataSourceSurface::ScopedMap map(
-            static_cast<gfx::DataSourceSurface*>(surface.get()),
-            gfx::DataSourceSurface::READ);
-        usable = map.IsMapped();
-      }
-
-      if (usable) {
-        auto surfaceImage = MakeRefPtr<layers::SourceSurfaceImage>(surface);
-        surfaceImage->SetTextureFlags(flags);
-        image = surfaceImage;
-      }
-    }
-  }
-
-  if (mData.mDoPaintCallbacks) {
-    aContext->OnDidPaintTransaction();
+  } else if (surface) {
+    auto surfaceImage = MakeRefPtr<layers::SourceSurfaceImage>(surface);
+    surfaceImage->SetTextureFlags(flags);
+    image = surfaceImage;
   }
 
   if (image) {
@@ -195,8 +201,6 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
 }
 
 void OffscreenCanvasDisplayHelper::MaybeQueueInvalidateElement() {
-  mMutex.AssertCurrentThreadOwns();
-
   if (!mPendingInvalidate) {
     mPendingInvalidate = true;
     NS_DispatchToMainThread(NS_NewRunnableFunction(

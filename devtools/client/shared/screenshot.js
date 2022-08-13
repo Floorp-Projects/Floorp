@@ -10,6 +10,11 @@ const Services = require("Services");
 
 loader.lazyImporter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
 loader.lazyImporter(this, "FileUtils", "resource://gre/modules/FileUtils.jsm");
+loader.lazyImporter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 const STRINGS_URI = "devtools/shared/locales/screenshot.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
@@ -232,7 +237,7 @@ function saveScreenshot(window, args = {}, value) {
   }
 
   simulateCameraShutter(window);
-  return save(args, value);
+  return save(window, args, value);
 }
 
 /**
@@ -253,16 +258,20 @@ function simulateCameraShutter(window) {
 /**
  * Save the captured screenshot to one of several destinations.
  *
+ * @param object window
+ *        The DevTools Client window.
+ *
  * @param object args
  *        The original args with which the screenshot was called.
  *
  * @param object image
  *        The image object that was sent from the server.
  *
+ *
  * @return string[]
  *         Response messages from processing the screenshot.
  */
-async function save(args, image) {
+async function save(window, args, image) {
   const fileNeeded = args.filename || !args.clipboard || args.file;
   const results = [];
 
@@ -272,7 +281,7 @@ async function save(args, image) {
   }
 
   if (fileNeeded) {
-    const result = await saveToFile(image);
+    const result = await saveToFile(window, image);
     results.push(result);
   }
   return results;
@@ -326,13 +335,16 @@ function saveToClipboard(base64URI) {
  * Save the screenshot data to disk, returning a promise which is resolved on
  * completion.
  *
+ * @param object window
+ *        The DevTools Client window.
+ *
  * @param object image
  *        The image object that was sent from the server.
  *
  * @return string
  *         Response message from processing the screenshot.
  */
-async function saveToFile(image) {
+async function saveToFile(window, image) {
   let filename = image.filename;
 
   // Guard against missing image data.
@@ -355,13 +367,22 @@ async function saveToFile(image) {
       : PathUtils.joinRelative(downloadsDir, filename);
   }
 
-  const sourceURI = Services.io.newURI(image.data);
   const targetFile = new FileUtils.File(filename);
 
   // Create download and track its progress.
   try {
     const download = await Downloads.createDownload({
-      source: sourceURI,
+      source: {
+        url: image.data,
+        // Here we want to know if the window in which the screenshot is taken is private.
+        // We have a ChromeWindow when this is called from Browser Console (:screenshot) and
+        // RDM (screenshot button).
+        isPrivate: window.isChromeWindow
+          ? PrivateBrowsingUtils.isWindowPrivate(window)
+          : PrivateBrowsingUtils.isBrowserPrivate(
+              window.browsingContext.embedderElement
+            ),
+      },
       target: targetFile,
     });
     const list = await Downloads.getList(Downloads.ALL);

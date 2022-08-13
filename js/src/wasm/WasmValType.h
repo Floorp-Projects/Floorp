@@ -36,25 +36,18 @@ using mozilla::Maybe;
 // A PackedTypeCode represents any value type in an compact POD format.
 union PackedTypeCode {
  public:
-  using PackedRepr = uintptr_t;
+  using PackedRepr = uint32_t;
 
  private:
-#ifdef JS_64BIT
   static constexpr size_t TypeCodeBits = 8;
-  static constexpr size_t TypeIndexBits = 21;
+  static constexpr size_t TypeIndexBits = 20;
   static constexpr size_t NullableBits = 1;
   static constexpr size_t PointerTagBits = 2;
-#else
-  static constexpr size_t TypeCodeBits = 8;
-  static constexpr size_t TypeIndexBits = 14;
-  static constexpr size_t NullableBits = 1;
-  static constexpr size_t PointerTagBits = 2;
-#endif
 
   static_assert(TypeCodeBits + TypeIndexBits + NullableBits + PointerTagBits <=
                     (sizeof(PackedRepr) * 8),
                 "enough bits");
-  static_assert(MaxTypeIndex < (1 << TypeIndexBits), "enough bits");
+  static_assert(MaxTypes < (1 << TypeIndexBits), "enough bits");
 
   PackedRepr bits_;
   struct {
@@ -171,7 +164,7 @@ union PackedTypeCode {
 
 WASM_DECLARE_CACHEABLE_POD(PackedTypeCode);
 
-static_assert(sizeof(PackedTypeCode) == sizeof(uintptr_t), "packed");
+static_assert(sizeof(PackedTypeCode) == sizeof(uint32_t), "packed");
 static_assert(std::is_pod_v<PackedTypeCode>,
               "must be POD to be simply serialized/deserialized");
 
@@ -517,16 +510,6 @@ class PackedType : public T {
   RefType::Kind refTypeKind() const {
     MOZ_ASSERT(isRefType());
     return RefType(tc_).kind();
-  }
-
-  void renumber(const RenumberVector& renumbering) {
-    if (!isTypeIndex()) {
-      return;
-    }
-
-    uint32_t newIndex = renumbering[typeIndex()];
-    MOZ_ASSERT(newIndex != UINT32_MAX);
-    *this = RefType::fromTypeIndex(newIndex, isNullable());
   }
 
   // Some types are encoded as JS::Value when they escape from Wasm (when passed
