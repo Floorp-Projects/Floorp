@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Title of the notification shown while we upgrade Fennec to Fenix. -->
+    <string name="mozac_support_migration_ongoing_notification_title">Përditësim në kryerje e sipër</string>
+    <!-- Text of the notification shown while we upgrade Fennec to Fenix. -->
+    <string name="mozac_support_migration_ongoing_notification_text">Firefox-i do të jetë gati pas një çasti…</string>
+    <!-- Title of the notification shown the upgrade from Fennec to Fenix is complete. -->
+    <string name="mozac_support_migration_complete_notification_title">Përditësim i plotë</string>
+    <!-- Text of the notification shown the upgrade from Fennec to Fenix is complete. -->
+    <string name="mozac_support_migration_complete_notification_text">Firefox-i është përditësuar - dhe përmirësuar!</string>
+</resources>

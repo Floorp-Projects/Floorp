@@ -38,6 +38,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Panodaki verileri alma</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Panoya veri gönderme</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Herhangi bir sayfadaki içeriği engelleme</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Dosya indirme, tarayıcının indirme geçmişini okuma ve değiştirme</string>
     <!-- Description for downloads_open permission. -->

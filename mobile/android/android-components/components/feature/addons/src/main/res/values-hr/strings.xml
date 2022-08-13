@@ -38,6 +38,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Dohvati podatke iz međuspremnika</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Unesi podatke u međuspremnik</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Blokiraj sadržaj na svim stranicama</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Preuzmi datoteke i pročitaj i promijeni povijest preuzimanja preglednika</string>
     <!-- Description for downloads_open permission. -->

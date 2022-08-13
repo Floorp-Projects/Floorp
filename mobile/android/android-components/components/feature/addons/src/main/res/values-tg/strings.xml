@@ -38,6 +38,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Гирифтани маълумот аз ҳофизаи муваққатӣ</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Гузоштани маълумот ба ҳофизаи муваққатӣ</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Муҳтаво дар ҳамаи саҳифаҳо манъ карда мешавад</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Боргирӣ кардани файлҳо, хондан ва тағйир додани таърихи боргириҳои браузер</string>
     <!-- Description for downloads_open permission. -->

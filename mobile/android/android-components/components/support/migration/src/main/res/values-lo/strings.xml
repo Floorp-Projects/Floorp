@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Title of the notification shown while we upgrade Fennec to Fenix. -->
+    <string name="mozac_support_migration_ongoing_notification_title">ກຳລັງດຳເນີນການອັບເດດ</string>
+    <!-- Text of the notification shown while we upgrade Fennec to Fenix. -->
+    <string name="mozac_support_migration_ongoing_notification_text">Firefox ຈະກຽມພ້ອມໃຫ້ໃຊ້ງານໃນອີກບໍ່ດົນ…</string>
+    <!-- Title of the notification shown the upgrade from Fennec to Fenix is complete. -->
+    <string name="mozac_support_migration_complete_notification_title">ການອັບເດດສຳເລັດແລ້ວ</string>
+    <!-- Text of the notification shown the upgrade from Fennec to Fenix is complete. -->
+    <string name="mozac_support_migration_complete_notification_text">Firefox ໄດ້ຮັບການອັບເດດ ແລະ ປັບປຸງແລ້ວ!</string>
+</resources>
