@@ -79,6 +79,7 @@ if CONFIG["MOZ_ENABLE_D3D10_LAYER"]:
         "RenderCompositorANGLE.h",
         "RenderCompositorD3D11SWGL.h",
         "RenderD3D11TextureHost.h",
+        "RenderDcompSurfaceTextureHost.h",
     ]
     UNIFIED_SOURCES += [
         "RenderCompositorD3D11SWGL.cpp",
@@ -87,6 +88,7 @@ if CONFIG["MOZ_ENABLE_D3D10_LAYER"]:
     SOURCES += [
         "DCLayerTree.cpp",
         "RenderCompositorANGLE.cpp",
+        "RenderDcompSurfaceTextureHost.cpp",
     ]
 
 if CONFIG["MOZ_WAYLAND"]:

@@ -97,6 +97,8 @@ class MFMediaSource : public Microsoft::WRL::RuntimeClass<
   };
   State GetState() const { return mState; }
 
+  void SetDCompSurfaceHandle(HANDLE aDCompSurfaceHandle);
+
  private:
   void AssertOnTaskQueue() const;
   void AssertOnMFThreadPool() const;

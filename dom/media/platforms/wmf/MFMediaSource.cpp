@@ -347,6 +347,13 @@ void MFMediaSource::HandleStreamEnded(TrackInfo::TrackType aType) {
   }
 }
 
+void MFMediaSource::SetDCompSurfaceHandle(HANDLE aDCompSurfaceHandle) {
+  // On MediaEngineParent's manager thread.
+  if (mVideoStream) {
+    mVideoStream->AsVideoStream()->SetDCompSurfaceHandle(aDCompSurfaceHandle);
+  }
+}
+
 void MFMediaSource::AssertOnTaskQueue() const {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 }

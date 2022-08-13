@@ -48,9 +48,14 @@ RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStreamWrapper::Decode(
   Unused << mTaskQueue->Dispatch(NS_NewRunnableFunction(
       "MFMediaEngineStreamWrapper::Decode",
       [sample = RefPtr{aSample}, stream]() { stream->NotifyNewData(sample); }));
-
-  // We don't return a real data, all data would be processed inside the media
-  // engine. We return an empty data back instead.
+  // TODO : for video, we should only resolve the promise when we get the dcomp
+  // handle.
+  RefPtr<MediaData> outputData = mStream->OutputData(aSample);
+  if (outputData) {
+    return DecodePromise::CreateAndResolve(DecodedData{outputData}, __func__);
+  }
+  // The stream don't support returning output, all data would be processed
+  // inside the media engine. We return an empty data back instead.
   MOZ_ASSERT(mFakeDataCreator->Type() == mStream->TrackType());
   return mFakeDataCreator->Decode(aSample);
 }

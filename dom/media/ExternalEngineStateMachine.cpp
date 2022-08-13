@@ -737,9 +737,8 @@ void ExternalEngineStateMachine::OnRequestVideo() {
                 MEDIA_PLAYBACK);
             MOZ_ASSERT(aVideo);
             RunningEngineUpdate(MediaData::Type::VIDEO_DATA);
-            // TODO : figure out the relationship between setting image and the
-            // DCOMP mode.
-            SetBlankVideoToVideoContainer();
+            mVideoFrameContainer->SetCurrentFrame(
+                mInfo->mVideo.mDisplay, aVideo->mImage, TimeStamp::Now());
           },
           [this, self](const MediaResult& aError) {
             mVideoDataRequest.Complete();
@@ -764,18 +763,6 @@ void ExternalEngineStateMachine::OnRequestVideo() {
             }
           })
       ->Track(mVideoDataRequest);
-}
-
-void ExternalEngineStateMachine::SetBlankVideoToVideoContainer() {
-  AssertOnTaskQueue();
-  MOZ_ASSERT(mState.IsRunningEngine() || mState.IsSeekingData());
-  if (!mBlankImage) {
-    mBlankImage =
-        mVideoFrameContainer->GetImageContainer()->CreatePlanarYCbCrImage();
-  }
-  MOZ_ASSERT(mInfo->HasVideo());
-  mVideoFrameContainer->SetCurrentFrame(mInfo->mVideo.mDisplay, mBlankImage,
-                                        TimeStamp::Now());
 }
 
 void ExternalEngineStateMachine::OnLoadedFirstFrame() {

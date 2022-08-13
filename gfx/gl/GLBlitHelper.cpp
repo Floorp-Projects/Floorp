@@ -812,11 +812,14 @@ bool GLBlitHelper::BlitImageToFramebuffer(layers::Image* const srcImage,
                        destSize, destOrigin);
     case ImageFormat::D3D9_RGB32_TEXTURE:
       return false;  // todo
+    case ImageFormat::DCOMP_SURFACE:
+      return false;
 #else
     case ImageFormat::D3D11_SHARE_HANDLE_TEXTURE:
     case ImageFormat::D3D11_TEXTURE_IMF_SAMPLE:
     case ImageFormat::D3D11_YCBCR_IMAGE:
     case ImageFormat::D3D9_RGB32_TEXTURE:
+    case ImageFormat::DCOMP_SURFACE:
       MOZ_ASSERT(false);
       return false;
 #endif
