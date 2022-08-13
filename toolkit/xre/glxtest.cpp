@@ -521,7 +521,7 @@ static bool get_gles_status(EGLDisplay dpy,
     return false;
   }
 
-#if defined(_ARM64_)
+#if defined(MOZ_AARCH64)
   EGLenum api = EGL_OPENGL_ES_API;
 #else
   EGLenum api = EGL_OPENGL_API;

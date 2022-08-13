@@ -42,9 +42,10 @@ steps we run before each video. We keep track of which test we are running with 
 
   // How many frames do we run? Must be more than 600, because that's how
   // many frames must be shown before telemetry is emitted. We present for
-  // longer than that to ensure that the telemetry is emitted at least once.
+  // much longer than that to ensure that the telemetry is emitted at least
+  // once.
   const TELEMETRY_FRAMES = 600;
-  const PRESENTED_FRAMES = TELEMETRY_FRAMES * 1.2;
+  const PRESENTED_FRAMES = TELEMETRY_FRAMES * 3.0;
 
   // Taken from TelemetryHistogramEnums.h
   const GFX_MACOS_VIDEO_LOW_POWER_LowPower = 1;

@@ -129,6 +129,7 @@ SelectContentHelper.prototype = {
       isOpenedViaTouch: this.isOpenedViaTouch,
       options,
       rect,
+      custom: !this.element.nodePrincipal.isSystemPrincipal,
       selectedIndex: this.element.selectedIndex,
       isDarkBackground: ChromeUtils.isDarkBackground(this.element),
       style: supportedStyles(computedStyles, SUPPORTED_SELECT_PROPERTIES),
@@ -199,7 +200,9 @@ SelectContentHelper.prototype = {
     );
     this.actor.sendAsyncMessage("Forms:UpdateDropDown", {
       options: this._buildOptionList(),
+      custom: !this.element.nodePrincipal.isSystemPrincipal,
       selectedIndex: this.element.selectedIndex,
+      isDarkBackground: ChromeUtils.isDarkBackground(this.element),
       style: supportedStyles(computedStyles, SUPPORTED_SELECT_PROPERTIES),
       defaultStyle: supportedStyles(defaultStyles, SUPPORTED_SELECT_PROPERTIES),
     });
