@@ -369,8 +369,16 @@ mozilla::ipc::IPCResult MFMediaEngineParent::RecvNotifyMediaInfo(
 mozilla::ipc::IPCResult MFMediaEngineParent::RecvPlay() {
   AssertOnManagerThread();
   if (mMediaEngine) {
-    LOG("Play");
+    LOG("Play, in playback rate %f", mPlaybackRate);
     NS_ENSURE_TRUE(SUCCEEDED(mMediaEngine->Play()), IPC_OK());
+    // The media engine has some undocumented behaviors for setting playback
+    // rate, it will set the rate to 0 when it pauses, and set the rate to 1
+    // when it starts. Therefore. we need to reset the targeted playback rate
+    // everytime when we start playing if the rate is not 1.
+    if (mPlaybackRate != 1.0) {
+      NS_ENSURE_TRUE(SUCCEEDED(mMediaEngine->SetPlaybackRate(mPlaybackRate)),
+                     IPC_OK());
+    }
   }
   return IPC_OK();
 }
@@ -420,7 +428,14 @@ mozilla::ipc::IPCResult MFMediaEngineParent::RecvSetVolume(double aVolume) {
 mozilla::ipc::IPCResult MFMediaEngineParent::RecvSetPlaybackRate(
     double aPlaybackRate) {
   AssertOnManagerThread();
-  // TODO : implement this by using media engine
+  if (aPlaybackRate <= 0) {
+    LOG("Not support zero or negative playback rate");
+    return IPC_OK();
+  }
+  LOG("SetPlaybackRate=%f", aPlaybackRate);
+  mPlaybackRate = aPlaybackRate;
+  NS_ENSURE_TRUE(SUCCEEDED(mMediaEngine->SetPlaybackRate(mPlaybackRate)),
+                 IPC_OK());
   return IPC_OK();
 }
 

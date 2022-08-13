@@ -439,11 +439,6 @@ RefPtr<ShutdownPromise> ExternalEngineStateMachine::Shutdown() {
   return state->mShutdown;
 }
 
-void ExternalEngineStateMachine::SetPlaybackRate(double aPlaybackRate) {
-  AssertOnTaskQueue();
-  mEngine->SetVolume(aPlaybackRate);
-}
-
 void ExternalEngineStateMachine::BufferedRangeUpdated() {
   AssertOnTaskQueue();
   AUTO_PROFILER_LABEL("ExternalEngineStateMachine::BufferedRangeUpdated",
@@ -474,17 +469,18 @@ void ExternalEngineStateMachine::BufferedRangeUpdated() {
   }
 }
 
-#define PERFORM_WHEN_ALLOW(Func)                                              \
+// Note: the variadic only supports passing member variables.
+#define PERFORM_WHEN_ALLOW(Func, ...)                                         \
   do {                                                                        \
     /* Initialzation is not done yet, posepone the operation */               \
     if (mState.IsInitEngine() && mState.AsInitEngine()->mInitPromise) {       \
       LOG("%s is called before init", __func__);                              \
       mState.AsInitEngine()->mInitPromise->Then(                              \
           OwnerThread(), __func__,                                            \
-          [self = RefPtr{this}](                                              \
+          [self = RefPtr{this}, this](                                        \
               const GenericNonExclusivePromise::ResolveOrRejectValue& aVal) { \
             if (aVal.IsResolve()) {                                           \
-              self->Func();                                                   \
+              Func(__VA_ARGS__);                                              \
             }                                                                 \
           });                                                                 \
       return;                                                                 \
@@ -492,6 +488,13 @@ void ExternalEngineStateMachine::BufferedRangeUpdated() {
       return;                                                                 \
     }                                                                         \
   } while (false)
+
+void ExternalEngineStateMachine::SetPlaybackRate(double aPlaybackRate) {
+  AssertOnTaskQueue();
+  mPlaybackRate = aPlaybackRate;
+  PERFORM_WHEN_ALLOW(SetPlaybackRate, mPlaybackRate);
+  mEngine->SetPlaybackRate(aPlaybackRate);
+}
 
 void ExternalEngineStateMachine::VolumeChanged() {
   AssertOnTaskQueue();
