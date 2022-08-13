@@ -113,7 +113,7 @@ ExternalEngineStateMachine::ExternalEngineStateMachine(
   LOG("Created ExternalEngineStateMachine");
   MOZ_ASSERT(mState.IsInitEngine());
 #ifdef MOZ_WMF_MEDIA_ENGINE
-  mEngine.reset(new MFMediaEngineWrapper(this));
+  mEngine.reset(new MFMediaEngineWrapper(this, mFrameStats));
 #endif
   if (mEngine) {
     auto* state = mState.AsInitEngine();
