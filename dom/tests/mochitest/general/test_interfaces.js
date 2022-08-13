@@ -1405,6 +1405,12 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "alert", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  {
+    name: "applicationCache",
+    insecureContext: false,
+    disabled: isEarlyBetaOrEarlier,
+  },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "atob", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "blur", insecureContext: true },
