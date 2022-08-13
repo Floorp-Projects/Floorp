@@ -4,6 +4,7 @@
 
 // I glared at the source code for about 3 hours, but for some reason I decided to use the server because it would be unclear because of the Floorp interface settings. God forgive me
 
+
 const BROWSER_CHROME_SYSTEM_COLOR = Services.prefs.getIntPref("floorp.chrome.theme.mode");
 
 switch (BROWSER_CHROME_SYSTEM_COLOR){

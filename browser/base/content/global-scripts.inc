@@ -27,15 +27,14 @@ Services.scriptloader.loadSubScript("chrome://browser/content/browser-design.js"
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-startup.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-tabbar.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-userChrome.js", this);
-Services.scriptloader.loadSubScript("chrome://browser/content/browser-preferences.js", this);
-
-window.setTimeout(() => {
-//shortcutkey
-Services.scriptloader.loadSubScript("chrome://browser/content/browser-command.js", this)
-}, 3000);
+Services.scriptloader.loadSubScript("chrome://browser/content/browser-command.js", this);
 
 if (AppConstants.platform == "macosx") {
   Services.scriptloader.loadSubScript("chrome://global/content/macWindowMenu.js", this);
 }
 
+window.setTimeout(() => {
+//preferences
+Services.scriptloader.loadSubScript("chrome://browser/content/browser-preferences.js", this);
+}, 3000);
 </script>
