@@ -20,6 +20,7 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/gfx/DeviceManagerDx.h"
 
 namespace mozilla {
 
@@ -91,6 +92,13 @@ void MFMediaEngineParent::DestroyEngineIfExists(
   }
   mMediaEngineEventListener.DisconnectIfExists();
   mRequestSampleListener.DisconnectIfExists();
+  if (mDXGIDeviceManager) {
+    mDXGIDeviceManager = nullptr;
+    wmf::MFUnlockDXGIDeviceManager();
+  }
+  if (mVirtualVideoWindow) {
+    DestroyWindow(mVirtualVideoWindow);
+  }
   if (aError) {
     Unused << SendNotifyError(*aError);
   }
@@ -108,10 +116,13 @@ void MFMediaEngineParent::CreateMediaEngine() {
     return;
   }
 
-  // TODO : init DXGIDeviceManager and a virtual window when media has video.
+  if (StaticPrefs::media_wmf_media_engine_video_output_enabled()) {
+    InitializeDXGIDeviceManager();
+    InitializeVirtualVideoWindow();
+  }
 
-  // Create an attribute and set mandatory information that are required for a
-  // media engine creation.
+  // Create an attribute and set mandatory information that are required for
+  // a media engine creation.
   ComPtr<IMFAttributes> creationAttributes;
   RETURN_VOID_IF_FAILED(wmf::MFCreateAttributes(&creationAttributes, 6));
   RETURN_VOID_IF_FAILED(
@@ -127,6 +138,15 @@ void MFMediaEngineParent::CreateMediaEngine() {
   RETURN_VOID_IF_FAILED(creationAttributes->SetUnknown(
       MF_MEDIA_ENGINE_EXTENSION, mMediaEngineExtension.Get()));
   // TODO : SET MF_MEDIA_ENGINE_CONTENT_PROTECTION_FLAGS
+  if (mDXGIDeviceManager) {
+    RETURN_VOID_IF_FAILED(creationAttributes->SetUnknown(
+        MF_MEDIA_ENGINE_DXGI_MANAGER, mDXGIDeviceManager.Get()));
+  }
+  if (mVirtualVideoWindow) {
+    RETURN_VOID_IF_FAILED(creationAttributes->SetUINT64(
+        MF_MEDIA_ENGINE_OPM_HWND,
+        reinterpret_cast<uint64_t>(mVirtualVideoWindow)));
+  }
 
   ComPtr<IMFMediaEngineClassFactory> factory;
   RETURN_VOID_IF_FAILED(CoCreateInstance(CLSID_MFMediaEngineClassFactory,
@@ -140,7 +160,12 @@ void MFMediaEngineParent::CreateMediaEngine() {
       isLowLatency ? MF_MEDIA_ENGINE_REAL_TIME_MODE : MF_MEDIA_ENGINE_DEFAULT,
       creationAttributes.Get(), &mMediaEngine));
 
-  // TODO : set DComp mode for video
+  if (StaticPrefs::media_wmf_media_engine_video_output_enabled()) {
+    // Set Dcomp mode for the media engine.
+    ComPtr<IMFMediaEngineEx> mediaEngineEx;
+    RETURN_VOID_IF_FAILED(mMediaEngine.As(&mediaEngineEx));
+    RETURN_VOID_IF_FAILED(mediaEngineEx->EnableWindowlessSwapchainMode(true));
+  }
 
   // TODO : deal with encrypted content (set ContentProtectionManager and cdm
   // proxy)
@@ -148,6 +173,57 @@ void MFMediaEngineParent::CreateMediaEngine() {
   LOG("Created media engine successfully");
   mIsCreatedMediaEngine = true;
   errorExit.release();
+}
+
+void MFMediaEngineParent::InitializeDXGIDeviceManager() {
+  auto* deviceManager = gfx::DeviceManagerDx::Get();
+  if (!deviceManager) {
+    return;
+  }
+  RefPtr<ID3D11Device> d3d11Device = deviceManager->CreateMediaEngineDevice();
+  if (!d3d11Device) {
+    return;
+  }
+
+  auto errorExit = MakeScopeExit([&] {
+    mDXGIDeviceManager = nullptr;
+    wmf::MFUnlockDXGIDeviceManager();
+  });
+  UINT deviceResetToken;
+  RETURN_VOID_IF_FAILED(
+      wmf::MFLockDXGIDeviceManager(&deviceResetToken, &mDXGIDeviceManager));
+  RETURN_VOID_IF_FAILED(
+      mDXGIDeviceManager->ResetDevice(d3d11Device.get(), deviceResetToken));
+  LOG("Initialized DXGI manager");
+  errorExit.release();
+}
+
+void MFMediaEngineParent::InitializeVirtualVideoWindow() {
+  static ATOM sVideoWindowClass = 0;
+  if (!sVideoWindowClass) {
+    WNDCLASS wnd{};
+    wnd.lpszClassName = L"MFMediaEngine";
+    wnd.hInstance = nullptr;
+    wnd.lpfnWndProc = DefWindowProc;
+    sVideoWindowClass = RegisterClass(&wnd);
+  }
+  if (!sVideoWindowClass) {
+    HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
+    LOG("Failed to register video window class: %lX", hr);
+    return;
+  }
+  mVirtualVideoWindow =
+      CreateWindowEx(WS_EX_NOPARENTNOTIFY | WS_EX_LAYERED | WS_EX_TRANSPARENT |
+                         WS_EX_NOREDIRECTIONBITMAP,
+                     reinterpret_cast<wchar_t*>(sVideoWindowClass), L"",
+                     WS_POPUP | WS_DISABLED | WS_CLIPSIBLINGS, 0, 0, 1, 1,
+                     nullptr, nullptr, nullptr, nullptr);
+  if (!mVirtualVideoWindow) {
+    HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
+    LOG("Failed to create virtual window: %lX", hr);
+    return;
+  }
+  LOG("Initialized virtual window");
 }
 
 void MFMediaEngineParent::HandleMediaEngineEvent(
