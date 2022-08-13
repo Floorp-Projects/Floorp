@@ -178,6 +178,9 @@ HRESULT MFLockDXGIDeviceManager(UINT* pResetToken,
 
 HRESULT MFUnlockDXGIDeviceManager();
 
+HRESULT MFPutWorkItem(DWORD dwQueue, IMFAsyncCallback* pCallback,
+                      IUnknown* pState);
+
 }  // namespace mozilla::wmf
 
 #endif

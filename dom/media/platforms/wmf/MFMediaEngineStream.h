@@ -19,6 +19,7 @@
 
 namespace mozilla {
 
+class MFMediaEngineVideoStream;
 class MFMediaSource;
 
 /**
@@ -85,6 +86,13 @@ class MFMediaEngineStream
 
   // True if the stream has been shutdown, it's a thread safe method.
   bool IsShutdown() const { return mIsShutdown; }
+
+  virtual MFMediaEngineVideoStream* AsVideoStream() { return nullptr; }
+
+  // Overwrite this method to support returning decoded data.
+  virtual already_AddRefed<MediaData> OutputData(MediaRawData* aSample) {
+    return nullptr;
+  }
 
  protected:
   HRESULT GenerateStreamDescriptor(uint64_t aStreamId, const TrackInfo& aInfo);

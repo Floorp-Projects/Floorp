@@ -9,6 +9,7 @@
 #include <mfapi.h>
 
 #include "MFMediaEngineExtension.h"
+#include "MFMediaEngineVideoStream.h"
 #include "MFMediaEngineUtils.h"
 #include "MFMediaEngineStream.h"
 #include "MFMediaSource.h"
@@ -153,19 +154,12 @@ void MFMediaEngineParent::CreateMediaEngine() {
                                          nullptr, CLSCTX_INPROC_SERVER,
                                          IID_PPV_ARGS(&factory)));
   const bool isLowLatency =
-      (StaticPrefs::media_wmf_low_latency_enabled() || IsWin10OrLater()) &&
+      StaticPrefs::media_wmf_low_latency_enabled() &&
       !StaticPrefs::media_wmf_low_latency_force_disabled();
   static const DWORD MF_MEDIA_ENGINE_DEFAULT = 0;
   RETURN_VOID_IF_FAILED(factory->CreateInstance(
       isLowLatency ? MF_MEDIA_ENGINE_REAL_TIME_MODE : MF_MEDIA_ENGINE_DEFAULT,
       creationAttributes.Get(), &mMediaEngine));
-
-  if (StaticPrefs::media_wmf_media_engine_video_output_enabled()) {
-    // Set Dcomp mode for the media engine.
-    ComPtr<IMFMediaEngineEx> mediaEngineEx;
-    RETURN_VOID_IF_FAILED(mMediaEngine.As(&mediaEngineEx));
-    RETURN_VOID_IF_FAILED(mediaEngineEx->EnableWindowlessSwapchainMode(true));
-  }
 
   // TODO : deal with encrypted content (set ContentProtectionManager and cdm
   // proxy)
@@ -237,7 +231,13 @@ void MFMediaEngineParent::HandleMediaEngineEvent(
       NotifyError(error, result);
       break;
     }
-    case MF_MEDIA_ENGINE_EVENT_FIRSTFRAMEREADY:
+    case MF_MEDIA_ENGINE_EVENT_FORMATCHANGE:
+    case MF_MEDIA_ENGINE_EVENT_FIRSTFRAMEREADY: {
+      if (mMediaEngine->HasVideo()) {
+        EnsureDcompSurfaceHandle();
+      }
+      [[fallthrough]];
+    }
     case MF_MEDIA_ENGINE_EVENT_LOADEDDATA:
     case MF_MEDIA_ENGINE_EVENT_WAITING:
     case MF_MEDIA_ENGINE_EVENT_SEEKED:
@@ -308,6 +308,7 @@ MFMediaEngineStreamWrapper* MFMediaEngineParent::GetMediaEngineStream(
   // output implementation. Our first step is to make audio playback work.
   if (StaticPrefs::media_wmf_media_engine_video_output_enabled()) {
     auto* stream = mMediaSource->GetVideoStream();
+    stream->AsVideoStream()->SetKnowsCompositor(aParam.mKnowsCompositor);
     return new MFMediaEngineStreamWrapper(stream, stream->GetTaskQueue(),
                                           aParam);
   }
@@ -460,6 +461,45 @@ void MFMediaEngineParent::HandleRequestSample(const SampleRequest& aRequest) {
 
 void MFMediaEngineParent::AssertOnManagerThread() const {
   MOZ_ASSERT(mManagerThread->IsOnCurrentThread());
+}
+
+void MFMediaEngineParent::EnsureDcompSurfaceHandle() {
+  AssertOnManagerThread();
+  MOZ_ASSERT(mMediaEngine);
+  MOZ_ASSERT(mMediaEngine->HasVideo());
+
+  ComPtr<IMFMediaEngineEx> mediaEngineEx;
+  RETURN_VOID_IF_FAILED(mMediaEngine.As(&mediaEngineEx));
+  DWORD width, height;
+  RETURN_VOID_IF_FAILED(mMediaEngine->GetNativeVideoSize(&width, &height));
+  if (width != mDisplayWidth || height != mDisplayHeight) {
+    // Update stream size before asking for a handle. If we don't update the
+    // size, media engine will create the dcomp surface in a wrong size. If
+    // the size isn't changed, then we don't need to recreate the surface.
+    mDisplayWidth = width;
+    mDisplayHeight = height;
+    RECT rect = {0, 0, (LONG)mDisplayWidth, (LONG)mDisplayHeight};
+    RETURN_VOID_IF_FAILED(mediaEngineEx->UpdateVideoStream(
+        nullptr /* pSrc */, &rect, nullptr /* pBorderClr */));
+    LOG("Updated video size for engine=[%lux%lu]", mDisplayWidth,
+        mDisplayHeight);
+  }
+
+  if (!mIsEnableDcompMode) {
+    RETURN_VOID_IF_FAILED(mediaEngineEx->EnableWindowlessSwapchainMode(true));
+    LOG("Enabled dcomp swap chain mode");
+    mIsEnableDcompMode = true;
+  }
+
+  HANDLE surfaceHandle = INVALID_HANDLE_VALUE;
+  RETURN_VOID_IF_FAILED(mediaEngineEx->GetVideoSwapchainHandle(&surfaceHandle));
+  if (surfaceHandle && surfaceHandle != INVALID_HANDLE_VALUE) {
+    LOG("EnsureDcompSurfaceHandle, handle=%p, size=[%lux%lu]", surfaceHandle,
+        width, height);
+    mMediaSource->SetDCompSurfaceHandle(surfaceHandle);
+  } else {
+    NS_WARNING("SurfaceHandle is not ready yet");
+  }
 }
 
 #undef LOG
