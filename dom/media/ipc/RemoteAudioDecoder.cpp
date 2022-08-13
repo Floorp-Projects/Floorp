@@ -14,8 +14,10 @@
 
 namespace mozilla {
 
-RemoteAudioDecoderChild::RemoteAudioDecoderChild(RemoteDecodeIn aLocation)
-    : RemoteDecoderChild(aLocation) {}
+RemoteAudioDecoderChild::RemoteAudioDecoderChild()
+    : RemoteDecoderChild(StaticPrefs::media_utility_process_enabled()
+                             ? RemoteDecodeIn::UtilityProcess
+                             : RemoteDecodeIn::RddProcess) {}
 
 MediaResult RemoteAudioDecoderChild::ProcessOutput(
     DecodedOutputIPDL&& aDecodedData) {

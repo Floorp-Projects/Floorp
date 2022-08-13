@@ -26,12 +26,6 @@ struct MediaInfoIPDL
   VideoInfo? videoInfo;
 };
 
-struct StatisticData
-{
-  uint64_t renderedFrames;
-  uint64_t droppedFrames;
-};
-
 [ManualDealloc]
 async protocol PMFMediaEngine
 {
@@ -55,7 +49,6 @@ child:
   async NotifyError(MediaResult error);
   async UpdateCurrentTime(double currentTimeInSecond);
   async RequestSample(TrackType type, bool isEnough);
-  async UpdateStatisticData(StatisticData data);
 };
 
 } // namespace mozilla

@@ -51,9 +51,6 @@
 
 #ifdef XP_WIN
 #  include "mozilla/layers/TextureD3D11.h"
-#  ifdef MOZ_WMF_MEDIA_ENGINE
-#    include "mozilla/layers/DcompSurfaceImage.h"
-#  endif
 #endif
 
 #if 0
@@ -213,10 +210,6 @@ already_AddRefed<TextureHost> TextureHost::Create(
     case SurfaceDescriptor::TSurfaceDescriptorD3D10:
     case SurfaceDescriptor::TSurfaceDescriptorDXGIYCbCr:
       result = CreateTextureHostD3D11(aDesc, aDeallocator, aBackend, aFlags);
-      break;
-    case SurfaceDescriptor::TSurfaceDescriptorDcompSurface:
-      result =
-          CreateTextureHostDcompSurface(aDesc, aDeallocator, aBackend, aFlags);
       break;
 #endif
     case SurfaceDescriptor::TSurfaceDescriptorRecorded: {
