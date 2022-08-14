@@ -49,11 +49,11 @@ media::DecodeSupportSet RemoteDecoderModule::Supports(
   bool supports =
       RemoteDecoderManagerChild::Supports(mLocation, aParams, aDiagnostics);
   MOZ_LOG(sPDMLog, LogLevel::Debug,
-          ("Sandbox %s decoder %s requested type",
+          ("Sandbox %s decoder %s requested type %s",
            mLocation == RemoteDecodeIn::GpuProcess
                ? "GPU"
                : (mLocation == RemoteDecodeIn::RddProcess ? "RDD" : "Utility"),
-           supports ? "supports" : "rejects"));
+           supports ? "supports" : "rejects", aParams.MimeType().get()));
   if (supports) {
     // TODO: Note that we do not yet distinguish between SW/HW decode support.
     //       Will be done in bug 1754239.

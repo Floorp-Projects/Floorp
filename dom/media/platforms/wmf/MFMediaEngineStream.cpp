@@ -48,9 +48,14 @@ RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStreamWrapper::Decode(
   Unused << mTaskQueue->Dispatch(NS_NewRunnableFunction(
       "MFMediaEngineStreamWrapper::Decode",
       [sample = RefPtr{aSample}, stream]() { stream->NotifyNewData(sample); }));
-
-  // We don't return a real data, all data would be processed inside the media
-  // engine. We return an empty data back instead.
+  // TODO : for video, we should only resolve the promise when we get the dcomp
+  // handle.
+  RefPtr<MediaData> outputData = mStream->OutputData(aSample);
+  if (outputData) {
+    return DecodePromise::CreateAndResolve(DecodedData{outputData}, __func__);
+  }
+  // The stream don't support returning output, all data would be processed
+  // inside the media engine. We return an empty data back instead.
   MOZ_ASSERT(mFakeDataCreator->Type() == mStream->TrackType());
   return mFakeDataCreator->Decode(aSample);
 }
@@ -97,6 +102,12 @@ nsCString MFMediaEngineStreamWrapper::GetDescriptionName() const {
   return mStream ? mStream->GetDescriptionName() : nsLiteralCString("none");
 }
 
+MediaDataDecoder::ConversionRequired
+MFMediaEngineStreamWrapper::NeedsConversion() const {
+  return mStream ? mStream->NeedsConversion()
+                 : MediaDataDecoder::ConversionRequired::kNeedNone;
+}
+
 MFMediaEngineStreamWrapper::FakeDecodedDataCreator::FakeDecodedDataCreator(
     const CreateDecoderParams& aParams) {
   if (aParams.mConfig.IsVideo()) {
@@ -119,10 +130,7 @@ MFMediaEngineStreamWrapper::FakeDecodedDataCreator::FakeDecodedDataCreator(
 }
 
 MFMediaEngineStream::MFMediaEngineStream()
-    : mIsShutdown(false),
-      mIsSelected(false),
-      mReceivedEOS(false),
-      mShouldServeSmamples(false) {}
+    : mIsShutdown(false), mIsSelected(false), mReceivedEOS(false) {}
 
 MFMediaEngineStream::~MFMediaEngineStream() { MOZ_ASSERT(IsShutdown()); }
 
@@ -130,20 +138,22 @@ HRESULT MFMediaEngineStream::RuntimeClassInitialize(
     uint64_t aStreamId, const TrackInfo& aInfo, MFMediaSource* aParentSource) {
   mParentSource = aParentSource;
   mTaskQueue = aParentSource->GetTaskQueue();
+  mStreamId = aStreamId;
   RETURN_IF_FAILED(wmf::MFCreateEventQueue(&mMediaEventQueue));
-  RETURN_IF_FAILED(GenerateStreamDescriptor(aStreamId, aInfo));
+
+  ComPtr<IMFMediaType> mediaType;
+  // The inherited stream would return different type based on their media info.
+  RETURN_IF_FAILED(CreateMediaType(aInfo, mediaType.GetAddressOf()));
+  RETURN_IF_FAILED(GenerateStreamDescriptor(mediaType));
   SLOG("Initialized %s (id=%" PRIu64 ", descriptorId=%lu)",
        GetDescriptionName().get(), aStreamId, mStreamDescriptorId);
   return S_OK;
 }
 
-HRESULT MFMediaEngineStream::GenerateStreamDescriptor(uint64_t aStreamId,
-                                                      const TrackInfo& aInfo) {
-  ComPtr<IMFMediaType> mediaType;
-  // The inherited stream would return different type based on their media info.
-  RETURN_IF_FAILED(CreateMediaType(aInfo, mediaType.GetAddressOf()));
+HRESULT MFMediaEngineStream::GenerateStreamDescriptor(
+    ComPtr<IMFMediaType>& aMediaType) {
   RETURN_IF_FAILED(wmf::MFCreateStreamDescriptor(
-      aStreamId, 1 /* stream amount */, mediaType.GetAddressOf(),
+      mStreamId, 1 /* stream amount */, aMediaType.GetAddressOf(),
       &mStreamDescriptor));
   RETURN_IF_FAILED(
       mStreamDescriptor->GetStreamIdentifier(&mStreamDescriptorId));
@@ -160,7 +170,12 @@ HRESULT MFMediaEngineStream::Start(const PROPVARIANT* aPosition) {
   }
   SLOG("Start");
   RETURN_IF_FAILED(QueueEvent(MEStreamStarted, GUID_NULL, S_OK, aPosition));
-  mShouldServeSmamples = true;
+  Unused << mTaskQueue->Dispatch(NS_NewRunnableFunction(
+      "MFMediaEngineStream::Start", [self = RefPtr{this}]() {
+        // Process any pending requests (if any) which happens when the stream
+        // wasn't allowed to serve samples.
+        self->ReplySampleRequestIfPossible();
+      }));
   return S_OK;
 }
 
@@ -172,7 +187,6 @@ HRESULT MFMediaEngineStream::Seek(const PROPVARIANT* aPosition) {
   }
   SLOG("Seek");
   RETURN_IF_FAILED(QueueEvent(MEStreamSeeked, GUID_NULL, S_OK, aPosition));
-  mShouldServeSmamples = true;
   return S_OK;
 }
 
@@ -184,7 +198,6 @@ HRESULT MFMediaEngineStream::Stop() {
   }
   SLOG("Stop");
   RETURN_IF_FAILED(QueueEvent(MEStreamStopped, GUID_NULL, S_OK, nullptr));
-  mShouldServeSmamples = false;
   return S_OK;
 }
 
@@ -196,7 +209,6 @@ HRESULT MFMediaEngineStream::Pause() {
   }
   SLOG("Pause");
   RETURN_IF_FAILED(QueueEvent(MEStreamPaused, GUID_NULL, S_OK, nullptr));
-  mShouldServeSmamples = false;
   return S_OK;
 }
 

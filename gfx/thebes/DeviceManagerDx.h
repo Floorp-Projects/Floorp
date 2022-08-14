@@ -62,6 +62,7 @@ class DeviceManagerDx final {
   RefPtr<IDCompositionDevice2> GetDirectCompositionDevice();
   RefPtr<ID3D11Device> GetVRDevice();
   RefPtr<ID3D11Device> CreateDecoderDevice(bool aHardwareWebRender);
+  RefPtr<ID3D11Device> CreateMediaEngineDevice();
   IDirectDraw7* GetDirectDraw();
 
   unsigned GetCompositorFeatureLevel() const;

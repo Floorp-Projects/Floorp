@@ -27,10 +27,12 @@ namespace mozilla {
 
 using media::TimeUnit;
 
-MFMediaEngineChild::MFMediaEngineChild(MFMediaEngineWrapper* aOwner)
+MFMediaEngineChild::MFMediaEngineChild(MFMediaEngineWrapper* aOwner,
+                                       FrameStatistics* aFrameStats)
     : mOwner(aOwner),
       mManagerThread(RemoteDecoderManagerChild::GetManagerThread()),
-      mMediaEngineId(0 /* invalid id, will be initialized later */) {}
+      mMediaEngineId(0 /* invalid id, will be initialized later */),
+      mFrameStats(WrapNotNull(aFrameStats)) {}
 
 RefPtr<GenericNonExclusivePromise> MFMediaEngineChild::Init(
     bool aShouldPreload) {
@@ -161,6 +163,20 @@ mozilla::ipc::IPCResult MFMediaEngineChild::RecvNotifyError(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult MFMediaEngineChild::RecvUpdateStatisticData(
+    const StatisticData& aData) {
+  AssertOnManagerThread();
+  uint64_t currentRenderedFrames = mFrameStats->GetPresentedFrames();
+  uint64_t currentDroppedFrames = mFrameStats->GetDroppedFrames();
+  mFrameStats->Accumulate({0, 0, aData.renderedFrames() - currentRenderedFrames,
+                           0, aData.droppedFrames() - currentDroppedFrames, 0});
+  CLOG("Update statictis data (rendered %" PRIu64 " -> %" PRIu64
+       ", dropped %" PRIu64 " -> %" PRIu64 ")",
+       currentRenderedFrames, mFrameStats->GetPresentedFrames(),
+       currentDroppedFrames, mFrameStats->GetDroppedFrames());
+  return IPC_OK();
+}
+
 void MFMediaEngineChild::OwnerDestroyed() {
   Unused << ManagerThread()->Dispatch(NS_NewRunnableFunction(
       "MFMediaEngineChild::OwnerDestroy", [self = RefPtr{this}, this] {
@@ -183,9 +199,10 @@ void MFMediaEngineChild::Shutdown() {
   mInitEngineRequest.DisconnectIfExists();
 }
 
-MFMediaEngineWrapper::MFMediaEngineWrapper(ExternalEngineStateMachine* aOwner)
+MFMediaEngineWrapper::MFMediaEngineWrapper(ExternalEngineStateMachine* aOwner,
+                                           FrameStatistics* aFrameStats)
     : ExternalPlaybackEngine(aOwner),
-      mEngine(new MFMediaEngineChild(this)),
+      mEngine(new MFMediaEngineChild(this, aFrameStats)),
       mCurrentTimeInSecond(0.0) {}
 
 RefPtr<GenericNonExclusivePromise> MFMediaEngineWrapper::Init(
@@ -236,7 +253,7 @@ void MFMediaEngineWrapper::SetPlaybackRate(double aPlaybackRate) {
   Unused << ManagerThread()->Dispatch(
       NS_NewRunnableFunction("MFMediaEngineWrapper::SetPlaybackRate",
                              [engine = mEngine, aPlaybackRate] {
-                               engine->SendSetVolume(aPlaybackRate);
+                               engine->SendSetPlaybackRate(aPlaybackRate);
                              }));
 }
 

@@ -19,6 +19,7 @@
 
 namespace mozilla {
 
+class MFMediaEngineVideoStream;
 class MFMediaSource;
 
 /**
@@ -86,8 +87,20 @@ class MFMediaEngineStream
   // True if the stream has been shutdown, it's a thread safe method.
   bool IsShutdown() const { return mIsShutdown; }
 
+  virtual MFMediaEngineVideoStream* AsVideoStream() { return nullptr; }
+
+  // Overwrite this method to support returning decoded data.
+  virtual already_AddRefed<MediaData> OutputData(MediaRawData* aSample) {
+    return nullptr;
+  }
+
+  virtual MediaDataDecoder::ConversionRequired NeedsConversion() const {
+    return MediaDataDecoder::ConversionRequired::kNeedNone;
+  }
+
  protected:
-  HRESULT GenerateStreamDescriptor(uint64_t aStreamId, const TrackInfo& aInfo);
+  HRESULT GenerateStreamDescriptor(
+      Microsoft::WRL::ComPtr<IMFMediaType>& aMediaType);
 
   // Create a IMFMediaType which includes the details about the stream.
   // https://docs.microsoft.com/en-us/windows/win32/medfound/media-type-attributes
@@ -112,6 +125,10 @@ class MFMediaEngineStream
   // This an unique ID retrieved from the IMFStreamDescriptor.
   DWORD mStreamDescriptorId = 0;
 
+  // A unique ID assigned by MFMediaSource, which won't be changed after first
+  // assignment.
+  uint64_t mStreamId = 0;
+
   RefPtr<TaskQueue> mTaskQueue;
 
   // This class would be run on two threads, MF thread pool and the source's
@@ -128,9 +145,6 @@ class MFMediaEngineStream
   // True if the stream has received the last data.
   // Modify on the task queue, access from any threads.
   Atomic<bool> mReceivedEOS;
-
-  // Only serve samples when the stream is already started.
-  Atomic<bool> mShouldServeSmamples;
 
   // A thread-safe queue storing input sample.
   MediaQueue<MediaRawData> mRawDataQueue;
@@ -171,6 +185,7 @@ class MFMediaEngineStreamWrapper : public MediaDataDecoder {
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
   nsCString GetDescriptionName() const override;
+  ConversionRequired NeedsConversion() const override;
 
  private:
   Microsoft::WRL::ComPtr<MFMediaEngineStream> mStream;

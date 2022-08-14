@@ -9,6 +9,7 @@
 #include <mfapi.h>
 
 #include "MFMediaEngineExtension.h"
+#include "MFMediaEngineVideoStream.h"
 #include "MFMediaEngineUtils.h"
 #include "MFMediaEngineStream.h"
 #include "MFMediaSource.h"
@@ -20,6 +21,7 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/gfx/DeviceManagerDx.h"
 
 namespace mozilla {
 
@@ -91,6 +93,13 @@ void MFMediaEngineParent::DestroyEngineIfExists(
   }
   mMediaEngineEventListener.DisconnectIfExists();
   mRequestSampleListener.DisconnectIfExists();
+  if (mDXGIDeviceManager) {
+    mDXGIDeviceManager = nullptr;
+    wmf::MFUnlockDXGIDeviceManager();
+  }
+  if (mVirtualVideoWindow) {
+    DestroyWindow(mVirtualVideoWindow);
+  }
   if (aError) {
     Unused << SendNotifyError(*aError);
   }
@@ -108,10 +117,13 @@ void MFMediaEngineParent::CreateMediaEngine() {
     return;
   }
 
-  // TODO : init DXGIDeviceManager and a virtual window when media has video.
+  if (StaticPrefs::media_wmf_media_engine_video_output_enabled()) {
+    InitializeDXGIDeviceManager();
+    InitializeVirtualVideoWindow();
+  }
 
-  // Create an attribute and set mandatory information that are required for a
-  // media engine creation.
+  // Create an attribute and set mandatory information that are required for
+  // a media engine creation.
   ComPtr<IMFAttributes> creationAttributes;
   RETURN_VOID_IF_FAILED(wmf::MFCreateAttributes(&creationAttributes, 6));
   RETURN_VOID_IF_FAILED(
@@ -127,20 +139,27 @@ void MFMediaEngineParent::CreateMediaEngine() {
   RETURN_VOID_IF_FAILED(creationAttributes->SetUnknown(
       MF_MEDIA_ENGINE_EXTENSION, mMediaEngineExtension.Get()));
   // TODO : SET MF_MEDIA_ENGINE_CONTENT_PROTECTION_FLAGS
+  if (mDXGIDeviceManager) {
+    RETURN_VOID_IF_FAILED(creationAttributes->SetUnknown(
+        MF_MEDIA_ENGINE_DXGI_MANAGER, mDXGIDeviceManager.Get()));
+  }
+  if (mVirtualVideoWindow) {
+    RETURN_VOID_IF_FAILED(creationAttributes->SetUINT64(
+        MF_MEDIA_ENGINE_OPM_HWND,
+        reinterpret_cast<uint64_t>(mVirtualVideoWindow)));
+  }
 
   ComPtr<IMFMediaEngineClassFactory> factory;
   RETURN_VOID_IF_FAILED(CoCreateInstance(CLSID_MFMediaEngineClassFactory,
                                          nullptr, CLSCTX_INPROC_SERVER,
                                          IID_PPV_ARGS(&factory)));
   const bool isLowLatency =
-      (StaticPrefs::media_wmf_low_latency_enabled() || IsWin10OrLater()) &&
+      StaticPrefs::media_wmf_low_latency_enabled() &&
       !StaticPrefs::media_wmf_low_latency_force_disabled();
   static const DWORD MF_MEDIA_ENGINE_DEFAULT = 0;
   RETURN_VOID_IF_FAILED(factory->CreateInstance(
       isLowLatency ? MF_MEDIA_ENGINE_REAL_TIME_MODE : MF_MEDIA_ENGINE_DEFAULT,
       creationAttributes.Get(), &mMediaEngine));
-
-  // TODO : set DComp mode for video
 
   // TODO : deal with encrypted content (set ContentProtectionManager and cdm
   // proxy)
@@ -148,6 +167,57 @@ void MFMediaEngineParent::CreateMediaEngine() {
   LOG("Created media engine successfully");
   mIsCreatedMediaEngine = true;
   errorExit.release();
+}
+
+void MFMediaEngineParent::InitializeDXGIDeviceManager() {
+  auto* deviceManager = gfx::DeviceManagerDx::Get();
+  if (!deviceManager) {
+    return;
+  }
+  RefPtr<ID3D11Device> d3d11Device = deviceManager->CreateMediaEngineDevice();
+  if (!d3d11Device) {
+    return;
+  }
+
+  auto errorExit = MakeScopeExit([&] {
+    mDXGIDeviceManager = nullptr;
+    wmf::MFUnlockDXGIDeviceManager();
+  });
+  UINT deviceResetToken;
+  RETURN_VOID_IF_FAILED(
+      wmf::MFLockDXGIDeviceManager(&deviceResetToken, &mDXGIDeviceManager));
+  RETURN_VOID_IF_FAILED(
+      mDXGIDeviceManager->ResetDevice(d3d11Device.get(), deviceResetToken));
+  LOG("Initialized DXGI manager");
+  errorExit.release();
+}
+
+void MFMediaEngineParent::InitializeVirtualVideoWindow() {
+  static ATOM sVideoWindowClass = 0;
+  if (!sVideoWindowClass) {
+    WNDCLASS wnd{};
+    wnd.lpszClassName = L"MFMediaEngine";
+    wnd.hInstance = nullptr;
+    wnd.lpfnWndProc = DefWindowProc;
+    sVideoWindowClass = RegisterClass(&wnd);
+  }
+  if (!sVideoWindowClass) {
+    HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
+    LOG("Failed to register video window class: %lX", hr);
+    return;
+  }
+  mVirtualVideoWindow =
+      CreateWindowEx(WS_EX_NOPARENTNOTIFY | WS_EX_LAYERED | WS_EX_TRANSPARENT |
+                         WS_EX_NOREDIRECTIONBITMAP,
+                     reinterpret_cast<wchar_t*>(sVideoWindowClass), L"",
+                     WS_POPUP | WS_DISABLED | WS_CLIPSIBLINGS, 0, 0, 1, 1,
+                     nullptr, nullptr, nullptr, nullptr);
+  if (!mVirtualVideoWindow) {
+    HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
+    LOG("Failed to create virtual window: %lX", hr);
+    return;
+  }
+  LOG("Initialized virtual window");
 }
 
 void MFMediaEngineParent::HandleMediaEngineEvent(
@@ -161,19 +231,30 @@ void MFMediaEngineParent::HandleMediaEngineEvent(
       NotifyError(error, result);
       break;
     }
-    case MF_MEDIA_ENGINE_EVENT_FIRSTFRAMEREADY:
+    case MF_MEDIA_ENGINE_EVENT_FORMATCHANGE:
+    case MF_MEDIA_ENGINE_EVENT_FIRSTFRAMEREADY: {
+      if (mMediaEngine->HasVideo()) {
+        EnsureDcompSurfaceHandle();
+      }
+      [[fallthrough]];
+    }
     case MF_MEDIA_ENGINE_EVENT_LOADEDDATA:
     case MF_MEDIA_ENGINE_EVENT_WAITING:
     case MF_MEDIA_ENGINE_EVENT_SEEKED:
     case MF_MEDIA_ENGINE_EVENT_BUFFERINGSTARTED:
     case MF_MEDIA_ENGINE_EVENT_BUFFERINGENDED:
-    case MF_MEDIA_ENGINE_EVENT_ENDED:
     case MF_MEDIA_ENGINE_EVENT_PLAYING:
       Unused << SendNotifyEvent(aEvent.mEvent);
       break;
+    case MF_MEDIA_ENGINE_EVENT_ENDED: {
+      Unused << SendNotifyEvent(aEvent.mEvent);
+      UpdateStatisticsData();
+      break;
+    }
     case MF_MEDIA_ENGINE_EVENT_TIMEUPDATE: {
       auto currentTimeInSeconds = mMediaEngine->GetCurrentTime();
       Unused << SendUpdateCurrentTime(currentTimeInSeconds);
+      UpdateStatisticsData();
       break;
     }
     default:
@@ -232,6 +313,8 @@ MFMediaEngineStreamWrapper* MFMediaEngineParent::GetMediaEngineStream(
   // output implementation. Our first step is to make audio playback work.
   if (StaticPrefs::media_wmf_media_engine_video_output_enabled()) {
     auto* stream = mMediaSource->GetVideoStream();
+    stream->AsVideoStream()->SetKnowsCompositor(aParam.mKnowsCompositor);
+    stream->AsVideoStream()->SetConfig(aParam.mConfig);
     return new MFMediaEngineStreamWrapper(stream, stream->GetTaskQueue(),
                                           aParam);
   }
@@ -292,8 +375,16 @@ mozilla::ipc::IPCResult MFMediaEngineParent::RecvNotifyMediaInfo(
 mozilla::ipc::IPCResult MFMediaEngineParent::RecvPlay() {
   AssertOnManagerThread();
   if (mMediaEngine) {
-    LOG("Play");
+    LOG("Play, in playback rate %f", mPlaybackRate);
     NS_ENSURE_TRUE(SUCCEEDED(mMediaEngine->Play()), IPC_OK());
+    // The media engine has some undocumented behaviors for setting playback
+    // rate, it will set the rate to 0 when it pauses, and set the rate to 1
+    // when it starts. Therefore. we need to reset the targeted playback rate
+    // everytime when we start playing if the rate is not 1.
+    if (mPlaybackRate != 1.0) {
+      NS_ENSURE_TRUE(SUCCEEDED(mMediaEngine->SetPlaybackRate(mPlaybackRate)),
+                     IPC_OK());
+    }
   }
   return IPC_OK();
 }
@@ -343,7 +434,14 @@ mozilla::ipc::IPCResult MFMediaEngineParent::RecvSetVolume(double aVolume) {
 mozilla::ipc::IPCResult MFMediaEngineParent::RecvSetPlaybackRate(
     double aPlaybackRate) {
   AssertOnManagerThread();
-  // TODO : implement this by using media engine
+  if (aPlaybackRate <= 0) {
+    LOG("Not support zero or negative playback rate");
+    return IPC_OK();
+  }
+  LOG("SetPlaybackRate=%f", aPlaybackRate);
+  mPlaybackRate = aPlaybackRate;
+  NS_ENSURE_TRUE(SUCCEEDED(mMediaEngine->SetPlaybackRate(mPlaybackRate)),
+                 IPC_OK());
   return IPC_OK();
 }
 
@@ -384,6 +482,97 @@ void MFMediaEngineParent::HandleRequestSample(const SampleRequest& aRequest) {
 
 void MFMediaEngineParent::AssertOnManagerThread() const {
   MOZ_ASSERT(mManagerThread->IsOnCurrentThread());
+}
+
+void MFMediaEngineParent::EnsureDcompSurfaceHandle() {
+  AssertOnManagerThread();
+  MOZ_ASSERT(mMediaEngine);
+  MOZ_ASSERT(mMediaEngine->HasVideo());
+
+  ComPtr<IMFMediaEngineEx> mediaEngineEx;
+  RETURN_VOID_IF_FAILED(mMediaEngine.As(&mediaEngineEx));
+  DWORD width, height;
+  RETURN_VOID_IF_FAILED(mMediaEngine->GetNativeVideoSize(&width, &height));
+  if (width != mDisplayWidth || height != mDisplayHeight) {
+    // Update stream size before asking for a handle. If we don't update the
+    // size, media engine will create the dcomp surface in a wrong size. If
+    // the size isn't changed, then we don't need to recreate the surface.
+    mDisplayWidth = width;
+    mDisplayHeight = height;
+    RECT rect = {0, 0, (LONG)mDisplayWidth, (LONG)mDisplayHeight};
+    RETURN_VOID_IF_FAILED(mediaEngineEx->UpdateVideoStream(
+        nullptr /* pSrc */, &rect, nullptr /* pBorderClr */));
+    LOG("Updated video size for engine=[%lux%lu]", mDisplayWidth,
+        mDisplayHeight);
+  }
+
+  if (!mIsEnableDcompMode) {
+    RETURN_VOID_IF_FAILED(mediaEngineEx->EnableWindowlessSwapchainMode(true));
+    LOG("Enabled dcomp swap chain mode");
+    mIsEnableDcompMode = true;
+  }
+
+  HANDLE surfaceHandle = INVALID_HANDLE_VALUE;
+  RETURN_VOID_IF_FAILED(mediaEngineEx->GetVideoSwapchainHandle(&surfaceHandle));
+  if (surfaceHandle && surfaceHandle != INVALID_HANDLE_VALUE) {
+    LOG("EnsureDcompSurfaceHandle, handle=%p, size=[%lux%lu]", surfaceHandle,
+        width, height);
+    mMediaSource->SetDCompSurfaceHandle(surfaceHandle);
+  } else {
+    NS_WARNING("SurfaceHandle is not ready yet");
+  }
+}
+
+void MFMediaEngineParent::UpdateStatisticsData() {
+  AssertOnManagerThread();
+  ComPtr<IMFMediaEngineEx> mediaEngineEx;
+  RETURN_VOID_IF_FAILED(mMediaEngine.As(&mediaEngineEx));
+
+  struct scopePropVariant : public PROPVARIANT {
+    scopePropVariant() { PropVariantInit(this); }
+    ~scopePropVariant() { PropVariantClear(this); }
+    scopePropVariant(scopePropVariant const&) = delete;
+    scopePropVariant& operator=(scopePropVariant const&) = delete;
+  };
+
+  // https://docs.microsoft.com/en-us/windows/win32/api/mfmediaengine/ne-mfmediaengine-mf_media_engine_statistic
+  scopePropVariant renderedFramesProp, droppedFramesProp;
+  RETURN_VOID_IF_FAILED(mediaEngineEx->GetStatistics(
+      MF_MEDIA_ENGINE_STATISTIC_FRAMES_RENDERED, &renderedFramesProp));
+  RETURN_VOID_IF_FAILED(mediaEngineEx->GetStatistics(
+      MF_MEDIA_ENGINE_STATISTIC_FRAMES_DROPPED, &droppedFramesProp));
+
+  const unsigned long renderedFrames = renderedFramesProp.ulVal;
+  const unsigned long droppedFrames = droppedFramesProp.ulVal;
+
+  // As the amount of rendered frame MUST increase monotonically. If the new
+  // statistic data show the decreasing, which means the media engine has reset
+  // the statistic data and started a new one. (That will happens after calling
+  // flush internally)
+  if (renderedFrames < mCurrentPlaybackStatisticData.renderedFrames()) {
+    mPrevPlaybackStatisticData =
+        StatisticData{mPrevPlaybackStatisticData.renderedFrames() +
+                          mCurrentPlaybackStatisticData.renderedFrames(),
+                      mPrevPlaybackStatisticData.droppedFrames() +
+                          mCurrentPlaybackStatisticData.droppedFrames()};
+    mCurrentPlaybackStatisticData = StatisticData{};
+  }
+
+  if (mCurrentPlaybackStatisticData.renderedFrames() != renderedFrames ||
+      mCurrentPlaybackStatisticData.droppedFrames() != droppedFrames) {
+    mCurrentPlaybackStatisticData =
+        StatisticData{renderedFrames, droppedFrames};
+    const uint64_t totalRenderedFrames =
+        mPrevPlaybackStatisticData.renderedFrames() +
+        mCurrentPlaybackStatisticData.renderedFrames();
+    const uint64_t totalDroppedFrames =
+        mPrevPlaybackStatisticData.droppedFrames() +
+        mCurrentPlaybackStatisticData.droppedFrames();
+    LOG("Update statistic data, rendered=%" PRIu64 ", dropped=%" PRIu64,
+        totalRenderedFrames, totalDroppedFrames);
+    Unused << SendUpdateStatisticData(
+        StatisticData{totalRenderedFrames, totalDroppedFrames});
+  }
 }
 
 #undef LOG

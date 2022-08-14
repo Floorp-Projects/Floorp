@@ -27,6 +27,13 @@ enum class RemoteDecodeIn {
   SENTINEL,
 };
 
+enum class TrackSupport {
+  None,
+  Audio,
+  Video,
+};
+using TrackSupportSet = EnumSet<TrackSupport, uint8_t>;
+
 class RemoteDecoderManagerChild final
     : public PRemoteDecoderManagerChild,
       public mozilla::ipc::IShmemAllocator,
@@ -54,6 +61,10 @@ class RemoteDecoderManagerChild final
 
   // Can be called from any thread.
   static nsISerialEventTarget* GetManagerThread();
+
+  // Return the track support information based on the location of the remote
+  // process. Thread-safe.
+  static TrackSupportSet GetTrackSupport(RemoteDecodeIn aLocation);
 
   // Can be called from any thread, dispatches the request to the IPDL thread
   // internally and will be ignored if the IPDL actor has been destroyed.

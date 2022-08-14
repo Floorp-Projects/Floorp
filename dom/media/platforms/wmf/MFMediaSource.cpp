@@ -34,7 +34,8 @@ HRESULT MFMediaSource::RuntimeClassInitialize(const Maybe<AudioInfo>& aAudio,
   mTaskQueue = TaskQueue::Create(
       GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER), "MFMediaSource");
   if (aAudio) {
-    mAudioStream = MFMediaEngineAudioStream::Create(streamId++, *aAudio, this);
+    mAudioStream.Attach(
+        MFMediaEngineAudioStream::Create(streamId++, *aAudio, this));
     if (!mAudioStream) {
       NS_WARNING("Failed to create audio stream");
       return E_FAIL;
@@ -47,8 +48,8 @@ HRESULT MFMediaSource::RuntimeClassInitialize(const Maybe<AudioInfo>& aAudio,
   // output implementation. Our first step is to make audio playback work.
   if (StaticPrefs::media_wmf_media_engine_video_output_enabled()) {
     if (aVideo) {
-      mVideoStream =
-          MFMediaEngineVideoStream::Create(streamId++, *aVideo, this);
+      mVideoStream.Attach(
+          MFMediaEngineVideoStream::Create(streamId++, *aVideo, this));
       if (!mVideoStream) {
         NS_WARNING("Failed to create video stream");
         return E_FAIL;
@@ -345,6 +346,110 @@ void MFMediaSource::HandleStreamEnded(TrackInfo::TrackType aType) {
     RETURN_VOID_IF_FAILED(
         QueueEvent(MEEndOfPresentation, GUID_NULL, S_OK, nullptr));
   }
+}
+
+void MFMediaSource::SetDCompSurfaceHandle(HANDLE aDCompSurfaceHandle) {
+  // On MediaEngineParent's manager thread.
+  if (mVideoStream) {
+    mVideoStream->AsVideoStream()->SetDCompSurfaceHandle(aDCompSurfaceHandle);
+  }
+}
+
+IFACEMETHODIMP MFMediaSource::GetService(REFGUID aGuidService, REFIID aRiid,
+                                         LPVOID* aResult) {
+  AssertOnMFThreadPool();
+  if (!IsEqualGUID(aGuidService, MF_RATE_CONTROL_SERVICE)) {
+    return MF_E_UNSUPPORTED_SERVICE;
+  }
+  return QueryInterface(aRiid, aResult);
+}
+
+IFACEMETHODIMP MFMediaSource::GetSlowestRate(MFRATE_DIRECTION aDirection,
+                                             BOOL aSupportsThinning,
+                                             float* aRate) {
+  AssertOnMFThreadPool();
+  MOZ_ASSERT(aRate);
+  if (aDirection == MFRATE_REVERSE) {
+    return MF_E_REVERSE_UNSUPPORTED;
+  }
+  *aRate = 0.0f;
+  return mState == State::Shutdowned ? MF_E_SHUTDOWN : S_OK;
+}
+
+IFACEMETHODIMP MFMediaSource::GetFastestRate(MFRATE_DIRECTION aDirection,
+                                             BOOL aSupportsThinning,
+                                             float* aRate) {
+  AssertOnMFThreadPool();
+  MOZ_ASSERT(aRate);
+  if (mState == State::Shutdowned) {
+    *aRate = 0.0f;
+    return MF_E_SHUTDOWN;
+  }
+  if (aDirection == MFRATE_REVERSE) {
+    return MF_E_REVERSE_UNSUPPORTED;
+  }
+  *aRate = 16.0f;
+  return S_OK;
+}
+
+IFACEMETHODIMP MFMediaSource::IsRateSupported(BOOL aSupportsThinning,
+                                              float aNewRate,
+                                              float* aSupportedRate) {
+  AssertOnMFThreadPool();
+  if (mState == State::Shutdowned) {
+    return MF_E_SHUTDOWN;
+  }
+
+  if (aSupportedRate) {
+    *aSupportedRate = 0.0f;
+  }
+
+  MFRATE_DIRECTION direction = aNewRate >= 0 ? MFRATE_FORWARD : MFRATE_REVERSE;
+  float fastestRate = 0.0f, slowestRate = 0.0f;
+  GetFastestRate(direction, aSupportsThinning, &fastestRate);
+  GetSlowestRate(direction, aSupportsThinning, &slowestRate);
+
+  if (aSupportsThinning) {
+    return MF_E_THINNING_UNSUPPORTED;
+  } else if (aNewRate < slowestRate) {
+    return MF_E_REVERSE_UNSUPPORTED;
+  } else if (aNewRate > fastestRate) {
+    return MF_E_UNSUPPORTED_RATE;
+  }
+
+  if (aSupportedRate) {
+    *aSupportedRate = aNewRate;
+  }
+  return S_OK;
+}
+
+IFACEMETHODIMP MFMediaSource::SetRate(BOOL aSupportsThinning, float aRate) {
+  AssertOnMFThreadPool();
+  if (mState == State::Shutdowned) {
+    return MF_E_SHUTDOWN;
+  }
+
+  HRESULT hr = IsRateSupported(aSupportsThinning, aRate, &mPlaybackRate);
+  if (FAILED(hr)) {
+    LOG("Unsupported playback rate %f, error=%lX", aRate, hr);
+    return hr;
+  }
+
+  PROPVARIANT varRate;
+  varRate.vt = VT_R4;
+  varRate.fltVal = mPlaybackRate;
+  LOG("Set playback rate %f", mPlaybackRate);
+  return QueueEvent(MESourceRateChanged, GUID_NULL, S_OK, &varRate);
+}
+
+IFACEMETHODIMP MFMediaSource::GetRate(BOOL* aSupportsThinning, float* aRate) {
+  AssertOnMFThreadPool();
+  if (mState == State::Shutdowned) {
+    return MF_E_SHUTDOWN;
+  }
+  *aSupportsThinning = FALSE;
+  *aRate = mPlaybackRate;
+  return S_OK;
 }
 
 void MFMediaSource::AssertOnTaskQueue() const {
