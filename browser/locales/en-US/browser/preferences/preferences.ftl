@@ -1603,4 +1603,6 @@ mobile-chrome-useragent-mode =
 
 ## DMR UI
 download-mgr-UI =
-    .label = Use a Simple UI download manager
+ .label = Use a Simple UI download manager
+downloading-red-color =
+ .label = Highlight the Download Manager icon in red during download  

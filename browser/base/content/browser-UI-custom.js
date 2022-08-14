@@ -125,3 +125,20 @@ Services.prefs.addObserver("floorp.legacy.dlui.enable", function(){
  else {
    document.getElementById("dlmgrcss").remove();
  }});
+
+ if (Services.prefs.getBoolPref("floorp.downloading.red.color", false)) {    
+  var Tag = document.createElement("style");
+  Tag.innerText = `@import url(chrome://browser/skin/optioncss/downloading-redcolor.css`
+  document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
+  Tag.setAttribute("id", "dlredcolor");
+}
+Services.prefs.addObserver("floorp.downloading.red.color", function(){
+ if (Services.prefs.getBoolPref("floorp.downloading.red.color", false)) {
+   var Tag = document.createElement("style");
+   Tag.innerText = `@import url(chrome://browser/skin/optioncss/downloading-redcolor.css`
+   document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
+   Tag.setAttribute("id", "dlredcolor");
+ }
+ else {
+   document.getElementById("dlredcolor").remove();
+ }});
