@@ -38,6 +38,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Ստանալ տվյալը սեղմատախտակից</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Ներածել տվյալը սեղմատախտակ</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Արգելափակել բովանդակությունը ցանկացած էջում</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Ներբեռնեք ֆայլեր և կարդացեք ու փոփոխեք դիտարկիչի ներբեռնումների պատմությունը</string>
     <!-- Description for downloads_open permission. -->
