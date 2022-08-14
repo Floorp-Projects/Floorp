@@ -1638,6 +1638,9 @@ MOZ_ALWAYS_INLINE bool JSString::getChar(JSContext* cx, size_t index,
    *   text = text.substr(0, x) + "bla" + text.substr(x)
    *   test.charCodeAt(x + 1)
    * }
+   *
+   * Note: keep this in sync with MacroAssembler::loadStringChar and
+   * CanAttachStringChar.
    */
   JSString* str;
   if (isRope()) {

@@ -1088,7 +1088,7 @@
   operands:
     str: WordSized
     index: WordSized
-  num_temps: 1
+  num_temps: 2
 
 # Convert uint16 character code to a string.
 - name: FromCharCode
