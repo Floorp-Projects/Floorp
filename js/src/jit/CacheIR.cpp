@@ -2284,17 +2284,14 @@ static bool CanAttachStringChar(const Value& val, const Value& idVal) {
     return false;
   }
 
-  // This follows JSString::getChar, otherwise we fail to attach getChar in a
-  // lot of cases.
+  // This follows JSString::getChar and MacroAssembler::loadStringChar.
   if (str->isRope()) {
     JSRope* rope = &str->asRope();
-
-    // Make sure the left side contains the index.
-    if (size_t(index) >= rope->leftChild()->length()) {
-      return false;
+    if (size_t(index) < rope->leftChild()->length()) {
+      str = rope->leftChild();
+    } else {
+      str = rope->rightChild();
     }
-
-    str = rope->leftChild();
   }
 
   if (!str->isLinear()) {

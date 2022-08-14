@@ -10810,12 +10810,13 @@ void CodeGenerator::visitCharCodeAt(LCharCodeAt* lir) {
   Register str = ToRegister(lir->str());
   Register index = ToRegister(lir->index());
   Register output = ToRegister(lir->output());
-  Register temp = ToRegister(lir->temp0());
+  Register temp0 = ToRegister(lir->temp0());
+  Register temp1 = ToRegister(lir->temp1());
 
   using Fn = bool (*)(JSContext*, HandleString, int32_t, uint32_t*);
   OutOfLineCode* ool = oolCallVM<Fn, jit::CharCodeAt>(lir, ArgList(str, index),
                                                       StoreRegisterTo(output));
-  masm.loadStringChar(str, index, output, temp, ool->entry());
+  masm.loadStringChar(str, index, output, temp0, temp1, ool->entry());
   masm.bind(ool->rejoin());
 }
 

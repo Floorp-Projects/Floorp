@@ -1193,7 +1193,8 @@ bool BaselineCacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
   Register str = allocator.useRegister(masm, strId);
   Register index = allocator.useRegister(masm, indexId);
   AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
-  AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchRegisterMaybeOutputType scratch2(allocator, masm, output);
+  AutoScratchRegister scratch3(allocator, masm);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -1203,7 +1204,8 @@ bool BaselineCacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
   // Bounds check, load string char.
   masm.spectreBoundsCheck32(index, Address(str, JSString::offsetOfLength()),
                             scratch1, failure->label());
-  masm.loadStringChar(str, index, scratch1, scratch2, failure->label());
+  masm.loadStringChar(str, index, scratch1, scratch2, scratch3,
+                      failure->label());
 
   allocator.discardStack(masm);
 
