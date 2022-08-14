@@ -100,6 +100,10 @@ jobs:
         tar -xf ./obj-x86_64-apple-darwin/obj-x86_64-apple-darwin.tar.xz -C ./
         tar -xf ./obj-aarch64-apple-darwin/obj-aarch64-apple-darwin.tar.xz -C ./
         ls -a
+         echo -e "ac_add_options --enable-bootstrap" >> mozconfig
+         ./mach create-mach-environment
+         ./mach bootstrap
+         ./mach configure
     - name: Package
       run: |       
         ./mach python ./toolkit/mozapps/installer/unify.py ./obj-x86_64-apple-darwin/dist/Floorp/Floorp.app ./obj-aarch64-apple-darwin/dist/Floorp/Floorp.app
