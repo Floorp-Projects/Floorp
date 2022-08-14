@@ -295,12 +295,11 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">アプリのロック解除に指紋を使用</string>
+
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
         %s will be replaced by the app name (e.g. Firefox Focus)
         Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
-    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">アプリ内で URL を開いている場合、指紋を使って %1$s のロックを解除できます。ステルスモードが有効となります。</string>
-
     <string name="preference_security_biometric_summary2">ショートカットを追加した場合やウェブサイトがすでに %s で開いている場合、指紋認証を使用してロックを解除します。</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
@@ -512,8 +511,6 @@
     <string name="onboarding_history_title">何事もなかったかのようなブラウジング</string>
 
     <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">ワンタップでブラウジング履歴と Cookie を消去し、ユーザーを追い回す広告を防ぎます。</string>
-
     <string name="onboarding_history_description2">ワンタップでブラウジング履歴と Cookie を消去し、ユーザーを追い回す広告を防ぎます。</string>
 
     <!-- Onboarding: Protection Title -->
@@ -670,7 +667,7 @@
     <string name="preference_advanced_summary">開発者ツール</string>
 
     <!-- Preference for open links in third party apps -->
-    <string name="preferences_open_links_in_apps">アプリ内のリンクを開く</string>
+    <string name="preferences_open_links_in_apps">リンクをアプリで開く</string>
 
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">詳細</string>
