@@ -1469,7 +1469,7 @@ bookmarks-bottom-mode =
  .label = Bookmark bar at the bottom of the browser
 
 material-effect =
- .label = Allow Mica for everyone to modify the browser design
+ .label = Allow Mica for Everyone to modify the browser design 
 other-preference = Other Preferences
 
 enable-userscript = 
