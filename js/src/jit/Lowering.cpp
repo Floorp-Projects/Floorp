@@ -2272,8 +2272,8 @@ void LIRGenerator::visitCharCodeAt(MCharCodeAt* ins) {
   MOZ_ASSERT(str->type() == MIRType::String);
   MOZ_ASSERT(idx->type() == MIRType::Int32);
 
-  LCharCodeAt* lir =
-      new (alloc()) LCharCodeAt(useRegister(str), useRegister(idx), temp());
+  LCharCodeAt* lir = new (alloc())
+      LCharCodeAt(useRegister(str), useRegister(idx), temp(), temp());
   define(lir, ins);
   assignSafepoint(lir, ins);
 }

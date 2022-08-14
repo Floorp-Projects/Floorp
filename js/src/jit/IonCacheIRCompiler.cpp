@@ -1364,7 +1364,8 @@ bool IonCacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
   Register str = allocator.useRegister(masm, strId);
   Register index = allocator.useRegister(masm, indexId);
   AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
-  AutoScratchRegister scratch2(allocator, masm);
+  AutoScratchRegisterMaybeOutputType scratch2(allocator, masm, output);
+  AutoScratchRegister scratch3(allocator, masm);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -1374,7 +1375,8 @@ bool IonCacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
   // Bounds check, load string char.
   masm.spectreBoundsCheck32(index, Address(str, JSString::offsetOfLength()),
                             scratch1, failure->label());
-  masm.loadStringChar(str, index, scratch1, scratch2, failure->label());
+  masm.loadStringChar(str, index, scratch1, scratch2, scratch3,
+                      failure->label());
 
   // Load StaticString for this char. For larger code units perform a VM call.
   Label vmCall;
@@ -1397,6 +1399,7 @@ bool IonCacheIRCompiler::emitLoadStringCharResult(StringOperandId strId,
                                  liveVolatileFloatRegs());
     volatileRegs.takeUnchecked(scratch1);
     volatileRegs.takeUnchecked(scratch2);
+    volatileRegs.takeUnchecked(scratch3);
     volatileRegs.takeUnchecked(output);
     masm.PushRegsInMask(volatileRegs);
 
