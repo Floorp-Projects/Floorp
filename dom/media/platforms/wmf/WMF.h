@@ -43,6 +43,12 @@ DEFINE_GUID(MFAudioFormat_Opus, WAVE_FORMAT_OPUS, 0x000, 0x0010, 0x80, 0x00,
             0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
 #endif
 
+const inline GUID CLSID_CMSVPXDecMFT = {
+    0xe3aaf548,
+    0xc9a4,
+    0x4c6e,
+    {0x23, 0x4d, 0x5a, 0xda, 0x37, 0x4b, 0x00, 0x00}};
+
 namespace mozilla::wmf {
 
 // A helper class for automatically starting and shuting down the Media
@@ -172,6 +178,14 @@ HRESULT MFCreatePresentationDescriptor(
     IMFPresentationDescriptor** ppPresentationDescriptor);
 
 HRESULT MFCreateMemoryBuffer(DWORD cbMaxLength, IMFMediaBuffer** ppBuffer);
+
+HRESULT MFLockDXGIDeviceManager(UINT* pResetToken,
+                                IMFDXGIDeviceManager** ppManager);
+
+HRESULT MFUnlockDXGIDeviceManager();
+
+HRESULT MFPutWorkItem(DWORD dwQueue, IMFAsyncCallback* pCallback,
+                      IUnknown* pState);
 
 }  // namespace mozilla::wmf
 

@@ -106,6 +106,14 @@ RenderTextureHostWrapper::AsRenderDXGIYCbCrTextureHost() {
   return mTextureHost->AsRenderDXGIYCbCrTextureHost();
 }
 
+RenderDcompSurfaceTextureHost*
+RenderTextureHostWrapper::AsRenderDcompSurfaceTextureHost() {
+  if (!mTextureHost) {
+    return nullptr;
+  }
+  return mTextureHost->AsRenderDcompSurfaceTextureHost();
+}
+
 RenderTextureHostSWGL* RenderTextureHostWrapper::EnsureRenderTextureHostSWGL()
     const {
   if (!mTextureHost) {

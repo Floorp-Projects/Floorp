@@ -5,6 +5,8 @@
 #ifndef DOM_MEDIA_IPC_MFMEDIAENGINEPARENT_H_
 #define DOM_MEDIA_IPC_MFMEDIAENGINEPARENT_H_
 
+#include <Mfidl.h>
+#include <winnt.h>
 #include <wrl.h>
 
 #include "MediaInfo.h"
@@ -65,6 +67,9 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
 
   void CreateMediaEngine();
 
+  void InitializeVirtualVideoWindow();
+  void InitializeDXGIDeviceManager();
+
   void AssertOnManagerThread() const;
 
   void HandleMediaEngineEvent(MFMediaEngineEventWrapper aEvent);
@@ -73,6 +78,10 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
   void NotifyError(MF_MEDIA_ENGINE_ERR aError, HRESULT aResult = 0);
 
   void DestroyEngineIfExists(const Maybe<MediaResult>& aError = Nothing());
+
+  void EnsureDcompSurfaceHandle();
+
+  void UpdateStatisticsData();
 
   // This generates unique id for each MFMediaEngineParent instance, and it
   // would be increased monotonically.
@@ -96,8 +105,30 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
 
   MediaEventListener mMediaEngineEventListener;
   MediaEventListener mRequestSampleListener;
-  MediaEventListener mTimeUpdateListener;
   bool mIsCreatedMediaEngine = false;
+
+  // A fake window handle passed to MF-based rendering pipeline for OPM.
+  HWND mVirtualVideoWindow = nullptr;
+
+  Microsoft::WRL::ComPtr<IMFDXGIDeviceManager> mDXGIDeviceManager;
+
+  // These will be always zero for audio playback.
+  DWORD mDisplayWidth = 0;
+  DWORD mDisplayHeight = 0;
+
+  // When it's true, the media engine will output decoded video frames to a
+  // shareable dcomp surface.
+  bool mIsEnableDcompMode = false;
+
+  float mPlaybackRate = 1.0;
+
+  // When flush happens inside the media engine, it will reset the statistic
+  // data. Therefore, whenever the statistic data gets reset, we will use
+  // `mCurrentPlaybackStatisticData` to track new data and store previous data
+  // to `mPrevPlaybackStatisticData`. The sum of these two data is the total
+  // statistic data for playback.
+  StatisticData mCurrentPlaybackStatisticData;
+  StatisticData mPrevPlaybackStatisticData;
 };
 
 }  // namespace mozilla

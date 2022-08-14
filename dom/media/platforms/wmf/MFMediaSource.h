@@ -34,11 +34,12 @@ struct SampleRequest {
  *
  * https://docs.microsoft.com/en-us/windows/win32/api/mfidl/nn-mfidl-imfmediasource
  */
-// TODO : support IMFTrustedInput/IMFRateSupport/IMFRateControl/IMFGetService
-class MFMediaSource : public Microsoft::WRL::RuntimeClass<
-                          Microsoft::WRL::RuntimeClassFlags<
-                              Microsoft::WRL::RuntimeClassType::ClassicCom>,
-                          IMFMediaSource> {
+// TODO : support IMFTrustedInput
+class MFMediaSource
+    : public Microsoft::WRL::RuntimeClass<
+          Microsoft::WRL::RuntimeClassFlags<
+              Microsoft::WRL::RuntimeClassType::ClassicCom>,
+          IMFMediaSource, IMFRateControl, IMFRateSupport, IMFGetService> {
  public:
   MFMediaSource();
   HRESULT RuntimeClassInitialize(const Maybe<AudioInfo>& aAudio,
@@ -65,6 +66,22 @@ class MFMediaSource : public Microsoft::WRL::RuntimeClass<
   IFACEMETHODIMP QueueEvent(MediaEventType aType, REFGUID aExtendedType,
                             HRESULT aStatus,
                             const PROPVARIANT* aValue) override;
+
+  // IMFGetService
+  IFACEMETHODIMP GetService(REFGUID aGuidService, REFIID aRiid,
+                            LPVOID* aResult) override;
+
+  // IMFRateSupport
+  IFACEMETHODIMP GetSlowestRate(MFRATE_DIRECTION aDirection,
+                                BOOL aSupportsThinning, float* aRate) override;
+  IFACEMETHODIMP GetFastestRate(MFRATE_DIRECTION aDirection,
+                                BOOL aSupportsThinning, float* aRate) override;
+  IFACEMETHODIMP IsRateSupported(BOOL aSupportsThinning, float aNewRate,
+                                 float* aSupportedRate) override;
+
+  // IMFRateControl
+  IFACEMETHODIMP SetRate(BOOL aSupportsThinning, float aRate) override;
+  IFACEMETHODIMP GetRate(BOOL* aSupportsThinning, float* aRate) override;
 
   MFMediaEngineStream* GetAudioStream() { return mAudioStream.Get(); }
   MFMediaEngineStream* GetVideoStream() { return mVideoStream.Get(); }
@@ -96,6 +113,8 @@ class MFMediaSource : public Microsoft::WRL::RuntimeClass<
     Shutdowned,
   };
   State GetState() const { return mState; }
+
+  void SetDCompSurfaceHandle(HANDLE aDCompSurfaceHandle);
 
  private:
   void AssertOnTaskQueue() const;
@@ -133,6 +152,9 @@ class MFMediaSource : public Microsoft::WRL::RuntimeClass<
   Atomic<State> mState;
 
   // Thread-safe members END
+
+  // Modify and access on MF thread pool.
+  float mPlaybackRate = 0.0f;
 };
 
 }  // namespace mozilla
