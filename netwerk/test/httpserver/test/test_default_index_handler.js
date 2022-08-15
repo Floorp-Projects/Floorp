@@ -179,6 +179,7 @@ function dataCheck(bytes, uri, path, dirEntries) {
   var lst = body.getElementsByTagName("ol");
   Assert.equal(lst.length, 1);
   var items = lst[0].getElementsByTagName("li");
+  var top = Services.io.newURI(uri);
 
   for (var i = 0; i < items.length; i++) {
     var link = items[i].childNodes[0];

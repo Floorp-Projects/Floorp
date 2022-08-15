@@ -336,6 +336,11 @@ function runHttpTests(testArray, done) {
       //     one.
       try {
         testArray[testIndex].onStopRequest(ch, status, this._data);
+      } catch (e) {
+        do_report_unexpected_exception(
+          e,
+          "testArray[" + testIndex + "].onStartRequest"
+        );
       } finally {
         try {
           performNextTest();
