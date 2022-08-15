@@ -1492,27 +1492,4 @@ void DataTransfer::SetMode(DataTransfer::Mode aMode) {
   }
 }
 
-/* static */
-void DataTransfer::IPCDataTransferTextItemsToDataTransfer(
-    const IPCDataTransfer& aIpcDataTransfer, const bool aHidden,
-    DataTransfer& aDataTransfer) {
-  MOZ_ASSERT(XRE_IsContentProcess());
-  MOZ_ASSERT(aDataTransfer.Items()->Length() == 0);
-
-  uint32_t i = 0;
-  for (const IPCDataTransferItem& item : aIpcDataTransfer.items()) {
-    MOZ_ASSERT(item.data().type() == IPCDataTransferData::TnsString);
-    RefPtr<nsVariantCC> variant = new nsVariantCC();
-    nsresult rv = nsContentUtils::IPCTransferableItemToVariant(
-        item, variant, ContentChild::GetSingleton());
-    if (NS_FAILED(rv)) {
-      continue;
-    }
-
-    aDataTransfer.SetDataWithPrincipalFromOtherProcess(
-        NS_ConvertUTF8toUTF16(item.flavor()), variant, i,
-        nsContentUtils::GetSystemPrincipal(), aHidden);
-  }
-}
-
 }  // namespace mozilla::dom

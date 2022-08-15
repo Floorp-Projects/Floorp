@@ -77,30 +77,17 @@ class Clipboard : public DOMEventTargetHelper {
 
   // @return the remaining work to fill aPromise.
   already_AddRefed<nsIRunnable> HandleReadTextRequestWhichRequiresPasteButton(
-      Promise& aPromise, nsIPrincipal& aSubjectPrincipal);
+      Promise& aPromise);
 
   already_AddRefed<Promise> ReadHelper(nsIPrincipal& aSubjectPrincipal,
                                        ClipboardReadType aClipboardReadType,
                                        ErrorResult& aRv);
 
-  // If necessary, fill the data transfer with data from the clipboard and
-  // resolve a promise with the appropriate object based on aClipboardReadType
-  //
-  // @param aOwner must be non-nullptr if aClipboardReadType is `eRead`, may be
-  //               nullptr otherwise.
-  static void ProcessDataTransfer(DataTransfer& aDataTransfer,
-                                  Promise& aPromise,
-                                  ClipboardReadType aClipboardReadType,
-                                  nsPIDOMWindowInner* aOwner,
-                                  nsIPrincipal& aSubjectPrincipal,
-                                  bool aNeedToFill);
-
   ~Clipboard();
 
   class ReadTextRequest final {
    public:
-    ReadTextRequest(Promise& aPromise, nsIPrincipal& aSubjectPrincipal)
-        : mPromise{&aPromise}, mSubjectPrincipal{&aSubjectPrincipal} {}
+    explicit ReadTextRequest(Promise& aPromise) : mPromise{&aPromise} {}
 
     // Clears the request too.
     already_AddRefed<nsIRunnable> Answer();
@@ -111,9 +98,6 @@ class Clipboard : public DOMEventTargetHelper {
     // Not cycle-collected, because it's nulled when the request is answered or
     // destructed.
     RefPtr<Promise> mPromise;
-    // Not cycle-collected, because it's nulled when the request is answered or
-    // destructed.
-    RefPtr<nsIPrincipal> mSubjectPrincipal;
   };
 
   AutoTArray<UniquePtr<ReadTextRequest>, 1> mReadTextRequests;
