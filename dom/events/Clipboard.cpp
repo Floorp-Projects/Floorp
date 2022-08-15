@@ -239,23 +239,64 @@ already_AddRefed<Promise> Clipboard::ReadHelper(
         return p.forget();
       }
 
-      // Want isExternal = true in order to use the data transfer object to
-      // perform a read
-      RefPtr<DataTransfer> dataTransfer = new DataTransfer(
-          this, ePaste, true /* aIsExternal */, nsIClipboard::kGlobalClipboard);
+      nsresult rv;
+      nsCOMPtr<nsIClipboard> clipboardService(
+          do_GetService("@mozilla.org/widget/clipboard;1", &rv));
+      if (NS_FAILED(rv)) {
+        p->MaybeReject(rv);
+        return p.forget();
+      }
 
-      RefPtr<nsPIDOMWindowInner> owner = GetOwner();
+      clipboardService
+          ->AsyncHasDataMatchingFlavors(
+              // Mandatory data types defined in
+              // https://w3c.github.io/clipboard-apis/#mandatory-data-types-x
+              AutoTArray<nsCString, 3>{nsDependentCString(kHTMLMime),
+                                       nsDependentCString(kUnicodeMime),
+                                       nsDependentCString(kPNGImageMime)},
+              nsIClipboard::kGlobalClipboard)
+          ->Then(
+              GetMainThreadSerialEventTarget(), __func__,
+              /* resolve */
+              [self = RefPtr{this}, p](nsTArray<nsCString> formats) {
+                nsCOMPtr<nsIGlobalObject> global =
+                    do_QueryInterface(self->GetOwner());
+                if (NS_WARN_IF(!global)) {
+                  p->MaybeReject(NS_ERROR_UNEXPECTED);
+                  return;
+                }
 
-      RefPtr<nsIRunnable> r = NS_NewRunnableFunction(
-          "Clipboard::Read", [p, dataTransfer, owner, aClipboardReadType,
-                              principal = RefPtr{&aSubjectPrincipal}]() {
-            // TODO: read async also for `eRead`, see bug 1755863.
-            ProcessDataTransfer(*dataTransfer, *p, aClipboardReadType, owner,
-                                *principal,
-                                /* aNeedToFill */ true);
-          });
+                AutoTArray<RefPtr<ClipboardItem::ItemEntry>, 3> entries;
+                for (const auto& format : formats) {
+                  nsCOMPtr<nsITransferable> trans =
+                      do_CreateInstance("@mozilla.org/widget/transferable;1");
+                  if (NS_WARN_IF(!trans)) {
+                    continue;
+                  }
 
-      GetParentObject()->Dispatch(TaskCategory::Other, r.forget());
+                  trans->Init(nullptr);
+                  trans->AddDataFlavor(format.get());
+
+                  RefPtr<ClipboardItem::ItemEntry> entry =
+                      MakeRefPtr<ClipboardItem::ItemEntry>(
+                          format.EqualsLiteral(kUnicodeMime)
+                              ? NS_ConvertUTF8toUTF16(kTextMime)
+                              : NS_ConvertUTF8toUTF16(format),
+                          format);
+                  entry->LoadData(*global, *trans);
+                  entries.AppendElement(std::move(entry));
+                }
+
+                // We currently only support one clipboard item.
+                AutoTArray<RefPtr<ClipboardItem>, 1> items;
+                items.AppendElement(MakeRefPtr<ClipboardItem>(
+                    global, PresentationStyle::Unspecified,
+                    std::move(entries)));
+
+                p->MaybeResolve(std::move(items));
+              },
+              /* reject */
+              [p](nsresult rv) { p->MaybeReject(rv); });
       break;
     }
   }
@@ -270,85 +311,23 @@ void Clipboard::ProcessDataTransfer(DataTransfer& aDataTransfer,
                                     nsPIDOMWindowInner* aOwner,
                                     nsIPrincipal& aSubjectPrincipal,
                                     bool aNeedToFill) {
+  MOZ_ASSERT(aClipboardReadType == eReadText);
+
   IgnoredErrorResult ier;
-  switch (aClipboardReadType) {
-    case eRead: {
-      MOZ_LOG(GetClipboardLog(), LogLevel::Debug,
-              ("Clipboard, ReadHelper, read case\n"));
-      if (aNeedToFill) {
-        aDataTransfer.FillAllExternalData();
-      }
-      // Convert the DataTransferItems to ClipboardItems.
-      // FIXME(bug 1691825): This is only suitable for testing!
-      // A real implementation would only read from the clipboard
-      // in ClipboardItem::getType instead of doing it here.
-      nsTArray<RefPtr<ClipboardItem::ItemEntry>> entries;
-      DataTransferItemList* items = aDataTransfer.Items();
-      for (size_t i = 0; i < items->Length(); i++) {
-        bool found = false;
-        DataTransferItem* item = items->IndexedGetter(i, found);
-
-        // Only allow strings and files.
-        if (!found || item->Kind() == DataTransferItem::KIND_OTHER) {
-          continue;
-        }
-
-        nsAutoString type;
-        item->GetType(type);
-
-        OwningStringOrBlob stringOrBlob;
-        if (item->Kind() == DataTransferItem::KIND_STRING) {
-          // We just ignore items that we can't access.
-          IgnoredErrorResult ignored;
-          nsCOMPtr<nsIVariant> data = item->Data(&aSubjectPrincipal, ignored);
-          if (NS_WARN_IF(!data || ignored.Failed())) {
-            continue;
-          }
-
-          nsAutoString string;
-          if (NS_WARN_IF(NS_FAILED(data->GetAsAString(string)))) {
-            continue;
-          }
-
-          stringOrBlob.SetAsString() = string;
-        } else {
-          IgnoredErrorResult ignored;
-          RefPtr<File> file = item->GetAsFile(aSubjectPrincipal, ignored);
-          if (NS_WARN_IF(!file || ignored.Failed())) {
-            continue;
-          }
-
-          stringOrBlob.SetAsBlob() = file;
-        }
-
-        entries.AppendElement(MakeRefPtr<ClipboardItem::ItemEntry>(
-            type, std::move(stringOrBlob)));
-      }
-
-      nsTArray<RefPtr<ClipboardItem>> sequence;
-      sequence.AppendElement(MakeRefPtr<ClipboardItem>(
-          aOwner, PresentationStyle::Unspecified, std::move(entries)));
-      aPromise.MaybeResolve(sequence);
-      break;
-    }
-    case eReadText: {
-      MOZ_LOG(GetClipboardLog(), LogLevel::Debug,
-              ("Clipboard, ReadHelper, read text case\n"));
-      nsAutoString str;
-      // If we haven't filled the data transfer with the items from the
-      // clipboard yet, then DataTransfer::GetData will get data from the
-      // clipboard and retrieve the item in the desired format if it exists.
-      // Otherwise, if our data transfer is filled with items from the clipboard
-      // and we call DataTransfer::GetData, it will simply try to retrieve the
-      // item in the desired format among the items it already has.
-      aDataTransfer.GetData(NS_LITERAL_STRING_FROM_CSTRING(kTextMime), str,
-                            aSubjectPrincipal, ier);
-      // Either resolve with a string extracted from data transfer item
-      // or resolve with an empty string if nothing was found
-      aPromise.MaybeResolve(str);
-      break;
-    }
-  }
+  MOZ_LOG(GetClipboardLog(), LogLevel::Debug,
+          ("Clipboard, ReadHelper, read text case\n"));
+  nsAutoString str;
+  // If we haven't filled the data transfer with the items from the
+  // clipboard yet, then DataTransfer::GetData will get data from the
+  // clipboard and retrieve the item in the desired format if it exists.
+  // Otherwise, if our data transfer is filled with items from the clipboard
+  // and we call DataTransfer::GetData, it will simply try to retrieve the
+  // item in the desired format among the items it already has.
+  aDataTransfer.GetData(NS_LITERAL_STRING_FROM_CSTRING(kTextMime), str,
+                        aSubjectPrincipal, ier);
+  // Either resolve with a string extracted from data transfer item
+  // or resolve with an empty string if nothing was found
+  aPromise.MaybeResolve(str);
 }
 
 auto Clipboard::TransientUserPasteState::RefreshAndGet(
@@ -746,7 +725,8 @@ already_AddRefed<Promise> Clipboard::WriteText(const nsAString& aData,
 
   nsTArray<RefPtr<ClipboardItem::ItemEntry>> items;
   items.AppendElement(MakeRefPtr<ClipboardItem::ItemEntry>(
-      NS_LITERAL_STRING_FROM_CSTRING(kTextMime), std::move(data)));
+      NS_LITERAL_STRING_FROM_CSTRING(kTextMime), nsLiteralCString(kUnicodeMime),
+      std::move(data)));
 
   nsTArray<OwningNonNull<ClipboardItem>> sequence;
   RefPtr<ClipboardItem> item = MakeRefPtr<ClipboardItem>(
