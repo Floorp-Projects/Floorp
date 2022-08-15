@@ -6715,10 +6715,6 @@ void nsIFrame::DidReflow(nsPresContext* aPresContext,
                          const ReflowInput* aReflowInput) {
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS, ("nsIFrame::DidReflow"));
 
-  if (GetInFlowParent() && GetInFlowParent()->IsContentHiddenForLayout()) {
-    return;
-  }
-
   SVGObserverUtils::InvalidateDirectRenderingObservers(
       this, SVGObserverUtils::INVALIDATE_REFLOW);
 
@@ -6829,11 +6825,6 @@ bool nsIFrame::IsContentHidden() const {
   }
 
   return IsFrameOfType(nsIFrame::eReplaced) || !StyleDisplay()->IsInlineFlow();
-}
-
-bool nsIFrame::IsContentHiddenForLayout() const {
-  return IsContentHidden() &&
-         !PresShell()->IsForcingLayoutForHiddenContent(this);
 }
 
 bool nsIFrame::AncestorHidesContent() const {
