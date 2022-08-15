@@ -118,5 +118,20 @@ RefPtr<GenericPromise> HeadlessClipboard::AsyncGetData(
   return GenericPromise::CreateAndResolve(true, __func__);
 }
 
+RefPtr<DataFlavorsPromise> HeadlessClipboard::AsyncHasDataMatchingFlavors(
+    const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) {
+  nsTArray<nsCString> results;
+  for (const auto& flavor : aFlavorList) {
+    bool hasMatchingFlavor = false;
+    nsresult rv = HasDataMatchingFlavors(AutoTArray<nsCString, 1>{flavor},
+                                         aWhichClipboard, &hasMatchingFlavor);
+    if (NS_SUCCEEDED(rv) && hasMatchingFlavor) {
+      results.AppendElement(flavor);
+    }
+  }
+
+  return DataFlavorsPromise::CreateAndResolve(std::move(results), __func__);
+}
+
 }  // namespace widget
 }  // namespace mozilla

@@ -11,11 +11,14 @@
 
 %{C++
 #include "mozilla/MozPromise.h"
+
+using DataFlavorsPromise = mozilla::MozPromise<nsTArray<nsCString>, nsresult, true>;
 %}
 
 interface nsIArray;
 
 native AsyncGetDataPromise(RefPtr<mozilla::GenericPromise>);
+native AsyncDataFlavorsPromise(RefPtr<DataFlavorsPromise>);
 
 [scriptable, builtinclass, uuid(ceaa0047-647f-4b8e-ad1c-aff9fa62aa51)]
 interface nsIClipboard : nsISupports
@@ -103,4 +106,16 @@ interface nsIClipboard : nsISupports
      */
     [noscript, notxpcom, nostdcall]
     AsyncGetDataPromise asyncGetData(in nsITransferable aTransferable, in long aWhichClipboard);
+
+    /**
+     * Check if there is data on the clipboard matching each of the flavors in the
+     * given list.
+     *
+     * @param  aFlavorList     An array of ASCII strings.
+     * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
+     * @return MozPromise      The returned promise will resolve with the list of matched flavors
+     *                         when the check is completed or reject if any error occurs.
+     */
+    [noscript, notxpcom, nostdcall]
+    AsyncDataFlavorsPromise asyncHasDataMatchingFlavors(in Array<ACString> aFlavorList, in long aWhichClipboard);
 };

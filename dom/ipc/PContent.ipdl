@@ -1222,6 +1222,11 @@ parent:
     sync ClipboardHasType(nsCString[] aTypes, int32_t aWhichClipboard)
         returns (bool hasType);
 
+    // Given a list of supported types, returns a list of types that clipboard
+    // constains the data for the specified type.
+    async ClipboardHasTypesAsync(nsCString [] aTypes, int32_t aWhichClipboard)
+        returns (nsCString [] types);
+
     // 'Play', 'Beep' and 'PlayEventSound' are the only nsISound methods used in
     // the content process.
     [Compress] async PlaySound(nsIURI aURL);
