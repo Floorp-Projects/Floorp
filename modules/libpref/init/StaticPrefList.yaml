@@ -11370,7 +11370,25 @@
   value: false
   mirror: always
 
-#  This is used for a temporary workaround for a web-compat issue. If pref is
+# When true we will dispatch a background task (separate process) to
+# delete the cache folder at shutdown in order to avoid shutdown hangs.
+- name: network.cache.shutdown_purge_in_background_task
+  type: RelaxedAtomicBool
+#if defined(NIGHTLY_BUILD) && defined(XP_WIN)
+  value: true
+#else
+  value: false
+#endif
+  mirror: always
+
+# Number of seconds to wait for the cache folder to be renamed before
+# the background task forcefully exists.
+- name: network.cache.shutdown_purge_folder_wait_seconds
+  type: RelaxedAtomicUint32
+  value: 10
+  mirror: always
+
+# This is used for a temporary workaround for a web-compat issue. If pref is
 # true CORS preflight requests are allowed to send client certificates.
 - name: network.cors_preflight.allow_client_cert
   type: RelaxedAtomicBool

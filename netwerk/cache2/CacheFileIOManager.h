@@ -266,6 +266,7 @@ class CacheFileIOManager final : public nsITimerCallback, public nsINamed {
   static nsresult Init();
   static nsresult Shutdown();
   static nsresult OnProfile();
+  static nsresult OnDelayedStartupFinished();
   static already_AddRefed<nsIEventTarget> IOTarget();
   static already_AddRefed<CacheIOThread> IOThread();
   static bool IsOnIOThread();
@@ -429,6 +430,14 @@ class CacheFileIOManager final : public nsITimerCallback, public nsINamed {
 
   static nsresult CacheIndexStateChanged();
   void CacheIndexStateChangedInternal();
+
+  // Dispatches a purgeHTTP background task to delete the cache directoy
+  // indicated by aCacheDirName.
+  // When this feature is enabled, a task will be dispatched at shutdown
+  // or after browser startup (to cleanup potential left-over directories)
+  nsresult DispatchPurgeTask(const nsCString& aCacheDirName,
+                             const nsCString& aSecondsToWait,
+                             const nsCString& aPurgeExtension);
 
   // Smart size calculation. UpdateSmartCacheSize() must be called on IO thread.
   // It is called in EvictIfOverLimitInternal() just before we decide whether to
