@@ -1200,13 +1200,14 @@ void nsWindow::HideWaylandPopupWindow(bool aTemporaryHide,
   if (mPopupClosed) {
     LOG("  Clearing mMoveToRectPopupSize\n");
     mMoveToRectPopupSize = {};
-  }
 
-  if (moz_container_wayland_is_waiting_to_show(mContainer)) {
-    // We need to clear rendering queue, see Bug 1782948.
-    LOG("  popup failed to show by Wayland compositor, clear rendering queue.");
-    moz_container_wayland_clear_waiting_to_show_flag(mContainer);
-    ClearRenderingQueue();
+    if (moz_container_wayland_is_waiting_to_show(mContainer)) {
+      // We need to clear rendering queue, see Bug 1782948.
+      LOG("  popup failed to show by Wayland compositor, clear rendering "
+          "queue.");
+      moz_container_wayland_clear_waiting_to_show_flag(mContainer);
+      ClearRenderingQueue();
+    }
   }
 }
 
