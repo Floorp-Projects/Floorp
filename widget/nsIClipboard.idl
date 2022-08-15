@@ -9,9 +9,15 @@
 #include "nsITransferable.idl"
 #include "nsIClipboardOwner.idl"
 
+%{C++
+#include "mozilla/MozPromise.h"
+%}
+
 interface nsIArray;
 
-[scriptable, uuid(ceaa0047-647f-4b8e-ad1c-aff9fa62aa51)]
+native AsyncGetDataPromise(RefPtr<mozilla::GenericPromise>);
+
+[scriptable, builtinclass, uuid(ceaa0047-647f-4b8e-ad1c-aff9fa62aa51)]
 interface nsIClipboard : nsISupports
 {
     const long kSelectionClipboard = 0;
@@ -84,9 +90,17 @@ interface nsIClipboard : nsISupports
     * @result NS_OK if successful.
     */
     boolean supportsFindClipboard ( ) ;
+
+    /**
+     * Filters the flavors aTransferable can import (see
+     * `nsITransferable::flavorsTransferableCanImport`) and gets the data for the
+     * first flavor. That data is set for aTransferable.
+     *
+     * @param  aTransferable   The transferable
+     * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
+     * @return MozPromise      The returned promise will resolve when the data is ready or reject
+     *                         if any error occurs.
+     */
+    [noscript, notxpcom, nostdcall]
+    AsyncGetDataPromise asyncGetData(in nsITransferable aTransferable, in long aWhichClipboard);
 };
-
-
-%{ C++
-
-%}

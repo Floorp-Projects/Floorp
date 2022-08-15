@@ -108,5 +108,15 @@ HeadlessClipboard::SupportsFindClipboard(bool* _retval) {
   return NS_OK;
 }
 
+RefPtr<GenericPromise> HeadlessClipboard::AsyncGetData(
+    nsITransferable* aTransferable, int32_t aWhichClipboard) {
+  nsresult rv = GetData(aTransferable, aWhichClipboard);
+  if (NS_FAILED(rv)) {
+    return GenericPromise::CreateAndReject(rv, __func__);
+  }
+
+  return GenericPromise::CreateAndResolve(true, __func__);
+}
+
 }  // namespace widget
 }  // namespace mozilla

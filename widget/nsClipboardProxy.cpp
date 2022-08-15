@@ -87,3 +87,42 @@ void nsClipboardProxy::SetCapabilities(
     const ClipboardCapabilities& aClipboardCaps) {
   mClipboardCaps = aClipboardCaps;
 }
+
+RefPtr<GenericPromise> nsClipboardProxy::AsyncGetData(
+    nsITransferable* aTransferable, int32_t aWhichClipboard) {
+  if (!aTransferable) {
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+
+  // Get a list of flavors this transferable can import
+  nsTArray<nsCString> flavors;
+  nsresult rv = aTransferable->FlavorsTransferableCanImport(flavors);
+  if (NS_FAILED(rv)) {
+    return GenericPromise::CreateAndReject(rv, __func__);
+  }
+
+  nsCOMPtr<nsITransferable> transferable(aTransferable);
+  auto promise = MakeRefPtr<GenericPromise::Private>(__func__);
+  ContentChild::GetSingleton()
+      ->SendGetClipboardAsync(flavors, aWhichClipboard)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          /* resolve */
+          [promise, transferable](const IPCDataTransfer& ipcDataTransfer) {
+            nsresult rv = nsContentUtils::IPCTransferableToTransferable(
+                ipcDataTransfer, false /* aAddDataFlavor */, transferable,
+                ContentChild::GetSingleton());
+            if (NS_FAILED(rv)) {
+              promise->Reject(rv, __func__);
+              return;
+            }
+
+            promise->Resolve(true, __func__);
+          },
+          /* reject */
+          [promise](mozilla::ipc::ResponseRejectReason aReason) {
+            promise->Reject(NS_ERROR_FAILURE, __func__);
+          });
+
+  return promise.forget();
+}
