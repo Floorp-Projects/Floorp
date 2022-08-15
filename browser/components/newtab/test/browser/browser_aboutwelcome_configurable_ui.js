@@ -4,6 +4,10 @@ const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
 );
 
+const { AboutWelcomeTelemetry } = ChromeUtils.import(
+  "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm"
+);
+
 const BASE_SCREEN_CONTENT = {
   title: "Step 1",
   primary_button: {
@@ -535,6 +539,64 @@ add_task(async function test_aboutwelcome_with_dark_mode_logo() {
     [
       '.logo-container source[srcset="chrome://activity-stream/content/data/content/assets/heart.webp"]',
     ]
+  );
+
+  await doExperimentCleanup();
+});
+
+/**
+ * Test rendering a message that starts on a specific screen
+ */
+add_task(async function test_aboutwelcome_start_screen_configured() {
+  let startScreen = 1;
+  let screens = [];
+  // we need at least two screens to test
+  for (let i = 1; i < 3; i++) {
+    screens.push(makeTestContent(`TEST_START_STEP_${i}`));
+  }
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "aboutwelcome",
+    value: {
+      enabled: true,
+      startScreen,
+      screens,
+    },
+  });
+
+  let sandbox = sinon.createSandbox();
+
+  let stub = sandbox.stub(AboutWelcomeTelemetry.prototype, "sendTelemetry");
+
+  registerCleanupFunction(() => {
+    sandbox.restore();
+  });
+
+  let browser = await openAboutWelcome(JSON.stringify(screens));
+
+  let secondScreenShown = await SpecialPowers.spawn(browser, [], async () => {
+    // Ensure screen has rendered
+    await ContentTaskUtils.waitForCondition(() =>
+      content.document.querySelector(".TEST_START_STEP_2")
+    );
+    return true;
+  });
+
+  ok(
+    secondScreenShown,
+    `Starts on second screen when configured with startScreen index equal to ${startScreen}`
+  );
+
+  Assert.equal(
+    stub.secondCall.args[0].event,
+    "IMPRESSION",
+    "An impression event is sent with start screen configured"
+  );
+
+  Assert.equal(
+    stub.secondCall.args[0].message_id,
+    `DEFAULT_ABOUTWELCOME_PROTON_${startScreen}_TEST_START_STEP_${startScreen +
+      1}`,
+    "Impression events have the correct message id with start screen configured"
   );
 
   await doExperimentCleanup();
