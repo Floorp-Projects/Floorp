@@ -44,6 +44,15 @@ shim code is small and doesn't inspect the API arguments, so is unlikely to
 expose any safety issues beyond those presented by the native OS API.
 """
 
+[[audits.askama]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+version = "0.11.1"
+notes = """
+Just contains some traits and re-exports for use by a broader package of related
+crates. No unsafe code or ambient capability usage.
+"""
+
 [[audits.atomic_refcell]]
 who = "Bobby Holley <bholley@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -146,6 +155,18 @@ who = "Zibi Braniecki <zibi@unicode.org>"
 criteria = "safe-to-run"
 version = "0.0.2"
 
+[[audits.fnv]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+version = "1.0.7"
+notes = "Simple hasher implementation with no unsafe code."
+
+[[audits.fxhash]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+version = "0.2.1"
+notes = "Straightforward crate with no unsafe code, does what it says on the tin."
+
 [[audits.getrandom]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -210,6 +231,17 @@ who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "50.1.3 -> 51.0.1"
 notes = "Maintained by the Glean team at Mozilla"
+
+[[audits.guid_win]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+version = "0.2.0"
+notes = """
+This crate has some unsafe code for the FFI bits, which I've reviewed carefully.
+It uses the deprecated mem::uninitialized(), which is generally sketchy. However
+the usage is pretty straightforward and while it's technically UB, it seems no
+more likely to lead to miscompilation than any other use of mem::uninitialized.
+"""
 
 [[audits.intl-memoizer]]
 who = "Zibi Braniecki <zibi@unicode.org>"
@@ -294,10 +326,22 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.24.0 -> 1.25.0"
 
+[[audits.rustc-hash]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+version = "1.1.0"
+notes = "Straightforward crate with no unsafe code, does what it says on the tin."
+
 [[audits.semver]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.0.9 -> 1.0.10"
+
+[[audits.svg_fmt]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+version = "0.4.1"
+notes = "Simple string processing with no unsafe code or ambient capability usage."
 
 [[audits.thin-vec]]
 who = "Aria Beingessner <a.beingessner@gmail.com>"
@@ -314,6 +358,12 @@ version = "0.3.4"
 who = "Zibi Braniecki <zibi@unicode.org>"
 criteria = "safe-to-deploy"
 version = "0.6.0"
+
+[[audits.topological-sort]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+version = "0.1.0"
+notes = "Simple algorithm crate with no unsafe code or capability usage."
 
 [[audits.tracy-rs]]
 who = "Glenn Watson <git@intuitionlibrary.com>"
@@ -466,6 +516,16 @@ by Dzmitry Malyshau while he was a Mozilla employee. Dzmitry left
 Mozilla at the beginning of February 2022. This audit statement was
 collected by Jim Blandy, a Mozilla employee, over email in July 2022:
 Dzmitry was shown, and agreed to, the 'safe-to-deploy' text.
+"""
+
+[[audits.whatsys]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+version = "0.1.2"
+notes = """
+Contains platform-specific FFI code for apple, mac, and windows. The windows code
+also contains a small C file compiled at build-time. I audited all of it and it
+looks correct.
 """
 
 [[audits.xmldecl]]
