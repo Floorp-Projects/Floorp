@@ -20,7 +20,6 @@ const lazy = {};
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   ClientID: "resource://gre/modules/ClientID.jsm",
-  ExtensionStorageIDB: "resource://gre/modules/ExtensionStorageIDB.jsm",
   DoHConfigController: "resource:///modules/DoHConfig.jsm",
   Heuristics: "resource:///modules/DoHHeuristics.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
@@ -94,9 +93,6 @@ XPCOMUtils.defineLazyServiceGetter(
 // Stores whether we've done first-run.
 const FIRST_RUN_PREF = "doh-rollout.doneFirstRun";
 
-// Records if the user opted in/out of DoH study by clicking on doorhanger
-const DOORHANGER_USER_DECISION_PREF = "doh-rollout.doorhanger-decision";
-
 // Set when we detect that the user set their DoH provider or mode manually.
 // If set, we don't run heuristics.
 const DISABLED_PREF = "doh-rollout.disable-heuristics";
@@ -154,10 +150,6 @@ const DoHController = {
   _heuristicsAreEnabled: false,
 
   async init() {
-    await this.migrateLocalStoragePrefs();
-    await this.migrateOldTrrMode();
-    await this.migrateNextDNSEndpoint();
-
     Services.telemetry.setEventRecordingEnabled(
       HEURISTICS_TELEMETRY_CATEGORY,
       true
@@ -216,105 +208,6 @@ const DoHController = {
     });
 
     return this.resetPromise;
-  },
-
-  async migrateLocalStoragePrefs() {
-    const BALROG_MIGRATION_COMPLETED_PREF = "doh-rollout.balrog-migration-done";
-    const ADDON_ID = "doh-rollout@mozilla.org";
-
-    // Migrate updated local storage item names. If this has already been done once, skip the migration
-    const isMigrated = lazy.Preferences.get(
-      BALROG_MIGRATION_COMPLETED_PREF,
-      false
-    );
-
-    if (isMigrated) {
-      return;
-    }
-
-    let policy = WebExtensionPolicy.getByID(ADDON_ID);
-    if (!policy) {
-      return;
-    }
-
-    const storagePrincipal = lazy.ExtensionStorageIDB.getStoragePrincipal(
-      policy.extension
-    );
-    const idbConn = await lazy.ExtensionStorageIDB.open(storagePrincipal);
-
-    // Previously, the DoH heuristics were bundled as an add-on. Early versions
-    // of this add-on used local storage instead of prefs to persist state. This
-    // function migrates the values that are still relevant to their new pref
-    // counterparts.
-    const legacyLocalStorageKeys = [
-      "doneFirstRun",
-      DOORHANGER_USER_DECISION_PREF,
-      DISABLED_PREF,
-    ];
-
-    for (let item of legacyLocalStorageKeys) {
-      let data = await idbConn.get(item);
-      let value = data[item];
-
-      if (data.hasOwnProperty(item)) {
-        let migratedName = item;
-
-        if (!item.startsWith("doh-rollout.")) {
-          migratedName = "doh-rollout." + item;
-        }
-
-        lazy.Preferences.set(migratedName, value);
-      }
-    }
-
-    await idbConn.clear();
-    await idbConn.close();
-
-    // Set pref to skip this function in the future.
-    lazy.Preferences.set(BALROG_MIGRATION_COMPLETED_PREF, true);
-  },
-
-  // Previous versions of the DoH frontend worked by setting network.trr.mode
-  // directly to turn DoH on/off. This makes sure we clear that value and also
-  // the pref we formerly used to track changes to it.
-  async migrateOldTrrMode() {
-    const PREVIOUS_TRR_MODE_PREF = "doh-rollout.previous.trr.mode";
-
-    if (lazy.Preferences.get(PREVIOUS_TRR_MODE_PREF) === undefined) {
-      return;
-    }
-
-    if (lazy.Preferences.get(NETWORK_TRR_MODE_PREF) !== 5) {
-      lazy.Preferences.reset(NETWORK_TRR_MODE_PREF);
-    }
-    lazy.Preferences.reset(PREVIOUS_TRR_MODE_PREF);
-  },
-
-  async migrateNextDNSEndpoint() {
-    // NextDNS endpoint changed from trr.dns.nextdns.io to firefox.dns.nextdns.io
-    // This migration updates any pref values that might be using the old value
-    // to the new one. We support values that match the exact URL that shipped
-    // in the network.trr.resolvers pref in prior versions of the browser.
-    // The migration is a direct static replacement of the string.
-    const oldURL = "https://trr.dns.nextdns.io/";
-    const newURL = "https://firefox.dns.nextdns.io/";
-    const prefsToMigrate = [
-      "network.trr.resolvers",
-      "network.trr.uri",
-      "network.trr.custom_uri",
-      "doh-rollout.trr-selection.dry-run-result",
-      "doh-rollout.uri",
-    ];
-
-    for (let pref of prefsToMigrate) {
-      if (!lazy.Preferences.isSet(pref)) {
-        continue;
-      }
-      lazy.Preferences.set(
-        pref,
-        lazy.Preferences.get(pref).replaceAll(oldURL, newURL)
-      );
-    }
   },
 
   // The "maybe" is because there are two cases when we don't enable heuristics:
