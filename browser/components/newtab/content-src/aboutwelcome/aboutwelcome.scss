@@ -39,6 +39,12 @@ body {
   }
 }
 
+// Below variables are used via config JSON in AboutWelcomeDefaults
+// and referenced below inside dummy class to pass test browser_parsable_css
+.dummy {
+  background: var(--mr-welcome-background-color) var(--mr-welcome-background-gradient);
+}
+
 // Styling for content rendered in a Spotlight messaging surface.
 :root {
   &[dialogroot] {
@@ -54,8 +60,6 @@ body {
       }
 
       .screen {
-        background-color: transparent;
-
         &:dir(rtl) {
           transform: unset;
         }
@@ -181,7 +185,6 @@ body {
   }
 
   .screen {
-    background-color: rgba(21, 20, 26, 0.5);
     display: flex;
     position: relative;
     flex-flow: row nowrap;
@@ -226,6 +229,7 @@ body {
     }
 
     &[pos='center'] {
+      background-color: rgba(21, 20, 26, 0.5);
       min-width: $main-section-width;
 
       &.with-noodles {
@@ -241,8 +245,6 @@ body {
 
     &[pos='split'] {
       margin: auto;
-      background-color: var(--mr-welcome-background-color);
-      background-image: var(--mr-welcome-background-gradient);
 
       .section-secondary,
       .section-main {
@@ -1363,7 +1365,6 @@ body {
   }
 
   [pos='corner'] {
-    background-color: transparent;
     min-width: $container-min-width;
 
     .section-secondary {
