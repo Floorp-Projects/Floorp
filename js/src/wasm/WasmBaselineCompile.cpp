@@ -5639,6 +5639,9 @@ void BaseCompiler::emitCompareRef(Assembler::Condition compareOp,
 
 bool BaseCompiler::emitInstanceCall(uint32_t lineOrBytecode,
                                     const SymbolicAddressSignature& builtin) {
+  // See declaration (WasmBCClass.h) for info on the relationship between the
+  // compiler's value stack and the argument order for the to-be-called
+  // function.
   const MIRType* argTypes = builtin.argTypes;
   MOZ_ASSERT(argTypes[0] == MIRType::Pointer);
 
@@ -10318,6 +10321,17 @@ void BaseCompiler::assertStackInvariants() const {
     }
   }
   MOZ_ASSERT(size == fr.dynamicHeight());
+}
+
+void BaseCompiler::showStack(const char* who) const {
+  fprintf(stderr, "Stack at %s {{\n", who);
+  size_t n = 0;
+  for (const Stk& elem : stk_) {
+    fprintf(stderr, "  [%zu] ", n++);
+    elem.showStackElem();
+    fprintf(stderr, "\n");
+  }
+  fprintf(stderr, "}}\n");
 }
 #endif
 

@@ -590,6 +590,9 @@ struct BaseCompiler final {
 
   // Count the number of memory references on the value stack.
   inline size_t countMemRefsOnStk();
+
+  // Print the stack to stderr.
+  void showStack(const char* who) const;
 #endif
 
   //////////////////////////////////////////////////////////////////////
@@ -1546,8 +1549,30 @@ struct BaseCompiler final {
   void emitConvertU64ToF64();
 #endif
   void emitRound(RoundingMode roundingMode, ValType operandType);
+
+  // Generate a call to the instance function denoted by `builtin`, passing as
+  // args the top elements of the compiler's value stack and optionally an
+  // Instance* too.  The relationship between the top of stack and arg
+  // ordering is as follows.  If the value stack looks like this:
+  //
+  //   A  <- least recently pushed
+  //   B
+  //   C  <- most recently pushed
+  //
+  // then the called function is expected to have signature [if an Instance*
+  // is also to be passed]:
+  //
+  //   static Instance::foo(Instance*, A, B, C)
+  //
+  // and the SymbolicAddressSignature::argTypes array will be
+  //
+  //   {_PTR, _A, _B, _C, _END}  // _PTR is for the Instance*
+  //
+  // (see WasmBuiltins.cpp).  In short, the most recently pushed value is the
+  // rightmost argument to the function.
   [[nodiscard]] bool emitInstanceCall(uint32_t lineOrBytecode,
                                       const SymbolicAddressSignature& builtin);
+
   [[nodiscard]] bool emitMemoryGrow();
   [[nodiscard]] bool emitMemorySize();
 
