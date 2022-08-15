@@ -210,7 +210,7 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   MOZ_CAN_RUN_SCRIPT static gboolean TaskDispatchCallback(gpointer data);
   MOZ_CAN_RUN_SCRIPT gboolean RunScheduledTask();
   MOZ_CAN_RUN_SCRIPT void DispatchMotionEvents();
-  void ReplyToDragMotion(GdkDragContext* aDragContext);
+  void ReplyToDragMotion(GdkDragContext* aDragContext, guint aTime);
   void ReplyToDragMotion();
   void UpdateDragAction(GdkDragContext* aDragContext);
   void UpdateDragAction();
