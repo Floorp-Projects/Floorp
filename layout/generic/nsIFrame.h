@@ -3151,6 +3151,13 @@ class nsIFrame : public nsQueryFrame {
   bool IsContentHidden() const;
 
   /**
+   * Whether the content is hidden via the `content-visibilty` property for
+   * layout. Hidden content might not be hidden for layout when forcing layout
+   * for size queries.
+   */
+  bool IsContentHiddenForLayout() const;
+
+  /**
    * Returns true if this frame is entirely hidden due the `content-visibility`
    * property on an ancestor.
    */
