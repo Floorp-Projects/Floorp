@@ -48,7 +48,9 @@
 
 ### Repository Overview
 
-This repository contains source code for the Floorp browser from version 10.0.0 and later.
+This repository contains source code for the Floorp browser from version 10.0.0 and later.　Although there is a copyright notation in the license, the contribution of the developer's code is very small. for signature. Please forgive me.
+
+For a list of contributors to Floorp, see about:contributors on Floorp
 
 Branches ```master```, ```release```, ``beta``, and ``ESR102`` exist.
 
