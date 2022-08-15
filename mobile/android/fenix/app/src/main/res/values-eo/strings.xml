@@ -72,6 +72,9 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Ignori</string>
 
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">Ignori</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Aliro al la fimilo postulata. Iru al agordoj de Android, tuŝetu Permesojn kaj poste Permesi.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -119,10 +122,10 @@
     <string name="recent_tabs_show_all_content_description_2">Butono por montri ĉiujn lastajn langetojn</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">Via serĉo de \&quot;%1$s\&quot;</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Via serĉo de \&quot;%1$s\&quot;</string>
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d retejoj</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d retejoj</string>
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Montri ĉiujn spegulitajn langetojn</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
@@ -617,9 +620,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Krado</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Grupoj de serĉoj</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Grupoj de serĉoj</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Grupigi rilatitajn retejojn</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Grupigi rilatitajn retejojn</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Fermi langetojn</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -748,7 +751,7 @@
     <string name="pwa_site_controls_title_private">%1$s (Privata reĝimo)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Aliaj langetoj</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Aliaj langetoj</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -781,6 +784,13 @@
     <string name="history_synced_from_other_devices">Spegulita de aliaj aparatoj</string>
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">El aliaj aparatoj</string>
+
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">Komencu seancon por vidi la spegulitan historion el viaj aliaj aparatoj.</string>
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">Komenci seancon</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>Aŭ kreu konton de Firefox por komenci speguli</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1155,7 +1165,18 @@
     <string name="delete_browsing_data_on_quit_action">Fini</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Ĉiujn viajn retumajn datumojn estos forigitaj.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Ĉiujn viajn retumajn datumojn estos forigitaj.</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Forigota tempa amplekso</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">Tio ĉi forigas historion (inkluzive de la historio spegulita de aliaj aparatoj), kuketojn kaj aliajn retumajn datumojn.</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Lasta horo</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">Hodiaŭ kaj hieraŭ</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Ĉio</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s forigos la elektitajn retumajn datumojn.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1168,8 +1189,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Retumaj datumoj forigataj…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">Tio ĉi forigos ĉiujn elementojn.</string>
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">Forigi ĉiujn retejojn en “%s”</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Nuligi</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1586,8 +1607,6 @@
     <string name="addresses_edit_address">Modifi adreson</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Administri adresojn</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Kompleta nomo</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">Persona nomo</string>
     <!-- The header for the middle name of an address -->
@@ -1857,4 +1876,5 @@
     <string name="experiments_snackbar">Aktivigi telemezuradon por sendi datumojn.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Iri al agordoj</string>
+    <string name="firefox_suggest_header">Sugestoj de Firefox</string>
 </resources>

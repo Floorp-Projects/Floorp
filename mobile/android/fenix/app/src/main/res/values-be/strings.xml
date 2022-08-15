@@ -72,6 +72,9 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Адхіліць</string>
 
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">Адхіліць</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Патрабуецца доступ да камеры. Перайдзіце ў налады Android, націсніце &quot;Дазволы&quot;, і затым &quot;Дазволіць&quot;.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -118,11 +121,11 @@
     <string name="recent_tabs_show_all_content_description_2">Кнопка паказу ўсіх нядаўніх картак</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">Вынік пошуку \&quot;%1$s\&quot;</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Вынік пошуку \&quot;%1$s\&quot;</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">Сайты: %d</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">Сайты: %d</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Усе сінхранізаваныя карткі</string>
@@ -621,9 +624,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Сетка</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Пошукавыя групы</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Пошукавыя групы</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Групуйце звязаныя сайты разам</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Групуйце звязаныя сайты разам</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Закрываць карткі</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -1167,7 +1170,18 @@
     <string name="delete_browsing_data_on_quit_action">Выйсці</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Гэта выдаліць усе дадзеныя вашага аглядання.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Гэта выдаліць усе дадзеныя вашага аглядання.</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Дыяпазон часу для выдалення</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">Выдаляе гісторыю (у тым ліку гісторыю, сінхранізаваную з іншых прылад), кукі і іншыя даныя аглядання.</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Апошняя гадзіна</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">За сёння і ўчора</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Усё</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s выдаліць выбраныя дадзеныя аглядання.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1181,8 +1195,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Выдаленне дадзеныя аглядання…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">Гэта выдаліць усе элементы.</string>
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">Выдаліць усе сайты ў “%s”</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Скасаваць</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1608,8 +1622,6 @@
     <string name="addresses_edit_address">Змяніць адрас</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Кіраваць адрасамі</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Імя цалкам</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">Імя</string>
     <!-- The header for the middle name of an address -->

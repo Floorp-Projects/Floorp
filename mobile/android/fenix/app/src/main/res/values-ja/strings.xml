@@ -72,7 +72,7 @@
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. The first parameter is the name of the application.-->
-    <string name="open_in_app_cfr_info_message_2">アプリ内のリンクを %1$sで自動的に開くように設定できます。</string>
+    <string name="open_in_app_cfr_info_message_2">リンクを外部アプリで自動的に開くよう %1$s を設定できます。</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">設定を開く</string>
     <!-- Text for the negative action button -->
@@ -205,7 +205,7 @@
     <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
     <string name="browser_menu_read_close">リーダービューを閉じる</string>
     <!-- Browser menu button to open the current page in an external app -->
-    <string name="browser_menu_open_app_link">アプリで開く</string>
+    <string name="browser_menu_open_app_link">外部アプリで開く</string>
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">リーダービューをカスタマイズ</string>
@@ -402,7 +402,7 @@
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">自動補完 URL</string>
     <!-- Preference for open links in third party apps -->
-    <string name="preferences_open_links_in_apps">リンクをアプリで開く</string>
+    <string name="preferences_open_links_in_apps">リンクを外部アプリで開く</string>
 
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">外部のダウンロードマネージャー</string>

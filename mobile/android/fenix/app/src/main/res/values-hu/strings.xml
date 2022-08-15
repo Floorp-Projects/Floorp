@@ -60,9 +60,9 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Parancsikon hozzáadása, amely privát lapokat nyit meg a Kezdőképernyőről.</string>
+    <string name="cfr_message">Indítóikon hozzáadása, amely privát lapokat nyit meg a Kezdőképernyőről.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Parancsikon hozzáadása</string>
+    <string name="cfr_pos_button_text">Indítóikon hozzáadása</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Köszönöm, nem</string>
 
@@ -124,11 +124,11 @@
     <string name="recent_tabs_show_all_content_description_2">Öösszes legutóbbi lap megjelenítése gomb</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">Az Ön keresése erre: „%1$s”</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Az Ön keresése erre: „%1$s”</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d webhely</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d webhely</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Összes szinkronizált lap megtekintése</string>
@@ -318,7 +318,7 @@
     <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
     <string name="preferences_screenshots_in_private_mode_disclaimer">Ha engedélyezett, a privát lapok akkor is láthatóak lesznek, ha több alkalmazás van nyitva</string>
     <!-- Preference for adding private browsing shortcut -->
-    <string name="preferences_add_private_browsing_shortcut">Privát böngészési parancsikon hozzáadása</string>
+    <string name="preferences_add_private_browsing_shortcut">Privát böngészési indítóikon hozzáadása</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Csak HTTPS mód</string>
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
@@ -629,9 +629,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Rács</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Keresési csoportok</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Keresési csoportok</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Kapcsolódó webhelyek csoportosítása</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Kapcsolódó webhelyek csoportosítása</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Lapok bezárása</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -1430,7 +1430,7 @@
     <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
     <string name="add_to_homescreen_continue">Tovább a weblapra</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
-    <string name="add_to_homescreen_text_placeholder">Parancsikon neve</string>
+    <string name="add_to_homescreen_text_placeholder">Indítóikon neve</string>
 
     <!-- Describes the add to homescreen functionality -->
     <string name="add_to_homescreen_description_2">Könnyedén hozzáadhatja ezt a weboldalt az eszköze Kezdőképernyőhöz, és azonnal elérheti azt, így gyorsabban böngészve, miközben alkalmazásszerű élményt kap.</string>
@@ -1805,7 +1805,7 @@
     <string name="top_sites_max_limit_confirmation_button">Rendben, értem</string>
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
-    <string name="top_sites_toggle_top_recent_sites_4">Gyorsbillentyűk</string>
+    <string name="top_sites_toggle_top_recent_sites_4">Indítóikonok</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Név</string>
     <!-- Hint for renaming title of a shortcut -->
