@@ -490,4 +490,14 @@ class PanZoomControllerTest : BaseSessionTest() {
         assertThat("The input result should be IGNORED during the fast fling",
                    value, equalTo(PanZoomController.INPUT_RESULT_IGNORED))
     }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test
+    fun touchEventWithXOrigin() {
+        setupDocument(TOUCH_XORIGIN_HTML_PATH)
+
+        // Touch handler with preventDefault
+        val value = sessionRule.waitForResult(sendDownEvent(50f, 45f))
+        assertThat("Value should match", value, equalTo(PanZoomController.INPUT_RESULT_HANDLED_CONTENT))
+    }
 }
