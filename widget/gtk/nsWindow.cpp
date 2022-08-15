@@ -5119,8 +5119,7 @@ void nsWindow::OnDragDataReceivedEvent(GtkWidget* aWidget,
   LOGDRAG("nsWindow::OnDragDataReceived(%p)\n", (void*)this);
 
   RefPtr<nsDragService> dragService = nsDragService::GetInstance();
-  dragService->EventLoopEnter();
-  auto autoLeave = MakeScopeExit([&] { dragService->EventLoopLeave(); });
+  nsDragService::AutoEventLoop loop(dragService);
   dragService->TargetDataReceived(aWidget, aDragContext, aX, aY, aSelectionData,
                                   aInfo, aTime);
 }
@@ -8186,8 +8185,7 @@ gboolean WindowDragMotionHandler(GtkWidget* aWidget,
           innerMostWindow.get(), retx, rety);
 
   RefPtr<nsDragService> dragService = nsDragService::GetInstance();
-  dragService->EventLoopEnter();
-  auto autoLeave = MakeScopeExit([&] { dragService->EventLoopLeave(); });
+  nsDragService::AutoEventLoop loop(dragService);
   if (!dragService->ScheduleMotionEvent(innerMostWindow, aDragContext, point,
                                         aTime)) {
     return FALSE;
@@ -8211,8 +8209,7 @@ void WindowDragLeaveHandler(GtkWidget* aWidget) {
   }
 
   RefPtr<nsDragService> dragService = nsDragService::GetInstance();
-  dragService->EventLoopEnter();
-  auto autoLeave = MakeScopeExit([&] { dragService->EventLoopLeave(); });
+  nsDragService::AutoEventLoop loop(dragService);
 
   nsWindow* mostRecentDragWindow = dragService->GetMostRecentDestWindow();
   if (!mostRecentDragWindow) {
@@ -8273,8 +8270,7 @@ gboolean WindowDragDropHandler(GtkWidget* aWidget, GdkDragContext* aDragContext,
           innerMostWindow.get(), retx, rety);
 
   RefPtr<nsDragService> dragService = nsDragService::GetInstance();
-  dragService->EventLoopEnter();
-  auto autoLeave = MakeScopeExit([&] { dragService->EventLoopLeave(); });
+  nsDragService::AutoEventLoop loop(dragService);
   return dragService->ScheduleDropEvent(innerMostWindow, aDragContext, point,
                                         aTime);
 }
