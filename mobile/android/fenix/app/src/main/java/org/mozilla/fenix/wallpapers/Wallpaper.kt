@@ -4,88 +4,43 @@
 
 package org.mozilla.fenix.wallpapers
 
-import androidx.annotation.DrawableRes
-import java.util.Calendar
 import java.util.Date
 
 /**
- * Type hierarchy defining the various wallpapers that are available as home screen backgrounds.
+ * Type that represents wallpapers.
+ *
  * @property name The name of the wallpaper.
+ * @property collectionName The name of the collection the wallpaper belongs to.
+ * @property availableLocales The locales that this wallpaper is restricted to. If null, the wallpaper
+ * is not restricted.
+ * @property startDate The date the wallpaper becomes available in a promotion. If null, it is available
+ * from any date.
+ * @property endDate The date the wallpaper stops being available in a promotion. If null,
+ * the wallpaper will be available to any date.
  */
-sealed class Wallpaper {
-    abstract val name: String
-
-    /**
-     * The default wallpaper. This uses the standard color resource to as a background, instead of
-     * loading a bitmap.
-     */
-    object Default : Wallpaper() {
-        override val name = "default"
-    }
-
-    /**
-     * If a user had previously selected a wallpaper, they are allowed to retain it even if
-     * the wallpaper is otherwise expired. This type exists as a wrapper around that current
-     * wallpaper.
-     */
-    data class Expired(override val name: String) : Wallpaper()
-
-    /**
-     * Wallpapers that are included directly in the shipped APK.
-     *
-     * @property drawableId The drawable bitmap used as the background.
-     */
-    sealed class Local : Wallpaper() {
-        abstract val drawableId: Int
-        data class Firefox(override val name: String, @DrawableRes override val drawableId: Int) : Local()
-    }
-
-    /**
-     * Wallpapers that need to be fetched from a network resource.
-     *
-     * @property expirationDate Optional date at which this wallpaper should no longer be available.
-     */
-    sealed class Remote : Wallpaper() {
-        abstract val expirationDate: Date?
-        abstract val remoteParentDirName: String
-        @Suppress("MagicNumber")
-        /**
-         * A promotional partnered wallpaper.
-         */
-        data class House(
-            override val name: String,
-            override val expirationDate: Date? = Calendar.getInstance().run {
-                set(2022, Calendar.APRIL, 30)
-                time
-            }
-        ) : Remote(), Promotional {
-            override val remoteParentDirName: String = "house"
-            override fun isAvailableInLocale(locale: String): Boolean =
-                listOf("en-US", "es-US").contains(locale)
-        }
-
-        /**
-         * Wallpapers that are original Firefox creations.
-         */
-        data class Firefox(
-            override val name: String,
-        ) : Remote() {
-            override val expirationDate: Date? = null
-            override val remoteParentDirName: String = "firefox"
-        }
-    }
-
-    /**
-     * Designates whether a wallpaper is part of a promotion that is locale-restricted.
-     */
-    interface Promotional {
-        /**
-         * Returns whether the wallpaper is available in [locale] or not.
-         */
-        fun isAvailableInLocale(locale: String): Boolean
-    }
-
+data class Wallpaper(
+    val name: String,
+    val collectionName: String,
+    val availableLocales: List<String>?,
+    val startDate: Date?,
+    val endDate: Date?
+) {
     companion object {
+        const val amethystName = "amethyst"
+        const val ceruleanName = "cerulean"
+        const val sunriseName = "sunrise"
+        const val twilightHillsName = "twilight-hills"
+        const val beachVibeName = "beach-vibe"
+        const val firefoxCollectionName = "firefox"
+        const val defaultName = "default"
+        val Default = Wallpaper(
+            name = defaultName,
+            collectionName = defaultName,
+            availableLocales = null,
+            startDate = null,
+            endDate = null,
+        )
+
         /**
          * Defines the standard path at which a wallpaper resource is kept on disk.
          *

@@ -931,7 +931,7 @@ class HomeFragment : Fragment() {
                     // We only want to update the wallpaper when it's different from the default one
                     // as the default is applied already on xml by default.
                     when (val currentWallpaper = state.wallpaperState.currentWallpaper) {
-                        is Wallpaper.Default -> {
+                        Wallpaper.Default -> {
                             binding.wallpaperImageView.visibility = View.GONE
                         }
                         else -> {

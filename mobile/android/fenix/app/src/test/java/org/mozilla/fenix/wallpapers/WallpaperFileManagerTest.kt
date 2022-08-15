@@ -46,7 +46,7 @@ class WallpaperFileManagerTest {
 
         val result = fileManager.lookupExpiredWallpaper(wallpaperName)
 
-        val expected = Wallpaper.Expired(name = wallpaperName)
+        val expected = generateWallpaper(name = wallpaperName)
         assertEquals(expected, result)
     }
 
@@ -64,9 +64,9 @@ class WallpaperFileManagerTest {
     @Test
     fun `WHEN cleaned THEN current wallpaper and available wallpapers kept`() {
         val currentName = "current"
-        val currentWallpaper = Wallpaper.Expired(currentName)
+        val currentWallpaper = generateWallpaper(name = currentName)
         val availableName = "available"
-        val available = Wallpaper.Remote.House(name = availableName)
+        val available = generateWallpaper(name = availableName)
         val unavailableName = "unavailable"
         createAllFiles(currentName)
         createAllFiles(availableName)
@@ -93,4 +93,12 @@ class WallpaperFileManagerTest {
             File(landscapeDarkFolder, "$name.png"),
         )
     }
+
+    private fun generateWallpaper(name: String) = Wallpaper(
+        name = name,
+        collectionName = "",
+        availableLocales = null,
+        startDate = null,
+        endDate = null
+    )
 }
