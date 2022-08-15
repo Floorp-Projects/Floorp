@@ -11,7 +11,6 @@
 #  include "nsThreadUtils.h"
 #  include "nsISupportsImpl.h"
 #  include "MainThreadUtils.h"
-#  include "mozilla/ScopeExit.h"
 
 #  include <gdk/gdkwayland.h>
 
@@ -148,21 +147,21 @@ void WaylandVsyncSource::Refresh(const MutexAutoLock& aProofOfLock) {
   }
 
   if (mContainer) {
-    MozContainerSurfaceLock lock(mContainer);
-    struct wl_surface* surface = lock.GetSurface();
+    struct wl_surface* surface = moz_container_wayland_surface_lock(mContainer);
     LOG("  refresh from mContainer, wl_surface %p", surface);
     if (!surface) {
       LOG("  we're missing wl_surface, register Refresh() callback");
       // The surface hasn't been created yet. Try again when the surface is
       // ready.
       RefPtr<WaylandVsyncSource> self(this);
-      moz_container_wayland_add_initial_draw_callback_locked(
+      moz_container_wayland_add_initial_draw_callback(
           mContainer, [self]() -> void {
             MutexAutoLock lock(self->mMutex);
             self->Refresh(lock);
           });
       return;
     }
+    moz_container_wayland_surface_unlock(mContainer, &surface);
   }
 
   // Vsync is enabled, but we don't have a callback configured. Set one up so
@@ -207,8 +206,7 @@ void WaylandVsyncSource::SetupFrameCallback(const MutexAutoLock& aProofOfLock) {
     mNativeLayerRoot->RequestFrameCallback(&WaylandVsyncSourceCallbackHandler,
                                            this);
   } else {
-    MozContainerSurfaceLock lock(mContainer);
-    struct wl_surface* surface = lock.GetSurface();
+    struct wl_surface* surface = moz_container_wayland_surface_lock(mContainer);
     LOG("  use mContainer, wl_surface %p", surface);
     if (!surface) {
       // We don't have a surface, either due to being called before it was made
@@ -224,6 +222,7 @@ void WaylandVsyncSource::SetupFrameCallback(const MutexAutoLock& aProofOfLock) {
                              this);
     wl_surface_commit(surface);
     wl_display_flush(WaylandDisplayGet()->GetDisplay());
+    moz_container_wayland_surface_unlock(mContainer, &surface);
   }
 
   mCallbackRequested = true;

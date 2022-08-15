@@ -5452,7 +5452,7 @@ void nsWindow::ConfigureCompositor() {
 
   LOG("nsWindow::ConfigureCompositor()");
   auto startCompositing = [self = RefPtr{this}, this]() -> void {
-    LOG("  moz_container_wayland_add_or_fire_initial_draw_callback "
+    LOG("  moz_container_wayland_add_initial_draw_callback "
         "ConfigureCompositor");
 
     // too late
@@ -5471,8 +5471,8 @@ void nsWindow::ConfigureCompositor() {
 
   if (GdkIsWaylandDisplay()) {
 #ifdef MOZ_WAYLAND
-    moz_container_wayland_add_or_fire_initial_draw_callback(mContainer,
-                                                            startCompositing);
+    moz_container_wayland_add_initial_draw_callback(mContainer,
+                                                    startCompositing);
 #endif
   } else {
     startCompositing();
