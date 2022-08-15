@@ -24,6 +24,11 @@ class PyPy(ViaGlobalRefVirtualenvBuiltin):
         yield host, targets, must, RefWhen.ANY
 
     @classmethod
+    def executables(cls, interpreter):
+        for src in super(PyPy, cls).sources(interpreter):
+            yield src
+
+    @classmethod
     def exe_names(cls, interpreter):
         return {
             cls.exe_stem(),
@@ -34,8 +39,8 @@ class PyPy(ViaGlobalRefVirtualenvBuiltin):
 
     @classmethod
     def sources(cls, interpreter):
-        for src in super(PyPy, cls).sources(interpreter):
-            yield src
+        for exe in cls.executables(interpreter):
+            yield exe
         for host in cls._add_shared_libs(interpreter):
             yield PathRefToDest(host, dest=lambda self, s: self.bin_dir / s.name)
 
@@ -43,11 +48,9 @@ class PyPy(ViaGlobalRefVirtualenvBuiltin):
     def _add_shared_libs(cls, interpreter):
         # https://bitbucket.org/pypy/pypy/issue/1922/future-proofing-virtualenv
         python_dir = Path(interpreter.system_executable).resolve().parent
-        for libname in cls._shared_libs():
-            src = python_dir / libname
-            if src.exists():
-                yield src
+        for src in cls._shared_libs(python_dir):
+            yield src
 
     @classmethod
-    def _shared_libs(cls):
+    def _shared_libs(cls, python_dir):
         raise NotImplementedError
