@@ -1314,11 +1314,28 @@ void nsHtml5TreeOpExecutor::SetSpeculationBase(const nsAString& aURL) {
     // the first one wins
     return;
   }
+
   auto encoding = mDocument->GetDocumentCharacterSet();
-  DebugOnly<nsresult> rv = NS_NewURI(getter_AddRefs(mSpeculationBaseURI), aURL,
-                                     encoding, mDocument->GetDocumentURI());
+  nsCOMPtr<nsIURI> newBaseURI;
+  DebugOnly<nsresult> rv = NS_NewURI(getter_AddRefs(newBaseURI), aURL, encoding,
+                                     mDocument->GetDocumentURI());
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to create a URI");
 
+  nsCOMPtr<nsIContentSecurityPolicy> csp = mDocument->GetPreloadCsp();
+  if (csp && newBaseURI) {
+    // base-uri should not fallback to the default-src and preloads should not
+    // trigger violation reports.
+    bool cspPermitsBaseURI = true;
+    nsresult rv = csp->Permits(
+        nullptr, nullptr, newBaseURI,
+        nsIContentSecurityPolicy::BASE_URI_DIRECTIVE, true /* aSpecific */,
+        false /* aSendViolationReports */, &cspPermitsBaseURI);
+    if (NS_FAILED(rv) || !cspPermitsBaseURI) {
+      return;
+    }
+  }
+
+  mSpeculationBaseURI = newBaseURI;
   mDocument->Preloads().SetSpeculationBase(mSpeculationBaseURI);
 }
 
