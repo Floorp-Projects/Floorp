@@ -180,6 +180,9 @@ const AVAILABLE_BREAKPOINTS = [
       generalEvent("keyboard", "keydown"),
       generalEvent("keyboard", "keyup"),
       generalEvent("keyboard", "keypress"),
+      generalEvent("keyboard", "compositionstart"),
+      generalEvent("keyboard", "compositionupdate"),
+      generalEvent("keyboard", "compositionend"),
     ].filter(Boolean),
   },
   {

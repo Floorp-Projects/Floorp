@@ -16,7 +16,7 @@ document.getElementById("xhr-button").onmousedown = xhrHandler;
 function xhrHandler() {
   var xhr = new XMLHttpRequest();
   xhr.open("GET", "doc-event-breakpoints.html", true);
-  xhr.onload = function() {
+  xhr.onload = function () {
     console.log("xhr load");
   };
   xhr.send();
@@ -46,4 +46,19 @@ function inputFocused() {
 document.getElementById("focus-text").addEventListener("focusout", inputFocusOut);
 function inputFocusOut() {
   console.log("focus lost");
+}
+
+document.getElementById("focus-text").addEventListener("compositionstart", inputCompositionStart);
+function inputCompositionStart() {
+  console.log("composition start");
+}
+
+document.getElementById("focus-text").addEventListener("compositionupdate", inputCompositionUpdate);
+function inputCompositionUpdate() {
+  console.log("composition update");
+}
+
+document.getElementById("focus-text").addEventListener("compositionend", inputCompositionEnd);
+function inputCompositionEnd() {
+  console.log("composition end");
 }

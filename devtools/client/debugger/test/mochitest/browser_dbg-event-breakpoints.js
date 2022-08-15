@@ -70,6 +70,69 @@ add_task(async function() {
   assertPausedAtSourceAndLine(dbg, eventBreakpointsSource.id, 48);
   await resume(dbg);
 
+  info("Deselect focus events");
+  // We need to give the input focus to test composition, but we don't want the
+  // focus breakpoints to fire.
+  await toggleEventBreakpoint(dbg, "Control", "event.control.focusin");
+  await toggleEventBreakpoint(dbg, "Control", "event.control.focusout");
+
+  await toggleEventBreakpoint(
+    dbg,
+    "Keyboard",
+    "event.keyboard.compositionstart"
+  );
+  invokeOnElement("#focus-text", "focus");
+
+  info("Type some characters during composition");
+  invokeComposition();
+
+  await waitForPaused(dbg);
+  assertPausedAtSourceAndLine(dbg, eventBreakpointsSource.id, 53);
+  await resume(dbg);
+
+  info("Deselect compositionstart and select compositionupdate");
+  await toggleEventBreakpoint(
+    dbg,
+    "Keyboard",
+    "event.keyboard.compositionstart"
+  );
+  await toggleEventBreakpoint(
+    dbg,
+    "Keyboard",
+    "event.keyboard.compositionupdate"
+  );
+
+  invokeOnElement("#focus-text", "focus");
+
+  info("Type some characters during composition");
+  invokeComposition();
+
+  await waitForPaused(dbg);
+  assertPausedAtSourceAndLine(dbg, eventBreakpointsSource.id, 58);
+  await resume(dbg);
+
+  info("Deselect compositionupdate and select compositionend");
+  await toggleEventBreakpoint(
+    dbg,
+    "Keyboard",
+    "event.keyboard.compositionupdate"
+  );
+  await toggleEventBreakpoint(dbg, "Keyboard", "event.keyboard.compositionend");
+  invokeOnElement("#focus-text", "focus");
+
+  info("Type some characters during composition");
+  invokeComposition();
+
+  info("Commit the composition");
+  EventUtils.synthesizeComposition({
+    type: "compositioncommitasis",
+    key: { key: "KEY_Enter" },
+  });
+
+  await waitForPaused(dbg);
+  assertPausedAtSourceAndLine(dbg, eventBreakpointsSource.id, 63);
+  await resume(dbg);
+
   info("Check that the click event breakpoint is still enabled");
   invokeInTab("clickHandler");
   await waitForPaused(dbg);
@@ -171,4 +234,21 @@ async function invokeOnElement(selector, action) {
       content.document.querySelector(_selector)[_action]();
     }
   );
+}
+
+function invokeComposition() {
+  const string = "ex";
+  EventUtils.synthesizeCompositionChange({
+    composition: {
+      string,
+      clauses: [
+        {
+          length: string.length,
+          attr: Ci.nsITextInputProcessor.ATTR_RAW_CLAUSE,
+        },
+      ],
+    },
+    caret: { start: string.length, length: 0 },
+    key: { key: string[string.length - 1] },
+  });
 }
