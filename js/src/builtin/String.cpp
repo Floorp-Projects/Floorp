@@ -26,7 +26,6 @@
 #include "jstypes.h"
 
 #include "builtin/Array.h"
-#include "builtin/Boolean.h"
 #if JS_HAS_INTL_API
 #  include "builtin/intl/CommonFunctions.h"
 #  include "builtin/intl/FormatBuffer.h"
@@ -46,14 +45,10 @@
 #include "util/StringBuffer.h"
 #include "util/Unicode.h"
 #include "vm/GlobalObject.h"
-#include "vm/Interpreter.h"
-#include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
-#include "vm/Opcodes.h"
 #include "vm/Printer.h"
 #include "vm/RegExpObject.h"
-#include "vm/RegExpStatics.h"
 #include "vm/SelfHosting.h"
 #include "vm/StaticStrings.h"
 #include "vm/ToSource.h"       // js::ValueToSource
@@ -61,7 +56,6 @@
 
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/InlineCharBuffer-inl.h"
-#include "vm/Interpreter-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/StringObject-inl.h"
 #include "vm/StringType-inl.h"
