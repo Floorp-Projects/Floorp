@@ -21,6 +21,7 @@ html {
 
 body {
   // sass-lint:disable no-color-literals
+
   --grey-subtitle-1: #696977;
   --newtab-button-secondary-color: #0060DF;
   --mr-welcome-background-color: #F8F6F4;
@@ -42,7 +43,7 @@ body {
 // Below variables are used via config JSON in AboutWelcomeDefaults
 // and referenced below inside dummy class to pass test browser_parsable_css
 .dummy {
-  background: var(--mr-welcome-background-color) var(--mr-welcome-background-gradient);
+  background: var(--mr-welcome-background-color) var(--mr-welcome-background-gradient) var(--mr-secondary-position);
 }
 
 // Styling for content rendered in a Spotlight messaging surface.
@@ -372,11 +373,14 @@ body {
       }
 
       .section-secondary {
+        --mr-secondary-position: center center / contain;
         border-radius: 8px 0 0 8px;
         box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
         margin: auto 0 auto auto;
         display: flex;
         align-items: center;
+        -moz-context-properties: fill, stroke, fill-opacity, stroke-opacity;
+        stroke: currentColor;
 
         &:dir(rtl) {
           border-radius: 0 8px 8px 0;
@@ -452,6 +456,7 @@ body {
         }
 
         .section-secondary {
+          --mr-secondary-position: top center / cover;
           border-radius: 8px 8px 0 0;
           margin: auto auto 0;
           height: 150px;
