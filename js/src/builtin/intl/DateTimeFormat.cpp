@@ -9,12 +9,10 @@
 #include "builtin/intl/DateTimeFormat.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/EnumSet.h"
 #include "mozilla/intl/Calendar.h"
 #include "mozilla/intl/DateIntervalFormat.h"
 #include "mozilla/intl/DateTimeFormat.h"
 #include "mozilla/intl/DateTimePart.h"
-#include "mozilla/intl/DateTimePatternGenerator.h"
 #include "mozilla/intl/Locale.h"
 #include "mozilla/intl/TimeZone.h"
 #include "mozilla/Range.h"
@@ -25,9 +23,7 @@
 #include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/LanguageTag.h"
 #include "builtin/intl/SharedIntlData.h"
-#include "builtin/intl/TimeZoneDataGenerated.h"
 #include "gc/GCContext.h"
-#include "js/CharacterEncoding.h"
 #include "js/Date.h"
 #include "js/experimental/Intl.h"     // JS::AddMozDateTimeFormatConstructor
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*

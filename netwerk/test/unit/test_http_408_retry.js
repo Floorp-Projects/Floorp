@@ -35,6 +35,9 @@ add_task(async function test() {
         let oldSock = global.socket;
         global.socket = resp.socket;
         if (global.socket == oldSock) {
+          // This function is handled within the httpserver where setTimeout is
+          // available.
+          // eslint-disable-next-line mozilla/no-arbitrary-setTimeout, no-undef
           setTimeout(
             arg => {
               arg.writeHead(408);

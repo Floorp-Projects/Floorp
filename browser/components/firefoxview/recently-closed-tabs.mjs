@@ -76,6 +76,20 @@ class RecentlyClosedTabsList extends HTMLElement {
       (event.type == "keydown" && event.keyCode == KeyEvent.DOM_VK_RETURN)
     ) {
       this.openTabAndUpdate(event);
+    } else if (
+      event.type == "keydown" &&
+      !event.shiftKey &&
+      !event.ctrlKey &&
+      event.target.classList.contains("closed-tab-li")
+    ) {
+      switch (event.key) {
+        case "ArrowDown":
+          event.target.nextSibling?.focus();
+          break;
+        case "ArrowUp":
+          event.target.previousSibling?.focus();
+          break;
+      }
     }
   }
 

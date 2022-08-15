@@ -26,7 +26,6 @@
 #include "jstypes.h"
 
 #include "builtin/Array.h"
-#include "builtin/Boolean.h"
 #if JS_HAS_INTL_API
 #  include "builtin/intl/CommonFunctions.h"
 #  include "builtin/intl/FormatBuffer.h"
@@ -46,14 +45,10 @@
 #include "util/StringBuffer.h"
 #include "util/Unicode.h"
 #include "vm/GlobalObject.h"
-#include "vm/Interpreter.h"
-#include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
-#include "vm/Opcodes.h"
 #include "vm/Printer.h"
 #include "vm/RegExpObject.h"
-#include "vm/RegExpStatics.h"
 #include "vm/SelfHosting.h"
 #include "vm/StaticStrings.h"
 #include "vm/ToSource.h"       // js::ValueToSource
@@ -61,7 +56,6 @@
 
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/InlineCharBuffer-inl.h"
-#include "vm/Interpreter-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/StringObject-inl.h"
 #include "vm/StringType-inl.h"
@@ -922,6 +916,8 @@ static const char* CaseMappingLocale(JSContext* cx, JSString* str) {
   return "";  // ICU root locale
 }
 
+static bool HasDefaultCasing(const char* locale) { return !strcmp(locale, ""); }
+
 bool js::intl_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
@@ -936,7 +932,7 @@ bool js::intl_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Call String.prototype.toLowerCase() for language independent casing.
-  if (intl::StringsAreEqual(locale, "")) {
+  if (HasDefaultCasing(locale)) {
     JSString* str = StringToLowerCase(cx, string);
     if (!str) {
       return false;
@@ -1345,7 +1341,7 @@ bool js::intl_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Call String.prototype.toUpperCase() for language independent casing.
-  if (intl::StringsAreEqual(locale, "")) {
+  if (HasDefaultCasing(locale)) {
     JSString* str = js::StringToUpperCase(cx, string);
     if (!str) {
       return false;

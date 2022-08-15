@@ -10,8 +10,7 @@
 #include "builtin/WeakMapObject.h"
 
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "vm/ProxyObject.h"
-
+#include "js/Wrapper.h"
 #include "gc/WeakMap-inl.h"
 #include "vm/JSObject-inl.h"
 

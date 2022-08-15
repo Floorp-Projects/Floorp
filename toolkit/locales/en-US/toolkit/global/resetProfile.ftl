@@ -9,3 +9,7 @@ refresh-profile-dialog-description = Start fresh to fix performance issues. This
 refresh-profile = Give { -brand-short-name } a tune up
 refresh-profile-button = Refresh { -brand-short-name }…
 refresh-profile-learn-more = Learn more
+
+refresh-profile-progress =
+    .title = Refresh { -brand-short-name }
+refresh-profile-progress-description = Almost done…

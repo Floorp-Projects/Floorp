@@ -36,6 +36,7 @@
   --colorways-no-collection-notice-justify-content: center;
   --colorways-no-collection-notice-margin: 0;
   --colorways-no-collection-notice-width: auto;
+  --colorways-no-collection-notice-text-color: #FFF;
 
   --info-icon-background-color: #0090ED;
 }
@@ -145,6 +146,7 @@ body > main > aside {
     --colorways-no-collection-notice-justify-content: flex-start;
     --colorways-no-collection-notice-margin: 1px;
     --colorways-no-collection-notice-width: 100%;
+    --colorways-no-collection-notice-text-color: inherit;
   }
 }
 
@@ -243,6 +245,7 @@ body > main > aside {
   align-items: center;
   font-size: 2em;
   background-color: var(--colorways-no-collection-notice-bg-color);
+  color: var(--colorways-no-collection-notice-text-color);
 }
 
 #no-current-colorway-collection-notice,

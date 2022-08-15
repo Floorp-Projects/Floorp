@@ -1025,7 +1025,7 @@ void EditorSpellCheck::SetFallbackDictionary(DictionaryFetcher* aFetcher) {
         mozilla::intl::Locale appLoc;
         auto result =
             mozilla::intl::LocaleParser::TryParse(appLocaleStr, appLoc);
-        if (result.isOk() && loc.Canonicalize().isOk() &&
+        if (result.isOk() && appLoc.Canonicalize().isOk() &&
             loc.Language().Span() == appLoc.Language().Span()) {
           if (BuildDictionaryList(appLocaleStr, dictList,
                                   DICT_COMPARE_CASE_INSENSITIVE, tryDictList)) {
@@ -1042,7 +1042,7 @@ void EditorSpellCheck::SetFallbackDictionary(DictionaryFetcher* aFetcher) {
         mozilla::intl::Locale sysLoc;
         auto result =
             mozilla::intl::LocaleParser::TryParse(sysLocaleStr, sysLoc);
-        if (result.isOk() && loc.Canonicalize().isOk() &&
+        if (result.isOk() && sysLoc.Canonicalize().isOk() &&
             loc.Language().Span() == sysLoc.Language().Span()) {
           if (BuildDictionaryList(sysLocaleStr, dictList,
                                   DICT_COMPARE_CASE_INSENSITIVE, tryDictList)) {

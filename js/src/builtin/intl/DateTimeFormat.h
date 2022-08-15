@@ -7,10 +7,8 @@
 #ifndef builtin_intl_DateTimeFormat_h
 #define builtin_intl_DateTimeFormat_h
 
-#include "builtin/intl/CommonFunctions.h"
 #include "builtin/SelfHostingDefines.h"
 #include "js/Class.h"
-#include "js/RootingAPI.h"
 #include "vm/NativeObject.h"
 
 namespace mozilla::intl {

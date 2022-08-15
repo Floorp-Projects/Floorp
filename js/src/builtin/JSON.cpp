@@ -17,8 +17,6 @@
 #include "jstypes.h"
 
 #include "builtin/Array.h"
-#include "builtin/BigInt.h"
-#include "js/CallAndConstruct.h"      // JS::IsCallable
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
 #include "js/Object.h"                // JS::GetBuiltinClass
@@ -42,7 +40,6 @@
 #endif
 
 #include "builtin/Array-inl.h"
-#include "builtin/Boolean-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/NativeObject-inl.h"

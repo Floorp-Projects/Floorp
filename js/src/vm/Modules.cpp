@@ -26,10 +26,12 @@
 #include "vm/ErrorContext.h"       // js::MainThreadErrorContext
 #include "vm/JSContext.h"          // CHECK_THREAD, JSContext
 #include "vm/JSObject.h"           // JSObject
+#include "vm/List.h"               // ListObject
 #include "vm/Runtime.h"            // JSRuntime
 
 #include "builtin/Array-inl.h"
 #include "vm/JSContext-inl.h"  // JSContext::{c,releaseC}heck
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 

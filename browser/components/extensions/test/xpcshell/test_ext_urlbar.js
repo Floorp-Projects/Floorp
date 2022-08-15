@@ -1104,7 +1104,8 @@ add_task(async function test_onBehaviorRequestedTimeout() {
     incognitoOverride: "spanning",
     background() {
       browser.urlbar.onBehaviorRequested.addListener(async query => {
-        // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+        // setTimeout is available in background scripts
+        // eslint-disable-next-line mozilla/no-arbitrary-setTimeout, no-undef
         await new Promise(r => setTimeout(r, 500));
         return "active";
       }, "test");
@@ -1159,7 +1160,8 @@ add_task(async function test_onResultsRequestedTimeout() {
         return "active";
       }, "test");
       browser.urlbar.onResultsRequested.addListener(async query => {
-        // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+        // setTimeout is available in background scripts
+        // eslint-disable-next-line mozilla/no-arbitrary-setTimeout, no-undef
         await new Promise(r => setTimeout(r, 600));
         return [
           {

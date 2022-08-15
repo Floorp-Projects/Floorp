@@ -1,4 +1,6 @@
-/* globals dnsResolve */
+// These are globlas defined for proxy servers, in ProxyAutoConfig.cpp. See
+// PACGlobalFunctions
+/* globals dnsResolve, alert */
 
 /* This test checks that using a PAC script still works when TRR is on.
    Steps:
