@@ -2509,18 +2509,23 @@ void nsWindow::WaylandPopupMove() {
   LOG("  popup use move to rect %d", mPopupUseMoveToRect);
 
   if (!mPopupUseMoveToRect) {
+    // Visible widgets can't be positioned.
+    if (gtk_widget_is_visible(mShell)) {
+      HideWaylandPopupWindow(/* aTemporaryHide */ true,
+                             /* aRemoveFromPopupList */ false);
+    }
     // Workaround for https://gitlab.gnome.org/GNOME/gtk/-/issues/4308
-    // Tooltips/Utility popus are created as subsurfaces with relative position.
+    // Tooltips are created as subsurfaces with relative position.
     // Menu uses absolute positions.
-    if (mPopupHint == ePopupTypeMenu) {
-      LOG("  use gtk_window_move(%d, %d) for hidden widget\n", mPopupPosition.x,
-          mPopupPosition.y);
-      gtk_window_move(GTK_WINDOW(mShell), mPopupPosition.x, mPopupPosition.y);
-    } else {
-      LOG("  use gtk_window_move(%d, %d) for visible widget\n",
+    if (mPopupHint == ePopupTypeTooltip) {
+      LOG("  use relative gtk_window_move(%d, %d) for tooltips\n",
           mRelativePopupPosition.x, mRelativePopupPosition.y);
       gtk_window_move(GTK_WINDOW(mShell), mRelativePopupPosition.x,
                       mRelativePopupPosition.y);
+    } else {
+      LOG("  use absolute gtk_window_move(%d, %d) for menus\n",
+          mPopupPosition.x, mPopupPosition.y);
+      gtk_window_move(GTK_WINDOW(mShell), mPopupPosition.x, mPopupPosition.y);
     }
     // Layout already should be aware of our bounds, since we didn't change it
     // from the widget side for flipping or so.
