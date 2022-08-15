@@ -585,6 +585,17 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
   return NS_OK;
 }
 
+RefPtr<GenericPromise> nsClipboard::AsyncGetData(nsITransferable* aTransferable,
+                                                 int32_t aWhichClipboard) {
+  // XXX we should read the clipboard data asynchronously instead, bug 1778201.
+  nsresult rv = GetData(aTransferable, aWhichClipboard);
+  if (NS_FAILED(rv)) {
+    return GenericPromise::CreateAndReject(rv, __func__);
+  }
+
+  return GenericPromise::CreateAndResolve(true, __func__);
+}
+
 NS_IMETHODIMP
 nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
   LOGCLIP("nsClipboard::EmptyClipboard (%s)\n",

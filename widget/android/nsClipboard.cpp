@@ -114,6 +114,16 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
   return NS_ERROR_FAILURE;
 }
 
+RefPtr<GenericPromise> nsClipboard::AsyncGetData(nsITransferable* aTransferable,
+                                                 int32_t aWhichClipboard) {
+  nsresult rv = GetData(aTransferable, aWhichClipboard);
+  if (NS_FAILED(rv)) {
+    return GenericPromise::CreateAndReject(rv, __func__);
+  }
+
+  return GenericPromise::CreateAndResolve(true, __func__);
+}
+
 NS_IMETHODIMP
 nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
   if (aWhichClipboard != kGlobalClipboard) return NS_ERROR_NOT_IMPLEMENTED;

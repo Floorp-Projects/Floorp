@@ -12,6 +12,7 @@
 #include "nsError.h"
 #include "nsXPCOM.h"
 
+using mozilla::GenericPromise;
 using mozilla::LogLevel;
 
 nsBaseClipboard::nsBaseClipboard()
@@ -90,6 +91,16 @@ NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable* aTransferable,
     return GetNativeClipboardData(aTransferable, aWhichClipboard);
 
   return NS_ERROR_FAILURE;
+}
+
+RefPtr<GenericPromise> nsBaseClipboard::AsyncGetData(
+    nsITransferable* aTransferable, int32_t aWhichClipboard) {
+  nsresult rv = GetData(aTransferable, aWhichClipboard);
+  if (NS_FAILED(rv)) {
+    return GenericPromise::CreateAndReject(rv, __func__);
+  }
+
+  return GenericPromise::CreateAndResolve(true, __func__);
 }
 
 NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(int32_t aWhichClipboard) {
