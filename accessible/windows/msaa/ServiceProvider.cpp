@@ -17,6 +17,7 @@
 
 #include "mozilla/a11y/DocAccessibleChild.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 
 #include "ISimpleDOM.h"
 
@@ -62,7 +63,7 @@ ServiceProvider::QueryService(REFGUID aGuidService, REFIID aIID,
       0x3571,
       0x4d8f,
       {0x95, 0x21, 0x07, 0xed, 0x28, 0xfb, 0x07, 0x2e}};
-  if (aGuidService == SID_IAccessibleContentDocument && localAcc) {
+  if (aGuidService == SID_IAccessibleContentDocument) {
     if (aIID != IID_IAccessible) return E_NOINTERFACE;
 
     // If acc is within an OOP iframe document, the top level document
@@ -83,13 +84,16 @@ ServiceProvider::QueryService(REFGUID aGuidService, REFIID aIID,
       }
     }
 
-    Relation rel = localAcc->RelationByType(RelationType::CONTAINING_TAB_PANE);
-    AccessibleWrap* tabDoc = static_cast<AccessibleWrap*>(rel.LocalNext());
-    if (!tabDoc) return E_NOINTERFACE;
+    MOZ_ASSERT(
+        acc->IsLocal() || StaticPrefs::accessibility_cache_enabled_AtStartup(),
+        "We should only handle remote accs here if the cache is on!");
+    Relation rel = acc->RelationByType(RelationType::CONTAINING_TAB_PANE);
+    RefPtr<IAccessible> next = MsaaAccessible::GetFrom(rel.Next());
+    if (!next) {
+      return E_NOINTERFACE;
+    }
 
-    RefPtr<IAccessible> result;
-    tabDoc->GetNativeInterface(getter_AddRefs(result));
-    result.forget(aInstancePtr);
+    next.forget(aInstancePtr);
     return S_OK;
   }
 
