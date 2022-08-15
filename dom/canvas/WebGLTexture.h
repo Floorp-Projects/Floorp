@@ -120,11 +120,6 @@ class WebGLTexture final : public WebGLContextBoundObject,
   // You almost certainly don't want to query mMaxMipmapLevel.
   // You almost certainly want MaxEffectiveMipmapLevel().
 
-  // "dirty" flags are set when the level is updated (eg indirectly by
-  // clamping) and cleared when we tell the driver.
-  bool mBaseMipmapLevelDirty;
-  bool mMaxMipmapLevelDirty;
-
   webgl::SamplingState mSamplingState;
 
   mutable const GLint* mCurSwizzle =
