@@ -1626,6 +1626,7 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitStructGet(FieldExtension extension);
   [[nodiscard]] bool emitStructSet();
   [[nodiscard]] bool emitArrayNew();
+  [[nodiscard]] bool emitArrayNewFixed();
   [[nodiscard]] bool emitArrayNewDefault();
   [[nodiscard]] bool emitArrayGet(FieldExtension extension);
   [[nodiscard]] bool emitArraySet();
@@ -1637,6 +1638,7 @@ struct BaseCompiler final {
   void emitGcCanon(uint32_t typeIndex);
   void emitGcNullCheck(RegRef rp);
   RegPtr emitGcArrayGetData(RegRef rp);
+  void emitGcArrayAdjustDataPointer(RegPtr rdata);
   RegI32 emitGcArrayGetNumElements(RegPtr rdata, bool adjustDataPointer);
   void emitGcArrayBoundsCheck(RegI32 index, RegI32 length);
   template <typename T>

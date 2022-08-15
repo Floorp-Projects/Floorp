@@ -585,6 +585,10 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             uint32_t unusedUint;
             CHECK(iter.readArrayNew(&unusedUint, &nothing, &nothing));
           }
+          case uint32_t(GcOp::ArrayNewFixed): {
+            uint32_t unusedUint1, unusedUint2;
+            CHECK(iter.readArrayNewFixed(&unusedUint1, &unusedUint2));
+          }
           case uint32_t(GcOp::ArrayNewDefault): {
             uint32_t unusedUint;
             CHECK(iter.readArrayNewDefault(&unusedUint, &nothing));

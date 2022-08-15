@@ -461,6 +461,7 @@ enum class GcOp {
 
   // Array operations
   ArrayNew = 0x1b,
+  ArrayNewFixed = 0x1a,
   ArrayNewDefault = 0x1c,
   ArrayGet = 0x13,
   ArrayGetS = 0x14,

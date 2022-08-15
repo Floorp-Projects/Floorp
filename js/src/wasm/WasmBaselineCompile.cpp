@@ -6359,6 +6359,17 @@ RegPtr BaseCompiler::emitGcArrayGetData(RegRef rp) {
   return rdata;
 }
 
+void BaseCompiler::emitGcArrayAdjustDataPointer(RegPtr rdata) {
+  // `rdata` points at the start of an OutlineTypedObject's out of line array
+  // (iow it holds the value of a OutLineTypedObject::data_ field).  Move it
+  // forwards so it points at the first byte of the first array element stored
+  // there.
+  STATIC_ASSERT_NUMELEMENTS_IS_U32;
+  masm.addPtr(ImmWord(OutlineTypedObject::offsetOfNumElements() +
+                      sizeof(OutlineTypedObject::NumElements)),
+              rdata);
+}
+
 RegI32 BaseCompiler::emitGcArrayGetNumElements(RegPtr rdata,
                                                bool adjustDataPointer) {
   STATIC_ASSERT_NUMELEMENTS_IS_U32;
@@ -6366,9 +6377,7 @@ RegI32 BaseCompiler::emitGcArrayGetNumElements(RegPtr rdata,
   masm.load32(Address(rdata, OutlineTypedObject::offsetOfNumElements()),
               length);
   if (adjustDataPointer) {
-    masm.addPtr(ImmWord(OutlineTypedObject::offsetOfNumElements() +
-                        sizeof(OutlineTypedObject::NumElements)),
-                rdata);
+    emitGcArrayAdjustDataPointer(rdata);
   }
   return length;
 }
@@ -6859,6 +6868,77 @@ bool BaseCompiler::emitArrayNew() {
   freePtr(rdata);
   pushRef(rp);
 
+  return true;
+}
+
+bool BaseCompiler::emitArrayNewFixed() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
+  uint32_t typeIndex, numElements;
+  if (!iter_.readArrayNewFixed(&typeIndex, &numElements)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  const ArrayType& arrayType = (*moduleEnv_.types)[typeIndex].arrayType();
+
+  // At this point, the top section of the value stack contains the values to
+  // be used to initialise the array, with index 0 as the topmost value.  Push
+  // the required number of elements and the required type on, since the call
+  // to SASigArrayNew will use them.
+  pushI32(numElements);
+  emitGcCanon(typeIndex);
+  if (!emitInstanceCall(lineOrBytecode, SASigArrayNew)) {
+    return false;
+  }
+
+  // Reserve this register early if we will need it so that it is not taken by
+  // any register used in this function.
+  bool avoidPreBarrierReg = arrayType.elementType_.isRefRepr();
+  if (avoidPreBarrierReg) {
+    needPtr(RegPtr(PreBarrierReg));
+  }
+
+  // Get hold of the pointer to the array, as created by SASigArrayNew.
+  RegRef rp = popRef();
+
+  // Acquire the data pointers from the object
+  RegPtr rdata = emitGcArrayGetData(rp);
+
+  // Free the barrier reg if we previously reserved it.
+  if (avoidPreBarrierReg) {
+    freePtr(RegPtr(PreBarrierReg));
+  }
+
+  // Adjust the data pointer to be immediately after the array length header
+  emitGcArrayAdjustDataPointer(rdata);
+
+  // Generate straight-line initialization code.  We could do better here if
+  // there was a version of ::emitGcArraySet that took `index` as a `uint32_t`
+  // rather than a general value-in-a-reg.
+  for (uint32_t i = 0; i < numElements; i++) {
+    if (avoidPreBarrierReg) {
+      needPtr(RegPtr(PreBarrierReg));
+    }
+    AnyReg value = popAny();
+    pushI32(i);
+    RegI32 index = popI32();
+    if (avoidPreBarrierReg) {
+      freePtr(RegPtr(PreBarrierReg));
+    }
+    if (!emitGcArraySet(rp, rdata, index, arrayType, value)) {
+      return false;
+    }
+    freeI32(index);
+    freeAny(value);
+  }
+
+  freePtr(rdata);
+
+  pushRef(rp);
   return true;
 }
 
@@ -9232,6 +9312,8 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitStructSet());
           case uint32_t(GcOp::ArrayNew):
             CHECK_NEXT(emitArrayNew());
+          case uint32_t(GcOp::ArrayNewFixed):
+            CHECK_NEXT(emitArrayNewFixed());
           case uint32_t(GcOp::ArrayNewDefault):
             CHECK_NEXT(emitArrayNewDefault());
           case uint32_t(GcOp::ArrayGet):
