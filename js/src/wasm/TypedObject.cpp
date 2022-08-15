@@ -195,15 +195,15 @@ TypedObject* TypedObject::createStruct(JSContext* cx, Handle<RttValue*> rtt,
 
 /*static*/
 TypedObject* TypedObject::createArray(JSContext* cx, Handle<RttValue*> rtt,
-                                      uint32_t elementsLength,
+                                      uint32_t numElements,
                                       gc::InitialHeap heap) {
   // Calculate the byte length of the outline storage, being careful to check
   // for overflow. We stick to uint32_t as an implicit implementation limit.
-  CheckedUint32 byteLength = rtt->typeDef().arrayType().elementType_.size();
-  byteLength *= elementsLength;
-  byteLength += OutlineTypedObject::offsetOfArrayLength() +
-                sizeof(OutlineTypedObject::ArrayLength);
-  if (!byteLength.isValid()) {
+  CheckedUint32 numBytes = rtt->typeDef().arrayType().elementType_.size();
+  numBytes *= numElements;
+  numBytes += OutlineTypedObject::offsetOfNumElements() +
+              sizeof(OutlineTypedObject::NumElements);
+  if (!numBytes.isValid()) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_ARRAY_IMP_LIMIT);
     return nullptr;
@@ -211,15 +211,15 @@ TypedObject* TypedObject::createArray(JSContext* cx, Handle<RttValue*> rtt,
 
   // Always create arrays outlined
   Rooted<OutlineTypedObject*> typedObj(
-      cx, OutlineTypedObject::create(cx, rtt, byteLength.value(), heap));
+      cx, OutlineTypedObject::create(cx, rtt, numBytes.value(), heap));
   if (!typedObj) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
 
   // Initialize the values to their defaults
-  typedObj->setArrayLength(elementsLength);
-  MOZ_ASSERT(typedObj->arrayLength() == elementsLength);
+  typedObj->setNumElements(numElements);
+  MOZ_ASSERT(typedObj->numElements() == numElements);
   typedObj->initDefault();
 
   return typedObj;
@@ -252,10 +252,10 @@ void TypedObject::visitReferences(V& visitor) {
       const auto& arrayType = typeDef.arrayType();
       MOZ_ASSERT(is<OutlineTypedObject>());
       if (arrayType.elementType_.isRefRepr()) {
-        uint8_t* elemBase = base + OutlineTypedObject::offsetOfArrayLength() +
-                            sizeof(OutlineTypedObject::ArrayLength);
-        uint32_t length = as<OutlineTypedObject>().arrayLength();
-        for (uint32_t i = 0; i < length; i++) {
+        uint8_t* elemBase = base + OutlineTypedObject::offsetOfNumElements() +
+                            sizeof(OutlineTypedObject::NumElements);
+        uint32_t numElements = as<OutlineTypedObject>().numElements();
+        for (uint32_t i = 0; i < numElements; i++) {
           visitor.visitReference(elemBase, i * arrayType.elementType_.size());
         }
       }
@@ -295,8 +295,10 @@ void MemoryTracingVisitor::visitReference(uint8_t* base, size_t offset) {
 /*static*/
 OutlineTypedObject* OutlineTypedObject::create(JSContext* cx,
                                                Handle<RttValue*> rtt,
-                                               size_t byteLength,
+                                               size_t numBytes,
                                                gc::InitialHeap heap) {
+  STATIC_ASSERT_NUMELEMENTS_IS_U32;
+  MOZ_ASSERT(numBytes >= sizeof(NumElements));
   AutoSetNewObjectMetadata metadata(cx);
 
   auto* obj = TypedObject::create<OutlineTypedObject>(cx, allocKind(), heap);
@@ -305,7 +307,7 @@ OutlineTypedObject* OutlineTypedObject::create(JSContext* cx,
   }
 
   obj->rttValue_.init(rtt);
-  obj->data_ = (uint8_t*)js_malloc(byteLength);
+  obj->data_ = (uint8_t*)js_malloc(numBytes);
   if (!obj->data_) {
     return nullptr;
   }
@@ -368,9 +370,9 @@ bool RttValue::lookupProperty(JSContext* cx, Handle<TypedObject*> object,
       // beginning of the data buffer
       if (id.isString() &&
           id.toString() == cx->runtime()->commonNames->length) {
-        STATIC_ASSERT_ARRAYLENGTH_IS_U32;
+        STATIC_ASSERT_NUMELEMENTS_IS_U32;
         *type = FieldType::I32;
-        *offset = OutlineTypedObject::offsetOfArrayLength();
+        *offset = OutlineTypedObject::offsetOfNumElements();
         return true;
       }
 
@@ -379,13 +381,13 @@ bool RttValue::lookupProperty(JSContext* cx, Handle<TypedObject*> object,
       if (!IdIsIndex(id, &index)) {
         return false;
       }
-      OutlineTypedObject::ArrayLength arrayLength =
-          object->as<OutlineTypedObject>().arrayLength();
-      if (index >= arrayLength) {
+      OutlineTypedObject::NumElements numElements =
+          object->as<OutlineTypedObject>().numElements();
+      if (index >= numElements) {
         return false;
       }
-      *offset = OutlineTypedObject::offsetOfArrayLength() +
-                sizeof(OutlineTypedObject::ArrayLength) +
+      *offset = OutlineTypedObject::offsetOfNumElements() +
+                sizeof(OutlineTypedObject::NumElements) +
                 index * arrayType.elementType_.size();
       *type = arrayType.elementType_;
       return true;
@@ -535,7 +537,7 @@ bool TypedObject::obj_newEnumerate(JSContext* cx, HandleObject obj,
       break;
     }
     case wasm::TypeDefKind::Array: {
-      indexCount = typedObj->as<OutlineTypedObject>().arrayLength();
+      indexCount = typedObj->as<OutlineTypedObject>().numElements();
       otherCount = 1;
       break;
     }
@@ -585,9 +587,9 @@ void TypedObject::initDefault() {
     }
     case TypeDefKind::Array: {
       MOZ_ASSERT(is<OutlineTypedObject>());
-      uint32_t length = as<OutlineTypedObject>().arrayLength();
+      uint32_t numElements = as<OutlineTypedObject>().numElements();
       memset(typedMem() + sizeof(uint32_t), 0,
-             rtt.typeDef().arrayType().elementType_.size() * length);
+             rtt.typeDef().arrayType().elementType_.size() * numElements);
       break;
     }
     default:

@@ -6351,21 +6351,23 @@ void BaseCompiler::emitGcNullCheck(RegRef rp) {
 }
 
 RegPtr BaseCompiler::emitGcArrayGetData(RegRef rp) {
+  // `rp` points at an OutLineTypedObject.  Return a reg holding the value of
+  // its `data_` field.
   RegPtr rdata = needPtr();
   // An array is always an outline typed object
   masm.loadPtr(Address(rp, OutlineTypedObject::offsetOfData()), rdata);
   return rdata;
 }
 
-RegI32 BaseCompiler::emitGcArrayGetLength(RegPtr rdata,
-                                          bool adjustDataPointer) {
-  STATIC_ASSERT_ARRAYLENGTH_IS_U32;
+RegI32 BaseCompiler::emitGcArrayGetNumElements(RegPtr rdata,
+                                               bool adjustDataPointer) {
+  STATIC_ASSERT_NUMELEMENTS_IS_U32;
   RegI32 length = needI32();
-  masm.load32(Address(rdata, OutlineTypedObject::offsetOfArrayLength()),
+  masm.load32(Address(rdata, OutlineTypedObject::offsetOfNumElements()),
               length);
   if (adjustDataPointer) {
-    masm.addPtr(ImmWord(OutlineTypedObject::offsetOfArrayLength() +
-                        sizeof(OutlineTypedObject::ArrayLength)),
+    masm.addPtr(ImmWord(OutlineTypedObject::offsetOfNumElements() +
+                        sizeof(OutlineTypedObject::NumElements)),
                 rdata);
   }
   return length;
@@ -6823,36 +6825,36 @@ bool BaseCompiler::emitArrayNew() {
   // Acquire the data pointers from the object
   RegPtr rdata = emitGcArrayGetData(rp);
 
-  // Acquire the array length and adjust the data pointer to be immediately
-  // after the array length header
-  RegI32 length = emitGcArrayGetLength(rdata, true);
+  // Acquire the number of elements and adjust the data pointer to be
+  // immediately after the number-of-elements header.
+  RegI32 numElements = emitGcArrayGetNumElements(rdata, true);
 
   // Free the barrier reg after we've allocated all registers
   if (arrayType.elementType_.isRefRepr()) {
     freePtr(RegPtr(PreBarrierReg));
   }
 
-  // Perform an initialization loop using `length` as the loop variable,
+  // Perform an initialization loop using `numElements` as the loop variable,
   // counting down to zero.
   Label done;
   Label loop;
-  // Skip initialization if length = 0
-  masm.branch32(Assembler::Equal, length, Imm32(0), &done);
+  // Skip initialization if numElements = 0
+  masm.branch32(Assembler::Equal, numElements, Imm32(0), &done);
   masm.bind(&loop);
 
   // Move to the next element
-  masm.sub32(Imm32(1), length);
+  masm.sub32(Imm32(1), numElements);
 
-  // Assign value to array[length]. All registers are preserved
-  if (!emitGcArraySet(rp, rdata, length, arrayType, value)) {
+  // Assign value to array[numElements]. All registers are preserved
+  if (!emitGcArraySet(rp, rdata, numElements, arrayType, value)) {
     return false;
   }
 
   // Loop back if there are still elements to initialize
-  masm.branch32(Assembler::GreaterThan, length, Imm32(0), &loop);
+  masm.branch32(Assembler::GreaterThan, numElements, Imm32(0), &loop);
   masm.bind(&done);
 
-  freeI32(length);
+  freeI32(numElements);
   freeAny(value);
   freePtr(rdata);
   pushRef(rp);
@@ -6901,13 +6903,13 @@ bool BaseCompiler::emitArrayGet(FieldExtension extension) {
   // Acquire the data pointer from the object
   RegPtr rdata = emitGcArrayGetData(rp);
 
-  // Acquire the array length and adjust the data pointer to be immediately
-  // after the array length header
-  RegI32 length = emitGcArrayGetLength(rdata, true);
+  // Acquire the number of elements and adjust the data pointer to be
+  // immediately after the number-of-elements header
+  RegI32 numElements = emitGcArrayGetNumElements(rdata, true);
 
   // Bounds check the index
-  emitGcArrayBoundsCheck(index, length);
-  freeI32(length);
+  emitGcArrayBoundsCheck(index, numElements);
+  freeI32(numElements);
 
   // Load the value
   uint32_t shift = arrayType.elementType_.indexingShift();
@@ -6960,9 +6962,9 @@ bool BaseCompiler::emitArraySet() {
   // Acquire the data pointer from the object
   RegPtr rdata = emitGcArrayGetData(rp);
 
-  // Acquire the array length and adjust the data pointer to be immediately
-  // after the array length header
-  RegI32 length = emitGcArrayGetLength(rdata, true);
+  // Acquire the number of elements and adjust the data pointer to be
+  // immediately after the number-of-elements header
+  RegI32 numElements = emitGcArrayGetNumElements(rdata, true);
 
   // Free the barrier reg after we've allocated all registers
   if (arrayType.elementType_.isRefRepr()) {
@@ -6970,8 +6972,8 @@ bool BaseCompiler::emitArraySet() {
   }
 
   // Bounds check the index
-  emitGcArrayBoundsCheck(index, length);
-  freeI32(length);
+  emitGcArrayBoundsCheck(index, numElements);
+  freeI32(numElements);
 
   // Pull the value out of the stack now that we need it.
   popAny(value);
@@ -7011,8 +7013,8 @@ bool BaseCompiler::emitArrayLen() {
   RegPtr rdata = emitGcArrayGetData(rp);
   freeRef(rp);
 
-  // Acquire the length from the array
-  pushI32(emitGcArrayGetLength(rdata, false));
+  // Acquire the number of elements from the array
+  pushI32(emitGcArrayGetNumElements(rdata, false));
   freePtr(rdata);
 
   return true;

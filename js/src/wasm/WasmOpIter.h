@@ -686,9 +686,10 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                    FieldExtension extension, Value* ptr);
   [[nodiscard]] bool readStructSet(uint32_t* typeIndex, uint32_t* fieldIndex,
                                    Value* ptr, Value* val);
-  [[nodiscard]] bool readArrayNew(uint32_t* typeIndex, Value* length,
+  [[nodiscard]] bool readArrayNew(uint32_t* typeIndex, Value* numElements,
                                   Value* argValue);
-  [[nodiscard]] bool readArrayNewDefault(uint32_t* typeIndex, Value* length);
+  [[nodiscard]] bool readArrayNewDefault(uint32_t* typeIndex,
+                                         Value* numElements);
   [[nodiscard]] bool readArrayGet(uint32_t* typeIndex, FieldExtension extension,
                                   Value* index, Value* ptr);
   [[nodiscard]] bool readArraySet(uint32_t* typeIndex, Value* val, Value* index,
@@ -3187,8 +3188,8 @@ inline bool OpIter<Policy>::readStructSet(uint32_t* typeIndex,
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readArrayNew(uint32_t* typeIndex, Value* length,
-                                         Value* argValue) {
+inline bool OpIter<Policy>::readArrayNew(uint32_t* typeIndex,
+                                         Value* numElements, Value* argValue) {
   MOZ_ASSERT(Classify(op_) == OpKind::ArrayNew);
 
   if (!readArrayTypeIndex(typeIndex)) {
@@ -3197,7 +3198,7 @@ inline bool OpIter<Policy>::readArrayNew(uint32_t* typeIndex, Value* length,
 
   const ArrayType& arr = env_.types->arrayType(*typeIndex);
 
-  if (!popWithType(ValType::I32, length)) {
+  if (!popWithType(ValType::I32, numElements)) {
     return false;
   }
 
@@ -3210,7 +3211,7 @@ inline bool OpIter<Policy>::readArrayNew(uint32_t* typeIndex, Value* length,
 
 template <typename Policy>
 inline bool OpIter<Policy>::readArrayNewDefault(uint32_t* typeIndex,
-                                                Value* length) {
+                                                Value* numElements) {
   MOZ_ASSERT(Classify(op_) == OpKind::ArrayNewDefault);
 
   if (!readArrayTypeIndex(typeIndex)) {
@@ -3219,7 +3220,7 @@ inline bool OpIter<Policy>::readArrayNewDefault(uint32_t* typeIndex,
 
   const ArrayType& arr = env_.types->arrayType(*typeIndex);
 
-  if (!popWithType(ValType::I32, length)) {
+  if (!popWithType(ValType::I32, numElements)) {
     return false;
   }
 

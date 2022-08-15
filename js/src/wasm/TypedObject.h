@@ -139,10 +139,11 @@ class TypedObject : public JSObject {
   static TypedObject* createStruct(JSContext* cx, Handle<RttValue*> rtt,
                                    gc::InitialHeap heap = gc::DefaultHeap);
 
-  // Creates a new array typed object initialized to zero of specified length.
-  // Reports an error if length is too large, or if there is an out of memory.
+  // Creates a new array typed object initialized to zero for the specified
+  // number of elements.  Reports an error if the number of elements is too
+  // large, or if there is an out of memory.
   static TypedObject* createArray(JSContext* cx, Handle<RttValue*> rtt,
-                                  uint32_t elementsLength,
+                                  uint32_t numElements,
                                   gc::InitialHeap heap = gc::DefaultHeap);
 
   RttValue& rttValue() const {
@@ -164,39 +165,59 @@ class TypedObject : public JSObject {
 // Class for a typed object whose data is allocated in the malloc heap.
 class OutlineTypedObject : public TypedObject {
  public:
-  using ArrayLength = uint32_t;
+  // This holds a value indicating the number of elements in the block (array)
+  // that `data_` points at.
+  using NumElements = uint32_t;
 
  private:
-  // Owned data pointer
+  // Owned data pointer.  In the case where this TypedObject is being used to
+  // represent a wasm array, the pointed-to block must be at least 4 bytes
+  // long since the first 4 bytes are used to store the number of array
+  // elements present.  They start at `&data_[4]`.  In the case where this
+  // TypedObject is being used to represent a wasm struct, the 4-byte limit
+  // does not apply.
   uint8_t* data_;
 
  protected:
   friend class TypedObject;
 
+  // `numBytes` is the required size of the block pointed to by `data`.
   static OutlineTypedObject* create(JSContext* cx, Handle<RttValue*> rtt,
-                                    size_t byteLength,
+                                    size_t numBytes,
                                     gc::InitialHeap heap = gc::DefaultHeap);
 
+  // This can possibly be removed, specialised or renamed, as part of the
+  // cleanup scheduled to happen in bug 1774836.
   uint8_t* outOfLineTypedMem() const { return data_; }
 
-  void setArrayLength(uint32_t length) { *(uint32_t*)(data_) = length; }
+  void setNumElements(NumElements numElements) {
+    *(NumElements*)(data_ + offsetOfNumElements()) = numElements;
+  }
 
  public:
   static const JSClass class_;
 
-  // The length of the array
-  ArrayLength arrayLength() const {
-    return *(ArrayLength*)(data_ + offsetOfArrayLength());
+  // The address of the first element in the array
+  uint8_t* addressOfElementZero() const {
+    return data_ + offsetOfNumElements() + sizeof(NumElements);
+  }
+
+  // The number of elements in the array
+  NumElements numElements() const {
+    return *(NumElements*)(data_ + offsetOfNumElements());
   }
 
   // AllocKind for object creation
   static gc::AllocKind allocKind();
 
   // JIT accessors
+
+  // Offset of `data_` relative to the start of the object.
   static constexpr size_t offsetOfData() {
     return offsetof(OutlineTypedObject, data_);
   }
-  static constexpr size_t offsetOfArrayLength() { return 0; }
+  // Offset inside `data_` of its size-in-bytes field.
+  static constexpr size_t offsetOfNumElements() { return 0; }
 
   // Tracing and finalization
   static void obj_trace(JSTracer* trc, JSObject* object);
@@ -205,8 +226,9 @@ class OutlineTypedObject : public TypedObject {
 
 // Helper to mark all locations that assume the type of the array length header
 // for a typed object.
-#define STATIC_ASSERT_ARRAYLENGTH_IS_U32 \
-  static_assert(1, "ArrayLength is uint32_t")
+#define STATIC_ASSERT_NUMELEMENTS_IS_U32                       \
+  static_assert(sizeof(js::OutlineTypedObject::NumElements) == \
+                sizeof(uint32_t));
 
 // Class for a typed object whose data is allocated inline.
 class InlineTypedObject : public TypedObject {

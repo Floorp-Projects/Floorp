@@ -1637,7 +1637,7 @@ struct BaseCompiler final {
   void emitGcCanon(uint32_t typeIndex);
   void emitGcNullCheck(RegRef rp);
   RegPtr emitGcArrayGetData(RegRef rp);
-  RegI32 emitGcArrayGetLength(RegPtr rdata, bool adjustDataPointer);
+  RegI32 emitGcArrayGetNumElements(RegPtr rdata, bool adjustDataPointer);
   void emitGcArrayBoundsCheck(RegI32 index, RegI32 length);
   template <typename T>
   void emitGcGet(FieldType type, FieldExtension extension, const T& src);
