@@ -421,6 +421,18 @@ function openLinkIn(url, where, params) {
     if (params.fromExternal !== undefined) {
       extraOptions.setPropertyAsBool("fromExternal", params.fromExternal);
     }
+    if (aGlobalHistoryOptions?.triggeringSponsoredURL) {
+      extraOptions.setPropertyAsACString(
+        "triggeringSponsoredURL",
+        aGlobalHistoryOptions.triggeringSponsoredURL
+      );
+      if (aGlobalHistoryOptions.triggeringSponsoredURLVisitTimeMS) {
+        extraOptions.setPropertyAsUint64(
+          "triggeringSponsoredURLVisitTimeMS",
+          aGlobalHistoryOptions.triggeringSponsoredURLVisitTimeMS
+        );
+      }
+    }
 
     var allowThirdPartyFixupSupports = Cc[
       "@mozilla.org/supports-PRBool;1"
