@@ -281,6 +281,15 @@ add_task(async function basic() {
       },
     },
     {
+      description: "Sponsored tile in new tab by context menu",
+      link: SPONSORED_LINK,
+      openType: OPEN_TYPE.NEWTAB_BY_CONTEXTMENU,
+      expected: {
+        source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
+      },
+    },
+    {
       description: "Sponsored tile in new window",
       link: SPONSORED_LINK,
       openType: OPEN_TYPE.NEWWINDOW_BY_CONTEXTMENU,
@@ -312,6 +321,16 @@ add_task(async function basic() {
       description: "Bookmarked result in new tab by middle click",
       link: NORMAL_LINK,
       openType: OPEN_TYPE.NEWTAB_BY_MIDDLECLICK,
+      bookmarks: BOOKMARKS,
+      expected: {
+        source: VISIT_SOURCE_BOOKMARKED,
+        frecency: FRECENCY.MIDDLECLICK_BOOKMARKED,
+      },
+    },
+    {
+      description: "Bookmarked result in new tab by context menu",
+      link: NORMAL_LINK,
+      openType: OPEN_TYPE.NEWTAB_BY_CONTEXTMENU,
       bookmarks: BOOKMARKS,
       expected: {
         source: VISIT_SOURCE_BOOKMARKED,
@@ -359,6 +378,16 @@ add_task(async function basic() {
       },
     },
     {
+      description: "Sponsored and bookmarked result in new tab by context menu",
+      link: SPONSORED_LINK,
+      openType: OPEN_TYPE.NEWTAB_BY_CONTEXTMENU,
+      bookmarks: BOOKMARKS,
+      expected: {
+        source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.MIDDLECLICK_BOOKMARKED,
+      },
+    },
+    {
       description: "Sponsored and bookmarked result in new window",
       link: SPONSORED_LINK,
       openType: OPEN_TYPE.NEWWINDOW_BY_CONTEXTMENU,
@@ -389,6 +418,15 @@ add_task(async function basic() {
       description: "Organic tile in new tab by middle click",
       link: NORMAL_LINK,
       openType: OPEN_TYPE.NEWTAB_BY_MIDDLECLICK,
+      expected: {
+        source: VISIT_SOURCE_ORGANIC,
+        frecency: FRECENCY.MIDDLECLICK_TYPED,
+      },
+    },
+    {
+      description: "Organic tile in new tab by context menu",
+      link: NORMAL_LINK,
+      openType: OPEN_TYPE.NEWTAB_BY_CONTEXTMENU,
       expected: {
         source: VISIT_SOURCE_ORGANIC,
         frecency: FRECENCY.MIDDLECLICK_TYPED,
