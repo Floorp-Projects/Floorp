@@ -1980,7 +1980,7 @@ nsDocumentViewer::SetBoundsWithFlags(const nsIntRect& aBounds,
     // of windows/widgets competing to handle the notifications.
     // (See bug 1154125.)
     if (mPresContext->DeviceContext()->CheckDPIChange()) {
-      mPresContext->UIResolutionChanged();
+      mPresContext->UIResolutionChangedSync();
     }
 
     int32_t p2a = mPresContext->AppUnitsPerDevPixel();

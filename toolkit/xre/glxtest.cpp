@@ -104,13 +104,15 @@ typedef void* (*PFNEGLGETPROCADDRESS)(const char*);
 #define EGL_NO_SURFACE nullptr
 #define EGL_FALSE 0
 #define EGL_TRUE 1
+#define EGL_OPENGL_ES2_BIT 0x0004
 #define EGL_BLUE_SIZE 0x3022
 #define EGL_GREEN_SIZE 0x3023
 #define EGL_RED_SIZE 0x3024
 #define EGL_NONE 0x3038
+#define EGL_RENDERABLE_TYPE 0x3040
 #define EGL_VENDOR 0x3053
 #define EGL_EXTENSIONS 0x3055
-#define EGL_CONTEXT_CLIENT_VERSION 0x3098
+#define EGL_CONTEXT_MAJOR_VERSION 0x3098
 #define EGL_OPENGL_ES_API 0x30A0
 #define EGL_OPENGL_API 0x30A2
 #define EGL_DEVICE_EXT 0x322C
@@ -510,33 +512,48 @@ static bool get_gles_status(EGLDisplay dpy,
   PFNGLGETSTRING glGetString =
       cast<PFNGLGETSTRING>(eglGetProcAddress("glGetString"));
 
-  EGLint config_attrs[] = {EGL_RED_SIZE,  8, EGL_GREEN_SIZE, 8,
-                           EGL_BLUE_SIZE, 8, EGL_NONE};
+#if defined(__aarch64__)
+  bool useGles = true;
+#else
+  bool useGles = false;
+#endif
+
+  std::vector<EGLint> attribs;
+  attribs.push_back(EGL_RED_SIZE);
+  attribs.push_back(8);
+  attribs.push_back(EGL_GREEN_SIZE);
+  attribs.push_back(8);
+  attribs.push_back(EGL_BLUE_SIZE);
+  attribs.push_back(8);
+  if (useGles) {
+    attribs.push_back(EGL_RENDERABLE_TYPE);
+    attribs.push_back(EGL_OPENGL_ES2_BIT);
+  }
+  attribs.push_back(EGL_NONE);
 
   EGLConfig config;
   EGLint num_config;
-  if (eglChooseConfig(dpy, config_attrs, &config, 1, &num_config) ==
+  if (eglChooseConfig(dpy, attribs.data(), &config, 1, &num_config) ==
       EGL_FALSE) {
     record_warning("eglChooseConfig returned an error");
     return false;
   }
 
-#if defined(MOZ_AARCH64)
-  EGLenum api = EGL_OPENGL_ES_API;
-#else
-  EGLenum api = EGL_OPENGL_API;
-#endif
-
+  EGLenum api = useGles ? EGL_OPENGL_ES_API : EGL_OPENGL_API;
   if (eglBindAPI(api) == EGL_FALSE) {
     record_warning("eglBindAPI returned an error");
     return false;
   }
 
-  EGLint ctx_attrs[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
+  EGLint ctx_attrs[] = {EGL_CONTEXT_MAJOR_VERSION, 3, EGL_NONE};
   EGLContext ectx = eglCreateContext(dpy, config, EGL_NO_CONTEXT, ctx_attrs);
   if (!ectx) {
-    record_warning("eglCreateContext returned an error");
-    return false;
+    EGLint ctx_attrs_fallback[] = {EGL_CONTEXT_MAJOR_VERSION, 2, EGL_NONE};
+    ectx = eglCreateContext(dpy, config, EGL_NO_CONTEXT, ctx_attrs_fallback);
+    if (!ectx) {
+      record_warning("eglCreateContext returned an error");
+      return false;
+    }
   }
 
   if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ectx) == EGL_FALSE) {
