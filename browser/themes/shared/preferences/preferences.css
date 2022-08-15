@@ -9,22 +9,6 @@
   user-select: text;
 }
 
-body {
-  font-size: 1.25em;
-}
-
-@media (-moz-platform: macos) {
-  body {
-    font-size: 1.36em;
-  }
-}
-
-@media (-moz-platform: linux) {
-  body {
-    font-size: 1.11em;
-  }
-}
-
 #preferences-root {
   text-rendering: optimizeLegibility;
 }
