@@ -204,6 +204,7 @@
     <string name="pref_key_current_wallpaper" translatable="false">pref_key_current_wallpaper</string>
     <string name="pref_key_wallpapers_switched_by_logo_tap">pref_key_wallpapers_switched_by_logo_tap</string>
     <string name="pref_key_show_logo_animation" translatable="false">pref_key_show_logo_animation</string>
+    <string name="pref_key_wallpapers_onboarding" translatable="false">pref_key_wallpapers_onboarding</string>
 
     <string name="pref_key_encryption_key_generated" translatable="false">pref_key_encryption_key_generated</string>
 

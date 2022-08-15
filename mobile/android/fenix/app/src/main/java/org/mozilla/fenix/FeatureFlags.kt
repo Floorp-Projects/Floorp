@@ -102,4 +102,9 @@ object FeatureFlags {
      * Enables compose on the tabs tray items.
      */
     val composeTabsTray = Config.channel.isDebug
+
+    /**
+     * Enables the wallpaper onboarding.
+     */
+    val wallpaperOnboardingEnabled = Config.channel.isDebug
 }

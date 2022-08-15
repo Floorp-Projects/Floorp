@@ -41,13 +41,22 @@ features:
         type: Map<OnboardingSection, Boolean>
         default:
           {
-            "sync-cfr": false
+            "sync-cfr": false,
+            "wallpapers": false
           }
     defaults:
       - channel: nightly
         value: {
           "sections-enabled": {
-            "sync-cfr": false
+            "sync-cfr": false,
+            "wallpapers": false
+          }
+        }
+      - channel: developer
+        value: {
+          "sections-enabled": {
+            "sync-cfr": false,
+            "wallpapers": true
           }
         }
   nimbus-validation:
@@ -327,3 +336,5 @@ types:
       variants:
         sync-cfr:
           description: Sync onboarding CFR.
+        wallpapers:
+          description: Wallpapers onboarding dialog.
