@@ -482,6 +482,10 @@ Relation RootAccessible::RelationByType(RelationType aType) const {
     return DocAccessibleWrap::RelationByType(aType);
   }
 
+  if (RemoteAccessible* remoteDoc = GetPrimaryRemoteTopLevelContentDoc()) {
+    return Relation(remoteDoc);
+  }
+
   if (nsIDocShell* docShell = mDocumentNode->GetDocShell()) {
     nsCOMPtr<nsIDocShellTreeOwner> owner;
     docShell->GetTreeOwner(getter_AddRefs(owner));

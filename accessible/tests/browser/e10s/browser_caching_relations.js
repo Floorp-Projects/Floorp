@@ -297,3 +297,28 @@ addAccessibleTask(
   },
   { iframe: true, remoteIframe: true }
 );
+
+/*
+ * Test EMBEDS on root accessible.
+ */
+addAccessibleTask(
+  `hello world`,
+  async function(browser, primaryDocAcc, secondaryDocAcc) {
+    // The root accessible should EMBED the top level
+    // content document. If this test runs in an iframe,
+    // the test harness will pass in doc accs for both the
+    // iframe (primaryDocAcc) and the top level remote
+    // browser (secondaryDocAcc). We should use the second
+    // one.
+    // If this is not in an iframe, we'll only get
+    // a single docAcc (primaryDocAcc) which refers to
+    // the top level content doc.
+    const topLevelDoc = secondaryDocAcc ? secondaryDocAcc : primaryDocAcc;
+    await testRelation(
+      getRootAccessible(document),
+      RELATION_EMBEDS,
+      topLevelDoc
+    );
+  },
+  { chrome: true, iframe: true, remoteIframe: true }
+);
