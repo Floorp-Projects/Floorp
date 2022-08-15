@@ -1,4 +1,4 @@
-flake8==4.0.1
+flake8==5.0.4
 zipp==0.5
-autopep8==1.6.0
+autopep8==1.7.0
 typing-extensions==3.10.0.2
