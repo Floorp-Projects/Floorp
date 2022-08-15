@@ -795,6 +795,10 @@ ITypeInfo* MsaaAccessible::GetTI(LCID lcid) {
 
 /* static */
 MsaaAccessible* MsaaAccessible::GetFrom(Accessible* aAcc) {
+  if (!aAcc) {
+    return nullptr;
+  }
+
   if (RemoteAccessible* remoteAcc = aAcc->AsRemote()) {
     return reinterpret_cast<MsaaAccessible*>(remoteAcc->GetWrapper());
   }

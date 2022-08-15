@@ -322,3 +322,33 @@ addAccessibleTask(
   },
   { chrome: true, iframe: true, remoteIframe: true }
 );
+
+/**
+ * Test CONTAINING_TAB_PANE
+ */
+addAccessibleTask(
+  `<p id="p">hello world</p>`,
+  async function(browser, primaryDocAcc, secondaryDocAcc) {
+    // The CONTAINING_TAB_PANE of any acc should be the top level
+    // content document. If this test runs in an iframe,
+    // the test harness will pass in doc accs for both the
+    // iframe (primaryDocAcc) and the top level remote
+    // browser (secondaryDocAcc). We should use the second
+    // one.
+    // If this is not in an iframe, we'll only get
+    // a single docAcc (primaryDocAcc) which refers to
+    // the top level content doc.
+    const topLevelDoc = secondaryDocAcc ? secondaryDocAcc : primaryDocAcc;
+    await testCachedRelation(
+      findAccessibleChildByID(primaryDocAcc, "p"),
+      RELATION_CONTAINING_TAB_PANE,
+      topLevelDoc
+    );
+  },
+  {
+    chrome: true,
+    topLevel: isCacheEnabled,
+    iframe: isCacheEnabled,
+    remoteIframe: isCacheEnabled,
+  }
+);
