@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<!-- This is a reference case for a "2-pages-per-sheet" scenario zero
+     unwriteable margins. We're scaling down 8in width to fit 2 in 10in,
+     so the scale factor is (10 / 2) / 8 = 0.625x. -->
+<style>
+html { height: 100%; }
+body {
+  height: 100%;
+  margin: 0;
+  box-sizing: border-box;
+
+  /* The testcase (rendered at 2-pages-per-sheet) will have 8 - (10in * 0.625)
+   * = 1.75in of extra vertical space. */
+  padding: 0.875in 0;
+
+  /* We lay out the body as a row-oriented flex container, with two
+     side-by-side children which correspond to the two pages per sheet: */
+  display: flex;
+}
+.swatch {
+  box-sizing: border-box;
+
+  /* This represents the 240px border in the testcase, scaled down 0.5x: */
+  border: 150px solid;
+
+  /* Share the width equally among the swatches. (The height will be
+     automatically set to the flex container's row height, via default
+     'align-self' behavior.) */
+  flex: 1;
+  margin: 0;
+}
+.swatch:nth-child(1) { border-color: cyan; }
+.swatch:nth-child(2) { border-color: pink; }
+</style>
+<div class="swatch"></div>
+<div class="swatch"></div>

@@ -949,7 +949,7 @@ async function runTest35() {
 
 // Testcases for pages-per-sheet with nonzero unwriteable margin values:
 // ---------------------------------------------------------------------
-    
+
 // In this subtest, the vertical scale-factor is more-severe and hence ends up
 // "winning", and we have a bit of extra space in the horizontal axis which we
 // distribute equally on either side (see the _ref.html file used below for
@@ -1495,6 +1495,195 @@ async function runTest51() {
       },
     },
   });
+  requestAnimationFrame(() => setTimeout(runTest52));
+}
+
+async function runTest52() {
+  // Unwriteable margins can be ignored by setting the appropriate flag.
+  // Slightly different to avoid hang.
+  await compareFiles("data:text/html,Foo", "data:text/html,<div>Foo", {
+    maxDifferent: 0,
+    maxDifference: 0,
+    test: {
+      settings: {
+        paperWidth: 8,
+        paperHeight: 10,
+        paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+        marginTop: 0,
+        marginRight: 0,
+        marginBottom: 0,
+        marginLeft: 0,
+        unwriteableMarginTop: 1,
+        unwriteableMarginRight: 1,
+        unwriteableMarginBottom: 1,
+        unwriteableMarginLeft: 1,
+        ignoreUnwriteableMargins: true,
+      },
+    },
+    ref: {
+      settings: {
+        paperWidth: 8,
+        paperHeight: 10,
+        paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+        marginTop: 0,
+        marginRight: 0,
+        marginBottom: 0,
+        marginLeft: 0,
+        unwriteableMarginTop: 0,
+        unwriteableMarginRight: 0,
+        unwriteableMarginBottom: 0,
+        unwriteableMarginLeft: 0,
+      },
+    },
+  });
+
+  requestAnimationFrame(() => setTimeout(runTest53));
+}
+
+async function runTest53() {
+  // Ensure that even when unwriteable margins are set to be taken into
+  // account, page rule margins can override it.
+  await compareFiles(
+    "data:text/html,<style>@page { margin: 0 }</style>Foo",
+    "data:text/html,<div>Foo",
+    {
+      maxDifferent: 0,
+      maxDifference: 0,
+      test: {
+        settings: {
+          paperWidth: 8,
+          paperHeight: 10,
+          paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+          marginTop: 0,
+          marginRight: 0,
+          marginBottom: 0,
+          marginLeft: 0,
+          unwriteableMarginTop: 1,
+          unwriteableMarginRight: 1,
+          unwriteableMarginBottom: 1,
+          unwriteableMarginLeft: 1,
+          ignoreUnwriteableMargins: false,
+          honorPageRuleMargins: true,
+        },
+      },
+      ref: {
+        settings: {
+          paperWidth: 8,
+          paperHeight: 10,
+          paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+          marginTop: 0,
+          marginRight: 0,
+          marginBottom: 0,
+          marginLeft: 0,
+          unwriteableMarginTop: 0,
+          unwriteableMarginRight: 0,
+          unwriteableMarginBottom: 0,
+          unwriteableMarginLeft: 0,
+        },
+      },
+    });
+
+    requestAnimationFrame(() => setTimeout(runTest54));
+}
+
+async function runTest54() {
+  // `ignoreUnwriteableMargins` lets author-specified margins ignore
+  // unwriteable margins as well. Without this flag, the unwriteable
+  // margin is ignored iff `Margins: Default` is set (i.e.
+  // `honorPageRuleMargins` set) and the author specified CSS page
+  // margin is zero.
+  // Note: At least currently, both `ignoreUnwriteableMargins`
+  // and `honorPageRuleMargins` cannot be set through the printing UI.
+  // TODO: If this behaviour is desired is up for debate.
+  await compareFiles(
+    "data:text/html,<style>@page { margin: 0.1in }</style>Foo",
+    "data:text/html,<div>Foo",
+    {
+      maxDifferent: 0,
+      maxDifference: 0,
+      test: {
+        settings: {
+          paperWidth: 8,
+          paperHeight: 10,
+          paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+          marginTop: 0,
+          marginRight: 0,
+          marginBottom: 0,
+          marginLeft: 0,
+          unwriteableMarginTop: 1,
+          unwriteableMarginRight: 1,
+          unwriteableMarginBottom: 1,
+          unwriteableMarginLeft: 1,
+          ignoreUnwriteableMargins: true,
+          honorPageRuleMargins: true,
+        },
+      },
+      ref: {
+        settings: {
+          paperWidth: 8,
+          paperHeight: 10,
+          paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+          marginTop: 0.1,
+          marginRight: 0.1,
+          marginBottom: 0.1,
+          marginLeft: 0.1,
+          unwriteableMarginTop: 0,
+          unwriteableMarginRight: 0,
+          unwriteableMarginBottom: 0,
+          unwriteableMarginLeft: 0,
+        },
+      },
+    });
+
+    requestAnimationFrame(() => setTimeout(runTest55));
+}
+
+async function runTest55() {
+  let test = "printpreview_pps_uw2.html";
+  let ref = "printpreview_pps_uw2_no_margin_ref.html";
+  let fuzz = navigator.platform.includes("Win") ? // Workaround for bug 1680838
+      { maxDifferent: 12870, maxDifference: 255 } :
+      { maxDifferent: 0, maxDifference: 0 };
+
+  // Unwriteable margins are successfully ignored, if requested,
+  // for pages-per-sheet.
+  await compareFiles(test, ref, {
+    maxDifferent: fuzz.maxDifferent,
+    maxDifference: fuzz.maxDifference,
+    test: {
+      settings: {
+        paperWidth: 8,
+        paperHeight: 10,
+        paperSizeUnit: Ci.nsIPrintSettings.kPaperSizeInches,
+        marginTop: 0,
+        marginRight: 0,
+        marginBottom: 0,
+        marginLeft: 0,
+        unwriteableMarginTop: 0.8,
+        unwriteableMarginRight: 0.6,
+        unwriteableMarginBottom: 1.2,
+        unwriteableMarginLeft: 0.4,
+        numPagesPerSheet: 2,
+        ignoreUnwriteableMargins: true,
+      },
+    },
+    ref: {
+      settings: {
+        paperWidth: 8,
+        paperHeight: 10,
+        marginTop: 0,
+        marginRight: 0,
+        marginBottom: 0,
+        marginLeft: 0,
+        unwriteableMarginTop: 0,
+        unwriteableMarginRight: 0,
+        unwriteableMarginBottom: 0,
+        unwriteableMarginLeft: 0,
+        orientation: 1, /* Landscape mode */
+      },
+    },
+  });
+
   finish();
 }
 

@@ -231,8 +231,10 @@ void PrintedSheetFrame::ComputePagesPerSheetOriginAndScale() {
   // Compute the space available for the pages-per-sheet "page grid" (just
   // subtract the sheet's unwriteable margin area):
   nsSize availSpaceOnSheet = pageSize;
-  nsMargin uwm = nsPresContext::CSSTwipsToAppUnits(
-      mPD->mPrintSettings->GetUnwriteableMarginInTwips());
+  nsMargin uwm = mPD->mPrintSettings->GetIgnoreUnwriteableMargins()
+                     ? nsMargin{}
+                     : nsPresContext::CSSTwipsToAppUnits(
+                           mPD->mPrintSettings->GetUnwriteableMarginInTwips());
 
   if (mPD->mPrintSettings->HasOrthogonalSheetsAndPages()) {
     // The pages will be rotated to be orthogonal to the physical sheet.  To

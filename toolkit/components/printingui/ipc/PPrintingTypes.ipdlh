@@ -31,6 +31,7 @@ struct PrintData {
   bool printBGColors;
   bool printBGImages;
   bool honorPageRuleMargins;
+  bool ignoreUnwriteableMargins;
   bool showMarginGuides;
   bool printSelectionOnly;
   int32_t[] pageRanges;
