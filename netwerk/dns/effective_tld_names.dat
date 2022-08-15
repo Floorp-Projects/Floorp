@@ -1315,7 +1315,9 @@ web.id
 ie
 gov.ie
 
-// il : http://www.isoc.org.il/domains/
+// il :         http://www.isoc.org.il/domains/
+// see also:    https://en.isoc.org.il/il-cctld/registration-rules
+// ISOC-IL      (operated by .il Registry)
 il
 ac.il
 co.il
@@ -1325,6 +1327,16 @@ k12.il
 muni.il
 net.il
 org.il
+// xn--4dbrk0ce ("Israel", Hebrew) : IL
+ישראל
+// xn--4dbgdty6c.xn--4dbrk0ce.
+אקדמיה.ישראל
+// xn--5dbhl8d.xn--4dbrk0ce.
+ישוב.ישראל
+// xn--8dbq2a.xn--4dbrk0ce.
+צהל.ישראל
+// xn--hebda8b.xn--4dbrk0ce.
+ממשל.ישראל
 
 // im : https://www.nic.im/
 // Submitted by registry <info@nic.im>
