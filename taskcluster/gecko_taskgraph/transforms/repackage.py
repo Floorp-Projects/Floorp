@@ -252,8 +252,8 @@ def copy_in_useful_magic(config, jobs):
 
 @transforms.add
 def handle_keyed_by(config, jobs):
-    """Resolve fields that can be keyed by platform, etc, but not `msix.*` fields that can be keyed by
-    `package-format`.  Such fields are handled specially below.
+    """Resolve fields that can be keyed by platform, etc, but not `msix.*` fields
+    that can be keyed by `package-format`.  Such fields are handled specially below.
     """
     fields = [
         "mozharness.config",
