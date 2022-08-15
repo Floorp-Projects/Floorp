@@ -1755,8 +1755,12 @@ void nsPresContext::UIResolutionChangedInternal() {
     AppUnitsPerDevPixelChanged();
   }
 
-  if (GetPresShell()) {
-    GetPresShell()->RefreshZoomConstraintsForScreenSizeChange();
+  if (mPresShell) {
+    mPresShell->RefreshZoomConstraintsForScreenSizeChange();
+    if (RefPtr<MobileViewportManager> mvm =
+            mPresShell->GetMobileViewportManager()) {
+      mvm->UpdateSizesBeforeReflow();
+    }
   }
 
   // Recursively notify all remote leaf descendants of the change.
