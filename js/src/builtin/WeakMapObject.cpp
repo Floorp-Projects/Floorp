@@ -15,7 +15,6 @@
 #include "vm/SelfHosting.h"
 
 #include "gc/WeakMap-inl.h"
-#include "vm/Interpreter-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;

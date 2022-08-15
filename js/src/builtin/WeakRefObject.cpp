@@ -6,8 +6,6 @@
 
 #include "builtin/WeakRefObject.h"
 
-#include "mozilla/Maybe.h"
-
 #include "jsapi.h"
 
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
