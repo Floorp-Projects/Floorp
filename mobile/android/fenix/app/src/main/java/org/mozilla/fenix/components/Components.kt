@@ -163,9 +163,7 @@ class Components(private val context: Context) {
     val wallpaperManager by lazyMonitored {
         strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
             WallpaperManager(
-                settings,
                 appStore,
-                useCases.wallpaperUseCases.selectWallpaper,
             )
         }
     }

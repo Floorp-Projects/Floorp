@@ -190,11 +190,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = Wallpaper.Default.name
     )
 
-    var wallpapersSwitchedByLogoTap by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_wallpapers_switched_by_logo_tap),
-        default = true
-    )
-
     /**
      * Indicates if the wallpaper onboarding dialog should be shown.
      */
@@ -416,15 +411,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         appContext.getPreferenceKey(R.string.pref_key_inactive_tabs),
         default = FeatureFlags.inactiveTabs,
         featureFlag = FeatureFlags.inactiveTabs
-    )
-
-    /**
-     * Indicates if the Firefox logo on the home screen should be animated,
-     * to show users that they can change the wallpaper by tapping on the Firefox logo.
-     */
-    var shouldAnimateFirefoxLogo by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_show_logo_animation),
-        default = true,
     )
 
     @VisibleForTesting

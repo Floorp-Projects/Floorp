@@ -10,7 +10,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,8 +27,6 @@ import androidx.compose.material.Snackbar
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.Surface
-import androidx.compose.material.Switch
-import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
@@ -48,7 +45,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.button.TextButton
@@ -66,8 +62,6 @@ import org.mozilla.fenix.wallpapers.Wallpaper
  * @param loadWallpaperResource Callback to handle loading a wallpaper bitmap. Only optional in the default case.
  * @param onSelectWallpaper Callback for when a new wallpaper is selected.
  * @param onViewWallpaper Callback for when the view action is clicked from snackbar.
- * @param tapLogoSwitchChecked Enabled state for switch controlling taps to change wallpaper.
- * @param onTapLogoSwitchCheckedChange Callback for when state of above switch is updated.
  */
 @Composable
 @Suppress("LongParameterList")
@@ -78,8 +72,6 @@ fun WallpaperSettings(
     selectedWallpaper: Wallpaper,
     onSelectWallpaper: (Wallpaper) -> Unit,
     onViewWallpaper: () -> Unit,
-    tapLogoSwitchChecked: Boolean,
-    onTapLogoSwitchCheckedChange: (Boolean) -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState = rememberScaffoldState()
@@ -109,7 +101,6 @@ fun WallpaperSettings(
                     onSelectWallpaper(updatedWallpaper)
                 },
             )
-            WallpaperLogoSwitch(tapLogoSwitchChecked, onCheckedChange = onTapLogoSwitchCheckedChange)
         }
     }
 }
@@ -253,38 +244,6 @@ private fun WallpaperThumbnailItem(
     }
 }
 
-@Composable
-@Suppress("MagicNumber")
-private fun WallpaperLogoSwitch(
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 16.dp)
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = stringResource(R.string.wallpaper_tap_to_change_switch_label_1),
-            color = FirefoxTheme.colors.textPrimary,
-            fontSize = 18.sp,
-            modifier = Modifier
-                .weight(0.8f)
-        )
-
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = FirefoxTheme.colors.formSelected,
-                checkedTrackColor = FirefoxTheme.colors.formSurface,
-                uncheckedTrackColor = FirefoxTheme.colors.formSurface
-            )
-        )
-    }
-}
-
 @Preview
 @Composable
 private fun WallpaperThumbnailsPreview() {
@@ -297,8 +256,6 @@ private fun WallpaperThumbnailsPreview() {
             selectedWallpaper = Wallpaper.Default,
             onSelectWallpaper = {},
             onViewWallpaper = {},
-            tapLogoSwitchChecked = false,
-            onTapLogoSwitchCheckedChange = {}
         )
     }
 }

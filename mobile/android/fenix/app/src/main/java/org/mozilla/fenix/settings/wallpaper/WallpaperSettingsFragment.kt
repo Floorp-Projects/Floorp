@@ -8,10 +8,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
@@ -34,10 +30,6 @@ class WallpaperSettingsFragment : Fragment() {
         requireComponents.useCases.wallpaperUseCases
     }
 
-    private val settings by lazy {
-        requireComponents.settings
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -54,7 +46,6 @@ class WallpaperSettingsFragment : Fragment() {
                     val currentWallpaper = appStore.observeAsComposableState { state ->
                         state.wallpaperState.currentWallpaper
                     }.value ?: Wallpaper.Default
-                    var wallpapersSwitchedByLogo by remember { mutableStateOf(settings.wallpapersSwitchedByLogoTap) }
 
                     WallpaperSettings(
                         wallpapers = wallpapers,
@@ -63,16 +54,6 @@ class WallpaperSettingsFragment : Fragment() {
                         selectedWallpaper = currentWallpaper,
                         onSelectWallpaper = { wallpaperUseCases.selectWallpaper(it) },
                         onViewWallpaper = { findNavController().navigate(R.id.homeFragment) },
-                        tapLogoSwitchChecked = wallpapersSwitchedByLogo,
-                        onTapLogoSwitchCheckedChange = {
-                            settings.wallpapersSwitchedByLogoTap = it
-                            wallpapersSwitchedByLogo = it
-                            Wallpapers.changeWallpaperLogoToggled.record(
-                                Wallpapers.ChangeWallpaperLogoToggledExtra(
-                                    checked = it
-                                )
-                            )
-                        }
                     )
                 }
             }
