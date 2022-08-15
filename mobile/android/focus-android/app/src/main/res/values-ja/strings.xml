@@ -447,7 +447,7 @@
 
     <string name="your_rights">あなたの権利</string>
 
-    <string name="external_app_prompt_title">リンクを他のアプリで開く</string>
+    <string name="external_app_prompt_title">リンクを外部アプリで開く</string>
     <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
          Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
     <string name="external_app_prompt">%1$s を離れてこのリンクを %2$s で開くことができます。</string>
@@ -667,7 +667,7 @@
     <string name="preference_advanced_summary">開発者ツール</string>
 
     <!-- Preference for open links in third party apps -->
-    <string name="preferences_open_links_in_apps">リンクをアプリで開く</string>
+    <string name="preferences_open_links_in_apps">リンクを外部アプリで開く</string>
 
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">詳細</string>
