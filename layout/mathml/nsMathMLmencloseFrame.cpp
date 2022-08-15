@@ -108,14 +108,6 @@ nsresult nsMathMLmencloseFrame::AddNotation(const nsAString& aNotation) {
   } else if (aNotation.EqualsLiteral("actuarial")) {
     mNotationsToDraw += NOTATION_RIGHT;
     mNotationsToDraw += NOTATION_TOP;
-  } else if (aNotation.EqualsLiteral("radical")) {
-    if (!StaticPrefs::mathml_deprecated_menclose_notation_radical_disabled()) {
-      mContent->OwnerDoc()->WarnOnceAbout(
-          dom::DeprecatedOperations::eMathML_DeprecatedMencloseNotationRadical);
-      rv = AllocateMathMLChar(NOTATION_RADICAL);
-      NS_ENSURE_SUCCESS(rv, rv);
-      mNotationsToDraw += NOTATION_RADICAL;
-    }
   } else if (aNotation.EqualsLiteral("box")) {
     mNotationsToDraw += NOTATION_LEFT;
     mNotationsToDraw += NOTATION_RIGHT;
