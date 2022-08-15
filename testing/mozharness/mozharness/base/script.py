@@ -704,7 +704,8 @@ class ScriptMixin(PlatformMixin):
         t.extractall(path=extract_to)
 
     def download_unpack(self, url, extract_to=".", extract_dirs="*", verbose=False):
-        """Generic method to download and extract a compressed file without writing it to disk first.
+        """Generic method to download and extract a compressed file without writing it
+        to disk first.
 
         Args:
             url (str): URL where the file to be downloaded is located.
