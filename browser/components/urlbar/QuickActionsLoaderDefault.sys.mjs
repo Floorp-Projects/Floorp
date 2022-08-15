@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
 });
 
-const BASE_URL = Services.urlFormatter.formatURLPref("app.support.baseURL");
+const BASE_URL = "https://support.mozilla.org/kb/";
 
 let openUrlFun = url => () => openUrl(url);
 let openUrl = url => {
