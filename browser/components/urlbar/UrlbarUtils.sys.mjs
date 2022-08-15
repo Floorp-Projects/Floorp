@@ -231,7 +231,7 @@ export var UrlbarUtils = {
       {
         source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
         restrict: lazy.UrlbarTokenizer.RESTRICT.ACTION,
-        icon: "chrome://devtools/skin/images/command-console.svg",
+        icon: "chrome://browser/skin/quickactions.svg",
         pref: "shortcuts.quickactions",
       },
     ];
