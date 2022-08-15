@@ -11,6 +11,7 @@ XPIDL_SOURCES += [
     "nsICacheEntry.idl",
     "nsICacheEntryDoomCallback.idl",
     "nsICacheEntryOpenCallback.idl",
+    "nsICachePurgeLock.idl",
     "nsICacheStorage.idl",
     "nsICacheStorageService.idl",
     "nsICacheStorageVisitor.idl",
@@ -23,6 +24,8 @@ EXPORTS += [
     "CacheObserver.h",
     "CacheStorageService.h",
 ]
+
+EXPORTS.mozilla.net += ["CachePurgeLock.h"]
 
 SOURCES += [
     "CacheStorage.cpp",
@@ -48,6 +51,11 @@ UNIFIED_SOURCES += [
     "CacheObserver.cpp",
     "CacheStorageService.cpp",
 ]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
+    UNIFIED_SOURCES += [
+        "CachePurgeLock.cpp",
+    ]
 
 LOCAL_INCLUDES += [
     "/netwerk/base",
