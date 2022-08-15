@@ -3,6 +3,24 @@
     {
       "stash": {
         "blocked": [
+          "extendedSearch@ext:1.0",
+          "Moviety@ext:1.0",
+          "MoviesCraver@ext:1.0",
+          "Filmatory@ext:1.0",
+          "WeecklyNews@ext:1.0",
+          "ComicsUniverse@ext:1.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1660160252095,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1660242907077,
+      "id": "4925b9ac-8c18-4c14-9030-5af176944919",
+      "last_modified": 1660243044117
+    },
+    {
+      "stash": {
+        "blocked": [
           "{ef8811db-22e2-4894-b79b-535d0a6b187b}:1.0.0"
         ],
         "unblocked": []
@@ -1258,5 +1276,5 @@
       "last_modified": 1656333551168
     }
   ],
-  "timestamp": 1659983847023
+  "timestamp": 1660243044117
 }
