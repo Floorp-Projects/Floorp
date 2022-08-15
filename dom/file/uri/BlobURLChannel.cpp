@@ -26,6 +26,18 @@ BlobURLChannel::BlobURLChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo)
 
 BlobURLChannel::~BlobURLChannel() = default;
 
+NS_IMETHODIMP
+BlobURLChannel::SetContentType(const nsACString& aContentType) {
+  // If the blob type is empty, set the content type of the channel to the
+  // empty string.
+  if (aContentType.IsEmpty()) {
+    mContentType.Truncate();
+    return NS_OK;
+  }
+
+  return nsBaseChannel::SetContentType(aContentType);
+}
+
 nsresult BlobURLChannel::OpenContentStream(bool aAsync,
                                            nsIInputStream** aResult,
                                            nsIChannel** aChannel) {
