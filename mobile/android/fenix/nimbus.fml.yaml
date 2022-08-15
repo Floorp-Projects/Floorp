@@ -34,7 +34,7 @@ features:
           }
         }
   onboarding:
-    description: The homescreen that the user goes to when they press home or new tab.
+    description: The onboarding features displayed on homescreen.
     variables:
       sections-enabled:
         description: "This property provides a lookup table of whether or not the given section should be enabled."
@@ -327,4 +327,3 @@ types:
       variants:
         sync-cfr:
           description: Sync onboarding CFR.
-
