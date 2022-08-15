@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- The tile for the list of external apps to open the link in -->
-    <string name="mozac_feature_applinks_open_in">他のアプリで開く…</string>
+    <string name="mozac_feature_applinks_open_in">外部アプリで開く…</string>
     <!-- The description to warn users that their private browsing session changes  -->
-    <string name="mozac_feature_applinks_confirm_dialog_title">アプリで開く場合、その行動はプライベートにはなりません。</string>
+    <string name="mozac_feature_applinks_confirm_dialog_title">外部アプリで開く場合、その行動はプライベートにはなりません。</string>
     <!-- Opens the selected time -->
     <string name="mozac_feature_applinks_confirm_dialog_confirm">開く</string>
     <!-- Cancels the prompt -->

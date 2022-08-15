@@ -17,11 +17,11 @@
     <string name="mozac_feature_addons_permissions_extra_sites_description" tools:ignore="PluralsCandidate">Πρόσβαση στα δεδομένα σας σε %1$d ακόμη ιστοτόπους</string>
     <!-- When an add-on requires access to more than 4 domains, for example the add-on requires access for 5 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
       then we will show another collapsed entry saying "Access your data on 1 other domain". This entry it's for the singular case, when the add-on is only accessing one extra domain. -->
-    <string name="mozac_feature_addons_permissions_one_extra_domain_description" tools:ignore="PluralsCandidate">Πρόσβαση στα δεδομένα σας σε άλλον 1 τομέα</string>
+    <string name="mozac_feature_addons_permissions_one_extra_domain_description" tools:ignore="PluralsCandidate">Πρόσβαση στα δεδομένα σας σε 1 ακόμα τομέα</string>
     <!-- When an add-on requires access to more than 4 domains, for example the add-on requires access for 6 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
      then we will show another collapsed entry saying "Access your data on 2 other domains". This entry it's for the plural case, when the add-on is accessing more than one extra domain.
      %1$d will be replaced by an integer indicating the number of additional domains for which this web extension is requesting permission. -->
-    <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">Πρόσβαση στα δεδομένα σας σε άλλους %1$d τομείς</string>
+    <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">Πρόσβαση στα δεδομένα σας σε %1$d ακόμα τομείς</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">Πρόσβαση στις καρτέλες προγράμματος περιήγησης</string>
     <!-- Description for unlimited_storage permission. -->

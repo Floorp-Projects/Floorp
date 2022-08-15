@@ -38,6 +38,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Získať údaje zo schránky</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Vkladať údaje do schránky</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Blokovať obsah na ľubovoľnej stránke</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Sťahovať súbory a čítať a upravovať históriu stiahnutých súborov</string>
     <!-- Description for downloads_open permission. -->
