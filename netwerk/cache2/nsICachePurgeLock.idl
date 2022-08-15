@@ -1,0 +1,33 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * This object is a wrapper of MultiInstanceLock.
+ * It's intended to be used to ensure exclusive access to folders being
+ * deleted by the purgeHTTPCache background task.
+ */
+[scriptable,uuid(8abb21e3-c6a0-4b4d-9333-cc0d72f2c23b)]
+interface nsICachePurgeLock : nsISupports {
+    /**
+     * Initializes the lock using the profile name and the current process's
+     * path.
+     * Will throw if a lock was already acquired successfully.
+     */
+    void lock(in AUTF8String profileName);
+
+    /**
+     * Returns true if another instance also holds the lock.
+     * Throws if called before lock was called, or after unlock was called.
+     */
+    bool isOtherInstanceRunning();
+
+    /**
+     * Releases the lock.
+     * This object may be locked again, potentially using a different path
+     * after unlocking.
+     */
+    void unlock();
+};
