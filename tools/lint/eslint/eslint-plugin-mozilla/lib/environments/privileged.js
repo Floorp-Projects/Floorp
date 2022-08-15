@@ -10,6 +10,8 @@
 
 module.exports = {
   globals: {
+    // Intl is available everywhere but not a webIDL definition.
+    Intl: false,
     // This list of items is currently obtained manually from the list of
     // mozilla::dom::constructor::id::ID enumerations in an object directory
     // generated dom/bindings/RegisterBindings.cpp
