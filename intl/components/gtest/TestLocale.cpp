@@ -39,6 +39,39 @@ TEST(IntlLocale, LocaleSettersAndGetters)
   ASSERT_EQ(locale2.Variants().length(), 0UL);
 }
 
+TEST(IntlLocale, LocaleMove)
+{
+  Locale locale;
+  ASSERT_TRUE(
+      LocaleParser::TryParse(
+          MakeStringSpan(
+              "fr-Latn-CA-fonipa-u-ca-gregory-t-es-AR-h0-hybrid-x-private"),
+          locale)
+          .isOk());
+
+  ASSERT_TRUE(locale.Language().EqualTo("fr"));
+  ASSERT_TRUE(locale.Script().EqualTo("Latn"));
+  ASSERT_TRUE(locale.Region().EqualTo("CA"));
+  ASSERT_EQ(locale.Variants()[0], MakeStringSpan("fonipa"));
+  ASSERT_EQ(locale.Extensions()[0], MakeStringSpan("u-ca-gregory"));
+  ASSERT_EQ(locale.Extensions()[1], MakeStringSpan("t-es-AR-h0-hybrid"));
+  ASSERT_EQ(locale.GetUnicodeExtension().value(),
+            MakeStringSpan("u-ca-gregory"));
+  ASSERT_EQ(locale.PrivateUse().value(), MakeStringSpan("x-private"));
+
+  Locale locale2 = std::move(locale);
+
+  ASSERT_TRUE(locale2.Language().EqualTo("fr"));
+  ASSERT_TRUE(locale2.Script().EqualTo("Latn"));
+  ASSERT_TRUE(locale2.Region().EqualTo("CA"));
+  ASSERT_EQ(locale2.Variants()[0], MakeStringSpan("fonipa"));
+  ASSERT_EQ(locale2.Extensions()[0], MakeStringSpan("u-ca-gregory"));
+  ASSERT_EQ(locale2.Extensions()[1], MakeStringSpan("t-es-AR-h0-hybrid"));
+  ASSERT_EQ(locale2.GetUnicodeExtension().value(),
+            MakeStringSpan("u-ca-gregory"));
+  ASSERT_EQ(locale2.PrivateUse().value(), MakeStringSpan("x-private"));
+}
+
 TEST(IntlLocale, LocaleParser)
 {
   const char* tags[] = {
@@ -51,8 +84,8 @@ TEST(IntlLocale, LocaleParser)
       "tuq",         "sr-ME",       "ng",         "klx",        "kk-Arab",
       "en-Cyrl",     "und-Cyrl-UK", "und-Arab",   "und-Arab-FO"};
 
-  Locale locale;
   for (const auto* tag : tags) {
+    Locale locale;
     ASSERT_TRUE(LocaleParser::TryParse(MakeStringSpan(tag), locale).isOk());
   }
 }
