@@ -16,10 +16,11 @@ var TabModalPrompt = class {
     let newPrompt = (this.element = win.document.createElement(
       "tabmodalprompt"
     ));
+    win.MozXULElement.insertFTLIfNeeded("toolkit/global/tabprompts.ftl");
     newPrompt.setAttribute("role", "dialog");
     let randomIdSuffix = Math.random()
       .toString(32)
-      .substr(2);
+      .substring(2);
     newPrompt.setAttribute("aria-describedby", `infoBody-${randomIdSuffix}`);
     newPrompt.appendChild(
       win.MozXULElement.parseXULToFragment(
@@ -32,12 +33,12 @@ var TabModalPrompt = class {
             </div>
 
             <div class="tabmodalprompt-loginContainer" hidden="hidden">
-              <xul:label class="tabmodalprompt-loginLabel" value="&editfield0.label;" control="loginTextbox-${randomIdSuffix}"/>
+              <xul:label class="tabmodalprompt-loginLabel" data-l10n-id="tabmodalprompt-username" control="loginTextbox-${randomIdSuffix}"/>
               <input class="tabmodalprompt-loginTextbox" id="loginTextbox-${randomIdSuffix}"/>
             </div>
 
             <div class="tabmodalprompt-password1Container" hidden="hidden">
-              <xul:label class="tabmodalprompt-password1Label" value="&editfield1.label;" control="password1Textbox-${randomIdSuffix}"/>
+              <xul:label class="tabmodalprompt-password1Label" data-l10n-id="tabmodalprompt-password" control="password1Textbox-${randomIdSuffix}"/>
               <input class="tabmodalprompt-password1Textbox" type="password" id="password1Textbox-${randomIdSuffix}"/>
             </div>
 
@@ -51,15 +52,11 @@ var TabModalPrompt = class {
           <div class="tabmodalprompt-buttonContainer">
             <xul:button class="tabmodalprompt-button3" hidden="true"/>
             <div class="tabmodalprompt-buttonSpacer"/>
-            <xul:button class="tabmodalprompt-button0" label="&okButton.label;"/>
+            <xul:button class="tabmodalprompt-button0" data-l10n-id="tabmodalprompt-ok-button"/>
             <xul:button class="tabmodalprompt-button2" hidden="true"/>
-            <xul:button class="tabmodalprompt-button1" label="&cancelButton.label;"/>
+            <xul:button class="tabmodalprompt-button1" data-l10n-id="tabmodalprompt-cancel-button"/>
           </div>
-        </div>`,
-        [
-          "chrome://global/locale/commonDialog.dtd",
-          "chrome://global/locale/dialogOverlay.dtd",
-        ]
+        </div>`
       )
     );
 
