@@ -581,3 +581,4 @@ majorRelease2022:
   owner: firefoxview@mozilla.com
   hasExposure: false
   isEarlyStartup: true
+  variables: {}
