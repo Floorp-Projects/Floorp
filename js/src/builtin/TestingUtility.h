@@ -7,16 +7,13 @@
 #ifndef builtin_TestingUtility_h
 #define builtin_TestingUtility_h
 
-#include "js/RootingAPI.h"  // JS::Handle, JS::MutableHandle
-#include "js/Utility.h"     // JS::UniqueChars
+#include "js/CompileOptions.h"  // JS::CompileOptions
+#include "js/RootingAPI.h"      // JS::Handle, JS::MutableHandle
+#include "js/Utility.h"         // JS::UniqueChars
 
 struct JSContext;
 class JSObject;
 class JSString;
-
-namespace JS {
-class JS_PUBLIC_API CompileOptions;
-}
 
 namespace js {
 

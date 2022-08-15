@@ -7,6 +7,7 @@
 /* JS reflection package. */
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Maybe.h"
 
 #include <stdlib.h>
 #include <utility>
@@ -14,26 +15,25 @@
 #include "jspubtd.h"
 
 #include "builtin/Array.h"
+#include "builtin/Reflect.h"
 #include "frontend/CompilationStencil.h"
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
+#include "js/CharacterEncoding.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
 #include "js/PropertyAndElement.h"    // JS_DefineFunction
 #include "js/StableStringChars.h"
+#include "vm/BigIntType.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
-#include "vm/Interpreter.h"
 #include "vm/JSAtom.h"
 #include "vm/JSObject.h"
 #include "vm/ModuleBuilder.h"  // js::ModuleBuilder
 #include "vm/PlainObject.h"    // js::PlainObject
 #include "vm/RegExpObject.h"
 
-#include "vm/JSAtom-inl.h"
-#include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
-#include "vm/ObjectOperations-inl.h"
 
 using namespace js;
 using namespace js::frontend;

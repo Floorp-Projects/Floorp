@@ -8,15 +8,17 @@
 
 #include "jsapi.h"
 
+#include "builtin/Array.h"
+
 #include "jit/InlinableNatives.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_NOT_EXPECTED_TYPE
 #include "js/PropertySpec.h"
-#include "vm/GlobalObject.h"
+#include "vm/ArgumentsObject.h"
 #include "vm/JSContext.h"
+#include "vm/Stack.h"
 
 #include "vm/GeckoProfiler-inl.h"
-#include "vm/JSObject-inl.h"
-#include "vm/ObjectOperations-inl.h"
+#include "vm/Interpreter-inl.h"
 
 using namespace js;
 

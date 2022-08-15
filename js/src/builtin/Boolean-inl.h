@@ -9,6 +9,7 @@
 
 #include "builtin/Boolean.h"
 
+#include "vm/BooleanObject.h"
 #include "vm/JSContext.h"
 #include "vm/WrapperObject.h"
 

@@ -16,6 +16,7 @@
 
 #include "jsapi.h"
 
+#include "builtin/BigInt.h"
 #include "builtin/Eval.h"
 #include "builtin/SelfHostingDefines.h"
 #include "frontend/BytecodeCompiler.h"
@@ -26,6 +27,7 @@
 #include "js/UniquePtr.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
+#include "vm/AsyncFunction.h"
 #include "vm/BooleanObject.h"
 #include "vm/DateObject.h"
 #include "vm/EqualityOperations.h"  // js::SameValue

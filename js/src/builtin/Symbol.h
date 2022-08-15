@@ -8,10 +8,7 @@
 #define builtin_Symbol_h
 
 #include "vm/NativeObject.h"
-
-namespace JS {
-class Symbol;
-}
+#include "vm/SymbolType.h"
 
 namespace js {
 
