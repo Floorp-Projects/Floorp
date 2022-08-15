@@ -99,11 +99,6 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   // set the drag icon during drag-begin
   void SetDragIcon(GdkDragContext* aContext);
 
-  // Reply to drag_motion event according to recent DragService state.
-  // We need that on Wayland to reply immediately as it's requested
-  // there (see Bug 1730203).
-  void ReplyToDragMotion();
-
   void EventLoopEnter() { mEventLoopDepth++; };
   void EventLoopLeave() { mEventLoopDepth--; };
   int GetLoopDepth() { return mEventLoopDepth; };
@@ -214,9 +209,12 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   // Callback for g_idle_add_full() to run mScheduledTask.
   MOZ_CAN_RUN_SCRIPT static gboolean TaskDispatchCallback(gpointer data);
   MOZ_CAN_RUN_SCRIPT gboolean RunScheduledTask();
-  void UpdateDragAction();
   MOZ_CAN_RUN_SCRIPT void DispatchMotionEvents();
   void ReplyToDragMotion(GdkDragContext* aDragContext);
+  void ReplyToDragMotion();
+  void UpdateDragAction(GdkDragContext* aDragContext);
+  void UpdateDragAction();
+
 #ifdef MOZ_LOGGING
   const char* GetDragServiceTaskName(nsDragService::DragTask aTask);
 #endif

@@ -8192,11 +8192,6 @@ gboolean WindowDragMotionHandler(GtkWidget* aWidget,
                                         aTime)) {
     return FALSE;
   }
-  // We need to reply to drag_motion event on Wayland immediately,
-  // see Bug 1730203.
-  if (GdkIsWaylandDisplay()) {
-    dragService->ReplyToDragMotion();
-  }
   return TRUE;
 }
 

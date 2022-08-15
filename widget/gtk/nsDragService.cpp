@@ -1057,6 +1057,8 @@ void nsDragService::ReplyToDragMotion(GdkDragContext* aDragContext) {
         action = GDK_ACTION_MOVE;
         break;
     }
+  } else {
+    LOGDRAGSERVICE("  mCanDrop is false, disable drop");
   }
   gdk_drag_status(aDragContext, action, mTargetTime);
 }
@@ -2208,6 +2210,14 @@ gboolean nsDragService::Schedule(DragTask aTask, nsWindow* aWindow,
     mTaskSource = g_timeout_add_full(G_PRIORITY_HIGH, 0, TaskDispatchCallback,
                                      this, nullptr);
   }
+
+  // We need to reply to drag_motion event on Wayland immediately,
+  // see Bug 1730203.
+  if (widget::GdkIsWaylandDisplay() && mScheduledTask == eDragTaskMotion) {
+    UpdateDragAction(aDragContext);
+    ReplyToDragMotion(aDragContext);
+  }
+
   return TRUE;
 }
 
@@ -2366,33 +2376,32 @@ gboolean nsDragService::RunScheduledTask() {
 // drag context.  Gtk gets this from a combination of the key settings
 // and what the source is offering.
 
-void nsDragService::UpdateDragAction() {
+void nsDragService::UpdateDragAction(GdkDragContext* aDragContext) {
   // This doesn't look right.  dragSession.dragAction is used by
   // nsContentUtils::SetDataTransferInEvent() to set the initial
   // dataTransfer.dropEffect, so GdkDragContext::suggested_action would be
   // more appropriate.  GdkDragContext::actions should be used to set
   // dataTransfer.effectAllowed, which doesn't currently happen with
   // external sources.
-  LOGDRAGSERVICE("nsDragService::UpdateDragAction(%p)",
-                 mTargetDragContext.get());
+  LOGDRAGSERVICE("nsDragService::UpdateDragAction(%p)", aDragContext);
 
   // default is to do nothing
   int action = nsIDragService::DRAGDROP_ACTION_NONE;
   GdkDragAction gdkAction = GDK_ACTION_DEFAULT;
-  if (mTargetDragContext) {
-    gdkAction = gdk_drag_context_get_actions(mTargetDragContext);
+  if (aDragContext) {
+    gdkAction = gdk_drag_context_get_actions(aDragContext);
     LOGDRAGSERVICE("  gdk_drag_context_get_actions() returns %x", gdkAction);
-  }
 
-  // Under wayland the selected action specifies the currently applied drag
-  // modifier
-  if (widget::GdkIsWaylandDisplay()) {
-    GdkDragAction gdkActionSelected =
-        gdk_drag_context_get_selected_action(mTargetDragContext);
-    LOGDRAGSERVICE("  gdk_drag_context_get_selected_action() returns %x",
-                   gdkActionSelected);
-    if (gdkActionSelected) {
-      gdkAction = gdkActionSelected;
+    // Under wayland the selected action specifies the currently applied drag
+    // modifier
+    if (widget::GdkIsWaylandDisplay()) {
+      GdkDragAction gdkActionSelected =
+          gdk_drag_context_get_selected_action(aDragContext);
+      LOGDRAGSERVICE("  gdk_drag_context_get_selected_action() returns %x",
+                     gdkActionSelected);
+      if (gdkActionSelected) {
+        gdkAction = gdkActionSelected;
+      }
     }
   }
 
@@ -2418,6 +2427,8 @@ void nsDragService::UpdateDragAction() {
   // update the drag information
   SetDragAction(action);
 }
+
+void nsDragService::UpdateDragAction() { UpdateDragAction(mTargetDragContext); }
 
 NS_IMETHODIMP
 nsDragService::UpdateDragEffect() {
