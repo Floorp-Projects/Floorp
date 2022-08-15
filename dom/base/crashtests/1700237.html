@@ -8,11 +8,17 @@
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   window.getSelection().modify("move", "backward", "line")
-  setInterval(() => {
+  const interval = setInterval(() => {
     const m = new MutationObserver(() => {
       let x = document.getSelection().getRangeAt(0)
       a.appendChild(document.createElement("optgroup"))
-      x.comparePoint(document.activeElement, 1)
+      try {
+        x.comparePoint(document.activeElement, 1)
+      } catch (error) {
+        clearInterval(interval)
+        return
+      }
+
     })
     m.observe(b, {attributes: true})
     b.setAttribute("x", "false")
