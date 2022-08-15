@@ -61,6 +61,9 @@ add_task(async function feature_callout_renders_in_firefox_view() {
     },
     async browser => {
       const { document } = browser.contentWindow;
+
+      await waitForCalloutRender(document);
+
       ok(
         document.querySelector(calloutSelector),
         "Feature Callout element exists"
@@ -83,7 +86,6 @@ add_task(async function feature_callout_moves_on_screen_change() {
       const { document } = browser.contentWindow;
       const buttonSelector = "#root .primary";
 
-      // Wait for callout to be rendered
       await waitForCalloutRender(document);
 
       const callout = document.querySelector(calloutSelector);
@@ -102,7 +104,7 @@ add_task(async function feature_callout_moves_on_screen_change() {
 
       document.querySelector(buttonSelector).click();
 
-      waitForCalloutScreen(document, "FEATURE_CALLOUT_2");
+      await waitForCalloutScreen(document, ".FEATURE_CALLOUT_2");
 
       ok(
         startingTop !== document.querySelector(calloutSelector).style.top,
@@ -397,7 +399,7 @@ add_task(async function feature_callout_only_highlights_existing_elements() {
       await waitForCalloutPositioned(document);
 
       // Remove parent element for third screen in tour
-      document.querySelector("#colorways").remove();
+      document.querySelector("#colorways.content-container").remove();
       // Advance to second screen
       await clickPrimaryButton(document);
       await waitForCalloutScreen(document, ".FEATURE_CALLOUT_2");
