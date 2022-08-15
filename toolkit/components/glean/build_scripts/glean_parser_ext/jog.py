@@ -95,5 +95,3 @@ def output_yaml(objs, output_fd, options={}):
     """
 
     load_monkeypatches()
-
-    print("TODO: implement")
