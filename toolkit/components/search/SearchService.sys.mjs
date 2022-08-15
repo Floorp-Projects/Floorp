@@ -2796,9 +2796,9 @@ export class SearchService {
         this.defaultPrivateEngine,
         lazy.SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE
       );
-      // Also update the telemetry data.
-      this.#recordTelemetryData();
     }
+    // Update the telemetry data.
+    this.#recordTelemetryData();
   }
 
   #getEngineInfo(engine) {

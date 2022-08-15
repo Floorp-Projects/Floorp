@@ -428,3 +428,151 @@ add_task(async function test_defaultPrivateEngine_ui_turned_off() {
     },
   });
 });
+
+add_task(async function test_defaultPrivateEngine_same_engine_toggle_pref() {
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
+    true
+  );
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",
+    true
+  );
+
+  // Set the normal and private engines to be the same
+  Services.search.defaultEngine = engine2;
+  Services.search.defaultPrivateEngine = engine2;
+
+  await assertGleanDefaultEngine({
+    normal: {
+      engineId: "engine-chromeicon",
+    },
+    private: {
+      engineId: "engine-chromeicon",
+    },
+  });
+
+  // Disable pref
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
+    false
+  );
+  Assert.equal(
+    Services.search.defaultPrivateEngine,
+    engine2,
+    "Should not change the default private engine"
+  );
+  Assert.equal(
+    Services.search.defaultEngine,
+    engine2,
+    "Should not change the default engine"
+  );
+
+  await assertGleanDefaultEngine({
+    normal: {
+      engineId: "engine-chromeicon",
+    },
+    private: {
+      engineId: "",
+    },
+  });
+
+  // Re-enable pref
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
+    true
+  );
+  Assert.equal(
+    Services.search.defaultPrivateEngine,
+    engine2,
+    "Should not change the default private engine"
+  );
+  Assert.equal(
+    Services.search.defaultEngine,
+    engine2,
+    "Should not change the default engine"
+  );
+
+  await assertGleanDefaultEngine({
+    normal: {
+      engineId: "engine-chromeicon",
+    },
+    private: {
+      engineId: "engine-chromeicon",
+    },
+  });
+});
+
+add_task(async function test_defaultPrivateEngine_same_engine_toggle_ui_pref() {
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
+    true
+  );
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",
+    true
+  );
+
+  // Set the normal and private engines to be the same
+  Services.search.defaultEngine = engine2;
+  Services.search.defaultPrivateEngine = engine2;
+
+  await assertGleanDefaultEngine({
+    normal: {
+      engineId: "engine-chromeicon",
+    },
+    private: {
+      engineId: "engine-chromeicon",
+    },
+  });
+
+  // Disable UI pref
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",
+    false
+  );
+  Assert.equal(
+    Services.search.defaultPrivateEngine,
+    engine2,
+    "Should not change the default private engine"
+  );
+  Assert.equal(
+    Services.search.defaultEngine,
+    engine2,
+    "Should not change the default engine"
+  );
+
+  await assertGleanDefaultEngine({
+    normal: {
+      engineId: "engine-chromeicon",
+    },
+    private: {
+      engineId: "",
+    },
+  });
+
+  // Re-enable UI pref
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",
+    true
+  );
+  Assert.equal(
+    Services.search.defaultPrivateEngine,
+    engine2,
+    "Should not change the default private engine"
+  );
+  Assert.equal(
+    Services.search.defaultEngine,
+    engine2,
+    "Should not change the default engine"
+  );
+
+  await assertGleanDefaultEngine({
+    normal: {
+      engineId: "engine-chromeicon",
+    },
+    private: {
+      engineId: "engine-chromeicon",
+    },
+  });
+});
