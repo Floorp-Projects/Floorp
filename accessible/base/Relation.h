@@ -24,7 +24,7 @@ class Relation {
 
   explicit Relation(AccIterable* aIter) : mFirstIter(aIter), mLastIter(aIter) {}
 
-  explicit Relation(LocalAccessible* aAcc)
+  explicit Relation(Accessible* aAcc)
       : mFirstIter(nullptr), mLastIter(nullptr) {
     AppendTarget(aAcc);
   }
@@ -59,7 +59,7 @@ class Relation {
   /**
    * Append the given accessible to the set of related accessibles.
    */
-  inline void AppendTarget(LocalAccessible* aAcc) {
+  inline void AppendTarget(Accessible* aAcc) {
     if (aAcc) AppendIter(new SingleAccIterator(aAcc));
   }
 

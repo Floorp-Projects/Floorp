@@ -280,12 +280,15 @@ LocalAccessible* IDRefsIterator::Next() {
 // SingleAccIterator
 ////////////////////////////////////////////////////////////////////////////////
 
-LocalAccessible* SingleAccIterator::Next() {
-  RefPtr<LocalAccessible> nextAcc;
-  mAcc.swap(nextAcc);
-  if (!nextAcc || nextAcc->IsDefunct()) {
+Accessible* SingleAccIterator::Next() {
+  Accessible* nextAcc = mAcc;
+  mAcc = nullptr;
+  if (!nextAcc) {
     return nullptr;
   }
+
+  MOZ_ASSERT(!nextAcc->IsLocal() || !nextAcc->AsLocal()->IsDefunct(),
+             "Iterator references defunct accessible?");
   return nextAcc;
 }
 
