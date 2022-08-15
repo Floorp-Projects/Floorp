@@ -176,6 +176,8 @@ async function extensionScriptWithMessageListener() {
 
     browser.test.sendMessage(`${msg}:done`, item);
   });
+  // window is available in background scripts
+  // eslint-disable-next-line no-undef
   browser.test.sendMessage("extension-origin", window.location.origin);
 }
 exports.extensionScriptWithMessageListener = extensionScriptWithMessageListener;
