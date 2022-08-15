@@ -33,6 +33,11 @@ input {
 
 .onboardingContainer.featureCallout {
   position: absolute;
+  transition: opacity 0.5s ease;
+}
+.onboardingContainer.featureCallout.hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 .onboardingContainer.featureCallout, .onboardingContainer.featureCallout .outer-wrapper {
   height: auto;
