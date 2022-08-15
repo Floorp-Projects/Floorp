@@ -59,18 +59,17 @@ struct _MozContainerClass;
 typedef struct _MozContainer MozContainer;
 typedef struct _MozContainerClass MozContainerClass;
 
-class MozContainerSurfaceLock {
-  MozContainer* mContainer;
-  struct wl_surface* mSurface;
-
- public:
-  MozContainerSurfaceLock(MozContainer* aContainer);
-  ~MozContainerSurfaceLock();
-  struct wl_surface* GetSurface();
-};
-
 void moz_container_wayland_class_init(MozContainerClass* klass);
 void moz_container_wayland_init(MozContainerWayland* container);
+
+struct wl_surface* moz_container_wayland_surface_lock(MozContainer* container);
+void moz_container_wayland_surface_unlock(MozContainer* container,
+                                          struct wl_surface** surface);
+
+struct wl_surface* moz_container_wayland_get_surface_locked(
+    const mozilla::MutexAutoLock& aProofOfLock, MozContainer* container);
+void moz_container_wayland_lock(MozContainer* container);
+void moz_container_wayland_unlock(MozContainer* container);
 
 struct wl_egl_window* moz_container_wayland_get_egl_window(
     MozContainer* container, double scale);
@@ -80,13 +79,9 @@ void moz_container_wayland_egl_window_set_size(MozContainer* container,
                                                int width, int height);
 void moz_container_wayland_set_scale_factor(MozContainer* container);
 void moz_container_wayland_set_scale_factor_locked(MozContainer* container);
-
-void moz_container_wayland_add_initial_draw_callback_locked(
-    MozContainer* container, const std::function<void(void)>& initial_draw_cb);
-void moz_container_wayland_add_or_fire_initial_draw_callback(
+void moz_container_wayland_add_initial_draw_callback(
     MozContainer* container, const std::function<void(void)>& initial_draw_cb);
 void moz_container_wayland_clear_initial_draw_callback(MozContainer* container);
-
 wl_surface* moz_gtk_widget_get_wl_surface(GtkWidget* aWidget);
 void moz_container_wayland_update_opaque_region(MozContainer* container,
                                                 int corner_radius);
