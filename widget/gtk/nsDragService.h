@@ -104,6 +104,10 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   // there (see Bug 1730203).
   void ReplyToDragMotion();
 
+  void EventLoopEnter() { mEventLoopDepth++; };
+  void EventLoopLeave() { mEventLoopDepth--; };
+  int GetLoopDepth() { return mEventLoopDepth; };
+
  protected:
   virtual ~nsDragService();
 
@@ -232,6 +236,8 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   nsCOMArray<nsIFile> mTemporaryFiles;
   // timer to trigger deletion of temporary files
   guint mTempFileTimerID;
+  // How deep we're nested in event loops
+  int mEventLoopDepth;
 };
 
 #endif  // nsDragService_h__

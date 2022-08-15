@@ -173,6 +173,7 @@ nsDragService::nsDragService()
   mTargetDragData = 0;
   mTargetDragDataLen = 0;
   mTempFileTimerID = 0;
+  mEventLoopDepth = 0;
 }
 
 nsDragService::~nsDragService() {
@@ -615,6 +616,8 @@ static void GetTextUriListItem(const char* data, uint32_t datalen,
   }
 }
 
+// Spins event loop, called from JS.
+// Can lead to another round of drag_motion events.
 NS_IMETHODIMP
 nsDragService::GetNumDropItems(uint32_t* aNumItems) {
   LOGDRAGSERVICE(("nsDragService::GetNumDropItems"));
@@ -1136,6 +1139,9 @@ bool nsDragService::IsTargetContextList(void) {
   return retval;
 }
 
+// Spins event loop, called from eDragTaskMotion handler by
+// DispatchMotionEvents().
+// Can lead to another round of drag_motion events.
 void nsDragService::GetTargetDragData(GdkAtom aFlavor,
                                       nsTArray<nsCString>& aDropFlavors) {
   LOGDRAGSERVICE(("nsDragService::GetTargetDragData(%p) '%s'\n",
