@@ -2246,10 +2246,7 @@ gboolean nsDragService::Schedule(DragTask aTask, nsWindow* aWindow,
 
 gboolean nsDragService::TaskDispatchCallback(gpointer data) {
   RefPtr<nsDragService> dragService = static_cast<nsDragService*>(data);
-
-  dragService->EventLoopEnter();
-  auto autoLeave = MakeScopeExit([&] { dragService->EventLoopLeave(); });
-
+  AutoEventLoop loop(dragService);
   return dragService->RunScheduledTask();
 }
 
