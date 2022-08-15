@@ -4,7 +4,3 @@
 
 <!ENTITY editfield0.label "User Name:">
 <!ENTITY editfield1.label "Password:">
-<!ENTITY copyCmd.label    "Copy">
-<!ENTITY copyCmd.accesskey "C">
-<!ENTITY selectAllCmd.label "Select All">
-<!ENTITY selectAllCmd.accesskey "A">

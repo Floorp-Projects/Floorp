@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://global/content/commonDialog.css" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/commonDialog.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://global/locale/commonDialog.dtd">
+<!DOCTYPE window>
 
 <window id="commonDialogWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -45,13 +45,11 @@
     <menupopup id="contentAreaContextMenu"
                onpopupshowing="goUpdateCommand('cmd_copy')">
       <menuitem id="context-copy"
-                label="&copyCmd.label;"
-                accesskey="&copyCmd.accesskey;"
+                data-l10n-id="common-dialog-copy-cmd"
                 command="cmd_copy"
                 disabled="true"/>
       <menuitem id="context-selectall"
-                label="&selectAllCmd.label;"
-                accesskey="&selectAllCmd.accesskey;"
+                data-l10n-id="common-dialog-select-all-cmd"
                 command="cmd_selectAll"/>
     </menupopup>
   </popupset>
