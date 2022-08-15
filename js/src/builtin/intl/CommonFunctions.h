@@ -9,7 +9,6 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
 #include "js/RootingAPI.h"
 #include "js/Utility.h"
@@ -60,10 +59,6 @@ extern void ReportInternalError(JSContext* cx);
 
 /** Report an Intl internal error not directly tied to a spec step. */
 extern void ReportInternalError(JSContext* cx, mozilla::intl::ICUError error);
-
-static inline bool StringsAreEqual(const char* s1, const char* s2) {
-  return !strcmp(s1, s2);
-}
 
 /**
  * The last-ditch locale is used if none of the available locales satisfies a
