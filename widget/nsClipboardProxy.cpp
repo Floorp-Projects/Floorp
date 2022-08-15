@@ -88,6 +88,25 @@ void nsClipboardProxy::SetCapabilities(
   mClipboardCaps = aClipboardCaps;
 }
 
+RefPtr<DataFlavorsPromise> nsClipboardProxy::AsyncHasDataMatchingFlavors(
+    const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) {
+  auto promise = MakeRefPtr<DataFlavorsPromise::Private>(__func__);
+  ContentChild::GetSingleton()
+      ->SendClipboardHasTypesAsync(aFlavorList, aWhichClipboard)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          /* resolve */
+          [promise](nsTArray<nsCString> types) {
+            promise->Resolve(std::move(types), __func__);
+          },
+          /* reject */
+          [promise](mozilla::ipc::ResponseRejectReason aReason) {
+            promise->Reject(NS_ERROR_FAILURE, __func__);
+          });
+
+  return promise.forget();
+}
+
 RefPtr<GenericPromise> nsClipboardProxy::AsyncGetData(
     nsITransferable* aTransferable, int32_t aWhichClipboard) {
   if (!aTransferable) {

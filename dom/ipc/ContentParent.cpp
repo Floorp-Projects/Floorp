@@ -3421,6 +3421,26 @@ mozilla::ipc::IPCResult ContentParent::RecvClipboardHasType(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvClipboardHasTypesAsync(
+    nsTArray<nsCString>&& aTypes, const int32_t& aWhichClipboard,
+    ClipboardHasTypesAsyncResolver&& aResolver) {
+  nsresult rv;
+  nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
+  if (NS_FAILED(rv)) {
+    return IPC_FAIL(this, "RecvGetClipboardTypes failed.");
+  }
+
+  clipboard->AsyncHasDataMatchingFlavors(aTypes, aWhichClipboard)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          /* resolve */
+          [aResolver](nsTArray<nsCString> types) { aResolver(types); },
+          /* reject */
+          [aResolver](nsresult rv) { aResolver(nsTArray<nsCString>{}); });
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvGetExternalClipboardFormats(
     const int32_t& aWhichClipboard, const bool& aPlainTextOnly,
     nsTArray<nsCString>* aTypes) {
