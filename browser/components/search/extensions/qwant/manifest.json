@@ -1,7 +1,7 @@
 {
   "name": "Qwant",
   "manifest_version": 2,
-  "version": "1.1",
+  "version": "1.2",
   "applications": {
     "gecko": {
       "id": "qwant@search.mozilla.org"
