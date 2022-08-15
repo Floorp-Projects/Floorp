@@ -74,7 +74,10 @@ var BackgroundTasksTestUtils = {
       environmentAppend: true,
       stderr: "stdout",
     }).then(p => {
-      p.stdin.close();
+      p.stdin.close().catch(() => {
+        // It's possible that the process exists before we close stdin.
+        // In that case, we should ignore the errors.
+      });
       const dumpPipe = async pipe => {
         // We must assemble all of the string fragments from stdout.
         let leftover = "";
