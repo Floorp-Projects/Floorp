@@ -823,13 +823,6 @@ static void UpdateAtkRelation(RelationType aType, Accessible* aAcc,
     targets.AppendElement(GetWrapperFor(tempAcc));
   }
 
-  if (aType == RelationType::EMBEDS && aAcc->IsRoot()) {
-    if (RemoteAccessible* proxyDoc =
-            aAcc->AsLocal()->AsRoot()->GetPrimaryRemoteTopLevelContentDoc()) {
-      targets.AppendElement(GetWrapperFor(proxyDoc));
-    }
-  }
-
   if (targets.Length()) {
     atkRelation =
         atk_relation_new(targets.Elements(), targets.Length(), aAtkType);
