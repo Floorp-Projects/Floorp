@@ -7,22 +7,20 @@
 #ifndef builtin_intl_CommonFunctions_h
 #define builtin_intl_CommonFunctions_h
 
-#include "mozilla/Assertions.h"
-
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
-#include <type_traits>
 
 #include "js/RootingAPI.h"
-#include "js/Vector.h"
-#include "vm/StringType.h"
+#include "js/Utility.h"
 
 namespace mozilla::intl {
 enum class ICUError : uint8_t;
 }
 
 namespace js {
+
+class PropertyName;
 
 namespace intl {
 
@@ -93,7 +91,7 @@ struct OldStyleLanguageTagMapping {
 
 extern const OldStyleLanguageTagMapping oldStyleLanguageTagMappings[5];
 
-extern UniqueChars EncodeLocale(JSContext* cx, JSString* locale);
+extern JS::UniqueChars EncodeLocale(JSContext* cx, JSString* locale);
 
 // The inline capacity we use for a Vector<char16_t>.  Use this to ensure that
 // our uses of ICU string functions, below and elsewhere, will try to fill the

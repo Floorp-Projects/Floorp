@@ -28,9 +28,7 @@
 
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
-#include "builtin/intl/LanguageTag.h"
 #include "builtin/intl/TimeZoneDataGenerated.h"
-#include "builtin/String.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
 #include "vm/ArrayObject.h"

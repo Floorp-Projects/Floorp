@@ -7,7 +7,6 @@
 #ifndef builtin_intl_IntlObject_h
 #define builtin_intl_IntlObject_h
 
-#include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 
 namespace js {
