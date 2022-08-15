@@ -26,8 +26,7 @@ class HistoryView(
     container: ViewGroup,
     val interactor: HistoryInteractor,
     val onZeroItemsLoaded: () -> Unit,
-    val onEmptyStateChanged: (Boolean) -> Unit,
-    val isSyncedHistory: Boolean,
+    val onEmptyStateChanged: (Boolean) -> Unit
 ) : LibraryPageView(container), UserInteractionHandler {
 
     val binding = ComponentHistoryBinding.inflate(
@@ -37,13 +36,9 @@ class HistoryView(
     var mode: HistoryFragmentState.Mode = HistoryFragmentState.Mode.Normal
         private set
 
-    val historyAdapter = HistoryAdapter(
-        historyInteractor = interactor,
-        isSyncedHistory = isSyncedHistory,
-        onEmptyStateChanged = { isEmpty ->
-            onEmptyStateChanged(isEmpty)
-        },
-    ).apply {
+    val historyAdapter = HistoryAdapter(interactor) { isEmpty ->
+        onEmptyStateChanged(isEmpty)
+    }.apply {
         addLoadStateListener {
             // First call will always have itemCount == 0, but we want to keep adapterItemCount
             // as null until we can distinguish an empty list from populated, so updateEmptyState()
@@ -102,12 +97,9 @@ class HistoryView(
 
         when (val mode = state.mode) {
             is HistoryFragmentState.Mode.Normal -> {
-                val title = if (isSyncedHistory) {
-                    context.getString(R.string.history_from_other_devices)
-                } else {
+                setUiForNormalMode(
                     context.getString(R.string.library_history)
-                }
-                setUiForNormalMode(title = title)
+                )
             }
             is HistoryFragmentState.Mode.Editing -> {
                 setUiForSelectingMode(
@@ -123,7 +115,7 @@ class HistoryView(
     private fun updateEmptyState(userHasHistory: Boolean) {
         binding.historyList.isInvisible = !userHasHistory
         binding.historyEmptyView.isVisible = !userHasHistory
-        binding.topSpacer.isVisible = !isSyncedHistory && !userHasHistory
+        binding.topSpacer.isVisible = !userHasHistory
 
         with(binding.recentlyClosedNavEmpty) {
             recentlyClosedNav.setOnClickListener {
@@ -140,15 +132,14 @@ class HistoryView(
                 ),
                 numRecentTabs
             )
-            recentlyClosedNav.isVisible = !isSyncedHistory && !userHasHistory
+            recentlyClosedNav.isVisible = !userHasHistory
         }
 
         with(binding.syncedHistoryNavEmpty) {
             syncedHistoryNav.setOnClickListener {
                 interactor.onSyncedHistoryClicked()
             }
-            syncedHistoryNav.isVisible =
-                !isSyncedHistory && FeatureFlags.showSyncedHistory && !userHasHistory
+            syncedHistoryNav.isVisible = FeatureFlags.showSyncedHistory && !userHasHistory
         }
 
         if (!userHasHistory) {

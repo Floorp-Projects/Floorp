@@ -25,9 +25,10 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.NavGraphDirections
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.history.DefaultPagedHistoryProvider
+import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
 
@@ -143,8 +144,9 @@ class HistoryControllerTest {
 
         controller.handleSearch()
         verify {
-            navController.navigate(
-                NavGraphDirections.actionGlobalHistorySearchDialog()
+            navController.navigateSafe(
+                R.id.historyFragment,
+                HistoryFragmentDirections.actionGlobalHistorySearchDialog()
             )
         }
     }
