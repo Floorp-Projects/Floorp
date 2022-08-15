@@ -4132,6 +4132,7 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
     if (!XRE_IsParentProcess()) {
       RefPtr<nsDocShell> docShell(this);
       nsCOMPtr<nsIContentViewer> cv(mContentViewer);
+      NS_ENSURE_STATE(cv);
 
       bool okToUnload = true;
       MOZ_TRY(cv->PermitUnload(&okToUnload));
