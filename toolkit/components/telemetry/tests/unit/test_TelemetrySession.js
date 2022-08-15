@@ -274,7 +274,7 @@ function checkScalars(processes) {
     "The keyedScalars entry must be an object."
   );
 
-  let checkScalar = function(scalar) {
+  let checkScalar = function(scalar, name) {
     // Check if the value is of a supported type.
     const valueType = typeof scalar;
     switch (valueType) {
@@ -305,7 +305,7 @@ function checkScalars(processes) {
   const scalars = parentProcess.scalars;
   for (let name in scalars) {
     Assert.equal(typeof name, "string", "Scalar names must be strings.");
-    checkScalar(scalars[name]);
+    checkScalar(scalars[name], name);
   }
 
   // Check that we have valid keyed scalar entries.
@@ -322,7 +322,7 @@ function checkScalars(processes) {
         key.length <= 70,
         "Keyed scalar keys can't have more than 70 characters."
       );
-      checkScalar(scalars[name][key]);
+      checkScalar(scalars[name][key], name);
     }
   }
 }
