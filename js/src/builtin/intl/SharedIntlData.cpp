@@ -37,7 +37,6 @@
 #include "vm/StringType.h"
 
 using js::HashNumber;
-using js::intl::StringsAreEqual;
 
 template <typename Char>
 static constexpr Char ToUpperASCII(Char c) {
@@ -678,6 +677,10 @@ bool js::intl::SharedIntlData::isUpperCaseFirst(JSContext* cx,
 void js::intl::DateTimePatternGeneratorDeleter::operator()(
     mozilla::intl::DateTimePatternGenerator* ptr) {
   delete ptr;
+}
+
+static bool StringsAreEqual(const char* s1, const char* s2) {
+  return !strcmp(s1, s2);
 }
 
 mozilla::intl::DateTimePatternGenerator*
