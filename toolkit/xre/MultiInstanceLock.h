@@ -79,6 +79,14 @@ void ReleaseMultiInstanceLock(MultiInstLockHandle lock);
 // Return value is true on success, false on error (and aResult won't be set).
 bool IsOtherInstanceRunning(MultiInstLockHandle lock, bool* aResult);
 
+// It is possible that the path we have is on a case insensitive
+// filesystem in which case the path may vary depending on how the
+// application is called. We want to normalize the case somehow.
+// When aAppFile is NULL, this function returns a nsIFile with a normalized
+// path for the currently running binary. When aAppFile is not null,
+// this function ensures the file path is properly normalized.
+already_AddRefed<nsIFile> GetNormalizedAppFile(nsIFile* aAppFile);
+
 };  // namespace mozilla
 
 #endif  // MULTIINSTANCELOCK_H

@@ -20,6 +20,14 @@
 #  include <sys/types.h>
 #endif
 
+#ifdef XP_WIN
+#  include "WinUtils.h"
+#endif
+
+#ifdef MOZ_WIDGET_COCOA
+#  include "nsILocalFileMac.h"
+#endif
+
 namespace mozilla {
 
 static bool GetLockFileName(const char* nameToken, const char16_t* installPath,
@@ -235,6 +243,53 @@ bool IsOtherInstanceRunning(MultiInstLockHandle lock, bool* aResult) {
   return true;
 
 #endif
+}
+
+already_AddRefed<nsIFile> GetNormalizedAppFile(nsIFile* aAppFile) {
+  // If we're given an app file, use it; otherwise, get it from the ambient
+  // directory service.
+  nsresult rv;
+  nsCOMPtr<nsIFile> appFile;
+  if (aAppFile) {
+    rv = aAppFile->Clone(getter_AddRefs(appFile));
+    NS_ENSURE_SUCCESS(rv, nullptr);
+  } else {
+    nsCOMPtr<nsIProperties> dirSvc =
+        do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(dirSvc, nullptr);
+
+    rv = dirSvc->Get(XRE_EXECUTABLE_FILE, NS_GET_IID(nsIFile),
+                     getter_AddRefs(appFile));
+    NS_ENSURE_SUCCESS(rv, nullptr);
+  }
+
+  // It is possible that the path we have is on a case insensitive
+  // filesystem in which case the path may vary depending on how the
+  // application is called. We want to normalize the case somehow.
+  // On Linux XRE_EXECUTABLE_FILE already seems to be set to the correct path.
+  //
+  // See similar nsXREDirProvider::GetInstallHash. The main difference here is
+  // to allow lookup to fail on OSX, because some tests use a nonexistent
+  // appFile.
+#ifdef XP_WIN
+  // Windows provides a way to get the correct case.
+  if (!mozilla::widget::WinUtils::ResolveJunctionPointsAndSymLinks(appFile)) {
+    NS_WARNING("Failed to resolve install directory.");
+  }
+#elif defined(MOZ_WIDGET_COCOA)
+  // On OSX roundtripping through an FSRef fixes the case.
+  FSRef ref;
+  nsCOMPtr<nsILocalFileMac> macFile = do_QueryInterface(appFile);
+  if (macFile && NS_SUCCEEDED(macFile->GetFSRef(&ref)) &&
+      NS_SUCCEEDED(
+          NS_NewLocalFileWithFSRef(&ref, true, getter_AddRefs(macFile)))) {
+    appFile = static_cast<nsIFile*>(macFile);
+  } else {
+    NS_WARNING("Failed to resolve install directory.");
+  }
+#endif
+
+  return appFile.forget();
 }
 
 };  // namespace mozilla
