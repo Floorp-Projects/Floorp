@@ -416,6 +416,9 @@ function trrQueryHandler(req, resp, url) {
     };
 
     if (response.delay) {
+      // This function is handled within the httpserver where setTimeout is
+      // available.
+      // eslint-disable-next-line no-undef
       setTimeout(
         arg => {
           writeResponse(arg[0], arg[1], arg[2]);
