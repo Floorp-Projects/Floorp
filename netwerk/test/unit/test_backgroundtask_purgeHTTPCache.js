@@ -94,14 +94,17 @@ add_task(async function test_folderNameWithSpaces() {
 });
 
 add_task(async function test_missing_folder() {
-  // We never create the directory. The task should just fail.
+  // We never create the directory.
   // We only wait for 1 second
 
+  let dir = do_get_profile();
+  dir.append(LEAF_NAME);
   let exitCode = await do_backgroundtask("purgeHTTPCache", {
     extraArgs: [do_get_profile().path, LEAF_NAME, "1", ""],
   });
 
-  equal(exitCode, EXIT_CODE.EXCEPTION);
+  equal(exitCode, EXIT_CODE.SUCCESS);
+  equal(dir.exists(), false);
 });
 
 add_task(
@@ -177,4 +180,63 @@ add_task(async function test_purgeFile() {
   equal(dir2.exists(), false);
   equal(file.exists(), true);
   file.remove(true);
+});
+
+add_task(async function test_two_tasks() {
+  let dir1 = do_get_profile();
+  dir1.append("leaf1.abc");
+
+  let dir2 = do_get_profile();
+  dir2.append("leaf2.abc");
+
+  let tasks = [];
+  tasks.push(
+    do_backgroundtask("purgeHTTPCache", {
+      extraArgs: [do_get_profile().path, dir1.leafName, "5", ".abc"],
+    })
+  );
+  dir1.create(Ci.nsIFile.DIRECTORY_TYPE, 0o744);
+  tasks.push(
+    do_backgroundtask("purgeHTTPCache", {
+      extraArgs: [do_get_profile().path, dir2.leafName, "5", ".abc"],
+    })
+  );
+  dir2.create(Ci.nsIFile.DIRECTORY_TYPE, 0o744);
+
+  let [r1, r2] = await Promise.all(tasks);
+
+  equal(r1, EXIT_CODE.SUCCESS);
+  equal(r2, EXIT_CODE.SUCCESS);
+  equal(dir1.exists(), false);
+  equal(dir2.exists(), false);
+});
+
+// This test creates a large number of tasks and directories.  Spawning a huge
+// number of tasks concurrently (say, 50 or 100) appears to cause problems;
+// since doing so is rather artificial, we haven't tracked this down.
+const TASK_COUNT = 20;
+add_task(async function test_aLotOfTasks() {
+  let dirs = [];
+  let tasks = [];
+
+  for (let i = 0; i < TASK_COUNT; i++) {
+    let dir = do_get_profile();
+    dir.append(`leaf${i}.abc`);
+
+    tasks.push(
+      do_backgroundtask("purgeHTTPCache", {
+        extraArgs: [do_get_profile().path, dir.leafName, "5", ".abc"],
+        extraEnv: { MOZ_LOG: "BackgroundTasks:5" },
+      })
+    );
+
+    dir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o744);
+    dirs.push(dir);
+  }
+
+  let results = await Promise.all(tasks);
+  for (let i in results) {
+    equal(results[i], EXIT_CODE.SUCCESS, `Task ${i} should succeed`);
+    equal(dirs[i].exists(), false, `leaf${i}.abc should not exist`);
+  }
 });
