@@ -1314,11 +1314,44 @@ void nsHtml5TreeOpExecutor::SetSpeculationBase(const nsAString& aURL) {
     // the first one wins
     return;
   }
-  auto encoding = mDocument->GetDocumentCharacterSet();
-  DebugOnly<nsresult> rv = NS_NewURI(getter_AddRefs(mSpeculationBaseURI), aURL,
-                                     encoding, mDocument->GetDocumentURI());
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to create a URI");
 
+  auto encoding = mDocument->GetDocumentCharacterSet();
+  nsCOMPtr<nsIURI> newBaseURI;
+  DebugOnly<nsresult> rv = NS_NewURI(getter_AddRefs(newBaseURI), aURL, encoding,
+                                     mDocument->GetDocumentURI());
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to create a URI");
+  if (!newBaseURI) {
+    return;
+  }
+
+  // Check the document's CSP usually delivered via the CSP header.
+  if (nsCOMPtr<nsIContentSecurityPolicy> csp = mDocument->GetCsp()) {
+    // base-uri should not fallback to the default-src and preloads should not
+    // trigger violation reports.
+    bool cspPermitsBaseURI = true;
+    nsresult rv = csp->Permits(
+        nullptr, nullptr, newBaseURI,
+        nsIContentSecurityPolicy::BASE_URI_DIRECTIVE, true /* aSpecific */,
+        false /* aSendViolationReports */, &cspPermitsBaseURI);
+    if (NS_FAILED(rv) || !cspPermitsBaseURI) {
+      return;
+    }
+  }
+
+  // Also check the CSP discovered from the <meta> tag during speculative
+  // parsing.
+  if (nsCOMPtr<nsIContentSecurityPolicy> csp = mDocument->GetPreloadCsp()) {
+    bool cspPermitsBaseURI = true;
+    nsresult rv = csp->Permits(
+        nullptr, nullptr, newBaseURI,
+        nsIContentSecurityPolicy::BASE_URI_DIRECTIVE, true /* aSpecific */,
+        false /* aSendViolationReports */, &cspPermitsBaseURI);
+    if (NS_FAILED(rv) || !cspPermitsBaseURI) {
+      return;
+    }
+  }
+
+  mSpeculationBaseURI = newBaseURI;
   mDocument->Preloads().SetSpeculationBase(mSpeculationBaseURI);
 }
 
@@ -1338,8 +1371,7 @@ void nsHtml5TreeOpExecutor::AddSpeculationCSP(const nsAString& aCSP) {
     NS_ENSURE_SUCCESS_VOID(rv);
   }
 
-  // please note that meta CSPs and CSPs delivered through a header need
-  // to be joined together.
+  // Please note that multiple meta CSPs need to be joined together.
   rv = preloadCsp->AppendPolicy(
       aCSP,
       false,  // csp via meta tag can not be report only
