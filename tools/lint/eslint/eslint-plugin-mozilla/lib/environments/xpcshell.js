@@ -11,6 +11,23 @@
 var { getScriptGlobals } = require("./utils");
 
 const extraGlobals = [
+  // Defined in XPCShellImpl.cpp
+  "print",
+  "readline",
+  "load",
+  "quit",
+  "dumpXPC",
+  "dump",
+  "gc",
+  "gczeal",
+  "options",
+  "sendCommand",
+  "atob",
+  "btoa",
+  "setInterruptCallback",
+  "simulateNoScriptActivity",
+  "registerXPCTestComponents",
+
   // Assert.jsm globals.
   "setReporter",
   "report",
@@ -30,8 +47,6 @@ const extraGlobals = [
   // TestingFunctions.cpp globals
   "allocationMarker",
   "byteSize",
-  "gc",
-  "gczeal",
   "saveStack",
 ];
 
