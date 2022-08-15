@@ -2,11 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.jsm",
 });
@@ -16,18 +19,27 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "featureTourProgress",
   "browser.firefox-view.feature-tour",
   '{"message":"","screen":"","complete":true}',
-  handlePrefChange,
+  _handlePrefChange,
   val => JSON.parse(val)
 );
 
-async function handlePrefChange(prefName, prevVal, newVal) {
-  if (newVal.complete) {
+async function _handlePrefChange() {
+  if (document.visibilityState === "hidden") {
+    return;
+  }
+  let prefVal = lazy.featureTourProgress;
+  if (prefVal.complete) {
     _endTour();
-  } else {
+  } else if (prefVal.screen !== CURRENT_SCREEN?.id) {
     READY = false;
-    _loadConfig(lazy.featureTourProgress.message);
-    document.getElementById(CONTAINER_ID)?.remove();
-    await _renderCallout();
+    let container = document.getElementById(CONTAINER_ID);
+    container?.classList.add("hidden");
+    // wait for fade out transition
+    setTimeout(async () => {
+      _loadConfig(lazy.featureTourProgress.message);
+      container?.remove();
+      await _renderCallout();
+    }, TRANSITION_MS);
   }
 }
 
@@ -63,6 +75,7 @@ let CONFIG;
 let RENDER_OBSERVER;
 let READY = false;
 
+const TRANSITION_MS = 500;
 const CONTAINER_ID = "root";
 const MESSAGES = [
   {
@@ -212,7 +225,7 @@ const MESSAGES = [
 
 function _createContainer() {
   let container = document.createElement("div");
-  container.classList.add("onboardingContainer", "featureCallout");
+  container.classList.add("onboardingContainer", "featureCallout", "hidden");
   container.id = CONTAINER_ID;
   document.body.appendChild(container);
   return container;
@@ -321,6 +334,8 @@ function _positionCallout() {
   } else {
     positioners[arrowPosition]();
   }
+
+  container.classList.remove("hidden");
 }
 
 function _addPositionListeners() {
@@ -355,9 +370,14 @@ function _setupWindowFunctions() {
 }
 
 function _endTour() {
-  document.getElementById(CONTAINER_ID)?.remove();
-  _removePositionListeners();
-  RENDER_OBSERVER?.disconnect();
+  // wait for fade out transition
+  let container = document.getElementById(CONTAINER_ID);
+  container?.classList.add("hidden");
+  setTimeout(() => {
+    container?.remove();
+    _removePositionListeners();
+    RENDER_OBSERVER?.disconnect();
+  }, TRANSITION_MS);
 }
 
 async function _addScriptsAndRender(container) {
@@ -393,7 +413,7 @@ function _observeRender(container) {
   RENDER_OBSERVER?.observe(container, { childList: true });
 }
 
-async function _loadConfig(messageId) {
+function _loadConfig(messageId) {
   // If the parent element a screen describes doesn't exist, remove screen
   // and ensure last screen displays the final primary CTA
   // (for example, when there are no active colorways in about:firefoxview)
@@ -420,14 +440,14 @@ async function _loadConfig(messageId) {
 
 async function _renderCallout() {
   let container = _createContainer();
-  _observeRender(container);
   // This results in rendering the Feature Callout
   await _addScriptsAndRender(container);
+  _observeRender(container);
 }
 /**
  * Render content based on about:welcome multistage template.
  */
-export async function showFeatureCallout(messageId) {
+async function showFeatureCallout(messageId) {
   // Don't show the feature tour if user has already completed it.
   if (lazy.featureTourProgress.complete) {
     return;
@@ -453,3 +473,17 @@ export async function showFeatureCallout(messageId) {
   _setupWindowFunctions();
   await _renderCallout();
 }
+
+window.addEventListener("DOMContentLoaded", () => {
+  // Get the message id from the feature tour pref
+  // (If/when this surface is used with other pages,
+  // add logic to select the correct pref for a given
+  // page's tour using its location)
+  showFeatureCallout(lazy.featureTourProgress.message);
+});
+
+// When the window is focused, ensure tour is synced with tours in
+// any other instances of the parent page
+window.addEventListener("visibilitychange", () => {
+  _handlePrefChange();
+});
