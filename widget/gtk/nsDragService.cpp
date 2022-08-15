@@ -1030,7 +1030,8 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
   return NS_OK;
 }
 
-void nsDragService::ReplyToDragMotion(GdkDragContext* aDragContext) {
+void nsDragService::ReplyToDragMotion(GdkDragContext* aDragContext,
+                                      guint aTime) {
   LOGDRAGSERVICE("nsDragService::ReplyToDragMotion(%p) can drop %d",
                  aDragContext, mCanDrop);
 
@@ -1039,26 +1040,50 @@ void nsDragService::ReplyToDragMotion(GdkDragContext* aDragContext) {
     // notify the dragger if we can drop
     switch (mDragAction) {
       case DRAGDROP_ACTION_COPY:
-        LOGDRAGSERVICE("  set gdk_drag_status() action copy");
+        LOGDRAGSERVICE("  set explicit action copy");
         action = GDK_ACTION_COPY;
         break;
       case DRAGDROP_ACTION_LINK:
-        LOGDRAGSERVICE("  set gdk_drag_status() action link");
+        LOGDRAGSERVICE("  set explicit action link");
         action = GDK_ACTION_LINK;
         break;
       case DRAGDROP_ACTION_NONE:
-        LOGDRAGSERVICE("  set gdk_drag_status() action none");
+        LOGDRAGSERVICE("  set explicit action none");
         action = (GdkDragAction)0;
         break;
       default:
-        LOGDRAGSERVICE("  set gdk_drag_status() action move");
+        LOGDRAGSERVICE("  set explicit action move");
         action = GDK_ACTION_MOVE;
         break;
     }
   } else {
     LOGDRAGSERVICE("  mCanDrop is false, disable drop");
   }
-  gdk_drag_status(aDragContext, action, mTargetTime);
+
+  // gdk_drag_status() is a kind of red herring here.
+  // It does not control final D&D operation type (copy/move) but controls
+  // drop/no-drop D&D state and default cursor type (copy/move).
+
+  // Actual D&D operation is determined by mDragAction which is set by
+  // SetDragAction() from UpdateDragAction() or gecko/layout.
+
+  // State passed to gdk_drag_status() sets default D&D cursor type
+  // which can be switched by key control (CTRL/SHIFT).
+  // If user changes D&D cursor (and D&D operation) we're notified by
+  // gdk_drag_context_get_selected_action() and update mDragAction.
+
+  // But if we pass mDragAction back to gdk_drag_status() the D&D operation
+  // becames locked and won't be returned when D&D modifiers (CTRL/SHIFT)
+  // are released.
+
+  // This gdk_drag_context_get_selected_action() -> gdk_drag_status() ->
+  // gdk_drag_context_get_selected_action() cycle happens on Wayland.
+  if (widget::GdkIsWaylandDisplay() && action == GDK_ACTION_COPY) {
+    LOGDRAGSERVICE("  Wayland: switch copy to move");
+    action = GDK_ACTION_MOVE;
+  }
+
+  gdk_drag_status(aDragContext, action, aTime);
 }
 
 void nsDragService::EnsureCachedDataValidForContext(
@@ -2213,7 +2238,7 @@ gboolean nsDragService::Schedule(DragTask aTask, nsWindow* aWindow,
   // see Bug 1730203.
   if (widget::GdkIsWaylandDisplay() && mScheduledTask == eDragTaskMotion) {
     UpdateDragAction(aDragContext);
-    ReplyToDragMotion(aDragContext);
+    ReplyToDragMotion(aDragContext, aTime);
   }
 
   return TRUE;
@@ -2390,8 +2415,14 @@ void nsDragService::UpdateDragAction(GdkDragContext* aDragContext) {
     gdkAction = gdk_drag_context_get_actions(aDragContext);
     LOGDRAGSERVICE("  gdk_drag_context_get_actions() returns %x", gdkAction);
 
-    // Under wayland the selected action specifies the currently applied drag
-    // modifier
+    // When D&D modifiers (CTRL/SHIFT) are involved,
+    // gdk_drag_context_get_actions() on X11 returns selected action but
+    // Wayland returns all allowed actions.
+
+    // So we need to call gdk_drag_context_get_selected_action() on Wayland
+    // to get potential D&D modifier.
+    // gdk_drag_context_get_selected_action() is also affected by
+    // gdk_drag_status(), see nsDragService::ReplyToDragMotion().
     if (widget::GdkIsWaylandDisplay()) {
       GdkDragAction gdkActionSelected =
           gdk_drag_context_get_selected_action(aDragContext);
@@ -2432,7 +2463,7 @@ NS_IMETHODIMP
 nsDragService::UpdateDragEffect() {
   LOGDRAGSERVICE("nsDragService::UpdateDragEffect() from e10s child process");
   if (mTargetDragContextForRemote) {
-    ReplyToDragMotion(mTargetDragContextForRemote);
+    ReplyToDragMotion(mTargetDragContextForRemote, mTargetTime);
     mTargetDragContextForRemote = nullptr;
   }
   return NS_OK;
@@ -2440,7 +2471,7 @@ nsDragService::UpdateDragEffect() {
 
 void nsDragService::ReplyToDragMotion() {
   if (mTargetDragContext) {
-    ReplyToDragMotion(mTargetDragContext);
+    ReplyToDragMotion(mTargetDragContext, mTargetTime);
   }
 }
 
