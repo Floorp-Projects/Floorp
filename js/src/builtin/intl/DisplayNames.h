@@ -17,8 +17,6 @@
 #include "js/Class.h"  // JSClass, JSClassOps, js::ClassSpec
 #include "js/TypeDecls.h"
 #include "js/Value.h"
-#include "vm/JSObject.h"
-#include "vm/List.h"
 #include "vm/NativeObject.h"
 
 struct JS_PUBLIC_API JSContext;

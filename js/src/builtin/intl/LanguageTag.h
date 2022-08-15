@@ -12,12 +12,8 @@
 #include "mozilla/intl/Locale.h"
 #include "mozilla/Span.h"
 
-#include "js/AllocPolicy.h"
-#include "js/GCAPI.h"
 #include "js/Result.h"
 #include "js/RootingAPI.h"
-#include "js/Utility.h"
-#include "js/Vector.h"
 
 struct JS_PUBLIC_API JSContext;
 class JSLinearString;

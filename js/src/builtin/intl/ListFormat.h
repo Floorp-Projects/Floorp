@@ -11,7 +11,6 @@
 
 #include "builtin/SelfHostingDefines.h"
 #include "js/Class.h"
-#include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "vm/NativeObject.h"
 
