@@ -169,9 +169,7 @@ nsDragService::nsDragService()
 
   // set up our logging module
   LOGDRAGSERVICE("nsDragService::nsDragService");
-  // We begin with enabled drop on Wayland due to different
-  // Wayland D&D architecture (Bug 1730203).
-  mCanDrop = widget::GdkIsWaylandDisplay();
+  mCanDrop = false;
   mTargetDragDataReceived = false;
   mTargetDragData = 0;
   mTargetDragDataLen = 0;
