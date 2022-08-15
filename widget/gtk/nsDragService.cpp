@@ -1036,21 +1036,23 @@ void nsDragService::ReplyToDragMotion(GdkDragContext* aDragContext) {
     // notify the dragger if we can drop
     switch (mDragAction) {
       case DRAGDROP_ACTION_COPY:
+        LOGDRAGSERVICE(("  set gdk_drag_status() action copy"));
         action = GDK_ACTION_COPY;
         break;
       case DRAGDROP_ACTION_LINK:
+        LOGDRAGSERVICE(("  set gdk_drag_status() action link"));
         action = GDK_ACTION_LINK;
         break;
       case DRAGDROP_ACTION_NONE:
+        LOGDRAGSERVICE(("  set gdk_drag_status() action none"));
         action = (GdkDragAction)0;
         break;
       default:
+        LOGDRAGSERVICE(("  set gdk_drag_status() action move"));
         action = GDK_ACTION_MOVE;
         break;
     }
   }
-
-  LOGDRAGSERVICE(("  gdk_drag_status() action %d", action));
   gdk_drag_status(aDragContext, action, mTargetTime);
 }
 
@@ -1359,7 +1361,7 @@ void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
         gdkWindow, gdk_drag_context_get_device(aContext), &x, &y, nullptr);
     gint scale = gdk_window_get_scale_factor(gdkWindow);
     SetDragEndPoint(LayoutDeviceIntPoint(x * scale, y * scale));
-    LOGDRAGSERVICE(("guess drag end point %d %d\n", x * scale, y * scale));
+    LOGDRAGSERVICE(("  guess drag end point %d %d\n", x * scale, y * scale));
   }
 
   // Either the drag was aborted or the drop occurred outside the app.
@@ -1369,6 +1371,7 @@ void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
   uint32_t dropEffect;
 
   if (aResult == MOZ_GTK_DRAG_RESULT_SUCCESS) {
+    LOGDRAGSERVICE(("  drop is accepted"));
     // With GTK+ versions 2.10.x and prior the drag may have been
     // cancelled (but no drag-failed signal would have been sent).
     // aContext->dest_window will be non-nullptr only if the drop was
@@ -1380,21 +1383,27 @@ void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
     // Only one bit of action should be set, but, just in case someone
     // does something funny, erring away from MOVE, and not recording
     // unusual action combinations as NONE.
-    if (!action)
+    if (!action) {
+      LOGDRAGSERVICE(("  drop action is none"));
       dropEffect = DRAGDROP_ACTION_NONE;
-    else if (action & GDK_ACTION_COPY)
+    } else if (action & GDK_ACTION_COPY) {
+      LOGDRAGSERVICE(("  drop action is copy"));
       dropEffect = DRAGDROP_ACTION_COPY;
-    else if (action & GDK_ACTION_LINK)
+    } else if (action & GDK_ACTION_LINK) {
+      LOGDRAGSERVICE(("  drop action is link"));
       dropEffect = DRAGDROP_ACTION_LINK;
-    else if (action & GDK_ACTION_MOVE)
+    } else if (action & GDK_ACTION_MOVE) {
+      LOGDRAGSERVICE(("  drop action is move"));
       dropEffect = DRAGDROP_ACTION_MOVE;
-    else
+    } else {
+      LOGDRAGSERVICE(("  drop action is copy"));
       dropEffect = DRAGDROP_ACTION_COPY;
-
+    }
   } else {
+    LOGDRAGSERVICE(("  drop action is none"));
     dropEffect = DRAGDROP_ACTION_NONE;
     if (aResult != MOZ_GTK_DRAG_RESULT_NO_TARGET) {
-      LOGDRAGSERVICE(("drop is user chancelled\n"));
+      LOGDRAGSERVICE(("  drop is user chancelled\n"));
       mUserCancelled = true;
     }
   }
@@ -2354,30 +2363,46 @@ void nsDragService::UpdateDragAction() {
   // dataTransfer.effectAllowed, which doesn't currently happen with
   // external sources.
   LOGDRAGSERVICE(
-      ("nsDragService::UpdateDragAction(%p)\n", mTargetDragContext.get()));
+      ("nsDragService::UpdateDragAction(%p)", mTargetDragContext.get()));
 
   // default is to do nothing
   int action = nsIDragService::DRAGDROP_ACTION_NONE;
   GdkDragAction gdkAction = GDK_ACTION_DEFAULT;
   if (mTargetDragContext) {
     gdkAction = gdk_drag_context_get_actions(mTargetDragContext);
+    LOGDRAGSERVICE(("  gdk_drag_context_get_actions() returns %x", gdkAction));
+  }
+
+  // Under wayland the selected action specifies the currently applied drag
+  // modifier
+  if (widget::GdkIsWaylandDisplay()) {
+    GdkDragAction gdkActionSelected =
+        gdk_drag_context_get_selected_action(mTargetDragContext);
+    LOGDRAGSERVICE(("  gdk_drag_context_get_selected_action() returns %x",
+                    gdkActionSelected));
+    if (gdkActionSelected) {
+      gdkAction = gdkActionSelected;
+    }
   }
 
   // set the default just in case nothing matches below
-  if (gdkAction & GDK_ACTION_DEFAULT)
+  if (gdkAction & GDK_ACTION_DEFAULT) {
+    LOGDRAGSERVICE(("  set default move"));
     action = nsIDragService::DRAGDROP_ACTION_MOVE;
-
+  }
   // first check to see if move is set
-  if (gdkAction & GDK_ACTION_MOVE)
+  if (gdkAction & GDK_ACTION_MOVE) {
+    LOGDRAGSERVICE(("  set explicit move"));
     action = nsIDragService::DRAGDROP_ACTION_MOVE;
-
-  // then fall to the others
-  else if (gdkAction & GDK_ACTION_LINK)
+  } else if (gdkAction & GDK_ACTION_LINK) {
+    // then fall to the others
+    LOGDRAGSERVICE(("  set explicit link"));
     action = nsIDragService::DRAGDROP_ACTION_LINK;
-
-  // copy is ctrl
-  else if (gdkAction & GDK_ACTION_COPY)
+  } else if (gdkAction & GDK_ACTION_COPY) {
+    // copy is ctrl
+    LOGDRAGSERVICE(("  set explicit copy"));
     action = nsIDragService::DRAGDROP_ACTION_COPY;
+  }
 
   // update the drag information
   SetDragAction(action);
