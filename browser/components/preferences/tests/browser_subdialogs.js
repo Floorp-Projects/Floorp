@@ -437,12 +437,14 @@ add_task(async function correct_width_and_height_should_be_used_for_dialog() {
       Assert.greaterOrEqual(expectedValue + fuzz, value, msg);
       Assert.lessOrEqual(expectedValue - fuzz, value, msg);
     }
-    let frameStyle = content.getComputedStyle(
-      content.gSubDialog._topDialog._frame
+    let topDialog = content.gSubDialog._topDialog;
+    let frameStyle = content.getComputedStyle(topDialog._frame);
+    let dialogStyle = topDialog.frameContentWindow.getComputedStyle(
+      topDialog.frameContentWindow.document.documentElement
     );
-    let fontSize = parseFloat(frameStyle.fontSize, 10);
-    let height = parseFloat(frameStyle.height, 10);
-    let width = parseFloat(frameStyle.width, 10);
+    let fontSize = parseFloat(dialogStyle.fontSize);
+    let height = parseFloat(frameStyle.height);
+    let width = parseFloat(frameStyle.width);
 
     fuzzyEqual(
       width,
@@ -500,13 +502,15 @@ add_task(
         Assert.greaterOrEqual(expectedValue + fuzz, value, msg);
         Assert.lessOrEqual(expectedValue - fuzz, value, msg);
       }
-      let frame = content.window.gSubDialog._topDialog._frame;
+      let topDialog = content.gSubDialog._topDialog;
+      let frame = topDialog._frame;
       let frameStyle = content.getComputedStyle(frame);
-      let fontSize = parseFloat(frameStyle.fontSize, 10);
-      let height = parseFloat(frameStyle.height, 10);
-      let width = parseFloat(frameStyle.width, 10);
-
       let docEl = frame.contentDocument.documentElement;
+      let dialogStyle = topDialog.frameContentWindow.getComputedStyle(docEl);
+      let fontSize = parseFloat(dialogStyle.fontSize);
+      let height = parseFloat(frameStyle.height);
+      let width = parseFloat(frameStyle.width);
+
       fuzzyEqual(
         width,
         32 * fontSize,
@@ -556,11 +560,15 @@ add_task(async function dialog_too_tall_should_get_reduced_in_height() {
       Assert.greaterOrEqual(expectedValue + fuzz, value, msg);
       Assert.lessOrEqual(expectedValue - fuzz, value, msg);
     }
-    let frame = content.window.gSubDialog._topDialog._frame;
+    let topDialog = content.gSubDialog._topDialog;
+    let frame = topDialog._frame;
     let frameStyle = content.getComputedStyle(frame);
-    let fontSize = parseFloat(frameStyle.fontSize, 10);
-    let height = parseFloat(frameStyle.height, 10);
-    let width = parseFloat(frameStyle.width, 10);
+    let dialogStyle = topDialog.frameContentWindow.getComputedStyle(
+      frame.contentDocument.documentElement
+    );
+    let fontSize = parseFloat(dialogStyle.fontSize);
+    let height = parseFloat(frameStyle.height);
+    let width = parseFloat(frameStyle.width);
     fuzzyEqual(
       width,
       32 * fontSize,
