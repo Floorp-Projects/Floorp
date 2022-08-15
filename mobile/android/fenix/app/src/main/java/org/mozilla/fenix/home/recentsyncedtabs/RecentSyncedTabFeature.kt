@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.home.recentsyncedtabs
 
+import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -12,6 +13,7 @@ import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
 import mozilla.components.lib.state.ext.flow
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.fxa.manager.ext.withConstellation
 import mozilla.components.service.fxa.store.SyncStatus
 import mozilla.components.service.fxa.store.SyncStore
@@ -33,6 +35,7 @@ import org.mozilla.fenix.GleanMetrics.RecentSyncedTabs
  * @property coroutineScope The scope to collect Sync state Flow updates in.
  */
 class RecentSyncedTabFeature(
+    private val context: Context,
     private val appStore: AppStore,
     private val syncStore: SyncStore,
     private val storage: SyncedTabsStorage,
@@ -62,7 +65,6 @@ class RecentSyncedTabFeature(
                     accountManager.withConstellation { refreshDevices() }
                     accountManager.syncNow(
                         reason = SyncReason.User,
-                        debounce = true,
                         customEngineSubset = listOf(SyncEngine.Tabs),
                     )
                 }
@@ -94,6 +96,14 @@ class RecentSyncedTabFeature(
     }
 
     private suspend fun dispatchSyncedTabs() {
+        if (!isSyncedTabsEngineEnabled()) {
+            appStore.dispatch(
+                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)
+            )
+
+            return
+        }
+
         val syncedTab = storage.getSyncedDeviceTabs()
             .filterNot { it.device.isCurrentDevice || it.tabs.isEmpty() }
             .maxByOrNull { it.device.lastAccessTime ?: 0 }
@@ -106,12 +116,19 @@ class RecentSyncedTabFeature(
                     url = tab.url,
                     iconUrl = tab.iconUrl
                 )
-            } ?: return
-        recordMetrics(syncedTab, lastSyncedTab, syncStartId)
-        appStore.dispatch(
-            AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(syncedTab))
-        )
-        lastSyncedTab = syncedTab
+            }
+
+        if (syncedTab == null) {
+            appStore.dispatch(
+                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)
+            )
+        } else {
+            recordMetrics(syncedTab, lastSyncedTab, syncStartId)
+            appStore.dispatch(
+                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(syncedTab))
+            )
+            lastSyncedTab = syncedTab
+        }
     }
 
     private fun onError() {
@@ -130,6 +147,10 @@ class RecentSyncedTabFeature(
         if (tab == lastSyncedTab) {
             RecentSyncedTabs.latestSyncedTabIsStale.add()
         }
+    }
+
+    private fun isSyncedTabsEngineEnabled(): Boolean {
+        return SyncEnginesStorage(context).getStatus()[SyncEngine.Tabs] ?: true
     }
 }
 

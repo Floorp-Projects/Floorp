@@ -67,16 +67,11 @@ class RecentTabViewHolder(
             )
 
             recentSyncedTabState.value?.let {
-                if (components.settings.enableTaskContinuityEnhancements && it != RecentSyncedTabState.None) {
+                if (components.settings.enableTaskContinuityEnhancements && it is RecentSyncedTabState.Success) {
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    val syncedTab = when (it) {
-                        RecentSyncedTabState.None,
-                        RecentSyncedTabState.Loading -> null
-                        is RecentSyncedTabState.Success -> it.tab
-                    }
                     RecentSyncedTab(
-                        tab = syncedTab,
+                        tab = it.tab,
                         onRecentSyncedTabClick = { tab ->
                             recentSyncedTabInteractor.onRecentSyncedTabClicked(tab)
                         },

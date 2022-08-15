@@ -300,6 +300,15 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             }
         }
 
+        components.backgroundServices.accountManagerAvailableQueue.runIfReadyOrQueue {
+            lifecycleScope.launch(IO) {
+                // If we're authenticated, kick-off a sync and a device state refresh.
+                components.backgroundServices.accountManager.authenticatedAccount()?.let {
+                    components.backgroundServices.accountManager.syncNow(reason = SyncReason.Startup)
+                }
+            }
+        }
+
         components.core.engine.profiler?.addMarker(
             MarkersActivityLifecycleCallbacks.MARKER_NAME, startTimeProfiler, "HomeActivity.onCreate"
         )
@@ -335,23 +344,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         breadcrumb(
             message = "onResume()"
         )
-
-        components.backgroundServices.accountManagerAvailableQueue.runIfReadyOrQueue {
-            lifecycleScope.launch {
-                // If we're authenticated, kick-off a sync and a device state refresh.
-                components.backgroundServices.accountManager.authenticatedAccount()?.let {
-                    val syncReason = when (isVisuallyComplete) {
-                        true -> SyncReason.User
-                        false -> SyncReason.Startup
-                    }
-
-                    components.backgroundServices.accountManager.syncNow(
-                        reason = syncReason,
-                        debounce = true
-                    )
-                }
-            }
-        }
 
         lifecycleScope.launch(IO) {
             try {

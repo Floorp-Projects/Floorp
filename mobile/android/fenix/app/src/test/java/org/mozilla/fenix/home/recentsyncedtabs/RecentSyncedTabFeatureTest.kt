@@ -9,6 +9,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -24,6 +25,7 @@ import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.fxa.manager.ext.withConstellation
 import mozilla.components.service.fxa.store.Account
 import mozilla.components.service.fxa.store.SyncAction
@@ -97,8 +99,13 @@ class RecentSyncedTabFeatureTest {
         Dispatchers.setMain(StandardTestDispatcher())
 
         every { appStore.dispatch(any()) } returns mockk()
+        mockkConstructor(SyncEnginesStorage::class)
+        every { anyConstructed<SyncEnginesStorage>().getStatus() } returns mapOf(
+            SyncEngine.Tabs to true
+        )
 
         feature = RecentSyncedTabFeature(
+            context = testContext,
             appStore = appStore,
             syncStore = syncStore,
             accountManager = accountManager,
@@ -128,7 +135,7 @@ class RecentSyncedTabFeatureTest {
 
         verify { appStore.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Loading)) }
         coVerify { accountManager.withConstellation { refreshDevices() } }
-        coVerify { accountManager.syncNow(reason = SyncReason.User, debounce = true, customEngineSubset = listOf(SyncEngine.Tabs)) }
+        coVerify { accountManager.syncNow(reason = SyncReason.User, customEngineSubset = listOf(SyncEngine.Tabs)) }
     }
 
     @Test
@@ -245,6 +252,34 @@ class RecentSyncedTabFeatureTest {
         verify {
             appStore.dispatch(
                 AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Success(expectedTab))
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN sync tabs are disabled WHEN dispatching recent synced tab THEN dispatch none`() = runTest {
+        val account = mockk<Account>()
+        syncStore.setState(account = account)
+        every { appStore.state } returns mockk {
+            every { recentSyncedTabState } returns RecentSyncedTabState.Loading
+        }
+        every { anyConstructed<SyncEnginesStorage>().getStatus() } returns mapOf(
+            SyncEngine.Tabs to false
+        )
+
+        val firstTab = createActiveTab("remote", "https://mozilla.org", null)
+        val syncedTabs = listOf(
+            SyncedDeviceTabs(deviceAccessed1, listOf(firstTab)),
+        )
+        coEvery { storage.getSyncedDeviceTabs() } returns syncedTabs
+
+        feature.start()
+        syncStore.setState(status = SyncStatus.Idle)
+        runCurrent()
+
+        verify {
+            appStore.dispatch(
+                AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)
             )
         }
     }

@@ -281,6 +281,7 @@ class HomeFragment : Fragment() {
             if (requireContext().settings().enableTaskContinuityEnhancements) {
                 recentSyncedTabFeature.set(
                     feature = RecentSyncedTabFeature(
+                        context = requireContext(),
                         appStore = requireComponents.appStore,
                         syncStore = requireComponents.backgroundServices.syncStore,
                         storage = requireComponents.backgroundServices.syncedTabsStorage,
