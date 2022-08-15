@@ -10,12 +10,10 @@
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/PropertySpec.h"
 #include "vm/GlobalObject.h"
-#include "vm/Iteration.h"
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
 
 #include "builtin/WeakMapObject-inl.h"
-#include "vm/Interpreter-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 

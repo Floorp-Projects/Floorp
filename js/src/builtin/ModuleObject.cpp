@@ -16,19 +16,14 @@
 #include "frontend/ParserAtom.h"  // TaggedParserAtomIndex, ParserAtomsTable, ParserAtom
 #include "frontend/SharedContext.h"
 #include "gc/GCContext.h"
-#include "gc/Policy.h"
 #include "gc/Tracer.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/Modules.h"  // JS::GetModulePrivate, JS::ModuleDynamicImportHook
-#include "js/PropertySpec.h"
-#include "vm/AsyncFunction.h"
-#include "vm/AsyncIteration.h"
 #include "vm/EqualityOperations.h"  // js::SameValue
 #include "vm/ModuleBuilder.h"       // js::ModuleBuilder
 #include "vm/Modules.h"
 #include "vm/PlainObject.h"    // js::PlainObject
 #include "vm/PromiseObject.h"  // js::PromiseObject
-#include "vm/SelfHosting.h"
 #include "vm/SharedStencil.h"  // js::GCThingIndex
 
 #include "builtin/HandlerFunction-inl.h"  // js::ExtraValueFromHandler, js::NewHandler{,WithExtraValue}, js::TargetFromHandler

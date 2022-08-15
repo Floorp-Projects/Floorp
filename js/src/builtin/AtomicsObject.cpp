@@ -29,9 +29,7 @@
 #include "js/Result.h"
 #include "js/WaitCallbacks.h"
 #include "vm/GlobalObject.h"
-#include "vm/Time.h"
 #include "vm/TypedArrayObject.h"
-#include "wasm/WasmInstance.h"
 
 #include "vm/Compartment-inl.h"
 #include "vm/JSObject-inl.h"

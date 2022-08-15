@@ -13,34 +13,33 @@
 #include <stddef.h>  // size_t
 #include <stdint.h>  // int32_t, uint32_t
 
-#include "builtin/SelfHostingDefines.h"  // MODULE_OBJECT_*
-#include "gc/Barrier.h"                  // HeapPtr
-#include "gc/ZoneAllocator.h"            // CellAllocPolicy
-#include "js/Class.h"                    // JSClass, ObjectOpResult
-#include "js/GCVector.h"                 // GCVector
-#include "js/Id.h"                       // jsid
+#include "gc/Barrier.h"        // HeapPtr
+#include "gc/ZoneAllocator.h"  // CellAllocPolicy
+#include "js/Class.h"          // JSClass, ObjectOpResult
+#include "js/Id.h"             // jsid
 #include "js/Modules.h"
-#include "js/PropertyDescriptor.h"  // PropertyDescriptor
-#include "js/Proxy.h"               // BaseProxyHandler
-#include "js/RootingAPI.h"          // Rooted, Handle, MutableHandle
+#include "js/Proxy.h"       // BaseProxyHandler
+#include "js/RootingAPI.h"  // Rooted, Handle, MutableHandle
 #include "js/TypeDecls.h"  // HandleValue, HandleId, HandleObject, HandleScript, MutableHandleValue, MutableHandleIdVector, MutableHandleObject
 #include "js/UniquePtr.h"  // UniquePtr
-#include "js/Value.h"      // JS::Value
-#include "vm/JSAtom.h"     // JSAtom
 #include "vm/JSObject.h"   // JSObject
-#include "vm/List.h"       // ListObject
-#include "vm/NativeObject.h"   // NativeObject
-#include "vm/PromiseObject.h"  // js::PromiseObject
-#include "vm/ProxyObject.h"    // ProxyObject
+#include "vm/NativeObject.h"  // NativeObject
+#include "vm/ProxyObject.h"   // ProxyObject
 
+class JSAtom;
 class JSScript;
 class JSTracer;
+
+namespace JS {
+class PropertyDescriptor;
+class Value;
+}  // namespace JS
 
 namespace js {
 
 class ArrayObject;
-class Shape;
-class Scope;
+class ListObject;
+class PromiseObject;
 class ScriptSourceObject;
 
 class ModuleEnvironmentObject;
