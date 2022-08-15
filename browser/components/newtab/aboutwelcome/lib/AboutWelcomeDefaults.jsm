@@ -270,7 +270,8 @@ const MR_ABOUT_WELCOME_DEFAULT = {
     "browser.aboutwelcome.transitions",
     true
   ),
-  backdrop: "#438ab6",
+  backdrop:
+    "var(--mr-welcome-background-color) var(--mr-welcome-background-gradient)",
   screens: [
     {
       id: "AW_PIN_FIREFOX",
