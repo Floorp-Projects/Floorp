@@ -1,0 +1,9 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- WARNING!!! This file is obsoleted by the dialog.xml widget -->
+
+<!-- OK Cancel Buttons -->
+<!ENTITY okButton.label      "OK">
+<!ENTITY cancelButton.label  "Cancel">
