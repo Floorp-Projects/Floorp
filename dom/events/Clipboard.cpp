@@ -32,6 +32,7 @@
 #include "nsIClipboard.h"
 #include "nsIInputStream.h"
 #include "nsIParserUtils.h"
+#include "nsISupportsPrimitives.h"
 #include "nsITransferable.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
@@ -79,40 +80,47 @@ static bool MaybeCreateAndDispatchMozClipboardReadTextPasteEvent(
 
 already_AddRefed<nsIRunnable> Clipboard::ReadTextRequest::Answer() {
   return NS_NewRunnableFunction(
-      "Clipboard::ReadText",
-      [p = std::move(mPromise),
-       dataTransfer = MakeRefPtr<DataTransfer>(
-           nullptr, ePaste, !XRE_IsContentProcess() /* aIsExternal */,
-           nsIClipboard::kGlobalClipboard),
-       principal = std::move(mSubjectPrincipal)]() {
-        if (XRE_IsContentProcess()) {
-          ContentChild* contentChild = ContentChild::GetSingleton();
-
-          AutoTArray<nsCString, 1> types{nsLiteralCString{kUnicodeMime}};
-
-          contentChild
-              ->SendGetClipboardAsync(types, nsIClipboard::kGlobalClipboard)
-              ->Then(
-                  GetMainThreadSerialEventTarget(), __func__,
-                  /* success */
-                  [p, dataTransfer,
-                   principal](const IPCDataTransfer& ipcDataTransfer) {
-                    DataTransfer::IPCDataTransferTextItemsToDataTransfer(
-                        ipcDataTransfer, false /* aHidden */, *dataTransfer);
-                    Clipboard::ProcessDataTransfer(*dataTransfer, *p, eReadText,
-                                                   nullptr /* aOwner */,
-                                                   *principal,
-                                                   /* aNeedToFill */ false);
-                  },
-                  /* failure */
-                  [p](mozilla::ipc::ResponseRejectReason aReason) {
-                    p->MaybeRejectWithUndefined();
-                  });
-        } else {
-          Clipboard::ProcessDataTransfer(*dataTransfer, *p, eReadText,
-                                         nullptr /* aOwner */, *principal,
-                                         /* aNeedToFill */ true);
+      "Clipboard::ReadText", [p = std::move(mPromise)]() {
+        nsresult rv;
+        nsCOMPtr<nsIClipboard> clipboardService(
+            do_GetService("@mozilla.org/widget/clipboard;1", &rv));
+        if (NS_FAILED(rv)) {
+          p->MaybeReject(NS_ERROR_UNEXPECTED);
+          return;
         }
+
+        nsCOMPtr<nsITransferable> trans =
+            do_CreateInstance("@mozilla.org/widget/transferable;1");
+        if (NS_WARN_IF(!trans)) {
+          p->MaybeReject(NS_ERROR_UNEXPECTED);
+          return;
+        }
+
+        trans->Init(nullptr);
+        trans->AddDataFlavor(kUnicodeMime);
+        clipboardService->AsyncGetData(trans, nsIClipboard::kGlobalClipboard)
+            ->Then(
+                GetMainThreadSerialEventTarget(), __func__,
+                /* resolve */
+                [trans, p]() {
+                  nsCOMPtr<nsISupports> data;
+                  nsresult rv = trans->GetTransferData(kUnicodeMime,
+                                                       getter_AddRefs(data));
+
+                  nsAutoString str;
+                  if (!NS_WARN_IF(NS_FAILED(rv))) {
+                    nsCOMPtr<nsISupportsString> supportsstr =
+                        do_QueryInterface(data);
+                    MOZ_ASSERT(supportsstr);
+                    if (supportsstr) {
+                      supportsstr->GetData(str);
+                    }
+                  }
+
+                  p->MaybeResolve(str);
+                },
+                /* reject */
+                [p](nsresult rv) { p->MaybeReject(rv); });
       });
 }
 
@@ -126,7 +134,7 @@ Clipboard::CheckReadTextPermissionAndHandleRequest(
   if (IsTestingPrefEnabledOrHasReadPermission(aSubjectPrincipal)) {
     MOZ_LOG(GetClipboardLog(), LogLevel::Debug,
             ("%s: testing pref enabled or has read permission", __FUNCTION__));
-    return ReadTextRequest{aPromise, aSubjectPrincipal}.Answer();
+    return ReadTextRequest{aPromise}.Answer();
   }
 
   if (aSubjectPrincipal.GetIsAddonOrExpandedAddonPrincipal()) {
@@ -137,13 +145,11 @@ Clipboard::CheckReadTextPermissionAndHandleRequest(
     return nullptr;
   }
 
-  return HandleReadTextRequestWhichRequiresPasteButton(aPromise,
-                                                       aSubjectPrincipal);
+  return HandleReadTextRequestWhichRequiresPasteButton(aPromise);
 }
 
 already_AddRefed<nsIRunnable>
-Clipboard::HandleReadTextRequestWhichRequiresPasteButton(
-    Promise& aPromise, nsIPrincipal& aSubjectPrincipal) {
+Clipboard::HandleReadTextRequestWhichRequiresPasteButton(Promise& aPromise) {
   RefPtr<nsIRunnable> runnable;
 
   nsPIDOMWindowInner* owner = GetOwner();
@@ -173,8 +179,7 @@ Clipboard::HandleReadTextRequestWhichRequiresPasteButton(
       if (MaybeCreateAndDispatchMozClipboardReadTextPasteEvent(*owner)) {
         mTransientUserPasteState.OnStartWaitingForUserReactionToPasteMenuPopup(
             windowContext->GetUserGestureStart());
-        mReadTextRequests.AppendElement(
-            MakeUnique<ReadTextRequest>(aPromise, aSubjectPrincipal));
+        mReadTextRequests.AppendElement(MakeUnique<ReadTextRequest>(aPromise));
       } else {
         // This shouldn't happen but let's handle this case.
         aPromise.MaybeRejectWithUndefined();
@@ -185,8 +190,7 @@ Clipboard::HandleReadTextRequestWhichRequiresPasteButton(
         WaitingForUserReactionToPasteMenuPopup: {
       MOZ_ASSERT(!mReadTextRequests.IsEmpty());
 
-      mReadTextRequests.AppendElement(
-          MakeUnique<ReadTextRequest>(aPromise, aSubjectPrincipal));
+      mReadTextRequests.AppendElement(MakeUnique<ReadTextRequest>(aPromise));
       break;
     }
     case TransientUserPasteState::Value::TransientlyForbiddenByUser: {
@@ -196,7 +200,7 @@ Clipboard::HandleReadTextRequestWhichRequiresPasteButton(
       break;
     }
     case TransientUserPasteState::Value::TransientlyAllowedByUser: {
-      runnable = ReadTextRequest{aPromise, aSubjectPrincipal}.Answer();
+      runnable = ReadTextRequest{aPromise}.Answer();
       break;
     }
   }
@@ -302,32 +306,6 @@ already_AddRefed<Promise> Clipboard::ReadHelper(
   }
 
   return p.forget();
-}
-
-/* static */
-void Clipboard::ProcessDataTransfer(DataTransfer& aDataTransfer,
-                                    Promise& aPromise,
-                                    ClipboardReadType aClipboardReadType,
-                                    nsPIDOMWindowInner* aOwner,
-                                    nsIPrincipal& aSubjectPrincipal,
-                                    bool aNeedToFill) {
-  MOZ_ASSERT(aClipboardReadType == eReadText);
-
-  IgnoredErrorResult ier;
-  MOZ_LOG(GetClipboardLog(), LogLevel::Debug,
-          ("Clipboard, ReadHelper, read text case\n"));
-  nsAutoString str;
-  // If we haven't filled the data transfer with the items from the
-  // clipboard yet, then DataTransfer::GetData will get data from the
-  // clipboard and retrieve the item in the desired format if it exists.
-  // Otherwise, if our data transfer is filled with items from the clipboard
-  // and we call DataTransfer::GetData, it will simply try to retrieve the
-  // item in the desired format among the items it already has.
-  aDataTransfer.GetData(NS_LITERAL_STRING_FROM_CSTRING(kTextMime), str,
-                        aSubjectPrincipal, ier);
-  // Either resolve with a string extracted from data transfer item
-  // or resolve with an empty string if nothing was found
-  aPromise.MaybeResolve(str);
 }
 
 auto Clipboard::TransientUserPasteState::RefreshAndGet(

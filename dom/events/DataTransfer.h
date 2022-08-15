@@ -394,14 +394,6 @@ class DataTransfer final : public nsISupports, public nsWrapperCache {
                                              nsTArray<nsCString>* aResult);
 
  protected:
-  // Non-text items are ignored.
-  //
-  // @param aHidden true, iff the data should be hidden from non-chrome code.
-  // @param aDataTransfer expected to be empty.
-  static void IPCDataTransferTextItemsToDataTransfer(
-      const IPCDataTransfer& aIpcDataTransfer, bool aHidden,
-      DataTransfer& aDataTransfer);
-
   // caches text and uri-list data formats that exist in the drag service or
   // clipboard for retrieval later.
   nsresult CacheExternalData(const char* aFormat, uint32_t aIndex,
