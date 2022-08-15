@@ -1186,6 +1186,11 @@ class ContextMenuChild extends JSWindowActorChild {
           context.onMozExtLink = context.linkProtocol == "moz-extension";
           context.onSaveableLink = this._isLinkSaveable(context.link);
 
+          context.isSponsoredLink =
+            (elem.ownerDocument.URL === "about:newtab" ||
+              elem.ownerDocument.URL === "about:home") &&
+            elem.dataset.isSponsoredLink === "true";
+
           try {
             if (elem.download) {
               // Ignore download attribute on cross-origin links
