@@ -282,7 +282,7 @@ void Clipboard::ProcessDataTransfer(DataTransfer& aDataTransfer,
       // FIXME(bug 1691825): This is only suitable for testing!
       // A real implementation would only read from the clipboard
       // in ClipboardItem::getType instead of doing it here.
-      nsTArray<ClipboardItem::ItemEntry> entries;
+      nsTArray<RefPtr<ClipboardItem::ItemEntry>> entries;
       DataTransferItemList* items = aDataTransfer.Items();
       for (size_t i = 0; i < items->Length(); i++) {
         bool found = false;
@@ -296,6 +296,7 @@ void Clipboard::ProcessDataTransfer(DataTransfer& aDataTransfer,
         nsAutoString type;
         item->GetType(type);
 
+        OwningStringOrBlob stringOrBlob;
         if (item->Kind() == DataTransferItem::KIND_STRING) {
           // We just ignore items that we can't access.
           IgnoredErrorResult ignored;
@@ -309,9 +310,7 @@ void Clipboard::ProcessDataTransfer(DataTransfer& aDataTransfer,
             continue;
           }
 
-          ClipboardItem::ItemEntry* entry = entries.AppendElement();
-          entry->mType = type;
-          entry->mData.SetAsString() = string;
+          stringOrBlob.SetAsString() = string;
         } else {
           IgnoredErrorResult ignored;
           RefPtr<File> file = item->GetAsFile(aSubjectPrincipal, ignored);
@@ -319,10 +318,11 @@ void Clipboard::ProcessDataTransfer(DataTransfer& aDataTransfer,
             continue;
           }
 
-          ClipboardItem::ItemEntry* entry = entries.AppendElement();
-          entry->mType = type;
-          entry->mData.SetAsBlob() = file;
+          stringOrBlob.SetAsBlob() = file;
         }
+
+        entries.AppendElement(MakeRefPtr<ClipboardItem::ItemEntry>(
+            type, std::move(stringOrBlob)));
       }
 
       nsTArray<RefPtr<ClipboardItem>> sequence;
@@ -469,21 +469,21 @@ class BlobTextHandler final : public PromiseNativeHandler {
 NS_IMPL_ISUPPORTS0(BlobTextHandler)
 
 RefPtr<NativeEntryPromise> GetStringNativeEntry(
-    const ClipboardItem::ItemEntry& entry) {
-  if (entry.mData.IsString()) {
+    const nsAString& aType, const OwningStringOrBlob& aData) {
+  if (aData.IsString()) {
     RefPtr<nsVariantCC> variant = new nsVariantCC();
-    variant->SetAsAString(entry.mData.GetAsString());
-    NativeEntry native(entry.mType, variant);
+    variant->SetAsAString(aData.GetAsString());
+    NativeEntry native(aType, variant);
     return NativeEntryPromise::CreateAndResolve(native, __func__);
   }
 
-  RefPtr<BlobTextHandler> handler = new BlobTextHandler(entry.mType);
+  RefPtr<BlobTextHandler> handler = new BlobTextHandler(aType);
   IgnoredErrorResult ignored;
-  RefPtr<Promise> promise = entry.mData.GetAsBlob()->Text(ignored);
+  RefPtr<Promise> promise = aData.GetAsBlob()->Text(ignored);
   if (ignored.Failed()) {
     CopyableErrorResult rv;
     rv.ThrowUnknownError("Unable to read blob for '"_ns +
-                         NS_ConvertUTF16toUTF8(entry.mType) + "' as text."_ns);
+                         NS_ConvertUTF16toUTF8(aType) + "' as text."_ns);
     return NativeEntryPromise::CreateAndReject(rv, __func__);
   }
   promise->AppendNativeHandler(handler);
@@ -529,29 +529,28 @@ class ImageDecodeCallback final : public imgIContainerCallback {
 NS_IMPL_ISUPPORTS(ImageDecodeCallback, imgIContainerCallback)
 
 RefPtr<NativeEntryPromise> GetImageNativeEntry(
-    const ClipboardItem::ItemEntry& entry) {
-  if (entry.mData.IsString()) {
+    const nsAString& aType, const OwningStringOrBlob& aData) {
+  if (aData.IsString()) {
     CopyableErrorResult rv;
     rv.ThrowTypeError("DOMString not supported for '"_ns +
-                      NS_ConvertUTF16toUTF8(entry.mType) +
-                      "' as image data."_ns);
+                      NS_ConvertUTF16toUTF8(aType) + "' as image data."_ns);
     return NativeEntryPromise::CreateAndReject(rv, __func__);
   }
 
   IgnoredErrorResult ignored;
   nsCOMPtr<nsIInputStream> stream;
-  entry.mData.GetAsBlob()->CreateInputStream(getter_AddRefs(stream), ignored);
+  aData.GetAsBlob()->CreateInputStream(getter_AddRefs(stream), ignored);
   if (ignored.Failed()) {
     CopyableErrorResult rv;
     rv.ThrowUnknownError("Unable to read blob for '"_ns +
-                         NS_ConvertUTF16toUTF8(entry.mType) + "' as image."_ns);
+                         NS_ConvertUTF16toUTF8(aType) + "' as image."_ns);
     return NativeEntryPromise::CreateAndReject(rv, __func__);
   }
 
-  RefPtr<ImageDecodeCallback> callback = new ImageDecodeCallback(entry.mType);
+  RefPtr<ImageDecodeCallback> callback = new ImageDecodeCallback(aType);
   nsCOMPtr<imgITools> imgtool = do_CreateInstance("@mozilla.org/image/tools;1");
-  imgtool->DecodeImageAsync(stream, NS_ConvertUTF16toUTF8(entry.mType),
-                            callback, GetMainThreadSerialEventTarget());
+  imgtool->DecodeImageAsync(stream, NS_ConvertUTF16toUTF8(aType), callback,
+                            GetMainThreadSerialEventTarget());
   return callback->Promise();
 }
 
@@ -598,18 +597,20 @@ using NativeItemPromise = NativeEntryPromise::AllPromiseType;
 RefPtr<NativeItemPromise> GetClipboardNativeItem(const ClipboardItem& aItem) {
   nsTArray<RefPtr<NativeEntryPromise>> promises;
   for (const auto& entry : aItem.Entries()) {
-    if (!IsValidType(entry.mType)) {
+    const nsAString& type = entry->Type();
+    if (!IsValidType(type)) {
       CopyableErrorResult rv;
-      rv.ThrowNotAllowedError("Type '"_ns + NS_ConvertUTF16toUTF8(entry.mType) +
+      rv.ThrowNotAllowedError("Type '"_ns + NS_ConvertUTF16toUTF8(type) +
                               "' not supported for write"_ns);
       return NativeItemPromise::CreateAndReject(rv, __func__);
     }
 
-    if (entry.mType.EqualsLiteral(kPNGImageMime)) {
-      promises.AppendElement(GetImageNativeEntry(entry));
+    const OwningStringOrBlob& data = entry->Data();
+    if (type.EqualsLiteral(kPNGImageMime)) {
+      promises.AppendElement(GetImageNativeEntry(type, data));
     } else {
-      RefPtr<NativeEntryPromise> promise = GetStringNativeEntry(entry);
-      if (entry.mType.EqualsLiteral(kHTMLMime)) {
+      RefPtr<NativeEntryPromise> promise = GetStringNativeEntry(type, data);
+      if (type.EqualsLiteral(kHTMLMime)) {
         promise = promise->Then(
             GetMainThreadSerialEventTarget(), __func__,
             [](const NativeEntryPromise::ResolveOrRejectValue& aValue)
@@ -740,13 +741,15 @@ already_AddRefed<Promise> Clipboard::WriteText(const nsAString& aData,
                                                nsIPrincipal& aSubjectPrincipal,
                                                ErrorResult& aRv) {
   // Create a single-element Sequence to reuse Clipboard::Write.
-  nsTArray<ClipboardItem::ItemEntry> items;
-  ClipboardItem::ItemEntry* entry = items.AppendElement();
-  entry->mType = NS_LITERAL_STRING_FROM_CSTRING(kTextMime);
-  entry->mData.SetAsString() = aData;
+  OwningStringOrBlob data;
+  data.SetAsString() = aData;
+
+  nsTArray<RefPtr<ClipboardItem::ItemEntry>> items;
+  items.AppendElement(MakeRefPtr<ClipboardItem::ItemEntry>(
+      NS_LITERAL_STRING_FROM_CSTRING(kTextMime), std::move(data)));
 
   nsTArray<OwningNonNull<ClipboardItem>> sequence;
-  RefPtr<ClipboardItem> item = new ClipboardItem(
+  RefPtr<ClipboardItem> item = MakeRefPtr<ClipboardItem>(
       GetOwner(), PresentationStyle::Unspecified, std::move(items));
   sequence.AppendElement(*item);
 

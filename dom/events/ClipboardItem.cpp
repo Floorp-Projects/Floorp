@@ -10,15 +10,9 @@
 
 namespace mozilla::dom {
 
-void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                                 ClipboardItem::ItemEntry& aField,
-                                 const char* aName, uint32_t aFlags = 0) {
-  ImplCycleCollectionTraverse(aCallback, aField.mData, aName, aFlags);
-}
-
-void ImplCycleCollectionUnlink(ClipboardItem::ItemEntry& aField) {
-  ImplCycleCollectionUnlink(aField.mData);
-}
+NS_IMPL_CYCLE_COLLECTION(ClipboardItem::ItemEntry, mData)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ClipboardItem::ItemEntry, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ClipboardItem::ItemEntry, Release)
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ClipboardItem, mOwner, mItems)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ClipboardItem, AddRef)
@@ -26,7 +20,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ClipboardItem, Release)
 
 ClipboardItem::ClipboardItem(nsISupports* aOwner,
                              const dom::PresentationStyle aPresentationStyle,
-                             nsTArray<ItemEntry>&& aItems)
+                             nsTArray<RefPtr<ItemEntry>>&& aItems)
     : mOwner(aOwner),
       mPresentationStyle(aPresentationStyle),
       mItems(std::move(aItems)) {}
@@ -41,21 +35,19 @@ already_AddRefed<ClipboardItem> ClipboardItem::Constructor(
     return nullptr;
   }
 
-  nsTArray<ItemEntry> items;
+  nsTArray<RefPtr<ItemEntry>> items;
   for (const auto& entry : aItems.Entries()) {
-    ItemEntry* item = items.AppendElement();
-    item->mType = entry.mKey;
-    item->mData = entry.mValue;
+    items.AppendElement(MakeRefPtr<ItemEntry>(entry.mKey, entry.mValue));
   }
 
-  RefPtr<ClipboardItem> item = new ClipboardItem(
+  RefPtr<ClipboardItem> item = MakeRefPtr<ClipboardItem>(
       aGlobal.GetAsSupports(), aOptions.mPresentationStyle, std::move(items));
   return item.forget();
 }
 
 void ClipboardItem::GetTypes(nsTArray<nsString>& aTypes) const {
   for (const auto& item : mItems) {
-    aTypes.AppendElement(item.mType);
+    aTypes.AppendElement(item->Type());
   }
 }
 
@@ -68,12 +60,14 @@ already_AddRefed<Promise> ClipboardItem::GetType(const nsAString& aType,
   }
 
   for (const auto& item : mItems) {
-    if (item.mType == aType) {
-      if (item.mData.IsBlob()) {
-        p->MaybeResolve(item.mData);
+    const nsAString& type = item->Type();
+    if (type == aType) {
+      const OwningStringOrBlob& data = item->Data();
+      if (data.IsBlob()) {
+        p->MaybeResolve(data);
       } else {
-        NS_ConvertUTF16toUTF8 string(item.mData.GetAsString());
-        RefPtr<Blob> blob = Blob::CreateStringBlob(global, string, item.mType);
+        NS_ConvertUTF16toUTF8 string(data.GetAsString());
+        RefPtr<Blob> blob = Blob::CreateStringBlob(global, string, type);
         p->MaybeResolve(blob);
       }
       return p.forget();
