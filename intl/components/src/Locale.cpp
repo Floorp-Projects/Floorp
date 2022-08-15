@@ -1148,6 +1148,14 @@ Result<Ok, LocaleParser::ParserError> LocaleParser::InternalParseBaseName(
 
 Result<Ok, LocaleParser::ParserError> LocaleParser::TryParse(
     mozilla::Span<const char> aLocale, Locale& aTag) {
+  // |aTag| must be a new, empty Locale.
+  MOZ_ASSERT(aTag.Language().Missing());
+  MOZ_ASSERT(aTag.Script().Missing());
+  MOZ_ASSERT(aTag.Region().Missing());
+  MOZ_ASSERT(aTag.Variants().empty());
+  MOZ_ASSERT(aTag.Extensions().empty());
+  MOZ_ASSERT(aTag.PrivateUse().isNothing());
+
   // unicode_locale_id = unicode_language_id
   //                     extensions*
   //                     pu_extensions? ;
@@ -1271,6 +1279,14 @@ Result<Ok, LocaleParser::ParserError> LocaleParser::TryParse(
 
 Result<Ok, LocaleParser::ParserError> LocaleParser::TryParseBaseName(
     Span<const char> aLocale, Locale& aTag) {
+  // |aTag| must be a new, empty Locale.
+  MOZ_ASSERT(aTag.Language().Missing());
+  MOZ_ASSERT(aTag.Script().Missing());
+  MOZ_ASSERT(aTag.Region().Missing());
+  MOZ_ASSERT(aTag.Variants().empty());
+  MOZ_ASSERT(aTag.Extensions().empty());
+  MOZ_ASSERT(aTag.PrivateUse().isNothing());
+
   LocaleParser ts(aLocale);
   Token tok = ts.NextToken();
 
