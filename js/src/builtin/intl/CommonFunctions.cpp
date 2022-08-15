@@ -9,12 +9,14 @@
 #include "builtin/intl/CommonFunctions.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/intl/ICUError.h"
+#include "mozilla/Casting.h"
+#include "mozilla/intl/ICU4CGlue.h"
 #include "mozilla/TextUtils.h"
 
 #include <algorithm>
 
 #include "gc/GCEnum.h"
+#include "gc/Zone.h"
 #include "gc/ZoneAllocator.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_INTERNAL_INTL_ERROR
 #include "js/Value.h"
@@ -22,9 +24,8 @@
 #include "vm/JSObject.h"
 #include "vm/SelfHosting.h"
 #include "vm/Stack.h"
-#include "vm/StringType.h"
 
-#include "gc/GCContext-inl.h"
+#include "vm/JSObject-inl.h"
 
 bool js::intl::InitializeObject(JSContext* cx, JS::Handle<JSObject*> obj,
                                 JS::Handle<PropertyName*> initializer,

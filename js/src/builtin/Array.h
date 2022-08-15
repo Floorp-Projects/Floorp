@@ -10,8 +10,12 @@
 #define builtin_Array_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/TextUtils.h"
+
+#include "jspubtd.h"
 
 #include "vm/JSObject.h"
+#include "vm/NativeObject.h"  // js::ShouldUpdateTypes
 
 namespace js {
 

@@ -9,6 +9,7 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Range.h"
 
+#include "ds/LifoAlloc.h"
 #include "frontend/BytecodeCompilation.h"
 #include "gc/HashUtil.h"
 #include "js/CompilationAndEvaluation.h"
@@ -17,17 +18,12 @@
 #include "js/friend/WindowProxy.h"     // js::IsWindowProxy
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
-#include "vm/EnvironmentObject.h"
-#include "vm/FrameIter.h"
 #include "vm/GlobalObject.h"
-#include "vm/Interpreter.h"
 #include "vm/JSContext.h"
 #include "vm/JSONParser.h"
 
-#include "gc/Marking-inl.h"
-#include "vm/EnvironmentObject-inl.h"
-#include "vm/JSContext-inl.h"
-#include "vm/Stack-inl.h"
+#include "debugger/DebugAPI-inl.h"
+#include "vm/Interpreter-inl.h"
 
 using namespace js;
 

@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 
+#include "builtin/SelfHostingDefines.h"
 #include "js/Class.h"
 #include "vm/NativeObject.h"
 

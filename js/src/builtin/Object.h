@@ -7,11 +7,8 @@
 #ifndef builtin_Object_h
 #define builtin_Object_h
 
-#include "vm/JSObject.h"
-
-namespace JS {
-class Value;
-}
+#include "js/Value.h"
+#include "vm/NativeObject.h"
 
 namespace js {
 

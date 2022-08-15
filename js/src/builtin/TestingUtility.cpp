@@ -17,11 +17,14 @@
 #include "js/RootingAPI.h"          // JS::Rooted, JS::Handle
 #include "js/Utility.h"             // JS::UniqueChars
 #include "js/Value.h"               // JS::Value, JS::StringValue
-#include "vm/JSScript.h"
+#include "vm/JSContext.h"           // JSContext
+#include "vm/JSObject.h"            // JSObject
+#include "vm/Realm.h"               // JSRealm
+#include "vm/StringType.h"          // JSString
 
 bool js::ParseCompileOptions(JSContext* cx, JS::CompileOptions& options,
                              JS::Handle<JSObject*> opts,
-                             JS::UniqueChars* fileNameBytes) {
+                             UniqueChars* fileNameBytes) {
   JS::Rooted<JS::Value> v(cx);
   JS::Rooted<JSString*> s(cx);
 
@@ -178,7 +181,7 @@ bool js::SetSourceOptions(JSContext* cx, ScriptSource* source,
                           JS::Handle<JSString*> displayURL,
                           JS::Handle<JSString*> sourceMapURL) {
   if (displayURL && !source->hasDisplayURL()) {
-    JS::UniqueTwoByteChars chars = JS_CopyStringCharsZ(cx, displayURL);
+    UniqueTwoByteChars chars = JS_CopyStringCharsZ(cx, displayURL);
     if (!chars) {
       return false;
     }
@@ -187,7 +190,7 @@ bool js::SetSourceOptions(JSContext* cx, ScriptSource* source,
     }
   }
   if (sourceMapURL && !source->hasSourceMapURL()) {
-    JS::UniqueTwoByteChars chars = JS_CopyStringCharsZ(cx, sourceMapURL);
+    UniqueTwoByteChars chars = JS_CopyStringCharsZ(cx, sourceMapURL);
     if (!chars) {
       return false;
     }
@@ -237,7 +240,7 @@ bool js::ParseDebugMetadata(JSContext* cx, JS::Handle<JSObject*> opts,
     if (!JS_DefineProperty(cx, infoObject, "element", elementValue, 0)) {
       return false;
     }
-    privateValue.set(JS::ObjectValue(*infoObject));
+    privateValue.set(ObjectValue(*infoObject));
   }
 
   if (!JS_GetProperty(cx, opts, "elementAttributeName", &v)) {
