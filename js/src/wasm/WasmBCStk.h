@@ -238,6 +238,103 @@ struct Stk {
     MOZ_ASSERT(isMem());
     return offs_;
   }
+
+#ifdef DEBUG
+  // Print a stack element (Stk) to stderr.  Skip the trailing \n.  Printing
+  // of the actual contents of each stack element (see case ConstI32) can be
+  // filled in on demand -- even printing just the element `kind_` fields can
+  // be very useful.
+  void showStackElem() const {
+    switch (kind_) {
+      case MemI32:
+        fprintf(stderr, "MemI32()");
+        break;
+      case MemI64:
+        fprintf(stderr, "MemI64()");
+        break;
+      case MemF32:
+        fprintf(stderr, "MemF32()");
+        break;
+      case MemF64:
+        fprintf(stderr, "MemF64()");
+        break;
+#  ifdef ENABLE_WASM_SIMD
+      case MemV128:
+        fprintf(stderr, "MemV128()");
+        break;
+#  endif
+      case MemRef:
+        fprintf(stderr, "MemRef()");
+        break;
+      case LocalI32:
+        fprintf(stderr, "LocalI32()");
+        break;
+      case LocalI64:
+        fprintf(stderr, "LocalI64()");
+        break;
+      case LocalF32:
+        fprintf(stderr, "LocalF32()");
+        break;
+      case LocalF64:
+        fprintf(stderr, "LocalF64()");
+        break;
+#  ifdef ENABLE_WASM_SIMD
+      case LocalV128:
+        fprintf(stderr, "LocalV128()");
+        break;
+#  endif
+      case LocalRef:
+        fprintf(stderr, "LocalRef()");
+        break;
+      case RegisterI32:
+        fprintf(stderr, "RegisterI32()");
+        break;
+      case RegisterI64:
+        fprintf(stderr, "RegisterI64()");
+        break;
+      case RegisterF32:
+        fprintf(stderr, "RegisterF32()");
+        break;
+      case RegisterF64:
+        fprintf(stderr, "RegisterF64()");
+        break;
+#  ifdef ENABLE_WASM_SIMD
+      case RegisterV128:
+        fprintf(stderr, "RegisterV128()");
+        break;
+#  endif
+      case RegisterRef:
+        fprintf(stderr, "RegisterRef()");
+        break;
+      case ConstI32:
+        fprintf(stderr, "ConstI32(%d)", (int)i32val_);
+        break;
+      case ConstI64:
+        fprintf(stderr, "ConstI64()");
+        break;
+      case ConstF32:
+        fprintf(stderr, "ConstF32()");
+        break;
+      case ConstF64:
+        fprintf(stderr, "ConstF64()");
+        break;
+#  ifdef ENABLE_WASM_SIMD
+      case ConstV128:
+        fprintf(stderr, "ConstV128()");
+        break;
+#  endif
+      case ConstRef:
+        fprintf(stderr, "ConstRef()");
+        break;
+      case Unknown:
+        fprintf(stderr, "Unknown()");
+        break;
+      default:
+        fprintf(stderr, "!! Stk::showStackElem !!");
+        break;
+    }
+  }
+#endif
 };
 
 using StkVector = Vector<Stk, 0, SystemAllocPolicy>;
