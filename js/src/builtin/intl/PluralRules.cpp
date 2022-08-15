@@ -10,13 +10,11 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
-#include "mozilla/intl/NumberFormat.h"
 #include "mozilla/intl/PluralRules.h"
 
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "gc/GCContext.h"
-#include "js/CharacterEncoding.h"
 #include "js/PropertySpec.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"

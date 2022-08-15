@@ -11,8 +11,6 @@
 
 #include "builtin/intl/StringAsciiChars.h"
 #include "gc/Tracer.h"
-#include "js/CharacterEncoding.h"
-#include "js/TracingAPI.h"
 #include "vm/JSContext.h"
 
 namespace js {
