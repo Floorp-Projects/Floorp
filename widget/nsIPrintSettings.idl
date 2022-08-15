@@ -227,8 +227,8 @@ interface nsIPrintSettings : nsISupports
   /**
    * The margins define the positioning of the content on the page.
    * and footers on the page. They're treated as an offset from the edges of
-   * the page, but are forced to be at least the "unwriteable margin"
-   * (described below).
+   * the page, but are forced to be at least the "unwriteable margin," unless
+   * set to be ignored (described below).
    */
   attribute double  marginTop;     /*  these are in inches */
   attribute double  marginLeft;
@@ -246,8 +246,21 @@ interface nsIPrintSettings : nsISupports
   [infallible] attribute boolean printBGColors; /* Print Background Colors */
   [infallible] attribute boolean printBGImages; /* Print Background Images */
 
-  /** Whether @page rule margins should be honored or not. */
+  /**
+   * Whether @page rule margins should be honored or not. If the @page
+   * rule sets its margins to zero, we automatically ignore unwriteable
+   * margins, but nonzero values will be clamped to unwriteable margins.
+   */
   [infallible] attribute boolean honorPageRuleMargins;
+
+  /**
+   * Whether unwritable margins should be ignored. This should be set when
+   * when the user explicitly requests "Margins: None", e.g. for documents
+   * where accurate scaling matters. Note: While `honorPageRuleMargins` and
+   * this flag can't be set at the same time through the UI, doing so will
+   * cause even the nonzero @page rule margins to ignore unwriteable margins.
+   */
+  [infallible] attribute boolean ignoreUnwriteableMargins;
 
   /** Whether to draw guidelines showing the margin settings */
   [infallible] attribute boolean showMarginGuides;

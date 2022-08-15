@@ -125,8 +125,12 @@ nsReflowStatus nsPageFrame::ReflowPageContent(
             kidReflowInput.ComputedPhysicalMargin().Side(side);
         // Respecting a zero margin is particularly important when the client
         // is PDF.js where the PDF already contains the margins.
-        if (computed == 0) {
-          mPageContentMargin.Side(side) = 0;
+        // User could also be asking to ignore unwriteable margins (Though
+        // currently, it is impossible through the print UI to set both
+        // `HonorPageRuleMargins` and `IgnoreUnwriteableMargins`).
+        if (computed == 0 ||
+            mPD->mPrintSettings->GetIgnoreUnwriteableMargins()) {
+          mPageContentMargin.Side(side) = computed;
         } else {
           // Unwriteable margins are in the coordinate space of the physical
           // paper. Scale them by the pageSizeScale to convert them to the

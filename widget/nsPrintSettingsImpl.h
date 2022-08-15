@@ -99,6 +99,7 @@ class nsPrintSettings : public nsIPrintSettings {
   bool mShrinkToFit = true;
   bool mShowMarginGuides = false;
   bool mHonorPageRuleMargins = true;
+  bool mIgnoreUnwriteableMargins = false;
   bool mPrintSelectionOnly = false;
 
   int32_t mPrintPageDelay = 50;  // XXX Do we really want this?

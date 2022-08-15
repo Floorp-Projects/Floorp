@@ -42,6 +42,9 @@ static const char kEdgeLeft[] = "print_edge_left";
 static const char kEdgeBottom[] = "print_edge_bottom";
 static const char kEdgeRight[] = "print_edge_right";
 
+static const char kIgnoreUnwriteableMargins[] =
+    "print_ignore_unwriteable_margins";
+
 static const char kUnwriteableMarginTopTwips[] =
     "print_unwriteable_margin_top_twips";
 static const char kUnwriteableMarginLeftTwips[] =
@@ -117,6 +120,7 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
   data->printBGColors() = aSettings->GetPrintBGColors();
   data->printBGImages() = aSettings->GetPrintBGImages();
 
+  data->ignoreUnwriteableMargins() = aSettings->GetIgnoreUnwriteableMargins();
   data->honorPageRuleMargins() = aSettings->GetHonorPageRuleMargins();
   data->showMarginGuides() = aSettings->GetShowMarginGuides();
   data->printSelectionOnly() = aSettings->GetPrintSelectionOnly();
@@ -192,6 +196,7 @@ nsPrintSettingsService::DeserializeToPrintSettings(const PrintData& data,
   settings->SetPrintBGColors(data.printBGColors());
   settings->SetPrintBGImages(data.printBGImages());
   settings->SetHonorPageRuleMargins(data.honorPageRuleMargins());
+  settings->SetIgnoreUnwriteableMargins(data.ignoreUnwriteableMargins());
   settings->SetShowMarginGuides(data.showMarginGuides());
   settings->SetPrintSelectionOnly(data.printSelectionOnly());
 
@@ -395,10 +400,14 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
     prefRead = ReadInchesToTwipsPref(GetPrefName(kMarginRight, aPrinterName),
                                      margin.right) ||
                prefRead;
-    ;
     if (prefRead && MarginIsOK(margin)) {
       aPS->SetMarginInTwips(margin);
       noValidPrefsFound = false;
+
+      prefRead = GETBOOLPREF(kIgnoreUnwriteableMargins, &b);
+      if (prefRead) {
+        aPS->SetIgnoreUnwriteableMargins(b);
+      }
     }
   }
 
@@ -581,6 +590,8 @@ nsresult nsPrintSettingsService::WritePrefs(nsIPrintSettings* aPS,
                              margin.bottom);
     WriteInchesFromTwipsPref(GetPrefName(kMarginRight, aPrinterName),
                              margin.right);
+    Preferences::SetBool(GetPrefName(kIgnoreUnwriteableMargins, aPrinterName),
+                         aPS->GetIgnoreUnwriteableMargins());
   }
 
   if (aFlags & nsIPrintSettings::kInitSaveEdges) {
