@@ -159,6 +159,10 @@ add_task(async function test_http2() {
         0x3e,
       ])
     );
+
+    // This function is handled within the httpserver where setTimeout is
+    // available.
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout, no-undef
     setTimeout(function() {
       resp.write(
         Buffer.from([
@@ -302,6 +306,9 @@ add_task(async function test_http2() {
       );
     }, 100);
 
+    // This function is handled within the httpserver where setTimeout is
+    // available.
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout, no-undef
     setTimeout(function() {
       resp.end(
         Buffer.from([

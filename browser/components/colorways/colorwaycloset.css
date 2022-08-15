@@ -18,26 +18,39 @@
   --homepage-reset-align: start;
 }
 
-@media (min-width: 50em) {
+@media (max-width: 35em) {
   :root {
-    --body-columns: 24px repeat(2, 1fr);
+    --font-scale: 0.9em;
+  }
+}
+
+@media (min-width: 40em) {
+  :root {
+    --body-columns: 1em repeat(1, 1fr);
     --body-rows: auto 1fr auto;
 
     --header-column: 2/4;
 
     --figure-column: 2;
     --figure-row: 2;
-    --figure-height: 300px;
-    --figure-width: 300px;
 
     --customization-panel-column: 3;
-    --customization-panel-padding-inline: 24px;
+    --customization-panel-padding-inline-start: 24px;
 
     --colorway-selector-align: start;
     --colorway-name-font-size: 2.5em;
 
     --homepage-reset-column: 1/4;
     --homepage-reset-align: end;
+  }
+}
+
+@media (min-width: 50em) {
+  :root {
+    --body-columns: 1em repeat(2, 1fr);
+
+    --figure-height: 300px;
+    --figure-width: 300px;
   }
 }
 
@@ -48,6 +61,7 @@ body {
   grid-template-rows: var(--body-rows);
   padding: 0 2em 1em;
   box-sizing: border-box;
+  font-size: var(--font-scale);
 }
 
 fieldset {
@@ -100,7 +114,7 @@ figure {
   align-items: center;
   justify-content: center;
 
-  margin: 1rem 0 0;
+  margin: 1em 0 0;
   min-width: var(--figure-width);
   min-height: var(--figure-height);
 }
@@ -115,7 +129,7 @@ figure > img {
 
 #colorway-customization-panel {
   align-self: stretch;
-  padding-inline: var(--customization-panel-padding-inline);
+  padding-inline-start: var(--customization-panel-padding-inline-start);
   grid-column: var(--customization-panel-column);
   display: flex;
   flex-direction: column;

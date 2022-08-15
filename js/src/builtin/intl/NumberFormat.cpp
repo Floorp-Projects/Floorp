@@ -22,8 +22,6 @@
 #include "mozilla/UniquePtr.h"
 
 #include <algorithm>
-#include <cstring>
-#include <iterator>
 #include <stddef.h>
 #include <stdint.h>
 #include <string>
@@ -36,20 +34,16 @@
 #include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/LanguageTag.h"
 #include "builtin/intl/RelativeTimeFormat.h"
-#include "ds/Sort.h"
 #include "gc/GCContext.h"
 #include "js/CharacterEncoding.h"
 #include "js/PropertySpec.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
-#include "js/Vector.h"
 #include "util/Text.h"
 #include "vm/BigIntType.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/PlainObject.h"  // js::PlainObject
-#include "vm/SelfHosting.h"
-#include "vm/Stack.h"
 #include "vm/StringType.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
 

@@ -20,6 +20,7 @@
 #include "util/StringBuffer.h"
 #include "util/Unicode.h"
 #include "vm/JSContext.h"
+#include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
 #include "vm/SelfHosting.h"
 #include "vm/WellKnownAtom.h"  // js_*_str

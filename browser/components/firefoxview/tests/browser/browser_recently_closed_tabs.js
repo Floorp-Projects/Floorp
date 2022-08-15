@@ -338,3 +338,49 @@ add_task(async function test_time_updates_correctly() {
     }
   );
 });
+
+add_task(async function test_arrow_keys() {
+  Services.obs.notifyObservers(null, "browser:purge-session-history");
+  is(
+    SessionStore.getClosedTabCount(window),
+    0,
+    "Closed tab count after purging session history"
+  );
+
+  await open_then_close(URLs[0]);
+  await open_then_close(URLs[1]);
+  await open_then_close(URLs[2]);
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+      const list = document.querySelectorAll(".closed-tab-li");
+      const arrowDown = () => {
+        info("Arrow down");
+        EventUtils.synthesizeKey("KEY_ArrowDown");
+      };
+      const arrowUp = () => {
+        info("Arrow up");
+        EventUtils.synthesizeKey("KEY_ArrowUp");
+      };
+      list[0].focus();
+      ok(list[0].matches(":focus"), "The first link is focused");
+      arrowDown();
+      ok(list[1].matches(":focus"), "The second link is focused");
+      arrowDown();
+      ok(list[2].matches(":focus"), "The third link is focused");
+      arrowDown();
+      ok(list[2].matches(":focus"), "The third link is still focused");
+      arrowUp();
+      ok(list[1].matches(":focus"), "The second link is focused");
+      arrowUp();
+      ok(list[0].matches(":focus"), "The first link is focused");
+      arrowUp();
+      ok(list[0].matches(":focus"), "The first link is still focused");
+    }
+  );
+});

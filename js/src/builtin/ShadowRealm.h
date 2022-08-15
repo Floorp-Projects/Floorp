@@ -7,8 +7,6 @@
 #ifndef builtin_ShadowRealm_h
 #define builtin_ShadowRealm_h
 
-#include "js/Wrapper.h"
-#include "vm/GlobalObject.h"
 #include "vm/NativeObject.h"
 
 namespace js {

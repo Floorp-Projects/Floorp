@@ -69,6 +69,8 @@ add_task(
       background() {
         const { browser } = this;
         browser.test.log("background script executed");
+        // window is available in background scripts
+        // eslint-disable-next-line no-undef
         browser.test.sendMessage("background page ready", window.location.href);
       },
     });

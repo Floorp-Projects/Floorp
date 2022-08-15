@@ -7,8 +7,6 @@
 #ifndef builtin_intl_NumberFormat_h
 #define builtin_intl_NumberFormat_h
 
-#include "mozilla/Attributes.h"
-
 #include <stdint.h>
 
 #include "builtin/SelfHostingDefines.h"

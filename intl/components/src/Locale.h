@@ -128,8 +128,16 @@ class LanguageTagSubtag final {
  public:
   LanguageTagSubtag() = default;
 
-  LanguageTagSubtag(const LanguageTagSubtag&) = delete;
-  LanguageTagSubtag& operator=(const LanguageTagSubtag&) = delete;
+  LanguageTagSubtag(const LanguageTagSubtag& aOther) {
+    std::copy_n(aOther.mChars, SubtagLength, mChars);
+    mLength = aOther.mLength;
+  }
+
+  LanguageTagSubtag& operator=(const LanguageTagSubtag& aOther) {
+    std::copy_n(aOther.mChars, SubtagLength, mChars);
+    mLength = aOther.mLength;
+    return *this;
+  }
 
   size_t Length() const { return mLength; }
   bool Missing() const { return mLength == 0; }
@@ -245,6 +253,8 @@ class MOZ_STACK_CLASS Locale final {
   Locale() = default;
   Locale(const Locale&) = delete;
   Locale& operator=(const Locale&) = delete;
+  Locale(Locale&&) = default;
+  Locale& operator=(Locale&&) = default;
 
   template <class Vec>
   class SubtagIterator {
@@ -735,11 +745,15 @@ class MOZ_STACK_CLASS LocaleParser final {
 
  public:
   // Parse the input string as a locale.
+  //
+  // NOTE: |aTag| must be a new, empty Locale.
   static Result<Ok, ParserError> TryParse(Span<const char> aLocale,
                                           Locale& aTag);
 
   // Parse the input string as the base-name parts (language, script, region,
   // variants) of a locale.
+  //
+  // NOTE: |aTag| must be a new, empty Locale.
   static Result<Ok, ParserError> TryParseBaseName(Span<const char> aLocale,
                                                   Locale& aTag);
 

@@ -6,15 +6,10 @@
 
 #include "builtin/BigInt.h"
 
-#include "gc/Tracer.h"
 #include "jit/InlinableNatives.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
-#include "js/TracingAPI.h"
-#include "vm/ArrayBufferObject.h"
 #include "vm/BigIntType.h"
-#include "vm/SelfHosting.h"
-#include "vm/TaggedProto.h"
 
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSObject-inl.h"

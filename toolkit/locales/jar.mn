@@ -37,7 +37,6 @@
 #if !defined(XP_WIN) && !defined(MOZ_FENNEC)
   locale/@AB_CD@/global/printdialog.properties          (%chrome/global/printdialog.properties)
 #endif
-  locale/@AB_CD@/global/resetProfile.dtd                (%chrome/global/resetProfile.dtd)
   locale/@AB_CD@/global/resetProfile.properties         (%chrome/global/resetProfile.properties)
   locale/@AB_CD@/global/dialog.properties               (%chrome/global/dialog.properties)
   locale/@AB_CD@/global/tree.dtd                        (%chrome/global/tree.dtd)

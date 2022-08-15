@@ -15,7 +15,6 @@
 #include "gc/Barrier.h"
 #include "js/Class.h"
 #include "vm/NativeObject.h"
-#include "vm/Runtime.h"
 
 namespace mozilla::intl {
 class RelativeTimeFormat;

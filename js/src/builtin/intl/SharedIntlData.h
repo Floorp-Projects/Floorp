@@ -13,7 +13,6 @@
 #include <stddef.h>
 
 #include "js/AllocPolicy.h"
-#include "js/CharacterEncoding.h"
 #include "js/GCAPI.h"
 #include "js/GCHashTable.h"
 #include "js/Result.h"

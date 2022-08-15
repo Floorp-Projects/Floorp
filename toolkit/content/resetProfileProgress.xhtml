@@ -4,12 +4,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
-%brandDTD;
-<!ENTITY % resetProfileDTD SYSTEM "chrome://global/locale/resetProfile.dtd" >
-%resetProfileDTD;
-]>
+<!DOCTYPE window>
 
 <?xml-stylesheet href="chrome://global/content/resetProfile.css"?>
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
@@ -17,10 +12,15 @@
 <window id="resetProfileProgressDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
-        title="&refreshProfile.dialog.title;"
+        data-l10n-id="refresh-profile-progress"
         style="min-width: 30em;">
   <vbox>
-    <description>&refreshProfile.cleaning.description;</description>
+    <linkset>
+      <html:link rel="localization" href="branding/brand.ftl"/>
+      <html:link rel="localization" href="toolkit/global/resetProfile.ftl"/>
+    </linkset>
+
+    <description data-l10n-id="refresh-profile-progress-description"></description>
     <html:progress/>
   </vbox>
 </window>
