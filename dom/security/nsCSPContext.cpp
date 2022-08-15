@@ -1675,7 +1675,8 @@ nsCSPContext::PermitsAncestry(nsILoadInfo* aLoadInfo,
 NS_IMETHODIMP
 nsCSPContext::Permits(Element* aTriggeringElement,
                       nsICSPEventListener* aCSPEventListener, nsIURI* aURI,
-                      CSPDirective aDir, bool aSpecific, bool* outPermits) {
+                      CSPDirective aDir, bool aSpecific,
+                      bool aSendViolationReports, bool* outPermits) {
   // Can't perform check without aURI
   if (aURI == nullptr) {
     return NS_ERROR_FAILURE;
@@ -1697,14 +1698,14 @@ nsCSPContext::Permits(Element* aTriggeringElement,
       permitsInternal(aDir, aTriggeringElement, aCSPEventListener, aURI,
                       nullptr,  // no original (pre-redirect) URI
                       u""_ns,   // no nonce
-                      aSpecific,
-                      true,    // send violation reports
+                      aSpecific, aSendViolationReports,
                       true,    // send blocked URI in violation reports
                       false);  // not parser created
 
   if (CSPCONTEXTLOGENABLED()) {
-    CSPCONTEXTLOG(("nsCSPContext::Permits, aUri: %s, aDir: %d, isAllowed: %s",
-                   aURI->GetSpecOrDefault().get(), aDir,
+    CSPCONTEXTLOG(("nsCSPContext::Permits, aUri: %s, aDir: %s, isAllowed: %s",
+                   aURI->GetSpecOrDefault().get(),
+                   CSP_CSPDirectiveToString(aDir),
                    *outPermits ? "allow" : "deny"));
   }
 
