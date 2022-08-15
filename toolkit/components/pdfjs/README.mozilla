@@ -2,10 +2,10 @@ This is the PDF.js project output, https://github.com/mozilla/pdf.js
 
 The current upstream commit is documented in the revision field in moz.yaml
 
-To update pdf.js locally, run
+To update PDF.js locally, run
 	./mach vendor toolkit/components/pdfjs/moz.yaml
  
-To avoid cloning pdf.js locally for every invocation of that command, you can
+To avoid cloning PDF.js locally for every invocation of that command, you can
 point ./mach vendor at a local repo by setting the PDFJS_CHECKOUT env var.
 The update process will perform a git fetch and checkout the latest version to
 update to, so any uncommited local changes will cause the update script to break.
