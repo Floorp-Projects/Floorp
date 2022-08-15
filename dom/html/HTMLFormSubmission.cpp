@@ -792,7 +792,8 @@ nsresult HTMLFormSubmission::GetFromForm(HTMLFormElement* aForm,
     // policy - do *not* consult default-src, see:
     // http://www.w3.org/TR/CSP2/#directive-default-src
     rv = csp->Permits(aForm, nullptr /* nsICSPEventListener */, actionURL,
-                      nsIContentSecurityPolicy::FORM_ACTION_DIRECTIVE, true,
+                      nsIContentSecurityPolicy::FORM_ACTION_DIRECTIVE,
+                      true /* aSpecific */, true /* aSendViolationReports */,
                       &permitsFormAction);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!permitsFormAction) {
