@@ -397,7 +397,7 @@ class NPZCSupport final
       return INPUT_RESULT_IGNORED;
     }
 
-    PostInputEvent([input, result](nsWindow* window) {
+    PostInputEvent([input = std::move(input), result](nsWindow* window) {
       WidgetWheelEvent wheelEvent = input.ToWidgetEvent(window);
       window->ProcessUntransformedAPZEvent(&wheelEvent, result);
     });
@@ -574,7 +574,7 @@ class NPZCSupport final
       return INPUT_RESULT_IGNORED;
     }
 
-    PostInputEvent([input, result](nsWindow* window) {
+    PostInputEvent([input = std::move(input), result](nsWindow* window) {
       WidgetMouseEvent mouseEvent = input.ToWidgetEvent(window);
       window->ProcessUntransformedAPZEvent(&mouseEvent, result);
     });
@@ -845,8 +845,8 @@ class NPZCSupport final
     }
 
     // Dispatch APZ input event on Gecko thread.
-    PostInputEvent([aInput, result](nsWindow* window) {
-      WidgetTouchEvent touchEvent = aInput.ToWidgetEvent(window);
+    PostInputEvent([input = std::move(aInput), result](nsWindow* window) {
+      WidgetTouchEvent touchEvent = input.ToWidgetEvent(window);
       window->ProcessUntransformedAPZEvent(&touchEvent, result);
       window->DispatchHitTest(touchEvent);
     });
