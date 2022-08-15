@@ -244,17 +244,17 @@ class IDRefsIterator : public AccIterable {
  */
 class SingleAccIterator : public AccIterable {
  public:
-  explicit SingleAccIterator(LocalAccessible* aTarget) : mAcc(aTarget) {}
+  explicit SingleAccIterator(Accessible* aTarget) : mAcc(aTarget) {}
   virtual ~SingleAccIterator() {}
 
-  virtual LocalAccessible* Next() override;
+  virtual Accessible* Next() override;
 
  private:
   SingleAccIterator();
   SingleAccIterator(const SingleAccIterator&);
   SingleAccIterator& operator=(const SingleAccIterator&);
 
-  RefPtr<LocalAccessible> mAcc;
+  Accessible* mAcc;
 };
 
 /**
