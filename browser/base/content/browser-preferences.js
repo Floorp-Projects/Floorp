@@ -77,7 +77,6 @@ Services.prefs.addObserver("floorp.browser.UserAgent", function(){
     default:
       Services.prefs.clearUserPref("general.useragent.override");
      break;
-      
   }
  }   
 )

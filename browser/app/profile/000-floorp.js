@@ -27,6 +27,8 @@ pref("update.id.floorp", "windows");
 pref("update.id.floorp", "linux");
 #endif
 
+// userAgent
+pref("floorp.browser.UserAgent", 1);
 
 //ブラウザーUIのカスタマイズ設定
 pref("floorp.hide.tabbrowser-tab.enable", false); //水平タブ削除
