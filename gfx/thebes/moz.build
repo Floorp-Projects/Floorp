@@ -17,7 +17,6 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = "gfx"
 
 EXPORTS += [
-    "COLRFonts.h",
     "DrawMode.h",
     "gfx2DGlue.h",
     "gfxAlphaRecovery.h",
@@ -196,7 +195,6 @@ SOURCES += [
 
 UNIFIED_SOURCES += [
     "CJKCompatSVS.cpp",
-    "COLRFonts.cpp",
     "gfxAlphaRecovery.cpp",
     "gfxBaseSharedMemorySurface.cpp",
     "gfxBlur.cpp",

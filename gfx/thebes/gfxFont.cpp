@@ -2028,7 +2028,8 @@ void gfxFont::DrawOneGlyph(uint32_t aGlyphID, const gfx::Point& aPt,
       }
     }
 
-    if (fontParams.haveColorGlyphs && !UseNativeColrFontSupport() &&
+    if (fontParams.haveColorGlyphs &&
+        !gfxPlatform::GetPlatform()->HasNativeColrFontSupport() &&
         RenderColorGlyph(runParams.dt, runParams.context, textDrawer,
                          fontParams.scaledFont, fontParams.drawOptions, devPt,
                          aGlyphID)) {
@@ -2463,37 +2464,60 @@ bool gfxFont::RenderSVGGlyph(gfxContext* aContext,
 
 bool gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget, gfxContext* aContext,
                                layout::TextDrawTarget* aTextDrawer,
-                               ScaledFont* aScaledFont,
-                               DrawOptions aDrawOptions, const Point& aPoint,
-                               uint32_t aGlyphId) {
-  auto currentColor = [=]() {
-    DeviceColor ctxColor;
-    return aContext->GetDeviceColor(ctxColor)
-               ? sRGBColor::FromABGR(ctxColor.ToABGR())
-               : sRGBColor::OpaqueBlack();
-  };
+                               mozilla::gfx::ScaledFont* scaledFont,
+                               mozilla::gfx::DrawOptions aDrawOptions,
+                               const mozilla::gfx::Point& aPoint,
+                               uint32_t aGlyphId) const {
+  AutoTArray<uint16_t, 8> layerGlyphs;
+  AutoTArray<mozilla::gfx::DeviceColor, 8> layerColors;
 
-  if (const auto* paintGraph =
-          COLRFonts::GetGlyphPaintGraph(GetFontEntry()->GetCOLR(), aGlyphId)) {
-    const auto* hbShaper = GetHarfBuzzShaper();
-    if (hbShaper && hbShaper->IsInitialized()) {
-      return COLRFonts::PaintGlyphGraph(
-          GetFontEntry()->GetCOLR(), hbShaper->GetHBFont(), paintGraph,
-          aDrawTarget, aTextDrawer, aScaledFont, aDrawOptions, currentColor(),
-          aPoint, aGlyphId, mFUnitsConvFactor);
+  mozilla::gfx::DeviceColor defaultColor;
+  if (!aContext->GetDeviceColor(defaultColor)) {
+    defaultColor = ToDeviceColor(mozilla::gfx::sRGBColor::OpaqueBlack());
+  }
+  if (!GetFontEntry()->GetColorLayersInfo(aGlyphId, defaultColor, layerGlyphs,
+                                          layerColors)) {
+    return false;
+  }
+
+  // Default to opaque rendering (non-webrender applies alpha with a layer)
+  float alpha = 1.0;
+  if (aTextDrawer) {
+    // defaultColor is the one that comes from CSS, so it has transparency info.
+    bool hasComplexTransparency = 0.f < defaultColor.a && defaultColor.a < 1.f;
+    if (hasComplexTransparency && layerGlyphs.Length() > 1) {
+      // WebRender doesn't support drawing multi-layer transparent color-glyphs,
+      // as it requires compositing all the layers before applying transparency.
+      // (pretend to succeed, output doesn't matter, we will emit a blob)
+      aTextDrawer->FoundUnsupportedFeature();
+      return true;
     }
+
+    // If we get here, then either alpha is 0 or 1, or there's only one layer
+    // which shouldn't have composition issues. In all of these cases, applying
+    // transparency directly to the glyph should work perfectly fine.
+    //
+    // Note that we must still emit completely transparent emoji, because they
+    // might be wrapped in a shadow that uses the text run's glyphs.
+    alpha = defaultColor.a;
   }
 
-  if (const auto* layers =
-          COLRFonts::GetGlyphLayers(GetFontEntry()->GetCOLR(), aGlyphId)) {
-    auto face(GetFontEntry()->GetHBFace());
-    bool ok = COLRFonts::PaintGlyphLayers(
-        GetFontEntry()->GetCOLR(), face, layers, aDrawTarget, aTextDrawer,
-        aScaledFont, aDrawOptions, currentColor(), aPoint);
-    return ok;
-  }
+  for (uint32_t layerIndex = 0; layerIndex < layerGlyphs.Length();
+       layerIndex++) {
+    Glyph glyph;
+    glyph.mIndex = layerGlyphs[layerIndex];
+    glyph.mPosition = aPoint;
 
-  return false;
+    mozilla::gfx::GlyphBuffer buffer;
+    buffer.mGlyphs = &glyph;
+    buffer.mNumGlyphs = 1;
+
+    mozilla::gfx::DeviceColor layerColor = layerColors[layerIndex];
+    layerColor.a *= alpha;
+    aDrawTarget->FillGlyphs(scaledFont, buffer, ColorPattern(layerColor),
+                            aDrawOptions);
+  }
+  return true;
 }
 
 bool gfxFont::HasColorGlyphFor(uint32_t aCh, uint32_t aNextCh) {
@@ -2518,9 +2542,7 @@ bool gfxFont::HasColorGlyphFor(uint32_t aCh, uint32_t aNextCh) {
     return false;
   }
   // Check if there is a COLR/CPAL or SVG glyph for this ID.
-  if (fe->TryGetColorGlyphs() &&
-      (COLRFonts::GetGlyphPaintGraph(fe->GetCOLR(), gid) ||
-       COLRFonts::GetGlyphLayers(fe->GetCOLR(), gid))) {
+  if (fe->TryGetColorGlyphs() && fe->HasColorLayersForGlyph(gid)) {
     return true;
   }
   if (fe->TryGetSVGData(this) && fe->HasSVGGlyph(gid)) {
@@ -3622,24 +3644,6 @@ void gfxFont::SetupGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphID,
         aGlyphID, gfxRect(svgBounds.X() * d2a, svgBounds.Y() * d2a,
                           svgBounds.Width() * d2a, svgBounds.Height() * d2a));
     return;
-  }
-
-  if (mFontEntry->TryGetColorGlyphs() && mFontEntry->mCOLR &&
-      COLRFonts::GetColrTableVersion(mFontEntry->mCOLR) == 1) {
-    auto* shaper = GetHarfBuzzShaper();
-    if (shaper && shaper->IsInitialized()) {
-      RefPtr scaledFont = GetScaledFont(aDrawTarget);
-      Rect r = COLRFonts::GetColorGlyphBounds(
-          mFontEntry->mCOLR, shaper->GetHBFont(), aGlyphID, aDrawTarget,
-          scaledFont, mFUnitsConvFactor);
-      if (!r.IsEmpty()) {
-        gfxFloat d2a = aExtents->GetAppUnitsPerDevUnit();
-        aExtents->SetTightGlyphExtents(
-            aGlyphID, gfxRect(r.X() * d2a, r.Y() * d2a, r.Width() * d2a,
-                              r.Height() * d2a));
-        return;
-      }
-    }
   }
 
   gfxRect bounds;

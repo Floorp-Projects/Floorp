@@ -160,36 +160,6 @@ fuzzy-if(OSX,198-198,172-172) == color-1b.html color-1-ref.html
 == color-2a.html color-2-ref.html
 != color-2a.html color-2-notref.html
 
-# COLRv1 (enhanced color font) format
-# Comparing COLRv1 glyph rendering to CSS backgrounds we can expect "fuzz" in lots of gradients
-# and along antialiased diagonals, etc., but the differences are barely perceptible to the eye.
-defaults pref(gfx.font_rendering.colr_v1.enabled,true)
-== colrv1-01.html#A colrv1-01-ref.html#A
-== colrv1-01.html#B colrv1-01-ref.html#B
-fuzzy(0-1,0-10000) == colrv1-01.html#C colrv1-01-ref.html#C
-fuzzy(0-1,0-600) == colrv1-01.html#D colrv1-01-ref.html#D
-fuzzy(0-1,0-200) == colrv1-01.html#E colrv1-01-ref.html#E
-fuzzy(0-1,0-200) == colrv1-01.html#F colrv1-01-ref.html#F
-fuzzy(0-1,0-400) == colrv1-01.html#G colrv1-01-ref.html#G
-fuzzy(0-1,0-400) == colrv1-01.html#H colrv1-01-ref.html#H
-fuzzy(0-1,0-10000) == colrv1-01.html#I colrv1-01-ref.html#I
-fuzzy(0-1,0-576) == colrv1-01.html#J colrv1-01-ref.html#J
-fuzzy(0-1,0-748) == colrv1-01.html#K colrv1-01-ref.html#K
-fuzzy(0-1,0-851) == colrv1-01.html#L colrv1-01-ref.html#L
-fuzzy(0-1,0-668) == colrv1-01.html#M colrv1-01-ref.html#M
-fuzzy(0-1,0-848) == colrv1-01.html#N colrv1-01-ref.html#N
-fuzzy(0-1,0-675) == colrv1-01.html#O colrv1-01-ref.html#O
-== colrv1-01.html#P colrv1-01-ref.html#P
-fuzzy(0-138,0-318) == colrv1-01.html#Q colrv1-01-ref.html#Q
-fuzzy(0-207,0-156) == colrv1-01.html#R colrv1-01-ref.html#R
-fuzzy(0-255,0-156) == colrv1-01.html#S colrv1-01-ref.html#S
-fuzzy(0-237,0-277) == colrv1-01.html#T colrv1-01-ref.html#T
-defaults
-
-# Check that the tech(color-COLRv1) function responds to whether COLRv1 support is enabled.
-pref(gfx.font_rendering.colr_v1.enabled,true) == colrv1-02.html colrv1-02a-ref.html
-pref(gfx.font_rendering.colr_v1.enabled,false) == colrv1-02.html colrv1-02b-ref.html
-
 == woff2-1.html woff2-1-ref.html
 == woff2-totalsfntsize.html woff2-totalsfntsize-ref.html
 

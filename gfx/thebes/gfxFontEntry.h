@@ -9,7 +9,6 @@
 #include <math.h>
 #include <new>
 #include <utility>
-#include "COLRFonts.h"
 #include "ThebesRLBoxTypes.h"
 #include "gfxFontUtils.h"
 #include "gfxFontVariations.h"
@@ -58,6 +57,9 @@ namespace fontlist {
 struct Face;
 struct Family;
 }  // namespace fontlist
+namespace gfx {
+struct DeviceColor;
+}
 }  // namespace mozilla
 
 typedef struct gr_face gr_face;
@@ -266,6 +268,14 @@ class gfxFontEntry {
   void NotifyGlyphsChanged();
 
   bool TryGetColorGlyphs();
+  bool GetColorLayersInfo(uint32_t aGlyphId,
+                          const mozilla::gfx::DeviceColor& aDefaultColor,
+                          nsTArray<uint16_t>& layerGlyphs,
+                          nsTArray<mozilla::gfx::DeviceColor>& layerColors);
+  bool HasColorLayersForGlyph(uint32_t aGlyphId) {
+    MOZ_ASSERT(GetCOLR());
+    return gfxFontUtils::HasColorLayersForGlyph(GetCOLR(), aGlyphId);
+  }
 
   bool HasColorBitmapTable() {
     if (!mCheckedForColorBitmapTables) {
