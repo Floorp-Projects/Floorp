@@ -1,3 +1,8 @@
+# 0.4.7 (July 19, 2022)
+
+* Use `#[track_caller]` on Rust 1.46+ (#119)
+* Make `Slab::new` const on Rust 1.39+ (#119)
+
 # 0.4.6 (April 2, 2022)
 
 * Add `Slab::vacant_key` (#114)
