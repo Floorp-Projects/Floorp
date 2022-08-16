@@ -37,7 +37,7 @@ tasks:
         description: 'Validate strings.xml with compare-locales'
         run:
             using: run-task
-            cwd: '{checkout}'
+            cwd: '{checkout}/android-components'
             command: 'pip install --user "compare-locales>=5.0.2,<6.0" && compare-locales --validate l10n.toml .'
         treeherder:
             symbol: compare-locale
