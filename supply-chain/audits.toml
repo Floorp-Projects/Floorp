@@ -368,6 +368,12 @@ the usage is pretty straightforward and while it's technically UB, it seems no
 more likely to lead to miscompilation than any other use of mem::uninitialized.
 """
 
+[[audits.hashbrown]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+version = "0.12.3"
+notes = "This version is used in rust's libstd, so effectively we're already trusting it"
+
 [[audits.hyper]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
