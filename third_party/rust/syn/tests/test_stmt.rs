@@ -1,4 +1,4 @@
-#![allow(clippy::non_ascii_literal)]
+#![allow(clippy::assertions_on_result_states, clippy::non_ascii_literal)]
 
 #[macro_use]
 mod macros;
