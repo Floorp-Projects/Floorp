@@ -3392,9 +3392,9 @@ nsresult HTMLEditor::InsertLinkAroundSelectionAsAction(
   nsAutoString value;
   for (uint32_t i = 0; i < count; ++i) {
     // XXX nsDOMAttributeMap::Item() accesses current attribute at the index.
-    //     Therefore, if `SetInlinePropertyInternal()` changed the attributes,
-    //     this may fail to scan some attributes.  Perhaps, we need to cache
-    //     all attributes first.
+    //     Therefore, if `SetInlinePropertyAsSubAction()` changed the
+    //     attributes, this may fail to scan some attributes.  Perhaps, we need
+    //     to cache all attributes first.
     RefPtr<Attr> attribute = attributeMap->Item(i);
     if (!attribute) {
       continue;
@@ -3408,10 +3408,10 @@ nsresult HTMLEditor::InsertLinkAroundSelectionAsAction(
 
     attribute->GetValue(value);
 
-    nsresult rv = SetInlinePropertyInternal(
+    nsresult rv = SetInlinePropertyAsSubAction(
         *nsGkAtoms::a, MOZ_KnownLive(attributeName), value);
     if (NS_FAILED(rv)) {
-      NS_WARNING("SetInlinePropertyInternal(nsGkAtoms::a) failed");
+      NS_WARNING("SetInlinePropertyAsSubAction(nsGkAtoms::a) failed");
       return rv;
     }
   }
@@ -5666,8 +5666,8 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
     // Loop through the ranges in the selection
-    // XXX This is different from `SetInlinePropertyInternal()`.  It uses
-    //     AutoSelectionRangeArray to store all ranges first.  The result may be
+    // XXX This is different from `SetInlinePropertyAsSubAction()`.  It uses
+    //     AutoRangeArray to store all ranges first.  The result may be
     //     different if mutation event listener changes the `Selection`.
     // TODO: Store all selection ranges first since this updates the style.
     for (uint32_t i = 0; i < SelectionRef().RangeCount(); i++) {
