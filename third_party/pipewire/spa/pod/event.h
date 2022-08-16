@@ -31,6 +31,11 @@ extern "C" {
 
 #include <spa/pod/pod.h>
 
+/**
+ * \addtogroup spa_pod
+ * \{
+ */
+
 struct spa_event_body {
 	struct spa_pod_object_body body;
 };
@@ -51,6 +56,10 @@ struct spa_event {
 #define SPA_EVENT_INIT(type,id)						\
 	SPA_EVENT_INIT_FULL(struct spa_event,				\
 			sizeof(struct spa_event_body), type, id)
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

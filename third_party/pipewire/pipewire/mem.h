@@ -31,7 +31,16 @@
 extern "C" {
 #endif
 
-/** Flags passed to \ref pw_mempool_alloc() \memberof pw_memblock */
+/** \defgroup pw_memblock Memory Blocks
+ * Memory allocation and pools.
+ */
+
+/**
+ * \addtogroup pw_memblock
+ * \{
+ */
+
+/** Flags passed to \ref pw_mempool_alloc() */
 enum pw_memblock_flags {
 	PW_MEMBLOCK_FLAG_NONE =		0,
 	PW_MEMBLOCK_FLAG_READABLE =	(1 << 0),	/**< memory is readable */
@@ -51,19 +60,20 @@ enum pw_memmap_flags {
 	PW_MEMMAP_FLAG_TWICE =		(1 << 2),	/**< map the same area twice after each other,
 							  *  creating a circular ringbuffer */
 	PW_MEMMAP_FLAG_PRIVATE =	(1 << 3),	/**< writes will be private */
+	PW_MEMMAP_FLAG_LOCKED =		(1 << 4),	/**< lock the memory into RAM */
 	PW_MEMMAP_FLAG_READWRITE = PW_MEMMAP_FLAG_READ | PW_MEMMAP_FLAG_WRITE,
 };
 
 struct pw_memchunk;
 
-/** \class pw_memblock
+/**
  *
  * A memory pool is a collection of pw_memblocks */
 struct pw_mempool {
 	struct pw_properties *props;
 };
 
-/** \class pw_memblock
+/**
  * Memory block structure */
 struct pw_memblock {
 	struct pw_mempool *pool;	/**< owner pool */
@@ -191,6 +201,9 @@ static inline void pw_map_range_init(struct pw_map_range *range,
 	range->size = SPA_ROUND_UP_N(range->start + size, page_size);
 }
 
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }

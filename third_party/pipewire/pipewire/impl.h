@@ -29,6 +29,10 @@
 extern "C" {
 #endif
 
+/**
+ * \addtogroup api_pw_impl
+ */
+
 struct pw_impl_client;
 struct pw_impl_module;
 struct pw_global;
@@ -44,6 +48,7 @@ struct pw_resource;
 #include <pipewire/impl-factory.h>
 #include <pipewire/global.h>
 #include <pipewire/impl-link.h>
+#include <pipewire/impl-metadata.h>
 #include <pipewire/impl-module.h>
 #include <pipewire/impl-node.h>
 #include <pipewire/impl-port.h>

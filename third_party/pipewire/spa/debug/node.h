@@ -29,12 +29,14 @@
 extern "C" {
 #endif
 
-#include <spa/node/node.h>
-#include <spa/debug/dict.h>
+/**
+ * \addtogroup spa_debug
+ * \{
+ */
 
-#ifndef spa_debug
-#define spa_debug(...)	({ fprintf(stderr, __VA_ARGS__);fputc('\n', stderr); })
-#endif
+#include <spa/node/node.h>
+#include <spa/debug/log.h>
+#include <spa/debug/dict.h>
 
 static inline int spa_debug_port_info(int indent, const struct spa_port_info *info)
 {
@@ -48,6 +50,10 @@ static inline int spa_debug_port_info(int indent, const struct spa_port_info *in
                 spa_debug("%*s" "  none", indent, "");
         return 0;
 }
+
+/**
+ * \}
+ */
 
 
 #ifdef __cplusplus

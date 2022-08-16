@@ -31,10 +31,15 @@ extern "C" {
 #include <spa/utils/defs.h>
 #include <spa/buffer/meta.h>
 
-/** \page page_buffer Buffers
+/** \defgroup spa_buffer Buffers
  *
  * Buffers describe the data and metadata that is exchanged between
  * ports of a node.
+ */
+
+/**
+ * \addtogroup spa_buffer
+ * \{
  */
 
 enum spa_data_type {
@@ -45,7 +50,7 @@ enum spa_data_type {
 	SPA_DATA_DmaBuf,		/**< fd to dmabuf memory */
 	SPA_DATA_MemId,			/**< memory is identified with an id */
 
-	SPA_DATA_LAST,			/**< not part of ABI */
+	_SPA_DATA_LAST,			/**< not part of ABI */
 };
 
 /** Chunk of memory, can change for each buffer */
@@ -58,6 +63,9 @@ struct spa_chunk {
 	int32_t stride;			/**< stride of valid data */
 #define SPA_CHUNK_FLAG_NONE		0
 #define SPA_CHUNK_FLAG_CORRUPTED	(1u<<0)	/**< chunk data is corrupted in some way */
+#define SPA_CHUNK_FLAG_EMPTY		(1u<<1)	/**< chunk data is empty with media specific
+						  *  neutral data such as silence or black. This
+						  *  could be used to optimize processing. */
 	int32_t flags;			/**< chunk flags */
 };
 
@@ -65,7 +73,12 @@ struct spa_chunk {
 struct spa_data {
 	uint32_t type;			/**< memory type, one of enum spa_data_type, when
 					  *  allocating memory, the type contains a bitmask
-					  *  of allowed types */
+					  *  of allowed types. SPA_ID_INVALID is a special
+					  *  value for the allocator to indicate that the
+					  *  other side did not explicitly specify any
+					  *  supported data types. It should probably use
+					  *  a memory type that does not require special
+					  *  handling in addition to simple mmap/munmap. */
 #define SPA_DATA_FLAG_NONE	 0
 #define SPA_DATA_FLAG_READABLE	(1u<<0)	/**< data is readable */
 #define SPA_DATA_FLAG_WRITABLE	(1u<<1)	/**< data is writable */
@@ -106,6 +119,10 @@ static inline void *spa_buffer_find_meta_data(const struct spa_buffer *b, uint32
 		return m->data;
 	return NULL;
 }
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

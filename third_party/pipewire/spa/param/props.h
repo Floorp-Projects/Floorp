@@ -29,6 +29,11 @@
 extern "C" {
 #endif
 
+/**
+ * \addtogroup spa_param
+ * \{
+ */
+
 #include <spa/param/param.h>
 
 /** properties of SPA_TYPE_OBJECT_PropInfo */
@@ -42,6 +47,9 @@ enum spa_prop_info {
 					  *  is of the type of the property, the second
 					  *  one is a string with a user readable label
 					  *  for the value. */
+	SPA_PROP_INFO_container,	/**< type of container if any (Id) */
+	SPA_PROP_INFO_params,		/**< is part of params property (Bool) */
+	SPA_PROP_INFO_description,	/**< User readable description */
 };
 
 /** predefined properties for SPA_TYPE_OBJECT_Props */
@@ -65,6 +73,7 @@ enum spa_prop {
 	SPA_PROP_live,
 	SPA_PROP_rate,
 	SPA_PROP_quality,
+	SPA_PROP_bluetoothAudioCodec,
 
 	SPA_PROP_START_Audio	= 0x10000,	/**< audio related properties */
 	SPA_PROP_waveType,
@@ -78,6 +87,18 @@ enum spa_prop {
 						  *  channel (Array of Float) */
 	SPA_PROP_volumeBase,			/**< a volume base (Float) */
 	SPA_PROP_volumeStep,			/**< a volume step (Float) */
+	SPA_PROP_channelMap,			/**< a channelmap array
+						  * (Array (Id enum spa_audio_channel)) */
+	SPA_PROP_monitorMute,			/**< mute (Bool) */
+	SPA_PROP_monitorVolumes,		/**< a volume array, one volume per
+						  *  channel (Array of Float) */
+	SPA_PROP_latencyOffsetNsec,		/**< delay adjustment */
+	SPA_PROP_softMute,			/**< mute (Bool) */
+	SPA_PROP_softVolumes,			/**< a volume array, one volume per
+						  *  channel (Array of Float) */
+
+	SPA_PROP_iec958Codecs,			/**< enabled IEC958 (S/PDIF) codecs,
+						  *  (Array (Id enum spa_audio_iec958_codec) */
 
 	SPA_PROP_START_Video	= 0x20000,	/**< video related properties */
 	SPA_PROP_brightness,
@@ -89,8 +110,19 @@ enum spa_prop {
 	SPA_PROP_gain,
 	SPA_PROP_sharpness,
 
+	SPA_PROP_START_Other	= 0x80000,	/**< other properties */
+	SPA_PROP_params,			/**< simple control params
+						  *    (Struct(
+						  *	  (String : key,
+						  *	   Pod    : value)*)) */
+
+
 	SPA_PROP_START_CUSTOM	= 0x1000000,
 };
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

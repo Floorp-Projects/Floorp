@@ -31,14 +31,17 @@ extern "C" {
 
 #include <spa/utils/defs.h>
 
-/** \class pw_permission
- *
- * \brief a PipeWire permission
+/** \defgroup pw_permission Permission
  *
  * Permissions are kept for a client and describe what the client is
  * allowed to do with an object.
  *
  * See \ref page_core_api
+ */
+
+/**
+ * \addtogroup pw_permission
+ * \{
  */
 
 #define PW_PERM_R	0400	/**< object can be seen and events can be received */
@@ -71,6 +74,10 @@ struct pw_permission {
 	(permission) & PW_PERM_W ? 'w' : '-',	\
 	(permission) & PW_PERM_X ? 'x' : '-',	\
 	(permission) & PW_PERM_M ? 'm' : '-'
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }

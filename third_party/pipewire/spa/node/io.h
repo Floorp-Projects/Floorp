@@ -29,6 +29,11 @@
 extern "C" {
 #endif
 
+/**
+ * \addtogroup spa_node
+ * \{
+ */
+
 #include <spa/utils/defs.h>
 #include <spa/pod/pod.h>
 
@@ -125,6 +130,7 @@ struct spa_io_range {
  * since the provider was last started.
  */
 struct spa_io_clock {
+#define SPA_IO_CLOCK_FLAG_FREEWHEEL (1u<<0)
 	uint32_t flags;			/**< clock flags */
 	uint32_t id;			/**< unique clock id, set by application */
 	char name[64];			/**< clock name prefixed with API, set by node. The clock name
@@ -137,7 +143,7 @@ struct spa_io_clock {
 	int64_t delay;			/**< delay between position and hardware,
 					  *  positive for capture, negative for playback */
 	double rate_diff;		/**< rate difference between clock and monotonic time */
-	uint64_t next_nsec;		/**< extimated next wakeup time in nanoseconds */
+	uint64_t next_nsec;		/**< estimated next wakeup time in nanoseconds */
 	uint32_t padding[8];
 };
 
@@ -231,7 +237,7 @@ struct spa_io_segment {
 						  *  segment extends to the next segment. If the
 						  *  segment becomes invalid and the looping flag is
 						  *  set, the segment repeats. */
-	double rate;				/**< overal rate of the segment, can be negative for
+	double rate;				/**< overall rate of the segment, can be negative for
 						  *  backwards time reporting. */
 	uint64_t position;			/**< The position when the running time == start.
 						  *  can be invalid when the owner of the extra segment
@@ -286,6 +292,10 @@ struct spa_io_rate_match {
 	uint32_t flags;			/**< extra flags */
 	uint32_t padding[7];
 };
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

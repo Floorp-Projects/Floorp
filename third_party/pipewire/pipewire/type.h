@@ -31,6 +31,15 @@ extern "C" {
 
 #include <spa/utils/type.h>
 
+/** \defgroup pw_type Type info
+ * Type information
+ */
+
+/**
+ * \addtogroup pw_type
+ * \{
+ */
+
 enum {
 	PW_TYPE_FIRST = SPA_TYPE_VENDOR_PipeWire,
 };
@@ -44,6 +53,10 @@ enum {
 #define PW_TYPE_INFO_INTERFACE_BASE	PW_TYPE_INFO_Interface ":"
 
 const struct spa_type_info * pw_type_info(void);
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }

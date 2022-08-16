@@ -37,6 +37,15 @@ struct itimerspec;
 #include <spa/utils/defs.h>
 #include <spa/utils/hook.h>
 
+/** \defgroup spa_system System
+ * I/O, clock, polling, timer, and signal interfaces
+ */
+
+/**
+ * \addtogroup spa_system
+ * \{
+ */
+
 /**
  * a collection of core system functions
  */
@@ -144,6 +153,10 @@ struct spa_system_methods {
 
 #define spa_system_signalfd_create(s,...)	spa_system_method_r(s,signalfd_create,0,__VA_ARGS__)
 #define spa_system_signalfd_read(s,...)		spa_system_method_r(s,signalfd_read,0,__VA_ARGS__)
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

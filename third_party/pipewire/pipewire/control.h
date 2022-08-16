@@ -31,15 +31,14 @@ extern "C" {
 
 #include <spa/utils/hook.h>
 
-/** \page page_control Control
+/** \defgroup pw_control Control
  *
- * \section page_control_overview Overview
- *
- * A control can be used to control a port property.
+ * \brief A control can be used to control a port property.
  */
-/** \class pw_control
- *
- * The control object
+
+/**
+ * \addtogroup pw_control
+ * \{
  */
 struct pw_control;
 
@@ -71,6 +70,10 @@ void pw_control_add_listener(struct pw_control *control,
 			     struct spa_hook *listener,
 			     const struct pw_control_events *events,
 			     void *data);
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }

@@ -29,6 +29,17 @@
 extern "C" {
 #endif
 
+/** \defgroup spa_node Node
+ *
+ * A spa_node is a component that can consume and produce buffers.
+ */
+
+/**
+ * \addtogroup spa_node
+ * \{
+ */
+
+#include <errno.h>
 #include <spa/utils/defs.h>
 #include <spa/utils/type.h>
 #include <spa/utils/hook.h>
@@ -37,9 +48,6 @@ extern "C" {
 #include <spa/node/command.h>
 
 
-/**
- * A spa_node is a component that can consume and produce buffers.
- */
 #define SPA_TYPE_INTERFACE_Node		SPA_TYPE_INFO_INTERFACE_BASE "Node"
 
 #define SPA_VERSION_NODE		0
@@ -68,7 +76,7 @@ struct spa_node_info {
 #define SPA_NODE_FLAG_NEED_CONFIGURE		(1u<<5)	/**< node needs configuration before it can
 							  *  be started. */
 #define SPA_NODE_FLAG_ASYNC			(1u<<6)	/**< the process function might not
-							  *  immediateley produce or consume data
+							  *  immediately produce or consume data
 							  *  but might offload the work to a worker
 							  *  thread. */
 	uint64_t flags;
@@ -286,7 +294,7 @@ struct spa_node_methods {
 	 *
 	 * \param node a #spa_node
 	 * \param listener a listener
-	 * \param events a #struct spa_node_events
+	 * \param events a struct \ref spa_node_events
 	 * \param data data passed as first argument in functions of \a events
 	 * \return 0 on success
 	 *	   < 0 errno on error
@@ -435,7 +443,7 @@ struct spa_node_methods {
 	 * This function must be called from the main thread.
 	 *
 	 * \param node a  spa_node
-	 * \param direction a #enum spa_direction
+	 * \param direction a enum \ref spa_direction
 	 * \param port_id an unused port id
 	 * \param props extra properties
 	 * \return 0 on success
@@ -449,7 +457,7 @@ struct spa_node_methods {
 	 * Remove a port with \a port_id.
 	 *
 	 * \param node a  spa_node
-	 * \param direction a #enum spa_direction
+	 * \param direction a enum \ref spa_direction
 	 * \param port_id a port id
 	 * \return 0 on success
 	 *         -EINVAL when node is NULL or when port_id is unknown or
@@ -499,12 +507,12 @@ struct spa_node_methods {
 	 *
 	 * This function must be called from the main thread.
 	 *
-	 * \param node a #struct spa_node
-	 * \param direction a #enum spa_direction
+	 * \param node a struct \ref spa_node
+	 * \param direction a enum \ref spa_direction
 	 * \param port_id the port to configure
 	 * \param id the parameter id to set
 	 * \param flags optional flags
-	 * \param param a #struct spa_pod with the parameter to set
+	 * \param param a struct \ref spa_pod with the parameter to set
 	 * \return 0 on success
 	 *         1 on success, the value of \a param might have been
 	 *                changed depending on \a flags and the final value can be found by
@@ -654,6 +662,10 @@ struct spa_node_methods {
 
 #define spa_node_port_reuse_buffer(n,...)	spa_node_method(n, port_reuse_buffer, 0, __VA_ARGS__)
 #define spa_node_process(n)			spa_node_method(n, process, 0)
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

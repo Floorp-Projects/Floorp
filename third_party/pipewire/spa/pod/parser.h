@@ -35,6 +35,11 @@ extern "C" {
 #include <spa/pod/iter.h>
 #include <spa/pod/vararg.h>
 
+/**
+ * \addtogroup spa_pod
+ * \{
+ */
+
 struct spa_pod_parser_state {
 	uint32_t offset;
 	uint32_t flags;
@@ -48,7 +53,7 @@ struct spa_pod_parser {
 	struct spa_pod_parser_state state;
 };
 
-#define SPA_POD_PARSER_INIT(buffer,size)  (struct spa_pod_parser){ buffer, size, }
+#define SPA_POD_PARSER_INIT(buffer,size)  (struct spa_pod_parser){ buffer, size, 0, {} }
 
 static inline void spa_pod_parser_init(struct spa_pod_parser *parser,
 				       const void *data, uint32_t size)
@@ -78,7 +83,7 @@ static inline struct spa_pod *
 spa_pod_parser_deref(struct spa_pod_parser *parser, uint32_t offset, uint32_t size)
 {
 	if (offset + 8 <= size) {
-		struct spa_pod *pod = SPA_MEMBER(parser->data, offset, struct spa_pod);
+		struct spa_pod *pod = SPA_PTROFF(parser->data, offset, struct spa_pod);
 		if (offset + SPA_POD_SIZE(pod) <= size)
 			return pod;
 	}
@@ -87,7 +92,7 @@ spa_pod_parser_deref(struct spa_pod_parser *parser, uint32_t offset, uint32_t si
 
 static inline struct spa_pod *spa_pod_parser_frame(struct spa_pod_parser *parser, struct spa_pod_frame *frame)
 {
-	return SPA_MEMBER(parser->data, frame->offset, struct spa_pod);
+	return SPA_PTROFF(parser->data, frame->offset, struct spa_pod);
 }
 
 static inline void spa_pod_parser_push(struct spa_pod_parser *parser,
@@ -359,6 +364,7 @@ do {											\
 		char *dest = va_arg(args, char*);					\
 		uint32_t maxlen = va_arg(args, uint32_t);				\
 		strncpy(dest, (char *)SPA_POD_CONTENTS(struct spa_pod_string, pod), maxlen-1);	\
+		dest[maxlen-1] = '\0';							\
 		break;									\
 	}										\
 	case 'y':									\
@@ -420,11 +426,11 @@ do {											\
 	case 'a':									\
 		va_arg(args, void*);							\
 		va_arg(args, void*);							\
-		/* fallthrough */							\
+		SPA_FALLTHROUGH 							\
 	case 'p':									\
 	case 'y':									\
 		va_arg(args, void*);							\
-		/* fallthrough */							\
+		SPA_FALLTHROUGH 							\
 	case 'b':									\
 	case 'I':									\
 	case 'i':									\
@@ -565,6 +571,10 @@ static inline int spa_pod_parser_get(struct spa_pod_parser *parser, ...)
 	spa_pod_parser_pod(&_p, pod);				\
 	spa_pod_parser_get_struct(&_p,##__VA_ARGS__);		\
 })
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */
