@@ -13603,14 +13603,14 @@
   mirror: once
 
 - name: webgl.override-unmasked-renderer
-  type: String
+  type: DataMutexString
   value: ""
-  mirror: never
+  mirror: always
 
 - name: webgl.override-unmasked-vendor
-  type: String
+  type: DataMutexString
   value: ""
-  mirror: never
+  mirror: always
 
 - name: webgl.power-preference-override
   type: RelaxedAtomicInt32

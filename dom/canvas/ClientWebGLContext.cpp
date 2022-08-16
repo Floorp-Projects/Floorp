@@ -28,7 +28,6 @@
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "mozilla/layers/WebRenderUserData.h"
 #include "mozilla/layers/WebRenderCanvasRenderer.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_webgl.h"
@@ -2149,30 +2148,20 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
   // -
 
   if (!debug) {
-    const auto GetPref = [&](const char* const name) {
-      Maybe<std::string> ret;
-      nsCString overrideVal;
-      const auto res = Preferences::GetCString(name, overrideVal);
-      if (NS_SUCCEEDED(res) && overrideVal.Length() > 0) {
-        ret = Some(ToString(overrideVal));
-      }
-      return ret;
-    };
-
     const auto GetUnmaskedRenderer = [&]() {
-      auto ret = GetPref("webgl.override-unmasked-renderer");
-      if (!ret) {
-        ret = GetString(LOCAL_GL_RENDERER);
+      const auto prefLock = StaticPrefs::webgl_override_unmasked_renderer();
+      if (!prefLock->IsEmpty()) {
+        return Some(ToString(*prefLock));
       }
-      return ret;
+      return GetString(LOCAL_GL_RENDERER);
     };
 
     const auto GetUnmaskedVendor = [&]() {
-      auto ret = GetPref("webgl.override-unmasked-vendor");
-      if (!ret) {
-        ret = GetString(LOCAL_GL_VENDOR);
+      const auto prefLock = StaticPrefs::webgl_override_unmasked_vendor();
+      if (!prefLock->IsEmpty()) {
+        return Some(ToString(*prefLock));
       }
-      return ret;
+      return GetString(LOCAL_GL_VENDOR);
     };
 
     // -

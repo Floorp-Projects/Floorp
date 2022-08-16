@@ -3471,13 +3471,6 @@ pref("toolkit.zoomManager.zoomValues", ".3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2
 // There is also network.http.accept which works in scope of document.
 pref("image.http.accept", "");
 
-//
-// Image memory management prefs
-//
-
-pref("webgl.renderer-string-override", "");
-pref("webgl.vendor-string-override", "");
-
 // sendbuffer of 0 means use OS default, sendbuffer unset means use
 // gecko default which varies depending on windows version and is OS
 // default on non windows
