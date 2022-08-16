@@ -25,6 +25,7 @@ class BaseNodeHTTPServerCode {
     resp.setHeader("Content-Length", response.length);
     resp.writeHead(404);
     resp.end(response);
+    return undefined;
   }
 }
 

@@ -271,7 +271,8 @@ class TRRServerCode {
       let u = url.parse(req.url, true);
       let handler = global.path_handlers[u.pathname];
       if (handler) {
-        return handler(req, resp, u);
+        handler(req, resp, u);
+        return;
       }
 
       // Didn't find a handler for this path.
@@ -350,7 +351,7 @@ function trrQueryHandler(req, resp, url) {
     req.on("data", chunk => {
       requestBody = Buffer.concat([requestBody, chunk]);
       if (requestBody.length == contentLength) {
-        return processRequest(req, resp, requestBody);
+        processRequest(req, resp, requestBody);
       }
     });
   } else if (method == "GET") {
@@ -361,7 +362,7 @@ function trrQueryHandler(req, resp, url) {
     }
 
     requestBody = Buffer.from(url.query.dns, "base64");
-    return processRequest(req, resp, requestBody);
+    processRequest(req, resp, requestBody);
   } else {
     // unexpected method.
     resp.writeHead(405);

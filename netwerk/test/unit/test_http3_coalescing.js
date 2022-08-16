@@ -124,6 +124,7 @@ add_task(async function testH3CoalescingWithSpeculativeConnection() {
 add_task(async function testH3CoalescingWithoutSpeculativeConnection() {
   Services.prefs.setIntPref("network.http.speculative-parallel-limit", 0);
   Services.obs.notifyObservers(null, "net:cancel-all-connections");
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, 1000));
   await H3CoalescingTest("baz.h3_coalescing.org", "qux.h3_coalescing.org");
 });

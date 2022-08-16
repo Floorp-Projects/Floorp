@@ -399,6 +399,7 @@ SocksTestServer.prototype = {
       }
     }
     do_throw("No test case with id " + id);
+    return null;
   },
 
   testCompleted(client) {

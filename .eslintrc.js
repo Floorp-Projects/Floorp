@@ -237,9 +237,6 @@ module.exports = {
         "netwerk/test/unit*/**",
       ],
       rules: {
-        "mozilla/no-arbitrary-setTimeout": "off",
-        "mozilla/no-define-cc-etc": "off",
-        "consistent-return": "off",
         "no-eval": "off",
         "no-global-assign": "off",
         "no-nested-ternary": "off",
