@@ -17,8 +17,8 @@ if_raw_str! {
 pub(super) struct EncodingError(Utf8Error);
 
 impl Display for EncodingError {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
-        write!(formatter, "os_str_bytes: {}", self.0)
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "os_str_bytes: {}", self.0)
     }
 }
 
@@ -30,15 +30,17 @@ macro_rules! expect_utf8 {
     ( $result:expr ) => {
         $result.expect(
             "platform string contains invalid UTF-8, which should not be \
-            possible",
+             possible",
         )
     };
 }
 
+fn from_bytes(string: &[u8]) -> Result<&str> {
+    str::from_utf8(string).map_err(EncodingError)
+}
+
 pub(super) fn os_str_from_bytes(string: &[u8]) -> Result<Cow<'_, OsStr>> {
-    str::from_utf8(string)
-        .map(|x| Cow::Borrowed(OsStr::new(x)))
-        .map_err(EncodingError)
+    from_bytes(string).map(|x| Cow::Borrowed(OsStr::new(x)))
 }
 
 pub(super) fn os_str_to_bytes(os_string: &OsStr) -> Cow<'_, [u8]> {

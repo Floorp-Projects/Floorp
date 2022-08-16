@@ -10,18 +10,20 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
-rust-version = "1.52.0"
+edition = "2021"
+rust-version = "1.57.0"
 name = "os_str_bytes"
-version = "6.1.0"
+version = "6.3.0"
 authors = ["dylni"]
 exclude = [
     ".*",
+    "tests.rs",
     "/rustfmt.toml",
+    "/src/bin",
     "/tests",
 ]
 description = """
-Utilities for converting between byte sequences and platform-native strings
+Convert between byte sequences and platform-native strings
 """
 readme = "README.md"
 keywords = [
@@ -40,6 +42,7 @@ categories = [
 ]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dylni/os_str_bytes"
+resolver = "2"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -57,7 +60,7 @@ version = "2.4"
 optional = true
 
 [dependencies.print_bytes]
-version = "0.5"
+version = "0.6"
 optional = true
 
 [dependencies.uniquote]
@@ -68,6 +71,7 @@ optional = true
 version = "0.2"
 
 [features]
+checked_conversions = []
 default = [
     "memchr",
     "raw_os_str",

@@ -1,5 +1,6 @@
 use std::char;
 use std::char::DecodeUtf16;
+use std::iter::FusedIterator;
 use std::num::NonZeroU16;
 
 use crate::util::BYTE_SHIFT;
@@ -17,7 +18,7 @@ const MIN_SURROGATE_CODE: u32 = (u16::MAX as u32) + 1;
 
 macro_rules! static_assert {
     ( $condition:expr ) => {
-        const _: () = [()][if $condition { 0 } else { 1 }];
+        const _: () = assert!($condition, "static assertion failed");
     };
 }
 
@@ -27,7 +28,7 @@ where
 {
     iter: DecodeUtf16<I>,
     code_point: u32,
-    shift: u8,
+    shifts: u8,
 }
 
 impl<I> DecodeWide<I>
@@ -41,8 +42,13 @@ where
         Self {
             iter: char::decode_utf16(string),
             code_point: 0,
-            shift: 0,
+            shifts: 0,
         }
+    }
+
+    #[inline(always)]
+    fn get_raw_byte(&self) -> u8 {
+        (self.code_point >> (self.shifts * BYTE_SHIFT)) as u8
     }
 }
 
@@ -53,11 +59,9 @@ where
     type Item = u8;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(shift) = self.shift.checked_sub(BYTE_SHIFT) {
-            self.shift = shift;
-            return Some(
-                ((self.code_point >> self.shift) as u8 & CONT_MASK) | CONT_TAG,
-            );
+        if let Some(shifts) = self.shifts.checked_sub(1) {
+            self.shifts = shifts;
+            return Some((self.get_raw_byte() & CONT_MASK) | CONT_TAG);
         }
 
         self.code_point = self
@@ -68,7 +72,7 @@ where
 
         macro_rules! decode {
             ( $tag:expr ) => {
-                Some((self.code_point >> self.shift) as u8 | $tag)
+                Some(self.get_raw_byte() | $tag)
             };
         }
         macro_rules! try_decode {
@@ -76,7 +80,7 @@ where
                 if self.code_point < $upper_bound {
                     return decode!($tag);
                 }
-                self.shift += BYTE_SHIFT;
+                self.shifts += 1;
             };
         }
         try_decode!(0, 0x80);
@@ -87,11 +91,11 @@ where
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         let (low, high) = self.iter.size_hint();
-        let shift = self.shift.into();
+        let shifts = self.shifts.into();
         (
-            low.saturating_add(shift),
+            low.saturating_add(shifts),
             high.and_then(|x| x.checked_mul(4))
-                .and_then(|x| x.checked_add(shift)),
+                .and_then(|x| x.checked_add(shifts)),
         )
     }
 }
@@ -119,6 +123,11 @@ where
     }
 }
 
+impl<I> FusedIterator for EncodeWide<I> where
+    I: FusedIterator + Iterator<Item = u8>
+{
+}
+
 impl<I> Iterator for EncodeWide<I>
 where
     I: Iterator<Item = u8>,
@@ -137,6 +146,8 @@ where
                     .map(|offset| {
                         static_assert!(MIN_LOW_SURROGATE != 0);
 
+                        // SAFETY: The above static assertion guarantees that
+                        // this value will not be zero.
                         self.surrogate = Some(unsafe {
                             NonZeroU16::new_unchecked(
                                 (offset & 0x3FF) as u16 | MIN_LOW_SURROGATE,

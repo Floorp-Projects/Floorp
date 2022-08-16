@@ -1,3 +1,4 @@
+use std::iter::FusedIterator;
 use std::iter::Peekable;
 use std::mem;
 
@@ -31,27 +32,31 @@ where
     }
 
     fn consume_next(&mut self, code_point: &mut u32) -> Result<()> {
-        if let Some(&byte) = self.iter.peek() {
-            if !is_continuation(byte) {
-                self.surrogate = false;
-                // Not consuming this byte will be useful if this crate ever
-                // offers a way to encode lossily.
-                return Err(EncodingError::Byte(byte));
-            }
-            *code_point =
-                (*code_point << BYTE_SHIFT) | u32::from(byte & CONT_MASK);
+        let &byte = self.iter.peek().ok_or(EncodingError::End())?;
 
-            let removed = self.iter.next();
-            debug_assert_eq!(Some(byte), removed);
-        } else {
-            return Err(EncodingError::End());
+        if !is_continuation(byte) {
+            self.surrogate = false;
+            // Not consuming this byte will be useful if this crate ever offers
+            // a way to encode lossily.
+            return Err(EncodingError::Byte(byte));
         }
+        *code_point =
+            (*code_point << BYTE_SHIFT) | u32::from(byte & CONT_MASK);
+
+        let removed = self.iter.next();
+        debug_assert_eq!(Some(byte), removed);
+
         Ok(())
     }
 
     pub(super) fn inner_size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
     }
+}
+
+impl<I> FusedIterator for CodePoints<I> where
+    I: FusedIterator + Iterator<Item = u8>
+{
 }
 
 impl<I> Iterator for CodePoints<I>
