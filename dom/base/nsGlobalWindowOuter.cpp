@@ -3366,7 +3366,8 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::IndexedGetterOuter(
   BrowsingContext* bc = GetBrowsingContext();
   NS_ENSURE_TRUE(bc, nullptr);
 
-  Span<RefPtr<BrowsingContext>> children = bc->Children();
+  Span<RefPtr<BrowsingContext>> children = bc->NonSyntheticChildren();
+
   if (aIndex < children.Length()) {
     return WindowProxyHolder(children[aIndex]);
   }
@@ -3994,7 +3995,7 @@ double nsGlobalWindowOuter::GetScrollYOuter() { return GetScrollXY(false).y; }
 
 uint32_t nsGlobalWindowOuter::Length() {
   BrowsingContext* bc = GetBrowsingContext();
-  return bc ? bc->Children().Length() : 0;
+  return bc ? bc->NonSyntheticChildren().Length() : 0;
 }
 
 Nullable<WindowProxyHolder> nsGlobalWindowOuter::GetTopOuter() {
