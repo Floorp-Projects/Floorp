@@ -12,16 +12,37 @@
 [package]
 edition = "2018"
 name = "unicode-normalization"
-version = "0.1.20"
-authors = ["kwantam <kwantam@gmail.com>", "Manish Goregaokar <manishsmail@gmail.com>"]
-exclude = ["target/*", "Cargo.lock", "scripts/tmp", "*.txt", "tests/*"]
-description = "This crate provides functions for normalization of\nUnicode strings, including Canonical and Compatible\nDecomposition and Recomposition, as described in\nUnicode Standard Annex #15.\n"
+version = "0.1.21"
+authors = [
+    "kwantam <kwantam@gmail.com>",
+    "Manish Goregaokar <manishsmail@gmail.com>",
+]
+exclude = [
+    "target/*",
+    "Cargo.lock",
+    "scripts/tmp",
+    "*.txt",
+    "tests/*",
+]
+description = """
+This crate provides functions for normalization of
+Unicode strings, including Canonical and Compatible
+Decomposition and Recomposition, as described in
+Unicode Standard Annex #15.
+"""
 homepage = "https://github.com/unicode-rs/unicode-normalization"
 documentation = "https://docs.rs/unicode-normalization/"
 readme = "README.md"
-keywords = ["text", "unicode", "normalization", "decomposition", "recomposition"]
+keywords = [
+    "text",
+    "unicode",
+    "normalization",
+    "decomposition",
+    "recomposition",
+]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/unicode-rs/unicode-normalization"
+
 [dependencies.tinyvec]
 version = "1"
 features = ["alloc"]
