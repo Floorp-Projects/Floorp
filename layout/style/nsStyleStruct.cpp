@@ -1319,16 +1319,6 @@ nsChangeHint nsStylePosition::CalcDifference(
   return hint;
 }
 
-const StyleContainIntrinsicSize& nsStylePosition::ContainIntrinsicBSize(
-    const WritingMode& aWM) const {
-  return aWM.IsVertical() ? mContainIntrinsicWidth : mContainIntrinsicHeight;
-}
-
-const StyleContainIntrinsicSize& nsStylePosition::ContainIntrinsicISize(
-    const WritingMode& aWM) const {
-  return aWM.IsVertical() ? mContainIntrinsicHeight : mContainIntrinsicWidth;
-}
-
 StyleAlignSelf nsStylePosition::UsedAlignSelf(
     const ComputedStyle* aParent) const {
   if (mAlignSelf._0 != StyleAlignFlags::AUTO) {
@@ -3585,22 +3575,8 @@ nscoord StyleCalcNode::Resolve(nscoord aBasis,
   return ResolveInternal(aBasis, aRounder);
 }
 
-static bool CanUseLastRememberedSize(const nsIFrame& aFrame) {
-  switch (aFrame.StyleDisplay()->mContentVisibility) {
-    case StyleContentVisibility::Visible:
-      return false;
-    case StyleContentVisibility::Auto:
-      // TODO: return true if the element skips its contents, i.e. if it's not
-      // relevant to the user.
-      return false;
-    case StyleContentVisibility::Hidden:
-      return true;
-  }
-}
-
 static nscoord Resolve(const StyleContainIntrinsicSize& aSize,
-                       nscoord aNoneValue, const nsIFrame& aFrame,
-                       LogicalAxis aAxis) {
+                       nscoord aNoneValue) {
   if (aSize.IsNone()) {
     return aNoneValue;
   }
@@ -3608,35 +3584,8 @@ static nscoord Resolve(const StyleContainIntrinsicSize& aSize,
     return aSize.AsLength().ToAppUnits();
   }
   MOZ_ASSERT(aSize.IsAutoLength());
-  if (const auto* element = Element::FromNodeOrNull(aFrame.GetContent())) {
-    Maybe<float> lastSize = aAxis == eLogicalAxisBlock
-                                ? element->GetLastRememberedBSize()
-                                : element->GetLastRememberedISize();
-    if (lastSize && CanUseLastRememberedSize(aFrame)) {
-      return CSSPixel::ToAppUnits(*lastSize);
-    }
-  }
+  // TODO: use last remembered size if possible.
   return aSize.AsAutoLength().ToAppUnits();
-}
-
-Maybe<nscoord> ContainSizeAxes::ContainIntrinsicBSize(
-    const nsIFrame& aFrame, nscoord aNoneValue) const {
-  if (!mBContained) {
-    return Nothing();
-  }
-  const StyleContainIntrinsicSize& bSize =
-      aFrame.StylePosition()->ContainIntrinsicBSize(aFrame.GetWritingMode());
-  return Some(Resolve(bSize, aNoneValue, aFrame, eLogicalAxisBlock));
-}
-
-Maybe<nscoord> ContainSizeAxes::ContainIntrinsicISize(
-    const nsIFrame& aFrame, nscoord aNoneValue) const {
-  if (!mIContained) {
-    return Nothing();
-  }
-  const StyleContainIntrinsicSize& iSize =
-      aFrame.StylePosition()->ContainIntrinsicISize(aFrame.GetWritingMode());
-  return Some(Resolve(iSize, aNoneValue, aFrame, eLogicalAxisInline));
 }
 
 nsSize ContainSizeAxes::ContainSize(const nsSize& aUncontainedSize,
@@ -3644,14 +3593,20 @@ nsSize ContainSizeAxes::ContainSize(const nsSize& aUncontainedSize,
   if (!IsAny()) {
     return aUncontainedSize;
   }
-  if (aFrame.GetWritingMode().IsVertical()) {
-    return nsSize(
-        ContainIntrinsicBSize(aFrame).valueOr(aUncontainedSize.Width()),
-        ContainIntrinsicISize(aFrame).valueOr(aUncontainedSize.Height()));
+  const nsStylePosition* stylePos = aFrame.StylePosition();
+  if (IsBoth()) {
+    return nsSize(Resolve(stylePos->mContainIntrinsicWidth, 0),
+                  Resolve(stylePos->mContainIntrinsicHeight, 0));
   }
-  return nsSize(
-      ContainIntrinsicISize(aFrame).valueOr(aUncontainedSize.Width()),
-      ContainIntrinsicBSize(aFrame).valueOr(aUncontainedSize.Height()));
+  // At this point, we know that precisely one of our dimensions is contained.
+  const bool containsWidth =
+      aFrame.GetWritingMode().IsVertical() ? mBContained : mIContained;
+  if (containsWidth) {
+    return nsSize(Resolve(stylePos->mContainIntrinsicWidth, 0),
+                  aUncontainedSize.Height());
+  }
+  return nsSize(aUncontainedSize.Width(),
+                Resolve(stylePos->mContainIntrinsicHeight, 0));
 }
 
 IntrinsicSize ContainSizeAxes::ContainIntrinsicSize(
@@ -3659,13 +3614,43 @@ IntrinsicSize ContainSizeAxes::ContainIntrinsicSize(
   if (!IsAny()) {
     return aUncontainedSize;
   }
-  IntrinsicSize result(aUncontainedSize);
-  const bool isVerticalWM = aFrame.GetWritingMode().IsVertical();
-  if (Maybe<nscoord> containBSize = ContainIntrinsicBSize(aFrame)) {
-    (isVerticalWM ? result.width : result.height) = containBSize;
+  const nsStylePosition* stylePos = aFrame.StylePosition();
+  if (IsBoth()) {
+    return IntrinsicSize(Resolve(stylePos->mContainIntrinsicWidth, 0),
+                         Resolve(stylePos->mContainIntrinsicHeight, 0));
   }
-  if (Maybe<nscoord> containISize = ContainIntrinsicISize(aFrame)) {
-    (isVerticalWM ? result.height : result.width) = containISize;
+  // At this point, we know that precisely one of our dimensions is contained.
+  const bool containsWidth =
+      aFrame.GetWritingMode().IsVertical() ? mBContained : mIContained;
+  IntrinsicSize result(aUncontainedSize);
+  if (containsWidth) {
+    result.width = Some(Resolve(stylePos->mContainIntrinsicWidth, 0));
+  } else {
+    result.height = Some(Resolve(stylePos->mContainIntrinsicHeight, 0));
   }
   return result;
+}
+
+Maybe<nscoord> ContainSizeAxes::ContainIntrinsicBSize(
+    const nsIFrame& aFrame, nscoord aNoneValue) const {
+  if (!mBContained) {
+    return Nothing();
+  }
+  const nsStylePosition* stylePos = aFrame.StylePosition();
+  return Some(Resolve(aFrame.GetWritingMode().IsVertical()
+                          ? stylePos->mContainIntrinsicWidth
+                          : stylePos->mContainIntrinsicHeight,
+                      aNoneValue));
+}
+
+Maybe<nscoord> ContainSizeAxes::ContainIntrinsicISize(
+    const nsIFrame& aFrame, nscoord aNoneValue) const {
+  if (!mIContained) {
+    return Nothing();
+  }
+  const nsStylePosition* stylePos = aFrame.StylePosition();
+  return Some(Resolve(aFrame.GetWritingMode().IsVertical()
+                          ? stylePos->mContainIntrinsicHeight
+                          : stylePos->mContainIntrinsicWidth,
+                      aNoneValue));
 }
