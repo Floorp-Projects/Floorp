@@ -153,6 +153,24 @@ nsCookieBannerService::GetRules(nsTArray<RefPtr<nsICookieBannerRule>>& aRules) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsCookieBannerService::ResetRules(const bool doImport) {
+  // Service is disabled, throw.
+  if (!mIsInitialized) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  mRules.Clear();
+
+  if (doImport) {
+    NS_ENSURE_TRUE(mListService, NS_ERROR_FAILURE);
+    nsresult rv = mListService->ImportRules();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
 nsresult nsCookieBannerService::GetRuleForDomain(const nsACString& aDomain,
                                                  nsICookieBannerRule** aRule) {
   NS_ENSURE_ARG_POINTER(aRule);
