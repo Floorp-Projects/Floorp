@@ -91,6 +91,11 @@ criteria = "safe-to-deploy"
 version = "0.5.2"
 notes = "Another crate I own via contain-rs that is ancient and maintenance mode, no known issues."
 
+[[audits.bit-set]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.5.2 -> 0.5.3"
+
 [[audits.bit-vec]]
 who = "Aria Beingessner <a.beingessner@gmail.com>"
 criteria = "safe-to-deploy"
