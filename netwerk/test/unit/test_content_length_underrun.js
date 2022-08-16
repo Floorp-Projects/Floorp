@@ -46,17 +46,20 @@ function run_test() {
 
 function run_test_number(num) {
   let testPath = testPathBase + num;
+  // eslint-disable-next-line no-eval
   httpserver.registerPathHandler(testPath, eval("handler" + num));
 
   var channel = setupChannel(testPath);
   let flags = test_flags[num]; // OK if flags undefined for test
   channel.asyncOpen(
+    // eslint-disable-next-line no-eval
     new ChannelListener(eval("completeTest" + num), channel, flags)
   );
 }
 
 function run_gzip_test(num) {
   let testPath = testPathBase + num;
+  // eslint-disable-next-line no-eval
   httpserver.registerPathHandler(testPath, eval("handler" + num));
 
   var channel = setupChannel(testPath);
