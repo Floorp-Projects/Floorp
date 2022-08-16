@@ -68,6 +68,11 @@ Just contains some traits and re-exports for use by a broader package of related
 crates. No unsafe code or ambient capability usage.
 """
 
+[[audits.async-trait]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.1.56 -> 0.1.57"
+
 [[audits.atomic_refcell]]
 who = "Bobby Holley <bholley@mozilla.com>"
 criteria = "safe-to-deploy"
