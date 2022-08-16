@@ -650,11 +650,7 @@ static bool DoSendPing(const PingThreadContext& aContext) {
   }
 
   // Obtain the name of the temp file that we have written
-  TempFileWriter& tempFile = *static_cast<TempFileWriter*>(json.WriteFunc());
-  if (!tempFile) {
-    return false;
-  }
-
+  TempFileWriter& tempFile = static_cast<TempFileWriter&>(json.WriteFunc());
   const std::wstring& fileName = tempFile.GetFileName();
 
   // Using the path to our executable binary, construct the path to

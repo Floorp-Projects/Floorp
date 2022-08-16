@@ -471,7 +471,7 @@ class HandleReportAndFinishReportingCallbacks final
     // was measured by them -- by "heap-allocated" if nothing else -- we want
     // DMD to see it as well. So we deliberately don't call Finish() until
     // after DMD finishes.
-    nsresult rv = static_cast<GZWriterWrapper*>(mWriter->WriteFunc())->Finish();
+    nsresult rv = static_cast<GZWriterWrapper&>(mWriter->WriteFunc()).Finish();
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!mFinishDumping) {

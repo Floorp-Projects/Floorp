@@ -346,12 +346,15 @@ class JSONWriter {
   explicit JSONWriter(UniquePtr<JSONWriteFunc> aWriter,
                       CollectionStyle aStyle = MultiLineStyle)
       : mWriter(std::move(aWriter)), mNeedComma(), mNeedNewlines(), mDepth(0) {
+    MOZ_RELEASE_ASSERT(
+        mWriter,
+        "JSONWriter must be given a non-null UniquePtr<JSONWriteFunc>");
     NewVectorEntries(aStyle == MultiLineStyle);
   }
 
   // Returns the JSONWriteFunc passed in at creation, for temporary use. The
   // JSONWriter object still owns the JSONWriteFunc.
-  JSONWriteFunc* WriteFunc() const { return mWriter.get(); }
+  JSONWriteFunc& WriteFunc() const { return *mWriter.get(); }
 
   // For all the following functions, the "Prints:" comment indicates what the
   // basic output looks like. However, it doesn't indicate the whitespace and
