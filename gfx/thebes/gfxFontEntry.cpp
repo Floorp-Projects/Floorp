@@ -1039,15 +1039,6 @@ void gfxFontEntry::GetFeatureInfo(nsTArray<gfxFontFeatureInfo>& aFeatureInfo) {
   collectForTable(HB_TAG('G', 'P', 'O', 'S'));
 }
 
-bool gfxFontEntry::GetColorLayersInfo(
-    uint32_t aGlyphId, const mozilla::gfx::DeviceColor& aDefaultColor,
-    nsTArray<uint16_t>& aLayerGlyphs,
-    nsTArray<mozilla::gfx::DeviceColor>& aLayerColors) {
-  return gfx::COLRFonts::GetColorGlyphLayers(GetCOLR(), GetCPAL(), aGlyphId,
-                                             aDefaultColor, aLayerGlyphs,
-                                             aLayerColors);
-}
-
 typedef struct {
   AutoSwap_PRUint32 version;
   AutoSwap_PRUint16 format;
