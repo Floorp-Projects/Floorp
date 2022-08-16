@@ -10,6 +10,7 @@
 
 struct hb_blob_t;
 struct hb_face_t;
+struct hb_font_t;
 
 namespace mozilla {
 
@@ -18,21 +19,44 @@ class TextDrawTarget;
 }
 
 namespace gfx {
-struct COLRBaseGlyphRecord;
 
 class COLRFonts {
  public:
-  // for color layer from glyph using COLR and CPAL tables
   static bool ValidateColorGlyphs(hb_blob_t* aCOLR, hb_blob_t* aCPAL);
 
-  static const COLRBaseGlyphRecord* GetGlyphLayers(hb_blob_t* aCOLR,
-                                                   uint32_t aGlyphId);
+  // COLRv0: color glyph is represented as a simple list of colored layers.
+  struct GlyphLayers;
+
+  static const GlyphLayers* GetGlyphLayers(hb_blob_t* aCOLR, uint32_t aGlyphId);
 
   static bool PaintGlyphLayers(
-      hb_blob_t* aCOLR, hb_face_t* aFace, const COLRBaseGlyphRecord* aLayers,
+      hb_blob_t* aCOLR, hb_face_t* aFace, const GlyphLayers* aLayers,
       DrawTarget* aDrawTarget, layout::TextDrawTarget* aTextDrawer,
       ScaledFont* aScaledFont, DrawOptions aDrawOptions,
       const sRGBColor& aCurrentColor, const Point& aPoint);
+
+  // COLRv1 support: color glyph is represented by a directed acyclic graph of
+  // paint records.
+  struct GlyphPaintGraph;
+
+  static const GlyphPaintGraph* GetGlyphPaintGraph(hb_blob_t* aCOLR,
+                                                   uint32_t aGlyphId);
+
+  static bool PaintGlyphGraph(hb_blob_t* aCOLR, hb_font_t* aFont,
+                              const GlyphPaintGraph* aPaintGraph,
+                              DrawTarget* aDrawTarget,
+                              layout::TextDrawTarget* aTextDrawer,
+                              ScaledFont* aScaledFont, DrawOptions aDrawOptions,
+                              const sRGBColor& aCurrentColor,
+                              const Point& aPoint, uint32_t aGlyphId,
+                              float aFontUnitsToPixels);
+
+  static Rect GetColorGlyphBounds(hb_blob_t* aCOLR, hb_font_t* aFont,
+                                  uint32_t aGlyphId, DrawTarget* aDrawTarget,
+                                  ScaledFont* aScaledFont,
+                                  float aFontUnitsToPixels);
+
+  static uint16_t GetColrTableVersion(hb_blob_t* aCOLR);
 };
 
 }  // namespace gfx
