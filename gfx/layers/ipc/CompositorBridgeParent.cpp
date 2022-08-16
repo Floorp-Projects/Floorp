@@ -366,7 +366,7 @@ CompositorBridgeParent::~CompositorBridgeParent() {
     tex->DeallocateDeviceData();
   }
   // Check if WebRender/Compositor was shutdown.
-  if (mWrBridge || mCompositor) {
+  if (mWrBridge) {
     gfxCriticalNote << "CompositorBridgeParent destroyed without shutdown";
   }
 }
@@ -434,11 +434,6 @@ void CompositorBridgeParent::StopAndClearResources() {
       // WebRenderAPI should be already destructed
       mAsyncImageManager = nullptr;
     }
-  }
-
-  if (mCompositor) {
-    mCompositor->Destroy();
-    mCompositor = nullptr;
   }
 
   // This must be destroyed now since it accesses the widget.
@@ -599,10 +594,7 @@ void CompositorBridgeParent::PauseComposition() {
     mPaused = true;
 
     TimeStamp now = TimeStamp::Now();
-    if (mCompositor) {
-      mCompositor->Pause();
-      DidComposite(VsyncId(), now, now);
-    } else if (mWrBridge) {
+    if (mWrBridge) {
       mWrBridge->Pause();
       NotifyPipelineRendered(mWrBridge->PipelineId(),
                              mWrBridge->GetCurrentEpoch(), VsyncId(), now, now,
@@ -662,13 +654,6 @@ void CompositorBridgeParent::SetEGLSurfaceRect(int x, int y, int width,
   NS_ASSERTION(mUseExternalSurfaceSize,
                "Compositor created without UseExternalSurfaceSize provided");
   mEGLSurfaceSize.SizeTo(width, height);
-  if (mCompositor) {
-    mCompositor->SetDestinationSurfaceSize(
-        gfx::IntSize(mEGLSurfaceSize.width, mEGLSurfaceSize.height));
-    if (mCompositor->AsCompositorOGL()) {
-      mCompositor->AsCompositorOGL()->SetSurfaceOrigin(ScreenIntPoint(x, y));
-    }
-  }
 }
 
 void CompositorBridgeParent::ResumeCompositionAndResize(int x, int y, int width,
@@ -1193,7 +1178,6 @@ PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
     const WindowKind& aWindowKind) {
   MOZ_ASSERT(wr::AsLayersId(aPipelineId) == mRootLayerTreeID);
   MOZ_ASSERT(!mWrBridge);
-  MOZ_ASSERT(!mCompositor);
   MOZ_ASSERT(!mCompositorScheduler);
   MOZ_ASSERT(mWidget);
 

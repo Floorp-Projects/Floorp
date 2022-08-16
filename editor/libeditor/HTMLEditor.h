@@ -486,8 +486,8 @@ class HTMLEditor final : public EditorBase,
    *                            called by system.
    */
   MOZ_CAN_RUN_SCRIPT nsresult SetInlinePropertyAsAction(
-      nsAtom& aProperty, nsAtom* aAttribute, const nsAString& aValue,
-      nsIPrincipal* aPrincipal = nullptr);
+      nsStaticAtom& aProperty, nsStaticAtom* aAttribute,
+      const nsAString& aValue, nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * GetInlineProperty() gets aggregate properties of the current selection.
@@ -874,8 +874,8 @@ class HTMLEditor final : public EditorBase,
    */
   enum class FontSize { incr, decr };
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
-  RelativeFontChangeOnTextNode(FontSize aDir, Text& aTextNode,
-                               uint32_t aStartOffset, uint32_t aEndOffset);
+  SetFontSizeOnTextNode(Text& aTextNode, uint32_t aStartOffset,
+                        uint32_t aEndOffset, FontSize aIncrementOrDecrement);
 
   /**
    * @return            A suggest point to put caret.
@@ -3298,19 +3298,16 @@ class HTMLEditor final : public EditorBase,
       Document& aDocument, const nsACString& aCharacterSet);
 
   /**
-   * SetInlinePropertyAsSubAction() stores new style with `mTypeInState` if
-   * `Selection` is collapsed.  Otherwise, applying the style at all selection
-   * ranges.
+   * SetInlinePropertiesAsSubAction() stores new styles with mTypeInState if
+   * `Selection` is collapsed.  Otherwise, applying the styles to all selected
+   * contents.
    *
-   * @param aHTMLProperty       One of the presentation tag names which we
-   *                            support in style editor.
-   * @param aAttribute          For some aProperty values, needs to be set to
-   *                            its attribute name.  Otherwise, nullptr.
-   * @param aAttributeValue     The value of aAttribute.
+   * @param aStylesToSet        The styles which should be applied to the
+   *                            selected content.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  SetInlinePropertyAsSubAction(nsAtom& aHTMLProperty, nsAtom* aAttribute,
-                               const nsAString& aAttributeValue);
+  template <size_t N>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SetInlinePropertiesAsSubAction(
+      const AutoTArray<EditorInlineStyleAndValue, N>& aStylesToSet);
 
   /**
    * RemoveInlinePropertiesAsSubAction() removes specified styles from
@@ -3351,7 +3348,7 @@ class HTMLEditor final : public EditorBase,
    * or calls to set the page background.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  SetCSSBackgroundColorWithTransaction(const nsAString& aColor);
+  SetBlockBackgroundColorWithCSSAsSubAction(const nsAString& aColor);
   MOZ_CAN_RUN_SCRIPT nsresult
   SetHTMLBackgroundColorWithTransaction(const nsAString& aColor);
 
@@ -3883,12 +3880,35 @@ class HTMLEditor final : public EditorBase,
   /**
    * Increase/decrease the font size of selection.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult RelativeFontChange(FontSize aDir);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  IncrementOrDecrementFontSizeAsSubAction(FontSize aIncrementOrDecrement);
 
-  MOZ_CAN_RUN_SCRIPT nsresult RelativeFontChangeOnNode(int32_t aSizeChange,
-                                                       nsIContent* aNode);
-  MOZ_CAN_RUN_SCRIPT nsresult RelativeFontChangeHelper(int32_t aSizeChange,
-                                                       nsINode* aNode);
+  /**
+   * Wrap aContent in <big> or <small> element and make children of
+   * <font size=n> wrap with <big> or <small> too.  Note that if there is
+   * opposite element for aIncrementOrDecrement, their children will be just
+   * unwrapped.
+   *
+   * @param aDir        Whether increase or decrease the font size of aContent.
+   * @param aContent    The content node whose font size will be changed.
+   * @return            A suggest point to put caret.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  SetFontSizeWithBigOrSmallElement(nsIContent& aContent,
+                                   FontSize aIncrementOrDecrement);
+
+  /**
+   * Adjust font size of font element children recursively with handling
+   * <big> and <small> elements.
+   *
+   * @param aDir        Whether increase or decrease the font size of aContent.
+   * @param aContent    The content node whose font size will be changed.
+   *                    All descendants will be handled recursively.
+   * @return            A suggest point to put caret.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  SetFontSizeOfFontElementChildren(nsIContent& aContent,
+                                   FontSize aIncrementOrDecrement);
 
   /**
    * SetInlinePropertyOnTextNode() splits aData if aStartOffset and/or

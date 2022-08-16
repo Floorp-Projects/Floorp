@@ -675,7 +675,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   static bool sStable;
   static uint32_t sFramesComposited;
 
-  RefPtr<Compositor> mCompositor;
   RefPtr<AsyncImagePipelineManager> mAsyncImageManager;
   RefPtr<WebRenderBridgeParent> mWrBridge;
   widget::CompositorWidget* mWidget;

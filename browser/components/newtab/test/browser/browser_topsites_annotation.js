@@ -6,7 +6,7 @@
 // Test whether a visit information is annotated correctly when clicking a tile.
 
 if (AppConstants.platform === "macosx") {
-  requestLongerTimeout(3);
+  requestLongerTimeout(4);
 } else {
   requestLongerTimeout(2);
 }
@@ -23,8 +23,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const OPEN_TYPE = {
   CURRENT_BY_CLICK: 0,
   NEWTAB_BY_CLICK: 1,
-  NEWTAB_BY_CONTEXTMENU: 2,
-  NEWWINDOW_BY_CONTEXTMENU: 3,
+  NEWTAB_BY_MIDDLECLICK: 2,
+  NEWTAB_BY_CONTEXTMENU: 3,
+  NEWWINDOW_BY_CONTEXTMENU: 4,
 };
 
 const FRECENCY = {
@@ -32,6 +33,8 @@ const FRECENCY = {
   VISITED: 100,
   SPONSORED: -1,
   BOOKMARKED: 2075,
+  MIDDLECLICK_TYPED: 100,
+  MIDDLECLICK_BOOKMARKED: 175,
   NEWWINDOW_TYPED: 100,
   NEWWINDOW_BOOKMARKED: 175,
 };
@@ -134,6 +137,23 @@ async function openAndTest({
     await BrowserTestUtils.synthesizeMouseAtCenter(
       linkSelector,
       { ctrlKey: true, metaKey: true },
+      gBrowser.selectedBrowser
+    );
+
+    const tab = await onLoad;
+    await onLocationChanged;
+    BrowserTestUtils.removeTab(tab);
+  } else if (openType === OPEN_TYPE.NEWTAB_BY_MIDDLECLICK) {
+    const onLoad = BrowserTestUtils.waitForNewTab(
+      gBrowser,
+      destinationURL,
+      true
+    );
+    const onLocationChanged = waitForLocationChanged(destinationURL);
+
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      linkSelector,
+      { button: 1 },
       gBrowser.selectedBrowser
     );
 
@@ -243,9 +263,27 @@ add_task(async function basic() {
       },
     },
     {
-      description: "Sponsored tile in new tab",
+      description: "Sponsored tile in new tab by click with key",
       link: SPONSORED_LINK,
       openType: OPEN_TYPE.NEWTAB_BY_CLICK,
+      expected: {
+        source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
+      },
+    },
+    {
+      description: "Sponsored tile in new tab by middle click",
+      link: SPONSORED_LINK,
+      openType: OPEN_TYPE.NEWTAB_BY_MIDDLECLICK,
+      expected: {
+        source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
+      },
+    },
+    {
+      description: "Sponsored tile in new tab by context menu",
+      link: SPONSORED_LINK,
+      openType: OPEN_TYPE.NEWTAB_BY_CONTEXTMENU,
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
@@ -270,13 +308,33 @@ add_task(async function basic() {
       },
     },
     {
-      description: "Bookmarked result in new tab",
+      description: "Bookmarked result in new tab by click with key",
       link: NORMAL_LINK,
       openType: OPEN_TYPE.NEWTAB_BY_CLICK,
       bookmarks: BOOKMARKS,
       expected: {
         source: VISIT_SOURCE_BOOKMARKED,
         frecency: FRECENCY.BOOKMARKED,
+      },
+    },
+    {
+      description: "Bookmarked result in new tab by middle click",
+      link: NORMAL_LINK,
+      openType: OPEN_TYPE.NEWTAB_BY_MIDDLECLICK,
+      bookmarks: BOOKMARKS,
+      expected: {
+        source: VISIT_SOURCE_BOOKMARKED,
+        frecency: FRECENCY.MIDDLECLICK_BOOKMARKED,
+      },
+    },
+    {
+      description: "Bookmarked result in new tab by context menu",
+      link: NORMAL_LINK,
+      openType: OPEN_TYPE.NEWTAB_BY_CONTEXTMENU,
+      bookmarks: BOOKMARKS,
+      expected: {
+        source: VISIT_SOURCE_BOOKMARKED,
+        frecency: FRECENCY.MIDDLECLICK_BOOKMARKED,
       },
     },
     {
@@ -299,13 +357,34 @@ add_task(async function basic() {
       },
     },
     {
-      description: "Sponsored and bookmarked result in new tab",
+      description:
+        "Sponsored and bookmarked result in new tab by click with key",
       link: SPONSORED_LINK,
       openType: OPEN_TYPE.NEWTAB_BY_CLICK,
       bookmarks: BOOKMARKS,
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.BOOKMARKED,
+      },
+    },
+    {
+      description: "Sponsored and bookmarked result in new tab by middle click",
+      link: SPONSORED_LINK,
+      openType: OPEN_TYPE.NEWTAB_BY_MIDDLECLICK,
+      bookmarks: BOOKMARKS,
+      expected: {
+        source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.MIDDLECLICK_BOOKMARKED,
+      },
+    },
+    {
+      description: "Sponsored and bookmarked result in new tab by context menu",
+      link: SPONSORED_LINK,
+      openType: OPEN_TYPE.NEWTAB_BY_CONTEXTMENU,
+      bookmarks: BOOKMARKS,
+      expected: {
+        source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.MIDDLECLICK_BOOKMARKED,
       },
     },
     {
@@ -327,12 +406,30 @@ add_task(async function basic() {
       },
     },
     {
-      description: "Organic tile in new tab",
+      description: "Organic tile in new tab by click with key",
       link: NORMAL_LINK,
       openType: OPEN_TYPE.NEWTAB_BY_CLICK,
       expected: {
         source: VISIT_SOURCE_ORGANIC,
         frecency: FRECENCY.TYPED,
+      },
+    },
+    {
+      description: "Organic tile in new tab by middle click",
+      link: NORMAL_LINK,
+      openType: OPEN_TYPE.NEWTAB_BY_MIDDLECLICK,
+      expected: {
+        source: VISIT_SOURCE_ORGANIC,
+        frecency: FRECENCY.MIDDLECLICK_TYPED,
+      },
+    },
+    {
+      description: "Organic tile in new tab by context menu",
+      link: NORMAL_LINK,
+      openType: OPEN_TYPE.NEWTAB_BY_CONTEXTMENU,
+      expected: {
+        source: VISIT_SOURCE_ORGANIC,
+        frecency: FRECENCY.MIDDLECLICK_TYPED,
       },
     },
     {
@@ -480,11 +577,28 @@ add_task(async function inherit() {
     });
     await PlacesTestUtils.clearHistoryVisits();
 
-    info("Open link on first page to show second page in new tab");
+    info(
+      "Open link on first page to show second page in new tab by click with key"
+    );
     await openAndTest({
       linkSelector: "a",
       linkURL: secondURL,
       openType: OPEN_TYPE.NEWTAB_BY_CLICK,
+      expected: {
+        source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
+        triggerURL: link.url,
+      },
+    });
+    await PlacesTestUtils.clearHistoryVisits();
+
+    info(
+      "Open link on first page to show second page in new tab by middle click"
+    );
+    await openAndTest({
+      linkSelector: "a",
+      linkURL: secondURL,
+      openType: OPEN_TYPE.NEWTAB_BY_MIDDLECLICK,
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
@@ -524,6 +638,21 @@ add_task(async function inherit() {
       linkSelector: "a",
       linkURL: thirdURL,
       openType: OPEN_TYPE.NEWTAB_BY_CONTEXTMENU,
+      expected: {
+        source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
+        triggerURL: link.url,
+      },
+    });
+    await PlacesTestUtils.clearHistoryVisits();
+
+    info(
+      "Open link on second page to show third page in new tab by middle click"
+    );
+    await openAndTest({
+      linkSelector: "a",
+      linkURL: thirdURL,
+      openType: OPEN_TYPE.NEWTAB_BY_MIDDLECLICK,
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
@@ -630,11 +759,27 @@ add_task(async function timeout() {
     });
     await PlacesTestUtils.clearHistoryVisits();
 
-    info("Open link on first page to show second page in new tab");
+    info(
+      "Open link on first page to show second page in new tab by click with key"
+    );
     await openAndTest({
       linkSelector: "a",
       linkURL: secondURL,
       openType: OPEN_TYPE.NEWTAB_BY_CLICK,
+      expected: {
+        source: VISIT_SOURCE_ORGANIC,
+        frecency: FRECENCY.VISITED,
+      },
+    });
+    await PlacesTestUtils.clearHistoryVisits();
+
+    info(
+      "Open link on first page to show second page in new tab by middle click"
+    );
+    await openAndTest({
+      linkSelector: "a",
+      linkURL: secondURL,
+      openType: OPEN_TYPE.NEWTAB_BY_MIDDLECLICK,
       expected: {
         source: VISIT_SOURCE_ORGANIC,
         frecency: FRECENCY.VISITED,

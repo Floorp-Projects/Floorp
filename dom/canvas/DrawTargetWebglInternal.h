@@ -311,13 +311,15 @@ class GlyphCacheEntry : public CacheEntryImpl<GlyphCacheEntry> {
 
   GlyphCacheEntry(const GlyphBuffer& aBuffer, const DeviceColor& aColor,
                   const Matrix& aTransform, const IntPoint& aQuantizeScale,
-                  const IntRect& aBounds, HashNumber aHash);
+                  const IntRect& aBounds, const IntRect& aFullBounds,
+                  HashNumber aHash);
   ~GlyphCacheEntry();
 
   const GlyphBuffer& GetGlyphBuffer() const { return mBuffer; }
 
   bool MatchesGlyphs(const GlyphBuffer& aBuffer, const DeviceColor& aColor,
-                     const Matrix& aTransform, const IntPoint& aQuantizeScale,
+                     const Matrix& aTransform, const IntPoint& aQuantizeOffset,
+                     const IntPoint& aBoundsOffset, const IntRect& aClipRect,
                      HashNumber aHash);
 
   static HashNumber HashGlyphs(const GlyphBuffer& aBuffer,
@@ -329,6 +331,8 @@ class GlyphCacheEntry : public CacheEntryImpl<GlyphCacheEntry> {
   GlyphBuffer mBuffer = {nullptr, 0};
   // The color of the text run.
   DeviceColor mColor;
+  // The full bounds of the text run without any clipping applied.
+  IntRect mFullBounds;
 };
 
 // GlyphCache maintains a list of GlyphCacheEntry's representing previously
@@ -347,14 +351,13 @@ class GlyphCache : public LinkedListElement<GlyphCache>,
                                               const DeviceColor& aColor,
                                               const Matrix& aTransform,
                                               const IntPoint& aQuantizeScale,
+                                              const IntRect& aClipRect,
                                               HashNumber aHash);
 
-  already_AddRefed<GlyphCacheEntry> InsertEntry(const GlyphBuffer& aBuffer,
-                                                const DeviceColor& aColor,
-                                                const Matrix& aTransform,
-                                                const IntPoint& aQuantizeScale,
-                                                const IntRect& aBounds,
-                                                HashNumber aHash);
+  already_AddRefed<GlyphCacheEntry> InsertEntry(
+      const GlyphBuffer& aBuffer, const DeviceColor& aColor,
+      const Matrix& aTransform, const IntPoint& aQuantizeScale,
+      const IntRect& aBounds, const IntRect& aFullBounds, HashNumber aHash);
 
  private:
   // Weak pointer to the owning font
