@@ -14,7 +14,6 @@ fn ready() {
     }))
 }
 
-#[cfg_attr(miri, ignore)] // https://github.com/rust-lang/miri/issues/1038
 #[test]
 fn poll() {
     use futures::poll;

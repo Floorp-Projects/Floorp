@@ -13,11 +13,12 @@
 edition = "2018"
 rust-version = "1.36"
 name = "futures-sink"
-version = "0.3.21"
+version = "0.3.23"
 description = """
 The asynchronous `Sink` trait for the futures-rs library.
 """
 homepage = "https://rust-lang.github.io/futures-rs"
+readme = "README.md"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-lang/futures-rs"
 

@@ -13,11 +13,12 @@
 edition = "2018"
 rust-version = "1.45"
 name = "futures-task"
-version = "0.3.21"
+version = "0.3.23"
 description = """
 Tools for working with tasks.
 """
 homepage = "https://rust-lang.github.io/futures-rs"
+readme = "README.md"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-lang/futures-rs"
 

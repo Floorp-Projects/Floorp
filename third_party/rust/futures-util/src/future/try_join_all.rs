@@ -10,14 +10,11 @@ use core::mem;
 use core::pin::Pin;
 use core::task::{Context, Poll};
 
-use super::{assert_future, TryFuture, TryMaybeDone};
+use super::{assert_future, join_all, IntoFuture, TryFuture, TryMaybeDone};
 
-fn iter_pin_mut<T>(slice: Pin<&mut [T]>) -> impl Iterator<Item = Pin<&mut T>> {
-    // Safety: `std` _could_ make this unsound if it were to decide Pin's
-    // invariants aren't required to transmit through slices. Otherwise this has
-    // the same safety as a normal field pin projection.
-    unsafe { slice.get_unchecked_mut() }.iter_mut().map(|t| unsafe { Pin::new_unchecked(t) })
-}
+#[cfg(not(futures_no_atomic_cas))]
+use crate::stream::{FuturesOrdered, TryCollect, TryStreamExt};
+use crate::TryFutureExt;
 
 enum FinalState<E = ()> {
     Pending,
@@ -31,7 +28,20 @@ pub struct TryJoinAll<F>
 where
     F: TryFuture,
 {
-    elems: Pin<Box<[TryMaybeDone<F>]>>,
+    kind: TryJoinAllKind<F>,
+}
+
+enum TryJoinAllKind<F>
+where
+    F: TryFuture,
+{
+    Small {
+        elems: Pin<Box<[TryMaybeDone<IntoFuture<F>>]>>,
+    },
+    #[cfg(not(futures_no_atomic_cas))]
+    Big {
+        fut: TryCollect<FuturesOrdered<IntoFuture<F>>, Vec<F::Ok>>,
+    },
 }
 
 impl<F> fmt::Debug for TryJoinAll<F>
@@ -39,9 +49,16 @@ where
     F: TryFuture + fmt::Debug,
     F::Ok: fmt::Debug,
     F::Error: fmt::Debug,
+    F::Output: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("TryJoinAll").field("elems", &self.elems).finish()
+        match self.kind {
+            TryJoinAllKind::Small { ref elems } => {
+                f.debug_struct("TryJoinAll").field("elems", elems).finish()
+            }
+            #[cfg(not(futures_no_atomic_cas))]
+            TryJoinAllKind::Big { ref fut, .. } => fmt::Debug::fmt(fut, f),
+        }
     }
 }
 
@@ -83,15 +100,37 @@ where
 /// assert_eq!(try_join_all(futures).await, Err(2));
 /// # });
 /// ```
-pub fn try_join_all<I>(i: I) -> TryJoinAll<I::Item>
+pub fn try_join_all<I>(iter: I) -> TryJoinAll<I::Item>
 where
     I: IntoIterator,
     I::Item: TryFuture,
 {
-    let elems: Box<[_]> = i.into_iter().map(TryMaybeDone::Future).collect();
-    assert_future::<Result<Vec<<I::Item as TryFuture>::Ok>, <I::Item as TryFuture>::Error>, _>(
-        TryJoinAll { elems: elems.into() },
-    )
+    let iter = iter.into_iter().map(TryFutureExt::into_future);
+
+    #[cfg(futures_no_atomic_cas)]
+    {
+        let kind = TryJoinAllKind::Small {
+            elems: iter.map(TryMaybeDone::Future).collect::<Box<[_]>>().into(),
+        };
+
+        assert_future::<Result<Vec<<I::Item as TryFuture>::Ok>, <I::Item as TryFuture>::Error>, _>(
+            TryJoinAll { kind },
+        )
+    }
+
+    #[cfg(not(futures_no_atomic_cas))]
+    {
+        let kind = match iter.size_hint().1 {
+            Some(max) if max <= join_all::SMALL => TryJoinAllKind::Small {
+                elems: iter.map(TryMaybeDone::Future).collect::<Box<[_]>>().into(),
+            },
+            _ => TryJoinAllKind::Big { fut: iter.collect::<FuturesOrdered<_>>().try_collect() },
+        };
+
+        assert_future::<Result<Vec<<I::Item as TryFuture>::Ok>, <I::Item as TryFuture>::Error>, _>(
+            TryJoinAll { kind },
+        )
+    }
 }
 
 impl<F> Future for TryJoinAll<F>
@@ -101,36 +140,46 @@ where
     type Output = Result<Vec<F::Ok>, F::Error>;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        let mut state = FinalState::AllDone;
+        match &mut self.kind {
+            TryJoinAllKind::Small { elems } => {
+                let mut state = FinalState::AllDone;
 
-        for elem in iter_pin_mut(self.elems.as_mut()) {
-            match elem.try_poll(cx) {
-                Poll::Pending => state = FinalState::Pending,
-                Poll::Ready(Ok(())) => {}
-                Poll::Ready(Err(e)) => {
-                    state = FinalState::Error(e);
-                    break;
+                for elem in join_all::iter_pin_mut(elems.as_mut()) {
+                    match elem.try_poll(cx) {
+                        Poll::Pending => state = FinalState::Pending,
+                        Poll::Ready(Ok(())) => {}
+                        Poll::Ready(Err(e)) => {
+                            state = FinalState::Error(e);
+                            break;
+                        }
+                    }
+                }
+
+                match state {
+                    FinalState::Pending => Poll::Pending,
+                    FinalState::AllDone => {
+                        let mut elems = mem::replace(elems, Box::pin([]));
+                        let results = join_all::iter_pin_mut(elems.as_mut())
+                            .map(|e| e.take_output().unwrap())
+                            .collect();
+                        Poll::Ready(Ok(results))
+                    }
+                    FinalState::Error(e) => {
+                        let _ = mem::replace(elems, Box::pin([]));
+                        Poll::Ready(Err(e))
+                    }
                 }
             }
-        }
-
-        match state {
-            FinalState::Pending => Poll::Pending,
-            FinalState::AllDone => {
-                let mut elems = mem::replace(&mut self.elems, Box::pin([]));
-                let results =
-                    iter_pin_mut(elems.as_mut()).map(|e| e.take_output().unwrap()).collect();
-                Poll::Ready(Ok(results))
-            }
-            FinalState::Error(e) => {
-                let _ = mem::replace(&mut self.elems, Box::pin([]));
-                Poll::Ready(Err(e))
-            }
+            #[cfg(not(futures_no_atomic_cas))]
+            TryJoinAllKind::Big { fut } => Pin::new(fut).poll(cx),
         }
     }
 }
 
-impl<F: TryFuture> FromIterator<F> for TryJoinAll<F> {
+impl<F> FromIterator<F> for TryJoinAll<F>
+where
+    F: TryFuture,
+{
     fn from_iter<T: IntoIterator<Item = F>>(iter: T) -> Self {
         try_join_all(iter)
     }

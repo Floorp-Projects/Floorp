@@ -34,7 +34,7 @@ impl std::error::Error for EnterError {}
 /// executor.
 ///
 /// Executor implementations should call this function before beginning to
-/// execute a tasks, and drop the returned [`Enter`](Enter) value after
+/// execute a task, and drop the returned [`Enter`](Enter) value after
 /// completing task execution:
 ///
 /// ```

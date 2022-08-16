@@ -2,6 +2,7 @@ use super::task::Task;
 use super::FuturesUnordered;
 use core::marker::PhantomData;
 use core::pin::Pin;
+use core::ptr;
 use core::sync::atomic::Ordering::Relaxed;
 
 /// Mutable iterator over all futures in the unordered set.
@@ -58,6 +59,9 @@ impl<Fut: Unpin> Iterator for IntoIter<Fut> {
             // valid `next_all` checks can be skipped.
             let next = (**task).next_all.load(Relaxed);
             *task = next;
+            if !task.is_null() {
+                *(**task).prev_all.get() = ptr::null_mut();
+            }
             self.len -= 1;
             Some(future)
         }
