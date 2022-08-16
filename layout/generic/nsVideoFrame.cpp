@@ -464,12 +464,17 @@ bool nsVideoFrame::ShouldDisplayPoster() const {
 nsSize nsVideoFrame::GetVideoIntrinsicSize() const {
   const auto containAxes = StyleDisplay()->GetContainSizeAxes();
   const auto isVideo = HasVideoElement();
-  // Intrinsic size will be 0,0 if the element is:
-  // - Size-contained, or
-  // - An audio element with no "controls" attribute, distinguished by the last
-  // and only child being the control.
-  if (containAxes.IsBoth() || (!isVideo && !mFrames.LastChild())) {
-    return {};
+  // Intrinsic size will be given by contain-intrinsic-size if the element is
+  // size-contained. If both axes have containment, ContainSize() will ignore
+  // the fallback size argument, so we can just pass 0,0 or whatever.
+  if (containAxes.IsBoth()) {
+    return containAxes.ContainSize({}, *this);
+  }
+
+  // An audio element with no "controls" attribute, distinguished by the last
+  // and only child being the control, falls back to 0,0.
+  if (!isVideo && !mFrames.LastChild()) {
+    return containAxes.ContainSize({}, *this);
   }
 
   if (!isVideo) {
