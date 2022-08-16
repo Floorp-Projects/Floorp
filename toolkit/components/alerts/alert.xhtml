@@ -3,10 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE window [
-<!ENTITY % alertDTD SYSTEM "chrome://alerts/locale/alert.dtd">
-%alertDTD;
-]>
+<!DOCTYPE window>
 
 <?xml-stylesheet href="chrome://global/content/alerts/alert.css" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/alert.css" type="text/css"?>
@@ -21,6 +18,10 @@
         onclick="onAlertClick();"
         onbeforeunload="onAlertBeforeUnload();">
 
+  <linkset>
+    <xhtml:link rel="localization" href="toolkit/global/alert.ftl"/>
+  </linkset>
+
   <script src="chrome://global/content/alerts/alert.js"/>
 
   <vbox id="alertBox">
@@ -29,7 +30,7 @@
       <label id="alertTitleLabel" class="alertTitle plain" crop="end"/>
       <vbox>
         <toolbarbutton class="close-icon"
-                       tooltiptext="&closeAlert.tooltip;"
+                       data-l10n-id="alert-close"
                        onclick="event.stopPropagation();"
                        oncommand="onAlertClose();"/>
       </vbox>
@@ -44,7 +45,7 @@
         <spacer flex="1"/>
         <box id="alertFooter">
           <label id="alertSourceLabel" class="alertSource plain"/>
-          <button type="menu" id="alertSettings" tooltiptext="&settings.label;">
+          <button type="menu" id="alertSettings" data-l10n-id="alert-settings-title">
             <menupopup position="after_end">
               <menuitem id="doNotDisturbMenuItem"
                         oncommand="doNotDisturb();"/>

@@ -59,7 +59,6 @@
   locale/@AB_CD@/mozapps/update/updates.properties                (%chrome/mozapps/update/updates.properties)
 #endif
 % locale alerts @AB_CD@ %locale/@AB_CD@/alerts/
-  locale/@AB_CD@/alerts/alert.dtd                                (%chrome/alerts/alert.dtd)
   locale/@AB_CD@/alerts/alert.properties                         (%chrome/alerts/alert.properties)
 % locale passwordmgr @AB_CD@ %locale/@AB_CD@/passwordmgr/
   locale/@AB_CD@/passwordmgr/passwordmgr.properties (%chrome/passwordmgr/passwordmgr.properties)
