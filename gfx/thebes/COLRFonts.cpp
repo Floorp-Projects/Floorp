@@ -9,6 +9,7 @@
 #include "harfbuzz/hb.h"
 #include "harfbuzz/hb-ot.h"
 #include "mozilla/gfx/Helpers.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "TextDrawTarget.h"
 
@@ -155,6 +156,7 @@ struct PaintState {
   float mFontUnitsToPixels;
   uint16_t mNumColors;
   uint16_t mCoordCount;
+  nsTArray<uint32_t>* mVisited;
 
   const char* COLRv1BaseAddr() const {
     return reinterpret_cast<const char*>(mHeader.v1);
@@ -667,6 +669,17 @@ struct ColorLineT {
 using ColorLine = ColorLineT<ColorStop>;
 using VarColorLine = ColorLineT<VarColorStop>;
 
+// Used to check for cycles in the paint graph, and bail out to avoid infinite
+// recursion when traversing the graph in Paint() or GetBoundingRect(). (Only
+// PaintColrLayers and PaintColrGlyph can cause cycles; all other paint types
+// have only forward references within the table.)
+#define IF_CYCLE_RETURN(retval)             \
+  if (aState.mVisited->Contains(aOffset)) { \
+    return retval;                          \
+  }                                         \
+  aState.mVisited->AppendElement(aOffset);  \
+  ScopeExit e([aState]() { aState.mVisited->RemoveLastElement(); })
+
 struct PaintColrLayers {
   enum { kFormat = 1 };
   uint8_t format;
@@ -675,6 +688,7 @@ struct PaintColrLayers {
 
   bool Paint(const PaintState& aState, uint32_t aOffset) const {
     MOZ_ASSERT(format == kFormat);
+    IF_CYCLE_RETURN(true);
     const auto* layerList = aState.mHeader.v1->layerList();
     if (!layerList) {
       return false;
@@ -694,6 +708,7 @@ struct PaintColrLayers {
 
   Rect GetBoundingRect(const PaintState& aState, uint32_t aOffset) const {
     MOZ_ASSERT(format == kFormat);
+    IF_CYCLE_RETURN(Rect());
     const auto* layerList = aState.mHeader.v1->layerList();
     if (!layerList) {
       return Rect();
@@ -1041,11 +1056,13 @@ struct PaintColrGlyph {
 
   bool Paint(const PaintState& aState, uint32_t aOffset) const {
     MOZ_ASSERT(format == kFormat);
+    IF_CYCLE_RETURN(true);
     const auto* base = aState.mHeader.v1->GetBaseGlyphPaint(glyphID);
     return base ? DoPaint(aState, base, uint16_t(glyphID)) : false;
   }
 
   Rect GetBoundingRect(const PaintState& aState, uint32_t aOffset) const {
+    IF_CYCLE_RETURN(Rect());
     if (const auto* clipList = aState.mHeader.v1->clipList()) {
       if (const auto* clip = clipList->GetClip(uint16_t(glyphID))) {
         return clip->GetRect(aState);
@@ -1059,6 +1076,8 @@ struct PaintColrGlyph {
     return Rect();
   }
 };
+
+#undef IF_CYCLE_RETURN
 
 struct Affine2x3 {
   Fixed xx;
@@ -2072,7 +2091,8 @@ bool COLRFonts::PaintGlyphLayers(
                    aCurrentColor,
                    0.0,  // fontUnitsToPixels not needed
                    uint16_t(colors.Length()),
-                   0};
+                   0,
+                   nullptr};
   return aLayers->Paint(state, alpha, aPoint);
 }
 
@@ -2124,6 +2144,7 @@ bool COLRFonts::PaintGlyphGraph(
   unsigned int coordCount;
   const int* coords = hb_font_get_var_coords_normalized(aFont, &coordCount);
 
+  AutoTArray<uint32_t, 32> visitedOffsets;
   PaintState state{{nullptr},
                    colors.Elements(),
                    aDrawTarget,
@@ -2134,7 +2155,8 @@ bool COLRFonts::PaintGlyphGraph(
                    aCurrentColor,
                    aFontUnitsToPixels,
                    uint16_t(colors.Length()),
-                   uint16_t(coordCount)};
+                   uint16_t(coordCount),
+                   &visitedOffsets};
   state.mHeader.v1 =
       reinterpret_cast<const COLRv1Header*>(hb_blob_get_data(aCOLR, nullptr));
   AutoRestoreTransform saveTransform(aDrawTarget);
@@ -2149,6 +2171,7 @@ Rect COLRFonts::GetColorGlyphBounds(hb_blob_t* aCOLR, hb_font_t* aFont,
   unsigned int coordCount;
   const int* coords = hb_font_get_var_coords_normalized(aFont, &coordCount);
 
+  AutoTArray<uint32_t, 32> visitedOffsets;
   PaintState state{{nullptr},
                    nullptr,  // palette is not needed
                    aDrawTarget,
@@ -2159,7 +2182,8 @@ Rect COLRFonts::GetColorGlyphBounds(hb_blob_t* aCOLR, hb_font_t* aFont,
                    sRGBColor(),
                    aFontUnitsToPixels,
                    0,  // numPaletteEntries
-                   uint16_t(coordCount)};
+                   uint16_t(coordCount),
+                   &visitedOffsets};
   state.mHeader.v1 =
       reinterpret_cast<const COLRv1Header*>(hb_blob_get_data(aCOLR, nullptr));
   MOZ_ASSERT(uint16_t(state.mHeader.v1->base.version) == 1);
