@@ -3313,24 +3313,24 @@ class HTMLEditor final : public EditorBase,
                                const nsAString& aAttributeValue);
 
   /**
-   * RemoveInlinePropertyAsSubAction() removes specified style from
-   * `mTypeInState` if `Selection` is collapsed.  Otherwise, removing the style.
+   * RemoveInlinePropertiesAsSubAction() removes specified styles from
+   * mTypeInState if `Selection` is collapsed.  Otherwise, removing the style.
    *
-   * @param aHTMLProperty       nullptr if you want to remove all inline styles.
-   *                            Otherwise, one of the presentation tag names
-   *                            which we support in style editor.
-   * @param aAttribute          For some aHTMLProperty values, need to be set to
-   *                            its attribute name.  Otherwise, nullptr.
-   * @param aRemoveRelatedElements      If Yes, this method removes different
-   *                                    name's elements in the block if
-   *                                    necessary.  For example, if
-   *                                    aHTMLProperty is nsGkAtoms::b,
-   *                                    `<strong>` elements are also removed.
+   * @param aStylesToRemove     Styles to remove from the selected contents.
    */
-  enum class RemoveRelatedElements { Yes, No };
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RemoveInlinePropertyAsSubAction(
-      nsStaticAtom* aHTMLProperty, nsStaticAtom* aAttribute,
-      RemoveRelatedElements aRemoveRelatedElements);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RemoveInlinePropertiesAsSubAction(
+      const nsTArray<EditorInlineStyle>& aStylesToRemove);
+
+  /**
+   * Helper method to call RemoveInlinePropertiesAsSubAction().  If you want to
+   * remove other elements to remove the style completely, this will append
+   * related elements of aStyleToRemove and aStyleToRemove itself to the array.
+   * E.g., nsGkAtoms::strong and nsGkAtoms::b will be appended if aStyleToRemove
+   * is nsGkAtoms::b.
+   */
+  void AppendInlineStyleAndRelatedStyle(
+      const EditorInlineStyle& aStyleToRemove,
+      nsTArray<EditorInlineStyle>& aStylesToRemove) const;
 
   /**
    * ReplaceHeadContentsWithSourceWithTransaction() replaces all children of
