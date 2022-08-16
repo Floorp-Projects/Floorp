@@ -276,7 +276,7 @@ add_test(function() {
 // network request.
 add_test(function() {
   var chan = make_channel(URL + "/body", null, function(chan) {
-    throw "boom";
+    throw new Error("boom");
   });
   chan.asyncOpen(new ChannelListener(handle_remote_response, null));
 });

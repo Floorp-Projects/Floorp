@@ -322,7 +322,9 @@ class http2ProxyCode {
         }
       });
       socket.on("error", error => {
-        throw `Unxpected error when conneting the HTTP/2 server from the HTTP/2 proxy during CONNECT handling: '${error}'`;
+        throw new Error(
+          `Unexpected error when conneting the HTTP/2 server from the HTTP/2 proxy during CONNECT handling: '${error}'`
+        );
       });
     });
   }

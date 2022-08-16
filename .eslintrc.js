@@ -237,12 +237,9 @@ module.exports = {
         "netwerk/test/unit*/**",
       ],
       rules: {
-        "no-eval": "off",
         "no-global-assign": "off",
-        "no-nested-ternary": "off",
         "no-redeclare": "off",
         "no-shadow": "off",
-        "no-throw-literal": "off",
       },
     },
     {
