@@ -58,6 +58,9 @@ interface ExtensionTest {
   [Throws, WebExtensionStub="NoReturn"]
   void assertFalse(any... args);
 
+  [Throws, WebExtensionStub="NoReturn"]
+  void assertDeepEq(any... args);
+
   [Throws, WebExtensionStub="AssertEq"]
   void assertEq(any... args);
 
