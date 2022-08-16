@@ -9,6 +9,7 @@
 #include <math.h>
 #include <new>
 #include <utility>
+#include "COLRFonts.h"
 #include "ThebesRLBoxTypes.h"
 #include "gfxFontUtils.h"
 #include "gfxFontVariations.h"
@@ -274,7 +275,7 @@ class gfxFontEntry {
                           nsTArray<mozilla::gfx::DeviceColor>& layerColors);
   bool HasColorLayersForGlyph(uint32_t aGlyphId) {
     MOZ_ASSERT(GetCOLR());
-    return gfxFontUtils::HasColorLayersForGlyph(GetCOLR(), aGlyphId);
+    return mozilla::gfx::COLRFonts::HasColorLayersForGlyph(GetCOLR(), aGlyphId);
   }
 
   bool HasColorBitmapTable() {
