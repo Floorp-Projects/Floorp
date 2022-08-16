@@ -21,7 +21,7 @@
 import collections
 import urllib.request
 
-UNICODE_VERSION = "13.0.0"
+UNICODE_VERSION = "14.0.0"
 UCD_URL = "https://www.unicode.org/Public/%s/ucd/" % UNICODE_VERSION
 
 PREAMBLE = """// Copyright 2012-2018 The Rust Project Developers. See the COPYRIGHT
