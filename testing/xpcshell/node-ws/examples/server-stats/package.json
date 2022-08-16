@@ -1,0 +1,9 @@
+{
+  "author": "",
+  "name": "serverstats",
+  "version": "0.0.0",
+  "repository": "websockets/ws",
+  "dependencies": {
+    "express": "^4.16.4"
+  }
+}
