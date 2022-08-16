@@ -806,6 +806,7 @@ void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
   MOZ_ASSERT(texture);
   mTextureHost = texture;
   if (!mTextureHost) {
+    gfxCriticalNoteOnce << "ExternalImage is not RenderMacIOSurfaceTextureHost";
     return;
   }
 

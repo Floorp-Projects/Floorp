@@ -18,7 +18,7 @@ namespace layers {
 
 GPUVideoTextureHost::GPUVideoTextureHost(
     TextureFlags aFlags, const SurfaceDescriptorGPUVideo& aDescriptor)
-    : TextureHost(aFlags), mDescriptor(aDescriptor) {
+    : TextureHost(TextureHostType::Unknown, aFlags), mDescriptor(aDescriptor) {
   MOZ_COUNT_CTOR(GPUVideoTextureHost);
 }
 
@@ -204,6 +204,13 @@ bool GPUVideoTextureHost::IsWrappingBufferTextureHost() {
     return EnsureWrappedTextureHost()->IsWrappingBufferTextureHost();
   }
   return false;
+}
+
+TextureHostType GPUVideoTextureHost::GetTextureHostType() {
+  if (!mWrappedTextureHost) {
+    return TextureHostType::Unknown;
+  }
+  return mWrappedTextureHost->GetTextureHostType();
 }
 
 }  // namespace layers

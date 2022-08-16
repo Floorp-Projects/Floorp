@@ -252,7 +252,9 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
   // the image keys than create new ones.
   auto backend = aSceneBuilderTxn.GetBackendType();
   bool canUpdate =
-      !!previousTexture && previousTexture->GetSize() == texture->GetSize() &&
+      !!previousTexture &&
+      previousTexture->GetTextureHostType() == texture->GetTextureHostType() &&
+      previousTexture->GetSize() == texture->GetSize() &&
       previousTexture->GetFormat() == texture->GetFormat() &&
       previousTexture->GetColorDepth() == texture->GetColorDepth() &&
       previousTexture->NeedsYFlip() == texture->NeedsYFlip() &&

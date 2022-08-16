@@ -15,7 +15,7 @@ namespace mozilla::layers {
 
 DMABUFTextureHostOGL::DMABUFTextureHostOGL(TextureFlags aFlags,
                                            const SurfaceDescriptor& aDesc)
-    : TextureHost(aFlags) {
+    : TextureHost(TextureHostType::DMABUF, aFlags) {
   MOZ_COUNT_CTOR(DMABUFTextureHostOGL);
 
   // DMABufSurface::CreateDMABufSurface() can fail, for instance when we're run

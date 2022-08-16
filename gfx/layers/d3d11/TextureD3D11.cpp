@@ -806,7 +806,7 @@ bool D3D11TextureData::UpdateFromSurface(gfx::SourceSurface* aSurface) {
 
 DXGITextureHostD3D11::DXGITextureHostD3D11(
     TextureFlags aFlags, const SurfaceDescriptorD3D10& aDescriptor)
-    : TextureHost(aFlags),
+    : TextureHost(TextureHostType::DXGI, aFlags),
       mGpuProcessTextureId(aDescriptor.gpuProcessTextureId()),
       mArrayIndex(aDescriptor.arrayIndex()),
       mSize(aDescriptor.size()),
@@ -1118,7 +1118,7 @@ bool DXGITextureHostD3D11::SupportsExternalCompositing(
 
 DXGIYCbCrTextureHostD3D11::DXGIYCbCrTextureHostD3D11(
     TextureFlags aFlags, const SurfaceDescriptorDXGIYCbCr& aDescriptor)
-    : TextureHost(aFlags),
+    : TextureHost(TextureHostType::DXGIYCbCr, aFlags),
       mSize(aDescriptor.size()),
       mSizeY(aDescriptor.sizeY()),
       mSizeCbCr(aDescriptor.sizeCbCr()),

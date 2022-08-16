@@ -65,6 +65,8 @@ class GPUVideoTextureHost : public TextureHost {
 
   bool IsWrappingBufferTextureHost() override;
 
+  TextureHostType GetTextureHostType() override;
+
  protected:
   GPUVideoTextureHost(TextureFlags aFlags,
                       const SurfaceDescriptorGPUVideo& aDescriptor);

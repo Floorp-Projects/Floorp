@@ -37,7 +37,8 @@ class ScheduleHandleRenderTextureOps : public wr::NotificationHandler {
 WebRenderTextureHost::WebRenderTextureHost(
     TextureFlags aFlags, TextureHost* aTexture,
     const wr::ExternalImageId& aExternalImageId)
-    : TextureHost(aFlags), mWrappedTextureHost(aTexture) {
+    : TextureHost(TextureHostType::Unknown, aFlags),
+      mWrappedTextureHost(aTexture) {
   MOZ_ASSERT(mWrappedTextureHost);
   // The wrapped textureHost will be used in WebRender, and the WebRender could
   // run at another thread. It's hard to control the life-time when gecko
@@ -193,6 +194,10 @@ mozilla::ipc::FileDescriptor WebRenderTextureHost::GetAndResetReleaseFence() {
 
 AndroidHardwareBuffer* WebRenderTextureHost::GetAndroidHardwareBuffer() const {
   return mWrappedTextureHost->GetAndroidHardwareBuffer();
+}
+
+TextureHostType WebRenderTextureHost::GetTextureHostType() {
+  return mWrappedTextureHost->GetTextureHostType();
 }
 
 }  // namespace mozilla::layers

@@ -74,7 +74,7 @@ TextureClient* DcompSurfaceImage::GetTextureClient(
 
 DcompSurfaceHandleHost::DcompSurfaceHandleHost(
     TextureFlags aFlags, const SurfaceDescriptorDcompSurface& aDescriptor)
-    : TextureHost(aFlags),
+    : TextureHost(TextureHostType::DcompSurface, aFlags),
       mHandle(const_cast<ipc::FileDescriptor&>(aDescriptor.handle())
                   .TakePlatformHandle()),
       mSize(aDescriptor.size()),
