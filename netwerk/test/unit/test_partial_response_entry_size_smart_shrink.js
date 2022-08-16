@@ -36,11 +36,11 @@ function contentHandler(metadata, response) {
   if (!metadata.hasHeader("If-Range")) {
     response.setHeader("Content-Length", responseBody.length + "");
     response.processAsync();
-    var slice = responseBody.slice(0, 100);
+    let slice = responseBody.slice(0, 100);
     response.bodyOutputStream.write(slice, slice.length);
     response.finish();
   } else {
-    var slice = responseBody.slice(100);
+    let slice = responseBody.slice(100);
     response.setStatusLine(metadata.httpVersion, 206, "Partial Content");
     response.setHeader(
       "Content-Range",

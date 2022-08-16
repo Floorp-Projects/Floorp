@@ -119,6 +119,8 @@ const PROXY_CHALLENGE =
 // i.e. successful proxy auth and successful web server auth
 //
 function authHandler(metadata, response) {
+  let authorization;
+  let authPrefix;
   switch (requestsMade) {
     case 0:
       // Proxy - First request to the Proxy resppond with a 407 to start auth
@@ -127,8 +129,8 @@ function authHandler(metadata, response) {
       break;
     case 1:
       // Proxy - Expecting a type 1 negotiate message from the client
-      var authorization = metadata.getHeader("Proxy-Authorization");
-      var authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
+      authorization = metadata.getHeader("Proxy-Authorization");
+      authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
       Assert.equal(NTLM_TYPE1_PREFIX, authPrefix, "Expecting a Type 1 message");
       response.setStatusLine(metadata.httpVersion, 407, "Unauthorized");
       response.setHeader("Proxy-Authenticate", PROXY_CHALLENGE, false);
@@ -136,31 +138,31 @@ function authHandler(metadata, response) {
     case 2:
       // Proxy - Expecting a type 3 Authenticate message from the client
       // Will respond with a 401 to start web server auth sequence
-      var authorization = metadata.getHeader("Proxy-Authorization");
-      var authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
+      authorization = metadata.getHeader("Proxy-Authorization");
+      authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
       Assert.equal(NTLM_TYPE3_PREFIX, authPrefix, "Expecting a Type 3 message");
       response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
       response.setHeader("WWW-Authenticate", "NTLM", false);
       break;
     case 3:
       // Web Server - Expecting a type 1 negotiate message from the client
-      var authorization = metadata.getHeader("Authorization");
-      var authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
+      authorization = metadata.getHeader("Authorization");
+      authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
       Assert.equal(NTLM_TYPE1_PREFIX, authPrefix, "Expecting a Type 1 message");
       response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
       response.setHeader("WWW-Authenticate", NTLM_CHALLENGE, false);
       break;
     case 4:
       // Web Server - Expecting a type 3 Authenticate message from the client
-      var authorization = metadata.getHeader("Authorization");
-      var authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
+      authorization = metadata.getHeader("Authorization");
+      authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
       Assert.equal(NTLM_TYPE3_PREFIX, authPrefix, "Expecting a Type 3 message");
       response.setStatusLine(metadata.httpVersion, 200, "Successful");
       break;
     default:
       // We should be authenticated and further requests are permitted
-      var authorization = metadata.getHeader("Authorization");
-      var authorization = metadata.getHeader("Proxy-Authorization");
+      authorization = metadata.getHeader("Authorization");
+      authorization = metadata.getHeader("Proxy-Authorization");
       Assert.isnull(authorization);
       response.setStatusLine(metadata.httpVersion, 200, "Successful");
   }
@@ -172,6 +174,8 @@ function authHandler(metadata, response) {
 //       proxy auth fails.
 //
 function authHandlerInvalidProxyPassword(metadata, response) {
+  let authorization;
+  let authPrefix;
   switch (requestsMade) {
     case 0:
       // Proxy - First request respond with a 407 to initiate auth sequence
@@ -180,8 +184,8 @@ function authHandlerInvalidProxyPassword(metadata, response) {
       break;
     case 1:
       // Proxy - Expecting a type 1 negotiate message from the client
-      var authorization = metadata.getHeader("Proxy-Authorization");
-      var authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
+      authorization = metadata.getHeader("Proxy-Authorization");
+      authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
       Assert.equal(NTLM_TYPE1_PREFIX, authPrefix, "Expecting a Type 1 message");
       response.setStatusLine(metadata.httpVersion, 407, "Unauthorized");
       response.setHeader("Proxy-Authenticate", PROXY_CHALLENGE, false);
@@ -190,8 +194,8 @@ function authHandlerInvalidProxyPassword(metadata, response) {
       // Proxy - Expecting a type 3 Authenticate message from the client
       // Respond with a 407 to indicate invalid credentials
       //
-      var authorization = metadata.getHeader("Proxy-Authorization");
-      var authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
+      authorization = metadata.getHeader("Proxy-Authorization");
+      authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
       Assert.equal(NTLM_TYPE3_PREFIX, authPrefix, "Expecting a Type 3 message");
       response.setStatusLine(metadata.httpVersion, 407, "Unauthorized");
       response.setHeader("Proxy-Authenticate", "NTLM", false);
@@ -211,6 +215,8 @@ function authHandlerInvalidProxyPassword(metadata, response) {
 // Note: the connection should not be reused once the password failure is
 //       detected
 function authHandlerInvalidWebPassword(metadata, response) {
+  let authorization;
+  let authPrefix;
   switch (requestsMade) {
     case 0:
       // Proxy - First request return a 407 to start Proxy auth
@@ -219,8 +225,8 @@ function authHandlerInvalidWebPassword(metadata, response) {
       break;
     case 1:
       // Proxy - Expecting a type 1 negotiate message from the client
-      var authorization = metadata.getHeader("Proxy-Authorization");
-      var authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
+      authorization = metadata.getHeader("Proxy-Authorization");
+      authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
       Assert.equal(NTLM_TYPE1_PREFIX, authPrefix, "Expecting a Type 1 message");
       response.setStatusLine(metadata.httpVersion, 407, "Unauthorized");
       response.setHeader("Proxy-Authenticate", NTLM_CHALLENGE, false);
@@ -228,16 +234,16 @@ function authHandlerInvalidWebPassword(metadata, response) {
     case 2:
       // Proxy - Expecting a type 3 Authenticate message from the client
       // Responds with a 401 to start web server auth
-      var authorization = metadata.getHeader("Proxy-Authorization");
-      var authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
+      authorization = metadata.getHeader("Proxy-Authorization");
+      authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
       Assert.equal(NTLM_TYPE3_PREFIX, authPrefix, "Expecting a Type 3 message");
       response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
       response.setHeader("WWW-Authenticate", "NTLM", false);
       break;
     case 3:
       // Web Server - Expecting a type 1 negotiate message from the client
-      var authorization = metadata.getHeader("Authorization");
-      var authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
+      authorization = metadata.getHeader("Authorization");
+      authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
       Assert.equal(NTLM_TYPE1_PREFIX, authPrefix, "Expecting a Type 1 message");
       response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
       response.setHeader("WWW-Authenticate", NTLM_CHALLENGE, false);
@@ -245,8 +251,8 @@ function authHandlerInvalidWebPassword(metadata, response) {
     case 4:
       // Web Server - Expecting a type 3 Authenticate message from the client
       // Respond with a 401 to restart the auth sequence.
-      var authorization = metadata.getHeader("Authorization");
-      var authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
+      authorization = metadata.getHeader("Authorization");
+      authPrefix = authorization.substring(0, NTLM_PREFIX_LEN);
       Assert.equal(NTLM_TYPE3_PREFIX, authPrefix, "Expecting a Type 1 message");
       response.setStatusLine(metadata.httpVersion, 401, "Unauthorized");
       break;

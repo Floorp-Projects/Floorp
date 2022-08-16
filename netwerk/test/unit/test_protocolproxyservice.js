@@ -753,7 +753,6 @@ function host_filter_cb(proxy) {
 // refers to "network.proxy.no_proxies_on"
 
 var uriStrUseProxyList;
-var uriStrUseProxyList;
 var hostFilterList;
 var uriStrFilterList;
 
