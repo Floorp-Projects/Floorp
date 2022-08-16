@@ -3196,6 +3196,14 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
 
   nsRect rootInkOverflow = aFrame->InkOverflowRectRelativeToSelf();
 
+  // If the dynamic toolbar is completely collapsed, the visible rect should
+  // be expanded to include this area.
+  if (presContext->IsRootContentDocumentCrossProcess() &&
+      presContext->HasDynamicToolbar()) {
+    rootInkOverflow.SizeTo(nsLayoutUtils::ExpandHeightForDynamicToolbar(
+        presContext, rootInkOverflow.Size()));
+  }
+
   // If we are in a remote browser, then apply clipping from ancestor browsers
   if (BrowserChild* browserChild = BrowserChild::GetFrom(presShell)) {
     if (!browserChild->IsTopLevel()) {
