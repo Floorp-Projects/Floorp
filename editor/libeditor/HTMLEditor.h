@@ -3298,18 +3298,19 @@ class HTMLEditor final : public EditorBase,
       Document& aDocument, const nsACString& aCharacterSet);
 
   /**
-   * SetInlinePropertyInternal() stores new style with `mTypeInState` if
+   * SetInlinePropertyAsSubAction() stores new style with `mTypeInState` if
    * `Selection` is collapsed.  Otherwise, applying the style at all selection
    * ranges.
    *
-   * @param aProperty           One of the presentation tag names which we
+   * @param aHTMLProperty       One of the presentation tag names which we
    *                            support in style editor.
    * @param aAttribute          For some aProperty values, needs to be set to
    *                            its attribute name.  Otherwise, nullptr.
    * @param aAttributeValue     The value of aAttribute.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SetInlinePropertyInternal(
-      nsAtom& aProperty, nsAtom* aAttribute, const nsAString& aValue);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  SetInlinePropertyAsSubAction(nsAtom& aHTMLProperty, nsAtom* aAttribute,
+                               const nsAString& aAttributeValue);
 
   /**
    * RemoveInlinePropertyAsSubAction() removes specified style from
