@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "once_cell"
-version = "1.12.0"
+version = "1.13.1"
 authors = ["Aleksey Kladov <aleksey.kladov@gmail.com>"]
 exclude = [
     "*.png",
@@ -66,7 +66,7 @@ name = "test_synchronization"
 required-features = ["std"]
 
 [dependencies.atomic-polyfill]
-version = "0.1"
+version = "1"
 optional = true
 
 [dependencies.parking_lot_core]
