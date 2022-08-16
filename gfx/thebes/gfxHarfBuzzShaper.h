@@ -100,6 +100,9 @@ class gfxHarfBuzzShaper : public gfxFontShaper {
                                  hb_font_funcs_t* aFontFuncs = nullptr,
                                  FontCallbackData* aCallbackData = nullptr);
 
+  hb_font_t* GetHBFont() const { return mHBFont; }
+  hb_face_t* GetHBFace() const { return hb_font_get_face(mHBFont); }
+
  protected:
   nsresult SetGlyphsFromRun(gfxShapedText* aShapedText, uint32_t aOffset,
                             uint32_t aLength, const char16_t* aText,

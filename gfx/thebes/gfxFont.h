@@ -2253,8 +2253,7 @@ class gfxFont {
                         mozilla::layout::TextDrawTarget* aTextDrawer,
                         mozilla::gfx::ScaledFont* scaledFont,
                         mozilla::gfx::DrawOptions drawOptions,
-                        const mozilla::gfx::Point& aPoint,
-                        uint32_t aGlyphId) const;
+                        const mozilla::gfx::Point& aPoint, uint32_t aGlyphId);
 
   // Bug 674909. When synthetic bolding text by drawing twice, need to
   // render using a pixel offset in device pixels, otherwise text
