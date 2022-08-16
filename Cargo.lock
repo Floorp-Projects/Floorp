@@ -990,9 +990,9 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-deque"
-version = "0.8.1"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6455c0ca19f0d2fbf751b908d5c55c1f5cbc65e03c4225427254b46890bdde1e"
+checksum = "715e8152b692bba2d374b53d4875445368fdf21a94751410af607a5ac677d1fc"
 dependencies = [
  "cfg-if 1.0.0",
  "crossbeam-epoch 0.9.8",
@@ -4347,7 +4347,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bd99e5772ead8baa5215278c9b15bf92087709e9c1b2d1f97cdb5a183c933a7d"
 dependencies = [
  "autocfg",
- "crossbeam-deque 0.8.1",
+ "crossbeam-deque 0.8.2",
  "either",
  "rayon-core",
 ]
@@ -4359,7 +4359,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "258bcdb5ac6dad48491bb2992db6b7cf74878b0384908af124823d118c99683f"
 dependencies = [
  "crossbeam-channel",
- "crossbeam-deque 0.8.1",
+ "crossbeam-deque 0.8.2",
  "crossbeam-utils 0.8.8",
  "num_cpus",
 ]
