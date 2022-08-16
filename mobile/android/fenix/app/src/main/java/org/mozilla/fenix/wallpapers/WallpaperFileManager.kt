@@ -28,10 +28,9 @@ class WallpaperFileManager(
         if (getAllLocalWallpaperPaths(name).all { File(rootDirectory, it).exists() }) {
             Wallpaper(
                 name = name,
-                collectionName = "",
-                availableLocales = null,
-                startDate = null,
-                endDate = null,
+                collection = Wallpaper.DefaultCollection,
+                textColor = null,
+                cardColor = null,
             )
         } else null
     }

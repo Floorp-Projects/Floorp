@@ -266,18 +266,32 @@ class WallpapersUseCasesTest {
         return if (isInPromo) {
             Wallpaper(
                 name = name,
-                collectionName = "",
-                availableLocales = listOf("en-US"),
-                startDate = null,
-                endDate = relativeTime
+                collection = Wallpaper.Collection(
+                    name = Wallpaper.firefoxCollectionName,
+                    heading = null,
+                    description = null,
+                    availableLocales = listOf("en-US"),
+                    startDate = null,
+                    endDate = relativeTime,
+                    learnMoreUrl = null
+                ),
+                textColor = null,
+                cardColor = null,
             )
         } else {
             Wallpaper(
                 name = name,
-                collectionName = "",
-                availableLocales = null,
-                startDate = null,
-                endDate = relativeTime
+                collection = Wallpaper.Collection(
+                    name = Wallpaper.firefoxCollectionName,
+                    heading = null,
+                    description = null,
+                    availableLocales = null,
+                    startDate = null,
+                    endDate = relativeTime,
+                    learnMoreUrl = null
+                ),
+                textColor = null,
+                cardColor = null,
             )
         }
     }

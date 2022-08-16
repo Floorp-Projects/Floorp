@@ -124,51 +124,55 @@ class WallpapersUseCases(
         }
 
         private fun Wallpaper.isExpired(): Boolean {
-            val expired = this.endDate?.let { Date().after(it) } ?: false
+            val expired = this.collection.endDate?.let { Date().after(it) } ?: false
             return expired && this.name != settings.currentWallpaper
         }
 
         private fun Wallpaper.isAvailableInLocale(): Boolean =
-            this.availableLocales?.contains(currentLocale) ?: true
+            this.collection.availableLocales?.contains(currentLocale) ?: true
 
         companion object {
+            private val firefoxClassicCollection = Wallpaper.Collection(
+                name = Wallpaper.firefoxCollectionName,
+                heading = null,
+                description = null,
+                availableLocales = null,
+                startDate = null,
+                endDate = null,
+                learnMoreUrl = null
+            )
             private val localWallpapers: List<Wallpaper> = listOf(
                 Wallpaper(
                     name = Wallpaper.amethystName,
-                    collectionName = Wallpaper.firefoxCollectionName,
-                    availableLocales = null,
-                    startDate = null,
-                    endDate = null,
+                    collection = firefoxClassicCollection,
+                    textColor = null,
+                    cardColor = null,
                 ),
                 Wallpaper(
                     name = Wallpaper.ceruleanName,
-                    collectionName = Wallpaper.firefoxCollectionName,
-                    availableLocales = null,
-                    startDate = null,
-                    endDate = null,
+                    collection = firefoxClassicCollection,
+                    textColor = null,
+                    cardColor = null,
                 ),
                 Wallpaper(
                     name = Wallpaper.sunriseName,
-                    collectionName = Wallpaper.firefoxCollectionName,
-                    availableLocales = null,
-                    startDate = null,
-                    endDate = null,
+                    collection = firefoxClassicCollection,
+                    textColor = null,
+                    cardColor = null,
                 ),
             )
             private val remoteWallpapers: List<Wallpaper> = listOf(
                 Wallpaper(
                     name = Wallpaper.twilightHillsName,
-                    collectionName = Wallpaper.firefoxCollectionName,
-                    availableLocales = null,
-                    startDate = null,
-                    endDate = null,
+                    collection = firefoxClassicCollection,
+                    textColor = null,
+                    cardColor = null,
                 ),
                 Wallpaper(
                     name = Wallpaper.beachVibeName,
-                    collectionName = Wallpaper.firefoxCollectionName,
-                    availableLocales = null,
-                    startDate = null,
-                    endDate = null,
+                    collection = firefoxClassicCollection,
+                    textColor = null,
+                    cardColor = null,
                 ),
             )
             val allWallpapers = listOf(Wallpaper.Default) + localWallpapers + remoteWallpapers
@@ -278,7 +282,7 @@ class WallpapersUseCases(
             Wallpapers.wallpaperSelected.record(
                 Wallpapers.WallpaperSelectedExtra(
                     name = wallpaper.name,
-                    themeCollection = wallpaper.collectionName
+                    themeCollection = wallpaper.collection.name
                 )
             )
         }

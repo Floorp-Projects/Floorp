@@ -78,7 +78,7 @@ class WallpaperDownloader(
                 val remotePath = "${context.resolutionSegment()}/" +
                     "$orientation/" +
                     "$theme/" +
-                    "$collectionName/" +
+                    "${collection.name}/" +
                     "$name.png"
                 WallpaperMetadata(remotePath, localPath)
             }
