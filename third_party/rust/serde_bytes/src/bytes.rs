@@ -12,7 +12,7 @@ use alloc::boxed::Box;
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::ByteBuf;
 
-use serde::de::{Deserialize, Deserializer, Error, Visitor};
+use serde::de::{Deserialize, Deserializer};
 use serde::ser::{Serialize, Serializer};
 
 /// Wrapper around `[u8]` to serialize and deserialize efficiently.
@@ -161,35 +161,12 @@ impl Serialize for Bytes {
     }
 }
 
-struct BytesVisitor;
-
-impl<'de> Visitor<'de> for BytesVisitor {
-    type Value = &'de Bytes;
-
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str("a borrowed byte array")
-    }
-
-    fn visit_borrowed_bytes<E>(self, v: &'de [u8]) -> Result<Self::Value, E>
-    where
-        E: Error,
-    {
-        Ok(Bytes::new(v))
-    }
-
-    fn visit_borrowed_str<E>(self, v: &'de str) -> Result<Self::Value, E>
-    where
-        E: Error,
-    {
-        Ok(Bytes::new(v.as_bytes()))
-    }
-}
-
 impl<'a, 'de: 'a> Deserialize<'de> for &'a Bytes {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
-        deserializer.deserialize_bytes(BytesVisitor)
+        // serde::Deserialize for &[u8] is already optimized, so simply forward to that.
+        Deserialize::deserialize(deserializer).map(Bytes::new)
     }
 }
