@@ -372,8 +372,15 @@ class FullParseHandler {
 
   ClassNodeType newClass(Node name, Node heritage,
                          LexicalScopeNodeType memberBlock,
+#ifdef ENABLE_DECORATORS
+                         ListNodeType decorators,
+#endif
                          const TokenPos& pos) {
-    return new_<ClassNode>(name, heritage, memberBlock, pos);
+    return new_<ClassNode>(name, heritage, memberBlock,
+#ifdef ENABLE_DECORATORS
+                           decorators,
+#endif
+                           pos);
   }
   ListNodeType newClassMemberList(uint32_t begin) {
     return new_<ListNode>(ParseNodeKind::ClassMemberList,
