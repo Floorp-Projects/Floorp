@@ -321,7 +321,7 @@ mod channel_tests {
     #[test]
     fn stress() {
         #[cfg(miri)]
-        const COUNT: usize = 500;
+        const COUNT: usize = 100;
         #[cfg(not(miri))]
         const COUNT: usize = 10000;
 
@@ -339,25 +339,22 @@ mod channel_tests {
 
     #[test]
     fn stress_shared() {
-        #[cfg(miri)]
-        const AMT: u32 = 500;
-        #[cfg(not(miri))]
-        const AMT: u32 = 10000;
-        const NTHREADS: u32 = 8;
+        let amt: u32 = if cfg!(miri) { 100 } else { 10_000 };
+        let nthreads: u32 = if cfg!(miri) { 4 } else { 8 };
         let (tx, rx) = channel::<i32>();
 
         let t = thread::spawn(move || {
-            for _ in 0..AMT * NTHREADS {
+            for _ in 0..amt * nthreads {
                 assert_eq!(rx.recv().unwrap(), 1);
             }
             assert!(rx.try_recv().is_err());
         });
 
-        let mut ts = Vec::with_capacity(NTHREADS as usize);
-        for _ in 0..NTHREADS {
+        let mut ts = Vec::with_capacity(nthreads as usize);
+        for _ in 0..nthreads {
             let tx = tx.clone();
             let t = thread::spawn(move || {
-                for _ in 0..AMT {
+                for _ in 0..amt {
                     tx.send(1).unwrap();
                 }
             });
@@ -747,7 +744,7 @@ mod channel_tests {
     #[test]
     fn recv_a_lot() {
         #[cfg(miri)]
-        const N: usize = 100;
+        const N: usize = 50;
         #[cfg(not(miri))]
         const N: usize = 10000;
 
