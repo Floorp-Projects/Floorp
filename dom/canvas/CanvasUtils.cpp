@@ -354,8 +354,6 @@ bool IsOffscreenCanvasEnabled(JSContext* aCx, JSObject* aObj) {
     return false;
   }
 
-  const auto& allowlist = gfxVars::GetOffscreenCanvasDomainAllowlistOrDefault();
-
   if (!NS_IsMainThread()) {
     dom::WorkerPrivate* workerPrivate = dom::GetWorkerPrivateFromContext(aCx);
     if (workerPrivate->UsesSystemPrincipal() ||
@@ -363,7 +361,8 @@ bool IsOffscreenCanvasEnabled(JSContext* aCx, JSObject* aObj) {
       return true;
     }
 
-    return nsContentUtils::IsURIInList(workerPrivate->GetBaseURI(), allowlist);
+    const auto prefLock = StaticPrefs::gfx_offscreencanvas_domain_allowlist();
+    return nsContentUtils::IsURIInList(workerPrivate->GetBaseURI(), *prefLock);
   }
 
   nsIPrincipal* principal = nsContentUtils::SubjectPrincipal(aCx);
@@ -372,7 +371,8 @@ bool IsOffscreenCanvasEnabled(JSContext* aCx, JSObject* aObj) {
   }
 
   nsCOMPtr<nsIURI> uri = principal->GetURI();
-  return nsContentUtils::IsURIInList(uri, allowlist);
+  const auto prefLock = StaticPrefs::gfx_offscreencanvas_domain_allowlist();
+  return nsContentUtils::IsURIInList(uri, *prefLock);
 }
 
 bool CheckWriteOnlySecurity(bool aCORSUsed, nsIPrincipal* aPrincipal,
