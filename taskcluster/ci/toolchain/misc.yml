@@ -360,18 +360,20 @@ win64-vs2019:
             - build/vs/vs2019.yaml
         toolchain-artifact: project/gecko/vs/vs.tar.zst
 
-linux64-afl-instrumentation-4.0:
-    description: "AFL++ instrumentation toolchain build"
+linux64-afl-instrumentation-2.5:
+    description: "AFL instrumentation toolchain build"
     treeherder:
-        symbol: TL(afl++)
+        symbol: TL(afl)
     worker:
         max-run-time: 3600
     run:
         script: build-afl.sh
+        resources:
+            - taskcluster/scripts/misc/afl-nyx.patch
         toolchain-artifact: public/build/afl-instrumentation.tar.zst
         toolchain-alias: linux64-afl-instrumentation
     fetches:
         fetch:
-            - aflplusplus-4.0
+            - afl-2.5
         toolchain:
             - linux64-clang

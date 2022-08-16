@@ -595,12 +595,12 @@ pkgconf:
         strip-components: 1
         add-prefix: pkgconf/
 
-aflplusplus-4.0:
-    description: AFL++ 4.00 source
+afl-2.5:
+    description: AFL 2.5x source
     fetch:
         type: git
-        repo: https://github.com/AFLplusplus/AFLplusplus
-        revision: ba3c7bfe40f9b17a691958e3525828385127ad25
+        repo: https://github.com/google/AFL
+        revision: e75894a889fe854c02b9435186bd1e2927d6d490
 
 cargo-vet:
     description: cargo-vet source
