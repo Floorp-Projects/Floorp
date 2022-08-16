@@ -67,6 +67,7 @@ function _addCalloutLinkElements() {
     "branding/brand.ftl",
     "browser/branding/brandings.ftl",
     "browser/newtab/asrouter.ftl",
+    "browser/featureCallout.ftl",
   ]);
 }
 
@@ -91,15 +92,20 @@ const MESSAGES = [
         content: {
           position: "callout",
           arrow_position: "top",
-          title: "Hop between devices with tab pickup",
-          subtitle:
-            "Quickly grab open tabs from your phone and open them here for maximum flow.",
+          title: {
+            string_id: "callout-firefox-view-tab-pickup-title",
+          },
+          subtitle: {
+            string_id: "callout-firefox-view-tab-pickup-subtitle",
+          },
           logo: {
             imageURL:
               "chrome://activity-stream/content/data/content/assets/heart.webp",
           },
           primary_button: {
-            label: "Next",
+            label: {
+              string_id: "callout-primary-advance-button-label",
+            },
             action: {
               type: "SET_PREF",
               data: {
@@ -137,11 +143,16 @@ const MESSAGES = [
         content: {
           position: "callout",
           arrow_position: "bottom",
-          title: "Get back your closed tabs in a snap",
-          subtitle:
-            "All your closed tabs will magically show up here. Never worry about accidentally closing a site again.",
+          title: {
+            string_id: "callout-firefox-view-recently-closed-title",
+          },
+          subtitle: {
+            string_id: "callout-firefox-view-recently-closed-subtitle",
+          },
           primary_button: {
-            label: "Next",
+            label: {
+              string_id: "callout-primary-advance-button-label",
+            },
             action: {
               type: "SET_PREF",
               data: {
@@ -179,15 +190,20 @@ const MESSAGES = [
         content: {
           position: "callout",
           arrow_position: "end",
-          title: "Add a splash of color",
-          subtitle:
-            "Paint your browser with colorways, only in Firefox. Choose the shade that speaks to you.",
+          title: {
+            string_id: "callout-firefox-view-colorways-title",
+          },
+          subtitle: {
+            string_id: "callout-firefox-view-colorways-subtitle",
+          },
           logo: {
             imageURL:
               "chrome://activity-stream/content/data/content/assets/heart.webp",
           },
           primary_button: {
-            label: "Finish",
+            label: {
+              string_id: "callout-primary-complete-button-label",
+            },
             action: {
               type: "SET_PREF",
               data: {
