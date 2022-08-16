@@ -45,6 +45,33 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.equal(wrapper.find("main").prop("pos"), "corner");
     });
 
+    it("should render secondary section with content background for split positioned screens", () => {
+      const BACKGROUND_URL =
+        "chrome://activity-stream/content/data/content/assets/proton-bkg.avif";
+      const SCREEN_PROPS = {
+        content: {
+          position: "split",
+          background: `url(${BACKGROUND_URL}) var(--mr-secondary-position) no-repeat`,
+          split_narrow_bkg_position: "10px",
+          title: "test title",
+        },
+      };
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+      assert.ok(
+        wrapper
+          .find("div.section-secondary")
+          .prop("style")
+          .background.includes("--mr-secondary-position")
+      );
+      assert.ok(
+        wrapper.find("div.section-secondary").prop("style")[
+          "--mr-secondary-background-position-y"
+        ],
+        "10px"
+      );
+    });
+
     it("should render with secondary section for split positioned screens", () => {
       const SCREEN_PROPS = {
         content: {
