@@ -2,7 +2,7 @@
 //!
 //! [github]: https://img.shields.io/badge/github-8da0cb?style=for-the-badge&labelColor=555555&logo=github
 //! [crates-io]: https://img.shields.io/badge/crates.io-fc8d62?style=for-the-badge&labelColor=555555&logo=rust
-//! [docs-rs]: https://img.shields.io/badge/docs.rs-66c2a5?style=for-the-badge&labelColor=555555&logoColor=white&logo=data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDUxMiA1MTIiPjxwYXRoIGZpbGw9IiNmNWY1ZjUiIGQ9Ik00ODguNiAyNTAuMkwzOTIgMjE0VjEwNS41YzAtMTUtOS4zLTI4LjQtMjMuNC0zMy43bC0xMDAtMzcuNWMtOC4xLTMuMS0xNy4xLTMuMS0yNS4zIDBsLTEwMCAzNy41Yy0xNC4xIDUuMy0yMy40IDE4LjctMjMuNCAzMy43VjIxNGwtOTYuNiAzNi4yQzkuMyAyNTUuNSAwIDI2OC45IDAgMjgzLjlWMzk0YzAgMTMuNiA3LjcgMjYuMSAxOS45IDMyLjJsMTAwIDUwYzEwLjEgNS4xIDIyLjEgNS4xIDMyLjIgMGwxMDMuOS01MiAxMDMuOSA1MmMxMC4xIDUuMSAyMi4xIDUuMSAzMi4yIDBsMTAwLTUwYzEyLjItNi4xIDE5LjktMTguNiAxOS45LTMyLjJWMjgzLjljMC0xNS05LjMtMjguNC0yMy40LTMzLjd6TTM1OCAyMTQuOGwtODUgMzEuOXYtNjguMmw4NS0zN3Y3My4zek0xNTQgMTA0LjFsMTAyLTM4LjIgMTAyIDM4LjJ2LjZsLTEwMiA0MS40LTEwMi00MS40di0uNnptODQgMjkxLjFsLTg1IDQyLjV2LTc5LjFsODUtMzguOHY3NS40em0wLTExMmwtMTAyIDQxLjQtMTAyLTQxLjR2LS42bDEwMi0zOC4yIDEwMiAzOC4ydi42em0yNDAgMTEybC04NSA0Mi41di03OS4xbDg1LTM4Ljh2NzUuNHptMC0xMTJsLTEwMiA0MS40LTEwMi00MS40di0uNmwxMDItMzguMiAxMDIgMzguMnYuNnoiPjwvcGF0aD48L3N2Zz4K
+//! [docs-rs]: https://img.shields.io/badge/docs.rs-66c2a5?style=for-the-badge&labelColor=555555&logo=docs.rs
 //!
 //! <br>
 //!
@@ -86,7 +86,7 @@
 //! a different thread.
 
 // Proc-macro2 types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/proc-macro2/1.0.39")]
+#![doc(html_root_url = "https://docs.rs/proc-macro2/1.0.43")]
 #![cfg_attr(any(proc_macro_span, super_unstable), feature(proc_macro_span))]
 #![cfg_attr(super_unstable, feature(proc_macro_def_site))]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
@@ -120,6 +120,7 @@ extern crate proc_macro;
 
 mod marker;
 mod parse;
+mod rcvec;
 
 #[cfg(wrap_proc_macro)]
 mod detection;
@@ -136,15 +137,15 @@ use crate::fallback as imp;
 mod imp;
 
 use crate::marker::Marker;
-use std::cmp::Ordering;
+use core::cmp::Ordering;
+use core::fmt::{self, Debug, Display};
+use core::hash::{Hash, Hasher};
+use core::iter::FromIterator;
+use core::ops::RangeBounds;
+use core::str::FromStr;
 use std::error::Error;
-use std::fmt::{self, Debug, Display};
-use std::hash::{Hash, Hasher};
-use std::iter::FromIterator;
-use std::ops::RangeBounds;
 #[cfg(procmacro2_semver_exempt)]
 use std::path::PathBuf;
-use std::str::FromStr;
 
 /// An abstract stream of tokens, or more concretely a sequence of token trees.
 ///
@@ -952,11 +953,11 @@ impl Ident {
         Ident::_new(imp::Ident::new(string, span.inner))
     }
 
-    /// Same as `Ident::new`, but creates a raw identifier (`r#ident`).
-    ///
-    /// This method is semver exempt and not exposed by default.
-    #[cfg(procmacro2_semver_exempt)]
-    #[cfg_attr(doc_cfg, doc(cfg(procmacro2_semver_exempt)))]
+    /// Same as `Ident::new`, but creates a raw identifier (`r#ident`). The
+    /// `string` argument must be a valid identifier permitted by the language
+    /// (including keywords, e.g. `fn`). Keywords which are usable in path
+    /// segments (e.g. `self`, `super`) are not supported, and will cause a
+    /// panic.
     pub fn new_raw(string: &str, span: Span) -> Self {
         Ident::_new_raw(string, span)
     }
@@ -1128,9 +1129,9 @@ impl Literal {
     /// This constructor is similar to those like `Literal::i8_unsuffixed` where
     /// the float's value is emitted directly into the token but no suffix is
     /// used, so it may be inferred to be a `f64` later in the compiler.
-    /// Literals created from negative numbers may not survive rountrips through
-    /// `TokenStream` or strings and may be broken into two tokens (`-` and
-    /// positive literal).
+    /// Literals created from negative numbers may not survive round-trips
+    /// through `TokenStream` or strings and may be broken into two tokens (`-`
+    /// and positive literal).
     ///
     /// # Panics
     ///
@@ -1147,7 +1148,7 @@ impl Literal {
     /// specified is the preceding part of the token and `f64` is the suffix of
     /// the token. This token will always be inferred to be an `f64` in the
     /// compiler. Literals created from negative numbers may not survive
-    /// rountrips through `TokenStream` or strings and may be broken into two
+    /// round-trips through `TokenStream` or strings and may be broken into two
     /// tokens (`-` and positive literal).
     ///
     /// # Panics
@@ -1164,9 +1165,9 @@ impl Literal {
     /// This constructor is similar to those like `Literal::i8_unsuffixed` where
     /// the float's value is emitted directly into the token but no suffix is
     /// used, so it may be inferred to be a `f64` later in the compiler.
-    /// Literals created from negative numbers may not survive rountrips through
-    /// `TokenStream` or strings and may be broken into two tokens (`-` and
-    /// positive literal).
+    /// Literals created from negative numbers may not survive round-trips
+    /// through `TokenStream` or strings and may be broken into two tokens (`-`
+    /// and positive literal).
     ///
     /// # Panics
     ///
@@ -1183,7 +1184,7 @@ impl Literal {
     /// specified is the preceding part of the token and `f32` is the suffix of
     /// the token. This token will always be inferred to be an `f32` in the
     /// compiler. Literals created from negative numbers may not survive
-    /// rountrips through `TokenStream` or strings and may be broken into two
+    /// round-trips through `TokenStream` or strings and may be broken into two
     /// tokens (`-` and positive literal).
     ///
     /// # Panics
@@ -1270,7 +1271,7 @@ impl Display for Literal {
 pub mod token_stream {
     use crate::marker::Marker;
     use crate::{imp, TokenTree};
-    use std::fmt::{self, Debug};
+    use core::fmt::{self, Debug};
 
     pub use crate::TokenStream;
 
@@ -1290,11 +1291,16 @@ pub mod token_stream {
         fn next(&mut self) -> Option<TokenTree> {
             self.inner.next()
         }
+
+        fn size_hint(&self) -> (usize, Option<usize>) {
+            self.inner.size_hint()
+        }
     }
 
     impl Debug for IntoIter {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            Debug::fmt(&self.inner, f)
+            f.write_str("TokenStream ")?;
+            f.debug_list().entries(self.clone()).finish()
         }
     }
 

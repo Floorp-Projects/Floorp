@@ -506,6 +506,11 @@ criteria = "safe-to-deploy"
 version = "0.1.1"
 notes = "This is a trivial crate."
 
+[[audits.proc-macro2]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.39 -> 1.0.43"
+
 [[audits.rust_decimal]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
