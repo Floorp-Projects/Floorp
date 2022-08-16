@@ -76,7 +76,10 @@ const TemporaryPermissions = {
     return { strict: uri.prePath, nonStrict: this._uriToBaseDomain(uri) };
   },
 
-  // Sets a new permission for the specified browser.
+  /**
+   * Sets a new permission for the specified browser.
+   * @returns {boolean} whether the permission changed, effectively.
+   */
   set(browser, id, state, expireTimeMS, browserURI, expireCallback) {
     if (
       !browser ||
@@ -151,7 +154,10 @@ const TemporaryPermissions = {
     return state != previousState;
   },
 
-  // Removes a permission with the specified id for the specified browser.
+  /**
+   * Removes a permission with the specified id for the specified browser.
+   * @returns {boolean} whether the permission was removed.
+   */
   remove(browser, id) {
     if (
       !browser ||
@@ -313,6 +319,9 @@ const TemporaryPermissions = {
 const GloballyBlockedPermissions = {
   _stateByBrowser: new WeakMap(),
 
+  /**
+   * @returns {boolean} whether the permission was removed.
+   */
   set(browser, id) {
     if (!this._stateByBrowser.has(browser)) {
       this._stateByBrowser.set(browser, {});
