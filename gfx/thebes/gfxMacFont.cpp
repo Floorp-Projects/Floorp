@@ -612,6 +612,16 @@ bool gfxMacFont::ShouldRoundXOffset(cairo_t* aCairo) const {
                        CAIRO_SURFACE_TYPE_QUARTZ;
 }
 
+bool gfxMacFont::UseNativeColrFontSupport() const {
+  if (nsCocoaFeatures::OnHighSierraOrLater()) {
+    auto* colr = GetFontEntry()->GetCOLR();
+    if (colr && COLRFonts::GetColrTableVersion(colr) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void gfxMacFont::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                         FontCacheSizes* aSizes) const {
   gfxFont::AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
