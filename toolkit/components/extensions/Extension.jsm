@@ -1272,9 +1272,11 @@ class ExtensionData {
     if (
       this.isPrivileged &&
       manifest.hidden &&
-      (manifest.browser_action || manifest.action)
+      (manifest.action || manifest.browser_action || manifest.page_action)
     ) {
-      this.manifestError("Cannot use browser actions in hidden add-ons");
+      this.manifestError(
+        "Cannot use browser and/or page actions in hidden add-ons"
+      );
     }
 
     let apiNames = new Set();
