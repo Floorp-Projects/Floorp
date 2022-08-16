@@ -305,6 +305,11 @@ fn handle_full_128<const POINT: bool, const NEG: bool, const ROUND: bool>(
                 if ROUND {
                     if digit >= 5 {
                         data += 1;
+
+                        // Make sure that the mantissa isn't now overflowing
+                        if overflow_128(data) {
+                            return tail_error("Invalid decimal: overflow from mantissa after rounding");
+                        }
                     }
                 } else {
                     return Err(Error::Underflow);
@@ -889,6 +894,15 @@ mod test {
         assert_eq!(
             parse_str_radix_10("."),
             Err(Error::from("Invalid decimal: no digits found"))
+        );
+    }
+
+    #[test]
+    fn from_str_edge_cases_6() {
+        // Decimal::MAX + 0.99999
+        assert_eq!(
+            parse_str_radix_10("79_228_162_514_264_337_593_543_950_335.99999"),
+            Err(Error::from("Invalid decimal: overflow from mantissa after rounding"))
         );
     }
 }

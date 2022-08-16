@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "rust_decimal"
-version = "1.25.0"
+version = "1.26.1"
 authors = ["Paul Mason <paul@form1.co.nz>"]
 build = "build.rs"
 exclude = ["tests/generated/*"]
@@ -72,10 +72,17 @@ version = "1.0"
 optional = true
 default-features = false
 
-[dependencies.diesel]
+[dependencies.diesel1]
 version = "1.4"
 optional = true
 default-features = false
+package = "diesel"
+
+[dependencies.diesel2]
+version = "2.0.0-rc.1"
+optional = true
+default-features = false
+package = "diesel"
 
 [dependencies.num-traits]
 version = "0.2"
@@ -172,12 +179,22 @@ default-features = false
 
 [features]
 c-repr = []
-db-diesel-mysql = [
-    "diesel/mysql",
+db-diesel-mysql = ["db-diesel1-mysql"]
+db-diesel-postgres = ["db-diesel1-postgres"]
+db-diesel1-mysql = [
+    "diesel1/mysql",
     "std",
 ]
-db-diesel-postgres = [
-    "diesel/postgres",
+db-diesel1-postgres = [
+    "diesel1/postgres",
+    "std",
+]
+db-diesel2-mysql = [
+    "diesel2/mysql",
+    "std",
+]
+db-diesel2-postgres = [
+    "diesel2/postgres",
     "std",
 ]
 db-postgres = [

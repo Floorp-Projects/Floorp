@@ -127,6 +127,14 @@ fn iterator_individual(b: &mut ::test::Bencher) {
 }
 
 #[bench]
+fn iterator_product(b: &mut ::test::Bencher) {
+    b.iter(|| {
+        let result: Decimal = DecimalIterator::new().product();
+        ::test::black_box(result);
+    });
+}
+
+#[bench]
 fn iterator_sum(b: &mut ::test::Bencher) {
     b.iter(|| {
         let result: Decimal = DecimalIterator::new().sum();
