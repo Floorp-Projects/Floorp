@@ -1,18 +1,19 @@
 use crate::parse::{self, Cursor};
+use crate::rcvec::{RcVec, RcVecBuilder, RcVecIntoIter, RcVecMut};
 use crate::{Delimiter, Spacing, TokenTree};
 #[cfg(span_locations)]
-use std::cell::RefCell;
+use core::cell::RefCell;
 #[cfg(span_locations)]
-use std::cmp;
-use std::fmt::{self, Debug, Display, Write};
-use std::iter::FromIterator;
-use std::mem;
-use std::ops::RangeBounds;
+use core::cmp;
+use core::fmt::{self, Debug, Display, Write};
+use core::iter::FromIterator;
+use core::mem::ManuallyDrop;
+use core::ops::RangeBounds;
+use core::ptr;
+use core::str::FromStr;
 #[cfg(procmacro2_semver_exempt)]
 use std::path::Path;
 use std::path::PathBuf;
-use std::str::FromStr;
-use std::vec;
 
 /// Force use of proc-macro2's fallback implementation of the API for now, even
 /// if the compiler's implementation is available.
@@ -30,7 +31,7 @@ pub fn unforce() {
 
 #[derive(Clone)]
 pub(crate) struct TokenStream {
-    inner: Vec<TokenTree>,
+    inner: RcVec<TokenTree>,
 }
 
 #[derive(Debug)]
@@ -52,71 +53,69 @@ impl LexError {
 
 impl TokenStream {
     pub fn new() -> Self {
-        TokenStream { inner: Vec::new() }
+        TokenStream {
+            inner: RcVecBuilder::new().build(),
+        }
     }
 
     pub fn is_empty(&self) -> bool {
         self.inner.len() == 0
     }
 
-    fn take_inner(&mut self) -> Vec<TokenTree> {
-        mem::replace(&mut self.inner, Vec::new())
-    }
-
-    fn push_token(&mut self, token: TokenTree) {
-        // https://github.com/dtolnay/proc-macro2/issues/235
-        match token {
-            #[cfg(not(no_bind_by_move_pattern_guard))]
-            TokenTree::Literal(crate::Literal {
-                #[cfg(wrap_proc_macro)]
-                    inner: crate::imp::Literal::Fallback(literal),
-                #[cfg(not(wrap_proc_macro))]
-                    inner: literal,
-                ..
-            }) if literal.repr.starts_with('-') => {
-                push_negative_literal(self, literal);
-            }
-            #[cfg(no_bind_by_move_pattern_guard)]
-            TokenTree::Literal(crate::Literal {
-                #[cfg(wrap_proc_macro)]
-                    inner: crate::imp::Literal::Fallback(literal),
-                #[cfg(not(wrap_proc_macro))]
-                    inner: literal,
-                ..
-            }) => {
-                if literal.repr.starts_with('-') {
-                    push_negative_literal(self, literal);
-                } else {
-                    self.inner
-                        .push(TokenTree::Literal(crate::Literal::_new_stable(literal)));
-                }
-            }
-            _ => self.inner.push(token),
-        }
-
-        #[cold]
-        fn push_negative_literal(stream: &mut TokenStream, mut literal: Literal) {
-            literal.repr.remove(0);
-            let mut punct = crate::Punct::new('-', Spacing::Alone);
-            punct.set_span(crate::Span::_new_stable(literal.span));
-            stream.inner.push(TokenTree::Punct(punct));
-            stream
-                .inner
-                .push(TokenTree::Literal(crate::Literal::_new_stable(literal)));
-        }
+    fn take_inner(self) -> RcVecBuilder<TokenTree> {
+        let nodrop = ManuallyDrop::new(self);
+        unsafe { ptr::read(&nodrop.inner) }.make_owned()
     }
 }
 
-impl From<Vec<TokenTree>> for TokenStream {
-    fn from(inner: Vec<TokenTree>) -> Self {
-        TokenStream { inner }
+fn push_token_from_proc_macro(mut vec: RcVecMut<TokenTree>, token: TokenTree) {
+    // https://github.com/dtolnay/proc-macro2/issues/235
+    match token {
+        #[cfg(not(no_bind_by_move_pattern_guard))]
+        TokenTree::Literal(crate::Literal {
+            #[cfg(wrap_proc_macro)]
+                inner: crate::imp::Literal::Fallback(literal),
+            #[cfg(not(wrap_proc_macro))]
+                inner: literal,
+            ..
+        }) if literal.repr.starts_with('-') => {
+            push_negative_literal(vec, literal);
+        }
+        #[cfg(no_bind_by_move_pattern_guard)]
+        TokenTree::Literal(crate::Literal {
+            #[cfg(wrap_proc_macro)]
+                inner: crate::imp::Literal::Fallback(literal),
+            #[cfg(not(wrap_proc_macro))]
+                inner: literal,
+            ..
+        }) => {
+            if literal.repr.starts_with('-') {
+                push_negative_literal(vec, literal);
+            } else {
+                vec.push(TokenTree::Literal(crate::Literal::_new_stable(literal)));
+            }
+        }
+        _ => vec.push(token),
+    }
+
+    #[cold]
+    fn push_negative_literal(mut vec: RcVecMut<TokenTree>, mut literal: Literal) {
+        literal.repr.remove(0);
+        let mut punct = crate::Punct::new('-', Spacing::Alone);
+        punct.set_span(crate::Span::_new_stable(literal.span));
+        vec.push(TokenTree::Punct(punct));
+        vec.push(TokenTree::Literal(crate::Literal::_new_stable(literal)));
     }
 }
 
 // Nonrecursive to prevent stack overflow.
 impl Drop for TokenStream {
     fn drop(&mut self) {
-        while let Some(token) = self.inner.pop() {
+        let mut inner = match self.inner.get_mut() {
+            Some(inner) => inner,
+            None => return,
+        };
+        while let Some(token) = inner.pop() {
             let group = match token {
                 TokenTree::Group(group) => group.inner,
                 _ => continue,
@@ -126,8 +125,35 @@ impl Drop for TokenStream {
                 crate::imp::Group::Fallback(group) => group,
                 crate::imp::Group::Compiler(_) => continue,
             };
-            let mut group = group;
-            self.inner.extend(group.stream.take_inner());
+            inner.extend(group.stream.take_inner());
+        }
+    }
+}
+
+pub(crate) struct TokenStreamBuilder {
+    inner: RcVecBuilder<TokenTree>,
+}
+
+impl TokenStreamBuilder {
+    pub fn new() -> Self {
+        TokenStreamBuilder {
+            inner: RcVecBuilder::new(),
+        }
+    }
+
+    pub fn with_capacity(cap: usize) -> Self {
+        TokenStreamBuilder {
+            inner: RcVecBuilder::with_capacity(cap),
+        }
+    }
+
+    pub fn push_token_from_parser(&mut self, tt: TokenTree) {
+        self.inner.push(tt);
+    }
+
+    pub fn build(self) -> TokenStream {
+        TokenStream {
+            inner: self.inner.build(),
         }
     }
 }
@@ -220,9 +246,11 @@ impl From<TokenStream> for proc_macro::TokenStream {
 
 impl From<TokenTree> for TokenStream {
     fn from(tree: TokenTree) -> TokenStream {
-        let mut stream = TokenStream::new();
-        stream.push_token(tree);
-        stream
+        let mut stream = RcVecBuilder::new();
+        push_token_from_proc_macro(stream.as_mut(), tree);
+        TokenStream {
+            inner: stream.build(),
+        }
     }
 }
 
@@ -236,35 +264,38 @@ impl FromIterator<TokenTree> for TokenStream {
 
 impl FromIterator<TokenStream> for TokenStream {
     fn from_iter<I: IntoIterator<Item = TokenStream>>(streams: I) -> Self {
-        let mut v = Vec::new();
+        let mut v = RcVecBuilder::new();
 
-        for mut stream in streams {
+        for stream in streams {
             v.extend(stream.take_inner());
         }
 
-        TokenStream { inner: v }
+        TokenStream { inner: v.build() }
     }
 }
 
 impl Extend<TokenTree> for TokenStream {
     fn extend<I: IntoIterator<Item = TokenTree>>(&mut self, tokens: I) {
-        tokens.into_iter().for_each(|token| self.push_token(token));
+        let mut vec = self.inner.make_mut();
+        tokens
+            .into_iter()
+            .for_each(|token| push_token_from_proc_macro(vec.as_mut(), token));
     }
 }
 
 impl Extend<TokenStream> for TokenStream {
     fn extend<I: IntoIterator<Item = TokenStream>>(&mut self, streams: I) {
-        self.inner.extend(streams.into_iter().flatten());
+        self.inner.make_mut().extend(streams.into_iter().flatten());
     }
 }
 
-pub(crate) type TokenTreeIter = vec::IntoIter<TokenTree>;
+pub(crate) type TokenTreeIter = RcVecIntoIter<TokenTree>;
 
 impl IntoIterator for TokenStream {
     type Item = TokenTree;
     type IntoIter = TokenTreeIter;
 
-    fn into_iter(mut self) -> TokenTreeIter {
+    fn into_iter(self) -> TokenTreeIter {
         self.take_inner().into_iter()
     }
 }
@@ -383,7 +414,7 @@ impl SourceMap {
     fn add_file(&mut self, name: &str, src: &str) -> Span {
         let (len, lines) = lines_offsets(src);
         let lo = self.next_start_pos();
-        // XXX(nika): Shouild we bother doing a checked cast or checked add here?
+        // XXX(nika): Should we bother doing a checked cast or checked add here?
         let span = Span {
             lo,
             hi: lo + (len as u32),
@@ -638,7 +669,7 @@ pub(crate) struct Ident {
 
 impl Ident {
     fn _new(string: &str, raw: bool, span: Span) -> Self {
-        validate_ident(string);
+        validate_ident(string, raw);
 
         Ident {
             sym: string.to_owned(),
@@ -672,13 +703,12 @@ pub(crate) fn is_ident_continue(c: char) -> bool {
     unicode_ident::is_xid_continue(c)
 }
 
-fn validate_ident(string: &str) {
-    let validate = string;
-    if validate.is_empty() {
+fn validate_ident(string: &str, raw: bool) {
+    if string.is_empty() {
         panic!("Ident is not allowed to be empty; use Option<Ident>");
     }
 
-    if validate.bytes().all(|digit| digit >= b'0' && digit <= b'9') {
+    if string.bytes().all(|digit| digit >= b'0' && digit <= b'9') {
         panic!("Ident cannot be a number; use Literal instead");
     }
 
@@ -696,8 +726,17 @@ fn validate_ident(string: &str) {
         true
     }
 
-    if !ident_ok(validate) {
+    if !ident_ok(string) {
         panic!("{:?} is not a valid Ident", string);
+    }
+
+    if raw {
+        match string {
+            "_" | "super" | "self" | "Self" | "crate" => {
+                panic!("`r#{}` cannot be a raw identifier", string);
+            }
+            _ => {}
+        }
     }
 }
 

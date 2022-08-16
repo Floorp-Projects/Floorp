@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicUsize, Ordering};
+use core::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Once;
 
 static WORKS: AtomicUsize = AtomicUsize::new(0);

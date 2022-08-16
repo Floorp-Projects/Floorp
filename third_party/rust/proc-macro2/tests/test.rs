@@ -1,4 +1,4 @@
-#![allow(clippy::non_ascii_literal)]
+#![allow(clippy::assertions_on_result_states, clippy::non_ascii_literal)]
 
 use proc_macro2::{Ident, Literal, Punct, Spacing, Span, TokenStream, TokenTree};
 use std::panic;
@@ -15,14 +15,24 @@ fn idents() {
 }
 
 #[test]
-#[cfg(procmacro2_semver_exempt)]
 fn raw_idents() {
     assert_eq!(
         Ident::new_raw("String", Span::call_site()).to_string(),
         "r#String"
     );
     assert_eq!(Ident::new_raw("fn", Span::call_site()).to_string(), "r#fn");
-    assert_eq!(Ident::new_raw("_", Span::call_site()).to_string(), "r#_");
+}
+
+#[test]
+#[should_panic(expected = "`r#_` cannot be a raw identifier")]
+fn ident_raw_underscore() {
+    Ident::new_raw("_", Span::call_site());
+}
+
+#[test]
+#[should_panic(expected = "`r#super` cannot be a raw identifier")]
+fn ident_raw_reserved() {
+    Ident::new_raw("super", Span::call_site());
 }
 
 #[test]
@@ -535,6 +545,13 @@ fn default_tokenstream_is_empty() {
     let default_token_stream = <TokenStream as Default>::default();
 
     assert!(default_token_stream.is_empty());
+}
+
+#[test]
+fn tokenstream_size_hint() {
+    let tokens = "a b (c d) e".parse::<TokenStream>().unwrap();
+
+    assert_eq!(tokens.into_iter().size_hint(), (4, Some(4)));
 }
 
 #[test]

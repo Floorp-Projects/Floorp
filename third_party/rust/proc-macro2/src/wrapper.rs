@@ -1,12 +1,12 @@
 use crate::detection::inside_proc_macro;
 use crate::{fallback, Delimiter, Punct, Spacing, TokenTree};
-use std::fmt::{self, Debug, Display};
-use std::iter::FromIterator;
-use std::ops::RangeBounds;
+use core::fmt::{self, Debug, Display};
+use core::iter::FromIterator;
+use core::ops::RangeBounds;
+use core::str::FromStr;
 use std::panic;
 #[cfg(super_unstable)]
 use std::path::PathBuf;
-use std::str::FromStr;
 
 #[derive(Clone)]
 pub(crate) enum TokenStream {
@@ -350,12 +350,6 @@ impl Iterator for TokenTreeIter {
     }
 }
 
-impl Debug for TokenTreeIter {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("TokenTreeIter").finish()
-    }
-}
-
 #[derive(Clone, PartialEq, Eq)]
 #[cfg(super_unstable)]
 pub(crate) enum SourceFile {
@@ -694,16 +688,26 @@ impl Ident {
 
     pub fn new_raw(string: &str, span: Span) -> Self {
         match span {
+            #[cfg(not(no_ident_new_raw))]
+            Span::Compiler(s) => Ident::Compiler(proc_macro::Ident::new_raw(string, s)),
+            #[cfg(no_ident_new_raw)]
             Span::Compiler(s) => {
-                let p: proc_macro::TokenStream = string.parse().unwrap();
-                let ident = match p.into_iter().next() {
-                    Some(proc_macro::TokenTree::Ident(mut i)) => {
-                        i.set_span(s);
-                        i
+                let _ = proc_macro::Ident::new(string, s);
+                // At this point the un-r#-prefixed string is known to be a
+                // valid identifier. Try to produce a valid raw identifier by
+                // running the `TokenStream` parser, and unwrapping the first
+                // token as an `Ident`.
+                let raw_prefixed = format!("r#{}", string);
+                if let Ok(ts) = raw_prefixed.parse::<proc_macro::TokenStream>() {
+                    let mut iter = ts.into_iter();
+                    if let (Some(proc_macro::TokenTree::Ident(mut id)), None) =
+                        (iter.next(), iter.next())
+                    {
+                        id.set_span(s);
+                        return Ident::Compiler(id);
                     }
-                    _ => panic!(),
-                };
-                Ident::Compiler(ident)
+                }
+                panic!("not allowed as a raw identifier: `{}`", raw_prefixed)
             }
             Span::Fallback(s) => Ident::Fallback(fallback::Ident::new_raw(string, s)),
         }
