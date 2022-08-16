@@ -38,6 +38,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Arbeletik datuak eskuratzea</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Arbelean datuak idaztea</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Blokeatu edozein orritako edukia</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Fitxategiak deskargatzea eta nabigatzailearen deskarga-historia irakurri eta aldatzea</string>
     <!-- Description for downloads_open permission. -->

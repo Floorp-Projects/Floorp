@@ -38,6 +38,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">کلپ بورڈ کنوں ڈیٹا گھنو</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">کلپ بورڈ وچ ڈیٹا پاؤ</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">کہیں وی ورقے تے مواد بلاک کرو</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">فائلاں ڈاؤن لوڈ کرو تے براؤزر دی ڈاؤن لوڈ تاریخ پڑھو تے تجدید کرو</string>
     <!-- Description for downloads_open permission. -->

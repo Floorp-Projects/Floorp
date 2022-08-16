@@ -5,6 +5,8 @@
     <string name="mozac_clear_button_description">تازىلاش</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, but none trackers have been blocked or detected. -->
     <string name="mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked">ئىزلاشتىن توسۇش ئىقتىدارى ئوچۇق</string>
+    <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, and trackers have been blocked or detected.-->
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked1">ئىز قوغلاش قوغدىغۇچىسى ئىز قوغلىغۇچىلارنى توستى</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection disabled.-->
     <string name="mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1">بۇ توربېكەتكە نىسبەتەن ئىزلاش ئېتىلگەن</string>
     <!-- Content description: For the site security information icon (the site security icon).-->
