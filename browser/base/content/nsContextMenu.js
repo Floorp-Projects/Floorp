@@ -243,8 +243,6 @@ class nsContextMenu {
     this.inSyntheticDoc = context.inSyntheticDoc;
     this.inAboutDevtoolsToolbox = context.inAboutDevtoolsToolbox;
 
-    this.isSponsoredLink = context.isSponsoredLink;
-
     // Everything after this isn't sent directly from ContextMenu
     if (this.target) {
       this.ownerDoc = this.target.ownerDocument;
@@ -1390,31 +1388,9 @@ class nsContextMenu {
     return params;
   }
 
-  _getGlobalHistoryOptions() {
-    if (this.isSponsoredLink) {
-      return {
-        globalHistoryOptions: { triggeringSponsoredURL: this.linkURL },
-      };
-    } else if (this.browser.hasAttribute("triggeringSponsoredURL")) {
-      return {
-        globalHistoryOptions: {
-          triggeringSponsoredURL: this.browser.getAttribute(
-            "triggeringSponsoredURL"
-          ),
-          triggeringSponsoredURLVisitTimeMS: this.browser.getAttribute(
-            "triggeringSponsoredURLVisitTimeMS"
-          ),
-        },
-      };
-    }
-    return {};
-  }
-
   // Open linked-to URL in a new window.
   openLink() {
-    const params = this._getGlobalHistoryOptions();
-
-    openLinkIn(this.linkURL, "window", this._openLinkInParameters(params));
+    openLinkIn(this.linkURL, "window", this._openLinkInParameters());
   }
 
   // Open linked-to URL in a new private window.
@@ -1430,7 +1406,14 @@ class nsContextMenu {
   openLinkInTab(event) {
     let params = {
       userContextId: parseInt(event.target.getAttribute("data-usercontextid")),
-      ...this._getGlobalHistoryOptions(),
+      globalHistoryOptions: {
+        triggeringSponsoredURL: this.browser.getAttribute(
+          "triggeringSponsoredURL"
+        ),
+        triggeringSponsoredURLVisitTimeMS: this.browser.getAttribute(
+          "triggeringSponsoredURLVisitTimeMS"
+        ),
+      },
     };
 
     openLinkIn(this.linkURL, "tab", this._openLinkInParameters(params));

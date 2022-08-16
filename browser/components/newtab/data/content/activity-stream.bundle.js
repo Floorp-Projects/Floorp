@@ -11610,8 +11610,7 @@ class TopSiteLink extends (external_React_default()).PureComponent {
       tabIndex: "0",
       onKeyPress: this.onKeyPress,
       onClick: onClick,
-      draggable: true,
-      "data-is-sponsored-link": !!link.sponsored_tile_id
+      draggable: true
     }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "tile",
       "aria-hidden": true
