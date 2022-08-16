@@ -35,6 +35,15 @@ interface nsICookieBannerService : nsISupports {
   readonly attribute Array<nsICookieBannerRule> rules;
 
   /**
+   * Clears all imported rules. They will be imported again on startup and when
+   * enabling the service. This is currently only used for testing.
+   *
+   * doImport - Whether to import initial rule list after reset. Passing false
+   * will result in an empty rule list.
+   */
+  void resetRules([optional] in boolean doImport);
+
+  /**
    * Look up all cookie rules for a given URI. Depending on the MODE_ this will
    * return none, only reject rules or accept rules if there is no reject rule
    * available.
