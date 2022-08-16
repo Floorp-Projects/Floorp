@@ -87,7 +87,7 @@ where
     Lite<T>: Debug,
 {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        Debug::fmt(Lite(&*self.value), formatter)
+        Debug::fmt(Lite(self.value), formatter)
     }
 }
 

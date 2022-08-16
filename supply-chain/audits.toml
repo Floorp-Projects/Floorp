@@ -613,6 +613,11 @@ criteria = "safe-to-deploy"
 version = "0.4.1"
 notes = "Simple string processing with no unsafe code or ambient capability usage."
 
+[[audits.syn]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.0.96 -> 1.0.99"
+
 [[audits.thin-vec]]
 who = "Aria Beingessner <a.beingessner@gmail.com>"
 criteria = "safe-to-deploy"

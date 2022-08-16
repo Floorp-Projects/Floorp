@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.31"
 name = "syn"
-version = "1.0.96"
+version = "1.0.99"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 include = [
     "/benches/**",
@@ -28,7 +28,14 @@ include = [
 description = "Parser for Rust source code"
 documentation = "https://docs.rs/syn"
 readme = "README.md"
-categories = ["development-tools::procedural-macro-helpers"]
+keywords = [
+    "macros",
+    "syn",
+]
+categories = [
+    "development-tools::procedural-macro-helpers",
+    "parser-implementations",
+]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dtolnay/syn"
 
