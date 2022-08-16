@@ -549,7 +549,12 @@
     value: true
     mirror: always
 
-# Mode to use when receiving kinetic scroll input.
+-   name: apz.gtk.pangesture.enabled
+    type: RelaxedAtomicBool
+    value: true
+    mirror: always
+
+# Mode to use when receiving pan gesture input.
 #
 #  * 0: Auto mode (uses the default behavior, subject to change).
 #  * 1: Page mode: Uses gtk deltas as a percentage of the page size to scroll. This mode matches:
@@ -560,17 +565,17 @@
 #
 #    https://webkit-search.igalia.com/webkit/rev/215039ef09d6bfd6e088175bfe30788d95b9705d/Source/WebKit/Shared/gtk/WebEventFactory.cpp#265-296
 #    (multiplied then by pixelsPerLineStep which in GNOME-web is 40).
--   name: apz.gtk.kinetic_scroll.delta_mode
+-   name: apz.gtk.pangesture.delta_mode
     type: uint32_t
     value: 0
     mirror: always
 
--   name: apz.gtk.kinetic_scroll.page_delta_mode_multiplier
+-   name: apz.gtk.pangesture.page_delta_mode_multiplier
     type: float
     value: 1.0f
     mirror: always
 
--   name: apz.gtk.kinetic_scroll.pixel_delta_mode_multiplier
+-   name: apz.gtk.pangesture.pixel_delta_mode_multiplier
     type: float
     value: 40.0f
     mirror: always

@@ -4727,7 +4727,7 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
       GdkInputSource source = gdk_device_get_source(device);
       if (source == GDK_SOURCE_TOUCHSCREEN || source == GDK_SOURCE_TOUCHPAD ||
           mCurrentSynthesizedTouchpadPan.mTouchpadGesturePhase.isSome()) {
-        if (StaticPrefs::apz_gtk_kinetic_scroll_enabled() &&
+        if (StaticPrefs::apz_gtk_pangesture_enabled() &&
             gtk_check_version(3, 20, 0) == nullptr) {
           static auto sGdkEventIsScrollStopEvent =
               (gboolean(*)(const GdkEvent*))dlsym(
@@ -4773,14 +4773,14 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
           mCurrentSynthesizedTouchpadPan.mTouchpadGesturePhase.reset();
 
           const bool isPageMode =
-              StaticPrefs::apz_gtk_kinetic_scroll_delta_mode() != 2;
+              StaticPrefs::apz_gtk_pangesture_delta_mode() != 2;
           const double multiplier =
               isPageMode
-                  ? StaticPrefs::
-                        apz_gtk_kinetic_scroll_page_delta_mode_multiplier()
+                  ? StaticPrefs::apz_gtk_pangesture_page_delta_mode_multiplier()
                   : StaticPrefs::
-                            apz_gtk_kinetic_scroll_pixel_delta_mode_multiplier() *
+                            apz_gtk_pangesture_pixel_delta_mode_multiplier() *
                         FractionalScaleFactor();
+
           ScreenPoint deltas(float(aEvent->delta_x * multiplier),
                              float(aEvent->delta_y * multiplier));
 
@@ -4791,7 +4791,8 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
               KeymapWrapper::ComputeKeyModifiers(aEvent->state));
           panEvent.mDeltaType = isPageMode ? PanGestureInput::PANDELTA_PAGE
                                            : PanGestureInput::PANDELTA_PIXEL;
-          panEvent.mSimulateMomentum = true;
+          panEvent.mSimulateMomentum =
+              StaticPrefs::apz_gtk_kinetic_scroll_enabled();
 
           panEvent
               .mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection =
