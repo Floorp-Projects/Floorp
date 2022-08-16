@@ -27,7 +27,7 @@
 //! }
 //! ```
 
-#![doc(html_root_url = "https://docs.rs/serde_bytes/0.11.6")]
+#![doc(html_root_url = "https://docs.rs/serde_bytes/0.11.7")]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(missing_docs)]
 #![allow(
