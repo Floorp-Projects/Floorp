@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.36"
 name = "ryu"
-version = "1.0.10"
+version = "1.0.11"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 exclude = [
     "performance.png",
@@ -22,7 +22,11 @@ exclude = [
 description = "Fast floating point to string conversion"
 documentation = "https://docs.rs/ryu"
 readme = "README.md"
-categories = ["value-formatting"]
+keywords = ["float"]
+categories = [
+    "value-formatting",
+    "no-std",
+]
 license = "Apache-2.0 OR BSL-1.0"
 repository = "https://github.com/dtolnay/ryu"
 
