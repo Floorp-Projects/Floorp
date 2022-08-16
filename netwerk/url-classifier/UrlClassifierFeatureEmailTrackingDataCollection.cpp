@@ -180,9 +180,15 @@ UrlClassifierFeatureEmailTrackingDataCollection::ProcessChannel(
 
   RefPtr<dom::BrowsingContext> bc;
   loadInfo->GetBrowsingContext(getter_AddRefs(bc));
+  if (!bc || bc->IsDiscarded()) {
+    return NS_OK;
+  }
 
   RefPtr<dom::WindowGlobalParent> topWindowParent =
       bc->Canonical()->GetTopWindowContext();
+  if (!topWindowParent || topWindowParent->IsDiscarded()) {
+    return NS_OK;
+  }
 
   // Cache the email webapp domains pref value and register the callback
   // function to update the cached value when the pref changes.
