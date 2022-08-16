@@ -19,4 +19,5 @@ object ManufacturerCodes {
 
     val isLG get() = Build.MANUFACTURER.equals(LG, ignoreCase = true)
     val isSamsung get() = Build.MANUFACTURER.equals(SAMSUNG, ignoreCase = true)
+    val isHuawei get() = Build.MANUFACTURER.equals(HUAWEI, ignoreCase = true)
 }
