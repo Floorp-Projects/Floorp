@@ -2721,8 +2721,7 @@ nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
         for (OwningNonNull<nsIContent>& content : arrayOfContents) {
           // MOZ_KnownLive because 'arrayOfContents' is guaranteed to keep it
           // alive.
-          nsresult rv = RelativeFontChangeOnNode(
-              aDir == FontSize::incr ? +1 : -1, MOZ_KnownLive(content));
+          nsresult rv = RelativeFontChangeOnNode(aDir, MOZ_KnownLive(content));
           if (NS_FAILED(rv)) {
             NS_WARNING("HTMLEditor::RelativeFontChangeOnNode() failed");
             return rv;
@@ -2899,8 +2898,7 @@ CreateElementResult HTMLEditor::RelativeFontChangeOnTextNode(
       std::move(pointToPutCaret));
 }
 
-nsresult HTMLEditor::RelativeFontChangeHelper(int32_t aSizeChange,
-                                              nsINode* aNode) {
+nsresult HTMLEditor::RelativeFontChangeHelper(FontSize aDir, nsINode* aNode) {
   MOZ_ASSERT(aNode);
 
   /*  This routine looks for all the font nodes in the tree rooted by aNode,
@@ -2908,11 +2906,6 @@ nsresult HTMLEditor::RelativeFontChangeHelper(int32_t aSizeChange,
       set.  Any such nodes need to have big or small put inside them, since
       they override any big/small that are above them.
   */
-
-  // Can only change font size by + or - 1
-  if (aSizeChange != 1 && aSizeChange != -1) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
 
   // If this is a font node with size, put big/small inside it.
   if (aNode->IsHTMLElement(nsGkAtoms::font) &&
@@ -2925,9 +2918,8 @@ nsresult HTMLEditor::RelativeFontChangeHelper(int32_t aSizeChange,
     }
 
     for (const auto& child : childList) {
-      // MOZ_KnownLive because 'childList' is guaranteed to
-      // keep it alive.
-      nsresult rv = RelativeFontChangeOnNode(aSizeChange, MOZ_KnownLive(child));
+      // MOZ_KnownLive because of bug 1622253
+      nsresult rv = RelativeFontChangeOnNode(aDir, MOZ_KnownLive(child));
       if (NS_FAILED(rv)) {
         NS_WARNING("HTMLEditor::RelativeFontChangeOnNode() failed");
         return rv;
@@ -2947,9 +2939,8 @@ nsresult HTMLEditor::RelativeFontChangeHelper(int32_t aSizeChange,
   }
 
   for (const auto& child : childList) {
-    // MOZ_KnownLive because 'childList' is guaranteed to
-    // keep it alive.
-    nsresult rv = RelativeFontChangeHelper(aSizeChange, MOZ_KnownLive(child));
+    // MOZ_KnownLive because of bug 1622253
+    nsresult rv = RelativeFontChangeHelper(aDir, MOZ_KnownLive(child));
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::RelativeFontChangeHelper() failed");
       return rv;
@@ -2959,22 +2950,18 @@ nsresult HTMLEditor::RelativeFontChangeHelper(int32_t aSizeChange,
   return NS_OK;
 }
 
-nsresult HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
+nsresult HTMLEditor::RelativeFontChangeOnNode(FontSize aDir,
                                               nsIContent* aNode) {
   MOZ_ASSERT(aNode);
-  // Can only change font size by + or - 1
-  if (aSizeChange != 1 && aSizeChange != -1) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
 
   nsStaticAtom* const bigOrSmallTagName =
-      aSizeChange == 1 ? nsGkAtoms::big : nsGkAtoms::small;
+      aDir == FontSize::incr ? nsGkAtoms::big : nsGkAtoms::small;
 
   // Is it the opposite of what we want?
-  if ((aSizeChange == 1 && aNode->IsHTMLElement(nsGkAtoms::small)) ||
-      (aSizeChange == -1 && aNode->IsHTMLElement(nsGkAtoms::big))) {
+  if ((aDir == FontSize::incr && aNode->IsHTMLElement(nsGkAtoms::small)) ||
+      (aDir == FontSize::decr && aNode->IsHTMLElement(nsGkAtoms::big))) {
     // first populate any nested font tags that have the size attr set
-    nsresult rv = RelativeFontChangeHelper(aSizeChange, aNode);
+    nsresult rv = RelativeFontChangeHelper(aDir, aNode);
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::RelativeFontChangeHelper() failed");
       return rv;
@@ -3000,7 +2987,7 @@ nsresult HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
   // can it be put inside a "big" or "small"?
   if (HTMLEditUtils::CanNodeContain(*bigOrSmallTagName, *aNode)) {
     // first populate any nested font tags that have the size attr set
-    nsresult rv = RelativeFontChangeHelper(aSizeChange, aNode);
+    nsresult rv = RelativeFontChangeHelper(aDir, aNode);
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::RelativeFontChangeHelper() failed");
       return rv;
@@ -3093,9 +3080,8 @@ nsresult HTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange,
   }
 
   for (const auto& child : childList) {
-    // MOZ_KnownLive because 'childList' is guaranteed to
-    // keep it alive.
-    nsresult rv = RelativeFontChangeOnNode(aSizeChange, MOZ_KnownLive(child));
+    // MOZ_KnownLive because of bug 1622253
+    nsresult rv = RelativeFontChangeOnNode(aDir, MOZ_KnownLive(child));
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::RelativeFontChangeOnNode() failed");
       return rv;

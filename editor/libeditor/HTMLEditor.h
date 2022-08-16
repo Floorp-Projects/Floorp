@@ -3882,9 +3882,9 @@ class HTMLEditor final : public EditorBase,
    */
   MOZ_CAN_RUN_SCRIPT nsresult RelativeFontChange(FontSize aDir);
 
-  MOZ_CAN_RUN_SCRIPT nsresult RelativeFontChangeOnNode(int32_t aSizeChange,
+  MOZ_CAN_RUN_SCRIPT nsresult RelativeFontChangeOnNode(FontSize aDir,
                                                        nsIContent* aNode);
-  MOZ_CAN_RUN_SCRIPT nsresult RelativeFontChangeHelper(int32_t aSizeChange,
+  MOZ_CAN_RUN_SCRIPT nsresult RelativeFontChangeHelper(FontSize aDir,
                                                        nsINode* aNode);
 
   /**
