@@ -98,7 +98,7 @@ add_task(async function test_OnboardingMessageProvider_getImport_nodefault() {
   sandbox.stub(OnboardingMessageProvider, "_doesAppNeedPin").resolves(false);
   const message = await OnboardingMessageProvider.getUpgradeMessage();
 
-  // No import screen is shown when user has Firefox both pinned and default
+  // Import screen is shown when user doesn't have Firefox pinned and default
   Assert.equal(
     message.content.screens[1]?.id,
     "UPGRADE_IMPORT_SETTINGS",
@@ -106,6 +106,59 @@ add_task(async function test_OnboardingMessageProvider_getImport_nodefault() {
   );
   sandbox.restore();
 });
+
+add_task(
+  async function test_OnboardingMessageProvider_getPinPrivateWindow_noPrivatePin() {
+    Services.prefs.setBoolPref("browser.shell.checkDefaultBrowser", true);
+    registerCleanupFunction(() => {
+      Services.prefs.clearUserPref("browser.shell.checkDefaultBrowser");
+    });
+    let sandbox = sinon.createSandbox();
+    // User needs default to ensure Pin Private window shows as third screen after import
+    sandbox
+      .stub(OnboardingMessageProvider, "_doesAppNeedDefault")
+      .resolves(true);
+
+    let pinStub = sandbox.stub(OnboardingMessageProvider, "_doesAppNeedPin");
+    pinStub.resolves(false);
+    pinStub.withArgs(true).resolves(true);
+    const message = await OnboardingMessageProvider.getUpgradeMessage();
+
+    // Pin Private screen is shown when user doesn't have Firefox private pinned but has Firefox pinned
+    Assert.equal(
+      message.content.screens[4]?.id,
+      "UPGRADE_PIN_PRIVATE_WINDOW",
+      "Screen has pin private window screen id"
+    );
+    sandbox.restore();
+  }
+);
+
+add_task(
+  async function test_OnboardingMessageProvider_getNoPinPrivateWindow_noPin() {
+    Services.prefs.setBoolPref("browser.shell.checkDefaultBrowser", true);
+    registerCleanupFunction(() => {
+      Services.prefs.clearUserPref("browser.shell.checkDefaultBrowser");
+    });
+    let sandbox = sinon.createSandbox();
+    // User needs default to ensure Pin Private window shows as third screen after import
+    sandbox
+      .stub(OnboardingMessageProvider, "_doesAppNeedDefault")
+      .resolves(true);
+
+    let pinStub = sandbox.stub(OnboardingMessageProvider, "_doesAppNeedPin");
+    pinStub.resolves(true);
+    const message = await OnboardingMessageProvider.getUpgradeMessage();
+
+    // Pin Private screen is not shown when user doesn't have Firefox pinned
+    Assert.notEqual(
+      message.content.screens[4]?.id,
+      "UPGRADE_PIN_PRIVATE_WINDOW",
+      "Screen doesn't have pin private window screen id"
+    );
+    sandbox.restore();
+  }
+);
 
 add_task(async function test_schemaValidation() {
   const { experimentValidator, messageValidators } = await makeValidators();
