@@ -490,6 +490,16 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.0.7 -> 1.0.8"
 
+[[audits.pin-project]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-run"
+delta = "1.0.10 -> 1.0.12"
+
+[[audits.pin-project-internal]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-run"
+delta = "1.0.10 -> 1.0.12"
+
 [[audits.precomputed-hash]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-deploy"

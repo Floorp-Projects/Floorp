@@ -10,6 +10,7 @@ struct Struct<T, U> {
 #[allow(explicit_outlives_requirements)]
 #[allow(single_use_lifetimes)]
 #[allow(unreachable_pub)]
+#[allow(unused_tuple_struct_fields)]
 #[allow(clippy::unknown_clippy_lints)]
 #[allow(clippy::pattern_type_mismatch)]
 #[allow(clippy::redundant_pub_crate)]
@@ -40,6 +41,7 @@ const _: () = {
         unpinned: &'pin (U),
     }
     impl<T, U> Struct<T, U> {
+        #[allow(dead_code)]
         fn project<'pin>(
             self: _pin_project::__private::Pin<&'pin mut Self>,
         ) -> __StructProjection<'pin, T, U> {
@@ -51,6 +53,7 @@ const _: () = {
                 }
             }
         }
+        #[allow(dead_code)]
         #[allow(clippy::missing_const_for_fn)]
         fn project_ref<'pin>(
             self: _pin_project::__private::Pin<&'pin Self>,
@@ -69,10 +72,10 @@ const _: () = {
         let _ = &this.pinned;
         let _ = &this.unpinned;
     }
-    impl<'pin, T, U> _pin_project::__private::Unpin for Struct<T, U> where
-        _pin_project::__private::Wrapper<'pin, Self>: _pin_project::UnsafeUnpin
-    {
-    }
+    impl<'pin, T, U> _pin_project::__private::Unpin for Struct<T, U>
+    where
+        _pin_project::__private::Wrapper<'pin, Self>: _pin_project::UnsafeUnpin,
+    {}
     trait StructMustNotImplDrop {}
     #[allow(clippy::drop_bounds, drop_bounds)]
     impl<T: _pin_project::__private::Drop> StructMustNotImplDrop for T {}

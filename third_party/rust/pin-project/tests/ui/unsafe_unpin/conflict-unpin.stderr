@@ -5,7 +5,7 @@ error[E0119]: conflicting implementations of trait `std::marker::Unpin` for type
    |               ^^^^^^^^^^^ conflicting implementation for `Foo<_, _>`
 ...
 10 | impl<T, U> Unpin for Foo<T, U> where T: Unpin {}
-   | --------------------------------------------- first implementation here
+   | ------------------------------ first implementation here
    |
    = note: upstream crates may add a new impl of trait `_::_pin_project::UnsafeUnpin` for type `_::_pin_project::__private::Wrapper<'_, Foo<_, _>>` in future versions
 

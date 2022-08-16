@@ -1,7 +1,7 @@
 # pin-project
 
 [![crates.io](https://img.shields.io/crates/v/pin-project?style=flat-square&logo=rust)](https://crates.io/crates/pin-project)
-[![docs.rs](https://img.shields.io/badge/docs.rs-pin--project-blue?style=flat-square)](https://docs.rs/pin-project)
+[![docs.rs](https://img.shields.io/badge/docs.rs-pin--project-blue?style=flat-square&logo=docs.rs)](https://docs.rs/pin-project)
 [![license](https://img.shields.io/badge/license-Apache--2.0_OR_MIT-blue?style=flat-square)](#license)
 [![rustc](https://img.shields.io/badge/rustc-1.37+-blue?style=flat-square&logo=rust)](https://www.rust-lang.org)
 [![build status](https://img.shields.io/github/workflow/status/taiki-e/pin-project/CI/main?style=flat-square&logo=github)](https://github.com/taiki-e/pin-project/actions)
@@ -78,17 +78,16 @@ impl<T, U> Enum<T, U> {
 See [documentation](https://docs.rs/pin-project) for more details, and
 see [examples] directory for more examples and generated code.
 
-[`pin_project`]: https://docs.rs/pin-project/1/pin_project/attr.pin_project.html
-[enum-default-expanded]: examples/enum-default-expanded.rs
-[examples]: examples/README.md
-[pin-projection]: https://doc.rust-lang.org/std/pin/index.html#projections-and-structural-pinning
-[struct-default-expanded]: examples/struct-default-expanded.rs
-
 ## Related Projects
 
 - [pin-project-lite]: A lightweight version of pin-project written with declarative macros.
 
+[`pin_project`]: https://docs.rs/pin-project/1/pin_project/attr.pin_project.html
+[enum-default-expanded]: examples/enum-default-expanded.rs
+[examples]: examples/README.md
 [pin-project-lite]: https://github.com/taiki-e/pin-project-lite
+[pin-projection]: https://doc.rust-lang.org/std/pin/index.html#projections-and-structural-pinning
+[struct-default-expanded]: examples/struct-default-expanded.rs
 
 ## License
 
