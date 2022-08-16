@@ -486,8 +486,8 @@ class HTMLEditor final : public EditorBase,
    *                            called by system.
    */
   MOZ_CAN_RUN_SCRIPT nsresult SetInlinePropertyAsAction(
-      nsAtom& aProperty, nsAtom* aAttribute, const nsAString& aValue,
-      nsIPrincipal* aPrincipal = nullptr);
+      nsStaticAtom& aProperty, nsStaticAtom* aAttribute,
+      const nsAString& aValue, nsIPrincipal* aPrincipal = nullptr);
 
   /**
    * GetInlineProperty() gets aggregate properties of the current selection.
@@ -3298,19 +3298,16 @@ class HTMLEditor final : public EditorBase,
       Document& aDocument, const nsACString& aCharacterSet);
 
   /**
-   * SetInlinePropertyAsSubAction() stores new style with `mTypeInState` if
-   * `Selection` is collapsed.  Otherwise, applying the style at all selection
-   * ranges.
+   * SetInlinePropertiesAsSubAction() stores new styles with mTypeInState if
+   * `Selection` is collapsed.  Otherwise, applying the styles to all selected
+   * contents.
    *
-   * @param aHTMLProperty       One of the presentation tag names which we
-   *                            support in style editor.
-   * @param aAttribute          For some aProperty values, needs to be set to
-   *                            its attribute name.  Otherwise, nullptr.
-   * @param aAttributeValue     The value of aAttribute.
+   * @param aStylesToSet        The styles which should be applied to the
+   *                            selected content.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  SetInlinePropertyAsSubAction(nsAtom& aHTMLProperty, nsAtom* aAttribute,
-                               const nsAString& aAttributeValue);
+  template <size_t N>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SetInlinePropertiesAsSubAction(
+      const AutoTArray<EditorInlineStyleAndValue, N>& aStylesToSet);
 
   /**
    * RemoveInlinePropertiesAsSubAction() removes specified styles from
