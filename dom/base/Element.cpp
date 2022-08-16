@@ -3199,11 +3199,21 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
           mouseEvent->mButton == MouseButton::eMiddle;
 
       if (mouseEvent->mButton == MouseButton::ePrimary) {
+        // For avoiding focus popup opened by clicking this link to get blurred,
+        // we need this to get focused now.  However, if the mousedown occurs
+        // in editable element in this link, we should not do this because its
+        // editing host will get focus.
         if (IsInComposedDoc()) {
-          if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
-            RefPtr<Element> kungFuDeathGrip(this);
-            fm->SetFocus(kungFuDeathGrip, nsIFocusManager::FLAG_BYMOUSE |
-                                              nsIFocusManager::FLAG_NOSCROLL);
+          Element* targetElement = Element::FromEventTargetOrNull(
+              aVisitor.mEvent->GetDOMEventTarget());
+          if (targetElement && targetElement->IsInclusiveDescendantOf(this) &&
+              (!targetElement->IsEditable() ||
+               targetElement->GetEditingHost() == this)) {
+            if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
+              RefPtr<Element> kungFuDeathGrip(this);
+              fm->SetFocus(kungFuDeathGrip, nsIFocusManager::FLAG_BYMOUSE |
+                                                nsIFocusManager::FLAG_NOSCROLL);
+            }
           }
         }
 

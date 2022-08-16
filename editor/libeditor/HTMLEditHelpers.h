@@ -1234,6 +1234,40 @@ struct MOZ_STACK_CLASS EditorInlineStyle {
   EditorInlineStyle() = default;
 };
 
+/******************************************************************************
+ * EditorInlineStyleAndValue represents an inline style and stores its value.
+ ******************************************************************************/
+
+struct MOZ_STACK_CLASS EditorInlineStyleAndValue : public EditorInlineStyle {
+  // Stores the value of mAttribute.
+  nsString const mAttributeValue;
+
+  bool IsStyleToClearAllInlineStyles() const = delete;
+  EditorInlineStyleAndValue() = delete;
+
+  explicit EditorInlineStyleAndValue(nsStaticAtom& aHTMLProperty)
+      : EditorInlineStyle(aHTMLProperty) {}
+  EditorInlineStyleAndValue(nsStaticAtom& aHTMLProperty, nsAtom& aAttribute,
+                            const nsAString& aValue)
+      : EditorInlineStyle(aHTMLProperty, &aAttribute),
+        mAttributeValue(aValue) {}
+  EditorInlineStyleAndValue(nsStaticAtom& aHTMLProperty,
+                            RefPtr<nsAtom>&& aAttribute,
+                            const nsAString& aValue)
+      : EditorInlineStyle(aHTMLProperty, std::move(aAttribute)),
+        mAttributeValue(aValue) {
+    MOZ_ASSERT(mAttribute);
+  }
+  EditorInlineStyleAndValue(nsStaticAtom& aHTMLProperty, nsAtom& aAttribute,
+                            nsString&& aValue)
+      : EditorInlineStyle(aHTMLProperty, &aAttribute),
+        mAttributeValue(std::move(aValue)) {}
+  EditorInlineStyleAndValue(nsStaticAtom& aHTMLProperty,
+                            RefPtr<nsAtom>&& aAttribute, nsString&& aValue)
+      : EditorInlineStyle(aHTMLProperty, std::move(aAttribute)),
+        mAttributeValue(aValue) {}
+};
+
 }  // namespace mozilla
 
 #endif  // #ifndef mozilla_HTMLEditHelpers_h

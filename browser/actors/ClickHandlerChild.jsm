@@ -181,6 +181,13 @@ class ClickHandlerChild extends JSWindowActorChild {
       json.originStoragePrincipal = ownerDoc.effectiveStoragePrincipal;
       json.triggeringPrincipal = ownerDoc.nodePrincipal;
 
+      if (
+        (ownerDoc.URL === "about:newtab" || ownerDoc.URL === "about:home") &&
+        node.dataset.isSponsoredLink === "true"
+      ) {
+        json.globalHistoryOptions = { triggeringSponsoredURL: href };
+      }
+
       // If a link element is clicked with middle button, user wants to open
       // the link somewhere rather than pasting clipboard content.  Therefore,
       // when it's clicked with middle button, we should prevent multiple
