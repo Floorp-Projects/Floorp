@@ -56,6 +56,16 @@ export function toggleContainer(collapsibleButton, collapsibleContainer) {
   const arrowDown = "arrow-down";
   collapsibleButton.classList.toggle(arrowDown);
   let isHidden = collapsibleButton.classList.contains(arrowDown);
+
+  const newFluentString = `${
+    !isHidden
+      ? "firefoxview-collapse-button-hide"
+      : "firefoxview-collapse-button-show"
+  }`;
+  collapsibleButton.setAttribute("data-l10n-id", newFluentString);
+
+  collapsibleButton.setAttribute("aria-expanded", !isHidden);
+  collapsibleButton.setAttribute("data-l10n-id", newFluentString);
   collapsibleContainer.hidden = isHidden;
 
   Services.telemetry.recordEvent(
