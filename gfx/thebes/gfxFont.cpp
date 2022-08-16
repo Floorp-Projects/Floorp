@@ -2467,17 +2467,20 @@ bool gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget, gfxContext* aContext,
                                ScaledFont* aScaledFont,
                                DrawOptions aDrawOptions, const Point& aPoint,
                                uint32_t aGlyphId) const {
-  DeviceColor ctxColor;
-  sRGBColor currentColor = aContext->GetDeviceColor(ctxColor)
-                               ? sRGBColor::FromABGR(ctxColor.ToABGR())
-                               : sRGBColor::OpaqueBlack();
+  auto currentColor = [=]() {
+    DeviceColor ctxColor;
+    return aContext->GetDeviceColor(ctxColor)
+               ? sRGBColor::FromABGR(ctxColor.ToABGR())
+               : sRGBColor::OpaqueBlack();
+  };
 
   if (const auto* layers =
           COLRFonts::GetGlyphLayers(GetFontEntry()->GetCOLR(), aGlyphId)) {
-    return COLRFonts::PaintGlyphLayers(GetFontEntry()->GetCOLR(),
-                                       GetFontEntry()->GetCPAL(), layers,
-                                       aDrawTarget, aTextDrawer, aScaledFont,
-                                       aDrawOptions, currentColor, aPoint);
+    auto face(GetFontEntry()->GetHBFace());
+    bool ok = COLRFonts::PaintGlyphLayers(
+        GetFontEntry()->GetCOLR(), face, layers, aDrawTarget, aTextDrawer,
+        aScaledFont, aDrawOptions, currentColor(), aPoint);
+    return ok;
   }
 
   return false;
