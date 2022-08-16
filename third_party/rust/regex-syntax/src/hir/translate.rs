@@ -589,7 +589,7 @@ struct TranslatorI<'t, 'p> {
 impl<'t, 'p> TranslatorI<'t, 'p> {
     /// Build a new internal translator.
     fn new(trans: &'t Translator, pattern: &'p str) -> TranslatorI<'t, 'p> {
-        TranslatorI { trans: trans, pattern: pattern }
+        TranslatorI { trans, pattern }
     }
 
     /// Return a reference to the underlying translator.
@@ -609,7 +609,7 @@ impl<'t, 'p> TranslatorI<'t, 'p> {
 
     /// Create a new error with the given span and error type.
     fn error(&self, span: Span, kind: ErrorKind) -> Error {
-        Error { kind: kind, pattern: self.pattern.to_string(), span: span }
+        Error { kind, pattern: self.pattern.to_string(), span }
     }
 
     /// Return a copy of the active flags.
@@ -779,7 +779,7 @@ impl<'t, 'p> TranslatorI<'t, 'p> {
             }
             ast::GroupKind::NonCapturing(_) => hir::GroupKind::NonCapturing,
         };
-        Hir::group(hir::Group { kind: kind, hir: Box::new(expr) })
+        Hir::group(hir::Group { kind, hir: Box::new(expr) })
     }
 
     fn hir_repetition(&self, rep: &ast::Repetition, expr: Hir) -> Hir {
@@ -802,11 +802,7 @@ impl<'t, 'p> TranslatorI<'t, 'p> {
         };
         let greedy =
             if self.flags().swap_greed() { !rep.greedy } else { rep.greedy };
-        Hir::repetition(hir::Repetition {
-            kind: kind,
-            greedy: greedy,
-            hir: Box::new(expr),
-        })
+        Hir::repetition(hir::Repetition { kind, greedy, hir: Box::new(expr) })
     }
 
     fn hir_unicode_class(
@@ -1238,7 +1234,7 @@ mod tests {
     fn hir_quest(greedy: bool, expr: Hir) -> Hir {
         Hir::repetition(hir::Repetition {
             kind: hir::RepetitionKind::ZeroOrOne,
-            greedy: greedy,
+            greedy,
             hir: Box::new(expr),
         })
     }
@@ -1246,7 +1242,7 @@ mod tests {
     fn hir_star(greedy: bool, expr: Hir) -> Hir {
         Hir::repetition(hir::Repetition {
             kind: hir::RepetitionKind::ZeroOrMore,
-            greedy: greedy,
+            greedy,
             hir: Box::new(expr),
         })
     }
@@ -1254,7 +1250,7 @@ mod tests {
     fn hir_plus(greedy: bool, expr: Hir) -> Hir {
         Hir::repetition(hir::Repetition {
             kind: hir::RepetitionKind::OneOrMore,
-            greedy: greedy,
+            greedy,
             hir: Box::new(expr),
         })
     }
@@ -1262,7 +1258,7 @@ mod tests {
     fn hir_range(greedy: bool, range: hir::RepetitionRange, expr: Hir) -> Hir {
         Hir::repetition(hir::Repetition {
             kind: hir::RepetitionKind::Range(range),
-            greedy: greedy,
+            greedy,
             hir: Box::new(expr),
         })
     }
