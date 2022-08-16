@@ -385,11 +385,11 @@ static void MakeFilename(const char* aPrefix, const nsAString& aIdentifier,
 // the following two problems:
 // - It provides a JSONWriterFunc::Write() that calls nsGZFileWriter::Write().
 // - It can be stored as a UniquePtr, whereas nsGZFileWriter is refcounted.
-class GZWriterWrapper : public JSONWriteFunc {
+class GZWriterWrapper final : public JSONWriteFunc {
  public:
   explicit GZWriterWrapper(nsGZFileWriter* aGZWriter) : mGZWriter(aGZWriter) {}
 
-  void Write(const Span<const char>& aStr) override {
+  void Write(const Span<const char>& aStr) final {
     // Ignore any failure because JSONWriteFunc doesn't have a mechanism for
     // handling errors.
     Unused << mGZWriter->Write(aStr.data(), aStr.size());

@@ -152,7 +152,7 @@ class TempFileWriter final : public mozilla::JSONWriteFunc {
 
   explicit operator bool() const { return !mFailed; }
 
-  void Write(const mozilla::Span<const char>& aStr) override {
+  void Write(const mozilla::Span<const char>& aStr) final {
     if (mFailed) {
       return;
     }
