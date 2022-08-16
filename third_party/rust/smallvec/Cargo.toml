@@ -12,14 +12,14 @@
 [package]
 edition = "2018"
 name = "smallvec"
-version = "1.8.0"
+version = "1.9.0"
 authors = ["The Servo Project Developers"]
 description = "'Small vector' optimization: store up to a small number of items on the stack"
 documentation = "https://docs.rs/smallvec/"
 readme = "README.md"
 keywords = ["small", "vec", "vector", "stack", "no_std"]
 categories = ["data-structures"]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/servo/rust-smallvec"
 [package.metadata.docs.rs]
 all-features = true
