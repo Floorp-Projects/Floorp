@@ -19,6 +19,11 @@ criteria = "safe-to-deploy"
 version = "0.1.2"
 notes = "I wrote this crate, reviewed by jimb. It is mostly a Rust port of some C++ code we already ship."
 
+[[audits.android_system_properties]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.1.2 -> 0.1.4"
+
 [[audits.app_units]]
 who = "Emilio Cobos Álvarez <emilio@crisal.io>"
 criteria = "safe-to-deploy"
