@@ -63,16 +63,6 @@ function makeChan(url) {
   return chan;
 }
 
-function makeChan(url) {
-  let chan = NetUtil.newChannel({
-    uri: url,
-    loadUsingSystemPrincipal: true,
-    contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
-  }).QueryInterface(Ci.nsIHttpChannel);
-  chan.loadFlags = Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
-  return chan;
-}
-
 function channelOpenPromise(chan, flags) {
   return new Promise(resolve => {
     function finish(req, buffer) {

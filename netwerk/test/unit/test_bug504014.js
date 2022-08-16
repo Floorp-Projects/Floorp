@@ -53,7 +53,7 @@ var invalid_URIs = [
 ];
 
 function run_test() {
-  for (var i = 0; i < valid_URIs.length; i++) {
+  for (let i = 0; i < valid_URIs.length; i++) {
     try {
       Services.io.newURI(valid_URIs[i]);
     } catch (e) {
@@ -61,7 +61,7 @@ function run_test() {
     }
   }
 
-  for (var i = 0; i < invalid_URIs.length; i++) {
+  for (let i = 0; i < invalid_URIs.length; i++) {
     try {
       Services.io.newURI(invalid_URIs[i]);
       do_throw("should throw: " + invalid_URIs[i]);

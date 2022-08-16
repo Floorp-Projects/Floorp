@@ -167,7 +167,7 @@ function run_test() {
 
   var xhr;
 
-  for (var i = 0; i < tests.length; ++i) {
+  for (let i = 0; i < tests.length; ++i) {
     dump("Testing " + tests[i] + "\n");
     xhr = createXHR(
       false,
@@ -178,7 +178,7 @@ function run_test() {
     checkResults(xhr, tests[i][2], tests[i][3], tests[i][4]);
   }
 
-  for (var i = 0; i < othertests.length; ++i) {
+  for (let i = 0; i < othertests.length; ++i) {
     dump("Testing " + othertests[i] + " (cross-origin)\n");
     xhr = createXHR(
       false,

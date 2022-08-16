@@ -65,14 +65,6 @@ registerCleanupFunction(async () => {
   await httpserv.stop();
 });
 
-function makeChan(url) {
-  let chan = NetUtil.newChannel({
-    uri: url,
-    loadUsingSystemPrincipal: true,
-  }).QueryInterface(Ci.nsIHttpChannel);
-  return chan;
-}
-
 function channelOpenPromise(chan) {
   return new Promise(resolve => {
     let topic = "http-on-transaction-suspended-authentication";

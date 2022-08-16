@@ -604,7 +604,7 @@ add_test(function test_hugeStringThrows() {
 });
 
 add_test(function test_filterWhitespace() {
-  var url = stringToURL(
+  let url = stringToURL(
     " \r\n\th\nt\rt\tp://ex\r\n\tample.com/path\r\n\t/\r\n\tto the/fil\r\n\te.e\r\n\txt?que\r\n\try#ha\r\n\tsh \r\n\t "
   );
   Assert.equal(
@@ -613,7 +613,7 @@ add_test(function test_filterWhitespace() {
   );
 
   // These setters should escape \r\n\t, not filter them.
-  var url = stringToURL("http://test.com/path?query#hash");
+  url = stringToURL("http://test.com/path?query#hash");
   url = url
     .mutate()
     .setFilePath("pa\r\n\tth")
@@ -722,7 +722,7 @@ add_test(function test_encode_C0_and_space() {
     ) {
       continue;
     }
-    var url = stringToURL(
+    let url = stringToURL(
       "http://example.com/pa" +
         String.fromCharCode(i) +
         "th?qu" +
@@ -744,7 +744,7 @@ add_test(function test_encode_C0_and_space() {
   }
 
   // Additionally, we need to check the setters.
-  var url = stringToURL("http://example.com/path?query#hash");
+  let url = stringToURL("http://example.com/path?query#hash");
   url = url
     .mutate()
     .setFilePath("pa\0th")
@@ -790,7 +790,7 @@ add_test(function test_ipv4Normalize() {
     "http://127.0.0.1.",
   ].map(stringToURL);
 
-  var url;
+  let url;
   for (url of localIPv4s) {
     Assert.equal(url.spec, "http://127.0.0.1/");
   }
@@ -821,7 +821,7 @@ add_test(function test_ipv4Normalize() {
     Assert.equal(url.spec, spec);
   }
 
-  var url = stringToURL("resource://path/to/resource/");
+  url = stringToURL("resource://path/to/resource/");
   url = url
     .mutate()
     .setHost("123")

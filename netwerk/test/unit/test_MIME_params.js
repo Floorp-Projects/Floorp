@@ -690,7 +690,7 @@ function do_tests(whichRFC) {
       tests[i].length == 3 || whichRFC == 0 ? tests[i][1] : tests[i][3];
 
     try {
-      var result;
+      let result;
 
       if (whichRFC == 0) {
         result = mhp.getParameter(tests[i][0], "", "UTF-8", true, unused);
@@ -715,7 +715,7 @@ function do_tests(whichRFC) {
       tests[i].length == 3 || whichRFC == 0 ? tests[i][2] : tests[i][4];
 
     try {
-      var result;
+      let result;
 
       if (whichRFC == 0) {
         result = mhp.getParameter(
