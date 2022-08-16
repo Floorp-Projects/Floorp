@@ -1,9 +1,9 @@
 extern crate heapsize;
 
-use self::heapsize::{HeapSizeOf, heap_size_of};
-use std::hash::{Hash, BuildHasher};
+use self::heapsize::{heap_size_of, HeapSizeOf};
+use std::hash::{BuildHasher, Hash};
 
-use {LinkedHashMap, KeyRef, Node};
+use {KeyRef, LinkedHashMap, Node};
 
 impl<K> HeapSizeOf for KeyRef<K> {
     fn heap_size_of_children(&self) -> usize {
@@ -12,8 +12,9 @@ impl<K> HeapSizeOf for KeyRef<K> {
 }
 
 impl<K, V> HeapSizeOf for Node<K, V>
-    where K: HeapSizeOf,
-          V: HeapSizeOf
+where
+    K: HeapSizeOf,
+    V: HeapSizeOf,
 {
     fn heap_size_of_children(&self) -> usize {
         self.key.heap_size_of_children() + self.value.heap_size_of_children()
@@ -21,9 +22,10 @@ impl<K, V> HeapSizeOf for Node<K, V>
 }
 
 impl<K, V, S> HeapSizeOf for LinkedHashMap<K, V, S>
-    where K: HeapSizeOf + Hash + Eq,
-          V: HeapSizeOf,
-          S: BuildHasher
+where
+    K: HeapSizeOf + Hash + Eq,
+    V: HeapSizeOf,
+    S: BuildHasher,
 {
     fn heap_size_of_children(&self) -> usize {
         unsafe {

@@ -3,28 +3,30 @@
 extern crate serde;
 
 use std::fmt::{Formatter, Result as FmtResult};
-use std::marker::PhantomData;
 use std::hash::{BuildHasher, Hash};
+use std::marker::PhantomData;
 
 use super::LinkedHashMap;
 
-use self::serde::{Serialize, Serializer, Deserialize, Deserializer};
+use self::serde::de::{Error, MapAccess, Visitor};
 use self::serde::ser::SerializeMap;
-use self::serde::de::{Visitor, MapAccess, Error};
+use self::serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 impl<K, V, S> Serialize for LinkedHashMap<K, V, S>
-    where K: Serialize + Eq + Hash,
-          V: Serialize,
-          S: BuildHasher
+where
+    K: Serialize + Eq + Hash,
+    V: Serialize,
+    S: BuildHasher,
 {
     #[inline]
-    fn serialize<T>(&self, serializer:T) -> Result<T::Ok, T::Error>
-        where T: Serializer,
+    fn serialize<T>(&self, serializer: T) -> Result<T::Ok, T::Error>
+    where
+        T: Serializer,
     {
-        let mut map_serializer = try!(serializer.serialize_map(Some(self.len())));
+        let mut map_serializer = serializer.serialize_map(Some(self.len()))?;
         for (k, v) in self {
-            try!(map_serializer.serialize_key(k));
-            try!(map_serializer.serialize_value(v));
+            map_serializer.serialize_key(k)?;
+            map_serializer.serialize_value(v)?;
         }
         map_serializer.end()
     }
@@ -52,8 +54,9 @@ impl<K, V> Default for LinkedHashMapVisitor<K, V> {
 }
 
 impl<'de, K, V> Visitor<'de> for LinkedHashMapVisitor<K, V>
-    where K: Deserialize<'de> + Eq + Hash,
-          V: Deserialize<'de>,
+where
+    K: Deserialize<'de> + Eq + Hash,
+    V: Deserialize<'de>,
 {
     type Value = LinkedHashMap<K, V>;
 
@@ -63,14 +66,16 @@ impl<'de, K, V> Visitor<'de> for LinkedHashMapVisitor<K, V>
 
     #[inline]
     fn visit_unit<E>(self) -> Result<Self::Value, E>
-        where E: Error,
+    where
+        E: Error,
     {
         Ok(LinkedHashMap::new())
     }
 
     #[inline]
     fn visit_map<M>(self, mut map: M) -> Result<Self::Value, M::Error>
-        where M: MapAccess<'de>,
+    where
+        M: MapAccess<'de>,
     {
         let mut values = LinkedHashMap::with_capacity(map.size_hint().unwrap_or(0));
 
@@ -83,11 +88,13 @@ impl<'de, K, V> Visitor<'de> for LinkedHashMapVisitor<K, V>
 }
 
 impl<'de, K, V> Deserialize<'de> for LinkedHashMap<K, V>
-    where K: Deserialize<'de> + Eq + Hash,
-          V: Deserialize<'de>,
+where
+    K: Deserialize<'de> + Eq + Hash,
+    V: Deserialize<'de>,
 {
     fn deserialize<D>(deserializer: D) -> Result<LinkedHashMap<K, V>, D::Error>
-        where D: Deserializer<'de>,
+    where
+        D: Deserializer<'de>,
     {
         deserializer.deserialize_map(LinkedHashMapVisitor::new())
     }
