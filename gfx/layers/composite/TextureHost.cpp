@@ -347,8 +347,9 @@ already_AddRefed<TextureHost> CreateBackendIndependentTextureHost(
   return result.forget();
 }
 
-TextureHost::TextureHost(TextureFlags aFlags)
+TextureHost::TextureHost(TextureHostType aType, TextureFlags aFlags)
     : AtomicRefCountedWithFinalize("TextureHost"),
+      mTextureHostType(aType),
       mActor(nullptr),
       mFlags(aFlags),
       mCompositableCount(0),
@@ -454,7 +455,7 @@ TextureSource::TextureSource() : mCompositableCount(0) {}
 TextureSource::~TextureSource() = default;
 BufferTextureHost::BufferTextureHost(const BufferDescriptor& aDesc,
                                      TextureFlags aFlags)
-    : TextureHost(aFlags), mLocked(false) {
+    : TextureHost(TextureHostType::Buffer, aFlags), mLocked(false) {
   mDescriptor = aDesc;
   switch (mDescriptor.type()) {
     case BufferDescriptor::TYCbCrDescriptor: {

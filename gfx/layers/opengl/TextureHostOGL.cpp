@@ -489,7 +489,7 @@ SurfaceTextureHost::SurfaceTextureHost(
     TextureFlags aFlags, mozilla::java::GeckoSurfaceTexture::Ref& aSurfTex,
     gfx::IntSize aSize, gfx::SurfaceFormat aFormat, bool aContinuousUpdate,
     bool aIgnoreTransform)
-    : TextureHost(aFlags),
+    : TextureHost(TextureHostType::AndroidSurfaceTexture, aFlags),
       mSurfTex(aSurfTex),
       mSize(aSize),
       mFormat(aFormat),
@@ -662,7 +662,7 @@ AndroidHardwareBufferTextureHost::Create(
 
 AndroidHardwareBufferTextureHost::AndroidHardwareBufferTextureHost(
     TextureFlags aFlags, AndroidHardwareBuffer* aAndroidHardwareBuffer)
-    : TextureHost(aFlags),
+    : TextureHost(TextureHostType::AndroidHardwareBuffer, aFlags),
       mAndroidHardwareBuffer(aAndroidHardwareBuffer),
       mEGLImage(EGL_NO_IMAGE) {}
 
@@ -857,7 +857,7 @@ gfx::Matrix4x4 EGLImageTextureSource::GetTextureTransform() {
 EGLImageTextureHost::EGLImageTextureHost(TextureFlags aFlags, EGLImage aImage,
                                          EGLSync aSync, gfx::IntSize aSize,
                                          bool hasAlpha)
-    : TextureHost(aFlags),
+    : TextureHost(TextureHostType::EGLImage, aFlags),
       mImage(aImage),
       mSync(aSync),
       mSize(aSize),
@@ -920,7 +920,7 @@ void EGLImageTextureHost::PushDisplayItems(
 GLTextureHost::GLTextureHost(TextureFlags aFlags, GLuint aTextureHandle,
                              GLenum aTarget, GLsync aSync, gfx::IntSize aSize,
                              bool aHasAlpha)
-    : TextureHost(aFlags),
+    : TextureHost(TextureHostType::GLTexture, aFlags),
       mTexture(aTextureHandle),
       mTarget(aTarget),
       mSync(aSync),

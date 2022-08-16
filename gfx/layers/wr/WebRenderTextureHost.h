@@ -92,6 +92,8 @@ class WebRenderTextureHost : public TextureHost {
 
   void MaybeNotifyForUse(wr::TransactionBuilder& aTxn);
 
+  TextureHostType GetTextureHostType() override;
+
   const RefPtr<TextureHost> mWrappedTextureHost;
 };
 
