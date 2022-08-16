@@ -64,11 +64,11 @@ mod no_std {
         }
 
         impl<T> Mutex<T> {
-            pub(crate) fn new(data: T) -> Self {
-                Self {
-                    inner: crate::spin::Mutex::new(data),
-                }
-            }
+            // pub(crate) fn new(data: T) -> Self {
+            //     Self {
+            //         inner: crate::spin::Mutex::new(data),
+            //     }
+            // }
 
             pub(crate) fn lock(&self) -> Result<MutexGuard<'_, T>, ()> {
                 Ok(self.inner.lock())

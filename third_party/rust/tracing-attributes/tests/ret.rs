@@ -4,9 +4,16 @@ use tracing_mock::*;
 
 use tracing::{subscriber::with_default, Level};
 use tracing_attributes::instrument;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::EnvFilter;
 
 #[instrument(ret)]
 fn ret() -> i32 {
+    42
+}
+
+#[instrument(target = "my_target", ret)]
+fn ret_with_target() -> i32 {
     42
 }
 
@@ -27,6 +34,33 @@ fn test() {
         .run_with_handle();
 
     with_default(subscriber, ret);
+    handle.assert_finished();
+}
+
+#[test]
+fn test_custom_target() {
+    let filter: EnvFilter = "my_target=info".parse().expect("filter should parse");
+    let span = span::mock()
+        .named("ret_with_target")
+        .with_target("my_target");
+
+    let (subscriber, handle) = subscriber::mock()
+        .new_span(span.clone())
+        .enter(span.clone())
+        .event(
+            event::mock()
+                .with_fields(field::mock("return").with_value(&tracing::field::debug(42)))
+                .at_level(Level::INFO)
+                .with_target("my_target"),
+        )
+        .exit(span.clone())
+        .drop_span(span)
+        .done()
+        .run_with_handle();
+
+    let subscriber = subscriber.with(filter);
+
+    with_default(subscriber, ret_with_target);
     handle.assert_finished();
 }
 
