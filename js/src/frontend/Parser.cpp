@@ -7630,6 +7630,80 @@ static AccessorType ToAccessorType(PropertyType propType) {
   }
 }
 
+#ifdef ENABLE_DECORATORS
+template <class ParseHandler, typename Unit>
+typename ParseHandler::ListNodeType
+GeneralParser<ParseHandler, Unit>::decoratorList(YieldHandling yieldHandling) {
+  ListNodeType decorators =
+      handler_.newList(ParseNodeKind::DecoratorList, pos());
+
+  // Build a decorator list element. At each entry point to this loop we have
+  // already consumed the |@| token
+  TokenKind tt;
+  for (;;) {
+    if (!tokenStream.getToken(&tt, TokenStream::SlashIsInvalid)) {
+      return null();
+    }
+
+    Node decorator = null();
+    if (tt == TokenKind::LeftParen) {
+      // Handle DecoratorParenthesizedExpression
+      decorator = exprInParens(InAllowed, yieldHandling, TripledotProhibited);
+      if (!decorator) {
+        return null();
+      }
+
+      if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_DECORATOR)) {
+        return null();
+      }
+
+      if (!tokenStream.getToken(&tt)) {
+        return null();
+      }
+    } else {
+      // Get decorator identifier
+      if (!(tt == TokenKind::Name || TokenKindIsContextualKeyword(tt))) {
+        error(JSMSG_DECORATOR_NAME_EXPECTED);
+        return null();
+      }
+      TaggedParserAtomIndex name = anyChars.currentName();
+      if (!tokenStream.getToken(&tt)) {
+        return null();
+      }
+
+      if (tt == TokenKind::LeftParen) {
+        // Handle DecoratorCallExpression
+        Node decoratorName = handler_.newName(name, pos());
+        bool isSpread = false;
+        Node args = argumentList(yieldHandling, &isSpread);
+        if (!args) {
+          return null();
+        }
+        decorator = handler_.newCall(decoratorName, args,
+                                     isSpread ? JSOp::SpreadCall : JSOp::Call);
+
+        if (!tokenStream.getToken(&tt)) {
+          return null();
+        }
+      } else {
+        // Handle DecoratorMemberExpression
+        // TODO: Bug 1784513, handle decorator member expressions with `.` in
+        // them.
+        decorator = handler_.newName(name, pos());
+      }
+    }
+    MOZ_ASSERT(decorator, "Decorator should exist");
+    handler_.addList(decorators, decorator);
+
+    if (tt != TokenKind::At) {
+      anyChars.ungetToken();
+      break;
+    }
+  }
+  return decorators;
+}
+#endif
+
 template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::classMember(
     YieldHandling yieldHandling, const ParseContext::ClassStatement& classStmt,
@@ -7650,6 +7724,20 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
   if (tt == TokenKind::Semi) {
     return true;
   }
+
+#ifdef ENABLE_DECORATORS
+  ListNodeType decorators;
+  if (tt == TokenKind::At) {
+    decorators = decoratorList(yieldHandling);
+    if (!decorators) {
+      return false;
+    }
+
+    if (!tokenStream.getToken(&tt, TokenStream::SlashIsInvalid)) {
+      return false;
+    }
+  }
+#endif
 
   bool isStatic = false;
   if (tt == TokenKind::Static) {
@@ -7745,7 +7833,12 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
     }
 
     ClassFieldType field =
-        handler_.newClassFieldDefinition(propName, initializer, isStatic);
+        handler_.newClassFieldDefinition(propName, initializer, isStatic
+#ifdef ENABLE_DECORATORS
+                                         ,
+                                         decorators
+#endif
+        );
     if (!field) {
       return false;
     }
@@ -7907,8 +8000,13 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
     }
   }
 
-  Node method = handler_.newClassMethodDefinition(
-      propName, funNode, atype, isStatic, initializerIfPrivate);
+  Node method = handler_.newClassMethodDefinition(propName, funNode, atype,
+                                                  isStatic, initializerIfPrivate
+#ifdef ENABLE_DECORATORS
+                                                  ,
+                                                  decorators
+#endif
+  );
   if (!method) {
     return false;
   }

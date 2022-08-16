@@ -385,12 +385,22 @@ class SyntaxParseHandler {
   }
   [[nodiscard]] Node newClassMethodDefinition(
       Node key, FunctionNodeType funNode, AccessorType atype, bool isStatic,
-      mozilla::Maybe<FunctionNodeType> initializerIfPrivate) {
+      mozilla::Maybe<FunctionNodeType> initializerIfPrivate
+#ifdef ENABLE_DECORATORS
+      ,
+      ListNodeType decorators
+#endif
+  ) {
     return NodeGeneric;
   }
   [[nodiscard]] Node newClassFieldDefinition(Node name,
                                              FunctionNodeType initializer,
-                                             bool isStatic) {
+                                             bool isStatic
+#ifdef ENABLE_DECORATORS
+                                             ,
+                                             ListNodeType decorators
+#endif
+  ) {
     return NodeGeneric;
   }
 
