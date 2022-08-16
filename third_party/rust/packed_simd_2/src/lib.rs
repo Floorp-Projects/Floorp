@@ -223,7 +223,6 @@
     stmt_expr_attributes,
     custom_inner_attributes,
 )]
-#![cfg_attr(aarch64_target_feature, feature(aarch64_target_feature))]
 #![allow(non_camel_case_types, non_snake_case,
         // FIXME: these types are unsound in C FFI already
         // See https://github.com/rust-lang/rust/issues/53346
