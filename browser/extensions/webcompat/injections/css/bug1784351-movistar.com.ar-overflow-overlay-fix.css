@@ -1,0 +1,10 @@
+/**
+ * movistar.com.ar - Page layout is broken
+ * Bug #1784351 - https://bugzilla.mozilla.org/show_bug.cgi?id=1784351
+ * WebCompat issue #108729 - https://webcompat.com/issues/108729
+ */
+
+.overlay-container {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
