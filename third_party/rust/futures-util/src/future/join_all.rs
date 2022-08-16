@@ -15,7 +15,7 @@ use super::{assert_future, MaybeDone};
 #[cfg(not(futures_no_atomic_cas))]
 use crate::stream::{Collect, FuturesOrdered, StreamExt};
 
-fn iter_pin_mut<T>(slice: Pin<&mut [T]>) -> impl Iterator<Item = Pin<&mut T>> {
+pub(crate) fn iter_pin_mut<T>(slice: Pin<&mut [T]>) -> impl Iterator<Item = Pin<&mut T>> {
     // Safety: `std` _could_ make this unsound if it were to decide Pin's
     // invariants aren't required to transmit through slices. Otherwise this has
     // the same safety as a normal field pin projection.
@@ -32,9 +32,9 @@ where
 }
 
 #[cfg(not(futures_no_atomic_cas))]
-const SMALL: usize = 30;
+pub(crate) const SMALL: usize = 30;
 
-pub(crate) enum JoinAllKind<F>
+enum JoinAllKind<F>
 where
     F: Future,
 {
@@ -104,26 +104,25 @@ where
     I: IntoIterator,
     I::Item: Future,
 {
+    let iter = iter.into_iter();
+
     #[cfg(futures_no_atomic_cas)]
     {
-        let elems = iter.into_iter().map(MaybeDone::Future).collect::<Box<[_]>>().into();
-        let kind = JoinAllKind::Small { elems };
+        let kind =
+            JoinAllKind::Small { elems: iter.map(MaybeDone::Future).collect::<Box<[_]>>().into() };
+
         assert_future::<Vec<<I::Item as Future>::Output>, _>(JoinAll { kind })
     }
+
     #[cfg(not(futures_no_atomic_cas))]
     {
-        let iter = iter.into_iter();
         let kind = match iter.size_hint().1 {
-            None => JoinAllKind::Big { fut: iter.collect::<FuturesOrdered<_>>().collect() },
-            Some(max) => {
-                if max <= SMALL {
-                    let elems = iter.map(MaybeDone::Future).collect::<Box<[_]>>().into();
-                    JoinAllKind::Small { elems }
-                } else {
-                    JoinAllKind::Big { fut: iter.collect::<FuturesOrdered<_>>().collect() }
-                }
-            }
+            Some(max) if max <= SMALL => JoinAllKind::Small {
+                elems: iter.map(MaybeDone::Future).collect::<Box<[_]>>().into(),
+            },
+            _ => JoinAllKind::Big { fut: iter.collect::<FuturesOrdered<_>>().collect() },
         };
+
         assert_future::<Vec<<I::Item as Future>::Output>, _>(JoinAll { kind })
     }
 }

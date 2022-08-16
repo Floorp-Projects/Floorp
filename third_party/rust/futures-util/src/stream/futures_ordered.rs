@@ -135,10 +135,38 @@ impl<Fut: Future> FuturesOrdered<Fut> {
     /// This function will not call `poll` on the submitted future. The caller
     /// must ensure that `FuturesOrdered::poll` is called in order to receive
     /// task notifications.
+    #[deprecated(note = "use `push_back` instead")]
     pub fn push(&mut self, future: Fut) {
+        self.push_back(future);
+    }
+
+    /// Pushes a future to the back of the queue.
+    ///
+    /// This function submits the given future to the internal set for managing.
+    /// This function will not call `poll` on the submitted future. The caller
+    /// must ensure that `FuturesOrdered::poll` is called in order to receive
+    /// task notifications.
+    pub fn push_back(&mut self, future: Fut) {
         let wrapped = OrderWrapper { data: future, index: self.next_incoming_index };
         self.next_incoming_index += 1;
         self.in_progress_queue.push(wrapped);
+    }
+
+    /// Pushes a future to the front of the queue.
+    ///
+    /// This function submits the given future to the internal set for managing.
+    /// This function will not call `poll` on the submitted future. The caller
+    /// must ensure that `FuturesOrdered::poll` is called in order to receive
+    /// task notifications. This future will be the next future to be returned
+    /// complete.
+    pub fn push_front(&mut self, future: Fut) {
+        if self.next_outgoing_index == 0 {
+            self.push_back(future)
+        } else {
+            let wrapped = OrderWrapper { data: future, index: self.next_outgoing_index - 1 };
+            self.next_outgoing_index -= 1;
+            self.in_progress_queue.push(wrapped);
+        }
     }
 }
 
@@ -196,7 +224,7 @@ impl<Fut: Future> FromIterator<Fut> for FuturesOrdered<Fut> {
     {
         let acc = Self::new();
         iter.into_iter().fold(acc, |mut acc, item| {
-            acc.push(item);
+            acc.push_back(item);
             acc
         })
     }
@@ -214,7 +242,7 @@ impl<Fut: Future> Extend<Fut> for FuturesOrdered<Fut> {
         I: IntoIterator<Item = Fut>,
     {
         for item in iter {
-            self.push(item);
+            self.push_back(item);
         }
     }
 }

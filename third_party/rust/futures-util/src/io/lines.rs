@@ -42,6 +42,6 @@ impl<R: AsyncBufRead> Stream for Lines<R> {
                 this.buf.pop();
             }
         }
-        Poll::Ready(Some(Ok(mem::replace(this.buf, String::new()))))
+        Poll::Ready(Some(Ok(mem::take(this.buf))))
     }
 }

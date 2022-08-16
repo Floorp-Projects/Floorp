@@ -35,10 +35,7 @@ fn cancel_notifies() {
 
 #[test]
 fn cancel_lots() {
-    #[cfg(miri)]
-    const N: usize = 100;
-    #[cfg(not(miri))]
-    const N: usize = 20000;
+    const N: usize = if cfg!(miri) { 100 } else { 20000 };
 
     let (tx, rx) = mpsc::channel::<(Sender<_>, mpsc::Sender<_>)>();
     let t = thread::spawn(move || {
@@ -106,10 +103,7 @@ fn is_canceled() {
 
 #[test]
 fn cancel_sends() {
-    #[cfg(miri)]
-    const N: usize = 100;
-    #[cfg(not(miri))]
-    const N: usize = 20000;
+    const N: usize = if cfg!(miri) { 100 } else { 20000 };
 
     let (tx, rx) = mpsc::channel::<Sender<_>>();
     let t = thread::spawn(move || {

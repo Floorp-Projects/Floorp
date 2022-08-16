@@ -1,5 +1,3 @@
-#![cfg(not(miri))] // https://github.com/rust-lang/miri/issues/1038
-
 use futures::channel::oneshot;
 use futures::executor::ThreadPool;
 use futures::future::{self, ok, Future, FutureExt, TryFutureExt};
@@ -136,6 +134,8 @@ fn select3() {
 
 #[test]
 fn select4() {
+    const N: usize = if cfg!(miri) { 100 } else { 10000 };
+
     let (tx, rx) = mpsc::channel::<oneshot::Sender<i32>>();
 
     let t = thread::spawn(move || {
@@ -145,7 +145,7 @@ fn select4() {
     });
 
     let (tx2, rx2) = mpsc::channel();
-    for _ in 0..10000 {
+    for _ in 0..N {
         let (c1, p1) = oneshot::channel::<i32>();
         let (c2, p2) = oneshot::channel::<i32>();
 

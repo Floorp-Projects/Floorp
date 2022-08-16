@@ -56,7 +56,6 @@ fn works_1() {
     assert_eq!(None, iter.next());
 }
 
-#[cfg_attr(miri, ignore)] // https://github.com/rust-lang/miri/issues/1038
 #[test]
 fn works_2() {
     let (a_tx, a_rx) = oneshot::channel::<i32>();
@@ -86,7 +85,6 @@ fn from_iterator() {
     assert_eq!(block_on(stream.collect::<Vec<_>>()), vec![1, 2, 3]);
 }
 
-#[cfg_attr(miri, ignore)] // https://github.com/rust-lang/miri/issues/1038
 #[test]
 fn finished_future() {
     let (_a_tx, a_rx) = oneshot::channel::<i32>();
@@ -259,6 +257,20 @@ fn into_iter_len() {
     assert!(into_iter.next().is_some());
     assert_eq!(into_iter.len(), 0);
     assert!(into_iter.next().is_none());
+}
+
+#[test]
+fn into_iter_partial() {
+    let stream = vec![future::ready(1), future::ready(2), future::ready(3), future::ready(4)]
+        .into_iter()
+        .collect::<FuturesUnordered<_>>();
+
+    let mut into_iter = stream.into_iter();
+    assert!(into_iter.next().is_some());
+    assert!(into_iter.next().is_some());
+    assert!(into_iter.next().is_some());
+    assert_eq!(into_iter.len(), 1);
+    // don't panic when iterator is dropped before completing
 }
 
 #[test]

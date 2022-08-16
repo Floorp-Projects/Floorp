@@ -59,7 +59,7 @@ impl<Fut: TryFuture + Unpin> Future for SelectOk<Fut> {
                     drop(self.inner.remove(idx));
                     match res {
                         Ok(e) => {
-                            let rest = mem::replace(&mut self.inner, Vec::new());
+                            let rest = mem::take(&mut self.inner);
                             return Poll::Ready(Ok((e, rest)));
                         }
                         Err(e) => {

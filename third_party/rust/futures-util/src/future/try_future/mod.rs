@@ -302,6 +302,9 @@ pub trait TryFutureExt: TryFuture {
     /// assert_eq!(future.await, Ok(1));
     /// # });
     /// ```
+    ///
+    /// [`join!`]: crate::join
+    /// [`select!`]: crate::select
     fn map_err<E, F>(self, f: F) -> MapErr<Self, F>
     where
         F: FnOnce(Self::Error) -> E,
@@ -332,6 +335,9 @@ pub trait TryFutureExt: TryFuture {
     /// let future_err_i32 = future_err_u8.err_into::<i32>();
     /// # });
     /// ```
+    ///
+    /// [`join!`]: crate::join
+    /// [`select!`]: crate::select
     fn err_into<E>(self) -> ErrInto<Self, E>
     where
         Self: Sized,

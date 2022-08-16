@@ -34,7 +34,7 @@ pub trait SpawnExt: Spawn {
     /// today. Feel free to use this method in the meantime.
     ///
     /// ```
-    /// # if cfg!(miri) { return; } // https://github.com/rust-lang/miri/issues/1038
+    /// # {
     /// use futures::executor::ThreadPool;
     /// use futures::task::SpawnExt;
     ///
@@ -42,6 +42,8 @@ pub trait SpawnExt: Spawn {
     ///
     /// let future = async { /* ... */ };
     /// executor.spawn(future).unwrap();
+    /// # }
+    /// # std::thread::sleep(std::time::Duration::from_millis(500)); // wait for background threads closed: https://github.com/rust-lang/miri/issues/1371
     /// ```
     #[cfg(feature = "alloc")]
     fn spawn<Fut>(&self, future: Fut) -> Result<(), SpawnError>
@@ -59,7 +61,7 @@ pub trait SpawnExt: Spawn {
     /// resolves to the output of the spawned future.
     ///
     /// ```
-    /// # if cfg!(miri) { return; } // https://github.com/rust-lang/miri/issues/1038
+    /// # {
     /// use futures::executor::{block_on, ThreadPool};
     /// use futures::future;
     /// use futures::task::SpawnExt;
@@ -69,6 +71,8 @@ pub trait SpawnExt: Spawn {
     /// let future = future::ready(1);
     /// let join_handle_fut = executor.spawn_with_handle(future).unwrap();
     /// assert_eq!(block_on(join_handle_fut), 1);
+    /// # }
+    /// # std::thread::sleep(std::time::Duration::from_millis(500)); // wait for background threads closed: https://github.com/rust-lang/miri/issues/1371
     /// ```
     #[cfg(feature = "channel")]
     #[cfg_attr(docsrs, doc(cfg(feature = "channel")))]
@@ -138,7 +142,6 @@ pub trait LocalSpawnExt: LocalSpawn {
     /// resolves to the output of the spawned future.
     ///
     /// ```
-    /// # if cfg!(miri) { return; } // https://github.com/rust-lang/miri/issues/1038
     /// use futures::executor::LocalPool;
     /// use futures::task::LocalSpawnExt;
     ///

@@ -200,10 +200,7 @@ fn tx_close_gets_none() {
 
 #[test]
 fn stress_shared_unbounded() {
-    #[cfg(miri)]
-    const AMT: u32 = 100;
-    #[cfg(not(miri))]
-    const AMT: u32 = 10000;
+    const AMT: u32 = if cfg!(miri) { 100 } else { 10000 };
     const NTHREADS: u32 = 8;
     let (tx, rx) = mpsc::unbounded::<i32>();
 
@@ -232,10 +229,7 @@ fn stress_shared_unbounded() {
 
 #[test]
 fn stress_shared_bounded_hard() {
-    #[cfg(miri)]
-    const AMT: u32 = 100;
-    #[cfg(not(miri))]
-    const AMT: u32 = 10000;
+    const AMT: u32 = if cfg!(miri) { 100 } else { 10000 };
     const NTHREADS: u32 = 8;
     let (tx, rx) = mpsc::channel::<i32>(0);
 
@@ -265,10 +259,7 @@ fn stress_shared_bounded_hard() {
 #[allow(clippy::same_item_push)]
 #[test]
 fn stress_receiver_multi_task_bounded_hard() {
-    #[cfg(miri)]
-    const AMT: usize = 100;
-    #[cfg(not(miri))]
-    const AMT: usize = 10_000;
+    const AMT: usize = if cfg!(miri) { 100 } else { 10_000 };
     const NTHREADS: u32 = 2;
 
     let (mut tx, rx) = mpsc::channel::<usize>(0);
@@ -336,10 +327,7 @@ fn stress_receiver_multi_task_bounded_hard() {
 /// after sender dropped.
 #[test]
 fn stress_drop_sender() {
-    #[cfg(miri)]
-    const ITER: usize = 100;
-    #[cfg(not(miri))]
-    const ITER: usize = 10000;
+    const ITER: usize = if cfg!(miri) { 100 } else { 10000 };
 
     fn list() -> impl Stream<Item = i32> {
         let (tx, rx) = mpsc::channel(1);
@@ -394,10 +382,9 @@ fn stress_close_receiver_iter() {
     }
 }
 
-#[cfg_attr(miri, ignore)] // Miri is too slow
 #[test]
 fn stress_close_receiver() {
-    const ITER: usize = 10000;
+    const ITER: usize = if cfg!(miri) { 50 } else { 10000 };
 
     for _ in 0..ITER {
         stress_close_receiver_iter();
@@ -414,10 +401,7 @@ async fn stress_poll_ready_sender(mut sender: mpsc::Sender<u32>, count: u32) {
 #[allow(clippy::same_item_push)]
 #[test]
 fn stress_poll_ready() {
-    #[cfg(miri)]
-    const AMT: u32 = 100;
-    #[cfg(not(miri))]
-    const AMT: u32 = 1000;
+    const AMT: u32 = if cfg!(miri) { 100 } else { 1000 };
     const NTHREADS: u32 = 8;
 
     /// Run a stress test using the specified channel capacity.
@@ -444,10 +428,9 @@ fn stress_poll_ready() {
     stress(16);
 }
 
-#[cfg_attr(miri, ignore)] // Miri is too slow
 #[test]
 fn try_send_1() {
-    const N: usize = 3000;
+    const N: usize = if cfg!(miri) { 100 } else { 3000 };
     let (mut tx, rx) = mpsc::channel(0);
 
     let t = thread::spawn(move || {
