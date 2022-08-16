@@ -95,26 +95,13 @@ nsresult HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
   nsAtom* attribute = aAttribute;
   nsAutoString value(aValue);
 
+  AutoTArray<EditorInlineStyle, 1> stylesToRemove;
   if (&aProperty == nsGkAtoms::sup) {
     // Superscript and Subscript styles are mutually exclusive.
-    nsresult rv = RemoveInlinePropertyAsSubAction(nsGkAtoms::sub, nullptr,
-                                                  RemoveRelatedElements::No);
-    if (NS_FAILED(rv)) {
-      NS_WARNING(
-          "HTMLEditor::RemoveInlinePropertyAsSubAction(nsGkAtoms::sub, "
-          "RemoveRelatedElements::No) failed");
-      return EditorBase::ToGenericNSResult(rv);
-    }
+    stylesToRemove.AppendElement(EditorInlineStyle(*nsGkAtoms::sub));
   } else if (&aProperty == nsGkAtoms::sub) {
     // Superscript and Subscript styles are mutually exclusive.
-    nsresult rv = RemoveInlinePropertyAsSubAction(nsGkAtoms::sup, nullptr,
-                                                  RemoveRelatedElements::No);
-    if (NS_FAILED(rv)) {
-      NS_WARNING(
-          "HTMLEditor::RemoveInlinePropertyAsSubAction(nsGkAtoms::sup, "
-          "RemoveRelatedElements::No) failed");
-      return EditorBase::ToGenericNSResult(rv);
-    }
+    stylesToRemove.AppendElement(EditorInlineStyle(*nsGkAtoms::sup));
   }
   // Handling `<tt>` element code was implemented for composer (bug 115922).
   // This shouldn't work with `Document.execCommand()`.  Currently, aPrincipal
@@ -123,33 +110,14 @@ nsresult HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
   // must be only when XUL command is executed on composer.
   else if (!aPrincipal) {
     if (&aProperty == nsGkAtoms::tt) {
-      nsresult rv = RemoveInlinePropertyAsSubAction(
-          nsGkAtoms::font, nsGkAtoms::face, RemoveRelatedElements::No);
-      if (NS_FAILED(rv)) {
-        NS_WARNING(
-            "HTMLEditor::RemoveInlinePropertyAsSubAction(nsGkAtoms::font, "
-            "nsGkAtoms::face, RemoveRelatedElements::No) failed");
-        return EditorBase::ToGenericNSResult(rv);
-      }
+      stylesToRemove.AppendElement(
+          EditorInlineStyle(*nsGkAtoms::font, nsGkAtoms::face));
     } else if (&aProperty == nsGkAtoms::font && aAttribute == nsGkAtoms::face) {
       if (!value.LowerCaseEqualsASCII("tt")) {
-        nsresult rv = RemoveInlinePropertyAsSubAction(
-            nsGkAtoms::tt, nullptr, RemoveRelatedElements::No);
-        if (NS_FAILED(rv)) {
-          NS_WARNING(
-              "HTMLEditor::RemoveInlinePropertyAsSubAction(nsGkAtoms::tt, "
-              "RemoveRelatedElements::No) failed");
-          return EditorBase::ToGenericNSResult(rv);
-        }
+        stylesToRemove.AppendElement(EditorInlineStyle(*nsGkAtoms::tt));
       } else {
-        nsresult rv = RemoveInlinePropertyAsSubAction(
-            nsGkAtoms::font, nsGkAtoms::face, RemoveRelatedElements::No);
-        if (NS_FAILED(rv)) {
-          NS_WARNING(
-              "HTMLEditor::RemoveInlinePropertyAsSubAction(nsGkAtoms::font, "
-              "nsGkAtoms::face, RemoveRelatedElements::No) failed");
-          return EditorBase::ToGenericNSResult(rv);
-        }
+        stylesToRemove.AppendElement(
+            EditorInlineStyle(*nsGkAtoms::font, nsGkAtoms::face));
         // Override property, attribute and value if the new font face value is
         // "tt".
         property = nsGkAtoms::tt;
@@ -158,6 +126,15 @@ nsresult HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
       }
     }
   }
+
+  if (!stylesToRemove.IsEmpty()) {
+    nsresult rv = RemoveInlinePropertiesAsSubAction(stylesToRemove);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("HTMLEditor::RemoveInlinePropertiesAsSubAction() failed");
+      return rv;
+    }
+  }
+
   rv = SetInlinePropertyAsSubAction(MOZ_KnownLive(*property),
                                     MOZ_KnownLive(attribute), value);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -2024,11 +2001,12 @@ nsresult HTMLEditor::RemoveAllInlinePropertiesAsAction(
       !ignoredError.Failed(),
       "HTMLEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  rv = RemoveInlinePropertyAsSubAction(nullptr, nullptr,
-                                       RemoveRelatedElements::No);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::RemoveInlinePropertyAsSubAction(nullptr, "
-                       "nullptr, RemoveRelatedElements::No) failed");
+  AutoTArray<EditorInlineStyle, 1> removeAllInlineStyles;
+  removeAllInlineStyles.AppendElement(EditorInlineStyle::RemoveAllStyles());
+  rv = RemoveInlinePropertiesAsSubAction(removeAllInlineStyles);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "HTMLEditor::RemoveInlinePropertiesAsSubAction() failed");
   return EditorBase::ToGenericNSResult(rv);
 }
 
@@ -2059,11 +2037,13 @@ nsresult HTMLEditor::RemoveInlinePropertyAsAction(nsStaticAtom& aHTMLProperty,
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  rv = RemoveInlinePropertyAsSubAction(&aHTMLProperty, aAttribute,
-                                       RemoveRelatedElements::Yes);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::RemoveInlinePropertyAsSubAction("
-                       "RemoveRelatedElements::Yes) failed");
+  AutoTArray<EditorInlineStyle, 8> removeInlineStyleAndRelatedElements;
+  AppendInlineStyleAndRelatedStyle(EditorInlineStyle(aHTMLProperty, aAttribute),
+                                   removeInlineStyleAndRelatedElements);
+  rv = RemoveInlinePropertiesAsSubAction(removeInlineStyleAndRelatedElements);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "HTMLEditor::RemoveInlinePropertiesAsSubAction() failed");
   return EditorBase::ToGenericNSResult(rv);
 }
 
@@ -2094,77 +2074,82 @@ NS_IMETHODIMP HTMLEditor::RemoveInlineProperty(const nsAString& aProperty,
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  rv = RemoveInlinePropertyAsSubAction(MOZ_KnownLive(property),
-                                       MOZ_KnownLive(attribute),
-                                       RemoveRelatedElements::No);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::RemoveInlinePropertyAsSubAction("
-                       "RemoveRelatedElements::No) failed");
+  AutoTArray<EditorInlineStyle, 1> removeOneInlineStyle;
+  removeOneInlineStyle.AppendElement(EditorInlineStyle(*property, attribute));
+  rv = RemoveInlinePropertiesAsSubAction(removeOneInlineStyle);
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "HTMLEditor::RemoveInlinePropertiesAsSubAction() failed");
   return EditorBase::ToGenericNSResult(rv);
 }
 
-nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
-    nsStaticAtom* aHTMLProperty, nsStaticAtom* aAttribute,
-    RemoveRelatedElements aRemoveRelatedElements) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(aAttribute != nsGkAtoms::_empty);
-
-  if (NS_WARN_IF(!mInitSucceeded)) {
-    return NS_ERROR_NOT_INITIALIZED;
+void HTMLEditor::AppendInlineStyleAndRelatedStyle(
+    const EditorInlineStyle& aStyleToRemove,
+    nsTArray<EditorInlineStyle>& aStylesToRemove) const {
+  if (aStyleToRemove.mHTMLProperty == nsGkAtoms::b) {
+    EditorInlineStyle strong(*nsGkAtoms::strong);
+    if (!aStylesToRemove.Contains(strong)) {
+      aStylesToRemove.AppendElement(std::move(strong));
+    }
+  } else if (aStyleToRemove.mHTMLProperty == nsGkAtoms::i) {
+    EditorInlineStyle em(*nsGkAtoms::em);
+    if (!aStylesToRemove.Contains(em)) {
+      aStylesToRemove.AppendElement(std::move(em));
+    }
+  } else if (aStyleToRemove.mHTMLProperty == nsGkAtoms::strike) {
+    EditorInlineStyle s(*nsGkAtoms::s);
+    if (!aStylesToRemove.Contains(s)) {
+      aStylesToRemove.AppendElement(std::move(s));
+    }
+  } else if (aStyleToRemove.mHTMLProperty == nsGkAtoms::font) {
+    if (aStyleToRemove.mAttribute == nsGkAtoms::size) {
+      EditorInlineStyle big(*nsGkAtoms::big), small(*nsGkAtoms::small);
+      if (!aStylesToRemove.Contains(big)) {
+        aStylesToRemove.AppendElement(std::move(big));
+      }
+      if (!aStylesToRemove.Contains(small)) {
+        aStylesToRemove.AppendElement(std::move(small));
+      }
+    }
+    // Handling <tt> element code was implemented for composer (bug 115922).
+    // This shouldn't work with Document.execCommand() for compatibility with
+    // the other browsers.  Currently, edit action principal is set only when
+    // the root caller is Document::ExecCommand() so that we should handle <tt>
+    // element only when the principal is nullptr that must be only when XUL
+    // command is executed on composer.
+    else if (aStyleToRemove.mAttribute == nsGkAtoms::face &&
+             !GetEditActionPrincipal()) {
+      EditorInlineStyle tt(*nsGkAtoms::tt);
+      if (!aStylesToRemove.Contains(tt)) {
+        aStylesToRemove.AppendElement(std::move(tt));
+      }
+    }
   }
+  if (!aStylesToRemove.Contains(aStyleToRemove)) {
+    aStylesToRemove.AppendElement(aStyleToRemove);
+  }
+}
+
+nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
+    const nsTArray<EditorInlineStyle>& aStylesToRemove) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!aStylesToRemove.IsEmpty());
 
   DebugOnly<nsresult> rvIgnored = CommitComposition();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "EditorBase::CommitComposition() failed, but ignored");
 
-  // Also remove equivalent properties (bug 317093)
-  struct HTMLStyle final {
-    // HTML tag name or nsGkAtoms::href or nsGkAtoms::name.
-    nsStaticAtom* mProperty = nullptr;
-    // HTML attribute like nsGkAtom::color for nsGkAtoms::font.
-    nsStaticAtom* mAttribute = nullptr;
-
-    explicit HTMLStyle(nsStaticAtom* aProperty,
-                       nsStaticAtom* aAttribute = nullptr)
-        : mProperty(aProperty), mAttribute(aAttribute) {}
-  };
-  AutoTArray<HTMLStyle, 3> removeStyles;
-  if (aRemoveRelatedElements == RemoveRelatedElements::Yes) {
-    if (aHTMLProperty == nsGkAtoms::b) {
-      removeStyles.AppendElement(HTMLStyle(nsGkAtoms::strong));
-    } else if (aHTMLProperty == nsGkAtoms::i) {
-      removeStyles.AppendElement(HTMLStyle(nsGkAtoms::em));
-    } else if (aHTMLProperty == nsGkAtoms::strike) {
-      removeStyles.AppendElement(HTMLStyle(nsGkAtoms::s));
-    } else if (aHTMLProperty == nsGkAtoms::font) {
-      if (aAttribute == nsGkAtoms::size) {
-        removeStyles.AppendElement(HTMLStyle(nsGkAtoms::big));
-        removeStyles.AppendElement(HTMLStyle(nsGkAtoms::small));
-      }
-      // Handling `<tt>` element code was implemented for composer (bug 115922).
-      // This shouldn't work with `Document.execCommand()` for compatibility
-      // with the other browsers.  Currently, edit action principal is set only
-      // when the root caller is Document::ExecCommand() so that we should
-      // handle `<tt>` element only when the principal is nullptr that must be
-      // only when XUL command is executed on composer.
-      else if (aAttribute == nsGkAtoms::face && !GetEditActionPrincipal()) {
-        removeStyles.AppendElement(HTMLStyle(nsGkAtoms::tt));
-      }
-    }
-  }
-  removeStyles.AppendElement(HTMLStyle(aHTMLProperty, aAttribute));
-
   if (SelectionRef().IsCollapsed()) {
     // Manipulating text attributes on a collapsed selection only sets state
     // for the next text insertion
-    if (removeStyles[0].mProperty) {
-      for (HTMLStyle& style : removeStyles) {
-        MOZ_ASSERT(style.mProperty);
-        if (style.mProperty == nsGkAtoms::href ||
-            style.mProperty == nsGkAtoms::name) {
+    if (aStylesToRemove[0].mHTMLProperty) {
+      for (const EditorInlineStyle& styleToRemove : aStylesToRemove) {
+        if (styleToRemove.mHTMLProperty == nsGkAtoms::href ||
+            styleToRemove.mHTMLProperty == nsGkAtoms::name) {
           mTypeInState->ClearProp(nsGkAtoms::a, nullptr);
         } else {
-          mTypeInState->ClearProp(style.mProperty, style.mAttribute);
+          mTypeInState->ClearProp(styleToRemove.mHTMLProperty,
+                                  styleToRemove.mAttribute);
         }
       }
     } else {
@@ -2204,14 +2189,21 @@ nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   AutoRangeArray selectionRanges(SelectionRef());
-  MOZ_ALWAYS_TRUE(selectionRanges.SaveAndTrackRanges(*this));
-
-  for (HTMLStyle& style : removeStyles) {
+  for (const EditorInlineStyle& styleToRemove : aStylesToRemove) {
+    // The ranges may be updated by changing the DOM tree.  In strictly
+    // speaking, we should save and restore the ranges at every range loop,
+    // but we've never done so and it may be expensive if there are a lot of
+    // ranges.  Therefore, we should do it for every style handling for now.
+    // TODO: We should collect everything required for removing the style before
+    //       touching the DOM tree.  Then, we need to save and restore the
+    //       ranges only once.
+    MOZ_ALWAYS_TRUE(selectionRanges.SaveAndTrackRanges(*this));
     const bool isCSSInvertibleStyle =
-        style.mProperty &&
-        CSSEditUtils::IsCSSInvertible(*style.mProperty, style.mAttribute);
+        styleToRemove.mHTMLProperty &&
+        CSSEditUtils::IsCSSInvertible(*styleToRemove.mHTMLProperty,
+                                      styleToRemove.mAttribute);
     for (const OwningNonNull<nsRange>& range : selectionRanges.Ranges()) {
-      if (style.mProperty == nsGkAtoms::name) {
+      if (styleToRemove.mHTMLProperty == nsGkAtoms::name) {
         // Promote range if it starts or end in a named anchor and we want to
         // remove named anchors
         nsresult rv = PromoteRangeIfStartsOrEndsInNamedAnchor(*range);
@@ -2234,8 +2226,8 @@ nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
       // them as appropriate
       SplitRangeOffResult splitRangeOffResult =
           SplitAncestorStyledInlineElementsAtRangeEdges(
-              EditorDOMRange(range), MOZ_KnownLive(style.mProperty),
-              MOZ_KnownLive(style.mAttribute));
+              EditorDOMRange(range), styleToRemove.mHTMLProperty,
+              styleToRemove.mAttribute);
       if (splitRangeOffResult.isErr()) {
         NS_WARNING(
             "HTMLEditor::SplitAncestorStyledInlineElementsAtRangeEdges() "
@@ -2330,8 +2322,8 @@ nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
           if (content->IsElement()) {
             Result<EditorDOMPoint, nsresult> removeStyleResult =
                 RemoveStyleInside(MOZ_KnownLive(*content->AsElement()),
-                                  MOZ_KnownLive(style.mProperty),
-                                  MOZ_KnownLive(style.mAttribute),
+                                  styleToRemove.mHTMLProperty,
+                                  styleToRemove.mAttribute,
                                   SpecifiedStyle::Preserve);
             if (MOZ_UNLIKELY(removeStyleResult.isErr())) {
               NS_WARNING("HTMLEditor::RemoveStyleInside() failed");
@@ -2355,8 +2347,8 @@ nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
           // style with inserting new <span> element, we should do it.
           Result<bool, nsresult> isRemovableParentStyleOrError =
               IsRemovableParentStyleWithNewSpanElement(
-                  MOZ_KnownLive(content), MOZ_KnownLive(style.mProperty),
-                  MOZ_KnownLive(style.mAttribute));
+                  MOZ_KnownLive(content), styleToRemove.mHTMLProperty,
+                  styleToRemove.mAttribute);
           if (MOZ_UNLIKELY(isRemovableParentStyleOrError.isErr())) {
             NS_WARNING(
                 "HTMLEditor::IsRemovableParentStyleWithNewSpanElement() "
@@ -2378,10 +2370,9 @@ nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
             // MOZ_KnownLive because 'arrayOfContents' is guaranteed to
             // keep it alive.
             Result<EditorDOMPoint, nsresult> setStyleResult =
-                SetInlinePropertyOnNode(MOZ_KnownLive(content),
-                                        MOZ_KnownLive(*style.mProperty),
-                                        MOZ_KnownLive(style.mAttribute),
-                                        u"-moz-editor-invert-value"_ns);
+                SetInlinePropertyOnNode(
+                    MOZ_KnownLive(content), *styleToRemove.mHTMLProperty,
+                    styleToRemove.mAttribute, u"-moz-editor-invert-value"_ns);
             if (MOZ_UNLIKELY(setStyleResult.isErr())) {
               if (NS_WARN_IF(setStyleResult.unwrapErr() ==
                              NS_ERROR_EDITOR_DESTROYED)) {
@@ -2411,11 +2402,10 @@ nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
                                    ? splitRange.EndRef().Offset()
                                    : content->Length();
           SplitRangeOffFromNodeResult wrapTextInStyledElementResult =
-              SetInlinePropertyOnTextNode(MOZ_KnownLive(*content->AsText()),
-                                          startOffset, endOffset,
-                                          MOZ_KnownLive(*style.mProperty),
-                                          MOZ_KnownLive(style.mAttribute),
-                                          u"-moz-editor-invert-value"_ns);
+              SetInlinePropertyOnTextNode(
+                  MOZ_KnownLive(*content->AsText()), startOffset, endOffset,
+                  *styleToRemove.mHTMLProperty, styleToRemove.mAttribute,
+                  u"-moz-editor-invert-value"_ns);
           if (wrapTextInStyledElementResult.isErr()) {
             NS_WARNING(
                 "HTMLEditor::SetInlinePropertyOnTextNode(-moz-editor-invert-"
@@ -2462,8 +2452,8 @@ nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
       for (const OwningNonNull<Text>& textNode : leafTextNodes) {
         Result<bool, nsresult> isRemovableParentStyleOrError =
             IsRemovableParentStyleWithNewSpanElement(
-                MOZ_KnownLive(textNode), MOZ_KnownLive(style.mProperty),
-                MOZ_KnownLive(style.mAttribute));
+                MOZ_KnownLive(textNode), styleToRemove.mHTMLProperty,
+                styleToRemove.mAttribute);
         if (isRemovableParentStyleOrError.isErr()) {
           NS_WARNING(
               "HTMLEditor::IsRemovableParentStyleWithNewSpanElement() "
@@ -2476,11 +2466,10 @@ nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
         // MOZ_KnownLive because 'leafTextNodes' is guaranteed to
         // keep it alive.
         SplitRangeOffFromNodeResult wrapTextInStyledElementResult =
-            SetInlinePropertyOnTextNode(MOZ_KnownLive(textNode), 0,
-                                        textNode->TextLength(),
-                                        MOZ_KnownLive(*style.mProperty),
-                                        MOZ_KnownLive(style.mAttribute),
-                                        u"-moz-editor-invert-value"_ns);
+            SetInlinePropertyOnTextNode(
+                MOZ_KnownLive(textNode), 0, textNode->TextLength(),
+                *styleToRemove.mHTMLProperty, styleToRemove.mAttribute,
+                u"-moz-editor-invert-value"_ns);
         if (wrapTextInStyledElementResult.isErr()) {
           NS_WARNING(
               "HTMLEditor::SetInlinePropertyOnTextNode(-moz-editor-invert-"
@@ -2492,11 +2481,11 @@ nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
         wrapTextInStyledElementResult.IgnoreCaretPointSuggestion();
       }  // for-loop of leafTextNodes
     }    // for-loop of selectionRanges
-  }      // for-loop of styles
+    MOZ_ASSERT(selectionRanges.HasSavedRanges());
+    selectionRanges.RestoreFromSavedRanges();
+  }  // for-loop of styles
 
-  MOZ_ASSERT(selectionRanges.HasSavedRanges());
-  selectionRanges.RestoreFromSavedRanges();
-
+  MOZ_ASSERT(!selectionRanges.HasSavedRanges());
   nsresult rv = selectionRanges.ApplyTo(SelectionRef());
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;

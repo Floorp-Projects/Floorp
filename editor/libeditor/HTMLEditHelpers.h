@@ -1192,6 +1192,48 @@ class MOZ_STACK_CLASS ReplaceRangeDataBase final {
   nsString mReplaceString;
 };
 
+/******************************************************************************
+ * EditorInlineStyle represents an inline style.
+ ******************************************************************************/
+
+struct MOZ_STACK_CLASS EditorInlineStyle {
+  // nullptr if you want to remove all inline styles.
+  // Otherwise, one of the presentation tag names which we support in style
+  // editor, and there special cases: nsGkAtoms::href means <a href="...">,
+  // and nsGkAtoms::name means <a name="...">.
+  MOZ_KNOWN_LIVE nsStaticAtom* const mHTMLProperty = nullptr;
+  // For some mHTMLProperty values, need to be set to its attribute name.
+  // E.g., nsGkAtoms::size and nsGkAtoms::face for nsGkAtoms::font.
+  // Otherwise, nullptr.
+  // TODO: Once we stop using these structure to wrap selected content nodes
+  //       with <a href> elements, we can make this nsStaticAtom*.
+  MOZ_KNOWN_LIVE const RefPtr<nsAtom> mAttribute;
+
+  /**
+   * Returns true if the style means that all inline styles should be removed.
+   */
+  bool IsStyleToClearAllInlineStyles() const { return !mHTMLProperty; }
+
+  explicit EditorInlineStyle(nsStaticAtom& aHTMLProperty,
+                             nsAtom* aAttribute = nullptr)
+      : mHTMLProperty(&aHTMLProperty), mAttribute(aAttribute) {}
+  EditorInlineStyle(nsStaticAtom& aHTMLProperty, RefPtr<nsAtom>&& aAttribute)
+      : mHTMLProperty(&aHTMLProperty), mAttribute(std::move(aAttribute)) {}
+
+  /**
+   * Returns the instance which means remove all inline styles.
+   */
+  static EditorInlineStyle RemoveAllStyles() { return EditorInlineStyle(); }
+
+  bool operator==(const EditorInlineStyle& aOther) const {
+    return mHTMLProperty == aOther.mHTMLProperty &&
+           mAttribute == aOther.mAttribute;
+  }
+
+ private:
+  EditorInlineStyle() = default;
+};
+
 }  // namespace mozilla
 
 #endif  // #ifndef mozilla_HTMLEditHelpers_h
