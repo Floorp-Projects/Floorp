@@ -66,11 +66,11 @@ def _extract_time_stamp(config):
 
 # Based on https://searchfox.org/mozilla-central/rev/e0eb861a187f0bb6d994228f2e0e49b2c9ee455e/taskcluster/taskgraph/transforms/release_notifications.py#31
 @transforms.add
-def add_notifications(config, jobs):
+def add_notifications(config, tasks):
     geckoview_timestamp = _extract_time_stamp(config)
 
-    for job in jobs:
-        notifications = job.pop("notifications", None)
+    for task in tasks:
+        notifications = task.pop("notifications", None)
         if notifications:
             emails = notifications["emails"]
             subject = notifications["subject"].format(geckoview_timestamp=geckoview_timestamp)
@@ -78,11 +78,11 @@ def add_notifications(config, jobs):
 
             status_types = notifications.get('status-types', ['on-failed'])
             for s in status_types:
-                job.setdefault('routes', []).extend(
+                task.setdefault('routes', []).extend(
                     [f'notify.email.{email}.{s}' for email in emails]
                 )
 
-            job.setdefault('extra', {}).update(
+            task.setdefault('extra', {}).update(
                 {
                    'notify': {
                        'email': {
@@ -92,6 +92,6 @@ def add_notifications(config, jobs):
                 }
             )
             if message:
-                job['extra']['notify']['email']['content'] = message
+                task['extra']['notify']['email']['content'] = message
 
-        yield job
+        yield task

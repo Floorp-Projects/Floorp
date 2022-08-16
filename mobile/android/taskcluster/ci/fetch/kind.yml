@@ -9,10 +9,10 @@ transforms:
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
-job-defaults:
+task-defaults:
     docker-image: {in-tree: base}
 
-jobs:
+tasks:
     android-sdk-3859397:
         description: Android SDK
         fetch:

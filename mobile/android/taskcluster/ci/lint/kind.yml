@@ -13,7 +13,7 @@ kind-dependencies:
     - toolchain
 
 
-job-defaults:
+task-defaults:
     attributes:
         code-review: true
     fetches:
@@ -32,7 +32,7 @@ job-defaults:
         docker-image: {in-tree: base}
         max-run-time: 600
 
-jobs:
+tasks:
     compare-locales:
         description: 'Validate strings.xml with compare-locales'
         run:

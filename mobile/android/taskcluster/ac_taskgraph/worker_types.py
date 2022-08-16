@@ -5,10 +5,10 @@
 
 from voluptuous import Any, Required, Optional
 
-from taskgraph.util.schema import taskref_or_string, WHITELISTED_SCHEMA_IDENTIFIERS
+from taskgraph.util.schema import taskref_or_string, EXCEPTED_SCHEMA_IDENTIFIERS
 from taskgraph.transforms.task import payload_builder
 
-WHITELISTED_SCHEMA_IDENTIFIERS.extend([
+EXCEPTED_SCHEMA_IDENTIFIERS.extend([
     lambda path: "[u'artifact-map']" in path,   # handed directly in beetmover
 ])
 

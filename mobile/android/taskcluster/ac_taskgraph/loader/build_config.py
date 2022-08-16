@@ -134,7 +134,7 @@ def loader(kind, path, config, params, loaded_tasks):
         logger.info("Affected components: %s" % " ".join(sorted(affected_components)))
 
     not_for_components = config.get("not-for-components", [])
-    jobs = {
+    tasks = {
         '{}{}'.format(
             '' if build_type == 'regular' else build_type + '-',
             component['name']
@@ -152,11 +152,11 @@ def loader(kind, path, config, params, loaded_tasks):
             and (component['shouldPublish'] or build_type == 'regular')
         )
     }
-    # Filter away overridden jobs that we wouldn't build anyways to avoid ending up with
-    # partial job entries.
-    overridden_jobs = {k: v for k, v in config.pop('overriden-jobs', {}).items() if affected_components is ALL_COMPONENTS or k in jobs.keys()}
-    jobs = merge(jobs, overridden_jobs)
+    # Filter away overridden tasks that we wouldn't build anyways to avoid ending up with
+    # partial task entries.
+    overridden_tasks = {k: v for k, v in config.pop('overriden-tasks', {}).items() if affected_components is ALL_COMPONENTS or k in tasks.keys()}
+    tasks = merge(tasks, overridden_tasks)
 
-    config['jobs'] = jobs
+    config['tasks'] = tasks
 
     return base_loader(kind, path, config, params, loaded_tasks)

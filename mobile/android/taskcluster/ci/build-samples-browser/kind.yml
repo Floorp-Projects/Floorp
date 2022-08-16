@@ -14,7 +14,7 @@ kind-dependencies:
     - toolchain
 
 
-job-defaults:
+task-defaults:
     attributes:
         build-type: regular
         code-review: true
@@ -39,7 +39,7 @@ job-defaults:
         docker-image: {in-tree: base}
         max-run-time: 1200
 
-jobs:
+tasks:
     gecko:
         run:
             gradlew:

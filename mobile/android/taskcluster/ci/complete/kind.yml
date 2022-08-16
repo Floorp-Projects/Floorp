@@ -16,7 +16,7 @@ transforms:
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
-job-defaults:
+task-defaults:
     attributes:
         code-review: true
     worker-type: b-android
@@ -40,7 +40,7 @@ job-defaults:
                     - geckoview-core@mozilla.com
             default: {}
 
-jobs:
+tasks:
     pr:
         description: PR Summary Task
         run-on-tasks-for: [github-pull-request]
