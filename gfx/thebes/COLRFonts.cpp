@@ -41,20 +41,22 @@ struct ItemVariationStore;
 
 struct COLRHeader {
   uint16 version;
-  uint16 numBaseGlyphRecord;
-  Offset32 offsetBaseGlyphRecord;
-  Offset32 offsetLayerRecord;
+  uint16 numBaseGlyphRecords;
+  Offset32 baseGlyphRecordsOffset;
+  Offset32 layerRecordsOffset;
   uint16 numLayerRecords;
 
   const BaseGlyphRecord* GetBaseGlyphRecords() const {
     return reinterpret_cast<const BaseGlyphRecord*>(
-        reinterpret_cast<const char*>(this) + offsetBaseGlyphRecord);
+        reinterpret_cast<const char*>(this) + baseGlyphRecordsOffset);
   }
 
   const LayerRecord* GetLayerRecords() const {
     return reinterpret_cast<const LayerRecord*>(
-        reinterpret_cast<const char*>(this) + offsetLayerRecord);
+        reinterpret_cast<const char*>(this) + layerRecordsOffset);
   }
+
+  bool Validate(uint64_t aLength) const;
 };
 
 struct BaseGlyphPaintRecord {
@@ -81,11 +83,7 @@ struct LayerList {
 };
 
 struct COLRv1Header {
-  uint16 version;
-  uint16 numBaseGlyphRecords;
-  Offset32 baseGlyphRecordsOffset;
-  Offset32 layerRecordsOffset;
-  uint16 numLayerRecords;
+  COLRHeader base;
   Offset32 baseGlyphListOffset;
   Offset32 layerListOffset;
   Offset32 clipListOffset;
@@ -1682,7 +1680,7 @@ static Rect DispatchGetBounds(const PaintState& aState, uint32_t aOffset) {
 
 #undef DO_CASE_VAR
 
-bool COLRv1Header::Validate(uint64_t aLength) const {
+bool COLRHeader::Validate(uint64_t aLength) const {
   uint64_t count;
   if ((count = numBaseGlyphRecords)) {
     if (baseGlyphRecordsOffset + count * sizeof(BaseGlyphRecord) > aLength) {
@@ -1693,6 +1691,30 @@ bool COLRv1Header::Validate(uint64_t aLength) const {
     if (layerRecordsOffset + count * sizeof(LayerRecord) > aLength) {
       return false;
     }
+  }
+  // Check ordering of baseGlyphRecords, and that layer indices are in bounds.
+  int32_t lastGlyphId = -1;
+  const auto* baseGlyph = reinterpret_cast<const BaseGlyphRecord*>(
+      reinterpret_cast<const char*>(this) + baseGlyphRecordsOffset);
+  for (uint16_t i = 0; i < uint16_t(numBaseGlyphRecords); i++, baseGlyph++) {
+    uint16_t glyphId = baseGlyph->glyphId;
+    if (lastGlyphId >= int32_t(glyphId)) {
+      return false;
+    }
+    if (uint32_t(baseGlyph->firstLayerIndex) + uint32_t(baseGlyph->numLayers) >
+        uint32_t(numLayerRecords)) {
+      return false;
+    }
+    lastGlyphId = glyphId;
+  }
+  // We don't need to validate all the layer paletteEntryIndex fields here,
+  // because PaintState.GetColor will range-check them at paint time.
+  return true;
+}
+
+bool COLRv1Header::Validate(uint64_t aLength) const {
+  if (!base.Validate(aLength)) {
+    return false;
   }
   if (baseGlyphListOffset + sizeof(BaseGlyphList) > aLength ||
       layerListOffset + sizeof(LayerList) > aLength ||
@@ -1919,12 +1941,11 @@ bool COLRFonts::ValidateColorGlyphs(hb_blob_t* aCOLR, hb_blob_t* aCPAL) {
     return false;
   }
 
-  const uint16_t numPaletteEntries = cpal->numPaletteEntries;
-  const uint16_t numPalettes = cpal->numPalettes;
-  const uint16_t numColorRecords = cpal->numColorRecords;
-  const uint32_t colorRecordsArrayOffset = cpal->colorRecordsArrayOffset;
+  uint16_t numPaletteEntries = cpal->numPaletteEntries;
+  uint16_t numPalettes = cpal->numPalettes;
+  uint16_t numColorRecords = cpal->numColorRecords;
+  uint32_t colorRecordsArrayOffset = cpal->colorRecordsArrayOffset;
   const auto* indices = cpal->colorRecordIndices();
-
   if (colorRecordsArrayOffset >= cpalLength) {
     return false;
   }
@@ -1964,67 +1985,7 @@ bool COLRFonts::ValidateColorGlyphs(hb_blob_t* aCOLR, hb_blob_t* aCPAL) {
     return false;
   }
 
-  const uint32_t offsetBaseGlyphRecord = colr->offsetBaseGlyphRecord;
-  const uint16_t numBaseGlyphRecord = colr->numBaseGlyphRecord;
-  const uint32_t offsetLayerRecord = colr->offsetLayerRecord;
-  const uint16_t numLayerRecords = colr->numLayerRecords;
-
-  if (offsetBaseGlyphRecord >= colrLength) {
-    return false;
-  }
-
-  if (offsetLayerRecord >= colrLength) {
-    return false;
-  }
-
-  if (sizeof(BaseGlyphRecord) * numBaseGlyphRecord >
-      colrLength - offsetBaseGlyphRecord) {
-    // COLR base glyph record will be overflow
-    return false;
-  }
-
-  if (sizeof(LayerRecord) * numLayerRecords > colrLength - offsetLayerRecord) {
-    // COLR layer record will be overflow
-    return false;
-  }
-
-  uint16_t lastGlyphId = 0;
-  const BaseGlyphRecord* baseGlyph = reinterpret_cast<const BaseGlyphRecord*>(
-      reinterpret_cast<const char*>(colr) + offsetBaseGlyphRecord);
-
-  for (uint16_t i = 0; i < numBaseGlyphRecord; i++, baseGlyph++) {
-    const uint32_t firstLayerIndex = baseGlyph->firstLayerIndex;
-    const uint16_t numLayers = baseGlyph->numLayers;
-    const uint16_t glyphId = baseGlyph->glyphId;
-
-    if (lastGlyphId && lastGlyphId >= glyphId) {
-      // glyphId must be sorted
-      return false;
-    }
-    lastGlyphId = glyphId;
-
-    if (!numLayers) {
-      // no layer
-      return false;
-    }
-    if (firstLayerIndex + numLayers > numLayerRecords) {
-      // layer length of target glyph is overflow
-      return false;
-    }
-  }
-
-  const LayerRecord* layer = reinterpret_cast<const LayerRecord*>(
-      reinterpret_cast<const char*>(colr) + offsetLayerRecord);
-
-  for (uint16_t i = 0; i < numLayerRecords; i++, layer++) {
-    if (uint16_t(layer->paletteEntryIndex) >= numPaletteEntries &&
-        uint16_t(layer->paletteEntryIndex) != 0xFFFF) {
-      // CPAL palette entry record is overflow
-      return false;
-    }
-  }
-
-  return true;
+  return colr->Validate(colrLength);
 }
 
 // Public alias of a COLRv0 list of layers.
@@ -2049,7 +2010,7 @@ const COLRFonts::GlyphLayers* COLRFonts::GetGlyphLayers(hb_blob_t* aCOLR,
   };
   return reinterpret_cast<const GlyphLayers*>(
       bsearch((void*)(uintptr_t)aGlyphId, colr->GetBaseGlyphRecords(),
-              uint16_t(colr->numBaseGlyphRecord), sizeof(GlyphLayers),
+              uint16_t(colr->numBaseGlyphRecords), sizeof(GlyphLayers),
               compareBaseGlyph));
 }
 
@@ -2192,7 +2153,7 @@ Rect COLRFonts::GetColorGlyphBounds(hb_blob_t* aCOLR, hb_font_t* aFont,
                    uint16_t(coordCount)};
   state.mHeader.v1 =
       reinterpret_cast<const COLRv1Header*>(hb_blob_get_data(aCOLR, nullptr));
-  MOZ_ASSERT(uint16_t(state.mHeader.v1->version) == 1);
+  MOZ_ASSERT(uint16_t(state.mHeader.v1->base.version) == 1);
   // If a clip rect is provided, return this as the glyph bounds.
   const auto* clipList = state.mHeader.v1->clipList();
   if (clipList) {
