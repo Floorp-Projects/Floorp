@@ -3388,34 +3388,31 @@ nsresult HTMLEditor::InsertLinkAroundSelectionAsAction(
     return NS_ERROR_FAILURE;
   }
 
-  uint32_t count = attributeMap->Length();
-  nsAutoString value;
-  for (uint32_t i = 0; i < count; ++i) {
-    // XXX nsDOMAttributeMap::Item() accesses current attribute at the index.
-    //     Therefore, if `SetInlinePropertyAsSubAction()` changed the
-    //     attributes, this may fail to scan some attributes.  Perhaps, we need
-    //     to cache all attributes first.
+  // TODO: We should stop using this loop for adding attributes to newly created
+  //       `<a href="...">` elements.  Then, we can avoid to increate the ref-
+  //       counter of attribute names since we can use nsStaticAtom if we don't
+  //       need to support unknown attributes.
+  AutoTArray<EditorInlineStyleAndValue, 32> stylesToSet;
+  stylesToSet.SetCapacity(attributeMap->Length());
+  nsString value;
+  for (uint32_t i : IntegerRange(attributeMap->Length())) {
     RefPtr<Attr> attribute = attributeMap->Item(i);
     if (!attribute) {
       continue;
     }
 
-    // We must clear the string buffers
-    //   because GetValue appends to previous string!
-    value.Truncate();
+    RefPtr<nsAtom> attributeName = attribute->NodeInfo()->NameAtom();
 
-    nsAtom* attributeName = attribute->NodeInfo()->NameAtom();
-
+    MOZ_ASSERT(value.IsEmpty());
     attribute->GetValue(value);
 
-    nsresult rv = SetInlinePropertyAsSubAction(
-        *nsGkAtoms::a, MOZ_KnownLive(attributeName), value);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("SetInlinePropertyAsSubAction(nsGkAtoms::a) failed");
-      return rv;
-    }
+    stylesToSet.AppendElement(EditorInlineStyleAndValue(
+        *nsGkAtoms::a, std::move(attributeName), std::move(value)));
   }
-  return NS_OK;
+  rv = SetInlinePropertiesAsSubAction(stylesToSet);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "HTMLEditor::SetInlinePropertiesAsSubAction() failed");
+  return rv;
 }
 
 nsresult HTMLEditor::SetHTMLBackgroundColorWithTransaction(
@@ -5666,7 +5663,7 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
     // Loop through the ranges in the selection
-    // XXX This is different from `SetInlinePropertyAsSubAction()`.  It uses
+    // XXX This is different from `SetInlinePropertiesAsSubAction()`.  It uses
     //     AutoRangeArray to store all ranges first.  The result may be
     //     different if mutation event listener changes the `Selection`.
     // TODO: Store all selection ranges first since this updates the style.
