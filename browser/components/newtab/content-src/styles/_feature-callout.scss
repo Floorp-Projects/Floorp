@@ -35,6 +35,12 @@ $max-z-index: 2147483647;
 
         .brand-logo {
           margin: 30px 45px 0;
+          // This may not work for all future messages, 
+          // so we may want to make flipping the logo 
+          // image in RTL mode configurable
+          &:dir(rtl) {
+            transform: rotateY(180deg);
+          }
         }
       }
 
