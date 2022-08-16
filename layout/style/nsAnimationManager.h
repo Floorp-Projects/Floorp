@@ -77,8 +77,8 @@ class nsAnimationManager final
           return false;
         }
         return keyframe.mTimingFunction
-                ? *keyframe.mTimingFunction == aTimingFunctionToMatch
-                : aTimingFunctionToMatch.IsLinearKeyword();
+                   ? *keyframe.mTimingFunction == aTimingFunctionToMatch
+                   : aTimingFunctionToMatch.IsLinearKeyword();
       }();
       if (matches) {
         return true;

@@ -56,9 +56,10 @@ struct ParamTraits<mozilla::wr::ImageDescriptor> {
 
 template <>
 struct ParamTraits<mozilla::wr::GeckoDisplayListType::Tag>
-    : public ContiguousEnumSerializer<mozilla::wr::GeckoDisplayListType::Tag,
-                                      mozilla::wr::GeckoDisplayListType::Tag::None,
-                                      mozilla::wr::GeckoDisplayListType::Tag::Sentinel> {};
+    : public ContiguousEnumSerializer<
+          mozilla::wr::GeckoDisplayListType::Tag,
+          mozilla::wr::GeckoDisplayListType::Tag::None,
+          mozilla::wr::GeckoDisplayListType::Tag::Sentinel> {};
 
 template <>
 struct ParamTraits<mozilla::wr::GeckoDisplayListType> {

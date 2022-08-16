@@ -520,7 +520,9 @@ class LogModuleManager {
 
   void SetIsSync(bool aIsSync) { mIsSync = aIsSync; }
 
-  void SetRecordMarkers(bool aRecordMarkers) { mAddProfilerMarker = aRecordMarkers; }
+  void SetRecordMarkers(bool aRecordMarkers) {
+    mAddProfilerMarker = aRecordMarkers;
+  }
 
   void SetAddTimestamp(bool aAddTimestamp) { mAddTimestamp = aAddTimestamp; }
 
