@@ -33,7 +33,7 @@
 #![cfg_attr(feature = "unstable", feature(maybe_uninit_extra))]
 #![cfg_attr(feature = "unstable", feature(maybe_uninit_uninit_array))]
 extern crate alloc;
-#[cfg(feature = "std_io")]
+#[cfg(feature = "std")]
 extern crate std;
 
 pub mod boxed;
