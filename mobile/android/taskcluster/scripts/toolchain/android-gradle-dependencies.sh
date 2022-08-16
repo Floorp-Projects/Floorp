@@ -12,11 +12,12 @@ function get_abs_path {
 }
 
 CURRENT_DIR="$(get_abs_path $0)"
-PROJECT_DIR="$(get_abs_path $CURRENT_DIR/../../../..)"
+REPO_ROOT_DIR="$(get_abs_path $CURRENT_DIR/../../../..)"
+PROJECT_DIR="$REPO_ROOT_DIR/android-components"
 
 pushd $PROJECT_DIR
 
-. taskcluster/scripts/toolchain/android-gradle-dependencies/before.sh
+. "$REPO_ROOT_DIR/taskcluster/scripts/toolchain/android-gradle-dependencies/before.sh"
 
 COMPONENT_REGEX='^  ([-a-z]+):$'
 # Components to ignore on first pass. They don't have any extra dependencies so we can
@@ -53,6 +54,6 @@ set +e; ./gradlew $GRADLE_ARGS -Pcoverage $TEST_COMMANDS; set -e
   :samples-browser:assemble :samples-browser:assembleAndroidTest :samples-browser:test :samples-browser:lint
   # :tooling-lint:lintRelease and :samples-browser:lintRelease do not exist
 
-. taskcluster/scripts/toolchain/android-gradle-dependencies/after.sh
+. "$REPO_ROOT_DIR/taskcluster/scripts/toolchain/android-gradle-dependencies/after.sh"
 
 popd
