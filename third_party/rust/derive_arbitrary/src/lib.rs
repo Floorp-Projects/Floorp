@@ -35,14 +35,17 @@ pub fn derive_arbitrary(tokens: proc_macro::TokenStream) -> proc_macro::TokenStr
     let (_, ty_generics, where_clause) = generics.split_for_impl();
 
     (quote! {
-        thread_local! {
-            static #recursive_count: std::cell::Cell<u32> = std::cell::Cell::new(0);
-        }
+        const _: () = {
+            thread_local! {
+                #[allow(non_upper_case_globals)]
+                static #recursive_count: std::cell::Cell<u32> = std::cell::Cell::new(0);
+            }
 
-        impl #impl_generics arbitrary::Arbitrary<#lifetime_without_bounds> for #name #ty_generics #where_clause {
-            #arbitrary_method
-            #size_hint_method
-        }
+            impl #impl_generics arbitrary::Arbitrary<#lifetime_without_bounds> for #name #ty_generics #where_clause {
+                #arbitrary_method
+                #size_hint_method
+            }
+        };
     })
     .into()
 }
@@ -82,17 +85,26 @@ fn with_recursive_count_guard(
     expr: impl quote::ToTokens,
 ) -> impl quote::ToTokens {
     quote! {
-        #recursive_count.with(|count| {
-            if count.get() > 0 && u.is_empty() {
-                return Err(arbitrary::Error::NotEnoughData);
-            }
+        let guard_against_recursion = u.is_empty();
+        if guard_against_recursion {
+            #recursive_count.with(|count| {
+                if count.get() > 0 {
+                    return Err(arbitrary::Error::NotEnoughData);
+                }
+                count.set(count.get() + 1);
+                Ok(())
+            })?;
+        }
 
-            count.set(count.get() + 1);
-            let result = { #expr };
-            count.set(count.get() - 1);
+        let result = (|| { #expr })();
 
-            result
-        })
+        if guard_against_recursion {
+            #recursive_count.with(|count| {
+                count.set(count.get() - 1);
+            });
+        }
+
+        result
     }
 }
 

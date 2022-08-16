@@ -43,6 +43,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
 delta = "1.1.0 -> 1.1.1"
 
+[[audits.arbitrary]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-run"
+delta = "1.1.1 -> 1.1.3"
+
 [[audits.ashmem]]
 who = "Matthew Gregan <kinetik@flim.org>"
 criteria = "safe-to-deploy"
@@ -111,6 +116,11 @@ static so there's no uncontrolled input whatsoever.
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
 delta = "1.1.0 -> 1.1.1"
+
+[[audits.derive_arbitrary]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-run"
+delta = "1.1.1 -> 1.1.3"
 
 [[audits.dogear]]
 who = "Sammy Khamis <skhamis@mozilla.com>"
