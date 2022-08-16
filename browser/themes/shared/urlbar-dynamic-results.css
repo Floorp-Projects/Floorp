@@ -145,10 +145,6 @@
 }
 
 .urlbarView-row[dynamicType=quickactions] > .urlbarView-row-inner {
-  align-items: start;
-}
-
-.urlbarView-row[dynamicType=quickactions] .urlbarView-dynamic-quickactions-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: 2em;
