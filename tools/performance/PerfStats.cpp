@@ -13,7 +13,7 @@
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/gfx/GPUChild.h"
 #include "mozilla/gfx/GPUProcessManager.h"
-#include "mozilla/JSONWriter.h"
+#include "mozilla/JSONStringWriteFuncs.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
@@ -107,15 +107,6 @@ void PerfStats::RecordMeasurementCounterInternal(Metric aMetric,
   sSingleton->mRecordedCounts[static_cast<size_t>(aMetric)]++;
 }
 
-struct StringWriteFunc : public JSONWriteFunc {
-  nsCString& mString;
-
-  explicit StringWriteFunc(nsCString& aString) : mString(aString) {}
-  virtual void Write(const Span<const char>& aStr) override {
-    mString.Append(aStr);
-  }
-};
-
 void AppendJSONStringAsProperty(nsCString& aDest, const char* aPropertyName,
                                 const nsACString& aJSON) {
   // We need to manually append into the string here, since JSONWriter has no
@@ -166,7 +157,7 @@ static void WriteContentParent(nsCString& aRawString, JSONWriter& aWriter,
 }
 
 struct PerfStatsCollector {
-  PerfStatsCollector() : writer(MakeUnique<StringWriteFunc>(string)) {}
+  PerfStatsCollector() : writer(MakeUnique<JSONStringRefWriteFunc>(string)) {}
 
   void AppendPerfStats(const nsCString& aString, ContentParent* aParent) {
     writer.StartObjectElement();
@@ -208,7 +199,8 @@ void PerfStats::ResetCollection() {
 void PerfStats::StorePerfStatsInternal(dom::ContentParent* aParent,
                                        const nsACString& aPerfStats) {
   nsCString jsonString;
-  JSONWriter w(MakeUnique<StringWriteFunc>(jsonString));
+  JSONStringRefWriteFunc jw(jsonString);
+  JSONWriter w(jw);
 
   // To generate correct JSON here we don't call start and end. That causes
   // this to use Single Line mode, sadly.
@@ -294,7 +286,8 @@ nsCString PerfStats::CollectLocalPerfStatsJSONInternal() {
 
   nsCString jsonString;
 
-  JSONWriter w(MakeUnique<StringWriteFunc>(jsonString));
+  JSONStringRefWriteFunc jw(jsonString);
+  JSONWriter w(jw);
   w.Start();
   {
     w.StartArrayProperty("metrics");

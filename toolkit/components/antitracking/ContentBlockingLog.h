@@ -8,7 +8,7 @@
 #define mozilla_ContentBlockingLog_h
 
 #include "mozilla/ContentBlockingNotifier.h"
-#include "mozilla/JSONWriter.h"
+#include "mozilla/JSONStringWriteFuncs.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/Tuple.h"
@@ -57,14 +57,6 @@ class ContentBlockingLog final {
 
   typedef nsTArray<OriginEntry> OriginDataTable;
 
-  struct StringWriteFunc : public JSONWriteFunc {
-    nsACString&
-        mBuffer;  // The lifetime of the struct must be bound to the buffer
-    explicit StringWriteFunc(nsACString& aBuffer) : mBuffer(aBuffer) {}
-
-    void Write(const Span<const char>& aStr) override { mBuffer.Append(aStr); }
-  };
-
   struct Comparator {
    public:
     bool Equals(const OriginDataTable::value_type& aLeft,
@@ -110,7 +102,8 @@ class ContentBlockingLog final {
   nsAutoCString Stringify() {
     nsAutoCString buffer;
 
-    JSONWriter w(MakeUnique<StringWriteFunc>(buffer));
+    JSONStringRefWriteFunc js(buffer);
+    JSONWriter w(js);
     w.Start();
 
     for (const OriginEntry& entry : mLog) {

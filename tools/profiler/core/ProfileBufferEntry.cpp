@@ -17,6 +17,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "mozilla/Logging.h"
+#include "mozilla/JSONStringWriteFuncs.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StackWalk.h"
@@ -485,18 +486,12 @@ static void StreamJITFrame(JSContext* aContext, SpliceableJSONWriter& aWriter,
   writer.IntElement(SUBCATEGORY, info.mSubcategoryIndex);
 }
 
-struct CStringWriteFunc : public JSONWriteFunc {
-  nsACString& mBuffer;  // The struct must not outlive this buffer
-  explicit CStringWriteFunc(nsACString& aBuffer) : mBuffer(aBuffer) {}
-
-  void Write(const Span<const char>& aStr) override { mBuffer.Append(aStr); }
-};
-
 static nsCString JSONForJITFrame(JSContext* aContext,
                                  const JS::ProfiledFrameHandle& aJITFrame,
                                  UniqueJSONStrings& aUniqueStrings) {
   nsCString json;
-  SpliceableJSONWriter writer(MakeUnique<CStringWriteFunc>(json));
+  JSONStringRefWriteFunc jw(json);
+  SpliceableJSONWriter writer(jw);
   StreamJITFrame(aContext, writer, aUniqueStrings, aJITFrame);
   return json;
 }
