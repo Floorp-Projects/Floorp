@@ -7,6 +7,7 @@
 #include "gfxFontUtils.h"
 #include "gfxUtils.h"
 #include "harfbuzz/hb.h"
+#include "harfbuzz/hb-ot.h"
 #include "mozilla/gfx/Helpers.h"
 #include "TextDrawTarget.h"
 
@@ -37,52 +38,31 @@ struct COLRHeader {
   }
 };
 
-struct CPALHeaderVersion0 {
-  AutoSwap_PRUint16 version;
-  AutoSwap_PRUint16 numPaletteEntries;
-  AutoSwap_PRUint16 numPalettes;
-  AutoSwap_PRUint16 numColorRecords;
-  AutoSwap_PRUint32 offsetFirstColorRecord;
-};
-
-// sRGB color space
-struct CPALColorRecord {
-  uint8_t blue;
-  uint8_t green;
-  uint8_t red;
-  uint8_t alpha;
-};
-
 struct PaintState {
   const COLRHeader* mHeader;
-  const CPALColorRecord* mPalette;
+  const hb_color_t* mPalette;
   DrawTarget* mDrawTarget;
   ScaledFont* mScaledFont;
   DrawOptions mDrawOptions;
   sRGBColor mCurrentColor;
-};
+  uint16_t mNumColors;
 
-static const CPALColorRecord* GetPaletteByIndex(hb_blob_t* aCPAL,
-                                                uint32_t aIndex) {
-  const auto* cpal = reinterpret_cast<const CPALHeaderVersion0*>(
-      hb_blob_get_data(aCPAL, nullptr));
-  const uint32_t offset = cpal->offsetFirstColorRecord;
-  return reinterpret_cast<const CPALColorRecord*>(
-      reinterpret_cast<const uint8_t*>(cpal) + offset);
-}
-
-static DeviceColor DoGetColor(PaintState& aState, uint16_t aPaletteIndex,
-                              float aAlpha) {
-  sRGBColor color;
-  if (aPaletteIndex == 0xFFFF) {
-    color = aState.mCurrentColor;
-  } else {
-    const CPALColorRecord& c = aState.mPalette[uint16_t(aPaletteIndex)];
-    color = sRGBColor(c.red / 255.0, c.green / 255.0, c.blue / 255.0,
-                      c.alpha / 255.0 * aAlpha);
+  DeviceColor GetColor(uint16_t aPaletteIndex, float aAlpha) {
+    sRGBColor color;
+    if (aPaletteIndex < mNumColors) {
+      const hb_color_t& c = mPalette[uint16_t(aPaletteIndex)];
+      color = sRGBColor(
+          hb_color_get_red(c) / 255.0, hb_color_get_green(c) / 255.0,
+          hb_color_get_blue(c) / 255.0, hb_color_get_alpha(c) / 255.0 * aAlpha);
+    } else if (aPaletteIndex == 0xffff) {
+      color = mCurrentColor;
+      color.a *= aAlpha;
+    } else {  // Palette index out of range! Return transparent black.
+      color = sRGBColor();
+    }
+    return ToDeviceColor(color);
   }
-  return ToDeviceColor(color);
-}
+};
 
 struct LayerRecord {
   AutoSwap_PRUint16 glyphId;
@@ -94,7 +74,7 @@ struct LayerRecord {
     GlyphBuffer buffer{&glyph, 1};
     aState.mDrawTarget->FillGlyphs(
         aState.mScaledFont, buffer,
-        ColorPattern(DoGetColor(aState, paletteEntryIndex, aAlpha)),
+        ColorPattern(aState.GetColor(paletteEntryIndex, aAlpha)),
         aState.mDrawOptions);
     return true;
   }
@@ -130,14 +110,68 @@ struct COLRBaseGlyphRecord {
 };
 
 bool COLRFonts::ValidateColorGlyphs(hb_blob_t* aCOLR, hb_blob_t* aCPAL) {
-  unsigned int colrLength;
-  const COLRHeader* colr =
-      reinterpret_cast<const COLRHeader*>(hb_blob_get_data(aCOLR, &colrLength));
+  struct ColorRecord {
+    uint8_t blue;
+    uint8_t green;
+    uint8_t red;
+    uint8_t alpha;
+  };
+
+  struct CPALHeaderVersion0 {
+    AutoSwap_PRUint16 version;
+    AutoSwap_PRUint16 numPaletteEntries;
+    AutoSwap_PRUint16 numPalettes;
+    AutoSwap_PRUint16 numColorRecords;
+    AutoSwap_PRUint32 colorRecordsArrayOffset;
+    // uint16 	colorRecordIndices[numPalettes];
+    const AutoSwap_PRUint16* colorRecordIndices() const {
+      return reinterpret_cast<const AutoSwap_PRUint16*>(this + 1);
+    }
+  };
+
   unsigned int cpalLength;
   const CPALHeaderVersion0* cpal = reinterpret_cast<const CPALHeaderVersion0*>(
       hb_blob_get_data(aCPAL, &cpalLength));
+  if (!cpal || cpalLength < sizeof(CPALHeaderVersion0)) {
+    return false;
+  }
 
-  if (!colr || !cpal || !colrLength || !cpalLength) {
+  // We can handle either version 0 or 1.
+  if (uint16_t(cpal->version) > 1) {
+    return false;
+  }
+
+  const uint16_t numPaletteEntries = cpal->numPaletteEntries;
+  const uint16_t numPalettes = cpal->numPalettes;
+  const uint16_t numColorRecords = cpal->numColorRecords;
+  const uint32_t colorRecordsArrayOffset = cpal->colorRecordsArrayOffset;
+  const auto* indices = cpal->colorRecordIndices();
+
+  if (colorRecordsArrayOffset >= cpalLength) {
+    return false;
+  }
+  if (!numPaletteEntries || !numPalettes ||
+      numColorRecords < numPaletteEntries) {
+    return false;
+  }
+  if (sizeof(ColorRecord) * numColorRecords >
+      cpalLength - colorRecordsArrayOffset) {
+    return false;
+  }
+  for (uint16_t i = 0; i < numPalettes; ++i) {
+    uint32_t index = indices[i];
+    if (index + numPaletteEntries > numColorRecords) {
+      return false;
+    }
+  }
+
+  // The additional fields in CPALv1 are not checked here; the harfbuzz code
+  // handles reading them safely.
+
+  unsigned int colrLength;
+  const COLRHeader* colr =
+      reinterpret_cast<const COLRHeader*>(hb_blob_get_data(aCOLR, &colrLength));
+  if (!colr || colrLength < sizeof(COLRHeader)) {
     return false;
   }
 
@@ -151,23 +185,11 @@ bool COLRFonts::ValidateColorGlyphs(hb_blob_t* aCOLR, hb_blob_t* aCPAL) {
   const uint32_t offsetLayerRecord = colr->offsetLayerRecord;
   const uint16_t numLayerRecords = colr->numLayerRecords;
 
-  const uint32_t offsetFirstColorRecord = cpal->offsetFirstColorRecord;
-  const uint16_t numColorRecords = cpal->numColorRecords;
-  const uint32_t numPaletteEntries = cpal->numPaletteEntries;
-
   if (offsetBaseGlyphRecord >= colrLength) {
     return false;
   }
 
   if (offsetLayerRecord >= colrLength) {
-    return false;
-  }
-
-  if (offsetFirstColorRecord >= cpalLength) {
-    return false;
-  }
-
-  if (!numPaletteEntries) {
     return false;
   }
 
@@ -179,17 +201,6 @@ bool COLRFonts::ValidateColorGlyphs(hb_blob_t* aCOLR, hb_blob_t* aCPAL) {
 
   if (sizeof(LayerRecord) * numLayerRecords > colrLength - offsetLayerRecord) {
     // COLR layer record will be overflow
-    return false;
-  }
-
-  if (sizeof(CPALColorRecord) * numColorRecords >
-      cpalLength - offsetFirstColorRecord) {
-    // CPAL color record will be overflow
-    return false;
-  }
-
-  if (numPaletteEntries * uint16_t(cpal->numPalettes) != numColorRecords) {
-    // palette of CPAL color record will be overflow.
     return false;
   }
 
@@ -258,7 +269,7 @@ const COLRBaseGlyphRecord* COLRFonts::GetGlyphLayers(hb_blob_t* aCOLR,
 }
 
 bool COLRFonts::PaintGlyphLayers(
-    hb_blob_t* aCOLR, hb_blob_t* aCPAL, const COLRBaseGlyphRecord* aLayers,
+    hb_blob_t* aCOLR, hb_face_t* aFace, const COLRBaseGlyphRecord* aLayers,
     DrawTarget* aDrawTarget, layout::TextDrawTarget* aTextDrawer,
     ScaledFont* aScaledFont, DrawOptions aDrawOptions,
     const sRGBColor& aCurrentColor, const Point& aPoint) {
@@ -284,11 +295,24 @@ bool COLRFonts::PaintGlyphLayers(
     // might be wrapped in a shadow that uses the text run's glyphs.
     alpha = aCurrentColor.a;
   }
-  auto* colr =
+
+  // Get the default palette (TODO: hook up CSS font-palette support)
+  unsigned int colorCount = 0;
+  AutoTArray<hb_color_t, 64> colors;
+  colors.SetLength(hb_ot_color_palette_get_colors(aFace, /* paletteIndex */ 0,
+                                                  0, &colorCount, nullptr));
+  colorCount = colors.Length();
+  hb_ot_color_palette_get_colors(aFace, 0, 0, &colorCount, colors.Elements());
+
+  const COLRHeader* colr =
       reinterpret_cast<const COLRHeader*>(hb_blob_get_data(aCOLR, nullptr));
-  auto* palette = GetPaletteByIndex(aCPAL, 0);  // TODO: font-palette support
-  PaintState state{colr,        palette,      aDrawTarget,
-                   aScaledFont, aDrawOptions, aCurrentColor};
+  PaintState state{colr,
+                   colors.Elements(),
+                   aDrawTarget,
+                   aScaledFont,
+                   aDrawOptions,
+                   aCurrentColor,
+                   uint16_t(colors.Length())};
   return aLayers->Paint(state, alpha, aPoint);
 }
 
