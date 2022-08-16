@@ -150,6 +150,16 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
 #define NS_HTTP_ON_MODIFY_REQUEST_TOPIC "http-on-modify-request"
 
 /**
+ * Same as http-on-modify-request, but called before the cookie header is set on
+ * the channel.
+ * This allows observers to set cookies via the cookie service to be included in
+ * the request header.
+ * http-on-modify-request is too late for this use-case since the cookie header
+ * has already been populated at that point.
+ */
+#define NS_HTTP_ON_MODIFY_REQUEST_BEFORE_COOKIES_TOPIC "http-on-modify-request-before-cookies"
+
+/**
   * Before an HTTP request is sent to the server via a document channel this
   * observer topic is notified.
   * It is similar to http-on-modify-request.

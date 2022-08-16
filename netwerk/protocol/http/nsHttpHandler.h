@@ -366,6 +366,11 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
     NotifyObservers(chan, NS_HTTP_ON_MODIFY_REQUEST_TOPIC);
   }
 
+  // Same as OnModifyRequest but before cookie headers are written.
+  void OnModifyRequestBeforeCookies(nsIHttpChannel* chan) {
+    NotifyObservers(chan, NS_HTTP_ON_MODIFY_REQUEST_BEFORE_COOKIES_TOPIC);
+  }
+
   void OnModifyDocumentRequest(nsIIdentChannel* chan) {
     NotifyObservers(chan, NS_DOCUMENT_ON_MODIFY_REQUEST_TOPIC);
   }
