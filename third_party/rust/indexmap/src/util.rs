@@ -1,15 +1,7 @@
-use core::iter::Enumerate;
 use core::ops::{Bound, Range, RangeBounds};
 
 pub(crate) fn third<A, B, C>(t: (A, B, C)) -> C {
     t.2
-}
-
-pub(crate) fn enumerate<I>(iterable: I) -> Enumerate<I::IntoIter>
-where
-    I: IntoIterator,
-{
-    iterable.into_iter().enumerate()
 }
 
 pub(crate) fn simplify_range<R>(range: R, len: usize) -> Range<usize>

@@ -295,7 +295,7 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_list()
-            .entries(self.set1.difference(&self.set2))
+            .entries(self.set1.difference(self.set2))
             .finish()
     }
 }
@@ -346,7 +346,7 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_list()
-            .entries(self.set1.intersection(&self.set2))
+            .entries(self.set1.intersection(self.set2))
             .finish()
     }
 }
@@ -397,7 +397,7 @@ where
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_list()
-            .entries(self.set1.symmetric_difference(&self.set2))
+            .entries(self.set1.symmetric_difference(self.set2))
             .finish()
     }
 }
@@ -447,7 +447,7 @@ where
     S2: BuildHasher,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_list().entries(self.set1.union(&self.set2)).finish()
+        f.debug_list().entries(self.set1.union(self.set2)).finish()
     }
 }
 

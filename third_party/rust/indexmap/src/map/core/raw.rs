@@ -2,12 +2,25 @@
 //! This module encapsulates the `unsafe` access to `hashbrown::raw::RawTable`,
 //! mostly in dealing with its bucket "pointers".
 
-use super::{equivalent, Entry, HashValue, IndexMapCore, VacantEntry};
+use super::{equivalent, Bucket, Entry, HashValue, IndexMapCore, VacantEntry};
 use core::fmt;
 use core::mem::replace;
 use hashbrown::raw::RawTable;
 
 type RawBucket = hashbrown::raw::Bucket<usize>;
+
+/// Inserts many entries into a raw table without reallocating.
+///
+/// ***Panics*** if there is not sufficient capacity already.
+pub(super) fn insert_bulk_no_grow<K, V>(indices: &mut RawTable<usize>, entries: &[Bucket<K, V>]) {
+    assert!(indices.capacity() - indices.len() >= entries.len());
+    for entry in entries {
+        // SAFETY: we asserted that sufficient capacity exists for all entries.
+        unsafe {
+            indices.insert_no_grow(entry.hash.get(), indices.len());
+        }
+    }
+}
 
 pub(super) struct DebugIndices<'a>(pub &'a RawTable<usize>);
 impl fmt::Debug for DebugIndices<'_> {

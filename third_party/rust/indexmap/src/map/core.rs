@@ -18,7 +18,7 @@ use core::mem::replace;
 use core::ops::RangeBounds;
 
 use crate::equivalent::Equivalent;
-use crate::util::{enumerate, simplify_range};
+use crate::util::simplify_range;
 use crate::{Bucket, Entries, HashValue};
 
 /// Core of the map that does not depend on S
@@ -44,7 +44,8 @@ fn equivalent<'a, K, V, Q: ?Sized + Equivalent<K>>(
 
 #[inline]
 fn erase_index(table: &mut RawTable<usize>, hash: HashValue, index: usize) {
-    table.erase_entry(hash.get(), move |&i| i == index);
+    let erased = table.erase_entry(hash.get(), move |&i| i == index);
+    debug_assert!(erased);
 }
 
 #[inline]
@@ -185,9 +186,7 @@ impl<K, V> IndexMapCore<K, V> {
         let entries = self.entries.split_off(at);
 
         let mut indices = RawTable::with_capacity(entries.len());
-        for (i, entry) in enumerate(&entries) {
-            indices.insert_no_grow(entry.hash.get(), i);
-        }
+        raw::insert_bulk_no_grow(&mut indices, &entries);
         Self { indices, entries }
     }
 
@@ -203,10 +202,11 @@ impl<K, V> IndexMapCore<K, V> {
         self.entries.reserve_exact(additional);
     }
 
-    /// Shrink the capacity of the map as much as possible.
-    pub(crate) fn shrink_to_fit(&mut self) {
-        self.indices.shrink_to(0, get_hash(&self.entries));
-        self.entries.shrink_to_fit();
+    /// Shrink the capacity of the map with a lower bound
+    pub(crate) fn shrink_to(&mut self, min_capacity: usize) {
+        self.indices
+            .shrink_to(min_capacity, get_hash(&self.entries));
+        self.entries.shrink_to(min_capacity);
     }
 
     /// Remove the last key-value pair
@@ -283,29 +283,77 @@ impl<K, V> IndexMapCore<K, V> {
     ///
     /// The index should already be removed from `self.indices`.
     fn shift_remove_finish(&mut self, index: usize) -> (K, V) {
-        // use Vec::remove, but then we need to update the indices that point
-        // to all of the other entries that have to move
-        let entry = self.entries.remove(index);
+        // Correct indices that point to the entries that followed the removed entry.
+        self.decrement_indices(index + 1, self.entries.len());
 
-        // correct indices that point to the entries that followed the removed entry.
-        // use a heuristic between a full sweep vs. a `find()` for every shifted item.
-        let raw_capacity = self.indices.buckets();
-        let shifted_entries = &self.entries[index..];
-        if shifted_entries.len() > raw_capacity / 2 {
-            // shift all indices greater than `index`
+        // Use Vec::remove to actually remove the entry.
+        let entry = self.entries.remove(index);
+        (entry.key, entry.value)
+    }
+
+    /// Decrement all indices in the range `start..end`.
+    ///
+    /// The index `start - 1` should not exist in `self.indices`.
+    /// All entries should still be in their original positions.
+    fn decrement_indices(&mut self, start: usize, end: usize) {
+        // Use a heuristic between a full sweep vs. a `find()` for every shifted item.
+        let shifted_entries = &self.entries[start..end];
+        if shifted_entries.len() > self.indices.buckets() / 2 {
+            // Shift all indices in range.
             for i in self.indices_mut() {
-                if *i > index {
+                if start <= *i && *i < end {
                     *i -= 1;
                 }
             }
         } else {
-            // find each following entry to shift its index
-            for (i, entry) in (index + 1..).zip(shifted_entries) {
+            // Find each entry in range to shift its index.
+            for (i, entry) in (start..end).zip(shifted_entries) {
                 update_index(&mut self.indices, entry.hash, i, i - 1);
             }
         }
+    }
 
-        (entry.key, entry.value)
+    /// Increment all indices in the range `start..end`.
+    ///
+    /// The index `end` should not exist in `self.indices`.
+    /// All entries should still be in their original positions.
+    fn increment_indices(&mut self, start: usize, end: usize) {
+        // Use a heuristic between a full sweep vs. a `find()` for every shifted item.
+        let shifted_entries = &self.entries[start..end];
+        if shifted_entries.len() > self.indices.buckets() / 2 {
+            // Shift all indices in range.
+            for i in self.indices_mut() {
+                if start <= *i && *i < end {
+                    *i += 1;
+                }
+            }
+        } else {
+            // Find each entry in range to shift its index, updated in reverse so
+            // we never have duplicated indices that might have a hash collision.
+            for (i, entry) in (start..end).zip(shifted_entries).rev() {
+                update_index(&mut self.indices, entry.hash, i, i + 1);
+            }
+        }
+    }
+
+    pub(super) fn move_index(&mut self, from: usize, to: usize) {
+        let from_hash = self.entries[from].hash;
+        if from != to {
+            // Use a sentinal index so other indices don't collide.
+            update_index(&mut self.indices, from_hash, from, usize::MAX);
+
+            // Update all other indices and rotate the entry positions.
+            if from < to {
+                self.decrement_indices(from + 1, to + 1);
+                self.entries[from..=to].rotate_left(1);
+            } else if to < from {
+                self.increment_indices(to, from);
+                self.entries[to..=from].rotate_right(1);
+            }
+
+            // Change the sentinal index to its final position.
+            update_index(&mut self.indices, from_hash, usize::MAX, to);
+        }
     }
 
     /// Remove an entry by swapping it with the last
@@ -372,15 +420,9 @@ impl<K, V> IndexMapCore<K, V> {
             // Reinsert everything, as there are few kept indices
             self.indices.clear();
 
-            // Reinsert stable indices
-            for (i, entry) in enumerate(start_entries) {
-                self.indices.insert_no_grow(entry.hash.get(), i);
-            }
-
-            // Reinsert shifted indices
-            for (i, entry) in (start..).zip(shifted_entries) {
-                self.indices.insert_no_grow(entry.hash.get(), i);
-            }
+            // Reinsert stable indices, then shifted indices
+            raw::insert_bulk_no_grow(&mut self.indices, start_entries);
+            raw::insert_bulk_no_grow(&mut self.indices, shifted_entries);
         } else if erased + shifted < half_capacity {
             // Find each affected index, as there are few to adjust
 
@@ -405,6 +447,7 @@ impl<K, V> IndexMapCore<K, V> {
     where
         F: FnMut(&mut K, &mut V) -> bool,
     {
+        // FIXME: This could use Vec::retain_mut with MSRV 1.61.
         // Like Vec::retain in self.entries, but with mutable K and V.
         // We swap-shift all the items we want to keep, truncate the rest,
         // then rebuild the raw hash table with the new indexes.
@@ -429,11 +472,7 @@ impl<K, V> IndexMapCore<K, V> {
 
     fn rebuild_hash_table(&mut self) {
         self.indices.clear();
-        debug_assert!(self.indices.capacity() >= self.entries.len());
-        for (i, entry) in enumerate(&self.entries) {
-            // We should never have to reallocate, so there's no need for a real hasher.
-            self.indices.insert_no_grow(entry.hash.get(), i);
-        }
+        raw::insert_bulk_no_grow(&mut self.indices, &self.entries);
     }
 
     pub(crate) fn reverse(&mut self) {

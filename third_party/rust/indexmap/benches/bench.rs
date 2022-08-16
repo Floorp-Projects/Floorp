@@ -15,7 +15,6 @@ use test::Bencher;
 use indexmap::IndexMap;
 
 use std::collections::HashMap;
-use std::iter::FromIterator;
 
 use rand::rngs::SmallRng;
 use rand::seq::SliceRandom;
