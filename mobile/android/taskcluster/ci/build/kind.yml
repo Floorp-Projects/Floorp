@@ -21,11 +21,11 @@ kind-dependencies:
 # maintains the latter mapping. The value may either be a list of specific components,
 # or the special sentinel value `all-components`.
 files-affecting-components:
-    ^build.gradle$: all-components
-    ^settings.gradle$: all-components
-    ^buildSrc.*$: all-components
-    ^gradle.properties$: all-components
-    ^gradle/wrapper/gradle-wrapper.properties$: all-components
+    ^android-components/build.gradle$: all-components
+    ^android-components/settings.gradle$: all-components
+    ^android-components/buildSrc.*$: all-components
+    ^android-components/gradle.properties$: all-components
+    ^android-components/gradle/wrapper/gradle-wrapper.properties$: all-components
 
 task-defaults:
     artifact-template:
