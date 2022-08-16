@@ -440,21 +440,22 @@ EnterprisePoliciesManager.prototype = {
     return InstallSources ? InstallSources.matches(uri) : true;
   },
 
-  isExemptExecutableExtension(origin, extension) {
-    let url;
+  isExemptExecutableExtension(url, extension) {
+    let urlObject;
     try {
-      url = new URL(origin);
+      urlObject = new URL(url);
     } catch (e) {
       return false;
     }
-    let { hostname } = url;
+    let { hostname } = urlObject;
     let exemptArray = this.getActivePolicies()
       ?.ExemptDomainFileTypePairsFromFileTypeDownloadWarnings;
     if (!hostname || !extension || !exemptArray) {
       return false;
     }
+    extension = extension.toLowerCase();
     let domains = exemptArray
-      .filter(item => item.file_extension == extension)
+      .filter(item => item.file_extension.toLowerCase() == extension)
       .map(item => item.domains)
       .flat();
     for (let domain of domains) {
