@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>APZ hit-testing of fixed content when async-scrolled</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+    html, body {
+      margin: 0;
+    }
+    iframe {
+      width: 100%;
+      height: 400px;
+      margin-top: 100px;
+      padding: 0px;
+      border: 0px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <iframe id="subdoc" srcdoc="<!DOCTYPE HTML>
+    <html>
+      <style>
+        html, body {
+          margin: 0;
+        }
+        #fixed {
+          position: fixed;
+          height: 300px;
+          width: 100%;
+          top: 0;
+          background: blue;
+        }
+        #target {
+          margin-top: 100px;
+          margin-left: 100px;
+          height: 20px;
+          width: 20px;
+          background: red;
+        }
+      </style>
+      <div id='fixed'>
+        <div id='target'></div>
+      </div>
+      <div id='make_scrollable' style='height: 5000px'></div>
+    </html>
+  "></iframe>
+  <div id="make_root_scrollable" style="height: 5000px"></div>
+</body>
+<script type="application/javascript">
+
+async function test() {
+  // Async scroll the root content document by 50 pixels.
+  // This test uses a touch-drag (with relevant prefs set in
+  // test_group_hittest-2.html to e.g. disable flings)
+  // rather than mousewheel so that we have control over the
+  // precise amount scrolled.
+  let transformEndPromise = promiseTransformEnd();
+  await synthesizeNativeTouchDrag(document.documentElement, 10, 10, 0, -50);
+  await transformEndPromise;
+
+  // Set up listeners that pass the test if we correctly hit |target|
+  // but fail it if we hit something else.
+  let target = subdoc.contentWindow.target;
+  let fixed = subdoc.contentWindow.fixed;
+  let clickPromise = new Promise(resolve => {
+    target.addEventListener("click", e => {
+      ok(true, "Target was hit");
+      e.stopPropagation();  // do not propagate event to ancestors
+      resolve();
+    });
+    fixed.addEventListener("click", e => {
+      // Since target's listener calls stopPropagation(), if we get here
+      // then the coordinates of the click event did not correspond to
+      // |target|, but somewhere else on |fixed|.
+      ok(false, "Fixed ancestor should not be hit");
+      resolve();
+    });
+    window.addEventListener("click", e => {
+      // Similarly, the root content document's window should not be hit.
+      ok(false, "Root document should not be hit");
+      resolve();
+    });
+  });
+
+  // Synthesize a click which should hit |target|.
+  // The y-coordinate relative to the window is:
+  //    100 pixel margin of iframe from top of root content doc
+  //  + 100 pixel margin of target from top of iframe
+  //  -  50 pixels async scrolled
+  //  +  10 pixels to get us to the middle of the 20px-width target
+  await synthesizeNativeMouseEventWithAPZ({
+    type: "click",
+    target: window,
+    offsetX: 110,
+    offsetY: 160
+  });
+
+  await clickPromise;
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>

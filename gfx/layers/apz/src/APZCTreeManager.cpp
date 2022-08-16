@@ -3172,7 +3172,11 @@ ParentLayerToScreenMatrix4x4 APZCTreeManager::GetApzcToGeckoTransform(
        parent = parent->GetParent()) {
     // aTransformToGeckoOut is LA.Inverse() * LD * MC * NC * OC * PC * PD * QC *
     // RC
-    result = result * parent->GetTransformToLastDispatchedPaint(aComponents) *
+    //
+    // Note: Do not pass the async transform components for the current target
+    // to the parent.
+    result = result *
+             parent->GetTransformToLastDispatchedPaint(LayoutAndVisual) *
              parent->GetAncestorTransform();
 
     // The above value for result when parent == P matches the required output
