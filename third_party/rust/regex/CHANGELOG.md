@@ -1,3 +1,24 @@
+1.6.0 (2022-07-05)
+==================
+This release principally includes an upgrade to Unicode 14.
+
+New features:
+
+* [FEATURE #832](https://github.com/rust-lang/regex/pull/832):
+  Clarify that `Captures::len` includes all groups, not just matching groups.
+* [FEATURE #857](https://github.com/rust-lang/regex/pull/857):
+  Add an `ExactSizeIterator` impl for `SubCaptureMatches`.
+* [FEATURE #861](https://github.com/rust-lang/regex/pull/861):
+  Improve `RegexSet` documentation examples.
+* [FEATURE #877](https://github.com/rust-lang/regex/issues/877):
+  Upgrade to Unicode 14.
+
+Bug fixes:
+
+* [BUG #792](https://github.com/rust-lang/regex/issues/792):
+  Fix error message rendering bug.
+
+
 1.5.6 (2022-05-20)
 ==================
 This release includes a few bug fixes, including a bug that produced incorrect

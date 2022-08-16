@@ -225,7 +225,7 @@ impl Literals {
         if self.lits.is_empty() {
             return self.to_empty();
         }
-        let mut old: Vec<Literal> = self.lits.iter().cloned().collect();
+        let mut old = self.lits.to_vec();
         let mut new = self.to_empty();
         'OUTER: while let Some(mut candidate) = old.pop() {
             if candidate.is_empty() {
@@ -256,15 +256,13 @@ impl Literals {
                         old.push(lit3);
                         lit2.clear();
                     }
-                } else {
-                    if let Some(i) = position(&lit2, &candidate) {
-                        lit2.cut();
-                        let mut new_candidate = candidate.clone();
-                        new_candidate.truncate(i);
-                        new_candidate.cut();
-                        old.push(new_candidate);
-                        candidate.clear();
-                    }
+                } else if let Some(i) = position(&lit2, &candidate) {
+                    lit2.cut();
+                    let mut new_candidate = candidate.clone();
+                    new_candidate.truncate(i);
+                    new_candidate.cut();
+                    old.push(new_candidate);
+                    candidate.clear();
                 }
                 // Oops, the candidate is already represented in the set.
                 if candidate.is_empty() {
@@ -793,7 +791,7 @@ fn repeat_range_literals<F: FnMut(&Hir, &mut Literals)>(
         f(
             &Hir::repetition(hir::Repetition {
                 kind: hir::RepetitionKind::ZeroOrMore,
-                greedy: greedy,
+                greedy,
                 hir: Box::new(e.clone()),
             }),
             lits,
@@ -932,12 +930,10 @@ fn escape_unicode(bytes: &[u8]) -> String {
         if c.is_whitespace() {
             let escaped = if c as u32 <= 0x7F {
                 escape_byte(c as u8)
+            } else if c as u32 <= 0xFFFF {
+                format!(r"\u{{{:04x}}}", c as u32)
             } else {
-                if c as u32 <= 0xFFFF {
-                    format!(r"\u{{{:04x}}}", c as u32)
-                } else {
-                    format!(r"\U{{{:08x}}}", c as u32)
-                }
+                format!(r"\U{{{:08x}}}", c as u32)
             };
             space_escaped.push_str(&escaped);
         } else {
