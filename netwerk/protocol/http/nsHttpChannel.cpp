@@ -401,6 +401,9 @@ nsHttpChannel::LogMimeTypeMismatch(const nsACString& aMessageName,
 nsresult nsHttpChannel::PrepareToConnect() {
   LOG(("nsHttpChannel::PrepareToConnect [this=%p]\n", this));
 
+  // notify "http-on-modify-request-before-cookies" observers
+  gHttpHandler->OnModifyRequestBeforeCookies(this);
+
   AddCookiesToRequest();
 
 #ifdef XP_WIN
