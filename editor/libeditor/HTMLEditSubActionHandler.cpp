@@ -5849,14 +5849,15 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
     pointToPutCaret.Set(newEmptyTextNode, 0u);
 
     if (relFontSize) {
-      // dir indicated bigger versus smaller.  1 = bigger, -1 = smaller
-      HTMLEditor::FontSize dir = relFontSize > 0 ? HTMLEditor::FontSize::incr
-                                                 : HTMLEditor::FontSize::decr;
-      for (int32_t j = 0; j < DeprecatedAbs(relFontSize); j++) {
+      HTMLEditor::FontSize incrementOrDecrement =
+          relFontSize > 0 ? HTMLEditor::FontSize::incr
+                          : HTMLEditor::FontSize::decr;
+      for ([[maybe_unused]] uint32_t j : IntegerRange(Abs(relFontSize))) {
         const CreateElementResult wrapTextInBigOrSmallElementResult =
-            RelativeFontChangeOnTextNode(dir, *newEmptyTextNode, 0, UINT32_MAX);
+            SetFontSizeOnTextNode(*newEmptyTextNode, 0, UINT32_MAX,
+                                  incrementOrDecrement);
         if (wrapTextInBigOrSmallElementResult.isErr()) {
-          NS_WARNING("HTMLEditor::RelativeFontChangeOnTextNode() failed");
+          NS_WARNING("HTMLEditor::SetFontSizeOnTextNode() failed");
           return Err(wrapTextInBigOrSmallElementResult.inspectErr());
         }
         // We don't need to update here because we'll suggest caret position

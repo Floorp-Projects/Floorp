@@ -2587,9 +2587,10 @@ nsresult HTMLEditor::IncreaseFontSizeAsAction(nsIPrincipal* aPrincipal) {
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  rv = RelativeFontChange(FontSize::incr);
+  rv = IncrementOrDecrementFontSizeAsSubAction(FontSize::incr);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::RelativeFontChange(FontSize::incr) failed");
+                       "HTMLEditor::IncrementOrDecrementFontSizeAsSubAction("
+                       "FontSize::incr) failed");
   return EditorBase::ToGenericNSResult(rv);
 }
 
@@ -2603,14 +2604,20 @@ nsresult HTMLEditor::DecreaseFontSizeAsAction(nsIPrincipal* aPrincipal) {
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  rv = RelativeFontChange(FontSize::decr);
+  rv = IncrementOrDecrementFontSizeAsSubAction(FontSize::decr);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::RelativeFontChange(FontSize::decr) failed");
+                       "HTMLEditor::IncrementOrDecrementFontSizeAsSubAction("
+                       "FontSize::decr) failed");
   return EditorBase::ToGenericNSResult(rv);
 }
 
-nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
+nsresult HTMLEditor::IncrementOrDecrementFontSizeAsSubAction(
+    FontSize aIncrementOrDecrement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
+
+  // Committing composition and changing font size should be undone together.
+  AutoPlaceholderBatch treatAsOneTransaction(
+      *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
 
   DebugOnly<nsresult> rvIgnored = CommitComposition();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
@@ -2618,37 +2625,34 @@ nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
 
   // If selection is collapsed, set typing state
   if (SelectionRef().IsCollapsed()) {
-    nsAtom& atom = aDir == FontSize::incr ? *nsGkAtoms::big : *nsGkAtoms::small;
+    nsStaticAtom& bigOrSmallTagName = aIncrementOrDecrement == FontSize::incr
+                                          ? *nsGkAtoms::big
+                                          : *nsGkAtoms::small;
 
     // Let's see in what kind of element the selection is
-    if (NS_WARN_IF(!SelectionRef().RangeCount())) {
+    if (!SelectionRef().RangeCount()) {
       return NS_OK;
     }
-    RefPtr<const nsRange> firstRange = SelectionRef().GetRangeAt(0);
-    if (NS_WARN_IF(!firstRange) ||
-        NS_WARN_IF(!firstRange->GetStartContainer())) {
+    const auto firstRangeStartPoint =
+        EditorBase::GetFirstSelectionStartPoint<EditorRawDOMPoint>();
+    if (NS_WARN_IF(!firstRangeStartPoint.IsSet())) {
       return NS_OK;
     }
-    OwningNonNull<nsINode> selectedNode = *firstRange->GetStartContainer();
-    if (selectedNode->IsText()) {
-      if (NS_WARN_IF(!selectedNode->GetParentNode())) {
-        return NS_OK;
-      }
-      selectedNode = *selectedNode->GetParentNode();
+    Element* element =
+        firstRangeStartPoint.GetContainerOrContainerParentElement();
+    if (NS_WARN_IF(!element)) {
+      return NS_OK;
     }
-    if (!HTMLEditUtils::CanNodeContain(selectedNode, atom)) {
+    if (!HTMLEditUtils::CanNodeContain(*element, bigOrSmallTagName)) {
       return NS_OK;
     }
 
     // Manipulating text attributes on a collapsed selection only sets state
     // for the next text insertion
-    mTypeInState->SetProp(&atom, nullptr, u""_ns);
+    mTypeInState->SetProp(&bigOrSmallTagName, nullptr, u""_ns);
     return NS_OK;
   }
 
-  // Wrap with txn batching, rules sniffing, and selection preservation code
-  AutoPlaceholderBatch treatAsOneTransaction(
-      *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
   IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eSetTextProperty, nsIEditor::eNext, ignoredError);
@@ -2659,116 +2663,136 @@ nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
       !ignoredError.Failed(),
       "HTMLEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  AutoSelectionRestorer restoreSelectionLater(*this);
+  // TODO: We don't need AutoTransactionsConserveSelection here in the normal
+  //       cases, but removing this may cause the behavior with the legacy
+  //       mutation event listeners.  We should try to delete this in a bug.
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
-  // Loop through the ranges in the selection
-  AutoSelectionRangeArray arrayOfRanges(SelectionRef());
-  for (auto& range : arrayOfRanges.mRanges) {
+  AutoRangeArray selectionRanges(SelectionRef());
+  MOZ_ALWAYS_TRUE(selectionRanges.SaveAndTrackRanges(*this));
+  for (const OwningNonNull<nsRange>& domRange : selectionRanges.Ranges()) {
     // Adjust range to include any ancestors with entirely selected children
-    nsresult rv = PromoteInlineRange(*range);
-    if (NS_FAILED(rv)) {
+    if (NS_FAILED(PromoteInlineRange(*domRange))) {
       NS_WARNING("HTMLEditor::PromoteInlineRange() failed");
-      return rv;
+      // for consistency with setting/removing inline styles, we should keep
+      // handling the other ranges.
+      continue;
     }
 
-    // Check for easy case: both range endpoints in same text node
-    nsCOMPtr<nsINode> startNode = range->GetStartContainer();
-    nsCOMPtr<nsINode> endNode = range->GetEndContainer();
-    MOZ_ASSERT(startNode);
-    MOZ_ASSERT(endNode);
-    if (startNode == endNode && startNode->IsText()) {
+    EditorDOMRange range(domRange);
+    if (NS_WARN_IF(!range.IsPositioned())) {
+      continue;
+    }
+
+    if (range.InSameContainer() && range.StartRef().IsInTextNode()) {
       CreateElementResult wrapWithBigOrSmallElementResult =
-          RelativeFontChangeOnTextNode(
-              aDir, MOZ_KnownLive(*startNode->GetAsText()),
-              range->StartOffset(), range->EndOffset());
+          SetFontSizeOnTextNode(
+              MOZ_KnownLive(*range.StartRef().ContainerAs<Text>()),
+              range.StartRef().Offset(), range.EndRef().Offset(),
+              aIncrementOrDecrement);
       if (wrapWithBigOrSmallElementResult.isErr()) {
-        NS_WARNING("HTMLEditor::RelativeFontChangeOnTextNode() failed");
+        NS_WARNING("HTMLEditor::SetFontSizeOnTextNode() failed");
         return wrapWithBigOrSmallElementResult.unwrapErr();
       }
       // There is an AutoTransactionsConserveSelection instance so that we don't
       // need to update selection for this change.
       wrapWithBigOrSmallElementResult.IgnoreCaretPointSuggestion();
-    } else {
-      // Not the easy case.  Range not contained in single text node.  There
-      // are up to three phases here.  There are all the nodes reported by the
-      // subtree iterator to be processed.  And there are potentially a
-      // starting textnode and an ending textnode which are only partially
-      // contained by the range.
+      continue;
+    }
 
-      // Let's handle the nodes reported by the iterator.  These nodes are
-      // entirely contained in the selection range.  We build up a list of them
-      // (since doing operations on the document during iteration would perturb
-      // the iterator).
+    // Not the easy case.  Range not contained in single text node.  There
+    // are up to three phases here.  There are all the nodes reported by the
+    // subtree iterator to be processed.  And there are potentially a
+    // starting textnode and an ending textnode which are only partially
+    // contained by the range.
 
-      // Iterate range and build up array
-      ContentSubtreeIterator subtreeIter;
-      if (NS_SUCCEEDED(subtreeIter.Init(range))) {
-        nsTArray<OwningNonNull<nsIContent>> arrayOfContents;
-        for (; !subtreeIter.IsDone(); subtreeIter.Next()) {
-          if (NS_WARN_IF(!subtreeIter.GetCurrentNode()->IsContent())) {
-            return NS_ERROR_FAILURE;
-          }
-          OwningNonNull<nsIContent> content =
-              *subtreeIter.GetCurrentNode()->AsContent();
+    // Let's handle the nodes reported by the iterator.  These nodes are
+    // entirely contained in the selection range.  We build up a list of them
+    // (since doing operations on the document during iteration would perturb
+    // the iterator).
 
-          if (EditorUtils::IsEditableContent(content, EditorType::HTML)) {
-            arrayOfContents.AppendElement(content);
-          }
+    // Iterate range and build up array
+    ContentSubtreeIterator subtreeIter;
+    if (NS_SUCCEEDED(subtreeIter.Init(range.StartRef().ToRawRangeBoundary(),
+                                      range.EndRef().ToRawRangeBoundary()))) {
+      nsTArray<OwningNonNull<nsIContent>> arrayOfContents;
+      for (; !subtreeIter.IsDone(); subtreeIter.Next()) {
+        if (NS_WARN_IF(!subtreeIter.GetCurrentNode()->IsContent())) {
+          return NS_ERROR_FAILURE;
         }
+        OwningNonNull<nsIContent> content =
+            *subtreeIter.GetCurrentNode()->AsContent();
 
-        // Now that we have the list, do the font size change on each node
-        for (OwningNonNull<nsIContent>& content : arrayOfContents) {
-          // MOZ_KnownLive because of bug 1622253
-          Result<EditorDOMPoint, nsresult> fontChangeOnNodeResult =
-              SetFontSizeWithBigOrSmallElement(MOZ_KnownLive(content), aDir);
-          if (MOZ_UNLIKELY(fontChangeOnNodeResult.isErr())) {
-            NS_WARNING("HTMLEditor::SetFontSizeWithBigOrSmallElement() failed");
-            return fontChangeOnNodeResult.unwrapErr();
-          }
-          // There is an AutoTransactionsConserveSelection, so we don't need to
-          // update selection here.
+        if (EditorUtils::IsEditableContent(content, EditorType::HTML)) {
+          arrayOfContents.AppendElement(content);
         }
       }
-      // Now check the start and end parents of the range to see if they need
-      // to be separately handled (they do if they are text nodes, due to how
-      // the subtree iterator works - it will not have reported them).
-      if (startNode->IsText() && EditorUtils::IsEditableContent(
-                                     *startNode->AsText(), EditorType::HTML)) {
-        CreateElementResult wrapWithBigOrSmallElementResult =
-            RelativeFontChangeOnTextNode(
-                aDir, MOZ_KnownLive(*startNode->AsText()), range->StartOffset(),
-                startNode->Length());
-        if (wrapWithBigOrSmallElementResult.isErr()) {
-          NS_WARNING("HTMLEditor::RelativeFontChangeOnTextNode() failed");
-          return wrapWithBigOrSmallElementResult.unwrapErr();
+
+      // Now that we have the list, do the font size change on each node
+      for (OwningNonNull<nsIContent>& content : arrayOfContents) {
+        // MOZ_KnownLive because of bug 1622253
+        Result<EditorDOMPoint, nsresult> fontChangeOnNodeResult =
+            SetFontSizeWithBigOrSmallElement(MOZ_KnownLive(content),
+                                             aIncrementOrDecrement);
+        if (MOZ_UNLIKELY(fontChangeOnNodeResult.isErr())) {
+          NS_WARNING("HTMLEditor::SetFontSizeWithBigOrSmallElement() failed");
+          return fontChangeOnNodeResult.unwrapErr();
         }
-        // There is an AutoTransactionsConserveSelection instance so that we
-        // don't need to update selection for this change.
-        wrapWithBigOrSmallElementResult.IgnoreCaretPointSuggestion();
+        // There is an AutoTransactionsConserveSelection, so we don't need to
+        // update selection here.
       }
-      if (endNode->IsText() && EditorUtils::IsEditableContent(
-                                   *endNode->AsText(), EditorType::HTML)) {
-        CreateElementResult wrapWithBigOrSmallElementResult =
-            RelativeFontChangeOnTextNode(
-                aDir, MOZ_KnownLive(*endNode->AsText()), 0, range->EndOffset());
-        if (wrapWithBigOrSmallElementResult.isErr()) {
-          NS_WARNING("HTMLEditor::RelativeFontChangeOnTextNode() failed");
-          return wrapWithBigOrSmallElementResult.unwrapErr();
-        }
-        // There is an AutoTransactionsConserveSelection instance so that we
-        // don't need to update selection for this change.
-        wrapWithBigOrSmallElementResult.IgnoreCaretPointSuggestion();
+    }
+    // Now check the start and end parents of the range to see if they need
+    // to be separately handled (they do if they are text nodes, due to how
+    // the subtree iterator works - it will not have reported them).
+    if (range.StartRef().IsInTextNode() &&
+        !range.StartRef().IsEndOfContainer() &&
+        EditorUtils::IsEditableContent(*range.StartRef().ContainerAs<Text>(),
+                                       EditorType::HTML)) {
+      CreateElementResult wrapWithBigOrSmallElementResult =
+          SetFontSizeOnTextNode(
+              MOZ_KnownLive(*range.StartRef().ContainerAs<Text>()),
+              range.StartRef().Offset(),
+              range.StartRef().ContainerAs<Text>()->TextDataLength(),
+              aIncrementOrDecrement);
+      if (wrapWithBigOrSmallElementResult.isErr()) {
+        NS_WARNING("HTMLEditor::SetFontSizeOnTextNode() failed");
+        return wrapWithBigOrSmallElementResult.unwrapErr();
       }
+      // There is an AutoTransactionsConserveSelection instance so that we
+      // don't need to update selection for this change.
+      wrapWithBigOrSmallElementResult.IgnoreCaretPointSuggestion();
+    }
+    if (range.EndRef().IsInTextNode() && !range.EndRef().IsStartOfContainer() &&
+        EditorUtils::IsEditableContent(*range.EndRef().ContainerAs<Text>(),
+                                       EditorType::HTML)) {
+      CreateElementResult wrapWithBigOrSmallElementResult =
+          SetFontSizeOnTextNode(
+              MOZ_KnownLive(*range.EndRef().ContainerAs<Text>()), 0u,
+              range.EndRef().Offset(), aIncrementOrDecrement);
+      if (wrapWithBigOrSmallElementResult.isErr()) {
+        NS_WARNING("HTMLEditor::SetFontSizeOnTextNode() failed");
+        return wrapWithBigOrSmallElementResult.unwrapErr();
+      }
+      // There is an AutoTransactionsConserveSelection instance so that we
+      // don't need to update selection for this change.
+      wrapWithBigOrSmallElementResult.IgnoreCaretPointSuggestion();
     }
   }
 
-  return NS_OK;
+  MOZ_ASSERT(selectionRanges.HasSavedRanges());
+  selectionRanges.RestoreFromSavedRanges();
+  nsresult rv = selectionRanges.ApplyTo(SelectionRef());
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AutoRangeArray::ApplyTo() failed");
+  return rv;
 }
 
-CreateElementResult HTMLEditor::RelativeFontChangeOnTextNode(
-    FontSize aDir, Text& aTextNode, uint32_t aStartOffset,
-    uint32_t aEndOffset) {
+CreateElementResult HTMLEditor::SetFontSizeOnTextNode(
+    Text& aTextNode, uint32_t aStartOffset, uint32_t aEndOffset,
+    FontSize aIncrementOrDecrement) {
   // Don't need to do anything if no characters actually selected
   if (aStartOffset == aEndOffset) {
     return CreateElementResult::NotHandled();
@@ -2853,7 +2877,8 @@ CreateElementResult HTMLEditor::RelativeFontChangeOnTextNode(
 
   // Look for siblings that are correct type of node
   nsStaticAtom* const bigOrSmallTagName =
-      aDir == FontSize::incr ? nsGkAtoms::big : nsGkAtoms::small;
+      aIncrementOrDecrement == FontSize::incr ? nsGkAtoms::big
+                                              : nsGkAtoms::small;
   nsCOMPtr<nsIContent> sibling = HTMLEditUtils::GetPreviousSibling(
       *textNodeForTheRange, {WalkTreeOption::IgnoreNonEditableNode});
   if (sibling && sibling->IsHTMLElement(bigOrSmallTagName)) {
