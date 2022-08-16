@@ -2,7 +2,7 @@ error[E0599]: the method `as_dyn_error` exists for reference `&NotError`, but it
    --> tests/ui/source-enum-not-error.rs:10:9
     |
 4   | pub struct NotError;
-    | --------------------
+    | -------------------
     | |
     | doesn't satisfy `NotError: AsDynError`
     | doesn't satisfy `NotError: std::error::Error`
@@ -18,11 +18,5 @@ error[E0599]: the method `as_dyn_error` exists for reference `&NotError`, but it
 note: the following trait must be implemented
    --> $RUST/std/src/error.rs
     |
-    | / pub trait Error: Debug + Display {
-    | |     /// The lower-level source of this error, if any.
-    | |     ///
-    | |     /// # Examples
-...   |
-    | |     }
-    | | }
-    | |_^
+    | pub trait Error: Debug + Display {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

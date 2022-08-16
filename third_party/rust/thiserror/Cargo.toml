@@ -13,11 +13,16 @@
 edition = "2018"
 rust-version = "1.31"
 name = "thiserror"
-version = "1.0.31"
+version = "1.0.32"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "derive(Error)"
 documentation = "https://docs.rs/thiserror"
 readme = "README.md"
+keywords = [
+    "error",
+    "error-handling",
+    "derive",
+]
 categories = ["rust-patterns"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dtolnay/thiserror"
@@ -26,7 +31,7 @@ repository = "https://github.com/dtolnay/thiserror"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies.thiserror-impl]
-version = "=1.0.31"
+version = "=1.0.32"
 
 [dev-dependencies.anyhow]
 version = "1.0"
