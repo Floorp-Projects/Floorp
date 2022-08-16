@@ -268,3 +268,15 @@ impl From<()> for Value {
         Value::Null
     }
 }
+
+impl<T> From<Option<T>> for Value
+where
+    T: Into<Value>,
+{
+    fn from(opt: Option<T>) -> Self {
+        match opt {
+            None => Value::Null,
+            Some(value) => Into::into(value),
+        }
+    }
+}

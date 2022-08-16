@@ -648,8 +648,8 @@ macro_rules! deserialize_value_ref_number {
         where
             V: Visitor<'de>,
         {
-            match *self {
-                Value::Number(ref n) => n.deserialize_any(visitor),
+            match self {
+                Value::Number(n) => n.deserialize_any(visitor),
                 _ => Err(self.invalid_type(&visitor)),
             }
         }
@@ -659,8 +659,8 @@ macro_rules! deserialize_value_ref_number {
         where
             V: Visitor<'de>,
         {
-            match *self {
-                Value::Number(ref n) => n.$method(visitor),
+            match self {
+                Value::Number(n) => n.$method(visitor),
                 _ => self.deserialize_any(visitor),
             }
         }
@@ -710,13 +710,13 @@ impl<'de> serde::Deserializer<'de> for &'de Value {
     where
         V: Visitor<'de>,
     {
-        match *self {
+        match self {
             Value::Null => visitor.visit_unit(),
-            Value::Bool(v) => visitor.visit_bool(v),
-            Value::Number(ref n) => n.deserialize_any(visitor),
-            Value::String(ref v) => visitor.visit_borrowed_str(v),
-            Value::Array(ref v) => visit_array_ref(v, visitor),
-            Value::Object(ref v) => visit_object_ref(v, visitor),
+            Value::Bool(v) => visitor.visit_bool(*v),
+            Value::Number(n) => n.deserialize_any(visitor),
+            Value::String(v) => visitor.visit_borrowed_str(v),
+            Value::Array(v) => visit_array_ref(v, visitor),
+            Value::Object(v) => visit_object_ref(v, visitor),
         }
     }
 
@@ -755,8 +755,8 @@ impl<'de> serde::Deserializer<'de> for &'de Value {
     where
         V: Visitor<'de>,
     {
-        let (variant, value) = match *self {
-            Value::Object(ref value) => {
+        let (variant, value) = match self {
+            Value::Object(value) => {
                 let mut iter = value.into_iter();
                 let (variant, value) = match iter.next() {
                     Some(v) => v,
@@ -776,8 +776,8 @@ impl<'de> serde::Deserializer<'de> for &'de Value {
                 }
                 (variant, Some(value))
             }
-            Value::String(ref variant) => (variant, None),
-            ref other => {
+            Value::String(variant) => (variant, None),
+            other => {
                 return Err(serde::de::Error::invalid_type(
                     other.unexpected(),
                     &"string or map",
@@ -831,8 +831,8 @@ impl<'de> serde::Deserializer<'de> for &'de Value {
     where
         V: Visitor<'de>,
     {
-        match *self {
-            Value::String(ref v) => visitor.visit_borrowed_str(v),
+        match self {
+            Value::String(v) => visitor.visit_borrowed_str(v),
             _ => Err(self.invalid_type(&visitor)),
         }
     }
@@ -848,9 +848,9 @@ impl<'de> serde::Deserializer<'de> for &'de Value {
     where
         V: Visitor<'de>,
     {
-        match *self {
-            Value::String(ref v) => visitor.visit_borrowed_str(v),
-            Value::Array(ref v) => visit_array_ref(v, visitor),
+        match self {
+            Value::String(v) => visitor.visit_borrowed_str(v),
+            Value::Array(v) => visit_array_ref(v, visitor),
             _ => Err(self.invalid_type(&visitor)),
         }
     }
@@ -883,8 +883,8 @@ impl<'de> serde::Deserializer<'de> for &'de Value {
     where
         V: Visitor<'de>,
     {
-        match *self {
-            Value::Array(ref v) => visit_array_ref(v, visitor),
+        match self {
+            Value::Array(v) => visit_array_ref(v, visitor),
             _ => Err(self.invalid_type(&visitor)),
         }
     }
@@ -912,8 +912,8 @@ impl<'de> serde::Deserializer<'de> for &'de Value {
     where
         V: Visitor<'de>,
     {
-        match *self {
-            Value::Object(ref v) => visit_object_ref(v, visitor),
+        match self {
+            Value::Object(v) => visit_object_ref(v, visitor),
             _ => Err(self.invalid_type(&visitor)),
         }
     }
@@ -927,9 +927,9 @@ impl<'de> serde::Deserializer<'de> for &'de Value {
     where
         V: Visitor<'de>,
     {
-        match *self {
-            Value::Array(ref v) => visit_array_ref(v, visitor),
-            Value::Object(ref v) => visit_object_ref(v, visitor),
+        match self {
+            Value::Array(v) => visit_array_ref(v, visitor),
+            Value::Object(v) => visit_object_ref(v, visitor),
             _ => Err(self.invalid_type(&visitor)),
         }
     }
@@ -1274,11 +1274,11 @@ impl Value {
 
     #[cold]
     fn unexpected(&self) -> Unexpected {
-        match *self {
+        match self {
             Value::Null => Unexpected::Unit,
-            Value::Bool(b) => Unexpected::Bool(b),
-            Value::Number(ref n) => n.unexpected(),
-            Value::String(ref s) => Unexpected::Str(s),
+            Value::Bool(b) => Unexpected::Bool(*b),
+            Value::Number(n) => n.unexpected(),
+            Value::String(s) => Unexpected::Str(s),
             Value::Array(_) => Unexpected::Seq,
             Value::Object(_) => Unexpected::Map,
         }
