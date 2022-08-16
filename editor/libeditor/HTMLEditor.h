@@ -886,20 +886,19 @@ class HTMLEditor final : public EditorBase,
 
   /**
    * SplitAncestorStyledInlineElementsAtRangeEdges() splits all ancestor inline
-   * elements in the block at both aStartPoint and aEndPoint if given style
-   * matches with some of them.
+   * elements in the block at aRange if given style matches with some of them.
    *
-   * @param aStartPoint Start of range to split ancestor inline elements.
-   * @param aEndPoint   End of range to split ancestor inline elements.
+   * @param aRange      Ancestor inline elements of the start and end boundaries
+   *                    will be split.
    * @param aProperty   The style tag name which you want to split.  Set
    *                    nullptr if you want to split any styled elements.
    * @param aAttribute  Attribute name if aProperty has some styles like
    *                    nsGkAtoms::font.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT SplitRangeOffResult
-  SplitAncestorStyledInlineElementsAtRangeEdges(
-      const EditorDOMPoint& aStartPoint, const EditorDOMPoint& aEndPoint,
-      nsAtom* aProperty, nsAtom* aAttribute);
+  SplitAncestorStyledInlineElementsAtRangeEdges(const EditorDOMRange& aRange,
+                                                nsAtom* aProperty,
+                                                nsAtom* aAttribute);
 
   /**
    * SplitAncestorStyledInlineElementsAt() splits ancestor inline elements at

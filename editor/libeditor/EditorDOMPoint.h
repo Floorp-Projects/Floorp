@@ -1206,20 +1206,41 @@ class EditorDOMRangeBase final {
   }
 
   template <typename MaybeOtherPointType>
-  MOZ_NEVER_INLINE_DEBUG void SetStart(const MaybeOtherPointType& aStart) {
+  void SetStart(const MaybeOtherPointType& aStart) {
     mStart = aStart.template To<PointType>();
   }
+  void SetStart(PointType&& aStart) { mStart = std::move(aStart); }
   template <typename MaybeOtherPointType>
-  MOZ_NEVER_INLINE_DEBUG void SetEnd(const MaybeOtherPointType& aEnd) {
+  void SetEnd(const MaybeOtherPointType& aEnd) {
     mEnd = aEnd.template To<PointType>();
   }
+  void SetEnd(PointType&& aEnd) { mEnd = std::move(aEnd); }
   template <typename StartPointType, typename EndPointType>
-  MOZ_NEVER_INLINE_DEBUG void SetStartAndEnd(const StartPointType& aStart,
-                                             const EndPointType& aEnd) {
+  void SetStartAndEnd(const StartPointType& aStart, const EndPointType& aEnd) {
     MOZ_ASSERT_IF(aStart.IsSet() && aEnd.IsSet(),
                   aStart.EqualsOrIsBefore(aEnd));
     mStart = aStart.template To<PointType>();
     mEnd = aEnd.template To<PointType>();
+  }
+  template <typename StartPointType>
+  void SetStartAndEnd(const StartPointType& aStart, PointType&& aEnd) {
+    MOZ_ASSERT_IF(aStart.IsSet() && aEnd.IsSet(),
+                  aStart.EqualsOrIsBefore(aEnd));
+    mStart = aStart.template To<PointType>();
+    mEnd = std::move(aEnd);
+  }
+  template <typename EndPointType>
+  void SetStartAndEnd(PointType&& aStart, const EndPointType& aEnd) {
+    MOZ_ASSERT_IF(aStart.IsSet() && aEnd.IsSet(),
+                  aStart.EqualsOrIsBefore(aEnd));
+    mStart = std::move(aStart);
+    mEnd = aEnd.template To<PointType>();
+  }
+  void SetStartAndEnd(PointType&& aStart, PointType&& aEnd) {
+    MOZ_ASSERT_IF(aStart.IsSet() && aEnd.IsSet(),
+                  aStart.EqualsOrIsBefore(aEnd));
+    mStart = std::move(aStart);
+    mEnd = std::move(aEnd);
   }
   void Clear() {
     mStart.Clear();
@@ -1247,6 +1268,11 @@ class EditorDOMRangeBase final {
   bool InSameContainer() const {
     MOZ_ASSERT(IsPositioned());
     return IsPositioned() && mStart.GetContainer() == mEnd.GetContainer();
+  }
+  bool InAdjacentSiblings() const {
+    MOZ_ASSERT(IsPositioned());
+    return IsPositioned() &&
+           mStart.GetContainer()->GetNextSibling() == mEnd.GetContainer();
   }
   bool IsInContentNodes() const {
     MOZ_ASSERT(IsPositioned());

@@ -399,14 +399,21 @@ class MOZ_STACK_CLASS AutoTrackDOMRange final {
     mStartPointTracker.emplace(aRangeUpdater, &mStartPoint);
     mEndPointTracker.emplace(aRangeUpdater, &mEndPoint);
   }
-  ~AutoTrackDOMRange() {
-    if (!mRangeRefPtr && !mRangeOwningNonNull) {
-      // The destructor of the trackers will update automatically.
+  ~AutoTrackDOMRange() { FlushAndStopTracking(); }
+
+  void FlushAndStopTracking() {
+    if (!mStartPointTracker || !mEndPointTracker) {
       return;
     }
-    // Otherwise, destroy them now.
     mStartPointTracker.reset();
     mEndPointTracker.reset();
+    if (!mRangeRefPtr && !mRangeOwningNonNull) {
+      // This must be created with EditorDOMRange or EditorDOMPoints.  In the
+      // cases, destroying mStartPointTracker and mEndPointTracker has done
+      // everything which we need to do.
+      return;
+    }
+    // Otherwise, update the DOM ranges by ourselves.
     if (mRangeRefPtr) {
       (*mRangeRefPtr)
           ->SetStartAndEnd(mStartPoint.ToRawRangeBoundary(),
