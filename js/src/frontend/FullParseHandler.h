@@ -372,15 +372,8 @@ class FullParseHandler {
 
   ClassNodeType newClass(Node name, Node heritage,
                          LexicalScopeNodeType memberBlock,
-#ifdef ENABLE_DECORATORS
-                         ListNodeType decorators,
-#endif
                          const TokenPos& pos) {
-    return new_<ClassNode>(name, heritage, memberBlock,
-#ifdef ENABLE_DECORATORS
-                           decorators,
-#endif
-                           pos);
+    return new_<ClassNode>(name, heritage, memberBlock, pos);
   }
   ListNodeType newClassMemberList(uint32_t begin) {
     return new_<ListNode>(ParseNodeKind::ClassMemberList,
@@ -501,61 +494,31 @@ class FullParseHandler {
 
     checkAndSetIsDirectRHSAnonFunction(funNode);
 
-    return new_<ClassMethod>(
-        ParseNodeKind::DefaultConstructor, key, funNode, AccessorType::None,
-        /* isStatic = */ false, /* initializeIfPrivate = */ nullptr
-#ifdef ENABLE_DECORATORS
-        ,
-        /* decorators = */ nullptr
-#endif
-    );
+    return new_<ClassMethod>(ParseNodeKind::DefaultConstructor, key, funNode,
+                             AccessorType::None,
+                             /* isStatic = */ false, nullptr);
   }
 
   [[nodiscard]] ClassMethod* newClassMethodDefinition(
       Node key, FunctionNodeType funNode, AccessorType atype, bool isStatic,
-      mozilla::Maybe<FunctionNodeType> initializerIfPrivate
-#ifdef ENABLE_DECORATORS
-      ,
-      ListNodeType decorators
-#endif
-  ) {
+      mozilla::Maybe<FunctionNodeType> initializerIfPrivate) {
     MOZ_ASSERT(isUsableAsObjectPropertyName(key));
 
     checkAndSetIsDirectRHSAnonFunction(funNode);
 
     if (initializerIfPrivate.isSome()) {
       return new_<ClassMethod>(ParseNodeKind::ClassMethod, key, funNode, atype,
-                               isStatic, initializerIfPrivate.value()
-#ifdef ENABLE_DECORATORS
-                                             ,
-                               decorators
-#endif
-      );
+                               isStatic, initializerIfPrivate.value());
     }
     return new_<ClassMethod>(ParseNodeKind::ClassMethod, key, funNode, atype,
-                             isStatic, /* initializeIfPrivate = */ nullptr
-#ifdef ENABLE_DECORATORS
-                             ,
-                             decorators
-#endif
-    );
+                             isStatic, nullptr);
   }
 
   [[nodiscard]] ClassField* newClassFieldDefinition(
-      Node name, FunctionNodeType initializer, bool isStatic
-#ifdef ENABLE_DECORATORS
-      ,
-      ListNodeType decorators
-#endif
-  ) {
+      Node name, FunctionNodeType initializer, bool isStatic) {
     MOZ_ASSERT(isUsableAsObjectPropertyName(name));
 
-    return new_<ClassField>(name, initializer, isStatic
-#if ENABLE_DECORATORS
-                            ,
-                            decorators
-#endif
-    );
+    return new_<ClassField>(name, initializer, isStatic);
   }
 
   [[nodiscard]] StaticClassBlock* newStaticClassBlock(FunctionNodeType block) {
