@@ -230,14 +230,9 @@ module.exports = {
       ],
     },
     {
-      files: [
-        "netwerk/cookie/test/browser/**",
-        "netwerk/test/browser/**",
-        "netwerk/test/mochitests/**",
-        "netwerk/test/unit*/**",
-      ],
+      files: ["netwerk/test/mochitests/**", "netwerk/test/unit*/**"],
       rules: {
-        "no-shadow": "off",
+        "no-shadow": "warn",
       },
     },
     {
