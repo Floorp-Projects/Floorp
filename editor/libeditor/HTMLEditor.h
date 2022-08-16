@@ -3890,11 +3890,18 @@ class HTMLEditor final : public EditorBase,
                                                        nsINode* aNode);
 
   /**
-   * Helper routines for inline style.
+   * SetInlinePropertyOnTextNode() splits aData if aStartOffset and/or
+   * aEndOffset are not start/end of aData.  Then, the text node which was
+   * contained in the range is wrapped into an element which applies the style.
+   *
+   * @return            The result of splitting aData.  Note that middle text
+   *                    node may be moved in an element, so left/middle/right
+   *                    nodes may not be siblings.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SetInlinePropertyOnTextNode(
-      Text& aData, uint32_t aStartOffset, uint32_t aEndOffset,
-      nsAtom& aProperty, nsAtom* aAttribute, const nsAString& aValue);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT SplitRangeOffFromNodeResult
+  SetInlinePropertyOnTextNode(Text& aData, uint32_t aStartOffset,
+                              uint32_t aEndOffset, nsAtom& aProperty,
+                              nsAtom* aAttribute, const nsAString& aValue);
 
   nsresult PromoteInlineRange(nsRange& aRange);
   nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange);
