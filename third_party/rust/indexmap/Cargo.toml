@@ -10,26 +10,11 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
+rust-version = "1.56"
 name = "indexmap"
-version = "1.8.2"
-authors = [
-    "bluss",
-    "Josh Stone <cuviper@gmail.com>",
-]
-build = "build.rs"
-description = """
-A hash table with consistent order and fast iteration.
-
-The indexmap is a hash table where the iteration order of the key-value
-pairs is independent of the hash values of the keys. It has the usual
-hash table functionality, it preserves insertion order except after
-removals, and it allows lookup of its elements by either hash table key
-or numerical index. A corresponding hash set type is also provided.
-
-This crate was initially published under the name ordermap, but it was renamed to
-indexmap.
-"""
+version = "1.9.1"
+description = "A hash table with consistent order and fast iteration."
 documentation = "https://docs.rs/indexmap/"
 keywords = [
     "hashmap",
@@ -39,8 +24,9 @@ categories = [
     "data-structures",
     "no-std",
 ]
-license = "Apache-2.0/MIT"
+license = "Apache-2.0 OR MIT"
 repository = "https://github.com/bluss/indexmap"
+resolver = "2"
 
 [package.metadata.release]
 no-dev-version = true
@@ -59,7 +45,7 @@ debug = true
 bench = false
 
 [dependencies.hashbrown]
-version = "0.11"
+version = "0.12"
 features = ["raw"]
 default-features = false
 
