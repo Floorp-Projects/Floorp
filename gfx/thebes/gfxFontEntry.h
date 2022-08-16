@@ -58,9 +58,6 @@ namespace fontlist {
 struct Face;
 struct Family;
 }  // namespace fontlist
-namespace gfx {
-struct DeviceColor;
-}
 }  // namespace mozilla
 
 typedef struct gr_face gr_face;

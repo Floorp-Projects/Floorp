@@ -6,27 +6,36 @@
 #ifndef COLR_FONTS_H
 #define COLR_FONTS_H
 
-#include "nsTArray.h"
+#include "mozilla/gfx/2D.h"
 
 struct hb_blob_t;
 
 namespace mozilla {
+
+namespace layout {
+class TextDrawTarget;
+}
+
 namespace gfx {
-struct DeviceColor;
+struct COLRBaseGlyphRecord;
 
 class COLRFonts {
  public:
   // for color layer from glyph using COLR and CPAL tables
   static bool ValidateColorGlyphs(hb_blob_t* aCOLR, hb_blob_t* aCPAL);
-  static bool GetColorGlyphLayers(
-      hb_blob_t* aCOLR, hb_blob_t* aCPAL, uint32_t aGlyphId,
-      const mozilla::gfx::DeviceColor& aDefaultColor,
-      nsTArray<uint16_t>& aGlyphs,
-      nsTArray<mozilla::gfx::DeviceColor>& aColors);
-  static bool HasColorLayersForGlyph(hb_blob_t* aCOLR, uint32_t aGlyphId);
+
+  static const COLRBaseGlyphRecord* GetGlyphLayers(hb_blob_t* aCOLR,
+                                                   uint32_t aGlyphId);
+
+  static bool PaintGlyphLayers(
+      hb_blob_t* aCOLR, hb_blob_t* aCPAL, const COLRBaseGlyphRecord* aLayers,
+      DrawTarget* aDrawTarget, layout::TextDrawTarget* aTextDrawer,
+      ScaledFont* aScaledFont, DrawOptions aDrawOptions,
+      const sRGBColor& aCurrentColor, const Point& aPoint);
 };
 
 }  // namespace gfx
+
 }  // namespace mozilla
 
 #endif  // COLR_FONTS_H
