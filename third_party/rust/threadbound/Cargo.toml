@@ -13,12 +13,16 @@
 edition = "2018"
 rust-version = "1.31"
 name = "threadbound"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "Make any value Sync but only available on its original thread."
 documentation = "https://docs.rs/threadbound"
 readme = "README.md"
-categories = ["rust-patterns"]
+keywords = ["sync"]
+categories = [
+    "concurrency",
+    "rust-patterns",
+]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dtolnay/threadbound"
 
