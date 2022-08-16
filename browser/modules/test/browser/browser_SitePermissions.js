@@ -21,7 +21,10 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
 
   Services.prefs.setIntPref("permissions.default.shortcuts", 2);
 
+  let browser = tab.linkedBrowser;
+
   SitePermissions.setForPrincipal(principal, "camera", SitePermissions.ALLOW);
+
   SitePermissions.setForPrincipal(
     principal,
     "cookie",
@@ -42,9 +45,7 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
 
   SitePermissions.setForPrincipal(principal, "xr", SitePermissions.ALLOW);
 
-  let permissions = SitePermissions.getAllPermissionDetailsForBrowser(
-    tab.linkedBrowser
-  );
+  let permissions = SitePermissions.getAllPermissionDetailsForBrowser(browser);
 
   let camera = permissions.find(({ id }) => id === "camera");
   Assert.deepEqual(camera, {
@@ -56,9 +57,7 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
 
   // Check that removed permissions (State.UNKNOWN) are skipped.
   SitePermissions.removeFromPrincipal(principal, "camera");
-  permissions = SitePermissions.getAllPermissionDetailsForBrowser(
-    tab.linkedBrowser
-  );
+  permissions = SitePermissions.getAllPermissionDetailsForBrowser(browser);
 
   camera = permissions.find(({ id }) => id === "camera");
   Assert.equal(camera, undefined);
@@ -113,6 +112,50 @@ add_task(async function testGetAllPermissionDetailsForBrowser() {
   Services.prefs.clearUserPref("permissions.default.shortcuts");
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(async function testTemporaryChangeEvent() {
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+    "https://example.com"
+  );
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    principal.spec
+  );
+
+  let browser = tab.linkedBrowser;
+
+  let changeEventCount = 0;
+  function listener() {
+    changeEventCount++;
+  }
+
+  browser.addEventListener("PermissionStateChange", listener);
+
+  // Test browser-specific permissions.
+  SitePermissions.setForPrincipal(
+    browser.contentPrincipal,
+    "autoplay-media",
+    SitePermissions.BLOCK,
+    SitePermissions.SCOPE_GLOBAL,
+    browser
+  );
+  is(changeEventCount, 1, "Should've changed");
+
+  // Setting the same value shouldn't dispatch a change event.
+  SitePermissions.setForPrincipal(
+    browser.contentPrincipal,
+    "autoplay-media",
+    SitePermissions.BLOCK,
+    SitePermissions.SCOPE_GLOBAL,
+    browser
+  );
+  is(changeEventCount, 1, "Shouldn't have changed");
+
+  browser.removeEventListener("PermissionStateChange", listener);
+
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function testInvalidPrincipal() {
