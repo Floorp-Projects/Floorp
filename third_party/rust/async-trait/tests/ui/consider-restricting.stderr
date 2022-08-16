@@ -9,7 +9,7 @@ note: captured value is not `Send`
    |
 16 |     async fn publish<T: IntoUrl>(&self, url: T) {}
    |                                         ^^^ has type `T` which is not `Send`
-   = note: required for the cast to the object type `dyn Future<Output = ()> + Send`
+   = note: required for the cast from `impl Future<Output = ()>` to the object type `dyn Future<Output = ()> + Send`
 help: consider further restricting this bound
    |
 16 |     async fn publish<T: IntoUrl + std::marker::Send>(&self, url: T) {}
@@ -26,7 +26,7 @@ note: captured value is not `Send`
    |
 23 |     async fn publish<T>(&self, url: T) {}
    |                                ^^^ has type `T` which is not `Send`
-   = note: required for the cast to the object type `dyn Future<Output = ()> + Send`
+   = note: required for the cast from `impl Future<Output = ()>` to the object type `dyn Future<Output = ()> + Send`
 help: consider further restricting this bound
    |
 23 |     async fn publish<T + std::marker::Send>(&self, url: T) {}
