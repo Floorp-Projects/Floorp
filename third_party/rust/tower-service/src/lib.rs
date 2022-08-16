@@ -1,11 +1,11 @@
-#![doc(html_root_url = "https://docs.rs/tower-service/0.3.1")]
 #![warn(
     missing_debug_implementations,
     missing_docs,
     rust_2018_idioms,
     unreachable_pub
 )]
-#![deny(broken_intra_doc_links)]
+#![forbid(unsafe_code)]
+// `rustdoc::broken_intra_doc_links` is checked on CI
 
 //! Definition of the core `Service` trait to Tower
 //!
@@ -231,6 +231,83 @@ use std::task::{Context, Poll};
 /// `Service` provides a mechanism by which the caller is able to coordinate
 /// readiness. `Service::poll_ready` returns `Ready` if the service expects that
 /// it is able to process a request.
+///
+/// # Be careful when cloning inner services
+///
+/// Services are permitted to panic if `call` is invoked without obtaining `Poll::Ready(Ok(()))`
+/// from `poll_ready`. You should therefore be careful when cloning services for example to move
+/// them into boxed futures. Even though the original service is ready, the clone might not be.
+///
+/// Therefore this kind of code is wrong and might panic:
+///
+/// ```rust
+/// # use std::pin::Pin;
+/// # use std::task::{Poll, Context};
+/// # use std::future::Future;
+/// # use tower_service::Service;
+/// #
+/// struct Wrapper<S> {
+///     inner: S,
+/// }
+///
+/// impl<R, S> Service<R> for Wrapper<S>
+/// where
+///     S: Service<R> + Clone + 'static,
+///     R: 'static,
+/// {
+///     type Response = S::Response;
+///     type Error = S::Error;
+///     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
+///
+///     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+///         Poll::Ready(Ok(()))
+///     }
+///
+///     fn call(&mut self, req: R) -> Self::Future {
+///         let mut inner = self.inner.clone();
+///         Box::pin(async move {
+///             // `inner` might not be ready since its a clone
+///             inner.call(req).await
+///         })
+///     }
+/// }
+/// ```
+///
+/// You should instead use [`std::mem::replace`] to take the service that was ready:
+///
+/// ```rust
+/// # use std::pin::Pin;
+/// # use std::task::{Poll, Context};
+/// # use std::future::Future;
+/// # use tower_service::Service;
+/// #
+/// struct Wrapper<S> {
+///     inner: S,
+/// }
+///
+/// impl<R, S> Service<R> for Wrapper<S>
+/// where
+///     S: Service<R> + Clone + 'static,
+///     R: 'static,
+/// {
+///     type Response = S::Response;
+///     type Error = S::Error;
+///     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
+///
+///     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+///         Poll::Ready(Ok(()))
+///     }
+///
+///     fn call(&mut self, req: R) -> Self::Future {
+///         let clone = self.inner.clone();
+///         // take the service that was ready
+///         let mut inner = std::mem::replace(&mut self.inner, clone);
+///         Box::pin(async move {
+///             inner.call(req).await
+///         })
+///     }
+/// }
+/// ```
 pub trait Service<Request> {
     /// Responses given by the service.
     type Response;
@@ -254,6 +331,12 @@ pub trait Service<Request> {
     /// Once `poll_ready` returns `Poll::Ready(Ok(()))`, a request may be dispatched to the
     /// service using `call`. Until a request is dispatched, repeated calls to
     /// `poll_ready` must return either `Poll::Ready(Ok(()))` or `Poll::Ready(Err(_))`.
+    ///
+    /// Note that `poll_ready` may reserve shared resources that are consumed in a subsequent
+    /// invocation of `call`. Thus, it is critical for implementations to not assume that `call`
+    /// will always be invoked and to ensure that such resources are released if the service is
+    /// dropped before `call` is invoked or the future returned by `call` is dropped before it
+    /// is polled.
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>>;
 
     /// Process the request and return the response asynchronously.

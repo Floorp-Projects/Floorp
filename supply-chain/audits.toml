@@ -655,6 +655,11 @@ criteria = "safe-to-deploy"
 version = "0.1.0"
 notes = "Simple algorithm crate with no unsafe code or capability usage."
 
+[[audits.tower-service]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-run"
+delta = "0.3.1 -> 0.3.2"
+
 [[audits.tracy-rs]]
 who = "Glenn Watson <git@intuitionlibrary.com>"
 criteria = "safe-to-deploy"

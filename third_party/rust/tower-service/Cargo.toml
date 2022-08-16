@@ -3,27 +3,32 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 edition = "2018"
 name = "tower-service"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Tower Maintainers <team@tower-rs.com>"]
-description = "Trait representing an asynchronous, request / response based, client or server.\n"
+description = """
+Trait representing an asynchronous, request / response based, client or server.
+"""
 homepage = "https://github.com/tower-rs/tower"
-documentation = "https://docs.rs/tower-service/0.3.1"
+documentation = "https://docs.rs/tower-service/0.3.2"
 readme = "README.md"
-categories = ["asynchronous", "network-programming"]
+categories = [
+    "asynchronous",
+    "network-programming",
+]
 license = "MIT"
 repository = "https://github.com/tower-rs/tower"
 
 [dependencies]
+
 [dev-dependencies.futures]
 version = "0.3"
 
@@ -32,6 +37,10 @@ version = "0.2"
 
 [dev-dependencies.tokio]
 version = "1"
+features = [
+    "macros",
+    "time",
+]
 
 [dev-dependencies.tower-layer]
 version = "0.3"
