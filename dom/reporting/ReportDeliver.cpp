@@ -111,7 +111,7 @@ class ReportJSONWriter final : public JSONWriter {
                     const Span<const char>& aJSON) {
     Separator();
     PropertyNameAndColon(aProperty);
-    mWriter->Write(aJSON);
+    mWriter.Write(aJSON);
   }
 };
 
