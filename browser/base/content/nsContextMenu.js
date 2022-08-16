@@ -1390,15 +1390,13 @@ class nsContextMenu {
     return params;
   }
 
-  // Open linked-to URL in a new window.
-  openLink() {
-    let params;
+  _getGlobalHistoryOptions() {
     if (this.isSponsoredLink) {
-      params = {
+      return {
         globalHistoryOptions: { triggeringSponsoredURL: this.linkURL },
       };
     } else if (this.browser.hasAttribute("triggeringSponsoredURL")) {
-      params = {
+      return {
         globalHistoryOptions: {
           triggeringSponsoredURL: this.browser.getAttribute(
             "triggeringSponsoredURL"
@@ -1409,6 +1407,12 @@ class nsContextMenu {
         },
       };
     }
+    return {};
+  }
+
+  // Open linked-to URL in a new window.
+  openLink() {
+    const params = this._getGlobalHistoryOptions();
 
     openLinkIn(this.linkURL, "window", this._openLinkInParameters(params));
   }
@@ -1426,14 +1430,7 @@ class nsContextMenu {
   openLinkInTab(event) {
     let params = {
       userContextId: parseInt(event.target.getAttribute("data-usercontextid")),
-      globalHistoryOptions: {
-        triggeringSponsoredURL: this.browser.getAttribute(
-          "triggeringSponsoredURL"
-        ),
-        triggeringSponsoredURLVisitTimeMS: this.browser.getAttribute(
-          "triggeringSponsoredURLVisitTimeMS"
-        ),
-      },
+      ...this._getGlobalHistoryOptions(),
     };
 
     openLinkIn(this.linkURL, "tab", this._openLinkInParameters(params));
