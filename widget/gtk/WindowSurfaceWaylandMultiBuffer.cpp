@@ -266,7 +266,8 @@ void WindowSurfaceWaylandMB::Commit(
   mFrameInProcess = false;
 
   MozContainer* container = mWindow->GetMozContainer();
-  wl_surface* waylandSurface = moz_container_wayland_surface_lock(container);
+  MozContainerSurfaceLock lock(container);
+  struct wl_surface* waylandSurface = lock.GetSurface();
   if (!waylandSurface) {
     LOGWAYLAND(
         "WindowSurfaceWaylandMB::Commit [%p] frame queued: can't lock "
@@ -274,7 +275,7 @@ void WindowSurfaceWaylandMB::Commit(
         (void*)mWindow.get());
     if (!mCallbackRequested) {
       RefPtr<WindowSurfaceWaylandMB> self(this);
-      moz_container_wayland_add_initial_draw_callback(
+      moz_container_wayland_add_initial_draw_callback_locked(
           container, [self, aInvalidRegion]() -> void {
             MutexAutoLock lock(self->mSurfaceLock);
             if (!self->mFrameInProcess) {
@@ -301,7 +302,6 @@ void WindowSurfaceWaylandMB::Commit(
 
   moz_container_wayland_set_scale_factor_locked(container);
   mInProgressBuffer->AttachAndCommit(waylandSurface);
-  moz_container_wayland_surface_unlock(container, &waylandSurface);
 
   mInProgressBuffer->ResetBufferAge();
   mFrontBuffer = mInProgressBuffer;
