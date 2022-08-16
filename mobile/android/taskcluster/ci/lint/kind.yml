@@ -45,8 +45,10 @@ tasks:
     detektAndKtlint:
         description: 'Running detekt and ktlint over all modules'
         run:
-            using: gradlew
             gradlew: [detekt, ktlint, githubLintDetektDetails]
+            pre-gradlew:
+                - ["cd", "android-components"]
+            using: gradlew
         treeherder:
             symbol: detektKtlint
         worker:

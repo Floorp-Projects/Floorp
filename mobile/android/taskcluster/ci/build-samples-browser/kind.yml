@@ -26,6 +26,8 @@ task-defaults:
             - android-gradle-dependencies
     include-coverage: true
     run:
+        pre-gradlew:
+            - ["cd", "android-components"]
         using: gradlew
         use-caches: false
     run-on-tasks-for: [github-pull-request, github-push]
