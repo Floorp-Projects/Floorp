@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.tabstray
 
-import androidx.annotation.VisibleForTesting
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import org.mozilla.fenix.GleanMetrics.Metrics
@@ -44,17 +43,4 @@ class TabsTrayMiddleware : Middleware<TabsTrayState, TabsTrayAction> {
             }
         }
     }
-
-    @Suppress("MagicNumber")
-    @VisibleForTesting
-    /**
-     * This follows the logic outlined in metrics.yaml for "search_terms.group_size_distribution"
-     */
-    internal fun generateTabGroupSizeMappedValue(size: Int): Long =
-        when (size) {
-            2 -> 1L
-            in 3..5 -> 2L
-            in 6..10 -> 3L
-            else -> 4L
-        }
 }

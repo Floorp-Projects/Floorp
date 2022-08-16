@@ -51,23 +51,6 @@ class TabsTrayMiddlewareTest {
     }
 
     @Test
-    fun testGenerateTabGroupSizeMappedValue() {
-        assertEquals(1L, tabsTrayMiddleware.generateTabGroupSizeMappedValue(2))
-        assertEquals(2L, tabsTrayMiddleware.generateTabGroupSizeMappedValue(3))
-        assertEquals(2L, tabsTrayMiddleware.generateTabGroupSizeMappedValue(4))
-        assertEquals(2L, tabsTrayMiddleware.generateTabGroupSizeMappedValue(5))
-        assertEquals(3L, tabsTrayMiddleware.generateTabGroupSizeMappedValue(6))
-        assertEquals(3L, tabsTrayMiddleware.generateTabGroupSizeMappedValue(7))
-        assertEquals(3L, tabsTrayMiddleware.generateTabGroupSizeMappedValue(8))
-        assertEquals(3L, tabsTrayMiddleware.generateTabGroupSizeMappedValue(9))
-        assertEquals(3L, tabsTrayMiddleware.generateTabGroupSizeMappedValue(10))
-        assertEquals(4L, tabsTrayMiddleware.generateTabGroupSizeMappedValue(11))
-        assertEquals(4L, tabsTrayMiddleware.generateTabGroupSizeMappedValue(12))
-        assertEquals(4L, tabsTrayMiddleware.generateTabGroupSizeMappedValue(20))
-        assertEquals(4L, tabsTrayMiddleware.generateTabGroupSizeMappedValue(50))
-    }
-
-    @Test
     fun `WHEN multi select mode from menu is entered THEN relevant metrics are collected`() {
         assertNull(TabsTray.enterMultiselectMode.testGetValue())
 
