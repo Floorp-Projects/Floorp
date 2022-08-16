@@ -1,0 +1,49 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsICookieBannerRule.idl"
+#include "nsICookieRule.idl"
+#include "nsIURI.idl"
+
+/**
+ * Service singleton which owns the cookie banner feature.
+ * This service owns the cookie banner handling rules.
+ * It initializes both the component for importing rules
+ * (nsICookieBannerListService) and injecting cookies (nsICookieInjector).
+ */
+[scriptable, uuid(eac9cdc4-ecee-49f2-91da-7627e15c1f3c)]
+interface nsICookieBannerService : nsISupports {
+
+  /**
+   * Modes for cookie banner handling
+   * MODE_DISABLED - No cookie banner handling, service disabled.
+   * MODE_REJECT - Only handle banners where selecting "reject all" is possible.
+   * MODE_REJECT_OR_ACCEPT - Prefer selecting "reject all", if not possible
+   * fall back to "accept all".
+   */
+  cenum Modes : 8 {
+    MODE_DISABLED,
+    MODE_REJECT,
+    MODE_REJECT_OR_ACCEPT,
+  };
+
+  /**
+   * Getter for a list of all cookie banner rules. This includes both opt-in and opt-out rules.
+   */
+  readonly attribute Array<nsICookieBannerRule> rules;
+
+  /**
+   * Look up all cookie rules for a given URI. Depending on the MODE_ this will
+   * return none, only reject rules or accept rules if there is no reject rule
+   * available.
+   */
+  Array<nsICookieRule> getCookiesForURI(in nsIURI aURI);
+
+  /**
+   * Lookup or insert an empty nsICookieBannerRule and return it.
+   * Used by the CookieBannerListService to create and populate the rules.
+   */
+  nsICookieBannerRule lookupOrInsertRuleForDomain(in ACString aDomain);
+};

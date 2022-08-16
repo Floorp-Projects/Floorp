@@ -1,0 +1,47 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Privacy: Anti-Tracking")
+
+XPIDL_SOURCES += [
+    "nsICookieBannerListService.idl",
+    "nsICookieBannerRule.idl",
+    "nsICookieBannerService.idl",
+    "nsICookieRule.idl",
+]
+
+XPIDL_MODULE = "toolkit_cookiebanners"
+
+EXTRA_JS_MODULES += [
+    "CookieBannerListService.jsm",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
+
+EXPORTS.mozilla += [
+    "nsCookieBannerRule.h",
+    "nsCookieBannerService.h",
+    "nsCookieInjector.h",
+    "nsCookieRule.h",
+]
+
+UNIFIED_SOURCES += [
+    "nsCookieBannerRule.cpp",
+    "nsCookieBannerService.cpp",
+    "nsCookieInjector.cpp",
+    "nsCookieRule.cpp",
+]
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+LOCAL_INCLUDES += ["/netwerk/base", "/netwerk/cookie"]
+
+FINAL_LIBRARY = "xul"
+
+REQUIRES_UNIFIED_BUILD = True

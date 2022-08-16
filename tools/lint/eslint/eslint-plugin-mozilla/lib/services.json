@@ -11,6 +11,7 @@
     "nsIClearDataService": "clearData",
     "nsIClipboard": "clipboard",
     "nsIConsoleService": "console",
+    "nsICookieBannerService": "cookieBanners",
     "nsICookieManager": "cookies",
     "nsICookieService": "cookies",
     "nsIDOMRequestService": "DOMRequest",

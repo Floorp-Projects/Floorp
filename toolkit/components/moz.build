@@ -27,6 +27,7 @@ DIRS += [
     "certviewer",
     "cleardata",
     "clearsitedata",
+    "cookiebanners",
     "commandlines",
     "contentprefs",
     "contextualidentity",

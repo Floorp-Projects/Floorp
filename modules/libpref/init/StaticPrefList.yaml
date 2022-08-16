@@ -1850,6 +1850,33 @@
   mirror: always
 
 #---------------------------------------------------------------------------
+# Prefs starting with "cookiebanners."
+#---------------------------------------------------------------------------
+
+# Controls the cookie banner handling mode.
+# 0: Disables all cookie banner handling.
+# 1: Reject-all if possible, otherwise do nothing.
+# 2: Reject-all if possible, otherwise accept-all.
+- name: cookiebanners.service.mode
+  type: uint32_t
+  value: 0
+  mirror: always
+
+# Enables the cookie banner cookie injector.
+- name: cookiebanners.cookieInjector.enabled
+  type: bool
+  value: true
+  mirror: always
+
+# By default, how many seconds in the future cookies should expire after they
+# have been injected. Defaults to 12 months. Individual cookie rules may
+# override this.
+- name: cookiebanners.cookieInjector.defaultExpiryRelative
+  type: uint32_t
+  value: 31536000
+  mirror: always
+
+#---------------------------------------------------------------------------
 # Prefs starting with "datareporting."
 #---------------------------------------------------------------------------
 

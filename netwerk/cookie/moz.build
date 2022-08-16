@@ -20,6 +20,7 @@ XPIDL_MODULE = "necko_cookie"
 
 
 EXPORTS.mozilla.net = [
+    "Cookie.h",
     "CookieJarSettings.h",
     "CookieKey.h",
     "CookiePersistentStorage.h",

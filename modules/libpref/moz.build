@@ -36,6 +36,7 @@ pref_groups = [
     "clipboard",
     "content",
     "converter",
+    "cookiebanners",
     "datareporting",
     "device",
     "devtools",

@@ -1,0 +1,53 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsICookieRule.idl"
+
+/**
+ * A rule containing instructions on how to handle a cookie banner for a specific
+ * domain.
+ */
+
+[builtinclass, scriptable, uuid(eb1904db-e0d1-4760-a721-db76b1ca3e94)]
+interface nsICookieBannerRule : nsISupports {
+    // Domain of the site to handle the cookie banner for.
+    readonly attribute ACString domain;
+
+    // Cookies that reflect the opt-out or "reject all" state for the cookie baner.
+    readonly attribute Array<nsICookieRule> cookiesOptOut;
+    // Cookies that reflect the opt-in or "accept all" state for the cookie banner.
+    readonly attribute Array<nsICookieRule> cookiesOptIn;
+
+    /**
+     * Clear both lists of opt-in and opt-out cookies.
+     */
+    void clearCookies();
+
+    /**
+     * Add an opt-in or opt-out cookie to the rule.
+
+     * aIsOptOut - Whether this is an opt-out cookie (true) or opt-in cookie (false).
+     * aExpiryRelative - See nsICookieRule.
+     * aUnsetValue - See nsICookieRule.
+     * For a description of the other fields see nsICookieManager#addNative.
+     */
+    void addCookie(in boolean     aIsOptOut,
+                   in AUTF8String aHost,
+                   in ACString    aName,
+                   in AUTF8String aValue,
+                   [optional] in AUTF8String aPath,
+                   [optional] in int64_t     aExpiryRelative,
+                   [optional] in AUTF8String aUnsetValue,
+                   [optional] in boolean     aIsSecure,
+                   [optional] in boolean     aIsHttpOnly,
+                   [optional] in boolean     aIsSession,
+                   [optional] in int32_t     aSameSite,
+                   [optional] in nsICookie_schemeType aSchemeMap);
+
+    // TODO: additional rule types here e.g. for clicking.
+};
+
