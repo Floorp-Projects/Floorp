@@ -874,8 +874,8 @@ class HTMLEditor final : public EditorBase,
    */
   enum class FontSize { incr, decr };
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
-  RelativeFontChangeOnTextNode(FontSize aDir, Text& aTextNode,
-                               uint32_t aStartOffset, uint32_t aEndOffset);
+  SetFontSizeOnTextNode(Text& aTextNode, uint32_t aStartOffset,
+                        uint32_t aEndOffset, FontSize aIncrementOrDecrement);
 
   /**
    * @return            A suggest point to put caret.
@@ -3880,7 +3880,8 @@ class HTMLEditor final : public EditorBase,
   /**
    * Increase/decrease the font size of selection.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult RelativeFontChange(FontSize aDir);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  IncrementOrDecrementFontSizeAsSubAction(FontSize aIncrementOrDecrement);
 
   /**
    * Wrap aContent in <big> or <small> element and make children of
