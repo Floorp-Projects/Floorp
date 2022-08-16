@@ -1271,6 +1271,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   ClassNodeType classDefinition(YieldHandling yieldHandling,
                                 ClassContext classContext,
                                 DefaultHandling defaultHandling);
+
   struct ClassInitializedMembers {
     // The number of instance class fields.
     size_t instanceFields = 0;
