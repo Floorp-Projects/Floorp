@@ -3,7 +3,7 @@ use core::{
     mem::{MaybeUninit, transmute},
     ptr::{drop_in_place, write},
 };
-use std::intrinsics::copy_nonoverlapping;
+use std::ptr::copy_nonoverlapping;
 
 /// Guard-struct used for correctly initialize uninitialized memory and `drop` it when guard goes out of scope.
 /// Usually, you *should not* use this struct to handle your memory.
