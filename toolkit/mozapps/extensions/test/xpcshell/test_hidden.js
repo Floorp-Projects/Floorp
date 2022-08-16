@@ -93,7 +93,24 @@ add_task(
         expectError: true,
       },
       {
-        title: "hidden and no browser_action",
+        title: "hidden and page_action",
+        manifest: {
+          hidden: true,
+          page_action: {},
+        },
+        expectError: true,
+      },
+      {
+        title: "hidden, browser_action and page_action",
+        manifest: {
+          hidden: true,
+          browser_action: {},
+          page_action: {},
+        },
+        expectError: true,
+      },
+      {
+        title: "hidden and no browser_action or page_action",
         manifest: {
           hidden: true,
         },
@@ -104,6 +121,14 @@ add_task(
         manifest: {
           hidden: false,
           browser_action: {},
+        },
+        expectError: false,
+      },
+      {
+        title: "not hidden and page_action",
+        manifest: {
+          hidden: false,
+          page_action: {},
         },
         expectError: false,
       },
@@ -124,10 +149,27 @@ add_task(
         expectError: true,
       },
       {
+        title: "hidden, action and page_action",
+        manifest: {
+          manifest_version: 3,
+          hidden: true,
+          action: {},
+          page_action: {},
+        },
+        expectError: true,
+      },
+      {
         title: "no hidden prop and action",
         manifest: {
           manifest_version: 3,
           action: {},
+        },
+        expectError: false,
+      },
+      {
+        title: "no hidden prop and page_action",
+        manifest: {
+          page_action: {},
         },
         expectError: false,
       },
@@ -146,6 +188,15 @@ add_task(
         manifest: {
           hidden: true,
           browser_action: {},
+        },
+        expectError: false,
+        isPrivileged: false,
+      },
+      {
+        title: "hidden and page_action but not privileged",
+        manifest: {
+          hidden: true,
+          page_action: {},
         },
         expectError: false,
         isPrivileged: false,
@@ -182,7 +233,7 @@ add_task(
       if (expectError) {
         await Assert.rejects(
           extension.startup(),
-          /Cannot use browser actions in hidden add-ons/,
+          /Cannot use browser and\/or page actions in hidden add-ons/,
           "expected extension not started"
         );
       } else {
