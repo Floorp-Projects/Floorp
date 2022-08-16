@@ -35,7 +35,7 @@ fn main() {
 
     if compiler < 45 {
         // String::strip_prefix.
-        // https://doc.rust-lang.org/std/primitive.str.html#method.repeat
+        // https://doc.rust-lang.org/std/primitive.str.html#method.strip_prefix
         println!("cargo:rustc-cfg=no_str_strip_prefix");
     }
 
