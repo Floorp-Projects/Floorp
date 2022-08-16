@@ -16,20 +16,40 @@ __ https://docs.rs/either/
 
 |build_status|_ |crates|_
 
-.. |build_status| image:: https://travis-ci.org/bluss/either.svg?branch=master
-.. _build_status: https://travis-ci.org/bluss/either
+.. |build_status| image:: https://github.com/bluss/either/workflows/CI/badge.svg?branch=master
+.. _build_status: https://github.com/bluss/either/actions
 
-.. |crates| image:: http://meritbadge.herokuapp.com/either
+.. |crates| image:: https://img.shields.io/crates/v/either.svg
 .. _crates: https://crates.io/crates/either
 
 How to use with cargo::
 
     [dependencies]
-    either = "1.6"
+    either = "1.7"
 
 
 Recent Changes
 --------------
+
+- 1.7.0
+
+  - **MSRV**: ``either`` now requires Rust 1.31 or later.
+
+  - Export the macro ``for_both!``, by @thomaseizinger (#58)
+
+  - Implement the ``io::Seek`` trait, by @Kerollmops (#60)
+
+  - Add new method ``.either_into()`` for ``Into`` conversion, by @TonalidadeHidrica (#63)
+
+  - Add new methods ``.factor_ok()``, ``.factor_err()``, and ``.factor_none()``,
+    by @zachs18 (#67)
+
+  - Specialize ``source`` in the ``Error`` implementation, by @thomaseizinger (#69)
+
+  - Specialize more iterator methods and implement the ``FusedIterator`` trait,
+    by @Ten0 (#66) and @cuviper (#71)
+
+  - Specialize ``Clone::clone_from``, by @cuviper (#72)
 
 - 1.6.1
 
@@ -123,7 +143,7 @@ License
 Dual-licensed to be compatible with the Rust project.
 
 Licensed under the Apache License, Version 2.0
-http://www.apache.org/licenses/LICENSE-2.0 or the MIT license
-http://opensource.org/licenses/MIT, at your
+https://www.apache.org/licenses/LICENSE-2.0 or the MIT license
+https://opensource.org/licenses/MIT, at your
 option. This file may not be copied, modified, or distributed
 except according to those terms.
