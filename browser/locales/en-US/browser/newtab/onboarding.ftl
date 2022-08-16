@@ -266,3 +266,14 @@ fx100-upgrade-thanks-header = 100 Thank-Yous
 fx100-upgrade-thank-you-body = It’s our 100th release of { -brand-short-name }. Thank <em>you</em> for helping us build a better, healthier internet.
 # Message shown with either a pin-to-taskbar or set-default button.
 fx100-upgrade-thanks-keep-body = It’s our 100th release! Thanks for being a part of our community. Keep { -brand-short-name } one click away for the next 100.
+
+## MR2022 Upgrade Dialog screens
+## Pin private window screen shown only for users who don't have Firefox private pinned
+
+mr2022-onboarding-skip-step-button-label = Skip this step
+mr2022-upgrade-onboarding-pin-private-window-header = Get private browsing freedom in one click
+mr2022-upgrade-onboarding-pin-private-window-subtitle = No saved cookies or history, right from your desktop. Browse like no one’s watching.
+mr2022-upgrade-onboarding-pin-private-window-primary-button-label = { PLATFORM() ->
+    [macos] Keep { -brand-short-name } private browsing in Dock
+   *[other] Pin { -brand-short-name } private browsing to taskbar
+}
