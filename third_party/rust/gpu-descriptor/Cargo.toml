@@ -12,15 +12,20 @@
 [package]
 edition = "2018"
 name = "gpu-descriptor"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Zakarum <zakarumych@ya.ru>"]
 description = "Implementation agnostic descriptor allocator for Vulkan like APIs"
 homepage = "https://github.com/zakarumych/gpu-descriptor"
 documentation = "https://docs.rs/gpu-descriptor"
 readme = "../README.md"
-keywords = ["gpu", "vulkan", "no-std"]
+keywords = [
+    "gpu",
+    "vulkan",
+    "no-std",
+]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/zakarumych/gpu-descriptor"
+
 [dependencies.bitflags]
 version = "1.2"
 default-features = false
@@ -29,7 +34,7 @@ default-features = false
 version = "0.1"
 
 [dependencies.hashbrown]
-version = "0.11"
+version = "0.12"
 
 [dependencies.serde]
 version = "1.0"
