@@ -10,6 +10,7 @@
 
 #include "modules/desktop_capture/linux/wayland/shared_screencast_stream.h"
 
+#include <fcntl.h>
 #include <libdrm/drm_fourcc.h>
 #include <pipewire/pipewire.h>
 #include <spa/param/video/format-utils.h>
@@ -93,7 +94,6 @@ class SharedScreenCastStreamPrivate {
 
  private:
   uint32_t pw_stream_node_id_ = 0;
-  int pw_fd_ = -1;
 
   DesktopSize stream_size_ = {};
   DesktopSize frame_size_;
@@ -387,7 +387,6 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
   egl_dmabuf_ = std::make_unique<EglDmaBuf>();
 
   pw_stream_node_id_ = stream_node_id;
-  pw_fd_ = fd;
 
   pw_init(/*argc=*/nullptr, /*argc=*/nullptr);
 
@@ -421,10 +420,11 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
   {
     PipeWireThreadLoopLock thread_loop_lock(pw_main_loop_);
 
-    if (!pw_fd_) {
-      pw_core_ = pw_context_connect(pw_context_, nullptr, 0);
+    if (fd >= 0) {
+      pw_core_ = pw_context_connect_fd(
+          pw_context_, fcntl(fd, F_DUPFD_CLOEXEC), nullptr, 0);
     } else {
-      pw_core_ = pw_context_connect_fd(pw_context_, pw_fd_, nullptr, 0);
+      pw_core_ = pw_context_connect(pw_context_, nullptr, 0);
     }
 
     if (!pw_core_) {
@@ -771,7 +771,7 @@ SharedScreenCastStream::CreateDefault() {
 }
 
 bool SharedScreenCastStream::StartScreenCastStream(uint32_t stream_node_id) {
-  return private_->StartScreenCastStream(stream_node_id, 0);
+  return private_->StartScreenCastStream(stream_node_id, -1);
 }
 
 bool SharedScreenCastStream::StartScreenCastStream(uint32_t stream_node_id,
