@@ -95,6 +95,7 @@ class EventSinkListener {
     if (iid.equals(Ci.nsIChannelEventSink)) {
       return this;
     }
+    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   }
   asyncOnChannelRedirect(oldChan, newChan, flags, callback) {
     Assert.equal(oldChan.URI.hostPort, newChan.URI.hostPort);

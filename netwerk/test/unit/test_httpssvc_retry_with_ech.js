@@ -239,6 +239,7 @@ add_task(async function testConnectWithECH() {
 
 add_task(async function testEchRetry() {
   Services.obs.notifyObservers(null, "net:cancel-all-connections");
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, 1000));
 
   dns.clearCache(true);
@@ -410,6 +411,7 @@ add_task(async function testH3ConnectWithECH() {
 add_task(async function testH3ConnectWithECHRetry() {
   dns.clearCache(true);
   Services.obs.notifyObservers(null, "net:cancel-all-connections");
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, 1000));
 
   function base64ToArray(base64) {

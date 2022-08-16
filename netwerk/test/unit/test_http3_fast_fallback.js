@@ -98,6 +98,7 @@ function channelOpenPromise(chan, flags, delay) {
       true
     );
     if (delay) {
+      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
       await new Promise(r => setTimeout(r, delay));
     }
     chan.asyncOpen(new ChannelListener(finish, null, flags));
@@ -171,6 +172,7 @@ add_task(async function test_fast_fallback_with_speculative_connection() {
 add_task(async function test_fast_fallback_without_speculative_connection() {
   // Make sure the h3 connection created by the previous test is cleared.
   Services.obs.notifyObservers(null, "net:cancel-all-connections");
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, 1000));
   // Clear the h3 excluded list, otherwise the Alt-Svc mapping will not be used.
   Services.obs.notifyObservers(null, "network:reset-http3-excluded-list");
