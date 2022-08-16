@@ -1,0 +1,9 @@
+/**
+ * nutmeg.morrisons.com - Menu items overflow content area
+ * Bug #1784195 - https://bugzilla.mozilla.org/show_bug.cgi?id=1784195
+ * WebCompat issue #105417 - https://webcompat.com/issues/105417
+ */
+
+#sidebar-wrapper {
+  overflow-x: auto;
+}
