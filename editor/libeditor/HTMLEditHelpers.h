@@ -936,60 +936,84 @@ class MOZ_STACK_CLASS SplitRangeOffResult final {
   }
 
   /**
-   * This is at right node of split at start point.
+   * The start boundary is at the right of split at split point.  The end
+   * boundary is at right node of split at end point, i.e., the end boundary
+   * points out of the range to have been split off.
    */
-  constexpr const EditorDOMPoint& SplitPointAtStart() const {
-    return mSplitPointAtStart;
-  }
+  constexpr const EditorDOMRange& RangeRef() const { return mRange; }
+
   /**
-   * This is at right node of split at end point.  I.e., not in the range.
-   * This is after the range.
+   * Suggest caret position to aHTMLEditor.
    */
-  constexpr const EditorDOMPoint& SplitPointAtEnd() const {
-    return mSplitPointAtEnd;
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SuggestCaretPointTo(
+      const HTMLEditor& aHTMLEditor, const SuggestCaretOptions& aOptions) const;
+
+  /**
+   * IgnoreCaretPointSuggestion() should be called if the method does not want
+   * to use caret position recommended by this instance.
+   */
+  void IgnoreCaretPointSuggestion() const { mHandledCaretPoint = true; }
+
+  bool HasCaretPointSuggestion() const { return mCaretPoint.IsSet(); }
+  constexpr EditorDOMPoint&& UnwrapCaretPoint() {
+    mHandledCaretPoint = true;
+    return std::move(mCaretPoint);
   }
+  bool MoveCaretPointTo(EditorDOMPoint& aPointToPutCaret,
+                        const SuggestCaretOptions& aOptions) {
+    MOZ_ASSERT(!aOptions.contains(SuggestCaret::AndIgnoreTrivialError));
+    MOZ_ASSERT(
+        !aOptions.contains(SuggestCaret::OnlyIfTransactionsAllowedToDoIt));
+    if (aOptions.contains(SuggestCaret::OnlyIfHasSuggestion) &&
+        !mCaretPoint.IsSet()) {
+      return false;
+    }
+    aPointToPutCaret = UnwrapCaretPoint();
+    return true;
+  }
+  bool MoveCaretPointTo(EditorDOMPoint& aPointToPutCaret,
+                        const HTMLEditor& aHTMLEditor,
+                        const SuggestCaretOptions& aOptions);
 
   SplitRangeOffResult() = delete;
 
   /**
    * Constructor for success case.
    *
-   * @param aTrackedRangeStart          This should be at topmost right node
-   *                                    child at start point if actually split
-   *                                    there, or at start point to be tried
-   *                                    to split.  Note that if the method
-   *                                    allows to run script after splitting
-   *                                    at start point, the point should be
-   *                                    tracked with AutoTrackDOMPoint.
+   * @param aTrackedRangeStart          The range whose start is at topmost
+   *                                    right node child at start point if
+   *                                    actually split there, or at the point
+   *                                    to be tried to split, and whose end is
+   *                                    at topmost right node child at end point
+   *                                    if actually split there, or at the point
+   *                                    to be tried to split.  Note that if the
+   *                                    method allows to run script after
+   *                                    splitting the range boundaries, they
+   *                                    should be tracked with
+   *                                    AutoTrackDOMRange.
    * @param aSplitNodeResultAtStart     Raw split node result at start point.
-   * @param aTrackedRangeEnd            This should be at topmost right node
-   *                                    child at end point if actually split
-   *                                    here, or at end point to be tried to
-   *                                    split.  As same as aTrackedRangeStart,
-   *                                    this value should be tracked while
-   *                                    running some script.
    * @param aSplitNodeResultAtEnd       Raw split node result at start point.
    */
-  SplitRangeOffResult(EditorDOMPoint&& aTrackedRangeStart,
+  SplitRangeOffResult(EditorDOMRange&& aTrackedRange,
                       SplitNodeResult&& aSplitNodeResultAtStart,
-                      EditorDOMPoint&& aTrackedRangeEnd,
                       SplitNodeResult&& aSplitNodeResultAtEnd)
-      : mSplitPointAtStart(aTrackedRangeStart),
-        mSplitPointAtEnd(aTrackedRangeEnd),
+      : mRange(std::move(aTrackedRange)),
         mRv(NS_OK),
         mHandled(aSplitNodeResultAtStart.Handled() ||
                  aSplitNodeResultAtEnd.Handled()) {
-    MOZ_ASSERT(mSplitPointAtStart.IsSet());
-    MOZ_ASSERT(mSplitPointAtEnd.IsSet());
+    MOZ_ASSERT(mRange.StartRef().IsSet());
+    MOZ_ASSERT(mRange.EndRef().IsSet());
     MOZ_ASSERT(aSplitNodeResultAtStart.isOk());
     MOZ_ASSERT(aSplitNodeResultAtEnd.isOk());
     // The given results are created for creating this instance so that the
     // caller may not need to handle with them.  For making who taking the
-    // reposible clearer, we should move them into this constructor.
+    // responsible clearer, we should move them into this constructor.
     SplitNodeResult splitNodeResultAtStart(std::move(aSplitNodeResultAtStart));
     SplitNodeResult splitNodeResultAtEnd(std::move(aSplitNodeResultAtEnd));
-    splitNodeResultAtStart.IgnoreCaretPointSuggestion();
-    splitNodeResultAtEnd.IgnoreCaretPointSuggestion();
+    splitNodeResultAtStart.MoveCaretPointTo(
+        mCaretPoint, {SuggestCaret::OnlyIfHasSuggestion});
+    splitNodeResultAtEnd.MoveCaretPointTo(mCaretPoint,
+                                          {SuggestCaret::OnlyIfHasSuggestion});
   }
 
   explicit SplitRangeOffResult(nsresult aRv) : mRv(aRv), mHandled(false) {
@@ -1002,8 +1026,7 @@ class MOZ_STACK_CLASS SplitRangeOffResult final {
   SplitRangeOffResult& operator=(SplitRangeOffResult&& aOther) = default;
 
  private:
-  EditorDOMPoint mSplitPointAtStart;
-  EditorDOMPoint mSplitPointAtEnd;
+  EditorDOMRange mRange;
 
   // If you need to store previous and/or next node at start/end point,
   // you might be able to use `SplitNodeResult::GetPreviousNode()` etc in the
@@ -1011,9 +1034,14 @@ class MOZ_STACK_CLASS SplitRangeOffResult final {
   // the node might have gone with another DOM tree mutation.  So, be careful
   // if you do it.
 
+  // The point which is a good point to put caret from point of view the
+  // splitter.
+  EditorDOMPoint mCaretPoint;
+
   nsresult mRv;
 
   bool mHandled;
+  bool mutable mHandledCaretPoint = false;
 };
 
 /******************************************************************************
