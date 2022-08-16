@@ -389,7 +389,7 @@ bool gfxFontEntry::TryGetColorGlyphs() {
   auto* colr = GetFontTable(TRUETYPE_TAG('C', 'O', 'L', 'R'));
   auto* cpal = colr ? GetFontTable(TRUETYPE_TAG('C', 'P', 'A', 'L')) : nullptr;
 
-  if (colr && cpal && gfxFontUtils::ValidateColorGlyphs(colr, cpal)) {
+  if (colr && cpal && gfx::COLRFonts::ValidateColorGlyphs(colr, cpal)) {
     if (!mCOLR.compareExchange(nullptr, colr)) {
       hb_blob_destroy(colr);
     }
@@ -1043,9 +1043,9 @@ bool gfxFontEntry::GetColorLayersInfo(
     uint32_t aGlyphId, const mozilla::gfx::DeviceColor& aDefaultColor,
     nsTArray<uint16_t>& aLayerGlyphs,
     nsTArray<mozilla::gfx::DeviceColor>& aLayerColors) {
-  return gfxFontUtils::GetColorGlyphLayers(GetCOLR(), GetCPAL(), aGlyphId,
-                                           aDefaultColor, aLayerGlyphs,
-                                           aLayerColors);
+  return gfx::COLRFonts::GetColorGlyphLayers(GetCOLR(), GetCPAL(), aGlyphId,
+                                             aDefaultColor, aLayerGlyphs,
+                                             aLayerColors);
 }
 
 typedef struct {
