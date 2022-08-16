@@ -256,7 +256,6 @@ using namespace mozilla::plugins;
  **************************************************************/
 static const wchar_t kUser32LibName[] = L"user32.dll";
 
-bool nsWindow::sDropShadowEnabled = true;
 uint32_t nsWindow::sInstanceCount = 0;
 bool nsWindow::sSwitchKeyboardLayout = false;
 BOOL nsWindow::sIsOleInitialized = FALSE;
@@ -946,6 +945,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   }
 
   mIsRTL = aInitData->mRTL;
+  mForMenupopupFrame = aInitData->mForMenupopupFrame;
   mOpeningAnimationSuppressed = aInitData->mIsAnimationSuppressed;
   mAlwaysOnTop = aInitData->mAlwaysOnTop;
   mResizable = aInitData->mResizable;
@@ -992,12 +992,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     }
   }
 
-  const wchar_t* className;
-  if (aInitData->mDropShadow) {
-    className = GetWindowPopupClass();
-  } else {
-    className = GetWindowClass();
-  }
+  const wchar_t* className = ChooseWindowClass(mWindowType, mForMenupopupFrame);
 
   if (aInitData->mWindowType == eWindowType_toplevel && !aParent &&
       !sFirstTopLevelWindowCreated) {
@@ -1258,9 +1253,9 @@ void nsWindow::Destroy() {
  *
  **************************************************************/
 
+/* static */
 const wchar_t* nsWindow::RegisterWindowClass(const wchar_t* aClassName,
-                                             UINT aExtraStyle,
-                                             LPWSTR aIconID) const {
+                                             UINT aExtraStyle, LPWSTR aIconID) {
   WNDCLASSW wc;
   if (::GetClassInfoW(nsToolkit::mDllInstance, aClassName, &wc)) {
     // already registered
@@ -1275,7 +1270,7 @@ const wchar_t* nsWindow::RegisterWindowClass(const wchar_t* aClassName,
   wc.hIcon =
       aIconID ? ::LoadIconW(::GetModuleHandleW(nullptr), aIconID) : nullptr;
   wc.hCursor = nullptr;
-  wc.hbrBackground = mBrush;
+  wc.hbrBackground = nullptr;
   wc.lpszMenuName = nullptr;
   wc.lpszClassName = aClassName;
 
@@ -1290,23 +1285,25 @@ const wchar_t* nsWindow::RegisterWindowClass(const wchar_t* aClassName,
 
 static LPWSTR const gStockApplicationIcon = MAKEINTRESOURCEW(32512);
 
-// Return the proper window class for everything except popups.
-const wchar_t* nsWindow::GetWindowClass() const {
-  switch (mWindowType) {
+/* static */
+const wchar_t* nsWindow::ChooseWindowClass(nsWindowType aWindowType,
+                                           bool aForMenupopupFrame) {
+  MOZ_ASSERT_IF(aForMenupopupFrame, aWindowType == eWindowType_popup);
+  switch (aWindowType) {
     case eWindowType_invisible:
       return RegisterWindowClass(kClassNameHidden, 0, gStockApplicationIcon);
     case eWindowType_dialog:
       return RegisterWindowClass(kClassNameDialog, 0, 0);
+    case eWindowType_popup:
+      if (aForMenupopupFrame) {
+        return RegisterWindowClass(kClassNameDropShadow, CS_DROPSHADOW,
+                                   gStockApplicationIcon);
+      }
+      [[fallthrough]];
     default:
       return RegisterWindowClass(GetMainWindowClass(), 0,
                                  gStockApplicationIcon);
   }
-}
-
-// Return the proper popup window class
-const wchar_t* nsWindow::GetWindowPopupClass() const {
-  return RegisterWindowClass(kClassNameDropShadow, CS_XP_DROPSHADOW,
-                             gStockApplicationIcon);
 }
 
 /**************************************************************
@@ -1646,24 +1643,30 @@ void nsWindow::Show(bool bState) {
 #endif  // defined(ACCESSIBILITY)
   }
 
-  if (mWindowType == eWindowType_popup) {
-    // See bug 603793. When we try to draw D3D9/10 windows with a drop shadow
-    // without the DWM on a secondary monitor, windows fails to composite
-    // our windows correctly. We therefor switch off the drop shadow for
-    // pop-up windows when the DWM is disabled and two monitors are
-    // connected.
-    if (HasBogusPopupsDropShadowOnMultiMonitor() &&
-        WinUtils::GetMonitorCount() > 1 &&
-        !gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) {
-      if (sDropShadowEnabled) {
-        ::SetClassLongA(mWnd, GCL_STYLE, 0);
-        sDropShadowEnabled = false;
+  if (mForMenupopupFrame) {
+    MOZ_ASSERT(ChooseWindowClass(mWindowType, mForMenupopupFrame) ==
+               kClassNameDropShadow);
+    const bool shouldUseDropShadow = [&] {
+      if (mTransparencyMode == eTransparencyTransparent) {
+        return false;
       }
-    } else {
-      if (!sDropShadowEnabled) {
-        ::SetClassLongA(mWnd, GCL_STYLE, CS_DROPSHADOW);
-        sDropShadowEnabled = true;
+      if (HasBogusPopupsDropShadowOnMultiMonitor() &&
+          WinUtils::GetMonitorCount() > 1 &&
+          !gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled()) {
+        // See bug 603793. When we try to draw D3D9/10 windows with a drop
+        // shadow without the DWM on a secondary monitor, windows fails to
+        // composite our windows correctly. We therefor switch off the drop
+        // shadow for pop-up windows when the DWM is disabled and two monitors
+        // are connected.
+        return false;
       }
+      return true;
+    }();
+
+    static bool sShadowEnabled = true;
+    if (sShadowEnabled != shouldUseDropShadow) {
+      ::SetClassLongA(mWnd, GCL_STYLE, shouldUseDropShadow ? CS_DROPSHADOW : 0);
+      sShadowEnabled = shouldUseDropShadow;
     }
 
     // WS_EX_COMPOSITED conflicts with the WS_EX_LAYERED style and causes
@@ -3721,9 +3724,10 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
   switch (aDataType) {
     case NS_NATIVE_TMP_WINDOW:
       return (void*)::CreateWindowExW(
-          mIsRTL ? WS_EX_LAYOUTRTL : 0, GetWindowClass(), L"", WS_CHILD,
-          CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, mWnd,
-          nullptr, nsToolkit::mDllInstance, nullptr);
+          mIsRTL ? WS_EX_LAYOUTRTL : 0,
+          ChooseWindowClass(mWindowType, /* aForMenupopupFrame = */ false), L"",
+          WS_CHILD, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+          mWnd, nullptr, nsToolkit::mDllInstance, nullptr);
     case NS_NATIVE_WIDGET:
     case NS_NATIVE_WINDOW:
     case NS_NATIVE_WINDOW_WEBRTC_DEVICE_ID:

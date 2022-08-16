@@ -8,11 +8,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=405818
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <link rel="stylesheet" type="text/css" href="data:text/css,%23myDiv{color:green;}">
-  <link rel="stylesheet" type="text/css" href="chrome://global/skin/tooltip.css">
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin/popup.css">
   <!-- Script to make sure sheets gets a chance to load fully in Gecko 1.8 and earlier -->
   <script type="text/javascript" src="data:text/javascript,"></script>
   <link rel="stylesheet" type="text/css" href="data:text/css,%23myDiv{color:green;}">
-  <link rel="stylesheet" type="text/css" href="chrome://global/skin/tooltip.css">
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin/popup.css">
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=405818">Mozilla Bug 405818</a>
@@ -35,10 +35,10 @@ addLoadEvent(function() {
      "Unexpected href for later linked sheet before cloning");
 
   is(document.styleSheets[2].href,
-     "chrome://global/skin/tooltip.css",
+     "chrome://global/skin/popup.css",
      "Unexpected href for linked chrome sheet before cloning");
   is(document.styleSheets[4].href,
-     "chrome://global/skin/tooltip.css",
+     "chrome://global/skin/popup.css",
      "Unexpected href for later linked chrome sheet before cloning");
 
   // Force cloning of inners
@@ -53,10 +53,10 @@ addLoadEvent(function() {
      "Unexpected href for later linked sheet after cloning");
 
   is(document.styleSheets[2].href,
-     "chrome://global/skin/tooltip.css",
+     "chrome://global/skin/popup.css",
      "Unexpected href for linked chrome sheet after cloning");
   is(document.styleSheets[4].href,
-     "chrome://global/skin/tooltip.css",
+     "chrome://global/skin/popup.css",
      "Unexpected href for later linked chrome sheet after cloning");
 
   var myDiv = document.getElementById("myDiv");

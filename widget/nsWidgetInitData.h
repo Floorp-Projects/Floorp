@@ -96,7 +96,7 @@ struct nsWidgetInitData {
         mScreenId(0),
         clipChildren(false),
         clipSiblings(false),
-        mDropShadow(false),
+        mForMenupopupFrame(false),
         mRTL(false),
         mNoAutoHide(false),
         mIsDragPopup(false),
@@ -119,7 +119,8 @@ struct nsWidgetInitData {
   // now, which align with the value of display type defined in HWC.
   uint32_t mScreenId;
   // when painting exclude area occupied by child windows and sibling windows
-  bool clipChildren, clipSiblings, mDropShadow;
+  bool clipChildren, clipSiblings;
+  bool mForMenupopupFrame;
   bool mRTL;
   bool mNoAutoHide;   // true for noautohide panels
   bool mIsDragPopup;  // true for drag feedback panels

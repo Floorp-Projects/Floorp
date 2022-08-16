@@ -603,14 +603,14 @@ class nsWindow final : public nsBaseWidget {
   void UserActivity();
 
   int32_t GetHeight(int32_t aProposedHeight);
-  const wchar_t* GetWindowClass() const;
-  const wchar_t* GetWindowPopupClass() const;
+
   DWORD WindowStyle();
   DWORD WindowExStyle();
 
+  static const wchar_t* ChooseWindowClass(nsWindowType, bool aForMenupopupFrame);
   // This method registers the given window class, and returns the class name.
-  const wchar_t* RegisterWindowClass(const wchar_t* aClassName,
-                                     UINT aExtraStyle, LPWSTR aIconID) const;
+  static const wchar_t* RegisterWindowClass(const wchar_t* aClassName,
+                                            UINT aExtraStyle, LPWSTR aIconID);
 
   /**
    * XP and Vista theming support for windows with rounded edges
@@ -692,7 +692,6 @@ class nsWindow final : public nsBaseWidget {
 
   static bool sTouchInjectInitialized;
   static InjectTouchInputPtr sInjectTouchFuncPtr;
-  static bool sDropShadowEnabled;
   static uint32_t sInstanceCount;
   static TriStateBool sCanQuit;
   static nsWindow* sCurrentWindow;
@@ -764,6 +763,7 @@ class nsWindow final : public nsBaseWidget {
   bool mIsEarlyBlankWindow = false;
   bool mIsShowingPreXULSkeletonUI = false;
   bool mResizable = false;
+  bool mForMenupopupFrame = false;
   DWORD_PTR mOldStyle = 0;
   DWORD_PTR mOldExStyle = 0;
   nsNativeDragTarget* mNativeDragTarget = nullptr;

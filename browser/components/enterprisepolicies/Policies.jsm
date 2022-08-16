@@ -1287,6 +1287,12 @@ var Policies = {
     },
   },
 
+  GoToIntranetSiteForSingleWordEntryInAddressBar: {
+    onBeforeAddons(manager, param) {
+      setAndLockPref("browser.fixup.dns_first_for_single_words", param);
+    },
+  },
+
   Handlers: {
     onBeforeAddons(manager, param) {
       if ("mimeTypes" in param) {

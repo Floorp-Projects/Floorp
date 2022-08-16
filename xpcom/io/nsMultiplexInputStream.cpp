@@ -106,6 +106,11 @@ class nsMultiplexInputStream final : public nsIMultiplexInputStream,
  private:
   ~nsMultiplexInputStream() = default;
 
+  void NextStream() REQUIRES(mLock) {
+    ++mCurrentStream;
+    mStartedReadingCurrent = false;
+  }
+
   nsresult AsyncWaitInternal();
 
   // This method updates mSeekableStreams, mTellableStreams,
@@ -324,7 +329,7 @@ nsMultiplexInputStream::Available(uint64_t* aResult) {
       // If a stream is closed, we continue with the next one.
       // If this is the current stream we move to the following stream.
       if (mCurrentStream == i) {
-        ++mCurrentStream;
+        NextStream();
       }
 
       // If this is the last stream, we want to return this error code.
@@ -400,8 +405,7 @@ nsMultiplexInputStream::Read(char* aBuf, uint32_t aCount, uint32_t* aResult) {
     }
 
     if (read == 0) {
-      ++mCurrentStream;
-      mStartedReadingCurrent = false;
+      NextStream();
     } else {
       NS_ASSERTION(aCount >= read, "Read more than requested");
       *aResult += read;
@@ -461,8 +465,7 @@ nsMultiplexInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
 
     // if stream is empty, then advance to the next stream.
     if (read == 0) {
-      ++mCurrentStream;
-      mStartedReadingCurrent = false;
+      NextStream();
     } else {
       NS_ASSERTION(aCount >= read, "Read more than requested");
       state.mOffset += read;
@@ -824,10 +827,6 @@ nsMultiplexInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
     mAsyncWaitFlags = aFlags;
     mAsyncWaitRequestedCount = aRequestedCount;
     mAsyncWaitEventTarget = aEventTarget;
-
-    if (!mAsyncWaitCallback) {
-      return NS_OK;
-    }
   }
 
   return AsyncWaitInternal();
@@ -835,6 +834,7 @@ nsMultiplexInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
 
 nsresult nsMultiplexInputStream::AsyncWaitInternal() {
   nsCOMPtr<nsIAsyncInputStream> stream;
+  nsIInputStreamCallback* asyncWaitCallback = nullptr;
   uint32_t asyncWaitFlags = 0;
   uint32_t asyncWaitRequestedCount = 0;
   nsCOMPtr<nsIEventTarget> asyncWaitEventTarget;
@@ -845,7 +845,7 @@ nsresult nsMultiplexInputStream::AsyncWaitInternal() {
     // Let's take the first async stream if we are not already closed, and if
     // it has data to read or if it async.
     if (mStatus != NS_BASE_STREAM_CLOSED) {
-      for (; mCurrentStream < mStreams.Length(); ++mCurrentStream) {
+      for (; mCurrentStream < mStreams.Length(); NextStream()) {
         stream = mStreams[mCurrentStream].mAsyncStream;
         if (stream) {
           break;
@@ -866,6 +866,7 @@ nsresult nsMultiplexInputStream::AsyncWaitInternal() {
       }
     }
 
+    asyncWaitCallback = mAsyncWaitCallback ? this : nullptr;
     asyncWaitFlags = mAsyncWaitFlags;
     asyncWaitRequestedCount = mAsyncWaitRequestedCount;
     asyncWaitEventTarget = mAsyncWaitEventTarget;
@@ -876,12 +877,14 @@ nsresult nsMultiplexInputStream::AsyncWaitInternal() {
   // If we are here it's because we are already closed, or if the current stream
   // is not async. In both case we have to execute the callback.
   if (!stream) {
-    AsyncWaitRunnable::Create(this, asyncWaitEventTarget);
+    if (asyncWaitCallback) {
+      AsyncWaitRunnable::Create(this, asyncWaitEventTarget);
+    }
     return NS_OK;
   }
 
-  return stream->AsyncWait(this, asyncWaitFlags, asyncWaitRequestedCount,
-                           asyncWaitEventTarget);
+  return stream->AsyncWait(asyncWaitCallback, asyncWaitFlags,
+                           asyncWaitRequestedCount, asyncWaitEventTarget);
 }
 
 NS_IMETHODIMP
@@ -904,18 +907,32 @@ nsMultiplexInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 
     if (NS_SUCCEEDED(mStatus)) {
       uint64_t avail = 0;
-      nsresult rv = aStream->Available(&avail);
+      nsresult rv = NS_OK;
+      // Only check `Available()` if `aStream` is actually the current stream,
+      // otherwise we'll always want to re-poll, as we got the callback for the
+      // wrong stream.
+      if (mCurrentStream < mStreams.Length() &&
+          aStream == mStreams[mCurrentStream].mAsyncStream) {
+        rv = aStream->Available(&avail);
+      }
       if (rv == NS_BASE_STREAM_CLOSED || (NS_SUCCEEDED(rv) && avail == 0)) {
-        // This stream is closed or empty, let's move to the following one,
-        // otherwise we need to re-wait on the current stream, as it currently
-        // has no data available.
+        // This stream is either closed, has no data available, or is not the
+        // current stream. If it is closed and current, move to the next stream,
+        // otherwise re-wait on the current stream until it has data available
+        // or becomes closed.
         // Unlike streams not implementing nsIAsyncInputStream, async streams
-        // cannot use `Available() == 0` to indicate EOF.
+        // cannot use `Available() == 0` to indicate EOF, so we re-poll in that
+        // situation.
         if (NS_FAILED(rv)) {
-          ++mCurrentStream;
+          NextStream();
         }
+
+        // Unlock and invoke AsyncWaitInternal to wait again.  If this succeeds,
+        // we'll be called again, otherwise fall through and notify.
         MutexAutoUnlock unlock(mLock);
-        return AsyncWaitInternal();
+        if (NS_SUCCEEDED(AsyncWaitInternal())) {
+          return NS_OK;
+        }
       }
     }
 
@@ -923,7 +940,7 @@ nsMultiplexInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
     mAsyncWaitEventTarget = nullptr;
   }
 
-  return callback->OnInputStreamReady(this);
+  return callback ? callback->OnInputStreamReady(this) : NS_OK;
 }
 
 void nsMultiplexInputStream::AsyncWaitCompleted() {
