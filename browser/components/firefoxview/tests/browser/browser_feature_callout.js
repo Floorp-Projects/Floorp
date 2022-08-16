@@ -335,13 +335,18 @@ add_task(async function feature_callout_only_highlights_existing_elements() {
       // Advance to second screen
       await clickPrimaryButton(document);
       await waitForCalloutScreen(document, ".FEATURE_CALLOUT_2");
-      // This test should be updated when landing localized strings
+
       ok(
-        document.querySelector(primaryButtonSelector).innerText === "Finish",
+        document
+          .querySelector(primaryButtonSelector)
+          .getAttribute("data-l10n-id") ===
+          "callout-primary-complete-button-label",
         "When parent element for third screen isn't present, second screen has CTA to finish tour"
       );
+
       // Click to finish tour
       await clickPrimaryButton(document);
+
       ok(
         !document.querySelector(`${calloutSelector}:not(.hidden)`),
         "Feature Callout screen does not render if its parent element does not exist"
