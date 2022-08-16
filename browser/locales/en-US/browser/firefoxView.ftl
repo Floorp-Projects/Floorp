@@ -64,8 +64,6 @@ firefoxview-mobile-confirmation-header = 🎉 Good to go!
 firefoxview-mobile-confirmation-description = Now you can grab your { -brand-product-name } tabs from your tablet or phone.
 
 firefoxview-closed-tabs-title = Recently closed
-firefoxview-closed-tabs-collapse-button =
-  .title = Show or hide recently closed tabs list
 
 firefoxview-closed-tabs-description = Reopen pages you’ve closed on this device.
 firefoxview-closed-tabs-placeholder = <strong>No recently closed pages</strong><br/>Never fear losing a closed tab again. You can always retrieve it here.
@@ -88,3 +86,9 @@ firefoxview-change-colorway-button = Change colorway
 firefoxview-colorway-description = { $intensity } · { $collection }
 
 firefoxview-synced-tabs-placeholder = <strong>Nothing to see yet</strong><br/>The next time you open a page in { -brand-product-name } on another device, grab it here like magic.
+
+firefoxview-collapse-button-show =
+  .title = Show list
+
+firefoxview-collapse-button-hide =
+  .title = Hide list
