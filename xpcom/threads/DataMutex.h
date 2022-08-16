@@ -38,32 +38,33 @@ namespace mozilla {
 template <typename T, typename MutexType>
 class DataMutexBase {
  public:
-  class MOZ_STACK_CLASS AutoLock {
+  template <typename V>
+  class MOZ_STACK_CLASS AutoLockBase {
    public:
-    T* operator->() const& { return &ref(); }
-    T* operator->() const&& = delete;
+    V* operator->() const& { return &ref(); }
+    V* operator->() const&& = delete;
 
-    T& operator*() const& { return ref(); }
-    T& operator*() const&& = delete;
+    V& operator*() const& { return ref(); }
+    V& operator*() const&& = delete;
 
     // Like RefPtr, make this act like its underlying raw pointer type
     // whenever it is used in a context where a raw pointer is expected.
-    operator T*() const& { return &ref(); }
+    operator V*() const& { return &ref(); }
 
     // Like RefPtr, don't allow implicit conversion of temporary to raw pointer.
-    operator T*() const&& = delete;
+    operator V*() const&& = delete;
 
-    T& ref() const& {
+    V& ref() const& {
       MOZ_ASSERT(mOwner);
       return mOwner->mValue;
     }
-    T& ref() const&& = delete;
+    V& ref() const&& = delete;
 
-    AutoLock(AutoLock&& aOther) : mOwner(aOther.mOwner) {
+    AutoLockBase(AutoLockBase&& aOther) : mOwner(aOther.mOwner) {
       aOther.mOwner = nullptr;
     }
 
-    ~AutoLock() {
+    ~AutoLockBase() {
       if (mOwner) {
         mOwner->mMutex.Unlock();
         mOwner = nullptr;
@@ -73,9 +74,9 @@ class DataMutexBase {
    private:
     friend class DataMutexBase;
 
-    AutoLock(const AutoLock& aOther) = delete;
+    AutoLockBase(const AutoLockBase& aOther) = delete;
 
-    explicit AutoLock(DataMutexBase<T, MutexType>* aDataMutex)
+    explicit AutoLockBase(DataMutexBase<T, MutexType>* aDataMutex)
         : mOwner(aDataMutex) {
       MOZ_ASSERT(!!mOwner);
       mOwner->mMutex.Lock();
@@ -84,12 +85,16 @@ class DataMutexBase {
     DataMutexBase<T, MutexType>* mOwner;
   };
 
+  using AutoLock = AutoLockBase<T>;
+  using ConstAutoLock = AutoLockBase<const T>;
+
   explicit DataMutexBase(const char* aName) : mMutex(aName) {}
 
   DataMutexBase(T&& aValue, const char* aName)
       : mMutex(aName), mValue(std::move(aValue)) {}
 
   AutoLock Lock() { return AutoLock(this); }
+  ConstAutoLock ConstLock() { return ConstAutoLock(this); }
 
   const MutexType& Mutex() const { return mMutex; }
 

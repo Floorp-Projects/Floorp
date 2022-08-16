@@ -46,6 +46,7 @@ VALID_TYPES.update(
         "SequentiallyConsistentAtomicUint32": "uint32_t",
         "AtomicFloat": "float",
         "String": None,
+        "DataMutexString": None,
     }
 )
 
@@ -76,6 +77,14 @@ ONCE_PREF(
 """,
     "always": """\
 ALWAYS_PREF(
+  "{name}",
+   {base_id},
+   {full_id},
+  {typ}, {value}
+)
+""",
+    "always_datamutex": """\
+ALWAYS_DATAMUTEX_PREF(
   "{name}",
    {base_id},
    {full_id},
@@ -165,11 +174,11 @@ def check_pref_list(pref_list):
         if "value" not in pref:
             error("missing `value` key for pref `{}`".format(name))
         value = pref["value"]
-        if typ == "String":
+        if typ == "String" or typ == "DataMutexString":
             if type(value) != str:
                 error(
-                    "non-string `value` value `{}` for `String` pref `{}`; "
-                    "add double quotes".format(value, name)
+                    "non-string `value` value `{}` for `{}` pref `{}`; "
+                    "add double quotes".format(value, typ, name)
                 )
         elif typ in VALID_BOOL_TYPES:
             if value not in (True, False):
@@ -179,6 +188,8 @@ def check_pref_list(pref_list):
         if "mirror" not in pref:
             error("missing `mirror` key for pref `{}`".format(name))
         mirror = pref["mirror"]
+        if typ.startswith("DataMutex"):
+            mirror += "_datamutex"
         if mirror not in MIRROR_TEMPLATES:
             error("invalid `mirror` value `{}` for pref `{}`".format(mirror, name))
 
@@ -261,6 +272,8 @@ def generate_code(pref_list, input_filename):
             full_id += "_AtStartup"
         if do_not_use_directly:
             full_id += "_DoNotUseDirectly"
+        if typ.startswith("DataMutex"):
+            mirror += "_datamutex"
 
         group = mk_group(pref)
 
@@ -273,6 +286,9 @@ def generate_code(pref_list, input_filename):
         if typ == "String":
             # Quote string literals, and escape double-quote chars.
             value = '"{}"'.format(value.replace('"', '\\"'))
+        elif typ == "DataMutexString":
+            # Quote string literals, and escape double-quote chars.
+            value = '"{}"_ns'.format(value.replace('"', '\\"'))
         elif typ in VALID_BOOL_TYPES:
             # Convert Python bools to C++ bools.
             if value is True:
