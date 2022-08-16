@@ -435,6 +435,11 @@ criteria = "safe-to-deploy"
 version = "0.1.9"
 notes = "This is a trivial crate."
 
+[[audits.memmap2]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.5.4 -> 0.5.7"
+
 [[audits.naga]]
 who = "Dzmitry Malyshau <kvark@fastmail.com>"
 criteria = "safe-to-deploy"
