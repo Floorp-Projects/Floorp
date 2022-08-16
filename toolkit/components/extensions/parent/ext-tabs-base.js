@@ -167,7 +167,8 @@ class TabBase {
    */
   get hasActiveTabPermission() {
     return (
-      this.extension.hasPermission("activeTab") &&
+      (this.extension.originControls ||
+        this.extension.hasPermission("activeTab")) &&
       this.activeTabWindowID != null &&
       this.activeTabWindowID === this.innerWindowID
     );
@@ -1919,12 +1920,16 @@ class TabManagerBase {
    *        The native tab for which to grant permissions.
    */
   addActiveTabPermission(nativeTab) {
-    if (this.extension.hasPermission("activeTab")) {
+    let tab = this.getWrapper(nativeTab);
+    if (
+      this.extension.hasPermission("activeTab") ||
+      (this.extension.originControls &&
+        this.extension.optionalOrigins.matches(tab._uri))
+    ) {
       // Note that, unlike Chrome, we don't currently clear this permission with
       // the tab navigates. If the inner window is revived from BFCache before
       // we've granted this permission to a new inner window, the extension
       // maintains its permissions for it.
-      let tab = this.getWrapper(nativeTab);
       tab.activeTabWindowID = tab.innerWindowID;
     }
   }

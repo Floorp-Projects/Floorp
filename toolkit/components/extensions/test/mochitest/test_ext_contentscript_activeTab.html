@@ -22,7 +22,12 @@ add_task(async function setup() {
 // script.  The background script will have a few helpful functions
 // available.
 /* global awaitLoad, gatherFrameSources */
-function makeExtension(background, useScriptingAPI, manifest_version = 2) {
+function makeExtension({
+  background,
+  useScriptingAPI = false,
+  manifest_version = 2,
+  host_permissions,
+}) {
   // Wait for a webNavigation.onCompleted event where the details for the
   // loaded page match the attributes of `filter`.
   function awaitLoad(filter) {
@@ -63,15 +68,22 @@ function makeExtension(background, useScriptingAPI, manifest_version = 2) {
       return String(result.sort());
     };
 
-  const permissions = ["activeTab", "webNavigation"];
+  const permissions = ["webNavigation"];
   if (useScriptingAPI) {
     permissions.push("scripting");
+  }
+
+  // When host_permissions is passed, test "automatic activeTab" for ungranted
+  // host_permissions in mv3, else test with the normal activeTab permission.
+  if (!host_permissions) {
+    permissions.push("activeTab");
   }
 
   return ExtensionTestUtils.loadExtension({
     manifest: {
       manifest_version,
       permissions,
+      host_permissions,
     },
     background: [
       `const useScriptingAPI = ${useScriptingAPI};`,
@@ -85,9 +97,9 @@ function makeExtension(background, useScriptingAPI, manifest_version = 2) {
 
 // Helper function to verify that executeScript() fails without the activeTab
 // permission (or any specific origin permissions).
-const verifyNoActiveTab = async ({ useScriptingAPI, manifest_version = 2 }) => {
-  let extension = makeExtension(
-    async function background() {
+const verifyNoActiveTab = async ({ useScriptingAPI, manifest_version, host_permissions }) => {
+  let extension = makeExtension({
+    async background() {
       const URL = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_contentscript_activeTab.html";
 
       let [tab] = await Promise.all([
@@ -107,7 +119,8 @@ const verifyNoActiveTab = async ({ useScriptingAPI, manifest_version = 2 }) => {
     },
     useScriptingAPI,
     manifest_version,
-  );
+    host_permissions,
+  });
 
   await extension.startup();
   await extension.awaitFinish("no-active-tab");
@@ -123,14 +136,26 @@ add_task(async function test_no_activeTab_scripting() {
 });
 
 add_task(async function test_no_activeTab_scripting_mv3() {
-  await verifyNoActiveTab({ useScriptingAPI: true, manifest_version: 3 });
+  await verifyNoActiveTab({
+    useScriptingAPI: true,
+    manifest_version: 3,
+    host_permissions: null,
+  });
+});
+
+add_task(async function test_no_activeTab_scripting_mv3_autoActiveTab() {
+  await verifyNoActiveTab({
+    useScriptingAPI: true,
+    manifest_version: 3,
+    host_permissions: ["http://mochi.test/"],
+  });
 });
 
 // Test helper to verify that dynamically created iframes do not get the
 // activeTab permission.
-const verifyDynamicFrames = async ({ useScriptingAPI, manifest_version = 2 }) => {
-  let extension = makeExtension(
-    async function background() {
+const verifyDynamicFrames = async ({ useScriptingAPI, manifest_version, host_permissions }) => {
+  let extension = makeExtension({
+    async background() {
       const BASE_HOST = "www.example.com";
 
       let [tab] = await Promise.all([
@@ -249,7 +274,8 @@ const verifyDynamicFrames = async ({ useScriptingAPI, manifest_version = 2 }) =>
     },
     useScriptingAPI,
     manifest_version,
-  );
+    host_permissions,
+  });
 
   await extension.startup();
 
@@ -271,14 +297,26 @@ add_task(async function test_dynamic_frames_scripting() {
 });
 
 add_task(async function test_dynamic_frames_scripting_mv3() {
-  await verifyDynamicFrames({ useScriptingAPI: true, manifest_version: 3 });
+  await verifyDynamicFrames({
+    useScriptingAPI: true,
+    manifest_version: 3,
+    host_permissions: null,
+  });
+});
+
+add_task(async function test_dynamic_frames_scripting_mv3_autoActiveTab() {
+  await verifyDynamicFrames({
+    useScriptingAPI: true,
+    manifest_version: 3,
+    host_permissions: ["https://www.example.com/"],
+  });
 });
 
 // Test helper to verify that an iframe created from an <iframe srcdoc> gets
 // the activeTab permission.
-const verifySrcdoc = async ({ useScriptingAPI, manifest_version = 2 }) => {
-  let extension = makeExtension(
-    async function background() {
+const verifySrcdoc = async ({ useScriptingAPI, manifest_version, host_permissions }) => {
+  let extension = makeExtension({
+    async background() {
       const URL = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_contentscript_activeTab2.html";
       const OUTER_SOURCE = "about:srcdoc";
       const PAGE_SOURCE = "mochi.test";
@@ -320,7 +358,8 @@ const verifySrcdoc = async ({ useScriptingAPI, manifest_version = 2 }) => {
     },
     useScriptingAPI,
     manifest_version,
-  );
+    host_permissions,
+  });
 
   await extension.startup();
 
@@ -342,14 +381,26 @@ add_task(async function test_srcdoc_scripting() {
 });
 
 add_task(async function test_srcdoc_scripting_mv3() {
-  await verifySrcdoc({ useScriptingAPI: true, manifest_version: 3 });
+  await verifySrcdoc({
+    useScriptingAPI: true,
+    manifest_version: 3,
+    host_permissions: null,
+  });
+});
+
+add_task(async function test_srcdoc_scripting_mv3_autoActiveTab() {
+  await verifySrcdoc({
+    useScriptingAPI: true,
+    manifest_version: 3,
+    host_permissions: ["http://mochi.test/"],
+  });
 });
 
 // Test helper to verify that navigating frames by setting the src attribute
 // from the parent page revokes the activeTab permission.
-const verifyNavigateBySrc = async ({ useScriptingAPI, manifest_version = 2 }) => {
-  let extension = makeExtension(
-    async function background() {
+const verifyNavigateBySrc = async ({ useScriptingAPI, manifest_version, host_permissions }) => {
+  let extension = makeExtension({
+    async background() {
       const URL = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_contentscript_activeTab.html";
       const PAGE_SOURCE = "mochi.test";
       const EMPTY_SOURCE = "about:blank";
@@ -455,7 +506,8 @@ const verifyNavigateBySrc = async ({ useScriptingAPI, manifest_version = 2 }) =>
     },
     useScriptingAPI,
     manifest_version,
-  );
+    host_permissions,
+  });
 
   await extension.startup();
 
@@ -477,14 +529,26 @@ add_task(async function test_navigate_by_src_scripting() {
 });
 
 add_task(async function test_navigate_by_src_scripting_mv3() {
-  await verifyNavigateBySrc({ useScriptingAPI: true, manifest_version: 3 });
+  await verifyNavigateBySrc({
+    useScriptingAPI: true,
+    manifest_version: 3,
+    host_permissions: null,
+  });
+});
+
+add_task(async function test_navigate_by_src_scripting_mv3_autoActiveTab() {
+  await verifyNavigateBySrc({
+    useScriptingAPI: true,
+    manifest_version: 3,
+    host_permissions: ["http://mochi.test/"],
+  });
 });
 
 // Test helper to verify that navigating frames by setting window.location from
 // inside the frame revokes the activeTab permission.
-const verifyNavigateByWindowLocation = async ({ useScriptingAPI, manifest_version = 2 }) => {
-  let extension = makeExtension(
-    async function background() {
+const verifyNavigateByWindowLocation = async ({ useScriptingAPI, manifest_version, host_permissions }) => {
+  let extension = makeExtension({
+    async background() {
       const URL = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_contentscript_activeTab.html";
       const PAGE_SOURCE = "mochi.test";
       const EMPTY_SOURCE = "about:blank";
@@ -603,7 +667,8 @@ const verifyNavigateByWindowLocation = async ({ useScriptingAPI, manifest_versio
     },
     useScriptingAPI,
     manifest_version,
-  );
+    host_permissions,
+  });
 
   await extension.startup();
 
@@ -625,7 +690,19 @@ add_task(async function test_navigate_by_window_location_scripting() {
 });
 
 add_task(async function test_navigate_by_window_location_scripting_mv3() {
-  await verifyNavigateByWindowLocation({ useScriptingAPI: true, manifest_version: 3 });
+  await verifyNavigateByWindowLocation({
+    useScriptingAPI: true,
+    manifest_version: 3,
+    host_permissions: null,
+   });
+});
+
+add_task(async function test_navigate_by_window_location_scripting_mv3_autoActiveTab() {
+  await verifyNavigateByWindowLocation({
+    useScriptingAPI: true,
+    manifest_version: 3,
+    host_permissions: ["http://mochi.test/"],
+   });
 });
 
 </script>
