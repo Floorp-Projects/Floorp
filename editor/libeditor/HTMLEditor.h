@@ -3312,8 +3312,8 @@ class HTMLEditor final : public EditorBase,
       nsAtom& aProperty, nsAtom* aAttribute, const nsAString& aValue);
 
   /**
-   * RemoveInlinePropertyInternal() removes specified style from `mTypeInState`
-   * if `Selection` is collapsed.  Otherwise, removing the style.
+   * RemoveInlinePropertyAsSubAction() removes specified style from
+   * `mTypeInState` if `Selection` is collapsed.  Otherwise, removing the style.
    *
    * @param aHTMLProperty       nullptr if you want to remove all inline styles.
    *                            Otherwise, one of the presentation tag names
@@ -3327,7 +3327,7 @@ class HTMLEditor final : public EditorBase,
    *                                    `<strong>` elements are also removed.
    */
   enum class RemoveRelatedElements { Yes, No };
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RemoveInlinePropertyInternal(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RemoveInlinePropertyAsSubAction(
       nsStaticAtom* aHTMLProperty, nsStaticAtom* aAttribute,
       RemoveRelatedElements aRemoveRelatedElements);
 

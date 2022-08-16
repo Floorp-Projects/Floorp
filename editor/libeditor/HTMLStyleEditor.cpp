@@ -6,6 +6,7 @@
 #include "ErrorList.h"
 #include "HTMLEditor.h"
 
+#include "AutoRangeArray.h"
 #include "EditAction.h"
 #include "EditorUtils.h"
 #include "HTMLEditHelpers.h"
@@ -96,21 +97,21 @@ nsresult HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
 
   if (&aProperty == nsGkAtoms::sup) {
     // Superscript and Subscript styles are mutually exclusive.
-    nsresult rv = RemoveInlinePropertyInternal(nsGkAtoms::sub, nullptr,
-                                               RemoveRelatedElements::No);
+    nsresult rv = RemoveInlinePropertyAsSubAction(nsGkAtoms::sub, nullptr,
+                                                  RemoveRelatedElements::No);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::RemoveInlinePropertyInternal(nsGkAtoms::sub, "
+          "HTMLEditor::RemoveInlinePropertyAsSubAction(nsGkAtoms::sub, "
           "RemoveRelatedElements::No) failed");
       return EditorBase::ToGenericNSResult(rv);
     }
   } else if (&aProperty == nsGkAtoms::sub) {
     // Superscript and Subscript styles are mutually exclusive.
-    nsresult rv = RemoveInlinePropertyInternal(nsGkAtoms::sup, nullptr,
-                                               RemoveRelatedElements::No);
+    nsresult rv = RemoveInlinePropertyAsSubAction(nsGkAtoms::sup, nullptr,
+                                                  RemoveRelatedElements::No);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "HTMLEditor::RemoveInlinePropertyInternal(nsGkAtoms::sup, "
+          "HTMLEditor::RemoveInlinePropertyAsSubAction(nsGkAtoms::sup, "
           "RemoveRelatedElements::No) failed");
       return EditorBase::ToGenericNSResult(rv);
     }
@@ -122,30 +123,30 @@ nsresult HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
   // must be only when XUL command is executed on composer.
   else if (!aPrincipal) {
     if (&aProperty == nsGkAtoms::tt) {
-      nsresult rv = RemoveInlinePropertyInternal(
+      nsresult rv = RemoveInlinePropertyAsSubAction(
           nsGkAtoms::font, nsGkAtoms::face, RemoveRelatedElements::No);
       if (NS_FAILED(rv)) {
         NS_WARNING(
-            "HTMLEditor::RemoveInlinePropertyInternal(nsGkAtoms::font, "
+            "HTMLEditor::RemoveInlinePropertyAsSubAction(nsGkAtoms::font, "
             "nsGkAtoms::face, RemoveRelatedElements::No) failed");
         return EditorBase::ToGenericNSResult(rv);
       }
     } else if (&aProperty == nsGkAtoms::font && aAttribute == nsGkAtoms::face) {
       if (!value.LowerCaseEqualsASCII("tt")) {
-        nsresult rv = RemoveInlinePropertyInternal(nsGkAtoms::tt, nullptr,
-                                                   RemoveRelatedElements::No);
+        nsresult rv = RemoveInlinePropertyAsSubAction(
+            nsGkAtoms::tt, nullptr, RemoveRelatedElements::No);
         if (NS_FAILED(rv)) {
           NS_WARNING(
-              "HTMLEditor::RemoveInlinePropertyInternal(nsGkAtoms::tt, "
+              "HTMLEditor::RemoveInlinePropertyAsSubAction(nsGkAtoms::tt, "
               "RemoveRelatedElements::No) failed");
           return EditorBase::ToGenericNSResult(rv);
         }
       } else {
-        nsresult rv = RemoveInlinePropertyInternal(
+        nsresult rv = RemoveInlinePropertyAsSubAction(
             nsGkAtoms::font, nsGkAtoms::face, RemoveRelatedElements::No);
         if (NS_FAILED(rv)) {
           NS_WARNING(
-              "HTMLEditor::RemoveInlinePropertyInternal(nsGkAtoms::font, "
+              "HTMLEditor::RemoveInlinePropertyAsSubAction(nsGkAtoms::font, "
               "nsGkAtoms::face, RemoveRelatedElements::No) failed");
           return EditorBase::ToGenericNSResult(rv);
         }
@@ -2015,10 +2016,10 @@ nsresult HTMLEditor::RemoveAllInlinePropertiesAsAction(
       !ignoredError.Failed(),
       "HTMLEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  rv =
-      RemoveInlinePropertyInternal(nullptr, nullptr, RemoveRelatedElements::No);
+  rv = RemoveInlinePropertyAsSubAction(nullptr, nullptr,
+                                       RemoveRelatedElements::No);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::RemoveInlinePropertyInternal(nullptr, "
+                       "HTMLEditor::RemoveInlinePropertyAsSubAction(nullptr, "
                        "nullptr, RemoveRelatedElements::No) failed");
   return EditorBase::ToGenericNSResult(rv);
 }
@@ -2050,10 +2051,10 @@ nsresult HTMLEditor::RemoveInlinePropertyAsAction(nsStaticAtom& aHTMLProperty,
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  rv = RemoveInlinePropertyInternal(&aHTMLProperty, aAttribute,
-                                    RemoveRelatedElements::Yes);
+  rv = RemoveInlinePropertyAsSubAction(&aHTMLProperty, aAttribute,
+                                       RemoveRelatedElements::Yes);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::RemoveInlinePropertyInternal("
+                       "HTMLEditor::RemoveInlinePropertyAsSubAction("
                        "RemoveRelatedElements::Yes) failed");
   return EditorBase::ToGenericNSResult(rv);
 }
@@ -2085,17 +2086,17 @@ NS_IMETHODIMP HTMLEditor::RemoveInlineProperty(const nsAString& aProperty,
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  rv = RemoveInlinePropertyInternal(MOZ_KnownLive(property),
-                                    MOZ_KnownLive(attribute),
-                                    RemoveRelatedElements::No);
+  rv = RemoveInlinePropertyAsSubAction(MOZ_KnownLive(property),
+                                       MOZ_KnownLive(attribute),
+                                       RemoveRelatedElements::No);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::RemoveInlinePropertyInternal("
+                       "HTMLEditor::RemoveInlinePropertyAsSubAction("
                        "RemoveRelatedElements::No) failed");
   return EditorBase::ToGenericNSResult(rv);
 }
 
-nsresult HTMLEditor::RemoveInlinePropertyInternal(
-    nsStaticAtom* aProperty, nsStaticAtom* aAttribute,
+nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
+    nsStaticAtom* aHTMLProperty, nsStaticAtom* aAttribute,
     RemoveRelatedElements aRemoveRelatedElements) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aAttribute != nsGkAtoms::_empty);
@@ -2121,13 +2122,13 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
   };
   AutoTArray<HTMLStyle, 3> removeStyles;
   if (aRemoveRelatedElements == RemoveRelatedElements::Yes) {
-    if (aProperty == nsGkAtoms::b) {
+    if (aHTMLProperty == nsGkAtoms::b) {
       removeStyles.AppendElement(HTMLStyle(nsGkAtoms::strong));
-    } else if (aProperty == nsGkAtoms::i) {
+    } else if (aHTMLProperty == nsGkAtoms::i) {
       removeStyles.AppendElement(HTMLStyle(nsGkAtoms::em));
-    } else if (aProperty == nsGkAtoms::strike) {
+    } else if (aHTMLProperty == nsGkAtoms::strike) {
       removeStyles.AppendElement(HTMLStyle(nsGkAtoms::s));
-    } else if (aProperty == nsGkAtoms::font) {
+    } else if (aHTMLProperty == nsGkAtoms::font) {
       if (aAttribute == nsGkAtoms::size) {
         removeStyles.AppendElement(HTMLStyle(nsGkAtoms::big));
         removeStyles.AppendElement(HTMLStyle(nsGkAtoms::small));
@@ -2143,7 +2144,7 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
       }
     }
   }
-  removeStyles.AppendElement(HTMLStyle(aProperty, aAttribute));
+  removeStyles.AppendElement(HTMLStyle(aHTMLProperty, aAttribute));
 
   if (SelectionRef().IsCollapsed()) {
     // Manipulating text attributes on a collapsed selection only sets state
@@ -2189,79 +2190,64 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
       !ignoredError.Failed(),
       "HTMLEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  {
-    AutoSelectionRestorer restoreSelectionLater(*this);
-    // TODO: We don't need AutoTransactionsConserveSelection here in the normal
-    //       cases, but removing this may cause the behavior with the legacy
-    //       mutation event listeners.  We should try to delete this in a bug.
-    AutoTransactionsConserveSelection dontChangeMySelection(*this);
+  // TODO: We don't need AutoTransactionsConserveSelection here in the normal
+  //       cases, but removing this may cause the behavior with the legacy
+  //       mutation event listeners.  We should try to delete this in a bug.
+  AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
-    for (HTMLStyle& style : removeStyles) {
-      // Loop through the ranges in the selection.
-      // XXX Although `Selection` will be restored by AutoSelectionRestorer,
-      //     AutoSelectionRangeArray just grabs the ranges in `Selection`.
-      //     Therefore, modifying each range may notify selection listener.  So
-      //     perhaps, we should clone each range here instead.
-      AutoSelectionRangeArray arrayOfRanges(SelectionRef());
-      for (auto& range : arrayOfRanges.mRanges) {
-        if (style.mProperty == nsGkAtoms::name) {
-          // Promote range if it starts or end in a named anchor and we want to
-          // remove named anchors
-          nsresult rv = PromoteRangeIfStartsOrEndsInNamedAnchor(*range);
-          if (NS_FAILED(rv)) {
-            NS_WARNING(
-                "HTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor() failed");
-            return rv;
-          }
-        } else {
-          // Adjust range to include any ancestors whose children are entirely
-          // selected
-          nsresult rv = PromoteInlineRange(*range);
-          if (NS_FAILED(rv)) {
-            NS_WARNING("HTMLEditor::PromoteInlineRange() failed");
-            return rv;
-          }
-        }
+  AutoRangeArray selectionRanges(SelectionRef());
+  MOZ_ALWAYS_TRUE(selectionRanges.SaveAndTrackRanges(*this));
 
-        // Remove this style from ancestors of our range endpoints, splitting
-        // them as appropriate
-        SplitRangeOffResult splitRangeOffResult =
-            SplitAncestorStyledInlineElementsAtRangeEdges(
-                EditorDOMRange(range), MOZ_KnownLive(style.mProperty),
-                MOZ_KnownLive(style.mAttribute));
-        if (splitRangeOffResult.isErr()) {
-          NS_WARNING(
-              "HTMLEditor::SplitAncestorStyledInlineElementsAtRangeEdges() "
-              "failed");
-          return splitRangeOffResult.unwrapErr();
-        }
-        // Ignore caret suggestion because of dontChangeMySelection.
-        splitRangeOffResult.IgnoreCaretPointSuggestion();
-
-        // XXX Modifying `range` means that we may modify ranges in `Selection`.
-        //     Is this intentional?  Note that the range may be not in
-        //     `Selection` too.  It seems that at least one of them is not
-        //     an unexpected case.
-        const EditorDOMRange& splitRange = splitRangeOffResult.RangeRef();
-        if (NS_WARN_IF(!splitRange.IsPositioned())) {
-          continue;
-        }
-
-        nsresult rv =
-            range->SetStartAndEnd(splitRange.StartRef().ToRawRangeBoundary(),
-                                  splitRange.EndRef().ToRawRangeBoundary());
-        // Note that modifying a range in `Selection` may run script so that
-        // we might have been destroyed here.
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
+  for (HTMLStyle& style : removeStyles) {
+    for (const OwningNonNull<nsRange>& range : selectionRanges.Ranges()) {
+      if (style.mProperty == nsGkAtoms::name) {
+        // Promote range if it starts or end in a named anchor and we want to
+        // remove named anchors
+        nsresult rv = PromoteRangeIfStartsOrEndsInNamedAnchor(*range);
         if (NS_FAILED(rv)) {
-          NS_WARNING("nsRange::SetStartAndEnd() failed");
+          NS_WARNING(
+              "HTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor() failed");
           return rv;
         }
+      } else {
+        // Adjust range to include any ancestors whose children are entirely
+        // selected
+        nsresult rv = PromoteInlineRange(*range);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("HTMLEditor::PromoteInlineRange() failed");
+          return rv;
+        }
+      }
 
-        // Collect editable nodes which are entirely contained in the range.
-        AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
+      // Remove this style from ancestors of our range endpoints, splitting
+      // them as appropriate
+      SplitRangeOffResult splitRangeOffResult =
+          SplitAncestorStyledInlineElementsAtRangeEdges(
+              EditorDOMRange(range), MOZ_KnownLive(style.mProperty),
+              MOZ_KnownLive(style.mAttribute));
+      if (splitRangeOffResult.isErr()) {
+        NS_WARNING(
+            "HTMLEditor::SplitAncestorStyledInlineElementsAtRangeEdges() "
+            "failed");
+        return splitRangeOffResult.unwrapErr();
+      }
+      // There is AutoTransactionsConserveSelection, so we don't need to
+      // update selection here.
+      splitRangeOffResult.IgnoreCaretPointSuggestion();
+
+      // XXX Modifying `range` means that we may modify ranges in `Selection`.
+      //     Is this intentional?  Note that the range may be not in
+      //     `Selection` too.  It seems that at least one of them is not
+      //     an unexpected case.
+      const EditorDOMRange& splitRange = splitRangeOffResult.RangeRef();
+      if (NS_WARN_IF(!splitRange.IsPositioned())) {
+        continue;
+      }
+
+      // Collect editable nodes which are entirely contained in the range.
+      AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
+      {  // TODO: This block keep the following line history after the next
+         //       patch.
         if (splitRange.InSameContainer() &&
             splitRange.StartRef().IsInTextNode()) {
           if (!EditorUtils::IsEditableContent(
@@ -2296,7 +2282,9 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
           }
           // Append all entirely selected nodes.
           ContentSubtreeIterator subtreeIter;
-          if (NS_SUCCEEDED(subtreeIter.Init(range))) {
+          if (NS_SUCCEEDED(
+                  subtreeIter.Init(splitRange.StartRef().ToRawRangeBoundary(),
+                                   splitRange.EndRef().ToRawRangeBoundary()))) {
             for (; !subtreeIter.IsDone(); subtreeIter.Next()) {
               nsCOMPtr<nsINode> node = subtreeIter.GetCurrentNode();
               if (NS_WARN_IF(!node)) {
@@ -2331,8 +2319,8 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
               NS_WARNING("HTMLEditor::RemoveStyleInside() failed");
               return removeStyleResult.unwrapErr();
             }
-            // There is AutoTransactionsConserveSelection instance here so that
-            // we don't need to update selection with removeStyleResult here.
+            // There is AutoTransactionsConserveSelection, so we don't need to
+            // update selection here.
 
             // If the element was removed from the DOM tree by
             // RemoveStyleInside, we need nothing to do for it anymore.
@@ -2345,7 +2333,7 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
               IsRemovableParentStyleWithNewSpanElement(
                   MOZ_KnownLive(content), MOZ_KnownLive(style.mProperty),
                   MOZ_KnownLive(style.mAttribute));
-          if (isRemovableParentStyleOrError.isErr()) {
+          if (MOZ_UNLIKELY(isRemovableParentStyleOrError.isErr())) {
             NS_WARNING(
                 "HTMLEditor::IsRemovableParentStyleWithNewSpanElement() "
                 "failed");
@@ -2365,17 +2353,20 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
                                         MOZ_KnownLive(*style.mProperty),
                                         MOZ_KnownLive(style.mAttribute),
                                         u"-moz-editor-invert-value"_ns);
-            if (MOZ_UNLIKELY(setStyleResult.isErr() &&
-                             NS_WARN_IF(setStyleResult.inspectErr() ==
-                                        NS_ERROR_EDITOR_DESTROYED))) {
-              return NS_ERROR_EDITOR_DESTROYED;
+            if (MOZ_UNLIKELY(setStyleResult.isErr())) {
+              if (NS_WARN_IF(setStyleResult.unwrapErr() ==
+                             NS_ERROR_EDITOR_DESTROYED)) {
+                NS_WARNING(
+                    "HTMLEditor::SetInlinePropertyOnNode(-moz-editor-invert-"
+                    "value) failed");
+                return NS_ERROR_EDITOR_DESTROYED;
+              }
+              NS_WARNING(
+                  "HTMLEditor::SetInlinePropertyOnNode(-moz-editor-invert-"
+                  "value) failed, but ignored");
             }
             // There is AutoTransactionsConserveSelection, so we don't need to
             // update selection here.
-            NS_WARNING_ASSERTION(
-                setStyleResult.isOk(),
-                "HTMLEditor::SetInlinePropertyOnNode(-moz-editor-invert-value) "
-                "failed, but ignored");
             continue;
           }
 
@@ -2406,61 +2397,67 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
           // update selection here.
           wrapTextInStyledElementResult.IgnoreCaretPointSuggestion();
         }
+      }
 
-        // For avoiding unnecessary loop cost, check whether the style is
-        // invertible first.
-        if (style.mProperty &&
-            CSSEditUtils::IsCSSInvertible(*style.mProperty, style.mAttribute)) {
-          // Finally, we should remove the style from all leaf text nodes if
-          // they still have the style.
-          AutoTArray<OwningNonNull<Text>, 32> leafTextNodes;
-          for (OwningNonNull<nsIContent>& content : arrayOfContents) {
-            // XXX Should we ignore content which has already removed from the
-            //     DOM tree by the previous for-loop?
-            if (content->IsElement()) {
-              CollectEditableLeafTextNodes(*content->AsElement(),
-                                           leafTextNodes);
-            }
-          }
-          for (OwningNonNull<Text>& textNode : leafTextNodes) {
-            Result<bool, nsresult> isRemovableParentStyleOrError =
-                IsRemovableParentStyleWithNewSpanElement(
-                    MOZ_KnownLive(textNode), MOZ_KnownLive(style.mProperty),
-                    MOZ_KnownLive(style.mAttribute));
-            if (isRemovableParentStyleOrError.isErr()) {
-              NS_WARNING(
-                  "HTMLEditor::IsRemovableParentStyleWithNewSpanElement() "
-                  "failed");
-              return isRemovableParentStyleOrError.unwrapErr();
-            }
-            if (!isRemovableParentStyleOrError.unwrap()) {
-              continue;
-            }
-            // MOZ_KnownLive because 'leafTextNodes' is guaranteed to
-            // keep it alive.
-            SplitRangeOffFromNodeResult wrapTextInStyledElementResult =
-                SetInlinePropertyOnTextNode(MOZ_KnownLive(textNode), 0,
-                                            textNode->TextLength(),
-                                            MOZ_KnownLive(*style.mProperty),
-                                            MOZ_KnownLive(style.mAttribute),
-                                            u"-moz-editor-invert-value"_ns);
-            if (wrapTextInStyledElementResult.isErr()) {
-              NS_WARNING(
-                  "HTMLEditor::SetInlinePropertyOnTextNode(-moz-editor-invert-"
-                  "value) failed");
-              return wrapTextInStyledElementResult.unwrapErr();
-            }
-            // There is AutoTransactionsConserveSelection, so we don't need to
-            // update selection here.
-            wrapTextInStyledElementResult.IgnoreCaretPointSuggestion();
+      // For avoiding unnecessary loop cost, check whether the style is
+      // invertible first.
+      if (style.mProperty &&
+          CSSEditUtils::IsCSSInvertible(*style.mProperty, style.mAttribute)) {
+        // Finally, we should remove the style from all leaf text nodes if
+        // they still have the style.
+        AutoTArray<OwningNonNull<Text>, 32> leafTextNodes;
+        for (OwningNonNull<nsIContent>& content : arrayOfContents) {
+          // XXX Should we ignore content which has already removed from the
+          //     DOM tree by the previous for-loop?
+          if (content->IsElement()) {
+            CollectEditableLeafTextNodes(*content->AsElement(), leafTextNodes);
           }
         }
-      }  // for-loop of selection ranges
-    }    // for-loop of styles
-  }      // AutoSelectionRestorer and AutoTransactionsConserveSelection
+        for (OwningNonNull<Text>& textNode : leafTextNodes) {
+          Result<bool, nsresult> isRemovableParentStyleOrError =
+              IsRemovableParentStyleWithNewSpanElement(
+                  MOZ_KnownLive(textNode), MOZ_KnownLive(style.mProperty),
+                  MOZ_KnownLive(style.mAttribute));
+          if (isRemovableParentStyleOrError.isErr()) {
+            NS_WARNING(
+                "HTMLEditor::IsRemovableParentStyleWithNewSpanElement() "
+                "failed");
+            return isRemovableParentStyleOrError.unwrapErr();
+          }
+          if (!isRemovableParentStyleOrError.unwrap()) {
+            continue;
+          }
+          // MOZ_KnownLive because 'leafTextNodes' is guaranteed to
+          // keep it alive.
+          SplitRangeOffFromNodeResult wrapTextInStyledElementResult =
+              SetInlinePropertyOnTextNode(MOZ_KnownLive(textNode), 0,
+                                          textNode->TextLength(),
+                                          MOZ_KnownLive(*style.mProperty),
+                                          MOZ_KnownLive(style.mAttribute),
+                                          u"-moz-editor-invert-value"_ns);
+          if (wrapTextInStyledElementResult.isErr()) {
+            NS_WARNING(
+                "HTMLEditor::SetInlinePropertyOnTextNode(-moz-editor-invert-"
+                "value) failed");
+            return wrapTextInStyledElementResult.unwrapErr();
+          }
+          // There is AutoTransactionsConserveSelection, so we don't need to
+          // update selection here.
+          wrapTextInStyledElementResult.IgnoreCaretPointSuggestion();
+        }
+      }
+    }  // for-loop of selectionRanges
+  }    // for-loop of styles
 
-  // Restoring `Selection` may cause destroying us.
-  return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : NS_OK;
+  MOZ_ASSERT(selectionRanges.HasSavedRanges());
+  selectionRanges.RestoreFromSavedRanges();
+
+  nsresult rv = selectionRanges.ApplyTo(SelectionRef());
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AutoRangeArray::ApplyTo() failed");
+  return rv;
 }
 
 Result<bool, nsresult> HTMLEditor::IsRemovableParentStyleWithNewSpanElement(
