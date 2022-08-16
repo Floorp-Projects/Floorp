@@ -243,6 +243,8 @@ class nsContextMenu {
     this.inSyntheticDoc = context.inSyntheticDoc;
     this.inAboutDevtoolsToolbox = context.inAboutDevtoolsToolbox;
 
+    this.isSponsoredLink = context.isSponsoredLink;
+
     // Everything after this isn't sent directly from ContextMenu
     if (this.target) {
       this.ownerDoc = this.target.ownerDocument;
@@ -1390,7 +1392,25 @@ class nsContextMenu {
 
   // Open linked-to URL in a new window.
   openLink() {
-    openLinkIn(this.linkURL, "window", this._openLinkInParameters());
+    let params;
+    if (this.isSponsoredLink) {
+      params = {
+        globalHistoryOptions: { triggeringSponsoredURL: this.linkURL },
+      };
+    } else if (this.browser.hasAttribute("triggeringSponsoredURL")) {
+      params = {
+        globalHistoryOptions: {
+          triggeringSponsoredURL: this.browser.getAttribute(
+            "triggeringSponsoredURL"
+          ),
+          triggeringSponsoredURLVisitTimeMS: this.browser.getAttribute(
+            "triggeringSponsoredURLVisitTimeMS"
+          ),
+        },
+      };
+    }
+
+    openLinkIn(this.linkURL, "window", this._openLinkInParameters(params));
   }
 
   // Open linked-to URL in a new private window.

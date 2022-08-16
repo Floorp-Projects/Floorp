@@ -288,6 +288,7 @@ export class TopSiteLink extends React.PureComponent {
             onKeyPress={this.onKeyPress}
             onClick={onClick}
             draggable={true}
+            data-is-sponsored-link={!!link.sponsored_tile_id}
           >
             <div className="tile" aria-hidden={true}>
               <div
