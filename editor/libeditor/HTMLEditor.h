@@ -3882,10 +3882,32 @@ class HTMLEditor final : public EditorBase,
    */
   MOZ_CAN_RUN_SCRIPT nsresult RelativeFontChange(FontSize aDir);
 
-  MOZ_CAN_RUN_SCRIPT nsresult RelativeFontChangeOnNode(FontSize aDir,
-                                                       nsIContent* aNode);
-  MOZ_CAN_RUN_SCRIPT nsresult RelativeFontChangeHelper(FontSize aDir,
-                                                       nsINode* aNode);
+  /**
+   * Wrap aContent in <big> or <small> element and make children of
+   * <font size=n> wrap with <big> or <small> too.  Note that if there is
+   * opposite element for aIncrementOrDecrement, their children will be just
+   * unwrapped.
+   *
+   * @param aDir        Whether increase or decrease the font size of aContent.
+   * @param aContent    The content node whose font size will be changed.
+   * @return            A suggest point to put caret.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  SetFontSizeWithBigOrSmallElement(nsIContent& aContent,
+                                   FontSize aIncrementOrDecrement);
+
+  /**
+   * Adjust font size of font element children recursively with handling
+   * <big> and <small> elements.
+   *
+   * @param aDir        Whether increase or decrease the font size of aContent.
+   * @param aContent    The content node whose font size will be changed.
+   *                    All descendants will be handled recursively.
+   * @return            A suggest point to put caret.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  SetFontSizeOfFontElementChildren(nsIContent& aContent,
+                                   FontSize aIncrementOrDecrement);
 
   /**
    * SetInlinePropertyOnTextNode() splits aData if aStartOffset and/or
