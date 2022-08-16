@@ -163,6 +163,7 @@ testing/web-platform/tests/tools/third_party/
 testing/xpcshell/dns-packet/
 testing/xpcshell/node-ip/
 testing/xpcshell/node-http2/
+testing/xpcshell/node-ws/
 testing/xpcshell/odoh-wasm/
 third_party/
 toolkit/components/certviewer/content/vendor/

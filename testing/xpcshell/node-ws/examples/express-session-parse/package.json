@@ -1,0 +1,11 @@
+{
+  "author": "",
+  "name": "express-session-parse",
+  "version": "0.0.0",
+  "repository": "websockets/ws",
+  "dependencies": {
+    "express": "^4.16.4",
+    "express-session": "^1.16.1",
+    "uuid": "^8.3.2"
+  }
+}
