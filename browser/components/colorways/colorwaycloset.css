@@ -255,7 +255,7 @@ figure > img {
 #homepage-reset-container > .success-prompt > span::before {
   display: inline-block;
   content: "";
-  background: var(--green-50) url('chrome://global/skin/icons/check.svg') center center no-repeat;
+  background: var(--green-70) url('chrome://global/skin/icons/check.svg') center center no-repeat;
   -moz-context-properties: fill;
   fill: white;
   width: 22px;
