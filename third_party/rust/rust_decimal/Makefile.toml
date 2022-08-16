@@ -184,33 +184,51 @@ dependencies = [
 command = "cargo"
 args = ["test", "--workspace", "--no-default-features", "--features=rust-fuzz", "rust_fuzz", "--", "--skip", "generated"]
 
-[tasks.test-db-mysql-all]
+[tasks.test-db-diesel]
 dependencies = [
-    "test-db-diesel-mysql"
+    "test-db-diesel1-mysql",
+    "test-db-diesel1-postgres",
+    "test-db-diesel2-mysql",
+    "test-db-diesel2-postgres",
 ]
 
-[tasks.test-db-diesel-mysql]
+[tasks.test-db-mysql-all]
+dependencies = [
+    "test-db-diesel1-mysql",
+    "test-db-diesel2-mysql",
+]
+
+[tasks.test-db-diesel1-mysql]
 command = "cargo"
-args = ["test", "--workspace", "--tests", "--features=db-diesel-mysql", "db", "--", "--skip", "generated"]
+args = ["test", "--workspace", "--tests", "--features=db-diesel1-mysql", "mysql", "--", "--skip", "generated"]
+
+[tasks.test-db-diesel2-mysql]
+command = "cargo"
+args = ["test", "--workspace", "--tests", "--features=db-diesel2-mysql", "mysql", "--", "--skip", "generated"]
 
 [tasks.test-db-postgres-all]
 dependencies = [
     "test-db-postgres",
     "test-db-tokio-postgres",
-    "test-db-diesel-postgres"
+    "test-db-diesel1-postgres",
+    "test-db-diesel2-postgres"
 ]
 
 [tasks.test-db-postgres]
 command = "cargo"
-args = ["test", "--workspace", "--tests", "--features=db-postgres", "db", "--", "--skip", "generated"]
+args = ["test", "--workspace", "--tests", "--features=db-postgres", "postgres", "--", "--skip", "generated"]
 
 [tasks.test-db-tokio-postgres]
 command = "cargo"
-args = ["test", "--workspace", "--tests", "--features=db-tokio-postgres", "db", "--", "--skip", "generated"]
+args = ["test", "--workspace", "--tests", "--features=db-tokio-postgres", "postgres", "--", "--skip", "generated"]
 
-[tasks.test-db-diesel-postgres]
+[tasks.test-db-diesel1-postgres]
 command = "cargo"
-args = ["test", "--workspace", "--tests", "--features=db-diesel-postgres", "db", "--", "--skip", "generated"]
+args = ["test", "--workspace", "--tests", "--features=db-diesel1-postgres", "postgres", "--", "--skip", "generated"]
+
+[tasks.test-db-diesel2-postgres]
+command = "cargo"
+args = ["test", "--workspace", "--tests", "--features=db-diesel2-postgres", "postgres", "--", "--skip", "generated"]
 
 [tasks.test-rocket-traits]
 command = "cargo"
