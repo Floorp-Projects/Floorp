@@ -557,10 +557,17 @@ nsUnknownContentTypeDialog.prototype = {
     // then set up simple ui
     var mimeType = this.mLauncher.MIMEInfo.MIMEType;
     let isPlain = mimeType == "text/plain";
+
+    this.isExemptExecutableExtension = Services.policies.isExemptExecutableExtension(
+      url.spec,
+      fname?.split(".").at(-1)
+    );
+
     var shouldntRememberChoice =
       mimeType == "application/octet-stream" ||
       mimeType == "application/x-msdownload" ||
-      this.mLauncher.targetFileIsExecutable ||
+      (this.mLauncher.targetFileIsExecutable &&
+        !this.isExemptExecutableExtension) ||
       // Do not offer to remember text/plain mimetype choices if the file
       // isn't actually a 'plain' text file.
       (isPlain && lazy.gReputationService.isBinary(suggestedFileName));
@@ -737,7 +744,10 @@ nsUnknownContentTypeDialog.prototype = {
       // in that case).
 
       //  Default is Ok if the file isn't executable (and vice-versa).
-      return !this.mLauncher.targetFileIsExecutable;
+      return (
+        !this.mLauncher.targetFileIsExecutable ||
+        this.isExemptExecutableExtension
+      );
     }
     // On other platforms, default is Ok if there is a default app.
     // Note that nsIMIMEInfo providers need to ensure that this holds true
@@ -778,7 +788,8 @@ nsUnknownContentTypeDialog.prototype = {
     var mimeType = this.mLauncher.MIMEInfo.MIMEType;
     var openHandler = this.dialogElement("openHandler");
     if (
-      this.mLauncher.targetFileIsExecutable ||
+      (this.mLauncher.targetFileIsExecutable &&
+        !this.isExemptExecutableExtension) ||
       ((mimeType == "application/octet-stream" ||
         mimeType == "application/x-msdos-program" ||
         mimeType == "application/x-msdownload") &&

@@ -67,9 +67,10 @@ interface nsIEnterprisePolicies : nsISupports
   bool allowedInstallSource(in nsIURI uri);
   /**
    * Uses ExemptDomainFileTypePairsFromFileTypeDownloadWarnings to determine
-   * if a given file extension is exempted from executable warnings.
+   * if a given file extension is exempted from executable behavior and
+   * warnings based on the URL.
    *
-   * @returns A boolean - true if warnings should not be shown.
+   * @returns A boolean - true if the extension should be exempt.
    */
-  bool isExemptExecutableExtension(in ACString origin, in ACString extension);
+  bool isExemptExecutableExtension(in ACString url, in ACString extension);
 };

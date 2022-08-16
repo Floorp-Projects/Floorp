@@ -701,16 +701,10 @@ var DownloadIntegration = {
       fileExtension &&
       fileExtension.toLowerCase() == "exe";
 
-    let isExemptExecutableExtension = false;
-    try {
-      let url = new URL(aDownload.source.url);
-      isExemptExecutableExtension = Services.policies.isExemptExecutableExtension(
-        url.origin,
-        fileExtension?.toLowerCase()
-      );
-    } catch (e) {
-      // Invalid URL, go down the original path.
-    }
+    let isExemptExecutableExtension = Services.policies.isExemptExecutableExtension(
+      aDownload.source.url,
+      fileExtension
+    );
 
     // Ask for confirmation if the file is executable, except for .exe on
     // Windows where the operating system will show the prompt based on the
