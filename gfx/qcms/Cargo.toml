@@ -20,6 +20,3 @@ cmyk = []
 
 [dependencies]
 libc = {version = "0.2", optional = true }
-
-[build-dependencies]
-rustc_version = "0.4"
