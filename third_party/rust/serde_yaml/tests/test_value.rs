@@ -1,4 +1,4 @@
-#![allow(clippy::eq_op)]
+#![allow(clippy::derive_partial_eq_without_eq, clippy::eq_op)]
 
 use serde::de::IntoDeserializer;
 use serde::Deserialize;

@@ -951,38 +951,35 @@ where
     if v == "false" {
         return visitor.visit_bool(false);
     }
-    if v.starts_with("0x") || v.starts_with("+0x") {
-        let start = 2 + v.starts_with('+') as usize;
-        if let Ok(n) = u64::from_str_radix(&v[start..], 16) {
+    if let Some(rest) = Option::or(v.strip_prefix("0x"), v.strip_prefix("+0x")) {
+        if let Ok(n) = u64::from_str_radix(rest, 16) {
             return visitor.visit_u64(n);
         }
     }
-    if v.starts_with("-0x") {
-        let negative = format!("-{}", &v[3..]);
+    if let Some(rest) = v.strip_prefix("-0x") {
+        let negative = format!("-{}", rest);
         if let Ok(n) = i64::from_str_radix(&negative, 16) {
             return visitor.visit_i64(n);
         }
     }
-    if v.starts_with("0o") || v.starts_with("+0o") {
-        let start = 2 + v.starts_with('+') as usize;
-        if let Ok(n) = u64::from_str_radix(&v[start..], 8) {
+    if let Some(rest) = Option::or(v.strip_prefix("0o"), v.strip_prefix("+0o")) {
+        if let Ok(n) = u64::from_str_radix(rest, 8) {
             return visitor.visit_u64(n);
         }
     }
-    if v.starts_with("-0o") {
-        let negative = format!("-{}", &v[3..]);
+    if let Some(rest) = v.strip_prefix("-0o") {
+        let negative = format!("-{}", rest);
         if let Ok(n) = i64::from_str_radix(&negative, 8) {
             return visitor.visit_i64(n);
         }
     }
-    if v.starts_with("0b") || v.starts_with("+0b") {
-        let start = 2 + v.starts_with('+') as usize;
-        if let Ok(n) = u64::from_str_radix(&v[start..], 2) {
+    if let Some(rest) = Option::or(v.strip_prefix("0b"), v.strip_prefix("+0b")) {
+        if let Ok(n) = u64::from_str_radix(rest, 2) {
             return visitor.visit_u64(n);
         }
     }
-    if v.starts_with("-0b") {
-        let negative = format!("-{}", &v[3..]);
+    if let Some(rest) = v.strip_prefix("-0b") {
+        let negative = format!("-{}", rest);
         if let Ok(n) = i64::from_str_radix(&negative, 2) {
             return visitor.visit_i64(n);
         }
@@ -1009,7 +1006,7 @@ where
     if let Ok(n) = v.parse() {
         return visitor.visit_i128(n);
     }
-    match trim_start_matches(v, '+') {
+    match v.trim_start_matches('+') {
         ".inf" | ".Inf" | ".INF" => return visitor.visit_f64(f64::INFINITY),
         _ => (),
     }
@@ -1025,14 +1022,6 @@ where
         }
     }
     visitor.visit_str(v)
-}
-
-#[allow(deprecated)]
-fn trim_start_matches(s: &str, pat: char) -> &str {
-    // str::trim_start_matches was added in 1.30, trim_left_matches deprecated
-    // in 1.33. We currently support rustc back to 1.17 so we need to continue
-    // to use the deprecated one.
-    s.trim_left_matches(pat)
 }
 
 fn invalid_type(event: &Event, exp: &dyn Expected) -> Error {
