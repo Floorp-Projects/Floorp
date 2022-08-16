@@ -960,6 +960,9 @@ impl RenderBackend {
 
                 for (_, doc) in &mut self.documents {
                     doc.scratch.memory_pressure();
+                    for tile_cache in self.tile_caches.values_mut() {
+                        tile_cache.memory_pressure(&mut self.resource_cache);
+                    }
                 }
 
                 let resource_updates = self.resource_cache.pending_updates();
