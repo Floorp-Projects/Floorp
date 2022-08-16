@@ -2260,7 +2260,6 @@ var gBrowserInit = {
 
         let hasValidUserGestureActivation = undefined;
         let fromExternal = undefined;
-        let globalHistoryOptions = undefined;
         if (window.arguments[1]) {
           if (!(window.arguments[1] instanceof Ci.nsIPropertyBag2)) {
             throw new Error(
@@ -2276,18 +2275,6 @@ var gBrowserInit = {
           }
           if (extraOptions.hasKey("fromExternal")) {
             fromExternal = extraOptions.getPropertyAsBool("fromExternal");
-          }
-          if (extraOptions.hasKey("triggeringSponsoredURL")) {
-            globalHistoryOptions = {
-              triggeringSponsoredURL: extraOptions.getPropertyAsACString(
-                "triggeringSponsoredURL"
-              ),
-            };
-            if (extraOptions.hasKey("triggeringSponsoredURLVisitTimeMS")) {
-              globalHistoryOptions.triggeringSponsoredURLVisitTimeMS = extraOptions.getPropertyAsUint64(
-                "triggeringSponsoredURLVisitTimeMS"
-              );
-            }
           }
         }
 
@@ -2309,7 +2296,6 @@ var gBrowserInit = {
             forceAboutBlankViewerInCurrent: !!window.arguments[6],
             hasValidUserGestureActivation,
             fromExternal,
-            globalHistoryOptions,
           });
         } catch (e) {
           Cu.reportError(e);

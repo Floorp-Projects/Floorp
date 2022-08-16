@@ -115,18 +115,13 @@ class ClickHandlerParent extends JSWindowActorParent {
       openerBrowser: browser,
       // The child ensures that untrusted events have a valid user activation.
       hasValidUserGestureActivation: true,
-    };
-
-    if (data.globalHistoryOptions) {
-      params.globalHistoryOptions = data.globalHistoryOptions;
-    } else {
-      params.globalHistoryOptions = {
+      globalHistoryOptions: {
         triggeringSponsoredURL: browser.getAttribute("triggeringSponsoredURL"),
         triggeringSponsoredURLVisitTimeMS: browser.getAttribute(
           "triggeringSponsoredURLVisitTimeMS"
         ),
-      };
-    }
+      },
+    };
 
     // The new tab/window must use the same userContextId.
     if (data.originAttributes.userContextId) {
