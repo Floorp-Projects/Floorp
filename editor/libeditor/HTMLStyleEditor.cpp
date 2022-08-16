@@ -2199,6 +2199,9 @@ nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
   MOZ_ALWAYS_TRUE(selectionRanges.SaveAndTrackRanges(*this));
 
   for (HTMLStyle& style : removeStyles) {
+    const bool isCSSInvertibleStyle =
+        style.mProperty &&
+        CSSEditUtils::IsCSSInvertible(*style.mProperty, style.mAttribute);
     for (const OwningNonNull<nsRange>& range : selectionRanges.Ranges()) {
       if (style.mProperty == nsGkAtoms::name) {
         // Promote range if it starts or end in a named anchor and we want to
@@ -2244,10 +2247,12 @@ nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
         continue;
       }
 
-      // Collect editable nodes which are entirely contained in the range.
-      AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
-      {  // TODO: This block keep the following line history after the next
-         //       patch.
+      AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContentsToInvertStyle;
+      {
+        // Collect top level children in the range first.
+        // TODO: Perhaps, HTMLEditUtils::IsSplittableNode should be used here
+        //       instead of EditorUtils::IsEditableContent.
+        AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContentsAroundRange;
         if (splitRange.InSameContainer() &&
             splitRange.StartRef().IsInTextNode()) {
           if (!EditorUtils::IsEditableContent(
@@ -2255,7 +2260,7 @@ nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
                   EditorType::HTML)) {
             continue;
           }
-          arrayOfContents.AppendElement(
+          arrayOfContentsAroundRange.AppendElement(
               *splitRange.StartRef().ContainerAs<Text>());
         } else if (splitRange.IsInTextNodes() &&
                    splitRange.InAdjacentSiblings()) {
@@ -2266,9 +2271,9 @@ nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
                   EditorType::HTML)) {
             continue;
           }
-          arrayOfContents.AppendElement(
+          arrayOfContentsAroundRange.AppendElement(
               *splitRange.StartRef().ContainerAs<Text>());
-          arrayOfContents.AppendElement(
+          arrayOfContentsAroundRange.AppendElement(
               *splitRange.EndRef().ContainerAs<Text>());
         } else {
           // Append first node if it's a text node but selected not entirely.
@@ -2277,7 +2282,7 @@ nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
               EditorUtils::IsEditableContent(
                   *splitRange.StartRef().ContainerAs<Text>(),
                   EditorType::HTML)) {
-            arrayOfContents.AppendElement(
+            arrayOfContentsAroundRange.AppendElement(
                 *splitRange.StartRef().ContainerAs<Text>());
           }
           // Append all entirely selected nodes.
@@ -2293,7 +2298,7 @@ nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
               if (node->IsContent() &&
                   EditorUtils::IsEditableContent(*node->AsContent(),
                                                  EditorType::HTML)) {
-                arrayOfContents.AppendElement(*node->AsContent());
+                arrayOfContentsAroundRange.AppendElement(*node->AsContent());
               }
             }
           }
@@ -2303,12 +2308,17 @@ nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
               !splitRange.EndRef().IsEndOfContainer() &&
               EditorUtils::IsEditableContent(
                   *splitRange.EndRef().ContainerAs<Text>(), EditorType::HTML)) {
-            arrayOfContents.AppendElement(
+            arrayOfContentsAroundRange.AppendElement(
                 *splitRange.EndRef().ContainerAs<Text>());
           }
         }
+        if (isCSSInvertibleStyle) {
+          arrayOfContentsToInvertStyle.SetCapacity(
+              arrayOfContentsAroundRange.Length());
+        }
 
-        for (OwningNonNull<nsIContent>& content : arrayOfContents) {
+        for (OwningNonNull<nsIContent>& content : arrayOfContentsAroundRange) {
+          // We should remove style from the element and its descendants.
           if (content->IsElement()) {
             Result<EditorDOMPoint, nsresult> removeStyleResult =
                 RemoveStyleInside(MOZ_KnownLive(*content->AsElement()),
@@ -2323,12 +2333,18 @@ nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
             // update selection here.
 
             // If the element was removed from the DOM tree by
-            // RemoveStyleInside, we need nothing to do for it anymore.
+            // RemoveStyleInside, we need to do nothing for it anymore.
             if (!content->GetParentNode()) {
               continue;
             }
           }
 
+          if (isCSSInvertibleStyle) {
+            arrayOfContentsToInvertStyle.AppendElement(content);
+          }
+
+          // If the style is specified in parent block and we can remove the
+          // style with inserting new <span> element, we should do it.
           Result<bool, nsresult> isRemovableParentStyleOrError =
               IsRemovableParentStyleWithNewSpanElement(
                   MOZ_KnownLive(content), MOZ_KnownLive(style.mProperty),
@@ -2340,9 +2356,14 @@ nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
             return isRemovableParentStyleOrError.unwrapErr();
           }
           if (!isRemovableParentStyleOrError.unwrap()) {
+            // E.g., text-decoration cannot be override visually in children.
+            // In such cases, we can do nothing.
             continue;
           }
 
+          // If it's not a text node, should wrap it into a new element,
+          // move it into direct child which has same style, or specify
+          // the style to its parent.
           if (!content->IsText()) {
             // XXX Do we need to call this even when data node or something?  If
             //     so, for what?
@@ -2396,58 +2417,74 @@ nsresult HTMLEditor::RemoveInlinePropertyAsSubAction(
           // There is AutoTransactionsConserveSelection, so we don't need to
           // update selection here.
           wrapTextInStyledElementResult.IgnoreCaretPointSuggestion();
+          // If we've split the content, let's swap content in
+          // arrayOfContentsToInvertStyle with the text node which is applied
+          // the style.
+          if (isCSSInvertibleStyle) {
+            MOZ_ASSERT(
+                wrapTextInStyledElementResult.GetMiddleContentAs<Text>());
+            if (Text* textNode =
+                    wrapTextInStyledElementResult.GetMiddleContentAs<Text>()) {
+              if (textNode != content) {
+                arrayOfContentsToInvertStyle.ReplaceElementAt(
+                    arrayOfContentsToInvertStyle.Length() - 1,
+                    OwningNonNull<nsIContent>(*textNode));
+              }
+            }
+          }
         }
       }
 
-      // For avoiding unnecessary loop cost, check whether the style is
-      // invertible first.
-      if (style.mProperty &&
-          CSSEditUtils::IsCSSInvertible(*style.mProperty, style.mAttribute)) {
-        // Finally, we should remove the style from all leaf text nodes if
-        // they still have the style.
-        AutoTArray<OwningNonNull<Text>, 32> leafTextNodes;
-        for (OwningNonNull<nsIContent>& content : arrayOfContents) {
-          // XXX Should we ignore content which has already removed from the
-          //     DOM tree by the previous for-loop?
-          if (content->IsElement()) {
-            CollectEditableLeafTextNodes(*content->AsElement(), leafTextNodes);
-          }
-        }
-        for (OwningNonNull<Text>& textNode : leafTextNodes) {
-          Result<bool, nsresult> isRemovableParentStyleOrError =
-              IsRemovableParentStyleWithNewSpanElement(
-                  MOZ_KnownLive(textNode), MOZ_KnownLive(style.mProperty),
-                  MOZ_KnownLive(style.mAttribute));
-          if (isRemovableParentStyleOrError.isErr()) {
-            NS_WARNING(
-                "HTMLEditor::IsRemovableParentStyleWithNewSpanElement() "
-                "failed");
-            return isRemovableParentStyleOrError.unwrapErr();
-          }
-          if (!isRemovableParentStyleOrError.unwrap()) {
-            continue;
-          }
-          // MOZ_KnownLive because 'leafTextNodes' is guaranteed to
-          // keep it alive.
-          SplitRangeOffFromNodeResult wrapTextInStyledElementResult =
-              SetInlinePropertyOnTextNode(MOZ_KnownLive(textNode), 0,
-                                          textNode->TextLength(),
-                                          MOZ_KnownLive(*style.mProperty),
-                                          MOZ_KnownLive(style.mAttribute),
-                                          u"-moz-editor-invert-value"_ns);
-          if (wrapTextInStyledElementResult.isErr()) {
-            NS_WARNING(
-                "HTMLEditor::SetInlinePropertyOnTextNode(-moz-editor-invert-"
-                "value) failed");
-            return wrapTextInStyledElementResult.unwrapErr();
-          }
-          // There is AutoTransactionsConserveSelection, so we don't need to
-          // update selection here.
-          wrapTextInStyledElementResult.IgnoreCaretPointSuggestion();
+      if (arrayOfContentsToInvertStyle.IsEmpty()) {
+        continue;
+      }
+      MOZ_ASSERT(isCSSInvertibleStyle);
+
+      // Finally, we should remove the style from all leaf text nodes if
+      // they still have the style.
+      AutoTArray<OwningNonNull<Text>, 32> leafTextNodes;
+      for (const OwningNonNull<nsIContent>& content :
+           arrayOfContentsToInvertStyle) {
+        // XXX Should we ignore content which has already removed from the
+        //     DOM tree by the previous for-loop?
+        if (content->IsElement()) {
+          CollectEditableLeafTextNodes(*content->AsElement(), leafTextNodes);
         }
       }
-    }  // for-loop of selectionRanges
-  }    // for-loop of styles
+      for (const OwningNonNull<Text>& textNode : leafTextNodes) {
+        Result<bool, nsresult> isRemovableParentStyleOrError =
+            IsRemovableParentStyleWithNewSpanElement(
+                MOZ_KnownLive(textNode), MOZ_KnownLive(style.mProperty),
+                MOZ_KnownLive(style.mAttribute));
+        if (isRemovableParentStyleOrError.isErr()) {
+          NS_WARNING(
+              "HTMLEditor::IsRemovableParentStyleWithNewSpanElement() "
+              "failed");
+          return isRemovableParentStyleOrError.unwrapErr();
+        }
+        if (!isRemovableParentStyleOrError.unwrap()) {
+          continue;
+        }
+        // MOZ_KnownLive because 'leafTextNodes' is guaranteed to
+        // keep it alive.
+        SplitRangeOffFromNodeResult wrapTextInStyledElementResult =
+            SetInlinePropertyOnTextNode(MOZ_KnownLive(textNode), 0,
+                                        textNode->TextLength(),
+                                        MOZ_KnownLive(*style.mProperty),
+                                        MOZ_KnownLive(style.mAttribute),
+                                        u"-moz-editor-invert-value"_ns);
+        if (wrapTextInStyledElementResult.isErr()) {
+          NS_WARNING(
+              "HTMLEditor::SetInlinePropertyOnTextNode(-moz-editor-invert-"
+              "value) failed");
+          return wrapTextInStyledElementResult.unwrapErr();
+        }
+        // There is AutoTransactionsConserveSelection, so we don't need to
+        // update selection here.
+        wrapTextInStyledElementResult.IgnoreCaretPointSuggestion();
+      }  // for-loop of leafTextNodes
+    }    // for-loop of selectionRanges
+  }      // for-loop of styles
 
   MOZ_ASSERT(selectionRanges.HasSavedRanges());
   selectionRanges.RestoreFromSavedRanges();

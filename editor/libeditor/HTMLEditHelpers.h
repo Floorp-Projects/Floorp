@@ -830,6 +830,32 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
   }
 
   /**
+   * GetLeftmostContent() returns the leftmost content after trying to
+   * split twice.  If the node was not split, this returns the original node.
+   */
+  MOZ_KNOWN_LIVE nsIContent* GetLeftmostContent() const {
+    return mLeftContent ? mLeftContent
+                        : (mMiddleContent ? mMiddleContent : mRightContent);
+  }
+  template <typename ContentNodeType>
+  MOZ_KNOWN_LIVE ContentNodeType* GetLeftmostContentAs() const {
+    return ContentNodeType::FromNodeOrNull(GetLeftmostContent());
+  }
+
+  /**
+   * GetRightmostContent() returns the rightmost content after trying to
+   * split twice.  If the node was not split, this returns the original node.
+   */
+  MOZ_KNOWN_LIVE nsIContent* GetRightmostContent() const {
+    return mRightContent ? mRightContent
+                         : (mMiddleContent ? mMiddleContent : mLeftContent);
+  }
+  template <typename ContentNodeType>
+  MOZ_KNOWN_LIVE ContentNodeType* GetRightmostContentAs() const {
+    return ContentNodeType::FromNodeOrNull(GetRightmostContent());
+  }
+
+  /**
    * Suggest caret position to aHTMLEditor.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SuggestCaretPointTo(
