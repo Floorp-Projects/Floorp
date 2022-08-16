@@ -96,7 +96,6 @@ UiCompositorControllerParent::RecvInvalidateAndRender() {
       CompositorBridgeParent::GetCompositorBridgeParentFromLayersId(
           mRootLayerTreeId);
   if (parent) {
-    parent->Invalidate();
     parent->ScheduleComposition(wr::RenderReasons::OTHER);
   }
   return IPC_OK();
