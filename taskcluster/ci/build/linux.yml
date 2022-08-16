@@ -1083,7 +1083,9 @@ linux64-asan-fuzzing-nyx/opt:
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing-nyx
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
-        max-run-time: 5400
+            AFL_CC: /builds/worker/fetches/clang/bin/clang
+            AFL_CXX: /builds/worker/fetches/clang/bin/clang++
+        max-run-time: 7200
     run:
         using: mozharness
         actions: [get-secrets, build]
