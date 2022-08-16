@@ -398,12 +398,19 @@ export const TabsSetupFlowManager = new (class {
     Services.telemetry.recordEvent("firefoxview", "fxa_continue", "sync", null);
   }
 
+  async openFxAPairDevice(window) {
+    const url = await lazy.fxAccounts.constructor.config.promisePairingURI({
+      entrypoint: "fxa_app_menu", // Bug 1784363 - update to "fx-view" when available
+    });
+    openTabInWindow(window, url, true);
+    Services.telemetry.recordEvent("firefoxview", "fxa_mobile", "sync", null, {
+      has_devices: this.secondaryDeviceConnected.toString(),
+    });
+  }
+
   openSyncPreferences(window) {
     const url = "about:preferences?action=pair#sync";
     openTabInWindow(window, url, true);
-    Services.telemetry.recordEvent("firefoxview", "fxa_mobile", "sync", null, {
-      has_devices: this.mobileDeviceConnected.toString(),
-    });
   }
 
   syncOpenTabs(containerElem) {
