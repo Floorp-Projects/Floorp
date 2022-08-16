@@ -22,6 +22,7 @@ function Saved(props) {
     setRemovedStatusState,
   ] = useState({});
   const [savedStory, setSavedStoryState] = useState();
+  const [articleInfoAttempted, setArticleInfoAttempted] = useState();
   const [{ similarRecs, similarRecsModel }, setSimilarRecsState] = useState({});
   const utmParams = `utm_source=${utmSource}${
     utmCampaign && utmContent
@@ -80,8 +81,14 @@ function Saved(props) {
       });
     });
 
-    panelMessaging.addMessageListener("PKT_renderSavedStory", function(resp) {
+    panelMessaging.addMessageListener("PKT_articleInfoFetched", function(resp) {
       setSavedStoryState(resp?.data?.item_preview);
+    });
+
+    panelMessaging.addMessageListener("PKT_getArticleInfoAttempted", function(
+      resp
+    ) {
+      setArticleInfoAttempted(true);
     });
 
     panelMessaging.addMessageListener("PKT_renderItemRecs", function(resp) {
@@ -144,19 +151,21 @@ function Saved(props) {
                 utmParams={utmParams}
               />
             )}
-            <TagPicker tags={[]} itemUrl={itemUrl} />
-            {similarRecs?.length && locale?.startsWith("en") && (
-              <>
-                <hr />
-                <h3 className="header_medium">Similar Stories</h3>
-                <ArticleList
-                  articles={similarRecs}
-                  source="on_save_recs"
-                  model={similarRecsModel}
-                  utmParams={utmParams}
-                />
-              </>
-            )}
+            {articleInfoAttempted && <TagPicker tags={[]} itemUrl={itemUrl} />}
+            {articleInfoAttempted &&
+              similarRecs?.length &&
+              locale?.startsWith("en") && (
+                <>
+                  <hr />
+                  <h3 className="header_medium">Similar Stories</h3>
+                  <ArticleList
+                    articles={similarRecs}
+                    source="on_save_recs"
+                    model={similarRecsModel}
+                    utmParams={utmParams}
+                  />
+                </>
+              )}
           </>
         )}
         {savedStatus === "loading" && (
