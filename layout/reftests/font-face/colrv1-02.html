@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<meta charset=utf-8>
+<title>COLRv1 font test: using the tech() function</title>
+<style>
+@font-face {
+  font-family: CAhem;
+  src: url("../fonts/fira/FiraSansOT-RegularItalic.otf");  /* if tech() is not parsed */
+  src: url("CAhem.ttf") tech(color-COLRv1),
+       url("../fonts/fira/FiraSans-Regular.otf");
+}
+#test { font: 100px/1 CAhem, serif; margin: 10px; padding: 10px; }
+</style>
+
+<!-- This should render using CAhem if COLRv1 is enabled, and FiraSans if disabled.
+     If the tech() function fails to parse at all, we'll get Fira Italic. -->
+<div id="test">ABC</div>

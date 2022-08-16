@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<meta charset=utf-8>
+<title>COLRv1 font test: comparing against CSS representation</title>
+<style>
+#ref { font: 0px serif; margin: 10px; padding: 10px; }
+#ref > div { width: 100px; height: 100px; display: inline-block; vertical-align: top; }
+span { display: inline-block; }
+.A { background: rgba(255, 0, 0, 1.0); }
+.B { background: rgba(255, 0, 0, 0.5); }
+.C { background: rgba(255, 0, 0, 0.1); }
+.D { background: linear-gradient(to right, rgb(0, 255, 0), rgb(0, 0, 255)); }
+.E { background: linear-gradient(to right, rgb(0, 255, 0) 25%, rgb(0, 0, 255) 75%); }
+.F { background: linear-gradient(to right, rgb(0, 255, 0) 25%, rgb(0, 0, 255) 75%); }
+.G { background: repeating-linear-gradient(to right, rgb(0, 255, 0) 40%, rgb(0, 0, 255) 60%); }
+.H { background: repeating-linear-gradient(to right, rgb(0, 255, 0) 40%, rgb(0, 0, 255) 60%, rgb(0, 255, 0) 80%); }
+.I { background: repeating-linear-gradient(to bottom, rgb(0, 255, 0) 40%, rgb(0, 0, 255) 60%, rgb(0, 255, 0) 80%); }
+.J { background: radial-gradient(rgb(255, 0, 0), rgb(0, 255, 0), rgb(0, 0, 255) 70.7107%); }
+.K { background: repeating-radial-gradient(rgb(255, 0, 0), rgb(0, 255, 0), rgb(0, 0, 255) 70.7107%); }
+.L { background: repeating-radial-gradient(rgb(255, 0, 0), rgb(0, 255, 0), rgb(0, 0, 255), rgb(0, 255, 0), rgb(255, 0, 0) 70.7107%); }
+.M { background: conic-gradient(rgb(0, 0, 255), rgb(0, 255, 0), rgb(255, 0, 0)); }
+.N { background: conic-gradient(rgb(0, 0, 255), rgb(0, 255, 0), rgb(255, 0, 0), rgb(0, 255, 0), rgb(0, 0, 255)); }
+.O { background: conic-gradient(rgb(255, 0, 0), rgb(0, 255, 0), rgb(0, 0, 255) 25%, rgb(0, 255, 0), rgb(255, 0, 0)); }
+.P :nth-child(1) { background: rgb(0, 0, 255); width: 100%; height: 50%; }
+.P :nth-child(2) { background: rgb(255, 0, 0); width: 50%; height: 50%; }
+.P :nth-child(3) { background: rgb(0, 255, 0); width: 50%; height: 50%; }
+.Q { background: rgba(0, 255, 0); }
+.Q :nth-child(1) { background: rgb(255, 0, 0); width: 50%; height: 50%; translate: 50% 50%; rotate: 45deg; }
+.R { background: rgba(0, 0, 255); }
+.R :nth-child(1) { background: rgb(255, 0, 0); width: 50%; height: 50%; translate: 50% 50%; transform: skew(30deg); }
+.S { background: rgba(255, 0, 0); }
+.S :nth-child(1) { background: rgb(0, 255, 0); width: 50%; height: 50%; translate: 50% 50%; transform: skew(0, 30deg); }
+.T { background: rgba(0, 255, 0); }
+.T :nth-child(1) { background: rgb(0, 0, 255); width: 50%; height: 50%; translate: 50% 50%; transform: skew(-20deg, -20deg); }
+</style>
+
+<p>COLRv1 font rendering:</p>
+<div id="ref"><div><span></span><span></span><span></span></div></div>
+
+<script>
+ref.firstChild.classList = window.location.hash.substr(1);
+document.documentElement.classList = "";
+</script>
