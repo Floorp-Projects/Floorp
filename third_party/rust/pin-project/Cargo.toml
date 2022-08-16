@@ -13,19 +13,36 @@
 edition = "2018"
 rust-version = "1.37"
 name = "pin-project"
-version = "1.0.10"
-exclude = ["/.*", "/ci", "/tools"]
-description = "A crate for safe and ergonomic pin-projection.\n"
-keywords = ["pin", "macros", "attribute"]
-categories = ["no-std", "rust-patterns"]
+version = "1.0.12"
+exclude = [
+    "/.*",
+    "/ci",
+    "/tools",
+]
+description = """
+A crate for safe and ergonomic pin-projection.
+"""
+readme = "README.md"
+keywords = [
+    "pin",
+    "macros",
+    "attribute",
+]
+categories = [
+    "no-std",
+    "rust-patterns",
+]
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/taiki-e/pin-project"
+
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
+
 [dependencies.pin-project-internal]
-version = "=1.0.10"
+version = "=1.0.12"
+
 [dev-dependencies.macrotest]
-version = "1.0.8"
+version = "1.0.9"
 
 [dev-dependencies.rustversion]
 version = "1"

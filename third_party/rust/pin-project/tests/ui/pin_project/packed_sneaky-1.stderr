@@ -5,13 +5,21 @@ error: #[pin_project] attribute may not be used on #[repr(packed)] types
   |               ^^^^^^
 
 error: #[pin_project] attribute may not be used on #[repr(packed)] types
-  --> tests/ui/pin_project/packed_sneaky-1.rs:14:15
+  --> tests/ui/pin_project/packed_sneaky-1.rs:13:1
    |
-14 | #[hidden_repr(packed)]
+13 | #[hidden_repr2]
+   | ^^^^^^^^^^^^^^^
+   |
+   = note: this error originates in the attribute macro `hidden_repr2` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: #[pin_project] attribute may not be used on #[repr(packed)] types
+  --> tests/ui/pin_project/packed_sneaky-1.rs:21:15
+   |
+21 | #[hidden_repr(packed)]
    |               ^^^^^^
 
 error: #[pin_project] attribute may not be used on #[repr(packed)] types
-  --> tests/ui/pin_project/packed_sneaky-1.rs:23:15
+  --> tests/ui/pin_project/packed_sneaky-1.rs:30:15
    |
-23 | #[hidden_repr(packed)]
+30 | #[hidden_repr(packed)]
    |               ^^^^^^

@@ -55,7 +55,7 @@ error[E0308]: mismatched types
    = note: expected unit type `()`
                  found struct `Pin<&mut E>`
 
-error[E0533]: expected unit struct, unit variant or constant, found struct variant `Self::V`
+error[E0533]: expected unit struct, unit variant or constant, found struct variant `E::V`
   --> tests/ui/pinned_drop/self.rs:53:27
    |
 53 |             let _: Self = Self::V; //~ ERROR E0533

@@ -7,10 +7,16 @@
         allow(dead_code, unused_variables)
     )
 ))]
-#![warn(unsafe_code)]
+#![forbid(unsafe_code)]
 #![warn(rust_2018_idioms, single_use_lifetimes, unreachable_pub)]
-#![warn(clippy::default_trait_access, clippy::wildcard_imports)]
-#![allow(clippy::needless_doctest_main)]
+#![warn(clippy::pedantic)]
+#![allow(
+    clippy::needless_doctest_main,
+    clippy::similar_names,
+    clippy::single_match_else,
+    clippy::too_many_lines,
+    clippy::unnested_or_patterns
+)]
 
 // older compilers require explicit `extern crate`.
 #[allow(unused_extern_crates)]
