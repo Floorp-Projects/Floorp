@@ -5622,13 +5622,14 @@ NS_IMETHODIMP HTMLEditor::SetIsCSSEnabled(bool aIsCSSPrefChecked) {
 }
 
 // Set the block background color
-nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
+nsresult HTMLEditor::SetBlockBackgroundColorWithCSSAsSubAction(
     const nsAString& aColor) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (NS_WARN_IF(!mInitSucceeded)) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  // background-color change and committing composition should be undone
+  // together
+  AutoPlaceholderBatch treatAsOneTransaction(
+      *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
 
   CommitComposition();
 
@@ -5644,10 +5645,6 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
     return result.Rv();
   }
 
-  bool selectionIsCollapsed = SelectionRef().IsCollapsed();
-
-  AutoPlaceholderBatch treatAsOneTransaction(
-      *this, ScrollSelectionIntoView::Yes, __FUNCTION__);
   IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertElement, nsIEditor::eNext, ignoredError);
@@ -5658,121 +5655,113 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
                        "HTMLEditor::OnStartToHandleTopLevelEditSubAction() "
                        "failed, but ignored");
 
-  {
-    AutoSelectionRestorer restoreSelectionLater(*this);
-    AutoTransactionsConserveSelection dontChangeMySelection(*this);
+  // TODO: We don't need AutoTransactionsConserveSelection here in the normal
+  //       cases, but removing this may cause the behavior with the legacy
+  //       mutation event listeners.  We should try to delete this in a bug.
+  AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
-    // Loop through the ranges in the selection
-    // XXX This is different from `SetInlinePropertiesAsSubAction()`.  It uses
-    //     AutoRangeArray to store all ranges first.  The result may be
-    //     different if mutation event listener changes the `Selection`.
-    // TODO: Store all selection ranges first since this updates the style.
-    for (uint32_t i = 0; i < SelectionRef().RangeCount(); i++) {
-      RefPtr<nsRange> range = SelectionRef().GetRangeAt(i);
-      if (NS_WARN_IF(!range)) {
-        return NS_ERROR_FAILURE;
-      }
+  AutoRangeArray selectionRanges(SelectionRef());
+  MOZ_ALWAYS_TRUE(selectionRanges.SaveAndTrackRanges(*this));
+  for (const OwningNonNull<nsRange>& domRange : selectionRanges.Ranges()) {
+    EditorDOMRange range(domRange);
+    if (NS_WARN_IF(!range.IsPositioned())) {
+      continue;
+    }
 
-      EditorDOMPoint startOfRange(range->StartRef());
-      EditorDOMPoint endOfRange(range->EndRef());
-      if (NS_WARN_IF(!startOfRange.IsSet()) ||
-          NS_WARN_IF(!endOfRange.IsSet())) {
+    if (range.InSameContainer()) {
+      // If the range is in a text node, set background color of its parent
+      // block.
+      if (range.StartRef().IsInTextNode()) {
+        if (const RefPtr<nsStyledElement> editableBlockStyledElement =
+                nsStyledElement::FromNodeOrNull(
+                    HTMLEditUtils::GetAncestorElement(
+                        *range.StartRef().ContainerAs<Text>(),
+                        HTMLEditUtils::ClosestEditableBlockElement))) {
+          Result<int32_t, nsresult> result =
+              mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithTransaction(
+                  *editableBlockStyledElement, nullptr, nsGkAtoms::bgcolor,
+                  &aColor);
+          if (result.isErr()) {
+            if (result.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
+              NS_WARNING(
+                  "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
+                  "nsGkAtoms::bgcolor) destroyed the editor");
+              return NS_ERROR_EDITOR_DESTROYED;
+            }
+            NS_WARNING(
+                "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
+                "nsGkAtoms::bgcolor) failed, but ignored");
+          }
+        }
         continue;
       }
 
-      if (startOfRange.GetContainer() == endOfRange.GetContainer()) {
-        // If the range is in a text node, set background color of its parent
-        // block.
-        if (startOfRange.IsInTextNode()) {
-          if (const RefPtr<nsStyledElement> editableBlockStyledElement =
-                  nsStyledElement::FromNodeOrNull(
-                      HTMLEditUtils::GetAncestorElement(
-                          *startOfRange.ContainerAs<Text>(),
-                          HTMLEditUtils::ClosestEditableBlockElement))) {
-            Result<int32_t, nsresult> result =
-                mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithTransaction(
-                    *editableBlockStyledElement, nullptr, nsGkAtoms::bgcolor,
-                    &aColor);
-            if (result.isErr()) {
-              if (result.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
-                NS_WARNING(
-                    "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
-                    "nsGkAtoms::bgcolor) destroyed the editor");
-                return NS_ERROR_EDITOR_DESTROYED;
-              }
+      // If `Selection` is collapsed in a `<body>` element, set background
+      // color of the `<body>` element.
+      if (range.Collapsed() &&
+          range.StartRef().IsContainerHTMLElement(nsGkAtoms::body)) {
+        if (RefPtr<nsStyledElement> styledElement =
+                range.StartRef().GetContainerAs<nsStyledElement>()) {
+          Result<int32_t, nsresult> result =
+              mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithTransaction(
+                  *styledElement, nullptr, nsGkAtoms::bgcolor, &aColor);
+          if (result.isErr()) {
+            if (result.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
               NS_WARNING(
                   "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
-                  "nsGkAtoms::bgcolor) failed, but ignored");
+                  "nsGkAtoms::bgcolor) destroyed the editor");
+              return NS_ERROR_EDITOR_DESTROYED;
             }
+            NS_WARNING(
+                "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
+                "nsGkAtoms::bgcolor) failed, but ignored");
           }
-          continue;
         }
-
-        // If `Selection` is collapsed in a `<body>` element, set background
-        // color of the `<body>` element.
-        // XXX Why do we refer whether the `Selection` is collapsed rather
-        //     than the `nsRange` is collapsed?
-        if (startOfRange.GetContainer()->IsHTMLElement(nsGkAtoms::body) &&
-            selectionIsCollapsed) {
-          if (RefPtr<nsStyledElement> styledElement =
-                  startOfRange.GetContainerAs<nsStyledElement>()) {
-            Result<int32_t, nsresult> result =
-                mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithTransaction(
-                    *styledElement, nullptr, nsGkAtoms::bgcolor, &aColor);
-            if (result.isErr()) {
-              if (result.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
-                NS_WARNING(
-                    "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
-                    "nsGkAtoms::bgcolor) destroyed the editor");
-                return NS_ERROR_EDITOR_DESTROYED;
-              }
-              NS_WARNING(
-                  "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
-                  "nsGkAtoms::bgcolor) failed, but ignored");
-            }
-          }
-          continue;
-        }
-        // If one node is selected, set background color of it if it's a
-        // block, or of its parent block otherwise.
-        if ((startOfRange.IsStartOfContainer() &&
-             endOfRange.IsStartOfContainer()) ||
-            startOfRange.Offset() + 1 == endOfRange.Offset()) {
-          if (NS_WARN_IF(startOfRange.IsInDataNode())) {
-            continue;
-          }
-          if (const RefPtr<nsStyledElement> editableBlockStyledElement =
-                  nsStyledElement::FromNodeOrNull(
-                      HTMLEditUtils::GetInclusiveAncestorElement(
-                          *startOfRange.GetChild(),
-                          HTMLEditUtils::ClosestEditableBlockElement))) {
-            Result<int32_t, nsresult> result =
-                mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithTransaction(
-                    *editableBlockStyledElement, nullptr, nsGkAtoms::bgcolor,
-                    &aColor);
-            if (result.isErr()) {
-              if (result.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
-                NS_WARNING(
-                    "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
-                    "nsGkAtoms::bgcolor) destroyed the editor");
-                return NS_ERROR_EDITOR_DESTROYED;
-              }
-              NS_WARNING(
-                  "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
-                  "nsGkAtoms::bgcolor) failed, but ignored");
-            }
-          }
-          continue;
-        }
+        continue;
       }
 
-      // Collect editable nodes which are entirely contained in the range.
-      AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
+      // If one node is selected, set background color of it if it's a
+      // block, or of its parent block otherwise.
+      if ((range.StartRef().IsStartOfContainer() &&
+           range.EndRef().IsStartOfContainer()) ||
+          range.StartRef().Offset() + 1 == range.EndRef().Offset()) {
+        if (NS_WARN_IF(range.StartRef().IsInDataNode())) {
+          continue;
+        }
+        if (const RefPtr<nsStyledElement> editableBlockStyledElement =
+                nsStyledElement::FromNodeOrNull(
+                    HTMLEditUtils::GetInclusiveAncestorElement(
+                        *range.StartRef().GetChild(),
+                        HTMLEditUtils::ClosestEditableBlockElement))) {
+          Result<int32_t, nsresult> result =
+              mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithTransaction(
+                  *editableBlockStyledElement, nullptr, nsGkAtoms::bgcolor,
+                  &aColor);
+          if (result.isErr()) {
+            if (result.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
+              NS_WARNING(
+                  "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
+                  "nsGkAtoms::bgcolor) destroyed the editor");
+              return NS_ERROR_EDITOR_DESTROYED;
+            }
+            NS_WARNING(
+                "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
+                "nsGkAtoms::bgcolor) failed, but ignored");
+          }
+        }
+        continue;
+      }
+    }  // if (range.InSameContainer())
+
+    // Collect editable nodes which are entirely contained in the range.
+    AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
+    {
       ContentSubtreeIterator subtreeIter;
       // If there is no node which is entirely in the range,
       // `ContentSubtreeIterator::Init()` fails, but this is possible case,
       // don't warn it.
-      nsresult rv = subtreeIter.Init(range);
+      nsresult rv = subtreeIter.Init(range.StartRef().ToRawRangeBoundary(),
+                                     range.EndRef().ToRawRangeBoundary());
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
           "ContentSubtreeIterator::Init() failed, but ignored");
@@ -5788,110 +5777,113 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
           }
         }
       }
+    }
 
-      // This caches block parent if we set its background color.
-      RefPtr<Element> handledBlockParent;
+    // This caches block parent if we set its background color.
+    RefPtr<Element> handledBlockParent;
 
-      // If start node is a text node, set background color of its parent
-      // block.
-      if (startOfRange.IsInTextNode() &&
-          EditorUtils::IsEditableContent(*startOfRange.ContainerAs<Text>(),
-                                         EditorType::HTML)) {
-        Element* const editableBlockElement = HTMLEditUtils::GetAncestorElement(
-            *startOfRange.ContainerAs<Text>(),
-            HTMLEditUtils::ClosestEditableBlockElement);
-        if (editableBlockElement &&
-            handledBlockParent != editableBlockElement) {
-          handledBlockParent = editableBlockElement;
-          if (nsStyledElement* blockStyledElement =
-                  nsStyledElement::FromNode(handledBlockParent)) {
-            // MOZ_KnownLive(*blockStyledElement): It's handledBlockParent
-            // whose type is RefPtr.
-            Result<int32_t, nsresult> result =
-                mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithTransaction(
-                    MOZ_KnownLive(*blockStyledElement), nullptr,
-                    nsGkAtoms::bgcolor, &aColor);
-            if (result.isErr()) {
-              if (result.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
-                NS_WARNING(
-                    "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
-                    "nsGkAtoms::bgcolor) destroyed the editor");
-                return NS_ERROR_EDITOR_DESTROYED;
-              }
+    // If start node is a text node, set background color of its parent
+    // block.
+    if (range.StartRef().IsInTextNode() &&
+        EditorUtils::IsEditableContent(*range.StartRef().ContainerAs<Text>(),
+                                       EditorType::HTML)) {
+      Element* const editableBlockElement = HTMLEditUtils::GetAncestorElement(
+          *range.StartRef().ContainerAs<Text>(),
+          HTMLEditUtils::ClosestEditableBlockElement);
+      if (editableBlockElement && handledBlockParent != editableBlockElement) {
+        handledBlockParent = editableBlockElement;
+        if (nsStyledElement* blockStyledElement =
+                nsStyledElement::FromNode(handledBlockParent)) {
+          // MOZ_KnownLive(*blockStyledElement): It's handledBlockParent
+          // whose type is RefPtr.
+          Result<int32_t, nsresult> result =
+              mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithTransaction(
+                  MOZ_KnownLive(*blockStyledElement), nullptr,
+                  nsGkAtoms::bgcolor, &aColor);
+          if (result.isErr()) {
+            if (result.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
               NS_WARNING(
                   "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
-                  "nsGkAtoms::bgcolor) failed, but ignored");
+                  "nsGkAtoms::bgcolor) destroyed the editor");
+              return NS_ERROR_EDITOR_DESTROYED;
             }
-          }
-        }
-      }
-
-      // Then, set background color of each block or block parent of all nodes
-      // in the range entirely.
-      for (OwningNonNull<nsIContent>& content : arrayOfContents) {
-        Element* const editableBlockElement =
-            HTMLEditUtils::GetInclusiveAncestorElement(
-                content, HTMLEditUtils::ClosestEditableBlockElement);
-        if (editableBlockElement &&
-            handledBlockParent != editableBlockElement) {
-          handledBlockParent = editableBlockElement;
-          if (nsStyledElement* blockStyledElement =
-                  nsStyledElement::FromNode(handledBlockParent)) {
-            // MOZ_KnownLive(*blockStyledElement): It's handledBlockParent whose
-            // type is RefPtr.
-            Result<int32_t, nsresult> result =
-                mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithTransaction(
-                    MOZ_KnownLive(*blockStyledElement), nullptr,
-                    nsGkAtoms::bgcolor, &aColor);
-            if (result.isErr()) {
-              if (result.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
-                NS_WARNING(
-                    "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
-                    "nsGkAtoms::bgcolor) destroyed the editor");
-                return NS_ERROR_EDITOR_DESTROYED;
-              }
-              NS_WARNING(
-                  "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
-                  "nsGkAtoms::bgcolor) failed, but ignored");
-            }
-          }
-        }
-      }
-
-      // Finally, if end node is a text node, set background color of its
-      // parent block.
-      if (endOfRange.IsInTextNode() &&
-          EditorUtils::IsEditableContent(*endOfRange.ContainerAs<Text>(),
-                                         EditorType::HTML)) {
-        Element* const editableBlockElement = HTMLEditUtils::GetAncestorElement(
-            *endOfRange.ContainerAs<Text>(),
-            HTMLEditUtils::ClosestEditableBlockElement);
-        if (editableBlockElement &&
-            handledBlockParent != editableBlockElement) {
-          if (RefPtr<nsStyledElement> blockStyledElement =
-                  nsStyledElement::FromNode(editableBlockElement)) {
-            Result<int32_t, nsresult> result =
-                mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithTransaction(
-                    *blockStyledElement, nullptr, nsGkAtoms::bgcolor, &aColor);
-            if (result.isErr()) {
-              if (result.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
-                NS_WARNING(
-                    "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
-                    "nsGkAtoms::bgcolor) destroyed the editor");
-                return NS_ERROR_EDITOR_DESTROYED;
-              }
-              NS_WARNING(
-                  "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
-                  "nsGkAtoms::bgcolor) failed, but ignored");
-            }
+            NS_WARNING(
+                "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
+                "nsGkAtoms::bgcolor) failed, but ignored");
           }
         }
       }
     }
-  }
 
-  // Restoring `Selection` may cause destroying us.
-  return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : NS_OK;
+    // Then, set background color of each block or block parent of all nodes
+    // in the range entirely.
+    for (OwningNonNull<nsIContent>& content : arrayOfContents) {
+      Element* const editableBlockElement =
+          HTMLEditUtils::GetInclusiveAncestorElement(
+              content, HTMLEditUtils::ClosestEditableBlockElement);
+      if (editableBlockElement && handledBlockParent != editableBlockElement) {
+        handledBlockParent = editableBlockElement;
+        if (nsStyledElement* blockStyledElement =
+                nsStyledElement::FromNode(handledBlockParent)) {
+          // MOZ_KnownLive(*blockStyledElement): It's handledBlockParent whose
+          // type is RefPtr.
+          Result<int32_t, nsresult> result =
+              mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithTransaction(
+                  MOZ_KnownLive(*blockStyledElement), nullptr,
+                  nsGkAtoms::bgcolor, &aColor);
+          if (result.isErr()) {
+            if (result.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
+              NS_WARNING(
+                  "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
+                  "nsGkAtoms::bgcolor) destroyed the editor");
+              return NS_ERROR_EDITOR_DESTROYED;
+            }
+            NS_WARNING(
+                "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
+                "nsGkAtoms::bgcolor) failed, but ignored");
+          }
+        }
+      }
+    }
+
+    // Finally, if end node is a text node, set background color of its
+    // parent block.
+    if (range.EndRef().IsInTextNode() &&
+        EditorUtils::IsEditableContent(*range.EndRef().ContainerAs<Text>(),
+                                       EditorType::HTML)) {
+      Element* const editableBlockElement = HTMLEditUtils::GetAncestorElement(
+          *range.EndRef().ContainerAs<Text>(),
+          HTMLEditUtils::ClosestEditableBlockElement);
+      if (editableBlockElement && handledBlockParent != editableBlockElement) {
+        if (RefPtr<nsStyledElement> blockStyledElement =
+                nsStyledElement::FromNode(editableBlockElement)) {
+          Result<int32_t, nsresult> result =
+              mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithTransaction(
+                  *blockStyledElement, nullptr, nsGkAtoms::bgcolor, &aColor);
+          if (result.isErr()) {
+            if (result.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
+              NS_WARNING(
+                  "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
+                  "nsGkAtoms::bgcolor) destroyed the editor");
+              return NS_ERROR_EDITOR_DESTROYED;
+            }
+            NS_WARNING(
+                "CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction("
+                "nsGkAtoms::bgcolor) failed, but ignored");
+          }
+        }
+      }
+    }
+  }  // for-loop of selectionRanges
+
+  MOZ_ASSERT(selectionRanges.HasSavedRanges());
+  selectionRanges.RestoreFromSavedRanges();
+  nsresult rv = selectionRanges.ApplyTo(SelectionRef());
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "AutoRangeArray::ApplyTo() failed");
+  return rv;
 }
 
 NS_IMETHODIMP HTMLEditor::SetBackgroundColor(const nsAString& aColor) {
@@ -5916,10 +5908,10 @@ nsresult HTMLEditor::SetBackgroundColorAsAction(const nsAString& aColor,
     // if we are in CSS mode, we have to apply the background color to the
     // containing block (or the body if we have no block-level element in
     // the document)
-    nsresult rv = SetCSSBackgroundColorWithTransaction(aColor);
+    nsresult rv = SetBlockBackgroundColorWithCSSAsSubAction(aColor);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
-        "HTMLEditor::SetCSSBackgroundColorWithTransaction() failed");
+        "HTMLEditor::SetBlockBackgroundColorWithCSSAsSubAction() failed");
     return EditorBase::ToGenericNSResult(rv);
   }
 
