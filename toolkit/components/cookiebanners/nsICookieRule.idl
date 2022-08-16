@@ -1,0 +1,38 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsICookie.idl"
+
+/**
+ * Rule which specifies a cookie to be set in order to handle a cookie banner.
+ */
+
+[builtinclass, scriptable, uuid(bf049b1e-8a05-481f-a120-332ea1bd65ef)]
+interface nsICookieRule : nsISupports {
+    /**
+     * The cookie to set.
+     * When calling this getter creation, expiry and last accessed time are
+     * computed.
+     */
+    readonly attribute nsICookie cookie;
+
+    /**
+     * Expiry time of the cookie in seconds relative to the injection time.
+     * If you want a cookie to expire in 1 month after it has been set, set this
+     * to 2592000.
+     * Defaults to 'cookiebanners.cookieInjector.defaultExpiryRelative'.
+     */
+    readonly attribute int64_t expiryRelative;
+
+    /**
+     * If an existing cookie sets this value it may be overwritten.
+     * This is used for sites which set an explicit cookie state, even if a
+     * cookie banner is still pending.
+     */
+    readonly attribute AUTF8String unsetValue;
+};
+
