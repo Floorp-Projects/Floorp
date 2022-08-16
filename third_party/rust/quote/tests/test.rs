@@ -180,7 +180,8 @@ fn test_integer() {
         #ii8 #ii16 #ii32 #ii64 #ii128 #iisize
         #uu8 #uu16 #uu32 #uu64 #uu128 #uusize
     };
-    let expected = "1 1i32 1u256 - 1i8 - 1i16 - 1i32 - 1i64 - 1i128 - 1isize 1u8 1u16 1u32 1u64 1u128 1usize";
+    let expected =
+        "1 1i32 1u256 - 1i8 - 1i16 - 1i32 - 1i64 - 1i128 - 1isize 1u8 1u16 1u32 1u64 1u128 1usize";
     assert_eq!(expected, tokens.to_string());
 }
 
