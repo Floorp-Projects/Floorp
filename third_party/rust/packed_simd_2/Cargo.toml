@@ -23,9 +23,6 @@ maintenance = { status = "experimental" }
 cfg-if = "1.0.0"
 core_arch = { version = "0.1.5", optional = true }
 
-[build-dependencies]
-rustc_version = "0.4"
-
 [features]
 default = []
 into_bits = []
