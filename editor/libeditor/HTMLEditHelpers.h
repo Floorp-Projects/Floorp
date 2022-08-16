@@ -71,65 +71,6 @@ static inline std::ostream& operator<<(std::ostream& aStream,
 }
 
 /*****************************************************************************
- * EditResult returns nsresult and preferred point where selection should be
- * collapsed or the range where selection should select.
- *
- * NOTE: If we stop modifying selection at every DOM tree change, perhaps,
- *       the following classes need to inherit this class.
- *****************************************************************************/
-class MOZ_STACK_CLASS EditResult final {
- public:
-  bool Succeeded() const { return NS_SUCCEEDED(mRv); }
-  bool Failed() const { return NS_FAILED(mRv); }
-  nsresult Rv() const { return mRv; }
-  bool EditorDestroyed() const { return mRv == NS_ERROR_EDITOR_DESTROYED; }
-  const EditorDOMPoint& PointRefToCollapseSelection() const {
-    MOZ_DIAGNOSTIC_ASSERT(mStartPoint.IsSet());
-    MOZ_DIAGNOSTIC_ASSERT(mStartPoint == mEndPoint);
-    return mStartPoint;
-  }
-  const EditorDOMPoint& StartPointRef() const { return mStartPoint; }
-  const EditorDOMPoint& EndPointRef() const { return mEndPoint; }
-  already_AddRefed<dom::StaticRange> CreateStaticRange() const {
-    return dom::StaticRange::Create(mStartPoint.ToRawRangeBoundary(),
-                                    mEndPoint.ToRawRangeBoundary(),
-                                    IgnoreErrors());
-  }
-  already_AddRefed<nsRange> CreateRange() const {
-    return nsRange::Create(mStartPoint.ToRawRangeBoundary(),
-                           mEndPoint.ToRawRangeBoundary(), IgnoreErrors());
-  }
-
-  EditResult() = delete;
-  explicit EditResult(nsresult aRv) : mRv(aRv) {
-    MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(mRv));
-  }
-  template <typename PT, typename CT>
-  explicit EditResult(const EditorDOMPointBase<PT, CT>& aPointToPutCaret)
-      : mRv(aPointToPutCaret.IsSet() ? NS_OK : NS_ERROR_FAILURE),
-        mStartPoint(aPointToPutCaret),
-        mEndPoint(aPointToPutCaret) {}
-
-  template <typename SPT, typename SCT, typename EPT, typename ECT>
-  EditResult(const EditorDOMPointBase<SPT, SCT>& aStartPoint,
-             const EditorDOMPointBase<EPT, ECT>& aEndPoint)
-      : mRv(aStartPoint.IsSet() && aEndPoint.IsSet() ? NS_OK
-                                                     : NS_ERROR_FAILURE),
-        mStartPoint(aStartPoint),
-        mEndPoint(aEndPoint) {}
-
-  EditResult(const EditResult& aOther) = delete;
-  EditResult& operator=(const EditResult& aOther) = delete;
-  EditResult(EditResult&& aOther) = default;
-  EditResult& operator=(EditResult&& aOther) = default;
-
- private:
-  nsresult mRv;
-  EditorDOMPoint mStartPoint;
-  EditorDOMPoint mEndPoint;
-};
-
-/*****************************************************************************
  * MoveNodeResult is a simple class for MoveSomething() methods.
  * This holds error code and next insertion point if moving contents succeeded.
  * TODO: Perhaps, we can make this inherits mozilla::Result for guaranteeing
@@ -574,6 +515,13 @@ class MOZ_STACK_CLASS SplitNodeResult final {
       : SplitNodeResult(std::move(aSplitResult)) {
     MOZ_ASSERT(isOk());
     mCaretPoint = aNewCaretPoint;
+    mHandledCaretPoint = false;
+  }
+  SplitNodeResult(SplitNodeResult&& aSplitResult,
+                  EditorDOMPoint&& aNewCaretPoint)
+      : SplitNodeResult(std::move(aSplitResult)) {
+    MOZ_ASSERT(isOk());
+    mCaretPoint = std::move(aNewCaretPoint);
     mHandledCaretPoint = false;
   }
 

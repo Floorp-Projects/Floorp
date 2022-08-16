@@ -936,9 +936,12 @@ class HTMLEditor final : public EditorBase,
    * @param aAttribute  Attribute name if aProperty has some styles like
    *                    nsGkAtoms::font.
    * @param aSpecifiedStyle  Whether the class and style attributes should
-   *                         be preserved or discareded.
+   *                         be preserved or discarded.
+   * @return            A candidate position to put caret.  If there is
+   *                    AutoTransactionsConserveSelection instances, this stops
+   *                    suggesting caret point only in some cases.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditResult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
   ClearStyleAt(const EditorDOMPoint& aPoint, nsAtom* aProperty,
                nsAtom* aAttribute, SpecifiedStyle aSpecifiedStyle);
 
