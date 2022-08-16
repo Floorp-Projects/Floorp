@@ -23,7 +23,7 @@ if sys.version_info < (3,):
 else:
     from urllib.request import urlopen
 
-MINIMUM_RUST_VERSION = "1.59.0"
+MINIMUM_RUST_VERSION = "1.61.0"
 
 
 def get_tools_dir(srcdir=False):
