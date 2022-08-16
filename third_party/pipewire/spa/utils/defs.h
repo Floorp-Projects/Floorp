@@ -31,10 +31,45 @@ extern "C" {
 #include <stdbool.h>
 #endif
 #include <inttypes.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
 #include <stdio.h>
+
+/**
+ * \defgroup spa_utils_defs Miscellaneous
+ * Helper macros and functions
+ */
+
+/**
+ * \addtogroup spa_utils_defs
+ * \{
+ */
+
+/**
+ * SPA_FALLTHROUGH is an annotation to suppress compiler warnings about switch
+ * cases that fall through without a break or return statement. SPA_FALLTHROUGH
+ * is only needed on cases that have code:
+ *
+ * switch (foo) {
+ *   case 1: // These cases have no code. No fallthrough annotations are needed.
+ *   case 2:
+ *   case 3:
+ *     foo = 4; // This case has code, so a fallthrough annotation is needed:
+ *     SPA_FALLTHROUGH;
+ *   default:
+ *     return foo;
+ * }
+ */
+#if defined(__clang__) && defined(__cplusplus) && __cplusplus >= 201103L
+   /* clang's fallthrough annotations are only available starting in C++11. */
+#  define SPA_FALLTHROUGH [[clang::fallthrough]];
+#elif __GNUC__ >= 7 || __clang_major__ >= 10
+#  define SPA_FALLTHROUGH __attribute__ ((fallthrough));
+#else
+#  define SPA_FALLTHROUGH /* FALLTHROUGH */
+#endif
 
 #define SPA_FLAG_MASK(field,mask,flag)	(((field) & (mask)) == (flag))
 #define SPA_FLAG_IS_SET(field,flag)	SPA_FLAG_MASK(field,flag,flag)
@@ -74,18 +109,35 @@ struct spa_fraction {
 };
 
 #define SPA_N_ELEMENTS(arr)  (sizeof(arr) / sizeof((arr)[0]))
+/**
+ * Array iterator macro. Usage:
+ * ```c
+ * struct foo array[16];
+ * struct foo *f;
+ * SPA_FOR_EACH_ELEMENT(array, f) {
+ *	f->bar = baz;
+ * }
+ * ```
+ */
+#define SPA_FOR_EACH_ELEMENT(arr, ptr) \
+	for (ptr = arr; (void*)ptr < SPA_PTROFF(arr, sizeof(arr), void); ptr++)
 
+#define SPA_ABS(a)			\
+({					\
+	__typeof__(a) _a = (a);		\
+	SPA_LIKELY(_a >= 0) ? _a : -_a;	\
+})
 #define SPA_MIN(a,b)		\
 ({				\
-	__typeof__(a) _a = (a);	\
-	__typeof__(b) _b = (b);	\
-	SPA_LIKELY(_a < _b) ? _a : _b;	\
+	__typeof__(a) _min_a = (a);	\
+	__typeof__(b) _min_b = (b);	\
+	SPA_LIKELY(_min_a < _min_b) ? _min_a : _min_b;	\
 })
 #define SPA_MAX(a,b)		\
 ({				\
-	__typeof__(a) _a = (a);	\
-	__typeof__(b) _b = (b);	\
-	SPA_LIKELY(_a > _b) ? _a : _b;	\
+	__typeof__(a) _max_a = (a);	\
+	__typeof__(b) _max_b = (b);	\
+	SPA_LIKELY(_max_a > _max_b) ? _max_a : _max_b;	\
 })
 #define SPA_CLAMP(v,low,high)				\
 ({							\
@@ -108,12 +160,23 @@ struct spa_fraction {
 	x;				\
 })
 
-#define SPA_MEMBER(b,o,t) ((t*)((uint8_t*)(b) + (int)(o)))
-#define SPA_MEMBER_ALIGN(b,o,a,t) SPA_PTR_ALIGN(SPA_MEMBER(b,o,t),a,t)
+/**
+ * Return the address (buffer + offset) as pointer of \a type
+ */
+#define SPA_PTROFF(ptr_,offset_,type_) ((type_*)((uintptr_t)(ptr_) + (ptrdiff_t)(offset_)))
+#define SPA_PTROFF_ALIGN(ptr_,offset_,alignment_,type_) \
+   SPA_PTR_ALIGN(SPA_PTROFF(ptr_,offset_,type_),alignment_,type_)
 
-#define SPA_CONTAINER_OF(p,t,m) (t*)((uint8_t*)p - offsetof (t,m))
 
-#define SPA_PTRDIFF(p1,p2) ((uint8_t*)(p1) - (uint8_t*)(p2))
+/**
+ * Deprecated, use SPA_PTROFF and SPA_PTROFF_ALIGN instead
+ */
+#define SPA_MEMBER(b,o,t) SPA_PTROFF(b,o,t)
+#define SPA_MEMBER_ALIGN(b,o,a,t) SPA_PTROFF_ALIGN(b,o,a,t)
+
+#define SPA_CONTAINER_OF(p,t,m) ((t*)((uintptr_t)p - offsetof(t,m)))
+
+#define SPA_PTRDIFF(p1,p2) ((intptr_t)(p1) - (intptr_t)(p2))
 
 #define SPA_PTR_TO_INT(p) ((int) ((intptr_t) (p)))
 #define SPA_INT_TO_PTR(u) ((void*) ((intptr_t) (u)))
@@ -139,18 +202,22 @@ struct spa_fraction {
 
 #ifdef __GNUC__
 #define SPA_PRINTF_FUNC(fmt, arg1) __attribute__((format(printf, fmt, arg1)))
+#define SPA_FORMAT_ARG_FUNC(arg1) __attribute__((format_arg(arg1)))
 #define SPA_ALIGNED(align) __attribute__((aligned(align)))
 #define SPA_DEPRECATED __attribute__ ((deprecated))
 #define SPA_EXPORT __attribute__((visibility("default")))
 #define SPA_SENTINEL __attribute__((__sentinel__))
 #define SPA_UNUSED __attribute__ ((unused))
+#define SPA_NORETURN __attribute__ ((noreturn))
 #else
 #define SPA_PRINTF_FUNC(fmt, arg1)
+#define SPA_FORMAT_ARG_FUNC(arg1)
 #define SPA_ALIGNED(align)
 #define SPA_DEPRECATED
 #define SPA_EXPORT
 #define SPA_SENTINEL
 #define SPA_UNUSED
+#define SPA_NORETURN
 #endif
 
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
@@ -161,12 +228,15 @@ struct spa_fraction {
 #define SPA_RESTRICT
 #endif
 
+#define SPA_ROUND_DOWN(num,value)	((num) - ((num) % (value)))
+#define SPA_ROUND_UP(num,value)		((((num) + (value) - 1) / (value)) * (value))
+
 #define SPA_ROUND_DOWN_N(num,align)	((num) & ~((align) - 1))
 #define SPA_ROUND_UP_N(num,align)	SPA_ROUND_DOWN_N((num) + ((align) - 1),align)
 
 #define SPA_PTR_ALIGNMENT(p,align)	((intptr_t)(p) & ((align)-1))
 #define SPA_IS_ALIGNED(p,align)		(SPA_PTR_ALIGNMENT(p,align) == 0)
-#define SPA_PTR_ALIGN(p,align,type)	(type*)SPA_ROUND_UP_N((intptr_t)(p), (intptr_t)(align))
+#define SPA_PTR_ALIGN(p,align,type)	((type*)SPA_ROUND_UP_N((intptr_t)(p), (intptr_t)(align)))
 
 #ifndef SPA_LIKELY
 #ifdef __GNUC__
@@ -201,6 +271,7 @@ struct spa_fraction {
 
 /* spa_assert_se() is an assert which guarantees side effects of x,
  * i.e. is never optimized away, regardless of NDEBUG or FASTPATH. */
+#ifndef __COVERITY__
 #define spa_assert_se(expr)						\
 	do {								\
 		if (SPA_UNLIKELY(!(expr))) {				\
@@ -209,25 +280,36 @@ struct spa_fraction {
 			abort();					\
 		}							\
 	} while (false)
-
-#define spa_assert(expr)						\
+#else
+#define spa_assert_se(expr)						\
 	do {								\
-		if (SPA_UNLIKELY(!(expr))) {				\
-			fprintf(stderr, "'%s' failed at %s:%u %s()\n",	\
-				#expr , __FILE__, __LINE__, __func__);	\
+		int _unique_var = (expr);				\
+		if (!_unique_var)					\
 			abort();					\
-		}							\
-	} while (false)
+		} while (false)
+#endif
 
+/* Does exactly nothing */
+#define spa_nop() do {} while (false)
+
+#ifdef NDEBUG
+#define spa_assert(expr) spa_nop()
+#elif defined (FASTPATH)
+#define spa_assert(expr) spa_assert_se(expr)
+#else
+#define spa_assert(expr) spa_assert_se(expr)
+#endif
+
+#ifdef NDEBUG
+#define spa_assert_not_reached() abort()
+#else
 #define spa_assert_not_reached()						\
 	do {									\
 		fprintf(stderr, "Code should not be reached at %s:%u %s()\n",	\
 				__FILE__, __LINE__, __func__);			\
 		abort();							\
 	} while (false)
-
-/* Does exactly nothing */
-#define spa_nop() do {} while (false)
+#endif
 
 #define spa_memzero(x,l) (memset((x), 0, (l)))
 #define spa_zero(x) (spa_memzero(&(x), sizeof(x)))
@@ -257,6 +339,10 @@ struct spa_fraction {
 		_strp = NULL;						\
 	_strp;								\
 })
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 } /* extern "C" */

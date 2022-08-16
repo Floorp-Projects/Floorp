@@ -31,6 +31,11 @@ extern "C" {
 
 #include <spa/utils/defs.h>
 
+/**
+ * \addtogroup spa_types
+ * \{
+ */
+
 #ifndef SPA_TYPE_ROOT
 #define SPA_TYPE_ROOT	spa_types
 #endif
@@ -52,6 +57,7 @@ static const struct spa_type_info spa_type_direction[] = {
 	{ 0, 0, NULL, NULL }
 };
 
+#include <spa/monitor/type-info.h>
 #include <spa/node/type-info.h>
 #include <spa/param/type-info.h>
 #include <spa/control/type-info.h>
@@ -99,7 +105,7 @@ static const struct spa_type_info spa_types[] = {
 	{ SPA_TYPE_POINTER_Dict, SPA_TYPE_Pointer, SPA_TYPE_INFO_POINTER_BASE "Dict", NULL },
 
 	{ SPA_TYPE_EVENT_START, SPA_TYPE_Object, SPA_TYPE_INFO_Event, NULL },
-	{ SPA_TYPE_EVENT_Device, SPA_TYPE_Object, SPA_TYPE_INFO_EVENT_BASE "Device", NULL },
+	{ SPA_TYPE_EVENT_Device, SPA_TYPE_Object, SPA_TYPE_INFO_EVENT_BASE "Device", spa_type_device_event },
 	{ SPA_TYPE_EVENT_Node, SPA_TYPE_Object, SPA_TYPE_INFO_EVENT_BASE "Node", spa_type_node_event },
 
 	{ SPA_TYPE_COMMAND_START, SPA_TYPE_Object, SPA_TYPE_INFO_Command, NULL },
@@ -117,9 +123,15 @@ static const struct spa_type_info spa_types[] = {
 	{ SPA_TYPE_OBJECT_ParamPortConfig, SPA_TYPE_Object, SPA_TYPE_INFO_PARAM_PortConfig, spa_type_param_port_config },
 	{ SPA_TYPE_OBJECT_ParamRoute, SPA_TYPE_Object, SPA_TYPE_INFO_PARAM_Route, spa_type_param_route },
 	{ SPA_TYPE_OBJECT_Profiler, SPA_TYPE_Object, SPA_TYPE_INFO_Profiler, spa_type_profiler },
+	{ SPA_TYPE_OBJECT_ParamLatency, SPA_TYPE_Object, SPA_TYPE_INFO_PARAM_Latency, spa_type_param_latency },
+	{ SPA_TYPE_OBJECT_ParamProcessLatency, SPA_TYPE_Object, SPA_TYPE_INFO_PARAM_ProcessLatency, spa_type_param_process_latency },
 
 	{ 0, 0, NULL, NULL }
 };
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

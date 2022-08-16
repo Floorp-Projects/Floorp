@@ -29,9 +29,7 @@
 extern "C" {
 #endif
 
-/** \class pw_impl_device
- *
- * \brief PipeWire device interface.
+/** \defgroup pw_impl_device Device Impl
  *
  * The device is an object that manages nodes. It typically
  * corresponds to a physical hardware device but it does not
@@ -39,6 +37,11 @@ extern "C" {
  *
  * The purpose of the device is to provide an interface to
  * dynamically create/remove/configure the nodes it manages.
+ */
+
+/**
+ * \addtogroup pw_impl_device
+ * \{
  */
 struct pw_impl_device;
 
@@ -102,6 +105,10 @@ int pw_impl_device_for_each_param(struct pw_impl_device *device,
 					      uint32_t id, uint32_t index, uint32_t next,
 					      struct spa_pod *param),
 			     void *data);
+/**
+ * \}
+ */
+
 #ifdef __cplusplus
 }
 #endif

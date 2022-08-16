@@ -33,6 +33,16 @@ extern "C" {
 
 #include <spa/utils/defs.h>
 
+/**
+ * \defgroup spa_dict Dictionary
+ * Dictionary data structure
+ */
+
+/**
+ * \addtogroup spa_dict
+ * \{
+ */
+
 struct spa_dict_item {
 	const char *key;
 	const char *value;
@@ -64,8 +74,9 @@ static inline int spa_dict_item_compare(const void *i1, const void *i2)
 
 static inline void spa_dict_qsort(struct spa_dict *dict)
 {
-	qsort((void*)dict->items, dict->n_items, sizeof(struct spa_dict_item),
-			spa_dict_item_compare);
+	if (dict->n_items > 0)
+		qsort((void*)dict->items, dict->n_items, sizeof(struct spa_dict_item),
+				spa_dict_item_compare);
 	SPA_FLAG_SET(dict->flags, SPA_DICT_FLAG_SORTED);
 }
 
@@ -74,7 +85,8 @@ static inline const struct spa_dict_item *spa_dict_lookup_item(const struct spa_
 {
 	const struct spa_dict_item *item;
 
-	if (SPA_FLAG_IS_SET(dict->flags, SPA_DICT_FLAG_SORTED)) {
+	if (SPA_FLAG_IS_SET(dict->flags, SPA_DICT_FLAG_SORTED) &&
+			dict->n_items > 0) {
 		struct spa_dict_item k = SPA_DICT_ITEM_INIT(key, NULL);
 		item = (const struct spa_dict_item *)bsearch(&k,
 				(const void *) dict->items, dict->n_items,
@@ -96,6 +108,10 @@ static inline const char *spa_dict_lookup(const struct spa_dict *dict, const cha
 	const struct spa_dict_item *item = spa_dict_lookup_item(dict, key);
 	return item ? item->value : NULL;
 }
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

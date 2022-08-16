@@ -29,6 +29,11 @@
 extern "C" {
 #endif
 
+/**
+ * \addtogroup spa_node
+ * \{
+ */
+
 #include <spa/pod/builder.h>
 
 #include <spa/node/node.h>
@@ -46,9 +51,10 @@ static inline void spa_result_func_node_params(void *data,
 	const struct spa_result_node_params *r =
 		(const struct spa_result_node_params *) result;
 	uint32_t offset = d->builder->state.offset;
-	spa_pod_builder_raw_padded(d->builder, r->param, SPA_POD_SIZE(r->param));
+	if (spa_pod_builder_raw_padded(d->builder, r->param, SPA_POD_SIZE(r->param)) < 0)
+		return;
 	d->data.next = r->next;
-	d->data.param = SPA_MEMBER(d->builder->data, offset, struct spa_pod);
+	d->data.param = spa_pod_builder_deref(d->builder, offset);
 }
 
 static inline int spa_node_enum_params_sync(struct spa_node *node,
@@ -58,9 +64,11 @@ static inline int spa_node_enum_params_sync(struct spa_node *node,
 			struct spa_pod_builder *builder)
 {
 	struct spa_result_node_params_data data = { builder, };
-	struct spa_hook listener = { 0 };
+	struct spa_hook listener = {{0}};
 	static const struct spa_node_events node_events = {
-		SPA_VERSION_NODE_EVENTS,
+		.version = SPA_VERSION_NODE_EVENTS,
+		.info = NULL,
+		.port_info = NULL,
 		.result = spa_result_func_node_params,
 	};
 	int res;
@@ -90,9 +98,11 @@ static inline int spa_node_port_enum_params_sync(struct spa_node *node,
 			struct spa_pod_builder *builder)
 {
 	struct spa_result_node_params_data data = { builder, };
-	struct spa_hook listener = { 0 };
+	struct spa_hook listener = {{0}};
 	static const struct spa_node_events node_events = {
-		SPA_VERSION_NODE_EVENTS,
+		.version = SPA_VERSION_NODE_EVENTS,
+		.info = NULL,
+		.port_info = NULL,
 		.result = spa_result_func_node_params,
 	};
 	int res;
@@ -136,6 +146,10 @@ static inline int spa_node_port_enum_params_sync(struct spa_node *node,
 #define spa_node_call_ready(hook,...)		spa_node_call(hook, ready, 0, __VA_ARGS__)
 #define spa_node_call_reuse_buffer(hook,...)	spa_node_call(hook, reuse_buffer, 0, __VA_ARGS__)
 #define spa_node_call_xrun(hook,...)		spa_node_call(hook, xrun, 0, __VA_ARGS__)
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

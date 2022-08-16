@@ -37,9 +37,14 @@ extern "C" {
 #define PIPEWIRE_SYMBOL_MODULE_INIT "pipewire__module_init"
 #define PIPEWIRE_MODULE_PREFIX "libpipewire-"
 
-/** \class pw_impl_module
+/** \defgroup pw_impl_module Module Impl
  *
  * A dynamically loadable module
+ */
+
+/**
+ * \addtogroup pw_impl_module
+ * \{
  */
 struct pw_impl_module;
 
@@ -51,8 +56,6 @@ struct pw_impl_module;
  *
  * A module should provide an init function with this signature. This function
  * will be called when a module is loaded.
- *
- * \memberof pw_impl_module
  */
 typedef int (*pw_impl_module_init_func_t) (struct pw_impl_module *module, const char *args);
 
@@ -69,15 +72,15 @@ struct pw_impl_module_events {
 	void (*initialized) (void *data);
 
 	/** The module is registered. This is a good time to register
-	 * objectes created from the module. */
+	 * objects created from the module. */
 	void (*registered) (void *data);
 };
 
 struct pw_impl_module *
 pw_context_load_module(struct pw_context *context,
-	       const char *name,		/**< name of the module */
-	       const char *args			/**< arguments of the module */,
-	       struct pw_properties *properties	/**< extra global properties */);
+	       const char *name,
+	       const char *args,
+	       struct pw_properties *properties);
 
 /** Get the context of a module */
 struct pw_context * pw_impl_module_get_context(struct pw_impl_module *module);
@@ -85,7 +88,7 @@ struct pw_context * pw_impl_module_get_context(struct pw_impl_module *module);
 /** Get the global of a module */
 struct pw_global * pw_impl_module_get_global(struct pw_impl_module *module);
 
-/** Get the node properties */
+/** Get the module properties */
 const struct pw_properties *pw_impl_module_get_properties(struct pw_impl_module *module);
 
 /** Update the module properties */
@@ -102,6 +105,10 @@ void pw_impl_module_add_listener(struct pw_impl_module *module,
 
 /** Destroy a module */
 void pw_impl_module_destroy(struct pw_impl_module *module);
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }

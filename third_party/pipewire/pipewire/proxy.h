@@ -43,8 +43,8 @@ extern "C" {
  * \section sec_page_proxy_core Core proxy
  *
  * A proxy for a remote core object can be obtained by making
- * a remote connection with \ref pw_core_connect.
- * See \ref pw_page_remote_api
+ * a remote connection with \ref pw_context_connect.
+ * See \ref pw_proxy
  *
  * Some methods on proxy object allow creation of more proxy objects or
  * create a binding between a local proxy and global resource.
@@ -87,7 +87,7 @@ extern "C" {
  * associated to the proxy.
  */
 
-/** \class pw_proxy
+/** \defgroup pw_proxy Proxy
  *
  * \brief Represents an object on the client side.
  *
@@ -97,6 +97,11 @@ extern "C" {
  * set in listener.
  *
  * See \ref page_proxy
+ */
+
+/**
+ * \addtogroup pw_proxy
+ * \{
  */
 struct pw_proxy;
 
@@ -124,13 +129,13 @@ struct pw_proxy_events {
         void (*error) (void *data, int seq, int res, const char *message);
 };
 
-/** Make a new proxy object. The id can be used to bind to a remote object and
-  * can be retrieved with \ref pw_proxy_get_id . */
+/* Make a new proxy object. The id can be used to bind to a remote object and
+ * can be retrieved with \ref pw_proxy_get_id . */
 struct pw_proxy *
-pw_proxy_new(struct pw_proxy *factory,	/**< factory */
-	     const char *type,		/**< interface type */
-	     uint32_t version,		/**< interface version */
-	     size_t user_data_size	/**< size of user data */);
+pw_proxy_new(struct pw_proxy *factory,
+	     const char *type,		/* interface type */
+	     uint32_t version,		/* interface version */
+	     size_t user_data_size	/* size of user data */);
 
 /** Add an event listener to proxy */
 void pw_proxy_add_listener(struct pw_proxy *proxy,
@@ -147,6 +152,9 @@ void pw_proxy_add_object_listener(struct pw_proxy *proxy,	/**< the proxy */
 
 /** destroy a proxy */
 void pw_proxy_destroy(struct pw_proxy *proxy);
+
+void pw_proxy_ref(struct pw_proxy *proxy);
+void pw_proxy_unref(struct pw_proxy *proxy);
 
 /** Get the user_data. The size was given in \ref pw_proxy_new */
 void *pw_proxy_get_user_data(struct pw_proxy *proxy);
@@ -199,6 +207,10 @@ int pw_proxy_install_marshal(struct pw_proxy *proxy, bool implementor);
 			type, _res, method, version, ##__VA_ARGS__);	\
 	_res;								\
 })
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }

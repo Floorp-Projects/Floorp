@@ -32,21 +32,23 @@ extern "C" {
 #include <spa/utils/defs.h>
 #include <spa/pod/pod.h>
 
-/** \page page_meta Metadata
- *
- * Metadata contains extra information on a buffer.
+/**
+ * \addtogroup spa_buffer
+ * \{
  */
+
 enum spa_meta_type {
 	SPA_META_Invalid,
 	SPA_META_Header,	/**< struct spa_meta_header */
 	SPA_META_VideoCrop,	/**< struct spa_meta_region with cropping data */
-	SPA_META_VideoDamage,	/**< array of struct spa_meta_region with damage */
+	SPA_META_VideoDamage,	/**< array of struct spa_meta_region with damage, where an invalid entry or end-of-array marks the end. */
 	SPA_META_Bitmap,	/**< struct spa_meta_bitmap */
 	SPA_META_Cursor,	/**< struct spa_meta_cursor */
 	SPA_META_Control,	/**< metadata contains a spa_meta_control
 				  *  associated with the data */
+	SPA_META_Busy,		/**< don't write to buffer when count > 0 */
 
-	SPA_META_LAST,		/**< not part of ABI/API */
+	_SPA_META_LAST,		/**< not part of ABI/API */
 };
 
 /**
@@ -63,8 +65,8 @@ struct spa_meta {
 };
 
 #define spa_meta_first(m)	((m)->data)
-#define spa_meta_end(m)		SPA_MEMBER((m)->data,(m)->size,void)
-#define spa_meta_check(p,m)	(SPA_MEMBER(p,sizeof(*p),void) <= spa_meta_end(m))
+#define spa_meta_end(m)		SPA_PTROFF((m)->data,(m)->size,void)
+#define spa_meta_check(p,m)	(SPA_PTROFF(p,sizeof(*p),void) <= spa_meta_end(m))
 
 /**
  * Describes essential buffer header metadata such as flags and
@@ -79,7 +81,7 @@ struct spa_meta_header {
 #define SPA_META_HEADER_FLAG_DELTA_UNIT	(1 << 5)	/**< cannot be decoded independently */
 	uint32_t flags;				/**< flags */
 	uint32_t offset;			/**< offset in current cycle */
-	int64_t pts;				/**< presentation timestamp */
+	int64_t pts;				/**< presentation timestamp in nanoseconds */
 	int64_t dts_offset;			/**< decoding timestamp as a difference with pts */
 	uint64_t seq;				/**< sequence number, increments with a
 						  *  media specific frequency */
@@ -143,6 +145,16 @@ struct spa_meta_cursor {
 struct spa_meta_control {
 	struct spa_pod_sequence sequence;
 };
+
+/** a busy counter for the buffer */
+struct spa_meta_busy {
+	uint32_t flags;
+	uint32_t count;			/**< number of users busy with the buffer */
+};
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

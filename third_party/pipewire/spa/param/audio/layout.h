@@ -29,10 +29,14 @@
 extern "C" {
 #endif
 
-#ifndef __FreeBSD__
+#if !defined(__FreeBSD__) && !defined(__MidnightBSD__)
 #include <endian.h>
 #endif
 
+/**
+ * \addtogroup spa_param
+ * \{
+ */
 #include <spa/param/audio/raw.h>
 
 struct spa_audio_layout_info {
@@ -60,8 +64,8 @@ struct spa_audio_layout_info {
 					     SPA_AUDIO_CHANNEL_TRL, SPA_AUDIO_CHANNEL_TRR, }
 
 
-#define SPA_AUDIO_LAYOUT_MPEG_1_0	SPA_AUDIO_LAYOUT_MONO
-#define SPA_AUDIO_LAYOUT_MPEG_2_0	SPA_AUDIO_LAYOUT_STEREO
+#define SPA_AUDIO_LAYOUT_MPEG_1_0	SPA_AUDIO_LAYOUT_Mono
+#define SPA_AUDIO_LAYOUT_MPEG_2_0	SPA_AUDIO_LAYOUT_Stereo
 #define SPA_AUDIO_LAYOUT_MPEG_3_0A	3, { SPA_AUDIO_CHANNEL_FL, SPA_AUDIO_CHANNEL_FR, \
 					     SPA_AUDIO_CHANNEL_FC, }
 #define SPA_AUDIO_LAYOUT_MPEG_3_0B	3, { SPA_AUDIO_CHANNEL_FC, SPA_AUDIO_CHANNEL_FL, \
@@ -176,6 +180,10 @@ struct spa_audio_layout_info {
 					     SPA_AUDIO_CHANNEL_FC, SPA_AUDIO_CHANNEL_LFE, \
 					     SPA_AUDIO_CHANNEL_RL, SPA_AUDIO_CHANNEL_RR, \
 					     SPA_AUDIO_CHANNEL_FLC, SPA_AUDIO_CHANNEL_FRC, }
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

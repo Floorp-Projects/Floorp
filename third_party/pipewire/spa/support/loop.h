@@ -33,6 +33,15 @@ extern "C" {
 #include <spa/utils/hook.h>
 #include <spa/support/system.h>
 
+/** \defgroup spa_loop Loop
+ * Event loop interface
+ */
+
+/**
+ * \addtogroup spa_loop
+ * \{
+ */
+
 #define SPA_TYPE_INTERFACE_Loop		SPA_TYPE_INFO_INTERFACE_BASE "Loop"
 #define SPA_TYPE_INTERFACE_DataLoop	SPA_TYPE_INFO_INTERFACE_BASE "DataLoop"
 #define SPA_VERSION_LOOP		0
@@ -57,6 +66,8 @@ struct spa_source {
 	int fd;
 	uint32_t mask;
 	uint32_t rmask;
+	/* private data for the loop implementer */
+	void *priv;
 };
 
 typedef int (*spa_invoke_func_t) (struct spa_loop *loop,
@@ -304,6 +315,10 @@ struct spa_loop_utils_methods {
 #define spa_loop_utils_update_timer(l,...)	spa_loop_utils_method_r(l,update_timer,0,__VA_ARGS__)
 #define spa_loop_utils_add_signal(l,...)	spa_loop_utils_method_s(l,add_signal,0,__VA_ARGS__)
 #define spa_loop_utils_destroy_source(l,...)	spa_loop_utils_method_v(l,destroy_source,0,__VA_ARGS__)
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

@@ -31,6 +31,11 @@ extern "C" {
 
 #include <spa/pod/event.h>
 
+/**
+ * \addtogroup spa_device
+ * \{
+ */
+
 /* object id of SPA_TYPE_EVENT_Device */
 enum spa_device_event {
 	SPA_DEVICE_EVENT_ObjectConfig,
@@ -46,6 +51,10 @@ enum spa_event_device {
 	SPA_EVENT_DEVICE_Object,	/* an object id (Int) */
 	SPA_EVENT_DEVICE_Props,		/* properties for an object (SPA_TYPE_OBJECT_Props) */
 };
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

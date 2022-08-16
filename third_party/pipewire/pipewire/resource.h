@@ -31,9 +31,9 @@ extern "C" {
 
 #include <spa/utils/hook.h>
 
-/** \page page_resource Resource
+/** \defgroup pw_resource Resource
  *
- * \section sec_page_resource Overview
+ * \brief Client owned objects
  *
  * Resources represent objects owned by a \ref pw_impl_client. They are
  * the result of binding to a global resource or by calling API that
@@ -47,14 +47,10 @@ extern "C" {
  *
  */
 
-/** \class pw_resource
- *
- * \brief Client owned objects
- *
- * Resources are objects owned by a client and are destroyed when the
- * client disappears.
- *
- * See also \ref page_resource
+
+/**
+ * \addtogroup pw_resource
+ * \{
  */
 struct pw_resource;
 
@@ -125,6 +121,10 @@ void pw_resource_add_object_listener(struct pw_resource *resource,
  * with the same \a sequence number in the return value. */
 int pw_resource_ping(struct pw_resource *resource, int seq);
 
+/** ref/unref a resource, Since 0.3.52 */
+void pw_resource_ref(struct pw_resource *resource);
+void pw_resource_unref(struct pw_resource *resource);
+
 /** Notify global id this resource is bound to */
 int pw_resource_set_bound_id(struct pw_resource *resource, uint32_t global_id);
 
@@ -160,6 +160,12 @@ int pw_resource_install_marshal(struct pw_resource *resource, bool implementor);
 			type, _res, method, version, ##__VA_ARGS__);	\
 	_res;								\
 })
+
+
+/**
+ * \}
+ */
+
 
 #ifdef __cplusplus
 }

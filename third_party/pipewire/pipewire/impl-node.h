@@ -29,17 +29,15 @@
 extern "C" {
 #endif
 
-/** \page page_node Node
- *
- * \section page_node_overview Overview
+/** \defgroup pw_impl_node Node Impl
  *
  * The node object processes data. The node has a list of
- * input and output ports (\ref page_port) on which it
+ * input and output ports (\ref pw_impl_port) on which it
  * will receive and send out buffers respectively.
  */
-/** \class pw_impl_node
- *
- * PipeWire node class.
+/**
+ * \addtogroup pw_impl_node
+ * \{
  */
 struct pw_impl_node;
 struct pw_impl_port;
@@ -97,7 +95,7 @@ struct pw_impl_node_events {
 	void (*peer_removed) (void *data, struct pw_impl_node *peer);
 };
 
-/** Create a new node \memberof pw_impl_node */
+/** Create a new node */
 struct pw_impl_node *
 pw_context_create_node(struct pw_context *context,	/**< the context */
 	    struct pw_properties *properties,	/**< extra properties */
@@ -174,6 +172,12 @@ int pw_impl_node_set_active(struct pw_impl_node *node, bool active);
 
 /** Check if a node is active */
 bool pw_impl_node_is_active(struct pw_impl_node *node);
+
+/** Check if a node is active, Since 0.3.39 */
+int pw_impl_node_send_command(struct pw_impl_node *node, const struct spa_command *command);
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }

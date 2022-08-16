@@ -29,6 +29,11 @@
 extern "C" {
 #endif
 
+/**
+ * \addtogroup spa_debug
+ * \{
+ */
+
 #include <spa/utils/type-info.h>
 
 #include <string.h>
@@ -90,6 +95,30 @@ static inline uint32_t spa_debug_type_find_type(const struct spa_type_info *info
 	}
 	return SPA_ID_INVALID;
 }
+
+static inline const struct spa_type_info *spa_debug_type_find_short(const struct spa_type_info *info, const char *name)
+{
+	while (info && info->name) {
+		if (strcmp(spa_debug_type_short_name(info->name), name) == 0)
+			return info;
+		if (strcmp(info->name, name) == 0)
+			return info;
+		if (info->type != 0 && info->type == (uint32_t)atoi(name))
+			return info;
+		info++;
+	}
+	return NULL;
+}
+
+static inline uint32_t spa_debug_type_find_type_short(const struct spa_type_info *info, const char *name)
+{
+	if ((info = spa_debug_type_find_short(info, name)) == NULL)
+		return SPA_ID_INVALID;
+	return info->type;
+}
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

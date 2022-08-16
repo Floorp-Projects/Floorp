@@ -31,9 +31,14 @@ extern "C" {
 
 #include <stdint.h>
 
-#ifndef __FreeBSD__
+#if !defined(__FreeBSD__) && !defined(__MidnightBSD__)
 #include <endian.h>
 #endif
+
+/**
+ * \addtogroup spa_param
+ * \{
+ */
 
 #define SPA_AUDIO_MAX_CHANNELS	64u
 
@@ -74,6 +79,9 @@ enum spa_audio_format {
 	SPA_AUDIO_FORMAT_F64_LE,
 	SPA_AUDIO_FORMAT_F64_BE,
 
+	SPA_AUDIO_FORMAT_ULAW,
+	SPA_AUDIO_FORMAT_ALAW,
+
 	/* planar formats */
 	SPA_AUDIO_FORMAT_START_Planar		= 0x200,
 	SPA_AUDIO_FORMAT_U8P,
@@ -83,6 +91,7 @@ enum spa_audio_format {
 	SPA_AUDIO_FORMAT_S24P,
 	SPA_AUDIO_FORMAT_F32P,
 	SPA_AUDIO_FORMAT_F64P,
+	SPA_AUDIO_FORMAT_S8P,
 
 	/* other formats start here */
 	SPA_AUDIO_FORMAT_START_Other		= 0x400,
@@ -201,7 +210,75 @@ enum spa_audio_channel {
 	SPA_AUDIO_CHANNEL_BLC,          /**< bottom left center */
 	SPA_AUDIO_CHANNEL_BRC,          /**< bottom right center */
 
-	SPA_AUDIO_CHANNEL_CUSTOM_START	= 0x10000,
+	SPA_AUDIO_CHANNEL_START_Aux	= 0x1000,	/**< aux channels */
+	SPA_AUDIO_CHANNEL_AUX0 = SPA_AUDIO_CHANNEL_START_Aux,
+	SPA_AUDIO_CHANNEL_AUX1,
+	SPA_AUDIO_CHANNEL_AUX2,
+	SPA_AUDIO_CHANNEL_AUX3,
+	SPA_AUDIO_CHANNEL_AUX4,
+	SPA_AUDIO_CHANNEL_AUX5,
+	SPA_AUDIO_CHANNEL_AUX6,
+	SPA_AUDIO_CHANNEL_AUX7,
+	SPA_AUDIO_CHANNEL_AUX8,
+	SPA_AUDIO_CHANNEL_AUX9,
+	SPA_AUDIO_CHANNEL_AUX10,
+	SPA_AUDIO_CHANNEL_AUX11,
+	SPA_AUDIO_CHANNEL_AUX12,
+	SPA_AUDIO_CHANNEL_AUX13,
+	SPA_AUDIO_CHANNEL_AUX14,
+	SPA_AUDIO_CHANNEL_AUX15,
+	SPA_AUDIO_CHANNEL_AUX16,
+	SPA_AUDIO_CHANNEL_AUX17,
+	SPA_AUDIO_CHANNEL_AUX18,
+	SPA_AUDIO_CHANNEL_AUX19,
+	SPA_AUDIO_CHANNEL_AUX20,
+	SPA_AUDIO_CHANNEL_AUX21,
+	SPA_AUDIO_CHANNEL_AUX22,
+	SPA_AUDIO_CHANNEL_AUX23,
+	SPA_AUDIO_CHANNEL_AUX24,
+	SPA_AUDIO_CHANNEL_AUX25,
+	SPA_AUDIO_CHANNEL_AUX26,
+	SPA_AUDIO_CHANNEL_AUX27,
+	SPA_AUDIO_CHANNEL_AUX28,
+	SPA_AUDIO_CHANNEL_AUX29,
+	SPA_AUDIO_CHANNEL_AUX30,
+	SPA_AUDIO_CHANNEL_AUX31,
+	SPA_AUDIO_CHANNEL_AUX32,
+	SPA_AUDIO_CHANNEL_AUX33,
+	SPA_AUDIO_CHANNEL_AUX34,
+	SPA_AUDIO_CHANNEL_AUX35,
+	SPA_AUDIO_CHANNEL_AUX36,
+	SPA_AUDIO_CHANNEL_AUX37,
+	SPA_AUDIO_CHANNEL_AUX38,
+	SPA_AUDIO_CHANNEL_AUX39,
+	SPA_AUDIO_CHANNEL_AUX40,
+	SPA_AUDIO_CHANNEL_AUX41,
+	SPA_AUDIO_CHANNEL_AUX42,
+	SPA_AUDIO_CHANNEL_AUX43,
+	SPA_AUDIO_CHANNEL_AUX44,
+	SPA_AUDIO_CHANNEL_AUX45,
+	SPA_AUDIO_CHANNEL_AUX46,
+	SPA_AUDIO_CHANNEL_AUX47,
+	SPA_AUDIO_CHANNEL_AUX48,
+	SPA_AUDIO_CHANNEL_AUX49,
+	SPA_AUDIO_CHANNEL_AUX50,
+	SPA_AUDIO_CHANNEL_AUX51,
+	SPA_AUDIO_CHANNEL_AUX52,
+	SPA_AUDIO_CHANNEL_AUX53,
+	SPA_AUDIO_CHANNEL_AUX54,
+	SPA_AUDIO_CHANNEL_AUX55,
+	SPA_AUDIO_CHANNEL_AUX56,
+	SPA_AUDIO_CHANNEL_AUX57,
+	SPA_AUDIO_CHANNEL_AUX58,
+	SPA_AUDIO_CHANNEL_AUX59,
+	SPA_AUDIO_CHANNEL_AUX60,
+	SPA_AUDIO_CHANNEL_AUX61,
+	SPA_AUDIO_CHANNEL_AUX62,
+	SPA_AUDIO_CHANNEL_AUX63,
+
+	SPA_AUDIO_CHANNEL_LAST_Aux	= 0x1fff,	/**< aux channels */
+
+	SPA_AUDIO_CHANNEL_START_Custom	= 0x10000,
 };
 
 /** Extra audio flags */
@@ -219,16 +296,26 @@ struct spa_audio_info_raw {
 
 #define SPA_AUDIO_INFO_RAW_INIT(...)		(struct spa_audio_info_raw) { __VA_ARGS__ }
 
+#define SPA_KEY_AUDIO_FORMAT		"audio.format"		/**< an audio format as string,
+								  *  Ex. "S16LE" */
 #define SPA_KEY_AUDIO_CHANNEL		"audio.channel"		/**< an audio channel as string,
 								  *  Ex. "FL" */
 #define SPA_KEY_AUDIO_CHANNELS		"audio.channels"	/**< an audio channel count as int */
 #define SPA_KEY_AUDIO_RATE		"audio.rate"		/**< an audio sample rate as int */
+#define SPA_KEY_AUDIO_POSITION		"audio.position"	/**< channel positions as comma separated list
+								  *  of channels ex. "FL,FR" */
+#define SPA_KEY_AUDIO_ALLOWED_RATES	"audio.allowed-rates"	/**< a list of allowed samplerates
+								  *  ex. "[ 44100 48000 ]" */
 
 struct spa_audio_info_dsp {
 	enum spa_audio_format format;		/*< format, one of the DSP formats in enum spa_audio_format_dsp */
 };
 
 #define SPA_AUDIO_INFO_DSP_INIT(...)		(struct spa_audio_info_dsp) { __VA_ARGS__ }
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */
