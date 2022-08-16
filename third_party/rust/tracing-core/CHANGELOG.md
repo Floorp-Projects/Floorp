@@ -1,3 +1,52 @@
+# 0.1.29 (July 29, 2022)
+
+This release of `tracing-core` adds `PartialEq` and `Eq` implementations for
+metadata types, and improves error messages when setting the global default
+subscriber fails.
+
+### Added
+
+- `PartialEq` and `Eq` implementations for `Metadata` ([#2229])
+- `PartialEq` and `Eq` implementations for `FieldSet` ([#2229])
+
+### Fixed
+
+- Fixed unhelpful `fmt::Debug` output for `dispatcher::SetGlobalDefaultError`
+  ([#2250])
+- Fixed compilation with `-Z minimal-versions` ([#2246])
+
+Thanks to @jswrenn and @CAD97 for contributing to this release!
+
+[#2229]: https://github.com/tokio-rs/tracing/pull/2229
+[#2246]: https://github.com/tokio-rs/tracing/pull/2246
+[#2250]: https://github.com/tokio-rs/tracing/pull/2250
+
+# 0.1.28 (June 23, 2022)
+
+This release of `tracing-core` adds new `Value` implementations, including one
+for `String`, to allow recording `&String` as a value without having to call
+`as_str()` or similar, and for 128-bit integers (`i128` and `u128`). In
+addition, it adds new methods and trait implementations for `Subscriber`s.
+
+### Added
+
+- `Value` implementation for `String` ([#2164])
+- `Value` implementation for `u128` and `i28` ([#2166])
+- `downcast_ref` and `is` methods for `dyn Subscriber + Sync`,
+  `dyn Subscriber + Send`, and `dyn Subscriber + Send + Sync` ([#2160])
+- `Subscriber::event_enabled` method to enable filtering based on `Event` field
+  values ([#2008])
+- `Subscriber` implementation for `Box<S: Subscriber + ?Sized>` and
+  `Arc<S: Subscriber + ?Sized>` ([#2161])
+
+Thanks to @jswrenn and @CAD97 for contributing to this release!
+
+[#2164]: https://github.com/tokio-rs/tracing/pull/2164
+[#2166]: https://github.com/tokio-rs/tracing/pull/2166
+[#2160]: https://github.com/tokio-rs/tracing/pull/2160
+[#2008]: https://github.com/tokio-rs/tracing/pull/2008
+[#2161]: https://github.com/tokio-rs/tracing/pull/2161
+
 # 0.1.27 (June 7, 2022)
 
 This release of `tracing-core` introduces a new `DefaultCallsite` type, which

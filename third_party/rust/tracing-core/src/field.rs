@@ -16,9 +16,9 @@
 //! will contain any fields attached to each event.
 //!
 //! `tracing` represents values as either one of a set of Rust primitives
-//! (`i64`, `u64`, `f64`, `bool`, and `&str`) or using a `fmt::Display` or
-//! `fmt::Debug` implementation. `Subscriber`s are provided these primitive
-//! value types as `dyn Value` trait objects.
+//! (`i64`, `u64`, `f64`, `i128`, `u128`, `bool`, and `&str`) or using a
+//! `fmt::Display` or `fmt::Debug` implementation. `Subscriber`s are provided
+//! these primitive value types as `dyn Value` trait objects.
 //!
 //! These trait objects can be formatted using `fmt::Debug`, but may also be
 //! recorded as typed data by calling the [`Value::record`] method on these
@@ -116,6 +116,7 @@ use crate::stdlib::{
     hash::{Hash, Hasher},
     num,
     ops::Range,
+    string::String,
 };
 
 use self::private::ValidLen;
@@ -144,6 +145,16 @@ pub struct Field {
 pub struct Empty;
 
 /// Describes the fields present on a span.
+///
+/// ## Equality
+///
+/// In well-behaved applications, two `FieldSet`s [initialized] with equal
+/// [callsite identifiers] will have identical fields. Consequently, in release
+/// builds, [`FieldSet::eq`] *only* checks that its arguments have equal
+/// callsites. However, the equality of field names is checked in debug builds.
+///
+/// [initialized]: Self::new
+/// [callsite identifiers]: callsite::Identifier
 pub struct FieldSet {
     /// The names of each field on the described span.
     names: &'static [&'static str],
@@ -274,6 +285,16 @@ pub trait Visit {
 
     /// Visit an unsigned 64-bit integer value.
     fn record_u64(&mut self, field: &Field, value: u64) {
+        self.record_debug(field, &value)
+    }
+
+    /// Visit a signed 128-bit integer value.
+    fn record_i128(&mut self, field: &Field, value: i128) {
+        self.record_debug(field, &value)
+    }
+
+    /// Visit an unsigned 128-bit integer value.
+    fn record_u128(&mut self, field: &Field, value: u128) {
         self.record_debug(field, &value)
     }
 
@@ -489,6 +510,8 @@ impl_values! {
     record_u64(usize, u32, u16, u8 as u64),
     record_i64(i64),
     record_i64(isize, i32, i16, i8 as i64),
+    record_u128(u128),
+    record_i128(i128),
     record_bool(bool),
     record_f64(f64, f32 as f64)
 }
@@ -593,6 +616,13 @@ where
     #[inline]
     fn record(&self, key: &Field, visitor: &mut dyn Visit) {
         self.as_ref().record(key, visitor)
+    }
+}
+
+impl crate::sealed::Sealed for String {}
+impl Value for String {
+    fn record(&self, key: &Field, visitor: &mut dyn Visit) {
+        visitor.record_str(key, self.as_str())
     }
 }
 
@@ -888,6 +918,40 @@ impl fmt::Display for FieldSet {
         f.debug_set()
             .entries(self.names.iter().map(display))
             .finish()
+    }
+}
+
+impl Eq for FieldSet {}
+
+impl PartialEq for FieldSet {
+    fn eq(&self, other: &Self) -> bool {
+        if core::ptr::eq(&self, &other) {
+            true
+        } else if cfg!(not(debug_assertions)) {
+            // In a well-behaving application, two `FieldSet`s can be assumed to
+            // be totally equal so long as they share the same callsite.
+            self.callsite == other.callsite
+        } else {
+            // However, when debug-assertions are enabled, do NOT assume that
+            // the application is well-behaving; check every the field names of
+            // each `FieldSet` for equality.
+
+            // `FieldSet` is destructured here to ensure a compile-error if the
+            // fields of `FieldSet` change.
+            let Self {
+                names: lhs_names,
+                callsite: lhs_callsite,
+            } = self;
+
+            let Self {
+                names: rhs_names,
+                callsite: rhs_callsite,
+            } = &other;
+
+            // Check callsite equality first, as it is probably cheaper to do
+            // than str equality.
+            lhs_callsite == rhs_callsite && lhs_names == rhs_names
+        }
     }
 }
 

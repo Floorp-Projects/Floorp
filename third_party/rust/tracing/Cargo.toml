@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.49.0"
 name = "tracing"
-version = "0.1.35"
+version = "0.1.36"
 authors = [
     "Eliza Weisman <eliza@buoyant.io>",
     "Tokio Contributors <team@tokio.rs>",
@@ -52,37 +52,65 @@ rustc-args = [
 ]
 
 [[bench]]
-name = "subscriber"
+name = "baseline"
 harness = false
 
 [[bench]]
-name = "no_subscriber"
+name = "dispatch_get_clone"
+harness = false
+
+[[bench]]
+name = "dispatch_get_ref"
+harness = false
+
+[[bench]]
+name = "empty_span"
+harness = false
+
+[[bench]]
+name = "enter_span"
+harness = false
+
+[[bench]]
+name = "event"
+harness = false
+
+[[bench]]
+name = "span_fields"
+harness = false
+
+[[bench]]
+name = "span_no_fields"
+harness = false
+
+[[bench]]
+name = "span_repeated"
 harness = false
 
 [dependencies.cfg-if]
 version = "1.0.0"
 
 [dependencies.log]
-version = "0.4"
+version = "0.4.17"
 optional = true
 
 [dependencies.pin-project-lite]
-version = "0.2"
+version = "0.2.9"
 
 [dependencies.tracing-attributes]
-version = "0.1.20"
+version = "0.1.22"
 optional = true
 
 [dependencies.tracing-core]
-version = "0.1.27"
+version = "0.1.29"
 default-features = false
 
 [dev-dependencies.criterion]
-version = "0.3"
-default_features = false
+version = "0.3.6"
+default-features = false
 
 [dev-dependencies.log]
-version = "0.4"
+version = "0.4.17"
 
 [features]
 async-await = []

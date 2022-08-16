@@ -31,6 +31,11 @@ fn fn_clashy_expr_field2(s: &str) {
     let _ = s;
 }
 
+#[instrument(fields(s = &s))]
+fn fn_string(s: String) {
+    let _ = s;
+}
+
 #[derive(Debug)]
 struct HasField {
     my_field: &'static str,
@@ -131,6 +136,14 @@ fn empty_field() {
     let span = span::mock().with_field(mock("foo").with_value(&"bar").only());
     run_test(span, || {
         fn_empty_field();
+    });
+}
+
+#[test]
+fn string_field() {
+    let span = span::mock().with_field(mock("s").with_value(&"hello world").only());
+    run_test(span, || {
+        fn_string(String::from("hello world"));
     });
 }
 

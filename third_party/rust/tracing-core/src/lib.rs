@@ -254,10 +254,7 @@ macro_rules! metadata {
     };
 }
 
-// Facade module: `no_std` uses spinlocks, `std` uses the mutexes in the standard library
-#[cfg(not(feature = "std"))]
-#[macro_use]
-mod lazy_static;
+pub(crate) mod lazy;
 
 // Trimmed-down vendored version of spin 0.5.2 (0387621)
 // Dependency of no_std lazy_static, not required in a std build
