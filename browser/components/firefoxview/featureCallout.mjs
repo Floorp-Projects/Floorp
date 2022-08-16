@@ -247,7 +247,10 @@ function _createContainer() {
   let container = document.createElement("div");
   container.classList.add("onboardingContainer", "featureCallout", "hidden");
   container.id = CONTAINER_ID;
-  document.body.appendChild(container);
+  let parent = document.querySelector(CURRENT_SCREEN?.parent_selector);
+  container.setAttribute("aria-describedby", `#${CONTAINER_ID} .welcome-text`);
+  container.tabIndex = 0;
+  parent.insertAdjacentElement("afterend", container);
   return container;
 }
 
@@ -256,7 +259,7 @@ function _createContainer() {
  */
 function _positionCallout() {
   const positions = ["top", "bottom", "left", "right"];
-  const container = document.getElementById("root");
+  const container = document.getElementById(CONTAINER_ID);
   const parentEl = document.querySelector(CURRENT_SCREEN?.parent_selector);
   const arrowPosition = CURRENT_SCREEN?.content?.arrow_position || "top";
   const margin = 15;
@@ -481,9 +484,13 @@ async function showFeatureCallout(messageId) {
 
   RENDER_OBSERVER = new MutationObserver(function() {
     // Check if the Feature Callout screen has loaded for the first time
-    if (!READY && document.querySelector("#root .screen")) {
+    if (!READY && document.querySelector(`#${CONTAINER_ID} .screen`)) {
       READY = true;
       _positionCallout();
+      let container = document.getElementById(CONTAINER_ID);
+      container.focus();
+      // Alert screen readers to the presence of the callout
+      container.setAttribute("role", "alert");
     }
   });
 
