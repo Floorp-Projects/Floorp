@@ -32,7 +32,7 @@ using namespace mozilla::dmd;
 
 DMDFuncs::Singleton DMDFuncs::sSingleton;
 
-class FpWriteFunc : public mozilla::JSONWriteFunc {
+class FpWriteFunc final : public mozilla::JSONWriteFunc {
  public:
   explicit FpWriteFunc(const char* aFilename) {
     mFp = fopen(aFilename, "w");
@@ -45,7 +45,7 @@ class FpWriteFunc : public mozilla::JSONWriteFunc {
 
   ~FpWriteFunc() { fclose(mFp); }
 
-  void Write(const mozilla::Span<const char>& aStr) override {
+  void Write(const mozilla::Span<const char>& aStr) final {
     for (const char c : aStr) {
       fputc(c, mFp);
     }

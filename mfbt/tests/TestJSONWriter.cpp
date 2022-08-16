@@ -18,10 +18,10 @@ using mozilla::MakeUnique;
 using mozilla::Span;
 
 // This writes all the output into a big buffer.
-struct StringWriteFunc : public JSONWriteFunc {
+struct StringWriteFunc final : public JSONWriteFunc {
   std::string mString;
 
-  void Write(const mozilla::Span<const char>& aStr) override {
+  void Write(const mozilla::Span<const char>& aStr) final {
     mString.append(aStr.data(), aStr.size());
   }
 };
