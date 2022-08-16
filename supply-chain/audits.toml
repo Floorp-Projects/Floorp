@@ -287,6 +287,11 @@ criteria = "safe-to-deploy"
 version = "0.2.1"
 notes = "Straightforward crate with no unsafe code, does what it says on the tin."
 
+[[audits.generic-array]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.14.5 -> 0.14.6"
+
 [[audits.getrandom]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
