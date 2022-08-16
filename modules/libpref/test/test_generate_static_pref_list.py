@@ -69,6 +69,12 @@ good_input = """
   mirror: always
   rust: true
 
+# A comment.
+- name: my.datamutex.string
+  type: DataMutexString
+  value: "foobar"    # This string is quoted.
+  mirror: always
+
 # YAML+Python interprets `10 + 10 * 20` as a string, and so it is printed
 # unchanged.
 - name: my.atomic.int
@@ -150,6 +156,13 @@ ALWAYS_PREF(
    my_atomic_bool,
    my_atomic_bool,
   RelaxedAtomicBool, true
+)
+
+ALWAYS_DATAMUTEX_PREF(
+  "my.datamutex.string",
+   my_datamutex_string,
+   my_datamutex_string,
+  DataMutexString, "foobar"_ns
 )
 
 ALWAYS_PREF(

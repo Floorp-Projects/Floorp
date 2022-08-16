@@ -42,10 +42,11 @@
 #   and JS code).
 #
 # - `type` is one of `bool`, `int32_t`, `uint32_t`, `float`, an atomic version
-#   of one of those, or `String`. Note that float prefs are stored internally
-#   as strings. The C++ preprocessor doesn't like template syntax in a macro
-#   argument, so use the typedefs defined in StaticPrefsBase.h; for example,
-#   use `RelaxedAtomicBool` instead of `Atomic<bool, Relaxed>`.
+#   of one of those, `String` or `DataMutexString`. Note that float prefs are
+#   stored internally as strings. The C++ preprocessor doesn't like template
+#   syntax in a macro argument, so use the typedefs defined in
+#   StaticPrefsBase.h; for example, use `RelaxedAtomicBool` instead of
+#   `Atomic<bool, Relaxed>`.
 #
 # - `value` is the default value. Its type should be appropriate for
 #   <cpp-type>, otherwise the generated code will fail to compile. A complex
