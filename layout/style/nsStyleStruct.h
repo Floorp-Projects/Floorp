@@ -772,6 +772,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
             mOffset.Get(mozilla::eSideBottom).IsAuto());
   }
 
+  const mozilla::StyleContainIntrinsicSize& ContainIntrinsicBSize(
+      const WritingMode& aWM) const;
+  const mozilla::StyleContainIntrinsicSize& ContainIntrinsicISize(
+      const WritingMode& aWM) const;
+
   /**
    * Return the used value for 'align-self' given our parent ComputedStyle
    * (or null for the root).
