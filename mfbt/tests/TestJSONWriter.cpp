@@ -26,8 +26,9 @@ struct StringWriteFunc : public JSONWriteFunc {
   }
 };
 
-void Check(JSONWriteFunc* aFunc, const char* aExpected) {
-  const std::string& actual = static_cast<StringWriteFunc*>(aFunc)->mString;
+void Check(JSONWriter& aWriter, const char* aExpected) {
+  JSONWriteFunc& func = aWriter.WriteFunc();
+  const std::string& actual = static_cast<StringWriteFunc&>(func).mString;
   if (strcmp(aExpected, actual.c_str()) != 0) {
     fprintf(stderr,
             "---- EXPECTED ----\n<<<%s>>>\n"
@@ -212,7 +213,7 @@ void TestBasicProperties() {
   }
   w.End();
 
-  Check(w.WriteFunc(), expected);
+  Check(w, expected);
 }
 
 void TestBasicElements() {
@@ -388,7 +389,7 @@ void TestBasicElements() {
   w.EndArray();
   w.End();
 
-  Check(w.WriteFunc(), expected);
+  Check(w, expected);
 }
 
 void TestOneLineObject() {
@@ -429,7 +430,7 @@ void TestOneLineObject() {
 
   w.End();
 
-  Check(w.WriteFunc(), expected);
+  Check(w, expected);
 }
 
 void TestOneLineJson() {
@@ -470,7 +471,7 @@ void TestOneLineJson() {
 
   w.End();  // No newline in this case.
 
-  Check(w.WriteFunc(), expected);
+  Check(w, expected);
 }
 
 void TestStringEscaping() {
@@ -532,7 +533,7 @@ void TestStringEscaping() {
   }
   w.End();
 
-  Check(w.WriteFunc(), expected);
+  Check(w, expected);
 }
 
 void TestDeepNesting() {
@@ -598,7 +599,7 @@ void TestDeepNesting() {
   }
   w.End();
 
-  Check(w.WriteFunc(), expected);
+  Check(w, expected);
 }
 
 void TestEscapedPropertyNames() {
@@ -639,7 +640,7 @@ void TestEscapedPropertyNames() {
 
   w.End();
 
-  Check(w.WriteFunc(), expected);
+  Check(w, expected);
 }
 
 int main(void) {
