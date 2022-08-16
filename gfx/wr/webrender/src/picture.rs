@@ -2007,25 +2007,6 @@ impl TileCacheInstance {
         self.tile_rect.area() as usize * self.sub_slices.len()
     }
 
-    /// Trims memory held by the tile cache, such as native surfaces.
-    pub fn memory_pressure(&mut self, resource_cache: &mut ResourceCache) {
-        for sub_slice in &mut self.sub_slices {
-            for tile in sub_slice.tiles.values_mut() {
-                if let Some(TileSurface::Texture { descriptor: SurfaceTextureDescriptor::Native { ref mut id, .. }, .. }) = tile.surface {
-                    // Reseting the id to None with take() ensures that a new
-                    // tile will be allocated during the next frame build.
-                    if let Some(id) = id.take() {
-                        resource_cache.destroy_compositor_tile(id);
-                    }
-                }
-            }
-            if let Some(native_surface) = sub_slice.native_surface.take() {
-                resource_cache.destroy_compositor_surface(native_surface.opaque);
-                resource_cache.destroy_compositor_surface(native_surface.alpha);
-            }
-        }
-    }
-
     /// Reset this tile cache with the updated parameters from a new scene
     /// that has arrived. This allows the tile cache to be retained across
     /// new scenes.
