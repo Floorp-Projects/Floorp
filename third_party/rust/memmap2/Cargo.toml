@@ -12,13 +12,14 @@
 [package]
 edition = "2018"
 name = "memmap2"
-version = "0.5.4"
+version = "0.5.7"
 authors = [
     "Dan Burkert <dan@danburkert.com>",
     "Yevhenii Reizner <razrfalcon@gmail.com>",
 ]
 description = "Cross-platform Rust API for memory-mapped file IO"
 documentation = "https://docs.rs/memmap2"
+readme = "README.md"
 keywords = [
     "mmap",
     "memory-map",
