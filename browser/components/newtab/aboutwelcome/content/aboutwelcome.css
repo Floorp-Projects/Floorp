@@ -58,6 +58,9 @@ input {
 .onboardingContainer.featureCallout .screen[pos=callout] .logo-container .brand-logo {
   margin: 30px 45px 0;
 }
+.onboardingContainer.featureCallout .screen[pos=callout] .logo-container .brand-logo:dir(rtl) {
+  transform: rotateY(180deg);
+}
 .onboardingContainer.featureCallout .screen[pos=callout] .welcome-text {
   align-items: baseline;
   text-align: start;

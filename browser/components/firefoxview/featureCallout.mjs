@@ -99,8 +99,10 @@ const MESSAGES = [
             string_id: "callout-firefox-view-tab-pickup-subtitle",
           },
           logo: {
-            imageURL:
-              "chrome://activity-stream/content/data/content/assets/heart.webp",
+            imageURL: "chrome://browser/content/callout-tab-pickup.svg",
+            darkModeImageURL:
+              "chrome://browser/content/callout-tab-pickup-dark.svg",
+            height: "128px",
           },
           primary_button: {
             label: {
@@ -197,8 +199,10 @@ const MESSAGES = [
             string_id: "callout-firefox-view-colorways-subtitle",
           },
           logo: {
-            imageURL:
-              "chrome://activity-stream/content/data/content/assets/heart.webp",
+            imageURL: "chrome://browser/content/callout-colorways.svg",
+            darkModeImageURL:
+              "chrome://browser/content/callout-colorways-dark.svg",
+            height: "128px",
           },
           primary_button: {
             label: {
