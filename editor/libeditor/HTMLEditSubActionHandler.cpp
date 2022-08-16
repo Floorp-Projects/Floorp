@@ -5791,14 +5791,14 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
     while (item && pointToPutCaret.GetContainer() != documentRootElement) {
-      EditResult result =
+      Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
           ClearStyleAt(pointToPutCaret, MOZ_KnownLive(item->tag),
                        MOZ_KnownLive(item->attr), item->specifiedStyle);
-      if (result.Failed()) {
+      if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
         NS_WARNING("HTMLEditor::ClearStyleAt() failed");
-        return Err(result.Rv());
+        return pointToPutCaretOrError;
       }
-      pointToPutCaret = result.PointRefToCollapseSelection();
+      pointToPutCaret = pointToPutCaretOrError.unwrap();
       item = mTypeInState->TakeClearProperty();
     }
   }

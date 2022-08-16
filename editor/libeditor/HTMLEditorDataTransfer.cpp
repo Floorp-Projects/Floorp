@@ -635,12 +635,21 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
 
     if (aClearStyle) {
       // pasting does not inherit local inline styles
-      EditResult result = mHTMLEditor.ClearStyleAt(
-          EditorDOMPoint(mHTMLEditor.SelectionRef().AnchorRef()), nullptr,
-          nullptr, SpecifiedStyle::Preserve);
-      if (result.Failed()) {
+      Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
+          mHTMLEditor.ClearStyleAt(
+              EditorDOMPoint(mHTMLEditor.SelectionRef().AnchorRef()), nullptr,
+              nullptr, SpecifiedStyle::Preserve);
+      if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
         NS_WARNING("HTMLEditor::ClearStyleAt() failed");
-        return result.Rv();
+        return pointToPutCaretOrError.unwrapErr();
+      }
+      if (pointToPutCaretOrError.inspect().IsSet()) {
+        nsresult rv =
+            mHTMLEditor.CollapseSelectionTo(pointToPutCaretOrError.unwrap());
+        if (NS_FAILED(rv)) {
+          NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+          return rv;
+        }
       }
     }
   } else {
