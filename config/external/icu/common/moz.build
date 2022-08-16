@@ -11,16 +11,6 @@ DEFINES["U_COMMON_IMPLEMENTATION"] = True
 
 LOCAL_INCLUDES += ["/intl/icu/source/i18n"]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += [
-        "-Wno-deprecated-declarations",
-        "-Wno-type-limits",
-        "-Wno-unused-but-set-variable",
-        "-Wno-unused-function",
-        "-Wno-sign-compare",
-        "-Wno-maybe-uninitialized",
-    ]
-
 include("../defs.mozbuild")
 include("sources.mozbuild")
 
