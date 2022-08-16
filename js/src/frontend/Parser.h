@@ -1297,6 +1297,9 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
       return privateMethods > 0 || privateAccessors > 0;
     }
   };
+#ifdef ENABLE_DECORATORS
+  ListNodeType decoratorList(YieldHandling yieldHandling);
+#endif
   [[nodiscard]] bool classMember(
       YieldHandling yieldHandling,
       const ParseContext::ClassStatement& classStmt,
