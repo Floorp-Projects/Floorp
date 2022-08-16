@@ -7472,8 +7472,7 @@ void nsGlobalWindowOuter::MaybeResetWindowName(Document* aNewDocument) {
     // is the same. But, it won't be the case for non-Fission mode that the
     // first about:blank will be loaded with a null principal and the
     // window.name will be reset when loading the test page.
-    if (mDoc && mDoc->NodePrincipal()->EqualsConsideringDomain(
-                    aNewDocument->NodePrincipal())) {
+    if (mDoc && mDoc->NodePrincipal()->Equals(aNewDocument->NodePrincipal())) {
       return;
     }
 
