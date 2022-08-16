@@ -3,7 +3,7 @@
 use super::{ArrayLength, GenericArray};
 use core::iter::FusedIterator;
 use core::mem::ManuallyDrop;
-use core::{cmp, fmt, ptr, mem};
+use core::{cmp, fmt, mem, ptr};
 
 /// An iterator that moves out of a `GenericArray`
 pub struct GenericArrayIter<T, N: ArrayLength<T>> {
@@ -97,20 +97,19 @@ where
     fn clone(&self) -> Self {
         // This places all cloned elements at the start of the new array iterator,
         // not at their original indices.
-        unsafe {
-            let mut array = ptr::read(&self.array);
-            let mut index_back = 0;
 
-            for (dst, src) in array.as_mut_slice().into_iter().zip(self.as_slice()) {
-                ptr::write(dst, src.clone());
-                index_back += 1;
-            }
+        let mut array = unsafe { ptr::read(&self.array) };
+        let mut index_back = 0;
 
-            GenericArrayIter {
-                array,
-                index: 0,
-                index_back
-            }
+        for (dst, src) in array.as_mut_slice().into_iter().zip(self.as_slice()) {
+            unsafe { ptr::write(dst, src.clone()) };
+            index_back += 1;
+        }
+
+        GenericArrayIter {
+            array,
+            index: 0,
+            index_back,
         }
     }
 }
@@ -247,10 +246,6 @@ where
     }
 }
 
-impl<T, N> FusedIterator for GenericArrayIter<T, N>
-where
-    N: ArrayLength<T>,
-{
-}
+impl<T, N> FusedIterator for GenericArrayIter<T, N> where N: ArrayLength<T> {}
 
 // TODO: Implement `TrustedLen` when stabilized
