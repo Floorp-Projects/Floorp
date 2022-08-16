@@ -943,10 +943,6 @@ void gfxPlatform::Init() {
   }
 
   if (XRE_IsParentProcess()) {
-    nsAutoCString allowlist;
-    Preferences::GetCString("gfx.offscreencanvas.domain-allowlist", allowlist);
-    gfxVars::SetOffscreenCanvasDomainAllowlist(allowlist);
-
     // Create the global vsync source and dispatcher.
     RefPtr<VsyncSource> vsyncSource =
         gfxPlatform::ForceSoftwareVsync()
