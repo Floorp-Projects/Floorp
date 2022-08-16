@@ -73,6 +73,9 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Afvis</string>
 
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">Afvis</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Adgang til kamera er nødvendig. Gå til Indstillinger i Android, tryk på Tilladelser, og tryk så på Tillad.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -121,11 +124,11 @@
     <string name="recent_tabs_show_all_content_description_2">Knap til visning af alle seneste faneblade</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">Din søgning efter \&quot;%1$s\&quot;</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Din søgning efter \&quot;%1$s\&quot;</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d websteder</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d websteder</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Vis alle synkroniserede faneblade</string>
@@ -617,9 +620,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Gitter</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Søgegrupper</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Søgegrupper</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Gruppér relaterede websteder</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Gruppér relaterede websteder</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Luk faneblade</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -745,7 +748,7 @@
     <string name="pwa_site_controls_title_private">%1$s (Privat tilstand)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Andre faneblade</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Andre faneblade</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
@@ -778,6 +781,13 @@
     <string name="history_synced_from_other_devices">Synkroniseret fra andre enheder</string>
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">Fra andre enheder</string>
+
+    <!-- The synced history sign in dialog message -->
+    <string name="history_sign_in_message">Log ind for at se historik synkroniseret fra dine andre enheder.</string>
+    <!-- The synced history sign in dialog button text -->
+    <string name="history_sign_in_button">Log ind</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string name="history_sign_in_create_account"><![CDATA[<u>Eller opret en Firefox-konto for at starte synkroniseringen</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1142,7 +1152,18 @@
     <string name="delete_browsing_data_on_quit_action">Afslut</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Dette sletter alle dine browserdata.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Dette sletter alle dine browserdata.</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Tidsinterval der skal slettes</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">Fjerner historik (herunder historik synkroniseret fra andre enheder), cookies og andre browserdata.</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Den sidste time</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">I dag og i går</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Alt</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s sletter de valgte browserdata.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1155,8 +1176,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Sletter browserdata…</string>
 
-    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
-    <string name="delete_history_group_prompt_message">Dette vil slette alle elementer.</string>
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">Slet alle websteder i &quot;%s&quot;</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Annuller</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1569,8 +1590,6 @@
     <string name="addresses_edit_address">Rediger adresse</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Håndter adresser</string>
-    <!-- The header for the full name of an address -->
-    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Fulde navn</string>
     <!-- The header for the first name of an address -->
     <string name="addresses_first_name">Fornavn</string>
     <!-- The header for the middle name of an address -->
@@ -1835,4 +1854,5 @@
     <string name="experiments_snackbar">Aktiver telemetri for at sende data.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Gå til indstillinger</string>
+    <string name="firefox_suggest_header">Firefox-forslag</string>
 </resources>
