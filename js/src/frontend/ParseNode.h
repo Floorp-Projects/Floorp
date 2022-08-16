@@ -2414,11 +2414,23 @@ class ClassNode : public TernaryNode {
     return &innerScope()->scopeBody()->as<ClassBodyScopeNode>();
   }
 
+#ifdef ENABLE_DECORATORS
+  ListNode* decorators_;
+#endif
+
  public:
   ClassNode(ParseNode* names, ParseNode* heritage,
-            LexicalScopeNode* memberBlock, const TokenPos& pos)
-      : TernaryNode(ParseNodeKind::ClassDecl, names, heritage, memberBlock,
-                    pos) {
+            LexicalScopeNode* memberBlock,
+#ifdef ENABLE_DECORATORS
+            ListNode* decorators,
+#endif
+            const TokenPos& pos)
+      : TernaryNode(ParseNodeKind::ClassDecl, names, heritage, memberBlock, pos)
+#ifdef ENABLE_DECORATORS
+        ,
+        decorators_(decorators)
+#endif
+  {
     MOZ_ASSERT(innerScope()->scopeBody()->is<ClassBodyScopeNode>());
     MOZ_ASSERT_IF(names, names->is<ClassNames>());
   }
@@ -2446,6 +2458,9 @@ class ClassNode : public TernaryNode {
     ClassBodyScopeNode* scope = bodyScope();
     return scope->isEmptyScope() ? nullptr : scope;
   }
+#ifdef ENABLE_DECORATORS
+  ListNode* decorators() const { return decorators_; }
+#endif
 };
 
 #ifdef DEBUG

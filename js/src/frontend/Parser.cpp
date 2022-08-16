@@ -8100,7 +8100,28 @@ typename ParseHandler::ClassNodeType
 GeneralParser<ParseHandler, Unit>::classDefinition(
     YieldHandling yieldHandling, ClassContext classContext,
     DefaultHandling defaultHandling) {
+#ifdef ENABLE_DECORATORS
+  MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::At) ||
+             anyChars.isCurrentTokenType(TokenKind::Class));
+
+  ListNodeType decorators = null();
+  if (anyChars.isCurrentTokenType(TokenKind::At)) {
+    decorators = decoratorList(yieldHandling);
+    if (!decorators) {
+      return null();
+    }
+    TokenKind next;
+    if (!tokenStream.getToken(&next)) {
+      return null();
+    }
+    if (next != TokenKind::Class) {
+      error(JSMSG_CLASS_EXPECTED);
+      return null();
+    }
+  }
+#else
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Class));
+#endif
 
   uint32_t classStartOffset = pos().begin;
   bool savedStrictness = setLocalStrictMode(true);
@@ -8313,6 +8334,9 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
   }
 
   return handler_.newClass(nameNode, classHeritage, classBlock,
+#ifdef ENABLE_DECORATORS
+                           decorators,
+#endif
                            TokenPos(classStartOffset, classEndOffset));
 }
 
@@ -9435,7 +9459,12 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
     case TokenKind::Function:
       return functionStmt(pos().begin, yieldHandling, NameRequired);
 
-    //   ClassDeclaration[?Yield, ~Default]
+      //   DecoratorList[?Yield, ?Await] opt ClassDeclaration[?Yield, ~Default]
+#ifdef ENABLE_DECORATORS
+    case TokenKind::At:
+      return classDefinition(yieldHandling, ClassExpression, NameRequired);
+#endif
+
     case TokenKind::Class:
       return classDefinition(yieldHandling, ClassStatement, NameRequired);
 
@@ -12511,6 +12540,11 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
 
     case TokenKind::HashBracket:
       return tupleLiteral(yieldHandling);
+#endif
+
+#ifdef ENABLE_DECORATORS
+    case TokenKind::At:
+      return classDefinition(yieldHandling, ClassExpression, NameRequired);
 #endif
 
     case TokenKind::LeftParen: {
