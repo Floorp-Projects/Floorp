@@ -398,12 +398,20 @@ pub unsafe extern "C" fn wgpu_server_buffer_get_mapped_range(
 
     // TODO: error reporting.
 
-    result.map(|(ptr, length)| MappedBufferSlice { ptr, length })
-        .unwrap_or(MappedBufferSlice { ptr: std::ptr::null_mut(), length: 0 })
+    result
+        .map(|(ptr, length)| MappedBufferSlice { ptr, length })
+        .unwrap_or(MappedBufferSlice {
+            ptr: std::ptr::null_mut(),
+            length: 0,
+        })
 }
 
 #[no_mangle]
-pub extern "C" fn wgpu_server_buffer_unmap(global: &Global, buffer_id: id::BufferId, mut error_buf: ErrorBuffer) {
+pub extern "C" fn wgpu_server_buffer_unmap(
+    global: &Global,
+    buffer_id: id::BufferId,
+    mut error_buf: ErrorBuffer,
+) {
     if let Err(e) = gfx_select!(buffer_id => global.buffer_unmap(buffer_id)) {
         error_buf.init(e);
     }

@@ -85,12 +85,8 @@ pub unsafe extern "C" fn create_anonymized_sdp_clone(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn create_sdp_clone(
-    session: *const SdpSession,
-) -> *const SdpSession {
-    Rc::into_raw(Rc::new(
-        (*session).clone(),
-    ))
+pub unsafe extern "C" fn create_sdp_clone(session: *const SdpSession) -> *const SdpSession {
+    Rc::into_raw(Rc::new((*session).clone()))
 }
 
 #[no_mangle]

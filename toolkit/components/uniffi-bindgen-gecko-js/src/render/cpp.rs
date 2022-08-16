@@ -27,7 +27,9 @@ pub struct CPPScaffoldingTemplate<'a> {
 
 impl<'a> CPPScaffoldingTemplate<'a> {
     fn has_any_objects(&self) -> bool {
-        self.ci_list.iter().any(|ci| ci.object_definitions().len() > 0)
+        self.ci_list
+            .iter()
+            .any(|ci| ci.object_definitions().len() > 0)
     }
 }
 

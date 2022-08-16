@@ -11,7 +11,7 @@ use l10nregistry::{
 };
 use log::warn;
 use nserror::{nsresult, NS_ERROR_NOT_AVAILABLE};
-use nsstring::{nsString, nsCStr};
+use nsstring::{nsCStr, nsString};
 use std::fmt::{self, Write};
 use unic_langid::LanguageIdentifier;
 use xpcom::interfaces;
