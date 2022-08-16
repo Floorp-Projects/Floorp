@@ -247,3 +247,27 @@ add_task(async function test_screenshot() {
     EventUtils.synthesizeKey("KEY_Escape");
   });
 });
+
+add_task(async function test_other_search_mode() {
+  let defaultEngine = await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
+  );
+  defaultEngine.alias = "testalias";
+  let oldDefaultEngine = await Services.search.getDefault();
+  Services.search.setDefault(defaultEngine);
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: defaultEngine.alias + " ",
+  });
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(window),
+    0,
+    "The results should be empty as no actions are displayed in other search modes"
+  );
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: defaultEngine.name,
+    entry: "typed",
+  });
+  Services.search.setDefault(oldDefaultEngine);
+});

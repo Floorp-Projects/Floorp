@@ -75,7 +75,11 @@ class ProviderQuickActions extends UrlbarProvider {
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   isActive(queryContext) {
-    return lazy.UrlbarPrefs.get(ENABLED_PREF);
+    return (
+      lazy.UrlbarPrefs.get(ENABLED_PREF) &&
+      (!queryContext.searchMode ||
+        queryContext.searchMode.source == UrlbarUtils.RESULT_SOURCE.ACTIONS)
+    );
   }
 
   /**
