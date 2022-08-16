@@ -64,7 +64,7 @@ bool ExternalHelperAppParent::Init(
     nsIURI* aReferrer, BrowsingContext* aContext,
     const bool& aShouldCloseWindow) {
   nsresult rv = mozilla::ipc::LoadInfoArgsToLoadInfo(aLoadInfoArgs,
-                                       getter_AddRefs(mLoadInfo));
+                                                     getter_AddRefs(mLoadInfo));
   if (NS_FAILED(rv)) {
     return false;
   }

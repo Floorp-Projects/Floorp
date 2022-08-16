@@ -295,15 +295,17 @@ class WorkerStreamOwner final {
     RefPtr<WorkerStreamOwner> self =
         new WorkerStreamOwner(aStream, std::move(target));
 
-    self->mWorkerRef = StrongWorkerRef::Create(aWorker, "JSStreamConsumer", [self]() {
-      if (self->mStream) {
-        // If this Close() calls JSStreamConsumer::OnInputStreamReady and drops
-        // the last reference to the JSStreamConsumer, 'this' will not be
-        // destroyed since ~JSStreamConsumer() only enqueues a release proxy.
-        self->mStream->Close();
-        self->mStream = nullptr;
-      }
-    });
+    self->mWorkerRef =
+        StrongWorkerRef::Create(aWorker, "JSStreamConsumer", [self]() {
+          if (self->mStream) {
+            // If this Close() calls JSStreamConsumer::OnInputStreamReady and
+            // drops the last reference to the JSStreamConsumer, 'this' will not
+            // be destroyed since ~JSStreamConsumer() only enqueues a release
+            // proxy.
+            self->mStream->Close();
+            self->mStream = nullptr;
+          }
+        });
 
     if (!self->mWorkerRef) {
       return nullptr;

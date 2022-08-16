@@ -258,7 +258,8 @@ static nsresult GetIconHandleFromPathInfo(const IconPathInfo& aPathInfo,
 }
 
 // Match stock icons with names
-static mozilla::Maybe<SHSTOCKICONID> GetStockIconIDForName(const nsACString& aStockName) {
+static mozilla::Maybe<SHSTOCKICONID> GetStockIconIDForName(
+    const nsACString& aStockName) {
   return aStockName.EqualsLiteral("uac-shield") ? Some(SIID_SHIELD) : Nothing();
 }
 
