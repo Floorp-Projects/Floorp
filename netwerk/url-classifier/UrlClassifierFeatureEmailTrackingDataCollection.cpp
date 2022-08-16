@@ -166,9 +166,15 @@ UrlClassifierFeatureEmailTrackingDataCollection::ProcessChannel(
 
   RefPtr<dom::BrowsingContext> bc;
   loadInfo->GetBrowsingContext(getter_AddRefs(bc));
+  if (!bc || bc->IsDiscarded()) {
+    return NS_OK;
+  }
 
   RefPtr<dom::WindowGlobalParent> topWindowParent =
       bc->Canonical()->GetTopWindowContext();
+  if (!topWindowParent || topWindowParent->IsDiscarded()) {
+    return NS_OK;
+  }
 
   bool isTopEmailWebApp = topWindowParent->DocumentPrincipal()->IsURIInPrefList(
       "privacy.trackingprotection.emailtracking.webapp.domains");
