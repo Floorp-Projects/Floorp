@@ -26,7 +26,7 @@ mod arch;
 mod arch;
 
 #[cfg(all(any(target_os = "none", target_os = "redox"), target_arch = "x86"))]
-#[path="arch/nonredox.rs"]
+#[path="arch/x86.rs"]
 mod arch;
 
 #[cfg(all(any(target_os = "none", target_os = "redox"), target_arch = "x86_64"))]
