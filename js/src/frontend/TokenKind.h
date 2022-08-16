@@ -123,14 +123,13 @@
   MACRO(Import, "keyword 'import'")                                    \
   MACRO(Class, "keyword 'class'")                                      \
   MACRO(Extends, "keyword 'extends'")                                  \
+  IF_DECORATORS(MACRO(Accessor, "keyword 'accessor'"))                 \
   MACRO(Super, "keyword 'super'")                                      \
   RANGE(KeywordLast, Super)                                            \
                                                                        \
   /* contextual keywords */                                            \
   MACRO(As, "'as'")                                                    \
   RANGE(ContextualKeywordFirst, As)                                    \
-  /* TODO: Move to alphabetical order when IF_DECORATORS is removed */ \
-  IF_DECORATORS(MACRO(Accessor, "'accessor'"))                         \
   MACRO(Assert, "'assert'")                                            \
   MACRO(Async, "'async'")                                              \
   MACRO(Await, "'await'")                                              \
