@@ -6,7 +6,6 @@
 ///
 /// This allows you to conveniently provide a long list #[cfg]'d blocks of code
 /// without having to rewrite each clause multiple times.
-#[allow(unused_macros)]
 macro_rules! cfg_if {
     // match if/else chains with a final `else`
     ($(
@@ -62,7 +61,6 @@ macro_rules! cfg_if {
     };
 }
 
-#[allow(unused_macros, unused_macro_rules)]
 macro_rules! s {
     ($($(#[$attr:meta])* pub $t:ident $i:ident { $($field:tt)* })*) => ($(
         s!(it: $(#[$attr])* pub $t $i { $($field)* });
@@ -87,7 +85,6 @@ macro_rules! s {
     );
 }
 
-#[allow(unused_macros)]
 macro_rules! s_no_extra_traits {
     ($($(#[$attr:meta])* pub $t:ident $i:ident { $($field:tt)* })*) => ($(
         s_no_extra_traits!(it: $(#[$attr])* pub $t $i { $($field)* });
@@ -123,7 +120,6 @@ macro_rules! s_no_extra_traits {
     );
 }
 
-#[allow(unused_macros)]
 macro_rules! e {
     ($($(#[$attr:meta])* pub enum $i:ident { $($field:tt)* })*) => ($(
         __item! {
@@ -138,7 +134,6 @@ macro_rules! e {
     )*);
 }
 
-#[allow(unused_macros)]
 macro_rules! s_paren {
     ($($(#[$attr:meta])* pub struct $i:ident ( $($field:tt)* ); )* ) => ($(
         __item! {
@@ -182,7 +177,6 @@ macro_rules! s_paren {
 // 'f!' block
 cfg_if! {
     if #[cfg(libc_const_extern_fn)] {
-        #[allow(unused_macros)]
         macro_rules! f {
             ($($(#[$attr:meta])* pub $({$constness:ident})* fn $i:ident(
                         $($arg:ident: $argty:ty),*
@@ -198,7 +192,6 @@ cfg_if! {
             )*)
         }
 
-        #[allow(unused_macros)]
         macro_rules! safe_f {
             ($($(#[$attr:meta])* pub $({$constness:ident})* fn $i:ident(
                         $($arg:ident: $argty:ty),*
@@ -214,7 +207,6 @@ cfg_if! {
             )*)
         }
 
-        #[allow(unused_macros)]
         macro_rules! const_fn {
             ($($(#[$attr:meta])* $({$constness:ident})* fn $i:ident(
                         $($arg:ident: $argty:ty),*
@@ -231,7 +223,6 @@ cfg_if! {
         }
 
     } else {
-        #[allow(unused_macros)]
         macro_rules! f {
             ($($(#[$attr:meta])* pub $({$constness:ident})* fn $i:ident(
                         $($arg:ident: $argty:ty),*
@@ -247,7 +238,6 @@ cfg_if! {
             )*)
         }
 
-        #[allow(unused_macros)]
         macro_rules! safe_f {
             ($($(#[$attr:meta])* pub $({$constness:ident})* fn $i:ident(
                         $($arg:ident: $argty:ty),*
@@ -263,7 +253,6 @@ cfg_if! {
             )*)
         }
 
-        #[allow(unused_macros)]
         macro_rules! const_fn {
             ($($(#[$attr:meta])* $({$constness:ident})* fn $i:ident(
                         $($arg:ident: $argty:ty),*
@@ -281,14 +270,12 @@ cfg_if! {
     }
 }
 
-#[allow(unused_macros)]
 macro_rules! __item {
     ($i:item) => {
         $i
     };
 }
 
-#[allow(unused_macros)]
 macro_rules! align_const {
     ($($(#[$attr:meta])*
        pub const $name:ident : $t1:ty
@@ -308,7 +295,6 @@ macro_rules! align_const {
 }
 
 // This macro is used to deprecate items that should be accessed via the mach2 crate
-#[allow(unused_macros)]
 macro_rules! deprecated_mach {
     (pub const $id:ident: $ty:ty = $expr:expr;) => {
         #[deprecated(
@@ -342,7 +328,6 @@ macro_rules! deprecated_mach {
     }
 }
 
-#[allow(unused_macros)]
 #[cfg(not(libc_ptr_addr_of))]
 macro_rules! ptr_addr_of {
     ($place:expr) => {
@@ -350,7 +335,6 @@ macro_rules! ptr_addr_of {
     };
 }
 
-#[allow(unused_macros)]
 #[cfg(libc_ptr_addr_of)]
 macro_rules! ptr_addr_of {
     ($place:expr) => {

@@ -487,6 +487,134 @@ s! {
         af_arg: [[::c_char; 10]; 24],
     }
 
+    pub struct ki_sigset_t {
+        pub __bits: [u32; 4],
+    }
+
+    pub struct kinfo_proc2 {
+        pub p_forw: u64,
+        pub p_back: u64,
+        pub p_paddr: u64,
+        pub p_addr: u64,
+        pub p_fd: u64,
+        pub p_cwdi: u64,
+        pub p_stats: u64,
+        pub p_limit: u64,
+        pub p_vmspace: u64,
+        pub p_sigacts: u64,
+        pub p_sess: u64,
+        pub p_tsess: u64,
+        pub p_ru: u64,
+        pub p_eflag: i32,
+        pub p_exitsig: i32,
+        pub p_flag: i32,
+        pub p_pid: i32,
+        pub p_ppid: i32,
+        pub p_sid: i32,
+        pub p__pgid: i32,
+        pub p_tpgid: i32,
+        pub p_uid: u32,
+        pub p_ruid: u32,
+        pub p_gid: u32,
+        pub p_rgid: u32,
+        pub p_groups: [u32; KI_NGROUPS as usize],
+        pub p_ngroups: i16,
+        pub p_jobc: i16,
+        pub p_tdev: u32,
+        pub p_estcpu: u32,
+        pub p_rtime_sec: u32,
+        pub p_rtime_usec: u32,
+        pub p_cpticks: i32,
+        pub p_pctcpu: u32,
+        pub p_swtime: u32,
+        pub p_slptime: u32,
+        pub p_schedflags: i32,
+        pub p_uticks: u64,
+        pub p_sticks: u64,
+        pub p_iticks: u64,
+        pub p_tracep: u64,
+        pub p_traceflag: i32,
+        pub p_holdcnt: i32,
+        pub p_siglist: ki_sigset_t,
+        pub p_sigmask: ki_sigset_t,
+        pub p_sigignore: ki_sigset_t,
+        pub p_sigcatch: ki_sigset_t,
+        pub p_stat: i8,
+        pub p_priority: u8,
+        pub p_usrpri: u8,
+        pub p_nice: u8,
+        pub p_xstat: u16,
+        pub p_acflag: u16,
+        pub p_comm: [::c_char; KI_MAXCOMLEN as usize],
+        pub p_wmesg: [::c_char; KI_WMESGLEN as usize],
+        pub p_wchan: u64,
+        pub p_login: [::c_char; KI_MAXLOGNAME as usize],
+        pub p_vm_rssize: i32,
+        pub p_vm_tsize: i32,
+        pub p_vm_dsize: i32,
+        pub p_vm_ssize: i32,
+        pub p_uvalid: i64,
+        pub p_ustart_sec: u32,
+        pub p_ustart_usec: u32,
+        pub p_uutime_sec: u32,
+        pub p_uutime_usec: u32,
+        pub p_ustime_sec: u32,
+        pub p_ustime_usec: u32,
+        pub p_uru_maxrss: u64,
+        pub p_uru_ixrss: u64,
+        pub p_uru_idrss: u64,
+        pub p_uru_isrss: u64,
+        pub p_uru_minflt: u64,
+        pub p_uru_majflt: u64,
+        pub p_uru_nswap: u64,
+        pub p_uru_inblock: u64,
+        pub p_uru_oublock: u64,
+        pub p_uru_msgsnd: u64,
+        pub p_uru_msgrcv: u64,
+        pub p_uru_nsignals: u64,
+        pub p_uru_nvcsw: u64,
+        pub p_uru_nivcsw: u64,
+        pub p_uctime_sec: u32,
+        pub p_uctime_usec: u32,
+        pub p_cpuid: u64,
+        pub p_realflag: u64,
+        pub p_nlwps: u64,
+        pub p_nrlwps: u64,
+        pub p_realstat: u64,
+        pub p_svuid: u32,
+        pub p_svgid: u32,
+        pub p_ename: [::c_char; KI_MAXEMULLEN as usize],
+        pub p_vm_vsize: i64,
+        pub p_vm_msize: i64,
+    }
+
+    pub struct kinfo_lwp {
+        pub l_forw: u64,
+        pub l_back: u64,
+        pub l_laddr: u64,
+        pub l_addr: u64,
+        pub l_lid: i32,
+        pub l_flag: i32,
+        pub l_swtime: u32,
+        pub l_slptime: u32,
+        pub l_schedflags: i32,
+        pub l_holdcnt: i32,
+        pub l_priority: u8,
+        pub l_usrpri: u8,
+        pub l_stat: i8,
+        l_pad1: i8,
+        l_pad2: i32,
+        pub l_wmesg: [::c_char; KI_WMESGLEN as usize],
+        pub l_wchan: u64,
+        pub l_cpuid: u64,
+        pub l_rtime_sec: u32,
+        pub l_rtime_usec: u32,
+        pub l_cpticks: u32,
+        pub l_pctcpu: u32,
+        pub l_pid: u32,
+        pub l_name: [::c_char; KI_LNAMELEN as usize],
+    }
+
     pub struct kinfo_vmentry {
         pub kve_start: u64,
         pub kve_end: u64,
@@ -1440,10 +1568,7 @@ pub const IPPROTO_VRRP: ::c_int = 112;
 /// Common Address Resolution Protocol
 pub const IPPROTO_CARP: ::c_int = 112;
 /// L2TPv3
-// TEMP: Disabled for now; this constant was added to NetBSD on 2017-02-16,
-// but isn't yet supported by the NetBSD rumprun kernel image used for
-// libc testing.
-//pub const IPPROTO_L2TP: ::c_int = 115;
+pub const IPPROTO_L2TP: ::c_int = 115;
 /// SCTP
 pub const IPPROTO_SCTP: ::c_int = 132;
 /// PFSYNC
@@ -2103,9 +2228,18 @@ pub const POSIX_SPAWN_SETSIGMASK: ::c_int = 0x20;
 pub const POSIX_SPAWN_RETURNERROR: ::c_int = 0x40;
 
 // Flags for chflags(2)
-pub const SF_SNAPSHOT: ::c_ulong = 0x00200000;
+pub const SF_APPEND: ::c_ulong = 0x00040000;
+pub const SF_ARCHIVED: ::c_ulong = 0x00010000;
+pub const SF_IMMUTABLE: ::c_ulong = 0x00020000;
 pub const SF_LOG: ::c_ulong = 0x00400000;
+pub const SF_SETTABLE: ::c_ulong = 0xffff0000;
 pub const SF_SNAPINVAL: ::c_ulong = 0x00800000;
+pub const SF_SNAPSHOT: ::c_ulong = 0x00200000;
+pub const UF_APPEND: ::c_ulong = 0x00000004;
+pub const UF_IMMUTABLE: ::c_ulong = 0x00000002;
+pub const UF_NODUMP: ::c_ulong = 0x00000001;
+pub const UF_OPAQUE: ::c_ulong = 0x00000008;
+pub const UF_SETTABLE: ::c_ulong = 0x0000ffff;
 
 // sys/sysctl.h
 pub const KVME_PROT_READ: ::c_int = 0x00000001;
@@ -2120,6 +2254,22 @@ pub const KVME_FLAG_GROWS_UP: ::c_int = 0x000000010;
 pub const KVME_FLAG_GROWS_DOWN: ::c_int = 0x000000020;
 
 pub const NGROUPS_MAX: ::c_int = 16;
+
+pub const KI_NGROUPS: ::c_int = 16;
+pub const KI_MAXCOMLEN: ::c_int = 24;
+pub const KI_WMESGLEN: ::c_int = 8;
+pub const KI_MAXLOGNAME: ::c_int = 24;
+pub const KI_MAXEMULLEN: ::c_int = 16;
+pub const KI_LNAMELEN: ::c_int = 20;
+
+// sys/lwp.h
+pub const LSIDL: ::c_int = 1;
+pub const LSRUN: ::c_int = 2;
+pub const LSSLEEP: ::c_int = 3;
+pub const LSSTOP: ::c_int = 4;
+pub const LSZOMB: ::c_int = 5;
+pub const LSONPROC: ::c_int = 7;
+pub const LSSUSPENDED: ::c_int = 8;
 
 const_fn! {
     {const} fn _ALIGN(p: usize) -> usize {

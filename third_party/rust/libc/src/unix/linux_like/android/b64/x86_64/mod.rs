@@ -350,6 +350,7 @@ cfg_if! {
             fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
                 f.debug_struct("user_fpregs_struct")
                     .field("cwd", &self.cwd)
+                    .field("swd", &self.swd)
                     .field("ftw", &self.ftw)
                     .field("fop", &self.fop)
                     .field("rip", &self.rip)
@@ -366,6 +367,7 @@ cfg_if! {
         impl ::hash::Hash for user_fpregs_struct {
             fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
                 self.cwd.hash(state);
+                self.swd.hash(state);
                 self.ftw.hash(state);
                 self.fop.hash(state);
                 self.rip.hash(state);

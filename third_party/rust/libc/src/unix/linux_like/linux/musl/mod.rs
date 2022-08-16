@@ -529,6 +529,8 @@ pub const MAP_ANONYMOUS: ::c_int = MAP_ANON;
 pub const SOCK_DCCP: ::c_int = 6;
 pub const SOCK_PACKET: ::c_int = 10;
 
+pub const SOMAXCONN: ::c_int = 128;
+
 #[deprecated(since = "0.2.55", note = "Use SIGSYS instead")]
 pub const SIGUNUSED: ::c_int = ::SIGSYS;
 

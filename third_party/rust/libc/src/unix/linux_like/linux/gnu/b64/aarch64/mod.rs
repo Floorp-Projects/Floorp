@@ -573,6 +573,22 @@ pub const HWCAP_PACG: ::c_ulong = 1 << 31;
 //pub const HWCAP2_SVESM4: ::c_ulong = 1 << 6;
 //pub const HWCAP2_FLAGM2: ::c_ulong = 1 << 7;
 //pub const HWCAP2_FRINT: ::c_ulong = 1 << 8;
+//pub const HWCAP2_MTE: ::c_ulong = 1 << 18;
+
+// linux/prctl.h
+pub const PR_PAC_RESET_KEYS: ::c_int = 54;
+pub const PR_SET_TAGGED_ADDR_CTRL: ::c_int = 55;
+pub const PR_GET_TAGGED_ADDR_CTRL: ::c_int = 56;
+pub const PR_PAC_SET_ENABLED_KEYS: ::c_int = 60;
+pub const PR_PAC_GET_ENABLED_KEYS: ::c_int = 61;
+
+pub const PR_TAGGED_ADDR_ENABLE: ::c_ulong = 1;
+
+pub const PR_PAC_APIAKEY: ::c_ulong = 1 << 0;
+pub const PR_PAC_APIBKEY: ::c_ulong = 1 << 1;
+pub const PR_PAC_APDAKEY: ::c_ulong = 1 << 2;
+pub const PR_PAC_APDBKEY: ::c_ulong = 1 << 3;
+pub const PR_PAC_APGAKEY: ::c_ulong = 1 << 4;
 
 // Syscall table
 pub const SYS_io_setup: ::c_long = 0;

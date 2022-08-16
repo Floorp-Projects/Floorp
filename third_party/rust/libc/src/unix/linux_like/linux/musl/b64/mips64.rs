@@ -458,7 +458,7 @@ pub const O_SYNC: ::c_int = 0x4010;
 pub const O_RSYNC: ::c_int = 0x4010;
 pub const O_DSYNC: ::c_int = 0x10;
 pub const O_ASYNC: ::c_int = 0x1000;
-pub const O_LARGEFILE: ::c_int = 0;
+pub const O_LARGEFILE: ::c_int = 0x2000;
 
 pub const EDEADLK: ::c_int = 45;
 pub const ENAMETOOLONG: ::c_int = 78;

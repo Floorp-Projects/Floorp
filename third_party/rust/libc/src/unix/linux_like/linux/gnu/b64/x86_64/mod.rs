@@ -626,6 +626,19 @@ pub const PTRACE_PEEKSIGINFO_SHARED: ::c_uint = 1;
 pub const PTRACE_SYSEMU: ::c_uint = 31;
 pub const PTRACE_SYSEMU_SINGLESTEP: ::c_uint = 32;
 
+pub const PR_GET_SPECULATION_CTRL: ::c_int = 52;
+pub const PR_SET_SPECULATION_CTRL: ::c_int = 53;
+pub const PR_SPEC_NOT_AFFECTED: ::c_uint = 0;
+pub const PR_SPEC_PRCTL: ::c_uint = 1 << 0;
+pub const PR_SPEC_ENABLE: ::c_uint = 1 << 1;
+pub const PR_SPEC_DISABLE: ::c_uint = 1 << 2;
+pub const PR_SPEC_FORCE_DISABLE: ::c_uint = 1 << 3;
+pub const PR_SPEC_DISABLE_NOEXEC: ::c_uint = 1 << 4;
+pub const PR_SPEC_STORE_BYPASS: ::c_int = 0;
+pub const PR_SPEC_INDIRECT_BRANCH: ::c_int = 1;
+// FIXME: perharps for later
+//pub const PR_SPEC_L1D_FLUSH: ::c_int = 2;
+
 pub const MCL_CURRENT: ::c_int = 0x0001;
 pub const MCL_FUTURE: ::c_int = 0x0002;
 

@@ -1565,6 +1565,7 @@ pub const MSG_INFO: ::c_int = 12;
 
 pub const MSG_NOERROR: ::c_int = 0o10000;
 pub const MSG_EXCEPT: ::c_int = 0o20000;
+pub const MSG_ZEROCOPY: ::c_int = 0x4000000;
 
 pub const SHM_R: ::c_int = 0o400;
 pub const SHM_W: ::c_int = 0o200;
@@ -1810,6 +1811,7 @@ pub const ITIMER_PROF: ::c_int = 2;
 pub const TFD_CLOEXEC: ::c_int = O_CLOEXEC;
 pub const TFD_NONBLOCK: ::c_int = O_NONBLOCK;
 pub const TFD_TIMER_ABSTIME: ::c_int = 1;
+pub const TFD_TIMER_CANCEL_ON_SET: ::c_int = 2;
 
 pub const _POSIX_VDISABLE: ::cc_t = 0;
 
@@ -1840,6 +1842,17 @@ pub const IPV6_FLOWINFO_PRIORITY: ::c_int = 0x0ff00000;
 
 pub const IPV6_RTHDR_LOOSE: ::c_int = 0;
 pub const IPV6_RTHDR_STRICT: ::c_int = 1;
+
+// SO_MEMINFO offsets
+pub const SK_MEMINFO_RMEM_ALLOC: ::c_int = 0;
+pub const SK_MEMINFO_RCVBUF: ::c_int = 1;
+pub const SK_MEMINFO_WMEM_ALLOC: ::c_int = 2;
+pub const SK_MEMINFO_SNDBUF: ::c_int = 3;
+pub const SK_MEMINFO_FWD_ALLOC: ::c_int = 4;
+pub const SK_MEMINFO_WMEM_QUEUED: ::c_int = 5;
+pub const SK_MEMINFO_OPTMEM: ::c_int = 6;
+pub const SK_MEMINFO_BACKLOG: ::c_int = 7;
+pub const SK_MEMINFO_DROPS: ::c_int = 8;
 
 pub const IUTF8: ::tcflag_t = 0x00004000;
 #[cfg(not(all(target_env = "uclibc", target_arch = "mips")))]
@@ -3061,6 +3074,7 @@ pub const FUTEX_WAIT_BITSET: ::c_int = 9;
 pub const FUTEX_WAKE_BITSET: ::c_int = 10;
 pub const FUTEX_WAIT_REQUEUE_PI: ::c_int = 11;
 pub const FUTEX_CMP_REQUEUE_PI: ::c_int = 12;
+pub const FUTEX_LOCK_PI2: ::c_int = 13;
 
 pub const FUTEX_PRIVATE_FLAG: ::c_int = 128;
 pub const FUTEX_CLOCK_REALTIME: ::c_int = 256;
