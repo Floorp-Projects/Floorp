@@ -13,11 +13,15 @@
 edition = "2018"
 rust-version = "1.31"
 name = "paste"
-version = "1.0.7"
+version = "1.0.8"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "Macros for all your token pasting needs"
 readme = "README.md"
-categories = ["no-std"]
+keywords = ["macros"]
+categories = [
+    "development-tools",
+    "no-std",
+]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dtolnay/paste"
 
