@@ -2255,6 +2255,11 @@ class gfxFont {
                         mozilla::gfx::DrawOptions drawOptions,
                         const mozilla::gfx::Point& aPoint, uint32_t aGlyphId);
 
+  // Subclasses can override to return true if the platform is able to render
+  // COLR-font glyphs directly, instead of us painting the layers explicitly.
+  // (Currently used only for COLR.v0 fonts on macOS.)
+  virtual bool UseNativeColrFontSupport() const { return false; }
+
   // Bug 674909. When synthetic bolding text by drawing twice, need to
   // render using a pixel offset in device pixels, otherwise text
   // doesn't appear bolded, it appears as if a bad text shadow exists
