@@ -31,12 +31,7 @@ class RecordType final : public js::NativeObject {
   friend JSString* js::RecordToSource(JSContext* cx, RecordType* rec);
 
  public:
-  enum {
-    INITIALIZED_LENGTH_SLOT = 0,
-    SORTED_KEYS_SLOT,
-    IS_ATOMIZED_SLOT,
-    SLOT_COUNT
-  };
+  enum { SORTED_KEYS_SLOT = 0, IS_ATOMIZED_SLOT, SLOT_COUNT };
 
   static const js::ClassSpec classSpec_;
   static const JSClass class_;
@@ -49,6 +44,8 @@ class RecordType final : public js::NativeObject {
 
   static bool copy(JSContext* cx, Handle<RecordType*> in,
                    MutableHandle<RecordType*> out);
+
+  uint32_t length();
 
   bool getOwnProperty(JSContext* cx, HandleId id, MutableHandleValue vp) const;
 

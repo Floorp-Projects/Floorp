@@ -56,16 +56,16 @@ Shape* RecordType::getInitialShape(JSContext* cx) {
 
 bool RecordType::copy(JSContext* cx, Handle<RecordType*> in,
                       MutableHandle<RecordType*> out) {
-  ArrayObject& sortedKeys = in->getFixedSlot(RecordType::SORTED_KEYS_SLOT)
-                                .toObject()
-                                .as<ArrayObject>();
-  uint32_t len = sortedKeys.length();
+  uint32_t len = in->length();
   out.set(RecordType::createUninitialized(cx, len));
   if (!out) {
     return false;
   }
   RootedId k(cx);
   RootedValue v(cx), vCopy(cx);
+  ArrayObject& sortedKeys = in->getFixedSlot(RecordType::SORTED_KEYS_SLOT)
+                                .toObject()
+                                .as<ArrayObject>();
   for (uint32_t i = 0; i < len; i++) {
     // Get the ith record key and convert it to a string, then to an id `k`
     Value kVal = sortedKeys.getDenseElement(i);
@@ -87,6 +87,13 @@ bool RecordType::copy(JSContext* cx, Handle<RecordType*> in,
     }
   }
   return out->finishInitialization(cx);
+}
+
+uint32_t RecordType::length() {
+  ArrayObject& sortedKeys =
+      getFixedSlot(SORTED_KEYS_SLOT).toObject().as<ArrayObject>();
+
+  return sortedKeys.getDenseInitializedLength();
 }
 
 RecordType* RecordType::createUninitialized(JSContext* cx,
@@ -114,7 +121,6 @@ RecordType* RecordType::createUninitialized(JSContext* cx,
     return nullptr;
   }
 
-  rec->initFixedSlot(INITIALIZED_LENGTH_SLOT, PrivateUint32Value(0));
   rec->initFixedSlot(SORTED_KEYS_SLOT, ObjectValue(*sortedKeys));
   rec->initFixedSlot(IS_ATOMIZED_SLOT, BooleanValue(false));
 
@@ -159,20 +165,15 @@ bool RecordType::initializeNextProperty(JSContext* cx, HandleId key,
     return false;
   }
 
-  uint32_t initializedLength =
-      getFixedSlot(INITIALIZED_LENGTH_SLOT).toPrivateUint32();
   ArrayObject* sortedKeys =
       &getFixedSlot(SORTED_KEYS_SLOT).toObject().as<ArrayObject>();
-  MOZ_ASSERT(initializedLength == sortedKeys->getDenseInitializedLength());
+  uint32_t initializedLength = sortedKeys->getDenseInitializedLength();
 
   if (!sortedKeys->ensureElements(cx, initializedLength + 1)) {
     return false;
   }
   sortedKeys->setDenseInitializedLength(initializedLength + 1);
   sortedKeys->initDenseElement(initializedLength, StringValue(atomKey));
-
-  setFixedSlot(INITIALIZED_LENGTH_SLOT,
-               PrivateUint32Value(initializedLength + 1));
 
   return true;
 }
@@ -186,10 +187,9 @@ bool RecordType::finishInitialization(JSContext* cx) {
     return false;
   }
 
-  uint32_t length = getFixedSlot(INITIALIZED_LENGTH_SLOT).toPrivateUint32();
   ArrayObject& sortedKeys =
       getFixedSlot(SORTED_KEYS_SLOT).toObject().as<ArrayObject>();
-  MOZ_ASSERT(length == sortedKeys.getDenseInitializedLength());
+  uint32_t length = sortedKeys.getDenseInitializedLength();
 
   Rooted<JSLinearString*> tmpKey(cx);
 
@@ -324,16 +324,16 @@ bool RecordType::sameValueZero(RecordType* lhs, RecordType* rhs) {
     return true;
   }
 
+  uint32_t length = lhs->length();
+
+  if (rhs->length() != length) {
+    return false;
+  }
+
   ArrayObject& lhsSortedKeys =
       lhs->getFixedSlot(SORTED_KEYS_SLOT).toObject().as<ArrayObject>();
   ArrayObject& rhsSortedKeys =
       rhs->getFixedSlot(SORTED_KEYS_SLOT).toObject().as<ArrayObject>();
-
-  uint32_t length = lhsSortedKeys.length();
-
-  if (rhsSortedKeys.length() != length) {
-    return false;
-  }
 
   Value v1, v2;
 
@@ -372,16 +372,14 @@ bool RecordType::sameValueWith(JSContext* cx, RecordType* lhs, RecordType* rhs,
     return true;
   }
 
-  uint32_t length =
-      lhs->getFixedSlot(INITIALIZED_LENGTH_SLOT).toPrivateUint32();
+  uint32_t length = lhs->length();
 
-  if (rhs->getFixedSlot(INITIALIZED_LENGTH_SLOT).toPrivateUint32() != length) {
+  if (rhs->length() != length) {
     *equal = false;
     return true;
   }
 
   *equal = true;
-
   RootedString k1(cx), k2(cx);
   RootedId id(cx);
   RootedValue v1(cx), v2(cx);
