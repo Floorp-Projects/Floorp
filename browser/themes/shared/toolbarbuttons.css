@@ -12,7 +12,7 @@
   --toolbarbutton-hover-background: var(--button-hover-bgcolor);
   --toolbarbutton-active-background: var(--button-active-bgcolor);
 
-  --toolbarseparator-color: color-mix(in srgb, currentColor 20%, transparent);
+  --toolbarseparator-color: color-mix(in srgb, currentColor 60%, transparent);
 
   --bookmark-block-padding: 4px;
 
