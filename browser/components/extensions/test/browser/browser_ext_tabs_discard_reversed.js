@@ -27,9 +27,7 @@ add_task(async function tabs_discarded_load_and_discard() {
       const PAGE_TITLE = "Dummy test page";
 
       function assertDeepEqual(expected, actual, message) {
-        expected = JSON.stringify(expected);
-        actual = JSON.stringify(actual);
-        browser.test.assertEq(expected, actual, message);
+        browser.test.assertDeepEq(expected, actual, message);
       }
 
       let tab = await browser.tabs.create({
