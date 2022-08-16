@@ -534,8 +534,6 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvForcePresent(
   return IPC_OK();
 }
 
-void CompositorBridgeParent::Invalidate() {}
-
 mozilla::ipc::IPCResult CompositorBridgeParent::RecvStartFrameTimeRecording(
     const int32_t& aBufferSize, uint32_t* aOutStartIndex) {
   if (mWrBridge) {
@@ -630,7 +628,6 @@ void CompositorBridgeParent::ResumeComposition() {
 
   mPaused = false;
 
-  Invalidate();
   mCompositorScheduler->ForceComposeToTarget(wr::RenderReasons::WIDGET, nullptr,
                                              nullptr);
 
@@ -935,7 +932,6 @@ void CompositorBridgeParent::SetFixedLayerMargins(ScreenIntCoord aTop,
     mApzcTreeManager->SetFixedLayerMargins(aTop, aBottom);
   }
 
-  Invalidate();
   ScheduleComposition(wr::RenderReasons::RESIZE);
 }
 

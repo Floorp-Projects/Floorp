@@ -623,7 +623,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   void PauseComposition();
   void ResumeComposition();
   void ResumeCompositionAndResize(int x, int y, int width, int height);
-  void Invalidate();
   bool IsPaused() { return mPaused; }
 
  protected:
