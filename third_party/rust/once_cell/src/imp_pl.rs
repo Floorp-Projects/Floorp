@@ -168,6 +168,7 @@ fn initialize_inner(state: &AtomicU8, init: &mut dyn FnMut() -> bool) {
                     None,
                 );
             },
+            Err(INCOMPLETE) => (),
             Err(_) => debug_assert!(false),
         }
     }
