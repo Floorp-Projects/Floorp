@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2022-06-14
+
+- Add `struct_names` option to `PrettyConfig` ([#329](https://github.com/ron-rs/ron/pull/329))
+- Fix newtype variant unwrapping around enum, seq and map ([#331](https://github.com/ron-rs/ron/pull/331))
+- Implement `unwrap_newtypes` extension during serialization ([#333](https://github.com/ron-rs/ron/pull/333))
+- Implement `unwrap_variant_newtypes` extension during serialization ([#336](https://github.com/ron-rs/ron/pull/336))
+- Fix issue [#338](https://github.com/ron-rs/ron/issues/338) value map roundtrip ([#341](https://github.com/ron-rs/ron/pull/341))
+- Fix issue [#289](https://github.com/ron-rs/ron/issues/289) enumerate_arrays comments ([#344](https://github.com/ron-rs/ron/pull/344))
+- Report struct name in expected struct error ([#342](https://github.com/ron-rs/ron/pull/342))
+- Add `Options` builder to configure the RON serde roundtrip ([#343](https://github.com/ron-rs/ron/pull/343))
+- Fix issue [#359](https://github.com/ron-rs/ron/issues/359) with `DeserializeSeed` support ([#360](https://github.com/ron-rs/ron/pull/360))
+- Fix issue [#370](https://github.com/ron-rs/ron/issues/370) with `FromStr`-equivalent float EBNF and `Error::FloatUnderscore` ([#371](https://github.com/ron-rs/ron/pull/371))
+- Fix issue [#374](https://github.com/ron-rs/ron/issues/374) extraneous .0 for small floats ([#372](https://github.com/ron-rs/ron/pull/372))
+- Deprecate `Serializer::new` ([#382](https://github.com/ron-rs/ron/issues/382))
+
 ## [0.7.0] - 2021-10-22
 
 - Add `unwrap_variant_newtypes` extension ([#319](https://github.com/ron-rs/ron/pull/319))

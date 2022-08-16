@@ -167,7 +167,21 @@ fn test_err_wrong_value() {
     assert_eq!(from_str::<[u8; 5]>("'c'"), err(ExpectedArray, 1, 1));
     assert_eq!(from_str::<Vec<u32>>("'c'"), err(ExpectedArray, 1, 1));
     assert_eq!(from_str::<MyEnum>("'c'"), err(ExpectedIdentifier, 1, 1));
-    assert_eq!(from_str::<MyStruct>("'c'"), err(ExpectedStruct, 1, 1));
+    assert_eq!(
+        from_str::<MyStruct>("'c'"),
+        err(ExpectedNamedStruct("MyStruct"), 1, 1)
+    );
+    assert_eq!(
+        from_str::<MyStruct>("NotMyStruct(x: 4, y: 2)"),
+        err(
+            ExpectedStructName {
+                expected: "MyStruct",
+                found: String::from("NotMyStruct")
+            },
+            1,
+            1
+        )
+    );
     assert_eq!(from_str::<(u8, bool)>("'c'"), err(ExpectedArray, 1, 1));
     assert_eq!(from_str::<bool>("notabool"), err(ExpectedBoolean, 1, 1));
 

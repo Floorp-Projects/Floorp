@@ -42,7 +42,7 @@ You can add this extension by adding the following attribute at the top of your 
 
 `#![enable(implicit_some)]`
 
-This feature enables RON to automatically convert any value to `Some(value)` if the deserialized struct requires it.
+This feature enables RON to automatically convert any value to `Some(value)` if the deserialized type requires it.
 
 ```rust
 struct Object {
@@ -65,6 +65,15 @@ Enabling the feature would automatically infer `Some(x)` if `x` is given. In thi
     value: 5,
 )
 ```
+
+With this extension enabled, explicitly given `None` and `Some(..)` will be matched eagerly on `Option<Option<Option<u32>>>`, i.e.
+* `5` -> `Some(Some(Some(5)))`
+* `None` -> `None`
+* `Some(5)` -> `Some(Some(Some(5)))`
+* `Some(None)` -> `Some(None)`
+* `Some(Some(5))` -> `Some(Some(Some(5)))`
+* `Some(Some(None))` -> `Some(Some(None))`
+* `Some(Some(Some(5)))` -> `Some(Some(Some(5)))`
 
 # unwrap_variant_newtypes
 

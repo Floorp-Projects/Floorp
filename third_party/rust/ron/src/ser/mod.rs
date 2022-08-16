@@ -4,6 +4,7 @@ use std::io;
 use crate::{
     error::{Error, Result},
     extensions::Extensions,
+    options::Options,
     parse::{is_ident_first_char, is_ident_other_char},
 };
 
@@ -17,8 +18,7 @@ where
     W: io::Write,
     T: ?Sized + Serialize,
 {
-    let mut s = Serializer::new(writer, None, false)?;
-    value.serialize(&mut s)
+    Options::default().to_writer(writer, value)
 }
 
 /// Serializes `value` into `writer` in a pretty way.
@@ -27,8 +27,7 @@ where
     W: io::Write,
     T: ?Sized + Serialize,
 {
-    let mut s = Serializer::new(writer, Some(config), false)?;
-    value.serialize(&mut s)
+    Options::default().to_writer_pretty(writer, value, config)
 }
 
 /// Serializes `value` and returns it as string.
@@ -39,10 +38,7 @@ pub fn to_string<T>(value: &T) -> Result<String>
 where
     T: ?Sized + Serialize,
 {
-    let buf = Vec::new();
-    let mut s = Serializer::new(buf, None, false)?;
-    value.serialize(&mut s)?;
-    Ok(String::from_utf8(s.output).expect("Ron should be utf-8"))
+    Options::default().to_string(value)
 }
 
 /// Serializes `value` in the recommended RON layout in a pretty way.
@@ -50,10 +46,7 @@ pub fn to_string_pretty<T>(value: &T, config: PrettyConfig) -> Result<String>
 where
     T: ?Sized + Serialize,
 {
-    let buf = Vec::new();
-    let mut s = Serializer::new(buf, Some(config), false)?;
-    value.serialize(&mut s)?;
-    Ok(String::from_utf8(s.output).expect("Ron should be utf-8"))
+    Options::default().to_string_pretty(value, config)
 }
 
 /// Pretty serializer state
@@ -75,27 +68,30 @@ struct Pretty {
 ///     .indentor("\t".to_owned());
 /// ```
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct PrettyConfig {
     /// Limit the pretty-ness up to the given depth.
-    #[serde(default = "default_depth_limit")]
     pub depth_limit: usize,
     /// New line string
-    #[serde(default = "default_new_line")]
     pub new_line: String,
     /// Indentation string
-    #[serde(default = "default_indentor")]
     pub indentor: String,
+    /// Separator string
+    #[serde(default = "default_separator")]
+    pub separator: String,
+    // Whether to emit struct names
+    pub struct_names: bool,
     /// Separate tuple members with indentation
-    #[serde(default = "default_separate_tuple_members")]
     pub separate_tuple_members: bool,
     /// Enumerate array items in comments
-    #[serde(default = "default_enumerate_arrays")]
     pub enumerate_arrays: bool,
     /// Always include the decimal in floats
-    #[serde(default = "default_decimal_floats")]
     pub decimal_floats: bool,
-    /// Enable extensions. Only configures 'implicit_some' for now.
+    /// Enable extensions. Only configures 'implicit_some'
+    ///  and 'unwrap_newtypes' for now.
     pub extensions: Extensions,
+    /// Enable compact arrays
+    pub compact_arrays: bool,
     /// Private field to ensure adding a field is non-breaking.
     #[serde(skip)]
     _future_proof: (),
@@ -137,6 +133,24 @@ impl PrettyConfig {
         self
     }
 
+    /// Configures the string sequence used to separate items inline.
+    ///
+    /// Default: 1 space
+    pub fn separator(mut self, separator: String) -> Self {
+        self.separator = separator;
+
+        self
+    }
+
+    /// Configures whether to emit struct names.
+    ///
+    /// Default: `false`
+    pub fn struct_names(mut self, struct_names: bool) -> Self {
+        self.struct_names = struct_names;
+
+        self
+    }
+
     /// Configures whether tuples are single- or multi-line.
     /// If set to `true`, tuples will have their fields indented and in new
     /// lines. If set to `false`, tuples will be serialized without any
@@ -163,9 +177,26 @@ impl PrettyConfig {
     /// When false `1.0` will serialize as `1`
     /// When true `1.0` will serialize as `1.0`
     ///
-    /// Default: `false`
+    /// Default: `true`
     pub fn decimal_floats(mut self, decimal_floats: bool) -> Self {
         self.decimal_floats = decimal_floats;
+
+        self
+    }
+
+    /// Configures whether every array should be a single line (true) or a multi line one (false)
+    /// When false, `["a","b"]` (as well as any array) will serialize to
+    /// `
+    /// [
+    ///   "a",
+    ///   "b",
+    /// ]
+    /// `
+    /// When true, `["a","b"]` (as well as any array) will serialize to `["a","b"]`
+    ///
+    /// Default: `false`
+    pub fn compact_arrays(mut self, compact_arrays: bool) -> Self {
+        self.compact_arrays = compact_arrays;
 
         self
     }
@@ -194,11 +225,19 @@ fn default_new_line() -> String {
 }
 
 fn default_decimal_floats() -> bool {
-    false
+    true
 }
 
 fn default_indentor() -> String {
     "    ".to_string()
+}
+
+fn default_separator() -> String {
+    "    ".to_string()
+}
+
+fn default_struct_names() -> bool {
+    false
 }
 
 fn default_separate_tuple_members() -> bool {
@@ -215,10 +254,13 @@ impl Default for PrettyConfig {
             depth_limit: default_depth_limit(),
             new_line: default_new_line(),
             indentor: default_indentor(),
+            struct_names: default_struct_names(),
             separate_tuple_members: default_separate_tuple_members(),
             enumerate_arrays: default_enumerate_arrays(),
             extensions: Extensions::default(),
             decimal_floats: default_decimal_floats(),
+            separator: String::from(" "),
+            compact_arrays: false,
             _future_proof: (),
         }
     }
@@ -231,18 +273,59 @@ impl Default for PrettyConfig {
 pub struct Serializer<W: io::Write> {
     output: W,
     pretty: Option<(PrettyConfig, Pretty)>,
-    struct_names: bool,
+    default_extensions: Extensions,
     is_empty: Option<bool>,
+    /// temporary field for semver compatibility
+    /// this was moved to PrettyConfig but will stay here until the next
+    /// breaking version.
+    /// TODO: remove me
+    struct_names: bool,
 }
 
 impl<W: io::Write> Serializer<W> {
     /// Creates a new `Serializer`.
     ///
     /// Most of the time you can just use `to_string` or `to_string_pretty`.
-    pub fn new(mut writer: W, config: Option<PrettyConfig>, struct_names: bool) -> Result<Self> {
+    ///
+    /// # Deprecation
+    ///
+    /// This constructor takes `struct_names`, which has been moved to `PrettyConfig`.
+    /// To stay semver compatible the `Serializer` will keep the `struct_names` field
+    /// until the next minor version gets released, and struct names will be generated
+    /// if either the `PrettyConfig`'s or the `Serializer`'s struct name field is `true`.
+    #[deprecated(
+        note = "Serializer::new is deprecated because struct_names was moved to PrettyConfig"
+    )]
+    pub fn new(writer: W, config: Option<PrettyConfig>, struct_names: bool) -> Result<Self> {
+        Self::with_options(writer, config, Options::default()).map(|mut x| {
+            x.struct_names = struct_names;
+            x
+        })
+    }
+
+    /// Creates a new `Serializer`.
+    ///
+    /// Most of the time you can just use `to_string` or `to_string_pretty`.
+    pub fn with_options(
+        mut writer: W,
+        config: Option<PrettyConfig>,
+        options: Options,
+    ) -> Result<Self> {
         if let Some(conf) = &config {
-            if conf.extensions.contains(Extensions::IMPLICIT_SOME) {
+            let non_default_extensions = !options.default_extensions;
+
+            if (non_default_extensions & conf.extensions).contains(Extensions::IMPLICIT_SOME) {
                 writer.write_all(b"#![enable(implicit_some)]")?;
+                writer.write_all(conf.new_line.as_bytes())?;
+            };
+            if (non_default_extensions & conf.extensions).contains(Extensions::UNWRAP_NEWTYPES) {
+                writer.write_all(b"#![enable(unwrap_newtypes)]")?;
+                writer.write_all(conf.new_line.as_bytes())?;
+            };
+            if (non_default_extensions & conf.extensions)
+                .contains(Extensions::UNWRAP_VARIANT_NEWTYPES)
+            {
+                writer.write_all(b"#![enable(unwrap_variant_newtypes)]")?;
                 writer.write_all(conf.new_line.as_bytes())?;
             };
         };
@@ -257,16 +340,10 @@ impl<W: io::Write> Serializer<W> {
                     },
                 )
             }),
-            struct_names,
+            default_extensions: options.default_extensions,
             is_empty: None,
+            struct_names: false,
         })
-    }
-
-    fn is_pretty(&self) -> bool {
-        match self.pretty {
-            Some((ref config, ref pretty)) => pretty.indent <= config.depth_limit,
-            None => false,
-        }
     }
 
     fn separate_tuple_members(&self) -> bool {
@@ -278,13 +355,21 @@ impl<W: io::Write> Serializer<W> {
     fn decimal_floats(&self) -> bool {
         self.pretty
             .as_ref()
-            .map_or(false, |&(ref config, _)| config.decimal_floats)
+            .map_or(true, |&(ref config, _)| config.decimal_floats)
+    }
+
+    fn compact_arrays(&self) -> bool {
+        self.pretty
+            .as_ref()
+            .map_or(false, |&(ref config, _)| config.compact_arrays)
     }
 
     fn extensions(&self) -> Extensions {
-        self.pretty
-            .as_ref()
-            .map_or(Extensions::empty(), |&(ref config, _)| config.extensions)
+        self.default_extensions
+            | self
+                .pretty
+                .as_ref()
+                .map_or(Extensions::empty(), |&(ref config, _)| config.extensions)
     }
 
     fn start_indent(&mut self) -> Result<()> {
@@ -349,6 +434,15 @@ impl<W: io::Write> Serializer<W> {
         self.output.write_all(name.as_bytes())?;
         Ok(())
     }
+
+    fn struct_names(&self) -> bool {
+        self.struct_names
+            || self
+                .pretty
+                .as_ref()
+                .map(|(pc, _)| pc.struct_names)
+                .unwrap_or(false)
+    }
 }
 
 impl<'a, W: io::Write> ser::Serializer for &'a mut Serializer<W> {
@@ -412,9 +506,7 @@ impl<'a, W: io::Write> ser::Serializer for &'a mut Serializer<W> {
 
     fn serialize_f32(self, v: f32) -> Result<()> {
         write!(self.output, "{}", v)?;
-        // TODO: use f32::EPSILON when minimum supported rust version is 1.43
-        pub const EPSILON: f32 = 1.192_092_9e-7;
-        if self.decimal_floats() && (v - v.floor()).abs() < EPSILON {
+        if self.decimal_floats() && v.fract() == 0.0 {
             write!(self.output, ".0")?;
         }
         Ok(())
@@ -422,9 +514,7 @@ impl<'a, W: io::Write> ser::Serializer for &'a mut Serializer<W> {
 
     fn serialize_f64(self, v: f64) -> Result<()> {
         write!(self.output, "{}", v)?;
-        // TODO: use f64::EPSILON when minimum supported rust version is 1.43
-        pub const EPSILON: f64 = 2.220_446_049_250_313e-16;
-        if self.decimal_floats() && (v - v.floor()).abs() < EPSILON {
+        if self.decimal_floats() && v.fract() == 0.0 {
             write!(self.output, ".0")?;
         }
         Ok(())
@@ -479,7 +569,7 @@ impl<'a, W: io::Write> ser::Serializer for &'a mut Serializer<W> {
     }
 
     fn serialize_unit_struct(self, name: &'static str) -> Result<()> {
-        if self.struct_names {
+        if self.struct_names() {
             self.write_identifier(name)?;
 
             Ok(())
@@ -498,7 +588,11 @@ impl<'a, W: io::Write> ser::Serializer for &'a mut Serializer<W> {
     where
         T: ?Sized + Serialize,
     {
-        if self.struct_names {
+        if self.extensions().contains(Extensions::UNWRAP_NEWTYPES) {
+            return value.serialize(&mut *self);
+        }
+
+        if self.struct_names() {
             self.write_identifier(name)?;
         }
 
@@ -534,7 +628,9 @@ impl<'a, W: io::Write> ser::Serializer for &'a mut Serializer<W> {
             self.is_empty = Some(len == 0);
         }
 
-        self.start_indent()?;
+        if !self.compact_arrays() {
+            self.start_indent()?;
+        }
 
         if let Some((_, ref mut pretty)) = self.pretty {
             pretty.sequence_index.push(0);
@@ -566,7 +662,7 @@ impl<'a, W: io::Write> ser::Serializer for &'a mut Serializer<W> {
         name: &'static str,
         len: usize,
     ) -> Result<Self::SerializeTupleStruct> {
-        if self.struct_names {
+        if self.struct_names() {
             self.write_identifier(name)?;
         }
 
@@ -611,7 +707,7 @@ impl<'a, W: io::Write> ser::Serializer for &'a mut Serializer<W> {
     }
 
     fn serialize_struct(self, name: &'static str, len: usize) -> Result<Self::SerializeStruct> {
-        if self.struct_names {
+        if self.struct_names() {
             self.write_identifier(name)?;
         }
         self.output.write_all(b"(")?;
@@ -645,10 +741,12 @@ impl<'a, W: io::Write> ser::Serializer for &'a mut Serializer<W> {
     }
 }
 
-pub enum State {
+enum State {
     First,
     Rest,
 }
+
+#[doc(hidden)]
 pub struct Compound<'a, W: io::Write> {
     ser: &'a mut Serializer<W>,
     state: State,
@@ -667,20 +765,25 @@ impl<'a, W: io::Write> ser::SerializeSeq for Compound<'a, W> {
         } else {
             self.ser.output.write_all(b",")?;
             if let Some((ref config, ref mut pretty)) = self.ser.pretty {
-                if pretty.indent <= config.depth_limit {
-                    if config.enumerate_arrays {
-                        assert!(config.new_line.contains('\n'));
-                        let index = pretty.sequence_index.last_mut().unwrap();
-                        //TODO: when /**/ comments are supported, prepend the index
-                        // to an element instead of appending it.
-                        write!(self.ser.output, "// [{}]", index).unwrap();
-                        *index += 1;
-                    }
+                if pretty.indent <= config.depth_limit && !config.compact_arrays {
                     self.ser.output.write_all(config.new_line.as_bytes())?;
+                } else {
+                    self.ser.output.write_all(config.separator.as_bytes())?;
                 }
             }
         }
-        self.ser.indent()?;
+
+        if !self.ser.compact_arrays() {
+            self.ser.indent()?;
+        }
+
+        if let Some((ref mut config, ref mut pretty)) = self.ser.pretty {
+            if pretty.indent <= config.depth_limit && config.enumerate_arrays {
+                let index = pretty.sequence_index.last_mut().unwrap();
+                write!(self.ser.output, "/*[{}]*/ ", index)?;
+                *index += 1;
+            }
+        }
 
         value.serialize(&mut *self.ser)?;
 
@@ -690,13 +793,16 @@ impl<'a, W: io::Write> ser::SerializeSeq for Compound<'a, W> {
     fn end(self) -> Result<()> {
         if let State::Rest = self.state {
             if let Some((ref config, ref mut pretty)) = self.ser.pretty {
-                if pretty.indent <= config.depth_limit {
+                if pretty.indent <= config.depth_limit && !config.compact_arrays {
                     self.ser.output.write_all(b",")?;
                     self.ser.output.write_all(config.new_line.as_bytes())?;
                 }
             }
         }
-        self.ser.end_indent()?;
+
+        if !self.ser.compact_arrays() {
+            self.ser.end_indent()?;
+        }
 
         if let Some((_, ref mut pretty)) = self.ser.pretty {
             pretty.sequence_index.pop();
@@ -720,14 +826,10 @@ impl<'a, W: io::Write> ser::SerializeTuple for Compound<'a, W> {
         } else {
             self.ser.output.write_all(b",")?;
             if let Some((ref config, ref pretty)) = self.ser.pretty {
-                if pretty.indent <= config.depth_limit {
-                    self.ser
-                        .output
-                        .write_all(if self.ser.separate_tuple_members() {
-                            config.new_line.as_bytes()
-                        } else {
-                            b" "
-                        })?;
+                if pretty.indent <= config.depth_limit && self.ser.separate_tuple_members() {
+                    self.ser.output.write_all(config.new_line.as_bytes())?;
+                } else {
+                    self.ser.output.write_all(config.separator.as_bytes())?;
                 }
             }
         }
@@ -809,6 +911,8 @@ impl<'a, W: io::Write> ser::SerializeMap for Compound<'a, W> {
             if let Some((ref config, ref pretty)) = self.ser.pretty {
                 if pretty.indent <= config.depth_limit {
                     self.ser.output.write_all(config.new_line.as_bytes())?;
+                } else {
+                    self.ser.output.write_all(config.separator.as_bytes())?;
                 }
             }
         }
@@ -822,8 +926,8 @@ impl<'a, W: io::Write> ser::SerializeMap for Compound<'a, W> {
     {
         self.ser.output.write_all(b":")?;
 
-        if self.ser.is_pretty() {
-            self.ser.output.write_all(b" ")?;
+        if let Some((ref config, _)) = self.ser.pretty {
+            self.ser.output.write_all(config.separator.as_bytes())?;
         }
 
         value.serialize(&mut *self.ser)?;
@@ -862,6 +966,8 @@ impl<'a, W: io::Write> ser::SerializeStruct for Compound<'a, W> {
             if let Some((ref config, ref pretty)) = self.ser.pretty {
                 if pretty.indent <= config.depth_limit {
                     self.ser.output.write_all(config.new_line.as_bytes())?;
+                } else {
+                    self.ser.output.write_all(config.separator.as_bytes())?;
                 }
             }
         }
@@ -869,8 +975,8 @@ impl<'a, W: io::Write> ser::SerializeStruct for Compound<'a, W> {
         self.ser.write_identifier(key)?;
         self.ser.output.write_all(b":")?;
 
-        if self.ser.is_pretty() {
-            self.ser.output.write_all(b" ")?;
+        if let Some((ref config, _)) = self.ser.pretty {
+            self.ser.output.write_all(config.separator.as_bytes())?;
         }
 
         value.serialize(&mut *self.ser)?;
