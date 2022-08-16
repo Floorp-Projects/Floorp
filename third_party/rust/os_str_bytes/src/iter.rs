@@ -2,11 +2,11 @@
 
 #![cfg_attr(os_str_bytes_docs_rs, doc(cfg(feature = "raw_os_str")))]
 
+use std::convert;
 use std::fmt;
 use std::fmt::Debug;
 use std::fmt::Formatter;
 use std::iter::FusedIterator;
-use std::str;
 
 use super::pattern::Encoded;
 use super::Pattern;
@@ -29,6 +29,7 @@ impl<'a, P> Split<'a, P>
 where
     P: Pattern,
 {
+    #[track_caller]
     pub(super) fn new(string: &'a RawOsStr, pat: P) -> Self {
         let pat = pat.__encode();
         assert!(
@@ -56,31 +57,6 @@ macro_rules! impl_next {
     }};
 }
 
-impl<P> DoubleEndedIterator for Split<'_, P>
-where
-    P: Pattern,
-{
-    fn next_back(&mut self) -> Option<Self::Item> {
-        impl_next!(self, rsplit_once_raw, |(prefix, suffix)| (suffix, prefix))
-    }
-}
-
-impl<'a, P> Iterator for Split<'a, P>
-where
-    P: Pattern,
-{
-    type Item = &'a RawOsStr;
-
-    #[inline]
-    fn last(mut self) -> Option<Self::Item> {
-        self.next_back()
-    }
-
-    fn next(&mut self) -> Option<Self::Item> {
-        impl_next!(self, split_once_raw, |x| x)
-    }
-}
-
 impl<P> Clone for Split<'_, P>
 where
     P: Pattern,
@@ -102,12 +78,34 @@ where
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("Split")
             .field("string", &self.string)
-            .field(
-                "pat",
-                &str::from_utf8(self.pat.__get()).expect("invalid pattern"),
-            )
+            .field("pat", &self.pat)
             .finish()
     }
 }
 
+impl<P> DoubleEndedIterator for Split<'_, P>
+where
+    P: Pattern,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        impl_next!(self, rsplit_once_raw, |(prefix, suffix)| (suffix, prefix))
+    }
+}
+
 impl<P> FusedIterator for Split<'_, P> where P: Pattern {}
+
+impl<'a, P> Iterator for Split<'a, P>
+where
+    P: Pattern,
+{
+    type Item = &'a RawOsStr;
+
+    #[inline]
+    fn last(mut self) -> Option<Self::Item> {
+        self.next_back()
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        impl_next!(self, split_once_raw, convert::identity)
+    }
+}

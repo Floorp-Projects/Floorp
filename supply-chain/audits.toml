@@ -475,6 +475,11 @@ Cryptography shenanigans are delegated to the caller so there's no possible
 unsoundness there.
 """
 
+[[audits.os_str_bytes]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "6.1.0 -> 6.3.0"
+
 [[audits.packed_simd_2]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
