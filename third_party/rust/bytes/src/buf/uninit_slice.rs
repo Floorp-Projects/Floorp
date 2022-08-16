@@ -124,6 +124,32 @@ impl UninitSlice {
         self.0.as_mut_ptr() as *mut _
     }
 
+    /// Return a `&mut [MaybeUninit<u8>]` to this slice's buffer.
+    ///
+    /// # Safety
+    ///
+    /// The caller **must not** read from the referenced memory and **must not** write
+    /// **uninitialized** bytes to the slice either. This is because `BufMut` implementation
+    /// that created the `UninitSlice` knows which parts are initialized. Writing uninitalized
+    /// bytes to the slice may cause the `BufMut` to read those bytes and trigger undefined
+    /// behavior.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bytes::BufMut;
+    ///
+    /// let mut data = [0, 1, 2];
+    /// let mut slice = &mut data[..];
+    /// unsafe {
+    ///     let uninit_slice = BufMut::chunk_mut(&mut slice).as_uninit_slice_mut();
+    /// };
+    /// ```
+    #[inline]
+    pub unsafe fn as_uninit_slice_mut<'a>(&'a mut self) -> &'a mut [MaybeUninit<u8>] {
+        &mut *(self as *mut _ as *mut [MaybeUninit<u8>])
+    }
+
     /// Returns the number of bytes in the slice.
     ///
     /// # Examples
