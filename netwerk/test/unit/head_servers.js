@@ -524,7 +524,8 @@ class NodeHTTP2ProxyServer extends BaseHTTPProxy {
 class NodeWebSocketServerCode extends BaseNodeHTTPServerCode {
   static messageHandler(data) {
     if (global.wsInputHandler) {
-      return global.wsInputHandler(data);
+      global.wsInputHandler(data);
+      return;
     }
 
     global.ws.send("test");
