@@ -16201,7 +16201,7 @@
     "n_buckets": 50,
     "description": "The time spent waiting for the GPU to complete previously issued drawing commands in milliseconds"
   },
-  "WR_RENDERER_TIME": {
+    "WR_RENDERER_TIME": {
     "record_in_processes": [ "main", "gpu" ],
     "products": [ "firefox" ],
     "alert_emails": [ "gfx-telemetry-alerts@mozilla.com" ],
@@ -16211,17 +16211,6 @@
     "high": 1000,
     "n_buckets": 50,
     "description": "The time spent by WebRender in the Renderer in milliseconds."
-  },
-    "WR_RENDERER_TIME_NO_SC_MS": {
-    "record_in_processes": [ "main", "gpu" ],
-    "products": [ "firefox" ],
-    "alert_emails": [ "gfx-telemetry-alerts@mozilla.com" ],
-    "bug_numbers": [ 1784286 ],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 50,
-    "description": "The time spent by WebRender in the Renderer in milliseconds for frames with no shader compilation."
   },
   "WR_SCENEBUILD_TIME": {
     "record_in_processes": ["main", "gpu"],
