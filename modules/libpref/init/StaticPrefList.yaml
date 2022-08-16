@@ -12109,7 +12109,7 @@
 # Partition the service workers unconditionally when dFPI is enabled.
 - name: privacy.partition.serviceWorkers
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Enables / disables the URL query string stripping in normal browsing mode
