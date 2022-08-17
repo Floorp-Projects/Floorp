@@ -439,7 +439,8 @@ void TestOneLineJson() {
 {\"i\":1,\"array\":[null,[{}],{\"o\":{}},\"s\"],\"d\":3.33}\
 ";
 
-  JSONWriter w(MakeUnique<StringWriteFunc>(), JSONWriter::SingleLineStyle);
+  StringWriteFunc func;
+  JSONWriter w(func, JSONWriter::SingleLineStyle);
 
   w.Start(w.MultiLineStyle);  // style overridden from above
 

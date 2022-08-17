@@ -163,6 +163,9 @@ class UniqueJSONStrings;
 
 class SpliceableJSONWriter : public JSONWriter {
  public:
+  explicit SpliceableJSONWriter(JSONWriteFunc& aWriter)
+      : JSONWriter(aWriter, JSONWriter::SingleLineStyle) {}
+
   explicit SpliceableJSONWriter(UniquePtr<JSONWriteFunc> aWriter)
       : JSONWriter(std::move(aWriter), JSONWriter::SingleLineStyle) {}
 
