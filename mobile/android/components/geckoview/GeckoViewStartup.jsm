@@ -141,6 +141,16 @@ class GeckoViewStartup {
           lazy.ActorManagerParent.addJSWindowActors(JSWINDOWACTORS);
           lazy.ActorManagerParent.addJSProcessActors(JSPROCESSACTORS);
 
+          if (Services.appinfo.sessionHistoryInParent) {
+            GeckoViewUtils.addLazyGetter(this, "GeckoViewSessionStore", {
+              module: "resource://gre/modules/GeckoViewSessionStore.jsm",
+              observers: [
+                "browsing-context-did-set-embedder",
+                "browsing-context-discarded",
+              ],
+            });
+          }
+
           GeckoViewUtils.addLazyGetter(this, "GeckoViewWebExtension", {
             module: "resource://gre/modules/GeckoViewWebExtension.jsm",
             ged: [
