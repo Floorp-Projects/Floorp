@@ -180,6 +180,8 @@ class nsComboboxControlFrame final : public nsBlockFrame,
   };
   DropDownPositionState AbsolutelyPositionDropDown();
 
+  nscoord GetLongestOptionISize(gfxContext*) const;
+
   // Helper for GetMinISize/GetPrefISize
   nscoord GetIntrinsicISize(gfxContext* aRenderingContext,
                             mozilla::IntrinsicISizeType aType);
