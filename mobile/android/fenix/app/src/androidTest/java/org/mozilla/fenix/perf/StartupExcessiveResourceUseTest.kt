@@ -63,7 +63,7 @@ private val EXPECTED_RUNBLOCKING_RANGE = 0..1 // CI has +1 counts compared to lo
  * If the view hierarchy uses Jetpack Compose, switching to that is also an option.
  */
 private val EXPECTED_RECYCLER_VIEW_CONSTRAINT_LAYOUT_CHILDREN =
-    3..4 // The messaging framework is not deterministic and could add a +1 to the count
+    4..6 // The messaging framework is not deterministic and could add to the count.
 
 /**
  * The number of layouts we inflate during this start up scenario. Incrementing the expected value
