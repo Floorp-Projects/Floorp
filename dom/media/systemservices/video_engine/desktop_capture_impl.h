@@ -208,7 +208,8 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
       _requestedCapability;  // Should be set by platform dependent code in
                              // StartCapture.
  private:
-  int32_t Init();
+  void LazyInitCaptureThread();
+  int32_t LazyInitDesktopCapturer();
   void UpdateFrameCount();
   uint32_t CalculateFrameRate(int64_t now_ns);
 

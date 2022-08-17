@@ -325,7 +325,7 @@ const char* DesktopCaptureImpl::CurrentDeviceName() const {
   return _deviceUniqueId.c_str();
 }
 
-int32_t DesktopCaptureImpl::Init() {
+int32_t DesktopCaptureImpl::LazyInitDesktopCapturer() {
   // Already initialized
   if (desktop_capturer_cursor_composer_) {
     return 0;
@@ -385,18 +385,7 @@ DesktopCaptureImpl::DesktopCaptureImpl(const int32_t id, const char* uniqueId,
       _rotateFrame(kVideoRotation_0),
       last_capture_time_ms_(rtc::TimeMillis()),
       time_event_(EventWrapper::Create()),
-#if defined(_WIN32)
-      capturer_thread_(
-          new rtc::PlatformUIThread(Run, this, "ScreenCaptureThread")),
-#else
-#  if defined(WEBRTC_LINUX)
-      // We start the thread lazily for Linux
       capturer_thread_(nullptr),
-#  else
-      capturer_thread_(
-          new rtc::PlatformThread(Run, this, "ScreenCaptureThread")),
-#  endif
-#endif
       started_(false) {
   _requestedCapability.width = kDefaultWidth;
   _requestedCapability.height = kDefaultHeight;
@@ -559,47 +548,41 @@ uint32_t DesktopCaptureImpl::CalculateFrameRate(int64_t now_ns) {
   return nrOfFrames;
 }
 
+void DesktopCaptureImpl::LazyInitCaptureThread() {
+  MOZ_ASSERT(desktop_capturer_cursor_composer_, "DesktopCapturer must be initialized before the capture thread");
+  if (capturer_thread_) {
+    return;
+  }
+#if defined(_WIN32)
+  capturer_thread_ = std::make_unique<rtc::PlatformUIThread>(std::function([self = (void*) this](){Run(self);}),"ScreenCaptureThread", rtc::ThreadAttributes{});
+  capturer_thread_->RequestCallbackTimer(_maxFPSNeeded);
+#else
+  capturer_thread_ = std::make_unique<rtc::PlatformThread>(Run, this, "ScreenCaptureThread");
+#endif
+  started_ = true;
+}
+
 int32_t DesktopCaptureImpl::StartCapture(
     const VideoCaptureCapability& capability) {
   rtc::CritScope lock(&_apiCs);
+  MOZ_ASSERT(!started_, "Capture must be stopped before Start() can be called");
 
+
+  if(uint32_t err = LazyInitDesktopCapturer(); err) {
+    return err;
+  }
+  started_ = true;
   _requestedCapability = capability;
   _maxFPSNeeded = _requestedCapability.maxFPS > 0
                       ? 1000 / _requestedCapability.maxFPS
                       : 1000;
-#if defined(_WIN32)
-  if (!capturer_thread_) {
-    capturer_thread_ = std::make_unique<rtc::PlatformUIThread>(
-        Run, this, "ScreenCaptureThread");
-  }
-  capturer_thread_->RequestCallbackTimer(_maxFPSNeeded);
-#endif
-
-  if (started_) {
-    return 0;
-  }
-#if defined(WEBRTC_LINUX)
-  // Lazily init capturer_thread_
-  if (!capturer_thread_) {
-    capturer_thread_ = std::unique_ptr<rtc::PlatformThread>(
-        new rtc::PlatformThread(Run, this, "ScreenCaptureThread"));
-  }
-#endif
-
-  uint32_t err = Init();
-  if (err) {
-    return err;
-  }
-
-  capturer_thread_->Start();
-  started_ = true;
+  LazyInitCaptureThread();
 
   return 0;
 }
 
 bool DesktopCaptureImpl::FocusOnSelectedSource() {
-  uint32_t err = Init();
-  if (err) {
+  if (uint32_t err = LazyInitDesktopCapturer(); err) {
     return false;
   }
 
