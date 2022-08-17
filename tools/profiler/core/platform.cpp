@@ -5519,7 +5519,8 @@ static void locked_profiler_save_profile_to_file(
   std::ofstream stream;
   stream.open(aFilename);
   if (stream.is_open()) {
-    SpliceableJSONWriter w(MakeUnique<OStreamJSONWriteFunc>(stream));
+    OStreamJSONWriteFunc sw(stream);
+    SpliceableJSONWriter w(sw);
     w.Start();
     {
       locked_profiler_stream_json_for_this_process(
