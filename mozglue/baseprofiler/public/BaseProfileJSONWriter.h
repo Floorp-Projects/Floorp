@@ -52,7 +52,7 @@ class ChunkedJSONWriteFunc final : public JSONWriteFunc {
     return totalLen;
   }
 
-  void Write(const Span<const char>& aStr) override {
+  void Write(const Span<const char>& aStr) final {
     MOZ_ASSERT(mChunkPtr >= mChunkList.back().get() && mChunkPtr <= mChunkEnd);
     MOZ_ASSERT(mChunkEnd >= mChunkList.back().get() + mChunkLengths.back());
     MOZ_ASSERT(*mChunkPtr == '\0');
@@ -151,7 +151,7 @@ class ChunkedJSONWriteFunc final : public JSONWriteFunc {
 struct OStreamJSONWriteFunc final : public JSONWriteFunc {
   explicit OStreamJSONWriteFunc(std::ostream& aStream) : mStream(aStream) {}
 
-  void Write(const Span<const char>& aStr) override {
+  void Write(const Span<const char>& aStr) final {
     std::string_view sv(aStr.data(), aStr.size());
     mStream << sv;
   }
