@@ -1155,8 +1155,13 @@ addressbar-locbar-topsites-option =
 addressbar-locbar-engines-option =
     .label = Search engines
     .accesskey = a
+addressbar-locbar-quickactions-option =
+    .label = Quick actions
+    .accesskey = Q
 
 addressbar-suggestions-settings = Change preferences for search engine suggestions
+
+addressbar-quickactions-learn-more = Learn more
 
 ## Privacy Section - Content Blocking
 
