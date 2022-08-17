@@ -24,7 +24,9 @@
 
 #include "libavutil/buffer.h"
 
-#include "avcodec.h"
+#include "codec_id.h"
+#include "codec_par.h"
+#include "packet.h"
 
 
 /*
@@ -40,6 +42,7 @@
  * bitstream.
  */
 
+struct AVCodecContext;
 struct CodedBitstreamType;
 
 /**
@@ -271,7 +274,11 @@ int ff_cbs_read_extradata(CodedBitstreamContext *ctx,
  */
 int ff_cbs_read_extradata_from_codec(CodedBitstreamContext *ctx,
                                      CodedBitstreamFragment *frag,
-                                     const AVCodecContext *avctx);
+                                     const struct AVCodecContext *avctx);
+
+int ff_cbs_read_packet_side_data(CodedBitstreamContext *ctx,
+                                 CodedBitstreamFragment *frag,
+                                 const AVPacket *pkt);
 
 /**
  * Read the data bitstream from a packet into a fragment, then
@@ -373,15 +380,6 @@ int ff_cbs_alloc_unit_content(CodedBitstreamUnit *unit,
 int ff_cbs_alloc_unit_content2(CodedBitstreamContext *ctx,
                                CodedBitstreamUnit *unit);
 
-
-/**
- * Allocate a new internal data buffer of the given size in the unit.
- *
- * The data buffer will have input padding.
- */
-int ff_cbs_alloc_unit_data(CodedBitstreamUnit *unit,
-                           size_t size);
-
 /**
  * Insert a new unit into a fragment with the given content.
  *
@@ -395,14 +393,13 @@ int ff_cbs_insert_unit_content(CodedBitstreamFragment *frag,
                                AVBufferRef *content_buf);
 
 /**
- * Insert a new unit into a fragment with the given data bitstream.
+ * Add a new unit to a fragment with the given data bitstream.
  *
  * If data_buf is not supplied then data must have been allocated with
  * av_malloc() and will on success become owned by the unit after this
  * call or freed on error.
  */
-int ff_cbs_insert_unit_data(CodedBitstreamFragment *frag,
-                            int position,
+int ff_cbs_append_unit_data(CodedBitstreamFragment *frag,
                             CodedBitstreamUnitType type,
                             uint8_t *data, size_t data_size,
                             AVBufferRef *data_buf);

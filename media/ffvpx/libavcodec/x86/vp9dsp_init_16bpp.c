@@ -22,7 +22,6 @@
 
 #include "libavutil/attributes.h"
 #include "libavutil/cpu.h"
-#include "libavutil/mem.h"
 #include "libavutil/x86/cpu.h"
 #include "libavcodec/vp9dsp.h"
 #include "libavcodec/x86/vp9dsp_init.h"
@@ -55,6 +54,8 @@ decl_ipred_fn(dl,       16,     16, avx2);
 decl_ipred_fn(dl,       32,     16, avx2);
 decl_ipred_fn(dr,       16,     16, avx2);
 decl_ipred_fn(dr,       32,     16, avx2);
+decl_ipred_fn(vl,       16,     16, avx2);
+decl_ipred_fn(hd,       16,     16, avx2);
 
 #define decl_ipred_dir_funcs(type) \
 decl_ipred_fns(type, 16, sse2,  sse2); \
@@ -140,6 +141,8 @@ av_cold void ff_vp9dsp_init_16bpp_x86(VP9DSPContext *dsp)
         init_ipred_func(dl, DIAG_DOWN_LEFT, 16, 16, avx2);
         init_ipred_func(dl, DIAG_DOWN_LEFT, 32, 16, avx2);
         init_ipred_func(dr, DIAG_DOWN_RIGHT, 16, 16, avx2);
+        init_ipred_func(vl, VERT_LEFT, 16, 16, avx2);
+        init_ipred_func(hd, HOR_DOWN, 16, 16, avx2);
 #if ARCH_X86_64
         init_ipred_func(dr, DIAG_DOWN_RIGHT, 32, 16, avx2);
 #endif
