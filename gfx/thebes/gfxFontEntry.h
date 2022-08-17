@@ -269,14 +269,6 @@ class gfxFontEntry {
   void NotifyGlyphsChanged();
 
   bool TryGetColorGlyphs();
-  bool GetColorLayersInfo(uint32_t aGlyphId,
-                          const mozilla::gfx::DeviceColor& aDefaultColor,
-                          nsTArray<uint16_t>& layerGlyphs,
-                          nsTArray<mozilla::gfx::DeviceColor>& layerColors);
-  bool HasColorLayersForGlyph(uint32_t aGlyphId) {
-    MOZ_ASSERT(GetCOLR());
-    return mozilla::gfx::COLRFonts::HasColorLayersForGlyph(GetCOLR(), aGlyphId);
-  }
 
   bool HasColorBitmapTable() {
     if (!mCheckedForColorBitmapTables) {
