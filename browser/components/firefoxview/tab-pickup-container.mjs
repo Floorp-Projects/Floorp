@@ -9,6 +9,7 @@ import { toggleContainer } from "./helpers.mjs";
 const { TabsSetupFlowManager } = ChromeUtils.importESModule(
   "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs"
 );
+
 const TOPIC_SETUPSTATE_CHANGED = "firefox-view.setupstate.changed";
 
 class TabPickupContainer extends HTMLElement {
@@ -66,7 +67,8 @@ class TabPickupContainer extends HTMLElement {
           TabsSetupFlowManager.openFxASignup(event.target.ownerGlobal);
           break;
         }
-        case "view2-primary-action": {
+        case "view2-primary-action":
+        case "mobile-promo-primary-action": {
           TabsSetupFlowManager.openFxAPairDevice(event.target.ownerGlobal);
           break;
         }
@@ -78,14 +80,13 @@ class TabPickupContainer extends HTMLElement {
           TabsSetupFlowManager.dismissMobilePromo(event.target);
           break;
         }
-        case "mobile-promo-primary-action": {
-          TabsSetupFlowManager.openFxAPairDevice(event.target.ownerGlobal);
-          break;
-        }
         case "mobile-confirmation-dismiss": {
           TabsSetupFlowManager.dismissMobileConfirmation(event.target);
           break;
         }
+        case "view0-sync-disconnected-action":
+          TabsSetupFlowManager.openSyncPreferences(event.target.ownerGlobal);
+          break;
       }
     }
     // Returning to fxview seems like a likely time for a device check
