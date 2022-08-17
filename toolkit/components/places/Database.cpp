@@ -7,7 +7,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/SpinEventLoopUntil.h"
-#include "mozilla/JSONStringWriteFuncs.h"
+#include "mozilla/JSONWriter.h"
 
 #include "Database.h"
 
@@ -2061,6 +2061,12 @@ nsresult Database::MigrateV50Up() {
   return NS_OK;
 }
 
+struct StringWriteFunc : public JSONWriteFunc {
+  nsCString& mCString;
+  explicit StringWriteFunc(nsCString& aCString) : mCString(aCString) {}
+  void Write(const Span<const char>& aStr) override { mCString.Append(aStr); }
+};
+
 nsresult Database::MigrateV51Up() {
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mMainConn->CreateStatement(
@@ -2078,8 +2084,8 @@ nsresult Database::MigrateV51Up() {
   rv = stmt->BindUTF8StringByName("anno_name"_ns, LAST_USED_ANNO);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  JSONStringWriteFunc<nsAutoCString> json;
-  JSONWriter jw{json};
+  nsAutoCString json;
+  JSONWriter jw{MakeUnique<StringWriteFunc>(json)};
   jw.StartArrayProperty(nullptr, JSONWriter::SingleLineStyle);
 
   bool hasAtLeastOne = false;
@@ -2105,7 +2111,7 @@ nsresult Database::MigrateV51Up() {
 
   rv = stmt->BindUTF8StringByName("key"_ns, LAST_USED_FOLDERS_META_KEY);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindUTF8StringByName("value"_ns, json.StringCRef());
+  rv = stmt->BindUTF8StringByName("value"_ns, json);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);

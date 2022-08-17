@@ -1146,10 +1146,10 @@ void TestLEB128() {
   printf("TestLEB128 done\n");
 }
 
-struct StringWriteFunc final : public JSONWriteFunc {
+struct StringWriteFunc : public JSONWriteFunc {
   std::string mString;
 
-  void Write(const mozilla::Span<const char>& aStr) final {
+  void Write(const mozilla::Span<const char>& aStr) override {
     mString.append(aStr.data(), aStr.size());
   }
 };
@@ -1157,7 +1157,7 @@ struct StringWriteFunc final : public JSONWriteFunc {
 void CheckJSON(mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
                const char* aExpected, int aLine) {
   const std::string& actual =
-      static_cast<StringWriteFunc&>(aWriter.WriteFunc()).mString;
+      static_cast<StringWriteFunc*>(aWriter.WriteFunc())->mString;
   if (strcmp(aExpected, actual.c_str()) != 0) {
     fprintf(stderr,
             "---- EXPECTED ---- (line %d)\n<<<%s>>>\n"

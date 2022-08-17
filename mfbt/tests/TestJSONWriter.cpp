@@ -18,17 +18,16 @@ using mozilla::MakeUnique;
 using mozilla::Span;
 
 // This writes all the output into a big buffer.
-struct StringWriteFunc final : public JSONWriteFunc {
+struct StringWriteFunc : public JSONWriteFunc {
   std::string mString;
 
-  void Write(const mozilla::Span<const char>& aStr) final {
+  void Write(const mozilla::Span<const char>& aStr) override {
     mString.append(aStr.data(), aStr.size());
   }
 };
 
-void Check(JSONWriter& aWriter, const char* aExpected) {
-  JSONWriteFunc& func = aWriter.WriteFunc();
-  const std::string& actual = static_cast<StringWriteFunc&>(func).mString;
+void Check(JSONWriteFunc* aFunc, const char* aExpected) {
+  const std::string& actual = static_cast<StringWriteFunc*>(aFunc)->mString;
   if (strcmp(aExpected, actual.c_str()) != 0) {
     fprintf(stderr,
             "---- EXPECTED ----\n<<<%s>>>\n"
@@ -213,7 +212,7 @@ void TestBasicProperties() {
   }
   w.End();
 
-  Check(w, expected);
+  Check(w.WriteFunc(), expected);
 }
 
 void TestBasicElements() {
@@ -389,7 +388,7 @@ void TestBasicElements() {
   w.EndArray();
   w.End();
 
-  Check(w, expected);
+  Check(w.WriteFunc(), expected);
 }
 
 void TestOneLineObject() {
@@ -430,7 +429,7 @@ void TestOneLineObject() {
 
   w.End();
 
-  Check(w, expected);
+  Check(w.WriteFunc(), expected);
 }
 
 void TestOneLineJson() {
@@ -439,8 +438,7 @@ void TestOneLineJson() {
 {\"i\":1,\"array\":[null,[{}],{\"o\":{}},\"s\"],\"d\":3.33}\
 ";
 
-  StringWriteFunc func;
-  JSONWriter w(func, JSONWriter::SingleLineStyle);
+  JSONWriter w(MakeUnique<StringWriteFunc>(), JSONWriter::SingleLineStyle);
 
   w.Start(w.MultiLineStyle);  // style overridden from above
 
@@ -472,7 +470,7 @@ void TestOneLineJson() {
 
   w.End();  // No newline in this case.
 
-  Check(w, expected);
+  Check(w.WriteFunc(), expected);
 }
 
 void TestStringEscaping() {
@@ -534,7 +532,7 @@ void TestStringEscaping() {
   }
   w.End();
 
-  Check(w, expected);
+  Check(w.WriteFunc(), expected);
 }
 
 void TestDeepNesting() {
@@ -600,7 +598,7 @@ void TestDeepNesting() {
   }
   w.End();
 
-  Check(w, expected);
+  Check(w.WriteFunc(), expected);
 }
 
 void TestEscapedPropertyNames() {
@@ -641,7 +639,7 @@ void TestEscapedPropertyNames() {
 
   w.End();
 
-  Check(w, expected);
+  Check(w.WriteFunc(), expected);
 }
 
 int main(void) {

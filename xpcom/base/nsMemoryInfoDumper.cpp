@@ -385,11 +385,11 @@ static void MakeFilename(const char* aPrefix, const nsAString& aIdentifier,
 // the following two problems:
 // - It provides a JSONWriterFunc::Write() that calls nsGZFileWriter::Write().
 // - It can be stored as a UniquePtr, whereas nsGZFileWriter is refcounted.
-class GZWriterWrapper final : public JSONWriteFunc {
+class GZWriterWrapper : public JSONWriteFunc {
  public:
   explicit GZWriterWrapper(nsGZFileWriter* aGZWriter) : mGZWriter(aGZWriter) {}
 
-  void Write(const Span<const char>& aStr) final {
+  void Write(const Span<const char>& aStr) override {
     // Ignore any failure because JSONWriteFunc doesn't have a mechanism for
     // handling errors.
     Unused << mGZWriter->Write(aStr.data(), aStr.size());
@@ -471,7 +471,7 @@ class HandleReportAndFinishReportingCallbacks final
     // was measured by them -- by "heap-allocated" if nothing else -- we want
     // DMD to see it as well. So we deliberately don't call Finish() until
     // after DMD finishes.
-    nsresult rv = static_cast<GZWriterWrapper&>(mWriter->WriteFunc()).Finish();
+    nsresult rv = static_cast<GZWriterWrapper*>(mWriter->WriteFunc())->Finish();
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!mFinishDumping) {
