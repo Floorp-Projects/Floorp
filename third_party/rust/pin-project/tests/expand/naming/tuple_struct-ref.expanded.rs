@@ -1,18 +1,22 @@
 use pin_project::pin_project;
-# [pin (__private (project_ref = ProjRef))]
+#[pin(__private(project_ref = ProjRef))]
 struct TupleStruct<T, U>(#[pin] T, U);
 #[allow(box_pointers)]
 #[allow(deprecated)]
 #[allow(explicit_outlives_requirements)]
 #[allow(single_use_lifetimes)]
 #[allow(unreachable_pub)]
+#[allow(unused_tuple_struct_fields)]
 #[allow(clippy::unknown_clippy_lints)]
 #[allow(clippy::pattern_type_mismatch)]
 #[allow(clippy::redundant_pub_crate)]
 #[allow(clippy::type_repetition_in_bounds)]
 #[allow(dead_code)]
 #[allow(clippy::ref_option_ref)]
-struct ProjRef<'pin, T, U>(::pin_project::__private::Pin<&'pin (T)>, &'pin (U))
+struct ProjRef<'pin, T, U>(
+    ::pin_project::__private::Pin<&'pin (T)>,
+    &'pin (U),
+)
 where
     TupleStruct<T, U>: 'pin;
 #[allow(box_pointers)]
@@ -20,6 +24,7 @@ where
 #[allow(explicit_outlives_requirements)]
 #[allow(single_use_lifetimes)]
 #[allow(unreachable_pub)]
+#[allow(unused_tuple_struct_fields)]
 #[allow(clippy::unknown_clippy_lints)]
 #[allow(clippy::pattern_type_mismatch)]
 #[allow(clippy::redundant_pub_crate)]
@@ -40,14 +45,19 @@ const _: () = {
     where
         TupleStruct<T, U>: 'pin;
     impl<T, U> TupleStruct<T, U> {
+        #[allow(dead_code)]
         fn project<'pin>(
             self: _pin_project::__private::Pin<&'pin mut Self>,
         ) -> __TupleStructProjection<'pin, T, U> {
             unsafe {
                 let Self(_0, _1) = self.get_unchecked_mut();
-                __TupleStructProjection(_pin_project::__private::Pin::new_unchecked(_0), _1)
+                __TupleStructProjection(
+                    _pin_project::__private::Pin::new_unchecked(_0),
+                    _1,
+                )
             }
         }
+        #[allow(dead_code)]
         #[allow(clippy::missing_const_for_fn)]
         fn project_ref<'pin>(
             self: _pin_project::__private::Pin<&'pin Self>,
@@ -74,15 +84,15 @@ const _: () = {
         >,
         __field0: T,
     }
-    impl<'pin, T, U> _pin_project::__private::Unpin for TupleStruct<T, U> where
-        __TupleStruct<'pin, T, U>: _pin_project::__private::Unpin
-    {
-    }
+    impl<'pin, T, U> _pin_project::__private::Unpin for TupleStruct<T, U>
+    where
+        __TupleStruct<'pin, T, U>: _pin_project::__private::Unpin,
+    {}
     #[doc(hidden)]
-    unsafe impl<'pin, T, U> _pin_project::UnsafeUnpin for TupleStruct<T, U> where
-        __TupleStruct<'pin, T, U>: _pin_project::__private::Unpin
-    {
-    }
+    unsafe impl<'pin, T, U> _pin_project::UnsafeUnpin for TupleStruct<T, U>
+    where
+        __TupleStruct<'pin, T, U>: _pin_project::__private::Unpin,
+    {}
     trait TupleStructMustNotImplDrop {}
     #[allow(clippy::drop_bounds, drop_bounds)]
     impl<T: _pin_project::__private::Drop> TupleStructMustNotImplDrop for T {}

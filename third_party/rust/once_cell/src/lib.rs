@@ -464,7 +464,8 @@ pub mod unsync {
         ///
         /// let mut cell: OnceCell<u32> = OnceCell::new();
         /// cell.set(92).unwrap();
-        /// cell = OnceCell::new();
+        /// *cell.get_mut().unwrap() = 93;
+        /// assert_eq!(cell.get(), Some(&93));
         /// ```
         pub fn get_mut(&mut self) -> Option<&mut T> {
             // Safe because we have unique access
@@ -739,6 +740,23 @@ pub mod unsync {
                 Some(f) => f(),
                 None => panic!("Lazy instance has previously been poisoned"),
             })
+        }
+
+        /// Gets the reference to the result of this lazy value if
+        /// it was initialized, otherwise returns `None`.
+        ///
+        /// # Example
+        /// ```
+        /// use once_cell::unsync::Lazy;
+        ///
+        /// let lazy = Lazy::new(|| 92);
+        ///
+        /// assert_eq!(Lazy::get(&lazy), None);
+        /// assert_eq!(&*lazy, &92);
+        /// assert_eq!(Lazy::get(&lazy), Some(&92));
+        /// ```
+        pub fn get(this: &Lazy<T, F>) -> Option<&T> {
+            this.cell.get()
         }
     }
 
@@ -1212,6 +1230,23 @@ pub mod sync {
                 Some(f) => f(),
                 None => panic!("Lazy instance has previously been poisoned"),
             })
+        }
+
+        /// Gets the reference to the result of this lazy value if
+        /// it was initialized, otherwise returns `None`.
+        ///
+        /// # Example
+        /// ```
+        /// use once_cell::sync::Lazy;
+        ///
+        /// let lazy = Lazy::new(|| 92);
+        ///
+        /// assert_eq!(Lazy::get(&lazy), None);
+        /// assert_eq!(&*lazy, &92);
+        /// assert_eq!(Lazy::get(&lazy), Some(&92));
+        /// ```
+        pub fn get(this: &Lazy<T, F>) -> Option<&T> {
+            this.cell.get()
         }
     }
 

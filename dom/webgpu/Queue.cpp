@@ -54,6 +54,11 @@ void Queue::WriteBuffer(const Buffer& aBuffer, uint64_t aBufferOffset,
     length = ab.Length();
     data = ab.Data();
   }
+  if (!length) {
+    aRv.ThrowAbortError("Input size cannot be zero.");
+    return;
+  }
+
   MOZ_ASSERT(data != nullptr);
 
   const auto checkedSize = aSize.WasPassed()

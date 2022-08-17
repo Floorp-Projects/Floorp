@@ -1,11 +1,18 @@
 use std::pin::Pin;
 
-use auxiliary_macro::hidden_repr;
+use auxiliary_macro::{hidden_repr, hidden_repr2};
 use pin_project::{pin_project, pinned_drop, UnsafeUnpin};
 
 #[pin_project] //~ ERROR may not be used on #[repr(packed)] types
 #[hidden_repr(packed)]
 struct A {
+    #[pin]
+    f: u32,
+}
+
+#[hidden_repr2]
+#[pin_project] //~ ERROR may not be used on #[repr(packed)] types
+struct B {
     #[pin]
     f: u32,
 }

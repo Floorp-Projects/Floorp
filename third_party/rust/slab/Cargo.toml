@@ -13,10 +13,11 @@
 edition = "2018"
 rust-version = "1.31"
 name = "slab"
-version = "0.4.6"
+version = "0.4.7"
 authors = ["Carl Lerche <me@carllerche.com>"]
 exclude = ["/.*"]
 description = "Pre-allocated storage for a uniform data type"
+readme = "README.md"
 keywords = [
     "slab",
     "allocator",
@@ -36,11 +37,17 @@ features = ["alloc"]
 optional = true
 default-features = false
 
+[dev-dependencies.rustversion]
+version = "1"
+
 [dev-dependencies.serde]
 version = "1"
 features = ["derive"]
 
 [dev-dependencies.serde_test]
+version = "1"
+
+[build-dependencies.autocfg]
 version = "1"
 
 [features]

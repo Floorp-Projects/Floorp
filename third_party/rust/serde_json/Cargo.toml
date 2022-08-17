@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.36"
 name = "serde_json"
-version = "1.0.81"
+version = "1.0.83"
 authors = [
     "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
     "David Tolnay <dtolnay@gmail.com>",
@@ -26,7 +26,11 @@ keywords = [
     "serde",
     "serialization",
 ]
-categories = ["encoding"]
+categories = [
+    "encoding",
+    "parser-implementations",
+    "no-std",
+]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/serde-rs/json"
 

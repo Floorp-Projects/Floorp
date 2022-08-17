@@ -93,10 +93,7 @@ fn dropping_ready_queue() {
 
 #[test]
 fn stress() {
-    #[cfg(miri)]
-    const ITER: usize = 30;
-    #[cfg(not(miri))]
-    const ITER: usize = 300;
+    const ITER: usize = if cfg!(miri) { 30 } else { 300 };
 
     for i in 0..ITER {
         let n = (i % 10) + 1;

@@ -1,5 +1,5 @@
 use pin_project::pin_project;
-# [pin (__private (project_replace = ProjOwn))]
+#[pin(__private(project_replace = ProjOwn))]
 struct Struct<T, U> {
     #[pin]
     pinned: T,
@@ -10,6 +10,7 @@ struct Struct<T, U> {
 #[allow(explicit_outlives_requirements)]
 #[allow(single_use_lifetimes)]
 #[allow(unreachable_pub)]
+#[allow(unused_tuple_struct_fields)]
 #[allow(clippy::unknown_clippy_lints)]
 #[allow(clippy::pattern_type_mismatch)]
 #[allow(clippy::redundant_pub_crate)]
@@ -24,6 +25,7 @@ struct ProjOwn<T, U> {
 #[allow(explicit_outlives_requirements)]
 #[allow(single_use_lifetimes)]
 #[allow(unreachable_pub)]
+#[allow(unused_tuple_struct_fields)]
 #[allow(clippy::unknown_clippy_lints)]
 #[allow(clippy::pattern_type_mismatch)]
 #[allow(clippy::redundant_pub_crate)]
@@ -54,6 +56,7 @@ const _: () = {
         unpinned: &'pin (U),
     }
     impl<T, U> Struct<T, U> {
+        #[allow(dead_code)]
         fn project<'pin>(
             self: _pin_project::__private::Pin<&'pin mut Self>,
         ) -> __StructProjection<'pin, T, U> {
@@ -65,6 +68,7 @@ const _: () = {
                 }
             }
         }
+        #[allow(dead_code)]
         #[allow(clippy::missing_const_for_fn)]
         fn project_ref<'pin>(
             self: _pin_project::__private::Pin<&'pin Self>,
@@ -77,21 +81,26 @@ const _: () = {
                 }
             }
         }
+        #[allow(dead_code)]
         fn project_replace(
             self: _pin_project::__private::Pin<&mut Self>,
             __replacement: Self,
         ) -> ProjOwn<T, U> {
             unsafe {
                 let __self_ptr: *mut Self = self.get_unchecked_mut();
-                let __guard =
-                    _pin_project::__private::UnsafeOverwriteGuard::new(__self_ptr, __replacement);
+                let __guard = _pin_project::__private::UnsafeOverwriteGuard::new(
+                    __self_ptr,
+                    __replacement,
+                );
                 let Self { pinned, unpinned } = &mut *__self_ptr;
                 let __result = ProjOwn {
                     pinned: _pin_project::__private::PhantomData,
                     unpinned: _pin_project::__private::ptr::read(unpinned),
                 };
                 {
-                    let __guard = _pin_project::__private::UnsafeDropInPlaceGuard::new(pinned);
+                    let __guard = _pin_project::__private::UnsafeDropInPlaceGuard::new(
+                        pinned,
+                    );
                 }
                 __result
             }
@@ -113,15 +122,15 @@ const _: () = {
         >,
         __field0: T,
     }
-    impl<'pin, T, U> _pin_project::__private::Unpin for Struct<T, U> where
-        __Struct<'pin, T, U>: _pin_project::__private::Unpin
-    {
-    }
+    impl<'pin, T, U> _pin_project::__private::Unpin for Struct<T, U>
+    where
+        __Struct<'pin, T, U>: _pin_project::__private::Unpin,
+    {}
     #[doc(hidden)]
-    unsafe impl<'pin, T, U> _pin_project::UnsafeUnpin for Struct<T, U> where
-        __Struct<'pin, T, U>: _pin_project::__private::Unpin
-    {
-    }
+    unsafe impl<'pin, T, U> _pin_project::UnsafeUnpin for Struct<T, U>
+    where
+        __Struct<'pin, T, U>: _pin_project::__private::Unpin,
+    {}
     trait StructMustNotImplDrop {}
     #[allow(clippy::drop_bounds, drop_bounds)]
     impl<T: _pin_project::__private::Drop> StructMustNotImplDrop for T {}

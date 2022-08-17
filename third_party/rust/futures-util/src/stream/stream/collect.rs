@@ -19,7 +19,7 @@ pin_project! {
 
 impl<St: Stream, C: Default> Collect<St, C> {
     fn finish(self: Pin<&mut Self>) -> C {
-        mem::replace(self.project().collection, Default::default())
+        mem::take(self.project().collection)
     }
 
     pub(super) fn new(stream: St) -> Self {

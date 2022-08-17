@@ -253,11 +253,11 @@ fn recv_after_disconnect() {
 #[test]
 fn len() {
     #[cfg(miri)]
-    const COUNT: usize = 250;
+    const COUNT: usize = 50;
     #[cfg(not(miri))]
     const COUNT: usize = 25_000;
     #[cfg(miri)]
-    const CAP: usize = 100;
+    const CAP: usize = 50;
     #[cfg(not(miri))]
     const CAP: usize = 1000;
 
@@ -377,7 +377,7 @@ fn spsc() {
 #[test]
 fn mpmc() {
     #[cfg(miri)]
-    const COUNT: usize = 100;
+    const COUNT: usize = 50;
     #[cfg(not(miri))]
     const COUNT: usize = 25_000;
     const THREADS: usize = 4;
@@ -497,10 +497,16 @@ fn stress_timeout_two_threads() {
     .unwrap();
 }
 
-#[cfg_attr(miri, ignore)] // Miri is too slow
 #[test]
 fn drops() {
+    #[cfg(miri)]
+    const RUNS: usize = 10;
+    #[cfg(not(miri))]
     const RUNS: usize = 100;
+    #[cfg(miri)]
+    const STEPS: usize = 100;
+    #[cfg(not(miri))]
+    const STEPS: usize = 10_000;
 
     static DROPS: AtomicUsize = AtomicUsize::new(0);
 
@@ -516,7 +522,7 @@ fn drops() {
     let mut rng = thread_rng();
 
     for _ in 0..RUNS {
-        let steps = rng.gen_range(0..10_000);
+        let steps = rng.gen_range(0..STEPS);
         let additional = rng.gen_range(0..50);
 
         DROPS.store(0, Ordering::SeqCst);
@@ -551,7 +557,7 @@ fn drops() {
 #[test]
 fn linearizable() {
     #[cfg(miri)]
-    const COUNT: usize = 100;
+    const COUNT: usize = 50;
     #[cfg(not(miri))]
     const COUNT: usize = 25_000;
     const THREADS: usize = 4;

@@ -45,6 +45,56 @@ pub mod arbitrary_precision {
     }
 }
 
+/// Serialize/deserialize optional Decimals as arbitrary precision numbers in JSON using the `arbitrary_precision` feature within `serde_json`.
+///
+/// ```
+/// # use serde::{Serialize, Deserialize};
+/// # use rust_decimal::Decimal;
+/// # use std::str::FromStr;
+///
+/// #[derive(Serialize, Deserialize)]
+/// pub struct ArbitraryExample {
+///     #[serde(with = "rust_decimal::serde::arbitrary_precision_option")]
+///     value: Option<Decimal>,
+/// }
+///
+/// let value = ArbitraryExample { value: Some(Decimal::from_str("123.400").unwrap()) };
+/// assert_eq!(
+///     &serde_json::to_string(&value).unwrap(),
+///     r#"{"value":123.400}"#
+/// );
+///
+/// let value = ArbitraryExample { value: None };
+/// assert_eq!(
+///     &serde_json::to_string(&value).unwrap(),
+///     r#"{"value":null}"#
+/// );
+/// ```
+#[cfg(feature = "serde-with-arbitrary-precision")]
+pub mod arbitrary_precision_option {
+    use super::*;
+    use serde::Serialize;
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<Decimal>, D::Error>
+    where
+        D: serde::de::Deserializer<'de>,
+    {
+        deserializer.deserialize_option(OptionDecimalVisitor)
+    }
+
+    pub fn serialize<S>(value: &Option<Decimal>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match *value {
+            Some(ref decimal) => serde_json::Number::from_str(&decimal.to_string())
+                .map_err(serde::ser::Error::custom)?
+                .serialize(serializer),
+            None => serializer.serialize_none(),
+        }
+    }
+}
+
 /// Serialize/deserialize Decimals as floats.
 ///
 /// ```
@@ -85,6 +135,57 @@ pub mod float {
     }
 }
 
+/// Serialize/deserialize optional Decimals as floats.
+///
+/// ```
+/// # use serde::{Serialize, Deserialize};
+/// # use rust_decimal::Decimal;
+/// # use std::str::FromStr;
+///
+/// #[derive(Serialize, Deserialize)]
+/// pub struct FloatExample {
+///     #[serde(with = "rust_decimal::serde::float_option")]
+///     value: Option<Decimal>,
+/// }
+///
+/// let value = FloatExample { value: Some(Decimal::from_str("123.400").unwrap()) };
+/// assert_eq!(
+///     &serde_json::to_string(&value).unwrap(),
+///     r#"{"value":123.4}"#
+/// );
+///
+/// let value = FloatExample { value: None };
+/// assert_eq!(
+///     &serde_json::to_string(&value).unwrap(),
+///     r#"{"value":null}"#
+/// );
+/// ```
+#[cfg(feature = "serde-with-float")]
+pub mod float_option {
+    use super::*;
+    use serde::Serialize;
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<Decimal>, D::Error>
+    where
+        D: serde::de::Deserializer<'de>,
+    {
+        deserializer.deserialize_option(OptionDecimalVisitor)
+    }
+
+    pub fn serialize<S>(value: &Option<Decimal>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match *value {
+            Some(ref decimal) => {
+                use num_traits::ToPrimitive;
+                decimal.to_f64().unwrap().serialize(serializer)
+            }
+            None => serializer.serialize_none(),
+        }
+    }
+}
+
 /// Serialize/deserialize Decimals as strings. This is particularly useful when using binary encoding formats.
 ///
 /// ```
@@ -103,6 +204,7 @@ pub mod float {
 ///     &serde_json::to_string(&value).unwrap(),
 ///     r#"{"value":"123.400"}"#
 /// );
+///
 /// ```
 #[cfg(feature = "serde-with-str")]
 pub mod str {
@@ -121,6 +223,56 @@ pub mod str {
     {
         let value = crate::str::to_str_internal(value, true, None);
         serializer.serialize_str(value.0.as_ref())
+    }
+}
+
+/// Serialize/deserialize optional Decimals as strings. This is particularly useful when using binary encoding formats.
+///
+/// ```
+/// # use serde::{Serialize, Deserialize};
+/// # use rust_decimal::Decimal;
+/// # use std::str::FromStr;
+///
+/// #[derive(Serialize, Deserialize)]
+/// pub struct StringExample {
+///     #[serde(with = "rust_decimal::serde::str_option")]
+///     value: Option<Decimal>,
+/// }
+///
+/// let value = StringExample { value: Some(Decimal::from_str("123.400").unwrap()) };
+/// assert_eq!(
+///     &serde_json::to_string(&value).unwrap(),
+///     r#"{"value":"123.400"}"#
+/// );
+///
+/// let value = StringExample { value: None };
+/// assert_eq!(
+///     &serde_json::to_string(&value).unwrap(),
+///     r#"{"value":null}"#
+/// );
+/// ```
+#[cfg(feature = "serde-with-str")]
+pub mod str_option {
+    use super::*;
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<Decimal>, D::Error>
+    where
+        D: serde::de::Deserializer<'de>,
+    {
+        deserializer.deserialize_option(OptionDecimalVisitor)
+    }
+
+    pub fn serialize<S>(value: &Option<Decimal>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match *value {
+            Some(ref decimal) => {
+                let decimal = crate::str::to_str_internal(decimal, true, None);
+                serializer.serialize_str(decimal.0.as_ref())
+            }
+            None => serializer.serialize_none(),
+        }
     }
 }
 
@@ -215,6 +367,30 @@ impl<'de> serde::de::Visitor<'de> for DecimalVisitor {
         }
         let v: DecimalFromString = map.next_value()?;
         Ok(v.value)
+    }
+}
+
+struct OptionDecimalVisitor;
+
+impl<'de> serde::de::Visitor<'de> for OptionDecimalVisitor {
+    type Value = Option<Decimal>;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("a Decimal type representing a fixed-point number")
+    }
+
+    fn visit_none<E>(self) -> Result<Option<Decimal>, E>
+    where
+        E: serde::de::Error,
+    {
+        Ok(None)
+    }
+
+    fn visit_some<D>(self, d: D) -> Result<Option<Decimal>, D::Error>
+    where
+        D: serde::de::Deserializer<'de>,
+    {
+        d.deserialize_any(DecimalVisitor).map(Some)
     }
 }
 
@@ -580,5 +756,74 @@ mod test {
             let decoded: BincodeExample = deserialize(&encoded[..]).unwrap();
             assert_eq!(expected, decoded.value);
         }
+    }
+
+    #[test]
+    #[cfg(feature = "serde-with-str")]
+    fn with_str_optional() {
+        #[derive(Serialize, Deserialize)]
+        pub struct StringExample {
+            #[serde(with = "crate::serde::str_option")]
+            value: Option<Decimal>,
+        }
+
+        let original = StringExample {
+            value: Some(Decimal::from_str("123.400").unwrap()),
+        };
+        assert_eq!(&serde_json::to_string(&original).unwrap(), r#"{"value":"123.400"}"#);
+        let deserialized: StringExample = serde_json::from_str(r#"{"value":"123.400"}"#).unwrap();
+        assert_eq!(deserialized.value, original.value);
+
+        // Null tests
+        let original = StringExample { value: None };
+        assert_eq!(&serde_json::to_string(&original).unwrap(), r#"{"value":null}"#);
+        let deserialized: StringExample = serde_json::from_str(r#"{"value":null}"#).unwrap();
+        assert_eq!(deserialized.value, original.value);
+    }
+
+    #[test]
+    #[cfg(feature = "serde-with-float")]
+    fn with_float_optional() {
+        #[derive(Serialize, Deserialize)]
+        pub struct StringExample {
+            #[serde(with = "crate::serde::float_option")]
+            value: Option<Decimal>,
+        }
+
+        let original = StringExample {
+            value: Some(Decimal::from_str("123.400").unwrap()),
+        };
+        assert_eq!(&serde_json::to_string(&original).unwrap(), r#"{"value":123.4}"#);
+        let deserialized: StringExample = serde_json::from_str(r#"{"value":123.4}"#).unwrap();
+        assert_eq!(deserialized.value, original.value);
+
+        // Null tests
+        let original = StringExample { value: None };
+        assert_eq!(&serde_json::to_string(&original).unwrap(), r#"{"value":null}"#);
+        let deserialized: StringExample = serde_json::from_str(r#"{"value":null}"#).unwrap();
+        assert_eq!(deserialized.value, original.value);
+    }
+
+    #[test]
+    #[cfg(feature = "serde-with-arbitrary-precision")]
+    fn with_arbitrary_precision_optional() {
+        #[derive(Serialize, Deserialize)]
+        pub struct StringExample {
+            #[serde(with = "crate::serde::arbitrary_precision_option")]
+            value: Option<Decimal>,
+        }
+
+        let original = StringExample {
+            value: Some(Decimal::from_str("123.400").unwrap()),
+        };
+        assert_eq!(&serde_json::to_string(&original).unwrap(), r#"{"value":123.400}"#);
+        let deserialized: StringExample = serde_json::from_str(r#"{"value":123.400}"#).unwrap();
+        assert_eq!(deserialized.value, original.value);
+
+        // Null tests
+        let original = StringExample { value: None };
+        assert_eq!(&serde_json::to_string(&original).unwrap(), r#"{"value":null}"#);
+        let deserialized: StringExample = serde_json::from_str(r#"{"value":null}"#).unwrap();
+        assert_eq!(deserialized.value, original.value);
     }
 }

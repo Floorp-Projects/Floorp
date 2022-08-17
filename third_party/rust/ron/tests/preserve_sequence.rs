@@ -25,13 +25,7 @@ fn read_original(source: &str) -> String {
 }
 
 fn make_roundtrip(source: &str) -> String {
-    let config: Config = match from_str(source) {
-        Ok(x) => x,
-        Err(e) => {
-            println!("Failed to load config: {}", e);
-            std::process::exit(1);
-        }
-    };
+    let config: Config = from_str(source).unwrap();
     let pretty = PrettyConfig::new()
         .depth_limit(3)
         .separate_tuple_members(true)

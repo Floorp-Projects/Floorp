@@ -1,4 +1,8 @@
-#![allow(clippy::cast_lossless, clippy::cast_possible_wrap)]
+#![allow(
+    clippy::cast_lossless,
+    clippy::cast_possible_wrap,
+    clippy::derive_partial_eq_without_eq
+)]
 
 use indoc::indoc;
 use serde_derive::Deserialize;

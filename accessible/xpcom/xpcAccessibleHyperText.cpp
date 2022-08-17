@@ -262,11 +262,7 @@ xpcAccessibleHyperText::GetOffsetAtPoint(int32_t aX, int32_t aY,
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  if (mIntl->IsLocal()) {
-    *aOffset = IntlLocal()->OffsetAtPoint(aX, aY, aCoordType);
-  } else {
-    *aOffset = mIntl->AsRemote()->OffsetAtPoint(aX, aY, aCoordType);
-  }
+  *aOffset = Intl()->OffsetAtPoint(aX, aY, aCoordType);
   return NS_OK;
 }
 

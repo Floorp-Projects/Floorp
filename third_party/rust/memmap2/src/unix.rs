@@ -1,7 +1,8 @@
 extern crate libc;
 
-use std::mem::MaybeUninit;
-use std::os::unix::io::RawFd;
+use std::fs::File;
+use std::mem::ManuallyDrop;
+use std::os::unix::io::{FromRawFd, RawFd};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::{io, ptr};
 
@@ -248,6 +249,26 @@ impl MmapInner {
             }
         }
     }
+
+    pub fn lock(&self) -> io::Result<()> {
+        unsafe {
+            if libc::mlock(self.ptr, self.len) != 0 {
+                Err(io::Error::last_os_error())
+            } else {
+                Ok(())
+            }
+        }
+    }
+
+    pub fn unlock(&self) -> io::Result<()> {
+        unsafe {
+            if libc::munlock(self.ptr, self.len) != 0 {
+                Err(io::Error::last_os_error())
+            } else {
+                Ok(())
+            }
+        }
+    }
 }
 
 impl Drop for MmapInner {
@@ -284,19 +305,10 @@ fn page_size() -> usize {
 }
 
 pub fn file_len(file: RawFd) -> io::Result<u64> {
-    #[cfg(not(any(target_os = "linux", target_os = "emscripten", target_os = "l4re")))]
-    use libc::{fstat, stat};
-    #[cfg(any(target_os = "linux", target_os = "emscripten", target_os = "l4re"))]
-    use libc::{fstat64 as fstat, stat64 as stat};
-
+    // SAFETY: We must not close the passed-in fd by dropping the File we create,
+    // we ensure this by immediately wrapping it in a ManuallyDrop.
     unsafe {
-        let mut stat = MaybeUninit::<stat>::uninit();
-
-        let result = fstat(file, stat.as_mut_ptr());
-        if result == 0 {
-            Ok(stat.assume_init().st_size as u64)
-        } else {
-            Err(io::Error::last_os_error())
-        }
+        let file = ManuallyDrop::new(File::from_raw_fd(file));
+        Ok(file.metadata()?.len())
     }
 }

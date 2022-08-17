@@ -21,10 +21,28 @@ fn main() {
     if compiler.minor >= 44 {
         println!("cargo:rustc-cfg=path_buf_capacity");
     }
+    if compiler.minor >= 56 {
+        println!("cargo:rustc-cfg=shrink_to");
+    }
+    // Stable and beta 1.63 have a stable try_reserve_2.
+    if (compiler.minor >= 63
+        && (compiler.channel == ReleaseChannel::Stable || compiler.channel == ReleaseChannel::Beta))
+        || compiler.minor >= 64
+    {
+        println!("cargo:rustc-cfg=try_reserve_2");
+    }
 }
 
 struct Compiler {
     minor: u32,
+    channel: ReleaseChannel,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum ReleaseChannel {
+    Stable,
+    Beta,
+    Nightly,
 }
 
 fn rustc_version() -> Option<Compiler> {
@@ -36,5 +54,12 @@ fn rustc_version() -> Option<Compiler> {
         return None;
     }
     let minor = pieces.next()?.parse().ok()?;
-    Some(Compiler { minor })
+    let channel = if version.contains("nightly") {
+        ReleaseChannel::Nightly
+    } else if version.contains("beta") {
+        ReleaseChannel::Beta
+    } else {
+        ReleaseChannel::Stable
+    };
+    Some(Compiler { minor, channel })
 }

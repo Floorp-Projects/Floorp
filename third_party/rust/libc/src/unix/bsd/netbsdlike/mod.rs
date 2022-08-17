@@ -639,17 +639,6 @@ pub const TIOCM_DSR: ::c_int = 0o0400;
 pub const TIOCM_CD: ::c_int = TIOCM_CAR;
 pub const TIOCM_RI: ::c_int = TIOCM_RNG;
 
-// Flags for chflags(2)
-pub const UF_SETTABLE: ::c_ulong = 0x0000ffff;
-pub const UF_NODUMP: ::c_ulong = 0x00000001;
-pub const UF_IMMUTABLE: ::c_ulong = 0x00000002;
-pub const UF_APPEND: ::c_ulong = 0x00000004;
-pub const UF_OPAQUE: ::c_ulong = 0x00000008;
-pub const SF_SETTABLE: ::c_ulong = 0xffff0000;
-pub const SF_ARCHIVED: ::c_ulong = 0x00010000;
-pub const SF_IMMUTABLE: ::c_ulong = 0x00020000;
-pub const SF_APPEND: ::c_ulong = 0x00040000;
-
 pub const TIMER_ABSTIME: ::c_int = 1;
 
 #[link(name = "util")]

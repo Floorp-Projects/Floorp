@@ -293,20 +293,31 @@ pub fn has_been_set() -> bool {
 }
 
 /// Returned if setting the global dispatcher fails.
-#[derive(Debug)]
 pub struct SetGlobalDefaultError {
     _no_construct: (),
 }
 
+impl fmt::Debug for SetGlobalDefaultError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("SetGlobalDefaultError")
+            .field(&Self::MESSAGE)
+            .finish()
+    }
+}
+
 impl fmt::Display for SetGlobalDefaultError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.pad("a global default trace dispatcher has already been set")
+        f.pad(Self::MESSAGE)
     }
 }
 
 #[cfg(feature = "std")]
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl error::Error for SetGlobalDefaultError {}
+
+impl SetGlobalDefaultError {
+    const MESSAGE: &'static str = "a global default trace dispatcher has already been set";
+}
 
 /// Executes a closure with a reference to this thread's current [dispatcher].
 ///
@@ -511,7 +522,9 @@ impl Dispatch {
     /// [`event`]: super::subscriber::Subscriber::event
     #[inline]
     pub fn event(&self, event: &Event<'_>) {
-        self.subscriber.event(event)
+        if self.subscriber.event_enabled(event) {
+            self.subscriber.event(event);
+        }
     }
 
     /// Records that a span has been can_enter.

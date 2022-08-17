@@ -5,6 +5,8 @@
 /// The surrounding function's or closure's return value is required to be
 /// `Result<_,`[`anyhow::Error`][crate::Error]`>`.
 ///
+/// [anyhow!]: crate::anyhow
+///
 /// # Example
 ///
 /// ```
@@ -74,6 +76,8 @@ macro_rules! bail {
 /// Analogously to `assert!`, `ensure!` takes a condition and exits the function
 /// if the condition fails. Unlike `assert!`, `ensure!` returns an `Error`
 /// rather than panicking.
+///
+/// [anyhow!]: crate::anyhow
 ///
 /// # Example
 ///

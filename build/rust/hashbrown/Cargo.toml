@@ -1,0 +1,21 @@
+[package]
+name = "hashbrown"
+version = "0.11.999"
+edition = "2018"
+license = "MPL-2.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies.hashbrown]
+version = "0.12"
+default-features = false
+
+[features]
+ahash-compile-time-rng = ["hashbrown/ahash-compile-time-rng"]
+default = ["hashbrown/default"]
+inline-more = ["hashbrown/inline-more"]
+nightly = ["hashbrown/nightly"]
+raw = ["hashbrown/raw"]
+rustc-dep-of-std = ["hashbrown/rustc-dep-of-std"]
+rustc-internal-api = ["hashbrown/rustc-internal-api"]

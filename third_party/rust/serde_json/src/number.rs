@@ -752,13 +752,15 @@ impl_from_signed!(i8, i16, i32, i64, isize);
 serde_if_integer128! {
     impl From<i128> for Number {
         fn from(i: i128) -> Self {
-            Number { n: i.to_string() }
+            let n = itoa::Buffer::new().format(i).to_owned();
+            Number { n }
         }
     }
 
     impl From<u128> for Number {
         fn from(u: u128) -> Self {
-            Number { n: u.to_string() }
+            let n = itoa::Buffer::new().format(u).to_owned();
+            Number { n }
         }
     }
 }

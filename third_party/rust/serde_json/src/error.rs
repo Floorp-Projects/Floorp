@@ -284,9 +284,9 @@ impl Error {
 
 impl Display for ErrorCode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            ErrorCode::Message(ref msg) => f.write_str(msg),
-            ErrorCode::Io(ref err) => Display::fmt(err, f),
+        match self {
+            ErrorCode::Message(msg) => f.write_str(msg),
+            ErrorCode::Io(err) => Display::fmt(err, f),
             ErrorCode::EofWhileParsingList => f.write_str("EOF while parsing a list"),
             ErrorCode::EofWhileParsingObject => f.write_str("EOF while parsing an object"),
             ErrorCode::EofWhileParsingString => f.write_str("EOF while parsing a string"),
@@ -318,8 +318,8 @@ impl Display for ErrorCode {
 impl serde::de::StdError for Error {
     #[cfg(feature = "std")]
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
-        match self.err.code {
-            ErrorCode::Io(ref err) => Some(err),
+        match &self.err.code {
+            ErrorCode::Io(err) => Some(err),
             _ => None,
         }
     }
@@ -438,7 +438,7 @@ fn parse_line_col(msg: &mut String) -> Option<(usize, usize)> {
 }
 
 fn starts_with_digit(slice: &str) -> bool {
-    match slice.as_bytes().get(0) {
+    match slice.as_bytes().first() {
         None => false,
         Some(&byte) => byte >= b'0' && byte <= b'9',
     }

@@ -5,12 +5,12 @@ pub use tracing_core::subscriber::*;
 #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 pub use tracing_core::dispatcher::DefaultGuard;
 
-/// Sets this subscriber as the default for the duration of a closure.
+/// Sets this [`Subscriber`] as the default for the current thread for the
+/// duration of a closure.
 ///
 /// The default subscriber is used when creating a new [`Span`] or
-/// [`Event`], _if no span is currently executing_. If a span is currently
-/// executing, new spans or events are dispatched to the subscriber that
-/// tagged that span, instead.
+/// [`Event`].
+///
 ///
 /// [`Span`]: super::span::Span
 /// [`Subscriber`]: super::subscriber::Subscriber
@@ -43,13 +43,10 @@ where
     crate::dispatcher::set_global_default(crate::Dispatch::new(subscriber))
 }
 
-/// Sets the subscriber as the default for the duration of the lifetime of the
-/// returned [`DefaultGuard`]
+/// Sets the [`Subscriber`] as the default for the current thread for the
+/// duration of the lifetime of the returned [`DefaultGuard`].
 ///
-/// The default subscriber is used when creating a new [`Span`] or
-/// [`Event`], _if no span is currently executing_. If a span is currently
-/// executing, new spans or events are dispatched to the subscriber that
-/// tagged that span, instead.
+/// The default subscriber is used when creating a new [`Span`] or [`Event`].
 ///
 /// [`Span`]: super::span::Span
 /// [`Subscriber`]: super::subscriber::Subscriber

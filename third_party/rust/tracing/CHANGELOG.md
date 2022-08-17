@@ -1,3 +1,33 @@
+# 0.1.36 (July 29, 2022)
+
+This release adds support for owned values and fat pointers as arguments to the
+`Span::record` method, as well as updating the minimum `tracing-core` version
+and several documentation improvements.
+
+### Fixed
+
+- Incorrect docs in `dispatcher::set_default` ([#2220])
+- Compilation with `-Z minimal-versions` ([#2246])
+
+### Added
+
+- Support for owned values and fat pointers in `Span::record` ([#2212])
+- Documentation improvements ([#2208], [#2163])
+
+### Changed
+
+- `tracing-core`: updated to [0.1.29][core-0.1.29]
+
+Thanks to @fredr, @cgbur, @jyn514, @matklad, and @CAD97 for contributing to this
+release!
+
+[core-0.1.29]: https://github.com/tokio-rs/tracing/releases/tag/tracing-core-0.1.29
+[#2220]: https://github.com/tokio-rs/tracing/pull/2220
+[#2246]: https://github.com/tokio-rs/tracing/pull/2246
+[#2212]: https://github.com/tokio-rs/tracing/pull/2212
+[#2208]: https://github.com/tokio-rs/tracing/pull/2208
+[#2163]: https://github.com/tokio-rs/tracing/pull/2163
+
 # 0.1.35 (June 8, 2022)
 
 This release reduces the overhead of callsite registration by using new

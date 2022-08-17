@@ -7,15 +7,15 @@ should get familiar with.
 Code Generation and IPC
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-* `IPC`_ and `IPDL`_
-* `IDL`_
+* `IPC`_ (Inter-Process Communication) and `IPDL`_ (Inter-Thread and Inter-Process Message Passing)
+* `IDL`_ (Interface Description Language)
     - Implementing an interface (C++/JS)
     - XPCONNECT (scriptable/builtin)
     - QueryInterface (QI) - do_QueryInterface/do_QueryObject
     - do_GetService, do_CreateInstance
 * `WebIDL`_
 
-.. _IPC: /toolkit/components/glean/dev/ipc.html
+.. _IPC: /ipc/index.html
 .. _IDL: /xpcom/xpidl.html
 .. _IPDL: /ipc/ipdl.html
 .. _WebIDL: /toolkit/components/extensions/webextensions/webidl_bindings.html
@@ -50,6 +50,11 @@ Preferences
 * :searchfox:`firefox.js <browser/app/profile/firefox.js>`
 * :searchfox:`StaticPrefList.yaml <modules/libpref/init/StaticPrefList.yaml>`
 
+Debugging
+~~~~~~~~~
+* `HTTP Logging`_
+
+.. _HTTP Logging: /networking/http/logging.html
 
 Testing
 ~~~~~~~
@@ -68,5 +73,8 @@ Testing
 
 See also
 ~~~~~~~~
-  - E10S (Electrolysis) -> Split ``HttpChannel`` into: ``HttpChannelChild`` & ``HttpChannelParent``
-  - Fission -> Site isolation
+  - E10S_ (Electrolysis) -> Split ``HttpChannel`` into: ``HttpChannelChild`` & ``HttpChannelParent``
+  - Fission_ -> Site isolation
+
+  .. _E10s: https://wiki.mozilla.org/Electrolysis
+  .. _Fission: https://hacks.mozilla.org/2021/05/introducing-firefox-new-site-isolation-security-architecture/

@@ -2,6 +2,8 @@ use tracing::subscriber::with_default;
 use tracing::Level;
 use tracing_attributes::instrument;
 use tracing_mock::*;
+use tracing_subscriber::filter::EnvFilter;
+use tracing_subscriber::layer::SubscriberExt;
 
 use std::convert::TryFrom;
 use std::num::TryFromIntError;
@@ -196,5 +198,36 @@ fn test_err_display_default() {
         .done()
         .run_with_handle();
     with_default(subscriber, || err().ok());
+    handle.assert_finished();
+}
+
+#[test]
+fn test_err_custom_target() {
+    let filter: EnvFilter = "my_target=error".parse().expect("filter should parse");
+    let span = span::mock().named("error_span").with_target("my_target");
+
+    let (subscriber, handle) = subscriber::mock()
+        .new_span(span.clone())
+        .enter(span.clone())
+        .event(
+            event::mock()
+                .at_level(Level::ERROR)
+                .with_target("my_target"),
+        )
+        .exit(span.clone())
+        .drop_span(span)
+        .done()
+        .run_with_handle();
+
+    let subscriber = subscriber.with(filter);
+
+    with_default(subscriber, || {
+        let error_span = tracing::error_span!(target: "my_target", "error_span");
+
+        {
+            let _enter = error_span.enter();
+            tracing::error!(target: "my_target", "This should display")
+        }
+    });
     handle.assert_finished();
 }

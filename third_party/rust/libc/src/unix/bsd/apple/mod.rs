@@ -53,6 +53,8 @@ pub type host_info64_t = *mut integer_t;
 pub type processor_flavor_t = ::c_int;
 pub type thread_flavor_t = natural_t;
 pub type thread_inspect_t = ::mach_port_t;
+pub type thread_act_t = ::mach_port_t;
+pub type thread_act_array_t = *mut ::thread_act_t;
 pub type policy_t = ::c_int;
 pub type mach_vm_address_t = u64;
 pub type mach_vm_offset_t = u64;
@@ -63,6 +65,9 @@ pub type memory_object_t = ::mach_port_t;
 pub type memory_object_offset_t = ::c_ulonglong;
 pub type vm_inherit_t = ::c_uint;
 pub type vm_prot_t = ::c_int;
+
+pub type ledger_t = ::mach_port_t;
+pub type ledger_array_t = *mut ::ledger_t;
 
 pub type iconv_t = *mut ::c_void;
 
@@ -121,6 +126,7 @@ pub type vm_statistics64_t = *mut vm_statistics64;
 pub type vm_statistics64_data_t = vm_statistics64;
 
 pub type task_t = ::mach_port_t;
+pub type task_inspect_t = ::mach_port_t;
 
 pub type sysdir_search_path_enumeration_state = ::c_uint;
 
@@ -672,6 +678,13 @@ s! {
         pub s_addr: ::in_addr_t,
     }
 
+    // net/ndrv.h
+    pub struct sockaddr_ndrv {
+        pub snd_len: ::c_uchar,
+        pub snd_family: ::c_uchar,
+        pub snd_name: [::c_uchar; 16]      // IFNAMSIZ from if.h
+    }
+
     // sys/socket.h
 
     pub struct sa_endpoints_t {
@@ -1038,7 +1051,8 @@ s_no_extra_traits! {
         pub f_fstypename: [::c_char; 16],
         pub f_mntonname: [::c_char; 1024],
         pub f_mntfromname: [::c_char; 1024],
-        pub f_reserved: [u32; 8],
+        pub f_flags_ext: u32,
+        pub f_reserved: [u32; 7],
     }
 
     pub struct dirent {
@@ -3466,6 +3480,7 @@ pub const pseudo_AF_RTIP: ::c_int = 22;
 pub const AF_IPX: ::c_int = 23;
 pub const AF_SIP: ::c_int = 24;
 pub const pseudo_AF_PIP: ::c_int = 25;
+pub const AF_NDRV: ::c_int = 27;
 pub const AF_ISDN: ::c_int = 28;
 pub const AF_E164: ::c_int = AF_ISDN;
 pub const pseudo_AF_KEY: ::c_int = 29;
@@ -3508,6 +3523,7 @@ pub const PF_SIP: ::c_int = AF_SIP;
 pub const PF_IPX: ::c_int = AF_IPX;
 pub const PF_RTIP: ::c_int = pseudo_AF_RTIP;
 pub const PF_PIP: ::c_int = pseudo_AF_PIP;
+pub const PF_NDRV: ::c_int = AF_NDRV;
 pub const PF_ISDN: ::c_int = AF_ISDN;
 pub const PF_KEY: ::c_int = pseudo_AF_KEY;
 pub const PF_INET6: ::c_int = AF_INET6;
@@ -3552,6 +3568,7 @@ pub const IP_ADD_SOURCE_MEMBERSHIP: ::c_int = 70;
 pub const IP_DROP_SOURCE_MEMBERSHIP: ::c_int = 71;
 pub const IP_BLOCK_SOURCE: ::c_int = 72;
 pub const IP_UNBLOCK_SOURCE: ::c_int = 73;
+pub const IPV6_BOUND_IF: ::c_int = 125;
 
 pub const TCP_NOPUSH: ::c_int = 4;
 pub const TCP_NOOPT: ::c_int = 8;
@@ -4672,6 +4689,16 @@ cfg_if! {
             const __DARWIN_ALIGNBYTES32: usize = ::mem::size_of::<u32>() - 1;
             p + __DARWIN_ALIGNBYTES32 & !__DARWIN_ALIGNBYTES32
         }
+    } else {
+        fn __DARWIN_ALIGN32(p: usize) -> usize {
+            let __DARWIN_ALIGNBYTES32: usize = ::mem::size_of::<u32>() - 1;
+            p + __DARWIN_ALIGNBYTES32 & !__DARWIN_ALIGNBYTES32
+        }
+    }
+}
+
+cfg_if! {
+    if #[cfg(libc_const_size_of)] {
         pub const THREAD_EXTENDED_POLICY_COUNT: mach_msg_type_number_t =
             (::mem::size_of::<thread_extended_policy_data_t>() / ::mem::size_of::<integer_t>())
             as mach_msg_type_number_t;
@@ -4712,10 +4739,6 @@ cfg_if! {
             (::mem::size_of::<vm_statistics64_data_t>() / ::mem::size_of::<integer_t>())
             as mach_msg_type_number_t;
     } else {
-        fn __DARWIN_ALIGN32(p: usize) -> usize {
-            let __DARWIN_ALIGNBYTES32: usize = ::mem::size_of::<u32>() - 1;
-            p + __DARWIN_ALIGNBYTES32 & !__DARWIN_ALIGNBYTES32
-        }
         pub const THREAD_EXTENDED_POLICY_COUNT: mach_msg_type_number_t = 1;
         pub const THREAD_TIME_CONSTRAINT_POLICY_COUNT: mach_msg_type_number_t = 4;
         pub const THREAD_PRECEDENCE_POLICY_COUNT: mach_msg_type_number_t = 1;
@@ -5004,6 +5027,8 @@ extern "C" {
         thread_info_out: thread_info_t,
         thread_info_outCnt: *mut mach_msg_type_number_t,
     ) -> kern_return_t;
+    #[cfg_attr(doc, doc(alias = "__errno_location"))]
+    #[cfg_attr(doc, doc(alias = "errno"))]
     pub fn __error() -> *mut ::c_int;
     pub fn backtrace(buf: *mut *mut ::c_void, sz: ::c_int) -> ::c_int;
     pub fn backtrace_symbols(addrs: *const *mut ::c_void, sz: ::c_int) -> *mut *mut ::c_char;
@@ -5480,6 +5505,19 @@ extern "C" {
         task_info_out: task_info_t,
         task_info_count: *mut mach_msg_type_number_t,
     ) -> ::kern_return_t;
+    pub fn task_create(
+        target_task: ::task_t,
+        ledgers: ::ledger_array_t,
+        ledgersCnt: ::mach_msg_type_number_t,
+        inherit_memory: ::boolean_t,
+        child_task: *mut ::task_t,
+    ) -> ::kern_return_t;
+    pub fn task_terminate(target_task: ::task_t) -> ::kern_return_t;
+    pub fn task_threads(
+        target_task: ::task_inspect_t,
+        act_list: *mut ::thread_act_array_t,
+        act_listCnt: *mut ::mach_msg_type_number_t,
+    ) -> ::kern_return_t;
     pub fn host_statistics(
         host_priv: host_t,
         flavor: host_flavor_t,
@@ -5508,12 +5546,23 @@ cfg_if! {
     if #[cfg(target_os = "macos")] {
         extern "C" {
             pub fn clock_settime(clock_id: ::clockid_t, tp: *const ::timespec) -> ::c_int;
+        }
+    }
+}
+cfg_if! {
+    if #[cfg(any(target_os = "macos", target_os = "ios"))] {
+        extern "C" {
             pub fn memmem(
                 haystack: *const ::c_void,
                 haystacklen: ::size_t,
                 needle: *const ::c_void,
                 needlelen: ::size_t,
             ) -> *mut ::c_void;
+            pub fn task_set_info(target_task: ::task_t,
+                                 flavor: ::task_flavor_t,
+                                 task_info_in: ::task_info_t,
+                                 task_info_inCnt: ::mach_msg_type_number_t
+            ) -> ::kern_return_t;
         }
     }
 }

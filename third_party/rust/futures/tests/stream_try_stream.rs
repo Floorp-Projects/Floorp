@@ -1,5 +1,3 @@
-#![cfg(not(miri))] // https://github.com/rust-lang/miri/issues/1038
-
 use futures::{
     stream::{self, StreamExt, TryStreamExt},
     task::Poll,

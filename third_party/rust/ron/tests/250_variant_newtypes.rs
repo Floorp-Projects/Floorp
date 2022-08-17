@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use ron::{de::from_str, error::ErrorCode};
 use serde::Deserialize;
 
@@ -13,6 +15,9 @@ enum TestEnum {
     TupleNewtypeTupleStruct(TupleStruct),
     TupleNewtypeStruct(Struct),
     TupleNewtypeEnum(Enum),
+    TupleNewtypeOption(Option<Struct>),
+    TupleNewtypeSeq(Vec<Struct>),
+    TupleNewtypeMap(HashMap<u32, Struct>),
 }
 
 #[derive(Debug, Deserialize, Eq, PartialEq)]
@@ -34,6 +39,8 @@ struct Struct {
 enum Enum {
     A,
     B(Struct),
+    C(u32, bool),
+    D { a: u32, b: bool },
 }
 
 #[test]
@@ -180,5 +187,96 @@ fn test_deserialise_tuple_newtypes() {
         )
         .unwrap(),
         TestEnum::TupleNewtypeEnum(Enum::B(Struct { a: 4, b: false })),
+    );
+    assert_eq!(
+        from_str::<TestEnum>(r#"#![enable(unwrap_variant_newtypes)] TupleNewtypeEnum(C 4, false)"#)
+            .unwrap_err()
+            .code,
+        ErrorCode::ExpectedArray,
+    );
+    assert_eq!(
+        from_str::<TestEnum>(
+            r#"#![enable(unwrap_variant_newtypes)] TupleNewtypeEnum(C(4, false))"#
+        )
+        .unwrap(),
+        TestEnum::TupleNewtypeEnum(Enum::C(4, false)),
+    );
+    assert_eq!(
+        from_str::<TestEnum>(
+            r#"#![enable(unwrap_variant_newtypes)] TupleNewtypeEnum(D a: 4, b: false)"#
+        )
+        .unwrap_err()
+        .code,
+        ErrorCode::ExpectedStruct,
+    );
+    assert_eq!(
+        from_str::<TestEnum>(
+            r#"#![enable(unwrap_variant_newtypes)] TupleNewtypeEnum(D(a: 4, b: false))"#
+        )
+        .unwrap(),
+        TestEnum::TupleNewtypeEnum(Enum::D { a: 4, b: false }),
+    );
+
+    assert_eq!(
+        from_str::<TestEnum>(r#"#![enable(unwrap_variant_newtypes)] TupleNewtypeOption(None)"#)
+            .unwrap(),
+        TestEnum::TupleNewtypeOption(None),
+    );
+    assert_eq!(
+        from_str::<TestEnum>(
+            r#"#![enable(unwrap_variant_newtypes)] TupleNewtypeOption(Some(a: 4, b: false))"#
+        )
+        .unwrap(),
+        TestEnum::TupleNewtypeOption(Some(Struct { a: 4, b: false })),
+    );
+    assert_eq!(
+        from_str::<TestEnum>(
+            r#"#![enable(unwrap_variant_newtypes)] TupleNewtypeOption(a: 4, b: false)"#
+        )
+        .unwrap_err()
+        .code,
+        ErrorCode::ExpectedOption,
+    );
+    assert_eq!(
+        from_str::<TestEnum>(r#"#![enable(unwrap_variant_newtypes, implicit_some)] TupleNewtypeOption(a: 4, b: false)"#).unwrap(),
+        TestEnum::TupleNewtypeOption(Some(Struct { a: 4, b: false })),
+    );
+
+    assert_eq!(
+        from_str::<TestEnum>(r#"#![enable(unwrap_variant_newtypes)] TupleNewtypeSeq([])"#).unwrap(),
+        TestEnum::TupleNewtypeSeq(vec![]),
+    );
+    assert_eq!(
+        from_str::<TestEnum>(
+            r#"#![enable(unwrap_variant_newtypes)] TupleNewtypeSeq([(a: 4, b: false)])"#
+        )
+        .unwrap(),
+        TestEnum::TupleNewtypeSeq(vec![Struct { a: 4, b: false }]),
+    );
+    assert_eq!(
+        from_str::<TestEnum>(
+            r#"#![enable(unwrap_variant_newtypes)] TupleNewtypeSeq([Struct(a: 4, b: false)])"#
+        )
+        .unwrap(),
+        TestEnum::TupleNewtypeSeq(vec![Struct { a: 4, b: false }]),
+    );
+
+    assert_eq!(
+        from_str::<TestEnum>(r#"#![enable(unwrap_variant_newtypes)] TupleNewtypeMap({})"#).unwrap(),
+        TestEnum::TupleNewtypeMap(vec![].into_iter().collect()),
+    );
+    assert_eq!(
+        from_str::<TestEnum>(
+            r#"#![enable(unwrap_variant_newtypes)] TupleNewtypeMap({2: (a: 4, b: false)})"#
+        )
+        .unwrap(),
+        TestEnum::TupleNewtypeMap(vec![(2, Struct { a: 4, b: false })].into_iter().collect()),
+    );
+    assert_eq!(
+        from_str::<TestEnum>(
+            r#"#![enable(unwrap_variant_newtypes)] TupleNewtypeMap({8: Struct(a: 4, b: false)})"#
+        )
+        .unwrap(),
+        TestEnum::TupleNewtypeMap(vec![(8, Struct { a: 4, b: false })].into_iter().collect()),
     );
 }

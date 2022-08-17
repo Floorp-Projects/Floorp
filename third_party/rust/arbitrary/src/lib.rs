@@ -140,12 +140,15 @@ pub trait Arbitrary<'a>: Sized {
     /// Arbitrary>::arbitrary` to construct an arbitrary instance of `MyType`
     /// from that unstuctured data.
     ///
-    /// Implementation may return an error if there is not enough data to
-    /// construct a full instance of `Self`. This is generally OK: it is better
-    /// to exit early and get the fuzzer to provide more input data, than it is
-    /// to generate default values in place of the missing data, which would
-    /// bias the distribution of generated values, and ultimately make fuzzing
-    /// less efficient.
+    /// Implementations may return an error if there is not enough data to
+    /// construct a full instance of `Self`, or they may fill out the rest of
+    /// `Self` with dummy values. Using dummy values when the underlying data is
+    /// exhausted can help avoid accidentally "defeating" some of the fuzzer's
+    /// mutations to the underlying byte stream that might otherwise lead to
+    /// interesting runtime behavior or new code coverage if only we had just a
+    /// few more bytes. However, it also requires that implementations for
+    /// recursive types (e.g. `struct Foo(Option<Box<Foo>>)`) avoid infinite
+    /// recursion when the underlying data is exhausted.
     ///
     /// ```
     /// # #[cfg(feature = "derive")] fn foo() {
@@ -174,11 +177,13 @@ pub trait Arbitrary<'a>: Sized {
     /// See also the documentation for [`Unstructured`][crate::Unstructured].
     fn arbitrary(u: &mut Unstructured<'a>) -> Result<Self>;
 
-    /// Generate an arbitrary value of `Self` from the entirety of the given unstructured data.
+    /// Generate an arbitrary value of `Self` from the entirety of the given
+    /// unstructured data.
     ///
-    /// This is similar to Arbitrary::arbitrary, however it assumes that it is the
-    /// last consumer of the given data, and is thus able to consume it all if it needs.
-    /// See also the documentation for [`Unstructured`][crate::Unstructured].
+    /// This is similar to Arbitrary::arbitrary, however it assumes that it is
+    /// the last consumer of the given data, and is thus able to consume it all
+    /// if it needs.  See also the documentation for
+    /// [`Unstructured`][crate::Unstructured].
     fn arbitrary_take_rest(mut u: Unstructured<'a>) -> Result<Self> {
         Self::arbitrary(&mut u)
     }
@@ -208,9 +213,10 @@ pub trait Arbitrary<'a>: Sized {
     /// of lengths bounded by these parameters. This applies to both
     /// [`Arbitrary::arbitrary`] and [`Arbitrary::arbitrary_take_rest`].
     ///
-    /// This is trivially true for `(0, None)`. To restrict this further, it must be proven
-    /// that all inputs that are now excluded produced redundant outputs which are still
-    /// possible to produce using the reduced input space.
+    /// This is trivially true for `(0, None)`. To restrict this further, it
+    /// must be proven that all inputs that are now excluded produced redundant
+    /// outputs which are still possible to produce using the reduced input
+    /// space.
     ///
     /// ## The `depth` Parameter
     ///

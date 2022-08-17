@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.45"
 name = "futures-macro"
-version = "0.3.21"
+version = "0.3.23"
 description = """
 The futures-rs procedural macro implementations.
 """

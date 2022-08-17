@@ -100,16 +100,17 @@ where
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         let (mut a, mut b) = self.inner.take().expect("cannot poll Select twice");
-        match a.poll_unpin(cx) {
-            Poll::Ready(x) => Poll::Ready(Either::Left((x, b))),
-            Poll::Pending => match b.poll_unpin(cx) {
-                Poll::Ready(x) => Poll::Ready(Either::Right((x, a))),
-                Poll::Pending => {
-                    self.inner = Some((a, b));
-                    Poll::Pending
-                }
-            },
+
+        if let Poll::Ready(val) = a.poll_unpin(cx) {
+            return Poll::Ready(Either::Left((val, b)));
         }
+
+        if let Poll::Ready(val) = b.poll_unpin(cx) {
+            return Poll::Ready(Either::Right((val, a)));
+        }
+
+        self.inner = Some((a, b));
+        Poll::Pending
     }
 }
 

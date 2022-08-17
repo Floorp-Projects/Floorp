@@ -129,7 +129,7 @@ aboutprivatebrowsing:
       - "dmosedale@mozilla.com"
       - "barret@mozilla.com"
       - "omc@mozilla.com"
-    expiry_version: "106"
+    expiry_version: "112"
     products:
       - "firefox"
 

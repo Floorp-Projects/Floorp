@@ -67,6 +67,7 @@ function _addCalloutLinkElements() {
     "branding/brand.ftl",
     "browser/branding/brandings.ftl",
     "browser/newtab/asrouter.ftl",
+    "browser/featureCallout.ftl",
   ]);
 }
 
@@ -91,15 +92,22 @@ const MESSAGES = [
         content: {
           position: "callout",
           arrow_position: "top",
-          title: "Hop between devices with tab pickup",
-          subtitle:
-            "Quickly grab open tabs from your phone and open them here for maximum flow.",
+          title: {
+            string_id: "callout-firefox-view-tab-pickup-title",
+          },
+          subtitle: {
+            string_id: "callout-firefox-view-tab-pickup-subtitle",
+          },
           logo: {
-            imageURL:
-              "chrome://activity-stream/content/data/content/assets/heart.webp",
+            imageURL: "chrome://browser/content/callout-tab-pickup.svg",
+            darkModeImageURL:
+              "chrome://browser/content/callout-tab-pickup-dark.svg",
+            height: "128px",
           },
           primary_button: {
-            label: "Next",
+            label: {
+              string_id: "callout-primary-advance-button-label",
+            },
             action: {
               type: "SET_PREF",
               data: {
@@ -137,11 +145,16 @@ const MESSAGES = [
         content: {
           position: "callout",
           arrow_position: "bottom",
-          title: "Get back your closed tabs in a snap",
-          subtitle:
-            "All your closed tabs will magically show up here. Never worry about accidentally closing a site again.",
+          title: {
+            string_id: "callout-firefox-view-recently-closed-title",
+          },
+          subtitle: {
+            string_id: "callout-firefox-view-recently-closed-subtitle",
+          },
           primary_button: {
-            label: "Next",
+            label: {
+              string_id: "callout-primary-advance-button-label",
+            },
             action: {
               type: "SET_PREF",
               data: {
@@ -179,15 +192,22 @@ const MESSAGES = [
         content: {
           position: "callout",
           arrow_position: "end",
-          title: "Add a splash of color",
-          subtitle:
-            "Paint your browser with colorways, only in Firefox. Choose the shade that speaks to you.",
+          title: {
+            string_id: "callout-firefox-view-colorways-title",
+          },
+          subtitle: {
+            string_id: "callout-firefox-view-colorways-subtitle",
+          },
           logo: {
-            imageURL:
-              "chrome://activity-stream/content/data/content/assets/heart.webp",
+            imageURL: "chrome://browser/content/callout-colorways.svg",
+            darkModeImageURL:
+              "chrome://browser/content/callout-colorways-dark.svg",
+            height: "128px",
           },
           primary_button: {
-            label: "Finish",
+            label: {
+              string_id: "callout-primary-complete-button-label",
+            },
             action: {
               type: "SET_PREF",
               data: {
@@ -227,7 +247,10 @@ function _createContainer() {
   let container = document.createElement("div");
   container.classList.add("onboardingContainer", "featureCallout", "hidden");
   container.id = CONTAINER_ID;
-  document.body.appendChild(container);
+  let parent = document.querySelector(CURRENT_SCREEN?.parent_selector);
+  container.setAttribute("aria-describedby", `#${CONTAINER_ID} .welcome-text`);
+  container.tabIndex = 0;
+  parent.insertAdjacentElement("afterend", container);
   return container;
 }
 
@@ -236,7 +259,7 @@ function _createContainer() {
  */
 function _positionCallout() {
   const positions = ["top", "bottom", "left", "right"];
-  const container = document.getElementById("root");
+  const container = document.getElementById(CONTAINER_ID);
   const parentEl = document.querySelector(CURRENT_SCREEN?.parent_selector);
   const arrowPosition = CURRENT_SCREEN?.content?.arrow_position || "top";
   const margin = 15;
@@ -461,9 +484,13 @@ async function showFeatureCallout(messageId) {
 
   RENDER_OBSERVER = new MutationObserver(function() {
     // Check if the Feature Callout screen has loaded for the first time
-    if (!READY && document.querySelector("#root .screen")) {
+    if (!READY && document.querySelector(`#${CONTAINER_ID} .screen`)) {
       READY = true;
       _positionCallout();
+      let container = document.getElementById(CONTAINER_ID);
+      container.focus();
+      // Alert screen readers to the presence of the callout
+      container.setAttribute("role", "alert");
     }
   });
 

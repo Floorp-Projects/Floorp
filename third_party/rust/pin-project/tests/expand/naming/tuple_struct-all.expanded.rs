@@ -1,18 +1,22 @@
 use pin_project::pin_project;
-# [pin (__private (project = Proj , project_ref = ProjRef , project_replace = ProjOwn))]
+#[pin(__private(project = Proj, project_ref = ProjRef, project_replace = ProjOwn))]
 struct TupleStruct<T, U>(#[pin] T, U);
 #[allow(box_pointers)]
 #[allow(deprecated)]
 #[allow(explicit_outlives_requirements)]
 #[allow(single_use_lifetimes)]
 #[allow(unreachable_pub)]
+#[allow(unused_tuple_struct_fields)]
 #[allow(clippy::unknown_clippy_lints)]
 #[allow(clippy::pattern_type_mismatch)]
 #[allow(clippy::redundant_pub_crate)]
 #[allow(clippy::type_repetition_in_bounds)]
 #[allow(dead_code)]
 #[allow(clippy::mut_mut)]
-struct Proj<'pin, T, U>(::pin_project::__private::Pin<&'pin mut (T)>, &'pin mut (U))
+struct Proj<'pin, T, U>(
+    ::pin_project::__private::Pin<&'pin mut (T)>,
+    &'pin mut (U),
+)
 where
     TupleStruct<T, U>: 'pin;
 #[allow(box_pointers)]
@@ -20,13 +24,17 @@ where
 #[allow(explicit_outlives_requirements)]
 #[allow(single_use_lifetimes)]
 #[allow(unreachable_pub)]
+#[allow(unused_tuple_struct_fields)]
 #[allow(clippy::unknown_clippy_lints)]
 #[allow(clippy::pattern_type_mismatch)]
 #[allow(clippy::redundant_pub_crate)]
 #[allow(clippy::type_repetition_in_bounds)]
 #[allow(dead_code)]
 #[allow(clippy::ref_option_ref)]
-struct ProjRef<'pin, T, U>(::pin_project::__private::Pin<&'pin (T)>, &'pin (U))
+struct ProjRef<'pin, T, U>(
+    ::pin_project::__private::Pin<&'pin (T)>,
+    &'pin (U),
+)
 where
     TupleStruct<T, U>: 'pin;
 #[allow(box_pointers)]
@@ -34,6 +42,7 @@ where
 #[allow(explicit_outlives_requirements)]
 #[allow(single_use_lifetimes)]
 #[allow(unreachable_pub)]
+#[allow(unused_tuple_struct_fields)]
 #[allow(clippy::unknown_clippy_lints)]
 #[allow(clippy::pattern_type_mismatch)]
 #[allow(clippy::redundant_pub_crate)]
@@ -45,6 +54,7 @@ struct ProjOwn<T, U>(::pin_project::__private::PhantomData<T>, U);
 #[allow(explicit_outlives_requirements)]
 #[allow(single_use_lifetimes)]
 #[allow(unreachable_pub)]
+#[allow(unused_tuple_struct_fields)]
 #[allow(clippy::unknown_clippy_lints)]
 #[allow(clippy::pattern_type_mismatch)]
 #[allow(clippy::redundant_pub_crate)]
@@ -57,12 +67,16 @@ const _: () = {
     #[allow(unused_extern_crates)]
     extern crate pin_project as _pin_project;
     impl<T, U> TupleStruct<T, U> {
-        fn project<'pin>(self: _pin_project::__private::Pin<&'pin mut Self>) -> Proj<'pin, T, U> {
+        #[allow(dead_code)]
+        fn project<'pin>(
+            self: _pin_project::__private::Pin<&'pin mut Self>,
+        ) -> Proj<'pin, T, U> {
             unsafe {
                 let Self(_0, _1) = self.get_unchecked_mut();
                 Proj(_pin_project::__private::Pin::new_unchecked(_0), _1)
             }
         }
+        #[allow(dead_code)]
         #[allow(clippy::missing_const_for_fn)]
         fn project_ref<'pin>(
             self: _pin_project::__private::Pin<&'pin Self>,
@@ -72,21 +86,26 @@ const _: () = {
                 ProjRef(_pin_project::__private::Pin::new_unchecked(_0), _1)
             }
         }
+        #[allow(dead_code)]
         fn project_replace(
             self: _pin_project::__private::Pin<&mut Self>,
             __replacement: Self,
         ) -> ProjOwn<T, U> {
             unsafe {
                 let __self_ptr: *mut Self = self.get_unchecked_mut();
-                let __guard =
-                    _pin_project::__private::UnsafeOverwriteGuard::new(__self_ptr, __replacement);
+                let __guard = _pin_project::__private::UnsafeOverwriteGuard::new(
+                    __self_ptr,
+                    __replacement,
+                );
                 let Self(_0, _1) = &mut *__self_ptr;
                 let __result = ProjOwn(
                     _pin_project::__private::PhantomData,
                     _pin_project::__private::ptr::read(_1),
                 );
                 {
-                    let __guard = _pin_project::__private::UnsafeDropInPlaceGuard::new(_0);
+                    let __guard = _pin_project::__private::UnsafeDropInPlaceGuard::new(
+                        _0,
+                    );
                 }
                 __result
             }
@@ -108,15 +127,15 @@ const _: () = {
         >,
         __field0: T,
     }
-    impl<'pin, T, U> _pin_project::__private::Unpin for TupleStruct<T, U> where
-        __TupleStruct<'pin, T, U>: _pin_project::__private::Unpin
-    {
-    }
+    impl<'pin, T, U> _pin_project::__private::Unpin for TupleStruct<T, U>
+    where
+        __TupleStruct<'pin, T, U>: _pin_project::__private::Unpin,
+    {}
     #[doc(hidden)]
-    unsafe impl<'pin, T, U> _pin_project::UnsafeUnpin for TupleStruct<T, U> where
-        __TupleStruct<'pin, T, U>: _pin_project::__private::Unpin
-    {
-    }
+    unsafe impl<'pin, T, U> _pin_project::UnsafeUnpin for TupleStruct<T, U>
+    where
+        __TupleStruct<'pin, T, U>: _pin_project::__private::Unpin,
+    {}
     trait TupleStructMustNotImplDrop {}
     #[allow(clippy::drop_bounds, drop_bounds)]
     impl<T: _pin_project::__private::Drop> TupleStructMustNotImplDrop for T {}

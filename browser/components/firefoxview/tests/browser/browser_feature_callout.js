@@ -1,7 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
-const calloutSelector = "#root.featureCallout";
-const primaryButtonSelector = "#root .primary";
+const calloutId = "root";
+const calloutSelector = `#${calloutId}.featureCallout`;
+const primaryButtonSelector = `#${calloutId} .primary`;
 const featureTourPref = "browser.firefox-view.feature-tour";
 const defaultPrefValue = JSON.stringify({
   message: "FIREFOX_VIEW_FEATURE_TOUR",
@@ -16,11 +17,9 @@ const waitForCalloutScreen = async (doc, screenId) => {
 };
 
 const waitForCalloutRemoved = async doc => {
-  await BrowserTestUtils.waitForMutationCondition(
-    doc.body,
-    { childList: true },
-    () => !doc.body.querySelector(calloutSelector)
-  );
+  await BrowserTestUtils.waitForCondition(() => {
+    return !doc.body.querySelector(calloutSelector);
+  });
 };
 
 const clickPrimaryButton = async doc => {
@@ -335,13 +334,18 @@ add_task(async function feature_callout_only_highlights_existing_elements() {
       // Advance to second screen
       await clickPrimaryButton(document);
       await waitForCalloutScreen(document, ".FEATURE_CALLOUT_2");
-      // This test should be updated when landing localized strings
+
       ok(
-        document.querySelector(primaryButtonSelector).innerText === "Finish",
+        document
+          .querySelector(primaryButtonSelector)
+          .getAttribute("data-l10n-id") ===
+          "callout-primary-complete-button-label",
         "When parent element for third screen isn't present, second screen has CTA to finish tour"
       );
+
       // Click to finish tour
       await clickPrimaryButton(document);
+
       ok(
         !document.querySelector(`${calloutSelector}:not(.hidden)`),
         "Feature Callout screen does not render if its parent element does not exist"
@@ -401,6 +405,55 @@ add_task(async function feature_callout_arrow_is_not_flipped_on_ltr() {
       ok(
         arrowParent,
         "Feature Callout arrow parent has arrow-end class when arrow direction is set to 'end'"
+      );
+    }
+  );
+});
+
+// Tour is accessible using a screen reader and keyboard navigation
+add_task(async function feature_callout_is_accessible() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.firefox-view.feature-tour", defaultPrefValue],
+      ["intl.l10n.pseudo", ""],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+      await waitForCalloutScreen(document, ".FEATURE_CALLOUT_1");
+
+      ok(
+        (document.activeElement.id = calloutId),
+        "Feature Callout is focused on page load"
+      );
+      ok(
+        document.querySelector(`${calloutSelector}[role="alert"]`),
+        "The callout container has role of alert"
+      );
+      ok(
+        document.querySelector(
+          `${calloutSelector}[aria-describedby="#${calloutId} .welcome-text"]`
+        ),
+        "The callout container has an aria-describedby value equal to the screen welcome text"
+      );
+
+      // Advance to second screen
+      clickPrimaryButton(document);
+      await waitForCalloutScreen(document, ".FEATURE_CALLOUT_2");
+
+      ok(
+        (document.activeElement.id = calloutId),
+        "Feature Callout is focused after advancing screens"
+      );
+      ok(
+        document.querySelector(`${calloutSelector}[role="alert"]`),
+        "The callout container has role of alert after advancing screens"
       );
     }
   );

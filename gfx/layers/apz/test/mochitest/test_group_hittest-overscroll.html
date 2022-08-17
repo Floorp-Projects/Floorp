@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Various hit-testing tests relevant with overscroll that spawn in new windows</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+var prefs = [
+  // Turn off displayport expiry so that we don't miss failures where the
+  // displayport is set and then expires before we get around to doing the
+  // hit-test inside the activated scrollframe.
+  ["apz.displayport_expiry_ms", 0],
+  // Always layerize the scrollbar track, so as to get consistent results
+  // across platforms. Eventually we should probably get rid of this and make
+  // the tests more robust in terms of testing all the different cross-platform
+  // variations.
+  ["layout.scrollbars.always-layerize-track", true],
+  // We need this pref to allow the synthetic mouse events to propagate to APZ,
+  // and to allow the MozMouseHittest event in particular to be dispatched to
+  // APZ as a MouseInput so the hit result is recorded.
+  ["test.events.async.enabled", true],
+  // Turns on APZTestData logging which we use to obtain the hit test results.
+  ["apz.test.logging_enabled", true],
+  // Prefs to ensure we can produce a precise amount of scrolling via
+  // synthesized touch-drag gestures.
+  ["apz.touch_start_tolerance", "0.0"],
+  ["apz.fling_min_velocity_threshold", "10000"],
+  // Overscroll relevant prefs.
+  ["apz.overscroll.enabled", true],
+  ["apz.overscroll.test_async_scroll_offset.enabled", true],
+  ["ui.prefersReducedMotion", 0],
+];
+
+var subtests = [
+  {"file": "helper_hittest_overscroll.html", "prefs": prefs},
+  {"file": "helper_hittest_overscroll_subframe.html", "prefs": prefs},
+  {"file": "helper_hittest_overscroll_contextmenu.html", "prefs": prefs},
+];
+
+if (isApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function() {
+    runSubtestsSeriallyInFreshWindows(subtests)
+    .then(SimpleTest.finish, SimpleTest.finishWithFailure);
+  };
+}
+
+  </script>
+</head>
+<body>
+</body>
+</html>

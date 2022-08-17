@@ -56,6 +56,10 @@ pub unsafe trait BufMut {
     /// Implementations of `remaining_mut` should ensure that the return value
     /// does not change unless a call is made to `advance_mut` or any other
     /// function that is documented to change the `BufMut`'s current position.
+    ///
+    /// # Note
+    ///
+    /// `remaining_mut` may return value smaller than actual available space.
     fn remaining_mut(&self) -> usize;
 
     /// Advance the internal cursor of the BufMut

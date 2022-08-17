@@ -28,6 +28,32 @@ Released YYYY-MM-DD.
 
 --------------------------------------------------------------------------------
 
+## 1.1.3
+
+Released 2022-06-23.
+
+### Fixed
+
+* Fixed some potential (but highly unlikely) name-clashes inside
+  `derive(Arbitrary)`'s generated
+  code. [#111](https://github.com/rust-fuzz/arbitrary/pull/111)
+* Fixed an edge case where `derive(Arbitrary)` for recursive types that detected
+  an overflow would not reset the overflow
+  detection. [#111](https://github.com/rust-fuzz/arbitrary/pull/111)
+
+--------------------------------------------------------------------------------
+
+## 1.1.2
+
+Released 2022-06-16.
+
+### Fixed
+
+* Fixed a warning inside `derive(Arbitrary)`-generated
+  code. [#110](https://github.com/rust-fuzz/arbitrary/pull/110)
+
+--------------------------------------------------------------------------------
+
 ## 1.1.1
 
 Released 2022-06-14.

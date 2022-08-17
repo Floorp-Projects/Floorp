@@ -277,6 +277,16 @@ impl ::Clone for fpos_t {
     }
 }
 
+// Special handling for all print and scan type functions because of https://github.com/rust-lang/libc/issues/2860
+#[cfg_attr(
+    all(windows, target_env = "msvc"),
+    link(name = "legacy_stdio_definitions")
+)]
+extern "C" {
+    pub fn printf(format: *const c_char, ...) -> ::c_int;
+    pub fn fprintf(stream: *mut FILE, format: *const c_char, ...) -> ::c_int;
+}
+
 extern "C" {
     pub fn isalnum(c: c_int) -> c_int;
     pub fn isalpha(c: c_int) -> c_int;
@@ -319,8 +329,6 @@ extern "C" {
     pub fn feof(stream: *mut FILE) -> c_int;
     pub fn ferror(stream: *mut FILE) -> c_int;
     pub fn perror(s: *const c_char);
-    pub fn printf(format: *const c_char, ...) -> ::c_int;
-    pub fn fprintf(stream: *mut FILE, format: *const c_char, ...) -> ::c_int;
     pub fn atoi(s: *const c_char) -> c_int;
     pub fn strtod(s: *const c_char, endp: *mut *mut c_char) -> c_double;
     pub fn strtof(s: *const c_char, endp: *mut *mut c_char) -> c_float;

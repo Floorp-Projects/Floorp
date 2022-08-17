@@ -2,9 +2,7 @@ error[E0061]: this function takes 0 arguments but 1 argument was supplied
   --> tests/ui/pinned_drop/call-drop-inner.rs:13:9
    |
 13 |         __drop_inner(__self);
-   |         ^^^^^^^^^^^^ ------ supplied 1 argument
-   |         |
-   |         expected 0 arguments
+   |         ^^^^^^^^^^^^ ------ argument of type `Pin<&mut Struct>` unexpected
    |
 note: function defined here
   --> tests/ui/pinned_drop/call-drop-inner.rs:10:1
@@ -12,3 +10,7 @@ note: function defined here
 10 | #[pinned_drop]
    | ^^^^^^^^^^^^^^
    = note: this error originates in the attribute macro `pinned_drop` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: remove the extra argument
+   |
+13 |         __drop_inner();
+   |         ~~~~~~~~~~~~~~

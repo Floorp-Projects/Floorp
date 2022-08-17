@@ -45,25 +45,25 @@ help: consider removing the `?Sized` bound to make the type parameter `Sized`
     |
 
 error[E0277]: the size for values of type `T` cannot be known at compilation time
-   --> tests/ui/pin_project/project_replace_unsized_fn_params.rs:7:5
-    |
-5   | #[pin_project(project_replace)] //~ ERROR E0277
-    | ------------------------------- required by a bound introduced by this call
-6   | struct Struct<T: ?Sized> {
-    |               - this type parameter needs to be `std::marker::Sized`
-7   |     f: T,
-    |     ^ doesn't have a size known at compile-time
-    |
+    --> tests/ui/pin_project/project_replace_unsized_fn_params.rs:7:5
+     |
+5    | #[pin_project(project_replace)] //~ ERROR E0277
+     | ------------------------------- required by a bound introduced by this call
+6    | struct Struct<T: ?Sized> {
+     |               - this type parameter needs to be `std::marker::Sized`
+7    |     f: T,
+     |     ^ doesn't have a size known at compile-time
+     |
 note: required by a bound in `std::ptr::read`
-   --> $RUST/core/src/ptr/mod.rs
-    |
-    | pub const unsafe fn read<T>(src: *const T) -> T {
-    |                          ^ required by this bound in `std::ptr::read`
+    --> $RUST/core/src/ptr/mod.rs
+     |
+     | pub const unsafe fn read<T>(src: *const T) -> T {
+     |                          ^ required by this bound in `std::ptr::read`
 help: consider removing the `?Sized` bound to make the type parameter `Sized`
-    |
-6   - struct Struct<T: ?Sized> {
-6   + struct Struct<T> {
-    |
+     |
+6    - struct Struct<T: ?Sized> {
+6    + struct Struct<T> {
+     |
 
 error[E0277]: the size for values of type `T` cannot be known at compilation time
   --> tests/ui/pin_project/project_replace_unsized_fn_params.rs:11:8

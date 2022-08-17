@@ -11,18 +11,30 @@
 
 [package]
 edition = "2018"
+rust-version = "1.37"
 name = "pin-project-internal"
-version = "1.0.10"
-description = "Implementation detail of the `pin-project` crate.\n"
-keywords = ["pin", "macros", "attribute"]
-categories = ["no-std", "rust-patterns"]
+version = "1.0.12"
+description = """
+Implementation detail of the `pin-project` crate.
+"""
+keywords = [
+    "pin",
+    "macros",
+    "attribute",
+]
+categories = [
+    "no-std",
+    "rust-patterns",
+]
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/taiki-e/pin-project"
+
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
 
 [lib]
 proc-macro = true
+
 [dependencies.proc-macro2]
 version = "1"
 
@@ -31,6 +43,9 @@ version = "1"
 
 [dependencies.syn]
 version = "1.0.56"
-features = ["full", "visit-mut"]
+features = [
+    "full",
+    "visit-mut",
+]
 
 [dev-dependencies]

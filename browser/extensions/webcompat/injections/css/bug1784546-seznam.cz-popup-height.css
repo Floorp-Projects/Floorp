@@ -1,0 +1,10 @@
+/**
+ * www.seznam.cz - Cookies consent popup options are not visible
+ * Bug #1784546 - https://bugzilla.mozilla.org/show_bug.cgi?id=1784546
+ * WebCompat issue #108565 - https://webcompat.com/issues/108565
+ */
+
+.szn-cmp-dialog-container {
+  transform: translateX(0);
+  margin-top: -56px !important;
+}

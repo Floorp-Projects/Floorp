@@ -35,6 +35,10 @@ pub type Elf64_Xword = u64;
 
 pub type iconv_t = *mut ::c_void;
 
+// It's an alias over "struct __kvm_t". However, its fields aren't supposed to be used directly,
+// making the type definition system dependent. Better not bind it exactly.
+pub type kvm_t = ::c_void;
+
 cfg_if! {
     if #[cfg(target_pointer_width = "64")] {
         type Elf_Addr = Elf64_Addr;
@@ -1788,6 +1792,44 @@ extern "C" {
         len: ::size_t,
         fd: ::c_int,
     ) -> ::c_int;
+}
+
+#[link(name = "kvm")]
+extern "C" {
+    pub fn kvm_open(
+        execfile: *const ::c_char,
+        corefile: *const ::c_char,
+        swapfile: *const ::c_char,
+        flags: ::c_int,
+        errstr: *const ::c_char,
+    ) -> *mut ::kvm_t;
+    pub fn kvm_close(kd: *mut ::kvm_t) -> ::c_int;
+    pub fn kvm_getprocs(
+        kd: *mut ::kvm_t,
+        op: ::c_int,
+        arg: ::c_int,
+        cnt: *mut ::c_int,
+    ) -> *mut ::kinfo_proc;
+    pub fn kvm_getloadavg(kd: *mut kvm_t, loadavg: *mut ::c_double, nelem: ::c_int) -> ::c_int;
+    pub fn kvm_openfiles(
+        execfile: *const ::c_char,
+        corefile: *const ::c_char,
+        swapfile: *const ::c_char,
+        flags: ::c_int,
+        errbuf: *mut ::c_char,
+    ) -> *mut ::kvm_t;
+    pub fn kvm_read(
+        kd: *mut ::kvm_t,
+        addr: ::c_ulong,
+        buf: *mut ::c_void,
+        nbytes: ::size_t,
+    ) -> ::ssize_t;
+    pub fn kvm_write(
+        kd: *mut ::kvm_t,
+        addr: ::c_ulong,
+        buf: *const ::c_void,
+        nbytes: ::size_t,
+    ) -> ::ssize_t;
 }
 
 cfg_if! {

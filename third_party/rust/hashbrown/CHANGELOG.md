@@ -2,10 +2,66 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](http://keepachangelog.com/)
-and this project adheres to [Semantic Versioning](http://semver.org/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/)
+and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
+
+## [v0.12.3] - 2022-07-17
+
+## Fixed
+
+- Fixed double-drop in `RawTable::clone_from`. (#348)
+
+## [v0.12.2] - 2022-07-09
+
+## Added
+
+- Added `Entry` API for `HashSet`. (#342)
+- Added `Extend<&'a (K, V)> for HashMap<K, V, S, A>`. (#340)
+- Added length-based short-circuiting for hash table iteration. (#338)
+- Added a function to access the `RawTable` of a `HashMap`. (#335)
+
+## Changed
+
+- Edited `do_alloc` to reduce LLVM IR generated. (#341)
+
+## [v0.12.1] - 2022-05-02
+
+## Fixed
+
+- Fixed underflow in `RawIterRange::size_hint`. (#325)
+- Fixed the implementation of `Debug` for `ValuesMut` and `IntoValues`. (#325)
+
+## [v0.12.0] - 2022-01-17
+
+## Added
+
+- Added `From<[T; N]>` and `From<[(K, V); N]>` for `HashSet` and `HashMap` respectively. (#297)
+- Added an `allocator()` getter to HashMap and HashSet. (#257)
+- Added `insert_unique_unchecked` to `HashMap` and `HashSet`. (#293)
+- Added `into_keys` and `into_values` to HashMap. (#295)
+- Implement `From<array>` on `HashSet` and `HashMap`. (#298)
+- Added `entry_ref` API to `HashMap`. (#201)
+
+## Changed
+
+- Bumped minimum Rust version to 1.56.1 and edition to 2021.
+- Use u64 for the GroupWord on WebAssembly. (#271)
+- Optimized `find`. (#279)
+- Made rehashing and resizing less generic to reduce compilation time. (#282)
+- Inlined small functions. (#283)
+- Use `BuildHasher::hash_one` when `feature = "nightly"` is enabled. (#292)
+- Relaxed the bounds on `Debug` for `HashSet`. (#296)
+- Rename `get_each_mut` to `get_many_mut` and align API with the stdlib. (#291)
+- Don't hash the key when searching in an empty table. (#305)
+
+## Fixed
+
+- Guard against allocations exceeding isize::MAX. (#268)
+- Made `RawTable::insert_no_grow` unsafe. (#254)
+- Inline `static_empty`. (#280)
+- Fixed trait bounds on Send/Sync impls. (#303)
 
 ## [v0.11.2] - 2021-03-25
 
@@ -307,7 +363,11 @@ This release was _yanked_ due to a breaking change for users of `no-default-feat
 
 - Initial release
 
-[Unreleased]: https://github.com/rust-lang/hashbrown/compare/v0.11.2...HEAD
+[Unreleased]: https://github.com/rust-lang/hashbrown/compare/v0.12.3...HEAD
+[v0.12.3]: https://github.com/rust-lang/hashbrown/compare/v0.12.2...v0.12.3
+[v0.12.2]: https://github.com/rust-lang/hashbrown/compare/v0.12.1...v0.12.2
+[v0.12.1]: https://github.com/rust-lang/hashbrown/compare/v0.12.0...v0.12.1
+[v0.12.0]: https://github.com/rust-lang/hashbrown/compare/v0.11.2...v0.12.0
 [v0.11.2]: https://github.com/rust-lang/hashbrown/compare/v0.11.1...v0.11.2
 [v0.11.1]: https://github.com/rust-lang/hashbrown/compare/v0.11.0...v0.11.1
 [v0.11.0]: https://github.com/rust-lang/hashbrown/compare/v0.10.0...v0.11.0

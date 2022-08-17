@@ -252,7 +252,7 @@ where
             Some(ch) => {
                 #[cfg(feature = "raw_value")]
                 {
-                    if let Some(ref mut buf) = self.raw_buffer {
+                    if let Some(buf) = &mut self.raw_buffer {
                         buf.push(ch);
                     }
                 }
@@ -263,7 +263,7 @@ where
                 Some(Ok(ch)) => {
                     #[cfg(feature = "raw_value")]
                     {
-                        if let Some(ref mut buf) = self.raw_buffer {
+                        if let Some(buf) = &mut self.raw_buffer {
                             buf.push(ch);
                         }
                     }
@@ -298,7 +298,7 @@ where
     #[cfg(feature = "raw_value")]
     fn discard(&mut self) {
         if let Some(ch) = self.ch.take() {
-            if let Some(ref mut buf) = self.raw_buffer {
+            if let Some(buf) = &mut self.raw_buffer {
                 buf.push(ch);
             }
         }

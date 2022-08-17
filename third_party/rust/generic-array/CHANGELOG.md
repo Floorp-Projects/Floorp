@@ -1,3 +1,8 @@
+* **`0.14.6`**
+    * Add an optional `Zeroize` impl for `GenericArray` (#126 and #112)
+    * Cleanup some unsafe (#125) and typos (#114)
+    * Use `include` in `Cargo.toml` to reduce package size
+
 * **`0.14.5`**
     * Fix unsoundness behavior in `GenericArrayIter::clone` ([#120](https://github.com/fizyk20/generic-array/pull/120))
 

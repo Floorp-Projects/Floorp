@@ -4,6 +4,19 @@
 
 -
 
+## 1.13.1
+
+- Make implementation compliant with [strict provenance](https://github.com/rust-lang/rust/issues/95228).
+- Upgrade `atomic-polyfill` to `1.0`
+
+## 1.13.0
+
+- Add `Lazy::get`, similar to `OnceCell::get`.
+
+## 1.12.1
+
+- Remove incorrect `debug_assert`.
+
 ## 1.12.0
 
 - Add `OnceCell::wait`, a blocking variant of `get`.

@@ -1,0 +1,14 @@
+/**
+ * aptsovation.com - Unsupported message is displayed on sites based on Entrata platform
+ * Bug #1784199 - https://bugzilla.mozilla.org/show_bug.cgi?id=1784199
+ * WebCompat issue #100131 - https://webcompat.com/issues/100131
+ */
+
+* {
+  color: unset;
+}
+
+#propertyProduct,
+.banner_overlay {
+  display: none;
+}

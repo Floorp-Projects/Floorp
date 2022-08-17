@@ -31,7 +31,7 @@ fn test_empty_struct() {
 fn test_struct() {
     let my_struct = MyStruct { x: 4.0, y: 7.0 };
 
-    assert_eq!(to_string(&my_struct).unwrap(), "(x:4,y:7)");
+    assert_eq!(to_string(&my_struct).unwrap(), "(x:4.0,y:7.0)");
 
     #[derive(Serialize)]
     struct NewType(i32);
@@ -41,7 +41,7 @@ fn test_struct() {
     #[derive(Serialize)]
     struct TupleStruct(f32, f32);
 
-    assert_eq!(to_string(&TupleStruct(2.0, 5.0)).unwrap(), "(2,5)");
+    assert_eq!(to_string(&TupleStruct(2.0, 5.0)).unwrap(), "(2.0,5.0)");
 }
 
 #[test]
@@ -89,10 +89,10 @@ fn test_map() {
     map.insert((false, false), 123);
 
     let s = to_string(&map).unwrap();
-    s.starts_with("{");
+    s.starts_with('{');
     s.contains("(true,false):4");
     s.contains("(false,false):123");
-    s.ends_with("}");
+    s.ends_with('}');
 }
 
 #[test]

@@ -48,6 +48,12 @@ where
         }
     }
 
+    /// Calls [`.flush()`](io::Write::flush) on the underlying `io::Write`
+    /// object.
+    pub fn flush(&mut self) -> io::Result<()> {
+        self.writer.flush()
+    }
+
     /// Unwrap the underlying `io::Write` object from the `Serializer`.
     pub fn into_inner(self) -> W {
         self.writer

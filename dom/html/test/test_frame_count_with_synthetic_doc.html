@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+    function getWindowLength() {
+      setTimeout(function() {
+        if (window.length > 0) {
+          ok(false, "Synthetic document shouldn't be exposed");
+        }
+
+        // Keep running this check until the test stops
+        getWindowLength();
+      });
+    }
+
+    function addObject() {
+      const object = document.createElement("object");
+      object.data = 'file_bug417760.png';
+      document.body.appendChild(object);
+
+      object.onload = function() {
+        ok(true, "Test passes");
+        SimpleTest.finish();
+      }
+    }
+
+    getWindowLength();
+    addObject();
+  </script>
+  </body>
+</html>

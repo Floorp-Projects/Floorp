@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.31"
 name = "thiserror-impl"
-version = "1.0.31"
+version = "1.0.32"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "Implementation detail of the `thiserror` crate"
 license = "MIT OR Apache-2.0"

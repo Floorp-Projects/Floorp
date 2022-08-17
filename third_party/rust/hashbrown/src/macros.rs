@@ -1,4 +1,5 @@
 // See the cfg-if crate.
+#[allow(unused_macro_rules)]
 macro_rules! cfg_if {
     // match if/else chains with a final `else`
     ($(
@@ -57,8 +58,8 @@ macro_rules! cfg_if {
 // default fn syntax for specialization changes in the future.
 #[cfg(feature = "nightly")]
 macro_rules! default_fn {
-	($($tt:tt)*) => {
-        default $($tt)*
+	(#[$($a:tt)*] $($tt:tt)*) => {
+        #[$($a)*] default $($tt)*
     }
 }
 #[cfg(not(feature = "nightly"))]

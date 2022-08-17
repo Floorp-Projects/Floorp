@@ -66,6 +66,9 @@ pub use self::copy::{copy, Copy};
 mod copy_buf;
 pub use self::copy_buf::{copy_buf, CopyBuf};
 
+mod copy_buf_abortable;
+pub use self::copy_buf_abortable::{copy_buf_abortable, CopyBufAbortable};
+
 mod cursor;
 pub use self::cursor::Cursor;
 

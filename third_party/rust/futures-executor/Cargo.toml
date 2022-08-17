@@ -13,11 +13,12 @@
 edition = "2018"
 rust-version = "1.45"
 name = "futures-executor"
-version = "0.3.21"
+version = "0.3.23"
 description = """
 Executors for asynchronous tasks based on the futures-rs library.
 """
 homepage = "https://rust-lang.github.io/futures-rs"
+readme = "README.md"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-lang/futures-rs"
 
@@ -29,15 +30,15 @@ rustdoc-args = [
 ]
 
 [dependencies.futures-core]
-version = "0.3.21"
+version = "0.3.23"
 default-features = false
 
 [dependencies.futures-task]
-version = "0.3.21"
+version = "0.3.23"
 default-features = false
 
 [dependencies.futures-util]
-version = "0.3.21"
+version = "0.3.23"
 default-features = false
 
 [dependencies.num_cpus]

@@ -1522,6 +1522,9 @@ impl Renderer {
         let t = self.profile.end_time(profiler::RENDERER_TIME);
         self.profile.end_time_if_started(profiler::TOTAL_FRAME_CPU_TIME);
         Telemetry::record_renderer_time(Duration::from_micros((t * 1000.00) as u64));
+        if self.profile.get(profiler::SHADER_BUILD_TIME).is_none() {
+          Telemetry::record_renderer_time_no_sc(Duration::from_micros((t * 1000.00) as u64));
+        }
 
         let current_time = precise_time_ns();
         if device_size.is_some() {

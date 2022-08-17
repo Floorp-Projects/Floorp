@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.1.6 (2022-07-16)
+### Added
+- Move `ParBlocks`/`ParBlocksSizeUser` from `cipher` crate ([#1052])
+
+[#1052]: https://github.com/RustCrypto/traits/pull/1052
+
+## 0.1.5 (2022-07-09)
+### Fixed
+- Support on-label MSRV ([#1049])
+
+[#1049]: https://github.com/RustCrypto/traits/pull/1049
+
+## 0.1.4 (2022-07-02)
+### Added
+- `getrandom` feature ([#1034])
+
+[#1034]: https://github.com/RustCrypto/traits/pull/1034
+
 ## 0.1.3 (2022-02-16)
 ### Fixed
 - Minimal versions build ([#940])

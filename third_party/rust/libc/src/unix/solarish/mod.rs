@@ -1796,6 +1796,8 @@ pub const TCP_LINGER2: ::c_int = 0x1c;
 
 pub const UDP_NAT_T_ENDPOINT: ::c_int = 0x0103;
 
+pub const SOMAXCONN: ::c_int = 128;
+
 pub const SOL_SOCKET: ::c_int = 0xffff;
 pub const SO_DEBUG: ::c_int = 0x01;
 pub const SO_ACCEPTCONN: ::c_int = 0x0002;

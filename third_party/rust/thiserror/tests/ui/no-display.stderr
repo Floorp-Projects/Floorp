@@ -2,7 +2,7 @@ error[E0599]: the method `as_display` exists for reference `&NoDisplay`, but its
    --> tests/ui/no-display.rs:7:9
     |
 4   | struct NoDisplay;
-    | ----------------- doesn't satisfy `NoDisplay: std::fmt::Display`
+    | ---------------- doesn't satisfy `NoDisplay: std::fmt::Display`
 ...
 7   | #[error("thread: {thread}")]
     |         ^^^^^^^^^^^^^^^^^^ method cannot be called on `&NoDisplay` due to unsatisfied trait bounds
@@ -13,11 +13,5 @@ error[E0599]: the method `as_display` exists for reference `&NoDisplay`, but its
 note: the following trait must be implemented
    --> $RUST/core/src/fmt/mod.rs
     |
-    | / pub trait Display {
-    | |     /// Formats the value using the given formatter.
-    | |     ///
-    | |     /// # Examples
-...   |
-    | |     fn fmt(&self, f: &mut Formatter<'_>) -> Result;
-    | | }
-    | |_^
+    | pub trait Display {
+    | ^^^^^^^^^^^^^^^^^

@@ -696,3 +696,9 @@ fn try_remove() {
     assert_eq!(slab.try_remove(key), None);
     assert_eq!(slab.get(key), None);
 }
+
+#[rustversion::since(1.39)]
+#[test]
+fn const_new() {
+    static _SLAB: Slab<()> = Slab::new();
+}

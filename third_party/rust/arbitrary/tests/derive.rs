@@ -1,5 +1,4 @@
 #![cfg(feature = "derive")]
-
 // Various structs/fields that we are deriving `Arbitrary` for aren't actually
 // used except to exercise the derive.
 #![allow(dead_code)]

@@ -67,7 +67,7 @@ class TabPickupContainer extends HTMLElement {
           break;
         }
         case "view2-primary-action": {
-          TabsSetupFlowManager.openSyncPreferences(event.target.ownerGlobal);
+          TabsSetupFlowManager.openFxAPairDevice(event.target.ownerGlobal);
           break;
         }
         case "view3-primary-action": {
@@ -79,7 +79,7 @@ class TabPickupContainer extends HTMLElement {
           break;
         }
         case "mobile-promo-primary-action": {
-          TabsSetupFlowManager.openSyncPreferences(event.target.ownerGlobal);
+          TabsSetupFlowManager.openFxAPairDevice(event.target.ownerGlobal);
           break;
         }
         case "mobile-confirmation-dismiss": {

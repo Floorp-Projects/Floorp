@@ -904,6 +904,7 @@ function Saved(props) {
     removedErrorMessage
   }, setRemovedStatusState] = (0,react.useState)({});
   const [savedStory, setSavedStoryState] = (0,react.useState)();
+  const [articleInfoAttempted, setArticleInfoAttempted] = (0,react.useState)();
   const [{
     similarRecs,
     similarRecsModel
@@ -966,8 +967,11 @@ function Saved(props) {
         savedErrorId: ""
       });
     });
-    messages.addMessageListener("PKT_renderSavedStory", function (resp) {
+    messages.addMessageListener("PKT_articleInfoFetched", function (resp) {
       setSavedStoryState(resp?.data?.item_preview);
+    });
+    messages.addMessageListener("PKT_getArticleInfoAttempted", function (resp) {
+      setArticleInfoAttempted(true);
     });
     messages.addMessageListener("PKT_renderItemRecs", function (resp) {
       const {
@@ -1024,10 +1028,10 @@ function Saved(props) {
     articles: [savedStory],
     openInPocketReader: true,
     utmParams: utmParams
-  }), /*#__PURE__*/react.createElement(TagPicker_TagPicker, {
+  }), articleInfoAttempted && /*#__PURE__*/react.createElement(TagPicker_TagPicker, {
     tags: [],
     itemUrl: itemUrl
-  }), similarRecs?.length && locale?.startsWith("en") && /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("h3", {
+  }), articleInfoAttempted && similarRecs?.length && locale?.startsWith("en") && /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("h3", {
     className: "header_medium"
   }, "Similar Stories"), /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
     articles: similarRecs,

@@ -72,6 +72,9 @@
 #[cfg(feature = "serde")]
 extern crate serde;
 
+#[cfg(feature = "zeroize")]
+extern crate zeroize;
+
 #[cfg(test)]
 extern crate bincode;
 
@@ -82,6 +85,9 @@ mod impls;
 
 #[cfg(feature = "serde")]
 mod impl_serde;
+
+#[cfg(feature = "zeroize")]
+mod impl_zeroize;
 
 use core::iter::FromIterator;
 use core::marker::PhantomData;
@@ -201,7 +207,7 @@ where
 /// Creates an array one element at a time using a mutable iterator
 /// you can write to with `ptr::write`.
 ///
-/// Incremenent the position while iterating to mark off created elements,
+/// Increment the position while iterating to mark off created elements,
 /// which will be dropped if `into_inner` is not called.
 #[doc(hidden)]
 pub struct ArrayBuilder<T, N: ArrayLength<T>> {
@@ -644,7 +650,7 @@ mod test {
     // cargo rustc --lib --profile test --release --
     //      -C target-cpu=native -C opt-level=3 --emit asm
     // and view the assembly to make sure test_assembly generates
-    // SIMD instructions instead of a niave loop.
+    // SIMD instructions instead of a naive loop.
 
     #[inline(never)]
     pub fn black_box<T>(val: T) -> T {
