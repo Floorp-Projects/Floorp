@@ -26,7 +26,8 @@ class TelemetryProbesReporterOwner {
 enum class MediaContent : uint8_t {
   MEDIA_HAS_NOTHING = (0 << 0),
   MEDIA_HAS_VIDEO = (1 << 0),
-  MEDIA_HAS_AUDIO = (1 << 1)
+  MEDIA_HAS_AUDIO = (1 << 1),
+  MEDIA_HAS_COLOR_DEPTH_ABOVE_8 = (1 << 2),
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(MediaContent)
@@ -64,6 +65,7 @@ class TelemetryProbesReporter final {
   void OnDecodeResumed();
 
   double GetTotalVideoPlayTimeInSeconds() const;
+  double GetTotalVideoHDRPlayTimeInSeconds() const;
   double GetVisibleVideoPlayTimeInSeconds() const;
   double GetInvisibleVideoPlayTimeInSeconds() const;
   double GetVideoDecodeSuspendedTimeInSeconds() const;
@@ -135,6 +137,10 @@ class TelemetryProbesReporter final {
 
   // Total time an element has spent on playing video.
   TimeDurationAccumulator mTotalVideoPlayTime;
+
+  // Total time an element has spent on playing video that has a color depth
+  // greater than 8, which is likely HDR video.
+  TimeDurationAccumulator mTotalVideoHDRPlayTime;
 
   // Total time an element has spent on playing audio
   TimeDurationAccumulator mTotalAudioPlayTime;
