@@ -230,6 +230,14 @@ size_t VideoData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return size;
 }
 
+ColorDepth VideoData::GetColorDepth() const {
+  if (!mImage) {
+    return ColorDepth::COLOR_8;
+  }
+
+  return mImage->GetColorDepth();
+}
+
 void VideoData::UpdateDuration(const TimeUnit& aDuration) {
   MOZ_ASSERT(!aDuration.IsNegative());
   mDuration = aDuration;
