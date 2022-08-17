@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.wallpapers
 
+import org.mozilla.fenix.utils.Settings
 import java.util.Date
 
 /**
@@ -84,6 +85,25 @@ data class Wallpaper(
          * @param name The name of the wallpaper.
          */
         fun getLocalPath(name: String, type: ImageType) = "wallpapers/$name/${type.lowercase()}.png"
+
+        /**
+         * Generate a wallpaper from metadata cached in Settings.
+         *
+         * @param settings The local cache.
+         */
+        fun getCurrentWallpaperFromSettings(settings: Settings): Wallpaper? {
+            val name = settings.currentWallpaperName
+            val textColor = settings.currentWallpaperTextColor
+            val cardColor = settings.currentWallpaperCardColor
+            return if (name.isNotEmpty() && textColor != 0L && cardColor != 0L) {
+                Wallpaper(
+                    name = name,
+                    textColor = textColor,
+                    cardColor = cardColor,
+                    collection = DefaultCollection
+                )
+            } else null
+        }
     }
 
     /**

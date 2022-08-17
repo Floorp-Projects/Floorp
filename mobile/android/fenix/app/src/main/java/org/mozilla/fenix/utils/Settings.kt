@@ -191,6 +191,22 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * A cache of the text color to use on text overlaying the current wallpaper.
+     */
+    var currentWallpaperTextColor by longPreference(
+        appContext.getPreferenceKey(R.string.pref_key_current_wallpaper_text_color),
+        default = 0
+    )
+
+    /**
+     * A cache of the background color to use on cards overlaying the current wallpaper.
+     */
+    var currentWallpaperCardColor by longPreference(
+        appContext.getPreferenceKey(R.string.pref_key_current_wallpaper_card_color),
+        default = 0
+    )
+
+    /**
      * Indicates if the wallpaper onboarding dialog should be shown.
      */
     val showWallpaperOnboarding by lazyFeatureFlagPreference(

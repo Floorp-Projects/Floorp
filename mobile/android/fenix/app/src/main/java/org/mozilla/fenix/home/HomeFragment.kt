@@ -114,6 +114,7 @@ import org.mozilla.fenix.home.topsites.DefaultTopSitesView
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
+import org.mozilla.fenix.perf.runBlockingIncrement
 import org.mozilla.fenix.tabstray.TabsTrayAccessPoint
 import org.mozilla.fenix.utils.Settings.Companion.TOP_SITES_PROVIDER_MAX_THRESHOLD
 import org.mozilla.fenix.utils.ToolbarPopupWindow
@@ -210,6 +211,10 @@ class HomeFragment : Fragment() {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val activity = activity as HomeActivity
         val components = requireComponents
+
+        // See https://github.com/mozilla-mobile/fenix/issues/26555 for context as to why
+        // this is commented out for now
+        observeWallpaperChanges()
 
         currentMode = CurrentMode(
             requireContext(),
@@ -390,8 +395,6 @@ class HomeFragment : Fragment() {
 
         FxNimbus.features.homescreen.recordExposure()
 
-        displayWallpaperIfEnabled()
-
         binding.root.doOnPreDraw {
             requireComponents.appStore.dispatch(AppAction.UpdateFirstFrameDrawn(drawn = true))
         }
@@ -407,6 +410,7 @@ class HomeFragment : Fragment() {
         super.onConfigurationChanged(newConfig)
 
         getMenuButton()?.dismissMenu()
+        setWallpaperToCurrent()
     }
 
     /**
@@ -923,27 +927,39 @@ class HomeFragment : Fragment() {
             ?.isVisible = tabCount > 0
     }
 
-    private fun displayWallpaperIfEnabled() {
+    @Suppress("UnusedPrivateMember")
+    private fun observeWallpaperChanges() {
         if (shouldEnableWallpaper()) {
             requireComponents.appStore.flow()
                 .ifChanged { state -> state.wallpaperState.currentWallpaper }
                 .onEach { state ->
-                    // We only want to update the wallpaper when it's different from the default one
-                    // as the default is applied already on xml by default.
-                    when (val currentWallpaper = state.wallpaperState.currentWallpaper) {
-                        Wallpaper.Default -> {
-                            binding.wallpaperImageView.visibility = View.GONE
-                        }
-                        else -> {
-                            val bitmap = requireComponents.useCases.wallpaperUseCases.loadBitmap(currentWallpaper)
-                            bitmap?.let {
-                                it.scaleToBottomOfView(binding.wallpaperImageView)
-                                binding.wallpaperImageView.visibility = View.VISIBLE
-                            }
-                        }
-                    }
+                    showWallpaper(state.wallpaperState.currentWallpaper)
                 }
                 .launchIn(viewLifecycleOwner.lifecycleScope)
+        }
+    }
+
+    private fun setWallpaperToCurrent() {
+        if (shouldEnableWallpaper()) {
+            val wallpaper = requireComponents.appStore.state.wallpaperState.currentWallpaper
+            runBlockingIncrement {
+                showWallpaper(wallpaper)
+            }
+        }
+    }
+
+    private suspend fun showWallpaper(wallpaper: Wallpaper) = when (wallpaper) {
+        // We only want to update the wallpaper when it's different from the default one
+        // as the default is applied already on xml by default.
+        Wallpaper.Default -> {
+            binding.wallpaperImageView.visibility = View.GONE
+        }
+        else -> {
+            val bitmap = requireComponents.useCases.wallpaperUseCases.loadBitmap(wallpaper)
+            bitmap?.let {
+                it.scaleToBottomOfView(binding.wallpaperImageView)
+                binding.wallpaperImageView.visibility = View.VISIBLE
+            }
         }
     }
 

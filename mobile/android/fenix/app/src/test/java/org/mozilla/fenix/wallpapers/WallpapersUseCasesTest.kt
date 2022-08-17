@@ -1,6 +1,7 @@
 package org.mozilla.fenix.wallpapers
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -36,7 +37,12 @@ class WallpapersUseCasesTest {
     private val fakeCalendar = Calendar.getInstance()
 
     private val appStore = AppStore()
-    private val mockSettings = mockk<Settings>()
+    private val mockSettings = mockk<Settings> {
+        every { currentWallpaperTextColor } returns 0L
+        every { currentWallpaperTextColor = any() } just Runs
+        every { currentWallpaperCardColor } returns 0L
+        every { currentWallpaperCardColor = any() } just Runs
+    }
     private val mockLegacyDownloader = mockk<LegacyWallpaperDownloader>(relaxed = true)
     private val mockLegacyFileManager = mockk<LegacyWallpaperFileManager> {
         every { clean(any(), any()) } just runs

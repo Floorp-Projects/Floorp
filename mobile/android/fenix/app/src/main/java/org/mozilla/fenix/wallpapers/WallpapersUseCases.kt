@@ -124,6 +124,11 @@ class WallpapersUseCases(
             // This should be cleaned up as improvements are made to the storage, file management,
             // and download utilities.
             withContext(Dispatchers.IO) {
+                val dispatchedCurrent = Wallpaper.getCurrentWallpaperFromSettings(settings)?.let {
+                    // Dispatch this ASAP so the home screen can render.
+                    store.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(it))
+                    true
+                } ?: false
                 val availableWallpapers = possibleWallpapers.getAvailableWallpapers()
                 val currentWallpaperName = settings.currentWallpaperName
                 val currentWallpaper = possibleWallpapers.find { it.name == currentWallpaperName }
@@ -136,7 +141,9 @@ class WallpapersUseCases(
                 )
                 downloadAllRemoteWallpapers(availableWallpapers)
                 store.dispatch(AppAction.WallpaperAction.UpdateAvailableWallpapers(availableWallpapers))
-                store.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(currentWallpaper))
+                if (!dispatchedCurrent) {
+                    store.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(currentWallpaper))
+                }
             }
         }
 
@@ -217,6 +224,9 @@ class WallpapersUseCases(
         private val currentLocale: String,
     ) : InitializeWallpapersUseCase {
         override suspend fun invoke() {
+            Wallpaper.getCurrentWallpaperFromSettings(settings)?.let {
+                store.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(it))
+            }
             val currentWallpaperName = withContext(Dispatchers.IO) { settings.currentWallpaperName }
             val possibleWallpapers = metadataFetcher.downloadWallpaperList().filter {
                 !it.isExpired() && it.isAvailableInLocale()
@@ -225,7 +235,8 @@ class WallpapersUseCases(
                 ?: fileManager.lookupExpiredWallpaper(currentWallpaperName)
                 ?: Wallpaper.Default
 
-            // Dispatching this early will make it accessible to the home screen ASAP
+            // Dispatching this early will make it accessible to the home screen ASAP. If it has been
+            // dispatched above, we may still need to update other metadata about it.
             store.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(currentWallpaper))
 
             fileManager.clean(
@@ -383,6 +394,8 @@ class WallpapersUseCases(
          */
         override fun invoke(wallpaper: Wallpaper) {
             settings.currentWallpaperName = wallpaper.name
+            settings.currentWallpaperTextColor = wallpaper.textColor ?: 0
+            settings.currentWallpaperCardColor = wallpaper.cardColor ?: 0
             store.dispatch(AppAction.WallpaperAction.UpdateCurrentWallpaper(wallpaper))
             Wallpapers.wallpaperSelected.record(
                 Wallpapers.WallpaperSelectedExtra(
