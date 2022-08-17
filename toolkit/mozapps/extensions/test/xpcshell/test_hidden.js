@@ -213,6 +213,11 @@ add_task(
     } of TEST_CASES) {
       info(`== ${title} ==`);
 
+      // Thunderbird doesn't have page actions.
+      if (manifest.page_action && AppConstants.MOZ_APP_NAME == "thunderbird") {
+        continue;
+      }
+
       const extension = ExtensionTestUtils.loadExtension({
         manifest: {
           browser_specific_settings: {
