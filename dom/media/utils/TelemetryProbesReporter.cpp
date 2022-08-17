@@ -54,16 +54,17 @@ static const char* ToMutedStr(bool aMuted) {
 
 MediaContent TelemetryProbesReporter::MediaInfoToMediaContent(
     const MediaInfo& aInfo) {
-  if (aInfo.HasAudio() && aInfo.HasVideo()) {
-    return MediaContent::MEDIA_HAS_VIDEO | MediaContent::MEDIA_HAS_AUDIO;
-  }
+  MediaContent content = MediaContent::MEDIA_HAS_NOTHING;
   if (aInfo.HasAudio()) {
-    return MediaContent::MEDIA_HAS_AUDIO;
+    content |= MediaContent::MEDIA_HAS_AUDIO;
   }
   if (aInfo.HasVideo()) {
-    return MediaContent::MEDIA_HAS_VIDEO;
+    content |= MediaContent::MEDIA_HAS_VIDEO;
+    if (aInfo.mVideo.GetAsVideoInfo()->mColorDepth > gfx::ColorDepth::COLOR_8) {
+      content |= MediaContent::MEDIA_HAS_COLOR_DEPTH_ABOVE_8;
+    }
   }
-  return MediaContent::MEDIA_HAS_NOTHING;
+  return content;
 }
 
 TelemetryProbesReporter::TelemetryProbesReporter(
@@ -85,6 +86,12 @@ void TelemetryProbesReporter::OnPlay(Visibility aVisibility,
 
   if (aMediaContent & MediaContent::MEDIA_HAS_VIDEO) {
     mTotalVideoPlayTime.Start();
+
+    MOZ_ASSERT_IF(mMediaContent & MediaContent::MEDIA_HAS_COLOR_DEPTH_ABOVE_8,
+                  !mTotalVideoHDRPlayTime.IsStarted());
+    if (aMediaContent & MediaContent::MEDIA_HAS_COLOR_DEPTH_ABOVE_8) {
+      mTotalVideoHDRPlayTime.Start();
+    }
   }
   if (aMediaContent & MediaContent::MEDIA_HAS_AUDIO) {
     mTotalAudioPlayTime.Start();
@@ -115,12 +122,16 @@ void TelemetryProbesReporter::OnPause(Visibility aVisibility) {
                 mTotalAudioPlayTime.IsStarted());
 
   if (mMediaContent & MediaContent::MEDIA_HAS_VIDEO) {
+    MOZ_ASSERT_IF(mMediaContent & MediaContent::MEDIA_HAS_COLOR_DEPTH_ABOVE_8,
+                  mTotalVideoHDRPlayTime.IsStarted());
+
     LOG("Pause video time accumulation for total play time");
     if (mInvisibleVideoPlayTime.IsStarted()) {
       LOG("Pause invisible video time accumulation for total play time");
       PauseInvisibleVideoTimeAccumulator();
     }
     mTotalVideoPlayTime.Pause();
+    mTotalVideoHDRPlayTime.Pause();
   }
   if (mMediaContent & MediaContent::MEDIA_HAS_AUDIO) {
     LOG("Pause audio time accumulation for total play time");
@@ -212,6 +223,7 @@ void TelemetryProbesReporter::OnMediaContentChanged(MediaContent aContent) {
     }
     if (mTotalVideoPlayTime.IsStarted()) {
       mTotalVideoPlayTime.Pause();
+      mTotalVideoHDRPlayTime.Pause();
     }
   }
   if (mMediaContent & MediaContent::MEDIA_HAS_AUDIO &&
@@ -235,6 +247,12 @@ void TelemetryProbesReporter::OnMediaContentChanged(MediaContent aContent) {
       if (mMediaElementVisibility == Visibility::eInvisible) {
         StartInvisibleVideoTimeAccumulator();
       }
+    }
+  }
+  if (!(mMediaContent & MediaContent::MEDIA_HAS_COLOR_DEPTH_ABOVE_8) &&
+      aContent & MediaContent::MEDIA_HAS_COLOR_DEPTH_ABOVE_8) {
+    if (mIsPlaying) {
+      mTotalVideoHDRPlayTime.Start();
     }
   }
   if (!(mMediaContent & MediaContent::MEDIA_HAS_AUDIO) &&
@@ -605,6 +623,10 @@ void TelemetryProbesReporter::ReportResultForVideoFrameStatistics(
 
 double TelemetryProbesReporter::GetTotalVideoPlayTimeInSeconds() const {
   return mTotalVideoPlayTime.PeekTotal();
+}
+
+double TelemetryProbesReporter::GetTotalVideoHDRPlayTimeInSeconds() const {
+  return mTotalVideoHDRPlayTime.PeekTotal();
 }
 
 double TelemetryProbesReporter::GetVisibleVideoPlayTimeInSeconds() const {
