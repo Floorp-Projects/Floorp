@@ -334,6 +334,7 @@ const AVAILABLE_SHIMS = [
       "*://*.imgur.com/js/vendor.*.bundle.js",
       "*://*.imgur.io/js/vendor.*.bundle.js",
       "*://www.rva311.com/static/js/main.*.chunk.js",
+      "*://web-assets.toggl.com/app/assets/scripts/*.js", // bug 1783919
     ],
     onlyIfPrivateBrowsing: true,
   },
@@ -600,6 +601,7 @@ const AVAILABLE_SHIMS = [
           "*://orangerie.eu/*", // bug 1758442
           "*://web.whatsapp.com/*", // bug 1767407
           "*://www.tripadvisor.com/*", // bug 1779536
+          "*://www.office.com/*", // bug 1783921
         ],
       },
     ],
@@ -668,20 +670,6 @@ const AVAILABLE_SHIMS = [
     ],
   },
   {
-    id: "Hamropatro",
-    platform: "all",
-    name: "Hamropatro",
-    bug: "1660446",
-    contentScripts: [
-      {
-        js: "hamropatro.js",
-        matches: ["*://we.hamropatro.com/login*"],
-        runAt: "document_start",
-      },
-    ],
-    onlyIfDFPIActive: true,
-  },
-  {
     id: "Kinja",
     platform: "all",
     name: "Kinja",
@@ -725,23 +713,6 @@ const AVAILABLE_SHIMS = [
           "*://web.powerva.microsoft.com/*",
           "*://teams.microsoft.com/*",
           "*://*.teams.microsoft.us/*",
-        ],
-        runAt: "document_start",
-      },
-    ],
-    onlyIfDFPIActive: true,
-  },
-  {
-    id: "Humblebundle",
-    platform: "all",
-    name: "Humblebundle",
-    bug: "1742553",
-    contentScripts: [
-      {
-        js: "humblebundle.js",
-        matches: [
-          "*://www.humblebundle.com/login*",
-          "*://www.humblebundle.com/signup*",
         ],
         runAt: "document_start",
       },
@@ -815,6 +786,16 @@ const AVAILABLE_SHIMS = [
         matches: ["*://www.blogger.com/blog/*"],
         runAt: "document_end",
       },
+    ],
+    onlyIfDFPIActive: true,
+  },
+  {
+    id: "FirebaseSignIn",
+    platform: "all",
+    name: "Firebase Sign-In",
+    bug: "1782772",
+    requestStorageAccessForRedirect: [
+      ["*://*/*", "*://*.firebaseapp.com/*/auth/*signInViaRedirect*"],
     ],
     onlyIfDFPIActive: true,
   },

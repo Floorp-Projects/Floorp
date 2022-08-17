@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Mozilla Android Components - Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "104.0.0",
+  "version": "105.0.0",
   "applications": {
     "gecko": {
       "id": "webcompat@mozilla.org",
@@ -123,9 +123,7 @@
     "shims/google-page-ad.js",
     "shims/google-publisher-tags.js",
     "shims/google-safeframe.html",
-    "shims/hamropatro.js",
     "shims/history.js",
-    "shims/humblebundle.js",
     "shims/iam.js",
     "shims/iaspet.js",
     "shims/kinja.js",
