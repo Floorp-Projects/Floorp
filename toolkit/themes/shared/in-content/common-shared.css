@@ -264,12 +264,7 @@
   color: var(--in-content-page-color);
 }
 
-/* FIXME bug 1784891: For historical reasons, we hardcode a font-size only for
- * HTML root nodes. XUL root nodes using this stylesheet get their font-size
- * from `font: message-box` above. Having the choice of markup language affect
- * the font-size like this seems arbitrary, so we should probably consolidate
- * this at some point. */
-html:root {
+:root:not(.system-font-size) {
   font-size: 15px;
 }
 

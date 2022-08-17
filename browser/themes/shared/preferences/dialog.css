@@ -2,12 +2,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-:root {
-  /* FIXME bug 1784891: This duplicates the font-size set in common-shared.css,
-   * as that stylesheet sets the font size only for HTML documents. */
-  font-size: 15px;
-}
-
 window,
 dialog {
   appearance: none;
