@@ -9,6 +9,7 @@
 #include "mozilla/gfx/2D.h"
 
 struct hb_blob_t;
+struct hb_face_t;
 
 namespace mozilla {
 
@@ -28,7 +29,7 @@ class COLRFonts {
                                                    uint32_t aGlyphId);
 
   static bool PaintGlyphLayers(
-      hb_blob_t* aCOLR, hb_blob_t* aCPAL, const COLRBaseGlyphRecord* aLayers,
+      hb_blob_t* aCOLR, hb_face_t* aFace, const COLRBaseGlyphRecord* aLayers,
       DrawTarget* aDrawTarget, layout::TextDrawTarget* aTextDrawer,
       ScaledFont* aScaledFont, DrawOptions aDrawOptions,
       const sRGBColor& aCurrentColor, const Point& aPoint);
