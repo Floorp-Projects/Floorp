@@ -876,7 +876,7 @@ void nsPresContext::AttachPresShell(mozilla::PresShell* aPresShell) {
 }
 
 Maybe<ColorScheme> nsPresContext::GetOverriddenOrEmbedderColorScheme() const {
-  if (Medium() == nsGkAtoms::print) {
+  if (IsPrintingOrPrintPreview()) {
     return Some(ColorScheme::Light);
   }
 
@@ -900,9 +900,12 @@ void nsPresContext::SetColorSchemeOverride(
   mOverriddenOrEmbedderColorScheme = aOverride;
 
   if (mDocument->PreferredColorScheme() != oldScheme) {
-    MediaFeatureValuesChanged(
-        MediaFeatureChange::ForPreferredColorSchemeChange(),
-        MediaFeatureChangePropagation::JustThisDocument);
+    // We need to restyle because not only media queries have changed, system
+    // colors may as well via the prefers-color-scheme meta tag / effective
+    // color-scheme property value.
+    MediaFeatureValuesChanged({RestyleHint::RecascadeSubtree(), nsChangeHint(0),
+                               MediaFeatureChangeReason::SystemMetricsChange},
+                              MediaFeatureChangePropagation::JustThisDocument);
   }
 }
 
@@ -1776,22 +1779,13 @@ void nsPresContext::UIResolutionChangedInternal() {
 
 void nsPresContext::EmulateMedium(nsAtom* aMediaType) {
   MOZ_ASSERT(!aMediaType || aMediaType->IsAsciiLowercase());
-
   RefPtr<const nsAtom> oldMedium = Medium();
-  auto oldScheme = mDocument->PreferredColorScheme();
-
   mMediaEmulationData.mMedium = aMediaType;
 
-  if (Medium() == oldMedium) {
-    return;
+  if (Medium() != oldMedium) {
+    MediaFeatureValuesChanged({MediaFeatureChangeReason::MediumChange},
+                              MediaFeatureChangePropagation::JustThisDocument);
   }
-
-  MediaFeatureChange change(MediaFeatureChangeReason::MediumChange);
-  if (oldScheme != mDocument->PreferredColorScheme()) {
-    change |= MediaFeatureChange::ForPreferredColorSchemeChange();
-  }
-  MediaFeatureValuesChanged(change,
-                            MediaFeatureChangePropagation::JustThisDocument);
 }
 
 void nsPresContext::ContentLanguageChanged() {
