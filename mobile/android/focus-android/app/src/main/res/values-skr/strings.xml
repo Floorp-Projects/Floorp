@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
+
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">منسوخ</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">ٹھیک ہے</string>
+
+    <string name="action_save">محفوظ</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">ڳولو یا پتہ درج کرو</string>
+
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">شیئر۔۔۔</string>
+
+    <string name="menu_settings">ترتیباں</string>
+    <string name="menu_about">تعارف</string>
+    <string name="menu_help">مدد</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">کھولو</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">مٹاؤ تے کھولو</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">مٹاؤ</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">براؤزنگ تاریخ مٹاؤ</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">مٹاؤ تے کھولو</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">مٹاؤ تے %1$s کھولو</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">نجی طور تے ڳولو</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">ویب مواد</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">ڈیفالٹ</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">ڳولݨ انجݨ</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">چالو</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">بند</string>
+
+    <string name="preference_language">زبان</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">نظام ڈیفالٹ</string>
+
+    <string name="preference_category_privacy">رازداری</string>
+
+    <string name="preference_category_mozilla">موزلّا</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">ٻیا سِکھو</string>
+
+    <string name="search_add_manually_save">محفوظ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">فارغ کرو</string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">ورتݨ ناں</string>
+    <string name="gv_prompt_password_hint">پاس ورڈ</string>
+    <string name="gv_prompt_clear">صاف کرو</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">محفوظ کنکشن</string>
+    <string name="security_popup_insecure_connection">غیرمحفوظ کنکشن</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">ورقے وچ لبھو</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">ورقے وچ لبھو</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%2$d وچوں %1$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">اڳلا نتیجہ لبھو</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">پچھلا نتیجہ لبھو</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">ورقے وچ لبھݨ کوں فارغ کرو</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">ہٹاؤ</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">فعال</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">واپس ون٘ڄو</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">ہٹاؤ</string>
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">ناں وٹاؤ</string>
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">ناں وٹاؤ</string>
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">شارٹ کٹ ناں</string>
+
+    <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">ٹیب بند کرو</string>
+
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">فارغ کرو</string>
+
+    </resources>
