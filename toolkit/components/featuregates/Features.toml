@@ -101,13 +101,3 @@ type = "boolean"
 bug-numbers = [1673971]
 is-public = true
 default-value = false
-
-[text-recognition]
-title = "experimental-features-text-recognition"
-description = "experimental-features-text-recognition-description"
-preference = "dom.text-recognition.enabled"
-restart-required = false
-type = "boolean"
-bug-numbers = [1759199]
-is-public = {default = false, "nightly,mac" = true}
-default-value = false
