@@ -11,6 +11,7 @@ pygments==2.6.1 \
     --hash=sha256:647344a061c249a3b74e230c739f434d7ea4d8b1d5f3721bc0f3558049b38f44 \
     --hash=sha256:ff7a40b4860b727ab48fad6360eb351cc1b33cbf9b15a0f689ca5353e9463324 \
     # via -r tools/lint/rst/requirements.in
-rstcheck==3.3.1 \
-    --hash=sha256:92c4f79256a54270e0402ba16a2f92d0b3c15c8f4410cb9c57127067c215741f \
+rstcheck==3.5.0 \
+    --hash=sha256:30c36768c4bd617a85ab93c31facaf410582e53803fde624845eb00c1430070c \
+    --hash=sha256:d4b035300b7d898403544f38c3a4980171ce85f487d25e188347bbafb6ee58c0
     # via -r tools/lint/rst/requirements.in

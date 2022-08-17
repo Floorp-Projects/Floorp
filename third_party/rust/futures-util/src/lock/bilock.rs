@@ -224,6 +224,9 @@ pub struct BiLockGuard<'a, T> {
     bilock: &'a BiLock<T>,
 }
 
+// We allow parallel access to T via Deref, so Sync bound is also needed here.
+unsafe impl<T: Send + Sync> Sync for BiLockGuard<'_, T> {}
+
 impl<T> Deref for BiLockGuard<'_, T> {
     type Target = T;
     fn deref(&self) -> &T {

@@ -83,9 +83,25 @@ function testScript() {
   browser.test.assertEq(null, null, "Null equality");
   browser.test.assertEq(undefined, undefined, "Void equality");
 
-  browser.test.assertEq({}, {}, "Object reference ineqality");
-  browser.test.assertEq([], [], "Array reference ineqality");
-  browser.test.assertEq(null, undefined, "Null and void ineqality");
+  browser.test.assertEq({}, {}, "Object reference inequality");
+  browser.test.assertEq([], [], "Array reference inequality");
+  browser.test.assertEq(true, 1, "strict: true and 1 inequality");
+  browser.test.assertEq("1", 1, "strict: '1' and 1 inequality");
+  browser.test.assertEq(null, undefined, "Null and void inequality");
+
+  browser.test.assertDeepEq({a: 1, b: 1}, {b: 1, a: 1}, "Object deep eq");
+  browser.test.assertDeepEq([[2], [1]], [[2], [1]], "Array deep eq");
+  browser.test.assertDeepEq(true, 1, "strict: true and 1 deep ineq");
+  browser.test.assertDeepEq("1", 1, "strict: '1' and 1 deep ineq");
+  // Key with undefined value should be different from object without key:
+  browser.test.assertDeepEq(null, undefined, "Null and void deep ineq");
+  browser.test.assertDeepEq({c: undefined}, {c: null}, "void+null deep ineq");
+  browser.test.assertDeepEq({a: undefined, b: 1}, {b: 1}, "void/- deep ineq");
+
+  browser.test.assertDeepEq(NaN, NaN, "NaN deep eq");
+  browser.test.assertDeepEq(NaN, null, "NaN+null deep ineq");
+  browser.test.assertDeepEq(Infinity, Infinity, "Infinity deep eq");
+  browser.test.assertDeepEq(Infinity, null, "Infinity+null deep ineq");
 
   obj = {
     toString() {
@@ -108,6 +124,25 @@ function testScript() {
     /dummy/
   );
 
+  // The WebIDL version of assertDeepEq structurally clones before sending the
+  // params to the main thread. This check verifies that the behavior is
+  // consistent between the WebIDL and Schemas.jsm-generated API bindings.
+  browser.test.assertThrows(
+    () => browser.test.assertDeepEq(obj, obj, "obj with func"),
+    /An unexpected error occurred/,
+    "assertDeepEq obj with function throws"
+  );
+  browser.test.assertThrows(
+    () => browser.test.assertDeepEq(() => {}, () => {}, "func to assertDeepEq"),
+    /An unexpected error occurred/,
+    "assertDeepEq with function throws"
+  );
+  browser.test.assertThrows(
+    () => browser.test.assertDeepEq(/./, /./, "regexp"),
+    /Unsupported obj type: RegExp/,
+    "assertDeepEq with RegExp throws"
+  );
+
   // Set of additional tests to only run on background page and content script
   // (but skip on background service worker).
   if (self === self.window) {
@@ -117,7 +152,7 @@ function testScript() {
     browser.test.assertFalse(dom, "Element falsey");
     browser.test.assertFalse(true, document.createElement("head"));
     browser.test.assertEq(dom, dom, "Element equality");
-    browser.test.assertEq(dom, document.createElement("body"), "Element ineqality");
+    browser.test.assertEq(dom, document.createElement("body"), "Element inequality");
     browser.test.assertEq(true, false, document.createElement("div"));
   }
 
@@ -155,9 +190,24 @@ function verifyTestResults(results, shortName, expectedProtocol, useServiceWorke
     ["test-eq", true, "Null equality", "null", "null"],
     ["test-eq", true, "Void equality", "undefined", "undefined"],
 
-    ["test-eq", false, "Object reference ineqality", "[object Object]", "[object Object] (different)"],
-    ["test-eq", false, "Array reference ineqality", "", " (different)"],
-    ["test-eq", false, "Null and void ineqality", "null", "undefined"],
+    ["test-eq", false, "Object reference inequality", "[object Object]", "[object Object] (different)"],
+    ["test-eq", false, "Array reference inequality", "", " (different)"],
+    ["test-eq", false, "strict: true and 1 inequality", "true", "1"],
+    ["test-eq", false, "strict: '1' and 1 inequality", "1", "1 (different)"],
+    ["test-eq", false, "Null and void inequality", "null", "undefined"],
+
+    ["test-eq", true, "Object deep eq", `{"a":1,"b":1}`, `{"b":1,"a":1}`],
+    ["test-eq", true, "Array deep eq", "[[2],[1]]", "[[2],[1]]"],
+    ["test-eq", false, "strict: true and 1 deep ineq", "true", "1"],
+    ["test-eq", false, "strict: '1' and 1 deep ineq", `"1"`, "1"],
+    ["test-eq", false, "Null and void deep ineq", "null", "undefined"],
+    ["test-eq", false, "void+null deep ineq", `{"c":"undefined"}`, `{"c":null}`],
+    ["test-eq", false, "void/- deep ineq", `{"a":"undefined","b":1}`, `{"b":1}`],
+
+    ["test-eq", true, "NaN deep eq", `NaN`, `NaN`],
+    ["test-eq", false, "NaN+null deep ineq", `NaN`, `null`],
+    ["test-eq", true, "Infinity deep eq", `Infinity`, `Infinity`],
+    ["test-eq", false, "Infinity+null deep ineq", `Infinity`, `null`],
 
     [
       "test-eq",
@@ -186,6 +236,18 @@ function verifyTestResults(results, shortName, expectedProtocol, useServiceWorke
       "test-result", false,
       "Function did not throw, expected error '/dummy/'"
     ],
+    [
+      "test-result", true,
+      "Function threw, expecting error to match '/An unexpected error occurred/', got 'Error: An unexpected error occurred': assertDeepEq obj with function throws",
+    ],
+    [
+      "test-result", true,
+      "Function threw, expecting error to match '/An unexpected error occurred/', got 'Error: An unexpected error occurred': assertDeepEq with function throws",
+    ],
+    [
+      "test-result", true,
+      "Function threw, expecting error to match '/Unsupported obj type: RegExp/', got 'Error: Unsupported obj type: RegExp': assertDeepEq with RegExp throws",
+    ],
   ];
 
   if (!useServiceWorker) {
@@ -195,7 +257,7 @@ function verifyTestResults(results, shortName, expectedProtocol, useServiceWorke
       ["test-result", false, "Element falsey"],
       ["test-result", false, "[object HTMLHeadElement]"],
       ["test-eq", true, "Element equality", "[object HTMLBodyElement]", "[object HTMLBodyElement]"],
-      ["test-eq", false, "Element ineqality", "[object HTMLBodyElement]", "[object HTMLBodyElement] (different)"],
+      ["test-eq", false, "Element inequality", "[object HTMLBodyElement]", "[object HTMLBodyElement] (different)"],
       ["test-eq", false, "[object HTMLDivElement]", "true", "false"],
     ]);
   }

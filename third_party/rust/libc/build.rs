@@ -97,11 +97,18 @@ fn main() {
         println!("cargo:rustc-cfg=libc_thread_local");
     }
 
-    if const_extern_fn_cargo_feature {
-        if !is_nightly || rustc_minor_ver < 40 {
-            panic!("const-extern-fn requires a nightly compiler >= 1.40")
-        }
+    // Rust >= 1.62.0 allows to use `const_extern_fn` for "Rust" and "C".
+    if rustc_minor_ver >= 62 {
         println!("cargo:rustc-cfg=libc_const_extern_fn");
+    } else {
+        // Rust < 1.62.0 requires a crate feature and feature gate.
+        if const_extern_fn_cargo_feature {
+            if !is_nightly || rustc_minor_ver < 40 {
+                panic!("const-extern-fn requires a nightly compiler >= 1.40");
+            }
+            println!("cargo:rustc-cfg=libc_const_extern_fn_unstable");
+            println!("cargo:rustc-cfg=libc_const_extern_fn");
+        }
     }
 }
 

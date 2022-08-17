@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "android_system_properties"
-version = "0.1.2"
+version = "0.1.4"
 authors = ["Nicolas Silva <nical@fastmail.com>"]
 description = "Minimal Android system properties wrapper"
 homepage = "https://github.com/nical/android_system_properties"
@@ -28,6 +28,7 @@ targets = [
     "armv7-linux-androideabi",
     "aarch64-linux-android",
     "i686-linux-android",
+    "x86_64-linux-android",
     "x86_64-unknown-linux-gnu",
 ]
 

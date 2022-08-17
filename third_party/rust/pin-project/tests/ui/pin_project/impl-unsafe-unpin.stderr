@@ -5,7 +5,7 @@ error[E0119]: conflicting implementations of trait `_::_pin_project::UnsafeUnpin
    | ^^^^^^^^^^^^^^ conflicting implementation for `Foo<_, _>`
 ...
 10 | unsafe impl<T, U> UnsafeUnpin for Foo<T, U> where T: Unpin {}
-   | ---------------------------------------------------------- first implementation here
+   | ------------------------------------------- first implementation here
    |
    = note: this error originates in the derive macro `::pin_project::__private::__PinProjectInternalDerive` (in Nightly builds, run with -Z macro-backtrace for more info)
 

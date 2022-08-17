@@ -47,9 +47,19 @@ const CONFIG_U_NT: &str = "
 
 #[test]
 fn unwrap_newtypes() {
-    let d: Struct = ron::de::from_str(&CONFIG_U_NT).expect("Failed to deserialize");
+    let d: Struct = ron::de::from_str(CONFIG_U_NT).expect("Failed to deserialize");
 
     println!("unwrap_newtypes: {:#?}", d);
+
+    let s = ron::ser::to_string_pretty(
+        &d,
+        ron::ser::PrettyConfig::default().extensions(ron::extensions::Extensions::UNWRAP_NEWTYPES),
+    )
+    .expect("Failed to serialize");
+
+    let d2: Struct = ron::de::from_str(&s).expect("Failed to deserialize");
+
+    assert_eq!(d, d2);
 }
 
 const CONFIG_I_S: &str = "
@@ -75,7 +85,7 @@ const CONFIG_I_S: &str = "
 
 #[test]
 fn implicit_some() {
-    let d: Struct = ron::de::from_str(&CONFIG_I_S).expect("Failed to deserialize");
+    let d: Struct = ron::de::from_str(CONFIG_I_S).expect("Failed to deserialize");
 
     println!("implicit_some: {:#?}", d);
 }

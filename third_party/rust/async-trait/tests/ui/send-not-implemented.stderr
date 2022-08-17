@@ -19,7 +19,7 @@ note: future is not `Send` as this value is used across an await
    |            ^^^^^^ await occurs here, with `_guard` maybe used later
 12 |     }
    |     - `_guard` is later dropped here
-   = note: required for the cast to the object type `dyn Future<Output = ()> + Send`
+   = note: required for the cast from `impl Future<Output = ()>` to the object type `dyn Future<Output = ()> + Send`
 
 error: future cannot be sent between threads safely
   --> tests/ui/send-not-implemented.rs:14:38
@@ -44,4 +44,4 @@ note: future is not `Send` as this value is used across an await
 18 |         true
 19 |     }
    |     - `_guard` is later dropped here
-   = note: required for the cast to the object type `dyn Future<Output = bool> + Send`
+   = note: required for the cast from `impl Future<Output = bool>` to the object type `dyn Future<Output = bool> + Send`

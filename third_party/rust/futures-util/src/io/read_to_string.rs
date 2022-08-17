@@ -22,7 +22,7 @@ impl<R: ?Sized + Unpin> Unpin for ReadToString<'_, R> {}
 impl<'a, R: AsyncRead + ?Sized + Unpin> ReadToString<'a, R> {
     pub(super) fn new(reader: &'a mut R, buf: &'a mut String) -> Self {
         let start_len = buf.len();
-        Self { reader, bytes: mem::replace(buf, String::new()).into_bytes(), buf, start_len }
+        Self { reader, bytes: mem::take(buf).into_bytes(), buf, start_len }
     }
 }
 

@@ -10,7 +10,7 @@ use crate::vec::{self, Vec};
 use core::cmp::Ordering;
 use core::fmt;
 use core::hash::{BuildHasher, Hash};
-use core::iter::{Chain, FromIterator, FusedIterator};
+use core::iter::{Chain, FusedIterator};
 use core::ops::{BitAnd, BitOr, BitXor, Index, RangeBounds, Sub};
 use core::slice;
 
@@ -192,7 +192,7 @@ impl<T, S> IndexSet<T, S> {
     /// Return an iterator over the values of the set, in their order
     pub fn iter(&self) -> Iter<'_, T> {
         Iter {
-            iter: self.map.keys().iter,
+            iter: self.map.as_entries().iter(),
         }
     }
 
@@ -266,6 +266,13 @@ where
     /// Computes in **O(n)** time.
     pub fn shrink_to_fit(&mut self) {
         self.map.shrink_to_fit();
+    }
+
+    /// Shrink the capacity of the set with a lower limit.
+    ///
+    /// Computes in **O(n)** time.
+    pub fn shrink_to(&mut self, min_capacity: usize) {
+        self.map.shrink_to(min_capacity);
     }
 
     /// Insert the value into the set.
@@ -595,8 +602,10 @@ where
     where
         F: FnMut(&T, &T) -> Ordering,
     {
+        let mut entries = self.into_entries();
+        entries.sort_by(move |a, b| cmp(&a.key, &b.key));
         IntoIter {
-            iter: self.map.sorted_by(move |a, _, b, _| cmp(a, b)).iter,
+            iter: entries.into_iter(),
         }
     }
 
@@ -626,11 +635,10 @@ where
     where
         F: FnMut(&T, &T) -> Ordering,
     {
+        let mut entries = self.into_entries();
+        entries.sort_unstable_by(move |a, b| cmp(&a.key, &b.key));
         IntoIter {
-            iter: self
-                .map
-                .sorted_unstable_by(move |a, _, b, _| cmp(a, b))
-                .iter,
+            iter: entries.into_iter(),
         }
     }
 
@@ -690,6 +698,19 @@ impl<T, S> IndexSet<T, S> {
     /// Computes in **O(n)** time (average).
     pub fn shift_remove_index(&mut self, index: usize) -> Option<T> {
         self.map.shift_remove_index(index).map(|(x, ())| x)
+    }
+
+    /// Moves the position of a value from one index to another
+    /// by shifting all other values in-between.
+    ///
+    /// * If `from < to`, the other values will shift down while the targeted value moves up.
+    /// * If `from > to`, the other values will shift up while the targeted value moves down.
+    ///
+    /// ***Panics*** if `from` or `to` are out of bounds.
+    ///
+    /// Computes in **O(n)** time (average).
+    pub fn move_index(&mut self, from: usize, to: usize) {
+        self.map.move_index(from, to)
     }
 
     /// Swaps the position of two values in the set.
@@ -870,7 +891,7 @@ impl<T, S> IntoIterator for IndexSet<T, S> {
 
     fn into_iter(self) -> Self::IntoIter {
         IntoIter {
-            iter: self.map.into_iter().iter,
+            iter: self.into_entries().into_iter(),
         }
     }
 }
@@ -888,7 +909,7 @@ where
     }
 }
 
-#[cfg(all(has_std, rustc_1_51))]
+#[cfg(has_std)]
 impl<T, const N: usize> From<[T; N]> for IndexSet<T, RandomState>
 where
     T: Eq + Hash,
@@ -903,7 +924,7 @@ where
     /// assert_eq!(set1, set2);
     /// ```
     fn from(arr: [T; N]) -> Self {
-        std::array::IntoIter::new(arr).collect()
+        Self::from_iter(arr)
     }
 }
 
@@ -1366,7 +1387,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::enumerate;
     use std::string::String;
 
     #[test]
@@ -1395,7 +1415,7 @@ mod tests {
         let not_present = [1, 3, 6, 9, 10];
         let mut set = IndexSet::with_capacity(insert.len());
 
-        for (i, &elt) in enumerate(&insert) {
+        for (i, &elt) in insert.iter().enumerate() {
             assert_eq!(set.len(), i);
             set.insert(elt);
             assert_eq!(set.len(), i + 1);
@@ -1414,7 +1434,7 @@ mod tests {
         let present = vec![1, 6, 2];
         let mut set = IndexSet::with_capacity(insert.len());
 
-        for (i, &elt) in enumerate(&insert) {
+        for (i, &elt) in insert.iter().enumerate() {
             assert_eq!(set.len(), i);
             let (index, success) = set.insert_full(elt);
             assert!(success);
@@ -1501,7 +1521,7 @@ mod tests {
         let not_present = [1, 3, 6, 9, 10];
         let mut set = IndexSet::with_capacity(replace.len());
 
-        for (i, &elt) in enumerate(&replace) {
+        for (i, &elt) in replace.iter().enumerate() {
             assert_eq!(set.len(), i);
             set.replace(elt);
             assert_eq!(set.len(), i + 1);
@@ -1520,7 +1540,7 @@ mod tests {
         let present = vec![1, 6, 2];
         let mut set = IndexSet::with_capacity(replace.len());
 
-        for (i, &elt) in enumerate(&replace) {
+        for (i, &elt) in replace.iter().enumerate() {
             assert_eq!(set.len(), i);
             let (index, replaced) = set.replace_full(elt);
             assert!(replaced.is_none());
@@ -1607,7 +1627,7 @@ mod tests {
         let not_present = [1, 3, 6, 9, 10];
         let mut set = IndexSet::with_capacity(insert.len());
 
-        for (i, &elt) in enumerate(&insert) {
+        for (i, &elt) in insert.iter().enumerate() {
             assert_eq!(set.len(), i);
             set.insert(elt);
             assert_eq!(set.len(), i + 1);
@@ -1882,7 +1902,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(all(has_std, rustc_1_51))]
+    #[cfg(has_std)]
     fn from_array() {
         let set1 = IndexSet::from([1, 2, 3, 4]);
         let set2: IndexSet<_> = [1, 2, 3, 4].into();

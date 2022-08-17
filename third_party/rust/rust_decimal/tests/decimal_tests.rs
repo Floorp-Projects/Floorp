@@ -3231,10 +3231,23 @@ fn test_zero_eq_negative_zero() {
 }
 
 #[test]
+fn declarative_dec_product() {
+    let vs = (1..5).map(|i| i.into()).collect::<Vec<Decimal>>();
+    let product: Decimal = vs.into_iter().product();
+    assert_eq!(product, Decimal::from(24))
+}
+
+#[test]
+fn declarative_ref_dec_product() {
+    let vs = (1..5).map(|i| i.into()).collect::<Vec<Decimal>>();
+    let product: Decimal = vs.iter().product();
+    assert_eq!(product, Decimal::from(24))
+}
+
+#[test]
 fn declarative_dec_sum() {
     let vs = (0..10).map(|i| i.into()).collect::<Vec<Decimal>>();
-    let sum: Decimal = vs.iter().cloned().sum();
-
+    let sum: Decimal = vs.into_iter().sum();
     assert_eq!(sum, Decimal::from(45))
 }
 
@@ -3242,7 +3255,6 @@ fn declarative_dec_sum() {
 fn declarative_ref_dec_sum() {
     let vs = (0..10).map(|i| i.into()).collect::<Vec<Decimal>>();
     let sum: Decimal = vs.iter().sum();
-
     assert_eq!(sum, Decimal::from(45))
 }
 

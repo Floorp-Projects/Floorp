@@ -75,7 +75,7 @@ impl<T> Abortable<T> {
 /// in calls to `Abortable::new`.
 #[derive(Debug)]
 pub struct AbortRegistration {
-    inner: Arc<AbortInner>,
+    pub(crate) inner: Arc<AbortInner>,
 }
 
 /// A handle to an `Abortable` task.
@@ -100,9 +100,9 @@ impl AbortHandle {
 // Inner type storing the waker to awaken and a bool indicating that it
 // should be aborted.
 #[derive(Debug)]
-struct AbortInner {
-    waker: AtomicWaker,
-    aborted: AtomicBool,
+pub(crate) struct AbortInner {
+    pub(crate) waker: AtomicWaker,
+    pub(crate) aborted: AtomicBool,
 }
 
 /// Indicator that the `Abortable` task was aborted.

@@ -125,6 +125,9 @@ tinyvec = { path = "build/rust/tinyvec" }
 # Patch wasi 0.10 to 0.11
 wasi = { path = "build/rust/wasi" }
 
+# Patch hashbrown 0.11 to 0.12
+hashbrown = { path = "build/rust/hashbrown" }
+
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 

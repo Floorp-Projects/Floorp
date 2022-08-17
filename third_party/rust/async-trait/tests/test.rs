@@ -618,6 +618,7 @@ pub mod issue45 {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)] // https://github.com/matklad/once_cell/pull/185
     fn tracing() {
         // Create the future outside of the subscriber, as no call to tracing
         // should be made until the future is polled.

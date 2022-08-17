@@ -425,6 +425,6 @@ add_task(async function test_remoteImages_prefetch() {
     await SpecialPowers.popPrefEnv();
     await ASRouter._updateMessageProviders();
     await RemoteImagesTestUtils.wipeCache();
-    sandbox.reset();
+    sandbox.restore();
   }
 });

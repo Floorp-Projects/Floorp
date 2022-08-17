@@ -89,6 +89,22 @@ wr:
       - gfx-telemetry-alerts@mozilla.com
     expires: never
     telemetry_mirror: WR_RENDERER_TIME
+  renderer_time_no_sc:
+    type: timing_distribution
+    description: >
+      WebRender renderer time excluding frames in which shader compilation took
+      place.
+    time_unit: microsecond
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1784286
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1784286
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+    expires: never
+    telemetry_mirror: WR_RENDERER_TIME_NO_SC_MS
   framebuild_time:
     type: timing_distribution
     description: >

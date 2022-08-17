@@ -11,16 +11,26 @@
 
 [package]
 edition = "2018"
+rust-version = "1.38"
 name = "crossbeam-deque"
-version = "0.8.1"
-authors = ["The Crossbeam Project Developers"]
+version = "0.8.2"
 description = "Concurrent work-stealing deque"
 homepage = "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-deque"
-documentation = "https://docs.rs/crossbeam-deque"
-keywords = ["chase-lev", "lock-free", "scheduler", "scheduling"]
-categories = ["algorithms", "concurrency", "data-structures"]
+readme = "README.md"
+keywords = [
+    "chase-lev",
+    "lock-free",
+    "scheduler",
+    "scheduling",
+]
+categories = [
+    "algorithms",
+    "concurrency",
+    "data-structures",
+]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/crossbeam-rs/crossbeam"
+
 [dependencies.cfg-if]
 version = "1"
 
@@ -33,9 +43,13 @@ default-features = false
 version = "0.8"
 optional = true
 default-features = false
+
 [dev-dependencies.rand]
 version = "0.8"
 
 [features]
 default = ["std"]
-std = ["crossbeam-epoch/std", "crossbeam-utils/std"]
+std = [
+    "crossbeam-epoch/std",
+    "crossbeam-utils/std",
+]

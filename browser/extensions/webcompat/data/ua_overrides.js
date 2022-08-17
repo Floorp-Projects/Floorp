@@ -881,23 +881,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1751604 - UA override for /www.otsuka.co.jp/fib/
-     *
-     * The site's content is not loaded unless a Chrome UA is used.
-     */
-    id: "bug1751604",
-    platform: "desktop",
-    domain: "www.otsuka.co.jp",
-    bug: "1751604",
-    config: {
-      matches: ["*://www.otsuka.co.jp/fib/*"],
-      uaTransformer: originalUA => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
      * Bug 1771200 - UA override for animalplanet.com
      * Webcompat issue #99993 - https://webcompat.com/issues/103727
      *
@@ -957,7 +940,7 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1776897 - UA override for watch.antennaplus.gr
+     * Bug 1776897 - UA override for www.edencast.fr
      * Webcompat issue #106545 - https://webcompat.com/issues/106545
      *
      * The site's podcast audio player does not load unless a Chrome UA is used.
@@ -968,6 +951,24 @@ const AVAILABLE_UA_OVERRIDES = [
     bug: "1776897",
     config: {
       matches: ["*://www.edencast.fr/zoomcast*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1784361 - UA override for coldwellbankerhomes.com
+     * Webcompat issue #108535 - https://webcompat.com/issues/108535
+     *
+     * An error is thrown due to missing element, unless Chrome UA is used
+     */
+    id: "bug1784361",
+    platform: "android",
+    domain: "coldwellbankerhomes.com",
+    bug: "1784361",
+    config: {
+      matches: ["*://*.coldwellbankerhomes.com/*"],
       uaTransformer: originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA();
       },

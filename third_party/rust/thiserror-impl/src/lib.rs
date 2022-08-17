@@ -2,6 +2,7 @@
     clippy::blocks_in_if_conditions,
     clippy::cast_lossless,
     clippy::cast_possible_truncation,
+    clippy::manual_find,
     clippy::manual_map,
     clippy::map_unwrap_or,
     clippy::needless_pass_by_value,

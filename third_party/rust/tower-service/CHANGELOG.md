@@ -1,5 +1,21 @@
 # Unreleased
 
+- None
+
+# 0.3.2 (June 17, 2022)
+
+## Added
+
+- **docs**: Clarify subtlety around cloning and readiness in the `Service` docs
+  ([#548])
+- **docs**: Clarify details around shared resource consumption in `poll_ready()`
+  ([#662])
+
+
+[#548]: https://github.com/tower-rs/tower/pull/548
+[#662]: https://github.com/tower-rs/tower/pull/662
+
+
 # 0.3.1 (November 29, 2019)
 
 - Improve example in `Service` docs. ([#510])

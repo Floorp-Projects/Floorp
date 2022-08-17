@@ -8,10 +8,10 @@ mod inner {
 
     #[allow(clippy::map_err_ignore)]
     pub fn do_alloc<A: Allocator>(alloc: &A, layout: Layout) -> Result<NonNull<u8>, ()> {
-        alloc
-            .allocate(layout)
-            .map(|ptr| ptr.as_non_null_ptr())
-            .map_err(|_| ())
+        match alloc.allocate(layout) {
+            Ok(ptr) => Ok(ptr.as_non_null_ptr()),
+            Err(_) => Err(()),
+        }
     }
 
     #[cfg(feature = "bumpalo")]
@@ -33,6 +33,7 @@ mod inner {
     use crate::alloc::alloc::{alloc, dealloc, Layout};
     use core::ptr::NonNull;
 
+    #[allow(clippy::missing_safety_doc)] // not exposed outside of this crate
     pub unsafe trait Allocator {
         fn allocate(&self, layout: Layout) -> Result<NonNull<u8>, ()>;
         unsafe fn deallocate(&self, ptr: NonNull<u8>, layout: Layout);
@@ -47,7 +48,7 @@ mod inner {
         }
         #[inline]
         unsafe fn deallocate(&self, ptr: NonNull<u8>, layout: Layout) {
-            dealloc(ptr.as_ptr(), layout)
+            dealloc(ptr.as_ptr(), layout);
         }
     }
     impl Default for Global {

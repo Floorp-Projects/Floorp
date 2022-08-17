@@ -7,10 +7,8 @@ error[E0367]: `Drop` impl requires `T: Unpin` but the struct it is implemented f
 note: the implementor must specify the same requirement
   --> tests/ui/pinned_drop/conditional-drop-impl.rs:7:1
    |
-7  | / struct DropImpl<T> {
-8  | |     f: T,
-9  | | }
-   | |_^
+7  | struct DropImpl<T> {
+   | ^^^^^^^^^^^^^^^^^^
 
 error[E0277]: `T` cannot be unpinned
   --> tests/ui/pinned_drop/conditional-drop-impl.rs:16:15

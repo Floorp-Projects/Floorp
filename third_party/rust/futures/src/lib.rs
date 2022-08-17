@@ -25,13 +25,13 @@
 //! within macros and keywords such as async and await!.
 //!
 //! ```rust
-//! # if cfg!(miri) { return; } // https://github.com/rust-lang/miri/issues/1038
 //! # use futures::channel::mpsc;
 //! # use futures::executor; ///standard executors to provide a context for futures and streams
 //! # use futures::executor::ThreadPool;
 //! # use futures::StreamExt;
 //! #
 //! fn main() {
+//!     # {
 //!     let pool = ThreadPool::new().expect("Failed to build pool");
 //!     let (tx, rx) = mpsc::unbounded::<i32>();
 //!
@@ -73,6 +73,8 @@
 //!     let values: Vec<i32> = executor::block_on(fut_values);
 //!
 //!     println!("Values={:?}", values);
+//!     # }
+//!     # std::thread::sleep(std::time::Duration::from_millis(500)); // wait for background threads closed: https://github.com/rust-lang/miri/issues/1371
 //! }
 //! ```
 //!

@@ -13,11 +13,20 @@
 edition = "2018"
 rust-version = "1.31"
 name = "serde_repr"
-version = "0.1.8"
+version = "0.1.9"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "Derive Serialize and Deserialize that delegates to the underlying repr of a C-like enum."
 documentation = "https://docs.rs/serde_repr"
 readme = "README.md"
+keywords = [
+    "serde",
+    "serialization",
+    "integer",
+]
+categories = [
+    "encoding",
+    "no-std",
+]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dtolnay/serde-repr"
 

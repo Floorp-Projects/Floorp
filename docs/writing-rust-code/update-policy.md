@@ -7,6 +7,69 @@ This allows contributors to know when new features will be usable, and
 downstream packagers to know what toolchain will be required for each Firefox
 release. Both benefit from the predictability of a schedule. 
 
+## Policy
+
+### Official builds
+
+_We ship official stable Firefox with a stable Rust._
+
+As a general rule, we update the Rust version used to build Firefox Nightly
+soon after its release, unless it's less than 7 days away from a soft-freeze,
+in which case we wait for the next Nightly train.
+
+We don't upgrade the Rust version in the beta or release branches of Firefox.
+
+The following exceptions apply:
+
+- We may use a Rust version from the Rust beta or nightly channels for new
+  platforms (e.g. we did so for Android, arm64 Windows and arm64 macOS), and
+  later upgrade when that Rust version becomes stable (we may even do so on the
+  Firefox beta branch).
+
+- We may skip the update (or backout the update) if major problems are
+  encountered (typically, we've had to do so because of build problems, crash
+  reporting bustage, or performance issues).
+
+### Developer builds
+
+_Local developer builds use whatever Rust toolchain is available on the
+system._
+
+Someone building Firefox can maintain the latest stable Rust with the `rustup`
+or `mach bootstrap` tools, or try other variations.
+
+### Minimum Supported Rust Version
+
+_We will update the Minimum Supported Rust Version (MSRV) when required._
+
+The MSRV will generally remain unchanged, until a newer version is required
+by some code.
+
+When that happens, we'll prefer to update the MSRV to the strict minimum
+required at that moment (e.g. if we require version 1.47.0, the currently used
+Rust version is 1.51.0, and a crate needs 1.50.0, we'll prefer to update the
+MSRV to 1.50.0 rather than 1.51.0).
+
+The MSRV won't be updated to a version of Rust that hasn't been used for
+Firefox Nightly for at least 14 days.
+
+We expect ESR releases will keep their MSRV, so backporting security fixes may
+require Rust compatibility work.
+
+### Rationale
+
+Historically, the Rust ecosystem quickly required new features provided by new
+Rust compilers, which made it necessary to update the minimum supported version
+quite often, and as such, a scheduled update was deemed a better trade-off.
+
+Fast-forward several years, and new Rust compiler releases more rarely sport
+ground-breaking new features, which has reduced the necessity to update quite
+significantly.
+
+On the flip side, in some instances, we have had to stick to specific versions
+of the Rust compiler for extended periods of time because of e.g. regressions,
+going against the schedule.
+
 ## Schedule
 
 Here are the Rust versions for each Firefox version.
@@ -14,10 +77,10 @@ Here are the Rust versions for each Firefox version.
 - The "Uses" column indicates the version of Rust used to build
   releases shipped to users.
 
-- The "Requires" column indicates the oldest version of Rust that can
-  successfully build the sources.
-  
-| Firefox Version | Uses | Requires | Rust "Uses" release date | Nightly Soft Freeze | Firefox release date |
+- The "MSRV" column indicates the minimum supported Rust version to build
+  the sources.
+
+| Firefox Version | Uses | MSRV | Rust "Uses" release date | Nightly Soft Freeze | Firefox release date |
 |-----------------|------|----------|--------------------------|---------------------|----------------------|
 | Firefox 56 | Rust 1.19.0 | 1.17.0 | 2017 April 27 | | 2017 September 26
 | Firefox 57 | Rust 1.19.0 | 1.19.0 | 2017 July 20 | | 2017 November 14
@@ -73,149 +136,3 @@ Here are the Rust versions for each Firefox version.
 | Firefox 106 | Rust 1.63.0 | ? | 2022 August 11 | 2022 September 15 | 2022 October 18
 | Firefox 107 | Rust 1.64.0 | ? | 2022 September 22 | 2022 October 13 | 2022 November 15
 | Firefox 108 | Rust 1.65.0 | ? | 2022 November 3 | 2022 November 10 | 2022 December 13
-
-New feature adoption schedule:
-
-| Mozilla-central can use | Starting on (Rust release + 2 weeks) |
-|-------------------------|--------------------------------------|
-| Rust 1.19.0 | 2017 August 3
-| Rust 1.20.0 | 2017 October 17 ([was](https://bugzilla.mozilla.org/show_bug.cgi?id=1396884) September 14)
-| Rust 1.21.0 | 2017 October 26
-| Rust 1.22.0 | 2017 December 7
-| Rust 1.23.0 | 2018 January 26 ([was](https://bugzilla.mozilla.org/show_bug.cgi?id=1418081#c8) January 18)
-| Rust 1.24.0 | 2018 March 1
-| Rust 1.25.0 | 2018 April 12
-| Rust 1.26.0 | 2018 May 24
-| Rust 1.27.0 | 2018 July 5
-| Rust 1.28.0 | 2018 August 16
-| Rust 1.29.0 | 2018 September 27
-| Rust 1.30.0 | 2018 November 8
-
-## Policy
-
-### Official builds
-
-_We ship official stable Firefox with stable Rust._
-
-Typically we build Firefox Nightly with the current stable Rust and let that
-configuration ride through beta to release. There have been frequent exceptions
-where we've adopted a beta Rust during the Nightly phase to address some
-platform support issue, and later updated when that Rust version became stable.
-For example, we needed to use beta Rust for our own builds when we first added
-Rust support to Firefox for Android.
-
-The policy provides good stability guarantees once Firefox is in release, while
-giving us the freedom to respond to the issues experience shows we'll need to
-address during development.
-
-###  Developer builds
-
-_Local developer builds use whatever Rust toolchain is available on the
-system._
-
-Someone building Firefox can maintain the latest stable Rust with the `rustup`
-for `mach bootstrap` tools, or try other variations.
-
-### Required versions
-
-_We require a new stable Rust starting 2 weeks after it is released._
-
-This policy effectively removes the difference between the required Rust
-version and the default target for official builds, while still giving tier-3
-developers some time to process toolchain updates.
-
-Downstream packagers still have 2-3 months to package each stable Rust release
-before it’s required by a new Firefox release.
-
-The stable+two weeks requirement is a rough target. We expect to hit it within
-a few days for most Rust releases. But, for example, when the target date falls
-within a mozilla-central soft freeze (before branching for a beta release) we
-may update a week later.
-
-We expect esr releases will stay on the same minimum Rust version, so
-backporting security fixes may require Rust compatibility work too.
-
-### Rationale
-
-We need to be fast and efficient across the whole system which includes the
-Rust, Servo, and Firefox development teams. We realise that the decisions we
-make have an impact downstream, and we want to minimise the negative aspects of
-that impact. However, we cannot do so at the expense of our own productivity.
-
-There are many other stakeholders, of course, but our work in Gecko and Servo
-are major drivers for Rust language, compiler, and library development. That
-influence is more effective if we can iterate quickly. Servo itself often uses
-experimental language features to give the necessary early feedback on features
-as they evolve.
-
-Rust updates every six weeks, just like Firefox. This is more like web
-languages than native languages, but it's been great for building community. We
-(as Gecko developers) should embrace it.
-
-Many of us think of the toolchain and source code as being conceptually
-different. At this point in time, Rust is evolving much more quickly than
-Python or C++. For now it is easier to think of Rust as being part of Firefox,
-rather than thinking of it like a C++ toolchain with decades of history which
-we we have little influence on.
-
-Official build configurations are generally part of the Firefox code itself,
-subject to normal review, and don't affect anyone else. Therefore it's
-straightforward to manage the Rust toolchain we use directly like any other
-change.
-
-For contributors, we maintain a minimum supported Rust toolchain This helps
-those working on tier-3 platforms, where updating Rust can be more difficult
-than just running `rustup update`, by giving them time to adapt. However, it
-means other contributors must backport newer work to maintain compatibility. As
-more Rust code was merged into Firefox this became expensive.
-
-Historically we bumped this minimum every 3-4 Rust releases, which also helped
-contributors on slow network connections since they didn't have to download
-toolchains as often. Deciding to bump this way involved negotiating each
-change, which by late 2017 many contributors felt was a more significant
-burden. Delaying to give tier-3 platforms months instead of weeks to update
-their Rust packages is also not considered a good trade-off.
-
-My experience is that it takes about a week for version bumps to start pulling
-in dependent crates using new language features, so updating after a couple of
-weeks acts as only a moderate restraint on Servo developers working on Gecko
-modules. I think this is the correct trade-off between those two groups.
-
-### Alternate Proposals
-
-_We require nightly Rust_
-
-This would certainly speed up the feedback with language design. However, we
-would frequently encounter build breakage when unstable language features
-change. Even Servo pins to a specific nightly to avoid this problem. That’s
-appropriate for a smaller research project, but not something the size of
-Firefox.
-
-We should and do test building Firefox with nightly Rust to catch compiler
-issues, but that’s different from requiring everyone to use unstable Rust.
-
-_We require beta Rust_
-
-I don’t think anyone has suggested this, but I thought I’d include it for
-completeness. This shortens the feedback cycle for new features at the expense
-of more churn for contributors. It’s not a good trade-off because by the time a
-new feature is stabilized in beta Rust, it’s too late to change it much. This
-is better served by particular developers working with upstream directly. I
-believe beta is also something of an “excluded middle” in the Rust ecosystem,
-with most contributors working with either stable or unstable nightly Rust.
-
-_We require the previous stable Rust once a new stable Rust is released._
-
-That is, we bump the Firefox minimum to Rust 1.n.m when rust 1.(n+1).0 stable
-is released. This is roughly every 6 weeks, with six weeks to update before
-bumping into the new requirement. This policy might be simpler for contributors
-to remember. There's not much difference in the amount of time downstream
-packager receive for a particular Firefox release. This is a trade-off of more
-time for tier-3 developers against people working on Gecko/Servo components
-doing extra work to maintain compatibility. As I say above, I think this is the
-wrong choice.
-
-_We bump the minimum Rust version only when new features are compelling._
-
-This reduces churn for developers, but the need to negotiate each bump takes
-time better spent on development. See the motivation section above. 

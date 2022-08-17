@@ -2658,8 +2658,9 @@ bool DrawTargetWebgl::SharedContext::FillGlyphsAccel(
   // dark-on-light, we may end up with different amounts of dilation applied, so
   // we can't use the same mask in the two circumstances, or the glyphs will be
   // dilated incorrectly.
-  bool lightOnDark = !useBitmaps && color.r >= 0.33f && color.g >= 0.33f &&
-                     color.b >= 0.33f && color.r + color.g + color.b >= 2.0f;
+  bool lightOnDark =
+      useBitmaps || (color.r >= 0.33f && color.g >= 0.33f && color.b >= 0.33f &&
+                     color.r + color.g + color.b >= 2.0f);
 #else
   // On other platforms, we assume no color-dependent dilation.
   const bool lightOnDark = true;

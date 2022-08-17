@@ -83,7 +83,7 @@ const TemporaryPermissions = {
       !browserURI ||
       !SitePermissions.isSupportedScheme(browserURI.scheme)
     ) {
-      return;
+      return false;
     }
     let entry = this._stateByBrowser.get(browser);
     if (!entry) {
@@ -95,7 +95,7 @@ const TemporaryPermissions = {
     let { strict, nonStrict } = this._getKeysFromURI(browserURI);
     let setKey;
     let deleteKey;
-    // Differenciate between block and non-block permissions. If we store a
+    // Differentiate between block and non-block permissions. If we store a
     // block permission we need to delete old entries which may be set under URI
     // prePath before setting the new permission for baseDomain. For non-block
     // permissions this is swapped.
@@ -112,6 +112,7 @@ const TemporaryPermissions = {
     }
 
     let expireTimeout = uriToPerm[setKey][id]?.expireTimeout;
+    let previousState = uriToPerm[setKey][id]?.state;
     // If overwriting a permission state. We need to cancel the old timeout.
     if (expireTimeout) {
       lazy.clearTimeout(expireTimeout);
@@ -139,14 +140,15 @@ const TemporaryPermissions = {
     // which may be set for baseDomain and vice versa. An individual permission
     // must only ever be keyed by either prePath or baseDomain.
     let permissions = uriToPerm[deleteKey];
-    if (!permissions) {
-      return;
+    if (permissions) {
+      expireTimeout = permissions[id]?.expireTimeout;
+      if (expireTimeout) {
+        lazy.clearTimeout(expireTimeout);
+      }
+      delete permissions[id];
     }
-    expireTimeout = permissions[id]?.expireTimeout;
-    if (expireTimeout) {
-      lazy.clearTimeout(expireTimeout);
-    }
-    delete permissions[id];
+
+    return state != previousState;
   },
 
   // Removes a permission with the specified id for the specified browser.
@@ -156,7 +158,7 @@ const TemporaryPermissions = {
       !SitePermissions.isSupportedScheme(browser.currentURI.scheme) ||
       !this._stateByBrowser.has(browser)
     ) {
-      return;
+      return false;
     }
     // Permission can be stored by any of the two keys (strict and non-strict).
     // getKeysFromURI can throw. We let the caller handle the exception.
@@ -172,9 +174,10 @@ const TemporaryPermissions = {
         // Individual permissions can only ever be keyed either strict or
         // non-strict. If we find the permission via the first key run we can
         // return early.
-        return;
+        return true;
       }
     }
+    return false;
   },
 
   // Gets a permission with the specified id for the specified browser.
@@ -321,7 +324,7 @@ const GloballyBlockedPermissions = {
     }
 
     if (entry[prePath][id]) {
-      return;
+      return false;
     }
     entry[prePath][id] = true;
 
@@ -350,6 +353,7 @@ const GloballyBlockedPermissions = {
       },
       Ci.nsIWebProgress.NOTIFY_LOCATION
     );
+    return true;
   },
 
   // Removes a permission with the specified id for the specified browser.
@@ -806,10 +810,11 @@ var SitePermissions = {
       );
     }
     if (scope == this.SCOPE_GLOBAL && state == this.BLOCK) {
-      GloballyBlockedPermissions.set(browser, permissionID);
-      browser.dispatchEvent(
-        new browser.ownerGlobal.CustomEvent("PermissionStateChange")
-      );
+      if (GloballyBlockedPermissions.set(browser, permissionID)) {
+        browser.dispatchEvent(
+          new browser.ownerGlobal.CustomEvent("PermissionStateChange")
+        );
+      }
       return;
     }
 
@@ -840,26 +845,28 @@ var SitePermissions = {
         throw new Error("expireTime must be a positive integer");
       }
 
-      TemporaryPermissions.set(
-        browser,
-        permissionID,
-        state,
-        expireTimeMS,
-        browserURI,
-        // On permission expiry
-        origBrowser => {
-          if (!origBrowser.ownerGlobal) {
-            return;
+      if (
+        TemporaryPermissions.set(
+          browser,
+          permissionID,
+          state,
+          expireTimeMS,
+          browserURI,
+          // On permission expiry
+          origBrowser => {
+            if (!origBrowser.ownerGlobal) {
+              return;
+            }
+            origBrowser.dispatchEvent(
+              new origBrowser.ownerGlobal.CustomEvent("PermissionStateChange")
+            );
           }
-          origBrowser.dispatchEvent(
-            new origBrowser.ownerGlobal.CustomEvent("PermissionStateChange")
-          );
-        }
-      );
-
-      browser.dispatchEvent(
-        new browser.ownerGlobal.CustomEvent("PermissionStateChange")
-      );
+        )
+      ) {
+        browser.dispatchEvent(
+          new browser.ownerGlobal.CustomEvent("PermissionStateChange")
+        );
+      }
     } else if (this.isSupportedPrincipal(principal)) {
       let perms_scope = Services.perms.EXPIRE_NEVER;
       if (scope == this.SCOPE_SESSION) {
@@ -900,9 +907,8 @@ var SitePermissions = {
     }
 
     // TemporaryPermissions.get() deletes expired permissions automatically,
-    if (TemporaryPermissions.get(browser, permissionID)) {
-      // If it exists but has not expired, remove it explicitly.
-      TemporaryPermissions.remove(browser, permissionID);
+    // if it hasn't expired, remove it explicitly.
+    if (TemporaryPermissions.remove(browser, permissionID)) {
       // Send a PermissionStateChange event only if the permission hasn't expired.
       browser.dispatchEvent(
         new browser.ownerGlobal.CustomEvent("PermissionStateChange")

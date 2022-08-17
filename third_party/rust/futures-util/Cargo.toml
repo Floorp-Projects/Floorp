@@ -13,11 +13,12 @@
 edition = "2018"
 rust-version = "1.45"
 name = "futures-util"
-version = "0.3.21"
+version = "0.3.23"
 description = """
 Common utilities and extension traits for the futures-rs library.
 """
 homepage = "https://rust-lang.github.io/futures-rs"
+readme = "README.md"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-lang/futures-rs"
 
@@ -29,33 +30,33 @@ rustdoc-args = [
 ]
 
 [dependencies.futures-channel]
-version = "0.3.21"
+version = "0.3.23"
 features = ["std"]
 optional = true
 default-features = false
 
 [dependencies.futures-core]
-version = "0.3.21"
+version = "0.3.23"
 default-features = false
 
 [dependencies.futures-io]
-version = "0.3.21"
+version = "0.3.23"
 features = ["std"]
 optional = true
 default-features = false
 
 [dependencies.futures-macro]
-version = "=0.3.21"
+version = "=0.3.23"
 optional = true
 default-features = false
 
 [dependencies.futures-sink]
-version = "0.3.21"
+version = "0.3.23"
 optional = true
 default-features = false
 
 [dependencies.futures-task]
-version = "0.3.21"
+version = "0.3.23"
 default-features = false
 
 [dependencies.futures_01]
@@ -68,7 +69,7 @@ version = "2.2"
 optional = true
 
 [dependencies.pin-project-lite]
-version = "0.2.4"
+version = "0.2.6"
 
 [dependencies.pin-utils]
 version = "0.1.0"

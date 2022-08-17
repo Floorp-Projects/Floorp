@@ -41,6 +41,7 @@ let expectedCommonApis = [
   "runtime.sendMessage",
   // browser.test is only available in xpcshell or when
   // Cu.isInAutomation is true.
+  "test.assertDeepEq",
   "test.assertEq",
   "test.assertFalse",
   "test.assertRejects",

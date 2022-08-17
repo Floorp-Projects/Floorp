@@ -30,21 +30,12 @@ var prefs = [
   ["apz.fling_min_velocity_threshold", "10000"],
 ];
 
-var overscroll_prefs = [...prefs,
-                        ["apz.overscroll.enabled", true],
-                        ["apz.overscroll.test_async_scroll_offset.enabled", true],
-                        ["ui.prefersReducedMotion", 0],
-                       ];
-
 var subtests = [
   {"file": "helper_hittest_deep_scene_stack.html", "prefs": prefs},
   {"file": "helper_hittest_pointerevents_svg.html", "prefs": prefs},
   {"file": "helper_hittest_clippath.html", "prefs": prefs},
   {"file": "helper_hittest_hoisted_scrollinfo.html", "prefs": prefs},
   {"file": "helper_hittest_hidden_inactive_scrollframe.html", "prefs": prefs},
-  {"file": "helper_hittest_overscroll.html", "prefs": overscroll_prefs},
-  {"file": "helper_hittest_overscroll_subframe.html", "prefs": overscroll_prefs},
-  {"file": "helper_hittest_overscroll_contextmenu.html", "prefs": overscroll_prefs},
   {"file": "helper_hittest_bug1715187.html", "prefs": prefs},
   {"file": "helper_hittest_bug1715369.html", "prefs": prefs},
   {"file": "helper_hittest_fixed.html", "prefs": prefs},

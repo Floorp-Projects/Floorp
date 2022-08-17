@@ -3,27 +3,31 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 name = "bit-set"
-version = "0.5.2"
+version = "0.5.3"
 authors = ["Alexis Beingessner <a.beingessner@gmail.com>"]
 description = "A set of bits"
 homepage = "https://github.com/contain-rs/bit-set"
 documentation = "https://contain-rs.github.io/bit-set/bit_set"
 readme = "README.md"
-keywords = ["data-structures", "bitset"]
+keywords = [
+    "data-structures",
+    "bitset",
+]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/contain-rs/bit-set"
+
 [dependencies.bit-vec]
 version = "0.6.1"
 default-features = false
+
 [dev-dependencies.rand]
 version = "0.3"
 

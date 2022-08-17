@@ -46,6 +46,9 @@ fn is_empty() {
 
 #[test]
 fn spsc() {
+    #[cfg(miri)]
+    const COUNT: usize = 500;
+    #[cfg(not(miri))]
     const COUNT: usize = 100_000;
 
     let q = Injector::new();
@@ -58,6 +61,8 @@ fn spsc() {
                         assert_eq!(i, v);
                         break;
                     }
+                    #[cfg(miri)]
+                    std::hint::spin_loop();
                 }
             }
 
@@ -73,6 +78,9 @@ fn spsc() {
 
 #[test]
 fn mpmc() {
+    #[cfg(miri)]
+    const COUNT: usize = 500;
+    #[cfg(not(miri))]
     const COUNT: usize = 25_000;
     const THREADS: usize = 4;
 
@@ -96,6 +104,8 @@ fn mpmc() {
                             v[n].fetch_add(1, SeqCst);
                             break;
                         }
+                        #[cfg(miri)]
+                        std::hint::spin_loop();
                     }
                 }
             });
@@ -111,6 +121,9 @@ fn mpmc() {
 #[test]
 fn stampede() {
     const THREADS: usize = 8;
+    #[cfg(miri)]
+    const COUNT: usize = 500;
+    #[cfg(not(miri))]
     const COUNT: usize = 50_000;
 
     let q = Injector::new();
@@ -152,6 +165,9 @@ fn stampede() {
 #[test]
 fn stress() {
     const THREADS: usize = 8;
+    #[cfg(miri)]
+    const COUNT: usize = 500;
+    #[cfg(not(miri))]
     const COUNT: usize = 50_000;
 
     let q = Injector::new();
@@ -208,6 +224,7 @@ fn stress() {
     .unwrap();
 }
 
+#[cfg_attr(miri, ignore)] // Miri is too slow
 #[test]
 fn no_starvation() {
     const THREADS: usize = 8;
@@ -269,8 +286,17 @@ fn no_starvation() {
 
 #[test]
 fn destructors() {
+    #[cfg(miri)]
+    const THREADS: usize = 2;
+    #[cfg(not(miri))]
     const THREADS: usize = 8;
+    #[cfg(miri)]
+    const COUNT: usize = 500;
+    #[cfg(not(miri))]
     const COUNT: usize = 50_000;
+    #[cfg(miri)]
+    const STEPS: usize = 100;
+    #[cfg(not(miri))]
     const STEPS: usize = 1000;
 
     struct Elem(usize, Arc<Mutex<Vec<usize>>>);
@@ -341,7 +367,7 @@ fn destructors() {
     {
         let mut v = dropped.lock().unwrap();
         assert_eq!(v.len(), rem);
-        v.sort();
+        v.sort_unstable();
         for pair in v.windows(2) {
             assert_eq!(pair[0] + 1, pair[1]);
         }

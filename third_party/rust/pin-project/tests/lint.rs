@@ -8,14 +8,16 @@
 #![forbid(future_incompatible, rust_2018_compatibility, rust_2021_compatibility)]
 // lints forbidden as a part of future_incompatible, rust_2018_compatibility, and rust_2021_compatibility are not included in the list below.
 // elided_lifetimes_in_paths, explicit_outlives_requirements, unused_extern_crates:  as a part of rust_2018_idioms
-// unsafe_block_in_unsafe_fn: requires Rust 1.52. and, we don't generate unsafe fn.
+// unsafe_op_in_unsafe_fn: requires Rust 1.52. and, we don't generate unsafe fn.
 // non_exhaustive_omitted_patterns: unstable
 // unstable_features: no way to generate #![feature(..)] by macros, expect for unstable inner attribute. and this lint is deprecated: https://doc.rust-lang.org/rustc/lints/listing/allowed-by-default.html#unstable-features
-// unused_crate_dependencies: unrelated
+// unused_crate_dependencies, must_not_suspend: unrelated
 // unsafe_code: checked in forbid_unsafe module
 #![warn(
     box_pointers,
     deprecated_in_future,
+    fuzzy_provenance_casts,
+    lossy_provenance_casts,
     macro_use_extern_crate,
     meta_variable_misuse,
     missing_abi,
@@ -32,11 +34,12 @@
     unused_lifetimes,
     unused_qualifications,
     unused_results,
+    unused_tuple_struct_fields,
     variant_size_differences
 )]
 #![warn(clippy::all, clippy::pedantic, clippy::nursery, clippy::restriction)]
 #![allow(clippy::blanket_clippy_restriction_lints)] // this is a test, so enable all restriction lints intentionally.
-#![allow(clippy::exhaustive_structs, clippy::exhaustive_enums)] // TODO
+#![allow(clippy::exhaustive_structs, clippy::exhaustive_enums, clippy::single_char_lifetime_names)] // TODO
 
 pub mod basic {
     include!("include/basic.rs");
@@ -237,14 +240,17 @@ pub mod basic {
                     Unit,
                 }
 
+                #[allow(clippy::undocumented_unsafe_blocks)]
                 unsafe impl<T: ::pin_project::__private::Unpin, U: ::pin_project::__private::Unpin>
                     ::pin_project::UnsafeUnpin for UnsafeUnpinStruct<T, U>
                 {
                 }
+                #[allow(clippy::undocumented_unsafe_blocks)]
                 unsafe impl<T: ::pin_project::__private::Unpin, U: ::pin_project::__private::Unpin>
                     ::pin_project::UnsafeUnpin for UnsafeUnpinTupleStruct<T, U>
                 {
                 }
+                #[allow(clippy::undocumented_unsafe_blocks)]
                 unsafe impl<T: ::pin_project::__private::Unpin, U: ::pin_project::__private::Unpin>
                     ::pin_project::UnsafeUnpin for UnsafeUnpinEnum<T, U>
                 {
@@ -756,6 +762,7 @@ pub mod explicit_outlives_requirements {
     }
 }
 
+#[allow(missing_debug_implementations)]
 pub mod single_use_lifetimes {
     use pin_project::pin_project;
 
@@ -765,7 +772,6 @@ pub mod single_use_lifetimes {
     #[allow(unused_lifetimes)] // for the type itself
     #[allow(single_use_lifetimes)] // for the type itself: https://github.com/rust-lang/rust/issues/55058
     #[pin_project(project_replace)]
-    #[derive(Debug)]
     pub struct Hrtb<'pin___, T>
     where
         for<'pin> &'pin T: Unpin,
@@ -788,7 +794,6 @@ pub mod single_use_lifetimes {
                 #[allow(unused_lifetimes)] // for the type itself
                 #[allow(single_use_lifetimes)] // for the type itself: https://github.com/rust-lang/rust/issues/55058
                 #[pin_project(project_replace)]
-                #[derive(Debug)]
                 pub struct Hrtb<'pin___, T>
                 where
                     for<'pin> &'pin T: Unpin,
@@ -917,12 +922,12 @@ pub mod clippy_mut_mut {
     }
 }
 
+#[allow(missing_debug_implementations)]
 #[allow(unreachable_pub)]
 mod clippy_redundant_pub_crate {
     use pin_project::pin_project;
 
     #[pin_project(project_replace)]
-    #[derive(Debug)]
     pub struct Struct<T, U> {
         #[pin]
         pub pinned: T,
@@ -930,7 +935,6 @@ mod clippy_redundant_pub_crate {
     }
 
     #[pin_project(project_replace)]
-    #[derive(Debug)]
     pub struct TupleStruct<T, U>(#[pin] pub T, pub U);
 
     #[allow(dead_code)]
@@ -939,7 +943,6 @@ mod clippy_redundant_pub_crate {
         project_ref = EnumProjRef,
         project_replace = EnumProjOwn,
     )]
-    #[derive(Debug)]
     pub enum Enum<T, U> {
         Struct {
             #[pin]
@@ -953,11 +956,11 @@ mod clippy_redundant_pub_crate {
     pub mod inside_macro {
         use pin_project::pin_project;
 
+        #[allow(clippy::redundant_pub_crate)]
         #[rustfmt::skip]
         macro_rules! mac {
             () => {
                 #[pin_project(project_replace)]
-                #[derive(Debug)]
                 pub struct Struct<T, U> {
                     #[pin]
                     pub pinned: T,
@@ -965,7 +968,6 @@ mod clippy_redundant_pub_crate {
                 }
 
                 #[pin_project(project_replace)]
-                #[derive(Debug)]
                 pub struct TupleStruct<T, U>(#[pin] pub T, pub U);
 
                 #[allow(dead_code)]
@@ -974,7 +976,6 @@ mod clippy_redundant_pub_crate {
                     project_ref = EnumProjRef,
                     project_replace = EnumProjOwn,
                 )]
-                #[derive(Debug)]
                 pub enum Enum<T, U> {
                     Struct {
                         #[pin]
@@ -991,11 +992,11 @@ mod clippy_redundant_pub_crate {
     }
 }
 
+#[allow(missing_debug_implementations)]
 pub mod clippy_type_repetition_in_bounds {
     use pin_project::pin_project;
 
     #[pin_project(project_replace)]
-    #[derive(Debug)]
     pub struct Struct<T, U>
     where
         Self: Sized,
@@ -1006,7 +1007,6 @@ pub mod clippy_type_repetition_in_bounds {
     }
 
     #[pin_project(project_replace)]
-    #[derive(Debug)]
     pub struct TupleStruct<T, U>(#[pin] T, U)
     where
         Self: Sized;
@@ -1016,7 +1016,6 @@ pub mod clippy_type_repetition_in_bounds {
         project_ref = EnumProjRef,
         project_replace = EnumProjOwn,
     )]
-    #[derive(Debug)]
     pub enum Enum<T, U>
     where
         Self: Sized,
@@ -1037,7 +1036,6 @@ pub mod clippy_type_repetition_in_bounds {
         macro_rules! mac {
             () => {
                 #[pin_project(project_replace)]
-                #[derive(Debug)]
                 pub struct Struct<T, U>
                 where
                     Self: Sized,
@@ -1048,7 +1046,6 @@ pub mod clippy_type_repetition_in_bounds {
                 }
 
                 #[pin_project(project_replace)]
-                #[derive(Debug)]
                 pub struct TupleStruct<T, U>(#[pin] T, U)
                 where
                     Self: Sized;
@@ -1058,7 +1055,6 @@ pub mod clippy_type_repetition_in_bounds {
                     project_ref = EnumProjRef,
                     project_replace = EnumProjOwn,
                 )]
-                #[derive(Debug)]
                 pub enum Enum<T, U>
                 where
                     Self: Sized,
@@ -1078,6 +1074,7 @@ pub mod clippy_type_repetition_in_bounds {
     }
 }
 
+#[allow(missing_debug_implementations)]
 pub mod clippy_use_self {
     use pin_project::pin_project;
 
@@ -1086,7 +1083,6 @@ pub mod clippy_use_self {
     }
 
     #[pin_project(project_replace)]
-    #[derive(Debug)]
     pub struct Generics<T: Trait<Assoc = Self>>
     where
         Self: Trait<Assoc = Self>,
@@ -1103,7 +1099,6 @@ pub mod clippy_use_self {
         macro_rules! mac {
             () => {
                 #[pin_project(project_replace)]
-                #[derive(Debug)]
                 pub struct Generics<T: Trait<Assoc = Self>>
                 where
                     Self: Trait<Assoc = Self>,
@@ -1117,11 +1112,11 @@ pub mod clippy_use_self {
     }
 }
 
+#[allow(missing_debug_implementations)]
 pub mod clippy_used_underscore_binding {
     use pin_project::pin_project;
 
     #[pin_project(project_replace)]
-    #[derive(Debug)]
     pub struct Struct<T, U> {
         #[pin]
         pub _pinned: T,
@@ -1133,7 +1128,6 @@ pub mod clippy_used_underscore_binding {
         project_ref = EnumProjRef,
         project_replace = EnumProjOwn,
     )]
-    #[derive(Debug)]
     pub enum Enum<T, U> {
         Struct {
             #[pin]
@@ -1149,7 +1143,6 @@ pub mod clippy_used_underscore_binding {
         macro_rules! mac {
             () => {
                 #[pin_project(project_replace)]
-                #[derive(Debug)]
                 pub struct Struct<T, U> {
                     #[pin]
                     pub _pinned: T,
@@ -1161,7 +1154,6 @@ pub mod clippy_used_underscore_binding {
                     project_ref = EnumProjRef,
                     project_replace = EnumProjOwn,
                 )]
-                #[derive(Debug)]
                 pub enum Enum<T, U> {
                     Struct {
                         #[pin]
@@ -1176,11 +1168,11 @@ pub mod clippy_used_underscore_binding {
     }
 }
 
+#[allow(missing_debug_implementations)]
 pub mod clippy_ref_option_ref {
     use pin_project::pin_project;
 
     #[pin_project]
-    #[derive(Debug)]
     pub struct Struct<'a> {
         #[pin]
         pub _pinned: Option<&'a ()>,
@@ -1188,7 +1180,6 @@ pub mod clippy_ref_option_ref {
     }
 
     #[pin_project(project = EnumProj, project_ref = EnumProjRef)]
-    #[derive(Debug)]
     pub enum Enum<'a> {
         Struct {
             #[pin]

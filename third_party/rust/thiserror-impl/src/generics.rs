@@ -57,6 +57,7 @@ impl InferredBounds {
         }
     }
 
+    #[allow(clippy::type_repetition_in_bounds, clippy::trait_duplication_in_bounds)] // clippy bug: https://github.com/rust-lang/rust-clippy/issues/8771
     pub fn insert(&mut self, ty: impl ToTokens, bound: impl ToTokens) {
         let ty = ty.to_token_stream();
         let bound = bound.to_token_stream();

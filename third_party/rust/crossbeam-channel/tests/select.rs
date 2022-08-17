@@ -408,7 +408,6 @@ fn both_ready() {
     .unwrap();
 }
 
-#[cfg_attr(miri, ignore)] // Miri is too slow
 #[test]
 fn loop_try() {
     const RUNS: usize = 20;
@@ -694,7 +693,7 @@ fn nesting() {
 #[test]
 fn stress_recv() {
     #[cfg(miri)]
-    const COUNT: usize = 100;
+    const COUNT: usize = 50;
     #[cfg(not(miri))]
     const COUNT: usize = 10_000;
 
@@ -735,7 +734,7 @@ fn stress_recv() {
 #[test]
 fn stress_send() {
     #[cfg(miri)]
-    const COUNT: usize = 100;
+    const COUNT: usize = 50;
     #[cfg(not(miri))]
     const COUNT: usize = 10_000;
 
@@ -953,7 +952,7 @@ fn matching_with_leftover() {
 #[test]
 fn channel_through_channel() {
     #[cfg(miri)]
-    const COUNT: usize = 100;
+    const COUNT: usize = 50;
     #[cfg(not(miri))]
     const COUNT: usize = 1000;
 
@@ -1014,7 +1013,7 @@ fn channel_through_channel() {
 #[test]
 fn linearizable_try() {
     #[cfg(miri)]
-    const COUNT: usize = 100;
+    const COUNT: usize = 50;
     #[cfg(not(miri))]
     const COUNT: usize = 100_000;
 
@@ -1069,7 +1068,7 @@ fn linearizable_try() {
 #[test]
 fn linearizable_timeout() {
     #[cfg(miri)]
-    const COUNT: usize = 100;
+    const COUNT: usize = 50;
     #[cfg(not(miri))]
     const COUNT: usize = 100_000;
 
@@ -1124,7 +1123,7 @@ fn linearizable_timeout() {
 #[test]
 fn fairness1() {
     #[cfg(miri)]
-    const COUNT: usize = 100;
+    const COUNT: usize = 50;
     #[cfg(not(miri))]
     const COUNT: usize = 10_000;
 
@@ -1173,7 +1172,7 @@ fn fairness1() {
 #[test]
 fn fairness2() {
     #[cfg(miri)]
-    const COUNT: usize = 100;
+    const COUNT: usize = 50;
     #[cfg(not(miri))]
     const COUNT: usize = 10_000;
 
@@ -1292,7 +1291,7 @@ fn send_and_clone() {
 #[test]
 fn reuse() {
     #[cfg(miri)]
-    const COUNT: usize = 100;
+    const COUNT: usize = 50;
     #[cfg(not(miri))]
     const COUNT: usize = 10_000;
 

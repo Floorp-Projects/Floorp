@@ -13,11 +13,15 @@
 edition = "2018"
 rust-version = "1.31"
 name = "inherent"
-version = "1.0.1"
+version = "1.0.2"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "Make trait methods callable without the trait in scope"
 documentation = "https://docs.rs/inherent"
 readme = "README.md"
+categories = [
+    "rust-patterns",
+    "no-std",
+]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dtolnay/inherent"
 

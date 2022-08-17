@@ -1480,7 +1480,7 @@ mod value {
 
         let mut bytes = input.to_owned().into_bytes();
 
-        let start = (*bytes.get(0)? == b'-') as usize;
+        let start = (*bytes.first()? == b'-') as usize;
         match bytes.get(start)? {
             b'0'..=b'9' => {}
             _ => return None,

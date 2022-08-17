@@ -149,7 +149,8 @@ impl Compiler {
             self.compiled.start = dotstar_patch.entry;
         }
         self.compiled.captures = vec![None];
-        let patch = self.c_capture(0, expr)?.unwrap_or(self.next_inst());
+        let patch =
+            self.c_capture(0, expr)?.unwrap_or_else(|| self.next_inst());
         if self.compiled.needs_dotstar() {
             self.fill(dotstar_patch.hole, patch.entry);
         } else {
@@ -185,7 +186,7 @@ impl Compiler {
             self.fill_to_next(prev_hole);
             let split = self.push_split_hole();
             let Patch { hole, entry } =
-                self.c_capture(0, expr)?.unwrap_or(self.next_inst());
+                self.c_capture(0, expr)?.unwrap_or_else(|| self.next_inst());
             self.fill_to_next(hole);
             self.compiled.matches.push(self.insts.len());
             self.push_compiled(Inst::Match(i));
@@ -193,7 +194,7 @@ impl Compiler {
         }
         let i = exprs.len() - 1;
         let Patch { hole, entry } =
-            self.c_capture(0, &exprs[i])?.unwrap_or(self.next_inst());
+            self.c_capture(0, &exprs[i])?.unwrap_or_else(|| self.next_inst());
         self.fill(prev_hole, entry);
         self.fill_to_next(hole);
         self.compiled.matches.push(self.insts.len());
@@ -410,11 +411,11 @@ impl Compiler {
         } else {
             let entry = self.insts.len();
             let hole = self.push_hole(InstHole::Save { slot: first_slot });
-            let patch = self.c(expr)?.unwrap_or(self.next_inst());
+            let patch = self.c(expr)?.unwrap_or_else(|| self.next_inst());
             self.fill(hole, patch.entry);
             self.fill_to_next(patch.hole);
             let hole = self.push_hole(InstHole::Save { slot: first_slot + 1 });
-            Ok(Some(Patch { hole: hole, entry: entry }))
+            Ok(Some(Patch { hole, entry }))
         }
     }
 
@@ -448,7 +449,7 @@ impl Compiler {
                 self.c_class(&[hir::ClassUnicodeRange::new(c, c)])
             }
         } else {
-            let hole = self.push_hole(InstHole::Char { c: c });
+            let hole = self.push_hole(InstHole::Char { c });
             Ok(Some(Patch { hole, entry: self.insts.len() - 1 }))
         }
     }
@@ -458,7 +459,7 @@ impl Compiler {
 
         assert!(!ranges.is_empty());
         if self.compiled.uses_bytes() {
-            Ok(Some(CompileClass { c: self, ranges: ranges }.compile()?))
+            Ok(Some(CompileClass { c: self, ranges }.compile()?))
         } else {
             let ranges: Vec<(char, char)> =
                 ranges.iter().map(|r| (r.start(), r.end())).collect();
@@ -467,9 +468,9 @@ impl Compiler {
             } else {
                 self.extra_inst_bytes +=
                     ranges.len() * (size_of::<char>() * 2);
-                self.push_hole(InstHole::Ranges { ranges: ranges })
+                self.push_hole(InstHole::Ranges { ranges })
             };
-            Ok(Some(Patch { hole: hole, entry: self.insts.len() - 1 }))
+            Ok(Some(Patch { hole, entry: self.insts.len() - 1 }))
         }
     }
 
@@ -508,8 +509,8 @@ impl Compiler {
     }
 
     fn c_empty_look(&mut self, look: EmptyLook) -> ResultOrEmpty {
-        let hole = self.push_hole(InstHole::EmptyLook { look: look });
-        Ok(Some(Patch { hole: hole, entry: self.insts.len() - 1 }))
+        let hole = self.push_hole(InstHole::EmptyLook { look });
+        Ok(Some(Patch { hole, entry: self.insts.len() - 1 }))
     }
 
     fn c_concat<'a, I>(&mut self, exprs: I) -> ResultOrEmpty
@@ -533,7 +534,7 @@ impl Compiler {
                 hole = p.hole;
             }
         }
-        Ok(Some(Patch { hole: hole, entry: entry }))
+        Ok(Some(Patch { hole, entry }))
     }
 
     fn c_alternate(&mut self, exprs: &[Hir]) -> ResultOrEmpty {
@@ -676,7 +677,7 @@ impl Compiler {
         // None).
         let patch_concat = self
             .c_concat(iter::repeat(expr).take(min))?
-            .unwrap_or(self.next_inst());
+            .unwrap_or_else(|| self.next_inst());
         if let Some(patch_rep) = self.c_repeat_zero_or_more(expr, greedy)? {
             self.fill(patch_concat.hole, patch_rep.entry);
             Ok(Some(Patch { hole: patch_rep.hole, entry: patch_concat.entry }))
@@ -700,7 +701,7 @@ impl Compiler {
         }
         // Same reasoning as in c_repeat_range_min_or_more (we know that min <
         // max at this point).
-        let patch_concat = patch_concat.unwrap_or(self.next_inst());
+        let patch_concat = patch_concat.unwrap_or_else(|| self.next_inst());
         let initial_entry = patch_concat.entry;
         // It is much simpler to compile, e.g., `a{2,5}` as:
         //
@@ -879,14 +880,14 @@ impl MaybeInst {
             }
             MaybeInst::Split1(goto1) => {
                 MaybeInst::Compiled(Inst::Split(InstSplit {
-                    goto1: goto1,
+                    goto1,
                     goto2: goto,
                 }))
             }
             MaybeInst::Split2(goto2) => {
                 MaybeInst::Compiled(Inst::Split(InstSplit {
                     goto1: goto,
-                    goto2: goto2,
+                    goto2,
                 }))
             }
             _ => unreachable!(
@@ -900,9 +901,7 @@ impl MaybeInst {
 
     fn fill_split(&mut self, goto1: InstPtr, goto2: InstPtr) {
         let filled = match *self {
-            MaybeInst::Split => {
-                Inst::Split(InstSplit { goto1: goto1, goto2: goto2 })
-            }
+            MaybeInst::Split => Inst::Split(InstSplit { goto1, goto2 }),
             _ => unreachable!(
                 "must be called on Split instruction, \
                  instead it was called on: {:?}",
@@ -960,19 +959,17 @@ enum InstHole {
 impl InstHole {
     fn fill(&self, goto: InstPtr) -> Inst {
         match *self {
-            InstHole::Save { slot } => {
-                Inst::Save(InstSave { goto: goto, slot: slot })
-            }
+            InstHole::Save { slot } => Inst::Save(InstSave { goto, slot }),
             InstHole::EmptyLook { look } => {
-                Inst::EmptyLook(InstEmptyLook { goto: goto, look: look })
+                Inst::EmptyLook(InstEmptyLook { goto, look })
             }
-            InstHole::Char { c } => Inst::Char(InstChar { goto: goto, c: c }),
+            InstHole::Char { c } => Inst::Char(InstChar { goto, c }),
             InstHole::Ranges { ref ranges } => Inst::Ranges(InstRanges {
-                goto: goto,
+                goto,
                 ranges: ranges.clone().into_boxed_slice(),
             }),
             InstHole::Bytes { start, end } => {
-                Inst::Bytes(InstBytes { goto: goto, start: start, end: end })
+                Inst::Bytes(InstBytes { goto, start, end })
             }
         }
     }
@@ -1042,7 +1039,7 @@ impl<'a, 'b> CompileClass<'a, 'b> {
         let mut last_hole = Hole::None;
         for byte_range in seq {
             let key = SuffixCacheKey {
-                from_inst: from_inst,
+                from_inst,
                 start: byte_range.start,
                 end: byte_range.end,
             };
@@ -1132,7 +1129,7 @@ impl SuffixCache {
             }
         }
         *pos = self.dense.len();
-        self.dense.push(SuffixCacheEntry { key: key, pc: pc });
+        self.dense.push(SuffixCacheEntry { key, pc });
         None
     }
 
@@ -1143,8 +1140,8 @@ impl SuffixCache {
     fn hash(&self, suffix: &SuffixCacheKey) -> usize {
         // Basic FNV-1a hash as described:
         // https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
-        const FNV_PRIME: u64 = 1099511628211;
-        let mut h = 14695981039346656037;
+        const FNV_PRIME: u64 = 1_099_511_628_211;
+        let mut h = 14_695_981_039_346_656_037;
         h = (h ^ (suffix.from_inst as u64)).wrapping_mul(FNV_PRIME);
         h = (h ^ (suffix.start as u64)).wrapping_mul(FNV_PRIME);
         h = (h ^ (suffix.end as u64)).wrapping_mul(FNV_PRIME);

@@ -392,8 +392,11 @@ impl<'a, T: 'a + Array> Drop for Drain<'a, T> {
                 let start = source_vec.len();
                 let tail = self.tail_start;
                 if tail != start {
-                    let src = source_vec.as_ptr().add(tail);
-                    let dst = source_vec.as_mut_ptr().add(start);
+                    // as_mut_ptr creates a &mut, invalidating other pointers.
+                    // This pattern avoids calling it with a pointer already present.
+                    let ptr = source_vec.as_mut_ptr();
+                    let src = ptr.add(tail);
+                    let dst = ptr.add(start);
                     ptr::copy(src, dst, self.tail_len);
                 }
                 source_vec.set_len(start + self.tail_len);
@@ -813,13 +816,14 @@ impl<A: Array> SmallVec<A> {
         unsafe {
             self.set_len(start);
 
-            let range_slice = slice::from_raw_parts_mut(self.as_mut_ptr().add(start), end - start);
+            let range_slice = slice::from_raw_parts(self.as_ptr().add(start), end - start);
 
             Drain {
                 tail_start: end,
                 tail_len: len - end,
                 iter: range_slice.iter(),
-                vec: NonNull::from(self),
+                // Since self is a &mut, passing it to a function would invalidate the slice iterator.
+                vec: NonNull::new_unchecked(self as *mut _),
             }
         }
     }
@@ -1064,17 +1068,22 @@ impl<A: Array> SmallVec<A> {
 
     /// Insert an element at position `index`, shifting all elements after it to the right.
     ///
-    /// Panics if `index` is out of bounds.
+    /// Panics if `index > len`.
     pub fn insert(&mut self, index: usize, element: A::Item) {
         self.reserve(1);
 
         unsafe {
             let (mut ptr, len_ptr, _) = self.triple_mut();
             let len = *len_ptr;
-            assert!(index <= len);
-            *len_ptr = len + 1;
             ptr = ptr.add(index);
-            ptr::copy(ptr, ptr.add(1), len - index);
+            if index < len {
+                ptr::copy(ptr, ptr.add(1), len - index);
+            } else if index == len {
+                // No elements need shifting.
+            } else {
+                panic!("index exceeds length");
+            }
+            *len_ptr = len + 1;
             ptr::write(ptr, element);
         }
     }
@@ -1111,6 +1120,10 @@ impl<A: Array> SmallVec<A> {
                 skip: index..(index + lower_size_bound),
                 len: old_len + lower_size_bound,
             };
+
+            // The set_len above invalidates the previous pointers, so we must re-create them.
+            let start = self.as_mut_ptr();
+            let ptr = start.add(index);
 
             while num_added < lower_size_bound {
                 let element = match iter.next() {
@@ -1217,6 +1230,15 @@ impl<A: Array> SmallVec<A> {
             }
         }
         self.truncate(len - del);
+    }
+
+    /// Retains only the elements specified by the predicate.
+    ///
+    /// This method is identical in behaviour to [`retain`]; it is included only
+    /// to maintain api-compatability with `std::Vec`, where the methods are
+    /// separate for historical reasons.
+    pub fn retain_mut<F: FnMut(&mut A::Item) -> bool>(&mut self, f: F) {
+        self.retain(f)
     }
 
     /// Removes consecutive duplicate elements.

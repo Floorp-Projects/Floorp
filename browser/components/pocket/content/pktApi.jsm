@@ -309,6 +309,11 @@ var pktApi = (function() {
     request.open("POST", url, true);
     request.onreadystatechange = function(e) {
       if (request.readyState == 4) {
+        // "done" is a completed XHR regardless of success/error:
+        if (options.done) {
+          options.done();
+        }
+
         if (request.status === 200) {
           // There could still be an error if the response is no valid json
           // or does not have status = 1
@@ -483,6 +488,7 @@ var pktApi = (function() {
         }
       },
       error: options.error,
+      done: options.done,
     });
   }
 

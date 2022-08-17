@@ -154,9 +154,9 @@ ia2AccessibleText::get_offsetAtPoint(long aX, long aY,
           ? nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE
           : nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
 
-  auto [textAcc, hr] = LocalTextAcc();
+  HyperTextAccessibleBase* textAcc = TextAcc();
   if (!textAcc) {
-    return hr;
+    return CO_E_OBJNOTCONNECTED;
   }
 
   *aOffset = textAcc->OffsetAtPoint(aX, aY, geckoCoordType);

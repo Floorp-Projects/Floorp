@@ -382,16 +382,27 @@ var pktUI = (function() {
         SaveToPocket.itemSaved();
 
         if (
-          item?.resolved_id &&
-          item?.resolved_id !== "0" &&
           NimbusFeatures.saveToPocket.getVariable("layoutRefresh") &&
           !NimbusFeatures.saveToPocket.getVariable("hideRecentSaves")
         ) {
-          pktApi.getArticleInfo(item.resolved_url, {
-            success(data) {
-              pktUIMessaging.sendMessageToPanel("PKT_renderSavedStory", data);
-            },
-          });
+          // Articles saved for the first time (by anyone) won't have a resolved_id
+          if (item?.resolved_id && item?.resolved_id !== "0") {
+            pktApi.getArticleInfo(item.resolved_url, {
+              success(data) {
+                pktUIMessaging.sendMessageToPanel(
+                  "PKT_articleInfoFetched",
+                  data
+                );
+              },
+              done() {
+                pktUIMessaging.sendMessageToPanel(
+                  "PKT_getArticleInfoAttempted"
+                );
+              },
+            });
+          } else {
+            pktUIMessaging.sendMessageToPanel("PKT_getArticleInfoAttempted");
+          }
         }
 
         getAndShowRecsForItem(item, {

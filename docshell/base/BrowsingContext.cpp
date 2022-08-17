@@ -737,7 +737,18 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
       obs->NotifyWhenScriptSafe(ToSupports(this),
                                 "browsing-context-did-set-embedder", nullptr);
     }
+
+    if (IsEmbedderTypeObjectOrEmbed()) {
+      Unused << SetSyntheticDocumentContainer(true);
+    }
   }
+}
+
+bool BrowsingContext::IsEmbedderTypeObjectOrEmbed() {
+  if (const Maybe<nsString>& type = GetEmbedderElementType()) {
+    return nsGkAtoms::object->Equals(*type) || nsGkAtoms::embed->Equals(*type);
+  }
+  return false;
 }
 
 void BrowsingContext::Embed() {
@@ -1059,6 +1070,13 @@ void BrowsingContext::GetChildren(
   aChildren.AppendElements(Children());
 }
 
+Span<RefPtr<BrowsingContext>> BrowsingContext::NonSyntheticChildren() const {
+  if (WindowContext* current = mCurrentWindowContext) {
+    return current->NonSyntheticChildren();
+  }
+  return Span<RefPtr<BrowsingContext>>();
+}
+
 void BrowsingContext::GetWindowContexts(
     nsTArray<RefPtr<WindowContext>>& aWindows) {
   aWindows.AppendElements(mWindowContexts);
@@ -1209,7 +1227,7 @@ BrowsingContext* BrowsingContext::FindWithName(
         found = parent;
         break;
       } else {
-        siblings = parent->Children();
+        siblings = parent->NonSyntheticChildren();
       }
 
       for (BrowsingContext* sibling : siblings) {
@@ -1244,7 +1262,7 @@ BrowsingContext* BrowsingContext::FindChildWithName(
     return nullptr;
   }
 
-  for (BrowsingContext* child : Children()) {
+  for (BrowsingContext* child : NonSyntheticChildren()) {
     if (child->NameEquals(aName) && aRequestingContext.CanAccess(child) &&
         child->IsTargetable()) {
       return child;
@@ -1288,7 +1306,7 @@ BrowsingContext* BrowsingContext::FindWithNameInSubtree(
     return this;
   }
 
-  for (BrowsingContext* child : Children()) {
+  for (BrowsingContext* child : NonSyntheticChildren()) {
     if (BrowsingContext* found =
             child->FindWithNameInSubtree(aName, aRequestingContext)) {
       return found;
@@ -2963,6 +2981,13 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsInBFCache>) {
         doc->NotifyActivityChanged();
       }
     });
+  }
+}
+
+void BrowsingContext::DidSet(FieldIndex<IDX_SyntheticDocumentContainer>) {
+  if (WindowContext* parentWindowContext = GetParentWindowContext()) {
+    parentWindowContext->UpdateChildSynthetic(this,
+                                              GetSyntheticDocumentContainer());
   }
 }
 

@@ -1674,6 +1674,8 @@ pub trait StreamExt: Stream {
     /// assert_eq!(total, 6);
     /// # });
     /// ```
+    ///
+    /// [`select!`]: crate::select
     fn select_next_some(&mut self) -> SelectNextSome<'_, Self>
     where
         Self: Unpin + FusedStream,

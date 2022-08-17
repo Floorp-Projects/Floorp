@@ -1,3 +1,7 @@
+# Version 1.8.0
+
+- Add `get_seed()` and `Rng::get_seed()` (#33)
+
 # Version 1.7.0
 
 - Add `char()` and `Rng::char()` (#25)

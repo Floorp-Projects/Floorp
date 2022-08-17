@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.36"
 name = "itoa"
-version = "1.0.2"
+version = "1.0.3"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 exclude = [
     "performance.png",
@@ -22,7 +22,11 @@ exclude = [
 description = "Fast integer primitive to string conversion"
 documentation = "https://docs.rs/itoa"
 readme = "README.md"
-categories = ["value-formatting"]
+keywords = ["integer"]
+categories = [
+    "value-formatting",
+    "no-std",
+]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dtolnay/itoa"
 

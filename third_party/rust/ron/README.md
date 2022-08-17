@@ -1,6 +1,7 @@
 # Rusty Object Notation
 
-[![Build Status](https://travis-ci.org/ron-rs/ron.svg?branch=master)](https://travis-ci.org/ron-rs/ron)
+[![CI](https://github.com/ron-rs/ron/actions/workflows/ci.yaml/badge.svg)](https://github.com/ron-rs/ron/actions/workflows/ci.yaml)
+[![codecov](https://img.shields.io/codecov/c/github/ron-rs/ron/codecov?token=x4Q5KA51Ul)](https://codecov.io/gh/ron-rs/ron)
 [![Crates.io](https://img.shields.io/crates/v/ron.svg)](https://crates.io/crates/ron)
 [![MSRV](https://img.shields.io/badge/MSRV-1.36.0-orange)](https://github.com/ron-rs/ron)
 [![Docs](https://docs.rs/ron/badge.svg)](https://docs.rs/ron)
@@ -68,17 +69,6 @@ GameConfig( // optional struct name
 }
 ```
 
-Notice these issues:
-  1. Struct and maps are the same
-     - random order of exported fields
-       - annoying and inconvenient for reading
-       - doesn't work well with version control
-     - quoted field names
-       - too verbose
-     - no support for enums
-  2. No trailing comma allowed
-  3. No comments allowed
-
 ### Same example in RON
 
 ```rust
@@ -104,57 +94,49 @@ Scene( // class name is optional
 )
 ```
 
-The new format uses `(`..`)` brackets for *heterogeneous* structures (classes),
-while preserving the `{`..`}` for maps, and `[`..`]` for *homogeneous* structures (arrays).
-This distinction allows us to solve the biggest problem with JSON.
+Note the following advantages of RON over JSON:
 
-Here are the general rules to parse the heterogeneous structures:
+* trailing commas allowed
+* single- and multi-line comments
+* field names aren't quoted, so it's less verbose
+* optional struct names improve readability
+* enums are supported (and less verbose than their JSON representation)
 
-| class is named? | fields are named? | what is it?               | example             |
-| --------------- | ------------------| ------------------------- | ------------------- |
-| no              | no                | tuple                     | `(a, b)`            |
-| yes/no          | no                | tuple struct              | `Name(a, b)`        |
-| yes             | no                | enum value                | `Variant(a, b)`     |
-| yes/no          | yes               | struct                    | `(f1: a, f2: b,)`   |
+## RON syntax overview
 
-### Specification
+* Numbers: `42`, `3.14`, `0xFF`, `0b0110`
+* Strings: `"Hello"`, `"with\\escapes\n"`, `r#"raw string, great for regex\."#`
+* Booleans: `true`, `false`
+* Optionals: `Some("string")`, `Some(Some(1.34))`, `None`
+* Tuples: `("abc", 1.23, true)`, `()`
+* Lists: `["abc", "def"]`
+* Structs: `( foo: 1.0, bar: ( baz: "I'm nested" ) )`
+* Maps: `{ "arbitrary": "keys", "are": "allowed" }`
+
+> **Note:** Serde's data model represents fixed-size Rust arrays as tuple (instead of as list)
+
+## Tooling
+
+| Editor       | Plugin                                                      |
+|--------------|-------------------------------------------------------------|
+| IntelliJ     | [intellij-ron](https://github.com/ron-rs/intellij-ron)      |
+| VS Code      | [a5huynh/vscode-ron](https://github.com/a5huynh/vscode-ron) |
+| Sublime Text | [RON](https://packagecontrol.io/packages/RON)               |
+| Atom         | [language-ron](https://atom.io/packages/language-ron)       |
+| Vim          | [ron-rs/ron.vim](https://github.com/ron-rs/ron.vim)         |
+| EMACS        | [emacs-ron]                                                 |
+
+[emacs-ron]: https://chiselapp.com/user/Hutzdog/repository/ron-mode/home
+
+## Specification
 
 There is a very basic, work in progress specification available on
 [the wiki page](https://github.com/ron-rs/ron/wiki/Specification).
 A more formal and complete grammar is available [here](docs/grammar.md).
 
-### Appendix
-
-Why not XML?
-  - too verbose
-  - unclear how to treat attributes vs contents
-
-Why not YAML?
-  - significant white-space
-  - specification is too big
-
-Why not TOML?
-  - alien syntax
-  - absolute paths are not scalable
-
-Why not XXX?
-  - if you know a better format, tell me!
-
-## Tooling
-
-IntelliJ: https://github.com/ron-rs/intellij-ron
-
-VS Code: https://github.com/a5huynh/vscode-ron
-
-Sublime Text: https://packagecontrol.io/packages/RON
-
-Atom: https://atom.io/packages/language-ron
-
-Vim: https://github.com/ron-rs/ron.vim
-
-EMACS: https://chiselapp.com/user/Hutzdog/repository/ron-mode/home
 
 ## License
 
 RON is dual-licensed under Apache-2.0 and MIT.
 
+Any contribution intentionally submitted for inclusion in the work must be provided under the same dual-license terms.

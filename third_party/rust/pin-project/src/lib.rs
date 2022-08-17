@@ -75,7 +75,20 @@
     )
 ))]
 #![warn(missing_docs, rust_2018_idioms, single_use_lifetimes, unreachable_pub)]
-#![warn(clippy::default_trait_access, clippy::wildcard_imports)]
+#![warn(
+    clippy::pedantic,
+    // lints for public library
+    clippy::alloc_instead_of_core,
+    clippy::exhaustive_enums,
+    clippy::exhaustive_structs,
+    clippy::std_instead_of_alloc,
+    clippy::std_instead_of_core,
+    // lints that help writing unsafe code
+    clippy::default_union_representation,
+    clippy::trailing_empty_array,
+    clippy::transmute_undefined_repr,
+    clippy::undocumented_unsafe_blocks,
+)]
 #![allow(clippy::needless_doctest_main)]
 
 #[doc(inline)]
@@ -243,7 +256,8 @@ pub mod __private {
     #[doc(hidden)]
     pub struct Wrapper<'a, T: ?Sized>(PhantomData<&'a ()>, T);
 
-    unsafe impl<T: ?Sized> UnsafeUnpin for Wrapper<'_, T> where T: UnsafeUnpin {}
+    // SAFETY: `T` implements UnsafeUnpin.
+    unsafe impl<T: ?Sized + UnsafeUnpin> UnsafeUnpin for Wrapper<'_, T> {}
 
     // This is an internal helper struct used by `pin-project-internal`.
     //
@@ -266,6 +280,8 @@ pub mod __private {
 
     impl<T: ?Sized> Drop for UnsafeDropInPlaceGuard<T> {
         fn drop(&mut self) {
+            // SAFETY: the caller of `UnsafeDropInPlaceGuard::new` must guarantee
+            // that `ptr` is valid for drop when this guard is destructed.
             unsafe {
                 ptr::drop_in_place(self.0);
             }
@@ -289,6 +305,8 @@ pub mod __private {
 
     impl<T> Drop for UnsafeOverwriteGuard<T> {
         fn drop(&mut self) {
+            // SAFETY: the caller of `UnsafeOverwriteGuard::new` must guarantee
+            // that `target` is valid for writes when this guard is destructed.
             unsafe {
                 ptr::write(self.target, ptr::read(&*self.value));
             }

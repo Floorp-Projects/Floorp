@@ -44,10 +44,6 @@ pub type fhandle_t = fhandle;
 pub type au_id_t = ::uid_t;
 pub type au_asid_t = ::pid_t;
 
-// It's an alias over "struct __kvm_t". However, its fields aren't supposed to be used directly,
-// making the type definition system dependent. Better not bind it exactly.
-pub type kvm_t = ::c_void;
-
 #[cfg_attr(feature = "extra_traits", derive(Debug, Hash, PartialEq, Eq))]
 #[repr(u32)]
 pub enum devstat_support_flags {
@@ -3661,6 +3657,19 @@ pub const CPUCLOCK_WHICH_TID: ::c_int = 1;
 pub const MFD_CLOEXEC: ::c_uint = 0x00000001;
 pub const MFD_ALLOW_SEALING: ::c_uint = 0x00000002;
 pub const MFD_HUGETLB: ::c_uint = 0x00000004;
+pub const MFD_HUGE_MASK: ::c_uint = 0xFC000000;
+pub const MFD_HUGE_64KB: ::c_uint = 16 << 26;
+pub const MFD_HUGE_512KB: ::c_uint = 19 << 26;
+pub const MFD_HUGE_1MB: ::c_uint = 20 << 26;
+pub const MFD_HUGE_2MB: ::c_uint = 21 << 26;
+pub const MFD_HUGE_8MB: ::c_uint = 23 << 26;
+pub const MFD_HUGE_16MB: ::c_uint = 24 << 26;
+pub const MFD_HUGE_32MB: ::c_uint = 25 << 26;
+pub const MFD_HUGE_256MB: ::c_uint = 28 << 26;
+pub const MFD_HUGE_512MB: ::c_uint = 29 << 26;
+pub const MFD_HUGE_1GB: ::c_uint = 30 << 26;
+pub const MFD_HUGE_2GB: ::c_uint = 31 << 26;
+pub const MFD_HUGE_16GB: ::c_uint = 34 << 26;
 
 pub const SHM_LARGEPAGE_ALLOC_DEFAULT: ::c_int = 0;
 pub const SHM_LARGEPAGE_ALLOC_NOWAIT: ::c_int = 1;
@@ -3772,21 +3781,21 @@ f! {
     }
 
     pub fn CPU_SET(cpu: usize, cpuset: &mut cpuset_t) -> () {
-        let bitset_bits = ::mem::size_of::<::c_long>();
+        let bitset_bits = 8 * ::mem::size_of::<::c_long>();
         let (idx, offset) = (cpu / bitset_bits, cpu % bitset_bits);
         cpuset.__bits[idx] |= 1 << offset;
         ()
     }
 
     pub fn CPU_CLR(cpu: usize, cpuset: &mut cpuset_t) -> () {
-        let bitset_bits = ::mem::size_of::<::c_long>();
+        let bitset_bits = 8 * ::mem::size_of::<::c_long>();
         let (idx, offset) = (cpu / bitset_bits, cpu % bitset_bits);
         cpuset.__bits[idx] &= !(1 << offset);
         ()
     }
 
     pub fn CPU_ISSET(cpu: usize, cpuset: &cpuset_t) -> bool {
-        let bitset_bits = ::mem::size_of::<::c_long>();
+        let bitset_bits = 8 * ::mem::size_of::<::c_long>();
         let (idx, offset) = (cpu / bitset_bits, cpu % bitset_bits);
         0 != cpuset.__bits[idx] & (1 << offset)
     }
@@ -3794,9 +3803,9 @@ f! {
     pub fn CPU_COUNT(cpuset: &cpuset_t) -> ::c_int {
         let mut s: u32 = 0;
         let cpuset_size = ::mem::size_of::<cpuset_t>();
-        let bitset_bits = ::mem::size_of::<::c_long>();
+        let bitset_size = ::mem::size_of::<::c_long>();
 
-        for i in cpuset.__bits[..(cpuset_size / bitset_bits)].iter() {
+        for i in cpuset.__bits[..(cpuset_size / bitset_size)].iter() {
             s += i.count_ones();
         };
         s as ::c_int
@@ -3839,6 +3848,8 @@ cfg_if! {
 }
 
 extern "C" {
+    #[cfg_attr(doc, doc(alias = "__errno_location"))]
+    #[cfg_attr(doc, doc(alias = "errno"))]
     pub fn __error() -> *mut ::c_int;
 
     pub fn aio_cancel(fd: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
@@ -4272,69 +4283,37 @@ extern "C" {
 
 #[link(name = "kvm")]
 extern "C" {
-    pub fn kvm_open(
-        execfile: *const ::c_char,
-        corefile: *const ::c_char,
-        swapfile: *const ::c_char,
-        flags: ::c_int,
-        errstr: *const ::c_char,
-    ) -> *mut kvm_t;
-    pub fn kvm_close(kd: *mut kvm_t) -> ::c_int;
-    pub fn kvm_dpcpu_setcpu(kd: *mut kvm_t, cpu: ::c_uint) -> ::c_int;
-    pub fn kvm_getargv(kd: *mut kvm_t, p: *const kinfo_proc, nchr: ::c_int) -> *mut *mut ::c_char;
-    pub fn kvm_getcptime(kd: *mut kvm_t, cp_time: *mut ::c_long) -> ::c_int;
-    pub fn kvm_getenvv(kd: *mut kvm_t, p: *const kinfo_proc, nchr: ::c_int) -> *mut *mut ::c_char;
-    pub fn kvm_geterr(kd: *mut kvm_t) -> *mut ::c_char;
-    pub fn kvm_getloadavg(kd: *mut kvm_t, loadavg: *mut ::c_double, nelem: ::c_int) -> ::c_int;
-    pub fn kvm_getmaxcpu(kd: *mut kvm_t) -> ::c_int;
-    pub fn kvm_getncpus(kd: *mut kvm_t) -> ::c_int;
-    pub fn kvm_getpcpu(kd: *mut kvm_t, cpu: ::c_int) -> *mut ::c_void;
-    pub fn kvm_counter_u64_fetch(kd: *mut kvm_t, base: ::c_ulong) -> u64;
-    pub fn kvm_getprocs(
-        kd: *mut kvm_t,
-        op: ::c_int,
-        arg: ::c_int,
-        cnt: *mut ::c_int,
-    ) -> *mut kinfo_proc;
+    pub fn kvm_dpcpu_setcpu(kd: *mut ::kvm_t, cpu: ::c_uint) -> ::c_int;
+    pub fn kvm_getargv(kd: *mut ::kvm_t, p: *const kinfo_proc, nchr: ::c_int)
+        -> *mut *mut ::c_char;
+    pub fn kvm_getcptime(kd: *mut ::kvm_t, cp_time: *mut ::c_long) -> ::c_int;
+    pub fn kvm_getenvv(kd: *mut ::kvm_t, p: *const kinfo_proc, nchr: ::c_int)
+        -> *mut *mut ::c_char;
+    pub fn kvm_geterr(kd: *mut ::kvm_t) -> *mut ::c_char;
+    pub fn kvm_getmaxcpu(kd: *mut ::kvm_t) -> ::c_int;
+    pub fn kvm_getncpus(kd: *mut ::kvm_t) -> ::c_int;
+    pub fn kvm_getpcpu(kd: *mut ::kvm_t, cpu: ::c_int) -> *mut ::c_void;
+    pub fn kvm_counter_u64_fetch(kd: *mut ::kvm_t, base: ::c_ulong) -> u64;
     pub fn kvm_getswapinfo(
-        kd: *mut kvm_t,
+        kd: *mut ::kvm_t,
         info: *mut kvm_swap,
         maxswap: ::c_int,
         flags: ::c_int,
     ) -> ::c_int;
-    pub fn kvm_native(kd: *mut kvm_t) -> ::c_int;
-    pub fn kvm_nlist(kd: *mut kvm_t, nl: *mut nlist) -> ::c_int;
-    pub fn kvm_nlist2(kd: *mut kvm_t, nl: *mut kvm_nlist) -> ::c_int;
-    pub fn kvm_openfiles(
-        execfile: *const ::c_char,
-        corefile: *const ::c_char,
-        swapfile: *const ::c_char,
-        flags: ::c_int,
-        errbuf: *mut ::c_char,
-    ) -> *mut kvm_t;
-    pub fn kvm_read(
-        kd: *mut kvm_t,
-        addr: ::c_ulong,
-        buf: *mut ::c_void,
-        nbytes: ::size_t,
-    ) -> ::ssize_t;
+    pub fn kvm_native(kd: *mut ::kvm_t) -> ::c_int;
+    pub fn kvm_nlist(kd: *mut ::kvm_t, nl: *mut nlist) -> ::c_int;
+    pub fn kvm_nlist2(kd: *mut ::kvm_t, nl: *mut kvm_nlist) -> ::c_int;
     pub fn kvm_read_zpcpu(
-        kd: *mut kvm_t,
+        kd: *mut ::kvm_t,
         base: ::c_ulong,
         buf: *mut ::c_void,
         size: ::size_t,
         cpu: ::c_int,
     ) -> ::ssize_t;
     pub fn kvm_read2(
-        kd: *mut kvm_t,
+        kd: *mut ::kvm_t,
         addr: kvaddr_t,
         buf: *mut ::c_void,
-        nbytes: ::size_t,
-    ) -> ::ssize_t;
-    pub fn kvm_write(
-        kd: *mut kvm_t,
-        addr: ::c_ulong,
-        buf: *const ::c_void,
         nbytes: ::size_t,
     ) -> ::ssize_t;
 }
@@ -4486,10 +4465,10 @@ extern "C" {
 
 #[link(name = "devstat")]
 extern "C" {
-    pub fn devstat_getnumdevs(kd: *mut kvm_t) -> ::c_int;
-    pub fn devstat_getgeneration(kd: *mut kvm_t) -> ::c_long;
-    pub fn devstat_getversion(kd: *mut kvm_t) -> ::c_int;
-    pub fn devstat_checkversion(kd: *mut kvm_t) -> ::c_int;
+    pub fn devstat_getnumdevs(kd: *mut ::kvm_t) -> ::c_int;
+    pub fn devstat_getgeneration(kd: *mut ::kvm_t) -> ::c_long;
+    pub fn devstat_getversion(kd: *mut ::kvm_t) -> ::c_int;
+    pub fn devstat_checkversion(kd: *mut ::kvm_t) -> ::c_int;
     pub fn devstat_selectdevs(
         dev_select: *mut *mut device_selection,
         num_selected: *mut ::c_int,

@@ -1571,11 +1571,12 @@ void nsWindow::LogPopupHierarchy() {
     while (popup) {
       nsPrintfCString indentString("%*s", indent, " ");
       LOG("%s %s %s nsWindow [%p] Menu %d Permanent %d ContextMenu %d "
-          "Anchored %d Visible %d\n",
+          "Anchored %d Visible %d MovedByRect %d\n",
           indentString.get(), popup->GetFrameTag().get(),
           popup->GetPopupTypeName().get(), popup, popup->WaylandPopupIsMenu(),
           popup->WaylandPopupIsPermanent(), popup->mPopupContextMenu,
-          popup->mPopupAnchored, gtk_widget_is_visible(popup->mShell));
+          popup->mPopupAnchored, gtk_widget_is_visible(popup->mShell),
+          popup->mPopupUseMoveToRect);
       indent += 4;
       popup = popup->mWaylandPopupNext;
     }
@@ -1592,12 +1593,12 @@ void nsWindow::LogPopupHierarchy() {
       nsPrintfCString indentString("%*s", (int)(i + 1) * 4, " ");
       if (window) {
         LOG("%s %s %s nsWindow [%p] Menu %d Permanent %d ContextMenu %d "
-            "Anchored %d Visible %d\n",
+            "Anchored %d Visible %d MovedByRect %d\n",
             indentString.get(), window->GetFrameTag().get(),
             window->GetPopupTypeName().get(), window,
             window->WaylandPopupIsMenu(), window->WaylandPopupIsPermanent(),
             window->mPopupContextMenu, window->mPopupAnchored,
-            gtk_widget_is_visible(window->mShell));
+            gtk_widget_is_visible(window->mShell), window->mPopupUseMoveToRect);
       } else {
         LOG("%s null window\n", indentString.get());
       }
@@ -2517,10 +2518,16 @@ void nsWindow::WaylandPopupMove() {
       HideWaylandPopupWindow(/* aTemporaryHide */ true,
                              /* aRemoveFromPopupList */ false);
     }
+
     // Workaround for https://gitlab.gnome.org/GNOME/gtk/-/issues/4308
-    // Tooltips are created as subsurfaces with relative position.
-    // Menu uses absolute positions.
-    if (mPopupHint == ePopupTypeTooltip) {
+    // Tooltips/Utility popups are created as subsurfaces with relative
+    // position.
+    bool useRelativeCoordinates =
+        gtk_window_get_type_hint(GTK_WINDOW(mShell)) ==
+            GDK_WINDOW_TYPE_HINT_UTILITY ||
+        gtk_window_get_type_hint(GTK_WINDOW(mShell)) ==
+            GDK_WINDOW_TYPE_HINT_TOOLTIP;
+    if (useRelativeCoordinates) {
       LOG("  use relative gtk_window_move(%d, %d) for tooltips\n",
           mRelativePopupPosition.x, mRelativePopupPosition.y);
       gtk_window_move(GTK_WINDOW(mShell), mRelativePopupPosition.x,
@@ -4720,7 +4727,7 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
       GdkInputSource source = gdk_device_get_source(device);
       if (source == GDK_SOURCE_TOUCHSCREEN || source == GDK_SOURCE_TOUCHPAD ||
           mCurrentSynthesizedTouchpadPan.mTouchpadGesturePhase.isSome()) {
-        if (StaticPrefs::apz_gtk_kinetic_scroll_enabled() &&
+        if (StaticPrefs::apz_gtk_pangesture_enabled() &&
             gtk_check_version(3, 20, 0) == nullptr) {
           static auto sGdkEventIsScrollStopEvent =
               (gboolean(*)(const GdkEvent*))dlsym(
@@ -4766,14 +4773,14 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
           mCurrentSynthesizedTouchpadPan.mTouchpadGesturePhase.reset();
 
           const bool isPageMode =
-              StaticPrefs::apz_gtk_kinetic_scroll_delta_mode() != 2;
+              StaticPrefs::apz_gtk_pangesture_delta_mode() != 2;
           const double multiplier =
               isPageMode
-                  ? StaticPrefs::
-                        apz_gtk_kinetic_scroll_page_delta_mode_multiplier()
+                  ? StaticPrefs::apz_gtk_pangesture_page_delta_mode_multiplier()
                   : StaticPrefs::
-                            apz_gtk_kinetic_scroll_pixel_delta_mode_multiplier() *
+                            apz_gtk_pangesture_pixel_delta_mode_multiplier() *
                         FractionalScaleFactor();
+
           ScreenPoint deltas(float(aEvent->delta_x * multiplier),
                              float(aEvent->delta_y * multiplier));
 
@@ -4784,7 +4791,8 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
               KeymapWrapper::ComputeKeyModifiers(aEvent->state));
           panEvent.mDeltaType = isPageMode ? PanGestureInput::PANDELTA_PAGE
                                            : PanGestureInput::PANDELTA_PIXEL;
-          panEvent.mSimulateMomentum = true;
+          panEvent.mSimulateMomentum =
+              StaticPrefs::apz_gtk_kinetic_scroll_enabled();
 
           panEvent
               .mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection =

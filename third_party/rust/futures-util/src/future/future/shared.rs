@@ -262,19 +262,20 @@ where
         let waker = waker_ref(&inner.notifier);
         let mut cx = Context::from_waker(&waker);
 
-        struct Reset<'a>(&'a AtomicUsize);
+        struct Reset<'a> {
+            state: &'a AtomicUsize,
+            did_not_panic: bool,
+        }
 
         impl Drop for Reset<'_> {
             fn drop(&mut self) {
-                use std::thread;
-
-                if thread::panicking() {
-                    self.0.store(POISONED, SeqCst);
+                if !self.did_not_panic {
+                    self.state.store(POISONED, SeqCst);
                 }
             }
         }
 
-        let _reset = Reset(&inner.notifier.state);
+        let mut reset = Reset { state: &inner.notifier.state, did_not_panic: false };
 
         let output = {
             let future = unsafe {
@@ -284,12 +285,15 @@ where
                 }
             };
 
-            match future.poll(&mut cx) {
+            let poll_result = future.poll(&mut cx);
+            reset.did_not_panic = true;
+
+            match poll_result {
                 Poll::Pending => {
                     if inner.notifier.state.compare_exchange(POLLING, IDLE, SeqCst, SeqCst).is_ok()
                     {
                         // Success
-                        drop(_reset);
+                        drop(reset);
                         this.inner = Some(inner);
                         return Poll::Pending;
                     } else {
@@ -313,7 +317,7 @@ where
             waker.wake();
         }
 
-        drop(_reset); // Make borrow checker happy
+        drop(reset); // Make borrow checker happy
         drop(wakers_guard);
 
         // Safety: We're in the COMPLETE state

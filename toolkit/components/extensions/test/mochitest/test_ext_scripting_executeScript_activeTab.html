@@ -18,7 +18,6 @@ const makeExtension = ({ manifest: manifestProps, ...otherProps }) => {
   return ExtensionTestUtils.loadExtension({
     manifest: {
       manifest_version: 3,
-      permissions: ["activeTab", "scripting"],
       action: {},
       ...manifestProps,
     },
@@ -32,8 +31,12 @@ add_task(async function setup() {
   });
 });
 
-add_task(async function test_executeScript_activeTab() {
+async function verifyExecuteScriptActiveTab(permissions, host_permissions) {
   let extension = makeExtension({
+    manifest: {
+      permissions: ["scripting", ...permissions],
+      host_permissions,
+    },
     background() {
       browser.action.onClicked.addListener(async tab => {
         const results = await browser.scripting.executeScript({
@@ -122,6 +125,17 @@ add_task(async function test_executeScript_activeTab() {
   await extension.unload();
 
   await AppTestDelegate.removeTab(window, tab);
+}
+
+// Test executeScript works with the standard activeTab permission.
+add_task(async function test_executeScript_activeTab_permission() {
+  await verifyExecuteScriptActiveTab(["activeTab"], []);
+});
+
+// Test executeScript works with automatic activeTab granted from optional
+// host permissions.
+add_task(async function test_executeScript_activeTab_automatic_originControls() {
+  await verifyExecuteScriptActiveTab([], ["*://test1.example.com/*"]);
 });
 
 </script>

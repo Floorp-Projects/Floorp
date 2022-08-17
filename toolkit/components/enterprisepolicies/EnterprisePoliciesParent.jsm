@@ -141,9 +141,12 @@ EnterprisePoliciesManager.prototype = {
 
   _chooseProvider() {
     let platformProvider = null;
-    if (AppConstants.platform == "win") {
+    if (AppConstants.platform == "win" && AppConstants.MOZ_SYSTEM_POLICIES) {
       platformProvider = new WindowsGPOPoliciesProvider();
-    } else if (AppConstants.platform == "macosx") {
+    } else if (
+      AppConstants.platform == "macosx" &&
+      AppConstants.MOZ_SYSTEM_POLICIES
+    ) {
       platformProvider = new macOSPoliciesProvider();
     }
     let jsonProvider = new JSONPoliciesProvider();
@@ -437,21 +440,22 @@ EnterprisePoliciesManager.prototype = {
     return InstallSources ? InstallSources.matches(uri) : true;
   },
 
-  isExemptExecutableExtension(origin, extension) {
-    let url;
+  isExemptExecutableExtension(url, extension) {
+    let urlObject;
     try {
-      url = new URL(origin);
+      urlObject = new URL(url);
     } catch (e) {
       return false;
     }
-    let { hostname } = url;
+    let { hostname } = urlObject;
     let exemptArray = this.getActivePolicies()
       ?.ExemptDomainFileTypePairsFromFileTypeDownloadWarnings;
     if (!hostname || !extension || !exemptArray) {
       return false;
     }
+    extension = extension.toLowerCase();
     let domains = exemptArray
-      .filter(item => item.file_extension == extension)
+      .filter(item => item.file_extension.toLowerCase() == extension)
       .map(item => item.domains)
       .flat();
     for (let domain of domains) {
@@ -527,7 +531,7 @@ class JSONPoliciesProvider {
   _getConfigurationFile() {
     let configFile = null;
 
-    if (AppConstants.platform == "linux") {
+    if (AppConstants.platform == "linux" && AppConstants.MOZ_SYSTEM_POLICIES) {
       let systemConfigFile = Cc["@mozilla.org/file/local;1"].createInstance(
         Ci.nsIFile
       );

@@ -533,11 +533,8 @@ where
     where
         T: ?Sized + Serialize,
     {
-        match *self {
-            Compound::Map {
-                ref mut ser,
-                ref mut state,
-            } => {
+        match self {
+            Compound::Map { ser, state } => {
                 tri!(ser
                     .formatter
                     .begin_array_value(&mut ser.writer, *state == State::First)
@@ -671,11 +668,8 @@ where
     where
         T: ?Sized + Serialize,
     {
-        match *self {
-            Compound::Map {
-                ref mut ser,
-                ref mut state,
-            } => {
+        match self {
+            Compound::Map { ser, state } => {
                 tri!(ser
                     .formatter
                     .begin_object_key(&mut ser.writer, *state == State::First)
@@ -702,8 +696,8 @@ where
     where
         T: ?Sized + Serialize,
     {
-        match *self {
-            Compound::Map { ref mut ser, .. } => {
+        match self {
+            Compound::Map { ser, .. } => {
                 tri!(ser
                     .formatter
                     .begin_object_value(&mut ser.writer)
@@ -753,10 +747,10 @@ where
     where
         T: ?Sized + Serialize,
     {
-        match *self {
+        match self {
             Compound::Map { .. } => ser::SerializeMap::serialize_entry(self, key, value),
             #[cfg(feature = "arbitrary_precision")]
-            Compound::Number { ref mut ser, .. } => {
+            Compound::Number { ser, .. } => {
                 if key == crate::number::TOKEN {
                     tri!(value.serialize(NumberStrEmitter(ser)));
                     Ok(())
@@ -765,7 +759,7 @@ where
                 }
             }
             #[cfg(feature = "raw_value")]
-            Compound::RawValue { ref mut ser, .. } => {
+            Compound::RawValue { ser, .. } => {
                 if key == crate::raw::TOKEN {
                     tri!(value.serialize(RawValueStrEmitter(ser)));
                     Ok(())

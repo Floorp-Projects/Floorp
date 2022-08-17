@@ -159,6 +159,7 @@ const ONBOARDING_MESSAGES = () => [
           id: "UPGRADE_COLORWAY",
           content: {
             position: "split",
+            split_narrow_bkg_position: "-100px",
             background:
               "url('chrome://browser/content/colorways/assets/independent-voices-collection.avif') var(--mr-secondary-position) no-repeat, var(--in-content-page-background) radial-gradient(83.12% 83.12% at 80.59% 16.88%, #9059FF 0%, #3A8EE6 54.51%, #A0C4EA 100%)",
             progress_bar: true,
@@ -321,6 +322,7 @@ const ONBOARDING_MESSAGES = () => [
           content: {
             position: "split",
             progress_bar: "true",
+            split_narrow_bkg_position: "-60px",
             background:
               "url('chrome://activity-stream/content/data/content/assets/mr-gratitude.svg') var(--mr-secondary-position) no-repeat, var(--in-content-page-background) radial-gradient(124% 67.28% at 0% 39.91%, rgba(103, 51, 205, 0.75) 0%, rgba(0, 108, 207, 0.75) 54.51%, rgba(128, 199, 247, 0.75) 100%)",
             logo: {},

@@ -71,6 +71,9 @@ fn is_empty() {
 
 #[test]
 fn spsc() {
+    #[cfg(miri)]
+    const STEPS: usize = 500;
+    #[cfg(not(miri))]
     const STEPS: usize = 50_000;
 
     let w = Worker::new_lifo();
@@ -84,6 +87,8 @@ fn spsc() {
                         assert_eq!(i, v);
                         break;
                     }
+                    #[cfg(miri)]
+                    std::hint::spin_loop();
                 }
             }
 
@@ -100,6 +105,9 @@ fn spsc() {
 #[test]
 fn stampede() {
     const THREADS: usize = 8;
+    #[cfg(miri)]
+    const COUNT: usize = 500;
+    #[cfg(not(miri))]
     const COUNT: usize = 50_000;
 
     let w = Worker::new_lifo();
@@ -141,6 +149,9 @@ fn stampede() {
 #[test]
 fn stress() {
     const THREADS: usize = 8;
+    #[cfg(miri)]
+    const COUNT: usize = 500;
+    #[cfg(not(miri))]
     const COUNT: usize = 50_000;
 
     let w = Worker::new_lifo();
@@ -197,6 +208,7 @@ fn stress() {
     .unwrap();
 }
 
+#[cfg_attr(miri, ignore)] // Miri is too slow
 #[test]
 fn no_starvation() {
     const THREADS: usize = 8;
@@ -258,8 +270,17 @@ fn no_starvation() {
 
 #[test]
 fn destructors() {
+    #[cfg(miri)]
+    const THREADS: usize = 2;
+    #[cfg(not(miri))]
     const THREADS: usize = 8;
+    #[cfg(miri)]
+    const COUNT: usize = 500;
+    #[cfg(not(miri))]
     const COUNT: usize = 50_000;
+    #[cfg(miri)]
+    const STEPS: usize = 100;
+    #[cfg(not(miri))]
     const STEPS: usize = 1000;
 
     struct Elem(usize, Arc<Mutex<Vec<usize>>>);
@@ -330,7 +351,7 @@ fn destructors() {
     {
         let mut v = dropped.lock().unwrap();
         assert_eq!(v.len(), rem);
-        v.sort();
+        v.sort_unstable();
         for pair in v.windows(2) {
             assert_eq!(pair[0] + 1, pair[1]);
         }

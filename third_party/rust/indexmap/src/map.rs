@@ -12,7 +12,7 @@ use crate::vec::{self, Vec};
 use ::core::cmp::Ordering;
 use ::core::fmt;
 use ::core::hash::{BuildHasher, Hash, Hasher};
-use ::core::iter::{FromIterator, FusedIterator};
+use ::core::iter::FusedIterator;
 use ::core::ops::{Index, IndexMut, RangeBounds};
 use ::core::slice::{Iter as SliceIter, IterMut as SliceIterMut};
 
@@ -332,7 +332,14 @@ where
     ///
     /// Computes in **O(n)** time.
     pub fn shrink_to_fit(&mut self) {
-        self.core.shrink_to_fit();
+        self.core.shrink_to(0);
+    }
+
+    /// Shrink the capacity of the map with a lower limit.
+    ///
+    /// Computes in **O(n)** time.
+    pub fn shrink_to(&mut self, min_capacity: usize) {
+        self.core.shrink_to(min_capacity);
     }
 
     fn hash<Q: ?Sized + Hash>(&self, key: &Q) -> HashValue {
@@ -838,6 +845,19 @@ impl<K, V, S> IndexMap<K, V, S> {
         self.core.shift_remove_index(index)
     }
 
+    /// Moves the position of a key-value pair from one index to another
+    /// by shifting all other pairs in-between.
+    ///
+    /// * If `from < to`, the other pairs will shift down while the targeted pair moves up.
+    /// * If `from > to`, the other pairs will shift up while the targeted pair moves down.
+    ///
+    /// ***Panics*** if `from` or `to` are out of bounds.
+    ///
+    /// Computes in **O(n)** time (average).
+    pub fn move_index(&mut self, from: usize, to: usize) {
+        self.core.move_index(from, to)
+    }
+
     /// Swaps the position of two key-value pairs in the map.
     ///
     /// ***Panics*** if `a` or `b` are out of bounds.
@@ -854,7 +874,7 @@ impl<K, V, S> IndexMap<K, V, S> {
 /// [`keys`]: struct.IndexMap.html#method.keys
 /// [`IndexMap`]: struct.IndexMap.html
 pub struct Keys<'a, K, V> {
-    pub(crate) iter: SliceIter<'a, Bucket<K, V>>,
+    iter: SliceIter<'a, Bucket<K, V>>,
 }
 
 impl<'a, K, V> Iterator for Keys<'a, K, V> {
@@ -999,7 +1019,12 @@ impl<K, V> ExactSizeIterator for ValuesMut<'_, K, V> {
 
 impl<K, V> FusedIterator for ValuesMut<'_, K, V> {}
 
-// TODO: `impl Debug for ValuesMut` once we have MSRV 1.53 for `slice::IterMut::as_slice`
+impl<K, V: fmt::Debug> fmt::Debug for ValuesMut<'_, K, V> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let iter = self.iter.as_slice().iter().map(Bucket::value_ref);
+        f.debug_list().entries(iter).finish()
+    }
+}
 
 /// An owning iterator over the values of a `IndexMap`.
 ///
@@ -1110,7 +1135,12 @@ impl<K, V> ExactSizeIterator for IterMut<'_, K, V> {
 
 impl<K, V> FusedIterator for IterMut<'_, K, V> {}
 
-// TODO: `impl Debug for IterMut` once we have MSRV 1.53 for `slice::IterMut::as_slice`
+impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for IterMut<'_, K, V> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let iter = self.iter.as_slice().iter().map(Bucket::refs);
+        f.debug_list().entries(iter).finish()
+    }
+}
 
 /// An owning iterator over the entries of a `IndexMap`.
 ///
@@ -1120,7 +1150,7 @@ impl<K, V> FusedIterator for IterMut<'_, K, V> {}
 /// [`into_iter`]: struct.IndexMap.html#method.into_iter
 /// [`IndexMap`]: struct.IndexMap.html
 pub struct IntoIter<K, V> {
-    pub(crate) iter: vec::IntoIter<Bucket<K, V>>,
+    iter: vec::IntoIter<Bucket<K, V>>,
 }
 
 impl<K, V> Iterator for IntoIter<K, V> {
@@ -1391,7 +1421,7 @@ where
     }
 }
 
-#[cfg(all(has_std, rustc_1_51))]
+#[cfg(has_std)]
 impl<K, V, const N: usize> From<[(K, V); N]> for IndexMap<K, V, RandomState>
 where
     K: Hash + Eq,
@@ -1406,7 +1436,7 @@ where
     /// assert_eq!(map1, map2);
     /// ```
     fn from(arr: [(K, V); N]) -> Self {
-        std::array::IntoIter::new(arr).collect()
+        Self::from_iter(arr)
     }
 }
 
@@ -1495,7 +1525,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::enumerate;
     use std::string::String;
 
     #[test]
@@ -1524,7 +1553,7 @@ mod tests {
         let not_present = [1, 3, 6, 9, 10];
         let mut map = IndexMap::with_capacity(insert.len());
 
-        for (i, &elt) in enumerate(&insert) {
+        for (i, &elt) in insert.iter().enumerate() {
             assert_eq!(map.len(), i);
             map.insert(elt, elt);
             assert_eq!(map.len(), i + 1);
@@ -1544,7 +1573,7 @@ mod tests {
         let present = vec![1, 6, 2];
         let mut map = IndexMap::with_capacity(insert.len());
 
-        for (i, &elt) in enumerate(&insert) {
+        for (i, &elt) in insert.iter().enumerate() {
             assert_eq!(map.len(), i);
             let (index, existing) = map.insert_full(elt, elt);
             assert_eq!(existing, None);
@@ -1611,7 +1640,7 @@ mod tests {
         let not_present = [1, 3, 6, 9, 10];
         let mut map = IndexMap::with_capacity(insert.len());
 
-        for (i, &elt) in enumerate(&insert) {
+        for (i, &elt) in insert.iter().enumerate() {
             assert_eq!(map.len(), i);
             map.insert(elt, elt);
             assert_eq!(map.len(), i + 1);
@@ -1906,7 +1935,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(all(has_std, rustc_1_51))]
+    #[cfg(has_std)]
     fn from_array() {
         let map = IndexMap::from([(1, 2), (3, 4)]);
         let mut expected = IndexMap::new();

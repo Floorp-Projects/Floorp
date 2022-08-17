@@ -456,7 +456,8 @@ body {
         }
 
         .section-secondary {
-          --mr-secondary-position: top center / cover;
+          --mr-secondary-background-position-y: top;
+          --mr-secondary-position: center var(--mr-secondary-background-position-y) / cover;
           border-radius: 8px 8px 0 0;
           margin: auto auto 0;
           height: 150px;

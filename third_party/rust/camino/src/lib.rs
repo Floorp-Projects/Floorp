@@ -120,6 +120,7 @@ impl Utf8PathBuf {
     ///
     /// let path = Utf8PathBuf::new();
     /// ```
+    #[must_use]
     pub fn new() -> Utf8PathBuf {
         Utf8PathBuf(PathBuf::new())
     }
@@ -177,6 +178,7 @@ impl Utf8PathBuf {
     /// let new_utf8_path_buf = Utf8PathBuf::from_path_buf(std_path_buf).unwrap();
     /// assert_eq!(new_utf8_path_buf, "foo.txt");
     /// ```
+    #[must_use = "`self` will be dropped if the result is not used"]
     pub fn into_std_path_buf(self) -> PathBuf {
         self.into()
     }
@@ -202,6 +204,7 @@ impl Utf8PathBuf {
     ///
     /// [`with_capacity`]: PathBuf::with_capacity
     #[cfg(path_buf_capacity)]
+    #[must_use]
     pub fn with_capacity(capacity: usize) -> Utf8PathBuf {
         Utf8PathBuf(PathBuf::with_capacity(capacity))
     }
@@ -216,6 +219,7 @@ impl Utf8PathBuf {
     /// let p = Utf8PathBuf::from("/test");
     /// assert_eq!(Utf8Path::new("/test"), p.as_path());
     /// ```
+    #[must_use]
     pub fn as_path(&self) -> &Utf8Path {
         // SAFETY: every Utf8PathBuf constructor ensures that self is valid UTF-8
         unsafe { Utf8Path::assume_utf8(&*self.0) }
@@ -347,6 +351,7 @@ impl Utf8PathBuf {
     /// let s = p.into_string();
     /// assert_eq!(s, "/the/head");
     /// ```
+    #[must_use = "`self` will be dropped if the result is not used"]
     pub fn into_string(self) -> String {
         self.into_os_string().into_string().unwrap()
     }
@@ -363,11 +368,13 @@ impl Utf8PathBuf {
     /// let s = p.into_os_string();
     /// assert_eq!(s, OsStr::new("/the/head"));
     /// ```
+    #[must_use = "`self` will be dropped if the result is not used"]
     pub fn into_os_string(self) -> OsString {
         self.0.into_os_string()
     }
 
     /// Converts this `Utf8PathBuf` into a [boxed](Box) [`Utf8Path`].
+    #[must_use = "`self` will be dropped if the result is not used"]
     pub fn into_boxed_path(self) -> Box<Utf8Path> {
         let ptr = Box::into_raw(self.0.into_boxed_path()) as *mut Utf8Path;
         // SAFETY:
@@ -384,6 +391,7 @@ impl Utf8PathBuf {
     ///
     /// [`capacity`]: PathBuf::capacity
     #[cfg(path_buf_capacity)]
+    #[must_use]
     pub fn capacity(&self) -> usize {
         self.0.capacity()
     }
@@ -408,6 +416,20 @@ impl Utf8PathBuf {
         self.0.reserve(additional)
     }
 
+    /// Invokes [`try_reserve`] on the underlying instance of [`PathBuf`].
+    ///
+    /// *Requires Rust 1.63 or newer.*
+    ///
+    /// [`try_reserve`]: PathBuf::try_reserve
+    #[cfg(try_reserve_2)]
+    #[inline]
+    pub fn try_reserve(
+        &mut self,
+        additional: usize,
+    ) -> Result<(), std::collections::TryReserveError> {
+        self.0.try_reserve(additional)
+    }
+
     /// Invokes [`reserve_exact`] on the underlying instance of [`PathBuf`].
     ///
     /// *Requires Rust 1.44 or newer.*
@@ -418,6 +440,20 @@ impl Utf8PathBuf {
         self.0.reserve_exact(additional)
     }
 
+    /// Invokes [`try_reserve_exact`] on the underlying instance of [`PathBuf`].
+    ///
+    /// *Requires Rust 1.63 or newer.*
+    ///
+    /// [`try_reserve_exact`]: PathBuf::try_reserve_exact
+    #[cfg(try_reserve_2)]
+    #[inline]
+    pub fn try_reserve_exact(
+        &mut self,
+        additional: usize,
+    ) -> Result<(), std::collections::TryReserveError> {
+        self.0.try_reserve_exact(additional)
+    }
+
     /// Invokes [`shrink_to_fit`] on the underlying instance of [`PathBuf`].
     ///
     /// *Requires Rust 1.44 or newer.*
@@ -426,6 +462,17 @@ impl Utf8PathBuf {
     #[cfg(path_buf_capacity)]
     pub fn shrink_to_fit(&mut self) {
         self.0.shrink_to_fit()
+    }
+
+    /// Invokes [`shrink_to`] on the underlying instance of [`PathBuf`].
+    ///
+    /// *Requires Rust 1.56 or newer.*
+    ///
+    /// [`shrink_to`]: PathBuf::shrink_to
+    #[cfg(shrink_to)]
+    #[inline]
+    pub fn shrink_to(&mut self, min_capacity: usize) {
+        self.0.shrink_to(min_capacity)
     }
 }
 
@@ -586,6 +633,7 @@ impl Utf8Path {
     /// ```
     ///
     /// [`str`]: str
+    #[must_use]
     pub fn as_str(&self) -> &str {
         // SAFETY: every Utf8Path constructor ensures that self is valid UTF-8
         unsafe { assume_utf8(self.as_os_str()) }
@@ -601,6 +649,7 @@ impl Utf8Path {
     /// let os_str = Utf8Path::new("foo.txt").as_os_str();
     /// assert_eq!(os_str, std::ffi::OsStr::new("foo.txt"));
     /// ```
+    #[must_use]
     pub fn as_os_str(&self) -> &OsStr {
         self.0.as_os_str()
     }
@@ -615,6 +664,8 @@ impl Utf8Path {
     /// let path_buf = Utf8Path::new("foo.txt").to_path_buf();
     /// assert_eq!(path_buf, Utf8PathBuf::from("foo.txt"));
     /// ```
+    #[must_use = "this returns the result of the operation, \
+                  without modifying the original"]
     pub fn to_path_buf(&self) -> Utf8PathBuf {
         Utf8PathBuf(self.0.to_path_buf())
     }
@@ -637,6 +688,7 @@ impl Utf8Path {
     /// ```
     ///
     /// [`has_root`]: Utf8Path::has_root
+    #[must_use]
     pub fn is_absolute(&self) -> bool {
         self.0.is_absolute()
     }
@@ -654,6 +706,7 @@ impl Utf8Path {
     /// ```
     ///
     /// [`is_absolute`]: Utf8Path::is_absolute
+    #[must_use]
     pub fn is_relative(&self) -> bool {
         self.0.is_relative()
     }
@@ -674,6 +727,7 @@ impl Utf8Path {
     ///
     /// assert!(Utf8Path::new("/etc/passwd").has_root());
     /// ```
+    #[must_use]
     pub fn has_root(&self) -> bool {
         self.0.has_root()
     }
@@ -695,6 +749,7 @@ impl Utf8Path {
     /// assert_eq!(grand_parent, Utf8Path::new("/"));
     /// assert_eq!(grand_parent.parent(), None);
     /// ```
+    #[must_use]
     pub fn parent(&self) -> Option<&Utf8Path> {
         self.0.parent().map(|path| {
             // SAFETY: self is valid UTF-8, so parent is valid UTF-8 as well
@@ -753,6 +808,7 @@ impl Utf8Path {
     /// assert_eq!(None, Utf8Path::new("foo.txt/..").file_name());
     /// assert_eq!(None, Utf8Path::new("/").file_name());
     /// ```
+    #[must_use]
     pub fn file_name(&self) -> Option<&str> {
         self.0.file_name().map(|s| {
             // SAFETY: self is valid UTF-8, so file_name is valid UTF-8 as well
@@ -818,6 +874,7 @@ impl Utf8Path {
     ///
     /// assert!(!Utf8Path::new("/etc/foo.rs").starts_with("/etc/foo"));
     /// ```
+    #[must_use]
     pub fn starts_with(&self, base: impl AsRef<Path>) -> bool {
         self.0.starts_with(base)
     }
@@ -840,6 +897,7 @@ impl Utf8Path {
     /// assert!(!path.ends_with("/resolv.conf"));
     /// assert!(!path.ends_with("conf")); // use .extension() instead
     /// ```
+    #[must_use]
     pub fn ends_with(&self, base: impl AsRef<Path>) -> bool {
         self.0.ends_with(base)
     }
@@ -863,6 +921,7 @@ impl Utf8Path {
     /// assert_eq!("foo", Utf8Path::new("foo.rs").file_stem().unwrap());
     /// assert_eq!("foo.tar", Utf8Path::new("foo.tar.gz").file_stem().unwrap());
     /// ```
+    #[must_use]
     pub fn file_stem(&self) -> Option<&str> {
         self.0.file_stem().map(|s| {
             // SAFETY: self is valid UTF-8, so file_stem is valid UTF-8 as well
@@ -889,6 +948,7 @@ impl Utf8Path {
     /// assert_eq!("rs", Utf8Path::new("foo.rs").extension().unwrap());
     /// assert_eq!("gz", Utf8Path::new("foo.tar.gz").extension().unwrap());
     /// ```
+    #[must_use]
     pub fn extension(&self) -> Option<&str> {
         self.0.extension().map(|s| {
             // SAFETY: self is valid UTF-8, so extension is valid UTF-8 as well
@@ -907,6 +967,7 @@ impl Utf8Path {
     ///
     /// assert_eq!(Utf8Path::new("/etc").join("passwd"), Utf8PathBuf::from("/etc/passwd"));
     /// ```
+    #[must_use]
     pub fn join(&self, path: impl AsRef<Utf8Path>) -> Utf8PathBuf {
         Utf8PathBuf(self.0.join(&path.as_ref().0))
     }
@@ -923,6 +984,7 @@ impl Utf8Path {
     ///
     /// assert_eq!(Utf8Path::new("/etc").join_os("passwd"), PathBuf::from("/etc/passwd"));
     /// ```
+    #[must_use]
     pub fn join_os(&self, path: impl AsRef<Path>) -> PathBuf {
         self.0.join(path)
     }
@@ -942,6 +1004,7 @@ impl Utf8Path {
     /// let path = Utf8Path::new("/tmp");
     /// assert_eq!(path.with_file_name("var"), Utf8PathBuf::from("/var"));
     /// ```
+    #[must_use]
     pub fn with_file_name(&self, file_name: impl AsRef<str>) -> Utf8PathBuf {
         Utf8PathBuf(self.0.with_file_name(file_name.as_ref()))
     }
@@ -1223,6 +1286,9 @@ impl Utf8Path {
 
     /// Returns `true` if the path points at an existing entity.
     ///
+    /// Warning: this method may be error-prone, consider using [`try_exists()`] instead!
+    /// It also has a risk of introducing time-of-check to time-of-use (TOCTOU) bugs.
+    ///
     /// This function will traverse symbolic links to query information about the
     /// destination file. In case of broken symbolic links this will return `false`.
     ///
@@ -1240,8 +1306,49 @@ impl Utf8Path {
     ///
     /// This is a convenience function that coerces errors to false. If you want to
     /// check errors, call [`fs::metadata`].
+    ///
+    /// [`try_exists()`]: Self::try_exists
+    #[must_use]
     pub fn exists(&self) -> bool {
         self.0.exists()
+    }
+
+    /// Returns `Ok(true)` if the path points at an existing entity.
+    ///
+    /// This function will traverse symbolic links to query information about the
+    /// destination file. In case of broken symbolic links this will return `Ok(false)`.
+    ///
+    /// As opposed to the [`exists()`] method, this one doesn't silently ignore errors
+    /// unrelated to the path not existing. (E.g. it will return `Err(_)` in case of permission
+    /// denied on some of the parent directories.)
+    ///
+    /// Note that while this avoids some pitfalls of the `exists()` method, it still can not
+    /// prevent time-of-check to time-of-use (TOCTOU) bugs. You should only use it in scenarios
+    /// where those bugs are not an issue.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use camino::Utf8Path;
+    /// assert!(!Utf8Path::new("does_not_exist.txt").try_exists().expect("Can't check existence of file does_not_exist.txt"));
+    /// assert!(Utf8Path::new("/root/secret_file.txt").try_exists().is_err());
+    /// ```
+    ///
+    /// [`exists()`]: Self::exists
+    #[inline]
+    pub fn try_exists(&self) -> io::Result<bool> {
+        // Note: this block is written this way rather than with a pattern guard to appease Rust
+        // 1.34.
+        match fs::metadata(self) {
+            Ok(_) => Ok(true),
+            Err(error) => {
+                if error.kind() == io::ErrorKind::NotFound {
+                    Ok(false)
+                } else {
+                    Err(error)
+                }
+            }
+        }
     }
 
     /// Returns `true` if the path exists on disk and is pointing at a regular file.
@@ -1271,6 +1378,7 @@ impl Utf8Path {
     /// it. Only using `is_file` can break workflows like `diff <( prog_a )` on
     /// a Unix-like system for example. See [`fs::File::open`] or
     /// [`fs::OpenOptions::open`] for more information.
+    #[must_use]
     pub fn is_file(&self) -> bool {
         self.0.is_file()
     }
@@ -1296,6 +1404,7 @@ impl Utf8Path {
     /// This is a convenience function that coerces errors to false. If you want to
     /// check errors, call [`fs::metadata`] and handle its [`Result`]. Then call
     /// [`fs::Metadata::is_dir`] if it was [`Ok`].
+    #[must_use]
     pub fn is_dir(&self) -> bool {
         self.0.is_dir()
     }
@@ -1334,6 +1443,7 @@ impl Utf8Path {
     }
 
     /// Converts a `Box<Utf8Path>` into a [`Utf8PathBuf`] without copying or allocating.
+    #[must_use = "`self` will be dropped if the result is not used"]
     pub fn into_path_buf(self: Box<Utf8Path>) -> Utf8PathBuf {
         let ptr = Box::into_raw(self) as *mut Path;
         // SAFETY:
@@ -1397,6 +1507,7 @@ impl fmt::Debug for Utf8Path {
 ///
 /// [`ancestors`]: Utf8Path::ancestors
 #[derive(Copy, Clone)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 #[repr(transparent)]
 pub struct Utf8Ancestors<'a>(Ancestors<'a>);
 
@@ -1439,6 +1550,7 @@ impl<'a> FusedIterator for Utf8Ancestors<'a> {}
 ///
 /// [`components`]: Utf8Path::components
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Utf8Components<'a>(Components<'a>);
 
 impl<'a> Utf8Components<'a> {
@@ -1455,6 +1567,7 @@ impl<'a> Utf8Components<'a> {
     ///
     /// assert_eq!(Utf8Path::new("foo/bar.txt"), components.as_path());
     /// ```
+    #[must_use]
     pub fn as_path(&self) -> &'a Utf8Path {
         // SAFETY: Utf8Components was constructed from a Utf8Path, so it is guaranteed to be valid
         // UTF-8
@@ -1523,6 +1636,7 @@ impl AsRef<OsStr> for Utf8Components<'_> {
 ///
 /// [`iter`]: Utf8Path::iter
 #[derive(Clone)]
+#[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct Iter<'a> {
     inner: Utf8Components<'a>,
 }
@@ -1557,6 +1671,7 @@ impl<'a> Iter<'a> {
     ///
     /// assert_eq!(Utf8Path::new("foo/bar.txt"), iter.as_path());
     /// ```
+    #[must_use]
     pub fn as_path(&self) -> &'a Utf8Path {
         self.inner.as_path()
     }
@@ -1674,6 +1789,7 @@ impl<'a> Utf8Component<'a> {
     /// let components: Vec<_> = path.components().map(|comp| comp.as_str()).collect();
     /// assert_eq!(&components, &[".", "tmp", "foo", "bar.txt"]);
     /// ```
+    #[must_use]
     pub fn as_str(&self) -> &'a str {
         // SAFETY: Utf8Component was constructed from a Utf8Path, so it is guaranteed to be
         // valid UTF-8
@@ -1691,6 +1807,7 @@ impl<'a> Utf8Component<'a> {
     /// let components: Vec<_> = path.components().map(|comp| comp.as_os_str()).collect();
     /// assert_eq!(&components, &[".", "tmp", "foo", "bar.txt"]);
     /// ```
+    #[must_use]
     pub fn as_os_str(&self) -> &'a OsStr {
         match *self {
             Utf8Component::Prefix(prefix) => prefix.as_os_str(),
@@ -1821,6 +1938,7 @@ impl<'a> Utf8Prefix<'a> {
     /// assert!(!UNC("server", "share").is_verbatim());
     /// assert!(!Disk(b'C').is_verbatim());
     /// ```
+    #[must_use]
     pub fn is_verbatim(&self) -> bool {
         use Utf8Prefix::*;
         match self {
@@ -1872,6 +1990,7 @@ impl<'a> Utf8PrefixComponent<'a> {
     ///
     /// See [`Utf8Prefix`]'s documentation for more information on the different
     /// kinds of prefixes.
+    #[must_use]
     pub fn kind(&self) -> Utf8Prefix<'a> {
         // SAFETY for all the below unsafe blocks: the path self was originally constructed from was
         // UTF-8 so any parts of it are valid UTF-8
@@ -1894,6 +2013,7 @@ impl<'a> Utf8PrefixComponent<'a> {
     }
 
     /// Returns the [`str`] slice for this prefix.
+    #[must_use]
     pub fn as_str(&self) -> &'a str {
         // SAFETY: Utf8PrefixComponent was constructed from a Utf8Path, so it is guaranteed to be
         // valid UTF-8
@@ -1901,6 +2021,7 @@ impl<'a> Utf8PrefixComponent<'a> {
     }
 
     /// Returns the raw [`OsStr`] slice for this prefix.
+    #[must_use]
     pub fn as_os_str(&self) -> &'a OsStr {
         self.0.as_os_str()
     }
@@ -2596,6 +2717,7 @@ impl<'a> IntoIterator for &'a Utf8Path {
 
 macro_rules! impl_cmp {
     ($lhs:ty, $rhs: ty) => {
+        #[allow(clippy::extra_unused_lifetimes)]
         impl<'a, 'b> PartialEq<$rhs> for $lhs {
             #[inline]
             fn eq(&self, other: &$rhs) -> bool {
@@ -2603,6 +2725,7 @@ macro_rules! impl_cmp {
             }
         }
 
+        #[allow(clippy::extra_unused_lifetimes)]
         impl<'a, 'b> PartialEq<$lhs> for $rhs {
             #[inline]
             fn eq(&self, other: &$lhs) -> bool {
@@ -2610,6 +2733,7 @@ macro_rules! impl_cmp {
             }
         }
 
+        #[allow(clippy::extra_unused_lifetimes)]
         impl<'a, 'b> PartialOrd<$rhs> for $lhs {
             #[inline]
             fn partial_cmp(&self, other: &$rhs) -> Option<Ordering> {
@@ -2617,6 +2741,7 @@ macro_rules! impl_cmp {
             }
         }
 
+        #[allow(clippy::extra_unused_lifetimes)]
         impl<'a, 'b> PartialOrd<$lhs> for $rhs {
             #[inline]
             fn partial_cmp(&self, other: &$lhs) -> Option<Ordering> {
@@ -2634,6 +2759,7 @@ impl_cmp!(Cow<'a, Utf8Path>, Utf8PathBuf);
 
 macro_rules! impl_cmp_std_path {
     ($lhs:ty, $rhs: ty) => {
+        #[allow(clippy::extra_unused_lifetimes)]
         impl<'a, 'b> PartialEq<$rhs> for $lhs {
             #[inline]
             fn eq(&self, other: &$rhs) -> bool {
@@ -2641,6 +2767,7 @@ macro_rules! impl_cmp_std_path {
             }
         }
 
+        #[allow(clippy::extra_unused_lifetimes)]
         impl<'a, 'b> PartialEq<$lhs> for $rhs {
             #[inline]
             fn eq(&self, other: &$lhs) -> bool {
@@ -2648,6 +2775,7 @@ macro_rules! impl_cmp_std_path {
             }
         }
 
+        #[allow(clippy::extra_unused_lifetimes)]
         impl<'a, 'b> PartialOrd<$rhs> for $lhs {
             #[inline]
             fn partial_cmp(&self, other: &$rhs) -> Option<std::cmp::Ordering> {
@@ -2655,6 +2783,7 @@ macro_rules! impl_cmp_std_path {
             }
         }
 
+        #[allow(clippy::extra_unused_lifetimes)]
         impl<'a, 'b> PartialOrd<$lhs> for $rhs {
             #[inline]
             fn partial_cmp(&self, other: &$lhs) -> Option<std::cmp::Ordering> {
@@ -2679,6 +2808,7 @@ impl_cmp_std_path!(&'a Utf8Path, PathBuf);
 
 macro_rules! impl_cmp_str {
     ($lhs:ty, $rhs: ty) => {
+        #[allow(clippy::extra_unused_lifetimes)]
         impl<'a, 'b> PartialEq<$rhs> for $lhs {
             #[inline]
             fn eq(&self, other: &$rhs) -> bool {
@@ -2686,6 +2816,7 @@ macro_rules! impl_cmp_str {
             }
         }
 
+        #[allow(clippy::extra_unused_lifetimes)]
         impl<'a, 'b> PartialEq<$lhs> for $rhs {
             #[inline]
             fn eq(&self, other: &$lhs) -> bool {
@@ -2693,6 +2824,7 @@ macro_rules! impl_cmp_str {
             }
         }
 
+        #[allow(clippy::extra_unused_lifetimes)]
         impl<'a, 'b> PartialOrd<$rhs> for $lhs {
             #[inline]
             fn partial_cmp(&self, other: &$rhs) -> Option<std::cmp::Ordering> {
@@ -2700,6 +2832,7 @@ macro_rules! impl_cmp_str {
             }
         }
 
+        #[allow(clippy::extra_unused_lifetimes)]
         impl<'a, 'b> PartialOrd<$lhs> for $rhs {
             #[inline]
             fn partial_cmp(&self, other: &$lhs) -> Option<std::cmp::Ordering> {
@@ -2724,6 +2857,7 @@ impl_cmp_str!(&'a Utf8Path, String);
 
 macro_rules! impl_cmp_os_str {
     ($lhs:ty, $rhs: ty) => {
+        #[allow(clippy::extra_unused_lifetimes)]
         impl<'a, 'b> PartialEq<$rhs> for $lhs {
             #[inline]
             fn eq(&self, other: &$rhs) -> bool {
@@ -2731,6 +2865,7 @@ macro_rules! impl_cmp_os_str {
             }
         }
 
+        #[allow(clippy::extra_unused_lifetimes)]
         impl<'a, 'b> PartialEq<$lhs> for $rhs {
             #[inline]
             fn eq(&self, other: &$lhs) -> bool {
@@ -2738,6 +2873,7 @@ macro_rules! impl_cmp_os_str {
             }
         }
 
+        #[allow(clippy::extra_unused_lifetimes)]
         impl<'a, 'b> PartialOrd<$rhs> for $lhs {
             #[inline]
             fn partial_cmp(&self, other: &$rhs) -> Option<std::cmp::Ordering> {
@@ -2745,6 +2881,7 @@ macro_rules! impl_cmp_os_str {
             }
         }
 
+        #[allow(clippy::extra_unused_lifetimes)]
         impl<'a, 'b> PartialOrd<$lhs> for $rhs {
             #[inline]
             fn partial_cmp(&self, other: &$lhs) -> Option<std::cmp::Ordering> {

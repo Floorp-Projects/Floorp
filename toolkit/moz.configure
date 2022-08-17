@@ -3231,3 +3231,13 @@ with only_when(compile_environment & depends(target.os)(lambda os: os != "WINNT"
     set_define("HAVE_ARC4RANDOM", check_symbol("arc4random"))
     set_define("HAVE_ARC4RANDOM_BUF", check_symbol("arc4random_buf"))
     set_define("HAVE_MALLINFO", check_symbol("mallinfo"))
+
+# System policies
+# ==============================================================
+
+option(
+    "--disable-system-policies",
+    help="Disable reading policies from Windows registry, macOS's file system attributes, and /etc/firefox",
+)
+
+set_config("MOZ_SYSTEM_POLICIES", True, when="--enable-system-policies")

@@ -1,5 +1,5 @@
 use pin_project::pin_project;
-# [pin (__private (project_ref = ProjRef))]
+#[pin(__private(project_ref = ProjRef))]
 struct Struct<T, U> {
     #[pin]
     pinned: T,
@@ -10,6 +10,7 @@ struct Struct<T, U> {
 #[allow(explicit_outlives_requirements)]
 #[allow(single_use_lifetimes)]
 #[allow(unreachable_pub)]
+#[allow(unused_tuple_struct_fields)]
 #[allow(clippy::unknown_clippy_lints)]
 #[allow(clippy::pattern_type_mismatch)]
 #[allow(clippy::redundant_pub_crate)]
@@ -28,6 +29,7 @@ where
 #[allow(explicit_outlives_requirements)]
 #[allow(single_use_lifetimes)]
 #[allow(unreachable_pub)]
+#[allow(unused_tuple_struct_fields)]
 #[allow(clippy::unknown_clippy_lints)]
 #[allow(clippy::pattern_type_mismatch)]
 #[allow(clippy::redundant_pub_crate)]
@@ -49,6 +51,7 @@ const _: () = {
         unpinned: &'pin mut (U),
     }
     impl<T, U> Struct<T, U> {
+        #[allow(dead_code)]
         fn project<'pin>(
             self: _pin_project::__private::Pin<&'pin mut Self>,
         ) -> __StructProjection<'pin, T, U> {
@@ -60,6 +63,7 @@ const _: () = {
                 }
             }
         }
+        #[allow(dead_code)]
         #[allow(clippy::missing_const_for_fn)]
         fn project_ref<'pin>(
             self: _pin_project::__private::Pin<&'pin Self>,
@@ -89,15 +93,15 @@ const _: () = {
         >,
         __field0: T,
     }
-    impl<'pin, T, U> _pin_project::__private::Unpin for Struct<T, U> where
-        __Struct<'pin, T, U>: _pin_project::__private::Unpin
-    {
-    }
+    impl<'pin, T, U> _pin_project::__private::Unpin for Struct<T, U>
+    where
+        __Struct<'pin, T, U>: _pin_project::__private::Unpin,
+    {}
     #[doc(hidden)]
-    unsafe impl<'pin, T, U> _pin_project::UnsafeUnpin for Struct<T, U> where
-        __Struct<'pin, T, U>: _pin_project::__private::Unpin
-    {
-    }
+    unsafe impl<'pin, T, U> _pin_project::UnsafeUnpin for Struct<T, U>
+    where
+        __Struct<'pin, T, U>: _pin_project::__private::Unpin,
+    {}
     trait StructMustNotImplDrop {}
     #[allow(clippy::drop_bounds, drop_bounds)]
     impl<T: _pin_project::__private::Drop> StructMustNotImplDrop for T {}

@@ -1,3 +1,5 @@
+// FIXME: needs to be updated to provide_ref/request_ref API.
+#![cfg(any())]
 #![cfg_attr(thiserror_nightly_testing, feature(backtrace))]
 
 use thiserror::Error;
