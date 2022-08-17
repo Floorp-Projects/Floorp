@@ -1481,6 +1481,7 @@ JS_PUBLIC_API void JS_SetNativeStackQuota(
     JS::NativeStackSize trustedScriptStackSize,
     JS::NativeStackSize untrustedScriptStackSize) {
   MOZ_ASSERT(!cx->activation());
+  MOZ_ASSERT(cx->isMainThreadContext());
 
   if (!trustedScriptStackSize) {
     trustedScriptStackSize = systemCodeStackSize;
@@ -1498,9 +1499,7 @@ JS_PUBLIC_API void JS_SetNativeStackQuota(
   SetNativeStackSize(cx, JS::StackForTrustedScript, trustedScriptStackSize);
   SetNativeStackSize(cx, JS::StackForUntrustedScript, untrustedScriptStackSize);
 
-  if (cx->isMainThreadContext()) {
-    cx->initJitStackLimit();
-  }
+  cx->initJitStackLimit();
 }
 
 /************************************************************************/
