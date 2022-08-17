@@ -105,8 +105,8 @@ var setupScript = runInParent(function setup() {
 
 SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal", true]]});
 
-var uname = $_(1, "uname");
-var pword = $_(1, "pword");
+let uname = getFormElementByName(1, "uname");
+let pword = getFormElementByName(1, "pword");
 
 // Restore the form to the default state.
 function restoreForm() {
@@ -531,8 +531,8 @@ add_task(async function test_form2() {
     </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "singleuser5"});
 
   // Turn our attention to form2
-  uname = $_(2, "uname");
-  pword = $_(2, "pword");
+  uname = getFormElementByName(2, "uname");
+  pword = getFormElementByName(2, "pword");
   checkLoginForm(uname, "singleuser5", pword, "singlepass5");
 
   restoreForm();
@@ -557,8 +557,8 @@ add_task(async function test_form3() {
       <button type="submit">Submit</button>
     </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "singleuser5"});
 
-  uname = $_(3, "uname");
-  pword = $_(3, "pword");
+  uname = getFormElementByName(3, "uname");
+  pword = getFormElementByName(3, "pword");
   checkLoginForm(uname, "singleuser5", pword, "singlepass5");
   restoreForm();
   let shownPromise = promiseACShown();
@@ -582,8 +582,8 @@ add_task(async function test_form4() {
       <button type="submit">Submit</button>
     </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "singleuser5"});
 
-  uname = $_(4, "uname");
-  pword = $_(4, "pword");
+  uname = getFormElementByName(4, "uname");
+  pword = getFormElementByName(4, "pword");
   checkLoginForm(uname, "singleuser5", pword, "singlepass5");
   restoreForm();
   let shownPromise = promiseACShown();
@@ -607,8 +607,8 @@ add_task(async function test_form5() {
       <button type="submit">Submit</button>
     </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "singleuser5"});
 
-  uname = $_(5, "uname");
-  pword = $_(5, "pword");
+  uname = getFormElementByName(5, "uname");
+  pword = getFormElementByName(5, "pword");
   checkLoginForm(uname, "singleuser5", pword, "singlepass5");
   restoreForm();
   let shownPromise = promiseACShown();
@@ -635,8 +635,8 @@ add_task(async function test_form6() {
 
   // (this is a control, w/o autocomplete=off, to ensure the login
   // that was being suppressed would have been filled in otherwise)
-  uname = $_(6, "uname");
-  pword = $_(6, "pword");
+  uname = getFormElementByName(6, "uname");
+  pword = getFormElementByName(6, "pword");
   checkLoginForm(uname, "singleuser5", pword, "singlepass5");
 });
 
@@ -670,8 +670,8 @@ add_task(async function test_form7() {
       <button type="submit">Submit</button>
     </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: ""});
 
-  uname = $_(7, "uname");
-  pword = $_(7, "pword");
+  uname = getFormElementByName(7, "uname");
+  pword = getFormElementByName(7, "pword");
   checkLoginForm(uname, "", pword, "");
 
   // Insert a new username field into the form. We'll then make sure
@@ -680,7 +680,7 @@ add_task(async function test_form7() {
   newField.setAttribute("type", "text");
   newField.setAttribute("name", "uname2");
   pword.parentNode.insertBefore(newField, pword);
-  is($_(7, "uname2").value, "", "Verifying empty uname2");
+  is(getFormElementByName(7, "uname2").value, "", "Verifying empty uname2");
 
   // Delete login6B. It was created just to prevent filling in a login
   // automatically, removing it makes it more likely that we'll catch a
@@ -706,7 +706,7 @@ add_task(async function test_form7_2() {
   // the password field should have any values filled in.
   await spinEventLoop();
   checkLoginForm(uname, "form7user1", pword, "");
-  is($_(7, "uname2").value, "", "Verifying empty uname2");
+  is(getFormElementByName(7, "uname2").value, "", "Verifying empty uname2");
   restoreForm(); // clear field, so reloading test doesn't fail
 
   let storageChanged = promiseStorageChanged(["removeLogin"]);
@@ -733,8 +733,8 @@ add_task(async function test_form8() {
     </form>
     `, {fieldSelector: `#form8 input[name="uname"]`, fieldValue: "form8user"});
 
-  uname = $_(8, "uname");
-  pword = $_(8, "pword");
+  uname = getFormElementByName(8, "uname");
+  pword = getFormElementByName(8, "pword");
   checkLoginForm(uname, "form8user", pword, "form8pass");
   restoreForm();
 });
@@ -742,7 +742,7 @@ add_task(async function test_form8() {
 add_task(async function test_form8_blur() {
   checkLoginForm(uname, "", pword, "");
   // Focus the previous form to trigger a blur.
-  $_(7, "uname").focus();
+  getFormElementByName(7, "uname").focus();
 });
 
 add_task(async function test_form8_2() {
@@ -770,8 +770,8 @@ add_task(async function test_form9_filtering() {
 
   // Turn our attention to form9 to test the dropdown - bug 497541
   let shownPromise = promiseACShown();
-  uname = $_(9, "uname");
-  pword = $_(9, "pword");
+  uname = getFormElementByName(9, "uname");
+  pword = getFormElementByName(9, "pword");
   uname.focus();
   let results = await shownPromise;
   checkAutoCompleteResults(results,
@@ -857,8 +857,8 @@ add_task(async function test_form11_recipes() {
       <button type="submit">Submit</button>
     </form>`, {fieldSelector: `input[name="1"]`, fieldValue: ""});
 
-  uname = $_(11, "1");
-  pword = $_(11, "2");
+  uname = getFormElementByName(11, "1");
+  pword = getFormElementByName(11, "2");
 
   // First test DOMAutocomplete
   // Switch the password field to type=password so _fillForm marks the username
@@ -899,8 +899,8 @@ add_task(async function test_form12_formless() {
       <button type="submit">Submit</button>
     </div>`, {fieldSelector: `input[name="uname"]`, fieldValue: ""});
 
-  uname = $_(12, "uname");
-  pword = $_(12, "pword");
+  uname = getFormElementByName(12, "uname");
+  pword = getFormElementByName(12, "pword");
   let shownPromise = promiseACShown();
   uname.focus();
   await shownPromise;
@@ -930,8 +930,8 @@ add_task(async function test_form13_stays_open_upon_empty_search() {
       <button type="submit">Submit</button>
     </form>`, {fieldSelector: `input[name="uname"]`, fieldValue: "prefilled"});
 
-  uname = $_(13, "uname");
-  pword = $_(13, "pword");
+  uname = getFormElementByName(13, "uname");
+  pword = getFormElementByName(13, "pword");
   checkLoginForm(uname, "prefilled", pword, "prefilled");
 
   uname.scrollIntoView();

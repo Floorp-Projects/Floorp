@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Test for input events in Login Manager</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="../../../satchel/test/satchel_common.js"></script>
   <script type="text/javascript" src="pwmgr_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -59,10 +60,10 @@ function onNewEvent(e) {
 
 SimpleTest.registerCleanupFunction(function cleanup() {
   clearTimeout(timeout);
-  $_(1, "uname").removeAttribute("oninput");
-  $_(1, "pword").removeAttribute("oninput");
-  $_(1, "uname").removeAttribute("onchange");
-  $_(1, "pword").removeAttribute("onchange");
+  getFormElementByName(1, "uname").removeAttribute("oninput");
+  getFormElementByName(1, "pword").removeAttribute("oninput");
+  getFormElementByName(1, "uname").removeAttribute("onchange");
+  getFormElementByName(1, "pword").removeAttribute("onchange");
   document.body.removeAttribute("onload");
 });
 
