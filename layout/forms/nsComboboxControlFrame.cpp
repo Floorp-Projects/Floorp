@@ -317,54 +317,57 @@ int32_t nsComboboxControlFrame::CharCountOfLargestOptionForInflation() const {
   return int32_t(maxLength);
 }
 
+nscoord nsComboboxControlFrame::GetLongestOptionISize(
+    gfxContext* aRenderingContext) const {
+  // Compute the width of each option's (potentially text-transformed) text,
+  // and use the widest one as part of our intrinsic size.
+  nscoord maxOptionSize = 0;
+  nsAutoString label;
+  nsAutoString transformedLabel;
+  RefPtr<nsFontMetrics> fm =
+      nsLayoutUtils::GetInflatedFontMetricsForFrame(this);
+  auto textTransform = StyleText()->mTextTransform.IsNone()
+                           ? Nothing()
+                           : Some(StyleText()->mTextTransform);
+  nsAtom* language = StyleFont()->mLanguage;
+  AutoTArray<bool, 50> charsToMergeArray;
+  AutoTArray<bool, 50> deletedCharsArray;
+  for (auto i : IntegerRange(Select().Options()->Length())) {
+    GetOptionText(i, label);
+    const nsAutoString* stringToUse = &label;
+    if (textTransform) {
+      transformedLabel.Truncate();
+      charsToMergeArray.SetLengthAndRetainStorage(0);
+      deletedCharsArray.SetLengthAndRetainStorage(0);
+      nsCaseTransformTextRunFactory::TransformString(
+          label, transformedLabel, textTransform,
+          /* aCaseTransformsOnly = */ false, language, charsToMergeArray,
+          deletedCharsArray);
+      stringToUse = &transformedLabel;
+    }
+    maxOptionSize = std::max(maxOptionSize,
+                             nsLayoutUtils::AppUnitWidthOfStringBidi(
+                                 *stringToUse, this, *fm, *aRenderingContext));
+  }
+  if (maxOptionSize) {
+    // HACK: Add one app unit to workaround silly Netgear router styling, see
+    // bug 1769580. In practice since this comes from font metrics is unlikely
+    // to be perceivable.
+    maxOptionSize += 1;
+  }
+  return maxOptionSize;
+}
+
 nscoord nsComboboxControlFrame::GetIntrinsicISize(gfxContext* aRenderingContext,
                                                   IntrinsicISizeType aType) {
   nscoord displayISize = mDisplayFrame->IntrinsicISizeOffsets().padding;
-
   if (!StyleDisplay()->GetContainSizeAxes().mIContained &&
       !StyleContent()->mContent.IsNone()) {
-    // Compute the width of each option's (potentially text-transformed) text,
-    // and use the widest one as part of our intrinsic size.
-    nscoord maxOptionSize = 0;
-    nsAutoString label;
-    nsAutoString transformedLabel;
-    RefPtr<nsFontMetrics> fm =
-        nsLayoutUtils::GetInflatedFontMetricsForFrame(this);
-    auto textTransform = StyleText()->mTextTransform.IsNone()
-                             ? Nothing()
-                             : Some(StyleText()->mTextTransform);
-    nsAtom* language = StyleFont()->mLanguage;
-    AutoTArray<bool, 50> charsToMergeArray;
-    AutoTArray<bool, 50> deletedCharsArray;
-    for (auto i : IntegerRange(Select().Options()->Length())) {
-      GetOptionText(i, label);
-      const nsAutoString* stringToUse = &label;
-      if (textTransform) {
-        transformedLabel.Truncate();
-        charsToMergeArray.SetLengthAndRetainStorage(0);
-        deletedCharsArray.SetLengthAndRetainStorage(0);
-        nsCaseTransformTextRunFactory::TransformString(
-            label, transformedLabel, textTransform,
-            /* aCaseTransformsOnly = */ false, language, charsToMergeArray,
-            deletedCharsArray);
-        stringToUse = &transformedLabel;
-      }
-      maxOptionSize = std::max(
-          maxOptionSize, nsLayoutUtils::AppUnitWidthOfStringBidi(
-                             *stringToUse, this, *fm, *aRenderingContext));
-    }
-    if (maxOptionSize) {
-      // HACK: Add one app unit to workaround silly Netgear router styling, see
-      // bug 1769580. In practice since this comes from font metrics is unlikely
-      // to be perceivable.
-      maxOptionSize += 1;
-    }
-    displayISize += maxOptionSize;
+    displayISize += GetLongestOptionISize(aRenderingContext);
   }
 
   // Add room for the dropmarker button (if there is one).
   displayISize += DropDownButtonISize();
-
   return displayISize;
 }
 
