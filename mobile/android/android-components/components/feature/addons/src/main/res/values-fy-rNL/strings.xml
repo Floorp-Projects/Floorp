@@ -38,6 +38,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Gegevens fan it klamboerd ophelje</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Gegevens op it klamboerd pleatse</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Ynhâld op elke side blokkearje</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Bestannen downloade en downloadskiednis fan de browser lêze en oanpasse</string>
     <!-- Description for downloads_open permission. -->
