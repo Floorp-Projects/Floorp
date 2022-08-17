@@ -25,11 +25,9 @@
  * @author Michael Niedermayer <michaelni@gmx.at>
  */
 
-#include <string.h>
-
+#include "common.h"
 #include "integer.h"
 #include "avassert.h"
-#include "intmath.h"
 
 static const AVInteger zero_i;
 

@@ -73,7 +73,7 @@ static int parse(AVCodecParserContext *s,
     return buf_size;
 }
 
-const AVCodecParser ff_vp8_parser = {
+AVCodecParser ff_vp8_parser = {
     .codec_ids    = { AV_CODEC_ID_VP8 },
     .parser_parse = parse,
 };

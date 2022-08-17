@@ -32,11 +32,9 @@
 #if HAVE_IO_H
 #include <io.h>
 #endif
-#include <inttypes.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include "avutil.h"
 #include "bprint.h"
 #include "common.h"
 #include "internal.h"

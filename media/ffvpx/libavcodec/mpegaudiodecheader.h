@@ -27,8 +27,7 @@
 #ifndef AVCODEC_MPEGAUDIODECHEADER_H
 #define AVCODEC_MPEGAUDIODECHEADER_H
 
-#include <stdint.h>
-#include "codec_id.h"
+#include "avcodec.h"
 
 #define MP3_MASK 0xFFFE0CCF
 

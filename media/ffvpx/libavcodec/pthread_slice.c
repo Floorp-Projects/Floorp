@@ -25,7 +25,6 @@
 #include "config.h"
 
 #include "avcodec.h"
-#include "codec_internal.h"
 #include "internal.h"
 #include "pthread_internal.h"
 #include "thread.h"
@@ -156,7 +155,7 @@ int ff_slice_thread_init(AVCodecContext *avctx)
     }
 
     avctx->internal->thread_ctx = c = av_mallocz(sizeof(*c));
-    mainfunc = ffcodec(avctx->codec)->caps_internal & FF_CODEC_CAP_SLICE_THREAD_HAS_MF ? &main_function : NULL;
+    mainfunc = avctx->codec->caps_internal & FF_CODEC_CAP_SLICE_THREAD_HAS_MF ? &main_function : NULL;
     if (!c || (thread_count = avpriv_slicethread_create(&c->thread, avctx, worker_func, mainfunc, thread_count)) <= 1) {
         if (c)
             avpriv_slicethread_free(&c->thread);
@@ -212,7 +211,7 @@ int ff_alloc_entries(AVCodecContext *avctx, int count)
         }
 
         p->thread_count  = avctx->thread_count;
-        p->entries       = av_calloc(count, sizeof(*p->entries));
+        p->entries       = av_mallocz_array(count, sizeof(int));
 
         if (!p->progress_mutex) {
             p->progress_mutex = av_malloc_array(p->thread_count, sizeof(pthread_mutex_t));
