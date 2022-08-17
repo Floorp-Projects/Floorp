@@ -9,19 +9,11 @@
 #include "js/JSON.h"
 #include "js/RootingAPI.h"
 #include "js/Value.h"
-#include "JSONWriter.h"
+#include "mozilla/JSONStringWriteFuncs.h"
 
 NS_IMPL_ISUPPORTS(nsMacPreferencesReader, nsIMacPreferencesReader)
 
 using namespace mozilla;
-
-struct StringWriteFunc : public JSONWriteFunc {
-  nsAString& mString;
-  explicit StringWriteFunc(nsAString& aStr) : mString(aStr) {}
-  void Write(const Span<const char>& aStr) override {
-    mString.Append(NS_ConvertUTF8toUTF16(aStr.data(), aStr.size()));
-  }
-};
 
 static void EvaluateDict(JSONWriter* aWriter, NSDictionary<NSString*, id>* aDict);
 
@@ -71,16 +63,16 @@ nsMacPreferencesReader::PoliciesEnabled(bool* aPoliciesEnabled) {
 
 NS_IMETHODIMP
 nsMacPreferencesReader::ReadPreferences(JSContext* aCx, JS::MutableHandle<JS::Value> aResult) {
-  nsAutoString jsonStr;
-  JSONWriter w(MakeUnique<StringWriteFunc>(jsonStr));
+  JSONStringWriteFunc<nsAutoCString> jsonStr;
+  JSONWriter w(jsonStr);
   w.Start();
   EvaluateDict(&w, [[NSUserDefaults standardUserDefaults] dictionaryRepresentation]);
   w.End();
 
-  auto json = static_cast<const char16_t*>(jsonStr.get());
+  NS_ConvertUTF8toUTF16 jsonStr16(jsonStr.StringCRef());
 
   JS::RootedValue val(aCx);
-  MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx, json, jsonStr.Length(), &val));
+  MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx, jsonStr16.get(), jsonStr16.Length(), &val));
 
   aResult.set(val);
   return NS_OK;

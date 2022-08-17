@@ -21,6 +21,7 @@
 #include "js/Value.h"
 #include "json/json.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/JSONStringWriteFuncs.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/Promise.h"
@@ -299,31 +300,20 @@ nsProfiler::GetProfile(double aSinceTime, char** aProfile) {
   return NS_OK;
 }
 
-namespace {
-struct StringWriteFunc : public JSONWriteFunc {
-  nsAString& mBuffer;  // This struct must not outlive this buffer
-  explicit StringWriteFunc(nsAString& buffer) : mBuffer(buffer) {}
-
-  void Write(const Span<const char>& aStr) override {
-    mBuffer.Append(NS_ConvertUTF8toUTF16(aStr.data(), aStr.size()));
-  }
-};
-}  // namespace
-
 NS_IMETHODIMP
 nsProfiler::GetSharedLibraries(JSContext* aCx,
                                JS::MutableHandle<JS::Value> aResult) {
   JS::Rooted<JS::Value> val(aCx);
   {
-    nsString buffer;
-    JSONWriter w(MakeUnique<StringWriteFunc>(buffer),
-                 JSONWriter::SingleLineStyle);
+    JSONStringWriteFunc<nsCString> buffer;
+    JSONWriter w(buffer, JSONWriter::SingleLineStyle);
     w.StartArrayElement();
     AppendSharedLibraries(w);
     w.EndArray();
+    NS_ConvertUTF8toUTF16 buffer16(buffer.StringCRef());
     MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx,
-                                 static_cast<const char16_t*>(buffer.get()),
-                                 buffer.Length(), &val));
+                                 static_cast<const char16_t*>(buffer16.get()),
+                                 buffer16.Length(), &val));
   }
   JS::Rooted<JSObject*> obj(aCx, &val.toObject());
   if (!obj) {
@@ -338,13 +328,13 @@ nsProfiler::GetActiveConfiguration(JSContext* aCx,
                                    JS::MutableHandle<JS::Value> aResult) {
   JS::Rooted<JS::Value> jsValue(aCx);
   {
-    nsString buffer;
-    JSONWriter writer(MakeUnique<StringWriteFunc>(buffer),
-                      JSONWriter::SingleLineStyle);
+    JSONStringWriteFunc<nsCString> buffer;
+    JSONWriter writer(buffer, JSONWriter::SingleLineStyle);
     profiler_write_active_configuration(writer);
+    NS_ConvertUTF8toUTF16 buffer16(buffer.StringCRef());
     MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx,
-                                 static_cast<const char16_t*>(buffer.get()),
-                                 buffer.Length(), &jsValue));
+                                 static_cast<const char16_t*>(buffer16.get()),
+                                 buffer16.Length(), &jsValue));
   }
   if (jsValue.isNull()) {
     aResult.setNull();

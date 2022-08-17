@@ -9,7 +9,7 @@
 #include "DDLogUtils.h"
 #include "nsIThread.h"
 #include "nsIThreadManager.h"
-#include "mozilla/JSONWriter.h"
+#include "mozilla/JSONStringWriteFuncs.h"
 
 namespace mozilla {
 
@@ -375,12 +375,6 @@ void DDMediaLogs::ProcessBuffer() {
   });
 }
 
-struct StringWriteFunc : public JSONWriteFunc {
-  nsCString& mCString;
-  explicit StringWriteFunc(nsCString& aCString) : mCString(aCString) {}
-  void Write(const Span<const char>& aStr) override { mCString.Append(aStr); }
-};
-
 void DDMediaLogs::FulfillPromises() {
   MOZ_ASSERT(!mThread || mThread.get() == NS_GetCurrentThread());
 
@@ -415,8 +409,8 @@ void DDMediaLogs::FulfillPromises() {
       continue;
     }
 
-    nsCString json;
-    JSONWriter jw{MakeUnique<StringWriteFunc>(json)};
+    JSONStringWriteFunc<nsCString> json;
+    JSONWriter jw{json};
     jw.Start();
     jw.StartArrayProperty("messages");
     for (const DDLogMessage& message : log->mMessages) {
@@ -485,7 +479,8 @@ void DDMediaLogs::FulfillPromises() {
         log->mMessages.IsEmpty());
     jw.EndObject();
     jw.End();
-    DDL_DEBUG("RetrieveMessages(%p) ->\n%s", mediaElement, json.get());
+    DDL_DEBUG("RetrieveMessages(%p) ->\n%s", mediaElement,
+              json.StringCRef().get());
 
     // This log exists (new messages or not) -> Resolve this promise.
     DDL_INFO("Resolving promise for HTMLMediaElement[%p] with messages %" PRImi
@@ -495,7 +490,7 @@ void DDMediaLogs::FulfillPromises() {
              log->mMessages.IsEmpty()
                  ? 0
                  : log->mMessages[log->mMessages.Length() - 1].mIndex.Value());
-    promiseHolder.Resolve(std::move(json), __func__);
+    promiseHolder.Resolve(std::move(json).StringRRef(), __func__);
 
     // Remove exported messages.
     log->mMessages.Clear();
