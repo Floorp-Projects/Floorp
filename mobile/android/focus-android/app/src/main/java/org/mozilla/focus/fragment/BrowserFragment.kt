@@ -739,15 +739,12 @@ class BrowserFragment :
 
     fun erase(shouldEraseAllTabs: Boolean = false) {
         if (shouldEraseAllTabs) {
+            requireComponents.appStore.dispatch(AppAction.NavigateUp(null))
             requireComponents.tabsUseCases.removeAllTabs()
         } else {
             requireComponents.tabsUseCases.removeTab(tab.id)
+            requireComponents.appStore.dispatch(AppAction.NavigateUp(requireComponents.store.state.selectedTabId))
         }
-        requireComponents.appStore.dispatch(
-            AppAction.NavigateUp(
-                requireComponents.store.state.selectedTabId,
-            ),
-        )
     }
 
     private fun shareCurrentUrl() {
