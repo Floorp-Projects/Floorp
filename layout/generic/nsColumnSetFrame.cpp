@@ -519,7 +519,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowColumns(
   bool reflowNext = false;
 
   while (child) {
-    const bool isMeasuringFeasibleContentBSize =
+    const bool reflowLastColumnWithUnconstrainedAvailBSize =
         aUnboundedLastColumn && colData.mColCount == aConfig.mUsedColCount &&
         aConfig.mIsBalancing;
 
@@ -541,7 +541,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowColumns(
         // content from its next sibling (Note that it might be the last column,
         // but not be the last child because the desired number of columns has
         // changed.)
-        isMeasuringFeasibleContentBSize;
+        reflowLastColumnWithUnconstrainedAvailBSize;
 
     // If column-fill is auto (not the default), then we might need to
     // move content between columns for any change in column block-size.
@@ -611,12 +611,12 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowColumns(
                      colData.mColCount, child, ToString(aStatus).c_str());
     } else {
       LogicalSize availSize(wm, aConfig.mColISize, aConfig.mColBSize);
-      if (isMeasuringFeasibleContentBSize) {
+      if (reflowLastColumnWithUnconstrainedAvailBSize) {
         availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
 
         COLUMN_SET_LOG(
-            "%s: Measuring content block-size, change available block-size "
-            "from %d to %d",
+            "%s: Reflowing last column with unconstrained block-size. Change "
+            "available block-size from %d to %d",
             __func__, aConfig.mColBSize, availSize.BSize(wm));
       }
 
