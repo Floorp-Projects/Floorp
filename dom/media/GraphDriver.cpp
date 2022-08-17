@@ -83,7 +83,7 @@ class MediaTrackGraphShutdownThreadRunnable : public Runnable {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mThread);
 
-    mThread->Shutdown();
+    mThread->AsyncShutdown();
     mThread = nullptr;
     return NS_OK;
   }
@@ -154,7 +154,7 @@ void ThreadedDriver::Shutdown() {
   if (mThread) {
     LOG(LogLevel::Debug,
         ("%p: Stopping ThreadedDriver's %p thread", Graph(), this));
-    mThread->Shutdown();
+    mThread->AsyncShutdown();
     mThread = nullptr;
   }
 }

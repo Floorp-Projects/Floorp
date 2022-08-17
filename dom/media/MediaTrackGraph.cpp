@@ -1737,8 +1737,6 @@ class MediaTrackGraphShutDownRunnable : public Runnable {
       RefPtr<GraphRunner>(mGraph->mGraphRunner)->Shutdown();
     }
 
-    // This will wait until it's shutdown since
-    // we'll start tearing down the graph after this
     RefPtr<GraphDriver>(mGraph->mDriver)->Shutdown();
 
     // Release the driver now so that an AudioCallbackDriver will release its

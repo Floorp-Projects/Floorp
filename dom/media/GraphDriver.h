@@ -275,7 +275,7 @@ class GraphDriver {
    * A driver cannot be started twice, it must be shutdown
    * before being started again. */
   virtual void Start() = 0;
-  /* Shutdown GraphDriver (synchronously) */
+  /* Shutdown GraphDriver */
   MOZ_CAN_RUN_SCRIPT virtual void Shutdown() = 0;
   /* Rate at which the GraphDriver runs, in ms. This can either be user
    * controlled (because we are using a {System,Offline}ClockDriver, and decide
