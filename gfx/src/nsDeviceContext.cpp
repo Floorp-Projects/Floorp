@@ -15,13 +15,14 @@
 #include "mozilla/gfx/PrintTarget.h"
 #include "mozilla/Preferences.h"  // for Preferences
 #include "mozilla/Services.h"     // for GetObserverService
-#include "mozilla/mozalloc.h"     // for operator new
-#include "nsCRT.h"                // for nsCRT
-#include "nsDebug.h"              // for NS_ASSERTION, etc
-#include "nsFont.h"               // for nsFont
-#include "nsFontCache.h"          // for nsFontCache
-#include "nsFontMetrics.h"        // for nsFontMetrics
-#include "nsAtom.h"               // for nsAtom, NS_Atomize
+#include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/mozalloc.h"  // for operator new
+#include "nsCRT.h"             // for nsCRT
+#include "nsDebug.h"           // for NS_ASSERTION, etc
+#include "nsFont.h"            // for nsFont
+#include "nsFontCache.h"       // for nsFontCache
+#include "nsFontMetrics.h"     // for nsFontMetrics
+#include "nsAtom.h"            // for nsAtom, NS_Atomize
 #include "nsID.h"
 #include "nsIDeviceContextSpec.h"   // for nsIDeviceContextSpec
 #include "nsLanguageAtomService.h"  // for nsLanguageAtomService

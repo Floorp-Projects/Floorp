@@ -6,6 +6,7 @@
 #include "ThemeColors.h"
 
 #include "mozilla/RelativeLuminanceUtils.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "ThemeDrawing.h"
 #include "nsNativeTheme.h"

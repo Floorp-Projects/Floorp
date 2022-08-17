@@ -13,7 +13,6 @@
 #include "mozilla/CSSEnabledState.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/PseudoStyleType.h"
-#include "mozilla/StaticPrefs_layout.h"
 
 // Is this pseudo-element a CSS2 pseudo-element that can be specified
 // with the single colon syntax (in addition to the double-colon syntax,
