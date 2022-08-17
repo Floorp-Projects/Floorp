@@ -779,7 +779,7 @@ void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
     static_assert(std::is_base_of_v<DesktopPixel,
                                     std::remove_reference_t<decltype(rect)>>,
                   "doReposition requires a rectangle using desktop pixels");
-                  
+
     adjustOSChrome();
     Resize(rect.X(), rect.Y(), rect.Width(), rect.Height(), true);
 
