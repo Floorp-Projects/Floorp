@@ -3094,11 +3094,11 @@ static nsresult SelectProfile(nsToolkitProfileService* aProfileSvc,
 }
 
 #ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
-struct FileWriteFunc final : public JSONWriteFunc {
+struct FileWriteFunc : public JSONWriteFunc {
   FILE* mFile;
   explicit FileWriteFunc(FILE* aFile) : mFile(aFile) {}
 
-  void Write(const Span<const char>& aStr) final {
+  void Write(const Span<const char>& aStr) override {
     fprintf(mFile, "%.*s", int(aStr.size()), aStr.data());
   }
 };

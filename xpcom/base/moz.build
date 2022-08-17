@@ -122,7 +122,6 @@ EXPORTS.mozilla += [
     "HoldDropJSObjects.h",
     "IntentionalCrash.h",
     "JSObjectHolder.h",
-    "JSONStringWriteFuncs.h",
     "Logging.h",
     "MemoryInfo.h",
     "MemoryMapping.h",

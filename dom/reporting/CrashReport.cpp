@@ -9,12 +9,18 @@
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/ReportingHeader.h"
 #include "mozilla/dom/ReportDeliver.h"
-#include "mozilla/JSONStringWriteFuncs.h"
+#include "mozilla/JSONWriter.h"
 #include "nsIPrincipal.h"
 #include "nsIURIMutator.h"
 #include "nsString.h"
 
 namespace mozilla::dom {
+
+struct StringWriteFunc : public JSONWriteFunc {
+  nsCString& mCString;
+  explicit StringWriteFunc(nsCString& aCString) : mCString(aCString) {}
+  void Write(const Span<const char>& aStr) override { mCString.Append(aStr); }
+};
 
 /* static */
 bool CrashReport::Deliver(nsIPrincipal* aPrincipal, bool aIsOOM) {
@@ -41,8 +47,8 @@ bool CrashReport::Deliver(nsIPrincipal* aPrincipal, bool aIsOOM) {
   data.mFailures = 0;
   data.mEndpointURL = endpoint_url;
 
-  JSONStringWriteFunc body;
-  JSONWriter writer{body};
+  nsCString body;
+  JSONWriter writer{MakeUnique<StringWriteFunc>(body)};
 
   writer.Start();
   if (aIsOOM) {
@@ -50,7 +56,7 @@ bool CrashReport::Deliver(nsIPrincipal* aPrincipal, bool aIsOOM) {
   }
   writer.End();
 
-  data.mReportBodyJSON = std::move(body).StringRRef();
+  data.mReportBodyJSON = body;
 
   ReportDeliver::Fetch(data);
   return true;

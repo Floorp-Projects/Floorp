@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <fstream>
-#include "mozilla/JSONStringWriteFuncs.h"
+#include "mozilla/JSONWriter.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "nsIThread.h"
 #include "nsString.h"
@@ -60,6 +60,15 @@ using namespace mozilla::gfx;
 namespace mozilla::gfx {
 
 namespace {
+
+// This is for controller action file writer.
+struct StringWriteFunc : public JSONWriteFunc {
+  nsACString& mBuffer;  // This struct must not outlive this buffer
+
+  explicit StringWriteFunc(nsACString& buffer) : mBuffer(buffer) {}
+
+  void Write(const Span<const char>& aStr) override { mBuffer.Append(aStr); }
+};
 
 class ControllerManifestFile {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ControllerManifestFile)
@@ -570,8 +579,8 @@ bool OpenVRSession::SetupContollerActions() {
     if (!GenerateTempFileName(controllerAction)) {
       return false;
     }
-    JSONStringWriteFunc actionData;
-    JSONWriter actionWriter(actionData);
+    nsCString actionData;
+    JSONWriter actionWriter(MakeUnique<StringWriteFunc>(actionData));
     actionWriter.Start();
 
     actionWriter.StringProperty("version",
@@ -633,8 +642,9 @@ bool OpenVRSession::SetupContollerActions() {
     actionWriter.End();
 
     std::ofstream actionfile(controllerAction.BeginReading());
+    nsCString actionResult(actionData.get());
     if (actionfile.is_open()) {
-      actionfile << actionData.StringCRef().get();
+      actionfile << actionResult.get();
       actionfile.close();
     }
   }

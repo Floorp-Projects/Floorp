@@ -250,15 +250,14 @@ class JSONWriter {
   static constexpr Span<const char> scTopObjectEndString = MakeStringSpan("}");
   static constexpr Span<const char> scTrueString = MakeStringSpan("true");
 
-  JSONWriteFunc& mWriter;
-  const UniquePtr<JSONWriteFunc> mMaybeOwnedWriter;
+  const UniquePtr<JSONWriteFunc> mWriter;
   Vector<bool, 8> mNeedComma;     // do we need a comma at depth N?
   Vector<bool, 8> mNeedNewlines;  // do we need newlines at depth N?
   size_t mDepth;                  // the current nesting depth
 
   void Indent() {
     for (size_t i = 0; i < mDepth; i++) {
-      mWriter.Write(scSpaceString);
+      mWriter->Write(scSpaceString);
     }
   }
 
@@ -267,22 +266,22 @@ class JSONWriter {
   // before.
   void Separator() {
     if (mNeedComma[mDepth]) {
-      mWriter.Write(scCommaString);
+      mWriter->Write(scCommaString);
     }
     if (mDepth > 0 && mNeedNewlines[mDepth]) {
-      mWriter.Write(scNewLineString);
+      mWriter->Write(scNewLineString);
       Indent();
     } else if (mNeedComma[mDepth] && mNeedNewlines[0]) {
-      mWriter.Write(scSpaceString);
+      mWriter->Write(scSpaceString);
     }
   }
 
   void PropertyNameAndColon(const Span<const char>& aName) {
-    mWriter.Write(scPropertyBeginString);
-    mWriter.Write(EscapedString(aName).SpanRef());
-    mWriter.Write(scPropertyEndString);
+    mWriter->Write(scPropertyBeginString);
+    mWriter->Write(EscapedString(aName).SpanRef());
+    mWriter->Write(scPropertyEndString);
     if (mNeedNewlines[0]) {
-      mWriter.Write(scSpaceString);
+      mWriter->Write(scSpaceString);
     }
   }
 
@@ -292,7 +291,7 @@ class JSONWriter {
     if (!aMaybePropertyName.empty()) {
       PropertyNameAndColon(aMaybePropertyName);
     }
-    mWriter.Write(aStringValue);
+    mWriter->Write(aStringValue);
     mNeedComma[mDepth] = true;
   }
 
@@ -302,9 +301,9 @@ class JSONWriter {
     if (!aMaybePropertyName.empty()) {
       PropertyNameAndColon(aMaybePropertyName);
     }
-    mWriter.Write(scQuoteString);
-    mWriter.Write(aStringValue);
-    mWriter.Write(scQuoteString);
+    mWriter->Write(scQuoteString);
+    mWriter->Write(aStringValue);
+    mWriter->Write(scQuoteString);
     mNeedComma[mDepth] = true;
   }
 
@@ -324,7 +323,7 @@ class JSONWriter {
     if (!aMaybePropertyName.empty()) {
       PropertyNameAndColon(aMaybePropertyName);
     }
-    mWriter.Write(aStartChar);
+    mWriter->Write(aStartChar);
     mNeedComma[mDepth] = true;
     mDepth++;
     NewVectorEntries(mNeedNewlines[mDepth - 1] && aStyle == MultiLineStyle);
@@ -334,38 +333,25 @@ class JSONWriter {
   void EndCollection(const Span<const char>& aEndChar) {
     MOZ_ASSERT(mDepth > 0);
     if (mNeedNewlines[mDepth]) {
-      mWriter.Write(scNewLineString);
+      mWriter->Write(scNewLineString);
       mDepth--;
       Indent();
     } else {
       mDepth--;
     }
-    mWriter.Write(aEndChar);
+    mWriter->Write(aEndChar);
   }
 
  public:
-  explicit JSONWriter(JSONWriteFunc& aWriter,
-                      CollectionStyle aStyle = MultiLineStyle)
-      : mWriter(aWriter), mNeedComma(), mNeedNewlines(), mDepth(0) {
-    NewVectorEntries(aStyle == MultiLineStyle);
-  }
-
   explicit JSONWriter(UniquePtr<JSONWriteFunc> aWriter,
                       CollectionStyle aStyle = MultiLineStyle)
-      : mWriter(*aWriter),
-        mMaybeOwnedWriter(std::move(aWriter)),
-        mNeedComma(),
-        mNeedNewlines(),
-        mDepth(0) {
-    MOZ_RELEASE_ASSERT(
-        mMaybeOwnedWriter,
-        "JSONWriter must be given a non-null UniquePtr<JSONWriteFunc>");
+      : mWriter(std::move(aWriter)), mNeedComma(), mNeedNewlines(), mDepth(0) {
     NewVectorEntries(aStyle == MultiLineStyle);
   }
 
   // Returns the JSONWriteFunc passed in at creation, for temporary use. The
   // JSONWriter object still owns the JSONWriteFunc.
-  JSONWriteFunc& WriteFunc() const { return mWriter; }
+  JSONWriteFunc* WriteFunc() const { return mWriter.get(); }
 
   // For all the following functions, the "Prints:" comment indicates what the
   // basic output looks like. However, it doesn't indicate the whitespace and
@@ -382,7 +368,7 @@ class JSONWriter {
   void End() {
     EndCollection(scTopObjectEndString);
     if (mNeedNewlines[mDepth]) {
-      mWriter.Write(scNewLineString);
+      mWriter->Write(scNewLineString);
     }
   }
 

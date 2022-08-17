@@ -152,7 +152,7 @@ class TempFileWriter final : public mozilla::JSONWriteFunc {
 
   explicit operator bool() const { return !mFailed; }
 
-  void Write(const mozilla::Span<const char>& aStr) final {
+  void Write(const mozilla::Span<const char>& aStr) override {
     if (mFailed) {
       return;
     }
@@ -623,8 +623,12 @@ static bool PrepPing(const PingThreadContext& aContext, const std::wstring& aId,
 }
 
 static bool DoSendPing(const PingThreadContext& aContext) {
-  TempFileWriter tempFile;
-  mozilla::JSONWriter json(tempFile);
+  auto writeFunc = mozilla::MakeUnique<TempFileWriter>();
+  if (!(*writeFunc)) {
+    return false;
+  }
+
+  mozilla::JSONWriter json(std::move(writeFunc));
 
   UUID uuid;
   if (::UuidCreate(&uuid) != RPC_S_OK) {
@@ -646,6 +650,11 @@ static bool DoSendPing(const PingThreadContext& aContext) {
   }
 
   // Obtain the name of the temp file that we have written
+  TempFileWriter& tempFile = *static_cast<TempFileWriter*>(json.WriteFunc());
+  if (!tempFile) {
+    return false;
+  }
+
   const std::wstring& fileName = tempFile.GetFileName();
 
   // Using the path to our executable binary, construct the path to
