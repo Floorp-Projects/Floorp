@@ -1724,18 +1724,28 @@ nsresult nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction* trans) {
     RefPtr<HttpConnectionBase> conn = GetH2orH3ActiveConn(ent, false, true);
     RefPtr<nsHttpConnection> connTCP = do_QueryObject(conn);
     if (ci->UsingHttpsProxy() && ci->UsingConnect()) {
-      RefPtr<nsHttpConnection> newTunnel;
-      connTCP->CreateTunnelStream(trans, getter_AddRefs(newTunnel));
+      LOG(("About to create new tunnel conn from [%p]", connTCP.get()));
       ConnectionEntry* specificEnt = mCT.GetWeak(ci->HashKey());
+
       if (!specificEnt) {
         RefPtr<nsHttpConnectionInfo> clone(ci->Clone());
         specificEnt = new ConnectionEntry(clone);
         mCT.InsertOrUpdate(clone->HashKey(), RefPtr{specificEnt});
       }
-      specificEnt->InsertIntoActiveConns(newTunnel);
-      trans->SetConnection(nullptr);
-      newTunnel->SetInSpdyTunnel();
-      rv = DispatchTransaction(specificEnt, trans, newTunnel);
+
+      ent = specificEnt;
+      bool atLimit = AtActiveConnectionLimit(ent, trans->Caps());
+      if (atLimit) {
+        rv = NS_ERROR_NOT_AVAILABLE;
+      } else {
+        RefPtr<nsHttpConnection> newTunnel;
+        connTCP->CreateTunnelStream(trans, getter_AddRefs(newTunnel));
+
+        ent->InsertIntoActiveConns(newTunnel);
+        trans->SetConnection(nullptr);
+        newTunnel->SetInSpdyTunnel();
+        rv = DispatchTransaction(ent, trans, newTunnel);
+      }
     } else {
       rv = DispatchTransaction(ent, trans, connTCP);
     }

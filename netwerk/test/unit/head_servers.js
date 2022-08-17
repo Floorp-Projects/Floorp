@@ -416,6 +416,7 @@ class HTTP2ProxyCode {
     };
     const http2 = require("http2");
     global.proxy = http2.createSecureServer(options);
+    global.socketCounts = {};
     this.setupProxy();
 
     await global.proxy.listen(port);
@@ -467,6 +468,8 @@ class HTTP2ProxyCode {
       const net = require("net");
       const socket = net.connect(port, "127.0.0.1", () => {
         try {
+          global.socketCounts[socket.remotePort] =
+            (global.socketCounts[socket.remotePort] || 0) + 1;
           stream.respond({ ":status": 200 });
           socket.pipe(stream);
           stream.pipe(socket);
@@ -500,6 +503,10 @@ class HTTP2ProxyCode {
       });
     });
   }
+
+  static socketCount(port) {
+    return global.socketCounts[port];
+  }
 }
 
 class NodeHTTP2ProxyServer extends BaseHTTPProxy {
@@ -516,6 +523,11 @@ class NodeHTTP2ProxyServer extends BaseHTTPProxy {
     this._port = await this.execute(`HTTP2ProxyCode.startServer(${port})`);
 
     this.registerFilter();
+  }
+
+  async socketCount(port) {
+    let count = this.execute(`HTTP2ProxyCode.socketCount(${port})`);
+    return count;
   }
 }
 
