@@ -198,21 +198,19 @@
   customElements.define("treechildren", MozTreeChildren);
 
   class MozTreecolPicker extends MozElements.BaseControl {
-    static get entities() {
-      return ["chrome://global/locale/tree.dtd"];
-    }
-
     static get markup() {
       return `
       <image class="tree-columnpicker-icon"></image>
       <menupopup anonid="popup">
         <menuseparator anonid="menuseparator"></menuseparator>
-        <menuitem anonid="menuitem" label="&restoreColumnOrder.label;"></menuitem>
+        <menuitem anonid="menuitem" data-l10n-id="tree-columnpicker-restore-order"></menuitem>
       </menupopup>
       `;
     }
     constructor() {
       super();
+
+      window.MozXULElement.insertFTLIfNeeded("toolkit/global/tree.ftl");
 
       this.addEventListener("command", event => {
         if (event.originalTarget == this) {
