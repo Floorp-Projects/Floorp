@@ -132,6 +132,10 @@ class MediaDecoderStateMachineBase {
     return mOnNextFrameStatus;
   }
 
+  MediaEventProducer<VideoInfo, AudioInfo>& OnTrackInfoUpdatedEvent() {
+    return mReader->OnTrackInfoUpdatedEvent();
+  }
+
   MediaEventSource<void>& OnMediaNotSeekable() const;
 
   AbstractCanonical<media::NullableTimeUnit>* CanonicalDuration() {

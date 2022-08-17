@@ -246,6 +246,10 @@ class MediaFormatReader final
     return mOnStoreDecoderBenchmark;
   }
 
+  MediaEventProducer<VideoInfo, AudioInfo>& OnTrackInfoUpdatedEvent() {
+    return mTrackInfoUpdatedEvent;
+  }
+
  private:
   bool HasVideo() const { return mVideo.mTrackDemuxer; }
   bool HasAudio() const { return mAudio.mTrackDemuxer; }
@@ -334,6 +338,8 @@ class MediaFormatReader final
   // storage of the decoder benchmark.
   // This is called only on TaskQueue.
   void NotifyDecoderBenchmarkStore();
+
+  void NotifyTrackInfoUpdated();
 
   enum class DrainState {
     None,
@@ -683,6 +689,10 @@ class MediaFormatReader final
   DecoderDataWithPromise<AudioData> mAudio;
   DecoderDataWithPromise<VideoData> mVideo;
 
+  Watchable<bool> mWorkingInfoChanged;
+  WatchManager<MediaFormatReader> mWatchManager;
+  bool mIsWatchingWorkingInfo;
+
   // Returns true when the decoder for this track needs input.
   bool NeedInput(DecoderData& aDecoder);
 
@@ -821,6 +831,8 @@ class MediaFormatReader final
   MediaEventProducer<MediaResult> mOnDecodeWarning;
 
   MediaEventProducer<VideoInfo> mOnStoreDecoderBenchmark;
+
+  MediaEventProducer<VideoInfo, AudioInfo> mTrackInfoUpdatedEvent;
 
   RefPtr<FrameStatistics> mFrameStats;
 

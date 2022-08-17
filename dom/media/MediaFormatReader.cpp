@@ -863,6 +863,9 @@ MediaFormatReader::MediaFormatReader(MediaFormatReaderInit& aInit,
              StaticPrefs::media_audio_max_decode_error()),
       mVideo(this, MediaData::Type::VIDEO_DATA,
              StaticPrefs::media_video_max_decode_error()),
+      mWorkingInfoChanged(false, "MediaFormatReader::mWorkingInfoChanged"),
+      mWatchManager(this, OwnerThread()),
+      mIsWatchingWorkingInfo(false),
       mDemuxer(new DemuxerProxy(aDemuxer)),
       mDemuxerInitDone(false),
       mPendingNotifyDataArrived(false),
@@ -909,6 +912,12 @@ RefPtr<ShutdownPromise> MediaFormatReader::Shutdown() {
       MediaResult(NS_ERROR_DOM_INVALID_STATE_ERR,
                   "MediaFormatReader is shutting down"),
       __func__);
+
+  if (mIsWatchingWorkingInfo) {
+    mWatchManager.Unwatch(mWorkingInfoChanged,
+                          &MediaFormatReader::NotifyTrackInfoUpdated);
+  }
+  mWatchManager.Shutdown();
 
   if (mAudio.HasPromise()) {
     mAudio.RejectPromise(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
@@ -974,6 +983,30 @@ void MediaFormatReader::NotifyDecoderBenchmarkStore() {
     VideoInfo info = *(decoder.GetCurrentInfo()->GetAsVideoInfo());
     info.SetFrameRate(static_cast<int32_t>(ceil(decoder.mMeanRate.Mean())));
     mOnStoreDecoderBenchmark.Notify(std::move(info));
+  }
+}
+
+void MediaFormatReader::NotifyTrackInfoUpdated() {
+  MOZ_ASSERT(OnTaskQueue());
+  if (mWorkingInfoChanged) {
+    mWorkingInfoChanged = false;
+
+    VideoInfo videoInfo;
+    AudioInfo audioInfo;
+    {
+      MutexAutoLock lock(mVideo.mMutex);
+      if (HasVideo()) {
+        videoInfo = *mVideo.GetWorkingInfo()->GetAsVideoInfo();
+      }
+    }
+    {
+      MutexAutoLock lock(mAudio.mMutex);
+      if (HasAudio()) {
+        audioInfo = *mAudio.GetWorkingInfo()->GetAsAudioInfo();
+      }
+    }
+
+    mTrackInfoUpdatedEvent.Notify(videoInfo, audioInfo);
   }
 }
 
@@ -1175,6 +1208,7 @@ void MediaFormatReader::OnDemuxerInitDone(const MediaResult& aResult) {
       for (const MetadataTag& tag : videoInfo->mTags) {
         tags->InsertOrUpdate(tag.mKey, tag.mValue);
       }
+      mWorkingInfoChanged = true;
       mVideo.mOriginalInfo = std::move(videoInfo);
       mTrackDemuxersMayBlock |= mVideo.mTrackDemuxer->GetSamplesMayBlock();
     } else {
@@ -1205,6 +1239,7 @@ void MediaFormatReader::OnDemuxerInitDone(const MediaResult& aResult) {
       for (const MetadataTag& tag : audioInfo->mTags) {
         tags->InsertOrUpdate(tag.mKey, tag.mValue);
       }
+      mWorkingInfoChanged = true;
       mAudio.mOriginalInfo = std::move(audioInfo);
       mTrackDemuxersMayBlock |= mAudio.mTrackDemuxer->GetSamplesMayBlock();
     } else {
@@ -1291,6 +1326,10 @@ void MediaFormatReader::MaybeResolveMetadataPromise() {
   // range.
   mHasStartTime = true;
   UpdateBuffered();
+
+  mWatchManager.Watch(mWorkingInfoChanged,
+                      &MediaFormatReader::NotifyTrackInfoUpdated);
+  mIsWatchingWorkingInfo = true;
 
   mMetadataPromise.Resolve(std::move(metadata), __func__);
 }
@@ -2013,6 +2052,7 @@ void MediaFormatReader::HandleDemuxedSamples(
       } else if (aTrack == TrackInfo::kVideoTrack) {
         decoder.mWorkingInfo = MakeUnique<VideoInfo>(*info->GetAsVideoInfo());
       }
+      mWorkingInfoChanged = true;
     }
 
     decoder.mMeanRate.Reset();
@@ -2527,6 +2567,7 @@ void MediaFormatReader::ReturnOutput(MediaData* aData, TrackType aTrack) {
       MutexAutoLock lock(mAudio.mMutex);
       mAudio.mWorkingInfo->GetAsAudioInfo()->mRate = audioData->mRate;
       mAudio.mWorkingInfo->GetAsAudioInfo()->mChannels = audioData->mChannels;
+      mWorkingInfoChanged = true;
     }
     mAudio.ResolvePromise(audioData, __func__);
   } else if (aTrack == TrackInfo::kVideoTrack) {
@@ -2539,6 +2580,7 @@ void MediaFormatReader::ReturnOutput(MediaData* aData, TrackType aTrack) {
       mInfo.mVideo.mDisplay = videoData->mDisplay;
       MutexAutoLock lock(mVideo.mMutex);
       mVideo.mWorkingInfo->GetAsVideoInfo()->mDisplay = videoData->mDisplay;
+      mWorkingInfoChanged = true;
     }
 
     TimeUnit nextKeyframe;
