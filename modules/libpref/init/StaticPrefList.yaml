@@ -14143,7 +14143,7 @@
 # Whether to disable SwipeTracker (e.g. swipe-to-nav).
 - name: widget.disable-swipe-tracker
   type: bool
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+#if defined(MOZ_WIDGET_GTK)
   value: @IS_NOT_EARLY_BETA_OR_EARLIER@
 #else
   value: false
