@@ -36,6 +36,7 @@ void ff_emulated_edge_mc_ ## depth(uint8_t *dst, const uint8_t *src, \
                                    int src_x, int src_y, int w, int h);
 
 EMULATED_EDGE(8)
+EMULATED_EDGE(16)
 
 typedef struct VideoDSPContext {
     /**
@@ -83,6 +84,5 @@ void ff_videodsp_init_arm(VideoDSPContext *ctx, int bpc);
 void ff_videodsp_init_ppc(VideoDSPContext *ctx, int bpc);
 void ff_videodsp_init_x86(VideoDSPContext *ctx, int bpc);
 void ff_videodsp_init_mips(VideoDSPContext *ctx, int bpc);
-void ff_videodsp_init_loongarch(VideoDSPContext *ctx, int bpc);
 
 #endif /* AVCODEC_VIDEODSP_H */

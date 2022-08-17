@@ -24,8 +24,6 @@
  * MPEG Audio decoder
  */
 
-#include "config_components.h"
-
 #include "libavutil/attributes.h"
 #include "libavutil/avassert.h"
 #include "libavutil/channel_layout.h"
@@ -1548,8 +1546,8 @@ static int mp_decode_frame(MPADecodeContext *s, OUT_INT **samples,
     return nb_frames * 32 * sizeof(OUT_INT) * s->nb_channels;
 }
 
-static int decode_frame(AVCodecContext *avctx, AVFrame *frame,
-                        int *got_frame_ptr, AVPacket *avpkt)
+static int decode_frame(AVCodecContext * avctx, void *data, int *got_frame_ptr,
+                        AVPacket *avpkt)
 {
     const uint8_t *buf  = avpkt->data;
     int buf_size        = avpkt->size;
@@ -1582,9 +1580,8 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *frame,
         return AVERROR_INVALIDDATA;
     }
     /* update codec info */
-    av_channel_layout_uninit(&avctx->ch_layout);
-    avctx->ch_layout = s->nb_channels == 1 ? (AVChannelLayout)AV_CHANNEL_LAYOUT_MONO :
-                                             (AVChannelLayout)AV_CHANNEL_LAYOUT_STEREO;
+    avctx->channels       = s->nb_channels;
+    avctx->channel_layout = s->nb_channels == 1 ? AV_CH_LAYOUT_MONO : AV_CH_LAYOUT_STEREO;
     if (!avctx->bit_rate)
         avctx->bit_rate = s->bit_rate;
 
@@ -1596,7 +1593,7 @@ static int decode_frame(AVCodecContext *avctx, AVFrame *frame,
         buf_size= s->frame_size;
     }
 
-    s->frame = frame;
+    s->frame = data;
 
     ret = mp_decode_frame(s, NULL, buf, buf_size);
     if (ret >= 0) {
@@ -1633,7 +1630,7 @@ static void flush(AVCodecContext *avctx)
 }
 
 #if CONFIG_MP3ADU_DECODER || CONFIG_MP3ADUFLOAT_DECODER
-static int decode_frame_adu(AVCodecContext *avctx, AVFrame *frame,
+static int decode_frame_adu(AVCodecContext *avctx, void *data,
                             int *got_frame_ptr, AVPacket *avpkt)
 {
     const uint8_t *buf  = avpkt->data;
@@ -1641,6 +1638,7 @@ static int decode_frame_adu(AVCodecContext *avctx, AVFrame *frame,
     MPADecodeContext *s = avctx->priv_data;
     uint32_t header;
     int len, ret;
+    int av_unused out_size;
 
     len = buf_size;
 
@@ -1664,15 +1662,14 @@ static int decode_frame_adu(AVCodecContext *avctx, AVFrame *frame,
     }
     /* update codec info */
     avctx->sample_rate = s->sample_rate;
-    av_channel_layout_uninit(&avctx->ch_layout);
-    avctx->ch_layout = s->nb_channels == 1 ? (AVChannelLayout)AV_CHANNEL_LAYOUT_MONO :
-                                             (AVChannelLayout)AV_CHANNEL_LAYOUT_STEREO;
+    avctx->channels    = s->nb_channels;
+    avctx->channel_layout = s->nb_channels == 1 ? AV_CH_LAYOUT_MONO : AV_CH_LAYOUT_STEREO;
     if (!avctx->bit_rate)
         avctx->bit_rate = s->bit_rate;
 
     s->frame_size = len;
 
-    s->frame = frame;
+    s->frame = data;
 
     ret = mp_decode_frame(s, NULL, buf, buf_size);
     if (ret < 0) {
@@ -1760,8 +1757,8 @@ static av_cold int decode_init_mp3on4(AVCodecContext * avctx)
     }
     s->frames             = mp3Frames[cfg.chan_config];
     s->coff               = chan_offset[cfg.chan_config];
-    av_channel_layout_uninit(&avctx->ch_layout);
-    av_channel_layout_from_mask(&avctx->ch_layout, chan_layout[cfg.chan_config]);
+    avctx->channels       = ff_mpeg4audio_channels[cfg.chan_config];
+    avctx->channel_layout = chan_layout[cfg.chan_config];
 
     if (cfg.sample_rate < 16000)
         s->syncword = 0xffe00000;
@@ -1813,9 +1810,10 @@ static void flush_mp3on4(AVCodecContext *avctx)
 }
 
 
-static int decode_frame_mp3on4(AVCodecContext *avctx, AVFrame *frame,
+static int decode_frame_mp3on4(AVCodecContext *avctx, void *data,
                                int *got_frame_ptr, AVPacket *avpkt)
 {
+    AVFrame *frame         = data;
     const uint8_t *buf     = avpkt->data;
     int buf_size           = avpkt->size;
     MP3On4DecodeContext *s = avctx->priv_data;
@@ -1857,8 +1855,8 @@ static int decode_frame_mp3on4(AVCodecContext *avctx, AVFrame *frame,
             return AVERROR_INVALIDDATA;
         }
 
-        if (ch + m->nb_channels > avctx->ch_layout.nb_channels ||
-            s->coff[fr] + m->nb_channels > avctx->ch_layout.nb_channels) {
+        if (ch + m->nb_channels > avctx->channels ||
+            s->coff[fr] + m->nb_channels > avctx->channels) {
             av_log(avctx, AV_LOG_ERROR, "frame channel count exceeds codec "
                                         "channel count\n");
             return AVERROR_INVALIDDATA;
@@ -1883,7 +1881,7 @@ static int decode_frame_mp3on4(AVCodecContext *avctx, AVFrame *frame,
 
         avctx->bit_rate += m->bit_rate;
     }
-    if (ch != avctx->ch_layout.nb_channels) {
+    if (ch != avctx->channels) {
         av_log(avctx, AV_LOG_ERROR, "failed to decode all channels\n");
         return AVERROR_INVALIDDATA;
     }
@@ -1891,7 +1889,7 @@ static int decode_frame_mp3on4(AVCodecContext *avctx, AVFrame *frame,
     /* update codec info */
     avctx->sample_rate = s->mp3decctx[0]->sample_rate;
 
-    frame->nb_samples = out_size / (avctx->ch_layout.nb_channels * sizeof(OUT_INT));
+    frame->nb_samples = out_size / (avctx->channels * sizeof(OUT_INT));
     *got_frame_ptr    = 1;
 
     return buf_size;

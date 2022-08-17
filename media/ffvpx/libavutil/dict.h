@@ -32,6 +32,8 @@
 
 #include <stdint.h>
 
+#include "version.h"
+
 /**
  * @addtogroup lavu_dict AVDictionary
  * @ingroup lavu_data

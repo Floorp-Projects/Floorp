@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "flacdata.h"
+#include "internal.h"
 
 const int ff_flac_sample_rate_table[16] =
 { 0,
