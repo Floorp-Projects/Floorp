@@ -124,10 +124,11 @@ add_task(async function test_disabled() {
   );
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  Assert.equal(
-    UrlbarTestUtils.getSelectedElementIndex(window),
-    -1,
-    "No results should be selected."
+  Assert.ok(
+    UrlbarTestUtils.getSelectedElement(window).classList.contains(
+      "urlbarView-button-help"
+    ),
+    "The selected element should be the onboarding button."
   );
 
   let disabledButton = window.document.querySelector(
