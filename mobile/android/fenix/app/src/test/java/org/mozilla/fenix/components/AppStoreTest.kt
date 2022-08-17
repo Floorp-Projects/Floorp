@@ -55,6 +55,7 @@ class AppStoreTest {
     private lateinit var currentMode: CurrentMode
     private lateinit var appState: AppState
     private lateinit var appStore: AppStore
+    private lateinit var recentSyncedTabsList: List<RecentSyncedTab>
 
     @Before
     fun setup() {
@@ -62,6 +63,15 @@ class AppStoreTest {
         accountManager = mockk(relaxed = true)
         onboarding = mockk(relaxed = true)
         browsingModeManager = mockk(relaxed = true)
+        recentSyncedTabsList = listOf(
+            RecentSyncedTab(
+                deviceDisplayName = "",
+                deviceType = mockk(relaxed = true),
+                title = "",
+                url = "",
+                previewImageUrl = null
+            )
+        )
 
         every { context.components.backgroundServices.accountManager } returns accountManager
         every { onboarding.userHasBeenOnboarded() } returns true
@@ -79,7 +89,8 @@ class AppStoreTest {
             mode = currentMode.getCurrentMode(),
             topSites = emptyList(),
             showCollectionPlaceholder = true,
-            recentTabs = emptyList()
+            recentTabs = emptyList(),
+            recentSyncedTabState = RecentSyncedTabState.Success(recentSyncedTabsList)
         )
 
         appStore = AppStore(appState)
@@ -244,7 +255,7 @@ class AppStoreTest {
     }
 
     @Test
-    fun `Test changing the collections, mode, recent tabs and bookmarks, history metadata and top sites in the AppStore`() =
+    fun `Test changing the collections, mode, recent tabs and bookmarks, history metadata, top sites and recent synced tabs in the AppStore`() =
         runTest {
             // Verify that the default state of the HomeFragment is correct.
             assertEquals(0, appStore.state.collections.size)
@@ -253,6 +264,10 @@ class AppStoreTest {
             assertEquals(0, appStore.state.recentBookmarks.size)
             assertEquals(0, appStore.state.recentHistory.size)
             assertEquals(Mode.Normal, appStore.state.mode)
+            assertEquals(
+                RecentSyncedTabState.Success(recentSyncedTabsList),
+                appStore.state.recentSyncedTabState
+            )
 
             val collections: List<TabCollection> = listOf(mockk())
             val topSites: List<TopSite> = listOf(mockk(), mockk())
@@ -263,6 +278,15 @@ class AppStoreTest {
             val group3 = RecentHistoryGroup(title = "test two")
             val highlight = RecentHistoryHighlight(group2.title, "")
             val recentHistory: List<RecentlyVisitedItem> = listOf(group1, group2, group3, highlight)
+            val recentSyncedTab = RecentSyncedTab(
+                deviceDisplayName = "device1",
+                deviceType = mockk(relaxed = true),
+                title = "1",
+                url = "",
+                previewImageUrl = null
+            )
+            val recentSyncedTabState: RecentSyncedTabState =
+                RecentSyncedTabState.Success(recentSyncedTabsList + recentSyncedTab)
 
             appStore.dispatch(
                 AppAction.Change(
@@ -272,7 +296,8 @@ class AppStoreTest {
                     showCollectionPlaceholder = true,
                     recentTabs = recentTabs,
                     recentBookmarks = recentBookmarks,
-                    recentHistory = recentHistory
+                    recentHistory = recentHistory,
+                    recentSyncedTabState = recentSyncedTabState
                 )
             ).join()
 
@@ -282,6 +307,10 @@ class AppStoreTest {
             assertEquals(recentBookmarks, appStore.state.recentBookmarks)
             assertEquals(listOf(group1, group2, group3, highlight), appStore.state.recentHistory)
             assertEquals(Mode.Private, appStore.state.mode)
+            assertEquals(
+                recentSyncedTabState,
+                appStore.state.recentSyncedTabState
+            )
         }
 
     @Test

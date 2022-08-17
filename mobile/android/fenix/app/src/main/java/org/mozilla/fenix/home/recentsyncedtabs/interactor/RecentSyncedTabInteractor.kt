@@ -22,4 +22,12 @@ interface RecentSyncedTabInteractor {
      * tabs" button.
      */
     fun onSyncedTabShowAllClicked()
+
+    /**
+     * Adds the url of the synced tab to the homescreen blocklist and removes the tab
+     * from the recent synced tabs.
+     *
+     * @param tab The recent synced tab to be removed.
+     */
+    fun onRemovedRecentSyncedTab(tab: RecentSyncedTab)
 }

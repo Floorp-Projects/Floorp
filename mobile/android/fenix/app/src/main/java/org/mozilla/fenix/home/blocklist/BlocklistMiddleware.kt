@@ -8,7 +8,6 @@ import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
-import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabState
 import org.mozilla.fenix.home.recenttabs.RecentTab
 
 /**
@@ -33,6 +32,7 @@ class BlocklistMiddleware(
         next(getUpdatedAction(context.state, action))
     }
 
+    @Suppress("ComplexMethod")
     private fun getUpdatedAction(
         state: AppState,
         action: AppAction
@@ -42,7 +42,8 @@ class BlocklistMiddleware(
                 action.copy(
                     recentBookmarks = action.recentBookmarks.filteredByBlocklist(),
                     recentTabs = action.recentTabs.filteredByBlocklist(),
-                    recentHistory = action.recentHistory.filteredByBlocklist()
+                    recentHistory = action.recentHistory.filteredByBlocklist(),
+                    recentSyncedTabState = action.recentSyncedTabState.filteredByBlocklist()
                 )
             }
             is AppAction.RecentTabsChange -> {
@@ -59,13 +60,9 @@ class BlocklistMiddleware(
                 action.copy(recentHistory = action.recentHistory.filteredByBlocklist())
             }
             is AppAction.RecentSyncedTabStateChange -> {
-                if (action.state is RecentSyncedTabState.Success) {
-                    action.copy(
-                        state = RecentSyncedTabState.Success(action.state.tabs.filteredByBlocklist())
-                    )
-                } else {
-                    action
-                }
+                action.copy(
+                    state = action.state.filteredByBlocklist()
+                )
             }
             is AppAction.RemoveRecentTab -> {
                 if (action.recentTab is RecentTab.Tab) {
@@ -85,6 +82,10 @@ class BlocklistMiddleware(
                 addUrlToBlocklist(action.highlightUrl)
                 state.toActionFilteringAllState(this)
             }
+            is AppAction.RemoveRecentSyncedTab -> {
+                addUrlToBlocklist(action.syncedTab.url)
+                state.toActionFilteringAllState(this)
+            }
             else -> action
         }
     }
@@ -102,7 +103,8 @@ class BlocklistMiddleware(
                 topSites = topSites,
                 mode = mode,
                 collections = collections,
-                showCollectionPlaceholder = showCollectionPlaceholder
+                showCollectionPlaceholder = showCollectionPlaceholder,
+                recentSyncedTabState = recentSyncedTabState.filteredByBlocklist()
             )
         }
 }

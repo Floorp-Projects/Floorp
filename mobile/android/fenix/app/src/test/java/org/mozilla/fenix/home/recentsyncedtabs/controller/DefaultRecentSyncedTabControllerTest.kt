@@ -29,6 +29,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.RecentSyncedTabs
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
 import org.mozilla.fenix.tabstray.Page
@@ -42,6 +44,7 @@ class DefaultRecentSyncedTabControllerTest {
 
     private val tabsUseCases: TabsUseCases = mockk()
     private val navController: NavController = mockk()
+    private val appStore: AppStore = mockk(relaxed = true)
     private val accessPoint = TabsTrayAccessPoint.HomeRecentSyncedTab
 
     private lateinit var controller: RecentSyncedTabController
@@ -52,6 +55,7 @@ class DefaultRecentSyncedTabControllerTest {
             tabsUseCase = tabsUseCases,
             navController = navController,
             accessPoint = accessPoint,
+            appStore = appStore
         )
     }
 
@@ -173,5 +177,20 @@ class DefaultRecentSyncedTabControllerTest {
         controller.handleSyncedTabShowAllClicked()
 
         assertEquals(1, RecentSyncedTabs.showAllSyncedTabsClicked.testGetValue())
+    }
+
+    @Test
+    fun `WHEN synced tab is removed from homescreen THEN RemoveRecentSyncedTab action is dispatched`() {
+        val tab = RecentSyncedTab(
+            deviceDisplayName = "display",
+            deviceType = DeviceType.DESKTOP,
+            title = "title",
+            url = "https://mozilla.org",
+            previewImageUrl = null
+        )
+
+        controller.handleRecentSyncedTabRemoved(tab)
+
+        verify { appStore.dispatch(AppAction.RemoveRecentSyncedTab(tab)) }
     }
 }

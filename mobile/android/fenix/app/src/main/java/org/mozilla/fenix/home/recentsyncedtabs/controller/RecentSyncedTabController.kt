@@ -8,6 +8,8 @@ import androidx.navigation.NavController
 import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.fenix.GleanMetrics.RecentSyncedTabs
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
 import org.mozilla.fenix.home.recentsyncedtabs.interactor.RecentSyncedTabInteractor
@@ -27,6 +29,13 @@ interface RecentSyncedTabController {
      * @see [RecentSyncedTabInteractor.onRecentSyncedTabClicked]
      */
     fun handleSyncedTabShowAllClicked()
+
+    /**
+     * Handle removing the synced tab from the homescreen.
+     *
+     * @param tab The recent synced tab to be removed.
+     */
+    fun handleRecentSyncedTabRemoved(tab: RecentSyncedTab)
 }
 
 /**
@@ -39,6 +48,7 @@ class DefaultRecentSyncedTabController(
     private val tabsUseCase: TabsUseCases,
     private val navController: NavController,
     private val accessPoint: TabsTrayAccessPoint,
+    private val appStore: AppStore,
 ) : RecentSyncedTabController {
     override fun handleRecentSyncedTabClick(tab: RecentSyncedTab) {
         RecentSyncedTabs.recentSyncedTabOpened[tab.deviceType.name.lowercase()].add()
@@ -54,5 +64,9 @@ class DefaultRecentSyncedTabController(
                 accessPoint = accessPoint
             )
         )
+    }
+
+    override fun handleRecentSyncedTabRemoved(tab: RecentSyncedTab) {
+        appStore.dispatch(AppAction.RemoveRecentSyncedTab(tab))
     }
 }

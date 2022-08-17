@@ -54,6 +54,7 @@ class RecentSyncedTabViewHolder(
                 tab = syncedTab,
                 onRecentSyncedTabClick = recentSyncedTabInteractor::onRecentSyncedTabClicked,
                 onSeeAllSyncedTabsButtonClick = recentSyncedTabInteractor::onSyncedTabShowAllClicked,
+                onRemoveSyncedTab = recentSyncedTabInteractor::onRemovedRecentSyncedTab
             )
         }
     }

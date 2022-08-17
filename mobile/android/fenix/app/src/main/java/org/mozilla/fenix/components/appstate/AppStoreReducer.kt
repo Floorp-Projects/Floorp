@@ -13,6 +13,7 @@ import org.mozilla.fenix.ext.filterOutTab
 import org.mozilla.fenix.ext.getFilteredStories
 import org.mozilla.fenix.gleanplumb.state.MessagingReducer
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
+import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabState
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 
@@ -43,6 +44,7 @@ internal object AppStoreReducer {
             recentBookmarks = action.recentBookmarks,
             recentTabs = action.recentTabs,
             recentHistory = action.recentHistory,
+            recentSyncedTabState = action.recentSyncedTabState
         )
         is AppAction.CollectionExpanded -> {
             val newExpandedCollection = state.expandedCollections.toMutableSet()
@@ -87,6 +89,14 @@ internal object AppStoreReducer {
         is AppAction.RemoveRecentHistoryHighlight -> state.copy(
             recentHistory = state.recentHistory.filterNot {
                 it is RecentlyVisitedItem.RecentHistoryHighlight && it.url == action.highlightUrl
+            }
+        )
+        is AppAction.RemoveRecentSyncedTab -> state.copy(
+            recentSyncedTabState = when (state.recentSyncedTabState) {
+                is RecentSyncedTabState.Success -> RecentSyncedTabState.Success(
+                    state.recentSyncedTabState.tabs - action.syncedTab
+                )
+                else -> state.recentSyncedTabState
             }
         )
         is AppAction.DisbandSearchGroupAction -> state.copy(

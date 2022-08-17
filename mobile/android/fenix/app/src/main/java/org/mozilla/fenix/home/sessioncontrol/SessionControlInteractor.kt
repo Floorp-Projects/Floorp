@@ -388,6 +388,10 @@ class SessionControlInteractor(
         recentSyncedTabController.handleSyncedTabShowAllClicked()
     }
 
+    override fun onRemovedRecentSyncedTab(tab: RecentSyncedTab) {
+        recentSyncedTabController.handleRecentSyncedTabRemoved(tab)
+    }
+
     override fun onRecentBookmarkClicked(bookmark: RecentBookmark) {
         recentBookmarksController.handleBookmarkClicked(bookmark)
     }

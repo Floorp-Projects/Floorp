@@ -8,8 +8,8 @@ import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.browser.storage.sync.Tab
+import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage

@@ -171,7 +171,8 @@ fun AppState.filterState(blocklistHandler: BlocklistHandler): AppState =
         copy(
             recentBookmarks = recentBookmarks.filteredByBlocklist(),
             recentTabs = recentTabs.filteredByBlocklist(),
-            recentHistory = recentHistory.filteredByBlocklist()
+            recentHistory = recentHistory.filteredByBlocklist(),
+            recentSyncedTabState = recentSyncedTabState.filteredByBlocklist()
         )
     }
 
