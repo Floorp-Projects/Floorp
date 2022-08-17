@@ -137,7 +137,10 @@ class TRRServiceChannel : public HttpBaseChannel,
   [[nodiscard]] virtual nsresult SetupReplacementChannel(
       nsIURI* aNewURI, nsIChannel* aNewChannel, bool aPreserveMethod,
       uint32_t aRedirectFlags) override;
-
+  // Skip this check for TRRServiceChannel.
+  virtual bool ShouldTaintReplacementChannelOrigin(nsIURI* aNewURI) override {
+    return false;
+  }
   virtual bool SameOriginWithOriginalUri(nsIURI* aURI) override;
   bool DispatchRelease();
 

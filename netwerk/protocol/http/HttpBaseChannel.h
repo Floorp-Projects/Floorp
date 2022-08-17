@@ -558,6 +558,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
   [[nodiscard]] virtual nsresult SetupReplacementChannel(
       nsIURI*, nsIChannel*, bool preserveMethod, uint32_t redirectFlags);
 
+  // WHATWG Fetch Standard 4.4. HTTP-redirect fetch, step 10
+  virtual bool ShouldTaintReplacementChannelOrigin(nsIURI* aNewURI);
+
   // bundle calling OMR observers and marking flag into one function
   inline void CallOnModifyRequestObservers() {
     gHttpHandler->OnModifyRequest(this);
@@ -640,9 +643,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   nsCOMPtr<nsIEventTarget> mCurrentThread;
 
  private:
-  // WHATWG Fetch Standard 4.4. HTTP-redirect fetch, step 10
-  bool ShouldTaintReplacementChannelOrigin(nsIURI* aNewURI);
-
   // Proxy release all members above on main thread.
   void ReleaseMainThreadOnlyReferences();
 
