@@ -51,7 +51,7 @@ firefoxview-tabpickup-network-offline-description = If you’re using a firewall
 firefoxview-tabpickup-network-offline-primarybutton = Try again
 
 firefoxview-tabpickup-sync-error-header = We’re having trouble syncing
-firefoxview-tabpickup-sync-error-description = { -brand-short-name } can’t reach the service right now. Try again in a few moments.
+firefoxview-tabpickup-generic-sync-error-description = { -brand-short-name } can’t reach the syncing service right now. Try again in a few moments.
 firefoxview-tabpickup-sync-error-primarybutton = Try again
 
 firefoxview-tabpickup-syncing = Sit tight while your tabs sync. It’ll be just a moment.
