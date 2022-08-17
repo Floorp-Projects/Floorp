@@ -645,7 +645,9 @@ class nsContextMenu {
     // Performing text recognition only works on images, and if the feature is enabled.
     this.showItem(
       "context-imagetext",
-      this.onImage && TEXT_RECOGNITION_ENABLED
+      this.onImage &&
+        Services.appinfo.isTextRecognitionSupported &&
+        TEXT_RECOGNITION_ENABLED
     );
 
     // Send media URL (but not for canvas, since it's a big data: URL)
