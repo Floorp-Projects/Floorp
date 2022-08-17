@@ -7716,7 +7716,7 @@
 # Whether the `animation-composition` in css-animations-2 is enabled.
 - name: layout.css.animation-composition.enabled
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Is the codepath for using cached scrollbar styles enabled?
