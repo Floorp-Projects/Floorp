@@ -1146,10 +1146,10 @@ void TestLEB128() {
   printf("TestLEB128 done\n");
 }
 
-struct StringWriteFunc : public JSONWriteFunc {
+struct StringWriteFunc final : public JSONWriteFunc {
   std::string mString;
 
-  void Write(const mozilla::Span<const char>& aStr) override {
+  void Write(const mozilla::Span<const char>& aStr) final {
     mString.append(aStr.data(), aStr.size());
   }
 };

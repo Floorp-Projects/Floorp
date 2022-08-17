@@ -24,7 +24,7 @@ class JSONStringWriteFunc final : public JSONWriteFunc {
  public:
   JSONStringWriteFunc() = default;
 
-  void Write(const Span<const char>& aStr) override { mString.Append(aStr); }
+  void Write(const Span<const char>& aStr) final { mString.Append(aStr); }
 
   const StringType& StringCRef() const { return mString; }
 
@@ -39,7 +39,7 @@ class JSONStringRefWriteFunc final : public JSONWriteFunc {
  public:
   MOZ_IMPLICIT JSONStringRefWriteFunc(nsACString& aString) : mString(aString) {}
 
-  void Write(const Span<const char>& aStr) override { mString.Append(aStr); }
+  void Write(const Span<const char>& aStr) final { mString.Append(aStr); }
 
   const nsACString& StringCRef() const { return mString; }
 
