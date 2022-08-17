@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-<title>Test Video Play Time Related Permenant Telemetry Probes</title>
+<title>Test Video Play Time Related Permanent Telemetry Probes</title>
 <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 <script type="application/javascript">
@@ -11,6 +11,7 @@
  * correctly, and the results would be used in Telemetry probes.
  * Currently this test covers following probes
  * - VIDEO_PLAY_TIME_MS
+ * - VIDEO_HDR_PLAY_TIME_MS
  * - VIDEO_HIDDEN_PLAY_TIME_MS
  * - VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE
  * - VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE
@@ -22,6 +23,9 @@
 const videoHistNames = [
   "VIDEO_PLAY_TIME_MS",
   "VIDEO_HIDDEN_PLAY_TIME_MS"
+];
+const videoHDRHistNames = [
+  "VIDEO_HDR_PLAY_TIME_MS"
 ];
 const videoKeyedHistNames = [
   "VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE",
@@ -79,6 +83,40 @@ add_task(async function testTotalPlayTime() {
   await assertValueConstantlyIncreases(videoChrome, "totalVideoPlayTime");
   await cleanUpMediaAndCheckTelemetry(video);
 });
+
+// The testHDRPlayTime task will only pass on platforms that accurately report
+// color depth in their VideoInfo structures. Presently, that is only true for
+// macOS.
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const reportsColorDepthFromVideoData = (AppConstants.platform == "macosx");
+if (reportsColorDepthFromVideoData) {
+  add_task(async function testHDRPlayTime() {
+    // This task is different from the others because the HTMLMediaElement does
+    // not expose a chrome property for video hdr play time. But we do capture
+    // telemety for VIDEO_HDR_PLAY_TIME_MS. To ensure that this telemetry is
+    // generated, this task follows the same structure as the other tasks, but
+    // doesn't actually check the properties of the video player, other than to
+    // confirm that video has played for at least some time.
+    const video = document.createElement('video');
+    video.src = "TestPatternHDR.mp4"; // This is an HDR video with no audio.
+    document.body.appendChild(video);
+
+    info(`load the HDR video`);
+    const videoChrome = SpecialPowers.wrap(video);
+    await new Promise(r => video.onloadeddata = r);
+
+    info(`start accumulating play time after media starts`);
+    video.autoplay = true;
+    await Promise.all([
+      once(video, "playing"),
+      once(video, "moztotalplaytimestarted"),
+    ]);
+    // Check that we have at least some video play time, because the
+    // HDR play time telemetry is emitted by the same process.
+    await assertValueConstantlyIncreases(videoChrome, "totalVideoPlayTime");
+    await cleanUpMediaAndCheckTelemetry(video, {hasVideo: true, hasAudio: false, hasVideoHDR: true});
+  });
+}
 
 add_task(async function testVisiblePlayTime() {
   const video = document.createElement('video');
@@ -458,16 +496,16 @@ add_task(async function testNoReportedTelemetryResult() {
 /**
  * Following are helper functions
  */
-async function cleanUpMediaAndCheckTelemetry(media, { reportExpected = true, hasVideo = true, hasAudio = true} = {}) {
+async function cleanUpMediaAndCheckTelemetry(media, { reportExpected = true, hasVideo = true, hasAudio = true, hasVideoHDR = false } = {}) {
   media.src = "";
-  await checkReportedTelemetry(media, reportExpected, hasVideo, hasAudio);
+  await checkReportedTelemetry(media, reportExpected, hasVideo, hasAudio, hasVideoHDR);
 }
 
 async function assertNoReportedTelemetryResult(media) {
   await checkReportedTelemetry(media, false, true, true);
 }
 
-async function checkReportedTelemetry(media, reportExpected, hasVideo, hasAudio) {
+async function checkReportedTelemetry(media, reportExpected, hasVideo, hasAudio, hasVideoHDR) {
   const reportResultPromise = once(media, "mozreportedtelemetry");
   info(`check telemetry result, reportExpected=${reportExpected}`);
   if (reportExpected) {
@@ -491,6 +529,21 @@ async function checkReportedTelemetry(media, reportExpected, hasVideo, hasAudio)
         ok(entriesNums > 0, `Reported result for ${name}`);
       } else {
         ok(entriesNums == 0, `Reported nothing for ${name}`);
+      }
+      hist.clear();
+    } catch (e) {
+      ok(false , `histogram '${name}' doesn't exist`);
+    }
+  }
+  // videoHDRHistNames are checked for total time, not for number of samples.
+  for (const name of videoHDRHistNames) {
+    try {
+      const hist = SpecialPowers.Services.telemetry.getHistogramById(name);
+      const totalTimeMS = hist.snapshot().sum;
+      if (reportExpected && hasVideoHDR) {
+        ok(totalTimeMS > 0, `Reported some time for ${name}`);
+      } else {
+        ok(totalTimeMS == 0, `Reported no time for ${name}`);
       }
       hist.clear();
     } catch (e) {
