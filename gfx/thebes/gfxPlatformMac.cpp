@@ -142,10 +142,6 @@ gfxPlatformMac::gfxPlatformMac() {
   mFontAntiAliasingThreshold = ReadAntiAliasingThreshold();
 
   InitBackendPrefs(GetBackendPrefs());
-
-  if (nsCocoaFeatures::OnHighSierraOrLater()) {
-    mHasNativeColrFontSupport = true;
-  }
 }
 
 gfxPlatformMac::~gfxPlatformMac() { gfxCoreTextShaper::Shutdown(); }
