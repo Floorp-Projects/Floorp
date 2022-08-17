@@ -2583,6 +2583,16 @@ void MediaFormatReader::ReturnOutput(MediaData* aData, TrackType aTrack) {
       mWorkingInfoChanged = true;
     }
 
+    mozilla::gfx::ColorDepth colorDepth = videoData->GetColorDepth();
+    if (colorDepth != mInfo.mVideo.mColorDepth) {
+      LOG("change of video color depth (enum %u -> enum %u)",
+          (unsigned)mInfo.mVideo.mColorDepth, (unsigned)colorDepth);
+      mInfo.mVideo.mColorDepth = colorDepth;
+      MutexAutoLock lock(mVideo.mMutex);
+      mVideo.mWorkingInfo->GetAsVideoInfo()->mColorDepth = colorDepth;
+      mWorkingInfoChanged = true;
+    }
+
     TimeUnit nextKeyframe;
     if (!mVideo.HasInternalSeekPending() &&
         NS_SUCCEEDED(

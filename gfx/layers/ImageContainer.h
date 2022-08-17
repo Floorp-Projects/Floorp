@@ -108,6 +108,9 @@ class Image {
     return gfx::IntRect(GetOrigin().x, GetOrigin().y, GetSize().width,
                         GetSize().height);
   }
+  virtual gfx::ColorDepth GetColorDepth() const {
+    return gfx::ColorDepth::COLOR_8;
+  }
 
   ImageBackendData* GetBackendData(LayersBackend aBackend) {
     return mBackendData[aBackend].get();
