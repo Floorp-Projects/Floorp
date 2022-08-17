@@ -171,6 +171,15 @@ class SettingsRobot {
             return SettingsSubMenuHomepageRobot.Transition()
         }
 
+        fun openAutofillSubMenu(interact: SettingsSubMenuAutofillRobot.() -> Unit): SettingsSubMenuAutofillRobot.Transition {
+
+            mDevice.findObject(UiSelector().textContains(getStringResource(R.string.preferences_autofill))).waitForExists(waitingTime)
+            onView(withText(R.string.preferences_autofill)).click()
+
+            SettingsSubMenuAutofillRobot().interact()
+            return SettingsSubMenuAutofillRobot.Transition()
+        }
+
         fun openAccessibilitySubMenu(interact: SettingsSubMenuAccessibilityRobot.() -> Unit): SettingsSubMenuAccessibilityRobot.Transition {
             scrollToElementByText("Accessibility")
 

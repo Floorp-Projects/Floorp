@@ -87,6 +87,12 @@ object TestAssetHelper {
         return TestAsset(url, "", "")
     }
 
+    fun getAddressFormAsset(server: MockWebServer): TestAsset {
+        val url = server.url("pages/addressForm.html").toString().toUri()!!
+
+        return TestAsset(url, "", "")
+    }
+
     fun getAudioPageAsset(server: MockWebServer): TestAsset {
         val url = server.url("pages/audioMediaPage.html").toString().toUri()!!
         val title = "Audio_Test_Page"

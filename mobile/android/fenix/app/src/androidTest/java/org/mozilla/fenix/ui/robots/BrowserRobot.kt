@@ -599,6 +599,16 @@ class BrowserRobot {
         }
     }
 
+    fun clickStreetAddressTextBox() {
+        streetAddressTextBox().waitForExists(waitingTime)
+        streetAddressTextBox().click()
+    }
+
+    fun clickSelectAddressButton() {
+        selectAddressButton.waitForExists(waitingTime)
+        selectAddressButton.clickAndWaitForNewWindow(waitingTime)
+    }
+
     fun clickLoginSuggestion(userName: String) {
         val loginSuggestion =
             mDevice.findObject(
@@ -608,6 +618,11 @@ class BrowserRobot {
             )
 
         loginSuggestion.click()
+    }
+
+    fun clickAddressSuggestion(streetName: String) {
+        addressSuggestion(streetName).waitForExists(waitingTime)
+        addressSuggestion(streetName).click()
     }
 
     fun verifySuggestedUserName(userName: String) {
@@ -643,6 +658,11 @@ class BrowserRobot {
         }
         mDevice.waitForObjects(userNameTextBox)
         assertTrue(userNameTextBox.text.equals(userName))
+    }
+
+    fun verifyAutofilledAddress(streetAddress: String) {
+        mDevice.waitForObjects(streetAddressTextBox(streetAddress))
+        assertTrue(streetAddressTextBox(streetAddress).waitForExists(waitingTime))
     }
 
     fun verifyPrefilledPWALoginCredentials(userName: String, shortcutTitle: String) {
@@ -906,6 +926,23 @@ private var progressBar =
     )
 
 private val suggestedLogins = mDevice.findObject(UiSelector().resourceId("$packageName:id/loginSelectBar"))
+private val selectAddressButton = mDevice.findObject(UiSelector().resourceId("$packageName:id/select_address_header"))
+
+private fun addressSuggestion(streetName: String) =
+    mDevice.findObject(
+        UiSelector()
+            .resourceId("$packageName:id/address_name")
+            .textContains(streetName)
+    )
+
+private fun streetAddressTextBox(streetAddress: String = "") =
+    mDevice.findObject(
+        UiSelector()
+            .resourceId("streetAddress")
+            .textContains(streetAddress)
+            .className("android.widget.EditText")
+            .packageName("$packageName")
+    )
 
 // Permissions test page elements & prompts
 // Test page used located at https://mozilla-mobile.github.io/testapp/permissions
