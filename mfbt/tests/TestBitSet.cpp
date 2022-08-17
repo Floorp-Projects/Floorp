@@ -83,12 +83,12 @@ class BitSetSuite {
     MOZ_RELEASE_ASSERT(bitset[kBitsPerWord + 1]);
 
     bitset.ResetAll();
-    for (size_t i = 0; i < bitset.Size(); i++) {
+    for (size_t i = 0; i < decltype(bitset)::Size(); i++) {
       MOZ_RELEASE_ASSERT(!bitset[i]);
     }
 
     bitset.SetAll();
-    for (size_t i = 0; i < bitset.Size(); i++) {
+    for (size_t i = 0; i < decltype(bitset)::Size(); i++) {
       MOZ_RELEASE_ASSERT(bitset[i]);
     }
 
@@ -96,7 +96,7 @@ class BitSetSuite {
     MOZ_RELEASE_ASSERT(bitset.Storage()[1] == 3);
 
     bitset.ResetAll();
-    for (size_t i = 0; i < bitset.Size(); i++) {
+    for (size_t i = 0; i < decltype(bitset)::Size(); i++) {
       MOZ_RELEASE_ASSERT(!bitset[i]);
     }
   }

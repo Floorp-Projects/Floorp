@@ -318,15 +318,15 @@ class EnumSet {
 #endif
   }
 
-  constexpr size_t MaxBits() const {
+  static constexpr size_t MaxBits() {
     if constexpr (std::is_unsigned_v<Serialized>) {
       return sizeof(Serialized) * 8;
     } else {
-      return mBitField.Size();
+      return Serialized::Size();
     }
-  };
+  }
 
-  static constexpr size_t kMaxBits = EnumSet().MaxBits();
+  static constexpr size_t kMaxBits = MaxBits();
 
   Serialized mBitField;
 
