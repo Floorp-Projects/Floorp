@@ -141,7 +141,6 @@ nsBaseWidget::nsBaseWidget(nsBorderStyle aBorderStyle)
       mCompositorVsyncDispatcher(nullptr),
       mBorderStyle(aBorderStyle),
       mBounds(0, 0, 0, 0),
-      mOriginalBounds(nullptr),
       mIsTiled(false),
       mPopupLevel(ePopupLevelTop),
       mPopupType(ePopupTypeAny),
@@ -403,8 +402,6 @@ nsBaseWidget::~nsBaseWidget() {
   gNumWidgets--;
   printf("WIDGETS- = %d\n", gNumWidgets);
 #endif
-
-  delete mOriginalBounds;
 }
 
 //-------------------------------------------------------------------------
@@ -723,7 +720,7 @@ void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
 
   if (aFullScreen) {
     if (!mOriginalBounds) {
-      mOriginalBounds = new LayoutDeviceIntRect();
+      mOriginalBounds = mozilla::MakeUnique<LayoutDeviceIntRect>();
     }
     *mOriginalBounds = GetScreenBounds();
 
