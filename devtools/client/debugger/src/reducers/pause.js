@@ -236,11 +236,6 @@ function update(state = initialPauseState(), action) {
     case "SELECT_FRAME":
       return updateThreadState({ selectedFrameId: action.frame.id });
 
-    case "CONNECT":
-      return {
-        ...initialPauseState(action.mainThreadActorID),
-      };
-
     case "PAUSE_ON_EXCEPTIONS": {
       const { shouldPauseOnExceptions, shouldPauseOnCaughtExceptions } = action;
 
