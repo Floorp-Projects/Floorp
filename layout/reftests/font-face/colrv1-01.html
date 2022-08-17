@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<meta charset=utf-8>
+<title>COLRv1 font test: comparing against CSS representation</title>
+<style>
+@font-face { font-family: CAhem; src: url("CAhem.ttf"); }
+#test { font: 100px/1 CAhem; margin: 10px; padding: 10px; }
+</style>
+
+<p>COLRv1 font rendering:</p>
+<div id="test"></div>
+
+<script>
+test.textContent = window.location.hash.substr(1);
+document.documentElement.classList = "";
+</script>
