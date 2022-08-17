@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // If you ever need to force a toolchain rebuild (taskcluster) then edit the following comment.
-// FORCE REBUILD 2021-11-24
+// FORCE REBUILD 2022-08-18
 
 object Versions {
     const val kotlin = "1.6.10"
