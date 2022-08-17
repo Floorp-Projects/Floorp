@@ -18,16 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include "avassert.h"
 #include "avstring.h"
 #include "bprint.h"
-#include "common.h"
 #include "compat/va_copy.h"
 #include "error.h"
+#include "macros.h"
 #include "mem.h"
 
 #define av_bprint_room(buf) ((buf)->size - FFMIN((buf)->len, (buf)->size))
@@ -245,10 +245,8 @@ int av_bprint_finalize(AVBPrint *buf, char **ret_str)
                 str = buf->str;
             buf->str = NULL;
         } else {
-            str = av_malloc(real_size);
-            if (str)
-                memcpy(str, buf->str, real_size);
-            else
+            str = av_memdup(buf->str, real_size);
+            if (!str)
                 ret = AVERROR(ENOMEM);
         }
         *ret_str = str;

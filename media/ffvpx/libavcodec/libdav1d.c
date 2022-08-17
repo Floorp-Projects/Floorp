@@ -19,9 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "dav1d/dav1d.h"
+#include <dav1d/dav1d.h>
 
 #include "libavutil/avassert.h"
+#include "libavutil/cpu.h"
 #include "libavutil/film_grain_params.h"
 #include "libavutil/mastering_display_metadata.h"
 #include "libavutil/imgutils.h"
@@ -30,6 +31,7 @@
 #include "atsc_a53.h"
 #include "avcodec.h"
 #include "bytestream.h"
+#include "codec_internal.h"
 #include "decode.h"
 #include "internal.h"
 
@@ -39,6 +41,9 @@
 typedef struct Libdav1dContext {
     AVClass *class;
     Dav1dContext *c;
+    /* This packet coincides with AVCodecInternal.in_pkt
+     * and is not owned by us. */
+    AVPacket *pkt;
     AVBufferPool *pool;
     int pool_size;
 
@@ -123,12 +128,97 @@ static void libdav1d_picture_release(Dav1dPicture *p, void *cookie)
     av_buffer_unref(&buf);
 }
 
+static void libdav1d_init_params(AVCodecContext *c, const Dav1dSequenceHeader *seq)
+{
+    c->profile = seq->profile;
+    c->level = ((seq->operating_points[0].major_level - 2) << 2)
+               | seq->operating_points[0].minor_level;
+
+    switch (seq->chr) {
+    case DAV1D_CHR_VERTICAL:
+        c->chroma_sample_location = AVCHROMA_LOC_LEFT;
+        break;
+    case DAV1D_CHR_COLOCATED:
+        c->chroma_sample_location = AVCHROMA_LOC_TOPLEFT;
+        break;
+    }
+    c->colorspace = (enum AVColorSpace) seq->mtrx;
+    c->color_primaries = (enum AVColorPrimaries) seq->pri;
+    c->color_trc = (enum AVColorTransferCharacteristic) seq->trc;
+    c->color_range = seq->color_range ? AVCOL_RANGE_JPEG : AVCOL_RANGE_MPEG;
+
+    if (seq->layout == DAV1D_PIXEL_LAYOUT_I444 &&
+        seq->mtrx == DAV1D_MC_IDENTITY &&
+        seq->pri  == DAV1D_COLOR_PRI_BT709 &&
+        seq->trc  == DAV1D_TRC_SRGB)
+        c->pix_fmt = pix_fmt_rgb[seq->hbd];
+    else
+        c->pix_fmt = pix_fmt[seq->layout][seq->hbd];
+
+    if (seq->num_units_in_tick && seq->time_scale) {
+        av_reduce(&c->framerate.den, &c->framerate.num,
+                  seq->num_units_in_tick, seq->time_scale, INT_MAX);
+        if (seq->equal_picture_interval)
+            c->ticks_per_frame = seq->num_ticks_per_picture;
+    }
+
+   if (seq->film_grain_present)
+       c->properties |= FF_CODEC_PROPERTY_FILM_GRAIN;
+   else
+       c->properties &= ~FF_CODEC_PROPERTY_FILM_GRAIN;
+}
+
+static av_cold int libdav1d_parse_extradata(AVCodecContext *c)
+{
+    Dav1dSequenceHeader seq;
+    size_t offset = 0;
+    int res;
+
+    if (!c->extradata || c->extradata_size <= 0)
+        return 0;
+
+    if (c->extradata[0] & 0x80) {
+        int version = c->extradata[0] & 0x7F;
+
+        if (version != 1 || c->extradata_size < 4) {
+            int explode = !!(c->err_recognition & AV_EF_EXPLODE);
+            av_log(c, explode ? AV_LOG_ERROR : AV_LOG_WARNING,
+                   "Error decoding extradata\n");
+            return explode ? AVERROR_INVALIDDATA : 0;
+        }
+
+        // Do nothing if there are no configOBUs to parse
+        if (c->extradata_size == 4)
+            return 0;
+
+        offset = 4;
+    }
+
+    res = dav1d_parse_sequence_header(&seq, c->extradata + offset,
+                                      c->extradata_size  - offset);
+    if (res < 0)
+        return 0; // Assume no seqhdr OBUs are present
+
+    libdav1d_init_params(c, &seq);
+    res = ff_set_dimensions(c, seq.max_width, seq.max_height);
+    if (res < 0)
+        return res;
+
+    return 0;
+}
+
 static av_cold int libdav1d_init(AVCodecContext *c)
 {
     Libdav1dContext *dav1d = c->priv_data;
     Dav1dSettings s;
+#if FF_DAV1D_VERSION_AT_LEAST(6,0)
+    int threads = c->thread_count;
+#else
     int threads = (c->thread_count ? c->thread_count : av_cpu_count()) * 3 / 2;
+#endif
     int res;
+
+    dav1d->pkt = c->internal->in_pkt;
 
     av_log(c, AV_LOG_INFO, "libdav1d %s\n", dav1d_version());
 
@@ -141,19 +231,22 @@ static av_cold int libdav1d_init(AVCodecContext *c)
     s.frame_size_limit = c->max_pixels;
     if (dav1d->apply_grain >= 0)
         s.apply_grain = dav1d->apply_grain;
-    else if (c->export_side_data & AV_CODEC_EXPORT_DATA_FILM_GRAIN)
-        s.apply_grain = 0;
+    else
+        s.apply_grain = !(c->export_side_data & AV_CODEC_EXPORT_DATA_FILM_GRAIN);
 
     s.all_layers = dav1d->all_layers;
     if (dav1d->operating_point >= 0)
         s.operating_point = dav1d->operating_point;
+#if FF_DAV1D_VERSION_AT_LEAST(6,2)
+    s.strict_std_compliance = c->strict_std_compliance > 0;
+#endif
 
 #if FF_DAV1D_VERSION_AT_LEAST(6,0)
     if (dav1d->frame_threads || dav1d->tile_threads)
         s.n_threads = FFMAX(dav1d->frame_threads, dav1d->tile_threads);
     else
         s.n_threads = FFMIN(threads, DAV1D_MAX_THREADS);
-    s.max_frame_delay = (c->flags & AV_CODEC_FLAG_LOW_DELAY) ? 1 : s.n_threads;
+    s.max_frame_delay = (c->flags & AV_CODEC_FLAG_LOW_DELAY) ? 1 : 0;
     av_log(c, AV_LOG_DEBUG, "Using %d threads, %d max_frame_delay\n",
            s.n_threads, s.max_frame_delay);
 #else
@@ -166,6 +259,10 @@ static av_cold int libdav1d_init(AVCodecContext *c)
     av_log(c, AV_LOG_DEBUG, "Using %d frame threads, %d tile threads\n",
            s.n_frame_threads, s.n_tile_threads);
 #endif
+
+    res = libdav1d_parse_extradata(c);
+    if (res < 0)
+        return res;
 
     res = dav1d_open(&dav1d->c, &s);
     if (res < 0)
@@ -198,37 +295,41 @@ static int libdav1d_receive_frame(AVCodecContext *c, AVFrame *frame)
     Libdav1dContext *dav1d = c->priv_data;
     Dav1dData *data = &dav1d->data;
     Dav1dPicture pic = { 0 }, *p = &pic;
+#if FF_DAV1D_VERSION_AT_LEAST(5,1)
+    enum Dav1dEventFlags event_flags = 0;
+#endif
     int res;
 
     if (!data->sz) {
-        AVPacket pkt = { 0 };
+        AVPacket *const pkt = dav1d->pkt;
 
-        res = ff_decode_get_packet(c, &pkt);
+        res = ff_decode_get_packet(c, pkt);
         if (res < 0 && res != AVERROR_EOF)
             return res;
 
-        if (pkt.size) {
-            res = dav1d_data_wrap(data, pkt.data, pkt.size, libdav1d_data_free, pkt.buf);
+        if (pkt->size) {
+            res = dav1d_data_wrap(data, pkt->data, pkt->size,
+                                  libdav1d_data_free, pkt->buf);
             if (res < 0) {
-                av_packet_unref(&pkt);
+                av_packet_unref(pkt);
                 return res;
             }
 
-            data->m.timestamp = pkt.pts;
-            data->m.offset = pkt.pos;
-            data->m.duration = pkt.duration;
+            data->m.timestamp = pkt->pts;
+            data->m.offset    = pkt->pos;
+            data->m.duration  = pkt->duration;
 
-            pkt.buf = NULL;
-            av_packet_unref(&pkt);
+            pkt->buf = NULL;
+            av_packet_unref(pkt);
 
             if (c->reordered_opaque != AV_NOPTS_VALUE) {
-                uint8_t *reordered_opaque = av_malloc(sizeof(c->reordered_opaque));
+                uint8_t *reordered_opaque = av_memdup(&c->reordered_opaque,
+                                                      sizeof(c->reordered_opaque));
                 if (!reordered_opaque) {
                     dav1d_data_unref(data);
                     return AVERROR(ENOMEM);
                 }
 
-                memcpy(reordered_opaque, &c->reordered_opaque, sizeof(c->reordered_opaque));
                 res = dav1d_data_wrap_user_data(data, reordered_opaque,
                                                 libdav1d_user_data_free, reordered_opaque);
                 if (res < 0) {
@@ -237,6 +338,9 @@ static int libdav1d_receive_frame(AVCodecContext *c, AVFrame *frame)
                     return res;
                 }
             }
+        } else if (res >= 0) {
+            av_packet_unref(pkt);
+            return AVERROR(EAGAIN);
         }
     }
 
@@ -244,8 +348,10 @@ static int libdav1d_receive_frame(AVCodecContext *c, AVFrame *frame)
     if (res < 0) {
         if (res == AVERROR(EINVAL))
             res = AVERROR_INVALIDDATA;
-        if (res != AVERROR(EAGAIN))
+        if (res != AVERROR(EAGAIN)) {
+            dav1d_data_unref(data);
             return res;
+        }
     }
 
     res = dav1d_get_picture(dav1d->c, p);
@@ -274,9 +380,16 @@ static int libdav1d_receive_frame(AVCodecContext *c, AVFrame *frame)
     frame->linesize[1] = p->stride[1];
     frame->linesize[2] = p->stride[1];
 
-    c->profile = p->seq_hdr->profile;
-    c->level = ((p->seq_hdr->operating_points[0].major_level - 2) << 2)
-               | p->seq_hdr->operating_points[0].minor_level;
+#if FF_DAV1D_VERSION_AT_LEAST(5,1)
+    dav1d_get_event_flags(dav1d->c, &event_flags);
+    if (c->pix_fmt == AV_PIX_FMT_NONE ||
+        event_flags & DAV1D_EVENT_FLAG_NEW_SEQUENCE)
+#endif
+    libdav1d_init_params(c, p->seq_hdr);
+    res = ff_decode_frame_props(c, frame);
+    if (res < 0)
+        goto fail;
+
     frame->width = p->p.w;
     frame->height = p->p.h;
     if (c->width != p->p.w || c->height != p->p.h) {
@@ -292,46 +405,13 @@ static int libdav1d_receive_frame(AVCodecContext *c, AVFrame *frame)
               INT_MAX);
     ff_set_sar(c, frame->sample_aspect_ratio);
 
-    switch (p->seq_hdr->chr) {
-    case DAV1D_CHR_VERTICAL:
-        frame->chroma_location = c->chroma_sample_location = AVCHROMA_LOC_LEFT;
-        break;
-    case DAV1D_CHR_COLOCATED:
-        frame->chroma_location = c->chroma_sample_location = AVCHROMA_LOC_TOPLEFT;
-        break;
-    }
-    frame->colorspace = c->colorspace = (enum AVColorSpace) p->seq_hdr->mtrx;
-    frame->color_primaries = c->color_primaries = (enum AVColorPrimaries) p->seq_hdr->pri;
-    frame->color_trc = c->color_trc = (enum AVColorTransferCharacteristic) p->seq_hdr->trc;
-    frame->color_range = c->color_range = p->seq_hdr->color_range ? AVCOL_RANGE_JPEG : AVCOL_RANGE_MPEG;
-
-    if (p->p.layout == DAV1D_PIXEL_LAYOUT_I444 &&
-        p->seq_hdr->mtrx == DAV1D_MC_IDENTITY &&
-        p->seq_hdr->pri  == DAV1D_COLOR_PRI_BT709 &&
-        p->seq_hdr->trc  == DAV1D_TRC_SRGB)
-        frame->format = c->pix_fmt = pix_fmt_rgb[p->seq_hdr->hbd];
-    else
-        frame->format = c->pix_fmt = pix_fmt[p->p.layout][p->seq_hdr->hbd];
-
     if (p->m.user_data.data)
         memcpy(&frame->reordered_opaque, p->m.user_data.data, sizeof(frame->reordered_opaque));
     else
         frame->reordered_opaque = AV_NOPTS_VALUE;
 
-    if (p->seq_hdr->num_units_in_tick && p->seq_hdr->time_scale) {
-        av_reduce(&c->framerate.den, &c->framerate.num,
-                  p->seq_hdr->num_units_in_tick, p->seq_hdr->time_scale, INT_MAX);
-        if (p->seq_hdr->equal_picture_interval)
-            c->ticks_per_frame = p->seq_hdr->num_ticks_per_picture;
-    }
-
     // match timestamps and packet size
     frame->pts = p->m.timestamp;
-#if FF_API_PKT_PTS
-FF_DISABLE_DEPRECATION_WARNINGS
-    frame->pkt_pts = p->m.timestamp;
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
     frame->pkt_dts = p->m.timestamp;
     frame->pkt_pos = p->m.offset;
     frame->pkt_size = p->m.size;
@@ -479,8 +559,8 @@ static av_cold int libdav1d_close(AVCodecContext *c)
 #define OFFSET(x) offsetof(Libdav1dContext, x)
 #define VD AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_DECODING_PARAM
 static const AVOption libdav1d_options[] = {
-    { "tilethreads", "Tile threads", OFFSET(tile_threads), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, DAV1D_MAX_TILE_THREADS, VD },
-    { "framethreads", "Frame threads", OFFSET(frame_threads), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, DAV1D_MAX_FRAME_THREADS, VD },
+    { "tilethreads", "Tile threads", OFFSET(tile_threads), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, DAV1D_MAX_TILE_THREADS, VD | AV_OPT_FLAG_DEPRECATED },
+    { "framethreads", "Frame threads", OFFSET(frame_threads), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, DAV1D_MAX_FRAME_THREADS, VD | AV_OPT_FLAG_DEPRECATED },
     { "filmgrain", "Apply Film Grain", OFFSET(apply_grain), AV_OPT_TYPE_BOOL, { .i64 = -1 }, -1, 1, VD | AV_OPT_FLAG_DEPRECATED },
     { "oppoint",  "Select an operating point of the scalable bitstream", OFFSET(operating_point), AV_OPT_TYPE_INT, { .i64 = -1 }, -1, 31, VD },
     { "alllayers", "Output all spatial layers", OFFSET(all_layers), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, VD },
@@ -494,19 +574,19 @@ static const AVClass libdav1d_class = {
     .version    = LIBAVUTIL_VERSION_INT,
 };
 
-AVCodec ff_libdav1d_decoder = {
-    .name           = "libdav1d",
-    .long_name      = NULL_IF_CONFIG_SMALL("dav1d AV1 decoder by VideoLAN"),
-    .type           = AVMEDIA_TYPE_VIDEO,
-    .id             = AV_CODEC_ID_AV1,
+const FFCodec ff_libdav1d_decoder = {
+    .p.name         = "libdav1d",
+    .p.long_name    = NULL_IF_CONFIG_SMALL("dav1d AV1 decoder by VideoLAN"),
+    .p.type         = AVMEDIA_TYPE_VIDEO,
+    .p.id           = AV_CODEC_ID_AV1,
     .priv_data_size = sizeof(Libdav1dContext),
     .init           = libdav1d_init,
     .close          = libdav1d_close,
     .flush          = libdav1d_flush,
-    .receive_frame  = libdav1d_receive_frame,
-    .capabilities   = AV_CODEC_CAP_DELAY | AV_CODEC_CAP_OTHER_THREADS,
+    FF_CODEC_RECEIVE_FRAME_CB(libdav1d_receive_frame),
+    .p.capabilities = AV_CODEC_CAP_DELAY | AV_CODEC_CAP_OTHER_THREADS,
     .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE | FF_CODEC_CAP_SETS_PKT_DTS |
                       FF_CODEC_CAP_AUTO_THREADS,
-    .priv_class     = &libdav1d_class,
-    .wrapper_name   = "libdav1d",
+    .p.priv_class   = &libdav1d_class,
+    .p.wrapper_name = "libdav1d",
 };
