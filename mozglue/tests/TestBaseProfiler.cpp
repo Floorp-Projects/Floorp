@@ -1157,7 +1157,7 @@ struct StringWriteFunc : public JSONWriteFunc {
 void CheckJSON(mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
                const char* aExpected, int aLine) {
   const std::string& actual =
-      static_cast<StringWriteFunc*>(aWriter.WriteFunc())->mString;
+      static_cast<StringWriteFunc&>(aWriter.WriteFunc()).mString;
   if (strcmp(aExpected, actual.c_str()) != 0) {
     fprintf(stderr,
             "---- EXPECTED ---- (line %d)\n<<<%s>>>\n"

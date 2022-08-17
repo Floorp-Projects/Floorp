@@ -255,13 +255,13 @@ class SpliceableJSONWriter : public JSONWriter {
 
   void Splice(const Span<const char>& aStr) {
     Separator();
-    WriteFunc()->Write(aStr);
+    WriteFunc().Write(aStr);
     mNeedComma[mDepth] = true;
   }
 
   void Splice(const char* aStr, size_t aLen) {
     Separator();
-    WriteFunc()->Write(Span<const char>(aStr, aLen));
+    WriteFunc().Write(Span<const char>(aStr, aLen));
     mNeedComma[mDepth] = true;
   }
 
@@ -274,7 +274,7 @@ class SpliceableJSONWriter : public JSONWriter {
   void CopyAndSplice(const ChunkedJSONWriteFunc& aFunc) {
     Separator();
     for (size_t i = 0; i < aFunc.mChunkList.length(); i++) {
-      WriteFunc()->Write(
+      WriteFunc().Write(
           Span<const char>(aFunc.mChunkList[i].get(), aFunc.mChunkLengths[i]));
     }
     mNeedComma[mDepth] = true;
@@ -286,7 +286,7 @@ class SpliceableJSONWriter : public JSONWriter {
   virtual void TakeAndSplice(ChunkedJSONWriteFunc&& aFunc) {
     Separator();
     for (size_t i = 0; i < aFunc.mChunkList.length(); i++) {
-      WriteFunc()->Write(
+      WriteFunc().Write(
           Span<const char>(aFunc.mChunkList[i].get(), aFunc.mChunkLengths[i]));
     }
     aFunc.mChunkPtr = nullptr;
@@ -353,8 +353,8 @@ class SpliceableChunkedJSONWriter final : public SpliceableJSONWriter {
   const ChunkedJSONWriteFunc& ChunkedWriteFunc() const {
     MOZ_ASSERT(!mTaken);
     // The WriteFunc was non-fallibly allocated as a ChunkedJSONWriteFunc in the
-    // only constructor above, so it's safe to cast to ChunkedJSONWriteFunc*.
-    return *static_cast<const ChunkedJSONWriteFunc*>(WriteFunc());
+    // only constructor above, so it's safe to cast to ChunkedJSONWriteFunc&.
+    return static_cast<const ChunkedJSONWriteFunc&>(WriteFunc());
   }
 
   // Access the ChunkedJSONWriteFunc as rvalue-reference, usually to take its
@@ -365,8 +365,8 @@ class SpliceableChunkedJSONWriter final : public SpliceableJSONWriter {
     mTaken = true;
 #endif  //
     // The WriteFunc was non-fallibly allocated as a ChunkedJSONWriteFunc in the
-    // only constructor above, so it's safe to cast to ChunkedJSONWriteFunc*.
-    return std::move(*static_cast<ChunkedJSONWriteFunc*>(WriteFunc()));
+    // only constructor above, so it's safe to cast to ChunkedJSONWriteFunc&.
+    return std::move(static_cast<ChunkedJSONWriteFunc&>(WriteFunc()));
   }
 
   // Adopts the chunks from aFunc without copying.
@@ -374,8 +374,8 @@ class SpliceableChunkedJSONWriter final : public SpliceableJSONWriter {
     MOZ_ASSERT(!mTaken);
     Separator();
     // The WriteFunc was non-fallibly allocated as a ChunkedJSONWriteFunc in the
-    // only constructor above, so it's safe to cast to ChunkedJSONWriteFunc*.
-    static_cast<ChunkedJSONWriteFunc*>(WriteFunc())->Take(std::move(aFunc));
+    // only constructor above, so it's safe to cast to ChunkedJSONWriteFunc&.
+    static_cast<ChunkedJSONWriteFunc&>(WriteFunc()).Take(std::move(aFunc));
     mNeedComma[mDepth] = true;
   }
 
