@@ -67,7 +67,7 @@ MediaCodecsSupported MCSInfo::GetDecodeMediaCodecsSupported(
 void MCSInfo::GetMediaCodecsSupportedString(
     nsCString& aSupportString, const MediaCodecsSupported& aSupportedCodecs) {
   CodecDefinition supportInfo;
-  aSupportString = "Codec support information:\n"_ns;
+  aSupportString = ""_ns;
   for (const auto& it : aSupportedCodecs) {
     if (!GetInstance()->mHashTableMCS->Get(it, &supportInfo)) {
       CODEC_SUPPORT_LOG(
