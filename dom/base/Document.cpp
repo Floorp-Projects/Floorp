@@ -7879,7 +7879,7 @@ void Document::DispatchContentLoadedEvents() {
     MaybeResolveReadyForIdle();
   }
 
-  nsIDocShell* docShell = this->GetDocShell();
+  nsIDocShell* docShell = GetDocShell();
 
   if (TimelineConsumers::HasConsumer(docShell)) {
     TimelineConsumers::AddMarkerForDocShell(
@@ -13076,7 +13076,7 @@ already_AddRefed<Document> Document::CreateStaticClone(
   RefPtr<nsDocShell> originalShell = mDocumentContainer.get();
   SetContainer(nsDocShell::Cast(aCloneContainer));
   IgnoredErrorResult rv;
-  nsCOMPtr<nsINode> clonedNode = this->CloneNode(true, rv);
+  nsCOMPtr<nsINode> clonedNode = CloneNode(true, rv);
   SetContainer(originalShell);
   if (rv.Failed()) {
     return nullptr;
@@ -16072,7 +16072,7 @@ void Document::SetUserHasInteracted() {
   // Thus, whenever we create a new SH entry for this document,
   // this flag is reset.
   if (!GetSHEntryHasUserInteraction()) {
-    nsIDocShell* docShell = this->GetDocShell();
+    nsIDocShell* docShell = GetDocShell();
     if (docShell) {
       nsCOMPtr<nsISHEntry> currentEntry;
       bool oshe;
@@ -16533,7 +16533,7 @@ void Document::MakeBrowsingContextNonSynthetic() {
 nsresult Document::HasStorageAccessSync(bool& aHasStorageAccess) {
   // Step 1: check if cookie permissions are available or denied to this
   // document's principal
-  nsCOMPtr<nsPIDOMWindowInner> inner = this->GetInnerWindow();
+  nsCOMPtr<nsPIDOMWindowInner> inner = GetInnerWindow();
   if (!inner) {
     aHasStorageAccess = false;
     return NS_OK;
@@ -16785,15 +16785,15 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
                                     nsLiteralCString("requestStorageAccess"),
                                     this, nsContentUtils::eDOM_PROPERTIES,
                                     "RequestStorageAccessUserGesture");
-    this->ConsumeTransientUserGestureActivation();
+    ConsumeTransientUserGestureActivation();
     promise->MaybeRejectWithUndefined();
     return promise.forget();
   }
 
   // Get a pointer to the inner window- We need this for convenience sake
-  RefPtr<nsPIDOMWindowInner> inner = this->GetInnerWindow();
+  RefPtr<nsPIDOMWindowInner> inner = GetInnerWindow();
   if (!inner) {
-    this->ConsumeTransientUserGestureActivation();
+    ConsumeTransientUserGestureActivation();
     promise->MaybeRejectWithUndefined();
     return promise.forget();
   }
@@ -16810,7 +16810,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
       promise->MaybeResolveWithUndefined();
       return promise.forget();
     } else {
-      this->ConsumeTransientUserGestureActivation();
+      ConsumeTransientUserGestureActivation();
       promise->MaybeRejectWithUndefined();
       return promise.forget();
     }
@@ -16839,7 +16839,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
       promise->MaybeResolveWithUndefined();
       return promise.forget();
     } else {
-      this->ConsumeTransientUserGestureActivation();
+      ConsumeTransientUserGestureActivation();
       promise->MaybeRejectWithUndefined();
       return promise.forget();
     }
@@ -16855,7 +16855,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
       promise->MaybeResolveWithUndefined();
       return promise.forget();
     } else {
-      this->ConsumeTransientUserGestureActivation();
+      ConsumeTransientUserGestureActivation();
       promise->MaybeRejectWithUndefined();
       return promise.forget();
     }
@@ -16871,18 +16871,18 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
       promise->MaybeResolveWithUndefined();
       return promise.forget();
     } else {
-      this->ConsumeTransientUserGestureActivation();
+      ConsumeTransientUserGestureActivation();
       promise->MaybeRejectWithUndefined();
       return promise.forget();
     }
   }
 
   // Get pointers to some objects that will be used in the async portion
-  RefPtr<BrowsingContext> bc = this->GetBrowsingContext();
+  RefPtr<BrowsingContext> bc = GetBrowsingContext();
   RefPtr<nsGlobalWindowOuter> outer =
       nsGlobalWindowOuter::Cast(inner->GetOuterWindow());
   if (!outer) {
-    this->ConsumeTransientUserGestureActivation();
+    ConsumeTransientUserGestureActivation();
     promise->MaybeRejectWithUndefined();
     return promise.forget();
   }
@@ -16890,7 +16890,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
 
   // Consume user activation before entering the async part of this method.
   // This prevents usage of other transient activation-gated APIs.
-  this->ConsumeTransientUserGestureActivation();
+  ConsumeTransientUserGestureActivation();
 
   // Step 5. Start an async call to request storage access. This will either
   // perform an automatic decision or notify the user, then perform some follow
@@ -16932,7 +16932,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
                                     nsLiteralCString("requestStorageAccess"),
                                     this, nsContentUtils::eDOM_PROPERTIES,
                                     "RequestStorageAccessUserGesture");
-    this->ConsumeTransientUserGestureActivation();
+    ConsumeTransientUserGestureActivation();
     promise->MaybeRejectWithUndefined();
     return promise.forget();
   }
@@ -16961,7 +16961,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
       promise->MaybeResolveWithUndefined();
       return promise.forget();
     }
-    this->ConsumeTransientUserGestureActivation();
+    ConsumeTransientUserGestureActivation();
     promise->MaybeRejectWithUndefined();
     return promise.forget();
   }
@@ -16976,31 +16976,31 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
       promise->MaybeResolveWithUndefined();
       return promise.forget();
     }
-    this->ConsumeTransientUserGestureActivation();
+    ConsumeTransientUserGestureActivation();
     promise->MaybeRejectWithUndefined();
     return promise.forget();
   }
 
   // Step 3: Get some useful variables that can be captured by the lambda for
   // the asynchronous portion
-  RefPtr<BrowsingContext> bc = this->GetBrowsingContext();
-  nsCOMPtr<nsPIDOMWindowInner> inner = this->GetInnerWindow();
+  RefPtr<BrowsingContext> bc = GetBrowsingContext();
+  nsCOMPtr<nsPIDOMWindowInner> inner = GetInnerWindow();
   if (!inner) {
-    this->ConsumeTransientUserGestureActivation();
+    ConsumeTransientUserGestureActivation();
     promise->MaybeRejectWithUndefined();
     return promise.forget();
   }
   RefPtr<nsGlobalWindowOuter> outer =
       nsGlobalWindowOuter::Cast(inner->GetOuterWindow());
   if (!outer) {
-    this->ConsumeTransientUserGestureActivation();
+    ConsumeTransientUserGestureActivation();
     promise->MaybeRejectWithUndefined();
     return promise.forget();
   }
   nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateContentPrincipal(
       thirdPartyURI, NodePrincipal()->OriginAttributesRef());
   if (!principal) {
-    this->ConsumeTransientUserGestureActivation();
+    ConsumeTransientUserGestureActivation();
     promise->MaybeRejectWithUndefined();
     return promise.forget();
   }
@@ -17010,7 +17010,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccessForOrigin(
 
   // Consume user activation before entering the async part of this method.
   // This prevents usage of other transient activation-gated APIs.
-  this->ConsumeTransientUserGestureActivation();
+  ConsumeTransientUserGestureActivation();
 
   // Step 4a: Start the async part of this function. Check the cookie
   // permission, but this can't be done in this process. We needs the cookie
@@ -17168,7 +17168,7 @@ already_AddRefed<Promise> Document::RequestStorageAccessUnderSite(
       BasePrincipal::CreateContentPrincipal(
           siteURI, NodePrincipal()->OriginAttributesRef());
   if (!argumentPrincipal) {
-    this->ConsumeTransientUserGestureActivation();
+    ConsumeTransientUserGestureActivation();
     promise->MaybeRejectWithUndefined();
     return promise.forget();
   }
