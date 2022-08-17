@@ -1446,12 +1446,12 @@ def _run_android(
                     'Using profile from target "{target_profile}"',
                 )
 
+            args = ["--profile", shlex_quote(target_profile)]
+
         # FIXME: When android switches to using Fission by default,
         # MOZ_FORCE_DISABLE_FISSION will need to be configured correctly.
         if enable_fission:
             env.append("MOZ_FORCE_ENABLE_FISSION=1")
-
-            args = ["--profile", shlex_quote(target_profile)]
 
         extras = {}
         for i, e in enumerate(env):
