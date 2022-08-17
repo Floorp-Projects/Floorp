@@ -6,7 +6,7 @@
 
 #include "RegistrationAnnotator.h"
 
-#include "mozilla/JSONWriter.h"
+#include "mozilla/JSONStringWriteFuncs.h"
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/NotNull.h"
 #include "nsExceptionHandler.h"
@@ -15,22 +15,6 @@
 #include "nsXULAppAPI.h"
 
 #include <oleauto.h>
-
-namespace {
-
-class CStringWriter final : public mozilla::JSONWriteFunc {
- public:
-  void Write(const mozilla::Span<const char>& aStr) override {
-    mBuf.Append(aStr);
-  }
-
-  const nsCString& Get() const { return mBuf; }
-
- private:
-  nsCString mBuf;
-};
-
-}  // anonymous namespace
 
 namespace mozilla {
 namespace mscom {
@@ -338,7 +322,8 @@ void AnnotateInterfaceRegistration(REFIID aIid) {
   const JSONWriter::CollectionStyle style = JSONWriter::SingleLineStyle;
 #endif
 
-  JSONWriter json(MakeUnique<CStringWriter>());
+  JSONStringWriteFunc<nsCString> jsonString;
+  JSONWriter json(jsonString);
 
   json.Start(style);
 
@@ -358,8 +343,7 @@ void AnnotateInterfaceRegistration(REFIID aIid) {
   } else {
     annotationKey = CrashReporter::Annotation::InterfaceRegistrationInfoChild;
   }
-  CrashReporter::AnnotateCrashReport(
-      annotationKey, static_cast<CStringWriter&>(json.WriteFunc()).Get());
+  CrashReporter::AnnotateCrashReport(annotationKey, jsonString.StringCRef());
 }
 
 void AnnotateClassRegistration(REFCLSID aClsid) {
@@ -372,7 +356,8 @@ void AnnotateClassRegistration(REFCLSID aClsid) {
   nsAutoString strClsid;
   GUIDToString(aClsid, strClsid);
 
-  JSONWriter json(MakeUnique<CStringWriter>());
+  JSONStringWriteFunc<nsCString> jsonString;
+  JSONWriter json(jsonString);
 
   json.Start(style);
 
@@ -393,8 +378,7 @@ void AnnotateClassRegistration(REFCLSID aClsid) {
     annotationKey = CrashReporter::Annotation::ClassRegistrationInfoChild;
   }
 
-  CrashReporter::AnnotateCrashReport(
-      annotationKey, static_cast<CStringWriter&>(json.WriteFunc()).Get());
+  CrashReporter::AnnotateCrashReport(annotationKey, jsonString.StringCRef());
 }
 
 }  // namespace mscom
