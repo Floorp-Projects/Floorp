@@ -4090,14 +4090,22 @@ void ReportDeprecation(nsIGlobalObject* aGlobal, nsIURI* aURI,
                        const Nullable<uint32_t>& aColumnNumber) {
   MOZ_ASSERT(aURI);
 
-  // Anonymize the URL.
-  // Strip the URL of any possible username/password and make it ready to be
-  // presented in the UI.
-  nsCOMPtr<nsIURI> exposableURI = net::nsIOService::CreateExposableURI(aURI);
-  nsAutoCString spec;
-  nsresult rv = exposableURI->GetSpec(spec);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
+  // If the URI has the data scheme, report that instead of the spec,
+  // as the spec may be arbitrarily long and we would like to avoid
+  // copying it.
+  nsAutoCString specOrScheme;
+  nsresult rv;
+  if (aURI->SchemeIs("data")) {
+    specOrScheme.Assign("data:..."_ns);
+  } else {
+    // Anonymize the URL.
+    // Strip the URL of any possible username/password and make it ready to be
+    // presented in the UI.
+    nsCOMPtr<nsIURI> exposableURI = net::nsIOService::CreateExposableURI(aURI);
+    rv = exposableURI->GetSpec(specOrScheme);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
   }
 
   nsAutoString type;
@@ -4142,7 +4150,7 @@ void ReportDeprecation(nsIGlobalObject* aGlobal, nsIURI* aURI,
                                 aFileName, aLineNumber, aColumnNumber);
 
   ReportingUtils::Report(aGlobal, nsGkAtoms::deprecation, u"default"_ns,
-                         NS_ConvertUTF8toUTF16(spec), body);
+                         NS_ConvertUTF8toUTF16(specOrScheme), body);
 }
 
 // This runnable is used to write a deprecation message from a worker to the
