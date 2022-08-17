@@ -352,6 +352,11 @@ js::AutoCheckRecursionLimit::stackKindForCurrentPrincipal(JSContext* cx) const {
   return cx->stackKindForCurrentPrincipal();
 }
 
+JS_PUBLIC_API void js::AutoCheckRecursionLimit::assertMainThread(
+    JSContext* cx) const {
+  MOZ_ASSERT(cx->isMainThreadContext());
+}
+
 JS_PUBLIC_API JSFunction* js::DefineFunctionWithReserved(
     JSContext* cx, JSObject* objArg, const char* name, JSNative call,
     unsigned nargs, unsigned attrs) {
