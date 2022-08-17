@@ -121,6 +121,9 @@ class ProviderQuickActions extends UrlbarProvider {
       {
         results: results.map(key => ({ key })),
         dynamicType: DYNAMIC_TYPE_NAME,
+        helpUrl:
+          Services.urlFormatter.formatURLPref("app.support.baseURL") +
+          "quick-actions-firefox-search-bar",
       }
     );
     result.suggestedIndex = SUGGESTED_INDEX;
@@ -132,51 +135,66 @@ class ProviderQuickActions extends UrlbarProvider {
       attributes: {
         selectable: false,
       },
-      children: result.payload.results.map(({ key }, i) => {
-        let action = this.#actions.get(key);
-        let inActive = "isActive" in action && !action.isActive();
-        let row = {
-          name: `button-${i}`,
-          tag: "span",
+      children: [
+        {
+          name: "buttons",
+          tag: "div",
+          children: result.payload.results.map(({ key }, i) => {
+            let action = this.#actions.get(key);
+            let inActive = "isActive" in action && !action.isActive();
+            let row = {
+              name: `button-${i}`,
+              tag: "span",
+              attributes: {
+                "data-key": key,
+                class: "urlbarView-quickaction-row",
+                role: inActive ? "" : "button",
+              },
+              children: [
+                {
+                  name: `icon-${i}`,
+                  tag: "div",
+                  attributes: { class: "urlbarView-favicon" },
+                  children: [
+                    {
+                      name: `image-${i}`,
+                      tag: "img",
+                      attributes: {
+                        class: "urlbarView-favicon-img",
+                        src: action.icon || DEFAULT_ICON,
+                      },
+                    },
+                  ],
+                },
+                {
+                  name: `div-${i}`,
+                  tag: "div",
+                  children: [
+                    {
+                      name: `label-${i}`,
+                      tag: "span",
+                      attributes: { class: "urlbarView-label" },
+                    },
+                  ],
+                },
+              ],
+            };
+            if (inActive) {
+              row.attributes.disabled = "disabled";
+            }
+            return row;
+          }),
+        },
+        {
+          name: "onboarding",
+          tag: "a",
           attributes: {
-            "data-key": key,
-            class: "urlbarView-quickaction-row",
-            role: inActive ? "" : "button",
+            "data-key": "onboarding-button",
+            role: "button",
+            class: "urlbarView-button urlbarView-button-help",
           },
-          children: [
-            {
-              name: `icon-${i}`,
-              tag: "div",
-              attributes: { class: "urlbarView-favicon" },
-              children: [
-                {
-                  name: `image-${i}`,
-                  tag: "img",
-                  attributes: {
-                    class: "urlbarView-favicon-img",
-                    src: action.icon || DEFAULT_ICON,
-                  },
-                },
-              ],
-            },
-            {
-              name: `div-${i}`,
-              tag: "div",
-              children: [
-                {
-                  name: `label-${i}`,
-                  tag: "span",
-                  attributes: { class: "urlbarView-label" },
-                },
-              ],
-            },
-          ],
-        };
-        if (inActive) {
-          row.attributes.disabled = "disabled";
-        }
-        return row;
-      }),
+        },
+      ],
     };
   }
 
