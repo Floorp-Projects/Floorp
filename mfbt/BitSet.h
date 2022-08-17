@@ -75,7 +75,7 @@ class BitSet {
     PodCopy(mStorage.begin(), aStorage.Elements(), kNumWords);
   }
 
-  constexpr size_t Size() const { return N; }
+  static constexpr size_t Size() { return N; }
 
   constexpr bool Test(size_t aPos) const {
     MOZ_ASSERT(aPos < N);
