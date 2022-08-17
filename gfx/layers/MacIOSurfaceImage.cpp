@@ -30,6 +30,13 @@ TextureClient* MacIOSurfaceImage::GetTextureClient(
   return mTextureClient;
 }
 
+ColorDepth MacIOSurfaceImage::GetColorDepth() const {
+  if (!mSurface) {
+    return gfx::ColorDepth::COLOR_8;
+  }
+  return mSurface->GetColorDepth();
+}
+
 already_AddRefed<SourceSurface> MacIOSurfaceImage::GetAsSourceSurface() {
   return CreateSourceSurfaceFromMacIOSurface(mSurface);
 }

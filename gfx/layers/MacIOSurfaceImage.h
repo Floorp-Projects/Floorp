@@ -44,6 +44,8 @@ class MacIOSurfaceImage : public Image {
 
   gfx::IntRect GetPictureRect() const override { return mPictureRect; }
 
+  gfx::ColorDepth GetColorDepth() const override;
+
  private:
   RefPtr<MacIOSurface> mSurface;
   RefPtr<TextureClient> mTextureClient;
