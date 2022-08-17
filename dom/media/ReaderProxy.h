@@ -64,6 +64,9 @@ class ReaderProxy {
   MediaEventSource<void>& OnMediaNotSeekable() {
     return mReader->OnMediaNotSeekable();
   }
+  MediaEventProducer<VideoInfo, AudioInfo>& OnTrackInfoUpdatedEvent() {
+    return mReader->OnTrackInfoUpdatedEvent();
+  }
   size_t SizeOfAudioQueueInFrames() const {
     return mReader->SizeOfAudioQueueInFrames();
   }

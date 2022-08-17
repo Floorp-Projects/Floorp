@@ -498,6 +498,9 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
 
   void OnNextFrameStatus(MediaDecoderOwner::NextFrameStatus);
 
+  void OnTrackInfoUpdated(const VideoInfo& aVideoInfo,
+                          const AudioInfo& aAudioInfo);
+
   void OnSecondaryVideoContainerInstalled(
       const RefPtr<VideoFrameContainer>& aSecondaryVideoContainer);
 
@@ -601,6 +604,7 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   MediaEventListener mOnWaitingForKey;
   MediaEventListener mOnDecodeWarning;
   MediaEventListener mOnNextFrameStatus;
+  MediaEventListener mOnTrackInfoUpdated;
   MediaEventListener mOnSecondaryVideoContainerInstalled;
   MediaEventListener mOnStoreDecoderBenchmark;
 
