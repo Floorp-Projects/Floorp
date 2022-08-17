@@ -38,6 +38,7 @@ EXPORTS.mozilla += [
     "ShellHeaderOnlyUtils.h",
     "UrlmonHeaderOnlyUtils.h",
     "WindowsConsole.h",
+    "WindowsEventLog.h",
     "WinHeaderOnlyUtils.h",
 ]
 
