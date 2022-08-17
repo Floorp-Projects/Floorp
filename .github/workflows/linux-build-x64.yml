@@ -21,10 +21,10 @@ jobs:
         export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
         for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
         AB_CD=multi ./mach package
-        zip -r dist.zip obj-x86_64-pc-linux-gnu/dist/
+        zip -r dist.zip obj-x86_64-pc-linux-gnu/dist/*.tar.bz2
 
     - name: Publish
       uses: actions/upload-artifact@v1
       with:
-        name: floorp-m1-macOS-x64.zip
+        name: floorp-linux-x64
         path: dist.zip
