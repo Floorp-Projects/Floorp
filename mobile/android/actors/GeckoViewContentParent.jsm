@@ -12,6 +12,15 @@ const { GeckoViewUtils } = ChromeUtils.import(
 const { GeckoViewActorParent } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewActorParent.jsm"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+const lazy = {};
+
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "SessionHistory",
+  "resource://gre/modules/sessionstore/SessionHistory.jsm"
+);
 
 const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewContentParent");
 
@@ -21,6 +30,20 @@ class GeckoViewContentParent extends GeckoViewActorParent {
   }
 
   restoreState({ history, switchId, formdata, scrolldata }) {
+    if (Services.appinfo.sessionHistoryInParent) {
+      const { browsingContext } = this.browser;
+      lazy.SessionHistory.restoreFromParent(
+        browsingContext.sessionHistory,
+        history
+      );
+
+      // TODO Bug 1648158 this should include scroll, form history, etc
+      return SessionStoreUtils.initializeRestore(
+        browsingContext,
+        SessionStoreUtils.constructSessionStoreRestoreData()
+      );
+    }
+
     // Restoring is made of two parts. First we need to restore the history
     // of the tab and navigating to the current page, after the page
     // navigates to the current page we need to restore the state of the
@@ -35,7 +58,7 @@ class GeckoViewContentParent extends GeckoViewActorParent {
     });
 
     if (!formdata && !scrolldata) {
-      return;
+      return null;
     }
 
     const progressFilter = Cc[
@@ -63,5 +86,6 @@ class GeckoViewContentParent extends GeckoViewActorParent {
     const flags = Ci.nsIWebProgress.NOTIFY_LOCATION;
     progressFilter.addProgressListener(progressListener, flags);
     browser.addProgressListener(progressFilter, flags);
+    return null;
   }
 }
