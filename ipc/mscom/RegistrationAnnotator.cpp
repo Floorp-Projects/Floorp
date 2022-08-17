@@ -359,7 +359,7 @@ void AnnotateInterfaceRegistration(REFIID aIid) {
     annotationKey = CrashReporter::Annotation::InterfaceRegistrationInfoChild;
   }
   CrashReporter::AnnotateCrashReport(
-      annotationKey, static_cast<CStringWriter*>(json.WriteFunc())->Get());
+      annotationKey, static_cast<CStringWriter&>(json.WriteFunc()).Get());
 }
 
 void AnnotateClassRegistration(REFCLSID aClsid) {
@@ -394,7 +394,7 @@ void AnnotateClassRegistration(REFCLSID aClsid) {
   }
 
   CrashReporter::AnnotateCrashReport(
-      annotationKey, static_cast<CStringWriter*>(json.WriteFunc())->Get());
+      annotationKey, static_cast<CStringWriter&>(json.WriteFunc()).Get());
 }
 
 }  // namespace mscom
