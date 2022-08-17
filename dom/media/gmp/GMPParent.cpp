@@ -946,7 +946,7 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
     // The fake CDM just exposes a key system with id "fake".
     video.mAPITags.AppendElement(nsCString{"fake"});
 #if XP_WIN
-    mLibs = "dxva2.dll, ole32.dll"_ns;
+    mLibs = "dxva2.dll, ole32.dll, oleaut32.dll"_ns;
 #endif
   } else {
     GMP_PARENT_LOG_DEBUG("%s: Unrecognized key system: %s, failing.",
