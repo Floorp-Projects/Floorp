@@ -393,46 +393,29 @@ static void getRangeExtentsCB(AtkText* aText, gint aStartOffset,
 }
 
 static gint getCharacterCountCB(AtkText* aText) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (accWrap) {
-    HyperTextAccessible* textAcc = accWrap->AsHyperText();
-    return !textAcc || textAcc->IsDefunct()
-               ? 0
-               : static_cast<gint>(textAcc->CharacterCount());
+  if (Accessible* acc = GetInternalObj(ATK_OBJECT(aText))) {
+    if (HyperTextAccessibleBase* text = acc->AsHyperTextBase()) {
+      return static_cast<gint>(text->CharacterCount());
+    }
   }
-
-  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
-    return proxy->CharacterCount();
-  }
-
   return 0;
 }
 
 static gint getOffsetAtPointCB(AtkText* aText, gint aX, gint aY,
                                AtkCoordType aCoords) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (accWrap) {
-    HyperTextAccessible* text = accWrap->AsHyperText();
-    if (!text || !text->IsTextRole()) {
-      return -1;
-    }
-
-    return static_cast<gint>(text->OffsetAtPoint(
-        aX, aY,
-        (aCoords == ATK_XY_SCREEN
-             ? nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE
-             : nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE)));
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aText));
+  if (!acc) {
+    return -1;
   }
-
-  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
-    return static_cast<gint>(proxy->OffsetAtPoint(
-        aX, aY,
-        (aCoords == ATK_XY_SCREEN
-             ? nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE
-             : nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE)));
+  HyperTextAccessibleBase* text = acc->AsHyperTextBase();
+  if (!text || !acc->IsTextRole()) {
+    return -1;
   }
-
-  return -1;
+  return static_cast<gint>(text->OffsetAtPoint(
+      aX, aY,
+      (aCoords == ATK_XY_SCREEN
+           ? nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE
+           : nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE)));
 }
 
 static gint getTextSelectionCountCB(AtkText* aText) {
