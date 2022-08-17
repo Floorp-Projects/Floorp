@@ -60,6 +60,13 @@ class ProviderQuickActions extends UrlbarProvider {
     return UrlbarUtils.PROVIDER_TYPE.PROFILE;
   }
 
+  get helpUrl() {
+    return (
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+      "quick-actions-firefox-search-bar"
+    );
+  }
+
   getPriority(context) {
     if (!context.searchString) {
       return 1;

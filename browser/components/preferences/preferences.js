@@ -63,6 +63,8 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 ChromeUtils.defineESModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarProviderQuickActions:
+    "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
