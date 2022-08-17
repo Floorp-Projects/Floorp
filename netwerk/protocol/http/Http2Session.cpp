@@ -3067,7 +3067,13 @@ nsresult Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter* writer,
 
   *countWritten = 0;
 
-  if (mClosed) return NS_ERROR_FAILURE;
+  if (mClosed) {
+    LOG(("Http2Session::WriteSegments %p already closed", this));
+    // We return NS_ERROR_ABORT (a "soft" error) here, so when this error is
+    // propagated to another Http2Session, the Http2Session will not be closed
+    // due to this error code.
+    return NS_ERROR_ABORT;
+  }
 
   nsresult rv = ConfirmTLSProfile();
   if (NS_FAILED(rv)) return rv;
