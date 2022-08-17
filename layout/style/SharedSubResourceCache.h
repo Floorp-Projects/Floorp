@@ -458,8 +458,9 @@ size_t SharedSubResourceCache<Traits, Derived>::SizeOfIncludingThis(
 template <typename Traits, typename Derived>
 void SharedSubResourceCache<Traits, Derived>::LoadStarted(
     const Key& aKey, LoadingValue& aValue) {
-  MOZ_ASSERT(!aValue.mIsLoading, "Already loading? How?");
-  MOZ_ASSERT(KeyFromLoadingValue(aValue).KeyEquals(aKey));
+  MOZ_DIAGNOSTIC_ASSERT(!aValue.mIsLoading, "Already loading? How?");
+  MOZ_DIAGNOSTIC_ASSERT(KeyFromLoadingValue(aValue).KeyEquals(aKey));
+  MOZ_DIAGNOSTIC_ASSERT(!mLoading.Contains(aKey), "Load not coalesced?");
   aValue.mIsLoading = true;
   mLoading.InsertOrUpdate(aKey, &aValue);
 }
