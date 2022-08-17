@@ -54,8 +54,8 @@ var setupScript = runInParent(function setup() {
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var uname = $_(1, "uname");
-var pword = $_(1, "pword");
+const uname = getFormElementByName(1, "uname");
+const pword = getFormElementByName(1, "pword");
 
 // Restore the form to the default state.
 function restoreForm() {
