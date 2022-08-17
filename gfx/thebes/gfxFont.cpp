@@ -2559,6 +2559,186 @@ bool gfxFont::IsSpaceGlyphInvisible(DrawTarget* aRefDrawTarget,
   return mFontEntry->mSpaceGlyphIsInvisible;
 }
 
+bool gfxFont::MeasureGlyphs(const gfxTextRun* aTextRun, uint32_t aStart,
+                            uint32_t aEnd, BoundingBoxType aBoundingBoxType,
+                            DrawTarget* aRefDrawTarget, Spacing* aSpacing,
+                            gfxGlyphExtents* aExtents, bool aIsRTL,
+                            bool aNeedsGlyphExtents, RunMetrics& aMetrics,
+                            gfxFloat* aAdvanceMin, gfxFloat* aAdvanceMax) {
+  const gfxTextRun::CompressedGlyph* charGlyphs =
+      aTextRun->GetCharacterGlyphs();
+  double x = 0;
+  if (aSpacing) {
+    x += aSpacing[0].mBefore;
+  }
+  uint32_t spaceGlyph = GetSpaceGlyph();
+  bool allGlyphsInvisible = true;
+
+  AutoReadLock lock(aExtents->mLock);
+
+  for (uint32_t i = aStart; i < aEnd; ++i) {
+    const gfxTextRun::CompressedGlyph* glyphData = &charGlyphs[i];
+    if (glyphData->IsSimpleGlyph()) {
+      double advance = glyphData->GetSimpleAdvance();
+      uint32_t glyphIndex = glyphData->GetSimpleGlyph();
+      if (allGlyphsInvisible) {
+        if (glyphIndex != spaceGlyph) {
+          allGlyphsInvisible = false;
+        } else {
+          if (!mFontEntry->mSpaceGlyphIsInvisibleInitialized &&
+              GetAdjustedSize() >= 1.0) {
+            gfxRect glyphExtents;
+            mFontEntry->mSpaceGlyphIsInvisible =
+                aExtents->GetTightGlyphExtentsAppUnitsLocked(
+                    this, aRefDrawTarget, spaceGlyph, &glyphExtents) &&
+                glyphExtents.IsEmpty();
+            mFontEntry->mSpaceGlyphIsInvisibleInitialized = true;
+          }
+          if (!mFontEntry->mSpaceGlyphIsInvisible) {
+            allGlyphsInvisible = false;
+          }
+        }
+      }
+      // Only get the real glyph horizontal extent if we were asked
+      // for the tight bounding box or we're in quality mode
+      if (aBoundingBoxType != LOOSE_INK_EXTENTS || aNeedsGlyphExtents) {
+        uint16_t extentsWidth =
+            aExtents->GetContainedGlyphWidthAppUnitsLocked(glyphIndex);
+        if (extentsWidth != gfxGlyphExtents::INVALID_WIDTH &&
+            aBoundingBoxType == LOOSE_INK_EXTENTS) {
+          UnionRange(x, aAdvanceMin, aAdvanceMax);
+          UnionRange(x + extentsWidth, aAdvanceMin, aAdvanceMax);
+        } else {
+          gfxRect glyphRect;
+          if (!aExtents->GetTightGlyphExtentsAppUnitsLocked(
+                  this, aRefDrawTarget, glyphIndex, &glyphRect)) {
+            glyphRect = gfxRect(0, aMetrics.mBoundingBox.Y(), advance,
+                                aMetrics.mBoundingBox.Height());
+          }
+          if (aIsRTL) {
+            // In effect, swap left and right sidebearings of the glyph, for
+            // proper accumulation of potentially-overlapping glyph rects.
+            glyphRect.MoveToX(advance - glyphRect.XMost());
+          }
+          glyphRect.MoveByX(x);
+          aMetrics.mBoundingBox = aMetrics.mBoundingBox.Union(glyphRect);
+        }
+      }
+      x += advance;
+    } else {
+      allGlyphsInvisible = false;
+      uint32_t glyphCount = glyphData->GetGlyphCount();
+      if (glyphCount > 0) {
+        const gfxTextRun::DetailedGlyph* details =
+            aTextRun->GetDetailedGlyphs(i);
+        NS_ASSERTION(details != nullptr,
+                     "detailedGlyph record should not be missing!");
+        uint32_t j;
+        for (j = 0; j < glyphCount; ++j, ++details) {
+          uint32_t glyphIndex = details->mGlyphID;
+          double advance = details->mAdvance;
+          gfxRect glyphRect;
+          if (glyphData->IsMissing() ||
+              !aExtents->GetTightGlyphExtentsAppUnitsLocked(
+                  this, aRefDrawTarget, glyphIndex, &glyphRect)) {
+            // We might have failed to get glyph extents due to
+            // OOM or something
+            glyphRect = gfxRect(0, -aMetrics.mAscent, advance,
+                                aMetrics.mAscent + aMetrics.mDescent);
+          }
+          if (aIsRTL) {
+            // Swap left/right sidebearings of the glyph, because we're doing
+            // mirrored measurement.
+            glyphRect.MoveToX(advance - glyphRect.XMost());
+            // Move to current x position, mirroring any x-offset amount.
+            glyphRect.MoveByX(x - details->mOffset.x);
+          } else {
+            glyphRect.MoveByX(x + details->mOffset.x);
+          }
+          glyphRect.MoveByY(details->mOffset.y);
+          aMetrics.mBoundingBox = aMetrics.mBoundingBox.Union(glyphRect);
+          x += advance;
+        }
+      }
+    }
+    if (aSpacing) {
+      double space = aSpacing[i - aStart].mAfter;
+      if (i + 1 < aEnd) {
+        space += aSpacing[i + 1 - aStart].mBefore;
+      }
+      x += space;
+    }
+  }
+
+  aMetrics.mAdvanceWidth = x;
+  return allGlyphsInvisible;
+}
+
+bool gfxFont::MeasureGlyphs(const gfxTextRun* aTextRun, uint32_t aStart,
+                            uint32_t aEnd, BoundingBoxType aBoundingBoxType,
+                            DrawTarget* aRefDrawTarget, Spacing* aSpacing,
+                            bool aIsRTL, RunMetrics& aMetrics) {
+  const gfxTextRun::CompressedGlyph* charGlyphs =
+      aTextRun->GetCharacterGlyphs();
+  double x = 0;
+  if (aSpacing) {
+    x += aSpacing[0].mBefore;
+  }
+  uint32_t spaceGlyph = GetSpaceGlyph();
+  bool allGlyphsInvisible = true;
+
+  for (uint32_t i = aStart; i < aEnd; ++i) {
+    const gfxTextRun::CompressedGlyph* glyphData = &charGlyphs[i];
+    if (glyphData->IsSimpleGlyph()) {
+      double advance = glyphData->GetSimpleAdvance();
+      uint32_t glyphIndex = glyphData->GetSimpleGlyph();
+      if (allGlyphsInvisible &&
+          (glyphIndex != spaceGlyph ||
+           !IsSpaceGlyphInvisible(aRefDrawTarget, aTextRun))) {
+        allGlyphsInvisible = false;
+      }
+      x += advance;
+    } else {
+      allGlyphsInvisible = false;
+      uint32_t glyphCount = glyphData->GetGlyphCount();
+      if (glyphCount > 0) {
+        const gfxTextRun::DetailedGlyph* details =
+            aTextRun->GetDetailedGlyphs(i);
+        NS_ASSERTION(details != nullptr,
+                     "detailedGlyph record should not be missing!");
+        uint32_t j;
+        for (j = 0; j < glyphCount; ++j, ++details) {
+          double advance = details->mAdvance;
+          gfxRect glyphRect(0, -aMetrics.mAscent, advance,
+                            aMetrics.mAscent + aMetrics.mDescent);
+          if (aIsRTL) {
+            // Swap left/right sidebearings of the glyph, because we're doing
+            // mirrored measurement.
+            glyphRect.MoveToX(advance - glyphRect.XMost());
+            // Move to current x position, mirroring any x-offset amount.
+            glyphRect.MoveByX(x - details->mOffset.x);
+          } else {
+            glyphRect.MoveByX(x + details->mOffset.x);
+          }
+          glyphRect.MoveByY(details->mOffset.y);
+          aMetrics.mBoundingBox = aMetrics.mBoundingBox.Union(glyphRect);
+          x += advance;
+        }
+      }
+    }
+    if (aSpacing) {
+      double space = aSpacing[i - aStart].mAfter;
+      if (i + 1 < aEnd) {
+        space += aSpacing[i + 1 - aStart].mBefore;
+      }
+      x += space;
+    }
+  }
+
+  aMetrics.mAdvanceWidth = x;
+  return allGlyphsInvisible;
+}
+
 gfxFont::RunMetrics gfxFont::Measure(const gfxTextRun* aTextRun,
                                      uint32_t aStart, uint32_t aEnd,
                                      BoundingBoxType aBoundingBoxType,
@@ -2627,8 +2807,6 @@ gfxFont::RunMetrics gfxFont::Measure(const gfxTextRun* aTextRun,
   }
 
   gfxFloat advanceMin = 0, advanceMax = 0;
-  const gfxTextRun::CompressedGlyph* charGlyphs =
-      aTextRun->GetCharacterGlyphs();
   bool isRTL = aTextRun->IsRightToLeft();
   bool needsGlyphExtents = NeedsGlyphExtents(this, aTextRun);
   gfxGlyphExtents* extents =
@@ -2637,110 +2815,32 @@ gfxFont::RunMetrics gfxFont::Measure(const gfxTextRun* aTextRun,
        MOZ_UNLIKELY(GetStyle()->AdjustedSizeMustBeZero()))
           ? nullptr
           : GetOrCreateGlyphExtents(aTextRun->GetAppUnitsPerDevUnit());
-  double x = 0;
-  if (aSpacing) {
-    x += aSpacing[0].mBefore;
-  }
-  uint32_t spaceGlyph = GetSpaceGlyph();
-  bool allGlyphsInvisible = true;
-  uint32_t i;
-  for (i = aStart; i < aEnd; ++i) {
-    const gfxTextRun::CompressedGlyph* glyphData = &charGlyphs[i];
-    if (glyphData->IsSimpleGlyph()) {
-      double advance = glyphData->GetSimpleAdvance();
-      uint32_t glyphIndex = glyphData->GetSimpleGlyph();
-      if (glyphIndex != spaceGlyph ||
-          !IsSpaceGlyphInvisible(aRefDrawTarget, aTextRun)) {
-        allGlyphsInvisible = false;
-      }
-      // Only get the real glyph horizontal extent if we were asked
-      // for the tight bounding box or we're in quality mode
-      if ((aBoundingBoxType != LOOSE_INK_EXTENTS || needsGlyphExtents) &&
-          extents) {
-        uint16_t extentsWidth =
-            extents->GetContainedGlyphWidthAppUnits(glyphIndex);
-        if (extentsWidth != gfxGlyphExtents::INVALID_WIDTH &&
-            aBoundingBoxType == LOOSE_INK_EXTENTS) {
-          UnionRange(x, &advanceMin, &advanceMax);
-          UnionRange(x + extentsWidth, &advanceMin, &advanceMax);
-        } else {
-          gfxRect glyphRect;
-          if (!extents->GetTightGlyphExtentsAppUnits(this, aRefDrawTarget,
-                                                     glyphIndex, &glyphRect)) {
-            glyphRect = gfxRect(0, metrics.mBoundingBox.Y(), advance,
-                                metrics.mBoundingBox.Height());
-          }
-          if (isRTL) {
-            // In effect, swap left and right sidebearings of the glyph, for
-            // proper accumulation of potentially-overlapping glyph rects.
-            glyphRect.MoveToX(advance - glyphRect.XMost());
-          }
-          glyphRect.MoveByX(x);
-          metrics.mBoundingBox = metrics.mBoundingBox.Union(glyphRect);
-        }
-      }
-      x += advance;
-    } else {
-      allGlyphsInvisible = false;
-      uint32_t glyphCount = glyphData->GetGlyphCount();
-      if (glyphCount > 0) {
-        const gfxTextRun::DetailedGlyph* details =
-            aTextRun->GetDetailedGlyphs(i);
-        NS_ASSERTION(details != nullptr,
-                     "detailedGlyph record should not be missing!");
-        uint32_t j;
-        for (j = 0; j < glyphCount; ++j, ++details) {
-          uint32_t glyphIndex = details->mGlyphID;
-          double advance = details->mAdvance;
-          gfxRect glyphRect;
-          if (glyphData->IsMissing() || !extents ||
-              !extents->GetTightGlyphExtentsAppUnits(this, aRefDrawTarget,
-                                                     glyphIndex, &glyphRect)) {
-            // We might have failed to get glyph extents due to
-            // OOM or something
-            glyphRect = gfxRect(0, -metrics.mAscent, advance,
-                                metrics.mAscent + metrics.mDescent);
-          }
-          if (isRTL) {
-            // Swap left/right sidebearings of the glyph, because we're doing
-            // mirrored measurement.
-            glyphRect.MoveToX(advance - glyphRect.XMost());
-            // Move to current x position, mirroring any x-offset amount.
-            glyphRect.MoveByX(x - details->mOffset.x);
-          } else {
-            glyphRect.MoveByX(x + details->mOffset.x);
-          }
-          glyphRect.MoveByY(details->mOffset.y);
-          metrics.mBoundingBox = metrics.mBoundingBox.Union(glyphRect);
-          x += advance;
-        }
-      }
-    }
-    // Every other glyph type is ignored
-    if (aSpacing) {
-      double space = aSpacing[i - aStart].mAfter;
-      if (i + 1 < aEnd) {
-        space += aSpacing[i + 1 - aStart].mBefore;
-      }
-      x += space;
-    }
+
+  bool allGlyphsInvisible;
+  if (extents) {
+    allGlyphsInvisible = MeasureGlyphs(
+        aTextRun, aStart, aEnd, aBoundingBoxType, aRefDrawTarget, aSpacing,
+        extents, isRTL, needsGlyphExtents, metrics, &advanceMin, &advanceMax);
+  } else {
+    allGlyphsInvisible =
+        MeasureGlyphs(aTextRun, aStart, aEnd, aBoundingBoxType, aRefDrawTarget,
+                      aSpacing, isRTL, metrics);
   }
 
   if (allGlyphsInvisible) {
     metrics.mBoundingBox.SetEmpty();
-  } else {
-    if (aBoundingBoxType == LOOSE_INK_EXTENTS) {
-      UnionRange(x, &advanceMin, &advanceMax);
-      gfxRect fontBox(advanceMin, -metrics.mAscent, advanceMax - advanceMin,
-                      metrics.mAscent + metrics.mDescent);
-      metrics.mBoundingBox = metrics.mBoundingBox.Union(fontBox);
-    }
+  } else if (aBoundingBoxType == LOOSE_INK_EXTENTS) {
+    UnionRange(metrics.mAdvanceWidth, &advanceMin, &advanceMax);
+    gfxRect fontBox(advanceMin, -metrics.mAscent, advanceMax - advanceMin,
+                    metrics.mAscent + metrics.mDescent);
+    metrics.mBoundingBox = metrics.mBoundingBox.Union(fontBox);
   }
 
   if (isRTL) {
     // Reverse the effect of having swapped each glyph's sidebearings, to get
     // the correct sidebearings of the merged bounding box.
-    metrics.mBoundingBox.MoveToX(x - metrics.mBoundingBox.XMost());
+    metrics.mBoundingBox.MoveToX(metrics.mAdvanceWidth -
+                                 metrics.mBoundingBox.XMost());
   }
 
   // If the font may be rendered with a fake-italic effect, we need to allow
@@ -2773,8 +2873,6 @@ gfxFont::RunMetrics gfxFont::Measure(const gfxTextRun* aTextRun,
     metrics.mDescent += baselineOffset;
     metrics.mBoundingBox.MoveByY(baselineOffset);
   }
-
-  metrics.mAdvanceWidth = x;
 
   return metrics;
 }
@@ -3586,18 +3684,19 @@ already_AddRefed<gfxFont> gfxFont::GetSubSuperscriptFont(
 }
 
 gfxGlyphExtents* gfxFont::GetOrCreateGlyphExtents(int32_t aAppUnitsPerDevUnit) {
+  uint32_t readCount;
   {
     AutoReadLock lock(mLock);
-    uint32_t i, count = mGlyphExtentsArray.Length();
-    for (i = 0; i < count; ++i) {
+    readCount = mGlyphExtentsArray.Length();
+    for (uint32_t i = 0; i < readCount; ++i) {
       if (mGlyphExtentsArray[i]->GetAppUnitsPerDevUnit() == aAppUnitsPerDevUnit)
         return mGlyphExtentsArray[i].get();
     }
   }
   AutoWriteLock lock(mLock);
   // Re-check in case of race.
-  uint32_t i, count = mGlyphExtentsArray.Length();
-  for (i = 0; i < count; ++i) {
+  uint32_t count = mGlyphExtentsArray.Length();
+  for (uint32_t i = readCount; i < count; ++i) {
     if (mGlyphExtentsArray[i]->GetAppUnitsPerDevUnit() == aAppUnitsPerDevUnit)
       return mGlyphExtentsArray[i].get();
   }
