@@ -2466,13 +2466,24 @@ bool gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget, gfxContext* aContext,
                                layout::TextDrawTarget* aTextDrawer,
                                ScaledFont* aScaledFont,
                                DrawOptions aDrawOptions, const Point& aPoint,
-                               uint32_t aGlyphId) const {
+                               uint32_t aGlyphId) {
   auto currentColor = [=]() {
     DeviceColor ctxColor;
     return aContext->GetDeviceColor(ctxColor)
                ? sRGBColor::FromABGR(ctxColor.ToABGR())
                : sRGBColor::OpaqueBlack();
   };
+
+  if (const auto* paintGraph =
+          COLRFonts::GetGlyphPaintGraph(GetFontEntry()->GetCOLR(), aGlyphId)) {
+    const auto* hbShaper = GetHarfBuzzShaper();
+    if (hbShaper && hbShaper->IsInitialized()) {
+      return COLRFonts::PaintGlyphGraph(
+          GetFontEntry()->GetCOLR(), hbShaper->GetHBFont(), paintGraph,
+          aDrawTarget, aTextDrawer, aScaledFont, aDrawOptions, currentColor(),
+          aPoint, aGlyphId, mFUnitsConvFactor);
+    }
+  }
 
   if (const auto* layers =
           COLRFonts::GetGlyphLayers(GetFontEntry()->GetCOLR(), aGlyphId)) {
@@ -2509,7 +2520,8 @@ bool gfxFont::HasColorGlyphFor(uint32_t aCh, uint32_t aNextCh) {
   }
   // Check if there is a COLR/CPAL or SVG glyph for this ID.
   if (fe->TryGetColorGlyphs() &&
-      COLRFonts::GetGlyphLayers(fe->GetCOLR(), gid)) {
+      (COLRFonts::GetGlyphPaintGraph(fe->GetCOLR(), gid) ||
+       COLRFonts::GetGlyphLayers(fe->GetCOLR(), gid))) {
     return true;
   }
   if (fe->TryGetSVGData(this) && fe->HasSVGGlyph(gid)) {
@@ -3611,6 +3623,24 @@ void gfxFont::SetupGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphID,
         aGlyphID, gfxRect(svgBounds.X() * d2a, svgBounds.Y() * d2a,
                           svgBounds.Width() * d2a, svgBounds.Height() * d2a));
     return;
+  }
+
+  if (mFontEntry->TryGetColorGlyphs() && mFontEntry->mCOLR &&
+      COLRFonts::GetColrTableVersion(mFontEntry->mCOLR) == 1) {
+    auto* shaper = GetHarfBuzzShaper();
+    if (shaper && shaper->IsInitialized()) {
+      RefPtr scaledFont = GetScaledFont(aDrawTarget);
+      Rect r = COLRFonts::GetColorGlyphBounds(
+          mFontEntry->mCOLR, shaper->GetHBFont(), aGlyphID, aDrawTarget,
+          scaledFont, mFUnitsConvFactor);
+      if (!r.IsEmpty()) {
+        gfxFloat d2a = aExtents->GetAppUnitsPerDevUnit();
+        aExtents->SetTightGlyphExtents(
+            aGlyphID, gfxRect(r.X() * d2a, r.Y() * d2a, r.Width() * d2a,
+                              r.Height() * d2a));
+        return;
+      }
+    }
   }
 
   gfxRect bounds;
