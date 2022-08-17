@@ -2794,7 +2794,6 @@ var gCSSProperties = {
       "-moz-max(5px)",
       "-moz-min(5px,2em)",
       "-moz-max(5px,2em)",
-      "calc(50px/(2 - 2))",
       "calc(5 + 5)",
       "calc(5 * 5)",
       "calc(5em * 5em)",
@@ -8491,7 +8490,6 @@ var gCSSProperties = {
       "-moz-max(5px)",
       "-moz-min(5px,2em)",
       "-moz-max(5px,2em)",
-      "calc(50px/(2 - 2))",
       /* If we ever support division by values, which is
        * complicated for the reasons described in
        * http://lists.w3.org/Archives/Public/www-style/2010Jan/0007.html
@@ -9803,7 +9801,6 @@ var gCSSProperties = {
       "-moz-max(5px)",
       "-moz-min(5px,2em)",
       "-moz-max(5px,2em)",
-      "calc(50px/(2 - 2))",
       // If we ever support division by values, which is
       // complicated for the reasons described in
       // http://lists.w3.org/Archives/Public/www-style/2010Jan/0007.html
