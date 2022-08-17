@@ -74,7 +74,23 @@ data class Wallpaper(
          * @param theme One of dark/light.
          * @param name The name of the wallpaper.
          */
-        fun getBaseLocalPath(orientation: String, theme: String, name: String): String =
+        fun legacyGetLocalPath(orientation: String, theme: String, name: String): String =
             "wallpapers/$orientation/$theme/$name.png"
+
+        /**
+         * Defines the standard path at which a wallpaper resource is kept on disk.
+         *
+         * @param type The type of image that should be retrieved.
+         * @param name The name of the wallpaper.
+         */
+        fun getLocalPath(type: ImageType, name: String) = "wallpapers/$name/${type.lowercase()}.png"
+    }
+
+    enum class ImageType {
+        Portrait,
+        Landscape,
+        Thumbnail;
+
+        fun lowercase(): String = this.name.lowercase()
     }
 }

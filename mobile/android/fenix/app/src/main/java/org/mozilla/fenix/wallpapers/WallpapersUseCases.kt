@@ -46,13 +46,13 @@ class WallpapersUseCases(
     val initialize: InitializeWallpapersUseCase by lazy {
         // Required to even access context.filesDir property and to retrieve current locale
         val (fileManager, currentLocale) = strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
-            val fileManager = WallpaperFileManager(context.filesDir)
+            val fileManager = LegacyWallpaperFileManager(context.filesDir)
             val currentLocale = LocaleManager.getCurrentLocale(context)?.toLanguageTag()
                 ?: LocaleManager.getSystemDefault().toLanguageTag()
             fileManager to currentLocale
         }
-        val downloader = WallpaperDownloader(context, client)
-        DefaultInitializeWallpaperUseCase(
+        val downloader = LegacyWallpaperDownloader(context, client)
+        LegacyInitializeWallpaperUseCase(
             store = store,
             downloader = downloader,
             fileManager = fileManager,
@@ -60,7 +60,7 @@ class WallpapersUseCases(
             currentLocale = currentLocale
         )
     }
-    val loadBitmap: LoadBitmapUseCase by lazy { DefaultLoadBitmapUseCase(context) }
+    val loadBitmap: LoadBitmapUseCase by lazy { LegacyLoadBitmapUseCase(context) }
     val selectWallpaper: SelectWallpaperUseCase by lazy { DefaultSelectWallpaperUseCase(context.settings(), store) }
 
     /**
@@ -75,10 +75,10 @@ class WallpapersUseCases(
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal class DefaultInitializeWallpaperUseCase(
+    internal class LegacyInitializeWallpaperUseCase(
         private val store: AppStore,
-        private val downloader: WallpaperDownloader,
-        private val fileManager: WallpaperFileManager,
+        private val downloader: LegacyWallpaperDownloader,
+        private val fileManager: LegacyWallpaperFileManager,
         private val settings: Settings,
         private val currentLocale: String,
         private val possibleWallpapers: List<Wallpaper> = allWallpapers,
@@ -192,7 +192,7 @@ class WallpapersUseCases(
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal class DefaultLoadBitmapUseCase(private val context: Context) : LoadBitmapUseCase {
+    internal class LegacyLoadBitmapUseCase(private val context: Context) : LoadBitmapUseCase {
         /**
          * Load the bitmap for a [wallpaper], if available.
          *
@@ -241,7 +241,7 @@ class WallpapersUseCases(
         private fun Wallpaper.getLocalPathFromContext(context: Context): String {
             val orientation = if (context.isLandscape()) "landscape" else "portrait"
             val theme = if (context.isDark()) "dark" else "light"
-            return Wallpaper.getBaseLocalPath(orientation, theme, name)
+            return Wallpaper.legacyGetLocalPath(orientation, theme, name)
         }
 
         private fun Context.isLandscape(): Boolean {

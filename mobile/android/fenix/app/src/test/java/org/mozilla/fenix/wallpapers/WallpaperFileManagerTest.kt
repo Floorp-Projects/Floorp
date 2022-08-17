@@ -1,12 +1,8 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 package org.mozilla.fenix.wallpapers
 
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
+import org.junit.Assert
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -18,10 +14,7 @@ class WallpaperFileManagerTest {
     @Rule
     @JvmField
     val tempFolder = TemporaryFolder()
-    private lateinit var portraitLightFolder: File
-    private lateinit var portraitDarkFolder: File
-    private lateinit var landscapeLightFolder: File
-    private lateinit var landscapeDarkFolder: File
+    private lateinit var wallpapersFolder: File
 
     private val dispatcher = UnconfinedTestDispatcher()
 
@@ -29,10 +22,7 @@ class WallpaperFileManagerTest {
 
     @Before
     fun setup() {
-        portraitLightFolder = tempFolder.newFolder("wallpapers", "portrait", "light")
-        portraitDarkFolder = tempFolder.newFolder("wallpapers", "portrait", "dark")
-        landscapeLightFolder = tempFolder.newFolder("wallpapers", "landscape", "light")
-        landscapeDarkFolder = tempFolder.newFolder("wallpapers", "landscape", "dark")
+        wallpapersFolder = File(tempFolder.root, "wallpapers")
         fileManager = WallpaperFileManager(
             rootDirectory = tempFolder.root,
             coroutineDispatcher = dispatcher,
@@ -40,25 +30,65 @@ class WallpaperFileManagerTest {
     }
 
     @Test
-    fun `GIVEN files exist in all directories WHEN expired wallpaper looked up THEN expired wallpaper returned`() = runTest {
+    fun `GIVEN wallpaper directory exists WHEN looked up THEN wallpaper created with correct name`() = runTest {
         val wallpaperName = "name"
         createAllFiles(wallpaperName)
 
         val result = fileManager.lookupExpiredWallpaper(wallpaperName)
 
         val expected = generateWallpaper(name = wallpaperName)
-        assertEquals(expected, result)
+        Assert.assertEquals(expected, result)
     }
 
     @Test
-    fun `GIVEN any missing file in directories WHEN expired wallpaper looked up THEN null returned`() = runTest {
+    fun `GIVEN portrait file missing in directories WHEN expired wallpaper looked up THEN null returned`() = runTest {
         val wallpaperName = "name"
-        File(landscapeLightFolder, "$wallpaperName.png").createNewFile()
-        File(landscapeDarkFolder, "$wallpaperName.png").createNewFile()
+        File(wallpapersFolder, "$wallpaperName/landscape.png").apply {
+            mkdirs()
+            createNewFile()
+        }
+        File(wallpapersFolder, "$wallpaperName/thumbnail.png").apply {
+            mkdirs()
+            createNewFile()
+        }
 
         val result = fileManager.lookupExpiredWallpaper(wallpaperName)
 
-        assertEquals(null, result)
+        Assert.assertEquals(null, result)
+    }
+
+    @Test
+    fun `GIVEN landscape file missing in directories WHEN expired wallpaper looked up THEN null returned`() = runTest {
+        val wallpaperName = "name"
+        File(wallpapersFolder, "$wallpaperName/portrait.png").apply {
+            mkdirs()
+            createNewFile()
+        }
+        File(wallpapersFolder, "$wallpaperName/thumbnail.png").apply {
+            mkdirs()
+            createNewFile()
+        }
+
+        val result = fileManager.lookupExpiredWallpaper(wallpaperName)
+
+        Assert.assertEquals(null, result)
+    }
+
+    @Test
+    fun `GIVEN thumbnail file missing in directories WHEN expired wallpaper looked up THEN null returned`() = runTest {
+        val wallpaperName = "name"
+        File(wallpapersFolder, "$wallpaperName/portrait.png").apply {
+            mkdirs()
+            createNewFile()
+        }
+        File(wallpapersFolder, "$wallpaperName/landscape.png").apply {
+            mkdirs()
+            createNewFile()
+        }
+
+        val result = fileManager.lookupExpiredWallpaper(wallpaperName)
+
+        Assert.assertEquals(null, result)
     }
 
     @Test
@@ -81,16 +111,18 @@ class WallpaperFileManagerTest {
 
     private fun createAllFiles(name: String) {
         for (file in getAllFiles(name)) {
+            file.mkdirs()
             file.createNewFile()
         }
     }
 
     private fun getAllFiles(name: String): List<File> {
+        val folder = File(wallpapersFolder, name)
         return listOf(
-            File(portraitLightFolder, "$name.png"),
-            File(portraitDarkFolder, "$name.png"),
-            File(landscapeLightFolder, "$name.png"),
-            File(landscapeDarkFolder, "$name.png"),
+            folder,
+            File(folder, "portrait.png"),
+            File(folder, "landscape.png"),
+            File(folder, "thumbnail.png"),
         )
     }
 
@@ -98,14 +130,6 @@ class WallpaperFileManagerTest {
         name = name,
         textColor = null,
         cardColor = null,
-        collection = Wallpaper.Collection(
-            name = Wallpaper.defaultName,
-            heading = null,
-            description = null,
-            availableLocales = null,
-            startDate = null,
-            endDate = null,
-            learnMoreUrl = null
-        ),
+        collection = Wallpaper.DefaultCollection
     )
 }

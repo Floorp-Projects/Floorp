@@ -37,8 +37,8 @@ class WallpapersUseCasesTest {
 
     private val appStore = AppStore()
     private val mockSettings = mockk<Settings>()
-    private val mockDownloader = mockk<WallpaperDownloader>(relaxed = true)
-    private val mockFileManager = mockk<WallpaperFileManager> {
+    private val mockDownloader = mockk<LegacyWallpaperDownloader>(relaxed = true)
+    private val mockFileManager = mockk<LegacyWallpaperFileManager> {
         every { clean(any(), any()) } just runs
     }
 
@@ -50,7 +50,7 @@ class WallpapersUseCasesTest {
         every { mockSettings.currentWallpaper } returns ""
         coEvery { mockFileManager.lookupExpiredWallpaper(any()) } returns null
 
-        WallpapersUseCases.DefaultInitializeWallpaperUseCase(
+        WallpapersUseCases.LegacyInitializeWallpaperUseCase(
             appStore,
             mockDownloader,
             mockFileManager,
@@ -71,7 +71,7 @@ class WallpapersUseCasesTest {
         every { mockSettings.currentWallpaper } returns ""
         coEvery { mockFileManager.lookupExpiredWallpaper(any()) } returns null
 
-        WallpapersUseCases.DefaultInitializeWallpaperUseCase(
+        WallpapersUseCases.LegacyInitializeWallpaperUseCase(
             appStore,
             mockDownloader,
             mockFileManager,
@@ -96,7 +96,7 @@ class WallpapersUseCasesTest {
         every { mockSettings.currentWallpaper } returns ""
         coEvery { mockFileManager.lookupExpiredWallpaper(any()) } returns null
 
-        WallpapersUseCases.DefaultInitializeWallpaperUseCase(
+        WallpapersUseCases.LegacyInitializeWallpaperUseCase(
             appStore,
             mockDownloader,
             mockFileManager,
@@ -120,7 +120,7 @@ class WallpapersUseCasesTest {
         every { mockSettings.currentWallpaper } returns expiredWallpaper.name
         coEvery { mockFileManager.lookupExpiredWallpaper(any()) } returns null
 
-        WallpapersUseCases.DefaultInitializeWallpaperUseCase(
+        WallpapersUseCases.LegacyInitializeWallpaperUseCase(
             appStore,
             mockDownloader,
             mockFileManager,
@@ -143,7 +143,7 @@ class WallpapersUseCasesTest {
         every { mockSettings.currentWallpaper } returns ""
         coEvery { mockFileManager.lookupExpiredWallpaper(any()) } returns null
 
-        WallpapersUseCases.DefaultInitializeWallpaperUseCase(
+        WallpapersUseCases.LegacyInitializeWallpaperUseCase(
             appStore,
             mockDownloader,
             mockFileManager,
@@ -164,7 +164,7 @@ class WallpapersUseCasesTest {
         every { mockSettings.currentWallpaper } returns ""
         coEvery { mockFileManager.lookupExpiredWallpaper(any()) } returns null
 
-        WallpapersUseCases.DefaultInitializeWallpaperUseCase(
+        WallpapersUseCases.LegacyInitializeWallpaperUseCase(
             appStore,
             mockDownloader,
             mockFileManager,
@@ -186,7 +186,7 @@ class WallpapersUseCasesTest {
         every { mockSettings.currentWallpaper } returns ""
         coEvery { mockFileManager.lookupExpiredWallpaper(any()) } returns null
 
-        WallpapersUseCases.DefaultInitializeWallpaperUseCase(
+        WallpapersUseCases.LegacyInitializeWallpaperUseCase(
             appStore,
             mockDownloader,
             mockFileManager,
@@ -209,7 +209,7 @@ class WallpapersUseCasesTest {
         every { mockSettings.currentWallpaper } returns selectedWallpaper.name
         coEvery { mockFileManager.lookupExpiredWallpaper(any()) } returns null
 
-        WallpapersUseCases.DefaultInitializeWallpaperUseCase(
+        WallpapersUseCases.LegacyInitializeWallpaperUseCase(
             appStore,
             mockDownloader,
             mockFileManager,

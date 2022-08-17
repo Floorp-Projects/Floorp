@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.wallpapers
 
-import android.content.Context
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.fetch.Client
@@ -12,34 +12,33 @@ import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.isSuccess
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.wallpapers.Wallpaper.Companion.getLocalPath
 import java.io.File
 
 /**
  * Can download wallpapers from a remote host.
  *
- * @param context Required for writing files to local storage.
+ * @param filesDir The top level app-local storage directory.
  * @param client Required for fetching files from network.
  */
 class WallpaperDownloader(
-    private val context: Context,
+    private val filesDir: File,
     private val client: Client,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
-    private val logger = Logger("WallpaperDownloader")
     private val remoteHost = BuildConfig.WALLPAPER_URL
 
     /**
-     * Downloads a wallpaper from the network. Will try to fetch 4 versions of each wallpaper:
-     * portrait/light - portrait/dark - landscape/light - landscape/dark. These are expected to be
-     * found at a remote path in the form:
-     * <WALLPAPER_URL>/<resolution>/<orientation>/<app theme>/<wallpaper theme>/<wallpaper name>.png
+     * Downloads a wallpaper from the network. Will try to fetch 2 versions of each wallpaper:
+     * portrait and landscape. These are expected to be found at a remote path in the form:
+     * <WALLPAPER_URL>/<collection name>/<wallpaper name>/<orientation>.png
+     * and will be stored in the local path:
+     * wallpapers/<wallpaper name>/<orientation>.png
      */
-    suspend fun downloadWallpaper(wallpaper: Wallpaper) = withContext(Dispatchers.IO) {
-        if (remoteHost.isNullOrEmpty()) {
-            return@withContext
-        }
-
-        for (metadata in wallpaper.toMetadata(context)) {
-            val localFile = File(context.filesDir.absolutePath, metadata.localPath)
+    suspend fun downloadWallpaper(wallpaper: Wallpaper) = withContext(dispatcher) {
+        for (metadata in wallpaper.toMetadata()) {
+            val localFile = File(filesDir.absolutePath, metadata.localPath)
+            // Don't overwrite an asset if it exists
             if (localFile.exists()) continue
             val request = Request(
                 url = "$remoteHost/${metadata.remotePath}",
@@ -48,7 +47,6 @@ class WallpaperDownloader(
             Result.runCatching {
                 val response = client.fetch(request)
                 if (!response.isSuccess) {
-                    logger.error("Download response failure code: ${response.status}")
                     return@withContext
                 }
                 File(localFile.path.substringBeforeLast("/")).mkdirs()
@@ -56,39 +54,22 @@ class WallpaperDownloader(
                     input.copyTo(localFile.outputStream())
                 }
             }.onFailure {
+                // This should clean up any partial downloads.
                 Result.runCatching {
                     if (localFile.exists()) {
                         localFile.delete()
                     }
-                }.onFailure { e ->
-                    logger.error("Failed to delete stale wallpaper bitmaps while downloading", e)
                 }
-
-                logger.error(it.message ?: "Download failed: no throwable message included.", it)
             }
         }
     }
 
     private data class WallpaperMetadata(val remotePath: String, val localPath: String)
 
-    private fun Wallpaper.toMetadata(context: Context): List<WallpaperMetadata> =
-        listOf("landscape", "portrait").flatMap { orientation ->
-            listOf("light", "dark").map { theme ->
-                val localPath = "wallpapers/$orientation/$theme/$name.png"
-                val remotePath = "${context.resolutionSegment()}/" +
-                    "$orientation/" +
-                    "$theme/" +
-                    "${collection.name}/" +
-                    "$name.png"
+    private fun Wallpaper.toMetadata(): List<WallpaperMetadata> =
+        listOf(Wallpaper.ImageType.Portrait, Wallpaper.ImageType.Landscape).map { orientation ->
+                val localPath = getLocalPath(orientation, this.name)
+                val remotePath = "${collection.name}/${this.name}/${orientation.lowercase()}.png"
                 WallpaperMetadata(remotePath, localPath)
             }
-        }
-
-    @Suppress("MagicNumber")
-    private fun Context.resolutionSegment(): String = when (resources.displayMetrics.densityDpi) {
-        // targeting hdpi and greater density resolutions https://developer.android.com/training/multiscreen/screendensities
-        in 0..240 -> "low"
-        in 240..320 -> "medium"
-        else -> "high"
-    }
 }

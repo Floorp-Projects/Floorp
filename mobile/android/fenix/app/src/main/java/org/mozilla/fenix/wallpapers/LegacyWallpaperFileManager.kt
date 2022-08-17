@@ -9,19 +9,20 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.mozilla.fenix.wallpapers.Wallpaper.Companion.getLocalPath
 import java.io.File
 
-class WallpaperFileManager(
+class LegacyWallpaperFileManager(
     private val rootDirectory: File,
     coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val scope = CoroutineScope(coroutineDispatcher)
-    private val wallpapersDirectory = File(rootDirectory, "wallpapers")
+    private val portraitDirectory = File(rootDirectory, "wallpapers/portrait")
+    private val landscapeDirectory = File(rootDirectory, "wallpapers/landscape")
 
     /**
      * Lookup all the files for a wallpaper name. This lookup will fail if there are not
-     * files for each of a portrait and landscape orientation as well as a thumbnail.
+     * files for each of the following orientation and theme combinations:
+     * light/portrait - light/landscape - dark/portrait - dark/landscape
      */
     suspend fun lookupExpiredWallpaper(name: String): Wallpaper? = withContext(Dispatchers.IO) {
         if (getAllLocalWallpaperPaths(name).all { File(rootDirectory, it).exists() }) {
@@ -35,8 +36,10 @@ class WallpaperFileManager(
     }
 
     private fun getAllLocalWallpaperPaths(name: String): List<String> =
-        Wallpaper.ImageType.values().map { orientation ->
-            getLocalPath(orientation, name)
+        listOf("landscape", "portrait").flatMap { orientation ->
+            listOf("light", "dark").map { theme ->
+                Wallpaper.legacyGetLocalPath(orientation, theme, name)
+            }
         }
 
     /**
@@ -45,11 +48,15 @@ class WallpaperFileManager(
     fun clean(currentWallpaper: Wallpaper, availableWallpapers: List<Wallpaper>) {
         scope.launch {
             val wallpapersToKeep = (listOf(currentWallpaper) + availableWallpapers).map { it.name }
-            for (file in wallpapersDirectory.listFiles()?.toList() ?: listOf()) {
-                if (file.isDirectory && !wallpapersToKeep.contains(file.name)) {
-                    file.deleteRecursively()
-                }
-            }
+            cleanChildren(portraitDirectory, wallpapersToKeep)
+            cleanChildren(landscapeDirectory, wallpapersToKeep)
+        }
+    }
+
+    private fun cleanChildren(dir: File, wallpapersToKeep: List<String>) {
+        for (file in dir.walkTopDown()) {
+            if (file.isDirectory || file.nameWithoutExtension in wallpapersToKeep) continue
+            file.delete()
         }
     }
 }
