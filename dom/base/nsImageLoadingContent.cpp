@@ -339,6 +339,11 @@ void nsImageLoadingContent::SetLoadingEnabled(bool aLoadingEnabled) {
   }
 }
 
+nsresult nsImageLoadingContent::GetSyncDecodingHint(bool* aHint) {
+  *aHint = mSyncDecodingHint;
+  return NS_OK;
+}
+
 already_AddRefed<Promise> nsImageLoadingContent::QueueDecodeAsync(
     ErrorResult& aRv) {
   Document* doc = GetOurOwnerDoc();
@@ -520,7 +525,8 @@ void nsImageLoadingContent::SetSyncDecodingHint(bool aHint) {
 
 void nsImageLoadingContent::MaybeForceSyncDecoding(
     bool aPrepareNextRequest, nsIFrame* aFrame /* = nullptr */) {
-  nsIFrame* frame = GetOurPrimaryImageFrame();
+  // GetOurPrimaryImageFrame() might not return the frame during frame init.
+  nsIFrame* frame = aFrame ? aFrame : GetOurPrimaryImageFrame();
   if (!frame) {
     return;
   }

@@ -128,6 +128,11 @@ interface nsIImageLoadingContent : imgINotificationObserver
   [noscript, infallible] readonly attribute nsIURI currentURI;
 
   /**
+   * Gets the sync-decoding hint set by the decoding attribute.
+   */
+  [noscript, infallible] readonly attribute boolean syncDecodingHint;
+
+  /**
    * loadImageWithChannel allows data from an existing channel to be
    * used as the image data for this content node.
    *
