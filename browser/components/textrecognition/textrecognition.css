@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 .textRecognitionText {
   overflow-y: auto;
   max-height: 300px;
@@ -48,23 +47,35 @@
   margin-inline-end: 5.5px;
 }
 
-.textRecognitionThrobber::before {
-  content: "";
-  position: absolute;
-  background-image: url("chrome://browser/skin/tabbrowser/loading.svg");
-  background-position: left center;
-  background-repeat: no-repeat;
-  width: 480px;
-  height: 100%;
-  animation: throbber-animation-ltr 1.05s steps(30) infinite;
-  -moz-context-properties: fill;
-  fill: currentColor;
-  opacity: 0.7;
+@media (prefers-reduced-motion: no-preference) {
+  .textRecognitionThrobber::before {
+    content: "";
+    position: absolute;
+    background-image: url("chrome://browser/skin/tabbrowser/loading.svg");
+    background-position: left center;
+    background-repeat: no-repeat;
+    width: 480px;
+    height: 100%;
+    animation: throbber-animation-ltr 1.05s steps(30) infinite;
+    -moz-context-properties: fill;
+    fill: currentColor;
+    opacity: 0.7;
+  }
+
+  .textRecognitionThrobber:dir(rtl)::before {
+    background-position-x: right;
+    animation: throbber-animation-rtl 1.05s steps(30) infinite;
+  }
 }
 
-.textRecognitionThrobber:dir(rtl)::before {
-  background-position-x: right;
-  animation: throbber-animation-rtl 1.05s steps(30) infinite;
+@media (prefers-reduced-motion: reduce) {
+  .textRecognitionThrobber {
+    background-image: url("chrome://browser/skin/tabbrowser/hourglass.svg");
+    background-position: center;
+    background-repeat: no-repeat;
+    -moz-context-properties: fill;
+    fill: currentColor;
+  }
 }
 
 .textRecognitionSuccessIcon {
@@ -77,7 +88,12 @@
   width: 12px;
   height: 12px;
   margin-inline-end: 6px;
-  animation: success-animation 0.3s cubic-bezier(.3,2,.48,.94);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .textRecognitionSuccessIcon {
+    animation: success-animation 0.3s cubic-bezier(.3,2,.48,.94);
+  }
 }
 
 .textRecognitionNoResultIcon {
@@ -94,6 +110,10 @@
     background-color: currentColor;
     border-color: currentColor;
     fill: var(--in-content-page-background);
+  }
+
+  .textRecognitionNoResultIcon {
+    fill: currentColor;
   }
 }
 
