@@ -113,18 +113,6 @@ add_task(async function() {
             inRange(r.x1, 11, 13), // very close to the left of the screen
         },
         {
-          name: "Initial favicon appearing after first paint",
-          condition: r => {
-            let faviconRect = win.gBrowser.tabs[0].iconImage.getBoundingClientRect();
-            return (
-              r.w == faviconRect.width &&
-              r.h == faviconRect.height &&
-              r.x1 == faviconRect.x &&
-              r.y1 == faviconRect.y
-            );
-          },
-        },
-        {
           // Note that the length and x values here are a bit weird because on
           // some fonts, we appear to detect the two words separately.
           name:

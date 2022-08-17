@@ -516,6 +516,7 @@ void nsImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     // We have a PresContext now, so we need to notify the image content node
     // that it can register images.
     imageLoader->FrameCreated(this);
+    AssertSyncDecodingHintIsInSync();
     if (nsIDocShell* docShell = PresContext()->GetDocShell()) {
       RefPtr<BrowsingContext> bc = docShell->GetBrowsingContext();
       mIsInObjectOrEmbed = bc->IsEmbedderTypeObjectOrEmbed() &&
@@ -2052,9 +2053,24 @@ static bool OldImageHasDifferentRatio(const nsImageFrame& aFrame,
   return oldRatio != currentRatio;
 }
 
+#ifdef DEBUG
+void nsImageFrame::AssertSyncDecodingHintIsInSync() const {
+  if (!IsForElement()) {
+    return;
+  }
+  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
+  MOZ_ASSERT(imageLoader);
+
+  // The opposite is not true, we might have some other heuristics which force
+  // sync-decoding of images.
+  MOZ_ASSERT_IF(imageLoader->GetSyncDecodingHint(), mForceSyncDecoding);
+}
+#endif
+
 void nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
   MOZ_ASSERT(mImage);
   auto* frame = static_cast<nsImageFrame*>(mFrame);
+  frame->AssertSyncDecodingHintIsInSync();
 
   const bool oldImageIsDifferent =
       OldImageHasDifferentRatio(*frame, *mImage, mPrevImage);
@@ -2118,6 +2134,7 @@ bool nsDisplayImage::CreateWebRenderCommands(
     return false;
   }
 
+  frame->AssertSyncDecodingHintIsInSync();
   const bool oldImageIsDifferent =
       OldImageHasDifferentRatio(*frame, *mImage, mPrevImage);
 

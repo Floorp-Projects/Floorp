@@ -298,6 +298,13 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   /// Always sync decode our image when painting if @aForce is true.
   void SetForceSyncDecoding(bool aForce) { mForceSyncDecoding = aForce; }
 
+  void AssertSyncDecodingHintIsInSync() const
+#ifndef DEBUG
+      {}
+#else
+      ;
+#endif
+
   /**
    * Computes the predicted dest rect that we'll draw into, in app units, based
    * upon the provided frame content box. (The content box is what
