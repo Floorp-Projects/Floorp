@@ -44,7 +44,7 @@ search:
       description: Query parameters values for search engine configurations.
 urlbar:
   description: The Address Bar
-  owner: adw@mozilla.com
+  owner: search-and-suggest-program@mozilla.com
   hasExposure: true
   exposureDescription: >-
     The timing of the exposure event depends on the experiment, but generally
@@ -91,6 +91,10 @@ urlbar:
       type: boolean
       fallbackPref: browser.urlbar.merino.enabled
       description: Whether Merino is enabled as a quick suggest source
+    merinoEndpointURL:
+      type: string
+      fallbackPref: browser.urlbar.merino.endpointURL
+      description: The Merino endpoint URL, not including parameters.
     merinoTimeoutMs:
       type: int
       fallbackPref: browser.urlbar.merino.timeoutMs
