@@ -84,7 +84,7 @@ struct RetainedDisplayListData {
  private:
   nsTHashMap<nsPtrHashKey<nsIFrame>, FrameFlags> mFrames;
   uint32_t mModifiedFrameCount = 0;
-  uint32_t mModifiedFrameLimit; // initialized to a pref value in constructor
+  uint32_t mModifiedFrameLimit;  // initialized to a pref value in constructor
 };
 
 enum class PartialUpdateResult { Failed, NoChange, Updated };
