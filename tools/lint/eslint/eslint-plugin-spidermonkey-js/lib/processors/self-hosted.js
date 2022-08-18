@@ -113,7 +113,7 @@ module.exports = {
           message.fix = fix;
         } else {
           // We couldn't create a fix, so we better remove the passed in fix,
-          // because its range points to the preprocesser output, but the post-
+          // because its range points to the preprocessor output, but the post-
           // processor must translate it into a range of the original source.
           delete message.fix;
         }
