@@ -3,139 +3,163 @@
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=819930
 -->
-  <head>
-    <meta charset="utf-8">
-    <title>Test for Bug 819930</title>
-    <script src="/tests/SimpleTest/SimpleTest.js"></script>
-    <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
-    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-    <style>
-      @media braille {
-        body {
-          background-color: rgb(255, 255, 0);
-        }
-      }
+<meta charset="utf-8">
+<title>Test for Bug 819930</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+<style>
+  @media braille {
+    body {
+      background-color: rgb(255, 255, 0);
+    }
+  }
 
-      @media embossed {
-        body {
-          background-color: rgb(210, 180, 140);
-        }
-      }
+  @media embossed {
+    body {
+      background-color: rgb(210, 180, 140);
+    }
+  }
 
-      @media handheld {
-        body {
-          background-color: rgb(0, 255, 0);
-        }
-      }
+  @media handheld {
+    body {
+      background-color: rgb(0, 255, 0);
+    }
+  }
 
-      @media print {
-        body {
-          background-color: rgb(0, 255, 255);
-        }
-      }
+  @media print {
+    body {
+      background-color: rgb(0, 255, 255);
+    }
+  }
 
-      @media projection {
-        body {
-          background-color: rgb(30, 144, 255);
-        }
-      }
+  @media projection {
+    body {
+      background-color: rgb(30, 144, 255);
+    }
+  }
 
-      @media screen {
-        body {
-          background-color: green;
-        }
-      }
+  @media screen {
+    body {
+      background-color: green;
+    }
+  }
 
-      @media speech {
-        body {
-          background-color: rgb(192, 192, 192);
-        }
-      }
+  @media speech {
+    body {
+      background-color: rgb(192, 192, 192);
+    }
+  }
 
-      @media tty {
-        body {
-          background-color: rgb(255, 192, 203);
-        }
-      }
+  @media tty {
+    body {
+      background-color: rgb(255, 192, 203);
+    }
+  }
 
-      @media tv {
-        body {
-          background-color: rgb(75, 0, 130);
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=819930">Mozilla Bug 819930</a>
-    <p id="display"></p>
+  @media tv {
+    body {
+      background-color: rgb(75, 0, 130);
+    }
+  }
+</style>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=819930">Mozilla Bug 819930</a>
+<p id="display"></p>
 
-    <div id="content" style="display: none"></div>
-    <pre id="test">
-      <script type="application/javascript">
-        let tests = [{name: 'braille', value: 'rgb(255, 255, 0)'},
-                     {name: 'embossed', value: 'rgb(210, 180, 140)'},
-                     {name: 'handheld', value: 'rgb(0, 255, 0)'},
-                     {name: 'print', value: 'rgb(0, 255, 255)'},
-                     {name: 'projection', value: 'rgb(30, 144, 255)'},
-                     {name: 'speech', value: 'rgb(192, 192, 192)'},
-                     {name: 'tty', value: 'rgb(255, 192, 203)'},
-                     {name: 'tv', value: 'rgb(75, 0, 130)'}];
+<div id="content" style="display: none"></div>
 
-        let originalColor = 'rgb(0, 128, 0)';
-        let body = document.body;
+<script>
+function waitForColorSchemeToBe(scheme) {
+  return new Promise(resolve => {
+    let mq = matchMedia(`(prefers-color-scheme: ${scheme})`);
+    if (mq.matches) {
+      resolve();
+    } else {
+      mq.addEventListener("change", resolve, { once: true });
+    }
+  });
+}
 
-        let getColor = function() {
-          return window.getComputedStyle(body)
-                       .getPropertyValue('background-color');
-        };
+add_setup(async function() {
+  // Set a dark color scheme so that we can properly test the print override.
+  await SpecialPowers.pushPrefEnv({ set: [["layout.css.prefers-color-scheme.content-override", 0]] });
+  await waitForColorSchemeToBe("dark");
+});
 
-        tests.forEach(function(test) {
-          // Emulate the given media
-          SpecialPowers.emulateMedium(window, test.name);
-          is(getColor(), test.value, 'emulating ' + test.name + ' produced ' +
-             'correct rendering');
+add_task(function() {
+  let tests = [
+    {name: 'braille', value: 'rgb(255, 255, 0)'},
+    {name: 'embossed', value: 'rgb(210, 180, 140)'},
+    {name: 'handheld', value: 'rgb(0, 255, 0)'},
+    {name: 'print', value: 'rgb(0, 255, 255)'},
+    {name: 'projection', value: 'rgb(30, 144, 255)'},
+    {name: 'speech', value: 'rgb(192, 192, 192)'},
+    {name: 'tty', value: 'rgb(255, 192, 203)'},
+    {name: 'tv', value: 'rgb(75, 0, 130)'},
+  ];
 
-          // Do the @media screen rules get applied after ending the emulation?
-          SpecialPowers.stopEmulatingMedium(window);
-          is(getColor(), originalColor, 'Ending ' + test.name +
-             ' emulation restores style for original medium');
+  let originalColor = 'rgb(0, 128, 0)';
+  let body = document.body;
 
-          // CSS media types are case-insensitive; we should be too.
-          SpecialPowers.emulateMedium(window, test.name.toUpperCase());
-          is(getColor(), test.value,
-             test.name + ' emulation is case-insensitive');
-          SpecialPowers.stopEmulatingMedium(window);
-        });
+  let getColor = function() {
+    return window.getComputedStyle(body).backgroundColor;
+  };
 
-        // Emulating screen should produce the same rendering as when there is
-        // no emulation in effect
-        SpecialPowers.emulateMedium(window, 'screen');
-        is(getColor(), originalColor,
-           'Emulating screen produces original rendering');
-        SpecialPowers.stopEmulatingMedium(window);
+  for (let test of tests) {
+    // Emulate the given media
+    SpecialPowers.emulateMedium(window, test.name);
+    is(getColor(), test.value, 'emulating ' + test.name + ' produced ' +
+        'correct rendering');
 
-        // Screen should be case-insensitive too
-        SpecialPowers.emulateMedium(window, 'SCREEN');
-        is(getColor(), originalColor, 'screen emulation is case-insensitive');
-        SpecialPowers.stopEmulatingMedium(window);
+    ok(matchMedia(test.name).matches, "Media matches");
+    if (test.value == "print") {
+      ok(matchMedia("(prefers-color-scheme: light)").matches, "color-scheme is overridden when emulating print");
+    }
 
-        // An invalid parameter shouldn't fail. Given the CSS rules above,
-        // an invalid parameter should result in a different rendering from any
-        // produced thus far
-        try {
-          SpecialPowers.emulateMedium(window, 'clay');
-          let invalid = getColor();
-          tests.push({name: 'screen', value: 'green'});
-          tests.forEach(function(test) {
-            isnot(invalid, test.value, 'Emulating invalid type differs from ' +
-               test.name);
-          });
-        } catch (e) {
-          ok(false, 'Supplying invalid type to emulateMedium shouldn\'t throw');
-        }
+    // Do the @media screen rules get applied after ending the emulation?
+    SpecialPowers.stopEmulatingMedium(window);
+    is(getColor(), originalColor, 'Ending ' + test.name +
+        ' emulation restores style for original medium');
+    ok(!matchMedia(test.name).matches, "Media no longer matches");
+    ok(!matchMedia("(prefers-color-scheme: light)").matches, "color-scheme override should be restored");
 
-        SpecialPowers.stopEmulatingMedium(window);
-      </script>
-    </pre>
-  </body>
-</html>
+    // CSS media types are case-insensitive; we should be too.
+    SpecialPowers.emulateMedium(window, test.name.toUpperCase());
+    is(getColor(), test.value,
+        test.name + ' emulation is case-insensitive');
+    SpecialPowers.stopEmulatingMedium(window);
+  }
+
+  is(getColor(), originalColor, 'No emulation');
+
+  // Emulating screen should produce the same rendering as when there is
+  // no emulation in effect
+  SpecialPowers.emulateMedium(window, 'screen');
+  is(getColor(), originalColor, 'Emulating screen produces original rendering');
+  SpecialPowers.stopEmulatingMedium(window);
+
+  is(getColor(), originalColor, 'No emulation, shouldn\'t change');
+
+  // Screen should be case-insensitive too
+  SpecialPowers.emulateMedium(window, 'SCREEN');
+  is(getColor(), originalColor, 'screen emulation is case-insensitive');
+  SpecialPowers.stopEmulatingMedium(window);
+
+  is(getColor(), originalColor, 'No emulation, shouldn\'t change');
+
+  // An invalid parameter shouldn't fail. Given the CSS rules above,
+  // an invalid parameter should result in a different rendering from any
+  // produced thus far
+  SpecialPowers.emulateMedium(window, 'clay');
+  let invalid = getColor();
+  tests.push({name: 'screen', value: 'green'});
+  tests.forEach(function(test) {
+    isnot(invalid, test.value, 'Emulating invalid type differs from ' +
+          test.name);
+  });
+
+  SpecialPowers.stopEmulatingMedium(window);
+
+  is(getColor(), originalColor, 'No emulation, shouldn\'t change');
+})
+</script>
