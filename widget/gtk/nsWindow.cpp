@@ -2514,12 +2514,6 @@ void nsWindow::WaylandPopupMove() {
   LOG("  popup use move to rect %d", mPopupUseMoveToRect);
 
   if (!mPopupUseMoveToRect) {
-    // Visible widgets can't be positioned.
-    if (gtk_widget_is_visible(mShell)) {
-      HideWaylandPopupWindow(/* aTemporaryHide */ true,
-                             /* aRemoveFromPopupList */ false);
-    }
-
     // Workaround for https://gitlab.gnome.org/GNOME/gtk/-/issues/4308
     // Tooltips/Utility popups are created as subsurfaces with relative
     // position.
@@ -2528,14 +2522,35 @@ void nsWindow::WaylandPopupMove() {
             GDK_WINDOW_TYPE_HINT_UTILITY ||
         gtk_window_get_type_hint(GTK_WINDOW(mShell)) ==
             GDK_WINDOW_TYPE_HINT_TOOLTIP;
+
+    GdkPoint currentPopupPosition;
+    gtk_window_get_position(GTK_WINDOW(mShell), &currentPopupPosition.x,
+                            &currentPopupPosition.y);
+    LOG("  recent window position (%d, %d)", currentPopupPosition.x,
+        currentPopupPosition.y);
+
+    GdkPoint newPopupPosition =
+        useRelativeCoordinates ? mRelativePopupPosition : mPopupPosition;
+    if (newPopupPosition.x == currentPopupPosition.x &&
+        newPopupPosition.y == currentPopupPosition.y) {
+      LOG("  popup is already positioned, quit");
+      return;
+    }
+
+    // Visible widgets can't be positioned.
+    if (gtk_widget_is_visible(mShell)) {
+      HideWaylandPopupWindow(/* aTemporaryHide */ true,
+                             /* aRemoveFromPopupList */ false);
+    }
+
     if (useRelativeCoordinates) {
-      LOG("  use relative gtk_window_move(%d, %d) for tooltips\n",
+      LOG("  use relative gtk_window_move(%d, %d) for utility/tooltips",
           mRelativePopupPosition.x, mRelativePopupPosition.y);
       gtk_window_move(GTK_WINDOW(mShell), mRelativePopupPosition.x,
                       mRelativePopupPosition.y);
     } else {
-      LOG("  use absolute gtk_window_move(%d, %d) for menus\n",
-          mPopupPosition.x, mPopupPosition.y);
+      LOG("  use absolute gtk_window_move(%d, %d) for menus", mPopupPosition.x,
+          mPopupPosition.y);
       gtk_window_move(GTK_WINDOW(mShell), mPopupPosition.x, mPopupPosition.y);
     }
     // Layout already should be aware of our bounds, since we didn't change it
