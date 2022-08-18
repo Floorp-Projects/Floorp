@@ -1485,8 +1485,23 @@ nsWindowsShellService::CheckPinCurrentAppToTaskbarAsync(
 }
 
 static bool IsCurrentAppPinnedToTaskbarSync(const nsAutoString& aumid) {
+  // There are two shortcut targets that we created. One always matches the
+  // binary we're running as (eg: firefox.exe). The other is the wrapper
+  // for launching in Private Browsing mode. We need to inspect shortcuts
+  // that point at either of these to accurately judge whether or not
+  // the app is pinned with the given AUMID.
   wchar_t exePath[MAXPATHLEN] = {};
+  wchar_t pbExePath[MAXPATHLEN] = {};
+
   if (NS_WARN_IF(NS_FAILED(BinaryPath::GetLong(exePath)))) {
+    return false;
+  }
+
+  wcscpy_s(pbExePath, MAXPATHLEN, exePath);
+  if (!PathRemoveFileSpecW(pbExePath)) {
+    return false;
+  }
+  if (!PathAppendW(pbExePath, L"private_browsing.exe")) {
     return false;
   }
 
@@ -1549,9 +1564,6 @@ static bool IsCurrentAppPinnedToTaskbarSync(const nsAutoString& aumid) {
       continue;
     }
 
-    // Note: AUMID is not checked, so a pin that does not group properly
-    // will still count as long as the exe matches.
-
     // Check the exe path
     static_assert(MAXPATHLEN == MAX_PATH);
     wchar_t storedExePath[MAX_PATH] = {};
@@ -1563,7 +1575,8 @@ static bool IsCurrentAppPinnedToTaskbarSync(const nsAutoString& aumid) {
     // Case insensitive path comparison
     // NOTE: Because this compares the path directly, it is possible to
     // have a false negative mismatch.
-    if (wcsnicmp(storedExePath, exePath, MAXPATHLEN) == 0) {
+    if (wcsnicmp(storedExePath, exePath, MAXPATHLEN) == 0 ||
+        wcsnicmp(storedExePath, pbExePath, MAXPATHLEN) == 0) {
       RefPtr<IPropertyStore> propStore;
       hr = link->QueryInterface(IID_IPropertyStore, getter_AddRefs(propStore));
       if (NS_WARN_IF(FAILED(hr))) {
