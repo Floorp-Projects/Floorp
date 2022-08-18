@@ -10,7 +10,6 @@ import android.view.LayoutInflater
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.annotation.VisibleForTesting
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import mozilla.components.concept.menu.MenuController
@@ -29,8 +28,7 @@ class LibrarySiteItemView @JvmOverloads constructor(
     defStyleRes: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr, defStyleRes) {
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal val binding = LibrarySiteItemBinding.inflate(
+    private val binding = LibrarySiteItemBinding.inflate(
         LayoutInflater.from(context),
         this,
         true
