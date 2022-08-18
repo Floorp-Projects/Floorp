@@ -114,7 +114,8 @@ TimeUnit AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) {
     // stream, it's necessary to cap the simulated current time at the maximum
     // timestamp of the media, to not return a media time that exceeds the
     // duration.
-    if (mLastPacketEndTime && pos > mLastPacketEndTime.value() && CheckIfEnded()) {
+    if (mLastPacketEndTime && pos > mLastPacketEndTime.value() &&
+        CheckIfEnded()) {
       pos = mLastPacketEndTime.value();
       mEndedPromiseHolder.ResolveIfExists(true, __func__);
     } else if (!mLastPacketEndTime && CheckIfEnded()) {
