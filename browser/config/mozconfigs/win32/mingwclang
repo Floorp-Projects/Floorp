@@ -32,6 +32,7 @@ ac_add_options --disable-webrtc # Bug 1393901
 ac_add_options --disable-geckodriver # Bug 1489320
 ac_add_options --disable-update-agent # Bug 1561797
 ac_add_options --disable-default-browser-agent # WinToast does not build on mingw
+ac_add_options --disable-notification-server # Toast notifications don't build on mingw.
 
 # Find our toolchain
 HOST_CC="$MOZ_FETCHES_DIR/clang/bin/clang"
