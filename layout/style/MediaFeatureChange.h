@@ -79,6 +79,14 @@ struct MediaFeatureChange {
     mReason |= aOther.mReason;
     return *this;
   }
+
+  static MediaFeatureChange ForPreferredColorSchemeChange() {
+    // We need to restyle because not only media queries have changed, system
+    // colors may as well via the prefers-color-scheme meta tag / effective
+    // color-scheme property value.
+    return {RestyleHint::RecascadeSubtree(), nsChangeHint(0),
+            MediaFeatureChangeReason::SystemMetricsChange};
+  }
 };
 
 }  // namespace mozilla

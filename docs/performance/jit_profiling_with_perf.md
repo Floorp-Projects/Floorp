@@ -55,7 +55,7 @@ View the profile:
 perf report --no-children -i jit.data
 ```
 
-All of the above comands can be put into a single shell script.
+All of the above commands can be put into a single shell script.
 
 ### Profiling the Browser
 

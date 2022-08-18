@@ -258,6 +258,7 @@ add_task(async function test_image() {
         true,
         "context-sendimage",
         true,
+        ...getTextRecognitionItems(),
         ...(Services.prefs.getBoolPref("browser.menu.showViewImageInfo", false)
           ? ["context-viewimageinfo", true]
           : []),
@@ -920,6 +921,7 @@ add_task(async function test_image_in_iframe() {
     true,
     "context-sendimage",
     true,
+    ...getTextRecognitionItems(),
     ...(Services.prefs.getBoolPref("browser.menu.showViewImageInfo", false)
       ? ["context-viewimageinfo", true]
       : []),
@@ -1429,6 +1431,7 @@ add_task(async function test_imagelink() {
     true,
     "context-sendimage",
     true,
+    ...getTextRecognitionItems(),
     ...(Services.prefs.getBoolPref("browser.menu.showViewImageInfo", false)
       ? ["context-viewimageinfo", true]
       : []),
@@ -1527,6 +1530,7 @@ add_task(async function test_longdesc() {
     true,
     "context-sendimage",
     true,
+    ...getTextRecognitionItems(),
     ...(Services.prefs.getBoolPref("browser.menu.showViewImageInfo", false)
       ? ["context-viewimageinfo", true]
       : []),
@@ -1896,4 +1900,14 @@ async function selectText(selector) {
       win.getSelection().addRange(div);
     }
   );
+}
+
+/**
+ * Not all platforms support text recognition.
+ * @returns {string[]}
+ */
+function getTextRecognitionItems() {
+  return Services.appinfo.isTextRecognitionSupported
+    ? ["context-imagetext", true]
+    : [];
 }

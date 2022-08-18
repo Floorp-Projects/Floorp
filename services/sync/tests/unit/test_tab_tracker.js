@@ -297,16 +297,16 @@ add_task(async function run_sync_on_tab_change_test() {
   await tracker.clearChangedIDs();
   clearQuickWriteTimer(tracker);
 
-  _("Test navigating to an about page does not trigger sync");
+  _("Test navigating to an about page does trigger sync");
   tracker.onLocationChange(
     { isTopLevel: true },
     undefined,
     Services.io.newURI("about:config")
   );
-  Assert.ok(!tracker.modified, "about page does not trigger a tab modified");
+  Assert.ok(tracker.modified, "about page does not trigger a tab modified");
   Assert.ok(
-    !tracker.tabsQuickWriteTimer,
-    "about schema should not trigger a sync happening soon"
+    tracker.tabsQuickWriteTimer,
+    "about schema should trigger a sync happening soon"
   );
 
   _("Test adjusting the filterScheme pref works");

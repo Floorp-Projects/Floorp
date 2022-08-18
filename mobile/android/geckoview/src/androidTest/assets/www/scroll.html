@@ -17,17 +17,23 @@ body {
 #one {
    background-color: red;
    width: 200vw;
-   height: 50vh;
+   height: 33vh;
 }
 
 #two {
    background-color: green;
    width: 200vw;
-   height: 50vh;
+   height: 33vh;
 }
 
 #three {
    background-color: blue;
+   width: 200vw;
+   height: 33vh;
+}
+
+#four {
+   background-color: purple;
    width: 200vw;
    height: 200vh;
 }
@@ -37,8 +43,14 @@ body {
     <div id="one"></div>
     <div id="two"></div>
     <div id="three"></div>
+    <div id="four"></div>
     <script>
       document.getElementById('two').addEventListener('touchstart', e => {
+        console.log('preventing default');
+        e.preventDefault();
+      });
+
+      document.getElementById('three').addEventListener('touchstart', e => {
         console.log('not preventing default');
       });
     </script>

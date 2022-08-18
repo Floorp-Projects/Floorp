@@ -321,7 +321,7 @@ void AudioBlockPanStereoToStereo_NEON(
 
     // Calculate left channel assuming isOnTheLeft
     onleft0 = vmlaq_f32(vinL0, vinR0, vscaleL0);
-    onleft1 = vmlaq_f32(vinL1, vinR1, vscaleL0);
+    onleft1 = vmlaq_f32(vinL1, vinR1, vscaleL1);
 
     // Calculate left channel assuming not isOnTheLeft
     notonleft0 = vmulq_f32(vinL0, vscaleL0);

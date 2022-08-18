@@ -7633,7 +7633,14 @@
 # Whether trigonometric constants and functions are enabled in calc().
 - name: layout.css.trig.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
+# Whether infinity / nan constants are enabled in calc().
+- name: layout.css.nan-inf.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
   rust: true
 
@@ -7709,7 +7716,7 @@
 # Whether the `animation-composition` in css-animations-2 is enabled.
 - name: layout.css.animation-composition.enabled
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Is the codepath for using cached scrollbar styles enabled?

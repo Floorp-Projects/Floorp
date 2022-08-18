@@ -1464,7 +1464,7 @@ void nsWindow::WaylandPopupHierarchyCalculatePositions() {
     if (popup->mPopupContextMenu && !popup->mPopupAnchored) {
       LOG("  popup [%p] is first context menu", popup);
       popup->mRelativePopupPosition = popup->mPopupPosition;
-    } else if (popup->mWaylandPopupPrev->mWaylandToplevel == nullptr) {
+    } else if (popup->WaylandPopupIsFirst()) {
       LOG("  popup [%p] has toplevel as parent", popup);
       popup->mRelativePopupPosition = popup->mPopupPosition;
     } else {
@@ -1534,6 +1534,10 @@ bool nsWindow::IsWidgetOverflowWindow() {
     return nodeId.Equals("widget-overflow");
   }
   return false;
+}
+
+bool nsWindow::WaylandPopupIsFirst() {
+  return !mWaylandPopupPrev || !mWaylandPopupPrev->mWaylandToplevel;
 }
 
 GdkPoint nsWindow::WaylandGetParentPosition() {
@@ -1830,21 +1834,14 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
         // popups are adjacent.
         return false;
       }
-      // We use move_to_rect when:
-      // - Popup is tooltip
-      // - Popup is anchored, i.e. it has an anchor defined by layout
-      //   (mPopupAnchored).
-      // - Popup isn't anchored but it has toplevel as parent, i.e.
-      //   it's first popup.
-      bool useIt = mPopupType == ePopupTypeTooltip || popup->mPopupAnchored ||
-                   !popup->mWaylandPopupPrev->mWaylandToplevel;
-      if (!useIt) {
-        return false;
-      }
-      if (popup->WaylandPopupFitsToplevelWindow()) {
+      if (popup->WaylandPopupIsFirst() &&
+          popup->WaylandPopupFitsToplevelWindow()) {
         // Workaround for https://gitlab.gnome.org/GNOME/gtk/-/issues/1986
         // Bug 1760276 - don't use move-to-rect when popup is inside main
         // Firefox window.
+        // Use it for first popups only due to another mutter bug
+        // https://gitlab.gnome.org/GNOME/gtk/-/issues/5089
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1784873
         return false;
       }
       return true;
@@ -1853,7 +1850,7 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
     LOG("  popup [%p] matches layout [%d] anchored [%d] first popup [%d] use "
         "move-to-rect %d\n",
         popup, popup->mPopupMatchesLayout, popup->mPopupAnchored,
-        popup->mWaylandPopupPrev->mWaylandToplevel == nullptr, useMoveToRect);
+        popup->WaylandPopupIsFirst(), useMoveToRect);
 
     popup->mPopupUseMoveToRect = useMoveToRect;
     popup->WaylandPopupMove();
@@ -2469,7 +2466,7 @@ bool nsWindow::WaylandPopupCheckAndGetAnchor(GdkRectangle* aPopupAnchor) {
   // (calculate correct position according to parent window)
   // and convert to Gtk coordinates.
   LayoutDeviceIntRect anchorRect = mPopupMoveToRectParams.mAnchorRect;
-  if (mWaylandPopupPrev->mWaylandToplevel) {
+  if (!WaylandPopupIsFirst()) {
     GdkPoint parent = WaylandGetParentPosition();
     LOG("  subtract parent position from anchor [%d, %d]\n", parent.x,
         parent.y);
@@ -2514,12 +2511,6 @@ void nsWindow::WaylandPopupMove() {
   LOG("  popup use move to rect %d", mPopupUseMoveToRect);
 
   if (!mPopupUseMoveToRect) {
-    // Visible widgets can't be positioned.
-    if (gtk_widget_is_visible(mShell)) {
-      HideWaylandPopupWindow(/* aTemporaryHide */ true,
-                             /* aRemoveFromPopupList */ false);
-    }
-
     // Workaround for https://gitlab.gnome.org/GNOME/gtk/-/issues/4308
     // Tooltips/Utility popups are created as subsurfaces with relative
     // position.
@@ -2528,14 +2519,35 @@ void nsWindow::WaylandPopupMove() {
             GDK_WINDOW_TYPE_HINT_UTILITY ||
         gtk_window_get_type_hint(GTK_WINDOW(mShell)) ==
             GDK_WINDOW_TYPE_HINT_TOOLTIP;
+
+    GdkPoint currentPopupPosition;
+    gtk_window_get_position(GTK_WINDOW(mShell), &currentPopupPosition.x,
+                            &currentPopupPosition.y);
+    LOG("  recent window position (%d, %d)", currentPopupPosition.x,
+        currentPopupPosition.y);
+
+    GdkPoint newPopupPosition =
+        useRelativeCoordinates ? mRelativePopupPosition : mPopupPosition;
+    if (newPopupPosition.x == currentPopupPosition.x &&
+        newPopupPosition.y == currentPopupPosition.y) {
+      LOG("  popup is already positioned, quit");
+      return;
+    }
+
+    // Visible widgets can't be positioned.
+    if (gtk_widget_is_visible(mShell)) {
+      HideWaylandPopupWindow(/* aTemporaryHide */ true,
+                             /* aRemoveFromPopupList */ false);
+    }
+
     if (useRelativeCoordinates) {
-      LOG("  use relative gtk_window_move(%d, %d) for tooltips\n",
+      LOG("  use relative gtk_window_move(%d, %d) for utility/tooltips",
           mRelativePopupPosition.x, mRelativePopupPosition.y);
       gtk_window_move(GTK_WINDOW(mShell), mRelativePopupPosition.x,
                       mRelativePopupPosition.y);
     } else {
-      LOG("  use absolute gtk_window_move(%d, %d) for menus\n",
-          mPopupPosition.x, mPopupPosition.y);
+      LOG("  use absolute gtk_window_move(%d, %d) for menus", mPopupPosition.x,
+          mPopupPosition.y);
       gtk_window_move(GTK_WINDOW(mShell), mPopupPosition.x, mPopupPosition.y);
     }
     // Layout already should be aware of our bounds, since we didn't change it

@@ -3300,6 +3300,23 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "animation-composition": {
+    "isInherited": false,
+    "subproperties": [
+      "animation-composition"
+    ],
+    "supports": [],
+    "values": [
+      "accumulate",
+      "add",
+      "inherit",
+      "initial",
+      "replace",
+      "revert",
+      "revert-layer",
+      "unset"
+    ]
+  },
   "animation-delay": {
     "isInherited": false,
     "subproperties": [
