@@ -350,7 +350,10 @@ OutputStreamTunnel::OutputStreamTunnel(Http2StreamTunnel* aStream) {
   mWeakStream = do_GetWeakReference(aStream);
 }
 
-OutputStreamTunnel::~OutputStreamTunnel() = default;
+OutputStreamTunnel::~OutputStreamTunnel() {
+  NS_ProxyRelease("OutputStreamTunnel::~OutputStreamTunnel",
+                  gSocketTransportService, mWeakStream.forget());
+}
 
 nsresult OutputStreamTunnel::OnSocketReady(nsresult condition) {
   LOG(("OutputStreamTunnel::OnSocketReady [this=%p cond=%" PRIx32
@@ -499,7 +502,10 @@ InputStreamTunnel::InputStreamTunnel(Http2StreamTunnel* aStream) {
   mWeakStream = do_GetWeakReference(aStream);
 }
 
-InputStreamTunnel::~InputStreamTunnel() = default;
+InputStreamTunnel::~InputStreamTunnel() {
+  NS_ProxyRelease("InputStreamTunnel::~InputStreamTunnel",
+                  gSocketTransportService, mWeakStream.forget());
+}
 
 nsresult InputStreamTunnel::OnSocketReady(nsresult condition) {
   LOG(("InputStreamTunnel::OnSocketReady [this=%p cond=%" PRIx32 "]\n", this,
