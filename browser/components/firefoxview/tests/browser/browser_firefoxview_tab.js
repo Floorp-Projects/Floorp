@@ -17,6 +17,38 @@ add_setup(async function() {
   }
 });
 
+add_task(async function aria_attributes() {
+  is(
+    FirefoxViewHandler.button.getAttribute("role"),
+    "tab",
+    "Firefox View button should have the 'tab' ARIA role"
+  );
+  await openFirefoxViewTab();
+  isnot(
+    FirefoxViewHandler.button.getAttribute("aria-controls"),
+    "",
+    "Firefox View button should have non-empty `aria-controls` attribute"
+  );
+  is(
+    FirefoxViewHandler.button.getAttribute("aria-controls"),
+    FirefoxViewHandler.tab.linkedPanel,
+    "Firefox View button should refence the hidden tab's linked panel via `aria-controls`"
+  );
+  is(
+    FirefoxViewHandler.button.getAttribute("aria-selected"),
+    "true",
+    'Firefox View button should have `aria-selected="true"` upon selecting it'
+  );
+  BrowserOpenTab();
+  is(
+    FirefoxViewHandler.button.getAttribute("aria-selected"),
+    "false",
+    'Firefox View button should have `aria-selected="false"` upon selecting a different tab'
+  );
+  gBrowser.removeCurrentTab();
+  closeFirefoxViewTab();
+});
+
 add_task(async function load_opens_new_tab() {
   await openFirefoxViewTab();
   gURLBar.focus();
