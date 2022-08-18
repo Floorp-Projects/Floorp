@@ -769,7 +769,7 @@ whenever a password element is added to the DOM after the ``pageshow`` event.
 Prefs
 -----
 
-`Preferences </modules/libpref/index.html>`_ (or prefs) are used throughtout
+`Preferences </modules/libpref/index.html>`_ (or prefs) are used throughout
 Gecko to configure the browser, enable custom features, etc.
 
 GeckoView does not directly expose prefs to Apps. A limited set configuration
