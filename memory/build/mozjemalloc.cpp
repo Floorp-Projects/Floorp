@@ -1369,7 +1369,7 @@ static inline void ApplyZeroOrJunk(void* aPtr, size_t aSize) {
 
 // Whether the current process should always stall, or only stall once.
 static bool sShouldAlwaysStall = true;
-MOZ_JEMALLOC_API void mozjemalloc_experiment_set_always_stall(bool aVal) {
+MOZ_JEMALLOC_API void mozjemalloc_experiment_win_set_always_stall(bool aVal) {
   sShouldAlwaysStall = aVal;
 }
 
