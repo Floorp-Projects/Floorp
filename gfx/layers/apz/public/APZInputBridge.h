@@ -7,11 +7,11 @@
 #ifndef mozilla_layers_APZInputBridge_h
 #define mozilla_layers_APZInputBridge_h
 
+#include "Units.h"                  // for LayoutDeviceIntPoint
 #include "mozilla/EventForwards.h"  // for WidgetInputEvent, nsEventStatus
 #include "mozilla/layers/APZPublicUtils.h"       // for APZWheelAction
 #include "mozilla/layers/LayersTypes.h"          // for ScrollDirections
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid
-#include "Units.h"                               // for LayoutDeviceIntPoint
 
 namespace mozilla {
 
@@ -127,7 +127,7 @@ struct APZEventResult {
   }
 
   bool WillHaveDelayedResult() const {
-    return GetStatus() != nsEventStatus_eConsumeNoDefault &&
+    return GetStatus() == nsEventStatus_eConsumeDoDefault &&
            !GetHandledResult();
   }
 
