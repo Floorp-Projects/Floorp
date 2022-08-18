@@ -275,7 +275,6 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     //".isp", exec // IIS config
     //".isu", // InstallShield
     //".jar", exec // Java
-    //".jnlp", exec // Java
     //".job", // Windows
     //".jpg",
     //".jpeg",
