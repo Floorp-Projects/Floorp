@@ -153,20 +153,21 @@ void ProxyObject::setSameCompartmentPrivate(const Value& priv) {
 }
 
 inline void ProxyObject::setPrivate(const Value& priv) {
-  MOZ_ASSERT_IF(IsMarkedBlack(this) && priv.isGCThing(),
+  MOZ_ASSERT_IF(!zone()->isGCPreparing() && isMarkedBlack() && priv.isGCThing(),
                 !JS::GCThingIsMarkedGray(priv.toGCCellPtr()));
   *slotOfPrivate() = priv;
 }
 
 void ProxyObject::setExpando(JSObject* expando) {
-  // Ensure that we don't accidentally end up pointing to a
-  // grey object, which would violate GC invariants.
-  MOZ_ASSERT_IF(IsMarkedBlack(this) && expando,
-                !JS::GCThingIsMarkedGray(JS::GCCellPtr(expando)));
-
   // Ensure we're in the same compartment as the proxy object: Don't want the
   // expando to end up as a CCW.
   MOZ_ASSERT_IF(expando, expando->compartment() == compartment());
+
+  // Ensure that we don't accidentally end up pointing to a
+  // grey object, which would violate GC invariants.
+  MOZ_ASSERT_IF(!zone()->isGCPreparing() && isMarkedBlack() && expando,
+                !JS::GCThingIsMarkedGray(JS::GCCellPtr(expando)));
+
   *slotOfExpando() = ObjectOrNullValue(expando);
 }
 
