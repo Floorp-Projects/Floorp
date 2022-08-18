@@ -453,7 +453,7 @@ add_task(async function test_open_context_menu_with_keyboard() {
   // Open the context menu by focusing the button and pressing the SPACE key.
   let shown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
   button.focus();
-  is(win.document.activeElement, button, "expected button to be focused");
+  is(button, win.document.activeElement, "expected button to be focused");
   EventUtils.synthesizeKey(" ", {}, win);
   await shown;
 
@@ -462,7 +462,7 @@ add_task(async function test_open_context_menu_with_keyboard() {
   // Open the context menu by focusing the button and pressing the ENTER key.
   shown = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
   button.focus();
-  is(win.document.activeElement, button, "expected button to be focused");
+  is(button, win.document.activeElement, "expected button to be focused");
   EventUtils.synthesizeKey("KEY_Enter", {}, win);
   await shown;
 

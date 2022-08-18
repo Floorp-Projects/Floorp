@@ -1,8 +1,12 @@
 "use strict";
 
+requestLongerTimeout(2);
+
 const { ExtensionPermissions } = ChromeUtils.import(
   "resource://gre/modules/ExtensionPermissions.jsm"
 );
+
+loadTestSubscript("head_unified_extensions.js");
 
 add_setup(async () => {
   await SpecialPowers.pushPrefEnv({
@@ -46,21 +50,7 @@ async function makeExtension(id, manifest_version, granted) {
     background() {
       let expectCount = 0;
 
-      browser.test.onMessage.addListener(async (msg, arg) => {
-        if (msg === "dynamic-script") {
-          await browser.scripting.registerContentScripts([arg]);
-          browser.test.sendMessage("dynamic-script-done");
-        } else if (msg === "injected-flush?") {
-          browser.test.sendMessage("injected", "flush");
-        } else if (msg === "expect-count") {
-          expectCount = arg;
-          browser.test.sendMessage("expect-done");
-        }
-      });
-
-      let action = browser.action || browser.browserAction;
-
-      action.onClicked.addListener(tab => {
+      const executeCountScript = tab =>
         browser.scripting.executeScript({
           target: { tabId: tab.id },
           func: expectCount => {
@@ -88,7 +78,28 @@ async function makeExtension(id, manifest_version, granted) {
           },
           args: [expectCount],
         });
+
+      browser.test.onMessage.addListener(async (msg, arg) => {
+        if (msg === "dynamic-script") {
+          await browser.scripting.registerContentScripts([arg]);
+          browser.test.sendMessage("dynamic-script-done");
+        } else if (msg === "injected-flush?") {
+          browser.test.sendMessage("injected", "flush");
+        } else if (msg === "expect-count") {
+          expectCount = arg;
+          browser.test.sendMessage("expect-done");
+        } else if (msg === "execute-count-script") {
+          const [tab] = await browser.tabs.query({
+            active: true,
+            currentWindow: true,
+          });
+          browser.test.withHandlingUserInput(() => executeCountScript(tab));
+        }
       });
+
+      let action = browser.action || browser.browserAction;
+
+      action.onClicked.addListener(executeCountScript);
     },
 
     files: {
@@ -138,13 +149,23 @@ async function makeExtension(id, manifest_version, granted) {
   return ext;
 }
 
-async function testActiveScript(extension, expectCount, expectHosts) {
+async function testActiveScript(
+  extension,
+  expectCount,
+  expectHosts,
+  win,
+  withUnifiedExtensionsPanel
+) {
   info(`Testing ${extension.id} on ${gBrowser.currentURI.spec}.`);
 
   extension.sendMessage("expect-count", expectCount);
   await extension.awaitMessage("expect-done");
 
-  await clickBrowserAction(extension);
+  if (withUnifiedExtensionsPanel) {
+    await clickUnifiedExtensionsItem(win, extension.id);
+  } else {
+    await clickBrowserAction(extension, win);
+  }
 
   let received = [];
   for (let host of expectHosts) {
@@ -159,12 +180,25 @@ async function testActiveScript(extension, expectCount, expectHosts) {
 
   is(received.sort().join(), expectHosts.join(), "All messages received.");
 
+  // To cover the activeTab counter assertion for extensions that don't trigger
+  // an action/browserAction onClicked event, we send an explicit test message
+  // here.
+  // The test extension queries the current active tab and then execute the
+  // counter content script from inside a `browser.test.withHandlingUserInput()`
+  // callback.
+  if (withUnifiedExtensionsPanel) {
+    extension.sendMessage("execute-count-script");
+  }
+
   info(`Awaiting the counter from the activeTab content script.`);
   let scriptCount = await extension.awaitMessage("scriptCount");
   is(scriptCount | 0, expectCount, "Expected number of scripts running");
 }
 
-add_task(async function test_action_activeScript() {
+const verifyActionActiveScript = async ({
+  win,
+  withUnifiedExtensionsPanel = false,
+}) => {
   // Static MV2 extension content scripts are not affected.
   let ext0 = await makeExtension("ext0@test", 2, ["*://example.com/*"]);
 
@@ -177,11 +211,11 @@ add_task(async function test_action_activeScript() {
 
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     info("No content scripts run on top level about:blank.");
-    await testActiveScript(ext0, 0, []);
-    await testActiveScript(ext1, 0, []);
-    await testActiveScript(ext2, 0, []);
-    await testActiveScript(ext3, 0, []);
-    await testActiveScript(ext4, 0, []);
+    await testActiveScript(ext0, 0, [], win, withUnifiedExtensionsPanel);
+    await testActiveScript(ext1, 0, [], win, withUnifiedExtensionsPanel);
+    await testActiveScript(ext2, 0, [], win, withUnifiedExtensionsPanel);
+    await testActiveScript(ext3, 0, [], win, withUnifiedExtensionsPanel);
+    await testActiveScript(ext4, 0, [], win, withUnifiedExtensionsPanel);
   });
 
   let dynamicScript = {
@@ -219,24 +253,42 @@ add_task(async function test_action_activeScript() {
     );
 
     info("Clicking ext0 button should not run content script again.");
-    await testActiveScript(ext0, 3, []);
+    await testActiveScript(ext0, 3, [], win, withUnifiedExtensionsPanel);
 
     info("ext2 has host permission, content script should run automatically.");
     let static2 = await ext2.awaitMessage("injected");
     is(static2, "static@example.com", "Script ran automatically");
 
     info("Clicking ext2 button should not run content script again.");
-    await testActiveScript(ext2, 1, []);
+    await testActiveScript(ext2, 1, [], win, withUnifiedExtensionsPanel);
 
-    await testActiveScript(ext1, 1, ["static@example.com"]);
+    await testActiveScript(
+      ext1,
+      1,
+      ["static@example.com"],
+      win,
+      withUnifiedExtensionsPanel
+    );
 
-    await testActiveScript(ext3, 3, [
-      "dynamic-frame@example.com",
-      "dynamic-top@example.com",
-      "static@example.com",
-    ]);
+    await testActiveScript(
+      ext3,
+      3,
+      [
+        "dynamic-frame@example.com",
+        "dynamic-top@example.com",
+        "static@example.com",
+      ],
+      win,
+      withUnifiedExtensionsPanel
+    );
 
-    await testActiveScript(ext4, 1, ["static@example.com"]);
+    await testActiveScript(
+      ext4,
+      1,
+      ["static@example.com"],
+      win,
+      withUnifiedExtensionsPanel
+    );
 
     // Navigate same-origin iframe to another page, activeScripts shouldn't run.
     let bc = browser.browsingContext.children[0].children[0];
@@ -248,12 +300,18 @@ add_task(async function test_action_activeScript() {
     is(dynamic0, "dynamic-frame@example.com", "Script ran automatically");
 
     info("Clicking all buttons again should not activeScripts.");
-    await testActiveScript(ext0, 4, []);
-    await testActiveScript(ext1, 1, []);
-    await testActiveScript(ext2, 1, []);
+    await testActiveScript(ext0, 4, [], win, withUnifiedExtensionsPanel);
+    await testActiveScript(ext1, 1, [], win, withUnifiedExtensionsPanel);
+    await testActiveScript(ext2, 1, [], win, withUnifiedExtensionsPanel);
     // Except ext3 dynamic allFrames script runs in the new navigated page.
-    await testActiveScript(ext3, 4, ["dynamic-frame@example.com"]);
-    await testActiveScript(ext4, 1, []);
+    await testActiveScript(
+      ext3,
+      4,
+      ["dynamic-frame@example.com"],
+      win,
+      withUnifiedExtensionsPanel
+    );
+    await testActiveScript(ext4, 1, [], win, withUnifiedExtensionsPanel);
   });
 
   // Register run_at content scripts in reverse order.
@@ -274,7 +332,7 @@ add_task(async function test_action_activeScript() {
     is(static0, "static@mochi.test:8888", "Script ran automatically.");
 
     info("Clicking ext0 button should not run content script again.");
-    await testActiveScript(ext0, 1, []);
+    await testActiveScript(ext0, 1, [], win, withUnifiedExtensionsPanel);
 
     info("ext3 has host permission, content script should run automatically.");
     let received3 = [
@@ -288,25 +346,43 @@ add_task(async function test_action_activeScript() {
     );
 
     info("Clicking ext3 button should not run content script again.");
-    await testActiveScript(ext3, 2, []);
+    await testActiveScript(ext3, 2, [], win, withUnifiedExtensionsPanel);
 
-    await testActiveScript(ext1, 1, ["static@mochi.test:8888"]);
-    await testActiveScript(ext2, 1, ["static@mochi.test:8888"]);
+    await testActiveScript(
+      ext1,
+      1,
+      ["static@mochi.test:8888"],
+      win,
+      withUnifiedExtensionsPanel
+    );
+    await testActiveScript(
+      ext2,
+      1,
+      ["static@mochi.test:8888"],
+      win,
+      withUnifiedExtensionsPanel
+    );
 
     // Expect run_at content scripts to run in the correct order.
-    await testActiveScript(ext4, 1, [
-      "order@document_start",
-      "order@document_start,document_end",
-      "order@document_start,document_end,document_idle",
-      "static@mochi.test:8888",
-    ]);
+    await testActiveScript(
+      ext4,
+      1,
+      [
+        "order@document_start",
+        "order@document_start,document_end",
+        "order@document_start,document_end,document_idle",
+        "static@mochi.test:8888",
+      ],
+      win,
+      withUnifiedExtensionsPanel
+    );
 
     info("Clicking all buttons again should not run content scripts.");
-    await testActiveScript(ext0, 1, []);
-    await testActiveScript(ext1, 1, []);
-    await testActiveScript(ext2, 1, []);
-    await testActiveScript(ext3, 2, []);
-    await testActiveScript(ext4, 1, []);
+    await testActiveScript(ext0, 1, [], win, withUnifiedExtensionsPanel);
+    await testActiveScript(ext1, 1, [], win, withUnifiedExtensionsPanel);
+    await testActiveScript(ext2, 1, [], win, withUnifiedExtensionsPanel);
+    await testActiveScript(ext3, 2, [], win, withUnifiedExtensionsPanel);
+    await testActiveScript(ext4, 1, [], win, withUnifiedExtensionsPanel);
   });
 
   await ext0.unload();
@@ -314,4 +390,21 @@ add_task(async function test_action_activeScript() {
   await ext2.unload();
   await ext3.unload();
   await ext4.unload();
+};
+
+add_task(async function test_action_activeScript() {
+  await verifyActionActiveScript({ win: window });
+});
+
+add_task(async function test_activeScript_with_unified_extensions_panel() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.unifiedExtensions.enabled", true]],
+  });
+
+  const win = await promiseEnableUnifiedExtensions();
+
+  await verifyActionActiveScript({ win, withUnifiedExtensionsPanel: true });
+
+  await BrowserTestUtils.closeWindow(win);
+  await SpecialPowers.popPrefEnv();
 });
