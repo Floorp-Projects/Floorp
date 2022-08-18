@@ -461,6 +461,16 @@ class PanZoomControllerTest : BaseSessionTest() {
         }
     }
 
+    @WithDisplay(width = 100, height = 100)
+    @Test
+    fun touchActionWithWheelListener() {
+        sessionRule.display?.run { setDynamicToolbarMaxHeight(20) }
+        setupDocument(TOUCH_ACTION_WHEEL_LISTENER_HTML_PATH)
+        var value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
+        assertThat("The input result should be UNHANDLED",
+                   value, equalTo(PanZoomController.INPUT_RESULT_UNHANDLED))
+    }
+
     private fun fling(): GeckoResult<Int> {
         val downTime = SystemClock.uptimeMillis();
         val down = MotionEvent.obtain(
