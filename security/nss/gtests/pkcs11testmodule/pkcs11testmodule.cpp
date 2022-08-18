@@ -76,12 +76,78 @@ CK_RV Test_C_GetFunctionList(CK_FUNCTION_LIST_PTR_PTR) { return CKR_OK; }
 
 static int tokenPresent = 0;
 
-// The token in slot 4 has 2 objects. Both of them are profile object
-// and identified by object ID 1 or 2.
+// The token in slot 4 has 4 objects:
+// 1. CKO_PROFILE with CKP_PUBLIC_CERTIFICATES_TOKEN
+// 2. CKO_PROFILE with CKP_BASELINE_PROVIDER
+// 3. CKO_CERTIFICATE with CKA_ID "\x00..\x0f"
+// 4. CKO_CERTIFICATE with CKA_ID "\x10..\x1f"
 static bool readingProfile = false;
 static const CK_PROFILE_ID profiles[] = {CKP_PUBLIC_CERTIFICATES_TOKEN,
                                          CKP_BASELINE_PROVIDER};
 static int profileIndex = 0;
+
+static bool readingCert = false;
+static const unsigned char certId1[] = {
+  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+  0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
+};
+static const char *certLabel1 = "cert1";
+static const unsigned char certId2[] = {
+  0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+  0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f
+};
+static const char *certLabel2 = "cert2";
+
+static const unsigned char certValue[] = {
+  0x30, 0x82, 0x01, 0x54, 0x30, 0x81, 0xfc, 0xa0, 0x03, 0x02, 0x01, 0x02,
+  0x02, 0x02, 0x0e, 0x42, 0x30, 0x0a, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce,
+  0x3d, 0x04, 0x03, 0x02, 0x30, 0x15, 0x31, 0x13, 0x30, 0x11, 0x06, 0x03,
+  0x55, 0x04, 0x03, 0x13, 0x0a, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
+  0x20, 0x43, 0x41, 0x30, 0x1e, 0x17, 0x0d, 0x32, 0x30, 0x31, 0x32, 0x31,
+  0x39, 0x30, 0x39, 0x30, 0x32, 0x34, 0x39, 0x5a, 0x17, 0x0d, 0x32, 0x31,
+  0x30, 0x33, 0x31, 0x39, 0x30, 0x39, 0x30, 0x32, 0x34, 0x39, 0x5a, 0x30,
+  0x15, 0x31, 0x13, 0x30, 0x11, 0x06, 0x03, 0x55, 0x04, 0x03, 0x13, 0x0a,
+  0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x20, 0x43, 0x41, 0x30, 0x59,
+  0x30, 0x13, 0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, 0x06,
+  0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07, 0x03, 0x42, 0x00,
+  0x04, 0x24, 0xd1, 0x96, 0xcc, 0x72, 0x36, 0xbb, 0xd6, 0x04, 0x36, 0x14,
+  0x59, 0x9a, 0x27, 0x24, 0x6b, 0x03, 0x7c, 0x02, 0x69, 0x68, 0x50, 0x70,
+  0x52, 0xe5, 0x5f, 0xe1, 0xf1, 0xd4, 0x0a, 0x00, 0x18, 0x76, 0x14, 0xa3,
+  0xed, 0x7d, 0xc5, 0x0a, 0xfe, 0xe4, 0x6f, 0x09, 0xf8, 0xcd, 0xe8, 0x5a,
+  0x39, 0x81, 0xf4, 0xcc, 0x25, 0xbe, 0x26, 0x76, 0xe1, 0x23, 0x52, 0x09,
+  0x6f, 0xbd, 0xf1, 0x75, 0xbe, 0xa3, 0x3c, 0x30, 0x3a, 0x30, 0x14, 0x06,
+  0x09, 0x60, 0x86, 0x48, 0x01, 0x86, 0xf8, 0x42, 0x01, 0x01, 0x01, 0x01,
+  0xff, 0x04, 0x04, 0x03, 0x02, 0x02, 0x04, 0x30, 0x12, 0x06, 0x03, 0x55,
+  0x1d, 0x13, 0x01, 0x01, 0xff, 0x04, 0x08, 0x30, 0x06, 0x01, 0x01, 0xff,
+  0x02, 0x01, 0x00, 0x30, 0x0e, 0x06, 0x03, 0x55, 0x1d, 0x0f, 0x01, 0x01,
+  0xff, 0x04, 0x04, 0x03, 0x02, 0x07, 0x80, 0x30, 0x0a, 0x06, 0x08, 0x2a,
+  0x86, 0x48, 0xce, 0x3d, 0x04, 0x03, 0x02, 0x03, 0x47, 0x00, 0x30, 0x44,
+  0x02, 0x20, 0x76, 0x56, 0x09, 0xe9, 0x79, 0xc2, 0x62, 0x28, 0xfc, 0x48,
+  0xf8, 0xac, 0x73, 0xbb, 0xe1, 0xe5, 0x79, 0x93, 0x78, 0x05, 0x4b, 0x45,
+  0x08, 0xcf, 0x10, 0x9f, 0x0d, 0xb9, 0x50, 0x7d, 0x70, 0x24, 0x02, 0x20,
+  0x27, 0x52, 0xe7, 0x9e, 0x42, 0xe3, 0xb2, 0x4d, 0xbb, 0x7d, 0xa3, 0x81,
+  0x5f, 0x7f, 0x0f, 0x3a, 0x55, 0x34, 0xfa, 0x86, 0x35, 0xcb, 0x68, 0x4f,
+  0xad, 0x67, 0x67, 0x05, 0x36, 0xcb, 0x11, 0x4d
+};
+static const unsigned char certSerial[] = {
+  0x02, 0x02, 0x0e, 0x42
+};
+static const unsigned char certIssuer[] = {
+  0x30, 0x15, 0x31, 0x13, 0x30, 0x11, 0x06, 0x03, 0x55, 0x04, 0x03, 0x13,
+  0x0a, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x20, 0x43, 0x41
+};
+
+static const struct cert {
+  const unsigned char *id;
+  size_t idLen;
+  const char *label;
+} certs[] = {
+  { certId1, sizeof(certId1), certLabel1 },
+  { certId2, sizeof(certId2), certLabel2 }
+};
+static int certIndex = 0;
+static CK_OBJECT_HANDLE certHandle = CK_INVALID_HANDLE;
+static bool certIdGiven = false;
 
 CK_RV Test_C_GetSlotList(CK_BBOOL limitToTokensPresent,
                          CK_SLOT_ID_PTR pSlotList, CK_ULONG_PTR pulCount) {
@@ -316,22 +382,78 @@ CK_RV Test_C_GetAttributeValue(CK_SESSION_HANDLE hSession,
                                CK_OBJECT_HANDLE hObject,
                                CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount) {
   if (hSession == 4) {
-    assert(hObject >= 1 &&
-           hObject - 1 < sizeof(profiles) / sizeof(profiles[0]));
-    for (CK_ULONG count = 0; count < ulCount; count++) {
-      if (pTemplate[count].type == CKA_PROFILE_ID) {
-        if (pTemplate[count].pValue) {
-          assert(pTemplate[count].ulValueLen == sizeof(CK_ULONG));
-          CK_ULONG value = profiles[hObject - 1];
-          memcpy(pTemplate[count].pValue, &value, sizeof(value));
+    switch (hObject) {
+    case 1:
+    case 2:
+      for (CK_ULONG count = 0; count < ulCount; count++) {
+        if (pTemplate[count].type == CKA_PROFILE_ID) {
+          if (pTemplate[count].pValue) {
+            assert(pTemplate[count].ulValueLen == sizeof(CK_ULONG));
+            CK_ULONG value = profiles[hObject - 1];
+            memcpy(pTemplate[count].pValue, &value, sizeof(value));
+          } else {
+            pTemplate[count].ulValueLen = sizeof(CK_ULONG);
+          }
         } else {
-          pTemplate[count].ulValueLen = sizeof(CK_ULONG);
+          pTemplate[count].ulValueLen = (CK_ULONG)-1;
         }
-      } else {
-        pTemplate[count].ulValueLen = (CK_ULONG)-1;
       }
+      return CKR_OK;
+    case 3:
+    case 4:
+      for (CK_ULONG count = 0; count < ulCount; count++) {
+        switch (pTemplate[count].type) {
+        case CKA_TOKEN:
+          if (pTemplate[count].pValue) {
+            assert(pTemplate[count].ulValueLen == sizeof(CK_BBOOL));
+            CK_BBOOL value = true;
+            memcpy(pTemplate[count].pValue, &value, sizeof(value));
+          } else {
+            pTemplate[count].ulValueLen = sizeof(CK_BBOOL);
+          }
+          break;
+
+        case CKA_LABEL: {
+          const char *label = certs[hObject - 3].label;
+          size_t labelLen = strlen(label);
+          if (pTemplate[count].pValue) {
+            if (pTemplate[count].ulValueLen >= labelLen) {
+              memcpy(pTemplate[count].pValue, label, labelLen);
+            } else {
+              pTemplate[count].ulValueLen = CK_UNAVAILABLE_INFORMATION;
+            }
+          } else {
+            pTemplate[count].ulValueLen = labelLen;
+          }
+          break;
+        }
+
+#define BYTEARRAY_CASE(label, array) \
+        case label: \
+          if (pTemplate[count].pValue) { \
+            if (pTemplate[count].ulValueLen >= sizeof(array)) { \
+              memcpy(pTemplate[count].pValue, array, sizeof(array)); \
+            } else { \
+              pTemplate[count].ulValueLen = CK_UNAVAILABLE_INFORMATION; \
+            } \
+          } else { \
+            pTemplate[count].ulValueLen = sizeof(array); \
+          } \
+          break;
+
+        BYTEARRAY_CASE(CKA_VALUE, certValue)
+        BYTEARRAY_CASE(CKA_SERIAL_NUMBER, certSerial)
+        BYTEARRAY_CASE(CKA_ISSUER, certIssuer)
+
+        default:
+          pTemplate[count].ulValueLen = CK_UNAVAILABLE_INFORMATION;
+          break;
+        }
+      }
+      return CKR_OK;
+    default:
+      break;
     }
-    return CKR_OK;
   }
   return CKR_FUNCTION_NOT_SUPPORTED;
 }
@@ -345,19 +467,47 @@ CK_RV Test_C_FindObjectsInit(CK_SESSION_HANDLE hSession,
                              CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount) {
   // Slot 4
   if (hSession == 4) {
+    CK_OBJECT_CLASS objectClass = CKO_DATA;
+    CK_BYTE *id = NULL;
+    CK_ULONG idLen = 0;
     for (CK_ULONG count = 0; count < ulCount; count++) {
       CK_ATTRIBUTE attribute = pTemplate[count];
-      if (attribute.type == CKA_CLASS) {
-        assert(attribute.ulValueLen == sizeof(CK_ULONG));
+      switch (attribute.type) {
+      case CKA_CLASS:
+        assert(attribute.ulValueLen == sizeof(CK_OBJECT_CLASS));
 
-        CK_ULONG value;
-        memcpy(&value, attribute.pValue, attribute.ulValueLen);
-        if (value == CKO_PROFILE) {
-          readingProfile = true;
-          profileIndex = 0;
-          break;
+        memcpy(&objectClass, attribute.pValue, attribute.ulValueLen);
+        break;
+      case CKA_ID:
+        id = (CK_BYTE *)attribute.pValue;
+        idLen = attribute.ulValueLen;
+        break;
+      default:
+        break;
+      }
+    }
+
+    switch (objectClass) {
+    case CKO_PROFILE:
+      readingProfile = true;
+      profileIndex = 0;
+      break;
+    case CKO_CERTIFICATE:
+      readingCert = true;
+      certIndex = 0;
+      if (id) {
+        certIdGiven = true;
+        for (size_t count = 0; count < sizeof(certs) / sizeof(certs[0]); count++) {
+          if (certs[count].idLen == idLen &&
+              memcmp(certs[count].id, id, idLen) == 0) {
+            certHandle = count + 3;
+            break;
+          }
         }
       }
+      break;
+    default:
+      break;
     }
   }
   return CKR_OK;
@@ -379,6 +529,30 @@ CK_RV Test_C_FindObjects(CK_SESSION_HANDLE hSession,
     }
     profileIndex += count;
     *pulObjectCount = count;
+  } else if (readingCert) {
+    assert(hSession == 4);
+    if (!certIdGiven) {
+      CK_ULONG count = ulMaxObjectCount;
+      size_t remaining = sizeof(certs) / sizeof(certs[0]) - certIndex;
+      if (count > remaining) {
+        count = remaining;
+      }
+      for (CK_ULONG i = 0; i < count; i++) {
+        phObject[i] = i + 3;
+      }
+      *pulObjectCount = count;
+      certIndex += count;
+    } else if (certHandle != CK_INVALID_HANDLE) {
+      if (certIndex == 0 && ulMaxObjectCount > 0) {
+        phObject[0] = certHandle;
+        *pulObjectCount = 1;
+        certIndex = 1;
+      } else {
+        *pulObjectCount = 0;
+      }
+    } else {
+      *pulObjectCount = 0;
+    }
   } else {
     *pulObjectCount = 0;
   }
@@ -387,6 +561,9 @@ CK_RV Test_C_FindObjects(CK_SESSION_HANDLE hSession,
 
 CK_RV Test_C_FindObjectsFinal(CK_SESSION_HANDLE hSession) {
   readingProfile = false;
+  readingCert = false;
+  certHandle = CK_INVALID_HANDLE;
+  certIdGiven = false;
   return CKR_OK;
 }
 

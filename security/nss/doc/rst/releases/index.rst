@@ -8,6 +8,7 @@ Releases
    :glob:
    :hidden:
 
+   nss_3_82.rst
    nss_3_81.rst
    nss_3_80.rst
    nss_3_79.rst
@@ -38,8 +39,8 @@ Releases
 
 .. note::
 
-   **NSS 3.81** is the latest version of NSS.
-   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_81_release_notes`
+   **NSS 3.82** is the latest version of NSS.
+   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_82_release_notes`
 
    **NSS 3.79** is the latest ESR version of NSS.
    Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_79_release_notes`
@@ -47,11 +48,10 @@ Releases
 
 .. container::
 
-   Changes in 3.81 included in this release:
+   Changes in 3.82 included in this release:
 
-   - Bug 1762831: Enable aarch64 hardware crypto support on OpenBSD.
-   - Bug 1775359 - make NSS_SecureMemcmp 0/1 valued.
-   - Bug 1779285: Add no_application_protocol alert handler and test client error code is set.
-   - Bug 1777672 - Gracefully handle null nickname in CERT_GetCertNicknameWithValidity.
-
-
+   - Bug 1330271 - check for null template in sec_asn1{d,e}_push_state
+   - Bug 1735925 - QuickDER: Forbid NULL tags with non-zero length
+   - Bug 1784724 - Initialize local variables in TlsConnectTestBase::ConnectAndCheckCipherSuite
+   - Bug 1784191 - Cast the result of GetProcAddress
+   - Bug 1681099 - pk11wrap: Tighten certificate lookup based on PKCS #11 URI

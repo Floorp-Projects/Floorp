@@ -616,9 +616,8 @@ transfer_uri_certs_to_collection(nssList *certList, PK11URI *uri,
     PRUint32 i, count;
     NSSToken **tokens, **tp;
     PK11SlotInfo *slot;
-    const char *id;
+    const SECItem *id;
 
-    id = PK11URI_GetPathAttribute(uri, PK11URI_PATTR_ID);
     count = nssList_Count(certList);
     if (count == 0) {
         return;
@@ -627,13 +626,14 @@ transfer_uri_certs_to_collection(nssList *certList, PK11URI *uri,
     if (!certs) {
         return;
     }
+    id = PK11URI_GetPathAttributeItem(uri, PK11URI_PATTR_ID);
     nssList_GetArray(certList, (void **)certs, count);
     for (i = 0; i < count; i++) {
         /*
-	 * Filter the subject matched certs based on the
-	 * CKA_ID from the URI
-	 */
-        if (id && (strlen(id) != certs[i]->id.size ||
+         * Filter the subject matched certs based on the
+         * CKA_ID from the URI
+         */
+        if (id && (id->len != certs[i]->id.size ||
                    memcmp(id, certs[i]->id.data, certs[i]->id.size)))
             continue;
         tokens = nssPKIObject_GetTokens(&certs[i]->object, NULL);
@@ -666,6 +666,14 @@ transfer_uri_certs_to_collection(nssList *certList, PK11URI *uri,
                     continue;
                 }
 
+                value = PK11URI_GetPathAttribute(uri, PK11URI_PATTR_SERIAL);
+                if (value &&
+                    !pk11_MatchString(value,
+                                      (char *)slot->tokenInfo.serialNumber,
+                                      sizeof(slot->tokenInfo.serialNumber))) {
+                    continue;
+                }
+
                 nssPKIObjectCollection_AddObject(collection,
                                                  (nssPKIObject *)certs[i]);
                 break;
@@ -683,7 +691,8 @@ find_certs_from_uri(const char *uriString, void *wincx)
     PK11URI *uri = NULL;
     CK_ATTRIBUTE attributes[10];
     CK_ULONG nattributes = 0;
-    const char *label;
+    const SECItem *id;
+    const char *label, *type;
     PK11SlotInfo *slotinfo;
     nssCryptokiObject **instances;
     PRStatus status;
@@ -710,10 +719,16 @@ find_certs_from_uri(const char *uriString, void *wincx)
         goto loser;
     }
 
+    /* if the "type" attribute is specified its value must be "cert" */
+    type = PK11URI_GetPathAttribute(uri, PK11URI_PATTR_TYPE);
+    if (type && strcmp(type, "cert")) {
+        goto loser;
+    }
+
     label = PK11URI_GetPathAttribute(uri, PK11URI_PATTR_OBJECT);
     if (label) {
         (void)nssTrustDomain_GetCertsForNicknameFromCache(defaultTD,
-                                                          (const char *)label,
+                                                          label,
                                                           certList);
     } else {
         (void)nssTrustDomain_GetCertsFromCache(defaultTD, certList);
@@ -736,6 +751,14 @@ find_certs_from_uri(const char *uriString, void *wincx)
         attributes[nattributes].type = CKA_LABEL;
         attributes[nattributes].pValue = (void *)label;
         attributes[nattributes].ulValueLen = strlen(label);
+        nattributes++;
+    }
+
+    id = PK11URI_GetPathAttributeItem(uri, PK11URI_PATTR_ID);
+    if (id) {
+        attributes[nattributes].type = CKA_ID;
+        attributes[nattributes].pValue = (void *)id->data;
+        attributes[nattributes].ulValueLen = id->len;
         nattributes++;
     }
 
