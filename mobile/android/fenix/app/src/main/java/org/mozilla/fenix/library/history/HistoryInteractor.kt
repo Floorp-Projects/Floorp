@@ -55,11 +55,6 @@ interface HistoryInteractor : SelectionInteractor<History> {
      * Called when the user clicks on recently closed tab button.
      */
     fun onRecentlyClosedClicked()
-
-    /**
-     * Called when the user clicks on synced history button.
-     */
-    fun onSyncedHistoryClicked()
 }
 
 /**
@@ -112,9 +107,5 @@ class DefaultHistoryInteractor(
 
     override fun onRecentlyClosedClicked() {
         historyController.handleEnterRecentlyClosed()
-    }
-
-    override fun onSyncedHistoryClicked() {
-        historyController.handleEnterSyncedHistory()
     }
 }

@@ -15,8 +15,7 @@ import org.mozilla.fenix.components.history.PagedHistoryProvider
  * Flow<PagingData>, that provides HistoryAdapter with items to display.
  */
 class HistoryDataSource(
-    private val historyProvider: PagedHistoryProvider,
-    private val isRemote: Boolean? = null,
+    private val historyProvider: PagedHistoryProvider
 ) : PagingSource<Int, History>() {
 
     // The refresh key is set to null so that it will always reload the entire list for any data
@@ -27,7 +26,7 @@ class HistoryDataSource(
         // Get the offset of the last loaded page or default to 0 when it is null on the initial
         // load or a refresh.
         val offset = params.key ?: 0
-        val historyItems = historyProvider.getHistory(offset, params.loadSize, isRemote).run {
+        val historyItems = historyProvider.getHistory(offset, params.loadSize).run {
             positionWithOffset(offset)
         }
         val nextOffset = if (historyItems.isEmpty()) {

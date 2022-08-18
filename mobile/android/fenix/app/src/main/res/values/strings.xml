@@ -754,15 +754,15 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">No history here</string>
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">Synced from other devices</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Synced from other devices</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">From other devices</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">From other devices</string>
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">Sign in to see history synced from your other devices.</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Sign in to see history synced from your other devices.</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">Sign in</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Sign in</string>
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>Or create a Firefox account to start syncing</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>Or create a Firefox account to start syncing</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->

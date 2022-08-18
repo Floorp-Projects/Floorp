@@ -80,11 +80,6 @@ object FeatureFlags {
     const val historyImprovementFeatures = true
 
     /**
-     * Separates history into local and synced from other sources.
-     */
-    val showSyncedHistory = Config.channel.isDebug
-
-    /**
      * Enables the Task Continuity enhancements.
      */
     val taskContinuityFeature = Config.channel.isNightlyOrDebug

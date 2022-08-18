@@ -50,11 +50,6 @@ interface HistoryController {
     fun handleDeleteTimeRangeConfirmed(timeFrame: RemoveTimeFrame?)
     fun handleRequestSync()
     fun handleEnterRecentlyClosed()
-
-    /**
-     * Navigates to [org.mozilla.fenix.library.syncedhistory.SyncedHistoryFragment]
-     */
-    fun handleEnterSyncedHistory()
 }
 
 @Suppress("TooManyFunctions", "LongParameterList")
@@ -215,11 +210,5 @@ class DefaultHistoryController(
             NavOptions.Builder().setPopUpTo(R.id.recentlyClosedFragment, true).build()
         )
         Events.recentlyClosedTabsOpened.record(NoExtras())
-    }
-
-    override fun handleEnterSyncedHistory() {
-        navController.navigate(
-            HistoryFragmentDirections.actionHistoryFragmentToSyncedHistoryFragment()
-        )
     }
 }

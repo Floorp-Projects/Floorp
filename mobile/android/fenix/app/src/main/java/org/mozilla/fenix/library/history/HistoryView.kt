@@ -12,7 +12,6 @@ import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
 import mozilla.components.support.base.feature.UserInteractionHandler
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.ComponentHistoryBinding
 import org.mozilla.fenix.ext.components
@@ -115,8 +114,6 @@ class HistoryView(
     private fun updateEmptyState(userHasHistory: Boolean) {
         binding.historyList.isInvisible = !userHasHistory
         binding.historyEmptyView.isVisible = !userHasHistory
-        binding.topSpacer.isVisible = !userHasHistory
-
         with(binding.recentlyClosedNavEmpty) {
             recentlyClosedNav.setOnClickListener {
                 interactor.onRecentlyClosedClicked()
@@ -134,14 +131,6 @@ class HistoryView(
             )
             recentlyClosedNav.isVisible = !userHasHistory
         }
-
-        with(binding.syncedHistoryNavEmpty) {
-            syncedHistoryNav.setOnClickListener {
-                interactor.onSyncedHistoryClicked()
-            }
-            syncedHistoryNav.isVisible = FeatureFlags.showSyncedHistory && !userHasHistory
-        }
-
         if (!userHasHistory) {
             binding.historyEmptyView.announceForAccessibility(context.getString(R.string.history_empty_message))
         }
