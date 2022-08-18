@@ -43,10 +43,8 @@ pub unsafe extern "system" fn crash_illegal_instruction(_arg: *mut c_void) -> u3
 // We're following the strategy employed by the `kvstore`.
 // See https://searchfox.org/mozilla-central/rev/a87a1c3b543475276e6d57a7a80cb02f3e42b6ed/toolkit/components/kvstore/src/lib.rs#78
 
-#[derive(xpcom)]
-#[refcnt = "atomic"]
-#[xpimplements(nsIProcessToolsService)]
-pub struct InitProcessToolsService {}
+#[xpcom(implement(nsIProcessToolsService), atomic)]
+pub struct ProcessToolsService {}
 
 impl ProcessToolsService {
     pub fn new() -> RefPtr<ProcessToolsService> {

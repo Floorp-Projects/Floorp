@@ -20,10 +20,8 @@ pub unsafe extern "C" fn xulstore_new_service(result: *mut *const nsIXULStore) {
     RefPtr::new(xul_store_service.coerce::<nsIXULStore>()).forget(&mut *result);
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsIXULStore)]
-#[refcnt = "atomic"]
-pub struct InitXULStoreService {}
+#[xpcom(implement(nsIXULStore), atomic)]
+pub struct XULStoreService {}
 
 impl XULStoreService {
     fn new() -> RefPtr<XULStoreService> {
@@ -154,10 +152,8 @@ impl XULStoreService {
     }
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsIStringEnumerator)]
-#[refcnt = "nonatomic"]
-pub(crate) struct InitStringEnumerator {
+#[xpcom(implement(nsIStringEnumerator), nonatomic)]
+pub(crate) struct StringEnumerator {
     iter: RefCell<XULStoreIterator>,
 }
 impl StringEnumerator {
@@ -191,10 +187,8 @@ impl StringEnumerator {
     }
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsIObserver)]
-#[refcnt = "nonatomic"]
-pub(crate) struct InitProfileChangeObserver {}
+#[xpcom(implement(nsIObserver), nonatomic)]
+pub(crate) struct ProfileChangeObserver {}
 impl ProfileChangeObserver {
     #[allow(non_snake_case)]
     unsafe fn Observe(

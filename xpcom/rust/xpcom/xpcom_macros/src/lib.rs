@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-//! This crate provides the `#[derive(xpcom)]` custom derive. This custom derive
+//! This crate provides the `#[xpcom]` custom attribute. This custom attribute
 //! is used in order to implement [`xpcom`] interfaces.
 //!
 //! # Usage
@@ -13,10 +13,8 @@
 //!
 //! ```ignore
 //! // Declaring an XPCOM Struct
-//! #[derive(xpcom)]
-//! #[xpimplements(nsIRunnable)]
-//! #[refcnt = "atomic"]
-//! struct InitImplRunnable {
+//! #[xpcom(implement(nsIRunnable), atomic)]
+//! struct ImplRunnable {
 //!     i: i32,
 //! }
 //!
@@ -34,40 +32,39 @@
 //! ```ignore
 //! // This derive should be placed on the initialization struct in order to
 //! // trigger the procedural macro.
-//! #[derive(xpcom)]
+//! #[xpcom(
+//!     // The implement argument should be passed the names of the IDL
+//!     // interfaces which you want to implement. These can be separated by
+//!     // commas if you want to implement multiple interfaces.
+//!     //
+//!     // Some methods use types which we cannot bind to in rust. Interfaces
+//!     // like those cannot be implemented, and a compile-time error will occur
+//!     // if they are listed in this attribute.
+//!     implement(nsIRunnable),
 //!
-//! // The xpimplements attribute should be passed the names of the IDL
-//! // interfaces which you want to implement. These can be separated by commas
-//! // if you want to implement multiple interfaces.
-//! //
-//! // Some methods use types which we cannot bind to in rust. Interfaces
-//! // like those cannot be implemented, and a compile-time error will occur
-//! // if they are listed in this attribute.
-//! #[xpimplements(nsIRunnable)]
+//!     // The refcount kind can be specified as one of the following values:
+//!     //  * `atomic` == atomic reference count
+//!     //    ~= NS_DECL_THREADSAFE_ISUPPORTS in C++
+//!     //  * `nonatomic` == non atomic reference count
+//!     //    ~= NS_DECL_ISUPPORTS in C++
+//!     atomic,
+//! )]
 //!
-//! // The refcnt attribute can have one of the following values:
-//! //  * "atomic" == atomic reference count
-//! //    ~= NS_DECL_THREADSAFE_ISUPPORTS in C++
-//! //  * "nonatomic" == non atomic reference count
-//! //    ~= NS_DECL_ISUPPORTS in C++
-//! #[refcnt = "atomic"]
-//!
-//! // The struct with the attribute on its name must start with `Init`.
-//! // The custom derive will define the actual underlying struct. For
-//! // example, placing the derive on a struct named `InitFoo` will cause
-//! // an underlying `Foo` struct to be generated.
-//! //
-//! // It is a compile time error to put the `#[derive(xpcom)]` derive on
+//! // It is a compile time error to put the `#[xpcom]` attribute on
 //! // an enum, union, or tuple struct.
-//! struct InitImplRunnable {
-//!     // Fields in the `Init` struct will also be in the underlying struct.
+//! //
+//! // The macro will generate both the named struct, as well as a version with
+//! // its name prefixed with `Init` which can be used to initialize the type.
+//! struct ImplRunnable {
 //!     i: i32,
 //! }
 //! ```
 //!
-//! The above example will generate an underlying `ImplRunnable` struct, which will implement
-//! the [`nsIRunnable`] XPCOM interface. The following methods will be
-//! automatically implemented on it:
+//! The above example will generate `ImplRunnable` and `InitImplRunnable`
+//! structs. The `ImplRunnable` struct will implement the [`nsIRunnable`] XPCOM
+//! interface, and cannot be constructed directly.
+//!
+//! The following methods will be automatically implemented on it:
 //!
 //! ```ignore
 //! // Automatic nsISupports implementation
@@ -111,7 +108,7 @@
 //! impl ImplRunnable {
 //!     // The method should have the same name as the corresponding C++ method.
 //!     unsafe fn Run(&self) -> nsresult {
-//!         // Fields defined on the `Init` struct will be directly on the
+//!         // Fields defined on the template struct will be directly on the
 //!         // generated struct.
 //!         println!("{}", self.i);
 //!         NS_OK
@@ -146,8 +143,8 @@ use quote::{format_ident, quote, ToTokens};
 use std::collections::{HashMap, HashSet};
 use syn::punctuated::Punctuated;
 use syn::{
-    parse_macro_input, parse_quote, Attribute, Data, DataStruct, DeriveInput, Field, Fields, Ident,
-    Lit, Meta, NestedMeta, Token, Type,
+    parse_macro_input, parse_quote, AttributeArgs, Field, Fields, Ident, ItemStruct, Meta,
+    MetaList, NestedMeta, Path, Token, Type,
 };
 
 macro_rules! bail {
@@ -245,98 +242,25 @@ impl ToTokens for RefcntKind {
     }
 }
 
-/// Scans through the attributes on a struct, and extracts the type of the refcount to use.
-fn get_refcnt_kind(attrs: &[Attribute]) -> Result<RefcntKind, syn::Error> {
-    for attr in attrs {
-        if let Meta::NameValue(syn::MetaNameValue {
-            ref path, ref lit, ..
-        }) = attr.parse_meta()?
-        {
-            if !path.is_ident("refcnt") {
-                continue;
-            }
-
-            let value = if let Lit::Str(ref s) = lit {
-                s.value()
-            } else {
-                bail!(@(attr), "Unexpected non-string value in #[refcnt]");
-            };
-
-            return if value == "nonatomic" {
-                Ok(RefcntKind::NonAtomic)
-            } else if value == "atomic" {
-                Ok(RefcntKind::Atomic)
-            } else {
-                bail!(@(attr), "Unexpected value in #[refcnt]. \
-                                Expected `nonatomic`, or `atomic`");
-            };
-        }
-    }
-
-    bail!("Expected #[refcnt] attribute")
-}
-
-/// Scan the attributes looking for an #[xpimplements] attribute. The identifier
-/// arguments passed to this attribute are the interfaces which the type wants to
-/// directly implement.
-fn get_bases(attrs: &[Attribute]) -> Result<Vec<&'static Interface>, syn::Error> {
-    let mut inherits = Vec::new();
-    for attr in attrs {
-        if let Meta::List(syn::MetaList {
-            ref path,
-            ref nested,
-            ..
-        }) = attr.parse_meta()?
-        {
-            if !path.is_ident("xpimplements") {
-                continue;
-            }
-
-            for item in nested.iter() {
-                let iface = match *item {
-                    NestedMeta::Meta(syn::Meta::Path(ref iface)) => iface,
-                    _ => bail!(@(attr), "Unexpected non-identifier in #[xpimplements(..)]"),
-                };
-                let ident = match iface.get_ident() {
-                    Some(ref iface) => iface.to_string(),
-                    _ => bail!(@(attr), "Too many components in xpimplements path"),
-                };
-                if let Some(&iface) = IFACES.get(ident.as_str()) {
-                    inherits.push(iface);
-                } else {
-                    bail!(@(attr), "Unexpected invalid base interface `{}` in #[xpimplements(..)]", ident);
-                }
-            }
-        }
-    }
-    Ok(inherits)
-}
-
 /// Extract the fields list from the input struct.
-fn get_fields(di: &DeriveInput) -> Result<&Punctuated<Field, Token![,]>, syn::Error> {
-    match di.data {
-        Data::Struct(DataStruct {
-            fields: Fields::Named(ref named),
-            ..
-        }) => Ok(&named.named),
-        _ => bail!(@(di), "The initializer struct must be a standard named \
+fn get_fields(si: &ItemStruct) -> Result<&Punctuated<Field, Token![,]>, syn::Error> {
+    match si.fields {
+        Fields::Named(ref named) => Ok(&named.named),
+        _ => bail!(@(si), "The initializer struct must be a standard named \
                           value struct definition"),
     }
 }
 
-/// Takes the `Init*` struct in, and generates a `DeriveInput` for the "real" struct.
-fn gen_real_struct(
-    init: &DeriveInput,
+/// Takes the template struct in, and generates `ItemStruct` for the "real" and
+/// "init" structs.
+fn gen_structs(
+    template: &ItemStruct,
     bases: &[&Interface],
     refcnt_ty: RefcntKind,
-) -> Result<DeriveInput, syn::Error> {
-    // Determine the name for the real struct based on the name of the
-    // initializer struct's name.
-    if !init.ident.to_string().starts_with("Init") {
-        bail!(@(init.ident), "The target struct's name must begin with Init");
-    }
-    let name = Ident::new(&init.ident.to_string()[4..], init.ident.span());
-    let vis = &init.vis;
+) -> Result<(ItemStruct, ItemStruct), syn::Error> {
+    let real_ident = &template.ident;
+    let init_ident = format_ident!("Init{}", real_ident);
+    let vis = &template.vis;
 
     let bases = bases.iter().map(|base| {
         let ident = format_ident!("__base_{}", base.name);
@@ -344,16 +268,23 @@ fn gen_real_struct(
         quote!(#ident : *const xpcom::interfaces::#vtable)
     });
 
-    let fields = get_fields(init)?;
-    let (impl_generics, _, where_clause) = init.generics.split_for_impl();
-    Ok(parse_quote! {
-       #[repr(C)]
-       #vis struct #name #impl_generics #where_clause {
-           #(#bases,)*
-           __refcnt: #refcnt_ty,
-           #fields
-       }
-    })
+    let fields = get_fields(template)?;
+    let (impl_generics, _, where_clause) = template.generics.split_for_impl();
+    Ok((
+        parse_quote! {
+           #[repr(C)]
+           #vis struct #real_ident #impl_generics #where_clause {
+               #(#bases,)*
+               __refcnt: #refcnt_ty,
+               #fields
+           }
+        },
+        parse_quote! {
+           #vis struct #init_ident #impl_generics #where_clause {
+               #fields
+           }
+        },
+    ))
 }
 
 /// Generates the `extern "system"` methods which are actually included in the
@@ -363,7 +294,7 @@ fn gen_real_struct(
 /// struct `real`. This is soundness-critical, as it will be used to offset
 /// pointers received from xpcom back to the concrete implementation.
 fn gen_vtable_methods(
-    real: &DeriveInput,
+    real: &ItemStruct,
     iface: &Interface,
     vtable_index: usize,
 ) -> Result<TokenStream, syn::Error> {
@@ -412,7 +343,7 @@ fn gen_vtable_methods(
 
 /// Generates the VTable for a given base interface. This assumes that the
 /// implementations of each of the `extern "system"` methods are in scope.
-fn gen_inner_vtable(real: &DeriveInput, iface: &Interface) -> Result<TokenStream, syn::Error> {
+fn gen_inner_vtable(real: &ItemStruct, iface: &Interface) -> Result<TokenStream, syn::Error> {
     let vtable_ty = format_ident!("{}VTable", iface.name);
 
     // Generate the vtable for the base interface.
@@ -442,7 +373,7 @@ fn gen_inner_vtable(real: &DeriveInput, iface: &Interface) -> Result<TokenStream
 }
 
 fn gen_root_vtable(
-    real: &DeriveInput,
+    real: &ItemStruct,
     base: &Interface,
     idx: usize,
 ) -> Result<TokenStream, syn::Error> {
@@ -490,7 +421,7 @@ fn gen_root_vtable(
 fn gen_casts(
     seen: &mut HashSet<&'static str>,
     iface: &Interface,
-    real: &DeriveInput,
+    real: &ItemStruct,
     coerce_name: &Ident,
     vtable_field: &Ident,
 ) -> Result<(TokenStream, TokenStream), syn::Error> {
@@ -550,14 +481,14 @@ fn check_generics(generics: &syn::Generics) -> Result<(), syn::Error> {
             syn::GenericParam::Type(tp) => tp,
             syn::GenericParam::Lifetime(lp) => bail!(
                 @(lp),
-                "Cannot #[derive(xpcom)] on types with lifetime parameters. \
+                "Cannot use #[xpcom] on types with lifetime parameters. \
                 Implementors of XPCOM interfaces must not contain non-'static \
                 lifetimes.",
             ),
             // XXX: Once const generics become stable, it may be as simple as
             // removing this bail! to support them.
             syn::GenericParam::Const(cp) => {
-                bail!(@(cp), "Cannot #[derive(xpcom)] on types with const generics.")
+                bail!(@(cp), "Cannot use #[xpcom] on types with const generics.")
             }
         };
 
@@ -587,19 +518,86 @@ fn check_generics(generics: &syn::Generics) -> Result<(), syn::Error> {
     Ok(())
 }
 
-/// The root xpcom procedural macro definition.
-fn xpcom(init: DeriveInput) -> Result<TokenStream, syn::Error> {
-    check_generics(&init.generics)?;
+#[derive(Default)]
+struct Options {
+    bases: Vec<&'static Interface>,
+    refcnt: Option<RefcntKind>,
+}
 
-    let bases = get_bases(&init.attrs)?;
-    if bases.is_empty() {
-        bail!(
-            "Types with #[derive(xpcom)] must implement at least one \
-             interface. Interfaces can be implemented by adding the \
-             #[xpimplements(nsIFoo, nsIBar)] attribute to the struct \
-             declaration."
-        );
+impl Options {
+    fn parse_path_arg(&mut self, path: &Path) -> Result<(), syn::Error> {
+        if path.is_ident("atomic") || path.is_ident("nonatomic") {
+            if self.refcnt.is_some() {
+                bail!(@(path), "Duplicate refcnt atomicity specifier");
+            }
+            self.refcnt = Some(if path.is_ident("atomic") {
+                RefcntKind::Atomic
+            } else {
+                RefcntKind::NonAtomic
+            });
+            return Ok(());
+        }
+        bail!(@(path), "Unexpected path argument to #[xpcom]");
     }
+
+    fn parse_list_arg(&mut self, list: &MetaList) -> Result<(), syn::Error> {
+        if list.path.is_ident("implement") {
+            for item in list.nested.iter() {
+                let iface = match *item {
+                    NestedMeta::Meta(syn::Meta::Path(ref iface)) => iface,
+                    _ => bail!(@(item), "Expected interface name to implement"),
+                };
+                let ident = match iface.get_ident() {
+                    Some(ref iface) => iface.to_string(),
+                    _ => bail!(@(iface), "Interface name must be unqualified"),
+                };
+                if let Some(&iface) = IFACES.get(ident.as_str()) {
+                    self.bases.push(iface);
+                } else {
+                    bail!(@(item), "Invalid base interface `{}`", ident);
+                }
+            }
+            return Ok(());
+        }
+        bail!(@(list), "Unexpected list argument to #[xpcom]");
+    }
+
+    fn parse(&mut self, args: &AttributeArgs) -> Result<(), syn::Error> {
+        for arg in args {
+            match arg {
+                NestedMeta::Meta(Meta::Path(path)) => self.parse_path_arg(path)?,
+                NestedMeta::Meta(Meta::List(list)) => self.parse_list_arg(list)?,
+                NestedMeta::Meta(Meta::NameValue(name_value)) => {
+                    bail!(@(name_value), "Unexpected name-value argument to #[xpcom]")
+                }
+                NestedMeta::Lit(lit) => bail!(@(lit), "Unexpected literal argument to #[xpcom]"),
+            }
+        }
+
+        if self.bases.is_empty() {
+            bail!(
+                "Types with #[xpcom(..)] must implement at least one \
+                interface. Interfaces can be implemented by adding an \
+                implements(nsIFoo, nsIBar) parameter to the #[xpcom] attribute"
+            );
+        }
+
+        if self.refcnt.is_none() {
+            bail!("Must specify refcnt kind in #[xpcom] attribute");
+        }
+
+        Ok(())
+    }
+}
+
+/// The root xpcom procedural macro definition.
+fn xpcom_impl(args: AttributeArgs, template: ItemStruct) -> Result<TokenStream, syn::Error> {
+    let mut options = Options::default();
+    options.parse(&args)?;
+
+    check_generics(&template.generics)?;
+
+    let bases = options.bases;
 
     // Ensure that all our base interface methods have unique names.
     let mut method_names = HashMap::new();
@@ -620,8 +618,8 @@ fn xpcom(init: DeriveInput) -> Result<TokenStream, syn::Error> {
     }
 
     // Determine what reference count type to use, and generate the real struct.
-    let refcnt_ty = get_refcnt_kind(&init.attrs)?;
-    let real = gen_real_struct(&init, &bases, refcnt_ty)?;
+    let refcnt_ty = options.refcnt.unwrap();
+    let (real, init) = gen_structs(&template, &bases, refcnt_ty)?;
 
     let name_init = &init.ident;
     let name = &real.ident;
@@ -676,6 +674,8 @@ fn xpcom(init: DeriveInput) -> Result<TokenStream, syn::Error> {
             as *const ::xpcom::reexports::libc::c_char
     );
     Ok(quote! {
+        #init
+
         #real
 
         impl #impl_generics #name #ty_generics #where_clause {
@@ -777,16 +777,16 @@ fn xpcom(init: DeriveInput) -> Result<TokenStream, syn::Error> {
         }
 
         /// This trait is implemented on the interface types which this
-        /// `#[derive(xpcom)]` type can be safely ane cheaply coerced to using
-        /// the `coerce` method.
+        /// `#[xpcom]` type can be safely ane cheaply coerced to using the
+        /// `coerce` method.
         ///
         /// The trait and its method should usually not be used directly, but
         /// rather acts as a trait bound and implementation for the `coerce`
         /// methods.
         #[doc(hidden)]
         #vis trait #coerce_name #impl_generics #where_clause {
-            /// Convert a value of the `#[derive(xpcom)]` type into the
-            /// implementing interface type.
+            /// Convert a value of the `#[xpcom]` type into the implementing
+            /// interface type.
             fn coerce_from(v: &#name #ty_generics) -> &Self;
         }
 
@@ -804,10 +804,14 @@ fn xpcom(init: DeriveInput) -> Result<TokenStream, syn::Error> {
     })
 }
 
-#[proc_macro_derive(xpcom, attributes(xpimplements, refcnt))]
-pub fn xpcom_internal(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    match xpcom(input) {
+#[proc_macro_attribute]
+pub fn xpcom(
+    args: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    let args = parse_macro_input!(args as AttributeArgs);
+    let input = parse_macro_input!(input as ItemStruct);
+    match xpcom_impl(args, input) {
         Ok(ts) => ts.into(),
         Err(err) => err.to_compile_error().into(),
     }

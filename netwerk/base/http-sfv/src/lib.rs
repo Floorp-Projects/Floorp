@@ -26,10 +26,8 @@ pub unsafe extern "C" fn new_sfv_service(result: *mut *const nsISFVService) {
     RefPtr::new(service.coerce::<nsISFVService>()).forget(&mut *result);
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsISFVService)]
-#[refcnt = "atomic"]
-struct InitSFVService {}
+#[xpcom(implement(nsISFVService), atomic)]
+struct SFVService {}
 
 impl SFVService {
     fn new() -> RefPtr<SFVService> {
@@ -153,10 +151,8 @@ impl SFVService {
     }
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsISFVInteger, nsISFVBareItem)]
-#[refcnt = "nonatomic"]
-struct InitSFVInteger {
+#[xpcom(implement(nsISFVInteger, nsISFVBareItem), nonatomic)]
+struct SFVInteger {
     value: RefCell<i64>,
 }
 
@@ -188,10 +184,8 @@ impl SFVInteger {
     }
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsISFVBool, nsISFVBareItem)]
-#[refcnt = "nonatomic"]
-struct InitSFVBool {
+#[xpcom(implement(nsISFVBool, nsISFVBareItem), nonatomic)]
+struct SFVBool {
     value: RefCell<bool>,
 }
 
@@ -223,10 +217,8 @@ impl SFVBool {
     }
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsISFVString, nsISFVBareItem)]
-#[refcnt = "nonatomic"]
-struct InitSFVString {
+#[xpcom(implement(nsISFVString, nsISFVBareItem), nonatomic)]
+struct SFVString {
     value: RefCell<nsCString>,
 }
 
@@ -265,10 +257,8 @@ impl SFVString {
     }
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsISFVToken, nsISFVBareItem)]
-#[refcnt = "nonatomic"]
-struct InitSFVToken {
+#[xpcom(implement(nsISFVToken, nsISFVBareItem), nonatomic)]
+struct SFVToken {
     value: RefCell<nsCString>,
 }
 
@@ -307,10 +297,8 @@ impl SFVToken {
     }
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsISFVByteSeq, nsISFVBareItem)]
-#[refcnt = "nonatomic"]
-struct InitSFVByteSeq {
+#[xpcom(implement(nsISFVByteSeq, nsISFVBareItem), nonatomic)]
+struct SFVByteSeq {
     value: RefCell<nsCString>,
 }
 
@@ -349,10 +337,8 @@ impl SFVByteSeq {
     }
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsISFVDecimal, nsISFVBareItem)]
-#[refcnt = "nonatomic"]
-struct InitSFVDecimal {
+#[xpcom(implement(nsISFVDecimal, nsISFVBareItem), nonatomic)]
+struct SFVDecimal {
     value: RefCell<f64>,
 }
 
@@ -391,10 +377,8 @@ impl SFVDecimal {
     }
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsISFVParams)]
-#[refcnt = "nonatomic"]
-struct InitSFVParams {
+#[xpcom(implement(nsISFVParams), nonatomic)]
+struct SFVParams {
     params: RefCell<Parameters>,
 }
 
@@ -464,10 +448,8 @@ impl SFVParams {
     }
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsISFVItem, nsISFVItemOrInnerList)]
-#[refcnt = "nonatomic"]
-struct InitSFVItem {
+#[xpcom(implement(nsISFVItem, nsISFVItemOrInnerList), nonatomic)]
+struct SFVItem {
     value: RefPtr<nsISFVBareItem>,
     params: RefPtr<nsISFVParams>,
 }
@@ -514,10 +496,8 @@ impl SFVItem {
     }
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsISFVInnerList, nsISFVItemOrInnerList)]
-#[refcnt = "nonatomic"]
-struct InitSFVInnerList {
+#[xpcom(implement(nsISFVInnerList, nsISFVItemOrInnerList), nonatomic)]
+struct SFVInnerList {
     items: RefCell<Vec<RefPtr<nsISFVItem>>>,
     params: RefPtr<nsISFVParams>,
 }
@@ -571,10 +551,8 @@ impl SFVInnerList {
     }
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsISFVList, nsISFVSerialize)]
-#[refcnt = "nonatomic"]
-struct InitSFVList {
+#[xpcom(implement(nsISFVList, nsISFVSerialize), nonatomic)]
+struct SFVList {
     members: RefCell<Vec<RefPtr<nsISFVItemOrInnerList>>>,
 }
 
@@ -653,10 +631,8 @@ impl SFVList {
     }
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsISFVDictionary, nsISFVSerialize)]
-#[refcnt = "nonatomic"]
-struct InitSFVDictionary {
+#[xpcom(implement(nsISFVDictionary, nsISFVSerialize), nonatomic)]
+struct SFVDictionary {
     value: RefCell<Dictionary>,
 }
 

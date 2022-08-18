@@ -27,10 +27,8 @@ unsafe fn boxed_slice_from_raw(ptr: *mut u8, len: usize) -> Box<[u8]> {
     }
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsIStreamLoaderObserver)]
-#[refcnt = "nonatomic"]
-struct InitStreamLoaderObserver {
+#[xpcom(implement(nsIStreamLoaderObserver), nonatomic)]
+struct StreamLoaderObserver {
     sender: Cell<Option<oneshot::Sender<Result<Box<[u8]>, nsresult>>>>,
 }
 

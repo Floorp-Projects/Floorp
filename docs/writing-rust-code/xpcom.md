@@ -36,18 +36,16 @@ use xpcom::{interfaces::nsISupports, RefPtr};
 The next part declares the implementation.
 
 ```rust
-#[derive(xpcom)]
-#[xpimplements(nsIObserver)]
-#[refcnt = "atomic"]
-struct InitMyObserver {
+#[xpcom(implement(nsIObserver), atomic)]
+struct MyObserver {
     ran: AtomicBool,
 }
 ```
 
-It defines an initializer struct, prefixed with `Init`, with three attributes.
-- Some `derive` magic.
-- An `xpimplements` declaration naming the interface(s) being implemented.
-- The reference count type.
+This defines the implementation type, which will be refcounted in the specified
+way and implement the listed xpidl interfaces. It will also declare a second
+initializer struct `InitMyObserver` which can be used to allocate a new
+`MyObserver` using the `MyObserver::allocate` method.
 
 Next, all interface methods are declared in the `impl` block as `unsafe` methods.
 
@@ -67,7 +65,8 @@ impl MyObserver {
 ```
 
 These methods always take `&self`, not `&mut self`, so we need to use interior
-mutability: `AtomicBool`, `RefCell`, `Cell`, etc.
+mutability: `AtomicBool`, `RefCell`, `Cell`, etc. This is because all XPCOM
+objects are reference counted (like `Arc<T>`), so cannot provide exclusive access.
 
 XPCOM methods are unsafe by default, but the
 [xpcom_method!](https://searchfox.org/mozilla-central/source/xpcom/rust/xpcom/src/method.rs)
@@ -100,6 +99,7 @@ conversion must be explicit.
 ## Bigger examples
 
 The following XPCOM components are written in Rust.
+
 - [kvstore](https://searchfox.org/mozilla-central/source/toolkit/components/kvstore),
   which exposes the LMDB key-value store (via the [Rkv
   library](https://docs.rs/rkv)) The API is asynchronous, using `moz_task` to

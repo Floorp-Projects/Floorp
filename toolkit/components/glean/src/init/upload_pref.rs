@@ -18,10 +18,8 @@ use xpcom::{
 static RECORDING_ENABLED: AtomicBool = AtomicBool::new(false);
 
 // Partially cargo-culted from https://searchfox.org/mozilla-central/rev/598e50d2c3cd81cd616654f16af811adceb08f9f/security/manager/ssl/cert_storage/src/lib.rs#1192
-#[derive(xpcom)]
-#[xpimplements(nsIObserver)]
-#[refcnt = "atomic"]
-pub(crate) struct InitUploadPrefObserver {}
+#[xpcom(implement(nsIObserver), atomic)]
+pub(crate) struct UploadPrefObserver {}
 
 #[allow(non_snake_case)]
 impl UploadPrefObserver {

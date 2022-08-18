@@ -87,10 +87,8 @@ pub unsafe extern "C" fn nsKeyValueServiceConstructor(
 // The XPCOM methods are implemented using the xpcom_method! declarative macro
 // from the xpcom crate.
 
-#[derive(xpcom)]
-#[xpimplements(nsIKeyValueService)]
-#[refcnt = "atomic"]
-pub struct InitKeyValueService {}
+#[xpcom(implement(nsIKeyValueService), atomic)]
+pub struct KeyValueService {}
 
 impl KeyValueService {
     fn new() -> RefPtr<KeyValueService> {
@@ -122,10 +120,8 @@ impl KeyValueService {
     }
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsIKeyValueDatabase)]
-#[refcnt = "atomic"]
-pub struct InitKeyValueDatabase {
+#[xpcom(implement(nsIKeyValueDatabase), atomic)]
+pub struct KeyValueDatabase {
     rkv: Arc<RwLock<Rkv>>,
     store: SingleStore,
     queue: RefPtr<nsISerialEventTarget>,
@@ -312,10 +308,8 @@ impl KeyValueDatabase {
     }
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsIKeyValueEnumerator)]
-#[refcnt = "atomic"]
-pub struct InitKeyValueEnumerator {
+#[xpcom(implement(nsIKeyValueEnumerator), atomic)]
+pub struct KeyValueEnumerator {
     iter: AtomicRefCell<IntoIter<KeyValuePairResult>>,
 }
 
@@ -349,10 +343,8 @@ impl KeyValueEnumerator {
     }
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsIKeyValuePair)]
-#[refcnt = "atomic"]
-pub struct InitKeyValuePair {
+#[xpcom(implement(nsIKeyValuePair), atomic)]
+pub struct KeyValuePair {
     key: String,
     value: OwnedValue,
 }

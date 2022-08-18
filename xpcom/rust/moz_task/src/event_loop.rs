@@ -11,10 +11,8 @@ use std::cell::RefCell;
 use std::future::Future;
 use xpcom::{interfaces::nsIThreadManager, xpcom, xpcom_method};
 
-#[derive(xpcom)]
-#[xpimplements(nsINestedEventLoopCondition)]
-#[refcnt = "nonatomic"]
-struct InitFutureCompleteCondition<T: 'static> {
+#[xpcom(implement(nsINestedEventLoopCondition), nonatomic)]
+struct FutureCompleteCondition<T: 'static> {
     value: RefCell<Option<T>>,
 }
 
