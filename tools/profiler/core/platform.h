@@ -161,10 +161,6 @@ bool profiler_get_profile_json(
     double aSinceTime, bool aIsShuttingDown,
     mozilla::ProgressLogger aProgressLogger);
 
-void profiler_get_profile_json_into_lazily_allocated_buffer(
-    const std::function<char*(size_t)>& aAllocator, double aSinceTime,
-    bool aIsShuttingDown, mozilla::ProgressLogger aProgressLogger);
-
 // Flags to conveniently track various JS instrumentations.
 enum class JSInstrumentationFlags {
   StackSampling = 0x1,
