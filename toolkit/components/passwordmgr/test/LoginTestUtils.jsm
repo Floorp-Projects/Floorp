@@ -34,8 +34,6 @@ const { FileTestUtils } = ChromeUtils.import(
   "resource://testing-common/FileTestUtils.jsm"
 );
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 const LoginInfo = Components.Constructor(
   "@mozilla.org/login-manager/loginInfo;1",
   "nsILoginInfo",
@@ -619,10 +617,7 @@ LoginTestUtils.file = {
    */
   async setupCsvFileWithLines(csvLines, extension = "csv") {
     let tmpFile = FileTestUtils.getTempFile(`firefox_logins.${extension}`);
-    await OS.File.writeAtomic(
-      tmpFile.path,
-      new TextEncoder().encode(csvLines.join("\r\n"))
-    );
+    await IOUtils.writeUTF8(tmpFile.path, csvLines.join("\r\n"));
     return tmpFile;
   },
 };

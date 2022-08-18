@@ -18,11 +18,10 @@ let { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
  * After extracting the CSV lines, it deletes the tmp file.
  */
 async function exportAsCSVInTmpFile() {
-  let tmpFilePath = FileTestUtils.getTempFile("logins.csv").path;
+  const tmpFilePath = FileTestUtils.getTempFile("logins.csv").path;
   await LoginExport.exportAsCSV(tmpFilePath);
-  let csvContent = await OS.File.read(tmpFilePath);
-  let csvString = new TextDecoder().decode(csvContent);
-  await OS.File.remove(tmpFilePath);
+  const csvString = await IOUtils.readUTF8(tmpFilePath);
+  await IOUtils.remove(tmpFilePath);
   // CSV uses CRLF
   return csvString.split(/\r\n/);
 }
