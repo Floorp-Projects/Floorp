@@ -10,6 +10,10 @@
 #include "nsTextNode.h"
 #include "imgIContainer.h"
 
+#ifdef XP_MACOSX
+#  include "nsCocoaFeatures.h"
+#endif
+
 using namespace mozilla::dom;
 
 namespace mozilla::widget {
@@ -114,5 +118,16 @@ auto TextRecognition::DoFindText(gfx::DataSourceSurface&,
                                         __func__);
 }
 #endif
+
+bool TextRecognition::IsSupported() {
+#ifdef XP_MACOSX
+  // Catalina (10.15) or higher is required because of the following API:
+  // VNRecognizeTextRequest - macOS 10.15+
+  // https://developer.apple.com/documentation/vision/vnrecognizetextrequest?language=objc
+  return nsCocoaFeatures::OnCatalinaOrLater();
+#else
+  return false;
+#endif
+}
 
 }  // namespace mozilla::widget

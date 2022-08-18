@@ -12,9 +12,6 @@ android {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
     }
-    dexOptions {
-        javaMaxHeapSize "32g"
-    }
     defaultConfig {
         applicationId "org.mozilla.geckoview.example.messaging"
         targetSdkVersion project.ext.targetSdkVersion

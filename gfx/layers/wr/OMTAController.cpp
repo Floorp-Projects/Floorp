@@ -8,6 +8,7 @@
 
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/StaticPrefs_layout.h"
 
 namespace mozilla {
 namespace layers {

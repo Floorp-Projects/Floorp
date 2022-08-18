@@ -63,6 +63,7 @@ export const TabsSetupFlowManager = new (class {
       lazy.gNetworkLinkService.linkStatusKnown &&
       lazy.gNetworkLinkService.isLinkUp;
     this.syncIsWorking = true;
+    this.syncIsConnected = lazy.UIState.get().syncEnabled;
 
     this.registerSetupState({
       uiStateIndex: 0,
@@ -71,7 +72,8 @@ export const TabsSetupFlowManager = new (class {
         return (
           this.networkIsOnline &&
           this.syncIsWorking &&
-          !Services.prefs.prefIsLocked(FXA_ENABLED)
+          !Services.prefs.prefIsLocked(FXA_ENABLED) &&
+          this.syncIsConnected
         );
       },
     });
@@ -182,6 +184,7 @@ export const TabsSetupFlowManager = new (class {
       "network-offline": !this.networkIsOnline,
       "sync-error": !this.syncIsWorking,
       "fxa-admin-disabled": Services.prefs.prefIsLocked(FXA_ENABLED),
+      "sync-disconnected": !this.syncIsConnected,
     };
 
     for (let [type, value] of Object.entries(errorStates)) {
@@ -268,6 +271,7 @@ export const TabsSetupFlowManager = new (class {
     switch (topic) {
       case lazy.UIState.ON_UPDATE:
         this.logger.debug("Handling UIState update");
+        this.syncIsConnected = lazy.UIState.get().syncEnabled;
         this.maybeUpdateUI();
         break;
       case TOPIC_DEVICELIST_UPDATED:
@@ -409,7 +413,7 @@ export const TabsSetupFlowManager = new (class {
   }
 
   openSyncPreferences(window) {
-    const url = "about:preferences?action=pair#sync";
+    const url = "about:preferences#sync";
     openTabInWindow(window, url, true);
   }
 

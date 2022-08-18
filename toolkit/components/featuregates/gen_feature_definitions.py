@@ -7,7 +7,6 @@ import json
 import pytoml
 import re
 import sys
-
 import voluptuous
 import voluptuous.humanize
 from voluptuous import Schema, Optional, Any, All, Required, Length, Range, Msg, Match

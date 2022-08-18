@@ -299,6 +299,11 @@ interface nsIXULRuntime : nsISupports
   readonly attribute boolean is64Bit;
 
   /**
+   * Indicates whether or not text recognition of images supported by the OS.
+   */
+  readonly attribute boolean isTextRecognitionSupported;
+
+  /**
    * Signal the apprunner to invalidate caches on the next restart.
    * This will cause components to be autoregistered and all
    * fastload data to be re-created.

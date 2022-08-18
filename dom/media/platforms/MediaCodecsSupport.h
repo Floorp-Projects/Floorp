@@ -172,15 +172,10 @@ class MCSInfo final {
   // or "common" name ("VP9")
   static CodecDefinition GetCodecDefinition(const MediaCodec& aCodec);
 
-  static inline UniquePtr<MCSInfo> sInstance = nullptr;
-  static inline StaticMutex sInitMutex;
-  static inline StaticMutex sUpdateMutex;
-  UniquePtr<nsTHashMap<MediaCodecsSupport, CodecDefinition>> mHashTableMCS =
-      nullptr;
-  UniquePtr<nsTHashMap<const char*, CodecDefinition>> mHashTableString =
-      nullptr;
-  UniquePtr<nsTHashMap<MediaCodec, CodecDefinition>> mHashTableCodec = nullptr;
-  MediaCodecsSupported mSupport{};
+  UniquePtr<nsTHashMap<MediaCodecsSupport, CodecDefinition>> mHashTableMCS;
+  UniquePtr<nsTHashMap<const char*, CodecDefinition>> mHashTableString;
+  UniquePtr<nsTHashMap<MediaCodec, CodecDefinition>> mHashTableCodec;
+  MediaCodecsSupported mSupport;
 };
 }  // namespace mozilla::media
 

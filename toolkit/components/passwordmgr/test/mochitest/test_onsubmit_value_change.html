@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Test input value change right after onsubmit event</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="../../../satchel/test/satchel_common.js"></script>
   <script type="text/javascript" src="pwmgr_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -42,8 +43,8 @@ Login Manager test: input value change right after onsubmit event
   add_task(async function checkFormValues() {
     SpecialPowers.wrap(document.getElementById("ufield")).setUserInput("testuser");
     SpecialPowers.wrap(document.getElementById("pfield")).setUserInput("testpass");
-    is($_(1, "uname").value, "testuser", "Checking for filled username");
-    is($_(1, "pword").value, "testpass", "Checking for filled password");
+    is(getFormElementByName(1, "uname").value, "testuser", "Checking for filled username");
+    is(getFormElementByName(1, "pword").value, "testpass", "Checking for filled password");
 
     document.getElementById("form1").addEventListener("submit", () => {
       // deliberately assign to .value rather than setUserInput:

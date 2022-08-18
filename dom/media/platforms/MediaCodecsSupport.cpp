@@ -14,6 +14,10 @@ using MediaCodecsSupport = mozilla::media::MediaCodecsSupport;
 
 namespace mozilla::media {
 
+static StaticAutoPtr<MCSInfo> sInstance;
+static StaticMutex sInitMutex;
+static StaticMutex sUpdateMutex;
+
 #define CODEC_SUPPORT_LOG(msg, ...) \
   MOZ_LOG(sPDMLog, LogLevel::Debug, ("MediaCodecsSupport, " msg, ##__VA_ARGS__))
 
@@ -63,7 +67,7 @@ MediaCodecsSupported MCSInfo::GetDecodeMediaCodecsSupported(
 void MCSInfo::GetMediaCodecsSupportedString(
     nsCString& aSupportString, const MediaCodecsSupported& aSupportedCodecs) {
   CodecDefinition supportInfo;
-  aSupportString = "Codec support information:\n"_ns;
+  aSupportString = ""_ns;
   for (const auto& it : aSupportedCodecs) {
     if (!GetInstance()->mHashTableMCS->Get(it, &supportInfo)) {
       CODEC_SUPPORT_LOG(
@@ -91,7 +95,7 @@ void MCSInfo::GetMediaCodecsSupportedString(
 MCSInfo* MCSInfo::GetInstance() {
   StaticMutexAutoLock lock(sInitMutex);
   if (!sInstance) {
-    sInstance.reset(new MCSInfo());
+    sInstance = new MCSInfo();
   }
   return sInstance.get();
 }
@@ -115,7 +119,9 @@ MCSInfo::MCSInfo() {
         RunOnShutdown(
             [&] {
               mHashTableMCS.reset();
+              mHashTableString.reset();
               mHashTableCodec.reset();
+              sInstance = nullptr;
             },
             ShutdownPhase::XPCOMShutdown);
       }));

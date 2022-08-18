@@ -42,36 +42,6 @@ let authPromptIsCommonDialog =
     ));
 
 /**
- * Returns the element with the specified |name| attribute.
- */
-function $_(formNum, name) {
-  var form = document.getElementById("form" + formNum);
-  if (!form) {
-    ok(false, "$_ couldn't find requested form " + formNum);
-    return null;
-  }
-
-  var element = form.querySelector(`:is([name="${name}"], [id="${name}"])`);
-  if (!element) {
-    ok(false, `$_ couldn't find requested element "${name}"`);
-    return null;
-  }
-
-  // Note that namedItem is a bit stupid, and will prefer an
-  // |id| attribute over a |name| attribute when looking for
-  // the element. Login Mananger happens to use .namedItem
-  // anyway, but let's rigorously check it here anyway so
-  // that we don't end up with tests that mistakenly pass.
-
-  if (element.getAttribute("name") != name) {
-    ok(false, "$_ got confused.");
-    return null;
-  }
-
-  return element;
-}
-
-/**
  * Recreate a DOM tree using the outerHTML to ensure that any event listeners
  * and internal state for the elements are removed.
  */

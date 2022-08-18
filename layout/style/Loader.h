@@ -409,6 +409,8 @@ class Loader final {
    */
   dom::Document* GetDocument() const { return mDocument; }
 
+  bool IsDocumentAssociated() const { return mIsDocumentAssociated; }
+
   /**
    * Return true if this loader has pending loads (ones that would send
    * notifications to an nsICSSLoaderObserver attached to this loader).
@@ -631,6 +633,9 @@ class Loader final {
   uint32_t mParsedSheetCount = 0;
 
   bool mEnabled = true;
+
+  // Whether we had a document at the point of creation.
+  bool mIsDocumentAssociated = false;
 
 #ifdef DEBUG
   // Whether we're in a necko callback atm.

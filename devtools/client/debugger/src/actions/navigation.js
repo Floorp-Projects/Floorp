@@ -5,10 +5,8 @@
 import { clearDocuments } from "../utils/editor";
 import sourceQueue from "../utils/source-queue";
 
-import { evaluateExpressions } from "./expressions";
-
 import { clearWasmStates } from "../utils/wasm";
-import { getMainThread, getThreadContext } from "../selectors";
+import { getMainThread } from "../selectors";
 
 /**
  * Redux actions for the navigation state
@@ -32,18 +30,6 @@ export function willNavigate(event) {
       type: "NAVIGATE",
       mainThread: { ...thread, url: event.url },
     });
-  };
-}
-
-export function connect(url, actor) {
-  return async function({ dispatch, getState }) {
-    dispatch({
-      type: "CONNECT",
-      mainThreadActorID: actor,
-    });
-
-    const cx = getThreadContext(getState());
-    dispatch(evaluateExpressions(cx));
   };
 }
 

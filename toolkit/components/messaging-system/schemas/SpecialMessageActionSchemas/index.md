@@ -21,6 +21,12 @@ For snippets, you should add the action type in `button_action` and any addition
 
 Opens the applications menu.
 
+### `OPEN_FIREFOX_VIEW`
+
+* args: (none)
+
+Opens the Firefox View pseudo-tab.
+
 ### `OPEN_PRIVATE_BROWSER_WINDOW`
 
 * args: (none)

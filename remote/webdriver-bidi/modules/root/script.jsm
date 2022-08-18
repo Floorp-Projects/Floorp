@@ -39,27 +39,6 @@ const OwnershipModel = {
   Root: "root",
 };
 
-/**
- * @typedef {Object} RealmType
- **/
-
-/**
- * Enum of realm types.
- *
- * @readonly
- * @enum {RealmType}
- **/
-const RealmType = {
-  AudioWorklet: "audio-worklet",
-  DedicatedWorker: "dedicated-worker",
-  PaintWorklet: "paint-worklet",
-  ServiceWorker: "service-worker",
-  SharedWorker: "shared-worker",
-  Window: "window",
-  Worker: "worker",
-  Worklet: "worklet",
-};
-
 class ScriptModule extends Module {
   destroy() {}
 
@@ -181,23 +160,25 @@ class ScriptModule extends Module {
     }
 
     const { contextId, realmId, sandbox } = this.#assertTarget(target);
-    const realm = this.#getRealmInfoFromTarget({ contextId, realmId, sandbox });
+    const context = this.#getContextFromTarget({ contextId, realmId, sandbox });
     const evaluationResult = await this.messageHandler.forwardCommand({
       moduleName: "script",
       commandName: "callFunctionDeclaration",
       destination: {
         type: lazy.WindowGlobalMessageHandler.type,
-        id: realm.context.id,
+        id: context.id,
       },
       params: {
         awaitPromise,
         commandArguments,
         functionDeclaration,
+        realmId,
+        sandbox,
         thisParameter,
       },
     });
 
-    return this.#buildReturnValue(evaluationResult, realm);
+    return this.#buildReturnValue(evaluationResult);
   }
 
   /**
@@ -247,21 +228,23 @@ class ScriptModule extends Module {
     this.#assertResultOwnership(resultOwnership);
 
     const { contextId, realmId, sandbox } = this.#assertTarget(target);
-    const realm = this.#getRealmInfoFromTarget({ contextId, realmId, sandbox });
+    const context = this.#getContextFromTarget({ contextId, realmId, sandbox });
     const evaluationResult = await this.messageHandler.forwardCommand({
       moduleName: "script",
       commandName: "evaluateExpression",
       destination: {
         type: lazy.WindowGlobalMessageHandler.type,
-        id: realm.context.id,
+        id: context.id,
       },
       params: {
         awaitPromise,
         expression: source,
+        realmId,
+        sandbox,
       },
     });
 
-    return this.#buildReturnValue(evaluationResult, realm);
+    return this.#buildReturnValue(evaluationResult);
   }
 
   #assertResultOwnership(resultOwnership) {
@@ -297,9 +280,6 @@ class ScriptModule extends Module {
           sandbox,
           `Expected "sandbox" to be a string, got ${sandbox}`
         );
-        throw new lazy.error.UnsupportedOperationError(
-          `sandbox is not supported yet`
-        );
       }
     } else if (realmId != null) {
       lazy.assert.string(
@@ -316,8 +296,8 @@ class ScriptModule extends Module {
     return { contextId, realmId, sandbox };
   }
 
-  #buildReturnValue(evaluationResult, realm) {
-    const rv = { realm: realm.realm };
+  #buildReturnValue(evaluationResult) {
+    const rv = { realm: evaluationResult.realm.realm };
     switch (evaluationResult.evaluationStatus) {
       // TODO: Compare with EvaluationStatus.Normal after Bug 1774444 is fixed.
       case "normal":
@@ -335,35 +315,23 @@ class ScriptModule extends Module {
     return rv;
   }
 
-  #getRealmInfoFromTarget({ contextId, realmId, sandbox }) {
-    // Only supports WindowRealmInfo at the moment.
-    if (contextId != null) {
-      const context = lazy.TabManager.getBrowsingContextById(contextId);
-      if (context === null) {
-        throw new lazy.error.NoSuchFrameError(
-          `Browsing Context with id ${contextId} not found`
-        );
-      }
-
-      if (!context.currentWindowGlobal) {
-        throw new lazy.error.NoSuchFrameError(
-          `No window found for BrowsingContext with id ${contextId}`
-        );
-      }
-
-      // TODO: Return an actual realm once we have proper realm support.
-      // See Bug 1766240.
-      return {
-        realm: String(context.currentWindowGlobal.innerWindowId),
-        origin: null,
-        type: RealmType.Window,
-        context,
-      };
+  // realmId is going to be used when the full Realm support is implemented
+  // See Bug 1779231.
+  #getContextFromTarget({ contextId /*, realmId, sandbox*/ }) {
+    const context = lazy.TabManager.getBrowsingContextById(contextId);
+    if (context === null) {
+      throw new lazy.error.NoSuchFrameError(
+        `Browsing Context with id ${contextId} not found`
+      );
     }
 
-    throw new lazy.error.NoSuchFrameError(
-      `No realm matching context: ${contextId}, realm: ${realmId}, sandbox: ${sandbox}`
-    );
+    if (!context.currentWindowGlobal) {
+      throw new lazy.error.NoSuchFrameError(
+        `No window found for BrowsingContext with id ${contextId}`
+      );
+    }
+
+    return context;
   }
 
   static get supportedEvents() {

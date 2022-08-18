@@ -71,6 +71,10 @@
 
 namespace mozilla {
 
+RetainedDisplayListData::RetainedDisplayListData()
+    : mModifiedFrameLimit(
+          StaticPrefs::layout_display_list_rebuild_frame_limit()) {}
+
 void RetainedDisplayListData::AddModifiedFrame(nsIFrame* aFrame) {
   MOZ_ASSERT(!aFrame->IsFrameModified());
   Flags(aFrame) += RetainedDisplayListData::FrameFlag::Modified;

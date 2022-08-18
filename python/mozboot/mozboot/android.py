@@ -22,10 +22,10 @@ from tqdm import tqdm
 from mozboot.bootstrap import MOZCONFIG_SUGGESTION_TEMPLATE
 
 NDK_VERSION = "r21d"
-CMDLINE_TOOLS_VERSION_STRING = "5.0"
-CMDLINE_TOOLS_VERSION = "7583922"
+CMDLINE_TOOLS_VERSION_STRING = "7.0"
+CMDLINE_TOOLS_VERSION = "8512546"
 
-BUNDLETOOL_VERSION = "1.8.0"
+BUNDLETOOL_VERSION = "1.11.0"
 
 # We expect the emulator AVD definitions to be platform agnostic
 LINUX_X86_64_ANDROID_AVD = "linux64-android-avd-x86_64-repack"

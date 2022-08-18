@@ -8,6 +8,12 @@ const AUTOPLAY_PAGE =
     "https://example.com"
   ) + "browser_autoplay_blocked.html";
 
+const AUTOPLAY_JS_PAGE =
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    "https://example.com"
+  ) + "browser_autoplay_js.html";
+
 const SLOW_AUTOPLAY_PAGE =
   getRootDirectory(gTestPath).replace(
     "chrome://mochitests/content",
@@ -320,5 +326,29 @@ add_task(async function testBlockedAll() {
     gBrowser.reload();
     await blockedIconHidden();
   });
+  Services.perms.removeAll();
+});
+
+add_task(async function testMultiplePlayNotificationsFromJS() {
+  Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.BLOCKED);
+
+  await BrowserTestUtils.withNewTab("about:home", async function(browser) {
+    let count = 0;
+    browser.addEventListener("GloballyAutoplayBlocked", function() {
+      is(++count, 1, "Shouldn't get more than one autoplay blocked event");
+    });
+
+    await blockedIconHidden();
+
+    BrowserTestUtils.loadURI(browser, AUTOPLAY_JS_PAGE);
+
+    await blockedIconShown();
+
+    // Sleep here a bit to ensure that multiple events don't arrive.
+    await sleep(100);
+
+    is(count, 1, "Shouldn't have got more events");
+  });
+
   Services.perms.removeAll();
 });

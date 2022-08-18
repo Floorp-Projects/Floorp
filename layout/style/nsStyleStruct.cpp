@@ -3311,6 +3311,15 @@ nsChangeHint nsStyleUIReset::CalcDifference(
   return hint;
 }
 
+StyleScrollbarWidth nsStyleUIReset::ScrollbarWidth() const {
+  if (MOZ_UNLIKELY(StaticPrefs::layout_css_scrollbar_width_thin_disabled())) {
+    if (mScrollbarWidth == StyleScrollbarWidth::Thin) {
+      return StyleScrollbarWidth::Auto;
+    }
+  }
+  return mScrollbarWidth;
+}
+
 //-----------------------
 // nsStyleEffects
 //

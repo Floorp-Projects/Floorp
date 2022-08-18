@@ -38,6 +38,7 @@ class TextRecognition final {
                                         const nsTArray<nsCString>&);
   static RefPtr<NativePromise> FindText(gfx::DataSourceSurface&,
                                         const nsTArray<nsCString>&);
+  static bool IsSupported();
 
  protected:
   // This should be implemented in the OS specific file.

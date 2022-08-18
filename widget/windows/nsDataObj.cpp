@@ -1982,28 +1982,34 @@ nsresult nsDataObj ::BuildPlatformHTML(const char* inOurHTML,
 
   // The CF_HTML's size is embedded in the fragment, in such a way that the
   // number of digits in the size is part of the size itself. While it _is_
-  // technically possible to compute the size of the size-field precisely -- by
-  // trial and error, if nothing else -- it's simpler to just fix it at eight
-  // characters and zero-pad it. (Zero-padding is explicitly permitted by the
-  // format definition.)
+  // technically possible to compute the necessary size of the size-field
+  // precisely -- by trial and error, if nothing else -- it's simpler just to
+  // pick a rough but generous estimate and zero-pad it. (Zero-padding is
+  // explicitly permitted by the format definition.)
   //
-  // Of course, while a maximum size of (10**9 - 1) bytes would probably have
-  // covered all possible use-cases in 2001, it's somewhat more likely to happen
-  // nowadays. Bug 1754803 covers extending this code to handle gigabyte-sized
-  // copies.
-  constexpr size_t kNumberLength = 8;
+  // Originally, in 2001, the "rough but generous estimate" was 8 digits. While
+  // a maximum size of (10**9 - 1) bytes probably would have covered all
+  // possible use-cases at the time, it's somewhat more likely to overflow
+  // nowadays. Nonetheless, for the sake of backwards compatibility with any
+  // misbehaving consumers of our existing CF_HTML output, we retain exactly
+  // that padding for (most) fragments where it suffices. (No such misbehaving
+  // consumers are actually known, so this is arguably paranoia.)
+  //
+  // It is now 2022. A padding size of 16 will cover up to about 8.8 petabytes,
+  // which should be enough for at least the next few years or so.
+  const size_t numberLength = inHTMLString.Length() < 9999'0000 ? 8 : 16;
 
   const size_t sourceURLLength = mSourceURL.Length();
 
-  constexpr size_t kFixedHeaderLen =
+  const size_t fixedHeaderLen =
       kStartHTMLPrefix.Length() + kEndHTMLPrefix.Length() +
       kStartFragPrefix.Length() + kEndFragPrefix.Length() +
-      kEndFragTrailer.Length() + (4 * kNumberLength);
+      kEndFragTrailer.Length() + (4 * numberLength);
 
   const size_t totalHeaderLen =
-      kFixedHeaderLen + (sourceURLLength > 0
-                             ? kStartSourceURLPrefix.Length() + sourceURLLength
-                             : 0);
+      fixedHeaderLen + (sourceURLLength > 0
+                            ? kStartSourceURLPrefix.Length() + sourceURLLength
+                            : 0);
 
   constexpr auto kHeaderString = "<html><body>\r\n<!--StartFragment-->"_ns;
   constexpr auto kTrailingString =
@@ -2022,18 +2028,18 @@ nsresult nsDataObj ::BuildPlatformHTML(const char* inOurHTML,
   nsCString clipboardString;
   clipboardString.SetCapacity(endHTMLOffset);
 
-  // These implicitly must match kNumberLength, above.
+  const int numberLengthInt = static_cast<int>(numberLength);
   clipboardString.Append(kStartHTMLPrefix);
-  clipboardString.AppendPrintf("%08zu", startHTMLOffset);
+  clipboardString.AppendPrintf("%0*zu", numberLengthInt, startHTMLOffset);
 
   clipboardString.Append(kEndHTMLPrefix);
-  clipboardString.AppendPrintf("%08zu", endHTMLOffset);
+  clipboardString.AppendPrintf("%0*zu", numberLengthInt, endHTMLOffset);
 
   clipboardString.Append(kStartFragPrefix);
-  clipboardString.AppendPrintf("%08zu", startFragOffset);
+  clipboardString.AppendPrintf("%0*zu", numberLengthInt, startFragOffset);
 
   clipboardString.Append(kEndFragPrefix);
-  clipboardString.AppendPrintf("%08zu", endFragOffset);
+  clipboardString.AppendPrintf("%0*zu", numberLengthInt, endFragOffset);
 
   if (sourceURLLength > 0) {
     clipboardString.Append(kStartSourceURLPrefix);

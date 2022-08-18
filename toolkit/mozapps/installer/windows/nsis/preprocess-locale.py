@@ -14,7 +14,6 @@
 from codecs import BOM_UTF16_LE
 import io
 from os.path import join, isfile
-import six
 import sys
 from optparse import OptionParser
 
