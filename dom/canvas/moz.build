@@ -70,6 +70,7 @@ EXPORTS.mozilla.dom += [
     "WebGLCommandQueue.h",
     "WebGLIpdl.h",
     "WebGLParent.h",
+    "WebGLTexelConversions.h",
     "WebGLTypes.h",
     "XRWebGLLayer.h",
 ]

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset='utf-8'>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+
+<body>
+  <script type='text/javascript'>
+'use strict';
+
+ok(
+  SpecialPowers.getBoolPref("dom.webgpu.enabled"),
+  "WebGPU pref should be enabled."
+);
+ok(
+  SpecialPowers.getBoolPref("gfx.offscreencanvas.enabled"),
+  "OffscreenCanvas pref should be enabled."
+);
+
+SimpleTest.waitForExplicitFinish();
+
+function requestAnimationFramePromise() {
+  return new Promise(requestAnimationFrame);
+}
+
+function createSourceCanvasWebgl() {
+  const offscreenCanvas = new OffscreenCanvas(200, 200);
+  const gl = offscreenCanvas.getContext("webgl");
+
+  const COLOR_VALUE = 127.0 / 255.0;
+  const ALPHA_VALUE = 127.0 / 255.0;
+
+  gl.enable(gl.SCISSOR_TEST);
+
+  gl.scissor(0, 0, 100, 100);
+  gl.clearColor(COLOR_VALUE, 0.0, 0.0, ALPHA_VALUE);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.scissor(100, 0, 100, 100);
+  gl.clearColor(0.0, COLOR_VALUE, 0.0, ALPHA_VALUE);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.scissor(0, 100, 100, 100);
+  gl.clearColor(0.0, 0.0, COLOR_VALUE, ALPHA_VALUE);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.scissor(100, 100, 100, 100);
+  gl.clearColor(0.0, 0.0, 0.0, ALPHA_VALUE);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  return {
+    source: offscreenCanvas,
+    origin: { x: 0, y: 0 },
+    flipY: true,
+  };
+}
+
+function createSourceCanvas2d() {
+  const offscreenCanvas = new OffscreenCanvas(200, 200);
+  const context = offscreenCanvas.getContext("2d");
+
+  context.fillStyle = "rgba(255,0,0,0.498)";
+  context.fillRect(0, 0, 100, 100);
+
+  context.fillStyle = "rgba(0,255,0,0.498)";
+  context.fillRect(100, 0, 100, 100);
+
+  context.fillStyle = "rgba(0,0,255,0.498)";
+  context.fillRect(0, 100, 100, 100);
+
+  context.fillStyle = "rgba(0,0,0,0.498)";
+  context.fillRect(100, 100, 100, 100);
+
+  return {
+    source: offscreenCanvas,
+    origin: { x: 0, y: 0 },
+    flipY: false,
+  };
+}
+
+function createSourceImageBitmap() {
+  const sourceCanvas = createSourceCanvas2d();
+  return {
+    source: sourceCanvas.source.transferToImageBitmap(),
+    origin: { x: 0, y: 0 },
+    flipY: false,
+  };
+}
+
+async function mapDestTexture(device, source, destFormat, premultiply, copySize) {
+  const bytesPerRow = 256 * 4; // 256 aligned for 200 pixels
+  const texture = device.createTexture({
+    format: destFormat,
+    size: copySize,
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+  });
+
+  device.queue.copyExternalImageToTexture(
+    source,
+    { texture, premultipliedAlpha: premultiply },
+    copySize,
+  );
+
+  const buffer = device.createBuffer({
+    size: 1024 * 200,
+    usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+  });
+
+  const encoder = device.createCommandEncoder();
+  encoder.copyTextureToBuffer(
+    { texture },
+    { buffer, bytesPerRow },
+    copySize,
+  );
+  device.queue.submit([encoder.finish()]);
+
+  await buffer.mapAsync(GPUMapMode.READ);
+  return buffer;
+}
+
+async function verifyBuffer(test, device, source, format, premultiply, copyDim, topLeftPixelData) {
+  try {
+    const buffer = await mapDestTexture(device, source, format, premultiply, copyDim);
+    const arrayBuffer = buffer.getMappedRange();
+    const view = new Uint8Array(arrayBuffer);
+    for (let i = 0; i < topLeftPixelData.length; ++i) {
+      is(view[i], topLeftPixelData[i], test + " " + format + " (" + source.origin.x + "," + source.origin.y + ") channel " + i);
+    }
+  } catch(e) {
+    ok(false, "WebGPU exception: " + e);
+  }
+}
+
+async function verifySourceCanvas(test, device, source) {
+  await verifyBuffer(test, device, source, "rgba8unorm", /* premultiply */ true,  { width: 200, height: 200 }, [127, 0, 0, 127]);
+  await verifyBuffer(test, device, source, "bgra8unorm", /* premultiply */ true,  { width: 200, height: 200 }, [0, 0, 127, 127]);
+  await verifyBuffer(test, device, source, "rgba8unorm", /* premultiply */ false, { width: 200, height: 200 }, [255, 0, 0, 127]);
+  await verifyBuffer(test, device, source, "bgra8unorm", /* premultiply */ false, { width: 200, height: 200 }, [0, 0, 255, 127]);
+
+  // The copy is flipped but the origin is relative to the original source data,
+  // so we need to invert for WebGL.
+  const topRightPixelData = test === "webgl" ? [0, 0, 0, 127] : [0, 127, 0, 127];
+  const topRightOrigin = { origin: { x: 100, y: 0 } };
+  await verifyBuffer(test, device, { ...source, ...topRightOrigin }, "bgra8unorm", /* premultiply */ true, { width: 100, height: 100 }, topRightPixelData);
+
+  const bottomLeftPixelData = test === "webgl" ? [0, 0, 127, 127] : [127, 0, 0, 127];
+  const bottomLeftOrigin = { origin: { x: 0, y: 100 } };
+  await verifyBuffer(test, device, { ...source, ...bottomLeftOrigin }, "bgra8unorm", /* premultiply */ true, { width: 100, height: 100 }, bottomLeftPixelData);
+}
+
+async function writeDestCanvas(source2d, sourceWebgl, sourceImageBitmap) {
+  const adapter = await navigator.gpu.requestAdapter();
+  const device = await adapter.requestDevice();
+  await verifySourceCanvas("2d", device, source2d);
+  await verifySourceCanvas("imageBitmap", device, sourceImageBitmap);
+  await verifySourceCanvas("webgl", device, sourceWebgl);
+}
+
+async function runTest() {
+  try {
+    const source2d = createSourceCanvas2d();
+    const sourceWebgl = createSourceCanvasWebgl();
+    const sourceImageBitmap = createSourceImageBitmap();
+    await requestAnimationFramePromise();
+    await requestAnimationFramePromise();
+    await writeDestCanvas(source2d, sourceWebgl, sourceImageBitmap);
+  } catch(e) {
+    ok(false, "Uncaught exception: " + e);
+  } finally {
+    SimpleTest.finish();
+  }
+}
+
+runTest();
+  </script>
+</body>
+
+</html>
