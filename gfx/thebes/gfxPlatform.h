@@ -822,7 +822,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   virtual void InitWebGLConfig();
   virtual void InitWebGPUConfig();
   virtual void InitWindowOcclusionConfig();
-  void InitBackdropFilterConfig();
 
   virtual void GetPlatformDisplayInfo(mozilla::widget::InfoObject& aObj) {}
 
