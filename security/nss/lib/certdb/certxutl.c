@@ -417,12 +417,15 @@ CERT_FindBitStringExtension(CERTCertExtension **extensions, int tag,
         goto loser;
     }
 
-    retItem->data = (unsigned char *)PORT_Alloc((tmpItem.len + 7) >> 3);
+    retItem->data = (unsigned char *)PORT_ZAlloc((tmpItem.len + 7) >> 3);
     if (retItem->data == NULL) {
         goto loser;
     }
 
-    PORT_Memcpy(retItem->data, tmpItem.data, (tmpItem.len + 7) >> 3);
+    if (tmpItem.len > 0) {
+        PORT_Memcpy(retItem->data, tmpItem.data, (tmpItem.len + 7) >> 3);
+    }
+
     retItem->len = tmpItem.len;
 
     rv = SECSuccess;

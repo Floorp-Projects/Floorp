@@ -737,6 +737,16 @@ cert_VerifyCertChainOld(CERTCertDBHandle *handle, CERTCertificate *cert,
             LOG_ERROR_OR_EXIT(log, subjectCert, count, 0);
         }
 
+        /* check that the signatureAlgorithm field of the certificate
+         * matches the signature field of the tbsCertificate */
+        if (SECOID_CompareAlgorithmID(
+                &subjectCert->signatureWrap.signatureAlgorithm,
+                &subjectCert->signature)) {
+            PORT_SetError(SEC_ERROR_ALGORITHM_MISMATCH);
+            LOG_ERROR(log, subjectCert, count, 0);
+            goto loser;
+        }
+
         /* find the certificate of the issuer */
         issuerCert = CERT_FindCertIssuer(subjectCert, t, certUsage);
         if (!issuerCert) {
