@@ -1108,7 +1108,11 @@ done:
 SECStatus
 sftkdb_PWCached(SFTKDBHandle *keydb)
 {
-    return keydb->passwordKey.data ? SECSuccess : SECFailure;
+    SECStatus rv;
+    PZ_Lock(keydb->passwordLock);
+    rv = keydb->passwordKey.data ? SECSuccess : SECFailure;
+    PZ_Unlock(keydb->passwordLock);
+    return rv;
 }
 
 static CK_RV

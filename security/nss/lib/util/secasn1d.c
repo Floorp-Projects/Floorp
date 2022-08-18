@@ -365,6 +365,11 @@ sec_asn1d_push_state(SEC_ASN1DecoderContext *cx,
         state->our_mark = PORT_ArenaMark(cx->our_pool);
     }
 
+    if (theTemplate == NULL) {
+        PORT_SetError(SEC_ERROR_BAD_TEMPLATE);
+        goto loser;
+    }
+
     new_state = (sec_asn1d_state *)sec_asn1d_zalloc(cx->our_pool,
                                                     sizeof(*new_state));
     if (new_state == NULL) {
