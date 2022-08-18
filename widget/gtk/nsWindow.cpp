@@ -1844,10 +1844,14 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
       if (!useIt) {
         return false;
       }
-      if (popup->WaylandPopupFitsToplevelWindow()) {
+      if (popup->WaylandPopupIsFirst() &&
+          popup->WaylandPopupFitsToplevelWindow()) {
         // Workaround for https://gitlab.gnome.org/GNOME/gtk/-/issues/1986
         // Bug 1760276 - don't use move-to-rect when popup is inside main
         // Firefox window.
+        // Use it for first popups only due to another mutter bug
+        // https://gitlab.gnome.org/GNOME/gtk/-/issues/5089
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1784873
         return false;
       }
       return true;
