@@ -197,13 +197,6 @@ class FragmentOrElement : public nsIContent {
      * Web components custom element data.
      */
     UniquePtr<CustomElementData> mCustomElementData;
-
-    /**
-     * Last remembered size (in CSS pixels) for the element.
-     * @see {@link https://drafts.csswg.org/css-sizing-4/#last-remembered}
-     */
-    Maybe<float> mLastRememberedBSize;
-    Maybe<float> mLastRememberedISize;
   };
 
   class nsDOMSlots : public nsIContent::nsContentSlots {
