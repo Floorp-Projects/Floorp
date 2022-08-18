@@ -245,6 +245,26 @@
                          [2, 3, "b\n", 2, 4],
                          [4, 5, "c", 4, 5] ]);
 
+      testTextAtOffset([ "inlineInput" ], BOUNDARY_LINE_END,
+                       [ [0, 1, "a", 0, 1],
+                         [2, 7, `\nb ${kEmbedChar} d`, 1, 7,
+                          [ [ 4, "inlineInput", kOkIfCache, kOk, kOkIfCache] ] ] ]);
+
+      testTextAtOffset([ "inlineInput2" ], BOUNDARY_LINE_END,
+                       [ [0, 1, "a", 0, 1],
+                         [2, 7, `\n${kEmbedChar} c d`, 1, 7,
+                          [ [ 2, "inlineInput2", kOkIfCache, kOk, kOkIfCache] ] ] ]);
+
+      testTextAtOffset([ "inlineInput3" ], BOUNDARY_LINE_END,
+                       [ [0, 1, "a", 0, 1],
+                         [2, 8, `\nb${kEmbedChar} c d`, 1, 8,
+                          [ [ 3, "inlineInput3", kOkIfCache, kOkIfCache, kOkIfCache] ] ] ]);
+
+      testTextAtOffset([ "inlineInput4" ], BOUNDARY_LINE_END,
+                       [ [0, 1, "a", 0, 1],
+                         [2, 7, `\n${kEmbedChar}b c d`, 1, 8,
+                          [ [ 2, "inlineInput4", kOkIfCache, kOkIfCache, kOkIfCache ] ] ] ]);
+
       SimpleTest.finish();
     }
 
@@ -364,5 +384,9 @@ two words
 </span></div><!-- OK to indent again -->
   <div id="displayContents">a<ul style="display: contents;"><li style="display: contents;"></li></ul>b</div>
   <div id="brAfterWrapped" style="width: 10px;">a b<br>c</div>
+  <div id="inlineInput">a<br>b <input value="c"> d</div>
+  <div id="inlineInput2">a<br><input value="b"> c d</div>
+  <div id="inlineInput3">a<br> b<input value=""> c d</div>
+  <div id="inlineInput4">a<br><input value="">b c d</div>
 </body>
 </html>
