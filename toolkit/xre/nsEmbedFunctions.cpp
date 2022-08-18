@@ -275,8 +275,7 @@ void XRE_SetProcessType(const char* aProcessTypeString) {
   //
   // For child processes, an obvious OOM-crash may be preferable to slow
   // performance. Retry at most once per process, then give up.
-  mozjemalloc_experiment_win_set_always_stall(processType ==
-                                              GeckoProcessType_Default);
+  mozjemalloc_win_set_always_stall(processType == GeckoProcessType_Default);
 #endif
 }
 
