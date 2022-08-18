@@ -928,11 +928,22 @@ dictionary GPUImageCopyBuffer : GPUImageDataLayout {
     required GPUBuffer buffer;
 };
 
+dictionary GPUImageCopyExternalImage {
+    required (ImageBitmap or HTMLCanvasElement or OffscreenCanvas) source;
+    GPUOrigin2D origin = {};
+    boolean flipY = false;
+};
+
 dictionary GPUImageCopyTexture {
     required GPUTexture texture;
     GPUIntegerCoordinate mipLevel = 0;
     GPUOrigin3D origin;
     GPUTextureAspect aspect = "all";
+};
+
+dictionary GPUImageCopyTextureTagged : GPUImageCopyTexture {
+    //GPUPredefinedColorSpace colorSpace = "srgb"; //TODO
+    boolean premultipliedAlpha = false;
 };
 
 dictionary GPUImageBitmapCopyView {
@@ -1165,6 +1176,12 @@ interface GPUQueue {
       BufferSource data,
       GPUImageDataLayout dataLayout,
       GPUExtent3D size);
+
+    [Throws]
+    void copyExternalImageToTexture(
+      GPUImageCopyExternalImage source,
+      GPUImageCopyTextureTagged destination,
+      GPUExtent3D copySize);
 };
 GPUQueue includes GPUObjectBase;
 
