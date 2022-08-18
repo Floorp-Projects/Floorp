@@ -431,6 +431,10 @@ bool Performance::IsPerformanceTimingAttribute(const nsAString& aName) const {
 
 DOMHighResTimeStamp Performance::ConvertMarkToTimestampWithString(
     const nsAString& aName, ErrorResult& aRv) {
+  if (IsPerformanceTimingAttribute(aName)) {
+    return ConvertNameToTimestamp(aName, aRv);
+  }
+
   AutoTArray<RefPtr<PerformanceEntry>, 1> arr;
   Optional<nsAString> typeParam;
   nsAutoString str;
@@ -441,20 +445,10 @@ DOMHighResTimeStamp Performance::ConvertMarkToTimestampWithString(
     return arr.LastElement()->StartTime();
   }
 
-  if (!IsPerformanceTimingAttribute(aName)) {
-    nsPrintfCString errorMsg("Given mark name, %s, is unknown",
-                             NS_ConvertUTF16toUTF8(aName).get());
-    aRv.ThrowSyntaxError(errorMsg);
-    return 0;
-  }
-
-  DOMHighResTimeStamp ts = GetPerformanceTimingFromString(aName);
-  if (!ts) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-    return 0;
-  }
-
-  return ts - CreationTime();
+  nsPrintfCString errorMsg("Given mark name, %s, is unknown",
+                           NS_ConvertUTF16toUTF8(aName).get());
+  aRv.ThrowSyntaxError(errorMsg);
+  return 0;
 }
 
 DOMHighResTimeStamp Performance::ConvertMarkToTimestampWithDOMHighResTimeStamp(
@@ -491,6 +485,39 @@ DOMHighResTimeStamp Performance::ConvertMarkToTimestamp(
 
   return ConvertMarkToTimestampWithDOMHighResTimeStamp(
       aAttribute, aMarkNameOrTimestamp.GetAsDouble(), aRv);
+}
+
+DOMHighResTimeStamp Performance::ConvertNameToTimestamp(const nsAString& aName,
+                                                        ErrorResult& aRv) {
+  if (!IsGlobalObjectWindow()) {
+    nsPrintfCString errorMsg(
+        "Cannot get PerformanceTiming attribute values for non-Window global "
+        "object. Given: %s",
+        NS_ConvertUTF16toUTF8(aName).get());
+    aRv.ThrowTypeError(errorMsg);
+    return 0;
+  }
+
+  if (aName.EqualsASCII("navigationStart")) {
+    return 0;
+  }
+
+  // We use GetPerformanceTimingFromString, rather than calling the
+  // navigationStart method timing function directly, because the former handles
+  // reducing precision against timing attacks.
+  const DOMHighResTimeStamp startTime =
+      GetPerformanceTimingFromString(u"navigationStart"_ns);
+  const DOMHighResTimeStamp endTime = GetPerformanceTimingFromString(aName);
+  MOZ_ASSERT(endTime >= 0);
+  if (endTime == 0) {
+    nsPrintfCString errorMsg(
+        "Given PerformanceTiming attribute, %s, isn't available yet",
+        NS_ConvertUTF16toUTF8(aName).get());
+    aRv.ThrowInvalidAccessError(errorMsg);
+    return 0;
+  }
+
+  return endTime - startTime;
 }
 
 DOMHighResTimeStamp Performance::ResolveEndTimeForMeasure(

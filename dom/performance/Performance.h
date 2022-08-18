@@ -223,6 +223,9 @@ class Performance : public DOMEventTargetHelper {
       const ResolveTimestampAttribute aAttribute,
       const OwningStringOrDouble& aMarkNameOrTimestamp, ErrorResult& aRv);
 
+  DOMHighResTimeStamp ConvertNameToTimestamp(const nsAString& aName,
+                                             ErrorResult& aRv);
+
   DOMHighResTimeStamp ResolveEndTimeForMeasure(
       const Optional<nsAString>& aEndMark,
       const Maybe<const PerformanceMeasureOptions&>& aOptions,
