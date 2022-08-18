@@ -20,10 +20,6 @@ const kApzTestNativeEventUtilsUrl =
 
 Services.scriptloader.loadSubScript(kApzTestNativeEventUtilsUrl, this);
 
-SpecialPowers.pushPrefEnv({
-  set: [["dom.events.asyncClipboard.readText", true]],
-});
-
 const chromeDoc = window.document;
 
 const kPasteMenuPopupId = "clipboardReadTextPasteMenuPopup";
@@ -37,14 +33,9 @@ function promiseBrowserReflow() {
 
 function promiseClickPasteButton() {
   const pasteButton = chromeDoc.getElementById(kPasteMenuItemId);
-
-  // Native mouse event to execute additional code paths which wouldn't be
-  // covered by non-native events.
-  return EventUtils.promiseNativeMouseEventAndWaitForEvent({
-    type: "click",
-    target: pasteButton,
-    atCenter: true,
-  });
+  let promise = BrowserTestUtils.waitForEvent(pasteButton, "click");
+  EventUtils.synthesizeMouseAtCenter(pasteButton, {});
+  return promise;
 }
 
 function getMouseCoordsRelativeToScreenInDevicePixels() {
@@ -136,14 +127,7 @@ function promiseClickContentToTriggerClipboardReadText(
         );
       });
 
-      // Native mouse event to execute additional code paths which wouldn't be
-      // covered by non-native events.
-      EventUtils.promiseNativeMouseEventAndWaitForEvent({
-        type: "click",
-        target: contentButton,
-        atCenter: true,
-        win: content.window,
-      });
+      EventUtils.synthesizeMouseAtCenter(contentButton, {}, content.window);
 
       return promise;
     }
@@ -183,8 +167,8 @@ function promiseWritingRandomTextToClipboard() {
 }
 
 function promiseDismissPasteButton() {
-  // Native mouse event to execute additional code paths which wouldn't be
-  // covered by non-native events.
+  // nsXULPopupManager rollup is handled in widget code, so we have to
+  // synthesize native mouse events.
   return EventUtils.promiseNativeMouseEvent({
     type: "click",
     target: chromeDoc.body,
@@ -193,6 +177,15 @@ function promiseDismissPasteButton() {
     atCenter: true,
   });
 }
+
+add_task(async function init() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.events.asyncClipboard.readText", true],
+      ["test.events.async.enabled", true],
+    ],
+  });
+});
 
 add_task(async function test_paste_button_position() {
   // Ensure there's text on the clipboard.
