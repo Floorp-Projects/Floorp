@@ -1021,6 +1021,10 @@ body {
         &.default,
         &.automatic {
           background-image: url('resource://default-theme/icon.svg');
+
+          &.colorway {
+            background-image: url('chrome://activity-stream/content/data/content/assets/default.svg');
+          }
         }
 
         &.abstract {
