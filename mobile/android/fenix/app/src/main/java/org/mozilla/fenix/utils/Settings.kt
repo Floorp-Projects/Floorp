@@ -1208,13 +1208,22 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
-     * Indicates if sync on-boarding CFR should be shown
+     * Indicates if sync onboarding CFR should be shown.
      * Returns true if the [FeatureFlags.showSynCFR] and [R.string.pref_key_should_show_sync_cfr] are true.
      */
     var showSyncCFR by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_should_show_sync_cfr),
         featureFlag = FeatureFlags.showSynCFR,
         default = { onboardScreenSection[OnboardingSection.SYNC_CFR] == true },
+    )
+
+    /**
+     * Indicates if home onboarding dialog should be shown.
+     */
+    var showHomeOnboardingDialog by lazyFeatureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_should_show_home_onboarding_dialog),
+        featureFlag = FeatureFlags.showHomeOnboarding,
+        default = { onboardScreenSection[OnboardingSection.HOME_ONBOARDING_DIALOG] == true },
     )
 
     /**
