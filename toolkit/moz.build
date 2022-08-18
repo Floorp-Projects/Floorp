@@ -25,7 +25,9 @@ DIRS += [
 ]
 
 if CONFIG["OS_ARCH"] == "WINNT":
-    DIRS += ["mozapps/notificationserver"]
+    if CONFIG["MOZ_NOTIFICATION_SERVER"]:
+        DIRS += ["mozapps/notificationserver"]
+
     if CONFIG["MOZ_DEFAULT_BROWSER_AGENT"]:
         DIRS += ["mozapps/defaultagent"]
 
