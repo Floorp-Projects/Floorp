@@ -38,6 +38,7 @@
 #include "WidgetUtils.h"
 #include "WindowRenderer.h"
 
+#include "mozilla/EventForwards.h"
 #include "nsAppShell.h"
 #include "nsContentUtils.h"
 #include "nsFocusManager.h"
@@ -851,30 +852,23 @@ class NPZCSupport final
       window->DispatchHitTest(touchEvent);
     });
 
+    if (result.GetStatus() == nsEventStatus_eIgnore) {
+      if (aReturnResult) {
+        aReturnResult->Complete(java::PanZoomController::InputResultDetail::New(
+            INPUT_RESULT_UNHANDLED,
+            java::PanZoomController::SCROLLABLE_FLAG_NONE,
+            java::PanZoomController::OVERSCROLL_FLAG_NONE));
+      }
+      return;
+    }
+
+    MOZ_ASSERT(result.GetStatus() == nsEventStatus_eConsumeDoDefault);
+
     if (aReturnResult && result.GetHandledResult() != Nothing()) {
       // We know conclusively that the root APZ handled this or not and
       // don't need to do any more work.
-      switch (result.GetStatus()) {
-        case nsEventStatus_eIgnore:
-          aReturnResult->Complete(
-              java::PanZoomController::InputResultDetail::New(
-                  INPUT_RESULT_UNHANDLED,
-                  java::PanZoomController::SCROLLABLE_FLAG_NONE,
-                  java::PanZoomController::OVERSCROLL_FLAG_NONE));
-          break;
-        case nsEventStatus_eConsumeDoDefault:
-          aReturnResult->Complete(
-              ConvertAPZHandledResult(result.GetHandledResult().value()));
-          break;
-        default:
-          MOZ_ASSERT_UNREACHABLE("Unexpected nsEventStatus");
-          aReturnResult->Complete(
-              java::PanZoomController::InputResultDetail::New(
-                  INPUT_RESULT_UNHANDLED,
-                  java::PanZoomController::SCROLLABLE_FLAG_NONE,
-                  java::PanZoomController::OVERSCROLL_FLAG_NONE));
-          break;
-      }
+      aReturnResult->Complete(
+          ConvertAPZHandledResult(result.GetHandledResult().value()));
     }
   }
 };
