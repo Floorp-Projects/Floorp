@@ -35,13 +35,17 @@ async function touchLastTabFetch() {
   await TestUtils.waitForTick();
 }
 
-function setupMocks({ fxaDevices = null, state = UIState.STATUS_SIGNED_IN }) {
+function setupMocks({
+  fxaDevices = null,
+  state = UIState.STATUS_SIGNED_IN,
+  syncEnabled = true,
+}) {
   const sandbox = sinon.createSandbox();
   gMockFxaDevices = fxaDevices;
   sandbox.stub(fxAccounts.device, "recentDeviceList").get(() => fxaDevices);
   sandbox.stub(UIState, "get").returns({
     status: state,
-    syncEnabled: true,
+    syncEnabled,
   });
 
   sandbox
@@ -856,6 +860,42 @@ add_task(async function test_sync_error() {
     );
 
     Services.obs.notifyObservers(null, "weave:service:sync:finished");
+  });
+  await tearDown(sandbox);
+});
+
+add_task(async function test_sync_disconnected_error() {
+  const sandbox = setupMocks({
+    state: UIState.STATUS_NOT_CONFIGURED,
+    syncEnabled: false,
+  });
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+
+    // triggered when user disconnects sync in about:preferences
+    Services.obs.notifyObservers(null, UIState.ON_UPDATE);
+
+    await waitForElementVisible(browser, "#tabpickup-steps", true);
+    await waitForVisibleStep(browser, {
+      expectedVisible: "#tabpickup-steps-view0",
+    });
+
+    const errorStateHeader = document.querySelector(
+      "#tabpickup-steps-view0-header"
+    );
+
+    await BrowserTestUtils.waitForMutationCondition(
+      errorStateHeader,
+      { childList: true },
+      () => errorStateHeader.textContent.includes("Turn on syncing to continue")
+    );
+
+    ok(
+      errorStateHeader
+        .getAttribute("data-l10n-id")
+        .includes("sync-disconnected"),
+      "Correct message should show when sync's been disconnected error"
+    );
   });
   await tearDown(sandbox);
 });

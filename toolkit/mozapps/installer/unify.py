@@ -4,7 +4,6 @@
 
 import argparse
 import os
-import six
 import buildconfig
 from mozpack.packager.formats import (
     FlatFormatter,
@@ -67,7 +66,7 @@ def main():
         packager.close()
 
         # Transplant jar preloading information.
-        for path, log in six.iteritems(app1_finder.jarlogs):
+        for path, log in app1_finder.jarlogs.items():
             assert isinstance(copier[path], Jarrer)
             copier[path].preload(log)
 

@@ -403,6 +403,7 @@ pref("browser.urlbar.suggest.calculator",           false);
   // Enable QuickActions and its urlbar search mode button.
   pref("browser.urlbar.suggest.quickactions", true);
   pref("browser.urlbar.shortcuts.quickactions", true);
+  pref("browser.urlbar.quickactions.showPrefs", true);
 #endif
 
 // When `browser.urlbar.bestMatch.enabled` is true, this controls whether best

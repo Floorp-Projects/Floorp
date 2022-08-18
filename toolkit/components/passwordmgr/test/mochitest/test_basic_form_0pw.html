@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Test forms with no password fields</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="../../../satchel/test/satchel_common.js"></script>
   <script type="text/javascript" src="pwmgr_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -54,12 +55,10 @@ Login Manager test: forms with no password fields
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-/** Test for Login Manager: form fill, no password fields. **/
-
 function startTest() {
-  is($_(3, "uname").value, "", "Checking for unfilled checkbox (form 3)");
-  is($_(4, "yyyyy").value, "", "Checking for unfilled text field (form 4)");
-  is($_(5, "uname").value, "", "Checking for unfilled text field (form 5)");
+  is(getFormElementByName(3, "uname").value, "", "Checking for unfilled checkbox (form 3)");
+  is(getFormElementByName(4, "yyyyy").value, "", "Checking for unfilled text field (form 4)");
+  is(getFormElementByName(5, "uname").value, "", "Checking for unfilled text field (form 5)");
 
   SimpleTest.finish();
 }

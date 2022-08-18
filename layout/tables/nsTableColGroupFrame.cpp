@@ -6,6 +6,7 @@
 
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "nsTableColFrame.h"
 #include "nsTableFrame.h"
 #include "nsStyleConsts.h"

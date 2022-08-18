@@ -20,6 +20,7 @@
 #include "mozilla/layers/RepaintRequest.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_layers.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "nsDeckFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"

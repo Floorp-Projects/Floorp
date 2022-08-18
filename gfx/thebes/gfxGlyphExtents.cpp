@@ -33,11 +33,9 @@ gfxGlyphExtents::~gfxGlyphExtents() {
   MOZ_COUNT_DTOR(gfxGlyphExtents);
 }
 
-bool gfxGlyphExtents::GetTightGlyphExtentsAppUnits(gfxFont* aFont,
-                                                   DrawTarget* aDrawTarget,
-                                                   uint32_t aGlyphID,
-                                                   gfxRect* aExtents) {
-  AutoReadLock lock(mLock);
+bool gfxGlyphExtents::GetTightGlyphExtentsAppUnitsLocked(
+    gfxFont* aFont, DrawTarget* aDrawTarget, uint32_t aGlyphID,
+    gfxRect* aExtents) {
   HashEntry* entry = mTightGlyphExtents.GetEntry(aGlyphID);
   if (!entry) {
     // Some functions higher up in the call chain deliberately pass in a
@@ -53,9 +51,12 @@ bool gfxGlyphExtents::GetTightGlyphExtentsAppUnits(gfxFont* aFont,
 #endif
     // We need to temporarily release the read lock, as SetupGlyphExtents will
     // take a write lock internally when it wants to set the new entry.
+    MOZ_PUSH_IGNORE_THREAD_SAFETY
     mLock.ReadUnlock();
     aFont->SetupGlyphExtents(aDrawTarget, aGlyphID, true, this);
     mLock.ReadLock();
+    MOZ_POP_THREAD_SAFETY
+
     entry = mTightGlyphExtents.GetEntry(aGlyphID);
     if (!entry) {
       NS_WARNING("Could not get glyph extents");

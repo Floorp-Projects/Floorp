@@ -1088,6 +1088,9 @@ def test_info_failures(
 
             hvalue += hash(l)
 
+        if not failure["lines"]:
+            hvalue = 1
+
         if not hvalue:
             continue
 
@@ -1099,6 +1102,11 @@ def test_info_failures(
         print("%s errors with:" % (len(lines[h]["config"])))
         for l in lines[h]["lines"]:
             print(l)
+        else:
+            print(
+                "... no failure lines recorded in"
+                " https://treeherder.mozilla.org/intermittent-failures ..."
+            )
 
         for job in jobs:
             count = len([x for x in lines[h]["config"] if x == job])

@@ -258,6 +258,9 @@ const SpecialMessageActions = {
           action.data.where || "tab"
         );
         break;
+      case "OPEN_FIREFOX_VIEW":
+        window.FirefoxViewHandler.openTab();
+        break;
       case "OPEN_PREFERENCES_PAGE":
         window.openPreferences(
           action.data.category || action.data.args,

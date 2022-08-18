@@ -39,8 +39,8 @@ Login Manager test: related realms autocomplete
 
 /** Test for Login Manager: related realms autocomplete. **/
 
-let uname = $_(1, "uname");
-let pword = $_(1, "pword");
+const uname = getFormElementByName(1, "uname");
+const pword = getFormElementByName(1, "pword");
 
 function restoreForm() {
   uname.value = "";

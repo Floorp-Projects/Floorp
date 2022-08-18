@@ -14,6 +14,7 @@
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsTArray.h"
+#include "mozilla/StaticPrefs_layout.h"
 
 namespace mozilla {
 

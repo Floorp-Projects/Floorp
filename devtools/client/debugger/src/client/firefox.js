@@ -8,6 +8,7 @@ import { features } from "../utils/prefs";
 
 import { recordEvent } from "../utils/telemetry";
 import sourceQueue from "../utils/source-queue";
+import { getContext } from "../selectors";
 
 let actions;
 let commands;
@@ -60,11 +61,11 @@ export async function onConnect(_commands, _resourceCommand, _actions, store) {
   };
   await commands.threadConfigurationCommand.updateConfiguration(options);
 
-  // We should probably only pass descriptor informations from here
-  // so only pass if that's a WebExtension toolbox.
-  // And let actions.willNavigate/NAVIGATE pass the current/selected thread
-  // from onTargetAvailable
-  await actions.connect(targetFront.url, targetFront.threadFront.actor);
+  // Select the top level target by default
+  await actions.selectThread(
+    getContext(store.getState()),
+    targetFront.threadFront.actor
+  );
 
   await targetCommand.watchTargets({
     types: targetCommand.ALL_TYPES,

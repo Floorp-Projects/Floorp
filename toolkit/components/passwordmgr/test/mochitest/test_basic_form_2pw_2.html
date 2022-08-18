@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Test for form fill with 2 password fields</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="../../../satchel/test/satchel_common.js"></script>
   <script type="text/javascript" src="pwmgr_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -30,15 +31,15 @@ var numStartingLogins = 0;
 
 function startTest() {
   // Check for unfilled forms
-  is($_(1, "uname").value, "", "Checking username 1");
-  is($_(1, "pword").value, "", "Checking password 1A");
-  is($_(1, "qword").value, "", "Checking password 1B");
+  is(getFormElementByName(1, "uname").value, "", "Checking username 1");
+  is(getFormElementByName(1, "pword").value, "", "Checking password 1A");
+  is(getFormElementByName(1, "qword").value, "", "Checking password 1B");
 
   // Fill in the username and password fields, for account creation.
   // Form 1
-  SpecialPowers.wrap($_(1, "uname")).setUserInput("newuser1");
-  SpecialPowers.wrap($_(1, "pword")).setUserInput("newpass1");
-  SpecialPowers.wrap($_(1, "qword")).setUserInput("newpass1");
+  SpecialPowers.wrap(getFormElementByName(1, "uname")).setUserInput("newuser1");
+  SpecialPowers.wrap(getFormElementByName(1, "pword")).setUserInput("newpass1");
+  SpecialPowers.wrap(getFormElementByName(1, "qword")).setUserInput("newpass1");
 
   // eslint-disable-next-line no-unused-vars
   var button = getFormSubmitButton(1);

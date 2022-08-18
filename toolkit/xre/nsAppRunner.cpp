@@ -34,6 +34,7 @@
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/JSONWriter.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/widget/TextRecognition.h"
 #include "BaseProfiler.h"
 
 #include "nsAppRunner.h"
@@ -1604,6 +1605,12 @@ nsXULAppInfo::GetIs64Bit(bool* aResult) {
 #else
   *aResult = false;
 #endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetIsTextRecognitionSupported(bool* aResult) {
+  *aResult = widget::TextRecognition::IsSupported();
   return NS_OK;
 }
 

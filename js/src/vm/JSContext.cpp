@@ -1082,7 +1082,6 @@ void JSContext::setHelperThread(const JS::ContextOptions& options,
 
   TlsContext.set(this);
   currentThread_ = ThreadId::ThisThreadId();
-  nativeStackBase_.emplace(GetNativeStackBase());
   options_ = options;
 }
 
@@ -1092,7 +1091,6 @@ void JSContext::clearHelperThread(const AutoLockHelperThreadState& locked) {
   MOZ_ASSERT(currentThread_ == ThreadId::ThisThreadId());
 
   currentThread_ = ThreadId();
-  nativeStackBase_.reset();
   options_ = JS::ContextOptions();
   TlsContext.set(nullptr);
 }
@@ -1247,6 +1245,7 @@ void JSContext::trace(JSTracer* trc) {
 }
 
 JS::NativeStackLimit JSContext::stackLimitForJitCode(JS::StackKind kind) {
+  MOZ_ASSERT(isMainThreadContext());
 #ifdef JS_SIMULATOR
   return simulator()->stackLimit();
 #else
@@ -1255,6 +1254,8 @@ JS::NativeStackLimit JSContext::stackLimitForJitCode(JS::StackKind kind) {
 }
 
 void JSContext::resetJitStackLimit() {
+  MOZ_ASSERT(isMainThreadContext());
+
   // Note that, for now, we use the untrusted limit for ion. This is fine,
   // because it's the most conservative limit, and if we hit it, we'll bail
   // out of ion into the interpreter, which will do a proper recursion check.

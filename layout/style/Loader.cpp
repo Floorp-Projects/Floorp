@@ -518,6 +518,7 @@ Loader::Loader(DocGroup* aDocGroup) : Loader() { mDocGroup = aDocGroup; }
 Loader::Loader(Document* aDocument) : Loader() {
   MOZ_ASSERT(aDocument, "We should get a valid document from the caller!");
   mDocument = aDocument;
+  mIsDocumentAssociated = true;
   mDocumentCompatMode = aDocument->GetCompatibilityMode();
   mSheets = SharedStyleSheetCache::Get();
   RegisterInSheetCache();

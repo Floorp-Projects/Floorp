@@ -332,8 +332,7 @@ const ONBOARDING_MESSAGES = () => [
             primary_button: {
               label: "See what’s new",
               action: {
-                type: "OPEN_ABOUT_PAGE",
-                data: { args: "firefoxview", where: "current" },
+                type: "OPEN_FIREFOX_VIEW",
                 navigate: true,
               },
             },

@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<meta charset="utf8">
+<audio>
+  <source src="audio.ogg" />
+</audio>
+<script>
+onload = function() {
+  let audio = document.querySelector("audio");
+  for (let i = 0; i < 100; ++i) {
+    audio.play();
+  }
+};
+</script>

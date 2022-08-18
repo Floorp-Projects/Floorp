@@ -33,8 +33,7 @@ from collections import OrderedDict
 from createprecomplete import generate_precomplete
 import os
 import plistlib
-import six
-from six import StringIO
+from io import StringIO
 import subprocess
 
 
@@ -58,7 +57,7 @@ class RemovedFiles(GeneratedFile):
 
     def __init__(self, copier):
         self.copier = copier
-        GeneratedFile.__init__(self, b"")
+        GeneratedFile.__init__(self, "")
 
     def handle_line(self, f):
         f = f.strip()
@@ -66,7 +65,7 @@ class RemovedFiles(GeneratedFile):
             return
         if self.copier.contains(f):
             errors.error("Removal of packaged file(s): %s" % f)
-        self.content += six.ensure_binary(f) + b"\n"
+        self.content = f + "\n"
 
 
 def split_define(define):

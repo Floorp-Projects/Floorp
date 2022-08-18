@@ -668,6 +668,16 @@
            is="text-link"
            data-l10n-id="addressbar-best-match-learn-more"/>
   </hbox>
+  <hbox id="quickActionsBox" align="center" hidden="true">
+    <checkbox id="enableQuickActions"
+              class="tail-with-learn-more"
+              data-l10n-id="addressbar-locbar-quickactions-option"
+              preference="browser.urlbar.suggest.quickactions" />
+    <label id="quickActionsLink"
+           class="learnMore"
+           is="text-link"
+           data-l10n-id="addressbar-quickactions-learn-more" />
+  </hbox>
   <vbox id="firefoxSuggestContainer" hidden="true">
     <!-- This form[autocomplete="off"] is necessary to prevent the inputs from
          participating in session restore. autocomplete="off" is ignored on the

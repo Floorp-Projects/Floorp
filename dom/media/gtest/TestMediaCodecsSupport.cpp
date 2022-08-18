@@ -153,6 +153,5 @@ TEST(MediaCodecsSupport, GetMediaCodecsSupportedString)
 
   nsCString supportString;
   MCSInfo::GetMediaCodecsSupportedString(supportString, MCSInfo::GetSupport());
-  EXPECT_TRUE(supportString.Equals(
-      "Codec support information:\nH264 SW\nH264 HW\nVP8 SW"_ns));
+  EXPECT_TRUE(supportString.Equals("H264 SW\nH264 HW\nVP8 SW"_ns));
 }

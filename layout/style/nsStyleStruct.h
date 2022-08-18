@@ -16,7 +16,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ServoStyleConstsInlines.h"
-#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/UniquePtr.h"
 #include "nsColor.h"
 #include "nsCoord.h"
@@ -1795,15 +1794,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
  public:
   mozilla::StyleUserSelect ComputedUserSelect() const { return mUserSelect; }
 
-  mozilla::StyleScrollbarWidth ScrollbarWidth() const {
-    if (MOZ_UNLIKELY(
-            mozilla::StaticPrefs::layout_css_scrollbar_width_thin_disabled())) {
-      if (mScrollbarWidth == mozilla::StyleScrollbarWidth::Thin) {
-        return mozilla::StyleScrollbarWidth::Auto;
-      }
-    }
-    return mScrollbarWidth;
-  }
+  mozilla::StyleScrollbarWidth ScrollbarWidth() const;
 
   nsCSSPropertyID GetTransitionProperty(uint32_t aIndex) const {
     return mTransitions[aIndex % mTransitionPropertyCount].GetProperty();

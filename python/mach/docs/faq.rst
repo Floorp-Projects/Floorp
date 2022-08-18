@@ -30,6 +30,32 @@ when the command is invoked with:
 
    ./mach --debug-command FAILING-COMMAND ARGS ...
 
+How do I debug ``mach`` itself?
+-------------------------------
+
+If you are editing the mach code, or other Python modules you can
+open the terminal and start debugging with pdb with the following:
+
+.. code-block:: shell
+
+        python3 -m pdb ./mach <command>
+
+How do I debug ``pytest`` tests?
+--------------------------------
+
+First, before debugging, run ``./mach python-test`` once to ensure that
+the testing virtualenv is up-to-date:
+
+.. code-block:: shell
+
+    ./mach python-test path/to/test.py
+
+Then, using the testing virtualenv, debug the test file:
+
+.. code-block:: shell
+
+    <objdir>/_virtualenvs/python-test/bin/python -m pdb path/to/test.py
+
 How do I profile a slow command?
 --------------------------------
 
@@ -83,11 +109,11 @@ piece of functionality or action that is useful to multiple people
 consider implementing a ``mach`` command for it.
 
 Some other cases where you should consider implementing something as a
-mach command:
+``mach`` command:
 
 -  When your tool is a random script in the tree. Random scripts are
    hard to find and may not conform to coding conventions or best
-   practices. Mach provides a framework in which your tool can live that
+   practices. ``Mach`` provides a framework in which your tool can live that
    will put it in a better position to succeed than if it were on its
    own.
 -  When the alternative is a ``make`` target. The build team generally does
@@ -113,7 +139,7 @@ currently a ``mach`` module. There may or may never be one; currently ``mach``
 is owned by the build team.
 
 Even if a ``mach`` module were established, ``mach`` command modules would
-likely never belong to it. Instead, ``mach`` command modules are owne by the
+likely never belong to it. Instead, ``mach`` command modules are owned by the
 team/module that owns the system they interact with. In other words, ``mach``
 is not a power play to consolidate authority for tooling. Instead, it aims to
 expose that tooling through a common, shared interface.
