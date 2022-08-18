@@ -548,12 +548,9 @@ TabTracker.prototype = {
       return;
     }
 
-    // Synced tabs do not sync certain urls, we should ignore scheduling a sync
-    // if we have navigate to one of those urls
-    if (lazy.TABS_FILTERED_SCHEMES.has(locationURI.scheme)) {
-      return;
-    }
-
+    // We can't filter out tabs that we don't sync here, because we might be
+    // navigating from a tab that we *did* sync to one we do not, and that
+    // tab we *did* sync should no longer be synced.
     this.callScheduleSync();
   },
 

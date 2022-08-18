@@ -260,13 +260,15 @@ class PanZoomControllerTest : BaseSessionTest() {
     fun touchEventForResultWithStaticToolbar() {
         setupTouch()
 
-        // No touch handlers, without scrolling
+        // Non-scrollable page: value is always INPUT_RESULT_UNHANDLED
+        
+        // No touch handler
         var value = sessionRule.waitForResult(sendDownEvent(50f, 15f))
         assertThat("Value should match", value, equalTo(PanZoomController.INPUT_RESULT_UNHANDLED))
 
         // Touch handler with preventDefault
         value = sessionRule.waitForResult(sendDownEvent(50f, 45f))
-        assertThat("Value should match", value, equalTo(PanZoomController.INPUT_RESULT_HANDLED_CONTENT))
+        assertThat("Value should match", value, equalTo(PanZoomController.INPUT_RESULT_UNHANDLED))
 
         // Touch handler without preventDefault
         value = sessionRule.waitForResult(sendDownEvent(50f, 75f))
@@ -275,12 +277,18 @@ class PanZoomControllerTest : BaseSessionTest() {
         // move in response to the event.
         assertThat("Value should match", value, equalTo(PanZoomController.INPUT_RESULT_UNHANDLED))
 
-        // No touch handlers, with scrolling
+        // Scrollable page: value depends on the presence and type of touch handler
         setupScroll()
-        value = sessionRule.waitForResult(sendDownEvent(50f, 25f))
+
+        // No touch handler
+        value = sessionRule.waitForResult(sendDownEvent(50f, 15f))
         assertThat("Value should match", value, equalTo(PanZoomController.INPUT_RESULT_HANDLED))
 
-        // Touch handler with scrolling
+        // Touch handler with preventDefault
+        value = sessionRule.waitForResult(sendDownEvent(50f, 45f))
+        assertThat("Value should match", value, equalTo(PanZoomController.INPUT_RESULT_HANDLED_CONTENT))
+
+        // Touch handler without preventDefault
         value = sessionRule.waitForResult(sendDownEvent(50f, 75f))
         assertThat("Value should match", value, equalTo(PanZoomController.INPUT_RESULT_HANDLED))
     }
@@ -411,20 +419,28 @@ class PanZoomControllerTest : BaseSessionTest() {
     fun touchEventForResultWithPreventDefault() {
         sessionRule.display?.run { setDynamicToolbarMaxHeight(20) }
 
-        var files = arrayOf(
-            ROOT_100_PERCENT_HEIGHT_HTML_PATH,
-            ROOT_98VH_HTML_PATH,
-            ROOT_100VH_HTML_PATH,
-            IFRAME_100_PERCENT_HEIGHT_NO_SCROLLABLE_HTML_PATH,
-            IFRAME_100_PERCENT_HEIGHT_SCROLLABLE_HTML_PATH,
-            IFRAME_98VH_SCROLLABLE_HTML_PATH,
-            IFRAME_98VH_NO_SCROLLABLE_HTML_PATH)
-
-        for (file in files) {
+        // Entries are pairs of (filename, pageIsPannable)
+        // Note: "pageIsPannable" means "pannable" in the sense used in
+        // AsyncPanZoomController::ArePointerEventsConsumable().
+        // For example, in iframe_98vh_no_scrollable.html, even though
+        // the page does not have a scroll range, the page is "pannable"
+        // because the dynamic toolbar can be hidden.
+        var entries = arrayOf(
+            Pair(ROOT_100_PERCENT_HEIGHT_HTML_PATH, false),
+            Pair(ROOT_98VH_HTML_PATH, true),
+            Pair(ROOT_100VH_HTML_PATH, true),
+            Pair(IFRAME_100_PERCENT_HEIGHT_NO_SCROLLABLE_HTML_PATH, false),
+            Pair(IFRAME_100_PERCENT_HEIGHT_SCROLLABLE_HTML_PATH, true),
+            Pair(IFRAME_98VH_SCROLLABLE_HTML_PATH, true),
+            Pair(IFRAME_98VH_NO_SCROLLABLE_HTML_PATH, true))
+        for (entry in entries) {
+          var (file, pageIsPannable) = entry;
+          var expected = if (pageIsPannable) PanZoomController.INPUT_RESULT_HANDLED_CONTENT
+                         else PanZoomController.INPUT_RESULT_UNHANDLED;
           setupDocument(file + "?event-prevent")
           var value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
-          assertThat("The input result should be HANDLED_CONTENT in " + file,
-                      value, equalTo(PanZoomController.INPUT_RESULT_HANDLED_CONTENT))
+          assertThat("The input result should be " + expected + " in " + file,
+                      value, equalTo(expected))
 
           // Scroll to the bottom edge if it's possible.
           mainSession.evaluateJS("""
@@ -440,9 +456,19 @@ class PanZoomControllerTest : BaseSessionTest() {
           mainSession.flushApzRepaints()
 
           value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
-          assertThat("The input result should be HANDLED_CONTENT in " + file,
-                      value, equalTo(PanZoomController.INPUT_RESULT_HANDLED_CONTENT))
+          assertThat("The input result should be " + expected + " in " + file,
+                      value, equalTo(expected))
         }
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test
+    fun touchActionWithWheelListener() {
+        sessionRule.display?.run { setDynamicToolbarMaxHeight(20) }
+        setupDocument(TOUCH_ACTION_WHEEL_LISTENER_HTML_PATH)
+        var value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
+        assertThat("The input result should be UNHANDLED",
+                   value, equalTo(PanZoomController.INPUT_RESULT_UNHANDLED))
     }
 
     private fun fling(): GeckoResult<Int> {

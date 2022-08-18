@@ -6,6 +6,8 @@
 
 "use strict";
 
+/* import-globals-from head.js */
+
 const kBaseUrlForContent = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "https://example.com"
@@ -20,94 +22,7 @@ const kApzTestNativeEventUtilsUrl =
 
 Services.scriptloader.loadSubScript(kApzTestNativeEventUtilsUrl, this);
 
-SpecialPowers.pushPrefEnv({
-  set: [["dom.events.asyncClipboard.readText", true]],
-});
-
 const chromeDoc = window.document;
-
-const kPasteMenuPopupId = "clipboardReadTextPasteMenuPopup";
-const kPasteMenuItemId = "clipboardReadTextPasteMenuItem";
-
-function promiseBrowserReflow() {
-  return new Promise(resolve =>
-    requestAnimationFrame(() => requestAnimationFrame(resolve))
-  );
-}
-
-function promiseClickPasteButton() {
-  const pasteButton = chromeDoc.getElementById(kPasteMenuItemId);
-
-  // Native mouse event to execute additional code paths which wouldn't be
-  // covered by non-native events.
-  return EventUtils.promiseNativeMouseEventAndWaitForEvent({
-    type: "click",
-    target: pasteButton,
-    atCenter: true,
-  });
-}
-
-function getMouseCoordsRelativeToScreenInDevicePixels() {
-  let mouseXInCSSPixels = {};
-  let mouseYInCSSPixels = {};
-  window.windowUtils.getLastOverWindowPointerLocationInCSSPixels(
-    mouseXInCSSPixels,
-    mouseYInCSSPixels
-  );
-
-  return {
-    x:
-      (mouseXInCSSPixels.value + window.mozInnerScreenX) *
-      window.devicePixelRatio,
-    y:
-      (mouseYInCSSPixels.value + window.mozInnerScreenY) *
-      window.devicePixelRatio,
-  };
-}
-
-function isCloselyLeftOnTopOf(aCoordsP1, aCoordsP2, aDelta) {
-  const kDelta = 10;
-  return (
-    aCoordsP2.x - aCoordsP1.x < kDelta && aCoordsP2.y - aCoordsP1.y < kDelta
-  );
-}
-
-function waitForPasteMenuPopupEvent(aEventSuffix) {
-  // The element with id `kPasteMenuPopupId` is inserted dynamically, hence
-  // calling `BrowserTestUtils.waitForEvent` instead of
-  // `BrowserTestUtils.waitForPopupEvent`.
-  return BrowserTestUtils.waitForEvent(
-    chromeDoc,
-    "popup" + aEventSuffix,
-    false /* capture */,
-    e => {
-      return e.target.getAttribute("id") == kPasteMenuPopupId;
-    }
-  );
-}
-
-function promisePasteButtonIsShown() {
-  return waitForPasteMenuPopupEvent("shown").then(() => {
-    ok(true, "Witnessed 'popupshown' event for 'Paste' button.");
-
-    const pasteButton = chromeDoc.getElementById(kPasteMenuItemId);
-
-    return promiseBrowserReflow().then(() => {
-      return coordinatesRelativeToScreen({
-        target: pasteButton,
-        offsetX: 0,
-        offsetY: 0,
-      });
-    });
-  });
-}
-
-function promisePasteButtonIsHidden() {
-  return waitForPasteMenuPopupEvent("hidden").then(() => {
-    ok(true, "Witnessed 'popuphidden' event for 'Paste' button.");
-    return promiseBrowserReflow();
-  });
-}
 
 // @param aBrowser browser object of the content tab.
 // @param aMultipleReadTextCalls if false, exactly one call is made, two
@@ -126,31 +41,19 @@ function promiseClickContentToTriggerClipboardReadText(
     [contentButtonId],
     async _contentButtonId => {
       const contentButton = content.document.getElementById(_contentButtonId);
-
-      // Native mouse event to execute additional code paths which wouldn't be
-      // covered by non-native events.
-      await EventUtils.promiseNativeMouseEventAndWaitForEvent({
-        type: "click",
-        target: contentButton,
-        atCenter: true,
-        win: content.window,
+      let promise = new Promise(resolve => {
+        contentButton.addEventListener(
+          "click",
+          function(e) {
+            resolve({ x: e.screenX, y: e.screenY });
+          },
+          { once: true }
+        );
       });
 
-      // Creating an object in this, priviliged, scope via `eval` so that
-      // `coordinatesRelativeToScreen` below can access the object's
-      // properties.
-      // Inside `eval`, parenthesis are needed to indicate to the JS
-      // parser that an expression, not a block statement, should be
-      // parsed.
-      const coordinateParams = content.window.eval(`({
-        target: window.document.getElementById("${_contentButtonId}"),
-        atCenter: true,
-      })`);
-      const coords = await content.wrappedJSObject.coordinatesRelativeToScreen(
-        coordinateParams
-      );
+      EventUtils.synthesizeMouseAtCenter(contentButton, {}, content.window);
 
-      return coords;
+      return promise;
     }
   );
 }
@@ -188,8 +91,8 @@ function promiseWritingRandomTextToClipboard() {
 }
 
 function promiseDismissPasteButton() {
-  // Native mouse event to execute additional code paths which wouldn't be
-  // covered by non-native events.
+  // nsXULPopupManager rollup is handled in widget code, so we have to
+  // synthesize native mouse events.
   return EventUtils.promiseNativeMouseEvent({
     type: "click",
     target: chromeDoc.body,
@@ -198,6 +101,15 @@ function promiseDismissPasteButton() {
     atCenter: true,
   });
 }
+
+add_task(async function init() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.events.asyncClipboard.readText", true],
+      ["test.events.async.enabled", true],
+    ],
+  });
+});
 
 add_task(async function test_paste_button_position() {
   // Ensure there's text on the clipboard.
