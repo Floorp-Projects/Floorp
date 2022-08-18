@@ -19,7 +19,8 @@ namespace mozilla {
 class AudibilityMonitor {
  public:
   // ≈ 20 * log10(pow(2, 12)), noise floor of 12bit audio
-  const float AUDIBILITY_THREHSOLD = -72.;
+  const float AUDIBILITY_THRESHOLD =
+      dom::WebAudioUtils::ConvertDecibelsToLinear(-72.);
 
   AudibilityMonitor(uint32_t aSamplerate, float aSilenceDurationSeconds)
       : mSamplerate(aSamplerate),
@@ -40,22 +41,20 @@ class AudibilityMonitor {
   }
 
   void ProcessPlanar(const nsTArray<const float*>& aPlanar, TrackTime aFrames) {
-    uint32_t lastFrameAudibleAccrossChannels = 0;
+    uint32_t lastFrameAudibleAcrossChannels = 0;
     for (uint32_t channel = 0; channel < aPlanar.Length(); channel++) {
       uint32_t lastSampleAudible = 0;
       for (uint32_t frame = 0; frame < aFrames; frame++) {
-        float dbfs = dom::WebAudioUtils::ConvertLinearToDecibels(
-            abs(aPlanar[channel][frame]), -100.f);
-        if (dbfs > AUDIBILITY_THREHSOLD) {
+        if (std::fabs(aPlanar[channel][frame]) > AUDIBILITY_THRESHOLD) {
           mEverAudible = true;
           mSilentFramesInARow = 0;
           lastSampleAudible = frame;
         }
       }
-      lastFrameAudibleAccrossChannels =
-          std::max(lastFrameAudibleAccrossChannels, lastSampleAudible);
+      lastFrameAudibleAcrossChannels =
+          std::max(lastFrameAudibleAcrossChannels, lastSampleAudible);
     }
-    mSilentFramesInARow += aFrames - lastFrameAudibleAccrossChannels - 1;
+    mSilentFramesInARow += aFrames - lastFrameAudibleAcrossChannels - 1;
   }
 
   void ProcessInterleaved(const Span<AudioDataValue>& aInterleaved,
@@ -68,9 +67,8 @@ class AudibilityMonitor {
     for (uint32_t i = 0; i < frameCount; i++) {
       bool atLeastOneAudible = false;
       for (uint32_t j = 0; j < aChannels; j++) {
-        float dbfs = dom::WebAudioUtils::ConvertLinearToDecibels(
-            abs(AudioSampleToFloat(samples[readIndex++])), -100.f);
-        if (dbfs > AUDIBILITY_THREHSOLD) {
+        if (std::fabs(AudioSampleToFloat(samples[readIndex++])) >
+            AUDIBILITY_THRESHOLD) {
           atLeastOneAudible = true;
         }
       }
