@@ -152,17 +152,17 @@ class TlsCipherSuiteTestBase : public TlsConnectTestBase {
     SendReceive();
 
     // Check that we used the right cipher suite, auth type and kea type.
-    uint16_t actual;
+    uint16_t actual = TLS_NULL_WITH_NULL_NULL;
     EXPECT_TRUE(client_->cipher_suite(&actual));
     EXPECT_EQ(cipher_suite_, actual);
     EXPECT_TRUE(server_->cipher_suite(&actual));
     EXPECT_EQ(cipher_suite_, actual);
-    SSLAuthType auth;
+    SSLAuthType auth = ssl_auth_size;
     EXPECT_TRUE(client_->auth_type(&auth));
     EXPECT_EQ(auth_type_, auth);
     EXPECT_TRUE(server_->auth_type(&auth));
     EXPECT_EQ(auth_type_, auth);
-    SSLKEAType kea;
+    SSLKEAType kea = ssl_kea_size;
     EXPECT_TRUE(client_->kea_type(&kea));
     EXPECT_EQ(kea_type_, kea);
     EXPECT_TRUE(server_->kea_type(&kea));

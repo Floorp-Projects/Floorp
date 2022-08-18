@@ -33,10 +33,8 @@ use xpcom::{
 /// on shutdown.
 static SHUTDOWN_OBSERVED: AtomicBool = AtomicBool::new(false);
 
-#[derive(xpcom)]
-#[xpimplements(mozIAppServicesLogger)]
-#[refcnt = "nonatomic"]
-pub struct InitAppServicesLogger {}
+#[xpcom(implement(mozIAppServicesLogger), nonatomic)]
+pub struct AppServicesLogger {}
 
 pub static LOGGERS_BY_TARGET: Lazy<RwLock<HashMap<String, LogSink>>> = Lazy::new(|| {
     let h: HashMap<String, LogSink> = HashMap::new();
@@ -99,10 +97,8 @@ fn ensure_observing_shutdown() {
     }
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsIObserver)]
-#[refcnt = "nonatomic"]
-struct InitShutdownObserver {}
+#[xpcom(implement(nsIObserver), nonatomic)]
+struct ShutdownObserver {}
 
 impl ShutdownObserver {
     xpcom_method!(observe => Observe(_subject: *const nsISupports, topic: *const c_char, _data: *const u16));

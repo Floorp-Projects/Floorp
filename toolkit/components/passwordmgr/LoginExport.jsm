@@ -10,16 +10,6 @@
 
 const EXPORTED_SYMBOLS = ["LoginExport"];
 
-let { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-const lazy = {};
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  OS: "resource://gre/modules/osfile.jsm",
-});
-
 class LoginExport {
   /**
    * Builds an array of strings representing a row in a CSV.
@@ -82,13 +72,9 @@ class LoginExport {
       rows.push(LoginExport._buildCSVRow(login, columns));
     }
     // https://tools.ietf.org/html/rfc7111 suggests always using CRLF.
-    let csvAsString = rows.map(e => e.join(",")).join("\r\n");
-    await lazy.OS.File.writeAtomic(
-      path,
-      new TextEncoder().encode(csvAsString),
-      {
-        tmpPath: path + ".tmp",
-      }
-    );
+    const csvAsString = rows.map(e => e.join(",")).join("\r\n");
+    await IOUtils.writeUTF8(path, csvAsString, {
+      tmpPath: path + ".tmp",
+    });
   }
 }

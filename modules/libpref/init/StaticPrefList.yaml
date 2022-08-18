@@ -1529,7 +1529,7 @@
 # from parent-process BrowsingContexts
 - name: browser.tabs.documentchannel.parent-controlled
   type: bool
-  value: true
+  value: false
   mirror: always
 
 # Testing-only pref which makes data: URIs be loaded in a "web" content process
@@ -7795,6 +7795,12 @@
 - name: layout.css.backdrop-filter.enabled
   type: bool
   value: true
+  mirror: always
+
+# Do we override the blocklist for CSS backdrop-filter?
+- name: layout.css.backdrop-filter.force-enabled
+  type: bool
+  value: false
   mirror: always
 
 # Should stray control characters be rendered visibly?

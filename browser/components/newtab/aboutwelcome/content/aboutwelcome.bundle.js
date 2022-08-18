@@ -844,6 +844,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
         current: this.props.order,
         total
       }),
+      "data-l10n-attrs": "aria-valuetext",
       role: "meter",
       "aria-valuenow": this.props.order,
       "aria-valuemin": 1,

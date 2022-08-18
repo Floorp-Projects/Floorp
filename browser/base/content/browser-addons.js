@@ -1203,28 +1203,51 @@ customElements.define(
       this._openMenuButton.addEventListener("mouseout", () => {
         this.classList.remove("no-hover");
       });
-      this._openMenuButton.addEventListener("click", event => {
-        const { target } = event;
 
-        if (event.button !== 0) {
-          return;
-        }
-
-        const popup = target.ownerDocument.getElementById(
-          "unified-extensions-context-menu"
-        );
-        popup.openPopup(
-          target,
-          "after_end",
-          0,
-          0,
-          true /* isContextMenu */,
-          false /* attributesOverride */,
-          event
-        );
-      });
+      this.addEventListener("click", this);
 
       this.render();
+    }
+
+    handleEvent(event) {
+      switch (event.type) {
+        case "click":
+          const { target } = event;
+
+          if (event.button !== 0) {
+            return;
+          }
+
+          if (target === this._openMenuButton) {
+            const popup = target.ownerDocument.getElementById(
+              "unified-extensions-context-menu"
+            );
+            popup.openPopup(
+              target,
+              "after_end",
+              0,
+              0,
+              true /* isContextMenu */,
+              false /* attributesOverride */,
+              event
+            );
+          } else {
+            gUnifiedExtensions.togglePanel();
+
+            const extension = WebExtensionPolicy.getByID(this.addon.id)
+              ?.extension;
+            if (!extension) {
+              return;
+            }
+
+            const win = event.target.ownerGlobal;
+            const tab = win.gBrowser.selectedTab;
+
+            extension.tabManager.addActiveTabPermission(tab);
+            extension.tabManager.activateScripts(tab);
+          }
+          break;
+      }
     }
 
     render() {
@@ -1250,6 +1273,10 @@ customElements.define(
       }
 
       this._openMenuButton.dataset.extensionId = this.addon.id;
+      this._openMenuButton.setAttribute(
+        "data-l10n-args",
+        JSON.stringify({ extensionName: this.addon.name })
+      );
     }
   }
 );

@@ -313,6 +313,7 @@ export class ProtonScreen extends React.PureComponent {
                   current: this.props.order,
                   total,
                 })}
+                data-l10n-attrs="aria-valuetext"
                 role="meter"
                 aria-valuenow={this.props.order}
                 aria-valuemin={1}

@@ -93,10 +93,8 @@ fn status_to_request_result(
 ///   3. Report the status to the observer.
 ///   4. If the transfer has finished, free its data and return, otherwise:
 ///   5. Dispatch itself back to its original thread and repeat from step 1.
-#[derive(xpcom)]
-#[xpimplements(nsIRunnable, nsINamed)]
-#[refcnt = "atomic"]
-pub struct InitMonitorRunnable {
+#[xpcom(implement(nsIRunnable, nsINamed), atomic)]
+pub struct MonitorRunnable {
     request: AtomicCell<Option<ThreadBoundRefPtr<BitsRequest>>>,
     id: Guid,
     timeout: u32,

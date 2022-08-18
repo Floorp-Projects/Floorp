@@ -16,6 +16,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/intl/Segmenter.h"
 #include "mozilla/intl/WordBreaker.h"
 #include "mozilla/StaticPrefs_layout.h"
@@ -138,6 +139,26 @@ static Accessible* PrevLeaf(Accessible* aOrigin) {
   return pivot.Prev(aOrigin, rule);
 }
 
+static nsIFrame* GetFrameInBlock(const LocalAccessible* aAcc) {
+  dom::HTMLInputElement* input =
+      dom::HTMLInputElement::FromNodeOrNull(aAcc->GetContent());
+  if (!input) {
+    if (LocalAccessible* parent = aAcc->LocalParent()) {
+      input = dom::HTMLInputElement::FromNodeOrNull(parent->GetContent());
+    }
+  }
+
+  if (input) {
+    // If this is a single line input (or a leaf of an input) we want to return
+    // the top frame of the input element and not the text leaf's frame because
+    // the leaf may be inside of an embedded block frame in the input's shadow
+    // DOM that we aren't interested in.
+    return input->GetPrimaryFrame();
+  }
+
+  return aAcc->GetFrame();
+}
+
 static bool IsLocalAccAtLineStart(LocalAccessible* aAcc) {
   if (aAcc->NativeRole() == roles::LISTITEM_MARKER) {
     // A bullet always starts a line.
@@ -170,18 +191,17 @@ static bool IsLocalAccAtLineStart(LocalAccessible* aAcc) {
       }
     }
   }
-  nsIFrame* thisFrame = aAcc->GetFrame();
+
+  nsIFrame* thisFrame = GetFrameInBlock(aAcc);
   if (!thisFrame) {
     return false;
   }
-  // Even though we have a leaf Accessible, there might be a child frame; e.g.
-  // an empty input element is a leaf Accessible but has an empty text frame
-  // child. To get a line number, we need a leaf frame.
-  nsIFrame::GetFirstLeaf(&thisFrame);
-  nsIFrame* prevFrame = prevLocal->GetFrame();
+
+  nsIFrame* prevFrame = GetFrameInBlock(prevLocal);
   if (!prevFrame) {
     return false;
   }
+
   auto [thisBlock, thisLineFrame] = thisFrame->GetContainingBlockForLine(
       /* aLockScroll */ false);
   if (!thisBlock) {
@@ -189,7 +209,7 @@ static bool IsLocalAccAtLineStart(LocalAccessible* aAcc) {
     // play it safe and assume this is the beginning of a new line.
     return true;
   }
-  nsIFrame::GetLastLeaf(&prevFrame);
+
   // The previous leaf might cross lines. We want to compare against the last
   // line.
   prevFrame = prevFrame->LastContinuation();

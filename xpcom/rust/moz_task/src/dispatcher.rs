@@ -13,10 +13,8 @@ use xpcom::xpcom;
 
 /// Basic wrapper to convert a FnOnce callback into a `nsIRunnable` to be
 /// dispatched using XPCOM.
-#[derive(xpcom)]
-#[xpimplements(nsIRunnable, nsINamed, nsIRunnablePriority)]
-#[refcnt = "atomic"]
-struct InitRunnableFunction<F: FnOnce() + 'static> {
+#[xpcom(implement(nsIRunnable, nsINamed, nsIRunnablePriority), atomic)]
+struct RunnableFunction<F: FnOnce() + 'static> {
     name: &'static str,
     priority: u32,
     function: Mutex<Option<F>>,

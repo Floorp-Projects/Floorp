@@ -46,10 +46,8 @@ pub unsafe extern "C" fn new_bits_service(result: *mut *const nsIBits) {
     RefPtr::new(service.coerce::<nsIBits>()).forget(&mut *result);
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsIBits)]
-#[refcnt = "nonatomic"]
-pub struct InitBitsService {
+#[xpcom(implement(nsIBits), nonatomic)]
+pub struct BitsService {
     // This command thread will be used to send commands (ex: Suspend, Resume)
     // to a running job. It will be started up when the first job is created and
     // shutdown when all jobs have been completed or cancelled.

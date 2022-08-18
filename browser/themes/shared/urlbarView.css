@@ -363,13 +363,13 @@
    they all remain vertically aligned. */
 .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-favicon,
 .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-title,
-.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-button-help,
+.urlbarView-row:is([type=tip], [dynamicType="quickactions"]) > .urlbarView-row-inner > .urlbarView-button-help,
 .urlbarView-tip-button {
   margin-block-end: 16px;
 }
 
 .urlbarView-tip-button,
-.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-button-help {
+.urlbarView-row:is([type=tip], [dynamicType="quickactions"]) > .urlbarView-row-inner > .urlbarView-button-help {
   min-height: 16px;
   padding: 7px;
 }
@@ -418,21 +418,21 @@
   flex-shrink: 1;
 }
 
-.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-button-help {
+.urlbarView-row:is([type=tip], [dynamicType="quickactions"]) > .urlbarView-row-inner > .urlbarView-button-help {
   min-width: 16px;
   min-height: 16px;
   margin-inline: 8px 4px;
 }
 
-.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-button-help[selected] {
+.urlbarView-row:is([type=tip], [dynamicType="quickactions"]) > .urlbarView-row-inner > .urlbarView-button-help[selected] {
   outline-offset: var(--focus-outline-offset);
 }
 
-.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-button-help:hover {
+.urlbarView-row:is([type=tip], [dynamicType="quickactions"]) > .urlbarView-row-inner > .urlbarView-button-help:hover {
   background-color: var(--button-hover-bgcolor);
 }
 
-.urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-button-help:hover:active {
+.urlbarView-row:is([type=tip], [dynamicType="quickactions"]) > .urlbarView-row-inner > .urlbarView-button-help:hover:active {
   background-color: var(--button-active-bgcolor);
 }
 

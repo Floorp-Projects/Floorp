@@ -1015,31 +1015,34 @@ export class UrlbarInput {
         break;
       }
       case lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC: {
-        url = result.payload.url;
-        // Do not revert the Urlbar if we're going to navigate. We want the URL
-        // populated so we can navigate to it.
-        if (!url || !result.payload.shouldNavigate) {
-          this.handleRevert();
-        }
+        if (element.classList.contains("urlbarView-button-help")) {
+          url = result.payload.helpUrl;
+        } else {
+          url = result.payload.url;
+          // Do not revert the Urlbar if we're going to navigate. We want the URL
+          // populated so we can navigate to it.
+          if (!url || !result.payload.shouldNavigate) {
+            this.handleRevert();
+          }
+          let provider = lazy.UrlbarProvidersManager.getProvider(
+            result.providerName
+          );
+          if (!provider) {
+            Cu.reportError(`Provider not found: ${result.providerName}`);
+            return;
+          }
+          provider.tryMethod("pickResult", result, element);
 
-        let provider = lazy.UrlbarProvidersManager.getProvider(
-          result.providerName
-        );
-        if (!provider) {
-          Cu.reportError(`Provider not found: ${result.providerName}`);
-          return;
-        }
-        provider.tryMethod("pickResult", result, element);
-
-        // If we won't be navigating, this is the end of the engagement.
-        if (!url || !result.payload.shouldNavigate) {
-          this.controller.engagementEvent.record(event, {
-            selIndex,
-            searchString: this._lastSearchString,
-            selType: this.controller.engagementEvent.typeFromElement(element),
-            provider: result.providerName,
-          });
-          return;
+          // If we won't be navigating, this is the end of the engagement.
+          if (!url || !result.payload.shouldNavigate) {
+            this.controller.engagementEvent.record(event, {
+              selIndex,
+              searchString: this._lastSearchString,
+              selType: this.controller.engagementEvent.typeFromElement(element),
+              provider: result.providerName,
+            });
+            return;
+          }
         }
         break;
       }

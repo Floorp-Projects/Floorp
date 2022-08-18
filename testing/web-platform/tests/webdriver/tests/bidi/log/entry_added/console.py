@@ -2,10 +2,9 @@ import math
 import time
 
 import pytest
-
 from webdriver.bidi.modules.script import ContextTarget
 
-from . import assert_console_entry
+from . import assert_console_entry, create_console_api_message_for_primitive_value
 
 
 @pytest.mark.asyncio
@@ -27,20 +26,13 @@ from . import assert_console_entry
     ],
 )
 async def test_text_with_argument_variation(
-    bidi_session,
-    current_session,
-    wait_for_event,
-    log_argument,
-    expected_text,
-    top_context,
+    bidi_session, top_context, wait_for_event, log_argument, expected_text,
 ):
     await bidi_session.session.subscribe(events=["log.entryAdded"])
 
     on_entry_added = wait_for_event("log.entryAdded")
-
-    # TODO: To be replaced with the BiDi implementation of execute_script.
-    current_session.execute_script(f"console.log({log_argument})")
-
+    await create_console_api_message_for_primitive_value(
+        bidi_session, top_context, "log", log_argument)
     event_data = await on_entry_added
 
     assert_console_entry(event_data, text=expected_text, context=top_context["context"])
@@ -61,18 +53,19 @@ async def test_text_with_argument_variation(
     ],
 )
 async def test_level(
-    bidi_session, current_session, wait_for_event, log_method, expected_level
+    bidi_session, top_context, wait_for_event, log_method, expected_level
 ):
     await bidi_session.session.subscribe(events=["log.entryAdded"])
 
     on_entry_added = wait_for_event("log.entryAdded")
 
-    # TODO: To be replaced with the BiDi implementation of execute_script.
     if log_method == "assert":
         # assert has to be called with a first falsy argument to trigger a log.
-        current_session.execute_script("console.assert(false, 'foo')")
+        await create_console_api_message_for_primitive_value(
+            bidi_session, top_context, "assert", "false, 'foo'")
     else:
-        current_session.execute_script(f"console.{log_method}('foo')")
+        await create_console_api_message_for_primitive_value(
+            bidi_session, top_context, log_method, "'foo'")
 
     event_data = await on_entry_added
 
@@ -82,22 +75,24 @@ async def test_level(
 
 
 @pytest.mark.asyncio
-async def test_timestamp(bidi_session, current_session, current_time, wait_for_event):
+async def test_timestamp(bidi_session, top_context, wait_for_event, current_time):
     await bidi_session.session.subscribe(events=["log.entryAdded"])
 
     on_entry_added = wait_for_event("log.entryAdded")
 
     time_start = current_time()
 
-    # TODO: To be replaced with the BiDi implementation of execute_async_script.
-    current_session.execute_async_script(
+    script = """new Promise(resolve => {
+            setTimeout(() => {
+                console.log('foo');
+                resolve();
+            }, 100);
+        });
         """
-        const resolve = arguments[0];
-        setTimeout(() => {
-            console.log('foo');
-            resolve();
-        }, 100);
-        """
+    await bidi_session.script.evaluate(
+        expression=script,
+        await_promise=True,
+        target=ContextTarget(top_context["context"]),
     )
 
     event_data = await on_entry_added
@@ -110,42 +105,40 @@ async def test_timestamp(bidi_session, current_session, current_time, wait_for_e
 
 
 @pytest.mark.asyncio
-async def test_new_context_with_new_window(
-    bidi_session, current_session, wait_for_event, top_context
-):
+async def test_new_context_with_new_window(bidi_session, top_context, wait_for_event):
     await bidi_session.session.subscribe(events=["log.entryAdded"])
 
     on_entry_added = wait_for_event("log.entryAdded")
-    current_session.execute_script("console.log('foo')")
+    await create_console_api_message_for_primitive_value(
+        bidi_session, top_context, 'log', "'foo'")
     event_data = await on_entry_added
     assert_console_entry(event_data, text="foo", context=top_context["context"])
 
-    new_window_handle = current_session.new_window()
-    current_session.window_handle = new_window_handle
+    new_context = await bidi_session.browsing_context.create(type_hint="tab")
 
     on_entry_added = wait_for_event("log.entryAdded")
-    current_session.execute_script("console.log('foo_in_new_window')")
+    await create_console_api_message_for_primitive_value(
+        bidi_session, new_context, 'log', "'foo_in_new_window'")
     event_data = await on_entry_added
-    assert_console_entry(
-        event_data, text="foo_in_new_window", context=new_window_handle
-    )
+    assert_console_entry(event_data, text="foo_in_new_window", context=new_context["context"])
 
 
 @pytest.mark.asyncio
-async def test_new_context_with_refresh(
-    bidi_session, current_session, wait_for_event, top_context
-):
+async def test_new_context_with_refresh(bidi_session, top_context, wait_for_event):
     await bidi_session.session.subscribe(events=["log.entryAdded"])
 
     on_entry_added = wait_for_event("log.entryAdded")
-    current_session.execute_script("console.log('foo')")
+    await create_console_api_message_for_primitive_value(
+        bidi_session, top_context, 'log', "'foo'")
     event_data = await on_entry_added
     assert_console_entry(event_data, text="foo", context=top_context["context"])
 
-    current_session.refresh()
-
+    await bidi_session.browsing_context.navigate(
+        context=top_context["context"], url=top_context["url"], wait="complete"
+    )
     on_entry_added = wait_for_event("log.entryAdded")
-    current_session.execute_script("console.log('foo_after_refresh')")
+    await create_console_api_message_for_primitive_value(
+        bidi_session, top_context, 'log', "'foo_after_refresh'")
     event_data = await on_entry_added
     assert_console_entry(
         event_data, text="foo_after_refresh", context=top_context["context"]
@@ -155,9 +148,9 @@ async def test_new_context_with_refresh(
 @pytest.mark.asyncio
 async def test_different_contexts(
     bidi_session,
+    top_context,
     wait_for_event,
     test_page_same_origin_frame,
-    top_context,
 ):
     await bidi_session.browsing_context.navigate(
         context=top_context["context"], url=test_page_same_origin_frame, wait="complete"
@@ -169,19 +162,13 @@ async def test_different_contexts(
     await bidi_session.session.subscribe(events=["log.entryAdded"])
 
     on_entry_added = wait_for_event("log.entryAdded")
-    await bidi_session.script.evaluate(
-        expression="console.log('foo')",
-        target=ContextTarget(top_context["context"]),
-        await_promise=True,
-    )
+    await create_console_api_message_for_primitive_value(
+        bidi_session, top_context, "log", "'foo'")
     event_data = await on_entry_added
     assert_console_entry(event_data, text="foo", context=top_context["context"])
 
     on_entry_added = wait_for_event("log.entryAdded")
-    await bidi_session.script.evaluate(
-        expression="console.log('bar')",
-        target=ContextTarget(frame_context["context"]),
-        await_promise=True,
-    )
+    await create_console_api_message_for_primitive_value(
+        bidi_session, frame_context, "log", "'bar'")
     event_data = await on_entry_added
     assert_console_entry(event_data, text="bar", context=frame_context["context"])

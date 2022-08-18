@@ -86,7 +86,7 @@ error_once_function(void)
 #if defined(__MINGW32__)
     HMODULE nss3 = GetModuleHandleW(L"nss3");
     if (nss3) {
-        FARPROC freePtr = GetProcAddress(nss3, "PR_Free");
+        PRThreadPrivateDTOR freePtr = (PRThreadPrivateDTOR)GetProcAddress(nss3, "PR_Free");
         if (freePtr) {
             return PR_NewThreadPrivateIndex(&error_stack_index, freePtr);
         }
