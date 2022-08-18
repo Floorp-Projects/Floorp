@@ -93,7 +93,8 @@ class gfxVarReceiver;
   _(HwDecodedVideoZeroCopy, bool, false)                           \
   _(UseDMABufSurfaceExport, bool, true)                            \
   _(ReuseDecoderDevice, bool, false)                               \
-  _(UseCanvasRenderThread, bool, false)
+  _(UseCanvasRenderThread, bool, false)                            \
+  _(AllowBackdropFilter, bool, false)
 
 /* Add new entries above this line. */
 
