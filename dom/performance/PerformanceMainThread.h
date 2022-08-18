@@ -98,14 +98,14 @@ class PerformanceMainThread final : public Performance,
 
   class EventCounts* EventCounts() override;
 
+  bool IsGlobalObjectWindow() const override { return true; };
+
  protected:
   ~PerformanceMainThread();
 
   void CreateNavigationTimingEntry();
 
   void InsertUserEntry(PerformanceEntry* aEntry) override;
-
-  bool IsPerformanceTimingAttribute(const nsAString& aName) override;
 
   DOMHighResTimeStamp GetPerformanceTimingFromString(
       const nsAString& aTimingName) override;
