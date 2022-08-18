@@ -2,14 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
 const lazy = {};
-
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.jsm",
 });
@@ -19,27 +16,18 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "featureTourProgress",
   "browser.firefox-view.feature-tour",
   '{"message":"","screen":"","complete":true}',
-  _handlePrefChange,
+  handlePrefChange,
   val => JSON.parse(val)
 );
 
-async function _handlePrefChange() {
-  if (document.visibilityState === "hidden") {
-    return;
-  }
-  let prefVal = lazy.featureTourProgress;
-  if (prefVal.complete) {
+async function handlePrefChange(prefName, prevVal, newVal) {
+  if (newVal.complete) {
     _endTour();
-  } else if (prefVal.screen !== CURRENT_SCREEN?.id) {
+  } else {
     READY = false;
-    let container = document.getElementById(CONTAINER_ID);
-    container?.classList.add("hidden");
-    // wait for fade out transition
-    setTimeout(async () => {
-      _loadConfig(lazy.featureTourProgress.message);
-      container?.remove();
-      await _renderCallout();
-    }, TRANSITION_MS);
+    _loadConfig(lazy.featureTourProgress.message);
+    document.getElementById(CONTAINER_ID)?.remove();
+    await _renderCallout();
   }
 }
 
@@ -67,7 +55,6 @@ function _addCalloutLinkElements() {
     "branding/brand.ftl",
     "browser/branding/brandings.ftl",
     "browser/newtab/asrouter.ftl",
-    "browser/featureCallout.ftl",
   ]);
 }
 
@@ -76,7 +63,6 @@ let CONFIG;
 let RENDER_OBSERVER;
 let READY = false;
 
-const TRANSITION_MS = 500;
 const CONTAINER_ID = "root";
 const MESSAGES = [
   {
@@ -92,22 +78,15 @@ const MESSAGES = [
         content: {
           position: "callout",
           arrow_position: "top",
-          title: {
-            string_id: "callout-firefox-view-tab-pickup-title",
-          },
-          subtitle: {
-            string_id: "callout-firefox-view-tab-pickup-subtitle",
-          },
+          title: "Hop between devices with tab pickup",
+          subtitle:
+            "Quickly grab open tabs from your phone and open them here for maximum flow.",
           logo: {
-            imageURL: "chrome://browser/content/callout-tab-pickup.svg",
-            darkModeImageURL:
-              "chrome://browser/content/callout-tab-pickup-dark.svg",
-            height: "128px",
+            imageURL:
+              "chrome://activity-stream/content/data/content/assets/heart.webp",
           },
           primary_button: {
-            label: {
-              string_id: "callout-primary-advance-button-label",
-            },
+            label: "Next",
             action: {
               type: "SET_PREF",
               data: {
@@ -145,16 +124,11 @@ const MESSAGES = [
         content: {
           position: "callout",
           arrow_position: "bottom",
-          title: {
-            string_id: "callout-firefox-view-recently-closed-title",
-          },
-          subtitle: {
-            string_id: "callout-firefox-view-recently-closed-subtitle",
-          },
+          title: "Get back your closed tabs in a snap",
+          subtitle:
+            "All your closed tabs will magically show up here. Never worry about accidentally closing a site again.",
           primary_button: {
-            label: {
-              string_id: "callout-primary-advance-button-label",
-            },
+            label: "Next",
             action: {
               type: "SET_PREF",
               data: {
@@ -192,22 +166,15 @@ const MESSAGES = [
         content: {
           position: "callout",
           arrow_position: "end",
-          title: {
-            string_id: "callout-firefox-view-colorways-title",
-          },
-          subtitle: {
-            string_id: "callout-firefox-view-colorways-subtitle",
-          },
+          title: "Add a splash of color",
+          subtitle:
+            "Paint your browser with colorways, only in Firefox. Choose the shade that speaks to you.",
           logo: {
-            imageURL: "chrome://browser/content/callout-colorways.svg",
-            darkModeImageURL:
-              "chrome://browser/content/callout-colorways-dark.svg",
-            height: "128px",
+            imageURL:
+              "chrome://activity-stream/content/data/content/assets/heart.webp",
           },
           primary_button: {
-            label: {
-              string_id: "callout-primary-complete-button-label",
-            },
+            label: "Finish",
             action: {
               type: "SET_PREF",
               data: {
@@ -245,12 +212,9 @@ const MESSAGES = [
 
 function _createContainer() {
   let container = document.createElement("div");
-  container.classList.add("onboardingContainer", "featureCallout", "hidden");
+  container.classList.add("onboardingContainer", "featureCallout");
   container.id = CONTAINER_ID;
-  let parent = document.querySelector(CURRENT_SCREEN?.parent_selector);
-  container.setAttribute("aria-describedby", `#${CONTAINER_ID} .welcome-text`);
-  container.tabIndex = 0;
-  parent.insertAdjacentElement("afterend", container);
+  document.body.appendChild(container);
   return container;
 }
 
@@ -259,7 +223,7 @@ function _createContainer() {
  */
 function _positionCallout() {
   const positions = ["top", "bottom", "left", "right"];
-  const container = document.getElementById(CONTAINER_ID);
+  const container = document.getElementById("root");
   const parentEl = document.querySelector(CURRENT_SCREEN?.parent_selector);
   const arrowPosition = CURRENT_SCREEN?.content?.arrow_position || "top";
   const margin = 15;
@@ -357,8 +321,6 @@ function _positionCallout() {
   } else {
     positioners[arrowPosition]();
   }
-
-  container.classList.remove("hidden");
 }
 
 function _addPositionListeners() {
@@ -393,14 +355,9 @@ function _setupWindowFunctions() {
 }
 
 function _endTour() {
-  // wait for fade out transition
-  let container = document.getElementById(CONTAINER_ID);
-  container?.classList.add("hidden");
-  setTimeout(() => {
-    container?.remove();
-    _removePositionListeners();
-    RENDER_OBSERVER?.disconnect();
-  }, TRANSITION_MS);
+  document.getElementById(CONTAINER_ID)?.remove();
+  _removePositionListeners();
+  RENDER_OBSERVER?.disconnect();
 }
 
 async function _addScriptsAndRender(container) {
@@ -436,7 +393,7 @@ function _observeRender(container) {
   RENDER_OBSERVER?.observe(container, { childList: true });
 }
 
-function _loadConfig(messageId) {
+async function _loadConfig(messageId) {
   // If the parent element a screen describes doesn't exist, remove screen
   // and ensure last screen displays the final primary CTA
   // (for example, when there are no active colorways in about:firefoxview)
@@ -463,14 +420,14 @@ function _loadConfig(messageId) {
 
 async function _renderCallout() {
   let container = _createContainer();
+  _observeRender(container);
   // This results in rendering the Feature Callout
   await _addScriptsAndRender(container);
-  _observeRender(container);
 }
 /**
  * Render content based on about:welcome multistage template.
  */
-async function showFeatureCallout(messageId) {
+export async function showFeatureCallout(messageId) {
   // Don't show the feature tour if user has already completed it.
   if (lazy.featureTourProgress.complete) {
     return;
@@ -484,13 +441,9 @@ async function showFeatureCallout(messageId) {
 
   RENDER_OBSERVER = new MutationObserver(function() {
     // Check if the Feature Callout screen has loaded for the first time
-    if (!READY && document.querySelector(`#${CONTAINER_ID} .screen`)) {
+    if (!READY && document.querySelector("#root .screen")) {
       READY = true;
       _positionCallout();
-      let container = document.getElementById(CONTAINER_ID);
-      container.focus();
-      // Alert screen readers to the presence of the callout
-      container.setAttribute("role", "alert");
     }
   });
 
@@ -500,17 +453,3 @@ async function showFeatureCallout(messageId) {
   _setupWindowFunctions();
   await _renderCallout();
 }
-
-window.addEventListener("DOMContentLoaded", () => {
-  // Get the message id from the feature tour pref
-  // (If/when this surface is used with other pages,
-  // add logic to select the correct pref for a given
-  // page's tour using its location)
-  showFeatureCallout(lazy.featureTourProgress.message);
-});
-
-// When the window is focused, ensure tour is synced with tours in
-// any other instances of the parent page
-window.addEventListener("visibilitychange", () => {
-  _handlePrefChange();
-});
