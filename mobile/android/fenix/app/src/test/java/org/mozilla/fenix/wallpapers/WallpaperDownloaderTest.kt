@@ -2,16 +2,13 @@ package org.mozilla.fenix.wallpapers
 
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestDispatcher
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
-import mozilla.components.concept.fetch.isSuccess
-import org.junit.Assert.*
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -56,14 +53,8 @@ class WallpaperDownloaderTest {
     @Test
     fun `GIVEN that request is successful WHEN downloading THEN file is created in expected location`() = runTest {
         val wallpaper = generateWallpaper()
-        val portraitRequest = Request(
-            url = "$remoteHost/${wallpaper.collection.name}/${wallpaper.name}/portrait.png",
-            method = Request.Method.GET
-        )
-        val landscapeRequest = Request(
-            url = "$remoteHost/${wallpaper.collection.name}/${wallpaper.name}/landscape.png",
-            method = Request.Method.GET
-        )
+        val portraitRequest = wallpaper.generateRequest("portrait")
+        val landscapeRequest = wallpaper.generateRequest("landscape")
         every { mockPortraitResponse.status } returns 200
         every { mockLandscapeResponse.status } returns 200
         every { mockPortraitResponse.body } returns portraitResponseBodySuccess
@@ -82,14 +73,8 @@ class WallpaperDownloaderTest {
     @Test
     fun `GIVEN that request fails WHEN downloading THEN file is not created`() = runTest {
         val wallpaper = generateWallpaper()
-        val portraitRequest = Request(
-            url = "$remoteHost/${wallpaper.collection.name}/${wallpaper.name}/portrait.png",
-            method = Request.Method.GET
-        )
-        val landscapeRequest = Request(
-            url = "$remoteHost/${wallpaper.collection.name}/${wallpaper.name}/landscape.png",
-            method = Request.Method.GET
-        )
+        val portraitRequest = wallpaper.generateRequest("portrait")
+        val landscapeRequest = wallpaper.generateRequest("landscape")
         every { mockPortraitResponse.status } returns 400
         every { mockLandscapeResponse.status } returns 400
         every { mockClient.fetch(portraitRequest) } returns mockPortraitResponse
@@ -106,14 +91,8 @@ class WallpaperDownloaderTest {
     @Test
     fun `GIVEN that copying the file fails WHEN downloading THEN file is not created`() = runTest {
         val wallpaper = generateWallpaper()
-        val portraitRequest = Request(
-            url = "$remoteHost/${wallpaper.collection.name}/${wallpaper.name}/portrait.png",
-            method = Request.Method.GET
-        )
-        val landscapeRequest = Request(
-            url = "$remoteHost/${wallpaper.collection.name}/${wallpaper.name}/landscape.png",
-            method = Request.Method.GET
-        )
+        val portraitRequest = wallpaper.generateRequest("portrait")
+        val landscapeRequest = wallpaper.generateRequest("landscape")
         every { mockPortraitResponse.status } returns 200
         every { mockLandscapeResponse.status } returns 200
         every { mockPortraitResponse.body } throws IllegalStateException()
@@ -133,5 +112,10 @@ class WallpaperDownloaderTest {
         collection = wallpaperCollection,
         textColor = null,
         cardColor = null
+    )
+
+    private fun Wallpaper.generateRequest(type: String) = Request(
+        url = "$remoteHost/${collection.name}/$name/$type.png",
+        method = Request.Method.GET
     )
 }

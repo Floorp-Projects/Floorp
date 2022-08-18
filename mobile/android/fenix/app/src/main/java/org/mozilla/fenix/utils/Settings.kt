@@ -185,7 +185,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = ""
     )
 
-    var currentWallpaper by stringPreference(
+    var currentWallpaperName by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_current_wallpaper),
         default = Wallpaper.Default.name
     )

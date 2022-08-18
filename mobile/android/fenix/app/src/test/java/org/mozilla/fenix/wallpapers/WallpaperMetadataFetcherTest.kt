@@ -346,4 +346,45 @@ class WallpaperMetadataFetcherTest {
             }
         )
     }
+
+    @Test
+    fun `GIVEN string fields with null values WHEN parsed THEN fields are correctly null`() = runTest {
+        val json = """
+            {
+                "last-updated-date": "2022-01-01",
+                "collections": [
+                    {
+                        "id": "classic-firefox",
+                        "heading": null,
+                        "description": null,
+                        "available-locales": null,
+                        "availability-range": null,
+                        "learn-more-url": null,
+                        "wallpapers": [
+                            {
+                                "id": "beach-vibes",
+                                "text-color": "FBFBFE",
+                                "card-color": "15141A"
+                            },
+                            {
+                                "id": "sunrise",
+                                "text-color": "15141A",
+                                "card-color": "FBFBFE"
+                            }
+                        ]
+                    }
+                ]
+            }
+        """.trimIndent()
+        every { mockResponse.body } returns Response.Body(json.byteInputStream())
+
+        val wallpapers = metadataFetcher.downloadWallpaperList()
+
+        assertTrue(wallpapers.isNotEmpty())
+        assertTrue(
+            wallpapers.all {
+                it.collection.heading == null && it.collection.description == null
+            }
+        )
+    }
 }

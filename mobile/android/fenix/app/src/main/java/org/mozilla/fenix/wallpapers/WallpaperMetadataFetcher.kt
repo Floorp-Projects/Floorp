@@ -48,11 +48,11 @@ class WallpaperMetadataFetcher(
 
     private fun JSONObject.toCollectionOfWallpapers(): List<Wallpaper> {
         val collectionId = getString("id")
-        val heading = optString("heading")
-        val description = optString("description")
+        val heading = optStringOrNull("heading")
+        val description = optStringOrNull("description")
         val availableLocales = optJSONArray("available-locales")?.getAvailableLocales()
         val availabilityRange = optJSONObject("availability-range")?.getAvailabilityRange()
-        val learnMoreUrl = optString("learn-more-url")
+        val learnMoreUrl = optStringOrNull("learn-more-url")
         val collection = Wallpaper.Collection(
             name = collectionId,
             heading = heading,
@@ -86,6 +86,15 @@ class WallpaperMetadataFetcher(
                 )
             }
         }
+
+    /**
+     * Normally, if a field is specified in json as null, then optString will return it as "null". If
+     * a field is missing completely, optString will return "". This will correctly return null in
+     * both those cases so that optional properties are marked as missing.
+     */
+    private fun JSONObject.optStringOrNull(propName: String) = optString(propName).takeIf {
+        it != "null" && it.isNotEmpty()
+    }
 
     /**
      * The wallpaper metadata has 6 digit hex color codes for compatibility with iOS. Since Android

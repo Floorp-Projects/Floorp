@@ -7,6 +7,7 @@ package org.mozilla.fenix.ui
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -143,6 +144,7 @@ class SettingsHomepageTest {
 
     @SmokeTest
     @Test
+    @Ignore("Intermittent test: https://github.com/mozilla-mobile/fenix/issues/26559")
     fun setWallpaperTest() {
         val wallpapers = listOf(
             "Wallpaper Item: amethyst",

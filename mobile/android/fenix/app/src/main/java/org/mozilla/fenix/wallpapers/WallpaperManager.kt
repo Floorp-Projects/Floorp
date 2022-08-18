@@ -24,7 +24,7 @@ class WallpaperManager(
         /**
          *  Get whether the default wallpaper should be used.
          */
-        fun isDefaultTheCurrentWallpaper(settings: Settings): Boolean = with(settings.currentWallpaper) {
+        fun isDefaultTheCurrentWallpaper(settings: Settings): Boolean = with(settings.currentWallpaperName) {
             return isEmpty() || equals(defaultWallpaper.name)
         }
 

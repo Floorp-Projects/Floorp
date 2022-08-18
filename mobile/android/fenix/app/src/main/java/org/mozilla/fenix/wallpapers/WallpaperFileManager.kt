@@ -12,19 +12,26 @@ import kotlinx.coroutines.withContext
 import org.mozilla.fenix.wallpapers.Wallpaper.Companion.getLocalPath
 import java.io.File
 
+/**
+ * Manages various functions related to the locally-stored wallpaper assets.
+ *
+ * @property storageRootDirectory The top level app-local storage directory.
+ * @param coroutineDispatcher Dispatcher used to execute suspending functions. Default parameter
+ * should be likely be used except for when under test.
+ */
 class WallpaperFileManager(
-    private val rootDirectory: File,
+    private val storageRootDirectory: File,
     coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val scope = CoroutineScope(coroutineDispatcher)
-    private val wallpapersDirectory = File(rootDirectory, "wallpapers")
+    private val wallpapersDirectory = File(storageRootDirectory, "wallpapers")
 
     /**
      * Lookup all the files for a wallpaper name. This lookup will fail if there are not
      * files for each of a portrait and landscape orientation as well as a thumbnail.
      */
     suspend fun lookupExpiredWallpaper(name: String): Wallpaper? = withContext(Dispatchers.IO) {
-        if (getAllLocalWallpaperPaths(name).all { File(rootDirectory, it).exists() }) {
+        if (getAllLocalWallpaperPaths(name).all { File(storageRootDirectory, it).exists() }) {
             Wallpaper(
                 name = name,
                 collection = Wallpaper.DefaultCollection,
@@ -36,16 +43,16 @@ class WallpaperFileManager(
 
     private fun getAllLocalWallpaperPaths(name: String): List<String> =
         Wallpaper.ImageType.values().map { orientation ->
-            getLocalPath(orientation, name)
+            getLocalPath(name, orientation)
         }
 
     /**
      * Remove all wallpapers that are not the [currentWallpaper] or in [availableWallpapers].
      */
-    fun clean(currentWallpaper: Wallpaper, availableWallpapers: List<Wallpaper>) {
+    suspend fun clean(currentWallpaper: Wallpaper, availableWallpapers: List<Wallpaper>) = withContext(Dispatchers.IO) {
         scope.launch {
             val wallpapersToKeep = (listOf(currentWallpaper) + availableWallpapers).map { it.name }
-            for (file in wallpapersDirectory.listFiles()?.toList() ?: listOf()) {
+            wallpapersDirectory.listFiles()?.forEach { file ->
                 if (file.isDirectory && !wallpapersToKeep.contains(file.name)) {
                     file.deleteRecursively()
                 }

@@ -2,7 +2,7 @@ package org.mozilla.fenix.wallpapers
 
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -24,7 +24,7 @@ class WallpaperFileManagerTest {
     fun setup() {
         wallpapersFolder = File(tempFolder.root, "wallpapers")
         fileManager = WallpaperFileManager(
-            rootDirectory = tempFolder.root,
+            storageRootDirectory = tempFolder.root,
             coroutineDispatcher = dispatcher,
         )
     }
@@ -37,7 +37,7 @@ class WallpaperFileManagerTest {
         val result = fileManager.lookupExpiredWallpaper(wallpaperName)
 
         val expected = generateWallpaper(name = wallpaperName)
-        Assert.assertEquals(expected, result)
+        assertEquals(expected, result)
     }
 
     @Test
@@ -54,7 +54,7 @@ class WallpaperFileManagerTest {
 
         val result = fileManager.lookupExpiredWallpaper(wallpaperName)
 
-        Assert.assertEquals(null, result)
+        assertEquals(null, result)
     }
 
     @Test
@@ -71,7 +71,7 @@ class WallpaperFileManagerTest {
 
         val result = fileManager.lookupExpiredWallpaper(wallpaperName)
 
-        Assert.assertEquals(null, result)
+        assertEquals(null, result)
     }
 
     @Test
@@ -88,11 +88,11 @@ class WallpaperFileManagerTest {
 
         val result = fileManager.lookupExpiredWallpaper(wallpaperName)
 
-        Assert.assertEquals(null, result)
+        assertEquals(null, result)
     }
 
     @Test
-    fun `WHEN cleaned THEN current wallpaper and available wallpapers kept`() {
+    fun `WHEN cleaned THEN current wallpaper and available wallpapers kept`() = runTest {
         val currentName = "current"
         val currentWallpaper = generateWallpaper(name = currentName)
         val availableName = "available"

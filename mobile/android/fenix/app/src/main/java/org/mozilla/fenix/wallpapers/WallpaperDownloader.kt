@@ -10,7 +10,6 @@ import kotlinx.coroutines.withContext
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.isSuccess
-import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.wallpapers.Wallpaper.Companion.getLocalPath
 import java.io.File
@@ -18,11 +17,13 @@ import java.io.File
 /**
  * Can download wallpapers from a remote host.
  *
- * @param filesDir The top level app-local storage directory.
+ * @param storageRootDirectory The top level app-local storage directory.
  * @param client Required for fetching files from network.
+ * @param dispatcher Dispatcher used to execute suspending functions. Default parameter
+ * should be likely be used except for when under test.
  */
 class WallpaperDownloader(
-    private val filesDir: File,
+    private val storageRootDirectory: File,
     private val client: Client,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
@@ -37,7 +38,7 @@ class WallpaperDownloader(
      */
     suspend fun downloadWallpaper(wallpaper: Wallpaper) = withContext(dispatcher) {
         for (metadata in wallpaper.toMetadata()) {
-            val localFile = File(filesDir.absolutePath, metadata.localPath)
+            val localFile = File(storageRootDirectory.absolutePath, metadata.localPath)
             // Don't overwrite an asset if it exists
             if (localFile.exists()) continue
             val request = Request(
@@ -54,7 +55,7 @@ class WallpaperDownloader(
                     input.copyTo(localFile.outputStream())
                 }
             }.onFailure {
-                // This should clean up any partial downloads.
+                // This should clean up any partial downloads
                 Result.runCatching {
                     if (localFile.exists()) {
                         localFile.delete()
@@ -68,8 +69,8 @@ class WallpaperDownloader(
 
     private fun Wallpaper.toMetadata(): List<WallpaperMetadata> =
         listOf(Wallpaper.ImageType.Portrait, Wallpaper.ImageType.Landscape).map { orientation ->
-                val localPath = getLocalPath(orientation, this.name)
-                val remotePath = "${collection.name}/${this.name}/${orientation.lowercase()}.png"
-                WallpaperMetadata(remotePath, localPath)
-            }
+            val localPath = getLocalPath(this.name, orientation)
+            val remotePath = "${collection.name}/${this.name}/${orientation.lowercase()}.png"
+            WallpaperMetadata(remotePath, localPath)
+        }
 }

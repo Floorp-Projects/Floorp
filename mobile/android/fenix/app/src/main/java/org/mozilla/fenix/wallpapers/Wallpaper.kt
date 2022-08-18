@@ -83,14 +83,20 @@ data class Wallpaper(
          * @param type The type of image that should be retrieved.
          * @param name The name of the wallpaper.
          */
-        fun getLocalPath(type: ImageType, name: String) = "wallpapers/$name/${type.lowercase()}.png"
+        fun getLocalPath(name: String, type: ImageType) = "wallpapers/$name/${type.lowercase()}.png"
     }
 
+    /**
+     * Defines various image asset types that can be downloaded for each wallpaper.
+     */
     enum class ImageType {
         Portrait,
         Landscape,
         Thumbnail;
 
+        /**
+         * Get a lowercase string representation of the [ImageType.name] for use in path segments.
+         */
         fun lowercase(): String = this.name.lowercase()
     }
 }
