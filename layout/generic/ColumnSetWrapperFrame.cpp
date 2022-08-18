@@ -156,7 +156,7 @@ nscoord ColumnSetWrapperFrame::GetMinISize(gfxContext* aRenderingContext) {
 
   if (Maybe<nscoord> containISize =
           ContainIntrinsicISize(NS_UNCONSTRAINEDSIZE)) {
-    // If we're size-contained in inline axis and contain-intrinsic-block-size
+    // If we're size-contained in inline axis and contain-intrinsic-inline-size
     // is not 'none', then use that size.
     if (*containISize != NS_UNCONSTRAINEDSIZE) {
       return *containISize;
