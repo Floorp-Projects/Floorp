@@ -179,8 +179,10 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_DMABUF_SURFACE_EXPORT = 40;
   /* Whether reuse decoder device is supported, starting in 104. */
   const long FEATURE_REUSE_DECODER_DEVICE = 41;
+  /* Whether to allow backdrop filter, starting in 105. */
+  const long FEATURE_BACKDROP_FILTER = 42;
   /* the maximum feature value. */
-  const long FEATURE_MAX_VALUE = FEATURE_REUSE_DECODER_DEVICE;
+  const long FEATURE_MAX_VALUE = FEATURE_BACKDROP_FILTER;
 
   /*
    * A set of return values from GetFeatureStatus

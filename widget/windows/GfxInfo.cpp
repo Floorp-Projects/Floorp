@@ -1188,6 +1188,9 @@ static bool OnlyAllowFeatureOnWhitelistedVendor(int32_t aFeature) {
     // Remote WebGL is needed for Win32k Lockdown, so it should be enabled
     // regardless of HW support or not
     case nsIGfxInfo::FEATURE_ALLOW_WEBGL_OUT_OF_PROCESS:
+    // Backdrop filter should generally work, especially if we fall back to
+    // Software WebRender because of an unknown vendor.
+    case nsIGfxInfo::FEATURE_BACKDROP_FILTER:
       return false;
     default:
       return true;
@@ -1871,6 +1874,17 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         nsIGfxInfo::FEATURE_WEBRENDER_SCISSORED_CACHE_CLEARS,
         nsIGfxInfo::FEATURE_BLOCKED_DEVICE, DRIVER_COMPARISON_IGNORED,
         V(0, 0, 0, 0), "FEATURE_FAILURE_BUG_1603515");
+
+    ////////////////////////////////////
+    // FEATURE_BACKDROP_FILTER
+
+    // Backdrop filter crashes the driver. See bug 1785366 and bug 1784093.
+    APPEND_TO_DRIVER_BLOCKLIST_RANGE(
+        OperatingSystem::Windows, DeviceFamily::IntelHDGraphicsToIvyBridge,
+        nsIGfxInfo::FEATURE_BACKDROP_FILTER,
+        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_BETWEEN_EXCLUSIVE,
+        V(8, 15, 10, 2879), V(10, 18, 10, 4425), "FEATURE_FAILURE_BUG_1785366",
+        "Intel driver >= 10.18.10.4425");
   }
   return *sDriverInfo;
 }
