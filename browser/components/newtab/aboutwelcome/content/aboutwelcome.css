@@ -413,9 +413,6 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer .screen[pos=split] .section-main .main-content .logo-container {
   text-align: start;
 }
-.onboardingContainer .screen[pos=split] .section-main .main-content .logo-container:dir(rtl) {
-  text-align: end;
-}
 .onboardingContainer .screen[pos=split] .section-main .main-content .brand-logo {
   height: 25px;
   margin-block: 0;
@@ -549,13 +546,17 @@ body[lwt-newtab-brighttext] {
   .onboardingContainer .screen[pos=split] .section-main .main-content .main-content-inner {
     align-items: center;
   }
-  .onboardingContainer .screen[pos=split] .section-main .main-content .brand-logo {
+  .onboardingContainer .screen[pos=split] .section-main .main-content .logo-container {
+    text-align: center;
+  }
+  .onboardingContainer .screen[pos=split] .section-main .main-content .logo-container .brand-logo {
     min-height: 25px;
   }
-  .onboardingContainer .screen[pos=split] .section-main .main-content .brand-logo, .onboardingContainer .screen[pos=split] .section-main .main-content .brand-logo:dir(rtl) {
+  .onboardingContainer .screen[pos=split] .section-main .main-content .logo-container .brand-logo, .onboardingContainer .screen[pos=split] .section-main .main-content .logo-container .brand-logo:dir(rtl) {
     background-position: center;
   }
   .onboardingContainer .screen[pos=split] .section-main .main-content .welcome-text {
+    align-items: center;
     text-align: center;
     margin-inline: 0;
     padding-inline: 30px;
