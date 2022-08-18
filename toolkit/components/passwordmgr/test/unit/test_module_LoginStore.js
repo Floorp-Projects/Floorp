@@ -71,11 +71,11 @@ add_task(async function test_save_reload() {
 add_task(async function test_load_empty() {
   let store = new LoginStore(getTempFile(TEST_STORE_FILE_NAME).path);
 
-  Assert.equal(false, await OS.File.exists(store.path));
+  Assert.equal(false, await IOUtils.exists(store.path));
 
   await store.load();
 
-  Assert.equal(false, await OS.File.exists(store.path));
+  Assert.equal(false, await IOUtils.exists(store.path));
 
   Assert.equal(store.data.logins.length, 0);
 });
@@ -84,16 +84,13 @@ add_task(async function test_load_empty() {
  * Checks that saving empty data still overwrites any existing file.
  */
 add_task(async function test_save_empty() {
-  let store = new LoginStore(getTempFile(TEST_STORE_FILE_NAME).path);
+  const store = new LoginStore(getTempFile(TEST_STORE_FILE_NAME).path);
 
   await store.load();
-
-  let createdFile = await OS.File.open(store.path, { create: true });
-  await createdFile.close();
-
+  await IOUtils.writeUTF8(store.path, "", { writeMode: "create" });
   await store._save();
 
-  Assert.ok(await OS.File.exists(store.path));
+  Assert.ok(await IOUtils.exists(store.path));
 });
 
 /**
@@ -121,7 +118,7 @@ add_task(async function test_load_string_predefined() {
     '"timesUsed":1}],"disabledHosts":[' +
     '"http://www.example.org"]}';
 
-  await OS.File.writeAtomic(store.path, new TextEncoder().encode(string), {
+  await IOUtils.writeUTF8(store.path, string, {
     tmpPath: store.path + ".tmp",
   });
 
@@ -154,15 +151,15 @@ add_task(async function test_load_string_malformed() {
 
   let string = '{"logins":[{"hostname":"http://www.example.com","id":1,';
 
-  await OS.File.writeAtomic(store.path, new TextEncoder().encode(string), {
+  await IOUtils.writeUTF8(store.path, string, {
     tmpPath: store.path + ".tmp",
   });
 
   await store.load();
 
   // A backup file should have been created.
-  Assert.ok(await OS.File.exists(store.path + ".corrupt"));
-  await OS.File.remove(store.path + ".corrupt");
+  Assert.ok(await IOUtils.exists(store.path + ".corrupt"));
+  await IOUtils.remove(store.path + ".corrupt");
 
   // The store should be ready to accept new data.
   Assert.equal(store.data.logins.length, 0);
@@ -177,15 +174,15 @@ add_task(async function test_load_string_malformed_sync() {
 
   let string = '{"logins":[{"hostname":"http://www.example.com","id":1,';
 
-  await OS.File.writeAtomic(store.path, new TextEncoder().encode(string), {
+  await IOUtils.writeUTF8(store.path, string, {
     tmpPath: store.path + ".tmp",
   });
 
   store.ensureDataReady();
 
   // A backup file should have been created.
-  Assert.ok(await OS.File.exists(store.path + ".corrupt"));
-  await OS.File.remove(store.path + ".corrupt");
+  Assert.ok(await IOUtils.exists(store.path + ".corrupt"));
+  await IOUtils.remove(store.path + ".corrupt");
 
   // The store should be ready to accept new data.
   Assert.equal(store.data.logins.length, 0);
@@ -310,7 +307,7 @@ add_task(async function test_load_bad_dates() {
         logins: [Object.assign({}, rawLoginData, testData.savedProps)],
       })
     );
-    await OS.File.writeAtomic(store.path, new TextEncoder().encode(string), {
+    await IOUtils.writeUTF8(store.path, string, {
       tmpPath: store.path + ".tmp",
     });
     let now = Date.now();
