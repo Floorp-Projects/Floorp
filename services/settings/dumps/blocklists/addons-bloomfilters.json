@@ -3,6 +3,21 @@
     {
       "stash": {
         "blocked": [
+          "{a4044c79-76fa-4f71-a912-962c2a4e405d}:2.0",
+          "{a4044c79-76fa-4f71-a912-962c2a4e405d}:2.1",
+          "{49866623-ce8f-408d-9806-4d96a7ccf05c}:2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1660243044177,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1660674907337,
+      "id": "8d3d0256-454d-465d-ab37-6fbe11df6863",
+      "last_modified": 1660675044629
+    },
+    {
+      "stash": {
+        "blocked": [
           "extendedSearch@ext:1.0",
           "Moviety@ext:1.0",
           "MoviesCraver@ext:1.0",
@@ -1276,5 +1291,5 @@
       "last_modified": 1656333551168
     }
   ],
-  "timestamp": 1660243044117
+  "timestamp": 1660675044629
 }

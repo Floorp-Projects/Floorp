@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1660265823834,
+      "derHash": "VIN+97WsSqI2BqFe8w3kbpu34j5g9u1PJhIJK5Ttxo8=",
+      "subject": "CN=Data Management Intermediate Certificate Authority,OU=Fresenius Kabi USA,O=Fresenius Kabi AG,C=US",
+      "subjectDN": "MIGDMQswCQYDVQQGEwJVUzEaMBgGA1UEChMRRnJlc2VuaXVzIEthYmkgQUcxGzAZBgNVBAsTEkZyZXNlbml1cyBLYWJpIFVTQTE7MDkGA1UEAxMyRGF0YSBNYW5hZ2VtZW50IEludGVybWVkaWF0ZSBDZXJ0aWZpY2F0ZSBBdXRob3JpdHk=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "e31d3bb304fdcef75199ff47761dd7a91e1a654cedec5485da203640dc0eee39",
+        "size": 1748,
+        "filename": "6tOYk51VDHXklgQiMTHvUHAqQsHRj8do_RweZi812do=.pem",
+        "location": "security-state-staging/intermediates/941016f3-c0dc-47ea-8440-1a189d509dbf.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "6tOYk51VDHXklgQiMTHvUHAqQsHRj8do/RweZi812do=",
+      "crlite_enrolled": false,
+      "id": "1e9a1998-a52f-498c-8217-0418e4aaeb12",
+      "last_modified": 1660654623240
+    },
+    {
       "schema": 1660265332073,
       "derHash": "rXtYw8XZWGvltieZwnksQRHJhSqW97BgciEmVxOVfhw=",
       "subject": "CN=SHECA OV Secure Server CA,O=Shanghai Electronic Certificate Authority Center Co.\\, Ltd.,C=CN",
@@ -12689,24 +12707,6 @@
       "crlite_enrolled": true,
       "id": "042596bd-887e-46b0-a897-969aef8e476a",
       "last_modified": 1641513440829
-    },
-    {
-      "schema": 1641502410043,
-      "derHash": "VIN+97WsSqI2BqFe8w3kbpu34j5g9u1PJhIJK5Ttxo8=",
-      "subject": "CN=Data Management Intermediate Certificate Authority,OU=Fresenius Kabi USA,O=Fresenius Kabi AG,C=US",
-      "subjectDN": "MIGDMQswCQYDVQQGEwJVUzEaMBgGA1UEChMRRnJlc2VuaXVzIEthYmkgQUcxGzAZBgNVBAsTEkZyZXNlbml1cyBLYWJpIFVTQTE7MDkGA1UEAxMyRGF0YSBNYW5hZ2VtZW50IEludGVybWVkaWF0ZSBDZXJ0aWZpY2F0ZSBBdXRob3JpdHk=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "e31d3bb304fdcef75199ff47761dd7a91e1a654cedec5485da203640dc0eee39",
-        "size": 1748,
-        "filename": "6tOYk51VDHXklgQiMTHvUHAqQsHRj8do_RweZi812do=.pem",
-        "location": "security-state-staging/intermediates/941016f3-c0dc-47ea-8440-1a189d509dbf.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "6tOYk51VDHXklgQiMTHvUHAqQsHRj8do/RweZi812do=",
-      "crlite_enrolled": true,
-      "id": "1e9a1998-a52f-498c-8217-0418e4aaeb12",
-      "last_modified": 1641513440819
     },
     {
       "schema": 1641502408251,
@@ -25705,5 +25705,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1660265823348
+  "timestamp": 1660654623240
 }
