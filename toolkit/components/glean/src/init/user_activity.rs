@@ -14,10 +14,8 @@ use nserror::{nsresult, NS_ERROR_FAILURE, NS_OK};
 use xpcom::interfaces::nsISupports;
 
 // Partially cargo-culted from UploadPrefObserver.
-#[derive(xpcom)]
-#[xpimplements(nsIObserver)]
-#[refcnt = "atomic"]
-pub(crate) struct InitUserActivityObserver {
+#[xpcom(implement(nsIObserver), atomic)]
+pub(crate) struct UserActivityObserver {
     last_edge: RwLock<Instant>,
     was_active: AtomicBool,
 }

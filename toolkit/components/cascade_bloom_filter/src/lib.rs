@@ -17,10 +17,8 @@ use thin_vec::ThinVec;
 use xpcom::interfaces::nsICascadeFilter;
 use xpcom::{xpcom_method, RefPtr};
 
-#[derive(xpcom)]
-#[xpimplements(nsICascadeFilter)]
-#[refcnt = "nonatomic"]
-pub struct InitCascadeFilter {
+#[xpcom(implement(nsICascadeFilter), nonatomic)]
+pub struct CascadeFilter {
     filter: RefCell<Option<Cascade>>,
 }
 

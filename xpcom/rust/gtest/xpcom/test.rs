@@ -20,10 +20,8 @@ pub unsafe extern "C" fn Rust_ObserveFromRust() -> *const interfaces::nsIObserve
     let obssvc = xpcom::services::get_ObserverService().unwrap();
 
     // Define an observer
-    #[derive(xpcom)]
-    #[xpimplements(nsIObserver)]
-    #[refcnt = "nonatomic"]
-    struct InitObserver {
+    #[xpcom(implement(nsIObserver), nonatomic)]
+    struct Observer {
         run: *mut bool,
     }
     impl Observer {
@@ -73,10 +71,8 @@ pub unsafe extern "C" fn Rust_ImplementRunnableInRust(
     runnable: *mut *const interfaces::nsIRunnable,
 ) {
     // Define a type which implements nsIRunnable in rust.
-    #[derive(xpcom)]
-    #[xpimplements(nsIRunnable)]
-    #[refcnt = "atomic"]
-    struct InitRunnableFn<F: Fn() + 'static> {
+    #[xpcom(implement(nsIRunnable), atomic)]
+    struct RunnableFn<F: Fn() + 'static> {
         run: F,
     }
 
@@ -105,10 +101,8 @@ pub unsafe extern "C" fn Rust_GetMultipleInterfaces(
 ) {
     // Define a type which implements nsIRunnable and nsIObserver in rust, and
     // hand both references back to c++
-    #[derive(xpcom)]
-    #[xpimplements(nsIRunnable, nsIObserver)]
-    #[refcnt = "atomic"]
-    struct InitMultipleInterfaces {}
+    #[xpcom(implement(nsIRunnable, nsIObserver), atomic)]
+    struct MultipleInterfaces {}
 
     impl MultipleInterfaces {
         unsafe fn Run(&self) -> nsresult {

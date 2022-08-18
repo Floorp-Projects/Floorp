@@ -249,8 +249,7 @@ where
 
 /// The type of the reference count type for xpcom structs.
 ///
-/// `#[derive(xpcom)]` will use this type for the `__refcnt` field when
-/// `#[refcnt = "nonatomic"]` is used.
+/// `#[xpcom(nonatomic)]` will use this type for the `__refcnt` field.
 #[derive(Debug)]
 pub struct Refcnt(Cell<nsrefcnt>);
 impl Refcnt {
@@ -286,8 +285,7 @@ impl Refcnt {
 
 /// The type of the atomic reference count used for xpcom structs.
 ///
-/// `#[derive(xpcom)]` will use this type for the `__refcnt` field when
-/// `#[refcnt = "atomic"]` is used.
+/// `#[xpcom(atomic)]` will use this type for the `__refcnt` field.
 ///
 /// See `nsISupportsImpl.h`'s `ThreadSafeAutoRefCnt` class for reasoning behind
 /// memory ordering decisions.

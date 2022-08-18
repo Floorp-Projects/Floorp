@@ -87,10 +87,8 @@ enum CancelAction {
     RequestEndPending,
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsIBitsRequest)]
-#[refcnt = "nonatomic"]
-pub struct InitBitsRequest {
+#[xpcom(implement(nsIBitsRequest), nonatomic)]
+pub struct BitsRequest {
     bits_id: Guid,
     bits_service: RefPtr<BitsService>,
     // Stores the value to be returned by nsIRequest::IsPending.

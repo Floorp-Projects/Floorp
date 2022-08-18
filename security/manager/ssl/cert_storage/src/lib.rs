@@ -1432,10 +1432,8 @@ macro_rules! get_security_state {
     }};
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsICertStorage)]
-#[refcnt = "atomic"]
-struct InitCertStorage {
+#[xpcom(implement(nsICertStorage), atomic)]
+struct CertStorage {
     security_state: Arc<RwLock<SecurityState>>,
     queue: RefPtr<nsISerialEventTarget>,
 }
@@ -1772,10 +1770,8 @@ extern "C" {
     fn cert_storage_malloc_size_of(ptr: *const xpcom::reexports::libc::c_void) -> usize;
 }
 
-#[derive(xpcom)]
-#[xpimplements(nsIMemoryReporter)]
-#[refcnt = "atomic"]
-struct InitMemoryReporter {
+#[xpcom(implement(nsIMemoryReporter), atomic)]
+struct MemoryReporter {
     security_state: Arc<RwLock<SecurityState>>,
 }
 
