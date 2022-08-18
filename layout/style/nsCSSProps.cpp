@@ -87,6 +87,10 @@ void nsCSSProps::RecomputeEnabledState(const char* aPref, void*) {
       gPropertyEnabled[pref->mPropID] = true;
 #else
       gPropertyEnabled[pref->mPropID] = Preferences::GetBool(pref->mPref);
+      if (pref->mPropID == eCSSProperty_backdrop_filter) {
+        gPropertyEnabled[pref->mPropID] &=
+            gfx::gfxVars::GetAllowBackdropFilterOrDefault();
+      }
 #endif
     }
   }
@@ -217,5 +221,42 @@ bool nsCSSProps::gPropertyEnabled[eCSSProperty_COUNT_with_aliases] = {
 
 #undef IS_ENABLED_BY_DEFAULT
 };
+
+/**
+ * A singleton class to register as a receiver for gfxVars.
+ * Updates the state of backdrop-filter's pref if the gfx
+ * backdrop filter var changes state.
+ */
+class nsCSSPropsGfxVarReceiver final : public gfx::gfxVarReceiver {
+  constexpr nsCSSPropsGfxVarReceiver() = default;
+
+  // Backdrop filter's last known enabled state.
+  static bool sLastKnownAllowBackdropFilter;
+  static nsCSSPropsGfxVarReceiver sInstance;
+
+ public:
+  static gfx::gfxVarReceiver& GetInstance() { return sInstance; }
+
+  void OnVarChanged(const gfx::GfxVarUpdate&) override {
+    bool enabled = gfx::gfxVars::AllowBackdropFilter();
+    if (sLastKnownAllowBackdropFilter != enabled) {
+      sLastKnownAllowBackdropFilter = enabled;
+      nsCSSProps::RecomputeEnabledState(
+          StaticPrefs::GetPrefName_layout_css_backdrop_filter_enabled());
+    }
+  }
+};
+
+/* static */
+nsCSSPropsGfxVarReceiver nsCSSPropsGfxVarReceiver::sInstance =
+    nsCSSPropsGfxVarReceiver();
+
+/* static */
+bool nsCSSPropsGfxVarReceiver::sLastKnownAllowBackdropFilter = true;
+
+/* static */
+gfx::gfxVarReceiver& nsCSSProps::GfxVarReceiver() {
+  return nsCSSPropsGfxVarReceiver::GetInstance();
+}
 
 #include "nsCSSPropsGenerated.inc"

@@ -900,6 +900,7 @@ void gfxPlatform::Init() {
   gPlatform->InitWebGLConfig();
   gPlatform->InitWebGPUConfig();
   gPlatform->InitWindowOcclusionConfig();
+  gPlatform->InitBackdropFilterConfig();
 
   // When using WebRender, we defer initialization of the D3D11 devices until
   // the (rare) cases where they're used. Note that the GPU process where
@@ -2996,6 +2997,54 @@ void gfxPlatform::InitWindowOcclusionConfig() {
           StaticPrefs::
               GetPrefName_widget_windows_window_occlusion_tracking_enabled()));
 #endif
+}
+
+static void BackdropFilterPrefChangeCallback(const char*, void*) {
+  FeatureState& feature = gfxConfig::GetFeature(Feature::BACKDROP_FILTER);
+
+  // We need to reset because the user status needs to be set before the
+  // environment status, but the environment status comes from the blocklist,
+  // and the user status can be updated after the fact.
+  feature.Reset();
+  feature.EnableByDefault();
+
+  if (StaticPrefs::layout_css_backdrop_filter_force_enabled()) {
+    feature.UserForceEnable("Force enabled by pref");
+  }
+
+  nsCString message;
+  nsCString failureId;
+  if (!gfxPlatform::IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_BACKDROP_FILTER,
+                                        &message, failureId)) {
+    feature.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
+  }
+
+  // This may still be gated by the layout.css.backdrop-filter.enabled pref but
+  // the test infrastructure is very sensitive to how changes to that pref
+  // propagate, so we don't include them in the gfxVars/gfxFeature.
+  gfxVars::SetAllowBackdropFilter(feature.IsEnabled());
+}
+
+void gfxPlatform::InitBackdropFilterConfig() {
+  // This would ideally be in the nsCSSProps code
+  // but nsCSSProps is initialized before gfxPlatform
+  // so it has to be done here.
+  gfxVars::AddReceiver(&nsCSSProps::GfxVarReceiver());
+
+  if (!XRE_IsParentProcess()) {
+    // gfxVars doesn't notify receivers when initialized on content processes
+    // we need to explicitly recompute backdrop-filter's enabled state here.
+    nsCSSProps::RecomputeEnabledState(
+        StaticPrefs::GetPrefName_layout_css_backdrop_filter_enabled());
+    return;
+  }
+
+  BackdropFilterPrefChangeCallback(nullptr, nullptr);
+
+  Preferences::RegisterCallback(
+      BackdropFilterPrefChangeCallback,
+      nsDependentCString(
+          StaticPrefs::GetPrefName_layout_css_backdrop_filter_force_enabled()));
 }
 
 bool gfxPlatform::CanUseHardwareVideoDecoding() {

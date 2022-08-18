@@ -7697,6 +7697,12 @@
   value: true
   mirror: always
 
+# Do we override the blocklist for CSS backdrop-filter?
+- name: layout.css.backdrop-filter.force-enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Should stray control characters be rendered visibly?
 - name: layout.css.control-characters.visible
   type: RelaxedAtomicBool

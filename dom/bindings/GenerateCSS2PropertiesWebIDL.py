@@ -39,7 +39,12 @@ def generate(output, idlFilename, dataFile):
         ]
 
         if p.pref != "":
-            extendedAttrs.append('Pref="%s"' % p.pref)
+            # BackdropFilter is a special case where we want WebIDL to check
+            # a function instead of checking the pref directly.
+            if p.method == "BackdropFilter":
+                extendedAttrs.append('Func="nsCSSProps::IsBackdropFilterAvailable"')
+            else:
+                extendedAttrs.append('Pref="%s"' % p.pref)
 
         prop = p.method
 
