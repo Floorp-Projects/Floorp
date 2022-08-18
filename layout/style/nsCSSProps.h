@@ -117,6 +117,13 @@ class nsCSSProps {
 
  public:
   /**
+   * Returns true if the backdrop-filter pref and the gfx blocklist are enabled.
+   */
+  static bool IsBackdropFilterAvailable(JSContext*, JSObject*) {
+    return IsEnabled(eCSSProperty_backdrop_filter, EnabledState::ForAllContent);
+  }
+
+  /**
    * Recoumputes the enabled state of a pref. If aPrefName is nullptr,
    * recomputes the state of all prefs in gPropertyEnabled.
    * aClosure is the pref callback closure data, which is not used.
