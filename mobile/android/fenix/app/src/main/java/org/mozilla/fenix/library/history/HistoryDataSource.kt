@@ -105,5 +105,6 @@ private fun HistoryDB.Regular.positioned(position: Int): History.Regular {
         url = this.url,
         visitedAt = this.visitedAt,
         historyTimeGroup = this.historyTimeGroup,
+        isRemote = this.isRemote
     )
 }

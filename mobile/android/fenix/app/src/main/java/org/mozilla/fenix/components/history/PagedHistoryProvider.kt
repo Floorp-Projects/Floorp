@@ -35,7 +35,8 @@ sealed class HistoryDB {
         override val title: String,
         val url: String,
         override val visitedAt: Long,
-        override val selected: Boolean = false
+        override val selected: Boolean = false,
+        val isRemote: Boolean = false,
     ) : HistoryDB()
 
     data class Metadata(
@@ -250,7 +251,8 @@ class DefaultPagedHistoryProvider(
         return HistoryDB.Regular(
             title = title,
             url = visit.url,
-            visitedAt = visit.visitTime
+            visitedAt = visit.visitTime,
+            isRemote = visit.isRemote
         )
     }
 }

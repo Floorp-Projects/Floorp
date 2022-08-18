@@ -32,6 +32,7 @@ sealed class History : Parcelable {
      * @property visitedAt Timestamp of when this history item was visited.
      * @property historyTimeGroup [HistoryItemTimeGroup] of the history item.
      * @property selected Whether or not the history item is selected.
+     * @property isRemote A history item is either opened locally or synced from other devices.
      */
     @Parcelize
     data class Regular(
@@ -40,7 +41,8 @@ sealed class History : Parcelable {
         val url: String,
         override val visitedAt: Long,
         override val historyTimeGroup: HistoryItemTimeGroup,
-        override val selected: Boolean = false
+        override val selected: Boolean = false,
+        val isRemote: Boolean = false,
     ) : History()
 
     /**
