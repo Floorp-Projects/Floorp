@@ -227,7 +227,7 @@ class SettingsRobot {
         }
 
         fun openTurnOnSyncMenu(interact: SettingsTurnOnSyncRobot.() -> Unit): SettingsTurnOnSyncRobot.Transition {
-            fun turnOnSyncButton() = onView(withText("Turn on Sync"))
+            fun turnOnSyncButton() = onView(withText("Sync and save your data"))
             turnOnSyncButton().click()
 
             SettingsTurnOnSyncRobot().interact()
