@@ -3,6 +3,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 /* import-globals-from ../../../../../toolkit/mozapps/extensions/test/browser/head.js */
 
 // This is needed to import the `MockProvider`.
@@ -91,6 +93,16 @@ add_task(async function test_open_panel_on_button_click() {
     "chrome://mozapps/skin/extensions/extensionGeneric.svg",
     "expected generic icon for the first extension"
   );
+  Assert.deepEqual(
+    win.document.l10n.getAttributes(
+      item.querySelector(".unified-extensions-item-open-menu")
+    ),
+    {
+      id: "unified-extensions-item-open-menu",
+      args: { extensionName: "Extension #1" },
+    },
+    "expected l10n attributes for the first extension"
+  );
 
   item = getUnifiedExtensionsItem(win, extensions[1].id);
   is(
@@ -104,6 +116,16 @@ add_task(async function test_open_panel_on_button_click() {
       .src.endsWith("/test-icon-16.png"),
     "expected custom icon for the second extension"
   );
+  Assert.deepEqual(
+    win.document.l10n.getAttributes(
+      item.querySelector(".unified-extensions-item-open-menu")
+    ),
+    {
+      id: "unified-extensions-item-open-menu",
+      args: { extensionName: "Another extension" },
+    },
+    "expected l10n attributes for the second extension"
+  );
 
   item = getUnifiedExtensionsItem(win, extensions[2].id);
   is(
@@ -116,6 +138,16 @@ add_task(async function test_open_panel_on_button_click() {
       .querySelector(".unified-extensions-item-icon")
       .src.endsWith("/test-icon-32.png"),
     "expected custom icon for the third extension"
+  );
+  Assert.deepEqual(
+    win.document.l10n.getAttributes(
+      item.querySelector(".unified-extensions-item-open-menu")
+    ),
+    {
+      id: "unified-extensions-item-open-menu",
+      args: { extensionName: "Yet another extension with an icon" },
+    },
+    "expected l10n attributes for the third extension"
   );
 
   await closeExtensionsPanel(win);

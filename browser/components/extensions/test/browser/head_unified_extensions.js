@@ -3,7 +3,8 @@
 
 "use strict";
 
-/* exported closeExtensionsPanel,
+/* exported clickUnifiedExtensionsItem,
+            closeExtensionsPanel,
             createExtensions,
             getUnifiedExtensionsItem,
             openExtensionsPanel,
@@ -97,6 +98,26 @@ const openUnifiedExtensionsContextMenu = async (win, extensionId) => {
   await shown;
 
   return menu;
+};
+
+const clickUnifiedExtensionsItem = async (win, extensionId) => {
+  // The panel should be closed automatically when we click an extension item.
+  await openExtensionsPanel(win);
+
+  const item = getUnifiedExtensionsItem(win, extensionId);
+  ok(item, `expected item for ${extensionId}`);
+
+  // Similar to `openUnifiedExtensionsContextMenu()`, we make sure the item is
+  // visible before clicking on it to prevent intermittents.
+  item.scrollIntoView({ block: "center" });
+
+  const popupHidden = BrowserTestUtils.waitForEvent(
+    win.document,
+    "popuphidden",
+    true
+  );
+  EventUtils.synthesizeMouseAtCenter(item, {}, win);
+  await popupHidden;
 };
 
 let extensionsCreated = 0;
