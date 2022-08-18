@@ -286,6 +286,21 @@ body {
 
           .main-content-inner {
             min-height: 330px;
+
+            .language-switcher-container {
+              text-align: initial;
+
+              .secondary {
+                margin-inline-start: 0;
+                margin: 5px 0;
+                color: var(--in-content-primary-button-text-color);
+                background-color: var(--in-content-primary-button-background);
+
+                &:hover {
+                  background-color: var(--in-content-primary-button-background-hover);
+                }
+              }
+            }
           }
 
           .action-buttons {
@@ -385,7 +400,7 @@ body {
 
         h1 {
           font-weight: 700;
-          font-size: clamp(52px, 7vw, 104px);
+          font-size: clamp(52px, 4vw, 104px);
           line-height: 110%;
           max-width: 340px;
           text-align: initial;
@@ -459,7 +474,9 @@ body {
           height: 150px;
 
           h1 {
-            display: none;
+            font-size: clamp(35px, 4vw, 104px);
+            text-align: center;
+            white-space: normal;
           }
 
           &:dir(rtl) {

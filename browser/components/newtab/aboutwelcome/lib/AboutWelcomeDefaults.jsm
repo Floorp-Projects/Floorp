@@ -319,8 +319,15 @@ const MR_ABOUT_WELCOME_DEFAULT = {
           "var(--in-content-page-background) radial-gradient(83.12% 83.12% at 80.59% 16.88%, #9059FF 0%, #3A8EE6 54.51%, #A0C4EA 100%)",
         progress_bar: true,
         logo: {},
-        title: { string_id: "onboarding-live-language-header" },
-        subtitle: "Firefox speaks your language",
+        title: {
+          string_id: "mr2022-onboarding-live-language-text",
+        },
+        subtitle: {
+          string_id: "mr2022-language-mismatch-subtitle",
+        },
+        hero_text: {
+          string_id: "mr2022-onboarding-live-language-text",
+        },
         languageSwitcher: {
           downloading: {
             string_id: "onboarding-live-language-button-label-downloading",
@@ -332,6 +339,12 @@ const MR_ABOUT_WELCOME_DEFAULT = {
           skip: { string_id: "onboarding-live-language-skip-button-label" },
           action: {
             navigate: true,
+          },
+          switch: {
+            string_id: "mr2022-onboarding-live-language-switch-to",
+          },
+          continue: {
+            string_id: "mr2022-onboarding-live-language-continue-in",
           },
         },
       },

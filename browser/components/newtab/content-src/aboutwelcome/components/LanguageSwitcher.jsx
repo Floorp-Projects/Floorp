@@ -190,7 +190,7 @@ export function LanguageSwitcher(props) {
   // Use {display: "none"} rather than if statements to prevent layout thrashing with
   // the localized text elements rendering as blank, then filling in the text.
   return (
-    <>
+    <div className="language-switcher-container">
       {/* Pre-loading screen */}
       <div style={{ display: showPreloadingScreen ? "block" : "none" }}>
         <button
@@ -263,10 +263,14 @@ export function LanguageSwitcher(props) {
               setIsAwaitingLangpack(true);
             }}
           >
-            {
+            {content.languageSwitcher.switch ? (
+              <Localized
+                text={withMessageArgs(content.languageSwitcher.switch)}
+              />
+            ) : (
               // This is the localized name from the Intl.DisplayNames API.
               negotiatedLanguage?.langPackDisplayName
-            }
+            )}
           </button>
         </div>
         <div>
@@ -281,13 +285,15 @@ export function LanguageSwitcher(props) {
               handleAction(event);
             }}
           >
-            {
+            {content.languageSwitcher.continue ? (
+              <Localized text={content.languageSwitcher.continue} />
+            ) : (
               // This is the localized name from the Intl.DisplayNames API.
               negotiatedLanguage?.appDisplayName
-            }
+            )}
           </button>
         </div>
       </div>
-    </>
+    </div>
   );
 }
