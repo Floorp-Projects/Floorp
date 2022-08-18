@@ -107,4 +107,9 @@ object FeatureFlags {
      * Enables the wallpaper onboarding.
      */
     val wallpaperOnboardingEnabled = Config.channel.isDebug
+
+    /**
+     * Enables the wallpaper v2 enhancements.
+     */
+    val wallpaperV2Enabled = Config.channel.isDebug
 }
