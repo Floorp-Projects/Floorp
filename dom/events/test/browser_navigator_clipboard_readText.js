@@ -126,31 +126,26 @@ function promiseClickContentToTriggerClipboardReadText(
     [contentButtonId],
     async _contentButtonId => {
       const contentButton = content.document.getElementById(_contentButtonId);
+      let promise = new Promise(resolve => {
+        contentButton.addEventListener(
+          "click",
+          function(e) {
+            resolve({ x: e.screenX, y: e.screenY });
+          },
+          { once: true }
+        );
+      });
 
       // Native mouse event to execute additional code paths which wouldn't be
       // covered by non-native events.
-      await EventUtils.promiseNativeMouseEventAndWaitForEvent({
+      EventUtils.promiseNativeMouseEventAndWaitForEvent({
         type: "click",
         target: contentButton,
         atCenter: true,
         win: content.window,
       });
 
-      // Creating an object in this, priviliged, scope via `eval` so that
-      // `coordinatesRelativeToScreen` below can access the object's
-      // properties.
-      // Inside `eval`, parenthesis are needed to indicate to the JS
-      // parser that an expression, not a block statement, should be
-      // parsed.
-      const coordinateParams = content.window.eval(`({
-        target: window.document.getElementById("${_contentButtonId}"),
-        atCenter: true,
-      })`);
-      const coords = await content.wrappedJSObject.coordinatesRelativeToScreen(
-        coordinateParams
-      );
-
-      return coords;
+      return promise;
     }
   );
 }
