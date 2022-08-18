@@ -741,3 +741,36 @@ add_task(async function test_aboutwelcome_languageSwitcher_cancelWaiting() {
   is(flushClickTelemetry().length, 0);
   sinon.assert.notCalled(mockable.setRequestedAppLocales);
 });
+
+/**
+ * Test MR About Welcome language mismatch screen
+ */
+add_task(async function test_aboutwelcome_languageSwitcher_MR() {
+  sandbox.restore();
+  await pushPrefs(["browser.aboutwelcome.templateMR", true]);
+
+  const { resolveLangPacks } = mockAddonAndLocaleAPIs({
+    systemLocale: "es-ES",
+    appLocale: "en-US",
+  });
+
+  const { browser } = await openAboutWelcome();
+
+  info("Clicking the primary button to view language switching screen.");
+  await clickVisibleButton(browser, "button.primary");
+
+  resolveLangPacks(["es-MX", "es-ES", "fr-FR"]);
+  await testScreenContent(
+    browser,
+    "Live language switching, asking for a language",
+    // Expected selectors:
+    [
+      `[data-l10n-id="mr2022-onboarding-live-language-text"]`,
+      `[data-l10n-id="mr2022-language-mismatch-subtitle"]`,
+      `button.primary[value="primary_button"]`,
+      `button.secondary`,
+    ],
+    // Unexpected selectors:
+    [`[data-l10n-id="onboarding-live-language-header"]`]
+  );
+});
