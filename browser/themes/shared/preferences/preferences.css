@@ -624,13 +624,11 @@ richlistitem[selected] .actionsMenu:focus-visible {
 }
 
 .dialogTitleBar {
-  margin-top: 0;
-  padding: 6px 4px;
+  padding: .4em .2em;
   border-bottom: 1px solid var(--in-content-border-color);
 }
 
 .dialogTitle {
-  font-size: .9em;
   font-weight: 600;
   text-align: center;
   user-select: none;
