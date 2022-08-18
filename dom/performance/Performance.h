@@ -152,9 +152,9 @@ class Performance : public DOMEventTargetHelper {
 
   void QueueNotificationObserversTask();
 
-  virtual bool IsPerformanceTimingAttribute(const nsAString& aName) {
-    return false;
-  }
+  bool IsPerformanceTimingAttribute(const nsAString& aName) const;
+
+  virtual bool IsGlobalObjectWindow() const { return false; };
 
  protected:
   Performance(nsIGlobalObject* aGlobal, bool aSystemPrincipal);
