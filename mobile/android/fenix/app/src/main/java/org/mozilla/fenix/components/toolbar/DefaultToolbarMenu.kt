@@ -349,17 +349,28 @@ open class DefaultToolbarMenu(
         onItemTapped.invoke(ToolbarMenu.Item.Quit)
     }
 
-    private fun getSyncItemTitle() =
-        accountManager.accountProfileEmail ?: context.getString(R.string.sync_menu_sign_in)
+    private fun syncMenuItem(): BrowserMenuImageText? {
+        val syncItemTitle =
+            if (context.components.backgroundServices.accountManagerAvailableQueue.isReady()) {
+                accountManager.accountProfileEmail ?: context.getString(R.string.sync_menu_sign_in)
+            } else {
+                null
+            }
 
-    private val syncMenuItem = BrowserMenuImageText(
-        getSyncItemTitle(),
-        R.drawable.ic_signed_out,
-        primaryTextColor()
-    ) {
-        onItemTapped.invoke(
-            ToolbarMenu.Item.SyncAccount(accountManager.accountState)
-        )
+        return when (syncItemTitle) {
+            null -> null
+            else -> {
+                BrowserMenuImageText(
+                    syncItemTitle,
+                    R.drawable.ic_signed_out,
+                    primaryTextColor()
+                ) {
+                    onItemTapped.invoke(
+                        ToolbarMenu.Item.SyncAccount(accountManager.accountState)
+                    )
+                }
+            }
+        }
     }
 
     @VisibleForTesting(otherwise = PRIVATE)
@@ -373,7 +384,7 @@ open class DefaultToolbarMenu(
                 historyItem,
                 downloadsItem,
                 extensionsItem,
-                syncMenuItem,
+                syncMenuItem(),
                 BrowserMenuDivider(),
                 findInPageItem,
                 desktopSiteItem,

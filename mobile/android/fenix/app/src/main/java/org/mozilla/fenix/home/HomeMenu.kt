@@ -96,15 +96,26 @@ class HomeMenu(
         }
     }
 
-    private fun getSyncItemTitle(): String =
-        accountManager.accountProfileEmail ?: context.getString(R.string.sync_menu_sign_in)
+    private fun syncSignInMenuItem(): BrowserMenuImageText? {
+        val syncItemTitle =
+            if (context.components.backgroundServices.accountManagerAvailableQueue.isReady()) {
+                accountManager.accountProfileEmail ?: context.getString(R.string.sync_menu_sign_in)
+            } else {
+                null
+            }
 
-    private val syncSignInMenuItem = BrowserMenuImageText(
-        getSyncItemTitle(),
-        R.drawable.ic_synced_tabs,
-        primaryTextColor
-    ) {
-        onItemTapped.invoke(Item.SyncAccount(accountManager.accountState))
+        return when (syncItemTitle) {
+            null -> null
+            else -> {
+                BrowserMenuImageText(
+                    syncItemTitle,
+                    R.drawable.ic_signed_out,
+                    primaryTextColor
+                ) {
+                    onItemTapped.invoke(Item.SyncAccount(accountManager.accountState))
+                }
+            }
+        }
     }
 
     val desktopItem = BrowserMenuImageSwitch(
@@ -212,7 +223,7 @@ class HomeMenu(
             historyItem,
             downloadsItem,
             extensionsItem,
-            syncSignInMenuItem,
+            syncSignInMenuItem(),
             accountAuthItem,
             if (Config.channel.isMozillaOnline) manageAccountAndDevicesItem else null,
             BrowserMenuDivider(),
