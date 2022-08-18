@@ -45,8 +45,7 @@ namespace gfx {
   _(VP8_HW_DECODE, Feature, "VP8 hardware decoding")                         \
   _(VP9_HW_DECODE, Feature, "VP9 hardware decoding")                         \
   _(DMABUF_SURFACE_EXPORT, Feature, "WebGL DMABuf surface export")           \
-  _(REUSE_DECODER_DEVICE, Feature, "Reuse decoder device")                   \
-  _(BACKDROP_FILTER, Feature, "Backdrop filter")
+  _(REUSE_DECODER_DEVICE, Feature, "Reuse decoder device")
 /* Add new entries above this comment */
 
 enum class Feature : uint32_t {
@@ -106,9 +105,6 @@ class FeatureState {
 
   bool DisabledByDefault() const;
 
-  // Clear all state.
-  void Reset();
-
  private:
   void SetUser(FeatureStatus aStatus, const char* aMessage,
                const nsACString& aFailureId);
@@ -121,6 +117,9 @@ class FeatureState {
   bool IsInitialized() const { return mDefault.IsInitialized(); }
 
   void AssertInitialized() const { MOZ_ASSERT(IsInitialized()); }
+
+  // Clear all state.
+  void Reset();
 
  private:
   struct Instance {
