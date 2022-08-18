@@ -109,7 +109,6 @@ add_task(async function test_merino() {
     valueOverrides: {
       merinoEnabled: true,
       merinoEndpointURL: "http://example.com/test_merino_config",
-      merinoEndpointParamQuery: "test_merino_config_param",
     },
     callback: () => {
       Assert.equal(UrlbarPrefs.get("merinoEnabled"), true, "merinoEnabled");
@@ -117,11 +116,6 @@ add_task(async function test_merino() {
         UrlbarPrefs.get("merinoEndpointURL"),
         "http://example.com/test_merino_config",
         "merinoEndpointURL"
-      );
-      Assert.equal(
-        UrlbarPrefs.get("merinoEndpointParamQuery"),
-        "test_merino_config_param",
-        "merinoEndpointParamQuery"
       );
     },
   });
