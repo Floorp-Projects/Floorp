@@ -1834,16 +1834,6 @@ void nsWindow::UpdateWaylandPopupHierarchy() {
         // popups are adjacent.
         return false;
       }
-      // We use move_to_rect when:
-      // - Popup is tooltip
-      // - Popup is anchored, i.e. it has an anchor defined by layout
-      //   (mPopupAnchored).
-      // - It's first popup.
-      bool useIt = mPopupType == ePopupTypeTooltip || popup->mPopupAnchored ||
-                   popup->WaylandPopupIsFirst();
-      if (!useIt) {
-        return false;
-      }
       if (popup->WaylandPopupIsFirst() &&
           popup->WaylandPopupFitsToplevelWindow()) {
         // Workaround for https://gitlab.gnome.org/GNOME/gtk/-/issues/1986
