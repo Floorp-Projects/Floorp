@@ -13,6 +13,18 @@ namespace mozilla {
 // Whether we should use a light or dark appearance.
 enum class ColorScheme : uint8_t { Light, Dark };
 
+// The color-scheme we should get back in case it's not explicit. The "used"
+// mode is the mode that most of layout should use (defaults to light if the
+// page doesn't have a color-scheme property / meta-tag indicating otherwise).
+//
+// The "preferred" mode returns the color-scheme for purposes of
+// prefers-color-scheme propagation (that is, it defaults to the current
+// preferred color-scheme, rather than light).
+enum class ColorSchemeMode : uint8_t {
+  Used,
+  Preferred,
+};
+
 }  // namespace mozilla
 
 #endif
