@@ -194,9 +194,9 @@ mdit-py-plugins==0.3.0 \
     # via
     #   -r requirements.in
     #   myst-parser
-mdurl==0.1.0 \
-    --hash=sha256:40654d6dcb8d21501ed13c21cc0bd6fc42ff07ceb8be30029e5ae63ebc2ecfda \
-    --hash=sha256:94873a969008ee48880fb21bad7de0349fef529f3be178969af5817239e9b990
+mdurl==0.1.2 \
+    --hash=sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8 \
+    --hash=sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba
     # via markdown-it-py
 mock==4.0.2 \
     --hash=sha256:3f9b2c0196c60d21838f307f5825a7b86b678cedc58ab9e50a8988187b4d81e0 \
