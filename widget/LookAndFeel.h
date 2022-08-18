@@ -410,9 +410,11 @@ class LookAndFeel {
     return sContentColorScheme;
   }
 
-  static ColorScheme ColorSchemeForStyle(const dom::Document&,
-                                         const StyleColorSchemeFlags&);
-  static ColorScheme ColorSchemeForFrame(const nsIFrame*);
+  static ColorScheme ColorSchemeForStyle(
+      const dom::Document&, const StyleColorSchemeFlags&,
+      ColorSchemeMode = ColorSchemeMode::Used);
+  static ColorScheme ColorSchemeForFrame(
+      const nsIFrame*, ColorSchemeMode = ColorSchemeMode::Used);
 
   // Whether standins for native colors should be used (that is, colors faked,
   // taken from win7, mostly). This forces light appearance, effectively.
