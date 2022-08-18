@@ -7637,6 +7637,13 @@
   mirror: always
   rust: true
 
+# Whether infinity / nan constants are enabled in calc().
+- name: layout.css.nan-inf.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Should we look for counter ancestor scopes first?
 - name: layout.css.counter-ancestor-scope.enabled
   type: bool
