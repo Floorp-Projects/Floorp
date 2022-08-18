@@ -102,7 +102,7 @@ struct GCPointerPolicy {
     // called at other times.
     TraceRoot(trc, vp, name);
   }
-  static bool isTenured(T v) { return !js::gc::IsInsideNursery(v); }
+  static bool isTenured(T v) { return !v || !js::gc::IsInsideNursery(v); }
   static bool isValid(T v) { return js::gc::IsCellPointerValidOrNull(v); }
 };
 #define EXPAND_SPECIALIZE_GCPOLICY(Type)                   \

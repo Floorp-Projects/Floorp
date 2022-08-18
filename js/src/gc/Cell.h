@@ -782,7 +782,7 @@ class alignas(gc::CellAlignBytes) CellWithTenuredGCPointer : public BaseCell {
   explicit CellWithTenuredGCPointer(PtrT* initial) { initHeaderPtr(initial); }
 
   void initHeaderPtr(PtrT* initial) {
-    MOZ_ASSERT(!IsInsideNursery(initial));
+    MOZ_ASSERT_IF(initial, !IsInsideNursery(initial));
     uintptr_t data = uintptr_t(initial);
     MOZ_ASSERT((data & Cell::RESERVED_MASK) == 0);
     this->header_ = data;
@@ -790,7 +790,7 @@ class alignas(gc::CellAlignBytes) CellWithTenuredGCPointer : public BaseCell {
 
   void setHeaderPtr(PtrT* newValue) {
     // As above, no flags are expected to be set here.
-    MOZ_ASSERT(!IsInsideNursery(newValue));
+    MOZ_ASSERT_IF(newValue, !IsInsideNursery(newValue));
     PreWriteBarrier(headerPtr());
     unbarrieredSetHeaderPtr(newValue);
   }
@@ -841,7 +841,7 @@ class alignas(gc::CellAlignBytes) TenuredCellWithGCPointer
     uintptr_t data = uintptr_t(initial);
     MOZ_ASSERT((data & Cell::RESERVED_MASK) == 0);
     this->header_ = data;
-    if (IsInsideNursery(initial)) {
+    if (initial && IsInsideNursery(initial)) {
       CellHeaderPostWriteBarrier(headerPtrAddress(), nullptr, initial);
     }
   }
