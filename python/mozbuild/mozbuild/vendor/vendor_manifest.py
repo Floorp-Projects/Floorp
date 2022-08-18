@@ -39,15 +39,12 @@ def _replace_in_file(file, pattern, replacement, regex=False):
         contents = f.read()
 
     if regex:
-        newcontents = re.sub(pattern, replacement, contents)
+        contents = re.sub(pattern, replacement, contents)
     else:
-        newcontents = contents.replace(pattern, replacement)
-
-    if newcontents == contents:
-        raise Exception("Could not find %s in %s to replace with %s" % (pattern, file, replacement))
+        contents = contents.replace(pattern, replacement)
 
     with open(file, "w") as f:
-        f.write(newcontents)
+        f.write(contents)
 
 
 class VendorManifest(MozbuildObject):
@@ -135,11 +132,7 @@ class VendorManifest(MozbuildObject):
     ):
         # First update the Cargo.toml
         cargo_file = os.path.join(os.path.dirname(self.yaml_file), "Cargo.toml")
-        try:
-            _replace_in_file(cargo_file, old_revision, new_revision)
-        except:
-            # If we can't find it the first time, try again with a short hash
-            _replace_in_file(cargo_file, old_revision[:8], new_revision)
+        _replace_in_file(cargo_file, old_revision, new_revision)
 
         # Then call ./mach vendor rust
         from mozbuild.vendor.vendor_rust import VendorRust
