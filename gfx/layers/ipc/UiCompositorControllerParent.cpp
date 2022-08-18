@@ -7,6 +7,7 @@
 
 #if defined(MOZ_WIDGET_ANDROID)
 #  include "apz/src/APZCTreeManager.h"
+#  include "mozilla/widget/AndroidCompositorWidget.h"
 #endif
 #include <utility>
 
@@ -85,6 +86,10 @@ mozilla::ipc::IPCResult UiCompositorControllerParent::RecvResumeAndResize(
   if (parent) {
     // Front-end expects a first paint callback upon resume/resize.
     parent->ForceIsFirstPaint();
+#if defined(MOZ_WIDGET_ANDROID)
+    parent->GetWidget()->AsAndroid()->NotifyClientSizeChanged(
+        LayoutDeviceIntSize(aWidth, aHeight));
+#endif
     parent->ResumeCompositionAndResize(aX, aY, aWidth, aHeight);
   }
   return IPC_OK();

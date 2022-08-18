@@ -13,7 +13,11 @@ const EXPECTED_MATCH = {
   type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
   source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
   heuristic: false,
-  payload: { results: [{ key: "newaction" }], dynamicType: "quickactions" },
+  payload: {
+    results: [{ key: "newaction" }],
+    dynamicType: "quickactions",
+    helpUrl: UrlbarProviderQuickActions.helpUrl,
+  },
 };
 
 add_task(async function init() {

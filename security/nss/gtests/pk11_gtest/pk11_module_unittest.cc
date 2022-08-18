@@ -45,7 +45,7 @@ TEST_F(Pkcs11ModuleTest, ListSlots) {
       PK11_GetAllTokens(CKM_INVALID_MECHANISM, PR_FALSE, PR_FALSE, nullptr));
   ASSERT_NE(nullptr, slots);
 
-  PK11SlotListElement* element = PK11_GetFirstSafe(slots.get());
+  PK11SlotListElement *element = PK11_GetFirstSafe(slots.get());
   ASSERT_NE(nullptr, element);
 
   // These tokens are always present.
@@ -79,6 +79,39 @@ TEST_F(Pkcs11ModuleTest, PublicCertificatesToken) {
       PK11_FindSlotByName(kPublicCertificatesToken.c_str()));
   ASSERT_NE(nullptr, slot2);
   EXPECT_TRUE(PK11_IsFriendly(slot2.get()));
+}
+
+TEST_F(Pkcs11ModuleTest, PublicCertificatesTokenLookup) {
+  const std::string kCertUrl =
+      "pkcs11:id=%10%11%12%13%14%15%16%17%18%19%1a%1b%1c%1d%1e%1f";
+
+  ScopedCERTCertList certsByUrl(
+      PK11_FindCertsFromURI(kCertUrl.c_str(), nullptr));
+  EXPECT_NE(nullptr, certsByUrl.get());
+
+  size_t count = 0;
+  CERTCertificate *certByUrl = nullptr;
+  for (CERTCertListNode *node = CERT_LIST_HEAD(certsByUrl);
+       !CERT_LIST_END(node, certsByUrl); node = CERT_LIST_NEXT(node)) {
+    if (count == 0) {
+      certByUrl = node->cert;
+    }
+    count++;
+  }
+  EXPECT_EQ(1UL, count);
+  EXPECT_NE(nullptr, certByUrl);
+
+  EXPECT_EQ(
+      0, strcmp(certByUrl->nickname, "Test PKCS11 Public Certs Token:cert2"));
+}
+
+TEST_F(Pkcs11ModuleTest, PublicCertificatesTokenLookupNoMatch) {
+  const std::string kCertUrl =
+      "pkcs11:id=%00%01%02%03%04%05%06%07%08%09%0a%0b%0c%0d%0e%0e";
+
+  ScopedCERTCertList certsByUrl(
+      PK11_FindCertsFromURI(kCertUrl.c_str(), nullptr));
+  EXPECT_EQ(nullptr, certsByUrl.get());
 }
 
 #if defined(_WIN32)

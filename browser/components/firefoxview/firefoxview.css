@@ -556,6 +556,7 @@ button.close {
   column-gap: 16px;
   padding: 8px;
   cursor: pointer;
+  align-items: center;
 }
 
 .closed-tab-li:hover {

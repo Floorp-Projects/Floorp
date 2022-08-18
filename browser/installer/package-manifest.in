@@ -421,7 +421,7 @@ bin/libfreebl_64int_3.so
 
 ; [ Notification COM Server ]
 ;
-#if defined(XP_WIN)
+#if defined(MOZ_NOTIFICATION_SERVER)
 @BINPATH@/@DLL_PREFIX@notificationserver@DLL_SUFFIX@
 #endif
 

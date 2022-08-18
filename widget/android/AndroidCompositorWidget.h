@@ -48,6 +48,7 @@ class AndroidCompositorWidget : public CompositorWidget {
   AndroidCompositorWidget* AsAndroid() override { return this; }
 
   LayoutDeviceIntSize GetClientSize() override;
+  void NotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize);
 
  protected:
   int32_t mWidgetId;
@@ -56,8 +57,6 @@ class AndroidCompositorWidget : public CompositorWidget {
   ANativeWindow_Buffer mBuffer;
   int32_t mFormat;
   LayoutDeviceIntSize mClientSize;
-
-  void NotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize);
 
  private:
   // Called whenever the compositor surface may have changed. The derived class

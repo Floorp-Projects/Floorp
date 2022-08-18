@@ -24,6 +24,8 @@ MARKUPMAP(abbr, New_HyperText, 0)
 
 MARKUPMAP(acronym, New_HyperText, 0)
 
+MARKUPMAP(address, New_HyperText, roles::GROUPING)
+
 MARKUPMAP(article, New_HyperText, roles::ARTICLE, Attr(xmlroles, article))
 
 MARKUPMAP(aside, New_HyperText, roles::LANDMARK)

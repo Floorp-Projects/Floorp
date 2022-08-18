@@ -17,13 +17,11 @@ use nserror::{nsresult, NS_ERROR_NULL_POINTER};
 /// }
 /// ```
 ///
-/// And a Rust implementation that uses #[derive(xpcom)] to implement it:
+/// And a Rust implementation that uses #[xpcom] to implement it:
 ///
 /// ```ignore
-/// #[derive(xpcom)]
-/// #[xpimplements(nsIFooBarBaz)]
-/// #[refcnt = "atomic"]
-/// struct InitFooBarBaz {
+/// #[xpcom(implement(nsIFooBarBaz), atomic)]
+/// struct FooBarBaz {
 ///     // …
 /// }
 /// ```

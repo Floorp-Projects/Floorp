@@ -22,11 +22,11 @@
 //! responsible for exposing your Sync engine to XPIDL [^1], in a way that lets
 //! JavaScript call it.
 //!
-//! For your bridge type, you'll need to declare an `Init` struct with the
-//! `#[derive(xpcom)]` and `#[xpimplements(mozIBridgedSyncEngine)]` attributes,
-//! then define `xpcom_method!()` stubs for the `mozIBridgedSyncEngine` methods.
-//! For more details about implementing XPCOM methods in Rust, check out the
-//! docs in `xpcom/rust/xpcom/src/method.rs`.
+//! For your bridge type, you'll need to implement an xpcom interface with the
+//! `#[xpcom(implement(mozIBridgedSyncEngine), nonatomic)]` attribute then
+//! define `xpcom_method!()` stubs for the `mozIBridgedSyncEngine` methods.  For
+//! more details about implementing XPCOM methods in Rust, check out the docs in
+//! `xpcom/rust/xpcom/src/method.rs`.
 //!
 //! You'll also need to add an entry for your bridge type to `components.conf`,
 //! and define C++ and Rust constructors for it, so that JavaScript code can

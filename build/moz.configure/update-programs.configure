@@ -134,3 +134,21 @@ def default_agent_flag(enabled):
 
 
 set_config("MOZ_DEFAULT_BROWSER_AGENT", default_agent_flag)
+
+
+# Enable or disable the notification server, which allows Windows native
+# notifications to persist when the application is not running and relaunch as
+# necessary.
+# ==============================================================================
+@depends(target, build_project)
+def notification_server_default(target, build_project):
+    return target.os == "WINNT" and build_project == "browser"
+
+
+option(
+    "--disable-notification-server",
+    when=notification_server_default,
+    help="Disable building the notification server",
+)
+
+set_config("MOZ_NOTIFICATION_SERVER", True, when="--enable-notification-server")

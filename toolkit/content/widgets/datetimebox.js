@@ -51,7 +51,7 @@ this.DateTimeBoxWidget = class {
   }
 
   destructor() {
-    this.mResetButton.addEventListener("mousedown", this, {
+    this.mResetButton.removeEventListener("mousedown", this, {
       mozSystemGroup: true,
     });
 

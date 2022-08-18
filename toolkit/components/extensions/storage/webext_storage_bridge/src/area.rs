@@ -58,16 +58,17 @@ fn path_from_nsifile(file: &nsIFile) -> Result<PathBuf> {
 ///
 /// This class can be created on any thread, but must not be shared between
 /// threads. In Rust terms, it's `Send`, but not `Sync`.
-#[derive(xpcom)]
-#[xpimplements(
-    mozIExtensionStorageArea,
-    mozIConfigurableExtensionStorageArea,
-    mozISyncedExtensionStorageArea,
-    mozIInterruptible,
-    mozIBridgedSyncEngine
+#[xpcom(
+    implement(
+        mozIExtensionStorageArea,
+        mozIConfigurableExtensionStorageArea,
+        mozISyncedExtensionStorageArea,
+        mozIInterruptible,
+        mozIBridgedSyncEngine
+    ),
+    nonatomic
 )]
-#[refcnt = "nonatomic"]
-pub struct InitStorageSyncArea {
+pub struct StorageSyncArea {
     /// A background task queue, used to run all our storage operations on a
     /// thread pool. Using a serial event target here means that all operations
     /// will execute sequentially.

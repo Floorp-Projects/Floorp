@@ -318,10 +318,6 @@ body {
 
           .logo-container {
             text-align: start;
-
-            &:dir(rtl) {
-              text-align: end;
-            }
           }
 
           .brand-logo {
@@ -484,16 +480,21 @@ body {
               align-items: center;
             }
 
-            .brand-logo {
-              min-height: 25px;
+            .logo-container {
+              text-align: center;
 
-              &,
-              &:dir(rtl) {
-                background-position: center;
+              .brand-logo {
+                min-height: 25px;
+
+                &,
+                &:dir(rtl) {
+                  background-position: center;
+                }
               }
             }
 
             .welcome-text {
+              align-items: center;
               text-align: center;
               margin-inline: 0;
               padding-inline: 30px;
@@ -1020,6 +1021,10 @@ body {
         &.default,
         &.automatic {
           background-image: url('resource://default-theme/icon.svg');
+
+          &.colorway {
+            background-image: url('chrome://activity-stream/content/data/content/assets/default.svg');
+          }
         }
 
         &.abstract {
