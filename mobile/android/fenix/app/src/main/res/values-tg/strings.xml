@@ -126,11 +126,11 @@
     <string name="recent_tabs_show_all_content_description_2">Нишон додани тугмаи ҳамаи хатбаракҳои охирин</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">Ҷустуҷӯи шумо барои \&quot;%1$s\&quot;</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Ҷустуҷӯи шумо барои \&quot;%1$s\&quot;</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d сомона</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d сомона</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Дидани ҳамаи варақаҳои ҳамоҳангшуда</string>
@@ -444,11 +444,11 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Намоиш</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Тасвири заминаро бо зеркунии тамғаи саҳифаи асосии «Firefox» иваз намоед</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Тасвири заминаро бо зеркунии тамғаи саҳифаи асосии «Firefox» иваз намоед</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Тамғаи «Firefox» - иваз кардани тасвири замина, тугма</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Тамғаи «Firefox» - иваз кардани тасвири замина, тугма</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -624,9 +624,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Тӯр</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Гурӯҳҳои ҷустуҷӯ</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Гурӯҳҳои ҷустуҷӯ</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Сомонаҳои марбутро гурӯҳбандӣ кунед</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Сомонаҳои марбутро гурӯҳбандӣ кунед</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Пӯшидани варақаҳо</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -1203,7 +1203,7 @@
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">Хуш омадед ба %s!</string>
+    <string name="onboarding_header">Хуш омадед ба «%s!»</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Firefox-ро байни дастгоҳҳо ҳамоҳанг кунед</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
@@ -1837,7 +1837,7 @@
     <string name="inactive_tabs_auto_close_message_snackbar">«Пӯшидани худкор» фаъол шуд</string>
 
     <!-- Default browser experiment -->
-    <string name="default_browser_experiment_card_text">Пайванҳоеро, танзим кунед, ки онҳо аз сомонаҳо, почтаи электронӣ ва паёмҳо дар браузери Firefox ба таври худкор кушода шаванд.</string>
+    <string name="default_browser_experiment_card_text">Пайвандҳоеро, танзим кунед, ки онҳо аз сомонаҳо, почтаи электронӣ ва паёмҳо дар браузери Firefox ба таври худкор кушода шаванд.</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Тоза кардан</string>
