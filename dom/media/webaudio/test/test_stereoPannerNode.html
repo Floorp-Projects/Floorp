@@ -238,6 +238,30 @@ var tests = [
     panner.pan.setValueAtTime(PANNING, 0);
     stereoSource.start(0);
     return expectedBufferForStereo(PANNING, GAIN);
+  },
+  function bug_1783181(ctx, panner) {
+    const length = 128;
+    const buffer = new AudioBuffer({ length, numberOfChannels: 2, sampleRate: ctx.sampleRate });
+
+    buffer.copyToChannel(new Float32Array([1, 0.5, 0, -0.5, -1]), 0);
+    buffer.copyToChannel(new Float32Array([-0.5, -0.25, 0, 0.25, 0.5]), 1);
+
+    const audioBufferSourceNode = new AudioBufferSourceNode(ctx, { buffer });
+
+    audioBufferSourceNode.connect(panner);
+
+    panner.pan.setValueAtTime(0.5, 0);
+    panner.pan.setValueAtTime(0, 2 / ctx.sampleRate);
+    panner.pan.linearRampToValueAtTime(1, 5 / ctx.sampleRate);
+    panner.pan.cancelScheduledValues(3 / ctx.sampleRate);
+
+    audioBufferSourceNode.start(0);
+
+    const expected = new AudioBuffer({ length, numberOfChannels: 2, sampleRate: ctx.sampleRate });
+    expected.copyToChannel(new Float32Array([ 0.7071067690849304, 0.3535533845424652, 0, -0.5, -1 ]), 0);
+    expected.copyToChannel(new Float32Array([ 0.20710676908493042, 0.10355338454246521, 0, 0.25, 0.5 ]), 1);
+
+    return expected;
   }
 ];
 
