@@ -263,7 +263,7 @@ class BrowserToolbarIntegration(
                     if (showTrackingProtectionCfrForTab[store.state.selectedTabId] == true) {
                         CFRPopup(
                             container = fragment.requireView(),
-                            text = fragment.getString(R.string.cfr_for_toolbar_shield_icon),
+                            text = fragment.getString(R.string.cfr_for_toolbar_shield_icon2),
                             anchor = toolbar.findViewById(
                                 R.id.mozac_browser_toolbar_tracking_protection_indicator,
                             ),
