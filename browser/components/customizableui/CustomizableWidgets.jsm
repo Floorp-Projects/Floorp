@@ -472,6 +472,7 @@ const CustomizableWidgets = [
       return Services.prefs.getBoolPref("browser.tabs.firefox-view");
     },
     onCreated(aNode) {
+      aNode.setAttribute("role", "tab");
       aNode.addEventListener("mousedown", this);
       aNode.ownerGlobal.addEventListener(
         "unload",

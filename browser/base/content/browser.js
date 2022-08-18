@@ -9944,6 +9944,7 @@ var FirefoxViewHandler = {
       gBrowser.tabContainer.addEventListener("TabSelect", this);
       window.addEventListener("activate", this);
       gBrowser.hideTab(this.tab);
+      this.button?.setAttribute("aria-controls", this.tab.linkedPanel);
     }
     gBrowser.selectedTab = this.tab;
   },
@@ -9951,11 +9952,13 @@ var FirefoxViewHandler = {
     switch (e.type) {
       case "TabSelect":
         this.button?.toggleAttribute("open", e.target == this.tab);
+        this.button?.setAttribute("aria-selected", e.target == this.tab);
         this._removeNotificationDotIfTabSelected();
         break;
       case "TabClose":
         this.tab = null;
         gBrowser.tabContainer.removeEventListener("TabSelect", this);
+        this.button?.removeAttribute("aria-controls");
         break;
       case "activate":
         this._removeNotificationDotIfTabSelected();
