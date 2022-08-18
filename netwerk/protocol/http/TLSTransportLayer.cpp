@@ -452,6 +452,8 @@ TLSTransportLayer::Close(nsresult aReason) {
     mSocketTransport->Close(aReason);
     mSocketTransport = nullptr;
   }
+  mSocketInWrapper.AsyncWait(nullptr, 0, 0, nullptr);
+  mSocketOutWrapper.AsyncWait(nullptr, 0, 0, nullptr);
 
   if (mOwner) {
     RefPtr<TLSTransportLayer> self = this;
