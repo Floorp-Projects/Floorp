@@ -977,6 +977,9 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer .tiles-theme-section .theme .icon.default, .onboardingContainer .tiles-theme-section .theme .icon.automatic {
   background-image: url("resource://default-theme/icon.svg");
 }
+.onboardingContainer .tiles-theme-section .theme .icon.default.colorway, .onboardingContainer .tiles-theme-section .theme .icon.automatic.colorway {
+  background-image: url("chrome://activity-stream/content/data/content/assets/default.svg");
+}
 .onboardingContainer .tiles-theme-section .theme .icon.abstract {
   background-image: url("resource://builtin-themes/colorways/2021abstract/balanced/icon.svg");
 }
