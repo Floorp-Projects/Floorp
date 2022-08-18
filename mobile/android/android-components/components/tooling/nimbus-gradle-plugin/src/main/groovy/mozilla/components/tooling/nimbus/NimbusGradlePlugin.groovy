@@ -171,7 +171,7 @@ class NimbusPlugin implements Plugin<Project> {
         // a) this plugin is going to live in the AS repo (eventually)
         // See https://github.com/mozilla-mobile/android-components/issues/11422 for tying this
         // to a version that is specified in buildSrc/src/main/java/Dependencies.kt
-        return "94.0.1"
+        return "94.1.0"
     }
 
     // Try one or more hosts to download the given file.
