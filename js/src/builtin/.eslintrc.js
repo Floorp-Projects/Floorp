@@ -59,6 +59,48 @@ module.exports = {
         // All self-hosted code is implicitly strict mode, so there's no need to
         // add a strict-mode directive.
         strict: ["error", "never"],
+        // Disallow syntax not supported in self-hosted code.
+        "no-restricted-syntax": [
+          "error",
+          {
+            selector: "ClassDeclaration",
+            message: "Class declarations are not allowed",
+          },
+          {
+            selector: "ClassExpression",
+            message: "Class expressions are not allowed",
+          },
+          {
+            selector: "Literal[regex]",
+            message: "Regular expression literals are not allowed",
+          },
+          {
+            selector: "CallExpression > MemberExpression.callee",
+            message:
+              "Direct method calls are not allowed, use callFunction() or callContentFunction()",
+          },
+          {
+            selector: "NewExpression > MemberExpression.callee",
+            message:
+              "Direct method calls are not allowed, use constructContentFunction()",
+          },
+          {
+            selector: "YieldExpression[delegate=true]",
+            message:
+              "yield* is not allowed because it can run user-modifiable iteration code",
+          },
+          {
+            selector: "ForOfStatement > :not(CallExpression).right",
+            message:
+              "for-of loops must use allowContentIter() or allowContentIterWith()",
+          },
+          {
+            selector:
+              "ForOfStatement > CallExpression.right > :not(Identifier[name='allowContentIter'], Identifier[name='allowContentIterWith']).callee",
+            message:
+              "for-of loops must use allowContentIter() or allowContentIterWith()",
+          },
+        ],
       },
 
       globals: {
