@@ -45,7 +45,7 @@ Maybe<MaybeCheckTDZ> TDZCheckCache::needsTDZCheck(BytecodeEmitter* bce,
   }
 
   if (!cache_->add(p, name, rv)) {
-    ReportOutOfMemory(bce->cx);
+    ReportOutOfMemory(bce->ec);
     return Nothing();
   }
 
@@ -67,7 +67,7 @@ bool TDZCheckCache::noteTDZCheck(BytecodeEmitter* bce,
     p->value() = check;
   } else {
     if (!cache_->add(p, name, check)) {
-      ReportOutOfMemory(bce->cx);
+      ReportOutOfMemory(bce->ec);
       return false;
     }
   }

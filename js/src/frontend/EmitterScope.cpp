@@ -87,7 +87,7 @@ bool EmitterScope::putNameInCache(BytecodeEmitter* bce,
   NameLocationMap::AddPtr p = cache.lookupForAdd(name);
   MOZ_ASSERT(!p);
   if (!cache.add(p, name, loc)) {
-    ReportOutOfMemory(bce->cx);
+    ReportOutOfMemory(bce->ec);
     return false;
   }
   return true;
@@ -530,7 +530,7 @@ bool EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox) {
       }
 
       if (!cache.add(p, bi.name(), loc)) {
-        ReportOutOfMemory(bce->cx);
+        ReportOutOfMemory(bce->ec);
         return false;
       }
     }
