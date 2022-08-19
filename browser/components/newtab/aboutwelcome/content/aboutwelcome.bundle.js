@@ -865,6 +865,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "ColorwayDescription": () => (/* binding */ ColorwayDescription),
 /* harmony export */   "computeColorWay": () => (/* binding */ computeColorWay),
+/* harmony export */   "computeVariationIndex": () => (/* binding */ computeVariationIndex),
 /* harmony export */   "Colorways": () => (/* binding */ Colorways)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
@@ -903,6 +904,25 @@ const ColorwayDescription = props => {
 
 function computeColorWay(themeName, systemVariations) {
   return !themeName || themeName === "alpenglow" || systemVariations.includes(themeName) ? "default" : themeName.split("-")[0];
+} // Set variationIndex based off activetheme value e.g. 'light', 'expressionist-soft'
+
+function computeVariationIndex(themeName, systemVariations, variations, defaultVariationIndex) {
+  // Check if themeName is in systemVariations, if yes choose variationIndex by themeName
+  let index = systemVariations.findIndex(theme => theme === themeName);
+
+  if (index >= 0) {
+    return index;
+  } // If themeName is one of the colorways, select variation index from colorways
+
+
+  let variation = themeName === null || themeName === void 0 ? void 0 : themeName.split("-")[1];
+  index = variations.findIndex(element => element === variation);
+
+  if (index >= 0) {
+    return index;
+  }
+
+  return defaultVariationIndex;
 }
 function Colorways(props) {
   let {
@@ -910,13 +930,15 @@ function Colorways(props) {
     defaultVariationIndex,
     systemVariations,
     variations
-  } = props.content.tiles; // This sets a default value
+  } = props.content.tiles; // Active theme id from JSON e.g. "expressionist"
 
   const activeId = computeColorWay(props.activeTheme, systemVariations);
-  const [colorwayId, setState] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(activeId); // Update state any time activeTheme changes.
+  const [colorwayId, setState] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(activeId);
+  const [variationIndex, setVariationIndex] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(defaultVariationIndex); // Update state any time activeTheme changes.
 
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    setState(computeColorWay(props.activeTheme, systemVariations)); // eslint-disable-next-line react-hooks/exhaustive-deps
+    setState(computeColorWay(props.activeTheme, systemVariations));
+    setVariationIndex(computeVariationIndex(props.activeTheme, systemVariations, variations, defaultVariationIndex)); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.activeTheme]);
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "tiles-theme-container"
@@ -953,7 +975,7 @@ function Colorways(props) {
     type: "radio",
     "data-colorway": id,
     name: "theme",
-    value: id === "default" ? systemVariations[defaultVariationIndex] : `${id}-${variations[defaultVariationIndex]}`,
+    value: id === "default" ? systemVariations[variationIndex] : `${id}-${variations[variationIndex]}`,
     checked: colorwayId === id,
     className: "sr-only input",
     onClick: props.handleAction,
