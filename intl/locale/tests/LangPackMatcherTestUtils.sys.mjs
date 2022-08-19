@@ -41,6 +41,7 @@ export function getAddonAndLocalAPIsMocker(testScope, sandbox) {
           availableLangpacks.map(locale => ({
             guid: `langpack-${locale}@firefox.mozilla.org`,
             type: "language",
+            hash: locale,
             target_locale: locale,
             current_compatible_version: {
               files: [

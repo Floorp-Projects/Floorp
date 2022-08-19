@@ -336,6 +336,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
         },
         hero_text: {
           string_id: "mr2022-onboarding-live-language-text",
+          useLangPack: true,
         },
         languageSwitcher: {
           downloading: {
@@ -351,6 +352,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
           },
           switch: {
             string_id: "mr2022-onboarding-live-language-switch-to",
+            useLangPack: true,
           },
           continue: {
             string_id: "mr2022-onboarding-live-language-continue-in",

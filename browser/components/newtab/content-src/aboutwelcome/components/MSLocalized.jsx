@@ -67,6 +67,8 @@ export const Localized = ({ text, children }) => {
 
   // Pick desired fluent or raw/plain text to render.
   if (text.string_id) {
+    // Set the key so React knows not to reuse when switching to plain text.
+    props.key = text.string_id;
     props["data-l10n-id"] = text.string_id;
     if (text.args) props["data-l10n-args"] = JSON.stringify(text.args);
   } else if (text.raw) {
