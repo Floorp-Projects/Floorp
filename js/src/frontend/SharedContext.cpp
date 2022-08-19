@@ -290,7 +290,7 @@ bool FunctionBox::setAsmJSModule(const JS::WasmModule* module) {
   }
 
   if (!compilationState_.asmJS->moduleMap.putNew(index(), module)) {
-    js::ReportOutOfMemory(cx_);
+    js::ReportOutOfMemory(ec_);
     return false;
   }
   return true;
