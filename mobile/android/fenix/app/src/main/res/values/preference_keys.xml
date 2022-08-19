@@ -239,6 +239,8 @@
     <string name="pref_key_should_show_sync_cfr" translatable="false">pref_key_should_show_sync_cfr</string>
     <!-- A value  of `true` means the home onboarding dialog have not been shown yet -->
     <string name="pref_key_should_show_home_onboarding_dialog" translatable="false">pref_key_should_show_home_onboarding_dialog</string>
+    <!-- A value  of `true` means the first run onboarding updates should be shown -->
+    <string name="pref_key_show_first_run_onboarding_update" translatable="false">pref_key_show_first_run_onboarding_update</string>
 
     <string name="pref_key_debug_settings" translatable="false">pref_key_debug_settings</string>
 

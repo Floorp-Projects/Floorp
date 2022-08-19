@@ -24,9 +24,19 @@ object FeatureFlags {
     const val syncAddressesFeature = false
 
     /**
-     * Enables the on-boarding sync cfr on the home screen.
+     * Enables the onboarding sync CFR on the home screen.
      */
     val showSynCFR = Config.channel.isDebug
+
+    /**
+     * Enables the onboarding jump back in CFR on the home screen.
+     */
+    const val showJumpBackInCFR = true
+
+    /**
+     * Enables the first run onboarding updates.
+     */
+    const val showFirstRunOnboardingUpdates = false
 
     /**
      * Enables the "recent" tabs feature in the home screen.

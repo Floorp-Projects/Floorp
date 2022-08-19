@@ -49,6 +49,8 @@ features:
             "sync-cfr": false,
             "wallpapers": false,
             "home-onboarding-dialog": false,
+            "jump-back-in-cfr": false,
+            "first-run-onboarding": false,
           }
     defaults:
       - channel: nightly
@@ -57,6 +59,8 @@ features:
             "sync-cfr": false,
             "wallpapers": false,
             "home-onboarding-dialog": false,
+            "jump-back-in-cfr": false,
+            "first-run-onboarding": false,
           }
         }
       - channel: developer
@@ -65,6 +69,8 @@ features:
             "sync-cfr": false,
             "wallpapers": true,
             "home-onboarding-dialog": false,
+            "jump-back-in-cfr": false,
+            "first-run-onboarding": false,
           }
         }
   nimbus-validation:
@@ -336,3 +342,7 @@ types:
           description: Wallpapers onboarding dialog.
         home-onboarding-dialog:
           description: Home onboarding dialog for upgraded users.
+        jump-back-in-cfr:
+          description: Jump back in onboarding CFR.
+        first-run-onboarding:
+          description: First run onboarding page updates.
