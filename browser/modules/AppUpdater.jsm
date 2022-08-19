@@ -9,13 +9,36 @@ var EXPORTED_SYMBOLS = ["AppUpdater"];
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
+
+var gLogfileOutputStream;
+
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
+const { FileUtils } = ChromeUtils.import(
+  "resource://gre/modules/FileUtils.jsm"
+);
+const PREF_APP_UPDATE_LOG = "app.update.log";
+const PREF_APP_UPDATE_LOG_FILE = "app.update.log.file";
+const KEY_PROFILE_DIR = "ProfD";
+const FILE_UPDATE_MESSAGES = "update_messages.log";
 const lazy = {};
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
 });
+XPCOMUtils.defineLazyGetter(lazy, "gLogEnabled", function aus_gLogEnabled() {
+  return (
+    Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG, false) ||
+    Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG_FILE, false)
+  );
+});
+XPCOMUtils.defineLazyGetter(
+  lazy,
+  "gLogfileEnabled",
+  function aus_gLogfileEnabled() {
+    return Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG_FILE, false);
+  }
+);
 
 const PREF_APP_UPDATE_CANCELATIONS_OSX = "app.update.cancelations.osx";
 const PREF_APP_UPDATE_ELEVATE_NEVER = "app.update.elevate.never";
@@ -54,6 +77,9 @@ class AppUpdater {
       "nsISupportsWeakReference",
     ]);
     Services.obs.addObserver(this, "update-swap", /* ownsWeak */ true);
+
+    // This one call observes PREF_APP_UPDATE_LOG and PREF_APP_UPDATE_LOG_FILE
+    Services.prefs.addObserver(PREF_APP_UPDATE_LOG, this);
   }
 
   /**
@@ -63,31 +89,43 @@ class AppUpdater {
    */
   check() {
     if (!AppConstants.MOZ_UPDATER || this.updateDisabledByPackage) {
+      LOG(
+        "AppUpdater:check -" +
+          "AppConstants.MOZ_UPDATER=" +
+          AppConstants.MOZ_UPDATER +
+          "this.updateDisabledByPackage: " +
+          this.updateDisabledByPackage
+      );
       this._setStatus(AppUpdater.STATUS.NO_UPDATER);
       return;
     }
 
     if (this.updateDisabledByPolicy) {
+      LOG("AppUpdater:check - this.updateDisabledByPolicy");
       this._setStatus(AppUpdater.STATUS.UPDATE_DISABLED_BY_POLICY);
       return;
     }
 
     if (this.isReadyForRestart) {
+      LOG("AppUpdater:check - this.isReadyForRestart");
       this._setStatus(AppUpdater.STATUS.READY_FOR_RESTART);
       return;
     }
 
     if (this.aus.isOtherInstanceHandlingUpdates) {
+      LOG("AppUpdater:check - this.aus.isOtherInstanceHandlingUpdates");
       this._setStatus(AppUpdater.STATUS.OTHER_INSTANCE_HANDLING_UPDATES);
       return;
     }
 
     if (this.isDownloading) {
+      LOG("AppUpdater:check - this.isDownloading");
       this.startDownload();
       return;
     }
 
     if (this.isStaging) {
+      LOG("AppUpdater:check - this.isStaging");
       this._waitForUpdateToStage();
       return;
     }
@@ -199,6 +237,11 @@ class AppUpdater {
 
   // true when updating in background is enabled.
   get updateStagingEnabled() {
+    LOG(
+      "AppUpdater:updateStagingEnabled" +
+        "canStageUpdates: " +
+        this.aus.canStageUpdates
+    );
     return (
       !this.updateDisabledByPolicy &&
       !this.updateDisabledByPackage &&
@@ -220,6 +263,7 @@ class AppUpdater {
     this._setStatus(AppUpdater.STATUS.CHECKING);
     this.checker.checkForUpdates(this._updateCheckListener, true);
     // after checking, onCheckComplete() is called
+    LOG("AppUpdater:checkForUpdates - waiting for onCheckComplete()");
   }
 
   /**
@@ -234,18 +278,31 @@ class AppUpdater {
          * See nsIUpdateService.idl
          */
         onCheckComplete: async (aRequest, aUpdates) => {
+          LOG("AppUpdater:_updateCheckListener:onCheckComplete - reached.");
           this.update = this.aus.selectUpdate(aUpdates);
           if (!this.update) {
+            LOG(
+              "AppUpdater:_updateCheckListener:onCheckComplete - result: " +
+                "NO_UPDATES_FOUND"
+            );
             this._setStatus(AppUpdater.STATUS.NO_UPDATES_FOUND);
             return;
           }
 
           if (this.update.unsupported) {
+            LOG(
+              "AppUpdater:_updateCheckListener:onCheckComplete - result: " +
+                "UNSUPPORTED SYSTEM"
+            );
             this._setStatus(AppUpdater.STATUS.UNSUPPORTED_SYSTEM);
             return;
           }
 
           if (!this.aus.canApplyUpdates) {
+            LOG(
+              "AppUpdater:_updateCheckListener:onCheckComplete - result: " +
+                "MANUAL_UPDATE"
+            );
             this._setStatus(AppUpdater.STATUS.MANUAL_UPDATE);
             return;
           }
@@ -255,6 +312,12 @@ class AppUpdater {
           }
           this.promiseAutoUpdateSetting.then(updateAuto => {
             if (updateAuto && !this.aus.manualUpdateOnly) {
+              LOG(
+                "AppUpdater:_updateCheckListener:onCheckComplete - " +
+                  "updateAuto is active and " +
+                  "manualUpdateOnlydateOnly is inactive." +
+                  "start the download."
+              );
               // automatically download and install
               this.startDownload();
             } else {
@@ -271,6 +334,7 @@ class AppUpdater {
           // Errors in the update check are treated as no updates found. If the
           // update check fails repeatedly without a success the user will be
           // notified with the normal app update user interface so this is safe.
+          LOG("AppUpdater:_updateCheckListener:onError: NO_UPDATES_FOUND");
           this._setStatus(AppUpdater.STATUS.NO_UPDATES_FOUND);
         },
 
@@ -309,6 +373,7 @@ class AppUpdater {
 
     let success = this.aus.downloadUpdate(this.update, false);
     if (!success) {
+      LOG("AppUpdater:startDownload - downloadUpdate failed.");
       this._setStatus(AppUpdater.STATUS.DOWNLOAD_FAILED);
       return;
     }
@@ -322,17 +387,27 @@ class AppUpdater {
   _setupDownloadListener() {
     this._setStatus(AppUpdater.STATUS.DOWNLOADING);
     this.aus.addDownloadListener(this);
+    LOG("AppUpdater:_setupDownloadListener - registered a download listener");
   }
 
   /**
    * See nsIRequestObserver.idl
    */
-  onStartRequest(aRequest) {}
+  onStartRequest(aRequest) {
+    LOG("AppUpdater:onStartRequest - aRequest: " + aRequest);
+  }
 
   /**
    * See nsIRequestObserver.idl
    */
   onStopRequest(aRequest, aStatusCode) {
+    LOG(
+      "AppUpdater:onStopRequest " +
+        "- aRequest: " +
+        aRequest +
+        ", aStatusCode: " +
+        aStatusCode
+    );
     switch (aStatusCode) {
       case Cr.NS_ERROR_UNEXPECTED:
         if (
@@ -342,6 +417,11 @@ class AppUpdater {
           // Verification error of complete patch, informational text is held in
           // the update object.
           this.aus.removeDownloadListener(this);
+          LOG(
+            "AppUpdater:onStopRequest " +
+              "- download failed with unexpected error" +
+              ", removed download listener"
+          );
           this._setStatus(AppUpdater.STATUS.DOWNLOAD_FAILED);
           break;
         }
@@ -353,14 +433,29 @@ class AppUpdater {
         break;
       case Cr.NS_OK:
         this.aus.removeDownloadListener(this);
+        LOG(
+          "AppUpdater:onStopRequest " +
+            "- download ok" +
+            ", removed download listener"
+        );
         if (this.updateStagingEnabled) {
           // It could be that another instance was started during the download,
           // and if that happened, then we actually should not advance to the
           // STAGING status because the staging process isn't really happening
           // until that instance exits (or we time out waiting).
           if (this.aus.isOtherInstanceHandlingUpdates) {
+            LOG(
+              "AppUpdater:onStopRequest " +
+                "- aStatusCode=Cr.NS_OK" +
+                ", another instance is handling updates"
+            );
             this._setStatus(AppUpdater.OTHER_INSTANCE_HANDLING_UPDATES);
           } else {
+            LOG(
+              "AppUpdater:onStopRequest " +
+                "- aStatusCode=Cr.NS_OK" +
+                ", no competitive instance found."
+            );
             this._setStatus(AppUpdater.STATUS.STAGING);
           }
           // But we should register the staging observer in either case, because
@@ -373,6 +468,12 @@ class AppUpdater {
         break;
       default:
         this.aus.removeDownloadListener(this);
+        LOG(
+          "AppUpdater:onStopRequest " +
+            "- case default" +
+            ", removing download listener" +
+            ", because the download failed."
+        );
         this._setStatus(AppUpdater.STATUS.DOWNLOAD_FAILED);
         break;
     }
@@ -381,12 +482,31 @@ class AppUpdater {
   /**
    * See nsIProgressEventSink.idl
    */
-  onStatus(aRequest, aStatus, aStatusArg) {}
+  onStatus(aRequest, aStatus, aStatusArg) {
+    LOG(
+      "AppUpdater:onStatus " +
+        "- aRequest: " +
+        aRequest +
+        ", aStatus: " +
+        aStatus +
+        ", aStatusArg: " +
+        aStatusArg
+    );
+  }
 
   /**
    * See nsIProgressEventSink.idl
    */
   onProgress(aRequest, aProgress, aProgressMax) {
+    LOG(
+      "AppUpdater:onProgress " +
+        "- aRequest: " +
+        aRequest +
+        ", aProgress: " +
+        aProgress +
+        ", aProgressMax: " +
+        aProgressMax
+    );
     this._setStatus(AppUpdater.STATUS.DOWNLOADING, aProgress, aProgressMax);
   }
 
@@ -397,6 +517,10 @@ class AppUpdater {
   _awaitDownloadComplete() {
     let observer = (aSubject, aTopic, aData) => {
       // Update the UI when the download is finished
+      LOG(
+        "AppUpdater:_awaitStagingComplete - observer reached" +
+          ", status changes to READY_FOR_RESTART"
+      );
       this._setStatus(AppUpdater.STATUS.READY_FOR_RESTART);
       Services.obs.removeObserver(observer, "update-downloaded");
     };
@@ -412,6 +536,15 @@ class AppUpdater {
    */
   _awaitStagingComplete() {
     let observer = (aSubject, aTopic, aData) => {
+      LOG(
+        "AppUpdater:_awaitStagingComplete:observer" +
+          "- aSubject: " +
+          aSubject +
+          "- aTopic: " +
+          aTopic +
+          "- aData (=status): " +
+          aData
+      );
       // Update the UI when the background updater is finished
       switch (aTopic) {
         case "update-staged":
@@ -454,6 +587,7 @@ class AppUpdater {
    * Stops the current check for updates and any ongoing download.
    */
   stop() {
+    LOG("AppUpdater:stop called, remove download listener");
     this.checker.stopCurrentCheck();
     this.aus.removeDownloadListener(this);
   }
@@ -464,18 +598,25 @@ class AppUpdater {
   get status() {
     if (!this._status) {
       if (!AppConstants.MOZ_UPDATER || this.updateDisabledByPackage) {
+        LOG("AppUpdater:status - no updater or updates disabled by package.");
         this._status = AppUpdater.STATUS.NO_UPDATER;
       } else if (this.updateDisabledByPolicy) {
+        LOG("AppUpdater:status - updateDisabledByPolicy");
         this._status = AppUpdater.STATUS.UPDATE_DISABLED_BY_POLICY;
       } else if (this.isReadyForRestart) {
+        LOG("AppUpdater:status - isReadyForRestart");
         this._status = AppUpdater.STATUS.READY_FOR_RESTART;
       } else if (this.aus.isOtherInstanceHandlingUpdates) {
+        LOG("AppUpdater:status - another instance is handling updates");
         this._status = AppUpdater.STATUS.OTHER_INSTANCE_HANDLING_UPDATES;
       } else if (this.isDownloading) {
+        LOG("AppUpdater:status - isDownloading");
         this._status = AppUpdater.STATUS.DOWNLOADING;
       } else if (this.isStaging) {
+        LOG("AppUpdater:status - isStaging");
         this._status = AppUpdater.STATUS.STAGING;
       } else {
+        LOG("AppUpdater:status - NEVER_CHECKED");
         this._status = AppUpdater.STATUS.NEVER_CHECKED;
       }
     }
@@ -524,10 +665,33 @@ class AppUpdater {
   }
 
   observe(subject, topic, status) {
+    LOG(
+      "AppUpdater:observe " +
+        "- subject: " +
+        subject +
+        ", topic: " +
+        topic +
+        ", status: " +
+        status
+    );
     switch (topic) {
       case "update-swap":
         this._handleUpdateSwap();
         break;
+      case "nsPref:changed":
+        if (
+          status == PREF_APP_UPDATE_LOG ||
+          status == PREF_APP_UPDATE_LOG_FILE
+        ) {
+          lazy.gLogEnabled; // Assigning this before it is lazy-loaded is an error.
+          lazy.gLogEnabled =
+            Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG, false) ||
+            Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG_FILE, false);
+        }
+        break;
+      case "quit-application":
+        Services.prefs.removeObserver(PREF_APP_UPDATE_LOG, this);
+        Services.obs.removeObserver(this, topic);
     }
   }
 
@@ -552,9 +716,11 @@ class AppUpdater {
     }
 
     if (this.updateStagingEnabled) {
+      LOG("AppUpdater:_handleUpdateSwap - updateStagingEnabled");
       this._setStatus(AppUpdater.STATUS.STAGING);
       this._awaitStagingComplete();
     } else {
+      LOG("AppUpdater:_handleUpdateSwap - updateStagingDisabled");
       this._setStatus(AppUpdater.STATUS.DOWNLOADING);
       this._awaitDownloadComplete();
     }
@@ -643,3 +809,37 @@ AppUpdater.STATUS = {
     return null;
   },
 };
+
+/**
+ * Logs a string to the error console. If enabled, also logs to the update
+ * messages file.
+ * @param   string
+ *          The string to write to the error console.
+ */
+function LOG(string) {
+  if (lazy.gLogEnabled) {
+    dump("*** AUS:AUM " + string + "\n");
+    if (!Cu.isInAutomation) {
+      Services.console.logStringMessage("AUS:AUM " + string);
+    }
+
+    if (lazy.gLogfileEnabled) {
+      if (!gLogfileOutputStream) {
+        let logfile = Services.dirsvc.get(KEY_PROFILE_DIR, Ci.nsIFile);
+        logfile.append(FILE_UPDATE_MESSAGES);
+        gLogfileOutputStream = FileUtils.openAtomicFileOutputStream(logfile);
+      }
+
+      try {
+        let encoded = new TextEncoder().encode(string + "\n");
+        gLogfileOutputStream.write(encoded, encoded.length);
+        gLogfileOutputStream.flush();
+      } catch (e) {
+        dump("*** AUS:AUM Unable to write to messages file: " + e + "\n");
+        Services.console.logStringMessage(
+          "AUS:AUM Unable to write to messages file: " + e
+        );
+      }
+    }
+  }
+}
