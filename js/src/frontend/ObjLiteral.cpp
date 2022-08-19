@@ -34,7 +34,7 @@
 
 namespace js {
 
-bool ObjLiteralWriter::checkForDuplicatedNames(JSContext* cx) {
+bool ObjLiteralWriter::checkForDuplicatedNames(ErrorContext* ec) {
   if (!mightContainDuplicatePropertyNames_) {
     return true;
   }
@@ -47,7 +47,7 @@ bool ObjLiteralWriter::checkForDuplicatedNames(JSContext* cx) {
       propNameSet;
 
   if (!propNameSet.reserve(propertyCount_)) {
-    js::ReportOutOfMemory(cx);
+    js::ReportOutOfMemory(ec);
     return false;
   }
 

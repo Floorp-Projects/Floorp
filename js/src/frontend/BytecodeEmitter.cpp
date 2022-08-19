@@ -1477,7 +1477,7 @@ void BytecodeEmitter::reportError(uint32_t offset, unsigned errorNumber, ...) {
 
 bool BytecodeEmitter::addObjLiteralData(ObjLiteralWriter& writer,
                                         GCThingIndex* outIndex) {
-  if (!writer.checkForDuplicatedNames(cx)) {
+  if (!writer.checkForDuplicatedNames(ec)) {
     return false;
   }
 
@@ -1512,12 +1512,12 @@ bool BytecodeEmitter::emitPrepareIteratorResult() {
 
   writer.setPropNameNoDuplicateCheck(parserAtoms(),
                                      TaggedParserAtomIndex::WellKnown::value());
-  if (!writer.propWithUndefinedValue(cx)) {
+  if (!writer.propWithUndefinedValue(ec)) {
     return false;
   }
   writer.setPropNameNoDuplicateCheck(parserAtoms(),
                                      TaggedParserAtomIndex::WellKnown::done());
-  if (!writer.propWithUndefinedValue(cx)) {
+  if (!writer.propWithUndefinedValue(ec)) {
     return false;
   }
 
@@ -9234,7 +9234,7 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj, JSOp op,
         return false;
       }
     } else {
-      if (!writer.propWithUndefinedValue(cx)) {
+      if (!writer.propWithUndefinedValue(ec)) {
         return false;
       }
     }
@@ -9285,7 +9285,7 @@ bool BytecodeEmitter::emitDestructuringRestExclusionSetObjLiteral(
       return false;
     }
 
-    if (!writer.propWithUndefinedValue(cx)) {
+    if (!writer.propWithUndefinedValue(ec)) {
       return false;
     }
   }
@@ -9353,28 +9353,28 @@ bool BytecodeEmitter::emitObjLiteralValue(ObjLiteralWriter& writer,
     } else {
       v.setDouble(numValue);
     }
-    if (!writer.propWithConstNumericValue(cx, v)) {
+    if (!writer.propWithConstNumericValue(ec, v)) {
       return false;
     }
   } else if (value->isKind(ParseNodeKind::TrueExpr)) {
-    if (!writer.propWithTrueValue(cx)) {
+    if (!writer.propWithTrueValue(ec)) {
       return false;
     }
   } else if (value->isKind(ParseNodeKind::FalseExpr)) {
-    if (!writer.propWithFalseValue(cx)) {
+    if (!writer.propWithFalseValue(ec)) {
       return false;
     }
   } else if (value->isKind(ParseNodeKind::NullExpr)) {
-    if (!writer.propWithNullValue(cx)) {
+    if (!writer.propWithNullValue(ec)) {
       return false;
     }
   } else if (value->isKind(ParseNodeKind::RawUndefinedExpr)) {
-    if (!writer.propWithUndefinedValue(cx)) {
+    if (!writer.propWithUndefinedValue(ec)) {
       return false;
     }
   } else if (value->isKind(ParseNodeKind::StringExpr) ||
              value->isKind(ParseNodeKind::TemplateStringExpr)) {
-    if (!writer.propWithAtomValue(cx, parserAtoms(),
+    if (!writer.propWithAtomValue(ec, parserAtoms(),
                                   value->as<NameNode>().atom())) {
       return false;
     }
