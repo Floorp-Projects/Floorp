@@ -812,8 +812,7 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
       // condition means we don't have a cached pointer.
       if (!longLineColumnInfo_.add(ptr, line, Vector<ChunkInfo>(cx))) {
         // In case of OOM, just count columns from the start of the line.
-        cx->recoverFromOutOfMemory();  // TODO bug 1782569 do we need this for
-                                       // ErrorContext?
+        ec->recoverFromOutOfMemory();
         return ColumnFromPartial(start, 0, UnitsType::PossiblyMultiUnit);
       }
     }
@@ -882,8 +881,7 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
 
     if (!lastChunkVectorForLine_->reserve(chunkIndex + 1)) {
       // As earlier, just start from the greatest offset/column in case of OOM.
-      cx->recoverFromOutOfMemory();  // TODO bug 1782569 do we need this for
-                                     // ErrorContext?
+      ec->recoverFromOutOfMemory();
       return ColumnFromPartial(partialOffset, partialColumn,
                                UnitsType::PossiblyMultiUnit);
     }

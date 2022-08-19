@@ -38,6 +38,10 @@ void MainThreadErrorContext::onAllocationOverflow() {
 
 void MainThreadErrorContext::onOverRecursed() { cx_->onOverRecursed(); }
 
+void MainThreadErrorContext::recoverFromOutOfMemory() {
+  cx_->recoverFromOutOfMemory();
+}
+
 const JSErrorFormatString* MainThreadErrorContext::gcSafeCallback(
     JSErrorCallback callback, void* userRef, const unsigned errorNumber) {
   gc::AutoSuppressGC suppressGC(cx_);
@@ -87,6 +91,10 @@ void OffThreadErrorContext::onAllocationOverflow() {
 void OffThreadErrorContext::onOutOfMemory() { addPendingOutOfMemory(); }
 
 void OffThreadErrorContext::onOverRecursed() { errors_.overRecursed = true; }
+
+void OffThreadErrorContext::recoverFromOutOfMemory() {
+  errors_.outOfMemory = false;
+}
 
 const JSErrorFormatString* OffThreadErrorContext::gcSafeCallback(
     JSErrorCallback callback, void* userRef, const unsigned errorNumber) {

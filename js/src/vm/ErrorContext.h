@@ -56,6 +56,8 @@ class ErrorContext {
   virtual void onOutOfMemory() = 0;
   virtual void onOverRecursed() = 0;
 
+  virtual void recoverFromOutOfMemory() = 0;
+
   virtual const JSErrorFormatString* gcSafeCallback(
       JSErrorCallback callback, void* userRef, const unsigned errorNumber) = 0;
 
@@ -89,6 +91,8 @@ class MainThreadErrorContext : public ErrorContext {
 
   void onOutOfMemory() override;
   void onOverRecursed() override;
+
+  void recoverFromOutOfMemory() override;
 
   const JSErrorFormatString* gcSafeCallback(
       JSErrorCallback callback, void* userRef,
@@ -129,6 +133,8 @@ class OffThreadErrorContext : public ErrorContext {
 
   void onOutOfMemory() override;
   void onOverRecursed() override;
+
+  void recoverFromOutOfMemory() override;
 
   const JSErrorFormatString* gcSafeCallback(
       JSErrorCallback callback, void* userRef,
