@@ -4,13 +4,6 @@
 "use strict";
 
 add_task(async function test_fullpageScreenshot() {
-  CustomizableUI.addWidgetToArea(
-    "screenshot-button",
-    CustomizableUI.AREA_NAVBAR
-  );
-  let screenshotBtn = document.getElementById("screenshot-button");
-  Assert.ok(screenshotBtn, "The screenshots button was added to the nav bar");
-
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -103,13 +96,6 @@ add_task(async function test_fullpageScreenshot() {
 });
 
 add_task(async function test_fullpageScreenshotScrolled() {
-  CustomizableUI.addWidgetToArea(
-    "screenshot-button",
-    CustomizableUI.AREA_NAVBAR
-  );
-  let screenshotBtn = document.getElementById("screenshot-button");
-  Assert.ok(screenshotBtn, "The screenshots button was added to the nav bar");
-
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,

@@ -19,13 +19,6 @@ XPCOMUtils.defineLazyGetter(this, "ExtensionManagement", () => {
 });
 
 add_task(async function test() {
-  CustomizableUI.addWidgetToArea(
-    "screenshot-button",
-    CustomizableUI.AREA_NAVBAR
-  );
-  let screenshotBtn = document.getElementById("screenshot-button");
-  Assert.ok(screenshotBtn, "The screenshots button was added to the nav bar");
-
   let observerSpy = sinon.spy();
   let notifierSpy = sinon.spy();
 

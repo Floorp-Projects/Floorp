@@ -7,13 +7,6 @@
  * This test ensures the overlay is covering the entire window event thought the body is only 100px by 100px
  */
 add_task(async function() {
-  CustomizableUI.addWidgetToArea(
-    "screenshot-button",
-    CustomizableUI.AREA_NAVBAR
-  );
-  let screenshotBtn = document.getElementById("screenshot-button");
-  Assert.ok(screenshotBtn, "The screenshots button was added to the nav bar");
-
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -30,25 +23,18 @@ add_task(async function() {
 
       await helper.dragOverlay(10, 10, 500, 500);
 
-      await ContentTask.spawn(browser, null, async () => {
-        let screenshotsChild = content.windowGlobalChild.getActor(
-          "ScreenshotsComponent"
-        );
-        Assert.ok(screenshotsChild._overlay._initialized, "The overlay exists");
+      let dimensions = await helper.getSelectionLayerDimensions();
+      Assert.equal(
+        dimensions.scrollWidth,
+        contentInfo.clientWidth,
+        "The overlay spans the width of the window"
+      );
 
-        let dimensions = screenshotsChild._overlay.screenshotsContainer.getSelectionLayerDimensions();
-        Assert.equal(
-          dimensions.scrollWidth,
-          content.window.innerWidth,
-          "The overlay spans the width of the window"
-        );
-
-        Assert.equal(
-          dimensions.scrollHeight,
-          content.window.innerHeight,
-          "The overlay spans the height of the window"
-        );
-      });
+      Assert.equal(
+        dimensions.scrollHeight,
+        contentInfo.clientHeight,
+        "The overlay spans the height of the window"
+      );
     }
   );
 });

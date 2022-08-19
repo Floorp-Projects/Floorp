@@ -116,6 +116,25 @@ class ScreenshotsHelper {
     });
   }
 
+  async waitForSelectionBoxSizeChange(currentWidth) {
+    await ContentTask.spawn(
+      this.browser,
+      [currentWidth],
+      async ([currWidth]) => {
+        let screenshotsChild = content.windowGlobalChild.getActor(
+          "ScreenshotsComponent"
+        );
+
+        let dimensions = screenshotsChild._overlay.screenshotsContainer.getSelectionLayerDimensions();
+        // return dimensions.boxWidth;
+        await ContentTaskUtils.waitForCondition(() => {
+          dimensions = screenshotsChild._overlay.screenshotsContainer.getSelectionLayerDimensions();
+          return dimensions.boxWidth !== currWidth;
+        }, "Wait for selection box width change");
+      }
+    );
+  }
+
   async dragOverlay(startX, startY, endX, endY) {
     await this.waitForStateChange("crosshairs");
     let state = await this.getOverlayState();
@@ -147,11 +166,21 @@ class ScreenshotsHelper {
     this.endY = endY;
   }
 
-  clickCopyButton() {
+  async scrollContentWindow(x, y) {
+    await ContentTask.spawn(this.browser, [x, y], async ([xPos, yPos]) => {
+      content.window.scroll(xPos, yPos);
+    });
+  }
+
+  clickCopyButton(overrideX = null, overrideY = null) {
     // click copy button with last x and y position from dragOverlay
     // the middle of the copy button is last X - 163 and last Y + 30.
     // Ex. 500, 500 would be 336, 530
-    mouse.click(this.endX - 166, this.endY + 30);
+    if (overrideX && overrideY) {
+      mouse.click(overrideX - 166, overrideY + 30);
+    } else {
+      mouse.click(this.endX - 166, this.endY + 30);
+    }
   }
 
   clickCancelButton() {
@@ -220,6 +249,28 @@ class ScreenshotsHelper {
         scrollHeight: doc.scrollHeight,
         scrollWidth: doc.scrollWidth,
       };
+    });
+  }
+
+  getSelectionLayerDimensions() {
+    return ContentTask.spawn(this.browser, null, async () => {
+      let screenshotsChild = content.windowGlobalChild.getActor(
+        "ScreenshotsComponent"
+      );
+      Assert.ok(screenshotsChild._overlay._initialized, "The overlay exists");
+
+      return screenshotsChild._overlay.screenshotsContainer.getSelectionLayerDimensions();
+    });
+  }
+
+  getSelectionBoxDimensions() {
+    return ContentTask.spawn(this.browser, null, async () => {
+      let screenshotsChild = content.windowGlobalChild.getActor(
+        "ScreenshotsComponent"
+      );
+      Assert.ok(screenshotsChild._overlay._initialized, "The overlay exists");
+
+      return screenshotsChild._overlay.screenshotsContainer.getSelectionLayerBoxDimensions();
     });
   }
 
@@ -376,23 +427,14 @@ async function safeSynthesizeMouseEventInContentPage(
   options = {}
 ) {
   let context = gBrowser.selectedBrowser.browsingContext;
-
-  await scrollContentPageNodeIntoView(context, selector);
   BrowserTestUtils.synthesizeMouse(selector, x, y, options, context);
 }
 
-/**
- * Scroll into view an element in the content page matching the passed selector
- *
- * @param {BrowsingContext} browsingContext: The browsing context the element lives in.
- * @param {String} selector: The node selector to get the node to scroll into view
- * @returns {Promise}
- */
-function scrollContentPageNodeIntoView(browsingContext, selector) {
-  return SpecialPowers.spawn(browsingContext, [selector], function(
-    innerSelector
-  ) {
-    const node = content.wrappedJSObject.document.querySelector(innerSelector);
-    node.scrollIntoView();
-  });
-}
+add_setup(async () => {
+  CustomizableUI.addWidgetToArea(
+    "screenshot-button",
+    CustomizableUI.AREA_NAVBAR
+  );
+  let screenshotBtn = document.getElementById("screenshot-button");
+  Assert.ok(screenshotBtn, "The screenshots button was added to the nav bar");
+});
