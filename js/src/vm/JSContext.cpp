@@ -398,6 +398,7 @@ void js::ReportAllocationOverflow(JSContext* cx) {
   if (!cx) {
     return;
   }
+  MOZ_ASSERT(cx->isMainThreadContext());
 
   cx->reportAllocationOverflow();
 }

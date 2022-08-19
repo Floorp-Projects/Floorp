@@ -274,6 +274,7 @@ class NodeBuilder {
   using CallbackArray = RootedValueArray<AST_LIMIT>;
 
   JSContext* cx;
+  ErrorContext* ec;
   frontend::Parser<frontend::FullParseHandler, char16_t>* parser;
   bool saveLoc;            /* save source location information?     */
   char const* src;         /* source filename or null               */
@@ -282,8 +283,9 @@ class NodeBuilder {
   RootedValue userv;       /* user-specified builder object or null */
 
  public:
-  NodeBuilder(JSContext* c, bool l, char const* s)
+  NodeBuilder(JSContext* c, ErrorContext* e, bool l, char const* s)
       : cx(c),
+        ec(e),
         parser(nullptr),
         saveLoc(l),
         src(s),
@@ -780,7 +782,7 @@ bool NodeBuilder::createNode(ASTType type, TokenPos* pos,
 bool NodeBuilder::newArray(NodeVector& elts, MutableHandleValue dst) {
   const size_t len = elts.length();
   if (len > UINT32_MAX) {
-    ReportAllocationOverflow(cx);
+    ReportAllocationOverflow(ec);
     return false;
   }
   RootedObject array(cx, NewDenseFullyAllocatedArray(cx, uint32_t(len)));
@@ -1865,7 +1867,7 @@ class ASTSerializer {
       : cx(c),
         ec(e),
         parser(nullptr),
-        builder(c, l, src)
+        builder(c, e, l, src)
 #ifdef DEBUG
         ,
         lineno(ln)
