@@ -195,7 +195,7 @@ class BigIntStencil {
  public:
   BigIntStencil() = default;
 
-  [[nodiscard]] bool init(JSContext* cx, LifoAlloc& alloc,
+  [[nodiscard]] bool init(ErrorContext* ec, LifoAlloc& alloc,
                           const mozilla::Span<const char16_t> buf);
 
   BigInt* createBigInt(JSContext* cx) const;

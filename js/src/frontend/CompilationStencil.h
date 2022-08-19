@@ -34,6 +34,7 @@
 #include "js/UniquePtr.h"  // js::UniquePtr
 #include "js/Vector.h"
 #include "js/WasmModule.h"
+#include "vm/ErrorContext.h"
 #include "vm/GlobalObject.h"  // GlobalObject
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"  // JSFunction
@@ -464,7 +465,7 @@ struct ScopeContext {
   bool hasFunctionNeedsHomeObjectOnChain = false;
 #endif
 
-  bool init(JSContext* cx, CompilationInput& input,
+  bool init(JSContext* cx, ErrorContext* ec, CompilationInput& input,
             ParserAtomsTable& parserAtoms, InheritThis inheritThis,
             JSObject* enclosingEnv);
 
@@ -487,15 +488,17 @@ struct ScopeContext {
 
   InputScope determineEffectiveScope(InputScope& scope, JSObject* environment);
 
-  bool cachePrivateFieldsForEval(JSContext* cx, CompilationInput& input,
+  bool cachePrivateFieldsForEval(JSContext* cx, ErrorContext* ec,
+                                 CompilationInput& input,
                                  JSObject* enclosingEnvironment,
                                  const InputScope& effectiveScope,
                                  ParserAtomsTable& parserAtoms);
 
-  bool cacheEnclosingScopeBindingForEval(JSContext* cx, CompilationInput& input,
+  bool cacheEnclosingScopeBindingForEval(JSContext* cx, ErrorContext* ec,
+                                         CompilationInput& input,
                                          ParserAtomsTable& parserAtoms);
 
-  bool addToEnclosingLexicalBindingCache(JSContext* cx,
+  bool addToEnclosingLexicalBindingCache(JSContext* cx, ErrorContext* ec,
                                          ParserAtomsTable& parserAtoms,
                                          CompilationAtomCache& atomCache,
                                          InputName& name,
@@ -527,7 +530,7 @@ struct CompilationAtomCache {
 
   bool hasAtomAt(ParserAtomIndex index) const;
   bool setAtomAt(JSContext* cx, ParserAtomIndex index, JSString* atom);
-  bool allocate(JSContext* cx, size_t length);
+  bool allocate(ErrorContext* ec, size_t length);
 
   bool empty() const { return atoms_.empty(); }
 
@@ -786,7 +789,7 @@ class CompilationSyntaxParseCache {
 
   // Initialize the SynaxParse cache given a LifoAlloc. The JSContext is only
   // used for reporting allocation errors.
-  [[nodiscard]] bool init(JSContext* cx, LifoAlloc& alloc,
+  [[nodiscard]] bool init(JSContext* cx, ErrorContext* ec, LifoAlloc& alloc,
                           ParserAtomsTable& parseAtoms,
                           CompilationAtomCache& atomCache,
                           const InputScript& lazy);
@@ -810,19 +813,23 @@ class CompilationSyntaxParseCache {
                                       ParserAtomsTable& parseAtoms,
                                       CompilationAtomCache& atomCache,
                                       const InputScript& lazy);
-  [[nodiscard]] bool copyScriptInfo(JSContext* cx, LifoAlloc& alloc,
+  [[nodiscard]] bool copyScriptInfo(JSContext* cx, ErrorContext* ec,
+                                    LifoAlloc& alloc,
                                     ParserAtomsTable& parseAtoms,
                                     CompilationAtomCache& atomCache,
                                     BaseScript* lazy);
-  [[nodiscard]] bool copyScriptInfo(JSContext* cx, LifoAlloc& alloc,
+  [[nodiscard]] bool copyScriptInfo(JSContext* cx, ErrorContext* ec,
+                                    LifoAlloc& alloc,
                                     ParserAtomsTable& parseAtoms,
                                     CompilationAtomCache& atomCache,
                                     const ScriptStencilRef& lazy);
-  [[nodiscard]] bool copyClosedOverBindings(JSContext* cx, LifoAlloc& alloc,
+  [[nodiscard]] bool copyClosedOverBindings(JSContext* cx, ErrorContext* ec,
+                                            LifoAlloc& alloc,
                                             ParserAtomsTable& parseAtoms,
                                             CompilationAtomCache& atomCache,
                                             BaseScript* lazy);
-  [[nodiscard]] bool copyClosedOverBindings(JSContext* cx, LifoAlloc& alloc,
+  [[nodiscard]] bool copyClosedOverBindings(JSContext* cx, ErrorContext* ec,
+                                            LifoAlloc& alloc,
                                             ParserAtomsTable& parseAtoms,
                                             CompilationAtomCache& atomCache,
                                             const ScriptStencilRef& lazy);
@@ -896,10 +903,12 @@ struct SharedDataContainer {
   ~SharedDataContainer();
 
   [[nodiscard]] bool initVector(JSContext* cx);
+  [[nodiscard]] bool initVector(ErrorContext* ec);
   [[nodiscard]] bool initMap(JSContext* cx);
+  [[nodiscard]] bool initMap(ErrorContext* ec);
 
  private:
-  [[nodiscard]] bool convertFromSingleToMap(JSContext* cx);
+  [[nodiscard]] bool convertFromSingleToMap(ErrorContext* ec);
 
  public:
   bool isEmpty() const { return (data_) == SingleTag; }
@@ -940,9 +949,11 @@ struct SharedDataContainer {
     return reinterpret_cast<SharedDataContainer*>(data_ & ~TagMask);
   }
 
-  [[nodiscard]] bool prepareStorageFor(JSContext* cx, size_t nonLazyScriptCount,
+  [[nodiscard]] bool prepareStorageFor(ErrorContext* ec,
+                                       size_t nonLazyScriptCount,
                                        size_t allScriptCount);
-  [[nodiscard]] bool cloneFrom(JSContext* cx, const SharedDataContainer& other);
+  [[nodiscard]] bool cloneFrom(ErrorContext* ec,
+                               const SharedDataContainer& other);
 
   // Returns index-th script's shared data, or nullptr if it doesn't have.
   js::SharedImmutableScriptData* get(ScriptIndex index) const;
@@ -955,7 +966,7 @@ struct SharedDataContainer {
   // The data should already be shared with VM.
   //
   // The data is supposed to be added from delazification.
-  [[nodiscard]] bool addExtraWithoutShare(JSContext* cx, ScriptIndex index,
+  [[nodiscard]] bool addExtraWithoutShare(ErrorContext* ec, ScriptIndex index,
                                           js::SharedImmutableScriptData* data);
 
   // Dynamic memory associated with this container. Does not include the
@@ -1302,16 +1313,19 @@ struct ExtensibleCompilationStencil {
   }
 
   // Steal CompilationStencil content.
-  [[nodiscard]] bool steal(JSContext* cx, RefPtr<CompilationStencil>&& other);
+  [[nodiscard]] bool steal(JSContext* cx, ErrorContext* ec,
+                           RefPtr<CompilationStencil>&& other);
 
   // Clone ExtensibleCompilationStencil content.
-  [[nodiscard]] bool cloneFrom(JSContext* cx, const CompilationStencil& other);
-  [[nodiscard]] bool cloneFrom(JSContext* cx,
+  [[nodiscard]] bool cloneFrom(JSContext* cx, ErrorContext* ec,
+                               const CompilationStencil& other);
+  [[nodiscard]] bool cloneFrom(JSContext* cx, ErrorContext* ec,
                                const ExtensibleCompilationStencil& other);
 
  private:
   template <typename Stencil>
-  [[nodiscard]] bool cloneFromImpl(JSContext* cx, const Stencil& other);
+  [[nodiscard]] bool cloneFromImpl(JSContext* cx, ErrorContext* ec,
+                                   const Stencil& other);
 
  public:
   const ParserAtomVector& parserAtomsSpan() const {
@@ -1367,9 +1381,11 @@ struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
   CompilationState(JSContext* cx, LifoAllocScope& parserAllocScope,
                    CompilationInput& input);
 
-  bool init(JSContext* cx, InheritThis inheritThis = InheritThis::No,
+  bool init(JSContext* cx, ErrorContext* ec,
+            InheritThis inheritThis = InheritThis::No,
             JSObject* enclosingEnv = nullptr) {
-    if (!scopeContext.init(cx, input, parserAtoms, inheritThis, enclosingEnv)) {
+    if (!scopeContext.init(cx, ec, input, parserAtoms, inheritThis,
+                           enclosingEnv)) {
       return false;
     }
 
@@ -1377,7 +1393,8 @@ struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
     if (input.isDelazifying()) {
       InputScript lazy = input.lazyOuterScript();
       auto& atomCache = input.atomCache;
-      if (!previousParseCache.init(cx, alloc, parserAtoms, atomCache, lazy)) {
+      if (!previousParseCache.init(cx, ec, alloc, parserAtoms, atomCache,
+                                   lazy)) {
         return false;
       }
     }
@@ -1395,7 +1412,7 @@ struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
     size_t asmJSCount = 0;
   };
 
-  bool prepareSharedDataStorage(JSContext* cx);
+  bool prepareSharedDataStorage(ErrorContext* ec);
 
   CompilationStatePosition getPosition();
   void rewind(const CompilationStatePosition& pos);
@@ -1411,13 +1428,13 @@ struct MOZ_RAII CompilationState : public ExtensibleCompilationStencil {
 
   // Allocate space for `length` gcthings, and return the address of the
   // first element to `cursor` to initialize on the caller.
-  bool allocateGCThingsUninitialized(JSContext* cx, ScriptIndex scriptIndex,
-                                     size_t length,
+  bool allocateGCThingsUninitialized(JSContext* cx, ErrorContext* ec,
+                                     ScriptIndex scriptIndex, size_t length,
                                      TaggedScriptThingIndex** cursor);
 
-  bool appendScriptStencilAndData(JSContext* cx);
+  bool appendScriptStencilAndData(ErrorContext* ec);
 
-  bool appendGCThings(JSContext* cx, ScriptIndex scriptIndex,
+  bool appendGCThings(JSContext* cx, ErrorContext* ec, ScriptIndex scriptIndex,
                       mozilla::Span<const TaggedScriptThingIndex> things);
 };
 
@@ -1693,7 +1710,7 @@ struct CompilationStencilMerger {
               js::SystemAllocPolicy>;
   FunctionKeyToScriptIndexMap functionKeyToInitialScriptIndex_;
 
-  [[nodiscard]] bool buildFunctionKeyToIndex(JSContext* cx);
+  [[nodiscard]] bool buildFunctionKeyToIndex(ErrorContext* ec);
 
   ScriptIndex getInitialScriptIndexFor(
       const CompilationStencil& delazification) const;
@@ -1702,7 +1719,7 @@ struct CompilationStencilMerger {
   // initial's TaggedParserAtomIndex
   using AtomIndexMap = Vector<TaggedParserAtomIndex, 0, js::SystemAllocPolicy>;
 
-  [[nodiscard]] bool buildAtomIndexMap(JSContext* cx,
+  [[nodiscard]] bool buildAtomIndexMap(JSContext* cx, ErrorContext* ec,
                                        const CompilationStencil& delazification,
                                        AtomIndexMap& atomIndexMap);
 
@@ -1712,10 +1729,15 @@ struct CompilationStencilMerger {
   // Set the initial stencil and prepare for merging.
   [[nodiscard]] bool setInitial(
       JSContext* cx, UniquePtr<ExtensibleCompilationStencil>&& initial);
+  [[nodiscard]] bool setInitial(
+      ErrorContext* ec, UniquePtr<ExtensibleCompilationStencil>&& initial);
 
   // Merge the delazification stencil into the initial stencil.
   [[nodiscard]] bool addDelazification(
       JSContext* cx, const CompilationStencil& delazification);
+  [[nodiscard]] bool addDelazification(
+      JSContext* cx, ErrorContext* ec,
+      const CompilationStencil& delazification);
 
   ExtensibleCompilationStencil& getResult() const { return *initial_; }
   UniquePtr<ExtensibleCompilationStencil> takeResult() {

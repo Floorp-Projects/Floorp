@@ -180,7 +180,7 @@ void BytecodeEmitter::initFromBodyPosition(TokenPos bodyPosition) {
 
 bool BytecodeEmitter::init() {
   if (!parent) {
-    if (!compilationState.prepareSharedDataStorage(cx)) {
+    if (!compilationState.prepareSharedDataStorage(ec)) {
       return false;
     }
   }
@@ -11721,7 +11721,7 @@ bool BytecodeEmitter::intoScriptStencil(ScriptIndex scriptIndex) {
              sc->hasNonSyntacticScope());
 
   auto& things = perScriptData().gcThingList().objects();
-  if (!compilationState.appendGCThings(cx, scriptIndex, things)) {
+  if (!compilationState.appendGCThings(cx, ec, scriptIndex, things)) {
     return false;
   }
 
