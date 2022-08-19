@@ -155,11 +155,13 @@ TEST(IntlTimeZone, GetAvailableTimeZones)
 {
   constexpr auto EuropeBerlin = MakeStringSpan("Europe/Berlin");
   constexpr auto EuropeBusingen = MakeStringSpan("Europe/Busingen");
+  constexpr auto AtlanticJan_Mayen = MakeStringSpan("Atlantic/Jan_Mayen");
 
   auto timeZones = TimeZone::GetAvailableTimeZones("DE").unwrap();
 
   bool hasEuropeBerlin = false;
   bool hasEuropeBusingen = false;
+  bool hasAtlanticJan_Mayen = false;
 
   for (auto timeZone : timeZones) {
     auto span = timeZone.unwrap();
@@ -169,6 +171,9 @@ TEST(IntlTimeZone, GetAvailableTimeZones)
     } else if (span == EuropeBusingen) {
       ASSERT_FALSE(hasEuropeBusingen);
       hasEuropeBusingen = true;
+    } else if (span == AtlanticJan_Mayen) {
+      ASSERT_FALSE(hasAtlanticJan_Mayen);
+      hasAtlanticJan_Mayen = true;
     } else {
       std::string str(span.data(), span.size());
       ADD_FAILURE() << "Unexpected time zone: " << str;
@@ -177,6 +182,7 @@ TEST(IntlTimeZone, GetAvailableTimeZones)
 
   ASSERT_TRUE(hasEuropeBerlin);
   ASSERT_TRUE(hasEuropeBusingen);
+  ASSERT_TRUE(hasAtlanticJan_Mayen);
 }
 
 TEST(IntlTimeZone, GetAvailableTimeZonesNoRegion)
