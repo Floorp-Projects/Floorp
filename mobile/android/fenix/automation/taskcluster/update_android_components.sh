@@ -52,7 +52,7 @@ fi
 echo "Pushing branch to GitHub"
 URL="https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/$GITHUB_USER/$REPO/"
 # XXX git sometimes leaks the URL including the token when the network request failed (regardless of --quiet).
-git push --force --no-verify --quiet "$URL" "$BRANCH" > /dev/null 2>&1 || echo "Failed ($?)"
+git push --force --no-verify --quiet "$URL" "$BRANCH" > /dev/null 2>&1 || { echo "Failed ($?)"; exit 1; }
 
 # Open a PR if needed
 if [[ $(hub pr list --head "$GITHUB_USER:$BRANCH") ]]; then
