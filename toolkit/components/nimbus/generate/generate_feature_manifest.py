@@ -37,7 +37,7 @@ def generate_feature_manifest(fd, input_file):
     write_fm_js_headers(fd)
     nimbus_dir_path = pathlib.Path(input_file).parent
     try:
-        with open(input_file, "r") as yaml_input:
+        with open(input_file, "r", encoding="utf-8") as yaml_input:
             data = yaml.safe_load(yaml_input)
             with pathlib.Path(nimbus_dir_path, FEATURE_MANIFEST_SCHEMA).open() as f:
                 schema = json.load(f)
@@ -92,7 +92,7 @@ def generate_platform_feature_manifest(fd, input_file):
         )
 
     try:
-        with open(input_file, "r") as yaml_input:
+        with open(input_file, "r", encoding="utf-8") as yaml_input:
             data = yaml.safe_load(yaml_input)
             fd.write(file_structure(data))
     except (IOError) as e:
