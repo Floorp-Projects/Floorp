@@ -61,7 +61,9 @@ function getObserverTopic(aNotificationId) {
 async function waitForProgressNotification(
   aPanelOpen = false,
   aExpectedCount = 1,
-  wantDisabled = true
+  wantDisabled = true,
+  expectedAnchorID = "addons-notification-icon",
+  win = window
 ) {
   let notificationId = PROGRESS_NOTIFICATION;
   info("Waiting for " + notificationId + " notification");
@@ -87,7 +89,7 @@ async function waitForProgressNotification(
     panelEventPromise = Promise.resolve();
   } else {
     panelEventPromise = new Promise(resolve => {
-      PopupNotifications.panel.addEventListener(
+      win.PopupNotifications.panel.addEventListener(
         "popupshowing",
         function() {
           resolve();
@@ -102,14 +104,14 @@ async function waitForProgressNotification(
   await waitForTick();
 
   info("Saw a notification");
-  ok(PopupNotifications.isPanelOpen, "Panel should be open");
+  ok(win.PopupNotifications.isPanelOpen, "Panel should be open");
   is(
-    PopupNotifications.panel.childNodes.length,
+    win.PopupNotifications.panel.childNodes.length,
     aExpectedCount,
     "Should be the right number of notifications"
   );
-  if (PopupNotifications.panel.childNodes.length) {
-    let nodes = Array.from(PopupNotifications.panel.childNodes);
+  if (win.PopupNotifications.panel.childNodes.length) {
+    let nodes = Array.from(win.PopupNotifications.panel.childNodes);
     let notification = nodes.find(
       n => n.id == notificationId + "-notification"
     );
@@ -119,9 +121,16 @@ async function waitForProgressNotification(
       wantDisabled,
       "The install button should be disabled?"
     );
+
+    let n = win.PopupNotifications.getNotification(PROGRESS_NOTIFICATION);
+    is(
+      n?.anchorElement?.id || n?.anchorElement?.parentElement?.id,
+      expectedAnchorID,
+      "expected the right anchor ID"
+    );
   }
 
-  return PopupNotifications.panel;
+  return win.PopupNotifications.panel;
 }
 
 function acceptAppMenuNotificationWhenShown(
@@ -205,7 +214,12 @@ function acceptAppMenuNotificationWhenShown(
   });
 }
 
-async function waitForNotification(aId, aExpectedCount = 1) {
+async function waitForNotification(
+  aId,
+  aExpectedCount = 1,
+  expectedAnchorID = "addons-notification-icon",
+  win = window
+) {
   info("Waiting for " + aId + " notification");
 
   let topic = getObserverTopic(aId);
@@ -228,14 +242,14 @@ async function waitForNotification(aId, aExpectedCount = 1) {
   }
 
   let panelEventPromise = new Promise(resolve => {
-    PopupNotifications.panel.addEventListener(
+    win.PopupNotifications.panel.addEventListener(
       "PanelUpdated",
       function eventListener(e) {
         // Skip notifications that are not the one that we are supposed to be looking for
         if (!e.detail.includes(aId)) {
           return;
         }
-        PopupNotifications.panel.removeEventListener(
+        win.PopupNotifications.panel.removeEventListener(
           "PanelUpdated",
           eventListener
         );
@@ -249,20 +263,27 @@ async function waitForNotification(aId, aExpectedCount = 1) {
   await waitForTick();
 
   info("Saw a " + aId + " notification");
-  ok(PopupNotifications.isPanelOpen, "Panel should be open");
+  ok(win.PopupNotifications.isPanelOpen, "Panel should be open");
   is(
-    PopupNotifications.panel.childNodes.length,
+    win.PopupNotifications.panel.childNodes.length,
     aExpectedCount,
     "Should be the right number of notifications"
   );
-  if (PopupNotifications.panel.childNodes.length) {
-    let nodes = Array.from(PopupNotifications.panel.childNodes);
+  if (win.PopupNotifications.panel.childNodes.length) {
+    let nodes = Array.from(win.PopupNotifications.panel.childNodes);
     let notification = nodes.find(n => n.id == aId + "-notification");
     ok(notification, "Should have seen the " + aId + " notification");
-  }
-  await SimpleTest.promiseFocus(PopupNotifications.window);
 
-  return PopupNotifications.panel;
+    let n = win.PopupNotifications.getNotification(aId);
+    is(
+      n?.anchorElement?.id || n?.anchorElement?.parentElement?.id,
+      expectedAnchorID,
+      "expected the right anchor ID"
+    );
+  }
+  await SimpleTest.promiseFocus(win.PopupNotifications.window);
+
+  return win.PopupNotifications.panel;
 }
 
 function waitForNotificationClose() {
@@ -431,6 +452,7 @@ var TESTS = [
     await addon.uninstall();
 
     await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    await SpecialPowers.popPrefEnv();
   },
 
   async function test_blockedInstallDomain() {
@@ -1198,7 +1220,10 @@ var TESTS = [
 
   async function test_failedSecurity() {
     SpecialPowers.pushPrefEnv({
-      set: [[PREF_INSTALL_REQUIREBUILTINCERTS, false]],
+      set: [
+        [PREF_INSTALL_REQUIREBUILTINCERTS, false],
+        ["extensions.postDownloadThirdPartyPrompt", false],
+      ],
     });
 
     setupRedirect({
@@ -1334,7 +1359,6 @@ var TESTS = [
     await addon.uninstall();
 
     await removeTabAndWaitForNotificationClose();
-    await SpecialPowers.popPrefEnv();
   },
 
   async function test_incognito_checkbox_new_window() {
@@ -1428,8 +1452,51 @@ var TESTS = [
 
     await addon.uninstall();
 
-    await SpecialPowers.popPrefEnv();
     await BrowserTestUtils.closeWindow(win);
+  },
+
+  async function test_blockedInstallDomain_with_unified_extensions() {
+    SpecialPowers.pushPrefEnv({
+      set: [["extensions.unifiedExtensions.enabled", true]],
+    });
+
+    let win = await BrowserTestUtils.openNewBrowserWindow();
+    await SimpleTest.promiseFocus(win);
+    await new Promise(resolve => {
+      win.requestIdleCallback(resolve);
+    });
+    await TestUtils.waitForCondition(
+      () => win.gUnifiedExtensions._initialized,
+      "Wait gUnifiedExtensions to have been initialized"
+    );
+
+    let progressPromise = waitForProgressNotification(
+      false,
+      1,
+      true,
+      "unified-extensions-button",
+      win
+    );
+    let notificationPromise = waitForNotification(
+      "addon-install-failed",
+      1,
+      "unified-extensions-button",
+      win
+    );
+    let triggers = encodeURIComponent(
+      JSON.stringify({
+        XPI: TESTROOT2 + "webmidi_permission.xpi",
+      })
+    );
+    BrowserTestUtils.openNewForegroundTab(
+      win.gBrowser,
+      TESTROOT + "installtrigger.html?" + triggers
+    );
+    await progressPromise;
+    await notificationPromise;
+
+    await BrowserTestUtils.closeWindow(win);
+    await SpecialPowers.popPrefEnv();
   },
 ];
 
