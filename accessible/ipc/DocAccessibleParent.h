@@ -325,6 +325,8 @@ class DocAccessibleParent : public RemoteAccessible,
   nsTHashMap<uint64_t, nsTHashMap<uint64_t, nsTArray<uint64_t>>>
       mReverseRelations;
 
+  static DocAccessibleParent* GetFrom(dom::BrowsingContext* aBrowsingContext);
+
  private:
   ~DocAccessibleParent();
 
