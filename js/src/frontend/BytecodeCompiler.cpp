@@ -304,7 +304,7 @@ template <typename Unit>
   SourceExtent extent = SourceExtent::makeGlobalExtent(
       srcBuf.length(), input.options.lineno, input.options.column);
 
-  GlobalSharedContext globalsc(cx, scopeKind, input.options,
+  GlobalSharedContext globalsc(cx, ec, scopeKind, input.options,
                                compiler.compilationState().directives, extent);
 
   if (!compiler.compile(cx, &globalsc)) {
@@ -524,7 +524,7 @@ static JSScript* CompileEvalScriptImpl(
   uint32_t len = srcBuf.length();
   SourceExtent extent =
       SourceExtent::makeGlobalExtent(len, options.lineno, options.column);
-  EvalSharedContext evalsc(cx, compiler.compilationState(), extent);
+  EvalSharedContext evalsc(cx, &ec, compiler.compilationState(), extent);
   if (!compiler.compile(cx, &evalsc)) {
     return nullptr;
   }
@@ -570,7 +570,7 @@ class MOZ_STACK_CLASS ModuleCompiler final : public SourceAwareCompiler<Unit> {
   using Base::init;
   using Base::stencil;
 
-  [[nodiscard]] bool compile(JSContext* cx);
+  [[nodiscard]] bool compile(JSContext* cx, ErrorContext* ec);
 };
 
 template <typename Unit>
@@ -737,7 +737,7 @@ bool ScriptCompiler<Unit>::compile(JSContext* cx, SharedContext* sc) {
 }
 
 template <typename Unit>
-bool ModuleCompiler<Unit>::compile(JSContext* cx) {
+bool ModuleCompiler<Unit>::compile(JSContext* cx, ErrorContext* ec) {
   // Emplace the topLevel stencil
   MOZ_ASSERT(compilationState_.scriptData.length() ==
              CompilationStencil::TopLevelIndex);
@@ -752,7 +752,7 @@ bool ModuleCompiler<Unit>::compile(JSContext* cx) {
   uint32_t len = this->sourceBuffer_.length();
   SourceExtent extent =
       SourceExtent::makeGlobalExtent(len, options.lineno, options.column);
-  ModuleSharedContext modulesc(cx, options, builder, extent);
+  ModuleSharedContext modulesc(cx, ec, options, builder, extent);
 
   ParseNode* pn = parser->moduleBody(&modulesc);
   if (!pn) {
@@ -885,7 +885,7 @@ template <typename Unit>
     return false;
   }
 
-  if (!compiler.compile(cx)) {
+  if (!compiler.compile(cx, ec)) {
     return false;
   }
 

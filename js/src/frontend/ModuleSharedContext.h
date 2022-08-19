@@ -33,7 +33,8 @@ class MOZ_STACK_CLASS ModuleSharedContext : public SuspendableContext {
   ModuleScope::ParserData* bindings;
   ModuleBuilder& builder;
 
-  ModuleSharedContext(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+  ModuleSharedContext(JSContext* cx, ErrorContext* ec,
+                      const JS::ReadOnlyCompileOptions& options,
                       ModuleBuilder& builder, SourceExtent extent);
 };
 
