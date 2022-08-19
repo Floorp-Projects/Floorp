@@ -72,6 +72,45 @@ class SettingsSubMenuAutofillRobot {
         manageAddressesButton.waitForExists(waitingTime)
     }
 
+    fun clickAddCreditCardButton() = addCreditCardButton.click()
+    fun clickManageSavedCardsButton() = manageSavedCardsButton.click()
+    fun clickSecuredCreditCardsLaterButton() = securedCreditCardsLaterButton.click()
+    fun clickSavedCreditCard() = savedCreditCardNumber.clickAndWaitForNewWindow(waitingTime)
+    fun clickDeleteCreditCardButton() {
+        deleteCreditCardButton.waitForExists(waitingTime)
+        deleteCreditCardButton.click()
+    }
+
+    fun clickConfirmDeleteCreditCardButton() {
+        confirmDeleteCreditCardButton.waitForExists(waitingTime)
+        confirmDeleteCreditCardButton.click()
+    }
+
+    fun clickExpiryMonthOption(expiryMonth: String) {
+        expiryMonthOption(expiryMonth).waitForExists(waitingTime)
+        expiryMonthOption(expiryMonth).click()
+    }
+
+    fun clickExpiryYearOption(expiryYear: String) {
+        expiryYearOption(expiryYear).waitForExists(waitingTime)
+        expiryYearOption(expiryYear).click()
+    }
+
+    fun verifyAddCreditCardsButton() = assertTrue(addCreditCardButton.waitForExists(waitingTime))
+
+    fun fillAndSaveCreditCard(cardNumber: String, cardName: String, expiryMonth: String, expiryYear: String) {
+        cardNumberTextInput.waitForExists(waitingTime)
+        cardNumberTextInput.setText(cardNumber)
+        nameOnCardTextInput.setText(cardName)
+        expiryMonthDropDown.click()
+        clickExpiryMonthOption(expiryMonth)
+        expiryYearDropDown.click()
+        clickExpiryYearOption(expiryYear)
+
+        saveButton.click()
+        manageSavedCardsButton.waitForExists(waitingTime)
+    }
+
     class Transition {
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
             mDevice.pressBack()
@@ -79,12 +118,18 @@ class SettingsSubMenuAutofillRobot {
             SettingsRobot().interact()
             return SettingsRobot.Transition()
         }
+
+        fun goBackToAutofillSettings(interact: SettingsSubMenuAutofillRobot.() -> Unit): SettingsSubMenuAutofillRobot.Transition {
+            mDevice.pressBack()
+
+            SettingsSubMenuAutofillRobot().interact()
+            return SettingsSubMenuAutofillRobot.Transition()
+        }
     }
 }
 
 private val addAddressButton = mDevice.findObject(UiSelector().textContains(getStringResource(R.string.preferences_addresses_add_address)))
 private val manageAddressesButton = mDevice.findObject(UiSelector().textContains(getStringResource(R.string.preferences_addresses_manage_addresses)))
-
 private val firstNameTextInput = mDevice.findObject(UiSelector().resourceId("$packageName:id/first_name_input"))
 private val middleNameTextInput = mDevice.findObject(UiSelector().resourceId("$packageName:id/middle_name_input"))
 private val lastNameTextInput = mDevice.findObject(UiSelector().resourceId("$packageName:id/last_name_input"))
@@ -100,6 +145,20 @@ private val deleteAddressButton = mDevice.findObject(UiSelector().resourceId("$p
 private val cancelDeleteAddressButton = mDevice.findObject(UiSelector().resourceId("android:id/button2"))
 private val confirmDeleteAddressButton = mDevice.findObject(UiSelector().resourceId("android:id/button1"))
 
+private val addCreditCardButton = mDevice.findObject(UiSelector().textContains(getStringResource(R.string.preferences_credit_cards_add_credit_card)))
+private val manageSavedCardsButton = mDevice.findObject(UiSelector().textContains(getStringResource(R.string.preferences_credit_cards_manage_saved_cards)))
+private val cardNumberTextInput = mDevice.findObject(UiSelector().resourceId("$packageName:id/card_number_input"))
+private val nameOnCardTextInput = mDevice.findObject(UiSelector().resourceId("$packageName:id/name_on_card_input"))
+private val expiryMonthDropDown = mDevice.findObject(UiSelector().resourceId("$packageName:id/expiry_month_drop_down"))
+private val expiryYearDropDown = mDevice.findObject(UiSelector().resourceId("$packageName:id/expiry_year_drop_down"))
+private val savedCreditCardNumber = mDevice.findObject(UiSelector().resourceId("$packageName:id/credit_card_logo"))
+private val deleteCreditCardButton = mDevice.findObject(UiSelector().resourceId("$packageName:id/delete_credit_card_button"))
+private val confirmDeleteCreditCardButton = mDevice.findObject(UiSelector().resourceId("android:id/button1"))
+private val securedCreditCardsLaterButton = mDevice.findObject(UiSelector().resourceId("android:id/button2"))
+
 private fun savedAddress(firstName: String) = mDevice.findObject(UiSelector().textContains(firstName))
 private fun subRegionOption(subRegion: String) = mDevice.findObject(UiSelector().textContains(subRegion))
 private fun countryOption(country: String) = mDevice.findObject(UiSelector().textContains(country))
+
+private fun expiryMonthOption(expiryMonth: String) = mDevice.findObject(UiSelector().textContains(expiryMonth))
+private fun expiryYearOption(expiryYear: String) = mDevice.findObject(UiSelector().textContains(expiryYear))

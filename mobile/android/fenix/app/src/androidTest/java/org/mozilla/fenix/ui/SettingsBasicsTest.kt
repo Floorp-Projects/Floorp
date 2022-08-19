@@ -17,9 +17,15 @@ import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.getLoremIpsumAsset
+import org.mozilla.fenix.ui.SettingsBasicsTest.creditCard.MOCK_CREDIT_CARD_NUMBER
+import org.mozilla.fenix.ui.SettingsBasicsTest.creditCard.MOCK_EXPIRATION_MONTH
+import org.mozilla.fenix.ui.SettingsBasicsTest.creditCard.MOCK_EXPIRATION_YEAR
+import org.mozilla.fenix.ui.SettingsBasicsTest.creditCard.MOCK_LAST_CARD_DIGITS
+import org.mozilla.fenix.ui.SettingsBasicsTest.creditCard.MOCK_NAME_ON_CARD
 import org.mozilla.fenix.ui.robots.checkTextSizeOnWebsite
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
+import java.time.LocalDate
 
 /**
  *  Tests for verifying the General section of the Settings menu
@@ -29,6 +35,14 @@ class SettingsBasicsTest {
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
     private lateinit var mockWebServer: MockWebServer
     private val featureSettingsHelper = FeatureSettingsHelper()
+
+    object creditCard {
+        const val MOCK_CREDIT_CARD_NUMBER = "5555555555554444"
+        const val MOCK_LAST_CARD_DIGITS = "4444"
+        const val MOCK_NAME_ON_CARD = "Mastercard"
+        const val MOCK_EXPIRATION_MONTH = "February"
+        val MOCK_EXPIRATION_YEAR = (LocalDate.now().year + 1).toString()
+    }
 
     @get:Rule
     val activityIntentTestRule = HomeActivityIntentTestRule()
@@ -188,6 +202,51 @@ class SettingsBasicsTest {
             clickDeleteAddressButton()
             clickConfirmDeleteAddressButton()
             verifyAddAddressButton()
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun verifyCreditCardAutofillTest() {
+        val creditCardFormPage = TestAssetHelper.getCreditCardFormAsset(mockWebServer)
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openAutofillSubMenu {
+            clickAddCreditCardButton()
+            fillAndSaveCreditCard(MOCK_CREDIT_CARD_NUMBER, MOCK_NAME_ON_CARD, MOCK_EXPIRATION_MONTH, MOCK_EXPIRATION_YEAR)
+            // Opening Manage saved cards to dismiss here the Secure your credit prompt
+            clickManageSavedCardsButton()
+            clickSecuredCreditCardsLaterButton()
+        }.goBackToAutofillSettings {
+        }.goBack {
+        }.goBack {
+        }
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(creditCardFormPage.url) {
+            clickCardNumberTextBox()
+            clickSelectCreditCardButton()
+            clickCreditCardSuggestion(MOCK_LAST_CARD_DIGITS)
+            verifyAutofilledCreditCard(MOCK_CREDIT_CARD_NUMBER)
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun deleteSavedCreditCardTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openAutofillSubMenu {
+            clickAddCreditCardButton()
+            fillAndSaveCreditCard(MOCK_CREDIT_CARD_NUMBER, MOCK_NAME_ON_CARD, MOCK_EXPIRATION_MONTH, MOCK_EXPIRATION_YEAR)
+            clickManageSavedCardsButton()
+            clickSecuredCreditCardsLaterButton()
+            clickSavedCreditCard()
+            clickDeleteCreditCardButton()
+            clickConfirmDeleteCreditCardButton()
+            verifyAddCreditCardsButton()
         }
     }
 }
