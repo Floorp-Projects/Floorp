@@ -968,6 +968,11 @@ nsresult GfxInfo::GetFeatureStatusImpl(
 
   GetData();
 
+  if (aFeature == nsIGfxInfo::FEATURE_BACKDROP_FILTER) {
+    *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
+    return NS_OK;
+  }
+
   if (mGlxTestError) {
     // If glxtest failed, block all features by default.
     *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
