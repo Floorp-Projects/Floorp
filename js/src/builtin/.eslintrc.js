@@ -44,6 +44,15 @@ module.exports = {
         },
       },
 
+      rules: {
+        // We should fix those at some point, but we use this to detect NaNs.
+        "no-self-compare": "off",
+        "no-lonely-if": "off",
+        // Disabled until we can use let/const to fix those erorrs, and undefined
+        // names cause an exception and abort during runtime initialization.
+        "no-redeclare": "off",
+      },
+
       globals: {
         // The bytecode compiler special-cases these identifiers.
         allowContentIter: "readonly",
@@ -96,13 +105,4 @@ module.exports = {
       },
     },
   ],
-
-  rules: {
-    // We should fix those at some point, but we use this to detect NaNs.
-    "no-self-compare": "off",
-    "no-lonely-if": "off",
-    // Disabled until we can use let/const to fix those erorrs,
-    // and undefined names cause an exception and abort during runtime initialization.
-    "no-redeclare": "off",
-  },
 };
