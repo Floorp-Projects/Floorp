@@ -22,6 +22,7 @@
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
 #include "js/PropertyAndElement.h"    // JS_DefineFunction
 #include "js/StableStringChars.h"
+#include "vm/ErrorContext.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/Interpreter.h"
 #include "vm/JSAtom.h"
@@ -1752,6 +1753,7 @@ namespace {
  */
 class ASTSerializer {
   JSContext* cx;
+  ErrorContext* ec;
   Parser<FullParseHandler, char16_t>* parser;
   NodeBuilder builder;
   DebugOnly<uint32_t> lineno;
@@ -1858,8 +1860,10 @@ class ASTSerializer {
   bool functionBody(ParseNode* pn, TokenPos* pos, MutableHandleValue dst);
 
  public:
-  ASTSerializer(JSContext* c, bool l, char const* src, uint32_t ln)
+  ASTSerializer(JSContext* c, ErrorContext* e, bool l, char const* src,
+                uint32_t ln)
       : cx(c),
+        ec(e),
         parser(nullptr),
         builder(c, l, src)
 #ifdef DEBUG
@@ -3629,7 +3633,7 @@ bool ASTSerializer::literal(ParseNode* pn, MutableHandleValue dst) {
 
     case ParseNodeKind::RegExpExpr: {
       RegExpObject* re = pn->as<RegExpLiteral>().create(
-          cx, parser->parserAtoms(),
+          cx, ec, parser->parserAtoms(),
           parser->getCompilationState().input.atomCache,
           parser->getCompilationState());
       if (!re) {
@@ -4102,7 +4106,8 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
   }
 
   /* Extract the builder methods first to report errors before parsing. */
-  ASTSerializer serialize(cx, loc, filename.get(), lineno);
+  MainThreadErrorContext ec(cx);
+  ASTSerializer serialize(cx, &ec, loc, filename.get(), lineno);
   if (!serialize.init(builder)) {
     return false;
   }
@@ -4135,7 +4140,6 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  MainThreadErrorContext ec(cx);
   frontend::CompilationState compilationState(cx, allocScope, input.get());
   if (!compilationState.init(cx, &ec)) {
     return false;
