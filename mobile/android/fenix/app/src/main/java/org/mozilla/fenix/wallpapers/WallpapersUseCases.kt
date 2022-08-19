@@ -43,6 +43,7 @@ class WallpapersUseCases(
     store: AppStore,
     client: Client,
     strictMode: StrictModeManager,
+    filesDir: File,
 ) {
     val initialize: InitializeWallpapersUseCase by lazy {
         if (FeatureFlags.wallpaperV2Enabled) {
@@ -87,6 +88,13 @@ class WallpapersUseCases(
             DefaultLoadBitmapUseCase(context)
         } else {
             LegacyLoadBitmapUseCase(context)
+        }
+    }
+    val loadThumbnail: LoadThumbnailUseCase by lazy {
+        if (FeatureFlags.wallpaperV2Enabled) {
+            DefaultLoadThumbnailUseCase(filesDir)
+        } else {
+            LegacyLoadThumbnailUseCase(context)
         }
     }
     val selectWallpaper: SelectWallpaperUseCase by lazy { DefaultSelectWallpaperUseCase(context.settings(), store) }
@@ -377,6 +385,37 @@ class WallpapersUseCases(
 
         private fun Context.isLandscape(): Boolean {
             return resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        }
+    }
+
+    /**
+     * Contract for usecase for loading thumbnail bitmaps related to a specific wallpaper.
+     */
+    interface LoadThumbnailUseCase {
+        /**
+         * Load the bitmap for a [wallpaper] thumbnail, if available.
+         *
+         * @param wallpaper The wallpaper to load a thumbnail for.
+         */
+        suspend operator fun invoke(wallpaper: Wallpaper): Bitmap?
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal class LegacyLoadThumbnailUseCase(private val context: Context): LoadThumbnailUseCase {
+        override suspend fun invoke(wallpaper: Wallpaper): Bitmap? =
+            LegacyLoadBitmapUseCase(context).invoke(wallpaper)
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal class DefaultLoadThumbnailUseCase(private val filesDir: File): LoadThumbnailUseCase {
+        override suspend fun invoke(wallpaper: Wallpaper): Bitmap? = withContext(Dispatchers.IO) {
+            Result.runCatching {
+                val path = Wallpaper.getLocalPath(wallpaper.name, Wallpaper.ImageType.Thumbnail)
+                withContext(Dispatchers.IO) {
+                    val file = File(filesDir, path)
+                    BitmapFactory.decodeStream(file.inputStream())
+                }
+            }.getOrNull()
         }
     }
 
