@@ -84,4 +84,6 @@
     <string name="mozac_feature_addons_unsupported_learn_more">تەپسىلاتىنى بىلىش</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated. -->
     <string name="mozac_feature_addons_updater_status_successfully_updated">مۇۋەپپەقىيەتلىك يېڭىلاندى</string>
+    <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
+    <string name="mozac_feature_addons_updater_status_error">خاتالىق</string>
     </resources>
