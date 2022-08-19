@@ -135,7 +135,7 @@ class ICState {
     numOptimizedStubs_++;
     // As a heuristic, reduce the failure count after each successful attach
     // to delay hitting Generic mode. Reset to 1 instead of 0 so that
-    // BaselineInspector can distinguish no-failures from rare-failures.
+    // code which inspects state can distinguish no-failures from rare-failures.
     numFailures_ = std::min(numFailures_, static_cast<uint8_t>(1));
   }
   void trackNotAttached() {
