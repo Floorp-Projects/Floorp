@@ -1634,10 +1634,6 @@ var PanelView = class extends AssociatedToNode {
         node.tagName == "toolbarbutton" ||
         node.tagName == "checkbox" ||
         node.classList.contains("text-link") ||
-        // This is also needed for the unified extensions panel because the
-        // extension item is actionable without being an actual button. See
-        // Bug 1784118
-        node.classList.contains("complex-subviewbutton") ||
         (!arrowKey && isNavigableWithTabOnly)
       ) {
         // Set the tabindex attribute to make sure the node is focusable.
