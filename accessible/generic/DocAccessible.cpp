@@ -47,8 +47,10 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_accessibility.h"
+#include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/BrowserChild.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLSelectElement.h"
@@ -264,10 +266,34 @@ void DocAccessible::ApplyARIAState(uint64_t* aState) const {
   if (mParent) mParent->ApplyARIAState(aState);
 }
 
-LocalAccessible* DocAccessible::FocusedChild() {
+Accessible* DocAccessible::FocusedChild() {
   // Return an accessible for the current global focus, which does not have to
   // be contained within the current document.
-  return FocusMgr()->FocusedAccessible();
+  if (Accessible* focusedAcc = FocusMgr()->FocusedAccessible()) {
+    return focusedAcc;
+  }
+  nsFocusManager* focusManagerDOM = nsFocusManager::GetFocusManager();
+
+  if (!focusManagerDOM) {
+    return nullptr;
+  }
+
+  if (!XRE_IsParentProcess()) {
+    // DocAccessibleParent's don't exist in the content
+    // process, so we can't return anything useful if this
+    // is the case.
+    return nullptr;
+  }
+  // If we call GetFocusedBrowsingContext from the chrome process
+  // it returns the BrowsingContext for the focused _window_, which
+  // is not helpful here. Instead use GetFocusedBrowsingContextInChrome
+  // which returns the content BrowsingContext that has focus.
+  dom::BrowsingContext* focusedContext =
+      focusManagerDOM->GetFocusedBrowsingContextInChrome();
+
+  DocAccessibleParent* focusedDoc =
+      DocAccessibleParent::GetFrom(focusedContext);
+  return focusedDoc ? focusedDoc->GetFocusedAcc() : nullptr;
 }
 
 void DocAccessible::TakeFocus() const {
