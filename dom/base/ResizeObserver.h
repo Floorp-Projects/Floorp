@@ -115,19 +115,13 @@ class ResizeObservation final : public LinkedListElement<ResizeObservation> {
  * https://drafts.csswg.org/resize-observer/#api
  */
 class ResizeObserver final : public nsISupports, public nsWrapperCache {
-  using NativeCallback = void (*)(
-      const Sequence<OwningNonNull<ResizeObserverEntry>>&, ResizeObserver&);
-  ResizeObserver(Document& aDocument, NativeCallback aCallback);
-
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ResizeObserver)
 
   ResizeObserver(nsCOMPtr<nsPIDOMWindowInner>&& aOwner, Document* aDocument,
                  ResizeObserverCallback& aCb)
-      : mOwner(std::move(aOwner)),
-        mDocument(aDocument),
-        mCallback(RefPtr<ResizeObserverCallback>(&aCb)) {
+      : mOwner(std::move(aOwner)), mDocument(aDocument), mCallback(&aCb) {
     MOZ_ASSERT(mOwner, "Need a non-null owner window");
     MOZ_ASSERT(mDocument, "Need a non-null doc");
     MOZ_ASSERT(mDocument == mOwner->GetExtantDoc());
@@ -180,22 +174,19 @@ class ResizeObserver final : public nsISupports, public nsWrapperCache {
    */
   MOZ_CAN_RUN_SCRIPT uint32_t BroadcastActiveObservations();
 
-  static already_AddRefed<ResizeObserver> CreateLastRememberedSizeObserver(
-      Document&);
-
  protected:
   ~ResizeObserver() { Disconnect(); }
 
   nsCOMPtr<nsPIDOMWindowInner> mOwner;
   // The window's document at the time of ResizeObserver creation.
   RefPtr<Document> mDocument;
-  Variant<RefPtr<ResizeObserverCallback>, NativeCallback> mCallback;
+  RefPtr<ResizeObserverCallback> mCallback;
   nsTArray<RefPtr<ResizeObservation>> mActiveTargets;
   // The spec uses a list to store the skipped targets. However, it seems what
   // we want is to check if there are any skipped targets (i.e. existence).
   // Therefore, we use a boolean value to represent the existence of skipped
   // targets.
-  bool mHasSkippedTargets = false;
+  bool mHasSkippedTargets;
 
   // Combination of HashTable and LinkedList so we can iterate through
   // the elements of HashTable in order of insertion time, so we can deliver
@@ -291,8 +282,8 @@ class ResizeObserverSize final : public nsISupports, public nsWrapperCache {
     return ResizeObserverSize_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-  float InlineSize() const { return mSize.ISize(); }
-  float BlockSize() const { return mSize.BSize(); }
+  double InlineSize() const { return mSize.ISize(); }
+  double BlockSize() const { return mSize.BSize(); }
 
  protected:
   ~ResizeObserverSize() = default;
