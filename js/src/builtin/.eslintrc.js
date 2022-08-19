@@ -53,6 +53,9 @@ module.exports = {
         "no-redeclare": "off",
         // Disallow use of |void 0|. Instead use |undefined|.
         "no-void": ["error", { allowAsStatement: true }],
+        // Disallow loose equality because of objects with the [[IsHTMLDDA]]
+        // internal slot, aka |document.all|, aka "objects emulating undefined".
+        eqeqeq: "error",
       },
 
       globals: {
