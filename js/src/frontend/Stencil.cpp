@@ -2337,8 +2337,8 @@ SharedDataContainer::~SharedDataContainer() {
 }
 
 bool SharedDataContainer::initVector(JSContext* cx) {
-  MainThreadErrorContext ec(
-      cx);  // TODO bug 1783951 - remove in favor of the ErrorContext version
+  // TODO bug 1783951 - remove in favor of the ErrorContext version
+  MainThreadErrorContext ec(cx);
   return initVector(&ec);
 }
 
@@ -2355,8 +2355,8 @@ bool SharedDataContainer::initVector(ErrorContext* ec) {
 }
 
 bool SharedDataContainer::initMap(JSContext* cx) {
-  MainThreadErrorContext ec(
-      cx);  // TODO bug 1783951 - remove in favor of the ErrorContext version
+  // TODO bug 1783951 - remove in favor of the ErrorContext version
+  MainThreadErrorContext ec(cx);
   return initMap(&ec);
 }
 
@@ -4359,8 +4359,8 @@ bool CompilationStencilMerger::buildAtomIndexMap(
 
 bool CompilationStencilMerger::setInitial(
     JSContext* cx, UniquePtr<ExtensibleCompilationStencil>&& initial) {
-  MainThreadErrorContext ec(cx);  //  // TODO bug 1783951 - remove in favor of
-                                  //  the ErrorContext version
+  // TODO bug 1783951 - remove in favor of the ErrorContext version
+  MainThreadErrorContext ec(cx);
   return setInitial(&ec, std::move(initial));
 }
 
@@ -4451,8 +4451,8 @@ static void MergeScriptStencil(ScriptStencil& dest, const ScriptStencil& src,
 
 bool CompilationStencilMerger::addDelazification(
     JSContext* cx, const CompilationStencil& delazification) {
-  MainThreadErrorContext ec(
-      cx);  // TODO bug 1783951 - remove in favor of the ErrorContext version
+  // TODO bug 1783951 - remove in favor of the ErrorContext version
+  MainThreadErrorContext ec(cx);
   return addDelazification(cx, &ec, delazification);
 }
 
