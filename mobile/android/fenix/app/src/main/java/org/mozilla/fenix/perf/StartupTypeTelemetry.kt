@@ -10,6 +10,7 @@ import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -67,14 +68,19 @@ class StartupTypeTelemetry(
     @VisibleForTesting(otherwise = NONE)
     fun getTestCallbacks() = StartupTypeLifecycleObserver()
 
+    /**
+     * Record startup telemetry based on the available [startupStateProvider] and [startupPathProvider].
+     *
+     * @param dispatcher used to control the thread on which telemetry will be recorded. Defaults to [Dispatchers.IO].
+     */
     @VisibleForTesting(otherwise = PRIVATE)
-    fun record() {
+    fun record(dispatcher: CoroutineDispatcher = Dispatchers.IO) {
         val startupState = startupStateProvider.getStartupStateForStartedActivity(activityClass)
         val startupPath = startupPathProvider.startupPathForActivity
         val label = getTelemetryLabel(startupState, startupPath)
 
         @OptIn(DelicateCoroutinesApi::class)
-        GlobalScope.launch(Dispatchers.IO) {
+        GlobalScope.launch(dispatcher) {
             PerfStartup.startupType[label].add(1)
             logger.info("Recorded start up: $label")
         }
