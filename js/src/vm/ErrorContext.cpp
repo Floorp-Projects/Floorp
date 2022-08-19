@@ -30,6 +30,8 @@ void* MainThreadErrorContext::onOutOfMemory(AllocFunction allocFunc,
   return cx_->onOutOfMemory(allocFunc, arena, nbytes, reallocPtr);
 }
 
+void MainThreadErrorContext::onOutOfMemory() { cx_->onOutOfMemory(); }
+
 void MainThreadErrorContext::onAllocationOverflow() {
   return cx_->reportAllocationOverflow();
 }
@@ -81,6 +83,8 @@ void OffThreadErrorContext::onAllocationOverflow() {
   // TODO Bug 1780599 - Currently allocation overflows are not reported for
   // helper threads; see js::reportAllocationOverflow()
 }
+
+void OffThreadErrorContext::onOutOfMemory() { addPendingOutOfMemory(); }
 
 void OffThreadErrorContext::onOverRecursed() { errors_.overRecursed = true; }
 

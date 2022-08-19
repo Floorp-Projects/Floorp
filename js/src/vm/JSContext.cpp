@@ -275,6 +275,14 @@ static void MaybeReportOutOfMemoryForDifferentialTesting() {
   }
 }
 
+/*
+ * Since memory has been exhausted, avoid the normal error-handling path which
+ * allocates an error object, report and callstack. Instead simply throw the
+ * static atom "out of memory".
+ *
+ * Furthermore, callers of ReportOutOfMemory (viz., malloc) assume a GC does
+ * not occur, so GC must be avoided or suppressed.
+ */
 void JSContext::onOutOfMemory() {
   runtime()->hadOutOfMemory = true;
   gc::AutoSuppressGC suppressGC(this);
@@ -300,14 +308,6 @@ void JSContext::onOutOfMemory() {
 #endif
 }
 
-/*
- * Since memory has been exhausted, avoid the normal error-handling path which
- * allocates an error object, report and callstack. Instead simply throw the
- * static atom "out of memory".
- *
- * Furthermore, callers of ReportOutOfMemory (viz., malloc) assume a GC does
- * not occur, so GC must be avoided or suppressed.
- */
 JS_PUBLIC_API void js::ReportOutOfMemory(JSContext* cx) {
   MaybeReportOutOfMemoryForDifferentialTesting();
 
@@ -316,6 +316,12 @@ JS_PUBLIC_API void js::ReportOutOfMemory(JSContext* cx) {
   }
 
   cx->onOutOfMemory();
+}
+
+JS_PUBLIC_API void js::ReportOutOfMemory(ErrorContext* ec) {
+  MaybeReportOutOfMemoryForDifferentialTesting();
+
+  ec->onOutOfMemory();
 }
 
 static void MaybeReportOverRecursedForDifferentialTesting() {
