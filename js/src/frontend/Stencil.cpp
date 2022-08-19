@@ -4205,7 +4205,7 @@ bool CompilationState::allocateGCThingsUninitialized(
   auto gcThingsOffset = CompilationGCThingIndex(gcThingData.length());
 
   if (length > INDEX_LIMIT) {
-    ReportAllocationOverflow(cx);
+    ReportAllocationOverflow(ec);
     return false;
   }
   uint32_t gcThingsLength = length;
@@ -4216,7 +4216,7 @@ bool CompilationState::allocateGCThingsUninitialized(
   }
 
   if (gcThingData.length() > UINT32_MAX) {
-    ReportAllocationOverflow(cx);
+    ReportAllocationOverflow(ec);
     return false;
   }
 
@@ -4255,7 +4255,7 @@ bool CompilationState::appendGCThings(
   auto gcThingsOffset = CompilationGCThingIndex(gcThingData.length());
 
   if (things.size() > INDEX_LIMIT) {
-    ReportAllocationOverflow(cx);
+    ReportAllocationOverflow(ec);
     return false;
   }
   uint32_t gcThingsLength = uint32_t(things.size());
@@ -4266,7 +4266,7 @@ bool CompilationState::appendGCThings(
   }
 
   if (gcThingData.length() > UINT32_MAX) {
-    ReportAllocationOverflow(cx);
+    ReportAllocationOverflow(ec);
     return false;
   }
 

@@ -310,7 +310,7 @@ TaggedParserAtomIndex ParserAtomsTable::addEntry(JSContext* cx,
   MOZ_ASSERT(!addPtr);
   ParserAtomIndex index = ParserAtomIndex(entries_.length());
   if (size_t(index) >= TaggedParserAtomIndex::IndexLimit) {
-    ReportAllocationOverflow(cx);
+    ReportAllocationOverflow(ec);
     return TaggedParserAtomIndex::null();
   }
   if (!entries_.append(entry)) {
@@ -430,7 +430,7 @@ TaggedParserAtomIndex ParserAtomsTable::internExternalParserAtom(
 bool ParserAtomsTable::addPlaceholder(JSContext* cx, ErrorContext* ec) {
   ParserAtomIndex index = ParserAtomIndex(entries_.length());
   if (size_t(index) >= TaggedParserAtomIndex::IndexLimit) {
-    ReportAllocationOverflow(cx);
+    ReportAllocationOverflow(ec);
     return false;
   }
   if (!entries_.append(nullptr)) {

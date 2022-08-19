@@ -399,12 +399,11 @@ void js::ReportAllocationOverflow(JSContext* cx) {
     return;
   }
 
-  if (cx->isHelperThreadContext()) {
-    return;
-  }
+  cx->reportAllocationOverflow();
+}
 
-  gc::AutoSuppressGC suppressGC(cx);
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_ALLOC_OVERFLOW);
+void js::ReportAllocationOverflow(ErrorContext* ec) {
+  ec->onAllocationOverflow();
 }
 
 /* |callee| requires a usage string provided by JS_DefineFunctionsWithHelp. */
@@ -755,6 +754,16 @@ void JSContext::recoverFromOutOfMemory() {
       clearPendingException();
     }
   }
+}
+
+void JSContext::reportAllocationOverflow() {
+  if (isHelperThreadContext()) {
+    return;
+  }
+
+  gc::AutoSuppressGC suppressGC(this);
+  JS_ReportErrorNumberASCII(this, GetErrorMessage, nullptr,
+                            JSMSG_ALLOC_OVERFLOW);
 }
 
 JS::StackKind JSContext::stackKindForCurrentPrincipal() {

@@ -679,7 +679,7 @@ void* ZoneAllocator::onOutOfMemory(js::AllocFunction allocFunc,
 }
 
 void ZoneAllocator::reportAllocationOverflow() const {
-  js::ReportAllocationOverflow(nullptr);
+  js::ReportAllocationOverflow(static_cast<JSContext*>(nullptr));
 }
 
 ZoneList::ZoneList() : head(nullptr), tail(nullptr) {}
