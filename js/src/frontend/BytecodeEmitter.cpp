@@ -8890,8 +8890,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         if (key->isKind(ParseNodeKind::NumberExpr)) {
           MOZ_ASSERT(accessorType == AccessorType::None);
 
-          auto keyAtom =
-              key->as<NumericLiteral>().toAtom(cx, ec, parserAtoms());
+          auto keyAtom = key->as<NumericLiteral>().toAtom(ec, parserAtoms());
           if (!keyAtom) {
             return false;
           }
@@ -8917,7 +8916,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
           ParseNode* keyKid = key->as<UnaryNode>().kid();
           if (keyKid->isKind(ParseNodeKind::NumberExpr)) {
             auto keyAtom =
-                keyKid->as<NumericLiteral>().toAtom(cx, ec, parserAtoms());
+                keyKid->as<NumericLiteral>().toAtom(ec, parserAtoms());
             if (!keyAtom) {
               return false;
             }

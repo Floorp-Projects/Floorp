@@ -11249,7 +11249,7 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
   }
 
   auto atom =
-      this->parserAtoms().internChar16(cx_, ec_, chars.begin(), chars.length());
+      this->parserAtoms().internChar16(ec_, chars.begin(), chars.length());
   if (!atom) {
     return nullptr;
   }
@@ -11610,7 +11610,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
   *propAtomOut = TaggedParserAtomIndex::null();
   switch (ltok) {
     case TokenKind::Number: {
-      auto numAtom = NumberToParserAtom(cx_, ec_, this->parserAtoms(),
+      auto numAtom = NumberToParserAtom(ec_, this->parserAtoms(),
                                         anyChars.currentToken().number());
       if (!numAtom) {
         return null();

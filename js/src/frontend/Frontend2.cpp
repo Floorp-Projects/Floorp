@@ -67,7 +67,7 @@ bool ConvertAtoms(JSContext* cx, ErrorContext* ec, const SmooshResult& result,
     auto s = reinterpret_cast<const mozilla::Utf8Unit*>(
         smoosh_get_atom_at(result, i));
     auto len = smoosh_get_atom_len_at(result, i);
-    auto atom = compilationState.parserAtoms.internUtf8(cx, ec, s, len);
+    auto atom = compilationState.parserAtoms.internUtf8(ec, s, len);
     if (!atom) {
       return false;
     }
@@ -330,7 +330,7 @@ bool ConvertRegExpData(JSContext* cx, ErrorContext* ec,
 
     const mozilla::Utf8Unit* sUtf8 =
         reinterpret_cast<const mozilla::Utf8Unit*>(s);
-    auto atom = compilationState.parserAtoms.internUtf8(cx, ec, sUtf8, len);
+    auto atom = compilationState.parserAtoms.internUtf8(ec, sUtf8, len);
     if (!atom) {
       return false;
     }

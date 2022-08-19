@@ -1600,7 +1600,7 @@ class TokenStreamCharsShared {
 
   TaggedParserAtomIndex drainCharBufferIntoAtom() {
     // Add to parser atoms table.
-    auto atom = this->parserAtoms->internChar16(cx, ec, charBuffer.begin(),
+    auto atom = this->parserAtoms->internChar16(ec, charBuffer.begin(),
                                                 charBuffer.length());
     charBuffer.clear();
     return atom;
@@ -1729,14 +1729,14 @@ template <>
 MOZ_ALWAYS_INLINE TaggedParserAtomIndex
 TokenStreamCharsBase<char16_t>::atomizeSourceChars(
     mozilla::Span<const char16_t> units) {
-  return this->parserAtoms->internChar16(cx, ec, units.data(), units.size());
+  return this->parserAtoms->internChar16(ec, units.data(), units.size());
 }
 
 template <>
 /* static */ MOZ_ALWAYS_INLINE TaggedParserAtomIndex
 TokenStreamCharsBase<mozilla::Utf8Unit>::atomizeSourceChars(
     mozilla::Span<const mozilla::Utf8Unit> units) {
-  return this->parserAtoms->internUtf8(cx, ec, units.data(), units.size());
+  return this->parserAtoms->internUtf8(ec, units.data(), units.size());
 }
 
 template <typename Unit>

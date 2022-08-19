@@ -1318,19 +1318,18 @@ struct ExtensibleCompilationStencil {
   }
 
   // Steal CompilationStencil content.
-  [[nodiscard]] bool steal(JSContext* cx, ErrorContext* ec,
+  [[nodiscard]] bool steal(ErrorContext* ec,
                            RefPtr<CompilationStencil>&& other);
 
   // Clone ExtensibleCompilationStencil content.
-  [[nodiscard]] bool cloneFrom(JSContext* cx, ErrorContext* ec,
+  [[nodiscard]] bool cloneFrom(ErrorContext* ec,
                                const CompilationStencil& other);
-  [[nodiscard]] bool cloneFrom(JSContext* cx, ErrorContext* ec,
+  [[nodiscard]] bool cloneFrom(ErrorContext* ec,
                                const ExtensibleCompilationStencil& other);
 
  private:
   template <typename Stencil>
-  [[nodiscard]] bool cloneFromImpl(JSContext* cx, ErrorContext* ec,
-                                   const Stencil& other);
+  [[nodiscard]] bool cloneFromImpl(ErrorContext* ec, const Stencil& other);
 
  public:
   const ParserAtomVector& parserAtomsSpan() const {
@@ -1724,7 +1723,7 @@ struct CompilationStencilMerger {
   // initial's TaggedParserAtomIndex
   using AtomIndexMap = Vector<TaggedParserAtomIndex, 0, js::SystemAllocPolicy>;
 
-  [[nodiscard]] bool buildAtomIndexMap(JSContext* cx, ErrorContext* ec,
+  [[nodiscard]] bool buildAtomIndexMap(ErrorContext* ec,
                                        const CompilationStencil& delazification,
                                        AtomIndexMap& atomIndexMap);
 
@@ -1741,8 +1740,7 @@ struct CompilationStencilMerger {
   [[nodiscard]] bool addDelazification(
       JSContext* cx, const CompilationStencil& delazification);
   [[nodiscard]] bool addDelazification(
-      JSContext* cx, ErrorContext* ec,
-      const CompilationStencil& delazification);
+      ErrorContext* ec, const CompilationStencil& delazification);
 
   ExtensibleCompilationStencil& getResult() const { return *initial_; }
   UniquePtr<ExtensibleCompilationStencil> takeResult() {

@@ -32,10 +32,10 @@ BEGIN_TEST(testParserAtom_empty) {
 
   // Check that the well-known empty atom matches for different entry points.
   auto refIndex = TaggedParserAtomIndex::WellKnown::empty();
-  CHECK(atomTable.internAscii(cx, &ec, ascii, 0) == refIndex);
-  CHECK(atomTable.internLatin1(cx, &ec, latin1, 0) == refIndex);
-  CHECK(atomTable.internUtf8(cx, &ec, utf8, 0) == refIndex);
-  CHECK(atomTable.internChar16(cx, &ec, char16, 0) == refIndex);
+  CHECK(atomTable.internAscii(&ec, ascii, 0) == refIndex);
+  CHECK(atomTable.internLatin1(&ec, latin1, 0) == refIndex);
+  CHECK(atomTable.internUtf8(&ec, utf8, 0) == refIndex);
+  CHECK(atomTable.internChar16(&ec, char16, 0) == refIndex);
 
   return true;
 }
@@ -59,10 +59,10 @@ BEGIN_TEST(testParserAtom_tiny1_ASCII) {
 
   auto refIndex = cx->runtime()->commonParserNames->lookupTinyIndex(&a, 1);
   CHECK(refIndex);
-  CHECK(atomTable.internAscii(cx, &ec, ascii, 1) == refIndex);
-  CHECK(atomTable.internLatin1(cx, &ec, latin1, 1) == refIndex);
-  CHECK(atomTable.internUtf8(cx, &ec, utf8, 1) == refIndex);
-  CHECK(atomTable.internChar16(cx, &ec, char16, 1) == refIndex);
+  CHECK(atomTable.internAscii(&ec, ascii, 1) == refIndex);
+  CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
+  CHECK(atomTable.internUtf8(&ec, utf8, 1) == refIndex);
+  CHECK(atomTable.internChar16(&ec, char16, 1) == refIndex);
 
   return true;
 }
@@ -88,9 +88,9 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
 
     auto refIndex = cx->runtime()->commonParserNames->lookupTinyIndex(&euro, 1);
     CHECK(refIndex);
-    CHECK(atomTable.internLatin1(cx, &ec, latin1, 1) == refIndex);
-    CHECK(atomTable.internUtf8(cx, &ec, utf8, 2) == refIndex);
-    CHECK(atomTable.internChar16(cx, &ec, char16, 1) == refIndex);
+    CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
+    CHECK(atomTable.internUtf8(&ec, utf8, 2) == refIndex);
+    CHECK(atomTable.internChar16(&ec, char16, 1) == refIndex);
   }
 
   {
@@ -104,9 +104,9 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
     auto refIndex =
         cx->runtime()->commonParserNames->lookupTinyIndex(&frac12, 1);
     CHECK(refIndex);
-    CHECK(atomTable.internLatin1(cx, &ec, latin1, 1) == refIndex);
-    CHECK(atomTable.internUtf8(cx, &ec, utf8, 2) == refIndex);
-    CHECK(atomTable.internChar16(cx, &ec, char16, 1) == refIndex);
+    CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
+    CHECK(atomTable.internUtf8(&ec, utf8, 2) == refIndex);
+    CHECK(atomTable.internChar16(&ec, char16, 1) == refIndex);
   }
 
   {
@@ -120,9 +120,9 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
     auto refIndex =
         cx->runtime()->commonParserNames->lookupTinyIndex(&iquest, 1);
     CHECK(refIndex);
-    CHECK(atomTable.internLatin1(cx, &ec, latin1, 1) == refIndex);
-    CHECK(atomTable.internUtf8(cx, &ec, utf8, 2) == refIndex);
-    CHECK(atomTable.internChar16(cx, &ec, char16, 1) == refIndex);
+    CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
+    CHECK(atomTable.internUtf8(&ec, utf8, 2) == refIndex);
+    CHECK(atomTable.internChar16(&ec, char16, 1) == refIndex);
   }
 
   {
@@ -136,9 +136,9 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
     auto refIndex =
         cx->runtime()->commonParserNames->lookupTinyIndex(&agrave, 1);
     CHECK(refIndex);
-    CHECK(atomTable.internLatin1(cx, &ec, latin1, 1) == refIndex);
-    CHECK(atomTable.internUtf8(cx, &ec, utf8, 2) == refIndex);
-    CHECK(atomTable.internChar16(cx, &ec, char16, 1) == refIndex);
+    CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
+    CHECK(atomTable.internUtf8(&ec, utf8, 2) == refIndex);
+    CHECK(atomTable.internChar16(&ec, char16, 1) == refIndex);
   }
 
   {
@@ -151,9 +151,9 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
 
     auto refIndex = cx->runtime()->commonParserNames->lookupTinyIndex(&ae, 1);
     CHECK(refIndex);
-    CHECK(atomTable.internLatin1(cx, &ec, latin1, 1) == refIndex);
-    CHECK(atomTable.internUtf8(cx, &ec, utf8, 2) == refIndex);
-    CHECK(atomTable.internChar16(cx, &ec, char16, 1) == refIndex);
+    CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
+    CHECK(atomTable.internUtf8(&ec, utf8, 2) == refIndex);
+    CHECK(atomTable.internChar16(&ec, char16, 1) == refIndex);
   }
 
   {
@@ -166,9 +166,9 @@ BEGIN_TEST(testParserAtom_tiny1_nonASCII) {
 
     auto refIndex = cx->runtime()->commonParserNames->lookupTinyIndex(&yuml, 1);
     CHECK(refIndex);
-    CHECK(atomTable.internLatin1(cx, &ec, latin1, 1) == refIndex);
-    CHECK(atomTable.internUtf8(cx, &ec, utf8, 2) == refIndex);
-    CHECK(atomTable.internChar16(cx, &ec, char16, 1) == refIndex);
+    CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
+    CHECK(atomTable.internUtf8(&ec, utf8, 2) == refIndex);
+    CHECK(atomTable.internChar16(&ec, char16, 1) == refIndex);
   }
 
   return true;
@@ -213,7 +213,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
     auto refIndex =
         cx->runtime()->commonParserNames->lookupTinyIndexUTF8(utf8, 2);
     CHECK(refIndex);
-    CHECK(atomTable.internLatin1(cx, &ec, latin1, 1) == refIndex);
+    CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
   }
 
   {
@@ -225,7 +225,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
     auto refIndex =
         cx->runtime()->commonParserNames->lookupTinyIndexUTF8(utf8, 2);
     CHECK(refIndex);
-    CHECK(atomTable.internLatin1(cx, &ec, latin1, 1) == refIndex);
+    CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
   }
 
   {
@@ -253,7 +253,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
     auto refIndex =
         cx->runtime()->commonParserNames->lookupTinyIndexUTF8(utf8, 2);
     CHECK(refIndex);
-    CHECK(atomTable.internLatin1(cx, &ec, latin1, 1) == refIndex);
+    CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
   }
 
   {
@@ -265,7 +265,7 @@ BEGIN_TEST(testParserAtom_tiny1_invalidUTF8) {
     auto refIndex =
         cx->runtime()->commonParserNames->lookupTinyIndexUTF8(utf8, 2);
     CHECK(refIndex);
-    CHECK(atomTable.internLatin1(cx, &ec, latin1, 1) == refIndex);
+    CHECK(atomTable.internLatin1(&ec, latin1, 1) == refIndex);
   }
 
   {
@@ -330,10 +330,10 @@ BEGIN_TEST(testParserAtom_tiny2) {
 
   auto refIndex = cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 2);
   CHECK(refIndex);
-  CHECK(atomTable.internAscii(cx, &ec, ascii, 2) == refIndex);
-  CHECK(atomTable.internLatin1(cx, &ec, latin1, 2) == refIndex);
-  CHECK(atomTable.internUtf8(cx, &ec, utf8, 2) == refIndex);
-  CHECK(atomTable.internChar16(cx, &ec, char16, 2) == refIndex);
+  CHECK(atomTable.internAscii(&ec, ascii, 2) == refIndex);
+  CHECK(atomTable.internLatin1(&ec, latin1, 2) == refIndex);
+  CHECK(atomTable.internUtf8(&ec, utf8, 2) == refIndex);
+  CHECK(atomTable.internChar16(&ec, char16, 2) == refIndex);
 
   // Note: If Latin1-Extended characters become supported, then UTF-8 behaviour
   // should be tested.
@@ -363,10 +363,10 @@ BEGIN_TEST(testParserAtom_int) {
 
     auto refIndex = cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 3);
     CHECK(refIndex);
-    CHECK(atomTable.internAscii(cx, &ec, ascii, 3) == refIndex);
-    CHECK(atomTable.internLatin1(cx, &ec, latin1, 3) == refIndex);
-    CHECK(atomTable.internUtf8(cx, &ec, utf8, 3) == refIndex);
-    CHECK(atomTable.internChar16(cx, &ec, char16, 3) == refIndex);
+    CHECK(atomTable.internAscii(&ec, ascii, 3) == refIndex);
+    CHECK(atomTable.internLatin1(&ec, latin1, 3) == refIndex);
+    CHECK(atomTable.internUtf8(&ec, utf8, 3) == refIndex);
+    CHECK(atomTable.internChar16(&ec, char16, 3) == refIndex);
   }
 
   {
@@ -378,10 +378,10 @@ BEGIN_TEST(testParserAtom_int) {
 
     auto refIndex = cx->runtime()->commonParserNames->lookupTinyIndex(ascii, 3);
     CHECK(refIndex);
-    CHECK(atomTable.internAscii(cx, &ec, ascii, 3) == refIndex);
-    CHECK(atomTable.internLatin1(cx, &ec, latin1, 3) == refIndex);
-    CHECK(atomTable.internUtf8(cx, &ec, utf8, 3) == refIndex);
-    CHECK(atomTable.internChar16(cx, &ec, char16, 3) == refIndex);
+    CHECK(atomTable.internAscii(&ec, ascii, 3) == refIndex);
+    CHECK(atomTable.internLatin1(&ec, latin1, 3) == refIndex);
+    CHECK(atomTable.internUtf8(&ec, utf8, 3) == refIndex);
+    CHECK(atomTable.internChar16(&ec, char16, 3) == refIndex);
   }
 
   {
