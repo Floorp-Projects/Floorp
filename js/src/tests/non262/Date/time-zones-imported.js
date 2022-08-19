@@ -564,25 +564,53 @@ inTimeZone("Australia/Lord_Howe", () => {
 
 // File: Date/Europe_Amsterdam.js
 // Europe/Amsterdam as an example for mean time like timezones after LMT (AMT, NST).
+//
+// tzdata2022b changed Europe/Amsterdam into a link to Europe/Brussels.
 
 inTimeZone("Europe/Amsterdam", () => {
 {
   let local = new DateTime.Local(1935, Month.January, 1, DayOfWeek.Tuesday, 0, 0, 0);
-  let utc = new DateTime.UTC(1934, Month.December, 31, DayOfWeek.Monday, 23, 40, 28);
+  let utc = new DateTime.UTC(1935, Month.January, 1, DayOfWeek.Tuesday, 0, 0, 0);
 
-  assertDate(local, utc, TimeZone(+0,19,32), {
-    String: "Tue Jan 01 1935 00:00:00 GMT+0019 (Central European Standard Time)",
-    UTCString: "Mon, 31 Dec 1934 23:40:28 GMT",
+  assertDate(local, utc, TimeZone(+0,0,0), {
+    String: "Tue Jan 01 1935 00:00:00 GMT+0000 (Central European Standard Time)",
+    UTCString: "Tue, 01 Jan 1935 00:00:00 GMT",
   });
 }
 
 {
   let local = new DateTime.Local(1935, Month.July, 1, DayOfWeek.Monday, 0, 0, 0);
-  let utc = new DateTime.UTC(1935, Month.June, 30, DayOfWeek.Sunday, 22, 40, 28);
+  let utc = new DateTime.UTC(1935, Month.June, 30, DayOfWeek.Sunday, 23, 0, 0);
 
-  assertDate(local, utc, TimeZone(+1,19,32), {
-    String: "Mon Jul 01 1935 00:00:00 GMT+0119 (Central European Summer Time)",
-    UTCString: "Sun, 30 Jun 1935 22:40:28 GMT",
+  assertDate(local, utc, TimeZone(+1,0,0), {
+    String: "Mon Jul 01 1935 00:00:00 GMT+0100 (Central European Summer Time)",
+    UTCString: "Sun, 30 Jun 1935 23:00:00 GMT",
+  });
+}
+});
+
+// Use America/St_Johns as a replacement for the Europe/Amsterdam test case.
+//
+// Zone America/St_Johns as an example for mean time like timezones after LMT (NST, NDT).
+
+inTimeZone("America/St_Johns", () => {
+{
+  let local = new DateTime.Local(1917, Month.January, 1, DayOfWeek.Monday, 0, 0, 0);
+  let utc = new DateTime.UTC(1917, Month.January, 1, DayOfWeek.Monday, 3, 30, 52);
+
+  assertDate(local, utc, TimeZone(-3,30,52), {
+    String: "Mon Jan 01 1917 00:00:00 GMT-0330 (Newfoundland Standard Time)",
+    UTCString: "Mon, 01 Jan 1917 03:30:52 GMT",
+  });
+}
+
+{
+  let local = new DateTime.Local(1917, Month.July, 1, DayOfWeek.Sunday, 0, 0, 0);
+  let utc = new DateTime.UTC(1917, Month.July, 1, DayOfWeek.Sunday, 2, 30, 52);
+
+  assertDate(local, utc, TimeZone(-2,30,52), {
+    String: "Sun Jul 01 1917 00:00:00 GMT-0230 (Newfoundland Daylight Time)",
+    UTCString: "Sun, 01 Jul 1917 02:30:52 GMT",
   });
 }
 });
