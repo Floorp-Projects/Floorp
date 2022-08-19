@@ -3,6 +3,7 @@ $max-z-index: 2147483647;
 .onboardingContainer.featureCallout {
   position: absolute;
   transition: opacity 0.5s ease;
+  z-index: $max-z-index - 2;
 
   &.hidden {
     opacity: 0;
