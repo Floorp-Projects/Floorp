@@ -19,6 +19,7 @@ add_setup(async function() {
 
   registerCleanupFunction(async function() {
     gCUITestUtils.removeSearchBar();
+    Services.search.restoreDefaultEngines();
   });
 });
 
@@ -63,5 +64,36 @@ add_task(async function test_invalidEngine() {
   );
 
   await PromptTestUtils.handlePrompt(prompt);
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_onOnlyDefaultEngine() {
+  info("Remove engines except default");
+  const defaultEngine = Services.search.defaultEngine;
+  const engines = await Services.search.getVisibleEngines();
+  for (const engine of engines) {
+    if (defaultEngine.name !== engine.name) {
+      await Services.search.removeEngine(engine);
+    }
+  }
+
+  info("Show popup");
+  const rootDir = getRootDirectory(gTestPath);
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    rootDir + "opensearch.html"
+  );
+  const onShown = promiseEvent(searchPopup, "popupshown");
+  await EventUtils.synthesizeMouseAtCenter(
+    searchbar.querySelector(".searchbar-search-button"),
+    {}
+  );
+  await onShown;
+
+  const addEngineList = searchPopup.querySelectorAll(
+    ".searchbar-engine-one-off-add-engine"
+  );
+  Assert.equal(addEngineList.length, 3, "Add engines should be shown");
+
   BrowserTestUtils.removeTab(tab);
 });
