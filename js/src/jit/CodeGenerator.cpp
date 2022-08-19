@@ -10470,8 +10470,6 @@ void CodeGenerator::visitSubstr(LSubstr* lir) {
   Register temp1 =
       lir->temp1()->isBogusTemp() ? string : ToRegister(lir->temp1());
 
-  Address stringFlags(string, JSString::offsetOfFlags());
-
   Label isLatin1, notInline, nonZero, nonInput, isInlinedLatin1;
 
   // For every edge case use the C++ variant.
@@ -10511,20 +10509,57 @@ void CodeGenerator::visitSubstr(LSubstr* lir) {
   masm.bind(&nonInput);
   masm.branchIfRope(string, slowPath);
 
-  // Handle inlined strings by creating a FatInlineString.
-  masm.branchTest32(Assembler::Zero, stringFlags,
-                    Imm32(JSString::INLINE_CHARS_BIT), &notInline);
-  masm.newGCFatInlineString(output, temp0, initialStringHeap(), slowPath);
-  masm.store32(length, Address(output, JSString::offsetOfLength()));
+  // Allocate either a JSThinInlineString or JSFatInlineString, or jump to
+  // notInline if we need a dependent string.
+  {
+    static_assert(JSThinInlineString::MAX_LENGTH_LATIN1 <
+                  JSFatInlineString::MAX_LENGTH_LATIN1);
+    static_assert(JSThinInlineString::MAX_LENGTH_TWO_BYTE <
+                  JSFatInlineString::MAX_LENGTH_TWO_BYTE);
 
-  auto initializeFatInlineString = [&](CharEncoding encoding) {
-    uint32_t flags = JSString::INIT_FAT_INLINE_FLAGS;
-    if (encoding == CharEncoding::Latin1) {
-      flags |= JSString::LATIN1_CHARS_BIT;
+    // Use temp2 to store the JS(Thin|Fat)InlineString flags. This avoids having
+    // duplicate newGCString/newGCFatInlineString codegen for Latin1 vs TwoByte
+    // strings.
+
+    Label isLatin1, allocFat, allocThin, allocDone;
+    masm.branchLatin1String(string, &isLatin1);
+    {
+      masm.branch32(Assembler::Above, length,
+                    Imm32(JSFatInlineString::MAX_LENGTH_TWO_BYTE), &notInline);
+      masm.move32(Imm32(0), temp2);
+      masm.branch32(Assembler::Above, length,
+                    Imm32(JSThinInlineString::MAX_LENGTH_TWO_BYTE), &allocFat);
+      masm.jump(&allocThin);
     }
 
-    masm.store32(Imm32(flags), Address(output, JSString::offsetOfFlags()));
-    masm.loadInlineStringChars(string, temp0, encoding);
+    masm.bind(&isLatin1);
+    {
+      masm.branch32(Assembler::Above, length,
+                    Imm32(JSFatInlineString::MAX_LENGTH_LATIN1), &notInline);
+      masm.move32(Imm32(JSString::LATIN1_CHARS_BIT), temp2);
+      masm.branch32(Assembler::Above, length,
+                    Imm32(JSThinInlineString::MAX_LENGTH_LATIN1), &allocFat);
+    }
+
+    masm.bind(&allocThin);
+    {
+      masm.newGCString(output, temp0, initialStringHeap(), slowPath);
+      masm.or32(Imm32(JSString::INIT_THIN_INLINE_FLAGS), temp2);
+      masm.jump(&allocDone);
+    }
+    masm.bind(&allocFat);
+    {
+      masm.newGCFatInlineString(output, temp0, initialStringHeap(), slowPath);
+      masm.or32(Imm32(JSString::INIT_FAT_INLINE_FLAGS), temp2);
+    }
+
+    masm.bind(&allocDone);
+    masm.store32(temp2, Address(output, JSString::offsetOfFlags()));
+    masm.store32(length, Address(output, JSString::offsetOfLength()));
+  }
+
+  auto initializeInlineString = [&](CharEncoding encoding) {
+    masm.loadStringChars(string, temp0, encoding);
     masm.addToCharPtr(temp0, begin, encoding);
     if (temp1 == string) {
       masm.push(string);
@@ -10539,10 +10574,10 @@ void CodeGenerator::visitSubstr(LSubstr* lir) {
   };
 
   masm.branchLatin1String(string, &isInlinedLatin1);
-  initializeFatInlineString(CharEncoding::TwoByte);
+  initializeInlineString(CharEncoding::TwoByte);
 
   masm.bind(&isInlinedLatin1);
-  initializeFatInlineString(CharEncoding::Latin1);
+  initializeInlineString(CharEncoding::Latin1);
 
   // Handle other cases with a DependentString.
   masm.bind(&notInline);
