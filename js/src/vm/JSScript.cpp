@@ -2079,15 +2079,25 @@ bool ScriptSource::setSourceMapURL(JSContext* cx, ErrorContext* ec,
 js::UniquePtr<ImmutableScriptData> js::ImmutableScriptData::new_(
     JSContext* cx, uint32_t codeLength, uint32_t noteLength,
     uint32_t numResumeOffsets, uint32_t numScopeNotes, uint32_t numTryNotes) {
+  // TODO bug 1783951 - remove in favor of the ErrorContext version
+  MainThreadErrorContext ec(cx);
+  return ImmutableScriptData::new_(&ec, codeLength, noteLength,
+                                   numResumeOffsets, numScopeNotes,
+                                   numTryNotes);
+}
+
+js::UniquePtr<ImmutableScriptData> js::ImmutableScriptData::new_(
+    ErrorContext* ec, uint32_t codeLength, uint32_t noteLength,
+    uint32_t numResumeOffsets, uint32_t numScopeNotes, uint32_t numTryNotes) {
   auto size = sizeFor(codeLength, noteLength, numResumeOffsets, numScopeNotes,
                       numTryNotes);
   if (!size.isValid()) {
-    ReportAllocationOverflow(cx);
+    ReportAllocationOverflow(ec);
     return nullptr;
   }
 
   // Allocate contiguous raw buffer.
-  void* raw = cx->pod_malloc<uint8_t>(size.value());
+  void* raw = ec->getAllocator()->pod_malloc<uint8_t>(size.value());
   MOZ_ASSERT(uintptr_t(raw) % alignof(ImmutableScriptData) == 0);
   if (!raw) {
     return nullptr;
@@ -2922,6 +2932,22 @@ js::UniquePtr<ImmutableScriptData> ImmutableScriptData::new_(
     mozilla::Span<const uint32_t> resumeOffsets,
     mozilla::Span<const ScopeNote> scopeNotes,
     mozilla::Span<const TryNote> tryNotes) {
+  // TODO bug 1783951 - remove in favor of the ErrorContext version
+  MainThreadErrorContext ec(cx);
+  return ImmutableScriptData::new_(
+      &ec, mainOffset, nfixed, nslots, bodyScopeIndex, numICEntries, isFunction,
+      funLength, code, notes, resumeOffsets, scopeNotes, tryNotes);
+}
+
+/* static */
+js::UniquePtr<ImmutableScriptData> ImmutableScriptData::new_(
+    ErrorContext* ec, uint32_t mainOffset, uint32_t nfixed, uint32_t nslots,
+    GCThingIndex bodyScopeIndex, uint32_t numICEntries, bool isFunction,
+    uint16_t funLength, mozilla::Span<const jsbytecode> code,
+    mozilla::Span<const SrcNote> notes,
+    mozilla::Span<const uint32_t> resumeOffsets,
+    mozilla::Span<const ScopeNote> scopeNotes,
+    mozilla::Span<const TryNote> tryNotes) {
   MOZ_RELEASE_ASSERT(code.Length() <= frontend::MaxBytecodeLength);
 
   // There are 1-4 copies of SrcNoteType::Null appended after the source
@@ -2935,7 +2961,7 @@ js::UniquePtr<ImmutableScriptData> ImmutableScriptData::new_(
 
   // Allocate ImmutableScriptData
   js::UniquePtr<ImmutableScriptData> data(ImmutableScriptData::new_(
-      cx, code.Length(), noteLength + nullLength, resumeOffsets.Length(),
+      ec, code.Length(), noteLength + nullLength, resumeOffsets.Length(),
       scopeNotes.Length(), tryNotes.Length()));
   if (!data) {
     return data;

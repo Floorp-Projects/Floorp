@@ -2470,7 +2470,7 @@ js::UniquePtr<ImmutableScriptData> BytecodeEmitter::createImmutableScriptData(
   uint16_t funLength = isFunction ? sc->asFunctionBox()->length() : 0;
 
   return ImmutableScriptData::new_(
-      cx, mainOffset(), maxFixedSlots, nslots, bodyScopeIndex,
+      ec, mainOffset(), maxFixedSlots, nslots, bodyScopeIndex,
       bytecodeSection().numICEntries(), isFunction, funLength,
       bytecodeSection().code(), bytecodeSection().notes(),
       bytecodeSection().resumeOffsetList().span(),
@@ -11620,12 +11620,12 @@ bool BytecodeEmitter::emitTree(
   return true;
 }
 
-static bool AllocSrcNote(JSContext* cx, SrcNotesVector& notes, unsigned size,
+static bool AllocSrcNote(ErrorContext* ec, SrcNotesVector& notes, unsigned size,
                          unsigned* index) {
   size_t oldLength = notes.length();
 
   if (MOZ_UNLIKELY(oldLength + size > MaxSrcNotesLength)) {
-    ReportAllocationOverflow(cx);  // TODO bug  1783935
+    ReportAllocationOverflow(ec);
     return false;
   }
 
@@ -11661,7 +11661,7 @@ bool BytecodeEmitter::newSrcNote(SrcNoteType type, unsigned* indexp) {
   bytecodeSection().setLastNoteOffset(offset);
 
   auto allocator = [&](unsigned size) -> SrcNote* {
-    if (!AllocSrcNote(cx, notes, size, &index)) {
+    if (!AllocSrcNote(ec, notes, size, &index)) {
       return nullptr;
     }
     return &notes[index];
@@ -11702,7 +11702,7 @@ bool BytecodeEmitter::newSrcNoteOperand(ptrdiff_t operand) {
 
   auto allocator = [&](unsigned size) -> SrcNote* {
     unsigned index;
-    if (!AllocSrcNote(cx, notes, size, &index)) {
+    if (!AllocSrcNote(ec, notes, size, &index)) {
       return nullptr;
     }
     return &notes[index];
