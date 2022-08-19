@@ -2,7 +2,7 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 122:
+/***/ 299:
 /***/ ((__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) => {
 
 
@@ -10,30 +10,6 @@
 var react = __webpack_require__(294);
 // EXTERNAL MODULE: ./node_modules/react-dom/index.js
 var react_dom = __webpack_require__(935);
-;// CONCATENATED MODULE: ./content/panels/js/components/PopularTopicsLegacy/PopularTopicsLegacy.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-function PopularTopicsLegacy(props) {
-  return /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("h3", {
-    "data-l10n-id": "pocket-panel-home-explore-popular-topics"
-  }), /*#__PURE__*/react.createElement("ul", null, props.topics.map(item => /*#__PURE__*/react.createElement("li", {
-    key: `item-${item.topic}`
-  }, /*#__PURE__*/react.createElement("a", {
-    className: "pkt_ext_topic",
-    href: `https://${props.pockethost}/explore/${item.topic}?utm_source=${props.utmsource}`
-  }, item.title, /*#__PURE__*/react.createElement("span", {
-    className: "pkt_ext_chevron_right"
-  }))))), /*#__PURE__*/react.createElement("a", {
-    className: "pkt_ext_discover",
-    href: `https://${props.pockethost}/explore?utm_source=${props.utmsource}`,
-    "data-l10n-id": "pocket-panel-home-discover-more"
-  }));
-}
-
-/* harmony default export */ const PopularTopicsLegacy_PopularTopicsLegacy = (PopularTopicsLegacy);
 ;// CONCATENATED MODULE: ./content/panels/js/components/Header/Header.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -424,31 +400,9 @@ It does not contain any logic for saving or communication with the extension or 
 
 
 
-
-
 var HomeOverlay = function (options) {
   this.inited = false;
   this.active = false;
-
-  this.parseHTML = function (htmlString) {
-    const parser = new DOMParser();
-    return parser.parseFromString(htmlString, `text/html`).documentElement;
-  };
-
-  this.setupClickEvents = function () {
-    messages.clickHelper(document.querySelector(`.pkt_ext_mylist`), {
-      source: `home_view_list`
-    });
-    messages.clickHelper(document.querySelector(`.pkt_ext_discover`), {
-      source: `home_discover`
-    });
-    document.querySelectorAll(`.pkt_ext_topic`).forEach((el, position) => {
-      messages.clickHelper(el, {
-        source: `home_topic`,
-        position
-      });
-    });
-  };
 };
 
 HomeOverlay.prototype = {
@@ -459,7 +413,6 @@ HomeOverlay.prototype = {
       searchParams
     } = new URL(window.location.href);
     const locale = searchParams.get(`locale`) || ``;
-    const layoutRefresh = searchParams.get(`layoutRefresh`) === `true`;
     const hideRecentSaves = searchParams.get(`hiderecentsaves`) === `true`;
     const utmSource = searchParams.get(`utmSource`);
     const utmCampaign = searchParams.get(`utmCampaign`);
@@ -470,92 +423,48 @@ HomeOverlay.prototype = {
     }
 
     this.active = true;
+    react_dom.render( /*#__PURE__*/react.createElement(Home_Home, {
+      locale: locale,
+      hideRecentSaves: hideRecentSaves,
+      pockethost: pockethost,
+      utmSource: utmSource,
+      utmCampaign: utmCampaign,
+      utmContent: utmContent,
+      topics: [{
+        title: "Technology",
+        topic: "technology"
+      }, {
+        title: "Self Improvement",
+        topic: "self-improvement"
+      }, {
+        title: "Food",
+        topic: "food"
+      }, {
+        title: "Parenting",
+        topic: "parenting"
+      }, {
+        title: "Science",
+        topic: "science"
+      }, {
+        title: "Entertainment",
+        topic: "entertainment"
+      }, {
+        title: "Career",
+        topic: "career"
+      }, {
+        title: "Health",
+        topic: "health"
+      }, {
+        title: "Travel",
+        topic: "travel"
+      }, {
+        title: "Must-Reads",
+        topic: "must-reads"
+      }]
+    }), document.querySelector(`body`));
 
-    if (layoutRefresh) {
-      // Create actual content
-      react_dom.render( /*#__PURE__*/react.createElement(Home_Home, {
-        locale: locale,
-        hideRecentSaves: hideRecentSaves,
-        pockethost: pockethost,
-        utmSource: utmSource,
-        utmCampaign: utmCampaign,
-        utmContent: utmContent,
-        topics: [{
-          title: "Technology",
-          topic: "technology"
-        }, {
-          title: "Self Improvement",
-          topic: "self-improvement"
-        }, {
-          title: "Food",
-          topic: "food"
-        }, {
-          title: "Parenting",
-          topic: "parenting"
-        }, {
-          title: "Science",
-          topic: "science"
-        }, {
-          title: "Entertainment",
-          topic: "entertainment"
-        }, {
-          title: "Career",
-          topic: "career"
-        }, {
-          title: "Health",
-          topic: "health"
-        }, {
-          title: "Travel",
-          topic: "travel"
-        }, {
-          title: "Must-Reads",
-          topic: "must-reads"
-        }]
-      }), document.querySelector(`body`));
-
-      if (window?.matchMedia(`(prefers-color-scheme: dark)`).matches) {
-        document.querySelector(`body`).classList.add(`theme_dark`);
-      }
-    } else {
-      // For English, we have a discover topics link.
-      // For non English, we don't have a link yet for this.
-      // When we do, we can consider flipping this on.
-      const enableLocalizedExploreMore = false;
-      const templateData = {
-        pockethost,
-        utmsource: `firefox-button`
-      }; // Create actual content
-
-      document.querySelector(`body`).append(this.parseHTML(Handlebars.templates.home_shell(templateData))); // We only have topic pages in English,
-      // so ensure we only show a topics section for English browsers.
-
-      if (locale.startsWith("en")) {
-        react_dom.render( /*#__PURE__*/react.createElement(PopularTopicsLegacy_PopularTopicsLegacy, {
-          pockethost: templateData.pockethost,
-          utmsource: templateData.utmsource,
-          topics: [{
-            title: "Self Improvement",
-            topic: "self-improvement"
-          }, {
-            title: "Food",
-            topic: "food"
-          }, {
-            title: "Entertainment",
-            topic: "entertainment"
-          }, {
-            title: "Science",
-            topic: "science"
-          }]
-        }), document.querySelector(`.pkt_ext_more`));
-      } else if (enableLocalizedExploreMore) {
-        // For non English, we have a slightly different component to the page.
-        document.querySelector(`.pkt_ext_more`).append(this.parseHTML(Handlebars.templates.explore_more()));
-      } // click events
-
-
-      this.setupClickEvents(); // tell back end we're ready
-
-      messages.sendMessage("PKT_show_home");
+    if (window?.matchMedia(`(prefers-color-scheme: dark)`).matches) {
+      document.querySelector(`body`).classList.add(`theme_dark`);
     }
   }
 
@@ -2018,7 +1927,7 @@ window.pktPanelMessaging = messages;
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [736], () => (__webpack_require__(122)))
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [736], () => (__webpack_require__(299)))
 /******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 /******/ 	
 /******/ })()
