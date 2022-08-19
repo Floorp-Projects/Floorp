@@ -51,6 +51,8 @@ module.exports = {
         // Disabled until we can use let/const to fix those erorrs, and undefined
         // names cause an exception and abort during runtime initialization.
         "no-redeclare": "off",
+        // Disallow use of |void 0|. Instead use |undefined|.
+        "no-void": ["error", { allowAsStatement: true }],
       },
 
       globals: {
