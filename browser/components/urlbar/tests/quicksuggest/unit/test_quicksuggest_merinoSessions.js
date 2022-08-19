@@ -132,19 +132,29 @@ async function doManyEngagementsTest(state) {
   }
 }
 
-// When a search is canceled before the Merino response is received, the
-// sequence number should not be incremented.
+// When a search is canceled after the request is sent and before the Merino
+// response is received, the sequence number should still be incremented.
 add_task(async function canceledQueries() {
-  let requests = [];
-  setMerinoResponse(req => {
-    requests.push({ params: new URLSearchParams(req.queryString) });
-    return MERINO_RESPONSE;
-  });
-
   let controller = UrlbarTestUtils.newMockController();
 
   for (let i = 0; i < 3; i++) {
-    // Start a search but don't wait for it to finish.
+    let requests = [];
+
+    // Create a promise that will resolve when the first request is received.
+    // Send the response after a delay to make sure the provider will not
+    // receive it before we start the second search.
+    let onRequestPromise = new Promise(resolve => {
+      setMerinoResponse(req => {
+        resolve();
+        requests.push({
+          delay: UrlbarPrefs.get("merinoTimeoutMs"),
+          params: new URLSearchParams(req.queryString),
+        });
+        return MERINO_RESPONSE;
+      });
+    });
+
+    // Start the first search.
     controller.startQuery(
       createContext("search" + i, {
         providers: [UrlbarProviderQuickSuggest.name],
@@ -152,22 +162,30 @@ add_task(async function canceledQueries() {
       })
     );
 
-    // Do another search that cancels the first.
-    let searchString = "search" + i + "again";
-    let context = createContext(searchString, {
-      providers: [UrlbarProviderQuickSuggest.name],
-      isPrivate: false,
-    });
-    await controller.startQuery(context);
+    // Wait until the first request is received before starting the second
+    // search. If we started the second search immediately, the first would be
+    // canceled before the provider is even called due to the urlbar's 50ms
+    // delay (see `browser.urlbar.delay`) so the sequence number would not be
+    // incremented for it. Here we want to test the case where the first search
+    // is canceled after the request is sent and the number is incremented.
+    await onRequestPromise;
 
-    // Only one request should have been received and the sequence number should
-    // be incremented only once compared to the previous successful search.
+    // Now do a second search that cancels the first.
+    let searchString = "search" + i + "again";
+    await controller.startQuery(
+      createContext(searchString, {
+        providers: [UrlbarProviderQuickSuggest.name],
+        isPrivate: false,
+      })
+    );
+
+    // The sequence number should have been incremented for each search.
     checkRequests(requests, {
-      count: i + 1,
+      count: 2,
       areSessionIDsUnique: false,
       params: {
         [MERINO_PARAMS.QUERY]: searchString,
-        [MERINO_PARAMS.SEQUENCE_NUMBER]: i,
+        [MERINO_PARAMS.SEQUENCE_NUMBER]: 2 * i + 1,
       },
     });
   }
@@ -176,7 +194,7 @@ add_task(async function canceledQueries() {
   endEngagement();
 });
 
-// When a network error occurs, the sequence number should not be incremented.
+// When a network error occurs, the sequence number should still be incremented.
 add_task(async function networkError() {
   let requests = [];
   setMerinoResponse(req => {
@@ -206,14 +224,14 @@ add_task(async function networkError() {
       })
     );
 
-    // Only one request should have been received and the sequence number should
-    // be incremented only once compared to the previous successful search.
+    // Only one request should have been received but the sequence number should
+    // have been incremented for each.
     checkRequests(requests, {
       count: i + 1,
       areSessionIDsUnique: false,
       params: {
         [MERINO_PARAMS.QUERY]: searchString,
-        [MERINO_PARAMS.SEQUENCE_NUMBER]: i,
+        [MERINO_PARAMS.SEQUENCE_NUMBER]: 2 * i + 1,
       },
     });
   }
@@ -315,8 +333,8 @@ add_task(async function merinoTimeout_wait() {
 });
 
 // When the server "times out" and a second search starts before the first
-// search receives a response, the first search should be canceled and the
-// sequence number should not be incremented.
+// search receives a response, the first search should be canceled but the
+// sequence number should still be incremented.
 add_task(async function merinoTimeout_canceled() {
   let delay = 0;
   let requests = [];
@@ -366,7 +384,7 @@ add_task(async function merinoTimeout_canceled() {
       areSessionIDsUnique: false,
       params: {
         [MERINO_PARAMS.QUERY]: searchString,
-        [MERINO_PARAMS.SEQUENCE_NUMBER]: i == 0 ? 0 : 1,
+        [MERINO_PARAMS.SEQUENCE_NUMBER]: i,
       },
     });
   }
@@ -392,11 +410,12 @@ add_task(async function sessionTimeout() {
   let controller = UrlbarTestUtils.newMockController();
 
   // Do a search.
-  let context = createContext("search 0", {
-    providers: [UrlbarProviderQuickSuggest.name],
-    isPrivate: false,
-  });
-  await controller.startQuery(context);
+  await controller.startQuery(
+    createContext("search 0", {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    })
+  );
 
   checkRequests(requests, {
     count: 1,
