@@ -1,3 +1,8 @@
+about:
+  description: Nimbus Feature Manifest for Focus Android
+  kotlin:
+    package: org.mozilla.focus
+    class: .nimbus.FocusNimbus
 channels:
   - debug
   - nightly
