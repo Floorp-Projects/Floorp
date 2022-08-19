@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
+import android.os.StrictMode
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
@@ -23,6 +24,7 @@ import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.top.sites.TopSitesStorage
 import mozilla.components.feature.top.sites.TopSitesUseCases
+import mozilla.components.support.locale.LocaleManager
 import mozilla.components.support.locale.LocaleUseCases
 import org.mozilla.fenix.components.bookmarks.BookmarksUseCase
 import org.mozilla.fenix.perf.StrictModeManager
@@ -107,6 +109,13 @@ class UseCases(
     val bookmarksUseCases by lazyMonitored { BookmarksUseCase(bookmarksStorage, historyStorage) }
 
     val wallpaperUseCases by lazyMonitored {
-        WallpapersUseCases(context, appStore, client, strictMode)
+        // Required to even access context.filesDir property and to retrieve current locale
+        val (rootStorageDirectory, currentLocale) = strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+            val rootStorageDirectory = context.filesDir
+            val currentLocale = LocaleManager.getCurrentLocale(context)?.toLanguageTag()
+                ?: LocaleManager.getSystemDefault().toLanguageTag()
+            rootStorageDirectory to currentLocale
+        }
+        WallpapersUseCases(context, appStore, client, rootStorageDirectory, currentLocale)
     }
 }

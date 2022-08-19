@@ -74,10 +74,7 @@ class WallpaperDownloaderTest {
     @Test
     fun `GIVEN that thumbnail request is successful WHEN downloading THEN file is created in expected location`() = runTest {
         val wallpaper = generateWallpaper()
-        val thumbnailRequest = Request(
-            url = "$remoteHost/${wallpaper.collection.name}/${wallpaper.name}/thumbnail.png",
-            method = Request.Method.GET
-        )
+        val thumbnailRequest = wallpaper.generateRequest("thumbnail")
         val mockThumbnailResponse = mockk<Response>()
         every { mockThumbnailResponse.status } returns 200
         every { mockThumbnailResponse.body } returns Response.Body(wallpaperBytes.byteInputStream())
@@ -132,7 +129,8 @@ class WallpaperDownloaderTest {
         collection = wallpaperCollection,
         textColor = null,
         cardColor = null,
-        thumbnailFileState = Wallpaper.ImageFileState.NotAvailable
+        thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
+        assetsFileState = Wallpaper.ImageFileState.Unavailable,
     )
 
     private fun Wallpaper.generateRequest(type: String) = Request(

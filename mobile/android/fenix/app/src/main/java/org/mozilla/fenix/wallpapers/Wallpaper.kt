@@ -22,6 +22,7 @@ data class Wallpaper(
     val textColor: Long?,
     val cardColor: Long?,
     val thumbnailFileState: ImageFileState,
+    val assetsFileState: ImageFileState,
 ) {
     /**
      * Type that represents a collection that a [Wallpaper] belongs to.
@@ -68,6 +69,7 @@ data class Wallpaper(
             textColor = null,
             cardColor = null,
             thumbnailFileState = ImageFileState.Downloaded,
+            assetsFileState = ImageFileState.Downloaded,
         )
 
         /**
@@ -104,6 +106,7 @@ data class Wallpaper(
                     cardColor = cardColor,
                     collection = DefaultCollection,
                     thumbnailFileState = ImageFileState.Downloaded,
+                    assetsFileState = ImageFileState.Downloaded,
                 )
             } else null
         }
@@ -127,9 +130,21 @@ data class Wallpaper(
      * Defines the download state of wallpaper asset.
      */
     enum class ImageFileState {
-        NotAvailable,
+        Unavailable,
         Downloading,
         Downloaded,
         Error,
+    }
+
+    override fun hashCode(): Int {
+        return name.hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return if (other is Wallpaper) {
+            this.name == other.name
+        } else {
+            false
+        }
     }
 }

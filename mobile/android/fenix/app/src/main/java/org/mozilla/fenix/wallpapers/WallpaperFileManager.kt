@@ -31,20 +31,21 @@ class WallpaperFileManager(
      * files for each of a portrait and landscape orientation as well as a thumbnail.
      */
     suspend fun lookupExpiredWallpaper(name: String): Wallpaper? = withContext(Dispatchers.IO) {
-        if (getAllLocalWallpaperPaths(name).all { File(storageRootDirectory, it).exists() }) {
+        if (allAssetsExist(name)) {
             Wallpaper(
                 name = name,
                 collection = Wallpaper.DefaultCollection,
                 textColor = null,
                 cardColor = null,
                 thumbnailFileState = Wallpaper.ImageFileState.Downloaded,
+                assetsFileState = Wallpaper.ImageFileState.Downloaded,
             )
         } else null
     }
 
-    private fun getAllLocalWallpaperPaths(name: String): List<String> =
-        Wallpaper.ImageType.values().map { orientation ->
-            getLocalPath(name, orientation)
+    private fun allAssetsExist(name: String): Boolean =
+        Wallpaper.ImageType.values().all { type ->
+            File(storageRootDirectory, getLocalPath(name, type)).exists()
         }
 
     /**
@@ -59,5 +60,12 @@ class WallpaperFileManager(
                 }
             }
         }
+    }
+
+    /**
+     * Checks whether all the assets for a wallpaper exist on the file system.
+     */
+    suspend fun wallpaperImagesExist(wallpaper: Wallpaper): Boolean = withContext(Dispatchers.IO) {
+        return@withContext allAssetsExist(wallpaper.name)
     }
 }

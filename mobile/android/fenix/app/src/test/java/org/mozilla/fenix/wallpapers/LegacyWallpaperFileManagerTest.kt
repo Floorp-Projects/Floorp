@@ -98,7 +98,8 @@ class LegacyWallpaperFileManagerTest {
         name = name,
         textColor = null,
         cardColor = null,
-        thumbnailFileState = Wallpaper.ImageFileState.NotAvailable,
+        thumbnailFileState = Wallpaper.ImageFileState.Unavailable,
+        assetsFileState = Wallpaper.ImageFileState.Downloaded,
         collection = Wallpaper.Collection(
             name = Wallpaper.defaultName,
             heading = null,

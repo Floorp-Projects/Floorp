@@ -37,30 +37,39 @@ class WallpaperDownloader(
      * and will be stored in the local path:
      * wallpapers/<wallpaper name>/<orientation>.png
      */
-    suspend fun downloadWallpaper(wallpaper: Wallpaper) = withContext(dispatcher) {
-        listOf(Wallpaper.ImageType.Portrait, Wallpaper.ImageType.Landscape).map { imageType ->
-            wallpaper.downloadAsset(imageType)
+    suspend fun downloadWallpaper(wallpaper: Wallpaper): Wallpaper.ImageFileState = withContext(dispatcher) {
+        val portraitResult = downloadAsset(wallpaper, Wallpaper.ImageType.Portrait)
+        val landscapeResult = downloadAsset(wallpaper, Wallpaper.ImageType.Landscape)
+        return@withContext if (portraitResult == Wallpaper.ImageFileState.Downloaded &&
+            landscapeResult == Wallpaper.ImageFileState.Downloaded
+        ) {
+            Wallpaper.ImageFileState.Downloaded
+        } else {
+            Wallpaper.ImageFileState.Error
         }
     }
 
     /**
      * Downloads a thumbnail for a wallpaper from the network. This is expected to be found remotely
      * at:
-     * <WALLPAPER_URL>/<collection name>/<wallpaper name>/<orientation>.png
+     * <WALLPAPER_URL>/<collection name>/<wallpaper name>/thumbnail.png
      * and stored locally at:
-     * wallpapers/<wallpaper name>/<orientation>.png
+     * wallpapers/<wallpaper name>/thumbnail.png
      */
     suspend fun downloadThumbnail(wallpaper: Wallpaper): Wallpaper.ImageFileState = withContext(dispatcher) {
-        wallpaper.downloadAsset(Wallpaper.ImageType.Thumbnail)
+        downloadAsset(wallpaper, Wallpaper.ImageType.Thumbnail)
     }
 
-    private suspend fun Wallpaper.downloadAsset(
+    private suspend fun downloadAsset(
+        wallpaper: Wallpaper,
         imageType: Wallpaper.ImageType
     ): Wallpaper.ImageFileState = withContext(dispatcher) {
-        val localFile = File(storageRootDirectory, getLocalPath(name, imageType))
-        if (localFile.exists()) return@withContext Wallpaper.ImageFileState.Downloaded
+        val localFile = File(storageRootDirectory, getLocalPath(wallpaper.name, imageType))
+        if (localFile.exists()) {
+            return@withContext Wallpaper.ImageFileState.Downloaded
+        }
 
-        val remotePath = "${collection.name}/${name}/${imageType.lowercase()}.png"
+        val remotePath = "${wallpaper.collection.name}/${wallpaper.name}/${imageType.lowercase()}.png"
         val request = Request(
             url = "$remoteHost/$remotePath",
             method = Request.Method.GET
@@ -83,7 +92,7 @@ class WallpaperDownloader(
                     localFile.delete()
                 }
             }
-            Wallpaper.ImageFileState.Downloaded
+            Wallpaper.ImageFileState.Error
         }
     }
 }

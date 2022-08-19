@@ -169,5 +169,17 @@ sealed class AppAction : Action {
          * Indicates that the list of potential wallpapers has changed.
          */
         data class UpdateAvailableWallpapers(val wallpapers: List<Wallpaper>) : WallpaperAction()
+
+        /**
+         * Indicates a change in the download state of a wallpaper. Note that this is meant to be
+         * used for full size images, not thumbnails.
+         *
+         * @property wallpaper The wallpaper that is being updated.
+         * @property imageState The updated image state for the wallpaper.
+         */
+        data class UpdateWallpaperDownloadState(
+            val wallpaper: Wallpaper,
+            val imageState: Wallpaper.ImageFileState
+        ) : WallpaperAction()
     }
 }

@@ -8,10 +8,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import kotlinx.coroutines.launch
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.Wallpapers
@@ -47,12 +49,18 @@ class WallpaperSettingsFragment : Fragment() {
                         state.wallpaperState.currentWallpaper
                     }.value ?: Wallpaper.Default
 
+                    var coroutineScope = rememberCoroutineScope()
+
                     WallpaperSettings(
                         wallpapers = wallpapers,
                         defaultWallpaper = Wallpaper.Default,
-                        loadWallpaperResource = { wallpaperUseCases.loadBitmap(it) },
                         selectedWallpaper = currentWallpaper,
-                        onSelectWallpaper = { wallpaperUseCases.selectWallpaper(it) },
+                        loadWallpaperResource = {
+                            wallpaperUseCases.loadThumbnail(it)
+                        },
+                        onSelectWallpaper = {
+                            coroutineScope.launch { wallpaperUseCases.selectWallpaper(it) }
+                        },
                         onViewWallpaper = { findNavController().navigate(R.id.homeFragment) },
                     )
                 }

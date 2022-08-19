@@ -3,6 +3,7 @@ package org.mozilla.fenix.wallpapers
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -109,6 +110,30 @@ class WallpaperFileManagerTest {
         assertTrue(getAllFiles(unavailableName).none { it.exists() })
     }
 
+    @Test
+    fun `WHEN both wallpaper assets exist THEN the file lookup will succeed`() = runTest {
+        val wallpaper = generateWallpaper("name")
+        createAllFiles(wallpaper.name)
+
+        val result = fileManager.wallpaperImagesExist(wallpaper)
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun `WHEN at least one wallpaper asset does not exist THEN the file lookup will fail`() = runTest {
+        val wallpaper = generateWallpaper("name")
+        val allFiles = getAllFiles(wallpaper.name)
+        (0 until (allFiles.size - 1)).forEach {
+            allFiles[it].mkdirs()
+            allFiles[it].createNewFile()
+        }
+
+        val result = fileManager.wallpaperImagesExist(wallpaper)
+
+        assertFalse(result)
+    }
+
     private fun createAllFiles(name: String) {
         for (file in getAllFiles(name)) {
             file.mkdirs()
@@ -131,6 +156,7 @@ class WallpaperFileManagerTest {
         textColor = null,
         cardColor = null,
         thumbnailFileState = Wallpaper.ImageFileState.Downloaded,
-        collection = Wallpaper.DefaultCollection
+        assetsFileState = Wallpaper.ImageFileState.Downloaded,
+        collection = Wallpaper.DefaultCollection,
     )
 }
