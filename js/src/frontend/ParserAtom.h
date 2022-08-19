@@ -474,12 +474,14 @@ class alignas(alignof(uint32_t)) ParserAtom {
   bool equalsSeq(HashNumber hash, InflatedChar16Sequence<CharT> seq) const;
 
   // Convert NotInstantiated and usedByStencil entry to a js-atom.
-  JSString* instantiateString(JSContext* cx, ParserAtomIndex index,
+  JSString* instantiateString(JSContext* cx, ErrorContext* ec,
+                              ParserAtomIndex index,
                               CompilationAtomCache& atomCache) const;
-  JSAtom* instantiateAtom(JSContext* cx, ParserAtomIndex index,
+  JSAtom* instantiateAtom(JSContext* cx, ErrorContext* ec,
+                          ParserAtomIndex index,
                           CompilationAtomCache& atomCache) const;
-  JSAtom* instantiatePermanentAtom(JSContext* cx, AtomSet& atomSet,
-                                   ParserAtomIndex index,
+  JSAtom* instantiatePermanentAtom(JSContext* cx, ErrorContext* ec,
+                                   AtomSet& atomSet, ParserAtomIndex index,
                                    CompilationAtomCache& atomCache) const;
 
  private:
@@ -640,10 +642,12 @@ class WellKnownParserAtoms {
   }
 };
 
-bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
+bool InstantiateMarkedAtoms(JSContext* cx, ErrorContext* ec,
+                            const ParserAtomSpan& entries,
                             CompilationAtomCache& atomCache);
 
-bool InstantiateMarkedAtomsAsPermanent(JSContext* cx, AtomSet& atomSet,
+bool InstantiateMarkedAtomsAsPermanent(JSContext* cx, ErrorContext* ec,
+                                       AtomSet& atomSet,
                                        const ParserAtomSpan& entries,
                                        CompilationAtomCache& atomCache);
 
@@ -714,7 +718,7 @@ class ParserAtomsTable {
   TaggedParserAtomIndex internChar16(JSContext* cx, const char16_t* char16Ptr,
                                      uint32_t length);
 
-  TaggedParserAtomIndex internJSAtom(JSContext* cx,
+  TaggedParserAtomIndex internJSAtom(JSContext* cx, ErrorContext* ec,
                                      CompilationAtomCache& atomCache,
                                      JSAtom* atom);
 
@@ -765,7 +769,7 @@ class ParserAtomsTable {
   UniqueChars toPrintableString(JSContext* cx,
                                 TaggedParserAtomIndex index) const;
   UniqueChars toQuotedString(JSContext* cx, TaggedParserAtomIndex index) const;
-  JSAtom* toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
+  JSAtom* toJSAtom(JSContext* cx, ErrorContext* ec, TaggedParserAtomIndex index,
                    CompilationAtomCache& atomCache) const;
 
  private:

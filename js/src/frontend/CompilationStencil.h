@@ -357,7 +357,8 @@ struct InputName {
   // The InputName is either from an instantiated name, or from another
   // CompilationStencil. This method interns the current name in the parser atom
   // table of a CompilationState, which has a corresponding CompilationInput.
-  TaggedParserAtomIndex internInto(JSContext* cx, ParserAtomsTable& parserAtoms,
+  TaggedParserAtomIndex internInto(JSContext* cx, ErrorContext* ec,
+                                   ParserAtomsTable& parserAtoms,
                                    CompilationAtomCache& atomCache);
 
   // Compare an InputName, which is not yet interned, with `other` is either an
@@ -367,7 +368,7 @@ struct InputName {
   // to nullptr, which is used to cache the JSAtom representation of the `other`
   // argument if needed. If a different `other` parameter is provided, the
   // `otherCached` argument should be reset to nullptr.
-  bool isEqualTo(JSContext* cx, ParserAtomsTable& parserAtoms,
+  bool isEqualTo(JSContext* cx, ErrorContext* ec, ParserAtomsTable& parserAtoms,
                  CompilationAtomCache& atomCache, TaggedParserAtomIndex other,
                  JSAtom** otherCached) const;
 
@@ -472,7 +473,8 @@ struct ScopeContext {
   mozilla::Maybe<EnclosingLexicalBindingKind>
   lookupLexicalBindingInEnclosingScope(TaggedParserAtomIndex name);
 
-  NameLocation searchInEnclosingScope(JSContext* cx, CompilationInput& input,
+  NameLocation searchInEnclosingScope(JSContext* cx, ErrorContext* ec,
+                                      CompilationInput& input,
                                       ParserAtomsTable& parserAtoms,
                                       TaggedParserAtomIndex name, uint8_t hops);
 
@@ -529,7 +531,7 @@ struct CompilationAtomCache {
   JSAtom* getAtomAt(ParserAtomIndex index) const;
 
   bool hasAtomAt(ParserAtomIndex index) const;
-  bool setAtomAt(JSContext* cx, ParserAtomIndex index, JSString* atom);
+  bool setAtomAt(ErrorContext* ec, ParserAtomIndex index, JSString* atom);
   bool allocate(ErrorContext* ec, size_t length);
 
   bool empty() const { return atoms_.empty(); }
@@ -809,7 +811,7 @@ class CompilationSyntaxParseCache {
     return taggedScriptIndex.toFunction();
   }
 
-  [[nodiscard]] bool copyFunctionInfo(JSContext* cx,
+  [[nodiscard]] bool copyFunctionInfo(JSContext* cx, ErrorContext* ec,
                                       ParserAtomsTable& parseAtoms,
                                       CompilationAtomCache& atomCache,
                                       const InputScript& lazy);
