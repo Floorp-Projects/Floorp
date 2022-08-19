@@ -1531,14 +1531,14 @@ struct CompilationGCOutput {
   // Reserve output vector capacity. This may be called before instantiate to do
   // allocations ahead of time (off thread). The stencil instantiation code will
   // also run this to ensure the vectors are ready.
-  [[nodiscard]] bool ensureReserved(JSContext* cx, size_t scriptDataLength,
+  [[nodiscard]] bool ensureReserved(ErrorContext* ec, size_t scriptDataLength,
                                     size_t scopeDataLength) {
     if (!functions.reserve(scriptDataLength)) {
-      ReportOutOfMemory(cx);
+      ReportOutOfMemory(ec);
       return false;
     }
     if (!scopes.reserve(scopeDataLength)) {
-      ReportOutOfMemory(cx);
+      ReportOutOfMemory(ec);
       return false;
     }
     return true;
@@ -1548,7 +1548,7 @@ struct CompilationGCOutput {
   // scope arrays. This is used when instantiating only a subset of the stencil.
   // Currently this only applies to self-hosted delazification. The ranges
   // include the start index and exclude the limit index.
-  [[nodiscard]] bool ensureReservedWithBaseIndex(JSContext* cx,
+  [[nodiscard]] bool ensureReservedWithBaseIndex(ErrorContext* ec,
                                                  ScriptIndex scriptStart,
                                                  ScriptIndex scriptLimit,
                                                  ScopeIndex scopeStart,
@@ -1556,7 +1556,7 @@ struct CompilationGCOutput {
     this->functionsBaseIndex = scriptStart;
     this->scopesBaseIndex = scopeStart;
 
-    return ensureReserved(cx, scriptLimit - scriptStart,
+    return ensureReserved(ec, scriptLimit - scriptStart,
                           scopeLimit - scopeStart);
   }
 

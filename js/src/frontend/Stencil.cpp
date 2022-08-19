@@ -2127,8 +2127,9 @@ bool CompilationStencil::delazifySelfHostedFunction(
 
   // Prepare to instantiate by reserving the output vectors. We also set a base
   // index to avoid allocations in most cases.
+  MainThreadErrorContext ec(cx);
   Rooted<CompilationGCOutput> gcOutput(cx);
-  if (!gcOutput.get().ensureReservedWithBaseIndex(cx, range.start, range.limit,
+  if (!gcOutput.get().ensureReservedWithBaseIndex(&ec, range.start, range.limit,
                                                   scopeIndex, scopeLimit)) {
     return false;
   }
@@ -2208,7 +2209,8 @@ bool CompilationStencil::prepareForInstantiate(
     JSContext* cx, CompilationAtomCache& atomCache,
     const CompilationStencil& stencil, CompilationGCOutput& gcOutput) {
   // Reserve the `gcOutput` vectors.
-  if (!gcOutput.ensureReserved(cx, stencil.scriptData.size(),
+  MainThreadErrorContext ec(cx);
+  if (!gcOutput.ensureReserved(&ec, stencil.scriptData.size(),
                                stencil.scopeData.size())) {
     return false;
   }
