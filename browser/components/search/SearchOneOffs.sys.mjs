@@ -424,6 +424,7 @@ export class SearchOneOffs {
       let textboxWidth = await this.window.promiseDocumentFlushed(() => {
         return this._textbox.clientWidth;
       });
+
       if (
         this._engineInfo?.domWasUpdated &&
         this._textboxWidth == textboxWidth &&
@@ -434,6 +435,9 @@ export class SearchOneOffs {
       this._textboxWidth = textboxWidth;
       this._addEngines = addEngines;
     }
+
+    // Hide the container during updating to avoid flickering.
+    this.container.hidden = true;
 
     // Finally, build the list of one-off buttons.
     while (this.buttons.firstElementChild) {
