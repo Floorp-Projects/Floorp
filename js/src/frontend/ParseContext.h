@@ -122,7 +122,7 @@ class ParseContext : public Nestable<ParseContext> {
 
     bool maybeReportOOM(ParseContext* pc, bool result) {
       if (!result) {
-        ReportOutOfMemory(pc->sc()->cx_);
+        ReportOutOfMemory(pc->sc()->ec_);
       }
       return result;
     }
