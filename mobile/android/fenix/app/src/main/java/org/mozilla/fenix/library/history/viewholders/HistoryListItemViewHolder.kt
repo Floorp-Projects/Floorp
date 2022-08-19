@@ -113,6 +113,7 @@ class HistoryListItemViewHolder(
         } else {
             binding.headerTitle.visibility = View.GONE
         }
+        binding.bottomSpacer.isVisible = headerText != null
     }
 
     private fun toggleTopContent(
@@ -120,6 +121,7 @@ class HistoryListItemViewHolder(
         isNormalMode: Boolean,
     ) {
         binding.recentlyClosedNavEmpty.recentlyClosedNav.isVisible = showTopContent
+        binding.topSpacer.isVisible = showTopContent
 
         if (showTopContent) {
             val numRecentTabs = itemView.context.components.core.store.state.closedTabs.size

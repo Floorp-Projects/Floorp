@@ -114,6 +114,8 @@ class HistoryView(
     private fun updateEmptyState(userHasHistory: Boolean) {
         binding.historyList.isInvisible = !userHasHistory
         binding.historyEmptyView.isVisible = !userHasHistory
+        binding.topSpacer.isVisible = !userHasHistory
+
         with(binding.recentlyClosedNavEmpty) {
             recentlyClosedNav.setOnClickListener {
                 interactor.onRecentlyClosedClicked()
