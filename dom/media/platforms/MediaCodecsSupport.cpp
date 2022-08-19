@@ -7,6 +7,7 @@
 
 #include "MediaCodecsSupport.h"
 #include "PlatformDecoderModule.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "nsTHashMap.h"
 
@@ -23,17 +24,32 @@ static StaticMutex sUpdateMutex;
 
 void MCSInfo::AddSupport(const MediaCodecsSupported& aSupport) {
   StaticMutexAutoLock lock(sUpdateMutex);
-  GetInstance()->mSupport += aSupport;
+  MCSInfo* instance = GetInstance();
+  if (!instance) {
+    CODEC_SUPPORT_LOG("Can't add codec support without a MCSInfo instance!");
+    return;
+  }
+  instance->mSupport += aSupport;
 }
 
 MediaCodecsSupported MCSInfo::GetSupport() {
   StaticMutexAutoLock lock(sUpdateMutex);
-  return GetInstance()->mSupport;
+  MCSInfo* instance = GetInstance();
+  if (!instance) {
+    CODEC_SUPPORT_LOG("Can't get codec support without a MCSInfo instance!");
+    return MediaCodecsSupported{};
+  }
+  return instance->mSupport;
 }
 
 void MCSInfo::ResetSupport() {
   StaticMutexAutoLock lock(sUpdateMutex);
-  GetInstance()->mSupport.clear();
+  MCSInfo* instance = GetInstance();
+  if (!instance) {
+    CODEC_SUPPORT_LOG("Can't reset codec support without a MCSInfo instance!");
+    return;
+  }
+  instance->mSupport.clear();
 }
 
 DecodeSupportSet MCSInfo::GetDecodeSupportSet(
@@ -52,9 +68,7 @@ DecodeSupportSet MCSInfo::GetDecodeSupportSet(
 MediaCodecsSupported MCSInfo::GetDecodeMediaCodecsSupported(
     const MediaCodec& aCodec, const DecodeSupportSet& aSupportSet) {
   MediaCodecsSupported support;
-
   const auto supportInfo = GetCodecDefinition(aCodec);
-
   if (aSupportSet.contains(DecodeSupport::SoftwareDecode)) {
     support += supportInfo.swDecodeSupport;
   }
@@ -68,11 +82,15 @@ void MCSInfo::GetMediaCodecsSupportedString(
     nsCString& aSupportString, const MediaCodecsSupported& aSupportedCodecs) {
   CodecDefinition supportInfo;
   aSupportString = ""_ns;
+  MCSInfo* instance = GetInstance();
+  if (!instance) {
+    CODEC_SUPPORT_LOG("Can't get codec support string w/o a MCSInfo instance!");
+    return;
+  }
   for (const auto& it : aSupportedCodecs) {
-    if (!GetInstance()->mHashTableMCS->Get(it, &supportInfo)) {
-      CODEC_SUPPORT_LOG(
-          "Could not find string matching MediaCodecsSupported enum: %d",
-          static_cast<int>(it));
+    if (!instance->mHashTableMCS->Get(it, &supportInfo)) {
+      CODEC_SUPPORT_LOG("Can't find string for MediaCodecsSupported enum: %d",
+                        static_cast<int>(it));
       aSupportString.Append("Unknown codec entry found!\n"_ns);
       continue;
     }
@@ -94,6 +112,10 @@ void MCSInfo::GetMediaCodecsSupportedString(
 
 MCSInfo* MCSInfo::GetInstance() {
   StaticMutexAutoLock lock(sInitMutex);
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+    CODEC_SUPPORT_LOG("In XPCOM shutdown - not returning MCSInfo instance!");
+    return nullptr;
+  }
   if (!sInstance) {
     sInstance = new MCSInfo();
   }
@@ -129,7 +151,10 @@ MCSInfo::MCSInfo() {
 
 CodecDefinition MCSInfo::GetCodecDefinition(const MediaCodec& aCodec) {
   CodecDefinition info;
-  if (!GetInstance()->mHashTableCodec->Get(aCodec, &info)) {
+  MCSInfo* instance = GetInstance();
+  if (!instance) {
+    CODEC_SUPPORT_LOG("Can't get codec definition without a MCSInfo instance!");
+  } else if (!instance->mHashTableCodec->Get(aCodec, &info)) {
     CODEC_SUPPORT_LOG("Could not find codec definition for codec enum: %d!",
                       static_cast<int>(aCodec));
   }
