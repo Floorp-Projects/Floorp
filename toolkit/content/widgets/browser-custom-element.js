@@ -172,6 +172,10 @@
 
           let linkHandler = Services.droppedLinkHandler;
           try {
+            if (!linkHandler.canDropLink(event, false)) {
+              return;
+            }
+
             // Pass true to prevent the dropping of javascript:/data: URIs
             var links = linkHandler.dropLinks(event, true);
           } catch (ex) {
