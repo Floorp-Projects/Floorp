@@ -261,7 +261,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
 
   ScriptIndex index = ScriptIndex(compilationState_.scriptData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(cx_);
+    ReportAllocationOverflow(ec_);
     return nullptr;
   }
   if (!compilationState_.appendScriptStencilAndData(ec_)) {
@@ -302,7 +302,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
 
   ScriptIndex index = ScriptIndex(compilationState_.scriptData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(cx_);
+    ReportAllocationOverflow(ec_);
     return nullptr;
   }
   if (!compilationState_.appendScriptStencilAndData(ec_)) {
@@ -2191,7 +2191,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
       mozilla::CheckedUint32(pc_->innerFunctionIndexesForLazy.length()) +
       mozilla::CheckedUint32(pc_->closedOverBindingsForLazy().length());
   if (!ngcthings.isValid()) {
-    ReportAllocationOverflow(cx_);
+    ReportAllocationOverflow(ec_);
     return false;
   }
 
@@ -11258,7 +11258,7 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
 
   RegExpIndex index(this->compilationState_.regExpData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(cx_);
+    ReportAllocationOverflow(ec_);
     return nullptr;
   }
   if (!this->compilationState_.regExpData.emplaceBack(atom, flags)) {
@@ -11308,13 +11308,13 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
   // productions start with 0[bBoOxX], indicating binary/octal/hex.
   const auto& chars = tokenStream.getCharBuffer();
   if (chars.length() > UINT32_MAX) {
-    ReportAllocationOverflow(cx_);
+    ReportAllocationOverflow(ec_);
     return null();
   }
 
   BigIntIndex index(this->compilationState_.bigIntData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(cx_);
+    ReportAllocationOverflow(ec_);
     return null();
   }
   if (!this->compilationState_.bigIntData.emplaceBack()) {

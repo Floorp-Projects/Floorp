@@ -124,7 +124,7 @@ bool ConvertScopeStencil(JSContext* cx, ErrorContext* ec,
   LifoAlloc& alloc = compilationState.alloc;
 
   if (result.scopes.len > TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(cx);
+    ReportAllocationOverflow(ec);
     return false;
   }
 
@@ -272,7 +272,7 @@ bool ConvertRegExpData(JSContext* cx, ErrorContext* ec,
   }
 
   if (len > TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(cx);
+    ReportAllocationOverflow(ec);
     return false;
   }
 
@@ -620,7 +620,7 @@ bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
   }
 
   if (len > TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(cx);
+    ReportAllocationOverflow(ec);
     return false;
   }
 
