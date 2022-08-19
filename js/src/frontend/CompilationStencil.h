@@ -586,22 +586,23 @@ struct CompilationInput {
       : options(options) {}
 
  private:
-  bool initScriptSource(JSContext* cx);
+  bool initScriptSource(JSContext* cx, ErrorContext* ec);
 
  public:
-  bool initForGlobal(JSContext* cx) {
+  bool initForGlobal(JSContext* cx, ErrorContext* ec) {
     target = CompilationTarget::Global;
-    return initScriptSource(cx);
+    return initScriptSource(cx, ec);
   }
 
   bool initForSelfHostingGlobal(JSContext* cx) {
     target = CompilationTarget::SelfHosting;
-    return initScriptSource(cx);
+    MainThreadErrorContext ec(cx);
+    return initScriptSource(cx, &ec);
   }
 
-  bool initForStandaloneFunction(JSContext* cx) {
+  bool initForStandaloneFunction(JSContext* cx, ErrorContext* ec) {
     target = CompilationTarget::StandaloneFunction;
-    if (!initScriptSource(cx)) {
+    if (!initScriptSource(cx, ec)) {
       return false;
     }
     enclosingScope = InputScope(&cx->global()->emptyGlobalScope());
@@ -609,20 +610,21 @@ struct CompilationInput {
   }
 
   bool initForStandaloneFunctionInNonSyntacticScope(
-      JSContext* cx, Handle<Scope*> functionEnclosingScope);
+      JSContext* cx, ErrorContext* ec, Handle<Scope*> functionEnclosingScope);
 
-  bool initForEval(JSContext* cx, Handle<Scope*> evalEnclosingScope) {
+  bool initForEval(JSContext* cx, ErrorContext* ec,
+                   Handle<Scope*> evalEnclosingScope) {
     target = CompilationTarget::Eval;
-    if (!initScriptSource(cx)) {
+    if (!initScriptSource(cx, ec)) {
       return false;
     }
     enclosingScope = InputScope(evalEnclosingScope);
     return true;
   }
 
-  bool initForModule(JSContext* cx) {
+  bool initForModule(JSContext* cx, ErrorContext* ec) {
     target = CompilationTarget::Module;
-    if (!initScriptSource(cx)) {
+    if (!initScriptSource(cx, ec)) {
       return false;
     }
     // The `enclosingScope` is the emptyGlobalScope.
@@ -961,7 +963,8 @@ struct SharedDataContainer {
   js::SharedImmutableScriptData* get(ScriptIndex index) const;
 
   // Add data for index-th script and share it with VM.
-  [[nodiscard]] bool addAndShare(JSContext* cx, ScriptIndex index,
+  [[nodiscard]] bool addAndShare(JSContext* cx, ErrorContext* ec,
+                                 ScriptIndex index,
                                  js::SharedImmutableScriptData* data);
 
   // Add data for index-th script without sharing it with VM.

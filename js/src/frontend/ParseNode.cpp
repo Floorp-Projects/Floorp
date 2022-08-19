@@ -387,8 +387,8 @@ void BaseScopeNode<Kind, ScopeType>::dumpImpl(ParserBase* parser,
 #endif
 
 TaggedParserAtomIndex NumericLiteral::toAtom(
-    JSContext* cx, ParserAtomsTable& parserAtoms) const {
-  return NumberToParserAtom(cx, parserAtoms, value());
+    JSContext* cx, ErrorContext* ec, ParserAtomsTable& parserAtoms) const {
+  return NumberToParserAtom(cx, ec, parserAtoms, value());
 }
 
 RegExpObject* RegExpLiteral::create(

@@ -209,7 +209,7 @@ class MOZ_STACK_CLASS ScriptCompiler : public SourceAwareCompiler<Unit> {
     return true;
   }
 
-  return stencilOut->source->assignSource(cx, input.options, srcBuf);
+  return stencilOut->source->assignSource(cx, ec, input.options, srcBuf);
 }
 
 [[nodiscard]] static bool TrySmoosh(
@@ -287,7 +287,7 @@ template <typename Unit>
       return false;
     }
   } else {
-    if (!input.initForGlobal(cx)) {
+    if (!input.initForGlobal(cx, ec)) {
       return false;
     }
   }
@@ -506,14 +506,14 @@ static JSScript* CompileEvalScriptImpl(
     JS::Handle<JSObject*> enclosingEnv) {
   AutoAssertReportedException assertException(cx);
 
+  MainThreadErrorContext ec(cx);
   Rooted<CompilationInput> input(cx, CompilationInput(options));
-  if (!input.get().initForEval(cx, enclosingScope)) {
+  if (!input.get().initForEval(cx, &ec, enclosingScope)) {
     return nullptr;
   }
 
   LifoAllocScope parserAllocScope(&cx->tempLifoAlloc());
 
-  MainThreadErrorContext ec(cx);
   JS::NativeStackLimit stackLimit = cx->stackLimitForCurrentPrincipal();
   ScriptCompiler<Unit> compiler(cx, stackLimit, parserAllocScope, input.get(),
                                 srcBuf);
@@ -618,7 +618,7 @@ bool SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx,
 
   errorContext = ec;
 
-  if (!compilationState_.source->assignSource(cx, options, sourceBuffer_)) {
+  if (!compilationState_.source->assignSource(cx, ec, options, sourceBuffer_)) {
     return false;
   }
 
@@ -872,7 +872,7 @@ template <typename Unit>
     BytecodeCompilerOutput& output) {
   MOZ_ASSERT(srcBuf.get());
 
-  if (!input.initForModule(cx)) {
+  if (!input.initForModule(cx, ec)) {
     return false;
   }
 
@@ -1399,14 +1399,15 @@ static JSFunction* CompileStandaloneFunction(
     FunctionAsyncKind asyncKind, Handle<Scope*> enclosingScope = nullptr) {
   AutoAssertReportedException assertException(cx);
 
+  MainThreadErrorContext ec(cx);
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   if (enclosingScope) {
     if (!input.get().initForStandaloneFunctionInNonSyntacticScope(
-            cx, enclosingScope)) {
+            cx, &ec, enclosingScope)) {
       return nullptr;
     }
   } else {
-    if (!input.get().initForStandaloneFunction(cx)) {
+    if (!input.get().initForStandaloneFunction(cx, &ec)) {
       return nullptr;
     }
   }
@@ -1415,7 +1416,6 @@ static JSFunction* CompileStandaloneFunction(
   InheritThis inheritThis = (syntaxKind == FunctionSyntaxKind::Arrow)
                                 ? InheritThis::Yes
                                 : InheritThis::No;
-  MainThreadErrorContext ec(cx);
   JS::NativeStackLimit stackLimit = cx->stackLimitForCurrentPrincipal();
   StandaloneFunctionCompiler<char16_t> compiler(
       cx, stackLimit, parserAllocScope, input.get(), srcBuf);

@@ -699,6 +699,8 @@ class SharedImmutableScriptData {
 
   static bool shareScriptData(JSContext* cx,
                               RefPtr<SharedImmutableScriptData>& sisd);
+  static bool shareScriptData(JSContext* cx, ErrorContext* ec,
+                              RefPtr<SharedImmutableScriptData>& sisd);
 
   size_t immutableDataLength() const { return isd_->immutableData().Length(); }
   uint32_t nfixed() const { return isd_->nfixed; }

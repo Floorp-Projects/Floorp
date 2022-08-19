@@ -54,7 +54,7 @@ namespace frontend {
 
 // Given the result of SmooshMonkey's parser, Convert the list of atoms into
 // the list of ParserAtoms.
-bool ConvertAtoms(JSContext* cx, const SmooshResult& result,
+bool ConvertAtoms(JSContext* cx, ErrorContext* ec, const SmooshResult& result,
                   CompilationState& compilationState,
                   Vector<TaggedParserAtomIndex>& allAtoms) {
   size_t numAtoms = result.all_atoms_len;
@@ -67,7 +67,7 @@ bool ConvertAtoms(JSContext* cx, const SmooshResult& result,
     auto s = reinterpret_cast<const mozilla::Utf8Unit*>(
         smoosh_get_atom_at(result, i));
     auto len = smoosh_get_atom_len_at(result, i);
-    auto atom = compilationState.parserAtoms.internUtf8(cx, s, len);
+    auto atom = compilationState.parserAtoms.internUtf8(cx, ec, s, len);
     if (!atom) {
       return false;
     }
@@ -330,7 +330,7 @@ bool ConvertRegExpData(JSContext* cx, ErrorContext* ec,
 
     const mozilla::Utf8Unit* sUtf8 =
         reinterpret_cast<const mozilla::Utf8Unit*>(s);
-    auto atom = compilationState.parserAtoms.internUtf8(cx, sUtf8, len);
+    auto atom = compilationState.parserAtoms.internUtf8(cx, ec, sUtf8, len);
     if (!atom) {
       return false;
     }
@@ -478,7 +478,8 @@ bool ConvertScriptStencil(JSContext* cx, ErrorContext* ec,
       return false;
     }
 
-    if (!compilationState.sharedData.addAndShare(cx, scriptIndex, sharedData)) {
+    if (!compilationState.sharedData.addAndShare(cx, ec, scriptIndex,
+                                                 sharedData)) {
       return false;
     }
 
@@ -591,7 +592,7 @@ bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
     return true;
   }
 
-  if (!input.initForGlobal(cx)) {
+  if (!input.initForGlobal(cx, ec)) {
     return false;
   }
 
@@ -599,7 +600,7 @@ bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
 
   Vector<TaggedParserAtomIndex> allAtoms(cx);
   CompilationState compilationState(cx, parserAllocScope, input);
-  if (!ConvertAtoms(cx, result, compilationState, allAtoms)) {
+  if (!ConvertAtoms(cx, ec, result, compilationState, allAtoms)) {
     return false;
   }
 

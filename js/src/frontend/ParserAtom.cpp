@@ -80,12 +80,12 @@ void TaggedParserAtomIndex::validateRaw() {
 
 template <typename CharT, typename SeqCharT>
 /* static */ ParserAtom* ParserAtom::allocate(
-    JSContext* cx, LifoAlloc& alloc, InflatedChar16Sequence<SeqCharT> seq,
-    uint32_t length, HashNumber hash) {
+    JSContext* cx, ErrorContext* ec, LifoAlloc& alloc,
+    InflatedChar16Sequence<SeqCharT> seq, uint32_t length, HashNumber hash) {
   constexpr size_t HeaderSize = sizeof(ParserAtom);
   void* raw = alloc.alloc(HeaderSize + (sizeof(CharT) * length));
   if (!raw) {
-    js::ReportOutOfMemory(cx);
+    js::ReportOutOfMemory(ec);
     return nullptr;
   }
 
@@ -304,6 +304,7 @@ ParserAtomsTable::ParserAtomsTable(JSRuntime* rt, LifoAlloc& alloc)
     : wellKnownTable_(*rt->commonParserNames), alloc_(&alloc) {}
 
 TaggedParserAtomIndex ParserAtomsTable::addEntry(JSContext* cx,
+                                                 ErrorContext* ec,
                                                  EntryMap::AddPtr& addPtr,
                                                  ParserAtom* entry) {
   MOZ_ASSERT(!addPtr);
@@ -313,12 +314,12 @@ TaggedParserAtomIndex ParserAtomsTable::addEntry(JSContext* cx,
     return TaggedParserAtomIndex::null();
   }
   if (!entries_.append(entry)) {
-    js::ReportOutOfMemory(cx);
+    js::ReportOutOfMemory(ec);
     return TaggedParserAtomIndex::null();
   }
   auto taggedIndex = TaggedParserAtomIndex(index);
   if (!entryMap_.add(addPtr, entry, taggedIndex)) {
-    js::ReportOutOfMemory(cx);
+    js::ReportOutOfMemory(ec);
     return TaggedParserAtomIndex::null();
   }
   return taggedIndex;
@@ -326,30 +327,32 @@ TaggedParserAtomIndex ParserAtomsTable::addEntry(JSContext* cx,
 
 template <typename AtomCharT, typename SeqCharT>
 TaggedParserAtomIndex ParserAtomsTable::internChar16Seq(
-    JSContext* cx, EntryMap::AddPtr& addPtr, HashNumber hash,
+    JSContext* cx, ErrorContext* ec, EntryMap::AddPtr& addPtr, HashNumber hash,
     InflatedChar16Sequence<SeqCharT> seq, uint32_t length) {
   MOZ_ASSERT(!addPtr);
 
   ParserAtom* entry =
-      ParserAtom::allocate<AtomCharT>(cx, *alloc_, seq, length, hash);
+      ParserAtom::allocate<AtomCharT>(cx, ec, *alloc_, seq, length, hash);
   if (!entry) {
     return TaggedParserAtomIndex::null();
   }
-  return addEntry(cx, addPtr, entry);
+  return addEntry(cx, ec, addPtr, entry);
 }
 
 static const uint16_t MAX_LATIN1_CHAR = 0xff;
 
 TaggedParserAtomIndex ParserAtomsTable::internAscii(JSContext* cx,
+                                                    ErrorContext* ec,
                                                     const char* asciiPtr,
                                                     uint32_t length) {
   // ASCII strings are strict subsets of Latin1 strings.
   const Latin1Char* latin1Ptr = reinterpret_cast<const Latin1Char*>(asciiPtr);
-  return internLatin1(cx, latin1Ptr, length);
+  return internLatin1(cx, ec, latin1Ptr, length);
 }
 
 TaggedParserAtomIndex ParserAtomsTable::internLatin1(
-    JSContext* cx, const Latin1Char* latin1Ptr, uint32_t length) {
+    JSContext* cx, ErrorContext* ec, const Latin1Char* latin1Ptr,
+    uint32_t length) {
   // Check for tiny strings which are abundant in minified code.
   if (auto tiny = wellKnownTable_.lookupTinyIndex(latin1Ptr, length)) {
     return tiny;
@@ -368,7 +371,8 @@ TaggedParserAtomIndex ParserAtomsTable::internLatin1(
     return addPtr->value();
   }
 
-  return internChar16Seq<Latin1Char>(cx, addPtr, lookup.hash(), seq, length);
+  return internChar16Seq<Latin1Char>(cx, ec, addPtr, lookup.hash(), seq,
+                                     length);
 }
 
 bool IsWide(const InflatedChar16Sequence<char16_t>& seq) {
@@ -385,7 +389,7 @@ bool IsWide(const InflatedChar16Sequence<char16_t>& seq) {
 
 template <typename AtomCharT>
 TaggedParserAtomIndex ParserAtomsTable::internExternalParserAtomImpl(
-    JSContext* cx, const ParserAtom* atom) {
+    JSContext* cx, ErrorContext* ec, const ParserAtom* atom) {
   InflatedChar16Sequence<AtomCharT> seq(atom->chars<AtomCharT>(),
                                         atom->length());
   SpecificParserAtomLookup<AtomCharT> lookup(seq, atom->hash());
@@ -402,8 +406,8 @@ TaggedParserAtomIndex ParserAtomsTable::internExternalParserAtomImpl(
     return index;
   }
 
-  auto index =
-      internChar16Seq<AtomCharT>(cx, addPtr, atom->hash(), seq, atom->length());
+  auto index = internChar16Seq<AtomCharT>(cx, ec, addPtr, atom->hash(), seq,
+                                          atom->length());
   if (!index) {
     return TaggedParserAtomIndex::null();
   }
@@ -416,28 +420,28 @@ TaggedParserAtomIndex ParserAtomsTable::internExternalParserAtomImpl(
 }
 
 TaggedParserAtomIndex ParserAtomsTable::internExternalParserAtom(
-    JSContext* cx, const ParserAtom* atom) {
+    JSContext* cx, ErrorContext* ec, const ParserAtom* atom) {
   if (atom->hasLatin1Chars()) {
-    return internExternalParserAtomImpl<JS::Latin1Char>(cx, atom);
+    return internExternalParserAtomImpl<JS::Latin1Char>(cx, ec, atom);
   }
-  return internExternalParserAtomImpl<char16_t>(cx, atom);
+  return internExternalParserAtomImpl<char16_t>(cx, ec, atom);
 }
 
-bool ParserAtomsTable::addPlaceholder(JSContext* cx) {
+bool ParserAtomsTable::addPlaceholder(JSContext* cx, ErrorContext* ec) {
   ParserAtomIndex index = ParserAtomIndex(entries_.length());
   if (size_t(index) >= TaggedParserAtomIndex::IndexLimit) {
     ReportAllocationOverflow(cx);
     return false;
   }
   if (!entries_.append(nullptr)) {
-    js::ReportOutOfMemory(cx);
+    js::ReportOutOfMemory(ec);
     return false;
   }
   return true;
 }
 
 TaggedParserAtomIndex ParserAtomsTable::internExternalParserAtomIndex(
-    JSContext* cx, const CompilationStencil& context,
+    JSContext* cx, ErrorContext* ec, const CompilationStencil& context,
     TaggedParserAtomIndex atom) {
   // When the atom is not a parser atom index, the value represent the atom
   // without the need for a ParserAtom, and thus we can skip interning it.
@@ -445,7 +449,7 @@ TaggedParserAtomIndex ParserAtomsTable::internExternalParserAtomIndex(
     return atom;
   }
   auto index = atom.toParserAtomIndex();
-  return internExternalParserAtom(cx, context.parserAtomData[index]);
+  return internExternalParserAtom(cx, ec, context.parserAtomData[index]);
 }
 
 bool ParserAtomsTable::isEqualToExternalParserAtomIndex(
@@ -515,7 +519,8 @@ static inline bool IsLatin1(mozilla::Utf8Unit c1, mozilla::Utf8Unit c2) {
 }
 
 TaggedParserAtomIndex ParserAtomsTable::internUtf8(
-    JSContext* cx, const mozilla::Utf8Unit* utf8Ptr, uint32_t nbyte) {
+    JSContext* cx, ErrorContext* ec, const mozilla::Utf8Unit* utf8Ptr,
+    uint32_t nbyte) {
   if (auto tiny = wellKnownTable_.lookupTinyIndexUTF8(utf8Ptr, nbyte)) {
     return tiny;
   }
@@ -530,7 +535,7 @@ TaggedParserAtomIndex ParserAtomsTable::internUtf8(
     // unit is the same size, we can reliably cast this `Utf8Unit*`
     // to a `Latin1Char*`.
     const Latin1Char* latin1Ptr = reinterpret_cast<const Latin1Char*>(utf8Ptr);
-    return internLatin1(cx, latin1Ptr, nbyte);
+    return internLatin1(cx, ec, latin1Ptr, nbyte);
   }
 
   // Check for existing.
@@ -553,13 +558,14 @@ TaggedParserAtomIndex ParserAtomsTable::internUtf8(
 
   // Otherwise, add new entry.
   bool wide = (minEncoding == JS::SmallestEncoding::UTF16);
-  return wide
-             ? internChar16Seq<char16_t>(cx, addPtr, lookup.hash(), seq, length)
-             : internChar16Seq<Latin1Char>(cx, addPtr, lookup.hash(), seq,
-                                           length);
+  return wide ? internChar16Seq<char16_t>(cx, ec, addPtr, lookup.hash(), seq,
+                                          length)
+              : internChar16Seq<Latin1Char>(cx, ec, addPtr, lookup.hash(), seq,
+                                            length);
 }
 
 TaggedParserAtomIndex ParserAtomsTable::internChar16(JSContext* cx,
+                                                     ErrorContext* ec,
                                                      const char16_t* char16Ptr,
                                                      uint32_t length) {
   // Check for tiny strings which are abundant in minified code.
@@ -581,10 +587,10 @@ TaggedParserAtomIndex ParserAtomsTable::internChar16(JSContext* cx,
   }
 
   // Otherwise, add new entry.
-  return IsWide(seq)
-             ? internChar16Seq<char16_t>(cx, addPtr, lookup.hash(), seq, length)
-             : internChar16Seq<Latin1Char>(cx, addPtr, lookup.hash(), seq,
-                                           length);
+  return IsWide(seq) ? internChar16Seq<char16_t>(cx, ec, addPtr, lookup.hash(),
+                                                 seq, length)
+                     : internChar16Seq<Latin1Char>(cx, ec, addPtr,
+                                                   lookup.hash(), seq, length);
 }
 
 TaggedParserAtomIndex ParserAtomsTable::internJSAtom(
@@ -596,8 +602,8 @@ TaggedParserAtomIndex ParserAtomsTable::internJSAtom(
 
     parserAtom =
         atom->hasLatin1Chars()
-            ? internLatin1(cx, atom->latin1Chars(nogc), atom->length())
-            : internChar16(cx, atom->twoByteChars(nogc), atom->length());
+            ? internLatin1(cx, ec, atom->latin1Chars(nogc), atom->length())
+            : internChar16(cx, ec, atom->twoByteChars(nogc), atom->length());
     if (!parserAtom) {
       return TaggedParserAtomIndex::null();
     }

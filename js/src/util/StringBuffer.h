@@ -16,6 +16,8 @@
 
 namespace js {
 
+class ErrorContext;
+
 namespace frontend {
 class ParserAtomsTable;
 class TaggedParserAtomIndex;
@@ -352,7 +354,7 @@ class StringBuffer {
   /* Identical to finishString() except that an atom is created. */
   JSAtom* finishAtom();
   frontend::TaggedParserAtomIndex finishParserAtom(
-      frontend::ParserAtomsTable& parserAtoms);
+      frontend::ParserAtomsTable& parserAtoms, ErrorContext* ec);
 
   /*
    * Creates a raw string from the characters in this buffer.  The string is

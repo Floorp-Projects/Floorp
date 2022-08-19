@@ -790,7 +790,7 @@ void DecodeStencilTask::parse(JSContext* cx, ErrorContext* ec) {
   if (!stencilInput_) {
     return;
   }
-  if (!stencilInput_->initForGlobal(cx)) {
+  if (!stencilInput_->initForGlobal(cx, ec)) {
     return;
   }
 
