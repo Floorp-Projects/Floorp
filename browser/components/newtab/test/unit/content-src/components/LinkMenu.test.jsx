@@ -371,6 +371,7 @@ describe("<LinkMenu>", () => {
       type: "bookmark",
       typedBonus: true,
       url: "https://foo.com",
+      sponsored_tile_id: 12345,
     };
     const dispatch = sinon.stub();
     const propOptions = [
@@ -404,6 +405,7 @@ describe("<LinkMenu>", () => {
         url: FAKE_SITE.url,
         referrer: FAKE_SITE.referrer,
         typedBonus: FAKE_SITE.typedBonus,
+        sponsored_tile_id: FAKE_SITE.sponsored_tile_id,
       },
       "newtab-menu-open-new-private-window": {
         url: FAKE_SITE.url,
