@@ -85,15 +85,19 @@ export function useLanguageSwitcher(
         return;
       }
       setLangPackInstallPhase("installing");
-      window.AWEnsureLangPackInstalled(negotiatedLanguage.langPack).then(
-        () => {
-          setLangPackInstallPhase("installed");
-        },
-        error => {
-          console.error(error);
-          setLangPackInstallPhase("installation-error");
-        }
-      );
+      window
+        .AWEnsureLangPackInstalled(negotiatedLanguage, screen?.content)
+        .then(
+          content => {
+            // Update screen content with strings that might have changed.
+            screen.content = content;
+            setLangPackInstallPhase("installed");
+          },
+          error => {
+            console.error(error);
+            setLangPackInstallPhase("installation-error");
+          }
+        );
     },
     [negotiatedLanguage]
   );
@@ -160,21 +164,6 @@ export function LanguageSwitcher(props) {
     }
   }, [isAwaitingLangpack, langPackInstallPhase]);
 
-  // The message args are the localized language names.
-  const withMessageArgs = obj => {
-    const langPackDisplayName = negotiatedLanguage?.langPackDisplayName;
-    if (langPackDisplayName) {
-      return {
-        ...obj,
-        args: {
-          ...obj.args,
-          negotiatedLanguage: langPackDisplayName,
-        },
-      };
-    }
-    return obj;
-  };
-
   let showWaitingScreen = false;
   let showPreloadingScreen = false;
   let showReadyScreen = false;
@@ -190,7 +179,7 @@ export function LanguageSwitcher(props) {
   // Use {display: "none"} rather than if statements to prevent layout thrashing with
   // the localized text elements rendering as blank, then filling in the text.
   return (
-    <div className="language-switcher-container">
+    <div className="action-buttons language-switcher-container">
       {/* Pre-loading screen */}
       <div style={{ display: showPreloadingScreen ? "block" : "none" }}>
         <button
@@ -230,9 +219,7 @@ export function LanguageSwitcher(props) {
             src="chrome://browser/skin/tabbrowser/tab-connecting.png"
             alt=""
           />
-          <Localized
-            text={withMessageArgs(content.languageSwitcher.downloading)}
-          />
+          <Localized text={content.languageSwitcher.downloading} />
         </button>
         <div className="secondary-cta">
           <Localized text={content.languageSwitcher.cancel}>
@@ -264,9 +251,7 @@ export function LanguageSwitcher(props) {
             }}
           >
             {content.languageSwitcher.switch ? (
-              <Localized
-                text={withMessageArgs(content.languageSwitcher.switch)}
-              />
+              <Localized text={content.languageSwitcher.switch} />
             ) : (
               // This is the localized name from the Intl.DisplayNames API.
               negotiatedLanguage?.langPackDisplayName

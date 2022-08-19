@@ -749,7 +749,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_MR() {
   sandbox.restore();
   await pushPrefs(["browser.aboutwelcome.templateMR", true]);
 
-  const { resolveLangPacks } = mockAddonAndLocaleAPIs({
+  const { resolveLangPacks, resolveInstaller } = mockAddonAndLocaleAPIs({
     systemLocale: "es-ES",
     appLocale: "en-US",
   });
@@ -759,18 +759,33 @@ add_task(async function test_aboutwelcome_languageSwitcher_MR() {
   info("Clicking the primary button to view language switching screen.");
   await clickVisibleButton(browser, "button.primary");
 
-  resolveLangPacks(["es-MX", "es-ES", "fr-FR"]);
+  resolveLangPacks(["es-AR"]);
   await testScreenContent(
     browser,
     "Live language switching, asking for a language",
     // Expected selectors:
     [
-      `[data-l10n-id="mr2022-onboarding-live-language-text"]`,
+      `#mainContentHeader[data-l10n-id="mr2022-onboarding-live-language-text"]`,
       `[data-l10n-id="mr2022-language-mismatch-subtitle"]`,
+      `.section-secondary [data-l10n-id="mr2022-onboarding-live-language-text"]`,
+      `[data-l10n-id="mr2022-onboarding-live-language-switch-to"]`,
       `button.primary[value="primary_button"]`,
       `button.secondary`,
     ],
     // Unexpected selectors:
     [`[data-l10n-id="onboarding-live-language-header"]`]
+  );
+
+  await resolveInstaller();
+  await testScreenContent(
+    browser,
+    "Switched some to langpack (raw) strings after install",
+    // Expected selectors:
+    [`#mainContentHeader[data-l10n-id="mr2022-onboarding-live-language-text"]`],
+    // Unexpected selectors:
+    [
+      `.section-secondary [data-l10n-id="mr2022-onboarding-live-language-text"]`,
+      `[data-l10n-id="mr2022-onboarding-live-language-switch-to"]`,
+    ]
   );
 });
