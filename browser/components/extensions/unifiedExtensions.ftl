@@ -19,8 +19,9 @@ unified-extensions-manage-extensions =
 # Variables:
 #   $extensionName (String) - Name of the extension
 unified-extensions-item-open-menu =
-    .tooltiptext = Open menu for { $extensionName }
     .aria-label = Open menu for { $extensionName }
+
+unified-extensions-item-message-manage = Manage extension
 
 ## Extension's context menu
 
