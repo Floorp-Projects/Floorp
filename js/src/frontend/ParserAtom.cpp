@@ -17,6 +17,7 @@
 #include "util/StringBuffer.h"  // StringBuffer
 #include "util/Text.h"          // AsciiDigitToNumber
 #include "util/Unicode.h"
+#include "vm/ErrorContext.h"
 #include "vm/JSContext.h"
 #include "vm/Printer.h"  // Sprinter, QuoteString
 #include "vm/Runtime.h"
@@ -110,7 +111,8 @@ bool ParserAtom::isInstantiatedAsJSAtom() const {
   return false;
 }
 
-JSString* ParserAtom::instantiateString(JSContext* cx, ParserAtomIndex index,
+JSString* ParserAtom::instantiateString(JSContext* cx, ErrorContext* ec,
+                                        ParserAtomIndex index,
                                         CompilationAtomCache& atomCache) const {
   MOZ_ASSERT(!isInstantiatedAsJSAtom());
 
@@ -125,14 +127,15 @@ JSString* ParserAtom::instantiateString(JSContext* cx, ParserAtomIndex index,
   if (!str) {
     return nullptr;
   }
-  if (!atomCache.setAtomAt(cx, index, str)) {
+  if (!atomCache.setAtomAt(ec, index, str)) {
     return nullptr;
   }
 
   return str;
 }
 
-JSAtom* ParserAtom::instantiateAtom(JSContext* cx, ParserAtomIndex index,
+JSAtom* ParserAtom::instantiateAtom(JSContext* cx, ErrorContext* ec,
+                                    ParserAtomIndex index,
                                     CompilationAtomCache& atomCache) const {
   MOZ_ASSERT(isInstantiatedAsJSAtom());
 
@@ -147,14 +150,14 @@ JSAtom* ParserAtom::instantiateAtom(JSContext* cx, ParserAtomIndex index,
   if (!atom) {
     return nullptr;
   }
-  if (!atomCache.setAtomAt(cx, index, atom)) {
+  if (!atomCache.setAtomAt(ec, index, atom)) {
     return nullptr;
   }
   return atom;
 }
 
 JSAtom* ParserAtom::instantiatePermanentAtom(
-    JSContext* cx, AtomSet& atomSet, ParserAtomIndex index,
+    JSContext* cx, ErrorContext* ec, AtomSet& atomSet, ParserAtomIndex index,
     CompilationAtomCache& atomCache) const {
   MOZ_ASSERT(!cx->zone());
 
@@ -165,7 +168,7 @@ JSAtom* ParserAtom::instantiatePermanentAtom(
   if (!atom) {
     return nullptr;
   }
-  if (!atomCache.setAtomAt(cx, index, atom)) {
+  if (!atomCache.setAtomAt(ec, index, atom)) {
     return nullptr;
   }
   return atom;
@@ -585,7 +588,8 @@ TaggedParserAtomIndex ParserAtomsTable::internChar16(JSContext* cx,
 }
 
 TaggedParserAtomIndex ParserAtomsTable::internJSAtom(
-    JSContext* cx, CompilationAtomCache& atomCache, JSAtom* atom) {
+    JSContext* cx, ErrorContext* ec, CompilationAtomCache& atomCache,
+    JSAtom* atom) {
   TaggedParserAtomIndex parserAtom;
   {
     JS::AutoCheckCannotGC nogc;
@@ -602,14 +606,14 @@ TaggedParserAtomIndex ParserAtomsTable::internJSAtom(
   if (parserAtom.isParserAtomIndex()) {
     ParserAtomIndex index = parserAtom.toParserAtomIndex();
     if (!atomCache.hasAtomAt(index)) {
-      if (!atomCache.setAtomAt(cx, index, atom)) {
+      if (!atomCache.setAtomAt(ec, index, atom)) {
         return TaggedParserAtomIndex::null();
       }
     }
   }
 
   // We should (infallibly) map back to the same JSAtom.
-  MOZ_ASSERT(toJSAtom(cx, parserAtom, atomCache) == atom);
+  MOZ_ASSERT(toJSAtom(cx, ec, parserAtom, atomCache) == atom);
 
   return parserAtom;
 }
@@ -1038,7 +1042,8 @@ UniqueChars ParserAtomsTable::toQuotedString(
       '\"');
 }
 
-JSAtom* ParserAtomsTable::toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
+JSAtom* ParserAtomsTable::toJSAtom(JSContext* cx, ErrorContext* ec,
+                                   TaggedParserAtomIndex index,
                                    CompilationAtomCache& atomCache) const {
   // This function can be called before we instantiate atoms based on
   // AtomizeFlag.
@@ -1056,7 +1061,7 @@ JSAtom* ParserAtomsTable::toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
     // For consistency, mark atomize.
     ParserAtom* parserAtom = getParserAtom(atomIndex);
     parserAtom->markAtomize(ParserAtom::Atomize::Yes);
-    return parserAtom->instantiateAtom(cx, atomIndex, atomCache);
+    return parserAtom->instantiateAtom(cx, ec, atomIndex, atomCache);
   }
 
   if (index.isWellKnownAtomId()) {
@@ -1110,7 +1115,8 @@ bool ParserAtomsTable::appendTo(StringBuffer& buffer,
   return buffer.append(content, 3);
 }
 
-bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
+bool InstantiateMarkedAtoms(JSContext* cx, ErrorContext* ec,
+                            const ParserAtomSpan& entries,
                             CompilationAtomCache& atomCache) {
   MOZ_ASSERT(cx->zone());
 
@@ -1129,11 +1135,11 @@ bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
     }
 
     if (!entry->isInstantiatedAsJSAtom()) {
-      if (!entry->instantiateString(cx, index, atomCache)) {
+      if (!entry->instantiateString(cx, ec, index, atomCache)) {
         return false;
       }
     } else {
-      if (!entry->instantiateAtom(cx, index, atomCache)) {
+      if (!entry->instantiateAtom(cx, ec, index, atomCache)) {
         return false;
       }
     }
@@ -1141,7 +1147,8 @@ bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
   return true;
 }
 
-bool InstantiateMarkedAtomsAsPermanent(JSContext* cx, AtomSet& atomSet,
+bool InstantiateMarkedAtomsAsPermanent(JSContext* cx, ErrorContext* ec,
+                                       AtomSet& atomSet,
                                        const ParserAtomSpan& entries,
                                        CompilationAtomCache& atomCache) {
   MOZ_ASSERT(!cx->zone());
@@ -1161,7 +1168,7 @@ bool InstantiateMarkedAtomsAsPermanent(JSContext* cx, AtomSet& atomSet,
       continue;
     }
 
-    if (!entry->instantiatePermanentAtom(cx, atomSet, index, atomCache)) {
+    if (!entry->instantiatePermanentAtom(cx, ec, atomSet, index, atomCache)) {
       return false;
     }
   }

@@ -97,12 +97,12 @@ InputName InputScript::displayAtom() const {
       });
 }
 
-TaggedParserAtomIndex InputName::internInto(JSContext* cx,
+TaggedParserAtomIndex InputName::internInto(JSContext* cx, ErrorContext* ec,
                                             ParserAtomsTable& parserAtoms,
                                             CompilationAtomCache& atomCache) {
   return variant_.match(
       [&](JSAtom* ptr) -> TaggedParserAtomIndex {
-        return parserAtoms.internJSAtom(cx, atomCache, ptr);
+        return parserAtoms.internJSAtom(cx, ec, atomCache, ptr);
       },
       [&](NameStencilRef& ref) -> TaggedParserAtomIndex {
         return parserAtoms.internExternalParserAtomIndex(cx, ref.context_,
@@ -110,7 +110,8 @@ TaggedParserAtomIndex InputName::internInto(JSContext* cx,
       });
 }
 
-bool InputName::isEqualTo(JSContext* cx, ParserAtomsTable& parserAtoms,
+bool InputName::isEqualTo(JSContext* cx, ErrorContext* ec,
+                          ParserAtomsTable& parserAtoms,
                           CompilationAtomCache& atomCache,
                           TaggedParserAtomIndex other,
                           JSAtom** otherCached) const {
@@ -126,7 +127,7 @@ bool InputName::isEqualTo(JSContext* cx, ParserAtomsTable& parserAtoms,
           //
           // See bug 1690277.
           AutoEnterOOMUnsafeRegion oomUnsafe;
-          *otherCached = parserAtoms.toJSAtom(cx, other, atomCache);
+          *otherCached = parserAtoms.toJSAtom(cx, ec, other, atomCache);
           if (!*otherCached) {
             oomUnsafe.crash("InputName::isEqualTo");
           }
@@ -436,7 +437,7 @@ bool ScopeContext::addToEnclosingLexicalBindingCache(
     CompilationAtomCache& atomCache, InputName& name,
     EnclosingLexicalBindingKind kind) {
   TaggedParserAtomIndex parserName =
-      name.internInto(cx, parserAtoms, atomCache);
+      name.internInto(cx, ec, parserAtoms, atomCache);
   if (!parserName) {
     return false;
   }
@@ -518,7 +519,7 @@ bool ScopeContext::cachePrivateFieldsForEval(JSContext* cx, ErrorContext* ec,
                IsPrivateField(scope_ref, bi.name()))) {
             InputName binding(scope_ref, bi.name());
             auto parserName =
-                binding.internInto(cx, parserAtoms, input.atomCache);
+                binding.internInto(cx, ec, parserAtoms, input.atomCache);
             if (!parserName) {
               return false;
             }
@@ -553,7 +554,8 @@ bool ScopeContext::cachePrivateFieldsForEval(JSContext* cx, ErrorContext* ec,
 }
 
 #ifdef DEBUG
-static bool NameIsOnEnvironment(JSContext* cx, ParserAtomsTable& parserAtoms,
+static bool NameIsOnEnvironment(JSContext* cx, ErrorContext* ec,
+                                ParserAtomsTable& parserAtoms,
                                 CompilationAtomCache& atomCache,
                                 InputScope& scope, TaggedParserAtomIndex name) {
   JSAtom* jsname = nullptr;
@@ -563,7 +565,7 @@ static bool NameIsOnEnvironment(JSContext* cx, ParserAtomsTable& parserAtoms,
       // or else there is a bug in the closed-over name analysis in the
       // Parser.
       InputName binding(scope_ref, bi.name());
-      if (binding.isEqualTo(cx, parserAtoms, atomCache, name, &jsname)) {
+      if (binding.isEqualTo(cx, ec, parserAtoms, atomCache, name, &jsname)) {
         BindingLocation::Kind kind = bi.location().kind();
 
         if (bi.hasArgumentSlot()) {
@@ -575,7 +577,7 @@ static bool NameIsOnEnvironment(JSContext* cx, ParserAtomsTable& parserAtoms,
             for (InputBindingIter bi2(bi); bi2 && bi2.hasArgumentSlot();
                  bi2++) {
               InputName binding2(scope_ref, bi2.name());
-              if (binding2.isEqualTo(cx, parserAtoms, atomCache, name,
+              if (binding2.isEqualTo(cx, ec, parserAtoms, atomCache, name,
                                      &jsname)) {
                 kind = bi2.location().kind();
               }
@@ -596,11 +598,9 @@ static bool NameIsOnEnvironment(JSContext* cx, ParserAtomsTable& parserAtoms,
 #endif
 
 /* static */
-NameLocation ScopeContext::searchInEnclosingScope(JSContext* cx,
-                                                  CompilationInput& input,
-                                                  ParserAtomsTable& parserAtoms,
-                                                  TaggedParserAtomIndex name,
-                                                  uint8_t hops) {
+NameLocation ScopeContext::searchInEnclosingScope(
+    JSContext* cx, ErrorContext* ec, CompilationInput& input,
+    ParserAtomsTable& parserAtoms, TaggedParserAtomIndex name, uint8_t hops) {
   MOZ_ASSERT(input.target ==
                  CompilationInput::CompilationTarget::Delazification ||
              input.target == CompilationInput::CompilationTarget::Eval);
@@ -612,8 +612,8 @@ NameLocation ScopeContext::searchInEnclosingScope(JSContext* cx,
   mozilla::Maybe<NameLocation> result;
 
   for (InputScopeIter si(input.enclosingScope); si; si++) {
-    MOZ_ASSERT(NameIsOnEnvironment(cx, parserAtoms, input.atomCache, si.scope(),
-                                   name));
+    MOZ_ASSERT(NameIsOnEnvironment(cx, ec, parserAtoms, input.atomCache,
+                                   si.scope(), name));
 
     bool hasEnv = si.hasSyntacticEnvironment();
 
@@ -627,7 +627,7 @@ NameLocation ScopeContext::searchInEnclosingScope(JSContext* cx,
           si.scope().match([&](auto& scope_ref) {
             for (auto bi = InputBindingIter(scope_ref); bi; bi++) {
               InputName binding(scope_ref, bi.name());
-              if (!binding.isEqualTo(cx, parserAtoms, input.atomCache, name,
+              if (!binding.isEqualTo(cx, ec, parserAtoms, input.atomCache, name,
                                      &jsname)) {
                 continue;
               }
@@ -640,8 +640,8 @@ NameLocation ScopeContext::searchInEnclosingScope(JSContext* cx,
                 for (InputBindingIter bi2(bi); bi2 && bi2.hasArgumentSlot();
                      bi2++) {
                   InputName binding2(scope_ref, bi2.name());
-                  if (binding2.isEqualTo(cx, parserAtoms, input.atomCache, name,
-                                         &jsname)) {
+                  if (binding2.isEqualTo(cx, ec, parserAtoms, input.atomCache,
+                                         name, &jsname)) {
                     bindLoc = bi2.location();
                   }
                 }
@@ -669,7 +669,7 @@ NameLocation ScopeContext::searchInEnclosingScope(JSContext* cx,
           si.scope().match([&](auto& scope_ref) {
             for (auto bi = InputBindingIter(scope_ref); bi; bi++) {
               InputName binding(scope_ref, bi.name());
-              if (!binding.isEqualTo(cx, parserAtoms, input.atomCache, name,
+              if (!binding.isEqualTo(cx, ec, parserAtoms, input.atomCache, name,
                                      &jsname)) {
                 continue;
               }
@@ -695,7 +695,7 @@ NameLocation ScopeContext::searchInEnclosingScope(JSContext* cx,
           si.scope().match([&](auto& scope_ref) {
             for (auto bi = InputBindingIter(scope_ref); bi; bi++) {
               InputName binding(scope_ref, bi.name());
-              if (!binding.isEqualTo(cx, parserAtoms, input.atomCache, name,
+              if (!binding.isEqualTo(cx, ec, parserAtoms, input.atomCache, name,
                                      &jsname)) {
                 continue;
               }
@@ -861,7 +861,7 @@ bool CompilationSyntaxParseCache::init(JSContext* cx, ErrorContext* ec,
                                        ParserAtomsTable& parseAtoms,
                                        CompilationAtomCache& atomCache,
                                        const InputScript& lazy) {
-  if (!copyFunctionInfo(cx, parseAtoms, atomCache, lazy)) {
+  if (!copyFunctionInfo(cx, ec, parseAtoms, atomCache, lazy)) {
     return false;
   }
   bool success = lazy.raw().match([&](auto& ref) {
@@ -883,11 +883,11 @@ bool CompilationSyntaxParseCache::init(JSContext* cx, ErrorContext* ec,
 }
 
 bool CompilationSyntaxParseCache::copyFunctionInfo(
-    JSContext* cx, ParserAtomsTable& parseAtoms,
+    JSContext* cx, ErrorContext* ec, ParserAtomsTable& parseAtoms,
     CompilationAtomCache& atomCache, const InputScript& lazy) {
   InputName name = lazy.displayAtom();
   if (!name.isNull()) {
-    displayAtom_ = name.internInto(cx, parseAtoms, atomCache);
+    displayAtom_ = name.internInto(cx, ec, parseAtoms, atomCache);
     if (!displayAtom_) {
       return false;
     }
@@ -951,7 +951,7 @@ bool CompilationSyntaxParseCache::copyScriptInfo(
 
     if (fun->displayAtom()) {
       TaggedParserAtomIndex displayAtom =
-          parseAtoms.internJSAtom(cx, atomCache, fun->displayAtom());
+          parseAtoms.internJSAtom(cx, ec, atomCache, fun->displayAtom());
       if (!displayAtom) {
         return false;
       }
@@ -1021,7 +1021,7 @@ bool CompilationSyntaxParseCache::copyScriptInfo(
 
     InputName name{inner, inner.scriptData().functionAtom};
     if (!name.isNull()) {
-      auto displayAtom = name.internInto(cx, parseAtoms, atomCache);
+      auto displayAtom = name.internInto(cx, ec, parseAtoms, atomCache);
       if (!displayAtom) {
         return false;
       }
@@ -1071,8 +1071,9 @@ bool CompilationSyntaxParseCache::copyClosedOverBindings(
     }
 
     MOZ_ASSERT(cell->as<JSString>()->isAtom());
+
     auto name = static_cast<JSAtom*>(cell);
-    auto parserAtom = parseAtoms.internJSAtom(cx, atomCache, name);
+    auto parserAtom = parseAtoms.internJSAtom(cx, ec, atomCache, name);
     if (!parserAtom) {
       return false;
     }
@@ -1124,7 +1125,7 @@ bool CompilationSyntaxParseCache::copyClosedOverBindings(
 
     MOZ_ASSERT(gcThing.isAtom());
     InputName name(lazy, gcThing.toAtom());
-    auto parserAtom = name.internInto(cx, parseAtoms, atomCache);
+    auto parserAtom = name.internInto(cx, ec, parseAtoms, atomCache);
     if (!parserAtom) {
       return false;
     }
@@ -1161,7 +1162,7 @@ RegExpObject* RegExpStencil::createRegExp(
 RegExpObject* RegExpStencil::createRegExpAndEnsureAtom(
     JSContext* cx, ErrorContext* ec, ParserAtomsTable& parserAtoms,
     CompilationAtomCache& atomCache) const {
-  Rooted<JSAtom*> atom(cx, parserAtoms.toJSAtom(cx, atom_, atomCache));
+  Rooted<JSAtom*> atom(cx, parserAtoms.toJSAtom(cx, ec, atom_, atomCache));
   if (!atom) {
     return nullptr;
   }
@@ -1415,9 +1416,10 @@ static JSFunction* CreateFunction(JSContext* cx,
   return fun;
 }
 
-static bool InstantiateAtoms(JSContext* cx, CompilationAtomCache& atomCache,
+static bool InstantiateAtoms(JSContext* cx, ErrorContext* ec,
+                             CompilationAtomCache& atomCache,
                              const CompilationStencil& stencil) {
-  return InstantiateMarkedAtoms(cx, stencil.parserAtomData, atomCache);
+  return InstantiateMarkedAtoms(cx, ec, stencil.parserAtomData, atomCache);
 }
 
 static bool InstantiateScriptSourceObject(JSContext* cx,
@@ -1941,7 +1943,8 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
   const JS::InstantiateOptions options(input.options);
 
   // Phase 1: Instantiate JSAtom/JSStrings.
-  if (!InstantiateAtoms(cx, atomCache, stencil)) {
+  MainThreadErrorContext ec(cx);
+  if (!InstantiateAtoms(cx, &ec, atomCache, stencil)) {
     return false;
   }
 
@@ -2031,7 +2034,8 @@ bool CompilationStencil::instantiateSelfHostedAtoms(
 
   // We must instantiate atoms during startup so they can be made permanent
   // across multiple runtimes.
-  return InstantiateMarkedAtomsAsPermanent(cx, atomSet, parserAtomData,
+  MainThreadErrorContext ec(cx);
+  return InstantiateMarkedAtomsAsPermanent(cx, &ec, atomSet, parserAtomData,
                                            atomCache);
 }
 
@@ -4152,7 +4156,7 @@ bool CompilationAtomCache::hasAtomAt(ParserAtomIndex index) const {
   return !!atoms_[index];
 }
 
-bool CompilationAtomCache::setAtomAt(JSContext* cx, ParserAtomIndex index,
+bool CompilationAtomCache::setAtomAt(ErrorContext* ec, ParserAtomIndex index,
                                      JSString* atom) {
   if (size_t(index) < atoms_.length()) {
     atoms_[index] = atom;
@@ -4160,7 +4164,7 @@ bool CompilationAtomCache::setAtomAt(JSContext* cx, ParserAtomIndex index,
   }
 
   if (!atoms_.resize(size_t(index) + 1)) {
-    ReportOutOfMemory(cx);  // TODO bug 1782569
+    ReportOutOfMemory(ec);
     return false;
   }
 

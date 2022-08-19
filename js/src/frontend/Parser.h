@@ -265,11 +265,6 @@ class MOZ_STACK_CLASS ParserSharedBase {
 
   LifoAlloc& stencilAlloc() { return compilationState_.alloc; }
 
-  JSAtom* liftParserAtomToJSAtom(TaggedParserAtomIndex index) {
-    return parserAtoms().toJSAtom(cx_, index,
-                                  compilationState_.input.atomCache);
-  }
-
 #if defined(DEBUG) || defined(JS_JITSPEW)
   void dumpAtom(TaggedParserAtomIndex index) const;
 #endif
@@ -304,6 +299,11 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
   bool inParametersOfAsyncFunction_ : 1;
 
  public:
+  JSAtom* liftParserAtomToJSAtom(TaggedParserAtomIndex index) {
+    return parserAtoms().toJSAtom(cx_, ec_, index,
+                                  compilationState_.input.atomCache);
+  }
+
   bool awaitIsKeyword() const {
     return awaitHandling_ == AwaitIsKeyword ||
            awaitHandling_ == AwaitIsModuleKeyword;
