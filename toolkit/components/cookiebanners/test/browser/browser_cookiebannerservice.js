@@ -42,13 +42,29 @@ add_task(async function test_enabled_pref() {
     /NS_ERROR_NOT_AVAILABLE/,
     "Should have thrown NS_ERROR_NOT_AVAILABLE for rules getter."
   );
+
+  // Create a test rule to attempt to insert.
+  let rule = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
+    Ci.nsICookieBannerRule
+  );
+  rule.domain = "example.com";
+
   Assert.throws(
     () => {
-      Services.cookieBanners.lookupOrInsertRuleForDomain("example.com");
+      Services.cookieBanners.insertRule(rule);
     },
     /NS_ERROR_NOT_AVAILABLE/,
-    "Should have thrown NS_ERROR_NOT_AVAILABLE for rules lookupOrInsertRuleForDomain."
+    "Should have thrown NS_ERROR_NOT_AVAILABLE for rules insertRule."
   );
+
+  Assert.throws(
+    () => {
+      Services.cookieBanners.removeRuleForDomain("example.com");
+    },
+    /NS_ERROR_NOT_AVAILABLE/,
+    "Should have thrown NS_ERROR_NOT_AVAILABLE for rules removeRuleForDomain."
+  );
+
   Assert.throws(
     () => {
       Services.cookieBanners.getCookiesForURI(
@@ -106,11 +122,34 @@ add_task(async function test_insertAndGetRule() {
     "Cookie banner service has no rules initially."
   );
 
-  let rule = Services.cookieBanners.lookupOrInsertRuleForDomain("example.com");
-  ok(rule, "lookupOrInsertRuleForDomain returns rule");
-  ok(
-    rule instanceof Ci.nsICookieBannerRule,
-    "Rule is of type nsICookieBannerRule"
+  info("Test that we can't import rules with empty domain field.");
+  let ruleInvalid = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
+    Ci.nsICookieBannerRule
+  );
+  Assert.throws(
+    () => {
+      Services.cookieBanners.insertRule(ruleInvalid);
+    },
+    /NS_ERROR_FAILURE/,
+    "Inserting an invalid rule missing a domain should throw."
+  );
+
+  let rule = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
+    Ci.nsICookieBannerRule
+  );
+  rule.domain = "example.com";
+
+  Services.cookieBanners.insertRule(rule);
+
+  is(
+    rule.cookiesOptOut.length,
+    0,
+    "Should not have any opt-out cookies initially"
+  );
+  is(
+    rule.cookiesOptIn.length,
+    0,
+    "Should not have any opt-in cookies initially"
   );
 
   info("Clearing preexisting cookies rules for example.com.");
@@ -129,7 +168,12 @@ add_task(async function test_insertAndGetRule() {
     "Cookie Banner Service has one rule."
   );
 
-  let rule2 = Services.cookieBanners.lookupOrInsertRuleForDomain("example.org");
+  let rule2 = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
+    Ci.nsICookieBannerRule
+  );
+  rule2.domain = "example.org";
+
+  Services.cookieBanners.insertRule(rule2);
   info("Clearing preexisting cookies rules for example.org.");
   rule2.clearCookies();
 
@@ -206,4 +250,123 @@ add_task(async function test_insertAndGetRule() {
     "getCookiesForURI should return a rule array."
   );
   is(ruleArrayUnknown.length, 0, "rule array should contain no rules.");
+
+  // Cleanup.
+  Services.cookieBanners.resetRules(false);
+});
+
+add_task(async function test_removeRule() {
+  info("Enabling cookie banner service with MODE_REJECT");
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["cookiebanners.service.mode", Ci.nsICookieBannerService.MODE_REJECT],
+    ],
+  });
+
+  info("Clear any preexisting rules");
+  Services.cookieBanners.resetRules(false);
+
+  is(
+    Services.cookieBanners.rules.length,
+    0,
+    "Cookie banner service has no rules initially."
+  );
+
+  let rule = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
+    Ci.nsICookieBannerRule
+  );
+  rule.domain = "example.com";
+
+  Services.cookieBanners.insertRule(rule);
+
+  let rule2 = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
+    Ci.nsICookieBannerRule
+  );
+  rule2.domain = "example.org";
+
+  Services.cookieBanners.insertRule(rule2);
+
+  is(
+    Services.cookieBanners.rules.length,
+    2,
+    "Cookie banner service two rules after insert."
+  );
+
+  info("Removing rule for non existent example.net");
+  Services.cookieBanners.removeRuleForDomain("example.net");
+
+  is(
+    Services.cookieBanners.rules.length,
+    2,
+    "Cookie banner service still has two rules."
+  );
+
+  info("Removing rule for non example.com");
+  Services.cookieBanners.removeRuleForDomain("example.com");
+
+  is(
+    Services.cookieBanners.rules.length,
+    1,
+    "Cookie banner service should have one rule left after remove."
+  );
+
+  is(
+    Services.cookieBanners.rules[0].domain,
+    "example.org",
+    "It should be the example.org rule."
+  );
+
+  // Cleanup.
+  Services.cookieBanners.resetRules(false);
+});
+
+add_task(async function test_overwriteRule() {
+  info("Enabling cookie banner service with MODE_REJECT");
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["cookiebanners.service.mode", Ci.nsICookieBannerService.MODE_REJECT],
+    ],
+  });
+
+  info("Clear any preexisting rules");
+  Services.cookieBanners.resetRules(false);
+
+  is(
+    Services.cookieBanners.rules.length,
+    0,
+    "Cookie banner service has no rules initially."
+  );
+
+  let rule = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
+    Ci.nsICookieBannerRule
+  );
+  rule.domain = "example.com";
+
+  info("Adding a cookie so we can detect if the rule updates.");
+  rule.addCookie(true, "", "foo", "original");
+
+  Services.cookieBanners.insertRule(rule);
+
+  let { cookie } = Services.cookieBanners.rules[0].cookiesOptOut[0];
+
+  is(cookie.name, "foo", "Should have set the correct cookie name.");
+  is(cookie.value, "original", "Should have set the correct cookie value.");
+
+  info("Add a new rule with the same domain. It should be overwritten.");
+
+  let ruleNew = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
+    Ci.nsICookieBannerRule
+  );
+  ruleNew.domain = "example.com";
+
+  ruleNew.addCookie(true, "", "foo", "new");
+
+  Services.cookieBanners.insertRule(ruleNew);
+
+  let { cookie: cookieNew } = Services.cookieBanners.rules[0].cookiesOptOut[0];
+  is(cookieNew.name, "foo", "Should have set the original cookie name.");
+  is(cookieNew.value, "new", "Should have set the updated cookie value.");
+
+  // Cleanup.
+  Services.cookieBanners.resetRules(false);
 });
