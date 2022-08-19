@@ -1207,15 +1207,12 @@ customElements.define(
       );
       this.appendChild(template.content.cloneNode(true));
 
+      this._actionButton = this.querySelector(
+        ".unified-extensions-item-action"
+      );
       this._openMenuButton = this.querySelector(
         ".unified-extensions-item-open-menu"
       );
-      this._openMenuButton.addEventListener("mouseover", () => {
-        this.classList.add("no-hover");
-      });
-      this._openMenuButton.addEventListener("mouseout", () => {
-        this.classList.remove("no-hover");
-      });
 
       this.addEventListener("click", this);
 
@@ -1244,9 +1241,7 @@ customElements.define(
               false /* attributesOverride */,
               event
             );
-          } else {
-            gUnifiedExtensions.togglePanel();
-
+          } else if (target === this._actionButton) {
             const extension = WebExtensionPolicy.getByID(this.addon.id)
               ?.extension;
             if (!extension) {
@@ -1271,7 +1266,6 @@ customElements.define(
       }
 
       this.setAttribute("extension-id", this.addon.id);
-      this.classList.add("subviewbutton", "complex-subviewbutton");
 
       this.querySelector(
         ".unified-extensions-item-name"
