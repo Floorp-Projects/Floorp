@@ -19,7 +19,12 @@ def test_devtools_active_port_file(browser):
 def test_connect(browser):
     current_browser = browser(use_cdp=True)
 
-    response = websocket_request(
-        current_browser.remote_agent_port, path=current_browser.debugger_address
-    )
-    assert response.status == 101
+    # Both `localhost` and `127.0.0.1` have to accept connections.
+    for target_host in ["127.0.0.1", "localhost"]:
+        print(f"Connecting to the WebSocket via host {target_host}")
+        response = websocket_request(
+            target_host,
+            current_browser.remote_agent_port,
+            path=current_browser.debugger_address,
+        )
+        assert response.status == 101

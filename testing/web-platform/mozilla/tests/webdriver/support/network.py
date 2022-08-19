@@ -2,8 +2,10 @@ import socket
 from http.client import HTTPConnection
 
 
-def websocket_request(remote_agent_port, host=None, origin=None, path="/session"):
-    real_host = f"localhost:{remote_agent_port}"
+def websocket_request(
+    remote_agent_host, remote_agent_port, host=None, origin=None, path="/session"
+):
+    real_host = f"{remote_agent_host}:{remote_agent_port}"
     url = f"http://{real_host}{path}"
 
     conn = HTTPConnection(real_host)
