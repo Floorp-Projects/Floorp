@@ -10,8 +10,20 @@
  */
 [scriptable, uuid(1d8d9470-97d3-4885-a108-44a5c4fb36e2)]
 interface nsICookieBannerListService : nsISupports {
-    // Import the initial rule list.
-    void importRules();
+    /**
+     * Initialize the service. This asynchronously imports the initial set of rules.
+     */
+    void init();
+
+    /**
+     * Shutdown the service. This disables any rule updates.
+     */
+    void shutdown();
+
+    /*
+     * Asynchronously import all rules from RemoteSettings.
+     */
+    void importAllRules();
 };
 
 %{C++
