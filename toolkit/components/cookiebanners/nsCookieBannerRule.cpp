@@ -59,6 +59,12 @@ nsCookieBannerRule::GetDomain(nsACString& aDomain) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsCookieBannerRule::SetDomain(const nsACString& aDomain) {
+  mDomain.Assign(aDomain);
+  return NS_OK;
+}
+
 nsTArray<nsCOMPtr<nsICookieRule>>& nsCookieBannerRule::Cookies(bool isOptOut) {
   if (isOptOut) {
     return mCookiesOptOut;
