@@ -19,6 +19,7 @@ addAccessibleTask(
       contentDocAcc,
       "default-iframe-body-id"
     );
+    const root = getRootAccessible(document);
 
     testStates(textbox, STATE_FOCUSABLE, 0, STATE_FOCUSED);
 
@@ -27,11 +28,6 @@ addAccessibleTask(
     await onFocus;
 
     testStates(textbox, STATE_FOCUSABLE | STATE_FOCUSED, 0);
-
-    if (Services.appinfo.OS == "WINNT") {
-      // focusedChild XPCOM method not implemented in windows.
-      return;
-    }
 
     is(
       getAccessibleDOMNodeID(contentDocAcc.focusedChild),
@@ -42,7 +38,13 @@ addAccessibleTask(
     is(
       getAccessibleDOMNodeID(iframeDocAcc.focusedChild),
       "textbox",
-      "correct focusedChild from child doc"
+      "correct focusedChild from iframe"
+    );
+
+    is(
+      getAccessibleDOMNodeID(root.focusedChild),
+      "textbox",
+      "correct focusedChild from root"
     );
 
     ok(!iframe.focusedChild, "correct focusedChild from iframe (null)");
@@ -60,6 +62,11 @@ addAccessibleTask(
       getAccessibleDOMNodeID(iframe.focusedChild),
       "default-iframe-body-id",
       "correct focusedChild of child doc from iframe"
+    );
+    is(
+      getAccessibleDOMNodeID(root.focusedChild),
+      "default-iframe-body-id",
+      "correct focusedChild of child doc from root"
     );
   },
   { topLevel: false, iframe: true, remoteIframe: true }

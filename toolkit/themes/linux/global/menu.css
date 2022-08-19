@@ -53,10 +53,11 @@ menucaption[disabled="true"] {
 }
 
 menubar > menu {
-  padding: 0 4px;
+  padding: .3em .4em;
 }
 
 menubar:-moz-lwtheme > menu {
+  appearance: none;
   text-shadow: none;
 }
 

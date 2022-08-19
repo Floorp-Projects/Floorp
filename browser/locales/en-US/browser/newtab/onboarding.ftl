@@ -232,12 +232,22 @@ mr2-onboarding-start-browsing-button-label = Start browsing
 ##
 ## Variables:
 ##   $negotiatedLanguage (String) - The name of the langpack's language, e.g. "Español (ES)"
+##   $systemLanguage (String) - The name of the system language, e.g "Español (ES)"
+##   $appLanguage (String) - The name of the language shipping in the browser build, e.g. "English (EN)"
 
 onboarding-live-language-header = Choose your language
+
+mr2022-onboarding-live-language-text = { -brand-short-name } speaks your language
+
+mr2022-language-mismatch-subtitle = Thanks to our community, { -brand-short-name } is translated in over 90 languages. It looks like your system is using { $systemLanguage }, and { -brand-short-name } is using { $appLanguage }.
 
 onboarding-live-language-button-label-downloading = Downloading the language pack for { $negotiatedLanguage }…
 onboarding-live-language-waiting-button = Getting available languages…
 onboarding-live-language-installing = Installing the language pack for { $negotiatedLanguage }…
+
+mr2022-onboarding-live-language-switch-to = Switch to { $negotiatedLanguage }
+mr2022-onboarding-live-language-continue-in = Continue in { $appLanguage }
+
 onboarding-live-language-secondary-cancel-download = Cancel
 onboarding-live-language-skip-button-label = Skip
 

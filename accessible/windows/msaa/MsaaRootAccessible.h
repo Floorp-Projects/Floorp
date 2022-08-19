@@ -35,8 +35,10 @@ class MsaaRootAccessible : public MsaaDocAccessible {
    */
   already_AddRefed<IUnknown> GetInternalUnknown();
 
-  virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accFocus(
-      /* [retval][out] */ VARIANT __RPC_FAR* pvarChild) override;
+  virtual /* [id] */ HRESULT STDMETHODCALLTYPE accNavigate(
+      /* [in] */ long navDir,
+      /* [optional][in] */ VARIANT varStart,
+      /* [retval][out] */ VARIANT __RPC_FAR* pvarEndUpAt) override;
 
  private:
   // DECLARE_AGGREGATABLE declares the internal IUnknown methods as well as

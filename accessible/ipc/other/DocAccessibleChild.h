@@ -417,10 +417,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
   virtual mozilla::ipc::IPCResult RecvStep(const uint64_t& aID,
                                            double* aStep) override;
 
-  virtual mozilla::ipc::IPCResult RecvFocusedChild(
-      const uint64_t& aID, PDocAccessibleChild** aResultDoc,
-      uint64_t* aResultID) override;
-
   virtual mozilla::ipc::IPCResult RecvLanguage(const uint64_t& aID,
                                                nsString* aLocale) override;
   virtual mozilla::ipc::IPCResult RecvDocType(const uint64_t& aID,

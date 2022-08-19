@@ -593,15 +593,13 @@ MOZ_ALWAYS_INLINE bool CellHasStoreBuffer(const Cell* cell) {
 } /* namespace detail */
 
 MOZ_ALWAYS_INLINE bool IsInsideNursery(const Cell* cell) {
-  if (!cell) {
-    return false;
-  }
+  MOZ_ASSERT(cell);
   return detail::CellHasStoreBuffer(cell);
 }
 
 MOZ_ALWAYS_INLINE bool IsInsideNursery(const TenuredCell* cell) {
-  MOZ_ASSERT_IF(
-      cell, !detail::CellHasStoreBuffer(reinterpret_cast<const Cell*>(cell)));
+  MOZ_ASSERT(cell);
+  MOZ_ASSERT(!IsInsideNursery(reinterpret_cast<const Cell*>(cell)));
   return false;
 }
 

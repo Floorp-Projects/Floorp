@@ -11,11 +11,9 @@ from __future__ import absolute_import
 
 import codecs
 import os
-import sqlite3
 
 from six import string_types
 from six.moves.urllib import parse
-import six
 
 __all__ = [
     "MissingPrimaryLocationError",
@@ -128,8 +126,7 @@ class ServerLocations(object):
     callback is called, if given.
     """
 
-    def __init__(self, filename=None, add_callback=None):
-        self.add_callback = add_callback
+    def __init__(self, filename=None):
         self._locations = []
         self.hasPrimary = False
         if filename:
@@ -141,15 +138,13 @@ class ServerLocations(object):
     def __len__(self):
         return len(self._locations)
 
-    def add(self, location, suppress_callback=False):
+    def add(self, location):
         if "primary" in location.options:
             if self.hasPrimary:
                 raise MultiplePrimaryLocationsError()
             self.hasPrimary = True
 
         self._locations.append(location)
-        if self.add_callback and not suppress_callback:
-            self.add_callback([location])
 
     def add_host(self, host, port="80", scheme="http", options="privileged"):
         if isinstance(options, string_types):
@@ -205,7 +200,7 @@ class ServerLocations(object):
 
             try:
                 location = Location(scheme, host, port, options)
-                self.add(location, suppress_callback=True)
+                self.add(location)
             except LocationError as e:
                 raise LocationsSyntaxError(lineno, e)
 
@@ -215,21 +210,15 @@ class ServerLocations(object):
         if check_for_primary and not self.hasPrimary:
             raise LocationsSyntaxError(lineno + 1, MissingPrimaryLocationError())
 
-        if self.add_callback:
-            self.add_callback(new_locations)
-
 
 class Permissions(object):
     """Allows handling of permissions for ``mozprofile``"""
 
-    def __init__(self, profileDir, locations=None):
-        self._profileDir = profileDir
-        self._locations = ServerLocations(add_callback=self.write_db)
+    def __init__(self, locations=None):
+        self._locations = ServerLocations()
         if locations:
             if isinstance(locations, ServerLocations):
                 self._locations = locations
-                self._locations.add_callback = self.write_db
-                self.write_db(self._locations._locations)
             elif isinstance(locations, list):
                 for l in locations:
                     self._locations.add_host(**l)
@@ -237,82 +226,6 @@ class Permissions(object):
                 self._locations.add_host(**locations)
             elif os.path.exists(locations):
                 self._locations.read(locations)
-
-    def write_db(self, locations):
-        """write permissions to the sqlite database"""
-
-        # Open database and create table
-        permDB = sqlite3.connect(os.path.join(self._profileDir, "permissions.sqlite"))
-        cursor = permDB.cursor()
-
-        # SQL copied from
-        # http://searchfox.org/mozilla-central/source/extensions/permissions/PermissionManager.cpp
-        cursor.execute(
-            """CREATE TABLE IF NOT EXISTS moz_hosts (
-              id INTEGER PRIMARY KEY
-             ,origin TEXT
-             ,type TEXT
-             ,permission INTEGER
-             ,expireType INTEGER
-             ,expireTime INTEGER
-             ,modificationTime INTEGER
-           )"""
-        )
-
-        rows = cursor.execute("PRAGMA table_info(moz_hosts)")
-        count = len(rows.fetchall())
-
-        using_origin = False
-        # if the db contains 7 columns, we're using user_version 5
-        if count == 7:
-            statement = "INSERT INTO moz_hosts values(NULL, ?, ?, ?, 0, 0, 0)"
-            cursor.execute("PRAGMA user_version=5;")
-            using_origin = True
-        # if the db contains 9 columns, we're using user_version 4
-        elif count == 9:
-            statement = "INSERT INTO moz_hosts values(NULL, ?, ?, ?, 0, 0, 0, 0, 0)"
-            cursor.execute("PRAGMA user_version=4;")
-        # if the db contains 8 columns, we're using user_version 3
-        elif count == 8:
-            statement = "INSERT INTO moz_hosts values(NULL, ?, ?, ?, 0, 0, 0, 0)"
-            cursor.execute("PRAGMA user_version=3;")
-        else:
-            statement = "INSERT INTO moz_hosts values(NULL, ?, ?, ?, 0, 0)"
-            cursor.execute("PRAGMA user_version=2;")
-
-        for location in locations:
-            # set the permissions
-            permissions = {"allowXULXBL": "noxul" not in location.options}
-            for perm, allow in six.iteritems(permissions):
-                if allow:
-                    permission_type = 1
-                else:
-                    permission_type = 2
-
-                if using_origin:
-                    # This is a crude approximation of the origin generation
-                    # logic from ContentPrincipal and nsStandardURL. It should
-                    # suffice for the permissions which the test runners will
-                    # want to insert into the system.
-                    origin = location.scheme + "://" + location.host
-                    if (location.scheme != "http" or location.port != "80") and (
-                        location.scheme != "https" or location.port != "443"
-                    ):
-                        origin += ":" + str(location.port)
-
-                    cursor.execute(statement, (origin, perm, permission_type))
-                else:
-                    # The database is still using a legacy system based on hosts
-                    # We can insert the permission as a host
-                    #
-                    # XXX This codepath should not be hit, as tests are run with
-                    # fresh profiles. However, if it was hit, permissions would
-                    # not be added to the database correctly (bug 1183185).
-                    cursor.execute(statement, (location.host, perm, permission_type))
-
-        # Commit and close
-        permDB.commit()
-        cursor.close()
 
     def network_prefs(self, proxy=None):
         """
@@ -411,22 +324,3 @@ function FindProxyForURL(url, host)
         prefs.append(("network.proxy.autoconfig_url", pacURL))
 
         return prefs
-
-    def clean_db(self):
-        """Removed permissions added by mozprofile."""
-
-        sqlite_file = os.path.join(self._profileDir, "permissions.sqlite")
-        if not os.path.exists(sqlite_file):
-            return
-
-        # Open database and create table
-        permDB = sqlite3.connect(sqlite_file)
-        cursor = permDB.cursor()
-
-        # TODO: only delete values that we add, this would require sending
-        # in the full permissions object
-        cursor.execute("DROP TABLE IF EXISTS moz_hosts")
-
-        # Commit and close
-        permDB.commit()
-        cursor.close()

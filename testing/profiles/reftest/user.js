@@ -25,8 +25,6 @@ user_pref("browser.startup.page", 0);
 // assumed 980px content.
 user_pref("browser.viewport.desktopWidth", 800);
 user_pref("datareporting.healthreport.uploadEnabled", false);
-// Allow XUL and XBL files to be opened from file:// URIs
-user_pref("dom.allow_XUL_XBL_for_file", true);
 // Don't forcibly kill content processes after a timeout
 user_pref("dom.ipc.tabs.shutdownTimeoutSecs", 0);
 // For mochitests, we're more interested in testing the behavior of in-

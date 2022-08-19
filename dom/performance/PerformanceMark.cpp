@@ -44,7 +44,8 @@ already_AddRefed<PerformanceMark> PerformanceMark::Constructor(
     return nullptr;
   }
 
-  if (performance->IsPerformanceTimingAttribute(aMarkName)) {
+  if (performance->IsGlobalObjectWindow() &&
+      performance->IsPerformanceTimingAttribute(aMarkName)) {
     aRv.ThrowSyntaxError("markName cannot be a performance timing attribute");
     return nullptr;
   }

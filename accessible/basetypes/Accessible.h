@@ -202,6 +202,11 @@ class Accessible {
                                    EWhichChildAtPoint aWhichChild) = 0;
 
   /**
+   * Return the focused child if any.
+   */
+  virtual Accessible* FocusedChild();
+
+  /**
    * Return ARIA role map if any.
    */
   const nsRoleMapEntry* ARIARoleMap() const;
