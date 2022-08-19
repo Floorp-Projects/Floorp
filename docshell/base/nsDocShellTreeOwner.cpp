@@ -961,6 +961,14 @@ nsDocShellTreeOwner::HandleEvent(Event* aEvent) {
   } else if (eventType.EqualsLiteral("drop")) {
     nsIWebNavigation* webnav = static_cast<nsIWebNavigation*>(mWebBrowser);
 
+    // The page might have cancelled the dragover event itself, so check to
+    // make sure that the link can be dropped first.
+    bool canDropLink = false;
+    handler->CanDropLink(dragEvent, false, &canDropLink);
+    if (!canDropLink) {
+      return NS_OK;
+    }
+
     nsTArray<RefPtr<nsIDroppedLinkItem>> links;
     if (webnav && NS_SUCCEEDED(handler->DropLinks(dragEvent, true, links))) {
       if (links.Length() >= 1) {

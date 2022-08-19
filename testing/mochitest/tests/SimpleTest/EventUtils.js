@@ -3089,7 +3089,7 @@ async function synthesizePlainDragAndDrop(aParams) {
   );
 
   try {
-    _getDOMWindowUtils().disableNonTestMouseEvents(true);
+    _getDOMWindowUtils(srcWindow).disableNonTestMouseEvents(true);
 
     await new Promise(r => setTimeout(r, 0));
 
@@ -3414,7 +3414,7 @@ async function synthesizePlainDragAndDrop(aParams) {
         srcWindow.removeEventListener("dragend", onDragEnd, { capture: true });
       }
     }
-    _getDOMWindowUtils().disableNonTestMouseEvents(false);
+    _getDOMWindowUtils(srcWindow).disableNonTestMouseEvents(false);
     if (logFunc) {
       logFunc("synthesizePlainDragAndDrop() -- END");
     }
