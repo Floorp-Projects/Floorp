@@ -12,6 +12,7 @@ const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ShellService: "resource:///modules/ShellService.jsm",
+  BuiltInThemes: "resource:///modules/BuiltInThemes.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -823,6 +824,12 @@ const OnboardingMessageProvider = {
       removeScreens(screen =>
         screen.id?.startsWith("UPGRADE_PIN_PRIVATE_WINDOW")
       );
+    }
+
+    // Remove colorways screen if there is no active colorways collection
+    const hasActiveColorways = !!lazy.BuiltInThemes.findActiveColorwayCollection?.();
+    if (!hasActiveColorways) {
+      removeScreens(screen => screen.id?.startsWith("UPGRADE_COLORWAY"));
     }
 
     return message;

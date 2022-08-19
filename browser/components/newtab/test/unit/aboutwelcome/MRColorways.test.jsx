@@ -4,6 +4,7 @@ import {
   Colorways,
   computeColorWay,
   ColorwayDescription,
+  computeVariationIndex,
 } from "content-src/aboutwelcome/components/MRColorways";
 import { WelcomeScreen } from "content-src/aboutwelcome/components/MultiStageAboutWelcome";
 
@@ -245,6 +246,51 @@ describe("Multistage AboutWelcome module", () => {
         TEST_COLORWAY_PROPS.content.tiles.systemVariations
       );
       assert.strictEqual(colorwayId, "abstract");
+    });
+
+    it("should computeVariationIndex for default active theme", () => {
+      let TEST_COLORWAY_PROPS = {
+        ...COLORWAY_SCREEN_PROPS,
+      };
+
+      const variationIndex = computeVariationIndex(
+        TEST_COLORWAY_PROPS.activeTheme,
+        TEST_COLORWAY_PROPS.content.tiles.systemVariations,
+        TEST_COLORWAY_PROPS.content.tiles.variations,
+        TEST_COLORWAY_PROPS.content.tiles.defaultVariationIndex
+      );
+      assert.strictEqual(
+        variationIndex,
+        TEST_COLORWAY_PROPS.content.tiles.defaultVariationIndex
+      );
+    });
+
+    it("should computeVariationIndex for active theme", () => {
+      let TEST_COLORWAY_PROPS = {
+        ...COLORWAY_SCREEN_PROPS,
+      };
+
+      const variationIndex = computeVariationIndex(
+        "light",
+        TEST_COLORWAY_PROPS.content.tiles.systemVariations,
+        TEST_COLORWAY_PROPS.content.tiles.variations,
+        TEST_COLORWAY_PROPS.content.tiles.defaultVariationIndex
+      );
+      assert.strictEqual(variationIndex, 1);
+    });
+
+    it("should computeVariationIndex for colorway theme", () => {
+      let TEST_COLORWAY_PROPS = {
+        ...COLORWAY_SCREEN_PROPS,
+      };
+
+      const variationIndex = computeVariationIndex(
+        "abstract-bold",
+        TEST_COLORWAY_PROPS.content.tiles.systemVariations,
+        TEST_COLORWAY_PROPS.content.tiles.variations,
+        TEST_COLORWAY_PROPS.content.tiles.defaultVariationIndex
+      );
+      assert.strictEqual(variationIndex, 1);
     });
   });
 });
