@@ -147,7 +147,7 @@ class ParseContext : public Nestable<ParseContext> {
         return false;
       }
 
-      return declared_.acquire(pc->sc()->cx_);
+      return declared_.acquire(pc->sc()->ec_);
     }
 
     bool isEmpty() const { return declared_->all().empty(); }

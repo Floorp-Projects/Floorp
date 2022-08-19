@@ -32,7 +32,7 @@ EmitterScope::EmitterScope(BytecodeEmitter* bce)
       noteIndex_(ScopeNote::NoScopeNoteIndex) {}
 
 bool EmitterScope::ensureCache(BytecodeEmitter* bce) {
-  return nameCache_.acquire(bce->cx);
+  return nameCache_.acquire(bce->ec);
 }
 
 bool EmitterScope::checkSlotLimits(BytecodeEmitter* bce,

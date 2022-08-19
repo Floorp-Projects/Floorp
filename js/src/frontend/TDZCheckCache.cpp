@@ -20,7 +20,7 @@ TDZCheckCache::TDZCheckCache(BytecodeEmitter* bce)
       cache_(bce->cx->frontendCollectionPool()) {}
 
 bool TDZCheckCache::ensureCache(BytecodeEmitter* bce) {
-  return cache_ || cache_.acquire(bce->cx);
+  return cache_ || cache_.acquire(bce->ec);
 }
 
 Maybe<MaybeCheckTDZ> TDZCheckCache::needsTDZCheck(BytecodeEmitter* bce,
