@@ -193,7 +193,7 @@ PerHandlerParser<ParseHandler>::PerHandlerParser(
     const ReadOnlyCompileOptions& options, bool foldConstants,
     CompilationState& compilationState, void* internalSyntaxParser)
     : ParserBase(cx, ec, stackLimit, options, foldConstants, compilationState),
-      handler_(cx, compilationState),
+      handler_(ec, compilationState),
       internalSyntaxParser_(internalSyntaxParser) {
   MOZ_ASSERT(compilationState.isInitialStencil() ==
              compilationState.input.isInitialStencil());

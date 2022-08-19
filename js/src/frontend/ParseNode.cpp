@@ -53,7 +53,7 @@ void* ParseNodeAllocator::allocNode(size_t size) {
   LifoAlloc::AutoFallibleScope fallibleAllocator(&alloc);
   void* p = alloc.alloc(size);
   if (!p) {
-    ReportOutOfMemory(cx);
+    ReportOutOfMemory(ec);
   }
   return p;
 }

@@ -104,8 +104,8 @@ class FullParseHandler {
                                   node->isKind(ParseNodeKind::ArrayExpr));
   }
 
-  FullParseHandler(JSContext* cx, CompilationState& compilationState)
-      : allocator(cx, compilationState.parserAllocScope.alloc()),
+  FullParseHandler(ErrorContext* ec, CompilationState& compilationState)
+      : allocator(ec, compilationState.parserAllocScope.alloc()),
         previousParseCache_(compilationState.previousParseCache),
         lazyInnerFunctionIndex(0),
         lazyClosedOverBindingIndex(0),
