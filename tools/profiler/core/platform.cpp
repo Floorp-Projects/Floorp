@@ -5362,27 +5362,6 @@ bool profiler_get_profile_json(
           99.9_pc, "profiler_get_profile_json: WriteProfileToJSONWriter done"));
 }
 
-void profiler_get_profile_json_into_lazily_allocated_buffer(
-    const std::function<char*(size_t)>& aAllocator, double aSinceTime,
-    bool aIsShuttingDown, mozilla::ProgressLogger aProgressLogger) {
-  LOG("profiler_get_profile_json_into_lazily_allocated_buffer");
-
-  SpliceableChunkedJSONWriter b;
-  if (!profiler_get_profile_json(
-          b, aSinceTime, aIsShuttingDown,
-          aProgressLogger.CreateSubLoggerFromTo(
-              1_pc,
-              "profiler_get_profile_json_into_lazily_allocated_buffer: "
-              "profiler_get_profile_json started",
-              98_pc,
-              "profiler_get_profile_json_into_lazily_allocated_buffer: "
-              "profiler_get_profile_json done"))) {
-    return;
-  }
-
-  b.ChunkedWriteFunc().CopyDataIntoLazilyAllocatedBuffer(aAllocator);
-}
-
 void profiler_get_start_params(int* aCapacity, Maybe<double>* aDuration,
                                double* aInterval, uint32_t* aFeatures,
                                Vector<const char*>* aFilters,

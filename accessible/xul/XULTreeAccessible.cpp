@@ -612,7 +612,7 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(XULTreeItemAccessibleBase,
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeItemAccessibleBase: LocalAccessible
 
-LocalAccessible* XULTreeItemAccessibleBase::FocusedChild() {
+Accessible* XULTreeItemAccessibleBase::FocusedChild() {
   return FocusMgr()->FocusedAccessible() == this ? this : nullptr;
 }
 

@@ -333,10 +333,8 @@ void ProfilerChild::GatherProfileThreadFunction(
           /* aSinceTime */ 0,
           /* aIsShuttingDown */ false,
           progressLogger.CreateSubLoggerFromTo(
-              1_pc,
-              "profiler_get_profile_json_into_lazily_allocated_buffer started",
-              99_pc,
-              "profiler_get_profile_json_into_lazily_allocated_buffer done"))) {
+              1_pc, "profiler_get_profile_json started", 99_pc,
+              "profiler_get_profile_json done"))) {
     // Failed to get a profile (profiler not running?), reset the writer
     // pointer, so that we'll send an empty string.
     writer.reset();

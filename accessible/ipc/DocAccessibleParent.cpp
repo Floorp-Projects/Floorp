@@ -15,6 +15,7 @@
 #include "xpcAccEvents.h"
 #include "nsAccUtils.h"
 #include "TextRange.h"
+#include "RootAccessible.h"
 
 #if defined(XP_WIN)
 #  include "AccessibleWrap.h"
@@ -22,7 +23,6 @@
 #  include "mozilla/mscom/PassthruProxy.h"
 #  include "mozilla/mscom/Ptr.h"
 #  include "nsWinUtils.h"
-#  include "RootAccessible.h"
 #else
 #  include "mozilla/a11y/DocAccessiblePlatformExtParent.h"
 #endif
@@ -1275,6 +1275,16 @@ void DocAccessibleParent::SelectionRanges(nsTArray<TextRange>* aRanges) const {
   }
 }
 
+Accessible* DocAccessibleParent::FocusedChild() {
+  LocalAccessible* outerDoc = OuterDocOfRemoteBrowser();
+  if (!outerDoc) {
+    return nullptr;
+  }
+
+  RootAccessible* rootDocument = outerDoc->RootAccessible();
+  return rootDocument->FocusedChild();
+}
+
 void DocAccessibleParent::URL(nsAString& aURL) const {
   if (!mBrowsingContext) {
     return;
@@ -1286,6 +1296,32 @@ void DocAccessibleParent::URL(nsAString& aURL) const {
   }
   uri->GetSpec(url);
   CopyUTF8toUTF16(url, aURL);
+}
+
+DocAccessibleParent* DocAccessibleParent::GetFrom(
+    dom::BrowsingContext* aBrowsingContext) {
+  if (!aBrowsingContext) {
+    return nullptr;
+  }
+
+  dom::BrowserParent* bp = aBrowsingContext->Canonical()->GetBrowserParent();
+  if (!bp) {
+    return nullptr;
+  }
+
+  const ManagedContainer<PDocAccessibleParent>& docs =
+      bp->ManagedPDocAccessibleParent();
+  for (auto* key : docs) {
+    // Iterate over our docs until we find one with a browsing
+    // context that matches the one we passed in. Return that
+    // document.
+    auto* doc = static_cast<a11y::DocAccessibleParent*>(key);
+    if (doc->GetBrowsingContext() == aBrowsingContext) {
+      return doc;
+    }
+  }
+
+  return nullptr;
 }
 
 }  // namespace a11y

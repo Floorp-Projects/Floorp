@@ -466,15 +466,6 @@ bool LocalAccessible::NativelyUnavailable() const {
                                       nsGkAtoms::_true, eCaseMatters);
 }
 
-LocalAccessible* LocalAccessible::FocusedChild() {
-  LocalAccessible* focus = FocusMgr()->FocusedAccessible();
-  if (focus && (focus == this || focus->LocalParent() == this)) {
-    return focus;
-  }
-
-  return nullptr;
-}
-
 Accessible* LocalAccessible::ChildAtPoint(int32_t aX, int32_t aY,
                                           EWhichChildAtPoint aWhichChild) {
   Accessible* child = LocalChildAtPoint(aX, aY, aWhichChild);

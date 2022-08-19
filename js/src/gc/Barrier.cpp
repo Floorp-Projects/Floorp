@@ -59,7 +59,9 @@ void HeapSlot::assertPreconditionForPostWriteBarrier(
             ->get() == target);
   }
 
-  AssertTargetIsNotGray(obj);
+  if (!obj->zone()->isGCPreparing()) {
+    AssertTargetIsNotGray(obj);
+  }
 }
 
 bool CurrentThreadIsIonCompiling() {

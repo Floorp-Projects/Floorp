@@ -330,8 +330,6 @@ child:
   [Nested=inside_sync] sync Step(uint64_t aID) returns(double aStep);
 
   async TakeFocus(uint64_t aID);
-  [Nested=inside_sync] sync FocusedChild(uint64_t aID)
-    returns(nullable PDocAccessible aResultDoc, uint64_t aResultID);
 
   [Nested=inside_sync] sync Language(uint64_t aID) returns(nsString aLocale);
   [Nested=inside_sync] sync DocType(uint64_t aID) returns(nsString aType);

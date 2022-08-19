@@ -870,7 +870,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
     // Get the endpoint URL. It's empty by default when running tests so they
     // don't hit the network.
-    let endpointString = lazy.UrlbarPrefs.get("merino.endpointURL");
+    let endpointString = lazy.UrlbarPrefs.get("merinoEndpointURL");
     if (!endpointString) {
       return null;
     }

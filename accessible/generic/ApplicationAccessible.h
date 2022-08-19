@@ -48,7 +48,7 @@ class ApplicationAccessible : public AccessibleWrap {
 
   virtual LocalAccessible* LocalChildAtPoint(
       int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) override;
-  virtual LocalAccessible* FocusedChild() override;
+  virtual Accessible* FocusedChild() override;
 
   // ActionAccessible
   virtual KeyBinding AccessKey() const override;

@@ -552,15 +552,7 @@ xpcAccessible::GetFocusedChild(nsIAccessible** aChild) {
 
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
 
-  if (RemoteAccessible* proxy = IntlGeneric()->AsRemote()) {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    NS_IF_ADDREF(*aChild = ToXPC(proxy->FocusedChild()));
-#endif
-  } else {
-    NS_IF_ADDREF(*aChild = ToXPC(Intl()->FocusedChild()));
-  }
+  NS_IF_ADDREF(*aChild = ToXPC(IntlGeneric()->FocusedChild()));
 
   return NS_OK;
 }

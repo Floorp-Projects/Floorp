@@ -317,6 +317,8 @@ class DocAccessibleParent : public RemoteAccessible,
 
   virtual void SelectionRanges(nsTArray<TextRange>* aRanges) const override;
 
+  virtual Accessible* FocusedChild() override;
+
   void URL(nsAString& aURL) const;
 
   // Tracks cached reverse relations (ie. those not set explicitly by an
@@ -324,6 +326,8 @@ class DocAccessibleParent : public RemoteAccessible,
   // the form: {accID, {relationType, [targetAccID, targetAccID, ...]}}
   nsTHashMap<uint64_t, nsTHashMap<uint64_t, nsTArray<uint64_t>>>
       mReverseRelations;
+
+  static DocAccessibleParent* GetFrom(dom::BrowsingContext* aBrowsingContext);
 
  private:
   ~DocAccessibleParent();

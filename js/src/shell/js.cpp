@@ -8052,6 +8052,8 @@ static bool GetMarks(JSContext* cx, unsigned argc, Value* vp) {
     JSObject* obj = observers->get()[i];
     if (!obj) {
       color = "dead";
+    } else if (obj->zone()->isGCPreparing()) {
+      color = "unmarked";
     } else {
       gc::TenuredCell* cell = &obj->asTenured();
       if (cell->isMarkedGray()) {

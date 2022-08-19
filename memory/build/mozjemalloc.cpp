@@ -1369,11 +1369,9 @@ static inline void ApplyZeroOrJunk(void* aPtr, size_t aSize) {
 
 // Whether the current process should always stall, or only stall once.
 static bool sShouldAlwaysStall = true;
-MOZ_JEMALLOC_API void mozjemalloc_experiment_set_always_stall(bool aVal) {
+MOZ_JEMALLOC_API void mozjemalloc_win_set_always_stall(bool aVal) {
   sShouldAlwaysStall = aVal;
 }
-
-#  ifdef MOZ_STALL_ON_OOM
 
 // Implementation of VirtualAlloc wrapper (bug 1716727).
 namespace MozAllocRetries {
@@ -1455,9 +1453,6 @@ static bool ShouldStallAndRetry() {
 }  // namespace MozAllocRetries
 
 using MozAllocRetries::MozVirtualAlloc;
-#  else
-#    define MozVirtualAlloc VirtualAlloc
-#  endif  // MOZ_STALL_ON_OOM
 #endif    // XP_WIN
 
 // ***************************************************************************

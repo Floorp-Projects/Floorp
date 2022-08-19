@@ -714,16 +714,7 @@ function ServeTestBase(aURL, depth) {
     // this one is needed so tests can use example.org urls for cross origin testing
     g.server.registerDirectory("/", directory);
 
-    var secMan = Cc[NS_SCRIPTSECURITYMANAGER_CONTRACTID]
-                     .getService(Ci.nsIScriptSecurityManager);
-
-    var testbase = g.ioService.newURI("http://localhost:" + g.httpServerPort +
-                                     path + dirPath);
-    var testBasePrincipal = secMan.createContentPrincipal(testbase, {});
-
-    // Give the testbase URI access to XUL and XBL
-    Services.perms.addFromPrincipal(testBasePrincipal, "allowXULXBL", Services.perms.ALLOW_ACTION);
-    return testbase;
+    return g.ioService.newURI("http://localhost:" + g.httpServerPort + path + dirPath);
 }
 
 function CreateUrls(test) {
@@ -733,8 +724,12 @@ function CreateUrls(test) {
     let manifestURL = g.ioService.newURI(test.manifest);
 
     let testbase = manifestURL;
-    if (test.runHttp)
+    if (test.runHttp) {
         testbase = ServeTestBase(manifestURL, test.httpDepth)
+    }
+
+    let testbasePrincipal = secMan.createContentPrincipal(testbase, {});
+    Services.perms.addFromPrincipal(testbasePrincipal, "allowXULXBL", Services.perms.ALLOW_ACTION);
 
     function FileToURI(file)
     {
