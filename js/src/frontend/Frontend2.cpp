@@ -117,7 +117,8 @@ void CopyBindingNames(JSContext* cx, CVec<COption<SmooshBindingName>>& from,
 
 // Given the result of SmooshMonkey's parser, convert a list of scope data
 // into a list of ScopeStencil.
-bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
+bool ConvertScopeStencil(JSContext* cx, ErrorContext* ec,
+                         const SmooshResult& result,
                          Vector<TaggedParserAtomIndex>& allAtoms,
                          CompilationState& compilationState) {
   LifoAlloc& alloc = compilationState.alloc;
@@ -137,7 +138,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
 
         size_t numBindings = global.bindings.len;
         GlobalScope::ParserData* data =
-            NewEmptyGlobalScopeData(cx, alloc, numBindings);
+            NewEmptyGlobalScopeData(ec, alloc, numBindings);
         if (!data) {
           return false;
         }
@@ -161,7 +162,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
         size_t numBindings = var.bindings.len;
 
         VarScope::ParserData* data =
-            NewEmptyVarScopeData(cx, alloc, numBindings);
+            NewEmptyVarScopeData(ec, alloc, numBindings);
         if (!data) {
           return false;
         }
@@ -189,7 +190,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
 
         size_t numBindings = lexical.bindings.len;
         LexicalScope::ParserData* data =
-            NewEmptyLexicalScopeData(cx, alloc, numBindings);
+            NewEmptyLexicalScopeData(ec, alloc, numBindings);
         if (!data) {
           return false;
         }
@@ -217,7 +218,7 @@ bool ConvertScopeStencil(JSContext* cx, const SmooshResult& result,
 
         size_t numBindings = function.bindings.len;
         FunctionScope::ParserData* data =
-            NewEmptyFunctionScopeData(cx, alloc, numBindings);
+            NewEmptyFunctionScopeData(ec, alloc, numBindings);
         if (!data) {
           return false;
         }
@@ -602,7 +603,7 @@ bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
     return false;
   }
 
-  if (!ConvertScopeStencil(cx, result, allAtoms, compilationState)) {
+  if (!ConvertScopeStencil(cx, ec, result, allAtoms, compilationState)) {
     return false;
   }
 
