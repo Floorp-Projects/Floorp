@@ -1374,11 +1374,11 @@ JS::ubi::Node::Size JS::ubi::Concrete<Scope>::size(
 
 template <typename... Args>
 /* static */ bool ScopeStencil::appendScopeStencilAndData(
-    JSContext* cx, ErrorContext* ec, CompilationState& compilationState,
+    ErrorContext* ec, CompilationState& compilationState,
     BaseParserScopeData* data, ScopeIndex* indexOut, Args&&... args) {
   *indexOut = ScopeIndex(compilationState.scopeData.length());
   if (uint32_t(*indexOut) >= TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(cx);
+    ReportAllocationOverflow(ec);
     return false;
   }
 
@@ -1400,8 +1400,7 @@ template <typename... Args>
 
 /* static */
 bool ScopeStencil::createForFunctionScope(
-    JSContext* cx, ErrorContext* ec,
-    frontend::CompilationState& compilationState,
+    ErrorContext* ec, frontend::CompilationState& compilationState,
     FunctionScope::ParserData* data, bool hasParameterExprs,
     bool needsEnvironment, ScriptIndex functionIndex, bool isArrow,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
@@ -1423,16 +1422,15 @@ bool ScopeStencil::createForFunctionScope(
   FunctionScope::prepareForScopeCreation(data, hasParameterExprs,
                                          needsEnvironment, &envShape);
 
-  return appendScopeStencilAndData(cx, ec, compilationState, data, index, kind,
+  return appendScopeStencilAndData(ec, compilationState, data, index, kind,
                                    enclosing, firstFrameSlot, envShape,
                                    mozilla::Some(functionIndex), isArrow);
 }
 
 /* static */
 bool ScopeStencil::createForLexicalScope(
-    JSContext* cx, ErrorContext* ec,
-    frontend::CompilationState& compilationState, ScopeKind kind,
-    LexicalScope::ParserData* data, uint32_t firstFrameSlot,
+    ErrorContext* ec, frontend::CompilationState& compilationState,
+    ScopeKind kind, LexicalScope::ParserData* data, uint32_t firstFrameSlot,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   using ScopeType = LexicalScope;
   MOZ_ASSERT(matchScopeKind<ScopeType>(kind));
@@ -1449,15 +1447,14 @@ bool ScopeStencil::createForLexicalScope(
   mozilla::Maybe<uint32_t> envShape;
   ScopeType::prepareForScopeCreation(kind, firstFrameSlot, data, &envShape);
 
-  return appendScopeStencilAndData(cx, ec, compilationState, data, index, kind,
+  return appendScopeStencilAndData(ec, compilationState, data, index, kind,
                                    enclosing, firstFrameSlot, envShape);
 }
 
 /* static */
 bool ScopeStencil::createForClassBodyScope(
-    JSContext* cx, ErrorContext* ec,
-    frontend::CompilationState& compilationState, ScopeKind kind,
-    ClassBodyScope::ParserData* data, uint32_t firstFrameSlot,
+    ErrorContext* ec, frontend::CompilationState& compilationState,
+    ScopeKind kind, ClassBodyScope::ParserData* data, uint32_t firstFrameSlot,
     mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   using ScopeType = ClassBodyScope;
   MOZ_ASSERT(matchScopeKind<ScopeType>(kind));
@@ -1474,15 +1471,15 @@ bool ScopeStencil::createForClassBodyScope(
   mozilla::Maybe<uint32_t> envShape;
   ScopeType::prepareForScopeCreation(kind, firstFrameSlot, data, &envShape);
 
-  return appendScopeStencilAndData(cx, ec, compilationState, data, index, kind,
+  return appendScopeStencilAndData(ec, compilationState, data, index, kind,
                                    enclosing, firstFrameSlot, envShape);
 }
 
 bool ScopeStencil::createForVarScope(
-    JSContext* cx, ErrorContext* ec,
-    frontend::CompilationState& compilationState, ScopeKind kind,
-    VarScope::ParserData* data, uint32_t firstFrameSlot, bool needsEnvironment,
-    mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
+    ErrorContext* ec, frontend::CompilationState& compilationState,
+    ScopeKind kind, VarScope::ParserData* data, uint32_t firstFrameSlot,
+    bool needsEnvironment, mozilla::Maybe<ScopeIndex> enclosing,
+    ScopeIndex* index) {
   using ScopeType = VarScope;
   MOZ_ASSERT(matchScopeKind<ScopeType>(kind));
 
@@ -1499,15 +1496,14 @@ bool ScopeStencil::createForVarScope(
   VarScope::prepareForScopeCreation(kind, data, firstFrameSlot,
                                     needsEnvironment, &envShape);
 
-  return appendScopeStencilAndData(cx, ec, compilationState, data, index, kind,
+  return appendScopeStencilAndData(ec, compilationState, data, index, kind,
                                    enclosing, firstFrameSlot, envShape);
 }
 
 /* static */
 bool ScopeStencil::createForGlobalScope(
-    JSContext* cx, ErrorContext* ec,
-    frontend::CompilationState& compilationState, ScopeKind kind,
-    GlobalScope::ParserData* data, ScopeIndex* index) {
+    ErrorContext* ec, frontend::CompilationState& compilationState,
+    ScopeKind kind, GlobalScope::ParserData* data, ScopeIndex* index) {
   using ScopeType = GlobalScope;
   MOZ_ASSERT(matchScopeKind<ScopeType>(kind));
 
@@ -1529,16 +1525,15 @@ bool ScopeStencil::createForGlobalScope(
 
   mozilla::Maybe<ScopeIndex> enclosing;
 
-  return appendScopeStencilAndData(cx, ec, compilationState, data, index, kind,
+  return appendScopeStencilAndData(ec, compilationState, data, index, kind,
                                    enclosing, firstFrameSlot, envShape);
 }
 
 /* static */
 bool ScopeStencil::createForEvalScope(
-    JSContext* cx, ErrorContext* ec,
-    frontend::CompilationState& compilationState, ScopeKind kind,
-    EvalScope::ParserData* data, mozilla::Maybe<ScopeIndex> enclosing,
-    ScopeIndex* index) {
+    ErrorContext* ec, frontend::CompilationState& compilationState,
+    ScopeKind kind, EvalScope::ParserData* data,
+    mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
   using ScopeType = EvalScope;
   MOZ_ASSERT(matchScopeKind<ScopeType>(kind));
 
@@ -1555,15 +1550,15 @@ bool ScopeStencil::createForEvalScope(
   mozilla::Maybe<uint32_t> envShape;
   EvalScope::prepareForScopeCreation(kind, data, &envShape);
 
-  return appendScopeStencilAndData(cx, ec, compilationState, data, index, kind,
+  return appendScopeStencilAndData(ec, compilationState, data, index, kind,
                                    enclosing, firstFrameSlot, envShape);
 }
 
 /* static */
 bool ScopeStencil::createForModuleScope(
-    JSContext* cx, ErrorContext* ec,
-    frontend::CompilationState& compilationState, ModuleScope::ParserData* data,
-    mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index) {
+    ErrorContext* ec, frontend::CompilationState& compilationState,
+    ModuleScope::ParserData* data, mozilla::Maybe<ScopeIndex> enclosing,
+    ScopeIndex* index) {
   auto kind = ScopeKind::Module;
   using ScopeType = ModuleScope;
   MOZ_ASSERT(matchScopeKind<ScopeType>(kind));
@@ -1585,7 +1580,7 @@ bool ScopeStencil::createForModuleScope(
   mozilla::Maybe<uint32_t> envShape;
   ModuleScope::prepareForScopeCreation(data, &envShape);
 
-  return appendScopeStencilAndData(cx, ec, compilationState, data, index, kind,
+  return appendScopeStencilAndData(ec, compilationState, data, index, kind,
                                    enclosing, firstFrameSlot, envShape);
 }
 
@@ -1612,7 +1607,7 @@ bool ScopeStencil::createSpecificShape(JSContext* cx, ScopeKind kind,
 }
 
 /* static */
-bool ScopeStencil::createForWithScope(JSContext* cx, ErrorContext* ec,
+bool ScopeStencil::createForWithScope(ErrorContext* ec,
                                       CompilationState& compilationState,
                                       mozilla::Maybe<ScopeIndex> enclosing,
                                       ScopeIndex* index) {
@@ -1622,8 +1617,8 @@ bool ScopeStencil::createForWithScope(JSContext* cx, ErrorContext* ec,
   uint32_t firstFrameSlot = 0;
   mozilla::Maybe<uint32_t> envShape;
 
-  return appendScopeStencilAndData(cx, ec, compilationState, nullptr, index,
-                                   kind, enclosing, firstFrameSlot, envShape);
+  return appendScopeStencilAndData(ec, compilationState, nullptr, index, kind,
+                                   enclosing, firstFrameSlot, envShape);
 }
 
 template <typename SpecificScopeT>
