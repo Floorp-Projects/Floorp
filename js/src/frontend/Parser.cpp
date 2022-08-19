@@ -263,7 +263,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     ReportAllocationOverflow(cx_);
     return nullptr;
   }
-  if (!compilationState_.appendScriptStencilAndData(cx_)) {
+  if (!compilationState_.appendScriptStencilAndData(ec_)) {
     return nullptr;
   }
 
@@ -304,7 +304,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
     ReportAllocationOverflow(cx_);
     return nullptr;
   }
-  if (!compilationState_.appendScriptStencilAndData(cx_)) {
+  if (!compilationState_.appendScriptStencilAndData(ec_)) {
     return nullptr;
   }
 
@@ -2199,7 +2199,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
 
   TaggedScriptThingIndex* cursor = nullptr;
   if (!this->compilationState_.allocateGCThingsUninitialized(
-          cx_, funbox->index(), ngcthings.value(), &cursor)) {
+          cx_, ec_, funbox->index(), ngcthings.value(), &cursor)) {
     return false;
   }
 
@@ -11319,7 +11319,7 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
   }
 
   if (!this->compilationState_.bigIntData[index].init(
-          this->cx_, this->stencilAlloc(), chars)) {
+          this->ec_, this->stencilAlloc(), chars)) {
     return null();
   }
 

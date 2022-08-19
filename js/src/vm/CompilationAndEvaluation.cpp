@@ -158,7 +158,8 @@ JS_PUBLIC_API bool JS::StartIncrementalEncoding(JSContext* cx,
       return false;
     }
 
-    if (!initial->steal(cx, std::move(stencil))) {
+    MainThreadErrorContext ec(cx);
+    if (!initial->steal(cx, &ec, std::move(stencil))) {
       return false;
     }
   }
@@ -230,12 +231,12 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  MainThreadErrorContext ec(cx);
   frontend::CompilationState compilationState(cx, allocScope, input.get());
-  if (!compilationState.init(cx)) {
+  if (!compilationState.init(cx, &ec)) {
     return false;
   }
 
-  MainThreadErrorContext ec(cx);
   JS::AutoSuppressWarningReporter suppressWarnings(cx);
   Parser<FullParseHandler, char16_t> parser(
       cx, &ec, cx->stackLimitForCurrentPrincipal(), options, chars.get(),

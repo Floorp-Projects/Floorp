@@ -115,7 +115,7 @@ class MOZ_STACK_CLASS SourceAwareCompiler {
   [[nodiscard]] bool init(JSContext* cx, ErrorContext* ec,
                           InheritThis inheritThis = InheritThis::No,
                           JSObject* enclosingEnv = nullptr) {
-    if (!compilationState_.init(cx, inheritThis, enclosingEnv)) {
+    if (!compilationState_.init(cx, ec, inheritThis, enclosingEnv)) {
       return false;
     }
 
@@ -692,7 +692,7 @@ bool ScriptCompiler<Unit>::compile(JSContext* cx, SharedContext* sc) {
   // Emplace the topLevel stencil
   MOZ_ASSERT(compilationState_.scriptData.length() ==
              CompilationStencil::TopLevelIndex);
-  if (!compilationState_.appendScriptStencilAndData(cx)) {
+  if (!compilationState_.appendScriptStencilAndData(sc->ec_)) {
     return false;
   }
 
@@ -741,7 +741,7 @@ bool ModuleCompiler<Unit>::compile(JSContext* cx, ErrorContext* ec) {
   // Emplace the topLevel stencil
   MOZ_ASSERT(compilationState_.scriptData.length() ==
              CompilationStencil::TopLevelIndex);
-  if (!compilationState_.appendScriptStencilAndData(cx)) {
+  if (!compilationState_.appendScriptStencilAndData(ec)) {
     return false;
   }
 
@@ -1069,7 +1069,8 @@ enum class GetCachedResult {
 // When we have a cache hit, the addPtr out-param would evaluate to a true-ish
 // value.
 static GetCachedResult GetCachedLazyFunctionStencilMaybeInstantiate(
-    JSContext* cx, CompilationInput& input, BytecodeCompilerOutput& output) {
+    JSContext* cx, ErrorContext* ec, CompilationInput& input,
+    BytecodeCompilerOutput& output) {
   RefPtr<CompilationStencil> stencil;
   {
     StencilCache& cache = cx->runtime()->caches().delazificationCache;
@@ -1098,7 +1099,7 @@ static GetCachedResult GetCachedLazyFunctionStencilMaybeInstantiate(
     if (!extensible) {
       return GetCachedResult::Error;
     }
-    if (!extensible->cloneFrom(cx, *stencil)) {
+    if (!extensible->cloneFrom(cx, ec, *stencil)) {
       return GetCachedResult::Error;
     }
 
@@ -1123,7 +1124,8 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
 
   AutoAssertReportedException assertException(cx, ec);
   if (input.options.consumeDelazificationCache()) {
-    auto res = GetCachedLazyFunctionStencilMaybeInstantiate(cx, input, output);
+    auto res =
+        GetCachedLazyFunctionStencilMaybeInstantiate(cx, ec, input, output);
     switch (res) {
       case GetCachedResult::Error:
         return false;
@@ -1142,7 +1144,7 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
   CompilationState compilationState(cx, parserAllocScope, input);
   compilationState.setFunctionKey(input.extent());
   MOZ_ASSERT(!compilationState.isInitialStencil());
-  if (!compilationState.init(cx, inheritThis)) {
+  if (!compilationState.init(cx, ec, inheritThis)) {
     return false;
   }
 
@@ -1183,7 +1185,8 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
   if (input.options.checkDelazificationCache()) {
     using OutputType = RefPtr<CompilationStencil>;
     BytecodeCompilerOutput cached((OutputType()));
-    auto res = GetCachedLazyFunctionStencilMaybeInstantiate(cx, input, cached);
+    auto res =
+        GetCachedLazyFunctionStencilMaybeInstantiate(cx, ec, input, cached);
     if (res == GetCachedResult::Error) {
       return false;
     }
