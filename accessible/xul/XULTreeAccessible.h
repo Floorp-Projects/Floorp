@@ -152,7 +152,7 @@ class XULTreeItemAccessibleBase : public AccessibleWrap {
   virtual uint64_t NativeInteractiveState() const override;
   virtual int32_t IndexInParent() const override;
   virtual Relation RelationByType(RelationType aType) const override;
-  virtual LocalAccessible* FocusedChild() override;
+  virtual Accessible* FocusedChild() override;
   virtual void SetSelected(bool aSelect) override;
   virtual void TakeFocus() const override;
 

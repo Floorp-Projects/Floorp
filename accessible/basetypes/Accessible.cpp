@@ -74,6 +74,16 @@ bool Accessible::IsBefore(const Accessible* aAcc) const {
   return otherPos > 0;
 }
 
+Accessible* Accessible::FocusedChild() {
+  Accessible* doc = nsAccUtils::DocumentFor(this);
+  Accessible* child = doc->FocusedChild();
+  if (child && (child == this || child->Parent() == this)) {
+    return child;
+  }
+
+  return nullptr;
+}
+
 const nsRoleMapEntry* Accessible::ARIARoleMap() const {
   return aria::GetRoleMapFromIndex(mRoleMapEntryIndex);
 }

@@ -15,6 +15,7 @@
 #include "xpcAccEvents.h"
 #include "nsAccUtils.h"
 #include "TextRange.h"
+#include "RootAccessible.h"
 
 #if defined(XP_WIN)
 #  include "AccessibleWrap.h"
@@ -22,7 +23,6 @@
 #  include "mozilla/mscom/PassthruProxy.h"
 #  include "mozilla/mscom/Ptr.h"
 #  include "nsWinUtils.h"
-#  include "RootAccessible.h"
 #else
 #  include "mozilla/a11y/DocAccessiblePlatformExtParent.h"
 #endif
@@ -1273,6 +1273,16 @@ void DocAccessibleParent::SelectionRanges(nsTArray<TextRange>* aRanges) const {
                                      startAcc, data.StartOffset(), endAcc,
                                      data.EndOffset()));
   }
+}
+
+Accessible* DocAccessibleParent::FocusedChild() {
+  LocalAccessible* outerDoc = OuterDocOfRemoteBrowser();
+  if (!outerDoc) {
+    return nullptr;
+  }
+
+  RootAccessible* rootDocument = outerDoc->RootAccessible();
+  return rootDocument->FocusedChild();
 }
 
 void DocAccessibleParent::URL(nsAString& aURL) const {

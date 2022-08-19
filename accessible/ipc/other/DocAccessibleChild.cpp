@@ -1416,50 +1416,6 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvStep(const uint64_t& aID,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessibleChild::RecvFocusedChild(
-    const uint64_t& aID, PDocAccessibleChild** aResultDoc,
-    uint64_t* aResultID) {
-  *aResultDoc = nullptr;
-  *aResultID = 0;
-  LocalAccessible* acc = IdToAccessible(aID);
-  if (!acc) {
-    return IPC_OK();
-  }
-
-  LocalAccessible* result = acc->FocusedChild();
-  if (result) {
-    // LocalAccessible::FocusedChild can return a LocalAccessible from any
-    // document, not just a descendant of the caller's document. Check that it
-    // is really a descendant.
-    DocAccessible* doc = result->Document();
-    if (!doc) {
-      MOZ_ASSERT_UNREACHABLE("Focused child is unbound from doc.");
-      return IPC_OK();
-    }
-
-    while (doc != mDoc) {
-      doc = doc->ParentDocument();
-      if (!doc) {
-        // result's document is not a descendant.
-        return IPC_OK();
-      }
-    }
-    DocAccessibleChild* resultDoc = result->Document()->IPCDoc();
-    // We've sent the constructor for this document to the parent process.
-    // However, because the constructor is async, the parent process might
-    // get the result of this (sync) method before it runs the constructor.
-    // If we send this document in this case, the parent process will crash.
-    // Therefore, we only do this if the parent process has explicitly told
-    // us that the document has been constructed there.
-    if (resultDoc && resultDoc->IsConstructedInParentProcess()) {
-      *aResultDoc = resultDoc;
-      *aResultID =
-          result->IsDoc() ? 0 : reinterpret_cast<uint64_t>(result->UniqueID());
-    }
-  }
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult DocAccessibleChild::RecvLanguage(const uint64_t& aID,
                                                          nsString* aLocale) {
   LocalAccessible* acc = IdToAccessible(aID);

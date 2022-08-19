@@ -317,6 +317,8 @@ class DocAccessibleParent : public RemoteAccessible,
 
   virtual void SelectionRanges(nsTArray<TextRange>* aRanges) const override;
 
+  virtual Accessible* FocusedChild() override;
+
   void URL(nsAString& aURL) const;
 
   // Tracks cached reverse relations (ie. those not set explicitly by an
