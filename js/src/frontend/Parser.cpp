@@ -207,7 +207,8 @@ GeneralParser<ParseHandler, Unit>::GeneralParser(
     SyntaxParser* syntaxParser)
     : Base(cx, ec, stackLimit, options, foldConstants, compilationState,
            syntaxParser),
-      tokenStream(cx, &compilationState.parserAtoms, options, units, length) {}
+      tokenStream(cx, ec, &compilationState.parserAtoms, options, units,
+                  length) {}
 
 template <typename Unit>
 void Parser<SyntaxParseHandler, Unit>::setAwaitHandling(
@@ -345,14 +346,14 @@ bool ParserBase::setSourceMapInfo() {
   }
 
   if (anyChars.hasDisplayURL()) {
-    if (!ss->setDisplayURL(cx_, anyChars.displayURL())) {
+    if (!ss->setDisplayURL(cx_, ec_, anyChars.displayURL())) {
       return false;
     }
   }
 
   if (anyChars.hasSourceMapURL()) {
     MOZ_ASSERT(!ss->hasSourceMapURL());
-    if (!ss->setSourceMapURL(cx_, anyChars.sourceMapURL())) {
+    if (!ss->setSourceMapURL(cx_, ec_, anyChars.sourceMapURL())) {
       return false;
     }
   }
@@ -370,7 +371,7 @@ bool ParserBase::setSourceMapInfo() {
       }
     }
 
-    if (!ss->setSourceMapURL(cx_, options().sourceMapURL())) {
+    if (!ss->setSourceMapURL(cx_, ec_, options().sourceMapURL())) {
       return false;
     }
   }
@@ -2594,7 +2595,7 @@ TaggedParserAtomIndex ParserBase::prefixAccessorName(
   if (!prefixed.append(this->parserAtoms(), propAtom)) {
     return TaggedParserAtomIndex::null();
   }
-  return prefixed.finishParserAtom(this->parserAtoms());
+  return prefixed.finishParserAtom(this->parserAtoms(), ec_);
 }
 
 template <class ParseHandler, typename Unit>
@@ -8008,7 +8009,7 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
           return false;
         }
         auto storedMethodProp =
-            storedMethodName.finishParserAtom(this->parserAtoms());
+            storedMethodName.finishParserAtom(this->parserAtoms(), ec_);
         if (!storedMethodProp) {
           return false;
         }
@@ -11248,7 +11249,7 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
   }
 
   auto atom =
-      this->parserAtoms().internChar16(cx_, chars.begin(), chars.length());
+      this->parserAtoms().internChar16(cx_, ec_, chars.begin(), chars.length());
   if (!atom) {
     return nullptr;
   }
@@ -11609,7 +11610,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
   *propAtomOut = TaggedParserAtomIndex::null();
   switch (ltok) {
     case TokenKind::Number: {
-      auto numAtom = NumberToParserAtom(cx_, this->parserAtoms(),
+      auto numAtom = NumberToParserAtom(cx_, ec_, this->parserAtoms(),
                                         anyChars.currentToken().number());
       if (!numAtom) {
         return null();

@@ -4130,11 +4130,11 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
 
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   if (target == ParseGoal::Script) {
-    if (!input.get().initForGlobal(cx)) {
+    if (!input.get().initForGlobal(cx, &ec)) {
       return false;
     }
   } else {
-    if (!input.get().initForModule(cx)) {
+    if (!input.get().initForModule(cx, &ec)) {
       return false;
     }
   }

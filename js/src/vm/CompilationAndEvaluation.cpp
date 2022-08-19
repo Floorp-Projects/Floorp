@@ -223,15 +223,15 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
   using frontend::ParseGoal;
   using frontend::Parser;
 
+  MainThreadErrorContext ec(cx);
   CompileOptions options(cx);
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
-  if (!input.get().initForGlobal(cx)) {
+  if (!input.get().initForGlobal(cx, &ec)) {
     return false;
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  MainThreadErrorContext ec(cx);
   frontend::CompilationState compilationState(cx, allocScope, input.get());
   if (!compilationState.init(cx, &ec)) {
     return false;

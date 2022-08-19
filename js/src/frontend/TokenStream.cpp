@@ -39,6 +39,7 @@
 #include "js/UniquePtr.h"
 #include "util/Text.h"
 #include "util/Unicode.h"
+#include "vm/ErrorContext.h"
 #include "vm/FrameIter.h"  // js::{,NonBuiltin}FrameIter
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
@@ -512,12 +513,10 @@ TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx, ErrorContext* ec,
 }
 
 template <typename Unit>
-TokenStreamCharsBase<Unit>::TokenStreamCharsBase(JSContext* cx,
-                                                 ParserAtomsTable* parserAtoms,
-                                                 const Unit* units,
-                                                 size_t length,
-                                                 size_t startOffset)
-    : TokenStreamCharsShared(cx, parserAtoms),
+TokenStreamCharsBase<Unit>::TokenStreamCharsBase(
+    JSContext* cx, ErrorContext* ec, ParserAtomsTable* parserAtoms,
+    const Unit* units, size_t length, size_t startOffset)
+    : TokenStreamCharsShared(cx, ec, parserAtoms),
       sourceUnits(units, length, startOffset) {}
 
 bool FillCharBufferFromSourceNormalizingAsciiLineBreaks(CharBuffer& charBuffer,
@@ -581,9 +580,9 @@ bool FillCharBufferFromSourceNormalizingAsciiLineBreaks(CharBuffer& charBuffer,
 
 template <typename Unit, class AnyCharsAccess>
 TokenStreamSpecific<Unit, AnyCharsAccess>::TokenStreamSpecific(
-    JSContext* cx, ParserAtomsTable* parserAtoms,
+    JSContext* cx, ErrorContext* ec, ParserAtomsTable* parserAtoms,
     const ReadOnlyCompileOptions& options, const Unit* units, size_t length)
-    : TokenStreamChars<Unit, AnyCharsAccess>(cx, parserAtoms, units, length,
+    : TokenStreamChars<Unit, AnyCharsAccess>(cx, ec, parserAtoms, units, length,
                                              options.scriptSourceOffset) {}
 
 bool TokenStreamAnyChars::checkOptions() {

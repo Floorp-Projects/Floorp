@@ -8890,7 +8890,8 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         if (key->isKind(ParseNodeKind::NumberExpr)) {
           MOZ_ASSERT(accessorType == AccessorType::None);
 
-          auto keyAtom = key->as<NumericLiteral>().toAtom(cx, parserAtoms());
+          auto keyAtom =
+              key->as<NumericLiteral>().toAtom(cx, ec, parserAtoms());
           if (!keyAtom) {
             return false;
           }
@@ -8916,7 +8917,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
           ParseNode* keyKid = key->as<UnaryNode>().kid();
           if (keyKid->isKind(ParseNodeKind::NumberExpr)) {
             auto keyAtom =
-                keyKid->as<NumericLiteral>().toAtom(cx, parserAtoms());
+                keyKid->as<NumericLiteral>().toAtom(cx, ec, parserAtoms());
             if (!keyAtom) {
               return false;
             }
@@ -9616,7 +9617,8 @@ bool BytecodeEmitter::emitPrivateMethodInitializers(ClassEmitter& ce,
             accessorType == AccessorType::Getter ? ".getter" : ".setter")) {
       return false;
     }
-    auto storedMethodAtom = storedMethodName.finishParserAtom(parserAtoms());
+    auto storedMethodAtom =
+        storedMethodName.finishParserAtom(parserAtoms(), ec);
 
     // Emit the private method body and store it as a lexical var.
     if (!emitFunction(&classMethod->method())) {
@@ -11733,7 +11735,8 @@ bool BytecodeEmitter::intoScriptStencil(ScriptIndex scriptIndex) {
   }
 
   // De-duplicate the bytecode within the runtime.
-  if (!compilationState.sharedData.addAndShare(cx, scriptIndex, sharedData)) {
+  if (!compilationState.sharedData.addAndShare(cx, ec, scriptIndex,
+                                               sharedData)) {
     return false;
   }
 

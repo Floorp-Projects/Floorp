@@ -764,6 +764,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
  public:
   using Base::anyChars;
   using Base::cx_;
+  using Base::ec_;
   using Base::handler_;
   using Base::noteUsedName;
   using Base::pc_;
@@ -1699,6 +1700,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
 #endif
   using Base::checkForUndefinedPrivateFields;
   using Base::cx_;
+  using Base::ec_;
   using Base::finishClassBodyScope;
   using Base::finishFunctionScopes;
   using Base::finishLexicalScope;

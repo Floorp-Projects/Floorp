@@ -6105,15 +6105,15 @@ bool Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp) {
 
   bool result = true;
 
+  MainThreadErrorContext ec(cx);
   CompileOptions options(cx);
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
-  if (!input.get().initForGlobal(cx)) {
+  if (!input.get().initForGlobal(cx, &ec)) {
     return false;
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  MainThreadErrorContext ec(cx);
   frontend::CompilationState compilationState(cx, allocScope, input.get());
   if (!compilationState.init(cx, &ec)) {
     return false;
