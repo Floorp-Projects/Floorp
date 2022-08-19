@@ -11,26 +11,8 @@
 // Necko shouldn't also be caching them.
 
 do_get_profile(); // must be called before getting nsIX509CertDB
-const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
-  Ci.nsIX509CertDB
-);
 
 const SERVER_PORT = 8888;
-
-function start_ocsp_responder(
-  expectedCertNames,
-  expectedPaths,
-  expectedMethods
-) {
-  return startOCSPResponder(
-    SERVER_PORT,
-    "www.example.com",
-    "test_ocsp_fetch_method",
-    expectedCertNames,
-    expectedPaths,
-    expectedMethods
-  );
-}
 
 function add_flush_cache() {
   add_test(() => {

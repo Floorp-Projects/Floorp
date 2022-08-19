@@ -10,7 +10,6 @@
 var gFetchCount = 0;
 var gGoodOCSPResponse = null;
 var gResponsePattern = [];
-var gMessage = "";
 
 function respondWithGoodOCSP(request, response) {
   info("returning 200 OK");
@@ -56,18 +55,10 @@ function add_ocsp_test(
       clearSessionCache();
       gFetchCount = 0;
       gResponsePattern = aResponses;
-      gMessage = aMessage;
     },
     function() {
       // check the number of requests matches the size of aResponses
-      equal(
-        gFetchCount,
-        aResponses.length,
-        "should have made " +
-          aResponses.length +
-          " OCSP request" +
-          (aResponses.length == 1 ? "" : "s")
-      );
+      equal(gFetchCount, aResponses.length, aMessage);
     },
     null,
     aOriginAttributes

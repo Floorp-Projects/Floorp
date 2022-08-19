@@ -13,9 +13,6 @@ const { TestUtils } = ChromeUtils.import(
 );
 
 do_get_profile(); // must be called before getting nsIX509CertDB
-const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
-  Ci.nsIX509CertDB
-);
 
 registerCleanupFunction(() => {
   let certDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile);

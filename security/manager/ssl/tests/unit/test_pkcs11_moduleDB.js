@@ -8,10 +8,6 @@
 // Ensure that the appropriate initialization has happened.
 do_get_profile();
 
-const gModuleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(
-  Ci.nsIPKCS11ModuleDB
-);
-
 function run_test() {
   let libraryFile = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
   libraryFile.append("pkcs11testmodule");
