@@ -29,7 +29,12 @@ function insertTestRules() {
 
   info("Inserting test rules.");
 
-  let ruleA = Services.cookieBanners.lookupOrInsertRuleForDomain(DOMAIN_A);
+  let ruleA = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
+    Ci.nsICookieBannerRule
+  );
+  ruleA.domain = DOMAIN_A;
+
+  Services.cookieBanners.insertRule(ruleA);
   ruleA.addCookie(
     true,
     "." + DOMAIN_A,
@@ -44,7 +49,12 @@ function insertTestRules() {
   );
 
   // An opt-in cookie rule for DOMAIN_B.
-  let ruleB = Services.cookieBanners.lookupOrInsertRuleForDomain(DOMAIN_B);
+  let ruleB = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
+    Ci.nsICookieBannerRule
+  );
+  ruleB.domain = DOMAIN_B;
+
+  Services.cookieBanners.insertRule(ruleB);
   ruleB.addCookie(
     false,
     null, // This should result in .<domain>
