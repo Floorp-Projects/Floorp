@@ -139,7 +139,7 @@ class VendorManifest(MozbuildObject):
         cargo_file = os.path.join(os.path.dirname(self.yaml_file), "Cargo.toml")
         try:
             _replace_in_file(cargo_file, old_revision, new_revision)
-        except:
+        except Exception:
             # If we can't find it the first time, try again with a short hash
             _replace_in_file(cargo_file, old_revision[:8], new_revision)
 
