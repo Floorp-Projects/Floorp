@@ -189,4 +189,4 @@ PerScriptData::PerScriptData(JSContext* cx,
     : gcThingList_(cx, compilationState),
       atomIndices_(cx->frontendCollectionPool()) {}
 
-bool PerScriptData::init(JSContext* cx) { return atomIndices_.acquire(cx); }
+bool PerScriptData::init(ErrorContext* ec) { return atomIndices_.acquire(ec); }

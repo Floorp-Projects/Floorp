@@ -371,7 +371,7 @@ class PerScriptData {
   explicit PerScriptData(JSContext* cx,
                          frontend::CompilationState& compilationState);
 
-  [[nodiscard]] bool init(JSContext* cx);
+  [[nodiscard]] bool init(ErrorContext* ec);
 
   GCThingList& gcThingList() { return gcThingList_; }
   const GCThingList& gcThingList() const { return gcThingList_; }

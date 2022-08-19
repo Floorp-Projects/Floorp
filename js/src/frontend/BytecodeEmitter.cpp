@@ -184,7 +184,7 @@ bool BytecodeEmitter::init() {
       return false;
     }
   }
-  return perScriptData_.init(cx);
+  return perScriptData_.init(ec);
 }
 
 bool BytecodeEmitter::init(TokenPos bodyPosition) {
