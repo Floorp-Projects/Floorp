@@ -284,7 +284,8 @@ export class WelcomeScreen extends React.PureComponent {
 
   async handleAction(event) {
     let { props } = this;
-    let { value } = event.currentTarget;
+    const value =
+      event.currentTarget.value ?? event.currentTarget.getAttribute("value");
     let targetContent =
       props.content[value] ||
       props.content.tiles ||

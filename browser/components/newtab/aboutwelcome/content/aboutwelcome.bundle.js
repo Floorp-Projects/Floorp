@@ -427,9 +427,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     let {
       props
     } = this;
-    let {
-      value
-    } = event.currentTarget;
+    const value = event.currentTarget.value ?? event.currentTarget.getAttribute("value");
     let targetContent = props.content[value] || props.content.tiles || props.content.languageSwitcher;
 
     if (!(targetContent && targetContent.action)) {
@@ -1381,7 +1379,7 @@ const LinkText = props => {
     handleAction
   } = props;
 
-  if (!(content !== null && content !== void 0 && content.text && content !== null && content !== void 0 && content.button_label && typeof handleAction === "function")) {
+  if (!(content !== null && content !== void 0 && content.text && typeof handleAction === "function")) {
     return null;
   }
 
@@ -1389,13 +1387,18 @@ const LinkText = props => {
     className: "cta-paragraph"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
     text: content.text
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-    text: content.button_label
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
+    "data-l10n-id": content.text.string_id,
     onClick: handleAction,
+    onKeyUp: event => ["Enter", " "].includes(event.key) ? handleAction(event) : null,
     value: "cta_paragraph",
-    className: "text-link"
-  })));
+    role: "button",
+    tabIndex: "0"
+  }, " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("a", {
+    role: "button",
+    tabIndex: "0",
+    "data-l10n-name": content.text.string_name
+  }, " "))));
 };
 
 /***/ }),
