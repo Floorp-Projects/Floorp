@@ -1897,40 +1897,40 @@ class MOZ_STACK_CLASS AutoInParametersOfAsyncFunction {
   }
 };
 
-GlobalScope::ParserData* NewEmptyGlobalScopeData(JSContext* cx,
+GlobalScope::ParserData* NewEmptyGlobalScopeData(ErrorContext* ec,
                                                  LifoAlloc& alloc,
                                                  uint32_t numBindings);
 
-VarScope::ParserData* NewEmptyVarScopeData(JSContext* cx, LifoAlloc& alloc,
+VarScope::ParserData* NewEmptyVarScopeData(ErrorContext* ec, LifoAlloc& alloc,
                                            uint32_t numBindings);
 
-LexicalScope::ParserData* NewEmptyLexicalScopeData(JSContext* cx,
+LexicalScope::ParserData* NewEmptyLexicalScopeData(ErrorContext* ec,
                                                    LifoAlloc& alloc,
                                                    uint32_t numBindings);
 
-FunctionScope::ParserData* NewEmptyFunctionScopeData(JSContext* cx,
+FunctionScope::ParserData* NewEmptyFunctionScopeData(ErrorContext* ec,
                                                      LifoAlloc& alloc,
                                                      uint32_t numBindings);
 
 mozilla::Maybe<GlobalScope::ParserData*> NewGlobalScopeData(
-    JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc,
-    ParseContext* pc);
-
-mozilla::Maybe<EvalScope::ParserData*> NewEvalScopeData(
-    JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc,
-    ParseContext* pc);
-
-mozilla::Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
-    JSContext* context, ParseContext::Scope& scope, bool hasParameterExprs,
+    JSContext* cx, ErrorContext* ec, ParseContext::Scope& scope,
     LifoAlloc& alloc, ParseContext* pc);
 
+mozilla::Maybe<EvalScope::ParserData*> NewEvalScopeData(
+    JSContext* cx, ErrorContext* ec, ParseContext::Scope& scope,
+    LifoAlloc& alloc, ParseContext* pc);
+
+mozilla::Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
+    JSContext* cx, ErrorContext* ec, ParseContext::Scope& scope,
+    bool hasParameterExprs, LifoAlloc& alloc, ParseContext* pc);
+
 mozilla::Maybe<VarScope::ParserData*> NewVarScopeData(
-    JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc,
-    ParseContext* pc);
+    JSContext* cx, ErrorContext* ec, ParseContext::Scope& scope,
+    LifoAlloc& alloc, ParseContext* pc);
 
 mozilla::Maybe<LexicalScope::ParserData*> NewLexicalScopeData(
-    JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc,
-    ParseContext* pc);
+    JSContext* cx, ErrorContext* ec, ParseContext::Scope& scope,
+    LifoAlloc& alloc, ParseContext* pc);
 
 bool FunctionScopeHasClosedOverBindings(ParseContext* pc);
 bool LexicalScopeHasClosedOverBindings(ParseContext* pc,
