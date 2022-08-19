@@ -34,7 +34,6 @@ input {
 .onboardingContainer.featureCallout {
   position: absolute;
   transition: opacity 0.5s ease;
-  z-index: 2147483645;
 }
 .onboardingContainer.featureCallout.hidden {
   opacity: 0;
