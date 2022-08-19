@@ -1159,7 +1159,7 @@ RegExpObject* RegExpStencil::createRegExp(
 }
 
 RegExpObject* RegExpStencil::createRegExpAndEnsureAtom(
-    JSContext* cx, ParserAtomsTable& parserAtoms,
+    JSContext* cx, ErrorContext* ec, ParserAtomsTable& parserAtoms,
     CompilationAtomCache& atomCache) const {
   Rooted<JSAtom*> atom(cx, parserAtoms.toJSAtom(cx, atom_, atomCache));
   if (!atom) {
