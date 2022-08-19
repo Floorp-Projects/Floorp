@@ -41,9 +41,7 @@ const AboutWelcomeUtils = {
   },
 
   sendImpressionTelemetry(messageId, context) {
-    var _window$AWSendEventTe, _window;
-
-    (_window$AWSendEventTe = (_window = window).AWSendEventTelemetry) === null || _window$AWSendEventTe === void 0 ? void 0 : _window$AWSendEventTe.call(_window, {
+    window.AWSendEventTelemetry({
       event: "IMPRESSION",
       event_context: { ...context,
         page
@@ -53,8 +51,6 @@ const AboutWelcomeUtils = {
   },
 
   sendActionTelemetry(messageId, elementId, eventName = "CLICK_BUTTON") {
-    var _window$AWSendEventTe2, _window2;
-
     const ping = {
       event: eventName,
       event_context: {
@@ -63,7 +59,7 @@ const AboutWelcomeUtils = {
       },
       message_id: messageId
     };
-    (_window$AWSendEventTe2 = (_window2 = window).AWSendEventTelemetry) === null || _window$AWSendEventTe2 === void 0 ? void 0 : _window$AWSendEventTe2.call(_window2, ping);
+    window.AWSendEventTelemetry(ping);
   },
 
   async fetchFlowParams(metricsFlowUri) {
@@ -287,10 +283,8 @@ const MultiStageAboutWelcome = props => {
   const [topSites, setTopSites] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     (async () => {
-      var _window$AWGetDefaultS, _window, _window$AWGetImportab, _window2;
-
-      let DEFAULT_SITES = await ((_window$AWGetDefaultS = (_window = window).AWGetDefaultSites) === null || _window$AWGetDefaultS === void 0 ? void 0 : _window$AWGetDefaultS.call(_window));
-      const importable = JSON.parse((await ((_window$AWGetImportab = (_window2 = window).AWGetImportableSites) === null || _window$AWGetImportab === void 0 ? void 0 : _window$AWGetImportab.call(_window2))) || "[]");
+      let DEFAULT_SITES = await window.AWGetDefaultSites();
+      const importable = JSON.parse(await window.AWGetImportableSites());
       const showImportable = useImportable && importable.length >= 5;
 
       if (!importTelemetrySent.current) {
@@ -1690,10 +1684,8 @@ class AboutWelcome extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
   }
 
   async fetchFxAFlowUri() {
-    var _window$AWGetFxAMetri, _window;
-
     this.setState({
-      metricsFlowUri: await ((_window$AWGetFxAMetri = (_window = window).AWGetFxAMetricsFlowURI) === null || _window$AWGetFxAMetri === void 0 ? void 0 : _window$AWGetFxAMetri.call(_window))
+      metricsFlowUri: await window.AWGetFxAMetricsFlowURI()
     });
   }
 
