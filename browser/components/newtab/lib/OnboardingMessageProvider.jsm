@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
+  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
   BuiltInThemes: "resource:///modules/BuiltInThemes.jsm",
 });
@@ -332,7 +333,7 @@ const ONBOARDING_MESSAGES = () => [
                 type: "OPEN_URL",
                 data: {
                   args:
-                    "https://www.mozilla.org/en-US/firefox/mobile/get-app/?utm_medium=firefox-desktop&utm_source=onboarding-modal&utm_campaign=mr2022&utm_content=existing-global",
+                    "https://www.mozilla.org/firefox/mobile/get-app/?utm_medium=firefox-desktop&utm_source=onboarding-modal&utm_campaign=mr2022&utm_content=existing-global",
                   where: "tabshifted",
                 },
               },
@@ -893,6 +894,16 @@ const OnboardingMessageProvider = {
     // Remove mobile download screen if user has sync enabled
     if (lazy.usesFirefoxSync && lazy.mobileDevices > 0) {
       removeScreens(screen => screen.id === "UPGRADE_MOBILE_DOWNLOAD");
+    } else if (!lazy.BrowserUtils.sendToDeviceEmailsSupported()) {
+      // If send to device emails are not supported for a user's locale,
+      // remove the send to device link and update the screen text
+      let mobileContent = content.screens.find(
+        screen => screen.id === "UPGRADE_MOBILE_DOWNLOAD"
+      ).content;
+      delete mobileContent.cta_paragraph.action;
+      mobileContent.cta_paragraph.text = {
+        string_id: "mr2022-onboarding-no-mobile-download-cta-text",
+      };
     }
 
     // If a user has Firefox private pinned remove pin private window screen
