@@ -48,6 +48,7 @@ class CustomTabTest {
     @Before
     fun setUp() {
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
+        featureSettingsHelper.setShowStartBrowsingCfrEnabled(false)
         webServer = MockWebServer().apply {
             dispatcher = MockWebServerHelper.AndroidAssetDispatcher()
             start()

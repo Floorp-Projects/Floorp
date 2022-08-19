@@ -19,6 +19,10 @@ class FeatureSettingsHelper {
         settings.shouldShowCfrForTrackingProtection = enabled
     }
 
+    fun setShowStartBrowsingCfrEnabled(enabled: Boolean) {
+        settings.shouldShowStartBrowsingCfr = enabled
+    }
+
     fun setSearchWidgetDialogEnabled(enabled: Boolean) {
         if (enabled) {
             settings.addClearBrowsingSessions(4)

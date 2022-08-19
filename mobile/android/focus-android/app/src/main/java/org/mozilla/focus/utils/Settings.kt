@@ -184,6 +184,14 @@ class Settings(
                 .apply()
         }
 
+    var shouldShowStartBrowsingCfr: Boolean
+        get() = preferences.getBoolean(getPreferenceKey(R.string.pref_cfr_visibility_for_start_browsing), true)
+        set(value) {
+            preferences.edit()
+                .putBoolean(getPreferenceKey(R.string.pref_cfr_visibility_for_start_browsing), value)
+                .apply()
+        }
+
     var isFirstRun: Boolean
         get() = preferences.getBoolean(getPreferenceKey(R.string.firstrun_shown), true)
         set(value) {

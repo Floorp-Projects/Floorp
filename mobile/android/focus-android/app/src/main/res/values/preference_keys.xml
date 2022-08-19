@@ -76,6 +76,8 @@
         <xliff:g id="preference_key">pref_screen_exceptions</xliff:g>
     </string>
     <string name="pref_cfr_visibility_for_tracking_protection" translatable="false"><xliff:g id="preference_key">pref_cfr_visibility_for_tracking_protection</xliff:g></string>
+    <string name="pref_cfr_visibility_for_start_browsing" translatable="false"><xliff:g id="preference_key">pref_cfr_visibility_for_start_browsing</xliff:g></string>
+
     <string name="pref_tool_tip_privacy_security_settings" translatable="false"><xliff:g id="preference_key">pref_tool_tip_privacy_security_settings</xliff:g></string>
     <!-- Theme Settings -->
     <string name="pref_key_light_theme" translatable="false">pref_key_light_theme</string>

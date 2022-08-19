@@ -8,6 +8,9 @@ import android.graphics.Color
 import android.widget.LinearLayout
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.compose.material.Text
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.children
@@ -18,6 +21,8 @@ import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar.Indicators
+import mozilla.components.compose.cfr.CFRPopup
+import mozilla.components.compose.cfr.CFRPopupProperties
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.CustomTabsUseCases
@@ -31,7 +36,6 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.focus.GleanMetrics.TabCount
 import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.R
-import org.mozilla.focus.compose.CFRPopup
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.isCustomTab
 import org.mozilla.focus.ext.isTablet
@@ -41,6 +45,7 @@ import org.mozilla.focus.menu.browser.CustomTabMenu
 import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
+import org.mozilla.focus.ui.theme.focusTypography
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 class BrowserToolbarIntegration(
@@ -238,10 +243,34 @@ class BrowserToolbarIntegration(
                                 .children
                                 .last()
                         CFRPopup(
-                            container = fragment.requireView(),
-                            text = fragment.getString(R.string.cfr_for_toolbar_delete_icon2),
                             anchor = eraseActionView,
-                            onDismiss = ::onDismissEraseTabsCfr,
+                            properties = CFRPopupProperties(
+                                popupWidth = 256.dp,
+                                popupAlignment = CFRPopup.PopupAlignment.INDICATOR_CENTERED_IN_ANCHOR,
+                                popupBodyColors = listOf(
+                                    ContextCompat.getColor(
+                                        fragment.requireContext(),
+                                        R.color.cfr_pop_up_shape_end_color,
+                                    ),
+                                    ContextCompat.getColor(
+                                        fragment.requireContext(),
+                                        R.color.cfr_pop_up_shape_start_color,
+                                    ),
+                                ),
+                                dismissButtonColor = ContextCompat.getColor(
+                                    fragment.requireContext(),
+                                    R.color.cardview_light_background,
+                                ),
+                                popupVerticalOffset = 0.dp,
+                            ),
+                            onDismiss = { onDismissEraseTabsCfr() },
+                            text = {
+                                Text(
+                                    style = focusTypography.cfrTextStyle,
+                                    text = fragment.getString(R.string.cfr_for_toolbar_delete_icon2),
+                                    color = colorResource(R.color.cfr_text_color),
+                                )
+                            },
                         ).apply {
                             show()
                         }
@@ -262,12 +291,36 @@ class BrowserToolbarIntegration(
                 .collect { showTrackingProtectionCfrForTab ->
                     if (showTrackingProtectionCfrForTab[store.state.selectedTabId] == true) {
                         CFRPopup(
-                            container = fragment.requireView(),
-                            text = fragment.getString(R.string.cfr_for_toolbar_shield_icon2),
                             anchor = toolbar.findViewById(
                                 R.id.mozac_browser_toolbar_tracking_protection_indicator,
                             ),
-                            onDismiss = ::onDismissTrackingProtectionCfr,
+                            properties = CFRPopupProperties(
+                                popupWidth = 256.dp,
+                                popupAlignment = CFRPopup.PopupAlignment.INDICATOR_CENTERED_IN_ANCHOR,
+                                popupBodyColors = listOf(
+                                    ContextCompat.getColor(
+                                        fragment.requireContext(),
+                                        R.color.cfr_pop_up_shape_end_color,
+                                    ),
+                                    ContextCompat.getColor(
+                                        fragment.requireContext(),
+                                        R.color.cfr_pop_up_shape_start_color,
+                                    ),
+                                ),
+                                dismissButtonColor = ContextCompat.getColor(
+                                    fragment.requireContext(),
+                                    R.color.cardview_light_background,
+                                ),
+                                popupVerticalOffset = 0.dp,
+                            ),
+                            onDismiss = { onDismissTrackingProtectionCfr() },
+                            text = {
+                                Text(
+                                    style = focusTypography.cfrTextStyle,
+                                    text = fragment.getString(R.string.cfr_for_toolbar_shield_icon2),
+                                    color = colorResource(R.color.cfr_text_color),
+                                )
+                            },
                         ).apply {
                             show()
                         }

@@ -35,6 +35,7 @@ object AppReducer : Reducer<AppState, AppAction> {
                 action,
             )
             is AppAction.ShowEraseTabsCfrChange -> showEraseTabsCfrChanged(state, action)
+            is AppAction.ShowStartBrowsingCfrChange -> showStartBrowsingCfrChanged(state, action)
             is AppAction.ShowTrackingProtectionCfrChange -> showTrackingProtectionCfrChanged(state, action)
             is AppAction.OpenSitePermissionOptionsScreen -> openSitePermissionOptionsScreen(state, action)
             is AppAction.ShowHomeScreen -> showHomeScreen(state)
@@ -185,6 +186,13 @@ private fun secretSettingsStateChanged(state: AppState, action: AppAction.Secret
  */
 private fun showEraseTabsCfrChanged(state: AppState, action: AppAction.ShowEraseTabsCfrChange): AppState {
     return state.copy(showEraseTabsCfr = action.value)
+}
+
+/**
+ * Update whether the start browsing CFR should be shown or not
+ */
+private fun showStartBrowsingCfrChanged(state: AppState, action: AppAction.ShowStartBrowsingCfrChange): AppState {
+    return state.copy(showStartBrowsingTabsCfr = action.value)
 }
 
 /**

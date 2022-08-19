@@ -19,6 +19,7 @@ import java.util.UUID
  * whether they have been updated or not
  * @property secretSettingsEnabled A flag which reflects the state of debug secret settings
  * @property showEraseTabsCfr A flag which reflects the state erase tabs CFR
+ * @property showStartBrowsingTabsCfr A flag which reflects the state of start browsing CFR
  * @property showSearchWidgetSnackbar A flag which reflects the state of search widget snackbar
  */
 data class AppState(
@@ -29,6 +30,7 @@ data class AppState(
     val showEraseTabsCfr: Boolean = false,
     val showSearchWidgetSnackbar: Boolean = false,
     val showTrackingProtectionCfrForTab: Map<String, Boolean> = emptyMap(),
+    val showStartBrowsingTabsCfr: Boolean = false,
 ) : State
 
 /**

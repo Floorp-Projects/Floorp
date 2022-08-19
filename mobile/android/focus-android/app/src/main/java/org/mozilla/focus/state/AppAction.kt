@@ -111,4 +111,9 @@ sealed class AppAction : Action {
      * State of Snackbar for promote search widget has changed
      */
     data class ShowSearchWidgetSnackBar(val value: Boolean) : AppAction()
+
+    /**
+     * State of start browsing CFR has changed
+     */
+    data class ShowStartBrowsingCfrChange(val value: Boolean) : AppAction()
 }

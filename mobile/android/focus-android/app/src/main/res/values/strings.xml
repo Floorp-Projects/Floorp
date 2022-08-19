@@ -964,6 +964,9 @@
     !-- This is the title of promote search widget dialog. -->
     <string name="promote_search_widget_dialog_title">Browsing history cleared! 🎉</string>
 
+    <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
+    <string name="cfr_for_start_browsing">Start your private browsing session, and we’ll block trackers and other bad stuff as you go.</string>
+
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. "Focus") -->
     <string name="promote_search_widget_dialog_subtitle">We’ll leave you to your private browsing, but get a quicker start next time with the %1$s widget on your Home screen.</string>

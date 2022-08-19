@@ -43,6 +43,7 @@ import org.mozilla.focus.settings.permissions.permissionoptions.SitePermission
 import org.mozilla.focus.settings.permissions.permissionoptions.SitePermissionOptionsFragment
 import org.mozilla.focus.settings.privacy.PrivacySecuritySettingsFragment
 import org.mozilla.focus.settings.privacy.studies.StudiesFragment
+import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.utils.ViewUtils
 import kotlin.collections.forEach as withEach
@@ -51,6 +52,7 @@ import kotlin.collections.forEach as withEach
  * Class performing the actual navigation in [MainActivity] by performing fragment transactions if
  * needed.
  */
+@Suppress("TooManyFunctions")
 class MainActivityNavigation(
     private val activity: MainActivity,
 ) {
@@ -83,6 +85,7 @@ class MainActivityNavigation(
             transaction.setCustomAnimations(0, R.anim.erase_animation)
         }
 
+        showStartBrowsingCfr()
         // Currently this callback can get invoked while the app is in the background. Therefore we are using
         // commitAllowingStateLoss() here because we can't do a fragment transaction while the app is in the
         // background - like we already do in showBrowserScreenForCurrentSession().
@@ -95,6 +98,18 @@ class MainActivityNavigation(
                 UrlInputFragment.FRAGMENT_TAG,
             )
             .commitAllowingStateLoss()
+    }
+
+    private fun showStartBrowsingCfr() {
+        val onboardingConfig = FocusNimbus.features.onboarding.value(activity)
+        if (
+            onboardingConfig.isCfrEnabled &&
+            !activity.settings.isFirstRun &&
+            activity.settings.shouldShowStartBrowsingCfr
+        ) {
+            FocusNimbus.features.onboarding.recordExposure()
+            activity.components.appStore.dispatch(AppAction.ShowStartBrowsingCfrChange(true))
+        }
     }
 
     /**

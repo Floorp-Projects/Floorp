@@ -35,7 +35,7 @@ public abstract class ScreenshotTest {
     UiDevice device;
 
     @Rule
-    public ActivityTestRule<MainActivity> mActivityTestRule = new MainActivityFirstrunTestRule(true, false, true) {
+    public ActivityTestRule<MainActivity> mActivityTestRule = new MainActivityFirstrunTestRule(true, false, true,false) {
         @Override
         protected void beforeActivityLaunched() {
             super.beforeActivityLaunched();
