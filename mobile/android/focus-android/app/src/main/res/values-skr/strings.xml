@@ -22,6 +22,9 @@
     <!-- Menu item: Share the currently visible page -->
     <string name="menu_share">شیئر۔۔۔</string>
 
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">سائٹ مسئلہ رپورٹ کرو</string>
+
     <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
       replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
       links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
@@ -48,6 +51,21 @@
     <string name="menu_help">مدد</string>
 
     <string name="menu_rights">تہاݙے حقوق</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">%1$s ولوں تکڑا تھیا</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">شیئر بذریعہ</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">براؤزنگ تاریخ مٹاؤ</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->
     <string name="notification_action_open">کھولو</string>
@@ -117,6 +135,9 @@
     <string name="preference_autocomplete_subitem_manage_sites">سائٹاں دا بندوبست کرو</string>
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ کسٹم یوآرایل شامل کرو</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add2">یوآرایل شامل کرو</string>
 
     <!-- Title of the screen for adding custom autocomplete URLs. -->
@@ -124,6 +145,9 @@
 
     <!-- Label for the button to quick add custom autocomplete URLs. -->
     <string name="custom_autocomplete_quick_add">کسٹم یوآرایل شامل کرو</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">ڈیٹا چوائس</string>
 
     <!-- A link to SUMO at autocomplete settings. -->
     <string name="preference_autocomplete_learn_more">ٻیا سِکھو</string>
@@ -174,7 +198,16 @@
     <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
     <string name="preference_about">%1$s دے بارے</string>
 
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ ہک ٻیا ڳولݨ انجݨ شامل کرو</string>
+    <string name="preference_search_remove_title">ڳولݨ انجݨ ہٹاؤ</string>
     <string name="preference_search_remove">ہٹاؤ</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">ہک ٻیا ڳولݨ انجݨ شامل کرو</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">آپݨاں ترجیحی انجݨ چݨو:</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">ڳولݨ انجݨ شامل کرو</string>
@@ -209,6 +242,9 @@
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
     on home screen-->
     <string name="indicator_content_description_menu">ٻیاں آپشناں بٹݨ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">واپس ون٘ڄو</string>
 
     <string name="your_rights">تہاݙے حقوق</string>
 
@@ -428,6 +464,9 @@
 
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">ساریاں ویب سائٹاں ہٹاؤ</string>
+
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">کوکیاں بلاک کرو</string>
 
     <!-- Label for button to close the tab-->
     <string name="tab_crash_report_close_tab_button_label">ٹیب بند کرو</string>

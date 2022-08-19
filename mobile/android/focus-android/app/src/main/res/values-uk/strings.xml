@@ -295,12 +295,11 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Використовувати відбиток пальця для розблокування</string>
+
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
         %s will be replaced by the app name (e.g. Firefox Focus)
         Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
-    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">Ваш відбиток пальця може розблокувати %1$s, якщо URL-адресу вже відкрито в програмі. Буде увімкнено режим Під прикриттям.</string>
-
     <string name="preference_security_biometric_summary2">Розблокуйте відбитком пальця, якщо ви додали ярлики, або якщо вебсайт вже відкритий у %s.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
@@ -310,7 +309,7 @@
      app's content (in our case especially the content of webpages) to show up in the "recent apps"
      screen. Additionally Android will prevent the user from taking screenshots or casting the app
      to other displays. -->
-    <string name="preference_privacy_stealth_summary">Приховувати вебсторінки при перемиканні застосунків та не дозволяти знімки екрану.</string>
+    <string name="preference_privacy_stealth_summary">Приховувати вебсторінки під час перемикання застосунків та не дозволяти знімки екрана.</string>
 
     <string name="preference_category_security">Безпека</string>
 
