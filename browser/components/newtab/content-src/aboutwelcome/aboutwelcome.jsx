@@ -16,7 +16,7 @@ class AboutWelcome extends React.PureComponent {
   }
 
   async fetchFxAFlowUri() {
-    this.setState({ metricsFlowUri: await window.AWGetFxAMetricsFlowURI() });
+    this.setState({ metricsFlowUri: await window.AWGetFxAMetricsFlowURI?.() });
   }
 
   componentDidMount() {

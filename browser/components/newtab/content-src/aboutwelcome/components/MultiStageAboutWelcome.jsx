@@ -124,8 +124,10 @@ export const MultiStageAboutWelcome = props => {
   const [topSites, setTopSites] = useState([]);
   useEffect(() => {
     (async () => {
-      let DEFAULT_SITES = await window.AWGetDefaultSites();
-      const importable = JSON.parse(await window.AWGetImportableSites());
+      let DEFAULT_SITES = await window.AWGetDefaultSites?.();
+      const importable = JSON.parse(
+        (await window.AWGetImportableSites?.()) || "[]"
+      );
       const showImportable = useImportable && importable.length >= 5;
       if (!importTelemetrySent.current) {
         AboutWelcomeUtils.sendImpressionTelemetry(`${props.message_id}_SITES`, {
