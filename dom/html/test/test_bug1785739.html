@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>nsFind::Find() should initialize the editor</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<input value="1abc1
+              2abc2
+              3abc3
+              4abc4
+              5abc5
+              6abc6
+              7abc7
+              8abc8
+              9abc9" id="input">
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  // The current window.find() impl does not support text controls, so import the internal component
+  const finder =
+    SpecialPowers
+      .Cc["@mozilla.org/typeaheadfind;1"]
+      .getService(SpecialPowers.Ci.nsITypeAheadFind);
+
+  finder.init(SpecialPowers.wrap(window).docShell);
+
+  function find() {
+    return finder.find(
+      "abc",
+      false,
+      SpecialPowers.Ci.nsITypeAheadFind.FIND_NEXT,
+      true);
+  }
+
+  async function runTests() {
+    finder.find("abc", false, SpecialPowers.Ci.nsITypeAheadFind.FIND_FIRST, true);
+    // Wait until layout flush as the bug repro needs it
+    await new Promise(requestAnimationFrame);
+
+    for (let i = 0; i < 9; i++) {
+      find();
+      await new Promise(requestAnimationFrame);
+      is(input.selectionStart, (i * 19) + 1);
+    }
+
+    SimpleTest.finish();
+  }
+  window.addEventListener("load", runTests);
+</script>
