@@ -364,8 +364,8 @@ bool EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind,
 
   ScopeIndex scopeIndex;
   if (!ScopeStencil::createForLexicalScope(
-          bce->cx, bce->compilationState, kind, bindings, firstFrameSlot,
-          enclosingScopeIndex(bce), &scopeIndex)) {
+          bce->cx, bce->ec, bce->compilationState, kind, bindings,
+          firstFrameSlot, enclosingScopeIndex(bce), &scopeIndex)) {
     return false;
   }
   if (!internScopeStencil(bce, scopeIndex)) {
@@ -428,8 +428,8 @@ bool EmitterScope::enterClassBody(BytecodeEmitter* bce, ScopeKind kind,
 
   ScopeIndex scopeIndex;
   if (!ScopeStencil::createForClassBodyScope(
-          bce->cx, bce->compilationState, kind, bindings, firstFrameSlot,
-          enclosingScopeIndex(bce), &scopeIndex)) {
+          bce->cx, bce->ec, bce->compilationState, kind, bindings,
+          firstFrameSlot, enclosingScopeIndex(bce), &scopeIndex)) {
     return false;
   }
   if (!internScopeStencil(bce, scopeIndex)) {
@@ -481,7 +481,7 @@ bool EmitterScope::enterNamedLambda(BytecodeEmitter* bce, FunctionBox* funbox) {
 
   ScopeIndex scopeIndex;
   if (!ScopeStencil::createForLexicalScope(
-          bce->cx, bce->compilationState, scopeKind,
+          bce->cx, bce->ec, bce->compilationState, scopeKind,
           funbox->namedLambdaBindings(), LOCALNO_LIMIT,
           enclosingScopeIndex(bce), &scopeIndex)) {
     return false;
@@ -581,8 +581,8 @@ bool EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox) {
 
   ScopeIndex scopeIndex;
   if (!ScopeStencil::createForFunctionScope(
-          bce->cx, bce->compilationState, funbox->functionScopeBindings(),
-          funbox->hasParameterExprs,
+          bce->cx, bce->ec, bce->compilationState,
+          funbox->functionScopeBindings(), funbox->hasParameterExprs,
           funbox->needsCallObjectRegardlessOfBindings(), funbox->index(),
           funbox->isArrow(), enclosingScopeIndex(bce), &scopeIndex)) {
     return false;
@@ -652,7 +652,7 @@ bool EmitterScope::enterFunctionExtraBodyVar(BytecodeEmitter* bce,
   // Create and intern the VM scope.
   ScopeIndex scopeIndex;
   if (!ScopeStencil::createForVarScope(
-          bce->cx, bce->compilationState, ScopeKind::FunctionBodyVar,
+          bce->cx, bce->ec, bce->compilationState, ScopeKind::FunctionBodyVar,
           funbox->extraVarScopeBindings(), firstFrameSlot,
           funbox->needsExtraBodyVarEnvironmentRegardlessOfBindings(),
           enclosingScopeIndex(bce), &scopeIndex)) {
@@ -705,9 +705,9 @@ bool EmitterScope::enterGlobal(BytecodeEmitter* bce,
   }
 
   ScopeIndex scopeIndex;
-  if (!ScopeStencil::createForGlobalScope(bce->cx, bce->compilationState,
-                                          globalsc->scopeKind(),
-                                          globalsc->bindings, &scopeIndex)) {
+  if (!ScopeStencil::createForGlobalScope(
+          bce->cx, bce->ec, bce->compilationState, globalsc->scopeKind(),
+          globalsc->bindings, &scopeIndex)) {
     return false;
   }
   if (!internBodyScopeStencil(bce, scopeIndex)) {
@@ -759,7 +759,7 @@ bool EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc) {
 
   ScopeIndex scopeIndex;
   if (!ScopeStencil::createForEvalScope(
-          bce->cx, bce->compilationState, scopeKind, evalsc->bindings,
+          bce->cx, bce->ec, bce->compilationState, scopeKind, evalsc->bindings,
           enclosingScopeIndex(bce), &scopeIndex)) {
     return false;
   }
@@ -865,7 +865,7 @@ bool EmitterScope::enterModule(BytecodeEmitter* bce,
   // Create and intern the VM scope creation data.
   ScopeIndex scopeIndex;
   if (!ScopeStencil::createForModuleScope(
-          bce->cx, bce->compilationState, modulesc->bindings,
+          bce->cx, bce->ec, bce->compilationState, modulesc->bindings,
           enclosingScopeIndex(bce), &scopeIndex)) {
     return false;
   }
@@ -887,7 +887,7 @@ bool EmitterScope::enterWith(BytecodeEmitter* bce) {
   fallbackFreeNameLocation_ = Some(NameLocation::Dynamic());
 
   ScopeIndex scopeIndex;
-  if (!ScopeStencil::createForWithScope(bce->cx, bce->compilationState,
+  if (!ScopeStencil::createForWithScope(bce->cx, bce->ec, bce->compilationState,
                                         enclosingScopeIndex(bce),
                                         &scopeIndex)) {
     return false;

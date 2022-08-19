@@ -151,7 +151,7 @@ bool ConvertScopeStencil(JSContext* cx, ErrorContext* ec,
         data->length = numBindings;
 
         if (!ScopeStencil::createForGlobalScope(
-                cx, compilationState, ScopeKind::Global, data, &index)) {
+                cx, ec, compilationState, ScopeKind::Global, data, &index)) {
           return false;
         }
         break;
@@ -178,7 +178,7 @@ bool ConvertScopeStencil(JSContext* cx, ErrorContext* ec,
         uint32_t firstFrameSlot = var.first_frame_slot;
         ScopeIndex enclosingIndex(var.enclosing);
         if (!ScopeStencil::createForVarScope(
-                cx, compilationState, ScopeKind::FunctionBodyVar, data,
+                cx, ec, compilationState, ScopeKind::FunctionBodyVar, data,
                 firstFrameSlot, var.function_has_extensible_scope,
                 mozilla::Some(enclosingIndex), &index)) {
           return false;
@@ -207,8 +207,8 @@ bool ConvertScopeStencil(JSContext* cx, ErrorContext* ec,
         uint32_t firstFrameSlot = lexical.first_frame_slot;
         ScopeIndex enclosingIndex(lexical.enclosing);
         if (!ScopeStencil::createForLexicalScope(
-                cx, compilationState, ScopeKind::Lexical, data, firstFrameSlot,
-                mozilla::Some(enclosingIndex), &index)) {
+                cx, ec, compilationState, ScopeKind::Lexical, data,
+                firstFrameSlot, mozilla::Some(enclosingIndex), &index)) {
           return false;
         }
         break;
@@ -244,9 +244,9 @@ bool ConvertScopeStencil(JSContext* cx, ErrorContext* ec,
 
         ScopeIndex enclosingIndex(function.enclosing);
         if (!ScopeStencil::createForFunctionScope(
-                cx, compilationState, data, hasParameterExprs, needsEnvironment,
-                functionIndex, isArrow, mozilla::Some(enclosingIndex),
-                &index)) {
+                cx, ec, compilationState, data, hasParameterExprs,
+                needsEnvironment, functionIndex, isArrow,
+                mozilla::Some(enclosingIndex), &index)) {
           return false;
         }
         break;
