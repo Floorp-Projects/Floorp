@@ -28,6 +28,8 @@ unified-extensions-item {
 }
 
 .unified-extensions-item-contents {
+  min-height: 40px; /* Avoid the add-on name to "jump" when we hover the menu
+                       button and the help message is displayed */
   max-width: 20em;
 }
 
@@ -40,6 +42,11 @@ unified-extensions-item {
 
 .unified-extensions-item-message {
   color: var(--panel-description-color);
+}
+
+unified-extensions-item[secondary-button-hovered="true"] .unified-extensions-item-message:not(.unified-extensions-item-message-hover),
+unified-extensions-item:not([secondary-button-hovered="true"]) .unified-extensions-item-message-hover {
+  display: none;
 }
 
 .unified-extensions-item-open-menu.subviewbutton {
