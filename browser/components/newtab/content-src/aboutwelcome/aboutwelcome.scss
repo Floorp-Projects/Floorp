@@ -654,8 +654,8 @@ body {
       }
     }
 
-    .cta-paragraph button {
-      &.text-link {
+    .cta-paragraph {
+      a {
         margin: 0;
         text-decoration: underline;
         cursor: pointer;

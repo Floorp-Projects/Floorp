@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
   AttributionCode: "resource:///modules/AttributionCode.jsm",
   BuiltInThemes: "resource:///modules/BuiltInThemes.jsm",
+  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -582,7 +583,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
             type: "OPEN_URL",
             data: {
               args:
-                "https://www.mozilla.org/en-US/firefox/mobile/get-app/?utm_medium=firefox-desktop&utm_source=onboarding-modal&utm_campaign=mr2022&utm_content=new-global",
+                "https://www.mozilla.org/firefox/mobile/get-app/?utm_medium=firefox-desktop&utm_source=onboarding-modal&utm_campaign=mr2022&utm_content=new-global",
               where: "tabshifted",
             },
           },
@@ -752,6 +753,16 @@ function prepareMRContent(content) {
   // and syncing to a mobile device
   if (lazy.usesFirefoxSync && lazy.mobileDevices > 0) {
     removeScreens(screen => screen.id === "AW_MOBILE_DOWNLOAD", screens);
+  } else if (!lazy.BrowserUtils.sendToDeviceEmailsSupported()) {
+    // If send to device emails are not supported for a user's locale,
+    // remove the send to device link and update the screen text
+    let mobileContent = screens.find(
+      screen => screen.id === "AW_MOBILE_DOWNLOAD"
+    ).content;
+    delete mobileContent.cta_paragraph.action;
+    mobileContent.cta_paragraph.text = {
+      string_id: "mr2022-onboarding-no-mobile-download-cta-text",
+    };
   }
 
   // Remove colorways screen if there is no active colorways collection

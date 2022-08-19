@@ -686,7 +686,7 @@ body[lwt-newtab-brighttext] {
     background-position: 400%;
   }
 }
-.onboardingContainer .welcome-text .cta-paragraph button.text-link {
+.onboardingContainer .welcome-text .cta-paragraph a {
   margin: 0;
   text-decoration: underline;
   cursor: pointer;

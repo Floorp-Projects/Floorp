@@ -9,7 +9,7 @@ import { MobileDownloads } from "./MobileDownloads";
 import { Themes } from "./Themes";
 import { SecondaryCTA, StepsIndicator } from "./MultiStageAboutWelcome";
 import { LanguageSwitcher } from "./LanguageSwitcher";
-import { LinkText } from "./LinkText";
+import { CTAParagraph } from "./CTAParagraph";
 import { HeroImage } from "./HeroImage";
 
 export const MultiStageProtonScreen = props => {
@@ -278,7 +278,7 @@ export class ProtonScreen extends React.PureComponent {
                   />
                 </Localized>
                 {content.cta_paragraph ? (
-                  <LinkText
+                  <CTAParagraph
                     content={content.cta_paragraph}
                     handleAction={this.props.handleAction}
                   />
