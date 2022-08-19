@@ -159,7 +159,7 @@ JS_PUBLIC_API bool JS::StartIncrementalEncoding(JSContext* cx,
     }
 
     MainThreadErrorContext ec(cx);
-    if (!initial->steal(cx, &ec, std::move(stencil))) {
+    if (!initial->steal(&ec, std::move(stencil))) {
       return false;
     }
   }

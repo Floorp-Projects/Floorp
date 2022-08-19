@@ -155,12 +155,12 @@ frontend::TaggedParserAtomIndex StringBuffer::finishParserAtom(
   }
 
   if (isLatin1()) {
-    auto result = parserAtoms.internLatin1(cx_, ec, latin1Chars().begin(), len);
+    auto result = parserAtoms.internLatin1(ec, latin1Chars().begin(), len);
     latin1Chars().clear();
     return result;
   }
 
-  auto result = parserAtoms.internChar16(cx_, ec, twoByteChars().begin(), len);
+  auto result = parserAtoms.internChar16(ec, twoByteChars().begin(), len);
   twoByteChars().clear();
   return result;
 }

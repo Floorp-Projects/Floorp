@@ -1420,7 +1420,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
 
     auto AddMathFunction = [this](const char* name,
                                   AsmJSMathBuiltinFunction func) {
-      auto atom = parserAtoms_.internAscii(cx_, ec_, name, strlen(name));
+      auto atom = parserAtoms_.internAscii(ec_, name, strlen(name));
       if (!atom) {
         return false;
       }
@@ -1449,7 +1449,7 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
     };
 
     auto AddMathConstant = [this](const char* name, double cst) {
-      auto atom = parserAtoms_.internAscii(cx_, ec_, name, strlen(name));
+      auto atom = parserAtoms_.internAscii(ec_, name, strlen(name));
       if (!atom) {
         return false;
       }

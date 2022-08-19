@@ -1099,7 +1099,7 @@ static GetCachedResult GetCachedLazyFunctionStencilMaybeInstantiate(
     if (!extensible) {
       return GetCachedResult::Error;
     }
-    if (!extensible->cloneFrom(cx, ec, *stencil)) {
+    if (!extensible->cloneFrom(ec, *stencil)) {
       return GetCachedResult::Error;
     }
 

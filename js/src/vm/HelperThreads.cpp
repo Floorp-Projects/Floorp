@@ -1026,7 +1026,7 @@ UniquePtr<DelazifyTask> DelazifyTask::Create(
   // Clone the extensible stencil to be used for eager delazification.
   auto initial = cx->make_unique<frontend::ExtensibleCompilationStencil>(
       cx, options, stencil.source);
-  if (!initial || !initial->cloneFrom(cx, &task->ec_, stencil)) {
+  if (!initial || !initial->cloneFrom(&task->ec_, stencil)) {
     // In case of errors, skip this and delazify on-demand.
     return nullptr;
   }
@@ -1169,7 +1169,7 @@ bool DelazifyTask::runTask(JSContext* cx) {
     // We are merging the delazification now, while this could be post-poned
     // until we have to look at inner functions, this is simpler to do it now
     // than querying the cache for every enclosing script.
-    if (!merger.addDelazification(cx, &this->ec_, *innerStencil)) {
+    if (!merger.addDelazification(&this->ec_, *innerStencil)) {
       return false;
     }
 

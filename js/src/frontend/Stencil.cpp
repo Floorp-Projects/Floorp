@@ -105,7 +105,7 @@ TaggedParserAtomIndex InputName::internInto(JSContext* cx, ErrorContext* ec,
         return parserAtoms.internJSAtom(cx, ec, atomCache, ptr);
       },
       [&](NameStencilRef& ref) -> TaggedParserAtomIndex {
-        return parserAtoms.internExternalParserAtomIndex(cx, ec, ref.context_,
+        return parserAtoms.internExternalParserAtomIndex(ec, ref.context_,
                                                          ref.atomIndex_);
       });
 }
@@ -2665,8 +2665,7 @@ BaseParserScopeData* CopyScopeData(ErrorContext* ec, LifoAlloc& alloc,
 }
 
 template <typename Stencil>
-bool ExtensibleCompilationStencil::cloneFromImpl(JSContext* cx,
-                                                 ErrorContext* ec,
+bool ExtensibleCompilationStencil::cloneFromImpl(ErrorContext* ec,
                                                  const Stencil& other) {
   MOZ_ASSERT(alloc.isEmpty());
 
@@ -2744,13 +2743,13 @@ bool ExtensibleCompilationStencil::cloneFromImpl(JSContext* cx,
   // ParserAtoms should be interned, to populate internal HashMap.
   for (const auto* entry : other.parserAtomsSpan()) {
     if (!entry) {
-      if (!parserAtoms.addPlaceholder(cx, ec)) {
+      if (!parserAtoms.addPlaceholder(ec)) {
         return false;
       }
       continue;
     }
 
-    auto index = parserAtoms.internExternalParserAtom(cx, ec, entry);
+    auto index = parserAtoms.internExternalParserAtom(ec, entry);
     if (!index) {
       return false;
     }
@@ -2775,17 +2774,16 @@ bool ExtensibleCompilationStencil::cloneFromImpl(JSContext* cx,
   return true;
 }
 
-bool ExtensibleCompilationStencil::cloneFrom(JSContext* cx, ErrorContext* ec,
+bool ExtensibleCompilationStencil::cloneFrom(ErrorContext* ec,
                                              const CompilationStencil& other) {
-  return cloneFromImpl(cx, ec, other);
+  return cloneFromImpl(ec, other);
 }
 bool ExtensibleCompilationStencil::cloneFrom(
-    JSContext* cx, ErrorContext* ec,
-    const ExtensibleCompilationStencil& other) {
-  return cloneFromImpl(cx, ec, other);
+    ErrorContext* ec, const ExtensibleCompilationStencil& other) {
+  return cloneFromImpl(ec, other);
 }
 
-bool ExtensibleCompilationStencil::steal(JSContext* cx, ErrorContext* ec,
+bool ExtensibleCompilationStencil::steal(ErrorContext* ec,
                                          RefPtr<CompilationStencil>&& other) {
   MOZ_ASSERT(alloc.isEmpty());
   using StorageType = CompilationStencil::StorageType;
@@ -2828,7 +2826,7 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx, ErrorContext* ec,
   }
 
   if (storageType == StorageType::Borrowed) {
-    return cloneFrom(cx, ec, *other);
+    return cloneFrom(ec, *other);
   }
 
   MOZ_ASSERT(storageType == StorageType::Owned);
@@ -2880,13 +2878,13 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx, ErrorContext* ec,
   // ParserAtoms should be interned, to populate internal HashMap.
   for (const auto* entry : other->parserAtomData) {
     if (!entry) {
-      if (!parserAtoms.addPlaceholder(cx, ec)) {
+      if (!parserAtoms.addPlaceholder(ec)) {
         return false;
       }
       continue;
     }
 
-    auto index = parserAtoms.internExternalParserAtom(cx, ec, entry);
+    auto index = parserAtoms.internExternalParserAtom(ec, entry);
     if (!index) {
       return false;
     }
@@ -4339,7 +4337,7 @@ ScriptIndex CompilationStencilMerger::getInitialScriptIndexFor(
 }
 
 bool CompilationStencilMerger::buildAtomIndexMap(
-    JSContext* cx, ErrorContext* ec, const CompilationStencil& delazification,
+    ErrorContext* ec, const CompilationStencil& delazification,
     AtomIndexMap& atomIndexMap) {
   uint32_t atomCount = delazification.parserAtomData.size();
   if (!atomIndexMap.reserve(atomCount)) {
@@ -4347,8 +4345,7 @@ bool CompilationStencilMerger::buildAtomIndexMap(
     return false;
   }
   for (const auto& atom : delazification.parserAtomData) {
-    auto mappedIndex =
-        initial_->parserAtoms.internExternalParserAtom(cx, ec, atom);
+    auto mappedIndex = initial_->parserAtoms.internExternalParserAtom(ec, atom);
     if (!mappedIndex) {
       return false;
     }
@@ -4453,11 +4450,11 @@ bool CompilationStencilMerger::addDelazification(
     JSContext* cx, const CompilationStencil& delazification) {
   // TODO bug 1783951 - remove in favor of the ErrorContext version
   MainThreadErrorContext ec(cx);
-  return addDelazification(cx, &ec, delazification);
+  return addDelazification(&ec, delazification);
 }
 
 bool CompilationStencilMerger::addDelazification(
-    JSContext* cx, ErrorContext* ec, const CompilationStencil& delazification) {
+    ErrorContext* ec, const CompilationStencil& delazification) {
   MOZ_ASSERT(initial_);
 
   auto delazifiedFunctionIndex = getInitialScriptIndexFor(delazification);
@@ -4506,7 +4503,7 @@ bool CompilationStencilMerger::addDelazification(
   // A map from ParserAtomIndex in delazification to TaggedParserAtomIndex
   // in initial_.
   AtomIndexMap atomIndexMap;
-  if (!buildAtomIndexMap(cx, ec, delazification, atomIndexMap)) {
+  if (!buildAtomIndexMap(ec, delazification, atomIndexMap)) {
     return false;
   }
   auto mapAtomIndex = [&](TaggedParserAtomIndex index) {
