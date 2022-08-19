@@ -1985,6 +1985,9 @@ bool COLRFonts::ValidateColorGlyphs(hb_blob_t* aCOLR, hb_blob_t* aCPAL) {
       cpalLength - colorRecordsArrayOffset) {
     return false;
   }
+  if (sizeof(uint16) * numPalettes > cpalLength - sizeof(CPALHeaderVersion0)) {
+    return false;
+  }
   for (uint16_t i = 0; i < numPalettes; ++i) {
     uint32_t index = indices[i];
     if (index + numPaletteEntries > numColorRecords) {
