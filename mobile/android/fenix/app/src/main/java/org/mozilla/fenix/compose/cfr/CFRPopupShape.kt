@@ -27,7 +27,10 @@ import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.theme.FirefoxTheme
 import kotlin.math.roundToInt
 
-private const val INDICATOR_BASE_TO_HEIGHT_RATIO = 1f
+/**
+ * How wide the base of the indicator should be in relation with the indicator's height.
+ */
+private const val INDICATOR_BASE_TO_HEIGHT_RATIO = 2f
 
 /**
  * A [Shape] describing a popup with an indicator triangle shown above or below the popup.

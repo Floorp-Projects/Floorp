@@ -106,9 +106,9 @@ class CFRPopup(
 
         /**
          * How tall the indicator arrow should be.
-         * This will also affect how wide the base of the indicator arrow will be.
+         * This will also affect the width of the indicator's base which is double the height value.
          */
-        internal const val DEFAULT_INDICATOR_HEIGHT = 15
+        internal const val DEFAULT_INDICATOR_HEIGHT = 7
 
         /**
          * Maximum distance between the popup start and the indicator.
