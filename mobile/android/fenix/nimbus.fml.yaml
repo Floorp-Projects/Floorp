@@ -1,4 +1,9 @@
 ---
+about:
+  description: Nimbus Feature Manifest for Fenix (Firefox Android)
+  kotlin:
+    package: org.mozilla.fenix
+    class: .nimbus.FxNimbus
 channels:
   - release
   - beta
