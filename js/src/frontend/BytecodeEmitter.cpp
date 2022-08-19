@@ -1484,7 +1484,7 @@ bool BytecodeEmitter::addObjLiteralData(ObjLiteralWriter& writer,
   size_t len = writer.getCode().size();
   auto* code = compilationState.alloc.newArrayUninitialized<uint8_t>(len);
   if (!code) {
-    js::ReportOutOfMemory(cx);
+    js::ReportOutOfMemory(ec);
     return false;
   }
   memcpy(code, writer.getCode().data(), len);
@@ -1497,7 +1497,7 @@ bool BytecodeEmitter::addObjLiteralData(ObjLiteralWriter& writer,
   if (!compilationState.objLiteralData.emplaceBack(code, len, writer.getKind(),
                                                    writer.getFlags(),
                                                    writer.getPropertyCount())) {
-    js::ReportOutOfMemory(cx);
+    js::ReportOutOfMemory(ec);
     return false;
   }
 
@@ -9195,7 +9195,7 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj, JSOp op,
         auto p = selfHostedPropNames->lookupForAdd(propName);
         MOZ_ASSERT(!p);
         if (!selfHostedPropNames->add(p, propName)) {
-          js::ReportOutOfMemory(cx);
+          js::ReportOutOfMemory(ec);
           return false;
         }
 #endif

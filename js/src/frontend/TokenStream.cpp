@@ -813,7 +813,8 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
       // condition means we don't have a cached pointer.
       if (!longLineColumnInfo_.add(ptr, line, Vector<ChunkInfo>(cx))) {
         // In case of OOM, just count columns from the start of the line.
-        cx->recoverFromOutOfMemory();
+        cx->recoverFromOutOfMemory();  // TODO bug 1782569 do we need this for
+                                       // ErrorContext?
         return ColumnFromPartial(start, 0, UnitsType::PossiblyMultiUnit);
       }
     }
@@ -882,7 +883,8 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
 
     if (!lastChunkVectorForLine_->reserve(chunkIndex + 1)) {
       // As earlier, just start from the greatest offset/column in case of OOM.
-      cx->recoverFromOutOfMemory();
+      cx->recoverFromOutOfMemory();  // TODO bug 1782569 do we need this for
+                                     // ErrorContext?
       return ColumnFromPartial(partialOffset, partialColumn,
                                UnitsType::PossiblyMultiUnit);
     }
@@ -1008,7 +1010,7 @@ MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
 
     auto notes = MakeUnique<JSErrorNotes>();
     if (!notes) {
-      ReportOutOfMemory(anyChars.cx);
+      ReportOutOfMemory(anyChars.ec);
       break;
     }
 
@@ -1034,7 +1036,7 @@ MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
     uint32_t line, column;
     computeLineAndColumn(offset, &line, &column);
 
-    if (!notes->addNoteASCII(anyChars.cx, anyChars.getFilename(), 0, line,
+    if (!notes->addNoteASCII(anyChars.ec, anyChars.getFilename(), 0, line,
                              column, GetErrorMessage, nullptr,
                              JSMSG_BAD_CODE_UNITS, badUnitsStr)) {
       break;
@@ -1792,7 +1794,7 @@ void TokenStreamSpecific<Unit, AnyCharsAccess>::reportIllegalCharacter(
     int32_t cp) {
   UniqueChars display = JS_smprintf("U+%04X", cp);
   if (!display) {
-    ReportOutOfMemory(anyCharsAccess().cx);
+    ReportOutOfMemory(anyCharsAccess().ec);
     return;
   }
   error(JSMSG_ILLEGAL_CHARACTER, display.get());

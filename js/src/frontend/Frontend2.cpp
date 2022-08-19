@@ -276,7 +276,7 @@ bool ConvertRegExpData(JSContext* cx, ErrorContext* ec,
   }
 
   if (!compilationState.regExpData.reserve(len)) {
-    js::ReportOutOfMemory(cx);
+    js::ReportOutOfMemory(ec);
     return false;
   }
 
@@ -621,12 +621,12 @@ bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
   }
 
   if (!compilationState.scriptData.resize(len)) {
-    js::ReportOutOfMemory(cx);
+    js::ReportOutOfMemory(ec);
     return false;
   }
 
   if (!compilationState.scriptExtra.resize(len)) {
-    js::ReportOutOfMemory(cx);
+    js::ReportOutOfMemory(ec);
     return false;
   }
 
