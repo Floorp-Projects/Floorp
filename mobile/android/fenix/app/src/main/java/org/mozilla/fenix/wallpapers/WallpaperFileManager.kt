@@ -37,6 +37,7 @@ class WallpaperFileManager(
                 collection = Wallpaper.DefaultCollection,
                 textColor = null,
                 cardColor = null,
+                thumbnailFileState = Wallpaper.ImageFileState.Downloaded,
             )
         } else null
     }

@@ -83,6 +83,7 @@ class WallpaperMetadataFetcher(
                     textColor = getArgbValueAsLong("text-color"),
                     cardColor = getArgbValueAsLong("card-color"),
                     collection = collection,
+                    thumbnailFileState = Wallpaper.ImageFileState.NotAvailable,
                 )
             }
         }

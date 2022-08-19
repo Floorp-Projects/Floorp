@@ -182,18 +182,21 @@ class WallpapersUseCases(
                     collection = firefoxClassicCollection,
                     textColor = null,
                     cardColor = null,
+                    thumbnailFileState = Wallpaper.ImageFileState.NotAvailable,
                 ),
                 Wallpaper(
                     name = Wallpaper.ceruleanName,
                     collection = firefoxClassicCollection,
                     textColor = null,
                     cardColor = null,
+                    thumbnailFileState = Wallpaper.ImageFileState.NotAvailable,
                 ),
                 Wallpaper(
                     name = Wallpaper.sunriseName,
                     collection = firefoxClassicCollection,
                     textColor = null,
                     cardColor = null,
+                    thumbnailFileState = Wallpaper.ImageFileState.NotAvailable,
                 ),
             )
             private val remoteWallpapers: List<Wallpaper> = listOf(
@@ -202,12 +205,14 @@ class WallpapersUseCases(
                     collection = firefoxClassicCollection,
                     textColor = null,
                     cardColor = null,
+                    thumbnailFileState = Wallpaper.ImageFileState.NotAvailable,
                 ),
                 Wallpaper(
                     name = Wallpaper.beachVibeName,
                     collection = firefoxClassicCollection,
                     textColor = null,
                     cardColor = null,
+                    thumbnailFileState = Wallpaper.ImageFileState.NotAvailable,
                 ),
             )
             val allWallpapers = listOf(Wallpaper.Default) + localWallpapers + remoteWallpapers
@@ -246,7 +251,12 @@ class WallpapersUseCases(
 
             possibleWallpapers.forEach { downloader.downloadWallpaper(it) }
 
-            val defaultIncluded = listOf(Wallpaper.Default) + possibleWallpapers
+            val wallpapersWithUpdatedThumbnailState = possibleWallpapers.map { wallpaper ->
+                val result = downloader.downloadThumbnail(wallpaper)
+                wallpaper.copy(thumbnailFileState = result)
+            }
+
+            val defaultIncluded = listOf(Wallpaper.Default) + wallpapersWithUpdatedThumbnailState
             store.dispatch(AppAction.WallpaperAction.UpdateAvailableWallpapers(defaultIncluded))
         }
 

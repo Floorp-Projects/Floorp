@@ -13,6 +13,7 @@ import mozilla.components.concept.fetch.isSuccess
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.wallpapers.Wallpaper.Companion.getLocalPath
 import java.io.File
+import java.lang.IllegalStateException
 
 /**
  * Can download wallpapers from a remote host.
@@ -37,40 +38,52 @@ class WallpaperDownloader(
      * wallpapers/<wallpaper name>/<orientation>.png
      */
     suspend fun downloadWallpaper(wallpaper: Wallpaper) = withContext(dispatcher) {
-        for (metadata in wallpaper.toMetadata()) {
-            val localFile = File(storageRootDirectory.absolutePath, metadata.localPath)
-            // Don't overwrite an asset if it exists
-            if (localFile.exists()) continue
-            val request = Request(
-                url = "$remoteHost/${metadata.remotePath}",
-                method = Request.Method.GET
-            )
-            Result.runCatching {
-                val response = client.fetch(request)
-                if (!response.isSuccess) {
-                    return@withContext
-                }
-                File(localFile.path.substringBeforeLast("/")).mkdirs()
-                response.body.useStream { input ->
-                    input.copyTo(localFile.outputStream())
-                }
-            }.onFailure {
-                // This should clean up any partial downloads
-                Result.runCatching {
-                    if (localFile.exists()) {
-                        localFile.delete()
-                    }
-                }
-            }
+        listOf(Wallpaper.ImageType.Portrait, Wallpaper.ImageType.Landscape).map { imageType ->
+            wallpaper.downloadAsset(imageType)
         }
     }
 
-    private data class WallpaperMetadata(val remotePath: String, val localPath: String)
+    /**
+     * Downloads a thumbnail for a wallpaper from the network. This is expected to be found remotely
+     * at:
+     * <WALLPAPER_URL>/<collection name>/<wallpaper name>/<orientation>.png
+     * and stored locally at:
+     * wallpapers/<wallpaper name>/<orientation>.png
+     */
+    suspend fun downloadThumbnail(wallpaper: Wallpaper): Wallpaper.ImageFileState = withContext(dispatcher) {
+        wallpaper.downloadAsset(Wallpaper.ImageType.Thumbnail)
+    }
 
-    private fun Wallpaper.toMetadata(): List<WallpaperMetadata> =
-        listOf(Wallpaper.ImageType.Portrait, Wallpaper.ImageType.Landscape).map { orientation ->
-            val localPath = getLocalPath(this.name, orientation)
-            val remotePath = "${collection.name}/${this.name}/${orientation.lowercase()}.png"
-            WallpaperMetadata(remotePath, localPath)
+    private suspend fun Wallpaper.downloadAsset(
+        imageType: Wallpaper.ImageType
+    ): Wallpaper.ImageFileState = withContext(dispatcher) {
+        val localFile = File(storageRootDirectory, getLocalPath(name, imageType))
+        if (localFile.exists()) return@withContext Wallpaper.ImageFileState.Downloaded
+
+        val remotePath = "${collection.name}/${name}/${imageType.lowercase()}.png"
+        val request = Request(
+            url = "$remoteHost/$remotePath",
+            method = Request.Method.GET
+        )
+
+        return@withContext Result.runCatching {
+            val response = client.fetch(request)
+            if (!response.isSuccess) {
+                throw IllegalStateException()
+            }
+            File(localFile.path.substringBeforeLast("/")).mkdirs()
+            response.body.useStream { input ->
+                input.copyTo(localFile.outputStream())
+            }
+            Wallpaper.ImageFileState.Downloaded
+        }.getOrElse {
+            // This should clean up any partial downloads
+            Result.runCatching {
+                if (localFile.exists()) {
+                    localFile.delete()
+                }
+            }
+            Wallpaper.ImageFileState.Downloaded
         }
+    }
 }

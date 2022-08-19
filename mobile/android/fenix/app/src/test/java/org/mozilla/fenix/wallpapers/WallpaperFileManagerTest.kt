@@ -130,6 +130,7 @@ class WallpaperFileManagerTest {
         name = name,
         textColor = null,
         cardColor = null,
+        thumbnailFileState = Wallpaper.ImageFileState.Downloaded,
         collection = Wallpaper.DefaultCollection
     )
 }

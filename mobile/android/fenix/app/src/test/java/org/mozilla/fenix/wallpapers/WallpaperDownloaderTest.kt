@@ -7,6 +7,7 @@ import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -51,7 +52,7 @@ class WallpaperDownloaderTest {
     }
 
     @Test
-    fun `GIVEN that request is successful WHEN downloading THEN file is created in expected location`() = runTest {
+    fun `GIVEN that asset request is successful WHEN downloading assets THEN both files are created in expected location`() = runTest {
         val wallpaper = generateWallpaper()
         val portraitRequest = wallpaper.generateRequest("portrait")
         val landscapeRequest = wallpaper.generateRequest("landscape")
@@ -68,6 +69,25 @@ class WallpaperDownloaderTest {
         val expectedLandscapeFile = File(tempFolder.root, "wallpapers/${wallpaper.name}/landscape.png")
         assertTrue(expectedPortraitFile.exists() && expectedPortraitFile.readText() == wallpaperBytes)
         assertTrue(expectedLandscapeFile.exists() && expectedLandscapeFile.readText() == wallpaperBytes)
+    }
+
+    @Test
+    fun `GIVEN that thumbnail request is successful WHEN downloading THEN file is created in expected location`() = runTest {
+        val wallpaper = generateWallpaper()
+        val thumbnailRequest = Request(
+            url = "$remoteHost/${wallpaper.collection.name}/${wallpaper.name}/thumbnail.png",
+            method = Request.Method.GET
+        )
+        val mockThumbnailResponse = mockk<Response>()
+        every { mockThumbnailResponse.status } returns 200
+        every { mockThumbnailResponse.body } returns Response.Body(wallpaperBytes.byteInputStream())
+        every { mockClient.fetch(thumbnailRequest) } returns mockThumbnailResponse
+
+        val result = downloader.downloadThumbnail(wallpaper)
+
+        val expectedThumbnailFile = File(tempFolder.root, "wallpapers/${wallpaper.name}/thumbnail.png")
+        assertTrue(expectedThumbnailFile.exists() && expectedThumbnailFile.readText() == wallpaperBytes)
+        assertEquals(Wallpaper.ImageFileState.Downloaded, result)
     }
 
     @Test
@@ -111,7 +131,8 @@ class WallpaperDownloaderTest {
         name = name,
         collection = wallpaperCollection,
         textColor = null,
-        cardColor = null
+        cardColor = null,
+        thumbnailFileState = Wallpaper.ImageFileState.NotAvailable
     )
 
     private fun Wallpaper.generateRequest(type: String) = Request(

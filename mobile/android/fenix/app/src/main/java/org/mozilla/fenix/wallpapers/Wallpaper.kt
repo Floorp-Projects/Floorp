@@ -21,6 +21,7 @@ data class Wallpaper(
     val collection: Collection,
     val textColor: Long?,
     val cardColor: Long?,
+    val thumbnailFileState: ImageFileState,
 ) {
     /**
      * Type that represents a collection that a [Wallpaper] belongs to.
@@ -66,6 +67,7 @@ data class Wallpaper(
             collection = DefaultCollection,
             textColor = null,
             cardColor = null,
+            thumbnailFileState = ImageFileState.Downloaded,
         )
 
         /**
@@ -100,7 +102,8 @@ data class Wallpaper(
                     name = name,
                     textColor = textColor,
                     cardColor = cardColor,
-                    collection = DefaultCollection
+                    collection = DefaultCollection,
+                    thumbnailFileState = ImageFileState.Downloaded,
                 )
             } else null
         }
@@ -118,5 +121,15 @@ data class Wallpaper(
          * Get a lowercase string representation of the [ImageType.name] for use in path segments.
          */
         fun lowercase(): String = this.name.lowercase()
+    }
+
+    /**
+     * Defines the download state of wallpaper asset.
+     */
+    enum class ImageFileState {
+        NotAvailable,
+        Downloading,
+        Downloaded,
+        Error,
     }
 }
