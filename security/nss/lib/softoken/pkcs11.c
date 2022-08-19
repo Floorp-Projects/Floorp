@@ -1674,6 +1674,7 @@ sftk_handleObject(SFTKObject *object, SFTKSession *session)
     SFTKAttribute *attribute;
     CK_BBOOL ckfalse = CK_FALSE;
     CK_BBOOL cktrue = CK_TRUE;
+    PRBool isLoggedIn, needLogin;
     CK_RV crv;
 
     /* make sure all the base object types are defined. If not set the
@@ -1691,9 +1692,13 @@ sftk_handleObject(SFTKObject *object, SFTKSession *session)
     if (crv != CKR_OK)
         return crv;
 
+    PZ_Lock(slot->slotLock);
+    isLoggedIn = slot->isLoggedIn;
+    needLogin = slot->needLogin;
+    PZ_Unlock(slot->slotLock);
+
     /* don't create a private object if we aren't logged in */
-    if ((!slot->isLoggedIn) && (slot->needLogin) &&
-        (sftk_isTrue(object, CKA_PRIVATE))) {
+    if (!isLoggedIn && needLogin && sftk_isTrue(object, CKA_PRIVATE)) {
         return CKR_USER_NOT_LOGGED_IN;
     }
 
@@ -3649,11 +3654,18 @@ NSC_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo)
 static PRBool
 sftk_checkNeedLogin(SFTKSlot *slot, SFTKDBHandle *keyHandle)
 {
+    PRBool needLogin;
     if (sftkdb_PWCached(keyHandle) == SECSuccess) {
-        return slot->needLogin;
+        PZ_Lock(slot->slotLock);
+        needLogin = slot->needLogin;
+        PZ_Unlock(slot->slotLock);
+    } else {
+        needLogin = (PRBool)!sftk_hasNullPassword(slot, keyHandle);
+        PZ_Lock(slot->slotLock);
+        slot->needLogin = needLogin;
+        PZ_Unlock(slot->slotLock);
     }
-    slot->needLogin = (PRBool)!sftk_hasNullPassword(slot, keyHandle);
-    return (slot->needLogin);
+    return needLogin;
 }
 
 static PRBool
@@ -4014,8 +4026,11 @@ NSC_InitPIN(CK_SESSION_HANDLE hSession,
 
     /* Now update our local copy of the pin */
     if (rv == SECSuccess) {
-        if (ulPinLen == 0)
+        if (ulPinLen == 0) {
+            PZ_Lock(slot->slotLock);
             slot->needLogin = PR_FALSE;
+            PZ_Unlock(slot->slotLock);
+        }
         /* database has been initialized, now force min password in FIPS
          * mode. NOTE: if we are in level1, we may not have a password, but
          * forcing it now will prevent an insufficient password from being set.
@@ -4050,6 +4065,7 @@ NSC_SetPIN(CK_SESSION_HANDLE hSession, CK_CHAR_PTR pOldPin,
     char newPinStr[SFTK_MAX_PIN + 1], oldPinStr[SFTK_MAX_PIN + 1];
     SECStatus rv;
     CK_RV crv = CKR_SESSION_HANDLE_INVALID;
+    PRBool needLogin;
     PRBool tokenRemoved = PR_FALSE;
 
     CHECK_FORK();
@@ -4070,7 +4086,10 @@ NSC_SetPIN(CK_SESSION_HANDLE hSession, CK_CHAR_PTR pOldPin,
         return CKR_PIN_LEN_RANGE; /* XXX FIXME wrong return value */
     }
 
-    if (slot->needLogin && sp->info.state != CKS_RW_USER_FUNCTIONS) {
+    PZ_Lock(slot->slotLock);
+    needLogin = slot->needLogin;
+    PZ_Unlock(slot->slotLock);
+    if (needLogin && sp->info.state != CKS_RW_USER_FUNCTIONS) {
         crv = CKR_USER_NOT_LOGGED_IN;
         goto loser;
     }
@@ -4300,6 +4319,8 @@ NSC_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType,
     CK_RV crv;
     char pinStr[SFTK_MAX_PIN + 1];
     PRBool tokenRemoved = PR_FALSE;
+    PRBool isLoggedIn;
+    PRBool needLogin;
 
     CHECK_FORK();
 
@@ -4323,9 +4344,14 @@ NSC_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType,
         return CKR_USER_TYPE_INVALID;
     }
 
-    if (slot->isLoggedIn)
+    PZ_Lock(slot->slotLock);
+    isLoggedIn = slot->isLoggedIn;
+    needLogin = slot->needLogin;
+    PZ_Unlock(slot->slotLock);
+
+    if (isLoggedIn)
         return CKR_USER_ALREADY_LOGGED_IN;
-    if (!slot->needLogin) {
+    if (!needLogin) {
         return ulPinLen ? CKR_PIN_INCORRECT : CKR_OK;
     }
     slot->ssoLoggedIn = PR_FALSE;
@@ -4792,7 +4818,7 @@ NSC_GetAttributeValue(CK_SESSION_HANDLE hSession,
     SFTKSession *session;
     SFTKObject *object;
     SFTKAttribute *attribute;
-    PRBool sensitive;
+    PRBool sensitive, isLoggedIn, needLogin;
     CK_RV crv;
     int i;
 
@@ -4823,9 +4849,13 @@ NSC_GetAttributeValue(CK_SESSION_HANDLE hSession,
         return CKR_OBJECT_HANDLE_INVALID;
     }
 
+    PZ_Lock(slot->slotLock);
+    isLoggedIn = slot->isLoggedIn;
+    needLogin = slot->needLogin;
+    PZ_Unlock(slot->slotLock);
+
     /* don't read a private object if we aren't logged in */
-    if ((!slot->isLoggedIn) && (slot->needLogin) &&
-        (sftk_isTrue(object, CKA_PRIVATE))) {
+    if (!isLoggedIn && needLogin && sftk_isTrue(object, CKA_PRIVATE)) {
         sftk_FreeObject(object);
         return CKR_USER_NOT_LOGGED_IN;
     }
@@ -4866,7 +4896,7 @@ NSC_SetAttributeValue(CK_SESSION_HANDLE hSession,
     SFTKSession *session;
     SFTKAttribute *attribute;
     SFTKObject *object;
-    PRBool isToken;
+    PRBool isToken, isLoggedIn, needLogin;
     CK_RV crv = CKR_OK;
     CK_BBOOL legal;
     int i;
@@ -4890,9 +4920,13 @@ NSC_SetAttributeValue(CK_SESSION_HANDLE hSession,
         return CKR_OBJECT_HANDLE_INVALID;
     }
 
+    PZ_Lock(slot->slotLock);
+    isLoggedIn = slot->isLoggedIn;
+    needLogin = slot->needLogin;
+    PZ_Unlock(slot->slotLock);
+
     /* don't modify a private object if we aren't logged in */
-    if ((!slot->isLoggedIn) && (slot->needLogin) &&
-        (sftk_isTrue(object, CKA_PRIVATE))) {
+    if (!isLoggedIn && needLogin && sftk_isTrue(object, CKA_PRIVATE)) {
         sftk_FreeSession(session);
         sftk_FreeObject(object);
         return CKR_USER_NOT_LOGGED_IN;
@@ -5170,7 +5204,10 @@ NSC_FindObjectsInit(CK_SESSION_HANDLE hSession,
     search->index = 0;
     search->size = 0;
     search->array_size = NSC_SEARCH_BLOCK_SIZE;
+
+    PZ_Lock(slot->slotLock);
     isLoggedIn = (PRBool)((!slot->needLogin) || slot->isLoggedIn);
+    PZ_Unlock(slot->slotLock);
 
     crv = sftk_searchTokenList(slot, search, pTemplate, ulCount, isLoggedIn);
     if (crv != CKR_OK) {

@@ -213,7 +213,7 @@ CERT_CheckCertUsage(CERTCertificate *cert, unsigned char usage)
     if (rv == SECFailure) {
         rv = (PORT_GetError() == SEC_ERROR_EXTENSION_NOT_FOUND) ? SECSuccess
                                                                 : SECFailure;
-    } else if (!keyUsage.data || !(keyUsage.data[0] & usage)) {
+    } else if (!keyUsage.data || !keyUsage.len || !(keyUsage.data[0] & usage)) {
         PORT_SetError(SEC_ERROR_CERT_USAGES_INVALID);
         rv = SECFailure;
     }

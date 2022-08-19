@@ -97,6 +97,13 @@ add_task(async function test_telemetry_empty_submission_url() {
       submissionUrl: "blank:",
       verified: "verified",
     },
+    private: {
+      engineId: "",
+      displayName: "",
+      loadPath: "",
+      submissionUrl: "blank:",
+      verified: "",
+    },
   });
 });
 
