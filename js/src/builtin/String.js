@@ -504,7 +504,7 @@ function String_split(separator, limit) {
 
   // Step 2.
   if (
-    !(typeof separator == "string" && StringProtoHasNoSplit()) &&
+    !(typeof separator === "string" && StringProtoHasNoSplit()) &&
     separator !== undefined &&
     separator !== null
   ) {
@@ -787,7 +787,7 @@ function String_repeat(count) {
   // MAX_STRING_LENGTH + 1 as range because that's a valid bit mask. That's
   // fine because it's only used as optimization hint.
   assert(
-    TO_INT32(MAX_STRING_LENGTH + 1) == MAX_STRING_LENGTH + 1,
+    TO_INT32(MAX_STRING_LENGTH + 1) === MAX_STRING_LENGTH + 1,
     "MAX_STRING_LENGTH + 1 must fit in int32"
   );
   assert(
