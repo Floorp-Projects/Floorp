@@ -400,10 +400,8 @@ add_task(async function test_crlite_confirm_revocations_mode() {
   let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
     Ci.nsIX509CertDB
   );
-  let issuerCert = constructCertFromFile("test_crlite_filters/issuer.pem");
-  let noSCTCertIssuer = constructCertFromFile(
-    "test_crlite_filters/no-sct-issuer.pem"
-  );
+  addCertFromFile(certdb, "test_crlite_filters/issuer.pem", ",,");
+  addCertFromFile(certdb, "test_crlite_filters/no-sct-issuer.pem", ",,");
 
   let result = await syncAndDownload([
     {
@@ -501,10 +499,8 @@ add_task(async function test_crlite_filters_and_check_revocation() {
   let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
     Ci.nsIX509CertDB
   );
-  let issuerCert = constructCertFromFile("test_crlite_filters/issuer.pem");
-  let noSCTCertIssuer = constructCertFromFile(
-    "test_crlite_filters/no-sct-issuer.pem"
-  );
+  addCertFromFile(certdb, "test_crlite_filters/issuer.pem", ",,");
+  addCertFromFile(certdb, "test_crlite_filters/no-sct-issuer.pem", ",,");
 
   let result = await syncAndDownload([
     {

@@ -257,14 +257,18 @@ add_task(async function test_crlite_filter() {
   let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
     Ci.nsIX509CertDB
   );
-  let validCertIssuer = constructCertFromFile(
-    "test_cert_storage_direct/valid-cert-issuer.pem"
+  addCertFromFile(
+    certdb,
+    "test_cert_storage_direct/valid-cert-issuer.pem",
+    ",,"
   );
   let validCert = constructCertFromFile(
     "test_cert_storage_direct/valid-cert.pem"
   );
-  let revokedCertIssuer = constructCertFromFile(
-    "test_cert_storage_direct/revoked-cert-issuer.pem"
+  addCertFromFile(
+    certdb,
+    "test_cert_storage_direct/revoked-cert-issuer.pem",
+    ",,"
   );
   let revokedCert = constructCertFromFile(
     "test_cert_storage_direct/revoked-cert.pem"
