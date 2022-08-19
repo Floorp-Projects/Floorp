@@ -5,14 +5,15 @@
 package mozilla.components.tooling.nimbus
 
 import org.gradle.api.Task
+import org.gradle.api.provider.ListProperty
 
+import java.util.stream.Collectors
 import java.util.zip.ZipFile
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Exec
-import org.gradle.api.tasks.TaskProvider
 
 abstract class NimbusPluginExtension {
     /**
@@ -26,7 +27,7 @@ abstract class NimbusPluginExtension {
     abstract Property<String> getManifestFile()
 
     String getManifestFileActual(Project project) {
-        var filename = this.manifestFile.get() ?: "nimbus.fml.yaml"
+        var filename = this.manifestFile.getOrNull() ?: "nimbus.fml.yaml"
         return [project.rootDir, filename].join(File.separator)
     }
 
@@ -44,6 +45,8 @@ abstract class NimbusPluginExtension {
     }
 
     /**
+     * @deprecated
+     *
      * The qualified class name which is the destination for the feature classes.
      *
      * Like classes in the `AndroidManifest.xml` if the class name starts with a `.`,
@@ -54,47 +57,6 @@ abstract class NimbusPluginExtension {
      * @return
      */
     abstract Property<String> getDestinationClass()
-
-    def getAppPackageName(variant) {
-        TaskProvider buildConfigProvider = variant.getGenerateBuildConfigProvider()
-        def configProvider = buildConfigProvider.get()
-
-        // In Gradle 6.x `getBuildConfigPackageName` was replaced by `namespace`.
-        // We want to be forward compatible, so we check that first or fallback to the old method.
-        if (configProvider.hasProperty("namespace")) {
-            return configProvider.namespace.get()
-        } else {
-            return configProvider.getBuildConfigPackageName().get()
-        }
-    }
-
-    def getPackageClassLiteral() {
-        var fqnClass = destinationClass.get() ?: ".nimbus.MyNimbus"
-        def i = fqnClass.lastIndexOf('.')
-        switch (i) {
-            case -1: return ["", fqnClass]
-            case 0: return [".", fqnClass.substring(i + 1)]
-            default: return [fqnClass.substring(0, i), fqnClass.substring(i + 1)]
-        }
-    }
-
-    String getPackageNameActual(variant) {
-        def (packageName, _) = getPackageClassLiteral()
-        if (!packageName.startsWith(".")) {
-            return packageName
-        }
-        def appPackageName = getAppPackageName(variant)
-        if (packageName == ".") {
-            return appPackageName
-        } else {
-            return appPackageName + packageName
-        }
-    }
-
-    String getClassNameActual() {
-        def (_, className) = getPackageClassLiteral()
-        return className
-    }
 
     /**
      * The filename of the manifest ingested by Experimenter.
@@ -107,7 +69,7 @@ abstract class NimbusPluginExtension {
     abstract Property<String> getExperimenterManifest()
 
     String getExperimenterManifestActual(Project project) {
-        var filename = this.experimenterManifest.get() ?: ".experimenter.json"
+        var filename = this.experimenterManifest.getOrNull() ?: ".experimenter.json"
         return [project.rootDir, filename].join(File.separator)
     }
 
@@ -126,6 +88,52 @@ abstract class NimbusPluginExtension {
         }
 
         return null
+    }
+
+    /**
+     * The directory to which the generated files should be written.
+     *
+     * This defaults to the generated sources folder in the build directory.
+     *
+     * @return
+     */
+    abstract Property<String> getOutputDir()
+
+    String getOutputDirActual(Object variant, Project project) {
+        var outputDir = this.outputDir.getOrNull() ?: ["generated", "source", "nimbus", variant.name, "kotlin"].join(File.separator)
+        return [project.buildDir, outputDir].join(File.separator)
+    }
+
+    /**
+     * The file(s) containing the version(s)/ref(s)/location(s) for additional repositories.
+     *
+     * This defaults to an empty list.
+     *
+     * @return
+     */
+    abstract ListProperty<String> getRepoFiles()
+
+    List<String> getRepoFilesActual(Project project) {
+        var repoFiles = this.repoFiles.getOrNull() ?: new ArrayList<String>()
+        return repoFiles.stream().map(filename -> {
+            [project.rootDir, filename].join(File.separator)
+        }).collect(Collectors.toList())
+    }
+
+    /**
+     * The directory where downloaded files are or where they should be cached.
+     *
+     * This defaults to `null`, in which case no cache directory will be used.
+     *
+     * @return
+     */
+    abstract Property<String> getCacheDir()
+
+    String getCacheDirActual(Project project) {
+        var cacheDir = this.cacheDir.getOrNull()
+        if (cacheDir == null)
+            return null
+        return [project.rootDir, cacheDir].join(File.separator)
     }
 }
 
@@ -317,62 +325,57 @@ class NimbusPlugin implements Plugin<Project> {
     }
 
     def setupNimbusFeatureTasks(variant, project, extension) {
-        String packageName = extension.getPackageNameActual(variant)
-        String className = extension.classNameActual
-
         String channel = extension.getChannelActual(variant)
-
-        var parts = [project.buildDir, "generated", "source", "nimbus", variant.name, "kotlin"]
-        var sourceOutputDir = parts.join(File.separator)
-
-        parts.addAll(packageName.split("\\."))
-        var outputDir = parts.join(File.separator)
-        var outputFile = [outputDir, "${className}.kt"].join(File.separator)
-
-        var inputFile = extension.getManifestFileActual(project)
+        String inputFile = extension.getManifestFileActual(project)
+        String outputDir = extension.getOutputDirActual(variant, project)
+        String cacheDir = extension.getCacheDirActual(project)
+        List<String> repoFiles = extension.getRepoFilesActual(project)
 
         var localAppServices = extension.getAppServicesActual(project)
-
-        var appPackageName = extension.getAppPackageName(variant)
-        var requiresRPackage = versionCompare(getApplicationServiceVersion(), "89.0.0") >= 0
 
         var generateTask = project.task("nimbusFeatures${variant.name.capitalize()}", type: Exec) {
             description = "Generate Kotlin data classes for Nimbus enabled features"
             group = "Nimbus"
 
             doFirst {
-                ensureDirExists(new File(sourceOutputDir))
                 ensureDirExists(new File(outputDir))
+                if (cacheDir != null)
+                    ensureDirExists(new File(cacheDir))
                 println("Nimbus FML generating Kotlin")
-                println("manifest   $inputFile")
-                println("class      ${packageName}.${className}")
-                println("channel    $channel")
-                println("R.class    ${appPackageName}.R")
+                println("manifest        $inputFile")
+                println("cache dir       $cacheDir")
+                println("repo file(s)    ${repoFiles.join(", ")}")
+                println("channel         $channel")
             }
 
             doLast {
-                println("outputFile $outputFile")
+                println("outputFile    $outputDir")
             }
 
             if (localAppServices == null) {
                 workingDir project.rootDir
                 commandLine getFMLPath(project)
             } else {
-                workingDir new File(localAppServices, APPSERVICES_FML_HOME)
+                workingDir new File(localAppServices, APPSERVICES_FML_HOME )
                 commandLine "cargo"
                 args "run", "--"
             }
-            args inputFile
-            args "android", "features"
-            args "--classname", className
-            args "--output", outputFile
-            args "--package", packageName
+            args "generate"
+            args "--language", "kotlin"
             args "--channel", channel
-            if (requiresRPackage) {
-                args "--r-package", extension.getAppPackageName(variant)
+            if (cacheDir != null)
+                args "--cache-dir", cacheDir
+            for (String file : repoFiles) {
+                args "--repo-file", file
             }
+
+            args inputFile
+            args outputDir
+
+            println args
         }
-        variant.registerJavaGeneratingTask(generateTask, new File(sourceOutputDir))
+
+        variant.registerJavaGeneratingTask(generateTask, new File(outputDir))
 
         def generateSourcesTask = project.tasks.findByName("generate${variant.name.capitalize()}Sources")
         if (generateSourcesTask != null) {
@@ -393,8 +396,11 @@ class NimbusPlugin implements Plugin<Project> {
             return null
         }
 
-        var inputFile = extension.getManifestFileActual(project)
-        var outputFile = extension.getExperimenterManifestActual(project)
+        String inputFile = extension.getManifestFileActual(project)
+        String experimenterFile = extension.getExperimenterManifestActual(project)
+        String cacheDir = extension.getCacheDirActual(project)
+        List<String> repoFiles = extension.getRepoFilesActual(project)
+
         var localAppServices = extension.getAppServicesActual(project)
 
         return project.task("nimbusExperimenter", type: Exec) {
@@ -402,12 +408,16 @@ class NimbusPlugin implements Plugin<Project> {
             group = "Nimbus"
 
             doFirst {
+                if (cacheDir != null)
+                    ensureDirExists(new File(cacheDir))
                 println("Nimbus FML generating JSON")
-                println("manifest   $inputFile")
+                println("manifest             $inputFile")
+                println("cache dir            $cacheDir")
+                println("repo file(s)         ${repoFiles.join()}")
             }
 
             doLast {
-                println("outputFile $outputFile")
+                println("output    $experimenterFile")
             }
 
             if (localAppServices == null) {
@@ -418,9 +428,15 @@ class NimbusPlugin implements Plugin<Project> {
                 commandLine "cargo"
                 args "run", "--"
             }
+            args "generate-experimenter"
+            if (cacheDir != null)
+                args "--cache-dir", cacheDir
+            for (String file : repoFiles) {
+                args "--repo-file", file
+            }
+
             args inputFile
-            args "experimenter"
-            args "--output", outputFile
+            args experimenterFile
         }
     }
 

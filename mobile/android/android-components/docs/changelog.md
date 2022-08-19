@@ -40,6 +40,9 @@ permalink: /changelog/
 * **support-migration**
   * ⚠️ **This is a breaking change**: This component was removed since the Fennec -> Fenix migration is no longer supported (https://github.com/mozilla-mobile/fenix/pull/23651/)
 
+* **nimbus-gradle-plugin**
+  * ⚠️ **This is a breaking change**: Updated the NimbusGradlePlugin to use the new nimbus cli commands.
+
 # 104.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v103.0.0...v104.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/151?closed=1)
