@@ -264,6 +264,42 @@ bool AutoResolving::alreadyStartedSlow() const {
   return false;
 }
 
+static void MaybeReportOutOfMemoryForDifferentialTesting() {
+  /*
+   * OOMs are non-deterministic, especially across different execution modes
+   * (e.g. interpreter vs JIT). When doing differential testing, print to stderr
+   * so that the fuzzers can detect this.
+   */
+  if (js::SupportDifferentialTesting()) {
+    fprintf(stderr, "ReportOutOfMemory called\n");
+  }
+}
+
+void JSContext::onOutOfMemory() {
+  runtime()->hadOutOfMemory = true;
+  gc::AutoSuppressGC suppressGC(this);
+
+  /* Report the oom. */
+  if (JS::OutOfMemoryCallback oomCallback = runtime()->oomCallback) {
+    oomCallback(this, runtime()->oomCallbackData);
+  }
+
+  // If we OOM early in process startup, this may be unavailable so just return
+  // instead of crashing unexpectedly.
+  if (MOZ_UNLIKELY(!runtime()->hasInitializedSelfHosting())) {
+    return;
+  }
+
+  RootedValue oomMessage(this, StringValue(names().outOfMemory));
+  setPendingException(oomMessage, nullptr);
+  MOZ_ASSERT(status == JS::ExceptionStatus::Throwing);
+  status = JS::ExceptionStatus::OutOfMemory;
+
+#ifdef DEBUG
+  hadNondeterministicException_ = true;
+#endif
+}
+
 /*
  * Since memory has been exhausted, avoid the normal error-handling path which
  * allocates an error object, report and callstack. Instead simply throw the
@@ -273,41 +309,13 @@ bool AutoResolving::alreadyStartedSlow() const {
  * not occur, so GC must be avoided or suppressed.
  */
 JS_PUBLIC_API void js::ReportOutOfMemory(JSContext* cx) {
-  /*
-   * OOMs are non-deterministic, especially across different execution modes
-   * (e.g. interpreter vs JIT). When doing differential testing, print to stderr
-   * so that the fuzzers can detect this.
-   */
-  if (js::SupportDifferentialTesting()) {
-    fprintf(stderr, "ReportOutOfMemory called\n");
-  }
+  MaybeReportOutOfMemoryForDifferentialTesting();
 
   if (cx->isHelperThreadContext()) {
     return cx->addPendingOutOfMemory();
   }
 
-  cx->runtime()->hadOutOfMemory = true;
-  gc::AutoSuppressGC suppressGC(cx);
-
-  /* Report the oom. */
-  if (JS::OutOfMemoryCallback oomCallback = cx->runtime()->oomCallback) {
-    oomCallback(cx, cx->runtime()->oomCallbackData);
-  }
-
-  // If we OOM early in process startup, this may be unavailable so just return
-  // instead of crashing unexpectedly.
-  if (MOZ_UNLIKELY(!cx->runtime()->hasInitializedSelfHosting())) {
-    return;
-  }
-
-  RootedValue oomMessage(cx, StringValue(cx->names().outOfMemory));
-  cx->setPendingException(oomMessage, nullptr);
-  MOZ_ASSERT(cx->status == JS::ExceptionStatus::Throwing);
-  cx->status = JS::ExceptionStatus::OutOfMemory;
-
-#ifdef DEBUG
-  cx->hadNondeterministicException_ = true;
-#endif
+  cx->onOutOfMemory();
 }
 
 static void MaybeReportOverRecursedForDifferentialTesting() {
