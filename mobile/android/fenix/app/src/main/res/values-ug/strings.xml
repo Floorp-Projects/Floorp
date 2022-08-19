@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">تاللانغان</string>
+
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">سايىلەش</string>
+
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">ئىزدەش</string>
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">ئاۋازلىق ئىزدەش</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">تەڭشەك</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">ھەققىدە</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">ئىزدەش</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">ھەققىدە %1$s</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">ئوچۇق</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">تاقاق</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">ئوتتۈلكە ھېساباتى</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">تىل</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">يورۇق</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">قاراڭغۇ</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">چۈشۈرۈلمىلەر</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">تاقاش</string>
+
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">باشبەت</string>
+
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">چىقىرىۋەت</string>
+
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">تاقاش</string>
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">ئىسىم ئۆزگەرتىش</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">چىقىرىۋەت</string>
+
+
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">تەپسىلاتى</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">تەپسىلاتى</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">كۆچۈرۈش</string>
+
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">قوشاي</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">قوشۇش</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">ساقلاش</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">تەھرىرلەش</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">ئۆچۈرۈش</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">باشقا</string>
+
+    <!-- Text for the menu button to open the homepage settings. -->
+    <string name="top_sites_menu_settings">تەڭشەك</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">تاقاش</string>
+
+    <!-- Clickable text for opening an external link for more information about Pocket. -->
+    <string name="pocket_stories_feature_learn_more">تەپسىلاتى</string>
+
+    </resources>

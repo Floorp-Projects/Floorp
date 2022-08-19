@@ -443,10 +443,10 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Wòó</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Ṣe àyípadà ìṣẹ́ṣọ ògiri nípa títẹ ààmì ojú-ìwé Firefox</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Ṣe àyípadà ìṣẹ́ṣọ ògiri nípa títẹ ààmì ojú-ìwé Firefox</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Lógò Firefox - ṣàyípada sí ìṣẹ̀ṣọ́ ògiri, bọ́tìnì</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Lógò Firefox - ṣàyípada sí ìṣẹ̀ṣọ́ ògiri, bọ́tìnì</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -1079,5 +1079,349 @@
     <string name="snackbar_message_bookmarks_saved">Àwọn búkúmaakì ti wà ní ìfipamọ́!</string>
     <!-- Text shown in snackbar when user adds a site to shortcuts -->
     <string name="snackbar_added_to_shortcuts">Ṣàfikún àwọn ọ̀nà-àbùjá!</string>
+
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Táàbù ìkọ̀kọ̀ ti padé</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Àwọn táàbù ìkọ̀kọ̀ ti padé</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">MÁṢÈÉ</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Sáìtì ti di yíyọ kúrò</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">Fàyègbàá %1$s láti ṣí %2$s</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">FÀYÈGBÀ</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">KỌ̀</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">Àdìrẹ́sì wẹ́ẹ̀bù ò fẹsẹ̀múlẹ̀.</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">Ó DÁA</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">Ṣé ó dá ọ lójú pé o fẹ́ paárẹ́ %1$s?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Pípa táàbù yí rẹ́ máa pa gbogbo àkójọpọ̀ náà rẹ́. O lè ṣẹ̀dá àwọn àkójọpọ̀ tuntun nígbàkúùgbà.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">Parẹ́ %1$s?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Parẹ́</string>
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Wíwọ ipò síkírìnì kíkun</string>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">URL ti di dídàkọ</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Jẹ́ kí ọ̀rọ̀ lórí àwọn wéíbusaìtì tóbi si tàbi kéré si</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">Ìwọ̀n Fọ́ǹtì</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_2">Àìfọwọ́yí ìwọ̀n fọ́ǹtì</string>
+
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Ìwọ̀n fọ́ǹtì yóò ní ìbámu pẹ̀lú àwọn ètò Android rẹ. Pa á láti ṣàkóso ìwọ̀n fọ́ǹtì.</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Pa dátà bíráwúsìnnì rẹ́</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title_2">Ṣí àwọn táàbù</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">%d àwọn táàbù</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">Ìtàn bíráwúsìnnì àti dátà sáìtì</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d àwọn àdìrẹ́sì</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Kúkíìsì</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Àwọn àwòrán àti àwọn fáìlì ti wà ní ìfipamọ́</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Pèsè aye fún ìpamọ́</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">Àwọn ìgbaniláàyè sáìtì</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Àwọn ìgbàsílẹ̀</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">Pa dátà bíráwúsìnnì rẹ́</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Jáwọ́</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Èyí yóò pa gbogbo dátà bíráwúsìnnì rẹ́.</string>
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Àsìkò láti parẹ́</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">Yọ ìtàn kúrò (pẹ̀lú ìtàn tí a ṣepọ̀ láti inú àwọn ẹ̀rọ mìíràn), kúkíìsì àti àwọn dátà bíráwúsìnnì mìíràn.</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Wákàtí tó kọjá</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">Òní àti àná</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Gbogbogbò</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s yóò pa àwọn dátà bíráwúsìnnì tí a yàn rẹ́.</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">Parẹ́</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">Parẹ́</string>
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">Àwọn dátà bíráwúsìnnì ti parẹ́</string>
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Ń pa dátà bíráwúsìnnì rẹ́…</string>
+
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">Pa gbogbo àwọn sáìtì rẹ́ ní “%s”</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">Parẹ́</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">Parẹ́</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">Ọ̀wọ́ ti di píparẹ́</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">Káàbọ̀ sí %s!</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Jẹ́kí Firefox ṣiṣẹ́ pọ̀ láàárìn àwọn ẹ̀rọ</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
+    <string name="onboarding_manual_sign_in_description_2">Mú àwọn búkúmaakì, ìtàn, àti àwọn ọ̀rọ̀ ìgbaniwọlé láti %1$s tan ẹ̀rọ yìí.</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Ìforúkọsílẹ̀</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Ìṣepọ̀ wà ní títàn </string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_3">Ìdánìkanwà nígbàgbogbo</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Rorò</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Yan ààyè pẹpẹ irinṣẹ́ rẹ</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description_1">Fi pẹpẹ irinṣẹ́ nàá sí àrọ́wọ́tó tó rọrùn. Tọ́jú rẹ̀ sí ìsàlẹ̀, tàbí gbe lọ sí òkè.</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">Ìkọ̀kọ̀ rẹ</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Ka àkíyèsí ìkọ̀kọ̀ wa</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Bẹ̀rẹ̀ láti ma bíráwúsì</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Yan àkóórí rẹ</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">Tọ́jú bátìrì àti ìríran rẹ pẹ̀lú ipọ̀ òkùnkùn.</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Ìdánìkanṣiṣẹ́</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Fi àwọn ètò ẹ̀rọ rẹ kọ́ra</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Tíímù òkùnkùn</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Tíímù ìmọ́lẹ̀</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Àwọn táàbù ti a fi ránṣẹ́!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Táàbù ti a fi ránṣẹ́!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">A kò lè fi ránṣẹ́</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">TUN GBÌYÀNJÚ</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">Síkáànì kóòdù náà</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[Lóri kọ̀m̀pútà rẹ ṣí Firefox ko sì lọ sí <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">Wọlé pẹ̀lú kámẹ́rà rẹ</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">Lo ímeelì dípò</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Kò sí àkáǹtì? <u> Ṣẹ̀dá ọ̀kan</u>láti jẹ́ kí Firefox ṣiṣẹ́pọ̀ láàárín àwọn ẹ̀rọ.]]></string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s yóò dá ìṣiṣẹ́pọ̀ dúrọ́ pẹ̀lú àkáńtì rẹ, àmọ́ ò ní pa dátà bíráwúsìnnì kankan rẹ́ lóri ẹ̀rọ yìí.</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">Gé ìsopọ̀ kúrò</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">Parẹ́</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Àwọn ètò Ìdáábòbò</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Ètò ìdáàbòbò tó múnádóko</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Bíráwúsì láìsí ìtẹ̀lé</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Kọ́ si </string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Ìṣọ̀túnṣòsì fún ìkọ̀kọ̀ àti ìṣesí. Àwọn ojúùwé ń ṣiṣẹ́ déédé.</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Rorò</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Àwọn kúkì</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Kúkíìsì láti sáìtì tí a kò ṣàbẹ̀wò sí</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Gbogbo kúkíìsì ẹni kẹta (lè jẹ́kí àwọn ojú òpó wẹ́ẹ̀bù fọ́)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Gbogbo kúkíìsì (yóò jẹ́kí àwọn ojú òpó wẹ́ẹ̀bù fọ́)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Nínu gbogbo àwọn táàbù</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Nínu táàbù ìkọ̀kọ̀ nìkan</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Àwọn kíríputomínà</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Awọn ẹ̀rọ ìtẹ̀ka</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Ẹ̀kúnrẹ́rẹ́ </string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocked">Ti dènà</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">Ti fàyègbàá</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Àwọn kíríputomínà</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Àwọn ẹ̀rọ ìtẹ̀ka</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">Àwọn ìdáábòbò wà ní PÍPA fún sáìtì yìí </string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">Ètò ìdáàbòbò tó múná ti wà ní pípa fún àwọn ojú òpó wẹ́ẹ̀bù yìí</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Pípadà ṣẹ́yìn</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">Kíni ó jẹ́ tuntun ní %s</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | Àwọn ilé-ìkàwé OSS</string>
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Àtúnjúwe Àwọn ohun ìtọpasè</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">Kọ́ si </string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">Àtìlẹ́yìn                </string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Àwọn ìjàmbá</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">Mọ àwọn ẹ̀tọ́ rẹ</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Ìwé-àṣẹ ìròyìn</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Àwọn ilé-ìkàwé tí a lò</string>
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Wíwá àtúnṣẹ àtẹ: %1$d tẹ(s) òsì láti jẹ́kí ó ṣiṣẹ́</string>
+    <string name="about_debug_menu_toast_done">Wá àtúnṣe sí àtẹ tọ́ ti jẹ́kí ó ṣiṣẹ́</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Ṣẹ̀dà</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Lẹ̀ẹ́ si &amp; Lọ</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Lẹ̀ẹ́ si</string>
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">A ti ṣe ẹ̀dà URL sí kílípíbọọ̀dù</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Fikún síkíríìnì àkọ́kọ́ kan</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Parẹ́</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Ṣàfikún</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Tẹ̀síwájú sí ojú òpó wẹ́ẹ̀bù</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Orúkọ ọ̀nà-àbùjá</string>
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">O lè fi ẃéíbusaìtì yí kún Síkíríìnì àkọ́ọ́kàn rẹ nírọ̀rùn láti ní ààyè lẹ́sẹ̀kẹsẹ̀ àti láti ṣe ìwádìí ní ìyára pẹ̀lú ìrírí tó jọ ti áàpù.</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Àwọn lọ́giìnì àti àwọn pásíwọọ̀dù</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Ṣe ìfipamọ́ àwọn lógiinì àti àwọn pásíwọọ̀dù</string>
+
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Bèrè láti fipamọ́</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Máṣe fipamọ́</string>
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">Ṣàfikún lọ́giìnì</string>
+
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Ìṣiṣẹ́pọ̀ lọ́giìnì</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Ṣe ìfipamọ́ lọ́giìnì</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Àwọn ìyọkúrò</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Pa gbogbo àwọn ìyọkúrò rẹ́</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Sáìtì</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Orúkọ aṣàmúlò</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Pásíwọọ̀dù</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Ṣe ẹ̀dà pásíwọọ̀dù sí orí kílípíbọọ̀dù</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Ti ṣe àdakọ orúkọ aṣàmúlò sí kílípíbọọ̀dù</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Ṣàdàkọ pásíwọọ̀dù</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Kó pásíwọọ̀dù kúrò</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Ṣàdàkọ orúkọ aṣàmúlò</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Pa orúkọ aṣàmúlò rẹ́</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Ṣí sáìtì nínu bíráwúsà</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Ṣàfihàn pásíwọọ̀dù</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Tọ́jú pásíwọọ̀dù</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">Ṣíi láti wo àwọn lọ́giìnì tí o fipamọ́</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Ṣe ààbò àwọn lọ́giìnì àti àwọn pásíwọọ̀dù rẹ</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Ṣètò àwọn pátàànì fún títìpa ẹ̀rọ, PÍÌNÌ, tàbí pásíwọọ̀dù láti ṣe ìdáábòbò fún àwọn lọ́giinì àti àwọn pásíwọọ̀dù tí o fipamọ́ láti má jẹ́kí ẹlòmíràn ní àǹfàní si tí wọ́n bá wà pẹ̀lú ẹ̀rọ rẹ.</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">Nígbà mìíràn</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">Ṣètò ní báyìí</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">Ṣí ẹ̀rọ rẹ</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Sún-un mọ́ra lóri gbogbo àwọn ojú òpó wẹ́ẹ̀bù </string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Láti jẹ́ kí ó fàyè gba ìfúnpọ̀ àti fífẹ̀, àti lórí wẹ́íbusaìtì tí kò gba ìrúfẹ́ ìfihàn yìí.</string>
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Orúkọ (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Ìlò ìkẹyìn</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Yanjú àtò ìforúkọsílẹ̀ láti wọlé</string>
+
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">Àwọn àdírẹ́ẹ̀sì</string>
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">Àwọn káàdì kírẹ́díìtì</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Dátà ti di ìṣọdi kóòdù</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">Ìṣepọ̀ àwọn káàdì lórí àwọn ẹ̀rọ</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Ìṣepọ̀ àwọn káàdì</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">Ṣàfikún kírẹ́díìtì káàdì</string>
 
     </resources>
