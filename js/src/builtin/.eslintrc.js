@@ -56,6 +56,9 @@ module.exports = {
         // Disallow loose equality because of objects with the [[IsHTMLDDA]]
         // internal slot, aka |document.all|, aka "objects emulating undefined".
         eqeqeq: "error",
+        // All self-hosted code is implicitly strict mode, so there's no need to
+        // add a strict-mode directive.
+        strict: ["error", "never"],
       },
 
       globals: {
