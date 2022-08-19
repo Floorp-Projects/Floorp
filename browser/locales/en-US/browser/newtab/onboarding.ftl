@@ -277,13 +277,136 @@ fx100-upgrade-thank-you-body = It’s our 100th release of { -brand-short-name }
 # Message shown with either a pin-to-taskbar or set-default button.
 fx100-upgrade-thanks-keep-body = It’s our 100th release! Thanks for being a part of our community. Keep { -brand-short-name } one click away for the next 100.
 
+mr2022-onboarding-secondary-skip-button-label = Skip this step
+
+## MR2022 New User Pin Firefox screen strings
+
+# Title used on about:welcome for new users when Firefox is not pinned.
+# In this context, open up is synonymous with "Discover".
+# The metaphor is that when they open their Firefox browser, it helps them discover an amazing internet.
+# If this translation does not make sense in your language, feel free to use the word "discover."
+mr2022-onboarding-welcome-pin-header = Open up an amazing internet
+# Subtitle is used on onboarding page for new users page when Firefox is not pinned
+mr2022-onboarding-welcome-pin-subtitle = Launch { -brand-short-name } from anywhere with a single click. Every time you do, you’re choosing a more open and independent web.
+# Primary button string used on welcome page for when Firefox is not pinned.
+mr2022-onboarding-pin-primary-button-label = { PLATFORM() ->
+    [macos] Keep { -brand-short-name } in Dock
+   *[other] Pin { -brand-short-name } to taskbar
+}
+# Subtitle will be used when user already has Firefox pinned, but
+# has not set it as their default browser.
+# When translating "zip", please feel free to pick a verb that signifies movement and/or exploration
+# and makes sense in the context of navigating the web.
+mr2022-onboarding-set-default-only-subtitle = Start with a browser backed by a non-profit. We defend your privacy while you zip around the web.
+
+## MR2022 Existing User Pin Firefox Screen Strings
+
+# Title used on multistage onboarding page for existing users when Firefox is not pinned
+mr2022-onboarding-existing-pin-header = Thank you for loving { -brand-product-name }
+# Subtitle is used on onboarding page for existing users when Firefox is not pinned
+mr2022-onboarding-existing-pin-subtitle = Launch a healthier internet from anywhere with a single click. Our latest update is packed with new things we think you’ll adore.
+# Subtitle will be used on the welcome screen for existing users
+# when they already have Firefox pinned but not set as default
+mr2022-onboarding-existing-set-default-only-subtitle = Use a browser that defends your privacy while you zip around the web. Our latest update is packed with things that you adore.
+mr2022-onboarding-existing-pin-checkbox-label = Also add { -brand-short-name } private browsing
+
+## MR2022 New User Set Default screen strings
+
+# This string is the title used when the user already has pinned the browser, but has not set default.
+mr2022-onboarding-set-default-title = Make { -brand-short-name } your go-to browser
+mr2022-onboarding-set-default-primary-button-label = Set { -brand-short-name } as default browser
+# When translating "zip", please feel free to pick a verb that signifies movement and/or exploration
+# and makes sense in the context of navigating the web.
+mr2022-onboarding-set-default-subtitle = Use a browser backed by a non-profit. We defend your privacy while you zip around the web.
+
+## MR2022 Get Started screen strings.
+## These strings will be used on the welcome page
+## when Firefox is already set to default and pinned.
+
+# When translating "zip", please feel free to pick a verb that signifies movement and/or exploration
+# and makes sense in the context of navigating the web.
+mr2022-onboarding-get-started-primary-subtitle = Our latest version is built around you, making it easier than ever to zip around the web. It’s packed with features we think you’ll adore.
+mr2022-onboarding-get-started-primary-button-label = Set up in seconds
+
+## MR2022 Import Settings screen strings
+
+mr2022-onboarding-import-header = Lightning-fast setup
+mr2022-onboarding-import-subtitle = Set up { -brand-short-name } how you like it. Add your bookmarks, passwords, and more from your old browser.
+mr2022-onboarding-import-primary-button-label-no-attribution = Import from previous browser
+
+## If your language uses grammatical genders, in the description for the
+## colorway feel free to switch from "You are a X. You…" (e.g. "You are a
+## Playmaker. You create…") to "X: you…" ("Playmaker: You create…"). This might
+## help creating a more inclusive translation.
+
+mr2022-onboarding-colorway-title = Choose the color that inspires you
+mr2022-onboarding-colorway-subtitle = Independent voices can change culture.
+mr2022-onboarding-colorway-primary-button-label = Set colorway
+mr2022-onboarding-existing-colorway-checkbox-label = Make { -firefox-home-brand-name } your colorful homepage
+
+mr2022-onboarding-colorway-label-default = Default
+mr2022-onboarding-colorway-tooltip-default =
+  .title = Default
+mr2022-onboarding-colorway-description-default = <b>Use my current { -brand-short-name } colors.</b>
+
+mr2022-onboarding-colorway-label-playmaker = Playmaker
+mr2022-onboarding-colorway-tooltip-playmaker =
+  .title = Playmaker
+mr2022-onboarding-colorway-description-playmaker = <b>You are a Playmaker.</b> You create opportunities to win and help everyone around you elevate their game.
+
+mr2022-onboarding-colorway-label-expressionist = Expressionist
+mr2022-onboarding-colorway-tooltip-expressionist =
+  .title = Expressionist
+mr2022-onboarding-colorway-description-expressionist = <b>You are an Expressionist.</b> You see the world differently and your creations stir the emotions of others.
+
+mr2022-onboarding-colorway-label-visionary = Visionary
+mr2022-onboarding-colorway-tooltip-visionary =
+  .title = Visionary
+mr2022-onboarding-colorway-description-visionary = <b>You are a Visionary.</b> You question the status quo and move others to imagine a better future.
+
+mr2022-onboarding-colorway-label-activist = Activist
+mr2022-onboarding-colorway-tooltip-activist =
+  .title = Activist
+mr2022-onboarding-colorway-description-activist = <b>You are an Activist.</b> You leave the world a better place than you found it and lead others to believe.
+
+mr2022-onboarding-colorway-label-dreamer = Dreamer
+mr2022-onboarding-colorway-tooltip-dreamer =
+  .title = Dreamer
+mr2022-onboarding-colorway-description-dreamer = <b>You are a Dreamer.</b> You believe that fortune favors the bold and inspire others to be brave.
+
+mr2022-onboarding-colorway-label-innovator = Innovator
+mr2022-onboarding-colorway-tooltip-innovator =
+  .title = Innovator
+mr2022-onboarding-colorway-description-innovator = <b>You are an Innovator.</b> You see opportunities everywhere and make an impact on the lives of everyone around you.
+
+## MR2022 Multistage Mobile Download screen strings
+
+mr2022-onboarding-mobile-download-title = Hop from laptop to phone and back again
+mr2022-onboarding-mobile-download-subtitle = Grab tabs from one device and pick up where you left off on another. Plus sync your bookmarks and passwords anywhere you use { -brand-product-name }.
+mr2022-onboarding-mobile-download-cta-text = Scan the QR code to get { -brand-product-name } for mobile or <a data-l10n-name="download-label">send yourself a download link.</a>
+mr2022-onboarding-no-mobile-download-cta-text = Scan the QR code to get { -brand-product-name } for mobile.
+
 ## MR2022 Upgrade Dialog screens
 ## Pin private window screen shown only for users who don't have Firefox private pinned
 
-mr2022-onboarding-skip-step-button-label = Skip this step
 mr2022-upgrade-onboarding-pin-private-window-header = Get private browsing freedom in one click
 mr2022-upgrade-onboarding-pin-private-window-subtitle = No saved cookies or history, right from your desktop. Browse like no one’s watching.
 mr2022-upgrade-onboarding-pin-private-window-primary-button-label = { PLATFORM() ->
     [macos] Keep { -brand-short-name } private browsing in Dock
    *[other] Pin { -brand-short-name } private browsing to taskbar
 }
+
+## MR2022 Privacy Segmentation screen strings
+
+mr2022-onboarding-privacy-segmentation-title = We always respect your privacy
+mr2022-onboarding-privacy-segmentation-subtitle = From intelligent suggestions to smarter search, we’re constantly working to create a better, more personal { -brand-product-name }.
+mr2022-onboarding-privacy-segmentation-cta-text = When we offer new features that use your data to enhance your browsing, do you want to see:
+mr2022-onboarding-privacy-segmentation-primary-button-label = { -brand-product-name } recommendations
+mr2022-onboarding-privacy-segmentation-secondary-button-label = Detailed information
+
+## MR2022 Multistage Gratitude screen strings
+
+mr2022-onboarding-gratitude-title = You’re helping us build a better web.
+mr2022-onboarding-gratitude-subtitle = Thank you for using { -brand-short-name }, backed by the Mozilla Foundation. With your support, we’re working to make the internet more open, accessible, and better for everyone.
+mr2022-onboarding-gratitude-primary-button-label = See what’s new
+mr2022-onboarding-gratitude-secondary-button-label = Start browsing
