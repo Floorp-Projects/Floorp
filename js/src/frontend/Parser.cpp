@@ -284,7 +284,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
       cx_, extent, compilationState_, inheritedDirectives, generatorKind,
       asyncKind, isInitialStencil, explicitName, flags, index);
   if (!funbox) {
-    ReportOutOfMemory(cx_);
+    ReportOutOfMemory(ec_);
     return nullptr;
   }
 
@@ -321,7 +321,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
       cachedScriptExtra.asyncKind(), compilationState_.isInitialStencil(),
       cachedScriptData.functionAtom, cachedScriptData.functionFlags, index);
   if (!funbox) {
-    ReportOutOfMemory(cx_);
+    ReportOutOfMemory(ec_);
     return nullptr;
   }
 
@@ -474,7 +474,7 @@ void GeneralParser<ParseHandler, Unit>::reportMissingClosing(
     unsigned errorNumber, unsigned noteNumber, uint32_t openedPos) {
   auto notes = MakeUnique<JSErrorNotes>();
   if (!notes) {
-    ReportOutOfMemory(pc_->sc()->cx_);
+    ReportOutOfMemory(this->ec_);
     return;
   }
 
@@ -487,7 +487,7 @@ void GeneralParser<ParseHandler, Unit>::reportMissingClosing(
   char lineNumber[MaxWidth];
   SprintfLiteral(lineNumber, "%" PRIu32, line);
 
-  if (!notes->addNoteASCII(pc_->sc()->cx_, getFilename(), 0, line, column,
+  if (!notes->addNoteASCII(this->ec_, getFilename(), 0, line, column,
                            GetErrorMessage, nullptr, noteNumber, lineNumber,
                            columnNumber)) {
     return;
@@ -513,7 +513,7 @@ void GeneralParser<ParseHandler, Unit>::reportRedeclaration(
 
   auto notes = MakeUnique<JSErrorNotes>();
   if (!notes) {
-    ReportOutOfMemory(pc_->sc()->cx_);
+    ReportOutOfMemory(this->ec_);
     return;
   }
 
@@ -526,7 +526,7 @@ void GeneralParser<ParseHandler, Unit>::reportRedeclaration(
   char lineNumber[MaxWidth];
   SprintfLiteral(lineNumber, "%" PRIu32, line);
 
-  if (!notes->addNoteASCII(pc_->sc()->cx_, getFilename(), 0, line, column,
+  if (!notes->addNoteASCII(this->ec_, getFilename(), 0, line, column,
                            GetErrorMessage, nullptr, JSMSG_REDECLARED_PREV,
                            lineNumber, columnNumber)) {
     return;
@@ -580,7 +580,7 @@ bool GeneralParser<ParseHandler, Unit>::notePositionalFormalParameter(
 
   if (!pc_->positionalFormalParameterNames().append(
           TrivialTaggedParserAtomIndex::from(name))) {
-    ReportOutOfMemory(cx_);
+    ReportOutOfMemory(this->ec_);
     return false;
   }
 
@@ -600,7 +600,7 @@ bool PerHandlerParser<ParseHandler>::noteDestructuredPositionalFormalParameter(
   // argument slots when making FunctionScope::ParserData.
   if (!pc_->positionalFormalParameterNames().append(
           TrivialTaggedParserAtomIndex::null())) {
-    ReportOutOfMemory(cx_);
+    ReportOutOfMemory(ec_);
     return false;
   }
 
@@ -940,7 +940,7 @@ bool PerHandlerParser<ParseHandler>::
         if constexpr (isSyntaxParser) {
           if (!pc_->closedOverBindingsForLazy().append(
                   TrivialTaggedParserAtomIndex::from(bi.name()))) {
-            ReportOutOfMemory(cx_);
+            ReportOutOfMemory(ec_);
             return false;
           }
         }
@@ -963,7 +963,7 @@ bool PerHandlerParser<ParseHandler>::
   if constexpr (isSyntaxParser) {
     if (!pc_->closedOverBindingsForLazy().append(
             TrivialTaggedParserAtomIndex::null())) {
-      ReportOutOfMemory(cx_);
+      ReportOutOfMemory(ec_);
       return false;
     }
   }
@@ -5049,7 +5049,7 @@ bool GeneralParser<ParseHandler, Unit>::assertClause(
       return false;
     }
     if (!usedAssertionKeys.add(p, keyName)) {
-      ReportOutOfMemory(cx_);
+      ReportOutOfMemory(this->ec_);
       return false;
     }
 
@@ -11258,7 +11258,7 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
     return nullptr;
   }
   if (!this->compilationState_.regExpData.emplaceBack(atom, flags)) {
-    js::ReportOutOfMemory(cx_);
+    js::ReportOutOfMemory(this->ec_);
     return nullptr;
   }
 
@@ -11314,7 +11314,7 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
     return null();
   }
   if (!this->compilationState_.bigIntData.emplaceBack()) {
-    js::ReportOutOfMemory(cx_);
+    js::ReportOutOfMemory(this->ec_);
     return null();
   }
 
