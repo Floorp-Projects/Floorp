@@ -39,6 +39,7 @@
 #include "js/UniquePtr.h"
 #include "util/Text.h"
 #include "util/Unicode.h"
+#include "vm/ErrorContext.h"
 #include "vm/FrameIter.h"  // js::{,NonBuiltin}FrameIter
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
@@ -512,12 +513,10 @@ TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx, ErrorContext* ec,
 }
 
 template <typename Unit>
-TokenStreamCharsBase<Unit>::TokenStreamCharsBase(JSContext* cx,
-                                                 ParserAtomsTable* parserAtoms,
-                                                 const Unit* units,
-                                                 size_t length,
-                                                 size_t startOffset)
-    : TokenStreamCharsShared(cx, parserAtoms),
+TokenStreamCharsBase<Unit>::TokenStreamCharsBase(
+    JSContext* cx, ErrorContext* ec, ParserAtomsTable* parserAtoms,
+    const Unit* units, size_t length, size_t startOffset)
+    : TokenStreamCharsShared(cx, ec, parserAtoms),
       sourceUnits(units, length, startOffset) {}
 
 bool FillCharBufferFromSourceNormalizingAsciiLineBreaks(CharBuffer& charBuffer,
@@ -581,9 +580,9 @@ bool FillCharBufferFromSourceNormalizingAsciiLineBreaks(CharBuffer& charBuffer,
 
 template <typename Unit, class AnyCharsAccess>
 TokenStreamSpecific<Unit, AnyCharsAccess>::TokenStreamSpecific(
-    JSContext* cx, ParserAtomsTable* parserAtoms,
+    JSContext* cx, ErrorContext* ec, ParserAtomsTable* parserAtoms,
     const ReadOnlyCompileOptions& options, const Unit* units, size_t length)
-    : TokenStreamChars<Unit, AnyCharsAccess>(cx, parserAtoms, units, length,
+    : TokenStreamChars<Unit, AnyCharsAccess>(cx, ec, parserAtoms, units, length,
                                              options.scriptSourceOffset) {}
 
 bool TokenStreamAnyChars::checkOptions() {
@@ -813,7 +812,7 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
       // condition means we don't have a cached pointer.
       if (!longLineColumnInfo_.add(ptr, line, Vector<ChunkInfo>(cx))) {
         // In case of OOM, just count columns from the start of the line.
-        cx->recoverFromOutOfMemory();
+        ec->recoverFromOutOfMemory();
         return ColumnFromPartial(start, 0, UnitsType::PossiblyMultiUnit);
       }
     }
@@ -882,7 +881,7 @@ uint32_t TokenStreamAnyChars::computePartialColumn(
 
     if (!lastChunkVectorForLine_->reserve(chunkIndex + 1)) {
       // As earlier, just start from the greatest offset/column in case of OOM.
-      cx->recoverFromOutOfMemory();
+      ec->recoverFromOutOfMemory();
       return ColumnFromPartial(partialOffset, partialColumn,
                                UnitsType::PossiblyMultiUnit);
     }
@@ -1008,7 +1007,7 @@ MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
 
     auto notes = MakeUnique<JSErrorNotes>();
     if (!notes) {
-      ReportOutOfMemory(anyChars.cx);
+      ReportOutOfMemory(anyChars.ec);
       break;
     }
 
@@ -1034,7 +1033,7 @@ MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
     uint32_t line, column;
     computeLineAndColumn(offset, &line, &column);
 
-    if (!notes->addNoteASCII(anyChars.cx, anyChars.getFilename(), 0, line,
+    if (!notes->addNoteASCII(anyChars.ec, anyChars.getFilename(), 0, line,
                              column, GetErrorMessage, nullptr,
                              JSMSG_BAD_CODE_UNITS, badUnitsStr)) {
       break;
@@ -1792,7 +1791,7 @@ void TokenStreamSpecific<Unit, AnyCharsAccess>::reportIllegalCharacter(
     int32_t cp) {
   UniqueChars display = JS_smprintf("U+%04X", cp);
   if (!display) {
-    ReportOutOfMemory(anyCharsAccess().cx);
+    ReportOutOfMemory(anyCharsAccess().ec);
     return;
   }
   error(JSMSG_ILLEGAL_CHARACTER, display.get());

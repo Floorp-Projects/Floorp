@@ -869,7 +869,7 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
 function CurrencyDigits(currency) {
   assert(typeof currency === "string", "currency is a string value");
   assert(IsWellFormedCurrencyCode(currency), "currency is well-formed");
-  assert(currency == toASCIIUpperCase(currency), "currency is all upper-case");
+  assert(currency === toASCIIUpperCase(currency), "currency is all upper-case");
 
   if (hasOwn(currency, currencyDigits)) {
     return currencyDigits[currency];

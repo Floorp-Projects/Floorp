@@ -69,6 +69,7 @@
 #include "vm/BytecodeLocation.h"
 #include "vm/BytecodeUtil.h"  // Disassemble
 #include "vm/Compression.h"
+#include "vm/ErrorContext.h"
 #include "vm/FunctionFlags.h"      // js::FunctionFlags
 #include "vm/HelperThreadState.h"  // js::RunPendingSourceCompressions
 #include "vm/JSAtom.h"
@@ -1490,7 +1491,7 @@ template bool ScriptSource::initializeWithUnretrievableCompressedSource<
               size_t sourceLength);
 
 template <typename Unit>
-bool ScriptSource::assignSource(JSContext* cx,
+bool ScriptSource::assignSource(JSContext* cx, ErrorContext* ec,
                                 const ReadOnlyCompileOptions& options,
                                 SourceText<Unit>& srcBuf) {
   MOZ_ASSERT(data.is<Missing>(),
@@ -1517,7 +1518,7 @@ bool ScriptSource::assignSource(JSContext* cx,
                : DuplicateString(srcBuf.get(), srcBuf.length());
   });
   if (!deduped) {
-    ReportOutOfMemory(cx);
+    ReportOutOfMemory(ec);
     return false;
   }
 
@@ -1526,10 +1527,10 @@ bool ScriptSource::assignSource(JSContext* cx,
   return true;
 }
 
-template bool ScriptSource::assignSource(JSContext* cx,
+template bool ScriptSource::assignSource(JSContext* cx, ErrorContext* ec,
                                          const ReadOnlyCompileOptions& options,
                                          SourceText<char16_t>& srcBuf);
-template bool ScriptSource::assignSource(JSContext* cx,
+template bool ScriptSource::assignSource(JSContext* cx, ErrorContext* ec,
                                          const ReadOnlyCompileOptions& options,
                                          SourceText<Utf8Unit>& srcBuf);
 
@@ -1863,7 +1864,7 @@ UniqueChars js::FormatIntroducedFilename(JSContext* cx, const char* filename,
   return formatted;
 }
 
-bool ScriptSource::initFromOptions(JSContext* cx,
+bool ScriptSource::initFromOptions(JSContext* cx, ErrorContext* ec,
                                    const ReadOnlyCompileOptions& options) {
   MOZ_ASSERT(!filename_);
   MOZ_ASSERT(!introducerFilename_);
@@ -1886,17 +1887,17 @@ bool ScriptSource::initFromOptions(JSContext* cx,
     if (!formatted) {
       return false;
     }
-    if (!setFilename(cx, std::move(formatted))) {
+    if (!setFilename(cx, ec, std::move(formatted))) {
       return false;
     }
   } else if (options.filename()) {
-    if (!setFilename(cx, options.filename())) {
+    if (!setFilename(cx, ec, options.filename())) {
       return false;
     }
   }
 
   if (options.introducerFilename()) {
-    if (!setIntroducerFilename(cx, options.introducerFilename())) {
+    if (!setIntroducerFilename(cx, ec, options.introducerFilename())) {
       return false;
     }
   }
@@ -1907,66 +1908,91 @@ bool ScriptSource::initFromOptions(JSContext* cx,
 // Use the SharedImmutableString map to deduplicate input string. The input
 // string must be null-terminated.
 template <typename SharedT, typename CharT>
-static SharedT GetOrCreateStringZ(JSContext* cx,
+static SharedT GetOrCreateStringZ(JSContext* cx, ErrorContext* ec,
                                   UniquePtr<CharT[], JS::FreePolicy>&& str) {
   JSRuntime* rt = cx->runtime();
   size_t lengthWithNull = std::char_traits<CharT>::length(str.get()) + 1;
   auto res =
       rt->sharedImmutableStrings().getOrCreate(std::move(str), lengthWithNull);
   if (!res) {
-    ReportOutOfMemory(cx);
+    ReportOutOfMemory(ec);
   }
   return res;
 }
 
 SharedImmutableString ScriptSource::getOrCreateStringZ(JSContext* cx,
+                                                       ErrorContext* ec,
                                                        UniqueChars&& str) {
-  return GetOrCreateStringZ<SharedImmutableString>(cx, std::move(str));
+  return GetOrCreateStringZ<SharedImmutableString>(cx, ec, std::move(str));
 }
 
 SharedImmutableTwoByteString ScriptSource::getOrCreateStringZ(
-    JSContext* cx, UniqueTwoByteChars&& str) {
-  return GetOrCreateStringZ<SharedImmutableTwoByteString>(cx, std::move(str));
+    JSContext* cx, ErrorContext* ec, UniqueTwoByteChars&& str) {
+  return GetOrCreateStringZ<SharedImmutableTwoByteString>(cx, ec,
+                                                          std::move(str));
 }
 
-bool ScriptSource::setFilename(JSContext* cx, const char* filename) {
+bool ScriptSource::setFilename(JSContext* cx, ErrorContext* ec,
+                               const char* filename) {
   UniqueChars owned = DuplicateString(cx, filename);
   if (!owned) {
     return false;
   }
-  return setFilename(cx, std::move(owned));
+  return setFilename(cx, ec, std::move(owned));
 }
 
 bool ScriptSource::setFilename(JSContext* cx, UniqueChars&& filename) {
+  // TODO bug 1783951 remove in favor of the ErrorContext version
+  MainThreadErrorContext ec(cx);
+  return setFilename(cx, &ec, std::move(filename));
+}
+
+bool ScriptSource::setFilename(JSContext* cx, ErrorContext* ec,
+                               UniqueChars&& filename) {
   MOZ_ASSERT(!filename_);
-  filename_ = getOrCreateStringZ(cx, std::move(filename));
+  filename_ = getOrCreateStringZ(cx, ec, std::move(filename));
   return bool(filename_);
 }
 
 bool ScriptSource::setIntroducerFilename(JSContext* cx, const char* filename) {
+  // TODO bug 1783951 remove in favor of the ErrorContext version
+  MainThreadErrorContext ec(cx);
+  return setIntroducerFilename(cx, &ec, filename);
+}
+
+bool ScriptSource::setIntroducerFilename(JSContext* cx, ErrorContext* ec,
+                                         const char* filename) {
   UniqueChars owned = DuplicateString(cx, filename);
   if (!owned) {
     return false;
   }
-  return setIntroducerFilename(cx, std::move(owned));
+  return setIntroducerFilename(cx, ec, std::move(owned));
 }
 
-bool ScriptSource::setIntroducerFilename(JSContext* cx,
+bool ScriptSource::setIntroducerFilename(JSContext* cx, ErrorContext* ec,
                                          UniqueChars&& filename) {
   MOZ_ASSERT(!introducerFilename_);
-  introducerFilename_ = getOrCreateStringZ(cx, std::move(filename));
+  introducerFilename_ = getOrCreateStringZ(cx, ec, std::move(filename));
   return bool(introducerFilename_);
 }
 
-bool ScriptSource::setDisplayURL(JSContext* cx, const char16_t* url) {
+bool ScriptSource::setDisplayURL(JSContext* cx, ErrorContext* ec,
+                                 const char16_t* url) {
   UniqueTwoByteChars owned = DuplicateString(cx, url);
   if (!owned) {
     return false;
   }
-  return setDisplayURL(cx, std::move(owned));
+  return setDisplayURL(cx, ec, std::move(owned));
 }
 
 bool ScriptSource::setDisplayURL(JSContext* cx, UniqueTwoByteChars&& url) {
+  // TODO bug 1783951 remove in favor of the ErrorContext version
+  MainThreadErrorContext ec(cx);
+  return setDisplayURL(cx, &ec, std::move(url));
+}
+
+bool ScriptSource::setDisplayURL(JSContext* cx, ErrorContext* ec,
+                                 UniqueTwoByteChars&& url) {
   if (hasDisplayURL()) {
     // FIXME: filename() should be UTF-8 (bug 987069).
     if (!cx->isHelperThreadContext() &&
@@ -1981,25 +2007,33 @@ bool ScriptSource::setDisplayURL(JSContext* cx, UniqueTwoByteChars&& url) {
     return true;
   }
 
-  displayURL_ = getOrCreateStringZ(cx, std::move(url));
+  displayURL_ = getOrCreateStringZ(cx, ec, std::move(url));
   return bool(displayURL_);
 }
 
-bool ScriptSource::setSourceMapURL(JSContext* cx, const char16_t* url) {
+bool ScriptSource::setSourceMapURL(JSContext* cx, ErrorContext* ec,
+                                   const char16_t* url) {
   UniqueTwoByteChars owned = DuplicateString(cx, url);
   if (!owned) {
     return false;
   }
-  return setSourceMapURL(cx, std::move(owned));
+  return setSourceMapURL(cx, ec, std::move(owned));
 }
 
 bool ScriptSource::setSourceMapURL(JSContext* cx, UniqueTwoByteChars&& url) {
+  // TODO bug 1783951 remove in favor of the ErrorContext version
+  MainThreadErrorContext ec(cx);
+  return setSourceMapURL(cx, &ec, std::move(url));
+}
+
+bool ScriptSource::setSourceMapURL(JSContext* cx, ErrorContext* ec,
+                                   UniqueTwoByteChars&& url) {
   MOZ_ASSERT(url);
   if (url[0] == '\0') {
     return true;
   }
 
-  sourceMapURL_ = getOrCreateStringZ(cx, std::move(url));
+  sourceMapURL_ = getOrCreateStringZ(cx, ec, std::move(url));
   return bool(sourceMapURL_);
 }
 
@@ -2045,15 +2079,25 @@ bool ScriptSource::setSourceMapURL(JSContext* cx, UniqueTwoByteChars&& url) {
 js::UniquePtr<ImmutableScriptData> js::ImmutableScriptData::new_(
     JSContext* cx, uint32_t codeLength, uint32_t noteLength,
     uint32_t numResumeOffsets, uint32_t numScopeNotes, uint32_t numTryNotes) {
+  // TODO bug 1783951 - remove in favor of the ErrorContext version
+  MainThreadErrorContext ec(cx);
+  return ImmutableScriptData::new_(&ec, codeLength, noteLength,
+                                   numResumeOffsets, numScopeNotes,
+                                   numTryNotes);
+}
+
+js::UniquePtr<ImmutableScriptData> js::ImmutableScriptData::new_(
+    ErrorContext* ec, uint32_t codeLength, uint32_t noteLength,
+    uint32_t numResumeOffsets, uint32_t numScopeNotes, uint32_t numTryNotes) {
   auto size = sizeFor(codeLength, noteLength, numResumeOffsets, numScopeNotes,
                       numTryNotes);
   if (!size.isValid()) {
-    ReportAllocationOverflow(cx);
+    ReportAllocationOverflow(ec);
     return nullptr;
   }
 
   // Allocate contiguous raw buffer.
-  void* raw = cx->pod_malloc<uint8_t>(size.value());
+  void* raw = ec->getAllocator()->pod_malloc<uint8_t>(size.value());
   MOZ_ASSERT(uintptr_t(raw) % alignof(ImmutableScriptData) == 0);
   if (!raw) {
     return nullptr;
@@ -2157,13 +2201,19 @@ void JSScript::relazify(JSRuntime* rt) {
 
   MOZ_ASSERT(isReadyForDelazification());
 }
+bool SharedImmutableScriptData::shareScriptData(
+    JSContext* cx, RefPtr<SharedImmutableScriptData>& sisd) {
+  // TODO bug 1783951 - remove in favor of the ErrorContext version
+  MainThreadErrorContext ec(cx);
+  return shareScriptData(cx, &ec, sisd);
+}
 
 // Takes ownership of the passed SharedImmutableScriptData and either adds it
 // into the runtime's SharedImmutableScriptDataTable, or frees it if a matching
 // entry already exists and replaces the passed RefPtr with the existing entry.
 /* static */
 bool SharedImmutableScriptData::shareScriptData(
-    JSContext* cx, RefPtr<SharedImmutableScriptData>& sisd) {
+    JSContext* cx, ErrorContext* ec, RefPtr<SharedImmutableScriptData>& sisd) {
   MOZ_ASSERT(sisd);
   MOZ_ASSERT(sisd->refCount() == 1);
 
@@ -2182,7 +2232,7 @@ bool SharedImmutableScriptData::shareScriptData(
     sisd = *p;
   } else {
     if (!cx->scriptDataTable(lock).add(p, data)) {
-      ReportOutOfMemory(cx);
+      ReportOutOfMemory(ec);
       return false;
     }
 
@@ -2882,6 +2932,22 @@ js::UniquePtr<ImmutableScriptData> ImmutableScriptData::new_(
     mozilla::Span<const uint32_t> resumeOffsets,
     mozilla::Span<const ScopeNote> scopeNotes,
     mozilla::Span<const TryNote> tryNotes) {
+  // TODO bug 1783951 - remove in favor of the ErrorContext version
+  MainThreadErrorContext ec(cx);
+  return ImmutableScriptData::new_(
+      &ec, mainOffset, nfixed, nslots, bodyScopeIndex, numICEntries, isFunction,
+      funLength, code, notes, resumeOffsets, scopeNotes, tryNotes);
+}
+
+/* static */
+js::UniquePtr<ImmutableScriptData> ImmutableScriptData::new_(
+    ErrorContext* ec, uint32_t mainOffset, uint32_t nfixed, uint32_t nslots,
+    GCThingIndex bodyScopeIndex, uint32_t numICEntries, bool isFunction,
+    uint16_t funLength, mozilla::Span<const jsbytecode> code,
+    mozilla::Span<const SrcNote> notes,
+    mozilla::Span<const uint32_t> resumeOffsets,
+    mozilla::Span<const ScopeNote> scopeNotes,
+    mozilla::Span<const TryNote> tryNotes) {
   MOZ_RELEASE_ASSERT(code.Length() <= frontend::MaxBytecodeLength);
 
   // There are 1-4 copies of SrcNoteType::Null appended after the source
@@ -2895,7 +2961,7 @@ js::UniquePtr<ImmutableScriptData> ImmutableScriptData::new_(
 
   // Allocate ImmutableScriptData
   js::UniquePtr<ImmutableScriptData> data(ImmutableScriptData::new_(
-      cx, code.Length(), noteLength + nullLength, resumeOffsets.Length(),
+      ec, code.Length(), noteLength + nullLength, resumeOffsets.Length(),
       scopeNotes.Length(), tryNotes.Length()));
   if (!data) {
     return data;

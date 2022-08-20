@@ -120,7 +120,7 @@ function getCollatorInternals(obj) {
 function InitializeCollator(collator, locales, options) {
   assert(IsObject(collator), "InitializeCollator called with non-object");
   assert(
-    intl_GuardToCollator(collator) != null,
+    intl_GuardToCollator(collator) !== null,
     "InitializeCollator called with non-Collator"
   );
 

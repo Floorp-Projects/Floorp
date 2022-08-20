@@ -202,7 +202,7 @@ void ParseContext::Scope::dump(ParseContext* pc, ParserBase* parser) {
 bool ParseContext::Scope::addPossibleAnnexBFunctionBox(ParseContext* pc,
                                                        FunctionBox* funbox) {
   if (!possibleAnnexBFunctionBoxes_) {
-    if (!possibleAnnexBFunctionBoxes_.acquire(pc->sc()->cx_)) {
+    if (!possibleAnnexBFunctionBoxes_.acquire(pc->sc()->ec_)) {
       return false;
     }
   }
@@ -340,11 +340,11 @@ bool ParseContext::init() {
     return false;
   }
 
-  JSContext* cx = sc()->cx_;
+  ErrorContext* ec = sc()->ec_;
 
   if (isFunctionBox()) {
     // Named lambdas always need a binding for their own name. If this
-    // binding is closed over when we finish parsing the function in
+    // binding is closed over when we finish parsing the function iNn
     // finishFunctionScopes, the function box needs to be marked as
     // needing a dynamic DeclEnv object.
     if (functionBox()->isNamedLambda()) {
@@ -365,12 +365,12 @@ bool ParseContext::init() {
       return false;
     }
 
-    if (!positionalFormalParameterNames_.acquire(cx)) {
+    if (!positionalFormalParameterNames_.acquire(ec)) {
       return false;
     }
   }
 
-  if (!closedOverBindingsForLazy_.acquire(cx)) {
+  if (!closedOverBindingsForLazy_.acquire(ec)) {
     return false;
   }
 

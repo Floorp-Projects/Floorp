@@ -20,6 +20,7 @@ class JS_PUBLIC_API CompileOptions;
 
 namespace js {
 
+class ErrorContext;
 class ScriptSource;
 
 // Populate `options` fields from `opt` object.
@@ -45,7 +46,8 @@ class ScriptSource;
     JS::MutableHandle<JSString*> displayURL,
     JS::MutableHandle<JSString*> sourceMapURL);
 
-[[nodiscard]] bool SetSourceOptions(JSContext* cx, ScriptSource* source,
+[[nodiscard]] bool SetSourceOptions(JSContext* cx, ErrorContext* ec,
+                                    ScriptSource* source,
                                     JS::Handle<JSString*> displayURL,
                                     JS::Handle<JSString*> sourceMapURL);
 

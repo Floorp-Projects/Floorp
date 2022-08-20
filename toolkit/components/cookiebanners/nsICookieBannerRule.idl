@@ -15,7 +15,7 @@
 [builtinclass, scriptable, uuid(eb1904db-e0d1-4760-a721-db76b1ca3e94)]
 interface nsICookieBannerRule : nsISupports {
     // Domain of the site to handle the cookie banner for.
-    readonly attribute ACString domain;
+    attribute ACString domain;
 
     // Cookies that reflect the opt-out or "reject all" state for the cookie baner.
     readonly attribute Array<nsICookieRule> cookiesOptOut;

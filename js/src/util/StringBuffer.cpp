@@ -13,6 +13,7 @@
 
 #include "frontend/ParserAtom.h"  // frontend::{ParserAtomsTable, TaggedParserAtomIndex
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "vm/ErrorContext.h"
 #include "vm/StaticStrings.h"
 
 #include "vm/JSObject-inl.h"
@@ -147,19 +148,19 @@ JSAtom* StringBuffer::finishAtom() {
 }
 
 frontend::TaggedParserAtomIndex StringBuffer::finishParserAtom(
-    frontend::ParserAtomsTable& parserAtoms) {
+    frontend::ParserAtomsTable& parserAtoms, ErrorContext* ec) {
   size_t len = length();
   if (len == 0) {
     return frontend::TaggedParserAtomIndex::WellKnown::empty();
   }
 
   if (isLatin1()) {
-    auto result = parserAtoms.internLatin1(cx_, latin1Chars().begin(), len);
+    auto result = parserAtoms.internLatin1(ec, latin1Chars().begin(), len);
     latin1Chars().clear();
     return result;
   }
 
-  auto result = parserAtoms.internChar16(cx_, twoByteChars().begin(), len);
+  auto result = parserAtoms.internChar16(ec, twoByteChars().begin(), len);
   twoByteChars().clear();
   return result;
 }

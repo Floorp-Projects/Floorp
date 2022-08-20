@@ -1,0 +1,110 @@
+{
+  "type": "object",
+  "definitions": {
+    "cookie": {
+      "type": "object",
+      "required": [
+        "name",
+        "value"
+      ],
+      "description": "JSON representation of a cookie to inject.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the cookie."
+        },
+        "value": {
+          "type": "string",
+          "description": "The cookie value."
+        },
+        "host": {
+          "type": "string",
+          "description": "Host to set cookie for. Defaults to .<domain> if unset."
+        },
+        "path": {
+          "type": "string",
+          "description": "The path pertaining to the cookie. Defaults to '/'"
+        },
+        "expiryRelative": {
+          "type": "number",
+          "description": "Expiry time of the cookie in seconds relative to the injection time. Defaults to pref value for cookiebanners.cookieInjector.defaultExpiryRelative."
+        },
+        "unsetValue": {
+          "type": "string",
+          "description": "If an existing cookie of the same name sets this value it may be overwritten by this rule."
+        },
+        "isSecure": {
+          "type": "boolean",
+          "description": "true if the cookie was transmitted over ssl, false otherwise."
+        },
+        "sameSite": {
+          "type": "number",
+          "description": "the SameSite attribute; this controls the cookie behavior for cross-site requests as per https://tools.ietf.org/html/draft-west-first-party-cookies-07"
+        },
+        "isSession": {
+          "type": "boolean",
+          "description": "true if the cookie is a session cookie."
+        },
+        "schemeMap": {
+          "type": "number",
+          "description": "Bitmap of schemes."
+        },
+        "isHTTPOnly": {
+          "type": "boolean",
+          "description": "true if the cookie is an http only cookie."
+        }
+      }
+    }
+  },
+  "title": "Cookie Banner Rule",
+  "required": [
+    "domain"
+  ],
+  "properties": {
+    "domain": {
+      "type": "string",
+      "description": "Domain of the site the rule describes."
+    },
+    "cookies": {
+      "type": "object",
+      "properties": {
+        "optIn": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cookie"
+          },
+          "description": "Cookies to be set to signal opt-in state."
+        },
+        "optOut": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/cookie"
+          },
+          "description": "Cookies to be set to signal opt-out state."
+        }
+      }
+    },
+    "click": {
+      "type": "object",
+      "properties": {
+        "presence": {
+          "type": "string",
+          "description": "Query selector to detect cookie banner element."
+        },
+        "hide": {
+          "type": "string",
+          "description": "Query selector for element to hide while handling cookie banner"
+        },
+        "optOut": {
+          "type": "string",
+          "description": "Query selector for opt-out / reject all button"
+        },
+        "optIn": {
+          "type": "string",
+          "description": "Query selector for opt-in / accept all button"
+        }
+      }
+    }
+  },
+  "description": "Rule containing instructions on how to handle a cookie banner on a specific site."
+}

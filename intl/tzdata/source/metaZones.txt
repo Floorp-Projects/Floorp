@@ -870,6 +870,7 @@ metaZones:table(nofallback){
         wall{"Wallis"}
         yaku{"Yakutsk"}
         yeka{"Yekaterinburg"}
+        yuko{"Yukon"}
     }
     metazoneInfo{
         "Africa:Abidjan"{

@@ -74,26 +74,28 @@ add_task(async function test_keyboard_navigation_activeScript() {
   ok(item, `expected item for ${extension1.id}`);
 
   info("moving focus to first item in the unified extensions panel");
-  let focused = BrowserTestUtils.waitForEvent(item, "focus");
+  let actionButton = item.querySelector(".unified-extensions-item-action");
+  let focused = BrowserTestUtils.waitForEvent(actionButton, "focus");
   EventUtils.synthesizeKey("VK_TAB", {}, win);
   await focused;
   is(
-    item,
+    actionButton,
     win.document.activeElement,
-    "expected first extension item to be focused"
+    "expected primary button of first extension item to be focused"
   );
 
   item = getUnifiedExtensionsItem(win, extension2.id);
   ok(item, `expected item for ${extension2.id}`);
 
   info("moving focus to second item in the unified extensions panel");
-  focused = BrowserTestUtils.waitForEvent(item, "focus");
+  actionButton = item.querySelector(".unified-extensions-item-action");
+  focused = BrowserTestUtils.waitForEvent(actionButton, "focus");
   EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
   await focused;
   is(
-    item,
+    actionButton,
     win.document.activeElement,
-    "expected second extension item to be focused"
+    "expected primary button of second extension item to be focused"
   );
 
   info("granting permission");
@@ -132,13 +134,18 @@ add_task(async function test_keyboard_navigation_opens_menu() {
   ok(item, `expected item for ${extension1.id}`);
 
   info("moving focus to first item in the unified extensions panel");
-  let focused = BrowserTestUtils.waitForEvent(item, "focus");
+  let actionButton = item.querySelector(".unified-extensions-item-action");
+  let focused = BrowserTestUtils.waitForEvent(actionButton, "focus");
   EventUtils.synthesizeKey("VK_TAB", {}, win);
   await focused;
   is(
-    item,
+    actionButton,
     win.document.activeElement,
-    "expected first extension item to be focused"
+    "expected primary button of the first extension item to be focused"
+  );
+  ok(
+    !item.hasAttribute("secondary-button-hovered"),
+    "expected no secondary-button-hovered attr on the item"
   );
 
   info("moving focus to first menu button in the unified extensions panel");
@@ -152,6 +159,11 @@ add_task(async function test_keyboard_navigation_opens_menu() {
     win.document.activeElement,
     "expected menu button in first extension item to be focused"
   );
+  is(
+    item.getAttribute("secondary-button-hovered"),
+    "true",
+    "expected secondary-button-hovered attr on the item"
+  );
 
   info("opening menu");
   const contextMenu = win.document.getElementById(
@@ -163,6 +175,15 @@ add_task(async function test_keyboard_navigation_opens_menu() {
   await shown;
 
   await closeChromeContextMenu(contextMenu.id, null, win);
+
+  info("moving focus back to the primary (action) button");
+  focused = BrowserTestUtils.waitForEvent(actionButton, "focus");
+  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true }, win);
+  await focused;
+  ok(
+    !item.hasAttribute("secondary-button-hovered"),
+    "expected no secondary-button-hovered attr on the item"
+  );
 
   await closeExtensionsPanel(win);
 

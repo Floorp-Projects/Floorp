@@ -1907,7 +1907,8 @@ async function selectText(selector) {
  * @returns {string[]}
  */
 function getTextRecognitionItems() {
-  return Services.appinfo.isTextRecognitionSupported
+  return Services.prefs.getBoolPref("dom.text-recognition.enabled") &&
+    Services.appinfo.isTextRecognitionSupported
     ? ["context-imagetext", true]
     : [];
 }

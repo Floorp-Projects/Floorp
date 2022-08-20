@@ -690,7 +690,7 @@ var coseTestcasesProd = [
 ];
 
 for (let policy of cosePolicies) {
-  for (let testcase of coseTestcasesStage) {
+  for (let testcase of [...coseTestcasesStage, ...coseTestcasesProd]) {
     add_signature_test(policy, function() {
       certdb.openSignedAppFileAsync(
         testcase.root,

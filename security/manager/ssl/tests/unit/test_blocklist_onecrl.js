@@ -11,8 +11,6 @@ const { RemoteSecuritySettings } = ChromeUtils.import(
 );
 const { OneCRLBlocklistClient } = RemoteSecuritySettings.init();
 
-const global = this;
-
 add_task(async function test_uses_a_custom_signer() {
   Assert.notEqual(
     OneCRLBlocklistClient.signerName,

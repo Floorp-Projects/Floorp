@@ -23,6 +23,7 @@
 #include <algorithm>
 
 #include "builtin/AtomicsObject.h"
+#include "vm/ErrorContext.h"
 #ifdef JS_HAS_INTL_API
 #  include "builtin/intl/SharedIntlData.h"
 #endif
@@ -83,6 +84,7 @@ namespace js {
 
 class AutoAssertNoContentJS;
 class EnterDebuggeeNoExecute;
+class ErrorContext;
 
 }  // namespace js
 
@@ -99,6 +101,7 @@ namespace js {
 
 extern MOZ_COLD void ReportOutOfMemory(JSContext* cx);
 extern MOZ_COLD void ReportAllocationOverflow(JSContext* maybecx);
+extern MOZ_COLD void ReportAllocationOverflow(ErrorContext* ec);
 extern MOZ_COLD void ReportOversizedAllocation(JSContext* cx,
                                                const unsigned errorNumber);
 
@@ -960,7 +963,9 @@ struct JSRuntime {
   js::MainThreadData<JS::AfterWaitCallback> afterWaitCallback;
 
  public:
-  void reportAllocationOverflow() { js::ReportAllocationOverflow(nullptr); }
+  void reportAllocationOverflow() {
+    js::ReportAllocationOverflow(static_cast<JSContext*>(nullptr));
+  }
 
   /*
    * This should be called after system malloc/calloc/realloc returns nullptr

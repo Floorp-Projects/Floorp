@@ -790,7 +790,7 @@ void DecodeStencilTask::parse(JSContext* cx, ErrorContext* ec) {
   if (!stencilInput_) {
     return;
   }
-  if (!stencilInput_->initForGlobal(cx)) {
+  if (!stencilInput_->initForGlobal(cx, ec)) {
     return;
   }
 
@@ -1026,7 +1026,7 @@ UniquePtr<DelazifyTask> DelazifyTask::Create(
   // Clone the extensible stencil to be used for eager delazification.
   auto initial = cx->make_unique<frontend::ExtensibleCompilationStencil>(
       cx, options, stencil.source);
-  if (!initial || !initial->cloneFrom(cx, stencil)) {
+  if (!initial || !initial->cloneFrom(&task->ec_, stencil)) {
     // In case of errors, skip this and delazify on-demand.
     return nullptr;
   }
@@ -1049,7 +1049,7 @@ bool DelazifyTask::init(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     UniquePtr<frontend::ExtensibleCompilationStencil>&& initial) {
   using namespace js::frontend;
-  if (!merger.setInitial(cx, std::move(initial))) {
+  if (!merger.setInitial(&ec_, std::move(initial))) {
     return false;
   }
 
@@ -1169,7 +1169,7 @@ bool DelazifyTask::runTask(JSContext* cx) {
     // We are merging the delazification now, while this could be post-poned
     // until we have to look at inner functions, this is simpler to do it now
     // than querying the cache for every enclosing script.
-    if (!merger.addDelazification(cx, *innerStencil)) {
+    if (!merger.addDelazification(&this->ec_, *innerStencil)) {
       return false;
     }
 

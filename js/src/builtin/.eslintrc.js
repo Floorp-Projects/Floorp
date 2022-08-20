@@ -44,6 +44,65 @@ module.exports = {
         },
       },
 
+      rules: {
+        // We should fix those at some point, but we use this to detect NaNs.
+        "no-self-compare": "off",
+        "no-lonely-if": "off",
+        // Disabled until we can use let/const to fix those erorrs, and undefined
+        // names cause an exception and abort during runtime initialization.
+        "no-redeclare": "off",
+        // Disallow use of |void 0|. Instead use |undefined|.
+        "no-void": ["error", { allowAsStatement: true }],
+        // Disallow loose equality because of objects with the [[IsHTMLDDA]]
+        // internal slot, aka |document.all|, aka "objects emulating undefined".
+        eqeqeq: "error",
+        // All self-hosted code is implicitly strict mode, so there's no need to
+        // add a strict-mode directive.
+        strict: ["error", "never"],
+        // Disallow syntax not supported in self-hosted code.
+        "no-restricted-syntax": [
+          "error",
+          {
+            selector: "ClassDeclaration",
+            message: "Class declarations are not allowed",
+          },
+          {
+            selector: "ClassExpression",
+            message: "Class expressions are not allowed",
+          },
+          {
+            selector: "Literal[regex]",
+            message: "Regular expression literals are not allowed",
+          },
+          {
+            selector: "CallExpression > MemberExpression.callee",
+            message:
+              "Direct method calls are not allowed, use callFunction() or callContentFunction()",
+          },
+          {
+            selector: "NewExpression > MemberExpression.callee",
+            message:
+              "Direct method calls are not allowed, use constructContentFunction()",
+          },
+          {
+            selector: "YieldExpression[delegate=true]",
+            message:
+              "yield* is not allowed because it can run user-modifiable iteration code",
+          },
+          {
+            selector: "ForOfStatement > :not(CallExpression).right",
+            message:
+              "for-of loops must use allowContentIter() or allowContentIterWith()",
+          },
+          {
+            selector:
+              "ForOfStatement > CallExpression.right > :not(Identifier[name='allowContentIter'], Identifier[name='allowContentIterWith']).callee",
+            message:
+              "for-of loops must use allowContentIter() or allowContentIterWith()",
+          },
+        ],
+      },
+
       globals: {
         // The bytecode compiler special-cases these identifiers.
         allowContentIter: "readonly",
@@ -96,13 +155,4 @@ module.exports = {
       },
     },
   ],
-
-  rules: {
-    // We should fix those at some point, but we use this to detect NaNs.
-    "no-self-compare": "off",
-    "no-lonely-if": "off",
-    // Disabled until we can use let/const to fix those erorrs,
-    // and undefined names cause an exception and abort during runtime initialization.
-    "no-redeclare": "off",
-  },
 };

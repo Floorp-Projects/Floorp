@@ -175,7 +175,7 @@ class SyntaxParseHandler {
   }
 
  public:
-  SyntaxParseHandler(JSContext* cx, CompilationState& compilationState) {
+  SyntaxParseHandler(ErrorContext* ec, CompilationState& compilationState) {
     MOZ_ASSERT(!compilationState.input.isDelazifying());
   }
 

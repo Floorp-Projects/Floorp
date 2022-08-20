@@ -56,7 +56,7 @@ def test_host_header(browser, hostname, port_type, status):
     server_port = current_browser.remote_agent_port
     test_host = get_host(port_type, hostname, server_port)
 
-    response = websocket_request(server_port, host=test_host)
+    response = websocket_request("127.0.0.1", server_port, host=test_host)
     assert response.status == status
 
 
@@ -108,7 +108,7 @@ def test_allowed_hosts(browser, hostname, port_type, status):
     server_port = current_browser.remote_agent_port
     test_host = get_host(port_type, hostname, server_port)
 
-    response = websocket_request(server_port, host=test_host)
+    response = websocket_request("127.0.0.1", server_port, host=test_host)
     assert response.status == status
 
 
@@ -125,7 +125,7 @@ def test_origin_header(browser, origin, status):
     # Request a default browser.
     current_browser = browser(use_bidi=True)
     server_port = current_browser.remote_agent_port
-    response = websocket_request(server_port, origin=origin)
+    response = websocket_request("127.0.0.1", server_port, origin=origin)
     assert response.status == status
 
 
@@ -146,5 +146,9 @@ def test_allowed_origins(browser, origin, status):
         extra_args=["--remote-allow-origins", "http://localhost:1234"],
     )
     server_port = current_browser.remote_agent_port
-    response = websocket_request(server_port, origin=origin)
-    assert response.status == status
+
+    # Both `localhost` and `127.0.0.1` have to accept connections.
+    for target_host in ["127.0.0.1", "localhost"]:
+        print(f"Connecting to the WebSocket via host {target_host}")
+        response = websocket_request(target_host, server_port, origin=origin)
+        assert response.status == status

@@ -48,7 +48,7 @@ def test_allow_hosts_passed_to_remote_agent(
     driver.new_session()
 
     host = get_host("default_port", hostname, driver.remote_agent_port)
-    response = websocket_request(driver.remote_agent_port, host=host)
+    response = websocket_request("127.0.0.1", driver.remote_agent_port, host=host)
     assert response.status == status
 
     driver.delete_session()

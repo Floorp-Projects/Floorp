@@ -430,7 +430,7 @@ class alignas(alignof(uint32_t)) ParserAtom {
   ParserAtom(ParserAtom&& other) = delete;
 
   template <typename CharT, typename SeqCharT>
-  static ParserAtom* allocate(JSContext* cx, LifoAlloc& alloc,
+  static ParserAtom* allocate(ErrorContext* ec, LifoAlloc& alloc,
                               InflatedChar16Sequence<SeqCharT> seq,
                               uint32_t length, HashNumber hash);
 
@@ -474,12 +474,14 @@ class alignas(alignof(uint32_t)) ParserAtom {
   bool equalsSeq(HashNumber hash, InflatedChar16Sequence<CharT> seq) const;
 
   // Convert NotInstantiated and usedByStencil entry to a js-atom.
-  JSString* instantiateString(JSContext* cx, ParserAtomIndex index,
+  JSString* instantiateString(JSContext* cx, ErrorContext* ec,
+                              ParserAtomIndex index,
                               CompilationAtomCache& atomCache) const;
-  JSAtom* instantiateAtom(JSContext* cx, ParserAtomIndex index,
+  JSAtom* instantiateAtom(JSContext* cx, ErrorContext* ec,
+                          ParserAtomIndex index,
                           CompilationAtomCache& atomCache) const;
-  JSAtom* instantiatePermanentAtom(JSContext* cx, AtomSet& atomSet,
-                                   ParserAtomIndex index,
+  JSAtom* instantiatePermanentAtom(JSContext* cx, ErrorContext* ec,
+                                   AtomSet& atomSet, ParserAtomIndex index,
                                    CompilationAtomCache& atomCache) const;
 
  private:
@@ -640,10 +642,12 @@ class WellKnownParserAtoms {
   }
 };
 
-bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
+bool InstantiateMarkedAtoms(JSContext* cx, ErrorContext* ec,
+                            const ParserAtomSpan& entries,
                             CompilationAtomCache& atomCache);
 
-bool InstantiateMarkedAtomsAsPermanent(JSContext* cx, AtomSet& atomSet,
+bool InstantiateMarkedAtomsAsPermanent(JSContext* cx, ErrorContext* ec,
+                                       AtomSet& atomSet,
                                        const ParserAtomSpan& entries,
                                        CompilationAtomCache& atomCache);
 
@@ -687,47 +691,49 @@ class ParserAtomsTable {
  private:
   // Internal APIs for interning to the table after well-known atoms cases have
   // been tested.
-  TaggedParserAtomIndex addEntry(JSContext* cx, EntryMap::AddPtr& addPtr,
+  TaggedParserAtomIndex addEntry(ErrorContext* ec, EntryMap::AddPtr& addPtr,
                                  ParserAtom* entry);
   template <typename AtomCharT, typename SeqCharT>
-  TaggedParserAtomIndex internChar16Seq(JSContext* cx, EntryMap::AddPtr& addPtr,
+  TaggedParserAtomIndex internChar16Seq(ErrorContext* ec,
+                                        EntryMap::AddPtr& addPtr,
                                         HashNumber hash,
                                         InflatedChar16Sequence<SeqCharT> seq,
                                         uint32_t length);
 
   template <typename AtomCharT>
-  TaggedParserAtomIndex internExternalParserAtomImpl(JSContext* cx,
+  TaggedParserAtomIndex internExternalParserAtomImpl(ErrorContext* ec,
                                                      const ParserAtom* atom);
 
  public:
-  TaggedParserAtomIndex internAscii(JSContext* cx, const char* asciiPtr,
+  TaggedParserAtomIndex internAscii(ErrorContext* ec, const char* asciiPtr,
                                     uint32_t length);
 
-  TaggedParserAtomIndex internLatin1(JSContext* cx,
+  TaggedParserAtomIndex internLatin1(ErrorContext* ec,
                                      const JS::Latin1Char* latin1Ptr,
                                      uint32_t length);
 
-  TaggedParserAtomIndex internUtf8(JSContext* cx,
+  TaggedParserAtomIndex internUtf8(ErrorContext* ec,
                                    const mozilla::Utf8Unit* utf8Ptr,
                                    uint32_t nbyte);
 
-  TaggedParserAtomIndex internChar16(JSContext* cx, const char16_t* char16Ptr,
+  TaggedParserAtomIndex internChar16(ErrorContext* ec,
+                                     const char16_t* char16Ptr,
                                      uint32_t length);
 
-  TaggedParserAtomIndex internJSAtom(JSContext* cx,
+  TaggedParserAtomIndex internJSAtom(JSContext* cx, ErrorContext* ec,
                                      CompilationAtomCache& atomCache,
                                      JSAtom* atom);
 
   // Intern ParserAtom data from other ParserAtomTable.
   // This copies flags as well.
-  TaggedParserAtomIndex internExternalParserAtom(JSContext* cx,
+  TaggedParserAtomIndex internExternalParserAtom(ErrorContext* ec,
                                                  const ParserAtom* atom);
 
   // The atomIndex given as argument is in relation with the context Stencil.
   // The atomIndex might be a well-known or static, in which case this function
   // is a no-op.
   TaggedParserAtomIndex internExternalParserAtomIndex(
-      JSContext* cx, const CompilationStencil& context,
+      ErrorContext* ec, const CompilationStencil& context,
       TaggedParserAtomIndex atomIndex);
 
   // Compare an internal atom index with an external atom index coming from the
@@ -736,7 +742,7 @@ class ParserAtomsTable {
                                         const CompilationStencil& context,
                                         TaggedParserAtomIndex external) const;
 
-  bool addPlaceholder(JSContext* cx);
+  bool addPlaceholder(ErrorContext* ec);
 
  private:
   const ParserAtom* getWellKnown(WellKnownAtomId atomId) const;
@@ -765,7 +771,7 @@ class ParserAtomsTable {
   UniqueChars toPrintableString(JSContext* cx,
                                 TaggedParserAtomIndex index) const;
   UniqueChars toQuotedString(JSContext* cx, TaggedParserAtomIndex index) const;
-  JSAtom* toJSAtom(JSContext* cx, TaggedParserAtomIndex index,
+  JSAtom* toJSAtom(JSContext* cx, ErrorContext* ec, TaggedParserAtomIndex index,
                    CompilationAtomCache& atomCache) const;
 
  private:

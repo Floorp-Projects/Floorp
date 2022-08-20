@@ -1018,7 +1018,7 @@ SetCanonicalName($ArraySpecies, "get [Symbol.species]");
 // ES 2016 draft Mar 25, 2016 9.4.2.3.
 function ArraySpeciesCreate(originalArray, length) {
   // Step 1.
-  assert(typeof length == "number", "length should be a number");
+  assert(typeof length === "number", "length should be a number");
   assert(length >= 0, "length should be a non-negative number");
 
   // Step 2.

@@ -303,6 +303,10 @@ async function upgrade(request, response) {
 
   const { transport, input, output } = response._connection;
 
+  lazy.logger.info(
+    `Perform WebSocket upgrade for incoming connection from ${transport.host}:${transport.port}`
+  );
+
   const headers = new Map();
   for (let [key, values] of Object.entries(request._headers._headers)) {
     headers.set(key, values.join("\n"));

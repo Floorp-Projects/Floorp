@@ -11,7 +11,7 @@ async def test_navigator_webdriver_enabled(inline, browser):
     current_browser = browser(use_bidi=True, extra_prefs={"remote.active-protocols": 1})
     server_port = current_browser.remote_agent_port
 
-    async with BidiSession.bidi_only(f"ws://localhost:{server_port}") as bidi_session:
+    async with BidiSession.bidi_only(f"ws://127.0.0.1:{server_port}") as bidi_session:
         contexts = await bidi_session.browsing_context.get_tree(max_depth=0)
         assert len(contexts) > 0
 

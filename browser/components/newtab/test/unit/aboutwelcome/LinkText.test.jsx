@@ -30,11 +30,6 @@ describe("LinkText component", () => {
     assert.ok(wrapper.isEmptyRender());
   });
 
-  it("should not render LinkText component if button label is not passed", () => {
-    wrapper.setProps({ content: { text: "Link Text", button_label: null } });
-    assert.ok(wrapper.isEmptyRender());
-  });
-
   it("should not render LinkText component if button action is not passed", () => {
     wrapper.setProps({ handleAction: null });
     assert.ok(wrapper.isEmptyRender());
