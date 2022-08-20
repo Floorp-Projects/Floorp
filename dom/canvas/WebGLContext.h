@@ -260,11 +260,9 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
     LruPosition& operator=(LruPosition&&) = delete;
 
    public:
-    void AssignLocked(WebGLContext& aContext,
-                      const StaticMutexAutoLock& aProofOfLock);
-
+    void AssignLocked(WebGLContext& aContext) MOZ_REQUIRES(sLruMutex);
     void Reset();
-    void ResetLocked(const StaticMutexAutoLock& aProofOfLock);
+    void ResetLocked() MOZ_REQUIRES(sLruMutex);
 
     LruPosition();
     explicit LruPosition(WebGLContext&);
@@ -274,7 +272,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
 
   mutable LruPosition mLruPosition MOZ_GUARDED_BY(sLruMutex);
 
-  void BumpLruLocked(const StaticMutexAutoLock& aProofOfLock);
+  void BumpLruLocked() MOZ_REQUIRES(sLruMutex);
 
  public:
   void BumpLru();
@@ -1119,8 +1117,8 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   ////
 
  private:
-  void LoseContextLruLocked(webgl::ContextLossReason reason,
-                            const StaticMutexAutoLock& aProofOfLock);
+  void LoseContextLruLocked(webgl::ContextLossReason reason)
+      MOZ_REQUIRES(sLruMutex);
 
  public:
   void LoseContext(
