@@ -12,7 +12,6 @@
 
 #unified-extensions-view > .panel-subview-body {
   max-height: 70vh;
-  max-width: var(--menu-panel-width-wide);
 }
 
 .unified-extensions-panel-header {

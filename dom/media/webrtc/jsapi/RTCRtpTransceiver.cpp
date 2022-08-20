@@ -132,6 +132,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(RTCRtpTransceiver)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(RTCRtpTransceiver)
   if (tmp->mHandlingUnlink) {
     tmp->BreakCycles();
+    tmp->mHandlingUnlink = false;
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END

@@ -156,33 +156,11 @@ async function update_blocklist() {
   );
 }
 
-function* generate_revocations_txt_lines() {
-  let profile = do_get_profile();
-  let revocations = profile.clone();
-  revocations.append("revocations.txt");
-  ok(revocations.exists(), "the revocations file should exist");
-  let inputStream = Cc[
-    "@mozilla.org/network/file-input-stream;1"
-  ].createInstance(Ci.nsIFileInputStream);
-  inputStream.init(revocations, -1, -1, 0);
-  inputStream.QueryInterface(Ci.nsILineInputStream);
-  let hasmore = false;
-  do {
-    let line = {};
-    hasmore = inputStream.readLine(line);
-    yield line.value;
-  } while (hasmore);
-}
-
 function run_test() {
   // import the certificates we need
   load_cert("test-ca", "CTu,CTu,CTu");
   load_cert("test-int", ",,");
   load_cert("other-test-ca", "CTu,CTu,CTu");
-
-  let certList = Cc["@mozilla.org/security/certstorage;1"].getService(
-    Ci.nsICertStorage
-  );
 
   add_task(async function() {
     // check some existing items in revocations.txt are blocked.

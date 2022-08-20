@@ -20,6 +20,7 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Maybe.h"       // mozilla::Maybe
 
+#include <cstdarg>
 #include <iterator>  // std::input_iterator_tag, std::iterator
 #include <stdarg.h>
 #include <stddef.h>  // size_t
@@ -43,7 +44,14 @@ class ExceptionStack;
 }
 namespace js {
 class SystemAllocPolicy;
-}
+
+enum ErrorArgumentsType {
+  ArgumentsAreUnicode,
+  ArgumentsAreASCII,
+  ArgumentsAreLatin1,
+  ArgumentsAreUTF8
+};
+}  // namespace js
 
 /**
  * Possible exception types. These types are part of a JSErrorFormatString
@@ -179,6 +187,12 @@ class JSErrorNotes {
   // Stores pointers to each note.
   js::Vector<js::UniquePtr<Note>, 1, js::SystemAllocPolicy> notes_;
 
+  bool addNoteVA(js::ErrorContext* ec, const char* filename, unsigned sourceId,
+                 unsigned lineno, unsigned column,
+                 JSErrorCallback errorCallback, void* userRef,
+                 const unsigned errorNumber,
+                 js::ErrorArgumentsType argumentsType, va_list ap);
+
  public:
   JSErrorNotes();
   ~JSErrorNotes();
@@ -188,12 +202,24 @@ class JSErrorNotes {
                     unsigned lineno, unsigned column,
                     JSErrorCallback errorCallback, void* userRef,
                     const unsigned errorNumber, ...);
+  bool addNoteASCII(js::ErrorContext* ec, const char* filename,
+                    unsigned sourceId, unsigned lineno, unsigned column,
+                    JSErrorCallback errorCallback, void* userRef,
+                    const unsigned errorNumber, ...);
   bool addNoteLatin1(JSContext* cx, const char* filename, unsigned sourceId,
                      unsigned lineno, unsigned column,
                      JSErrorCallback errorCallback, void* userRef,
                      const unsigned errorNumber, ...);
+  bool addNoteLatin1(js::ErrorContext* ec, const char* filename,
+                     unsigned sourceId, unsigned lineno, unsigned column,
+                     JSErrorCallback errorCallback, void* userRef,
+                     const unsigned errorNumber, ...);
   bool addNoteUTF8(JSContext* cx, const char* filename, unsigned sourceId,
                    unsigned lineno, unsigned column,
+                   JSErrorCallback errorCallback, void* userRef,
+                   const unsigned errorNumber, ...);
+  bool addNoteUTF8(js::ErrorContext* ec, const char* filename,
+                   unsigned sourceId, unsigned lineno, unsigned column,
                    JSErrorCallback errorCallback, void* userRef,
                    const unsigned errorNumber, ...);
 

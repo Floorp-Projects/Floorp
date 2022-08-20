@@ -22,11 +22,12 @@
 #include "frontend/SourceNotes.h"  // js::SrcNote
 #include "frontend/TypedIndex.h"   // js::frontend::TypedIndex
 
-#include "js/AllocPolicy.h"            // js::SystemAllocPolicy
-#include "js/TypeDecls.h"              // JSContext,jsbytecode
-#include "js/UniquePtr.h"              // js::UniquePtr
-#include "util/EnumFlags.h"            // js::EnumFlags
-#include "util/TrailingArray.h"        // js::TrailingArray
+#include "js/AllocPolicy.h"      // js::SystemAllocPolicy
+#include "js/TypeDecls.h"        // JSContext,jsbytecode
+#include "js/UniquePtr.h"        // js::UniquePtr
+#include "util/EnumFlags.h"      // js::EnumFlags
+#include "util/TrailingArray.h"  // js::TrailingArray
+#include "vm/ErrorContext.h"
 #include "vm/GeneratorAndAsyncKind.h"  // GeneratorKind, FunctionAsyncKind
 #include "vm/StencilEnums.h"  // js::{TryNoteKind,ImmutableScriptFlagsEnum,MutableScriptFlagsEnum}
 
@@ -521,9 +522,20 @@ class alignas(uint32_t) ImmutableScriptData final : public TrailingArray {
       mozilla::Span<const uint32_t> resumeOffsets,
       mozilla::Span<const ScopeNote> scopeNotes,
       mozilla::Span<const TryNote> tryNotes);
+  static js::UniquePtr<ImmutableScriptData> new_(
+      ErrorContext* ec, uint32_t mainOffset, uint32_t nfixed, uint32_t nslots,
+      GCThingIndex bodyScopeIndex, uint32_t numICEntries, bool isFunction,
+      uint16_t funLength, mozilla::Span<const jsbytecode> code,
+      mozilla::Span<const SrcNote> notes,
+      mozilla::Span<const uint32_t> resumeOffsets,
+      mozilla::Span<const ScopeNote> scopeNotes,
+      mozilla::Span<const TryNote> tryNotes);
 
   static js::UniquePtr<ImmutableScriptData> new_(
       JSContext* cx, uint32_t codeLength, uint32_t noteLength,
+      uint32_t numResumeOffsets, uint32_t numScopeNotes, uint32_t numTryNotes);
+  static js::UniquePtr<ImmutableScriptData> new_(
+      ErrorContext* ec, uint32_t codeLength, uint32_t noteLength,
       uint32_t numResumeOffsets, uint32_t numScopeNotes, uint32_t numTryNotes);
 
   static js::UniquePtr<ImmutableScriptData> new_(JSContext* cx,
@@ -698,6 +710,8 @@ class SharedImmutableScriptData {
       delete;
 
   static bool shareScriptData(JSContext* cx,
+                              RefPtr<SharedImmutableScriptData>& sisd);
+  static bool shareScriptData(JSContext* cx, ErrorContext* ec,
                               RefPtr<SharedImmutableScriptData>& sisd);
 
   size_t immutableDataLength() const { return isd_->immutableData().Length(); }

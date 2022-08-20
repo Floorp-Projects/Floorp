@@ -8,27 +8,35 @@ import { Localized } from "./MSLocalized";
 export const LinkText = props => {
   const { content, handleAction } = props;
 
-  if (
-    !(
-      content?.text &&
-      content?.button_label &&
-      typeof handleAction === "function"
-    )
-  ) {
+  if (!(content?.text && typeof handleAction === "function")) {
     return null;
   }
 
   return (
     <h2 className="cta-paragraph">
       <Localized text={content.text}>
-        <span />
-      </Localized>
-      <Localized text={content.button_label}>
-        <button
+        <span
+          data-l10n-id={content.text.string_id}
           onClick={handleAction}
+          onKeyUp={event =>
+            ["Enter", " "].includes(event.key) ? handleAction(event) : null
+          }
           value="cta_paragraph"
-          className="text-link"
-        />
+          role="button"
+          tabIndex="0"
+        >
+          {" "}
+          {/* <a> is valid here because of click and keyup handling. */}
+          {/* <button> cannot be used due to fluent integration. <a> content is provided by fluent */}
+          {/* eslint-disable jsx-a11y/anchor-is-valid */}
+          <a
+            role="button"
+            tabIndex="0"
+            data-l10n-name={content.text.string_name}
+          >
+            {" "}
+          </a>
+        </span>
       </Localized>
     </h2>
   );

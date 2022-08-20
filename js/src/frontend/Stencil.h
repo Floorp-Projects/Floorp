@@ -172,7 +172,7 @@ class RegExpStencil {
   // This is used by `Reflect.parse` when we need the RegExpObject but are not
   // doing a complete instantiation of the CompilationStencil.
   RegExpObject* createRegExpAndEnsureAtom(
-      JSContext* cx, ParserAtomsTable& parserAtoms,
+      JSContext* cx, ErrorContext* ec, ParserAtomsTable& parserAtoms,
       CompilationAtomCache& atomCache) const;
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
@@ -195,7 +195,7 @@ class BigIntStencil {
  public:
   BigIntStencil() = default;
 
-  [[nodiscard]] bool init(JSContext* cx, LifoAlloc& alloc,
+  [[nodiscard]] bool init(ErrorContext* ec, LifoAlloc& alloc,
                           const mozilla::Span<const char16_t> buf);
 
   BigInt* createBigInt(JSContext* cx) const;
@@ -284,54 +284,54 @@ class ScopeStencil {
   // Create ScopeStencil with `args`, and append ScopeStencil and `data` to
   // `compilationState`, and return the index of them as `indexOut`.
   template <typename... Args>
-  static bool appendScopeStencilAndData(JSContext* cx,
+  static bool appendScopeStencilAndData(ErrorContext* ec,
                                         CompilationState& compilationState,
                                         BaseParserScopeData* data,
                                         ScopeIndex* indexOut, Args&&... args);
 
  public:
   static bool createForFunctionScope(
-      JSContext* cx, CompilationState& compilationState,
+      ErrorContext* ec, CompilationState& compilationState,
       FunctionScope::ParserData* dataArg, bool hasParameterExprs,
       bool needsEnvironment, ScriptIndex functionIndex, bool isArrow,
       mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
 
   static bool createForLexicalScope(
-      JSContext* cx, CompilationState& compilationState, ScopeKind kind,
+      ErrorContext* ec, CompilationState& compilationState, ScopeKind kind,
       LexicalScope::ParserData* dataArg, uint32_t firstFrameSlot,
       mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
 
   static bool createForClassBodyScope(
-      JSContext* cx, CompilationState& compilationState, ScopeKind kind,
+      ErrorContext* ec, CompilationState& compilationState, ScopeKind kind,
       ClassBodyScope::ParserData* dataArg, uint32_t firstFrameSlot,
       mozilla::Maybe<ScopeIndex> enclosing, ScopeIndex* index);
 
-  static bool createForVarScope(JSContext* cx,
+  static bool createForVarScope(ErrorContext* ec,
                                 CompilationState& compilationState,
                                 ScopeKind kind, VarScope::ParserData* dataArg,
                                 uint32_t firstFrameSlot, bool needsEnvironment,
                                 mozilla::Maybe<ScopeIndex> enclosing,
                                 ScopeIndex* index);
 
-  static bool createForGlobalScope(JSContext* cx,
+  static bool createForGlobalScope(ErrorContext* ec,
                                    CompilationState& compilationState,
                                    ScopeKind kind,
                                    GlobalScope::ParserData* dataArg,
                                    ScopeIndex* index);
 
-  static bool createForEvalScope(JSContext* cx,
+  static bool createForEvalScope(ErrorContext* ec,
                                  CompilationState& compilationState,
                                  ScopeKind kind, EvalScope::ParserData* dataArg,
                                  mozilla::Maybe<ScopeIndex> enclosing,
                                  ScopeIndex* index);
 
-  static bool createForModuleScope(JSContext* cx,
+  static bool createForModuleScope(ErrorContext* ec,
                                    CompilationState& compilationState,
                                    ModuleScope::ParserData* dataArg,
                                    mozilla::Maybe<ScopeIndex> enclosing,
                                    ScopeIndex* index);
 
-  static bool createForWithScope(JSContext* cx,
+  static bool createForWithScope(ErrorContext* ec,
                                  CompilationState& compilationState,
                                  mozilla::Maybe<ScopeIndex> enclosing,
                                  ScopeIndex* index);

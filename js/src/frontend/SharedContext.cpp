@@ -33,10 +33,11 @@ class ModuleBuilder;
 
 namespace frontend {
 
-SharedContext::SharedContext(JSContext* cx, Kind kind,
+SharedContext::SharedContext(JSContext* cx, ErrorContext* ec, Kind kind,
                              const JS::ReadOnlyCompileOptions& options,
                              Directives directives, SourceExtent extent)
     : cx_(cx),
+      ec_(ec),
       extent_(extent),
       allowNewTarget_(false),
       allowSuperProperty_(false),
@@ -76,10 +77,10 @@ SharedContext::SharedContext(JSContext* cx, Kind kind,
 }
 
 GlobalSharedContext::GlobalSharedContext(
-    JSContext* cx, ScopeKind scopeKind,
+    JSContext* cx, ErrorContext* ec, ScopeKind scopeKind,
     const JS::ReadOnlyCompileOptions& options, Directives directives,
     SourceExtent extent)
-    : SharedContext(cx, Kind::Global, options, directives, extent),
+    : SharedContext(cx, ec, Kind::Global, options, directives, extent),
       scopeKind_(scopeKind),
       bindings(nullptr) {
   MOZ_ASSERT(scopeKind == ScopeKind::Global ||
@@ -87,10 +88,10 @@ GlobalSharedContext::GlobalSharedContext(
   MOZ_ASSERT(thisBinding_ == ThisBinding::Global);
 }
 
-EvalSharedContext::EvalSharedContext(JSContext* cx,
+EvalSharedContext::EvalSharedContext(JSContext* cx, ErrorContext* ec,
                                      CompilationState& compilationState,
                                      SourceExtent extent)
-    : SharedContext(cx, Kind::Eval, compilationState.input.options,
+    : SharedContext(cx, ec, Kind::Eval, compilationState.input.options,
                     compilationState.directives, extent),
       bindings(nullptr) {
   // Eval inherits syntax and binding rules from enclosing environment.
@@ -103,21 +104,22 @@ EvalSharedContext::EvalSharedContext(JSContext* cx,
 }
 
 SuspendableContext::SuspendableContext(
-    JSContext* cx, Kind kind, const JS::ReadOnlyCompileOptions& options,
-    Directives directives, SourceExtent extent, bool isGenerator, bool isAsync)
-    : SharedContext(cx, kind, options, directives, extent) {
+    JSContext* cx, ErrorContext* ec, Kind kind,
+    const JS::ReadOnlyCompileOptions& options, Directives directives,
+    SourceExtent extent, bool isGenerator, bool isAsync)
+    : SharedContext(cx, ec, kind, options, directives, extent) {
   setFlag(ImmutableFlags::IsGenerator, isGenerator);
   setFlag(ImmutableFlags::IsAsync, isAsync);
 }
 
-FunctionBox::FunctionBox(JSContext* cx, SourceExtent extent,
+FunctionBox::FunctionBox(JSContext* cx, ErrorContext* ec, SourceExtent extent,
                          CompilationState& compilationState,
                          Directives directives, GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind, bool isInitialCompilation,
                          TaggedParserAtomIndex atom, FunctionFlags flags,
                          ScriptIndex index)
-    : SuspendableContext(cx, Kind::FunctionBox, compilationState.input.options,
-                         directives, extent,
+    : SuspendableContext(cx, ec, Kind::FunctionBox,
+                         compilationState.input.options, directives, extent,
                          generatorKind == GeneratorKind::Generator,
                          asyncKind == FunctionAsyncKind::AsyncFunction),
       compilationState_(compilationState),
@@ -288,16 +290,17 @@ bool FunctionBox::setAsmJSModule(const JS::WasmModule* module) {
   }
 
   if (!compilationState_.asmJS->moduleMap.putNew(index(), module)) {
-    js::ReportOutOfMemory(cx_);
+    js::ReportOutOfMemory(ec_);
     return false;
   }
   return true;
 }
 
 ModuleSharedContext::ModuleSharedContext(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JSContext* cx, ErrorContext* ec, const JS::ReadOnlyCompileOptions& options,
     ModuleBuilder& builder, SourceExtent extent)
-    : SuspendableContext(cx, Kind::Module, options, Directives(true), extent,
+    : SuspendableContext(cx, ec, Kind::Module, options, Directives(true),
+                         extent,
                          /* isGenerator = */ false,
                          /* isAsync = */ false),
       bindings(nullptr),

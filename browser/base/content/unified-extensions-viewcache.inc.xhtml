@@ -7,16 +7,21 @@
   defined in `browser/base/content/browser-addons.js`.
 -->
 <html:template id="unified-extensions-item-template">
-  <image class="unified-extensions-item-icon"
-         role="presentation"
-         src="chrome://mozapps/skin/extensions/extensionGeneric.svg" />
+  <toolbarbutton class="unified-extensions-item-action subviewbutton">
+    <image class="unified-extensions-item-icon"
+          role="presentation"
+          src="chrome://mozapps/skin/extensions/extensionGeneric.svg" />
 
-  <vbox class="unified-extensions-item-contents">
-    <label class="unified-extensions-item-name" />
-    <label class="unified-extensions-item-message">
-      <!-- A notification could be printed here -->
-    </label>
-  </vbox>
+    <vbox class="unified-extensions-item-contents">
+      <label class="unified-extensions-item-name" />
+      <label class="unified-extensions-item-message unified-extensions-item-message-default">
+        <!-- A notification could be printed here -->
+      </label>
+      <label class="unified-extensions-item-message unified-extensions-item-message-hover"
+             data-l10n-id="unified-extensions-item-message-manage">
+      </label>
+    </vbox>
+  </toolbarbutton>
 
   <toolbarbutton class="unified-extensions-item-open-menu subviewbutton subviewbutton-iconic"
                  closemenu="none"

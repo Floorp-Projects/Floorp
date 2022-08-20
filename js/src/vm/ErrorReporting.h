@@ -121,13 +121,6 @@ extern void ReportErrorToGlobal(JSContext* cx,
                                 JS::Handle<js::GlobalObject*> global,
                                 JS::HandleValue error);
 
-enum ErrorArgumentsType {
-  ArgumentsAreUnicode,
-  ArgumentsAreASCII,
-  ArgumentsAreLatin1,
-  ArgumentsAreUTF8
-};
-
 enum class IsWarning { No, Yes };
 
 /**

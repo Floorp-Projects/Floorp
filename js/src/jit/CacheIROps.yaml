@@ -1719,7 +1719,7 @@
     flags: CallFlagsImm
 
 
-# Meta ops generate no code, but contain data for BaselineInspector.
+# Meta ops generate no code, but contain data for the Warp Transpiler.
 - name: MetaScriptedThisShape
   shared: true
   transpile: true

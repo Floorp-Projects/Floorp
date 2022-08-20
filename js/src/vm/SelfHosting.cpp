@@ -2620,7 +2620,8 @@ ScriptSourceObject* GlobalObject::getOrCreateSelfHostingScriptSourceObject(
     return nullptr;
   }
 
-  if (!source->initFromOptions(cx, options)) {
+  MainThreadErrorContext ec(cx);
+  if (!source->initFromOptions(cx, &ec, options)) {
     return nullptr;
   }
 

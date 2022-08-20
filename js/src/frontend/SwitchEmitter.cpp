@@ -51,7 +51,7 @@ bool SwitchEmitter::TableGenerator::addNumber(int32_t caseValue) {
   if (caseValue >= intmapBitLength_) {
     size_t newLength = NumWordsForBitArrayOfLength(caseValue + 1);
     if (!intmap_->resize(newLength)) {
-      ReportOutOfMemory(bce_->cx);
+      ReportOutOfMemory(bce_->ec);
       return false;
     }
     intmapBitLength_ = newLength * BitArrayElementBits;
@@ -155,7 +155,7 @@ bool SwitchEmitter::emitCond() {
   top_ = bce_->bytecodeSection().offset();
 
   if (!caseOffsets_.resize(caseCount_)) {
-    ReportOutOfMemory(bce_->cx);
+    ReportOutOfMemory(bce_->ec);
     return false;
   }
 
@@ -176,7 +176,7 @@ bool SwitchEmitter::emitTable(const TableGenerator& tableGen) {
   top_ = bce_->bytecodeSection().offset();
 
   if (!caseOffsets_.resize(tableGen.tableLength())) {
-    ReportOutOfMemory(bce_->cx);
+    ReportOutOfMemory(bce_->ec);
     return false;
   }
 

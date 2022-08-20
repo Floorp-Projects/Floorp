@@ -115,7 +115,7 @@ class MOZ_STACK_CLASS SourceAwareCompiler {
   [[nodiscard]] bool init(JSContext* cx, ErrorContext* ec,
                           InheritThis inheritThis = InheritThis::No,
                           JSObject* enclosingEnv = nullptr) {
-    if (!compilationState_.init(cx, inheritThis, enclosingEnv)) {
+    if (!compilationState_.init(cx, ec, inheritThis, enclosingEnv)) {
       return false;
     }
 
@@ -209,7 +209,7 @@ class MOZ_STACK_CLASS ScriptCompiler : public SourceAwareCompiler<Unit> {
     return true;
   }
 
-  return stencilOut->source->assignSource(cx, input.options, srcBuf);
+  return stencilOut->source->assignSource(cx, ec, input.options, srcBuf);
 }
 
 [[nodiscard]] static bool TrySmoosh(
@@ -287,7 +287,7 @@ template <typename Unit>
       return false;
     }
   } else {
-    if (!input.initForGlobal(cx)) {
+    if (!input.initForGlobal(cx, ec)) {
       return false;
     }
   }
@@ -304,7 +304,7 @@ template <typename Unit>
   SourceExtent extent = SourceExtent::makeGlobalExtent(
       srcBuf.length(), input.options.lineno, input.options.column);
 
-  GlobalSharedContext globalsc(cx, scopeKind, input.options,
+  GlobalSharedContext globalsc(cx, ec, scopeKind, input.options,
                                compiler.compilationState().directives, extent);
 
   if (!compiler.compile(cx, &globalsc)) {
@@ -506,14 +506,14 @@ static JSScript* CompileEvalScriptImpl(
     JS::Handle<JSObject*> enclosingEnv) {
   AutoAssertReportedException assertException(cx);
 
+  MainThreadErrorContext ec(cx);
   Rooted<CompilationInput> input(cx, CompilationInput(options));
-  if (!input.get().initForEval(cx, enclosingScope)) {
+  if (!input.get().initForEval(cx, &ec, enclosingScope)) {
     return nullptr;
   }
 
   LifoAllocScope parserAllocScope(&cx->tempLifoAlloc());
 
-  MainThreadErrorContext ec(cx);
   JS::NativeStackLimit stackLimit = cx->stackLimitForCurrentPrincipal();
   ScriptCompiler<Unit> compiler(cx, stackLimit, parserAllocScope, input.get(),
                                 srcBuf);
@@ -524,7 +524,7 @@ static JSScript* CompileEvalScriptImpl(
   uint32_t len = srcBuf.length();
   SourceExtent extent =
       SourceExtent::makeGlobalExtent(len, options.lineno, options.column);
-  EvalSharedContext evalsc(cx, compiler.compilationState(), extent);
+  EvalSharedContext evalsc(cx, &ec, compiler.compilationState(), extent);
   if (!compiler.compile(cx, &evalsc)) {
     return nullptr;
   }
@@ -570,7 +570,7 @@ class MOZ_STACK_CLASS ModuleCompiler final : public SourceAwareCompiler<Unit> {
   using Base::init;
   using Base::stencil;
 
-  [[nodiscard]] bool compile(JSContext* cx);
+  [[nodiscard]] bool compile(JSContext* cx, ErrorContext* ec);
 };
 
 template <typename Unit>
@@ -618,7 +618,7 @@ bool SourceAwareCompiler<Unit>::createSourceAndParser(JSContext* cx,
 
   errorContext = ec;
 
-  if (!compilationState_.source->assignSource(cx, options, sourceBuffer_)) {
+  if (!compilationState_.source->assignSource(cx, ec, options, sourceBuffer_)) {
     return false;
   }
 
@@ -692,7 +692,7 @@ bool ScriptCompiler<Unit>::compile(JSContext* cx, SharedContext* sc) {
   // Emplace the topLevel stencil
   MOZ_ASSERT(compilationState_.scriptData.length() ==
              CompilationStencil::TopLevelIndex);
-  if (!compilationState_.appendScriptStencilAndData(cx)) {
+  if (!compilationState_.appendScriptStencilAndData(sc->ec_)) {
     return false;
   }
 
@@ -737,11 +737,11 @@ bool ScriptCompiler<Unit>::compile(JSContext* cx, SharedContext* sc) {
 }
 
 template <typename Unit>
-bool ModuleCompiler<Unit>::compile(JSContext* cx) {
+bool ModuleCompiler<Unit>::compile(JSContext* cx, ErrorContext* ec) {
   // Emplace the topLevel stencil
   MOZ_ASSERT(compilationState_.scriptData.length() ==
              CompilationStencil::TopLevelIndex);
-  if (!compilationState_.appendScriptStencilAndData(cx)) {
+  if (!compilationState_.appendScriptStencilAndData(ec)) {
     return false;
   }
 
@@ -752,7 +752,7 @@ bool ModuleCompiler<Unit>::compile(JSContext* cx) {
   uint32_t len = this->sourceBuffer_.length();
   SourceExtent extent =
       SourceExtent::makeGlobalExtent(len, options.lineno, options.column);
-  ModuleSharedContext modulesc(cx, options, builder, extent);
+  ModuleSharedContext modulesc(cx, ec, options, builder, extent);
 
   ParseNode* pn = parser->moduleBody(&modulesc);
   if (!pn) {
@@ -872,7 +872,7 @@ template <typename Unit>
     BytecodeCompilerOutput& output) {
   MOZ_ASSERT(srcBuf.get());
 
-  if (!input.initForModule(cx)) {
+  if (!input.initForModule(cx, ec)) {
     return false;
   }
 
@@ -885,7 +885,7 @@ template <typename Unit>
     return false;
   }
 
-  if (!compiler.compile(cx)) {
+  if (!compiler.compile(cx, ec)) {
     return false;
   }
 
@@ -1069,7 +1069,8 @@ enum class GetCachedResult {
 // When we have a cache hit, the addPtr out-param would evaluate to a true-ish
 // value.
 static GetCachedResult GetCachedLazyFunctionStencilMaybeInstantiate(
-    JSContext* cx, CompilationInput& input, BytecodeCompilerOutput& output) {
+    JSContext* cx, ErrorContext* ec, CompilationInput& input,
+    BytecodeCompilerOutput& output) {
   RefPtr<CompilationStencil> stencil;
   {
     StencilCache& cache = cx->runtime()->caches().delazificationCache;
@@ -1098,7 +1099,7 @@ static GetCachedResult GetCachedLazyFunctionStencilMaybeInstantiate(
     if (!extensible) {
       return GetCachedResult::Error;
     }
-    if (!extensible->cloneFrom(cx, *stencil)) {
+    if (!extensible->cloneFrom(ec, *stencil)) {
       return GetCachedResult::Error;
     }
 
@@ -1123,7 +1124,8 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
 
   AutoAssertReportedException assertException(cx, ec);
   if (input.options.consumeDelazificationCache()) {
-    auto res = GetCachedLazyFunctionStencilMaybeInstantiate(cx, input, output);
+    auto res =
+        GetCachedLazyFunctionStencilMaybeInstantiate(cx, ec, input, output);
     switch (res) {
       case GetCachedResult::Error:
         return false;
@@ -1142,7 +1144,7 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
   CompilationState compilationState(cx, parserAllocScope, input);
   compilationState.setFunctionKey(input.extent());
   MOZ_ASSERT(!compilationState.isInitialStencil());
-  if (!compilationState.init(cx, inheritThis)) {
+  if (!compilationState.init(cx, ec, inheritThis)) {
     return false;
   }
 
@@ -1183,7 +1185,8 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
   if (input.options.checkDelazificationCache()) {
     using OutputType = RefPtr<CompilationStencil>;
     BytecodeCompilerOutput cached((OutputType()));
-    auto res = GetCachedLazyFunctionStencilMaybeInstantiate(cx, input, cached);
+    auto res =
+        GetCachedLazyFunctionStencilMaybeInstantiate(cx, ec, input, cached);
     if (res == GetCachedResult::Error) {
       return false;
     }
@@ -1396,14 +1399,15 @@ static JSFunction* CompileStandaloneFunction(
     FunctionAsyncKind asyncKind, Handle<Scope*> enclosingScope = nullptr) {
   AutoAssertReportedException assertException(cx);
 
+  MainThreadErrorContext ec(cx);
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   if (enclosingScope) {
     if (!input.get().initForStandaloneFunctionInNonSyntacticScope(
-            cx, enclosingScope)) {
+            cx, &ec, enclosingScope)) {
       return nullptr;
     }
   } else {
-    if (!input.get().initForStandaloneFunction(cx)) {
+    if (!input.get().initForStandaloneFunction(cx, &ec)) {
       return nullptr;
     }
   }
@@ -1412,7 +1416,6 @@ static JSFunction* CompileStandaloneFunction(
   InheritThis inheritThis = (syntaxKind == FunctionSyntaxKind::Arrow)
                                 ? InheritThis::Yes
                                 : InheritThis::No;
-  MainThreadErrorContext ec(cx);
   JS::NativeStackLimit stackLimit = cx->stackLimitForCurrentPrincipal();
   StandaloneFunctionCompiler<char16_t> compiler(
       cx, stackLimit, parserAllocScope, input.get(), srcBuf);

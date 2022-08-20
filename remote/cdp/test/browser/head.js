@@ -137,8 +137,8 @@ async function getCDP() {
   // library in order to do the cross-domain http request, which,
   // in a regular Web page, is impossible.
   window.criRequest = (options, callback) => {
-    const { host, port, path } = options;
-    const url = `http://${host}:${port}${path}`;
+    const { path } = options;
+    const url = `http://${RemoteAgent.host}:${RemoteAgent.port}${path}`;
     const xhr = new XMLHttpRequest();
     xhr.open("GET", url, true);
 

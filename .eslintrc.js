@@ -191,7 +191,6 @@ module.exports = {
         // a reasonable size.
         "dom/**",
         "netwerk/**",
-        "security/manager/ssl/tests/unit/**",
       ],
       rules: {
         // No declaring variables that are never used

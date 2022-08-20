@@ -5,40 +5,37 @@
 /* Style for the custom element "unified-extensions-item". */
 
 unified-extensions-item {
+  align-items: center;
   display: flex;
-  flex-shrink: 0;
 }
 
-unified-extensions-item.no-hover:hover {
-  /* Overrides panelUI-shared.css */
-  background-color: transparent !important;
+.unified-extensions-item-action {
+  flex-grow: 1;
+  overflow: hidden;
 }
 
 /* The padding-block for menuitems is set to 0 in compact mode which, with the
  * extension icon being 32px in this case, makes the item look crowded even for
  * compact mode. */
-:root[uidensity="compact"] unified-extensions-item {
+:root[uidensity="compact"] .unified-extensions-item-action {
   padding-block: 4px;
 }
 
 .unified-extensions-item-icon {
-  align-self: center;
-  flex-shrink: 0;
   height: 32px;
   width: 32px;
   margin-inline-end: 6px;
 }
 
 .unified-extensions-item-contents {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  overflow-x: hidden;
-  white-space: nowrap;
+  min-height: 40px; /* Avoid the add-on name to "jump" when we hover the menu
+                       button and the help message is displayed */
+  max-width: 20em;
 }
 
 .unified-extensions-item-name,
 .unified-extensions-item-message {
+  display: inherit;
   overflow-x: hidden;
   text-overflow: ellipsis;
 }
@@ -47,11 +44,16 @@ unified-extensions-item.no-hover:hover {
   color: var(--panel-description-color);
 }
 
+unified-extensions-item[secondary-button-hovered="true"] .unified-extensions-item-message:not(.unified-extensions-item-message-hover),
+unified-extensions-item:not([secondary-button-hovered="true"]) .unified-extensions-item-message-hover {
+  display: none;
+}
+
 .unified-extensions-item-open-menu.subviewbutton {
-  flex-shrink: 0;
   list-style-image: url("chrome://global/skin/icons/settings.svg");
   margin: 0;
-  margin-inline-start: 6px;
+  margin-inline-end: 8px;
+  padding: 8px;
 }
 
 .unified-extensions-item-open-menu.subviewbutton > .toolbarbutton-text {

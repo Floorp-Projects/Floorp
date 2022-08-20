@@ -35,6 +35,28 @@ export function computeColorWay(themeName, systemVariations) {
     : themeName.split("-")[0];
 }
 
+// Set variationIndex based off activetheme value e.g. 'light', 'expressionist-soft'
+export function computeVariationIndex(
+  themeName,
+  systemVariations,
+  variations,
+  defaultVariationIndex
+) {
+  // Check if themeName is in systemVariations, if yes choose variationIndex by themeName
+  let index = systemVariations.findIndex(theme => theme === themeName);
+  if (index >= 0) {
+    return index;
+  }
+
+  // If themeName is one of the colorways, select variation index from colorways
+  let variation = themeName?.split("-")[1];
+  index = variations.findIndex(element => element === variation);
+  if (index >= 0) {
+    return index;
+  }
+  return defaultVariationIndex;
+}
+
 export function Colorways(props) {
   let {
     colorways,
@@ -43,13 +65,22 @@ export function Colorways(props) {
     variations,
   } = props.content.tiles;
 
-  // This sets a default value
+  // Active theme id from JSON e.g. "expressionist"
   const activeId = computeColorWay(props.activeTheme, systemVariations);
   const [colorwayId, setState] = useState(activeId);
+  const [variationIndex, setVariationIndex] = useState(defaultVariationIndex);
 
   // Update state any time activeTheme changes.
   useEffect(() => {
     setState(computeColorWay(props.activeTheme, systemVariations));
+    setVariationIndex(
+      computeVariationIndex(
+        props.activeTheme,
+        systemVariations,
+        variations,
+        defaultVariationIndex
+      )
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.activeTheme]);
 
@@ -88,8 +119,8 @@ export function Colorways(props) {
                     name="theme"
                     value={
                       id === "default"
-                        ? systemVariations[defaultVariationIndex]
-                        : `${id}-${variations[defaultVariationIndex]}`
+                        ? systemVariations[variationIndex]
+                        : `${id}-${variations[variationIndex]}`
                     }
                     checked={colorwayId === id}
                     className="sr-only input"

@@ -21,6 +21,8 @@ extern MOZ_COLD JS_PUBLIC_API void JS_ReportOutOfMemory(JSContext* cx);
 
 namespace js {
 
+class ErrorContext;
+
 enum class AllocFunction { Malloc, Calloc, Realloc };
 
 /* Base class allocation policies providing allocation methods. */
@@ -92,6 +94,7 @@ class SystemAllocPolicy : public AllocPolicyBase {
 };
 
 MOZ_COLD JS_PUBLIC_API void ReportOutOfMemory(JSContext* cx);
+MOZ_COLD JS_PUBLIC_API void ReportOutOfMemory(ErrorContext* ec);
 
 /*
  * Allocation policy that calls the system memory functions and reports errors

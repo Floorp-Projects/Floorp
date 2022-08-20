@@ -6309,7 +6309,8 @@ static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
     return false;
   }
 
-  if (!SetSourceOptions(cx, stencil->source, displayURL, sourceMapURL)) {
+  MainThreadErrorContext ec(cx);
+  if (!SetSourceOptions(cx, &ec, stencil->source, displayURL, sourceMapURL)) {
     return false;
   }
 
@@ -6461,7 +6462,7 @@ static bool CompileToStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
     return false;
   }
 
-  if (!SetSourceOptions(cx, stencil->source, displayURL, sourceMapURL)) {
+  if (!SetSourceOptions(cx, &ec, stencil->source, displayURL, sourceMapURL)) {
     return false;
   }
 
@@ -6524,9 +6525,10 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   }
 
   /* Prepare the CompilationStencil for decoding. */
+  MainThreadErrorContext ec(cx);
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
-  if (!input.get().initForGlobal(cx)) {
+  if (!input.get().initForGlobal(cx, &ec)) {
     return false;
   }
   frontend::CompilationStencil stencil(nullptr);

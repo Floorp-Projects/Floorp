@@ -15,7 +15,6 @@ const gCertDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
 const PKCS12_FILE = "test_certDB_import/cert_from_windows.pfx";
 const CERT_COMMON_NAME = "test_cert_from_windows";
 const TEST_CERT_PASSWORD = "黒い";
-const TEST_OUTPUT_PASSWORD = "other password";
 
 function findCertByCommonName(commonName) {
   for (let cert of gCertDB.getCerts()) {

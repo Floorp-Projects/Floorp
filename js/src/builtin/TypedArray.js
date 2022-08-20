@@ -2182,7 +2182,7 @@ function TypedArrayWith(index, value) {
 
     // Step 12.b. If k is actualIndex, let fromValue be value.
     // Step 12.c. Else, let fromValue be ! Get(O, Pk).
-    var fromValue = k == actualIndex ? value : O[k];
+    var fromValue = k === actualIndex ? value : O[k];
 
     // Step 12.d. Perform ! Set(A, Pk, fromValue, true).
     A[k] = fromValue;

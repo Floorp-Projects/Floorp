@@ -1015,7 +1015,7 @@ function RegExpSplit(string, limit) {
 
   var optimizable =
     IsRegExpSplitOptimizable(rx, C) &&
-    (limit === undefined || typeof limit == "number");
+    (limit === undefined || typeof limit === "number");
 
   var flags, unicodeMatching, splitter;
   if (optimizable) {
@@ -1288,7 +1288,7 @@ function RegExpBuiltinExec(R, S, forTest) {
   if (forTest) {
     // Steps 3, 9-25, except 12.a.i-ii, 12.c.i.1-2, 15.
     var endIndex = RegExpTester(R, S, lastIndex);
-    if (endIndex == -1) {
+    if (endIndex === -1) {
       // Steps 12.a.i-ii, 12.c.i.1-2.
       if (globalOrSticky) {
         R.lastIndex = 0;

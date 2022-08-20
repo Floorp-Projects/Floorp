@@ -6,6 +6,7 @@ remote.jar:
 % content remote %content/
 
   content/webdriver-bidi/NewSessionHandler.jsm (NewSessionHandler.jsm)
+  content/webdriver-bidi/Realm.jsm (Realm.jsm)
   content/webdriver-bidi/RemoteValue.jsm (RemoteValue.jsm)
   content/webdriver-bidi/WebDriverBiDi.jsm (WebDriverBiDi.jsm)
   content/webdriver-bidi/WebDriverBiDiConnection.jsm (WebDriverBiDiConnection.jsm)

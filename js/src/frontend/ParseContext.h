@@ -122,7 +122,7 @@ class ParseContext : public Nestable<ParseContext> {
 
     bool maybeReportOOM(ParseContext* pc, bool result) {
       if (!result) {
-        ReportOutOfMemory(pc->sc()->cx_);
+        ReportOutOfMemory(pc->sc()->ec_);
       }
       return result;
     }
@@ -147,7 +147,7 @@ class ParseContext : public Nestable<ParseContext> {
         return false;
       }
 
-      return declared_.acquire(pc->sc()->cx_);
+      return declared_.acquire(pc->sc()->ec_);
     }
 
     bool isEmpty() const { return declared_->all().empty(); }

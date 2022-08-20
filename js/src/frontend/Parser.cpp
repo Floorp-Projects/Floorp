@@ -193,7 +193,7 @@ PerHandlerParser<ParseHandler>::PerHandlerParser(
     const ReadOnlyCompileOptions& options, bool foldConstants,
     CompilationState& compilationState, void* internalSyntaxParser)
     : ParserBase(cx, ec, stackLimit, options, foldConstants, compilationState),
-      handler_(cx, compilationState),
+      handler_(ec, compilationState),
       internalSyntaxParser_(internalSyntaxParser) {
   MOZ_ASSERT(compilationState.isInitialStencil() ==
              compilationState.input.isInitialStencil());
@@ -207,7 +207,8 @@ GeneralParser<ParseHandler, Unit>::GeneralParser(
     SyntaxParser* syntaxParser)
     : Base(cx, ec, stackLimit, options, foldConstants, compilationState,
            syntaxParser),
-      tokenStream(cx, &compilationState.parserAtoms, options, units, length) {}
+      tokenStream(cx, ec, &compilationState.parserAtoms, options, units,
+                  length) {}
 
 template <typename Unit>
 void Parser<SyntaxParseHandler, Unit>::setAwaitHandling(
@@ -260,10 +261,10 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
 
   ScriptIndex index = ScriptIndex(compilationState_.scriptData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(cx_);
+    ReportAllocationOverflow(ec_);
     return nullptr;
   }
-  if (!compilationState_.appendScriptStencilAndData(cx_)) {
+  if (!compilationState_.appendScriptStencilAndData(ec_)) {
     return nullptr;
   }
 
@@ -281,10 +282,10 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    * function.
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
-      cx_, extent, compilationState_, inheritedDirectives, generatorKind,
+      cx_, ec_, extent, compilationState_, inheritedDirectives, generatorKind,
       asyncKind, isInitialStencil, explicitName, flags, index);
   if (!funbox) {
-    ReportOutOfMemory(cx_);
+    ReportOutOfMemory(ec_);
     return nullptr;
   }
 
@@ -301,10 +302,10 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
 
   ScriptIndex index = ScriptIndex(compilationState_.scriptData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(cx_);
+    ReportAllocationOverflow(ec_);
     return nullptr;
   }
-  if (!compilationState_.appendScriptStencilAndData(cx_)) {
+  if (!compilationState_.appendScriptStencilAndData(ec_)) {
     return nullptr;
   }
 
@@ -316,12 +317,12 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    * function.
    */
   FunctionBox* funbox = alloc_.new_<FunctionBox>(
-      cx_, cachedScriptExtra.extent, compilationState_,
+      cx_, ec_, cachedScriptExtra.extent, compilationState_,
       Directives(/* strict = */ false), cachedScriptExtra.generatorKind(),
       cachedScriptExtra.asyncKind(), compilationState_.isInitialStencil(),
       cachedScriptData.functionAtom, cachedScriptData.functionFlags, index);
   if (!funbox) {
-    ReportOutOfMemory(cx_);
+    ReportOutOfMemory(ec_);
     return nullptr;
   }
 
@@ -345,14 +346,14 @@ bool ParserBase::setSourceMapInfo() {
   }
 
   if (anyChars.hasDisplayURL()) {
-    if (!ss->setDisplayURL(cx_, anyChars.displayURL())) {
+    if (!ss->setDisplayURL(cx_, ec_, anyChars.displayURL())) {
       return false;
     }
   }
 
   if (anyChars.hasSourceMapURL()) {
     MOZ_ASSERT(!ss->hasSourceMapURL());
-    if (!ss->setSourceMapURL(cx_, anyChars.sourceMapURL())) {
+    if (!ss->setSourceMapURL(cx_, ec_, anyChars.sourceMapURL())) {
       return false;
     }
   }
@@ -370,7 +371,7 @@ bool ParserBase::setSourceMapInfo() {
       }
     }
 
-    if (!ss->setSourceMapURL(cx_, options().sourceMapURL())) {
+    if (!ss->setSourceMapURL(cx_, ec_, options().sourceMapURL())) {
       return false;
     }
   }
@@ -388,8 +389,8 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
   SourceExtent extent = SourceExtent::makeGlobalExtent(
       /* len = */ 0, options().lineno, options().column);
   Directives directives(options().forceStrictMode());
-  GlobalSharedContext globalsc(cx_, ScopeKind::Global, options(), directives,
-                               extent);
+  GlobalSharedContext globalsc(cx_, this->ec_, ScopeKind::Global, options(),
+                               directives, extent);
   SourceParseContext globalpc(this, &globalsc, /* newDirectives = */ nullptr);
   if (!globalpc.init()) {
     return null();
@@ -474,7 +475,7 @@ void GeneralParser<ParseHandler, Unit>::reportMissingClosing(
     unsigned errorNumber, unsigned noteNumber, uint32_t openedPos) {
   auto notes = MakeUnique<JSErrorNotes>();
   if (!notes) {
-    ReportOutOfMemory(pc_->sc()->cx_);
+    ReportOutOfMemory(this->ec_);
     return;
   }
 
@@ -487,7 +488,7 @@ void GeneralParser<ParseHandler, Unit>::reportMissingClosing(
   char lineNumber[MaxWidth];
   SprintfLiteral(lineNumber, "%" PRIu32, line);
 
-  if (!notes->addNoteASCII(pc_->sc()->cx_, getFilename(), 0, line, column,
+  if (!notes->addNoteASCII(this->ec_, getFilename(), 0, line, column,
                            GetErrorMessage, nullptr, noteNumber, lineNumber,
                            columnNumber)) {
     return;
@@ -513,7 +514,7 @@ void GeneralParser<ParseHandler, Unit>::reportRedeclaration(
 
   auto notes = MakeUnique<JSErrorNotes>();
   if (!notes) {
-    ReportOutOfMemory(pc_->sc()->cx_);
+    ReportOutOfMemory(this->ec_);
     return;
   }
 
@@ -526,7 +527,7 @@ void GeneralParser<ParseHandler, Unit>::reportRedeclaration(
   char lineNumber[MaxWidth];
   SprintfLiteral(lineNumber, "%" PRIu32, line);
 
-  if (!notes->addNoteASCII(pc_->sc()->cx_, getFilename(), 0, line, column,
+  if (!notes->addNoteASCII(this->ec_, getFilename(), 0, line, column,
                            GetErrorMessage, nullptr, JSMSG_REDECLARED_PREV,
                            lineNumber, columnNumber)) {
     return;
@@ -580,7 +581,7 @@ bool GeneralParser<ParseHandler, Unit>::notePositionalFormalParameter(
 
   if (!pc_->positionalFormalParameterNames().append(
           TrivialTaggedParserAtomIndex::from(name))) {
-    ReportOutOfMemory(cx_);
+    ReportOutOfMemory(this->ec_);
     return false;
   }
 
@@ -600,7 +601,7 @@ bool PerHandlerParser<ParseHandler>::noteDestructuredPositionalFormalParameter(
   // argument slots when making FunctionScope::ParserData.
   if (!pc_->positionalFormalParameterNames().append(
           TrivialTaggedParserAtomIndex::null())) {
-    ReportOutOfMemory(cx_);
+    ReportOutOfMemory(ec_);
     return false;
   }
 
@@ -940,7 +941,7 @@ bool PerHandlerParser<ParseHandler>::
         if constexpr (isSyntaxParser) {
           if (!pc_->closedOverBindingsForLazy().append(
                   TrivialTaggedParserAtomIndex::from(bi.name()))) {
-            ReportOutOfMemory(cx_);
+            ReportOutOfMemory(ec_);
             return false;
           }
         }
@@ -963,7 +964,7 @@ bool PerHandlerParser<ParseHandler>::
   if constexpr (isSyntaxParser) {
     if (!pc_->closedOverBindingsForLazy().append(
             TrivialTaggedParserAtomIndex::null())) {
-      ReportOutOfMemory(cx_);
+      ReportOutOfMemory(ec_);
       return false;
     }
   }
@@ -990,34 +991,34 @@ bool Parser<FullParseHandler, Unit>::checkStatementsEOF() {
 }
 
 template <typename ScopeT>
-typename ScopeT::ParserData* NewEmptyBindingData(JSContext* cx,
+typename ScopeT::ParserData* NewEmptyBindingData(ErrorContext* ec,
                                                  LifoAlloc& alloc,
                                                  uint32_t numBindings) {
   using Data = typename ScopeT::ParserData;
   size_t allocSize = SizeOfScopeData<Data>(numBindings);
   auto* bindings = alloc.newWithSize<Data>(allocSize, numBindings);
   if (!bindings) {
-    ReportOutOfMemory(cx);
+    ReportOutOfMemory(ec);
   }
   return bindings;
 }
 
-GlobalScope::ParserData* NewEmptyGlobalScopeData(JSContext* cx,
+GlobalScope::ParserData* NewEmptyGlobalScopeData(ErrorContext* ec,
                                                  LifoAlloc& alloc,
                                                  uint32_t numBindings) {
-  return NewEmptyBindingData<GlobalScope>(cx, alloc, numBindings);
+  return NewEmptyBindingData<GlobalScope>(ec, alloc, numBindings);
 }
 
-LexicalScope::ParserData* NewEmptyLexicalScopeData(JSContext* cx,
+LexicalScope::ParserData* NewEmptyLexicalScopeData(ErrorContext* ec,
                                                    LifoAlloc& alloc,
                                                    uint32_t numBindings) {
-  return NewEmptyBindingData<LexicalScope>(cx, alloc, numBindings);
+  return NewEmptyBindingData<LexicalScope>(ec, alloc, numBindings);
 }
 
-FunctionScope::ParserData* NewEmptyFunctionScopeData(JSContext* cx,
+FunctionScope::ParserData* NewEmptyFunctionScopeData(ErrorContext* ec,
                                                      LifoAlloc& alloc,
                                                      uint32_t numBindings) {
-  return NewEmptyBindingData<FunctionScope>(cx, alloc, numBindings);
+  return NewEmptyBindingData<FunctionScope>(ec, alloc, numBindings);
 }
 
 namespace detail {
@@ -1075,6 +1076,7 @@ static MOZ_ALWAYS_INLINE void InitializeBindingData(
 }
 
 Maybe<GlobalScope::ParserData*> NewGlobalScopeData(JSContext* cx,
+                                                   ErrorContext* ec,
                                                    ParseContext::Scope& scope,
                                                    LifoAlloc& alloc,
                                                    ParseContext* pc) {
@@ -1120,7 +1122,7 @@ Maybe<GlobalScope::ParserData*> NewGlobalScopeData(JSContext* cx,
   uint32_t numBindings = vars.length() + lets.length() + consts.length();
 
   if (numBindings > 0) {
-    bindings = NewEmptyBindingData<GlobalScope>(cx, alloc, numBindings);
+    bindings = NewEmptyBindingData<GlobalScope>(ec, alloc, numBindings);
     if (!bindings) {
       return Nothing();
     }
@@ -1136,10 +1138,11 @@ Maybe<GlobalScope::ParserData*> NewGlobalScopeData(JSContext* cx,
 
 Maybe<GlobalScope::ParserData*> ParserBase::newGlobalScopeData(
     ParseContext::Scope& scope) {
-  return NewGlobalScopeData(cx_, scope, stencilAlloc(), pc_);
+  return NewGlobalScopeData(cx_, ec_, scope, stencilAlloc(), pc_);
 }
 
 Maybe<ModuleScope::ParserData*> NewModuleScopeData(JSContext* cx,
+                                                   ErrorContext* ec,
                                                    ParseContext::Scope& scope,
                                                    LifoAlloc& alloc,
                                                    ParseContext* pc) {
@@ -1187,7 +1190,7 @@ Maybe<ModuleScope::ParserData*> NewModuleScopeData(JSContext* cx,
       imports.length() + vars.length() + lets.length() + consts.length();
 
   if (numBindings > 0) {
-    bindings = NewEmptyBindingData<ModuleScope>(cx, alloc, numBindings);
+    bindings = NewEmptyBindingData<ModuleScope>(ec, alloc, numBindings);
     if (!bindings) {
       return Nothing();
     }
@@ -1204,10 +1207,10 @@ Maybe<ModuleScope::ParserData*> NewModuleScopeData(JSContext* cx,
 
 Maybe<ModuleScope::ParserData*> ParserBase::newModuleScopeData(
     ParseContext::Scope& scope) {
-  return NewModuleScopeData(cx_, scope, stencilAlloc(), pc_);
+  return NewModuleScopeData(cx_, ec_, scope, stencilAlloc(), pc_);
 }
 
-Maybe<EvalScope::ParserData*> NewEvalScopeData(JSContext* cx,
+Maybe<EvalScope::ParserData*> NewEvalScopeData(JSContext* cx, ErrorContext* ec,
                                                ParseContext::Scope& scope,
                                                LifoAlloc& alloc,
                                                ParseContext* pc) {
@@ -1233,7 +1236,7 @@ Maybe<EvalScope::ParserData*> NewEvalScopeData(JSContext* cx,
   uint32_t numBindings = vars.length();
 
   if (numBindings > 0) {
-    bindings = NewEmptyBindingData<EvalScope>(cx, alloc, numBindings);
+    bindings = NewEmptyBindingData<EvalScope>(ec, alloc, numBindings);
     if (!bindings) {
       return Nothing();
     }
@@ -1246,12 +1249,12 @@ Maybe<EvalScope::ParserData*> NewEvalScopeData(JSContext* cx,
 
 Maybe<EvalScope::ParserData*> ParserBase::newEvalScopeData(
     ParseContext::Scope& scope) {
-  return NewEvalScopeData(cx_, scope, stencilAlloc(), pc_);
+  return NewEvalScopeData(cx_, ec_, scope, stencilAlloc(), pc_);
 }
 
 Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
-    JSContext* cx, ParseContext::Scope& scope, bool hasParameterExprs,
-    LifoAlloc& alloc, ParseContext* pc) {
+    JSContext* cx, ErrorContext* ec, ParseContext::Scope& scope,
+    bool hasParameterExprs, LifoAlloc& alloc, ParseContext* pc) {
   ParserBindingNameVector positionalFormals(cx);
   ParserBindingNameVector formals(cx);
   ParserBindingNameVector vars(cx);
@@ -1335,7 +1338,7 @@ Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
       positionalFormals.length() + formals.length() + vars.length();
 
   if (numBindings > 0) {
-    bindings = NewEmptyBindingData<FunctionScope>(cx, alloc, numBindings);
+    bindings = NewEmptyBindingData<FunctionScope>(ec, alloc, numBindings);
     if (!bindings) {
       return Nothing();
     }
@@ -1376,16 +1379,16 @@ bool FunctionScopeHasClosedOverBindings(ParseContext* pc) {
 
 Maybe<FunctionScope::ParserData*> ParserBase::newFunctionScopeData(
     ParseContext::Scope& scope, bool hasParameterExprs) {
-  return NewFunctionScopeData(cx_, scope, hasParameterExprs, stencilAlloc(),
-                              pc_);
+  return NewFunctionScopeData(cx_, ec_, scope, hasParameterExprs,
+                              stencilAlloc(), pc_);
 }
 
-VarScope::ParserData* NewEmptyVarScopeData(JSContext* cx, LifoAlloc& alloc,
+VarScope::ParserData* NewEmptyVarScopeData(ErrorContext* ec, LifoAlloc& alloc,
                                            uint32_t numBindings) {
-  return NewEmptyBindingData<VarScope>(cx, alloc, numBindings);
+  return NewEmptyBindingData<VarScope>(ec, alloc, numBindings);
 }
 
-Maybe<VarScope::ParserData*> NewVarScopeData(JSContext* cx,
+Maybe<VarScope::ParserData*> NewVarScopeData(JSContext* cx, ErrorContext* ec,
                                              ParseContext::Scope& scope,
                                              LifoAlloc& alloc,
                                              ParseContext* pc) {
@@ -1412,7 +1415,7 @@ Maybe<VarScope::ParserData*> NewVarScopeData(JSContext* cx,
   uint32_t numBindings = vars.length();
 
   if (numBindings > 0) {
-    bindings = NewEmptyBindingData<VarScope>(cx, alloc, numBindings);
+    bindings = NewEmptyBindingData<VarScope>(ec, alloc, numBindings);
     if (!bindings) {
       return Nothing();
     }
@@ -1437,10 +1440,11 @@ static bool VarScopeHasBindings(ParseContext* pc) {
 
 Maybe<VarScope::ParserData*> ParserBase::newVarScopeData(
     ParseContext::Scope& scope) {
-  return NewVarScopeData(cx_, scope, stencilAlloc(), pc_);
+  return NewVarScopeData(cx_, ec_, scope, stencilAlloc(), pc_);
 }
 
 Maybe<LexicalScope::ParserData*> NewLexicalScopeData(JSContext* cx,
+                                                     ErrorContext* ec,
                                                      ParseContext::Scope& scope,
                                                      LifoAlloc& alloc,
                                                      ParseContext* pc) {
@@ -1477,7 +1481,7 @@ Maybe<LexicalScope::ParserData*> NewLexicalScopeData(JSContext* cx,
   uint32_t numBindings = lets.length() + consts.length();
 
   if (numBindings > 0) {
-    bindings = NewEmptyBindingData<LexicalScope>(cx, alloc, numBindings);
+    bindings = NewEmptyBindingData<LexicalScope>(ec, alloc, numBindings);
     if (!bindings) {
       return Nothing();
     }
@@ -1517,12 +1521,12 @@ bool LexicalScopeHasClosedOverBindings(ParseContext* pc,
 
 Maybe<LexicalScope::ParserData*> ParserBase::newLexicalScopeData(
     ParseContext::Scope& scope) {
-  return NewLexicalScopeData(cx_, scope, stencilAlloc(), pc_);
+  return NewLexicalScopeData(cx_, ec_, scope, stencilAlloc(), pc_);
 }
 
 Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
-    JSContext* cx, ParseContext::Scope& scope, LifoAlloc& alloc,
-    ParseContext* pc) {
+    JSContext* cx, ErrorContext* ec, ParseContext::Scope& scope,
+    LifoAlloc& alloc, ParseContext* pc) {
   ParserBindingNameVector privateBrand(cx);
   ParserBindingNameVector synthetics(cx);
   ParserBindingNameVector privateMethods(cx);
@@ -1567,7 +1571,7 @@ Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
       privateBrand.length() + synthetics.length() + privateMethods.length();
 
   if (numBindings > 0) {
-    bindings = NewEmptyBindingData<ClassBodyScope>(cx, alloc, numBindings);
+    bindings = NewEmptyBindingData<ClassBodyScope>(ec, alloc, numBindings);
     if (!bindings) {
       return Nothing();
     }
@@ -1601,7 +1605,7 @@ Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
 
 Maybe<ClassBodyScope::ParserData*> ParserBase::newClassBodyScopeData(
     ParseContext::Scope& scope) {
-  return NewClassBodyScopeData(cx_, scope, stencilAlloc(), pc_);
+  return NewClassBodyScopeData(cx_, ec_, scope, stencilAlloc(), pc_);
 }
 
 template <>
@@ -2187,7 +2191,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
       mozilla::CheckedUint32(pc_->innerFunctionIndexesForLazy.length()) +
       mozilla::CheckedUint32(pc_->closedOverBindingsForLazy().length());
   if (!ngcthings.isValid()) {
-    ReportAllocationOverflow(cx_);
+    ReportAllocationOverflow(ec_);
     return false;
   }
 
@@ -2199,7 +2203,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
 
   TaggedScriptThingIndex* cursor = nullptr;
   if (!this->compilationState_.allocateGCThingsUninitialized(
-          cx_, funbox->index(), ngcthings.value(), &cursor)) {
+          cx_, ec_, funbox->index(), ngcthings.value(), &cursor)) {
     return false;
   }
 
@@ -2591,7 +2595,7 @@ TaggedParserAtomIndex ParserBase::prefixAccessorName(
   if (!prefixed.append(this->parserAtoms(), propAtom)) {
     return TaggedParserAtomIndex::null();
   }
-  return prefixed.finishParserAtom(this->parserAtoms());
+  return prefixed.finishParserAtom(this->parserAtoms(), ec_);
 }
 
 template <class ParseHandler, typename Unit>
@@ -5049,7 +5053,7 @@ bool GeneralParser<ParseHandler, Unit>::assertClause(
       return false;
     }
     if (!usedAssertionKeys.add(p, keyName)) {
-      ReportOutOfMemory(cx_);
+      ReportOutOfMemory(this->ec_);
       return false;
     }
 
@@ -8005,7 +8009,7 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
           return false;
         }
         auto storedMethodProp =
-            storedMethodName.finishParserAtom(this->parserAtoms());
+            storedMethodName.finishParserAtom(this->parserAtoms(), ec_);
         if (!storedMethodProp) {
           return false;
         }
@@ -11245,7 +11249,7 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
   }
 
   auto atom =
-      this->parserAtoms().internChar16(cx_, chars.begin(), chars.length());
+      this->parserAtoms().internChar16(ec_, chars.begin(), chars.length());
   if (!atom) {
     return nullptr;
   }
@@ -11254,11 +11258,11 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
 
   RegExpIndex index(this->compilationState_.regExpData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(cx_);
+    ReportAllocationOverflow(ec_);
     return nullptr;
   }
   if (!this->compilationState_.regExpData.emplaceBack(atom, flags)) {
-    js::ReportOutOfMemory(cx_);
+    js::ReportOutOfMemory(this->ec_);
     return nullptr;
   }
 
@@ -11304,22 +11308,22 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
   // productions start with 0[bBoOxX], indicating binary/octal/hex.
   const auto& chars = tokenStream.getCharBuffer();
   if (chars.length() > UINT32_MAX) {
-    ReportAllocationOverflow(cx_);
+    ReportAllocationOverflow(ec_);
     return null();
   }
 
   BigIntIndex index(this->compilationState_.bigIntData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
-    ReportAllocationOverflow(cx_);
+    ReportAllocationOverflow(ec_);
     return null();
   }
   if (!this->compilationState_.bigIntData.emplaceBack()) {
-    js::ReportOutOfMemory(cx_);
+    js::ReportOutOfMemory(this->ec_);
     return null();
   }
 
   if (!this->compilationState_.bigIntData[index].init(
-          this->cx_, this->stencilAlloc(), chars)) {
+          this->ec_, this->stencilAlloc(), chars)) {
     return null();
   }
 
@@ -11606,7 +11610,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
   *propAtomOut = TaggedParserAtomIndex::null();
   switch (ltok) {
     case TokenKind::Number: {
-      auto numAtom = NumberToParserAtom(cx_, this->parserAtoms(),
+      auto numAtom = NumberToParserAtom(ec_, this->parserAtoms(),
                                         anyChars.currentToken().number());
       if (!numAtom) {
         return null();

@@ -51,7 +51,7 @@ def test_allow_origins_passed_to_remote_agent(
 
     driver.new_session()
 
-    response = websocket_request(driver.remote_agent_port, origin=origin)
+    response = websocket_request("127.0.0.1", driver.remote_agent_port, origin=origin)
     assert response.status == status
 
     driver.delete_session()

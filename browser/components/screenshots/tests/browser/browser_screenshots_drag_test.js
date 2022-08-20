@@ -7,13 +7,6 @@
  * This function drags to a 490x490 area and copies to the clipboard
  */
 add_task(async function() {
-  CustomizableUI.addWidgetToArea(
-    "screenshot-button",
-    CustomizableUI.AREA_NAVBAR
-  );
-  let screenshotBtn = document.getElementById("screenshot-button");
-  Assert.ok(screenshotBtn, "The screenshots button was added to the nav bar");
-
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -59,13 +52,6 @@ add_task(async function() {
  * This function drags a 1.5 zoomed browser to a 490x490 area and copies to the clipboard
  */
 add_task(async function() {
-  CustomizableUI.addWidgetToArea(
-    "screenshot-button",
-    CustomizableUI.AREA_NAVBAR
-  );
-  let screenshotBtn = document.getElementById("screenshot-button");
-  Assert.ok(screenshotBtn, "The screenshots button was added to the nav bar");
-
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -115,13 +101,6 @@ add_task(async function() {
  * on the overlay to go back to the crosshairs state
  */
 add_task(async function() {
-  CustomizableUI.addWidgetToArea(
-    "screenshot-button",
-    CustomizableUI.AREA_NAVBAR
-  );
-  let screenshotBtn = document.getElementById("screenshot-button");
-  Assert.ok(screenshotBtn, "The screenshots button was added to the nav bar");
-
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -154,13 +133,6 @@ add_task(async function() {
  * cancel button to cancel the overlay
  */
 add_task(async function() {
-  CustomizableUI.addWidgetToArea(
-    "screenshot-button",
-    CustomizableUI.AREA_NAVBAR
-  );
-  let screenshotBtn = document.getElementById("screenshot-button");
-  Assert.ok(screenshotBtn, "The screenshots button was added to the nav bar");
-
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -192,13 +164,6 @@ add_task(async function() {
  * and back to the center to confirm that the original size is preserved
  */
 add_task(async function() {
-  CustomizableUI.addWidgetToArea(
-    "screenshot-button",
-    CustomizableUI.AREA_NAVBAR
-  );
-  let screenshotBtn = document.getElementById("screenshot-button");
-  Assert.ok(screenshotBtn, "The screenshots button was added to the nav bar");
-
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -269,13 +234,6 @@ add_task(async function() {
  *  with the 4 sides of the box
  */
 add_task(async function() {
-  CustomizableUI.addWidgetToArea(
-    "screenshot-button",
-    CustomizableUI.AREA_NAVBAR
-  );
-  let screenshotBtn = document.getElementById("screenshot-button");
-  Assert.ok(screenshotBtn, "The screenshots button was added to the nav bar");
-
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -390,13 +348,6 @@ add_task(async function() {
  *  with the 4 corners of the box
  */
 add_task(async function() {
-  CustomizableUI.addWidgetToArea(
-    "screenshot-button",
-    CustomizableUI.AREA_NAVBAR
-  );
-  let screenshotBtn = document.getElementById("screenshot-button");
-  Assert.ok(screenshotBtn, "The screenshots button was added to the nav bar");
-
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
