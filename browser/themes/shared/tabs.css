@@ -132,13 +132,13 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  :root[sessionrestored] .tab-loading-burst {
+  .tab-loading-burst {
     border-radius: inherit;
     position: relative;
     overflow: hidden;
   }
 
-  :root[sessionrestored] .tab-loading-burst::before {
+  .tab-loading-burst::before {
     position: absolute;
     content: "";
     /* We set the width to be a percentage of the tab's width so that we can use
@@ -152,13 +152,13 @@
     margin-inline-start: calc(17px - 2.5%);
   }
 
-  :root[sessionrestored] .tab-loading-burst[pinned]::before {
+  .tab-loading-burst[pinned]::before {
     /* This is like the margin-inline-start rule above, except that icons for
        pinned tabs are 12px from the edge. */
     margin-inline-start: calc(20px - 2.5%);
   }
 
-  :root[sessionrestored] .tab-loading-burst[bursting]::before {
+  .tab-loading-burst[bursting]::before {
     background-image: url("chrome://browser/skin/tabbrowser/loading-burst.svg");
     background-position: center center;
     background-size: 100% auto;
@@ -168,7 +168,7 @@
     fill: var(--tab-loading-fill);
   }
 
-  :root[sessionrestored] .tab-loading-burst[bursting][notselectedsinceload]::before {
+  .tab-loading-burst[bursting][notselectedsinceload]::before {
     animation-name: tab-burst-animation-light;
   }
 
