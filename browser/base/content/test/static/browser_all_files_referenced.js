@@ -65,6 +65,9 @@ var gExceptionPaths = [
 
   // Activity stream schemas are referenced programmatically.
   "resource://activity-stream/schemas",
+
+  // Localization file added programatically in featureCallout.jsm
+  "resource://app/localization/en-US/browser/featureCallout.ftl",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running

@@ -245,7 +245,12 @@ const MESSAGES = [
 
 function _createContainer() {
   let container = document.createElement("div");
-  container.classList.add("onboardingContainer", "featureCallout", "hidden");
+  container.classList.add(
+    "onboardingContainer",
+    "featureCallout",
+    "callout-arrow",
+    "hidden"
+  );
   container.id = CONTAINER_ID;
   let parent = document.querySelector(CURRENT_SCREEN?.parent_selector);
   container.setAttribute("aria-describedby", `#${CONTAINER_ID} .welcome-text`);
@@ -258,11 +263,20 @@ function _createContainer() {
  * Set callout's position relative to parent element
  */
 function _positionCallout() {
-  const positions = ["top", "bottom", "left", "right"];
   const container = document.getElementById(CONTAINER_ID);
   const parentEl = document.querySelector(CURRENT_SCREEN?.parent_selector);
+  // All possible arrow positions
+  const arrowPositions = ["top", "bottom", "end", "start"];
   const arrowPosition = CURRENT_SCREEN?.content?.arrow_position || "top";
-  const margin = 15;
+  // Length of arrow pointer in pixels
+  const arrowLength = 12;
+  // Callout should overlap the parent element by
+  // 15% of the latter's width or height
+  const overlap = 0.15;
+  // Number of pixels that the callout should overlap the element it describes,
+  // including the length of the element's arrow pointer
+  const parentHeightOverlap = parentEl.offsetHeight * overlap - arrowLength;
+  const parentWidthOverlap = parentEl.offsetWidth * overlap - arrowLength;
   // Is the document layout right to left?
   const RTL = document.dir === "rtl";
 
@@ -281,8 +295,10 @@ function _positionCallout() {
   }
 
   function clearPosition() {
-    positions.forEach(position => {
+    Object.keys(positioners).forEach(position => {
       container.style[position] = "unset";
+    });
+    arrowPositions.forEach(position => {
       if (container.classList.contains(`arrow-${position}`)) {
         container.classList.remove(`arrow-${position}`);
       }
@@ -292,70 +308,124 @@ function _positionCallout() {
     });
   }
 
+  const positioners = {
+    top: {
+      availableSpace:
+        document.body.offsetHeight -
+        getOffset(parentEl).top -
+        parentEl.offsetHeight +
+        parentHeightOverlap,
+      neededSpace: container.offsetHeight - parentHeightOverlap,
+      position() {
+        // Point to an element above the callout
+        let containerTop =
+          getOffset(parentEl).top + parentEl.offsetHeight - parentHeightOverlap;
+        container.style.top = `${Math.max(
+          container.offsetHeight - parentHeightOverlap,
+          containerTop
+        )}px`;
+        centerHorizontally(container, parentEl);
+        container.classList.add("arrow-top");
+      },
+    },
+    bottom: {
+      availableSpace: getOffset(parentEl).top + parentHeightOverlap,
+      neededSpace: container.offsetHeight - parentHeightOverlap,
+      position() {
+        // Point to an element below the callout
+        let containerTop =
+          getOffset(parentEl).top -
+          container.offsetHeight +
+          parentHeightOverlap;
+        container.style.top = `${Math.max(0, containerTop)}px`;
+        centerHorizontally(container, parentEl);
+        container.classList.add("arrow-bottom");
+      },
+    },
+    right: {
+      availableSpace: getOffset(parentEl).left + parentHeightOverlap,
+      neededSpace: container.offsetWidth - parentWidthOverlap,
+      position() {
+        // Point to an element to the right of the callout
+        let containerLeft =
+          getOffset(parentEl).left - container.offsetWidth + parentWidthOverlap;
+        if (RTL) {
+          // Account for cases where the document body may be narrow than the window
+          containerLeft -= window.innerWidth - document.body.offsetWidth;
+        }
+        container.style.left = `${Math.max(0, containerLeft)}px`;
+        container.style.top = `${getOffset(parentEl).top}px`;
+        container.classList.add("arrow-inline-end");
+      },
+    },
+    left: {
+      availableSpace:
+        document.body.offsetWidth -
+        getOffset(parentEl).right +
+        parentWidthOverlap,
+      neededSpace: container.offsetWidth - parentWidthOverlap,
+      position() {
+        // Point to an element to the left of the callout
+        let containerLeft =
+          getOffset(parentEl).left + parentEl.offsetWidth - parentWidthOverlap;
+        if (RTL) {
+          // Account for cases where the document body may be narrow than the window
+          containerLeft -= window.innerWidth - document.body.offsetWidth;
+        }
+        container.style.left = `${(container.offsetWidth - parentWidthOverlap,
+        containerLeft)}px`;
+        container.style.top = `${getOffset(parentEl).top}px`;
+        container.classList.add("arrow-inline-start");
+      },
+    },
+  };
+
+  function calloutFits(position) {
+    // Does callout element fit in this position relative
+    // to the parent element without going off screen?
+    return (
+      positioners[position].availableSpace > positioners[position].neededSpace
+    );
+  }
+
+  function choosePosition() {
+    let position = arrowPosition;
+    if (!arrowPositions.includes(position)) {
+      // Configured arrow position is not valid
+      return false;
+    }
+    if (["start", "end"].includes(position)) {
+      if (RTL) {
+        position = "start" ? "right" : "left";
+      } else {
+        position = "start" ? "left" : "right";
+      }
+    }
+    if (calloutFits(position)) {
+      return position;
+    }
+    let newPosition = Object.keys(positioners)
+      .filter(p => p !== position)
+      .find(p => calloutFits(p));
+    // If the callout doesn't fit in any position, use the configured one.
+    // The callout will be adjusted to overlap the parent element so that
+    // the former doesn't go off screen.
+    return newPosition || position;
+  }
+
   function centerHorizontally() {
     let sideOffset = (parentEl.offsetWidth - container.offsetWidth) / 2;
     let containerSide = RTL
       ? window.innerWidth - getOffset(parentEl).right + sideOffset
       : getOffset(parentEl).left + sideOffset;
-    container.style[RTL ? "right" : "left"] = `${Math.max(
-      containerSide,
-      margin
-    )}px`;
+    container.style[RTL ? "right" : "left"] = `${Math.max(containerSide, 0)}px`;
   }
-
-  // Position callout relative to a parent element
-  const positioners = {
-    top() {
-      let containerTop = getOffset(parentEl).bottom - margin;
-      container.style.top = `${Math.min(
-        window.innerHeight - container.offsetHeight - margin,
-        containerTop
-      )}px`;
-      centerHorizontally(container, parentEl);
-      container.classList.add("arrow-top");
-    },
-    // Point to an element below the callout
-    bottom() {
-      let containerTop =
-        getOffset(parentEl).top - container.clientHeight + margin;
-      container.style.top = `${Math.max(containerTop, 0)}px`;
-      centerHorizontally(container, parentEl);
-      container.classList.add("arrow-bottom");
-    },
-    // Point to an element to the right of the callout
-    left() {
-      let containerLeft = getOffset(parentEl).right - margin;
-      container.style.left = `${Math.min(
-        window.innerWidth - container.offsetWidth - margin,
-        containerLeft
-      )}px`;
-      container.style.top = `${getOffset(parentEl).top}px`;
-      container.classList.add("arrow-inline-start");
-    },
-    // Point to an element to the left of the callout
-    right() {
-      let containerLeft =
-        getOffset(parentEl).left - container.offsetWidth + margin;
-      container.style.left = `${Math.max(containerLeft, margin)}px`;
-      container.style.top = `${getOffset(parentEl).top}px`;
-      container.classList.add("arrow-inline-end");
-    },
-  };
 
   clearPosition(container);
 
-  if (!container.classList.contains("callout-arrow")) {
-    container.classList.add("callout-arrow");
-  }
-
-  if (["start", "end"].includes(arrowPosition)) {
-    if (RTL) {
-      positioners[arrowPosition === "start" ? "right" : "left"]();
-    } else {
-      positioners[arrowPosition === "start" ? "left" : "right"]();
-    }
-  } else {
-    positioners[arrowPosition]();
+  let finalPosition = choosePosition();
+  if (finalPosition) {
+    positioners[finalPosition].position();
   }
 
   container.classList.remove("hidden");
@@ -445,14 +515,16 @@ function _loadConfig(messageId) {
     screens = screens.filter((s, i) => {
       return document.querySelector(s.parent_selector);
     });
-    screens[screens.length - 1].content.primary_button = finalCTA;
+    if (screens.length) {
+      screens[screens.length - 1].content.primary_button = finalCTA;
+    }
     return screens;
   }
 
   let content = MESSAGES.find(m => m.id === messageId);
   const screenId = lazy.featureTourProgress.screen;
   let screenIndex;
-  if (content?.screens && screenId) {
+  if (content?.screens?.length && screenId) {
     content.screens = _getRelevantScreens(content.screens);
     screenIndex = content.screens.findIndex(s => s.id === screenId);
     content.startScreen = screenIndex;

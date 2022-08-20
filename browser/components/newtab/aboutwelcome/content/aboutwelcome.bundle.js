@@ -552,6 +552,8 @@ const Localized = ({
   const textNodes = props.children; // Pick desired fluent or raw/plain text to render.
 
   if (text.string_id) {
+    // Set the key so React knows not to reuse when switching to plain text.
+    props.key = text.string_id;
     props["data-l10n-id"] = text.string_id;
     if (text.args) props["data-l10n-args"] = JSON.stringify(text.args);
   } else if (text.raw) {
@@ -596,7 +598,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _Themes__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(9);
 /* harmony import */ var _MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(4);
 /* harmony import */ var _LanguageSwitcher__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(10);
-/* harmony import */ var _LinkText__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(11);
+/* harmony import */ var _CTAParagraph__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(11);
 /* harmony import */ var _HeroImage__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(12);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -820,7 +822,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
         "addon-name": this.props.addonName,
         ...((_this$props$appAndSys = this.props.appAndSystemLocaleInfo) === null || _this$props$appAndSys === void 0 ? void 0 : _this$props$appAndSys.displayNames)
       })
-    })), content.cta_paragraph ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_LinkText__WEBPACK_IMPORTED_MODULE_7__.LinkText, {
+    })), content.cta_paragraph ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_CTAParagraph__WEBPACK_IMPORTED_MODULE_7__.CTAParagraph, {
       content: content.cta_paragraph,
       handleAction: this.props.handleAction
     }) : null), this.renderContentTiles(), this.renderLanguageSwitcher(), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
@@ -1187,7 +1189,9 @@ function useLanguageSwitcher(appAndSystemLocaleInfo, screens, screenIndex, setSc
     }
 
     setLangPackInstallPhase("installing");
-    window.AWEnsureLangPackInstalled(negotiatedLanguage.langPack).then(() => {
+    window.AWEnsureLangPackInstalled(negotiatedLanguage, screen === null || screen === void 0 ? void 0 : screen.content).then(content => {
+      // Update screen content with strings that might have changed.
+      screen.content = content;
       setLangPackInstallPhase("installed");
     }, error => {
       console.error(error);
@@ -1243,22 +1247,7 @@ function LanguageSwitcher(props) {
         });
       });
     }
-  }, [isAwaitingLangpack, langPackInstallPhase]); // The message args are the localized language names.
-
-  const withMessageArgs = obj => {
-    const langPackDisplayName = negotiatedLanguage === null || negotiatedLanguage === void 0 ? void 0 : negotiatedLanguage.langPackDisplayName;
-
-    if (langPackDisplayName) {
-      return { ...obj,
-        args: { ...obj.args,
-          negotiatedLanguage: langPackDisplayName
-        }
-      };
-    }
-
-    return obj;
-  };
-
+  }, [isAwaitingLangpack, langPackInstallPhase]);
   let showWaitingScreen = false;
   let showPreloadingScreen = false;
   let showReadyScreen = false;
@@ -1274,7 +1263,7 @@ function LanguageSwitcher(props) {
 
 
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "language-switcher-container"
+    className: "action-buttons language-switcher-container"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     style: {
       display: showPreloadingScreen ? "block" : "none"
@@ -1313,7 +1302,7 @@ function LanguageSwitcher(props) {
     src: "chrome://browser/skin/tabbrowser/tab-connecting.png",
     alt: ""
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-    text: withMessageArgs(content.languageSwitcher.downloading)
+    text: content.languageSwitcher.downloading
   })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "secondary-cta"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
@@ -1341,7 +1330,7 @@ function LanguageSwitcher(props) {
       setIsAwaitingLangpack(true);
     }
   }, content.languageSwitcher.switch ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-    text: withMessageArgs(content.languageSwitcher.switch)
+    text: content.languageSwitcher.switch
   }) : // This is the localized name from the Intl.DisplayNames API.
   negotiatedLanguage === null || negotiatedLanguage === void 0 ? void 0 : negotiatedLanguage.langPackDisplayName)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
     type: "button",
@@ -1363,7 +1352,7 @@ function LanguageSwitcher(props) {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "LinkText": () => (/* binding */ LinkText)
+/* harmony export */   "CTAParagraph": () => (/* binding */ CTAParagraph)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
@@ -1373,13 +1362,13 @@ __webpack_require__.r(__webpack_exports__);
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-const LinkText = props => {
+const CTAParagraph = props => {
   const {
     content,
     handleAction
   } = props;
 
-  if (!(content !== null && content !== void 0 && content.text && typeof handleAction === "function")) {
+  if (!(content !== null && content !== void 0 && content.text)) {
     return null;
   }
 
@@ -1387,7 +1376,7 @@ const LinkText = props => {
     className: "cta-paragraph"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
     text: content.text
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
+  }, content.text.string_name && typeof handleAction === "function" ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
     "data-l10n-id": content.text.string_id,
     onClick: handleAction,
     onKeyUp: event => ["Enter", " "].includes(event.key) ? handleAction(event) : null,
@@ -1398,7 +1387,7 @@ const LinkText = props => {
     role: "button",
     tabIndex: "0",
     "data-l10n-name": content.text.string_name
-  }, " "))));
+  }, " ")) : null));
 };
 
 /***/ }),

@@ -335,8 +335,11 @@ template <typename Unit>
     }
     output.as<UniquePtr<ExtensibleCompilationStencil>>() = std::move(stencil);
   } else if (output.is<RefPtr<CompilationStencil>>()) {
-    AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
-                                       JS::ProfilingCategoryPair::JS_Parsing);
+    Maybe<AutoGeckoProfilerEntry> pseudoFrame;
+    if (cx) {
+      pseudoFrame.emplace(cx, "script emit",
+                          JS::ProfilingCategoryPair::JS_Parsing);
+    }
 
     auto extensibleStencil =
         cx->make_unique<frontend::ExtensibleCompilationStencil>(
@@ -460,8 +463,11 @@ bool frontend::InstantiateStencils(JSContext* cx, CompilationInput& input,
 bool frontend::PrepareForInstantiate(JSContext* cx, CompilationInput& input,
                                      const CompilationStencil& stencil,
                                      CompilationGCOutput& gcOutput) {
-  AutoGeckoProfilerEntry pseudoFrame(cx, "stencil instantiate",
-                                     JS::ProfilingCategoryPair::JS_Parsing);
+  Maybe<AutoGeckoProfilerEntry> pseudoFrame;
+  if (cx) {
+    pseudoFrame.emplace(cx, "stencil instantiate",
+                        JS::ProfilingCategoryPair::JS_Parsing);
+  }
 
   return CompilationStencil::prepareForInstantiate(cx, input.atomCache, stencil,
                                                    gcOutput);
@@ -698,8 +704,11 @@ bool ScriptCompiler<Unit>::compile(JSContext* cx, SharedContext* sc) {
 
   ParseNode* pn;
   {
-    AutoGeckoProfilerEntry pseudoFrame(cx, "script parsing",
-                                       JS::ProfilingCategoryPair::JS_Parsing);
+    Maybe<AutoGeckoProfilerEntry> pseudoFrame;
+    if (cx) {
+      pseudoFrame.emplace(cx, "script parsing",
+                          JS::ProfilingCategoryPair::JS_Parsing);
+    }
     if (sc->isEvalContext()) {
       pn = parser->evalBody(sc->asEvalContext());
     } else {
@@ -718,8 +727,11 @@ bool ScriptCompiler<Unit>::compile(JSContext* cx, SharedContext* sc) {
 
   {
     // Successfully parsed. Emit the script.
-    AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
-                                       JS::ProfilingCategoryPair::JS_Parsing);
+    Maybe<AutoGeckoProfilerEntry> pseudoFrame;
+    if (cx) {
+      pseudoFrame.emplace(cx, "script emit",
+                          JS::ProfilingCategoryPair::JS_Parsing);
+    }
 
     Maybe<BytecodeEmitter> emitter;
     if (!emplaceEmitter(emitter, sc)) {
@@ -897,8 +909,11 @@ template <typename Unit>
     }
     output.as<UniquePtr<ExtensibleCompilationStencil>>() = std::move(stencil);
   } else if (output.is<RefPtr<CompilationStencil>>()) {
-    AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
-                                       JS::ProfilingCategoryPair::JS_Parsing);
+    Maybe<AutoGeckoProfilerEntry> pseudoFrame;
+    if (cx) {
+      pseudoFrame.emplace(cx, "script emit",
+                          JS::ProfilingCategoryPair::JS_Parsing);
+    }
 
     auto extensibleStencil =
         cx->make_unique<frontend::ExtensibleCompilationStencil>(
@@ -1219,8 +1234,11 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     }
     output.as<UniquePtr<ExtensibleCompilationStencil>>() = std::move(stencil);
   } else if (output.is<RefPtr<CompilationStencil>>()) {
-    AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
-                                       JS::ProfilingCategoryPair::JS_Parsing);
+    Maybe<AutoGeckoProfilerEntry> pseudoFrame;
+    if (cx) {
+      pseudoFrame.emplace(cx, "script emit",
+                          JS::ProfilingCategoryPair::JS_Parsing);
+    }
 
     auto extensibleStencil =
         cx->make_unique<frontend::ExtensibleCompilationStencil>(
@@ -1295,8 +1313,11 @@ static bool DelazifyCanonicalScriptedFunctionImpl(
 bool frontend::DelazifyCanonicalScriptedFunction(
     JSContext* cx, ErrorContext* ec, JS::NativeStackLimit stackLimit,
     HandleFunction fun) {
-  AutoGeckoProfilerEntry pseudoFrame(cx, "script delazify",
-                                     JS::ProfilingCategoryPair::JS_Parsing);
+  Maybe<AutoGeckoProfilerEntry> pseudoFrame;
+  if (cx) {
+    pseudoFrame.emplace(cx, "script delazify",
+                        JS::ProfilingCategoryPair::JS_Parsing);
+  }
 
   Rooted<BaseScript*> lazy(cx, fun->baseScript());
   ScriptSource* ss = lazy->scriptSource();
@@ -1376,8 +1397,11 @@ frontend::DelazifyCanonicalScriptedFunction(JSContext* cx, ErrorContext* ec,
                                             JS::NativeStackLimit stackLimit,
                                             CompilationStencil& context,
                                             ScriptIndex scriptIndex) {
-  AutoGeckoProfilerEntry pseudoFrame(cx, "stencil script delazify",
-                                     JS::ProfilingCategoryPair::JS_Parsing);
+  Maybe<AutoGeckoProfilerEntry> pseudoFrame;
+  if (cx) {
+    pseudoFrame.emplace(cx, "stencil script delazify",
+                        JS::ProfilingCategoryPair::JS_Parsing);
+  }
 
   ScriptSource* ss = context.source;
   if (ss->hasSourceType<Utf8Unit>()) {
