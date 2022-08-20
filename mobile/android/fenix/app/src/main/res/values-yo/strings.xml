@@ -560,6 +560,8 @@
     <string name="preference_dark_theme">Òkùnkùn</string>
 
 
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Ìpamọ́ bátíìrì ló ṣètò rẹ̀</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Tẹ̀lé àkóórí ẹ̀rọ</string>
 
@@ -786,15 +788,15 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Kò sí ìtàn níbí</string>
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">Ìṣiṣẹ́pọ̀ láti àwọn ẹ̀rọ míràn</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Ìṣiṣẹ́pọ̀ láti àwọn ẹ̀rọ míràn</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">Láti inú àwọn ẹ̀rọ mìíràn</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">Láti inú àwọn ẹ̀rọ mìíràn</string>
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">Forúkọsílẹ̀-wọlé láti rí ìtan nípasẹ̀ ìṣiṣẹ́pọ̀ láti àwọn ẹ̀rọ̀ rẹ míràn.</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Forúkọsílẹ̀-wọlé láti rí ìtan nípasẹ̀ ìṣiṣẹ́pọ̀ láti àwọn ẹ̀rọ̀ rẹ míràn.</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">Ìforúkọsílẹ̀-wọlé</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Ìforúkọsílẹ̀-wọlé</string>
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>Tàbí ṣẹ̀dá àkáńtì Firefox láti bẹ̀rẹ̀ sí ní ṣiṣẹ́pọ̀</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>Tàbí ṣẹ̀dá àkáńtì Firefox láti bẹ̀rẹ̀ sí ní ṣiṣẹ́pọ̀</u>]]></string>
 
 
     <!-- Downloads -->
@@ -1364,6 +1366,8 @@
     <string name="preferences_passwords_exceptions">Àwọn ìyọkúrò</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Pa gbogbo àwọn ìyọkúrò rẹ́</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Yẹ àwọn lógiìnì wò</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Sáìtì</string>
     <!-- The header for the username for a login -->
@@ -1423,5 +1427,271 @@
     <string name="preferences_credit_cards_sync_cards">Ìṣepọ̀ àwọn káàdì</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Ṣàfikún kírẹ́díìtì káàdì</string>
+
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Ṣàkóso àwọn káàdì tí ó wà ní ìfipamọ́</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">Ṣàfikún àdìrẹ́sì</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">Ṣàkóso àwọn àdírẹ́sì</string>
+
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Ṣàfikún káàdì</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Ṣàtúnṣe káàdì</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Nóḿbà káàdì</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Déètì ọjọ́ ìparí</string>
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_month">Déètì oṣù ọjọ́ ìparí</string>
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_year">Déètì ọdún ọjọ́ ìparí</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Orúkọ lóri káàdì</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Pa káàdì rẹ̀</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Pa káàdì rẹ̀</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">Ṣé ó dá ọ lójú pé o fẹ́ pa kírẹ́dítì káàdì yìí rẹ́?</string>
+    <!-- The text for the positive button on "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_button">Parẹ́</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Fipamọ́</string>
+
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Fipamọ́</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting a credit card -->
+    <string name="credit_cards_cancel_button">Parẹ́</string>
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Ṣe ìfipamọ́ àwọn káàdì</string>
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Jọ̀wọ́ tẹ nọ́ḿbà kírẹ́dítì káàdì tó fẹsẹ̀múlẹ̀</string>
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Jọ̀wọ́ bu ọwọ́ lu ààyè yìí</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Ṣí i láti wo àwọn káàdì rẹ tó wà ní ìpamọ́</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Ṣe ààbò àwọn kírẹ́dítì káàdì rẹ</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Ṣètò rẹ̀ báyìí</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Nígbà mìíràn</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Ṣí ẹ̀rọ rẹ sílẹ̀</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Ṣi láti lo àwọn àlàyé káàdì kírẹ́díìtì tí wọ́n fi pamọ́</string>
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">Ṣàfikún àdìrẹ́sì</string>
+    <!-- Title of the "Edit address" screen -->
+    <string name="addresses_edit_address">Ṣàtúnkọ àdìrẹ́sì</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">Ṣàkóso àwọn àdírẹ́sì</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">Orúkọ àkọ́kọ́</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">Orúkọ kejì</string>
+
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">Orúkọ ìdílé</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">Orúkọ òpópónà</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">Ìlú</string>
+    <!-- The header for the subregion of an address when "state" should be used -->
+    <string name="addresses_state">Ìpínlẹ̀</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">Ìgbèríko</string>
+
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">Zíìpù</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Orílẹ̀-èdè tàbí àgbègbè</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">Fóònù</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">Ímeélì</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">Fipamọ́</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">Parẹ́</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">Pa àdìrẹ́sì rẹ́</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message">Ṣé ó dá ẹ lójú pé o fẹ́ pa àdìrẹ́sì náà rẹ́?</string>
+    <!-- The text for the positive button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_ok_button">Parẹ́</string>
+    <!-- The text for the negative button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_cancel_button">Parẹ́</string>
+
+    <!-- The text for the "Save address" menu item for saving an address -->
+    <string name="address_menu_save_address">Fi àdìrẹ́sì pamọ́</string>
+    <!-- The text for the "Delete address" menu item for deleting an address -->
+    <string name="address_menu_delete_address">Pa àdìrẹ́sì rẹ́</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Ṣàfikún ẹ̀rọ ìwádìí</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Ṣàtúnkọ ẹ̀rọ ìwádìí</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">Ṣàfikún</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Fipamọ́</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">Ṣàtúnkọ</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">Parẹ́</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">Òmíìràn</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">Orúkọ</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">Àkójọ ohun ìwádìí láti lò</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Tẹ orúkọ ẹ̀rọ ìwádìí</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Tẹ àkójọ ohun ìwádìí kan</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Ri pé àkójọ ohun ìwádìí bá ìlànà àpẹẹrẹ náà mu</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">Ti ṣẹ̀dá%s</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">Ti fipamọ́%s</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">Ti parẹ́%s</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Láti gbàá láyè:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Lọ sí ètò ándírọ́ídì</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Fọwọ́ ba<b>ìgbàláàyè</b>]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection_2">Ààbò wá lórí ìbáṣepọ̀</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection_2">Kò sí ààbò lórí ìbáṣepọ̀</string>
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">Pa àwọn àkójọ dátà aláfiránṣẹ́ ti wẹ́ẹ̀bù àti dátà sáìtì rẹ́</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[Ṣé ó dá ẹ lójú pé o fẹ́ yọ gbogbo àwọn àkójọ dátà aláfiránṣẹ́ ti wẹ́ẹ̀bù àti dátà fún sáìtì náà<b>%s</b>?]]></string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">Ṣé ó dá ẹ lójú pé o fẹ́ yọ gbogbo ìgbààyè yìí fún gbogbo sáìtì?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">Ṣé ó dá ẹ lójú pé o fẹ́ yọ gbogbo ìgbààyè fún sáìtì yìí?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">Ṣé ó dá ẹ lójú pé o fẹ́ yọ ìgbààyè yìí fún sáìtì yìí?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Kò sí àyọkúrò sáìtì</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">Ṣé ó dá ẹ lójú pé o fẹ́ pa àkọsílẹ̀ àdìrẹ́sì wẹ́ẹ̀bù yìí rẹ́?</string>
+    <!-- Browser menu button that adds a shortcut to the home fragment -->
+    <string name="browser_menu_add_to_shortcuts">Ṣàfikún àwọn ọ̀nà-àbùjá</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">Yọọ́ kúrò nínú àwọn ọ̀nà-àbùjá </string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">Jẹ́rìí sí láti ọwọ́: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Parẹ́</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Ṣàtúnkọ</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Ṣé ó dá ẹ lójú pé o fẹ́ pa ìforúkọsílẹ̀ láti wọlé yìí rẹ́?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Parẹ́</string>
+    <!-- Negative action of a dialog asking to delete login -->
+    <string name="dialog_delete_negative">Paárẹ́</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Àwọn ẹ̀yàn ìforúkọsílẹ̀ láti wọlé</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Ààyè ìṣàtúnkọ ọ̀rọ̀ fún àdìrẹ́sì wẹ́ẹ̀bù fún ìforúkọsílẹ̀ láti wọlé.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Ààyè ìṣàtúnkọ ọ̀rọ̀ fún orúkọ aṣàmúlò fún orúkọ ìgbàwọlé.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Ààyè ìṣàtúnkọ ọ̀rọ̀ fún pásíwọọ̀dù fún ìforúkọsílẹ̀ láti wọlé.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Ṣe ìfipamọ́ àwọn àyípadà sí ìforúkọsílẹ̀ láti wọlé.</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Ṣàtúnkọ</string>
+    <!--  The page title for adding new login. -->
+    <string name="add_login">Ṣàfikún ìforúkọsílẹ̀ láti wọlé tuntun</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Ìnílò pásíwọọ̀dù</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">Ìnílò orúkọ aṣàmúlò</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Ìwádìí olóhùn</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Sọ̀rọ̀ nísìnyí</string>
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Ìfisílẹ̀ orúkọ ìgbàwọlé yẹn ti wà tẹ́lè</string>
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.àpẹẹrẹ.com</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_3">Àdírẹ́sì wẹ́ẹ̀bù gbọ́dọ̀ ní &quot;https://&quot; tàbí &quot;http://&quot;</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Ṣe àsopọ̀ ẹ̀rọ míràn.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Jọ̀wọ́ tún fi ìdí ẹ̀ múlẹ̀.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Jọ̀wọ́ gba ìṣepọ̀ táàbù láyè.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">O ò ní àwọn táàbù tí ó wà ní ṣíṣí ní Firefox lórí àwọn ẹ̀rọ rẹ tó kù.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Ṣe àfihàn àtòjọ àwọn táàbù láti àwọn ẹ̀rọ̀ rẹ̀ tó kù.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Ṣe ìforúkọsílẹ̀ láti wọ ìṣepọ̀ náà</string>
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Kò sí àwọn táàbù ní ṣíṣí</string>
+    <!-- Content description for expanding a group of synced tabs. -->
+    <string name="synced_tabs_expand_group">Fẹ́ àkójọpọ̀ àwọn táàbù tí wọ́n jọ́ ń ṣiṣẹ́ pọ̀</string>
+    <!-- Content description for collapsing a group of synced tabs. -->
+    <string name="synced_tabs_collapse_group">Pa àwọn àkójọpọ̀ táàbù tí wọ́n jọ́ ń ṣiṣẹ́ pọ náà dé</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">Ó ti dé ìwọ̀n ọ̀nà-àbùjá</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">Láti ṣàfikún ọ̀nà-àbùjá tuntun, yọ ọ̀kan. Fọwọ́kàn kí o sì di sáìtì náà mú kí o sì yan ìyọkúrò.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">Ó dára, mo gbà</string>
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_4">Àwọn ọ̀nà-àbùjá</string>
+	<!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Orúkọ</string>
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">Orúkọ ọ̀nà-àbùjá</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">O DÁRA</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Parẹ́</string>
+    <!-- Text for the menu button to open the homepage settings. -->
+    <string name="top_sites_menu_settings">Àwọn aatò</string>
+    <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="top_sites_menu_sponsor_privacy">Àwọn onígbọ̀wọ́ wa àti ìkọ̀kò rẹ</string>
+    <!-- Label text displayed for a sponsored top site. -->
+    <string name="top_sites_sponsored_label">Onígbọ̀wọ́</string>
+
+    <!-- Inactive tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
+    <string name="inactive_tabs_title">Àwọn táàbù ti ò ṣiṣẹ́</string>
+    <!-- Content description for closing all inactive tabs -->
+    <string name="inactive_tabs_delete_all">Ti gbogbo táàbù tí ò ṣiṣẹ́</string>
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">Fẹ àwọn táàbù tí ò ṣiṣẹ́</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">Pa àwọn táàbù tí ò ṣiṣẹ́ dé</string>
+
+    <!-- Inactive tabs auto-close message in the tabs tray -->
+    <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">Tì-fúnra-ẹ̀ lẹ́yìn oṣù kan?</string>
+    <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
+    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Firefox lè ti àwọn táàbù tí oò tíì yẹ̀wò ní oṣù tó kọjá.</string>
 
     </resources>

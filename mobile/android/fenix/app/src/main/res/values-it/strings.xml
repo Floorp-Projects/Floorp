@@ -124,11 +124,11 @@
     <string name="recent_tabs_show_all_content_description_2">Pulsante per mostrare tutte le schede recenti</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">La tua ricerca per “%1$s”</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">La tua ricerca per “%1$s”</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d siti</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d siti</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Mostra tutte le schede sincronizzate</string>
@@ -454,11 +454,11 @@
     <string name="wallpaper_updated_snackbar_action">Visualizza</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Cambia lo sfondo toccando il logo di Firefox nella pagina iniziale</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Cambia lo sfondo toccando il logo di Firefox nella pagina iniziale</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Logo di Firefox. Pulsante per cambiare lo sfondo</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Logo di Firefox. Pulsante per cambiare lo sfondo</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -591,7 +591,7 @@
     <!-- Option in library to open Bookmarks page -->
     <string name="library_bookmarks">Segnalibri</string>
     <!-- Option in library to open Desktop Bookmarks root page -->
-    <string name="library_desktop_bookmarks_root">Segnalibri pc desktop</string>
+    <string name="library_desktop_bookmarks_root">Segnalibri PC desktop</string>
     <!-- Option in library to open Desktop Bookmarks "menu" page -->
     <string name="library_desktop_bookmarks_menu">Menu segnalibri</string>
     <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
@@ -638,9 +638,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Griglia</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Gruppi di ricerca</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Gruppi di ricerca</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Raggruppa siti correlati</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Raggruppa siti correlati</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Chiudi schede</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -801,16 +801,16 @@
     <string name="history_empty_message">Nessuna cronologia disponibile.</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">Sincronizzata da altri dispositivi</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Sincronizzata da altri dispositivi</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">Da altri dispositivi</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">Da altri dispositivi</string>
 
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">Accedi per visualizzare la cronologia sincronizzata con altri dispositivi.</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Accedi per visualizzare la cronologia sincronizzata con altri dispositivi.</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">Accedi</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Accedi</string>
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>Oppure crea un account Firefox per iniziare a sincronizzare</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>Oppure crea un account Firefox per iniziare a sincronizzare</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
