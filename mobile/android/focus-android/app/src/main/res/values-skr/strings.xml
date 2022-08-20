@@ -16,6 +16,13 @@
     <string name="urlbar_hint">ڳولو یا پتہ درج کرو</string>
 
 
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">تہاݙی براؤزنگ تاریخ مٹا ڈتی ڳئی ہے۔</string>
+    <string name="feedback_erase2">براؤزنگ تاریخ صاف تھی ڳئی</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">ٹیب دی براؤزنگ تاریخ مٹا ڈتی ڳئی ہے۔</string>
+
     <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
     <string name="search_hint">%1$s کیتے ڳول</string>
 
@@ -51,6 +58,9 @@
     <string name="menu_help">مدد</string>
 
     <string name="menu_rights">تہاݙے حقوق</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">مواد روکݨ</string>
 
     <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
      See https://github.com/mozilla-mobile/focus-android/issues/2106
@@ -104,6 +114,9 @@
 
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">ویب مواد</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">ایپاں تبدیل کرݨ</string>
 
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">عمومی</string>
@@ -171,6 +184,8 @@
 
     <string name="preference_category_privacy">رازداری</string>
 
+    <string name="preference_privacy_category_cookies">کوکیاں بلاک کرو</string>
+
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
     <string name="preference_privacy_should_block_cookies_no_option2">کو، شکریہ</string>
@@ -198,6 +213,9 @@
     <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
     <string name="preference_about">%1$s دے بارے</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">ڳولݨ انجݨ چݨو</string>
+
     <!-- Action for adding an additional search engine to the list.
     The "+" is used to emphasize that this is an "add" action -->
     <string name="preference_search_add2">+ ہک ٻیا ڳولݨ انجݨ شامل کرو</string>
@@ -216,9 +234,16 @@
     <string name="search_add_manually_string">ورتݨ کیتے تند ڳولو</string>
     <string name="search_add_manually_save">محفوظ</string>
 
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">مثال: example.com/search/?q=%s</string>
+
     <string name="search_add_confirmation">نواں ڳولݨ انجݨ شامل تھی ڳیا۔</string>
 
     <string name="search_add_error_empty_name">ڳولݨ انجݨ دا ناں درج کرو</string>
+
+    <string name="search_add_error_empty_search">ڳولݨ تن٘د درج کرو</string>
+
+    <string name="search_add_error_format">پڑتال کرو جو ڳولݨ تند مثال دے نمونے مطابق ہے</string>
 
     <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
     <string name="content_description_clear_input">ان پٹ صاف کرو</string>
@@ -227,6 +252,10 @@
      while in typing mode will dismiss and go back to the browser. This text will be read when the
      overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
     <string name="content_description_dismiss_input">فارغ کرو</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">براؤزنگ تاریخ مٹاؤ</string>
 
     <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
      https pages.. -->
@@ -338,6 +367,9 @@
 
     <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
     <string name="custom_tab_copy_url_action">یوآرایل نقل تھی ڳیا</string>
+
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">لنک ایپاں وچ کھولو</string>
 
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">ودھایا</string>
