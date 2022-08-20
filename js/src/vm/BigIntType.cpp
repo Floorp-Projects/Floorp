@@ -1550,7 +1550,7 @@ bool BigInt::calculateMaximumDigitsRequired(JSContext* cx, uint8_t radix,
   uint64_t n = CeilDiv(static_cast<uint64_t>(charcount) * bitsPerChar,
                        DigitBits * bitsPerCharTableMultiplier);
   if (n > MaxDigitLength) {
-    ReportAllocationOverflow(cx);
+    ReportOversizedAllocation(cx, JSMSG_BIGINT_TOO_LARGE);
     return false;
   }
 

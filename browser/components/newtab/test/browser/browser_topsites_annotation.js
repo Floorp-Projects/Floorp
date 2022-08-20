@@ -26,6 +26,7 @@ const OPEN_TYPE = {
   NEWTAB_BY_MIDDLECLICK: 2,
   NEWTAB_BY_CONTEXTMENU: 3,
   NEWWINDOW_BY_CONTEXTMENU: 4,
+  NEWWINDOW_BY_CONTEXTMENU_OF_TILE: 5,
 };
 
 const FRECENCY = {
@@ -202,6 +203,26 @@ async function openAndTest({
 
     const win = await onLoad;
     await BrowserTestUtils.closeWindow(win);
+  } else if (openType === OPEN_TYPE.NEWWINDOW_BY_CONTEXTMENU_OF_TILE) {
+    const onLoad = BrowserTestUtils.waitForNewWindow({ url: destinationURL });
+
+    await SpecialPowers.spawn(
+      gBrowser.selectedBrowser,
+      [linkSelector],
+      async selector => {
+        const link = content.document.querySelector(selector);
+        const list = link.closest("li");
+        const contextMenu = list.querySelector(".context-menu-button");
+        contextMenu.click();
+        const target = list.querySelector(
+          "[data-l10n-id=newtab-menu-open-new-window]"
+        );
+        target.click();
+      }
+    );
+
+    const win = await onLoad;
+    await BrowserTestUtils.closeWindow(win);
   }
 
   info("Check database for the destination.");
@@ -290,9 +311,18 @@ add_task(async function basic() {
       },
     },
     {
-      description: "Sponsored tile in new window",
+      description: "Sponsored tile in new window by context menu",
       link: SPONSORED_LINK,
       openType: OPEN_TYPE.NEWWINDOW_BY_CONTEXTMENU,
+      expected: {
+        source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
+      },
+    },
+    {
+      description: "Sponsored tile in new window by context menu of tile",
+      link: SPONSORED_LINK,
+      openType: OPEN_TYPE.NEWWINDOW_BY_CONTEXTMENU_OF_TILE,
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.SPONSORED,
@@ -338,13 +368,23 @@ add_task(async function basic() {
       },
     },
     {
-      description: "Bookmarked result in new window",
+      description: "Bookmarked result in new window by context menu",
       link: NORMAL_LINK,
       openType: OPEN_TYPE.NEWWINDOW_BY_CONTEXTMENU,
       bookmarks: BOOKMARKS,
       expected: {
         source: VISIT_SOURCE_BOOKMARKED,
         frecency: FRECENCY.NEWWINDOW_BOOKMARKED,
+      },
+    },
+    {
+      description: "Bookmarked result in new window by context menu of tile",
+      link: NORMAL_LINK,
+      openType: OPEN_TYPE.NEWWINDOW_BY_CONTEXTMENU_OF_TILE,
+      bookmarks: BOOKMARKS,
+      expected: {
+        source: VISIT_SOURCE_BOOKMARKED,
+        frecency: FRECENCY.BOOKMARKED,
       },
     },
     {
@@ -388,13 +428,25 @@ add_task(async function basic() {
       },
     },
     {
-      description: "Sponsored and bookmarked result in new window",
+      description:
+        "Sponsored and bookmarked result in new window by context menu",
       link: SPONSORED_LINK,
       openType: OPEN_TYPE.NEWWINDOW_BY_CONTEXTMENU,
       bookmarks: BOOKMARKS,
       expected: {
         source: VISIT_SOURCE_SPONSORED,
         frecency: FRECENCY.NEWWINDOW_BOOKMARKED,
+      },
+    },
+    {
+      description:
+        "Sponsored and bookmarked result in new window by context menu of tile",
+      link: SPONSORED_LINK,
+      openType: OPEN_TYPE.NEWWINDOW_BY_CONTEXTMENU_OF_TILE,
+      bookmarks: BOOKMARKS,
+      expected: {
+        source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.BOOKMARKED,
       },
     },
     {
@@ -433,12 +485,21 @@ add_task(async function basic() {
       },
     },
     {
-      description: "Organic tile in new window",
+      description: "Organic tile in new window by context menu",
       link: NORMAL_LINK,
       openType: OPEN_TYPE.NEWWINDOW_BY_CONTEXTMENU,
       expected: {
         source: VISIT_SOURCE_ORGANIC,
         frecency: FRECENCY.NEWWINDOW_TYPED,
+      },
+    },
+    {
+      description: "Organic tile in new window by context menu of tile",
+      link: NORMAL_LINK,
+      openType: OPEN_TYPE.NEWWINDOW_BY_CONTEXTMENU_OF_TILE,
+      expected: {
+        source: VISIT_SOURCE_ORGANIC,
+        frecency: FRECENCY.TYPED,
       },
     },
   ];

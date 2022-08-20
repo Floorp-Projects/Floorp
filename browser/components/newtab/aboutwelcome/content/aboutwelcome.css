@@ -34,6 +34,7 @@ input {
 .onboardingContainer.featureCallout {
   position: absolute;
   transition: opacity 0.5s ease;
+  z-index: 2147483645;
 }
 .onboardingContainer.featureCallout.hidden {
   opacity: 0;
@@ -388,9 +389,6 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer .screen[pos=split] .section-main .main-content .main-content-inner {
   min-height: 330px;
 }
-.onboardingContainer .screen[pos=split] .section-main .main-content .main-content-inner .language-switcher-container {
-  text-align: initial;
-}
 .onboardingContainer .screen[pos=split] .section-main .main-content .main-content-inner .language-switcher-container .secondary {
   margin-inline-start: 0;
   margin: 5px 0;
@@ -479,7 +477,7 @@ body[lwt-newtab-brighttext] {
 }
 .onboardingContainer .screen[pos=split] .section-secondary h1 {
   font-weight: 700;
-  font-size: clamp(52px, 4vw, 104px);
+  font-size: 47px;
   line-height: 110%;
   max-width: 340px;
   text-align: initial;
@@ -541,7 +539,7 @@ body[lwt-newtab-brighttext] {
     height: 150px;
   }
   .onboardingContainer .screen[pos=split] .section-secondary h1 {
-    font-size: clamp(35px, 4vw, 104px);
+    font-size: 35px;
     text-align: center;
     white-space: normal;
   }
@@ -686,7 +684,7 @@ body[lwt-newtab-brighttext] {
     background-position: 400%;
   }
 }
-.onboardingContainer .welcome-text .cta-paragraph button.text-link {
+.onboardingContainer .welcome-text .cta-paragraph a {
   margin: 0;
   text-decoration: underline;
   cursor: pointer;
