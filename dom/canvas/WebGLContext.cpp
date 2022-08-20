@@ -137,6 +137,10 @@ void WebGLContext::LruPosition::Reset() {
   ResetLocked();
 }
 
+bool WebGLContext::LruPosition::IsInsertedLocked() const {
+  return mItr != sLru.end();
+}
+
 WebGLContext::WebGLContext(HostWebGLContext& host,
                            const webgl::InitContextDesc& desc)
     : gl(mGL_OnlyClearInDestroyResourcesAndContext),  // const reference
@@ -144,6 +148,7 @@ WebGLContext::WebGLContext(HostWebGLContext& host,
       mResistFingerprinting(desc.resistFingerprinting),
       mOptions(desc.options),
       mPrincipalKey(desc.principalKey),
+      mPendingContextLoss(false),
       mMaxPerfWarnings(StaticPrefs::webgl_perf_max_warnings()),
       mMaxAcceptableFBStatusInvals(
           StaticPrefs::webgl_perf_max_acceptable_fb_status_invals()),
@@ -687,7 +692,13 @@ void WebGLContext::SetCompositableHost(
   mCompositableHost = aCompositableHost;
 }
 
-void WebGLContext::BumpLruLocked() { mLruPosition.AssignLocked(*this); }
+void WebGLContext::BumpLruLocked() {
+  if (!mIsContextLost && !mPendingContextLoss) {
+    mLruPosition.AssignLocked(*this);
+  } else {
+    MOZ_ASSERT(!mLruPosition.IsInsertedLocked());
+  }
+}
 
 void WebGLContext::BumpLru() {
   StaticMutexAutoLock lock(sLruMutex);
@@ -1428,17 +1439,23 @@ void WebGLContext::CheckForContextLoss() {
   LoseContext(reason);
 }
 
+void WebGLContext::HandlePendingContextLoss() {
+  mIsContextLost = true;
+  mHost->OnContextLoss(mPendingContextLossReason);
+}
+
 void WebGLContext::LoseContextLruLocked(const webgl::ContextLossReason reason) {
   printf_stderr("WebGL(%p)::LoseContext(%u)\n", this,
                 static_cast<uint32_t>(reason));
-  mIsContextLost = true;
   mLruPosition.ResetLocked();
-  mHost->OnContextLoss(reason);
+  mPendingContextLossReason = reason;
+  mPendingContextLoss = true;
 }
 
 void WebGLContext::LoseContext(const webgl::ContextLossReason reason) {
   StaticMutexAutoLock lock(sLruMutex);
   LoseContextLruLocked(reason);
+  HandlePendingContextLoss();
 }
 
 void WebGLContext::DidRefresh() {

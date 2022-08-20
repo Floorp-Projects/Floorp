@@ -15,6 +15,7 @@
 #include "GLScreenBuffer.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "mozilla/Attributes.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
@@ -263,6 +264,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
     void AssignLocked(WebGLContext& aContext) MOZ_REQUIRES(sLruMutex);
     void Reset();
     void ResetLocked() MOZ_REQUIRES(sLruMutex);
+    bool IsInsertedLocked() const MOZ_REQUIRES(sLruMutex);
 
     LruPosition();
     explicit LruPosition(WebGLContext&);
@@ -300,6 +302,9 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   Maybe<webgl::Limits> mLimits;
 
   bool mIsContextLost = false;
+  Atomic<bool> mPendingContextLoss;
+  webgl::ContextLossReason mPendingContextLossReason =
+      webgl::ContextLossReason::None;
   const uint32_t mMaxPerfWarnings;
   mutable uint64_t mNumPerfWarnings = 0;
   const uint32_t mMaxAcceptableFBStatusInvals;
@@ -529,6 +534,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
 
   void RunContextLossTimer();
   void CheckForContextLoss();
+  void HandlePendingContextLoss();
 
   bool TryToRestoreContext();
 
@@ -544,7 +550,13 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   void GetContextAttributes(dom::Nullable<dom::WebGLContextAttributes>& retval);
 
   // This is the entrypoint. Don't test against it directly.
-  bool IsContextLost() const { return mIsContextLost; }
+  bool IsContextLost() const {
+    auto* self = const_cast<WebGLContext*>(this);
+    if (self->mPendingContextLoss.exchange(false)) {
+      self->HandlePendingContextLoss();
+    }
+    return mIsContextLost;
+  }
 
   // -
 
