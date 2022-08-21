@@ -321,7 +321,6 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/sanitizer_gn",
     "/third_party/libwebrtc/rtc_base/stringutils_gn",
     "/third_party/libwebrtc/rtc_base/synchronization/mutex_gn",
-    "/third_party/libwebrtc/rtc_base/synchronization/rw_lock_wrapper_gn",
     "/third_party/libwebrtc/rtc_base/synchronization/sequence_checker_gn",
     "/third_party/libwebrtc/rtc_base/synchronization/yield_gn",
     "/third_party/libwebrtc/rtc_base/synchronization/yield_policy_gn",
