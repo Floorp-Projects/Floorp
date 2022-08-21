@@ -202,7 +202,6 @@ DIRS += [
     "/third_party/libwebrtc/modules/audio_processing/agc2/cpu_features_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/fixed_digital_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/gain_applier_gn",
-    "/third_party/libwebrtc/modules/audio_processing/agc2/level_estimation_agc_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/noise_level_estimator_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/rnn_vad_auto_correlation_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/rnn_vad_common_gn",
