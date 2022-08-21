@@ -40,9 +40,11 @@ SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
+    "/third_party/libwebrtc/modules/rtp_rtcp/source/absolute_capture_time_interpolator.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/absolute_capture_time_receiver.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/absolute_capture_time_sender.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/active_decode_targets_helper.cc",
+    "/third_party/libwebrtc/modules/rtp_rtcp/source/capture_clock_offset_updater.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/create_video_rtp_depacketizer.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/dtmf_queue.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/fec_private_tables_bursty.cc",

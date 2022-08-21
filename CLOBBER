@@ -22,5 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Modified build files in third_party/libwebrtc - Bug 1766646 - (fix-fe2063ebc7) enable building third_party/libwebrtc/third_party/abseil-cpp/absl/functional:bind_front"
+Modified build files in third_party/libwebrtc - Bug 1766646 - Vendor libwebrtc from 63b3095d2b
 
