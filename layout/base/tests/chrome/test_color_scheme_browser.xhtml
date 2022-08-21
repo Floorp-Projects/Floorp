@@ -71,7 +71,7 @@
         let current = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         for (let id of ["dynamic-test", "light", "dark"]) {
           let expected = id == "dynamic-test" ? current : id;
-          await testElement(id, expected, current);
+          await testElement(id, expected, expected);
         }
       });
 
@@ -81,7 +81,7 @@
         for (let value of ["light", "dark"]) {
           await tick();
           dynamicTest.style.colorScheme = value;
-          await testElement("dynamic-test", value,  current);
+          await testElement("dynamic-test", value, value);
         }
         dynamicTest.style.colorScheme = "";
         await tick();

@@ -7693,6 +7693,13 @@
   mirror: always
   rust: true
 
+# This pref controls whether the `prefers-color-scheme` value of iframes images
+# reacts to the embedder `color-scheme` in content.
+- name: layout.css.iframe-embedder-prefers-color-scheme.content.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # The minimum contrast ratio between the accent color foreground and background
 # colors.
 #
