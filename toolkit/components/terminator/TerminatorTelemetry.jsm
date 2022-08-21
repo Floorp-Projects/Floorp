@@ -19,7 +19,24 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Timer.jsm"
 );
 
-function nsTerminatorTelemetry() {}
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "PromiseUtils",
+  "resource://gre/modules/PromiseUtils.jsm"
+);
+
+function nsTerminatorTelemetry() {
+  this._wasNotified = false;
+  this._deferred = lazy.PromiseUtils.defer();
+
+  IOUtils.sendTelemetry.addBlocker(
+    "TerminatoryTelemetry: Waiting to submit telemetry",
+    this._deferred.promise,
+    () => ({
+      wasNotified: this._wasNotified,
+    })
+  );
+}
 
 var HISTOGRAMS = {
   "quit-application": "SHUTDOWN_PHASE_DURATION_TICKS_QUIT_APPLICATION",
@@ -45,53 +62,59 @@ nsTerminatorTelemetry.prototype = {
   // nsIObserver
 
   observe: function DS_observe(aSubject, aTopic, aData) {
-    (async function() {
-      //
-      // This data is hardly critical, reading it can wait for a few seconds.
-      //
-      await new Promise(resolve => lazy.setTimeout(resolve, 3000));
+    this._wasNotified = true;
 
-      let PATH = PathUtils.join(
-        Services.dirsvc.get("ProfLD", Ci.nsIFile).path,
-        "ShutdownDuration.json"
-      );
-      let data;
+    (async () => {
       try {
-        data = await IOUtils.readJSON(PATH);
-      } catch (ex) {
-        if (DOMException.isInstance(ex) && ex.name == "NotFoundError") {
-          return;
-        }
-        // Let other errors be reported by Promise's error-reporting.
-        throw ex;
-      }
+        //
+        // This data is hardly critical, reading it can wait for a few seconds.
+        //
+        await new Promise(resolve => lazy.setTimeout(resolve, 3000));
 
-      // Clean up
-      await IOUtils.remove(PATH);
-      await IOUtils.remove(PATH + ".tmp");
-
-      for (let k of Object.keys(data)) {
-        let id = HISTOGRAMS[k];
+        let PATH = PathUtils.join(
+          Services.dirsvc.get("ProfLD", Ci.nsIFile).path,
+          "ShutdownDuration.json"
+        );
+        let data;
         try {
-          let histogram = Services.telemetry.getHistogramById(id);
-          if (!histogram) {
-            throw new Error("Unknown histogram " + id);
-          }
-
-          histogram.add(Number.parseInt(data[k]));
+          data = await IOUtils.readJSON(PATH);
         } catch (ex) {
-          // Make sure that the error is reported and causes test failures,
-          // but otherwise, ignore it.
-          Promise.reject(ex);
-          continue;
+          if (DOMException.isInstance(ex) && ex.name == "NotFoundError") {
+            return;
+          }
+          // Let other errors be reported by Promise's error-reporting.
+          throw ex;
         }
-      }
 
-      // Inform observers that we are done.
-      Services.obs.notifyObservers(
-        null,
-        "shutdown-terminator-telemetry-updated"
-      );
+        // Clean up
+        await IOUtils.remove(PATH);
+        await IOUtils.remove(PATH + ".tmp");
+
+        for (let k of Object.keys(data)) {
+          let id = HISTOGRAMS[k];
+          try {
+            let histogram = Services.telemetry.getHistogramById(id);
+            if (!histogram) {
+              throw new Error("Unknown histogram " + id);
+            }
+
+            histogram.add(Number.parseInt(data[k]));
+          } catch (ex) {
+            // Make sure that the error is reported and causes test failures,
+            // but otherwise, ignore it.
+            Promise.reject(ex);
+            continue;
+          }
+        }
+
+        // Inform observers that we are done.
+        Services.obs.notifyObservers(
+          null,
+          "shutdown-terminator-telemetry-updated"
+        );
+      } finally {
+        this._deferred.resolve();
+      }
     })();
   },
 };
