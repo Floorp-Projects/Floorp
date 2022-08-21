@@ -28,8 +28,8 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/features_extraction.cc",
-    "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/rnn.cc"
+    "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/pitch_search.cc",
+    "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/pitch_search_internal.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -208,4 +208,4 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["_GNU_SOURCE"] = True
 
-Library("rnn_vad_gn")
+Library("rnn_vad_pitch_gn")
