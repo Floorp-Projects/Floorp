@@ -240,11 +240,6 @@ if CONFIG["CPU_ARCH"] == "arm":
         "/third_party/libwebrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc"
     ]
 
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/screen_capturer_pipewire.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_capturer_pipewire.cc"
-    ]
-
 if CONFIG["CPU_ARCH"] == "ppc64":
 
     DEFINES["USE_X11"] = "1"
@@ -300,11 +295,6 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc"
     ]
 
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/screen_capturer_pipewire.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_capturer_pipewire.cc"
-    ]
-
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
     CXXFLAGS += [
@@ -319,11 +309,6 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc"
     ]
 
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/screen_capturer_pipewire.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_capturer_pipewire.cc"
-    ]
-
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
@@ -332,11 +317,6 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
 
     SOURCES += [
         "/third_party/libwebrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/screen_capturer_pipewire.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_capturer_pipewire.cc"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":

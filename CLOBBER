@@ -22,5 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Modified build files in third_party/libwebrtc - Bug 1766646 - (fix-01b3e24a83) fix build failures on Windows
+Modified build files in third_party/libwebrtc - Bug 1766646 - Vendor libwebrtc from 40c3ea5c71 (and c3c8129736, 14b036d436, 8d9d575920, e52cfab633, 96106719a9, 593b4d550d)
 
