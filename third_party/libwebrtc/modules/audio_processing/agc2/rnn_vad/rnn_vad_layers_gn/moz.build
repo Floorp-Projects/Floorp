@@ -28,7 +28,8 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/rnn_fc.cc"
+    "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/rnn_fc.cc",
+    "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/rnn_gru.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
