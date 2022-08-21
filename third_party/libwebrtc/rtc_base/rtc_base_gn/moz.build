@@ -41,8 +41,6 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/rtc_base/network_constants.cc",
     "/third_party/libwebrtc/rtc_base/network_route.cc",
     "/third_party/libwebrtc/rtc_base/null_socket_server.cc",
-    "/third_party/libwebrtc/rtc_base/openssl_certificate.cc",
-    "/third_party/libwebrtc/rtc_base/openssl_identity.cc",
     "/third_party/libwebrtc/rtc_base/physical_socket_server.cc",
     "/third_party/libwebrtc/rtc_base/socket_address.cc",
     "/third_party/libwebrtc/rtc_base/stream.cc",
