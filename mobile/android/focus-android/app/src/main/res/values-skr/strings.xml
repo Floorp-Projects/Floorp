@@ -59,8 +59,22 @@
 
     <string name="menu_rights">تہاݙے حقوق</string>
 
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">ٹریکر بلاک تھئے</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">ایں کوں بند کرݨ نال سائٹ دے کجھ مسئلے ٹھیک تھی سڳدن</string>
+
     <!-- Menu item: This is the label for turning off content blocking for the current website. -->
     <string name="menu_content_blocking">مواد روکݨ</string>
+
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">کجھ سائٹاں کوں ٹھیک کرݨ کیتے  بند کرو</string>
 
     <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
      See https://github.com/mozilla-mobile/focus-android/issues/2106
@@ -159,17 +173,32 @@
     <!-- Label for the button to quick add custom autocomplete URLs. -->
     <string name="custom_autocomplete_quick_add">کسٹم یوآرایل شامل کرو</string>
 
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">کوکیاں تے سائٹ ڈیٹا</string>
+
     <!-- Preference category for settings about data choices -->
     <string name="preference_category_data_choices">ڈیٹا چوائس</string>
 
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">من پسند یوآرایلاں ہٹاؤ</string>
+
     <!-- A link to SUMO at autocomplete settings. -->
     <string name="preference_autocomplete_learn_more">ٻیا سِکھو</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">شامل کرݨ کیتے یوآرایل</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">یوآرایل پیسٹ یا درج کرو</string>
 
     <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
     <string name="preference_autocomplete_add_example2">مثال دے طور تے: mozilla.org</string>
 
     <!-- To be removed once the new hint has been translated -->
     <string name="preference_autocomplete_add_example">مثال: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">نویں من پسند یوآرایل شامل تھی ڳئی۔</string>
 
     <!-- Menu item to remove existing autocomplete URLs. -->
     <string name="preference_autocomplete_menu_remove">ہٹاؤ</string>
@@ -184,11 +213,13 @@
 
     <string name="preference_category_privacy">رازداری</string>
 
+    <string name="preference_privacy_block_ads">اشتہار ٹریکر کوں بلاک کرو</string>
     <string name="preference_privacy_category_cookies">کوکیاں بلاک کرو</string>
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
     <string name="preference_privacy_should_block_cookies_no_option2">کو، شکریہ</string>
+    <string name="preference_privacy_should_block_cookies_cross_site_option">کراس سائٹ کوکیاں بلاک کرو</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">جیا سوہݨا</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
@@ -204,6 +235,8 @@
 
     <string name="preference_category_mozilla">موزلّا</string>
 
+    <string name="preference_mozilla_telemetry2">ورتیل ڈیٹا پٹھو</string>
+
     <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
     <string name="preference_mozilla_telemetry_summary">ٻیا سِکھو</string>
 
@@ -212,6 +245,9 @@
 
     <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
     <string name="preference_about">%1$s دے بارے</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">انسٹال تھئے ڳولݨ انجݨ</string>
 
     <!-- Header for the list of installed search engines -->
     <string name="preference_choose_search_engine">ڳولݨ انجݨ چݨو</string>
@@ -226,6 +262,10 @@
     <string name="preference_search_add3">ہک ٻیا ڳولݨ انجݨ شامل کرو</string>
     <!-- Explanation text above the list of search engines-->
     <string name="preference_select_preferred_engine">آپݨاں ترجیحی انجݨ چݨو:</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">ہوم سکریں گُر ݙکھاؤ</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">ڳولݨ انجݨ شامل کرو</string>
@@ -257,6 +297,11 @@
      history and go back to the home screen. -->
     <string name="content_description_erase">براؤزنگ تاریخ مٹاؤ</string>
 
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">%1$s ٹیب کھلے ہن</string>
+
     <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
      https pages.. -->
     <string name="content_description_lock">محفوظ کنکشن</string>
@@ -265,6 +310,10 @@
      loading a website -->
     <string name="accessibility_announcement_loading">لوڈ تھیندا پئے</string>
 
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">ویب سائٹ لوڈ تھی ڳئی</string>
+
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">ٻیاں آپشناں</string>
 
@@ -272,10 +321,34 @@
     on home screen-->
     <string name="indicator_content_description_menu">ٻیاں آپشناں بٹݨ</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">اڳوں تے ون٘ڄو</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">ویب سائٹ ولدا لوڈ کرو</string>
+
     <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
     <string name="content_description_back">واپس ون٘ڄو</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">ویب سائٹ لوڈ کرݨ بند کرو</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">پچھلی ایپ تے واپس ون٘ڄو</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">ٹریکراں کوں بلاک کرو</string>
+
     <string name="your_rights">تہاݙے حقوق</string>
+
+    <string name="external_app_prompt_title">لنک ہک ٻئی ایپ وچ کھولو</string>
+
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">نجی براؤزنگ وچوں نکلوں؟</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s مکمل تھیا</string>
 
     <!-- Snackbar action to immediately open the successfully downloaded file. -->
     <string name="download_snackbar_open">کھولو</string>
@@ -288,6 +361,18 @@
 
     <!-- Onboarding: Start browsing -->
     <string name="onboarding_start_browsing">براؤزنگ شروع کرو</string>
+
+    <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">آپݨی رازداری تکڑی کرو</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">تہاݙا ڳولݨ۔ تہاݙا راہ</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">آپݨی ہوم سکرین تے شارٹ کٹاں شامل کرو</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">رازداری کوں عادت بݨاؤ</string>
 
     <string name="firstrun_close_button">ٹھیک ہے، میکوں سمجھ آڳئی ہے!</string>
     <string name="firstrun_skip_button">چھوڑو</string>
@@ -469,6 +554,16 @@
      When pressed, the user's previous session is cleared, and authentication is not required. -->
     <string moz:removedIn="103" name="biometric_auth_new_session">نویں مجلس</string>
 
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">لنک نویں سیشن وچ کھولو</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">فنگر پرنٹ آئیکان</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">ڳولݨ تجویزاں ݙکھاؤں؟</string>
+
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">کو</string>
 
@@ -500,6 +595,11 @@
     <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
     <string name="preference_block_cookies_title">کوکیاں بلاک کرو</string>
 
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">بھلا تساں کوکیاں کوں بلاک کرݨ چاہندے ہو؟</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">ٹیب تباہ تھی ڳیا</string>
     <!-- Label for button to close the tab-->
     <string name="tab_crash_report_close_tab_button_label">ٹیب بند کرو</string>
 
@@ -508,9 +608,13 @@
 
     <!-- Tracking protection bottom sheet -->
 
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">ٹریکرز %s کنوں بلاک ہن۔</string>
     <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
     <string name="content">مواد</string>
 
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">اشتہار</string>
     <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
     <string name="social">سماجی</string>
     <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
@@ -525,6 +629,9 @@
     <string name="secure_connection">کنکشن محفوظ ہے۔</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="insecure_connection">کنکشن محفوظ کائنی۔</string>
+
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">بلاک کرݨ کیتے ٹریکر تے سکرپٹ</string>
 
     <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
     <string name="go_back">واپس ون٘ڄو</string>
