@@ -22,12 +22,15 @@ FINAL_LIBRARY = "webrtc"
 LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
+    "/media/libyuv/",
+    "/media/libyuv/libyuv/include/",
     "/third_party/libwebrtc/",
     "/third_party/libwebrtc/third_party/abseil-cpp/",
     "/tools/profiler/public"
 ]
 
 UNIFIED_SOURCES += [
+    "/third_party/libwebrtc/api/video/i420_buffer.cc",
     "/third_party/libwebrtc/api/video/video_frame.cc",
     "/third_party/libwebrtc/api/video/video_frame_buffer.cc",
     "/third_party/libwebrtc/api/video/video_source_interface.cc"
