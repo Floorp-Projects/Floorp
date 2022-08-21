@@ -374,6 +374,7 @@ DIRS += [
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/container/flat_hash_map_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/container/inlined_vector_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/container/inlined_vector_internal_gn",
+    "/third_party/libwebrtc/third_party/abseil-cpp/absl/functional/bind_front_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/memory/memory_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/meta/type_traits_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/numeric/int128_gn",
