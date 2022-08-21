@@ -52,6 +52,7 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/rtp_rtcp/source/forward_error_correction.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/forward_error_correction_internal.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/packet_loss_stats.cc",
+    "/third_party/libwebrtc/modules/rtp_rtcp/source/packet_sequencer.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/receive_statistics_impl.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/remote_ntp_time_estimator.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtcp_nack_stats.cc",
