@@ -446,10 +446,10 @@
     <string name="wallpaper_updated_snackbar_action">ดู</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">เปลี่ยนวอลเปเปอร์โดยแตะโลโก้หน้าแรกของ Firefox</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">เปลี่ยนวอลเปเปอร์โดยแตะโลโก้หน้าแรกของ Firefox</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">โลโก้ Firefox - เปลี่ยนวอลเปเปอร์, ปุ่ม</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">โลโก้ Firefox - เปลี่ยนวอลเปเปอร์, ปุ่ม</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -622,9 +622,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">เส้นตาราง</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">ค้นหากลุ่ม</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">ค้นหากลุ่ม</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">จัดกลุ่มเว็บไซต์ที่เกี่ยวข้องกัน</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">จัดกลุ่มเว็บไซต์ที่เกี่ยวข้องกัน</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">ปิดแท็บ</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -783,12 +783,17 @@
     <string name="history_empty_message">ไม่มีประวัติที่นี่</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">ซิงค์จากอุปกรณ์อื่น</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">ซิงค์จากอุปกรณ์อื่น</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">จากอุปกรณ์อื่นๆ</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">จากอุปกรณ์อื่นๆ</string>
 
+    <!-- The synced history sign in dialog message -->
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">ลงชื่อเข้าเพื่อดูประวัติที่ซิงค์จากอุปกรณ์อื่น ๆ ของคุณ</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">ลงชื่อเข้า</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">ลงชื่อเข้า</string>
+
+    <!-- The synced history sign in dialog create a new account link -->
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>หรือสร้างบัญชี Firefox เพื่อเริ่มซิงค์</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1157,6 +1162,8 @@
     <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">การดำเนินการนี้จะเป็นการลบข้อมูลการเรียกดูทั้งหมดของคุณ</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">ช่วงเวลาที่จะลบ</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">ลบประวัติ (รวมถึงประวัติที่ซิงค์จากอุปกรณ์อื่น) คุกกี้ และข้อมูลการเรียกดูอื่น ๆ</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">ชั่วโมงที่แล้ว</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
@@ -1533,6 +1540,9 @@
     <string name="preferences_addresses_manage_addresses">จัดการที่อยู่</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">บันทึกและป้อนที่อยู่อัตโนมัติ</string>
+
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">รวมข้อมูลเช่นหมายเลข อีเมล และที่อยู่ในการจัดส่ง</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">เพิ่มบัตร</string>
