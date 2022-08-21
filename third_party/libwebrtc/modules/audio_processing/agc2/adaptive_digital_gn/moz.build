@@ -32,7 +32,8 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/audio_processing/agc2/adaptive_agc.cc",
     "/third_party/libwebrtc/modules/audio_processing/agc2/adaptive_digital_gain_applier.cc",
     "/third_party/libwebrtc/modules/audio_processing/agc2/adaptive_mode_level_estimator.cc",
-    "/third_party/libwebrtc/modules/audio_processing/agc2/saturation_protector.cc"
+    "/third_party/libwebrtc/modules/audio_processing/agc2/saturation_protector.cc",
+    "/third_party/libwebrtc/modules/audio_processing/agc2/saturation_protector_buffer.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
