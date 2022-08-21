@@ -413,7 +413,8 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "/third_party/libwebrtc/modules/audio_coding/isac_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_generic_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
-        "/third_party/libwebrtc/modules/desktop_capture/primitives_gn"
+        "/third_party/libwebrtc/modules/desktop_capture/primitives_gn",
+        "/third_party/libwebrtc/rtc_base/win32_gn"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":
