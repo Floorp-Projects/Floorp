@@ -213,6 +213,7 @@ DIRS += [
     "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/rnn_vad_sequence_buffer_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/rnn_vad_spectral_features_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/rnn_vad_symmetric_matrix_buffer_gn",
+    "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/vector_math_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad_with_level_gn",
     "/third_party/libwebrtc/modules/audio_processing/api_gn",
     "/third_party/libwebrtc/modules/audio_processing/apm_logging_gn",
@@ -462,6 +463,7 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
         "/third_party/libwebrtc/modules/audio_coding/isac_c_gn",
         "/third_party/libwebrtc/modules/audio_coding/isac_gn",
         "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_avx2_gn",
+        "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/vector_math_avx2_gn",
         "/third_party/libwebrtc/modules/video_processing/video_processing_sse2_gn"
     ]
 
@@ -475,6 +477,7 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
         "/third_party/libwebrtc/modules/audio_coding/isac_c_gn",
         "/third_party/libwebrtc/modules/audio_coding/isac_gn",
         "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_avx2_gn",
+        "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/vector_math_avx2_gn",
         "/third_party/libwebrtc/modules/video_processing/video_processing_sse2_gn"
     ]
 
@@ -492,6 +495,7 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Darwin":
         "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
         "/third_party/libwebrtc/common_audio/common_audio_sse2_gn",
         "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_avx2_gn",
+        "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/vector_math_avx2_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
         "/third_party/libwebrtc/modules/video_processing/video_processing_sse2_gn"
     ]
@@ -549,6 +553,7 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/modules/audio_coding/isac_c_gn",
         "/third_party/libwebrtc/modules/audio_coding/isac_gn",
         "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_avx2_gn",
+        "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/vector_math_avx2_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_generic_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
@@ -566,6 +571,7 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/modules/audio_coding/isac_c_gn",
         "/third_party/libwebrtc/modules/audio_coding/isac_gn",
         "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_avx2_gn",
+        "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/vector_math_avx2_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_generic_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
@@ -587,6 +593,7 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "OpenBSD":
         "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
         "/third_party/libwebrtc/common_audio/common_audio_sse2_gn",
         "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_avx2_gn",
+        "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/vector_math_avx2_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
         "/third_party/libwebrtc/modules/video_processing/video_processing_sse2_gn"
     ]
@@ -605,6 +612,7 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "WINNT":
         "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
         "/third_party/libwebrtc/common_audio/common_audio_sse2_gn",
         "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_avx2_gn",
+        "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/vector_math_avx2_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
         "/third_party/libwebrtc/modules/video_processing/video_processing_sse2_gn"
     ]
@@ -615,6 +623,7 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "WINNT":
         "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
         "/third_party/libwebrtc/common_audio/common_audio_sse2_gn",
         "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_avx2_gn",
+        "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/vector_math_avx2_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
         "/third_party/libwebrtc/modules/video_processing/video_processing_sse2_gn"
     ]
