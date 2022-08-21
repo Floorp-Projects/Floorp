@@ -37,6 +37,7 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/desktop_capture/cropped_desktop_frame.cc",
     "/third_party/libwebrtc/modules/desktop_capture/cropping_window_capturer.cc",
     "/third_party/libwebrtc/modules/desktop_capture/desktop_and_cursor_composer.cc",
+    "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_metrics_helper.cc",
     "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_options.cc",
     "/third_party/libwebrtc/modules/desktop_capture/desktop_capturer.cc",
     "/third_party/libwebrtc/modules/desktop_capture/desktop_capturer_differ_wrapper.cc",
