@@ -89,6 +89,7 @@ DIRS += [
     "/third_party/libwebrtc/api/video/video_codec_constants_gn",
     "/third_party/libwebrtc/api/video/video_frame_gn",
     "/third_party/libwebrtc/api/video/video_frame_i010_gn",
+    "/third_party/libwebrtc/api/video/video_frame_i420_gn",
     "/third_party/libwebrtc/api/video/video_frame_metadata_gn",
     "/third_party/libwebrtc/api/video/video_frame_nv12_gn",
     "/third_party/libwebrtc/api/video/video_frame_type_gn",
