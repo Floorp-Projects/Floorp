@@ -199,6 +199,7 @@ DIRS += [
     "/third_party/libwebrtc/modules/audio_processing/agc2/adaptive_digital_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/biquad_filter_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/common_gn",
+    "/third_party/libwebrtc/modules/audio_processing/agc2/cpu_features_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/fixed_digital_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/gain_applier_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/level_estimation_agc_gn",
