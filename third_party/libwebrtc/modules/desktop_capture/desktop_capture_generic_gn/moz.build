@@ -115,7 +115,6 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
     DEFINES["WEBRTC_BSD"] = True
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_POSIX"] = True
-    DEFINES["WEBRTC_USE_PIPEWIRE"] = True
     DEFINES["WEBRTC_USE_X11"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
     DEFINES["_LARGEFILE64_SOURCE"] = True
@@ -134,16 +133,10 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
         "Xtst"
     ]
 
-    SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc"
-    ]
-
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/modules/desktop_capture/linux/mouse_cursor_monitor_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/screen_capturer_pipewire.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/screen_capturer_x11.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/shared_x_display.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_capturer_pipewire.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/window_capturer_x11.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/window_finder_x11.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/window_list_utils.cc",
