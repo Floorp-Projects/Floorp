@@ -41,10 +41,6 @@
       set: [
         ["dom.w3c_pointer_events.dispatch_by_pointer_messages", true],
         ["dom.w3c_pointer_events.scroll_by_pen.enabled", true],
-        // Run the font loader task eagerly for more predictable behavior,
-        // see bug 1672141.
-        ["gfx.font_loader.delay", 0],
-        ["gfx.font_loader.interval", 0],
       ],
     });
 
