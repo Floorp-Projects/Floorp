@@ -48,7 +48,6 @@ LOCAL_INCLUDES += [
 UNIFIED_SOURCES += [
     "/third_party/libwebrtc/sdk/objc/base/RTCEncodedImage.m",
     "/third_party/libwebrtc/sdk/objc/base/RTCLogging.mm",
-    "/third_party/libwebrtc/sdk/objc/base/RTCRtpFragmentationHeader.m",
     "/third_party/libwebrtc/sdk/objc/base/RTCVideoCapturer.m",
     "/third_party/libwebrtc/sdk/objc/base/RTCVideoCodecInfo.m",
     "/third_party/libwebrtc/sdk/objc/base/RTCVideoEncoderQpThresholds.m",
