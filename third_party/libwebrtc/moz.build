@@ -336,7 +336,6 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/socket_server_gn",
     "/third_party/libwebrtc/rtc_base/stringutils_gn",
     "/third_party/libwebrtc/rtc_base/synchronization/mutex_gn",
-    "/third_party/libwebrtc/rtc_base/synchronization/sequence_checker_gn",
     "/third_party/libwebrtc/rtc_base/synchronization/sequence_checker_internal_gn",
     "/third_party/libwebrtc/rtc_base/synchronization/yield_gn",
     "/third_party/libwebrtc/rtc_base/synchronization/yield_policy_gn",
