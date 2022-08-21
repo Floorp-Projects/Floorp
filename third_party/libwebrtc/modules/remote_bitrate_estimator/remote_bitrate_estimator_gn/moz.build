@@ -38,6 +38,7 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/remote_bitrate_estimator/inter_arrival.cc",
     "/third_party/libwebrtc/modules/remote_bitrate_estimator/overuse_detector.cc",
     "/third_party/libwebrtc/modules/remote_bitrate_estimator/overuse_estimator.cc",
+    "/third_party/libwebrtc/modules/remote_bitrate_estimator/packet_arrival_map.cc",
     "/third_party/libwebrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_abs_send_time.cc",
     "/third_party/libwebrtc/modules/remote_bitrate_estimator/remote_estimator_proxy.cc"
 ]
