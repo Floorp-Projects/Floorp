@@ -94,7 +94,6 @@ DIRS += [
     "/third_party/libwebrtc/api/video/video_frame_type_gn",
     "/third_party/libwebrtc/api/video/video_layers_allocation_gn",
     "/third_party/libwebrtc/api/video/video_rtp_headers_gn",
-    "/third_party/libwebrtc/api/video/video_stream_encoder_create_gn",
     "/third_party/libwebrtc/api/video/video_stream_encoder_gn",
     "/third_party/libwebrtc/api/video_codecs/bitstream_parser_api_gn",
     "/third_party/libwebrtc/api/video_codecs/builtin_video_decoder_factory_gn",
