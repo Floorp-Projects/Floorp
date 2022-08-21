@@ -218,7 +218,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "/third_party/libwebrtc/modules/desktop_capture/win/selected_window_context.cc",
         "/third_party/libwebrtc/modules/desktop_capture/win/window_capture_utils.cc",
         "/third_party/libwebrtc/modules/desktop_capture/win/window_capturer_win_gdi.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/win/window_capturer_win_wgc.cc",
         "/third_party/libwebrtc/modules/desktop_capture/window_capturer_win.cc",
         "/third_party/libwebrtc/modules/desktop_capture/window_finder_win.cc"
     ]
