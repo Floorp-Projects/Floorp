@@ -41,15 +41,12 @@
 #include "gfxUtils.h"
 #include "IPDLActor.h"
 
-#ifdef MOZ_ENABLE_D3D10_LAYER
-#  include "../d3d11/CompositorD3D11.h"
-#endif
-
 #ifdef XP_MACOSX
 #  include "../opengl/MacIOSurfaceTextureHostOGL.h"
 #endif
 
 #ifdef XP_WIN
+#  include "../d3d11/CompositorD3D11.h"
 #  include "mozilla/layers/TextureD3D11.h"
 #  ifdef MOZ_WMF_MEDIA_ENGINE
 #    include "mozilla/layers/DcompSurfaceImage.h"
