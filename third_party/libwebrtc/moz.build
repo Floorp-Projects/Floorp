@@ -222,6 +222,7 @@ DIRS += [
     "/third_party/libwebrtc/modules/audio_processing/audio_frame_view_gn",
     "/third_party/libwebrtc/modules/audio_processing/audio_processing_gn",
     "/third_party/libwebrtc/modules/audio_processing/audio_processing_statistics_gn",
+    "/third_party/libwebrtc/modules/audio_processing/capture_levels_adjuster/capture_levels_adjuster_gn",
     "/third_party/libwebrtc/modules/audio_processing/config_gn",
     "/third_party/libwebrtc/modules/audio_processing/high_pass_filter_gn",
     "/third_party/libwebrtc/modules/audio_processing/ns/ns_gn",
