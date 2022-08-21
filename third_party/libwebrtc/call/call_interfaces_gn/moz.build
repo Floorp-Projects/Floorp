@@ -31,6 +31,7 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/call/audio_receive_stream.cc",
     "/third_party/libwebrtc/call/audio_send_stream_call.cc",
     "/third_party/libwebrtc/call/audio_state.cc",
+    "/third_party/libwebrtc/call/call_basic_stats.cc",
     "/third_party/libwebrtc/call/call_config.cc",
     "/third_party/libwebrtc/call/flexfec_receive_stream.cc",
     "/third_party/libwebrtc/call/syncable.cc"
