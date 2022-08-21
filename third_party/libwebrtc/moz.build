@@ -266,6 +266,7 @@ DIRS += [
     "/third_party/libwebrtc/modules/video_coding/encoded_frame_gn",
     "/third_party/libwebrtc/modules/video_coding/frame_dependencies_calculator_gn",
     "/third_party/libwebrtc/modules/video_coding/nack_module_gn",
+    "/third_party/libwebrtc/modules/video_coding/svc/scalability_structures_gn",
     "/third_party/libwebrtc/modules/video_coding/svc/scalable_video_controller_gn",
     "/third_party/libwebrtc/modules/video_coding/video_codec_interface_gn",
     "/third_party/libwebrtc/modules/video_coding/video_coding_gn",
