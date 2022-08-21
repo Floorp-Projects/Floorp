@@ -32,6 +32,7 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/video/adaptation/bitrate_constraint.cc",
     "/third_party/libwebrtc/video/adaptation/encode_usage_resource.cc",
     "/third_party/libwebrtc/video/adaptation/overuse_frame_detector.cc",
+    "/third_party/libwebrtc/video/adaptation/pixel_limit_resource.cc",
     "/third_party/libwebrtc/video/adaptation/quality_rampup_experiment_helper.cc",
     "/third_party/libwebrtc/video/adaptation/quality_scaler_resource.cc",
     "/third_party/libwebrtc/video/adaptation/video_stream_encoder_resource.cc",
