@@ -116,6 +116,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["NOMINMAX"] = True
     DEFINES["NTDDI_VERSION"] = "0x0A000000"
     DEFINES["PSAPI_VERSION"] = "2"
+    DEFINES["RTC_ENABLE_WIN_WGC"] = True
     DEFINES["UNICODE"] = True
     DEFINES["USE_AURA"] = "1"
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
@@ -146,6 +147,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
     ]
 
     UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/rtc_base/win/create_direct3d_device.cc",
         "/third_party/libwebrtc/rtc_base/win/get_activation_factory.cc",
         "/third_party/libwebrtc/rtc_base/win/scoped_com_initializer.cc",
         "/third_party/libwebrtc/rtc_base/win/windows_version.cc"
