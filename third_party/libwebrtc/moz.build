@@ -355,7 +355,6 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/task_utils/to_queued_task_gn",
     "/third_party/libwebrtc/rtc_base/third_party/base64/base64_gn",
     "/third_party/libwebrtc/rtc_base/third_party/sigslot/sigslot_gn",
-    "/third_party/libwebrtc/rtc_base/thread_checker_gn",
     "/third_party/libwebrtc/rtc_base/threading_gn",
     "/third_party/libwebrtc/rtc_base/time/timestamp_extrapolator_gn",
     "/third_party/libwebrtc/rtc_base/timeutils_gn",
