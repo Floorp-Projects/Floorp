@@ -116,6 +116,7 @@ DIRS += [
     "/third_party/libwebrtc/call/rtp_sender_gn",
     "/third_party/libwebrtc/call/simulated_network_gn",
     "/third_party/libwebrtc/call/simulated_packet_receiver_gn",
+    "/third_party/libwebrtc/call/version_gn",
     "/third_party/libwebrtc/call/video_stream_api_gn",
     "/third_party/libwebrtc/common_audio/common_audio_c_arm_asm_gn",
     "/third_party/libwebrtc/common_audio/common_audio_c_gn",
