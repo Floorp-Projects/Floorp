@@ -2030,6 +2030,15 @@ void Element::UnbindFromTree(bool aNullParent) {
         nsContentUtils::UnregisterUnresolvedElement(this);
       }
     }
+
+    if (HasLastRememberedBSize() || HasLastRememberedISize()) {
+      // Need to remove the last remembered size at the next ResizeObserver
+      // opportunity, so observe the element. But if already observed, we still
+      // want the callback to be invoked even if the size was already 0x0, so
+      // unobserve it first.
+      document->UnobserveForLastRememberedSize(*this);
+      document->ObserveForLastRememberedSize(*this);
+    }
   }
 
   // This has to be here, rather than in nsGenericHTMLElement::UnbindFromTree,

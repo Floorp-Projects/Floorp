@@ -4962,6 +4962,15 @@ class nsIFrame : public nsQueryFrame {
    */
   inline void PropagateWritingModeToSelfAndAncestors(mozilla::WritingMode aWM);
 
+  /**
+   * Observes or unobserves the element with an internal ResizeObserver,
+   * depending on whether it needs to update its last remembered size.
+   * Also removes a previously stored last remembered size if the element
+   * can no longer have it.
+   * @see {@link https://drafts.csswg.org/css-sizing-4/#last-remembered}
+   */
+  void HandleLastRememberedSize();
+
  protected:
   static void DestroyAnonymousContent(nsPresContext* aPresContext,
                                       already_AddRefed<nsIContent>&& aContent);
