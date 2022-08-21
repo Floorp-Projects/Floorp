@@ -277,6 +277,7 @@ DIRS += [
     "/third_party/libwebrtc/modules/video_coding/video_coding_gn",
     "/third_party/libwebrtc/modules/video_coding/video_coding_utility_gn",
     "/third_party/libwebrtc/modules/video_coding/webrtc_h264_gn",
+    "/third_party/libwebrtc/modules/video_coding/webrtc_libvpx_interface_gn",
     "/third_party/libwebrtc/modules/video_coding/webrtc_multiplex_gn",
     "/third_party/libwebrtc/modules/video_coding/webrtc_vp8_gn",
     "/third_party/libwebrtc/modules/video_coding/webrtc_vp8_temporal_layers_gn",
