@@ -327,7 +327,6 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/system/file_wrapper_gn",
     "/third_party/libwebrtc/rtc_base/system/ignore_warnings_gn",
     "/third_party/libwebrtc/rtc_base/system/inline_gn",
-    "/third_party/libwebrtc/rtc_base/system/no_unique_address_gn",
     "/third_party/libwebrtc/rtc_base/system/rtc_export_gn",
     "/third_party/libwebrtc/rtc_base/system/thread_registry_gn",
     "/third_party/libwebrtc/rtc_base/system/unused_gn",
