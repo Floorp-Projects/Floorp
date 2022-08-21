@@ -28,14 +28,14 @@ LOCAL_INCLUDES += [
 ]
 
 SOURCES += [
-    "/third_party/libwebrtc/modules/video_coding/svc/scalability_structure_key_svc.cc",
-    "/third_party/libwebrtc/modules/video_coding/svc/scalability_structure_s2t1.cc"
+    "/third_party/libwebrtc/modules/video_coding/svc/scalability_structure_key_svc.cc"
 ]
 
 UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/video_coding/svc/create_scalability_structure.cc",
     "/third_party/libwebrtc/modules/video_coding/svc/scalability_structure_full_svc.cc",
-    "/third_party/libwebrtc/modules/video_coding/svc/scalability_structure_l2t2_key_shift.cc"
+    "/third_party/libwebrtc/modules/video_coding/svc/scalability_structure_l2t2_key_shift.cc",
+    "/third_party/libwebrtc/modules/video_coding/svc/scalability_structure_simulcast.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
