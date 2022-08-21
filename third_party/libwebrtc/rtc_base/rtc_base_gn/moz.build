@@ -28,13 +28,23 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
+    "/third_party/libwebrtc/rtc_base/async_resolver_interface.cc",
+    "/third_party/libwebrtc/rtc_base/async_socket.cc",
     "/third_party/libwebrtc/rtc_base/crc32.cc",
     "/third_party/libwebrtc/rtc_base/crypt_string.cc",
     "/third_party/libwebrtc/rtc_base/data_rate_limiter.cc",
     "/third_party/libwebrtc/rtc_base/file_rotating_stream.cc",
+    "/third_party/libwebrtc/rtc_base/ip_address.cc",
     "/third_party/libwebrtc/rtc_base/log_sinks.cc",
+    "/third_party/libwebrtc/rtc_base/message_handler.cc",
+    "/third_party/libwebrtc/rtc_base/net_helpers.cc",
+    "/third_party/libwebrtc/rtc_base/network_constants.cc",
     "/third_party/libwebrtc/rtc_base/network_route.cc",
-    "/third_party/libwebrtc/rtc_base/stream.cc"
+    "/third_party/libwebrtc/rtc_base/null_socket_server.cc",
+    "/third_party/libwebrtc/rtc_base/physical_socket_server.cc",
+    "/third_party/libwebrtc/rtc_base/socket_address.cc",
+    "/third_party/libwebrtc/rtc_base/stream.cc",
+    "/third_party/libwebrtc/rtc_base/thread.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -67,6 +77,7 @@ if CONFIG["OS_TARGET"] == "Android":
     ]
 
     UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/rtc_base/ifaddrs_android.cc",
         "/third_party/libwebrtc/rtc_base/ifaddrs_converter.cc"
     ]
 

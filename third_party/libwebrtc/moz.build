@@ -285,8 +285,6 @@ DIRS += [
     "/third_party/libwebrtc/modules/video_coding/webrtc_vp9_helpers_gn",
     "/third_party/libwebrtc/modules/video_processing/denoiser_filter_gn",
     "/third_party/libwebrtc/modules/video_processing/video_processing_gn",
-    "/third_party/libwebrtc/rtc_base/async_resolver_interface_gn",
-    "/third_party/libwebrtc/rtc_base/async_socket_gn",
     "/third_party/libwebrtc/rtc_base/atomicops_gn",
     "/third_party/libwebrtc/rtc_base/audio_format_to_string_gn",
     "/third_party/libwebrtc/rtc_base/checks_gn",
@@ -309,14 +307,10 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/experiments/stable_target_rate_experiment_gn",
     "/third_party/libwebrtc/rtc_base/gtest_prod_gn",
     "/third_party/libwebrtc/rtc_base/ignore_wundef_gn",
-    "/third_party/libwebrtc/rtc_base/ip_address_gn",
     "/third_party/libwebrtc/rtc_base/logging_gn",
     "/third_party/libwebrtc/rtc_base/macromagic_gn",
     "/third_party/libwebrtc/rtc_base/memory/aligned_malloc_gn",
-    "/third_party/libwebrtc/rtc_base/net_helpers_gn",
     "/third_party/libwebrtc/rtc_base/network/sent_packet_gn",
-    "/third_party/libwebrtc/rtc_base/network_constants_gn",
-    "/third_party/libwebrtc/rtc_base/null_socket_server_gn",
     "/third_party/libwebrtc/rtc_base/platform_thread_gn",
     "/third_party/libwebrtc/rtc_base/platform_thread_types_gn",
     "/third_party/libwebrtc/rtc_base/protobuf_utils_gn",
@@ -331,10 +325,6 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/safe_conversions_gn",
     "/third_party/libwebrtc/rtc_base/safe_minmax_gn",
     "/third_party/libwebrtc/rtc_base/sanitizer_gn",
-    "/third_party/libwebrtc/rtc_base/socket_address_gn",
-    "/third_party/libwebrtc/rtc_base/socket_factory_gn",
-    "/third_party/libwebrtc/rtc_base/socket_gn",
-    "/third_party/libwebrtc/rtc_base/socket_server_gn",
     "/third_party/libwebrtc/rtc_base/stringutils_gn",
     "/third_party/libwebrtc/rtc_base/synchronization/mutex_gn",
     "/third_party/libwebrtc/rtc_base/synchronization/sequence_checker_gn",
@@ -355,7 +345,6 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/third_party/base64/base64_gn",
     "/third_party/libwebrtc/rtc_base/third_party/sigslot/sigslot_gn",
     "/third_party/libwebrtc/rtc_base/thread_checker_gn",
-    "/third_party/libwebrtc/rtc_base/threading_gn",
     "/third_party/libwebrtc/rtc_base/time/timestamp_extrapolator_gn",
     "/third_party/libwebrtc/rtc_base/timeutils_gn",
     "/third_party/libwebrtc/rtc_base/type_traits_gn",
@@ -396,12 +385,6 @@ DIRS += [
     "/third_party/libwebrtc/video/video_stream_encoder_impl_gn",
     "/third_party/libwebrtc/webrtc_gn"
 ]
-
-if CONFIG["OS_TARGET"] == "Android":
-
-    DIRS += [
-        "/third_party/libwebrtc/rtc_base/ifaddrs_android_gn"
-    ]
 
 if CONFIG["OS_TARGET"] == "Darwin":
 
