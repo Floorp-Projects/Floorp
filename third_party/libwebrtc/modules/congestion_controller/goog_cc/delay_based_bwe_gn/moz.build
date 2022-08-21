@@ -29,8 +29,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/modules/congestion_controller/goog_cc/delay_based_bwe.cc",
-    "/third_party/libwebrtc/modules/congestion_controller/goog_cc/inter_arrival_delta.cc"
+    "/third_party/libwebrtc/modules/congestion_controller/goog_cc/delay_based_bwe.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
