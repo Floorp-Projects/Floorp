@@ -63,6 +63,7 @@ DIRS += [
     "/third_party/libwebrtc/api/rtp_parameters_gn",
     "/third_party/libwebrtc/api/rtp_transceiver_direction_gn",
     "/third_party/libwebrtc/api/scoped_refptr_gn",
+    "/third_party/libwebrtc/api/sequence_checker_gn",
     "/third_party/libwebrtc/api/simulated_network_api_gn",
     "/third_party/libwebrtc/api/task_queue/task_queue_gn",
     "/third_party/libwebrtc/api/transport/bitrate_settings_gn",
