@@ -28,6 +28,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
+    "/third_party/libwebrtc/api/video_codecs/h264_profile_level_id.cc",
     "/third_party/libwebrtc/api/video_codecs/sdp_video_format.cc",
     "/third_party/libwebrtc/api/video_codecs/spatial_layer.cc",
     "/third_party/libwebrtc/api/video_codecs/video_codec.cc",
@@ -36,7 +37,8 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/api/video_codecs/video_encoder.cc",
     "/third_party/libwebrtc/api/video_codecs/video_encoder_config.cc",
     "/third_party/libwebrtc/api/video_codecs/vp8_frame_config.cc",
-    "/third_party/libwebrtc/api/video_codecs/vp8_temporal_layers.cc"
+    "/third_party/libwebrtc/api/video_codecs/vp8_temporal_layers.cc",
+    "/third_party/libwebrtc/api/video_codecs/vp9_profile.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
