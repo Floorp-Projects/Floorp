@@ -290,7 +290,6 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/checks_gn",
     "/third_party/libwebrtc/rtc_base/compile_assert_c_gn",
     "/third_party/libwebrtc/rtc_base/criticalsection_gn",
-    "/third_party/libwebrtc/rtc_base/deprecation_gn",
     "/third_party/libwebrtc/rtc_base/divide_round_gn",
     "/third_party/libwebrtc/rtc_base/experiments/alr_experiment_gn",
     "/third_party/libwebrtc/rtc_base/experiments/balanced_degradation_settings_gn",
