@@ -29,7 +29,8 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/modules/congestion_controller/receive_side_congestion_controller.cc"
+    "/third_party/libwebrtc/modules/congestion_controller/receive_side_congestion_controller.cc",
+    "/third_party/libwebrtc/modules/congestion_controller/remb_throttler.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
