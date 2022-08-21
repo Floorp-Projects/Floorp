@@ -446,7 +446,11 @@ export class SearchOneOffs {
     headerText.id = this.telemetryOrigin + "-one-offs-header-label";
     this.buttons.setAttribute("aria-labelledby", headerText.id);
 
-    let hideOneOffs = await this.willHide();
+    // For the search-bar, always show the one-off buttons where there is an
+    // option to add an engine.
+    let addEngineNeeded =
+      this.hasAttribute("is_searchbar") && addEngines.length;
+    let hideOneOffs = (await this.willHide()) && !addEngineNeeded;
 
     // The _engineInfo cache is used by more consumers, thus it is not a good
     // representation of whether this method already updated the one-off buttons
