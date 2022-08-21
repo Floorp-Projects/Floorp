@@ -17,8 +17,8 @@ fuzzy-if(winWidget,0-1,0-1) == multicolor-image-2.html multicolor-image-2-ref.ht
 != different-h-v-2.html different-h-v-ref.html
 != different-h-v-1.html different-h-v-2.html
 == center-scaling-1.html center-scaling-1-ref.html
-== center-scaling-2.html center-scaling-2-ref.html # Android: very different scaling (blurriness) on some sides
-== center-scaling-3.html center-scaling-3-ref.html # Android: very different scaling (blurriness) on some sides
+fuzzy-if(useDrawSnapshot,35-35,4050-4050) == center-scaling-2.html center-scaling-2-ref.html # Android: very different scaling (blurriness) on some sides
+fuzzy-if(useDrawSnapshot,35-35,5220-5220) == center-scaling-3.html center-scaling-3-ref.html # Android: very different scaling (blurriness) on some sides
 == center-scaling-4t.html center-scaling-4t-ref.html
 == center-scaling-4r.html center-scaling-4r-ref.html
 == center-scaling-4b.html center-scaling-4b-ref.html

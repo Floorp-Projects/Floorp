@@ -23,7 +23,8 @@ fuzzy-if(d2d,0-255,0-24) fuzzy-if(!useDrawSnapshot,255-255,50-115) == element-pa
 # For the rest: -ref the scrollframe is active and layerized differently with APZ.
 fuzzy(0-24,0-106) fuzzy-if(winWidget&&!layersGPUAccelerated,149-149,1203-1203) fuzzy-if(!useDrawSnapshot&&!nativeThemePref,1-48,5-68) fuzzy-if(winWidget,47-222,1197-1588) fuzzy-if(Android,0-40,0-81) == element-paint-native-widget.html element-paint-native-widget-ref.html
 
-fails-if(usesRepeatResampling&&!winWidget) == element-paint-subimage-sampling-restriction.html about:blank
+# This fails with CreateSamplingRestrictedDrawable removed
+fails-if(!Android&&!useDrawSnapshot) == element-paint-subimage-sampling-restriction.html about:blank
 == element-paint-clippath.html element-paint-clippath-ref.html
 fuzzy-if(!useDrawSnapshot,1-1,128-128) fuzzy-if(d2d,47-47,650-652) fuzzy-if(!useDrawSnapshot,36-39,704-738) == element-paint-sharpness-01a.html element-paint-sharpness-01b.html
 fuzzy(0-1,0-326) fails-if(useDrawSnapshot) == element-paint-sharpness-01b.html element-paint-sharpness-01c.html
