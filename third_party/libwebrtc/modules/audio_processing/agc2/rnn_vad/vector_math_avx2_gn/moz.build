@@ -9,6 +9,11 @@
 COMPILE_FLAGS["OS_INCLUDES"] = []
 AllowCompilerWarnings()
 
+CXXFLAGS += [
+    "-mavx2",
+    "-mfma"
+]
+
 DEFINES["ABSL_ALLOCATOR_NOTHROW"] = "1"
 DEFINES["RTC_ENABLE_VP9"] = True
 DEFINES["WEBRTC_ENABLE_AVX2"] = True
@@ -44,11 +49,6 @@ if CONFIG["MOZ_DEBUG"] == "1":
 
 if CONFIG["OS_TARGET"] == "Android":
 
-    CXXFLAGS += [
-        "-mavx2",
-        "-mfma"
-    ]
-
     DEFINES["ANDROID"] = True
     DEFINES["ANDROID_NDK_VERSION_ROLL"] = "r20_1"
     DEFINES["HAVE_SYS_UIO_H"] = True
@@ -66,11 +66,6 @@ if CONFIG["OS_TARGET"] == "Android":
 
 if CONFIG["OS_TARGET"] == "Darwin":
 
-    CXXFLAGS += [
-        "-mavx2",
-        "-mfma"
-    ]
-
     DEFINES["WEBRTC_MAC"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_LIBCPP_HAS_NO_ALIGNED_ALLOCATION"] = True
@@ -79,11 +74,6 @@ if CONFIG["OS_TARGET"] == "Darwin":
     DEFINES["__STDC_FORMAT_MACROS"] = True
 
 if CONFIG["OS_TARGET"] == "Linux":
-
-    CXXFLAGS += [
-        "-mavx2",
-        "-mfma"
-    ]
 
     DEFINES["USE_AURA"] = "1"
     DEFINES["USE_GLIB"] = "1"
@@ -104,11 +94,6 @@ if CONFIG["OS_TARGET"] == "Linux":
     ]
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
-
-    CXXFLAGS += [
-        "-mavx2",
-        "-mfma"
-    ]
 
     DEFINES["USE_GLIB"] = "1"
     DEFINES["USE_X11"] = "1"
