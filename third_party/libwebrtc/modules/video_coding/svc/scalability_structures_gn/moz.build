@@ -28,14 +28,13 @@ LOCAL_INCLUDES += [
 ]
 
 SOURCES += [
-    "/third_party/libwebrtc/modules/video_coding/svc/scalability_structure_l2t1_key.cc",
-    "/third_party/libwebrtc/modules/video_coding/svc/scalability_structure_l2t2_key.cc",
     "/third_party/libwebrtc/modules/video_coding/svc/scalability_structure_s2t1.cc"
 ]
 
 UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/video_coding/svc/create_scalability_structure.cc",
     "/third_party/libwebrtc/modules/video_coding/svc/scalability_structure_full_svc.cc",
+    "/third_party/libwebrtc/modules/video_coding/svc/scalability_structure_key_svc.cc",
     "/third_party/libwebrtc/modules/video_coding/svc/scalability_structure_l1t2.cc",
     "/third_party/libwebrtc/modules/video_coding/svc/scalability_structure_l1t3.cc",
     "/third_party/libwebrtc/modules/video_coding/svc/scalability_structure_l2t1.cc",
