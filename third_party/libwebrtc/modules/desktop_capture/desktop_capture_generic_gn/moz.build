@@ -197,6 +197,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "/third_party/libwebrtc/modules/desktop_capture/win/cursor.cc",
         "/third_party/libwebrtc/modules/desktop_capture/win/d3d_device.cc",
         "/third_party/libwebrtc/modules/desktop_capture/win/desktop.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/win/desktop_capture_utils.cc",
         "/third_party/libwebrtc/modules/desktop_capture/win/display_configuration_monitor.cc",
         "/third_party/libwebrtc/modules/desktop_capture/win/dxgi_adapter_duplicator.cc",
         "/third_party/libwebrtc/modules/desktop_capture/win/dxgi_context.cc",
