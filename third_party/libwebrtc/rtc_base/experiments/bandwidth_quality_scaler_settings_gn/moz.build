@@ -28,16 +28,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/video/adaptation/balanced_constraint.cc",
-    "/third_party/libwebrtc/video/adaptation/bandwidth_quality_scaler_resource.cc",
-    "/third_party/libwebrtc/video/adaptation/bitrate_constraint.cc",
-    "/third_party/libwebrtc/video/adaptation/encode_usage_resource.cc",
-    "/third_party/libwebrtc/video/adaptation/overuse_frame_detector.cc",
-    "/third_party/libwebrtc/video/adaptation/pixel_limit_resource.cc",
-    "/third_party/libwebrtc/video/adaptation/quality_rampup_experiment_helper.cc",
-    "/third_party/libwebrtc/video/adaptation/quality_scaler_resource.cc",
-    "/third_party/libwebrtc/video/adaptation/video_stream_encoder_resource.cc",
-    "/third_party/libwebrtc/video/adaptation/video_stream_encoder_resource_manager.cc"
+    "/third_party/libwebrtc/rtc_base/experiments/bandwidth_quality_scaler_settings.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -65,7 +56,6 @@ if CONFIG["OS_TARGET"] == "Android":
     DEFINES["__STDC_FORMAT_MACROS"] = True
 
     OS_LIBS += [
-        "GLESv2",
         "log"
     ]
 
@@ -93,11 +83,6 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["_LARGEFILE_SOURCE"] = True
     DEFINES["__STDC_CONSTANT_MACROS"] = True
     DEFINES["__STDC_FORMAT_MACROS"] = True
-
-    OS_LIBS += [
-        "dl",
-        "rt"
-    ]
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
 
@@ -141,9 +126,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["__STD_C"] = True
 
     OS_LIBS += [
-        "crypt32",
-        "iphlpapi",
-        "secur32",
         "winmm"
     ]
 
@@ -219,4 +201,4 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
-Library("video_adaptation_gn")
+Library("bandwidth_quality_scaler_settings_gn")
