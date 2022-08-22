@@ -529,7 +529,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
                            const TimeStamp& aCompositeReqEnd);
 
   void ClearCachedResources();
-  void InvalidateLayers();
   void SchedulePaint();
   void ReinitRendering();
   void ReinitRenderingForDeviceReset();

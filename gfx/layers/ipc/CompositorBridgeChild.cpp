@@ -279,18 +279,6 @@ bool CompositorBridgeChild::CompositorIsInGPUProcess() {
   return bridge->OtherPid() != dom::ContentChild::GetSingleton()->OtherPid();
 }
 
-mozilla::ipc::IPCResult CompositorBridgeChild::RecvInvalidateLayers(
-    const LayersId& aLayersId) {
-  if (mLayerManager) {
-    MOZ_ASSERT(!aLayersId.IsValid());
-  } else if (aLayersId.IsValid()) {
-    if (dom::BrowserChild* child = dom::BrowserChild::GetFrom(aLayersId)) {
-      child->InvalidateLayers();
-    }
-  }
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult CompositorBridgeChild::RecvDidComposite(
     const LayersId& aId, const nsTArray<TransactionId>& aTransactionIds,
     const TimeStamp& aCompositeStart, const TimeStamp& aCompositeEnd) {
