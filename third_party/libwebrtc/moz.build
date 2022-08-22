@@ -332,6 +332,7 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/experiments/rtt_mult_experiment_gn",
     "/third_party/libwebrtc/rtc_base/experiments/stable_target_rate_experiment_gn",
     "/third_party/libwebrtc/rtc_base/gtest_prod_gn",
+    "/third_party/libwebrtc/rtc_base/histogram_percentile_counter_gn",
     "/third_party/libwebrtc/rtc_base/ignore_wundef_gn",
     "/third_party/libwebrtc/rtc_base/ip_address_gn",
     "/third_party/libwebrtc/rtc_base/location_gn",
