@@ -135,7 +135,6 @@ import mozilla.components.service.sync.autofill.DefaultCreditCardValidationDeleg
 import mozilla.components.support.base.feature.ActivityResultHandler
 import mozilla.components.support.ktx.android.view.enterToImmersiveMode
 import mozilla.components.support.ktx.kotlin.getOrigin
-import org.mozilla.fenix.GleanMetrics.Downloads
 import org.mozilla.fenix.GleanMetrics.MediaState
 import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
 import org.mozilla.fenix.components.toolbar.interactor.DefaultBrowserToolbarInteractor
@@ -529,10 +528,6 @@ abstract class BaseBrowserFragment :
 
                 dynamicDownloadDialog.show()
                 browserToolbarView.expand()
-
-                if (downloadState.contentType == "application/pdf") {
-                    Downloads.pdfDownloadCount.add()
-                }
             }
         }
 
