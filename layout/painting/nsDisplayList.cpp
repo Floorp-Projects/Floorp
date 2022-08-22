@@ -8012,7 +8012,7 @@ static Maybe<wr::WrClipChainId> CreateSimpleClipRegion(
 
       nscoord radii[8] = {0};
 
-      if (ShapeUtils::ComputeInsetRadii(shape, refBox, radii)) {
+      if (ShapeUtils::ComputeInsetRadii(shape, refBox, insetRect, radii)) {
         clipId = aBuilder.DefineRoundedRectClip(
             Nothing(),
             wr::ToComplexClipRegion(insetRect, radii, appUnitsPerDevPixel));
