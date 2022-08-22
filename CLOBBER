@@ -22,5 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Modified build files in third_party/libwebrtc - Bug 1766646 - Vendor libwebrtc from 1b200b93d54
+Modified build files in third_party/libwebrtc - Bug 1775143 - pt18 - (mirror) (cherry-pick) glandium's D149205.patch r=ng
 

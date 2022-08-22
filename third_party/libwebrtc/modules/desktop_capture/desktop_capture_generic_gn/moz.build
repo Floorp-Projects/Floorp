@@ -111,6 +111,7 @@ if CONFIG["OS_TARGET"] == "Linux":
 if CONFIG["OS_TARGET"] == "OpenBSD":
 
     DEFINES["USE_GLIB"] = "1"
+    DEFINES["USE_OZONE"] = "1"
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
@@ -297,10 +298,6 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
     ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
-
-    CXXFLAGS += [
-        "-msse2"
-    ]
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_USE_PIPEWIRE"] = True
