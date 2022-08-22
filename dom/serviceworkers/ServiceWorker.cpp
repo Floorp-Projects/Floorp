@@ -53,15 +53,6 @@ bool ServiceWorkersEnabled(JSContext* aCx, JSObject* aGlobal) {
   // xpc::CurrentNativeGlobal below requires rooting
   JS::Rooted<JSObject*> global(aCx, aGlobal);
 
-  if (StaticPrefs::dom_serviceWorkers_hide_in_pbmode_enabled()) {
-    if (const nsCOMPtr<nsIGlobalObject> global =
-            xpc::CurrentNativeGlobal(aCx)) {
-      if (global->GetStorageAccess() == StorageAccess::ePrivateBrowsing) {
-        return false;
-      }
-    }
-  }
-
   // Allow a webextension principal to register a service worker script with
   // a moz-extension url only if 'extensions.service_worker_register.allowed'
   // is true.
@@ -86,8 +77,6 @@ bool ServiceWorkerVisible(JSContext* aCx, JSObject* aGlobal) {
     // navigator.serviceWorker is available. Currently it may not be available
     // with some reasons:
     // 1. navigator.serviceWorker is not supported in workers. (bug 1131324)
-    // 2. `dom.serviceWorkers.hide_in_pbmode.enabled` wants to hide it in
-    // private browsing mode.
     return ServiceWorkersEnabled(aCx, aGlobal);
   }
 
