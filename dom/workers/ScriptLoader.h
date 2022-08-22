@@ -128,7 +128,6 @@ class WorkerScriptLoader final : public nsINamed {
   using ScriptLoadRequestList = JS::loader::ScriptLoadRequestList;
   using ScriptFetchOptions = JS::loader::ScriptFetchOptions;
 
-  WorkerPrivate* const mWorkerPrivate;
   RefPtr<ThreadSafeWorkerRef> mWorkerRef;
   UniquePtr<SerializedStackHolder> mOriginStack;
   nsString mOriginStackJSON;
@@ -204,8 +203,7 @@ class WorkerScriptLoader final : public nsINamed {
 
   nsresult LoadScript(ScriptLoadRequest* aRequest);
 
-  void ShutdownScriptLoader(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-                            bool aResult, bool aMutedError);
+  void ShutdownScriptLoader(bool aResult, bool aMutedError);
 
  private:
   ~WorkerScriptLoader() = default;

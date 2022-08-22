@@ -39,7 +39,7 @@ NS_IMPL_ISUPPORTS(NetworkLoadHandler, nsIStreamLoaderObserver,
 NetworkLoadHandler::NetworkLoadHandler(WorkerScriptLoader* aLoader,
                                        JS::loader::ScriptLoadRequest* aRequest)
     : mLoader(aLoader),
-      mWorkerPrivate(aLoader->mWorkerPrivate),
+      mWorkerPrivate(aLoader->mWorkerRef->Private()),
       mLoadContext(aRequest->GetWorkerLoadContext()) {
   MOZ_ASSERT(mLoader);
 
