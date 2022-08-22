@@ -220,6 +220,12 @@ interface BrowsingContext {
    */
   [SetterThrows] attribute boolean allowJavascript;
 
+  /**
+   * Determines whether we're forcing a desktop-mode viewport. Only settable in
+   * the top browsing context from the parent process.
+   */
+  [SetterThrows] attribute boolean forceDesktopViewport;
+
   /*
    * Default load flags (as defined in nsIRequest) that will be set on all
    * requests made by this BrowsingContext.

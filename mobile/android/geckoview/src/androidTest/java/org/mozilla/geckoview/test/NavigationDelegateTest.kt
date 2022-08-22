@@ -1187,6 +1187,20 @@ class NavigationDelegateTest : BaseSessionTest() {
         assertThat("innerWidth should be equal to $desktopInnerWidth", innerWidth,
                 closeTo(desktopInnerWidth, 0.1))
 
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        innerWidth = mainSession.evaluateJS(innerWidthJs) as Double
+        assertThat("after navigation innerWidth should be equal to $desktopInnerWidth",
+                innerWidth, closeTo(desktopInnerWidth, 0.1))
+
+        mainSession.loadTestPath(VIEWPORT_PATH)
+        sessionRule.waitForPageStop()
+
+        innerWidth = mainSession.evaluateJS(innerWidthJs) as Double
+        assertThat("after navigting back innerWidth should be equal to $desktopInnerWidth",
+                innerWidth, closeTo(desktopInnerWidth, 0.1))
+
         mainSession.settings.viewportMode = GeckoSessionSettings.VIEWPORT_MODE_MOBILE
 
         mainSession.reload()
