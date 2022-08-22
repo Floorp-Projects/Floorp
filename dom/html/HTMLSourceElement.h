@@ -89,12 +89,16 @@ class HTMLSourceElement final : public nsGenericHTMLElement {
     SetHTMLAttr(nsGkAtoms::media, aMedia, rv);
   }
 
-  uint32_t Width() const { return GetUnsignedIntAttr(nsGkAtoms::width, 0); }
+  uint32_t Width() const {
+    return GetDimensionAttrAsUnsignedInt(nsGkAtoms::width, 0);
+  }
   void SetWidth(uint32_t aWidth, ErrorResult& aRv) {
     SetUnsignedIntAttr(nsGkAtoms::width, aWidth, 0, aRv);
   }
 
-  uint32_t Height() const { return GetUnsignedIntAttr(nsGkAtoms::height, 0); }
+  uint32_t Height() const {
+    return GetDimensionAttrAsUnsignedInt(nsGkAtoms::height, 0);
+  }
   void SetHeight(uint32_t aHeight, ErrorResult& aRv) {
     SetUnsignedIntAttr(nsGkAtoms::height, aHeight, 0, aRv);
   }
