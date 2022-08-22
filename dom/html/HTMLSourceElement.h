@@ -87,18 +87,31 @@ class HTMLSourceElement final : public nsGenericHTMLElement {
     SetHTMLAttr(nsGkAtoms::media, aMedia, rv);
   }
 
+  uint32_t Width() const { return GetUnsignedIntAttr(nsGkAtoms::width, 0); }
+  void SetWidth(uint32_t aWidth, ErrorResult& aRv) {
+    SetUnsignedIntAttr(nsGkAtoms::width, aWidth, 0, aRv);
+  }
+
+  uint32_t Height() const { return GetUnsignedIntAttr(nsGkAtoms::height, 0); }
+  void SetHeight(uint32_t aHeight, ErrorResult& aRv) {
+    SetUnsignedIntAttr(nsGkAtoms::height, aHeight, 0, aRv);
+  }
+
  protected:
   virtual ~HTMLSourceElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext* aCx,
+                     JS::Handle<JSObject*> aGivenProto) override;
 
- protected:
-  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue,
-                                nsIPrincipal* aMaybeScriptedPrincipal,
-                                bool aNotify) override;
+  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                      const nsAString& aValue,
+                      nsIPrincipal* aMaybeScriptedPrincipal,
+                      nsAttrValue& aResult) override;
+
+  nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                        const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                        nsIPrincipal* aMaybeScriptedPrincipal,
+                        bool aNotify) override;
 
  private:
   RefPtr<MediaList> mMediaList;
