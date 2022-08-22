@@ -299,6 +299,7 @@ DIRS += [
     "/third_party/libwebrtc/modules/video_coding/webrtc_libvpx_interface_gn",
     "/third_party/libwebrtc/modules/video_coding/webrtc_multiplex_gn",
     "/third_party/libwebrtc/modules/video_coding/webrtc_vp8_gn",
+    "/third_party/libwebrtc/modules/video_coding/webrtc_vp8_scalability_gn",
     "/third_party/libwebrtc/modules/video_coding/webrtc_vp8_temporal_layers_gn",
     "/third_party/libwebrtc/modules/video_coding/webrtc_vp9_gn",
     "/third_party/libwebrtc/modules/video_coding/webrtc_vp9_helpers_gn",
