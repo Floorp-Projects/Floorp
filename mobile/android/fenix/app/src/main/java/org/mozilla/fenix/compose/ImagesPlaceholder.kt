@@ -5,7 +5,6 @@
 package org.mozilla.fenix.compose
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -17,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import mozilla.components.support.images.compose.loader.Fallback
 import mozilla.components.support.images.compose.loader.ImageLoaderScope
 import mozilla.components.support.images.compose.loader.Placeholder
-import mozilla.components.ui.colors.PhotonColors
+import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * Renders the app default image placeholder while the image is still getting loaded.
@@ -68,20 +67,17 @@ internal fun DefaultImagePlaceholder(
     modifier: Modifier,
     contentDescription: String? = null
 ) {
-    val color = when (isSystemInDarkTheme()) {
-        true -> PhotonColors.DarkGrey30
-        false -> PhotonColors.LightGrey30
-    }
-
-    Image(ColorPainter(color), contentDescription, modifier)
+    Image(ColorPainter(FirefoxTheme.colors.layer2), contentDescription, modifier)
 }
 
 @Composable
 @Preview
 private fun DefaultImagePlaceholderPreview() {
-    DefaultImagePlaceholder(
-        Modifier
-            .size(200.dp, 100.dp)
-            .clip(RoundedCornerShape(8.dp))
-    )
+    FirefoxTheme {
+        DefaultImagePlaceholder(
+            Modifier
+                .size(200.dp, 100.dp)
+                .clip(RoundedCornerShape(8.dp))
+        )
+    }
 }
