@@ -10,6 +10,7 @@
 #include "nsIStreamLoader.h"
 #include "mozilla/dom/WorkerLoadContext.h"
 #include "mozilla/dom/ScriptLoadHandler.h"
+#include "mozilla/dom/WorkerRef.h"
 
 namespace mozilla::dom::workerinternals::loader {
 
@@ -69,7 +70,7 @@ class NetworkLoadHandler final : public nsIStreamLoaderObserver,
 
   RefPtr<WorkerScriptLoader> mLoader;
   UniquePtr<ScriptDecoder> mDecoder;
-  WorkerPrivate* const mWorkerPrivate;
+  RefPtr<ThreadSafeWorkerRef> mWorkerRef;
   WorkerLoadContext* mLoadContext;
 };
 
