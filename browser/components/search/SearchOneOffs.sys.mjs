@@ -424,6 +424,7 @@ export class SearchOneOffs {
       let textboxWidth = await this.window.promiseDocumentFlushed(() => {
         return this._textbox.clientWidth;
       });
+
       if (
         this._engineInfo?.domWasUpdated &&
         this._textboxWidth == textboxWidth &&
@@ -433,6 +434,12 @@ export class SearchOneOffs {
       }
       this._textboxWidth = textboxWidth;
       this._addEngines = addEngines;
+    }
+
+    const isSearchBar = this.hasAttribute("is_searchbar");
+    if (isSearchBar) {
+      // Hide the container during updating to avoid flickering.
+      this.container.hidden = true;
     }
 
     // Finally, build the list of one-off buttons.
@@ -446,7 +453,10 @@ export class SearchOneOffs {
     headerText.id = this.telemetryOrigin + "-one-offs-header-label";
     this.buttons.setAttribute("aria-labelledby", headerText.id);
 
-    let hideOneOffs = await this.willHide();
+    // For the search-bar, always show the one-off buttons where there is an
+    // option to add an engine.
+    let addEngineNeeded = isSearchBar && addEngines.length;
+    let hideOneOffs = (await this.willHide()) && !addEngineNeeded;
 
     // The _engineInfo cache is used by more consumers, thus it is not a good
     // representation of whether this method already updated the one-off buttons

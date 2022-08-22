@@ -31,6 +31,9 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
  * layers (at the moment WindowGlobalMessageHandlers in content processes).
  */
 class RootMessageHandler extends MessageHandler {
+  #frameTransport;
+  #sessionData;
+
   /**
    * Returns the RootMessageHandler module path.
    *
@@ -66,16 +69,16 @@ class RootMessageHandler extends MessageHandler {
   constructor(sessionId) {
     super(sessionId, null);
 
-    this._frameTransport = new lazy.FrameTransport(this);
-    this._sessionData = new lazy.SessionData(this);
+    this.#frameTransport = new lazy.FrameTransport(this);
+    this.#sessionData = new lazy.SessionData(this);
   }
 
   get sessionData() {
-    return this._sessionData;
+    return this.#sessionData;
   }
 
   destroy() {
-    this._sessionData.destroy();
+    this.#sessionData.destroy();
     super.destroy();
   }
 
@@ -103,7 +106,7 @@ class RootMessageHandler extends MessageHandler {
   forwardCommand(command) {
     switch (command.destination.type) {
       case lazy.WindowGlobalMessageHandler.type:
-        return this._frameTransport.forwardCommand(command);
+        return this.#frameTransport.forwardCommand(command);
       default:
         throw new Error(
           `Cannot forward command to "${command.destination.type}" from "${this.constructor.type}".`
@@ -136,7 +139,7 @@ class RootMessageHandler extends MessageHandler {
     const isAdding = mode === "add";
 
     const updateMethod = isAdding ? "addSessionData" : "removeSessionData";
-    const updatedValues = this._sessionData[updateMethod](
+    const updatedValues = this.#sessionData[updateMethod](
       moduleName,
       category,
       contextDescriptor,
@@ -155,7 +158,7 @@ class RootMessageHandler extends MessageHandler {
 
     // Don't apply session data if the module is not present
     // for the destination.
-    if (!this._moduleCache.hasModule(moduleName, destination)) {
+    if (!this.moduleCache.hasModule(moduleName, destination)) {
       return Promise.resolve();
     }
 
