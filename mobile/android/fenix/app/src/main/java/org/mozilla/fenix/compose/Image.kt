@@ -46,25 +46,29 @@ fun Image(
     alignment: Alignment = Alignment.Center,
     contentScale: ContentScale = ContentScale.Fit,
 ) {
-    ImageLoader(
-        url = url,
-        client = components.core.client,
-        private = private,
-        targetSize = targetSize
-    ) {
-        WithImage { painter ->
-            androidx.compose.foundation.Image(
-                painter = painter,
-                modifier = modifier,
-                contentDescription = contentDescription,
-                alignment = alignment,
-                contentScale = contentScale
-            )
+    if (inComposePreview) {
+        DefaultImagePlaceholder(modifier = modifier)
+    } else {
+        ImageLoader(
+            url = url,
+            client = components.core.client,
+            private = private,
+            targetSize = targetSize
+        ) {
+            WithImage { painter ->
+                androidx.compose.foundation.Image(
+                    painter = painter,
+                    modifier = modifier,
+                    contentDescription = contentDescription,
+                    alignment = alignment,
+                    contentScale = contentScale
+                )
+            }
+
+            WithDefaultPlaceholder(modifier, contentDescription)
+
+            WithDefaultFallback(modifier, contentDescription)
         }
-
-        WithDefaultPlaceholder(modifier, contentDescription)
-
-        WithDefaultFallback(modifier, contentDescription)
     }
 }
 
