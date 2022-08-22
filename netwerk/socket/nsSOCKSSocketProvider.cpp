@@ -66,15 +66,14 @@ nsSOCKSSocketProvider::NewSocket(int32_t family, const char* host, int32_t port,
                                  nsIProxyInfo* proxy,
                                  const OriginAttributes& originAttributes,
                                  uint32_t flags, uint32_t tlsFlags,
-                                 PRFileDesc** result,
-                                 nsISSLSocketControl** tlsSocketControl) {
+                                 PRFileDesc** result, nsISupports** socksInfo) {
   PRFileDesc* sock = OpenTCPSocket(family, proxy);
   if (!sock) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   nsresult rv = nsSOCKSIOLayerAddToSocket(family, host, port, proxy, mVersion,
-                                          flags, tlsFlags, sock);
+                                          flags, tlsFlags, sock, socksInfo);
   if (NS_SUCCEEDED(rv)) {
     *result = sock;
     return NS_OK;
@@ -88,10 +87,9 @@ nsSOCKSSocketProvider::AddToSocket(int32_t family, const char* host,
                                    int32_t port, nsIProxyInfo* proxy,
                                    const OriginAttributes& originAttributes,
                                    uint32_t flags, uint32_t tlsFlags,
-                                   PRFileDesc* sock,
-                                   nsISSLSocketControl** tlsSocketControl) {
+                                   PRFileDesc* sock, nsISupports** socksInfo) {
   nsresult rv = nsSOCKSIOLayerAddToSocket(family, host, port, proxy, mVersion,
-                                          flags, tlsFlags, sock);
+                                          flags, tlsFlags, sock, socksInfo);
 
   if (NS_FAILED(rv)) rv = NS_ERROR_SOCKET_CREATE_FAILED;
   return rv;

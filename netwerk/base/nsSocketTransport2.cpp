@@ -871,12 +871,10 @@ nsresult nsSocketTransport::InitWithConnectedSocket(PRFileDesc* fd,
   return PostEvent(MSG_RETRY_INIT_SOCKET);
 }
 
-nsresult nsSocketTransport::InitWithConnectedSocket(
-    PRFileDesc* aFD, const NetAddr* aAddr, nsIInterfaceRequestor* aCallbacks) {
-  {
-    MutexAutoLock lock(mLock);
-    mCallbacks = aCallbacks;
-  }
+nsresult nsSocketTransport::InitWithConnectedSocket(PRFileDesc* aFD,
+                                                    const NetAddr* aAddr,
+                                                    nsISupports* aSecInfo) {
+  mSecInfo = aSecInfo;
   return InitWithConnectedSocket(aFD, aAddr);
 }
 
@@ -1114,7 +1112,7 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
     rv = spserv->GetSocketProvider(mTypes[i].get(), getter_AddRefs(provider));
     if (NS_FAILED(rv)) break;
 
-    nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
+    nsCOMPtr<nsISupports> secinfo;
     if (i == 0) {
       // if this is the first type, we'll want the
       // service to allocate a new socket
@@ -1145,7 +1143,7 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
           mHttpsProxy ? mProxyHost.get() : socketProviderHost,
           mHttpsProxy ? mProxyPort : socketProviderPort, proxyInfo,
           mOriginAttributes, controlFlags, mTlsFlags, &fd,
-          getter_AddRefs(tlsSocketControl));
+          getter_AddRefs(secinfo));
 
       if (NS_SUCCEEDED(rv) && !fd) {
         MOZ_ASSERT_UNREACHABLE(
@@ -1159,7 +1157,7 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
       // to the stack (such as pushing an io layer)
       rv = provider->AddToSocket(mNetAddr.raw.family, host, port, proxyInfo,
                                  mOriginAttributes, controlFlags, mTlsFlags, fd,
-                                 getter_AddRefs(tlsSocketControl));
+                                 getter_AddRefs(secinfo));
     }
 
     // controlFlags = 0; not used below this point...
@@ -1173,15 +1171,14 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
       nsCOMPtr<nsIInterfaceRequestor> callbacks;
       {
         MutexAutoLock lock(mLock);
-        mTLSSocketControl = tlsSocketControl;
+        mSecInfo = secinfo;
         callbacks = mCallbacks;
-        SOCKET_LOG(("  [tlsSocketControl=%p callbacks=%p]\n",
-                    mTLSSocketControl.get(), mCallbacks.get()));
+        SOCKET_LOG(("  [secinfo=%p callbacks=%p]\n", mSecInfo.get(),
+                    mCallbacks.get()));
       }
       // don't call into PSM while holding mLock!!
-      if (tlsSocketControl) {
-        tlsSocketControl->SetNotificationCallbacks(callbacks);
-      }
+      nsCOMPtr<nsISSLSocketControl> secCtrl(do_QueryInterface(secinfo));
+      if (secCtrl) secCtrl->SetNotificationCallbacks(callbacks);
       // remember if socket type is SSL so we can ProxyStartSSL if need be.
       usingSSL = isSSL;
     } else if (mTypes[i].EqualsLiteral("socks") ||
@@ -1331,7 +1328,8 @@ nsresult nsSocketTransport::InitiateSocket() {
     SOCKET_LOG(("Successfully attached fuzzing IOLayer.\n"));
 
     if (usingSSL) {
-      mTLSSocketControl = new FuzzySecurityInfo();
+      mSecInfo = static_cast<nsISupports*>(
+          static_cast<nsISSLSocketControl*>(new FuzzySecurityInfo()));
     }
   }
 #endif
@@ -1471,11 +1469,12 @@ nsresult nsSocketTransport::InitiateSocket() {
   }
 #endif
 
-  if (mTLSSocketControl) {
+  nsCOMPtr<nsISSLSocketControl> secCtrl = do_QueryInterface(mSecInfo);
+  if (secCtrl) {
     if (!mEchConfig.IsEmpty() &&
         !(mConnectionFlags & (DONT_TRY_ECH | BE_CONSERVATIVE))) {
       SOCKET_LOG(("nsSocketTransport::InitiateSocket set echconfig."));
-      rv = mTLSSocketControl->SetEchConfig(mEchConfig);
+      rv = secCtrl->SetEchConfig(mEchConfig);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1541,14 +1540,16 @@ nsresult nsSocketTransport::InitiateSocket() {
       //
       OnSocketConnected();
 
-      if (mTLSSocketControl && !mProxyHost.IsEmpty() && proxyTransparent &&
-          usingSSL) {
+      if (mSecInfo && !mProxyHost.IsEmpty() && proxyTransparent && usingSSL) {
         // if the connection phase is finished, and the ssl layer has
         // been pushed, and we were proxying (transparently; ie. nothing
         // has to happen in the protocol layer above us), it's time for
         // the ssl to start doing it's thing.
-        SOCKET_LOG(("  calling ProxyStartSSL()\n"));
-        mTLSSocketControl->ProxyStartSSL();
+        nsCOMPtr<nsISSLSocketControl> secCtrl = do_QueryInterface(mSecInfo);
+        if (secCtrl) {
+          SOCKET_LOG(("  calling ProxyStartSSL()\n"));
+          secCtrl->ProxyStartSSL();
+        }
         // XXX what if we were forced to poll on the socket for a successful
         // connection... wouldn't we need to call ProxyStartSSL after a call
         // to PR_ConnectContinue indicates that we are connected?
@@ -2225,9 +2226,8 @@ void nsSocketTransport::OnSocketDetached(PRFileDesc* fd) {
   // break any potential reference cycle between the security info object
   // and ourselves by resetting its notification callbacks object.  see
   // bug 285991 for details.
-  if (mTLSSocketControl) {
-    mTLSSocketControl->SetNotificationCallbacks(nullptr);
-  }
+  nsCOMPtr<nsISSLSocketControl> secCtrl = do_QueryInterface(mSecInfo);
+  if (secCtrl) secCtrl->SetNotificationCallbacks(nullptr);
 
   // finally, release our reference to the socket (must do this within
   // the transport lock) possibly closing the socket. Also release our
@@ -2392,9 +2392,9 @@ nsSocketTransport::Close(nsresult reason) {
 }
 
 NS_IMETHODIMP
-nsSocketTransport::GetTlsSocketControl(nsISSLSocketControl** tlsSocketControl) {
+nsSocketTransport::GetSecurityInfo(nsISupports** secinfo) {
   MutexAutoLock lock(mLock);
-  *tlsSocketControl = do_AddRef(mTLSSocketControl).take();
+  *secinfo = do_AddRef(mSecInfo).take();
   return NS_OK;
 }
 
@@ -2412,20 +2412,19 @@ nsSocketTransport::SetSecurityCallbacks(nsIInterfaceRequestor* callbacks) {
                                          GetCurrentEventTarget(),
                                          getter_AddRefs(threadsafeCallbacks));
 
-  nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
+  nsCOMPtr<nsISupports> secinfo;
   {
     MutexAutoLock lock(mLock);
     mCallbacks = threadsafeCallbacks;
-    SOCKET_LOG(("Reset callbacks for tlsSocketInfo=%p callbacks=%p\n",
-                mTLSSocketControl.get(), mCallbacks.get()));
+    SOCKET_LOG(("Reset callbacks for secinfo=%p callbacks=%p\n", mSecInfo.get(),
+                mCallbacks.get()));
 
-    tlsSocketControl = mTLSSocketControl;
+    secinfo = mSecInfo;
   }
 
   // don't call into PSM while holding mLock!!
-  if (tlsSocketControl) {
-    tlsSocketControl->SetNotificationCallbacks(threadsafeCallbacks);
-  }
+  nsCOMPtr<nsISSLSocketControl> secCtrl(do_QueryInterface(secinfo));
+  if (secCtrl) secCtrl->SetNotificationCallbacks(threadsafeCallbacks);
 
   return NS_OK;
 }

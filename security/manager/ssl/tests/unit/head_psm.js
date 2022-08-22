@@ -630,9 +630,7 @@ async function asyncConnectTo(
     );
     if (aWithSecurityInfo) {
       aWithSecurityInfo(
-        conn.transport.tlsSocketControl.QueryInterface(
-          Ci.nsITransportSecurityInfo
-        )
+        conn.transport.securityInfo.QueryInterface(Ci.nsITransportSecurityInfo)
       );
     }
   });

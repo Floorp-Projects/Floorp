@@ -10,7 +10,6 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "nsISerializable.h"
-#include "nsISSLSocketControl.h"
 #include "nsSerializationHelper.h"
 #include "nsThreadUtils.h"
 #include "WebSocketConnection.h"
@@ -82,10 +81,10 @@ WebSocketConnectionChild::OnTransportAvailable(
   }
 
   nsAutoCString serializedSecurityInfo;
-  nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
-  aTransport->GetTlsSocketControl(getter_AddRefs(tlsSocketControl));
-  if (tlsSocketControl) {
-    nsCOMPtr<nsISerializable> secInfoSer = do_QueryInterface(tlsSocketControl);
+  nsCOMPtr<nsISupports> secInfoSupp;
+  aTransport->GetSecurityInfo(getter_AddRefs(secInfoSupp));
+  if (secInfoSupp) {
+    nsCOMPtr<nsISerializable> secInfoSer = do_QueryInterface(secInfoSupp);
     if (secInfoSer) {
       NS_SerializeToString(secInfoSer, serializedSecurityInfo);
     }

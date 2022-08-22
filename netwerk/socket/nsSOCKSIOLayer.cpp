@@ -11,6 +11,7 @@
 
 #include "nsIDNSService.h"
 #include "nsIDNSRecord.h"
+#include "nsISOCKSSocketInfo.h"
 #include "nsISocketProvider.h"
 #include "nsNamedPipeIOLayer.h"
 #include "nsSOCKSIOLayer.h"
@@ -36,7 +37,7 @@ static mozilla::LazyLogModule gSOCKSLog("SOCKS");
 #define LOGDEBUG(args) MOZ_LOG(gSOCKSLog, mozilla::LogLevel::Debug, args)
 #define LOGERROR(args) MOZ_LOG(gSOCKSLog, mozilla::LogLevel::Error, args)
 
-class nsSOCKSSocketInfo : public nsIDNSListener {
+class nsSOCKSSocketInfo : public nsISOCKSSocketInfo, public nsIDNSListener {
   enum State {
     SOCKS_INITIAL,
     SOCKS_DNS_IN_PROGRESS,
@@ -66,6 +67,7 @@ class nsSOCKSSocketInfo : public nsIDNSListener {
   nsSOCKSSocketInfo();
 
   NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSISOCKSSOCKETINFO
   NS_DECL_NSIDNSLISTENER
 
   void Init(int32_t version, int32_t family, nsIProxyInfo* proxy,
@@ -77,10 +79,6 @@ class nsSOCKSSocketInfo : public nsIDNSListener {
   bool IsConnected() const { return mState == SOCKS_CONNECTED; }
   void ForgetFD() { mFD = nullptr; }
   void SetNamedPipeFD(PRFileDesc* fd) { mFD = fd; }
-
-  void GetExternalProxyAddr(NetAddr& aExternalProxyAddr);
-  void GetDestinationAddr(NetAddr& aDestinationAddr);
-  void SetDestinationAddr(const NetAddr& aDestinationAddr);
 
  private:
   virtual ~nsSOCKSSocketInfo() {
@@ -352,18 +350,42 @@ void nsSOCKSSocketInfo::Init(int32_t version, int32_t family,
   mProxy->GetUsername(mProxyUsername);  // cache
 }
 
-NS_IMPL_ISUPPORTS(nsSOCKSSocketInfo, nsIDNSListener)
+NS_IMPL_ISUPPORTS(nsSOCKSSocketInfo, nsISOCKSSocketInfo, nsIDNSListener)
 
-void nsSOCKSSocketInfo::GetExternalProxyAddr(NetAddr& aExternalProxyAddr) {
-  aExternalProxyAddr = mExternalProxyAddr;
+NS_IMETHODIMP
+nsSOCKSSocketInfo::GetExternalProxyAddr(NetAddr** aExternalProxyAddr) {
+  memcpy(*aExternalProxyAddr, &mExternalProxyAddr, sizeof(NetAddr));
+  return NS_OK;
 }
 
-void nsSOCKSSocketInfo::GetDestinationAddr(NetAddr& aDestinationAddr) {
-  aDestinationAddr = mDestinationAddr;
+NS_IMETHODIMP
+nsSOCKSSocketInfo::SetExternalProxyAddr(NetAddr* aExternalProxyAddr) {
+  memcpy(&mExternalProxyAddr, aExternalProxyAddr, sizeof(NetAddr));
+  return NS_OK;
 }
 
-void nsSOCKSSocketInfo::SetDestinationAddr(const NetAddr& aDestinationAddr) {
-  mDestinationAddr = aDestinationAddr;
+NS_IMETHODIMP
+nsSOCKSSocketInfo::GetDestinationAddr(NetAddr** aDestinationAddr) {
+  memcpy(*aDestinationAddr, &mDestinationAddr, sizeof(NetAddr));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSOCKSSocketInfo::SetDestinationAddr(NetAddr* aDestinationAddr) {
+  memcpy(&mDestinationAddr, aDestinationAddr, sizeof(NetAddr));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSOCKSSocketInfo::GetInternalProxyAddr(NetAddr** aInternalProxyAddr) {
+  memcpy(*aInternalProxyAddr, &mInternalProxyAddr, sizeof(NetAddr));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSOCKSSocketInfo::SetInternalProxyAddr(NetAddr* aInternalProxyAddr) {
+  memcpy(&mInternalProxyAddr, aInternalProxyAddr, sizeof(NetAddr));
+  return NS_OK;
 }
 
 // There needs to be a means of distinguishing between connection errors
@@ -1279,7 +1301,7 @@ static PRStatus nsSOCKSIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
     memcpy(&dst, addr, sizeof(dst));
   }
 
-  info->SetDestinationAddr(dst);
+  info->SetDestinationAddr(&dst);
   info->SetConnectTimeout(to);
 
   do {
@@ -1353,9 +1375,11 @@ static PRStatus nsSOCKSIOLayerGetName(PRFileDesc* fd, PRNetAddr* addr) {
 
   if (info != nullptr && addr != nullptr) {
     NetAddr temp;
-    info->GetExternalProxyAddr(temp);
-    NetAddrToPRNetAddr(&temp, addr);
-    return PR_SUCCESS;
+    NetAddr* tempPtr = &temp;
+    if (info->GetExternalProxyAddr(&tempPtr) == NS_OK) {
+      NetAddrToPRNetAddr(tempPtr, addr);
+      return PR_SUCCESS;
+    }
   }
 
   return PR_FAILURE;
@@ -1366,9 +1390,11 @@ static PRStatus nsSOCKSIOLayerGetPeerName(PRFileDesc* fd, PRNetAddr* addr) {
 
   if (info != nullptr && addr != nullptr) {
     NetAddr temp;
-    info->GetDestinationAddr(temp);
-    NetAddrToPRNetAddr(&temp, addr);
-    return PR_SUCCESS;
+    NetAddr* tempPtr = &temp;
+    if (info->GetDestinationAddr(&tempPtr) == NS_OK) {
+      NetAddrToPRNetAddr(tempPtr, addr);
+      return PR_SUCCESS;
+    }
   }
 
   return PR_FAILURE;
@@ -1383,7 +1409,8 @@ static PRStatus nsSOCKSIOLayerListen(PRFileDesc* fd, int backlog) {
 nsresult nsSOCKSIOLayerAddToSocket(int32_t family, const char* host,
                                    int32_t port, nsIProxyInfo* proxy,
                                    int32_t socksVersion, uint32_t flags,
-                                   uint32_t tlsFlags, PRFileDesc* fd) {
+                                   uint32_t tlsFlags, PRFileDesc* fd,
+                                   nsISupports** info) {
   NS_ENSURE_TRUE((socksVersion == 4) || (socksVersion == 5),
                  NS_ERROR_NOT_INITIALIZED);
 
@@ -1457,6 +1484,8 @@ nsresult nsSOCKSIOLayerAddToSocket(int32_t family, const char* host,
     return NS_ERROR_FAILURE;
   }
 
+  *info = static_cast<nsISOCKSSocketInfo*>(infoObject);
+  NS_ADDREF(*info);
   return NS_OK;
 }
 

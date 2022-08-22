@@ -84,8 +84,7 @@ class FakeSocketTransportProvider : public nsISocketTransport {
     MOZ_ASSERT(false);
     return NS_OK;
   }
-  NS_IMETHOD GetTlsSocketControl(
-      nsISSLSocketControl** aTLSSocketControl) override {
+  NS_IMETHOD GetSecurityInfo(nsISupports** aSecurityInfo) override {
     MOZ_ASSERT(false);
     return NS_OK;
   }

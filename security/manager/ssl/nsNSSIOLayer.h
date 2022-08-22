@@ -327,16 +327,14 @@ class nsSSLIOLayerHelpers {
 nsresult nsSSLIOLayerNewSocket(int32_t family, const char* host, int32_t port,
                                nsIProxyInfo* proxy,
                                const OriginAttributes& originAttributes,
-                               PRFileDesc** fd,
-                               nsISSLSocketControl** tlsSocketControl,
+                               PRFileDesc** fd, nsISupports** securityInfo,
                                bool forSTARTTLS, uint32_t flags,
                                uint32_t tlsFlags);
 
 nsresult nsSSLIOLayerAddToSocket(int32_t family, const char* host, int32_t port,
                                  nsIProxyInfo* proxy,
                                  const OriginAttributes& originAttributes,
-                                 PRFileDesc* fd,
-                                 nsISSLSocketControl** tlsSocketControl,
+                                 PRFileDesc* fd, nsISupports** securityInfo,
                                  bool forSTARTTLS, uint32_t flags,
                                  uint32_t tlsFlags);
 

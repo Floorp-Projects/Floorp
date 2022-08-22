@@ -123,7 +123,7 @@ class ServerSocketListener {
 
   onSocketAccepted(socket, transport) {
     info("accepted TLS client connection");
-    let connectionInfo = transport.securityCallbacks.getInterface(
+    let connectionInfo = transport.securityInfo.QueryInterface(
       Ci.nsITLSServerConnectionInfo
     );
     let input = transport.openInputStream(0, 0, 0);
