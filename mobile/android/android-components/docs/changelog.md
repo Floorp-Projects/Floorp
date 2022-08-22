@@ -4,12 +4,20 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 105.0.0 (In Development)
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v104.0.0...main)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/152?closed=1)
+# 106.0.0
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v105.0.0...main)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/153?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
+
+
+# 105.0.0
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v104.0.0...v105.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/152?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v105.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v105.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v105.0.0/.config.yml)
 
 * **feature-search**:
   * Implement the common part of search widget in Android Components [#12565](https://github.com/mozilla-mobile/android-components/issues/12565).
