@@ -11,7 +11,7 @@ AllowCompilerWarnings()
 
 DEFINES["ABSL_ALLOCATOR_NOTHROW"] = "1"
 DEFINES["ANDROID"] = True
-DEFINES["ANDROID_NDK_VERSION_ROLL"] = "r20_1"
+DEFINES["ANDROID_NDK_VERSION_ROLL"] = "r22_1"
 DEFINES["HAVE_SYS_UIO_H"] = True
 DEFINES["RTC_ENABLE_VP9"] = True
 DEFINES["WEBRTC_ANDROID"] = True
@@ -79,10 +79,6 @@ if CONFIG["CPU_ARCH"] == "arm":
     ]
 
 if CONFIG["CPU_ARCH"] == "x86":
-
-    CXXFLAGS += [
-        "-msse2"
-    ]
 
     OS_LIBS += [
         "android_support"
