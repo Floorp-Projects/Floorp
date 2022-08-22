@@ -335,6 +335,7 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/logging_gn",
     "/third_party/libwebrtc/rtc_base/macromagic_gn",
     "/third_party/libwebrtc/rtc_base/memory/aligned_malloc_gn",
+    "/third_party/libwebrtc/rtc_base/memory/always_valid_pointer_gn",
     "/third_party/libwebrtc/rtc_base/net_helpers_gn",
     "/third_party/libwebrtc/rtc_base/network/sent_packet_gn",
     "/third_party/libwebrtc/rtc_base/network_constants_gn",
