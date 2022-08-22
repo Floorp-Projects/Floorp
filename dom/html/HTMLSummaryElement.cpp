@@ -62,9 +62,7 @@ nsresult HTMLSummaryElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
     }
   }  // event->HasMouseEventMessage()
 
-  if (event->HasKeyEventMessage() && event->IsTrusted()) {
-    HandleKeyboardActivation(aVisitor);
-  }
+  HandleKeyboardActivation(aVisitor);
   return rv;
 }
 
