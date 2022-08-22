@@ -53,14 +53,31 @@ class CacheCreator;
 
 class WorkerLoadContext : public JS::loader::LoadContextBase {
  public:
-  explicit WorkerLoadContext();
+  enum Kind { MainScript, ImportScript, DebuggerScript };
+
+  explicit WorkerLoadContext(WorkerLoadContext::Kind aKind);
 
   ~WorkerLoadContext() = default;
+
+  bool IsTopLevel() {
+    return mRequest->IsTopLevel() && (mKind == Kind::MainScript);
+  };
+
+  static Kind GetKind(bool isMainScript, bool isDebuggerScript) {
+    if (isDebuggerScript) {
+      return Kind::DebuggerScript;
+    }
+    if (isMainScript) {
+      return Kind::MainScript;
+    }
+    return Kind::ImportScript;
+  };
 
   /* These fields are used by all workers */
   Maybe<bool> mMutedErrorFlag;
   nsresult mLoadResult = NS_ERROR_NOT_INITIALIZED;
   bool mLoadingFinished = false;
+  Kind mKind;
 
   /* These fields are only used by service workers */
   /* TODO: Split out a ServiceWorkerLoadContext */
