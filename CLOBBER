@@ -22,5 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Modified build files in third_party/libwebrtc - Bug 1766646 - (fix-e6106102f8a) restrict what we're building in third_party/abseil-cpp/absl/cleanup
+Modified build files in third_party/libwebrtc - Bug 1766646 - Vendor libwebrtc from d6cdf80072
 
