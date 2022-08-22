@@ -60,7 +60,7 @@ void HTMLPictureElement::InsertChildBefore(nsIContent* aKid,
     img->PictureSourceAdded();
   } else if (auto* source = HTMLSourceElement::FromNode(aKid)) {
     // Find all img siblings after this <source> to notify them of its insertion
-    nsCOMPtr<nsIContent> nextSibling = aKid->GetNextSibling();
+    nsCOMPtr<nsIContent> nextSibling = source->GetNextSibling();
     if (nextSibling && nextSibling->GetParentNode() == this) {
       do {
         if (auto* img = HTMLImageElement::FromNode(nextSibling)) {

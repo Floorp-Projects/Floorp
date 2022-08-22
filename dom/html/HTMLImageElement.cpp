@@ -45,6 +45,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/MappedDeclarations.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/RestyleManager.h"
 
 #include "nsLayoutUtils.h"
 
@@ -54,7 +55,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Image)
 
 #ifdef DEBUG
 // Is aSubject a previous sibling of aNode.
-static bool IsPreviousSibling(nsINode* aSubject, nsINode* aNode) {
+static bool IsPreviousSibling(const nsINode* aSubject, const nsINode* aNode) {
   if (aSubject == aNode) {
     return false;
   }
@@ -1018,6 +1019,20 @@ void HTMLImageElement::PictureSourceMediaOrTypeChanged(nsIContent* aSourceNode,
   UpdateSourceSyncAndQueueImageTask(true);
 }
 
+void HTMLImageElement::PictureSourceDimensionChanged(
+    HTMLSourceElement* aSourceNode, bool aNotify) {
+  MOZ_ASSERT(IsPreviousSibling(aSourceNode, this),
+             "Should not be getting notifications for non-previous-siblings");
+
+  // "width" and "height" affect the dimension of images, but they don't have
+  // impact on the selection of <source> elements. In other words,
+  // UpdateResponsiveSource doesn't change the source, so all we need to do is
+  // just request restyle.
+  if (mResponsiveSelector->Content() == aSourceNode) {
+    InvalidateAttributeMapping();
+  }
+}
+
 void HTMLImageElement::PictureSourceAdded(HTMLSourceElement* aSourceNode) {
   MOZ_ASSERT(!aSourceNode || IsPreviousSibling(aSourceNode, this),
              "Should not be getting notifications for non-previous-siblings");
@@ -1335,6 +1350,45 @@ void HTMLImageElement::LazyLoadImageReachedViewport() {
   doc->IncLazyLoadImageReachViewport(!Complete());
 }
 
+const nsMappedAttributes* HTMLImageElement::GetMappedAttributesFromSource()
+    const {
+  if (!IsInPicture() || !mResponsiveSelector ||
+      !mResponsiveSelector->Content()) {
+    return nullptr;
+  }
+
+  const auto* source =
+      HTMLSourceElement::FromNode(mResponsiveSelector->Content());
+  if (!source) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(IsPreviousSibling(source, this),
+             "Incorrect or out-of-date source");
+  return source->GetAttributesMappedForImage();
+}
+
+void HTMLImageElement::InvalidateAttributeMapping() {
+  if (!IsInPicture()) {
+    return;
+  }
+
+  nsPresContext* presContext = nsContentUtils::GetContextForContent(this);
+  if (!presContext) {
+    return;
+  }
+
+  // Note: Unfortunately, we have to use RESTYLE_SELF, instead of using
+  // RESTYLE_STYLE_ATTRIBUTE or other ways, to avoid re-selector-match because
+  // we are using Gecko_GetExtraContentStyleDeclarations() to retrieve the
+  // extra declaration block from |this|'s width and height attributes, and
+  // other restyle hints seems not enough.
+  // FIXME: We may refine this together with the restyle for presentation
+  // attributes in RestyleManger::AttributeChagned()
+  presContext->RestyleManager()->PostRestyleEvent(
+      this, RestyleHint::RESTYLE_SELF, nsChangeHint(0));
+}
+
 void HTMLImageElement::SetResponsiveSelector(
     RefPtr<ResponsiveImageSelector>&& aSource) {
   if (mResponsiveSelector == aSource) {
@@ -1343,8 +1397,10 @@ void HTMLImageElement::SetResponsiveSelector(
 
   mResponsiveSelector = std::move(aSource);
 
-  // TODO: Restyle the image element if needed in the following patches.
+  // Invalidate the style if needed.
+  InvalidateAttributeMapping();
 
+  // Update density.
   SetDensity(mResponsiveSelector
                  ? mResponsiveSelector->GetSelectedImageDensity()
                  : 1.0);

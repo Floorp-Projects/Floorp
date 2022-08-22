@@ -270,6 +270,10 @@ class HTMLImageElement final : public nsGenericHTMLElement,
 
   void LazyLoadImageReachedViewport();
 
+  // This is used when restyling, for retrieving the extra style from the source
+  // element.
+  const nsMappedAttributes* GetMappedAttributesFromSource() const;
+
  protected:
   virtual ~HTMLImageElement();
 
@@ -309,6 +313,11 @@ class HTMLImageElement final : public nsGenericHTMLElement,
   // As we re-run the source selection on these mutations regardless,
   // we don't actually care which changed or to what
   void PictureSourceMediaOrTypeChanged(nsIContent* aSourceNode, bool aNotify);
+
+  // This is called when we update "width" or "height" attribute of source
+  // element.
+  void PictureSourceDimensionChanged(HTMLSourceElement* aSourceNode,
+                                     bool aNotify);
 
   void PictureSourceAdded(HTMLSourceElement* aSourceNode = nullptr);
   // This should be called prior to the unbind, such that nextsibling works
@@ -407,6 +416,8 @@ class HTMLImageElement final : public nsGenericHTMLElement,
     return GetParentElement() &&
            GetParentElement()->IsHTMLElement(nsGkAtoms::picture);
   }
+
+  void InvalidateAttributeMapping();
 
   void SetResponsiveSelector(RefPtr<ResponsiveImageSelector>&& aSource);
   void SetDensity(double aDensity);

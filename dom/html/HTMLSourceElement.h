@@ -29,11 +29,13 @@ class HTMLSourceElement final : public nsGenericHTMLElement {
 
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLSourceElement, source)
 
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // Override BindToTree() so that we can trigger a load when we add a
   // child source element.
-  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
+
+  void UnbindFromTree(bool aNullParent) override;
 
   // If this element's media attr matches for its owner document.  Returns true
   // if no media attr was set.
@@ -97,6 +99,14 @@ class HTMLSourceElement final : public nsGenericHTMLElement {
     SetUnsignedIntAttr(nsGkAtoms::height, aHeight, 0, aRv);
   }
 
+  const nsMappedAttributes* GetAttributesMappedForImage() const {
+    return mMappedAttributesForImage;
+  }
+
+  static bool IsAttributeMappedToImages(const nsAtom* aAttribute) {
+    return aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height;
+  }
+
  protected:
   virtual ~HTMLSourceElement();
 
@@ -114,6 +124,11 @@ class HTMLSourceElement final : public nsGenericHTMLElement {
                         bool aNotify) override;
 
  private:
+  // Generates a new MediaList using the given input
+  void UpdateMediaList(const nsAttrValue* aValue);
+
+  void BuildMappedAttributesForImage();
+
   bool IsInPicture() const {
     return GetParentElement() &&
            GetParentElement()->IsHTMLElement(nsGkAtoms::picture);
@@ -128,8 +143,9 @@ class HTMLSourceElement final : public nsGenericHTMLElement {
   // The triggering principal for the srcset attribute.
   nsCOMPtr<nsIPrincipal> mSrcsetTriggeringPrincipal;
 
-  // Generates a new MediaList using the given input
-  void UpdateMediaList(const nsAttrValue* aValue);
+  // The mapped attributes to HTMLImageElement if we are associated with a
+  // <picture> with a valid <img>.
+  RefPtr<nsMappedAttributes> mMappedAttributesForImage;
 };
 
 }  // namespace mozilla::dom
