@@ -11,7 +11,6 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/PodOperations.h"
 #include "nsMathUtils.h"
-#include "Tracing.h"
 
 namespace mozilla {
 
@@ -54,7 +53,6 @@ class AnalyserNodeEngine final : public AudioNodeEngine {
   virtual void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                             const AudioBlock& aInput, AudioBlock* aOutput,
                             bool* aFinished) override {
-    TRACE("AnalyserNodeEngine::ProcessBlock");
     *aOutput = aInput;
 
     if (aInput.IsNull()) {

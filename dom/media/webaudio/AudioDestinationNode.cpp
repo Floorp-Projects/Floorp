@@ -28,7 +28,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsServiceManagerUtils.h"
-#include "Tracing.h"
 
 extern mozilla::LazyLogModule gAudioChannelLog;
 
@@ -76,7 +75,6 @@ class OfflineDestinationNodeEngine final : public AudioNodeEngine {
   void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
-    TRACE("OfflineDestinationNodeEngine::ProcessBlock");
     // Do this just for the sake of political correctness; this output
     // will not go anywhere.
     *aOutput = aInput;
@@ -205,7 +203,6 @@ class DestinationNodeEngine final : public AudioNodeEngine {
   void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
-    TRACE("DestinationNodeEngine::ProcessBlock");
     *aOutput = aInput;
     aOutput->mVolume *= mVolume;
 
