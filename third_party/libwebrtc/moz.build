@@ -140,7 +140,6 @@ DIRS += [
     "/third_party/libwebrtc/logging/rtc_event_video_gn",
     "/third_party/libwebrtc/logging/rtc_stream_config_gn",
     "/third_party/libwebrtc/media/rtc_encoder_simulcast_proxy_gn",
-    "/third_party/libwebrtc/media/rtc_h264_profile_id_gn",
     "/third_party/libwebrtc/media/rtc_internal_video_codecs_gn",
     "/third_party/libwebrtc/media/rtc_media_base_gn",
     "/third_party/libwebrtc/media/rtc_media_config_gn",
