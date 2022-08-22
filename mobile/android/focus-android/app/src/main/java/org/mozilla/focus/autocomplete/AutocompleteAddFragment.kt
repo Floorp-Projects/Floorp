@@ -39,11 +39,6 @@ class AutocompleteAddFragment : BaseSettingsLikeFragment(), CoroutineScope {
     private var _binding: FragmentAutocompleteAddDomainBinding? = null
     private val binding get() = _binding!!
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
-    }
-
     override fun onResume() {
         super.onResume()
 
@@ -79,12 +74,12 @@ class AutocompleteAddFragment : BaseSettingsLikeFragment(), CoroutineScope {
         _binding = null
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.menu_autocomplete_add, menu)
+    override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.menu_autocomplete_add, menu)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.save) {
+    override fun onMenuItemSelected(menuItem: MenuItem): Boolean = when (menuItem.itemId) {
+        R.id.save -> {
             val domain = binding.domainView.text.toString().trim()
 
             launch(IO) {
@@ -103,11 +98,10 @@ class AutocompleteAddFragment : BaseSettingsLikeFragment(), CoroutineScope {
                     }
                 }
             }
-
-            return true
+            true
         }
-
-        return super.onOptionsItemSelected(item)
+        // other options are not handled by this menu provider
+        else -> false
     }
 
     private fun saveDomainAndClose(context: Context, domain: String) {

@@ -27,7 +27,7 @@ import kotlin.collections.forEach as withEach
 
 class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
     override fun onCreatePreferences(p0: Bundle?, p1: String?) {
-        setHasOptionsMenu(true)
+        //
     }
 
     companion object {
@@ -47,22 +47,22 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        inflater.inflate(R.menu.menu_search_engines, menu)
+    override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        super.onCreateMenu(menu, menuInflater)
+        menuInflater.inflate(R.menu.menu_search_engines, menu)
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu) {
-        super.onPrepareOptionsMenu(menu)
+    override fun onPrepareMenu(menu: Menu) {
+        super.onPrepareMenu(menu)
         menu.findItem(R.id.menu_restore_default_engines)?.let {
             it.isEnabled = !requireComponents.store.state.search.hasDefaultSearchEnginesOnly()
         }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
         val currentEnginesCount = requireComponents.store.state.search.searchEngines.size
 
-        return when (item.itemId) {
+        return when (menuItem.itemId) {
             R.id.menu_remove_search_engines -> {
                 requireComponents.appStore.dispatch(
                     AppAction.OpenSettings(Screen.Settings.Page.SearchRemove),
@@ -82,7 +82,7 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
                 )
                 true
             }
-            else -> super.onOptionsItemSelected(item)
+            else -> false
         }
     }
 

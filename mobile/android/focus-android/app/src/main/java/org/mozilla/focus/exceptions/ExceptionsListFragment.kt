@@ -96,11 +96,6 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment(), CoroutineScope {
         },
     )
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
-    }
-
     /**
      * In selection mode the user can select and remove items. In non-selection mode the list can
      * be reordered by the user.
@@ -182,11 +177,11 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment(), CoroutineScope {
         _binding = null
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.menu_exceptions_list, menu)
+    override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+        menuInflater.inflate(R.menu.menu_exceptions_list, menu)
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu) {
+    override fun onPrepareMenu(menu: Menu) {
         val removeItem = menu.findItem(R.id.remove)
 
         removeItem?.let {
@@ -197,14 +192,14 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment(), CoroutineScope {
         }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
+    override fun onMenuItemSelected(menuItem: MenuItem): Boolean = when (menuItem.itemId) {
         R.id.remove -> {
             requireComponents.appStore.dispatch(
                 AppAction.OpenSettings(page = Screen.Settings.Page.PrivacyExceptionsRemove),
             )
             true
         }
-        else -> super.onOptionsItemSelected(item)
+        else -> false
     }
 
     /**
