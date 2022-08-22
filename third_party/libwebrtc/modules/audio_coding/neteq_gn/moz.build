@@ -57,10 +57,12 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/audio_coding/neteq/preemptive_expand.cc",
     "/third_party/libwebrtc/modules/audio_coding/neteq/random_vector.cc",
     "/third_party/libwebrtc/modules/audio_coding/neteq/red_payload_splitter.cc",
+    "/third_party/libwebrtc/modules/audio_coding/neteq/relative_arrival_delay_tracker.cc",
     "/third_party/libwebrtc/modules/audio_coding/neteq/statistics_calculator.cc",
     "/third_party/libwebrtc/modules/audio_coding/neteq/sync_buffer.cc",
     "/third_party/libwebrtc/modules/audio_coding/neteq/time_stretch.cc",
-    "/third_party/libwebrtc/modules/audio_coding/neteq/timestamp_scaler.cc"
+    "/third_party/libwebrtc/modules/audio_coding/neteq/timestamp_scaler.cc",
+    "/third_party/libwebrtc/modules/audio_coding/neteq/underrun_optimizer.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
