@@ -29,10 +29,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/modules/audio_processing/agc2/down_sampler.cc",
-    "/third_party/libwebrtc/modules/audio_processing/agc2/noise_level_estimator.cc",
-    "/third_party/libwebrtc/modules/audio_processing/agc2/noise_spectrum_estimator.cc",
-    "/third_party/libwebrtc/modules/audio_processing/agc2/signal_classifier.cc"
+    "/third_party/libwebrtc/modules/audio_processing/agc2/noise_level_estimator.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
