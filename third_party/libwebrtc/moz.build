@@ -341,6 +341,7 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/network/sent_packet_gn",
     "/third_party/libwebrtc/rtc_base/network_constants_gn",
     "/third_party/libwebrtc/rtc_base/null_socket_server_gn",
+    "/third_party/libwebrtc/rtc_base/one_time_event_gn",
     "/third_party/libwebrtc/rtc_base/platform_thread_gn",
     "/third_party/libwebrtc/rtc_base/platform_thread_types_gn",
     "/third_party/libwebrtc/rtc_base/protobuf_utils_gn",
