@@ -70,7 +70,6 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_sender_audio.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_sequence_number_map.cc",
-    "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_utility.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/source_tracker.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/time_util.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/tmmbr_help.cc",
