@@ -28,12 +28,15 @@ LOCAL_INCLUDES += [
     "/tools/profiler/public"
 ]
 
+SOURCES += [
+    "/third_party/libwebrtc/modules/pacing/prioritized_packet_queue.cc"
+]
+
 UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/pacing/bitrate_prober.cc",
     "/third_party/libwebrtc/modules/pacing/paced_sender.cc",
     "/third_party/libwebrtc/modules/pacing/pacing_controller.cc",
     "/third_party/libwebrtc/modules/pacing/packet_router.cc",
-    "/third_party/libwebrtc/modules/pacing/prioritized_packet_queue.cc",
     "/third_party/libwebrtc/modules/pacing/round_robin_packet_queue.cc",
     "/third_party/libwebrtc/modules/pacing/task_queue_paced_sender.cc"
 ]
