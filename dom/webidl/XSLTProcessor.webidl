@@ -7,6 +7,7 @@ typedef (unrestricted double or boolean or DOMString or Node or sequence<Node> o
 
 [Exposed=Window]
 interface XSLTProcessor {
+    [UseCounter]
     constructor();
 
     /**
