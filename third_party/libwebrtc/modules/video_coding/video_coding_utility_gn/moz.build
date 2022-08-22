@@ -30,7 +30,7 @@ LOCAL_INCLUDES += [
 UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/video_coding/utility/decoded_frames_history.cc",
     "/third_party/libwebrtc/modules/video_coding/utility/frame_dropper.cc",
-    "/third_party/libwebrtc/modules/video_coding/utility/framerate_controller.cc",
+    "/third_party/libwebrtc/modules/video_coding/utility/framerate_controller_deprecated.cc",
     "/third_party/libwebrtc/modules/video_coding/utility/ivf_file_reader.cc",
     "/third_party/libwebrtc/modules/video_coding/utility/ivf_file_writer.cc",
     "/third_party/libwebrtc/modules/video_coding/utility/qp_parser.cc",

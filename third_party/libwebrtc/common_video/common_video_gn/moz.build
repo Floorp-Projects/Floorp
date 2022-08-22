@@ -32,6 +32,7 @@ LOCAL_INCLUDES += [
 UNIFIED_SOURCES += [
     "/third_party/libwebrtc/common_video/bitrate_adjuster.cc",
     "/third_party/libwebrtc/common_video/frame_rate_estimator.cc",
+    "/third_party/libwebrtc/common_video/framerate_controller.cc",
     "/third_party/libwebrtc/common_video/h264/h264_bitstream_parser.cc",
     "/third_party/libwebrtc/common_video/h264/h264_common.cc",
     "/third_party/libwebrtc/common_video/h264/pps_parser.cc",
