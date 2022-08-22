@@ -323,6 +323,7 @@ void CanonicalBrowsingContext::ReplacedBy(
   txn.SetUserAgentOverride(GetUserAgentOverride());
   txn.SetSuspendMediaWhenInactive(GetSuspendMediaWhenInactive());
   txn.SetDisplayMode(GetDisplayMode());
+  txn.SetForceDesktopViewport(GetForceDesktopViewport());
 
   // As this is a different BrowsingContext, set InitialSandboxFlags to the
   // current flags in the new context so that they also apply to any initial
