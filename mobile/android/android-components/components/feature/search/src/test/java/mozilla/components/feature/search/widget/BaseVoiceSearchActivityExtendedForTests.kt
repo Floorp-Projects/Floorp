@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.search.widget
 
+import androidx.core.view.MenuProvider
 import java.util.Locale
 
 class BaseVoiceSearchActivityExtendedForTests : BaseVoiceSearchActivity() {
@@ -16,5 +17,8 @@ class BaseVoiceSearchActivityExtendedForTests : BaseVoiceSearchActivity() {
     }
 
     override fun onSpeechRecognitionEnded(spokenText: String) {
+    }
+
+    override fun addMenuProvider(provider: MenuProvider) {
     }
 }
