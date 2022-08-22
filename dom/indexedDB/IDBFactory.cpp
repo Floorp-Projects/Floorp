@@ -401,6 +401,7 @@ RefPtr<IDBOpenDBRequest> IDBFactory::Open(JSContext* aCx,
                                           const IDBOpenDBOptions& aOptions,
                                           CallerType aCallerType,
                                           ErrorResult& aRv) {
+  // This overload is nonstandard, see bug 1275496.
   // Ignore calls with empty options for telemetry of usage count.
   // Unfortunately, we cannot distinguish between the use of the method with
   // only a single argument (which actually is a standard overload we don't want
@@ -536,6 +537,20 @@ RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
       return nullptr;
     }
   } else {
+    if (mGlobal->GetStorageAccess() == StorageAccess::ePrivateBrowsing) {
+      if (NS_IsMainThread()) {
+        SetUseCounter(
+            mGlobal->GetGlobalJSObject(),
+            aDeleting
+                ? eUseCounter_custom_PrivateBrowsingIDBFactoryOpen
+                : eUseCounter_custom_PrivateBrowsingIDBFactoryDeleteDatabase);
+      } else {
+        SetUseCounter(
+            aDeleting ? UseCounterWorker::Custom_PrivateBrowsingIDBFactoryOpen
+                      : UseCounterWorker::
+                            Custom_PrivateBrowsingIDBFactoryDeleteDatabase);
+      }
+    }
     principalInfo = *mPrincipalInfo;
   }
 
