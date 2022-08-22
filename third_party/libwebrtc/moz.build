@@ -310,6 +310,7 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/bitstream_reader_gn",
     "/third_party/libwebrtc/rtc_base/buffer_gn",
     "/third_party/libwebrtc/rtc_base/buffer_queue_gn",
+    "/third_party/libwebrtc/rtc_base/byte_buffer_gn",
     "/third_party/libwebrtc/rtc_base/byte_order_gn",
     "/third_party/libwebrtc/rtc_base/callback_list_gn",
     "/third_party/libwebrtc/rtc_base/checks_gn",
