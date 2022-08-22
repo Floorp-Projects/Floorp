@@ -11,6 +11,7 @@
 #include <new>
 #include <utility>
 #include "gfxPlatform.h"
+#include "harfbuzz/hb.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
@@ -906,6 +907,19 @@ class gfxFontUtils {
     mozilla::AutoSwap_PRUint16 length;      // String length (in bytes).
     mozilla::AutoSwap_PRUint16 offset;  // String offset from start of storage
                                         // (in bytes).
+  };
+
+  // Helper to ensure we free a font table when we return.
+  class AutoHBBlob {
+   public:
+    explicit AutoHBBlob(hb_blob_t* aBlob) : mBlob(aBlob) {}
+
+    ~AutoHBBlob() { hb_blob_destroy(mBlob); }
+
+    operator hb_blob_t*() { return mBlob; }
+
+   private:
+    hb_blob_t* const mBlob;
   };
 
   // for reading big-endian font data on either big or little-endian platforms
