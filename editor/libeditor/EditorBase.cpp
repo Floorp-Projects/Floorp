@@ -3015,7 +3015,6 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
-  EditorDOMPointInText pointToInsert(aPointToInsert);
   RefPtr<EditTransactionBase> transaction;
   bool isIMETransaction = false;
   // aSuppressIME is used when editor must insert text, yet this text is not
@@ -3023,18 +3022,11 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
   // IME insertion.
   if (ShouldHandleIMEComposition() && !aSuppressIME) {
     transaction =
-        CompositionTransaction::Create(*this, aStringToInsert, pointToInsert);
+        CompositionTransaction::Create(*this, aStringToInsert, aPointToInsert);
     isIMETransaction = true;
-    // All characters of the composition string will be replaced with
-    // aStringToInsert.  So, we need to emulate to remove the composition
-    // string.
-    // FYI: The text node information in mComposition has been updated by
-    //      CompositionTransaction::Create().
-    pointToInsert.Set(mComposition->GetContainerTextNode(),
-                      mComposition->XPOffsetInTextNode());
   } else {
     transaction =
-        InsertTextTransaction::Create(*this, aStringToInsert, pointToInsert);
+        InsertTextTransaction::Create(*this, aStringToInsert, aPointToInsert);
   }
 
   // XXX We may not need these view batches anymore.  This is handled at a
@@ -3045,7 +3037,20 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
                        "EditorBase::DoTransactionInternal() failed");
   EndUpdateViewBatch(__FUNCTION__);
 
-  if (IsHTMLEditor() && pointToInsert.IsSet()) {
+  auto pointToInsert = [&]() -> EditorDOMPointInText {
+    if (!isIMETransaction) {
+      return aPointToInsert;
+    }
+    if (NS_WARN_IF(!mComposition->GetContainerTextNode())) {
+      return aPointToInsert;
+    }
+    return EditorDOMPointInText(
+        mComposition->GetContainerTextNode(),
+        std::min(mComposition->XPOffsetInTextNode(),
+                 mComposition->GetContainerTextNode()->TextDataLength()));
+  }();
+
+  if (IsHTMLEditor()) {
     auto [begin, end] = ComputeInsertedRange(pointToInsert, aStringToInsert);
     if (begin.IsSet() && end.IsSet()) {
       TopLevelEditSubActionDataRef().DidInsertText(
@@ -3054,7 +3059,7 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
     if (isIMETransaction) {
       // Let's mark the text node as "modified frequently" if it interact with
       // IME since non-ASCII character may be inserted into it in most cases.
-      aPointToInsert.ContainerAs<Text>()->MarkAsMaybeModifiedFrequently();
+      pointToInsert.ContainerAs<Text>()->MarkAsMaybeModifiedFrequently();
     }
   }
 
