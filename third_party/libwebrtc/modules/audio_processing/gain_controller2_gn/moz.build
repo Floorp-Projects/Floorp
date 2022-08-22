@@ -28,21 +28,8 @@ LOCAL_INCLUDES += [
     "/tools/profiler/public"
 ]
 
-SOURCES += [
-    "/third_party/libwebrtc/modules/audio_processing/echo_control_mobile_impl.cc",
-    "/third_party/libwebrtc/modules/audio_processing/echo_detector/normalized_covariance_estimator.cc",
-    "/third_party/libwebrtc/modules/audio_processing/gain_control_impl.cc"
-]
-
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/modules/audio_processing/audio_processing_builder_impl.cc",
-    "/third_party/libwebrtc/modules/audio_processing/audio_processing_impl.cc",
-    "/third_party/libwebrtc/modules/audio_processing/echo_detector/circular_buffer.cc",
-    "/third_party/libwebrtc/modules/audio_processing/echo_detector/mean_variance_estimator.cc",
-    "/third_party/libwebrtc/modules/audio_processing/echo_detector/moving_max.cc",
-    "/third_party/libwebrtc/modules/audio_processing/level_estimator.cc",
-    "/third_party/libwebrtc/modules/audio_processing/residual_echo_detector.cc",
-    "/third_party/libwebrtc/modules/audio_processing/typing_detection.cc"
+    "/third_party/libwebrtc/modules/audio_processing/gain_controller2.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -222,4 +209,4 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
-Library("audio_processing_gn")
+Library("gain_controller2_gn")
