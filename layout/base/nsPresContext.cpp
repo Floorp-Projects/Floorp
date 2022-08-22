@@ -931,10 +931,11 @@ void nsPresContext::RecomputeBrowsingContextDependentData() {
     if (overriden != PrefersColorSchemeOverride::None) {
       return overriden;
     }
-    // We only use the top embedder color-scheme for now, see
-    // https://github.com/w3c/csswg-drafts/issues/7213 for a more general
-    // proposal.
-    return top->GetEmbedderColorScheme();
+    if (!StaticPrefs::
+            layout_css_iframe_embedder_prefers_color_scheme_content_enabled()) {
+      return top->GetEmbedderColorScheme();
+    }
+    return browsingContext->GetEmbedderColorScheme();
   }());
 
   if (doc == mDocument) {
