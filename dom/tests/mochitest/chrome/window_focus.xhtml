@@ -53,31 +53,31 @@ function initEvents(target)
 function eventOccured(event)
 {
   // iframes should never receive focus or blur events directly
-  if (event.target instanceof Element && event.target.localName == "iframe")
+  if (Element.isInstance(event.target) && event.target.localName == "iframe")
     ok(false, "iframe " + event.type + "occured");
 
   var id;
   if (gOldExpectedWindow && event.type == "blur") {
-    if (event.target instanceof Window)
+    if (Window.isInstance(event.target))
       id = "frame-" + gOldExpectedWindow.document.documentElement.id + "-window";
-    else if (event.target instanceof Document)
+    else if (Document.isInstance(event.target))
       id = "frame-" + gOldExpectedWindow.document.documentElement.id + "-document";
     else
       id = event.originalTarget.id;
   }
   else if (gNewExpectedWindow && event.type == "focus") {
-    if (event.target instanceof Window)
+    if (Window.isInstance(event.target))
       id = "frame-" + gNewExpectedWindow.document.documentElement.id + "-window";
-    else if (event.target instanceof Document)
+    else if (Document.isInstance(event.target))
       id = "frame-" + gNewExpectedWindow.document.documentElement.id + "-document";
     else
       id = event.originalTarget.id;
   }
   else if (event.type == "activate" || event.type == "deactivate")
     id = event.target.document.documentElement.id + "-window";
-  else if (event.target instanceof Window)
+  else if (Window.isInstance(event.target))
     id = (event.target == window) ? "outer-window" : "child-window";
-  else if (event.target instanceof Document)
+  else if (Document.isInstance(event.target))
     id = (event.target == document) ? "outer-document" : "child-document";
   else
     id = event.originalTarget.id;

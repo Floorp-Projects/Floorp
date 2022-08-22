@@ -77,7 +77,7 @@ function runTest()
     }
     // if full keyboard access is not on, just skip the tests
     if (fullKeyboardAccess) {
-      if (!(event.target instanceof Element)) {
+      if (!(Element.isInstance(event.target))) {
         info("target not an Element");
         return;
       }

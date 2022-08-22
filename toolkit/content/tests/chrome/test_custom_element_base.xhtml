@@ -105,13 +105,13 @@
     ok(MozXULElement.parseXULToFragment, "parseXULToFragment helper exists");
 
     let frag = MozXULElement.parseXULToFragment(`<deck id='foo' />`);
-    ok(frag instanceof DocumentFragment);
+    ok(DocumentFragment.isInstance(frag));
 
     document.documentElement.appendChild(frag);
 
     let deck = document.documentElement.lastChild;
     ok(deck instanceof MozXULElement, "instance of MozXULElement");
-    ok(deck instanceof XULElement, "instance of XULElement");
+    ok(XULElement.isInstance(deck), "instance of XULElement");
     is(deck.id, "foo", "attribute set");
     is(deck.selectedIndex, "0", "Custom Element is property attached");
     deck.remove();
@@ -322,7 +322,7 @@
 
     asControl = twoElement.QueryInterface(Ci.nsIDOMXULControlElement);
     ok(asControl, "QueryInterface to nsIDOMXULControlElement");
-    ok(asControl instanceof Node, "Control is a Node");
+    ok(Node.isInstance(asControl), "Control is a Node");
 
     // Now make sure that the custom element handles focus/tabIndex as needed by shitfing
     // focus around and enabling/disabling the simple elements.
