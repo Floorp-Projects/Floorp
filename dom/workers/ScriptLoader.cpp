@@ -476,7 +476,8 @@ WorkerScriptLoader::WorkerScriptLoader(
     // script uri encoding. Otherwise, default encoding (UTF-8) is applied.
     MOZ_ASSERT_IF(bool(aDocumentEncoding),
                   aIsMainScript && !aWorkerPrivate->GetParent());
-    nsCOMPtr<nsIURI> baseURI = GetBaseURI();
+    nsCOMPtr<nsIURI> baseURI =
+        aIsMainScript ? GetInitialBaseURI() : GetBaseURI();
     nsCOMPtr<nsIURI> aURI;
     nsresult rv = ConstructURI(aScriptURL, baseURI, aDocumentEncoding,
                                getter_AddRefs(aURI));
@@ -512,22 +513,25 @@ bool WorkerScriptLoader::DispatchLoadScripts() {
   return true;
 }
 
-nsIURI* WorkerScriptLoader::GetBaseURI() {
+nsIURI* WorkerScriptLoader::GetInitialBaseURI() {
   MOZ_ASSERT(mWorkerRef->Private());
   nsIURI* baseURI;
   WorkerPrivate* parentWorker = mWorkerRef->Private()->GetParent();
-  if (mIsMainScript) {
-    if (parentWorker) {
-      baseURI = parentWorker->GetBaseURI();
-      NS_ASSERTION(baseURI, "Should have been set already!");
-    } else {
-      // May be null.
-      baseURI = mWorkerRef->Private()->GetBaseURI();
-    }
+  if (parentWorker) {
+    baseURI = parentWorker->GetBaseURI();
   } else {
+    // May be null.
     baseURI = mWorkerRef->Private()->GetBaseURI();
-    NS_ASSERTION(baseURI, "Should have been set already!");
   }
+
+  return baseURI;
+}
+
+nsIURI* WorkerScriptLoader::GetBaseURI() {
+  MOZ_ASSERT(mWorkerRef);
+  nsIURI* baseURI;
+  baseURI = mWorkerRef->Private()->GetBaseURI();
+  NS_ASSERTION(baseURI, "Should have been set already!");
 
   return baseURI;
 }

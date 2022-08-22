@@ -165,6 +165,8 @@ class WorkerScriptLoader final : public nsINamed {
  protected:
   nsIURI* GetBaseURI();
 
+  nsIURI* GetInitialBaseURI();
+
   void MaybeExecuteFinishedScripts(ScriptLoadRequest* aRequest);
 
   void MaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
