@@ -273,7 +273,12 @@ impl ComponentValType {
         }
     }
 
-    pub(crate) fn is_subtype_of(&self, other: &Self, types: &TypeList) -> bool {
+    /// Determines if this component value type is a subtype of the given one.
+    pub fn is_subtype_of(&self, other: &Self, types: TypesRef) -> bool {
+        self.internal_is_subtype_of(other, types.list)
+    }
+
+    pub(crate) fn internal_is_subtype_of(&self, other: &Self, types: &TypeList) -> bool {
         match (self, other) {
             (ComponentValType::Primitive(ty), ComponentValType::Primitive(other_ty)) => {
                 ty.is_subtype_of(other_ty)
@@ -281,8 +286,19 @@ impl ComponentValType {
             (ComponentValType::Type(ty), ComponentValType::Type(other_ty)) => types[*ty]
                 .as_defined_type()
                 .unwrap()
-                .is_subtype_of(types[*other_ty].as_defined_type().unwrap(), types),
-            _ => false,
+                .internal_is_subtype_of(types[*other_ty].as_defined_type().unwrap(), types),
+            (ComponentValType::Primitive(ty), ComponentValType::Type(other_ty)) => {
+                match types[*other_ty].as_defined_type().unwrap() {
+                    ComponentDefinedType::Primitive(other_ty) => ty.is_subtype_of(other_ty),
+                    _ => false,
+                }
+            }
+            (ComponentValType::Type(ty), ComponentValType::Primitive(other_ty)) => {
+                match types[*ty].as_defined_type().unwrap() {
+                    ComponentDefinedType::Primitive(ty) => ty.is_subtype_of(other_ty),
+                    _ => false,
+                }
+            }
         }
     }
 
@@ -320,7 +336,12 @@ pub enum EntityType {
 }
 
 impl EntityType {
-    pub(crate) fn is_subtype_of(&self, b: &Self, types: &TypeList) -> bool {
+    /// Determines if this entity type is a subtype of the given one.
+    pub fn is_subtype_of(&self, other: &Self, types: TypesRef) -> bool {
+        self.internal_is_subtype_of(other, types.list)
+    }
+
+    pub(crate) fn internal_is_subtype_of(&self, b: &Self, types: &TypeList) -> bool {
         macro_rules! limits_match {
             ($a:expr, $b:expr) => {{
                 let a = $a;
@@ -437,7 +458,12 @@ impl ModuleType {
         self.imports.get(&(module, name) as &dyn ModuleImportKey)
     }
 
-    pub(crate) fn is_subtype_of(&self, other: &Self, types: &TypeList) -> bool {
+    /// Determines if this module type is a subtype of the given one.
+    pub fn is_subtype_of(&self, other: &Self, types: TypesRef) -> bool {
+        self.internal_is_subtype_of(other, types.list)
+    }
+
+    pub(crate) fn internal_is_subtype_of(&self, other: &Self, types: &TypeList) -> bool {
         // For module type subtyping, all exports in the other module type
         // must be present in this module type's exports (i.e. it can export
         // *more* than what this module type needs).
@@ -446,14 +472,14 @@ impl ModuleType {
         self.imports
             .iter()
             .all(|(k, ty)| match other.imports.get(k) {
-                Some(other) => other.is_subtype_of(ty, types),
+                Some(other) => other.internal_is_subtype_of(ty, types),
                 None => false,
             })
             && other
                 .exports
                 .iter()
                 .all(|(k, other)| match self.exports.get(k) {
-                    Some(ty) => ty.is_subtype_of(other, types),
+                    Some(ty) => ty.internal_is_subtype_of(other, types),
                     None => false,
                 })
     }
@@ -504,32 +530,37 @@ pub enum ComponentEntityType {
 }
 
 impl ComponentEntityType {
-    pub(crate) fn is_subtype_of(&self, other: &Self, types: &TypeList) -> bool {
+    /// Determines if this component entity type is a subtype of the given one.
+    pub fn is_subtype_of(&self, other: &Self, types: TypesRef) -> bool {
+        self.internal_is_subtype_of(other, types.list)
+    }
+
+    pub(crate) fn internal_is_subtype_of(&self, other: &Self, types: &TypeList) -> bool {
         match (self, other) {
             (Self::Module(ty), Self::Module(other_ty)) => types[*ty]
                 .as_module_type()
                 .unwrap()
-                .is_subtype_of(types[*other_ty].as_module_type().unwrap(), types),
+                .internal_is_subtype_of(types[*other_ty].as_module_type().unwrap(), types),
             (Self::Func(ty), Self::Func(other_ty)) => types[*ty]
                 .as_component_func_type()
                 .unwrap()
-                .is_subtype_of(types[*other_ty].as_component_func_type().unwrap(), types),
-            (Self::Value(ty), Self::Value(other_ty)) => ty.is_subtype_of(other_ty, types),
+                .internal_is_subtype_of(types[*other_ty].as_component_func_type().unwrap(), types),
+            (Self::Value(ty), Self::Value(other_ty)) => ty.internal_is_subtype_of(other_ty, types),
             (Self::Type(ty), Self::Type(other_ty)) => types[*ty]
                 .as_defined_type()
                 .unwrap()
-                .is_subtype_of(types[*other_ty].as_defined_type().unwrap(), types),
+                .internal_is_subtype_of(types[*other_ty].as_defined_type().unwrap(), types),
             (Self::Instance(ty), Self::Instance(other_ty)) => types[*ty]
                 .as_component_instance_type()
                 .unwrap()
-                .is_subtype_of(
+                .internal_is_subtype_of(
                     types[*other_ty].as_component_instance_type().unwrap(),
                     types,
                 ),
             (Self::Component(ty), Self::Component(other_ty)) => types[*ty]
                 .as_component_type()
                 .unwrap()
-                .is_subtype_of(types[*other_ty].as_component_type().unwrap(), types),
+                .internal_is_subtype_of(types[*other_ty].as_component_type().unwrap(), types),
             _ => false,
         }
     }
@@ -569,7 +600,12 @@ pub struct ComponentType {
 }
 
 impl ComponentType {
-    pub(crate) fn is_subtype_of(&self, other: &Self, types: &TypeList) -> bool {
+    /// Determines if this component type is a subtype of the given one.
+    pub fn is_subtype_of(&self, other: &Self, types: TypesRef) -> bool {
+        self.internal_is_subtype_of(other, types.list)
+    }
+
+    pub(crate) fn internal_is_subtype_of(&self, other: &Self, types: &TypeList) -> bool {
         // For component type subtyping, all exports in the other component type
         // must be present in this component type's exports (i.e. it can export
         // *more* than what this component type needs).
@@ -578,14 +614,14 @@ impl ComponentType {
         self.imports
             .iter()
             .all(|(k, ty)| match other.imports.get(k) {
-                Some(other) => other.is_subtype_of(ty, types),
+                Some(other) => other.internal_is_subtype_of(ty, types),
                 None => false,
             })
             && other
                 .exports
                 .iter()
                 .all(|(k, other)| match self.exports.get(k) {
-                    Some(ty) => ty.is_subtype_of(other, types),
+                    Some(ty) => ty.internal_is_subtype_of(other, types),
                     None => false,
                 })
     }
@@ -625,7 +661,12 @@ impl ComponentInstanceType {
         }
     }
 
-    pub(crate) fn is_subtype_of(&self, other: &Self, types: &TypeList) -> bool {
+    /// Determines if this component instance type is a subtype of the given one.
+    pub fn is_subtype_of(&self, other: &Self, types: TypesRef) -> bool {
+        self.internal_is_subtype_of(other, types.list)
+    }
+
+    pub(crate) fn internal_is_subtype_of(&self, other: &Self, types: &TypeList) -> bool {
         let exports = self.exports(types);
 
         // For instance type subtyping, all exports in the other instance type
@@ -635,7 +676,7 @@ impl ComponentInstanceType {
             .exports(types)
             .iter()
             .all(|(k, other)| match exports.get(k) {
-                Some(ty) => ty.is_subtype_of(other, types),
+                Some(ty) => ty.internal_is_subtype_of(other, types),
                 None => false,
             })
     }
@@ -653,12 +694,17 @@ pub struct ComponentFuncType {
 }
 
 impl ComponentFuncType {
-    pub(crate) fn is_subtype_of(&self, other: &Self, types: &TypeList) -> bool {
+    /// Determines if this component function type is a subtype of the given one.
+    pub fn is_subtype_of(&self, other: &Self, types: TypesRef) -> bool {
+        self.internal_is_subtype_of(other, types.list)
+    }
+
+    pub(crate) fn internal_is_subtype_of(&self, other: &Self, types: &TypeList) -> bool {
         // Subtyping rules:
         // https://github.com/WebAssembly/component-model/blob/17f94ed1270a98218e0e796ca1dad1feb7e5c507/design/mvp/Subtyping.md
 
         // Covariant on return type
-        if !self.result.is_subtype_of(&other.result, types) {
+        if !self.result.internal_is_subtype_of(&other.result, types) {
             return false;
         }
 
@@ -673,7 +719,7 @@ impl ComponentFuncType {
                 return false;
             }
 
-            if !other_ty.is_subtype_of(ty, types) {
+            if !other_ty.internal_is_subtype_of(ty, types) {
                 return false;
             }
         }
@@ -706,6 +752,7 @@ impl ComponentFuncType {
                 info.params.clear();
                 assert!(info.params.push(ValType::I32));
                 info.requires_memory = true;
+                info.requires_realloc = true;
                 break;
             }
         }
@@ -823,7 +870,12 @@ impl ComponentDefinedType {
         }
     }
 
-    pub(crate) fn is_subtype_of(&self, other: &Self, types: &TypeList) -> bool {
+    /// Determines if this component defined type is a subtype of the given one.
+    pub fn is_subtype_of(&self, other: &Self, types: TypesRef) -> bool {
+        self.internal_is_subtype_of(other, types.list)
+    }
+
+    pub(crate) fn internal_is_subtype_of(&self, other: &Self, types: &TypeList) -> bool {
         // Subtyping rules according to
         // https://github.com/WebAssembly/component-model/blob/17f94ed1270a98218e0e796ca1dad1feb7e5c507/design/mvp/Subtyping.md
         match (self, other) {
@@ -831,7 +883,7 @@ impl ComponentDefinedType {
             (Self::Record(r), Self::Record(other_r)) => {
                 for (name, ty) in r.fields.iter() {
                     if let Some(other_ty) = other_r.fields.get(name) {
-                        if !ty.is_subtype_of(other_ty, types) {
+                        if !ty.internal_is_subtype_of(other_ty, types) {
                             return false;
                         }
                     } else {
@@ -850,7 +902,7 @@ impl ComponentDefinedType {
                 for (name, case) in v.cases.iter() {
                     if let Some(other_case) = other_v.cases.get(name) {
                         // Covariant subtype on the case type
-                        if !case.ty.is_subtype_of(&other_case.ty, types) {
+                        if !case.ty.internal_is_subtype_of(&other_case.ty, types) {
                             return false;
                         }
                     } else if let Some(refines) = &case.refines {
@@ -867,7 +919,7 @@ impl ComponentDefinedType {
                 true
             }
             (Self::List(ty), Self::List(other_ty)) | (Self::Option(ty), Self::Option(other_ty)) => {
-                ty.is_subtype_of(other_ty, types)
+                ty.internal_is_subtype_of(other_ty, types)
             }
             (Self::Tuple(t), Self::Tuple(other_t)) => {
                 if t.types.len() != other_t.types.len() {
@@ -876,7 +928,7 @@ impl ComponentDefinedType {
                 t.types
                     .iter()
                     .zip(other_t.types.iter())
-                    .all(|(ty, other_ty)| ty.is_subtype_of(other_ty, types))
+                    .all(|(ty, other_ty)| ty.internal_is_subtype_of(other_ty, types))
             }
             (Self::Union(u), Self::Union(other_u)) => {
                 if u.types.len() != other_u.types.len() {
@@ -885,12 +937,13 @@ impl ComponentDefinedType {
                 u.types
                     .iter()
                     .zip(other_u.types.iter())
-                    .all(|(ty, other_ty)| ty.is_subtype_of(other_ty, types))
+                    .all(|(ty, other_ty)| ty.internal_is_subtype_of(other_ty, types))
             }
             (Self::Flags(set), Self::Flags(other_set))
             | (Self::Enum(set), Self::Enum(other_set)) => set.is_subset(other_set),
             (Self::Expected(ok, error), Self::Expected(other_ok, other_error)) => {
-                ok.is_subtype_of(other_ok, types) && error.is_subtype_of(other_error, types)
+                ok.internal_is_subtype_of(other_ok, types)
+                    && error.internal_is_subtype_of(other_error, types)
             }
             _ => false,
         }
@@ -1001,35 +1054,50 @@ enum TypesKind {
 ///
 /// The type information is returned via the [`crate::Validator::end`] method.
 pub struct Types {
-    types: TypeList,
+    list: TypeList,
     kind: TypesKind,
 }
 
-impl Types {
-    pub(crate) fn from_module(types: TypeList, module: Arc<Module>) -> Self {
+#[derive(Clone, Copy)]
+enum TypesRefKind<'a> {
+    Module(&'a Module),
+    Component(&'a ComponentState),
+}
+
+/// Represents the types known to a [`crate::Validator`] during validation.
+///
+/// Retrieved via the [`crate::Validator::types`] method.
+#[derive(Clone, Copy)]
+pub struct TypesRef<'a> {
+    list: &'a TypeList,
+    kind: TypesRefKind<'a>,
+}
+
+impl<'a> TypesRef<'a> {
+    pub(crate) fn from_module(types: &'a TypeList, module: &'a Module) -> Self {
         Self {
-            types,
-            kind: TypesKind::Module(module),
+            list: types,
+            kind: TypesRefKind::Module(module),
         }
     }
 
-    pub(crate) fn from_component(types: TypeList, component: ComponentState) -> Self {
+    pub(crate) fn from_component(types: &'a TypeList, component: &'a ComponentState) -> Self {
         Self {
-            types,
-            kind: TypesKind::Component(component),
+            list: types,
+            kind: TypesRefKind::Component(component),
         }
     }
 
-    fn types(&self, core: bool) -> Option<&Vec<TypeId>> {
+    fn types(&self, core: bool) -> Option<&'a [TypeId]> {
         Some(match &self.kind {
-            TypesKind::Module(module) => {
+            TypesRefKind::Module(module) => {
                 if core {
                     &module.types
                 } else {
                     return None;
                 }
             }
-            TypesKind::Component(component) => {
+            TypesRefKind::Component(component) => {
                 if core {
                     &component.core_types
                 } else {
@@ -1042,32 +1110,267 @@ impl Types {
     /// Gets a type based on its type id.
     ///
     /// Returns `None` if the type id is unknown.
-    pub fn type_from_id(&self, id: TypeId) -> Option<&Type> {
-        self.types.get(id.index)
+    pub fn type_from_id(&self, id: TypeId) -> Option<&'a Type> {
+        self.list.get(id.index)
     }
 
     /// Gets a type id from a type index.
     ///
-    /// Returns `None` if the type index is out of bounds.
+    /// Returns `None` if the type index is out of bounds or the type has not
+    /// been parsed yet.
     pub fn id_from_type_index(&self, index: u32, core: bool) -> Option<TypeId> {
         self.types(core)?.get(index as usize).copied()
     }
 
     /// Gets a type at the given type index.
     ///
+    /// Returns `None` if the type index is out of bounds or the type has not
+    /// been parsed yet.
+    pub fn type_at(&self, index: u32, core: bool) -> Option<&'a Type> {
+        self.type_from_id(*self.types(core)?.get(index as usize)?)
+    }
+
+    /// Gets a defined core function type at the given type index.
+    ///
+    /// Returns `None` if the type index is out of bounds or the type has not
+    /// been parsed yet.
+    pub fn func_type_at(&self, index: u32) -> Option<&'a FuncType> {
+        match self.type_at(index, true)? {
+            Type::Func(ty) => Some(ty),
+            _ => None,
+        }
+    }
+
+    /// Gets the type of a table at the given table index.
+    ///
+    /// Returns `None` if the type index is out of bounds or the type has not
+    /// been parsed yet.
+    pub fn table_at(&self, index: u32) -> Option<TableType> {
+        let tables = match &self.kind {
+            TypesRefKind::Module(module) => &module.tables,
+            TypesRefKind::Component(component) => &component.core_tables,
+        };
+
+        tables.get(index as usize).copied()
+    }
+
+    /// Gets the type of a memory at the given memory index.
+    ///
+    /// Returns `None` if the type index is out of bounds or the type has not
+    /// been parsed yet.
+    pub fn memory_at(&self, index: u32) -> Option<MemoryType> {
+        let memories = match &self.kind {
+            TypesRefKind::Module(module) => &module.memories,
+            TypesRefKind::Component(component) => &component.core_memories,
+        };
+
+        memories.get(index as usize).copied()
+    }
+
+    /// Gets the type of a global at the given global index.
+    ///
+    /// Returns `None` if the type index is out of bounds or the type has not
+    /// been parsed yet.
+    pub fn global_at(&self, index: u32) -> Option<GlobalType> {
+        let globals = match &self.kind {
+            TypesRefKind::Module(module) => &module.globals,
+            TypesRefKind::Component(component) => &component.core_globals,
+        };
+
+        globals.get(index as usize).copied()
+    }
+
+    /// Gets the type of a tag at the given tag index.
+    ///
+    /// Returns `None` if the type index is out of bounds or the type has not
+    /// been parsed yet.
+    pub fn tag_at(&self, index: u32) -> Option<&'a FuncType> {
+        let tags = match &self.kind {
+            TypesRefKind::Module(module) => &module.tags,
+            TypesRefKind::Component(component) => &component.core_tags,
+        };
+
+        Some(
+            self.list[*tags.get(index as usize)?]
+                .as_func_type()
+                .unwrap(),
+        )
+    }
+
+    /// Gets the type of a core function at the given function index.
+    ///
+    /// Returns `None` if the type index is out of bounds or the type has not
+    /// been parsed yet.
+    pub fn function_at(&self, index: u32) -> Option<&'a FuncType> {
+        let id = match &self.kind {
+            TypesRefKind::Module(module) => {
+                &module.types[*module.functions.get(index as usize)? as usize]
+            }
+            TypesRefKind::Component(component) => component.core_funcs.get(index as usize)?,
+        };
+
+        match &self.list[*id] {
+            Type::Func(ty) => Some(ty),
+            _ => None,
+        }
+    }
+
+    /// Gets the type of an element segment at the given element segment index.
+    ///
+    /// Returns `None` if the type index is out of bounds or the type has not
+    /// been parsed yet.
+    pub fn element_at(&self, index: u32) -> Option<ValType> {
+        match &self.kind {
+            TypesRefKind::Module(module) => module.element_types.get(index as usize).copied(),
+            TypesRefKind::Component(_) => None,
+        }
+    }
+
+    /// Gets the type of a component function at the given function index.
+    ///
+    /// Returns `None` if the type index is out of bounds or the type has not
+    /// been parsed yet.
+    pub fn component_function_at(&self, index: u32) -> Option<&'a ComponentFuncType> {
+        match &self.kind {
+            TypesRefKind::Module(_) => None,
+            TypesRefKind::Component(component) => Some(
+                self.list[*component.funcs.get(index as usize)?]
+                    .as_component_func_type()
+                    .unwrap(),
+            ),
+        }
+    }
+
+    /// Gets the type of a module at the given module index.
+    ///
+    /// Returns `None` if the type index is out of bounds or the type has not
+    /// been parsed yet.
+    pub fn module_at(&self, index: u32) -> Option<&'a ModuleType> {
+        match &self.kind {
+            TypesRefKind::Module(_) => None,
+            TypesRefKind::Component(component) => Some(
+                self.list[*component.core_modules.get(index as usize)?]
+                    .as_module_type()
+                    .unwrap(),
+            ),
+        }
+    }
+
+    /// Gets the type of a module instance at the given module instance index.
+    ///
+    /// Returns `None` if the type index is out of bounds or the type has not
+    /// been parsed yet.
+    pub fn instance_at(&self, index: u32) -> Option<&'a InstanceType> {
+        match &self.kind {
+            TypesRefKind::Module(_) => None,
+            TypesRefKind::Component(component) => {
+                let id = component.core_instances.get(index as usize)?;
+                match &self.list[*id] {
+                    Type::Instance(ty) => Some(ty),
+                    _ => None,
+                }
+            }
+        }
+    }
+
+    /// Gets the type of a component at the given component index.
+    ///
+    /// Returns `None` if the type index is out of bounds or the type has not
+    /// been parsed yet.
+    pub fn component_at(&self, index: u32) -> Option<&'a ComponentType> {
+        match &self.kind {
+            TypesRefKind::Module(_) => None,
+            TypesRefKind::Component(component) => Some(
+                self.list[*component.components.get(index as usize)?]
+                    .as_component_type()
+                    .unwrap(),
+            ),
+        }
+    }
+
+    /// Gets the type of an component instance at the given component instance index.
+    ///
+    /// Returns `None` if the type index is out of bounds or the type has not
+    /// been parsed yet.
+    pub fn component_instance_at(&self, index: u32) -> Option<&'a ComponentInstanceType> {
+        match &self.kind {
+            TypesRefKind::Module(_) => None,
+            TypesRefKind::Component(component) => {
+                let id = component.instances.get(index as usize)?;
+                match &self.list[*id] {
+                    Type::ComponentInstance(ty) => Some(ty),
+                    _ => None,
+                }
+            }
+        }
+    }
+
+    /// Gets the type of a value at the given value index.
+    ///
+    /// Returns `None` if the type index is out of bounds or the type has not
+    /// been parsed yet.
+    pub fn value_at(&self, index: u32) -> Option<ComponentValType> {
+        match &self.kind {
+            TypesRefKind::Module(_) => None,
+            TypesRefKind::Component(component) => {
+                component.values.get(index as usize).map(|(r, _)| *r)
+            }
+        }
+    }
+}
+
+impl Types {
+    pub(crate) fn from_module(types: TypeList, module: Arc<Module>) -> Self {
+        Self {
+            list: types,
+            kind: TypesKind::Module(module),
+        }
+    }
+
+    pub(crate) fn from_component(types: TypeList, component: ComponentState) -> Self {
+        Self {
+            list: types,
+            kind: TypesKind::Component(component),
+        }
+    }
+
+    /// Gets a reference to this validation type information.
+    pub fn as_ref(&self) -> TypesRef {
+        TypesRef {
+            list: &self.list,
+            kind: match &self.kind {
+                TypesKind::Module(module) => TypesRefKind::Module(module),
+                TypesKind::Component(component) => TypesRefKind::Component(component),
+            },
+        }
+    }
+
+    /// Gets a type based on its type id.
+    ///
+    /// Returns `None` if the type id is unknown.
+    pub fn type_from_id(&self, id: TypeId) -> Option<&Type> {
+        self.as_ref().type_from_id(id)
+    }
+
+    /// Gets a type id from a type index.
+    ///
+    /// Returns `None` if the type index is out of bounds.
+    pub fn id_from_type_index(&self, index: u32, core: bool) -> Option<TypeId> {
+        self.as_ref().id_from_type_index(index, core)
+    }
+
+    /// Gets a type at the given type index.
+    ///
     /// Returns `None` if the index is out of bounds.
     pub fn type_at(&self, index: u32, core: bool) -> Option<&Type> {
-        self.type_from_id(*self.types(core)?.get(index as usize)?)
+        self.as_ref().type_at(index, core)
     }
 
     /// Gets a defined core function type at the given type index.
     ///
     /// Returns `None` if the index is out of bounds.
     pub fn func_type_at(&self, index: u32) -> Option<&FuncType> {
-        match self.type_at(index, true)? {
-            Type::Func(ty) => Some(ty),
-            _ => None,
-        }
+        self.as_ref().func_type_at(index)
     }
 
     /// Gets the count of core types.
@@ -1082,12 +1385,7 @@ impl Types {
     ///
     /// Returns `None` if the index is out of bounds.
     pub fn table_at(&self, index: u32) -> Option<TableType> {
-        let tables = match &self.kind {
-            TypesKind::Module(module) => &module.tables,
-            TypesKind::Component(component) => &component.core_tables,
-        };
-
-        tables.get(index as usize).copied()
+        self.as_ref().table_at(index)
     }
 
     /// Gets the count of imported and defined tables.
@@ -1102,12 +1400,7 @@ impl Types {
     ///
     /// Returns `None` if the index is out of bounds.
     pub fn memory_at(&self, index: u32) -> Option<MemoryType> {
-        let memories = match &self.kind {
-            TypesKind::Module(module) => &module.memories,
-            TypesKind::Component(component) => &component.core_memories,
-        };
-
-        memories.get(index as usize).copied()
+        self.as_ref().memory_at(index)
     }
 
     /// Gets the count of imported and defined memories.
@@ -1122,12 +1415,7 @@ impl Types {
     ///
     /// Returns `None` if the index is out of bounds.
     pub fn global_at(&self, index: u32) -> Option<GlobalType> {
-        let globals = match &self.kind {
-            TypesKind::Module(module) => &module.globals,
-            TypesKind::Component(component) => &component.core_globals,
-        };
-
-        globals.get(index as usize).copied()
+        self.as_ref().global_at(index)
     }
 
     /// Gets the count of imported and defined globals.
@@ -1142,16 +1430,7 @@ impl Types {
     ///
     /// Returns `None` if the index is out of bounds.
     pub fn tag_at(&self, index: u32) -> Option<&FuncType> {
-        let tags = match &self.kind {
-            TypesKind::Module(module) => &module.tags,
-            TypesKind::Component(component) => &component.core_tags,
-        };
-
-        Some(
-            self.types[*tags.get(index as usize)?]
-                .as_func_type()
-                .unwrap(),
-        )
+        self.as_ref().tag_at(index)
     }
 
     /// Gets the count of imported and defined tags.
@@ -1166,17 +1445,7 @@ impl Types {
     ///
     /// Returns `None` if the index is out of bounds.
     pub fn function_at(&self, index: u32) -> Option<&FuncType> {
-        let id = match &self.kind {
-            TypesKind::Module(module) => {
-                &module.types[*module.functions.get(index as usize)? as usize]
-            }
-            TypesKind::Component(component) => component.core_funcs.get(index as usize)?,
-        };
-
-        match &self.types[*id] {
-            Type::Func(ty) => Some(ty),
-            _ => None,
-        }
+        self.as_ref().function_at(index)
     }
 
     /// Gets the count of imported and defined core functions.
@@ -1193,10 +1462,7 @@ impl Types {
     ///
     /// Returns `None` if the index is out of bounds.
     pub fn element_at(&self, index: u32) -> Option<ValType> {
-        match &self.kind {
-            TypesKind::Module(module) => module.element_types.get(index as usize).copied(),
-            TypesKind::Component(_) => None,
-        }
+        self.as_ref().element_at(index)
     }
 
     /// Gets the count of element segments.
@@ -1211,14 +1477,7 @@ impl Types {
     ///
     /// Returns `None` if the index is out of bounds.
     pub fn component_function_at(&self, index: u32) -> Option<&ComponentFuncType> {
-        match &self.kind {
-            TypesKind::Module(_) => None,
-            TypesKind::Component(component) => Some(
-                self.types[*component.funcs.get(index as usize)?]
-                    .as_component_func_type()
-                    .unwrap(),
-            ),
-        }
+        self.as_ref().component_function_at(index)
     }
 
     /// Gets the count of imported, exported, or aliased component functions.
@@ -1233,14 +1492,7 @@ impl Types {
     ///
     /// Returns `None` if the index is out of bounds.
     pub fn module_at(&self, index: u32) -> Option<&ModuleType> {
-        match &self.kind {
-            TypesKind::Module(_) => None,
-            TypesKind::Component(component) => Some(
-                self.types[*component.core_modules.get(index as usize)?]
-                    .as_module_type()
-                    .unwrap(),
-            ),
-        }
+        self.as_ref().module_at(index)
     }
 
     /// Gets the count of imported, exported, or aliased modules.
@@ -1255,16 +1507,7 @@ impl Types {
     ///
     /// Returns `None` if the index is out of bounds.
     pub fn instance_at(&self, index: u32) -> Option<&InstanceType> {
-        match &self.kind {
-            TypesKind::Module(_) => None,
-            TypesKind::Component(component) => {
-                let id = component.core_instances.get(index as usize)?;
-                match &self.types[*id] {
-                    Type::Instance(ty) => Some(ty),
-                    _ => None,
-                }
-            }
-        }
+        self.as_ref().instance_at(index)
     }
 
     /// Gets the count of imported, exported, or aliased core module instances.
@@ -1279,14 +1522,7 @@ impl Types {
     ///
     /// Returns `None` if the index is out of bounds.
     pub fn component_at(&self, index: u32) -> Option<&ComponentType> {
-        match &self.kind {
-            TypesKind::Module(_) => None,
-            TypesKind::Component(component) => Some(
-                self.types[*component.components.get(index as usize)?]
-                    .as_component_type()
-                    .unwrap(),
-            ),
-        }
+        self.as_ref().component_at(index)
     }
 
     /// Gets the count of imported, exported, or aliased components.
@@ -1301,16 +1537,7 @@ impl Types {
     ///
     /// Returns `None` if the index is out of bounds.
     pub fn component_instance_at(&self, index: u32) -> Option<&ComponentInstanceType> {
-        match &self.kind {
-            TypesKind::Module(_) => None,
-            TypesKind::Component(component) => {
-                let id = component.instances.get(index as usize)?;
-                match &self.types[*id] {
-                    Type::ComponentInstance(ty) => Some(ty),
-                    _ => None,
-                }
-            }
-        }
+        self.as_ref().component_instance_at(index)
     }
 
     /// Gets the count of imported, exported, or aliased component instances.
@@ -1325,12 +1552,7 @@ impl Types {
     ///
     /// Returns `None` if the index is out of bounds.
     pub fn value_at(&self, index: u32) -> Option<ComponentValType> {
-        match &self.kind {
-            TypesKind::Module(_) => None,
-            TypesKind::Component(component) => {
-                component.values.get(index as usize).map(|(r, _)| *r)
-            }
-        }
+        self.as_ref().value_at(index)
     }
 
     /// Gets the count of imported, exported, or aliased values.
@@ -1485,4 +1707,5 @@ impl<T> Default for SnapshotList<T> {
     }
 }
 
+/// A snapshot list of types.
 pub(crate) type TypeList = SnapshotList<Type>;

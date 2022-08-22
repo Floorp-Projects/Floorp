@@ -380,7 +380,7 @@ impl<'a> Expander<'a> {
                     core::TypeDef::Struct(_) => {}
                     core::TypeDef::Array(_) => {}
                 },
-                ModuleTypeDecl::Alias(_) => {},
+                ModuleTypeDecl::Alias(_) => {}
                 ModuleTypeDecl::Import(ty) => {
                     expand_sig(&mut ty.item, &mut to_prepend, &mut func_type_to_idx);
                 }
@@ -467,7 +467,7 @@ impl<'a> Expander<'a> {
                 self.expand_component_type_use(t);
             }
             ItemSigKind::Value(t) => {
-                self.expand_component_val_ty(t);
+                self.expand_component_val_ty(&mut t.0);
             }
             ItemSigKind::Type(_) => {}
         }
@@ -513,7 +513,8 @@ impl<'a> Expander<'a> {
 
     fn expand_component_val_ty(&mut self, ty: &mut ComponentValType<'a>) {
         let inline = match ty {
-            ComponentValType::Primitive(_) | ComponentValType::Ref(_) => return,
+            ComponentValType::Inline(ComponentDefinedType::Primitive(_))
+            | ComponentValType::Ref(_) => return,
             ComponentValType::Inline(inline) => {
                 self.expand_defined_ty(inline);
                 mem::take(inline)

@@ -2,6 +2,7 @@
 
 mod code_builder;
 pub(crate) mod encode;
+mod notrap;
 mod terminate;
 
 use crate::{arbitrary_loop, limited_string, unique_string, Config, DefaultConfig};
@@ -14,7 +15,7 @@ use std::marker;
 use std::ops::Range;
 use std::rc::Rc;
 use std::str::{self, FromStr};
-use wasm_encoder::{BlockType, ExportKind, ValType};
+use wasm_encoder::{BlockType, ConstExpr, ExportKind, ValType};
 pub(crate) use wasm_encoder::{GlobalType, MemoryType, TableType};
 
 // NB: these constants are used to control the rate at which various events
@@ -87,7 +88,7 @@ pub struct Module {
 
     /// The indexes and initialization expressions of globals defined in this
     /// module.
-    defined_globals: Vec<(u32, Instruction)>,
+    defined_globals: Vec<(u32, GlobalInitExpr)>,
 
     /// All tags available to this module, sorted by their index. The list
     /// entry is the type of each tag.
@@ -295,7 +296,7 @@ enum ElementKind {
     Declared,
     Active {
         table: Option<u32>, // None == table 0 implicitly
-        offset: Instruction,
+        offset: Offset,
     },
 }
 
@@ -326,10 +327,20 @@ struct DataSegment {
 #[derive(Debug)]
 enum DataSegmentKind {
     Passive,
-    Active {
-        memory_index: u32,
-        offset: Instruction,
-    },
+    Active { memory_index: u32, offset: Offset },
+}
+
+#[derive(Debug)]
+pub(crate) enum Offset {
+    Const32(i32),
+    Const64(i64),
+    Global(u32),
+}
+
+#[derive(Debug)]
+pub(crate) enum GlobalInitExpr {
+    FuncRef(u32),
+    ConstExpr(ConstExpr),
 }
 
 impl Module {
@@ -837,7 +848,7 @@ impl Module {
     }
 
     fn arbitrary_globals(&mut self, u: &mut Unstructured) -> Result<()> {
-        let mut choices: Vec<Box<dyn Fn(&mut Unstructured, ValType) -> Result<Instruction>>> =
+        let mut choices: Vec<Box<dyn Fn(&mut Unstructured, ValType) -> Result<GlobalInitExpr>>> =
             vec![];
         let num_imported_globals = self.globals.len();
 
@@ -855,27 +866,29 @@ impl Module {
                 choices.clear();
                 let num_funcs = self.funcs.len() as u32;
                 choices.push(Box::new(move |u, ty| {
-                    Ok(match ty {
-                        ValType::I32 => Instruction::I32Const(u.arbitrary()?),
-                        ValType::I64 => Instruction::I64Const(u.arbitrary()?),
-                        ValType::F32 => Instruction::F32Const(u.arbitrary()?),
-                        ValType::F64 => Instruction::F64Const(u.arbitrary()?),
-                        ValType::V128 => Instruction::V128Const(u.arbitrary()?),
-                        ValType::ExternRef => Instruction::RefNull(ValType::ExternRef),
+                    Ok(GlobalInitExpr::ConstExpr(match ty {
+                        ValType::I32 => ConstExpr::i32_const(u.arbitrary()?),
+                        ValType::I64 => ConstExpr::i64_const(u.arbitrary()?),
+                        ValType::F32 => ConstExpr::f32_const(u.arbitrary()?),
+                        ValType::F64 => ConstExpr::f64_const(u.arbitrary()?),
+                        ValType::V128 => ConstExpr::v128_const(u.arbitrary()?),
+                        ValType::ExternRef => ConstExpr::ref_null(ValType::ExternRef),
                         ValType::FuncRef => {
                             if num_funcs > 0 && u.arbitrary()? {
                                 let func = u.int_in_range(0..=num_funcs - 1)?;
-                                Instruction::RefFunc(func)
+                                return Ok(GlobalInitExpr::FuncRef(func));
                             } else {
-                                Instruction::RefNull(ValType::FuncRef)
+                                ConstExpr::ref_null(ValType::FuncRef)
                             }
                         }
-                    })
+                    }))
                 }));
 
                 for (i, g) in self.globals[..num_imported_globals].iter().enumerate() {
                     if !g.mutable && g.val_type == ty.val_type {
-                        choices.push(Box::new(move |_, _| Ok(Instruction::GlobalGet(i as u32))));
+                        choices.push(Box::new(move |_, _| {
+                            Ok(GlobalInitExpr::ConstExpr(ConstExpr::global_get(i as u32)))
+                        }));
                     }
                 }
 
@@ -1012,7 +1025,7 @@ impl Module {
         let arbitrary_active_elem = |u: &mut Unstructured, min: u32, table: Option<u32>| {
             let (offset, max_size_hint) = if !offset_global_choices.is_empty() && u.arbitrary()? {
                 let g = u.choose(&offset_global_choices)?;
-                (Instruction::GlobalGet(*g), None)
+                (Offset::Global(*g), None)
             } else {
                 let offset = arbitrary_offset(u, min.into(), u32::MAX.into(), 0)? as u32;
                 let max_size_hint =
@@ -1021,7 +1034,7 @@ impl Module {
                     } else {
                         None
                     };
-                (Instruction::I32Const(offset as i32), max_size_hint)
+                (Offset::Const32(offset as i32), max_size_hint)
             };
             Ok((ElementKind::Active { table, offset }, max_size_hint))
         };
@@ -1177,10 +1190,10 @@ impl Module {
             return Ok(());
         }
 
-        let mut choices32: Vec<Box<dyn Fn(&mut Unstructured, u64, usize) -> Result<Instruction>>> =
+        let mut choices32: Vec<Box<dyn Fn(&mut Unstructured, u64, usize) -> Result<Offset>>> =
             vec![];
         choices32.push(Box::new(|u, min_size, data_len| {
-            Ok(Instruction::I32Const(arbitrary_offset(
+            Ok(Offset::Const32(arbitrary_offset(
                 u,
                 u32::try_from(min_size.saturating_mul(64 * 1024))
                     .unwrap_or(u32::MAX)
@@ -1189,10 +1202,10 @@ impl Module {
                 data_len,
             )? as i32))
         }));
-        let mut choices64: Vec<Box<dyn Fn(&mut Unstructured, u64, usize) -> Result<Instruction>>> =
+        let mut choices64: Vec<Box<dyn Fn(&mut Unstructured, u64, usize) -> Result<Offset>>> =
             vec![];
         choices64.push(Box::new(|u, min_size, data_len| {
-            Ok(Instruction::I64Const(arbitrary_offset(
+            Ok(Offset::Const64(arbitrary_offset(
                 u,
                 min_size.saturating_mul(64 * 1024),
                 u64::MAX,
@@ -1208,13 +1221,9 @@ impl Module {
                 continue;
             }
             if g.val_type == ValType::I32 {
-                choices32.push(Box::new(move |_, _, _| {
-                    Ok(Instruction::GlobalGet(i as u32))
-                }));
+                choices32.push(Box::new(move |_, _, _| Ok(Offset::Global(i as u32))));
             } else if g.val_type == ValType::I64 {
-                choices64.push(Box::new(move |_, _, _| {
-                    Ok(Instruction::GlobalGet(i as u32))
-                }));
+                choices64.push(Box::new(move |_, _, _| Ok(Offset::Global(i as u32))));
             }
         }
 

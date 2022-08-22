@@ -578,7 +578,9 @@ impl<T> From<&ComponentTypeUse<'_, T>> for u32 {
 impl From<&ComponentValType<'_>> for wasm_encoder::ComponentValType {
     fn from(r: &ComponentValType) -> Self {
         match r {
-            ComponentValType::Primitive(p) => Self::Primitive((*p).into()),
+            ComponentValType::Inline(ComponentDefinedType::Primitive(p)) => {
+                Self::Primitive((*p).into())
+            }
             ComponentValType::Ref(i) => Self::Type(u32::from(*i)),
             ComponentValType::Inline(_) => unreachable!("should be expanded by now"),
         }
@@ -621,7 +623,7 @@ impl From<&ItemSigKind<'_>> for wasm_encoder::ComponentTypeRef {
             ItemSigKind::Component(c) => Self::Component(c.into()),
             ItemSigKind::CoreModule(m) => Self::Module(m.into()),
             ItemSigKind::Instance(i) => Self::Instance(i.into()),
-            ItemSigKind::Value(v) => Self::Value(v.into()),
+            ItemSigKind::Value(v) => Self::Value((&v.0).into()),
             ItemSigKind::Func(f) => Self::Func(f.into()),
             ItemSigKind::Type(TypeBounds::Eq(t)) => {
                 Self::Type(wasm_encoder::TypeBounds::Eq, (*t).into())

@@ -109,7 +109,7 @@ impl ModuleState {
         Ok(())
     }
 
-    pub fn next_code_entry_type(&mut self, offset: usize) -> Result<u32> {
+    pub fn next_code_index_and_type(&mut self, offset: usize) -> Result<(u32, u32)> {
         let index = self
             .code_section_index
             .get_or_insert(self.module.num_imported_functions as usize);
@@ -124,7 +124,7 @@ impl ModuleState {
         let ty = self.module.functions[*index];
         *index += 1;
 
-        Ok(ty)
+        Ok(((*index - 1) as u32, ty))
     }
 
     pub fn add_global(
