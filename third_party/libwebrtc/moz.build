@@ -238,6 +238,7 @@ DIRS += [
     "/third_party/libwebrtc/modules/audio_processing/rms_level_gn",
     "/third_party/libwebrtc/modules/audio_processing/transient/transient_suppressor_api_gn",
     "/third_party/libwebrtc/modules/audio_processing/transient/transient_suppressor_impl_gn",
+    "/third_party/libwebrtc/modules/audio_processing/transient/voice_probability_delay_unit_gn",
     "/third_party/libwebrtc/modules/audio_processing/utility/cascaded_biquad_filter_gn",
     "/third_party/libwebrtc/modules/audio_processing/utility/legacy_delay_estimator_gn",
     "/third_party/libwebrtc/modules/audio_processing/utility/pffft_wrapper_gn",
