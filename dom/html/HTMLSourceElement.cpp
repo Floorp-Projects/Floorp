@@ -94,11 +94,10 @@ nsresult HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   }
   // If we are associated with a <picture> with a valid <img>, notify it of
   // responsive parameter changes
-  Element* parent = nsINode::GetParentElement();
   if (aNameSpaceID == kNameSpaceID_None &&
       (aName == nsGkAtoms::srcset || aName == nsGkAtoms::sizes ||
        aName == nsGkAtoms::media || aName == nsGkAtoms::type) &&
-      parent && parent->IsHTMLElement(nsGkAtoms::picture)) {
+      IsInPicture()) {
     if (aName == nsGkAtoms::media) {
       UpdateMediaList(aValue);
     }

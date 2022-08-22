@@ -114,6 +114,11 @@ class HTMLSourceElement final : public nsGenericHTMLElement {
                         bool aNotify) override;
 
  private:
+  bool IsInPicture() const {
+    return GetParentElement() &&
+           GetParentElement()->IsHTMLElement(nsGkAtoms::picture);
+  }
+
   RefPtr<MediaList> mMediaList;
   RefPtr<MediaSource> mSrcMediaSource;
 

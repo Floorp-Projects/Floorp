@@ -831,8 +831,7 @@ bool HTMLImageElement::HaveSrcsetOrInPicture() {
     return true;
   }
 
-  Element* parent = GetParentElement();
-  return parent && parent->IsHTMLElement(nsGkAtoms::picture);
+  return IsInPicture();
 }
 
 bool HTMLImageElement::InResponsiveMode() {
@@ -1030,12 +1029,11 @@ bool HTMLImageElement::UpdateResponsiveSource() {
 
   nsIContent* currentSource =
       mResponsiveSelector ? mResponsiveSelector->Content() : nullptr;
-  Element* parent = nsINode::GetParentElement();
 
   nsINode* candidateSource = nullptr;
-  if (parent && parent->IsHTMLElement(nsGkAtoms::picture)) {
+  if (IsInPicture()) {
     // Walk source nodes previous to ourselves
-    candidateSource = parent->GetFirstChild();
+    candidateSource = GetParentElement()->GetFirstChild();
   } else {
     candidateSource = this;
   }
@@ -1111,8 +1109,7 @@ bool HTMLImageElement::SupportedPictureSourceType(const nsAString& aType) {
 bool HTMLImageElement::SourceElementMatches(Element* aSourceElement) {
   MOZ_ASSERT(aSourceElement->IsHTMLElement(nsGkAtoms::source));
 
-  DebugOnly<Element*> parent(nsINode::GetParentElement());
-  MOZ_ASSERT(parent && parent->IsHTMLElement(nsGkAtoms::picture));
+  MOZ_ASSERT(IsInPicture());
   MOZ_ASSERT(IsPreviousSibling(aSourceElement, this));
 
   // Check media and type
