@@ -39,7 +39,7 @@ NS_IMPL_ISUPPORTS(NetworkLoadHandler, nsIStreamLoaderObserver,
 NetworkLoadHandler::NetworkLoadHandler(WorkerScriptLoader* aLoader,
                                        JS::loader::ScriptLoadRequest* aRequest)
     : mLoader(aLoader),
-      mWorkerPrivate(aLoader->mWorkerPrivate),
+      mWorkerRef(aLoader->mWorkerRef),
       mLoadContext(aRequest->GetWorkerLoadContext()) {
   MOZ_ASSERT(mLoader);
 
@@ -90,9 +90,9 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
     return rv;
   }
 
-  nsIPrincipal* principal = mWorkerPrivate->GetPrincipal();
+  nsIPrincipal* principal = mWorkerRef->Private()->GetPrincipal();
   if (!principal) {
-    WorkerPrivate* parentWorker = mWorkerPrivate->GetParent();
+    WorkerPrivate* parentWorker = mWorkerRef->Private()->GetParent();
     MOZ_ASSERT(parentWorker, "Must have a parent!");
     principal = parentWorker->GetPrincipal();
   }
@@ -100,7 +100,7 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
 #ifdef DEBUG
   if (mLoader->IsMainWorkerScript()) {
     nsCOMPtr<nsIPrincipal> loadingPrincipal =
-        mWorkerPrivate->GetLoadingPrincipal();
+        mWorkerRef->Private()->GetLoadingPrincipal();
     // if we are not in a ServiceWorker, and the principal is not null, then
     // the loading principal must subsume the worker principal if it is not a
     // nullPrincipal (sandbox).
@@ -148,7 +148,7 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
   }
 
   // May be null.
-  Document* parentDoc = mWorkerPrivate->GetDocument();
+  Document* parentDoc = mWorkerRef->Private()->GetDocument();
 
   // Set the Source type to "text" for decoding.
   mLoadContext->mRequest->SetTextSource();
@@ -188,16 +188,16 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
   // worker's primary script.
   if (mLoader->IsMainWorkerScript()) {
     // Take care of the base URI first.
-    mWorkerPrivate->SetBaseURI(finalURI);
+    mWorkerRef->Private()->SetBaseURI(finalURI);
 
     // Store the channel info if needed.
-    mWorkerPrivate->InitChannelInfo(channel);
+    mWorkerRef->Private()->InitChannelInfo(channel);
 
     // Our final channel principal should match the loading principal
     // in terms of the origin.  This used to be an assert, but it seems
     // there are some rare cases where this check can fail in practice.
     // Perhaps some browser script setting nsIChannel.owner, etc.
-    NS_ENSURE_TRUE(mWorkerPrivate->FinalChannelPrincipalIsValid(channel),
+    NS_ENSURE_TRUE(mWorkerRef->Private()->FinalChannelPrincipalIsValid(channel),
                    NS_ERROR_FAILURE);
 
     // However, we must still override the principal since the nsIPrincipal
@@ -205,26 +205,26 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
     // URL must exactly match the final worker script URL in order to
     // properly set the referrer header on fetch/xhr requests.  If bug 1340694
     // is ever fixed this can be removed.
-    rv = mWorkerPrivate->SetPrincipalsAndCSPFromChannel(channel);
+    rv = mWorkerRef->Private()->SetPrincipalsAndCSPFromChannel(channel);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIContentSecurityPolicy> csp = mWorkerPrivate->GetCSP();
+    nsCOMPtr<nsIContentSecurityPolicy> csp = mWorkerRef->Private()->GetCSP();
     // We did inherit CSP in bug 1223647. If we do not already have a CSP, we
     // should get it from the HTTP headers on the worker script.
     if (!csp) {
-      rv = mWorkerPrivate->SetCSPFromHeaderValues(tCspHeaderValue,
-                                                  tCspROHeaderValue);
+      rv = mWorkerRef->Private()->SetCSPFromHeaderValues(tCspHeaderValue,
+                                                         tCspROHeaderValue);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
-      csp->EnsureEventTarget(mWorkerPrivate->MainThreadEventTarget());
+      csp->EnsureEventTarget(mWorkerRef->Private()->MainThreadEventTarget());
     }
 
-    mWorkerPrivate->UpdateReferrerInfoFromHeader(tRPHeaderCValue);
+    mWorkerRef->Private()->UpdateReferrerInfoFromHeader(tRPHeaderCValue);
 
-    WorkerPrivate* parent = mWorkerPrivate->GetParent();
+    WorkerPrivate* parent = mWorkerRef->Private()->GetParent();
     if (parent) {
       // XHR Params Allowed
-      mWorkerPrivate->SetXHRParamsAllowed(parent->XHRParamsAllowed());
+      mWorkerRef->Private()->SetXHRParamsAllowed(parent->XHRParamsAllowed());
     }
 
     nsCOMPtr<nsILoadInfo> chanLoadInfo = channel->LoadInfo();
@@ -239,9 +239,9 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
     //
     // https://github.com/w3c/ServiceWorker/issues/1261
     //
-    if (IsBlobURI(mWorkerPrivate->GetBaseURI())) {
+    if (IsBlobURI(mWorkerRef->Private()->GetBaseURI())) {
       MOZ_DIAGNOSTIC_ASSERT(mLoader->GetController().isNothing());
-      mLoader->SetController(mWorkerPrivate->GetParentController());
+      mLoader->SetController(mWorkerRef->Private()->GetParentController());
     }
   }
 
@@ -277,14 +277,15 @@ nsresult NetworkLoadHandler::PrepareForRequest(nsIRequest* aRequest) {
   // "Extract a MIME type from the response’s header list. If this MIME type
   // (ignoring parameters) is not a JavaScript MIME type, return a network
   // error."
-  if (mWorkerPrivate->IsServiceWorker()) {
+  if (mWorkerRef->Private()->IsServiceWorker()) {
     nsAutoCString mimeType;
     channel->GetContentType(mimeType);
 
     if (!nsContentUtils::IsJavascriptMIMEType(
             NS_ConvertUTF8toUTF16(mimeType))) {
-      const nsCString& scope =
-          mWorkerPrivate->GetServiceWorkerRegistrationDescriptor().Scope();
+      const nsCString& scope = mWorkerRef->Private()
+                                   ->GetServiceWorkerRegistrationDescriptor()
+                                   .Scope();
 
       ServiceWorkerManager::LocalizeAndReportToAllClients(
           scope, "ServiceWorkerRegisterMimeTypeError2",

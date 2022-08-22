@@ -22,6 +22,7 @@
 #include "mozilla/dom/cache/Cache.h"
 #include "mozilla/dom/cache/CacheStorage.h"
 #include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerRef.h"
 
 #include "mozilla/dom/workerinternals/ScriptLoader.h"
 
@@ -79,7 +80,7 @@ class CacheLoadHandler final : public PromiseNativeHandler,
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMLOADEROBSERVER
 
-  CacheLoadHandler(WorkerPrivate* aWorkerPrivate,
+  CacheLoadHandler(ThreadSafeWorkerRef* aWorkerRef,
                    JS::loader::ScriptLoadRequest* aRequest,
                    bool aIsWorkerScript, WorkerScriptLoader* aLoader);
 
@@ -106,7 +107,7 @@ class CacheLoadHandler final : public PromiseNativeHandler,
 
   WorkerLoadContext* mLoadContext;
   const RefPtr<WorkerScriptLoader> mLoader;
-  WorkerPrivate* const mWorkerPrivate;
+  RefPtr<ThreadSafeWorkerRef> mWorkerRef;
   const bool mIsWorkerScript;
   bool mFailed;
   const ServiceWorkerState mState;
