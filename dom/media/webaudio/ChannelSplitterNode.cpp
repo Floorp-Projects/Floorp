@@ -8,6 +8,7 @@
 #include "mozilla/dom/ChannelSplitterNodeBinding.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeTrack.h"
+#include "Tracing.h"
 
 namespace mozilla::dom {
 
@@ -24,6 +25,7 @@ class ChannelSplitterNodeEngine final : public AudioNodeEngine {
                             bool* aFinished) override {
     MOZ_ASSERT(aInput.Length() == 1, "Should only have one input port");
     MOZ_ASSERT(aOutput.Length() == OutputCount());
+    TRACE("ChannelSplitterNodeEngine::ProcessBlocksOnPorts");
 
     for (uint16_t i = 0; i < OutputCount(); ++i) {
       if (i < aInput[0].ChannelCount()) {

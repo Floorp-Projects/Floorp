@@ -91,6 +91,7 @@ class WorkletNodeEngine final : public AudioNodeEngine {
                     bool* aFinished) override {
     MOZ_ASSERT(InputCount() <= 1);
     MOZ_ASSERT(OutputCount() <= 1);
+    TRACE("WorkletNodeEngine::ProcessBlock");
     ProcessBlocksOnPorts(aTrack, aFrom, Span(&aInput, InputCount()),
                          Span(aOutput, OutputCount()), aFinished);
   }
