@@ -14,10 +14,12 @@
 #include "mozilla/dom/MediaList.h"
 #include "mozilla/dom/MediaSource.h"
 
-#include "nsGkAtoms.h"
-
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/Preferences.h"
+
+#include "nsGkAtoms.h"
+#include "nsHTMLStyleSheet.h"
+#include "nsMappedAttributes.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Source)
 
@@ -131,6 +133,17 @@ nsresult HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         NS_GetSourceForMediaSourceURI(uri, getter_AddRefs(mSrcMediaSource));
       }
     }
+  } else if (StaticPrefs::dom_picture_source_dimension_attributes_enabled() &&
+             aNameSpaceID == kNameSpaceID_None &&
+             IsAttributeMappedToImages(aName) && IsInPicture()) {
+    BuildMappedAttributesForImage();
+
+    nsCOMPtr<nsIContent> sibling = AsContent();
+    while ((sibling = sibling->GetNextSibling())) {
+      if (auto* img = HTMLImageElement::FromNode(sibling)) {
+        img->PictureSourceDimensionChanged(this, aNotify);
+      }
+    }
   }
 
   return nsGenericHTMLElement::AfterSetAttr(
@@ -146,12 +159,77 @@ nsresult HTMLSourceElement::BindToTree(BindContext& aContext,
     media->NotifyAddedSource();
   }
 
+  if (aParent.IsHTMLElement(nsGkAtoms::picture)) {
+    BuildMappedAttributesForImage();
+  } else {
+    mMappedAttributesForImage = nullptr;
+  }
+
   return NS_OK;
+}
+
+void HTMLSourceElement::UnbindFromTree(bool aNullParent) {
+  mMappedAttributesForImage = nullptr;
+  nsGenericHTMLElement::UnbindFromTree(aNullParent);
 }
 
 JSObject* HTMLSourceElement::WrapNode(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
   return HTMLSourceElement_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+void HTMLSourceElement::BuildMappedAttributesForImage() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!StaticPrefs::dom_picture_source_dimension_attributes_enabled()) {
+    return;
+  }
+
+  mMappedAttributesForImage = nullptr;
+
+  Document* document = GetComposedDoc();
+  nsHTMLStyleSheet* sheet =
+      document ? document->GetAttributeStyleSheet() : nullptr;
+  if (!sheet) {
+    return;
+  }
+
+  const nsAttrValue* width = mAttrs.GetAttr(nsGkAtoms::width);
+  const nsAttrValue* height = mAttrs.GetAttr(nsGkAtoms::height);
+  if (!width && !height) {
+    return;
+  }
+
+  const size_t count = (width ? 1 : 0) + (height ? 1 : 0);
+  RefPtr<nsMappedAttributes> modifiableMapped(new (count) nsMappedAttributes(
+      sheet, nsGenericHTMLElement::MapPictureSourceSizeAttributesInto));
+  MOZ_ASSERT(modifiableMapped);
+
+  auto maybeSetAttr = [&](nsAtom* aName, const nsAttrValue* aValue) {
+    if (!aValue) {
+      return;
+    }
+    nsAttrValue val(*aValue);
+    bool oldValueSet = false;
+    modifiableMapped->SetAndSwapAttr(aName, val, &oldValueSet);
+  };
+  maybeSetAttr(nsGkAtoms::width, width);
+  maybeSetAttr(nsGkAtoms::height, height);
+
+  RefPtr<nsMappedAttributes> newAttrs =
+      sheet->UniqueMappedAttributes(modifiableMapped);
+  NS_ENSURE_TRUE_VOID(newAttrs);
+
+  if (newAttrs != modifiableMapped) {
+    // Reset the stylesheet of modifiableMapped so that it doesn't
+    // spend time trying to remove itself from the hash.  There is no
+    // risk that modifiableMapped is in the hash since we created
+    // it ourselves and it didn't come from the stylesheet (in which
+    // case it would not have been modifiable).
+    modifiableMapped->DropStyleSheetReference();
+  }
+
+  mMappedAttributesForImage = std::move(newAttrs);
 }
 
 }  // namespace mozilla::dom

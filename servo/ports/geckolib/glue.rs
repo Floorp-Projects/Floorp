@@ -5471,6 +5471,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetAutoValue(
         MarginRight => auto,
         MarginBottom => auto,
         MarginLeft => auto,
+        AspectRatio => specified::AspectRatio::auto(),
     };
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(prop, Importance::Normal);
