@@ -118,20 +118,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["_WINDOWS"] = True
     DEFINES["__STD_C"] = True
 
-    OS_LIBS += [
-        "winmm"
-    ]
-
-    SOURCES += [
-        "/third_party/libwebrtc/rtc_base/win/hstring.cc"
-    ]
-
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/rtc_base/win/get_activation_factory.cc",
-        "/third_party/libwebrtc/rtc_base/win/scoped_com_initializer.cc",
-        "/third_party/libwebrtc/rtc_base/win/windows_version.cc"
-    ]
-
 if CONFIG["CPU_ARCH"] == "aarch64":
 
     DEFINES["WEBRTC_ARCH_ARM64"] = True

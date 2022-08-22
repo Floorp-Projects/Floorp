@@ -1,0 +1,75 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+  ### This moz.build was AUTOMATICALLY GENERATED from a GN config,  ###
+  ### DO NOT edit it by hand.                                       ###
+
+COMPILE_FLAGS["OS_INCLUDES"] = []
+AllowCompilerWarnings()
+
+DEFINES["ABSL_ALLOCATOR_NOTHROW"] = "1"
+DEFINES["CERT_CHAIN_PARA_HAS_EXTRA_FIELDS"] = True
+DEFINES["NOMINMAX"] = True
+DEFINES["NTDDI_VERSION"] = "0x0A000000"
+DEFINES["PSAPI_VERSION"] = "2"
+DEFINES["RTC_DAV1D_IN_INTERNAL_DECODER_FACTORY"] = True
+DEFINES["RTC_ENABLE_VP9"] = True
+DEFINES["UNICODE"] = True
+DEFINES["USE_AURA"] = "1"
+DEFINES["WEBRTC_ENABLE_AVX2"] = True
+DEFINES["WEBRTC_ENABLE_PROTOBUF"] = "0"
+DEFINES["WEBRTC_LIBRARY_IMPL"] = True
+DEFINES["WEBRTC_MOZILLA_BUILD"] = True
+DEFINES["WEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS"] = "0"
+DEFINES["WEBRTC_WIN"] = True
+DEFINES["WIN32"] = True
+DEFINES["WIN32_LEAN_AND_MEAN"] = True
+DEFINES["WINAPI_FAMILY"] = "WINAPI_FAMILY_DESKTOP_APP"
+DEFINES["WINVER"] = "0x0A00"
+DEFINES["_ATL_NO_OPENGL"] = True
+DEFINES["_CRT_RAND_S"] = True
+DEFINES["_CRT_SECURE_NO_DEPRECATE"] = True
+DEFINES["_ENABLE_EXTENDED_ALIGNED_STORAGE"] = True
+DEFINES["_HAS_EXCEPTIONS"] = "0"
+DEFINES["_HAS_NODISCARD"] = True
+DEFINES["_SCL_SECURE_NO_DEPRECATE"] = True
+DEFINES["_SECURE_ATL"] = True
+DEFINES["_UNICODE"] = True
+DEFINES["_WIN32_WINNT"] = "0x0A00"
+DEFINES["_WINDOWS"] = True
+DEFINES["__STD_C"] = True
+
+FINAL_LIBRARY = "webrtc"
+
+
+LOCAL_INCLUDES += [
+    "!/ipc/ipdl/_ipdlheaders",
+    "/ipc/chromium/src",
+    "/third_party/libwebrtc/",
+    "/third_party/libwebrtc/third_party/abseil-cpp/",
+    "/tools/profiler/public"
+]
+
+SOURCES += [
+    "/third_party/libwebrtc/rtc_base/win/hstring.cc"
+]
+
+if not CONFIG["MOZ_DEBUG"]:
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
+    DEFINES["NDEBUG"] = True
+    DEFINES["NVALGRIND"] = True
+
+if CONFIG["MOZ_DEBUG"] == "1":
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
+    DEFINES["_HAS_ITERATOR_DEBUGGING"] = "0"
+
+if CONFIG["CPU_ARCH"] == "aarch64":
+
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+
+Library("hstring_gn")
