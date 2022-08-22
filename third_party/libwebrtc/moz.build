@@ -363,7 +363,6 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/rate_statistics_gn",
     "/third_party/libwebrtc/rtc_base/rate_tracker_gn",
     "/third_party/libwebrtc/rtc_base/refcount_gn",
-    "/third_party/libwebrtc/rtc_base/rtc_base_approved_gn",
     "/third_party/libwebrtc/rtc_base/rtc_base_gn",
     "/third_party/libwebrtc/rtc_base/rtc_event_gn",
     "/third_party/libwebrtc/rtc_base/rtc_numerics_gn",
