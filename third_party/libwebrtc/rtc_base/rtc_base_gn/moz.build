@@ -162,10 +162,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "winmm"
     ]
 
-    UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/rtc_base/win32_socket_server.cc"
-    ]
-
 if CONFIG["CPU_ARCH"] == "aarch64":
 
     DEFINES["WEBRTC_ARCH_ARM64"] = True
