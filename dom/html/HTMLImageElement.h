@@ -395,6 +395,11 @@ class HTMLImageElement final : public nsGenericHTMLElement,
 
   void StartLoadingIfNeeded();
 
+  bool IsInPicture() const {
+    return GetParentElement() &&
+           GetParentElement()->IsHTMLElement(nsGkAtoms::picture);
+  }
+
   bool mInDocResponsiveContent;
 
   RefPtr<ImageLoadTask> mPendingImageLoadTask;
