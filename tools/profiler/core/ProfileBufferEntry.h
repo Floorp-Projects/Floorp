@@ -347,16 +347,23 @@ class UniqueStacks {
   void SpliceFrameTableElements(SpliceableJSONWriter& aWriter);
   void SpliceStackTableElements(SpliceableJSONWriter& aWriter);
 
+  [[nodiscard]] UniqueJSONStrings& UniqueStrings() {
+    MOZ_RELEASE_ASSERT(mUniqueStrings.get());
+    return *mUniqueStrings;
+  }
+
+  // Find the function name at the given PC (if a ProfilerCodeAddressService was
+  // provided), otherwise just stringify that PC.
+  [[nodiscard]] nsAutoCString FunctionNameOrAddress(void* aPC);
+
  private:
   void StreamNonJITFrame(const FrameKey& aFrame);
   void StreamStack(const StackKey& aStack);
 
- public:
   mozilla::UniquePtr<UniqueJSONStrings> mUniqueStrings;
 
   ProfilerCodeAddressService* mCodeAddressService = nullptr;
 
- private:
   SpliceableChunkedJSONWriter mFrameTableWriter;
   mozilla::HashMap<FrameKey, uint32_t, FrameKeyHasher> mFrameToIndexMap;
 

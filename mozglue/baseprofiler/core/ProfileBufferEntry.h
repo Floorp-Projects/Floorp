@@ -204,14 +204,17 @@ class UniqueStacks {
   void SpliceFrameTableElements(SpliceableJSONWriter& aWriter);
   void SpliceStackTableElements(SpliceableJSONWriter& aWriter);
 
+  UniqueJSONStrings& UniqueStrings() {
+    MOZ_RELEASE_ASSERT(mUniqueStrings.get());
+    return *mUniqueStrings;
+  }
+
  private:
   void StreamNonJITFrame(const FrameKey& aFrame);
   void StreamStack(const StackKey& aStack);
 
- public:
   UniquePtr<UniqueJSONStrings> mUniqueStrings;
 
- private:
   SpliceableChunkedJSONWriter mFrameTableWriter;
   HashMap<FrameKey, uint32_t, FrameKeyHasher> mFrameToIndexMap;
 
