@@ -271,7 +271,7 @@ DIRS += [
     "/third_party/libwebrtc/modules/video_coding/codecs/av1/libaom_av1_encoder_gn",
     "/third_party/libwebrtc/modules/video_coding/encoded_frame_gn",
     "/third_party/libwebrtc/modules/video_coding/frame_dependencies_calculator_gn",
-    "/third_party/libwebrtc/modules/video_coding/nack_module_gn",
+    "/third_party/libwebrtc/modules/video_coding/nack_requester_gn",
     "/third_party/libwebrtc/modules/video_coding/svc/scalability_structures_gn",
     "/third_party/libwebrtc/modules/video_coding/svc/scalable_video_controller_gn",
     "/third_party/libwebrtc/modules/video_coding/svc/svc_rate_allocator_gn",
