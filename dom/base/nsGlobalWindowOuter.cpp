@@ -1756,22 +1756,18 @@ bool nsGlobalWindowOuter::WouldReuseInnerWindow(Document* aNewDocument) {
   return false;
 }
 
-void nsGlobalWindowOuter::SetInitialPrincipalToSubject(
-    nsIContentSecurityPolicy* aCSP,
+void nsGlobalWindowOuter::SetInitialPrincipal(
+    nsIPrincipal* aNewWindowPrincipal, nsIContentSecurityPolicy* aCSP,
     const Maybe<nsILoadInfo::CrossOriginEmbedderPolicy>& aCOEP) {
-  // First, grab the subject principal.
-  nsCOMPtr<nsIPrincipal> newWindowPrincipal =
-      nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller();
-
   // We should never create windows with an expanded principal.
   // If we have a system principal, make sure we're not using it for a content
   // docshell.
   // NOTE: Please keep this logic in sync with
   // nsAppShellService::JustCreateTopWindow
-  if (nsContentUtils::IsExpandedPrincipal(newWindowPrincipal) ||
-      (newWindowPrincipal->IsSystemPrincipal() &&
+  if (nsContentUtils::IsExpandedPrincipal(aNewWindowPrincipal) ||
+      (aNewWindowPrincipal->IsSystemPrincipal() &&
        GetBrowsingContext()->IsContent())) {
-    newWindowPrincipal = nullptr;
+    aNewWindowPrincipal = nullptr;
   }
 
   // If there's an existing document, bail if it either:
@@ -1779,7 +1775,7 @@ void nsGlobalWindowOuter::SetInitialPrincipalToSubject(
     // (a) is not an initial about:blank document, or
     if (!mDoc->IsInitialDocument()) return;
     // (b) already has the correct principal.
-    if (mDoc->NodePrincipal() == newWindowPrincipal) return;
+    if (mDoc->NodePrincipal() == aNewWindowPrincipal) return;
 
 #ifdef DEBUG
     // If we have a document loaded at this point, it had better be about:blank.
@@ -1795,7 +1791,7 @@ void nsGlobalWindowOuter::SetInitialPrincipalToSubject(
   // Use the subject (or system) principal as the storage principal too until
   // the new window finishes navigating and gets a real storage principal.
   nsDocShell::Cast(GetDocShell())
-      ->CreateAboutBlankContentViewer(newWindowPrincipal, newWindowPrincipal,
+      ->CreateAboutBlankContentViewer(aNewWindowPrincipal, aNewWindowPrincipal,
                                       aCSP, nullptr,
                                       /* aIsInitialDocument */ true, aCOEP);
 
