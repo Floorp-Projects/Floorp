@@ -560,7 +560,7 @@ class IconLoader {
         canUseForTab: !iconInfo.isRichIcon,
         expiration: undefined,
         iconURL: iconInfo.iconUri.spec,
-        canStoreIcon: this.beforePageShow,
+        canStoreIcon: true,
       });
       return;
     }
