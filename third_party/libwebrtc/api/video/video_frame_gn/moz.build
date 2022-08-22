@@ -31,6 +31,7 @@ LOCAL_INCLUDES += [
 
 UNIFIED_SOURCES += [
     "/third_party/libwebrtc/api/video/i420_buffer.cc",
+    "/third_party/libwebrtc/api/video/i444_buffer.cc",
     "/third_party/libwebrtc/api/video/nv12_buffer.cc",
     "/third_party/libwebrtc/api/video/video_frame.cc",
     "/third_party/libwebrtc/api/video/video_frame_buffer.cc",
