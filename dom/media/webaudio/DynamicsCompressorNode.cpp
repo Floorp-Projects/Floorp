@@ -11,7 +11,6 @@
 #include "AudioDestinationNode.h"
 #include "WebAudioUtils.h"
 #include "blink/DynamicsCompressor.h"
-#include "Tracing.h"
 
 using WebCore::DynamicsCompressor;
 
@@ -72,7 +71,6 @@ class DynamicsCompressorNodeEngine final : public AudioNodeEngine {
   void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
-    TRACE("DynamicsCompressorNodeEngine::ProcessBlock");
     if (aInput.IsNull()) {
       // Just output silence
       *aOutput = aInput;

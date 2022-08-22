@@ -15,7 +15,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ErrorResult.h"
 #include "AudioParamTimeline.h"
-#include "Tracing.h"
 
 namespace mozilla::dom {
 
@@ -121,7 +120,6 @@ class BiquadFilterNodeEngine final : public AudioNodeEngine {
   void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
-    TRACE("BiquadFilterNode::ProcessBlock");
     float inputBuffer[WEBAUDIO_BLOCK_SIZE + 4];
     float* alignedInputBuffer = ALIGNED16(inputBuffer);
     ASSERT_ALIGNED16(alignedInputBuffer);

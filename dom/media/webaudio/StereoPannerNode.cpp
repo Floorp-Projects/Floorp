@@ -14,7 +14,6 @@
 #include "PanningUtils.h"
 #include "AudioParamTimeline.h"
 #include "AudioParam.h"
-#include "Tracing.h"
 
 namespace mozilla::dom {
 
@@ -97,8 +96,6 @@ class StereoPannerNodeEngine final : public AudioNodeEngine {
                             bool* aFinished) override {
     // The output of this node is always stereo, no matter what the inputs are.
     MOZ_ASSERT(aInput.ChannelCount() <= 2);
-    TRACE("StereoPannerNodeEngine::ProcessBlock");
-
     bool monoToStereo = aInput.ChannelCount() == 1;
 
     if (aInput.IsNull()) {

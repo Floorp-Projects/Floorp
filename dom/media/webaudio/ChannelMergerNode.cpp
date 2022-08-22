@@ -9,7 +9,6 @@
 #include "AudioNodeEngine.h"
 #include "AudioNodeTrack.h"
 #include "nsPrintfCString.h"
-#include "Tracing.h"
 
 namespace mozilla::dom {
 
@@ -26,7 +25,6 @@ class ChannelMergerNodeEngine final : public AudioNodeEngine {
                             bool* aFinished) override {
     MOZ_ASSERT(aInput.Length() == InputCount());
     MOZ_ASSERT(aOutput.Length() == 1, "Should have only one output port");
-    TRACE("ChannelMergerNodeEngine::ProcessBlocksOnPorts");
 
     // Get the number of output channels, and allocate it
     size_t channelCount = InputCount();
