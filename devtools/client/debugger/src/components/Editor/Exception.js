@@ -5,7 +5,7 @@
 import { PureComponent } from "react";
 import PropTypes from "prop-types";
 
-import { toEditorPosition, getTokenEnd } from "../../utils/editor";
+import { toEditorPosition, getTokenEnd, hasDocument } from "../../utils/editor";
 
 import { getIndentation } from "../../utils/indentation";
 
@@ -54,6 +54,10 @@ export default class Exception extends PureComponent {
     const { exception, doc, selectedSourceId } = this.props;
     const { columnNumber, lineNumber } = exception;
 
+    if (!hasDocument(selectedSourceId)) {
+      return;
+    }
+
     const location = {
       column: columnNumber - 1,
       line: lineNumber,
@@ -68,11 +72,17 @@ export default class Exception extends PureComponent {
 
   clearEditorExceptionLine() {
     if (this.markText) {
-      const { doc } = this.props;
+      const { selectedSourceId } = this.props;
 
       this.markText.clear();
-      doc.removeLineClass(this.exceptionLine, "wrapClass", "line-exception");
 
+      if (hasDocument(selectedSourceId)) {
+        this.props.doc.removeLineClass(
+          this.exceptionLine,
+          "wrapClass",
+          "line-exception"
+        );
+      }
       this.exceptionLine = null;
       this.markText = null;
     }
