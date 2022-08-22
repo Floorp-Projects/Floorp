@@ -301,8 +301,7 @@ already_AddRefed<Promise> CacheStorage::Match(
     const MultiCacheQueryOptions& aOptions, ErrorResult& aRv) {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (!HasStorageAccess(eUseCounter_custom_PrivateBrowsingCachesMatch,
-                        UseCounterWorker::Custom_PrivateBrowsingCachesMatch)) {
+  if (!HasStorageAccess()) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
@@ -340,8 +339,7 @@ already_AddRefed<Promise> CacheStorage::Has(const nsAString& aKey,
                                             ErrorResult& aRv) {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (!HasStorageAccess(eUseCounter_custom_PrivateBrowsingCachesHas,
-                        UseCounterWorker::Custom_PrivateBrowsingCachesHas)) {
+  if (!HasStorageAccess()) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
@@ -369,8 +367,7 @@ already_AddRefed<Promise> CacheStorage::Open(const nsAString& aKey,
                                              ErrorResult& aRv) {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (!HasStorageAccess(eUseCounter_custom_PrivateBrowsingCachesOpen,
-                        UseCounterWorker::Custom_PrivateBrowsingCachesOpen)) {
+  if (!HasStorageAccess()) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
@@ -398,8 +395,7 @@ already_AddRefed<Promise> CacheStorage::Delete(const nsAString& aKey,
                                                ErrorResult& aRv) {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (!HasStorageAccess(eUseCounter_custom_PrivateBrowsingCachesDelete,
-                        UseCounterWorker::Custom_PrivateBrowsingCachesDelete)) {
+  if (!HasStorageAccess()) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
@@ -426,8 +422,7 @@ already_AddRefed<Promise> CacheStorage::Delete(const nsAString& aKey,
 already_AddRefed<Promise> CacheStorage::Keys(ErrorResult& aRv) {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  if (!HasStorageAccess(eUseCounter_custom_PrivateBrowsingCachesKeys,
-                        UseCounterWorker::Custom_PrivateBrowsingCachesKeys)) {
+  if (!HasStorageAccess()) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
@@ -558,21 +553,13 @@ OpenMode CacheStorage::GetOpenMode() const {
   return mNamespace == CHROME_ONLY_NAMESPACE ? OpenMode::Eager : OpenMode::Lazy;
 }
 
-bool CacheStorage::HasStorageAccess(UseCounter aLabel,
-                                    UseCounterWorker aLabelWorker) const {
+bool CacheStorage::HasStorageAccess() const {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
   if (NS_WARN_IF(!mGlobal)) {
     return false;
   }
 
   StorageAccess access = mGlobal->GetStorageAccess();
-  if (access == StorageAccess::ePrivateBrowsing) {
-    if (NS_IsMainThread()) {
-      SetUseCounter(mGlobal->GetGlobalJSObject(), aLabel);
-    } else {
-      SetUseCounter(aLabelWorker);
-    }
-  }
   return access > StorageAccess::ePrivateBrowsing ||
          (StaticPrefs::
               privacy_partition_always_partition_third_party_non_cookie_storage() &&
