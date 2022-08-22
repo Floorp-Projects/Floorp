@@ -9,12 +9,14 @@ import androidx.annotation.VisibleForTesting
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import org.mozilla.fenix.compose.cfr.CFRPopup.PopupAlignment
 import java.lang.ref.WeakReference
 
 /**
  * Properties used to customize the behavior of a [CFRPopup].
  *
  * @property popupWidth Width of the popup. Defaults to [CFRPopup.DEFAULT_WIDTH].
+ * @property popupAlignment Where in relation to it's anchor should the popup be placed.
  * @property indicatorDirection The direction the indicator arrow is pointing.
  * @property dismissOnBackPress Whether the popup can be dismissed by pressing the back button.
  * If true, pressing the back button will also call onDismiss().
@@ -29,6 +31,7 @@ import java.lang.ref.WeakReference
  */
 data class CFRPopupProperties(
     val popupWidth: Dp = CFRPopup.DEFAULT_WIDTH.dp,
+    val popupAlignment: PopupAlignment = PopupAlignment.BODY_TO_ANCHOR_CENTER,
     val indicatorDirection: CFRPopup.IndicatorDirection = CFRPopup.IndicatorDirection.UP,
     val dismissOnBackPress: Boolean = true,
     val dismissOnClickOutside: Boolean = true,
@@ -88,6 +91,29 @@ class CFRPopup(
     enum class IndicatorDirection {
         UP,
         DOWN
+    }
+
+    /**
+     * Possible alignments of the popup in relation to it's anchor.
+     */
+    enum class PopupAlignment {
+        /**
+         * The popup body will be centered in the space occupied by the anchor.
+         * Recommended to be used when the anchor is wider than the popup.
+         */
+        BODY_TO_ANCHOR_CENTER,
+
+        /**
+         * The popup body will be shown aligned to exactly the anchor start.
+         */
+        BODY_TO_ANCHOR_START,
+
+        /**
+         * The popup will be aligned such that the indicator arrow will point to exactly the middle of the anchor.
+         * Recommended to be used when there are multiple widgets displayed horizontally so that this will allow
+         * to indicate exactly which widget the popup refers to.
+         */
+        INDICATOR_CENTERED_IN_ANCHOR
     }
 
     companion object {
