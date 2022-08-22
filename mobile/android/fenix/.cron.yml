@@ -18,12 +18,6 @@ jobs:
           treeherder-symbol: fennec-production
           target-tasks-method: fennec-production
       when: []  # Force hook only
-    - name: bump-android-components
-      job:
-          type: decision-task
-          treeherder-symbol: bump-ac
-          target-tasks-method: bump_android_components
-      when: [{hour: 15, minute: 30}]
     - name: screenshots
       job:
           type: decision-task

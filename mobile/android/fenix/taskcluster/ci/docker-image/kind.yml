@@ -16,9 +16,6 @@ tasks:
         parent: base
     base:
         symbol: I(base)
-    bump:
-        parent: base
-        symbol: I(bump)
     ui-tests:
         parent: base
         symbol: I(ui-tests)

@@ -4,7 +4,6 @@ treeherder:
     group-names:
         'beta': 'Beta-related tasks with same APK configuration as Fennec'
         'Btime': 'Raptor-Browsertime tests'
-        'bump': 'Bump dependencies'
         'debug': 'Builds made for testing'
         'Fetch': 'Fetch and store content'
         'forPerformanceTest': 'Builds made for Raptor and other performance tests'

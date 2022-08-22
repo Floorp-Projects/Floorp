@@ -92,16 +92,6 @@ def target_tasks_fennec_nightly(full_task_graph, parameters, graph_config):
     ]
 
 
-@_target_task("bump_android_components")
-def target_tasks_bump_android_components(full_task_graph, parameters, graph_config):
-    """Select the set of tasks required to update android components."""
-
-    def filter(task, parameters):
-        return task.attributes.get("bump-type", "") == "android-components"
-
-    return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
-
-
 @_target_task("screenshots")
 def target_tasks_screnshots(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to generate screenshots on a real device."""
