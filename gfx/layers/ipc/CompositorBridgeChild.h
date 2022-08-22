@@ -82,8 +82,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   mozilla::ipc::IPCResult RecvNotifyFrameStats(
       nsTArray<FrameStats>&& aFrameStats);
 
-  mozilla::ipc::IPCResult RecvInvalidateLayers(const LayersId& aLayersId);
-
   mozilla::ipc::IPCResult RecvNotifyJankedAnimations(
       const LayersId& aLayersId, nsTArray<uint64_t>&& aJankedAnimations);
 
