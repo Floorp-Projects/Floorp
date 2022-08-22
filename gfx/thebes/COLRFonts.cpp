@@ -302,7 +302,7 @@ struct DeltaSetIndexMap {
                   sizeof(v1.mapCount);
         break;
       default:
-        // unknown DeltaSetIndexMap format
+        MOZ_ASSERT_UNREACHABLE("unknown DeltaSetIndexMap format");
         return aIndex;
     }
     if (!mapCount) {
@@ -517,7 +517,7 @@ struct Clip {
       case 2:
         return reinterpret_cast<const ClipBoxFormat2*>(box)->GetRect(aState);
       default:
-        // unknown ClipBoxFormat
+        MOZ_ASSERT_UNREACHABLE("unknown ClipBoxFormat");
         break;
     }
     return Rect();
@@ -709,7 +709,7 @@ struct PaintColrLayers {
     if (!layerList) {
       return false;
     }
-    if (uint64_t(firstLayerIndex) + numLayers > layerList->numLayers) {
+    if (firstLayerIndex + numLayers > layerList->numLayers) {
       return false;
     }
     const auto* paintOffsets = layerList->paintOffsets() + firstLayerIndex;
@@ -729,7 +729,7 @@ struct PaintColrLayers {
     if (!layerList) {
       return Rect();
     }
-    if (uint64_t(firstLayerIndex) + numLayers > layerList->numLayers) {
+    if (firstLayerIndex + numLayers > layerList->numLayers) {
       return Rect();
     }
     Rect result;
@@ -1050,9 +1050,6 @@ struct PaintGlyph {
 
   bool Paint(const PaintState& aState, uint32_t aOffset) const {
     MOZ_ASSERT(format == kFormat);
-    if (!paintOffset) {
-      return true;
-    }
     Glyph g{uint16_t(glyphID), Point()};
     GlyphBuffer buffer{&g, 1};
     // If the paint is a simple fill (rather than a sub-graph of further paint
@@ -1172,18 +1169,12 @@ struct PaintTransformBase {
   Offset24 paintOffset;
 
   bool Paint(const PaintState& aState, uint32_t aOffset) const {
-    if (!paintOffset) {
-      return true;
-    }
     AutoRestoreTransform saveTransform(aState.mDrawTarget);
     aState.mDrawTarget->ConcatTransform(DispatchGetMatrix(aState, aOffset));
     return DispatchPaint(aState, aOffset + paintOffset);
   }
 
   Rect GetBoundingRect(const PaintState& aState, uint32_t aOffset) const {
-    if (!paintOffset) {
-      return Rect();
-    }
     Rect bounds = DispatchGetBounds(aState, aOffset + paintOffset);
     bounds = DispatchGetMatrix(aState, aOffset).TransformBounds(bounds);
     return bounds;
@@ -1509,12 +1500,10 @@ struct PaintComposite {
 
   bool Paint(const PaintState& aState, uint32_t aOffset) const {
     MOZ_ASSERT(format == kFormat);
-    if (!backdropPaintOffset || !sourcePaintOffset) {
-      return true;
-    }
     auto mapCompositionMode = [](uint8_t aMode) -> CompositionOp {
       switch (aMode) {
         default:
+          MOZ_ASSERT_UNREACHABLE("bad composition mode");
           return CompositionOp::OP_SOURCE;
         case COMPOSITE_CLEAR:
         case COMPOSITE_SRC:
@@ -1597,9 +1586,6 @@ struct PaintComposite {
   }
 
   Rect GetBoundingRect(const PaintState& aState, uint32_t aOffset) const {
-    if (!backdropPaintOffset || !sourcePaintOffset) {
-      return Rect();
-    }
     // For now, just return the maximal bounds that could result; this could be
     // smarter, returning just one of the rects or their intersection when
     // appropriate for the composite mode in effect.
@@ -1638,10 +1624,6 @@ const BaseGlyphPaintRecord* COLRv1Header::GetBaseGlyphPaint(
 
 // Process paint table at aOffset from start of COLRv1 table.
 static bool DispatchPaint(const PaintState& aState, uint32_t aOffset) {
-  if (aOffset >= aState.mCOLRLength) {
-    return false;
-  }
-
   const char* paint = aState.COLRv1BaseAddr() + aOffset;
   // All paint table formats start with an 8-bit 'format' field.
   uint8_t format = uint8_t(*paint);
@@ -1672,7 +1654,7 @@ static bool DispatchPaint(const PaintState& aState, uint32_t aOffset) {
     DO_CASE_VAR(SkewAroundCenter);
     DO_CASE(PaintComposite);
     default:
-      return false;
+      MOZ_ASSERT_UNREACHABLE("Bad COLRv1 table");
   }
 
 #undef DO_CASE
@@ -1684,10 +1666,6 @@ static bool DispatchPaint(const PaintState& aState, uint32_t aOffset) {
 // simple format that can be used as a fill (not a sub-graph).
 static UniquePtr<Pattern> DispatchMakePattern(const PaintState& aState,
                                               uint32_t aOffset) {
-  if (aOffset >= aState.mCOLRLength) {
-    return nullptr;
-  }
-
   const char* paint = aState.COLRv1BaseAddr() + aOffset;
   // All paint table formats start with an 8-bit 'format' field.
   uint8_t format = uint8_t(*paint);
@@ -1714,10 +1692,6 @@ static UniquePtr<Pattern> DispatchMakePattern(const PaintState& aState,
 }
 
 static Matrix DispatchGetMatrix(const PaintState& aState, uint32_t aOffset) {
-  if (aOffset >= aState.mCOLRLength) {
-    return Matrix();
-  }
-
   const char* paint = aState.COLRv1BaseAddr() + aOffset;
   // All paint table formats start with an 8-bit 'format' field.
   uint8_t format = uint8_t(*paint);
@@ -1740,7 +1714,7 @@ static Matrix DispatchGetMatrix(const PaintState& aState, uint32_t aOffset) {
     DO_CASE_VAR(Skew);
     DO_CASE_VAR(SkewAroundCenter);
     default:
-      break;
+      MOZ_ASSERT_UNREACHABLE("Bad COLRv1 table");
   }
 
 #undef DO_CASE
@@ -1749,10 +1723,6 @@ static Matrix DispatchGetMatrix(const PaintState& aState, uint32_t aOffset) {
 }
 
 static Rect DispatchGetBounds(const PaintState& aState, uint32_t aOffset) {
-  if (aOffset >= aState.mCOLRLength) {
-    return Rect();
-  }
-
   const char* paint = aState.COLRv1BaseAddr() + aOffset;
   // All paint table formats start with an 8-bit 'format' field.
   uint8_t format = uint8_t(*paint);
@@ -1784,7 +1754,7 @@ static Rect DispatchGetBounds(const PaintState& aState, uint32_t aOffset) {
     DO_CASE_VAR(SkewAroundCenter);
     DO_CASE(PaintComposite);
     default:
-      break;
+      MOZ_ASSERT_UNREACHABLE("Bad COLRv1 table");
   }
 
 #undef DO_CASE
@@ -1917,7 +1887,7 @@ bool Clip::Validate(const COLRv1Header* aHeader, uint64_t aLength) const {
       }
       break;
     default:
-      // unknown ClipBoxFormat
+      MOZ_ASSERT_UNREACHABLE("unknown ClipBoxFormat");
       break;
   }
   return false;
