@@ -243,11 +243,9 @@ impl ComponentState {
                 self.values.push((ty, false));
                 (self.values.len(), MAX_WASM_VALUES, "values")
             }
-            ComponentEntityType::Type(..) => {
-                return Err(BinaryReaderError::new(
-                    "component types cannot currently be imported",
-                    offset,
-                ));
+            ComponentEntityType::Type(id) => {
+                self.types.push(id);
+                (self.types.len(), MAX_WASM_TYPES, "types")
             }
         };
 
@@ -466,7 +464,10 @@ impl ComponentState {
 
         for (i, ((_, ty), arg)) in ft.params.iter().zip(args).enumerate() {
             // Ensure the value's type is a subtype of the parameter type
-            if !self.value_at(*arg, offset)?.is_subtype_of(ty, types) {
+            if !self
+                .value_at(*arg, offset)?
+                .internal_is_subtype_of(ty, types)
+            {
                 return Err(BinaryReaderError::new(
                     format!(
                         "value type mismatch for component start function argument {}",
@@ -1010,7 +1011,7 @@ impl ComponentState {
                 }
             }
 
-            if !arg.is_subtype_of(expected, types) {
+            if !arg.internal_is_subtype_of(expected, types) {
                 return Err(BinaryReaderError::new(
                     format!(
                         "{} type mismatch for export `{}` of module instantiation argument `{}`",
@@ -1146,7 +1147,7 @@ impl ComponentState {
                         }
                     };
 
-                    if !arg.is_subtype_of(expected, types) {
+                    if !arg.internal_is_subtype_of(expected, types) {
                         return Err(BinaryReaderError::new(
                             format!(
                                 "{} type mismatch for component instantiation argument `{}`",

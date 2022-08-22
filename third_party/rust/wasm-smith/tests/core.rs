@@ -197,6 +197,23 @@ fn smoke_test_imports_config() {
     assert!(n_partial > 0);
 }
 
+#[test]
+fn smoke_test_no_trapping_mode() {
+    let mut rng = SmallRng::seed_from_u64(0);
+    let mut buf = vec![0; 2048];
+    for _ in 0..1024 {
+        rng.fill_bytes(&mut buf);
+        let u = Unstructured::new(&buf);
+        if let Ok(mut module) = Module::arbitrary_take_rest(u) {
+            if module.no_traps().is_ok() {
+                let wasm_bytes = module.to_bytes();
+                let mut validator = Validator::new_with_features(wasm_features());
+                validate(&mut validator, &wasm_bytes);
+            }
+        }
+    }
+}
+
 fn wasm_features() -> WasmFeatures {
     WasmFeatures {
         multi_memory: true,

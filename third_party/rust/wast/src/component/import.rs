@@ -88,7 +88,7 @@ pub enum ItemSigKind<'a> {
     /// The item signature is for an instance.
     Instance(ComponentTypeUse<'a, InstanceType<'a>>),
     /// The item signature is for a value.
-    Value(ComponentValType<'a>),
+    Value(ComponentValTypeUse<'a>),
     /// The item signature is for a type.
     Type(TypeBounds<'a>),
 }

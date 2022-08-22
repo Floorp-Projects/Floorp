@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "wasmparser"
-version = "0.87.0"
+version = "0.88.0"
 authors = ["Yury Delendik <ydelendik@mozilla.com>"]
 description = """
 A simple event-driven library for parsing WebAssembly binary files.

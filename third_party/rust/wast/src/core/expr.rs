@@ -578,7 +578,6 @@ instructions! {
 
         RefNull(HeapType<'a>) : [0xd0] : "ref.null",
         RefIsNull : [0xd1] : "ref.is_null",
-        RefExtern(u32) : [0xff] : "ref.extern", // only used in test harness
         RefFunc(Index<'a>) : [0xd2] : "ref.func",
 
         // function-references proposal
@@ -1157,6 +1156,17 @@ instructions! {
         F32x4RelaxedMax : [0xfd, 0xe2]: "f32x4.relaxed_max",
         F64x2RelaxedMin : [0xfd, 0xd4]: "f64x2.relaxed_min",
         F64x2RelaxedMax : [0xfd, 0xee]: "f64x2.relaxed_max",
+    }
+}
+
+impl<'a> Instruction<'a> {
+    pub(crate) fn needs_data_count(&self) -> bool {
+        match self {
+            Instruction::MemoryInit(_)
+            | Instruction::DataDrop(_)
+            | Instruction::ArrayNewData(_) => true,
+            _ => false,
+        }
     }
 }
 

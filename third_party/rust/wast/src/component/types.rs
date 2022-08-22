@@ -271,12 +271,10 @@ impl<'a> Parse<'a> for PrimitiveValType {
     }
 }
 
-/// An component value type.
+/// A component value type.
 #[allow(missing_docs)]
 #[derive(Debug)]
 pub enum ComponentValType<'a> {
-    /// The value type is a primitive value type.
-    Primitive(PrimitiveValType),
     /// The value type is an inline defined type.
     Inline(ComponentDefinedType<'a>),
     /// The value type is an index reference to a defined type.
@@ -287,15 +285,30 @@ impl<'a> Parse<'a> for ComponentValType<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         if parser.peek::<Index<'_>>() {
             Ok(Self::Ref(parser.parse()?))
-        } else if parser.peek::<LParen>() {
+        } else {
+            Ok(Self::Inline(InlineComponentValType::parse(parser)?.0))
+        }
+    }
+}
+
+/// An inline-only component value type.
+///
+/// This variation does not parse type indexes.
+#[allow(missing_docs)]
+#[derive(Debug)]
+pub struct InlineComponentValType<'a>(ComponentDefinedType<'a>);
+
+impl<'a> Parse<'a> for InlineComponentValType<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        if parser.peek::<LParen>() {
             parser.parens(|parser| {
-                Ok(Self::Inline(ComponentDefinedType::parse_non_primitive(
+                Ok(Self(ComponentDefinedType::parse_non_primitive(
                     parser,
                     parser.lookahead1(),
                 )?))
             })
         } else {
-            Ok(Self::Primitive(parser.parse()?))
+            Ok(Self(ComponentDefinedType::Primitive(parser.parse()?)))
         }
     }
 }
@@ -611,7 +624,7 @@ impl<'a> Parse<'a> for ComponentFunctionType<'a> {
             })?
         } else {
             // If the result is omitted, use `unit`.
-            ComponentValType::Primitive(PrimitiveValType::Unit)
+            ComponentValType::Inline(ComponentDefinedType::Primitive(PrimitiveValType::Unit))
         };
 
         Ok(Self {
@@ -773,6 +786,19 @@ impl<'a> Parse<'a> for Vec<InstanceTypeDecl<'a>> {
             decls.push(parser.parens(|parser| parser.parse())?);
         }
         Ok(decls)
+    }
+}
+
+/// A value type declaration used for values in import signatures.
+#[derive(Debug)]
+pub struct ComponentValTypeUse<'a>(pub ComponentValType<'a>);
+
+impl<'a> Parse<'a> for ComponentValTypeUse<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        match ComponentTypeUse::<'a, InlineComponentValType<'a>>::parse(parser)? {
+            ComponentTypeUse::Ref(i) => Ok(Self(ComponentValType::Ref(i.idx))),
+            ComponentTypeUse::Inline(t) => Ok(Self(ComponentValType::Inline(t.0))),
+        }
     }
 }
 
