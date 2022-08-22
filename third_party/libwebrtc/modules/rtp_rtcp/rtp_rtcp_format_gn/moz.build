@@ -29,7 +29,8 @@ LOCAL_INCLUDES += [
 
 SOURCES += [
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbn.cc",
-    "/third_party/libwebrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbr.cc"
+    "/third_party/libwebrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbr.cc",
+    "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_util.cc"
 ]
 
 UNIFIED_SOURCES += [
@@ -70,7 +71,6 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_packet.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_packet_received.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_packet_to_send.cc",
-    "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_util.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_video_layers_allocation_extension.cc"
 ]
 
