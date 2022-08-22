@@ -89,7 +89,9 @@ if CONFIG["OS_TARGET"] == "Linux":
 
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/modules/video_capture/linux/device_info_linux.cc",
-        "/third_party/libwebrtc/modules/video_capture/linux/video_capture_linux.cc"
+        "/third_party/libwebrtc/modules/video_capture/linux/device_info_v4l2.cc",
+        "/third_party/libwebrtc/modules/video_capture/linux/video_capture_linux.cc",
+        "/third_party/libwebrtc/modules/video_capture/linux/video_capture_v4l2.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
@@ -108,7 +110,9 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
 
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/modules/video_capture/linux/device_info_linux.cc",
-        "/third_party/libwebrtc/modules/video_capture/linux/video_capture_linux.cc"
+        "/third_party/libwebrtc/modules/video_capture/linux/device_info_v4l2.cc",
+        "/third_party/libwebrtc/modules/video_capture/linux/video_capture_linux.cc",
+        "/third_party/libwebrtc/modules/video_capture/linux/video_capture_v4l2.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "WINNT":
