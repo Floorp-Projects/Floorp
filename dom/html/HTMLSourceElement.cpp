@@ -68,6 +68,20 @@ void HTMLSourceElement::UpdateMediaList(const nsAttrValue* aValue) {
   mMediaList = MediaList::Create(mediaStr);
 }
 
+bool HTMLSourceElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                                       const nsAString& aValue,
+                                       nsIPrincipal* aMaybeScriptedPrincipal,
+                                       nsAttrValue& aResult) {
+  if (StaticPrefs::dom_picture_source_dimension_attributes_enabled() &&
+      aNamespaceID == kNameSpaceID_None &&
+      (aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height)) {
+    return aResult.ParseHTMLDimension(aValue);
+  }
+
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aMaybeScriptedPrincipal, aResult);
+}
+
 nsresult HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                          const nsAttrValue* aValue,
                                          const nsAttrValue* aOldValue,
