@@ -65,16 +65,23 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
       if (dataSurface) {
         size_t length;
         int32_t stride;
-        auto surfaceData =
-            nsContentUtils::GetSurfaceData(*dataSurface, &length, &stride);
-        if (surfaceData.isNothing()) {
+        Maybe<Shmem> maybeShm = nsContentUtils::GetSurfaceData(
+            *dataSurface, &length, &stride, child);
+        if (maybeShm.isNothing()) {
+          return NS_ERROR_FAILURE;
+        }
+
+        auto surfaceData = maybeShm.value();
+
+        // Save the surface data to shared memory.
+        if (!surfaceData.IsReadable() || !surfaceData.get<char>()) {
           NS_WARNING("Failed to create shared memory for drag session.");
           return NS_ERROR_FAILURE;
         }
 
         mozilla::Unused << child->SendInvokeDragSession(
-            std::move(dataTransfers), aActionType, std::move(surfaceData),
-            stride, dataSurface->GetFormat(), dragRect, principal, csp, csArgs,
+            dataTransfers, aActionType, Some(std::move(surfaceData)), stride,
+            dataSurface->GetFormat(), dragRect, principal, csp, csArgs,
             mSourceWindowContext);
         StartDragSession();
         return NS_OK;
@@ -83,9 +90,8 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
   }
 
   mozilla::Unused << child->SendInvokeDragSession(
-      std::move(dataTransfers), aActionType, Nothing(), 0,
-      static_cast<SurfaceFormat>(0), dragRect, principal, csp, csArgs,
-      mSourceWindowContext);
+      dataTransfers, aActionType, Nothing(), 0, static_cast<SurfaceFormat>(0),
+      dragRect, principal, csp, csArgs, mSourceWindowContext);
   StartDragSession();
   return NS_OK;
 }
