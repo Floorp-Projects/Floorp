@@ -20,6 +20,9 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/v105.0.0/.config.yml)
 
 * **feature-search**:
+  * Allow the search widget to match the resized width [#12676](https://github.com/mozilla-mobile/android-components/issues/12676).
+
+* **feature-search**:
   * Implement the common part of search widget in Android Components [#12565](https://github.com/mozilla-mobile/android-components/issues/12565).
 
 * **feature-prompts**:
