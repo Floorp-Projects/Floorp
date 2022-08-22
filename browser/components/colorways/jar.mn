@@ -6,6 +6,4 @@ browser.jar:
     content/browser/colorways/colorwaycloset.html
     content/browser/colorways/colorwaycloset.css
     content/browser/colorways/colorwaycloset.js
-#ifdef EARLY_BETA_OR_EARLIER
     content/browser/colorways/assets/ (assets/*.avif)
-#endif
