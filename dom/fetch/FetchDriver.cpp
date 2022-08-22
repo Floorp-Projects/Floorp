@@ -1025,13 +1025,13 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
       if (NS_SUCCEEDED(rv) && !contentCharset.IsEmpty()) {
         contentType += ";charset="_ns + contentCharset;
       }
+
+      IgnoredErrorResult result;
+      response->Headers()->Append("Content-Type"_ns, contentType, result);
+      MOZ_ASSERT(!result.Failed());
     }
 
-    IgnoredErrorResult result;
-    response->Headers()->Append("Content-Type"_ns, contentType, result);
-    MOZ_ASSERT(!result.Failed());
-
-    if (contentLength >= 0) {
+    if (contentLength > 0) {
       nsAutoCString contentLenStr;
       contentLenStr.AppendInt(contentLength);
 

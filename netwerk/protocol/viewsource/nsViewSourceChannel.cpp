@@ -457,8 +457,7 @@ nsViewSourceChannel::GetContentType(nsACString& aContentType) {
     // content decoder will then kick in automatically, and it
     // will call our SetOriginalContentType method instead of our
     // SetContentType method to set the type it determines.
-    if (!contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE) &&
-        !contentType.IsEmpty()) {
+    if (!contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE)) {
       contentType = VIEWSOURCE_CONTENT_TYPE;
     }
 

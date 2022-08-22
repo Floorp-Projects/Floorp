@@ -13,7 +13,6 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "nsStreamUtils.h"
-#include "nsMimeTypes.h"
 
 namespace mozilla::dom {
 
@@ -462,21 +461,9 @@ nsresult BlobURLInputStream::StoreBlobImplStream(
     already_AddRefed<BlobImpl> aBlobImpl, const MutexAutoLock& aProofOfLock) {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
   const RefPtr<BlobImpl> blobImpl = aBlobImpl;
-  nsAutoString blobContentType;
-  nsAutoCString channelContentType;
-
-  blobImpl->GetType(blobContentType);
-  mChannel->GetContentType(channelContentType);
-  // A empty content type is the correct channel content type in the case of a
-  // fetch of a blob where the type was not set. It is invalid in others cases
-  // such as a XHR (See https://xhr.spec.whatwg.org/#response-mime-type). The
-  // XMLHttpRequestMainThread will set the channel content type to the correct
-  // fallback value before this point, so we need to be careful to only override
-  // it when the blob type is valid.
-  if (!blobContentType.IsEmpty() ||
-      channelContentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE)) {
-    mChannel->SetContentType(NS_ConvertUTF16toUTF8(blobContentType));
-  }
+  nsAutoString contentType;
+  blobImpl->GetType(contentType);
+  mChannel->SetContentType(NS_ConvertUTF16toUTF8(contentType));
 
   auto cleanupOnExit = MakeScopeExit([&] { mChannel = nullptr; });
 
