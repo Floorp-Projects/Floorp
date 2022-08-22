@@ -241,6 +241,7 @@ DIRS += [
     "/third_party/libwebrtc/modules/audio_processing/utility/legacy_delay_estimator_gn",
     "/third_party/libwebrtc/modules/audio_processing/utility/pffft_wrapper_gn",
     "/third_party/libwebrtc/modules/audio_processing/vad/vad_gn",
+    "/third_party/libwebrtc/modules/audio_processing/voice_detection_gn",
     "/third_party/libwebrtc/modules/congestion_controller/congestion_controller_gn",
     "/third_party/libwebrtc/modules/congestion_controller/goog_cc/alr_detector_gn",
     "/third_party/libwebrtc/modules/congestion_controller/goog_cc/delay_based_bwe_gn",
