@@ -2204,8 +2204,10 @@ nsMenuFrame* nsMenuPopupFrame::FindMenuWithShortcut(KeyboardEvent* aKeyEvent,
       }
     }
 
-    if (StringBeginsWith(textKey, incrementalString,
-                         nsCaseInsensitiveStringComparator)) {
+    if (StringBeginsWith(
+            nsContentUtils::TrimWhitespace<
+                nsContentUtils::IsHTMLWhitespaceOrNBSP>(textKey, false),
+            incrementalString, nsCaseInsensitiveStringComparator)) {
       // mIncrementalString is a prefix of textKey
       nsMenuFrame* menu = do_QueryFrame(currFrame);
       if (menu) {
