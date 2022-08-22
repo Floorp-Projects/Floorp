@@ -193,6 +193,7 @@ DIRS += [
     "/third_party/libwebrtc/modules/audio_processing/aec_dump_interface_gn",
     "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc/agc_gn",
+    "/third_party/libwebrtc/modules/audio_processing/agc/analog_gain_stats_reporter_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc/clipping_predictor_evaluator_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc/clipping_predictor_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc/clipping_predictor_level_buffer_gn",
