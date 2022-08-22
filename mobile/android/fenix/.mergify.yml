@@ -69,7 +69,7 @@ pull_request_rules:
         type: APPROVE
         message: LGTM 😎
       queue:
-        method: rebase
+        method: squash
         name: default
         rebase_fallback: none
   - name: Needs landing - Rebase
