@@ -22,5 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Modified build files in third_party/libwebrtc - Bug 1766646 - Vendor libwebrtc from 26d12fcc71
+Modified build files in third_party/libwebrtc - Bug 1766646 - (fix-8615bf0582) restrict deps in frame_buffer_unittest
 
