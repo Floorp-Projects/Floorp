@@ -214,6 +214,7 @@
     <string name="preference_category_privacy">رازداری</string>
 
     <string name="preference_privacy_block_ads">اشتہار ٹریکر کوں بلاک کرو</string>
+    <string name="preference_privacy_block_analytics">تجزیاتی ٹریکر  بلاک کرو</string>
     <string name="preference_privacy_category_cookies">کوکیاں بلاک کرو</string>
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
@@ -233,6 +234,12 @@
 
     <string name="preference_performance_block_javascript">JavaScript بلاک کرو</string>
 
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">%1$s کوں پہلوں مقرر براؤز بݨاؤ</string>
+
     <string name="preference_category_mozilla">موزلّا</string>
 
     <string name="preference_mozilla_telemetry2">ورتیل ڈیٹا پٹھو</string>
@@ -251,6 +258,9 @@
 
     <!-- Header for the list of installed search engines -->
     <string name="preference_choose_search_engine">ڳولݨ انجݨ چݨو</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">ڈیفالٹ ڳولݨ انجݨ بحال کرو</string>
 
     <!-- Action for adding an additional search engine to the list.
     The "+" is used to emphasize that this is an "add" action -->
@@ -336,6 +346,10 @@
     <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
     <string name="content_description_customtab_exit">پچھلی ایپ تے واپس ون٘ڄو</string>
 
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">بلاک تھئے ٹریکراں دی تعداد</string>
+
     <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
          content blocking for the current session -->
     <string name="content_description_blocking_switch">ٹریکراں کوں بلاک کرو</string>
@@ -344,6 +358,8 @@
 
     <string name="external_app_prompt_title">لنک ہک ٻئی ایپ وچ کھولو</string>
 
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">ہک ایپ لبھو جہڑی لنک کوں کھول سڳے</string>
     <!-- This label is shown above a list of apps that can be used to open a given link -->
     <string name="external_multiple_apps_matched_exit">نجی براؤزنگ وچوں نکلوں؟</string>
 
@@ -574,6 +590,9 @@
     <string name="dismiss_no_suggestions_prompt_button">فارغ کرو</string>
 
     <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">موہری سکرین تے تجویزاں بند کرو</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">نواں ٹیب کھل ڳیا</string>
