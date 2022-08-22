@@ -706,8 +706,6 @@
     <string name="open_tabs_menu">Open tabs menu</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Save tabs to collection</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu" moz:RemovedIn="103" tools:ignore="UnusedResources">Tab menu</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Delete collection</string>
     <!-- Text for the menu button to rename a collection -->
