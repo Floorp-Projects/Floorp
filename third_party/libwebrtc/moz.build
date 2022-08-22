@@ -353,6 +353,7 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/race_checker_gn",
     "/third_party/libwebrtc/rtc_base/random_gn",
     "/third_party/libwebrtc/rtc_base/rate_limiter_gn",
+    "/third_party/libwebrtc/rtc_base/rate_tracker_gn",
     "/third_party/libwebrtc/rtc_base/refcount_gn",
     "/third_party/libwebrtc/rtc_base/rtc_base_approved_gn",
     "/third_party/libwebrtc/rtc_base/rtc_base_gn",
