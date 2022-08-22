@@ -207,3 +207,36 @@ function promiseEngine(expectedData, expectedEngineName) {
     }
   ).then(([engine, data]) => engine);
 }
+
+add_task(async function shortcuts_without_other_engines() {
+  info("Checks the shortcuts without other engines.");
+
+  info("Remove search engines except default");
+  const defaultEngine = Services.search.defaultEngine;
+  const engines = await Services.search.getVisibleEngines();
+  for (const engine of engines) {
+    if (defaultEngine.name !== engine.name) {
+      await Services.search.removeEngine(engine);
+    }
+  }
+
+  info("Remove local engines");
+  for (const { pref } of UrlbarUtils.LOCAL_SEARCH_MODES) {
+    await SpecialPowers.pushPrefEnv({
+      set: [[`browser.urlbar.${pref}`, false]],
+    });
+  }
+
+  const url = getRootDirectory(gTestPath) + "add_search_engine_many.html";
+  await BrowserTestUtils.withNewTab(url, async () => {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "test",
+    });
+
+    const shortcutButtons = UrlbarTestUtils.getOneOffSearchButtons(window);
+    Assert.ok(shortcutButtons.container.hidden, "It should be hidden");
+  });
+
+  Services.search.restoreDefaultEngines();
+});

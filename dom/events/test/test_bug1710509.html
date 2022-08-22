@@ -33,10 +33,6 @@
     await SpecialPowers.pushPrefEnv({
       set: [
         ["dom.w3c_pointer_events.dispatch_by_pointer_messages", false],
-        // Run the font loader task eagerly for more predictable behavior,
-        // see bug 1672141.
-        ["gfx.font_loader.delay", 0],
-        ["gfx.font_loader.interval", 0],
       ],
     });
 

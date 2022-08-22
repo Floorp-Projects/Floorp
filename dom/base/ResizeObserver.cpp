@@ -506,7 +506,42 @@ void ResizeObserverEntry::SetDevicePixelContentSize(const gfx::Size& aSize) {
 static void LastRememberedSizeCallback(
     const Sequence<OwningNonNull<ResizeObserverEntry>>& aEntries,
     ResizeObserver& aObserver) {
-  // TODO.
+  for (const auto& entry : aEntries) {
+    Element* target = entry->Target();
+    if (!target->IsInComposedDoc()) {
+      aObserver.Unobserve(*target);
+      target->RemoveLastRememberedBSize();
+      target->RemoveLastRememberedISize();
+      continue;
+    }
+    nsIFrame* frame = target->GetPrimaryFrame();
+    if (!frame) {
+      aObserver.Unobserve(*target);
+      continue;
+    }
+    const nsStylePosition* stylePos = frame->StylePosition();
+    const WritingMode wm = frame->GetWritingMode();
+    bool canRememberBSize = stylePos->ContainIntrinsicBSize(wm).IsAutoLength();
+    bool canRememberISize = stylePos->ContainIntrinsicISize(wm).IsAutoLength();
+    MOZ_ASSERT(canRememberBSize || !target->HasLastRememberedBSize(),
+               "Should have removed the last remembered block size.");
+    MOZ_ASSERT(canRememberISize || !target->HasLastRememberedISize(),
+               "Should have removed the last remembered inline size.");
+    const auto containAxes = frame->StyleDisplay()->GetContainSizeAxes();
+    bool canUpdateBSize = canRememberBSize && !containAxes.mBContained;
+    bool canUpdateISize = canRememberISize && !containAxes.mIContained;
+    MOZ_ASSERT(canUpdateBSize || canUpdateISize,
+               "Should have unobserved if we can't update any size.");
+    AutoTArray<RefPtr<ResizeObserverSize>, 1> retVal;
+    entry->GetContentBoxSize(retVal);
+    const ResizeObserverSize& size = *retVal[0];
+    if (canUpdateBSize) {
+      target->SetLastRememberedBSize(size.BlockSize());
+    }
+    if (canUpdateISize) {
+      target->SetLastRememberedISize(size.InlineSize());
+    }
+  }
 }
 
 /* static */ already_AddRefed<ResizeObserver>
