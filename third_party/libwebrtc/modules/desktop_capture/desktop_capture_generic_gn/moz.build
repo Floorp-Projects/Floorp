@@ -240,7 +240,6 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["_GNU_SOURCE"] = True
 
     UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/egl_dmabuf.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/moz_base_capturer_pipewire.cc"
     ]
 
@@ -296,7 +295,6 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["_GNU_SOURCE"] = True
 
     UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/egl_dmabuf.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/moz_base_capturer_pipewire.cc"
     ]
 
@@ -307,7 +305,6 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["_GNU_SOURCE"] = True
 
     UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/egl_dmabuf.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/moz_base_capturer_pipewire.cc"
     ]
 
@@ -318,7 +315,6 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["_GNU_SOURCE"] = True
 
     UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/egl_dmabuf.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/moz_base_capturer_pipewire.cc"
     ]
 
