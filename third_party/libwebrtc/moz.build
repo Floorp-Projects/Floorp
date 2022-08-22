@@ -498,6 +498,10 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_generic_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
         "/third_party/libwebrtc/modules/desktop_capture/primitives_gn",
+        "/third_party/libwebrtc/rtc_base/win/create_direct3d_device_gn",
+        "/third_party/libwebrtc/rtc_base/win/get_activation_factory_gn",
+        "/third_party/libwebrtc/rtc_base/win/hstring_gn",
+        "/third_party/libwebrtc/rtc_base/win/windows_version_gn",
         "/third_party/libwebrtc/rtc_base/win32_gn"
     ]
 
