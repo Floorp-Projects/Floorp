@@ -20,12 +20,10 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/GlobalKeyListener.h"
 #include "mozilla/IMEStateManager.h"
-#include "mozilla/Logging.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/NativeKeyBindingsType.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -87,8 +85,6 @@
 #include "nsView.h"
 #include "nsViewManager.h"
 
-static mozilla::LazyLogModule sBaseWidgetLog("BaseWidget");
-
 #ifdef DEBUG
 #  include "nsIObserver.h"
 
@@ -145,6 +141,7 @@ nsBaseWidget::nsBaseWidget(nsBorderStyle aBorderStyle)
       mCompositorVsyncDispatcher(nullptr),
       mBorderStyle(aBorderStyle),
       mBounds(0, 0, 0, 0),
+      mOriginalBounds(nullptr),
       mIsTiled(false),
       mPopupLevel(ePopupLevelTop),
       mPopupType(ePopupTypeAny),
@@ -406,6 +403,8 @@ nsBaseWidget::~nsBaseWidget() {
   gNumWidgets--;
   printf("WIDGETS- = %d\n", gNumWidgets);
 #endif
+
+  delete mOriginalBounds;
 }
 
 //-------------------------------------------------------------------------
@@ -720,192 +719,33 @@ void nsBaseWidget::PerformFullscreenTransition(FullscreenTransitionStage aStage,
 //
 //-------------------------------------------------------------------------
 void nsBaseWidget::InfallibleMakeFullScreen(bool aFullScreen) {
-#define MOZ_FORMAT_RECT(fmtstr) "[" fmtstr "," fmtstr " " fmtstr "x" fmtstr "]"
-#define MOZ_SPLAT_RECT(rect) \
-  (rect).X(), (rect).Y(), (rect).Width(), (rect).Height()
-
-  // Windows which can be made fullscreen are exactly those which are located on
-  // the desktop, rather than being a child of some other window.
-  MOZ_DIAGNOSTIC_ASSERT(BoundsUseDesktopPixels(),
-                        "non-desktop windows cannot be made fullscreen");
-
-  // Ensure that the OS chrome is hidden/shown before we resize and/or exit the
-  // function.
-  //
-  // HideWindowChrome() may (depending on platform, implementation details, and
-  // OS-level user preferences) alter the reported size of the window. The
-  // obvious and principled solution is socks-and-shoes:
-  //   - On entering fullscreen mode: hide window chrome, then perform resize.
-  //   - On leaving fullscreen mode: unperform resize, then show window chrome.
-  //
-  // ... unfortunately, HideWindowChrome() requires Resize() to be called
-  // afterwards (see bug 498835), which prevents this from being done in a
-  // straightforward way.
-  //
-  // Instead, we always call HideWindowChrome() just before we call Resize().
-  // This at least ensures that our measurements are consistently taken in a
-  // pre-transition state.
-  //
-  // ... unfortunately again, coupling HideWindowChrome() to Resize() means that
-  // we have to worry about the possibility of control flows that don't call
-  // Resize() at all. (That shouldn't happen, but it's not trivial to rule out.)
-  // We therefore set up a fallback to fix up the OS chrome if it hasn't been
-  // done at exit time.
-  bool hasAdjustedOSChrome = false;
-  const auto adjustOSChrome = [&]() {
-    if (hasAdjustedOSChrome) {
-      MOZ_ASSERT_UNREACHABLE("window chrome should only be adjusted once");
-      return;
-    }
-    HideWindowChrome(aFullScreen);
-    hasAdjustedOSChrome = true;
-  };
-  const auto adjustChromeOnScopeExit = MakeScopeExit([&]() {
-    if (hasAdjustedOSChrome) {
-      return;
-    }
-
-    MOZ_LOG(sBaseWidgetLog, LogLevel::Warning,
-            (("window was not resized within InfallibleMakeFullScreen()")));
-
-    // Hide chrome and "resize" the window to its current size.
-    auto rect = GetBounds();
-    adjustOSChrome();
-    Resize(rect.X(), rect.Y(), rect.Width(), rect.Height(), true);
-  });
-
-  // Resize.
-  const auto doReposition = [&](auto rect) {
-    static_assert(std::is_base_of_v<DesktopPixel,
-                                    std::remove_reference_t<decltype(rect)>>,
-                  "doReposition requires a rectangle using desktop pixels");
-
-    adjustOSChrome();
-    Resize(rect.X(), rect.Y(), rect.Width(), rect.Height(), true);
-
-    {
-      gfx::RectTyped<DesktopPixel, float> rectAsFloat{rect};
-      auto postResizeRect = GetScreenBounds();
-      auto postResizeRectScaled = postResizeRect / GetDesktopToDeviceScale();
-      MOZ_LOG(sBaseWidgetLog, LogLevel::Verbose,
-              ("resize target: " MOZ_FORMAT_RECT("%f"),
-               MOZ_SPLAT_RECT(rectAsFloat)));
-      MOZ_LOG(sBaseWidgetLog, LogLevel::Verbose,
-              ("resize effect (raw): " MOZ_FORMAT_RECT("%d"),
-               MOZ_SPLAT_RECT(postResizeRect)));
-      MOZ_LOG(sBaseWidgetLog, LogLevel::Verbose,
-              ("resize effect (DPI): " MOZ_FORMAT_RECT("%f"),
-               MOZ_SPLAT_RECT(postResizeRectScaled)));
-    }
-  };
+  HideWindowChrome(aFullScreen);
 
   if (aFullScreen) {
-    if (!mSavedBounds) {
-      mSavedBounds = mozilla::MakeUnique<FullscreenSavedState>();
+    if (!mOriginalBounds) {
+      mOriginalBounds = new LayoutDeviceIntRect();
     }
-    // save current position
-    mSavedBounds->windowRect = GetScreenBounds() / GetDesktopToDeviceScale();
+    *mOriginalBounds = GetScreenBounds();
 
+    // Move to top-left corner of screen and size to the screen dimensions
     nsCOMPtr<nsIScreen> screen = GetWidgetScreen();
-    if (!screen) {
-      return;
+    if (screen) {
+      int32_t left, top, width, height;
+      if (NS_SUCCEEDED(
+              screen->GetRectDisplayPix(&left, &top, &width, &height))) {
+        Resize(left, top, width, height, true);
+      }
     }
-
-    // move to fill the screen (and save that position, too)
-    const auto screenRect = screen->GetRectDisplayPix();
-    mSavedBounds->screenRect = screenRect;
-    doReposition(screenRect);
-
-    MOZ_LOG(sBaseWidgetLog, LogLevel::Debug,
-            ("window: " MOZ_FORMAT_RECT("%f"),
-             MOZ_SPLAT_RECT(mSavedBounds->windowRect)));
-    MOZ_LOG(sBaseWidgetLog, LogLevel::Debug,
-            ("screen: " MOZ_FORMAT_RECT("%d"),
-             MOZ_SPLAT_RECT(mSavedBounds->screenRect)));
-
-  } else {
-    if (!mSavedBounds) {
-      // This should never happen, at present, since we don't make windows
-      // fullscreen at their creation time; but it's not logically impossible.
-      MOZ_ASSERT(false, "fullscreen window did not have saved position");
-      return;
+  } else if (mOriginalBounds) {
+    if (BoundsUseDesktopPixels()) {
+      DesktopRect deskRect = *mOriginalBounds / GetDesktopToDeviceScale();
+      Resize(deskRect.X(), deskRect.Y(), deskRect.Width(), deskRect.Height(),
+             true);
+    } else {
+      Resize(mOriginalBounds->X(), mOriginalBounds->Y(),
+             mOriginalBounds->Width(), mOriginalBounds->Height(), true);
     }
-
-    // Figure out where to go from here.
-    //
-    // Fortunately, since we're currently fullscreen (and other code should be
-    // handling _keeping_ us fullscreen even after display-layout changes),
-    // there's an obvious choice for which display we should attach to; all we
-    // need to determine is where on that display we should go.
-
-    const DesktopRect currentWinRect =
-        GetScreenBounds() / GetDesktopToDeviceScale();
-
-    MOZ_LOG(sBaseWidgetLog, LogLevel::Debug,
-            ("currentWinRect: " MOZ_FORMAT_RECT("%f"),
-             MOZ_SPLAT_RECT(currentWinRect)));
-
-    // Optimization: if where we are is where we were, then where we originally
-    // came from is where we're going to go.
-    if (currentWinRect == DesktopRect(mSavedBounds->screenRect)) {
-      doReposition(mSavedBounds->windowRect);
-      return;
-    }
-
-    /*
-      General case: figure out where we're going to go by dividing where we are
-      by where we were, and then multiplying by where we originally came from.
-
-      Less abstrusely: resize so that we occupy the same proportional position
-      on our current display after leaving fullscreen as we occupied on our
-      previous display before entering fullscreen.
-
-      (N.B.: We do not clamp. If we were only partially on the old display,
-      we'll be only partially on the new one, too.)
-    */
-
-    // splat: convert an arbitrary Rect into a tuple, for syntactic convenience.
-    const auto splat = [](auto rect) {
-      return std::tuple(rect.X(), rect.Y(), rect.Width(), rect.Height());
-    };
-
-    // remap: find the unique affine mapping which transforms `src` to `dst`,
-    // and apply it to `val`.
-    using Range = std::pair<float, float>;
-    const auto remap = [](Range dst, Range src, float val) {
-      // linear interpolation and its inverse
-      const auto lerp = [](float lo, float hi, float t) {
-        return lo + t * (hi - lo);
-      };
-      const auto colerp = [](float lo, float hi, float mid) {
-        return (mid - lo) / (hi - lo);
-      };
-
-      const auto [dst_a, dst_b] = dst;
-      const auto [src_a, src_b] = src;
-      return lerp(dst_a, dst_b, colerp(src_a, src_b, val));
-    };
-
-    // original position
-    const auto [px, py, pw, ph] = splat(mSavedBounds->windowRect);
-    // source desktop rect
-    const auto [sx, sy, sw, sh] = splat(mSavedBounds->screenRect);
-    // target desktop rect
-    const auto [tx, ty, tw, th] = splat(currentWinRect);
-
-    const float nx = remap({tx, tx + tw}, {sx, sx + sw}, px);
-    const float ny = remap({ty, ty + th}, {sy, sy + sh}, py);
-    const float nw = remap({0, tw}, {0, sw}, pw);
-    const float nh = remap({0, th}, {0, sh}, ph);
-
-    MOZ_LOG(sBaseWidgetLog, LogLevel::Debug,
-            ("final size: " MOZ_FORMAT_RECT("%lf"), nx, ny, nw, nh));
-
-    doReposition(DesktopRect{nx, ny, nw, nh});
   }
-
-#undef MOZ_SPLAT_RECT
-#undef MOZ_FORMAT_RECT
 }
 
 nsresult nsBaseWidget::MakeFullScreen(bool aFullScreen) {

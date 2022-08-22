@@ -711,17 +711,12 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   Cursor mCursor;
   nsBorderStyle mBorderStyle;
   LayoutDeviceIntRect mBounds;
+  LayoutDeviceIntRect* mOriginalBounds;
   bool mIsTiled;
   nsPopupLevel mPopupLevel;
   nsPopupType mPopupType;
   SizeConstraints mSizeConstraints;
   bool mHasRemoteContent;
-
-  struct FullscreenSavedState {
-    DesktopRect windowRect;
-    DesktopIntRect screenRect;
-  };
-  mozilla::UniquePtr<FullscreenSavedState> mSavedBounds;
 
   bool mUpdateCursor;
   bool mUseAttachedEvents;
