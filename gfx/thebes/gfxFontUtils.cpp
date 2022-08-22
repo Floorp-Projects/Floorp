@@ -25,8 +25,6 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/dom/WorkerCommon.h"
 
-#include "harfbuzz/hb.h"
-
 #include "plbase64.h"
 #include "mozilla/Logging.h"
 
@@ -1602,19 +1600,6 @@ void gfxFontUtils::GetVariationData(
     // on the number of axes present.
     // (Not currently used by our code here anyhow.)
     //  AutoSwap_PRUint16 postScriptNameID;
-  };
-
-  // Helper to ensure we free a font table when we return.
-  class AutoHBBlob {
-   public:
-    explicit AutoHBBlob(hb_blob_t* aBlob) : mBlob(aBlob) {}
-
-    ~AutoHBBlob() { hb_blob_destroy(mBlob); }
-
-    operator hb_blob_t*() { return mBlob; }
-
-   private:
-    hb_blob_t* const mBlob;
   };
 
   // Load the two font tables we need as harfbuzz blobs; if either is absent,
