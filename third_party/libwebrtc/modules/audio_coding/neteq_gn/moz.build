@@ -28,7 +28,8 @@ LOCAL_INCLUDES += [
 ]
 
 SOURCES += [
-    "/third_party/libwebrtc/modules/audio_coding/neteq/audio_vector.cc"
+    "/third_party/libwebrtc/modules/audio_coding/neteq/audio_vector.cc",
+    "/third_party/libwebrtc/modules/audio_coding/neteq/underrun_optimizer.cc"
 ]
 
 UNIFIED_SOURCES += [
@@ -62,8 +63,7 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/audio_coding/neteq/statistics_calculator.cc",
     "/third_party/libwebrtc/modules/audio_coding/neteq/sync_buffer.cc",
     "/third_party/libwebrtc/modules/audio_coding/neteq/time_stretch.cc",
-    "/third_party/libwebrtc/modules/audio_coding/neteq/timestamp_scaler.cc",
-    "/third_party/libwebrtc/modules/audio_coding/neteq/underrun_optimizer.cc"
+    "/third_party/libwebrtc/modules/audio_coding/neteq/timestamp_scaler.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
