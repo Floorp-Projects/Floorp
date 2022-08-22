@@ -29,28 +29,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/modules/video_coding/decoder_database.cc",
-    "/third_party/libwebrtc/modules/video_coding/event_wrapper.cc",
-    "/third_party/libwebrtc/modules/video_coding/fec_controller_default.cc",
-    "/third_party/libwebrtc/modules/video_coding/frame_buffer2.cc",
-    "/third_party/libwebrtc/modules/video_coding/frame_object.cc",
-    "/third_party/libwebrtc/modules/video_coding/generic_decoder.cc",
-    "/third_party/libwebrtc/modules/video_coding/h264_sprop_parameter_sets.cc",
-    "/third_party/libwebrtc/modules/video_coding/h264_sps_pps_tracker.cc",
-    "/third_party/libwebrtc/modules/video_coding/inter_frame_delay.cc",
-    "/third_party/libwebrtc/modules/video_coding/jitter_estimator.cc",
-    "/third_party/libwebrtc/modules/video_coding/loss_notification_controller.cc",
-    "/third_party/libwebrtc/modules/video_coding/media_opt_util.cc",
-    "/third_party/libwebrtc/modules/video_coding/rtp_frame_id_only_ref_finder.cc",
-    "/third_party/libwebrtc/modules/video_coding/rtp_frame_reference_finder.cc",
-    "/third_party/libwebrtc/modules/video_coding/rtp_generic_ref_finder.cc",
-    "/third_party/libwebrtc/modules/video_coding/rtp_seq_num_only_ref_finder.cc",
-    "/third_party/libwebrtc/modules/video_coding/rtp_vp8_ref_finder.cc",
-    "/third_party/libwebrtc/modules/video_coding/rtp_vp9_ref_finder.cc",
-    "/third_party/libwebrtc/modules/video_coding/timestamp_map.cc",
-    "/third_party/libwebrtc/modules/video_coding/unique_timestamp_counter.cc",
-    "/third_party/libwebrtc/modules/video_coding/video_codec_initializer.cc",
-    "/third_party/libwebrtc/modules/video_coding/video_receiver2.cc"
+    "/third_party/libwebrtc/modules/video_coding/rtt_filter.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -78,7 +57,6 @@ if CONFIG["OS_TARGET"] == "Android":
     DEFINES["__STDC_FORMAT_MACROS"] = True
 
     OS_LIBS += [
-        "GLESv2",
         "log"
     ]
 
@@ -106,11 +84,6 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["_LARGEFILE_SOURCE"] = True
     DEFINES["__STDC_CONSTANT_MACROS"] = True
     DEFINES["__STDC_FORMAT_MACROS"] = True
-
-    OS_LIBS += [
-        "dl",
-        "rt"
-    ]
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
 
@@ -152,13 +125,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["_WIN32_WINNT"] = "0x0A00"
     DEFINES["_WINDOWS"] = True
     DEFINES["__STD_C"] = True
-
-    OS_LIBS += [
-        "crypt32",
-        "iphlpapi",
-        "secur32",
-        "winmm"
-    ]
 
 if CONFIG["CPU_ARCH"] == "aarch64":
 
@@ -232,4 +198,4 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
-Library("video_coding_gn")
+Library("rtt_filter_gn")
