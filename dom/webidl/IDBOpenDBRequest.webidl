@@ -7,7 +7,7 @@
  * https://w3c.github.io/IndexedDB/#idbopendbrequest
  */
 
-[Exposed=(Window,Worker)]
+[Exposed=(Window,Worker), Func="IDBFactory::IsEnabled"]
 interface IDBOpenDBRequest : IDBRequest {
                 attribute EventHandler onblocked;
 
