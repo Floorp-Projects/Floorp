@@ -36,6 +36,7 @@ SOURCES += [
 
 UNIFIED_SOURCES += [
     "/third_party/libwebrtc/api/video/i420_buffer.cc",
+    "/third_party/libwebrtc/api/video/i422_buffer.cc",
     "/third_party/libwebrtc/api/video/nv12_buffer.cc",
     "/third_party/libwebrtc/api/video/video_frame.cc",
     "/third_party/libwebrtc/api/video/video_frame_buffer.cc",
