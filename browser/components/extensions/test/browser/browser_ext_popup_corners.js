@@ -33,6 +33,12 @@ add_task(async function testPopupBorderRadius() {
 
   await extension.startup();
 
+  let widget = getBrowserActionWidget(extension);
+  // If the panel doesn't allows embedding in subview then
+  // radius will be 0, otherwise 8.  In practice we always
+  // disallow subview.
+  let expectedRadius = widget.disallowSubView ? "8px" : "0px";
+
   async function testPanel(browser, standAlone = true) {
     let panel = getPanelForNode(browser);
     let arrowContent = panel.panelContent;
@@ -76,8 +82,12 @@ add_task(async function testPopupBorderRadius() {
           `Panel and body ${prop} should be the same`
         );
       } else {
-        is(viewStyle[prop], "0px", `View node ${prop} should be 0px`);
-        is(bodyStyle.get(prop), "0px", `Body node ${prop} should be 0px`);
+        is(viewStyle[prop], expectedRadius, `View node ${prop} should be 0px`);
+        is(
+          bodyStyle.get(prop),
+          expectedRadius,
+          `Body node ${prop} should be 0px`
+        );
       }
     }
   }
@@ -94,7 +104,6 @@ add_task(async function testPopupBorderRadius() {
   {
     info("Test menu panel browserAction popup");
 
-    let widget = getBrowserActionWidget(extension);
     CustomizableUI.addWidgetToArea(widget.id, getCustomizableUIPanelID());
 
     clickBrowserAction(extension);

@@ -202,6 +202,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
       tooltiptext: this.action.getProperty(null, "title"),
       defaultArea: browserAreas[this.action.getDefaultArea()],
       showInPrivateBrowsing: this.extension.privateBrowsingAllowed,
+      disallowSubView: true,
 
       // Don't attempt to load properties from the built-in widget string
       // bundle.
@@ -213,6 +214,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
         view.setAttribute("flex", "1");
         view.setAttribute("extension", true);
         view.setAttribute("neverhidden", true);
+        view.setAttribute("disallowSubView", true);
 
         document.getElementById("appMenu-viewCache").appendChild(view);
 
@@ -526,15 +528,12 @@ this.browserAction = class extends ExtensionAPIPersistent {
       pendingPopup.destroy();
     }
 
-    let fixedWidth =
-      this.widget.areaType == CustomizableUI.TYPE_MENU_PANEL ||
-      this.widget.forWindow(window).overflowed;
     return new ViewPopup(
       this.extension,
       window,
       popupURL,
       this.browserStyle,
-      fixedWidth,
+      false,
       blockParser
     );
   }

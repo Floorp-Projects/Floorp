@@ -429,7 +429,7 @@ const PanelUI = {
     this.ensurePanicViewInitialized(viewNode);
 
     let container = aAnchor.closest("panelmultiview");
-    if (container) {
+    if (container && !viewNode.hasAttribute("disallowSubView")) {
       container.showSubView(aViewId, aAnchor);
     } else if (!aAnchor.open) {
       aAnchor.open = true;
