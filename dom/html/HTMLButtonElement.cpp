@@ -233,11 +233,7 @@ nsresult HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   }
 
   if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
-    WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
-    if (keyEvent && keyEvent->IsTrusted()) {
-      HandleKeyboardActivation(aVisitor);
-    }
-
+    HandleKeyboardActivation(aVisitor);
     if (aVisitor.mItemFlags & NS_OUTER_ACTIVATE_EVENT) {
       if (mForm) {
         // Hold a strong ref while dispatching

@@ -2211,10 +2211,11 @@ Result<bool, nsresult> nsGenericHTMLElement::PerformAccesskey(
 
 void nsGenericHTMLElement::HandleKeyboardActivation(
     EventChainPostVisitor& aVisitor) {
-  MOZ_ASSERT(aVisitor.mEvent->HasKeyEventMessage());
-  MOZ_ASSERT(aVisitor.mEvent->IsTrusted());
-
   const auto message = aVisitor.mEvent->mMessage;
+  if (message != eKeyDown && message != eKeyUp && message != eKeyPress) {
+    return;
+  }
+
   const WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
   if (nsEventStatus_eIgnore != aVisitor.mEventStatus) {
     if (message == eKeyUp && keyEvent->mKeyCode == NS_VK_SPACE) {
