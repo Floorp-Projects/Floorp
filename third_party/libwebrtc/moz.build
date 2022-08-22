@@ -105,6 +105,7 @@ DIRS += [
     "/third_party/libwebrtc/api/video_codecs/video_codecs_api_gn",
     "/third_party/libwebrtc/api/video_codecs/vp8_temporal_layers_factory_gn",
     "/third_party/libwebrtc/api/video_track_source_constraints_gn",
+    "/third_party/libwebrtc/api/webrtc_key_value_config_gn",
     "/third_party/libwebrtc/audio/audio_gn",
     "/third_party/libwebrtc/audio/utility/audio_frame_operations_gn",
     "/third_party/libwebrtc/call/adaptation/resource_adaptation_gn",
