@@ -42,7 +42,6 @@ using mozilla::LayoutDeviceIntPoint from "Units.h";
 using nsSizeMode from "nsIWidgetListener.h";
 using ScrollbarPreference from "mozilla/ScrollbarPreferences.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
-using TransferableDataType from "ipc/nsTransferableIPC.h";
 [RefCounted] using class nsIPrincipal from "nsIPrincipal.h";
 using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
 [RefCounted] using class nsIURI from "nsIURI.h";
@@ -53,6 +52,7 @@ using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingCont
 using mozilla::TimeStamp from "mozilla/TimeStamp.h";
 [RefCounted] using class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
 [RefCounted] using class mozilla::RemoteLazyInputStream from "mozilla/RemoteLazyInputStream.h";
+[MoveOnly] using class mozilla::ipc::BigBuffer from "mozilla/ipc/BigBuffer.h";
 
 namespace mozilla {
 namespace dom {
@@ -101,28 +101,55 @@ struct MessageData {
   MessageDataType data;
 };
 
-union IPCDataTransferData
+struct IPCDataTransferString
 {
-  nsString;  // text
-  Shmem;     // images using Shmem
-  IPCBlob;   // files
+  BigBuffer data;
 };
 
-struct IPCDataTransferImage
+struct IPCDataTransferCString
 {
+  BigBuffer data;
+};
+
+struct IPCDataTransferInputStream
+{
+  // NOTE: Editor currently relies on these input streams being synchronous, so
+  // we can't safely serialize them using IPCStream (see bug 1778565). Instead,
+  // they're serialized as a `BigBuffer`, and converted to a nsStringInputStream
+  // on the receiving side. If we are able to use async streams reliably in the
+  // future, we could consider switching the code which adds `nsIInputStream`s
+  // to the transferable to use `BlobImpl` instead, for more consistency between
+  // image formats.
+  BigBuffer data;
+};
+
+struct IPCDataTransferImageContainer
+{
+  BigBuffer data;
   uint32_t width;
   uint32_t height;
   uint32_t stride;
   SurfaceFormat format;
 };
 
+struct IPCDataTransferBlob
+{
+  IPCBlob blob;
+};
+
+union IPCDataTransferData
+{
+  IPCDataTransferString;
+  IPCDataTransferCString;
+  IPCDataTransferInputStream;
+  IPCDataTransferImageContainer;
+  IPCDataTransferBlob;
+};
+
 struct IPCDataTransferItem
 {
   nsCString flavor;
   IPCDataTransferData data;
-  TransferableDataType dataType;
-  // The image details are only used when transferring images.
-  IPCDataTransferImage? imageDetails;
 };
 
 struct IPCDataTransfer

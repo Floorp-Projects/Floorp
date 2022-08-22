@@ -6046,8 +6046,8 @@ nsresult EventStateManager::DoContentCommandEvent(
                 transferable->GetRequestingPrincipal();
             nsContentPolicyType contentPolicyType =
                 transferable->GetContentPolicyType();
-            remote->SendPasteTransferable(ipcDataTransfer, isPrivateData,
-                                          requestingPrincipal,
+            remote->SendPasteTransferable(std::move(ipcDataTransfer),
+                                          isPrivateData, requestingPrincipal,
                                           contentPolicyType);
             rv = NS_OK;
           } else {
