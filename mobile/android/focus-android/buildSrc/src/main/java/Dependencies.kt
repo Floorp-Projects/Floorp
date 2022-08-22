@@ -19,10 +19,12 @@ object Versions {
         const val compose_constraint_layout = "1.0.1"
         const val constraint_layout = "2.1.4"
         const val cardview = "1.0.0"
+        const val fragment = "1.5.2"
         const val recyclerview = "1.2.0"
         const val palette = "1.0.0"
         const val preferences = "1.1.1"
         const val lifecycle = "2.2.0"
+        const val saved_state = "1.2.0"
         const val splash_screen = "1.0.0"
     }
 
@@ -72,11 +74,15 @@ object Dependencies {
         "androidx.constraintlayout:constraintlayout-compose:${Versions.AndroidX.compose_constraint_layout}"
     const val androidx_constraint_layout = "androidx.constraintlayout:constraintlayout:${Versions.AndroidX.constraint_layout}"
     const val androidx_core_ktx = "androidx.core:core-ktx:${Versions.AndroidX.core}"
+    const val androidx_fragment = "androidx.fragment:fragment:${Versions.AndroidX.fragment}"
+
     const val androidx_palette = "androidx.palette:palette-ktx:${Versions.AndroidX.palette}"
     const val androidx_preferences = "androidx.preference:preference-ktx:${Versions.AndroidX.preferences}"
     const val androidx_recyclerview = "androidx.recyclerview:recyclerview:${Versions.AndroidX.recyclerview}"
     const val androidx_lifecycle_process = "androidx.lifecycle:lifecycle-process:${Versions.AndroidX.lifecycle}"
+    const val androidx_lifecycle_viewmodel = "androidx.lifecycle:lifecycle-viewmodel-ktx:${Versions.AndroidX.lifecycle}"
     const val androidx_splash_screen = "androidx.core:core-splashscreen:${Versions.AndroidX.splash_screen}"
+    const val androidx_savedstate = "androidx.savedstate:savedstate-ktx:${Versions.AndroidX.saved_state}"
 
     const val google_material = "com.google.android.material:material:${Versions.Google.material}"
     const val google_accompanist_insets_ui = "com.google.accompanist:accompanist-insets-ui:${Versions.Google.accompanist}"

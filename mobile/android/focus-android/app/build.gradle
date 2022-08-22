@@ -221,10 +221,13 @@ dependencies {
     implementation Dependencies.androidx_compose_runtime_livedata
     implementation Dependencies.androidx_constraint_layout
     implementation Dependencies.androidx_core_ktx
+    implementation Dependencies.androidx_fragment
     implementation Dependencies.androidx_lifecycle_process
+    implementation Dependencies.androidx_lifecycle_viewmodel
     implementation Dependencies.androidx_palette
     implementation Dependencies.androidx_preferences
     implementation Dependencies.androidx_recyclerview
+    implementation Dependencies.androidx_savedstate
     implementation Dependencies.androidx_splash_screen
     implementation Dependencies.google_accompanist_insets_ui
     implementation Dependencies.google_play
