@@ -1756,18 +1756,22 @@ bool nsGlobalWindowOuter::WouldReuseInnerWindow(Document* aNewDocument) {
   return false;
 }
 
-void nsGlobalWindowOuter::SetInitialPrincipal(
-    nsIPrincipal* aNewWindowPrincipal, nsIContentSecurityPolicy* aCSP,
+void nsGlobalWindowOuter::SetInitialPrincipalToSubject(
+    nsIContentSecurityPolicy* aCSP,
     const Maybe<nsILoadInfo::CrossOriginEmbedderPolicy>& aCOEP) {
+  // First, grab the subject principal.
+  nsCOMPtr<nsIPrincipal> newWindowPrincipal =
+      nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller();
+
   // We should never create windows with an expanded principal.
   // If we have a system principal, make sure we're not using it for a content
   // docshell.
   // NOTE: Please keep this logic in sync with
   // nsAppShellService::JustCreateTopWindow
-  if (nsContentUtils::IsExpandedPrincipal(aNewWindowPrincipal) ||
-      (aNewWindowPrincipal->IsSystemPrincipal() &&
+  if (nsContentUtils::IsExpandedPrincipal(newWindowPrincipal) ||
+      (newWindowPrincipal->IsSystemPrincipal() &&
        GetBrowsingContext()->IsContent())) {
-    aNewWindowPrincipal = nullptr;
+    newWindowPrincipal = nullptr;
   }
 
   // If there's an existing document, bail if it either:
@@ -1775,7 +1779,7 @@ void nsGlobalWindowOuter::SetInitialPrincipal(
     // (a) is not an initial about:blank document, or
     if (!mDoc->IsInitialDocument()) return;
     // (b) already has the correct principal.
-    if (mDoc->NodePrincipal() == aNewWindowPrincipal) return;
+    if (mDoc->NodePrincipal() == newWindowPrincipal) return;
 
 #ifdef DEBUG
     // If we have a document loaded at this point, it had better be about:blank.
@@ -1791,7 +1795,7 @@ void nsGlobalWindowOuter::SetInitialPrincipal(
   // Use the subject (or system) principal as the storage principal too until
   // the new window finishes navigating and gets a real storage principal.
   nsDocShell::Cast(GetDocShell())
-      ->CreateAboutBlankContentViewer(aNewWindowPrincipal, aNewWindowPrincipal,
+      ->CreateAboutBlankContentViewer(newWindowPrincipal, newWindowPrincipal,
                                       aCSP, nullptr,
                                       /* aIsInitialDocument */ true, aCOEP);
 
