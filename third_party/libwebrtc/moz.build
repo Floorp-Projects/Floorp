@@ -111,6 +111,7 @@ DIRS += [
     "/third_party/libwebrtc/call/call_gn",
     "/third_party/libwebrtc/call/call_interfaces_gn",
     "/third_party/libwebrtc/call/fake_network_gn",
+    "/third_party/libwebrtc/call/receive_stream_interface_gn",
     "/third_party/libwebrtc/call/rtp_interfaces_gn",
     "/third_party/libwebrtc/call/rtp_receiver_gn",
     "/third_party/libwebrtc/call/rtp_sender_gn",
