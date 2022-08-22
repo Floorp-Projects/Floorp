@@ -23,14 +23,17 @@ FINAL_LIBRARY = "webrtc"
 LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
+    "/media/libdav1d/",
+    "/media/libyuv/",
+    "/media/libyuv/libyuv/include/",
+    "/third_party/dav1d/include/dav1d/",
     "/third_party/libwebrtc/",
     "/third_party/libwebrtc/third_party/abseil-cpp/",
     "/tools/profiler/public"
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/api/video_codecs/video_decoder_software_fallback_wrapper.cc",
-    "/third_party/libwebrtc/api/video_codecs/video_encoder_software_fallback_wrapper.cc"
+    "/third_party/libwebrtc/modules/video_coding/codecs/av1/dav1d_decoder.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -212,4 +215,4 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
-Library("rtc_software_fallback_wrappers_gn")
+Library("dav1d_decoder_gn")
