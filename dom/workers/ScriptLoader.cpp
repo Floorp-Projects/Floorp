@@ -265,15 +265,7 @@ void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
       aDocumentEncoding, clientInfo, controller, aIsMainScript,
       aWorkerScriptType, aRv);
 
-  RefPtr<StrongWorkerRef> workerRef =
-      StrongWorkerRef::Create(aWorkerPrivate, "ScriptLoader", [loader]() {
-        NS_DispatchToMainThread(NewRunnableMethod(
-            "WorkerScriptLoader::CancelMainThreadWithBindingAborted", loader,
-            &loader::WorkerScriptLoader::CancelMainThreadWithBindingAborted));
-      });
-
-  if (NS_WARN_IF(!workerRef)) {
-    aRv.Throw(NS_ERROR_FAILURE);
+  if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
@@ -458,6 +450,22 @@ WorkerScriptLoader::WorkerScriptLoader(
   aWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(aSyncLoopTarget);
   MOZ_ASSERT_IF(aIsMainScript, aScriptURLs.Length() == 1);
+
+  RefPtr<WorkerScriptLoader> self = this;
+
+  RefPtr<StrongWorkerRef> workerRef =
+      StrongWorkerRef::Create(aWorkerPrivate, "ScriptLoader", [self]() {
+        NS_DispatchToMainThread(NewRunnableMethod(
+            "WorkerScriptLoader::CancelMainThreadWithBindingAborted", self,
+            &loader::WorkerScriptLoader::CancelMainThreadWithBindingAborted));
+      });
+
+  if (workerRef) {
+    mWorkerRef = new ThreadSafeWorkerRef(workerRef);
+  } else {
+    mRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
 
   for (const nsString& aScriptURL : aScriptURLs) {
     RefPtr<WorkerLoadContext> loadContext = new WorkerLoadContext();
@@ -992,6 +1000,9 @@ void WorkerScriptLoader::ShutdownScriptLoader(JSContext* aCx,
   }
 
   aWorkerPrivate->StopSyncLoop(mSyncLoopTarget, aResult);
+
+  // Allow worker shutdown.
+  mWorkerRef = nullptr;
 }
 
 void WorkerScriptLoader::LogExceptionToConsole(JSContext* aCx,

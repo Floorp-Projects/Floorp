@@ -9,6 +9,7 @@
 
 #include "js/loader/ScriptLoadRequest.h"
 #include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerRef.h"
 #include "mozilla/Maybe.h"
 #include "nsIContentPolicy.h"
 #include "nsStringFwd.h"
@@ -128,6 +129,7 @@ class WorkerScriptLoader final : public nsINamed {
   using ScriptFetchOptions = JS::loader::ScriptFetchOptions;
 
   WorkerPrivate* const mWorkerPrivate;
+  RefPtr<ThreadSafeWorkerRef> mWorkerRef;
   UniquePtr<SerializedStackHolder> mOriginStack;
   nsString mOriginStackJSON;
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
