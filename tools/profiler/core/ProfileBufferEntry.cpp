@@ -301,9 +301,9 @@ bool UniqueStacks::FrameKey::JITFrameData::operator==(
 UniqueStacks::UniqueStacks(
     JITFrameInfo&& aJITFrameInfo,
     ProfilerCodeAddressService* aCodeAddressService /* = nullptr */)
-    : mUniqueStrings(std::move(aJITFrameInfo.mUniqueStrings)),
+    : mUniqueStrings(std::move(aJITFrameInfo).MoveUniqueStrings()),
       mCodeAddressService(aCodeAddressService),
-      mJITInfoRanges(std::move(aJITFrameInfo.mRanges)) {
+      mJITInfoRanges(std::move(aJITFrameInfo).MoveRanges()) {
   mFrameTableWriter.StartBareList();
   mStackTableWriter.StartBareList();
 }

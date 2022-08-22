@@ -141,7 +141,8 @@ struct JITFrameInfoForBufferRange final {
 
 // Contains JITFrameInfoForBufferRange objects for multiple profiler buffer
 // ranges.
-struct JITFrameInfo final {
+class JITFrameInfo final {
+ public:
   JITFrameInfo() : mUniqueStrings(mozilla::MakeUnique<UniqueJSONStrings>()) {}
 
   MOZ_IMPLICIT JITFrameInfo(const JITFrameInfo& aOther,
@@ -171,6 +172,14 @@ struct JITFrameInfo final {
     return mRanges.back().mRangeEnd <= aCurrentBufferRangeStart;
   }
 
+  mozilla::Vector<JITFrameInfoForBufferRange>&& MoveRanges() && {
+    return std::move(mRanges);
+  }
+  mozilla::UniquePtr<UniqueJSONStrings>&& MoveUniqueStrings() && {
+    return std::move(mUniqueStrings);
+  }
+
+ private:
   // The array of ranges of JIT frame information, sorted by buffer position.
   // Ranges are non-overlapping.
   // The JSON of the cached frames can contain string indexes, which refer
