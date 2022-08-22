@@ -1818,12 +1818,6 @@ network::Connection* Navigator::GetConnection(ErrorResult& aRv) {
 already_AddRefed<ServiceWorkerContainer> Navigator::ServiceWorker() {
   MOZ_ASSERT(mWindow);
 
-  if (mWindow->AsGlobal()->GetStorageAccess() ==
-      StorageAccess::ePrivateBrowsing) {
-    SetUseCounter(mWindow->AsGlobal()->GetGlobalJSObject(),
-                  eUseCounter_custom_PrivateBrowsingNavigatorServiceWorker);
-  }
-
   if (!mServiceWorkerContainer) {
     mServiceWorkerContainer =
         ServiceWorkerContainer::Create(mWindow->AsGlobal());

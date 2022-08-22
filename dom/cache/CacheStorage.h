@@ -95,7 +95,7 @@ class CacheStorage final : public nsISupports,
 
   OpenMode GetOpenMode() const;
 
-  bool HasStorageAccess(UseCounter aLabel, UseCounterWorker aLabelWorker) const;
+  bool HasStorageAccess() const;
 
   const Namespace mNamespace;
   nsCOMPtr<nsIGlobalObject> mGlobal;
