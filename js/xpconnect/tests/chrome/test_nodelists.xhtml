@@ -18,12 +18,12 @@
         var win = $('ifr').contentWindow;
         var list = win.document.getElementsByTagName('p');
         is(list.length, 3, "can get the length");
-        ok(list[0] instanceof HTMLParagraphElement, "can get list[0]");
+        ok(HTMLParagraphElement.isInstance(list[0]), "can get list[0]");
         is(list[0], list.item(0), "list.item works");
         is(list.item, list.item, "don't recreate functions for each get");
 
         var list2 = list[2];
-        ok(list[2] instanceof HTMLParagraphElement, "list[2] exists");
+        ok(HTMLParagraphElement.isInstance(list[2]), "list[2] exists");
         ok("2" in list, "in operator works");
 
         is(win.document.body.removeChild(win.document.body.lastChild), list2, "remove last paragraph element");

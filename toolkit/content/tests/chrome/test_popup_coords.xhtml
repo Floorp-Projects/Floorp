@@ -47,7 +47,7 @@ function openThePopup(id)
 function eventOccurred(event)
 {
   var testname = event.type + " on " + event.target.id + " ";
-  ok(event instanceof MouseEvent, testname + "is a mouse event");
+  ok(MouseEvent.isInstance(event), testname + "is a mouse event");
   is(event.clientX, 0, testname + "clientX");
   is(event.clientY, 0, testname + "clientY");
   is(event.rangeParent, null, testname + "rangeParent");
@@ -59,7 +59,7 @@ function popupShowingEventOccurred(event)
   // the popupshowing event should have the event coordinates and
   // range position filled in.
   var testname = "popupshowing on " + event.target.id + " ";
-  ok(event instanceof MouseEvent, testname + "is a mouse event");
+  ok(MouseEvent.isInstance(event), testname + "is a mouse event");
 
   var trigger = document.getElementById(event.target.id == "outerpopup" ? "outer" : "inner");
   var rect = trigger.getBoundingClientRect();
