@@ -344,6 +344,7 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/platform_thread_gn",
     "/third_party/libwebrtc/rtc_base/platform_thread_types_gn",
     "/third_party/libwebrtc/rtc_base/protobuf_utils_gn",
+    "/third_party/libwebrtc/rtc_base/random_gn",
     "/third_party/libwebrtc/rtc_base/rate_limiter_gn",
     "/third_party/libwebrtc/rtc_base/refcount_gn",
     "/third_party/libwebrtc/rtc_base/rtc_base_approved_gn",
