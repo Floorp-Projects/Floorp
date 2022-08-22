@@ -36,8 +36,7 @@ SOURCES += [
 
 UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/audio_processing/audio_processing_builder_impl.cc",
-    "/third_party/libwebrtc/modules/audio_processing/audio_processing_impl.cc",
-    "/third_party/libwebrtc/modules/audio_processing/typing_detection.cc"
+    "/third_party/libwebrtc/modules/audio_processing/audio_processing_impl.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
