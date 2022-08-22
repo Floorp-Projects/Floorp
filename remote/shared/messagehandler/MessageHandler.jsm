@@ -82,6 +82,12 @@ const ContextDescriptorType = {
  * session id as well as some other context information.
  */
 class MessageHandler extends EventEmitter {
+  #context;
+  #contextId;
+  #eventsDispatcher;
+  #moduleCache;
+  #sessionId;
+
   /**
    * Create a new MessageHandler instance.
    *
@@ -93,28 +99,28 @@ class MessageHandler extends EventEmitter {
   constructor(sessionId, context) {
     super();
 
-    this._moduleCache = new lazy.ModuleCache(this);
+    this.#moduleCache = new lazy.ModuleCache(this);
 
-    this._sessionId = sessionId;
-    this._context = context;
-    this._contextId = this.constructor.getIdFromContext(context);
-    this._eventsDispatcher = new lazy.EventsDispatcher(this);
+    this.#sessionId = sessionId;
+    this.#context = context;
+    this.#contextId = this.constructor.getIdFromContext(context);
+    this.#eventsDispatcher = new lazy.EventsDispatcher(this);
   }
 
   get context() {
-    return this._context;
+    return this.#context;
   }
 
   get contextId() {
-    return this._contextId;
+    return this.#contextId;
   }
 
   get eventsDispatcher() {
-    return this._eventsDispatcher;
+    return this.#eventsDispatcher;
   }
 
   get moduleCache() {
-    return this._moduleCache;
+    return this.#moduleCache;
   }
 
   get name() {
@@ -122,15 +128,15 @@ class MessageHandler extends EventEmitter {
   }
 
   get sessionId() {
-    return this._sessionId;
+    return this.#sessionId;
   }
 
   destroy() {
     lazy.logger.trace(
       `MessageHandler ${this.constructor.type} for session ${this.sessionId} is being destroyed`
     );
-    this._eventsDispatcher.destroy();
-    this._moduleCache.destroy();
+    this.#eventsDispatcher.destroy();
+    this.#moduleCache.destroy();
 
     // At least the MessageHandlerRegistry will be expecting this event in order
     // to remove the instance from the registry when destroyed.
@@ -211,7 +217,7 @@ class MessageHandler extends EventEmitter {
    *     An array of Module classes.
    */
   getAllModuleClasses(moduleName, destination) {
-    return this._moduleCache.getAllModuleClasses(moduleName, destination);
+    return this.#moduleCache.getAllModuleClasses(moduleName, destination);
   }
 
   /**
@@ -236,7 +242,7 @@ class MessageHandler extends EventEmitter {
       );
     }
 
-    const module = this._moduleCache.getModuleInstance(moduleName, destination);
+    const module = this.#moduleCache.getModuleInstance(moduleName, destination);
     if (module && module.supportsMethod(commandName)) {
       return module[commandName](params, destination);
     }
