@@ -280,6 +280,7 @@ DIRS += [
     "/third_party/libwebrtc/modules/video_coding/frame_buffer_gn",
     "/third_party/libwebrtc/modules/video_coding/frame_dependencies_calculator_gn",
     "/third_party/libwebrtc/modules/video_coding/frame_helpers_gn",
+    "/third_party/libwebrtc/modules/video_coding/inter_frame_delay_gn",
     "/third_party/libwebrtc/modules/video_coding/jitter_estimator_gn",
     "/third_party/libwebrtc/modules/video_coding/nack_requester_gn",
     "/third_party/libwebrtc/modules/video_coding/packet_buffer_gn",
