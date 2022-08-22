@@ -655,10 +655,6 @@ void WorkerScriptLoader::CancelMainThread(nsresult aCancelResult) {
 nsresult WorkerScriptLoader::LoadScripts() {
   AssertIsOnMainThread();
 
-  if (IsMainWorkerScript()) {
-    mWorkerRef->Private()->SetLoadingWorkerScript(true);
-  }
-
   // Convert the origin stack to JSON (which must be done on the main
   // thread) explicitly, so that we can use the stack to notify the net
   // monitor about every script we load.
@@ -968,10 +964,6 @@ void WorkerScriptLoader::ShutdownScriptLoader(bool aResult, bool aMutedError) {
   mWorkerRef->Private()->AssertIsOnWorkerThread();
 
   MOZ_ASSERT(AllScriptsExecuted());
-
-  if (IsMainWorkerScript()) {
-    mWorkerRef->Private()->SetLoadingWorkerScript(false);
-  }
 
   if (!aResult) {
     // At this point there are two possibilities:

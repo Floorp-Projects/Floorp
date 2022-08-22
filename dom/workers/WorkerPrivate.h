@@ -899,16 +899,6 @@ class WorkerPrivate final
 
   bool IsWatchedByDevTools() const { return mLoadInfo.mWatchedByDevTools; }
 
-  // Determine if the worker is currently loading its top level script.
-  bool IsLoadingWorkerScript() const { return mLoadingWorkerScript; }
-
-  // Called by ScriptLoader to track when this worker is loading its
-  // top level script.
-  void SetLoadingWorkerScript(bool aLoadingWorkerScript) {
-    // any thread
-    mLoadingWorkerScript = aLoadingWorkerScript;
-  }
-
   RemoteWorkerChild* GetRemoteWorkerController();
 
   void SetRemoteWorkerController(RemoteWorkerChild* aController);
@@ -1303,8 +1293,6 @@ class WorkerPrivate final
   // This is touched on parent thread only, but it can be read on a different
   // thread before crashing because hanging.
   Atomic<uint64_t> mBusyCount;
-
-  Atomic<bool> mLoadingWorkerScript;
 
   TimeStamp mCreationTimeStamp;
   DOMHighResTimeStamp mCreationTimeHighRes;
