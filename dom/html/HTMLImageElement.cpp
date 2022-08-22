@@ -857,23 +857,6 @@ nsresult HTMLImageElement::LoadSelectedImage(bool aForce, bool aNotify,
                                              bool aAlwaysLoad) {
   double currentDensity = 1.0;  // default to 1.0 for the src attribute case
 
-  // Helper to update state when only density may have changed (i.e., the source
-  // to load hasn't changed, and we don't do any request at all). We need (apart
-  // from updating our internal state) to tell the image frame because its
-  // intrinsic size may have changed.
-  //
-  // In the case we actually trigger a new load, that load will trigger a call
-  // to nsImageFrame::NotifyNewCurrentRequest, which takes care of that for us.
-  auto UpdateDensityOnly = [&]() -> void {
-    if (mCurrentDensity == currentDensity) {
-      return;
-    }
-    mCurrentDensity = currentDensity;
-    if (nsImageFrame* f = do_QueryFrame(GetPrimaryFrame())) {
-      f->ResponsiveContentDensityChanged();
-    }
-  };
-
   if (aForce) {
     // In responsive mode we generally want to re-run the full selection
     // algorithm whenever starting a new load, per spec.
@@ -886,7 +869,9 @@ nsresult HTMLImageElement::LoadSelectedImage(bool aForce, bool aNotify,
     }
 
     if (!sourceChanged && !aAlwaysLoad) {
-      UpdateDensityOnly();
+      // Note: UpdateResponsiveSource should set the density properly, so we
+      // don't have to do that again.
+      MOZ_ASSERT(currentDensity == mCurrentDensity);
       return NS_OK;
     }
   } else if (mResponsiveSelector) {
@@ -919,7 +904,15 @@ nsresult HTMLImageElement::LoadSelectedImage(bool aForce, bool aNotify,
   }
 
   if (!aAlwaysLoad && SelectedSourceMatchesLast(selectedSource)) {
-    UpdateDensityOnly();
+    // Update state when only density may have changed (i.e., the source to load
+    // hasn't changed, and we don't do any request at all). We need (apart from
+    // updating our internal state) to tell the image frame because its
+    // intrinsic size may have changed.
+    //
+    // In the case we actually trigger a new load, that load will trigger a call
+    // to nsImageFrame::NotifyNewCurrentRequest, which takes care of that for
+    // us.
+    SetDensity(currentDensity);
     return NS_OK;
   }
 
@@ -1030,13 +1023,13 @@ bool HTMLImageElement::UpdateResponsiveSource() {
   nsIContent* currentSource =
       mResponsiveSelector ? mResponsiveSelector->Content() : nullptr;
 
-  nsINode* candidateSource = nullptr;
-  if (IsInPicture()) {
-    // Walk source nodes previous to ourselves
-    candidateSource = GetParentElement()->GetFirstChild();
-  } else {
-    candidateSource = this;
-  }
+  // Walk source nodes previous to ourselves if IsInPicture().
+  nsINode* candidateSource =
+      IsInPicture() ? GetParentElement()->GetFirstChild() : this;
+
+  // Initialize this as nullptr so we don't have to nullify it when runing out
+  // of siblings without finding ourself, e.g. XBL magic.
+  RefPtr<ResponsiveImageSelector> newResponsiveSelector = nullptr;
 
   while (candidateSource) {
     if (candidateSource == currentSource) {
@@ -1054,34 +1047,33 @@ bool HTMLImageElement::UpdateResponsiveSource() {
         }
 
         if (isUsableCandidate) {
+          // We are still using the current source, but the selected image may
+          // be changed, so always set the density from the selected image.
+          SetDensity(mResponsiveSelector->GetSelectedImageDensity());
           return changed;
         }
       }
 
       // no longer valid
-      mResponsiveSelector = nullptr;
+      newResponsiveSelector = nullptr;
       if (candidateSource == this) {
         // No further possibilities
         break;
       }
     } else if (candidateSource == this) {
       // We are the last possible source
-      if (!TryCreateResponsiveSelector(candidateSource->AsElement())) {
-        // Failed to find any source
-        mResponsiveSelector = nullptr;
+      newResponsiveSelector =
+          TryCreateResponsiveSelector(candidateSource->AsElement());
+      break;
+    } else if (auto* source = HTMLSourceElement::FromNode(candidateSource)) {
+      if (RefPtr<ResponsiveImageSelector> selector =
+              TryCreateResponsiveSelector(source)) {
+        newResponsiveSelector = selector.forget();
+        // This led to a valid source, stop
+        break;
       }
-      break;
-    } else if (candidateSource->IsHTMLElement(nsGkAtoms::source) &&
-               TryCreateResponsiveSelector(candidateSource->AsElement())) {
-      // This led to a valid source, stop
-      break;
     }
     candidateSource = candidateSource->GetNextSibling();
-  }
-
-  if (!candidateSource) {
-    // Ran out of siblings without finding ourself, e.g. XBL magic.
-    mResponsiveSelector = nullptr;
   }
 
   // If we reach this point, either:
@@ -1089,6 +1081,7 @@ bool HTMLImageElement::UpdateResponsiveSource() {
   // - there was no selector originally, and there is one now
   // - there was a selector, and there is a different one now
   // - there was a selector, and there is not one now
+  SetResponsiveSelector(std::move(newResponsiveSelector));
   return hadSelector || mResponsiveSelector;
 }
 
@@ -1127,14 +1120,15 @@ bool HTMLImageElement::SourceElementMatches(Element* aSourceElement) {
   return true;
 }
 
-bool HTMLImageElement::TryCreateResponsiveSelector(Element* aSourceElement) {
+already_AddRefed<ResponsiveImageSelector>
+HTMLImageElement::TryCreateResponsiveSelector(Element* aSourceElement) {
   nsCOMPtr<nsIPrincipal> principal;
 
   // Skip if this is not a <source> with matching media query
   bool isSourceTag = aSourceElement->IsHTMLElement(nsGkAtoms::source);
   if (isSourceTag) {
     if (!SourceElementMatches(aSourceElement)) {
-      return false;
+      return nullptr;
     }
     auto* source = HTMLSourceElement::FromNode(aSourceElement);
     principal = source->GetSrcsetTriggeringPrincipal();
@@ -1147,11 +1141,11 @@ bool HTMLImageElement::TryCreateResponsiveSelector(Element* aSourceElement) {
   // Skip if has no srcset or an empty srcset
   nsString srcset;
   if (!aSourceElement->GetAttr(nsGkAtoms::srcset, srcset)) {
-    return false;
+    return nullptr;
   }
 
   if (srcset.IsEmpty()) {
-    return false;
+    return nullptr;
   }
 
   // Try to parse
@@ -1159,7 +1153,7 @@ bool HTMLImageElement::TryCreateResponsiveSelector(Element* aSourceElement) {
       new ResponsiveImageSelector(aSourceElement);
   if (!sel->SetCandidatesFromSourceSet(srcset, principal)) {
     // No possible candidates, don't need to bother parsing sizes
-    return false;
+    return nullptr;
   }
 
   nsAutoString sizes;
@@ -1175,8 +1169,7 @@ bool HTMLImageElement::TryCreateResponsiveSelector(Element* aSourceElement) {
     }
   }
 
-  mResponsiveSelector = sel;
-  return true;
+  return sel.forget();
 }
 
 /* static */
@@ -1320,6 +1313,34 @@ void HTMLImageElement::LazyLoadImageReachedViewport() {
     obs->Unobserve(*this);
   }
   doc->IncLazyLoadImageReachViewport(!Complete());
+}
+
+void HTMLImageElement::SetResponsiveSelector(
+    RefPtr<ResponsiveImageSelector>&& aSource) {
+  if (mResponsiveSelector == aSource) {
+    return;
+  }
+
+  mResponsiveSelector = std::move(aSource);
+
+  // TODO: Restyle the image element if needed in the following patches.
+
+  SetDensity(mResponsiveSelector
+                 ? mResponsiveSelector->GetSelectedImageDensity()
+                 : 1.0);
+}
+
+void HTMLImageElement::SetDensity(double aDensity) {
+  if (mCurrentDensity == aDensity) {
+    return;
+  }
+
+  mCurrentDensity = aDensity;
+
+  // Invalidate the reflow.
+  if (nsImageFrame* f = do_QueryFrame(GetPrimaryFrame())) {
+    f->ResponsiveContentDensityChanged();
+  }
 }
 
 }  // namespace mozilla::dom

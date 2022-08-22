@@ -331,9 +331,10 @@ class HTMLImageElement final : public nsGenericHTMLElement,
   // create a ResponsiveSelector.
 
   // If the node's srcset/sizes make for an invalid selector, returns
-  // false. This does not guarantee the resulting selector matches an image,
+  // nullptr. This does not guarantee the resulting selector matches an image,
   // only that it is valid.
-  bool TryCreateResponsiveSelector(Element* aSourceElement);
+  already_AddRefed<ResponsiveImageSelector> TryCreateResponsiveSelector(
+      Element* aSourceElement);
 
   MOZ_CAN_RUN_SCRIPT CSSIntPoint GetXY();
   virtual JSObject* WrapNode(JSContext* aCx,
@@ -399,6 +400,9 @@ class HTMLImageElement final : public nsGenericHTMLElement,
     return GetParentElement() &&
            GetParentElement()->IsHTMLElement(nsGkAtoms::picture);
   }
+
+  void SetResponsiveSelector(RefPtr<ResponsiveImageSelector>&& aSource);
+  void SetDensity(double aDensity);
 
   bool mInDocResponsiveContent;
 
