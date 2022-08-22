@@ -797,6 +797,7 @@ const AVAILABLE_SHIMS = [
     requestStorageAccessForRedirect: [
       ["*://*/*", "*://*.firebaseapp.com/*/auth/*signInViaRedirect*"],
       ["*://*/*", "*://members.rally.allizom.org/*/auth/*signInViaRedirect*"],
+      ["*://*/*", "*://members.rally.mozilla.org/*/auth/*signInViaRedirect*"],
     ],
     onlyIfDFPIActive: true,
   },
