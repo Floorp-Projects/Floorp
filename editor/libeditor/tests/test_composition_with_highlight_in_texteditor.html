@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Test crash bug 1785311</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<input value="abc">
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  const input = document.querySelector("input");
+  input.focus();
+  const editor = SpecialPowers.wrap(input).editor;
+  const selectionController = editor.selectionController;
+  const findSelection = selectionController.getSelection(
+    SpecialPowers.Ci.nsISelectionController.SELECTION_FIND
+  );
+  const editActionListener = {
+    QueryInterface: SpecialPowers.ChromeUtils.generateQI(["nsIEditActionListener"]),
+    WillDeleteText: (textNode, offset, length) => {},
+    DidInsertText: (textNode, offset, aString) => {},
+    WillDeleteRanges: (rangesToDelete) => {},
+  };
+  // Highlight "a"
+  findSelection.setBaseAndExtent(
+    editor.rootElement.firstChild, 0,
+    editor.rootElement.firstChild, 1
+  );
+  try {
+    editor.addEditActionListener(editActionListener);
+    // Start composition at end of <input>
+    editor.selection.collapse(editor.rootElement.firstChild, "abc".length);
+    synthesizeCompositionChange({
+      composition: {
+        string: "d",
+        clauses: [
+          { length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE },
+        ],
+      },
+      caret: {
+        start: 1,
+        length: 0,
+      },
+    });
+    synthesizeComposition({
+      type: "compositioncommitasis",
+    });
+    ok(true, "Should not crash");
+  } finally {
+    editor.removeEditActionListener(editActionListener);
+    SimpleTest.finish();
+  }
+});
+</script>
+</body>
+</html>
