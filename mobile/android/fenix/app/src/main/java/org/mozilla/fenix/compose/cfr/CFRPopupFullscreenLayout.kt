@@ -201,13 +201,14 @@ internal class CFRPopupFullScreenLayout(
                         UP -> {
                             when (properties.overlapAnchor) {
                                 true -> anchorLocation.last() + anchor.height / 2
-                                else -> anchorLocation.last() + anchor.height
+                                else -> anchorLocation.last() + anchor.height + properties.popupVerticalOffset.toPx()
                             }
                         }
                         DOWN -> {
                             when (properties.overlapAnchor) {
                                 true -> anchorLocation.last() - popupContentSize.height + anchor.height / 2
-                                else -> anchorLocation.last() - popupContentSize.height
+                                else -> anchorLocation.last() - popupContentSize.height -
+                                    properties.popupVerticalOffset.toPx()
                             }
                         }
                     }

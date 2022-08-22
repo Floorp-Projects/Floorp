@@ -25,6 +25,8 @@ import java.lang.ref.WeakReference
  * @property overlapAnchor How the popup's indicator will be shown in relation to the anchor:
  *   - true - indicator will be shown exactly in the middle horizontally and vertically
  *   - false - indicator will be shown horizontally in the middle of the anchor but immediately below or above it
+ * @property popupVerticalOffset Vertical distance between the indicator arrow and the anchor.
+ * This only applies if [overlapAnchor] is `false`.
  * @property indicatorArrowStartOffset Maximum distance between the popup start and the indicator arrow.
  * If there isn't enough space this could automatically be overridden up to 0 such that
  * the indicator arrow will be pointing to the middle of the anchor.
@@ -36,6 +38,7 @@ data class CFRPopupProperties(
     val dismissOnBackPress: Boolean = true,
     val dismissOnClickOutside: Boolean = true,
     val overlapAnchor: Boolean = false,
+    val popupVerticalOffset: Dp = CFRPopup.DEFAULT_VERTICAL_OFFSET.dp,
     val indicatorArrowStartOffset: Dp = CFRPopup.DEFAULT_INDICATOR_START_OFFSET.dp,
 )
 
@@ -145,5 +148,10 @@ class CFRPopup(
          * Corner radius for the popup body.
          */
         internal const val DEFAULT_CORNER_RADIUS = 12
+
+        /**
+         * Vertical distance between the indicator arrow and the anchor.
+         */
+        internal const val DEFAULT_VERTICAL_OFFSET = 9
     }
 }
