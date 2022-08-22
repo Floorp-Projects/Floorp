@@ -40,7 +40,6 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/audio_processing/echo_detector/circular_buffer.cc",
     "/third_party/libwebrtc/modules/audio_processing/echo_detector/mean_variance_estimator.cc",
     "/third_party/libwebrtc/modules/audio_processing/echo_detector/moving_max.cc",
-    "/third_party/libwebrtc/modules/audio_processing/level_estimator.cc",
     "/third_party/libwebrtc/modules/audio_processing/residual_echo_detector.cc",
     "/third_party/libwebrtc/modules/audio_processing/typing_detection.cc"
 ]
