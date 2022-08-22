@@ -41,7 +41,6 @@ SOURCES += [
 
 UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/rtp_rtcp/source/absolute_capture_time_interpolator.cc",
-    "/third_party/libwebrtc/modules/rtp_rtcp/source/absolute_capture_time_receiver.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/absolute_capture_time_sender.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/active_decode_targets_helper.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/capture_clock_offset_updater.cc",
