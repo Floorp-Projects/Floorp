@@ -12,6 +12,7 @@
 #include "WebAudioUtils.h"
 #include "DelayBuffer.h"
 #include "PlayingRefChangeHandler.h"
+#include "Tracing.h"
 
 namespace mozilla::dom {
 
@@ -65,6 +66,7 @@ class DelayNodeEngine final : public AudioNodeEngine {
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
     MOZ_ASSERT(aTrack->mSampleRate == mDestination->mSampleRate);
+    TRACE("DelayNodeEngine::ProcessBlock");
 
     if (!aInput.IsSilentOrSubnormal()) {
       if (mLeftOverData <= 0) {

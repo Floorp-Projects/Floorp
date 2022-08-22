@@ -11,6 +11,7 @@
 #include "nsContentUtils.h"
 #include "WebAudioUtils.h"
 #include "blink/PeriodicWave.h"
+#include "Tracing.h"
 
 namespace mozilla::dom {
 
@@ -285,6 +286,8 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
     MOZ_ASSERT(mSource == aTrack, "Invalid source track");
+    TRACE("OscillatorNodeEngine::ProcessBlock");
+
 
     TrackTime ticks = mDestination->GraphTimeToTrackTime(aFrom);
     if (mStart == -1) {
