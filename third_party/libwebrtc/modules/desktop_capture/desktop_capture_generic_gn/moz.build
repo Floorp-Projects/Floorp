@@ -155,7 +155,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["NOMINMAX"] = True
     DEFINES["NTDDI_VERSION"] = "0x0A000000"
     DEFINES["PSAPI_VERSION"] = "2"
-    DEFINES["RTC_ENABLE_WIN_WGC"] = True
     DEFINES["UNICODE"] = True
     DEFINES["USE_AURA"] = "1"
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
@@ -214,10 +213,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "/third_party/libwebrtc/modules/desktop_capture/win/screen_capturer_win_directx.cc",
         "/third_party/libwebrtc/modules/desktop_capture/win/screen_capturer_win_magnifier.cc",
         "/third_party/libwebrtc/modules/desktop_capture/win/selected_window_context.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/win/wgc_capture_session.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/win/wgc_capture_source.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/win/wgc_capturer_win.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/win/wgc_desktop_frame.cc",
         "/third_party/libwebrtc/modules/desktop_capture/win/window_capture_utils.cc",
         "/third_party/libwebrtc/modules/desktop_capture/win/window_capturer_win_gdi.cc",
         "/third_party/libwebrtc/modules/desktop_capture/window_capturer_win.cc",
