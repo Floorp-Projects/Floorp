@@ -4,8 +4,6 @@
 
 FROM ubuntu:18.04
 
-MAINTAINER Tom Prince "mozilla@hocat.ca"
-
 # Add worker user
 RUN mkdir /builds && \
     useradd -d /builds/worker -s /bin/bash -m worker && \
