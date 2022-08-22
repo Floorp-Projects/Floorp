@@ -41,13 +41,13 @@ auto TextRecognition::FindText(gfx::DataSourceSurface& aSurface,
     -> RefPtr<NativePromise> {
   if (XRE_IsContentProcess()) {
     auto* contentChild = ContentChild::GetSingleton();
-    auto image = nsContentUtils::SurfaceToIPCImage(aSurface, contentChild);
+    auto image = nsContentUtils::SurfaceToIPCImage(aSurface);
     if (!image) {
       return NativePromise::CreateAndReject("Failed to share data surface"_ns,
                                             __func__);
     }
     auto promise = MakeRefPtr<NativePromise::Private>(__func__);
-    contentChild->SendFindImageText(*image, aLanguages)
+    contentChild->SendFindImageText(std::move(*image), aLanguages)
         ->Then(
             GetCurrentSerialEventTarget(), __func__,
             [promise](TextRecognitionResultOrError&& aResultOrError) {

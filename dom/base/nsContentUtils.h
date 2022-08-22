@@ -162,7 +162,7 @@ template <class T>
 class StaticRefPtr;
 
 namespace dom {
-class ShmemImage;
+class IPCImage;
 struct AutocompleteInfo;
 class BrowserChild;
 class BrowserParent;
@@ -2928,10 +2928,10 @@ class nsContentUtils {
       mozilla::gfx::DataSourceSurface& aSurface, size_t* aLength,
       int32_t* aStride, mozilla::ipc::IShmemAllocator* aAlloc);
 
-  static mozilla::Maybe<mozilla::dom::ShmemImage> SurfaceToIPCImage(
-      mozilla::gfx::DataSourceSurface&, mozilla::ipc::IShmemAllocator*);
+  static mozilla::Maybe<mozilla::dom::IPCImage> SurfaceToIPCImage(
+      mozilla::gfx::DataSourceSurface&);
   static already_AddRefed<mozilla::gfx::DataSourceSurface> IPCImageToSurface(
-      mozilla::dom::ShmemImage&&, mozilla::ipc::IShmemAllocator*);
+      mozilla::dom::IPCImage&&);
 
   // Helpers shared by the implementations of nsContentUtils methods and
   // nsIDOMWindowUtils methods.
