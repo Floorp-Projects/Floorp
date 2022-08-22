@@ -1409,8 +1409,7 @@ static PRStatus nsSOCKSIOLayerListen(PRFileDesc* fd, int backlog) {
 nsresult nsSOCKSIOLayerAddToSocket(int32_t family, const char* host,
                                    int32_t port, nsIProxyInfo* proxy,
                                    int32_t socksVersion, uint32_t flags,
-                                   uint32_t tlsFlags, PRFileDesc* fd,
-                                   nsISupports** info) {
+                                   uint32_t tlsFlags, PRFileDesc* fd) {
   NS_ENSURE_TRUE((socksVersion == 4) || (socksVersion == 5),
                  NS_ERROR_NOT_INITIALIZED);
 
@@ -1484,8 +1483,6 @@ nsresult nsSOCKSIOLayerAddToSocket(int32_t family, const char* host,
     return NS_ERROR_FAILURE;
   }
 
-  *info = static_cast<nsISOCKSSocketInfo*>(infoObject);
-  NS_ADDREF(*info);
   return NS_OK;
 }
 

@@ -36,6 +36,7 @@
 #include "nsIProtocolHandler.h"
 #include "nsIRandomGenerator.h"
 #include "nsISocketTransport.h"
+#include "nsISSLSocketControl.h"
 #include "nsThreadUtils.h"
 #include "nsINetworkLinkService.h"
 #include "nsIObserverService.h"
@@ -3335,7 +3336,11 @@ WebSocketChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
   }
 
   if (mTransport) {
-    if (NS_FAILED(mTransport->GetSecurityInfo(aSecurityInfo))) {
+    nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
+    if (NS_SUCCEEDED(mTransport->GetTlsSocketControl(
+            getter_AddRefs(tlsSocketControl)))) {
+      tlsSocketControl.forget(aSecurityInfo);
+    } else {
       *aSecurityInfo = nullptr;
     }
   }

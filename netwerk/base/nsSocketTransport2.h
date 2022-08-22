@@ -380,7 +380,7 @@ class nsSocketTransport final : public nsASocketHandler,
 
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsITransportEventSink> mEventSink;
-  nsCOMPtr<nsISupports> mSecInfo;
+  nsCOMPtr<nsISSLSocketControl> mTLSSocketControl;
 
   nsSocketInputStream mInput;
   nsSocketOutputStream mOutput;
