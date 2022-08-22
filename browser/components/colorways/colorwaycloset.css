@@ -26,7 +26,7 @@
 
 @media (min-width: 40em) {
   :root {
-    --body-columns: 1em repeat(1, 1fr);
+    --body-columns: 1em auto 1fr;
     --body-rows: auto 1fr auto;
 
     --header-column: 2/4;
@@ -35,7 +35,7 @@
     --figure-row: 2;
 
     --customization-panel-column: 3;
-    --customization-panel-padding-inline-start: 24px;
+    --customization-panel-padding-inline-start: 2em;
 
     --colorway-selector-align: start;
     --colorway-name-font-size: 2.5em;
@@ -47,8 +47,6 @@
 
 @media (min-width: 50em) {
   :root {
-    --body-columns: 1em repeat(2, 1fr);
-
     --figure-height: 300px;
     --figure-width: 300px;
   }
@@ -114,7 +112,7 @@ figure {
   align-items: center;
   justify-content: center;
 
-  margin: 1em 0 0;
+  margin: 1em 1.5em 0;
   min-width: var(--figure-width);
   min-height: var(--figure-height);
 }
@@ -188,6 +186,7 @@ figure > img {
 #colorway-description {
   font-size: 1.1em;
   line-height: 1.5;
+  flex: 2;
 }
 
 /* Intensity Picker */
