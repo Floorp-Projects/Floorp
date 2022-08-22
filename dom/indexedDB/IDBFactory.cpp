@@ -359,21 +359,6 @@ bool IDBFactory::AllowedForPrincipal(nsIPrincipal* aPrincipal,
   return !aPrincipal->GetIsNullPrincipal();
 }
 
-bool IDBFactory::IsEnabled(JSContext* aCx, JSObject* aGlobal) {
-  if (StaticPrefs::dom_indexedDB_privateBrowsing_enabled()) {
-    return true;
-  }
-  if (StaticPrefs::dom_indexedDB_hide_in_pbmode_enabled()) {
-    if (const nsCOMPtr<nsIGlobalObject> global =
-            xpc::CurrentNativeGlobal(aCx)) {
-      if (global->GetStorageAccess() == StorageAccess::ePrivateBrowsing) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
 void IDBFactory::UpdateActiveTransactionCount(int32_t aDelta) {
   AssertIsOnOwningThread();
   MOZ_DIAGNOSTIC_ASSERT(aDelta > 0 || (mActiveTransactionCount + aDelta) <
