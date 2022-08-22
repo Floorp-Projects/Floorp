@@ -277,19 +277,20 @@ static void SetPropertiesFromFace(gfxFontEntry* aFontEntry,
   };
 
   // Get the macStyle field from the 'head' table
-  hb_blob_t* blob = hb_face_reference_table(aFace, HB_TAG('h', 'e', 'a', 'd'));
+  gfxFontUtils::AutoHBBlob headBlob(
+      hb_face_reference_table(aFace, HB_TAG('h', 'e', 'a', 'd')));
   unsigned int len;
-  const char* data = hb_blob_get_data(blob, &len);
+  const char* data = hb_blob_get_data(headBlob, &len);
   uint16_t style = 0;
   if (len >= sizeof(HeadTable)) {
     const HeadTable* head = reinterpret_cast<const HeadTable*>(data);
     style = head->macStyle;
   }
-  hb_blob_destroy(blob);
 
   // Get the OS/2 table for weight & width fields
-  blob = hb_face_reference_table(aFace, HB_TAG('O', 'S', '/', '2'));
-  data = hb_blob_get_data(blob, &len);
+  gfxFontUtils::AutoHBBlob os2blob(
+      hb_face_reference_table(aFace, HB_TAG('O', 'S', '/', '2')));
+  data = hb_blob_get_data(os2blob, &len);
   uint16_t os2weight = 400;
   float stretch = 100.0;
   if (len >= offsetof(OS2Table, fsType)) {
@@ -300,7 +301,6 @@ static void SetPropertiesFromFace(gfxFontEntry* aFontEntry,
       stretch = kOS2WidthToStretch[os2width];
     }
   }
-  hb_blob_destroy(blob);
 
   aFontEntry->mStyleRange = SlantStyleRange(
       (style & 2) ? FontSlantStyle::ITALIC : FontSlantStyle::NORMAL);
@@ -362,12 +362,12 @@ nsresult FT2FontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
 
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
   uint32_t uvsOffset = 0;
-  if (hb_blob_t* cmapBlob = GetFontTable(TTAG_cmap)) {
+  gfxFontUtils::AutoHBBlob cmapBlob(GetFontTable(TTAG_cmap));
+  if (cmapBlob) {
     unsigned int length;
     const char* data = hb_blob_get_data(cmapBlob, &length);
     rv = gfxFontUtils::ReadCMAP((const uint8_t*)data, length, *charmap,
                                 uvsOffset);
-    hb_blob_destroy(cmapBlob);
   }
   mUVSOffset.exchange(uvsOffset);
 
@@ -439,11 +439,11 @@ hb_face_t* FT2FontEntry::CreateHBFace() const {
   if (mFilename[0] == '/') {
     // An absolute path means a normal file in the filesystem, so we can use
     // hb_blob_create_from_file to read it.
-    hb_blob_t* fileBlob = hb_blob_create_from_file(mFilename.get());
+    gfxFontUtils::AutoHBBlob fileBlob(
+        hb_blob_create_from_file(mFilename.get()));
     if (hb_blob_get_length(fileBlob) > 0) {
       result = hb_face_create(fileBlob, mFTFontIndex);
     }
-    hb_blob_destroy(fileBlob);
   } else {
     // A relative path means an omnijar resource, which we may need to
     // decompress to a temporary buffer.
@@ -462,11 +462,10 @@ hb_face_t* FT2FontEntry::CreateHBFace() const {
         cursor.Copy(&length);
         MOZ_ASSERT(length == item->RealSize(), "error reading font");
         if (length == item->RealSize()) {
-          hb_blob_t* blob =
+          gfxFontUtils::AutoHBBlob blob(
               hb_blob_create((const char*)buffer, length,
-                             HB_MEMORY_MODE_READONLY, buffer, free);
+                             HB_MEMORY_MODE_READONLY, buffer, free));
           result = hb_face_create(blob, mFTFontIndex);
-          hb_blob_destroy(blob);
         }
       }
     }
@@ -1180,14 +1179,13 @@ void gfxFT2FontList::AppendFacesFromFontFile(const nsCString& aFileName,
     }
   }
 
-  hb_blob_t* fileBlob = hb_blob_create_from_file(aFileName.get());
+  gfxFontUtils::AutoHBBlob fileBlob(hb_blob_create_from_file(aFileName.get()));
   if (hb_blob_get_length(fileBlob) > 0) {
     LOG(("reading font info via harfbuzz for %s", aFileName.get()));
     AppendFacesFromBlob(aFileName, aStdFile, fileBlob,
                         0 == statRetval ? aCache : nullptr, s.st_mtime,
                         s.st_size);
   }
-  hb_blob_destroy(fileBlob);
 }
 
 void gfxFT2FontList::FindFontsInOmnijar(FontNameCache* aCache) {
@@ -1374,10 +1372,9 @@ void gfxFT2FontList::AppendFacesFromOmnijarEntry(nsZipArchive* aArchive,
     return;
   }
 
-  hb_blob_t* blob =
-      hb_blob_create(buffer, bufSize, HB_MEMORY_MODE_READONLY, buffer, free);
+  gfxFontUtils::AutoHBBlob blob(
+      hb_blob_create(buffer, bufSize, HB_MEMORY_MODE_READONLY, buffer, free));
   AppendFacesFromBlob(aEntryName, kStandard, blob, aCache, 0, bufSize);
-  hb_blob_destroy(blob);
 }
 
 // Called on each family after all fonts are added to the list;

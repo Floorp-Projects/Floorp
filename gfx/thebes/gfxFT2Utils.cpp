@@ -131,8 +131,8 @@ void gfxFT2Utils::GetVariationInstances(
   if (!aMMVar) {
     return;
   }
-  hb_blob_t* nameTable =
-      aFontEntry->GetFontTable(TRUETYPE_TAG('n', 'a', 'm', 'e'));
+  gfxFontUtils::AutoHBBlob nameTable(
+      aFontEntry->GetFontTable(TRUETYPE_TAG('n', 'a', 'm', 'e')));
   if (!nameTable) {
     return;
   }
@@ -154,5 +154,4 @@ void gfxFT2Utils::GetVariationInstances(
     }
     aInstances.AppendElement(inst);
   }
-  hb_blob_destroy(nameTable);
 }
