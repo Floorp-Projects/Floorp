@@ -270,5 +270,42 @@ add_task(async function test_other_search_mode() {
     engineName: defaultEngine.name,
     entry: "typed",
   });
+  await UrlbarTestUtils.promisePopupClose(window, () => {
+    EventUtils.synthesizeKey("KEY_Escape");
+  });
   Services.search.setDefault(oldDefaultEngine);
+});
+
+let COMMANDS_TESTS = [
+  ["add-ons", async () => isSelected("button[name=discover]")],
+  ["plugins", async () => isSelected("button[name=plugin]")],
+  ["extensions", async () => isSelected("button[name=extension]")],
+  ["themes", async () => isSelected("button[name=theme]")],
+];
+
+let isSelected = async selector =>
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [selector], arg => {
+    return ContentTaskUtils.waitForCondition(() =>
+      content.document.querySelector(arg)?.hasAttribute("selected")
+    );
+  });
+
+add_task(async function test_pages() {
+  for (const [cmd, testFun] of COMMANDS_TESTS) {
+    info(`Testing ${cmd} command is triggered`);
+    let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: cmd,
+    });
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, window);
+    EventUtils.synthesizeKey("KEY_Enter", {}, window);
+    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
+    Assert.ok(
+      await testFun(),
+      `The command "${cmd}" passed completed its test`
+    );
+    await BrowserTestUtils.removeTab(tab);
+  }
 });
