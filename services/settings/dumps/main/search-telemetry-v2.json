@@ -1,7 +1,7 @@
 {
   "data": [
     {
-      "schema": 1659619721253,
+      "schema": 1660225143655,
       "taggedCodes": [
         "MOZ2",
         "MOZ4",
@@ -14,6 +14,7 @@
         "MOZL",
         "MOZM",
         "MOZO",
+        "MOZR",
         "MOZT",
         "MOZW",
         "MOZSL01",
@@ -40,7 +41,7 @@
         "^https://www\\.bing\\.com/acli?c?k"
       ],
       "id": "e1eec461-f1f3-40de-b94b-3b670b78108c",
-      "last_modified": 1660225143613
+      "last_modified": 1660832830989
     },
     {
       "schema": 1657989403056,
@@ -153,5 +154,5 @@
       "last_modified": 1643136933989
     }
   ],
-  "timestamp": 1660225143613
+  "timestamp": 1660832830989
 }
