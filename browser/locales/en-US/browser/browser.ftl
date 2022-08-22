@@ -242,9 +242,9 @@ search-one-offs-actions =
 ## The -cmd- strings are comma separated list of keywords that will match
 ## the action.
 
-# Opens the about:addons page
+# Opens the about:addons page in the home / recommendations section
 quickactions-addons = View Add-ons
-quickactions-cmd-addons = add-ons, extensions, themes
+quickactions-cmd-addons2 = add-ons
 
 # Opens the bookmarks library window
 quickactions-bookmarks = View Bookmarks
@@ -258,6 +258,10 @@ quickactions-cmd-clearhistory = clear history
 quickactions-downloads = Open Downloads
 quickactions-cmd-downloads = downloads
 
+# Opens about:addons page in the extensions section
+quickactions-extensions = Manage extensions
+quickactions-cmd-extensions = extensions
+
 # Opens the devtools web inspector
 quickactions-inspector = Open Inspector
 quickactions-cmd-inspector = inspector, devtools
@@ -265,6 +269,10 @@ quickactions-cmd-inspector = inspector, devtools
 # Opens about:logins
 quickactions-logins = View Logins
 quickactions-cmd-logins = logins, passwords
+
+# Opens about:addons page in the plugins section
+quickactions-plugins = Manage plugins
+quickactions-cmd-plugins = plugins
 
 # Opens the print dialog
 quickactions-print = Print
@@ -289,6 +297,10 @@ quickactions-cmd-screenshot = screenshot
 # Opens about:preferences
 quickactions-settings = Open Settings
 quickactions-cmd-settings = settings, preferences, options
+
+# Opens about:addons page in the themes section
+quickactions-themes = Manage themes
+quickactions-cmd-themes = themes
 
 # Opens a SUMO article explaining how to update the browser
 quickactions-update = Update { -brand-short-name }

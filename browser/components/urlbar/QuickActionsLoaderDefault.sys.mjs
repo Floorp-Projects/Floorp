@@ -30,6 +30,13 @@ let openUrl = url => {
   return { focusContent: true };
 };
 
+let openAddonsUrl = url => {
+  return () => {
+    let window = lazy.BrowserWindowTracker.getTopWindow();
+    window.BrowserOpenAddonsMgr(url);
+  };
+};
+
 // There are various actions that will either fail or do not
 // make sense to use unless the user is viewing web content,
 // Screenshots for example cannot be taken on about: pages.
@@ -46,10 +53,10 @@ XPCOMUtils.defineLazyGetter(lazy, "gFluentStrings", function() {
 
 const DEFAULT_ACTIONS = {
   addons: {
-    l10nCommands: "quickactions-cmd-addons",
+    l10nCommands: "quickactions-cmd-addons2",
     icon: "chrome://mozapps/skin/extensions/category-extensions.svg",
     label: "quickactions-addons",
-    onPick: openUrlFun("about:addons"),
+    onPick: openAddonsUrl("addons://discover/"),
   },
   bookmarks: {
     l10nCommands: "quickactions-cmd-bookmarks",
@@ -74,6 +81,12 @@ const DEFAULT_ACTIONS = {
     label: "quickactions-downloads",
     onPick: openUrlFun("about:downloads"),
   },
+  extensions: {
+    l10nCommands: "quickactions-cmd-extensions",
+    icon: "chrome://mozapps/skin/extensions/category-extensions.svg",
+    label: "quickactions-extensions",
+    onPick: openAddonsUrl("addons://list/extension"),
+  },
   inspect: {
     l10nCommands: "quickactions-cmd-inspector",
     icon: "chrome://devtools/skin/images/tool-inspector.svg",
@@ -85,6 +98,12 @@ const DEFAULT_ACTIONS = {
     l10nCommands: "quickactions-cmd-logins",
     label: "quickactions-logins",
     onPick: openUrlFun("about:logins"),
+  },
+  plugins: {
+    l10nCommands: "quickactions-cmd-plugins",
+    icon: "chrome://mozapps/skin/extensions/category-extensions.svg",
+    label: "quickactions-plugins",
+    onPick: openAddonsUrl("addons://list/plugin"),
   },
   print: {
     l10nCommands: "quickactions-cmd-print",
@@ -131,6 +150,12 @@ const DEFAULT_ACTIONS = {
     l10nCommands: "quickactions-cmd-settings",
     label: "quickactions-settings",
     onPick: openUrlFun("about:preferences"),
+  },
+  themes: {
+    l10nCommands: "quickactions-cmd-themes",
+    icon: "chrome://mozapps/skin/extensions/category-extensions.svg",
+    label: "quickactions-themes",
+    onPick: openAddonsUrl("addons://list/theme"),
   },
   update: {
     l10nCommands: "quickactions-cmd-update",
