@@ -12,6 +12,7 @@
 #include "nsIOutputStream.h"
 #include "nsICacheEntryOpenCallback.h"
 #include "nsICacheEntryDoomCallback.h"
+#include "nsITransportSecurityInfo.h"
 
 #include "nsCOMPtr.h"
 #include "nsRefPtrHashtable.h"
@@ -78,8 +79,8 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
   nsresult OpenInputStream(int64_t offset, nsIInputStream** _retval);
   nsresult OpenOutputStream(int64_t offset, int64_t predictedSize,
                             nsIOutputStream** _retval);
-  nsresult GetSecurityInfo(nsISupports** aSecurityInfo);
-  nsresult SetSecurityInfo(nsISupports* aSecurityInfo);
+  nsresult GetSecurityInfo(nsITransportSecurityInfo** aSecurityInfo);
+  nsresult SetSecurityInfo(nsITransportSecurityInfo* aSecurityInfo);
   nsresult GetStorageDataSize(uint32_t* aStorageDataSize);
   nsresult AsyncDoom(nsICacheEntryDoomCallback* aCallback);
   nsresult GetMetaDataElement(const char* key, char** aRetval);
@@ -420,7 +421,7 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
     uint32_t mFlags{0};
   } mBackgroundOperations;
 
-  nsCOMPtr<nsISupports> mSecurityInfo;
+  nsCOMPtr<nsITransportSecurityInfo> mSecurityInfo;
   mozilla::TimeStamp mLoadStart;
   uint32_t mUseCount{0};
 
@@ -487,10 +488,11 @@ class CacheEntryHandle final : public nsICacheEntry {
                               nsIOutputStream** _retval) override {
     return mEntry->OpenOutputStream(offset, predictedSize, _retval);
   }
-  NS_IMETHOD GetSecurityInfo(nsISupports** aSecurityInfo) override {
+  NS_IMETHOD GetSecurityInfo(
+      nsITransportSecurityInfo** aSecurityInfo) override {
     return mEntry->GetSecurityInfo(aSecurityInfo);
   }
-  NS_IMETHOD SetSecurityInfo(nsISupports* aSecurityInfo) override {
+  NS_IMETHOD SetSecurityInfo(nsITransportSecurityInfo* aSecurityInfo) override {
     return mEntry->SetSecurityInfo(aSecurityInfo);
   }
   NS_IMETHOD GetStorageDataSize(uint32_t* aStorageDataSize) override {
