@@ -11,6 +11,7 @@ DIRS += [
 XPIDL_SOURCES += [
     "nsISocketProvider.idl",
     "nsISocketProviderService.idl",
+    "nsISOCKSSocketInfo.idl",
     "nsISSLSocketControl.idl",
     "nsITransportSecurityInfo.idl",
 ]

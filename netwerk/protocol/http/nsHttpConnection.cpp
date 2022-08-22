@@ -1199,13 +1199,9 @@ void nsHttpConnection::GetSecurityInfo(nsISupports** secinfo) {
     return;
   }
 
-  if (mSocketTransport) {
-    nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
-    if (NS_SUCCEEDED(mSocketTransport->GetTlsSocketControl(
-            getter_AddRefs(tlsSocketControl)))) {
-      tlsSocketControl.forget(secinfo);
-      return;
-    }
+  if (mSocketTransport &&
+      NS_SUCCEEDED(mSocketTransport->GetSecurityInfo(secinfo))) {
+    return;
   }
 
   *secinfo = nullptr;
@@ -2199,13 +2195,18 @@ bool nsHttpConnection::NoClientCertAuth() const {
     return false;
   }
 
-  nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
-  mSocketTransport->GetTlsSocketControl(getter_AddRefs(tlsSocketControl));
-  if (!tlsSocketControl) {
+  nsCOMPtr<nsISupports> secInfo;
+  mSocketTransport->GetSecurityInfo(getter_AddRefs(secInfo));
+  if (!secInfo) {
     return false;
   }
 
-  return !tlsSocketControl->GetClientCertSent();
+  nsCOMPtr<nsISSLSocketControl> ssc(do_QueryInterface(secInfo));
+  if (!ssc) {
+    return false;
+  }
+
+  return !ssc->GetClientCertSent();
 }
 
 bool nsHttpConnection::CanAcceptWebsocket() {

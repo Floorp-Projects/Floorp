@@ -30,7 +30,7 @@ function startServer(cert) {
   let listener = {
     onSocketAccepted(socket, transport) {
       info("Accept TLS client connection");
-      let connectionInfo = transport.securityCallbacks.getInterface(
+      let connectionInfo = transport.securityInfo.QueryInterface(
         Ci.nsITLSServerConnectionInfo
       );
       connectionInfo.setSecurityObserver(listener);

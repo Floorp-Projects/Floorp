@@ -77,7 +77,7 @@ function startServer(cert) {
 
   let listener = {
     onSocketAccepted(socket, transport) {
-      let connectionInfo = transport.securityCallbacks.getInterface(
+      let connectionInfo = transport.securityInfo.QueryInterface(
         Ci.nsITLSServerConnectionInfo
       );
       connectionInfo.setSecurityObserver(listener);

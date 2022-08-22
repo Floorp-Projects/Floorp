@@ -1,0 +1,24 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{ C++
+namespace mozilla {
+namespace net {
+union NetAddr;
+}
+}
+%}
+[ptr] native NetAddrPtr(mozilla::net::NetAddr);
+
+[scriptable, uuid(D5C0D1F9-22D7-47DC-BF91-D9AC6E1251A6)]
+interface nsISOCKSSocketInfo : nsISupports
+{
+    [noscript] attribute NetAddrPtr destinationAddr;
+    [noscript] attribute NetAddrPtr externalProxyAddr;
+    [noscript] attribute NetAddrPtr internalProxyAddr;
+};

@@ -6,7 +6,6 @@
 #include "nsISupports.idl"
 
 interface nsIProxyInfo;
-interface nsISSLSocketControl;
 [ptr] native PRFileDescStar(struct PRFileDesc);
 native OriginAttributes(mozilla::OriginAttributes);
 [ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
@@ -42,9 +41,9 @@ interface nsISocketProvider : nsISupports
      *        studies relating to the TLS implementation.
      * @param aFileDesc
      *        The resulting PRFileDesc.
-     * @param aTLSSocketControl
-     *        TLS socket control object that should be associated with
-     *        aFileDesc, if applicable.
+     * @param aSecurityInfo
+     *        Any security info that should be associated with aFileDesc.  This
+     *        object typically implements nsITransportSecurityInfo.
      */
     [noscript]
     void newSocket(in long                      aFamily,
@@ -55,7 +54,7 @@ interface nsISocketProvider : nsISupports
                    in unsigned long             aFlags,
                    in unsigned long             aTlsFlags,
                    out PRFileDescStar           aFileDesc,
-                   out nsISSLSocketControl      aTLSSocketControl);
+                   out nsISupports              aSecurityInfo);
 
     /**
      * addToSocket
@@ -76,7 +75,7 @@ interface nsISocketProvider : nsISupports
                      in unsigned long             aFlags,
                      in unsigned long             aTlsFlags,
                      in PRFileDescStar            aFileDesc,
-                     out nsISSLSocketControl      aTLSSocketControl);
+                     out nsISupports              aSecurityInfo);
 
     /**
      * PROXY_RESOLVES_HOST

@@ -317,7 +317,7 @@ TLSTransportLayer::~TLSTransportLayer() {
     PR_Close(mFD);
     mFD = nullptr;
   }
-  mTLSSocketControl = nullptr;
+  mSecInfo = nullptr;
 }
 
 bool TLSTransportLayer::Init(const char* aTLSHost, int32_t aTLSPort) {
@@ -361,9 +361,9 @@ bool TLSTransportLayer::Init(const char* aTLSHost, int32_t aTLSPort) {
 
   mFD->secret = reinterpret_cast<PRFilePrivate*>(this);
 
-  return NS_SUCCEEDED(provider->AddToSocket(
-      PR_AF_INET, aTLSHost, aTLSPort, nullptr, OriginAttributes(), 0, 0, mFD,
-      getter_AddRefs(mTLSSocketControl)));
+  return NS_SUCCEEDED(provider->AddToSocket(PR_AF_INET, aTLSHost, aTLSPort,
+                                            nullptr, OriginAttributes(), 0, 0,
+                                            mFD, getter_AddRefs(mSecInfo)));
 }
 
 NS_IMETHODIMP
@@ -555,13 +555,12 @@ FWD_TS_PTR(GetRecvBufferSize, uint32_t);
 FWD_TS(SetRecvBufferSize, uint32_t);
 FWD_TS_PTR(GetResetIPFamilyPreference, bool);
 
-nsresult TLSTransportLayer::GetTlsSocketControl(
-    nsISSLSocketControl** tlsSocketControl) {
-  if (!mTLSSocketControl) {
+nsresult TLSTransportLayer::GetSecurityInfo(nsISupports** secinfo) {
+  if (!mSecInfo) {
     return NS_ERROR_ABORT;
   }
 
-  *tlsSocketControl = do_AddRef(mTLSSocketControl).take();
+  *secinfo = do_AddRef(mSecInfo).take();
   return NS_OK;
 }
 

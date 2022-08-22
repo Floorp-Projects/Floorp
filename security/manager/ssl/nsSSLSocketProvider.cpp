@@ -23,10 +23,10 @@ nsSSLSocketProvider::NewSocket(int32_t family, const char* host, int32_t port,
                                const OriginAttributes& originAttributes,
                                uint32_t flags, uint32_t tlsFlags,
                                PRFileDesc** _result,
-                               nsISSLSocketControl** tlsSocketControl) {
+                               nsISupports** securityInfo) {
   nsresult rv =
       nsSSLIOLayerNewSocket(family, host, port, proxy, originAttributes,
-                            _result, tlsSocketControl, false, flags, tlsFlags);
+                            _result, securityInfo, false, flags, tlsFlags);
   return (NS_FAILED(rv)) ? NS_ERROR_SOCKET_CREATE_FAILED : NS_OK;
 }
 
@@ -37,10 +37,10 @@ nsSSLSocketProvider::AddToSocket(int32_t family, const char* host, int32_t port,
                                  const OriginAttributes& originAttributes,
                                  uint32_t flags, uint32_t tlsFlags,
                                  PRFileDesc* aSocket,
-                                 nsISSLSocketControl** tlsSocketControl) {
-  nsresult rv = nsSSLIOLayerAddToSocket(
-      family, host, port, proxy, originAttributes, aSocket, tlsSocketControl,
-      false, flags, tlsFlags);
+                                 nsISupports** securityInfo) {
+  nsresult rv =
+      nsSSLIOLayerAddToSocket(family, host, port, proxy, originAttributes,
+                              aSocket, securityInfo, false, flags, tlsFlags);
 
   return (NS_FAILED(rv)) ? NS_ERROR_SOCKET_CREATE_FAILED : NS_OK;
 }

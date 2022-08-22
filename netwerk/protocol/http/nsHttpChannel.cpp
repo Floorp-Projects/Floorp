@@ -4596,10 +4596,7 @@ void nsHttpChannel::CloseCacheEntry(bool doomOnFailure) {
   } else {
     // Store updated security info, makes cached EV status race less likely
     // (see bug 1040086)
-    nsCOMPtr<nsITransportSecurityInfo> tsi = do_QueryInterface(mSecurityInfo);
-    if (tsi) {
-      mCacheEntry->SetSecurityInfo(tsi);
-    }
+    if (mSecurityInfo) mCacheEntry->SetSecurityInfo(mSecurityInfo);
   }
 
   mCachedResponseHead = nullptr;
@@ -4745,10 +4742,7 @@ nsresult DoAddCacheEntryHeaders(nsHttpChannel* self, nsICacheEntry* entry,
 
   LOG(("nsHttpChannel::AddCacheEntryHeaders [this=%p] begin", self));
   // Store secure data in memory only
-  nsCOMPtr<nsITransportSecurityInfo> tsi = do_QueryInterface(securityInfo);
-  if (tsi) {
-    entry->SetSecurityInfo(tsi);
-  }
+  if (securityInfo) entry->SetSecurityInfo(securityInfo);
 
   // Store the HTTP request method with the cache entry so we can distinguish
   // for example GET and HEAD responses.

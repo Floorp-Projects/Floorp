@@ -134,10 +134,9 @@ class nsSocketTransport final : public nsASocketHandler,
   nsresult InitWithConnectedSocket(PRFileDesc* socketFD, const NetAddr* addr);
 
   // this method instructs the socket transport to use an already connected
-  // socket with the given address, and additionally supplies the security
-  // callbacks interface requestor.
+  // socket with the given address, and additionally supplies security info.
   nsresult InitWithConnectedSocket(PRFileDesc* aFD, const NetAddr* aAddr,
-                                   nsIInterfaceRequestor* aCallbacks);
+                                   nsISupports* aSecInfo);
 
 #ifdef XP_UNIX
   // This method instructs the socket transport to open a socket
@@ -380,7 +379,7 @@ class nsSocketTransport final : public nsASocketHandler,
 
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsITransportEventSink> mEventSink;
-  nsCOMPtr<nsISSLSocketControl> mTLSSocketControl;
+  nsCOMPtr<nsISupports> mSecInfo;
 
   nsSocketInputStream mInput;
   nsSocketOutputStream mOutput;
