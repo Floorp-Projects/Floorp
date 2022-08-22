@@ -98,7 +98,7 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
   }
 
 #ifdef DEBUG
-  if (mLoader->IsMainWorkerScript()) {
+  if (mLoadContext->IsTopLevel()) {
     nsCOMPtr<nsIPrincipal> loadingPrincipal =
         mWorkerRef->Private()->GetLoadingPrincipal();
     // if we are not in a ServiceWorker, and the principal is not null, then
@@ -114,7 +114,7 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
   // same-origin checks on them so we should be able to see their errors.
   // Note that for data: url, where we allow it through the same-origin check
   // but then give it a different origin.
-  mLoadContext->mMutedErrorFlag.emplace(!mLoader->IsMainWorkerScript() &&
+  mLoadContext->mMutedErrorFlag.emplace(!mLoadContext->IsTopLevel() &&
                                         !principal->Subsumes(channelPrincipal));
 
   // Make sure we're not seeing the result of a 404 or something by checking
@@ -186,7 +186,7 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
 
   // Update the principal of the worker and its base URI if we just loaded the
   // worker's primary script.
-  if (mLoader->IsMainWorkerScript()) {
+  if (mLoadContext->IsTopLevel()) {
     // Take care of the base URI first.
     mWorkerRef->Private()->SetBaseURI(finalURI);
 

@@ -387,7 +387,7 @@ void CacheLoadHandler::ResolvedCallback(JSContext* aCx,
                           OriginTrial::CoepCredentialless));
 
   rv = ScriptResponseHeaderProcessor::ProcessCrossOriginEmbedderPolicyHeader(
-      mWorkerRef->Private(), coep, mLoader->IsMainScript());
+      mWorkerRef->Private(), coep, mLoadContext->IsTopLevel());
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     Fail(rv);
@@ -535,7 +535,7 @@ nsresult CacheLoadHandler::DataReceivedFromCache(
                                     "EmptyWorkerSourceWarning");
   }
 
-  if (mLoader->IsMainWorkerScript()) {
+  if (mLoadContext->IsTopLevel()) {
     nsCOMPtr<nsIURI> finalURI;
     rv = NS_NewURI(getter_AddRefs(finalURI), mLoadContext->mFullURL);
     if (NS_SUCCEEDED(rv)) {
@@ -590,7 +590,7 @@ nsresult CacheLoadHandler::DataReceivedFromCache(
 }
 
 void CacheLoadHandler::DataReceived() {
-  if (mLoader->IsMainWorkerScript()) {
+  if (mLoadContext->IsTopLevel()) {
     WorkerPrivate* parent = mWorkerRef->Private()->GetParent();
 
     if (parent) {
