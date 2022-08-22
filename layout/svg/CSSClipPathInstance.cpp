@@ -210,11 +210,12 @@ already_AddRefed<Path> CSSClipPathInstance::CreateClipPathInset(
   nscoord appUnitsPerDevPixel =
       mTargetFrame->PresContext()->AppUnitsPerDevPixel();
 
-  nsRect insetRect = ShapeUtils::ComputeInsetRect(basicShape, aRefBox);
+  const nsRect insetRect = ShapeUtils::ComputeInsetRect(basicShape, aRefBox);
   const Rect insetRectPixels = NSRectToRect(insetRect, appUnitsPerDevPixel);
   nscoord appUnitsRadii[8];
 
-  if (ShapeUtils::ComputeInsetRadii(basicShape, aRefBox, appUnitsRadii)) {
+  if (ShapeUtils::ComputeInsetRadii(basicShape, aRefBox, insetRect,
+                                    appUnitsRadii)) {
     RectCornerRadii corners;
     nsCSSRendering::ComputePixelRadii(appUnitsRadii, appUnitsPerDevPixel,
                                       &corners);
