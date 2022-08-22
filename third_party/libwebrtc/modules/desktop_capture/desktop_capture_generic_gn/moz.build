@@ -136,16 +136,16 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
     ]
 
     UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/mouse_cursor_monitor_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/screen_capturer_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/shared_x_display.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_capturer_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_finder_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_list_utils.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_atom_cache.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_error_trap.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_server_pixel_buffer.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_window_property.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/screen_capturer_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/shared_x_display.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_capturer_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_finder_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_list_utils.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_atom_cache.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_error_trap.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_server_pixel_buffer.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc",
         "/third_party/libwebrtc/modules/desktop_capture/mouse_cursor_monitor_linux.cc",
         "/third_party/libwebrtc/modules/desktop_capture/screen_capturer_linux.cc",
         "/third_party/libwebrtc/modules/desktop_capture/window_capturer_linux.cc"
@@ -239,12 +239,9 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_USE_PIPEWIRE"] = True
     DEFINES["_GNU_SOURCE"] = True
 
-    SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc"
-    ]
-
     UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/egl_dmabuf.cc"
+        "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/egl_dmabuf.cc"
     ]
 
 if CONFIG["CPU_ARCH"] == "ppc64":
@@ -264,16 +261,16 @@ if CONFIG["CPU_ARCH"] == "ppc64":
     ]
 
     UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/mouse_cursor_monitor_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/screen_capturer_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/shared_x_display.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_capturer_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_finder_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_list_utils.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_atom_cache.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_error_trap.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_server_pixel_buffer.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_window_property.cc"
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/screen_capturer_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/shared_x_display.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_capturer_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_finder_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_list_utils.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_atom_cache.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_error_trap.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_server_pixel_buffer.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc"
     ]
 
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Darwin":
@@ -298,12 +295,9 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_USE_PIPEWIRE"] = True
     DEFINES["_GNU_SOURCE"] = True
 
-    SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc"
-    ]
-
     UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/egl_dmabuf.cc"
+        "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/egl_dmabuf.cc"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
@@ -312,12 +306,9 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_USE_PIPEWIRE"] = True
     DEFINES["_GNU_SOURCE"] = True
 
-    SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc"
-    ]
-
     UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/egl_dmabuf.cc"
+        "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/egl_dmabuf.cc"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
@@ -326,12 +317,9 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_USE_PIPEWIRE"] = True
     DEFINES["_GNU_SOURCE"] = True
 
-    SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc"
-    ]
-
     UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/egl_dmabuf.cc"
+        "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/egl_dmabuf.cc"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
@@ -351,16 +339,16 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_T
     ]
 
     UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/mouse_cursor_monitor_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/screen_capturer_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/shared_x_display.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_capturer_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_finder_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_list_utils.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_atom_cache.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_error_trap.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_server_pixel_buffer.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_window_property.cc"
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/screen_capturer_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/shared_x_display.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_capturer_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_finder_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_list_utils.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_atom_cache.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_error_trap.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_server_pixel_buffer.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc"
     ]
 
 if CONFIG["CPU_ARCH"] == "arm" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
@@ -380,16 +368,16 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGE
     ]
 
     UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/mouse_cursor_monitor_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/screen_capturer_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/shared_x_display.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_capturer_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_finder_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_list_utils.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_atom_cache.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_error_trap.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_server_pixel_buffer.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_window_property.cc"
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/screen_capturer_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/shared_x_display.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_capturer_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_finder_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_list_utils.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_atom_cache.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_error_trap.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_server_pixel_buffer.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
@@ -409,16 +397,16 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGE
     ]
 
     UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/mouse_cursor_monitor_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/screen_capturer_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/shared_x_display.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_capturer_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_finder_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_list_utils.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_atom_cache.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_error_trap.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_server_pixel_buffer.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_window_property.cc"
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/screen_capturer_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/shared_x_display.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_capturer_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_finder_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_list_utils.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_atom_cache.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_error_trap.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_server_pixel_buffer.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
@@ -438,16 +426,16 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TA
     ]
 
     UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/linux/mouse_cursor_monitor_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/screen_capturer_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/shared_x_display.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_capturer_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_finder_x11.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/window_list_utils.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_atom_cache.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_error_trap.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_server_pixel_buffer.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/linux/x_window_property.cc"
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/screen_capturer_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/shared_x_display.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_capturer_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_finder_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_list_utils.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_atom_cache.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_error_trap.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_server_pixel_buffer.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc"
     ]
 
 Library("desktop_capture_generic_gn")
