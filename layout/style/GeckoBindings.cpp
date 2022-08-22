@@ -368,11 +368,11 @@ Gecko_GetHTMLPresentationAttrDeclarationBlock(const Element* aElement) {
 
 const StyleStrong<RawServoDeclarationBlock>*
 Gecko_GetExtraContentStyleDeclarations(const Element* aElement) {
-  if (!aElement->IsAnyOfHTMLElements(nsGkAtoms::td, nsGkAtoms::th)) {
+  const auto* cell = HTMLTableCellElement::FromNode(aElement);
+  if (!cell) {
     return nullptr;
   }
-  const HTMLTableCellElement* cell =
-      static_cast<const HTMLTableCellElement*>(aElement);
+
   if (nsMappedAttributes* attrs =
           cell->GetMappedAttributesInheritedFromTable()) {
     return AsRefRawStrong(attrs->GetServoStyle());
