@@ -686,7 +686,7 @@ nsresult WorkerScriptLoader::LoadScripts() {
     WorkerLoadContext* loadInfo = req->GetWorkerLoadContext();
     loadInfo->SetCacheCreator(cacheCreator);
     loadInfo->GetCacheCreator()->AddLoader(
-        MakeNotNull<RefPtr<CacheLoadHandler>>(mWorkerRef->Private(), req,
+        MakeNotNull<RefPtr<CacheLoadHandler>>(mWorkerRef, req,
                                               IsMainWorkerScript(), this));
   }
 
