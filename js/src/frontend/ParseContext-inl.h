@@ -9,8 +9,6 @@
 
 #include "frontend/ParseContext.h"
 
-#include "mozilla/ResultVariant.h"
-
 #include "frontend/Parser.h"
 #include "vm/JSContext.h"
 

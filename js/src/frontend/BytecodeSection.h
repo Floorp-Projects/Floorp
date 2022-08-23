@@ -25,7 +25,6 @@
 #include "frontend/Stencil.h"      // Stencils
 #include "js/TypeDecls.h"          // jsbytecode, JSContext
 #include "js/Vector.h"             // Vector
-#include "vm/Opcodes.h"            // JSOpLength_JumpTarget
 #include "vm/SharedStencil.h"      // TryNote, ScopeNote, GCThingIndex
 #include "vm/StencilEnums.h"       // TryNoteKind
 

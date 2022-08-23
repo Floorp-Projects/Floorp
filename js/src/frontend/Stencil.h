@@ -10,34 +10,28 @@
 #include "mozilla/Assertions.h"       // MOZ_ASSERT
 #include "mozilla/Maybe.h"            // mozilla::{Maybe, Nothing}
 #include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
-#include "mozilla/Range.h"            // mozilla::Range
 #include "mozilla/Span.h"             // mozilla::Span
-#include "mozilla/Variant.h"          // mozilla::Variant
 
 #include <stddef.h>  // size_t
 #include <stdint.h>  // char16_t, uint8_t, uint16_t, uint32_t
 
-#include "frontend/AbstractScopePtr.h"    // AbstractScopePtr, ScopeIndex
-#include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
-#include "frontend/ObjLiteral.h"          // ObjLiteralStencil
-#include "frontend/ParserAtom.h"          // TaggedParserAtomIndex
-#include "frontend/ScriptIndex.h"         // ScriptIndex
-#include "frontend/TypedIndex.h"          // TypedIndex
-#include "js/AllocPolicy.h"               // SystemAllocPolicy
-#include "js/RefCounted.h"                // AtomicRefCounted
-#include "js/RegExpFlags.h"               // JS::RegExpFlags
-#include "js/RootingAPI.h"                // Handle
-#include "js/TypeDecls.h"                 // JSContext
-#include "js/UniquePtr.h"                 // js::UniquePtr
-#include "js/Utility.h"                   // UniqueTwoByteChars
-#include "js/Vector.h"                    // js::Vector
-#include "util/Text.h"                    // DuplicateString
-#include "vm/FunctionFlags.h"             // FunctionFlags
-#include "vm/GeneratorAndAsyncKind.h"     // GeneratorKind, FunctionAsyncKind
+#include "frontend/AbstractScopePtr.h"  // AbstractScopePtr, ScopeIndex
+#include "frontend/ObjLiteral.h"        // ObjLiteralStencil
+#include "frontend/ParserAtom.h"        // TaggedParserAtomIndex
+#include "frontend/ScriptIndex.h"       // ScriptIndex
+#include "frontend/TypedIndex.h"        // TypedIndex
+#include "js/AllocPolicy.h"             // SystemAllocPolicy
+#include "js/RefCounted.h"              // AtomicRefCounted
+#include "js/RegExpFlags.h"             // JS::RegExpFlags
+#include "js/RootingAPI.h"              // Handle
+#include "js/TypeDecls.h"               // JSContext
+#include "js/UniquePtr.h"               // js::UniquePtr
+#include "js/Utility.h"                 // UniqueTwoByteChars
+#include "js/Vector.h"                  // js::Vector
+#include "vm/FunctionFlags.h"           // FunctionFlags
 #include "vm/Scope.h"  // Scope, BaseScopeData, FunctionScope, LexicalScope, VarScope, GlobalScope, EvalScope, ModuleScope
 #include "vm/ScopeKind.h"      // ScopeKind
 #include "vm/SharedStencil.h"  // ImmutableScriptFlags, GCThingIndex, js::SharedImmutableScriptData, MemberInitializers, SourceExtent
-#include "vm/StencilEnums.h"   // ImmutableScriptFlagsEnum
 
 namespace js {
 
