@@ -11,6 +11,7 @@
 #include "AudioNodeTrack.h"
 #include "blink/Reverb.h"
 #include "PlayingRefChangeHandler.h"
+#include "Tracing.h"
 
 namespace mozilla::dom {
 
@@ -171,6 +172,7 @@ static void AddScaledLeftToRight(AudioBlock* aBlock, float aScale) {
 void ConvolverNodeEngine::ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                                        const AudioBlock& aInput,
                                        AudioBlock* aOutput, bool* aFinished) {
+  TRACE("ConvolverNodeEngine::ProcessBlock");
   if (!mReverb) {
     aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
     return;
