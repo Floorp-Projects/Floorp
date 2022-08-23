@@ -827,7 +827,7 @@ void ChannelMediaResource::UpdatePrincipal() {
         // media element, they are not considered opaque when verifying
         // network responses; they can be mixed with non-opaque responses from
         // subsequent loads on the same-origin finalURI.
-        !nsContentUtils::CheckMayLoad(loadInfo->GetLoadingPrincipal(), mChannel,
+        !nsContentUtils::CheckMayLoad(MediaElement()->NodePrincipal(), mChannel,
                                       /*allowIfInheritsPrincipal*/ true);
     if (!hadData) {  // First response with data
       mSharedInfo->mFinalResponsesAreOpaque = finalResponseIsOpaque;
