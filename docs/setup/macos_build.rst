@@ -185,4 +185,3 @@ If you need Python 3.10, you can re-link it after the fact with
 .. code-block:: shell
 
     brew link python@3.10
-
