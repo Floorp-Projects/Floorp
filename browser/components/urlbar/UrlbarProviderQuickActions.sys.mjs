@@ -108,6 +108,9 @@ class ProviderQuickActions extends UrlbarProvider {
         }
       }
     }
+    // Ensure results are unique.
+    results = [...new Set(results)];
+
     if (!results?.length) {
       return;
     }

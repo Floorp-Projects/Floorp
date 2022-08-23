@@ -1819,7 +1819,8 @@ bool nsSSLIOLayerHelpers::treatUnsafeNegotiationAsBroken() {
 nsresult nsSSLIOLayerNewSocket(int32_t family, const char* host, int32_t port,
                                nsIProxyInfo* proxy,
                                const OriginAttributes& originAttributes,
-                               PRFileDesc** fd, nsISupports** info,
+                               PRFileDesc** fd,
+                               nsISSLSocketControl** tlsSocketControl,
                                bool forSTARTTLS, uint32_t flags,
                                uint32_t tlsFlags) {
   PRFileDesc* sock = PR_OpenTCPSocket(family);
@@ -1827,7 +1828,7 @@ nsresult nsSSLIOLayerNewSocket(int32_t family, const char* host, int32_t port,
 
   nsresult rv =
       nsSSLIOLayerAddToSocket(family, host, port, proxy, originAttributes, sock,
-                              info, forSTARTTLS, flags, tlsFlags);
+                              tlsSocketControl, forSTARTTLS, flags, tlsFlags);
   if (NS_FAILED(rv)) {
     PR_Close(sock);
     return rv;
@@ -2123,7 +2124,8 @@ SECStatus StoreResumptionToken(PRFileDesc* fd, const PRUint8* resumptionToken,
 nsresult nsSSLIOLayerAddToSocket(int32_t family, const char* host, int32_t port,
                                  nsIProxyInfo* proxy,
                                  const OriginAttributes& originAttributes,
-                                 PRFileDesc* fd, nsISupports** info,
+                                 PRFileDesc* fd,
+                                 nsISSLSocketControl** tlsSocketControl,
                                  bool forSTARTTLS, uint32_t providerFlags,
                                  uint32_t providerTlsFlags) {
   PRFileDesc* layer = nullptr;
@@ -2207,9 +2209,8 @@ nsresult nsSSLIOLayerAddToSocket(int32_t family, const char* host, int32_t port,
     goto loser;
   }
 
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-          ("[%p] Socket set up\n", (void*)sslSock));
-  infoObject->QueryInterface(NS_GET_IID(nsISupports), (void**)(info));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("[%p] Socket set up", (void*)sslSock));
+  *tlsSocketControl = do_AddRef(infoObject).take();
 
   // We are going use a clear connection first //
   if (forSTARTTLS || haveProxy) {

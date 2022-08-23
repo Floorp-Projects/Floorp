@@ -9,10 +9,10 @@
 
 #include "mozilla/Attributes.h"
 
+#include "gc/Policy.h"
 #include "js/GCHashTable.h"
 #include "js/Principals.h"
 #include "js/UbiNode.h"
-#include "js/Wrapper.h"
 #include "vm/NativeObject.h"
 
 namespace js {

@@ -18,10 +18,6 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserv.identity.primaryPort;
 });
 
-XPCOMUtils.defineLazyGetter(this, "PORT", function() {
-  return httpserv.identity.primaryPort;
-});
-
 function makeChan(url, loadingUrl) {
   var principal = Services.scriptSecurityManager.createContentPrincipal(
     Services.io.newURI(loadingUrl),

@@ -57,11 +57,11 @@ async function allow(audio, video) {
   await checkSharingUI({ audio, video });
 }
 
-async function deny() {
+async function deny(action) {
   let observerPromise1 = expectObserverCalled("getUserMedia:response:deny");
   let observerPromise2 = expectObserverCalled("recording-window-ended");
   await promiseMessage(permissionError, () => {
-    activateSecondaryAction(kActionDeny);
+    activateSecondaryAction(action);
   });
   await observerPromise1;
   await observerPromise2;
@@ -159,12 +159,12 @@ var gTests = [
 
       info("After grace period expires, gUM(camera) causes a prompt.");
       await prompt(false, true);
-      await deny();
+      await deny(kActionDeny);
       perms.removeFromPrincipal(null, "camera", gBrowser.selectedBrowser);
 
       info("After grace period expires, gUM(mic) causes a prompt.");
       await prompt(true, false);
-      await deny();
+      await deny(kActionDeny);
       perms.removeFromPrincipal(null, "microphone", gBrowser.selectedBrowser);
     },
   },
@@ -222,12 +222,12 @@ var gTests = [
 
       info("After grace period expires, gUM(camera) causes a prompt.");
       await prompt(false, true);
-      await deny();
+      await deny(kActionDeny);
       perms.removeFromPrincipal(null, "camera", gBrowser.selectedBrowser);
 
       info("After grace period expires, gUM(mic) causes a prompt.");
       await prompt(true, false);
-      await deny();
+      await deny(kActionDeny);
       perms.removeFromPrincipal(null, "microphone", gBrowser.selectedBrowser);
     },
   },
@@ -254,7 +254,7 @@ var gTests = [
 
       info("After grace period expires, gUM(camera+mic) causes a prompt.");
       await prompt(true, true);
-      await deny();
+      await deny(kActionDeny);
       perms.removeFromPrincipal(null, "camera", gBrowser.selectedBrowser);
       perms.removeFromPrincipal(null, "microphone", gBrowser.selectedBrowser);
     },
@@ -301,7 +301,7 @@ var gTests = [
           "causes a prompt."
       );
       await prompt(true, true);
-      await deny();
+      await deny(kActionDeny);
       perms.removeFromPrincipal(null, "camera", gBrowser.selectedBrowser);
       perms.removeFromPrincipal(null, "microphone", gBrowser.selectedBrowser);
 
@@ -321,7 +321,7 @@ var gTests = [
 
       info("After grace period expires, gUM(camera+mic) causes a prompt.");
       await prompt(true, true);
-      await deny();
+      await deny(kActionDeny);
       perms.removeFromPrincipal(null, "camera", gBrowser.selectedBrowser);
       perms.removeFromPrincipal(null, "microphone", gBrowser.selectedBrowser);
     },
@@ -337,17 +337,22 @@ var gTests = [
       await prompt(false, true);
       await allow(false, true);
       await closeStream();
-
+      let principal = gBrowser.selectedBrowser.contentPrincipal;
       info("Request both to get prompted so we can block both.");
       await prompt(true, true);
-      await deny();
-      // Clear the temporary deny so we can prompt again.
-      perms.removeFromPrincipal(null, "camera", gBrowser.selectedBrowser);
-      perms.removeFromPrincipal(null, "microphone", gBrowser.selectedBrowser);
+      // We need to remember this decision to set a block permission here and not just 'Not now' the request, see Bug:1609578
+      await deny(kActionNever);
+      // Clear the block so we can prompt again.
+      perms.removeFromPrincipal(principal, "camera", gBrowser.selectedBrowser);
+      perms.removeFromPrincipal(
+        principal,
+        "microphone",
+        gBrowser.selectedBrowser
+      );
 
       info("Revoking permission clears camera grace period.");
       await prompt(false, true);
-      await deny();
+      await deny(kActionDeny);
       perms.removeFromPrincipal(null, "camera", gBrowser.selectedBrowser);
 
       info("Set up longer microphone grace period.");
@@ -357,13 +362,19 @@ var gTests = [
 
       info("Request both to get prompted so we can block both.");
       await prompt(true, true);
-      await deny();
-      perms.removeFromPrincipal(null, "camera", gBrowser.selectedBrowser);
-      perms.removeFromPrincipal(null, "microphone", gBrowser.selectedBrowser);
+      // We need to remember this decision to be able to set a block permission here
+      await deny(kActionNever);
+      perms.removeFromPrincipal(principal, "camera", gBrowser.selectedBrowser);
+      perms.removeFromPrincipal(
+        principal,
+        "microphone",
+        gBrowser.selectedBrowser
+      );
 
       info("Revoking permission clears microphone grace period.");
       await prompt(true, false);
-      await deny();
+      // We need to remember this decision to be able to set a block permission here
+      await deny(kActionNever);
       perms.removeFromPrincipal(null, "microphone", gBrowser.selectedBrowser);
     },
   },

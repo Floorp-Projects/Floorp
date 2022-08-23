@@ -1,5 +1,6 @@
 use super::{
-    Elements, FuncType, Instruction, InstructionKind::*, InstructionKinds, Module, ValType,
+    Elements, FuncType, GlobalInitExpr, Instruction, InstructionKind::*, InstructionKinds, Module,
+    ValType,
 };
 use arbitrary::{Result, Unstructured};
 use std::collections::{BTreeMap, BTreeSet};
@@ -692,7 +693,7 @@ impl CodeBuilderAllocations {
 
         let mut referenced_functions = BTreeSet::new();
         for (_, expr) in module.defined_globals.iter() {
-            if let Instruction::RefFunc(i) = *expr {
+            if let GlobalInitExpr::FuncRef(i) = *expr {
                 referenced_functions.insert(i);
             }
         }

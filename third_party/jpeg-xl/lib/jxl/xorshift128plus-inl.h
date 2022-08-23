@@ -21,8 +21,10 @@ namespace HWY_NAMESPACE {
 namespace {
 
 // These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Add;
 using hwy::HWY_NAMESPACE::ShiftLeft;
 using hwy::HWY_NAMESPACE::ShiftRight;
+using hwy::HWY_NAMESPACE::Xor;
 
 // Adapted from https://github.com/vpxyz/xorshift/blob/master/xorshift128plus/
 // (MIT-license)
@@ -60,11 +62,11 @@ class Xorshift128Plus {
     for (size_t i = 0; i < N; i += Lanes(d)) {
       auto s1 = Load(d, s0_ + i);
       const auto s0 = Load(d, s1_ + i);
-      const auto bits = s1 + s0;  // b, c
+      const auto bits = Add(s1, s0);  // b, c
       Store(s0, d, s0_ + i);
-      s1 ^= ShiftLeft<23>(s1);
+      s1 = Xor(s1, ShiftLeft<23>(s1));
       Store(bits, d, random_bits + i);
-      s1 ^= s0 ^ ShiftRight<18>(s1) ^ ShiftRight<5>(s0);
+      s1 = Xor(s1, Xor(s0, Xor(ShiftRight<18>(s1), ShiftRight<5>(s0))));
       Store(s1, d, s1_ + i);
     }
 #else

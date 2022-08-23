@@ -29,6 +29,7 @@
 #include "js/RootingAPI.h"        // JS::Handle, JS::Rooted, js::CanGC
 #include "js/Stream.h"            // JS::ReadableStream{Mode,UnderlyingSource}
 #include "js/Value.h"             // JS::Value
+#include "vm/Interpreter.h"       // js::GetProperty
 #include "vm/JSContext.h"         // JSContext
 #include "vm/JSObject.h"          // js::GetPrototypeFromBuiltinConstructor
 #include "vm/ObjectOperations.h"  // js::GetProperty

@@ -31,7 +31,6 @@ Listener.prototype.QueryInterface = ChromeUtils.generateQI(["nsIDNSListener"]);
 const DOMAIN_IDN = "bücher.org";
 const ACE_IDN = "xn--bcher-kva.org";
 
-const DOMAIN = "localhost";
 const ADDR1 = "127.0.0.1";
 const ADDR2 = "::1";
 

@@ -12,7 +12,6 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
 });
 
 var httpServer = null;
-var randomPath = "/redirect/" + Math.random();
 var redirects = [];
 const numRedirects = 10;
 

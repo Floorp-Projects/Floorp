@@ -18,8 +18,10 @@
 #include "jit/JitRealm.h"
 #include "js/HeapAPI.h"
 #include "js/Value.h"
+#include "util/DifferentialTesting.h"
 #include "vm/HelperThreads.h"
 #include "vm/Realm.h"
+#include "vm/Scope.h"
 
 #include "gc/Marking-inl.h"
 #include "vm/GeckoProfiler-inl.h"

@@ -36,6 +36,31 @@ function handlePageActionMessage(message, tabId) {
       });
       break;
 
+    case "setPopupCheckRestrictions":
+      browser.pageAction
+        .setPopup({
+          tabId,
+          popup: message.popup,
+        })
+        .then(
+          () => {
+            port.postMessage({
+              resultFor: "setPopup",
+              type: "pageAction",
+              success: true,
+            });
+          },
+          err => {
+            port.postMessage({
+              resultFor: "setPopup",
+              type: "pageAction",
+              success: false,
+              error: String(err),
+            });
+          }
+        );
+      break;
+
     case "setTitle":
       browser.pageAction.setTitle({
         tabId,
@@ -92,6 +117,31 @@ function handleBrowserActionMessage(message, tabId) {
         tabId,
         popup: message.popup,
       });
+      break;
+
+    case "setPopupCheckRestrictions":
+      browser.browserAction
+        .setPopup({
+          tabId,
+          popup: message.popup,
+        })
+        .then(
+          () => {
+            port.postMessage({
+              resultFor: "setPopup",
+              type: "browserAction",
+              success: true,
+            });
+          },
+          err => {
+            port.postMessage({
+              resultFor: "setPopup",
+              type: "browserAction",
+              success: false,
+              error: String(err),
+            });
+          }
+        );
       break;
 
     case "setTitle":

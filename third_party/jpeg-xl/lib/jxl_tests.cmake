@@ -125,8 +125,6 @@ foreach (TESTFILE IN LISTS TEST_FILES)
   )
   target_link_libraries(${TESTNAME}
     box
-    jxl-static
-    jxl_threads-static
     jxl_extras-static
     jxl_testlib-static
     gmock

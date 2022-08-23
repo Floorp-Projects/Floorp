@@ -28,11 +28,13 @@
 #include "js/TypeDecls.h"
 #include "js/Wrapper.h"
 #include "vm/GlobalObject.h"
+#include "vm/Interpreter.h"
 #include "vm/JSObject.h"
 #include "vm/ObjectOperations.h"
 
 #include "builtin/HandlerFunction-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/Realm-inl.h"
 
 using namespace js;
 

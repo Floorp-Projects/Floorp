@@ -45,12 +45,9 @@ enum class ComputeSizeFlag : uint8_t {
   ShrinkWrap,
 
   /**
-   * Set if we'd like to compute our 'auto' bsize, regardless of our actual
-   * corresponding computed value. (e.g. to get an intrinsic bsize for flex
-   * items when resolving automatic minimum size in the main axis during flexbox
-   * layout.)
+   * Set if this is a grid measuring reflow, to prevent stretching.
    */
-  UseAutoBSize,
+  IsGridMeasuringReflow,
 
   /**
    * Indicates that we should clamp the margin-box min-size to the given CB

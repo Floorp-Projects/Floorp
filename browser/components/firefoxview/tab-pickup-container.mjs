@@ -60,7 +60,7 @@ class TabPickupContainer extends HTMLElement {
       switch (event.target.dataset.action) {
         case "view0-sync-error-action":
         case "view0-network-offline-action": {
-          this.getWindow().gBrowser.reload();
+          TabsSetupFlowManager.forceSyncTabs();
           break;
         }
         case "view1-primary-action": {

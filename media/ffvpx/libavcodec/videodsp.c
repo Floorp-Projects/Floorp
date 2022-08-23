@@ -18,9 +18,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "config.h"
 #include "libavutil/attributes.h"
 #include "libavutil/avassert.h"
-#include "libavutil/common.h"
+#include "libavutil/macros.h"
 #include "videodsp.h"
 
 #define BIT_DEPTH 8
@@ -44,14 +45,17 @@ av_cold void ff_videodsp_init(VideoDSPContext *ctx, int bpc)
         ctx->emulated_edge_mc = ff_emulated_edge_mc_16;
     }
 
-    if (ARCH_AARCH64)
-        ff_videodsp_init_aarch64(ctx, bpc);
-    if (ARCH_ARM)
-        ff_videodsp_init_arm(ctx, bpc);
-    if (ARCH_PPC)
-        ff_videodsp_init_ppc(ctx, bpc);
-    if (ARCH_X86)
-        ff_videodsp_init_x86(ctx, bpc);
-    if (ARCH_MIPS)
-        ff_videodsp_init_mips(ctx, bpc);
+#if ARCH_AARCH64
+    ff_videodsp_init_aarch64(ctx, bpc);
+#elif ARCH_ARM
+    ff_videodsp_init_arm(ctx, bpc);
+#elif ARCH_PPC
+    ff_videodsp_init_ppc(ctx, bpc);
+#elif ARCH_X86
+    ff_videodsp_init_x86(ctx, bpc);
+#elif ARCH_MIPS
+    ff_videodsp_init_mips(ctx, bpc);
+#elif ARCH_LOONGARCH64
+    ff_videodsp_init_loongarch(ctx, bpc);
+#endif
 }

@@ -13,7 +13,6 @@
 #include "mozilla/TextUtils.h"
 #include "mozilla/Utf8.h"
 
-#include <algorithm>
 #include <type_traits>
 
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*

@@ -11,6 +11,8 @@ function run_test() {
   Services.scriptloader.loadSubScript(uri.spec, srvScope);
 }
 
+// Exported to the loaded script
+/* exported checkPublicSuffix */
 function checkPublicSuffix(host, expectedSuffix) {
   var actualSuffix = null;
   try {

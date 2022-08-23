@@ -20,7 +20,6 @@
 #include "lib/jxl/enc_cache.h"
 #include "lib/jxl/enc_frame.h"
 #include "lib/jxl/enc_icc_codec.h"
-#include "lib/jxl/exif.h"
 #include "lib/jxl/frame_header.h"
 #include "lib/jxl/headers.h"
 #include "lib/jxl/image_bundle.h"
@@ -28,42 +27,6 @@
 namespace jxl {
 
 namespace {
-
-// DC + 'Very Low Frequency'
-PassDefinition progressive_passes_dc_vlf[] = {
-    {/*num_coefficients=*/2, /*shift=*/0, /*salient_only=*/false,
-     /*suitable_for_downsampling_of_at_least=*/4}};
-
-PassDefinition progressive_passes_dc_lf[] = {
-    {/*num_coefficients=*/2, /*shift=*/0, /*salient_only=*/false,
-     /*suitable_for_downsampling_of_at_least=*/4},
-    {/*num_coefficients=*/3, /*shift=*/0, /*salient_only=*/false,
-     /*suitable_for_downsampling_of_at_least=*/2}};
-
-PassDefinition progressive_passes_dc_lf_salient_ac[] = {
-    {/*num_coefficients=*/2, /*shift=*/0, /*salient_only=*/false,
-     /*suitable_for_downsampling_of_at_least=*/4},
-    {/*num_coefficients=*/3, /*shift=*/0, /*salient_only=*/false,
-     /*suitable_for_downsampling_of_at_least=*/2},
-    {/*num_coefficients=*/8, /*shift=*/0, /*salient_only=*/true,
-     /*suitable_for_downsampling_of_at_least=*/0}};
-
-PassDefinition progressive_passes_dc_lf_salient_ac_other_ac[] = {
-    {/*num_coefficients=*/2, /*shift=*/0, /*salient_only=*/false,
-     /*suitable_for_downsampling_of_at_least=*/4},
-    {/*num_coefficients=*/3, /*shift=*/0, /*salient_only=*/false,
-     /*suitable_for_downsampling_of_at_least=*/2},
-    {/*num_coefficients=*/8, /*shift=*/0, /*salient_only=*/true,
-     /*suitable_for_downsampling_of_at_least=*/0},
-    {/*num_coefficients=*/8, /*shift=*/0, /*salient_only=*/false,
-     /*suitable_for_downsampling_of_at_least=*/0}};
-
-PassDefinition progressive_passes_dc_quant_ac_full_ac[] = {
-    {/*num_coefficients=*/8, /*shift=*/1, /*salient_only=*/false,
-     /*suitable_for_downsampling_of_at_least=*/2},
-    {/*num_coefficients=*/8, /*shift=*/0, /*salient_only=*/false,
-     /*suitable_for_downsampling_of_at_least=*/0},
-};
 
 Status PrepareCodecMetadataFromIO(const CompressParams& cparams,
                                   const CodecInOut* io,
@@ -84,8 +47,8 @@ Status PrepareCodecMetadataFromIO(const CompressParams& cparams,
   metadata->m.xyb_encoded =
       cparams.color_transform == ColorTransform::kXYB ? true : false;
 
-  InterpretExif(io->blobs.exif, metadata);
-
+  // TODO(firsching): move this EncodeFile to test_utils / re-implement this
+  // using API functions
   return true;
 }
 
@@ -173,47 +136,6 @@ Status EncodeFile(const CompressParams& params, const CodecInOut* io,
   BitWriter::Allotment allotment(&writer, 8);
   writer.ZeroPadToByte();
   ReclaimAndCharge(&writer, &allotment, kLayerHeader, aux_out);
-
-  if (cparams.progressive_mode || cparams.qprogressive_mode) {
-    if (cparams.saliency_map != nullptr) {
-      passes_enc_state->progressive_splitter.SetSaliencyMap(
-          cparams.saliency_map);
-    }
-    passes_enc_state->progressive_splitter.SetSaliencyThreshold(
-        cparams.saliency_threshold);
-    if (cparams.qprogressive_mode) {
-      passes_enc_state->progressive_splitter.SetProgressiveMode(
-          ProgressiveMode{progressive_passes_dc_quant_ac_full_ac});
-    } else {
-      switch (cparams.saliency_num_progressive_steps) {
-        case 1:
-          passes_enc_state->progressive_splitter.SetProgressiveMode(
-              ProgressiveMode{progressive_passes_dc_vlf});
-          break;
-        case 2:
-          passes_enc_state->progressive_splitter.SetProgressiveMode(
-              ProgressiveMode{progressive_passes_dc_lf});
-          break;
-        case 3:
-          passes_enc_state->progressive_splitter.SetProgressiveMode(
-              ProgressiveMode{progressive_passes_dc_lf_salient_ac});
-          break;
-        case 4:
-          if (cparams.saliency_threshold == 0.0f) {
-            // No need for a 4th pass if saliency-threshold regards everything
-            // as salient.
-            passes_enc_state->progressive_splitter.SetProgressiveMode(
-                ProgressiveMode{progressive_passes_dc_lf_salient_ac});
-          } else {
-            passes_enc_state->progressive_splitter.SetProgressiveMode(
-                ProgressiveMode{progressive_passes_dc_lf_salient_ac_other_ac});
-          }
-          break;
-        default:
-          return JXL_FAILURE("Invalid saliency_num_progressive_steps.");
-      }
-    }
-  }
 
   for (size_t i = 0; i < io->frames.size(); i++) {
     FrameInfo info;

@@ -7,7 +7,6 @@
 #include "vm/SharedArrayObject.h"
 
 #include "mozilla/Atomics.h"
-#include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 
 #include "gc/GCContext.h"
@@ -15,18 +14,15 @@
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
 #include "js/SharedArrayBuffer.h"
-#include "js/Wrapper.h"
 #include "util/Memory.h"
 #include "vm/SharedMem.h"
 #include "wasm/WasmMemory.h"
-#include "wasm/WasmSignalHandlers.h"
 
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using js::wasm::Pages;
-using mozilla::CheckedInt;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
 using mozilla::Nothing;

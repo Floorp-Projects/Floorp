@@ -13,14 +13,15 @@
 #include "gc/Tracer.h"
 #include "js/AllocPolicy.h"
 #include "js/GCHashTable.h"
-#include "js/HeapAPI.h"
 #include "js/RootingAPI.h"
 #include "js/shadow/Symbol.h"  // JS::shadow::Symbol
 #include "js/Symbol.h"
 #include "js/TypeDecls.h"
-#include "js/Utility.h"
-#include "vm/Printer.h"
 #include "vm/StringType.h"
+
+namespace js {
+class GenericPrinter;
+}
 
 namespace JS {
 

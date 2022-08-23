@@ -1,4 +1,5 @@
 // Copyright 2021 Google LLC
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "hwy/contrib/sort/disabled_targets.h"
 #include "hwy/contrib/sort/vqsort.h"
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "hwy/contrib/sort/vqsort_128d.cc"
-#include "hwy/foreach_target.h"
+#include "hwy/foreach_target.h"  // IWYU pragma: keep
 
 // After foreach_target
 #include "hwy/contrib/sort/traits128-inl.h"
@@ -29,9 +29,16 @@ namespace HWY_NAMESPACE {
 
 void Sort128Desc(uint64_t* HWY_RESTRICT keys, size_t num,
                  uint64_t* HWY_RESTRICT buf) {
+#if VQSORT_ENABLED
   SortTag<uint64_t> d;
   detail::SharedTraits<detail::Traits128<detail::OrderDescending128>> st;
   Sort(d, st, keys, num, buf);
+#else
+  (void) keys;
+  (void) num;
+  (void) buf;
+  HWY_ASSERT(0);
+#endif
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)

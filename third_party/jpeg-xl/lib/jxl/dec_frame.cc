@@ -857,13 +857,11 @@ Status FrameDecoder::FinalizeFrame() {
     // Nothing to do.
     return true;
   }
-  if (!finalized_dc_) {
-    // We don't have all of DC, and render pipeline is not created yet, so we
-    // can not call Flush() yet.
-    return JXL_FAILURE("FinalizeFrame called before DC was fully decoded");
-  }
 
-  JXL_RETURN_IF_ERROR(Flush());
+  // undo global modular transforms and copy int pixel buffers to float ones
+  JXL_RETURN_IF_ERROR(
+      modular_frame_decoder_.FinalizeDecoding(dec_state_, pool_,
+                                              /*inplace=*/true));
 
   if (frame_header_.CanBeReferenced()) {
     auto& info = dec_state_->shared_storage

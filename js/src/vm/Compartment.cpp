@@ -13,10 +13,10 @@
 #include "jsfriendapi.h"
 
 #include "debugger/DebugAPI.h"
-#include "gc/Policy.h"
+#include "gc/GC.h"
+#include "gc/Memory.h"
 #include "gc/PublicIterators.h"
 #include "gc/Zone.h"
-#include "js/Date.h"
 #include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit
 #include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy, js::ToWindowProxyIfWindow
 #include "js/Proxy.h"
@@ -26,21 +26,16 @@
 #include "js/WrapperCallbacks.h"
 #include "proxy/DeadObjectProxy.h"
 #include "proxy/DOMProxy.h"
-#include "vm/Iteration.h"
 #include "vm/JSContext.h"
 #ifdef ENABLE_RECORD_TUPLE
 #  include "vm/RecordTupleShared.h"
 #endif
 #include "vm/WrapperObject.h"
 
-#include "gc/GC-inl.h"
 #include "gc/Marking-inl.h"
 #include "gc/WeakMap-inl.h"
-#include "vm/JSAtom-inl.h"
-#include "vm/JSFunction-inl.h"
 #include "vm/JSObject-inl.h"
-#include "vm/JSScript-inl.h"
-#include "vm/NativeObject-inl.h"
+#include "vm/Realm-inl.h"
 
 using namespace js;
 

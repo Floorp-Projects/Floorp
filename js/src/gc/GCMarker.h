@@ -11,7 +11,6 @@
 
 #include "ds/OrderedHashTable.h"
 #include "gc/Barrier.h"
-#include "js/SliceBudget.h"
 #include "js/TracingAPI.h"
 #include "js/TypeDecls.h"
 
@@ -19,6 +18,7 @@ class JSRope;
 
 namespace js {
 
+class SliceBudget;
 class WeakMapBase;
 
 static const size_t NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY = 4096;

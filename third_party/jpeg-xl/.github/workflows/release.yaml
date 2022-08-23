@@ -290,7 +290,7 @@ jobs:
       id: cache-vcpkg
       with:
         path: vcpkg
-        key: ${{ runner.os }}-vcpkg-${{ env.VCPKG_VERSION }}-${{ matrix.triplet }}
+        key: release-${{ runner.os }}-vcpkg-${{ env.VCPKG_VERSION }}-${{ matrix.triplet }}
 
     - name: Download vcpkg
       if: steps.cache-vcpkg.outputs.cache-hit != 'true'

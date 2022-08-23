@@ -13,6 +13,7 @@ mod item_ref;
 mod module;
 mod resolve;
 mod types;
+mod wast;
 
 pub use self::alias::*;
 pub use self::component::*;
@@ -24,3 +25,4 @@ pub use self::instance::*;
 pub use self::item_ref::*;
 pub use self::module::*;
 pub use self::types::*;
+pub use self::wast::*;

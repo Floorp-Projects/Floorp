@@ -1,4 +1,15 @@
+test/puppeteer/.github
+test/puppeteer/.husky
 test/puppeteer/.local-chromium/
+test/puppeteer/.local-firefox/
+test/puppeteer/coverage/
+test/puppeteer/docker/
+test/puppeteer/experimental/
 test/puppeteer/lib/
 test/puppeteer/node_modules/
 test/puppeteer/package-lock.json
+test/puppeteer/test/build
+test/puppeteer/test/output-firefox
+test/puppeteer/test/output-chromium
+test/puppeteer/utils/testserver/tsconfig.tsbuildinfo
+test/puppeteer/website

@@ -1,5 +1,7 @@
 "use strict";
 
+// This test is run as part of the perf tests which require the metadata.
+/* exported perfMetadata */
 var perfMetadata = {
   owner: "Network Team",
   name: "http3 raw",
@@ -58,6 +60,7 @@ function run_next_test() {
   }
 }
 
+// eslint-disable-next-line no-unused-vars
 function run_test() {
   let env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment

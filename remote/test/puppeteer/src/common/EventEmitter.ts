@@ -7,7 +7,7 @@ import mitt, {
 /**
  * @public
  */
-export { EventType, Handler };
+export {EventType, Handler};
 
 /**
  * @public
@@ -54,7 +54,7 @@ export class EventEmitter implements CommonEventEmitter {
   /**
    * Bind an event listener to fire when an event occurs.
    * @param event - the event type you'd like to listen to. Can be a string or symbol.
-   * @param handler  - the function to be called when the event occurs.
+   * @param handler - the function to be called when the event occurs.
    * @returns `this` to enable you to chain method calls.
    */
   on(event: EventType, handler: Handler): EventEmitter {
@@ -65,7 +65,7 @@ export class EventEmitter implements CommonEventEmitter {
   /**
    * Remove an event listener from firing.
    * @param event - the event type you'd like to stop listening to.
-   * @param handler  - the function that should be removed.
+   * @param handler - the function that should be removed.
    * @returns `this` to enable you to chain method calls.
    */
   off(event: EventType, handler: Handler): EventEmitter {
@@ -110,7 +110,7 @@ export class EventEmitter implements CommonEventEmitter {
    * @returns `this` to enable you to chain method calls.
    */
   once(event: EventType, handler: Handler): EventEmitter {
-    const onceHandler: Handler = (eventData) => {
+    const onceHandler: Handler = eventData => {
       handler(eventData);
       this.off(event, onceHandler);
     };
@@ -144,6 +144,6 @@ export class EventEmitter implements CommonEventEmitter {
   }
 
   private eventListenersCount(event: EventType): number {
-    return this.eventsMap.has(event) ? this.eventsMap.get(event).length : 0;
+    return this.eventsMap.get(event)?.length || 0;
   }
 }

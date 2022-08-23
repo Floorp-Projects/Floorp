@@ -9,16 +9,16 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
 });
 
-const EXPECTED_MATCH = {
+let expectedMatch = key => ({
   type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
   source: UrlbarUtils.RESULT_SOURCE.ACTIONS,
   heuristic: false,
   payload: {
-    results: [{ key: "newaction" }],
+    results: [{ key }],
     dynamicType: "quickactions",
     helpUrl: UrlbarProviderQuickActions.helpUrl,
   },
-};
+});
 
 add_task(async function init() {
   UrlbarPrefs.set("suggest.quickactions", true);
@@ -67,6 +67,22 @@ add_task(async function quickactions_match() {
   });
   await check_results({
     context,
-    matches: [EXPECTED_MATCH],
+    matches: [expectedMatch("newaction")],
+  });
+});
+
+add_task(async function duplicate_matches() {
+  UrlbarProviderQuickActions.addAction("testaction", {
+    commands: ["testaction", "test"],
+  });
+
+  let context = createContext("testaction", {
+    providers: [UrlbarProviderQuickActions.name],
+    isPrivate: false,
+  });
+
+  await check_results({
+    context,
+    matches: [expectedMatch("testaction")],
   });
 });

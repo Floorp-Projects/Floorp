@@ -14,36 +14,47 @@
  * limitations under the License.
  */
 
-import { assert } from './assert.js';
-import { helper } from './helper.js';
-import { createJSHandle, JSHandle, ElementHandle } from './JSHandle.js';
-import { CDPSession } from './Connection.js';
-import { DOMWorld } from './DOMWorld.js';
-import { Frame } from './FrameManager.js';
-import { Protocol } from 'devtools-protocol';
-import { EvaluateHandleFn, SerializableOrJSHandle } from './EvalTypes.js';
+import {Protocol} from 'devtools-protocol';
+import {assert} from './assert.js';
+import {CDPSession} from './Connection.js';
+import {Frame} from './FrameManager.js';
+import {IsolatedWorld} from './IsolatedWorld.js';
+import {JSHandle} from './JSHandle.js';
+import {EvaluateFunc, HandleFor} from './types.js';
+import {
+  createJSHandle,
+  getExceptionMessage,
+  isString,
+  valueFromRemoteObject,
+} from './util.js';
+
 /**
  * @public
  */
-export const EVALUATION_SCRIPT_URL = '__puppeteer_evaluation_script__';
+export const EVALUATION_SCRIPT_URL = 'pptr://__puppeteer_evaluation_script__';
 const SOURCE_URL_REGEX = /^[\040\t]*\/\/[@#] sourceURL=\s*(\S*?)\s*$/m;
 
 /**
- * This class represents a context for JavaScript execution. A [Page] might have
- * many execution contexts:
- * - each
- *   {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe |
- *   frame } has "default" execution context that is always created after frame is
- *   attached to DOM. This context is returned by the
- *   {@link Frame.executionContext} method.
- * - {@link https://developer.chrome.com/extensions | Extension}'s content scripts
- *   create additional execution contexts.
+ * @deprecated Do not use directly.
  *
+ * Represents a context for JavaScript execution.
+ *
+ * @example
+ * A {@link Page} can have several execution contexts:
+ *
+ * - Each {@link Frame} of a {@link Page | page} has a "default" execution
+ *   context that is always created after frame is attached to DOM. This context
+ *   is returned by the {@link Frame.executionContext} method.
+ * - Each {@link https://developer.chrome.com/extensions | Chrome extensions}
+ *   creates additional execution contexts to isolate their code.
+ *
+ * @remarks
+ * By definition, each context is isolated from one another, however they are
+ * all able to manipulate non-JavaScript resources (such as DOM).
+ *
+ * @remarks
  * Besides pages, execution contexts can be found in
- * {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API |
- * workers }.
- *
- * @public
+ * {@link WebWorker | workers}.
  */
 export class ExecutionContext {
   /**
@@ -53,7 +64,7 @@ export class ExecutionContext {
   /**
    * @internal
    */
-  _world: DOMWorld;
+  _world?: IsolatedWorld;
   /**
    * @internal
    */
@@ -69,7 +80,7 @@ export class ExecutionContext {
   constructor(
     client: CDPSession,
     contextPayload: Protocol.Runtime.ExecutionContextDescription,
-    world: DOMWorld
+    world?: IsolatedWorld
   ) {
     this._client = client;
     this._world = world;
@@ -78,136 +89,160 @@ export class ExecutionContext {
   }
 
   /**
-   * @remarks
-   *
-   * Not every execution context is associated with a frame. For
-   * example, workers and extensions have execution contexts that are not
-   * associated with frames.
-   *
    * @returns The frame associated with this execution context.
+   *
+   * @remarks
+   * Not every execution context is associated with a frame. For example,
+   * {@link WebWorker | workers} have execution contexts that are not associated
+   * with frames.
    */
   frame(): Frame | null {
     return this._world ? this._world.frame() : null;
   }
 
   /**
-   * @remarks
-   * If the function passed to the `executionContext.evaluate` returns a
-   * Promise, then `executionContext.evaluate` would wait for the promise to
-   * resolve and return its value. If the function passed to the
-   * `executionContext.evaluate` returns a non-serializable value, then
-   * `executionContext.evaluate` resolves to `undefined`. DevTools Protocol also
-   * supports transferring some additional values that are not serializable by
-   * `JSON`: `-0`, `NaN`, `Infinity`, `-Infinity`, and bigint literals.
-   *
+   * Evaluates the given function.
    *
    * @example
-   * ```js
+   *
+   * ```ts
    * const executionContext = await page.mainFrame().executionContext();
    * const result = await executionContext.evaluate(() => Promise.resolve(8 * 7))* ;
    * console.log(result); // prints "56"
    * ```
    *
    * @example
-   * A string can also be passed in instead of a function.
+   * A string can also be passed in instead of a function:
    *
-   * ```js
+   * ```ts
    * console.log(await executionContext.evaluate('1 + 2')); // prints "3"
    * ```
    *
    * @example
-   * {@link JSHandle} instances can be passed as arguments to the
-   * `executionContext.* evaluate`:
-   * ```js
+   * Handles can also be passed as `args`. They resolve to their referenced object:
+   *
+   * ```ts
    * const oneHandle = await executionContext.evaluateHandle(() => 1);
    * const twoHandle = await executionContext.evaluateHandle(() => 2);
    * const result = await executionContext.evaluate(
-   *    (a, b) => a + b, oneHandle, * twoHandle
+   *   (a, b) => a + b,
+   *   oneHandle,
+   *   twoHandle
    * );
    * await oneHandle.dispose();
    * await twoHandle.dispose();
    * console.log(result); // prints '3'.
    * ```
-   * @param pageFunction - a function to be evaluated in the `executionContext`
-   * @param args - argument to pass to the page function
    *
-   * @returns A promise that resolves to the return value of the given function.
+   * @param pageFunction - The function to evaluate.
+   * @param args - Additional arguments to pass into the function.
+   * @returns The result of evaluating the function. If the result is an object,
+   * a vanilla object containing the serializable properties of the result is
+   * returned.
    */
-  async evaluate<ReturnType extends any>(
-    pageFunction: Function | string,
-    ...args: unknown[]
-  ): Promise<ReturnType> {
-    return await this._evaluateInternal<ReturnType>(
-      true,
-      pageFunction,
-      ...args
-    );
+  async evaluate<
+    Params extends unknown[],
+    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>
+  >(
+    pageFunction: Func | string,
+    ...args: Params
+  ): Promise<Awaited<ReturnType<Func>>> {
+    return await this.#evaluate(true, pageFunction, ...args);
   }
 
   /**
-   * @remarks
-   * The only difference between `executionContext.evaluate` and
-   * `executionContext.evaluateHandle` is that `executionContext.evaluateHandle`
-   * returns an in-page object (a {@link JSHandle}).
-   * If the function passed to the `executionContext.evaluateHandle` returns a
-   * Promise, then `executionContext.evaluateHandle` would wait for the
-   * promise to resolve and return its value.
+   * Evaluates the given function.
+   *
+   * Unlike {@link ExecutionContext.evaluate | evaluate}, this method returns a
+   * handle to the result of the function.
+   *
+   * This method may be better suited if the object cannot be serialized (e.g.
+   * `Map`) and requires further manipulation.
    *
    * @example
-   * ```js
+   *
+   * ```ts
    * const context = await page.mainFrame().executionContext();
-   * const aHandle = await context.evaluateHandle(() => Promise.resolve(self));
-   * aHandle; // Handle for the global object.
+   * const handle: JSHandle<typeof globalThis> = await context.evaluateHandle(
+   *   () => Promise.resolve(self)
+   * );
    * ```
    *
    * @example
    * A string can also be passed in instead of a function.
    *
-   * ```js
-   * // Handle for the '3' * object.
-   * const aHandle = await context.evaluateHandle('1 + 2');
+   * ```ts
+   * const handle: JSHandle<number> = await context.evaluateHandle('1 + 2');
    * ```
    *
    * @example
-   * JSHandle instances can be passed as arguments
-   * to the `executionContext.* evaluateHandle`:
+   * Handles can also be passed as `args`. They resolve to their referenced object:
    *
-   * ```js
-   * const aHandle = await context.evaluateHandle(() => document.body);
-   * const resultHandle = await context.evaluateHandle(body => body.innerHTML, * aHandle);
-   * console.log(await resultHandle.jsonValue()); // prints body's innerHTML
-   * await aHandle.dispose();
-   * await resultHandle.dispose();
+   * ```ts
+   * const bodyHandle: ElementHandle<HTMLBodyElement> =
+   *   await context.evaluateHandle(() => {
+   *     return document.body;
+   *   });
+   * const stringHandle: JSHandle<string> = await context.evaluateHandle(
+   *   body => body.innerHTML,
+   *   body
+   * );
+   * console.log(await stringHandle.jsonValue()); // prints body's innerHTML
+   * // Always dispose your garbage! :)
+   * await bodyHandle.dispose();
+   * await stringHandle.dispose();
    * ```
    *
-   * @param pageFunction - a function to be evaluated in the `executionContext`
-   * @param args - argument to pass to the page function
-   *
-   * @returns A promise that resolves to the return value of the given function
-   * as an in-page object (a {@link JSHandle}).
+   * @param pageFunction - The function to evaluate.
+   * @param args - Additional arguments to pass into the function.
+   * @returns A {@link JSHandle | handle} to the result of evaluating the
+   * function. If the result is a `Node`, then this will return an
+   * {@link ElementHandle | element handle}.
    */
-  async evaluateHandle<HandleType extends JSHandle | ElementHandle = JSHandle>(
-    pageFunction: EvaluateHandleFn,
-    ...args: SerializableOrJSHandle[]
-  ): Promise<HandleType> {
-    return this._evaluateInternal<HandleType>(false, pageFunction, ...args);
+  async evaluateHandle<
+    Params extends unknown[],
+    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>
+  >(
+    pageFunction: Func | string,
+    ...args: Params
+  ): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
+    return this.#evaluate(false, pageFunction, ...args);
   }
 
-  private async _evaluateInternal<ReturnType>(
+  async #evaluate<
+    Params extends unknown[],
+    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>
+  >(
+    returnByValue: true,
+    pageFunction: Func | string,
+    ...args: Params
+  ): Promise<Awaited<ReturnType<Func>>>;
+  async #evaluate<
+    Params extends unknown[],
+    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>
+  >(
+    returnByValue: false,
+    pageFunction: Func | string,
+    ...args: Params
+  ): Promise<HandleFor<Awaited<ReturnType<Func>>>>;
+  async #evaluate<
+    Params extends unknown[],
+    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>
+  >(
     returnByValue: boolean,
-    pageFunction: Function | string,
-    ...args: unknown[]
-  ): Promise<ReturnType> {
+    pageFunction: Func | string,
+    ...args: Params
+  ): Promise<HandleFor<Awaited<ReturnType<Func>>> | Awaited<ReturnType<Func>>> {
     const suffix = `//# sourceURL=${EVALUATION_SCRIPT_URL}`;
 
-    if (helper.isString(pageFunction)) {
+    if (isString(pageFunction)) {
       const contextId = this._contextId;
       const expression = pageFunction;
       const expressionWithSourceUrl = SOURCE_URL_REGEX.test(expression)
         ? expression
         : expression + '\n' + suffix;
 
-      const { exceptionDetails, result: remoteObject } = await this._client
+      const {exceptionDetails, result: remoteObject} = await this._client
         .send('Runtime.evaluate', {
           expression: expressionWithSourceUrl,
           contextId,
@@ -217,20 +252,16 @@ export class ExecutionContext {
         })
         .catch(rewriteError);
 
-      if (exceptionDetails)
+      if (exceptionDetails) {
         throw new Error(
-          'Evaluation failed: ' + helper.getExceptionMessage(exceptionDetails)
+          'Evaluation failed: ' + getExceptionMessage(exceptionDetails)
         );
+      }
 
       return returnByValue
-        ? helper.valueFromRemoteObject(remoteObject)
+        ? valueFromRemoteObject(remoteObject)
         : createJSHandle(this, remoteObject);
     }
-
-    if (typeof pageFunction !== 'function')
-      throw new Error(
-        `Expected to get |string| or |function| as the first argument, but got "${pageFunction}" instead.`
-      );
 
     let functionText = pageFunction.toString();
     try {
@@ -238,10 +269,12 @@ export class ExecutionContext {
     } catch (error) {
       // This means we might have a function shorthand. Try another
       // time prefixing 'function '.
-      if (functionText.startsWith('async '))
+      if (functionText.startsWith('async ')) {
         functionText =
           'async function ' + functionText.substring('async '.length);
-      else functionText = 'function ' + functionText;
+      } else {
+        functionText = 'function ' + functionText;
+      }
       try {
         new Function('(' + functionText + ')');
       } catch (error) {
@@ -263,77 +296,95 @@ export class ExecutionContext {
       if (
         error instanceof TypeError &&
         error.message.startsWith('Converting circular structure to JSON')
-      )
-        error.message += ' Are you passing a nested JSHandle?';
+      ) {
+        error.message += ' Recursive objects are not allowed.';
+      }
       throw error;
     }
-    const { exceptionDetails, result: remoteObject } =
+    const {exceptionDetails, result: remoteObject} =
       await callFunctionOnPromise.catch(rewriteError);
-    if (exceptionDetails)
+    if (exceptionDetails) {
       throw new Error(
-        'Evaluation failed: ' + helper.getExceptionMessage(exceptionDetails)
+        'Evaluation failed: ' + getExceptionMessage(exceptionDetails)
       );
+    }
     return returnByValue
-      ? helper.valueFromRemoteObject(remoteObject)
+      ? valueFromRemoteObject(remoteObject)
       : createJSHandle(this, remoteObject);
 
-    /**
-     * @param {*} arg
-     * @returns {*}
-     * @this {ExecutionContext}
-     */
-    function convertArgument(this: ExecutionContext, arg: unknown): unknown {
-      if (typeof arg === 'bigint')
+    function convertArgument(
+      this: ExecutionContext,
+      arg: unknown
+    ): Protocol.Runtime.CallArgument {
+      if (typeof arg === 'bigint') {
         // eslint-disable-line valid-typeof
-        return { unserializableValue: `${arg.toString()}n` };
-      if (Object.is(arg, -0)) return { unserializableValue: '-0' };
-      if (Object.is(arg, Infinity)) return { unserializableValue: 'Infinity' };
-      if (Object.is(arg, -Infinity))
-        return { unserializableValue: '-Infinity' };
-      if (Object.is(arg, NaN)) return { unserializableValue: 'NaN' };
+        return {unserializableValue: `${arg.toString()}n`};
+      }
+      if (Object.is(arg, -0)) {
+        return {unserializableValue: '-0'};
+      }
+      if (Object.is(arg, Infinity)) {
+        return {unserializableValue: 'Infinity'};
+      }
+      if (Object.is(arg, -Infinity)) {
+        return {unserializableValue: '-Infinity'};
+      }
+      if (Object.is(arg, NaN)) {
+        return {unserializableValue: 'NaN'};
+      }
       const objectHandle = arg && arg instanceof JSHandle ? arg : null;
       if (objectHandle) {
-        if (objectHandle._context !== this)
+        if (objectHandle.executionContext() !== this) {
           throw new Error(
             'JSHandles can be evaluated only in the context they were created!'
           );
-        if (objectHandle._disposed) throw new Error('JSHandle is disposed!');
-        if (objectHandle._remoteObject.unserializableValue)
+        }
+        if (objectHandle.disposed) {
+          throw new Error('JSHandle is disposed!');
+        }
+        if (objectHandle.remoteObject().unserializableValue) {
           return {
-            unserializableValue: objectHandle._remoteObject.unserializableValue,
+            unserializableValue:
+              objectHandle.remoteObject().unserializableValue,
           };
-        if (!objectHandle._remoteObject.objectId)
-          return { value: objectHandle._remoteObject.value };
-        return { objectId: objectHandle._remoteObject.objectId };
+        }
+        if (!objectHandle.remoteObject().objectId) {
+          return {value: objectHandle.remoteObject().value};
+        }
+        return {objectId: objectHandle.remoteObject().objectId};
       }
-      return { value: arg };
+      return {value: arg};
     }
 
     function rewriteError(error: Error): Protocol.Runtime.EvaluateResponse {
-      if (error.message.includes('Object reference chain is too long'))
-        return { result: { type: 'undefined' } };
-      if (error.message.includes("Object couldn't be returned by value"))
-        return { result: { type: 'undefined' } };
+      if (error.message.includes('Object reference chain is too long')) {
+        return {result: {type: 'undefined'}};
+      }
+      if (error.message.includes("Object couldn't be returned by value")) {
+        return {result: {type: 'undefined'}};
+      }
 
       if (
         error.message.endsWith('Cannot find context with specified id') ||
         error.message.endsWith('Inspected target navigated or closed')
-      )
+      ) {
         throw new Error(
           'Execution context was destroyed, most likely because of a navigation.'
         );
+      }
       throw error;
     }
   }
 
   /**
-   * This method iterates the JavaScript heap and finds all the objects with the
+   * Iterates through the JavaScript heap and finds all the objects with the
    * given prototype.
-   * @remarks
+   *
    * @example
-   * ```js
+   *
+   * ```ts
    * // Create a Map object
-   * await page.evaluate(() => window.map = new Map());
+   * await page.evaluate(() => (window.map = new Map()));
    * // Get a handle to the Map object prototype
    * const mapPrototype = await page.evaluateHandle(() => Map.prototype);
    * // Query all map instances into an array
@@ -345,48 +396,20 @@ export class ExecutionContext {
    * ```
    *
    * @param prototypeHandle - a handle to the object prototype
-   *
    * @returns A handle to an array of objects with the given prototype.
    */
-  async queryObjects(prototypeHandle: JSHandle): Promise<JSHandle> {
-    assert(!prototypeHandle._disposed, 'Prototype JSHandle is disposed!');
+  async queryObjects<Prototype>(
+    prototypeHandle: JSHandle<Prototype>
+  ): Promise<HandleFor<Prototype[]>> {
+    assert(!prototypeHandle.disposed, 'Prototype JSHandle is disposed!');
+    const remoteObject = prototypeHandle.remoteObject();
     assert(
-      prototypeHandle._remoteObject.objectId,
+      remoteObject.objectId,
       'Prototype JSHandle must not be referencing primitive value'
     );
     const response = await this._client.send('Runtime.queryObjects', {
-      prototypeObjectId: prototypeHandle._remoteObject.objectId,
+      prototypeObjectId: remoteObject.objectId,
     });
-    return createJSHandle(this, response.objects);
-  }
-
-  /**
-   * @internal
-   */
-  async _adoptBackendNodeId(
-    backendNodeId: Protocol.DOM.BackendNodeId
-  ): Promise<ElementHandle> {
-    const { object } = await this._client.send('DOM.resolveNode', {
-      backendNodeId: backendNodeId,
-      executionContextId: this._contextId,
-    });
-    return createJSHandle(this, object) as ElementHandle;
-  }
-
-  /**
-   * @internal
-   */
-  async _adoptElementHandle(
-    elementHandle: ElementHandle
-  ): Promise<ElementHandle> {
-    assert(
-      elementHandle.executionContext() !== this,
-      'Cannot adopt handle that already belongs to this execution context'
-    );
-    assert(this._world, 'Cannot adopt handle without DOMWorld');
-    const nodeInfo = await this._client.send('DOM.describeNode', {
-      objectId: elementHandle._remoteObject.objectId,
-    });
-    return this._adoptBackendNodeId(nodeInfo.node.backendNodeId);
+    return createJSHandle(this, response.objects) as HandleFor<Prototype[]>;
   }
 }

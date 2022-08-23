@@ -113,7 +113,10 @@ impl Module {
         let mut globals = wasm_encoder::GlobalSection::new();
         for (idx, expr) in &self.defined_globals {
             let ty = &self.globals[*idx as usize];
-            globals.global(*ty, expr);
+            match expr {
+                GlobalInitExpr::ConstExpr(expr) => globals.global(*ty, expr),
+                GlobalInitExpr::FuncRef(func) => globals.global(*ty, &ConstExpr::ref_func(*func)),
+            };
         }
         module.section(&globals);
     }
@@ -145,9 +148,15 @@ impl Module {
             let elements = match &el.items {
                 Elements::Expressions(es) => {
                     exps.clear();
-                    exps.extend(es.iter().map(|e| match e {
-                        Some(i) => wasm_encoder::Element::Func(*i),
-                        None => wasm_encoder::Element::Null,
+                    exps.extend(es.iter().map(|e| {
+                        // TODO(nagisa): generate global.get of imported ref globals too.
+                        match e {
+                            Some(i) => match el.ty {
+                                ValType::FuncRef => wasm_encoder::ConstExpr::ref_func(*i),
+                                _ => unreachable!(),
+                            },
+                            None => wasm_encoder::ConstExpr::ref_null(el.ty),
+                        }
                     }));
                     wasm_encoder::Elements::Expressions(&exps)
                 }
@@ -155,7 +164,12 @@ impl Module {
             };
             match &el.kind {
                 ElementKind::Active { table, offset } => {
-                    elems.active(*table, offset, el.ty, elements);
+                    let offset = match *offset {
+                        Offset::Const32(n) => ConstExpr::i32_const(n),
+                        Offset::Const64(n) => ConstExpr::i64_const(n),
+                        Offset::Global(g) => ConstExpr::global_get(g),
+                    };
+                    elems.active(*table, &offset, el.ty, elements);
                 }
                 ElementKind::Passive => {
                     elems.passive(el.ty, elements);
@@ -218,7 +232,12 @@ impl Module {
                     memory_index,
                     offset,
                 } => {
-                    data.active(*memory_index, offset, seg.init.iter().copied());
+                    let offset = match *offset {
+                        Offset::Const32(n) => ConstExpr::i32_const(n),
+                        Offset::Const64(n) => ConstExpr::i64_const(n),
+                        Offset::Global(g) => ConstExpr::global_get(g),
+                    };
+                    data.active(*memory_index, &offset, seg.init.iter().copied());
                 }
                 DataSegmentKind::Passive => {
                     data.passive(seg.init.iter().copied());

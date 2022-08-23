@@ -10,7 +10,6 @@ const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 var httpserver = new HttpServer();
 var testpath = "/simple";
 var httpbody = "0123456789";
-var buffer = "";
 
 var dbg = 0;
 if (dbg) {

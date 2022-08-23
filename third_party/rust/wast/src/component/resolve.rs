@@ -256,7 +256,7 @@ impl<'a> Resolver<'a> {
             ItemSigKind::Func(t) => self.component_type_use(t),
             ItemSigKind::Component(t) => self.component_type_use(t),
             ItemSigKind::Instance(t) => self.component_type_use(t),
-            ItemSigKind::Value(t) => self.component_val_type(t),
+            ItemSigKind::Value(t) => self.component_val_type(&mut t.0),
             ItemSigKind::Type(b) => match b {
                 TypeBounds::Eq(i) => self.resolve_ns(i, Ns::Type),
             },
@@ -473,8 +473,8 @@ impl<'a> Resolver<'a> {
 
     fn component_val_type(&mut self, ty: &mut ComponentValType<'a>) -> Result<(), Error> {
         match ty {
-            ComponentValType::Primitive(_) => Ok(()),
             ComponentValType::Ref(idx) => self.resolve_ns(idx, Ns::Type),
+            ComponentValType::Inline(ComponentDefinedType::Primitive(_)) => Ok(()),
             ComponentValType::Inline(_) => unreachable!("should be expanded by now"),
         }
     }

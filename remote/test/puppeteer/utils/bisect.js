@@ -21,7 +21,7 @@ const pptr = require('..');
 const browserFetcher = pptr.createBrowserFetcher();
 const path = require('path');
 const fs = require('fs');
-const { fork, spawn, execSync } = require('child_process');
+const {fork, spawn, execSync} = require('child_process');
 
 const COLOR_RESET = '\x1b[0m';
 const COLOR_RED = '\x1b[31m';
@@ -35,7 +35,7 @@ Usage:
   node bisect.js --good <revision> --bad <revision> <script>
 
 Parameters:
-  --good       revision that is known to be GOOD, defaults to the chromium revision in src/revision.ts in the main branch 
+  --good       revision that is known to be GOOD, defaults to the chromium revision in src/revision.ts in the main branch
   --bad        revision that is known to be BAD, defaults to the chromium revision in src/revision.ts
   --no-cache   do not keep downloaded Chromium revisions
   --unit-test  pattern that identifies a unit tests that should be checked
@@ -111,14 +111,18 @@ if (argv.script && !fs.existsSync(scriptPath)) {
   while (true) {
     const middle = Math.round((good + bad) / 2);
     const revision = await findDownloadableRevision(middle, good, bad);
-    if (!revision || revision === good || revision === bad) break;
+    if (!revision || revision === good || revision === bad) {
+      break;
+    }
     let info = browserFetcher.revisionInfo(revision);
     const shouldRemove = noCache && !info.local;
     info = await downloadRevision(revision);
     const exitCode = await (pattern
       ? runUnitTest(pattern, info)
       : runScript(scriptPath, info));
-    if (shouldRemove) await browserFetcher.remove(revision);
+    if (shouldRemove) {
+      await browserFetcher.remove(revision);
+    }
     let outcome;
     if (exitCode) {
       bad = revision;
@@ -164,15 +168,19 @@ function runScript(scriptPath, revisionInfo) {
     },
   });
   return new Promise((resolve, reject) => {
-    child.on('error', (err) => reject(err));
-    child.on('exit', (code) => resolve(code));
+    child.on('error', err => {
+      return reject(err);
+    });
+    child.on('exit', code => {
+      return resolve(code);
+    });
   });
 }
 
 function runUnitTest(pattern, revisionInfo) {
   const log = debug('bisect:rununittest');
   log('Running unit test');
-  const child = spawn('npm run unit', ['--', '-g', pattern], {
+  const child = spawn('npm run test:chrome:headless', ['--', '-g', pattern], {
     stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
     shell: true,
     env: {
@@ -181,8 +189,12 @@ function runUnitTest(pattern, revisionInfo) {
     },
   });
   return new Promise((resolve, reject) => {
-    child.on('error', (err) => reject(err));
-    child.on('exit', (code) => resolve(code));
+    child.on('error', err => {
+      return reject(err);
+    });
+    child.on('exit', code => {
+      return resolve(code);
+    });
   });
 }
 
@@ -224,7 +236,9 @@ async function findDownloadableRevision(rev, from, to) {
   const min = Math.min(from, to);
   const max = Math.max(from, to);
   log(`Looking around ${rev} from [${min}, ${max}]`);
-  if (await browserFetcher.canDownload(rev)) return rev;
+  if (await browserFetcher.canDownload(rev)) {
+    return rev;
+  }
   let down = rev;
   let up = rev;
   while (min <= down || up <= max) {
@@ -232,8 +246,12 @@ async function findDownloadableRevision(rev, from, to) {
       down > min ? probe(--down) : Promise.resolve(false),
       up < max ? probe(++up) : Promise.resolve(false),
     ]);
-    if (downOk) return down;
-    if (upOk) return up;
+    if (downOk) {
+      return down;
+    }
+    if (upOk) {
+      return up;
+    }
   }
   return null;
 
@@ -264,10 +282,16 @@ function fetchJSON(url) {
     const req = agent.request(options, function (res) {
       let result = '';
       res.setEncoding('utf8');
-      res.on('data', (chunk) => (result += chunk));
-      res.on('end', () => resolve(JSON.parse(result)));
+      res.on('data', chunk => {
+        return (result += chunk);
+      });
+      res.on('end', () => {
+        return resolve(JSON.parse(result));
+      });
     });
-    req.on('error', (err) => reject(err));
+    req.on('error', err => {
+      return reject(err);
+    });
     req.end();
   });
 }
@@ -283,6 +307,8 @@ function getChromiumRevision(gitRevision = null) {
   });
 
   const m = result.match(/chromium: '(\d+)'/);
-  if (!m) return null;
+  if (!m) {
+    return null;
+  }
   return parseInt(m[1], 10);
 }

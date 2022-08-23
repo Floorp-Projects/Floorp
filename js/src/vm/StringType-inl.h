@@ -13,12 +13,10 @@
 #include "mozilla/Range.h"
 
 #include "gc/Allocator.h"
-#include "gc/Marking.h"
 #include "gc/MaybeRooted.h"
 #include "gc/StoreBuffer.h"
 #include "js/UniquePtr.h"
 #include "vm/JSContext.h"
-#include "vm/Realm.h"
 #include "vm/StaticStrings.h"
 
 #include "gc/GCContext-inl.h"

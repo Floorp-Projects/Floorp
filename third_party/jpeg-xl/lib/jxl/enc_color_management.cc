@@ -105,7 +105,8 @@ Status BeforeTransform(JxlCms* t, const float* buf_src, float* xform_src,
                                           : 10000.f / t->intensity_target);
       for (size_t i = 0; i < buf_size; i += Lanes(df)) {
         const auto val = Load(df, buf_src + i);
-        const auto result = multiplier * TF_PQ().DisplayFromEncoded(df, val);
+        const auto result =
+            Mul(multiplier, TF_PQ().DisplayFromEncoded(df, val));
         Store(result, df, xform_src + i);
       }
 #if JXL_CMS_VERBOSE >= 2
@@ -162,7 +163,8 @@ Status AfterTransform(JxlCms* t, float* JXL_RESTRICT buf_dst, size_t buf_size) {
                                                  : t->intensity_target * 1e-4f);
       for (size_t i = 0; i < buf_size; i += Lanes(df)) {
         const auto val = Load(df, buf_dst + i);
-        const auto result = TF_PQ().EncodedFromDisplay(df, multiplier * val);
+        const auto result =
+            TF_PQ().EncodedFromDisplay(df, Mul(multiplier, val));
         Store(result, df, buf_dst + i);
       }
 #if JXL_CMS_VERBOSE >= 2

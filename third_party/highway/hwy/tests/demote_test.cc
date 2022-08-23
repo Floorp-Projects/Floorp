@@ -1,4 +1,5 @@
 // Copyright 2019 Google LLC
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +19,7 @@
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "tests/demote_test.cc"
-#include "hwy/foreach_target.h"
-
+#include "hwy/foreach_target.h"  // IWYU pragma: keep
 #include "hwy/highway.h"
 #include "hwy/tests/test_util-inl.h"
 
@@ -31,12 +31,12 @@ namespace hwy {
 namespace HWY_NAMESPACE {
 
 template <typename T, HWY_IF_FLOAT(T)>
-bool IsFinite(T t) {
+bool IsFiniteT(T t) {
   return std::isfinite(t);
 }
 // Wrapper avoids calling std::isfinite for integer types (ambiguous).
 template <typename T, HWY_IF_NOT_FLOAT(T)>
-bool IsFinite(T /*unused*/) {
+bool IsFiniteT(T /*unused*/) {
   return true;
 }
 
@@ -57,7 +57,7 @@ struct TestDemoteTo {
     const T max = LimitsMax<ToT>();
 
     const auto value_ok = [&](T& value) {
-      if (!IsFinite(value)) return false;
+      if (!IsFiniteT(value)) return false;
       return true;
     };
 
@@ -117,7 +117,7 @@ struct TestDemoteToFloat {
         do {
           const uint64_t bits = rng();
           memcpy(&from[i], &bits, sizeof(T));
-        } while (!IsFinite(from[i]));
+        } while (!IsFiniteT(from[i]));
         const T magn = std::abs(from[i]);
         const T max_abs = HighestValue<ToT>();
         // NOTE: std:: version from C++11 cmath is not defined in RVV GCC, see
@@ -213,7 +213,6 @@ class TestReorderDemote2To {
   template <typename TF32, class DF32>
   HWY_NOINLINE void operator()(TF32 /*t*/, DF32 d32) {
 #if HWY_TARGET != HWY_SCALAR
-
     size_t padded;
     auto in = ReorderBF16TestCases(d32, padded);
 
@@ -234,11 +233,12 @@ class TestReorderDemote2To {
       const auto promoted1 = PromoteTo(d32, Load(dbf16_half, temp16.get() + N));
 
       // Smoke test: sum should be same (with tolerance for non-associativity)
-      const auto sum_expected =
+      const auto sum_expected = GetLane(SumOfLanes(d32, Add(f0, f1)));
+      const auto sum_actual =
           GetLane(SumOfLanes(d32, Add(promoted0, promoted1)));
-      const auto sum_actual = GetLane(SumOfLanes(d32, Add(f0, f1)));
-      HWY_ASSERT(sum_actual - 1E-4 <= sum_actual &&
-                 sum_expected <= sum_actual + 1E-4);
+
+      HWY_ASSERT(sum_expected - 1E-4 <= sum_actual &&
+                 sum_actual <= sum_expected + 1E-4);
 
       // Ensure values are the same after sorting to undo the Reorder
       Store(f0, d32, expected.get() + 0);
@@ -323,11 +323,5 @@ HWY_EXPORT_AND_TEST_P(HwyDemoteTest, TestAllReorderDemote2To);
 HWY_EXPORT_AND_TEST_P(HwyDemoteTest, TestAllI32F64);
 #endif  //  !HWY_IS_MSAN
 }  // namespace hwy
-
-// Ought not to be necessary, but without this, no tests run on RVV.
-int main(int argc, char** argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
 
 #endif

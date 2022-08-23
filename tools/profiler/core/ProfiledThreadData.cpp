@@ -86,7 +86,7 @@ static void StreamTables(UniqueStacks&& aUniqueStacks, JSContext* aCx,
   aWriter.StartArrayProperty("stringTable");
   {
     aProgressLogger.SetLocalProgress(60_pc, "Splicing string table...");
-    std::move(*aUniqueStacks.mUniqueStrings).SpliceStringTableElements(aWriter);
+    std::move(aUniqueStacks.UniqueStrings()).SpliceStringTableElements(aWriter);
     aProgressLogger.SetLocalProgress(90_pc, "Spliced string table");
   }
   aWriter.EndArray();
@@ -140,8 +140,7 @@ void ProfiledThreadData::StreamJSON(
                               0_pc, "Preparing unique stacks...", 10_pc,
                               "Prepared Unique stacks"));
 
-  MOZ_ASSERT(uniqueStacks->mUniqueStrings);
-  aWriter.SetUniqueStrings(*uniqueStacks->mUniqueStrings);
+  aWriter.SetUniqueStrings(uniqueStacks->UniqueStrings());
 
   aWriter.Start();
   {
@@ -390,9 +389,9 @@ ThreadStreamingContext::ThreadStreamingContext(
           aProgressLogger.CreateSubLoggerFromTo(
               0_pc, "Preparing thread streaming context unique stacks...",
               99_pc, "Prepared thread streaming context Unique stacks"))) {
-  mSamplesDataWriter.SetUniqueStrings(*mUniqueStacks->mUniqueStrings);
+  mSamplesDataWriter.SetUniqueStrings(mUniqueStacks->UniqueStrings());
   mSamplesDataWriter.StartBareList();
-  mMarkersDataWriter.SetUniqueStrings(*mUniqueStacks->mUniqueStrings);
+  mMarkersDataWriter.SetUniqueStrings(mUniqueStacks->UniqueStrings());
   mMarkersDataWriter.StartBareList();
 }
 

@@ -10,7 +10,6 @@ var httpserver = new HttpServer();
 var testpath = "/421";
 var httpbody = "0123456789";
 var channel;
-var ios;
 
 function run_test() {
   setup_test();

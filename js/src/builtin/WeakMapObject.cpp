@@ -7,13 +7,16 @@
 #include "builtin/WeakMapObject-inl.h"
 
 #include "builtin/WeakSetObject.h"
+#include "gc/GC.h"
 #include "gc/GCContext.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/PropertySpec.h"
 #include "js/WeakMap.h"
+#include "vm/Compartment.h"
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
 
+#include "gc/GCContext-inl.h"
 #include "gc/WeakMap-inl.h"
 #include "vm/NativeObject-inl.h"
 

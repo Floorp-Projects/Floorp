@@ -14,10 +14,6 @@ XPCOMUtils.defineLazyGetter(this, "randomURI", function() {
   return URL + randomPath;
 });
 
-function inChildProcess() {
-  return Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
-}
-
 function make_channel(url, callback, ctx) {
   return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });
 }

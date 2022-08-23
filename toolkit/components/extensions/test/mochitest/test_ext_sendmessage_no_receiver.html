@@ -12,19 +12,25 @@
 <script>
 "use strict";
 
-function loadContentScriptExtension(contentScript) {
-  let extensionData = {
-    manifest: {
-      "content_scripts": [{
-        "js": ["contentscript.js"],
-        "matches": ["http://mochi.test/*/file_sample.html"],
-      }],
-    },
-    files: {
-      "contentscript.js": contentScript,
-    },
-  };
-  return ExtensionTestUtils.loadExtension(extensionData);
+async function testFn(expectPromise) {
+  browser.test.assertEq(null, chrome.runtime.lastError, "no lastError before call");
+  let retval = chrome.runtime.sendMessage("msg");
+  browser.test.assertEq(null, chrome.runtime.lastError, "no lastError after call");
+  if (expectPromise) {
+    browser.test.assertTrue(retval instanceof Promise, "chrome.runtime.sendMessage should return a promise");
+  } else {
+    browser.test.assertEq(undefined, retval, "return value of chrome.runtime.sendMessage with callback");
+  }
+
+  let isAsyncCall = false;
+  retval = chrome.runtime.sendMessage("msg", reply => {
+    browser.test.assertEq(undefined, reply, "no reply");
+    browser.test.assertTrue(isAsyncCall, "chrome.runtime.sendMessage's callback must be called asynchronously");
+    browser.test.assertEq(undefined, retval, "return value of chrome.runtime.sendMessage with callback");
+    browser.test.assertEq("Could not establish connection. Receiving end does not exist.", chrome.runtime.lastError.message);
+    browser.test.sendMessage("finished", retval);
+  });
+  isAsyncCall = true;
 }
 
 add_task(async function test_content_script_sendMessage_without_listener() {
@@ -36,7 +42,18 @@ add_task(async function test_content_script_sendMessage_without_listener() {
     browser.test.notifyPass("sendMessage callback was invoked");
   }
 
-  let extension = loadContentScriptExtension(contentScript);
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [{
+        js: ["contentscript.js"],
+        matches: ["http://mochi.test/*/file_sample.html"],
+      }],
+    },
+    files: {
+      "contentscript.js": contentScript,
+    },
+  });
+
   await extension.startup();
 
   let win = window.open("file_sample.html");
@@ -47,35 +64,51 @@ add_task(async function test_content_script_sendMessage_without_listener() {
 });
 
 add_task(async function test_content_script_chrome_sendMessage_without_listener() {
-  function contentScript() {
-    /* globals chrome */
-    browser.test.assertEq(null, chrome.runtime.lastError, "no lastError before call");
-    let retval = chrome.runtime.sendMessage("msg");
-    browser.test.assertEq(null, chrome.runtime.lastError, "no lastError after call");
-    // TODO(robwu): Fix the implementation and uncomment the next expectation.
-    // When content script APIs are schema-based (bugzil.la/1287007) this bug will be fixed for free.
-    // browser.test.assertEq(undefined, retval, "return value of chrome.runtime.sendMessage without callback");
-    browser.test.assertTrue(retval instanceof Promise, "TODO: chrome.runtime.sendMessage should return undefined, not a promise");
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 2,
+      content_scripts: [{
+        js: ["contentscript.js"],
+        matches: ["http://mochi.test/*/file_sample.html"],
+      }],
+    },
+    // In MV2, chrome namespace in content scripts do get promises, however in background pages they do not.
+    background: `(${testFn})(false)`,
+    files: {
+      "contentscript.js": `(${testFn})(true)`,
+    },
+  });
 
-    let isAsyncCall = false;
-    retval = chrome.runtime.sendMessage("msg", reply => {
-      browser.test.assertEq(undefined, reply, "no reply");
-      browser.test.assertTrue(isAsyncCall, "chrome.runtime.sendMessage's callback must be called asynchronously");
-      browser.test.assertEq(undefined, retval, "return value of chrome.runtime.sendMessage with callback");
-      browser.test.assertEq("Could not establish connection. Receiving end does not exist.", chrome.runtime.lastError.message);
-      browser.test.notifyPass("finished chrome.runtime.sendMessage");
-    });
-    isAsyncCall = true;
-  }
-
-  let extension = loadContentScriptExtension(contentScript);
   await extension.startup();
+  await extension.awaitMessage("finished");
 
   let win = window.open("file_sample.html");
-  await extension.awaitFinish("finished chrome.runtime.sendMessage");
+  await extension.awaitMessage("finished");
   win.close();
 
   await extension.unload();
+});
+
+add_task(async function test_chrome_sendMessage_without_listener_v3() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.manifestV3.enabled", true]],
+  });
+
+  // We only test the background here because content script behavior
+  // is independant of the manifest version.
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+    },
+    background: `(${testFn})(true)`,
+  });
+
+  await extension.startup();
+
+  await extension.awaitMessage("finished");
+
+  await extension.unload();
+  await SpecialPowers.popPrefEnv();
 });
 </script>
 </body>

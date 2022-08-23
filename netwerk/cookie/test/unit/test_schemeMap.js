@@ -1,9 +1,5 @@
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 function inChildProcess() {
   return Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 }

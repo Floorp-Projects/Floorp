@@ -28,7 +28,6 @@
 #include <type_traits>
 #include <utility>
 
-#include "jsapi.h"
 #include "jstypes.h"
 
 #include "frontend/BytecodeSection.h"
@@ -37,11 +36,9 @@
 #include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
 #include "frontend/Stencil.h"  // DumpFunctionFlagsItems, DumpImmutableScriptFlags
 #include "frontend/StencilXdr.h"  // XDRStencilEncoder
-#include "gc/AllocKind.h"         // gc::InitialHeap
 #include "gc/GCContext.h"
 #include "jit/BaselineJIT.h"
 #include "jit/CacheIRHealth.h"
-#include "jit/Invalidation.h"
 #include "jit/Ion.h"
 #include "jit/IonScript.h"
 #include "jit/JitCode.h"
@@ -49,58 +46,46 @@
 #include "jit/JitRuntime.h"
 #include "js/CharacterEncoding.h"  // JS_EncodeStringToUTF8
 #include "js/CompileOptions.h"
+#include "js/experimental/SourceHook.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/HeapAPI.h"               // JS::GCCellPtr
 #include "js/MemoryMetrics.h"
-#include "js/Printf.h"
-#include "js/SourceText.h"
 #include "js/Transcoding.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"  // JS::UniqueChars
 #include "js/Value.h"    // JS::Value
-#include "js/Wrapper.h"
-#include "util/Memory.h"
 #include "util/Poison.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
-#include "vm/ArgumentsObject.h"
 #include "vm/BigIntType.h"  // JS::BigInt
 #include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"
 #include "vm/BytecodeUtil.h"  // Disassemble
 #include "vm/Compression.h"
 #include "vm/ErrorContext.h"
-#include "vm/FunctionFlags.h"      // js::FunctionFlags
 #include "vm/HelperThreadState.h"  // js::RunPendingSourceCompressions
-#include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 #include "vm/JSONPrinter.h"  // JSONPrinter
 #include "vm/Opcodes.h"
-#include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/Printer.h"  // js::GenericPrinter, js::Fprinter, js::Sprinter, js::QuoteString
 #include "vm/Scope.h"  // Scope
-#include "vm/SelfHosting.h"
-#include "vm/Shape.h"
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/StencilEnums.h"  // TryNote, TryNoteKind, ScopeNote
 #include "vm/StringType.h"    // JSString, JSAtom
+#include "vm/Time.h"          // AutoIncrementalTimer
 #include "vm/ToSource.h"      // JS::ValueToSource
 #include "vm/Warnings.h"      // js::WarnNumberLatin1
 #ifdef MOZ_VTUNE
 #  include "vtune/VTuneWrapper.h"
 #endif
 
-#include "debugger/DebugAPI-inl.h"
 #include "gc/Marking-inl.h"
 #include "vm/BytecodeIterator-inl.h"
 #include "vm/BytecodeLocation-inl.h"
 #include "vm/Compartment-inl.h"
-#include "vm/EnvironmentObject-inl.h"
-#include "vm/JSFunction-inl.h"
 #include "vm/JSObject-inl.h"
-#include "vm/NativeObject-inl.h"
 #include "vm/SharedImmutableStringsCache-inl.h"
 #include "vm/Stack-inl.h"
 

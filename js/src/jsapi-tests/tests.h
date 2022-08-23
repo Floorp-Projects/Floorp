@@ -21,6 +21,7 @@
 #include "gc/GC.h"
 #include "js/AllocPolicy.h"
 #include "js/CharacterEncoding.h"
+#include "js/Conversions.h"
 #include "js/Equality.h"      // JS::SameValue
 #include "js/GlobalObject.h"  // JS::DefaultGlobalClassOps
 #include "js/RegExpFlags.h"   // JS::RegExpFlags

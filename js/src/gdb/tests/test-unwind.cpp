@@ -7,6 +7,7 @@
 #include "js/CompileOptions.h"            // JS::CompileOptions
 #include "js/GlobalObject.h"              // JS::CurrentGlobalOrNull
 #include "js/PropertyAndElement.h"        // JS_DefineProperty
+#include "js/PropertyDescriptor.h"        // JSPROP_ENUMERATE
 #include "js/RootingAPI.h"                // JS::Rooted
 #include "js/SourceText.h"                // JS::Source{Ownership,Text}
 #include "js/Value.h"                     // JS::Value

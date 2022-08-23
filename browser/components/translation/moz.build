@@ -11,10 +11,7 @@ with Files("**"):
 
 EXTRA_JS_MODULES.translation = [
     "BingTranslator.jsm",
-    "cld2/cld-worker.js",
-    "cld2/cld-worker.js.mem",
     "GoogleTranslator.jsm",
-    "LanguageDetector.jsm",
     "TranslationChild.jsm",
     "TranslationDocument.jsm",
     "TranslationParent.jsm",
@@ -22,5 +19,3 @@ EXTRA_JS_MODULES.translation = [
 ]
 
 BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
-
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]

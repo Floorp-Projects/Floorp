@@ -7,12 +7,15 @@
 #define mozilla_net_CookieServiceParent_h
 
 #include "mozilla/net/PCookieServiceParent.h"
+#include "mozilla/net/CookieKey.h"
 
 class nsIArray;
 class nsICookie;
 namespace mozilla {
 class OriginAttributes;
 }
+
+class nsIEffectiveTLDService;
 
 namespace mozilla {
 namespace net {
@@ -33,15 +36,19 @@ class CookieServiceParent : public PCookieServiceParent {
 
   void RemoveAll();
 
-  void RemoveCookie(nsICookie* aCookie);
+  void RemoveCookie(const Cookie& aCookie);
 
-  void AddCookie(nsICookie* aCookie);
+  void AddCookie(const Cookie& aCookie);
 
   // This will return true if the CookieServiceParent is currently processing
   // an update from the content process. This is used in ContentParent to make
   // sure that we are only forwarding those cookie updates to other content
   // processes, not the one they originated from.
   bool ProcessingCookie() { return mProcessingCookie; }
+
+  bool CookieMatchesContentList(const Cookie& cookie);
+  void UpdateCookieInContentList(nsIURI* aHostURI,
+                                 const OriginAttributes& aOriginAttrs);
 
  protected:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -62,8 +69,10 @@ class CookieServiceParent : public PCookieServiceParent {
   static void SerialializeCookieList(const nsTArray<Cookie*>& aFoundCookieList,
                                      nsTArray<CookieStruct>& aCookiesList);
 
+  nsCOMPtr<nsIEffectiveTLDService> mTLDService;
   RefPtr<CookieService> mCookieService;
   bool mProcessingCookie;
+  nsTHashMap<CookieKey, bool> mCookieKeysInContent;
 };
 
 }  // namespace net

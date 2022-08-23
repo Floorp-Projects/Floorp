@@ -9,6 +9,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ScopeExit.h"
 
+#include "gc/GC.h"
 #include "jit/Assembler.h"  // jit::FramePointer
 #include "jit/BaselineJIT.h"
 #include "jit/JitFrames.h"
@@ -17,6 +18,7 @@
 #include "jit/JSJitFrameIter.h"
 #include "jit/SafepointIndex.h"
 #include "jit/ScriptFromCalleeToken.h"
+#include "vm/Interpreter.h"
 #include "vm/JSContext.h"
 #include "vm/Stack.h"
 

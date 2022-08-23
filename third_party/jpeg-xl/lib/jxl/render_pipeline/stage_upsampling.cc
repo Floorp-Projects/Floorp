@@ -17,6 +17,12 @@ HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
 
+// These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Clamp;
+using hwy::HWY_NAMESPACE::Max;
+using hwy::HWY_NAMESPACE::Min;
+using hwy::HWY_NAMESPACE::MulAdd;
+
 class UpsamplingStage : public RenderPipelineStage {
  public:
   explicit UpsamplingStage(const CustomTransformData& ups_factors, size_t c,
@@ -101,10 +107,27 @@ class UpsamplingStage : public RenderPipelineStage {
   void ProcessRowImpl(const RowInfo& input_rows, const RowInfo& output_rows,
                       ssize_t x0, ssize_t x1) const {
     static HWY_FULL(float) df;
+    using V = hwy::HWY_NAMESPACE::Vec<HWY_FULL(float)>;
+    V ups0, ups1, ups2, ups3, ups4, ups5, ups6, ups7;
+    (void)ups2, (void)ups3, (void)ups4, (void)ups5, (void)ups6, (void)ups7;
+    V* ups[N];
+    if (N >= 2) {
+      ups[0] = &ups0;
+      ups[1] = &ups1;
+    }
+    if (N >= 4) {
+      ups[2] = &ups2;
+      ups[3] = &ups3;
+    }
+    if (N == 8) {
+      ups[4] = &ups4;
+      ups[5] = &ups5;
+      ups[6] = &ups6;
+      ups[7] = &ups7;
+    }
     for (size_t oy = 0; oy < N; oy++) {
       float* dst_row = GetOutputRow(output_rows, c_, oy);
       for (ssize_t x = x0; x < x1; x += Lanes(df)) {
-        hwy::HWY_NAMESPACE::Vec<HWY_FULL(float)> ups[8];
         for (size_t ox = 0; ox < N; ox++) {
           auto result = Zero(df);
           auto min = LoadU(df, GetInputRow(input_rows, c_, 0) + x);
@@ -118,17 +141,17 @@ class UpsamplingStage : public RenderPipelineStage {
             }
           }
           // Avoid overshooting.
-          ups[ox] = Clamp(result, min, max);
+          *ups[ox] = Clamp(result, min, max);
         }
         if (N == 2) {
-          StoreInterleaved(df, ups[0], ups[1], dst_row + x * N);
+          StoreInterleaved(df, ups0, ups1, dst_row + x * N);
         }
         if (N == 4) {
-          StoreInterleaved(df, ups[0], ups[1], ups[2], ups[3], dst_row + x * N);
+          StoreInterleaved(df, ups0, ups1, ups2, ups3, dst_row + x * N);
         }
         if (N == 8) {
-          StoreInterleaved(df, ups[0], ups[1], ups[2], ups[3], ups[4], ups[5],
-                           ups[6], ups[7], dst_row + x * N);
+          StoreInterleaved(df, ups0, ups1, ups2, ups3, ups4, ups5, ups6, ups7,
+                           dst_row + x * N);
         }
       }
     }

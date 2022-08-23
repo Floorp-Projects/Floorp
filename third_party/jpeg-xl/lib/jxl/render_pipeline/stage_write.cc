@@ -20,6 +20,12 @@ HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
 
+// These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Clamp;
+using hwy::HWY_NAMESPACE::Mul;
+using hwy::HWY_NAMESPACE::NearestInt;
+using hwy::HWY_NAMESPACE::U8FromU32;
+
 template <typename D, typename V>
 void StoreRGBA(D d, V r, V g, V b, V a, bool alpha, size_t n, size_t extra,
                uint8_t* buf) {
@@ -116,10 +122,10 @@ class WriteToU8Stage : public RenderPipelineStage {
     }
 
     for (ssize_t x = 0; x < x1; x += Lanes(d)) {
-      auto rf = Clamp(zero, LoadU(d, row_in_r + x), one) * mul;
-      auto gf = Clamp(zero, LoadU(d, row_in_g + x), one) * mul;
-      auto bf = Clamp(zero, LoadU(d, row_in_b + x), one) * mul;
-      auto af = row_in_a ? Clamp(zero, LoadU(d, row_in_a + x), one) * mul
+      auto rf = Mul(Clamp(zero, LoadU(d, row_in_r + x), one), mul);
+      auto gf = Mul(Clamp(zero, LoadU(d, row_in_g + x), one), mul);
+      auto bf = Mul(Clamp(zero, LoadU(d, row_in_b + x), one), mul);
+      auto af = row_in_a ? Mul(Clamp(zero, LoadU(d, row_in_a + x), one), mul)
                          : Set(d, 255.0f);
       auto r8 = U8FromU32(BitCast(du, NearestInt(rf)));
       auto g8 = U8FromU32(BitCast(du, NearestInt(gf)));
@@ -272,16 +278,23 @@ class WriteToImage3FStage : public RenderPipelineStage {
 class WriteToPixelCallbackStage : public RenderPipelineStage {
  public:
   WriteToPixelCallbackStage(const PixelCallback& pixel_callback, size_t width,
-                            size_t height, bool rgba, bool has_alpha,
-                            bool unpremul_alpha, size_t alpha_c)
+                            size_t height, size_t num_channels, bool has_alpha,
+                            bool unpremul_alpha, size_t alpha_c,
+                            bool swap_endianness, Orientation undo_orientation)
       : RenderPipelineStage(RenderPipelineStage::Settings()),
         pixel_callback_(pixel_callback),
         width_(width),
         height_(height),
-        rgba_(rgba),
+        num_channels_(num_channels),
+        num_color_(num_channels < 3 ? 1 : 3),
+        want_alpha_(num_channels_ == 2 || num_channels_ == 4),
         has_alpha_(has_alpha),
         unpremul_alpha_(unpremul_alpha),
         alpha_c_(alpha_c),
+        swap_endianness_(swap_endianness),
+        flip_x_(ShouldFlipX(undo_orientation)),
+        flip_y_(ShouldFlipY(undo_orientation)),
+        transpose_(ShouldTranspose(undo_orientation)),
         opaque_alpha_(kMaxPixelsPerCall, 1.0f) {}
 
   WriteToPixelCallbackStage(const WriteToPixelCallbackStage&) = delete;
@@ -302,16 +315,18 @@ class WriteToPixelCallbackStage : public RenderPipelineStage {
     JXL_DASSERT(run_opaque_);
     if (ypos >= height_) return;
     const float* line_buffers[4];
-    for (size_t c = 0; c < 3; c++) {
+    for (size_t c = 0; c < num_color_; c++) {
       line_buffers[c] = GetInputRow(input_rows, c, 0) - xextra;
     }
     if (has_alpha_) {
-      line_buffers[3] = GetInputRow(input_rows, alpha_c_, 0) - xextra;
+      line_buffers[num_color_] = GetInputRow(input_rows, alpha_c_, 0) - xextra;
     } else {
       // No xextra offset; opaque_alpha_ is a way to set all values to 1.0f.
-      line_buffers[3] = opaque_alpha_.data();
+      line_buffers[num_color_] = opaque_alpha_.data();
     }
-
+    if (flip_y_) {
+      ypos = height_ - 1u - ypos;
+    }
     // TODO(veluca): SIMD.
     ssize_t limit = std::min(xextra + xsize, width_ - xpos);
     for (ssize_t x0 = -xextra; x0 < limit; x0 += kMaxPixelsPerCall) {
@@ -320,25 +335,52 @@ class WriteToPixelCallbackStage : public RenderPipelineStage {
       float* JXL_RESTRICT temp =
           reinterpret_cast<float*>(temp_[thread_id].get());
       for (; ix < kMaxPixelsPerCall && ssize_t(ix) + x0 < limit; ix++) {
-        temp[j++] = line_buffers[0][ix];
-        temp[j++] = line_buffers[1][ix];
-        temp[j++] = line_buffers[2][ix];
-        if (rgba_) {
-          temp[j++] = line_buffers[3][ix];
+        for (size_t c = 0; c < num_channels_; ++c) {
+          temp[j++] = line_buffers[c][ix];
         }
       }
-      if (has_alpha_ && rgba_ && unpremul_alpha_) {
+      size_t xstart = xpos + x0;
+      size_t xlen = ix;
+      if (has_alpha_ && want_alpha_ && unpremul_alpha_) {
         // TODO(szabadka) SIMDify (possibly in a separate pipeline stage).
-        UnpremultiplyAlpha(temp, ix);
+        UnpremultiplyAlpha(temp, num_color_, xlen);
       }
-      pixel_callback_.run(run_opaque_, thread_id, xpos + x0, ypos, ix, temp);
-      for (size_t c = 0; c < 3; c++) line_buffers[c] += kMaxPixelsPerCall;
-      if (has_alpha_) line_buffers[3] += kMaxPixelsPerCall;
+      if (swap_endianness_) {
+        size_t len = xlen * num_channels_;
+        for (size_t j = 0; j < len; ++j) {
+          temp[j] = BSwapFloat(temp[j]);
+        }
+      }
+      if (flip_x_) {
+        size_t last = (xlen - 1u) * num_channels_;
+        size_t num = (xlen / 2) * num_channels_;
+        for (size_t i = 0; i < num; i += num_channels_) {
+          for (size_t c = 0; c < num_channels_; ++c) {
+            std::swap(temp[i + c], temp[last - i + c]);
+          }
+        }
+        xstart = width_ - xstart - xlen;
+      }
+      if (transpose_) {
+        // TODO(szabadka) Buffer 8x8 chunks and transpose with SIMD.
+        for (size_t i = 0, j = 0; i < xlen; ++i, j += num_channels_) {
+          pixel_callback_.run(run_opaque_, thread_id, ypos, xstart + i, 1,
+                              temp + j);
+        }
+      } else {
+        pixel_callback_.run(run_opaque_, thread_id, xstart, ypos, xlen, temp);
+      }
+      for (size_t c = 0; c < num_color_; c++) {
+        line_buffers[c] += kMaxPixelsPerCall;
+      }
+      if (has_alpha_) {
+        line_buffers[num_color_] += kMaxPixelsPerCall;
+      }
     }
   }
 
   RenderPipelineChannelMode GetChannelMode(size_t c) const final {
-    return c < 3 || (has_alpha_ && c == alpha_c_)
+    return c < num_color_ || (has_alpha_ && c == alpha_c_)
                ? RenderPipelineChannelMode::kInput
                : RenderPipelineChannelMode::kIgnored;
   }
@@ -352,9 +394,27 @@ class WriteToPixelCallbackStage : public RenderPipelineStage {
     JXL_RETURN_IF_ERROR(run_opaque_ != nullptr);
     temp_.resize(num_threads);
     for (CacheAlignedUniquePtr& temp : temp_) {
-      temp = AllocateArray(sizeof(float) * kMaxPixelsPerCall * (rgba_ ? 4 : 3));
+      temp = AllocateArray(sizeof(float) * kMaxPixelsPerCall * num_channels_);
     }
     return true;
+  }
+  static bool ShouldFlipX(Orientation undo_orientation) {
+    return (undo_orientation == Orientation::kFlipHorizontal ||
+            undo_orientation == Orientation::kRotate180 ||
+            undo_orientation == Orientation::kRotate270 ||
+            undo_orientation == Orientation::kAntiTranspose);
+  }
+  static bool ShouldFlipY(Orientation undo_orientation) {
+    return (undo_orientation == Orientation::kFlipVertical ||
+            undo_orientation == Orientation::kRotate180 ||
+            undo_orientation == Orientation::kRotate90 ||
+            undo_orientation == Orientation::kAntiTranspose);
+  }
+  static bool ShouldTranspose(Orientation undo_orientation) {
+    return (undo_orientation == Orientation::kTranspose ||
+            undo_orientation == Orientation::kRotate90 ||
+            undo_orientation == Orientation::kRotate270 ||
+            undo_orientation == Orientation::kAntiTranspose);
   }
 
   static constexpr size_t kMaxPixelsPerCall = 1024;
@@ -362,10 +422,16 @@ class WriteToPixelCallbackStage : public RenderPipelineStage {
   void* run_opaque_ = nullptr;
   size_t width_;
   size_t height_;
-  bool rgba_;
+  size_t num_channels_;
+  size_t num_color_;
+  bool want_alpha_;
   bool has_alpha_;
   bool unpremul_alpha_;
   size_t alpha_c_;
+  bool swap_endianness_;
+  bool flip_x_;
+  bool flip_y_;
+  bool transpose_;
   std::vector<float> opaque_alpha_;
   std::vector<CacheAlignedUniquePtr> temp_;
 };
@@ -392,10 +458,12 @@ std::unique_ptr<RenderPipelineStage> GetWriteToU8Stage(uint8_t* rgb,
 }
 
 std::unique_ptr<RenderPipelineStage> GetWriteToPixelCallbackStage(
-    const PixelCallback& pixel_callback, size_t width, size_t height, bool rgba,
-    bool has_alpha, bool unpremul_alpha, size_t alpha_c) {
+    const PixelCallback& pixel_callback, size_t width, size_t height,
+    size_t num_channels, bool has_alpha, bool unpremul_alpha, size_t alpha_c,
+    bool swap_endianness, Orientation undo_orientation) {
   return jxl::make_unique<WriteToPixelCallbackStage>(
-      pixel_callback, width, height, rgba, has_alpha, unpremul_alpha, alpha_c);
+      pixel_callback, width, height, num_channels, has_alpha, unpremul_alpha,
+      alpha_c, swap_endianness, undo_orientation);
 }
 
 }  // namespace jxl

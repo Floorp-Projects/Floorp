@@ -10,21 +10,14 @@
 #include "vm/JSContext.h"
 
 #include <type_traits>
-#include <utility>
 
-#include "builtin/Object.h"
+#include "gc/Marking.h"
 #include "gc/Zone.h"
 #include "jit/JitFrames.h"
-#include "js/friend/StackLimits.h"  // js::CheckRecursionLimit
-#include "proxy/Proxy.h"
 #include "util/DiagnosticAssertions.h"
 #include "vm/BigIntType.h"
 #include "vm/GlobalObject.h"
-#include "vm/HelperThreads.h"
-#include "vm/Interpreter.h"
-#include "vm/Iteration.h"
 #include "vm/Realm.h"
-#include "vm/SymbolType.h"
 
 #include "vm/Activation-inl.h"  // js::Activation::hasWasmExitFP
 

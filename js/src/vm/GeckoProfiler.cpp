@@ -8,8 +8,6 @@
 
 #include "mozilla/Sprintf.h"
 
-#include "jsnum.h"
-
 #include "gc/GC.h"
 #include "gc/PublicIterators.h"
 #include "jit/BaselineJIT.h"
@@ -17,13 +15,12 @@
 #include "jit/JitRuntime.h"
 #include "jit/JSJitFrameIter.h"
 #include "js/ProfilingStack.h"
-#include "util/StringBuffer.h"
 #include "vm/FrameIter.h"  // js::OnlyJSJitFrameIter
+#include "vm/JitActivation.h"
 #include "vm/JSScript.h"
 
 #include "gc/Marking-inl.h"
 #include "jit/JSJitFrameIter-inl.h"
-#include "vm/JSScript-inl.h"
 
 using namespace js;
 

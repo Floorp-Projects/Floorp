@@ -36,16 +36,17 @@
 #include "jit/JitRuntime.h"
 #include "jit/JitZone.h"
 #include "proxy/DeadObjectProxy.h"
+#include "vm/BigIntType.h"
 #include "vm/HelperThreads.h"
 #include "vm/JSContext.h"
+#include "vm/Time.h"
 #include "vm/WrapperObject.h"
 
 #include "gc/PrivateIterators-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSObject-inl.h"
-#include "vm/JSScript-inl.h"
 #include "vm/PropMap-inl.h"
-#include "vm/Stack-inl.h"
+#include "vm/Shape-inl.h"
 #include "vm/StringType-inl.h"
 
 using namespace js;

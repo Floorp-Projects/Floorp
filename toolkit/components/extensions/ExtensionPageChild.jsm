@@ -237,13 +237,22 @@ class ExtensionBaseContextChild extends BaseContext {
       });
     }
 
-    lazy.Schemas.exportLazyGetter(contentWindow, "browser", () => {
+    defineLazyGetter(this, "browserObj", () => {
       let browserObj = Cu.createObjectIn(contentWindow);
       this.childManager.inject(browserObj);
       return browserObj;
     });
 
+    lazy.Schemas.exportLazyGetter(contentWindow, "browser", () => {
+      return this.browserObj;
+    });
+
     lazy.Schemas.exportLazyGetter(contentWindow, "chrome", () => {
+      // For MV3 and later, this is just an alias for browser.
+      if (extension.manifestVersion > 2) {
+        return this.browserObj;
+      }
+      // Chrome compat is only used with MV2
       let chromeApiWrapper = Object.create(this.childManager);
       chromeApiWrapper.isChromeCompat = true;
 

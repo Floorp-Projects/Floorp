@@ -47,5 +47,4 @@ static av_always_inline av_const uint64_t av_bswap64(uint64_t x)
 }
 
 #endif /* HAVE_INLINE_ASM */
-
 #endif /* AVUTIL_AARCH64_BSWAP_H */

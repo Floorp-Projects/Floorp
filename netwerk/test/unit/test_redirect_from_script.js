@@ -211,7 +211,8 @@ function done() {
   });
 }
 
-var redirector = new Redirector();
+// Needed for side-effects
+new Redirector();
 
 function run_test() {
   httpServer = new HttpServer();

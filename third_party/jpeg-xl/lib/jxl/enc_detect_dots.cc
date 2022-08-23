@@ -45,6 +45,11 @@ HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
 
+// These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Add;
+using hwy::HWY_NAMESPACE::Mul;
+using hwy::HWY_NAMESPACE::Sub;
+
 ImageF SumOfSquareDifferences(const Image3F& forig, const Image3F& smooth,
                               ThreadPool* pool) {
   const HWY_FULL(float) d;
@@ -66,16 +71,14 @@ ImageF SumOfSquareDifferences(const Image3F& forig, const Image3F& smooth,
         float* JXL_RESTRICT sos_row = sum_of_squares.Row(y);
 
         for (size_t x = 0; x < forig.xsize(); x += Lanes(d)) {
-          auto v0 = Load(d, orig_row0 + x) - Load(d, smooth_row0 + x);
-          auto v1 = Load(d, orig_row1 + x) - Load(d, smooth_row1 + x);
-          auto v2 = Load(d, orig_row2 + x) - Load(d, smooth_row2 + x);
-          v0 *= v0;
-          v1 *= v1;
-          v2 *= v2;
-          v0 *= color_coef0;  // FMA doesn't help here.
-          v1 *= color_coef1;
-          v2 *= color_coef2;
-          const auto sos = v0 + v1 + v2;  // weighted sum of square diffs
+          auto v0 = Sub(Load(d, orig_row0 + x), Load(d, smooth_row0 + x));
+          auto v1 = Sub(Load(d, orig_row1 + x), Load(d, smooth_row1 + x));
+          auto v2 = Sub(Load(d, orig_row2 + x), Load(d, smooth_row2 + x));
+          v0 = Mul(Mul(v0, v0), color_coef0);
+          v1 = Mul(Mul(v1, v1), color_coef1);
+          v2 = Mul(Mul(v2, v2), color_coef2);
+          const auto sos =
+              Add(v0, Add(v1, v2));  // weighted sum of square diffs
           Store(sos, d, sos_row + x);
         }
       },

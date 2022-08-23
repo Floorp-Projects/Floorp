@@ -22,6 +22,7 @@
 #include "vm/Realm.h"
 #include "vm/SelfHosting.h"
 
+#include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 
 using namespace js;

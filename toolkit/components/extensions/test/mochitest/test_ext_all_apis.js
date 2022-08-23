@@ -133,6 +133,12 @@ function sendAllApis() {
     eventKeys = eventKeys.sort().join();
     return eventKeys === "addListener,hasListener,removeListener";
   }
+  // Some items are removed from the namespaces in the lazy getters after the first get.  This
+  // in one case, the events namespace, leaves a namespace that is empty.  Make sure we don't
+  // consider those as a part of our testing.
+  function isEmptyObject(val) {
+    return val !== null && typeof val == "object" && !Object.keys(val).length;
+  }
   function mayRecurse(key, val) {
     if (Object.keys(val).filter(k => !/^[A-Z\-0-9_]+$/.test(k)).length === 0) {
       // Don't recurse on constants and empty objects.
@@ -143,11 +149,10 @@ function sendAllApis() {
 
   let results = [];
   function diveDeeper(path, obj) {
-    for (let key in obj) {
-      let val = obj[key];
+    for (const [key, val] of Object.entries(obj)) {
       if (typeof val == "object" && val !== null && mayRecurse(key, val)) {
         diveDeeper(`${path}.${key}`, val);
-      } else if (val !== undefined) {
+      } else if (val !== undefined && !isEmptyObject(val)) {
         results.push(`${path}.${key}`);
       }
     }
@@ -155,6 +160,7 @@ function sendAllApis() {
   diveDeeper("browser", browser);
   diveDeeper("chrome", chrome);
   browser.test.sendMessage("allApis", results.sort());
+  browser.test.sendMessage("namespaces", browser === chrome);
 }
 
 add_task(async function setup() {
@@ -187,6 +193,9 @@ add_task(async function test_enumerate_content_script_apis() {
   let expectedApis = generateExpectations(expectedContentApis);
   isDeeply(actualApis, expectedApis, "content script APIs");
 
+  let sameness = await extension.awaitMessage("namespaces");
+  ok(sameness, "namespaces are same object");
+
   await extension.unload();
 });
 
@@ -200,6 +209,9 @@ add_task(async function test_enumerate_background_script_apis() {
   let actualApis = await extension.awaitMessage("allApis");
   let expectedApis = generateExpectations(expectedBackgroundApis);
   isDeeply(actualApis, expectedApis, "background script APIs");
+
+  let sameness = await extension.awaitMessage("namespaces");
+  ok(!sameness, "namespaces are different objects");
 
   await extension.unload();
 });
@@ -224,6 +236,9 @@ add_task(async function test_enumerate_background_script_apis_mv3() {
   let actualApis = await extension.awaitMessage("allApis");
   let expectedApis = generateExpectations(expectedBackgroundApisMV3);
   isDeeply(actualApis, expectedApis, "background script APIs in MV3");
+
+  let sameness = await extension.awaitMessage("namespaces");
+  ok(sameness, "namespaces are same object");
 
   await extension.unload();
   await SpecialPowers.popPrefEnv();

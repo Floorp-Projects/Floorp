@@ -66,7 +66,7 @@ pub fn encode(
     }
     e.custom_sections(After(Start));
     e.section_list(9, Elem, &elem);
-    if contains_bulk_memory(&funcs) {
+    if needs_data_count(&funcs) {
         e.section(12, &data.len());
     }
     e.section_list(10, Code, &funcs);
@@ -80,7 +80,7 @@ pub fn encode(
 
     return e.wasm;
 
-    fn contains_bulk_memory(funcs: &[&crate::core::Func<'_>]) -> bool {
+    fn needs_data_count(funcs: &[&crate::core::Func<'_>]) -> bool {
         funcs
             .iter()
             .filter_map(|f| match &f.kind {
@@ -88,10 +88,7 @@ pub fn encode(
                 _ => None,
             })
             .flat_map(|e| e.instrs.iter())
-            .any(|i| match i {
-                Instruction::MemoryInit(_) | Instruction::DataDrop(_) => true,
-                _ => false,
-            })
+            .any(|i| i.needs_data_count())
     }
 }
 

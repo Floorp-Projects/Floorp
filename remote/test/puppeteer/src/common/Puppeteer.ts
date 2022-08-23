@@ -13,26 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { puppeteerErrors, PuppeteerErrors } from './Errors.js';
-import { ConnectionTransport } from './ConnectionTransport.js';
-import { devicesMap, DevicesMap } from './DeviceDescriptors.js';
-import { Browser } from './Browser.js';
+import {Browser} from './Browser.js';
+import {BrowserConnectOptions, _connectToBrowser} from './BrowserConnector.js';
+import {ConnectionTransport} from './ConnectionTransport.js';
+import {devices} from './DeviceDescriptors.js';
+import {errors} from './Errors.js';
+import {networkConditions} from './NetworkConditions.js';
 import {
-  registerCustomQueryHandler,
-  unregisterCustomQueryHandler,
-  customQueryHandlerNames,
   clearCustomQueryHandlers,
   CustomQueryHandler,
+  customQueryHandlerNames,
+  registerCustomQueryHandler,
+  unregisterCustomQueryHandler,
 } from './QueryHandler.js';
-import { Product } from './Product.js';
-import { connectToBrowser, BrowserConnectOptions } from './BrowserConnector.js';
-import {
-  PredefinedNetworkConditions,
-  networkConditions,
-} from './NetworkConditions.js';
 
 /**
- * Settings that are common to the Puppeteer class, regardless of enviroment.
+ * Settings that are common to the Puppeteer class, regardless of environment.
+ *
  * @internal
  */
 export interface CommonPuppeteerSettings {
@@ -45,7 +42,6 @@ export interface ConnectOptions extends BrowserConnectOptions {
   browserWSEndpoint?: string;
   browserURL?: string;
   transport?: ConnectionTransport;
-  product?: Product;
 }
 
 /**
@@ -66,6 +62,8 @@ export class Puppeteer {
    */
   constructor(settings: CommonPuppeteerSettings) {
     this._isPuppeteerCore = settings.isPuppeteerCore;
+
+    this.connect = this.connect.bind(this);
   }
 
   /**
@@ -77,124 +75,93 @@ export class Puppeteer {
    * @returns Promise which resolves to browser instance.
    */
   connect(options: ConnectOptions): Promise<Browser> {
-    return connectToBrowser(options);
+    return _connectToBrowser(options);
   }
 
   /**
-   * @remarks
-   * A list of devices to be used with `page.emulate(options)`. Actual list of devices can be found in {@link https://github.com/puppeteer/puppeteer/blob/main/src/common/DeviceDescriptors.ts | src/common/DeviceDescriptors.ts}.
-   *
+   * @deprecated Import directly puppeteer.
    * @example
    *
-   * ```js
-   * const puppeteer = require('puppeteer');
-   * const iPhone = puppeteer.devices['iPhone 6'];
-   *
-   * (async () => {
-   *   const browser = await puppeteer.launch();
-   *   const page = await browser.newPage();
-   *   await page.emulate(iPhone);
-   *   await page.goto('https://www.google.com');
-   *   // other actions...
-   *   await browser.close();
-   * })();
+   * ```ts
+   * import {devices} from 'puppeteer';
    * ```
-   *
    */
-  get devices(): DevicesMap {
-    return devicesMap;
+  get devices(): typeof devices {
+    return devices;
   }
 
   /**
-   * @remarks
-   *
-   * Puppeteer methods might throw errors if they are unable to fulfill a request.
-   * For example, `page.waitForSelector(selector[, options])` might fail if
-   * the selector doesn't match any nodes during the given timeframe.
-   *
-   * For certain types of errors Puppeteer uses specific error classes.
-   * These classes are available via `puppeteer.errors`.
-   *
+   * @deprecated Import directly puppeteer.
    * @example
-   * An example of handling a timeout error:
-   * ```js
-   * try {
-   *   await page.waitForSelector('.foo');
-   * } catch (e) {
-   *   if (e instanceof puppeteer.errors.TimeoutError) {
-   *     // Do something if this is a timeout.
-   *   }
-   * }
+   *
+   * ```ts
+   * import {errors} from 'puppeteer';
    * ```
    */
-  get errors(): PuppeteerErrors {
-    return puppeteerErrors;
+  get errors(): typeof errors {
+    return errors;
   }
 
   /**
-   * @remarks
-   * Returns a list of network conditions to be used with `page.emulateNetworkConditions(networkConditions)`. Actual list of predefined conditions can be found in {@link https://github.com/puppeteer/puppeteer/blob/main/src/common/NetworkConditions.ts | src/common/NetworkConditions.ts}.
-   *
+   * @deprecated Import directly puppeteer.
    * @example
    *
-   * ```js
-   * const puppeteer = require('puppeteer');
-   * const slow3G = puppeteer.networkConditions['Slow 3G'];
-   *
-   * (async () => {
-   *   const browser = await puppeteer.launch();
-   *   const page = await browser.newPage();
-   *   await page.emulateNetworkConditions(slow3G);
-   *   await page.goto('https://www.google.com');
-   *   // other actions...
-   *   await browser.close();
-   * })();
+   * ```ts
+   * import {networkConditions} from 'puppeteer';
    * ```
-   *
    */
-  get networkConditions(): PredefinedNetworkConditions {
+  get networkConditions(): typeof networkConditions {
     return networkConditions;
   }
 
   /**
-   * Registers a {@link CustomQueryHandler | custom query handler}. After
-   * registration, the handler can be used everywhere where a selector is
-   * expected by prepending the selection string with `<name>/`. The name is
-   * only allowed to consist of lower- and upper case latin letters.
+   * @deprecated Import directly puppeteer.
    * @example
+   *
+   * ```ts
+   * import {registerCustomQueryHandler} from 'puppeteer';
    * ```
-   * puppeteer.registerCustomQueryHandler('text', { … });
-   * const aHandle = await page.$('text/…');
-   * ```
-   * @param name - The name that the custom query handler will be registered under.
-   * @param queryHandler - The {@link CustomQueryHandler | custom query handler} to
-   * register.
    */
   registerCustomQueryHandler(
     name: string,
     queryHandler: CustomQueryHandler
   ): void {
-    registerCustomQueryHandler(name, queryHandler);
+    return registerCustomQueryHandler(name, queryHandler);
   }
 
   /**
-   * @param name - The name of the query handler to unregistered.
+   * @deprecated Import directly puppeteer.
+   * @example
+   *
+   * ```ts
+   * import {unregisterCustomQueryHandler} from 'puppeteer';
+   * ```
    */
   unregisterCustomQueryHandler(name: string): void {
-    unregisterCustomQueryHandler(name);
+    return unregisterCustomQueryHandler(name);
   }
 
   /**
-   * @returns a list with the names of all registered custom query handlers.
+   * @deprecated Import directly puppeteer.
+   * @example
+   *
+   * ```ts
+   * import {customQueryHandlerNames} from 'puppeteer';
+   * ```
    */
   customQueryHandlerNames(): string[] {
     return customQueryHandlerNames();
   }
 
   /**
-   * Clears all registered handlers.
+   * @deprecated Import directly puppeteer.
+   * @example
+   *
+   * ```ts
+   * import {clearCustomQueryHandlers} from 'puppeteer';
+   * ```
    */
   clearCustomQueryHandlers(): void {
-    clearCustomQueryHandlers();
+    return clearCustomQueryHandlers();
   }
 }

@@ -11,6 +11,8 @@
 #include "js/GCVector.h"
 #include "vm/JSObject.h"
 
+#include "gc/GCContext-inl.h"
+#include "gc/Marking-inl.h"
 #include "vm/ObjectFlags-inl.h"
 
 using namespace js;

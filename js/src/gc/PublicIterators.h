@@ -11,16 +11,12 @@
 #ifndef gc_PublicIterators_h
 #define gc_PublicIterators_h
 
-#include "mozilla/Maybe.h"
-
 #include "jstypes.h"
 #include "gc/GCRuntime.h"
 #include "gc/IteratorUtils.h"
 #include "gc/Zone.h"
 #include "vm/Compartment.h"
 #include "vm/Runtime.h"
-
-struct JSRuntime;
 
 namespace JS {
 class JS_PUBLIC_API Realm;

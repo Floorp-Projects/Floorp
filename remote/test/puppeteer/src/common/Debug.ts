@@ -14,19 +14,34 @@
  * limitations under the License.
  */
 
-import { isNode } from '../environment.js';
+import {isNode} from '../environment.js';
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __PUPPETEER_DEBUG: string;
+}
+
+/**
+ * @internal
+ */
+let debugModule: typeof import('debug') | null = null;
+/**
+ * @internal
+ */
+export async function importDebug(): Promise<typeof import('debug')> {
+  if (!debugModule) {
+    debugModule = (await import('debug')).default;
+  }
+  return debugModule;
+}
 
 /**
  * A debug function that can be used in any environment.
  *
  * @remarks
- *
  * If used in Node, it falls back to the
  * {@link https://www.npmjs.com/package/debug | debug module}. In the browser it
  * uses `console.log`.
- *
- * @param prefix - this will be prefixed to each log.
- * @returns a function that can be called to log to that debug channel.
  *
  * In Node, use the `DEBUG` environment variable to control logging:
  *
@@ -45,22 +60,31 @@ import { isNode } from '../environment.js';
  * ```
  *
  * @example
+ *
  * ```
  * const log = debug('Page');
  *
  * log('new page created')
  * // logs "Page: new page created"
  * ```
+ *
+ * @param prefix - this will be prefixed to each log.
+ * @returns a function that can be called to log to that debug channel.
+ *
+ * @internal
  */
 export const debug = (prefix: string): ((...args: unknown[]) => void) => {
   if (isNode) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    return require('debug')(prefix);
+    return async (...logArgs: unknown[]) => {
+      (await importDebug())(prefix)(logArgs);
+    };
   }
 
   return (...logArgs: unknown[]): void => {
-    const debugLevel = globalThis.__PUPPETEER_DEBUG as string;
-    if (!debugLevel) return;
+    const debugLevel = (globalThis as any).__PUPPETEER_DEBUG;
+    if (!debugLevel) {
+      return;
+    }
 
     const everythingShouldBeLogged = debugLevel === '*';
 
@@ -75,7 +99,9 @@ export const debug = (prefix: string): ((...args: unknown[]) => void) => {
         ? prefix.startsWith(debugLevel)
         : prefix === debugLevel);
 
-    if (!prefixMatchesDebugLevel) return;
+    if (!prefixMatchesDebugLevel) {
+      return;
+    }
 
     // eslint-disable-next-line no-console
     console.log(`${prefix}:`, ...logArgs);

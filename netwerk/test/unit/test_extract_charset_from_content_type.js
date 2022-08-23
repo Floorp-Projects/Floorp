@@ -11,13 +11,6 @@ var charsetStart = {};
 var charsetEnd = {};
 var hadCharset;
 
-function reset() {
-  delete charset.value;
-  delete charsetStart.value;
-  delete charsetEnd.value;
-  hadCharset = undefined;
-}
-
 function check(aHadCharset, aCharset, aCharsetStart, aCharsetEnd) {
   Assert.equal(aHadCharset, hadCharset);
   Assert.equal(aCharset, charset.value);

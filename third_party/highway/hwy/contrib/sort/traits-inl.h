@@ -1,4 +1,5 @@
 // Copyright 2021 Google LLC
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,35 +22,63 @@
 #define HIGHWAY_HWY_CONTRIB_SORT_TRAITS_TOGGLE
 #endif
 
-#include "hwy/contrib/sort/disabled_targets.h"
+#include <string>
+
 #include "hwy/contrib/sort/shared-inl.h"  // SortConstants
 #include "hwy/contrib/sort/vqsort.h"      // SortDescending
 #include "hwy/highway.h"
+#include "hwy/print.h"
 
 HWY_BEFORE_NAMESPACE();
 namespace hwy {
 namespace HWY_NAMESPACE {
 namespace detail {
 
+#if VQSORT_ENABLED || HWY_IDE
+
 // Highway does not provide a lane type for 128-bit keys, so we use uint64_t
 // along with an abstraction layer for single-lane vs. lane-pair, which is
 // independent of the order.
+template <typename T>
 struct KeyLane {
+  constexpr bool Is128() const { return false; }
   constexpr size_t LanesPerKey() const { return 1; }
 
+  // What type bench_sort should allocate for generating inputs.
+  using LaneType = T;
+  // What type to pass to Sorter::operator().
+  using KeyType = T;
+
+  std::string KeyString() const {
+    char string100[100];
+    hwy::detail::TypeName(hwy::detail::MakeTypeInfo<KeyType>(), 1, string100);
+    return string100;
+  }
+
   // For HeapSort
-  template <typename T>
   HWY_INLINE void Swap(T* a, T* b) const {
     const T temp = *a;
     *a = *b;
     *b = temp;
   }
 
+  template <class V, class M>
+  HWY_INLINE V CompressKeys(V keys, M mask) const {
+    return CompressNot(keys, mask);
+  }
+
   // Broadcasts one key into a vector
   template <class D>
-  HWY_INLINE Vec<D> SetKey(D d, const TFromD<D>* key) const {
+  HWY_INLINE Vec<D> SetKey(D d, const T* key) const {
     return Set(d, *key);
   }
+
+  template <class D>
+  HWY_INLINE Mask<D> EqualKeys(D /*tag*/, Vec<D> a, Vec<D> b) const {
+    return Eq(a, b);
+  }
+
+  HWY_INLINE bool Equal1(const T* a, const T* b) { return *a == *b; }
 
   template <class D>
   HWY_INLINE Vec<D> ReverseKeys(D d, Vec<D> v) const {
@@ -148,10 +177,10 @@ struct KeyLane {
 // We avoid overloaded functions because we want all functions to be callable
 // from a SortTraits without per-function wrappers. Specializing would work, but
 // we are anyway going to specialize at a higher level.
-struct OrderAscending : public KeyLane {
+template <typename T>
+struct OrderAscending : public KeyLane<T> {
   using Order = SortAscending;
 
-  template <typename T>
   HWY_INLINE bool Compare1(const T* a, const T* b) {
     return *a < *b;
   }
@@ -174,31 +203,31 @@ struct OrderAscending : public KeyLane {
 
   template <class D>
   HWY_INLINE Vec<D> FirstOfLanes(D d, Vec<D> v,
-                                 TFromD<D>* HWY_RESTRICT /* buf */) const {
+                                 T* HWY_RESTRICT /* buf */) const {
     return MinOfLanes(d, v);
   }
 
   template <class D>
   HWY_INLINE Vec<D> LastOfLanes(D d, Vec<D> v,
-                                TFromD<D>* HWY_RESTRICT /* buf */) const {
+                                T* HWY_RESTRICT /* buf */) const {
     return MaxOfLanes(d, v);
   }
 
   template <class D>
   HWY_INLINE Vec<D> FirstValue(D d) const {
-    return Set(d, hwy::LowestValue<TFromD<D>>());
+    return Set(d, hwy::LowestValue<T>());
   }
 
   template <class D>
   HWY_INLINE Vec<D> LastValue(D d) const {
-    return Set(d, hwy::HighestValue<TFromD<D>>());
+    return Set(d, hwy::HighestValue<T>());
   }
 };
 
-struct OrderDescending : public KeyLane {
+template <typename T>
+struct OrderDescending : public KeyLane<T> {
   using Order = SortDescending;
 
-  template <typename T>
   HWY_INLINE bool Compare1(const T* a, const T* b) {
     return *b < *a;
   }
@@ -220,32 +249,30 @@ struct OrderDescending : public KeyLane {
 
   template <class D>
   HWY_INLINE Vec<D> FirstOfLanes(D d, Vec<D> v,
-                                 TFromD<D>* HWY_RESTRICT /* buf */) const {
+                                 T* HWY_RESTRICT /* buf */) const {
     return MaxOfLanes(d, v);
   }
 
   template <class D>
   HWY_INLINE Vec<D> LastOfLanes(D d, Vec<D> v,
-                                TFromD<D>* HWY_RESTRICT /* buf */) const {
+                                T* HWY_RESTRICT /* buf */) const {
     return MinOfLanes(d, v);
   }
 
   template <class D>
   HWY_INLINE Vec<D> FirstValue(D d) const {
-    return Set(d, hwy::HighestValue<TFromD<D>>());
+    return Set(d, hwy::HighestValue<T>());
   }
 
   template <class D>
   HWY_INLINE Vec<D> LastValue(D d) const {
-    return Set(d, hwy::LowestValue<TFromD<D>>());
+    return Set(d, hwy::LowestValue<T>());
   }
 };
 
 // Shared code that depends on Order.
 template <class Base>
-struct LaneTraits : public Base {
-  constexpr bool Is128() const { return false; }
-
+struct TraitsLane : public Base {
   // For each lane i: replaces a[i] with the first and b[i] with the second
   // according to Base.
   // Corresponds to a conditional swap, which is one "node" of a sorting
@@ -314,6 +341,66 @@ struct LaneTraits : public Base {
     return base->OddEvenQuads(d, swapped, v);
   }
 };
+
+#else
+
+// Base class shared between OrderAscending, OrderDescending.
+template <typename T>
+struct KeyLane {
+  constexpr bool Is128() const { return false; }
+  constexpr size_t LanesPerKey() const { return 1; }
+
+  using LaneType = T;
+  using KeyType = T;
+
+  std::string KeyString() const {
+    char string100[100];
+    hwy::detail::TypeName(hwy::detail::MakeTypeInfo<KeyType>(), 1, string100);
+    return string100;
+  }
+};
+
+template <typename T>
+struct OrderAscending : public KeyLane<T> {
+  using Order = SortAscending;
+
+  HWY_INLINE bool Compare1(const T* a, const T* b) { return *a < *b; }
+
+  template <class D>
+  HWY_INLINE Mask<D> Compare(D /* tag */, Vec<D> a, Vec<D> b) {
+    return Lt(a, b);
+  }
+};
+
+template <typename T>
+struct OrderDescending : public KeyLane<T> {
+  using Order = SortDescending;
+
+  HWY_INLINE bool Compare1(const T* a, const T* b) { return *b < *a; }
+
+  template <class D>
+  HWY_INLINE Mask<D> Compare(D /* tag */, Vec<D> a, Vec<D> b) {
+    return Lt(b, a);
+  }
+};
+
+template <class Order>
+struct TraitsLane : public Order {
+  // For HeapSort
+  template <typename T>  // MSVC doesn't find typename Order::LaneType.
+  HWY_INLINE void Swap(T* a, T* b) const {
+    const T temp = *a;
+    *a = *b;
+    *b = temp;
+  }
+
+  template <class D>
+  HWY_INLINE Vec<D> SetKey(D d, const TFromD<D>* key) const {
+    return Set(d, *key);
+  }
+};
+
+#endif  // VQSORT_ENABLED
 
 }  // namespace detail
 // NOLINTNEXTLINE(google-readability-namespace-comments)

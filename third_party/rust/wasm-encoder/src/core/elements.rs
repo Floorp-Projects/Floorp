@@ -1,4 +1,4 @@
-use crate::{encode_section, Encode, Instruction, Section, SectionId, ValType};
+use crate::{encode_section, ConstExpr, Encode, Section, SectionId, ValType};
 
 /// An encoder for the element section.
 ///
@@ -8,8 +8,8 @@ use crate::{encode_section, Encode, Instruction, Section, SectionId, ValType};
 ///
 /// ```
 /// use wasm_encoder::{
-///     Elements, ElementSection, Instruction, Module, TableSection, TableType,
-///     ValType,
+///     Elements, ElementSection, Module, TableSection, TableType,
+///     ValType, ConstExpr
 /// };
 ///
 /// let mut tables = TableSection::new();
@@ -21,7 +21,7 @@ use crate::{encode_section, Encode, Instruction, Section, SectionId, ValType};
 ///
 /// let mut elements = ElementSection::new();
 /// let table_index = 0;
-/// let offset = Instruction::I32Const(42);
+/// let offset = ConstExpr::i32_const(42);
 /// let element_type = ValType::FuncRef;
 /// let functions = Elements::Functions(&[
 ///     // Function indices...
@@ -47,16 +47,7 @@ pub enum Elements<'a> {
     /// A sequences of references to functions by their indices.
     Functions(&'a [u32]),
     /// A sequence of reference expressions.
-    Expressions(&'a [Element]),
-}
-
-/// An element in a segment in the element section.
-#[derive(Clone, Copy, Debug)]
-pub enum Element {
-    /// A null reference.
-    Null,
-    /// A `ref.func n`.
-    Func(u32),
+    Expressions(&'a [ConstExpr]),
 }
 
 /// An element segment's mode.
@@ -79,7 +70,7 @@ pub enum ElementMode<'a> {
         /// bulk memory proposal and can refer to tables with any valid reference type.
         table: Option<u32>,
         /// The offset within the table to place this segment.
-        offset: &'a Instruction<'a>,
+        offset: &'a ConstExpr,
     },
 }
 
@@ -123,7 +114,6 @@ impl ElementSection {
             } => {
                 (/* 0x00 | */expr_bit).encode(&mut self.bytes);
                 offset.encode(&mut self.bytes);
-                Instruction::End.encode(&mut self.bytes);
             }
             ElementMode::Passive => {
                 (0x01 | expr_bit).encode(&mut self.bytes);
@@ -140,7 +130,6 @@ impl ElementSection {
                 (0x02 | expr_bit).encode(&mut self.bytes);
                 i.encode(&mut self.bytes);
                 offset.encode(&mut self.bytes);
-                Instruction::End.encode(&mut self.bytes);
                 if expr_bit == 0 {
                     self.bytes.push(0x00); // elemkind == funcref
                 } else {
@@ -164,13 +153,7 @@ impl ElementSection {
             Elements::Expressions(e) => {
                 e.len().encode(&mut self.bytes);
                 for expr in e {
-                    match expr {
-                        Element::Func(i) => Instruction::RefFunc(*i).encode(&mut self.bytes),
-                        Element::Null => {
-                            Instruction::RefNull(segment.element_type).encode(&mut self.bytes)
-                        }
-                    }
-                    Instruction::End.encode(&mut self.bytes);
+                    expr.encode(&mut self.bytes);
                 }
             }
         }
@@ -187,7 +170,7 @@ impl ElementSection {
     pub fn active(
         &mut self,
         table_index: Option<u32>,
-        offset: &Instruction<'_>,
+        offset: &ConstExpr,
         element_type: ValType,
         elements: Elements<'_>,
     ) -> &mut Self {

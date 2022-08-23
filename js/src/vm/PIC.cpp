@@ -7,15 +7,15 @@
 #include "vm/PIC.h"
 
 #include "gc/GCContext.h"
-#include "gc/Marking.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/Realm.h"
 #include "vm/SelfHosting.h"
 
+#include "gc/GCContext-inl.h"
+#include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
-#include "vm/NativeObject-inl.h"
 
 using namespace js;
 

@@ -381,7 +381,7 @@ macro_rules! float {
         name: $parse:ident,
     })*) => ($(
         /// A parsed floating-point type
-        #[derive(Debug)]
+        #[derive(Debug, Copy, Clone)]
         pub struct $name {
             /// The raw bits that this floating point number represents.
             pub bits: $int,

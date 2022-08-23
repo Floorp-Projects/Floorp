@@ -6,7 +6,7 @@
 
 #include "gc/Barrier.h"
 
-#include "gc/Policy.h"
+#include "gc/Marking.h"
 #include "jit/JitContext.h"
 #include "js/HashTable.h"
 #include "js/shadow/Zone.h"  // JS::shadow::Zone
@@ -14,12 +14,8 @@
 #include "vm/BigIntType.h"  // JS::BigInt
 #include "vm/EnvironmentObject.h"
 #include "vm/GeneratorObject.h"
-#include "vm/GetterSetter.h"
 #include "vm/JSObject.h"
 #include "vm/PropMap.h"
-#include "vm/Realm.h"
-#include "vm/SharedArrayObject.h"
-#include "vm/SymbolType.h"
 #include "wasm/WasmJS.h"
 
 #include "gc/Zone-inl.h"

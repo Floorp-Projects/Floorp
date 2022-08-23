@@ -29,6 +29,7 @@ namespace jxl {
 namespace HWY_NAMESPACE {
 
 // These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Or;
 using hwy::HWY_NAMESPACE::ShiftRight;
 using hwy::HWY_NAMESPACE::Vec;
 
@@ -46,7 +47,7 @@ void BitsToFloat(const uint32_t* JXL_RESTRICT random_bits,
 
   const auto bits = Load(du, random_bits);
   // 1.0 + 23 random mantissa bits = [1, 2)
-  const auto rand12 = BitCast(df, ShiftRight<9>(bits) | Set(du, 0x3F800000));
+  const auto rand12 = BitCast(df, Or(ShiftRight<9>(bits), Set(du, 0x3F800000)));
   Store(rand12, df, floats);
 }
 

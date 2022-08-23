@@ -64,9 +64,9 @@ void TLSServerSocket::CreateClientTransport(PRFileDesc* aClientFD,
   RefPtr<TLSServerConnectionInfo> info = new TLSServerConnectionInfo();
   info->mServerSocket = this;
   info->mTransport = trans;
-  nsCOMPtr<nsISupports> infoSupports =
-      NS_ISUPPORTS_CAST(nsITLSServerConnectionInfo*, info);
-  rv = trans->InitWithConnectedSocket(aClientFD, &aClientAddr, infoSupports);
+  nsCOMPtr<nsIInterfaceRequestor> infoInterfaceRequestor(info);
+  rv = trans->InitWithConnectedSocket(aClientFD, &aClientAddr,
+                                      infoInterfaceRequestor);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mCondition = rv;
     return;
@@ -262,7 +262,7 @@ TLSServerSecurityObserverProxy::OnHandshakeDoneRunnable::Run() {
 }  // namespace
 
 NS_IMPL_ISUPPORTS(TLSServerConnectionInfo, nsITLSServerConnectionInfo,
-                  nsITLSClientStatus)
+                  nsITLSClientStatus, nsIInterfaceRequestor)
 
 TLSServerConnectionInfo::~TLSServerConnectionInfo() {
   RefPtr<nsITLSServerSecurityObserver> observer;
@@ -357,6 +357,20 @@ TLSServerConnectionInfo::GetMacLength(uint32_t* aMacLength) {
   }
   *aMacLength = mMacLength;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+TLSServerConnectionInfo::GetInterface(const nsIID& aIID, void** aResult) {
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nullptr;
+
+  if (aIID.Equals(NS_GET_IID(nsITLSServerConnectionInfo))) {
+    *aResult = static_cast<nsITLSServerConnectionInfo*>(this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  return NS_NOINTERFACE;
 }
 
 // static

@@ -27,6 +27,7 @@
 #include "jit/Assembler.h"
 #include "jit/JitOptions.h"
 #include "js/Printf.h"
+#include "threading/Thread.h"
 #include "util/Memory.h"
 #include "util/Text.h"
 #include "vm/HelperThreads.h"

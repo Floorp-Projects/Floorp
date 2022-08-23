@@ -1,7 +1,6 @@
 browser/components/newtab/vendor/
 browser/components/pocket/content/panels/js/vendor/
 browser/components/storybook/node_modules/
-browser/components/translation/cld2/
 browser/extensions/formautofill/content/third-party/
 browser/extensions/formautofill/test/fixtures/third_party/
 browser/extensions/screenshots/build/raven.js
@@ -171,6 +170,7 @@ toolkit/components/jsoncpp/
 toolkit/components/normandy/vendor/
 toolkit/components/passwordmgr/PasswordRulesParser.jsm
 toolkit/components/protobuf/
+toolkit/components/translation/cld2/
 toolkit/components/url-classifier/chromium/
 toolkit/components/utils/mozjexl.js
 toolkit/components/viaduct/fetch_msg_types.pb.cc

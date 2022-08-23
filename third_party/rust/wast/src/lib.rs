@@ -359,10 +359,8 @@ macro_rules! id {
 
 #[cfg(feature = "wasm-module")]
 id! {
-    mod assert_expr;
     mod wast;
     mod wat;
-    pub use self::assert_expr::*;
     pub use self::wast::*;
     pub use self::wat::*;
 
@@ -505,6 +503,8 @@ pub mod kw {
     custom_keyword!(post_return = "post-return");
     custom_keyword!(with);
     custom_keyword!(core);
+    custom_keyword!(true_ = "true");
+    custom_keyword!(false_ = "false");
 }
 
 /// Common annotations used to parse WebAssembly text files.

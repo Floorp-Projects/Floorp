@@ -33,6 +33,8 @@ function diffFiles(files_after, files_before) {
   return files_after.filter(file => !files_before_set.has(file.leafName));
 }
 
+const BASENAME_RE = new RegExp("([^/\\\\]+)$");
+
 function parseRecords(files) {
   let records = new Map();
 
@@ -73,12 +75,24 @@ function parseRecords(files) {
         }
 
         case "SF": {
-          if (AppConstants.platform == "win") {
-            recordContent = recordContent.replace(/\//g, "\\");
+          if (
+            recordContent.startsWith("resource:") ||
+            recordContent.startsWith("chrome:")
+          ) {
+            recordContent = recordContent.split("/").at(-1);
+          } else {
+            if (AppConstants.platform == "win") {
+              recordContent = recordContent.replace(/\//g, "\\");
+            }
+            const match = BASENAME_RE.exec(recordContent);
+            if (match.length) {
+              recordContent = match[0];
+            }
           }
 
           currentSF = [];
-          records.set(PathUtils.filename(recordContent), currentSF);
+
+          records.set(recordContent, currentSF);
           break;
         }
       }

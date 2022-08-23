@@ -141,7 +141,8 @@ struct JITFrameInfoForBufferRange final {
 
 // Contains JITFrameInfoForBufferRange objects for multiple profiler buffer
 // ranges.
-struct JITFrameInfo final {
+class JITFrameInfo final {
+ public:
   JITFrameInfo() : mUniqueStrings(mozilla::MakeUnique<UniqueJSONStrings>()) {}
 
   MOZ_IMPLICIT JITFrameInfo(const JITFrameInfo& aOther,
@@ -171,6 +172,14 @@ struct JITFrameInfo final {
     return mRanges.back().mRangeEnd <= aCurrentBufferRangeStart;
   }
 
+  mozilla::Vector<JITFrameInfoForBufferRange>&& MoveRanges() && {
+    return std::move(mRanges);
+  }
+  mozilla::UniquePtr<UniqueJSONStrings>&& MoveUniqueStrings() && {
+    return std::move(mUniqueStrings);
+  }
+
+ private:
   // The array of ranges of JIT frame information, sorted by buffer position.
   // Ranges are non-overlapping.
   // The JSON of the cached frames can contain string indexes, which refer
@@ -338,16 +347,23 @@ class UniqueStacks {
   void SpliceFrameTableElements(SpliceableJSONWriter& aWriter);
   void SpliceStackTableElements(SpliceableJSONWriter& aWriter);
 
+  [[nodiscard]] UniqueJSONStrings& UniqueStrings() {
+    MOZ_RELEASE_ASSERT(mUniqueStrings.get());
+    return *mUniqueStrings;
+  }
+
+  // Find the function name at the given PC (if a ProfilerCodeAddressService was
+  // provided), otherwise just stringify that PC.
+  [[nodiscard]] nsAutoCString FunctionNameOrAddress(void* aPC);
+
  private:
   void StreamNonJITFrame(const FrameKey& aFrame);
   void StreamStack(const StackKey& aStack);
 
- public:
   mozilla::UniquePtr<UniqueJSONStrings> mUniqueStrings;
 
   ProfilerCodeAddressService* mCodeAddressService = nullptr;
 
- private:
   SpliceableChunkedJSONWriter mFrameTableWriter;
   mozilla::HashMap<FrameKey, uint32_t, FrameKeyHasher> mFrameToIndexMap;
 

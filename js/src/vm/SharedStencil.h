@@ -22,12 +22,11 @@
 #include "frontend/SourceNotes.h"  // js::SrcNote
 #include "frontend/TypedIndex.h"   // js::frontend::TypedIndex
 
-#include "js/AllocPolicy.h"      // js::SystemAllocPolicy
-#include "js/TypeDecls.h"        // JSContext,jsbytecode
-#include "js/UniquePtr.h"        // js::UniquePtr
-#include "util/EnumFlags.h"      // js::EnumFlags
-#include "util/TrailingArray.h"  // js::TrailingArray
-#include "vm/ErrorContext.h"
+#include "js/AllocPolicy.h"            // js::SystemAllocPolicy
+#include "js/TypeDecls.h"              // JSContext,jsbytecode
+#include "js/UniquePtr.h"              // js::UniquePtr
+#include "util/EnumFlags.h"            // js::EnumFlags
+#include "util/TrailingArray.h"        // js::TrailingArray
 #include "vm/GeneratorAndAsyncKind.h"  // GeneratorKind, FunctionAsyncKind
 #include "vm/StencilEnums.h"  // js::{TryNoteKind,ImmutableScriptFlagsEnum,MutableScriptFlagsEnum}
 
@@ -36,6 +35,8 @@
 //
 
 namespace js {
+
+class ErrorContext;
 
 namespace frontend {
 class StencilXDR;

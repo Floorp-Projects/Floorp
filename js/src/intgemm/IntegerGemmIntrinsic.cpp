@@ -7,12 +7,16 @@
  */
 
 #include "intgemm/IntegerGemmIntrinsic.h"
+
 #include "mozilla/CheckedInt.h"
+#include "mozilla/IntegerPrintfMacros.h"
+
 #include <intgemm.h>
 
 #include "js/ErrorReport.h"
 #include "js/HeapAPI.h"
 #include "vm/ArrayBufferObject.h"
+#include "wasm/WasmBuiltins.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmLog.h"
 

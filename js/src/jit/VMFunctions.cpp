@@ -12,6 +12,7 @@
 #include "builtin/String.h"
 #include "ds/OrderedHashTable.h"
 #include "gc/Cell.h"
+#include "gc/GC.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/AtomicOperations.h"
 #include "jit/BaselineIC.h"
@@ -28,6 +29,7 @@
 #include "js/Printf.h"
 #include "js/TraceKind.h"
 #include "vm/ArrayObject.h"
+#include "vm/Compartment.h"
 #include "vm/Interpreter.h"
 #include "vm/JSAtom.h"
 #include "vm/PlainObject.h"  // js::PlainObject

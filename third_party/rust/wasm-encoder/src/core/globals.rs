@@ -1,4 +1,4 @@
-use crate::{encode_section, Encode, Instruction, Section, SectionId, ValType};
+use crate::{encode_section, ConstExpr, Encode, Section, SectionId, ValType};
 
 /// An encoder for the global section.
 ///
@@ -7,7 +7,7 @@ use crate::{encode_section, Encode, Instruction, Section, SectionId, ValType};
 /// # Example
 ///
 /// ```
-/// use wasm_encoder::{Module, GlobalSection, GlobalType, Instruction, ValType};
+/// use wasm_encoder::{ConstExpr, Module, GlobalSection, GlobalType, Instruction, ValType};
 ///
 /// let mut globals = GlobalSection::new();
 /// globals.global(
@@ -15,7 +15,7 @@ use crate::{encode_section, Encode, Instruction, Section, SectionId, ValType};
 ///         val_type: ValType::I32,
 ///         mutable: false,
 ///     },
-///     &Instruction::I32Const(42),
+///     &ConstExpr::i32_const(42),
 /// );
 ///
 /// let mut module = Module::new();
@@ -46,10 +46,9 @@ impl GlobalSection {
     }
 
     /// Define a global.
-    pub fn global(&mut self, global_type: GlobalType, init_expr: &Instruction<'_>) -> &mut Self {
+    pub fn global(&mut self, global_type: GlobalType, init_expr: &ConstExpr) -> &mut Self {
         global_type.encode(&mut self.bytes);
         init_expr.encode(&mut self.bytes);
-        Instruction::End.encode(&mut self.bytes);
         self.num_added += 1;
         self
     }

@@ -15,9 +15,6 @@ const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const { MockRegistrar } = ChromeUtils.import(
   "resource://testing-common/MockRegistrar.jsm"
 );
-const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
-  Ci.nsIDNSService
-);
 
 registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.proxy.type");
@@ -31,7 +28,6 @@ function FindProxyForURL(url, host) {
   return "DIRECT";
 }
 
-const CID = Components.ID("{5645d2c1-d6d8-4091-b117-fe7ee4027db7}");
 XPCOMUtils.defineLazyGetter(this, "systemSettings", function() {
   return {
     QueryInterface: ChromeUtils.generateQI(["nsISystemProxySettings"]),

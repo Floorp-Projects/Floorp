@@ -33,6 +33,7 @@
 #include "js/Wrapper.h"           // js::UncheckedUnwrapWithoutExpose
 #include "vm/BigIntType.h"        // JS::BigInt::dump
 #include "vm/FrameIter.h"         // js::AllFramesIter, js::FrameIter
+#include "vm/Interpreter.h"       // GetFunctionThis
 #include "vm/JSContext.h"         // JSContext
 #include "vm/JSFunction.h"        // JSFunction
 #include "vm/JSObject.h"          // JSObject

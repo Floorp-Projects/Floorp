@@ -18,6 +18,9 @@ HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
 
+// These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::IfThenZeroElse;
+
 template <typename Op>
 struct PerChannelOp {
   explicit PerChannelOp(Op op) : op(op) {}
@@ -86,7 +89,7 @@ struct OpGamma {
   const float inverse_gamma;
   template <typename D, typename T>
   T Transform(D d, const T& linear) const {
-    return IfThenZeroElse(linear <= Set(d, 1e-5f),
+    return IfThenZeroElse(Le(linear, Set(d, 1e-5f)),
                           FastPowf(d, linear, Set(d, inverse_gamma)));
   }
 };

@@ -7,10 +7,8 @@
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 var { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-let prefs;
 let h2Port;
 let h3Port;
-let listen;
 let trrServer;
 
 const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
@@ -22,8 +20,6 @@ const { TestUtils } = ChromeUtils.import(
 const certOverrideService = Cc[
   "@mozilla.org/security/certoverride;1"
 ].getService(Ci.nsICertOverrideService);
-
-const defaultOriginAttributes = {};
 
 add_setup(async function setup() {
   let env = Cc["@mozilla.org/process/environment;1"].getService(

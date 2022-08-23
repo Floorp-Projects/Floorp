@@ -13,7 +13,8 @@
 
 #include "js/TypeDecls.h"
 #include "vm/Printer.h"
-#include "vm/StringType.h"
+
+class JSLinearString;
 
 namespace js {
 

@@ -4,6 +4,9 @@
 const { TabsSetupFlowManager } = ChromeUtils.importESModule(
   "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs"
 );
+const { SyncedTabs } = ChromeUtils.import(
+  "resource://services-sync/SyncedTabs.jsm"
+);
 
 const MOBILE_PROMO_DISMISSED_PREF =
   "browser.tabs.firefox-view.mobilePromo.dismissed";
@@ -858,6 +861,51 @@ add_task(async function test_sync_error() {
       errorStateHeader.getAttribute("data-l10n-id").includes("sync-error"),
       "Correct message should show when there's a sync service error"
     );
+
+    Services.obs.notifyObservers(null, "weave:service:sync:finished");
+  });
+  await tearDown(sandbox);
+});
+
+add_task(async function test_sync_error_try_again() {
+  const sandbox = await setupWithDesktopDevices();
+  sandbox.spy(SyncedTabs, "syncTabs");
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+
+    Services.obs.notifyObservers(null, "weave:service:sync:error");
+
+    await waitForElementVisible(browser, "#tabpickup-steps", true);
+    await waitForVisibleStep(browser, {
+      expectedVisible: "#tabpickup-steps-view0",
+    });
+
+    const errorStateHeader = document.querySelector(
+      "#tabpickup-steps-view0-header"
+    );
+
+    await BrowserTestUtils.waitForMutationCondition(
+      errorStateHeader,
+      { childList: true },
+      () => errorStateHeader.textContent.includes("trouble syncing")
+    );
+
+    ok(
+      errorStateHeader.getAttribute("data-l10n-id").includes("sync-error"),
+      "Correct message should show when there's a sync service error"
+    );
+
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      "#error-state-button",
+      {},
+      browser
+    );
+
+    await BrowserTestUtils.waitForCondition(() => {
+      return SyncedTabs.syncTabs.calledOnce;
+    });
+
+    ok(SyncedTabs.syncTabs.calledOnce, "SyncedTabs.syncTabs() was called once");
 
     Services.obs.notifyObservers(null, "weave:service:sync:finished");
   });

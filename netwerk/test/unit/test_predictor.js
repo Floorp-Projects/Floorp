@@ -358,6 +358,8 @@ function continue_test_redirect() {
   });
 }
 
+// Test is currently disabled.
+// eslint-disable-next-line no-unused-vars
 function test_redirect() {
   open_and_continue([redirect_inituri, redirect_targeturi], function() {
     if (running_single_process) {
@@ -368,6 +370,8 @@ function test_redirect() {
   });
 }
 
+// Test is currently disabled.
+// eslint-disable-next-line no-unused-vars
 function test_startup() {
   if (!running_single_process && !is_child_process()) {
     // This one we can just proxy to the child and be done with, no extra setup

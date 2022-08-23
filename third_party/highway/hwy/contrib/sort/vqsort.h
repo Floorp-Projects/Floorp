@@ -1,4 +1,5 @@
 // Copyright 2022 Google LLC
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +14,12 @@
 // limitations under the License.
 
 // Interface to vectorized quicksort with dynamic dispatch.
+// Blog post: https://tinyurl.com/vqsort-blog
+// Paper with measurements: https://arxiv.org/abs/2205.05982
+//
+// To ensure the overhead of using wide vectors (e.g. AVX2 or AVX-512) is
+// worthwhile, we recommend using this code for sorting arrays whose size is at
+// least 512 KiB.
 
 #ifndef HIGHWAY_HWY_CONTRIB_SORT_VQSORT_H_
 #define HIGHWAY_HWY_CONTRIB_SORT_VQSORT_H_
@@ -20,15 +27,6 @@
 #include "hwy/base.h"
 
 namespace hwy {
-
-// Aligned 128-bit type. Cannot use __int128 because clang doesn't yet align it:
-// https://reviews.llvm.org/D86310
-#pragma pack(push, 1)
-struct alignas(16) uint128_t {
-  uint64_t lo;  // little-endian layout
-  uint64_t hi;
-};
-#pragma pack(pop)
 
 // Tag arguments that determine the sort order.
 struct SortAscending {
@@ -83,6 +81,9 @@ class HWY_CONTRIB_DLLEXPORT Sorter {
 
   void operator()(uint128_t* HWY_RESTRICT keys, size_t n, SortAscending) const;
   void operator()(uint128_t* HWY_RESTRICT keys, size_t n, SortDescending) const;
+
+  void operator()(K64V64* HWY_RESTRICT keys, size_t n, SortAscending) const;
+  void operator()(K64V64* HWY_RESTRICT keys, size_t n, SortDescending) const;
 
   // For internal use only
   static void Fill24Bytes(const void* seed_heap, size_t seed_num, void* bytes);

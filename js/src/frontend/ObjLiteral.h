@@ -9,17 +9,14 @@
 #define frontend_ObjLiteral_h
 
 #include "mozilla/BloomFilter.h"  // mozilla::BitBloomFilter
-#include "mozilla/EnumSet.h"
 #include "mozilla/Span.h"
 
 #include "frontend/ParserAtom.h"  // ParserAtomsTable, TaggedParserAtomIndex, ParserAtom
 #include "js/AllocPolicy.h"
-#include "js/GCPolicyAPI.h"
 #include "js/Value.h"
 #include "js/Vector.h"
 #include "util/EnumFlags.h"
 #include "vm/BytecodeUtil.h"
-#include "vm/ErrorContext.h"
 #include "vm/Opcodes.h"
 
 /*
@@ -109,8 +106,9 @@
 
 namespace js {
 
-class LifoAlloc;
+class ErrorContext;
 class JSONPrinter;
+class LifoAlloc;
 
 namespace frontend {
 struct CompilationAtomCache;
