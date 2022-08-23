@@ -798,7 +798,11 @@ function findChromeUrlsFromArray(array, prefix) {
 }
 
 add_task(async function checkAllTheFiles() {
-  const libxul = await IOUtils.read(PathUtils.xulLibraryPath);
+  let libxulPath = OS.Constants.Path.libxul;
+  if (AppConstants.platform != "macosx") {
+    libxulPath = PathUtils.join(OS.Constants.Path.libDir, libxulPath);
+  }
+  let libxul = await IOUtils.read(libxulPath);
   findChromeUrlsFromArray(libxul, "chrome://");
   findChromeUrlsFromArray(libxul, "resource://");
   // Handle NS_LITERAL_STRING.
