@@ -11,6 +11,7 @@
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream
 #include "js/Class.h"          // JSClass, JSCLASS_HAS_RESERVED_SLOTS
 #include "js/RootingAPI.h"     // JS::Handle, JS::Rooted
+#include "vm/Compartment.h"    // JS::Compartment
 #include "vm/JSContext.h"      // JSContext
 #include "vm/PromiseObject.h"  // js::PromiseObject
 

@@ -27,15 +27,15 @@
 #include "js/ErrorReport.h"
 #include "js/PropertyDescriptor.h"
 #include "js/RootingAPI.h"
-#include "js/ScalarType.h"  // js::Scalar::Type
 #include "js/TypeDecls.h"
 #include "js/Value.h"
+#include "vm/ArrayObject.h"
+#include "vm/JSAtomState.h"
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 #include "vm/NativeObject.h"
 #include "vm/Realm.h"
-#include "vm/Runtime.h"
 #include "vm/Shape.h"
 #include "vm/StringType.h"
 
@@ -105,6 +105,8 @@ class GlobalObjectData {
 
  public:
   explicit GlobalObjectData(Zone* zone);
+
+  ~GlobalObjectData();
 
   // The global environment record's [[VarNames]] list that contains all
   // names declared using FunctionDeclaration, GeneratorDeclaration, and

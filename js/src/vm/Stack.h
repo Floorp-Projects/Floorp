@@ -7,11 +7,8 @@
 #ifndef vm_Stack_h
 #define vm_Stack_h
 
-#include "mozilla/Atomics.h"
 #include "mozilla/HashFunctions.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Span.h"  // for Span
 
 #include <algorithm>
 #include <type_traits>
@@ -20,12 +17,10 @@
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
-#include "js/UniquePtr.h"
 #include "js/ValueArray.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
-#include "vm/SavedFrame.h"
 #include "wasm/WasmDebugFrame.h"  // js::wasm::DebugFrame
 
 namespace js {
@@ -41,8 +36,6 @@ class GeckoProfilerRuntime;
 class InterpreterFrame;
 class EnvironmentIter;
 class EnvironmentCoordinate;
-
-class SavedFrame;
 
 namespace jit {
 class CommonFrameLayout;

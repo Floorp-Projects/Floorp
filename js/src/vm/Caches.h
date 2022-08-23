@@ -9,23 +9,15 @@
 
 #include "mozilla/Array.h"
 
-#include <iterator>
-#include <new>
-
-#include "frontend/SourceNotes.h"  // SrcNote
 #include "gc/Tracer.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
-#include "js/UniquePtr.h"
-#include "util/Memory.h"
-#include "vm/ArrayObject.h"
-#include "vm/JSAtom.h"
-#include "vm/JSObject.h"
 #include "vm/JSScript.h"
-#include "vm/NativeObject.h"
 #include "vm/StencilCache.h"  // js::StencilCache
 
 namespace js {
+
+class SrcNote;
 
 /*
  * GetSrcNote cache to avoid O(n^2) growth in finding a source note for a

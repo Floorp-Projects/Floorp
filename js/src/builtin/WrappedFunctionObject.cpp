@@ -19,6 +19,7 @@
 #include "vm/ObjectOperations.h"
 
 #include "vm/JSObject-inl.h"
+#include "vm/Realm-inl.h"
 
 using namespace js;
 using namespace JS;

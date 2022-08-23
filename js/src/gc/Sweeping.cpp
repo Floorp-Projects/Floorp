@@ -38,6 +38,7 @@
 #include "proxy/DeadObjectProxy.h"
 #include "vm/HelperThreads.h"
 #include "vm/JSContext.h"
+#include "vm/Time.h"
 #include "vm/WrapperObject.h"
 
 #include "gc/PrivateIterators-inl.h"

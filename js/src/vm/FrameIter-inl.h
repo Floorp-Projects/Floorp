@@ -12,7 +12,6 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT, MOZ_CRASH
 
 #include "jit/JSJitFrameIter.h"  // js::jit::{InlineFrameIterator,MaybeReadFallback,ReadFrame_Actuals}
-#include "vm/Stack.h"  // js::InterpreterFrame
 
 #include "vm/Stack-inl.h"  // js::InterpreterFrame::unaliasedForEachActual
 

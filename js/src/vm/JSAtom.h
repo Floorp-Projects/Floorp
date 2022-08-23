@@ -15,7 +15,6 @@
 #include "gc/MaybeRooted.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
-#include "vm/CommonPropertyNames.h"
 
 namespace js {
 

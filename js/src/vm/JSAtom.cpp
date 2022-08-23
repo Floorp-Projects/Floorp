@@ -10,7 +10,6 @@
 
 #include "vm/JSAtom-inl.h"
 
-#include "mozilla/EndianUtils.h"
 #include "mozilla/HashFunctions.h"  // mozilla::HashStringKnownLength
 #include "mozilla/RangedPtr.h"
 
@@ -41,7 +40,6 @@
 
 #include "gc/AtomMarking-inl.h"
 #include "vm/JSContext-inl.h"
-#include "vm/JSObject-inl.h"
 #include "vm/Realm-inl.h"
 #include "vm/StringType-inl.h"
 

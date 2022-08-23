@@ -15,16 +15,12 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/ReverseIterator.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/Vector.h"
 
-#include <algorithm>
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
-#include <type_traits>
 
 #include "jsapi.h"
-#include "jsnum.h"
 #include "jstypes.h"
 
 #include "frontend/BytecodeCompiler.h"
@@ -40,7 +36,6 @@
 #include "js/Symbol.h"
 #include "util/DifferentialTesting.h"
 #include "util/Memory.h"
-#include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/BuiltinObjectKind.h"
 #include "vm/BytecodeIterator.h"  // for AllBytecodesIterable
@@ -62,9 +57,7 @@
 
 #include "gc/GC-inl.h"
 #include "vm/BytecodeIterator-inl.h"
-#include "vm/BytecodeLocation-inl.h"
 #include "vm/JSContext-inl.h"
-#include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/Realm-inl.h"
 

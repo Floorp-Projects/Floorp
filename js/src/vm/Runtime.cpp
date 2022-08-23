@@ -14,36 +14,28 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ThreadLocal.h"
 
-#if defined(XP_DARWIN)
-#  include <mach/mach.h>
-#elif defined(XP_UNIX)
-#  include <sys/resource.h>
-#endif  // defined(XP_DARWIN) || defined(XP_UNIX) || defined(XP_WIN)
 #include <locale.h>
 #include <string.h>
-#ifdef JS_CAN_CHECK_THREADSAFE_ACCESSES
-#  include <sys/mman.h>
-#endif
 
 #include "jsfriendapi.h"
 #include "jsmath.h"
 
 #include "frontend/CompilationStencil.h"
+#include "gc/GC.h"
 #include "gc/PublicIterators.h"
 #include "jit/IonCompileTask.h"
 #include "jit/JitRuntime.h"
 #include "jit/Simulator.h"
 #include "js/AllocationLogging.h"  // JS_COUNT_CTOR, JS_COUNT_DTOR
-#include "js/Date.h"
+#include "js/experimental/JSStencil.h"
+#include "js/experimental/SourceHook.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/Interrupt.h"
 #include "js/MemoryMetrics.h"
-#include "js/SliceBudget.h"
 #include "js/Stack.h"  // JS::NativeStackLimitMin
 #include "js/Wrapper.h"
-#include "util/WindowsWrapper.h"
+#include "js/WrapperCallbacks.h"
 #include "vm/DateTime.h"
-#include "vm/JSAtom.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
 #include "vm/PromiseObject.h"  // js::PromiseObject
@@ -51,7 +43,7 @@
 #include "wasm/WasmSignalHandlers.h"
 
 #include "debugger/DebugAPI-inl.h"
-#include "gc/GC-inl.h"
+#include "gc/ArenaList-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/Realm-inl.h"
 

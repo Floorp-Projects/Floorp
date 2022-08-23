@@ -91,23 +91,18 @@
 
 #include <functional>
 #include <limits>
-#include <math.h>
 #include <memory>
 #include <type_traits>  // std::is_same_v
 
 #include "jsnum.h"
 
-#include "builtin/BigInt.h"
 #include "gc/Allocator.h"
 #include "js/BigInt.h"
-#include "js/Conversions.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/Initialization.h"
 #include "js/StableStringChars.h"
 #include "js/Utility.h"
 #include "util/CheckedArithmetic.h"
 #include "vm/JSContext.h"
-#include "vm/SelfHosting.h"
 #include "vm/StaticStrings.h"
 
 #include "gc/GCContext-inl.h"

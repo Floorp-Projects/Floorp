@@ -6,6 +6,7 @@
 #include "js/RootingAPI.h"
 #include "jsapi-tests/tests.h"
 #include "vm/CommonPropertyNames.h"
+#include "vm/JSAtomState.h"
 #include "vm/JSContext.h"
 
 BEGIN_TEST(testAtomizeWithoutActiveZone) {

@@ -35,7 +35,6 @@
 
 #include "vm/JSAtom-inl.h"            // js::AtomToId, js::IndexToId
 #include "vm/JSContext-inl.h"         // JSContext::check
-#include "vm/JSFunction-inl.h"        // js::NewNativeFunction
 #include "vm/JSObject-inl.h"          // js::NewBuiltinClassInstance
 #include "vm/NativeObject-inl.h"      // js::NativeLookupOwnPropertyNoResolve
 #include "vm/ObjectOperations-inl.h"  // js::GetProperty, js::GetElement, js::SetProperty, js::HasProperty, js::DeleteProperty, js::DeleteElement

@@ -32,21 +32,14 @@
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
-#include "util/StructuredSpewer.h"
 #include "util/TrailingArray.h"
-#include "vm/BigIntType.h"
 #include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"
 #include "vm/BytecodeUtil.h"
-#include "vm/ErrorContext.h"
-#include "vm/JSAtom.h"
 #include "vm/NativeObject.h"
-#include "vm/ScopeKind.h"  // ScopeKind
-#include "vm/Shape.h"
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/SharedStencil.h"  // js::GCThingIndex, js::SourceExtent, js::SharedImmutableScriptData, MemberInitializers
 #include "vm/StencilEnums.h"   // SourceRetrievable
-#include "vm/Time.h"
 
 namespace JS {
 struct ScriptSourceInfo;
@@ -56,12 +49,12 @@ class SourceText;
 
 namespace js {
 
+class ErrorContext;
 class ScriptSource;
 
 class VarScope;
 class LexicalScope;
 
-class GenericPrinter;
 class Sprinter;
 
 namespace coverage {

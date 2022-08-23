@@ -20,11 +20,14 @@
 #include "jit/ScriptFromCalleeToken.h"
 #include "jit/TrialInlining.h"
 #include "vm/BytecodeUtil.h"
+#include "vm/Compartment.h"
 #include "vm/FrameIter.h"  // js::OnlyJSJitFrameIter
+#include "vm/JitActivation.h"
 #include "vm/JSScript.h"
 
 #include "gc/GCContext-inl.h"
 #include "jit/JSJitFrameIter-inl.h"
+#include "vm/JSContext-inl.h"
 #include "vm/JSScript-inl.h"
 
 using namespace js;

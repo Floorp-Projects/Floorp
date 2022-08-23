@@ -19,19 +19,17 @@
 #include "ds/Sort.h"
 #include "frontend/BytecodeCompiler.h"  // js::frontend::CompileModule
 #include "js/Context.h"                 // js::AssertHeapIsIdle
-#include "js/PropertyAndElement.h"
-#include "js/RootingAPI.h"         // JS::MutableHandle
-#include "js/Value.h"              // JS::Value
-#include "vm/EnvironmentObject.h"  // js::ModuleEnvironmentObject
-#include "vm/ErrorContext.h"       // js::MainThreadErrorContext
-#include "vm/JSContext.h"          // CHECK_THREAD, JSContext
-#include "vm/JSObject.h"           // JSObject
-#include "vm/List.h"               // ListObject
-#include "vm/Runtime.h"            // JSRuntime
+#include "js/RootingAPI.h"              // JS::MutableHandle
+#include "js/Value.h"                   // JS::Value
+#include "vm/EnvironmentObject.h"       // js::ModuleEnvironmentObject
+#include "vm/ErrorContext.h"            // js::MainThreadErrorContext
+#include "vm/JSContext.h"               // CHECK_THREAD, JSContext
+#include "vm/JSObject.h"                // JSObject
+#include "vm/List.h"                    // ListObject
+#include "vm/Runtime.h"                 // JSRuntime
 
-#include "builtin/Array-inl.h"
+#include "vm/JSAtom-inl.h"
 #include "vm/JSContext-inl.h"  // JSContext::{c,releaseC}heck
-#include "vm/JSObject-inl.h"
 
 using namespace js;
 

@@ -12,10 +12,7 @@
 #include <iterator>   // std::size
 #include <stddef.h>   // size_t
 #include <stdint.h>   // uint8_t, uint32_t
-#include <utility>    // std::move
 
-#include "debugger/DebugAPI.h"
-#include "gc/Marking.h"
 #include "gc/Tracer.h"  // js::TraceRoot
 #include "jit/JitcodeMap.h"
 #include "jit/JitRuntime.h"
@@ -23,13 +20,9 @@
 #include "js/Value.h"                 // JS::Value
 #include "vm/FrameIter.h"             // js::FrameIter
 #include "vm/JSContext.h"
-#include "vm/Opcodes.h"
 #include "wasm/WasmProcess.h"
 
 #include "jit/JSJitFrameIter-inl.h"
-#include "vm/Compartment-inl.h"
-#include "vm/EnvironmentObject-inl.h"
-#include "vm/Interpreter-inl.h"
 #include "vm/Probes-inl.h"
 
 using namespace js;

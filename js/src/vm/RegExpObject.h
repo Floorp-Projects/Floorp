@@ -9,14 +9,10 @@
 #ifndef vm_RegExpObject_h
 #define vm_RegExpObject_h
 
-#include "mozilla/MemoryReporting.h"
-
 #include "builtin/SelfHostingDefines.h"
-#include "gc/Marking.h"
-#include "js/GCHashTable.h"
 #include "js/RegExpFlags.h"
 #include "proxy/Proxy.h"
-#include "vm/ArrayObject.h"
+#include "vm/JSAtomState.h"
 #include "vm/JSContext.h"
 #include "vm/RegExpShared.h"
 #include "vm/Shape.h"
@@ -35,10 +31,6 @@
  *     Owns all RegExpShared instances in a zone.
  */
 namespace js {
-
-struct MatchPair;
-class MatchPairs;
-class RegExpStatics;
 
 extern RegExpObject* RegExpAlloc(JSContext* cx, NewObjectKind newKind,
                                  HandleObject proto = nullptr);
