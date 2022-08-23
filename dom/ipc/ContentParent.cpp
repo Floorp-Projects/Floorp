@@ -162,6 +162,7 @@
 #include "mozilla/net/NeckoMessageUtils.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/PCookieServiceParent.h"
+#include "mozilla/net/CookieKey.h"
 #include "mozilla/TelemetryComms.h"
 #include "mozilla/TelemetryEventEnums.h"
 #include "mozilla/RemoteLazyInputStreamParent.h"
@@ -3946,11 +3947,18 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
 
     nsCOMPtr<nsICookie> xpcCookie = do_QueryInterface(aSubject);
     NS_ASSERTION(xpcCookie, "couldn't get cookie");
+
+    // only broadcast the cookie change to content processes that need it
+    const Cookie& cookie = xpcCookie->AsCookie();
+    if (!cs->CookieMatchesContentList(cookie)) {
+      return NS_OK;
+    }
+
     if (!nsCRT::strcmp(aData, u"deleted")) {
-      cs->RemoveCookie(xpcCookie);
+      cs->RemoveCookie(cookie);
     } else if ((!nsCRT::strcmp(aData, u"added")) ||
                (!nsCRT::strcmp(aData, u"changed"))) {
-      cs->AddCookie(xpcCookie);
+      cs->AddCookie(cookie);
     }
   } else if (!strcmp(aTopic, NS_NETWORK_LINK_TYPE_TOPIC)) {
     UpdateNetworkLinkType();
