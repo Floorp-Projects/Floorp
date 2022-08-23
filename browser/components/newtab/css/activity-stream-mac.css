@@ -608,7 +608,8 @@ main.has-snippet {
   border-radius: 8px;
   display: inline-block;
   flex-basis: 120px;
-  background-color: var(--newtab-background-color);
+  background-color: color-mix(in srgb, var(--newtab-background-color) 50%, transparent);
+  border: 1px solid rgba(170, 170, 170, 0.6);
   backdrop-filter: blur(12px);
 }
 .top-site-outer .top-site-inner {
