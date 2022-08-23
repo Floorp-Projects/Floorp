@@ -96,7 +96,7 @@ namespace mozilla {
 struct SizeComputationInput {
  public:
   // The frame being reflowed.
-  nsIFrame* mFrame;
+  nsIFrame* const mFrame;
 
   // Rendering context to use for measurement.
   gfxContext* mRenderingContext;
