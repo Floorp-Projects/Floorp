@@ -24,6 +24,9 @@ namespace jxl {
 namespace HWY_NAMESPACE {
 
 // These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Add;
+using hwy::HWY_NAMESPACE::GetLane;
+using hwy::HWY_NAMESPACE::Mul;
 using hwy::HWY_NAMESPACE::Rebind;
 
 double ComputeDistanceP(const ImageF& distmap, const ButteraugliParams& params,
@@ -63,17 +66,17 @@ double ComputeDistanceP(const ImageF& distmap, const ButteraugliParams& params,
 #else
         const auto d1 = Load(d, row + x);
 #endif
-        const auto d2 = d1 * d1 * d1;
-        sums0 += d2;
-        const auto d3 = d2 * d2;
-        sums1 += d3;
-        const auto d4 = d3 * d3;
-        sums2 += d4;
+        const auto d2 = Mul(d1, Mul(d1, d1));
+        sums0 = Add(sums0, d2);
+        const auto d3 = Mul(d2, d2);
+        sums1 = Add(sums1, d3);
+        const auto d4 = Mul(d3, d3);
+        sums2 = Add(sums2, d4);
       }
 
-      Store(sums0 + Load(d, sum_totals0), d, sum_totals0);
-      Store(sums1 + Load(d, sum_totals1), d, sum_totals1);
-      Store(sums2 + Load(d, sum_totals2), d, sum_totals2);
+      Store(Add(sums0, Load(d, sum_totals0)), d, sum_totals0);
+      Store(Add(sums1, Load(d, sum_totals1)), d, sum_totals1);
+      Store(Add(sums2, Load(d, sum_totals2)), d, sum_totals2);
 
       for (; x < distmap.xsize(); ++x) {
         const double d1 = row[x];

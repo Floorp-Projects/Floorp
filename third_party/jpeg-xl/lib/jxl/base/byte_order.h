@@ -197,6 +197,15 @@ static JXL_INLINE void StoreLE64(const uint64_t native, uint8_t* p) {
 #endif
 }
 
+static JXL_INLINE float BSwapFloat(float x) {
+  uint32_t u;
+  memcpy(&u, &x, 4);
+  uint32_t uswap = JXL_BSWAP32(u);
+  float xswap;
+  memcpy(&xswap, &uswap, 4);
+  return xswap;
+}
+
 // Big/Little Endian order.
 struct OrderBE {};
 struct OrderLE {};

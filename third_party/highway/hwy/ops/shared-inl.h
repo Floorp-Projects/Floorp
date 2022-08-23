@@ -1,4 +1,5 @@
 // Copyright 2020 Google LLC
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -98,21 +99,21 @@ struct Simd {
 
 namespace detail {
 
-#if HWY_HAVE_SCALABLE
-
 template <typename T, size_t N, int kPow2>
 constexpr bool IsFull(Simd<T, N, kPow2> /* d */) {
   return N == HWY_LANES(T) && kPow2 == 0;
 }
-
-#endif
 
 // Returns the number of lanes (possibly zero) after applying a shift:
 // - 0: no change;
 // - [1,3]: a group of 2,4,8 [fractional] vectors;
 // - [-3,-1]: a fraction of a vector from 1/8 to 1/2.
 constexpr size_t ScaleByPower(size_t N, int pow2) {
+#if HWY_TARGET == HWY_RVV
   return pow2 >= 0 ? (N << pow2) : (N >> (-pow2));
+#else
+  return pow2 >= 0 ? N : (N >> (-pow2));
+#endif
 }
 
 // Struct wrappers enable validation of arguments via static_assert.
@@ -136,17 +137,16 @@ struct ScalableTagChecker {
 template <typename T, size_t kLimit>
 struct CappedTagChecker {
   static_assert(kLimit != 0, "Does not make sense to have zero lanes");
-  using type = Simd<T, HWY_MIN(kLimit, HWY_MAX_BYTES / sizeof(T)), 0>;
+  // Safely handle non-power-of-two inputs by rounding down, which is allowed by
+  // CappedTag. Otherwise, Simd<T, 3, 0> would static_assert.
+  static constexpr size_t kLimitPow2 = size_t{1} << hwy::FloorLog2(kLimit);
+  using type = Simd<T, HWY_MIN(kLimitPow2, HWY_LANES(T)), 0>;
 };
 
 template <typename T, size_t kNumLanes>
 struct FixedTagChecker {
   static_assert(kNumLanes != 0, "Does not make sense to have zero lanes");
-  static_assert(kNumLanes * sizeof(T) <= HWY_MAX_BYTES, "Too many lanes");
-#if HWY_TARGET == HWY_SCALAR
-  // HWY_MAX_BYTES would still allow uint8x8, which is not supported.
-  static_assert(kNumLanes == 1, "Scalar only supports one lane");
-#endif
+  static_assert(kNumLanes <= HWY_LANES(T), "Too many lanes");
   using type = Simd<T, kNumLanes, 0>;
 };
 
@@ -172,8 +172,8 @@ template <typename T, size_t kLimit>
 using CappedTag = typename detail::CappedTagChecker<T, kLimit>::type;
 
 // Alias for a tag describing a vector with *exactly* kNumLanes active lanes,
-// even on targets with scalable vectors. HWY_SCALAR only supports one lane.
-// All other targets allow kNumLanes up to HWY_MAX_BYTES / sizeof(T).
+// even on targets with scalable vectors. Requires `kNumLanes` to be a power of
+// two not exceeding `HWY_LANES(T)`.
 //
 // NOTE: if the application does not need to support HWY_SCALAR (+), use this
 // instead of CappedTag to emphasize that there will be exactly kNumLanes lanes.
@@ -218,6 +218,15 @@ using Half = typename D::Half;
 template <class D>
 using Twice = typename D::Twice;
 
+template <typename T>
+using Full32 = Simd<T, 4 / sizeof(T), 0>;
+
+template <typename T>
+using Full64 = Simd<T, 8 / sizeof(T), 0>;
+
+template <typename T>
+using Full128 = Simd<T, 16 / sizeof(T), 0>;
+
 // Same as base.h macros but with a Simd<T, N, kPow2> argument instead of T.
 #define HWY_IF_UNSIGNED_D(D) HWY_IF_UNSIGNED(TFromD<D>)
 #define HWY_IF_SIGNED_D(D) HWY_IF_SIGNED(TFromD<D>)
@@ -232,15 +241,12 @@ using Twice = typename D::Twice;
 #define HWY_IF_GE128_D(D) \
   hwy::EnableIf<D::kPrivateN * sizeof(TFromD<D>) >= 16>* = nullptr
 
-// Same, but with a vector argument.
+// Same, but with a vector argument. ops/*-inl.h define their own TFromV.
 #define HWY_IF_UNSIGNED_V(V) HWY_IF_UNSIGNED(TFromV<V>)
 #define HWY_IF_SIGNED_V(V) HWY_IF_SIGNED(TFromV<V>)
 #define HWY_IF_FLOAT_V(V) HWY_IF_FLOAT(TFromV<V>)
 #define HWY_IF_LANE_SIZE_V(V, bytes) HWY_IF_LANE_SIZE(TFromV<V>, bytes)
-
-// For implementing functions for a specific type.
-// IsSame<...>() in template arguments is broken on MSVC2015.
-#define HWY_IF_LANES_ARE(T, V) EnableIf<IsSameT<T, TFromV<V>>::value>* = nullptr
+#define HWY_IF_NOT_LANE_SIZE_V(V, bytes) HWY_IF_NOT_LANE_SIZE(TFromV<V>, bytes)
 
 template <class D>
 HWY_INLINE HWY_MAYBE_UNUSED constexpr int Pow2(D /* d */) {
@@ -291,8 +297,7 @@ HWY_INLINE HWY_MAYBE_UNUSED size_t Lanes(Simd<T, N, kPow2>) {
 // We therefore pass by const& only on GCC and (Windows or ARM64). This alias
 // must be used for all vector/mask parameters of functions marked HWY_NOINLINE,
 // and possibly also other functions that are not inlined.
-#if HWY_COMPILER_GCC && !HWY_COMPILER_CLANG && \
-    ((defined(_WIN32) || defined(_WIN64)) || HWY_ARCH_ARM_A64)
+#if HWY_COMPILER_GCC_ACTUAL && (HWY_OS_WIN || HWY_ARCH_ARM_A64)
 template <class V>
 using VecArg = const V&;
 #else

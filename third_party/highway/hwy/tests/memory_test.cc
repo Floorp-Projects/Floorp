@@ -1,4 +1,5 @@
 // Copyright 2019 Google LLC
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +15,7 @@
 
 // Ensure incompabilities with Windows macros (e.g. #define StoreFence) are
 // detected. Must come before Highway headers.
+#include "hwy/base.h"
 #if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
 #endif
@@ -24,7 +26,7 @@
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "tests/memory_test.cc"
 #include "hwy/cache_control.h"
-#include "hwy/foreach_target.h"
+#include "hwy/foreach_target.h"  // IWYU pragma: keep
 #include "hwy/highway.h"
 #include "hwy/tests/test_util-inl.h"
 
@@ -82,127 +84,52 @@ HWY_NOINLINE void TestAllLoadStore() {
   ForAllTypes(ForPartialVectors<TestLoadStore>());
 }
 
-struct TestStoreInterleaved3 {
+struct TestSafeCopyN {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
-// TODO(janwas): restore once segment intrinsics are available
-#if HWY_TARGET != HWY_RVV
     const size_t N = Lanes(d);
+    const auto v = Iota(d, 1);
+    auto from = AllocateAligned<T>(N + 2);
+    auto to = AllocateAligned<T>(N + 2);
+    Store(v, d, from.get());
 
-    RandomState rng;
+    // 0: nothing changes
+    to[0] = T();
+    SafeCopyN(0, d, from.get(), to.get());
+    HWY_ASSERT_EQ(T(), to[0]);
 
-    // Data to be interleaved
-    auto bytes = AllocateAligned<uint8_t>(3 * N);
-    for (size_t i = 0; i < 3 * N; ++i) {
-      bytes[i] = static_cast<uint8_t>(Random32(&rng) & 0xFF);
-    }
-    const auto in0 = Load(d, &bytes[0 * N]);
-    const auto in1 = Load(d, &bytes[1 * N]);
-    const auto in2 = Load(d, &bytes[2 * N]);
+    // 1: only first changes
+    to[1] = T();
+    SafeCopyN(1, d, from.get(), to.get());
+    HWY_ASSERT_EQ(static_cast<T>(1), to[0]);
+    HWY_ASSERT_EQ(T(), to[1]);
 
-    // Interleave here, ensure vector results match scalar
-    auto expected = AllocateAligned<T>(4 * N);
-    auto actual_aligned = AllocateAligned<T>(4 * N + 1);
-    T* actual = actual_aligned.get() + 1;
+    // N-1: last does not change
+    to[N - 1] = T();
+    SafeCopyN(N - 1, d, from.get(), to.get());
+    HWY_ASSERT_EQ(T(), to[N - 1]);
+    // Also check preceding lanes
+    to[N - 1] = static_cast<T>(N);
+    HWY_ASSERT_VEC_EQ(d, to.get(), v);
 
-    for (size_t rep = 0; rep < 100; ++rep) {
-      for (size_t i = 0; i < N; ++i) {
-        expected[3 * i + 0] = bytes[0 * N + i];
-        expected[3 * i + 1] = bytes[1 * N + i];
-        expected[3 * i + 2] = bytes[2 * N + i];
-        // Ensure we do not write more than 3*N bytes
-        expected[3 * N + i] = actual[3 * N + i] = 0;
-      }
-      StoreInterleaved3(in0, in1, in2, d, actual);
-      size_t pos = 0;
-      if (!BytesEqual(expected.get(), actual, 4 * N, &pos)) {
-        Print(d, "in0", in0, pos / 3);
-        Print(d, "in1", in1, pos / 3);
-        Print(d, "in2", in2, pos / 3);
-        const size_t i = pos - pos % 3;
-        fprintf(stderr, "interleaved %d %d %d  %d %d %d\n", actual[i],
-                actual[i + 1], actual[i + 2], actual[i + 3], actual[i + 4],
-                actual[i + 5]);
-        HWY_ASSERT(false);
-      }
-    }
-#else
-    (void)d;
+    // N: all change
+    to[N] = T();
+    SafeCopyN(N, d, from.get(), to.get());
+    HWY_ASSERT_VEC_EQ(d, to.get(), v);
+    HWY_ASSERT_EQ(T(), to[N]);
+
+    // N+1: subsequent lane does not change if using masked store
+    to[N + 1] = T();
+    SafeCopyN(N + 1, d, from.get(), to.get());
+    HWY_ASSERT_VEC_EQ(d, to.get(), v);
+#if !HWY_MEM_OPS_MIGHT_FAULT
+    HWY_ASSERT_EQ(T(), to[N + 1]);
 #endif
   }
 };
 
-HWY_NOINLINE void TestAllStoreInterleaved3() {
-#if HWY_TARGET == HWY_RVV
-  // Segments are limited to 8 registers, so we can only go up to LMUL=2.
-  const ForExtendableVectors<TestStoreInterleaved3, 2> test;
-#else
-  const ForPartialVectors<TestStoreInterleaved3> test;
-#endif
-  test(uint8_t());
-}
-
-struct TestStoreInterleaved4 {
-  template <class T, class D>
-  HWY_NOINLINE void operator()(T /*unused*/, D d) {
-// TODO(janwas): restore once segment intrinsics are available
-#if HWY_TARGET != HWY_RVV
-    const size_t N = Lanes(d);
-
-    RandomState rng;
-
-    // Data to be interleaved
-    auto bytes = AllocateAligned<uint8_t>(4 * N);
-    for (size_t i = 0; i < 4 * N; ++i) {
-      bytes[i] = static_cast<uint8_t>(Random32(&rng) & 0xFF);
-    }
-    const auto in0 = Load(d, &bytes[0 * N]);
-    const auto in1 = Load(d, &bytes[1 * N]);
-    const auto in2 = Load(d, &bytes[2 * N]);
-    const auto in3 = Load(d, &bytes[3 * N]);
-
-    // Interleave here, ensure vector results match scalar
-    auto expected = AllocateAligned<T>(5 * N);
-    auto actual_aligned = AllocateAligned<T>(5 * N + 1);
-    T* actual = actual_aligned.get() + 1;
-
-    for (size_t rep = 0; rep < 100; ++rep) {
-      for (size_t i = 0; i < N; ++i) {
-        expected[4 * i + 0] = bytes[0 * N + i];
-        expected[4 * i + 1] = bytes[1 * N + i];
-        expected[4 * i + 2] = bytes[2 * N + i];
-        expected[4 * i + 3] = bytes[3 * N + i];
-        // Ensure we do not write more than 4*N bytes
-        expected[4 * N + i] = actual[4 * N + i] = 0;
-      }
-      StoreInterleaved4(in0, in1, in2, in3, d, actual);
-      size_t pos = 0;
-      if (!BytesEqual(expected.get(), actual, 5 * N, &pos)) {
-        Print(d, "in0", in0, pos / 4);
-        Print(d, "in1", in1, pos / 4);
-        Print(d, "in2", in2, pos / 4);
-        Print(d, "in3", in3, pos / 4);
-        const size_t i = pos;
-        fprintf(stderr, "interleaved %d %d %d %d  %d %d %d %d\n", actual[i],
-                actual[i + 1], actual[i + 2], actual[i + 3], actual[i + 4],
-                actual[i + 5], actual[i + 6], actual[i + 7]);
-        HWY_ASSERT(false);
-      }
-    }
-#else
-    (void)d;
-#endif
-  }
-};
-
-HWY_NOINLINE void TestAllStoreInterleaved4() {
-#if HWY_TARGET == HWY_RVV
-  // Segments are limited to 8 registers, so we can only go up to LMUL=2.
-  const ForExtendableVectors<TestStoreInterleaved4, 2> test;
-#else
-  const ForPartialVectors<TestStoreInterleaved4> test;
-#endif
-  test(uint8_t());
+HWY_NOINLINE void TestAllSafeCopyN() {
+  ForAllTypes(ForPartialVectors<TestSafeCopyN>());
 }
 
 struct TestLoadDup128 {
@@ -403,19 +330,12 @@ HWY_AFTER_NAMESPACE();
 namespace hwy {
 HWY_BEFORE_TEST(HwyMemoryTest);
 HWY_EXPORT_AND_TEST_P(HwyMemoryTest, TestAllLoadStore);
-HWY_EXPORT_AND_TEST_P(HwyMemoryTest, TestAllStoreInterleaved3);
-HWY_EXPORT_AND_TEST_P(HwyMemoryTest, TestAllStoreInterleaved4);
+HWY_EXPORT_AND_TEST_P(HwyMemoryTest, TestAllSafeCopyN);
 HWY_EXPORT_AND_TEST_P(HwyMemoryTest, TestAllLoadDup128);
 HWY_EXPORT_AND_TEST_P(HwyMemoryTest, TestAllStream);
 HWY_EXPORT_AND_TEST_P(HwyMemoryTest, TestAllScatter);
 HWY_EXPORT_AND_TEST_P(HwyMemoryTest, TestAllGather);
 HWY_EXPORT_AND_TEST_P(HwyMemoryTest, TestAllCache);
 }  // namespace hwy
-
-// Ought not to be necessary, but without this, no tests run on RVV.
-int main(int argc, char** argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
 
 #endif

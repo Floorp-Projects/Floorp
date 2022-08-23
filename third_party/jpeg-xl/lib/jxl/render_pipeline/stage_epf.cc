@@ -21,7 +21,14 @@ namespace HWY_NAMESPACE {
 using DF = HWY_CAPPED(float, 8);
 
 // These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::AbsDiff;
+using hwy::HWY_NAMESPACE::Add;
+using hwy::HWY_NAMESPACE::Div;
+using hwy::HWY_NAMESPACE::Mul;
+using hwy::HWY_NAMESPACE::MulAdd;
 using hwy::HWY_NAMESPACE::Vec;
+using hwy::HWY_NAMESPACE::VFromD;
+using hwy::HWY_NAMESPACE::ZeroIfNegative;
 
 JXL_INLINE Vec<DF> Weight(Vec<DF> sad, Vec<DF> inv_sigma, Vec<DF> thres) {
   auto v = MulAdd(sad, inv_sigma, Set(DF(), 1.0f));
@@ -52,7 +59,7 @@ class EPF0Stage : public RenderPipelineStage {
                       : LoadU(DF(), rows[2][3 + row] + x);
 
     auto weight = Weight(sad, inv_sigma, Set(DF(), lf_.epf_pass1_zeroflush));
-    *w += weight;
+    *w = Add(*w, weight);
     *X = MulAdd(weight, cx, *X);
     *Y = MulAdd(weight, cy, *Y);
     *B = MulAdd(weight, cb, *B);
@@ -62,6 +69,11 @@ class EPF0Stage : public RenderPipelineStage {
                   size_t xextra, size_t xsize, size_t xpos, size_t ypos,
                   size_t thread_id) const final {
     DF df;
+
+    using V = decltype(Zero(df));
+    V t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, tA, tB;
+    V* sads[12] = {&t0, &t1, &t2, &t3, &t4, &t5, &t6, &t7, &t8, &t9, &tA, &tB};
+
     xextra = RoundUpTo(xextra, Lanes(df));
     const float* JXL_RESTRICT row_sigma =
         sigma_->Row(ypos / kBlockDim + kSigmaPadding);
@@ -99,10 +111,9 @@ class EPF0Stage : public RenderPipelineStage {
       }
 
       const auto sm = Load(df, sad_mul + ix);
-      const auto inv_sigma = Set(df, row_sigma[bx]) * sm;
+      const auto inv_sigma = Mul(Set(df, row_sigma[bx]), sm);
 
-      decltype(Zero(df)) sads[12];
-      for (size_t i = 0; i < 12; i++) sads[i] = Zero(df);
+      for (size_t i = 0; i < 12; i++) *sads[i] = Zero(df);
       constexpr std::array<int, 2> sads_off[12] = {
           {{-2, 0}}, {{-1, -1}}, {{-1, 0}}, {{-1, 1}}, {{0, -2}}, {{0, -1}},
           {{0, 1}},  {{0, 2}},   {{1, -1}}, {{1, 0}},  {{1, 1}},  {{2, 0}},
@@ -122,9 +133,9 @@ class EPF0Stage : public RenderPipelineStage {
             const auto c11 =
                 LoadU(df, rows[c][3 + sads_off[i][0] + plus_off[j][0]] + x +
                               sads_off[i][1] + plus_off[j][1]);
-            sad += AbsDiff(r11, c11);
+            sad = Add(sad, AbsDiff(r11, c11));
           }
-          sads[i] = MulAdd(sad, scale, sads[i]);
+          *sads[i] = MulAdd(sad, scale, *sads[i]);
         }
       }
       const auto x_cc = Load(df, rows[0][3 + 0] + x);
@@ -138,17 +149,17 @@ class EPF0Stage : public RenderPipelineStage {
 
       for (size_t i = 0; i < 12; i++) {
         AddPixel</*aligned=*/false>(/*row=*/sads_off[i][0], rows,
-                                    x + sads_off[i][1], sads[i], inv_sigma, &X,
+                                    x + sads_off[i][1], *sads[i], inv_sigma, &X,
                                     &Y, &B, &w);
       }
 #if JXL_HIGH_PRECISION
-      auto inv_w = Set(df, 1.0f) / w;
+      auto inv_w = Div(Set(df, 1.0f), w);
 #else
       auto inv_w = ApproximateReciprocal(w);
 #endif
-      StoreU(X * inv_w, df, GetOutputRow(output_rows, 0, 0) + x);
-      StoreU(Y * inv_w, df, GetOutputRow(output_rows, 1, 0) + x);
-      StoreU(B * inv_w, df, GetOutputRow(output_rows, 2, 0) + x);
+      StoreU(Mul(X, inv_w), df, GetOutputRow(output_rows, 0, 0) + x);
+      StoreU(Mul(Y, inv_w), df, GetOutputRow(output_rows, 1, 0) + x);
+      StoreU(Mul(B, inv_w), df, GetOutputRow(output_rows, 2, 0) + x);
     }
   }
 
@@ -188,7 +199,7 @@ class EPF1Stage : public RenderPipelineStage {
                       : LoadU(DF(), rows[2][2 + row] + x);
 
     auto weight = Weight(sad, inv_sigma, Set(DF(), lf_.epf_pass1_zeroflush));
-    *w += weight;
+    *w = Add(*w, weight);
     *X = MulAdd(weight, cx, *X);
     *Y = MulAdd(weight, cy, *Y);
     *B = MulAdd(weight, cb, *B);
@@ -236,7 +247,7 @@ class EPF1Stage : public RenderPipelineStage {
       }
 
       const auto sm = Load(df, sad_mul + ix);
-      const auto inv_sigma = Set(df, row_sigma[bx]) * sm;
+      const auto inv_sigma = Mul(Set(df, row_sigma[bx]), sm);
       auto sad0 = Zero(df);
       auto sad1 = Zero(df);
       auto sad2 = Zero(df);
@@ -259,41 +270,41 @@ class EPF1Stage : public RenderPipelineStage {
 
         const auto p02 = LoadU(df, rows[c][2 + 0] + x - 2);
         const auto p12 = LoadU(df, rows[c][2 + 0] + x - 1);
-        sad1c += AbsDiff(p02, p12);  // SAD 1, 2
-        sad0c += AbsDiff(p11, p12);  // SAD 2, 1
+        sad1c = Add(sad1c, AbsDiff(p02, p12));  // SAD 1, 2
+        sad0c = Add(sad0c, AbsDiff(p11, p12));  // SAD 2, 1
 
         const auto p22 = LoadU(df, rows[c][2 + 0] + x);
         t = AbsDiff(p12, p22);
-        sad1c += t;  // SAD 1, 2
-        sad2c += t;  // SAD 3, 2
+        sad1c = Add(sad1c, t);  // SAD 1, 2
+        sad2c = Add(sad2c, t);  // SAD 3, 2
         t = AbsDiff(p22, p21);
         auto sad3c = t;  // SAD 2, 3
-        sad0c += t;      // SAD 2, 1
+        sad0c = Add(sad0c, t);  // SAD 2, 1
 
         const auto p32 = LoadU(df, rows[c][2 + 0] + x + 1);
-        sad0c += AbsDiff(p31, p32);  // SAD 2, 1
+        sad0c = Add(sad0c, AbsDiff(p31, p32));  // SAD 2, 1
         t = AbsDiff(p22, p32);
-        sad1c += t;  // SAD 1, 2
-        sad2c += t;  // SAD 3, 2
+        sad1c = Add(sad1c, t);  // SAD 1, 2
+        sad2c = Add(sad2c, t);  // SAD 3, 2
 
         const auto p42 = LoadU(df, rows[c][2 + 0] + x + 2);
-        sad2c += AbsDiff(p42, p32);  // SAD 3, 2
+        sad2c = Add(sad2c, AbsDiff(p42, p32));  // SAD 3, 2
 
         const auto p13 = LoadU(df, rows[c][2 + 1] + x - 1);
-        sad3c += AbsDiff(p13, p12);  // SAD 2, 3
+        sad3c = Add(sad3c, AbsDiff(p13, p12));  // SAD 2, 3
 
         const auto p23 = Load(df, rows[c][2 + 1] + x);
         t = AbsDiff(p22, p23);
-        sad0c += t;                  // SAD 2, 1
-        sad3c += t;                  // SAD 2, 3
-        sad1c += AbsDiff(p13, p23);  // SAD 1, 2
+        sad0c = Add(sad0c, t);                  // SAD 2, 1
+        sad3c = Add(sad3c, t);                  // SAD 2, 3
+        sad1c = Add(sad1c, AbsDiff(p13, p23));  // SAD 1, 2
 
         const auto p33 = LoadU(df, rows[c][2 + 1] + x + 1);
-        sad2c += AbsDiff(p33, p23);  // SAD 3, 2
-        sad3c += AbsDiff(p33, p32);  // SAD 2, 3
+        sad2c = Add(sad2c, AbsDiff(p33, p23));  // SAD 3, 2
+        sad3c = Add(sad3c, AbsDiff(p33, p32));  // SAD 2, 3
 
         const auto p24 = Load(df, rows[c][2 + 2] + x);
-        sad3c += AbsDiff(p24, p23);  // SAD 2, 3
+        sad3c = Add(sad3c, AbsDiff(p24, p23));  // SAD 2, 3
 
         auto scale = Set(df, lf_.epf_channel_scale[c]);
         sad0 = MulAdd(sad0c, scale, sad0);
@@ -322,13 +333,13 @@ class EPF1Stage : public RenderPipelineStage {
       AddPixel</*aligned=*/true>(/*row=*/1, rows, x, sad3, inv_sigma, &X, &Y,
                                  &B, &w);
 #if JXL_HIGH_PRECISION
-      auto inv_w = Set(df, 1.0f) / w;
+      auto inv_w = Div(Set(df, 1.0f), w);
 #else
       auto inv_w = ApproximateReciprocal(w);
 #endif
-      Store(X * inv_w, df, GetOutputRow(output_rows, 0, 0) + x);
-      Store(Y * inv_w, df, GetOutputRow(output_rows, 1, 0) + x);
-      Store(B * inv_w, df, GetOutputRow(output_rows, 2, 0) + x);
+      Store(Mul(X, inv_w), df, GetOutputRow(output_rows, 0, 0) + x);
+      Store(Mul(Y, inv_w), df, GetOutputRow(output_rows, 1, 0) + x);
+      Store(Mul(B, inv_w), df, GetOutputRow(output_rows, 2, 0) + x);
     }
   }
 
@@ -367,13 +378,13 @@ class EPF2Stage : public RenderPipelineStage {
     auto cb = aligned ? Load(DF(), rows[2][1 + row] + x)
                       : LoadU(DF(), rows[2][1 + row] + x);
 
-    auto sad = AbsDiff(cx, rx) * Set(DF(), lf_.epf_channel_scale[0]);
+    auto sad = Mul(AbsDiff(cx, rx), Set(DF(), lf_.epf_channel_scale[0]));
     sad = MulAdd(AbsDiff(cy, ry), Set(DF(), lf_.epf_channel_scale[1]), sad);
     sad = MulAdd(AbsDiff(cb, rb), Set(DF(), lf_.epf_channel_scale[2]), sad);
 
     auto weight = Weight(sad, inv_sigma, Set(DF(), lf_.epf_pass2_zeroflush));
 
-    *w += weight;
+    *w = Add(*w, weight);
     *X = MulAdd(weight, cx, *X);
     *Y = MulAdd(weight, cy, *Y);
     *B = MulAdd(weight, cb, *B);
@@ -421,7 +432,7 @@ class EPF2Stage : public RenderPipelineStage {
       }
 
       const auto sm = Load(df, sad_mul + ix);
-      const auto inv_sigma = Set(df, row_sigma[bx]) * sm;
+      const auto inv_sigma = Mul(Set(df, row_sigma[bx]), sm);
 
       const auto x_cc = Load(df, rows[0][1 + 0] + x);
       const auto y_cc = Load(df, rows[1][1 + 0] + x);
@@ -444,13 +455,13 @@ class EPF2Stage : public RenderPipelineStage {
       AddPixel</*aligned=*/true>(/*row=*/1, rows, x, x_cc, y_cc, b_cc,
                                  inv_sigma, &X, &Y, &B, &w);
 #if JXL_HIGH_PRECISION
-      auto inv_w = Set(df, 1.0f) / w;
+      auto inv_w = Div(Set(df, 1.0f), w);
 #else
       auto inv_w = ApproximateReciprocal(w);
 #endif
-      Store(X * inv_w, df, GetOutputRow(output_rows, 0, 0) + x);
-      Store(Y * inv_w, df, GetOutputRow(output_rows, 1, 0) + x);
-      Store(B * inv_w, df, GetOutputRow(output_rows, 2, 0) + x);
+      Store(Mul(X, inv_w), df, GetOutputRow(output_rows, 0, 0) + x);
+      Store(Mul(Y, inv_w), df, GetOutputRow(output_rows, 1, 0) + x);
+      Store(Mul(B, inv_w), df, GetOutputRow(output_rows, 2, 0) + x);
     }
   }
 

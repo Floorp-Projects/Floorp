@@ -1,4 +1,5 @@
 // Copyright 2019 Google LLC
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,12 +15,15 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 #include <bitset>
 
+#include "hwy/base.h"
+
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "highway_test.cc"
-#include "hwy/foreach_target.h"
+#include "hwy/foreach_target.h"    // IWYU pragma: keep
 #include "hwy/highway.h"
 #include "hwy/nanobenchmark.h"  // Unpredictable1
 #include "hwy/tests/test_util-inl.h"
@@ -27,6 +31,38 @@
 HWY_BEFORE_NAMESPACE();
 namespace hwy {
 namespace HWY_NAMESPACE {
+
+template <size_t kLimit, typename T>
+HWY_NOINLINE void TestCappedLimit(T /* tag */) {
+  CappedTag<T, kLimit> d;
+  // Ensure two ops compile
+  HWY_ASSERT_VEC_EQ(d, Zero(d), Set(d, T{0}));
+
+  // Ensure we do not write more than kLimit lanes
+  const size_t N = Lanes(d);
+  if (kLimit < N) {
+    auto lanes = AllocateAligned<T>(N);
+    std::fill(lanes.get(), lanes.get() + N, T{0});
+    Store(Set(d, T{1}), d, lanes.get());
+    for (size_t i = kLimit; i < N; ++i) {
+      HWY_ASSERT_EQ(lanes[i], T{0});
+    }
+  }
+}
+
+// Adapter for ForAllTypes - we are constructing our own Simd<> and thus do not
+// use ForPartialVectors etc.
+struct TestCapped {
+  template <typename T>
+  void operator()(T t) const {
+    TestCappedLimit<1>(t);
+    TestCappedLimit<3>(t);
+    TestCappedLimit<5>(t);
+    TestCappedLimit<1ull << 15>(t);
+  }
+};
+
+HWY_NOINLINE void TestAllCapped() { ForAllTypes(TestCapped()); }
 
 // For testing that ForPartialVectors reaches every possible size:
 using NumLanesSet = std::bitset<HWY_MAX_BYTES + 1>;
@@ -48,7 +84,7 @@ struct TestMaxLanes {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
     const size_t N = Lanes(d);
-    const size_t kMax = MaxLanes(d);
+    const size_t kMax = MaxLanes(d);  // for RVV, includes LMUL
     HWY_ASSERT(N <= kMax);
     HWY_ASSERT(kMax <= (HWY_MAX_BYTES / sizeof(T)));
 
@@ -175,26 +211,19 @@ HWY_NOINLINE void TestAllSignBit() {
   ForFloatTypes(ForPartialVectors<TestSignBitFloat>());
 }
 
-// std::isnan returns false for 0x7F..FF in clang AVX3 builds, so DIY.
-template <typename TF>
-bool IsNaN(TF f) {
-  MakeUnsigned<TF> bits;
-  memcpy(&bits, &f, sizeof(TF));
-  bits += bits;
-  bits >>= 1;  // clear sign bit
-  // NaN if all exponent bits are set and the mantissa is not zero.
-  return bits > ExponentMask<decltype(bits)>();
-}
-
+// inline to work around incorrect SVE codegen (only first 128 bits used).
 template <class D, class V>
-HWY_NOINLINE void AssertNaN(D d, VecArg<V> v, const char* file, int line) {
+HWY_INLINE void AssertNaN(D d, VecArg<V> v, const char* file, int line) {
   using T = TFromD<D>;
-  const T lane = GetLane(v);
-  if (!IsNaN(lane)) {
-    const std::string type_name = TypeName(T(), Lanes(d));
+  const size_t N = Lanes(d);
+  if (!AllTrue(d, IsNaN(v))) {
+    Print(d, "not all NaN", v, 0, N);
+    Print(d, "mask", VecFromMask(d, IsNaN(v)), 0, N);
+    const std::string type_name = TypeName(T(), N);
     // RVV lacks PRIu64 and MSYS still has problems with %zu, so print bytes to
     // avoid truncating doubles.
     uint8_t bytes[HWY_MAX(sizeof(T), 8)] = {0};
+    const T lane = GetLane(v);
     memcpy(bytes, &lane, sizeof(T));
     Abort(file, line,
           "Expected %s NaN, got %E (bytes %02x %02x %02x %02x %02x %02x %02x "
@@ -264,14 +293,14 @@ struct TestNaN {
 
     // Reduction
     HWY_ASSERT_NAN(d, SumOfLanes(d, nan));
-// TODO(janwas): re-enable after QEMU is fixed
+// TODO(janwas): re-enable after QEMU/Spike are fixed
 #if HWY_TARGET != HWY_RVV
     HWY_ASSERT_NAN(d, MinOfLanes(d, nan));
     HWY_ASSERT_NAN(d, MaxOfLanes(d, nan));
 #endif
 
     // Min
-#if HWY_ARCH_X86 && HWY_TARGET != HWY_SCALAR
+#if HWY_ARCH_X86 && (HWY_TARGET != HWY_SCALAR && HWY_TARGET != HWY_EMU128)
     // x86 SIMD returns the second operand if any input is NaN.
     HWY_ASSERT_VEC_EQ(d, v1, Min(nan, v1));
     HWY_ASSERT_VEC_EQ(d, v1, Max(nan, v1));
@@ -315,6 +344,74 @@ struct TestF32NaN {
 HWY_NOINLINE void TestAllNaN() {
   ForFloatTypes(ForPartialVectors<TestNaN>());
   ForPartialVectors<TestF32NaN>()(float());
+}
+
+struct TestIsNaN {
+  template <class T, class D>
+  HWY_NOINLINE void operator()(T /*unused*/, D d) {
+    const auto v1 = Set(d, T(Unpredictable1()));
+    const auto inf = IfThenElse(Eq(v1, Set(d, T(1))), Inf(d), v1);
+    const auto nan = IfThenElse(Eq(v1, Set(d, T(1))), NaN(d), v1);
+    const auto neg = Set(d, T{-1});
+    HWY_ASSERT_NAN(d, nan);
+    HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsNaN(inf));
+    HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsNaN(CopySign(inf, neg)));
+    HWY_ASSERT_MASK_EQ(d, MaskTrue(d), IsNaN(nan));
+    HWY_ASSERT_MASK_EQ(d, MaskTrue(d), IsNaN(CopySign(nan, neg)));
+    HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsNaN(v1));
+    HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsNaN(Zero(d)));
+    HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsNaN(Set(d, hwy::LowestValue<T>())));
+    HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsNaN(Set(d, hwy::HighestValue<T>())));
+  }
+};
+
+HWY_NOINLINE void TestAllIsNaN() {
+  ForFloatTypes(ForPartialVectors<TestIsNaN>());
+}
+
+struct TestIsInf {
+  template <class T, class D>
+  HWY_NOINLINE void operator()(T /*unused*/, D d) {
+    const auto v1 = Set(d, T(Unpredictable1()));
+    const auto inf = IfThenElse(Eq(v1, Set(d, T(1))), Inf(d), v1);
+    const auto nan = IfThenElse(Eq(v1, Set(d, T(1))), NaN(d), v1);
+    const auto neg = Set(d, T{-1});
+    HWY_ASSERT_MASK_EQ(d, MaskTrue(d), IsInf(inf));
+    HWY_ASSERT_MASK_EQ(d, MaskTrue(d), IsInf(CopySign(inf, neg)));
+    HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsInf(nan));
+    HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsInf(CopySign(nan, neg)));
+    HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsInf(v1));
+    HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsInf(Zero(d)));
+    HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsInf(Set(d, hwy::LowestValue<T>())));
+    HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsInf(Set(d, hwy::HighestValue<T>())));
+  }
+};
+
+HWY_NOINLINE void TestAllIsInf() {
+  ForFloatTypes(ForPartialVectors<TestIsInf>());
+}
+
+struct TestIsFinite {
+  template <class T, class D>
+  HWY_NOINLINE void operator()(T /*unused*/, D d) {
+    const auto v1 = Set(d, T(Unpredictable1()));
+    const auto inf = IfThenElse(Eq(v1, Set(d, T(1))), Inf(d), v1);
+    const auto nan = IfThenElse(Eq(v1, Set(d, T(1))), NaN(d), v1);
+    const auto neg = Set(d, T{-1});
+    HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsFinite(inf));
+    HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsFinite(CopySign(inf, neg)));
+    HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsFinite(nan));
+    HWY_ASSERT_MASK_EQ(d, MaskFalse(d), IsFinite(CopySign(nan, neg)));
+    HWY_ASSERT_MASK_EQ(d, MaskTrue(d), IsFinite(v1));
+    HWY_ASSERT_MASK_EQ(d, MaskTrue(d), IsFinite(Zero(d)));
+    HWY_ASSERT_MASK_EQ(d, MaskTrue(d), IsFinite(Set(d, hwy::LowestValue<T>())));
+    HWY_ASSERT_MASK_EQ(d, MaskTrue(d),
+                       IsFinite(Set(d, hwy::HighestValue<T>())));
+  }
+};
+
+HWY_NOINLINE void TestAllIsFinite() {
+  ForFloatTypes(ForPartialVectors<TestIsFinite>());
 }
 
 struct TestCopyAndAssign {
@@ -371,21 +468,19 @@ HWY_AFTER_NAMESPACE();
 
 namespace hwy {
 HWY_BEFORE_TEST(HighwayTest);
+HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllCapped);
 HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllMaxLanes);
 HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllSet);
 HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllOverflow);
 HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllClamp);
 HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllSignBit);
 HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllNaN);
+HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllIsNaN);
+HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllIsInf);
+HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllIsFinite);
 HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllCopyAndAssign);
 HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllGetLane);
 HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllDFromV);
 }  // namespace hwy
-
-// Ought not to be necessary, but without this, no tests run on RVV.
-int main(int argc, char** argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
 
 #endif

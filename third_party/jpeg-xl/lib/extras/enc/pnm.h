@@ -10,9 +10,9 @@
 
 // TODO(janwas): workaround for incorrect Win64 codegen (cause unknown)
 #include <hwy/highway.h>
+#include <memory>
 
 #include "lib/extras/enc/encode.h"
-#include "lib/extras/packed_image.h"
 
 namespace jxl {
 namespace extras {
@@ -21,9 +21,6 @@ std::unique_ptr<Encoder> GetPAMEncoder();
 std::unique_ptr<Encoder> GetPGMEncoder();
 std::unique_ptr<Encoder> GetPPMEncoder();
 std::unique_ptr<Encoder> GetPFMEncoder();
-
-Status EncodeImagePNM(const PackedImage& image, JxlOrientation orientation,
-                      size_t bits_per_sample, std::vector<uint8_t>* bytes);
 
 }  // namespace extras
 }  // namespace jxl

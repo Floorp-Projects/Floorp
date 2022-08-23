@@ -28,6 +28,11 @@ HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
 
+// These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Eq;
+using hwy::HWY_NAMESPACE::IfThenElse;
+using hwy::HWY_NAMESPACE::Lt;
+
 const HWY_FULL(float) df;
 const HWY_FULL(int32_t) di;
 size_t Padded(size_t x) { return RoundUpTo(x, Lanes(df)); }
@@ -40,8 +45,8 @@ float EstimateBits(const int32_t *counts, int32_t *rounded_counts,
   const auto zero_i = Zero(di);
   for (size_t i = 0; i < num_symbols; i += Lanes(df)) {
     auto counts_v = LoadU(di, &counts[i]);
-    counts_v = IfThenElse(counts_v == zero_i, zero_i,
-                          IfThenElse(counts_v < min, min, counts_v));
+    counts_v = IfThenElse(Eq(counts_v, zero_i), zero_i,
+                          IfThenElse(Lt(counts_v, min), min, counts_v));
     StoreU(counts_v, di, &rounded_counts[i]);
   }
   // Compute entropy of the "rounded" probabilities.
@@ -54,11 +59,11 @@ float EstimateBits(const int32_t *counts, int32_t *rounded_counts,
   for (size_t i = 0; i < num_symbols; i += Lanes(df)) {
     const auto counts_v = ConvertTo(df, LoadU(di, &counts[i]));
     const auto round_counts_v = LoadU(di, &rounded_counts[i]);
-    const auto probs = ConvertTo(df, round_counts_v) * inv_total;
-    const auto nbps = IfThenElse(round_counts_v == total_v, BitCast(di, zero),
+    const auto probs = Mul(ConvertTo(df, round_counts_v), inv_total);
+    const auto nbps = IfThenElse(Eq(round_counts_v, total_v), BitCast(di, zero),
                                  BitCast(di, FastLog2f(df, probs)));
-    bits_lanes -=
-        IfThenElse(counts_v == zero, zero, counts_v * BitCast(df, nbps));
+    bits_lanes = Sub(bits_lanes, IfThenElse(Eq(counts_v, zero), zero,
+                                            Mul(counts_v, BitCast(df, nbps))));
   }
   return GetLane(SumOfLanes(df, bits_lanes));
 }

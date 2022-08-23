@@ -1,3 +1,37 @@
+highway (1.0.0-1) UNRELEASED; urgency=medium
+
+* ABI change: 64-bit target values, more room for expansion
+* Add CompressBlocksNot, CompressNot, Lt128Upper, Min/Max128Upper, TruncateTo
+* Add HWY_SVE2_128 target
+* Sort speedups especially for 128-bit
+* Documentation clarifications
+* Faster NEON CountTrue/FindFirstTrue/AllFalse/AllTrue
+* Improved SVE codegen
+* Fix u16x8 ConcatEven/Odd, SSSE3 i64 Lt
+* MSVC 2017 workarounds
+* Support for runtime dispatch on Arm/GCC/Linux
+
+ -- Jan Wassenberg <janwas@google.com>  Wed, 27 Jul 2022 10:00:00 +0200
+
+highway (0.17.0-1) UNRELEASED; urgency=medium
+
+* Add ExtractLane, InsertLane, IsInf, IsFinite, IsNaN
+* Add StoreInterleaved2, LoadInterleaved2/3/4, BlendedStore, SafeFillN
+* Add MulFixedPoint15, Or3
+* Add Copy[If], Find[If], Generate, Replace[If] algos
+* Add HWY_EMU128 target (replaces HWY_SCALAR)
+* HWY_RVV is feature-complete
+* Add HWY_ENABLE_CONTRIB build flag, HWY_NATIVE_FMA, HWY_WANT_SSSE3/SSE4 macros
+* Extend ConcatOdd/Even and StoreInterleaved* to all types
+* Allow CappedTag<T, nonPowerOfTwo>
+* Sort speedups: 2x for AVX2, 1.09x for AVX3; avoid x86 malloc
+* Expand documentation
+* Fix RDTSCP crash in nanobenchmark
+* Fix XCR0 check (was ignoring AVX3 on ICL)
+* Support Arm/RISC-V timers
+
+ -- Jan Wassenberg <janwas@google.com>  Fri, 20 May 2022 10:00:00 +0200
+
 highway (0.16.0-1) UNRELEASED; urgency=medium
 
   * Add contrib/sort (vectorized quicksort)

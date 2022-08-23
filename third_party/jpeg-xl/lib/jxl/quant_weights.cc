@@ -32,6 +32,11 @@ HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
 
+// These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Lt;
+using hwy::HWY_NAMESPACE::MulAdd;
+using hwy::HWY_NAMESPACE::Sqrt;
+
 // kQuantWeights[N * N * c + N * y + x] is the relative weight of the (x, y)
 // coefficient in component c. Higher weights correspond to finer quantization
 // intervals and more bits spent in encoding.
@@ -104,14 +109,14 @@ hwy::HWY_NAMESPACE::Vec<DF4> InterpolateVec(
 
   auto idx = ConvertTo(di, scaled_pos);
 
-  auto frac = scaled_pos - ConvertTo(DF4(), idx);
+  auto frac = Sub(scaled_pos, ConvertTo(DF4(), idx));
 
   // TODO(veluca): in theory, this could be done with 8 TableLookupBytes, but
   // it's probably slower.
   auto a = GatherIndex(DF4(), array, idx);
   auto b = GatherIndex(DF4(), array + 1, idx);
 
-  return a * FastPowf(DF4(), b / a, frac);
+  return Mul(a, FastPowf(DF4(), Div(b, a), frac));
 }
 
 // Computes quant weights for a COLS*ROWS-sized transform, using num_bands
@@ -139,7 +144,8 @@ Status GetQuantWeights(
       float dy = y * rcprow;
       float dy2 = dy * dy;
       for (uint32_t x = 0; x < COLS; x += Lanes(DF4())) {
-        auto dx = (Set(DF4(), x) + Load(DF4(), l0123)) * Set(DF4(), rcpcol);
+        auto dx =
+            Mul(Add(Set(DF4(), x), Load(DF4(), l0123)), Set(DF4(), rcpcol));
         auto scaled_distance = Sqrt(MulAdd(dx, dx, Set(DF4(), dy2)));
         auto weight = num_bands == 1 ? Set(DF4(), bands[0])
                                      : InterpolateVec(scaled_distance, bands);
@@ -318,11 +324,11 @@ Status ComputeQuantTable(const QuantEncoding& encoding,
   HWY_CAPPED(float, 64) d;
   for (size_t i = 0; i < num * 3; i += Lanes(d)) {
     auto inv_val = LoadU(d, weights.data() + i);
-    if (JXL_UNLIKELY(!AllFalse(d, inv_val >= Set(d, 1.0f / kAlmostZero)) ||
-                     !AllFalse(d, inv_val < Set(d, kAlmostZero)))) {
+    if (JXL_UNLIKELY(!AllFalse(d, Ge(inv_val, Set(d, 1.0f / kAlmostZero))) ||
+                     !AllFalse(d, Lt(inv_val, Set(d, kAlmostZero))))) {
       return JXL_FAILURE("Invalid quantization table");
     }
-    auto val = Set(d, 1.0f) / inv_val;
+    auto val = Div(Set(d, 1.0f), inv_val);
     StoreU(val, d, table + *pos + i);
     StoreU(inv_val, d, inv_table + *pos + i);
   }

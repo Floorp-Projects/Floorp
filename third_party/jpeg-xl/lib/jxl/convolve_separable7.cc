@@ -17,6 +17,9 @@ namespace jxl {
 namespace HWY_NAMESPACE {
 
 // These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Add;
+using hwy::HWY_NAMESPACE::Mul;
+using hwy::HWY_NAMESPACE::MulAdd;
 using hwy::HWY_NAMESPACE::Vec;
 
 // 7x7 convolution by separable kernel with a single scan through the input.
@@ -62,38 +65,38 @@ class Separable7Strategy {
     // More than one iteration for scalars.
     for (; x < kRadius; x += Lanes(d)) {
       const V conv0 =
-          HorzConvolveFirst(row_m, x, xsize, wh0, wh1, wh2, wh3) * wv0;
+          Mul(HorzConvolveFirst(row_m, x, xsize, wh0, wh1, wh2, wh3), wv0);
 
       const V conv1t = HorzConvolveFirst(row_t1, x, xsize, wh0, wh1, wh2, wh3);
       const V conv1b = HorzConvolveFirst(row_b1, x, xsize, wh0, wh1, wh2, wh3);
-      const V conv1 = MulAdd(conv1t + conv1b, wv1, conv0);
+      const V conv1 = MulAdd(Add(conv1t, conv1b), wv1, conv0);
 
       const V conv2t = HorzConvolveFirst(row_t2, x, xsize, wh0, wh1, wh2, wh3);
       const V conv2b = HorzConvolveFirst(row_b2, x, xsize, wh0, wh1, wh2, wh3);
-      const V conv2 = MulAdd(conv2t + conv2b, wv2, conv1);
+      const V conv2 = MulAdd(Add(conv2t, conv2b), wv2, conv1);
 
       const V conv3t = HorzConvolveFirst(row_t3, x, xsize, wh0, wh1, wh2, wh3);
       const V conv3b = HorzConvolveFirst(row_b3, x, xsize, wh0, wh1, wh2, wh3);
-      const V conv3 = MulAdd(conv3t + conv3b, wv3, conv2);
+      const V conv3 = MulAdd(Add(conv3t, conv3b), wv3, conv2);
 
       Store(conv3, d, row_out + x);
     }
 
     // Main loop: load inputs without padding
     for (; x + Lanes(d) + kRadius <= xsize; x += Lanes(d)) {
-      const V conv0 = HorzConvolve(row_m + x, wh0, wh1, wh2, wh3) * wv0;
+      const V conv0 = Mul(HorzConvolve(row_m + x, wh0, wh1, wh2, wh3), wv0);
 
       const V conv1t = HorzConvolve(row_t1 + x, wh0, wh1, wh2, wh3);
       const V conv1b = HorzConvolve(row_b1 + x, wh0, wh1, wh2, wh3);
-      const V conv1 = MulAdd(conv1t + conv1b, wv1, conv0);
+      const V conv1 = MulAdd(Add(conv1t, conv1b), wv1, conv0);
 
       const V conv2t = HorzConvolve(row_t2 + x, wh0, wh1, wh2, wh3);
       const V conv2b = HorzConvolve(row_b2 + x, wh0, wh1, wh2, wh3);
-      const V conv2 = MulAdd(conv2t + conv2b, wv2, conv1);
+      const V conv2 = MulAdd(Add(conv2t, conv2b), wv2, conv1);
 
       const V conv3t = HorzConvolve(row_t3 + x, wh0, wh1, wh2, wh3);
       const V conv3b = HorzConvolve(row_b3 + x, wh0, wh1, wh2, wh3);
-      const V conv3 = MulAdd(conv3t + conv3b, wv3, conv2);
+      const V conv3 = MulAdd(Add(conv3t, conv3b), wv3, conv2);
 
       Store(conv3, d, row_out + x);
     }
@@ -105,26 +108,26 @@ class Separable7Strategy {
     if (kSizeModN < kRadius) {
 #endif
       const V conv0 =
-          HorzConvolveLast<kSizeModN>(row_m, x, xsize, wh0, wh1, wh2, wh3) *
-          wv0;
+          Mul(HorzConvolveLast<kSizeModN>(row_m, x, xsize, wh0, wh1, wh2, wh3),
+              wv0);
 
       const V conv1t =
           HorzConvolveLast<kSizeModN>(row_t1, x, xsize, wh0, wh1, wh2, wh3);
       const V conv1b =
           HorzConvolveLast<kSizeModN>(row_b1, x, xsize, wh0, wh1, wh2, wh3);
-      const V conv1 = MulAdd(conv1t + conv1b, wv1, conv0);
+      const V conv1 = MulAdd(Add(conv1t, conv1b), wv1, conv0);
 
       const V conv2t =
           HorzConvolveLast<kSizeModN>(row_t2, x, xsize, wh0, wh1, wh2, wh3);
       const V conv2b =
           HorzConvolveLast<kSizeModN>(row_b2, x, xsize, wh0, wh1, wh2, wh3);
-      const V conv2 = MulAdd(conv2t + conv2b, wv2, conv1);
+      const V conv2 = MulAdd(Add(conv2t, conv2b), wv2, conv1);
 
       const V conv3t =
           HorzConvolveLast<kSizeModN>(row_t3, x, xsize, wh0, wh1, wh2, wh3);
       const V conv3b =
           HorzConvolveLast<kSizeModN>(row_b3, x, xsize, wh0, wh1, wh2, wh3);
-      const V conv3 = MulAdd(conv3t + conv3b, wv3, conv2);
+      const V conv3 = MulAdd(Add(conv3t, conv3b), wv3, conv2);
 
       Store(conv3, d, row_out + x);
       x += Lanes(d);
@@ -155,7 +158,7 @@ class Separable7Strategy {
       const V wh0, const V wh1, const V wh2, const V wh3) {
     const D d;
     const V c = LoadU(d, row + x);
-    const V mul0 = c * wh0;
+    const V mul0 = Mul(c, wh0);
 
 #if HWY_TARGET == HWY_SCALAR
     const V l1 = LoadU(d, row + Mirror(x - 1, xsize));
@@ -172,9 +175,9 @@ class Separable7Strategy {
     const V r2 = LoadU(d, row + x + 2);
     const V r3 = LoadU(d, row + x + 3);
 
-    const V mul1 = MulAdd(l1 + r1, wh1, mul0);
-    const V mul2 = MulAdd(l2 + r2, wh2, mul1);
-    const V mul3 = MulAdd(l3 + r3, wh3, mul2);
+    const V mul1 = MulAdd(Add(l1, r1), wh1, mul0);
+    const V mul2 = MulAdd(Add(l2, r2), wh2, mul1);
+    const V mul3 = MulAdd(Add(l3, r3), wh3, mul2);
     return mul3;
   }
 
@@ -184,7 +187,7 @@ class Separable7Strategy {
       const V wh0, const V wh1, const V wh2, const V wh3) {
     const D d;
     const V c = LoadU(d, row + x);
-    const V mul0 = c * wh0;
+    const V mul0 = Mul(c, wh0);
 
     const V l1 = LoadU(d, row + x - 1);
     const V l2 = LoadU(d, row + x - 2);
@@ -215,11 +218,11 @@ class Separable7Strategy {
 #endif
 
     // Sum of pixels with Manhattan distance i, multiplied by weights[i].
-    const V sum1 = l1 + r1;
+    const V sum1 = Add(l1, r1);
     const V mul1 = MulAdd(sum1, wh1, mul0);
-    const V sum2 = l2 + r2;
+    const V sum2 = Add(l2, r2);
     const V mul2 = MulAdd(sum2, wh2, mul1);
-    const V sum3 = l3 + r3;
+    const V sum3 = Add(l3, r3);
     const V mul3 = MulAdd(sum3, wh3, mul2);
     return mul3;
   }
@@ -232,7 +235,7 @@ class Separable7Strategy {
                                          const V wh3) {
     const D d;
     const V c = LoadU(d, pos);
-    const V mul0 = c * wh0;
+    const V mul0 = Mul(c, wh0);
 
     // TODO(janwas): better to Combine
     const V l1 = LoadU(d, pos - 1);
@@ -242,11 +245,11 @@ class Separable7Strategy {
     const V l3 = LoadU(d, pos - 3);
     const V r3 = LoadU(d, pos + 3);
     // Sum of pixels with Manhattan distance i, multiplied by weights[i].
-    const V sum1 = l1 + r1;
+    const V sum1 = Add(l1, r1);
     const V mul1 = MulAdd(sum1, wh1, mul0);
-    const V sum2 = l2 + r2;
+    const V sum2 = Add(l2, r2);
     const V mul2 = MulAdd(sum2, wh2, mul1);
-    const V sum3 = l3 + r3;
+    const V sum3 = Add(l3, r3);
     const V mul3 = MulAdd(sum3, wh3, mul2);
     return mul3;
   }

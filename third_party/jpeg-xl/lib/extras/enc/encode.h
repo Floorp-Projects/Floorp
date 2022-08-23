@@ -58,6 +58,11 @@ class Encoder {
     return options_;
   }
 
+  Status VerifyBasicInfo(const JxlBasicInfo& info) const;
+
+  Status VerifyPackedImage(const PackedImage& image,
+                           const JxlBasicInfo& info) const;
+
  private:
   std::unordered_map<std::string, std::string> options_;
 };

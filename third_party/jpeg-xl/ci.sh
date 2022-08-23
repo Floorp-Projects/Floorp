@@ -703,7 +703,7 @@ cmd_msan_install() {
   export CXX="${CXX:-clang++}"
   detect_clang_version
   # Allow overriding the LLVM checkout.
-  local llvm_root="${LLVM_ROOT}"
+  local llvm_root="${LLVM_ROOT:-}"
   if [ -z "${llvm_root}" ]; then
     local llvm_tag="llvmorg-${CLANG_VERSION}.0.0"
     case "${CLANG_VERSION}" in

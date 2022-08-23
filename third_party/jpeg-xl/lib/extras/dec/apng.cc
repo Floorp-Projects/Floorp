@@ -706,31 +706,29 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
     size_t xsize = frame.data.xsize;
     size_t ysize = frame.data.ysize;
     if (previous_frame_should_be_cleared) {
-      size_t xs = frame.data.xsize;
-      size_t ys = frame.data.ysize;
       size_t px0 = frames[i - 1].x0;
       size_t py0 = frames[i - 1].y0;
       size_t pxs = frames[i - 1].xsize;
       size_t pys = frames[i - 1].ysize;
-      if (px0 >= x0 && py0 >= y0 && px0 + pxs <= x0 + xs &&
-          py0 + pys <= y0 + ys && frame.blend_op == BLEND_OP_SOURCE &&
+      if (px0 >= x0 && py0 >= y0 && px0 + pxs <= x0 + xsize &&
+          py0 + pys <= y0 + ysize && frame.blend_op == BLEND_OP_SOURCE &&
           use_for_next_frame) {
         // If the previous frame is entirely contained in the current frame and
         // we are using BLEND_OP_SOURCE, nothing special needs to be done.
         ppf->frames.emplace_back(std::move(frame.data));
-      } else if (px0 == x0 && py0 == y0 && px0 + pxs == x0 + xs &&
-                 py0 + pys == y0 + ys && use_for_next_frame) {
+      } else if (px0 == x0 && py0 == y0 && px0 + pxs == x0 + xsize &&
+                 py0 + pys == y0 + ysize && use_for_next_frame) {
         // If the new frame has the same size as the old one, but we are
         // blending, we can instead just not blend.
         should_blend = false;
         ppf->frames.emplace_back(std::move(frame.data));
-      } else if (px0 <= x0 && py0 <= y0 && px0 + pxs >= x0 + xs &&
-                 py0 + pys >= y0 + ys && use_for_next_frame) {
+      } else if (px0 <= x0 && py0 <= y0 && px0 + pxs >= x0 + xsize &&
+                 py0 + pys >= y0 + ysize && use_for_next_frame) {
         // If the new frame is contained within the old frame, we can pad the
         // new frame with zeros and not blend.
         PackedImage new_data(pxs, pys, frame.data.format);
         memset(new_data.pixels(), 0, new_data.pixels_size);
-        for (size_t y = 0; y < ys; y++) {
+        for (size_t y = 0; y < ysize; y++) {
           size_t bytes_per_pixel =
               PackedImage::BitsPerChannel(new_data.format.data_type) *
               new_data.format.num_channels / 8;
@@ -739,7 +737,7 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
                      bytes_per_pixel * (x0 - px0),
                  static_cast<const uint8_t*>(frame.data.pixels()) +
                      frame.data.stride * y,
-                 xs * bytes_per_pixel);
+                 xsize * bytes_per_pixel);
         }
 
         x0 = px0;
@@ -756,12 +754,14 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
         auto& pframe = ppf->frames.back();
         pframe.frame_info.layer_info.crop_x0 = px0;
         pframe.frame_info.layer_info.crop_y0 = py0;
-        pframe.frame_info.layer_info.xsize = frame.xsize;
-        pframe.frame_info.layer_info.ysize = frame.ysize;
+        pframe.frame_info.layer_info.xsize = pxs;
+        pframe.frame_info.layer_info.ysize = pys;
         pframe.frame_info.duration = 0;
-        pframe.frame_info.layer_info.have_crop = 0;
+        bool is_full_size = px0 == 0 && py0 == 0 && pxs == ppf->info.xsize &&
+                            pys == ppf->info.ysize;
+        pframe.frame_info.layer_info.have_crop = is_full_size ? 0 : 1;
         pframe.frame_info.layer_info.blend_info.blendmode = JXL_BLEND_REPLACE;
-        pframe.frame_info.layer_info.blend_info.source = 0;
+        pframe.frame_info.layer_info.blend_info.source = 1;
         pframe.frame_info.layer_info.save_as_reference = 1;
         ppf->frames.emplace_back(std::move(frame.data));
       }
@@ -780,7 +780,7 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
     bool is_full_size = x0 == 0 && y0 == 0 && xsize == ppf->info.xsize &&
                         ysize == ppf->info.ysize;
     pframe.frame_info.layer_info.have_crop = is_full_size ? 0 : 1;
-    pframe.frame_info.layer_info.blend_info.source = should_blend ? 1 : 0;
+    pframe.frame_info.layer_info.blend_info.source = 1;
     pframe.frame_info.layer_info.blend_info.alpha = 0;
     pframe.frame_info.layer_info.save_as_reference = use_for_next_frame ? 1 : 0;
 

@@ -197,8 +197,8 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
                            size_t ysize, const ColorEncoding& c_current,
                            size_t channels, bool alpha_is_premultiplied,
                            size_t bits_per_sample, JxlEndianness endianness,
-                           bool flipped_y, ThreadPool* pool, ImageBundle* ib,
-                           bool float_in, size_t align) {
+                           ThreadPool* pool, ImageBundle* ib, bool float_in,
+                           size_t align) {
   JXL_CHECK(float_in ? bits_per_sample == 16 || bits_per_sample == 32
                      : bits_per_sample > 0 && bits_per_sample <= 16);
 
@@ -243,16 +243,12 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
 
   Image3F color(xsize, ysize);
 
-  const auto get_y = [flipped_y, ysize](const size_t y) {
-    return flipped_y ? ysize - 1 - y : y;
-  };
-
   if (float_in) {
     for (size_t c = 0; c < color_channels; ++c) {
       JXL_RETURN_IF_ERROR(RunOnPool(
           pool, 0, static_cast<uint32_t>(ysize), ThreadPool::NoInit,
           [&](const uint32_t task, size_t /*thread*/) {
-            const size_t y = get_y(task);
+            const size_t y = task;
             size_t i =
                 row_size * task + (c * bits_per_sample / jxl::kBitsPerByte);
             float* JXL_RESTRICT row_out = color.PlaneRow(c, y);
@@ -291,7 +287,7 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
       JXL_RETURN_IF_ERROR(RunOnPool(
           pool, 0, static_cast<uint32_t>(ysize), ThreadPool::NoInit,
           [&](const uint32_t task, size_t /*thread*/) {
-            const size_t y = get_y(task);
+            const size_t y = task;
             size_t i = row_size * task + c * bytes_per_channel;
             float* JXL_RESTRICT row_out = color.PlaneRow(c, y);
             if (bits_per_sample <= 8) {
@@ -326,7 +322,7 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
       JXL_RETURN_IF_ERROR(RunOnPool(
           pool, 0, static_cast<uint32_t>(ysize), ThreadPool::NoInit,
           [&](const uint32_t task, size_t /*thread*/) {
-            const size_t y = get_y(task);
+            const size_t y = task;
             size_t i = row_size * task +
                        ((channels - 1) * bits_per_sample / jxl::kBitsPerByte);
             float* JXL_RESTRICT row_out = alpha.Row(y);
@@ -362,7 +358,7 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
       JXL_RETURN_IF_ERROR(RunOnPool(
           pool, 0, static_cast<uint32_t>(ysize), ThreadPool::NoInit,
           [&](const uint32_t task, size_t /*thread*/) {
-            const size_t y = get_y(task);
+            const size_t y = task;
             size_t i = row_size * task + (channels - 1) * bytes_per_channel;
             float* JXL_RESTRICT row_out = alpha.Row(y);
             if (bits_per_sample <= 8) {
@@ -422,8 +418,8 @@ Status BufferToImageBundle(const JxlPixelFormat& pixel_format, uint32_t xsize,
   JXL_RETURN_IF_ERROR(ConvertFromExternal(
       jxl::Span<const uint8_t>(static_cast<const uint8_t*>(buffer), size),
       xsize, ysize, c_current, pixel_format.num_channels,
-      /*alpha_is_premultiplied=*/false, bitdepth, pixel_format.endianness,
-      /*flipped_y=*/false, pool, ib, float_in, pixel_format.align));
+      /*alpha_is_premultiplied=*/false, bitdepth, pixel_format.endianness, pool,
+      ib, float_in, pixel_format.align));
   ib->VerifyMetadata();
 
   return true;

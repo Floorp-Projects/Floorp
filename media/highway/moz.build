@@ -11,6 +11,7 @@ LOCAL_INCLUDES += [
 SOURCES += [
     "/third_party/highway/hwy/aligned_allocator.cc",
     "/third_party/highway/hwy/contrib/image/image.cc",
+    "/third_party/highway/hwy/per_target.cc",
     "/third_party/highway/hwy/targets.cc",
 ]
 
@@ -29,6 +30,7 @@ EXPORTS.hwy += [
 EXPORTS.hwy.ops += [
     "/third_party/highway/hwy/ops/arm_neon-inl.h",
     "/third_party/highway/hwy/ops/arm_sve-inl.h",
+    "/third_party/highway/hwy/ops/emu128-inl.h",
     "/third_party/highway/hwy/ops/generic_ops-inl.h",
     "/third_party/highway/hwy/ops/rvv-inl.h",
     "/third_party/highway/hwy/ops/scalar-inl.h",
