@@ -7,15 +7,13 @@
 #include "js/UbiNodeCensus.h"
 
 #include "builtin/MapObject.h"
-#include "js/CharacterEncoding.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "util/Text.h"
+#include "vm/Compartment.h"
 #include "vm/JSContext.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/Printer.h"
-#include "vm/Realm.h"
 
-#include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
 using namespace js;

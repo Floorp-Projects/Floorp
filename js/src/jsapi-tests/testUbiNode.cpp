@@ -14,6 +14,7 @@
 #include "js/UbiNodeShortestPaths.h"
 #include "jsapi-tests/tests.h"
 #include "util/Text.h"
+#include "vm/Compartment.h"
 #include "vm/Realm.h"
 #include "vm/SavedFrame.h"
 

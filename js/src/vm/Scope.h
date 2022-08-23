@@ -21,7 +21,6 @@
 
 #include "builtin/ModuleObject.h"  // ModuleObject, Handle<ModuleObject*>
 #include "frontend/ParserAtom.h"   // frontend::TaggedParserAtomIndex
-#include "gc/Allocator.h"          // AllowGC
 #include "gc/Barrier.h"            // HeapPtr
 #include "gc/Cell.h"               // TenuredCellWithNonGCPointer
 #include "js/GCPolicyAPI.h"        // GCPolicy, IgnoreGCPolicy
@@ -38,21 +37,15 @@
 #include "wasm/WasmJS.h"    // WasmInstanceObject
 
 class JSAtom;
-class JSFunction;
 class JSScript;
 class JSTracer;
 struct JSContext;
-
-namespace JS {
-class Zone;
-}  // namespace JS
 
 namespace js {
 
 class GenericPrinter;
 
 namespace frontend {
-struct CompilationAtomCache;
 class ScopeStencil;
 struct ScopeStencilRef;
 }  // namespace frontend

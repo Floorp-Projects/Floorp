@@ -10,7 +10,6 @@
 #include "mozilla/DebugOnly.h"
 
 #include <algorithm>
-#include <math.h>
 #include <utility>
 
 #include "jsapi.h"
@@ -19,8 +18,6 @@
 
 #include "gc/GCContext.h"
 #include "gc/HashUtil.h"
-#include "gc/Marking.h"
-#include "gc/Policy.h"
 #include "js/CharacterEncoding.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertyAndElement.h"    // JS_DefineProperty, JS_GetProperty
@@ -30,18 +27,17 @@
 #include "js/Vector.h"
 #include "util/DifferentialTesting.h"
 #include "util/StringBuffer.h"
+#include "vm/Compartment.h"
+#include "vm/FrameIter.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/JSScript.h"
 #include "vm/Realm.h"
 #include "vm/SavedFrame.h"
-#include "vm/Time.h"
 #include "vm/WrapperObject.h"
 
 #include "debugger/DebugAPI-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSContext-inl.h"
-#include "vm/NativeObject-inl.h"
-#include "vm/Stack-inl.h"
 
 using mozilla::AddToHash;
 using mozilla::DebugOnly;

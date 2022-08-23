@@ -15,20 +15,18 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/Variant.h"
+#include "mozilla/Vector.h"
 
 #include <utility>
 
 #include "jspubtd.h"
 
 #include "js/AllocPolicy.h"
-#include "js/GCAPI.h"
 #include "js/HashTable.h"
 #include "js/RootingAPI.h"
-#include "js/TracingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
 #include "js/Value.h"
-#include "js/Vector.h"
 
 // [SMDOC] ubi::Node (Heap Analysis framework)
 //
@@ -169,6 +167,8 @@ class BaseScript;
 }  // namespace js
 
 namespace JS {
+
+class JS_PUBLIC_API AutoCheckCannotGC;
 
 using ZoneSet =
     js::HashSet<Zone*, js::DefaultHasher<Zone*>, js::SystemAllocPolicy>;

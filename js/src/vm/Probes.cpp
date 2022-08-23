@@ -6,9 +6,6 @@
 
 #include "vm/Probes-inl.h"
 
-#include "js/CharacterEncoding.h"
-#include "vm/JSContext.h"
-
 #ifdef INCLUDE_MOZILLA_DTRACE
 #  include "vm/JSScript-inl.h"
 #endif

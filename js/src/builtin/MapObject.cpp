@@ -29,6 +29,7 @@
 #  include "vm/TupleType.h"
 #endif
 
+#include "gc/GCContext-inl.h"
 #include "gc/Marking-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/NativeObject-inl.h"

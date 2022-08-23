@@ -21,6 +21,7 @@
 #include "js/ErrorReport.h"  // for JS_ReportErrorASCII,  JS_ReportErrorNumberASCII
 #include "js/experimental/TypedData.h"  // for JS_NewUint8Array
 #include "js/friend/ErrorMessages.h"    // for GetErrorMessage, JSMSG_*
+#include "js/GCVariant.h"               // for GCVariant
 #include "js/SourceText.h"              // for JS::SourceOwnership
 #include "js/String.h"                  // for JS_CopyStringCharsZ
 #include "vm/BytecodeUtil.h"            // for JSDVG_SEARCH_STACK

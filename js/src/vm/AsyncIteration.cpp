@@ -6,8 +6,6 @@
 
 #include "vm/AsyncIteration.h"
 
-#include "builtin/Array.h"
-
 #include "builtin/Promise.h"  // js::PromiseHandler, js::CreatePromiseObjectForAsyncGenerator, js::AsyncFromSyncIteratorMethod, js::ResolvePromiseInternal, js::RejectPromiseInternal, js::InternalAsyncGeneratorAwait
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
@@ -22,7 +20,6 @@
 #include "vm/SelfHosting.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
 
-#include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/List-inl.h"
 

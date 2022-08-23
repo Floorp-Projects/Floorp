@@ -64,6 +64,7 @@
 #include "js/Debug.h"                 // for Builder::Object, Builder
 #include "js/friend/ErrorMessages.h"  // for GetErrorMessage, JSMSG_*
 #include "js/GCAPI.h"                 // for GarbageCollectionEvent
+#include "js/GCVariant.h"             // for GCVariant
 #include "js/HeapAPI.h"               // for ExposeObjectToActiveJS
 #include "js/Promise.h"               // for AutoDebuggerJobQueueInterruption
 #include "js/PropertyAndElement.h"    // for JS_GetProperty
@@ -90,6 +91,7 @@
 #include "vm/JSContext.h"             // for JSContext
 #include "vm/JSFunction.h"            // for JSFunction
 #include "vm/JSObject.h"              // for JSObject, RequireObject,
+#include "vm/JSScript.h"              // for BaseScript, ScriptSourceObject
 #include "vm/ObjectOperations.h"      // for DefineDataProperty
 #include "vm/PlainObject.h"           // for js::PlainObject
 #include "vm/PromiseObject.h"         // for js::PromiseObject

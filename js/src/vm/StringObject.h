@@ -8,9 +8,11 @@
 #define vm_StringObject_h
 
 #include "vm/JSObject.h"
-#include "vm/Shape.h"
+#include "vm/NativeObject.h"
 
 namespace js {
+
+class Shape;
 
 class StringObject : public NativeObject {
   static const unsigned PRIMITIVE_VALUE_SLOT = 0;
