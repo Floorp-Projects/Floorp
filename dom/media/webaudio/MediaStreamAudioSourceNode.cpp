@@ -13,6 +13,7 @@
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
 #include "nsID.h"
+#include "Tracing.h"
 
 namespace mozilla::dom {
 

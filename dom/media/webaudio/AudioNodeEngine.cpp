@@ -17,6 +17,7 @@
 #  include "AudioNodeEngineSSE2.h"
 #endif
 #include "AudioBlock.h"
+#include "Tracing.h"
 
 namespace mozilla {
 
@@ -394,6 +395,7 @@ void AudioNodeEngine::ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                                    const AudioBlock& aInput,
                                    AudioBlock* aOutput, bool* aFinished) {
   MOZ_ASSERT(mInputCount <= 1 && mOutputCount <= 1);
+  TRACE("AudioNodeEngine::ProcessBlock");
   *aOutput = aInput;
 }
 
@@ -403,6 +405,7 @@ void AudioNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
                                            Span<AudioBlock> aOutput,
                                            bool* aFinished) {
   MOZ_ASSERT(mInputCount > 1 || mOutputCount > 1);
+  TRACE("AudioNodeEngine::ProcessBlocksOnPorts");
   // Only produce one output port, and drop all other input ports.
   aOutput[0] = aInput[0];
 }
