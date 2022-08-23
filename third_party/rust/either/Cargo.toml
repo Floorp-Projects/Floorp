@@ -11,9 +11,9 @@
 
 [package]
 edition = "2018"
-rust-version = "1.31"
+rust-version = "1.36"
 name = "either"
-version = "1.7.0"
+version = "1.8.0"
 authors = ["bluss"]
 description = """
 The enum `Either` with variants `Left` and `Right` is a general purpose sum type with two cases.
