@@ -1,0 +1,38 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/*
+ * Rule to specify the CSS selector for detecting and clicking cookie banner.
+ */
+
+[builtinclass, scriptable, uuid(7e104b32-b6db-43f3-b887-573c01acef39)]
+interface nsIClickRule : nsISupports {
+  /**
+   * The CSS selector for detecting the presence of the cookie banner.
+   */
+  [must_use] readonly attribute ACString presence;
+
+  /**
+   * The CSS selector for hiding the presence of the cookie banner. If this is
+   * not given, we will use the presence selector to hide the banner.
+   *
+   * Note that we hide the cookie banner before we click it in order to prevent
+   * flickers.
+   */
+  [must_use] readonly attribute ACString hide;
+
+  /*
+   * The CSS selector to to select the element to click for the opt-out option
+   * for the cookie banner.
+   */
+  [must_use] readonly attribute ACString optOut;
+
+  /*
+   * The CSS selector to to select the element to click for the opt-in option
+   * for the cookie banner.
+   */
+  [must_use] readonly attribute ACString optIn;
+};

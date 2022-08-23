@@ -152,7 +152,11 @@ class CookieBannerListService {
   }
 
   #importClickRule(rule, click) {
-    // Import the click rules. This will be implemented in the next patch.
+    if (!click) {
+      return;
+    }
+
+    rule.addClickRule(click.presence, click.hide, click.optOut, click.optIn);
   }
 }
 
