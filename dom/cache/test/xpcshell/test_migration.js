@@ -6,7 +6,7 @@
  * and are CC licensed by https://www.flickr.com/photos/legofenris/.
  */
 
-async function testSteps() {
+add_task(async function testSteps() {
   create_test_profile("schema_15_profile.zip");
 
   const cache = await caches.open("xpcshell-test");
@@ -62,4 +62,4 @@ async function testSteps() {
       "the response should have the correct header"
     );
   }
-}
+});

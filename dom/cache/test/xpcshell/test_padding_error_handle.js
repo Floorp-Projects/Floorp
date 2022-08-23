@@ -20,7 +20,7 @@ function createTempPaddingFile() {
   );
 }
 
-async function testSteps() {
+add_task(async function testSteps() {
   create_test_profile("schema_25_profile.zip");
   let cache = await caches.open("test");
 
@@ -69,4 +69,4 @@ async function testSteps() {
   );
 
   await caches.delete("test");
-}
+});

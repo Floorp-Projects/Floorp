@@ -189,7 +189,6 @@ module.exports = {
         // These are more complicated bugs which may require some in-depth
         // investigation or different solutions. They are also likely to be
         // a reasonable size.
-        "dom/cache/**",
         "dom/indexedDB/**",
         "dom/localstorage/**",
       ],
