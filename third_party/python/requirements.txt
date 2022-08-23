@@ -61,9 +61,9 @@ chardet==4.0.0; python_version >= "2.7" and python_full_version < "3.0.0" or pyt
 click==7.1.2; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.5.0" \
     --hash=sha256:dacca89f4bfadd5de3d7489b7c8a566eee0d3676333fbb50030263894c38c0dc \
     --hash=sha256:d2b5255c7c6349bc1bd1e59e08cd12acbbd63ce649f2588755783aa94dfb6b1a
-colorama==0.4.4; python_version >= "2.7" and python_full_version < "3.0.0" and platform_system == "Windows" or python_full_version >= "3.5.0" and platform_system == "Windows" \
-    --hash=sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2 \
-    --hash=sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b
+colorama==0.4.5; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.5.0") \
+    --hash=sha256:854bf444933e37f5824ae7bfc1e98d5bce2ebe4160d46b5edf346a89358e99da \
+    --hash=sha256:e6c6b4334fc50988a639d9b98aa429a0b57da6e17b9a44f0451f930b6967b7a4
 compare-locales==8.2.1; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.5.0" and python_version < "4") \
     --hash=sha256:470d50d96c68f8e147daa3d70f29a7b750adefea450c5fa07e0f666c8083d854 \
     --hash=sha256:e6a1610151d357e74ee6c1f5e944f1868e449f83e478c84d92f7b86132f721d7
@@ -323,8 +323,8 @@ slugid==2.0.0 \
     --hash=sha256:aec8b0e01c4ad32e38e12d609eab3ec912fd129aaf6b2ded0199b56a5f8fd67c \
     --hash=sha256:a950d98b72691178bdd4d6c52743c4a2aa039207cf7a97d71060a111ff9ba297
 taskcluster-taskgraph==2.0.0 \
-    --hash=sha256:3d22ab488071ddc82997b33fc6c1c524a44bdc7e14b30a274d99dbbdd7389502 \
-    --hash=sha256:93eff40ba39a29cd290fc25a2124ed9bf5806d87891edd7e8de35df568708141
+    --hash=sha256:93eff40ba39a29cd290fc25a2124ed9bf5806d87891edd7e8de35df568708141 \
+    --hash=sha256:3d22ab488071ddc82997b33fc6c1c524a44bdc7e14b30a274d99dbbdd7389502
 taskcluster-urls==13.0.1 \
     --hash=sha256:b25e122ecec249c4299ac7b20b08db76e3e2025bdaeb699a9d444556de5fd367 \
     --hash=sha256:5e25e7e6818e8877178b175ff43d2e6548afad72694aa125f404a7329ece0973 \
