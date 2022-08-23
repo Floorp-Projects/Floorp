@@ -203,6 +203,20 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
+  CookieBanner: {
+    parent: {
+      moduleURI: "resource://gre/actors/CookieBannerParent.jsm",
+    },
+    child: {
+      moduleURI: "resource://gre/actors/CookieBannerChild.jsm",
+      events: {
+        DOMContentLoaded: {},
+      },
+    },
+
+    enablePreference: "cookiebanners.bannerClicking.enabled",
+  },
+
   DateTimePicker: {
     parent: {
       moduleURI: "resource://gre/actors/DateTimePickerParent.jsm",
