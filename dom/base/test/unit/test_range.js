@@ -32,17 +32,7 @@ function getFragment(aNode) {
 }
 
 // Goodies from head_content.js
-const serializer = new DOMSerializer();
 const parser = getParser();
-
-/**
- * Dump the contents of a document fragment to the console.
- *
- * @param aFragment The fragment to serialize.
- */
-function dumpFragment(aFragment) {
-  dump(serializer.serializeToString(aFragment) + "\n\n");
-}
 
 /**
  * Translate an XPath to a DOM node. This method uses a document
