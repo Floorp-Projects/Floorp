@@ -1262,6 +1262,11 @@ static bool IsLineClampItem(const ReflowInput& aReflowInput) {
 void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
                           const ReflowInput& aReflowInput,
                           nsReflowStatus& aStatus) {
+  if (GetInFlowParent() && GetInFlowParent()->IsContentHiddenForLayout()) {
+    FinishAndStoreOverflow(&aMetrics, aReflowInput.mStyleDisplay);
+    return;
+  }
+
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsBlockFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aMetrics, aStatus);
@@ -2531,6 +2536,10 @@ static bool LinesAreEmpty(const nsLineList& aList) {
 }
 
 void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
+  if (IsContentHiddenForLayout()) {
+    return;
+  }
+
   bool keepGoing = true;
   bool repositionViews = false;  // should we really need this?
   bool foundAnyClears = aState.mFloatBreakType != StyleClear::None;

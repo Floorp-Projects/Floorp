@@ -1739,6 +1739,18 @@ class PresShell final : public nsStubDocumentObserver,
 
   bool GetZoomableByAPZ() const;
 
+  /**
+   * If this frame has content hidden via `content-visibilty` that has a pending
+   * reflow, force the content to reflow immediately.
+   */
+  void EnsureReflowIfFrameHasHiddenContent(nsIFrame*);
+
+  /**
+   * Whether or not this presshell is  is forcing a reflow of hidden content in
+   * this frame via EnsureReflowIfFrameHasHiddenContent().
+   */
+  bool IsForcingLayoutForHiddenContent(const nsIFrame*) const;
+
  private:
   ~PresShell();
 
@@ -2997,6 +3009,8 @@ class PresShell final : public nsStubDocumentObserver,
   nsTHashSet<nsIScrollableFrame*> mPendingScrollAnchorSelection;
   nsTHashSet<nsIScrollableFrame*> mPendingScrollAnchorAdjustment;
   nsTHashSet<nsIScrollableFrame*> mPendingScrollResnap;
+
+  nsTHashSet<nsIContent*> mHiddenContentInForcedLayout;
 
   nsCallbackEventRequest* mFirstCallbackEventRequest = nullptr;
   nsCallbackEventRequest* mLastCallbackEventRequest = nullptr;
