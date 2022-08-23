@@ -21,7 +21,7 @@ process interspersed with some tips.
 
    You should use this as basis for a PR to the Puppeteer project once you are
 	 satisfied that the two-way sync will be successful in mozilla-central. See
-	 their [CONTRIBUTING.md].
+	 their [contributing.md].
 
 	 Typically, the changes we push to Puppeteer include unskipping newly passing
 	 unit tests for Firefox along with minor fixes to the tests or
@@ -67,8 +67,8 @@ process interspersed with some tips.
 	 Examine the job logs and makes sure the run didn't get interrupted early
 	 by a crash or a hang, especially if you see a lot of
 	 `TEST-UNEXPECTED-MISSING` in the Treeherder Failure Summary. You might need
-	 to add new test skips or fix some new bug in the unit tests. This is the
-	 fun part.
+	 to add new test skips (especially for these tests as designed for Chrome only)
+	 or fix some new bug in the unit tests. This is the fun part.
 
 7. Once you are happy with the metadata and are ready to submit the sync patch
    up for review, run the Puppeteer test job on try again with `--rebuild 10`
@@ -76,8 +76,8 @@ process interspersed with some tips.
 
 [Testing]: ../Testing.md
 [Puppeteer test suite]: https://github.com/GoogleChrome/puppeteer/tree/master/test
-[re-install the project]: https://github.com/puppeteer/puppeteer/blob/main/CONTRIBUTING.md#getting-code
+[install the project]: https://github.com/puppeteer/puppeteer/blob/main/docs/contributing.md#getting-code
 [run tests against both Chromium and Firefox]: https://github.com/puppeteer/puppeteer/blob/main/test/README.md#running-tests
 [puppeteer-expected.json]: https://searchfox.org/mozilla-central/source/remote/test/puppeteer-expected.json
-[CONTRIBUTING.md]: https://github.com/puppeteer/puppeteer/blob/main/CONTRIBUTING.md
+[contributing.md]: https://github.com/puppeteer/puppeteer/blob/main/docs/contributing.md
 [unskip]: https://github.com/puppeteer/puppeteer/blob/main/test/README.md#skipping-tests-in-specific-conditions
