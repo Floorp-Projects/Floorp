@@ -26,6 +26,7 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 @RunWith(Parameterized::class)
 class ExtensionActionTest : BaseSessionTest() {
     private var extension: WebExtension? = null
+    private var otherExtension: WebExtension? = null
     private var default: WebExtension.Action? = null
     private var backgroundPort: WebExtension.Port? = null
     private var windowPort: WebExtension.Port? = null
@@ -57,6 +58,10 @@ class ExtensionActionTest : BaseSessionTest() {
 
         extension = sessionRule.waitForResult(
                 controller.installBuiltIn("resource://android/assets/web_extensions/actions/"));
+        // Another dummy extension, only used to check restrictions related to setting
+        // another extension url as a popup url, and so there is no delegate needed for it.
+        otherExtension = sessionRule.waitForResult(
+                controller.installBuiltIn("resource://android/assets/web_extensions/dummy/"));
 
         mainSession.webExtensionController.setMessageDelegate(
                 extension!!,
@@ -123,6 +128,10 @@ class ExtensionActionTest : BaseSessionTest() {
             extension!!.setActionDelegate(null)
             sessionRule.waitForResult(controller.uninstall(extension!!))
         }
+
+        if (otherExtension != null) {
+            sessionRule.waitForResult(controller.uninstall(otherExtension!!))
+        }
     }
 
     private fun testBackgroundActionApi(message: String, tester: (WebExtension.Action) -> Unit) {
@@ -161,6 +170,43 @@ class ExtensionActionTest : BaseSessionTest() {
         })
 
         sessionRule.waitForResult(result)
+    }
+
+    private fun testSetPopup(popupUrl: String, isUrlAllowed: Boolean) {
+        val setPopupResult = GeckoResult<Void>()
+
+        backgroundPort!!.setDelegate(object : WebExtension.PortDelegate {
+            override fun onPortMessage(message: Any, port: WebExtension.Port) {
+                val json = message as JSONObject
+                if (json.getString("resultFor") == "setPopup" &&
+                    json.getString("type") == type) {
+                    if (isUrlAllowed != json.getBoolean("success")) {
+                      val expectedResString = when(isUrlAllowed) {
+                        true -> "allowed"
+                        else -> "disallowed"
+                      };
+                      setPopupResult.completeExceptionally(IllegalArgumentException(
+                              "Expected \"${popupUrl}\" to be ${ expectedResString }"))
+                    } else {
+                      setPopupResult.complete(null)
+                    }
+                } else {
+                    // We should NOT receive the expected message result.
+                    setPopupResult.completeExceptionally(IllegalArgumentException(
+                            "Received unexpected result for: ${json.getString("type")} ${json.getString("resultFor")}"))
+                }
+            }
+        })
+
+        var json = JSONObject("""{
+           "action": "setPopupCheckRestrictions",
+           "popup": "$popupUrl" 
+        }""");
+
+        json.put("type", type)
+        windowPort!!.postMessage(json)
+
+        sessionRule.waitForResult(setPopupResult)
     }
 
     private fun testActionApi(message: String, tester: (WebExtension.Action) -> Unit) {
@@ -475,6 +521,15 @@ class ExtensionActionTest : BaseSessionTest() {
         }
 
         sessionRule.waitForResult(error)
+    }
+
+    @Test
+    fun testSetPopupRestrictions() {
+      testSetPopup("https://example.com", false)
+      testSetPopup("${otherExtension!!.metaData.baseUrl}other-extension.html", false)
+      testSetPopup("${extension!!.metaData.baseUrl}same-extension.html", true)
+      testSetPopup("relative-url-01.html", true);
+      testSetPopup("/relative-url-02.html", true);
     }
 
     @Test
