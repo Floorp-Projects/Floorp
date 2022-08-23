@@ -103,16 +103,26 @@ nsWebPEncoder::InitFromData(const uint8_t* aData,
 
   size_t size = 0;
 
+  CheckedInt32 width = CheckedInt32(aWidth);
+  CheckedInt32 height = CheckedInt32(aHeight);
+  CheckedInt32 stride = CheckedInt32(aStride);
+  if (!width.isValid() || !height.isValid() || !stride.isValid() ||
+      !(CheckedUint32(aStride) * CheckedUint32(aHeight)).isValid()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   if (aInputFormat == INPUT_FORMAT_RGB) {
-    size = quality == 100 ? WebPEncodeLosslessRGB(aData, aWidth, aHeight,
-                                                  aStride, &mImageBuffer)
-                          : WebPEncodeRGB(aData, aWidth, aHeight, aStride,
-                                          quality, &mImageBuffer);
+    size = quality == 100
+               ? WebPEncodeLosslessRGB(aData, width.value(), height.value(),
+                                       stride.value(), &mImageBuffer)
+               : WebPEncodeRGB(aData, width.value(), height.value(),
+                               stride.value(), quality, &mImageBuffer);
   } else if (aInputFormat == INPUT_FORMAT_RGBA) {
-    size = quality == 100 ? WebPEncodeLosslessRGBA(aData, aWidth, aHeight,
-                                                   aStride, &mImageBuffer)
-                          : WebPEncodeRGBA(aData, aWidth, aHeight, aStride,
-                                           quality, &mImageBuffer);
+    size = quality == 100
+               ? WebPEncodeLosslessRGBA(aData, width.value(), height.value(),
+                                        stride.value(), &mImageBuffer)
+               : WebPEncodeRGBA(aData, width.value(), height.value(),
+                                stride.value(), quality, &mImageBuffer);
   } else if (aInputFormat == INPUT_FORMAT_HOSTARGB) {
     UniquePtr<uint8_t[]> aDest = MakeUnique<uint8_t[]>(aStride * aHeight);
 
@@ -139,10 +149,12 @@ nsWebPEncoder::InitFromData(const uint8_t* aData,
       }
     }
 
-    size = quality == 100 ? WebPEncodeLosslessRGBA(aDest.get(), aWidth, aHeight,
-                                                   aStride, &mImageBuffer)
-                          : WebPEncodeRGBA(aDest.get(), aWidth, aHeight,
-                                           aStride, quality, &mImageBuffer);
+    size =
+        quality == 100
+            ? WebPEncodeLosslessRGBA(aDest.get(), width.value(), height.value(),
+                                     stride.value(), &mImageBuffer)
+            : WebPEncodeRGBA(aDest.get(), width.value(), height.value(),
+                             stride.value(), quality, &mImageBuffer);
   }
 
   mFinished = true;
