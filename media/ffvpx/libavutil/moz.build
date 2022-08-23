@@ -11,11 +11,13 @@ if CONFIG['FFVPX_ASFLAGS']:
         DIRS += ['x86']
     elif CONFIG['CPU_ARCH'] == 'arm':
         DIRS += ['arm']
-    elif CONFIG['CPU_ARCH'] == 'aarch64':
-        DIRS += ['aarch64']
+
+if CONFIG['CPU_ARCH'] == 'aarch64':
+    DIRS += ['aarch64']
 
 SharedLibrary('mozavutil')
 SOURCES += [
+    'avsscanf.c',
     'avstring.c',
     'bprint.c',
     'buffer.c',
@@ -45,6 +47,7 @@ SOURCES += [
     'time.c',
     'utils.c'
 ]
+
 if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
     SOURCES += [
         'adler32.c',
@@ -54,6 +57,7 @@ if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
         'integer.c',
         'intmath.c',
         'lls.c',
+        'mastering_display_metadata.c',
         'pixelutils.c',
         'threadmessage.c',
         'timecode.c',
@@ -63,7 +67,6 @@ if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
         LOCAL_INCLUDES += ['/media/mozva']
         SOURCES += [
             'hwcontext_vaapi.c',
-            'mastering_display_metadata.c',
         ]
         USE_LIBS += ['mozva']
 

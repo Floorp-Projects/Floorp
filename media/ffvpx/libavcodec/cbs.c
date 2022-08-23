@@ -25,6 +25,7 @@
 #include "libavutil/common.h"
 #include "libavutil/opt.h"
 
+#include "avcodec.h"
 #include "cbs.h"
 #include "cbs_internal.h"
 
@@ -293,12 +294,47 @@ int ff_cbs_read_packet(CodedBitstreamContext *ctx,
                          pkt->data, pkt->size, 0);
 }
 
+int ff_cbs_read_packet_side_data(CodedBitstreamContext *ctx,
+                                 CodedBitstreamFragment *frag,
+                                 const AVPacket *pkt)
+{
+    size_t side_data_size;
+    const uint8_t *side_data =
+        av_packet_get_side_data(pkt, AV_PKT_DATA_NEW_EXTRADATA,
+                                &side_data_size);
+
+    return cbs_read_data(ctx, frag, NULL,
+                         side_data, side_data_size, 1);
+}
+
 int ff_cbs_read(CodedBitstreamContext *ctx,
                 CodedBitstreamFragment *frag,
                 const uint8_t *data, size_t size)
 {
     return cbs_read_data(ctx, frag, NULL,
                          data, size, 0);
+}
+
+/**
+ * Allocate a new internal data buffer of the given size in the unit.
+ *
+ * The data buffer will have input padding.
+ */
+static int cbs_alloc_unit_data(CodedBitstreamUnit *unit,
+                               size_t size)
+{
+    av_assert0(!unit->data && !unit->data_ref);
+
+    unit->data_ref = av_buffer_alloc(size + AV_INPUT_BUFFER_PADDING_SIZE);
+    if (!unit->data_ref)
+        return AVERROR(ENOMEM);
+
+    unit->data      = unit->data_ref->data;
+    unit->data_size = size;
+
+    memset(unit->data + size, 0, AV_INPUT_BUFFER_PADDING_SIZE);
+
+    return 0;
 }
 
 static int cbs_write_unit_data(CodedBitstreamContext *ctx,
@@ -346,7 +382,7 @@ static int cbs_write_unit_data(CodedBitstreamContext *ctx,
 
     flush_put_bits(&pbc);
 
-    ret = ff_cbs_alloc_unit_data(unit, put_bits_count(&pbc) / 8);
+    ret = cbs_alloc_unit_data(unit, put_bytes_output(&pbc));
     if (ret < 0)
         return ret;
 
@@ -679,23 +715,6 @@ int ff_cbs_alloc_unit_content(CodedBitstreamUnit *unit,
     return 0;
 }
 
-int ff_cbs_alloc_unit_data(CodedBitstreamUnit *unit,
-                           size_t size)
-{
-    av_assert0(!unit->data && !unit->data_ref);
-
-    unit->data_ref = av_buffer_alloc(size + AV_INPUT_BUFFER_PADDING_SIZE);
-    if (!unit->data_ref)
-        return AVERROR(ENOMEM);
-
-    unit->data      = unit->data_ref->data;
-    unit->data_size = size;
-
-    memset(unit->data + size, 0, AV_INPUT_BUFFER_PADDING_SIZE);
-
-    return 0;
-}
-
 static int cbs_insert_unit(CodedBitstreamFragment *frag,
                            int position)
 {
@@ -770,18 +789,16 @@ int ff_cbs_insert_unit_content(CodedBitstreamFragment *frag,
     return 0;
 }
 
-int ff_cbs_insert_unit_data(CodedBitstreamFragment *frag,
-                            int position,
-                            CodedBitstreamUnitType type,
-                            uint8_t *data, size_t data_size,
-                            AVBufferRef *data_buf)
+static int cbs_insert_unit_data(CodedBitstreamFragment *frag,
+                                CodedBitstreamUnitType type,
+                                uint8_t *data, size_t data_size,
+                                AVBufferRef *data_buf,
+                                int position)
 {
     CodedBitstreamUnit *unit;
     AVBufferRef *data_ref;
     int err;
 
-    if (position == -1)
-        position = frag->nb_units;
     av_assert0(position >= 0 && position <= frag->nb_units);
 
     if (data_buf)
@@ -807,6 +824,16 @@ int ff_cbs_insert_unit_data(CodedBitstreamFragment *frag,
     unit->data_ref  = data_ref;
 
     return 0;
+}
+
+int ff_cbs_append_unit_data(CodedBitstreamFragment *frag,
+                            CodedBitstreamUnitType type,
+                            uint8_t *data, size_t data_size,
+                            AVBufferRef *data_buf)
+{
+    return cbs_insert_unit_data(frag, type,
+                                data, data_size, data_buf,
+                                frag->nb_units);
 }
 
 void ff_cbs_delete_unit(CodedBitstreamFragment *frag,

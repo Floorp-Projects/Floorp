@@ -27,8 +27,10 @@
  * @{
  */
 
-#include "avutil.h"
+#include <stddef.h>
+#include <stdint.h>
 #include "pixdesc.h"
+#include "pixfmt.h"
 #include "rational.h"
 
 /**
@@ -123,6 +125,24 @@ int av_image_alloc(uint8_t *pointers[4], int linesizes[4],
 void av_image_copy_plane(uint8_t       *dst, int dst_linesize,
                          const uint8_t *src, int src_linesize,
                          int bytewidth, int height);
+
+/**
+ * Copy image data located in uncacheable (e.g. GPU mapped) memory. Where
+ * available, this function will use special functionality for reading from such
+ * memory, which may result in greatly improved performance compared to plain
+ * av_image_copy_plane().
+ *
+ * bytewidth must be contained by both absolute values of dst_linesize
+ * and src_linesize, otherwise the function behavior is undefined.
+ *
+ * @note The linesize parameters have the type ptrdiff_t here, while they are
+ *       int for av_image_copy_plane().
+ * @note On x86, the linesizes currently need to be aligned to the cacheline
+ *       size (i.e. 64) to get improved performance.
+ */
+void av_image_copy_plane_uc_from(uint8_t       *dst, ptrdiff_t dst_linesize,
+                                 const uint8_t *src, ptrdiff_t src_linesize,
+                                 ptrdiff_t bytewidth, int height);
 
 /**
  * Copy image in src_data to dst_data.

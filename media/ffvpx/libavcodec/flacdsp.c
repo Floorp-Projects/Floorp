@@ -19,6 +19,7 @@
  */
 
 #include "libavutil/attributes.h"
+#include "libavutil/internal.h"
 #include "libavutil/samplefmt.h"
 #include "flacdsp.h"
 #include "config.h"
@@ -123,8 +124,9 @@ av_cold void ff_flacdsp_init(FLACDSPContext *c, enum AVSampleFormat fmt, int cha
         break;
     }
 
-    if (ARCH_ARM)
-        ff_flacdsp_init_arm(c, fmt, channels, bps);
-    if (ARCH_X86)
-        ff_flacdsp_init_x86(c, fmt, channels, bps);
+#if ARCH_ARM
+    ff_flacdsp_init_arm(c, fmt, channels, bps);
+#elif ARCH_X86
+    ff_flacdsp_init_x86(c, fmt, channels, bps);
+#endif
 }

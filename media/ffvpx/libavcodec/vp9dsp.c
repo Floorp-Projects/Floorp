@@ -21,8 +21,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "config.h"
+
+#include "libavutil/attributes.h"
 #include "libavutil/avassert.h"
-#include "libavutil/common.h"
 #include "libavutil/mem_internal.h"
 
 #include "vp9dsp.h"
@@ -94,8 +96,15 @@ av_cold void ff_vp9dsp_init(VP9DSPContext *dsp, int bpp, int bitexact)
         ff_vp9dsp_init_12(dsp);
     }
 
-    if (ARCH_AARCH64) ff_vp9dsp_init_aarch64(dsp, bpp);
-    if (ARCH_ARM) ff_vp9dsp_init_arm(dsp, bpp);
-    if (ARCH_X86) ff_vp9dsp_init_x86(dsp, bpp, bitexact);
-    if (ARCH_MIPS) ff_vp9dsp_init_mips(dsp, bpp);
+#if ARCH_AARCH64
+    ff_vp9dsp_init_aarch64(dsp, bpp);
+#elif ARCH_ARM
+    ff_vp9dsp_init_arm(dsp, bpp);
+#elif ARCH_X86
+    ff_vp9dsp_init_x86(dsp, bpp, bitexact);
+#elif ARCH_MIPS
+    ff_vp9dsp_init_mips(dsp, bpp);
+#elif ARCH_LOONGARCH
+    ff_vp9dsp_init_loongarch(dsp, bpp);
+#endif
 }
