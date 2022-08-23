@@ -35,7 +35,7 @@
     --figure-row: 2;
 
     --customization-panel-column: 3;
-    --customization-panel-padding-inline-start: 2em;
+    --customization-panel-padding-inline-start: 2.5em;
 
     --colorway-selector-align: start;
     --colorway-name-font-size: 2.5em;
@@ -112,7 +112,7 @@ figure {
   align-items: center;
   justify-content: center;
 
-  margin: 1em 1.5em 0;
+  margin: 1em 0 0;
   min-width: var(--figure-width);
   min-height: var(--figure-height);
 }
