@@ -648,7 +648,7 @@ var gPageIcons = {
 var gInitialPages = [
   "about:blank",
   "about:home",
-  ...(AppConstants.NIGHTLY_BUILD ? ["about:firefoxview"] : []),
+  "about:firefoxview",
   "about:newtab",
   "about:privatebrowsing",
   "about:sessionrestore",
@@ -2540,8 +2540,6 @@ var gBrowserInit = {
 
     DownloadsButton.uninit();
 
-    FirefoxViewHandler.uninit();
-
     if (gToolbarKeyNavEnabled) {
       ToolbarKeyboardNavigator.uninit();
     }
@@ -2610,6 +2608,7 @@ var gBrowserInit = {
       CanvasPermissionPromptHelper.uninit();
       WebAuthnPromptHelper.uninit();
       PanelUI.uninit();
+      FirefoxViewHandler.uninit();
     }
 
     // Final window teardown, do this last.
@@ -9917,23 +9916,21 @@ var FirefoxViewHandler = {
     return document.getElementById("firefox-view-button");
   },
   init() {
-    if (!AppConstants.NIGHTLY_BUILD) {
-      return;
-    }
     const { FirefoxViewNotificationManager } = ChromeUtils.importESModule(
       "resource:///modules/firefox-view-notification-manager.sys.mjs"
     );
     if (!Services.prefs.getBoolPref("browser.tabs.firefox-view")) {
       document.getElementById("menu_openFirefoxView").hidden = true;
     } else {
-      let shouldShow = FirefoxViewNotificationManager.shouldNotificationDotBeShowing();
-      this._toggleNotificationDot(shouldShow);
+      this._toggleNotificationDot(
+        FirefoxViewNotificationManager.shouldNotificationDotBeShowing()
+      );
     }
     Services.obs.addObserver(this, "firefoxview-notification-dot-update");
-    this.observerAdded = true;
+    this._observerAdded = true;
   },
   uninit() {
-    if (this.observerAdded) {
+    if (this._observerAdded) {
       Services.obs.removeObserver(this, "firefoxview-notification-dot-update");
     }
   },
