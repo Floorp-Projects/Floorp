@@ -21,6 +21,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 class CookieBannerParent extends JSWindowActorParent {
   async receiveMessage(message) {
+    if (message.name == "CookieBanner::Test-FinishClicking") {
+      Services.obs.notifyObservers(null, "cookie-banner-test-clicking-finish");
+      return undefined;
+    }
+
     if (
       lazy.serviceMode == Ci.nsICookieBannerService.MODE_DISABLED ||
       message.name != "CookieBanner::GetClickRule"

@@ -25,6 +25,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   3000
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "testing",
+  "cookiebanners.bannerClicking.testing",
+  false
+);
+
 XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
   return console.createInstance({
     prefix: "CookieBannerChild",
@@ -75,12 +82,15 @@ class CookieBannerChild extends JSWindowActorChild {
     lazy.logConsole.debug("Got rule:", rule);
     // We can stop here if we don't have a rule or the target button to click.
     if (!rule?.target) {
+      this.#maybeSendTestMessage();
       return;
     }
 
     this.#clickRule = rule;
 
-    this.handleCookieBanner();
+    await this.handleCookieBanner();
+
+    this.#maybeSendTestMessage();
   }
 
   didDestroy() {
@@ -281,5 +291,18 @@ class CookieBannerChild extends JSWindowActorChild {
     banner.ownerGlobal.requestAnimationFrame(() => {
       banner.style.display = originalDisplay;
     });
+  }
+
+  #maybeSendTestMessage() {
+    if (lazy.testing) {
+      let win = this.contentWindow;
+
+      // Report the clicking is finished after the style has been flushed.
+      win.requestAnimationFrame(() => {
+        win.setTimeout(() => {
+          this.sendAsyncMessage("CookieBanner::Test-FinishClicking");
+        }, 0);
+      });
+    }
   }
 }
