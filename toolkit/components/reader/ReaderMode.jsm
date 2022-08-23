@@ -45,7 +45,7 @@ ChromeUtils.defineModuleGetter(
 ChromeUtils.defineModuleGetter(
   lazy,
   "LanguageDetector",
-  "resource:///modules/translation/LanguageDetector.jsm"
+  "resource://gre/modules/translation/LanguageDetector.jsm"
 );
 ChromeUtils.defineModuleGetter(
   lazy,

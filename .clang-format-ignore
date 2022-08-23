@@ -71,7 +71,6 @@ toolkit/components/uniffi-js/UniFFIFixtureScaffolding.cpp
 
 # Generated from ./tools/rewriting/ThirdPartyPaths.txt
 # awk '{print ""$1".*"}' ./tools/rewriting/ThirdPartyPaths.txt
-browser/components/translation/cld2/.*
 browser/extensions/mortar/ppapi/.*
 devtools/client/shared/sourceeditor/codemirror/.*
 dom/canvas/test/webgl-conf/checkout/closure-library/.*
@@ -200,6 +199,7 @@ testing/web-platform/tests/tools/third_party/.*
 third_party/.*
 toolkit/components/jsoncpp/.*
 toolkit/components/protobuf/.*
+toolkit/components/translation/cld2/.*
 toolkit/components/url-classifier/chromium/.*
 toolkit/components/url-classifier/protobuf/.*
 toolkit/crashreporter/breakpad-client/.*

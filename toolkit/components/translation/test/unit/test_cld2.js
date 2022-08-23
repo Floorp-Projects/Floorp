@@ -569,7 +569,7 @@ const kTestPairs = [
 
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 let { LanguageDetector, workerManager } = ChromeUtils.import(
-  "resource:///modules/translation/LanguageDetector.jsm"
+  "resource://gre/modules/translation/LanguageDetector.jsm"
 );
 
 function check_result(result, langCode, expected) {

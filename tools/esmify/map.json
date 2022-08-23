@@ -792,8 +792,6 @@
     "browser/components/syncedtabs/util.js",
   "resource:///modules/translation/BingTranslator.jsm":
     "browser/components/translation/BingTranslator.jsm",
-  "resource:///modules/translation/LanguageDetector.jsm":
-    "browser/components/translation/LanguageDetector.jsm",
   "resource:///modules/translation/TranslationChild.jsm":
     "browser/components/translation/TranslationChild.jsm",
   "resource:///modules/translation/TranslationDocument.jsm":
@@ -1944,6 +1942,8 @@
     "toolkit/modules/third_party/fathom/fathom.jsm",
   "resource://gre/modules/third_party/jsesc/jsesc.js":
     "toolkit/modules/third_party/jsesc/jsesc.js",
+  "resource://gre/modules/translation/LanguageDetector.jsm":
+    "toolkit/components/translation/LanguageDetector.jsm",
   "resource://gre/modules/txEXSLTRegExFunctions.jsm":
     "dom/xslt/xslt/txEXSLTRegExFunctions.jsm",
   "resource://gre/modules/vtt.jsm": "dom/media/webvtt/vtt.jsm",
