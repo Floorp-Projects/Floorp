@@ -53,8 +53,7 @@ struct Histogram {
 };
 
 void ClusterHistograms(HistogramParams params, const std::vector<Histogram>& in,
-                       size_t num_contexts, size_t max_histograms,
-                       std::vector<Histogram>* out,
+                       size_t max_histograms, std::vector<Histogram>* out,
                        std::vector<uint32_t>* histogram_symbols);
 }  // namespace jxl
 

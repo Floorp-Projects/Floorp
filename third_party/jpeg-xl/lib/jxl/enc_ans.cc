@@ -703,9 +703,8 @@ class HistogramBuilder {
     if (histograms_.size() > 1) {
       if (!ans_fuzzer_friendly_) {
         std::vector<uint32_t> histogram_symbols;
-        ClusterHistograms(params, histograms_, histograms_.size(),
-                          kClustersLimit, &clustered_histograms,
-                          &histogram_symbols);
+        ClusterHistograms(params, histograms_, kClustersLimit,
+                          &clustered_histograms, &histogram_symbols);
         for (size_t c = 0; c < histograms_.size(); ++c) {
           (*context_map)[c] = static_cast<uint8_t>(histogram_symbols[c]);
         }

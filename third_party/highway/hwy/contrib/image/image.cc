@@ -1,4 +1,5 @@
 // Copyright 2020 Google LLC
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +20,7 @@
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "hwy/contrib/image/image.cc"
-#include "hwy/foreach_target.h"
+#include "hwy/foreach_target.h"  // IWYU pragma: keep
 #include "hwy/highway.h"
 
 HWY_BEFORE_NAMESPACE();
@@ -104,7 +105,7 @@ ImageBase::ImageBase(const size_t xsize, const size_t ysize,
 }
 
 void ImageBase::InitializePadding(const size_t sizeof_t, Padding padding) {
-#if defined(MEMORY_SANITIZER) || HWY_IDE
+#if HWY_IS_MSAN || HWY_IDE
   if (xsize_ == 0 || ysize_ == 0) return;
 
   const size_t vec_size = VectorSize();  // Bytes, independent of sizeof_t!
@@ -130,7 +131,7 @@ void ImageBase::InitializePadding(const size_t sizeof_t, Padding padding) {
 #else
   (void)sizeof_t;
   (void)padding;
-#endif  // MEMORY_SANITIZER
+#endif  // HWY_IS_MSAN
 }
 
 void ImageBase::Swap(ImageBase& other) {

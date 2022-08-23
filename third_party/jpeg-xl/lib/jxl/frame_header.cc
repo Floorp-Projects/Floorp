@@ -79,6 +79,26 @@ Status BlendingInfo::VisitFields(Visitor* JXL_RESTRICT visitor) {
   return true;
 }
 
+std::string BlendingInfo::DebugString() const {
+  std::ostringstream os;
+  os << ",";
+  os << (mode == BlendMode::kReplace            ? "Replace"
+         : mode == BlendMode::kAdd              ? "Add"
+         : mode == BlendMode::kBlend            ? "Blend"
+         : mode == BlendMode::kAlphaWeightedAdd ? "AlphaWeightedAdd"
+                                                : "Mul");
+  if (nonserialized_num_extra_channels > 0 &&
+      (mode == BlendMode::kBlend || mode == BlendMode::kAlphaWeightedAdd)) {
+    os << ",alpha=" << alpha_channel << ",clamp=" << clamp;
+  } else if (mode == BlendMode::kMul) {
+    os << ",clamp=" << clamp;
+  }
+  if (mode != BlendMode::kReplace || nonserialized_is_partial_frame) {
+    os << ",source=" << source;
+  }
+  return os.str();
+}
+
 AnimationFrame::AnimationFrame(const CodecMetadata* metadata)
     : nonserialized_metadata(metadata) {
   Bundle::Init(this);
@@ -462,7 +482,12 @@ std::string FrameHeader::DebugString() const {
   if (loop_filter.gab) os << ",Gaborish";
   if (loop_filter.epf_iters > 0) os << ",epf=" << loop_filter.epf_iters;
   if (animation_frame.duration > 0) os << ",dur=" << animation_frame.duration;
+  if (frame_type == FrameType::kRegularFrame ||
+      frame_type == FrameType::kSkipProgressive) {
+    os << blending_info.DebugString();
+  }
   if (save_as_reference > 0) os << ",ref=" << save_as_reference;
+  os << "," << (save_before_color_transform ? "before" : "after") << "_ct";
   if (is_last) os << ",last";
   return os.str();
 }

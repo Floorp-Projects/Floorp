@@ -18,6 +18,8 @@ namespace jxl {
 namespace HWY_NAMESPACE {
 
 // These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Add;
+using hwy::HWY_NAMESPACE::Mul;
 using hwy::HWY_NAMESPACE::Vec;
 
 // Weighted sum of 1x5 pixels around ix, iy with [wx2 wx1 wx0 wx1 wx2].
@@ -51,10 +53,10 @@ static V WeightedSum(const ImageF& in, const WrapY wrap_y, const size_t ix,
   const auto in_m1 = LoadU(d, center - 1);
   const auto in_p1 = LoadU(d, center + 1);
   const auto in_00 = Load(d, center);
-  const auto sum_2 = wx2 * (in_m2 + in_p2);
-  const auto sum_1 = wx1 * (in_m1 + in_p1);
-  const auto sum_0 = wx0 * in_00;
-  return sum_2 + sum_1 + sum_0;
+  const auto sum_2 = Mul(wx2, Add(in_m2, in_p2));
+  const auto sum_1 = Mul(wx1, Add(in_m1, in_p1));
+  const auto sum_0 = Mul(wx0, in_00);
+  return Add(sum_2, Add(sum_1, sum_0));
 }
 
 // Produces result for one pixel
@@ -104,13 +106,13 @@ static void Symmetric5Interior(const ImageF& in, const Rect& rect,
   // Unrolled loop over all 5 rows of the kernel.
   auto sum0 = WeightedSum(in, wrap_y, ix, iy, ysize, w0, w1, w2);
 
-  sum0 += WeightedSum(in, wrap_y, ix, iy - 2, ysize, w2, w5, w8);
+  sum0 = Add(sum0, WeightedSum(in, wrap_y, ix, iy - 2, ysize, w2, w5, w8));
   auto sum1 = WeightedSum(in, wrap_y, ix, iy + 2, ysize, w2, w5, w8);
 
-  sum0 += WeightedSum(in, wrap_y, ix, iy - 1, ysize, w1, w4, w5);
-  sum1 += WeightedSum(in, wrap_y, ix, iy + 1, ysize, w1, w4, w5);
+  sum0 = Add(sum0, WeightedSum(in, wrap_y, ix, iy - 1, ysize, w1, w4, w5));
+  sum1 = Add(sum1, WeightedSum(in, wrap_y, ix, iy + 1, ysize, w1, w4, w5));
 
-  Store(sum0 + sum1, d, row_out + ix);
+  Store(Add(sum0, sum1), d, row_out + ix);
 }
 
 template <class WrapY>

@@ -49,7 +49,6 @@ SOURCES += [
     "/third_party/jpeg-xl/lib/jxl/enc_bit_writer.cc",
     "/third_party/jpeg-xl/lib/jxl/entropy_coder.cc",
     "/third_party/jpeg-xl/lib/jxl/epf.cc",
-    "/third_party/jpeg-xl/lib/jxl/exif.cc",
     "/third_party/jpeg-xl/lib/jxl/fast_dct.cc",
     "/third_party/jpeg-xl/lib/jxl/fields.cc",
     "/third_party/jpeg-xl/lib/jxl/frame_header.cc",

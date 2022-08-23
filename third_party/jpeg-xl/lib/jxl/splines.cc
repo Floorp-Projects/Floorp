@@ -28,6 +28,13 @@ namespace jxl {
 namespace HWY_NAMESPACE {
 namespace {
 
+// These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Mul;
+using hwy::HWY_NAMESPACE::MulAdd;
+using hwy::HWY_NAMESPACE::MulSub;
+using hwy::HWY_NAMESPACE::Sqrt;
+using hwy::HWY_NAMESPACE::Sub;
+
 // Given a set of DCT coefficients, this returns the result of performing cosine
 // interpolation on the original samples.
 float ContinuousIDCT(const float dct[32], const float t) {
@@ -48,9 +55,9 @@ float ContinuousIDCT(const float dct[32], const float t) {
   auto result = Zero(df);
   const auto tandhalf = Set(df, t + 0.5f);
   for (int i = 0; i < 32; i += Lanes(df)) {
-    auto cos_arg = LoadU(df, kMultipliers + i) * tandhalf;
+    auto cos_arg = Mul(LoadU(df, kMultipliers + i), tandhalf);
     auto cos = FastCosf(df, cos_arg);
-    auto local_res = LoadU(df, dct + i) * cos;
+    auto local_res = Mul(LoadU(df, dct + i), cos);
     result = MulAdd(Set(df, kSqrt2), local_res, result);
   }
   return GetLane(SumOfLanes(df, result));
@@ -65,15 +72,16 @@ void DrawSegment(DF df, const SplineSegment& segment, const bool add,
   const auto one_over_2s2 = Set(df, 0.353553391f);
   const auto sigma_over_4_times_intensity =
       Set(df, segment.sigma_over_4_times_intensity);
-  const auto dx = ConvertTo(df, Iota(di, x)) - Set(df, segment.center_x);
+  const auto dx = Sub(ConvertTo(df, Iota(di, x)), Set(df, segment.center_x));
   const auto dy = Set(df, y - segment.center_y);
-  const auto sqd = MulAdd(dx, dx, dy * dy);
+  const auto sqd = MulAdd(dx, dx, Mul(dy, dy));
   const auto distance = Sqrt(sqd);
   const auto one_dimensional_factor =
-      FastErff(df, MulAdd(distance, half, one_over_2s2) * inv_sigma) -
-      FastErff(df, MulSub(distance, half, one_over_2s2) * inv_sigma);
-  auto local_intensity = sigma_over_4_times_intensity * one_dimensional_factor *
-                         one_dimensional_factor;
+      Sub(FastErff(df, Mul(MulAdd(distance, half, one_over_2s2), inv_sigma)),
+          FastErff(df, Mul(MulSub(distance, half, one_over_2s2), inv_sigma)));
+  auto local_intensity =
+      Mul(sigma_over_4_times_intensity,
+          Mul(one_dimensional_factor, one_dimensional_factor));
   for (size_t c = 0; c < 3; ++c) {
     const auto cm = Set(df, add ? segment.color[c] : -segment.color[c]);
     const auto in = LoadU(df, rows[c] + x);

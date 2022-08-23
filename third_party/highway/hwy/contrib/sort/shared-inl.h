@@ -1,4 +1,5 @@
 // Copyright 2021 Google LLC
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,8 +28,8 @@ namespace hwy {
 struct SortConstants {
 // SortingNetwork reshapes its input into a matrix. This is the maximum number
 // of *keys* per vector.
-#if HWY_COMPILER_MSVC
-  static constexpr size_t kMaxCols = 8;  // avoids build timeout
+#if HWY_COMPILER_MSVC || HWY_IS_DEBUG_BUILD
+  static constexpr size_t kMaxCols = 8;  // avoid build timeout/stack overflow
 #else
   static constexpr size_t kMaxCols = 16;  // enough for u32 in 512-bit vector
 #endif
@@ -41,7 +42,7 @@ struct SortConstants {
   static constexpr size_t kMaxRowsLog2 = 4;
   static constexpr size_t kMaxRows = size_t{1} << kMaxRowsLog2;
 
-  static HWY_INLINE size_t BaseCaseNum(size_t N) {
+  static constexpr HWY_INLINE size_t BaseCaseNum(size_t N) {
     return kMaxRows * HWY_MIN(N, kMaxCols);
   }
 
@@ -52,7 +53,7 @@ struct SortConstants {
   // To change, must also update left + 3 * N etc. in the loop.
   static constexpr size_t kPartitionUnroll = 4;
 
-  static HWY_INLINE size_t PartitionBufNum(size_t N) {
+  static constexpr HWY_INLINE size_t PartitionBufNum(size_t N) {
     // The main loop reads kPartitionUnroll vectors, and first loads from
     // both left and right beforehand, so it requires min = 2 *
     // kPartitionUnroll vectors. To handle smaller amounts (only guaranteed
@@ -64,8 +65,25 @@ struct SortConstants {
   // Chunk := group of keys loaded for sampling a pivot. Matches the typical
   // cache line size of 64 bytes to get maximum benefit per L2 miss. If vectors
   // are larger, use entire vectors to ensure we do not overrun the array.
-  static HWY_INLINE size_t LanesPerChunk(size_t sizeof_t, size_t N) {
+  static constexpr HWY_INLINE size_t LanesPerChunk(size_t sizeof_t, size_t N) {
     return HWY_MAX(64 / sizeof_t, N);
+  }
+
+  static constexpr HWY_INLINE size_t PivotBufNum(size_t sizeof_t, size_t N) {
+    // 3 chunks of medians, 1 chunk of median medians plus two padding vectors.
+    return (3 + 1) * LanesPerChunk(sizeof_t, N) + 2 * N;
+  }
+
+  template <typename T>
+  static constexpr HWY_INLINE size_t BufNum(size_t N) {
+    // One extra for padding plus another for full-vector loads.
+    return HWY_MAX(BaseCaseNum(N) + 2 * N,
+                   HWY_MAX(PartitionBufNum(N), PivotBufNum(sizeof(T), N)));
+  }
+
+  template <typename T>
+  static constexpr HWY_INLINE size_t BufBytes(size_t vector_size) {
+    return sizeof(T) * BufNum<T>(vector_size / sizeof(T));
   }
 };
 
@@ -84,12 +102,23 @@ struct SortConstants {
 
 #include "hwy/highway.h"
 
+// vqsort isn't available on HWY_SCALAR, and builds time out on MSVC opt and
+// Arm v7 debug.
+#undef VQSORT_ENABLED
+#if (HWY_TARGET == HWY_SCALAR) ||                 \
+    (HWY_COMPILER_MSVC && !HWY_IS_DEBUG_BUILD) || \
+    (HWY_ARCH_ARM_V7 && HWY_IS_DEBUG_BUILD)
+#define VQSORT_ENABLED 0
+#else
+#define VQSORT_ENABLED 1
+#endif
+
 namespace hwy {
 namespace HWY_NAMESPACE {
 
 // Default tag / vector width selector.
-// TODO(janwas): enable once LMUL < 1 is supported.
-#if HWY_TARGET == HWY_RVV && 0
+#if HWY_TARGET == HWY_RVV
+// Use LMUL = 1/2; for SEW=64 this ends up emulated via vsetvl.
 template <typename T>
 using SortTag = ScalableTag<T, -1>;
 #else

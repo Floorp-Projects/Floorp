@@ -174,29 +174,6 @@ struct CompressParams {
   // Default: on for lossless, off for lossy
   Override keep_invisible = Override::kDefault;
 
-  // Progressive-mode saliency.
-  //
-  // How many progressive saliency-encoding steps to perform.
-  // - 1: Encode only DC and lowest-frequency AC. Does not need a saliency-map.
-  // - 2: Encode only DC+LF, dropping all HF AC data.
-  //      Does not need a saliency-map.
-  // - 3: Encode DC+LF+{salient HF}, dropping all non-salient HF data.
-  // - 4: Encode DC+LF+{salient HF}+{other HF}.
-  // - 5: Encode DC+LF+{quantized HF}+{low HF bits}.
-  size_t saliency_num_progressive_steps = 3;
-  // Every saliency-heatmap cell with saliency >= threshold will be considered
-  // as 'salient'. The default value of 0.0 will consider every AC-block
-  // as salient, hence not require a saliency-map, and not actually generate
-  // a 4th progressive step.
-  float saliency_threshold = 0.0f;
-  // Saliency-map (owned by caller).
-  ImageF* saliency_map = nullptr;
-
-  // Input and output file name. Will be used to provide pluggable saliency
-  // extractor with paths.
-  const char* file_in = nullptr;
-  const char* file_out = nullptr;
-
   // Currently unused as of 2020-01.
   bool clear_metadata = false;
 

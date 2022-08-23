@@ -21,17 +21,11 @@ constexpr size_t kMaxHeaderSize = 200;
 
 Status EncodeHeader(const JxlBasicInfo& info, char* header,
                     int* chars_written) {
-  if (info.xsize == 0 || info.ysize == 0) {
-    return JXL_FAILURE("Empty image");
-  }
   if (info.alpha_bits > 0) {
     return JXL_FAILURE("PGX: can't store alpha");
   }
   if (info.num_color_channels != 1) {
     return JXL_FAILURE("PGX: must be grayscale");
-  }
-  if (info.orientation != JXL_ORIENT_IDENTITY) {
-    return JXL_FAILURE("Orientation must be identity");
   }
   // TODO(lode): verify other bit depths: for other bit depths such as 1 or 4
   // bits, have a test case to verify it works correctly. For bits > 16, we may
@@ -61,18 +55,8 @@ Status EncodeImagePGX(const PackedFrame& frame, const JxlBasicInfo& info,
   size_t bytes_per_sample = data_bits_per_sample / kBitsPerByte;
   size_t num_samples = info.xsize * info.ysize;
 
-  if (in == nullptr || color.pixels_size != bytes_per_sample * num_samples) {
-    return JXL_FAILURE("Invalid frame");
-  }
-  if (color.xsize != info.xsize || color.ysize != info.ysize ||
-      format.num_channels != 1) {
-    return JXL_FAILURE("Frame size does not match image size");
-  }
   if (info.bits_per_sample != data_bits_per_sample) {
     return JXL_FAILURE("Bit depth does not match pixel data type");
-  }
-  if (color.flipped_y) {
-    return JXL_FAILURE("Flipped y channel not supported");
   }
 
   std::vector<uint8_t> pixels(num_samples * bytes_per_sample);
@@ -116,10 +100,12 @@ class PGXEncoder : public Encoder {
   }
   Status Encode(const PackedPixelFile& ppf, EncodedImage* encoded_image,
                 ThreadPool* pool) const override {
+    JXL_RETURN_IF_ERROR(VerifyBasicInfo(ppf.info));
     encoded_image->icc.assign(ppf.icc.begin(), ppf.icc.end());
     encoded_image->bitstreams.clear();
     encoded_image->bitstreams.reserve(ppf.frames.size());
     for (const auto& frame : ppf.frames) {
+      JXL_RETURN_IF_ERROR(VerifyPackedImage(frame.color, ppf.info));
       encoded_image->bitstreams.emplace_back();
       JXL_RETURN_IF_ERROR(
           EncodeImagePGX(frame, ppf.info, &encoded_image->bitstreams.back()));

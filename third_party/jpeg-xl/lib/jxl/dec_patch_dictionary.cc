@@ -165,7 +165,7 @@ Status PatchDictionary::Decode(BitReader* br, size_t xsize, size_t ysize,
     return JXL_FAILURE("ANS checksum failure.");
   }
 
-  ComputePatchCache();
+  ComputePatchTree();
   return true;
 }
 
@@ -177,44 +177,142 @@ int PatchDictionary::GetReferences() const {
   return result;
 }
 
-void PatchDictionary::ComputePatchCache() {
-  patch_starts_.clear();
-  sorted_patches_.clear();
-  if (positions_.empty()) return;
-  std::vector<std::pair<size_t, size_t>> sorted_patches_y;
-  for (size_t i = 0; i < positions_.size(); i++) {
-    const PatchPosition& pos = positions_[i];
-    const PatchReferencePosition& ref_pos = ref_positions_[pos.ref_pos_idx];
-    for (size_t y = pos.y; y < pos.y + ref_pos.ysize; y++) {
-      sorted_patches_y.emplace_back(y, i);
+namespace {
+struct PatchInterval {
+  size_t idx;
+  size_t y0, y1;
+};
+}  // namespace
+
+void PatchDictionary::ComputePatchTree() {
+  patch_tree_.clear();
+  num_patches_.clear();
+  sorted_patches_y0_.clear();
+  sorted_patches_y1_.clear();
+  if (positions_.empty()) {
+    return;
+  }
+  // Create a y-interval for each patch.
+  std::vector<PatchInterval> intervals(positions_.size());
+  for (size_t i = 0; i < positions_.size(); ++i) {
+    const auto& pos = positions_[i];
+    intervals[i].idx = i;
+    intervals[i].y0 = pos.y;
+    intervals[i].y1 = pos.y + ref_positions_[pos.ref_pos_idx].ysize;
+  }
+  auto sort_by_y0 = [&intervals](size_t start, size_t end) {
+    std::sort(intervals.data() + start, intervals.data() + end,
+              [](const PatchInterval& i0, const PatchInterval& i1) {
+                return i0.y0 < i1.y0;
+              });
+  };
+  auto sort_by_y1 = [&intervals](size_t start, size_t end) {
+    std::sort(intervals.data() + start, intervals.data() + end,
+              [](const PatchInterval& i0, const PatchInterval& i1) {
+                return i0.y1 < i1.y1;
+              });
+  };
+  // Count the number of patches for each row.
+  sort_by_y1(0, intervals.size());
+  num_patches_.resize(intervals.back().y1);
+  for (auto iv : intervals) {
+    for (size_t y = iv.y0; y < iv.y1; ++y) num_patches_[y]++;
+  }
+  PatchTreeNode root;
+  root.start = 0;
+  root.num = intervals.size();
+  patch_tree_.push_back(root);
+  size_t next = 0;
+  while (next < patch_tree_.size()) {
+    auto& node = patch_tree_[next];
+    size_t start = node.start;
+    size_t end = node.start + node.num;
+    // Choose the y_center for this node to be the median of interval starts.
+    sort_by_y0(start, end);
+    size_t middle_idx = start + node.num / 2;
+    node.y_center = intervals[middle_idx].y0;
+    // Divide the intervals in [start, end) into three groups:
+    //   * those completely to the right of y_center: [right_start, end)
+    //   * those overlapping y_center: [left_end, right_start)
+    //   * those completely to the left of y_center: [start, left_end)
+    size_t right_start = middle_idx;
+    while (right_start < end && intervals[right_start].y0 == node.y_center) {
+      ++right_start;
     }
+    sort_by_y1(start, right_start);
+    size_t left_end = right_start;
+    while (left_end > start && intervals[left_end - 1].y1 > node.y_center) {
+      --left_end;
+    }
+    // Fill in sorted_patches_y0_ and sorted_patches_y1_ for the current node.
+    node.num = right_start - left_end;
+    node.start = sorted_patches_y0_.size();
+    for (ssize_t i = static_cast<ssize_t>(right_start) - 1;
+         i >= static_cast<ssize_t>(left_end); --i) {
+      sorted_patches_y1_.push_back({intervals[i].y1, intervals[i].idx});
+    }
+    sort_by_y0(left_end, right_start);
+    for (size_t i = left_end; i < right_start; ++i) {
+      sorted_patches_y0_.push_back({intervals[i].y0, intervals[i].idx});
+    }
+    // Create the left and right nodes (if not empty).
+    node.left_child = node.right_child = -1;
+    if (left_end > start) {
+      PatchTreeNode left;
+      left.start = start;
+      left.num = left_end - left.start;
+      patch_tree_[next].left_child = patch_tree_.size();
+      patch_tree_.push_back(left);
+    }
+    if (right_start < end) {
+      PatchTreeNode right;
+      right.start = right_start;
+      right.num = end - right.start;
+      patch_tree_[next].right_child = patch_tree_.size();
+      patch_tree_.push_back(right);
+    }
+    ++next;
   }
-  // The relative order of patches that affect the same pixels is preserved.
-  // This is important for patches that have a blend mode different from kAdd.
-  std::sort(sorted_patches_y.begin(), sorted_patches_y.end());
-  patch_starts_.resize(sorted_patches_y.back().first + 2,
-                       sorted_patches_y.size());
-  sorted_patches_.resize(sorted_patches_y.size());
-  for (size_t i = 0; i < sorted_patches_y.size(); i++) {
-    sorted_patches_[i] = sorted_patches_y[i].second;
-    patch_starts_[sorted_patches_y[i].first] =
-        std::min(patch_starts_[sorted_patches_y[i].first], i);
+}
+
+std::vector<size_t> PatchDictionary::GetPatchesForRow(size_t y) const {
+  std::vector<size_t> result;
+  if (y < num_patches_.size() && num_patches_[y] > 0) {
+    result.reserve(num_patches_[y]);
+    for (ssize_t tree_idx = 0; tree_idx != -1;) {
+      JXL_DASSERT(tree_idx < (ssize_t)patch_tree_.size());
+      const auto& node = patch_tree_[tree_idx];
+      if (y <= node.y_center) {
+        for (size_t i = 0; i < node.num; ++i) {
+          const auto& p = sorted_patches_y0_[node.start + i];
+          if (y < p.first) break;
+          result.push_back(p.second);
+        }
+        tree_idx = y < node.y_center ? node.left_child : -1;
+      } else {
+        for (size_t i = 0; i < node.num; ++i) {
+          const auto& p = sorted_patches_y1_[node.start + i];
+          if (y >= p.first) break;
+          result.push_back(p.second);
+        }
+        tree_idx = node.right_child;
+      }
+    }
+    // Ensure that he relative order of patches that affect the same pixels is
+    // preserved. This is important for patches that have a blend mode
+    // different from kAdd.
+    std::sort(result.begin(), result.end());
   }
-  for (size_t i = patch_starts_.size() - 1; i > 0; i--) {
-    patch_starts_[i - 1] = std::min(patch_starts_[i], patch_starts_[i - 1]);
-  }
+  return result;
 }
 
 // Adds patches to a segment of `xsize` pixels, starting at `inout`, assumed
 // to be located at position (x0, y) in the frame.
 void PatchDictionary::AddOneRow(float* const* inout, size_t y, size_t x0,
                                 size_t xsize) const {
-  if (patch_starts_.empty()) return;
   size_t num_ec = shared_->metadata->m.num_extra_channels;
   std::vector<const float*> fg_ptrs(3 + num_ec);
-  if (y + 1 >= patch_starts_.size()) return;
-  for (size_t id = patch_starts_[y]; id < patch_starts_[y + 1]; id++) {
-    const size_t pos_idx = sorted_patches_[id];
+  for (size_t pos_idx : GetPatchesForRow(y)) {
     const size_t blending_idx = pos_idx * (num_ec + 1);
     const PatchPosition& pos = positions_[pos_idx];
     const PatchReferencePosition& ref_pos = ref_positions_[pos.ref_pos_idx];
@@ -242,7 +340,7 @@ void PatchDictionary::AddOneRow(float* const* inout, size_t y, size_t x0,
     }
     PerformBlending(inout, fg_ptrs.data(), inout, patch_x0 - x0,
                     patch_x1 - patch_x0, blendings_[blending_idx],
-                    &blendings_[blending_idx + 1],
+                    blendings_.data() + blending_idx + 1,
                     shared_->metadata->m.extra_channel_info);
   }
 }

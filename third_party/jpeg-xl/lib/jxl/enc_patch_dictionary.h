@@ -87,7 +87,7 @@ class PatchDictionaryEncoder {
     pdic->positions_ = std::move(positions);
     pdic->ref_positions_ = std::move(ref_positions);
     pdic->blendings_ = std::move(blendings);
-    pdic->ComputePatchCache();
+    pdic->ComputePatchTree();
   }
 
   static void SubtractFrom(const PatchDictionary& pdic, Image3F* opsin);

@@ -28,6 +28,7 @@ namespace HWY_NAMESPACE {
 
 // These templates are not found via ADL.
 using hwy::HWY_NAMESPACE::Broadcast;
+using hwy::HWY_NAMESPACE::MulAdd;
 
 void OpsinToLinearInplace(Image3F* JXL_RESTRICT inout, ThreadPool* pool,
                           const OpsinParams& opsin_params) {
@@ -135,12 +136,12 @@ void YcbcrToRgb(const Image3F& ycbcr, Image3F* rgb, const Rect& rect) {
     float* g_row = rect.PlaneRow(rgb, 1, y);
     float* b_row = rect.PlaneRow(rgb, 2, y);
     for (size_t x = 0; x < xsize; x += S) {
-      const auto y_vec = Load(df, y_row + x) + c128;
+      const auto y_vec = Add(Load(df, y_row + x), c128);
       const auto cb_vec = Load(df, cb_row + x);
       const auto cr_vec = Load(df, cr_row + x);
-      const auto r_vec = crcr * cr_vec + y_vec;
-      const auto g_vec = cgcr * cr_vec + cgcb * cb_vec + y_vec;
-      const auto b_vec = cbcb * cb_vec + y_vec;
+      const auto r_vec = MulAdd(crcr, cr_vec, y_vec);
+      const auto g_vec = MulAdd(cgcr, cr_vec, MulAdd(cgcb, cb_vec, y_vec));
+      const auto b_vec = MulAdd(cbcb, cb_vec, y_vec);
       Store(r_vec, df, r_row + x);
       Store(g_vec, df, g_row + x);
       Store(b_vec, df, b_row + x);

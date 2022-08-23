@@ -1,4 +1,5 @@
 // Copyright 2019 Google LLC
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,11 +16,11 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include "hwy/base.h"
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "tests/convert_test.cc"
-#include "hwy/foreach_target.h"
-
+#include "hwy/foreach_target.h"  // IWYU pragma: keep
 #include "hwy/highway.h"
 #include "hwy/tests/test_util-inl.h"
 
@@ -334,15 +335,51 @@ struct TestConvertU8 {
   template <typename T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, const D du32) {
     const Rebind<uint8_t, D> du8;
-    auto lanes8 = AllocateAligned<uint8_t>(Lanes(du8));
-    Store(Iota(du8, 0), du8, lanes8.get());
-    HWY_ASSERT_VEC_EQ(du8, Iota(du8, 0), U8FromU32(Iota(du32, 0)));
-    HWY_ASSERT_VEC_EQ(du8, Iota(du8, 0x7F), U8FromU32(Iota(du32, 0x7F)));
+    const auto wrap = Set(du32, 0xFF);
+    HWY_ASSERT_VEC_EQ(du8, Iota(du8, 0), U8FromU32(And(Iota(du32, 0), wrap)));
+    HWY_ASSERT_VEC_EQ(du8, Iota(du8, 0x7F),
+                      U8FromU32(And(Iota(du32, 0x7F), wrap)));
   }
 };
 
 HWY_NOINLINE void TestAllConvertU8() {
   ForDemoteVectors<TestConvertU8, 2>()(uint32_t());
+}
+
+template <typename From, typename To, class D>
+constexpr bool IsSupportedTruncation() {
+  return (sizeof(To) < sizeof(From)) &&
+         (Pow2(Rebind<To, D>()) + 3 >= static_cast<int>(CeilLog2(sizeof(To))));
+}
+
+struct TestTruncateTo {
+  template <typename From, typename To, class D,
+            hwy::EnableIf<!IsSupportedTruncation<From, To, D>()>* = nullptr>
+  HWY_NOINLINE void testTo(From, To, const D) {
+    // do nothing
+  }
+
+  template <typename From, typename To, class D,
+            hwy::EnableIf<IsSupportedTruncation<From, To, D>()>* = nullptr>
+  HWY_NOINLINE void testTo(From, To, const D d) {
+    constexpr uint32_t base = 0xFA578D00;
+    const Rebind<To, D> dTo;
+    const auto src = Iota(d, static_cast<From>(base));
+    const auto expected = Iota(dTo, static_cast<To>(base));
+    const VFromD<decltype(dTo)> actual = TruncateTo(dTo, src);
+    HWY_ASSERT_VEC_EQ(dTo, expected, actual);
+  }
+
+  template <typename T, class D>
+  HWY_NOINLINE void operator()(T from, const D d) {
+    testTo<T, uint8_t, D>(from, uint8_t(), d);
+    testTo<T, uint16_t, D>(from, uint16_t(), d);
+    testTo<T, uint32_t, D>(from, uint32_t(), d);
+  }
+};
+
+HWY_NOINLINE void TestAllTruncate() {
+  ForUnsignedTypes(ForPartialVectors<TestTruncateTo>());
 }
 
 // Separate function to attempt to work around a compiler bug on ARM: when this
@@ -387,7 +424,7 @@ class TestIntFromFloat {
     for (int sign = 0; sign < 2; ++sign) {
       for (size_t shift = 0; shift < kBits - 1; ++shift) {
         for (int64_t ofs : ofs_table) {
-          const int64_t mag = (int64_t(1) << shift) + ofs;
+          const int64_t mag = (int64_t{1} << shift) + ofs;
           const int64_t val = sign ? mag : -mag;
           HWY_ASSERT_VEC_EQ(di, Set(di, static_cast<TI>(val)),
                             ConvertTo(di, Set(df, static_cast<TF>(val))));
@@ -551,15 +588,10 @@ HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllPromoteTo);
 HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllF16);
 HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllBF16);
 HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllConvertU8);
+HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllTruncate);
 HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllIntFromFloat);
 HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllFloatFromInt);
 HWY_EXPORT_AND_TEST_P(HwyConvertTest, TestAllI32F64);
 }  // namespace hwy
-
-// Ought not to be necessary, but without this, no tests run on RVV.
-int main(int argc, char** argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
 
 #endif

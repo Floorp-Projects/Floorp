@@ -57,11 +57,11 @@ typedef enum {
 
 /* DEPRECATED: bit-packed 1-bit data type. Use JXL_TYPE_UINT8 instead.
  */
-static const int JXL_DEPRECATED JXL_TYPE_BOOLEAN = 1;
+JXL_DEPRECATED static const int JXL_TYPE_BOOLEAN = 1;
 
 /* DEPRECATED: uint32_t data type. Use JXL_TYPE_FLOAT instead.
  */
-static const int JXL_DEPRECATED JXL_TYPE_UINT32 = 4;
+JXL_DEPRECATED static const int JXL_TYPE_UINT32 = 4;
 
 /** Ordering of multi-byte data.
  */
