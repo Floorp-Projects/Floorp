@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.38"
 name = "anyhow"
-version = "1.0.61"
+version = "1.0.62"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "Flexible concrete Error type built on std::error::Error"
 documentation = "https://docs.rs/anyhow"
@@ -28,7 +28,6 @@ categories = [
 ]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dtolnay/anyhow"
-resolver = "1"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

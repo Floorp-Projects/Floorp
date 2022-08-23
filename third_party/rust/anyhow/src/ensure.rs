@@ -788,15 +788,15 @@ macro_rules! __fancy_ensure {
             (lhs, rhs) => {
                 if !(lhs $op rhs) {
                     #[allow(unused_imports)]
-                    use $crate::private::{BothDebug, NotBothDebug};
+                    use $crate::__private::{BothDebug, NotBothDebug};
                     return Err((lhs, rhs).__dispatch_ensure(
-                        $crate::private::concat!(
+                        $crate::__private::concat!(
                             "Condition failed: `",
-                            $crate::private::stringify!($lhs),
+                            $crate::__private::stringify!($lhs),
                             " ",
-                            $crate::private::stringify!($op),
+                            $crate::__private::stringify!($op),
                             " ",
-                            $crate::private::stringify!($rhs),
+                            $crate::__private::stringify!($rhs),
                             "`",
                         ),
                     ));
@@ -811,24 +811,24 @@ macro_rules! __fancy_ensure {
 macro_rules! __fallback_ensure {
     ($cond:expr $(,)?) => {
         if !$cond {
-            return $crate::private::Err($crate::Error::msg(
-                $crate::private::concat!("Condition failed: `", $crate::private::stringify!($cond), "`")
+            return $crate::__private::Err($crate::Error::msg(
+                $crate::__private::concat!("Condition failed: `", $crate::__private::stringify!($cond), "`")
             ));
         }
     };
     ($cond:expr, $msg:literal $(,)?) => {
         if !$cond {
-            return $crate::private::Err($crate::__anyhow!($msg));
+            return $crate::__private::Err($crate::__anyhow!($msg));
         }
     };
     ($cond:expr, $err:expr $(,)?) => {
         if !$cond {
-            return $crate::private::Err($crate::__anyhow!($err));
+            return $crate::__private::Err($crate::__anyhow!($err));
         }
     };
     ($cond:expr, $fmt:expr, $($arg:tt)*) => {
         if !$cond {
-            return $crate::private::Err($crate::__anyhow!($fmt, $($arg)*));
+            return $crate::__private::Err($crate::__anyhow!($fmt, $($arg)*));
         }
     };
 }

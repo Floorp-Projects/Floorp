@@ -1,4 +1,4 @@
-error: unused return value of `anyhow::private::must_use` that must be used
+error: unused return value of `anyhow::__private::must_use` that must be used
  --> tests/ui/must-use.rs:8:9
   |
 8 |         anyhow!("it failed");
