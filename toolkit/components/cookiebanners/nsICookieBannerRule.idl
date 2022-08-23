@@ -48,6 +48,6 @@ interface nsICookieBannerRule : nsISupports {
                    [optional] in int32_t     aSameSite,
                    [optional] in nsICookie_schemeType aSchemeMap);
 
-    // TODO: additional rule types here e.g. for clicking.
+    // We will use the nsIClickRule here which will be added in the next patch.
 };
 
