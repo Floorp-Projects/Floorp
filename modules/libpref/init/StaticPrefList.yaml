@@ -14014,7 +14014,7 @@
 
 - name: widget.windows.hide_cursor_when_typing
   type: bool
-  value: true
+  value: false
   mirror: always
 
 # Whether to apply logic intended to improve taskbar behavior involving
