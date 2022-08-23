@@ -3455,7 +3455,6 @@ pref("signon.includeOtherSubdomainsInLookup",     true);
 // This temporarily prevents the primary password to reprompt for autocomplete.
 pref("signon.masterPasswordReprompt.timeout_ms", 900000); // 15 Minutes
 pref("signon.showAutoCompleteFooter",             false);
-pref("signon.showAutoCompleteOrigins",            true);
 
 // Satchel (Form Manager) prefs
 pref("browser.formfill.debug",            false);
