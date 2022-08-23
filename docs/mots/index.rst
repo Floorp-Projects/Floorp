@@ -1,15 +1,24 @@
 ..
     This file was automatically generated using `mots export`.
-.. note::
-    To add, remove, or update module information, see the `mots documentation <https://mots.readthedocs.io/en/latest/#adding-a-module>`_.
 
-=======
-Modules
-=======
+==========
+Governance
+==========
+
+--------
+Overview
+--------
+To add, remove, or update module information, see the `mots documentation <https://mots.readthedocs.io/en/latest/#adding-a-module>`_.
 
 Mozilla operates under a `module ownership governance system <https://www.mozilla.org/hacking/module-ownership.html>`_. A module is a discrete unit of code or activity. An owner is the person in charge of a module or sub-module. A peer is a person whom the owner has appointed to help them. A module may have multiple peers and, very occasionally, multiple owners.
 
 The system is overseen by the owner and peers of the Module Ownership module. For the modules that make up Firefox, oversight is provided by the Firefox Technical Leadership module. Owners may add and remove peers from their modules as they wish, without reference to anyone else.
+
+
+
+-------
+Modules
+-------
 
 Mots config
 ~~~~~~~~~~~
