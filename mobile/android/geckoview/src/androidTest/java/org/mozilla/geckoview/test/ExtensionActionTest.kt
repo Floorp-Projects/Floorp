@@ -479,7 +479,6 @@ class ExtensionActionTest : BaseSessionTest() {
 
     @Test
     @GeckoSessionTestRule.WithDisplay(width=100, height=100)
-    @Ignore("This test fails intermittently on try")
     fun testOpenPopup() {
         // First, let's make sure we have a popup set
         val actionResult = GeckoResult<Void>()
@@ -492,17 +491,17 @@ class ExtensionActionTest : BaseSessionTest() {
 
             actionResult.complete(null)
         }
+        sessionRule.waitForResult(actionResult)
 
         val url = when(id) {
-            "#browserAction" -> "/test-open-popup-browser-action.html"
-            "#pageAction" -> "/test-open-popup-page-action.html"
+            "#browserAction" -> "test-open-popup-browser-action.html"
+            "#pageAction" -> "test-open-popup-page-action.html"
             else -> throw IllegalArgumentException()
         }
 
-        windowPort!!.postMessage(JSONObject("""{
-            "type": "load",
-            "url": "$url"
-        }"""))
+        var location = extension!!.metaData.baseUrl;
+        mainSession.loadUri("$location$url")
+        sessionRule.waitForPageStop()
 
         val openPopup = GeckoResult<Void>()
         mainSession.webExtensionController.setActionDelegate(extension!!,
@@ -510,13 +509,11 @@ class ExtensionActionTest : BaseSessionTest() {
             override fun onOpenPopup(extension: WebExtension,
                                      popupAction: WebExtension.Action): GeckoResult<GeckoSession>? {
                 assertEquals(extension, this@ExtensionActionTest.extension)
-                // assertEquals(popupAction, this@ExtensionActionTest.default)
                 openPopup.complete(null)
                 return null
             }
         })
 
-        sessionRule.waitForPageStops(2)
         // openPopup needs user activation
         mainSession.synthesizeTap(50, 50)
 
