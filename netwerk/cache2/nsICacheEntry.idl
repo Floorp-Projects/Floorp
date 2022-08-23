@@ -4,14 +4,13 @@
 
 #include "nsISupports.idl"
 
-interface nsIInputStream;
-interface nsIOutputStream;
 interface nsIAsyncOutputStream;
 interface nsICacheEntryDoomCallback;
-
-interface nsIFile;
 interface nsICacheEntryMetaDataVisitor;
+interface nsIInputStream;
 interface nsILoadContextInfo;
+interface nsIOutputStream;
+interface nsITransportSecurityInfo;
 
 [scriptable, uuid(607c2a2c-0a48-40b9-a956-8cf2bb9857cf)]
 interface nsICacheEntry : nsISupports
@@ -169,7 +168,7 @@ interface nsICacheEntry : nsISupports
   /**
    * Get/set security info on the cache entry for this descriptor.
    */
-  attribute nsISupports securityInfo;
+  attribute nsITransportSecurityInfo securityInfo;
 
   /**
    * Get the size of the cache entry data, as stored. This may differ
