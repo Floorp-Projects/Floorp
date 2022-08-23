@@ -194,6 +194,20 @@ describe("MultiStageAboutWelcome module", () => {
         assert.ok(wrapper.find("div.secondary_button_top"));
       });
 
+      it("should render the arrow icon in the secondary button", () => {
+        let SCREEN_PROPS = {
+          content: {
+            title: "Step",
+            secondary_button: {
+              has_arrow_icon: true,
+              label: "test label",
+            },
+          },
+        };
+        const wrapper = mount(<SecondaryCTA {...SCREEN_PROPS} />);
+        assert.ok(wrapper.find("button[class='arrow-icon']"));
+      });
+
       it("should render steps indicator", () => {
         let SCREEN_PROPS = {
           totalNumberOfScreens: 1,
