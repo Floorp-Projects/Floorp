@@ -512,7 +512,10 @@ main.has-snippet {
 
 .top-sites-list {
   list-style: none;
-  margin: 0 -16px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
   padding: 0;
 }
 .top-sites-list:not(.dnd-active) .top-site-outer:is(.active, :focus, :hover) {
@@ -604,6 +607,9 @@ main.has-snippet {
   padding: 20px 16px 4px;
   border-radius: 8px;
   display: inline-block;
+  flex-basis: 120px;
+  background-color: var(--newtab-background-color);
+  backdrop-filter: blur(12px);
 }
 .top-site-outer .top-site-inner {
   position: relative;
@@ -3211,7 +3217,7 @@ main.has-snippet {
   outline: none;
 }
 .outer-wrapper .ds-top-sites .top-sites .top-sites-list {
-  margin: 0 -12px;
+  margin: 0 -68px;
 }
 
 .ds-column-5 .ds-top-sites .top-site-outer,
