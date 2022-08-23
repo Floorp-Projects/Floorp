@@ -22,7 +22,9 @@ const SEARCH_ENGINE_DETAILS = [
   },
   {
     alias: "b",
-    baseURL: "https://www.bing.com/search?{code}pc=MOZI&q=foo",
+    baseURL: `https://www.bing.com/search?{code}pc=${
+      AppConstants.IS_ESR ? "MOZR" : "MOZI"
+    }&q=foo`,
     codes: {
       context: "form=MOZCON&",
       keyword: "form=MOZLBR&",
