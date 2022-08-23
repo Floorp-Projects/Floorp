@@ -74,6 +74,13 @@ add_task(async function test_enabled_pref() {
     /NS_ERROR_NOT_AVAILABLE/,
     "Should have thrown NS_ERROR_NOT_AVAILABLE for rules getCookiesForURI."
   );
+  Assert.throws(
+    () => {
+      Services.cookieBanners.getClickRuleForDomain("example.com");
+    },
+    /NS_ERROR_NOT_AVAILABLE/,
+    "Should have thrown NS_ERROR_NOT_AVAILABLE for rules getClickRuleForDomain."
+  );
 
   info("Enabling cookie banner service. MODE_REJECT");
   await SpecialPowers.pushPrefEnv({
@@ -155,9 +162,13 @@ add_task(async function test_insertAndGetRule() {
   info("Clearing preexisting cookies rules for example.com.");
   rule.clearCookies();
 
+  info("Adding cookies to the rule for example.com.");
   rule.addCookie(true, "example.com", "foo", "bar");
   rule.addCookie(true, "example.com", "foobar", "barfoo");
   rule.addCookie(false, "foo.example.com", "foo", "bar", "/myPath", 3600);
+
+  info("Adding a click rule to the rule for example.com.");
+  rule.addClickRule("div#presence", "div#hide", "div#optOut", "div#optIn");
 
   is(rule.cookiesOptOut.length, 2, "Should have two opt-out cookies.");
   is(rule.cookiesOptIn.length, 1, "Should have one opt-in cookie.");
@@ -177,7 +188,11 @@ add_task(async function test_insertAndGetRule() {
   info("Clearing preexisting cookies rules for example.org.");
   rule2.clearCookies();
 
+  info("Adding a cookie to the rule for example.org.");
   rule2.addCookie(false, "example.org", "foo2", "bar2");
+
+  info("Adding a click rule to the rule for example.org.");
+  rule2.addClickRule("div#presence", null, null, "div#optIn");
 
   is(
     Services.cookieBanners.rules.length,
@@ -204,6 +219,21 @@ add_task(async function test_insertAndGetRule() {
   is(rule.cookiesOptOut.length, 0, "Should have no opt-out cookies.");
   is(rule.cookiesOptIn.length, 0, "Should have no opt-in cookies.");
 
+  info("Getting the click rule for example.com.");
+  let clickRule = Services.cookieBanners.getClickRuleForDomain("example.com");
+  is(
+    clickRule.presence,
+    "div#presence",
+    "Should have the correct presence selector."
+  );
+  is(clickRule.hide, "div#hide", "Should have the correct hide selector.");
+  is(
+    clickRule.optOut,
+    "div#optOut",
+    "Should have the correct optOut selector."
+  );
+  is(clickRule.optIn, "div#optIn", "Should have the correct optIn selector.");
+
   info("Getting cookies by URI for example.org.");
   let ruleArray2 = Services.cookieBanners.getCookiesForURI(
     Services.io.newURI("http://example.org")
@@ -217,6 +247,17 @@ add_task(async function test_insertAndGetRule() {
     0,
     "rule array should contain no rules in MODE_REJECT (opt-out only)"
   );
+
+  info("Getting the click rule for example.org.");
+  let clickRule2 = Services.cookieBanners.getClickRuleForDomain("example.org");
+  is(
+    clickRule2.presence,
+    "div#presence",
+    "Should have the correct presence selector."
+  );
+  ok(!clickRule2.hide, "Should have no hide selector.");
+  ok(!clickRule2.optOut, "Should have no target selector.");
+  is(clickRule.optIn, "div#optIn", "Should have the correct optIn selector.");
 
   info("Switching cookiebanners.service.mode to MODE_REJECT_OR_ACCEPT.");
   await SpecialPowers.pushPrefEnv({
@@ -345,6 +386,9 @@ add_task(async function test_overwriteRule() {
   info("Adding a cookie so we can detect if the rule updates.");
   rule.addCookie(true, "", "foo", "original");
 
+  info("Adding a click rule so we can detect if the rule updates.");
+  rule.addClickRule("div#original");
+
   Services.cookieBanners.insertRule(rule);
 
   let { cookie } = Services.cookieBanners.rules[0].cookiesOptOut[0];
@@ -361,11 +405,16 @@ add_task(async function test_overwriteRule() {
 
   ruleNew.addCookie(true, "", "foo", "new");
 
+  ruleNew.addClickRule("div#new");
+
   Services.cookieBanners.insertRule(ruleNew);
 
   let { cookie: cookieNew } = Services.cookieBanners.rules[0].cookiesOptOut[0];
   is(cookieNew.name, "foo", "Should have set the original cookie name.");
   is(cookieNew.value, "new", "Should have set the updated cookie value.");
+
+  let { presence: presenceNew } = Services.cookieBanners.rules[0].clickRule;
+  is(presenceNew, "div#new", "Should have set the updated presence value");
 
   // Cleanup.
   Services.cookieBanners.resetRules(false);

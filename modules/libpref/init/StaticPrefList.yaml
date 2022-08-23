@@ -1916,6 +1916,12 @@
   value: 3000
   mirror: always
 
+# Whether or not banner auto clicking test mode is enabled.
+- name: cookiebanners.bannerClicking.testing
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "datareporting."
 #---------------------------------------------------------------------------
