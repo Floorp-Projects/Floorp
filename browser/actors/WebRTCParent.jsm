@@ -315,11 +315,11 @@ class WebRTCParent extends JSWindowActorParent {
    */
   activateDevicePerm(aOuterWindowId, aMediaSource, aId) {
     if (!lazy.webrtcUI.activePerms.has(this.manager.outerWindowId)) {
-      lazy.webrtcUI.activePerms.set(this.manager.outerWindowId, new Set());
+      lazy.webrtcUI.activePerms.set(this.manager.outerWindowId, new Map());
     }
     lazy.webrtcUI.activePerms
       .get(this.manager.outerWindowId)
-      .add(aOuterWindowId + aMediaSource + aId);
+      .set(aOuterWindowId + aMediaSource + aId, aMediaSource);
   }
 
   /**
@@ -342,8 +342,8 @@ class WebRTCParent extends JSWindowActorParent {
     if (!lazy.webrtcUI.activePerms.has(this.manager.outerWindowId)) {
       return;
     }
-    let set = lazy.webrtcUI.activePerms.get(this.manager.outerWindowId);
-    set.delete(aOuterWindowId + aMediaSource + aId);
+    let map = lazy.webrtcUI.activePerms.get(this.manager.outerWindowId);
+    map.delete(aOuterWindowId + aMediaSource + aId);
 
     // Add a permission grace period for camera and microphone only
     if (
@@ -412,7 +412,7 @@ class WebRTCParent extends JSWindowActorParent {
       (aRequest.isThirdPartyOrigin && !aRequest.shouldDelegatePermission) ||
       aRequest.secondOrigin;
 
-    let set = lazy.webrtcUI.activePerms.get(this.manager.outerWindowId);
+    let map = lazy.webrtcUI.activePerms.get(this.manager.outerWindowId);
     let {
       callID,
       windowID,
@@ -425,7 +425,7 @@ class WebRTCParent extends JSWindowActorParent {
     // We consider a camera or mic active if it is active or was active within a
     // grace period of milliseconds ago.
     const isAllowed = ({ mediaSource, id }, permissionID) =>
-      set?.has(windowID + mediaSource + id) ||
+      map?.get(windowID + mediaSource + id) ||
       (!limited &&
         (lazy.SitePermissions.getForPrincipal(aPrincipal, permissionID).state ==
           lazy.SitePermissions.ALLOW ||
@@ -696,12 +696,39 @@ function prompt(aActor, aBrowser, aRequest) {
       },
     ];
   } else {
+    let label = "getUserMedia.block.label";
+    let key = "getUserMedia.block.accesskey";
+    let isNotNowLabelEnabled =
+      allowedOrActiveCameraOrMicrophone(aBrowser) && !sharingScreen;
+    // We have a (temporary) allow permission for some device
+    // hence we offer a 'Not now' label instead of 'Block'.
+    if (isNotNowLabelEnabled) {
+      label = "getUserMedia.notNow.label";
+      key = "getUserMedia.notNow.accesskey";
+    }
     secondaryActions = [
       {
-        label: stringBundle.getString("getUserMedia.block.label"),
-        accessKey: stringBundle.getString("getUserMedia.block.accesskey"),
+        label: stringBundle.getString(label),
+        accessKey: stringBundle.getString(key),
         callback(aState) {
           aActor.denyRequest(aRequest);
+
+          let scope = lazy.SitePermissions.SCOPE_TEMPORARY;
+          if (aState && aState.checkboxChecked) {
+            scope = lazy.SitePermissions.SCOPE_PERSISTENT;
+          }
+
+          // Choosing 'Not now' will not set a block permission
+          // we just deny the request. This enables certain use cases
+          // where sites want to switch devices, but users back out of the permission request
+          // (See Bug 1609578).
+          // Selecting 'Remember this decision' and clicking 'Not now' will set a persistent block
+          if (
+            scope != lazy.SitePermissions.SCOPE_PERSISTENT &&
+            isNotNowLabelEnabled
+          ) {
+            return;
+          }
 
           // Denying a camera / microphone prompt means we set a temporary or
           // persistent permission block. There may still be active grace period
@@ -712,10 +739,6 @@ function prompt(aActor, aBrowser, aRequest) {
             audioInputDevices.length
           );
 
-          let scope = lazy.SitePermissions.SCOPE_TEMPORARY;
-          if (aState && aState.checkboxChecked) {
-            scope = lazy.SitePermissions.SCOPE_PERSISTENT;
-          }
           if (audioInputDevices.length) {
             lazy.SitePermissions.setForPrincipal(
               principal,
@@ -1380,6 +1403,49 @@ function prompt(aActor, aBrowser, aRequest) {
     schemeHistogram.add(requestType, scheme);
     userInputHistogram.add(requestType, aRequest.isHandlingUserInput);
   }
+}
+
+/**
+ * Checks whether we have a microphone/camera in use by checking the activePerms map
+ * or if we have an allow permission for a microphone/camera in sitePermissions
+ * @param {Browser} browser - Browser to find all active and allowed microphone and camera devices for
+ * @return true if one of the above conditions is met
+ */
+function allowedOrActiveCameraOrMicrophone(browser) {
+  // Do we have an allow permission for cam/mic in the permissions manager?
+  if (
+    lazy.SitePermissions.getAllForBrowser(browser).some(perm => {
+      return (
+        perm.state == lazy.SitePermissions.ALLOW &&
+        (perm.id.startsWith("camera") || perm.id.startsWith("microphone"))
+      );
+    })
+  ) {
+    // Return early, no need to check for active devices
+    return true;
+  }
+
+  // Do we have an active device?
+  return (
+    // Find all windowIDs that belong to our browsing contexts
+    browser.browsingContext
+      .getAllBrowsingContextsInSubtree()
+      // Only keep the outerWindowIds
+      .map(bc => bc.currentWindowGlobal?.outerWindowId)
+      .filter(id => id != null)
+      // We have an active device if one of our windowIds has a non empty map in the activePerms map
+      // that includes one device of type "camera" or "microphone"
+      .some(id => {
+        let map = lazy.webrtcUI.activePerms.get(id);
+        if (!map) {
+          // This windowId has no active device
+          return false;
+        }
+        // Let's see if one of the devices is a camera or a microphone
+        let types = [...map.values()];
+        return types.includes("microphone") || types.includes("camera");
+      })
+  );
 }
 
 function removePrompt(aBrowser, aCallId) {
