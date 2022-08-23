@@ -1,4 +1,5 @@
 // Copyright 2021 Google LLC
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,19 +13,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "hwy/contrib/sort/disabled_targets.h"
 #include "hwy/contrib/sort/vqsort.h"
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "hwy/contrib/sort/vqsort_u16d.cc"
-#include "hwy/foreach_target.h"
+#include "hwy/foreach_target.h"  // IWYU pragma: keep
 
 // After foreach_target
 #include "hwy/contrib/sort/traits-inl.h"
 #include "hwy/contrib/sort/vqsort-inl.h"
-
-// Workaround for build timeout
-#if !HWY_COMPILER_MSVC || HWY_IS_DEBUG_BUILD
 
 HWY_BEFORE_NAMESPACE();
 namespace hwy {
@@ -33,7 +30,8 @@ namespace HWY_NAMESPACE {
 void SortU16Desc(uint16_t* HWY_RESTRICT keys, size_t num,
                  uint16_t* HWY_RESTRICT buf) {
   SortTag<uint16_t> d;
-  detail::SharedTraits<detail::LaneTraits<detail::OrderDescending>> st;
+  detail::SharedTraits<detail::TraitsLane<detail::OrderDescending<uint16_t>>>
+      st;
   Sort(d, st, keys, num, buf);
 }
 
@@ -55,5 +53,3 @@ void Sorter::operator()(uint16_t* HWY_RESTRICT keys, size_t n,
 
 }  // namespace hwy
 #endif  // HWY_ONCE
-
-#endif  // !HWY_COMPILER_MSVC || HWY_IS_DEBUG_BUILD

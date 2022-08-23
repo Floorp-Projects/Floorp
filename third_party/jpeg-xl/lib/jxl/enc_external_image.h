@@ -32,8 +32,8 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
                            size_t ysize, const ColorEncoding& c_current,
                            size_t channels, bool alpha_is_premultiplied,
                            size_t bits_per_sample, JxlEndianness endianness,
-                           bool flipped_y, ThreadPool* pool, ImageBundle* ib,
-                           bool float_in, size_t align);
+                           ThreadPool* pool, ImageBundle* ib, bool float_in,
+                           size_t align);
 Status BufferToImageF(const JxlPixelFormat& pixel_format, size_t xsize,
                       size_t ysize, const void* buffer, size_t size,
                       ThreadPool* pool, ImageF* channel);

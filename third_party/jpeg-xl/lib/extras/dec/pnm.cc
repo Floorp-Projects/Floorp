@@ -366,13 +366,18 @@ Status DecodeImagePNM(const Span<const uint8_t> bytes,
   ppf->frames.emplace_back(header.xsize, header.ysize, format);
   auto* frame = &ppf->frames.back();
 
-  frame->color.bitdepth_from_format = false;
-  frame->color.flipped_y = header.bits_per_sample == 32;  // PFMs are flipped
   size_t pnm_remaining_size = bytes.data() + bytes.size() - pos;
   if (pnm_remaining_size < frame->color.pixels_size) {
     return JXL_FAILURE("PNM file too small");
   }
-  memcpy(frame->color.pixels(), pos, frame->color.pixels_size);
+  const bool flipped_y = header.bits_per_sample == 32;  // PFMs are flipped
+  uint8_t* out = reinterpret_cast<uint8_t*>(frame->color.pixels());
+  for (size_t y = 0; y < header.ysize; ++y) {
+    size_t y_in = flipped_y ? header.ysize - 1 - y : y;
+    const uint8_t* row_in = &pos[y_in * frame->color.stride];
+    uint8_t* row_out = &out[y * frame->color.stride];
+    memcpy(row_out, row_in, frame->color.stride);
+  }
   return true;
 }
 

@@ -16,6 +16,10 @@ HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
 
+// These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Mul;
+using hwy::HWY_NAMESPACE::MulAdd;
+
 class HorizontalChromaUpsamplingStage : public RenderPipelineStage {
  public:
   explicit HorizontalChromaUpsamplingStage(size_t channel)
@@ -35,7 +39,7 @@ class HorizontalChromaUpsamplingStage : public RenderPipelineStage {
     float* row_out = GetOutputRow(output_rows, c_, 0);
     for (ssize_t x = -xextra; x < static_cast<ssize_t>(xsize + xextra);
          x += Lanes(df)) {
-      auto current = LoadU(df, row_in + x) * threefour;
+      auto current = Mul(LoadU(df, row_in + x), threefour);
       auto prev = LoadU(df, row_in + x - 1);
       auto next = LoadU(df, row_in + x + 1);
       auto left = MulAdd(onefour, prev, current);
@@ -80,7 +84,7 @@ class VerticalChromaUpsamplingStage : public RenderPipelineStage {
       auto it = LoadU(df, row_top + x);
       auto im = LoadU(df, row_mid + x);
       auto ib = LoadU(df, row_bot + x);
-      auto im_scaled = im * threefour;
+      auto im_scaled = Mul(im, threefour);
       Store(MulAdd(it, onefour, im_scaled), df, row_out0 + x);
       Store(MulAdd(ib, onefour, im_scaled), df, row_out1 + x);
     }

@@ -1,4 +1,5 @@
 // Copyright 2019 Google LLC
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +22,7 @@
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "base_test.cc"
-#include "hwy/foreach_target.h"
+#include "hwy/foreach_target.h"  // IWYU pragma: keep
 #include "hwy/highway.h"
 #include "hwy/tests/test_util-inl.h"
 
@@ -30,25 +31,26 @@ namespace hwy {
 namespace HWY_NAMESPACE {
 
 HWY_NOINLINE void TestAllLimits() {
-  HWY_ASSERT_EQ(uint8_t(0), LimitsMin<uint8_t>());
-  HWY_ASSERT_EQ(uint16_t(0), LimitsMin<uint16_t>());
-  HWY_ASSERT_EQ(uint32_t(0), LimitsMin<uint32_t>());
-  HWY_ASSERT_EQ(uint64_t(0), LimitsMin<uint64_t>());
+  HWY_ASSERT_EQ(uint8_t{0}, LimitsMin<uint8_t>());
+  HWY_ASSERT_EQ(uint16_t{0}, LimitsMin<uint16_t>());
+  HWY_ASSERT_EQ(uint32_t{0}, LimitsMin<uint32_t>());
+  HWY_ASSERT_EQ(uint64_t{0}, LimitsMin<uint64_t>());
 
-  HWY_ASSERT_EQ(int8_t(-128), LimitsMin<int8_t>());
-  HWY_ASSERT_EQ(int16_t(-32768), LimitsMin<int16_t>());
-  HWY_ASSERT_EQ(int32_t(0x80000000u), LimitsMin<int32_t>());
-  HWY_ASSERT_EQ(int64_t(0x8000000000000000ull), LimitsMin<int64_t>());
+  HWY_ASSERT_EQ(int8_t{-128}, LimitsMin<int8_t>());
+  HWY_ASSERT_EQ(int16_t{-32768}, LimitsMin<int16_t>());
+  HWY_ASSERT_EQ(static_cast<int32_t>(0x80000000u), LimitsMin<int32_t>());
+  HWY_ASSERT_EQ(static_cast<int64_t>(0x8000000000000000ull),
+                LimitsMin<int64_t>());
 
-  HWY_ASSERT_EQ(uint8_t(0xFF), LimitsMax<uint8_t>());
-  HWY_ASSERT_EQ(uint16_t(0xFFFF), LimitsMax<uint16_t>());
-  HWY_ASSERT_EQ(uint32_t(0xFFFFFFFFu), LimitsMax<uint32_t>());
-  HWY_ASSERT_EQ(uint64_t(0xFFFFFFFFFFFFFFFFull), LimitsMax<uint64_t>());
+  HWY_ASSERT_EQ(uint8_t{0xFF}, LimitsMax<uint8_t>());
+  HWY_ASSERT_EQ(uint16_t{0xFFFF}, LimitsMax<uint16_t>());
+  HWY_ASSERT_EQ(uint32_t{0xFFFFFFFFu}, LimitsMax<uint32_t>());
+  HWY_ASSERT_EQ(uint64_t{0xFFFFFFFFFFFFFFFFull}, LimitsMax<uint64_t>());
 
-  HWY_ASSERT_EQ(int8_t(0x7F), LimitsMax<int8_t>());
-  HWY_ASSERT_EQ(int16_t(0x7FFF), LimitsMax<int16_t>());
-  HWY_ASSERT_EQ(int32_t(0x7FFFFFFFu), LimitsMax<int32_t>());
-  HWY_ASSERT_EQ(int64_t(0x7FFFFFFFFFFFFFFFull), LimitsMax<int64_t>());
+  HWY_ASSERT_EQ(int8_t{0x7F}, LimitsMax<int8_t>());
+  HWY_ASSERT_EQ(int16_t{0x7FFF}, LimitsMax<int16_t>());
+  HWY_ASSERT_EQ(int32_t{0x7FFFFFFFu}, LimitsMax<int32_t>());
+  HWY_ASSERT_EQ(int64_t{0x7FFFFFFFFFFFFFFFull}, LimitsMax<int64_t>());
 }
 
 struct TestLowestHighest {
@@ -88,6 +90,10 @@ HWY_NOINLINE void TestAllType() {
   ForUnsignedTypes(TestIsUnsigned());
   ForSignedTypes(TestIsSigned());
   ForFloatTypes(TestIsFloat());
+
+  static_assert(sizeof(MakeUnsigned<hwy::uint128_t>) == 16, "");
+  static_assert(sizeof(MakeWide<uint64_t>) == 16, "Expected uint128_t");
+  static_assert(sizeof(MakeNarrow<hwy::uint128_t>) == 8, "Expected uint64_t");
 }
 
 struct TestIsSame {
@@ -102,54 +108,54 @@ struct TestIsSame {
 HWY_NOINLINE void TestAllIsSame() { ForAllTypes(TestIsSame()); }
 
 HWY_NOINLINE void TestAllBitScan() {
-  HWY_ASSERT_EQ(size_t(0), Num0BitsAboveMS1Bit_Nonzero32(0x80000000u));
-  HWY_ASSERT_EQ(size_t(0), Num0BitsAboveMS1Bit_Nonzero32(0xFFFFFFFFu));
-  HWY_ASSERT_EQ(size_t(1), Num0BitsAboveMS1Bit_Nonzero32(0x40000000u));
-  HWY_ASSERT_EQ(size_t(1), Num0BitsAboveMS1Bit_Nonzero32(0x40108210u));
-  HWY_ASSERT_EQ(size_t(30), Num0BitsAboveMS1Bit_Nonzero32(2u));
-  HWY_ASSERT_EQ(size_t(30), Num0BitsAboveMS1Bit_Nonzero32(3u));
-  HWY_ASSERT_EQ(size_t(31), Num0BitsAboveMS1Bit_Nonzero32(1u));
+  HWY_ASSERT_EQ(size_t{0}, Num0BitsAboveMS1Bit_Nonzero32(0x80000000u));
+  HWY_ASSERT_EQ(size_t{0}, Num0BitsAboveMS1Bit_Nonzero32(0xFFFFFFFFu));
+  HWY_ASSERT_EQ(size_t{1}, Num0BitsAboveMS1Bit_Nonzero32(0x40000000u));
+  HWY_ASSERT_EQ(size_t{1}, Num0BitsAboveMS1Bit_Nonzero32(0x40108210u));
+  HWY_ASSERT_EQ(size_t{30}, Num0BitsAboveMS1Bit_Nonzero32(2u));
+  HWY_ASSERT_EQ(size_t{30}, Num0BitsAboveMS1Bit_Nonzero32(3u));
+  HWY_ASSERT_EQ(size_t{31}, Num0BitsAboveMS1Bit_Nonzero32(1u));
 
-  HWY_ASSERT_EQ(size_t(0),
+  HWY_ASSERT_EQ(size_t{0},
                 Num0BitsAboveMS1Bit_Nonzero64(0x8000000000000000ull));
-  HWY_ASSERT_EQ(size_t(0),
+  HWY_ASSERT_EQ(size_t{0},
                 Num0BitsAboveMS1Bit_Nonzero64(0xFFFFFFFFFFFFFFFFull));
-  HWY_ASSERT_EQ(size_t(1),
+  HWY_ASSERT_EQ(size_t{1},
                 Num0BitsAboveMS1Bit_Nonzero64(0x4000000000000000ull));
-  HWY_ASSERT_EQ(size_t(1),
+  HWY_ASSERT_EQ(size_t{1},
                 Num0BitsAboveMS1Bit_Nonzero64(0x4010821004200011ull));
-  HWY_ASSERT_EQ(size_t(62), Num0BitsAboveMS1Bit_Nonzero64(2ull));
-  HWY_ASSERT_EQ(size_t(62), Num0BitsAboveMS1Bit_Nonzero64(3ull));
-  HWY_ASSERT_EQ(size_t(63), Num0BitsAboveMS1Bit_Nonzero64(1ull));
+  HWY_ASSERT_EQ(size_t{62}, Num0BitsAboveMS1Bit_Nonzero64(2ull));
+  HWY_ASSERT_EQ(size_t{62}, Num0BitsAboveMS1Bit_Nonzero64(3ull));
+  HWY_ASSERT_EQ(size_t{63}, Num0BitsAboveMS1Bit_Nonzero64(1ull));
 
-  HWY_ASSERT_EQ(size_t(0), Num0BitsBelowLS1Bit_Nonzero32(1u));
-  HWY_ASSERT_EQ(size_t(1), Num0BitsBelowLS1Bit_Nonzero32(2u));
-  HWY_ASSERT_EQ(size_t(30), Num0BitsBelowLS1Bit_Nonzero32(0xC0000000u));
-  HWY_ASSERT_EQ(size_t(31), Num0BitsBelowLS1Bit_Nonzero32(0x80000000u));
+  HWY_ASSERT_EQ(size_t{0}, Num0BitsBelowLS1Bit_Nonzero32(1u));
+  HWY_ASSERT_EQ(size_t{1}, Num0BitsBelowLS1Bit_Nonzero32(2u));
+  HWY_ASSERT_EQ(size_t{30}, Num0BitsBelowLS1Bit_Nonzero32(0xC0000000u));
+  HWY_ASSERT_EQ(size_t{31}, Num0BitsBelowLS1Bit_Nonzero32(0x80000000u));
 
-  HWY_ASSERT_EQ(size_t(0), Num0BitsBelowLS1Bit_Nonzero64(1ull));
-  HWY_ASSERT_EQ(size_t(1), Num0BitsBelowLS1Bit_Nonzero64(2ull));
-  HWY_ASSERT_EQ(size_t(62),
+  HWY_ASSERT_EQ(size_t{0}, Num0BitsBelowLS1Bit_Nonzero64(1ull));
+  HWY_ASSERT_EQ(size_t{1}, Num0BitsBelowLS1Bit_Nonzero64(2ull));
+  HWY_ASSERT_EQ(size_t{62},
                 Num0BitsBelowLS1Bit_Nonzero64(0xC000000000000000ull));
-  HWY_ASSERT_EQ(size_t(63),
+  HWY_ASSERT_EQ(size_t{63},
                 Num0BitsBelowLS1Bit_Nonzero64(0x8000000000000000ull));
 }
 
 HWY_NOINLINE void TestAllPopCount() {
-  HWY_ASSERT_EQ(size_t(0), PopCount(0u));
-  HWY_ASSERT_EQ(size_t(1), PopCount(1u));
-  HWY_ASSERT_EQ(size_t(1), PopCount(2u));
-  HWY_ASSERT_EQ(size_t(2), PopCount(3u));
-  HWY_ASSERT_EQ(size_t(1), PopCount(0x80000000u));
-  HWY_ASSERT_EQ(size_t(31), PopCount(0x7FFFFFFFu));
-  HWY_ASSERT_EQ(size_t(32), PopCount(0xFFFFFFFFu));
+  HWY_ASSERT_EQ(size_t{0}, PopCount(0u));
+  HWY_ASSERT_EQ(size_t{1}, PopCount(1u));
+  HWY_ASSERT_EQ(size_t{1}, PopCount(2u));
+  HWY_ASSERT_EQ(size_t{2}, PopCount(3u));
+  HWY_ASSERT_EQ(size_t{1}, PopCount(0x80000000u));
+  HWY_ASSERT_EQ(size_t{31}, PopCount(0x7FFFFFFFu));
+  HWY_ASSERT_EQ(size_t{32}, PopCount(0xFFFFFFFFu));
 
-  HWY_ASSERT_EQ(size_t(1), PopCount(0x80000000ull));
-  HWY_ASSERT_EQ(size_t(31), PopCount(0x7FFFFFFFull));
-  HWY_ASSERT_EQ(size_t(32), PopCount(0xFFFFFFFFull));
-  HWY_ASSERT_EQ(size_t(33), PopCount(0x10FFFFFFFFull));
-  HWY_ASSERT_EQ(size_t(63), PopCount(0xFFFEFFFFFFFFFFFFull));
-  HWY_ASSERT_EQ(size_t(64), PopCount(0xFFFFFFFFFFFFFFFFull));
+  HWY_ASSERT_EQ(size_t{1}, PopCount(0x80000000ull));
+  HWY_ASSERT_EQ(size_t{31}, PopCount(0x7FFFFFFFull));
+  HWY_ASSERT_EQ(size_t{32}, PopCount(0xFFFFFFFFull));
+  HWY_ASSERT_EQ(size_t{33}, PopCount(0x10FFFFFFFFull));
+  HWY_ASSERT_EQ(size_t{63}, PopCount(0xFFFEFFFFFFFFFFFFull));
+  HWY_ASSERT_EQ(size_t{64}, PopCount(0xFFFFFFFFFFFFFFFFull));
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)
@@ -168,11 +174,5 @@ HWY_EXPORT_AND_TEST_P(BaseTest, TestAllIsSame);
 HWY_EXPORT_AND_TEST_P(BaseTest, TestAllBitScan);
 HWY_EXPORT_AND_TEST_P(BaseTest, TestAllPopCount);
 }  // namespace hwy
-
-// Ought not to be necessary, but without this, no tests run on RVV.
-int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
 
 #endif

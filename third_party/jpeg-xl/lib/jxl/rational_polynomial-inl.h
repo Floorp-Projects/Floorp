@@ -20,6 +20,10 @@ namespace jxl {
 namespace HWY_NAMESPACE {
 namespace {
 
+// These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Div;
+using hwy::HWY_NAMESPACE::MulAdd;
+
 // Primary template: default to actual division.
 template <typename T, class V>
 struct FastDivision {
@@ -31,14 +35,14 @@ struct FastDivision<float, V> {
   // One Newton-Raphson iteration.
   static HWY_INLINE V ReciprocalNR(const V x) {
     const auto rcp = ApproximateReciprocal(x);
-    const auto sum = rcp + rcp;
-    const auto x_rcp = x * rcp;
+    const auto sum = Add(rcp, rcp);
+    const auto x_rcp = Mul(x, rcp);
     return NegMulAdd(x_rcp, rcp, sum);
   }
 
   V operator()(const V n, const V d) const {
 #if 1  // Faster on SKX
-    return n / d;
+    return Div(n, d);
 #else
     return n * ReciprocalNR(d);
 #endif

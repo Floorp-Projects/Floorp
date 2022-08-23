@@ -139,6 +139,9 @@ Status InitializePassesEncoder(const Image3F& opsin, const JxlCmsInterface& cms,
     dc_frame_info.ib_needs_color_transform = false;
     dc_frame_info.save_before_color_transform = true;  // Implicitly true
     AuxOut dc_aux_out;
+    if (aux_out) {
+      dc_aux_out.debug_prefix = aux_out->debug_prefix;
+    }
     JXL_CHECK(EncodeFrame(cparams, dc_frame_info, shared.metadata, ib,
                           state.get(), cms, pool, special_frame.get(),
                           aux_out ? &dc_aux_out : nullptr));

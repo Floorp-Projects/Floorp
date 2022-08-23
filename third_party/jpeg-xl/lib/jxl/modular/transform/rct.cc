@@ -12,7 +12,10 @@ HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
 
+// These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Add;
 using hwy::HWY_NAMESPACE::ShiftRight;
+using hwy::HWY_NAMESPACE::Sub;
 
 template <int transform_type>
 void InvRCTRow(const pixel_type* in0, const pixel_type* in1,
@@ -31,10 +34,10 @@ void InvRCTRow(const pixel_type* in0, const pixel_type* in1,
       auto Y = Load(d, in0 + x);
       auto Co = Load(d, in1 + x);
       auto Cg = Load(d, in2 + x);
-      Y -= ShiftRight<1>(Cg);
-      auto G = Cg + Y;
-      Y -= ShiftRight<1>(Co);
-      auto R = Y + Co;
+      Y = Sub(Y, ShiftRight<1>(Cg));
+      auto G = Add(Cg, Y);
+      Y = Sub(Y, ShiftRight<1>(Co));
+      auto R = Add(Y, Co);
       Store(R, d, out0 + x);
       Store(G, d, out1 + x);
       Store(Y, d, out2 + x);
@@ -42,11 +45,11 @@ void InvRCTRow(const pixel_type* in0, const pixel_type* in1,
       auto First = Load(d, in0 + x);
       auto Second = Load(d, in1 + x);
       auto Third = Load(d, in2 + x);
-      if (third) Third += First;
+      if (third) Third = Add(Third, First);
       if (second == 1) {
-        Second += First;
+        Second = Add(Second, First);
       } else if (second == 2) {
-        Second += ShiftRight<1>(First + Third);
+        Second = Add(Second, ShiftRight<1>(Add(First, Third)));
       }
       Store(First, d, out0 + x);
       Store(Second, d, out1 + x);

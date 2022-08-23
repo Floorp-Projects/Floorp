@@ -24,6 +24,46 @@
 namespace jxl {
 namespace extras {
 
+Status Encoder::VerifyBasicInfo(const JxlBasicInfo& info) const {
+  if (info.xsize == 0 || info.ysize == 0) {
+    return JXL_FAILURE("Empty image");
+  }
+  if (info.num_color_channels != 1 && info.num_color_channels != 3) {
+    return JXL_FAILURE("Invalid number of color channels");
+  }
+  if (info.alpha_bits > 0 && info.alpha_bits != info.bits_per_sample) {
+    return JXL_FAILURE("Alpha bit depth does not match image bit depth");
+  }
+  if (info.orientation != JXL_ORIENT_IDENTITY) {
+    return JXL_FAILURE("Orientation must be identity");
+  }
+  return true;
+}
+
+Status Encoder::VerifyPackedImage(const PackedImage& image,
+                                  const JxlBasicInfo& info) const {
+  if (image.pixels() == nullptr) {
+    return JXL_FAILURE("Invalid image.");
+  }
+  if (image.stride != image.xsize * image.pixel_stride()) {
+    return JXL_FAILURE("Invalid image stride.");
+  }
+  if (image.pixels_size != image.ysize * image.stride) {
+    return JXL_FAILURE("Invalid image size.");
+  }
+  size_t info_num_channels =
+      (info.num_color_channels + (info.alpha_bits > 0 ? 1 : 0));
+  if (image.xsize != info.xsize || image.ysize != info.ysize ||
+      image.format.num_channels != info_num_channels) {
+    return JXL_FAILURE("Frame size does not match image size");
+  }
+  if (info.bits_per_sample >
+      PackedImage::BitsPerChannel(image.format.data_type)) {
+    return JXL_FAILURE("Bit depth does not fit pixel data type");
+  }
+  return true;
+}
+
 Status SelectFormat(const std::vector<JxlPixelFormat>& accepted_formats,
                     const JxlBasicInfo& basic_info, JxlPixelFormat* format) {
   const size_t original_bit_depth = basic_info.bits_per_sample;

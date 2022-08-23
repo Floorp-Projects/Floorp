@@ -1,4 +1,5 @@
 // Copyright 2020 Google LLC
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,8 +28,8 @@
 namespace skeleton {
 
 // Computes base-2 logarithm by converting to float. Supports dynamic dispatch.
-void CallFloorLog2(const uint8_t* HWY_RESTRICT in, const size_t count,
-                   uint8_t* HWY_RESTRICT out);
+HWY_DLLEXPORT void CallFloorLog2(const uint8_t* HWY_RESTRICT in,
+                                 const size_t count, uint8_t* HWY_RESTRICT out);
 
 }  // namespace skeleton
 

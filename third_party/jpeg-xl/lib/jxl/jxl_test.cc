@@ -462,7 +462,7 @@ TEST(JxlTest, RoundtripLargeFast) {
   cparams.speed_tier = SpeedTier::kSquirrel;
 
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, {}, &pool, &io2), 450800u);
+  EXPECT_LE(Roundtrip(&io, cparams, {}, &pool, &io2), 451040u);
 }
 
 TEST(JxlTest, RoundtripDotsForceEpf) {
@@ -1713,7 +1713,7 @@ TEST(JxlTest, RoundtripProgressive) {
   cparams.responsive = true;
   cparams.progressive_mode = true;
   CodecInOut io2;
-  EXPECT_LE(Roundtrip(&io, cparams, {}, &pool, &io2), 61600u);
+  EXPECT_LE(Roundtrip(&io, cparams, {}, &pool, &io2), 61700u);
   EXPECT_THAT(ButteraugliDistance(io, io2, cparams.ba_params, GetJxlCms(),
                                   /*distmap=*/nullptr, &pool),
               IsSlightlyBelow(1.17f));

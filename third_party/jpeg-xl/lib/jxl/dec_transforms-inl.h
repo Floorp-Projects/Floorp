@@ -23,6 +23,9 @@ namespace jxl {
 namespace HWY_NAMESPACE {
 namespace {
 
+// These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::MulAdd;
+
 // Computes the lowest-frequency LF_ROWSxLF_COLS-sized square in output, which
 // is a DCT_ROWS*DCT_COLS-sized DCT block, by doing a ROWS*COLS DCT on the
 // input block.

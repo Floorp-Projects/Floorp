@@ -1,4 +1,5 @@
 // Copyright (c) the JPEG XL Project
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,14 +15,7 @@
 
 #include "hwy/contrib/image/image.h"
 
-#include <cstddef>
-
-#include "hwy/base.h"
-
-#undef HWY_TARGET_INCLUDE
-#define HWY_TARGET_INCLUDE "hwy/contrib/image/image_test.cc"
-#include "hwy/foreach_target.h"
-
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,6 +23,11 @@
 #include <random>
 #include <utility>
 
+#undef HWY_TARGET_INCLUDE
+#define HWY_TARGET_INCLUDE "hwy/contrib/image/image_test.cc"
+#include "hwy/foreach_target.h"  // IWYU pragma: keep
+
+// After foreach_target:
 #include "hwy/highway.h"
 #include "hwy/tests/test_util-inl.h"
 
@@ -82,7 +81,7 @@ struct TestUnalignedT {
 
 // This test reads padding, which only works if it was initialized,
 // which only happens in MSAN builds.
-#if defined(MEMORY_SANITIZER) || HWY_IDE
+#if HWY_IS_MSAN || HWY_IDE
         // Initialize only the valid samples
         for (size_t y = 0; y < ysize; ++y) {
           T* HWY_RESTRICT row = img.MutableRow(y);
@@ -149,11 +148,5 @@ HWY_BEFORE_TEST(ImageTest);
 HWY_EXPORT_AND_TEST_P(ImageTest, TestAligned);
 HWY_EXPORT_AND_TEST_P(ImageTest, TestUnaligned);
 }  // namespace hwy
-
-// Ought not to be necessary, but without this, no tests run on RVV.
-int main(int argc, char** argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
 
 #endif

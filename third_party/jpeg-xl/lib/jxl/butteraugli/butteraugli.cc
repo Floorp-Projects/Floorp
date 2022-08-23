@@ -272,7 +272,20 @@ namespace jxl {
 namespace HWY_NAMESPACE {
 
 // These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Abs;
+using hwy::HWY_NAMESPACE::Div;
+using hwy::HWY_NAMESPACE::Gt;
+using hwy::HWY_NAMESPACE::IfThenElse;
+using hwy::HWY_NAMESPACE::IfThenElseZero;
+using hwy::HWY_NAMESPACE::Lt;
+using hwy::HWY_NAMESPACE::Max;
+using hwy::HWY_NAMESPACE::Mul;
+using hwy::HWY_NAMESPACE::MulAdd;
+using hwy::HWY_NAMESPACE::MulSub;
+using hwy::HWY_NAMESPACE::Neg;
+using hwy::HWY_NAMESPACE::Sub;
 using hwy::HWY_NAMESPACE::Vec;
+using hwy::HWY_NAMESPACE::ZeroIfNegative;
 
 template <class D, class V>
 HWY_INLINE V MaximumClamp(D d, V v, double kMaxVal) {
@@ -280,24 +293,26 @@ HWY_INLINE V MaximumClamp(D d, V v, double kMaxVal) {
   const V mul = Set(d, kMul);
   const V maxval = Set(d, kMaxVal);
   // If greater than maxval or less than -maxval, replace with if_*.
-  const V if_pos = MulAdd(v - maxval, mul, maxval);
-  const V if_neg = MulSub(v + maxval, mul, maxval);
-  const V pos_or_v = IfThenElse(v >= maxval, if_pos, v);
-  return IfThenElse(v < Neg(maxval), if_neg, pos_or_v);
+  const V if_pos = MulAdd(Sub(v, maxval), mul, maxval);
+  const V if_neg = MulSub(Add(v, maxval), mul, maxval);
+  const V pos_or_v = IfThenElse(Ge(v, maxval), if_pos, v);
+  return IfThenElse(Lt(v, Neg(maxval)), if_neg, pos_or_v);
 }
 
 // Make area around zero less important (remove it).
 template <class D, class V>
 HWY_INLINE V RemoveRangeAroundZero(const D d, const double kw, const V x) {
   const auto w = Set(d, kw);
-  return IfThenElse(x > w, x - w, IfThenElseZero(x < Neg(w), x + w));
+  return IfThenElse(Gt(x, w), Sub(x, w),
+                    IfThenElseZero(Lt(x, Neg(w)), Add(x, w)));
 }
 
 // Make area around zero more important (2x it until the limit).
 template <class D, class V>
 HWY_INLINE V AmplifyRangeAroundZero(const D d, const double kw, const V x) {
   const auto w = Set(d, kw);
-  return IfThenElse(x > w, x + w, IfThenElse(x < Neg(w), x - w, x + x));
+  return IfThenElse(Gt(x, w), Add(x, w),
+                    IfThenElse(Lt(x, Neg(w)), Sub(x, w), Add(x, x)));
 }
 
 // XybLowFreqToVals converts from low-frequency XYB space to the 'vals' space.
@@ -316,9 +331,9 @@ HWY_INLINE void XybLowFreqToVals(const D d, const V& x, const V& y,
   const V bmul = Set(d, bmuli);
   const V y_to_b_mul = Set(d, y_to_b_muli);
   const V b = MulAdd(y_to_b_mul, y, b_arg);
-  *valb = b * bmul;
-  *valx = x * xmul;
-  *valy = y * ymul;
+  *valb = Mul(b, bmul);
+  *valx = Mul(x, xmul);
+  *valy = Mul(y, ymul);
 }
 
 void SuppressXByY(const ImageF& in_x, const ImageF& in_y, const double yw,
@@ -341,8 +356,9 @@ void SuppressXByY(const ImageF& in_x, const ImageF& in_y, const double yw,
     for (size_t x = 0; x < xsize; x += Lanes(d)) {
       const auto vx = Load(d, row_x + x);
       const auto vy = Load(d, row_y + x);
-      const auto scaler = MulAdd(ywv / MulAdd(vy, vy, ywv), one_minus_s, sv);
-      Store(scaler * vx, d, row_out + x);
+      const auto scaler =
+          MulAdd(Div(ywv, MulAdd(vy, vy, ywv)), one_minus_s, sv);
+      Store(Mul(scaler, vx), d, row_out + x);
     }
   }
 }
@@ -372,7 +388,7 @@ static void SeparateFrequencies(size_t xsize, size_t ysize,
       const float* BUTTERAUGLI_RESTRICT row_lf = ps.lf.ConstPlaneRow(i, y);
       float* BUTTERAUGLI_RESTRICT row_mf = ps.mf.PlaneRow(i, y);
       for (size_t x = 0; x < xsize; x += Lanes(d)) {
-        const auto mf = Load(d, row_xyb + x) - Load(d, row_lf + x);
+        const auto mf = Sub(Load(d, row_xyb + x), Load(d, row_lf + x));
         Store(mf, d, row_mf + x);
       }
     }
@@ -397,7 +413,7 @@ static void SeparateFrequencies(size_t xsize, size_t ysize,
         float* BUTTERAUGLI_RESTRICT row_hf = ps.hf[0].Row(y);
         for (size_t x = 0; x < xsize; x += Lanes(d)) {
           auto mf = Load(d, row_mf + x);
-          auto hf = Load(d, row_hf + x) - mf;
+          auto hf = Sub(Load(d, row_hf + x), mf);
           mf = RemoveRangeAroundZero(d, kRemoveMfRange, mf);
           Store(mf, d, row_mf + x);
           Store(hf, d, row_hf + x);
@@ -409,7 +425,7 @@ static void SeparateFrequencies(size_t xsize, size_t ysize,
         float* BUTTERAUGLI_RESTRICT row_hf = ps.hf[1].Row(y);
         for (size_t x = 0; x < xsize; x += Lanes(d)) {
           auto mf = Load(d, row_mf + x);
-          auto hf = Load(d, row_hf + x) - mf;
+          auto hf = Sub(Load(d, row_hf + x), mf);
 
           mf = AmplifyRangeAroundZero(d, kAddMfRange, mf);
           Store(mf, d, row_mf + x);
@@ -452,7 +468,7 @@ static void SeparateFrequencies(size_t xsize, size_t ysize,
         float* BUTTERAUGLI_RESTRICT row_hf = ps.hf[0].Row(y);
         for (size_t x = 0; x < xsize; x += Lanes(d)) {
           auto hf = Load(d, row_hf + x);
-          auto uhf = Load(d, row_uhf + x) - hf;
+          auto uhf = Sub(Load(d, row_uhf + x), hf);
           hf = RemoveRangeAroundZero(d, kRemoveHfRange, hf);
           uhf = RemoveRangeAroundZero(d, kRemoveUhfRange, uhf);
           Store(hf, d, row_hf + x);
@@ -467,12 +483,12 @@ static void SeparateFrequencies(size_t xsize, size_t ysize,
           auto hf = Load(d, row_hf + x);
           hf = MaximumClamp(d, hf, kMaxclampHf);
 
-          auto uhf = Load(d, row_uhf + x) - hf;
+          auto uhf = Sub(Load(d, row_uhf + x), hf);
           uhf = MaximumClamp(d, uhf, kMaxclampUhf);
-          uhf *= Set(d, kMulYUhf);
+          uhf = Mul(uhf, Set(d, kMulYUhf));
           Store(uhf, d, row_uhf + x);
 
-          hf *= Set(d, kMulYHf);
+          hf = Mul(hf, Set(d, kMulYHf));
           hf = AmplifyRangeAroundZero(d, kAddHfRange, hf);
           Store(hf, d, row_hf + x);
         }
@@ -500,6 +516,25 @@ static void SeparateFrequencies(size_t xsize, size_t ysize,
   }
 }
 
+namespace {
+template <typename V>
+BUTTERAUGLI_INLINE V Sum(V a, V b, V c, V d) {
+  return Add(Add(a, b), Add(c, d));
+}
+template <typename V>
+BUTTERAUGLI_INLINE V Sum(V a, V b, V c, V d, V e) {
+  return Sum(a, b, c, Add(d, e));
+}
+template <typename V>
+BUTTERAUGLI_INLINE V Sum(V a, V b, V c, V d, V e, V f, V g) {
+  return Sum(a, b, c, Sum(d, e, f, g));
+}
+template <typename V>
+BUTTERAUGLI_INLINE V Sum(V a, V b, V c, V d, V e, V f, V g, V h, V i) {
+  return Add(Add(Sum(a, b, c, d), Sum(e, f, g, h)), i);
+}
+}  // namespace
+
 template <class D>
 Vec<D> MaltaUnit(MaltaTagLF /*tag*/, const D df,
                  const float* BUTTERAUGLI_RESTRICT d, const intptr_t xs) {
@@ -508,52 +543,52 @@ Vec<D> MaltaUnit(MaltaTagLF /*tag*/, const D df,
   const auto center = LoadU(df, d);
 
   // x grows, y constant
-  const auto sum_yconst = LoadU(df, d - 4) + LoadU(df, d - 2) + center +
-                          LoadU(df, d + 2) + LoadU(df, d + 4);
+  const auto sum_yconst = Sum(LoadU(df, d - 4), LoadU(df, d - 2), center,
+                              LoadU(df, d + 2), LoadU(df, d + 4));
   // Will return this, sum of all line kernels
-  auto retval = sum_yconst * sum_yconst;
+  auto retval = Mul(sum_yconst, sum_yconst);
   {
     // y grows, x constant
-    auto sum = LoadU(df, d - xs3 - xs) + LoadU(df, d - xs - xs) + center +
-               LoadU(df, d + xs + xs) + LoadU(df, d + xs3 + xs);
+    auto sum = Sum(LoadU(df, d - xs3 - xs), LoadU(df, d - xs - xs), center,
+                   LoadU(df, d + xs + xs), LoadU(df, d + xs3 + xs));
     retval = MulAdd(sum, sum, retval);
   }
   {
     // both grow
-    auto sum = LoadU(df, d - xs3 - 3) + LoadU(df, d - xs - xs - 2) + center +
-               LoadU(df, d + xs + xs + 2) + LoadU(df, d + xs3 + 3);
+    auto sum = Sum(LoadU(df, d - xs3 - 3), LoadU(df, d - xs - xs - 2), center,
+                   LoadU(df, d + xs + xs + 2), LoadU(df, d + xs3 + 3));
     retval = MulAdd(sum, sum, retval);
   }
   {
     // y grows, x shrinks
-    auto sum = LoadU(df, d - xs3 + 3) + LoadU(df, d - xs - xs + 2) + center +
-               LoadU(df, d + xs + xs - 2) + LoadU(df, d + xs3 - 3);
+    auto sum = Sum(LoadU(df, d - xs3 + 3), LoadU(df, d - xs - xs + 2), center,
+                   LoadU(df, d + xs + xs - 2), LoadU(df, d + xs3 - 3));
     retval = MulAdd(sum, sum, retval);
   }
   {
     // y grows -4 to 4, x shrinks 1 -> -1
-    auto sum = LoadU(df, d - xs3 - xs + 1) + LoadU(df, d - xs - xs + 1) +
-               center + LoadU(df, d + xs + xs - 1) +
-               LoadU(df, d + xs3 + xs - 1);
+    auto sum =
+        Sum(LoadU(df, d - xs3 - xs + 1), LoadU(df, d - xs - xs + 1), center,
+            LoadU(df, d + xs + xs - 1), LoadU(df, d + xs3 + xs - 1));
     retval = MulAdd(sum, sum, retval);
   }
   {
     //  y grows -4 to 4, x grows -1 -> 1
-    auto sum = LoadU(df, d - xs3 - xs - 1) + LoadU(df, d - xs - xs - 1) +
-               center + LoadU(df, d + xs + xs + 1) +
-               LoadU(df, d + xs3 + xs + 1);
+    auto sum =
+        Sum(LoadU(df, d - xs3 - xs - 1), LoadU(df, d - xs - xs - 1), center,
+            LoadU(df, d + xs + xs + 1), LoadU(df, d + xs3 + xs + 1));
     retval = MulAdd(sum, sum, retval);
   }
   {
     // x grows -4 to 4, y grows -1 to 1
-    auto sum = LoadU(df, d - 4 - xs) + LoadU(df, d - 2 - xs) + center +
-               LoadU(df, d + 2 + xs) + LoadU(df, d + 4 + xs);
+    auto sum = Sum(LoadU(df, d - 4 - xs), LoadU(df, d - 2 - xs), center,
+                   LoadU(df, d + 2 + xs), LoadU(df, d + 4 + xs));
     retval = MulAdd(sum, sum, retval);
   }
   {
     // x grows -4 to 4, y shrinks 1 to -1
-    auto sum = LoadU(df, d - 4 + xs) + LoadU(df, d - 2 + xs) + center +
-               LoadU(df, d + 2 - xs) + LoadU(df, d + 4 - xs);
+    auto sum = Sum(LoadU(df, d - 4 + xs), LoadU(df, d - 2 + xs), center,
+                   LoadU(df, d + 2 - xs), LoadU(df, d + 4 - xs));
     retval = MulAdd(sum, sum, retval);
   }
   {
@@ -566,8 +601,8 @@ Vec<D> MaltaUnit(MaltaTagLF /*tag*/, const D df,
        6_____*___
        7______*__
        8_________ */
-    auto sum = LoadU(df, d - xs3 - 2) + LoadU(df, d - xs - xs - 1) + center +
-               LoadU(df, d + xs + xs + 1) + LoadU(df, d + xs3 + 2);
+    auto sum = Sum(LoadU(df, d - xs3 - 2), LoadU(df, d - xs - xs - 1), center,
+                   LoadU(df, d + xs + xs + 1), LoadU(df, d + xs3 + 2));
     retval = MulAdd(sum, sum, retval);
   }
   {
@@ -580,8 +615,8 @@ Vec<D> MaltaUnit(MaltaTagLF /*tag*/, const D df,
        6___*_____
        7__*______
        8_________ */
-    auto sum = LoadU(df, d - xs3 + 2) + LoadU(df, d - xs - xs + 1) + center +
-               LoadU(df, d + xs + xs - 1) + LoadU(df, d + xs3 - 2);
+    auto sum = Sum(LoadU(df, d - xs3 + 2), LoadU(df, d - xs - xs + 1), center,
+                   LoadU(df, d + xs + xs - 1), LoadU(df, d + xs3 - 2));
     retval = MulAdd(sum, sum, retval);
   }
   {
@@ -594,8 +629,8 @@ Vec<D> MaltaUnit(MaltaTagLF /*tag*/, const D df,
        6_______*_
        7_________
        8_________ */
-    auto sum = LoadU(df, d - xs - xs - 3) + LoadU(df, d - xs - 2) + center +
-               LoadU(df, d + xs + 2) + LoadU(df, d + xs + xs + 3);
+    auto sum = Sum(LoadU(df, d - xs - xs - 3), LoadU(df, d - xs - 2), center,
+                   LoadU(df, d + xs + 2), LoadU(df, d + xs + xs + 3));
     retval = MulAdd(sum, sum, retval);
   }
   {
@@ -608,8 +643,8 @@ Vec<D> MaltaUnit(MaltaTagLF /*tag*/, const D df,
        6_*_______
        7_________
        8_________ */
-    auto sum = LoadU(df, d - xs - xs + 3) + LoadU(df, d - xs + 2) + center +
-               LoadU(df, d + xs - 2) + LoadU(df, d + xs + xs - 3);
+    auto sum = Sum(LoadU(df, d - xs - xs + 3), LoadU(df, d - xs + 2), center,
+                   LoadU(df, d + xs - 2), LoadU(df, d + xs + xs - 3));
     retval = MulAdd(sum, sum, retval);
   }
   {
@@ -623,8 +658,8 @@ Vec<D> MaltaUnit(MaltaTagLF /*tag*/, const D df,
        7_________
        8_________ */
 
-    auto sum = LoadU(df, d + xs + xs - 4) + LoadU(df, d + xs - 2) + center +
-               LoadU(df, d - xs + 2) + LoadU(df, d - xs - xs + 4);
+    auto sum = Sum(LoadU(df, d + xs + xs - 4), LoadU(df, d + xs - 2), center,
+                   LoadU(df, d - xs + 2), LoadU(df, d - xs - xs + 4));
     retval = MulAdd(sum, sum, retval);
   }
   {
@@ -637,8 +672,8 @@ Vec<D> MaltaUnit(MaltaTagLF /*tag*/, const D df,
        6________*
        7_________
        8_________ */
-    auto sum = LoadU(df, d - xs - xs - 4) + LoadU(df, d - xs - 2) + center +
-               LoadU(df, d + xs + 2) + LoadU(df, d + xs + xs + 4);
+    auto sum = Sum(LoadU(df, d - xs - xs - 4), LoadU(df, d - xs - 2), center,
+                   LoadU(df, d + xs + 2), LoadU(df, d + xs + xs + 4));
     retval = MulAdd(sum, sum, retval);
   }
   {
@@ -651,9 +686,9 @@ Vec<D> MaltaUnit(MaltaTagLF /*tag*/, const D df,
        6_____*___
        7_________
        8______*__ */
-    auto sum = LoadU(df, d - xs3 - xs - 2) + LoadU(df, d - xs - xs - 1) +
-               center + LoadU(df, d + xs + xs + 1) +
-               LoadU(df, d + xs3 + xs + 2);
+    auto sum =
+        Sum(LoadU(df, d - xs3 - xs - 2), LoadU(df, d - xs - xs - 1), center,
+            LoadU(df, d + xs + xs + 1), LoadU(df, d + xs3 + xs + 2));
     retval = MulAdd(sum, sum, retval);
   }
   {
@@ -666,9 +701,9 @@ Vec<D> MaltaUnit(MaltaTagLF /*tag*/, const D df,
        6___*_____
        7_________
        8__*______ */
-    auto sum = LoadU(df, d - xs3 - xs + 2) + LoadU(df, d - xs - xs + 1) +
-               center + LoadU(df, d + xs + xs - 1) +
-               LoadU(df, d + xs3 + xs - 2);
+    auto sum =
+        Sum(LoadU(df, d - xs3 - xs + 2), LoadU(df, d - xs - xs + 1), center,
+            LoadU(df, d + xs + xs - 1), LoadU(df, d + xs3 + xs - 2));
     retval = MulAdd(sum, sum, retval);
   }
   return retval;
@@ -682,65 +717,65 @@ Vec<D> MaltaUnit(MaltaTag /*tag*/, const D df,
   const auto center = LoadU(df, d);
 
   // x grows, y constant
-  const auto sum_yconst = LoadU(df, d - 4) + LoadU(df, d - 3) +
-                          LoadU(df, d - 2) + LoadU(df, d - 1) + center +
-                          LoadU(df, d + 1) + LoadU(df, d + 2) +
-                          LoadU(df, d + 3) + LoadU(df, d + 4);
+  const auto sum_yconst =
+      Sum(LoadU(df, d - 4), LoadU(df, d - 3), LoadU(df, d - 2),
+          LoadU(df, d - 1), center, LoadU(df, d + 1), LoadU(df, d + 2),
+          LoadU(df, d + 3), LoadU(df, d + 4));
   // Will return this, sum of all line kernels
-  auto retval = sum_yconst * sum_yconst;
+  auto retval = Mul(sum_yconst, sum_yconst);
 
   {
     // y grows, x constant
-    auto sum = LoadU(df, d - xs3 - xs) + LoadU(df, d - xs3) +
-               LoadU(df, d - xs - xs) + LoadU(df, d - xs) + center +
-               LoadU(df, d + xs) + LoadU(df, d + xs + xs) + LoadU(df, d + xs3) +
-               LoadU(df, d + xs3 + xs);
+    auto sum = Sum(LoadU(df, d - xs3 - xs), LoadU(df, d - xs3),
+                   LoadU(df, d - xs - xs), LoadU(df, d - xs), center,
+                   LoadU(df, d + xs), LoadU(df, d + xs + xs),
+                   LoadU(df, d + xs3), LoadU(df, d + xs3 + xs));
     retval = MulAdd(sum, sum, retval);
   }
   {
     // both grow
-    auto sum = LoadU(df, d - xs3 - 3) + LoadU(df, d - xs - xs - 2) +
-               LoadU(df, d - xs - 1) + center + LoadU(df, d + xs + 1) +
-               LoadU(df, d + xs + xs + 2) + LoadU(df, d + xs3 + 3);
+    auto sum = Sum(LoadU(df, d - xs3 - 3), LoadU(df, d - xs - xs - 2),
+                   LoadU(df, d - xs - 1), center, LoadU(df, d + xs + 1),
+                   LoadU(df, d + xs + xs + 2), LoadU(df, d + xs3 + 3));
     retval = MulAdd(sum, sum, retval);
   }
   {
     // y grows, x shrinks
-    auto sum = LoadU(df, d - xs3 + 3) + LoadU(df, d - xs - xs + 2) +
-               LoadU(df, d - xs + 1) + center + LoadU(df, d + xs - 1) +
-               LoadU(df, d + xs + xs - 2) + LoadU(df, d + xs3 - 3);
+    auto sum = Sum(LoadU(df, d - xs3 + 3), LoadU(df, d - xs - xs + 2),
+                   LoadU(df, d - xs + 1), center, LoadU(df, d + xs - 1),
+                   LoadU(df, d + xs + xs - 2), LoadU(df, d + xs3 - 3));
     retval = MulAdd(sum, sum, retval);
   }
   {
     // y grows -4 to 4, x shrinks 1 -> -1
-    auto sum = LoadU(df, d - xs3 - xs + 1) + LoadU(df, d - xs3 + 1) +
-               LoadU(df, d - xs - xs + 1) + LoadU(df, d - xs) + center +
-               LoadU(df, d + xs) + LoadU(df, d + xs + xs - 1) +
-               LoadU(df, d + xs3 - 1) + LoadU(df, d + xs3 + xs - 1);
+    auto sum = Sum(LoadU(df, d - xs3 - xs + 1), LoadU(df, d - xs3 + 1),
+                   LoadU(df, d - xs - xs + 1), LoadU(df, d - xs), center,
+                   LoadU(df, d + xs), LoadU(df, d + xs + xs - 1),
+                   LoadU(df, d + xs3 - 1), LoadU(df, d + xs3 + xs - 1));
     retval = MulAdd(sum, sum, retval);
   }
   {
     //  y grows -4 to 4, x grows -1 -> 1
-    auto sum = LoadU(df, d - xs3 - xs - 1) + LoadU(df, d - xs3 - 1) +
-               LoadU(df, d - xs - xs - 1) + LoadU(df, d - xs) + center +
-               LoadU(df, d + xs) + LoadU(df, d + xs + xs + 1) +
-               LoadU(df, d + xs3 + 1) + LoadU(df, d + xs3 + xs + 1);
+    auto sum = Sum(LoadU(df, d - xs3 - xs - 1), LoadU(df, d - xs3 - 1),
+                   LoadU(df, d - xs - xs - 1), LoadU(df, d - xs), center,
+                   LoadU(df, d + xs), LoadU(df, d + xs + xs + 1),
+                   LoadU(df, d + xs3 + 1), LoadU(df, d + xs3 + xs + 1));
     retval = MulAdd(sum, sum, retval);
   }
   {
     // x grows -4 to 4, y grows -1 to 1
-    auto sum = LoadU(df, d - 4 - xs) + LoadU(df, d - 3 - xs) +
-               LoadU(df, d - 2 - xs) + LoadU(df, d - 1) + center +
-               LoadU(df, d + 1) + LoadU(df, d + 2 + xs) +
-               LoadU(df, d + 3 + xs) + LoadU(df, d + 4 + xs);
+    auto sum =
+        Sum(LoadU(df, d - 4 - xs), LoadU(df, d - 3 - xs), LoadU(df, d - 2 - xs),
+            LoadU(df, d - 1), center, LoadU(df, d + 1), LoadU(df, d + 2 + xs),
+            LoadU(df, d + 3 + xs), LoadU(df, d + 4 + xs));
     retval = MulAdd(sum, sum, retval);
   }
   {
     // x grows -4 to 4, y shrinks 1 to -1
-    auto sum = LoadU(df, d - 4 + xs) + LoadU(df, d - 3 + xs) +
-               LoadU(df, d - 2 + xs) + LoadU(df, d - 1) + center +
-               LoadU(df, d + 1) + LoadU(df, d + 2 - xs) +
-               LoadU(df, d + 3 - xs) + LoadU(df, d + 4 - xs);
+    auto sum =
+        Sum(LoadU(df, d - 4 + xs), LoadU(df, d - 3 + xs), LoadU(df, d - 2 + xs),
+            LoadU(df, d - 1), center, LoadU(df, d + 1), LoadU(df, d + 2 - xs),
+            LoadU(df, d + 3 - xs), LoadU(df, d + 4 - xs));
     retval = MulAdd(sum, sum, retval);
   }
   {
@@ -753,9 +788,9 @@ Vec<D> MaltaUnit(MaltaTag /*tag*/, const D df,
        6_____*___
        7______*__
        8_________ */
-    auto sum = LoadU(df, d - xs3 - 2) + LoadU(df, d - xs - xs - 1) +
-               LoadU(df, d - xs - 1) + center + LoadU(df, d + xs + 1) +
-               LoadU(df, d + xs + xs + 1) + LoadU(df, d + xs3 + 2);
+    auto sum = Sum(LoadU(df, d - xs3 - 2), LoadU(df, d - xs - xs - 1),
+                   LoadU(df, d - xs - 1), center, LoadU(df, d + xs + 1),
+                   LoadU(df, d + xs + xs + 1), LoadU(df, d + xs3 + 2));
     retval = MulAdd(sum, sum, retval);
   }
   {
@@ -768,9 +803,9 @@ Vec<D> MaltaUnit(MaltaTag /*tag*/, const D df,
        6___*_____
        7__*______
        8_________ */
-    auto sum = LoadU(df, d - xs3 + 2) + LoadU(df, d - xs - xs + 1) +
-               LoadU(df, d - xs + 1) + center + LoadU(df, d + xs - 1) +
-               LoadU(df, d + xs + xs - 1) + LoadU(df, d + xs3 - 2);
+    auto sum = Sum(LoadU(df, d - xs3 + 2), LoadU(df, d - xs - xs + 1),
+                   LoadU(df, d - xs + 1), center, LoadU(df, d + xs - 1),
+                   LoadU(df, d + xs + xs - 1), LoadU(df, d + xs3 - 2));
     retval = MulAdd(sum, sum, retval);
   }
   {
@@ -783,9 +818,9 @@ Vec<D> MaltaUnit(MaltaTag /*tag*/, const D df,
        6_______*_
        7_________
        8_________ */
-    auto sum = LoadU(df, d - xs - xs - 3) + LoadU(df, d - xs - 2) +
-               LoadU(df, d - xs - 1) + center + LoadU(df, d + xs + 1) +
-               LoadU(df, d + xs + 2) + LoadU(df, d + xs + xs + 3);
+    auto sum = Sum(LoadU(df, d - xs - xs - 3), LoadU(df, d - xs - 2),
+                   LoadU(df, d - xs - 1), center, LoadU(df, d + xs + 1),
+                   LoadU(df, d + xs + 2), LoadU(df, d + xs + xs + 3));
     retval = MulAdd(sum, sum, retval);
   }
   {
@@ -798,9 +833,9 @@ Vec<D> MaltaUnit(MaltaTag /*tag*/, const D df,
        6_*_______
        7_________
        8_________ */
-    auto sum = LoadU(df, d - xs - xs + 3) + LoadU(df, d - xs + 2) +
-               LoadU(df, d - xs + 1) + center + LoadU(df, d + xs - 1) +
-               LoadU(df, d + xs - 2) + LoadU(df, d + xs + xs - 3);
+    auto sum = Sum(LoadU(df, d - xs - xs + 3), LoadU(df, d - xs + 2),
+                   LoadU(df, d - xs + 1), center, LoadU(df, d + xs - 1),
+                   LoadU(df, d + xs - 2), LoadU(df, d + xs + xs - 3));
     retval = MulAdd(sum, sum, retval);
   }
   {
@@ -814,10 +849,10 @@ Vec<D> MaltaUnit(MaltaTag /*tag*/, const D df,
        7_________
        8_________ */
 
-    auto sum = LoadU(df, d + xs - 4) + LoadU(df, d + xs - 3) +
-               LoadU(df, d + xs - 2) + LoadU(df, d - 1) + center +
-               LoadU(df, d + 1) + LoadU(df, d - xs + 2) +
-               LoadU(df, d - xs + 3) + LoadU(df, d - xs + 4);
+    auto sum =
+        Sum(LoadU(df, d + xs - 4), LoadU(df, d + xs - 3), LoadU(df, d + xs - 2),
+            LoadU(df, d - 1), center, LoadU(df, d + 1), LoadU(df, d - xs + 2),
+            LoadU(df, d - xs + 3), LoadU(df, d - xs + 4));
     retval = MulAdd(sum, sum, retval);
   }
   {
@@ -830,10 +865,10 @@ Vec<D> MaltaUnit(MaltaTag /*tag*/, const D df,
        6_________
        7_________
        8_________ */
-    auto sum = LoadU(df, d - xs - 4) + LoadU(df, d - xs - 3) +
-               LoadU(df, d - xs - 2) + LoadU(df, d - 1) + center +
-               LoadU(df, d + 1) + LoadU(df, d + xs + 2) +
-               LoadU(df, d + xs + 3) + LoadU(df, d + xs + 4);
+    auto sum =
+        Sum(LoadU(df, d - xs - 4), LoadU(df, d - xs - 3), LoadU(df, d - xs - 2),
+            LoadU(df, d - 1), center, LoadU(df, d + 1), LoadU(df, d + xs + 2),
+            LoadU(df, d + xs + 3), LoadU(df, d + xs + 4));
     retval = MulAdd(sum, sum, retval);
   }
   {
@@ -846,10 +881,10 @@ Vec<D> MaltaUnit(MaltaTag /*tag*/, const D df,
        6_____*___
        7_____*___
        8_____*___ */
-    auto sum = LoadU(df, d - xs3 - xs - 1) + LoadU(df, d - xs3 - 1) +
-               LoadU(df, d - xs - xs - 1) + LoadU(df, d - xs) + center +
-               LoadU(df, d + xs) + LoadU(df, d + xs + xs + 1) +
-               LoadU(df, d + xs3 + 1) + LoadU(df, d + xs3 + xs + 1);
+    auto sum = Sum(LoadU(df, d - xs3 - xs - 1), LoadU(df, d - xs3 - 1),
+                   LoadU(df, d - xs - xs - 1), LoadU(df, d - xs), center,
+                   LoadU(df, d + xs), LoadU(df, d + xs + xs + 1),
+                   LoadU(df, d + xs3 + 1), LoadU(df, d + xs3 + xs + 1));
     retval = MulAdd(sum, sum, retval);
   }
   {
@@ -862,10 +897,10 @@ Vec<D> MaltaUnit(MaltaTag /*tag*/, const D df,
        6___*_____
        7___*_____
        8___*_____ */
-    auto sum = LoadU(df, d - xs3 - xs + 1) + LoadU(df, d - xs3 + 1) +
-               LoadU(df, d - xs - xs + 1) + LoadU(df, d - xs) + center +
-               LoadU(df, d + xs) + LoadU(df, d + xs + xs - 1) +
-               LoadU(df, d + xs3 - 1) + LoadU(df, d + xs3 + xs - 1);
+    auto sum = Sum(LoadU(df, d - xs3 - xs + 1), LoadU(df, d - xs3 + 1),
+                   LoadU(df, d - xs - xs + 1), LoadU(df, d - xs), center,
+                   LoadU(df, d + xs), LoadU(df, d + xs + xs - 1),
+                   LoadU(df, d + xs3 - 1), LoadU(df, d + xs3 + xs - 1));
     retval = MulAdd(sum, sum, retval);
   }
   return retval;
@@ -989,7 +1024,7 @@ static void MaltaDiffMapT(const Tag tag, const ImageF& lum0, const ImageF& lum1,
     }
     for (; x0 + Lanes(df) + 4 <= xsize_; x0 += Lanes(df)) {
       auto diff = Load(df, row_diff + x0);
-      diff += MaltaUnit(Tag(), df, row_in + x0, stride);
+      diff = Add(diff, MaltaUnit(Tag(), df, row_in + x0, stride));
       Store(diff, df, row_diff + x0);
     }
 
@@ -1250,8 +1285,8 @@ static void L2Diff(const ImageF& i0, const ImageF& i1, const float w,
     float* BUTTERAUGLI_RESTRICT row_diff = diffmap->PlaneRow(c, y);
 
     for (size_t x = 0; x < i0.xsize(); x += Lanes(d)) {
-      const auto diff = Load(d, row0 + x) - Load(d, row1 + x);
-      const auto diff2 = diff * diff;
+      const auto diff = Sub(Load(d, row0 + x), Load(d, row1 + x));
+      const auto diff2 = Mul(diff, diff);
       const auto prev = Load(d, row_diff + x);
       Store(MulAdd(diff2, weight, prev), d, row_diff + x);
     }
@@ -1272,9 +1307,9 @@ static void SetL2Diff(const ImageF& i0, const ImageF& i1, const float w,
     float* BUTTERAUGLI_RESTRICT row_diff = diffmap->PlaneRow(c, y);
 
     for (size_t x = 0; x < i0.xsize(); x += Lanes(d)) {
-      const auto diff = Load(d, row0 + x) - Load(d, row1 + x);
-      const auto diff2 = diff * diff;
-      Store(diff2 * weight, d, row_diff + x);
+      const auto diff = Sub(Load(d, row0 + x), Load(d, row1 + x));
+      const auto diff2 = Mul(diff, diff);
+      Store(Mul(diff2, weight), d, row_diff + x);
     }
   }
 }
@@ -1302,22 +1337,22 @@ static void L2DiffAsymmetric(const ImageF& i0, const ImageF& i1, float w_0gt1,
       const auto val1 = Load(d, row1 + x);
 
       // Primary symmetric quadratic objective.
-      const auto diff = val0 - val1;
-      auto total = MulAdd(diff * diff, vw_0gt1, Load(d, row_diff + x));
+      const auto diff = Sub(val0, val1);
+      auto total = MulAdd(Mul(diff, diff), vw_0gt1, Load(d, row_diff + x));
 
       // Secondary half-open quadratic objectives.
       const auto fabs0 = Abs(val0);
-      const auto too_small = Set(d, 0.4) * fabs0;
+      const auto too_small = Mul(Set(d, 0.4), fabs0);
       const auto too_big = fabs0;
 
-      const auto if_neg =
-          IfThenElse(val1 > Neg(too_small), val1 + too_small,
-                     IfThenElseZero(val1 < Neg(too_big), Neg(val1) - too_big));
+      const auto if_neg = IfThenElse(
+          Gt(val1, Neg(too_small)), Add(val1, too_small),
+          IfThenElseZero(Lt(val1, Neg(too_big)), Sub(Neg(val1), too_big)));
       const auto if_pos =
-          IfThenElse(val1 < too_small, too_small - val1,
-                     IfThenElseZero(val1 > too_big, val1 - too_big));
-      const auto v = IfThenElse(val0 < Zero(d), if_neg, if_pos);
-      total += vw_0lt1 * v * v;
+          IfThenElse(Lt(val1, too_small), Sub(too_small, val1),
+                     IfThenElseZero(Gt(val1, too_big), Sub(val1, too_big)));
+      const auto v = IfThenElse(Lt(val0, Zero(d)), if_neg, if_pos);
+      total = MulAdd(vw_0lt1, Mul(v, v), total);
       Store(total, d, row_diff + x);
     }
   }
@@ -1334,7 +1369,7 @@ V Gamma(const DF df, V v) {
   // clamping here.
   v = ZeroIfNegative(v);
 
-  const auto biased = v + Set(df, 9.9710635769299145);
+  const auto biased = Add(v, Set(df, 9.9710635769299145));
   const auto log = FastLog2f(df, biased);
   // We could fold this into a custom Log2 polynomial, but there would be
   // relatively little gain.
@@ -1373,9 +1408,9 @@ BUTTERAUGLI_INLINE void OpsinAbsorbance(const DF df, const V& in0, const V& in1,
   const V mix10 = Set(df, mixi10);
   const V mix11 = Set(df, mixi11);
 
-  *out0 = mix0 * in0 + mix1 * in1 + mix2 * in2 + mix3;
-  *out1 = mix4 * in0 + mix5 * in1 + mix6 * in2 + mix7;
-  *out2 = mix8 * in0 + mix9 * in1 + mix10 * in2 + mix11;
+  *out0 = MulAdd(mix0, in0, MulAdd(mix1, in1, MulAdd(mix2, in2, mix3)));
+  *out1 = MulAdd(mix4, in0, MulAdd(mix5, in1, MulAdd(mix6, in2, mix7)));
+  *out2 = MulAdd(mix8, in0, MulAdd(mix9, in1, MulAdd(mix10, in2, mix11)));
 
   if (Clamp) {
     *out0 = Max(*out0, mix3);
@@ -1419,16 +1454,16 @@ Image3F OpsinDynamicsImage(const Image3F& rgb, const ButteraugliParams& params,
         auto pre_mixed1 = Undefined(df);
         auto pre_mixed2 = Undefined(df);
         OpsinAbsorbance<true>(
-            df, Load(df, row_blurred_r + x) * intensity_target_multiplier,
-            Load(df, row_blurred_g + x) * intensity_target_multiplier,
-            Load(df, row_blurred_b + x) * intensity_target_multiplier,
+            df, Mul(Load(df, row_blurred_r + x), intensity_target_multiplier),
+            Mul(Load(df, row_blurred_g + x), intensity_target_multiplier),
+            Mul(Load(df, row_blurred_b + x), intensity_target_multiplier),
             &pre_mixed0, &pre_mixed1, &pre_mixed2);
         pre_mixed0 = Max(pre_mixed0, min);
         pre_mixed1 = Max(pre_mixed1, min);
         pre_mixed2 = Max(pre_mixed2, min);
-        sensitivity0 = Gamma(df, pre_mixed0) / pre_mixed0;
-        sensitivity1 = Gamma(df, pre_mixed1) / pre_mixed1;
-        sensitivity2 = Gamma(df, pre_mixed2) / pre_mixed2;
+        sensitivity0 = Div(Gamma(df, pre_mixed0), pre_mixed0);
+        sensitivity1 = Div(Gamma(df, pre_mixed1), pre_mixed1);
+        sensitivity2 = Div(Gamma(df, pre_mixed2), pre_mixed2);
         sensitivity0 = Max(sensitivity0, min);
         sensitivity1 = Max(sensitivity1, min);
         sensitivity2 = Max(sensitivity2, min);
@@ -1436,14 +1471,14 @@ Image3F OpsinDynamicsImage(const Image3F& rgb, const ButteraugliParams& params,
       auto cur_mixed0 = Undefined(df);
       auto cur_mixed1 = Undefined(df);
       auto cur_mixed2 = Undefined(df);
-      OpsinAbsorbance<false>(df,
-                             Load(df, row_r + x) * intensity_target_multiplier,
-                             Load(df, row_g + x) * intensity_target_multiplier,
-                             Load(df, row_b + x) * intensity_target_multiplier,
-                             &cur_mixed0, &cur_mixed1, &cur_mixed2);
-      cur_mixed0 *= sensitivity0;
-      cur_mixed1 *= sensitivity1;
-      cur_mixed2 *= sensitivity2;
+      OpsinAbsorbance<false>(
+          df, Mul(Load(df, row_r + x), intensity_target_multiplier),
+          Mul(Load(df, row_g + x), intensity_target_multiplier),
+          Mul(Load(df, row_b + x), intensity_target_multiplier), &cur_mixed0,
+          &cur_mixed1, &cur_mixed2);
+      cur_mixed0 = Mul(cur_mixed0, sensitivity0);
+      cur_mixed1 = Mul(cur_mixed1, sensitivity1);
+      cur_mixed2 = Mul(cur_mixed2, sensitivity2);
       // This is a kludge. The negative values should be zeroed away before
       // blurring. Ideally there would be no negative values in the first place.
       const auto min01 = Set(df, 1.7557483643287353f);
@@ -1452,8 +1487,8 @@ Image3F OpsinDynamicsImage(const Image3F& rgb, const ButteraugliParams& params,
       cur_mixed1 = Max(cur_mixed1, min01);
       cur_mixed2 = Max(cur_mixed2, min2);
 
-      Store(cur_mixed0 - cur_mixed1, df, row_out_x + x);
-      Store(cur_mixed0 + cur_mixed1, df, row_out_y + x);
+      Store(Sub(cur_mixed0, cur_mixed1), df, row_out_x + x);
+      Store(Add(cur_mixed0, cur_mixed1), df, row_out_y + x);
       Store(cur_mixed2, df, row_out_b + x);
     }
   }

@@ -46,8 +46,16 @@ using D = HWY_FULL(float);
 using DScalar = HWY_CAPPED(float, 1);
 
 // These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Abs;
+using hwy::HWY_NAMESPACE::Add;
+using hwy::HWY_NAMESPACE::Div;
+using hwy::HWY_NAMESPACE::Max;
+using hwy::HWY_NAMESPACE::Mul;
+using hwy::HWY_NAMESPACE::MulAdd;
 using hwy::HWY_NAMESPACE::Rebind;
+using hwy::HWY_NAMESPACE::Sub;
 using hwy::HWY_NAMESPACE::Vec;
+using hwy::HWY_NAMESPACE::ZeroIfNegative;
 
 // TODO(veluca): optimize constants.
 const float w1 = 0.20345139757231578f;
@@ -88,12 +96,12 @@ JXL_INLINE void ComputePixelChannel(const D d, const float dc_factor,
   const auto w_side = Set(d, w1);
   const auto w_corner = Set(d, w2);
 
-  const auto corner = tl + tr + bl + br;
-  const auto side = ml + mr + tc + bc;
-  *sm = corner * w_corner + side * w_side + *mc * w_center;
+  const auto corner = Add(Add(tl, tr), Add(bl, br));
+  const auto side = Add(Add(ml, mr), Add(tc, bc));
+  *sm = MulAdd(corner, w_corner, MulAdd(side, w_side, Mul(*mc, w_center)));
 
   const auto dc_quant = Set(d, dc_factor);
-  *gap = MaxWorkaround(*gap, Abs((*mc - *sm) / dc_quant));
+  *gap = MaxWorkaround(*gap, Abs(Div(Sub(*mc, *sm), dc_quant)));
 }
 
 template <typename D>
@@ -120,11 +128,11 @@ JXL_INLINE void ComputePixel(
   auto factor = MulAdd(Set(d, -4.0f), gap, Set(d, 3.0f));
   factor = ZeroIfNegative(factor);
 
-  auto out = MulAdd(sm_x - mc_x, factor, mc_x);
+  auto out = MulAdd(Sub(sm_x, mc_x), factor, mc_x);
   Store(out, d, out_rows[0] + x);
-  out = MulAdd(sm_y - mc_y, factor, mc_y);
+  out = MulAdd(Sub(sm_y, mc_y), factor, mc_y);
   Store(out, d, out_rows[1] + x);
-  out = MulAdd(sm_b - mc_b, factor, mc_b);
+  out = MulAdd(Sub(sm_b, mc_b), factor, mc_b);
   Store(out, d, out_rows[2] + x);
 }
 
@@ -222,9 +230,9 @@ void DequantDC(const Rect& r, Image3F* dc, ImageB* quant_dc, const Image& in,
         const auto in_q_x = Load(di, quant_row_x + x);
         const auto in_q_y = Load(di, quant_row_y + x);
         const auto in_q_b = Load(di, quant_row_b + x);
-        const auto in_x = ConvertTo(df, in_q_x) * fac_x;
-        const auto in_y = ConvertTo(df, in_q_y) * fac_y;
-        const auto in_b = ConvertTo(df, in_q_b) * fac_b;
+        const auto in_x = Mul(ConvertTo(df, in_q_x), fac_x);
+        const auto in_y = Mul(ConvertTo(df, in_q_y), fac_y);
+        const auto in_b = Mul(ConvertTo(df, in_q_b), fac_b);
         Store(in_y, df, dec_row_y + x);
         Store(MulAdd(in_y, cfl_fac_x, in_x), df, dec_row_x + x);
         Store(MulAdd(in_y, cfl_fac_b, in_b), df, dec_row_b + x);
@@ -243,7 +251,7 @@ void DequantDC(const Rect& r, Image3F* dc, ImageB* quant_dc, const Image& in,
         float* row = rect.PlaneRow(dc, c, y);
         for (size_t x = 0; x < rect.xsize(); x += Lanes(di)) {
           const auto in_q = Load(di, quant_row + x);
-          const auto in = ConvertTo(df, in_q) * fac;
+          const auto in = Mul(ConvertTo(df, in_q), fac);
           Store(in, df, row + x);
         }
       }

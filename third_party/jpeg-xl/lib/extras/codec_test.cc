@@ -66,7 +66,8 @@ std::string ExtensionFromCodec(Codec codec, const bool is_gray,
 }
 
 void VerifySameImage(const PackedImage& im0, size_t bits_per_sample0,
-                     const PackedImage& im1, size_t bits_per_sample1) {
+                     const PackedImage& im1, size_t bits_per_sample1,
+                     bool lossless = true) {
   ASSERT_EQ(im0.xsize, im1.xsize);
   ASSERT_EQ(im0.ysize, im1.ysize);
   ASSERT_EQ(im0.format.num_channels, im1.format.num_channels);
@@ -81,7 +82,11 @@ void VerifySameImage(const PackedImage& im0, size_t bits_per_sample0,
       test::ConvertToRGBA32(pixels0, im0.xsize, im0.ysize, im0.format, factor0);
   auto rgba1 =
       test::ConvertToRGBA32(pixels1, im1.xsize, im1.ysize, im1.format, factor1);
-  double tolerance = 0.5 * std::min(factor0, factor1);
+  double tolerance =
+      lossless ? 0.5 * std::min(factor0, factor1) : 3.0f / 255.0f;
+  if (bits_per_sample0 == 32 || bits_per_sample1 == 32) {
+    tolerance = 0.5 * std::max(factor0, factor1);
+  }
   for (size_t y = 0; y < im0.ysize; ++y) {
     for (size_t x = 0; x < im0.xsize; ++x) {
       for (size_t c = 0; c < im0.format.num_channels; ++c) {
@@ -102,6 +107,11 @@ JxlColorEncoding CreateTestColorEncoding(bool is_gray) {
   c.primaries = JXL_PRIMARIES_P3;
   c.rendering_intent = JXL_RENDERING_INTENT_RELATIVE;
   c.transfer_function = JXL_TRANSFER_FUNCTION_LINEAR;
+  // Roundtrip through internal color encoding to fill in primaries and white
+  // point CIE xy coordinates.
+  ColorEncoding c_internal;
+  JXL_CHECK(ConvertExternalToInternalColorEncoding(c, &c_internal));
+  ConvertInternalToExternalColorEncoding(c_internal, &c);
   return c;
 }
 
@@ -131,9 +141,9 @@ void StoreRandomValue(uint8_t* out, Rng* rng, JxlPixelFormat format,
     uint32_t uval;
     memcpy(&uval, &val, 4);
     if (format.endianness == JXL_BIG_ENDIAN) {
-      StoreBE32(val, out);
+      StoreBE32(uval, out);
     } else {
-      StoreLE32(val, out);
+      StoreLE32(uval, out);
     }
   }
 }
@@ -156,6 +166,7 @@ void FillPackedImage(size_t bits_per_sample, PackedImage* image) {
 }
 
 struct TestImageParams {
+  Codec codec;
   size_t xsize;
   size_t ysize;
   size_t bits_per_sample;
@@ -163,15 +174,26 @@ struct TestImageParams {
   bool add_alpha;
   bool big_endian;
 
-  bool ShouldTestRoundtrip(Codec codec) const {
+  bool ShouldTestRoundtrip() const {
     if (codec == Codec::kPNG) {
       return true;
     } else if (codec == Codec::kPNM) {
+      // TODO(szabadka) Make PNM encoder endianness-aware.
       return ((bits_per_sample <= 16 && big_endian) ||
-              (bits_per_sample == 32 && !add_alpha));
+              (bits_per_sample == 32 && !add_alpha && !big_endian));
     } else if (codec == Codec::kPGX) {
       return ((bits_per_sample == 8 || bits_per_sample == 16) && is_gray &&
               !add_alpha);
+    } else if (codec == Codec::kEXR) {
+#if defined(ADDRESS_SANITIZER) || defined(MEMORY_SANITIZER) || \
+    defined(THREAD_SANITIZER)
+      // OpenEXR 2.3 has a memory leak in IlmThread_2_3::ThreadPool
+      return false;
+#else
+      return bits_per_sample == 32 && !is_gray;
+#endif
+    } else if (codec == Codec::kJPG) {
+      return bits_per_sample == 8 && !add_alpha;
     } else {
       return false;
     }
@@ -203,9 +225,11 @@ void CreateTestImage(const TestImageParams& params, PackedPixelFile* ppf) {
   ppf->info.exponent_bits_per_sample = params.bits_per_sample == 32 ? 8 : 0;
   ppf->info.num_color_channels = params.is_gray ? 1 : 3;
   ppf->info.alpha_bits = params.add_alpha ? params.bits_per_sample : 0;
+  ppf->info.alpha_premultiplied = (params.codec == Codec::kEXR);
 
   JxlColorEncoding color_encoding = CreateTestColorEncoding(params.is_gray);
   ppf->icc = GenerateICC(color_encoding);
+  ppf->color_encoding = color_encoding;
 
   PackedFrame frame(params.xsize, params.ysize, params.PixelFormat());
   FillPackedImage(params.bits_per_sample, &frame.color);
@@ -213,12 +237,11 @@ void CreateTestImage(const TestImageParams& params, PackedPixelFile* ppf) {
 }
 
 // Ensures reading a newly written file leads to the same image pixels.
-void TestRoundTrip(Codec codec, const TestImageParams& params,
-                   ThreadPool* pool) {
-  if (!params.ShouldTestRoundtrip(codec)) return;
+void TestRoundTrip(const TestImageParams& params, ThreadPool* pool) {
+  if (!params.ShouldTestRoundtrip()) return;
 
   std::string extension = ExtensionFromCodec(
-      codec, params.is_gray, params.add_alpha, params.bits_per_sample);
+      params.codec, params.is_gray, params.add_alpha, params.bits_per_sample);
   printf("Codec %s %s\n", extension.c_str(), params.DebugString().c_str());
 
   PackedPixelFile ppf_in;
@@ -234,13 +257,15 @@ void TestRoundTrip(Codec codec, const TestImageParams& params,
   ASSERT_TRUE(DecodeBytes(Span<const uint8_t>(encoded.bitstreams[0]),
                           ColorHints(), SizeConstraints(), &ppf_out));
 
-  if (codec != Codec::kPNM && codec != Codec::kPGX) {
+  if (params.codec != Codec::kPNM && params.codec != Codec::kPGX &&
+      params.codec != Codec::kEXR) {
     EXPECT_EQ(ppf_in.icc, ppf_out.icc);
   }
 
   ASSERT_EQ(ppf_out.frames.size(), 1);
   VerifySameImage(ppf_in.frames[0].color, ppf_in.info.bits_per_sample,
-                  ppf_out.frames[0].color, ppf_out.info.bits_per_sample);
+                  ppf_out.frames[0].color, ppf_out.info.bits_per_sample,
+                  /*lossless=*/params.codec != Codec::kJPG);
 }
 
 TEST(CodecTest, TestRoundTrip) {
@@ -255,11 +280,12 @@ TEST(CodecTest, TestRoundTrip) {
       for (bool is_gray : {false, true}) {
         for (bool add_alpha : {false, true}) {
           for (bool big_endian : {false, true}) {
+            params.codec = codec;
             params.bits_per_sample = static_cast<size_t>(bits_per_sample);
             params.is_gray = is_gray;
             params.add_alpha = add_alpha;
             params.big_endian = big_endian;
-            TestRoundTrip(codec, params, &pool);
+            TestRoundTrip(params, &pool);
           }
         }
       }

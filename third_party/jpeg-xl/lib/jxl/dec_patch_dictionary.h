@@ -106,7 +106,7 @@ class PatchDictionary {
 
   void Clear() {
     positions_.clear();
-    ComputePatchCache();
+    ComputePatchTree();
   }
 
   // Adds patches to a segment of `xsize` pixels, starting at `inout`, assumed
@@ -117,6 +117,8 @@ class PatchDictionary {
   // bit mask: bits 0-3 indicate reference frame 0-3.
   int GetReferences() const;
 
+  std::vector<size_t> GetPatchesForRow(size_t y) const;
+
  private:
   friend class PatchDictionaryEncoder;
 
@@ -125,20 +127,23 @@ class PatchDictionary {
   std::vector<PatchReferencePosition> ref_positions_;
   std::vector<PatchBlending> blendings_;
 
-  // TODO(szabadka) Limit the size of these vectors or use an interval tree.
-  // Patch occurrences sorted by y.
-  std::vector<size_t> sorted_patches_;
-  // Index of the first patch for each y value.
-  std::vector<size_t> patch_starts_;
+  // Interval tree on the y coordinates of the patches.
+  struct PatchTreeNode {
+    ssize_t left_child;
+    ssize_t right_child;
+    size_t y_center;
+    // Range of patches in sorted_patches_y0_ and sorted_patches_y1_ that
+    // contain the row y_center.
+    size_t start;
+    size_t num;
+  };
+  std::vector<PatchTreeNode> patch_tree_;
+  // Number of patches for each row.
+  std::vector<size_t> num_patches_;
+  std::vector<std::pair<size_t, size_t>> sorted_patches_y0_;
+  std::vector<std::pair<size_t, size_t>> sorted_patches_y1_;
 
-  // Patch IDs in position [patch_starts_[y], patch_start_[y+1]) of
-  // sorted_patches_ are all the patches that intersect the horizontal line at
-  // y.
-  // The relative order of patches that affect the same pixels is the same -
-  // important when applying patches is noncommutative.
-
-  // Compute patches_by_y_ after updating positions_.
-  void ComputePatchCache();
+  void ComputePatchTree();
 };
 
 }  // namespace jxl

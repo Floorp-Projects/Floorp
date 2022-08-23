@@ -32,26 +32,6 @@ class PackedImage {
  public:
   PackedImage(size_t xsize, size_t ysize, const JxlPixelFormat& format)
       : PackedImage(xsize, ysize, format, CalcStride(format, xsize)) {}
-  PackedImage(size_t xsize, size_t ysize, const JxlPixelFormat& format,
-              size_t stride)
-      : xsize(xsize),
-        ysize(ysize),
-        stride(stride),
-        format(format),
-        pixels_size(ysize * stride),
-        pixels_(malloc(std::max<size_t>(1, pixels_size)), free) {}
-  // Construct the image using the passed pixel buffer. The buffer is owned by
-  // this object and released with free().
-  PackedImage(size_t xsize, size_t ysize, const JxlPixelFormat& format,
-              void* pixels, size_t pixels_size)
-      : xsize(xsize),
-        ysize(ysize),
-        stride(CalcStride(format, xsize)),
-        format(format),
-        pixels_size(pixels_size),
-        pixels_(pixels, free) {
-    JXL_ASSERT(pixels_size >= stride * ysize);
-  }
 
   // The interleaved pixels as defined in the storage format.
   void* pixels() const { return pixels_.get(); }
@@ -59,15 +39,6 @@ class PackedImage {
   // The image size in pixels.
   size_t xsize;
   size_t ysize;
-
-  // Whether the y coordinate is flipped (y=0 is the last row).
-  bool flipped_y = false;
-
-  // Whether the range is determined by format or by JxlBasicInfo
-  // e.g. if format is UINT16 and JxlBasicInfo bits_per_sample is 10,
-  // then if bitdepth_from_format == true, the range is 0..65535
-  // while if bitdepth_from_format == false, the range is 0..1023.
-  bool bitdepth_from_format = true;
 
   // The number of bytes per row.
   size_t stride;
@@ -97,6 +68,15 @@ class PackedImage {
   }
 
  private:
+  PackedImage(size_t xsize, size_t ysize, const JxlPixelFormat& format,
+              size_t stride)
+      : xsize(xsize),
+        ysize(ysize),
+        stride(stride),
+        format(format),
+        pixels_size(ysize * stride),
+        pixels_(malloc(std::max<size_t>(1, pixels_size)), free) {}
+
   static size_t CalcStride(const JxlPixelFormat& format, size_t xsize) {
     size_t stride = xsize * (BitsPerChannel(format.data_type) *
                              format.num_channels / jxl::kBitsPerByte);

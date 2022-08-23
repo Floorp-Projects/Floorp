@@ -220,14 +220,16 @@ class FrameDecoder {
   //
   // @param undo_orientation: if true, indicates the frame decoder should apply
   // the exif orientation to bring the image to the intended display
-  // orientation. Performing this operation is not yet supported, so this
-  // results in not setting the buffer if the image has a non-identity EXIF
-  // orientation. When outputting to the ImageBundle, no orientation is undone.
-  void MaybeSetFloatCallback(const PixelCallback& pixel_callback, bool is_rgba,
-                             bool unpremul_alpha, bool undo_orientation) const {
-    if (!CanDoLowMemoryPath(undo_orientation)) return;
+  // orientation.
+  void SetFloatCallback(const PixelCallback& pixel_callback,
+                        size_t num_channels, bool unpremul_alpha,
+                        bool undo_orientation, bool swap_endianness) const {
     dec_state_->pixel_callback = pixel_callback;
-    dec_state_->rgb_output_is_rgba = is_rgba;
+    dec_state_->output_channels = num_channels;
+    dec_state_->undo_orientation = undo_orientation
+                                       ? decoded_->metadata()->GetOrientation()
+                                       : Orientation::kIdentity;
+    dec_state_->swap_endianness = swap_endianness;
     JXL_ASSERT(dec_state_->rgb_output == nullptr);
   }
 

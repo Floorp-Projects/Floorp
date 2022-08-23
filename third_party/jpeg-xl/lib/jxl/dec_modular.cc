@@ -34,6 +34,8 @@ namespace jxl {
 namespace HWY_NAMESPACE {
 
 // These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Add;
+using hwy::HWY_NAMESPACE::Mul;
 using hwy::HWY_NAMESPACE::Rebind;
 
 void MultiplySum(const size_t xsize,
@@ -44,8 +46,8 @@ void MultiplySum(const size_t xsize,
   const Rebind<pixel_type, HWY_FULL(float)> di;  // assumes pixel_type <= float
   const auto factor_v = Set(df, factor);
   for (size_t x = 0; x < xsize; x += Lanes(di)) {
-    const auto in = Load(di, row_in + x) + Load(di, row_in_Y + x);
-    const auto out = ConvertTo(df, in) * factor_v;
+    const auto in = Add(Load(di, row_in + x), Load(di, row_in_Y + x));
+    const auto out = Mul(ConvertTo(df, in), factor_v);
     Store(out, df, row_out + x);
   }
 }
@@ -60,7 +62,7 @@ void RgbFromSingle(const size_t xsize,
   const auto factor_v = Set(df, factor);
   for (size_t x = 0; x < xsize; x += Lanes(di)) {
     const auto in = Load(di, row_in + x);
-    const auto out = ConvertTo(df, in) * factor_v;
+    const auto out = Mul(ConvertTo(df, in), factor_v);
     Store(out, df, out_r + x);
     Store(out, df, out_g + x);
     Store(out, df, out_b + x);
@@ -76,7 +78,7 @@ void SingleFromSingle(const size_t xsize,
   const auto factor_v = Set(df, factor);
   for (size_t x = 0; x < xsize; x += Lanes(di)) {
     const auto in = Load(di, row_in + x);
-    const auto out = ConvertTo(df, in) * factor_v;
+    const auto out = Mul(ConvertTo(df, in), factor_v);
     Store(out, df, row_out + x);
   }
 }

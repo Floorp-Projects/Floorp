@@ -1,4 +1,5 @@
 // Copyright 2019 Google LLC
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +18,7 @@
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "tests/combine_test.cc"
-#include "hwy/foreach_target.h"
-
+#include "hwy/foreach_target.h"  // IWYU pragma: keep
 #include "hwy/highway.h"
 #include "hwy/tests/test_util-inl.h"
 
@@ -83,7 +83,13 @@ struct TestLowerQuarter {
 
 HWY_NOINLINE void TestAllLowerHalf() {
   ForAllTypes(ForHalfVectors<TestLowerHalf>());
-  ForAllTypes(ForHalfVectors<TestLowerQuarter, 2>());
+
+  // The minimum vector size is 128 bits, so there's no guarantee we can have
+  // quarters of 64-bit lanes, hence test 'all' other types.
+  ForHalfVectors<TestLowerQuarter, 2> test_quarter;
+  ForUI8(test_quarter);
+  ForUI16(test_quarter);  // exclude float16_t - cannot compare
+  ForUIF32(test_quarter);
 }
 
 struct TestUpperHalf {
@@ -220,7 +226,7 @@ HWY_NOINLINE void TestAllConcat() {
 struct TestConcatOddEven {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
-#if HWY_TARGET != HWY_RVV && HWY_TARGET != HWY_SCALAR
+#if HWY_TARGET != HWY_SCALAR
     const size_t N = Lanes(d);
     const auto hi = Iota(d, static_cast<T>(N));
     const auto lo = Iota(d, 0);
@@ -228,6 +234,14 @@ struct TestConcatOddEven {
     const auto odd = Add(even, Set(d, 1));
     HWY_ASSERT_VEC_EQ(d, odd, ConcatOdd(d, hi, lo));
     HWY_ASSERT_VEC_EQ(d, even, ConcatEven(d, hi, lo));
+
+    // This test catches inadvertent saturation.
+    const auto min = Set(d, LowestValue<T>());
+    const auto max = Set(d, HighestValue<T>());
+    HWY_ASSERT_VEC_EQ(d, max, ConcatOdd(d, max, max));
+    HWY_ASSERT_VEC_EQ(d, max, ConcatEven(d, max, max));
+    HWY_ASSERT_VEC_EQ(d, min, ConcatOdd(d, min, min));
+    HWY_ASSERT_VEC_EQ(d, min, ConcatEven(d, min, min));
 #else
     (void)d;
 #endif
@@ -235,7 +249,7 @@ struct TestConcatOddEven {
 };
 
 HWY_NOINLINE void TestAllConcatOddEven() {
-  ForUIF3264(ForShrinkableVectors<TestConcatOddEven>());
+  ForAllTypes(ForShrinkableVectors<TestConcatOddEven>());
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)
@@ -254,11 +268,5 @@ HWY_EXPORT_AND_TEST_P(HwyCombineTest, TestAllCombine);
 HWY_EXPORT_AND_TEST_P(HwyCombineTest, TestAllConcat);
 HWY_EXPORT_AND_TEST_P(HwyCombineTest, TestAllConcatOddEven);
 }  // namespace hwy
-
-// Ought not to be necessary, but without this, no tests run on RVV.
-int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
 
 #endif  // HWY_ONCE

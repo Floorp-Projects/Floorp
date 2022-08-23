@@ -23,9 +23,23 @@ HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
 
+// These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Abs;
+using hwy::HWY_NAMESPACE::Add;
+using hwy::HWY_NAMESPACE::And;
+using hwy::HWY_NAMESPACE::Gt;
+using hwy::HWY_NAMESPACE::IfThenElse;
+using hwy::HWY_NAMESPACE::IfThenZeroElse;
+using hwy::HWY_NAMESPACE::Lt;
+using hwy::HWY_NAMESPACE::MulEven;
+using hwy::HWY_NAMESPACE::Ne;
+using hwy::HWY_NAMESPACE::Neg;
+using hwy::HWY_NAMESPACE::OddEven;
 using hwy::HWY_NAMESPACE::RebindToUnsigned;
 using hwy::HWY_NAMESPACE::ShiftLeft;
 using hwy::HWY_NAMESPACE::ShiftRight;
+using hwy::HWY_NAMESPACE::Sub;
+using hwy::HWY_NAMESPACE::Xor;
 
 #if HWY_TARGET != HWY_SCALAR
 
@@ -44,12 +58,12 @@ JXL_INLINE void FastUnsqueeze(const pixel_type *JXL_RESTRICT p_residual,
     auto next_avg = Load(d, p_navg + x);
     auto top = Load(d, p_pout + x);
     // Equivalent to SmoothTendency(top,avg,next_avg), but without branches
-    auto Ba = top - avg;
-    auto an = avg - next_avg;
-    auto nonmono = Ba ^ an;
+    auto Ba = Sub(top, avg);
+    auto an = Sub(avg, next_avg);
+    auto nonmono = Xor(Ba, an);
     auto absBa = Abs(Ba);
     auto absan = Abs(an);
-    auto absBn = Abs(top - next_avg);
+    auto absBn = Abs(Sub(top, next_avg));
     // Compute a3 = absBa / 3
     auto a3e = BitCast(d, ShiftRight<32>(MulEven(absBa, onethird)));
     auto a3oi = MulEven(Reverse(d, absBa), onethird);
@@ -57,26 +71,27 @@ JXL_INLINE void FastUnsqueeze(const pixel_type *JXL_RESTRICT p_residual,
         d, Reverse(hwy::HWY_NAMESPACE::Repartition<pixel_type_w, decltype(d)>(),
                    a3oi));
     auto a3 = OddEven(a3o, a3e);
-    a3 += absBn + Set(d, 2);
+    a3 = Add(a3, Add(absBn, Set(d, 2)));
     auto absdiff = ShiftRight<2>(a3);
-    auto skipdiff = Ba != Zero(d);
-    skipdiff = And(skipdiff, an != Zero(d));
-    skipdiff = And(skipdiff, nonmono < Zero(d));
-    auto absBa2 = ShiftLeft<1>(absBa) + (absdiff & Set(d, 1));
-    absdiff =
-        IfThenElse(absdiff > absBa2, ShiftLeft<1>(absBa) + Set(d, 1), absdiff);
+    auto skipdiff = Ne(Ba, Zero(d));
+    skipdiff = And(skipdiff, Ne(an, Zero(d)));
+    skipdiff = And(skipdiff, Lt(nonmono, Zero(d)));
+    auto absBa2 = Add(ShiftLeft<1>(absBa), And(absdiff, Set(d, 1)));
+    absdiff = IfThenElse(Gt(absdiff, absBa2),
+                         Add(ShiftLeft<1>(absBa), Set(d, 1)), absdiff);
     auto absan2 = ShiftLeft<1>(absan);
-    absdiff =
-        IfThenElse(absdiff + (absdiff & Set(d, 1)) > absan2, absan2, absdiff);
-    auto diff1 = IfThenElse(top < next_avg, Neg(absdiff), absdiff);
+    absdiff = IfThenElse(Gt(Add(absdiff, And(absdiff, Set(d, 1))), absan2),
+                         absan2, absdiff);
+    auto diff1 = IfThenElse(Lt(top, next_avg), Neg(absdiff), absdiff);
     auto tendency = IfThenZeroElse(skipdiff, diff1);
 
     auto diff_minus_tendency = Load(d, p_residual + x);
-    auto diff = diff_minus_tendency + tendency;
-    auto out = avg + ShiftRight<1>(
-                         diff + BitCast(d, ShiftRight<31>(BitCast(du, diff))));
+    auto diff = Add(diff_minus_tendency, tendency);
+    auto out =
+        Add(avg, ShiftRight<1>(
+                     Add(diff, BitCast(d, ShiftRight<31>(BitCast(du, diff))))));
     Store(out, d, p_out + x);
-    Store(out - diff, d, p_nout + x);
+    Store(Sub(out, diff), d, p_nout + x);
   }
 }
 

@@ -35,6 +35,13 @@ HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
 
+// These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Abs;
+using hwy::HWY_NAMESPACE::Ge;
+using hwy::HWY_NAMESPACE::GetLane;
+using hwy::HWY_NAMESPACE::IfThenElse;
+using hwy::HWY_NAMESPACE::Lt;
+
 static HWY_FULL(float) df;
 
 struct CFLFunction {
@@ -72,23 +79,27 @@ struct CFLFunction {
 
     for (size_t i = 0; i < num; i += Lanes(df)) {
       // color residual = ax + b
-      const auto a = inv_color_factor * Load(df, values_m + i);
-      const auto b = base_v * Load(df, values_m + i) - Load(df, values_s + i);
-      const auto v = a * x_v + b;
-      const auto vpe = a * xpe_v + b;
-      const auto vme = a * xme_v + b;
+      const auto a = Mul(inv_color_factor, Load(df, values_m + i));
+      const auto b =
+          Sub(Mul(base_v, Load(df, values_m + i)), Load(df, values_s + i));
+      const auto v = MulAdd(a, x_v, b);
+      const auto vpe = MulAdd(a, xpe_v, b);
+      const auto vme = MulAdd(a, xme_v, b);
       const auto av = Abs(v);
       const auto avpe = Abs(vpe);
       const auto avme = Abs(vme);
-      auto d = coeffx2 * (av + one) * a;
-      auto dpe = coeffx2 * (avpe + one) * a;
-      auto dme = coeffx2 * (avme + one) * a;
-      d = IfThenElse(v < zero, zero - d, d);
-      dpe = IfThenElse(vpe < zero, zero - dpe, dpe);
-      dme = IfThenElse(vme < zero, zero - dme, dme);
-      fd_v += IfThenElse(av >= thres, zero, d);
-      fdpe_v += IfThenElse(av >= thres, zero, dpe);
-      fdme_v += IfThenElse(av >= thres, zero, dme);
+      const auto acoeffx2 = Mul(coeffx2, a);
+      auto d = Mul(acoeffx2, Add(av, one));
+      auto dpe = Mul(acoeffx2, Add(avpe, one));
+      auto dme = Mul(acoeffx2, Add(avme, one));
+      d = IfThenElse(Lt(v, zero), Sub(zero, d), d);
+      dpe = IfThenElse(Lt(vpe, zero), Sub(zero, dpe), dpe);
+      dme = IfThenElse(Lt(vme, zero), Sub(zero, dme), dme);
+      const auto above = Ge(av, thres);
+      // TODO(eustas): use IfThenElseZero
+      fd_v = Add(fd_v, IfThenElse(above, zero, d));
+      fdpe_v = Add(fdpe_v, IfThenElse(above, zero, dpe));
+      fdme_v = Add(fdme_v, IfThenElse(above, zero, dme));
     }
 
     *fpeps = first_derivative_peps + GetLane(SumOfLanes(df, fdpe_v));
@@ -118,8 +129,9 @@ int32_t FindBestMultiplier(const float* values_m, const float* values_s,
     const auto base_v = Set(df, base);
     for (size_t i = 0; i < num; i += Lanes(df)) {
       // color residual = ax + b
-      const auto a = inv_color_factor * Load(df, values_m + i);
-      const auto b = base_v * Load(df, values_m + i) - Load(df, values_s + i);
+      const auto a = Mul(inv_color_factor, Load(df, values_m + i));
+      const auto b =
+          Sub(Mul(base_v, Load(df, values_m + i)), Load(df, values_s + i));
       ca = MulAdd(a, a, ca);
       cb = MulAdd(a, b, cb);
     }
@@ -293,12 +305,12 @@ void ComputeTile(const Image3F& opsin, const DequantMatrices& dequant,
         const auto b_y = Load(df, block_y + i);
         const auto b_x = Load(df, block_x + i);
         const auto b_b = Load(df, block_b + i);
-        const auto qqm_x = qv * Load(df, qm_x + i);
-        const auto qqm_b = qv * Load(df, qm_b + i);
-        Store(b_y * qqm_x, df, coeffs_yx + num_ac);
-        Store(b_x * qqm_x, df, coeffs_x + num_ac);
-        Store(b_y * qqm_b, df, coeffs_yb + num_ac);
-        Store(b_b * qqm_b, df, coeffs_b + num_ac);
+        const auto qqm_x = Mul(qv, Load(df, qm_x + i));
+        const auto qqm_b = Mul(qv, Load(df, qm_b + i));
+        Store(Mul(b_y, qqm_x), df, coeffs_yx + num_ac);
+        Store(Mul(b_x, qqm_x), df, coeffs_x + num_ac);
+        Store(Mul(b_y, qqm_b), df, coeffs_yb + num_ac);
+        Store(Mul(b_b, qqm_b), df, coeffs_b + num_ac);
         num_ac += Lanes(df);
       }
     }

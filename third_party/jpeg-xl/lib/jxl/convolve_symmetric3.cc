@@ -17,6 +17,9 @@ namespace jxl {
 namespace HWY_NAMESPACE {
 
 // These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Add;
+using hwy::HWY_NAMESPACE::Mul;
+using hwy::HWY_NAMESPACE::MulAdd;
 using hwy::HWY_NAMESPACE::Vec;
 
 template <class WrapY, class V>
@@ -30,10 +33,10 @@ static V WeightedSum(const ImageF& in, const WrapY wrap_y, const size_t ix,
   const auto in_m1 = LoadU(d, center - 1);
   const auto in_p1 = LoadU(d, center + 1);
   const auto in_00 = Load(d, center);
-  const auto sum_2 = wx2 * (in_m2 + in_p2);
-  const auto sum_1 = wx1 * (in_m1 + in_p1);
-  const auto sum_0 = wx0 * in_00;
-  return sum_2 + sum_1 + sum_0;
+  const auto sum_2 = Mul(wx2, Add(in_m2, in_p2));
+  const auto sum_1 = Mul(wx1, Add(in_m1, in_p1));
+  const auto sum_0 = Mul(wx0, in_00);
+  return Add(sum_2, Add(sum_1, sum_0));
 }
 
 // 3x3 convolution by symmetric kernel with a single scan through the input.
@@ -126,18 +129,18 @@ class Symmetric3Strategy {
                                         const V ml, const V mc, const V mr,
                                         const V bl, const V bc, const V br,
                                         const V w0, const V w1, const V w2) {
-    const V sum_tb = tc + bc;
+    const V sum_tb = Add(tc, bc);
 
     // Faster than 5 mul + 4 FMA.
-    const V mul0 = mc * w0;
-    const V sum_lr = ml + mr;
+    const V mul0 = Mul(mc, w0);
+    const V sum_lr = Add(ml, mr);
 
-    const V x1 = sum_tb + sum_lr;
+    const V x1 = Add(sum_tb, sum_lr);
     const V mul1 = MulAdd(x1, w1, mul0);
 
-    const V sum_t2 = tl + tr;
-    const V sum_b2 = bl + br;
-    const V x2 = sum_t2 + sum_b2;
+    const V sum_t2 = Add(tl, tr);
+    const V sum_b2 = Add(bl, br);
+    const V x2 = Add(sum_t2, sum_b2);
     const V mul2 = MulAdd(x2, w2, mul1);
     return mul2;
   }
