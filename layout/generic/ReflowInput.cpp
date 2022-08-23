@@ -285,9 +285,9 @@ void ReflowInput::SetComputedISize(nscoord aComputedISize) {
   //    (like a text control, for example), we'll end up creating a reflow
   //    input for the parent while the parent is reflowing.
 
-  MOZ_ASSERT(aComputedISize >= 0, "Invalid computed inline-size!");
+  NS_WARNING_ASSERTION(aComputedISize >= 0, "Invalid computed inline-size!");
   if (ComputedISize() != aComputedISize) {
-    ComputedISize() = aComputedISize;
+    ComputedISize() = std::max(0, aComputedISize);
     const LayoutFrameType frameType = mFrame->Type();
     if (frameType != LayoutFrameType::Viewport) {
       InitResizeFlags(mFrame->PresContext(), frameType);
@@ -317,8 +317,8 @@ void ReflowInput::SetComputedBSizeWithoutResettingResizeFlags(
   // input when reflowing fixed-pos kids.  In that case we actually don't
   // want to mess with the resize flags, because comparing the frame's rect
   // to the munged computed isize is pointless.
-  MOZ_ASSERT(aComputedBSize >= 0, "Invalid computed block-size!");
-  ComputedBSize() = aComputedBSize;
+  NS_WARNING_ASSERTION(aComputedBSize >= 0, "Invalid computed block-size!");
+  ComputedBSize() = std::max(0, aComputedBSize);
 }
 
 void ReflowInput::Init(nsPresContext* aPresContext,
