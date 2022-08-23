@@ -51,7 +51,7 @@ class RecentBookmarksHeaderViewHolder(
             Spacer(modifier = Modifier.height(40.dp))
 
             HomeSectionHeader(
-                headerText = stringResource(R.string.recent_bookmarks_title),
+                headerText = stringResource(R.string.recently_saved_title),
                 description = stringResource(R.string.recently_saved_show_all_content_description_2),
                 onShowAllClick = {
                     dismissSearchDialogIfDisplayed()

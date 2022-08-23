@@ -730,7 +730,7 @@ private fun jumpBackInSection() =
     mDevice.findObject(UiSelector().textContains(getStringResource(R.string.recent_tabs_header)))
 
 private fun recentBookmarksSection() =
-    mDevice.findObject(UiSelector().textContains(getStringResource(R.string.recent_bookmarks_title)))
+    mDevice.findObject(UiSelector().textContains(getStringResource(R.string.recently_saved_title)))
 
 private fun startBrowsingButton(): UiObject {
     val startBrowsingButton = mDevice.findObject(UiSelector().resourceId("$packageName:id/finish_button"))

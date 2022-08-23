@@ -39,7 +39,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">Recent bookmarks</string>
+    <string name="recent_bookmarks_title" moz:RemovedIn="106" tools:ignore="UnusedResources">Recent bookmarks</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Recently saved</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Show all saved bookmarks</string>
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
