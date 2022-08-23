@@ -10,8 +10,13 @@
 #if defined(MOZ_FFVPX_AUDIOONLY)
 #  if defined(MOZ_WIDGET_ANDROID) && defined(__arm__)
 #    include "config_android32.h"
+#  elif defined(MOZ_WIDGET_ANDROID) && defined(__aarch64__)
+#    include "config_android64.h"
+#  elif defined(__aarch64__)
+#    include "config_unix_aarch64.h"
 #  else
-#    include "config_audio.h"
+      // no assembly
+#    include "config_generic.h"
 #  endif
 #else  // MOZ_FFVPX_AUDIOONLY
 #  if defined(XP_WIN)
@@ -21,7 +26,7 @@
 #      undef HAVE_UNISTD_H
 #    endif
 #    if defined(_ARM64_)
-#      include "config_aarch64_win64.h"
+#      include "config_win64_aarch64.h"
 #    else
 #      if defined(HAVE_64BIT_BUILD)
 #        include "config_win64.h"
@@ -44,6 +49,8 @@
 #    else
 #      include "config_darwin64.h"
 #    endif
+#  elif defined(MOZ_WIDGET_ANDROID) && defined(HAVE_64BIT_BUILD)
+#      include "config_android_x86_64.h"
 #  elif defined(XP_UNIX)
 #    if defined(HAVE_64BIT_BUILD)
 #      include "config_unix64.h"
@@ -52,7 +59,5 @@
 #    endif
 #  endif
 #endif  // else MOZ_FFVPX_AUDIOONLY
-
-#include "config_common.h"
 
 #endif  // MOZ_FFVPX_CONFIG_H
