@@ -192,7 +192,6 @@ module.exports = {
         "dom/cache/**",
         "dom/indexedDB/**",
         "dom/localstorage/**",
-        "dom/tests/**",
       ],
       rules: {
         // No declaring variables that are never used
