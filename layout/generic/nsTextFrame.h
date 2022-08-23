@@ -309,6 +309,14 @@ class nsTextFrame : public nsIFrame {
     return &mContent->AsText()->TextFragment();
   }
 
+  /**
+   * Check that the text in this frame is entirely whitespace. Importantly,
+   * this function considers non-breaking spaces (0xa0) to be whitespace,
+   * whereas nsTextFrame::IsEmpty does not. It also considers both one and
+   * two-byte chars.
+   */
+  bool IsEntirelyWhitespace() const;
+
   ContentOffsets CalcContentOffsetsFromFramePoint(const nsPoint& aPoint) final;
   ContentOffsets GetCharacterOffsetAtFramePoint(const nsPoint& aPoint);
 

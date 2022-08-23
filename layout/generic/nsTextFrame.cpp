@@ -7418,6 +7418,18 @@ int16_t nsTextFrame::GetSelectionStatus(int16_t* aSelectionFlags) {
   return selectionValue;
 }
 
+bool nsTextFrame::IsEntirelyWhitespace() const {
+  const nsTextFragment& text = mContent->AsText()->TextFragment();
+  for (uint32_t index = 0; index < text.GetLength(); ++index) {
+    const char16_t ch = text.CharAt(index);
+    if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch == 0xa0) {
+      continue;
+    }
+    return false;
+  }
+  return true;
+}
+
 /**
  * Compute the longest prefix of text whose width is <= aWidth. Return
  * the length of the prefix. Also returns the width of the prefix in aFitWidth.
