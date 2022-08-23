@@ -13,7 +13,6 @@ var principal;
 
 const REPORT_SERVER_PORT = httpServer.identity.primaryPort;
 const REPORT_SERVER_URI = "http://localhost";
-const REPORT_SERVER_PATH = "/report";
 
 /**
  * Construct a callback that listens to a report submission and either passes

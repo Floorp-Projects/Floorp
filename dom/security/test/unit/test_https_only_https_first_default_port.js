@@ -1,12 +1,5 @@
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-XPCOMUtils.defineLazyGetter(this, "HTTP_TEST_URL", function() {
-  return "http://test1.example.com";
-});
 
 const TEST_PATH = "/https_only_https_first_port";
 var httpserver = null;
