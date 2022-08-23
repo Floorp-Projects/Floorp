@@ -16,7 +16,7 @@ nsUDPSocketProvider::NewSocket(int32_t aFamily, const char* aHost,
                                const OriginAttributes& originAttributes,
                                uint32_t aFlags, uint32_t aTlsFlags,
                                PRFileDesc** aFileDesc,
-                               nsISupports** aSecurityInfo) {
+                               nsISSLSocketControl** aTLSSocketControl) {
   NS_ENSURE_ARG_POINTER(aFileDesc);
 
   PRFileDesc* udpFD = PR_OpenUDPSocket(aFamily);
@@ -32,7 +32,7 @@ nsUDPSocketProvider::AddToSocket(int32_t aFamily, const char* aHost,
                                  const OriginAttributes& originAttributes,
                                  uint32_t aFlags, uint32_t aTlsFlags,
                                  struct PRFileDesc* aFileDesc,
-                                 nsISupports** aSecurityInfo) {
+                                 nsISSLSocketControl** aTLSSocketControl) {
   // does not make sense to strap a UDP socket onto an existing socket
   MOZ_ASSERT_UNREACHABLE("Cannot layer UDP socket on an existing socket");
   return NS_ERROR_UNEXPECTED;
