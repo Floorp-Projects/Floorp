@@ -191,6 +191,13 @@ IPCResult CookieServiceChild::RecvAddCookie(const CookieStruct& aCookie,
                                             const OriginAttributes& aAttrs) {
   RefPtr<Cookie> cookie = Cookie::Create(aCookie, aAttrs);
   RecordDocumentCookie(cookie, aAttrs);
+
+  // signal test code to check their cookie list
+  nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
+  if (obsService) {
+    obsService->NotifyObservers(nullptr, "cookie-content-filter-test", nullptr);
+  }
+
   return IPC_OK();
 }
 
