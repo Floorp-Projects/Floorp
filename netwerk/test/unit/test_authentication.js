@@ -293,8 +293,6 @@ function makeChan(url, loadingUrl) {
   });
 }
 
-var current_test = 0;
-
 var httpserv = null;
 
 function setup() {

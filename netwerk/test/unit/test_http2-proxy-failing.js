@@ -11,13 +11,11 @@
  */
 
 /* eslint-env node */
-/* global serverPort */
 
 "use strict";
 
 const pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
 
-let proxy_port;
 let filter;
 
 class ProxyFilter {

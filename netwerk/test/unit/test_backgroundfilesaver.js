@@ -14,11 +14,6 @@
 
 ChromeUtils.defineModuleGetter(
   this,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
 );
@@ -63,8 +58,6 @@ const EXPECTED_HASHES = {
   // TEST_DATA_LONG + TEST_DATA_LONG
   9437184: "693e4f8c6855a6fed4f5f9370d12cc53105672f3ff69783581e7d925984c41d3",
 };
-
-const gTextDecoder = new TextDecoder();
 
 // Generate a long string of data in a moderately fast way.
 const TEST_256_CHARS = new Array(257).join("-");

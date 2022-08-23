@@ -149,7 +149,6 @@ function makeChan(origin) {
 
 var origin;
 var xaltsvc;
-var retryCounter = 0;
 var loadWithoutClearingMappings = false;
 var disallowH3 = false;
 var disallowH2 = false;

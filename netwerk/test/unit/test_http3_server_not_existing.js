@@ -16,16 +16,6 @@ registerCleanupFunction(async () => {
   dump("cleanup done\n");
 });
 
-function chanPromise(chan, listener) {
-  return new Promise(resolve => {
-    function finish() {
-      resolve();
-    }
-    listener.finish = finish;
-    chan.asyncOpen(listener);
-  });
-}
-
 function makeChan() {
   let chan = NetUtil.newChannel({
     uri: httpsUri,

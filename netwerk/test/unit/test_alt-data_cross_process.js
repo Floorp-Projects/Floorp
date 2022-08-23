@@ -72,6 +72,8 @@ function check_has_alt_data_in_index(aHasAltData, callback) {
   }, true);
 }
 
+// This file is loaded as part of test_alt-data_cross_process_wrap.js.
+// eslint-disable-next-line no-unused-vars
 function run_test() {
   httpServer = new HttpServer();
   httpServer.registerPathHandler("/content", contentHandler);

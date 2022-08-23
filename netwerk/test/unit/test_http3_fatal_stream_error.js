@@ -42,16 +42,6 @@ Http3FailedListener.prototype = {
   },
 };
 
-function chanPromise(chan, listener) {
-  return new Promise(resolve => {
-    function finish(result) {
-      resolve(result);
-    }
-    listener.finish = finish;
-    chan.asyncOpen(listener);
-  });
-}
-
 function makeChan() {
   let chan = NetUtil.newChannel({
     uri: httpsUri,

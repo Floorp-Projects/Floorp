@@ -190,7 +190,6 @@ module.exports = {
         // investigation or different solutions. They are also likely to be
         // a reasonable size.
         "dom/**",
-        "netwerk/**",
       ],
       rules: {
         // No declaring variables that are never used

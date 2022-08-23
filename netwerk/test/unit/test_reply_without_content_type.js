@@ -60,7 +60,6 @@ var httpbodyGZip = [
   "0x0",
   "0x0",
 ];
-var buffer = "";
 
 var dbg = 0;
 if (dbg) {

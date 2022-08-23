@@ -30,7 +30,6 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
 });
 
 var httpserver = new HttpServer();
-var index = 0;
 var nextTest = firstTest;
 var test_flags = [];
 var testPathBase = "/test_headers";
@@ -85,12 +84,14 @@ function endTests() {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Test 1: test Content-Disposition channel attributes
+// eslint-disable-next-line no-unused-vars
 function handler1(metadata, response) {
   response.setStatusLine(metadata.httpVersion, 200, "OK");
   response.setHeader("Content-Disposition", "attachment; filename=foo");
   response.setHeader("Content-Type", "text/plain", false);
 }
 
+// eslint-disable-next-line no-unused-vars
 function completeTest1(request, data, ctx) {
   try {
     var chan = request.QueryInterface(Ci.nsIChannel);
@@ -105,6 +106,7 @@ function completeTest1(request, data, ctx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Test 2: no filename
+// eslint-disable-next-line no-unused-vars
 function handler2(metadata, response) {
   response.setStatusLine(metadata.httpVersion, 200, "OK");
   response.setHeader("Content-Type", "text/plain", false);
@@ -113,6 +115,7 @@ function handler2(metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
+// eslint-disable-next-line no-unused-vars
 function completeTest2(request, data, ctx) {
   try {
     var chan = request.QueryInterface(Ci.nsIChannel);
@@ -128,6 +131,7 @@ function completeTest2(request, data, ctx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Test 3: filename missing
+// eslint-disable-next-line no-unused-vars
 function handler3(metadata, response) {
   response.setStatusLine(metadata.httpVersion, 200, "OK");
   response.setHeader("Content-Type", "text/plain", false);
@@ -136,6 +140,7 @@ function handler3(metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
+// eslint-disable-next-line no-unused-vars
 function completeTest3(request, data, ctx) {
   try {
     var chan = request.QueryInterface(Ci.nsIChannel);
@@ -152,6 +157,7 @@ function completeTest3(request, data, ctx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Test 4: inline
+// eslint-disable-next-line no-unused-vars
 function handler4(metadata, response) {
   response.setStatusLine(metadata.httpVersion, 200, "OK");
   response.setHeader("Content-Type", "text/plain", false);
@@ -160,6 +166,7 @@ function handler4(metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
+// eslint-disable-next-line no-unused-vars
 function completeTest4(request, data, ctx) {
   try {
     var chan = request.QueryInterface(Ci.nsIChannel);

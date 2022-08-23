@@ -51,8 +51,6 @@ function contentHandler(metadata, response) {
   response.bodyOutputStream.write(responseBody, responseBody.length);
 }
 
-const DEFAULT_WAIT_TIME = 200; // ms
-
 const kDNSv6Domain =
   mozinfo.os == "linux" || mozinfo.os == "android"
     ? "ip6-localhost"
