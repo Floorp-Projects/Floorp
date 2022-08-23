@@ -284,6 +284,25 @@ mod unix {
                 .map_err(|err| self.error(err, ErrorKind::WriteAt))
         }
     }
+
+    #[cfg(feature = "io_safety")]
+    mod io_safety {
+        use std::os::unix::io::{AsFd, BorrowedFd, OwnedFd};
+
+        #[cfg_attr(docsrs, doc(cfg(feature = "io_safety")))]
+        impl AsFd for crate::File {
+            fn as_fd(&self) -> BorrowedFd<'_> {
+                self.file().as_fd()
+            }
+        }
+
+        #[cfg_attr(docsrs, doc(cfg(feature = "io_safety")))]
+        impl From<crate::File> for OwnedFd {
+            fn from(file: crate::File) -> Self {
+                file.into_parts().0.into()
+            }
+        }
+    }
 }
 
 #[cfg(windows)]
@@ -323,6 +342,25 @@ mod windows {
     impl IntoRawHandle for crate::File {
         fn into_raw_handle(self) -> RawHandle {
             self.file.into_raw_handle()
+        }
+    }
+
+    #[cfg(feature = "io_safety")]
+    mod io_safety {
+        use std::os::windows::io::{AsHandle, BorrowedHandle, OwnedHandle};
+
+        #[cfg_attr(docsrs, doc(cfg(feature = "io_safety")))]
+        impl AsHandle for crate::File {
+            fn as_handle(&self) -> BorrowedHandle<'_> {
+                self.file().as_handle()
+            }
+        }
+
+        #[cfg_attr(docsrs, doc(cfg(feature = "io_safety")))]
+        impl From<crate::File> for OwnedHandle {
+            fn from(file: crate::File) -> Self {
+                file.into_parts().0.into()
+            }
         }
     }
 }
