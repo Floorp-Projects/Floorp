@@ -871,10 +871,12 @@ nsresult nsSocketTransport::InitWithConnectedSocket(PRFileDesc* fd,
   return PostEvent(MSG_RETRY_INIT_SOCKET);
 }
 
-nsresult nsSocketTransport::InitWithConnectedSocket(PRFileDesc* aFD,
-                                                    const NetAddr* aAddr,
-                                                    nsISupports* aSecInfo) {
-  mSecInfo = aSecInfo;
+nsresult nsSocketTransport::InitWithConnectedSocket(
+    PRFileDesc* aFD, const NetAddr* aAddr, nsIInterfaceRequestor* aCallbacks) {
+  {
+    MutexAutoLock lock(mLock);
+    mCallbacks = aCallbacks;
+  }
   return InitWithConnectedSocket(aFD, aAddr);
 }
 
