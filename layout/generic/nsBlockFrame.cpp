@@ -184,8 +184,10 @@ static bool LineHasVisibleInlineContent(nsLineBox* aLine) {
 static nsRect GetFrameTextArea(nsIFrame* aFrame,
                                nsDisplayListBuilder* aBuilder) {
   nsRect textArea;
-  if (aFrame->IsTextFrame()) {
-    textArea = aFrame->InkOverflowRect();
+  if (const nsTextFrame* textFrame = do_QueryFrame(aFrame)) {
+    if (!textFrame->IsEntirelyWhitespace()) {
+      textArea = aFrame->InkOverflowRect();
+    }
   } else if (aFrame->IsFrameOfType(nsIFrame::eLineParticipant)) {
     for (nsIFrame* kid : aFrame->PrincipalChildList()) {
       nsRect kidTextArea = GetFrameTextArea(kid, aBuilder);
