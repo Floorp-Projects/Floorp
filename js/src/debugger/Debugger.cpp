@@ -39,6 +39,7 @@
 #include "debugger/Object.h"              // for DebuggerObject
 #include "debugger/Script.h"              // for DebuggerScript
 #include "debugger/Source.h"              // for DebuggerSource
+#include "frontend/BytecodeCompiler.h"    // for IsIdentifier
 #include "frontend/CompilationStencil.h"  // for CompilationStencil
 #include "frontend/Parser.h"              // for Parser
 #include "gc/GC.h"                        // for IterateScripts
@@ -82,6 +83,7 @@
 #include "vm/BytecodeUtil.h"          // for JSDVG_IGNORE_STACK
 #include "vm/Compartment.h"           // for CrossCompartmentKey
 #include "vm/EnvironmentObject.h"     // for IsSyntacticEnvironment
+#include "vm/ErrorContext.h"          // for MainThreadErrorContext
 #include "vm/ErrorReporting.h"        // for ReportErrorToGlobal
 #include "vm/GeneratorObject.h"       // for AbstractGeneratorObject
 #include "vm/GlobalObject.h"          // for GlobalObject

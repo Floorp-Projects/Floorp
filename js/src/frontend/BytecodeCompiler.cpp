@@ -15,21 +15,20 @@
 #include "ds/LifoAlloc.h"
 #include "frontend/BytecodeCompilation.h"
 #include "frontend/BytecodeEmitter.h"
+#include "frontend/CompilationStencil.h"
 #include "frontend/EitherParser.h"
-#include "frontend/ErrorReporter.h"
-#include "vm/ErrorContext.h"
-#include "vm/ErrorReporting.h"
 #ifdef JS_ENABLE_SMOOSH
 #  include "frontend/Frontend2.h"  // Smoosh
 #endif
 #include "frontend/ModuleSharedContext.h"
+#include "js/experimental/JSStencil.h"
 #include "js/SourceText.h"
 #include "js/Stack.h"  // JS::NativeStackLimit
 #include "js/UniquePtr.h"
+#include "vm/ErrorContext.h"
 #include "vm/FunctionFlags.h"          // FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
-#include "vm/GlobalObject.h"
-#include "vm/HelperThreadState.h"  // OffThreadFrontendErrors
+#include "vm/HelperThreads.h"  // StartOffThreadDelazification, WaitForAllDelazifyTasks
 #include "vm/JSContext.h"
 #include "vm/JSScript.h"       // ScriptSource, UncompressedSourceCache
 #include "vm/ModuleBuilder.h"  // js::ModuleBuilder
