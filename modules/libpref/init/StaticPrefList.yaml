@@ -3132,6 +3132,13 @@
   value: false
   mirror: always
 
+# This enables width and height attributes and map these attributes to img
+# element's style.
+- name: dom.picture_source_dimension_attributes.enabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Is support for Element.requestPointerLock enabled?
 # This is added for accessibility purpose. When user has no way to exit
 # pointer lock (e.g. no keyboard available), they can use this pref to
@@ -7692,6 +7699,13 @@
   value: true
   mirror: always
   rust: true
+
+# This pref controls whether the `prefers-color-scheme` value of iframes images
+# reacts to the embedder `color-scheme` in content.
+- name: layout.css.iframe-embedder-prefers-color-scheme.content.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
 
 # The minimum contrast ratio between the accent color foreground and background
 # colors.

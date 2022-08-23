@@ -77,7 +77,7 @@ function* nextTest()
 
   function openPopup(position, anchor, expected, anchorEdge)
   {
-    expectedAnchor = anchor instanceof Node ? anchor : $(anchor);
+    expectedAnchor = Node.isInstance(anchor) ? anchor : $(anchor);
     expectedSide = expected;
     expectedAnchorEdge = anchorEdge;
 

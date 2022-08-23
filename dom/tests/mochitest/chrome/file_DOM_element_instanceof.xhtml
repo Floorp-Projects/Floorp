@@ -14,15 +14,15 @@
   // Note: We can't use frames[0] here because the type="content" attribute
   // isolates it into a separate browsing context hierarchy.
   var doc = document.querySelector("iframe").contentDocument;
-  ok(doc.createElement("body") instanceof HTMLBodyElement,
+  ok(HTMLBodyElement.isInstance(doc.createElement("body")),
      "Should be instance of HTMLBodyElement");
-  ok(doc.createElement("div") instanceof HTMLDivElement,
+  ok(HTMLDivElement.isInstance(doc.createElement("div")),
      "Should be instance of HTMLDivElement");
-  ok(doc.createElement("frameset") instanceof HTMLFrameSetElement,
+  ok(HTMLFrameSetElement.isInstance(doc.createElement("frameset")),
      "Should be instance of HTMLFrameSetElement");
-  ok(doc.createElement("h1") instanceof HTMLHeadingElement,
+  ok(HTMLHeadingElement.isInstance(doc.createElement("h1")),
      "Should be instance of HTMLHeadingElement");
-  ok(doc.createElement("label") instanceof HTMLLabelElement,
+  ok(HTMLLabelElement.isInstance(doc.createElement("label")),
      "Should be instance of HTMLLabelElement");
 
   window.close();

@@ -532,6 +532,16 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
                                          mozilla::MappedDeclarations&,
                                          MapAspectRatio = MapAspectRatio::No);
   /**
+   * Helper to map the iamge source attributes into a style stuct.
+   * Note:
+   * This will override the declaration created by the presentation attributes
+   * of HTMLImageElement (i.e. mapped by MapImageSizeAttributeInto).
+   * https://html.spec.whatwg.org/multipage/embedded-content.html#the-source-element
+   */
+  static void MapPictureSourceSizeAttributesInto(const nsMappedAttributes*,
+                                                 mozilla::MappedDeclarations&);
+
+  /**
    * Helper to map the width and height attributes into the aspect-ratio
    * property.
    *

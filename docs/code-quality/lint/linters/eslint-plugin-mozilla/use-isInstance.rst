@@ -10,6 +10,7 @@ These files are covered:
 - ``*.sys.mjs``
 - ``*.jsm``
 - ``*.jsm.js``
+- ``*.xhtml`` with ``there.is.only.xul``
 - ``*.js`` with a heuristic
 
 Since there is no straightforward way to detect chrome scripts, currently the

@@ -270,16 +270,22 @@ class HTMLImageElement final : public nsGenericHTMLElement,
 
   void LazyLoadImageReachedViewport();
 
+  // This is used when restyling, for retrieving the extra style from the source
+  // element.
+  const nsMappedAttributes* GetMappedAttributesFromSource() const;
+
  protected:
   virtual ~HTMLImageElement();
 
-  // Queues a task to run LoadSelectedImage pending stable state.
+  // Update the responsive source synchronously and queues a task to run
+  // LoadSelectedImage pending stable state.
   //
   // Pending Bug 1076583 this is only used by the responsive image
   // algorithm (InResponsiveMode()) -- synchronous actions when just
   // using img.src will bypass this, and update source and kick off
   // image load synchronously.
-  void QueueImageLoadTask(bool aAlwaysLoad);
+  void UpdateSourceSyncAndQueueImageTask(
+      bool aAlwaysLoad, const HTMLSourceElement* aSkippedSource = nullptr);
 
   // True if we have a srcset attribute or a <picture> parent, regardless of if
   // any valid responsive sources were parsed from either.
@@ -292,8 +298,8 @@ class HTMLImageElement final : public nsGenericHTMLElement,
   // True if the given URL equals the last URL that was loaded by this element.
   bool SelectedSourceMatchesLast(nsIURI* aSelectedSource);
 
-  // Resolve and load the current mResponsiveSelector (responsive mode) or src
-  // attr image.
+  // Load the current mResponsiveSelector (responsive mode) or src attr image.
+  // Note: This doesn't run the full selection for the responsive selector.
   nsresult LoadSelectedImage(bool aForce, bool aNotify, bool aAlwaysLoad);
 
   // True if this string represents a type we would support on <source type>
@@ -308,9 +314,14 @@ class HTMLImageElement final : public nsGenericHTMLElement,
   // we don't actually care which changed or to what
   void PictureSourceMediaOrTypeChanged(nsIContent* aSourceNode, bool aNotify);
 
-  void PictureSourceAdded(nsIContent* aSourceNode);
+  // This is called when we update "width" or "height" attribute of source
+  // element.
+  void PictureSourceDimensionChanged(HTMLSourceElement* aSourceNode,
+                                     bool aNotify);
+
+  void PictureSourceAdded(HTMLSourceElement* aSourceNode = nullptr);
   // This should be called prior to the unbind, such that nextsibling works
-  void PictureSourceRemoved(nsIContent* aSourceNode);
+  void PictureSourceRemoved(HTMLSourceElement* aSourceNode = nullptr);
 
   // Re-evaluates all source nodes (picture <source>,<img>) and finds
   // the best source set for mResponsiveSelector. If a better source
@@ -324,16 +335,22 @@ class HTMLImageElement final : public nsGenericHTMLElement,
   // parameters as appropriate before calling (or null it out to force
   // recreation)
   //
+  // if |aSkippedSource| is non-null, we will skip it when running the
+  // algorithm. This is used when we need to update the source when we are
+  // removing the source element.
+  //
   // Returns true if the source has changed, and false otherwise.
-  bool UpdateResponsiveSource();
+  bool UpdateResponsiveSource(
+      const HTMLSourceElement* aSkippedSource = nullptr);
 
   // Given a <source> node that is a previous sibling *or* ourselves, try to
   // create a ResponsiveSelector.
 
   // If the node's srcset/sizes make for an invalid selector, returns
-  // false. This does not guarantee the resulting selector matches an image,
+  // nullptr. This does not guarantee the resulting selector matches an image,
   // only that it is valid.
-  bool TryCreateResponsiveSelector(Element* aSourceElement);
+  already_AddRefed<ResponsiveImageSelector> TryCreateResponsiveSelector(
+      Element* aSourceElement);
 
   MOZ_CAN_RUN_SCRIPT CSSIntPoint GetXY();
   virtual JSObject* WrapNode(JSContext* aCx,
@@ -394,6 +411,16 @@ class HTMLImageElement final : public nsGenericHTMLElement,
   void SetLazyLoading();
 
   void StartLoadingIfNeeded();
+
+  bool IsInPicture() const {
+    return GetParentElement() &&
+           GetParentElement()->IsHTMLElement(nsGkAtoms::picture);
+  }
+
+  void InvalidateAttributeMapping();
+
+  void SetResponsiveSelector(RefPtr<ResponsiveImageSelector>&& aSource);
+  void SetDensity(double aDensity);
 
   bool mInDocResponsiveContent;
 

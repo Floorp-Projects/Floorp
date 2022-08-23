@@ -2280,7 +2280,6 @@ WorkerPrivate::WorkerPrivate(
       mParentStatus(Pending),
       mStatus(Pending),
       mBusyCount(0),
-      mLoadingWorkerScript(false),
       mCreationTimeStamp(TimeStamp::Now()),
       mCreationTimeHighRes((double)PR_Now() / PR_USEC_PER_MSEC),
       mReportedUseCounters(false),

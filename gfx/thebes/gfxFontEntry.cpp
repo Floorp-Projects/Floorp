@@ -656,7 +656,7 @@ tainted_opaque_gr<const void*> gfxFontEntry::GrGetTable(
         rlbox::from_opaque(aName).unverified_safe_because(
             "This is only being used to index into a hashmap, which is robust "
             "for any value. No checks needed.");
-    hb_blob_t* blob = fontEntry->GetFontTable(fontTableKey);
+    gfxFontUtils::AutoHBBlob blob(fontEntry->GetFontTable(fontTableKey));
 
     if (blob) {
       unsigned int blobLength;
@@ -670,7 +670,6 @@ tainted_opaque_gr<const void*> gfxFontEntry::GrGetTable(
         *t_aLen = blobLength;
         ret = rlbox::sandbox_const_cast<const void*>(t_tableData);
       }
-      hb_blob_destroy(blob);
     }
   }
 

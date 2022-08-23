@@ -7,28 +7,28 @@
 const BROWSERS = [
   {
     name: "Firefox",
-    mustContain: new RegExp(`(?:Firefox|FxiOS)\/(${getVersionRegex(1)})`),
+    mustContain: new RegExp(`(?:Firefox|FxiOS)\/(${getVersionRegex(1, 1)})`),
   },
   {
     name: "Opera",
-    mustContain: new RegExp(`(?:OPR|Opera)\/(${getVersionRegex(1)})`),
+    mustContain: new RegExp(`(?:OPR|Opera)\/(${getVersionRegex(1, 1)})`),
   },
   {
     name: "Safari",
-    mustContain: new RegExp(`Version\/(${getVersionRegex(1)}).+Safari`),
+    mustContain: new RegExp(`Version\/(${getVersionRegex(1, 1)}).+Safari`),
     mustNotContain: new RegExp("Chrome|Chromium"),
   },
   {
     name: "Edge",
-    mustContain: new RegExp(`Edge\/(${getVersionRegex(1)})`),
+    mustContain: new RegExp(`Edge\/(${getVersionRegex(0, 1)})`),
   },
   {
     name: "Chrome",
-    mustContain: new RegExp(`(?:Chrome|CriOS)\/(${getVersionRegex(1)})`),
+    mustContain: new RegExp(`(?:Chrome|CriOS)\/(${getVersionRegex(1, 1)})`),
   },
   {
     name: "IE",
-    mustContain: new RegExp(`MSIE (${getVersionRegex(1)})`),
+    mustContain: new RegExp(`MSIE (${getVersionRegex(1, 1)})`),
   },
 ];
 
@@ -36,32 +36,37 @@ const OSES = [
   {
     name: "iOS",
     minMinorVersionCount: 0,
-    mustContain: new RegExp(`CPU iPhone OS (${getVersionRegex(2)})`),
+    mustContain: new RegExp(`CPU iPhone OS (${getVersionRegex(0, 2)})`),
+  },
+  {
+    name: "iPadOS",
+    minMinorVersionCount: 0,
+    mustContain: new RegExp(`CPU OS (${getVersionRegex(0, 2)})`),
   },
   {
     name: "Windows Phone",
     minMinorVersionCount: 1,
-    mustContain: new RegExp(`Windows Phone (${getVersionRegex(2)})`),
+    mustContain: new RegExp(`Windows Phone (${getVersionRegex(1, 2)})`),
   },
   {
     name: "Chrome OS",
     minMinorVersionCount: 1,
-    mustContain: new RegExp(`CrOS .+ (${getVersionRegex(2)})`),
+    mustContain: new RegExp(`CrOS .+ (${getVersionRegex(1, 2)})`),
   },
   {
     name: "Android",
-    minMinorVersionCount: 1,
-    mustContain: new RegExp(`Android (${getVersionRegex(2)})`),
+    minMinorVersionCount: 0,
+    mustContain: new RegExp(`Android (${getVersionRegex(0, 2)})`),
   },
   {
     name: "Windows NT",
     minMinorVersionCount: 1,
-    mustContain: new RegExp(`Windows NT (${getVersionRegex(2)})`),
+    mustContain: new RegExp(`Windows NT (${getVersionRegex(1, 2)})`),
   },
   {
     name: "Mac OSX",
     minMinorVersionCount: 1,
-    mustContain: new RegExp(`Intel Mac OS X (${getVersionRegex(2)})`),
+    mustContain: new RegExp(`Intel Mac OS X (${getVersionRegex(1, 2)})`),
   },
   {
     name: "Linux",
@@ -69,8 +74,8 @@ const OSES = [
   },
 ];
 
-function getVersionRegex(maxMinorVersionCount) {
-  return `\\d+(?:[._][0-9a-z]+){1,${maxMinorVersionCount}}`;
+function getVersionRegex(minMinorVersionCount, maxMinorVersionCount) {
+  return `\\d+(?:[._][0-9a-z]+){${minMinorVersionCount},${maxMinorVersionCount}}`;
 }
 
 function detect(ua, dataset) {
@@ -91,6 +96,7 @@ function detect(ua, dataset) {
     }
 
     let version = null;
+
     if (result && result.length === 2) {
       // Remove most minor version if that expresses 0.
       let parts = result[1].match(/([0-9a-z]+)/g);

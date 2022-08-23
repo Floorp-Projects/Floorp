@@ -18,7 +18,7 @@ const TEST_DATA = [
     userAgent:
       "Mozilla/5.0 (Android 8.0.0; Mobile; rv:70.0) Gecko/70.0 Firefox/70.0",
     expectedBrowser: { name: "Firefox", version: "70" },
-    expectedOS: { name: "Android", version: "8.0" },
+    expectedOS: { name: "Android", version: "8" },
   },
   {
     userAgent:
@@ -52,6 +52,12 @@ const TEST_DATA = [
   },
   {
     userAgent:
+      "Mozilla/5.0 (iPad; CPU OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2 Mobile/15E148 Safari/604.1",
+    expectedBrowser: { name: "Safari", version: "14.1" },
+    expectedOS: { name: "iPadOS", version: "14.7.1" },
+  },
+  {
+    userAgent:
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/601.7.8 (KHTML, like Gecko) Version/9.1.2 Safari/601.7.7",
     expectedBrowser: { name: "Safari", version: "9.1" },
     expectedOS: { name: "Mac OSX", version: "10.11.6" },
@@ -60,7 +66,13 @@ const TEST_DATA = [
     userAgent:
       "Mozilla/5.0 (Linux; Android 8.0.0; Nexus 6P Build/OPP3.170518.006) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 Mobile Safari/537.36",
     expectedBrowser: { name: "Chrome", version: "67" },
-    expectedOS: { name: "Android", version: "8.0" },
+    expectedOS: { name: "Android", version: "8" },
+  },
+  {
+    userAgent:
+      "Mozilla/5.0 (Linux; Android 11; SAMSUNG SM-G973U) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/14.2 Chrome/87.0.4280.141 Mobile Safari/537.36",
+    expectedBrowser: { name: "Chrome", version: "87" },
+    expectedOS: { name: "Android", version: "11" },
   },
   {
     userAgent:

@@ -69,9 +69,280 @@
             "description": "ID of the Ruleset this rule belongs to."
           }
         }
+      },
+      {
+        "id": "Rule",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "An id which uniquely identifies a rule. Mandatory and should be >= 1.",
+            "minimum": 1
+          },
+          "priority": {
+            "type": "integer",
+            "optional": true,
+            "description": "Rule priority. Defaults to 1. When specified, should be >= 1",
+            "minimum": 1,
+            "default": 1
+          },
+          "condition": {
+            "type": "object",
+            "description": "The condition under which this rule is triggered.",
+            "properties": {
+              "urlFilter": {
+                "type": "string",
+                "optional": true,
+                "description": "TODO: link to doc explaining supported pattern. The pattern which is matched against the network request url. Only one of 'urlFilter' or 'regexFilter' can be specified."
+              },
+              "regexFilter": {
+                "type": "string",
+                "optional": true,
+                "description": "Regular expression to match against the network request url. Only one of 'urlFilter' or 'regexFilter' can be specified."
+              },
+              "isUrlFilterCaseSensitive": {
+                "type": "boolean",
+                "optional": true,
+                "description": "Whether 'urlFilter' or 'regexFilter' is case-sensitive. Defaults to true."
+              },
+              "initiatorDomains": {
+                "type": "array",
+                "optional": true,
+                "description": "The rule will only match network requests originating from the list of 'initiatorDomains'. If the list is omitted, the rule is applied to requests from all domains.",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "description": "TODO: describe domain format."
+                }
+              },
+              "excludedInitiatorDomains": {
+                "type": "array",
+                "optional": true,
+                "description": "The rule will not match network requests originating from the list of 'initiatorDomains'. If the list is empty or omitted, no domains are excluded. This takes precedence over 'initiatorDomains'.",
+                "items": {
+                  "type": "string",
+                  "description": "TODO: describe domain format."
+                }
+              },
+              "requestDomains": {
+                "type": "array",
+                "optional": true,
+                "description": "The rule will only match network requests when the domain matches one from the list of 'requestDomains'. If the list is omitted, the rule is applied to requests from all domains.",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "description": "TODO: describe domain format."
+                }
+              },
+              "excludedRequestDomains": {
+                "type": "array",
+                "optional": true,
+                "description": "The rule will not match network requests when the domains matches one from the list of 'excludedRequestDomains'. If the list is empty or omitted, no domains are excluded. This takes precedence over 'requestDomains'.",
+                "items": {
+                  "type": "string",
+                  "description": "TODO: describe domain format."
+                }
+              },
+              "resourceTypes": {
+                "type": "array",
+                "optional": true,
+                "description": "List of resource types which the rule can match. When the rule action is 'allowAllRequests', this must be specified and may only contain 'main_frame' or 'sub_frame'. Cannot be specified if 'excludedResourceTypes' is specified. If neither of them is specified, all resource types except 'main_frame' are matched.",
+                "minItems": 1,
+                "items": {
+                  "$ref": "ResourceType"
+                }
+              },
+              "excludedResourceTypes": {
+                "type": "array",
+                "optional": true,
+                "description": "List of resource types which the rule won't match. Cannot be specified if 'resourceTypes' is specified. If neither of them is specified, all resource types except 'main_frame' are matched.",
+                "minItems": 1,
+                "items": {
+                  "$ref": "ResourceType"
+                }
+              },
+              "requestMethods": {
+                "type": "array",
+                "optional": true,
+                "description": "List of HTTP request methods which the rule can match. Should be a lower-case method such as 'connect', 'delete', 'get', 'head', 'options', 'patch', 'post', 'put'.'",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "excludedRequestMethods": {
+                "type": "array",
+                "optional": true,
+                "description": "List of request methods which the rule won't match. Cannot be specified if 'requestMethods' is specified. If neither of them is specified, all request methods are matched.",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "domainType": {
+                "type": "string",
+                "optional": true,
+                "description": "Specifies whether the network request is first-party or third-party to the domain from which it originated. If omitted, all requests are matched.",
+                "enum": ["firstParty", "thirdParty"]
+              },
+              "tabIds": {
+                "type": "array",
+                "optional": true,
+                "description": "List of tabIds which the rule should match. An ID of -1 matches requests which don't originate from a tab. Only supported for session-scoped rules.",
+                "minItems": 1,
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "excludedTabIds": {
+                "type": "array",
+                "optional": true,
+                "description": "List of tabIds which the rule should not match. An ID of -1 excludes requests which don't originate from a tab. Only supported for session-scoped rules.",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "action": {
+            "type": "object",
+            "description": "The action to take if this rule is matched.",
+            "properties": {
+              "type": {
+                 "type": "string",
+                 "enum": ["block", "redirect", "allow", "upgradeScheme", "modifyHeaders", "allowAllRequests"]
+              },
+              "redirect": {
+                "type": "object",
+                "optional": true,
+                "description": "Describes how the redirect should be performed. Only valid when type is 'redirect'.",
+                "properties": {
+                  "extensionPath": {
+                    "type": "string",
+                    "optional": true,
+                    "description": "Path relative to the extension directory. Should start with '/'."
+                  },
+                  "transform": {
+                    "type": "object",
+                    "optional": true,
+                    "description": "TODO: URLTransform - Url transformations to perform."
+                  },
+                  "url": {
+                    "type": "string",
+                    "optional": true,
+                    "description": "The redirect url. Redirects to JavaScript urls are not allowed."
+                  },
+                  "regexSubstitution": {
+                    "type": "string",
+                    "optional": true,
+                    "description": "TODO with regexFilter + Substitution pattern for rules which specify a 'regexFilter'."
+                  }
+                }
+              },
+              "requestHeaders": {
+                "type": "object",
+                "optional": true,
+                "description": "The request headers to modify for the request. Only valid when type is 'modifyHeaders'.",
+                "properties": {
+                  "header": {
+                    "type": "string",
+                    "description": "The name of the request header to be modified."
+                  },
+                  "operation": {
+                    "type": "string",
+                    "description": "The operation to be performed on a header. The 'append' operation is not supported for request headers.",
+                    "enum": ["set", "remove"]
+                  },
+                  "value": {
+                    "type": "string",
+                    "optional": true,
+                    "description": "The new value for the header. Must be specified for the 'set' operation."
+                  }
+                }
+              },
+              "responseHeaders": {
+                "type": "object",
+                "optional": true,
+                "description": "The response headers to modify for the request. Only valid when type is 'modifyHeaders'.",
+                "properties": {
+                  "header": {
+                    "type": "string",
+                    "description": "The name of the response header to be modified."
+                  },
+                  "operation": {
+                    "type": "string",
+                    "description": "The operation to be performed on a header.",
+                    "enum": ["append", "set", "remove"]
+                  },
+                  "value": {
+                    "type": "string",
+                    "optional": true,
+                    "description": "The new value for the header. Must be specified for the 'append' and 'set' operations."
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     ],
     "functions": [
+      {
+        "name": "updateSessionRules",
+        "type": "function",
+        "description": "Modifies the current set of session scoped rules for the extension. The rules with IDs listed in options.removeRuleIds are first removed, and then the rules given in options.addRules are added. These rules are not persisted across sessions and are backed in memory.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "options",
+            "type": "object",
+            "properties": {
+              "removeRuleIds": {
+                "type": "array",
+                "optional": true,
+                "description": "IDs of the rules to remove. Any invalid IDs will be ignored.",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "addRules": {
+                "type": "array",
+                "optional": true,
+                "description": "Rules to add.",
+                "items": {
+                  "$ref": "Rule"
+                }
+              }
+            }
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "description": "Called when the session rules have been updated",
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "getSessionRules",
+        "type": "function",
+        "description": "Returns the current set of session scoped rules for the extension.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "callback",
+            "type": "function",
+            "parameters": [
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "Rule"
+                }
+              }
+            ]
+          }
+        ]
+      },
       {
         "name": "testMatchOutcome",
         "type": "function",

@@ -830,13 +830,14 @@ void nsSubDocumentFrame::MaybeUpdateEmbedderColorScheme() {
     return;
   }
 
-  auto usedColorScheme = LookAndFeel::ColorSchemeForFrame(this);
+  auto preferredColorScheme =
+      LookAndFeel::ColorSchemeForFrame(this, ColorSchemeMode::Preferred);
   bool needUpdate = [&] {
     switch (bc->GetEmbedderColorScheme()) {
       case PrefersColorSchemeOverride::Light:
-        return usedColorScheme != ColorScheme::Light;
+        return preferredColorScheme != ColorScheme::Light;
       case PrefersColorSchemeOverride::Dark:
-        return usedColorScheme != ColorScheme::Dark;
+        return preferredColorScheme != ColorScheme::Dark;
       case PrefersColorSchemeOverride::None:
       case PrefersColorSchemeOverride::EndGuard_:
         break;
@@ -847,7 +848,7 @@ void nsSubDocumentFrame::MaybeUpdateEmbedderColorScheme() {
     return;
   }
 
-  auto value = usedColorScheme == ColorScheme::Dark
+  auto value = preferredColorScheme == ColorScheme::Dark
                    ? PrefersColorSchemeOverride::Dark
                    : PrefersColorSchemeOverride::Light;
   Unused << bc->SetEmbedderColorScheme(value);

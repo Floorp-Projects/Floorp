@@ -10,8 +10,9 @@
 namespace mozilla {
 namespace dom {
 
-WorkerLoadContext::WorkerLoadContext()
-    : JS::loader::LoadContextBase(JS::loader::ContextKind::Worker) {}
+WorkerLoadContext::WorkerLoadContext(WorkerLoadContext::Kind aKind)
+    : JS::loader::LoadContextBase(JS::loader::ContextKind::Worker),
+      mKind(aKind){};
 
 void WorkerLoadContext::SetCacheCreator(
     RefPtr<workerinternals::loader::CacheCreator> aCacheCreator) {

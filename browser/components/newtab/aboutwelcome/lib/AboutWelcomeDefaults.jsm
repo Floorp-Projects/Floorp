@@ -420,7 +420,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
         },
         secondary_button: {
           label: {
-            string_id: "mr2022-onboarding-skip-step-button-label",
+            string_id: "mr2022-onboarding-secondary-skip-button-label",
           },
           action: {
             navigate: true,

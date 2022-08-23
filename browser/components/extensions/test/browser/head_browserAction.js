@@ -153,6 +153,9 @@ async function testPopupSize(
   );
   let browser = await openBrowserActionPanel(extension, browserWin);
 
+  // Small changes if this is a fixed width window
+  let isFixedWidth = !widget.disallowSubView;
+
   // Wait long enough to make sure the initial popup positioning has been completed (
   // by waiting until the value stays the same for 20 times in a row).
   await waitUntilValue({
@@ -252,7 +255,14 @@ async function testPopupSize(
     `Browser height should increase (${getHeight()} > ${height})`
   );
 
-  is(win.innerWidth, innerWidth, "Window width should not change");
+  if (isFixedWidth) {
+    is(win.innerWidth, innerWidth, "Window width should not change");
+  } else {
+    ok(
+      win.innerWidth >= innerWidth,
+      `Window width should increase (${win.innerWidth} >= ${innerWidth})`
+    );
+  }
   ok(
     win.innerHeight >= innerHeight,
     `Window height should increase (${win.innerHeight} >= ${innerHeight})`
@@ -265,31 +275,34 @@ async function testPopupSize(
 
   checkPanelPosition();
 
-  info(
-    "Increase body children's width and height. " +
-      "Expect them to wrap, and the frame to grow vertically rather than widen."
-  );
+  if (isFixedWidth) {
+    // Test a fixed width window grows in height when elements wrap
+    info(
+      "Increase body children's width and height. " +
+        "Expect them to wrap, and the frame to grow vertically rather than widen."
+    );
 
-  dims = await alterContent(browser, setClass, "bigger");
-  win = dims.window;
+    dims = await alterContent(browser, setClass, "bigger");
+    win = dims.window;
 
-  ok(
-    getHeight() > height,
-    `Browser height should increase (${getHeight()} > ${height})`
-  );
+    ok(
+      getHeight() > height,
+      `Browser height should increase (${getHeight()} > ${height})`
+    );
 
-  is(win.innerWidth, innerWidth, "Window width should not change");
-  ok(
-    win.innerHeight >= innerHeight,
-    `Window height should increase (${win.innerHeight} >= ${innerHeight})`
-  );
-  Assert.lessOrEqual(
-    win.scrollMaxY,
-    1,
-    "Document should not be vertically scrollable"
-  );
+    is(win.innerWidth, innerWidth, "Window width should not change");
+    ok(
+      win.innerHeight >= innerHeight,
+      `Window height should increase (${win.innerHeight} >= ${innerHeight})`
+    );
+    Assert.lessOrEqual(
+      win.scrollMaxY,
+      1,
+      "Document should not be vertically scrollable"
+    );
 
-  checkPanelPosition();
+    checkPanelPosition();
+  }
 
   info(
     "Increase body height beyond the height of the screen. " +
