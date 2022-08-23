@@ -992,6 +992,17 @@ void SessionAccessibility::PopulateNodeInfo(
   }
 }
 
+Accessible* SessionAccessibility::GetAccessibleByID(int32_t aID) const {
+  Accessible* accessible = mIDToAccessibleMap.Get(aID);
+  if (accessible && accessible->IsLocal() &&
+      accessible->AsLocal()->IsDefunct()) {
+    MOZ_ASSERT_UNREACHABLE("Registered accessible is defunct!");
+    return nullptr;
+  }
+
+  return accessible;
+}
+
 void SessionAccessibility::RegisterAccessible(Accessible* aAccessible) {
   if (IPCAccessibilityActive()) {
     // Don't register accessible in content process.
