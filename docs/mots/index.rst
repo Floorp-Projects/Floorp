@@ -35,6 +35,23 @@ Mots config
       -
         | `mots.yaml <https://searchfox.org/mozilla-central/search?q=&path=mots.yaml>`__
 
+mozilla-toplevel
+~~~~~~~~~~~~~~~~
+The top level directory for the mozilla tree.
+
+.. warning::
+    This module does not have any owners specified.
+
+.. list-table::
+    :stub-columns: 1
+    :widths: 30 70
+
+    * - Owner(s) Emeritus
+      - Brendan Eich
+    * - Includes
+      -
+        | `README <https://searchfox.org/mozilla-central/search?q=&path=README>`__
+
 Code Coverage
 ~~~~~~~~~~~~~
 Tools for code coverage instrumentation, and coverage data parsing and management.
@@ -1403,23 +1420,6 @@ Glue library containing various low-level functionality, including a dynamic lin
       - dev-platform
     * - Bugzilla Components
       - Core::mozglue
-
-Core: mozilla-toplevel
-~~~~~~~~~~~~~~~~~~~~~~
-The top level directory for the mozilla tree.
-
-.. warning::
-    This module does not have any owners specified.
-
-.. list-table::
-    :stub-columns: 1
-    :widths: 30 70
-
-    * - Owner(s) Emeritus
-      - Brendan Eich
-    * - Includes
-      -
-        | `README <https://searchfox.org/mozilla-central/search?q=&path=README>`__
 
 Core: MSCOM
 ~~~~~~~~~~~
@@ -3605,7 +3605,7 @@ The core infrastructure in the Firefox client to send back Telemetry and FHR dat
 
     * - Owner(s)
       -
-        | `Chris H-C (chutten|PTO) <https://people.mozilla.org/s?query=chutten|PTO>`__
+        | `Chris H-C (chutten) <https://people.mozilla.org/s?query=chutten>`__
     * - Peer(s)
       -
         | `aplacitelli <https://people.mozilla.org/s?query=aplacitelli>`__
