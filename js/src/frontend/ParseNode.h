@@ -2258,6 +2258,7 @@ class ClassMethod : public BinaryNode {
 class ClassField : public BinaryNode {
   bool isStatic_;
 #ifdef ENABLE_DECORATORS
+  bool hasAccessor_;
   ListNode* decorators_;
 #endif
 
@@ -2265,12 +2266,18 @@ class ClassField : public BinaryNode {
   ClassField(ParseNode* name, ParseNode* initializer, bool isStatic
 #ifdef ENABLE_DECORATORS
              ,
-             ListNode* decorators
+             ListNode* decorators, bool hasAccessor
 #endif
              )
       : BinaryNode(ParseNodeKind::ClassField, initializer->pn_pos, name,
                    initializer),
-        isStatic_(isStatic) {
+        isStatic_(isStatic)
+#ifdef ENABLE_DECORATORS
+        ,
+        hasAccessor_(hasAccessor),
+        decorators_(decorators)
+#endif
+  {
   }
 
   static bool test(const ParseNode& node) {
@@ -2287,6 +2294,7 @@ class ClassField : public BinaryNode {
 
 #ifdef ENABLE_DECORATORS
   ListNode* decorators() const { return decorators_; }
+  bool hasAccessor() const { return hasAccessor_; }
 #endif
 };
 

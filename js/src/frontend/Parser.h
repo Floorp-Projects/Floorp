@@ -222,6 +222,7 @@ enum class PropertyType {
   Constructor,
   DerivedConstructor,
   Field,
+  FieldWithAccessor,
 };
 
 enum AwaitHandling : uint8_t {
