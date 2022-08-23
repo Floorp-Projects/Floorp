@@ -614,6 +614,8 @@ function buildFlags(caseSensitive, isGlobal) {
   if (!caseSensitive && !isGlobal) {
     return "i";
   }
+
+  return null;
 }
 
 function buildQuery(originalQuery, modifiers, {
