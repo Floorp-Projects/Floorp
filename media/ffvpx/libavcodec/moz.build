@@ -9,10 +9,11 @@
 if CONFIG['FFVPX_ASFLAGS']:
     if CONFIG['CPU_ARCH'] == 'x86' or CONFIG['CPU_ARCH'] == 'x86_64':
         DIRS += ['x86']
-    elif CONFIG['CPU_ARCH'] == 'aarch64':
-        DIRS += ['aarch64']
     elif CONFIG['CPU_ARCH'] == 'arm':
         DIRS += ['arm']
+
+if CONFIG['CPU_ARCH'] == 'aarch64':
+    DIRS += ['aarch64']
 
 SharedLibrary('mozavcodec')
 SOURCES += [
@@ -40,6 +41,7 @@ SOURCES += [
     'flacdata.c',
     'flacdec.c',
     'flacdsp.c',
+    'get_buffer.c',
     'idctdsp.c',
     'jfdctfst.c',
     'jfdctint.c',
@@ -54,10 +56,12 @@ SOURCES += [
     'mpegaudiodsp_data.c',
     'mpegaudiodsp_fixed.c',
     'mpegaudiodsp_float.c',
+    'mpegaudiotabs.c',
     'null_bsf.c',
     'options.c',
     'parser.c',
     'parsers.c',
+    'profiles.c',
     'pthread.c',
     'pthread_frame.c',
     'pthread_slice.c',
@@ -65,22 +69,24 @@ SOURCES += [
     'reverse.c',
     'simple_idct.c',
     'utils.c',
+    'version.c',
+    'vlc.c',
     'vorbis_parser.c',
     'xiph.c'
 ]
 
 if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
     SOURCES += [
+        'atsc_a53.c',
         'av1dec.c',
         'avpicture.c',
-        'bitstream_filter.c',
         'cbs.c',
         'cbs_av1.c',
         'golomb.c',
         'h264pred.c',
         'imgconvert.c',
+        'libdav1d.c',
         'mathtables.c',
-        'profiles.c',
         'qsv_api.c',
         'raw.c',
         'videodsp.c',
@@ -102,19 +108,19 @@ if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
         'vp9prob.c',
         'vp9recon.c'
     ]
+    USE_LIBS += [
+        'dav1d',
+        'media_libdav1d_asm',
+    ]
     if CONFIG['MOZ_WAYLAND']:
         LOCAL_INCLUDES += ['/media/mozva']
         SOURCES += [
-            'atsc_a53.c',
-            'libdav1d.c',
             'vaapi_av1.c',
             'vaapi_decode.c',
             'vaapi_vp8.c',
             'vaapi_vp9.c',
         ]
         USE_LIBS += [
-          'dav1d',
-          'media_libdav1d_asm',
           'mozva'
         ]
 

@@ -24,14 +24,14 @@
 #include <stdint.h>
 
 #include "libavutil/buffer.h"
+#include "libavutil/frame.h"
 #include "libavutil/pixfmt.h"
 #include "avcodec.h"
 #include "cbs.h"
 #include "cbs_av1.h"
-#include "thread.h"
 
 typedef struct AV1Frame {
-    ThreadFrame tf;
+    AVFrame *f;
 
     AVBufferRef *hwaccel_priv_buf;
     void *hwaccel_picture_private;
@@ -42,6 +42,7 @@ typedef struct AV1Frame {
     int temporal_id;
     int spatial_id;
 
+    uint8_t gm_invalid[AV1_NUM_REF_FRAMES];
     uint8_t gm_type[AV1_NUM_REF_FRAMES];
     int32_t gm_params[AV1_NUM_REF_FRAMES][6];
 

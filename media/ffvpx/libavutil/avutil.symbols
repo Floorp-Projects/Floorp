@@ -30,7 +30,13 @@ av_buffer_replace
 av_buffer_ref
 av_buffer_unref
 av_calloc
+av_channel_layout_check
+av_channel_layout_copy
+av_channel_layout_compare
 av_channel_layout_extract_channel
+av_channel_layout_describe
+av_channel_layout_from_mask
+av_channel_layout_uninit
 av_chroma_location_name
 av_color_primaries_name
 av_color_range_name
@@ -38,9 +44,7 @@ av_color_space_name
 av_color_transfer_name
 av_compare_mod
 av_compare_ts
-#ifdef MOZ_WAYLAND
 av_content_light_metadata_create_side_data
-#endif
 av_cpu_count
 av_crc
 av_crc_get_table
@@ -68,20 +72,26 @@ av_expr_free
 av_expr_parse
 av_expr_parse_and_eval
 av_fast_malloc
+av_fast_mallocz
 av_fast_realloc
 av_fifo_alloc
+av_fifo_alloc2
 av_fifo_alloc_array
+av_fifo_can_read
 av_fifo_drain
 av_fifo_free
 av_fifo_freep
+av_fifo_freep2
 av_fifo_generic_peek
 av_fifo_generic_read
 av_fifo_generic_write
 av_fifo_grow
 av_fifo_realloc2
+av_fifo_read
 av_fifo_reset
 av_fifo_size
 av_fifo_space
+av_fifo_write
 av_find_best_pix_fmt_of_2
 av_find_info_tag
 av_find_nearest_q_idx
@@ -96,42 +106,16 @@ av_frame_clone
 av_frame_copy
 av_frame_copy_props
 av_frame_free
-av_frame_get_best_effort_timestamp
 av_frame_get_buffer
-av_frame_get_channel_layout
-av_frame_get_channels
-av_frame_get_color_range
-av_frame_get_colorspace
-av_frame_get_decode_error_flags
-av_frame_get_metadata
-av_frame_get_pkt_duration
-av_frame_get_pkt_pos
-av_frame_get_pkt_size
 av_frame_get_plane_buffer
-av_frame_get_qp_table
-av_frame_get_sample_rate
 av_frame_get_side_data
 av_frame_is_writable
 av_frame_make_writable
 av_frame_move_ref
 av_frame_new_side_data
-#ifdef MOZ_WAYLAND
 av_frame_new_side_data_from_buf
-#endif
 av_frame_ref
 av_frame_remove_side_data
-av_frame_set_best_effort_timestamp
-av_frame_set_channel_layout
-av_frame_set_channels
-av_frame_set_color_range
-av_frame_set_colorspace
-av_frame_set_decode_error_flags
-av_frame_set_metadata
-av_frame_set_pkt_duration
-av_frame_set_pkt_pos
-av_frame_set_pkt_size
-av_frame_set_qp_table
-av_frame_set_sample_rate
 av_frame_side_data_name
 av_frame_unref
 av_free
@@ -201,9 +185,7 @@ av_log_set_flags
 av_log_set_level
 av_malloc
 av_mallocz
-#ifdef MOZ_WAYLAND
 av_mastering_display_metadata_create_side_data
-#endif
 av_match_list
 av_match_name
 av_max_alloc
@@ -211,7 +193,6 @@ av_memcpy_backptr
 av_memdup
 av_mul_q
 av_nearer_q
-av_opt_child_class_next
 av_opt_child_next
 av_opt_copy
 av_opt_eval_double
@@ -262,7 +243,6 @@ av_opt_set_video_rate
 av_opt_show2
 av_parse_color
 av_parse_cpu_caps
-av_parse_cpu_flags
 av_parse_ratio
 av_parse_time
 av_parse_video_rate
@@ -293,7 +273,6 @@ av_samples_copy
 av_samples_fill_arrays
 av_samples_get_buffer_size
 av_samples_set_silence
-av_set_cpu_flags_mask
 av_set_options_string
 av_small_strptime
 av_strcasecmp
@@ -314,9 +293,7 @@ av_sub_q
 av_timegm
 av_usleep
 av_utf8_decode
-av_util_ffversion
 av_vbprintf
-av_version_info
 #ifndef MOZ_FFVPX_AUDIOONLY
 av_video_enc_params_create_side_data
 #endif
@@ -328,9 +305,6 @@ avpriv_report_missing_feature
 avpriv_request_sample
 avpriv_scalarproduct_float_c
 avpriv_set_systematic_pal2
-avutil_configuration
-avutil_license
-avutil_version
 #if defined(XP_WIN) && !defined(_ARM64_)
 avpriv_emms_asm
 #endif
