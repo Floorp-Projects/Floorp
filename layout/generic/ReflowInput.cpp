@@ -2536,7 +2536,7 @@ void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
       }
     }
   };
-  if (!aFlags.contains(ComputeSizeFlag::UseAutoBSize)) {
+  if (!aFlags.contains(ComputeSizeFlag::IsGridMeasuringReflow)) {
     ApplyBaselinePadding(eLogicalAxisBlock, nsIFrame::BBaselinePadProperty());
   }
   if (!aFlags.contains(ComputeSizeFlag::ShrinkWrap)) {
