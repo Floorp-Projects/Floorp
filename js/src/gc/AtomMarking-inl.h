@@ -10,7 +10,8 @@
 
 #include <type_traits>
 
-#include "vm/Realm.h"
+#include "vm/JSContext.h"
+#include "vm/StringType.h"
 #include "vm/SymbolType.h"
 
 #include "gc/Heap-inl.h"

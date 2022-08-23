@@ -6,7 +6,6 @@
 
 #include "gc/GCParallelTask.h"
 
-#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 
 #include "gc/GCContext.h"

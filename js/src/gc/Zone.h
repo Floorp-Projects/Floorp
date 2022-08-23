@@ -7,9 +7,15 @@
 #ifndef gc_Zone_h
 #define gc_Zone_h
 
-#include "mozilla/Atomics.h"
-#include "mozilla/HashFunctions.h"
-#include "mozilla/SegmentedVector.h"
+#include "mozilla/Array.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/LinkedList.h"
+#include "mozilla/MemoryReporting.h"
+#include "mozilla/PodOperations.h"
+#include "mozilla/TimeStamp.h"
+
+#include "jstypes.h"
 
 #include "ds/Bitmap.h"
 #include "gc/ArenaList.h"
@@ -22,7 +28,8 @@
 #include "js/GCHashTable.h"
 #include "js/Vector.h"
 #include "vm/AtomsTable.h"
-#include "vm/JSFunction.h"
+#include "vm/JSObject.h"
+#include "vm/JSScript.h"
 #include "vm/ShapeZone.h"
 
 namespace js {
