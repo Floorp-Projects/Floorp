@@ -65,8 +65,6 @@ fn main() {
 }
 
 fn compile_probe() -> Option<ExitStatus> {
-    println!("cargo:rerun-if-env-changed=RUSTC_WRAPPER");
-
     let rustc = env::var_os("RUSTC")?;
     let out_dir = env::var_os("OUT_DIR")?;
     let probefile = Path::new(&out_dir).join("probe.rs");

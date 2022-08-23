@@ -55,13 +55,13 @@
 #[macro_export]
 macro_rules! bail {
     ($msg:literal $(,)?) => {
-        return $crate::private::Err($crate::__anyhow!($msg))
+        return $crate::__private::Err($crate::__anyhow!($msg))
     };
     ($err:expr $(,)?) => {
-        return $crate::private::Err($crate::__anyhow!($err))
+        return $crate::__private::Err($crate::__anyhow!($err))
     };
     ($fmt:expr, $($arg:tt)*) => {
-        return $crate::private::Err($crate::__anyhow!($fmt, $($arg)*))
+        return $crate::__private::Err($crate::__anyhow!($fmt, $($arg)*))
     };
 }
 
@@ -120,24 +120,24 @@ macro_rules! bail {
 macro_rules! ensure {
     ($cond:expr $(,)?) => {
         if !$cond {
-            return $crate::private::Err($crate::Error::msg(
-                $crate::private::concat!("Condition failed: `", $crate::private::stringify!($cond), "`")
+            return $crate::__private::Err($crate::Error::msg(
+                $crate::__private::concat!("Condition failed: `", $crate::__private::stringify!($cond), "`")
             ));
         }
     };
     ($cond:expr, $msg:literal $(,)?) => {
         if !$cond {
-            return $crate::private::Err($crate::__anyhow!($msg));
+            return $crate::__private::Err($crate::__anyhow!($msg));
         }
     };
     ($cond:expr, $err:expr $(,)?) => {
         if !$cond {
-            return $crate::private::Err($crate::__anyhow!($err));
+            return $crate::__private::Err($crate::__anyhow!($err));
         }
     };
     ($cond:expr, $fmt:expr, $($arg:tt)*) => {
         if !$cond {
-            return $crate::private::Err($crate::__anyhow!($fmt, $($arg)*));
+            return $crate::__private::Err($crate::__anyhow!($fmt, $($arg)*));
         }
     };
 }
@@ -189,14 +189,14 @@ macro_rules! ensure {
 #[macro_export]
 macro_rules! anyhow {
     ($msg:literal $(,)?) => {
-        $crate::private::must_use({
-            let error = $crate::private::format_err($crate::private::format_args!($msg));
+        $crate::__private::must_use({
+            let error = $crate::__private::format_err($crate::__private::format_args!($msg));
             error
         })
     };
     ($err:expr $(,)?) => {
-        $crate::private::must_use({
-            use $crate::private::kind::*;
+        $crate::__private::must_use({
+            use $crate::__private::kind::*;
             let error = match $err {
                 error => (&error).anyhow_kind().new(error),
             };
@@ -204,7 +204,7 @@ macro_rules! anyhow {
         })
     };
     ($fmt:expr, $($arg:tt)*) => {
-        $crate::Error::msg($crate::private::format!($fmt, $($arg)*))
+        $crate::Error::msg($crate::__private::format!($fmt, $($arg)*))
     };
 }
 
@@ -215,17 +215,17 @@ macro_rules! anyhow {
 #[macro_export]
 macro_rules! __anyhow {
     ($msg:literal $(,)?) => ({
-        let error = $crate::private::format_err($crate::private::format_args!($msg));
+        let error = $crate::__private::format_err($crate::__private::format_args!($msg));
         error
     });
     ($err:expr $(,)?) => ({
-        use $crate::private::kind::*;
+        use $crate::__private::kind::*;
         let error = match $err {
             error => (&error).anyhow_kind().new(error),
         };
         error
     });
     ($fmt:expr, $($arg:tt)*) => {
-        $crate::Error::msg($crate::private::format!($fmt, $($arg)*))
+        $crate::Error::msg($crate::__private::format!($fmt, $($arg)*))
     };
 }
