@@ -7,30 +7,31 @@
 #ifndef nsHttpChannel_h__
 #define nsHttpChannel_h__
 
-#include "HttpBaseChannel.h"
-#include "nsTArray.h"
-#include "nsICachingChannel.h"
-#include "nsICacheEntry.h"
-#include "nsICacheEntryOpenCallback.h"
-#include "nsIDNSListener.h"
-#include "nsIProtocolProxyCallback.h"
-#include "nsIHttpAuthenticableChannel.h"
-#include "nsIAsyncVerifyRedirectCallback.h"
-#include "nsIEarlyHintObserver.h"
-#include "nsIThreadRetargetableRequest.h"
-#include "nsIThreadRetargetableStreamListener.h"
-#include "nsWeakReference.h"
-#include "TimingStruct.h"
-#include "AutoClose.h"
-#include "nsIStreamListener.h"
-#include "nsICorsPreflightCallback.h"
 #include "AlternateServices.h"
-#include "nsIRaceCacheWithNetwork.h"
+#include "AutoClose.h"
+#include "HttpBaseChannel.h"
+#include "TimingStruct.h"
 #include "mozilla/AtomicBitfields.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/extensions/PStreamFilterParent.h"
 #include "mozilla/net/DocumentLoadListener.h"
-#include "mozilla/Mutex.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
+#include "nsICacheEntry.h"
+#include "nsICacheEntryOpenCallback.h"
+#include "nsICachingChannel.h"
+#include "nsICorsPreflightCallback.h"
+#include "nsIDNSListener.h"
+#include "nsIEarlyHintObserver.h"
+#include "nsIHttpAuthenticableChannel.h"
+#include "nsIProtocolProxyCallback.h"
+#include "nsIRaceCacheWithNetwork.h"
+#include "nsIStreamListener.h"
+#include "nsIThreadRetargetableRequest.h"
+#include "nsIThreadRetargetableStreamListener.h"
+#include "nsITransportSecurityInfo.h"
+#include "nsTArray.h"
+#include "nsWeakReference.h"
 
 class nsDNSPrefetch;
 class nsICancelable;
@@ -577,7 +578,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   AutoClose<nsIInputStream> mCacheInputStream;
   RefPtr<nsInputStreamPump> mCachePump;
   UniquePtr<nsHttpResponseHead> mCachedResponseHead;
-  nsCOMPtr<nsISupports> mCachedSecurityInfo;
+  nsCOMPtr<nsITransportSecurityInfo> mCachedSecurityInfo;
   uint32_t mPostID{0};
   uint32_t mRequestTime{0};
 
