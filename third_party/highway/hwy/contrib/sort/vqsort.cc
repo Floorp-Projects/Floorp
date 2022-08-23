@@ -1,4 +1,5 @@
 // Copyright 2021 Google LLC
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,21 +17,64 @@
 
 #include <string.h>  // memset
 
-#include "hwy/aligned_allocator.h"
-
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "hwy/contrib/sort/vqsort.cc"
-#include "hwy/foreach_target.h"
+#include "hwy/foreach_target.h"  // IWYU pragma: keep
 
 // After foreach_target
 #include "hwy/contrib/sort/shared-inl.h"
+
+// Architectures for which we know HWY_HAVE_SCALABLE == 0. This opts into an
+// optimization that replaces dynamic allocation with stack storage.
+#ifndef VQSORT_STACK
+#if HWY_ARCH_X86 || HWY_ARCH_WASM
+#define VQSORT_STACK 1
+#else
+#define VQSORT_STACK 0
+#endif
+#endif  // VQSORT_STACK
+
+#if !VQSORT_STACK
+#include "hwy/aligned_allocator.h"
+#endif
+
+// Check if we have sys/random.h. First skip some systems on which the check
+// itself (features.h) might be problematic.
+#if defined(ANDROID) || defined(__ANDROID__) || HWY_ARCH_RVV
+#define VQSORT_GETRANDOM 0
+#endif
+
+#if !defined(VQSORT_GETRANDOM) && HWY_OS_LINUX
+#include <features.h>
+
+// ---- which libc
+#if defined(__UCLIBC__)
+#define VQSORT_GETRANDOM 1  // added Mar 2015, before uclibc-ng 1.0
+
+#elif defined(__GLIBC__) && defined(__GLIBC_PREREQ)
+#if __GLIBC_PREREQ(2, 25)
+#define VQSORT_GETRANDOM 1
+#else
+#define VQSORT_GETRANDOM 0
+#endif
+
+#else
+// Assume MUSL, which has getrandom since 2018. There is no macro to test, see
+// https://www.openwall.com/lists/musl/2013/03/29/13.
+#define VQSORT_GETRANDOM 1
+
+#endif  // ---- which libc
+#endif  // linux
+
+#if !defined(VQSORT_GETRANDOM)
+#define VQSORT_GETRANDOM 0
+#endif
 
 // Seed source for SFC generator: 1=getrandom, 2=CryptGenRandom
 // (not all Android support the getrandom wrapper)
 #ifndef VQSORT_SECURE_SEED
 
-#if (defined(linux) || defined(__linux__)) && \
-    !(defined(ANDROID) || defined(__ANDROID__) || HWY_ARCH_RVV)
+#if VQSORT_GETRANDOM
 #define VQSORT_SECURE_SEED 1
 #elif defined(_WIN32) || defined(_WIN64)
 #define VQSORT_SECURE_SEED 2
@@ -47,7 +91,7 @@
 #include <sys/random.h>
 #elif VQSORT_SECURE_SEED == 2
 #include <windows.h>
-#pragma comment(lib, "Advapi32.lib")
+#pragma comment(lib, "advapi32.lib")
 // Must come after windows.h.
 #include <wincrypt.h>
 #endif  // VQSORT_SECURE_SEED
@@ -72,40 +116,32 @@ namespace {
 HWY_EXPORT(VectorSize);
 HWY_EXPORT(HaveFloat64);
 
-HWY_INLINE size_t PivotBufNum(size_t sizeof_t, size_t N) {
-  // 3 chunks of medians, 1 chunk of median medians plus two padding vectors.
-  const size_t lpc = SortConstants::LanesPerChunk(sizeof_t, N);
-  return (3 + 1) * lpc + 2 * N;
-}
-
 }  // namespace
 
 Sorter::Sorter() {
+#if VQSORT_STACK
+  ptr_ = nullptr;  // Sort will use stack storage instead
+#else
   // Determine the largest buffer size required for any type by trying them all.
   // (The capping of N in BaseCaseNum means that smaller N but larger sizeof_t
   // may require a larger buffer.)
   const size_t vector_size = HWY_DYNAMIC_DISPATCH(VectorSize)();
-  size_t max_bytes = 0;
-  for (size_t sizeof_t :
-       {sizeof(uint16_t), sizeof(uint32_t), sizeof(uint64_t)}) {
-    const size_t N = vector_size / sizeof_t;
-    // One extra for padding plus another for full-vector loads.
-    const size_t base_case = SortConstants::BaseCaseNum(N) + 2 * N;
-    const size_t partition_num = SortConstants::PartitionBufNum(N);
-    const size_t buf_lanes =
-        HWY_MAX(base_case, HWY_MAX(partition_num, PivotBufNum(sizeof_t, N)));
-    max_bytes = HWY_MAX(max_bytes, buf_lanes * sizeof_t);
-  }
-
+  const size_t max_bytes =
+      HWY_MAX(HWY_MAX(SortConstants::BufBytes<uint16_t>(vector_size),
+                      SortConstants::BufBytes<uint32_t>(vector_size)),
+              SortConstants::BufBytes<uint64_t>(vector_size));
   ptr_ = hwy::AllocateAlignedBytes(max_bytes, nullptr, nullptr);
 
   // Prevent msan errors by initializing.
   memset(ptr_, 0, max_bytes);
+#endif
 }
 
 void Sorter::Delete() {
+#if !VQSORT_STACK
   FreeAlignedBytes(ptr_, nullptr, nullptr);
   ptr_ = nullptr;
+#endif
 }
 
 #if !VQSORT_SECURE_RNG

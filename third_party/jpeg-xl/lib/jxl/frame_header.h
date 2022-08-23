@@ -92,8 +92,8 @@ struct YCbCrChromaSubsampling : public Fields {
   uint8_t MaxHShift() const { return maxhs_; }
   uint8_t MaxVShift() const { return maxvs_; }
 
-  uint8_t RawHShift(size_t c) { return kHShift[channel_mode_[c]]; }
-  uint8_t RawVShift(size_t c) { return kVShift[channel_mode_[c]]; }
+  uint8_t RawHShift(size_t c) const { return kHShift[channel_mode_[c]]; }
+  uint8_t RawVShift(size_t c) const { return kVShift[channel_mode_[c]]; }
 
   // Uses JPEG channel order (Y, Cb, Cr).
   Status Set(const uint8_t* hsample, const uint8_t* vsample) {
@@ -219,6 +219,8 @@ struct BlendingInfo : public Fields {
   bool clamp;
   // Frame ID to copy from (0-3). Only encoded if blend_mode is not kReplace.
   uint32_t source;
+
+  std::string DebugString() const;
 
   size_t nonserialized_num_extra_channels = 0;
   bool nonserialized_is_partial_frame = false;

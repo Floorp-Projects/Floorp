@@ -1,8 +1,14 @@
-jpeg-xl (0.7) UNRELEASED; urgency=medium
+jpeg-xl (0.8) UNRELEASED; urgency=medium
+
+  * Bump JPEG XL version to 0.8.
+
+ -- JPEG XL Maintainers <jpegxl@google.com>  Mon, 08 Aug 2022 14:43:58 +0000
+
+jpeg-xl (0.7) unstable; urgency=medium
 
   * Bump JPEG XL version to 0.7.
 
- -- JPEG XL Maintainers <jpegxl@google.com>  Fri, 10 Sep 2021 16:08:17 +0200
+ -- JPEG XL Maintainers <jpegxl@google.com>  Mon, 08 Aug 2022 14:43:58 +0000
 
 jpeg-xl (0.6) unstable; urgency=medium
 

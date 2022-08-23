@@ -32,14 +32,13 @@ class ToneMappingStage : public RenderPipelineStage {
     if (output_encoding_info_.orig_color_encoding.tf.IsPQ() &&
         output_encoding_info_.desired_intensity_target <
             output_encoding_info_.orig_intensity_target) {
-      tone_mapper_storage_ = AllocateArray(sizeof(ToneMapper));
-      tone_mapper_ = reinterpret_cast<ToneMapper*>(tone_mapper_storage_.get());
-      new (tone_mapper_)
-          ToneMapper(std::pair<float, float>(
-                         0, output_encoding_info_.orig_intensity_target),
-                     std::pair<float, float>(
-                         0, output_encoding_info_.desired_intensity_target),
-                     output_encoding_info_.luminances);
+      tone_mapper_ = jxl::make_unique<ToneMapper>(
+          /*source_range=*/std::pair<float, float>(
+              0, output_encoding_info_.orig_intensity_target),
+          /*target_range=*/
+          std::pair<float, float>(
+              0, output_encoding_info_.desired_intensity_target),
+          output_encoding_info_.luminances);
     } else if (output_encoding_info_.orig_color_encoding.tf.IsHLG() &&
                !output_encoding_info_.color_encoding.tf.IsHLG()) {
       hlg_ootf_ = jxl::make_unique<HlgOOTF>(
@@ -54,11 +53,6 @@ class ToneMappingStage : public RenderPipelineStage {
           10000.f / output_encoding_info_.orig_intensity_target;
       from_desired_intensity_target_ =
           output_encoding_info_.desired_intensity_target / 10000.f;
-    }
-  }
-  ~ToneMappingStage() override {
-    if (tone_mapper_) {
-      tone_mapper_->~ToneMapper();
     }
   }
 
@@ -87,9 +81,9 @@ class ToneMappingStage : public RenderPipelineStage {
       auto g = LoadU(d, row1 + x);
       auto b = LoadU(d, row2 + x);
       if (tone_mapper_ || hlg_ootf_) {
-        r *= Set(d, to_intensity_target_);
-        g *= Set(d, to_intensity_target_);
-        b *= Set(d, to_intensity_target_);
+        r = Mul(r, Set(d, to_intensity_target_));
+        g = Mul(g, Set(d, to_intensity_target_));
+        b = Mul(b, Set(d, to_intensity_target_));
         if (tone_mapper_) {
           tone_mapper_->ToneMap(&r, &g, &b);
         } else {
@@ -99,9 +93,9 @@ class ToneMappingStage : public RenderPipelineStage {
         if (tone_mapper_ || hlg_ootf_->WarrantsGamutMapping()) {
           GamutMap(&r, &g, &b, output_encoding_info_.luminances);
         }
-        r *= Set(d, from_desired_intensity_target_);
-        g *= Set(d, from_desired_intensity_target_);
-        b *= Set(d, from_desired_intensity_target_);
+        r = Mul(r, Set(d, from_desired_intensity_target_));
+        g = Mul(g, Set(d, from_desired_intensity_target_));
+        b = Mul(b, Set(d, from_desired_intensity_target_));
       }
       StoreU(r, d, row0 + x);
       StoreU(g, d, row1 + x);
@@ -122,8 +116,7 @@ class ToneMappingStage : public RenderPipelineStage {
  private:
   using ToneMapper = Rec2408ToneMapper<HWY_FULL(float)>;
   OutputEncodingInfo output_encoding_info_;
-  CacheAlignedUniquePtr tone_mapper_storage_;
-  ToneMapper* tone_mapper_ = nullptr;
+  std::unique_ptr<ToneMapper> tone_mapper_;
   std::unique_ptr<HlgOOTF> hlg_ootf_;
   // When the target colorspace is PQ, 1 represents 10000 nits instead of
   // orig_intensity_target. This temporarily changes this if the tone mappers

@@ -116,15 +116,12 @@ void PatchDictionaryEncoder::SubtractFrom(const PatchDictionary& pdic,
   size_t num_ec = pdic.shared_->metadata->m.num_extra_channels;
   // TODO(veluca): this can likely be optimized knowing it runs on full images.
   for (size_t y = 0; y < opsin->ysize(); y++) {
-    if (y + 1 >= pdic.patch_starts_.size()) continue;
     float* JXL_RESTRICT rows[3] = {
         opsin->PlaneRow(0, y),
         opsin->PlaneRow(1, y),
         opsin->PlaneRow(2, y),
     };
-    for (size_t id = pdic.patch_starts_[y]; id < pdic.patch_starts_[y + 1];
-         id++) {
-      const size_t pos_idx = pdic.sorted_patches_[id];
+    for (size_t pos_idx : pdic.GetPatchesForRow(y)) {
       const size_t blending_idx = pos_idx * (num_ec + 1);
       const PatchPosition& pos = pdic.positions_[pos_idx];
       const PatchReferencePosition& ref_pos =

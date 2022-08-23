@@ -22,6 +22,7 @@
 #include "lib/jxl/enc_file.h"
 #include "lib/jxl/enc_icc_codec.h"
 #include "lib/jxl/encode_internal.h"
+#include "lib/jxl/exif.h"
 #include "lib/jxl/jpeg/enc_jpeg_data.h"
 #include "lib/jxl/sanitizers.h"
 
@@ -1443,6 +1444,11 @@ JxlEncoderStatus JxlEncoderAddJPEGFrame(
                          "Can't XYB encode a lossless JPEG");
   }
   if (!io.blobs.exif.empty()) {
+    JxlOrientation orientation = static_cast<JxlOrientation>(
+        frame_settings->enc->metadata.m.orientation);
+    jxl::InterpretExif(io.blobs.exif, &orientation);
+    frame_settings->enc->metadata.m.orientation = orientation;
+
     size_t exif_size = io.blobs.exif.size();
     // Exif data in JPEG is limited to 64k
     if (exif_size > 0xFFFF) {

@@ -14,11 +14,35 @@ on:
   pull_request:
     types: [opened, reopened, labeled, synchronize]
 
+env:
+  LIBJXL_VERSION: 0.8.0
+  LIBJXL_ABI_VERSION: 0.8
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  warmup: # If necessary, fetch files just once, before tests are run. 
+    name: Warmup caches
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout the conformance source
+      uses: actions/checkout@v2
+      with:
+        repository: libjxl/conformance
+        # TODO(eustas): move ref to a global variable / file?
+        ref: a6a44bbbd69830e1dc862174599ce5738a0a414f
+        path: conformance
+    - name: Cache
+      uses: actions/cache@v2
+      with:
+        path: ${{ github.workspace }}/conformance/.objects
+        key: conformance-refs
+    - name: Download and link conformance files
+      run: |
+        ${{ github.workspace }}/conformance/scripts/download_and_symlink.sh
+
   build:
     name: Conformance Build ${{ matrix.name }}
     runs-on: ubuntu-latest
@@ -88,9 +112,9 @@ jobs:
         # of the same Pull Request it will reuse the cache if still around. For
         # either Pull Requests or new pushes to main, this will use the parent
         # hash as the starting point from the restore-keys entry.
-        key: ${{ runner.os }}-${{ github.sha }}-${{ matrix.name }}
+        key: conformance-${{ runner.os }}-${{ github.sha }}-${{ matrix.name }}
         restore-keys: |
-          ${{ runner.os }}-${{ steps.git-env.outputs.parent }}-${{ matrix.name }}
+          conformance-${{ runner.os }}-${{ steps.git-env.outputs.parent }}-${{ matrix.name }}
     - name: Build
       run: |
         mkdir -p ${CCACHE_DIR}
@@ -104,8 +128,8 @@ jobs:
         cp tools/conformance/conformance.py build/tools/conformance
         cp tools/conformance/lcms2.py build/tools/conformance
         cp build/tools/djxl build/tools/conformance
-        cp build/libjxl_dec.so.0.7.0 build/tools/conformance
-        cp build/libjxl_threads.so.0.7.0 build/tools/conformance
+        cp build/libjxl.so.${{ env.LIBJXL_VERSION }} build/tools/conformance
+        cp build/libjxl_threads.so.${{ env.LIBJXL_VERSION }} build/tools/conformance
       env:
         SKIP_TEST: 1
     - uses: actions/upload-artifact@v2
@@ -115,14 +139,14 @@ jobs:
           build/tools/conformance/conformance.py
           build/tools/conformance/lcms2.py
           build/tools/conformance/djxl
-          build/tools/conformance/libjxl_dec.so.0.7.0
-          build/tools/conformance/libjxl_threads.so.0.7.0
+          build/tools/conformance/libjxl.so.${{ env.LIBJXL_VERSION }}
+          build/tools/conformance/libjxl_threads.so.${{ env.LIBJXL_VERSION }}
     - name: ccache stats
       run: ccache --show-stats
 
   run:
-    name: Conformance Test ${{ matrix.name }} on ${{ matrix.target}}
-    needs: build
+    name: Conformance Test ${{ matrix.name }} on ${{ matrix.target }}
+    needs: [warmup, build]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -139,6 +163,11 @@ jobs:
         repository: libjxl/conformance
         ref: a6a44bbbd69830e1dc862174599ce5738a0a414f
         path: conformance
+    - name: Cache
+      uses: actions/cache@v2
+      with:
+        path: ${{ github.workspace }}/conformance/.objects
+        key: conformance-refs
     - name: Download and link conformance files
       run: |
         ${{ github.workspace }}/conformance/scripts/download_and_symlink.sh
@@ -148,8 +177,8 @@ jobs:
     - name: Run conformance tests
       run: |
         chmod +x djxl
-        ln -s libjxl_dec.so.0.7.0 libjxl_dec.so.0.7
-        ln -s libjxl_threads.so.0.7.0 libjxl_threads.so.0.7
+        ln -s libjxl.so.${{ env.LIBJXL_VERSION }} libjxl.so.${{ env.LIBJXL_ABI_VERSION }}
+        ln -s libjxl_threads.so.${{ env.LIBJXL_VERSION }} libjxl_threads.so.${{ env.LIBJXL_ABI_VERSION }}
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`
         python conformance.py \
           --decoder=`pwd`/djxl \

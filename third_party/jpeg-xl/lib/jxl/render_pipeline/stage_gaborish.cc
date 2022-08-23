@@ -14,6 +14,11 @@ HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
 
+// These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Add;
+using hwy::HWY_NAMESPACE::Mul;
+using hwy::HWY_NAMESPACE::MulAdd;
+
 class GaborishStage : public RenderPipelineStage {
  public:
   explicit GaborishStage(const LoopFilter& lf)
@@ -74,9 +79,9 @@ class GaborishStage : public RenderPipelineStage {
         const auto bl = LoadU(d, row_b + x - 1);
         const auto br = LoadU(d, row_b + x + 1);
         const auto sum0 = m;
-        const auto sum1 = (l + r) + (t + b);
-        const auto sum2 = (tl + tr) + (bl + br);
-        auto pixels = MulAdd(sum2, w2, MulAdd(sum1, w1, sum0 * w0));
+        const auto sum1 = Add(Add(l, r), Add(t, b));
+        const auto sum2 = Add(Add(tl, tr), Add(bl, br));
+        auto pixels = MulAdd(sum2, w2, MulAdd(sum1, w1, Mul(sum0, w0)));
         Store(pixels, d, row_out + x);
       }
     }

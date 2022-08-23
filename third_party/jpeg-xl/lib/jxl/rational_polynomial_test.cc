@@ -26,8 +26,11 @@ using T = float;  // required by EvalLog2
 using D = HWY_FULL(T);
 
 // These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Add;
+using hwy::HWY_NAMESPACE::GetLane;
 using hwy::HWY_NAMESPACE::ShiftLeft;
 using hwy::HWY_NAMESPACE::ShiftRight;
+using hwy::HWY_NAMESPACE::Sub;
 
 // Generic: only computes polynomial
 struct EvalPoly {
@@ -50,17 +53,17 @@ struct EvalLog2 {
     const HWY_FULL(int32_t) di;
     const auto x_bits = BitCast(di, vx);
     // Cannot handle negative numbers / NaN.
-    JXL_DASSERT(AllTrue(di, Abs(x_bits) == x_bits));
+    JXL_DASSERT(AllTrue(di, Eq(Abs(x_bits), x_bits)));
 
     // Range reduction to [-1/3, 1/3] - 3 integer, 2 float ops
-    const auto exp_bits = x_bits - Set(di, 0x3f2aaaab);  // = 2/3
+    const auto exp_bits = Sub(x_bits, Set(di, 0x3f2aaaab));  // = 2/3
     // Shifted exponent = log2; also used to clear mantissa.
     const auto exp_shifted = ShiftRight<23>(exp_bits);
-    const auto mantissa = BitCast(d, x_bits - ShiftLeft<23>(exp_shifted));
+    const auto mantissa = BitCast(d, Sub(x_bits, ShiftLeft<23>(exp_shifted)));
     const auto exp_val = ConvertTo(d, exp_shifted);
-    vx = mantissa - Set(d, 1.0f);
+    vx = Sub(mantissa, Set(d, 1.0f));
 
-    const auto approx = EvalRationalPolynomial(d, vx, p, q) + exp_val;
+    const auto approx = Add(EvalRationalPolynomial(d, vx, p, q), exp_val);
     return GetLane(approx);
   }
 };

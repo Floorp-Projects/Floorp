@@ -19,6 +19,11 @@ namespace jxl {
 namespace HWY_NAMESPACE {
 namespace {
 
+// These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Clamp;
+using hwy::HWY_NAMESPACE::Max;
+using hwy::HWY_NAMESPACE::ZeroIfNegative;
+
 template <typename D>
 class Rec2408ToneMapper {
  private:
@@ -35,47 +40,66 @@ class Rec2408ToneMapper {
         blue_Y_(primaries_luminances[2]) {}
 
   void ToneMap(V* red, V* green, V* blue) const {
-    const V luminance =
-        Set(df_, source_range_.second) *
-        (MulAdd(Set(df_, red_Y_), *red,
-                MulAdd(Set(df_, green_Y_), *green, Set(df_, blue_Y_) * *blue)));
-    const V normalized_pq =
-        Min(Set(df_, 1.f),
-            (InvEOTF(luminance) - pq_mastering_min_) * inv_pq_mastering_range_);
+    const V luminance = Mul(Set(df_, source_range_.second),
+                            (MulAdd(Set(df_, red_Y_), *red,
+                                    MulAdd(Set(df_, green_Y_), *green,
+                                           Mul(Set(df_, blue_Y_), *blue)))));
+    const V pq_mastering_min = Set(df_, pq_mastering_min_);
+    const V inv_pq_mastering_range = Set(df_, inv_pq_mastering_range_);
+    const V normalized_pq = Min(
+        Set(df_, 1.f),
+        Mul(Sub(InvEOTF(luminance), pq_mastering_min), inv_pq_mastering_range));
+    const V ks = Set(df_, ks_);
     const V e2 =
-        IfThenElse(normalized_pq < ks_, normalized_pq, P(normalized_pq));
-    const V one_minus_e2 = Set(df_, 1) - e2;
-    const V one_minus_e2_2 = one_minus_e2 * one_minus_e2;
-    const V one_minus_e2_4 = one_minus_e2_2 * one_minus_e2_2;
-    const V e3 = MulAdd(b_, one_minus_e2_4, e2);
-    const V e4 = MulAdd(e3, pq_mastering_range_, pq_mastering_min_);
-    const V new_luminance = Min(
-        Set(df_, target_range_.second),
-        ZeroIfNegative(Set(df_, 10000) * TF_PQ().DisplayFromEncoded(df_, e4)));
+        IfThenElse(Lt(normalized_pq, ks), normalized_pq, P(normalized_pq));
+    const V one_minus_e2 = Sub(Set(df_, 1), e2);
+    const V one_minus_e2_2 = Mul(one_minus_e2, one_minus_e2);
+    const V one_minus_e2_4 = Mul(one_minus_e2_2, one_minus_e2_2);
+    const V b = Set(df_, min_lum_);
+    const V e3 = MulAdd(b, one_minus_e2_4, e2);
+    const V pq_mastering_range = Set(df_, pq_mastering_range_);
+    const V e4 = MulAdd(e3, pq_mastering_range, pq_mastering_min);
+    const V new_luminance =
+        Min(Set(df_, target_range_.second),
+            ZeroIfNegative(
+                Mul(Set(df_, 10000), TF_PQ().DisplayFromEncoded(df_, e4))));
 
-    const V ratio = new_luminance / luminance;
+    const V ratio = Div(new_luminance, luminance);
 
+    const V normalizer = Set(df_, normalizer_);
     for (V* const val : {red, green, blue}) {
-      *val = IfThenElse(luminance <= Set(df_, 1e-6f), new_luminance,
-                        *val * ratio) *
-             normalizer_;
+      *val = Mul(IfThenElse(Le(luminance, Set(df_, 1e-6f)), new_luminance,
+                            Mul(*val, ratio)),
+                 normalizer);
     }
   }
 
  private:
   V InvEOTF(const V luminance) const {
-    return TF_PQ().EncodedFromDisplay(df_, luminance * Set(df_, 1. / 10000));
+    return TF_PQ().EncodedFromDisplay(df_,
+                                      Mul(luminance, Set(df_, 1. / 10000)));
   }
-  V T(const V a) const { return (a - ks_) * inv_one_minus_ks_; }
+  float InvEOTF(const float luminance) const {
+    return TF_PQ().EncodedFromDisplay(luminance / 10000.0f);
+  }
+  V T(const V a) const {
+    const V ks = Set(df_, ks_);
+    const V inv_one_minus_ks = Set(df_, inv_one_minus_ks_);
+    return Mul(Sub(a, ks), inv_one_minus_ks);
+  }
   V P(const V b) const {
     const V t_b = T(b);
-    const V t_b_2 = t_b * t_b;
-    const V t_b_3 = t_b_2 * t_b;
+    const V t_b_2 = Mul(t_b, t_b);
+    const V t_b_3 = Mul(t_b_2, t_b);
+    const V ks = Set(df_, ks_);
+    const V max_lum = Set(df_, max_lum_);
     return MulAdd(
         MulAdd(Set(df_, 2), t_b_3, MulAdd(Set(df_, -3), t_b_2, Set(df_, 1))),
-        ks_,
-        MulAdd(t_b_3 + MulAdd(Set(df_, -2), t_b_2, t_b), Set(df_, 1) - ks_,
-               MulAdd(Set(df_, -2), t_b_3, Set(df_, 3) * t_b_2) * max_lum_));
+        ks,
+        MulAdd(Add(t_b_3, MulAdd(Set(df_, -2), t_b_2, t_b)),
+               Sub(Set(df_, 1), ks),
+               MulAdd(Set(df_, -2), t_b_3,
+                      Mul(Mul(Set(df_, 3), t_b_2), max_lum))));
   }
 
   D df_;
@@ -85,24 +109,22 @@ class Rec2408ToneMapper {
   const float green_Y_;
   const float blue_Y_;
 
-  const V pq_mastering_min_ = InvEOTF(Set(df_, source_range_.first));
-  const V pq_mastering_max_ = InvEOTF(Set(df_, source_range_.second));
-  const V pq_mastering_range_ = pq_mastering_max_ - pq_mastering_min_;
-  const V inv_pq_mastering_range_ =
-      Set(df_, 1) / (pq_mastering_max_ - pq_mastering_min_);
-  const V min_lum_ =
-      (InvEOTF(Set(df_, target_range_.first)) - pq_mastering_min_) *
-      inv_pq_mastering_range_;
-  const V max_lum_ =
-      (InvEOTF(Set(df_, target_range_.second)) - pq_mastering_min_) *
-      inv_pq_mastering_range_;
-  const V ks_ = MulAdd(Set(df_, 1.5f), max_lum_, Set(df_, -0.5f));
-  const V b_ = min_lum_;
+  const float pq_mastering_min_ = InvEOTF(source_range_.first);
+  const float pq_mastering_max_ = InvEOTF(source_range_.second);
+  const float pq_mastering_range_ = pq_mastering_max_ - pq_mastering_min_;
+  const float inv_pq_mastering_range_ = 1.0f / pq_mastering_range_;
+  // TODO(eustas): divide instead of inverse-multiply?
+  const float min_lum_ = (InvEOTF(target_range_.first) - pq_mastering_min_) *
+                         inv_pq_mastering_range_;
+  // TODO(eustas): divide instead of inverse-multiply?
+  const float max_lum_ = (InvEOTF(target_range_.second) - pq_mastering_min_) *
+                         inv_pq_mastering_range_;
+  const float ks_ = 1.5f * max_lum_ - 0.5f;
+  const float b_ = min_lum_;
 
-  const V inv_one_minus_ks_ =
-      Set(df_, 1) / Max(Set(df_, 1e-6f), Set(df_, 1) - ks_);
+  const float inv_one_minus_ks_ = 1.0f / std::max(1e-6f, 1.0f - ks_);
 
-  const V normalizer_ = Set(df_, source_range_.second / target_range_.second);
+  const float normalizer_ = source_range_.second / target_range_.second;
 };
 
 class HlgOOTF {
@@ -134,12 +156,12 @@ class HlgOOTF {
     if (!apply_ootf_) return;
     const V luminance =
         MulAdd(Set(df, red_Y_), *red,
-               MulAdd(Set(df, green_Y_), *green, Set(df, blue_Y_) * *blue));
+               MulAdd(Set(df, green_Y_), *green, Mul(Set(df, blue_Y_), *blue)));
     const V ratio =
         Min(FastPowf(df, luminance, Set(df, exponent_)), Set(df, 1e9));
-    *red *= ratio;
-    *green *= ratio;
-    *blue *= ratio;
+    *red = Mul(*red, ratio);
+    *green = Mul(*green, ratio);
+    *blue = Mul(*blue, ratio);
   }
 
   bool WarrantsGamutMapping() const { return apply_ootf_ && exponent_ < 0; }
@@ -161,9 +183,10 @@ template <typename V>
 void GamutMap(V* red, V* green, V* blue, const float primaries_luminances[3],
               float preserve_saturation = 0.1f) {
   hwy::HWY_NAMESPACE::DFromV<V> df;
-  const V luminance = MulAdd(Set(df, primaries_luminances[0]), *red,
-                             MulAdd(Set(df, primaries_luminances[1]), *green,
-                                    Set(df, primaries_luminances[2]) * *blue));
+  const V luminance =
+      MulAdd(Set(df, primaries_luminances[0]), *red,
+             MulAdd(Set(df, primaries_luminances[1]), *green,
+                    Mul(Set(df, primaries_luminances[2]), *blue)));
 
   // Desaturate out-of-gamut pixels. This is done by mixing each pixel
   // with just enough gray of the target luminance to make all
@@ -175,27 +198,28 @@ void GamutMap(V* red, V* green, V* blue, const float primaries_luminances[3],
   // done by mixing in yet more gray. That will desaturate it further.
   V gray_mix_saturation = Zero(df);
   V gray_mix_luminance = Zero(df);
-  for (const V val : {*red, *green, *blue}) {
-    const V inv_val_minus_gray = Set(df, 1) / (val - luminance);
+  for (const V* ch : {red, green, blue}) {
+    const V& val = *ch;
+    const V inv_val_minus_gray = Div(Set(df, 1), (Sub(val, luminance)));
     gray_mix_saturation =
-        IfThenElse(val >= luminance, gray_mix_saturation,
-                   Max(gray_mix_saturation, val * inv_val_minus_gray));
+        IfThenElse(Ge(val, luminance), gray_mix_saturation,
+                   Max(gray_mix_saturation, Mul(val, inv_val_minus_gray)));
     gray_mix_luminance =
         Max(gray_mix_luminance,
-            IfThenElse(val <= luminance, gray_mix_saturation,
-                       (val - Set(df, 1)) * inv_val_minus_gray));
+            IfThenElse(Le(val, luminance), gray_mix_saturation,
+                       Mul(Sub(val, Set(df, 1)), inv_val_minus_gray)));
   }
-  const V gray_mix = Clamp(Set(df, preserve_saturation) *
-                                   (gray_mix_saturation - gray_mix_luminance) +
-                               gray_mix_luminance,
-                           Zero(df), Set(df, 1));
+  const V gray_mix = Clamp(
+      MulAdd(Set(df, preserve_saturation),
+             Sub(gray_mix_saturation, gray_mix_luminance), gray_mix_luminance),
+      Zero(df), Set(df, 1));
   for (V* const val : {red, green, blue}) {
-    *val = MulAdd(gray_mix, luminance - *val, *val);
+    *val = MulAdd(gray_mix, Sub(luminance, *val), *val);
   }
   const V normalizer =
-      Set(df, 1) / Max(Set(df, 1), Max(*red, Max(*green, *blue)));
+      Div(Set(df, 1), Max(Set(df, 1), Max(*red, Max(*green, *blue))));
   for (V* const val : {red, green, blue}) {
-    *val *= normalizer;
+    *val = Mul(*val, normalizer);
   }
 }
 

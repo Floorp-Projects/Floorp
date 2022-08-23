@@ -1,4 +1,5 @@
 // Copyright 2020 Google LLC
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +23,6 @@
 #include <vector>
 
 #include "gtest/gtest.h"
-#include "hwy/base.h"
 
 namespace {
 
@@ -69,8 +69,8 @@ class FakeAllocator {
   void Free(void* memory) {
     if (!memory) return;
     EXPECT_NE(allocs_.end(), allocs_.find(memory));
-    free(memory);
     allocs_.erase(memory);
+    free(memory);
   }
 
   std::set<void*> allocs_;
@@ -276,9 +276,3 @@ TEST(AlignedAllocatorTest, DefaultInit) {
 }
 
 }  // namespace hwy
-
-// Ought not to be necessary, but without this, no tests run on RVV.
-int main(int argc, char** argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

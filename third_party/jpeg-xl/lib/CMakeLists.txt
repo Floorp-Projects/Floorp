@@ -4,7 +4,7 @@
 # license that can be found in the LICENSE file.
 
 set(JPEGXL_MAJOR_VERSION 0)
-set(JPEGXL_MINOR_VERSION 7)
+set(JPEGXL_MINOR_VERSION 8)
 set(JPEGXL_PATCH_VERSION 0)
 set(JPEGXL_LIBRARY_VERSION
     "${JPEGXL_MAJOR_VERSION}.${JPEGXL_MINOR_VERSION}.${JPEGXL_PATCH_VERSION}")
@@ -15,7 +15,7 @@ set(JPEGXL_LIBRARY_VERSION
 # It is important to update this value when making incompatible API/ABI changes
 # so that programs that depend on libjxl can update their dependencies. Semantic
 # versioning allows 0.y.z to have incompatible changes in minor versions.
-set(JPEGXL_SO_MINOR_VERSION 7)
+set(JPEGXL_SO_MINOR_VERSION 8)
 if (JPEGXL_MAJOR_VERSION EQUAL 0)
 set(JPEGXL_LIBRARY_SOVERSION
     "${JPEGXL_MAJOR_VERSION}.${JPEGXL_SO_MINOR_VERSION}")

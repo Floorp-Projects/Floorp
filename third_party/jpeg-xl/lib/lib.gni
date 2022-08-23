@@ -8,7 +8,7 @@
 # Library version macros
 libjxl_version_defines = [
     "JPEGXL_MAJOR_VERSION=0",
-    "JPEGXL_MINOR_VERSION=7",
+    "JPEGXL_MINOR_VERSION=8",
     "JPEGXL_PATCH_VERSION=0",
 ]
 
@@ -128,7 +128,6 @@ libjxl_dec_sources = [
     "jxl/entropy_coder.h",
     "jxl/epf.cc",
     "jxl/epf.h",
-    "jxl/exif.cc",
     "jxl/exif.h",
     "jxl/fast_dct-inl.h",
     "jxl/fast_dct.cc",
@@ -466,6 +465,8 @@ libjxl_extras_sources = [
     "extras/enc/pgx.h",
     "extras/enc/pnm.cc",
     "extras/enc/pnm.h",
+    "extras/exif.cc",
+    "extras/exif.h",
     "extras/hlg.cc",
     "extras/hlg.h",
     "extras/packed_image.h",

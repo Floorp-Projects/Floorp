@@ -63,7 +63,8 @@ class ModularFrameEncoder {
   std::vector<uint8_t> extra_dc_precision;
 
  private:
-  Status PrepareEncoding(ThreadPool* pool, EncoderHeuristics* heuristics,
+  Status PrepareEncoding(const FrameHeader& frame_header, ThreadPool* pool,
+                         EncoderHeuristics* heuristics,
                          AuxOut* aux_out = nullptr);
   Status PrepareStreamParams(const Rect& rect, const CompressParams& cparams,
                              int minShift, int maxShift,

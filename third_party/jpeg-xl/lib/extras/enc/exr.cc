@@ -12,12 +12,9 @@
 
 #include <vector>
 
-#include "lib/extras/packed_image_convert.h"
-#include "lib/jxl/alpha.h"
-#include "lib/jxl/color_encoding_internal.h"
-#include "lib/jxl/color_management.h"
-#include "lib/jxl/enc_color_management.h"
-#include "lib/jxl/enc_image_bundle.h"
+#include "jxl/codestream_header.h"
+#include "lib/extras/packed_image.h"
+#include "lib/jxl/base/byte_order.h"
 
 namespace jxl {
 namespace extras {
@@ -32,18 +29,6 @@ namespace Imath = IMATH_NAMESPACE;
 // on macOS, where the definition for OpenEXR::Int64 was actually not equivalent
 // to uint64_t. This alternative should work in all cases.
 using ExrInt64 = decltype(std::declval<OpenEXR::IStream>().tellg());
-
-size_t GetNumThreads(ThreadPool* pool) {
-  size_t exr_num_threads = 1;
-  JXL_CHECK(RunOnPool(
-      pool, 0, 1,
-      [&](size_t num_threads) {
-        exr_num_threads = num_threads;
-        return true;
-      },
-      [&](uint32_t /* task */, size_t /*thread*/) {}, "DecodeImageEXRThreads"));
-  return exr_num_threads;
-}
 
 class InMemoryOStream : public OpenEXR::OStream {
  public:
@@ -72,36 +57,65 @@ class InMemoryOStream : public OpenEXR::OStream {
   size_t pos_ = 0;
 };
 
-Status EncodeImageEXR(const ImageBundle& ib, const ColorEncoding& c_desired,
-                      ThreadPool* pool, std::vector<uint8_t>* bytes) {
-  // As in `DecodeImageEXR`, `pool` is only used for pixel conversion, not for
-  // actual OpenEXR I/O.
-  OpenEXR::setGlobalThreadCount(GetNumThreads(pool));
+// Loads a Big-Endian float
+float LoadBEFloat(const uint8_t* p) {
+  uint32_t u = LoadBE32(p);
+  float result;
+  memcpy(&result, &u, 4);
+  return result;
+}
 
-  ColorEncoding c_linear = c_desired;
-  c_linear.tf.SetTransferFunction(TransferFunction::kLinear);
-  JXL_RETURN_IF_ERROR(c_linear.CreateICC());
-  ImageMetadata metadata = *ib.metadata();
-  ImageBundle store(&metadata);
-  const ImageBundle* linear;
-  JXL_RETURN_IF_ERROR(
-      TransformIfNeeded(ib, c_linear, GetJxlCms(), pool, &store, &linear));
+// Loads a Little-Endian float
+float LoadLEFloat(const uint8_t* p) {
+  uint32_t u = LoadLE32(p);
+  float result;
+  memcpy(&result, &u, 4);
+  return result;
+}
 
-  const bool has_alpha = ib.HasAlpha();
-  const bool alpha_is_premultiplied = ib.AlphaIsPremultiplied();
+Status EncodeImageEXR(const PackedImage& image, const JxlBasicInfo& info,
+                      const JxlColorEncoding& c_enc, ThreadPool* pool,
+                      std::vector<uint8_t>* bytes) {
+  OpenEXR::setGlobalThreadCount(0);
 
-  OpenEXR::Header header(ib.xsize(), ib.ysize());
-  const PrimariesCIExy& primaries = c_linear.HasPrimaries()
-                                        ? c_linear.GetPrimaries()
-                                        : ColorEncoding::SRGB().GetPrimaries();
+  const size_t xsize = info.xsize;
+  const size_t ysize = info.ysize;
+  const bool has_alpha = info.alpha_bits > 0;
+  const bool alpha_is_premultiplied = info.alpha_premultiplied;
+
+  if (info.num_color_channels != 3 ||
+      c_enc.color_space != JXL_COLOR_SPACE_RGB ||
+      c_enc.transfer_function != JXL_TRANSFER_FUNCTION_LINEAR) {
+    return JXL_FAILURE("Unsupported color encoding for OpenEXR output.");
+  }
+
+  const size_t num_channels = 3 + (has_alpha ? 1 : 0);
+  const JxlPixelFormat format = image.format;
+
+  if (format.data_type != JXL_TYPE_FLOAT) {
+    return JXL_FAILURE("Unsupported pixel format for OpenEXR output");
+  }
+
+  const uint8_t* in = reinterpret_cast<const uint8_t*>(image.pixels());
+  size_t in_stride = num_channels * 4 * xsize;
+
+  OpenEXR::Header header(xsize, ysize);
   OpenEXR::Chromaticities chromaticities;
-  chromaticities.red = Imath::V2f(primaries.r.x, primaries.r.y);
-  chromaticities.green = Imath::V2f(primaries.g.x, primaries.g.y);
-  chromaticities.blue = Imath::V2f(primaries.b.x, primaries.b.y);
+  chromaticities.red =
+      Imath::V2f(c_enc.primaries_red_xy[0], c_enc.primaries_red_xy[1]);
+  chromaticities.green =
+      Imath::V2f(c_enc.primaries_green_xy[0], c_enc.primaries_green_xy[1]);
+  chromaticities.blue =
+      Imath::V2f(c_enc.primaries_blue_xy[0], c_enc.primaries_blue_xy[1]);
   chromaticities.white =
-      Imath::V2f(c_linear.GetWhitePoint().x, c_linear.GetWhitePoint().y);
+      Imath::V2f(c_enc.white_point_xy[0], c_enc.white_point_xy[1]);
   OpenEXR::addChromaticities(header, chromaticities);
-  OpenEXR::addWhiteLuminance(header, ib.metadata()->IntensityTarget());
+  OpenEXR::addWhiteLuminance(header, 255.0f);
+
+  auto loadFloat =
+      format.endianness == JXL_BIG_ENDIAN ? LoadBEFloat : LoadLEFloat;
+  auto loadAlpha =
+      has_alpha ? loadFloat : [](const uint8_t* p) -> float { return 1.0f; };
 
   // Ensure that the destructor of RgbaOutputFile has run before we look at the
   // size of `bytes`.
@@ -111,49 +125,32 @@ Status EncodeImageEXR(const ImageBundle& ib, const ColorEncoding& c_desired,
         os, header, has_alpha ? OpenEXR::WRITE_RGBA : OpenEXR::WRITE_RGB);
     // How many rows to write at once. Again, the OpenEXR documentation
     // recommends writing the whole image in one call.
-    const int y_chunk_size = ib.ysize();
-    std::vector<OpenEXR::Rgba> output_rows(ib.xsize() * y_chunk_size);
+    const int y_chunk_size = ysize;
+    std::vector<OpenEXR::Rgba> output_rows(xsize * y_chunk_size);
 
-    for (size_t start_y = 0; start_y < ib.ysize(); start_y += y_chunk_size) {
+    for (size_t start_y = 0; start_y < ysize; start_y += y_chunk_size) {
       // Inclusive.
-      const size_t end_y = std::min(start_y + y_chunk_size - 1, ib.ysize() - 1);
-      output.setFrameBuffer(output_rows.data() - start_y * ib.xsize(),
-                            /*xStride=*/1, /*yStride=*/ib.xsize());
-      JXL_RETURN_IF_ERROR(RunOnPool(
-          pool, start_y, end_y + 1, ThreadPool::NoInit,
-          [&](const uint32_t y, size_t /* thread */) {
-            const float* const JXL_RESTRICT input_rows[] = {
-                linear->color().ConstPlaneRow(0, y),
-                linear->color().ConstPlaneRow(1, y),
-                linear->color().ConstPlaneRow(2, y),
-            };
-            OpenEXR::Rgba* const JXL_RESTRICT row_data =
-                &output_rows[(y - start_y) * ib.xsize()];
-            if (has_alpha) {
-              const float* const JXL_RESTRICT alpha_row =
-                  ib.alpha().ConstRow(y);
-              if (alpha_is_premultiplied) {
-                for (size_t x = 0; x < ib.xsize(); ++x) {
-                  row_data[x] =
-                      OpenEXR::Rgba(input_rows[0][x], input_rows[1][x],
-                                    input_rows[2][x], alpha_row[x]);
-                }
-              } else {
-                for (size_t x = 0; x < ib.xsize(); ++x) {
-                  row_data[x] = OpenEXR::Rgba(alpha_row[x] * input_rows[0][x],
-                                              alpha_row[x] * input_rows[1][x],
-                                              alpha_row[x] * input_rows[2][x],
-                                              alpha_row[x]);
-                }
-              }
-            } else {
-              for (size_t x = 0; x < ib.xsize(); ++x) {
-                row_data[x] = OpenEXR::Rgba(input_rows[0][x], input_rows[1][x],
-                                            input_rows[2][x], 1.f);
-              }
-            }
-          },
-          "EncodeImageEXR"));
+      const size_t end_y = std::min(start_y + y_chunk_size - 1, ysize - 1);
+      output.setFrameBuffer(output_rows.data() - start_y * xsize,
+                            /*xStride=*/1, /*yStride=*/xsize);
+      for (size_t y = start_y; y <= end_y; ++y) {
+        const uint8_t* in_row = &in[(y - start_y) * in_stride];
+        OpenEXR::Rgba* const JXL_RESTRICT row_data =
+            &output_rows[(y - start_y) * xsize];
+        for (size_t x = 0; x < xsize; ++x) {
+          const uint8_t* in_pixel = &in_row[4 * num_channels * x];
+          float r = loadFloat(&in_pixel[0]);
+          float g = loadFloat(&in_pixel[4]);
+          float b = loadFloat(&in_pixel[8]);
+          const float alpha = loadAlpha(&in_pixel[12]);
+          if (!alpha_is_premultiplied) {
+            r *= alpha;
+            g *= alpha;
+            b *= alpha;
+          }
+          row_data[x] = OpenEXR::Rgba(r, g, b, alpha);
+        }
+      }
       output.writePixels(/*numScanLines=*/end_y - start_y + 1);
     }
   }
@@ -178,14 +175,15 @@ class EXREncoder : public Encoder {
   }
   Status Encode(const PackedPixelFile& ppf, EncodedImage* encoded_image,
                 ThreadPool* pool = nullptr) const override {
+    JXL_RETURN_IF_ERROR(VerifyBasicInfo(ppf.info));
     encoded_image->icc.clear();
-    CodecInOut io;
-    JXL_RETURN_IF_ERROR(ConvertPackedPixelFileToCodecInOut(ppf, pool, &io));
     encoded_image->bitstreams.clear();
-    encoded_image->bitstreams.reserve(io.frames.size());
-    for (const ImageBundle& ib : io.frames) {
+    encoded_image->bitstreams.reserve(ppf.frames.size());
+    for (const auto& frame : ppf.frames) {
+      JXL_RETURN_IF_ERROR(VerifyPackedImage(frame.color, ppf.info));
       encoded_image->bitstreams.emplace_back();
-      JXL_RETURN_IF_ERROR(EncodeImageEXR(ib, io.metadata.m.color_encoding, pool,
+      JXL_RETURN_IF_ERROR(EncodeImageEXR(frame.color, ppf.info,
+                                         ppf.color_encoding, pool,
                                          &encoded_image->bitstreams.back()));
     }
     return true;
@@ -196,11 +194,6 @@ class EXREncoder : public Encoder {
 
 std::unique_ptr<Encoder> GetEXREncoder() {
   return jxl::make_unique<EXREncoder>();
-}
-
-Status EncodeImageEXR(const CodecInOut* io, const ColorEncoding& c_desired,
-                      ThreadPool* pool, std::vector<uint8_t>* bytes) {
-  return EncodeImageEXR(io->Main(), c_desired, pool, bytes);
 }
 
 }  // namespace extras
