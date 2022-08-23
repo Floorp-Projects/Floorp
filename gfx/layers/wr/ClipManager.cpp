@@ -137,8 +137,9 @@ wr::WrSpatialId ClipManager::SpatialIdAfterOverride(
 wr::WrSpaceAndClipChain ClipManager::SwitchItem(nsDisplayListBuilder* aBuilder,
                                                 nsDisplayItem* aItem) {
   const DisplayItemClipChain* clip = aItem->GetClipChain();
-  if (mBuilder->GetInheritedClipChain() &&
-      mBuilder->GetInheritedClipChain() != clip) {
+  const DisplayItemClipChain* inheritedClipChain =
+      mBuilder->GetInheritedClipChain();
+  if (inheritedClipChain && inheritedClipChain != clip) {
     if (!clip) {
       clip = mBuilder->GetInheritedClipChain();
     } else {
@@ -147,18 +148,18 @@ wr::WrSpaceAndClipChain ClipManager::SwitchItem(nsDisplayListBuilder* aBuilder,
     }
   }
   const ActiveScrolledRoot* asr = aItem->GetActiveScrolledRoot();
-  CLIP_LOG("processing item %p (%s) asr %p\n", aItem,
-           DisplayItemTypeName(aItem->GetType()), asr);
+  CLIP_LOG("processing item %p (%s) asr %p clip %p, inherited = %p\n", aItem,
+           DisplayItemTypeName(aItem->GetType()), asr, clip,
+           inheritedClipChain);
 
   DisplayItemType type = aItem->GetType();
   if (type == DisplayItemType::TYPE_STICKY_POSITION) {
-    // For sticky position items, the ASR is computed differently depending
-    // on whether the item has a fixed descendant or not. But for WebRender
+    // For sticky position items, the ASR is computed differently depending on
+    // whether the item has a fixed descendant or not. But for WebRender
     // purposes we always want to use the ASR that would have been used if it
     // didn't have fixed descendants, which is stored as the "container ASR" on
     // the sticky item.
-    nsDisplayStickyPosition* sticky =
-        static_cast<nsDisplayStickyPosition*>(aItem);
+    auto* sticky = static_cast<nsDisplayStickyPosition*>(aItem);
     asr = sticky->GetContainerASR();
 
     // If the leafmost clip for the sticky item is just the displayport clip,
@@ -177,7 +178,7 @@ wr::WrSpaceAndClipChain ClipManager::SwitchItem(nsDisplayListBuilder* aBuilder,
     // Container display items are not currently supported because the clip
     // rect of a stacking context is not handled the same as normal display
     // items.
-    separateLeaf = aItem->GetChildren() == nullptr;
+    separateLeaf = !aItem->GetChildren();
   }
 
   ItemClips clips(asr, clip, separateLeaf);
@@ -386,12 +387,12 @@ Maybe<wr::WrClipChainId> ClipManager::DefineClipChain(
     AutoTArray<wr::WrClipId, 4> chainClipIds;
 
     auto rectClipId = mBuilder->DefineRectClip(space, wr::ToLayoutRect(clip));
-    CLIP_LOG("cache[%p] <= %zu\n", chain, rectClipId);
+    CLIP_LOG("cache[%p] <= %zu\n", chain, rectClipId.id);
     chainClipIds.AppendElement(rectClipId);
 
     for (const auto& complexClip : wrRoundedRects) {
       auto complexClipId = mBuilder->DefineRoundedRectClip(space, complexClip);
-      CLIP_LOG("cache[%p] <= %zu\n", chain, complexClipId);
+      CLIP_LOG("cache[%p] <= %zu\n", chain, complexClipId.id);
       chainClipIds.AppendElement(complexClipId);
     }
 
