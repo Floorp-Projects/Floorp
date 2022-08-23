@@ -16,6 +16,19 @@ const { ExtensionParent } = ChromeUtils.import(
 );
 const { IconDetails, StartupCache } = ExtensionParent;
 
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+
+const lazy = {};
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "MV2_ACTION_POPURL_RESTRICTED",
+  "extensions.manifestV2.actionsPopupURLRestricted",
+  false
+);
+
 function parseColor(color, kind) {
   if (typeof color == "string") {
     let rgba = InspectorUtils.colorToRGBA(color);
@@ -265,10 +278,18 @@ class PanelActionBase {
 
         // On manifest_version 3 is mandatory for the resolved URI to belong to the
         // current extension (see Bug 1760608).
+        //
+        // The same restriction is extended  extend to MV2 extensions if the
+        // "extensions.manifestV2.actionsPopupURLRestricted" preference is set to true.
+        //
+        // (Currently set to true by default on GeckoView builds, where the set of
+        // extensions supported is limited to a small set and so less risks of
+        // unexpected regressions for the existing extensions).
         if (
-          context.extension.manifestVersion >= 3 &&
           url &&
-          !url.startsWith(extension.baseURI.spec)
+          !url.startsWith(extension.baseURI.spec) &&
+          (context.extension.manifestVersion >= 3 ||
+            lazy.MV2_ACTION_POPURL_RESTRICTED)
         ) {
           return Promise.reject({ message: `Access denied for URL ${url}` });
         }
