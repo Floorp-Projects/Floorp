@@ -171,7 +171,9 @@ uint32_t HTMLTableCellAccessible::RowIdx() const {
 
 uint32_t HTMLTableCellAccessible::ColExtent() const {
   int32_t rowIdx = -1, colIdx = -1;
-  GetCellIndexes(rowIdx, colIdx);
+  if (NS_FAILED(GetCellIndexes(rowIdx, colIdx))) {
+    return 0;
+  }
 
   TableAccessible* table = Table();
   NS_ASSERTION(table, "cell not in a table!");
@@ -182,7 +184,9 @@ uint32_t HTMLTableCellAccessible::ColExtent() const {
 
 uint32_t HTMLTableCellAccessible::RowExtent() const {
   int32_t rowIdx = -1, colIdx = -1;
-  GetCellIndexes(rowIdx, colIdx);
+  if (NS_FAILED(GetCellIndexes(rowIdx, colIdx))) {
+    return 0;
+  }
 
   TableAccessible* table = Table();
   NS_ASSERTION(table, "cell not in atable!");
@@ -231,7 +235,9 @@ void HTMLTableCellAccessible::RowHeaderCells(nsTArray<Accessible*>* aCells) {
 
 bool HTMLTableCellAccessible::Selected() {
   int32_t rowIdx = -1, colIdx = -1;
-  GetCellIndexes(rowIdx, colIdx);
+  if (NS_FAILED(GetCellIndexes(rowIdx, colIdx))) {
+    return false;
+  }
 
   TableAccessible* table = Table();
   NS_ENSURE_TRUE(table, false);
