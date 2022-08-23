@@ -2,9 +2,8 @@
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
-/* eslint no-unused-vars: ["warn", { "varsIgnorePattern": "(testSteps)" }]*/
 
-async function testSteps() {
+add_task(async function testSteps() {
   const url = "http://example.com";
 
   info("Setting pref");
@@ -37,4 +36,4 @@ async function testSteps() {
 
   let storage = getLocalStorage(getPrincipal(url));
   storage.open();
-}
+});

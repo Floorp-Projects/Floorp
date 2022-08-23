@@ -6,7 +6,7 @@
 /* import-globals-from databaseShadowing-shared.js */
 loadSubscript("databaseShadowing-shared.js");
 
-async function testSteps() {
+add_task(async function testSteps() {
   // The shadow database was prepared in test_databaseShadowing_clearOrigin1.js
 
   disableNextGenLocalStorage();
@@ -14,4 +14,4 @@ async function testSteps() {
   ok(importShadowDatabase("shadowdb-clearedOrigin.sqlite"), "Import succeeded");
 
   verifyData([1], /* migrated */ true);
-}
+});

@@ -16,36 +16,15 @@ function ok(cond, msg) {
   Assert.ok(!!cond, msg);
 }
 
-function run_test() {
-  runTest();
-}
+add_setup(function() {
+  do_get_profile();
 
-if (!this.runTest) {
-  this.runTest = function() {
-    do_get_profile();
+  enableTesting();
 
-    enableTesting();
+  Cu.importGlobalProperties(["crypto"]);
 
-    Cu.importGlobalProperties(["crypto"]);
-
-    Assert.ok(
-      typeof testSteps === "function",
-      "There should be a testSteps function"
-    );
-    Assert.ok(
-      testSteps.constructor.name === "AsyncFunction",
-      "testSteps should be an async function"
-    );
-
-    registerCleanupFunction(resetTesting);
-
-    add_task(testSteps);
-
-    // Since we defined run_test, we must invoke run_next_test() to start the
-    // async test.
-    run_next_test();
-  };
-}
+  registerCleanupFunction(resetTesting);
+});
 
 function returnToEventLoop() {
   return new Promise(function(resolve) {

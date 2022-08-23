@@ -38,17 +38,9 @@ if (!window.runTest) {
 
     await requestFinished(clearAllDatabases());
 
-    ok(typeof testSteps === "function", "There should be a testSteps function");
-    ok(
-      testSteps.constructor.name === "AsyncFunction",
-      "testSteps should be an async function"
-    );
-
     SimpleTest.registerCleanupFunction(async function() {
       await requestFinished(clearAllDatabases());
     });
-
-    add_task(testSteps);
   };
 }
 

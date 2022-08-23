@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-async function testSteps() {
+add_task(async function testSteps() {
   const url = "http://example.com";
 
   info("Setting pref");
@@ -36,4 +36,4 @@ async function testSteps() {
 
   let storage = getLocalStorage(getPrincipal(url));
   storage.open();
-}
+});

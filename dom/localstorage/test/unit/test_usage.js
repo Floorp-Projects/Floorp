@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-async function testSteps() {
+add_task(async function testSteps() {
   const data = {};
   data.key = "key1";
   data.value = "value1";
@@ -66,4 +66,4 @@ async function testSteps() {
   await requestFinished(request);
 
   is(request.result.usage, 0, "Correct usage");
-}
+});

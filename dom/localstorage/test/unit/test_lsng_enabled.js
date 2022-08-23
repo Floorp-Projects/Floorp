@@ -8,7 +8,6 @@
  * can lead to a data loss in a combination with disabled shadow writes.
  */
 
-// eslint-disable-next-line no-unused-vars
-async function testSteps() {
+add_task(async function testSteps() {
   ok(Services.domStorageManager.nextGenLocalStorageEnabled, "LSNG enabled");
-}
+});

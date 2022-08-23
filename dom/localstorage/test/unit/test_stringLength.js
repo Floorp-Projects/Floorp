@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-async function testSteps() {
+add_task(async function testSteps() {
   const principal = getPrincipal("http://example.org");
 
   const data = {};
@@ -71,4 +71,4 @@ async function testSteps() {
 
   value = storage.getItem(data.secondKey);
   ok(value.length === data.value.length, "Correct string length");
-}
+});
