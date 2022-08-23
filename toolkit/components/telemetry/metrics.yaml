@@ -41,3 +41,25 @@ legacy.telemetry:
       - 'events'
       - 'newtab'
       - 'baseline'
+      - 'pseudo-main'
+
+  profile_subsession_counter:
+    type: quantity
+    unit: subsessions
+    description: |
+      The `profileSubsessionCounter` from the Legacy Telemetry "main" ping.
+      This is a value that monotonically increases once for every "main" ping
+      that has been submitted.
+      It is a sequence number by a longer name.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1785251
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1785251
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+      - glean-team@mozilla.com
+    expires: 113
+    send_in_pings:
+      - 'pseudo-main'

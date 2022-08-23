@@ -483,6 +483,20 @@ var Impl = {
     let pingData = this.assemblePing(aType, aPayload, aOptions);
     this._log.trace("submitExternalPing - ping assembled, id: " + pingData.id);
 
+    if (aType == PING_TYPE_MAIN) {
+      try {
+        Glean.legacyTelemetry.profileSubsessionCounter.set(
+          aPayload?.info?.profileSubsessionCounter
+        );
+        GleanPings.pseudoMain.submit(
+          aPayload?.info?.reason?.replaceAll("-", "_")
+        );
+      } catch (e) {
+        this._log.warn("submitExternalPing - Failed to send 'pseudo-main'", e);
+        // Definitely continue, even if things explode.
+      }
+    }
+
     if (aOptions.useEncryption === true) {
       try {
         if (!aOptions.publicKey) {
