@@ -65,7 +65,7 @@ body {
           transform: unset;
         }
 
-        &:not([pos='split']), {
+        &:not([pos='split']) {
           .section-main {
             margin-block: $noodle-buffer auto;
           }
@@ -324,6 +324,17 @@ body {
                   text-decoration: none;
                   // sass-lint:disable-block no-important
                   background-color: var(--in-content-button-background-hover) !important;
+                }
+              }
+
+              .arrow-icon {
+                background: url('chrome://browser/skin/forward.svg') no-repeat right 8px center;
+                background-size: 12px;
+                padding-inline-end: 24px;
+
+                &:dir(rtl) {
+                  background-image: url('chrome://browser/skin/back.svg');
+                  background-position-x: left 8px;
                 }
               }
             }

@@ -349,7 +349,10 @@ const MultiStageAboutWelcome = props => {
   })));
 };
 const SecondaryCTA = props => {
+  var _props$content$second;
+
   let targetElement = props.position ? `secondary_button_${props.position}` : `secondary_button`;
+  const buttonStyling = (_props$content$second = props.content.secondary_button) !== null && _props$content$second !== void 0 && _props$content$second.has_arrow_icon ? `secondary text-link arrow-icon` : `secondary text-link`;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: props.position ? `secondary-cta ${props.position}` : "secondary-cta"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
@@ -357,7 +360,7 @@ const SecondaryCTA = props => {
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
     text: props.content[targetElement].label
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-    className: "secondary text-link",
+    className: buttonStyling,
     value: targetElement,
     onClick: props.handleAction
   })));
