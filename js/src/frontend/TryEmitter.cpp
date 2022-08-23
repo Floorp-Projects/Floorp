@@ -11,7 +11,6 @@
 #include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
 #include "frontend/IfEmitter.h"        // BytecodeEmitter
 #include "frontend/SharedContext.h"    // StatementKind
-#include "vm/BytecodeUtil.h"           // SET_RESUMEINDEX
 #include "vm/Opcodes.h"                // JSOp
 
 using namespace js;
