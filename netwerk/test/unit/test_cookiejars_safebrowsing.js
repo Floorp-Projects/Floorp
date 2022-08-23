@@ -31,12 +31,6 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserver.identity.primaryPort;
 });
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "SafeBrowsing",
-  "resource://gre/modules/SafeBrowsing.jsm"
-);
-
 var setCookiePath = "/setcookie";
 var checkCookiePath = "/checkcookie";
 var safebrowsingUpdatePath = "/safebrowsingUpdate";

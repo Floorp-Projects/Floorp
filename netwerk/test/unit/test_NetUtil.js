@@ -800,4 +800,3 @@ function test_readInputStreamToString_invalid_sequence() {
   test_readInputStreamToString_with_charset,
   test_readInputStreamToString_invalid_sequence,
 ].forEach(f => add_test(f));
-var index = 0;

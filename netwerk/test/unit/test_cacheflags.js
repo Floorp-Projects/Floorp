@@ -8,7 +8,6 @@ httpserver.start(-1);
 // Need to randomize, because apparently no one clears our cache
 var suffix = Math.random();
 var httpBase = "http://localhost:" + httpserver.identity.primaryPort;
-var httpsBase = "http://localhost:4445";
 var shortexpPath = "/shortexp" + suffix;
 var longexpPath = "/longexp/" + suffix;
 var longexp2Path = "/longexp/2/" + suffix;

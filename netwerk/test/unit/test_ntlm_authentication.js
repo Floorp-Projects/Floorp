@@ -20,13 +20,10 @@ XPCOMUtils.defineLazyGetter(this, "PORT", function() {
 const FLAG_RETURN_FALSE = 1 << 0;
 const FLAG_WRONG_PASSWORD = 1 << 1;
 const FLAG_BOGUS_USER = 1 << 2;
-const FLAG_PREVIOUS_FAILED = 1 << 3;
+// const FLAG_PREVIOUS_FAILED = 1 << 3;
 const CROSS_ORIGIN = 1 << 4;
 const FLAG_NO_REALM = 1 << 5;
 const FLAG_NON_ASCII_USER_PASSWORD = 1 << 6;
-
-const nsIAuthPrompt2 = Ci.nsIAuthPrompt2;
-const nsIAuthInformation = Ci.nsIAuthInformation;
 
 function AuthPrompt1(flags) {
   this.flags = flags;

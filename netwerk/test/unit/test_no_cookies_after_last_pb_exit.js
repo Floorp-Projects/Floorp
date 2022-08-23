@@ -1,4 +1,3 @@
-/* globals ChromeUtils, Assert, add_task */
 "use strict";
 
 do_get_profile();

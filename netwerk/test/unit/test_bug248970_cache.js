@@ -11,16 +11,7 @@ const kMemoryDevice = "memory";
 const kCacheA = "http://cache/A";
 const kCacheA2 = "http://cache/A2";
 const kCacheB = "http://cache/B";
-const kCacheC = "http://cache/C";
 const kTestContent = "test content";
-
-function make_input_stream_scriptable(input) {
-  var wrapper = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
-    Ci.nsIScriptableInputStream
-  );
-  wrapper.init(input);
-  return wrapper;
-}
 
 const entries = [
   // key       content       device          should exist after leaving PB

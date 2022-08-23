@@ -46,10 +46,6 @@ function run_test() {
   run_next_test();
 }
 
-function finish_test(request, buffer) {
-  httpServer.stop(do_test_finished);
-}
-
 function consume304(request, buffer) {
   request.QueryInterface(Ci.nsIHttpChannel);
   Assert.equal(request.responseStatus, 304);

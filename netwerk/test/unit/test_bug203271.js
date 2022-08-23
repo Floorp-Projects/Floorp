@@ -7,7 +7,6 @@
 "use strict";
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-const BUGID = "203271";
 
 var httpserver = new HttpServer();
 var index = 0;

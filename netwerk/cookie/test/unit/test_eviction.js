@@ -1,12 +1,6 @@
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const BASE_HOST = "example.org";
-const BASE_HOSTNAMES = ["example.org", "example.co.uk"];
-const SUBDOMAINS = ["", "pub.", "www.", "other."];
 
 const { CookieXPCShellUtils } = ChromeUtils.import(
   "resource://testing-common/CookieXPCShellUtils.jsm"

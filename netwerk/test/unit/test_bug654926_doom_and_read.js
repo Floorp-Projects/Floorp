@@ -24,14 +24,6 @@ function write_and_check(str, data, len) {
   }
 }
 
-function make_input_stream_scriptable(input) {
-  var wrapper = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
-    Ci.nsIScriptableInputStream
-  );
-  wrapper.init(input);
-  return wrapper;
-}
-
 function write_datafile(status, entry) {
   Assert.equal(status, Cr.NS_OK);
   var data = gen_1MiB();
