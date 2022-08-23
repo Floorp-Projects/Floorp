@@ -63,7 +63,7 @@ class CookieBannerListService {
     log("importAllRules");
 
     let rules = await this.#rs.get();
-    this.#importRules(rules);
+    this.importRules(rules);
   }
 
   shutdown() {
@@ -97,66 +97,50 @@ class CookieBannerListService {
       .forEach(Services.cookieBanners.removeRuleForDomain);
   }
 
-  #importRules(rules) {
+  importRules(rules) {
     log("importRules", rules);
 
-    rules.forEach(({ domain, cookies, click }) => {
+    rules.forEach(({ domain, cookies }) => {
+      // Skip rules that don't have cookies.
+      if (!cookies) {
+        return;
+      }
+
       let rule = Cc["@mozilla.org/cookie-banner-rule;1"].createInstance(
         Ci.nsICookieBannerRule
       );
       rule.domain = domain;
 
-      // Import the cookie rule.
-      this.#importCookieRule(rule, cookies);
+      // Import opt-in and opt-out cookies if defined.
+      for (let category of ["optOut", "optIn"]) {
+        if (!cookies[category]) {
+          continue;
+        }
 
-      // Import the click rule.
-      this.#importClickRule(rule, click);
+        let isOptOut = category == "optOut";
+
+        for (let c of cookies[category]) {
+          rule.addCookie(
+            isOptOut,
+            c.host,
+            c.name,
+            c.value,
+            // The following fields are optional and may not be defined by the
+            // rule. They will fall back to defaults.
+            c.path,
+            c.expiryRelative,
+            c.unsetValue,
+            c.isSecure,
+            c.isHTTPOnly,
+            c.isSession,
+            c.sameSite,
+            c.schemeMap
+          );
+        }
+      }
 
       Services.cookieBanners.insertRule(rule);
     });
-  }
-
-  #importCookieRule(rule, cookies) {
-    // Skip rules that don't have cookies.
-    if (!cookies) {
-      return;
-    }
-
-    // Import opt-in and opt-out cookies if defined.
-    for (let category of ["optOut", "optIn"]) {
-      if (!cookies[category]) {
-        continue;
-      }
-
-      let isOptOut = category == "optOut";
-
-      for (let c of cookies[category]) {
-        rule.addCookie(
-          isOptOut,
-          c.host,
-          c.name,
-          c.value,
-          // The following fields are optional and may not be defined by the
-          // rule. They will fall back to defaults.
-          c.path,
-          c.expiryRelative,
-          c.unsetValue,
-          c.isSecure,
-          c.isHTTPOnly,
-          c.isSession,
-          c.sameSite,
-          c.schemeMap
-        );
-      }
-    }
-  }
-
-  #importClickRule(rule, click) {
-    if (!click) {
-      return;
-    }
-
-    rule.addClickRule(click.presence, click.hide, click.optOut, click.optIn);
   }
 }
 

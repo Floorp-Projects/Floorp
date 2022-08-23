@@ -4419,6 +4419,3 @@ pref("extensions.formautofill.supportRTL", false);
 
 // Controls the log level for CookieBannerListService.jsm.
 pref("cookiebanners.listService.logLevel", "Error");
-
-// Contorls the log level for Cookie Banner Auto Clicking.
-pref("cookiebanners.bannerClicking.logLevel", "Error");
