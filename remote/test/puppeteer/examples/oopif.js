@@ -23,13 +23,15 @@ async function attachFrame(frameId, url) {
   frame.src = url;
   frame.id = frameId;
   document.body.appendChild(frame);
-  await new Promise((x) => (frame.onload = x));
+  await new Promise(x => {
+    return (frame.onload = x);
+  });
   return frame;
 }
 
 (async () => {
   // Launch browser in non-headless mode.
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({headless: false});
   const page = await browser.newPage();
 
   // Load a page from one origin:
@@ -39,7 +41,7 @@ async function attachFrame(frameId, url) {
   await page.evaluateHandle(attachFrame, 'frame1', 'https://example.com/');
 
   // At this point there should be a message in the output:
-  // puppeteer:frame The frame '...' moved to another session. Out-of-proccess
+  // puppeteer:frame The frame '...' moved to another session. Out-of-process
   // iframes (OOPIF) are not supported by Puppeteer yet.
   // https://github.com/puppeteer/puppeteer/issues/2548
 

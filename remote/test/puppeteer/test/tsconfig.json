@@ -1,7 +1,15 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "noEmit": true
+    "declaration": false,
+    "declarationMap": false,
+    "module": "CommonJS",
+    "outDir": "build",
+    "rootDir": "src"
   },
-  "include": ["*.ts", "*.js"]
+  "include": ["src"],
+  "references": [
+    {"path": "../src/tsconfig.cjs.json"},
+    {"path": "../utils/testserver/tsconfig.json"}
+  ]
 }

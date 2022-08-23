@@ -19,26 +19,33 @@ import {
   CommonPuppeteerSettings,
   ConnectOptions,
 } from '../common/Puppeteer.js';
-import { BrowserFetcher, BrowserFetcherOptions } from './BrowserFetcher.js';
-import {
-  LaunchOptions,
-  BrowserLaunchArgumentOptions,
-} from './LaunchOptions.js';
-import { BrowserConnectOptions } from '../common/BrowserConnector.js';
-import { Browser } from '../common/Browser.js';
-import Launcher, { ProductLauncher } from './Launcher.js';
-import { PUPPETEER_REVISIONS } from '../revisions.js';
-import { Product } from '../common/Product.js';
+import {BrowserFetcher, BrowserFetcherOptions} from './BrowserFetcher.js';
+import {LaunchOptions, BrowserLaunchArgumentOptions} from './LaunchOptions.js';
+import {BrowserConnectOptions} from '../common/BrowserConnector.js';
+import {Browser} from '../common/Browser.js';
+import {createLauncher, ProductLauncher} from './ProductLauncher.js';
+import {PUPPETEER_REVISIONS} from '../revisions.js';
+import {Product} from '../common/Product.js';
 
 /**
- * Extends the main {@link Puppeteer} class with Node specific behaviour for fetching and
- * downloading browsers.
+ * @public
+ */
+export interface PuppeteerLaunchOptions
+  extends LaunchOptions,
+    BrowserLaunchArgumentOptions,
+    BrowserConnectOptions {
+  product?: Product;
+  extraPrefsFirefox?: Record<string, unknown>;
+}
+
+/**
+ * Extends the main {@link Puppeteer} class with Node specific behaviour for
+ * fetching and downloading browsers.
  *
  * If you're using Puppeteer in a Node environment, this is the class you'll get
  * when you run `require('puppeteer')` (or the equivalent ES `import`).
  *
  * @remarks
- *
  * The most common method to use is {@link PuppeteerNode.launch | launch}, which
  * is used to launch and connect to a new browser instance.
  *
@@ -47,7 +54,8 @@ import { Product } from '../common/Product.js';
  *
  * @example
  * The following is a typical example of using Puppeteer to drive automation:
- * ```js
+ *
+ * ```ts
  * const puppeteer = require('puppeteer');
  *
  * (async () => {
@@ -66,12 +74,10 @@ import { Product } from '../common/Product.js';
  * @public
  */
 export class PuppeteerNode extends Puppeteer {
-  private _lazyLauncher: ProductLauncher;
-  private _projectRoot: string;
-  private __productName?: Product;
-  /**
-   * @internal
-   */
+  #launcher?: ProductLauncher;
+  #projectRoot?: string;
+  #productName?: Product;
+
   _preferredRevision: string;
 
   /**
@@ -79,91 +85,95 @@ export class PuppeteerNode extends Puppeteer {
    */
   constructor(
     settings: {
-      projectRoot: string;
+      projectRoot?: string;
       preferredRevision: string;
       productName?: Product;
     } & CommonPuppeteerSettings
   ) {
-    const { projectRoot, preferredRevision, productName, ...commonSettings } =
+    const {projectRoot, preferredRevision, productName, ...commonSettings} =
       settings;
     super(commonSettings);
-    this._projectRoot = projectRoot;
-    this.__productName = productName;
+    this.#projectRoot = projectRoot;
+    this.#productName = productName;
     this._preferredRevision = preferredRevision;
+
+    this.connect = this.connect.bind(this);
+    this.launch = this.launch.bind(this);
+    this.executablePath = this.executablePath.bind(this);
+    this.defaultArgs = this.defaultArgs.bind(this);
+    this.createBrowserFetcher = this.createBrowserFetcher.bind(this);
   }
 
   /**
    * This method attaches Puppeteer to an existing browser instance.
    *
-   * @remarks
-   *
    * @param options - Set of configurable options to set on the browser.
    * @returns Promise which resolves to browser instance.
    */
-  connect(options: ConnectOptions): Promise<Browser> {
-    if (options.product) this._productName = options.product;
+  override connect(options: ConnectOptions): Promise<Browser> {
     return super.connect(options);
   }
 
   /**
    * @internal
    */
-  get _productName(): Product {
-    return this.__productName;
+  get _productName(): Product | undefined {
+    return this.#productName;
   }
-
-  // don't need any TSDoc here - because the getter is internal the setter is too.
-  set _productName(name: Product) {
-    if (this.__productName !== name) this._changedProduct = true;
-    this.__productName = name;
+  set _productName(name: Product | undefined) {
+    if (this.#productName !== name) {
+      this._changedProduct = true;
+    }
+    this.#productName = name;
   }
 
   /**
-   * Launches puppeteer and launches a browser instance with given arguments
-   * and options when specified.
-   *
-   * @remarks
+   * Launches puppeteer and launches a browser instance with given arguments and
+   * options when specified.
    *
    * @example
    * You can use `ignoreDefaultArgs` to filter out `--mute-audio` from default arguments:
-   * ```js
+   *
+   * ```ts
    * const browser = await puppeteer.launch({
-   *   ignoreDefaultArgs: ['--mute-audio']
+   *   ignoreDefaultArgs: ['--mute-audio'],
    * });
    * ```
    *
-   * **NOTE** Puppeteer can also be used to control the Chrome browser,
-   * but it works best with the version of Chromium it is bundled with.
-   * There is no guarantee it will work with any other version.
-   * Use `executablePath` option with extreme caution.
-   * If Google Chrome (rather than Chromium) is preferred, a {@link https://www.google.com/chrome/browser/canary.html | Chrome Canary} or {@link https://www.chromium.org/getting-involved/dev-channel | Dev Channel} build is suggested.
-   * In `puppeteer.launch([options])`, any mention of Chromium also applies to Chrome.
-   * See {@link https://www.howtogeek.com/202825/what%E2%80%99s-the-difference-between-chromium-and-chrome/ | this article} for a description of the differences between Chromium and Chrome. {@link https://chromium.googlesource.com/chromium/src/+/lkgr/docs/chromium_browser_vs_google_chrome.md | This article} describes some differences for Linux users.
+   * @remarks
+   * **NOTE** Puppeteer can also be used to control the Chrome browser, but it
+   * works best with the version of Chromium it is bundled with. There is no
+   * guarantee it will work with any other version. Use `executablePath` option
+   * with extreme caution. If Google Chrome (rather than Chromium) is preferred,
+   * a {@link https://www.google.com/chrome/browser/canary.html | Chrome Canary}
+   * or
+   * {@link https://www.chromium.org/getting-involved/dev-channel | Dev Channel}
+   * build is suggested. In `puppeteer.launch([options])`, any mention of
+   * Chromium also applies to Chrome. See
+   * {@link https://www.howtogeek.com/202825/what%E2%80%99s-the-difference-between-chromium-and-chrome/ | this article}
+   * for a description of the differences between Chromium and Chrome.
+   * {@link https://chromium.googlesource.com/chromium/src/+/lkgr/docs/chromium_browser_vs_google_chrome.md | This article}
+   * describes some differences for Linux users.
    *
    * @param options - Set of configurable options to set on the browser.
    * @returns Promise which resolves to browser instance.
    */
-  launch(
-    options: LaunchOptions &
-      BrowserLaunchArgumentOptions &
-      BrowserConnectOptions & {
-        product?: Product;
-        extraPrefsFirefox?: Record<string, unknown>;
-      } = {}
-  ): Promise<Browser> {
-    if (options.product) this._productName = options.product;
+  launch(options: PuppeteerLaunchOptions = {}): Promise<Browser> {
+    if (options.product) {
+      this._productName = options.product;
+    }
     return this._launcher.launch(options);
   }
 
   /**
    * @remarks
+   * **NOTE** `puppeteer.executablePath()` is affected by the
+   * `PUPPETEER_EXECUTABLE_PATH` and `PUPPETEER_CHROMIUM_REVISION` environment
+   * variables.
    *
-   * **NOTE** `puppeteer.executablePath()` is affected by the `PUPPETEER_EXECUTABLE_PATH`
-   * and `PUPPETEER_CHROMIUM_REVISION` environment variables.
-   *
-   * @returns A path where Puppeteer expects to find the bundled browser.
-   * The browser binary might not be there if the download was skipped with
-   * the `PUPPETEER_SKIP_DOWNLOAD` environment variable.
+   * @returns A path where Puppeteer expects to find the bundled browser. The
+   * browser binary might not be there if the download was skipped with the
+   * `PUPPETEER_SKIP_DOWNLOAD` environment variable.
    */
   executablePath(channel?: string): string {
     return this._launcher.executablePath(channel);
@@ -174,8 +184,8 @@ export class PuppeteerNode extends Puppeteer {
    */
   get _launcher(): ProductLauncher {
     if (
-      !this._lazyLauncher ||
-      this._lazyLauncher.product !== this._productName ||
+      !this.#launcher ||
+      this.#launcher.product !== this._productName ||
       this._changedProduct
     ) {
       switch (this._productName) {
@@ -187,22 +197,23 @@ export class PuppeteerNode extends Puppeteer {
           this._preferredRevision = PUPPETEER_REVISIONS.chromium;
       }
       this._changedProduct = false;
-      this._lazyLauncher = Launcher(
-        this._projectRoot,
+      this.#launcher = createLauncher(
+        this.#projectRoot,
         this._preferredRevision,
         this._isPuppeteerCore,
         this._productName
       );
     }
-    return this._lazyLauncher;
+    return this.#launcher;
   }
 
   /**
-   * The name of the browser that is under automation (`"chrome"` or `"firefox"`)
+   * The name of the browser that is under automation (`"chrome"` or
+   * `"firefox"`)
    *
    * @remarks
-   * The product is set by the `PUPPETEER_PRODUCT` environment variable or the `product`
-   * option in `puppeteer.launch([options])` and defaults to `chrome`.
+   * The product is set by the `PUPPETEER_PRODUCT` environment variable or the
+   * `product` option in `puppeteer.launch([options])` and defaults to `chrome`.
    * Firefox support is experimental.
    */
   get product(): string {
@@ -210,7 +221,6 @@ export class PuppeteerNode extends Puppeteer {
   }
 
   /**
-   *
    * @param options - Set of configurable options to set on the browser.
    * @returns The default flags that Chromium will be launched with.
    */
@@ -219,11 +229,16 @@ export class PuppeteerNode extends Puppeteer {
   }
 
   /**
-   * @param options - Set of configurable options to specify the settings
-   * of the BrowserFetcher.
+   * @param options - Set of configurable options to specify the settings of the
+   * BrowserFetcher.
    * @returns A new BrowserFetcher instance.
    */
   createBrowserFetcher(options: BrowserFetcherOptions): BrowserFetcher {
-    return new BrowserFetcher(this._projectRoot, options);
+    if (!this.#projectRoot) {
+      throw new Error(
+        '_projectRoot is undefined. Unable to create a BrowserFetcher.'
+      );
+    }
+    return new BrowserFetcher(this.#projectRoot, options);
   }
 }

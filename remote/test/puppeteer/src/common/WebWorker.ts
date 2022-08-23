@@ -13,19 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { EventEmitter } from './EventEmitter.js';
-import { debugError } from './helper.js';
-import { ExecutionContext } from './ExecutionContext.js';
-import { JSHandle } from './JSHandle.js';
-import { CDPSession } from './Connection.js';
-import { Protocol } from 'devtools-protocol';
-import { EvaluateHandleFn, SerializableOrJSHandle } from './EvalTypes.js';
+import {Protocol} from 'devtools-protocol';
+import {CDPSession} from './Connection.js';
+import {ConsoleMessageType} from './ConsoleMessage.js';
+import {EvaluateFunc, HandleFor} from './types.js';
+import {EventEmitter} from './EventEmitter.js';
+import {ExecutionContext} from './ExecutionContext.js';
+import {JSHandle} from './JSHandle.js';
+import {debugError} from './util.js';
 
 /**
  * @internal
  */
 export type ConsoleAPICalledCallback = (
-  eventType: string,
+  eventType: ConsoleMessageType,
   handles: JSHandle[],
   trace: Protocol.Runtime.StackTrace
 ) => void;
@@ -36,10 +37,11 @@ export type ConsoleAPICalledCallback = (
 export type ExceptionThrownCallback = (
   details: Protocol.Runtime.ExceptionDetails
 ) => void;
+
 type JSHandleFactory = (obj: Protocol.Runtime.RemoteObject) => JSHandle;
 
 /**
- * The WebWorker class represents a
+ * This class represents a
  * {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API | WebWorker}.
  *
  * @remarks
@@ -47,9 +49,14 @@ type JSHandleFactory = (obj: Protocol.Runtime.RemoteObject) => JSHandle;
  * object to signal the worker lifecycle.
  *
  * @example
- * ```js
- * page.on('workercreated', worker => console.log('Worker created: ' + worker.url()));
- * page.on('workerdestroyed', worker => console.log('Worker destroyed: ' + worker.url()));
+ *
+ * ```ts
+ * page.on('workercreated', worker =>
+ *   console.log('Worker created: ' + worker.url())
+ * );
+ * page.on('workerdestroyed', worker =>
+ *   console.log('Worker destroyed: ' + worker.url())
+ * );
  *
  * console.log('Current workers:');
  * for (const worker of page.workers()) {
@@ -60,13 +67,12 @@ type JSHandleFactory = (obj: Protocol.Runtime.RemoteObject) => JSHandle;
  * @public
  */
 export class WebWorker extends EventEmitter {
-  _client: CDPSession;
-  _url: string;
-  _executionContextPromise: Promise<ExecutionContext>;
-  _executionContextCallback: (value: ExecutionContext) => void;
+  #client: CDPSession;
+  #url: string;
+  #executionContextPromise: Promise<ExecutionContext>;
+  #executionContextCallback!: (value: ExecutionContext) => void;
 
   /**
-   *
    * @internal
    */
   constructor(
@@ -76,44 +82,41 @@ export class WebWorker extends EventEmitter {
     exceptionThrown: ExceptionThrownCallback
   ) {
     super();
-    this._client = client;
-    this._url = url;
-    this._executionContextPromise = new Promise<ExecutionContext>(
-      (x) => (this._executionContextCallback = x)
-    );
+    this.#client = client;
+    this.#url = url;
+    this.#executionContextPromise = new Promise<ExecutionContext>(x => {
+      return (this.#executionContextCallback = x);
+    });
 
     let jsHandleFactory: JSHandleFactory;
-    this._client.once('Runtime.executionContextCreated', async (event) => {
+    this.#client.once('Runtime.executionContextCreated', async event => {
       // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-      jsHandleFactory = (remoteObject) =>
-        new JSHandle(executionContext, client, remoteObject);
-      const executionContext = new ExecutionContext(
-        client,
-        event.context,
-        null
-      );
-      this._executionContextCallback(executionContext);
+      jsHandleFactory = remoteObject => {
+        return new JSHandle(executionContext, client, remoteObject);
+      };
+      const executionContext = new ExecutionContext(client, event.context);
+      this.#executionContextCallback(executionContext);
     });
 
     // This might fail if the target is closed before we receive all execution contexts.
-    this._client.send('Runtime.enable').catch(debugError);
-    this._client.on('Runtime.consoleAPICalled', (event) =>
-      consoleAPICalled(
+    this.#client.send('Runtime.enable').catch(debugError);
+    this.#client.on('Runtime.consoleAPICalled', event => {
+      return consoleAPICalled(
         event.type,
         event.args.map(jsHandleFactory),
         event.stackTrace
-      )
-    );
-    this._client.on('Runtime.exceptionThrown', (exception) =>
-      exceptionThrown(exception.exceptionDetails)
-    );
+      );
+    });
+    this.#client.on('Runtime.exceptionThrown', exception => {
+      return exceptionThrown(exception.exceptionDetails);
+    });
   }
 
   /**
    * @returns The URL of this web worker.
    */
   url(): string {
-    return this._url;
+    return this.#url;
   }
 
   /**
@@ -121,7 +124,7 @@ export class WebWorker extends EventEmitter {
    * @returns The ExecutionContext the web worker runs in.
    */
   async executionContext(): Promise<ExecutionContext> {
-    return this._executionContextPromise;
+    return this.#executionContextPromise;
   }
 
   /**
@@ -138,11 +141,14 @@ export class WebWorker extends EventEmitter {
    * @param args - Arguments to pass to `pageFunction`.
    * @returns Promise which resolves to the return value of `pageFunction`.
    */
-  async evaluate<ReturnType extends any>(
-    pageFunction: Function | string,
-    ...args: any[]
-  ): Promise<ReturnType> {
-    return (await this._executionContextPromise).evaluate<ReturnType>(
+  async evaluate<
+    Params extends unknown[],
+    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>
+  >(
+    pageFunction: Func | string,
+    ...args: Params
+  ): Promise<Awaited<ReturnType<Func>>> {
+    return (await this.#executionContextPromise).evaluate(
       pageFunction,
       ...args
     );
@@ -160,11 +166,14 @@ export class WebWorker extends EventEmitter {
    * @param args - Arguments to pass to `pageFunction`.
    * @returns Promise which resolves to the return value of `pageFunction`.
    */
-  async evaluateHandle<HandlerType extends JSHandle = JSHandle>(
-    pageFunction: EvaluateHandleFn,
-    ...args: SerializableOrJSHandle[]
-  ): Promise<JSHandle> {
-    return (await this._executionContextPromise).evaluateHandle<HandlerType>(
+  async evaluateHandle<
+    Params extends unknown[],
+    Func extends EvaluateFunc<Params> = EvaluateFunc<Params>
+  >(
+    pageFunction: Func | string,
+    ...args: Params
+  ): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
+    return (await this.#executionContextPromise).evaluateHandle(
       pageFunction,
       ...args
     );

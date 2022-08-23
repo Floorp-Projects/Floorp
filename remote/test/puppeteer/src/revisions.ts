@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-type Revisions = Readonly<{
-  readonly chromium: string;
-  readonly firefox: string;
-}>;
-
-export const PUPPETEER_REVISIONS: Revisions = {
-  chromium: '938248',
+/**
+ * @internal
+ */
+export const PUPPETEER_REVISIONS = Object.freeze({
+  chromium: '1022525',
   firefox: 'latest',
-};
+});

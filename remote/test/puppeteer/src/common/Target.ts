@@ -14,27 +14,29 @@
  * limitations under the License.
  */
 
-import { Page, PageEmittedEvents } from './Page.js';
-import { WebWorker } from './WebWorker.js';
-import { CDPSession } from './Connection.js';
-import { Browser, BrowserContext } from './Browser.js';
-import { Viewport } from './PuppeteerViewport.js';
-import { Protocol } from 'devtools-protocol';
-import { TaskQueue } from './TaskQueue.js';
+import {Page, PageEmittedEvents} from './Page.js';
+import {WebWorker} from './WebWorker.js';
+import {CDPSession} from './Connection.js';
+import {Browser, BrowserContext, IsPageTargetCallback} from './Browser.js';
+import {Viewport} from './PuppeteerViewport.js';
+import {Protocol} from 'devtools-protocol';
+import {TaskQueue} from './TaskQueue.js';
+import {TargetManager} from './TargetManager.js';
 
 /**
  * @public
  */
 export class Target {
-  private _targetInfo: Protocol.Target.TargetInfo;
-  private _browserContext: BrowserContext;
+  #browserContext: BrowserContext;
+  #session?: CDPSession;
+  #targetInfo: Protocol.Target.TargetInfo;
+  #sessionFactory: (isAutoAttachEmulated: boolean) => Promise<CDPSession>;
+  #ignoreHTTPSErrors: boolean;
+  #defaultViewport?: Viewport;
+  #pagePromise?: Promise<Page>;
+  #workerPromise?: Promise<WebWorker>;
+  #screenshotTaskQueue: TaskQueue;
 
-  private _sessionFactory: () => Promise<CDPSession>;
-  private _ignoreHTTPSErrors: boolean;
-  private _defaultViewport?: Viewport;
-  private _pagePromise?: Promise<Page>;
-  private _workerPromise?: Promise<WebWorker>;
-  private _screenshotTaskQueue: TaskQueue;
   /**
    * @internal
    */
@@ -42,7 +44,7 @@ export class Target {
   /**
    * @internal
    */
-  _initializedCallback: (x: boolean) => void;
+  _initializedCallback!: (x: boolean) => void;
   /**
    * @internal
    */
@@ -50,7 +52,7 @@ export class Target {
   /**
    * @internal
    */
-  _closedCallback: () => void;
+  _closedCallback!: () => void;
   /**
    * @internal
    */
@@ -59,78 +61,114 @@ export class Target {
    * @internal
    */
   _targetId: string;
+  /**
+   * @internal
+   */
+  _isPageTargetCallback: IsPageTargetCallback;
+
+  #targetManager: TargetManager;
 
   /**
    * @internal
    */
   constructor(
     targetInfo: Protocol.Target.TargetInfo,
+    session: CDPSession | undefined,
     browserContext: BrowserContext,
-    sessionFactory: () => Promise<CDPSession>,
+    targetManager: TargetManager,
+    sessionFactory: (isAutoAttachEmulated: boolean) => Promise<CDPSession>,
     ignoreHTTPSErrors: boolean,
     defaultViewport: Viewport | null,
-    screenshotTaskQueue: TaskQueue
+    screenshotTaskQueue: TaskQueue,
+    isPageTargetCallback: IsPageTargetCallback
   ) {
-    this._targetInfo = targetInfo;
-    this._browserContext = browserContext;
+    this.#session = session;
+    this.#targetManager = targetManager;
+    this.#targetInfo = targetInfo;
+    this.#browserContext = browserContext;
     this._targetId = targetInfo.targetId;
-    this._sessionFactory = sessionFactory;
-    this._ignoreHTTPSErrors = ignoreHTTPSErrors;
-    this._defaultViewport = defaultViewport;
-    this._screenshotTaskQueue = screenshotTaskQueue;
-    /** @type {?Promise<!Puppeteer.Page>} */
-    this._pagePromise = null;
-    /** @type {?Promise<!WebWorker>} */
-    this._workerPromise = null;
-    this._initializedPromise = new Promise<boolean>(
-      (fulfill) => (this._initializedCallback = fulfill)
-    ).then(async (success) => {
-      if (!success) return false;
+    this.#sessionFactory = sessionFactory;
+    this.#ignoreHTTPSErrors = ignoreHTTPSErrors;
+    this.#defaultViewport = defaultViewport ?? undefined;
+    this.#screenshotTaskQueue = screenshotTaskQueue;
+    this._isPageTargetCallback = isPageTargetCallback;
+    this._initializedPromise = new Promise<boolean>(fulfill => {
+      return (this._initializedCallback = fulfill);
+    }).then(async success => {
+      if (!success) {
+        return false;
+      }
       const opener = this.opener();
-      if (!opener || !opener._pagePromise || this.type() !== 'page')
+      if (!opener || !opener.#pagePromise || this.type() !== 'page') {
         return true;
-      const openerPage = await opener._pagePromise;
-      if (!openerPage.listenerCount(PageEmittedEvents.Popup)) return true;
+      }
+      const openerPage = await opener.#pagePromise;
+      if (!openerPage.listenerCount(PageEmittedEvents.Popup)) {
+        return true;
+      }
       const popupPage = await this.page();
       openerPage.emit(PageEmittedEvents.Popup, popupPage);
       return true;
     });
-    this._isClosedPromise = new Promise<void>(
-      (fulfill) => (this._closedCallback = fulfill)
-    );
+    this._isClosedPromise = new Promise<void>(fulfill => {
+      return (this._closedCallback = fulfill);
+    });
     this._isInitialized =
-      this._targetInfo.type !== 'page' || this._targetInfo.url !== '';
-    if (this._isInitialized) this._initializedCallback(true);
+      !this._isPageTargetCallback(this.#targetInfo) ||
+      this.#targetInfo.url !== '';
+    if (this._isInitialized) {
+      this._initializedCallback(true);
+    }
+  }
+
+  /**
+   * @internal
+   */
+  _session(): CDPSession | undefined {
+    return this.#session;
   }
 
   /**
    * Creates a Chrome Devtools Protocol session attached to the target.
    */
   createCDPSession(): Promise<CDPSession> {
-    return this._sessionFactory();
+    return this.#sessionFactory(false);
+  }
+
+  /**
+   * @internal
+   */
+  _targetManager(): TargetManager {
+    return this.#targetManager;
+  }
+
+  /**
+   * @internal
+   */
+  _getTargetInfo(): Protocol.Target.TargetInfo {
+    return this.#targetInfo;
   }
 
   /**
    * If the target is not of type `"page"` or `"background_page"`, returns `null`.
    */
   async page(): Promise<Page | null> {
-    if (
-      (this._targetInfo.type === 'page' ||
-        this._targetInfo.type === 'background_page' ||
-        this._targetInfo.type === 'webview') &&
-      !this._pagePromise
-    ) {
-      this._pagePromise = this._sessionFactory().then((client) =>
-        Page.create(
+    if (this._isPageTargetCallback(this.#targetInfo) && !this.#pagePromise) {
+      this.#pagePromise = (
+        this.#session
+          ? Promise.resolve(this.#session)
+          : this.#sessionFactory(true)
+      ).then(client => {
+        return Page._create(
           client,
           this,
-          this._ignoreHTTPSErrors,
-          this._defaultViewport,
-          this._screenshotTaskQueue
-        )
-      );
+          this.#ignoreHTTPSErrors,
+          this.#defaultViewport ?? null,
+          this.#screenshotTaskQueue
+        );
+      });
     }
-    return this._pagePromise;
+    return (await this.#pagePromise) ?? null;
   }
 
   /**
@@ -138,27 +176,31 @@ export class Target {
    */
   async worker(): Promise<WebWorker | null> {
     if (
-      this._targetInfo.type !== 'service_worker' &&
-      this._targetInfo.type !== 'shared_worker'
-    )
+      this.#targetInfo.type !== 'service_worker' &&
+      this.#targetInfo.type !== 'shared_worker'
+    ) {
       return null;
-    if (!this._workerPromise) {
-      // TODO(einbinder): Make workers send their console logs.
-      this._workerPromise = this._sessionFactory().then(
-        (client) =>
-          new WebWorker(
-            client,
-            this._targetInfo.url,
-            () => {} /* consoleAPICalled */,
-            () => {} /* exceptionThrown */
-          )
-      );
     }
-    return this._workerPromise;
+    if (!this.#workerPromise) {
+      // TODO(einbinder): Make workers send their console logs.
+      this.#workerPromise = (
+        this.#session
+          ? Promise.resolve(this.#session)
+          : this.#sessionFactory(false)
+      ).then(client => {
+        return new WebWorker(
+          client,
+          this.#targetInfo.url,
+          () => {} /* consoleAPICalled */,
+          () => {} /* exceptionThrown */
+        );
+      });
+    }
+    return this.#workerPromise;
   }
 
   url(): string {
-    return this._targetInfo.url;
+    return this.#targetInfo.url;
   }
 
   /**
@@ -176,7 +218,7 @@ export class Target {
     | 'other'
     | 'browser'
     | 'webview' {
-    const type = this._targetInfo.type;
+    const type = this.#targetInfo.type;
     if (
       type === 'page' ||
       type === 'background_page' ||
@@ -184,8 +226,9 @@ export class Target {
       type === 'shared_worker' ||
       type === 'browser' ||
       type === 'webview'
-    )
+    ) {
       return type;
+    }
     return 'other';
   }
 
@@ -193,22 +236,24 @@ export class Target {
    * Get the browser the target belongs to.
    */
   browser(): Browser {
-    return this._browserContext.browser();
+    return this.#browserContext.browser();
   }
 
   /**
    * Get the browser context the target belongs to.
    */
   browserContext(): BrowserContext {
-    return this._browserContext;
+    return this.#browserContext;
   }
 
   /**
    * Get the target that opened this target. Top-level targets return `null`.
    */
-  opener(): Target | null {
-    const { openerId } = this._targetInfo;
-    if (!openerId) return null;
+  opener(): Target | undefined {
+    const {openerId} = this.#targetInfo;
+    if (!openerId) {
+      return;
+    }
     return this.browser()._targets.get(openerId);
   }
 
@@ -216,11 +261,12 @@ export class Target {
    * @internal
    */
   _targetInfoChanged(targetInfo: Protocol.Target.TargetInfo): void {
-    this._targetInfo = targetInfo;
+    this.#targetInfo = targetInfo;
 
     if (
       !this._isInitialized &&
-      (this._targetInfo.type !== 'page' || this._targetInfo.url !== '')
+      (!this._isPageTargetCallback(this.#targetInfo) ||
+        this.#targetInfo.url !== '')
     ) {
       this._isInitialized = true;
       this._initializedCallback(true);

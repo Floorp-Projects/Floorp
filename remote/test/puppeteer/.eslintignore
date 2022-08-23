@@ -1,17 +1,39 @@
-test/assets/modernizr.js
-third_party/*
-utils/browser/puppeteer-web.js
-utils/doclint/check_public_api/test/
-node6/*
-node6-test/*
-experimental/
+## [START] Keep in sync with .gitignore
+# Dependencies
+node_modules
+
+# Production
+build/
 lib/
-/index.d.ts
-# We ignore this file because it uses ES imports which we don't yet use
-# in the Puppeteer src, so it trips up the ESLint-TypeScript parser.
-utils/doclint/generate_types/test/test.ts
+
+# Generated files
+tsconfig.tsbuildinfo
+puppeteer.api.json
+puppeteer*.tgz
+yarn.lock
+.docusaurus/
+.cache-loader
+.local-chromium/
+.local-firefox/
+test/output-*/
+.dev_profile*
+coverage/
+
+# IDE Artifacts
+.vscode
+
+# Misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+## [END] Keep in sync with .gitignore
+
+# ESLint ignores.
+assets/
 vendor/
-web-test-runner.config.mjs
-test-ts-types/
-website/
-docs-dist/

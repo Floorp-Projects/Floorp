@@ -17,14 +17,10 @@
 
 const assert = require('assert');
 const https = require('https');
-// run `npm run dev-install` if lib dir is missing
 const BrowserFetcher =
   require('../lib/cjs/puppeteer/node/BrowserFetcher.js').BrowserFetcher;
 
-const SUPPORTER_PLATFORMS = ['linux', 'mac', 'win32', 'win64'];
-const fetchers = SUPPORTER_PLATFORMS.map(
-  (platform) => new BrowserFetcher('', { platform })
-);
+const SUPPORTED_PLATFORMS = ['linux', 'mac', 'mac_arm', 'win32', 'win64'];
 
 const colors = {
   reset: '\x1b[0m',
@@ -47,8 +43,9 @@ class Table {
   drawRow(values) {
     assert(values.length === this.widths.length);
     let row = '';
-    for (let i = 0; i < values.length; ++i)
+    for (let i = 0; i < values.length; ++i) {
       row += padCenter(values[i], this.widths[i]);
+    }
     console.log(row);
   }
 }
@@ -59,10 +56,13 @@ This script checks availability of prebuilt Chromium snapshots.
 Usage: node check_availability.js [<options>] [<browser version(s)>]
 
 options
-    -f          full mode checks availability of all the platforms, default mode
-    -r          roll mode checks for the most recent stable Chromium roll candidate
-    -rb         roll mode checks for the most recent beta Chromium roll candidate
-    -rd         roll mode checks for the most recent dev Chromium roll candidate
+    -f            full mode checks availability of all the platforms, default mode
+    -r            roll mode checks for the most recent stable Chromium roll candidate
+    -rb           roll mode checks for the most recent beta Chromium roll candidate
+    -rd           roll mode checks for the most recent dev Chromium roll candidate
+    -p $platform  print the latest revision for the given platform (${SUPPORTED_PLATFORMS.join(
+      ','
+    )}).
     -h          show this help
 
 browser version(s)
@@ -108,6 +108,9 @@ function main() {
       case 'rd':
         checkRollCandidate('dev');
         return;
+      case 'p':
+        printLatestRevisionForPlatform(args[1]);
+        return;
       default:
         console.log(helpMessage);
         return;
@@ -140,6 +143,9 @@ async function checkOmahaProxyAvailability() {
         'https://storage.googleapis.com/chromium-browser-snapshots/Mac/LAST_CHANGE'
       ),
       fetch(
+        'https://storage.googleapis.com/chromium-browser-snapshots/Mac_Arm/LAST_CHANGE'
+      ),
+      fetch(
         'https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/LAST_CHANGE'
       ),
       fetch(
@@ -149,14 +155,49 @@ async function checkOmahaProxyAvailability() {
         'https://storage.googleapis.com/chromium-browser-snapshots/Win_x64/LAST_CHANGE'
       ),
     ])
-  ).map((s) => parseInt(s, 10));
+  ).map(s => {
+    return parseInt(s, 10);
+  });
   const from = Math.max(...latestRevisions);
-  checkRangeAvailability({
+  await checkRangeAvailability({
     fromRevision: from,
     toRevision: 0,
     stopWhenAllAvailable: false,
   });
 }
+
+async function printLatestRevisionForPlatform(platform) {
+  const latestRevisions = (
+    await Promise.all([
+      fetch(
+        'https://storage.googleapis.com/chromium-browser-snapshots/Mac/LAST_CHANGE'
+      ),
+      fetch(
+        'https://storage.googleapis.com/chromium-browser-snapshots/Mac_Arm/LAST_CHANGE'
+      ),
+      fetch(
+        'https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/LAST_CHANGE'
+      ),
+      fetch(
+        'https://storage.googleapis.com/chromium-browser-snapshots/Win/LAST_CHANGE'
+      ),
+      fetch(
+        'https://storage.googleapis.com/chromium-browser-snapshots/Win_x64/LAST_CHANGE'
+      ),
+    ])
+  ).map(s => {
+    return parseInt(s, 10);
+  });
+  const from = Math.max(...latestRevisions);
+  await checkRangeAvailability({
+    fromRevision: from,
+    toRevision: 0,
+    stopWhenAllAvailable: true,
+    printAsTable: false,
+    platforms: [platform],
+  });
+}
+
 async function checkRollCandidate(channel) {
   const omahaResponse = await fetch(
     `https://omahaproxy.appspot.com/all.json?channel=${channel}&os=linux`
@@ -172,7 +213,7 @@ async function checkRollCandidate(channel) {
     10
   );
   const currentRevision = parseInt(
-    require('../lib/cjs/puppeteer/revisions').PUPPETEER_REVISIONS.chromium,
+    require('../lib/cjs/puppeteer/revisions.js').PUPPETEER_REVISIONS.chromium,
     10
   );
 
@@ -190,9 +231,24 @@ async function checkRangeAvailability({
   fromRevision,
   toRevision,
   stopWhenAllAvailable,
+  platforms,
+  printAsTable = true,
 }) {
-  const table = new Table([10, 7, 7, 7, 7]);
-  table.drawRow([''].concat(SUPPORTER_PLATFORMS));
+  platforms = platforms || SUPPORTED_PLATFORMS;
+  let table;
+  if (printAsTable) {
+    table = new Table([
+      10,
+      ...platforms.map(() => {
+        return 7;
+      }),
+    ]);
+    table.drawRow([''].concat(platforms));
+  }
+
+  const fetchers = platforms.map(platform => {
+    return new BrowserFetcher('', {platform});
+  });
 
   const inc = fromRevision < toRevision ? 1 : -1;
   const revisionToStop = toRevision + inc; // +inc so the range is fully inclusive
@@ -201,37 +257,33 @@ async function checkRangeAvailability({
     revision !== revisionToStop;
     revision += inc
   ) {
-    const allAvailable = await checkAndDrawRevisionAvailability(
-      table,
-      '',
-      revision
-    );
-    if (allAvailable && stopWhenAllAvailable) break;
+    const promises = fetchers.map(fetcher => {
+      return fetcher.canDownload(revision);
+    });
+    const availability = await Promise.all(promises);
+    const allAvailable = availability.every(e => {
+      return !!e;
+    });
+    if (table) {
+      const values = [
+        ' ' +
+          (allAvailable ? colors.green + revision + colors.reset : revision),
+      ];
+      for (let i = 0; i < availability.length; ++i) {
+        const decoration = availability[i] ? '+' : '-';
+        const color = availability[i] ? colors.green : colors.red;
+        values.push(color + decoration + colors.reset);
+      }
+      table.drawRow(values);
+    } else {
+      if (allAvailable) {
+        console.log(revision);
+      }
+    }
+    if (allAvailable && stopWhenAllAvailable) {
+      break;
+    }
   }
-}
-
-/**
- * @param {!Table} table
- * @param {string} name
- * @param {number} revision
- * @returns {boolean}
- */
-async function checkAndDrawRevisionAvailability(table, name, revision) {
-  const promises = fetchers.map((fetcher) => fetcher.canDownload(revision));
-  const availability = await Promise.all(promises);
-  const allAvailable = availability.every((e) => !!e);
-  const values = [
-    name +
-      ' ' +
-      (allAvailable ? colors.green + revision + colors.reset : revision),
-  ];
-  for (let i = 0; i < availability.length; ++i) {
-    const decoration = availability[i] ? '+' : '-';
-    const color = availability[i] ? colors.green : colors.red;
-    values.push(color + decoration + colors.reset);
-  }
-  table.drawRow(values);
-  return allAvailable;
 }
 
 /**
@@ -240,9 +292,11 @@ async function checkAndDrawRevisionAvailability(table, name, revision) {
  */
 function fetch(url) {
   let resolve;
-  const promise = new Promise((x) => (resolve = x));
+  const promise = new Promise(x => {
+    return (resolve = x);
+  });
   https
-    .get(url, (response) => {
+    .get(url, response => {
       if (response.statusCode !== 200) {
         resolve(null);
         return;
@@ -256,7 +310,12 @@ function fetch(url) {
       });
     })
     .on('error', function (e) {
-      console.error('Error fetching json: ' + e);
+      // This is okay; the server may just be faster at closing than us after
+      // the body is fully sent.
+      if (e.message.includes('ECONNRESET')) {
+        return;
+      }
+      console.error(`Error fetching json from ${url}: ${e}`);
       resolve(null);
     });
   return promise;
@@ -289,7 +348,9 @@ function filterOutColors(text) {
  */
 function padCenter(text, length) {
   const printableCharacters = filterOutColors(text);
-  if (printableCharacters.length >= length) return text;
+  if (printableCharacters.length >= length) {
+    return text;
+  }
   const left = Math.floor((length - printableCharacters.length) / 2);
   const right = Math.ceil((length - printableCharacters.length) / 2);
   return spaceString(left) + text + spaceString(right);
