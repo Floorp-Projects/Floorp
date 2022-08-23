@@ -94,7 +94,8 @@ export default function mapExpressionBindings(expression, ast, bindings = []) {
       if (t.isIdentifier(node.left) || t.isPattern(node.left)) {
         const newNode = globalizeAssignment(node, bindings);
         isMapped = true;
-        return replaceNode(ancestors, newNode);
+        replaceNode(ancestors, newNode);
+        return;
       }
 
       return;

@@ -222,6 +222,8 @@ export function getFunctionParameterNames(path) {
       ) {
         return `${param.left.name} = null`;
       }
+
+      return null;
     });
   }
   return [];

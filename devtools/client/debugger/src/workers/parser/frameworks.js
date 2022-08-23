@@ -14,6 +14,8 @@ export function getFramework(symbols) {
   if (isVueComponent(symbols)) {
     return "Vue";
   }
+
+  return null;
 }
 
 function isReactComponent({ imports, classes, callExpressions, identifiers }) {
