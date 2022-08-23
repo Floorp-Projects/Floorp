@@ -39,7 +39,6 @@ pings_yamls = [
     "browser/components/newtab/pings.yaml",
     "toolkit/components/glean/pings.yaml",
     "toolkit/components/glean/tests/test_pings.yaml",
-    "toolkit/components/telemetry/pings.yaml",
     "toolkit/mozapps/update/pings.yaml",
 ]
 
