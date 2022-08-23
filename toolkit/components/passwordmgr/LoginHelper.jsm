@@ -648,12 +648,22 @@ const LoginHelper = {
   getLoginOrigin(uriString, allowJS = false) {
     let realm = "";
     try {
+      const mozProxyRegex = /^moz-proxy:\/\//i;
+      const isMozProxy = !!uriString.match(mozProxyRegex);
+      if (isMozProxy) {
+        // Special handling because uri.displayHostPort throws on moz-proxy://
+        return (
+          "moz-proxy://" +
+          Services.io.newURI(uriString.replace(mozProxyRegex, "https://"))
+            .displayHostPort
+        );
+      }
+
       let uri = Services.io.newURI(uriString);
 
       if (allowJS && uri.scheme == "javascript") {
         return "javascript:";
       }
-      // TODO: Bug 1559205 - Add support for moz-proxy
 
       // Build this manually instead of using prePath to avoid including the userPass portion.
       realm = uri.scheme + "://" + uri.displayHostPort;

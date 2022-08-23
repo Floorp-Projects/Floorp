@@ -65,6 +65,7 @@
 #include "mozilla/RWLock.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
+#include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLTableCellElement.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/HTMLSelectElement.h"
@@ -368,14 +369,15 @@ Gecko_GetHTMLPresentationAttrDeclarationBlock(const Element* aElement) {
 
 const StyleStrong<RawServoDeclarationBlock>*
 Gecko_GetExtraContentStyleDeclarations(const Element* aElement) {
-  if (!aElement->IsAnyOfHTMLElements(nsGkAtoms::td, nsGkAtoms::th)) {
-    return nullptr;
-  }
-  const HTMLTableCellElement* cell =
-      static_cast<const HTMLTableCellElement*>(aElement);
-  if (nsMappedAttributes* attrs =
-          cell->GetMappedAttributesInheritedFromTable()) {
-    return AsRefRawStrong(attrs->GetServoStyle());
+  if (const auto* cell = HTMLTableCellElement::FromNode(aElement)) {
+    if (nsMappedAttributes* attrs =
+            cell->GetMappedAttributesInheritedFromTable()) {
+      return AsRefRawStrong(attrs->GetServoStyle());
+    }
+  } else if (const auto* img = HTMLImageElement::FromNode(aElement)) {
+    if (const auto* attrs = img->GetMappedAttributesFromSource()) {
+      return AsRefRawStrong(attrs->GetServoStyle());
+    }
   }
   return nullptr;
 }

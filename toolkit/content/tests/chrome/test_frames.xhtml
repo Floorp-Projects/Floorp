@@ -13,7 +13,7 @@ SimpleTest.waitForExplicitFinish();
 function runTest() {
   for (let i = 1; i <= 3; i++) {
     let frame = document.getElementById("frame" + i);
-    ok(frame instanceof XULFrameElement, "XULFrameElement " + i);
+    ok(XULFrameElement.isInstance(frame), "XULFrameElement " + i);
 
     // Check the various fields to ensure that they have the correct type.
     ok(frame.docShell instanceof Ci.nsIDocShell, "docShell " + i);
@@ -21,8 +21,8 @@ function runTest() {
 
     let contentWindow = frame.contentWindow;
     let contentDocument = frame.contentDocument;
-    ok(contentWindow instanceof Window, "contentWindow " + i);
-    ok(contentDocument instanceof Document, "contentDocument " + i);
+    ok(Window.isInstance(contentWindow), "contentWindow " + i);
+    ok(Document.isInstance(contentDocument), "contentDocument " + i);
     is(contentDocument.body.id, "thechildbody" + i, "right document body " + i);
 
     // These fields should all be read-only.
@@ -38,7 +38,7 @@ function runTest() {
 
   // A non-frame element should not have these fields.
   let button = document.getElementById("nonframe");
-  ok(!(button instanceof XULFrameElement), "XULFrameElement non frame");
+  ok(!(XULFrameElement.isInstance(button)), "XULFrameElement non frame");
   is(button.docShell, undefined, "docShell non frame");
   is(button.webNavigation, undefined, "webNavigation non frame");
   is(button.contentWindow, undefined, "contentWindow non frame");

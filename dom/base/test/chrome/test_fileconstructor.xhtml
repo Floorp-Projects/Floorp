@@ -47,12 +47,12 @@ add_task(async function test() {
 
   let domFile = await File.createFromFileName(file.path);
 
-  ok(domFile instanceof File, "File() should return a File");
+  ok(File.isInstance(domFile), "File() should return a File");
   is(domFile.type, "image/png", "File should be a PNG");
   is(domFile.size, 95, "File has size 95 (and more importantly we can read it)");
 
   domFile = await File.createFromNsIFile(file);
-  ok(domFile instanceof File, "File() should return a File for an nsIFile");
+  ok(File.isInstance(domFile), "File() should return a File for an nsIFile");
   is(domFile.type, "image/png", "File should be a PNG");
   is(domFile.size, 95, "File has size 95 (and more importantly we can read it)");
 

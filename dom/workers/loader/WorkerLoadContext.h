@@ -53,14 +53,55 @@ class CacheCreator;
 
 class WorkerLoadContext : public JS::loader::LoadContextBase {
  public:
-  explicit WorkerLoadContext();
+  /* Worker Load Context Kinds
+   *
+   * A script that is loaded and run as a worker can be one of several species.
+   * Each may have slightly different behavior, but they fall into roughly two
+   * categories: the Main Worker Script (the script that triggers the first
+   * load) and scripts that are attached to this main worker script.
+   *
+   * In the specification, the Main Worker Script is referred to as the "top
+   * level script" and is defined here:
+   * https://html.spec.whatwg.org/multipage/webappapis.html#fetching-scripts-is-top-level
+   */
+
+  enum Kind {
+    // Indicates that the is-top-level bit is true. This may be a Classic script
+    // or a Module script.
+    MainScript,
+    // We are importing a script from the worker via ImportScript. This may only
+    // be a Classic script.
+    ImportScript,
+    // We have an attached debugger, and these should be treated specially and
+    // not like a main script (regardless of their type). This is not part of
+    // the specification.
+    DebuggerScript
+  };
+
+  explicit WorkerLoadContext(WorkerLoadContext::Kind aKind);
 
   ~WorkerLoadContext() = default;
+
+  // Used to detect if the `is top-level` bit is set on a given module.
+  bool IsTopLevel() {
+    return mRequest->IsTopLevel() && (mKind == Kind::MainScript);
+  };
+
+  static Kind GetKind(bool isMainScript, bool isDebuggerScript) {
+    if (isDebuggerScript) {
+      return Kind::DebuggerScript;
+    }
+    if (isMainScript) {
+      return Kind::MainScript;
+    }
+    return Kind::ImportScript;
+  };
 
   /* These fields are used by all workers */
   Maybe<bool> mMutedErrorFlag;
   nsresult mLoadResult = NS_ERROR_NOT_INITIALIZED;
   bool mLoadingFinished = false;
+  Kind mKind;
 
   /* These fields are only used by service workers */
   /* TODO: Split out a ServiceWorkerLoadContext */

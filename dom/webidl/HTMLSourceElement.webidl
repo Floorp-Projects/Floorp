@@ -28,4 +28,10 @@ partial interface HTMLSourceElement {
            attribute DOMString sizes;
            [CEReactions, SetterThrows]
            attribute DOMString media;
+           [CEReactions, SetterThrows,
+            Pref="dom.picture_source_dimension_attributes.enabled"]
+           attribute unsigned long width;
+           [CEReactions, SetterThrows,
+            Pref="dom.picture_source_dimension_attributes.enabled"]
+           attribute unsigned long height;
 };

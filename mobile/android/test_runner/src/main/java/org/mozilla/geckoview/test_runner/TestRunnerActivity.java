@@ -482,6 +482,14 @@ public class TestRunnerActivity extends Activity {
     mView = new GeckoView(this);
     mView.setSession(mSession);
     setContentView(mView);
+    sRuntime.setServiceWorkerDelegate(
+        new GeckoRuntime.ServiceWorkerDelegate() {
+          @NonNull
+          @Override
+          public GeckoResult<GeckoSession> onOpenWindow(@NonNull String url) {
+            return mNavigationDelegate.onNewSession(mSession, url);
+          }
+        });
   }
 
   private final TestApiImpl mTestApiImpl = new TestApiImpl();

@@ -378,7 +378,7 @@ const ONBOARDING_MESSAGES = () => [
             },
             secondary_button: {
               label: {
-                string_id: "mr2022-onboarding-skip-step-button-label",
+                string_id: "mr2022-onboarding-secondary-skip-button-label",
               },
               action: {
                 navigate: true,

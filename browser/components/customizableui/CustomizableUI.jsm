@@ -2062,8 +2062,14 @@ var CustomizableUIInternal = {
         this.hidePanelForNode(aNode);
         anchor = wrapper.anchor;
       }
+    } else if (aWidget.disallowSubView) {
+      // Close the containing panel (e.g. overflow), PanelUI will reopen.
+      let wrapper = this.wrapWidget(aWidget.id).forWindow(ownerWindow);
+      if (wrapper?.anchor) {
+        this.hidePanelForNode(aNode);
+        anchor = wrapper.anchor;
+      }
     }
-
     ownerWindow.PanelUI.showSubView(aWidget.viewId, anchor, aEvent);
   },
 
@@ -2867,6 +2873,7 @@ var CustomizableUIInternal = {
       showInPrivateBrowsing: true,
       _introducedInVersion: -1,
       keepBroadcastAttributesWhenCustomizing: false,
+      disallowSubView: false,
     };
 
     if (typeof aData.id != "string" || !/^[a-z0-9-_]{1,}$/i.test(aData.id)) {
@@ -2909,6 +2916,7 @@ var CustomizableUIInternal = {
       "locationSpecific",
       "localized",
       "keepBroadcastAttributesWhenCustomizing",
+      "disallowSubView",
     ];
     for (let prop of kOptBoolProps) {
       if (typeof aData[prop] == "boolean") {
@@ -4696,6 +4704,7 @@ function WidgetGroupWrapper(aWidget) {
     "tooltiptext",
     "showInPrivateBrowsing",
     "viewId",
+    "disallowSubView",
   ];
   for (let prop of kBareProps) {
     let propertyName = prop;

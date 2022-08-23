@@ -1405,6 +1405,41 @@ void nsGenericHTMLElement::MapImageSizeAttributesInto(
   }
 }
 
+void nsGenericHTMLElement::MapPictureSourceSizeAttributesInto(
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
+  const auto* width = aAttributes->GetAttr(nsGkAtoms::width);
+  const auto* height = aAttributes->GetAttr(nsGkAtoms::height);
+  if (!width && !height) {
+    return;
+  }
+
+  // We should set the missing property values with auto value to make sure it
+  // overrides the declaraion created by the presentation attributes of
+  // HTMLImageElement. This can make sure we compute the ratio-dependent axis
+  // size properly by the natural aspect-ratio of the image.
+  //
+  // Note: The spec doesn't specify this, so we follow the implementation in
+  // other browsers.
+  // Spec issue: https://github.com/whatwg/html/issues/8178.
+  if (width) {
+    MapDimensionAttributeInto(aDecls, eCSSProperty_width, *width);
+  } else {
+    aDecls.SetAutoValue(eCSSProperty_width);
+  }
+
+  if (height) {
+    MapDimensionAttributeInto(aDecls, eCSSProperty_height, *height);
+  } else {
+    aDecls.SetAutoValue(eCSSProperty_height);
+  }
+
+  if (width && height) {
+    DoMapAspectRatio(*width, *height, aDecls);
+  } else {
+    aDecls.SetAutoValue(eCSSProperty_aspect_ratio);
+  }
+}
+
 void nsGenericHTMLElement::MapAspectRatioInto(
     const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
   auto* width = aAttributes->GetAttr(nsGkAtoms::width);

@@ -136,7 +136,6 @@ class WorkerScriptLoader final : public nsINamed {
   JS::loader::ScriptLoadRequestList mLoadedRequests;
   Maybe<ClientInfo> mClientInfo;
   Maybe<ServiceWorkerDescriptor> mController;
-  const bool mIsMainScript;
   WorkerScriptType mWorkerScriptType;
   Maybe<nsresult> mCancelMainThread;
   ErrorResult& mRv;
@@ -165,6 +164,8 @@ class WorkerScriptLoader final : public nsINamed {
  protected:
   nsIURI* GetBaseURI();
 
+  nsIURI* GetInitialBaseURI();
+
   void MaybeExecuteFinishedScripts(ScriptLoadRequest* aRequest);
 
   void MaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
@@ -178,14 +179,6 @@ class WorkerScriptLoader final : public nsINamed {
   }
 
   nsresult OnStreamComplete(ScriptLoadRequest* aRequest, nsresult aStatus);
-
-  // Are we loading the primary script, which is not a Debugger Script?
-  bool IsMainWorkerScript() const {
-    return mIsMainScript && mWorkerScriptType == WorkerScript;
-  }
-
-  // Are we loading the primary script, regardless of the script type?
-  bool IsMainScript() const { return mIsMainScript; }
 
   bool IsDebuggerScript() const { return mWorkerScriptType == DebuggerScript; }
 

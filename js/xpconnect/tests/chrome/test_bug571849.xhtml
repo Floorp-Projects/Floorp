@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
       index = i[0], value = i[1];
     }
     is(index, "0", "enumerated the 0th element");
-    ok(value instanceof Text, "the 0th element was a text node");
+    ok(Text.isInstance(value), "the 0th element was a text node");
     SimpleTest.finish();
   }
 

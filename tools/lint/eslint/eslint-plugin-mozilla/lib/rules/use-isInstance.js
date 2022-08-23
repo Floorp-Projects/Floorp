@@ -8,6 +8,8 @@
 
 "use strict";
 
+const fs = require("fs");
+
 const { maybeGetMemberPropertyName } = require("../helpers");
 
 const privilegedGlobals = Object.keys(
@@ -85,6 +87,12 @@ function isChromeContext(context) {
     filename.endsWith(".jsm.js");
   if (isChromeFileName) {
     return true;
+  }
+
+  if (filename.endsWith(".xhtml")) {
+    // Treat scripts in XUL files as chrome scripts
+    // Note: readFile is needed as getSourceCode() only gives JS blocks
+    return fs.readFileSync(filename).includes("there.is.only.xul");
   }
 
   // Treat scripts using ChromeUtils as chrome scripts, but not SpecialPowers.ChromeUtils
