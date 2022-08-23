@@ -5,7 +5,6 @@
 package org.mozilla.fenix.home.recenttabs.view
 
 import android.view.View
-import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
@@ -22,7 +21,6 @@ import org.mozilla.fenix.home.recenttabs.interactor.RecentTabInteractor
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
  * @param recentTabInteractor [RecentTabInteractor] which will have delegated to all user recent
  * tab interactions.
- * @param recentSyncedTabInteractor [RecentSyncedTabInteractor] which will have delegated to all user
  * recent synced tab interactions.
  */
 class RecentTabViewHolder(
@@ -45,17 +43,15 @@ class RecentTabViewHolder(
     override fun Content() {
         val recentTabs = components.appStore.observeAsComposableState { state -> state.recentTabs }
 
-        Column {
-            RecentTabs(
-                recentTabs = recentTabs.value ?: emptyList(),
-                onRecentTabClick = { recentTabInteractor.onRecentTabClicked(it) },
-                menuItems = listOf(
-                    RecentTabMenuItem(
-                        title = stringResource(id = R.string.recent_tab_menu_item_remove),
-                        onClick = { tab -> recentTabInteractor.onRemoveRecentTab(tab) }
-                    )
+        RecentTabs(
+            recentTabs = recentTabs.value ?: emptyList(),
+            onRecentTabClick = { recentTabInteractor.onRecentTabClicked(it) },
+            menuItems = listOf(
+                RecentTabMenuItem(
+                    title = stringResource(id = R.string.recent_tab_menu_item_remove),
+                    onClick = { tab -> recentTabInteractor.onRemoveRecentTab(tab) }
                 )
             )
-        }
+        )
     }
 }
