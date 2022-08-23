@@ -11,6 +11,7 @@
 
 #include <type_traits>
 
+#include "gc/Marking.h"
 #include "gc/Zone.h"
 #include "jit/JitFrames.h"
 #include "util/DiagnosticAssertions.h"

@@ -17,9 +17,12 @@
 #include "ds/LifoAlloc.h"
 #include "gc/Nursery.h"
 #include "js/AllocPolicy.h"
-#include "js/MemoryMetrics.h"
 #include "js/UniquePtr.h"
 #include "threading/Mutex.h"
+
+namespace JS {
+struct GCSizes;
+}
 
 namespace js {
 

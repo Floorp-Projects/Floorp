@@ -7,6 +7,7 @@
 #include "vm/ErrorContext.h"
 
 #include "gc/GC.h"
+#include "util/DifferentialTesting.h"
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"  // selfHosting_ErrorReporter
 

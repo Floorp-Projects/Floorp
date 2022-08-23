@@ -8,12 +8,13 @@
 #define gc_AtomMarking_h
 
 #include "NamespaceImports.h"
-#include "ds/Bitmap.h"
+#include "js/Vector.h"
 #include "threading/ProtectedData.h"
 
 namespace js {
 
 class AutoLockGC;
+class DenseBitmap;
 
 namespace gc {
 
