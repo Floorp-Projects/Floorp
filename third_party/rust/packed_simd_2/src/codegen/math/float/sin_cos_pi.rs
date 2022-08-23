@@ -5,7 +5,7 @@
 
 use crate::*;
 
-pub(crate) trait SinCosPi: Sized {
+crate trait SinCosPi: Sized {
     type Output;
     fn sin_cos_pi(self) -> Self::Output;
 }

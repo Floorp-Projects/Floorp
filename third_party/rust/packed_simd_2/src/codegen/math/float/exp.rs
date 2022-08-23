@@ -5,7 +5,7 @@
 
 use crate::*;
 
-pub(crate) trait Exp {
+crate trait Exp {
     fn exp(self) -> Self;
 }
 

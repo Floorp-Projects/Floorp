@@ -217,13 +217,14 @@
     rustc_attrs,
     platform_intrinsics,
     stdsimd,
+    aarch64_target_feature,
     arm_target_feature,
     link_llvm_intrinsics,
     core_intrinsics,
     stmt_expr_attributes,
+    crate_visibility_modifier,
     custom_inner_attributes,
 )]
-#![cfg_attr(aarch64_target_feature, feature(aarch64_target_feature))]
 #![allow(non_camel_case_types, non_snake_case,
         // FIXME: these types are unsound in C FFI already
         // See https://github.com/rust-lang/rust/issues/53346
@@ -343,6 +344,6 @@ pub use self::codegen::llvm::{
     __shuffle_vector8,
 };
 
-pub(crate) mod llvm {
-    pub(crate) use crate::codegen::llvm::*;
+crate mod llvm {
+    crate use crate::codegen::llvm::*;
 }

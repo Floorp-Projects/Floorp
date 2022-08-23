@@ -7,11 +7,11 @@
 
 use crate::*;
 
-pub(crate) trait All: crate::marker::Sized {
+crate trait All: crate::marker::Sized {
     unsafe fn all(self) -> bool;
 }
 
-pub(crate) trait Any: crate::marker::Sized {
+crate trait Any: crate::marker::Sized {
     unsafe fn any(self) -> bool;
 }
 
