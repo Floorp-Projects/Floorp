@@ -4327,9 +4327,9 @@ bool AsyncPanZoomController::SnapBackIfOverscrolled() {
   if (SnapBackIfOverscrolledForMomentum(ParentLayerPoint(0, 0))) {
     return true;
   }
-  // If we don't kick off an overscroll animation, we still need to ask the
-  // main thread to snap to any nearby snap points, assuming we haven't already
-  // done so when we started this fling
+  // If we don't kick off an overscroll animation, we still need to snap to any
+  // nearby snap points, assuming we haven't already done so when we started
+  // this fling
   if (mState != FLING) {
     ScrollSnap(ScrollSnapFlags::IntendedEndPosition |
                ScrollSnapFlags::IntendedDirection);
