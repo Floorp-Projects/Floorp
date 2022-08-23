@@ -422,4 +422,8 @@ export const TabsSetupFlowManager = new (class {
     // The observer should trigger re-evaluating state and advance to next step
     Services.prefs.setBoolPref(SYNC_TABS_PREF, true);
   }
+
+  forceSyncTabs() {
+    lazy.SyncedTabs.syncTabs(true);
+  }
 })();
