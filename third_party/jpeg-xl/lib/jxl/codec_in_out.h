@@ -210,7 +210,6 @@ class CodecInOut {
 
   std::vector<ImageBundle> frames;  // size=1 if !metadata.have_animation
 
-  bool use_sjpeg = false;
   // If the image should be written to a JPEG, use this quality for encoding.
   size_t jpeg_quality;
 };

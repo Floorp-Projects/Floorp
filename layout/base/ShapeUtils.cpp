@@ -124,9 +124,11 @@ nsRect ShapeUtils::ComputeInsetRect(const StyleBasicShape& aBasicShape,
 
 /* static */
 bool ShapeUtils::ComputeInsetRadii(const StyleBasicShape& aBasicShape,
-                                   const nsRect& aRefBox, nscoord aRadii[8]) {
+                                   const nsRect& aRefBox,
+                                   const nsRect& aInsetRect,
+                                   nscoord aRadii[8]) {
   const auto& radius = aBasicShape.AsInset().round;
-  return nsIFrame::ComputeBorderRadii(radius, aRefBox.Size(), aRefBox.Size(),
+  return nsIFrame::ComputeBorderRadii(radius, aRefBox.Size(), aInsetRect.Size(),
                                       Sides(), aRadii);
 }
 

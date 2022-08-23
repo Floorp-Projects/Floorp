@@ -1181,7 +1181,7 @@ FWD_TS_PTR(GetPeerAddr, mozilla::net::NetAddr);
 FWD_TS_PTR(GetSelfAddr, mozilla::net::NetAddr);
 FWD_TS_ADDREF(GetScriptablePeerAddr, nsINetAddr);
 FWD_TS_ADDREF(GetScriptableSelfAddr, nsINetAddr);
-FWD_TS_ADDREF(GetSecurityInfo, nsISupports);
+FWD_TS_ADDREF(GetTlsSocketControl, nsISSLSocketControl);
 FWD_TS_PTR(IsAlive, bool);
 FWD_TS_PTR(GetConnectionFlags, uint32_t);
 FWD_TS(SetConnectionFlags, uint32_t);

@@ -12,6 +12,7 @@ use crate::{FunctionBody, Operator, WasmFeatures, WasmModuleResources};
 pub struct FuncValidator<T> {
     validator: OperatorValidator,
     resources: T,
+    index: u32,
 }
 
 impl<T: WasmModuleResources> FuncValidator<T> {
@@ -25,6 +26,7 @@ impl<T: WasmModuleResources> FuncValidator<T> {
     /// The returned validator can be used to then parse a [`FunctionBody`], for
     /// example, to read locals and validate operators.
     pub fn new(
+        index: u32,
         ty: u32,
         offset: usize,
         resources: T,
@@ -33,6 +35,7 @@ impl<T: WasmModuleResources> FuncValidator<T> {
         Ok(FuncValidator {
             validator: OperatorValidator::new_func(ty, offset, features, &resources)?,
             resources,
+            index,
         })
     }
 
@@ -113,6 +116,12 @@ impl<T: WasmModuleResources> FuncValidator<T> {
     pub fn resources(&self) -> &T {
         &self.resources
     }
+
+    /// The index of the function within the module's function index space that
+    /// is being validated.
+    pub fn index(&self) -> u32 {
+        self.index
+    }
 }
 
 #[cfg(test)]
@@ -176,7 +185,7 @@ mod tests {
 
     #[test]
     fn operand_stack_height() {
-        let mut v = FuncValidator::new(0, 0, &EmptyResources, &Default::default()).unwrap();
+        let mut v = FuncValidator::new(0, 0, 0, &EmptyResources, &Default::default()).unwrap();
 
         // Initially zero values on the stack.
         assert_eq!(v.operand_stack_height(), 0);

@@ -1,4 +1,4 @@
-use crate::{encode_section, encoding_size, Encode, Instruction, Section, SectionId};
+use crate::{encode_section, encoding_size, ConstExpr, Encode, Section, SectionId};
 
 /// An encoder for the data section.
 ///
@@ -8,7 +8,7 @@ use crate::{encode_section, encoding_size, Encode, Instruction, Section, Section
 ///
 /// ```
 /// use wasm_encoder::{
-///     DataSection, Instruction, MemorySection, MemoryType,
+///     ConstExpr, DataSection, Instruction, MemorySection, MemoryType,
 ///     Module,
 /// };
 ///
@@ -22,7 +22,7 @@ use crate::{encode_section, encoding_size, Encode, Instruction, Section, Section
 ///
 /// let mut data = DataSection::new();
 /// let memory_index = 0;
-/// let offset = Instruction::I32Const(42);
+/// let offset = ConstExpr::i32_const(42);
 /// let segment_data = b"hello";
 /// data.active(memory_index, &offset, segment_data.iter().copied());
 ///
@@ -56,7 +56,7 @@ pub enum DataSegmentMode<'a> {
         /// The memory this segment applies to.
         memory_index: u32,
         /// The offset where this segment's data is initialized at.
-        offset: &'a Instruction<'a>,
+        offset: &'a ConstExpr,
     },
     /// A passive data segment.
     ///
@@ -96,7 +96,6 @@ impl DataSection {
             } => {
                 self.bytes.push(0x00);
                 offset.encode(&mut self.bytes);
-                Instruction::End.encode(&mut self.bytes);
             }
             DataSegmentMode::Active {
                 memory_index,
@@ -105,7 +104,6 @@ impl DataSection {
                 self.bytes.push(0x02);
                 memory_index.encode(&mut self.bytes);
                 offset.encode(&mut self.bytes);
-                Instruction::End.encode(&mut self.bytes);
             }
         }
 
@@ -118,7 +116,7 @@ impl DataSection {
     }
 
     /// Define an active data segment.
-    pub fn active<D>(&mut self, memory_index: u32, offset: &Instruction, data: D) -> &mut Self
+    pub fn active<D>(&mut self, memory_index: u32, offset: &ConstExpr, data: D) -> &mut Self
     where
         D: IntoIterator<Item = u8>,
         D::IntoIter: ExactSizeIterator,

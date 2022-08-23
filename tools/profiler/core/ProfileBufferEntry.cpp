@@ -301,9 +301,9 @@ bool UniqueStacks::FrameKey::JITFrameData::operator==(
 UniqueStacks::UniqueStacks(
     JITFrameInfo&& aJITFrameInfo,
     ProfilerCodeAddressService* aCodeAddressService /* = nullptr */)
-    : mUniqueStrings(std::move(aJITFrameInfo.mUniqueStrings)),
+    : mUniqueStrings(std::move(aJITFrameInfo).MoveUniqueStrings()),
       mCodeAddressService(aCodeAddressService),
-      mJITInfoRanges(std::move(aJITFrameInfo.mRanges)) {
+      mJITInfoRanges(std::move(aJITFrameInfo).MoveRanges()) {
   mFrameTableWriter.StartBareList();
   mStackTableWriter.StartBareList();
 }
@@ -388,6 +388,29 @@ void UniqueStacks::SpliceFrameTableElements(SpliceableJSONWriter& aWriter) {
 void UniqueStacks::SpliceStackTableElements(SpliceableJSONWriter& aWriter) {
   mStackTableWriter.EndBareList();
   aWriter.TakeAndSplice(mStackTableWriter.TakeChunkedWriteFunc());
+}
+
+[[nodiscard]] nsAutoCString UniqueStacks::FunctionNameOrAddress(void* aPC) {
+  nsAutoCString nameOrAddress;
+
+  if (!mCodeAddressService ||
+      !mCodeAddressService->GetFunction(aPC, nameOrAddress) ||
+      nameOrAddress.IsEmpty()) {
+    nameOrAddress.AppendASCII("0x");
+    // `AppendInt` only knows `uint32_t` or `uint64_t`, but because these are
+    // just aliases for *two* of (`unsigned`, `unsigned long`, and `unsigned
+    // long long`), a call with `uintptr_t` could use the third type and
+    // therefore would be ambiguous.
+    // So we want to force using exactly `uint32_t` or `uint64_t`, whichever
+    // matches the size of `uintptr_t`.
+    // (The outer cast to `uint` should then be a no-op.)
+    using uint = std::conditional_t<sizeof(uintptr_t) <= sizeof(uint32_t),
+                                    uint32_t, uint64_t>;
+    nameOrAddress.AppendInt(static_cast<uint>(reinterpret_cast<uintptr_t>(aPC)),
+                            16);
+  }
+
+  return nameOrAddress;
 }
 
 void UniqueStacks::StreamStack(const StackKey& aStack) {
@@ -999,28 +1022,11 @@ ProfilerThreadId ProfileBuffer::DoStreamSamplesAndMarkersToJSON(
             void* pc = e.Get().GetPtr();
             e.Next();
 
-            nsAutoCString buf;
+            nsAutoCString functionNameOrAddress =
+                uniqueStacks.FunctionNameOrAddress(pc);
 
-            if (!uniqueStacks.mCodeAddressService ||
-                !uniqueStacks.mCodeAddressService->GetFunction(pc, buf) ||
-                buf.IsEmpty()) {
-              buf.AppendASCII("0x");
-              // `AppendInt` only knows `uint32_t` or `uint64_t`, but because
-              // these are just aliases for *two* of (`unsigned`, `unsigned
-              // long`, and `unsigned long long`), a call with `uintptr_t` could
-              // use the third type and therefore would be ambiguous.
-              // So we want to force using exactly `uint32_t` or `uint64_t`,
-              // whichever matches the size of `uintptr_t`.
-              // (The outer cast to `uint` should then be a no-op.)
-              using uint =
-                  std::conditional_t<sizeof(uintptr_t) <= sizeof(uint32_t),
-                                     uint32_t, uint64_t>;
-              buf.AppendInt(static_cast<uint>(reinterpret_cast<uintptr_t>(pc)),
-                            16);
-            }
-
-            stack = uniqueStacks.AppendFrame(stack,
-                                             UniqueStacks::FrameKey(buf.get()));
+            stack = uniqueStacks.AppendFrame(
+                stack, UniqueStacks::FrameKey(functionNameOrAddress.get()));
 
           } else if (e.Get().IsLabel()) {
             numFrames++;

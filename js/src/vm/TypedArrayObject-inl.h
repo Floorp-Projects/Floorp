@@ -12,7 +12,6 @@
 #include "vm/TypedArrayObject.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Compiler.h"
 #include "mozilla/FloatingPoint.h"
 
 #include <algorithm>
@@ -20,7 +19,6 @@
 
 #include "jsnum.h"
 
-#include "builtin/Array.h"
 #include "gc/Zone.h"
 #include "jit/AtomicOperations.h"
 #include "js/Conversions.h"
@@ -28,12 +26,13 @@
 #include "js/Value.h"
 #include "util/DifferentialTesting.h"
 #include "util/Memory.h"
+#include "vm/ArrayObject.h"
 #include "vm/BigIntType.h"
-#include "vm/JSContext.h"
 #include "vm/NativeObject.h"
 #include "vm/Uint8Clamped.h"
 
 #include "gc/ObjectKind-inl.h"
+#include "vm/NativeObject-inl.h"
 #include "vm/ObjectOperations-inl.h"
 
 namespace js {

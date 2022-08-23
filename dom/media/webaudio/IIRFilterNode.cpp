@@ -13,6 +13,7 @@
 #include "nsPrintfCString.h"
 
 #include "nsGkAtoms.h"
+#include "Tracing.h"
 
 namespace mozilla::dom {
 
@@ -30,6 +31,7 @@ class IIRFilterNodeEngine final : public AudioNodeEngine {
   void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
+    TRACE("IIRFilterNodeEngine::ProcessBlock");
     float inputBuffer[WEBAUDIO_BLOCK_SIZE + 4];
     float* alignedInputBuffer = ALIGNED16(inputBuffer);
     ASSERT_ALIGNED16(alignedInputBuffer);

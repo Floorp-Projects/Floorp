@@ -9,6 +9,7 @@
 
 #include "vm/ErrorObject.h"
 
+#include "vm/JSAtomState.h"
 #include "vm/JSContext.h"
 
 inline JSString* js::ErrorObject::fileName(JSContext* cx) const {

@@ -13,8 +13,6 @@ const BinaryOutputStream = Components.Constructor(
 
 const Pipe = Components.Constructor("@mozilla.org/pipe;1", "nsIPipe", "init");
 
-const kNestedAboutCID = "{2f277c00-0eaf-4ddb-b936-41326ba48aae}";
-
 function run_test() {
   var ios = Cc["@mozilla.org/network/io-service;1"].createInstance(
     Ci.nsIIOService

@@ -9,14 +9,13 @@
 
 #include "vm/JSAtom.h"
 
-#include "mozilla/FloatingPoint.h"
 #include "mozilla/RangedPtr.h"
 
 #include "jsnum.h"
 
 #include "gc/MaybeRooted.h"
+#include "vm/JSAtomState.h"
 #include "vm/JSContext.h"
-#include "vm/Runtime.h"
 #include "vm/StringType.h"
 
 namespace js {

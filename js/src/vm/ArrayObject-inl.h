@@ -11,10 +11,9 @@
 
 #include "gc/Allocator.h"
 #include "gc/GCProbes.h"
-#include "vm/StringType.h"
 
 #include "vm/JSObject-inl.h"
-#include "vm/ObjectOperations-inl.h"  // js::GetElement
+#include "vm/NativeObject-inl.h"
 
 namespace js {
 

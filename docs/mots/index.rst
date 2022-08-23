@@ -1,15 +1,24 @@
 ..
     This file was automatically generated using `mots export`.
-.. note::
-    To add, remove, or update module information, see the `mots documentation <https://mots.readthedocs.io/en/latest/#adding-a-module>`_.
 
-=======
-Modules
-=======
+==========
+Governance
+==========
+
+--------
+Overview
+--------
+To add, remove, or update module information, see the `mots documentation <https://mots.readthedocs.io/en/latest/#adding-a-module>`_.
 
 Mozilla operates under a `module ownership governance system <https://www.mozilla.org/hacking/module-ownership.html>`_. A module is a discrete unit of code or activity. An owner is the person in charge of a module or sub-module. A peer is a person whom the owner has appointed to help them. A module may have multiple peers and, very occasionally, multiple owners.
 
 The system is overseen by the owner and peers of the Module Ownership module. For the modules that make up Firefox, oversight is provided by the Firefox Technical Leadership module. Owners may add and remove peers from their modules as they wish, without reference to anyone else.
+
+
+
+-------
+Modules
+-------
 
 Mots config
 ~~~~~~~~~~~
@@ -25,6 +34,23 @@ Mots config
     * - Includes
       -
         | `mots.yaml <https://searchfox.org/mozilla-central/search?q=&path=mots.yaml>`__
+
+mozilla-toplevel
+~~~~~~~~~~~~~~~~
+The top level directory for the mozilla tree.
+
+.. warning::
+    This module does not have any owners specified.
+
+.. list-table::
+    :stub-columns: 1
+    :widths: 30 70
+
+    * - Owner(s) Emeritus
+      - Brendan Eich
+    * - Includes
+      -
+        | `README <https://searchfox.org/mozilla-central/search?q=&path=README>`__
 
 Code Coverage
 ~~~~~~~~~~~~~
@@ -1394,23 +1420,6 @@ Glue library containing various low-level functionality, including a dynamic lin
       - dev-platform
     * - Bugzilla Components
       - Core::mozglue
-
-Core: mozilla-toplevel
-~~~~~~~~~~~~~~~~~~~~~~
-The top level directory for the mozilla tree.
-
-.. warning::
-    This module does not have any owners specified.
-
-.. list-table::
-    :stub-columns: 1
-    :widths: 30 70
-
-    * - Owner(s) Emeritus
-      - Brendan Eich
-    * - Includes
-      -
-        | `README <https://searchfox.org/mozilla-central/search?q=&path=README>`__
 
 Core: MSCOM
 ~~~~~~~~~~~
@@ -3596,7 +3605,7 @@ The core infrastructure in the Firefox client to send back Telemetry and FHR dat
 
     * - Owner(s)
       -
-        | `Chris H-C (chutten|PTO) <https://people.mozilla.org/s?query=chutten|PTO>`__
+        | `Chris H-C (chutten) <https://people.mozilla.org/s?query=chutten>`__
     * - Peer(s)
       -
         | `aplacitelli <https://people.mozilla.org/s?query=aplacitelli>`__

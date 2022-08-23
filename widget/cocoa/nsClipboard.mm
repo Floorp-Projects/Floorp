@@ -94,8 +94,6 @@ nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
   if ((aWhichClipboard != kGlobalClipboard && aWhichClipboard != kFindClipboard) || !mTransferable)
     return NS_ERROR_FAILURE;
 
-  mIgnoreEmptyNotification = true;
-
   NSDictionary* pasteboardOutputDict = PasteboardDictFromTransferable(mTransferable);
   if (!pasteboardOutputDict) return NS_ERROR_FAILURE;
 
@@ -143,8 +141,6 @@ nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard) {
 
   mCachedClipboard = aWhichClipboard;
   mChangeCount = [cocoaPasteboard changeCount];
-
-  mIgnoreEmptyNotification = false;
 
   return NS_OK;
 

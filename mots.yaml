@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-08-11T13:07:31.289055'
+updated_at: '2022-08-23T09:56:25.482550'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -165,10 +165,10 @@ people:
     bmo_id: 644229
     name: Caroline Cullen
     nick: caroline
-  - &chuttenPTO
+  - &chutten
     bmo_id: 553004
     name: Chris H-C
-    nick: chutten|PTO
+    nick: chutten
   - &ckerschbaumer
     bmo_id: 521513
     name: ''
@@ -884,6 +884,20 @@ modules:
     owners:
       - *zeid
     machine_name: _mots
+
+  - name: mozilla-toplevel
+    description: The top level directory for the mozilla tree.
+    includes:
+      - README
+        # TODO: verify, as this was toolkit/README
+    meta:
+      owners_emeritus:
+        - Brendan Eich
+    owners:
+        # - Technical Leadership Module
+        # TODO
+    peers: []
+    machine_name: _mozillatoplevel
 
   - machine_name: code_coverage
     name: Code Coverage
@@ -1969,20 +1983,6 @@ modules:
     peers:
       - *jchen
     machine_name: core_mozglue
-
-  - name: 'Core: mozilla-toplevel'
-    description: The top level directory for the mozilla tree.
-    includes:
-      - README
-        # TODO: verify, as this was toolkit/README
-    meta:
-      owners_emeritus:
-        - Brendan Eich
-    owners:
-        # - Technical Leadership Module
-        # TODO
-    peers: []
-    machine_name: core_mozillatoplevel
 
   - name: 'Core: MSCOM'
     description: Integration with Microsoft Distributed COM
@@ -3570,7 +3570,7 @@ modules:
           group: fx-data-dev
           url: https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/index.html
         owners:
-          - *chuttenPTO
+          - *chutten
         peers:
           - *aplacitelli
           - *janerik
@@ -3607,5 +3607,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: 94b11222bd4d452c7e55cd605834609f9b1bfae9
-  export: 8c296abc98008b6a2e09bb13401043d95218d526
+  config: af03e70e8268def4ba57af0191a85cbb5e0a61f4
+  export: fd5ea331ea6cac903498a00597a06f4a7af73adf

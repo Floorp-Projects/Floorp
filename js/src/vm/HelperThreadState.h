@@ -27,7 +27,6 @@
 #include "js/Stack.h"  // JS::NativeStackLimit
 #include "js/TypeDecls.h"
 #include "threading/ConditionVariable.h"
-#include "threading/Thread.h"
 #include "vm/ErrorContext.h"
 #include "vm/HelperThreads.h"
 #include "vm/HelperThreadTask.h"
@@ -36,27 +35,16 @@
 
 namespace js {
 
-class AutoLockHelperThreadState;
-class AutoUnlockHelperThreadState;
-class CompileError;
 struct ParseTask;
 struct DelazifyTask;
 struct FreeDelazifyTask;
 struct PromiseHelperTask;
 class PromiseObject;
 
-namespace frontend {
-struct ScriptStencilRef;
-}
-
 namespace jit {
 class IonCompileTask;
 class IonFreeTask;
 }  // namespace jit
-
-namespace wasm {
-struct Tier2GeneratorTask;
-}  // namespace wasm
 
 enum class ParseTaskKind {
   // The output is CompilationStencil for script.

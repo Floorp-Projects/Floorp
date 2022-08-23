@@ -2,11 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { getMode } from "../source";
-
 import { isWasm, getWasmLineNumberFormatter, renderWasmText } from "../wasm";
 import { isMinified } from "../isMinified";
 import { resizeBreakpointGutter, resizeToggleButton } from "../ui";
+import { javascriptLikeExtensions } from "../source";
 
 let sourceDocs = {};
 
@@ -73,10 +72,8 @@ export function updateDocuments(updater) {
 }
 
 export function clearEditor(editor) {
-  const doc = editor.createDocument();
+  const doc = editor.createDocument("", { name: "text" });
   editor.replaceDocument(doc);
-  editor.setText("");
-  editor.setMode({ name: "text" });
   resetLineNumberFormat(editor);
 }
 
@@ -86,11 +83,8 @@ export function showLoading(editor) {
   if (doc) {
     editor.replaceDocument(doc);
   } else {
-    doc = editor.createDocument();
+    doc = editor.createDocument(L10N.getStr("loadingText"), { name: "text" });
     setDocument("loading", doc);
-    doc.setValue(L10N.getStr("loadingText"));
-    editor.replaceDocument(doc);
-    editor.setMode({ name: "text" });
   }
 }
 
@@ -101,36 +95,114 @@ export function showErrorMessage(editor, msg) {
   } else {
     error = L10N.getFormatStr("errorLoadingText3", msg);
   }
-  const doc = editor.createDocument();
+  const doc = editor.createDocument(error, { name: "text" });
   editor.replaceDocument(doc);
-  editor.setText(error);
-  editor.setMode({ name: "text" });
   resetLineNumberFormat(editor);
 }
 
-function setEditorText(editor, sourceId, content) {
-  if (content.type === "wasm") {
-    const wasmLines = renderWasmText(sourceId, content);
-    // cm will try to split into lines anyway, saving memory
-    const wasmText = { split: () => wasmLines, match: () => false };
-    editor.setText(wasmText);
-  } else {
-    editor.setText(content.value);
-  }
-}
+const contentTypeModeMap = new Map([
+  ["text/javascript", { name: "javascript" }],
+  ["text/typescript", { name: "javascript", typescript: true }],
+  ["text/coffeescript", { name: "coffeescript" }],
+  [
+    "text/typescript-jsx",
+    {
+      name: "jsx",
+      base: { name: "javascript", typescript: true },
+    },
+  ],
+  ["text/jsx", { name: "jsx" }],
+  ["text/x-elm", { name: "elm" }],
+  ["text/x-clojure", { name: "clojure" }],
+  ["text/x-clojurescript", { name: "clojure" }],
+  ["text/wasm", { name: "text" }],
+  ["text/html", { name: "htmlmixed" }],
+  ["text/plain", { name: "text" }],
+]);
 
-function setMode(editor, source, sourceTextContent, symbols) {
-  // Disable modes for minified files with 1+ million characters Bug 1569829
+const nonJSLanguageExtensionMap = new Map([
+  ["c", { name: "text/x-csrc" }],
+  ["kt", { name: "text/x-kotlin" }],
+  ["cpp", { name: "text/x-c++src" }],
+  ["m", { name: "text/x-objectivec" }],
+  ["rs", { name: "text/x-rustsrc" }],
+  ["hx", { name: "text/x-haxe" }],
+]);
+
+/**
+ * Returns Code Mirror mode for source content type
+ */
+// eslint-disable-next-line complexity
+export function getMode(source, sourceTextContent, symbols) {
   const content = sourceTextContent.value;
+  // Disable modes for minified files with 1+ million characters (See Bug 1569829).
   if (
     content.type === "text" &&
     isMinified(source, sourceTextContent) &&
     content.value.length > 1000000
   ) {
-    return;
+    return contentTypeModeMap.get("text/plain");
   }
 
-  const mode = getMode(source, content, symbols);
+  if (content.type !== "text") {
+    return contentTypeModeMap.get("text/plain");
+  }
+
+  const extension = source.displayURL.fileExtension;
+  if (extension === "jsx" || (symbols && symbols.hasJsx)) {
+    if (symbols && symbols.hasTypes) {
+      return contentTypeModeMap.get("text/typescript-jsx");
+    }
+    return contentTypeModeMap.get("text/jsx");
+  }
+
+  if (symbols && symbols.hasTypes) {
+    if (symbols.hasJsx) {
+      return contentTypeModeMap.get("text/typescript-jsx");
+    }
+
+    return contentTypeModeMap.get("text/typescript");
+  }
+
+  // check for C and other non JS languages
+  if (nonJSLanguageExtensionMap.has(extension)) {
+    return nonJSLanguageExtensionMap.get(extension);
+  }
+
+  // if the url ends with a known Javascript-like URL, provide JavaScript mode.
+  if (javascriptLikeExtensions.has(extension)) {
+    return contentTypeModeMap.get("text/javascript");
+  }
+
+  const { contentType, value: text } = content;
+  // Use HTML mode for files in which the first non whitespace
+  // character is `<` regardless of extension.
+  const isHTMLLike = () => text.match(/^\s*</);
+  if (!contentType) {
+    if (isHTMLLike()) {
+      return contentTypeModeMap.get("text/html");
+    }
+    return contentTypeModeMap.get("text/plain");
+  }
+
+  // // @flow or /* @flow */
+  if (text.match(/^\s*(\/\/ @flow|\/\* @flow \*\/)/)) {
+    return contentTypeModeMap.get("text/typescript");
+  }
+
+  if (contentTypeModeMap.has(contentType)) {
+    return contentTypeModeMap.get(contentType);
+  }
+
+  if (isHTMLLike()) {
+    return contentTypeModeMap.get("text/html");
+  }
+
+  return contentTypeModeMap.get("text/plain");
+}
+
+function setMode(editor, source, sourceTextContent, symbols) {
+  const mode = getMode(source, sourceTextContent, symbols);
   const currentMode = editor.codeMirror.getOption("mode");
   if (!currentMode || currentMode.name != mode.name) {
     editor.setMode(mode);
@@ -155,11 +227,23 @@ export function showSourceText(editor, source, sourceTextContent, symbols) {
     return;
   }
 
-  const doc = editor.createDocument();
+  const content = sourceTextContent.value;
+
+  const doc = editor.createDocument(
+    // We can set wasm text content directly from the constructor, so we pass an empty string
+    // here, and set the text after replacing the document.
+    content.type !== "wasm" ? content.value : "",
+    getMode(source, sourceTextContent, symbols)
+  );
+
   setDocument(source.id, doc);
   editor.replaceDocument(doc);
 
-  setEditorText(editor, source.id, sourceTextContent.value);
-  setMode(editor, source, sourceTextContent, symbols);
+  if (content.type === "wasm") {
+    const wasmLines = renderWasmText(source.id, content);
+    // cm will try to split into lines anyway, saving memory
+    editor.setText({ split: () => wasmLines, match: () => false });
+  }
+
   updateLineNumberFormat(editor, source.id);
 }

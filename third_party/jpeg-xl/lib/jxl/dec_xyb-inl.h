@@ -21,7 +21,11 @@ namespace HWY_NAMESPACE {
 namespace {
 
 // These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Add;
 using hwy::HWY_NAMESPACE::Broadcast;
+using hwy::HWY_NAMESPACE::Mul;
+using hwy::HWY_NAMESPACE::MulAdd;
+using hwy::HWY_NAMESPACE::Sub;
 
 // Inverts the pixel-wise RGB->XYB conversion in OpsinDynamicsImage() (including
 // the gamma mixing and simple gamma). Avoids clamping to [0, 1] - out of (sRGB)
@@ -48,18 +52,18 @@ HWY_INLINE HWY_MAYBE_UNUSED void XybToRgb(D d, const V opsin_x, const V opsin_y,
 #endif
 
   // Color space: XYB -> RGB
-  auto gamma_r = opsin_y + opsin_x;
-  auto gamma_g = opsin_y - opsin_x;
+  auto gamma_r = Add(opsin_y, opsin_x);
+  auto gamma_g = Sub(opsin_y, opsin_x);
   auto gamma_b = opsin_b;
 
-  gamma_r -= Set(d, opsin_params.opsin_biases_cbrt[0]);
-  gamma_g -= Set(d, opsin_params.opsin_biases_cbrt[1]);
-  gamma_b -= Set(d, opsin_params.opsin_biases_cbrt[2]);
+  gamma_r = Sub(gamma_r, Set(d, opsin_params.opsin_biases_cbrt[0]));
+  gamma_g = Sub(gamma_g, Set(d, opsin_params.opsin_biases_cbrt[1]));
+  gamma_b = Sub(gamma_b, Set(d, opsin_params.opsin_biases_cbrt[2]));
 
   // Undo gamma compression: linear = gamma^3 for efficiency.
-  const auto gamma_r2 = gamma_r * gamma_r;
-  const auto gamma_g2 = gamma_g * gamma_g;
-  const auto gamma_b2 = gamma_b * gamma_b;
+  const auto gamma_r2 = Mul(gamma_r, gamma_r);
+  const auto gamma_g2 = Mul(gamma_g, gamma_g);
+  const auto gamma_b2 = Mul(gamma_b, gamma_b);
   const auto mixed_r = MulAdd(gamma_r2, gamma_r, neg_bias_r);
   const auto mixed_g = MulAdd(gamma_g2, gamma_g, neg_bias_g);
   const auto mixed_b = MulAdd(gamma_b2, gamma_b, neg_bias_b);
@@ -67,9 +71,10 @@ HWY_INLINE HWY_MAYBE_UNUSED void XybToRgb(D d, const V opsin_x, const V opsin_y,
   const float* HWY_RESTRICT inverse_matrix = opsin_params.inverse_opsin_matrix;
 
   // Unmix (multiply by 3x3 inverse_matrix)
-  *linear_r = LoadDup128(d, &inverse_matrix[0 * 4]) * mixed_r;
-  *linear_g = LoadDup128(d, &inverse_matrix[3 * 4]) * mixed_r;
-  *linear_b = LoadDup128(d, &inverse_matrix[6 * 4]) * mixed_r;
+  // TODO(eustas): ref would be more readable than pointer
+  *linear_r = Mul(LoadDup128(d, &inverse_matrix[0 * 4]), mixed_r);
+  *linear_g = Mul(LoadDup128(d, &inverse_matrix[3 * 4]), mixed_r);
+  *linear_b = Mul(LoadDup128(d, &inverse_matrix[6 * 4]), mixed_r);
   *linear_r = MulAdd(LoadDup128(d, &inverse_matrix[1 * 4]), mixed_g, *linear_r);
   *linear_g = MulAdd(LoadDup128(d, &inverse_matrix[4 * 4]), mixed_g, *linear_g);
   *linear_b = MulAdd(LoadDup128(d, &inverse_matrix[7 * 4]), mixed_g, *linear_b);

@@ -113,8 +113,3 @@ browser/chrome/browser/skin/classic/browser/customize.svg
 # Bug 1718144 - De-duplicate lightbulb icon
 browser/features/webcompat-reporter@mozilla.org/icons/lightbulb.svg
 chrome/toolkit/skin/classic/global/icons/lightbulb.svg
-
-# Bug 1710546 - Bundle Firefox extension as a builtin addon Nighly only
-# We plan to remove this duplicity after Firefox Translations become pref'd on
-browser/chrome/browser/builtin-addons/translations/wasm/cld-worker.js.mem
-browser/modules/translation/cld-worker.js.mem

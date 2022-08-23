@@ -69,6 +69,22 @@
 namespace jxl {
 namespace {
 
+PassDefinition progressive_passes_dc_vlf_lf_full_ac[] = {
+    {/*num_coefficients=*/2, /*shift=*/0,
+     /*suitable_for_downsampling_of_at_least=*/4},
+    {/*num_coefficients=*/3, /*shift=*/0,
+     /*suitable_for_downsampling_of_at_least=*/2},
+    {/*num_coefficients=*/8, /*shift=*/0,
+     /*suitable_for_downsampling_of_at_least=*/0},
+};
+
+PassDefinition progressive_passes_dc_quant_ac_full_ac[] = {
+    {/*num_coefficients=*/8, /*shift=*/1,
+     /*suitable_for_downsampling_of_at_least=*/2},
+    {/*num_coefficients=*/8, /*shift=*/0,
+     /*suitable_for_downsampling_of_at_least=*/0},
+};
+
 void ClusterGroups(PassesEncoderState* enc_state) {
   if (enc_state->shared.frame_header.passes.num_passes > 1) {
     // TODO(veluca): implement this for progressive modes.
@@ -1126,6 +1142,14 @@ Status EncodeFrame(const CompressParams& cparams_orig,
   ib.VerifyMetadata();
 
   passes_enc_state->special_frames.clear();
+
+  if (cparams.qprogressive_mode) {
+    passes_enc_state->progressive_splitter.SetProgressiveMode(
+        ProgressiveMode{progressive_passes_dc_quant_ac_full_ac});
+  } else if (cparams.progressive_mode) {
+    passes_enc_state->progressive_splitter.SetProgressiveMode(
+        ProgressiveMode{progressive_passes_dc_vlf_lf_full_ac});
+  }
 
   JXL_RETURN_IF_ERROR(ParamsPostInit(&cparams));
 

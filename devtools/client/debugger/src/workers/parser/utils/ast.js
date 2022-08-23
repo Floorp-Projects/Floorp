@@ -58,16 +58,15 @@ const sourceOptions = {
 };
 
 export function parse(text, opts) {
-  let ast;
+  let ast = {};
   if (!text) {
-    return;
+    return ast;
   }
 
   try {
     ast = _parse(text, opts);
   } catch (error) {
     console.error(error);
-    ast = {};
   }
 
   return ast;
@@ -88,7 +87,7 @@ function vueParser({ source, line }) {
 }
 function parseVueScript(code) {
   if (typeof code !== "string") {
-    return;
+    return {};
   }
 
   let ast;

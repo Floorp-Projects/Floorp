@@ -96,7 +96,7 @@ namespace mozilla {
 struct SizeComputationInput {
  public:
   // The frame being reflowed.
-  nsIFrame* mFrame;
+  nsIFrame* const mFrame;
 
   // Rendering context to use for measurement.
   gfxContext* mRenderingContext;
@@ -834,14 +834,7 @@ struct ReflowInput : public SizeComputationInput {
   // These methods don't apply min/max computed block-sizes to the value passed
   // in.
   void SetComputedBSize(nscoord aComputedBSize);
-  void SetComputedBSizeWithoutResettingResizeFlags(nscoord aComputedBSize) {
-    // Viewport frames reset the computed block size on a copy of their reflow
-    // input when reflowing fixed-pos kids.  In that case we actually don't
-    // want to mess with the resize flags, because comparing the frame's rect
-    // to the munged computed isize is pointless.
-    MOZ_ASSERT(aComputedBSize >= 0, "Invalid computed block-size!");
-    ComputedBSize() = aComputedBSize;
-  }
+  void SetComputedBSizeWithoutResettingResizeFlags(nscoord aComputedBSize);
 
   bool WillReflowAgainForClearance() const {
     return mDiscoveredClearance && *mDiscoveredClearance;

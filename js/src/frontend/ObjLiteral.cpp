@@ -20,7 +20,6 @@
 #include "js/Id.h"                                 // INT_TO_JSID
 #include "js/RootingAPI.h"                         // Rooted
 #include "js/TypeDecls.h"                          // RootedId, RootedValue
-#include "vm/JSAtom.h"                             // JSAtom
 #include "vm/JSObject.h"                           // TenuredObject
 #include "vm/JSONPrinter.h"                        // js::JSONPrinter
 #include "vm/NativeObject.h"                       // NativeDefineDataProperty

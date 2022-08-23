@@ -5,7 +5,6 @@ const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 var httpserver = null;
 const noRedirectURI = "/content";
-const pageValue = "Final page";
 const acceptType = "application/json";
 
 function redirectHandler(metadata, response) {

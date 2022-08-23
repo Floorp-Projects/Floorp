@@ -15,7 +15,6 @@
 #include "jstypes.h"
 #include "NamespaceImports.h"
 
-#include "gc/Tracer.h"
 #include "js/GCVector.h"
 #include "js/PropertyDescriptor.h"
 #include "util/EnumFlags.h"

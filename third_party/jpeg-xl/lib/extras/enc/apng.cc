@@ -42,15 +42,42 @@
 #include <string>
 #include <vector>
 
+#include "lib/extras/exif.h"
 #include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/base/printf_macros.h"
-#include "lib/jxl/exif.h"
 #include "png.h" /* original (unpatched) libpng is ok */
 
 namespace jxl {
 namespace extras {
 
 namespace {
+
+class APNGEncoder : public Encoder {
+ public:
+  std::vector<JxlPixelFormat> AcceptedFormats() const override {
+    std::vector<JxlPixelFormat> formats;
+    for (const uint32_t num_channels : {1, 2, 3, 4}) {
+      for (const JxlDataType data_type : {JXL_TYPE_UINT8, JXL_TYPE_UINT16}) {
+        formats.push_back(JxlPixelFormat{num_channels, data_type,
+                                         JXL_BIG_ENDIAN, /*align=*/0});
+      }
+    }
+    return formats;
+  }
+  Status Encode(const PackedPixelFile& ppf, EncodedImage* encoded_image,
+                ThreadPool* pool) const override {
+    JXL_RETURN_IF_ERROR(VerifyBasicInfo(ppf.info));
+    encoded_image->icc.clear();
+    encoded_image->bitstreams.resize(1);
+    return EncodePackedPixelFileToAPNG(ppf, pool,
+                                       &encoded_image->bitstreams.front());
+  }
+
+ private:
+  Status EncodePackedPixelFileToAPNG(const PackedPixelFile& ppf,
+                                     ThreadPool* pool,
+                                     std::vector<uint8_t>* bytes) const;
+};
 
 static void PngWrite(png_structp png_ptr, png_bytep data, png_size_t length) {
   std::vector<uint8_t>* bytes =
@@ -152,8 +179,9 @@ void MaybeAddCICP(JxlColorEncoding c_enc, png_structp png_ptr,
   png_set_unknown_chunks(png_ptr, info_ptr, &cicp_chunk, 1);
 }
 
-Status EncodePackedPixelFileToAPNG(const PackedPixelFile& ppf, ThreadPool* pool,
-                                   std::vector<uint8_t>* bytes) {
+Status APNGEncoder::EncodePackedPixelFileToAPNG(
+    const PackedPixelFile& ppf, ThreadPool* pool,
+    std::vector<uint8_t>* bytes) const {
   size_t xsize = ppf.info.xsize;
   size_t ysize = ppf.info.ysize;
   bool has_alpha = ppf.info.alpha_bits != 0;
@@ -162,26 +190,16 @@ Status EncodePackedPixelFileToAPNG(const PackedPixelFile& ppf, ThreadPool* pool,
   size_t num_channels = color_channels + (has_alpha ? 1 : 0);
   size_t num_samples = num_channels * xsize * ysize;
 
-  if (xsize == 0 || ysize == 0 || ppf.frames.empty()) {
-    return JXL_FAILURE("Empty image");
-  }
-  if (has_alpha && ppf.info.alpha_bits != ppf.info.bits_per_sample) {
-    return JXL_FAILURE("Alpha bit depth does not match image bit depth");
-  }
-  if (color_channels != 1 && color_channels != 3) {
-    return JXL_FAILURE("Invalid number of color channels");
-  }
   if (!ppf.info.have_animation && ppf.frames.size() != 1) {
     return JXL_FAILURE("Invalid number of frames");
-  }
-  if (ppf.info.orientation != JXL_ORIENT_IDENTITY) {
-    return JXL_FAILURE("Orientation must be identity");
   }
 
   size_t count = 0;
   size_t anim_chunks = 0;
 
   for (const auto& frame : ppf.frames) {
+    JXL_RETURN_IF_ERROR(VerifyPackedImage(frame.color, ppf.info));
+
     const PackedImage& color = frame.color;
     const JxlPixelFormat format = color.format;
     const uint8_t* in = reinterpret_cast<const uint8_t*>(color.pixels());
@@ -190,21 +208,6 @@ Status EncodePackedPixelFileToAPNG(const PackedPixelFile& ppf, ThreadPool* pool,
     size_t out_bytes_per_sample = bytes_per_sample > 1 ? 2 : 1;
     size_t out_stride = xsize * num_channels * out_bytes_per_sample;
     size_t out_size = ysize * out_stride;
-
-    if (in == nullptr || color.pixels_size < bytes_per_sample * num_samples) {
-      return JXL_FAILURE("Invalid frame");
-    }
-    if (color.xsize != xsize || color.ysize != ysize ||
-        format.num_channels != num_channels) {
-      return JXL_FAILURE("Frame size does not match image size");
-    }
-    if (ppf.info.bits_per_sample > data_bits_per_sample) {
-      return JXL_FAILURE("Bit depth does not fit pixel data type");
-    }
-    if (color.flipped_y) {
-      return JXL_FAILURE("Flipped y channel not supported");
-    }
-
     std::vector<uint8_t> out(out_size);
 
     if (format.data_type == JXL_TYPE_UINT8) {
@@ -355,27 +358,6 @@ Status EncodePackedPixelFileToAPNG(const PackedPixelFile& ppf, ThreadPool* pool,
 
   return true;
 }
-
-class APNGEncoder : public Encoder {
- public:
-  std::vector<JxlPixelFormat> AcceptedFormats() const override {
-    std::vector<JxlPixelFormat> formats;
-    for (const uint32_t num_channels : {1, 2, 3, 4}) {
-      for (const JxlDataType data_type : {JXL_TYPE_UINT8, JXL_TYPE_UINT16}) {
-        formats.push_back(JxlPixelFormat{num_channels, data_type,
-                                         JXL_BIG_ENDIAN, /*align=*/0});
-      }
-    }
-    return formats;
-  }
-  Status Encode(const PackedPixelFile& ppf, EncodedImage* encoded_image,
-                ThreadPool* pool) const override {
-    encoded_image->icc.clear();
-    encoded_image->bitstreams.resize(1);
-    return EncodePackedPixelFileToAPNG(ppf, pool,
-                                       &encoded_image->bitstreams.front());
-  }
-};
 
 }  // namespace
 

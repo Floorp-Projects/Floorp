@@ -1,0 +1,20 @@
+<html class="reftest-wait">
+<script>
+function tweak() {
+  document.getElementById('a').appendChild(document.createTextNode('hZ'));
+  document.documentElement.removeAttribute("class");
+}
+
+window.onload = () => {
+  // double-rAF (to ensure layout/paints have been flushed) before we make
+  // the dynamic modification. This seems to make the bug more likely to
+  // reproduce, in unpatched builds.
+  requestAnimationFrame(() => { requestAnimationFrame(() => {
+    tweak();
+  }); });
+};
+</script>
+<table>
+<tfoot id='a'>
+<th>
+<textarea>Text

@@ -1,4 +1,5 @@
 // Copyright 2020 Google LLC
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,6 +53,17 @@
 #error ">1 target enabled => define HWY_TARGET_INCLUDE before foreach_target.h"
 #endif
 
+#if (HWY_TARGETS & HWY_EMU128) && (HWY_STATIC_TARGET != HWY_EMU128)
+#undef HWY_TARGET
+#define HWY_TARGET HWY_EMU128
+#include HWY_TARGET_INCLUDE
+#ifdef HWY_TARGET_TOGGLE
+#undef HWY_TARGET_TOGGLE
+#else
+#define HWY_TARGET_TOGGLE
+#endif
+#endif
+
 #if (HWY_TARGETS & HWY_SCALAR) && (HWY_STATIC_TARGET != HWY_SCALAR)
 #undef HWY_TARGET
 #define HWY_TARGET HWY_SCALAR
@@ -74,6 +86,17 @@
 #endif
 #endif
 
+#if (HWY_TARGETS & HWY_RVV) && (HWY_STATIC_TARGET != HWY_RVV)
+#undef HWY_TARGET
+#define HWY_TARGET HWY_RVV
+#include HWY_TARGET_INCLUDE
+#ifdef HWY_TARGET_TOGGLE
+#undef HWY_TARGET_TOGGLE
+#else
+#define HWY_TARGET_TOGGLE
+#endif
+#endif
+
 #if (HWY_TARGETS & HWY_SVE) && (HWY_STATIC_TARGET != HWY_SVE)
 #undef HWY_TARGET
 #define HWY_TARGET HWY_SVE
@@ -88,6 +111,28 @@
 #if (HWY_TARGETS & HWY_SVE2) && (HWY_STATIC_TARGET != HWY_SVE2)
 #undef HWY_TARGET
 #define HWY_TARGET HWY_SVE2
+#include HWY_TARGET_INCLUDE
+#ifdef HWY_TARGET_TOGGLE
+#undef HWY_TARGET_TOGGLE
+#else
+#define HWY_TARGET_TOGGLE
+#endif
+#endif
+
+#if (HWY_TARGETS & HWY_SVE_256) && (HWY_STATIC_TARGET != HWY_SVE_256)
+#undef HWY_TARGET
+#define HWY_TARGET HWY_SVE_256
+#include HWY_TARGET_INCLUDE
+#ifdef HWY_TARGET_TOGGLE
+#undef HWY_TARGET_TOGGLE
+#else
+#define HWY_TARGET_TOGGLE
+#endif
+#endif
+
+#if (HWY_TARGETS & HWY_SVE2_128) && (HWY_STATIC_TARGET != HWY_SVE2_128)
+#undef HWY_TARGET
+#define HWY_TARGET HWY_SVE2_128
 #include HWY_TARGET_INCLUDE
 #ifdef HWY_TARGET_TOGGLE
 #undef HWY_TARGET_TOGGLE
@@ -151,9 +196,9 @@
 #endif
 #endif
 
-#if (HWY_TARGETS & HWY_WASM2) && (HWY_STATIC_TARGET != HWY_WASM2)
+#if (HWY_TARGETS & HWY_WASM_EMU256) && (HWY_STATIC_TARGET != HWY_WASM_EMU256)
 #undef HWY_TARGET
-#define HWY_TARGET HWY_WASM2
+#define HWY_TARGET HWY_WASM_EMU256
 #include HWY_TARGET_INCLUDE
 #ifdef HWY_TARGET_TOGGLE
 #undef HWY_TARGET_TOGGLE

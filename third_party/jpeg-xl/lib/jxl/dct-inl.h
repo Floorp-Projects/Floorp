@@ -24,6 +24,13 @@ namespace jxl {
 namespace HWY_NAMESPACE {
 namespace {
 
+// These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Add;
+using hwy::HWY_NAMESPACE::Mul;
+using hwy::HWY_NAMESPACE::MulAdd;
+using hwy::HWY_NAMESPACE::NegMulAdd;
+using hwy::HWY_NAMESPACE::Sub;
+
 template <size_t SZ>
 struct FVImpl {
   using type = HWY_CAPPED(float, SZ);
@@ -48,7 +55,7 @@ struct CoeffBundle {
     for (size_t i = 0; i < N; i++) {
       auto in1 = Load(FV<SZ>(), ain1 + i * SZ);
       auto in2 = Load(FV<SZ>(), ain2 + (N - i - 1) * SZ);
-      Store(in1 + in2, FV<SZ>(), aout + i * SZ);
+      Store(Add(in1, in2), FV<SZ>(), aout + i * SZ);
     }
   }
   static void SubReverse(const float* JXL_RESTRICT ain1,
@@ -57,7 +64,7 @@ struct CoeffBundle {
     for (size_t i = 0; i < N; i++) {
       auto in1 = Load(FV<SZ>(), ain1 + i * SZ);
       auto in2 = Load(FV<SZ>(), ain2 + (N - i - 1) * SZ);
-      Store(in1 - in2, FV<SZ>(), aout + i * SZ);
+      Store(Sub(in1, in2), FV<SZ>(), aout + i * SZ);
     }
   }
   static void B(float* JXL_RESTRICT coeff) {
@@ -68,18 +75,18 @@ struct CoeffBundle {
     for (size_t i = 1; i + 1 < N; i++) {
       auto in1 = Load(FV<SZ>(), coeff + i * SZ);
       auto in2 = Load(FV<SZ>(), coeff + (i + 1) * SZ);
-      Store(in1 + in2, FV<SZ>(), coeff + i * SZ);
+      Store(Add(in1, in2), FV<SZ>(), coeff + i * SZ);
     }
   }
   static void BTranspose(float* JXL_RESTRICT coeff) {
     for (size_t i = N - 1; i > 0; i--) {
       auto in1 = Load(FV<SZ>(), coeff + i * SZ);
       auto in2 = Load(FV<SZ>(), coeff + (i - 1) * SZ);
-      Store(in1 + in2, FV<SZ>(), coeff + i * SZ);
+      Store(Add(in1, in2), FV<SZ>(), coeff + i * SZ);
     }
     auto sqrt2 = Set(FV<SZ>(), kSqrt2);
     auto in1 = Load(FV<SZ>(), coeff);
-    Store(in1 * sqrt2, FV<SZ>(), coeff);
+    Store(Mul(in1, sqrt2), FV<SZ>(), coeff);
   }
   // Ideally optimized away by compiler (except the multiply).
   static void InverseEvenOdd(const float* JXL_RESTRICT ain,
@@ -110,7 +117,7 @@ struct CoeffBundle {
     for (size_t i = 0; i < N / 2; i++) {
       auto in1 = Load(FV<SZ>(), coeff + (N / 2 + i) * SZ);
       auto mul = Set(FV<SZ>(), WcMultipliers<N>::kMultipliers[i]);
-      Store(in1 * mul, FV<SZ>(), coeff + (N / 2 + i) * SZ);
+      Store(Mul(in1, mul), FV<SZ>(), coeff + (N / 2 + i) * SZ);
     }
   }
   static void MultiplyAndAdd(const float* JXL_RESTRICT coeff,
@@ -137,7 +144,7 @@ struct CoeffBundle {
                                    const Block& out, size_t off) {
     auto mul = Set(FV<SZ>(), 1.0f / N);
     for (size_t i = 0; i < N; i++) {
-      out.StorePart(FV<SZ>(), mul * Load(FV<SZ>(), coeff + i * SZ), i, off);
+      out.StorePart(FV<SZ>(), Mul(mul, Load(FV<SZ>(), coeff + i * SZ)), i, off);
     }
   }
 };
@@ -155,8 +162,8 @@ struct DCT1DImpl<2, SZ> {
   JXL_INLINE void operator()(float* JXL_RESTRICT mem) {
     auto in1 = Load(FV<SZ>(), mem);
     auto in2 = Load(FV<SZ>(), mem + SZ);
-    Store(in1 + in2, FV<SZ>(), mem);
-    Store(in1 - in2, FV<SZ>(), mem + SZ);
+    Store(Add(in1, in2), FV<SZ>(), mem);
+    Store(Sub(in1, in2), FV<SZ>(), mem + SZ);
   }
 };
 
@@ -194,8 +201,8 @@ struct IDCT1DImpl<2, SZ> {
     JXL_DASSERT(to_stride >= SZ);
     auto in1 = LoadU(FV<SZ>(), from);
     auto in2 = LoadU(FV<SZ>(), from + from_stride);
-    StoreU(in1 + in2, FV<SZ>(), to);
-    StoreU(in1 - in2, FV<SZ>(), to + to_stride);
+    StoreU(Add(in1, in2), FV<SZ>(), to);
+    StoreU(Sub(in1, in2), FV<SZ>(), to + to_stride);
   }
 };
 

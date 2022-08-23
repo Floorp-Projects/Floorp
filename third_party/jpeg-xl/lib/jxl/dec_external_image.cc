@@ -32,6 +32,10 @@ HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
 
+// These templates are not found via ADL.
+using hwy::HWY_NAMESPACE::Clamp;
+using hwy::HWY_NAMESPACE::NearestInt;
+
 // TODO(jon): check if this can be replaced by a FloatToU16 function
 void FloatToU32(const float* in, uint32_t* out, size_t num, float mul,
                 size_t bits_per_sample) {
@@ -50,7 +54,7 @@ void FloatToU32(const float* in, uint32_t* out, size_t num, float mul,
     auto v = Load(d, in + x);
     // Clamp turns NaN to 'min'.
     v = Clamp(v, Zero(d), one);
-    auto i = NearestInt(v * scale);
+    auto i = NearestInt(Mul(v, scale));
     Store(BitCast(du, i), du, out + x);
   }
 

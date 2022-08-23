@@ -192,9 +192,6 @@
 
 #include "gc/GC-inl.h"
 
-#include "mozilla/DebugOnly.h"
-#include "mozilla/MacroForEach.h"
-#include "mozilla/MemoryReporting.h"
 #include "mozilla/Range.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TextUtils.h"
@@ -206,60 +203,44 @@
 #include <stdlib.h>
 #include <string.h>
 #include <utility>
-#if !defined(XP_WIN) && !defined(__wasi__)
-#  include <sys/mman.h>
-#  include <unistd.h>
-#endif
 
 #include "jsapi.h"  // JS_AbortIfWrongThread
 #include "jstypes.h"
 
 #include "debugger/DebugAPI.h"
 #include "gc/ClearEdgesTracer.h"
-#include "gc/FindSCCs.h"
 #include "gc/GCContext.h"
 #include "gc/GCInternals.h"
 #include "gc/GCLock.h"
 #include "gc/GCProbes.h"
 #include "gc/Memory.h"
-#include "gc/ParallelWork.h"
-#include "gc/Policy.h"
 #include "gc/WeakMap.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/JitCode.h"
 #include "jit/JitRealm.h"
 #include "jit/ProcessExecutableMemory.h"
-#include "js/HeapAPI.h"             // JS::GCCellPtr
-#include "js/Object.h"              // JS::GetClass
-#include "js/PropertyAndElement.h"  // JS_DefineProperty
+#include "js/HeapAPI.h"  // JS::GCCellPtr
 #include "js/SliceBudget.h"
 #include "util/DifferentialTesting.h"
-#include "util/Poison.h"
-#include "util/WindowsWrapper.h"
 #include "vm/BigIntType.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/GetterSetter.h"
 #include "vm/HelperThreadState.h"
 #include "vm/JitActivation.h"
-#include "vm/JSAtom.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
 #include "vm/Printer.h"
 #include "vm/PropMap.h"
-#include "vm/ProxyObject.h"
 #include "vm/Realm.h"
 #include "vm/Shape.h"
 #include "vm/StringType.h"
 #include "vm/SymbolType.h"
 #include "vm/Time.h"
-#include "vm/WrapperObject.h"
 
 #include "gc/Heap-inl.h"
-#include "gc/Marking-inl.h"
 #include "gc/Nursery-inl.h"
 #include "gc/ObjectKind-inl.h"
 #include "gc/PrivateIterators-inl.h"
-#include "gc/Zone-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/Realm-inl.h"

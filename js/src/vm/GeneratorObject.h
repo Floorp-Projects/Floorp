@@ -12,11 +12,12 @@
 #include "vm/ArrayObject.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/GeneratorResumeKind.h"  // GeneratorResumeKind
-#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/Stack.h"
 
 namespace js {
+
+class InterpreterActivation;
 
 namespace frontend {
 class TaggedParserAtomIndex;

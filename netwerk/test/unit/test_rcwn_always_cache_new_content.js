@@ -45,7 +45,6 @@ function test_handler(metadata, response) {
   response.setStatusLine(metadata.httpVersion, 200, "OK");
 }
 
-let gIsFromCache = 0;
 function checkContent(request, buffer, context, isFromCache) {
   let isRacing = request.QueryInterface(Ci.nsICacheInfoChannel).isRacing();
   switch (gRequestCounter) {

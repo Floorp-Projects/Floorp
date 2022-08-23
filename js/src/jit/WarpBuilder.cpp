@@ -19,6 +19,7 @@
 #include "jit/WarpSnapshot.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_BAD_CONST_ASSIGN
 #include "vm/GeneratorObject.h"
+#include "vm/Interpreter.h"
 #include "vm/Opcodes.h"
 
 #include "gc/ObjectKind-inl.h"

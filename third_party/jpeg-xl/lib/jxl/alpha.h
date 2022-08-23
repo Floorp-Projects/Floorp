@@ -60,7 +60,8 @@ void PremultiplyAlpha(float* JXL_RESTRICT r, float* JXL_RESTRICT g,
 void UnpremultiplyAlpha(float* JXL_RESTRICT r, float* JXL_RESTRICT g,
                         float* JXL_RESTRICT b, const float* JXL_RESTRICT a,
                         size_t num_pixels);
-void UnpremultiplyAlpha(float* JXL_RESTRICT rgba, size_t num_pixels);
+void UnpremultiplyAlpha(float* JXL_RESTRICT rgba, size_t num_color,
+                        size_t num_pixels);
 
 }  // namespace jxl
 

@@ -22,6 +22,7 @@
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/UseCounter.h"
 #include "nsContentUtils.h"
 #include "nsHTMLTags.h"
 #include "jsapi.h"
@@ -866,6 +867,8 @@ void CustomElementRegistry::Define(
    */
   nsAutoString localName(aName);
   if (aOptions.mExtends.WasPassed()) {
+    doc->SetUseCounter(eUseCounter_custom_CustomizedBuiltin);
+
     RefPtr<nsAtom> extendsAtom(NS_Atomize(aOptions.mExtends.Value()));
     if (nsContentUtils::IsCustomElementName(extendsAtom, kNameSpaceID_XHTML)) {
       aRv.ThrowNotSupportedError(

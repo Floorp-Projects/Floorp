@@ -6,7 +6,6 @@
 
 #include "gc/GCParallelTask.h"
 
-#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 
 #include "gc/GCContext.h"
@@ -14,6 +13,7 @@
 #include "gc/ParallelWork.h"
 #include "vm/HelperThreadState.h"
 #include "vm/Runtime.h"
+#include "vm/Time.h"
 
 using namespace js;
 using namespace js::gc;

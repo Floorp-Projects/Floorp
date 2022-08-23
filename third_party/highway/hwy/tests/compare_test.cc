@@ -1,4 +1,5 @@
 // Copyright 2019 Google LLC
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +19,7 @@
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "tests/compare_test.cc"
-#include "hwy/foreach_target.h"
+#include "hwy/foreach_target.h"  // IWYU pragma: keep
 #include "hwy/highway.h"
 #include "hwy/tests/test_util-inl.h"
 
@@ -148,8 +149,21 @@ struct TestStrictInt {
   }
 };
 
+// S-SSE3 bug (#795): same upper, differing MSB in lower
+struct TestStrictInt64 {
+  template <typename T, class D>
+  HWY_NOINLINE void operator()(T /*unused*/, D d) {
+    const auto m0 = MaskFalse(d);
+    const auto m1 = MaskTrue(d);
+    HWY_ASSERT_MASK_EQ(d, m0, Lt(Set(d, 0x380000000LL), Set(d, 0x300000001LL)));
+    HWY_ASSERT_MASK_EQ(d, m1, Lt(Set(d, 0xF00000000LL), Set(d, 0xF80000000LL)));
+    HWY_ASSERT_MASK_EQ(d, m1, Lt(Set(d, 0xF00000000LL), Set(d, 0xF80000001LL)));
+  }
+};
+
 HWY_NOINLINE void TestAllStrictInt() {
   ForSignedTypes(ForPartialVectors<TestStrictInt>());
+  ForPartialVectors<TestStrictInt64>()(int64_t());
 }
 
 struct TestStrictFloat {
@@ -218,16 +232,15 @@ HWY_NOINLINE void TestAllWeakFloat() {
   ForFloatTypes(ForPartialVectors<TestWeakFloat>());
 }
 
-class TestLt128 {
-  template <class D>
-  static HWY_NOINLINE Vec<D> Make128(D d, uint64_t hi, uint64_t lo) {
-    alignas(16) uint64_t in[2];
-    in[0] = lo;
-    in[1] = hi;
-    return LoadDup128(d, in);
-  }
+template <class D>
+static HWY_NOINLINE Vec<D> Make128(D d, uint64_t hi, uint64_t lo) {
+  alignas(16) uint64_t in[2];
+  in[0] = lo;
+  in[1] = hi;
+  return LoadDup128(d, in);
+}
 
- public:
+struct TestLt128 {
   template <typename T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
     using V = Vec<D>;
@@ -275,6 +288,154 @@ class TestLt128 {
 
 HWY_NOINLINE void TestAllLt128() { ForGEVectors<128, TestLt128>()(uint64_t()); }
 
+struct TestLt128Upper {
+  template <typename T, class D>
+  HWY_NOINLINE void operator()(T /*unused*/, D d) {
+    using V = Vec<D>;
+    const V v00 = Zero(d);
+    const V v01 = Make128(d, 0, 1);
+    const V v10 = Make128(d, 1, 0);
+    const V v11 = Add(v01, v10);
+
+    const auto mask_false = MaskFalse(d);
+    const auto mask_true = MaskTrue(d);
+
+    HWY_ASSERT_MASK_EQ(d, mask_false, Lt128Upper(d, v00, v00));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Lt128Upper(d, v01, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Lt128Upper(d, v10, v10));
+
+    HWY_ASSERT_MASK_EQ(d, mask_false, Lt128Upper(d, v00, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Lt128Upper(d, v01, v10));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Lt128Upper(d, v01, v11));
+
+    // Reversed order
+    HWY_ASSERT_MASK_EQ(d, mask_false, Lt128Upper(d, v01, v00));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Lt128Upper(d, v10, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Lt128Upper(d, v11, v01));
+
+    // Also check 128-bit blocks are independent
+    const V iota = Iota(d, 1);
+    HWY_ASSERT_MASK_EQ(d, mask_false, Lt128Upper(d, iota, Add(iota, v01)));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Lt128Upper(d, iota, Add(iota, v10)));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Lt128Upper(d, Add(iota, v01), iota));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Lt128Upper(d, Add(iota, v10), iota));
+
+    // Max value
+    const V vm = Make128(d, LimitsMax<T>(), LimitsMax<T>());
+    HWY_ASSERT_MASK_EQ(d, mask_false, Lt128Upper(d, vm, vm));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Lt128Upper(d, vm, v00));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Lt128Upper(d, vm, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Lt128Upper(d, vm, v10));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Lt128Upper(d, vm, v11));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Lt128Upper(d, v00, vm));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Lt128Upper(d, v01, vm));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Lt128Upper(d, v10, vm));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Lt128Upper(d, v11, vm));
+  }
+};
+
+HWY_NOINLINE void TestAllLt128Upper() {
+  ForGEVectors<128, TestLt128Upper>()(uint64_t());
+}
+
+struct TestEq128 {
+  template <typename T, class D>
+  HWY_NOINLINE void operator()(T /*unused*/, D d) {
+    using V = Vec<D>;
+    const V v00 = Zero(d);
+    const V v01 = Make128(d, 0, 1);
+    const V v10 = Make128(d, 1, 0);
+    const V v11 = Add(v01, v10);
+
+    const auto mask_false = MaskFalse(d);
+    const auto mask_true = MaskTrue(d);
+
+    HWY_ASSERT_MASK_EQ(d, mask_true, Eq128(d, v00, v00));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Eq128(d, v01, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Eq128(d, v10, v10));
+
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, v00, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, v01, v10));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, v01, v11));
+
+    // Reversed order
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, v01, v00));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, v10, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, v11, v01));
+
+    // Also check 128-bit blocks are independent
+    const V iota = Iota(d, 1);
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, iota, Add(iota, v01)));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, iota, Add(iota, v10)));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, Add(iota, v01), iota));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, Add(iota, v10), iota));
+
+    // Max value
+    const V vm = Make128(d, LimitsMax<T>(), LimitsMax<T>());
+    HWY_ASSERT_MASK_EQ(d, mask_true, Eq128(d, vm, vm));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, vm, v00));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, vm, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, vm, v10));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, vm, v11));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, v00, vm));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, v01, vm));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, v10, vm));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128(d, v11, vm));
+  }
+};
+
+HWY_NOINLINE void TestAllEq128() { ForGEVectors<128, TestEq128>()(uint64_t()); }
+
+struct TestEq128Upper {
+  template <typename T, class D>
+  HWY_NOINLINE void operator()(T /*unused*/, D d) {
+    using V = Vec<D>;
+    const V v00 = Zero(d);
+    const V v01 = Make128(d, 0, 1);
+    const V v10 = Make128(d, 1, 0);
+    const V v11 = Add(v01, v10);
+
+    const auto mask_false = MaskFalse(d);
+    const auto mask_true = MaskTrue(d);
+
+    HWY_ASSERT_MASK_EQ(d, mask_true, Eq128Upper(d, v00, v00));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Eq128Upper(d, v01, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Eq128Upper(d, v10, v10));
+
+    HWY_ASSERT_MASK_EQ(d, mask_true, Eq128Upper(d, v00, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, v01, v10));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, v01, v11));
+
+    // Reversed order
+    HWY_ASSERT_MASK_EQ(d, mask_true, Eq128Upper(d, v01, v00));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, v10, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, v11, v01));
+
+    // Also check 128-bit blocks are independent
+    const V iota = Iota(d, 1);
+    HWY_ASSERT_MASK_EQ(d, mask_true, Eq128Upper(d, iota, Add(iota, v01)));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, iota, Add(iota, v10)));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Eq128Upper(d, Add(iota, v01), iota));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, Add(iota, v10), iota));
+
+    // Max value
+    const V vm = Make128(d, LimitsMax<T>(), LimitsMax<T>());
+    HWY_ASSERT_MASK_EQ(d, mask_true, Eq128Upper(d, vm, vm));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, vm, v00));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, vm, v01));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, vm, v10));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, vm, v11));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, v00, vm));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, v01, vm));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, v10, vm));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq128Upper(d, v11, vm));
+  }
+};
+
+HWY_NOINLINE void TestAllEq128Upper() {
+  ForGEVectors<128, TestEq128Upper>()(uint64_t());
+}
+
 // NOLINTNEXTLINE(google-readability-namespace-comments)
 }  // namespace HWY_NAMESPACE
 }  // namespace hwy
@@ -290,12 +451,9 @@ HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllStrictInt);
 HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllStrictFloat);
 HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllWeakFloat);
 HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllLt128);
+HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllLt128Upper);
+HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllEq128);
+HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllEq128Upper);
 }  // namespace hwy
-
-// Ought not to be necessary, but without this, no tests run on RVV.
-int main(int argc, char** argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
 
 #endif

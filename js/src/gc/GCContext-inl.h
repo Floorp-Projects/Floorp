@@ -10,7 +10,6 @@
 #include "gc/GCContext.h"
 
 #include "gc/ZoneAllocator.h"
-#include "js/RefCounted.h"
 
 inline void JS::GCContext::free_(Cell* cell, void* p, size_t nbytes,
                                  MemoryUse use) {

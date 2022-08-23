@@ -53,7 +53,6 @@ add_task(async function test() {
       });
     } else {
       await server.registerPathHandler("/test", (req, resp) => {
-        let oldSock = global.socket;
         global.socket = resp.socket;
         if (!global.sent408) {
           global.sent408 = true;

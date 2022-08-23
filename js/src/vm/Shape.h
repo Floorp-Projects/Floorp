@@ -10,35 +10,22 @@
 #include "js/shadow/Shape.h"  // JS::shadow::Shape, JS::shadow::BaseShape
 
 #include "mozilla/Attributes.h"
-#include "mozilla/HashFunctions.h"
-#include "mozilla/MathAlgorithms.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/TemplateLib.h"
-
-#include <algorithm>
 
 #include "jstypes.h"
 #include "NamespaceImports.h"
 
 #include "gc/Barrier.h"
-#include "gc/GCContext.h"
 #include "gc/MaybeRooted.h"
-#include "gc/Policy.h"
 #include "js/HashTable.h"
 #include "js/Id.h"  // JS::PropertyKey
 #include "js/MemoryMetrics.h"
 #include "js/RootingAPI.h"
 #include "js/UbiNode.h"
 #include "util/EnumFlags.h"
-#include "vm/JSAtom.h"
 #include "vm/ObjectFlags.h"
-#include "vm/Printer.h"
 #include "vm/PropertyInfo.h"
-#include "vm/PropertyKey.h"
 #include "vm/PropMap.h"
-#include "vm/StringType.h"
-#include "vm/SymbolType.h"
 #include "vm/TaggedProto.h"
 
 // [SMDOC] Shapes

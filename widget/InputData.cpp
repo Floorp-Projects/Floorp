@@ -86,17 +86,6 @@ MultiTouchInput::MultiTouchInput()
       mType(MULTITOUCH_START),
       mHandledByAPZ(false) {}
 
-MultiTouchInput::MultiTouchInput(const MultiTouchInput& aOther)
-    : InputData(MULTITOUCH_INPUT, aOther.mTime, aOther.mTimeStamp,
-                aOther.modifiers),
-      mType(aOther.mType),
-      mScreenOffset(aOther.mScreenOffset),
-      mHandledByAPZ(aOther.mHandledByAPZ),
-      mButton(aOther.mButton),
-      mButtons(aOther.mButtons) {
-  mTouches.AppendElements(aOther.mTouches);
-}
-
 MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
     : InputData(MULTITOUCH_INPUT, aTouchEvent.mTime, aTouchEvent.mTimeStamp,
                 aTouchEvent.mModifiers),

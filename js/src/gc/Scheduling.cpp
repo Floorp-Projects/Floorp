@@ -12,9 +12,11 @@
 #include <algorithm>
 #include <cmath>
 
+#include "gc/Memory.h"
 #include "gc/Nursery.h"
 #include "gc/RelocationOverlay.h"
 #include "gc/ZoneAllocator.h"
+#include "util/DifferentialTesting.h"
 #include "vm/MutexIDs.h"
 
 using namespace js;

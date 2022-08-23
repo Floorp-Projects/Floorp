@@ -227,7 +227,7 @@ class MultiTouchInput : public InputData {
                   Modifiers aModifiers);
   MultiTouchInput();
   MultiTouchInput(MultiTouchInput&&) = default;
-  MultiTouchInput(const MultiTouchInput& aOther);
+  MultiTouchInput(const MultiTouchInput&) = default;
   explicit MultiTouchInput(const WidgetTouchEvent& aTouchEvent);
 
   MultiTouchInput& operator=(MultiTouchInput&&) = default;

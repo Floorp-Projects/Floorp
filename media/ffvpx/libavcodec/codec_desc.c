@@ -19,15 +19,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include <stdlib.h>
 #include <string.h>
 
-#include "libavutil/common.h"
 #include "libavutil/internal.h"
+#include "libavutil/macros.h"
 
 #include "codec_id.h"
 #include "codec_desc.h"
 #include "profiles.h"
-#include "version.h"
 
 #define MT(...) (const char *const[]){ __VA_ARGS__, NULL }
 
@@ -1856,6 +1856,36 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .long_name = NULL_IF_CONFIG_SMALL("Digital Pictures SGA Video"),
         .props     = AV_CODEC_PROP_LOSSY,
     },
+    {
+        .id        = AV_CODEC_ID_GEM,
+        .type      = AVMEDIA_TYPE_VIDEO,
+        .name      = "gem",
+        .long_name = NULL_IF_CONFIG_SMALL("GEM Raster image"),
+        .props     = AV_CODEC_PROP_LOSSY,
+    },
+    {
+        .id        = AV_CODEC_ID_VBN,
+        .type      = AVMEDIA_TYPE_VIDEO,
+        .name      = "vbn",
+        .long_name = NULL_IF_CONFIG_SMALL("Vizrt Binary Image"),
+        .props     = AV_CODEC_PROP_LOSSY,
+    },
+    {
+        .id        = AV_CODEC_ID_JPEGXL,
+        .type      = AVMEDIA_TYPE_VIDEO,
+        .name      = "jpegxl",
+        .long_name = NULL_IF_CONFIG_SMALL("JPEG XL"),
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY |
+                     AV_CODEC_PROP_LOSSLESS,
+        .mime_types= MT("image/jxl"),
+    },
+    {
+        .id        = AV_CODEC_ID_QOI,
+        .type      = AVMEDIA_TYPE_VIDEO,
+        .name      = "qoi",
+        .long_name = NULL_IF_CONFIG_SMALL("QOI (Quite OK Image)"),
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSLESS,
+    },
 
     /* various PCM "codecs" */
     {
@@ -2462,6 +2492,13 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .long_name = NULL_IF_CONFIG_SMALL("ADPCM IMA MobiClip MOFLEX"),
         .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY,
     },
+    {
+        .id        = AV_CODEC_ID_ADPCM_IMA_ACORN,
+        .type      = AVMEDIA_TYPE_AUDIO,
+        .name      = "adpcm_ima_acorn",
+        .long_name = NULL_IF_CONFIG_SMALL("ADPCM IMA Acorn Replay"),
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY,
+    },
 
     /* AMR */
     {
@@ -2758,7 +2795,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .type      = AVMEDIA_TYPE_AUDIO,
         .name      = "mlp",
         .long_name = NULL_IF_CONFIG_SMALL("MLP (Meridian Lossless Packing)"),
-        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSLESS,
+        .props     = AV_CODEC_PROP_LOSSLESS,
     },
     {
         .id        = AV_CODEC_ID_GSM_MS,
@@ -3215,6 +3252,20 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .name      = "fastaudio",
         .long_name = NULL_IF_CONFIG_SMALL("MobiClip FastAudio"),
         .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY,
+    },
+    {
+        .id        = AV_CODEC_ID_MSNSIREN,
+        .type      = AVMEDIA_TYPE_AUDIO,
+        .name      = "msnsiren",
+        .long_name = NULL_IF_CONFIG_SMALL("MSN Siren"),
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY,
+    },
+    {
+        .id        = AV_CODEC_ID_DFPWM,
+        .type      = AVMEDIA_TYPE_AUDIO,
+        .name      = "dfpwm",
+        .long_name = NULL_IF_CONFIG_SMALL("DFPWM (Dynamic Filter Pulse Width Modulation)"),
+        .props     = AV_CODEC_PROP_LOSSY,
     },
 
     /* subtitle codecs */

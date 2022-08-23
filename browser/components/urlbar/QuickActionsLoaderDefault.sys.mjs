@@ -23,10 +23,15 @@ const BASE_URL = "https://support.mozilla.org/kb/";
 let openUrlFun = url => () => openUrl(url);
 let openUrl = url => {
   let window = lazy.BrowserWindowTracker.getTopWindow();
-  window.gBrowser.loadOneTab(url, {
-    inBackground: false,
-    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-  });
+
+  if (url.startsWith("about:")) {
+    window.switchToTabHavingURI(Services.io.newURI(url), true);
+  } else {
+    window.gBrowser.loadOneTab(url, {
+      inBackground: false,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
+  }
   return { focusContent: true };
 };
 

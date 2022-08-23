@@ -8,23 +8,18 @@
 
 #include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 
 #include <algorithm>
 #include <iterator>
 
-#include "debugger/DebugAPI.h"
-#include "gc/Marking.h"
 #include "gc/MaybeRooted.h"
-#include "js/CharacterEncoding.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
-#include "js/Result.h"
 #include "js/Value.h"
-#include "util/Memory.h"
 #include "vm/EqualityOperations.h"  // js::SameValue
 #include "vm/GetterSetter.h"        // js::GetterSetter
+#include "vm/Interpreter.h"         // js::CallGetter, js::CallSetter
 #include "vm/PlainObject.h"         // js::PlainObject
 #include "vm/TypedArrayObject.h"
 
@@ -35,18 +30,13 @@
 #endif
 
 #include "gc/Nursery-inl.h"
-#include "vm/ArrayObject-inl.h"
-#include "vm/BytecodeLocation-inl.h"
-#include "vm/EnvironmentObject-inl.h"
 #include "vm/JSObject-inl.h"
-#include "vm/JSScript-inl.h"
 #include "vm/Shape-inl.h"
 
 using namespace js;
 
 using JS::AutoCheckCannotGC;
 using mozilla::CheckedInt;
-using mozilla::DebugOnly;
 using mozilla::PodCopy;
 using mozilla::RoundUpPow2;
 

@@ -16,14 +16,15 @@
 #include "gc/ZoneAllocator.h"
 #include "js/ArrayBuffer.h"
 #include "js/GCHashTable.h"
+#include "vm/JSFunction.h"
 #include "vm/JSObject.h"
-#include "vm/Runtime.h"
 #include "vm/SharedMem.h"
 #include "wasm/WasmMemory.h"
 
 namespace js {
 
 class ArrayBufferViewObject;
+class AutoSetNewObjectMetadata;
 class WasmArrayRawBuffer;
 
 namespace wasm {

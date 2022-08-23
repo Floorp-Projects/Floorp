@@ -10,6 +10,7 @@
 #include "gc/Nursery.h"
 #include "js/experimental/TypedData.h"  // JS_GetArrayBufferView{Data,Buffer,Length,ByteOffset}, JS_GetObjectAsArrayBufferView, JS_IsArrayBufferViewObject
 #include "js/SharedArrayBuffer.h"
+#include "vm/Compartment.h"
 #include "vm/JSContext.h"
 #include "vm/TypedArrayObject.h"
 

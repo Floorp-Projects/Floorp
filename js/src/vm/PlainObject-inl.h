@@ -12,7 +12,7 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT, MOZ_ASSERT_IF
 #include "mozilla/Attributes.h"  // MOZ_ALWAYS_INLINE
 
-#include "gc/Allocator.h"     // js::gc::InitialHeap
+#include "gc/AllocKind.h"     // js::gc::InitialHeap
 #include "js/RootingAPI.h"    // JS::Handle, JS::Rooted, JS::MutableHandle
 #include "js/Value.h"         // JS::Value, JS_IS_CONSTRUCTING
 #include "vm/JSFunction.h"    // JSFunction

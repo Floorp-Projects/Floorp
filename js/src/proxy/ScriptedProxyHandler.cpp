@@ -10,11 +10,13 @@
 
 #include "jsapi.h"
 
+#include "builtin/Object.h"
 #include "js/CallAndConstruct.h"  // JS::Construct, JS::IsCallable
 #include "js/CharacterEncoding.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertyDescriptor.h"    // JS::FromPropertyDescriptor
 #include "vm/EqualityOperations.h"    // js::SameValue
+#include "vm/Interpreter.h"           // js::Call
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 #include "vm/PlainObject.h"  // js::PlainObject

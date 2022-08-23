@@ -30,18 +30,19 @@ DIRS += [
     "about",
     "aboutlogins",
     "attribution",
-    "contextualidentity",
     "colorways",
+    "contextualidentity",
     "customizableui",
     "doh",
     "downloads",
     "enterprisepolicies",
     "extensions",
-    "pagedata",
+    "firefoxview",
+    "ion",
     "migration",
     "newtab",
     "originattributes",
-    "ion",
+    "pagedata",
     "places",
     "pocket",
     "preferences",
@@ -63,11 +64,6 @@ DIRS += [
 ]
 
 DIRS += ["build"]
-
-if CONFIG["NIGHTLY_BUILD"]:
-    DIRS += [
-        "firefoxview",
-    ]
 
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":

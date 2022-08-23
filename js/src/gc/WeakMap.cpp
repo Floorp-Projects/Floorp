@@ -9,12 +9,9 @@
 #include <string.h>
 
 #include "gc/PublicIterators.h"
-#include "js/Wrapper.h"
-#include "vm/GlobalObject.h"
-#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 
-#include "vm/JSObject-inl.h"
+#include "gc/Marking-inl.h"
 
 using namespace js;
 using namespace js::gc;

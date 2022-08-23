@@ -158,6 +158,8 @@ Cookie::GetOriginAttributes(JSContext* aCx, JS::MutableHandle<JS::Value> aVal) {
   return NS_OK;
 }
 
+const Cookie& Cookie::AsCookie() { return *this; }
+
 const nsCString& Cookie::GetFilePath() {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
 

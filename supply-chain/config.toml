@@ -325,14 +325,6 @@ criteria = "safe-to-deploy"
 version = "0.1.1"
 criteria = "safe-to-deploy"
 
-[[exemptions.chardetng]]
-version = "0.1.9"
-criteria = "safe-to-deploy"
-
-[[exemptions.chardetng_c]]
-version = "0.1.2"
-criteria = "safe-to-deploy"
-
 [[exemptions.chrono]]
 version = "0.4.19"
 criteria = "safe-to-deploy"
@@ -543,18 +535,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.either]]
 version = "1.6.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.encoding_c]]
-version = "0.9.8"
-criteria = "safe-to-deploy"
-
-[[exemptions.encoding_c_mem]]
-version = "0.2.6"
-criteria = "safe-to-deploy"
-
-[[exemptions.encoding_rs]]
-version = "0.8.31"
 criteria = "safe-to-deploy"
 
 [[exemptions.enumset]]

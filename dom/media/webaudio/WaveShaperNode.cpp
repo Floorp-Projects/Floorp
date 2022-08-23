@@ -11,6 +11,7 @@
 #include "AudioNodeEngine.h"
 #include "AudioNodeTrack.h"
 #include "mozilla/PodOperations.h"
+#include "Tracing.h"
 
 namespace mozilla::dom {
 
@@ -192,6 +193,8 @@ class WaveShaperNodeEngine final : public AudioNodeEngine {
   void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
+    TRACE("WaveShaperNodeEngine::ProcessBlock");
+
     uint32_t channelCount = aInput.ChannelCount();
     if (!mCurve.Length()) {
       // Optimize the case where we don't have a curve buffer

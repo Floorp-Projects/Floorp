@@ -9,7 +9,6 @@
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT, MOZ_CRASH
 #include "mozilla/MaybeOneOf.h"  // mozilla::MaybeOneOf
-#include "mozilla/RefPtr.h"      // RefPtr
 #include "mozilla/Result.h"      // mozilla::{Result, Ok, Err}, MOZ_TRY
 #include "mozilla/Utf8.h"        // mozilla::Utf8Unit
 
@@ -18,8 +17,7 @@
 #include <string.h>     // memcpy
 #include <type_traits>  // std::enable_if_t
 
-#include "js/AllocPolicy.h"     // ReportOutOfMemory
-#include "js/CompileOptions.h"  // JS::DecodeOptions
+#include "js/AllocPolicy.h"  // ReportOutOfMemory
 #include "js/Transcoding.h"  // JS::TranscodeResult, JS::TranscodeBuffer, JS::TranscodeRange, IsTranscodingBytecodeAligned, IsTranscodingBytecodeOffsetAligned
 #include "js/TypeDecls.h"    // JS::Latin1Char
 #include "js/UniquePtr.h"    // UniquePtr

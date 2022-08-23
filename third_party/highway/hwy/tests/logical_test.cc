@@ -1,4 +1,5 @@
 // Copyright 2019 Google LLC
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +21,7 @@
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "tests/logical_test.cc"
-#include "hwy/foreach_target.h"
+#include "hwy/foreach_target.h"  // IWYU pragma: keep
 #include "hwy/highway.h"
 #include "hwy/tests/test_util-inl.h"
 
@@ -57,6 +58,15 @@ struct TestLogicalInteger {
     HWY_ASSERT_VEC_EQ(d, vi, AndNot(v0, vi));
     HWY_ASSERT_VEC_EQ(d, v0, AndNot(vi, v0));
     HWY_ASSERT_VEC_EQ(d, v0, AndNot(vi, vi));
+
+    HWY_ASSERT_VEC_EQ(d, v0, Or3(v0, v0, v0));
+    HWY_ASSERT_VEC_EQ(d, vi, Or3(v0, vi, v0));
+    HWY_ASSERT_VEC_EQ(d, vi, Or3(v0, v0, vi));
+    HWY_ASSERT_VEC_EQ(d, vi, Or3(v0, vi, vi));
+    HWY_ASSERT_VEC_EQ(d, vi, Or3(vi, v0, v0));
+    HWY_ASSERT_VEC_EQ(d, vi, Or3(vi, vi, v0));
+    HWY_ASSERT_VEC_EQ(d, vi, Or3(vi, v0, vi));
+    HWY_ASSERT_VEC_EQ(d, vi, Or3(vi, vi, vi));
 
     HWY_ASSERT_VEC_EQ(d, v0, OrAnd(v0, v0, v0));
     HWY_ASSERT_VEC_EQ(d, v0, OrAnd(v0, vi, v0));
@@ -164,90 +174,8 @@ struct TestCopySign {
   }
 };
 
-struct TestIfVecThenElse {
-  template <class T, class D>
-  HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    RandomState rng;
-
-    using TU = MakeUnsigned<T>;  // For all-one mask
-    const Rebind<TU, D> du;
-    const size_t N = Lanes(d);
-    auto in1 = AllocateAligned<T>(N);
-    auto in2 = AllocateAligned<T>(N);
-    auto vec_lanes = AllocateAligned<TU>(N);
-    auto expected = AllocateAligned<T>(N);
-
-    // Each lane should have a chance of having mask=true.
-    for (size_t rep = 0; rep < AdjustedReps(200); ++rep) {
-      for (size_t i = 0; i < N; ++i) {
-        in1[i] = static_cast<T>(Random32(&rng));
-        in2[i] = static_cast<T>(Random32(&rng));
-        vec_lanes[i] = (Random32(&rng) & 16) ? static_cast<TU>(~TU(0)) : TU(0);
-      }
-
-      const auto v1 = Load(d, in1.get());
-      const auto v2 = Load(d, in2.get());
-      const auto vec = BitCast(d, Load(du, vec_lanes.get()));
-
-      for (size_t i = 0; i < N; ++i) {
-        expected[i] = vec_lanes[i] ? in1[i] : in2[i];
-      }
-      HWY_ASSERT_VEC_EQ(d, expected.get(), IfVecThenElse(vec, v1, v2));
-    }
-  }
-};
-
-HWY_NOINLINE void TestAllIfVecThenElse() {
-  ForAllTypes(ForPartialVectors<TestIfVecThenElse>());
-}
-
 HWY_NOINLINE void TestAllCopySign() {
   ForFloatTypes(ForPartialVectors<TestCopySign>());
-}
-
-struct TestZeroIfNegative {
-  template <class T, class D>
-  HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto v0 = Zero(d);
-    const auto vp = Iota(d, 1);
-    const auto vn = Iota(d, T(-1E5));  // assumes N < 10^5
-
-    // Zero and positive remain unchanged
-    HWY_ASSERT_VEC_EQ(d, v0, ZeroIfNegative(v0));
-    HWY_ASSERT_VEC_EQ(d, vp, ZeroIfNegative(vp));
-
-    // Negative are all replaced with zero
-    HWY_ASSERT_VEC_EQ(d, v0, ZeroIfNegative(vn));
-  }
-};
-
-HWY_NOINLINE void TestAllZeroIfNegative() {
-  ForFloatTypes(ForPartialVectors<TestZeroIfNegative>());
-}
-
-struct TestIfNegative {
-  template <class T, class D>
-  HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto v0 = Zero(d);
-    const auto vp = Iota(d, 1);
-    const auto vn = Or(vp, SignBit(d));
-
-    // Zero and positive remain unchanged
-    HWY_ASSERT_VEC_EQ(d, v0, IfNegativeThenElse(v0, vn, v0));
-    HWY_ASSERT_VEC_EQ(d, vn, IfNegativeThenElse(v0, v0, vn));
-    HWY_ASSERT_VEC_EQ(d, vp, IfNegativeThenElse(vp, vn, vp));
-    HWY_ASSERT_VEC_EQ(d, vn, IfNegativeThenElse(vp, vp, vn));
-
-    // Negative are replaced with 2nd arg
-    HWY_ASSERT_VEC_EQ(d, v0, IfNegativeThenElse(vn, v0, vp));
-    HWY_ASSERT_VEC_EQ(d, vn, IfNegativeThenElse(vn, vn, v0));
-    HWY_ASSERT_VEC_EQ(d, vp, IfNegativeThenElse(vn, vp, vn));
-  }
-};
-
-HWY_NOINLINE void TestAllIfNegative() {
-  ForFloatTypes(ForPartialVectors<TestIfNegative>());
-  ForSignedTypes(ForPartialVectors<TestIfNegative>());
 }
 
 struct TestBroadcastSignBit {
@@ -333,19 +261,10 @@ namespace hwy {
 HWY_BEFORE_TEST(HwyLogicalTest);
 HWY_EXPORT_AND_TEST_P(HwyLogicalTest, TestAllLogicalInteger);
 HWY_EXPORT_AND_TEST_P(HwyLogicalTest, TestAllLogicalFloat);
-HWY_EXPORT_AND_TEST_P(HwyLogicalTest, TestAllIfVecThenElse);
 HWY_EXPORT_AND_TEST_P(HwyLogicalTest, TestAllCopySign);
-HWY_EXPORT_AND_TEST_P(HwyLogicalTest, TestAllZeroIfNegative);
-HWY_EXPORT_AND_TEST_P(HwyLogicalTest, TestAllIfNegative);
 HWY_EXPORT_AND_TEST_P(HwyLogicalTest, TestAllBroadcastSignBit);
 HWY_EXPORT_AND_TEST_P(HwyLogicalTest, TestAllTestBit);
 HWY_EXPORT_AND_TEST_P(HwyLogicalTest, TestAllPopulationCount);
 }  // namespace hwy
-
-// Ought not to be necessary, but without this, no tests run on RVV.
-int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
 
 #endif

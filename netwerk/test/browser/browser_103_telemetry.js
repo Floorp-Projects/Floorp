@@ -101,3 +101,7 @@ add_task(async function() {
 
   gBrowser.removeCurrentTab();
 });
+
+add_task(async function cleanup() {
+  Services.prefs.clearUserPref("dom.securecontext.allowlist");
+});

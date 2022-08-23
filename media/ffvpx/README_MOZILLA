@@ -1,63 +1,144 @@
+# FFVPX
+
 This directory contains files used in gecko builds from FFmpeg
 (http://ffmpeg.org). The current files are from FFmpeg as of
-revision n4.2.2-1-g19bfd72126
+revision fed07efcde72824ac1ada80d4af4e91ac4fcfc14
 git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
-git checkout n4.2.2-1-g19bfd72126
+git checkout fed07efcde72824ac1ada80d4af4e91ac4fcfc14
 
 All source files match their path from the library's source archive.
 
-Currently, we only use the vp8, vp9, mp3, and flac portion of the library. If
-this changes, configuration files will most likely need to be updated.
+Currently, we only use the vp8, vp9, av1 (libdav1d), mp3, and flac portion of
+the library. If this changes, configuration files will most likely need to be
+updated. Decoding AV1 via libdav1d is supported, although the decoder
+(libdav1d) is vendored separately, `ffvpx` only contains the code to use `libdav1d` through the `ffmpeg` API.
 
-AVX2 must be disabled on Linux 32 bits due to the use of yasm 1.1 on the build bots.
-Once yasm is upgraded to 1.2 or later, AVX2 code could be re-enabled.
-Add --disable-avx2 to configure on those platforms.
+The ffmpeg project recommends to use ffmpeg's tip, not a particular release.
 
-configuration files were generated as follow using the configure script:
- ./configure --disable-all --enable-avcodec --enable-decoder=vp8,vp9,mp3,flac \
-             --enable-parser=vp8,vp9 --disable-static --enable-shared \
-             --disable-autodetect
-config*:
-replace: /HAVE_(MALLOC_H|ARC4RANDOM|LOCALTIME_R|MEMALIGN|POSIX_MEMALIGN)/d
-# sed -i bak -E '/HAVE_(MALLOC_H|ARC4RANDOM|LOCALTIME_R|MEMALIGN|POSIX_MEMALIGN)/d' config.h
+## Source files
 
-config_unix32.h:
-add to configure command: --disable-asm --disable-x86asm --cc='clang -m32'
+This library only use a small part of `ffmpeg`. To update the source tree, run:
 
-config_android32.h: Only mp3 and flac are enabled on this platform.
-./configure --disable-all --enable-avcodec --enable-decoder=mp3,flac \
-            --disable-static --enable-shared --disable-autodetect \
-            --enable-small --target-os=linux --arch=arm --enable-cross-compile \
-            --cc=$HOME/.mozbuild/android-ndk-r20/toolchains/llvm/prebuilt/darwin-x86_64/bin/armv7a-linux-androideabi16-clang
-
-config_unix32.h/config_unix64.h/config_unix64.asm:
-replace: s/HAVE_SYSCTL 1/HAVE_SYSCTL 0
-
-config_win{32|64}.{h|asm}:
-add to configure command: --toolchain=msvc
-
-config_aarch64_win64.h: You will need to install cpp (either using msys or wsl)
-./configure --disable-all --enable-avcodec --enable-decoder=vp8,vp9,mp3,flac \
-            --enable-parser=vp8,vp9 --disable-static --enable-shared \
-            --disable-autodetect  --toolchain=msvc --enable-cross-compile \
-            --target-os=win32 --arch=arm64
-
-Regenerate defaults_disabled.{h,asm} with:
-$ grep -E ".*_(INDEV|OUTDEV|DECODER|ENCODER|DEMUXER|MUXER|PARSER|FILTER|HWACCEL|PROTOCOL|ENCODERS|DECODERS|HWACCELS|INDEVS|OUTDEVS|FILTERS|DEMUXERS|MUXERS|PROTOCOLS|BSF) 0" config.h | sort -d -u > ~/Work/Mozilla/mozilla-central/media/ffvpx/defaults_disabled.h
-$ grep -E ".*_(INDEV|OUTDEV|DECODER|ENCODER|DEMUXER|MUXER|PARSER|FILTER|HWACCEL|PROTOCOL|ENCODERS|DECODERS|HWACCELS|INDEVS|OUTDEVS|FILTERS|DEMUXERS|MUXERS|PROTOCOLS|BSF) 0" config.asm | sort -d -u > ~/Work/Mozilla/mozilla-central/media/ffvpx/defaults_disabled.asm
-
-The GNU comm utility is a useful tool to compare and extract only the changes.
-
-To update the source tree, perform a diff on the files listed in FILES.
-The diffs should typically apply to the ffvpx tree.
-e.g. something like this would do:
-Run in the ffmpeg original tree:
-$ for i in `cat $PATH_CENTRAL/media/ffvpx/FILES`; do git diff $REV_LASTSYNC HEAD >> patch.diff; done
-Then apply patch.diff on the ffvpx tree.
-
-You can also directly copy existing files from new ffmpeg checkout by rsync:
-rsync -av --existing ffmpeg-new-dif ffmpeg-mozilla-dir
+> rsync -av --existing ffmpeg-upstream ffmpeg-mozilla-dir
 
 Compilation will reveal if any files are missing.
 
-Apply linux-vaapi-build.patch patch to enable build VA-API support for Linux.
+Then, make sure the files:
+
+- `libavcodec/codec_list.c`
+- `libavcodec/bsf_list.c`
+- `libavcodec/parser_list.c`
+
+include conditional compilation directives, by probably reverting them (or
+reverting and adjusting them if new codecs are added).
+
+## `config.h` generation
+
+Configuration files are generated as follow using the configure script (here
+for Linux desktop):
+
+> ./configure --disable-all --enable-avcodec --enable-decoder=vp8,vp9,mp3,flac,av1 \
+              --enable-parser=vp8,vp9 --disable-static --enable-shared \
+              --disable-autodetect --disable-iconv --enable-libdav1d
+
+For Linux Desktop, there are a number of overrides in `config_common.h` for
+VAAPI. We can't put them in `config_components.h` because this breaks the build.
+
+`config_components.h` is common to all platforms, and then a specific config
+file is included, based on the platform and architecture. This needs to be
+regenerated on all OSes. macOS is similar to Linux Desktop. For other OSes,
+instructions below:
+
+# Linux 32-bits from a Linux 64-bits host:
+
+To produce `config_unix32.h` on a 64-bits machine, add to the configure command
+above: `--disable-asm --disable-x86asm --cc='clang -m32'`
+
+# macOS, x86 and aarch64
+
+Similar to Linux Desktop in all aspects.
+
+# Android
+
+config_android32.h: Only mp3 and flac are enabled on this platform. Assuming
+the standard toolchain location for a Firefox Developer, substitute with the
+ndk version in use when updating:
+
+> ./configure --disable-all --enable-avcodec --enable-decoder=mp3,flac \
+              --disable-static --enable-shared --disable-autodetect \
+              --enable-small --target-os=linux --arch=arm --enable-cross-compile \
+              --cc=$HOME/.mozbuild/android-ndk-r20/toolchains/llvm/prebuilt/darwin-x86_64/bin/armv7a-linux-androideabi16-clang
+
+config_android64.h, config_androidx86_64.h: substitute with aarch64 and the right compiler.
+
+For config_androidx86_64.h, enable vp8 and vp9.
+
+# Windows
+
+The general idea is to get an msys prompt with an msvc toolchain
+configured, so that the configure script for ffmpeg can run successfully
+with the thread flavor Gecko prefers on Windows (win32, not pthreads).
+
+- Open Visual Studio (2019 when writing this)
+- Tools → Command Line → Developer command prompt
+- Check that compiling a small C program with cl.exe works
+- Install msys2 from https://www.msys2.org/
+- From the Visual Studio Developer Command Prompt, run the following:
+    > C:\msys64\msys_shell.cmd -mysy -use-full-path
+- This pops up a new shell window, with a 32-bits build environment
+- Check that compiling a small C program with `cl.exe` works
+- Run ffmpeg's ./configure with the options needed:
+
+> ./configure --disable-all --enable-avcodec
+              --enable-decoder=vp8,vp9,mp3,flac --enable-parser=vp8,vp9
+              --disable-static --enable-shared --disable-autodetect
+              --enable-w32threads --toolchain=msvc
+
+- Copy `config.h` and `config.asm` as `config_win32.h` and `config_win32.asm`
+  in this directory
+- Close the `msys2` window, go back to the `cmd.exe` window
+- Run this command, maybe substituting the Visual Studio version:
+
+> "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" amd64
+
+- This pops up a new shell window, now with a 64-bits build
+  environment
+- Check that compiling a small C program with `cl.exe` works
+- Run ffmpeg's `./configure` with the options needed:
+
+> ./configure --disable-all --enable-avcodec --enable-decoder=vp8,vp9,mp3,flac
+              --enable-parser=vp8,vp9 --disable-static --enable-shared 
+              --disable-autodetect --enable-w32threads --toolchain=msvc
+
+- Copy `config.h` and `config.asm` as `config_win64.h` and `config_win64.asm`.
+
+config_aarch64_win64.h: You will need to install cpp (either using msys or
+wsl), then:
+
+> ./configure --disable-all --enable-avcodec --enable-decoder=vp8,vp9,mp3,flac \
+              --enable-parser=vp8,vp9 --disable-static --enable-shared \
+              --disable-autodetect  --toolchain=msvc --enable-cross-compile \
+              --target-os=win32 --arch=arm64
+
+
+# Finally
+
+Run the following command on all config* file:
+
+> sed -i -E '/HAVE_(MALLOC_H|ARC4RANDOM|LOCALTIME_R|MEMALIGN|POSIX_MEMALIGN)/d' config.*
+
+to avoid redefined macros.
+
+# Build, fix errors
+
+Missing files need to be added, and the patch to rename `time.h` to `fftime.h`
+might need to be reaplied or extended to other files including `time.h`. The
+issue being that it's included instead of the system header, causing all sorts
+of issues.
+
+`moz.build` files might need to be modified as well, in light of compilation
+and link errors.
+
+There are going to be a lot of changes in terms of symbols exported. Adjust
+`libavutil/avutil.symbols` and `libavcodec/avcodec.symbols` by removing and
+adding symbols until the build passes.

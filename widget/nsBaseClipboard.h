@@ -43,9 +43,11 @@ class nsBaseClipboard : public nsIClipboard {
                                     int32_t aWhichClipboard) = 0;
 
   bool mEmptyingForSetData;
-  bool mIgnoreEmptyNotification;
   nsCOMPtr<nsIClipboardOwner> mClipboardOwner;
   nsCOMPtr<nsITransferable> mTransferable;
+
+ private:
+  bool mIgnoreEmptyNotification = false;
 };
 
 #endif  // nsBaseClipboard_h__

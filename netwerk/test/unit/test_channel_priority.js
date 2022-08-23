@@ -88,6 +88,7 @@ function run_test() {
 }
 
 // This is used by unit_ipc/test_channel_priority_wrap.js for e10s XPCShell test
+/* exported configPort */
 function configPort(serverPort) {
   // jshint ignore:line
   port = serverPort;

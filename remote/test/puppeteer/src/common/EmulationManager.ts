@@ -13,17 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { CDPSession } from './Connection.js';
-import { Viewport } from './PuppeteerViewport.js';
-import { Protocol } from 'devtools-protocol';
+import {CDPSession} from './Connection.js';
+import {Viewport} from './PuppeteerViewport.js';
+import {Protocol} from 'devtools-protocol';
 
+/**
+ * @internal
+ */
 export class EmulationManager {
-  _client: CDPSession;
-  _emulatingMobile = false;
-  _hasTouch = false;
+  #client: CDPSession;
+  #emulatingMobile = false;
+  #hasTouch = false;
 
   constructor(client: CDPSession) {
-    this._client = client;
+    this.#client = client;
   }
 
   async emulateViewport(viewport: Viewport): Promise<boolean> {
@@ -33,27 +36,27 @@ export class EmulationManager {
     const deviceScaleFactor = viewport.deviceScaleFactor || 1;
     const screenOrientation: Protocol.Emulation.ScreenOrientation =
       viewport.isLandscape
-        ? { angle: 90, type: 'landscapePrimary' }
-        : { angle: 0, type: 'portraitPrimary' };
+        ? {angle: 90, type: 'landscapePrimary'}
+        : {angle: 0, type: 'portraitPrimary'};
     const hasTouch = viewport.hasTouch || false;
 
     await Promise.all([
-      this._client.send('Emulation.setDeviceMetricsOverride', {
+      this.#client.send('Emulation.setDeviceMetricsOverride', {
         mobile,
         width,
         height,
         deviceScaleFactor,
         screenOrientation,
       }),
-      this._client.send('Emulation.setTouchEmulationEnabled', {
+      this.#client.send('Emulation.setTouchEmulationEnabled', {
         enabled: hasTouch,
       }),
     ]);
 
     const reloadNeeded =
-      this._emulatingMobile !== mobile || this._hasTouch !== hasTouch;
-    this._emulatingMobile = mobile;
-    this._hasTouch = hasTouch;
+      this.#emulatingMobile !== mobile || this.#hasTouch !== hasTouch;
+    this.#emulatingMobile = mobile;
+    this.#hasTouch = hasTouch;
     return reloadNeeded;
   }
 }

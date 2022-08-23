@@ -2,6 +2,7 @@ appdirs==1.4.4
 attrs==19.2.0
 blessings==1.7
 cbor2==4.0.1
+colorama==0.4.5
 compare-locales==8.2.1
 cookies==2.2.1
 cram==0.7

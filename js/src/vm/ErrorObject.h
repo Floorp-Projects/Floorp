@@ -16,20 +16,16 @@
 #include "jspubtd.h"
 #include "NamespaceImports.h"
 
-#include "gc/Barrier.h"
 #include "js/Class.h"
 #include "js/ErrorReport.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
 #include "js/Value.h"
-#include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/JSObject.h"
 #include "vm/NativeObject.h"
-#include "vm/Shape.h"
 
 namespace js {
-class ArrayObject;
 
 class ErrorObject : public NativeObject {
   static JSObject* createProto(JSContext* cx, JSProtoKey key);

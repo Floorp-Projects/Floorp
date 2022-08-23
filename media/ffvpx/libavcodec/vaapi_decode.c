@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "config_components.h"
+
 #include "libavutil/avassert.h"
 #include "libavutil/common.h"
 #include "libavutil/pixdesc.h"
@@ -577,10 +579,10 @@ static int vaapi_decode_make_config(AVCodecContext *avctx,
         switch (avctx->codec_id) {
         case AV_CODEC_ID_H264:
         case AV_CODEC_ID_HEVC:
+        case AV_CODEC_ID_AV1:
             frames->initial_pool_size += 16;
             break;
         case AV_CODEC_ID_VP9:
-        case AV_CODEC_ID_AV1:
             frames->initial_pool_size += 8;
             break;
         case AV_CODEC_ID_VP8:
@@ -640,46 +642,6 @@ int ff_vaapi_decode_init(AVCodecContext *avctx)
     ctx->va_config  = VA_INVALID_ID;
     ctx->va_context = VA_INVALID_ID;
 
-#if FF_API_STRUCT_VAAPI_CONTEXT
-    if (avctx->hwaccel_context) {
-        av_log(avctx, AV_LOG_WARNING, "Using deprecated struct "
-               "vaapi_context in decode.\n");
-
-        ctx->have_old_context = 1;
-        ctx->old_context = avctx->hwaccel_context;
-
-        // Really we only want the VAAPI device context, but this
-        // allocates a whole generic device context because we don't
-        // have any other way to determine how big it should be.
-        ctx->device_ref =
-            av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_VAAPI);
-        if (!ctx->device_ref) {
-            err = AVERROR(ENOMEM);
-            goto fail;
-        }
-        ctx->device = (AVHWDeviceContext*)ctx->device_ref->data;
-        ctx->hwctx  = ctx->device->hwctx;
-
-        ctx->hwctx->display = ctx->old_context->display;
-
-        // The old VAAPI decode setup assumed this quirk was always
-        // present, so set it here to avoid the behaviour changing.
-        ctx->hwctx->driver_quirks =
-            AV_VAAPI_DRIVER_QUIRK_RENDER_PARAM_BUFFERS;
-
-    }
-#endif
-
-#if FF_API_STRUCT_VAAPI_CONTEXT
-    if (ctx->have_old_context) {
-        ctx->va_config  = ctx->old_context->config_id;
-        ctx->va_context = ctx->old_context->context_id;
-
-        av_log(avctx, AV_LOG_DEBUG, "Using user-supplied decoder "
-               "context: %#x/%#x.\n", ctx->va_config, ctx->va_context);
-    } else {
-#endif
-
     err = ff_decode_get_hw_frames_ctx(avctx, AV_HWDEVICE_TYPE_VAAPI);
     if (err < 0)
         goto fail;
@@ -690,7 +652,7 @@ int ff_vaapi_decode_init(AVCodecContext *avctx)
     ctx->hwctx  = ctx->device->hwctx;
 
     err = vaapi_decode_make_config(avctx, ctx->frames->device_ref,
-                                   &ctx->va_config, avctx->hw_frames_ctx);
+                                   &ctx->va_config, NULL);
     if (err)
         goto fail;
 
@@ -709,9 +671,6 @@ int ff_vaapi_decode_init(AVCodecContext *avctx)
 
     av_log(avctx, AV_LOG_DEBUG, "Decode context initialised: "
            "%#x/%#x.\n", ctx->va_config, ctx->va_context);
-#if FF_API_STRUCT_VAAPI_CONTEXT
-    }
-#endif
 
     return 0;
 
@@ -724,12 +683,6 @@ int ff_vaapi_decode_uninit(AVCodecContext *avctx)
 {
     VAAPIDecodeContext *ctx = avctx->internal->hwaccel_priv_data;
     VAStatus vas;
-
-#if FF_API_STRUCT_VAAPI_CONTEXT
-    if (ctx->have_old_context) {
-        av_buffer_unref(&ctx->device_ref);
-    } else {
-#endif
 
     if (ctx->va_context != VA_INVALID_ID) {
         vas = vaDestroyContext(ctx->hwctx->display, ctx->va_context);
@@ -747,10 +700,6 @@ int ff_vaapi_decode_uninit(AVCodecContext *avctx)
                    ctx->va_config, vas, vaErrorStr(vas));
         }
     }
-
-#if FF_API_STRUCT_VAAPI_CONTEXT
-    }
-#endif
 
     return 0;
 }

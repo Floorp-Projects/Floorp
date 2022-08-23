@@ -2348,6 +2348,11 @@ bool nsContentUtils::ShouldResistFingerprinting(nsILoadInfo* aLoadInfo) {
   // Because this function is only used for subresource loads, this
   // will check the parent's principal
   nsIPrincipal* principal = aLoadInfo->GetLoadingPrincipal();
+
+  if (principal->IsSystemPrincipal()) {
+    return false;
+  }
+
   MOZ_ASSERT(BasePrincipal::Cast(principal)->OriginAttributesRef() ==
              aLoadInfo->GetOriginAttributes());
   return ShouldResistFingerprinting_dangerous(principal, "Internal Call");
@@ -2366,6 +2371,10 @@ bool nsContentUtils::ShouldResistFingerprinting_dangerous(
             ("Called nsContentUtils::ShouldResistFingerprinting(nsILoadInfo* "
              "aChannel) but the loadinfo's loadingprincipal was NULL"));
     return true;
+  }
+
+  if (aPrincipal->IsSystemPrincipal()) {
+    return false;
   }
 
   auto originAttributes =

@@ -14,11 +14,6 @@
 
 ChromeUtils.defineModuleGetter(
   this,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "NetUtil",
   "resource://gre/modules/NetUtil.jsm"
 );

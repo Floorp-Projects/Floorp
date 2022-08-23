@@ -45,10 +45,12 @@ need Mercurial to download and update the code. Additionally, we'll
 put user-wide python package installations on the ``$PATH``, so that
 both ``hg`` and ``moz-phab`` will be easily accessible:
 
+**NOTE** Pay special attention to the `==6.1.4`, as Mercurial >=6.2 is incompatible with several plugins
+
 .. code-block:: shell
 
     echo "export PATH=\"$(python3 -m site --user-base)/bin:$PATH\"" >> ~/.zshenv
-    python3 -m pip install --user mercurial
+    python3 -m pip install --user mercurial==6.1.4
 
 Now, restart your shell so that the ``PATH`` change took effect.
 You can test that Mercurial is installed by running:
@@ -164,3 +166,22 @@ should install:
     ac_add_options --with-macos-sdk=$HOME/.mozbuild/macos-sdk/MacOSX11.3.sdk
 
 5. Now, you should be able to successfully run ``./mach build``.
+
+
+"FileNotFoundError" with some stuff about _virtualenvs and site-packages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You likely have Python 3.10 installed (Brew or XCode may have done this -- We're not sure how it happens). There is
+a bug in `virtualenv` that prevents us from even setting up the virtual environment.
+
+Uninstall it with the following:
+
+.. code-block:: shell
+
+    brew unlink python@3.10
+
+If you need Python 3.10, you can re-link it after the fact with
+
+.. code-block:: shell
+
+    brew link python@3.10

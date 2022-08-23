@@ -49,10 +49,6 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserv.identity.primaryPort;
 });
 
-XPCOMUtils.defineLazyGetter(this, "PORT", function() {
-  return httpserv.identity.primaryPort;
-});
-
 function AuthPrompt(promptExpected) {
   this.promptExpected = promptExpected;
 }

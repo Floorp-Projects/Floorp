@@ -15,8 +15,7 @@
 using mozilla::GenericPromise;
 using mozilla::LogLevel;
 
-nsBaseClipboard::nsBaseClipboard()
-    : mEmptyingForSetData(false), mIgnoreEmptyNotification(false) {}
+nsBaseClipboard::nsBaseClipboard() : mEmptyingForSetData(false) {}
 
 nsBaseClipboard::~nsBaseClipboard() {
   EmptyClipboard(kSelectionClipboard);
@@ -60,7 +59,9 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
 
   nsresult rv = NS_ERROR_FAILURE;
   if (mTransferable) {
+    mIgnoreEmptyNotification = true;
     rv = SetNativeClipboardData(aWhichClipboard);
+    mIgnoreEmptyNotification = false;
   }
   if (NS_FAILED(rv)) {
     CLIPBOARD_LOG("%s: setting native clipboard data failed.", __FUNCTION__);
@@ -114,7 +115,9 @@ NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(int32_t aWhichClipboard) {
       aWhichClipboard != kGlobalClipboard)
     return NS_ERROR_FAILURE;
 
-  if (mIgnoreEmptyNotification) return NS_OK;
+  if (mIgnoreEmptyNotification) {
+    return NS_OK;
+  }
 
   if (mClipboardOwner) {
     mClipboardOwner->LosingOwnership(mTransferable);

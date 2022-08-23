@@ -13,16 +13,15 @@
 
 #include "js/HashTable.h"
 #include "js/Stack.h"
-#include "js/Wrapper.h"
-#include "vm/JSContext.h"
 #include "vm/SavedFrame.h"
-#include "vm/Stack.h"
 
 namespace JS {
 enum class SavedFrameSelfHosted;
 }
 
 namespace js {
+
+class FrameIter;
 
 // # Saved Stacks
 //

@@ -10,6 +10,14 @@
  * Main cookie object interface.
  */
 
+%{C++
+namespace mozilla::net {
+class Cookie;
+}
+%}
+
+[ref] native const_Cookie(const mozilla::net::Cookie);
+
 typedef long nsCookieStatus;
 typedef long nsCookiePolicy;
 
@@ -79,6 +87,9 @@ interface nsICookie : nsISupports {
      */
     [implicit_jscontext]
     readonly attribute jsval originAttributes;
+
+    [noscript, notxpcom, nostdcall, binaryname(AsCookie)]
+    const_Cookie AsCookie();
 
     /**
      * true if the cookie is a session cookie.

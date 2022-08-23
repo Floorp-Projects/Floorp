@@ -1503,11 +1503,6 @@ interface nsIDOMWindowUtils : nsISupports {
   boolean isInModalState();
 
   /**
-   * Internal desktopMode flag.
-   */
-  attribute boolean desktopModeViewport;
-
-  /**
    * Suspend/resume timeouts on this window and its descendant windows.
    */
   void suspendTimeouts();

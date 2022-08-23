@@ -70,10 +70,11 @@ struct ShapeUtils final {
 
   // Compute the radii for an inset.
   // @param aRefBox the reference box of the inset.
+  // @param aInsetRect the inset rect in app units.
   // @param aRadii the returned radii in app units.
   // @return true if any of the radii is nonzero; false otherwise.
   static bool ComputeInsetRadii(const StyleBasicShape&, const nsRect& aRefBox,
-                                nscoord aRadii[8]);
+                                const nsRect& aInsetRect, nscoord aRadii[8]);
 
   // Compute the vertices for a polygon.
   // @param aRefBox the reference box of the polygon.

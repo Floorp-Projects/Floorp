@@ -8343,17 +8343,16 @@ const sourceOptions = {
 };
 
 function parse(text, opts) {
-  let ast;
+  let ast = {};
 
   if (!text) {
-    return;
+    return ast;
   }
 
   try {
     ast = _parse(text, opts);
   } catch (error) {
     console.error(error);
-    ast = {};
   }
 
   return ast;
@@ -8385,7 +8384,7 @@ function vueParser({
 
 function parseVueScript(code) {
   if (typeof code !== "string") {
-    return;
+    return {};
   }
 
   let ast; // .vue files go through several passes, so while there is a
@@ -11955,6 +11954,8 @@ function getFunctionParameterNames(path) {
       } else if (param.left.type === "Identifier" && param.right.type === "NullLiteral") {
         return `${param.left.name} = null`;
       }
+
+      return null;
     });
   }
 
@@ -46296,6 +46297,8 @@ function getFramework(symbols) {
   if (isVueComponent(symbols)) {
     return "Vue";
   }
+
+  return null;
 }
 
 function isReactComponent({
@@ -47747,7 +47750,8 @@ function mapExpressionBindings(expression, ast, bindings = []) {
       if (t.isIdentifier(node.left) || t.isPattern(node.left)) {
         const newNode = globalizeAssignment(node, bindings);
         isMapped = true;
-        return (0, _ast.replaceNode)(ancestors, newNode);
+        (0, _ast.replaceNode)(ancestors, newNode);
+        return;
       }
 
       return;

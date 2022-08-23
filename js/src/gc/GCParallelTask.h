@@ -14,7 +14,6 @@
 #include <utility>
 
 #include "gc/GCContext.h"
-#include "js/TypeDecls.h"
 #include "js/Utility.h"
 #include "threading/ProtectedData.h"
 #include "vm/HelperThreadTask.h"

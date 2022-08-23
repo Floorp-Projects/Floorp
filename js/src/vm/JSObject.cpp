@@ -10,11 +10,8 @@
 
 #include "vm/JSObject-inl.h"
 
-#include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/TemplateLib.h"
 
-#include <algorithm>
 #include <string.h>
 
 #include "jsapi.h"
@@ -23,17 +20,12 @@
 #include "jsnum.h"
 #include "jstypes.h"
 
-#include "builtin/Array.h"
 #include "builtin/BigInt.h"
-#include "builtin/Eval.h"
 #include "builtin/MapObject.h"
-#include "builtin/Object.h"
 #include "builtin/String.h"
 #include "builtin/Symbol.h"
 #include "builtin/WeakSetObject.h"
-#include "ds/IdValuePair.h"  // js::IdValuePair
-#include "gc/Policy.h"
-#include "js/CallAndConstruct.h"  // JS::IsCallable, JS::IsConstructor
+#include "gc/GC.h"
 #include "js/CharacterEncoding.h"
 #include "js/friend/DumpFunctions.h"  // js::DumpObject
 #include "js/friend/ErrorMessages.h"  // JSErrNum, js::GetErrorMessage, JSMSG_*
@@ -44,7 +36,6 @@
 #include "js/Proxy.h"
 #include "js/Result.h"
 #include "js/UbiNode.h"
-#include "js/UniquePtr.h"
 #include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"
 #include "util/Memory.h"
@@ -52,6 +43,7 @@
 #include "util/WindowsWrapper.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/BytecodeUtil.h"
+#include "vm/Compartment.h"
 #include "vm/DateObject.h"
 #include "vm/Interpreter.h"
 #include "vm/Iteration.h"
@@ -65,6 +57,7 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/Watchtower.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
+#include "vm/WrapperObject.h"
 #ifdef ENABLE_RECORD_TUPLE
 #  include "builtin/RecordObject.h"
 #  include "builtin/TupleObject.h"
@@ -72,22 +65,15 @@
 #  include "vm/TupleType.h"
 #endif
 
-#include "builtin/Boolean-inl.h"
-#include "gc/Marking-inl.h"
-#include "vm/ArrayObject-inl.h"
 #include "vm/BooleanObject-inl.h"
-#include "vm/Compartment-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/JSContext-inl.h"
-#include "vm/JSFunction-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/ObjectFlags-inl.h"
-#include "vm/PlainObject-inl.h"  // js::CopyInitializerObject
 #include "vm/Realm-inl.h"
-#include "vm/Shape-inl.h"
 #include "vm/StringObject-inl.h"
 #include "vm/TypedArrayObject-inl.h"
 #include "wasm/TypedObject-inl.h"

@@ -13,7 +13,7 @@ registerCleanupFunction(async () => {
   trr_clear_prefs();
 });
 
-const { updateAppInfo, getAppInfo } = ChromeUtils.import(
+const { updateAppInfo } = ChromeUtils.import(
   "resource://testing-common/AppInfo.jsm"
 );
 

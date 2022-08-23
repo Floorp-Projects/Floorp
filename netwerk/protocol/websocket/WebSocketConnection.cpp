@@ -10,6 +10,7 @@
 #include "WebSocketLog.h"
 #include "mozilla/net/WebSocketConnectionListener.h"
 #include "nsIOService.h"
+#include "nsISSLSocketControl.h"
 #include "nsISocketTransport.h"
 #include "nsSocketTransportService2.h"
 
@@ -143,10 +144,13 @@ void WebSocketConnection::DrainSocketData() {
 nsresult WebSocketConnection::GetSecurityInfo(nsISupports** aSecurityInfo) {
   LOG(("WebSocketConnection::GetSecurityInfo() %p\n", this));
   MOZ_ASSERT(OnSocketThread());
+  *aSecurityInfo = nullptr;
 
   if (mTransport) {
-    if (NS_FAILED(mTransport->GetSecurityInfo(aSecurityInfo))) {
-      *aSecurityInfo = nullptr;
+    nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
+    if (NS_SUCCEEDED(mTransport->GetTlsSocketControl(
+            getter_AddRefs(tlsSocketControl)))) {
+      tlsSocketControl.forget(aSecurityInfo);
     }
   }
   return NS_OK;

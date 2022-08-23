@@ -12,7 +12,6 @@
 
 #include <type_traits>
 
-#include "gc/GCEnum.h"
 #include "gc/Heap.h"
 #include "js/GCAnnotations.h"
 #include "js/shadow/Zone.h"  // JS::shadow::Zone
@@ -49,7 +48,6 @@ extern void TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc,
 
 namespace gc {
 
-class Arena;
 enum class AllocKind : uint8_t;
 class StoreBuffer;
 class TenuredCell;

@@ -25,10 +25,11 @@ Status ConvertPackedFrameToImageBundle(const JxlBasicInfo& info,
                                        const CodecInOut& io, ThreadPool* pool,
                                        ImageBundle* bundle) {
   JXL_ASSERT(frame.color.pixels() != nullptr);
+  const bool float_in = frame.color.format.data_type == JXL_TYPE_FLOAT16 ||
+                        frame.color.format.data_type == JXL_TYPE_FLOAT;
   size_t frame_bits_per_sample =
-      (frame.color.bitdepth_from_format
-           ? frame.color.BitsPerChannel(frame.color.format.data_type)
-           : info.bits_per_sample);
+      float_in ? PackedImage::BitsPerChannel(frame.color.format.data_type)
+               : info.bits_per_sample;
   JXL_ASSERT(frame_bits_per_sample != 0);
   // It is ok for the frame.color.format.num_channels to not match the
   // number of channels on the image.
@@ -55,14 +56,11 @@ Status ConvertPackedFrameToImageBundle(const JxlBasicInfo& info,
   JXL_ASSERT(io.metadata.m.color_encoding.IsGray() ==
              (frame.color.format.num_channels <= 2));
 
-  const bool float_in = frame.color.format.data_type == JXL_TYPE_FLOAT16 ||
-                        frame.color.format.data_type == JXL_TYPE_FLOAT;
   JXL_RETURN_IF_ERROR(ConvertFromExternal(
       span, frame.color.xsize, frame.color.ysize, io.metadata.m.color_encoding,
       frame.color.format.num_channels,
       /*alpha_is_premultiplied=*/info.alpha_premultiplied,
-      frame_bits_per_sample, frame.color.format.endianness,
-      /*flipped_y=*/frame.color.flipped_y, pool, bundle,
+      frame_bits_per_sample, frame.color.format.endianness, pool, bundle,
       /*float_in=*/float_in, /*align=*/0));
 
   bundle->extra_channels().resize(io.metadata.m.extra_channel_info.size());
@@ -241,9 +239,7 @@ Status ConvertCodecInOutToPackedPixelFile(const CodecInOut& io,
 
   // Convert the color encoding
   ppf->icc.assign(c_desired.ICC().begin(), c_desired.ICC().end());
-  if (ppf->icc.empty()) {
-    ConvertInternalToExternalColorEncoding(c_desired, &ppf->color_encoding);
-  }
+  ConvertInternalToExternalColorEncoding(c_desired, &ppf->color_encoding);
 
   // Convert the extra blobs
   ppf->metadata.exif = io.blobs.exif;
@@ -267,7 +263,6 @@ Status ConvertCodecInOutToPackedPixelFile(const CodecInOut& io,
 
     PackedFrame packed_frame(frame.oriented_xsize(), frame.oriented_ysize(),
                              format);
-    packed_frame.color.bitdepth_from_format = float_out;
     const size_t bits_per_sample =
         float_out ? packed_frame.color.BitsPerChannel(pixel_format.data_type)
                   : ppf->info.bits_per_sample;

@@ -10230,7 +10230,7 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
   nsPresContext* context = mPresShell->GetPresContext();
   // When querying the full zoom, get it from the device context rather than
   // directly from the pres context, because the device context's value can
-  // include an adjustment necessay to keep the number of app units per device
+  // include an adjustment necessary to keep the number of app units per device
   // pixel an integer, and we want the adjusted value.
   float fullZoom = context ? context->DeviceContext()->GetFullZoom() : 1.0;
   fullZoom = (fullZoom == 0.0) ? 1.0 : fullZoom;
@@ -10243,8 +10243,8 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
   // Special behaviour for desktop mode, provided we are not on an about: page,
   // or fullscreen.
   const bool fullscreen = Fullscreen();
-  nsPIDOMWindowOuter* win = GetWindow();
-  if (win && win->IsDesktopModeViewport() && !IsAboutPage() && !fullscreen) {
+  auto* bc = GetBrowsingContext();
+  if (bc && bc->ForceDesktopViewport() && !IsAboutPage() && !fullscreen) {
     CSSCoord viewportWidth =
         StaticPrefs::browser_viewport_desktopWidth() / fullZoom;
     CSSToScreenScale scaleToFit(aDisplaySize.width / viewportWidth);
@@ -10401,11 +10401,10 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
       // default size has a complicated calculation, we fixup the maxWidth
       // value after setting it, above.
       if (maxWidth == nsViewportInfo::Auto && !mValidScaleFloat) {
-        BrowsingContext* bc = GetBrowsingContext();
         if (bc && bc->TouchEventsOverride() == TouchEventsOverride::Enabled &&
             bc->InRDMPane()) {
           // If RDM and touch simulation are active, then use the simulated
-          // screen width to accomodate for cases where the screen width is
+          // screen width to accommodate for cases where the screen width is
           // larger than the desktop viewport default.
           maxWidth = nsViewportInfo::Max(
               displaySize.width, StaticPrefs::browser_viewport_desktopWidth());

@@ -309,3 +309,51 @@ add_task(async function test_pages() {
     await BrowserTestUtils.removeTab(tab);
   }
 });
+
+add_task(async function test_about_pages_refocused() {
+  const testData = [
+    {
+      input: "downloads",
+      uri: "about:downloads",
+    },
+    {
+      input: "logins",
+      uri: "about:logins",
+    },
+    {
+      input: "settings",
+      uri: "about:preferences",
+    },
+  ];
+
+  for (const { input, uri } of testData) {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: input,
+    });
+
+    info("Open about page by quick action");
+    let originalTab = gBrowser.selectedTab;
+    let onLoad = BrowserTestUtils.waitForNewTab(gBrowser, uri);
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, window);
+    EventUtils.synthesizeKey("KEY_Enter", {}, window);
+    let newTab = await onLoad;
+
+    info("Do the same quick action in original tab");
+    gBrowser.selectedTab = originalTab;
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: input,
+    });
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, window);
+    EventUtils.synthesizeKey("KEY_Enter", {}, window);
+    Assert.equal(
+      gBrowser.selectedTab,
+      newTab,
+      "Switched to the tab that is opening the about page"
+    );
+    Assert.equal(gBrowser.tabs.length, 2, "Not opened a new tab");
+
+    BrowserTestUtils.removeTab(newTab);
+  }
+});

@@ -9,15 +9,10 @@
 
 #include "vm/PropMap.h"
 
-#include "gc/Allocator.h"
-#include "vm/Interpreter.h"
-#include "vm/JSObject.h"
-#include "vm/TypedArrayObject.h"
+#include "gc/Zone.h"
+#include "vm/JSContext.h"
 
 #include "gc/GCContext-inl.h"
-#include "gc/Marking-inl.h"
-#include "vm/JSAtom-inl.h"
-#include "vm/JSContext-inl.h"
 
 namespace js {
 

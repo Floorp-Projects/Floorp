@@ -113,7 +113,9 @@ SizeComputationInput::SizeComputationInput(nsIFrame* aFrame,
       mWritingMode(aFrame->GetWritingMode()),
       mComputedMargin(mWritingMode),
       mComputedBorderPadding(mWritingMode),
-      mComputedPadding(mWritingMode) {}
+      mComputedPadding(mWritingMode) {
+  MOZ_ASSERT(mFrame);
+}
 
 SizeComputationInput::SizeComputationInput(
     nsIFrame* aFrame, gfxContext* aRenderingContext,
@@ -270,7 +272,6 @@ bool ReflowInput::ShouldReflowAllKids() const {
 }
 
 void ReflowInput::SetComputedISize(nscoord aComputedISize) {
-  NS_ASSERTION(mFrame, "Must have a frame!");
   // It'd be nice to assert that |frame| is not in reflow, but this fails for
   // two reasons:
   //
@@ -284,9 +285,9 @@ void ReflowInput::SetComputedISize(nscoord aComputedISize) {
   //    (like a text control, for example), we'll end up creating a reflow
   //    input for the parent while the parent is reflowing.
 
-  MOZ_ASSERT(aComputedISize >= 0, "Invalid computed inline-size!");
+  NS_WARNING_ASSERTION(aComputedISize >= 0, "Invalid computed inline-size!");
   if (ComputedISize() != aComputedISize) {
-    ComputedISize() = aComputedISize;
+    ComputedISize() = std::max(0, aComputedISize);
     const LayoutFrameType frameType = mFrame->Type();
     if (frameType != LayoutFrameType::Viewport) {
       InitResizeFlags(mFrame->PresContext(), frameType);
@@ -295,7 +296,6 @@ void ReflowInput::SetComputedISize(nscoord aComputedISize) {
 }
 
 void ReflowInput::SetComputedBSize(nscoord aComputedBSize) {
-  NS_ASSERTION(mFrame, "Must have a frame!");
   // It'd be nice to assert that |frame| is not in reflow, but this fails
   // because:
   //
@@ -305,11 +305,20 @@ void ReflowInput::SetComputedBSize(nscoord aComputedBSize) {
   //    (like a text control, for example), we'll end up creating a reflow
   //    input for the parent while the parent is reflowing.
 
-  MOZ_ASSERT(aComputedBSize >= 0, "Invalid computed block-size!");
   if (ComputedBSize() != aComputedBSize) {
-    ComputedBSize() = aComputedBSize;
+    SetComputedBSizeWithoutResettingResizeFlags(aComputedBSize);
     InitResizeFlags(mFrame->PresContext(), mFrame->Type());
   }
+}
+
+void ReflowInput::SetComputedBSizeWithoutResettingResizeFlags(
+    nscoord aComputedBSize) {
+  // Viewport frames reset the computed block size on a copy of their reflow
+  // input when reflowing fixed-pos kids.  In that case we actually don't
+  // want to mess with the resize flags, because comparing the frame's rect
+  // to the munged computed isize is pointless.
+  NS_WARNING_ASSERTION(aComputedBSize >= 0, "Invalid computed block-size!");
+  ComputedBSize() = std::max(0, aComputedBSize);
 }
 
 void ReflowInput::Init(nsPresContext* aPresContext,
@@ -2527,7 +2536,7 @@ void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
       }
     }
   };
-  if (!aFlags.contains(ComputeSizeFlag::UseAutoBSize)) {
+  if (!aFlags.contains(ComputeSizeFlag::IsGridMeasuringReflow)) {
     ApplyBaselinePadding(eLogicalAxisBlock, nsIFrame::BBaselinePadProperty());
   }
   if (!aFlags.contains(ComputeSizeFlag::ShrinkWrap)) {

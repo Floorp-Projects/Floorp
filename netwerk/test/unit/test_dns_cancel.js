@@ -11,7 +11,6 @@ for (var i = 0; i < 20; i++) {
   hostname2 += possible.charAt(Math.floor(Math.random() * possible.length));
 }
 
-var requestList1Canceled1;
 var requestList1Canceled2;
 var requestList1NotCanceled;
 
@@ -52,7 +51,7 @@ function run_test() {
   var flags = Ci.nsIDNSService.RESOLVE_BYPASS_CACHE;
 
   // This one will be canceled with cancelAsyncResolve.
-  requestList1Canceled1 = dns.asyncResolve(
+  dns.asyncResolve(
     hostname2,
     Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
     flags,

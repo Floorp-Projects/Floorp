@@ -1,4 +1,5 @@
 // Copyright 2019 Google LLC
+// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +25,7 @@
 #include <algorithm>  // sort
 #include <array>
 #include <atomic>
+#include <chrono>  //NOLINT
 #include <limits>
 #include <numeric>  // iota
 #include <random>
@@ -122,6 +124,9 @@ inline Ticks Start() {
   Ticks t;
 #if HWY_ARCH_PPC && defined(__GLIBC__)
   asm volatile("mfspr %0, %1" : "=r"(t) : "i"(268));
+#elif HWY_ARCH_ARM_A64 && !HWY_COMPILER_MSVC
+  // pmccntr_el0 is privileged but cntvct_el0 is accessible in Linux and QEMU.
+  asm volatile("mrs %0, cntvct_el0" : "=r"(t));
 #elif HWY_ARCH_X86 && HWY_COMPILER_MSVC
   _ReadWriteBarrier();
   _mm_lfence();
@@ -160,10 +165,14 @@ inline Ticks Start() {
   return t;
 }
 
+// WARNING: on x86, caller must check HasRDTSCP before using this!
 inline Ticks Stop() {
   uint64_t t;
 #if HWY_ARCH_PPC && defined(__GLIBC__)
   asm volatile("mfspr %0, %1" : "=r"(t) : "i"(268));
+#elif HWY_ARCH_ARM_A64 && !HWY_COMPILER_MSVC
+  // pmccntr_el0 is privileged but cntvct_el0 is accessible in Linux and QEMU.
+  asm volatile("mrs %0, cntvct_el0" : "=r"(t));
 #elif HWY_ARCH_X86 && HWY_COMPILER_MSVC
   _ReadWriteBarrier();
   unsigned aux;
@@ -302,7 +311,8 @@ T MedianAbsoluteDeviation(const T* values, const size_t num_values,
   std::vector<T> abs_deviations;
   abs_deviations.reserve(num_values);
   for (size_t i = 0; i < num_values; ++i) {
-    const int64_t abs = std::abs(int64_t(values[i]) - int64_t(median));
+    const int64_t abs = std::abs(static_cast<int64_t>(values[i]) -
+                                 static_cast<int64_t>(median));
     abs_deviations.push_back(static_cast<T>(abs));
   }
   return Median(abs_deviations.data(), num_values);
@@ -329,6 +339,38 @@ inline void PreventElision(T&& output) {
   static std::atomic<T> dummy(T{});
   dummy.store(output, std::memory_order_relaxed);
 #endif
+}
+
+// Measures the actual current frequency of Ticks. We cannot rely on the nominal
+// frequency encoded in x86 BrandString because it is misleading on M1 Rosetta,
+// and not reported by AMD. CPUID 0x15 is also not yet widely supported. Also
+// used on RISC-V and ARM64.
+HWY_MAYBE_UNUSED double MeasureNominalClockRate() {
+  double max_ticks_per_sec = 0.0;
+  // Arbitrary, enough to ignore 2 outliers without excessive init time.
+  for (int rep = 0; rep < 3; ++rep) {
+    auto time0 = std::chrono::steady_clock::now();
+    using Time = decltype(time0);
+    const timer::Ticks ticks0 = timer::Start();
+    const Time time_min = time0 + std::chrono::milliseconds(10);
+
+    Time time1;
+    timer::Ticks ticks1;
+    for (;;) {
+      time1 = std::chrono::steady_clock::now();
+      // Ideally this would be Stop, but that requires RDTSCP on x86. To avoid
+      // another codepath, just use Start instead. now() presumably has its own
+      // fence-like behavior.
+      ticks1 = timer::Start();  // Do not use Stop, see comment above
+      if (time1 >= time_min) break;
+    }
+
+    const double dticks = static_cast<double>(ticks1 - ticks0);
+    std::chrono::duration<double, std::ratio<1>> dtime = time1 - time0;
+    const double ticks_per_sec = dticks / dtime.count();
+    max_ticks_per_sec = std::max(max_ticks_per_sec, ticks_per_sec);
+  }
+  return max_ticks_per_sec;
 }
 
 #if HWY_ARCH_X86
@@ -378,50 +420,27 @@ std::string BrandString() {
   return brand_string;
 }
 
-// Returns the frequency quoted inside the brand string. This does not
-// account for throttling nor Turbo Boost.
-double NominalClockRate() {
-  const std::string& brand_string = BrandString();
-  // Brand strings include the maximum configured frequency. These prefixes are
-  // defined by Intel CPUID documentation.
-  const char* prefixes[3] = {"MHz", "GHz", "THz"};
-  const double multipliers[3] = {1E6, 1E9, 1E12};
-  for (size_t i = 0; i < 3; ++i) {
-    const size_t pos_prefix = brand_string.find(prefixes[i]);
-    if (pos_prefix != std::string::npos) {
-      const size_t pos_space = brand_string.rfind(' ', pos_prefix - 1);
-      if (pos_space != std::string::npos) {
-        const std::string digits =
-            brand_string.substr(pos_space + 1, pos_prefix - pos_space - 1);
-        return std::stod(digits) * multipliers[i];
-      }
-    }
-  }
-
-  return 0.0;
-}
-
 #endif  // HWY_ARCH_X86
 
 }  // namespace
 
 HWY_DLLEXPORT double InvariantTicksPerSecond() {
 #if HWY_ARCH_PPC && defined(__GLIBC__)
-  return double(__ppc_get_timebase_freq());
-#elif HWY_ARCH_X86
-  // We assume the TSC is invariant; it is on all recent Intel/AMD CPUs.
-  return NominalClockRate();
+  return static_cast<double>(__ppc_get_timebase_freq());
+#elif HWY_ARCH_X86 || HWY_ARCH_RVV || (HWY_ARCH_ARM_A64 && !HWY_COMPILER_MSVC)
+  // We assume the x86 TSC is invariant; it is on all recent Intel/AMD CPUs.
+  static const double freq = MeasureNominalClockRate();
+  return freq;
 #elif defined(_WIN32) || defined(_WIN64)
   LARGE_INTEGER freq;
   (void)QueryPerformanceFrequency(&freq);
-  return double(freq.QuadPart);
+  return static_cast<double>(freq.QuadPart);
 #elif defined(__APPLE__)
   // https://developer.apple.com/library/mac/qa/qa1398/_index.html
   mach_timebase_info_data_t timebase;
   (void)mach_timebase_info(&timebase);
-  return double(timebase.denom) / timebase.numer * 1E9;
+  return static_cast<double>(timebase.denom) / timebase.numer * 1E9;
 #else
-  // TODO(janwas): ARM? Unclear how to reliably query cntvct_el0 frequency.
   return 1E9;  // Haiku and clock_gettime return nanoseconds.
 #endif
 }
@@ -432,14 +451,28 @@ HWY_DLLEXPORT double Now() {
 }
 
 HWY_DLLEXPORT uint64_t TimerResolution() {
+#if HWY_ARCH_X86
+  bool can_use_stop = platform::HasRDTSCP();
+#else
+  constexpr bool can_use_stop = true;
+#endif
+
   // Nested loop avoids exceeding stack/L1 capacity.
   timer::Ticks repetitions[Params::kTimerSamples];
   for (size_t rep = 0; rep < Params::kTimerSamples; ++rep) {
     timer::Ticks samples[Params::kTimerSamples];
-    for (size_t i = 0; i < Params::kTimerSamples; ++i) {
-      const timer::Ticks t0 = timer::Start();
-      const timer::Ticks t1 = timer::Stop();
-      samples[i] = t1 - t0;
+    if (can_use_stop) {
+      for (size_t i = 0; i < Params::kTimerSamples; ++i) {
+        const timer::Ticks t0 = timer::Start();
+        const timer::Ticks t1 = timer::Stop();  // we checked HasRDTSCP above
+        samples[i] = t1 - t0;
+      }
+    } else {
+      for (size_t i = 0; i < Params::kTimerSamples; ++i) {
+        const timer::Ticks t0 = timer::Start();
+        const timer::Ticks t1 = timer::Start();  // do not use Stop, see above
+        samples[i] = t1 - t0;
+      }
     }
     repetitions[rep] = robust_statistics::Mode(samples);
   }
@@ -459,7 +492,7 @@ timer::Ticks SampleUntilStable(const double max_rel_mad, double* rel_mad,
   // Choose initial samples_per_eval based on a single estimated duration.
   timer::Ticks t0 = timer::Start();
   lambda();
-  timer::Ticks t1 = timer::Stop();
+  timer::Ticks t1 = timer::Stop();  // Caller checks HasRDTSCP
   timer::Ticks est = t1 - t0;
   static const double ticks_per_second = platform::InvariantTicksPerSecond();
   const size_t ticks_per_eval =
@@ -483,7 +516,7 @@ timer::Ticks SampleUntilStable(const double max_rel_mad, double* rel_mad,
     for (size_t i = 0; i < samples_per_eval; ++i) {
       t0 = timer::Start();
       lambda();
-      t1 = timer::Stop();
+      t1 = timer::Stop();  // Caller checks HasRDTSCP
       samples.push_back(t1 - t0);
     }
 

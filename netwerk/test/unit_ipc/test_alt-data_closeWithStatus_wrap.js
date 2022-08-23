@@ -6,8 +6,6 @@ var cacheFlushObserver = {
   },
 };
 
-var currentThread = Services.tm.currentThread;
-
 function run_test() {
   do_get_profile();
   do_await_remote_message("flush").then(() => {

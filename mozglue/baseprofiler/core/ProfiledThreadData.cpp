@@ -31,8 +31,7 @@ void ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer,
                                     double aSinceTime) {
   UniqueStacks uniqueStacks;
 
-  MOZ_ASSERT(uniqueStacks.mUniqueStrings);
-  aWriter.SetUniqueStrings(*uniqueStacks.mUniqueStrings);
+  aWriter.SetUniqueStrings(uniqueStacks.UniqueStrings());
 
   aWriter.Start();
   {
@@ -78,7 +77,7 @@ void ProfiledThreadData::StreamJSON(const ProfileBuffer& aBuffer,
 
     aWriter.StartArrayProperty("stringTable");
     {
-      std::move(*uniqueStacks.mUniqueStrings)
+      std::move(uniqueStacks.UniqueStrings())
           .SpliceStringTableElements(aWriter);
     }
     aWriter.EndArray();

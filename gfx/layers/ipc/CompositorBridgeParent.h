@@ -7,14 +7,6 @@
 #ifndef mozilla_layers_CompositorBridgeParent_h
 #define mozilla_layers_CompositorBridgeParent_h
 
-// Enable this pref to turn on compositor performance warning.
-// This will print warnings if the compositor isn't meeting
-// its responsiveness objectives:
-//    1) Compose a frame within 15ms of receiving a ScheduleCompositeCall
-//    2) Unless a frame was composited within the throttle threshold in
-//       which the deadline will be 15ms + throttle threshold
-//#define COMPOSITOR_PERFORMANCE_WARNING
-
 #include <stdint.h>  // for uint64_t
 #include <unordered_map>
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT_HELPER2
@@ -35,10 +27,7 @@
 
 namespace mozilla {
 
-class CancelableRunnable;
-
 namespace gfx {
-class DrawTarget;
 class GPUProcessManager;
 class GPUParent;
 }  // namespace gfx
@@ -70,7 +59,6 @@ class APZSampler;
 class APZTestData;
 class APZUpdater;
 class AsyncImagePipelineManager;
-class Compositor;
 class CompositorAnimationStorage;
 class CompositorBridgeParent;
 class CompositorManagerParent;
@@ -78,7 +66,6 @@ class CompositorVsyncScheduler;
 class FrameUniformityData;
 class GeckoContentController;
 class IAPZCTreeManager;
-class Layer;
 class OMTASampler;
 class ContentCompositorBridgeParent;
 class CompositorThreadHolder;
@@ -163,12 +150,6 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
   virtual UniquePtr<SurfaceDescriptor> LookupSurfaceDescriptorForClientTexture(
       const int64_t aTextureId) {
     MOZ_CRASH("Should only be called on ContentCompositorBridgeParent.");
-  }
-
-  virtual void ForceComposeToTarget(wr::RenderReasons aReasons,
-                                    gfx::DrawTarget* aTarget,
-                                    const gfx::IntRect* aRect = nullptr) {
-    MOZ_CRASH();
   }
 
   virtual void NotifyMemoryPressure() {}
@@ -404,13 +385,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
 
   void ScheduleComposition(wr::RenderReasons aReasons);
 
-  /**
-   * Check rotation info and schedule a rendering task if needed.
-   * Only can be called from compositor thread.
-   */
-  void ScheduleRotationOnCompositorThread(const TargetConfig& aTargetConfig,
-                                          bool aIsFirstPaint);
-
   static void ScheduleForcedComposition(const LayersId& aLayersId,
                                         wr::RenderReasons aReasons);
 
@@ -421,24 +395,9 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   LayersId RootLayerTreeId();
 
   /**
-   * Notify local and remote layer trees connected to this compositor that
-   * the compositor's local device is being reset. All layers must be
-   * invalidated to clear any cached TextureSources.
-   *
-   * This must be called on the compositor thread.
-   */
-  void InvalidateRemoteLayers();
-
-  /**
    * Initialize statics.
    */
   static void InitializeStatics();
-
-  /**
-   * Returns a pointer to the CompositorBridgeParent corresponding to the given
-   * ID.
-   */
-  static CompositorBridgeParent* GetCompositorBridgeParent(uint64_t id);
 
   /**
    * Notify the compositor for the given layer tree that vsync has occurred.
@@ -508,10 +467,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   static void PostInsertVsyncProfilerMarker(mozilla::TimeStamp aVsyncTimestamp);
 
   widget::CompositorWidget* GetWidget() { return mWidget; }
-
-  virtual void ForceComposeToTarget(
-      wr::RenderReasons aReasons, gfx::DrawTarget* aTarget,
-      const gfx::IntRect* aRect = nullptr) override;
 
   PAPZCTreeManagerParent* AllocPAPZCTreeManagerParent(
       const LayersId& aLayersId) override;
@@ -626,9 +581,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   bool IsPaused() { return mPaused; }
 
  protected:
-  void ForceComposition(wr::RenderReasons aReasons);
-  void CancelCurrentCompositeTask();
-
   /**
    * Add a compositor to the global compositor map.
    */
@@ -647,19 +599,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
    * Remaning cleanups after the compositore thread is gone.
    */
   static void FinishShutdown();
-
-  /**
-   * Return true if current state allows compositing, that is
-   * finishing a layers transaction.
-   */
-  bool CanComposite();
-
-  void DidComposite(const VsyncId& aId, TimeStamp& aCompositeStart,
-                    TimeStamp& aCompositeEnd);
-
-  void NotifyDidComposite(const nsTArray<TransactionId>& aTransactionIds,
-                          VsyncId aId, TimeStamp& aCompositeStart,
-                          TimeStamp& aCompositeEnd);
 
   // The indirect layer tree lock must be held before calling this function.
   // Callback should take (LayerTreeState* aState, const LayersId& aLayersId)
@@ -681,11 +620,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   CSSToLayoutDeviceScale mScale;
   TimeDuration mVsyncRate;
 
-  AutoTArray<TransactionId, 2> mPendingTransactions;
-  TimeStamp mRefreshStartTime;
-  TimeStamp mTxnStartTime;
-  TimeStamp mFwdTime;
-
   bool mPaused;
   bool mHaveCompositionRecorder;
   bool mIsForcedFirstPaint;
@@ -697,9 +631,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
 
   uint64_t mCompositorBridgeID;
   LayersId mRootLayerTreeID;
-
-  bool mOverrideComposeReadiness;
-  RefPtr<CancelableRunnable> mForceCompositionTask;
 
   RefPtr<APZCTreeManager> mApzcTreeManager;
   RefPtr<APZSampler> mApzSampler;
@@ -716,8 +647,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   // mSelfRef is cleared in DeferredDestroy which is scheduled by ActorDestroy.
   RefPtr<CompositorBridgeParent> mSelfRef;
   RefPtr<CompositorAnimationStorage> mAnimationStorage;
-
-  TimeDuration mPaintTime;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorBridgeParent);
 };
