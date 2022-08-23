@@ -1,5 +1,4 @@
 // Copyright 2019 Google LLC
-// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +21,7 @@
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "tests/shift_test.cc"
-#include "hwy/foreach_target.h"  // IWYU pragma: keep
+#include "hwy/foreach_target.h"
 #include "hwy/highway.h"
 #include "hwy/tests/test_util-inl.h"
 
@@ -44,8 +43,7 @@ struct TestLeftShifts {
     const size_t N = Lanes(d);
     auto expected = AllocateAligned<T>(N);
 
-    // Values to shift
-    const auto values = Iota(d, static_cast<T>(kSigned ? -TI(N) : TI(0)));
+    const auto values = Iota(d, kSigned ? -TI(N) : TI(0));  // value to shift
     constexpr size_t kMaxShift = (sizeof(T) * 8) - 1;
 
     // 0
@@ -425,5 +423,11 @@ HWY_EXPORT_AND_TEST_P(HwyShiftTest, TestAllShifts);
 HWY_EXPORT_AND_TEST_P(HwyShiftTest, TestAllVariableShifts);
 HWY_EXPORT_AND_TEST_P(HwyShiftTest, TestAllRotateRight);
 }  // namespace hwy
+
+// Ought not to be necessary, but without this, no tests run on RVV.
+int main(int argc, char** argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 #endif
