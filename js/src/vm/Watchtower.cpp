@@ -7,7 +7,6 @@
 #include "vm/Watchtower.h"
 
 #include "js/CallAndConstruct.h"
-#include "js/Id.h"
 #include "vm/Compartment.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
@@ -16,6 +15,7 @@
 
 #include "vm/Compartment-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/Realm-inl.h"
 
 using namespace js;
 

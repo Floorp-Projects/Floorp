@@ -12,24 +12,26 @@
 #include "mozilla/Span.h"
 
 #include "jstypes.h"
-#include "gc/Barrier.h"
-#include "gc/GC.h"
-#include "gc/Nursery.h"
-#include "js/AllocPolicy.h"
-#include "js/GCHashTable.h"
+
+#include "gc/Allocator.h"
+#include "gc/Cell.h"
+#include "gc/StoreBuffer.h"
 #include "js/Result.h"
 #include "js/RootingAPI.h"
 #include "js/TraceKind.h"
 #include "js/TypeDecls.h"
-#include "vm/StringType.h"
+
+namespace js {
+class TenuringTracer;
+
+namespace jit {
+class MacroAssembler;
+}
+}  // namespace js
 
 namespace JS {
 
 class JS_PUBLIC_API BigInt;
-
-}  // namespace JS
-
-namespace JS {
 
 class BigInt final : public js::gc::CellWithLengthAndFlags {
  public:

@@ -10,8 +10,8 @@
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/PIC.h"
-#include "vm/Realm.h"
 
+#include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 
 using namespace js;

@@ -7,7 +7,6 @@
 #ifndef vm_DateTime_h
 #define vm_DateTime_h
 
-#include "mozilla/Assertions.h"
 #include "mozilla/UniquePtr.h"
 
 #include <stdint.h>

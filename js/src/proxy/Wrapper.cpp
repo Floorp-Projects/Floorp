@@ -13,7 +13,9 @@
 #include "js/friend/WindowProxy.h"    // js::IsWindowProxy
 #include "js/Object.h"                // JS::GetBuiltinClass
 #include "js/Proxy.h"
+#include "vm/Compartment.h"
 #include "vm/ErrorObject.h"
+#include "vm/Interpreter.h"
 #include "vm/JSContext.h"
 #include "vm/ProxyObject.h"
 #include "vm/Realm.h"

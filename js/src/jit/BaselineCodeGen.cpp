@@ -8,6 +8,7 @@
 
 #include "mozilla/Casting.h"
 
+#include "gc/GC.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/CacheIRCompiler.h"
@@ -35,6 +36,7 @@
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/Interpreter.h"
 #include "vm/JSFunction.h"
+#include "vm/Time.h"
 #ifdef MOZ_VTUNE
 #  include "vtune/VTuneWrapper.h"
 #endif

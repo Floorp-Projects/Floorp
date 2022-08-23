@@ -15,7 +15,6 @@
 #include "js/GCHashTable.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/GlobalObject.h"
-#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/ProxyObject.h"
 #include "vm/Scope.h"

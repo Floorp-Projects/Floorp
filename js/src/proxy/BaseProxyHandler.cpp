@@ -7,9 +7,11 @@
 #include "jsapi.h"
 #include "NamespaceImports.h"
 
+#include "gc/GC.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Proxy.h"
 #include "proxy/DeadObjectProxy.h"
+#include "vm/Interpreter.h"
 #include "vm/ProxyObject.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
 #include "vm/WrapperObject.h"

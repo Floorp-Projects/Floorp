@@ -9,7 +9,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
-#include "vm/ErrorContext.h"
 #ifdef JS_HAS_INTL_API
 #  include "mozilla/intl/ICU4CLibrary.h"
 #  include "mozilla/intl/Locale.h"
@@ -102,6 +101,7 @@
 #include "util/DifferentialTesting.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
+#include "vm/ErrorContext.h"
 #include "vm/ErrorObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/HelperThreads.h"

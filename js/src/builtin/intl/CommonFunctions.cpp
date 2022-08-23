@@ -18,6 +18,7 @@
 #include "gc/ZoneAllocator.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_INTERNAL_INTL_ERROR
 #include "js/Value.h"
+#include "vm/JSAtomState.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/SelfHosting.h"

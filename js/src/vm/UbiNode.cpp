@@ -7,26 +7,25 @@
 #include "js/UbiNode.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Range.h"
 
 #include <algorithm>
 
 #include "debugger/Debugger.h"
+#include "gc/GC.h"
 #include "jit/JitCode.h"
 #include "js/Debug.h"
 #include "js/TracingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/UbiNodeUtils.h"
 #include "js/Utility.h"
-#include "js/Vector.h"
 #include "util/Text.h"
 #include "vm/BigIntType.h"
+#include "vm/Compartment.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/GetterSetter.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
-#include "vm/JSScript.h"
 #include "vm/PropMap.h"
 #include "vm/Scope.h"
 #include "vm/Shape.h"

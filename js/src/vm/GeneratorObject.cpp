@@ -19,10 +19,6 @@
 #include "vm/PlainObject.h"  // js::PlainObject
 
 #include "debugger/DebugAPI-inl.h"
-#include "vm/ArrayObject-inl.h"
-#include "vm/JSAtom-inl.h"
-#include "vm/JSScript-inl.h"
-#include "vm/NativeObject-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;

@@ -16,6 +16,7 @@
 #include "jsapi-tests/tests.h"
 #include "util/Text.h"
 #include "vm/JSFunction.h"  // JSFunction
+#include "vm/Scope.h"       // Scope
 #include "vm/ScopeKind.h"   // ScopeKind
 
 using namespace js;

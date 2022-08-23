@@ -31,7 +31,7 @@
 struct JS_PUBLIC_API JSContext;
 
 namespace JS {
-class ReadOnlyCompileOptions;
+class JS_PUBLIC_API ReadOnlyCompileOptions;
 struct WasmModule;
 }  // namespace JS
 

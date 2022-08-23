@@ -14,6 +14,7 @@
 #include "mozilla/Casting.h"
 
 #include "frontend/TokenStream.h"
+#include "gc/GC.h"
 #include "gc/Zone.h"
 #include "irregexp/imported/regexp-ast.h"
 #include "irregexp/imported/regexp-bytecode-generator.h"

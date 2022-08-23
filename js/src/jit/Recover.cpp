@@ -8,6 +8,7 @@
 
 #include "jsmath.h"
 
+#include "builtin/Object.h"
 #include "builtin/RegExp.h"
 #include "builtin/String.h"
 #include "jit/Bailouts.h"

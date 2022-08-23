@@ -9,10 +9,7 @@
 
 #include "mozilla/Assertions.h"
 
-#include "js/HeapAPI.h"
-#include "js/RootingAPI.h"
-
-#include "vm/Shape.h"
+#include "vm/PropertyInfo.h"
 
 namespace js {
 

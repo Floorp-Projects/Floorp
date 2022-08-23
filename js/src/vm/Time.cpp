@@ -14,7 +14,6 @@
 #ifdef SOLARIS
 #  define _REENTRANT 1
 #endif
-#include <algorithm>
 #include <string.h>
 #include <time.h>
 

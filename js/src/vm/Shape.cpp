@@ -9,26 +9,18 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PodOperations.h"
 
-#include "gc/GCContext.h"
 #include "gc/HashUtil.h"
-#include "gc/Policy.h"
-#include "gc/PublicIterators.h"
 #include "js/friend/WindowProxy.h"  // js::IsWindow
 #include "js/HashTable.h"
 #include "js/UniquePtr.h"
-#include "util/Text.h"
-#include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/ShapeZone.h"
 #include "vm/Watchtower.h"
 
 #include "gc/Zone-inl.h"
-#include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
-#include "vm/ObjectFlags-inl.h"
-#include "vm/Realm-inl.h"
 
 using namespace js;
 

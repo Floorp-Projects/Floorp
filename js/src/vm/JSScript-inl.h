@@ -16,9 +16,6 @@
 #include "vm/RegExpObject.h"
 #include "wasm/AsmJS.h"
 
-#include "vm/Realm-inl.h"
-#include "vm/Shape-inl.h"
-
 namespace js {
 
 ScriptCounts::ScriptCounts()

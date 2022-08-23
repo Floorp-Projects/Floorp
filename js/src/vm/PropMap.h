@@ -8,17 +8,14 @@
 #define vm_PropMap_h
 
 #include "mozilla/Array.h"
-#include "mozilla/Maybe.h"
 
 #include "gc/Barrier.h"
 #include "gc/Cell.h"
 #include "js/TypeDecls.h"
 #include "js/UbiNode.h"
-#include "vm/JSAtom.h"
 #include "vm/ObjectFlags.h"
 #include "vm/PropertyInfo.h"
 #include "vm/PropertyKey.h"
-#include "vm/SymbolType.h"
 
 // [SMDOC] Property Maps
 //

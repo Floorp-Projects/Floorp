@@ -28,6 +28,7 @@
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefinePropertyById
 #include "js/StreamConsumer.h"
 #include "threading/LockGuard.h"
+#include "threading/Thread.h"
 #include "vm/HelperThreadState.h"  // Tier2GeneratorTask
 #include "vm/PlainObject.h"        // js::PlainObject
 #include "wasm/WasmBaselineCompile.h"

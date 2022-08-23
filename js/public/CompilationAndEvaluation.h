@@ -13,9 +13,8 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/CompileOptions.h"  // JS::CompileOptions, JS::ReadOnlyCompileOptions, JS::InstantiateOptions
 #include "js/RootingAPI.h"  // JS::Handle, JS::MutableHandle
-#include "js/Value.h"  // JS::Value and specializations of JS::*Handle-related types
+#include "js/TypeDecls.h"
 
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSFunction;
@@ -27,6 +26,9 @@ union Utf8Unit;
 }
 
 namespace JS {
+
+class JS_PUBLIC_API InstantiateOptions;
+class JS_PUBLIC_API ReadOnlyCompileOptions;
 
 template <typename UnitT>
 class SourceText;
