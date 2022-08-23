@@ -40,10 +40,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.insets.statusBarsPadding
+import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.button.PrimaryButton
 import org.mozilla.fenix.compose.button.SecondaryButton
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.GleanMetrics.Onboarding as OnboardingMetrics
 
 /**
  * Enum that represents the onboarding screen that is displayed.
@@ -83,7 +85,16 @@ fun Onboarding(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End,
         ) {
-            IconButton(onClick = onDismiss) {
+            IconButton(
+                onClick = {
+                    if (onboardingState == OnboardingState.Welcome) {
+                        OnboardingMetrics.welcomeCloseClicked.record(NoExtras())
+                    } else {
+                        OnboardingMetrics.syncCloseClicked.record(NoExtras())
+                    }
+                    onDismiss()
+                }
+            ) {
                 Icon(
                     painter = painterResource(id = R.drawable.mozac_ic_close),
                     contentDescription = null,
@@ -99,6 +110,7 @@ fun Onboarding(
                 onboardingState = onboardingState,
                 isSyncSignIn = isSyncSignIn,
                 onGetStartedButtonClick = {
+                    OnboardingMetrics.welcomeGetStartedClicked.record(NoExtras())
                     if (isSyncSignIn) {
                         onDismiss()
                     } else {
@@ -106,14 +118,24 @@ fun Onboarding(
                     }
                 },
             )
+
+            OnboardingMetrics.welcomeCardImpression.record(NoExtras())
         } else if (onboardingState == OnboardingState.SyncSignIn) {
             OnboardingSyncSignInContent()
 
             OnboardingSyncSignInBottomContent(
                 onboardingState = onboardingState,
-                onSignInButtonClick = onSignInButtonClick,
-                onSkipButtonClick = onDismiss,
+                onSignInButtonClick = {
+                    OnboardingMetrics.syncSignInClicked.record(NoExtras())
+                    onSignInButtonClick()
+                },
+                onSkipButtonClick = {
+                    OnboardingMetrics.syncSkipClicked.record(NoExtras())
+                    onDismiss()
+                }
             )
+
+            OnboardingMetrics.syncCardImpression.record(NoExtras())
         }
     }
 }

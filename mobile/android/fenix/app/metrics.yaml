@@ -668,6 +668,120 @@ onboarding:
     metadata:
       tags:
         - Onboarding
+  welcome_card_impression:
+    type: event
+    description:
+      The welcome onboarding card was displayed to the user.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/26551
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/26596
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Onboarding
+  welcome_close_clicked:
+    type: event
+    description:
+      The user clicked the `X` button from the welcome onboarding card.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/26551
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/26596
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Onboarding
+  welcome_get_started_clicked:
+    type: event
+    description:
+      The user clicked the `Get started` button from the welcome onboarding
+      card.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/26551
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/26596
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Onboarding
+  sync_card_impression:
+    type: event
+    description:
+      The sync sign in onboarding card was displayed to the user.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/26551
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/26596
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Onboarding
+  sync_close_clicked:
+    type: event
+    description:
+      The user clicked the `X` button from the sync sign in onboarding card.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/26551
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/26596
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Onboarding
+  sync_sign_in_clicked:
+    type: event
+    description:
+      The user clicked the `Sign in` button from the sync sign in
+      onboarding card.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/26551
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/26596
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Onboarding
+  sync_skip_clicked:
+    type: event
+    description:
+      The user clicked the `Skip` button from the sign in onboarding card.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/26551
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/26596
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+    metadata:
+      tags:
+        - Onboarding
 
 search_shortcuts:
   selected:
