@@ -124,11 +124,11 @@
     <string name="recent_tabs_show_all_content_description_2">Botão de exibir todas as abas recentes</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">Sua pesquisa de \&quot;%1$s\&quot;</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Sua pesquisa de \&quot;%1$s\&quot;</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d sites</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d sites</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Ver todas as abas sincronizadas</string>
@@ -448,11 +448,11 @@
     <string name="wallpaper_updated_snackbar_action">Ver</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Mudar o fundo de tela tocando no logotipo do Firefox na tela inicial</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Mudar o fundo de tela tocando no logotipo do Firefox na tela inicial</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Logotipo do Firefox - mudar fundo de tela, botão</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Logotipo do Firefox - mudar fundo de tela, botão</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -625,9 +625,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Grade</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Grupos de pesquisa</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Grupos de pesquisa</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Agrupar sites relacionados</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Agrupar sites relacionados</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Fechar abas</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -786,16 +786,16 @@
     <string name="history_empty_message">Nenhum histórico aqui</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">Sincronizado de outros dispositivos</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Sincronizado de outros dispositivos</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">De outros dispositivos</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">De outros dispositivos</string>
 
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">Entre para ver o histórico sincronizado de seus outros dispositivos.</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Entre para ver o histórico sincronizado de seus outros dispositivos.</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">Entrar</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Entrar</string>
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>Ou crie uma conta Firefox para começar a sincronizar</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>Ou crie uma conta Firefox para começar a sincronizar</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1326,7 +1326,7 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Todos os cookies (atrapalha vários sites)</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Conteúdo de rastreamento</string>
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Conteúdo com rastreamento</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Em todas as abas</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1358,7 +1358,7 @@
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_description">Impede a coleta de dados exclusivamente identificáveis sobre o seu dispositivo que podem ser usados para fins de rastreamento.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_tracking_content_title">Conteúdo de rastreamento</string>
+    <string name="etp_tracking_content_title">Conteúdo com rastreamento</string>
 
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Impede o carregamento de anúncios, vídeos e outros conteúdos externos que contêm código de rastreamento. Pode afetar funcionalidades de alguns sites.</string>
