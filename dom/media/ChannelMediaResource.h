@@ -213,6 +213,8 @@ class ChannelMediaResource
   nsresult OnChannelRedirect(nsIChannel* aOld, nsIChannel* aNew,
                              uint32_t aFlags, int64_t aOffset);
 
+  // Use only before MediaDecoder shutdown.  Main thread only.
+  dom::HTMLMediaElement* MediaElement() const;
   // Opens the channel, using an HTTP byte range request to start at aOffset
   // if possible. Main thread only.
   nsresult OpenChannel(int64_t aOffset);
