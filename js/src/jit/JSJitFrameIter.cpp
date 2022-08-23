@@ -18,7 +18,6 @@
 #include "jit/ScriptFromCalleeToken.h"
 #include "jit/VMFunctions.h"
 #include "js/friend/DumpFunctions.h"  // js::DumpObject, js::DumpValue
-#include "vm/JitActivation.h"
 
 #include "vm/JSScript-inl.h"
 

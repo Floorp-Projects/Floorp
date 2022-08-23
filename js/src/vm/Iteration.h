@@ -16,11 +16,10 @@
 
 #include "builtin/SelfHostingDefines.h"
 #include "gc/Barrier.h"
-#include "vm/NativeObject.h"
+#include "vm/Stack.h"
 
 namespace js {
 
-class ArrayObject;
 class PlainObject;
 class PropertyIteratorObject;
 

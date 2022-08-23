@@ -6,6 +6,7 @@
 
 #include "vm/SymbolType.h"
 
+#include "builtin/Symbol.h"
 #include "gc/Allocator.h"
 #include "gc/HashUtil.h"
 #include "util/StringBuffer.h"

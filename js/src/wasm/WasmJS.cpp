@@ -68,7 +68,6 @@
 #include "wasm/WasmStubs.h"
 #include "wasm/WasmValidate.h"
 
-#include "gc/GCContext-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"

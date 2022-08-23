@@ -22,8 +22,10 @@
 #endif
 
 #include "gc/GCContext-inl.h"
+#include "gc/Marking-inl.h"
 #include "gc/ObjectKind-inl.h"
 #include "vm/ObjectOperations-inl.h"  // js::MaybeHasInterestingSymbolProperty
+#include "vm/Realm-inl.h"
 
 namespace js {
 

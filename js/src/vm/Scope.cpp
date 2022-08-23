@@ -6,10 +6,13 @@
 
 #include "vm/Scope.h"
 
+#include "mozilla/OperatorNewExtensions.h"  // mozilla::KnownNotNull
+#include "mozilla/ScopeExit.h"
+
+#include <memory>
 #include <new>
 
-#include "jsnum.h"
-
+#include "builtin/ModuleObject.h"
 #include "frontend/CompilationStencil.h"  // ScopeStencilRef, CompilationStencil, CompilationState, CompilationAtomCache
 #include "frontend/ParserAtom.h"  // frontend::ParserAtomsTable, frontend::ParserAtom
 #include "frontend/ScriptIndex.h"  // ScriptIndex
@@ -24,6 +27,7 @@
 
 #include "gc/GCContext-inl.h"
 #include "gc/ObjectKind-inl.h"
+#include "vm/Shape-inl.h"
 #include "wasm/WasmInstance-inl.h"
 
 using namespace js;

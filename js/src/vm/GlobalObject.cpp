@@ -7,11 +7,14 @@
 #include "vm/GlobalObject.h"
 
 #include "jsapi.h"
+#include "jsdate.h"
+#include "jsexn.h"
 #include "jsfriendapi.h"
 
 #include "builtin/AtomicsObject.h"
 #include "builtin/BigInt.h"
 #include "builtin/DataViewObject.h"
+#include "builtin/Eval.h"
 #ifdef JS_HAS_INTL_API
 #  include "builtin/intl/Collator.h"
 #  include "builtin/intl/DateTimeFormat.h"
@@ -24,6 +27,10 @@
 #endif
 #include "builtin/FinalizationRegistryObject.h"
 #include "builtin/MapObject.h"
+#include "builtin/ModuleObject.h"
+#include "builtin/Object.h"
+#include "builtin/RegExp.h"
+#include "builtin/SelfHostingDefines.h"
 #include "builtin/ShadowRealm.h"
 #include "builtin/Stream.h"
 #include "builtin/streams/QueueingStrategies.h"  // js::{ByteLength,Count}QueueingStrategy
@@ -37,7 +44,6 @@
 #include "debugger/DebugAPI.h"
 #include "frontend/CompilationStencil.h"
 #include "gc/FinalizationObservers.h"
-#include "gc/GC.h"
 #include "gc/GCContext.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/WindowProxy.h"    // js::ToWindowProxyIfWindow
@@ -46,16 +52,14 @@
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/BooleanObject.h"
-#include "vm/Compartment.h"
 #include "vm/DateObject.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/ErrorObject.h"
 #include "vm/GeneratorObject.h"
+#include "vm/HelperThreads.h"
 #include "vm/JSContext.h"
 #include "vm/NumberObject.h"
 #include "vm/PIC.h"
-#include "vm/PlainObject.h"
-#include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
 #include "vm/SelfHosting.h"
 #include "vm/StringObject.h"
@@ -67,6 +71,8 @@
 
 #include "gc/GCContext-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/JSScript-inl.h"
+#include "vm/NativeObject-inl.h"
 #include "vm/Realm-inl.h"
 
 using namespace js;
@@ -984,8 +990,6 @@ void GlobalObject::releaseData(JS::GCContext* gcx) {
 }
 
 GlobalObjectData::GlobalObjectData(Zone* zone) : varNames(zone) {}
-
-GlobalObjectData::~GlobalObjectData() = default;
 
 void GlobalObjectData::trace(JSTracer* trc, GlobalObject* global) {
   // Atoms are always tenured so don't need to be traced during minor GC.

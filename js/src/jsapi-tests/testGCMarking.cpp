@@ -10,7 +10,6 @@
 #include "js/RootingAPI.h"
 #include "js/SliceBudget.h"
 #include "jsapi-tests/tests.h"
-#include "vm/Compartment.h"
 #include "vm/Realm.h"
 
 using namespace js;

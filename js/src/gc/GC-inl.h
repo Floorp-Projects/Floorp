@@ -13,7 +13,6 @@
 #include "mozilla/Maybe.h"
 
 #include "gc/IteratorUtils.h"
-#include "gc/Marking.h"
 #include "gc/Zone.h"
 #include "vm/Runtime.h"
 

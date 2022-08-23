@@ -8,13 +8,12 @@
 
 #include "gc/Allocator.h"
 #include "gc/GCProbes.h"
-#include "gc/Marking.h"
-#include "gc/Zone.h"
 #include "proxy/DeadObjectProxy.h"
-#include "vm/Compartment.h"
 #include "vm/Realm.h"
 
 #include "gc/ObjectKind-inl.h"
+#include "gc/WeakMap-inl.h"
+#include "vm/JSObject-inl.h"
 
 using namespace js;
 

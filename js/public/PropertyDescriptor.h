@@ -17,6 +17,7 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
+#include "js/Class.h"       // JS{Getter,Setter}Op
 #include "js/Id.h"          // jsid
 #include "js/RootingAPI.h"  // JS::Handle, js::{,Mutable}WrappedPtrOperations
 #include "js/Value.h"       // JS::Value

@@ -19,6 +19,7 @@
 #include <stdint.h>
 
 #include "js/TraceKind.h"
+#include "js/Utility.h"
 
 class JSDependentString;
 class JSExternalString;

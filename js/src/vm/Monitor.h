@@ -7,8 +7,11 @@
 #ifndef vm_Monitor_h
 #define vm_Monitor_h
 
-#include "threading/ConditionVariable.h"
-#include "threading/Mutex.h"
+#include "mozilla/DebugOnly.h"
+
+#include <stddef.h>
+
+#include "js/Utility.h"
 
 namespace js {
 

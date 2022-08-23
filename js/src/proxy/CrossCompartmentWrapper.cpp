@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "builtin/FinalizationRegistryObject.h"
-#include "gc/GC.h"
 #include "gc/PublicIterators.h"
 #include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy
 #include "js/Wrapper.h"

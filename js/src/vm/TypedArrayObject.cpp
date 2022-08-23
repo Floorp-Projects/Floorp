@@ -7,6 +7,7 @@
 #include "vm/TypedArrayObject-inl.h"
 #include "vm/TypedArrayObject.h"
 
+#include "mozilla/Alignment.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/PodOperations.h"
@@ -16,6 +17,7 @@
 #include <iterator>
 #include <limits>
 #include <numeric>
+#include <string>
 #include <string.h>
 #include <string_view>
 #if !defined(XP_WIN) && !defined(__wasi__)
@@ -28,7 +30,9 @@
 
 #include "builtin/Array.h"
 #include "builtin/DataViewObject.h"
+#include "builtin/TypedArrayConstants.h"
 #include "gc/Barrier.h"
+#include "gc/Marking.h"
 #include "gc/MaybeRooted.h"
 #include "jit/InlinableNatives.h"
 #include "js/Conversions.h"
@@ -44,6 +48,7 @@
 #include "vm/ArrayBufferObject.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/GlobalObject.h"
+#include "vm/Interpreter.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/PIC.h"
@@ -53,10 +58,13 @@
 #include "vm/WrapperObject.h"
 
 #include "gc/Nursery-inl.h"
+#include "gc/StoreBuffer-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/Compartment-inl.h"
 #include "vm/GeckoProfiler-inl.h"
+#include "vm/JSAtom-inl.h"
 #include "vm/NativeObject-inl.h"
+#include "vm/Shape-inl.h"
 
 using namespace js;
 

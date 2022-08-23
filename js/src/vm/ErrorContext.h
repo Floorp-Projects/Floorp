@@ -7,7 +7,6 @@
 #ifndef vm_ErrorContext_h
 #define vm_ErrorContext_h
 
-#include "js/ErrorReport.h"
 #include "vm/ErrorReporting.h"
 #include "vm/MallocProvider.h"
 

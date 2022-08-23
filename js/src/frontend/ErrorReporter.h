@@ -13,12 +13,11 @@
 #include <stddef.h>  // for size_t
 #include <stdint.h>  // for uint32_t
 
+#include "js/CompileOptions.h"
 #include "js/UniquePtr.h"
 #include "vm/ErrorReporting.h"  // ErrorMetadata, ReportCompile{Error,Warning}
 
-namespace JS {
-class JS_PUBLIC_API ReadOnlyCompileOptions;
-}
+class JSErrorNotes;
 
 namespace js {
 namespace frontend {

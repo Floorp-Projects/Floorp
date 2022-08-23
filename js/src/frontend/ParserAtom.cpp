@@ -17,6 +17,7 @@
 #include "util/StringBuffer.h"  // StringBuffer
 #include "util/Text.h"          // AsciiDigitToNumber
 #include "util/Unicode.h"
+#include "vm/ErrorContext.h"
 #include "vm/JSContext.h"
 #include "vm/Printer.h"  // Sprinter, QuoteString
 #include "vm/Runtime.h"

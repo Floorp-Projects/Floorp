@@ -9,9 +9,7 @@
 
 #include "NamespaceImports.h"
 
-#include "js/CallNonGenericMethod.h"
-#include "js/RootingAPI.h"
-#include "js/TypeDecls.h"
+#include "vm/Stack.h"
 
 // [SMDOC] Self-hosted JS
 //
@@ -204,16 +202,7 @@
 //     Force interpreter execution for this function, using
 //     `JSOp::ForceInterpreter` opcode.
 //     This must be the first statement inside the function.
-
-namespace JS {
-class JS_PUBLIC_API CompileOptions;
-}
-
 namespace js {
-
-class AnyInvokeArgs;
-class PropertyName;
-class ScriptSourceObject;
 
 ScriptSourceObject* SelfHostingScriptSourceObject(JSContext* cx);
 

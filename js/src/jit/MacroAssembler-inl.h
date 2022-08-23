@@ -18,7 +18,6 @@
 #include "jit/JitFrames.h"
 #include "jit/JSJitFrameIter.h"
 #include "util/DifferentialTesting.h"
-#include "vm/BigIntType.h"
 #include "vm/JSObject.h"
 #include "vm/ProxyObject.h"
 #include "vm/Runtime.h"

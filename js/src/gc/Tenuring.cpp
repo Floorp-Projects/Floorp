@@ -12,6 +12,7 @@
 
 #include "mozilla/PodOperations.h"
 
+#include "gc/Allocator.h"
 #include "gc/Cell.h"
 #include "gc/GCInternals.h"
 #include "gc/GCProbes.h"
@@ -29,6 +30,7 @@
 #include "gc/Marking-inl.h"
 #include "gc/ObjectKind-inl.h"
 #include "gc/StoreBuffer-inl.h"
+#include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/PlainObject-inl.h"
 #ifdef ENABLE_RECORD_TUPLE

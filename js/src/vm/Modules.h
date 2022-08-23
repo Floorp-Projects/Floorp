@@ -7,11 +7,14 @@
 #ifndef vm_Modules_h
 #define vm_Modules_h
 
+#include "js/Modules.h"
+
 #include "NamespaceImports.h"
 
 #include "builtin/ModuleObject.h"
 #include "js/AllocPolicy.h"
 #include "js/GCVector.h"
+#include "js/HashTable.h"
 #include "js/RootingAPI.h"
 
 struct JSContext;

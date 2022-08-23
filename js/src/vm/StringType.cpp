@@ -22,7 +22,6 @@
 #include <type_traits>  // std::is_same, std::is_unsigned
 
 #include "jsfriendapi.h"
-#include "jsnum.h"
 
 #include "builtin/Boolean.h"
 #ifdef ENABLE_RECORD_TUPLE
@@ -35,7 +34,9 @@
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertyAndElement.h"    // JS_DefineElement
 #include "js/StableStringChars.h"
+#include "js/Symbol.h"
 #include "js/UbiNode.h"
+#include "util/StringBuffer.h"
 #include "util/Unicode.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/StaticStrings.h"
@@ -43,6 +44,9 @@
 
 #include "gc/Marking-inl.h"
 #include "vm/GeckoProfiler-inl.h"
+#include "vm/JSContext-inl.h"
+#include "vm/JSObject-inl.h"
+#include "vm/Realm-inl.h"
 #ifdef ENABLE_RECORD_TUPLE
 #  include "vm/RecordType.h"
 #  include "vm/TupleType.h"

@@ -16,9 +16,10 @@
 #include "js/Printf.h"                // JS_vsmprintf
 #include "js/Warnings.h"              // JS::WarningReporter
 #include "vm/ErrorContext.h"  // MainThreadErrorContext, OffThreadErrorContext
-#include "vm/FrameIter.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
+
+#include "vm/JSContext-inl.h"
 
 using namespace js;
 

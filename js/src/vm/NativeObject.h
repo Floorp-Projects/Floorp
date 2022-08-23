@@ -17,20 +17,21 @@
 #include "NamespaceImports.h"
 
 #include "gc/Barrier.h"
+#include "gc/Marking.h"
 #include "gc/MaybeRooted.h"
 #include "gc/ZoneAllocator.h"
 #include "js/shadow/Object.h"  // JS::shadow::Object
 #include "js/shadow/Zone.h"    // JS::shadow::Zone
 #include "js/Value.h"
 #include "vm/GetterSetter.h"
-#include "vm/JSAtom.h"
 #include "vm/JSObject.h"
+#include "vm/PropertyResult.h"
 #include "vm/Shape.h"
 #include "vm/StringType.h"
 
 namespace js {
 
-class PropertyResult;
+class Shape;
 class TenuringTracer;
 
 #ifdef ENABLE_RECORD_TUPLE
@@ -501,6 +502,9 @@ extern HeapSlot* const emptyObjectSlotsForDictionaryObject[];
 
 class AutoCheckShapeConsistency;
 class GCMarker;
+class Shape;
+
+class NewObjectCache;
 
 // Operations which change an object's dense elements can either succeed, fail,
 // or be unable to complete. The latter is used when the object's elements must
@@ -716,6 +720,7 @@ class NativeObject : public JSObject {
   friend class DictionaryPropMap;
   friend class GCMarker;
   friend class Shape;
+  friend class NewObjectCache;
 
   void invalidateSlotRange(uint32_t start, uint32_t end) {
 #ifdef DEBUG

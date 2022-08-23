@@ -10,7 +10,6 @@
 #include <utility>
 
 #include "jit/Bailouts.h"
-#include "jit/JSJitFrameIter.h"
 #include "js/friend/DumpFunctions.h"  // js::DumpValue
 #include "vm/ArgumentsObject.h"
 

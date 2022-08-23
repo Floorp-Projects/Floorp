@@ -8,6 +8,7 @@
 #define vm_ErrorReporting_h
 
 #include <stdarg.h>
+#include <utility>
 
 #include "jsfriendapi.h"  // for ScriptEnvironmentPreparer
 

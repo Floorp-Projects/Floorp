@@ -7,8 +7,6 @@
 #ifndef frontend_JumpList_h
 #define frontend_JumpList_h
 
-#include <stddef.h>  // ptrdiff_t
-
 #include "frontend/BytecodeOffset.h"  // BytecodeOffset
 #include "js/TypeDecls.h"             // jsbytecode
 

@@ -8,6 +8,7 @@
 #ifndef gc_Nursery_h
 #define gc_Nursery_h
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TimeStamp.h"
@@ -18,6 +19,7 @@
 #include "js/Class.h"
 #include "js/GCAPI.h"
 #include "js/HeapAPI.h"
+#include "js/TracingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Vector.h"
 #include "util/Text.h"
@@ -47,6 +49,7 @@
 
 template <typename T>
 class SharedMem;
+class JSDependentString;
 
 namespace js {
 
@@ -55,6 +58,7 @@ class AutoLockGCBgAlloc;
 class ObjectElements;
 class PlainObject;
 class NativeObject;
+class Nursery;
 struct NurseryChunk;
 class HeapSlot;
 class JSONPrinter;
@@ -72,6 +76,7 @@ class MinorCollectionTracer;
 class RelocationOverlay;
 class StringRelocationOverlay;
 enum class AllocKind : uint8_t;
+class TenuredCell;
 }  // namespace gc
 
 namespace jit {

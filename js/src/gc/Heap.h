@@ -9,7 +9,10 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "ds/BitArray.h"
 #include "gc/AllocKind.h"
+#include "gc/GCEnum.h"
+#include "gc/Memory.h"
 #include "gc/Pretenuring.h"
 #include "js/HeapAPI.h"
 #include "js/TypeDecls.h"
@@ -20,6 +23,7 @@ namespace js {
 class AutoLockGC;
 class AutoLockGCBgAlloc;
 class Nursery;
+class NurseryDecommitTask;
 
 namespace gc {
 
@@ -29,6 +33,7 @@ class ArenaList;
 class GCRuntime;
 class MarkingValidator;
 class SortedArenaList;
+class StoreBuffer;
 class TenuredCell;
 
 // Cells are aligned to CellAlignShift, so the largest tagged null pointer is:
