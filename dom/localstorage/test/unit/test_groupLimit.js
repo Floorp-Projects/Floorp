@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-async function testSteps() {
+add_task(async function testSteps() {
   const groupLimitKB = 10 * 1024;
 
   const globalLimitKB = groupLimitKB * 5;
@@ -82,4 +82,4 @@ async function testSteps() {
   for (let i = 0; i < urls.length; i++) {
     storages[i].setItem("B", "");
   }
-}
+});

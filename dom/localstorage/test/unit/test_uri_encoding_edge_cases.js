@@ -11,7 +11,7 @@
  * of a null quota object. See bug 1516333.
  */
 
-async function testSteps() {
+add_task(async function testSteps() {
   /**
    * The edge cases are specified in this array of origins. Each edge case must
    * contain two properties uri and path (origin directory path relative to the
@@ -66,4 +66,4 @@ async function testSteps() {
 
     ok(originDir.exists(), `The origin directory ${origin.path} should exist`);
   }
-}
+});

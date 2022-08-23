@@ -9,7 +9,7 @@
  * quota object. See bug 1516333.
  */
 
-async function testSteps() {
+add_task(async function testSteps() {
   const principal = getPrincipal("https://foo.bar.mozilla-iot.org");
 
   info("Clearing");
@@ -42,4 +42,4 @@ async function testSteps() {
   info("Adding item");
 
   storage.setItem("foo", "bar");
-}
+});

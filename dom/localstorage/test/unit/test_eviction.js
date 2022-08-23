@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-async function testSteps() {
+add_task(async function testSteps() {
   const globalLimitKB = 5 * 1024;
 
   const data = {};
@@ -88,4 +88,4 @@ async function testSteps() {
   await requestFinished(request);
 
   is(request.result.usage, 0, "Zero usage");
-}
+});

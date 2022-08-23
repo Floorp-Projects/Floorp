@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-async function testSteps() {
+add_task(async function testSteps() {
   const principalInfos = [
     { url: "http://localhost", attrs: {} },
     { url: "http://www.mozilla.org", attrs: {} },
@@ -124,4 +124,4 @@ async function testSteps() {
 
     verifyData(clearedOrigins);
   }
-}
+});

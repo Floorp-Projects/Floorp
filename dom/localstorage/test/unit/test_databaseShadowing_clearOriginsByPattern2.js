@@ -6,7 +6,7 @@
 /* import-globals-from databaseShadowing-shared.js */
 loadSubscript("databaseShadowing-shared.js");
 
-async function testSteps() {
+add_task(async function testSteps() {
   // The shadow database was prepared in
   // test_databaseShadowing_clearOriginsByPattern1.js
 
@@ -18,4 +18,4 @@ async function testSteps() {
   );
 
   verifyData([4, 5, 6], /* migrated */ true);
-}
+});

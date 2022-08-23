@@ -3,7 +3,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-async function testSteps() {
+add_task(async function testSteps() {
   const url = "http://example.com";
 
   info("Setting pref");
@@ -67,4 +67,4 @@ async function testSteps() {
   for (let i = 0; i < keys.length; i++) {
     is(keys[i], savedKeys[i], "Correct key");
   }
-}
+});
