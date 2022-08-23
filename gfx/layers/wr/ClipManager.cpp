@@ -63,7 +63,7 @@ void ClipManager::BeginList(const StackingContextHelper& aStackingContext) {
 
   ItemClips clips(nullptr, nullptr, false);
   if (!mItemClipStack.empty()) {
-    clips.CopyOutputsFrom(mItemClipStack.top());
+    clips = mItemClipStack.top();
   }
 
   if (aStackingContext.ReferenceFrameId()) {
@@ -434,11 +434,6 @@ void ClipManager::ItemClips::UpdateSeparateLeaf(
 bool ClipManager::ItemClips::HasSameInputs(const ItemClips& aOther) {
   return mASR == aOther.mASR && mChain == aOther.mChain &&
          mSeparateLeaf == aOther.mSeparateLeaf;
-}
-
-void ClipManager::ItemClips::CopyOutputsFrom(const ItemClips& aOther) {
-  mScrollId = aOther.mScrollId;
-  mClipChainId = aOther.mClipChainId;
 }
 
 wr::WrSpaceAndClipChain ClipManager::ItemClips::GetSpaceAndClipChain() const {
