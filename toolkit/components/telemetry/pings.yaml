@@ -1,0 +1,35 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+$schema: moz://mozilla.org/schemas/glean/pings/2-0-0
+
+pseudo-main:
+  description: |
+    A ping designed to be submitted on the same schedule as the Legacy
+    Telemetry "main" ping.
+    See "main" ping documentation for details.
+  include_client_id: true
+  send_if_empty: true
+  reasons:
+    shutdown: |
+      Submitted at shutdown. Likely not uploaded until the following app
+      session. See "main" ping documentation for details.
+    environment_change: |
+      Submitted when something in the "main" ping's Environment changed.
+      See "main" ping documentation for details.
+    aborted_session: |
+      Submitted when the previous session failed to submit a "shutdown"-reason
+      "main" ping.
+      See "main" ping documentation for details.
+    daily: |
+      Submitted around local midnight.
+      See "main" ping documentation for details.
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1785251
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1785251
+  notification_emails:
+    - chutten@mozilla.com
+    - glean-team@mozilla.com
