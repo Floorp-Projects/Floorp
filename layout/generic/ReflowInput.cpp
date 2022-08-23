@@ -305,11 +305,20 @@ void ReflowInput::SetComputedBSize(nscoord aComputedBSize) {
   //    (like a text control, for example), we'll end up creating a reflow
   //    input for the parent while the parent is reflowing.
 
-  MOZ_ASSERT(aComputedBSize >= 0, "Invalid computed block-size!");
   if (ComputedBSize() != aComputedBSize) {
-    ComputedBSize() = aComputedBSize;
+    SetComputedBSizeWithoutResettingResizeFlags(aComputedBSize);
     InitResizeFlags(mFrame->PresContext(), mFrame->Type());
   }
+}
+
+void ReflowInput::SetComputedBSizeWithoutResettingResizeFlags(
+    nscoord aComputedBSize) {
+  // Viewport frames reset the computed block size on a copy of their reflow
+  // input when reflowing fixed-pos kids.  In that case we actually don't
+  // want to mess with the resize flags, because comparing the frame's rect
+  // to the munged computed isize is pointless.
+  MOZ_ASSERT(aComputedBSize >= 0, "Invalid computed block-size!");
+  ComputedBSize() = aComputedBSize;
 }
 
 void ReflowInput::Init(nsPresContext* aPresContext,
