@@ -133,6 +133,7 @@ class ClipManager {
     void UpdateSeparateLeaf(wr::DisplayListBuilder& aBuilder,
                             int32_t aAppUnitsPerDevPixel);
     bool HasSameInputs(const ItemClips& aOther);
+    void CopyOutputsFrom(const ItemClips& aOther);
     wr::WrSpaceAndClipChain GetSpaceAndClipChain() const;
   };
 
