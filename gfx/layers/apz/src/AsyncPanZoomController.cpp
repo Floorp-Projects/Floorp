@@ -4331,8 +4331,7 @@ bool AsyncPanZoomController::SnapBackIfOverscrolled() {
   // nearby snap points, assuming we haven't already done so when we started
   // this fling
   if (mState != FLING) {
-    ScrollSnap(ScrollSnapFlags::IntendedEndPosition |
-               ScrollSnapFlags::IntendedDirection);
+    ScrollSnap(ScrollSnapFlags::IntendedEndPosition);
   }
   return false;
 }
