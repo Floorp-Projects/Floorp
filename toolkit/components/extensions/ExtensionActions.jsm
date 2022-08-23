@@ -258,9 +258,21 @@ class PanelActionBase {
         // For internal consistency, we currently resolve both relative to the
         // calling context.
         let url = details.popup && context.uri.resolve(details.popup);
+
         if (url && !context.checkLoadURL(url)) {
           return Promise.reject({ message: `Access denied for URL ${url}` });
         }
+
+        // On manifest_version 3 is mandatory for the resolved URI to belong to the
+        // current extension (see Bug 1760608).
+        if (
+          context.extension.manifestVersion >= 3 &&
+          url &&
+          !url.startsWith(extension.baseURI.spec)
+        ) {
+          return Promise.reject({ message: `Access denied for URL ${url}` });
+        }
+
         this.setPropertyFromDetails(details, "popup", url);
       },
       getPopup: details => {
