@@ -60,7 +60,6 @@
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 
-#include "gc/GCContext-inl.h"
 #include "vm/JSObject-inl.h"
 
 using std::numeric_limits;

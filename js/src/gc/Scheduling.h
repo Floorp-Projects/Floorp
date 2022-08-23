@@ -320,7 +320,9 @@
 #include "js/GCAPI.h"
 #include "js/HashTable.h"
 #include "js/HeapAPI.h"
+#include "js/SliceBudget.h"
 #include "threading/ProtectedData.h"
+#include "util/DifferentialTesting.h"
 
 namespace js {
 

@@ -8,7 +8,6 @@
 #include "core/TelemetryCommon.h"
 #include "js/Array.h"               // JS::NewArrayObject
 #include "js/PropertyAndElement.h"  // JS_DefineUCProperty
-#include "js/PropertyDescriptor.h"  // JSPROP_ENUMERATE, JSPROP_READONLY
 #include "js/ValueArray.h"
 #include "nsIFile.h"
 

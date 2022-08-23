@@ -9,8 +9,11 @@
 
 #include "mozilla/RefPtr.h"  // RefPtr
 
-#include "frontend/ParserAtom.h"  // ParserAtom, ParserAtomSpan
+#include "frontend/CompilationStencil.h"  // SharedDataContainer
+#include "frontend/ObjLiteral.h"          // ObjLiteralStencil
+#include "frontend/ParserAtom.h"          // ParserAtom, ParserAtomSpan
 #include "frontend/Stencil.h"  // BitIntStencil, ScopeStencil, BaseParserScopeData
+#include "vm/SharedStencil.h"  // SharedImmutableScriptData
 #include "vm/Xdr.h"            // XDRMode, XDRResult, XDRState
 
 namespace JS {
@@ -22,18 +25,12 @@ class DecodeOptions;
 namespace js {
 
 class LifoAlloc;
-class ObjLiteralStencil;
 class ScriptSource;
-class SharedImmutableScriptData;
 
 class XDRStencilDecoder;
 class XDRStencilEncoder;
 
 namespace frontend {
-
-struct CompilationStencil;
-struct ExtensibleCompilationStencil;
-struct SharedDataContainer;
 
 // Check that we can copy data to disk and restore it in another instance of
 // the program in a different address space.

@@ -18,7 +18,7 @@
 #include "util/Memory.h"
 #include "util/Text.h"
 #include "util/WindowsWrapper.h"
-#include "vm/StringType.h"
+#include "vm/JSContext.h"
 
 using mozilla::PodCopy;
 

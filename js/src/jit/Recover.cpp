@@ -8,7 +8,6 @@
 
 #include "jsmath.h"
 
-#include "builtin/Object.h"
 #include "builtin/RegExp.h"
 #include "builtin/String.h"
 #include "jit/Bailouts.h"
@@ -19,7 +18,6 @@
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 #include "jit/VMFunctions.h"
-#include "util/DifferentialTesting.h"
 #include "vm/BigIntType.h"
 #include "vm/EqualityOperations.h"
 #include "vm/Interpreter.h"

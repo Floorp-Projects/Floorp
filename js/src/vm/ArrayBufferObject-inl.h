@@ -12,6 +12,8 @@
 
 #include "vm/ArrayBufferObject.h"
 
+#include "js/Value.h"
+
 #include "vm/SharedArrayObject.h"
 #include "vm/SharedMem.h"
 

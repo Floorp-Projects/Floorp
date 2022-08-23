@@ -9,6 +9,8 @@
 
 #include "gc/Marking.h"
 
+#include "mozilla/Maybe.h"
+
 #include <type_traits>
 
 #include "gc/RelocationOverlay.h"

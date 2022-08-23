@@ -9,6 +9,7 @@
 #include <type_traits>
 
 #include "gc/PublicIterators.h"
+#include "vm/Realm.h"
 
 #include "gc/GC-inl.h"
 #include "gc/Heap-inl.h"

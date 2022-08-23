@@ -15,7 +15,6 @@
 #include "vm/JSScript.h"
 
 #include "vm/JSScript-inl.h"
-#include "vm/Realm-inl.h"
 
 using namespace js;
 using namespace js::jit;

@@ -39,7 +39,6 @@
 #include "util/Unicode.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/BytecodeUtil.h"
-#include "vm/Compartment.h"
 #include "vm/Iteration.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/ProxyObject.h"

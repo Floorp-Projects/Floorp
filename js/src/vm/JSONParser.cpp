@@ -14,14 +14,12 @@
 #include "jsnum.h"
 
 #include "builtin/Array.h"
-#include "js/ErrorReport.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "util/StringBuffer.h"
-#include "vm/ArrayObject.h"
-#include "vm/JSContext.h"
 #include "vm/PlainObject.h"  // js::NewPlainObjectWithProperties
+#include "vm/Realm.h"
 
-#include "vm/JSAtom-inl.h"
+#include "vm/NativeObject-inl.h"
 
 using namespace js;
 

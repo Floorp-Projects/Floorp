@@ -10,21 +10,23 @@
 
 #include "NamespaceImports.h"
 
+#include "gc/GCInternals.h"
+#include "gc/Marking.h"
 #include "gc/PublicIterators.h"
-#include "jit/JitCode.h"
+#include "gc/Zone.h"
 #include "util/Memory.h"
 #include "util/Text.h"
 #include "vm/BigIntType.h"
-#include "vm/JSContext.h"
+#include "vm/GetterSetter.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
-#include "vm/RegExpShared.h"
-#include "vm/Scope.h"
+#include "vm/PropMap.h"
 #include "vm/Shape.h"
-#include "vm/StringType.h"
 #include "vm/SymbolType.h"
 
-#include "vm/Shape-inl.h"
+#include "gc/GC-inl.h"
+#include "gc/Marking-inl.h"
+#include "vm/Realm-inl.h"
 
 using namespace js;
 using namespace js::gc;

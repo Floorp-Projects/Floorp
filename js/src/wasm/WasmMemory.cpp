@@ -19,9 +19,6 @@
 #include "wasm/WasmMemory.h"
 
 #include "mozilla/MathAlgorithms.h"
-
-#include "js/Conversions.h"
-#include "js/ErrorReport.h"
 #include "vm/ArrayBufferObject.h"
 #include "wasm/WasmCodegenTypes.h"
 #include "wasm/WasmProcess.h"

@@ -8,7 +8,9 @@
 #define vm_FrameIter_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Atomics.h"     // mozilla::Atomic, mozilla::Relaxed
 #include "mozilla/Attributes.h"  // MOZ_IMPLICIT, MOZ_RAII
+#include "mozilla/Maybe.h"       // mozilla::Maybe
 #include "mozilla/MaybeOneOf.h"  // mozilla::MaybeOneOf
 
 #include <stddef.h>  // size_t
@@ -19,9 +21,12 @@
 #include "jit/JSJitFrameIter.h"  // js::jit::{InlineFrameIterator,JSJitFrameIter}
 #include "js/RootingAPI.h"       // JS::Handle, JS::Rooted
 #include "js/TypeDecls.h"  // jsbytecode, JSContext, JSAtom, JSFunction, JSObject, JSScript
-#include "js/Value.h"       // JS::Value
-#include "vm/Activation.h"  // js::InterpreterActivation
-#include "vm/Stack.h"       // js::{AbstractFramePtr,MaybeCheckAliasing}
+#include "js/UniquePtr.h"        // js::UniquePtr
+#include "js/Value.h"            // JS::Value
+#include "vm/Activation.h"       // js::InterpreterActivation
+#include "vm/Stack.h"            // js::{AbstractFramePtr,MaybeCheckAliasing}
+#include "wasm/WasmConstants.h"  // js::wasm::Trap
+#include "wasm/WasmFrame.h"      // js::wasm::{Frame,TrapData}
 #include "wasm/WasmFrameIter.h"  // js::wasm::{ExitReason,RegisterState,WasmFrameIter}
 
 struct JSPrincipals;
@@ -37,6 +42,7 @@ namespace js {
 
 class ArgumentsObject;
 class CallObject;
+class InterpreterFrame;
 
 namespace jit {
 class CommonFrameLayout;

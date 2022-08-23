@@ -12,7 +12,6 @@
 #include "jit/VMFunctions.h"
 #include "util/DiagnosticAssertions.h"
 #include "vm/EqualityOperations.h"
-#include "vm/Iteration.h"
 
 #include "vm/Interpreter-inl.h"
 #include "vm/JSScript-inl.h"

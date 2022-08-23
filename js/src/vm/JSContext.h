@@ -14,12 +14,11 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "builtin/AtomicsObject.h"
 #include "ds/TraceableFifo.h"
 #include "frontend/NameCollections.h"
 #include "gc/Memory.h"
 #include "irregexp/RegExpTypes.h"
-#include "jit/PcScriptCache.h"
+#include "js/CharacterEncoding.h"
 #include "js/ContextOptions.h"  // JS::ContextOptions
 #include "js/Exception.h"
 #include "js/GCVector.h"
@@ -32,6 +31,7 @@
 #include "threading/ProtectedData.h"
 #include "util/StructuredSpewer.h"
 #include "vm/Activation.h"  // js::Activation
+#include "vm/ErrorReporting.h"
 #include "vm/MallocProvider.h"
 #include "vm/Runtime.h"
 #include "vm/SharedStencil.h"  // js::SharedImmutableScriptDataTable
@@ -46,6 +46,10 @@ namespace js {
 class AutoAllocInAtomsZone;
 class AutoMaybeLeaveAtomsZone;
 class AutoRealm;
+
+namespace frontend {
+class WellKnownParserAtoms;
+}  // namespace frontend
 
 namespace jit {
 class ICScript;

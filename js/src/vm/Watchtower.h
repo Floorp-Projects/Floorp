@@ -7,7 +7,9 @@
 #ifndef vm_Watchtower_h
 #define vm_Watchtower_h
 
+#include "js/Id.h"
 #include "js/TypeDecls.h"
+#include "vm/JSContext.h"
 #include "vm/NativeObject.h"
 
 namespace js {

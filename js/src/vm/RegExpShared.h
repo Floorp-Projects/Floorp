@@ -17,7 +17,7 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "gc/Barrier.h"
-#include "gc/Policy.h"
+#include "gc/Marking.h"
 #include "gc/ZoneAllocator.h"
 #include "irregexp/RegExpTypes.h"
 #include "jit/JitCode.h"
@@ -27,6 +27,7 @@
 #include "js/UbiNode.h"
 #include "js/Vector.h"
 #include "vm/ArrayObject.h"
+#include "vm/JSAtom.h"
 
 namespace js {
 

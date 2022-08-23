@@ -7,11 +7,9 @@
 #ifndef js_WeakMapPtr_h
 #define js_WeakMapPtr_h
 
-#include "jstypes.h"
+#include "jspubtd.h"
 
 #include "js/TypeDecls.h"
-
-class JS_PUBLIC_API JSTracer;
 
 namespace JS {
 

@@ -10,7 +10,8 @@
 #include "vm/Probes.h"
 
 #include "vm/JSContext.h"
-#include "vm/JSScript.h"
+
+#include "vm/JSScript-inl.h"
 
 namespace js {
 

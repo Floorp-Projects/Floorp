@@ -9,7 +9,6 @@
 
 #include "vm/GeckoProfiler.h"
 
-#include "js/ProfilingStack.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 #include "vm/Runtime.h"

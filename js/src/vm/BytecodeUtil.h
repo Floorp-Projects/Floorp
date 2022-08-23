@@ -23,6 +23,7 @@
 #include "NamespaceImports.h"
 
 #include "js/TypeDecls.h"
+#include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Value.h"
 #include "vm/BytecodeFormatFlags.h"  // JOF_*

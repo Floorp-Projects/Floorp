@@ -16,7 +16,6 @@
 #include "js/AllocPolicy.h"
 #include "js/Vector.h"
 #include "jsapi-tests/tests.h"
-#include "vm/PlainObject.h"
 
 #include "vm/JSObject-inl.h"
 

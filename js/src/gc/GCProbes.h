@@ -14,19 +14,10 @@
  * from JIT code.
  */
 
-#include <stddef.h>
-
-#include "gc/AllocKind.h"
-#include "js/TraceKind.h"
-
-class JSObject;
+#include "gc/Heap.h"
 
 namespace js {
 namespace gc {
-
-class GCRuntime;
-struct Cell;
-
 namespace gcprobes {
 
 inline void Init(gc::GCRuntime* gc) {}

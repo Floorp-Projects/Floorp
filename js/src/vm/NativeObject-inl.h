@@ -9,6 +9,7 @@
 
 #include "vm/NativeObject.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 
 #include <type_traits>
@@ -17,17 +18,17 @@
 #include "gc/GCProbes.h"
 #include "gc/MaybeRooted.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "vm/Iteration.h"
+#include "js/Result.h"
+#include "proxy/Proxy.h"
 #include "vm/JSContext.h"
-#include "vm/PlainObject.h"
 #include "vm/PropertyResult.h"
+#include "vm/ProxyObject.h"
 #include "vm/TypedArrayObject.h"
 
 #include "gc/Heap-inl.h"
 #include "gc/Marking-inl.h"
 #include "gc/ObjectKind-inl.h"
 #include "vm/JSObject-inl.h"
-#include "vm/Realm-inl.h"
 #include "vm/Shape-inl.h"
 
 #ifdef ENABLE_RECORD_TUPLE

@@ -14,10 +14,7 @@
 #include "gc/ZoneAllocator.h"
 #include "js/HashTable.h"
 #include "js/HeapAPI.h"
-
-namespace JS {
-class Zone;
-}
+#include "js/shadow/Zone.h"  // JS::shadow::Zone
 
 namespace js {
 

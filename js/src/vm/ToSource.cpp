@@ -16,6 +16,7 @@
 #include "builtin/Boolean.h"        // BooleanToString
 #include "builtin/Object.h"         // ObjectToSource
 #include "gc/Allocator.h"           // CanGC
+#include "js/CallAndConstruct.h"    // JS::IsCallable
 #include "js/Class.h"               // ESClass
 #include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit
 #include "js/Object.h"              // JS::GetBuiltinClass
@@ -24,6 +25,7 @@
 #include "js/Utility.h"         // UniqueChars
 #include "js/Value.h"           // JS::Value
 #include "util/StringBuffer.h"  // JSStringBuilder
+#include "vm/ArrayObject.h"     // ArrayObject
 #include "vm/ErrorObject.h"     // ErrorObject, ErrorToSource
 #include "vm/Interpreter.h"     // Call
 #include "vm/JSContext.h"       // JSContext

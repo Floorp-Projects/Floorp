@@ -20,6 +20,7 @@
 #include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit
 #include "js/Stack.h"               // JS::NativeStackLimit
 #include "util/StringBuffer.h"      // StringBuffer
+#include "vm/StringType.h"
 
 using namespace js;
 using namespace js::frontend;

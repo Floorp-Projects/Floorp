@@ -7,6 +7,11 @@
 #ifndef js_UbiNodeCensus_h
 #define js_UbiNodeCensus_h
 
+#include "mozilla/Attributes.h"
+
+#include <algorithm>
+#include <utility>
+
 #include "js/UbiNode.h"
 #include "js/UbiNodeBreadthFirst.h"
 

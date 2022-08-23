@@ -7,8 +7,6 @@
 #ifndef vm_ObjectFlags_h
 #define vm_ObjectFlags_h
 
-#include <stdint.h>
-
 #include "util/EnumFlags.h"  // js::EnumFlags
 
 namespace js {

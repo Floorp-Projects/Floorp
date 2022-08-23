@@ -11,7 +11,6 @@
 #include <algorithm>
 
 #include "builtin/ModuleObject.h"
-#include "gc/GC.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"

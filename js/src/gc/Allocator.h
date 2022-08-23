@@ -7,16 +7,17 @@
 #ifndef gc_Allocator_h
 #define gc_Allocator_h
 
-#include <stddef.h>
+#include <stdint.h>
 
 #include "gc/AllocKind.h"
-#include "js/TypeDecls.h"
+#include "js/RootingAPI.h"
+
+class JSFatInlineString;
 
 namespace js {
 
 namespace gc {
 class AllocSite;
-struct Cell;
 }  // namespace gc
 
 // [SMDOC] AllowGC template parameter

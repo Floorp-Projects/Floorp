@@ -26,7 +26,6 @@
 
 #include "jsmath.h"
 
-#include "gc/Marking.h"
 #include "jit/AtomicOperations.h"
 #include "jit/Disassemble.h"
 #include "jit/JitCommon.h"
@@ -38,11 +37,8 @@
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/BigIntType.h"
-#include "vm/Compartment.h"
 #include "vm/ErrorObject.h"
-#include "vm/Interpreter.h"
 #include "vm/Iteration.h"
-#include "vm/JitActivation.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "wasm/TypedObject.h"
 #include "wasm/WasmBuiltins.h"

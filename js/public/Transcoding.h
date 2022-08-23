@@ -21,7 +21,7 @@
 
 namespace JS {
 
-class JS_PUBLIC_API ReadOnlyCompileOptions;
+class ReadOnlyCompileOptions;
 
 using TranscodeBuffer = mozilla::Vector<uint8_t>;
 using TranscodeRange = mozilla::Range<const uint8_t>;

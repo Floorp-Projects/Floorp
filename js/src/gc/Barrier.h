@@ -7,6 +7,8 @@
 #ifndef gc_Barrier_h
 #define gc_Barrier_h
 
+#include "mozilla/DebugOnly.h"
+
 #include <type_traits>  // std::true_type
 
 #include "NamespaceImports.h"

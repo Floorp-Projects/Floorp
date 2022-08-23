@@ -14,9 +14,12 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jsnum.h"
+#include "gc/Barrier.h"
+#include "gc/Marking.h"
 #include "js/CallArgs.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Wrapper.h"
+#include "vm/Iteration.h"
 #include "vm/JSObject.h"
 
 #include "vm/JSContext-inl.h"

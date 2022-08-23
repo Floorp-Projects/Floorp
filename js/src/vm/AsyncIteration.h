@@ -11,6 +11,7 @@
 #include "builtin/SelfHostingDefines.h"
 #include "js/Class.h"
 #include "vm/GeneratorObject.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/List.h"
 #include "vm/PromiseObject.h"
