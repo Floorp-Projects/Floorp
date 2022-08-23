@@ -16,10 +16,8 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "jit/CalleeToken.h"  // js::jit::CalleeToken
-#include "js/CallArgs.h"      // JS::CallArgs
 #include "js/RootingAPI.h"    // JS::Handle, JS::Rooted
 #include "js/TypeDecls.h"     // jsbytecode
-#include "js/UniquePtr.h"     // js::UniquePtr
 #include "js/Value.h"         // JS::Value
 #include "vm/SavedFrame.h"    // js::SavedFrame
 #include "vm/Stack.h"         // js::InterpreterRegs
@@ -32,6 +30,7 @@ class JSScript;
 
 namespace JS {
 
+class CallArgs;
 class JS_PUBLIC_API Compartment;
 
 namespace dbg {
@@ -43,11 +42,9 @@ class JS_PUBLIC_API AutoEntryMonitor;
 namespace js {
 
 class InterpreterActivation;
-class InterpreterFrame;
 
 namespace jit {
 class JitActivation;
-class JitFrameLayout;
 }  // namespace jit
 
 // This class is separate from Activation, because it calls Compartment::wrap()

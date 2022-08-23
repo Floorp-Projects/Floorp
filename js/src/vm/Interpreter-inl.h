@@ -7,10 +7,13 @@
 #ifndef vm_Interpreter_inl_h
 #define vm_Interpreter_inl_h
 
+#include "vm/Interpreter.h"
+
 #include "jsnum.h"
 
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "vm/ArgumentsObject.h"
+#include "vm/BigIntType.h"
 #include "vm/BytecodeUtil.h"  // JSDVG_SEARCH_STACK
 #include "vm/Realm.h"
 #include "vm/SharedStencil.h"  // GCThingIndex
@@ -22,6 +25,7 @@
 
 #include "vm/GlobalObject-inl.h"
 #include "vm/JSAtom-inl.h"
+#include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/ObjectOperations-inl.h"
 #include "vm/StringType-inl.h"

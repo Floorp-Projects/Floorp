@@ -20,13 +20,15 @@
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/Modules.h"  // JS::GetModulePrivate, JS::ModuleDynamicImportHook
 #include "vm/EqualityOperations.h"  // js::SameValue
-#include "vm/ModuleBuilder.h"       // js::ModuleBuilder
+#include "vm/Interpreter.h"    // Execute, Lambda, ReportRuntimeLexicalError
+#include "vm/ModuleBuilder.h"  // js::ModuleBuilder
 #include "vm/Modules.h"
 #include "vm/PlainObject.h"    // js::PlainObject
 #include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/SharedStencil.h"  // js::GCThingIndex
 
 #include "builtin/HandlerFunction-inl.h"  // js::ExtraValueFromHandler, js::NewHandler{,WithExtraValue}, js::TargetFromHandler
+#include "gc/GCContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/List-inl.h"

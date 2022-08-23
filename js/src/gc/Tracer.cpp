@@ -21,6 +21,7 @@
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
 #include "vm/PropMap.h"
+#include "vm/Scope.h"
 #include "vm/Shape.h"
 #include "vm/SymbolType.h"
 

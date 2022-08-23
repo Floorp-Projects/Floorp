@@ -6,10 +6,9 @@
 
 #include "vm/ErrorContext.h"
 
+#include "gc/GC.h"
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"  // selfHosting_ErrorReporter
-
-#include "vm/JSContext-inl.h"
 
 using namespace js;
 

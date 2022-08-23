@@ -9,6 +9,7 @@
 
 #include "builtin/ModuleObject.h"
 #include "debugger/DebugAPI.h"
+#include "gc/GC.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
@@ -31,8 +32,10 @@
 #include "util/Memory.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/BytecodeUtil.h"
+#include "vm/JitActivation.h"
 
 #include "jit/JitFrames-inl.h"
+#include "vm/JSContext-inl.h"
 #include "vm/JSScript-inl.h"
 
 using namespace js;

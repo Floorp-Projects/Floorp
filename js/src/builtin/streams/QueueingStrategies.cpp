@@ -15,6 +15,7 @@
 #include "js/PropertySpec.h"  // JS{Property,Function}Spec, JS_FN, JS_FS_END, JS_PS_END
 #include "js/ProtoKey.h"          // JSProto_{ByteLength,Count}QueuingStrategy
 #include "js/RootingAPI.h"        // JS::{Handle,Rooted}
+#include "vm/Interpreter.h"       // js::GetProperty
 #include "vm/JSObject.h"          // js::GetPrototypeFromBuiltinConstructor
 #include "vm/ObjectOperations.h"  // js::{Define,Get}Property
 #include "vm/Runtime.h"           // JSAtomState

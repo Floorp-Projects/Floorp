@@ -14,6 +14,7 @@
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 
+#include "gc/Marking-inl.h"
 #include "vm/JSObject-inl.h"
 
 using namespace js;

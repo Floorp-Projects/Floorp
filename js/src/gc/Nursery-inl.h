@@ -18,6 +18,8 @@
 #include "vm/Runtime.h"
 #include "vm/SharedMem.h"
 
+#include "vm/JSContext-inl.h"
+
 inline JSRuntime* js::Nursery::runtime() const { return gc->rt; }
 
 template <typename T>

@@ -35,6 +35,7 @@
 #include "vm/BooleanObject.h"
 #include "vm/DateObject.h"
 #include "vm/ErrorObject.h"
+#include "vm/Interpreter.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/NumberObject.h"
@@ -48,9 +49,11 @@
 #  include "vm/TupleType.h"
 #endif
 
+#include "gc/Marking-inl.h"
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
+#include "vm/Realm-inl.h"
 
 using namespace js;
 

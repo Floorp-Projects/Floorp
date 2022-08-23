@@ -10,7 +10,6 @@
 #include "js/Class.h"
 #include "vm/AsyncFunctionResolveKind.h"  // AsyncFunctionResolveKind
 #include "vm/GeneratorObject.h"
-#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/PromiseObject.h"
 

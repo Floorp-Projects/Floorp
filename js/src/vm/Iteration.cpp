@@ -24,22 +24,18 @@
 #include "builtin/SelfHostingDefines.h"
 #include "ds/Sort.h"
 #include "gc/GCContext.h"
-#include "gc/Marking.h"
-#include "js/CallAndConstruct.h"      // JS::IsCallable
 #include "js/ForOfIterator.h"         // JS::ForOfIterator
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertySpec.h"
-#include "js/Proxy.h"
 #include "util/DifferentialTesting.h"
 #include "util/Poison.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
-#include "vm/JSAtom.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
-#include "vm/JSScript.h"
 #include "vm/NativeObject.h"  // js::PlainObject
 #include "vm/Shape.h"
+#include "vm/StringType.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
 
@@ -48,12 +44,8 @@
 #  include "builtin/TupleObject.h"
 #endif
 
-#include "vm/Compartment-inl.h"
-#include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/PlainObject-inl.h"  // js::PlainObject::createWithTemplate
-#include "vm/Stack-inl.h"
-#include "vm/StringType-inl.h"
 
 using namespace js;
 

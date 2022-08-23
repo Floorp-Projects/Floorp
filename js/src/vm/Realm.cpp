@@ -16,29 +16,22 @@
 #include "builtin/WrappedFunctionObject.h"
 #include "debugger/DebugAPI.h"
 #include "debugger/Debugger.h"
-#include "gc/Policy.h"
-#include "gc/PublicIterators.h"
+#include "gc/GC.h"
 #include "jit/JitRealm.h"
 #include "jit/JitRuntime.h"
-#include "js/CallAndConstruct.h"  // JS::IsCallable
-#include "js/Date.h"
+#include "js/CallAndConstruct.h"      // JS::IsCallable
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "js/GCVariant.h"
 #include "js/Proxy.h"
 #include "js/RootingAPI.h"
 #include "js/Wrapper.h"
-#include "proxy/DeadObjectProxy.h"
+#include "vm/Compartment.h"
 #include "vm/DateTime.h"
 #include "vm/Iteration.h"
 #include "vm/JSContext.h"
-#include "vm/WrapperObject.h"
 
-#include "gc/GC-inl.h"
 #include "gc/Marking-inl.h"
-#include "vm/JSAtom-inl.h"
-#include "vm/JSFunction-inl.h"
 #include "vm/JSObject-inl.h"
-#include "vm/JSScript-inl.h"
-#include "vm/NativeObject-inl.h"
 
 using namespace js;
 

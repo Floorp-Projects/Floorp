@@ -26,6 +26,7 @@
 #include "js/Wrapper.h"
 #include "util/DifferentialTesting.h"
 #include "vm/ArrayBufferObject.h"
+#include "vm/Compartment.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/JSContext.h"

@@ -9,10 +9,11 @@
 
 #include "vm/ObjectFlags.h"
 
+#include "builtin/Array.h"
+#include "vm/JSAtomState.h"
+#include "vm/JSContext.h"
 #include "vm/PlainObject.h"
 #include "vm/PropertyInfo.h"
-#include "vm/PropertyKey.h"
-#include "vm/Shape.h"
 
 namespace js {
 

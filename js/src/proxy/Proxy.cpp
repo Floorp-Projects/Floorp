@@ -19,6 +19,7 @@
 #include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"
 #include "proxy/ScriptedProxyHandler.h"
+#include "vm/Compartment.h"
 #include "vm/Interpreter.h"  // js::CallGetter
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"

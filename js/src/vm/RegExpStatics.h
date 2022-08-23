@@ -7,15 +7,12 @@
 #ifndef vm_RegExpStatics_h
 #define vm_RegExpStatics_h
 
-#include "gc/Marking.h"
+#include "js/RegExpFlags.h"
 #include "vm/JSContext.h"
 #include "vm/MatchPairs.h"
-#include "vm/RegExpShared.h"
 #include "vm/Runtime.h"
 
 namespace js {
-
-class GlobalObject;
 
 class RegExpStatics {
   /* The latest RegExp output, set after execution. */

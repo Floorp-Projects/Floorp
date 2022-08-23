@@ -11,19 +11,16 @@
 #include "mozilla/HashFunctions.h"  // mozilla::HashGeneric
 #include "mozilla/RefPtr.h"         // mozilla::RefPtr
 
-#include "js/experimental/JSStencil.h"  // mozilla::RefPtrTraits<JS::Stencil>
-#include "js/HashTable.h"               // js::HashTable
+#include "js/HashTable.h"  // js::HashTable
 
 #include "threading/ExclusiveData.h"  // js::ExclusiveData
 
-#include "vm/MutexIDs.h"       // js::mutexid::StencilCache
+#include "vm/JSScript.h"       // js::ScriptSource
 #include "vm/SharedStencil.h"  // js::SourceExtent
 
 struct JS_PUBLIC_API JSContext;  // vm/JSContext.h
 
 namespace js {
-
-class ScriptSource;  // vm/JSScript.h
 
 namespace frontend {
 struct CompilationStencil;            // frontend/CompilationStencil.h

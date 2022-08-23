@@ -25,6 +25,7 @@
 #include "vm/AsyncIteration.h"
 #include "vm/CompletionKind.h"
 #include "vm/ErrorObject.h"
+#include "vm/ErrorReporting.h"
 #include "vm/Iteration.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
