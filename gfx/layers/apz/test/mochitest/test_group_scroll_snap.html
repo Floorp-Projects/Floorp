@@ -38,7 +38,16 @@ const subtests = [
   {"file": "helper_scroll_snap_not_resnap_during_scrollbar_dragging.html",
     // Same as above helper_scroll_snap_not_resnap_during_scrollbar_dragging.html.
    "prefs": [["layout.css.scroll-behavior.spring-constant", 1000]]},
-  {"file": "helper_bug1780701.html"}
+  {"file": "helper_bug1780701.html"},
+  {"file": "helper_bug1783936.html",
+             // Shorten the scroll snap animation duration.
+   "prefs": [["layout.css.scroll-behavior.spring-constant", 1000],
+             // Avoid fling at the end of pan.
+             ["apz.fling_min_velocity_threshold", "10000"],
+             ["apz.gtk.kinetic_scroll.enabled", true],
+             // Use the pixel mode to make the test predictable easily.
+             ["apz.gtk.kinetic_scroll.delta_mode", 2],
+             ["apz.gtk.kinetic_scroll.pixel_delta_mode_multiplier", 1]]},
 ];
 
 if (isApzEnabled()) {

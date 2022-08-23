@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test that scroll snap happens on pan end without fling</title>
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    html {
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      scroll-behavior: auto;
+    }
+    .snap {
+      width: 100%;
+      height: 100vh;
+      background-color: blue;
+      position: absolute;
+      top: 200px;
+      scroll-snap-align: start;
+    }
+  </style>
+</head>
+<body>
+  <div class="snap"></div>
+  <div style="width: 100%; height: 500vh;"></div>
+  <script type="application/javascript">
+    async function test() {
+      is(window.scrollY, 200, "The initial layout should result snapping to 200px");
+
+      // Start scrolling back by a pan gesture and wait its' scroll end.
+      let transformEndPromise = promiseTransformEnd();
+      await promiseNativeTouchpadPanEventAndWaitForObserver(
+        window,
+        100,
+        100,
+        0, -100,
+        SpecialPowers.DOMWindowUtils.PHASE_BEGIN);
+
+      // Finish the pan gesture.
+      await promiseNativeTouchpadPanEventAndWaitForObserver(
+        window,
+        100,
+        100,
+        0, 0,
+        SpecialPowers.DOMWindowUtils.PHASE_END);
+      await transformEndPromise;
+
+      // Make sure the new scroll positions have reached to the main-thread.
+      await promiseOnlyApzControllerFlushed();
+
+      is(window.scrollY, 200, "The pan-end should result snapping to 200px");
+    }
+
+    // This test is supposed to run on environments where
+    // PanGestureInput.mSimulateMomentum for pan gestures is true, which means
+    // as of now it's only on Linux.
+    if (getPlatform() == "linux") {
+      waitUntilApzStable()
+      .then(test)
+      .then(subtestDone, subtestFailed);
+    } else {
+      ok(true, "Skipping test because this test isn't supposed to work on " + getPlatform());
+      subtestDone();
+    }
+  </script>
+</body>
+</html>
