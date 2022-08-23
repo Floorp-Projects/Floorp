@@ -7,7 +7,7 @@
 ChromeUtils.defineModuleGetter(
   this,
   "LanguageDetector",
-  "resource:///modules/translation/LanguageDetector.jsm"
+  "resource://gre/modules/translation/LanguageDetector.jsm"
 );
 
 this.i18n = class extends ExtensionAPI {

@@ -351,7 +351,10 @@ add_task(async function test_get_accept_languages() {
   await extension.startup();
   await extension.awaitMessage("content-loaded");
 
-  let expectedLangs = ["en-US", "en"];
+  // TODO bug 1765375: ", en" is missing on Android.
+  // TODO bug 1785807: "en-us" should be "en-US" on Android
+  let expectedLangs =
+    AppConstants.platform == "android" ? ["en-us"] : ["en-US", "en"];
   extension.sendMessage(["expect-results", expectedLangs]);
   await extension.awaitMessage("background-done");
   await extension.awaitMessage("content-done");
@@ -452,11 +455,6 @@ add_task(async function test_get_ui_language() {
 });
 
 add_task(async function test_detect_language() {
-  if (AppConstants.MOZ_BUILD_APP !== "browser") {
-    // This is not supported on Android.
-    return;
-  }
-
   const af_string =
     " aam skukuza die naam beteken hy wat skoonvee of hy wat alles onderstebo keer wysig " +
     "bosveldkampe boskampe is kleiner afgeleë ruskampe wat oor min fasiliteite beskik daar is geen restaurante " +

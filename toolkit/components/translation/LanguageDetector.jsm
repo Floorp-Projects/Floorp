@@ -11,7 +11,7 @@ const { clearTimeout, setTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
 
-const WORKER_URL = "resource:///modules/translation/cld-worker.js";
+const WORKER_URL = "resource://gre/modules/translation/cld-worker.js";
 
 var workerManager = {
   // Since Emscripten can handle heap growth, but not heap shrinkage, we
