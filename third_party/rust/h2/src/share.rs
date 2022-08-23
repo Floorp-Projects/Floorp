@@ -5,7 +5,6 @@ use crate::proto::{self, WindowSize};
 use bytes::{Buf, Bytes};
 use http::HeaderMap;
 
-use crate::PollExt;
 use std::fmt;
 #[cfg(feature = "stream")]
 use std::pin::Pin;
@@ -307,8 +306,8 @@ impl<B: Buf> SendStream<B> {
     pub fn poll_capacity(&mut self, cx: &mut Context) -> Poll<Option<Result<usize, crate::Error>>> {
         self.inner
             .poll_capacity(cx)
-            .map_ok_(|w| w as usize)
-            .map_err_(Into::into)
+            .map_ok(|w| w as usize)
+            .map_err(Into::into)
     }
 
     /// Sends a single data frame to the remote peer.
@@ -403,7 +402,7 @@ impl RecvStream {
 
     /// Poll for the next data frame.
     pub fn poll_data(&mut self, cx: &mut Context<'_>) -> Poll<Option<Result<Bytes, crate::Error>>> {
-        self.inner.inner.poll_data(cx).map_err_(Into::into)
+        self.inner.inner.poll_data(cx).map_err(Into::into)
     }
 
     #[doc(hidden)]

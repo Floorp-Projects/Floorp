@@ -442,6 +442,11 @@ the usage is pretty straightforward and while it's technically UB, it seems no
 more likely to lead to miscompilation than any other use of mem::uninitialized.
 """
 
+[[audits.h2]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-run"
+delta = "0.3.13 -> 0.3.14"
+
 [[audits.hashbrown]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
