@@ -7,16 +7,6 @@
  */
 
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "gContentSecurityManager",
-  "@mozilla.org/contentsecuritymanager;1",
-  "nsIContentSecurityManager"
-);
 
 Services.prefs.setCharPref(
   "dom.securecontext.allowlist",
