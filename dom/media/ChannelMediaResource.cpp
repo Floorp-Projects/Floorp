@@ -512,6 +512,15 @@ nsresult ChannelMediaResource::Open(nsIStreamListener** aStreamListener) {
   return NS_OK;
 }
 
+dom::HTMLMediaElement* ChannelMediaResource::MediaElement() const {
+  MOZ_ASSERT(NS_IsMainThread());
+  MediaDecoderOwner* owner = mCallback->GetMediaOwner();
+  MOZ_DIAGNOSTIC_ASSERT(owner);
+  dom::HTMLMediaElement* element = owner->GetMediaElement();
+  MOZ_DIAGNOSTIC_ASSERT(element);
+  return element;
+}
+
 nsresult ChannelMediaResource::OpenChannel(int64_t aOffset) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!mClosed);
@@ -529,11 +538,7 @@ nsresult ChannelMediaResource::OpenChannel(int64_t aOffset) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Tell the media element that we are fetching data from a channel.
-  MediaDecoderOwner* owner = mCallback->GetMediaOwner();
-  MOZ_DIAGNOSTIC_ASSERT(owner);
-  dom::HTMLMediaElement* element = owner->GetMediaElement();
-  MOZ_DIAGNOSTIC_ASSERT(element);
-  element->DownloadResumed();
+  MediaElement()->DownloadResumed();
 
   return NS_OK;
 }
@@ -556,11 +561,7 @@ nsresult ChannelMediaResource::SetupChannelHeaders(int64_t aOffset) {
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Send Accept header for video and audio types only (Bug 489071)
-    MediaDecoderOwner* owner = mCallback->GetMediaOwner();
-    MOZ_DIAGNOSTIC_ASSERT(owner);
-    dom::HTMLMediaElement* element = owner->GetMediaElement();
-    MOZ_DIAGNOSTIC_ASSERT(element);
-    element->SetRequestHeaders(hc);
+    MediaElement()->SetRequestHeaders(hc);
   } else {
     NS_ASSERTION(aOffset == 0, "Don't know how to seek on this channel type");
     return NS_ERROR_FAILURE;
@@ -669,10 +670,7 @@ void ChannelMediaResource::Suspend(bool aCloseImmediately) {
     return;
   }
 
-  MediaDecoderOwner* owner = mCallback->GetMediaOwner();
-  MOZ_DIAGNOSTIC_ASSERT(owner);
-  dom::HTMLMediaElement* element = owner->GetMediaElement();
-  MOZ_DIAGNOSTIC_ASSERT(element);
+  dom::HTMLMediaElement* element = MediaElement();
 
   if (mChannel && aCloseImmediately && mIsTransportSeekable) {
     CloseChannel();
@@ -691,10 +689,7 @@ void ChannelMediaResource::Resume() {
     return;
   }
 
-  MediaDecoderOwner* owner = mCallback->GetMediaOwner();
-  MOZ_DIAGNOSTIC_ASSERT(owner);
-  dom::HTMLMediaElement* element = owner->GetMediaElement();
-  MOZ_DIAGNOSTIC_ASSERT(element);
+  dom::HTMLMediaElement* element = MediaElement();
 
   if (mSuspendAgent.Resume()) {
     if (mChannel) {
@@ -712,10 +707,7 @@ nsresult ChannelMediaResource::RecreateChannel() {
   nsLoadFlags loadFlags = nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY |
                           (mLoadInBackground ? nsIRequest::LOAD_BACKGROUND : 0);
 
-  MediaDecoderOwner* owner = mCallback->GetMediaOwner();
-  MOZ_DIAGNOSTIC_ASSERT(owner);
-  dom::HTMLMediaElement* element = owner->GetMediaElement();
-  MOZ_DIAGNOSTIC_ASSERT(element);
+  dom::HTMLMediaElement* element = MediaElement();
 
   nsCOMPtr<nsILoadGroup> loadGroup = element->GetDocumentLoadGroup();
   NS_ENSURE_TRUE(loadGroup, NS_ERROR_NULL_POINTER);
