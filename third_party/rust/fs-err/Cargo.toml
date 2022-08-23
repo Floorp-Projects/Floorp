@@ -12,25 +12,44 @@
 [package]
 edition = "2018"
 name = "fs-err"
-version = "2.7.0"
+version = "2.8.1"
 authors = ["Andrew Hickman <andrew.hickman1@sky.com>"]
-exclude = [".github", ".gitignore", "README.tpl"]
+exclude = [
+    ".github",
+    ".gitignore",
+    "README.tpl",
+]
 description = "A drop-in replacement for std::fs with more helpful error messages."
 documentation = "https://docs.rs/fs-err"
 readme = "README.md"
-categories = ["command-line-interface", "filesystem"]
+categories = [
+    "command-line-interface",
+    "filesystem",
+]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/andrewhickman/fs-err"
+
 [package.metadata.release]
-sign-tag = true
 tag-name = "{{version}}"
+sign-tag = true
 
 [[package.metadata.release.pre-release-replacements]]
-exactly = 1
 file = "src/lib.rs"
-replace = "html_root_url = \"https://docs.rs/fs-err/{{version}}/\""
-search = "html_root_url = \"https://docs\\.rs/fs-err/.*?\""
+search = 'html_root_url = "https://docs\.rs/fs-err/.*?"'
+replace = "html_root_url = \"https://docs.rs/fs-err/{{version}}\""
+exactly = 1
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = [
+    "--cfg",
+    "docsrs",
+]
 
 [dependencies]
+
 [dev-dependencies.serde_json]
 version = "1.0.64"
+
+[features]
+io_safety = []
