@@ -117,6 +117,18 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.0.9 -> 1.1.1"
 
+[[audits.chardetng]]
+who = "Henri Sivonen <hsivonen@hsivonen.fi>"
+criteria = "safe-to-deploy"
+version = "0.1.9"
+notes = "I, Henri Sivonen, wrote this (safe-code-only) crate for Gecko even though the crate is published via crates.io."
+
+[[audits.chardetng_c]]
+who = "Henri Sivonen <hsivonen@hsivonen.fi>"
+criteria = "safe-to-deploy"
+version = "0.1.2"
+notes = "I, Henri Sivonen, wrote this crate for Gecko even though it is published via crates.io. The buffer input assumes Rust slice constraints for the start pointer. In Gecko, this is taken care of by mozilla::Span, but the C API doesn't conform to idiomatic C constraints on this point."
+
 [[audits.clap_lex]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -182,6 +194,28 @@ notes = "The repository for this crate belongs in the Mozilla org."
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.6.1 -> 1.7.0"
+
+[[audits.encoding_c]]
+who = "Henri Sivonen <hsivonen@hsivonen.fi>"
+criteria = "safe-to-deploy"
+version = "0.9.8"
+notes = "I, Henri Sivonen, wrote encoding_c for Gecko even though it is published via crates.io. There are two caveats: 1) the C API is designed to be used together with mozilla::Span and is unidiomatic for zero-length inputs otherwise. 2) It is idiomatic in C and C++ to pass uninitialized buffers as output buffers. This is generally documented to be UB in Rust, but idiomatic C and C++ usage here relies on this not actually being UB for buffers of integers (which these buffers are). See https://github.com/hsivonen/encoding_rs/issues/79#issuecomment-1211870361"
+
+[[audits.encoding_c_mem]]
+who = "Henri Sivonen <hsivonen@hsivonen.fi>"
+criteria = "safe-to-deploy"
+version = "0.2.6"
+notes = """
+I, Henri Sivonen, wrote encoding_c_mem for Gecko even though it is published via crates.io. There are two caveats: 1) the C API is designed to be used together with mozilla::Span and is unidiomatic for zero-length inputs otherwise. 2) It is idiomatic in C and C
+++ to pass uninitialized buffers as output buffers. This is generally documented to be UB in Rust, but idiomatic C and C++ usage here relies on this not actually being UB for buffers of integers (which these buffers are). See https://github.com/hsivonen/encoding_rs/i
+ssues/79#issuecomment-1211870361
+"""
+
+[[audits.encoding_rs]]
+who = "Henri Sivonen <hsivonen@hsivonen.fi>"
+criteria = "safe-to-deploy"
+version = "0.8.31"
+notes = "I, Henri Sivonen, wrote encoding_rs for Gecko and have reviewed contributions by others. There are two caveats to the certification: 1) The crate does things that are documented to be UB but that do not appear to actually be UB due to integer types differing from the general rule; https://github.com/hsivonen/encoding_rs/issues/79 . 2) It would be prudent to re-review the code that reinterprets buffers of integers as SIMD vectors; see https://github.com/hsivonen/encoding_rs/issues/87 ."
 
 [[audits.extend]]
 who = "Ben Dean-Kawamura <bdk@mozilla.com>"
