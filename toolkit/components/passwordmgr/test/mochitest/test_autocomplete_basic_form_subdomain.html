@@ -72,7 +72,6 @@ add_setup(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["signon.includeOtherSubdomainsInLookup", true],
-      ["signon.showAutoCompleteOrigins", true],
     ],
   });
   listenForUnexpectedPopupShown();

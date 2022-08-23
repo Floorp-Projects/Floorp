@@ -29,11 +29,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/satchel/form-fill-controller;1",
   Ci.nsIFormFillController
 );
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "SHOULD_SHOW_ORIGIN",
-  "signon.showAutoCompleteOrigins"
-);
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   return lazy.LoginHelper.createLogger("LoginAutoComplete");
 });
@@ -138,7 +133,7 @@ class LoginAutocompleteItem extends AutocompleteItem {
     actor,
     isOriginMatched
   ) {
-    super(lazy.SHOULD_SHOW_ORIGIN ? "loginWithOrigin" : "login");
+    super("loginWithOrigin");
     this.login = login.QueryInterface(Ci.nsILoginMetaInfo);
     this.#actor = actor;
 
