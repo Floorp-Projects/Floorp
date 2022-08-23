@@ -12,29 +12,20 @@
 #ifndef gc_Marking_h
 #define gc_Marking_h
 
+#include "gc/Barrier.h"
 #include "js/TypeDecls.h"
-#include "vm/TaggedProto.h"
 
-class JSLinearString;
-class JSRope;
 class JSTracer;
 struct JSClass;
 
 namespace js {
-class BaseShape;
 class GCMarker;
-class NativeObject;
 class Shape;
 class WeakMapBase;
-
-namespace jit {
-class JitCode;
-}  // namespace jit
 
 namespace gc {
 
 struct Cell;
-class TenuredCell;
 
 /*** Liveness ***/
 

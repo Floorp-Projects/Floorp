@@ -15,14 +15,11 @@
 #include <stdio.h>
 #include <type_traits>
 
-#include "debugger/DebugAPI.h"
 #include "gc/GC.h"
 #include "gc/GCInternals.h"
 #include "gc/Memory.h"
-#include "js/friend/UsageStatistics.h"  // JSMetric
 #include "util/GetPidProvider.h"
 #include "util/Text.h"
-#include "vm/HelperThreads.h"
 #include "vm/Runtime.h"
 #include "vm/Time.h"
 

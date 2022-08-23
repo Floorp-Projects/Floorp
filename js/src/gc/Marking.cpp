@@ -9,26 +9,17 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/ReentrancyGuard.h"
 #include "mozilla/ScopeExit.h"
 
 #include <algorithm>
-#include <initializer_list>
 #include <type_traits>
 
 #include "builtin/ModuleObject.h"
-#include "debugger/DebugAPI.h"
 #include "gc/GCInternals.h"
-#include "gc/GCProbes.h"
-#include "gc/Policy.h"
 #include "jit/JitCode.h"
 #include "js/GCTypeMacros.h"  // JS_FOR_EACH_PUBLIC_{,TAGGED_}GC_POINTER_TYPE
 #include "js/SliceBudget.h"
-#include "util/DiagnosticAssertions.h"
-#include "util/Memory.h"
 #include "util/Poison.h"
-#include "vm/ArgumentsObject.h"
-#include "vm/ArrayObject.h"
 #include "vm/BigIntType.h"
 #include "vm/GeneratorObject.h"
 #include "vm/GetterSetter.h"
@@ -41,16 +32,9 @@
 #include "wasm/WasmJS.h"
 
 #include "gc/GC-inl.h"
-#include "gc/Nursery-inl.h"
 #include "gc/PrivateIterators-inl.h"
 #include "gc/WeakMap-inl.h"
-#include "gc/Zone-inl.h"
 #include "vm/GeckoProfiler-inl.h"
-#include "vm/JSScript-inl.h"
-#include "vm/NativeObject-inl.h"
-#include "vm/PlainObject-inl.h"  // js::PlainObject
-#include "vm/Realm-inl.h"
-#include "vm/StringType-inl.h"
 
 using namespace js;
 using namespace js::gc;

@@ -29,7 +29,6 @@
 #include "gc/PrivateIterators-inl.h"
 #include "gc/Zone-inl.h"
 #include "vm/GeckoProfiler-inl.h"
-#include "vm/JSContext-inl.h"
 
 using namespace js;
 using namespace js::gc;

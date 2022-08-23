@@ -36,6 +36,7 @@
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "js/Wrapper.h"
+#include "util/DifferentialTesting.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/BooleanObject.h"

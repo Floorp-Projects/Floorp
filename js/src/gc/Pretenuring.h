@@ -19,9 +19,6 @@
 #ifndef gc_Pretenuring_h
 #define gc_Pretenuring_h
 
-#include "mozilla/Atomics.h"
-#include "mozilla/Maybe.h"
-
 #include <algorithm>
 
 #include "gc/AllocKind.h"
