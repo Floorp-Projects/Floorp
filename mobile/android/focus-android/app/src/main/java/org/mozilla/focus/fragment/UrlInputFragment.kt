@@ -537,12 +537,12 @@ class UrlInputFragment :
             if (isUrl) {
                 SearchBar.enteredUrl.record(NoExtras())
             } else {
-                val defaultSearchEngineName = requireComponents.store.defaultSearchEngineName()
+                val defaultSearchEngineName = requireComponents.store.defaultSearchEngineName().lowercase()
                 SearchBar.performedSearch.record(
                     SearchBar.PerformedSearchExtra(defaultSearchEngineName)
                 )
                 TelemetryWrapper.searchEnterEvent()
-                BrowserSearch.searchCount["action"].add()
+                BrowserSearch.searchCount["$defaultSearchEngineName.action"].add()
             }
         }
     }
@@ -584,7 +584,9 @@ class UrlInputFragment :
         }
 
         TelemetryWrapper.searchSelectEvent(isSuggestion)
-        BrowserSearch.searchCount["suggestion"].add()
+
+        val defaultSearchEngineName = requireComponents.store.defaultSearchEngineName().lowercase()
+        BrowserSearch.searchCount["$defaultSearchEngineName.suggestion"].add()
     }
 
     private fun openUrl(url: String, searchTerms: String?) {
