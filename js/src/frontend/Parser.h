@@ -185,10 +185,13 @@
 #include "frontend/TokenStream.h"
 #include "js/friend/ErrorMessages.h"  // JSErrNum, JSMSG_*
 #include "js/Stack.h"                 // JS::NativeStackLimit
-#include "vm/ErrorReporting.h"
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
 
 namespace js {
+
+class ErrorContext;
+struct ErrorMetadata;
+
 namespace frontend {
 
 template <class ParseHandler, typename Unit>
