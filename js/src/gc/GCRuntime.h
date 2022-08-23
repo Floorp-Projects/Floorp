@@ -37,7 +37,6 @@ class FinalizationQueueObject;
 class GlobalObject;
 class VerifyPreTracer;
 class WeakRefObject;
-class ZoneAllocator;
 
 namespace gc {
 

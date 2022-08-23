@@ -6,10 +6,7 @@
 
 #include "gc/Allocator.h"
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/TimeStamp.h"
-
-#include <type_traits>
 
 #include "gc/GCInternals.h"
 #include "gc/GCLock.h"
@@ -18,9 +15,7 @@
 #include "threading/CpuCount.h"
 #include "util/Poison.h"
 #include "vm/BigIntType.h"
-#include "vm/GetterSetter.h"
 #include "vm/JSContext.h"
-#include "vm/PropMap.h"
 #include "vm/Runtime.h"
 #include "vm/StringType.h"
 
@@ -28,7 +23,6 @@
 #include "gc/Heap-inl.h"
 #include "gc/PrivateIterators-inl.h"
 #include "vm/JSContext-inl.h"
-#include "vm/JSObject-inl.h"
 
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;

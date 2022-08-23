@@ -14,6 +14,7 @@
 
 #include "debugger/DebugAPI.h"
 #include "gc/GC.h"
+#include "gc/Memory.h"
 #include "gc/PublicIterators.h"
 #include "gc/Zone.h"
 #include "js/friend/StackLimits.h"  // js::AutoCheckRecursionLimit

@@ -21,6 +21,7 @@
 #include "gc/Heap-inl.h"
 
 #include "gc/GCLock.h"
+#include "gc/Memory.h"
 #include "jit/Assembler.h"
 #include "vm/BigIntType.h"
 #include "vm/RegExpShared.h"

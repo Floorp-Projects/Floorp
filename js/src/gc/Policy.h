@@ -12,7 +12,7 @@
 #include <type_traits>
 
 #include "gc/Barrier.h"
-#include "gc/Marking.h"
+#include "gc/Tracer.h"
 #include "js/GCPolicyAPI.h"
 
 namespace js {

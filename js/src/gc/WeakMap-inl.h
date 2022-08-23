@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <type_traits>
 
+#include "gc/Marking.h"
 #include "gc/Zone.h"
 #include "js/TraceKind.h"
 #include "vm/JSContext.h"

@@ -11,7 +11,6 @@
 
 #include <algorithm>
 
-#include "gc/GC.h"
 #include "gc/GCParallelTask.h"
 #include "gc/GCRuntime.h"
 #include "js/SliceBudget.h"

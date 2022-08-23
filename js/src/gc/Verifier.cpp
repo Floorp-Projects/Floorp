@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/DebugOnly.h"
-#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Sprintf.h"
 
 #include <algorithm>
@@ -28,7 +26,6 @@
 #include "gc/GC-inl.h"
 #include "gc/Marking-inl.h"
 #include "gc/PrivateIterators-inl.h"
-#include "vm/JSContext-inl.h"
 
 using namespace js;
 using namespace js::gc;

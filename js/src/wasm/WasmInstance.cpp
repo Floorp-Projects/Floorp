@@ -26,6 +26,7 @@
 
 #include "jsmath.h"
 
+#include "gc/Marking.h"
 #include "jit/AtomicOperations.h"
 #include "jit/Disassemble.h"
 #include "jit/JitCommon.h"
