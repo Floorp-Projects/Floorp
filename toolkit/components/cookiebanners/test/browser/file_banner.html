@@ -1,0 +1,22 @@
+<html>
+<head>
+  <title>A top-level page with cookie banner</title>
+  <script>
+    function clickOptOut() {
+      document.getElementById("result").textContent = "OptOut";
+    }
+
+    function clickOptIn() {
+      document.getElementById("result").textContent = "OptIn";
+    }
+  </script>
+</head>
+<body>
+  <h1>This is the top-level page</h1>
+  <div id="banner">
+    <button id="optOut" onclick="clickOptOut()">OptOut</button>
+    <button id="optIn" onclick="clickOptIn()">OptIn</button>
+  </div>
+  <p id="result">NoClick</p>
+</body>
+</html>
