@@ -401,7 +401,8 @@ class SyntaxParseHandler {
                                              bool isStatic
 #ifdef ENABLE_DECORATORS
                                              ,
-                                             ListNodeType decorators
+                                             ListNodeType decorators,
+                                             bool hasAccessor
 #endif
   ) {
     return NodeGeneric;
