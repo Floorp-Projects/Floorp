@@ -100,30 +100,34 @@ export function showErrorMessage(editor, msg) {
   resetLineNumberFormat(editor);
 }
 
-const contentTypeModeMap = {
-  "text/javascript": { name: "javascript" },
-  "text/typescript": { name: "javascript", typescript: true },
-  "text/coffeescript": { name: "coffeescript" },
-  "text/typescript-jsx": {
-    name: "jsx",
-    base: { name: "javascript", typescript: true },
-  },
-  "text/jsx": { name: "jsx" },
-  "text/x-elm": { name: "elm" },
-  "text/x-clojure": { name: "clojure" },
-  "text/x-clojurescript": { name: "clojure" },
-  "text/wasm": { name: "text" },
-  "text/html": { name: "htmlmixed" },
-};
+const contentTypeModeMap = new Map([
+  ["text/javascript", { name: "javascript" }],
+  ["text/typescript", { name: "javascript", typescript: true }],
+  ["text/coffeescript", { name: "coffeescript" }],
+  [
+    "text/typescript-jsx",
+    {
+      name: "jsx",
+      base: { name: "javascript", typescript: true },
+    },
+  ],
+  ["text/jsx", { name: "jsx" }],
+  ["text/x-elm", { name: "elm" }],
+  ["text/x-clojure", { name: "clojure" }],
+  ["text/x-clojurescript", { name: "clojure" }],
+  ["text/wasm", { name: "text" }],
+  ["text/html", { name: "htmlmixed" }],
+  ["text/plain", { name: "text" }],
+]);
 
-const languageMimeMap = [
-  { ext: "c", mode: "text/x-csrc" },
-  { ext: "kt", mode: "text/x-kotlin" },
-  { ext: "cpp", mode: "text/x-c++src" },
-  { ext: "m", mode: "text/x-objectivec" },
-  { ext: "rs", mode: "text/x-rustsrc" },
-  { ext: "hx", mode: "text/x-haxe" },
-];
+const nonJSLanguageExtensionMap = new Map([
+  ["c", { name: "text/x-csrc" }],
+  ["kt", { name: "text/x-kotlin" }],
+  ["cpp", { name: "text/x-c++src" }],
+  ["m", { name: "text/x-objectivec" }],
+  ["rs", { name: "text/x-rustsrc" }],
+  ["hx", { name: "text/x-haxe" }],
+]);
 
 /**
  * Returns Code Mirror mode for source content type
@@ -137,72 +141,64 @@ export function getMode(source, sourceTextContent, symbols) {
     isMinified(source, sourceTextContent) &&
     content.value.length > 1000000
   ) {
-    return { name: "text" };
+    return contentTypeModeMap.get("text/plain");
+  }
+
+  if (content.type !== "text") {
+    return contentTypeModeMap.get("text/plain");
   }
 
   const extension = source.displayURL.fileExtension;
-
-  if (content.type !== "text") {
-    return { name: "text" };
-  }
-
-  const { contentType, value: text } = content;
-
   if (extension === "jsx" || (symbols && symbols.hasJsx)) {
     if (symbols && symbols.hasTypes) {
-      return { name: "text/typescript-jsx" };
+      return contentTypeModeMap.get("text/typescript-jsx");
     }
-    return { name: "jsx" };
+    return contentTypeModeMap.get("text/jsx");
   }
 
   if (symbols && symbols.hasTypes) {
     if (symbols.hasJsx) {
-      return { name: "text/typescript-jsx" };
+      return contentTypeModeMap.get("text/typescript-jsx");
     }
 
-    return { name: "text/typescript" };
+    return contentTypeModeMap.get("text/typescript");
   }
 
   // check for C and other non JS languages
-  const result = languageMimeMap.find(({ ext }) => extension === ext);
-  if (result !== undefined) {
-    return { name: result.mode };
+  if (nonJSLanguageExtensionMap.has(extension)) {
+    return nonJSLanguageExtensionMap.get(extension);
   }
 
   // if the url ends with a known Javascript-like URL, provide JavaScript mode.
-  // uses the first part of the URL to ignore query string
-  if (javascriptLikeExtensions.find(ext => ext === extension)) {
-    return { name: "javascript" };
+  if (javascriptLikeExtensions.has(extension)) {
+    return contentTypeModeMap.get("text/javascript");
   }
 
+  const { contentType, value: text } = content;
   // Use HTML mode for files in which the first non whitespace
   // character is `<` regardless of extension.
-  const isHTMLLike = text.match(/^\s*</);
+  const isHTMLLike = () => text.match(/^\s*</);
   if (!contentType) {
-    if (isHTMLLike) {
-      return { name: "htmlmixed" };
+    if (isHTMLLike()) {
+      return contentTypeModeMap.get("text/html");
     }
-    return { name: "text" };
+    return contentTypeModeMap.get("text/plain");
   }
 
   // // @flow or /* @flow */
   if (text.match(/^\s*(\/\/ @flow|\/\* @flow \*\/)/)) {
-    return contentTypeModeMap["text/typescript"];
+    return contentTypeModeMap.get("text/typescript");
   }
 
-  if (/script|elm|jsx|clojure|wasm|html/.test(contentType)) {
-    if (contentType in contentTypeModeMap) {
-      return contentTypeModeMap[contentType];
-    }
-
-    return contentTypeModeMap["text/javascript"];
+  if (contentTypeModeMap.has(contentType)) {
+    return contentTypeModeMap.get(contentType);
   }
 
-  if (isHTMLLike) {
-    return { name: "htmlmixed" };
+  if (isHTMLLike()) {
+    return contentTypeModeMap.get("text/html");
   }
 
-  return { name: "text" };
+  return contentTypeModeMap.get("text/plain");
 }
 
 function setMode(editor, source, sourceTextContent, symbols) {

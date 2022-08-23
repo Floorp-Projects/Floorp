@@ -28,7 +28,7 @@ export const sourceTypes = {
   vue: "vue",
 };
 
-export const javascriptLikeExtensions = ["marko", "es6", "vue", "jsm"];
+export const javascriptLikeExtensions = new Set(["marko", "es6", "vue", "jsm"]);
 
 function getPath(source) {
   const { path } = source.displayURL;
@@ -128,7 +128,7 @@ export function isJavaScript(source, content) {
   const extension = source.displayURL.fileExtension;
   const contentType = content.type === "wasm" ? null : content.contentType;
   return (
-    javascriptLikeExtensions.includes(extension) ||
+    javascriptLikeExtensions.has(extension) ||
     !!(contentType && contentType.includes("javascript"))
   );
 }
