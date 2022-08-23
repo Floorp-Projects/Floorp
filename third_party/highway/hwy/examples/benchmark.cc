@@ -1,5 +1,4 @@
 // Copyright 2019 Google LLC
-// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#undef HWY_TARGET_INCLUDE
+#define HWY_TARGET_INCLUDE "hwy/examples/benchmark.cc"
+#include "hwy/foreach_target.h"
+
 #include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -21,12 +24,8 @@
 #include <memory>
 #include <numeric>  // iota
 
-#undef HWY_TARGET_INCLUDE
-#define HWY_TARGET_INCLUDE "hwy/examples/benchmark.cc"
-#include "hwy/foreach_target.h"  // IWYU pragma: keep
-
-// Must come after foreach_target.h to avoid redefinition errors.
 #include "hwy/aligned_allocator.h"
+// Must come after foreach_target.h to avoid redefinition errors.
 #include "hwy/highway.h"
 #include "hwy/nanobenchmark.h"
 
@@ -82,8 +81,7 @@ void RunBenchmark(const char* caption) {
   benchmark.Verify(num_items);
 
   for (size_t i = 0; i < num_results; ++i) {
-    const double cycles_per_item =
-        results[i].ticks / static_cast<double>(results[i].input);
+    const double cycles_per_item = results[i].ticks / double(results[i].input);
     const double mad = results[i].variability * cycles_per_item;
     printf("%6" PRIu64 ": %6.3f (+/- %5.3f)\n",
            static_cast<uint64_t>(results[i].input), cycles_per_item, mad);
@@ -235,7 +233,7 @@ namespace hwy {
 HWY_EXPORT(RunBenchmarks);
 
 void Run() {
-  for (int64_t target : SupportedAndGeneratedTargets()) {
+  for (uint32_t target : SupportedAndGeneratedTargets()) {
     SetSupportedTargetsForTest(target);
     HWY_DYNAMIC_DISPATCH(RunBenchmarks)();
   }

@@ -31,6 +31,7 @@ void BM_EncExternalImage_ConvertImageRGBA(benchmark::State& state) {
           /*channels=*/4,
           /*alpha_is_premultiplied=*/false,
           /*bits_per_sample=*/8, JXL_NATIVE_ENDIAN,
+          /*flipped_y=*/false,
           /*pool=*/nullptr, &ib, /*float_in=*/false, /*align=*/0));
     }
   }

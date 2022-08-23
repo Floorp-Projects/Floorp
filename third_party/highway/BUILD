@@ -1,9 +1,7 @@
 load("@bazel_skylib//lib:selects.bzl", "selects")
 
 load("@rules_cc//cc:defs.bzl", "cc_test")
-package(
-    default_visibility = ["//visibility:public"],
-)
+package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
@@ -16,31 +14,8 @@ config_setting(
 )
 
 config_setting(
-    name = "compiler_clangcl",
-    flag_values = {"@bazel_tools//tools/cpp:compiler": "lexan"},
-)
-
-config_setting(
-    name = "compiler_msvc_actual",
-    flag_values = {"@bazel_tools//tools/cpp:compiler": "msvc"},
-)
-
-# The above is insufficient for Bazel on Windows, which does not seem to
-# detect/set a compiler flag. This workaround prevents compile errors due to
-# passing clang-only warning flags to MSVC.
-config_setting(
-    name = "compiler_msvc_cpu",
-    values = {
-        "cpu": "x64_windows",
-    },
-)
-
-selects.config_setting_group(
     name = "compiler_msvc",
-    match_any = [
-        ":compiler_msvc_actual",
-        ":compiler_msvc_cpu",
-    ],
+    flag_values = {"@bazel_tools//tools/cpp:compiler": "msvc"},
 )
 
 config_setting(
@@ -79,8 +54,8 @@ CLANG_GCC_COPTS = [
     "-Wunreachable-code",
 ]
 
-# Warnings supported by Clang and Clang-cl
-CLANG_OR_CLANGCL_OPTS = CLANG_GCC_COPTS + [
+# Additional warnings only supported by Clang
+CLANG_ONLY_COPTS = [
     "-Wfloat-overflow-conversion",
     "-Wfloat-zero-conversion",
     "-Wfor-loop-analysis",
@@ -98,19 +73,11 @@ CLANG_OR_CLANGCL_OPTS = CLANG_GCC_COPTS + [
     "-Wunused-comparison",
 ]
 
-# Warnings only supported by Clang, but not Clang-cl
-CLANG_ONLY_COPTS = CLANG_OR_CLANGCL_OPTS + [
-    # Do not treat the third_party headers as system headers when building
-    # highway - the errors are pertinent.
-    "--no-system-header-prefix=third_party/highway",
-]
-
 COPTS = select({
     ":compiler_msvc": [],
     ":compiler_gcc": CLANG_GCC_COPTS,
-    ":compiler_clangcl": CLANG_OR_CLANGCL_OPTS,
     # Default to clang because compiler detection only works in Bazel
-    "//conditions:default": CLANG_ONLY_COPTS,
+    "//conditions:default": CLANG_GCC_COPTS + CLANG_ONLY_COPTS,
 }) + select({
     "@platforms//cpu:riscv64": [
         "-march=rv64gcv1p0",
@@ -118,12 +85,6 @@ COPTS = select({
     ],
     "//conditions:default": [
     ],
-})
-
-DEFINES = select({
-    ":compiler_msvc": ["HWY_SHARED_DEFINE"],
-    ":compiler_clangcl": ["HWY_SHARED_DEFINE"],
-    "//conditions:default": [],
 })
 
 # Unused on Bazel builds, where this is not defined/known; Copybara replaces
@@ -141,8 +102,6 @@ cc_library(
     name = "hwy",
     srcs = [
         "hwy/aligned_allocator.cc",
-        "hwy/per_target.cc",
-        "hwy/print.cc",
         "hwy/targets.cc",
     ],
     # Normal headers with include guards
@@ -151,12 +110,10 @@ cc_library(
         "hwy/base.h",
         "hwy/cache_control.h",
         "hwy/detect_compiler_arch.h",  # private
-        "hwy/print.h",
+        "hwy/highway_export.h",
     ],
     compatible_with = [],
     copts = COPTS,
-    defines = DEFINES,
-    local_defines = ["hwy_EXPORTS"],
     textual_hdrs = [
         # These are textual because config macros influence them:
         "hwy/detect_targets.h",  # private
@@ -164,12 +121,8 @@ cc_library(
         # End of list
         "hwy/highway.h",  # public
         "hwy/foreach_target.h",  # public
-        "hwy/per_target.h",  # public
-        "hwy/print-inl.h",  # public
-        "hwy/highway_export.h",  # public
         "hwy/ops/arm_neon-inl.h",
         "hwy/ops/arm_sve-inl.h",
-        "hwy/ops/emu128-inl.h",
         "hwy/ops/generic_ops-inl.h",
         "hwy/ops/scalar-inl.h",
         "hwy/ops/set_macros-inl.h",
@@ -188,23 +141,8 @@ cc_library(
 )
 
 cc_library(
-    name = "algo",
-    compatible_with = [],
-    copts = COPTS,
-    textual_hdrs = [
-        "hwy/contrib/algo/copy-inl.h",
-        "hwy/contrib/algo/find-inl.h",
-        "hwy/contrib/algo/transform-inl.h",
-    ],
-    deps = [
-        ":hwy",
-    ],
-)
-
-cc_library(
     name = "dot",
     compatible_with = [],
-    copts = COPTS,
     textual_hdrs = [
         "hwy/contrib/dot/dot-inl.h",
     ],
@@ -222,8 +160,6 @@ cc_library(
         "hwy/contrib/image/image.h",
     ],
     compatible_with = [],
-    copts = COPTS,
-    local_defines = ["hwy_contrib_EXPORTS"],
     deps = [
         ":hwy",
     ],
@@ -232,7 +168,6 @@ cc_library(
 cc_library(
     name = "math",
     compatible_with = [],
-    copts = COPTS,
     textual_hdrs = [
         "hwy/contrib/math/math-inl.h",
     ],
@@ -246,9 +181,6 @@ cc_library(
     name = "hwy_test_util",
     srcs = ["hwy/tests/test_util.cc"],
     hdrs = ["hwy/tests/test_util.h"],
-    compatible_with = [],
-    copts = COPTS,
-    local_defines = ["hwy_test_EXPORTS"],
     textual_hdrs = [
         "hwy/tests/test_util-inl.h",
         "hwy/tests/hwy_gtest.h",
@@ -264,16 +196,12 @@ cc_library(
     name = "nanobenchmark",
     srcs = ["hwy/nanobenchmark.cc"],
     hdrs = ["hwy/nanobenchmark.h"],
-    compatible_with = [],
-    copts = COPTS,
-    local_defines = ["hwy_EXPORTS"],
     deps = [":hwy"],
 )
 
 cc_binary(
     name = "benchmark",
     srcs = ["hwy/examples/benchmark.cc"],
-    copts = COPTS,
     deps = [
         ":hwy",
         ":nanobenchmark",
@@ -284,8 +212,6 @@ cc_library(
     name = "skeleton",
     srcs = ["hwy/examples/skeleton.cc"],
     hdrs = ["hwy/examples/skeleton.h"],
-    copts = COPTS,
-    local_defines = ["hwy_EXPORTS"],
     textual_hdrs = ["hwy/examples/skeleton-inl.h"],
     deps = [
         ":hwy",
@@ -300,9 +226,6 @@ cc_binary(
 
 # path, name
 HWY_TESTS = [
-    ("hwy/contrib/algo/", "copy_test"),
-    ("hwy/contrib/algo/", "find_test"),
-    ("hwy/contrib/algo/", "transform_test"),
     ("hwy/contrib/dot/", "dot_test"),
     ("hwy/contrib/image/", "image_test"),
     ("hwy/contrib/math/", "math_test"),
@@ -315,40 +238,20 @@ HWY_TESTS = [
     ("hwy/", "targets_test"),
     ("hwy/tests/", "arithmetic_test"),
     ("hwy/tests/", "blockwise_test"),
-    ("hwy/tests/", "blockwise_shift_test"),
     ("hwy/tests/", "combine_test"),
     ("hwy/tests/", "compare_test"),
-    ("hwy/tests/", "compress_test"),
     ("hwy/tests/", "convert_test"),
     ("hwy/tests/", "crypto_test"),
     ("hwy/tests/", "demote_test"),
-    ("hwy/tests/", "float_test"),
-    ("hwy/tests/", "if_test"),
-    ("hwy/tests/", "interleaved_test"),
     ("hwy/tests/", "logical_test"),
     ("hwy/tests/", "mask_test"),
-    ("hwy/tests/", "mask_mem_test"),
     ("hwy/tests/", "memory_test"),
-    ("hwy/tests/", "mul_test"),
-    ("hwy/tests/", "reduction_test"),
-    ("hwy/tests/", "reverse_test"),
     ("hwy/tests/", "shift_test"),
     ("hwy/tests/", "swizzle_test"),
     ("hwy/tests/", "test_util_test"),
 ]
 
-HWY_TEST_COPTS = select({
-    ":compiler_msvc": [],
-    "//conditions:default": [
-        # gTest triggers this warning (which is enabled by the
-        # extra-semi in COPTS), so we need to disable it here,
-        # but it's still enabled for :hwy.
-        "-Wno-c++98-compat-extra-semi",
-    ],
-})
-
 HWY_TEST_DEPS = [
-    ":algo",
     ":dot",
     ":hwy",
     ":hwy_test_util",
@@ -369,7 +272,12 @@ HWY_TEST_DEPS = [
             srcs = [
                 subdir + test + ".cc",
             ],
-            copts = COPTS + HWY_TEST_COPTS,
+            copts = COPTS + [
+                # gTest triggers this warning (which is enabled by the
+                # extra-semi in COPTS), so we need to disable it here,
+                # but it's still enabled for :hwy.
+                "-Wno-c++98-compat-extra-semi",
+            ],
             features = select({
                 "@platforms//cpu:riscv64": ["fully_static_link"],
                 "//conditions:default": [],

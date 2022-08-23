@@ -1,5 +1,4 @@
 // Copyright 2021 Google LLC
-// SPDX-License-Identifier: Apache-2.0
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +20,7 @@
 
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "tests/crypto_test.cc"
-#include "hwy/foreach_target.h"  // IWYU pragma: keep
+#include "hwy/foreach_target.h"
 #include "hwy/highway.h"
 #include "hwy/tests/test_util-inl.h"
 
@@ -549,5 +548,11 @@ HWY_BEFORE_TEST(HwyCryptoTest);
 HWY_EXPORT_AND_TEST_P(HwyCryptoTest, TestAllAES);
 HWY_EXPORT_AND_TEST_P(HwyCryptoTest, TestAllCLMul);
 }  // namespace hwy
+
+// Ought not to be necessary, but without this, no tests run on RVV.
+int main(int argc, char **argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 #endif
