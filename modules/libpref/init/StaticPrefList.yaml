@@ -13658,7 +13658,7 @@
 
 - name: widget.windows.hide_cursor_when_typing
   type: bool
-  value: true
+  value: false
   mirror: always
 #endif
 
