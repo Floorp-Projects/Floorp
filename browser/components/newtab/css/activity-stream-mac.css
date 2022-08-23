@@ -519,7 +519,7 @@ main.has-snippet {
   padding: 0;
 }
 .top-sites-list:not(.dnd-active) .top-site-outer:is(.active, :focus, :hover) {
-  background: var(--newtab-element-hover-color);
+  background: color-mix(in srgb, var(--newtab-element-hover-color) 50%, transparent);
 }
 @media (max-width: 610px) {
   .top-sites-list > :nth-child(2n+1) .context-menu {
