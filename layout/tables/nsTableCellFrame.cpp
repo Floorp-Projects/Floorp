@@ -534,13 +534,16 @@ nscoord nsTableCellFrame::GetCellBaseline() const {
   // Ignore the position of the inner frame relative to the cell frame
   // since we want the position as though the inner were top-aligned.
   nsIFrame* inner = mFrames.FirstChild();
-  nscoord borderPadding = GetUsedBorderAndPadding().top;
+  const auto wm = GetWritingMode();
+  const auto borderPadding = GetLogicalUsedBorderAndPadding(wm);
   nscoord result;
   if (!StyleDisplay()->IsContainLayout() &&
-      nsLayoutUtils::GetFirstLineBaseline(GetWritingMode(), inner, &result)) {
-    return result + borderPadding;
+      nsLayoutUtils::GetFirstLineBaseline(wm, inner, &result)) {
+    return result + borderPadding.BStart(wm);
   }
-  return inner->GetContentRectRelativeToSelf().YMost() + borderPadding;
+  const auto logicalSize = inner->GetLogicalSize(wm);
+  // ::-moz-cell-content shouldn't have any border/padding.
+  return logicalSize.BSize(wm) + borderPadding.BStart(wm);
 }
 
 int32_t nsTableCellFrame::GetRowSpan() {
