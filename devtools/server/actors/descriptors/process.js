@@ -4,6 +4,23 @@
 
 "use strict";
 
+/*
+ * Represents any process running in Firefox.
+ * This can be:
+ *  - the parent process, where all top level chrome window runs:
+ *    like browser.xhtml, sidebars, devtools iframes, the browser console, ...
+ *  - any content process
+ *
+ * There is some special cases in the class around:
+ *  - xpcshell, where there is only one process which doesn't expose any DOM document
+ *    And instead of exposing a ParentProcessTargetActor, getTarget will return
+ *    a ContentProcessTargetActor.
+ *  - background task, similarly to xpcshell, they don't expose any DOM document
+ *    and this also works with a ContentProcessTargetActor.
+ *
+ * See devtools/docs/backend/actor-hierarchy.md for more details.
+ */
+
 const Services = require("Services");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const { Cc, Ci } = require("chrome");
@@ -189,7 +206,10 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
       isWindowlessParent: this.isWindowlessParent,
       traits: {
         // Supports the Watcher actor. Can be removed as part of Bug 1680280.
-        watcher: true,
+        // Bug 1687461: WatcherActor only supports the parent process, where we debug everything.
+        // For the "Browser Content Toolbox", where we debug only one content process,
+        // we will still be using legacy listeners.
+        watcher: this.isParent,
         // ParentProcessTargetActor can be reloaded.
         supportsReloadDescriptor: this.isParent && !this.isWindowlessParent,
       },
