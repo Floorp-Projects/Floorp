@@ -13,11 +13,6 @@
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
-});
-
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserver.identity.primaryPort;
 });
