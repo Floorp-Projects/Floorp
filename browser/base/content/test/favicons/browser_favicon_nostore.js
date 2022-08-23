@@ -70,17 +70,15 @@ add_task(async function places_loader() {
   });
 });
 
-add_task(async function later_addition() {
+async function later_addition(iconUrl) {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE_URL);
   registerCleanupFunction(async () => {
     await cleanup();
     BrowserTestUtils.removeTab(tab);
   });
 
-  const LATE_ICON_URL =
-    TEST_SITE + "/browser/browser/base/content/test/favicons/moz.png";
-  let iconPromise = waitForFaviconMessage(true, LATE_ICON_URL);
-  await ContentTask.spawn(gBrowser.selectedBrowser, LATE_ICON_URL, href => {
+  let iconPromise = waitForFaviconMessage(true, iconUrl);
+  await ContentTask.spawn(gBrowser.selectedBrowser, iconUrl, href => {
     let doc = content.document;
     let head = doc.head;
     let link = doc.createElement("link");
@@ -90,7 +88,7 @@ add_task(async function later_addition() {
     head.appendChild(link);
   });
   let { iconURL } = await iconPromise;
-  is(iconURL, LATE_ICON_URL, "Should have seen the expected icon.");
+  is(iconURL, iconUrl, "Should have seen the expected icon.");
 
   // Ensure the favicon has not been stored.
   /* eslint-disable mozilla/no-arbitrary-setTimeout */
@@ -107,6 +105,15 @@ add_task(async function later_addition() {
     );
   });
   BrowserTestUtils.removeTab(tab);
+}
+
+add_task(async function test_later_addition() {
+  for (let iconUrl of [
+    TEST_SITE + "/browser/browser/base/content/test/favicons/moz.png",
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABH0lEQVRYw2P8////f4YBBEwMAwxGHcBCUMX/91DGOSj/BpT/DkpzQChGBSjfBErLQsVZhmoI/L8LpRdD6X1QietQGhYy7FB5aAgwmkLpBKi4BZTPMThDgBGjHIDF+f9mKD0fKvGBRKNdoF7sgPL1saaJwZgGDkJ9vpZMn8PAHqg5G9FyifBgD4H/W9HyOWrU/f+DIzHhkoeZxxgzZEIAVtJ9RxX+Q6DAxCmP3byhXxkxshAs5odqbcioAY3UC1CBLyTGOTqAmsfAOWRCwBvqxV0oIUB2OQAzDy3/D+a6wB7q8mCU2vD/nw94GziYIQOtDRn9oXz+IZMGBKGMbCjNh9Ii+v8HR4uIAUeLiEEbb9twELaIRlqrmHG0bzjiHQAA1LVfww8jwM4AAAAASUVORK5CYII=",
+  ]) {
+    await later_addition(iconUrl);
+  }
 });
 
 add_task(async function root_icon_stored() {
