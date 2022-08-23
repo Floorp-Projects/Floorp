@@ -5,7 +5,7 @@
 
 use crate::*;
 
-pub(crate) trait SinPi {
+crate trait SinPi {
     fn sin_pi(self) -> Self;
 }
 

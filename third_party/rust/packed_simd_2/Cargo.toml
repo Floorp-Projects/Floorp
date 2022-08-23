@@ -1,6 +1,6 @@
 [package]
 name = "packed_simd_2"
-version = "0.3.8"
+version = "0.3.7"
 description = "Portable Packed SIMD vectors"
 documentation = "https://docs.rs/crate/packed_simd/"
 homepage = "https://github.com/rust-lang/packed_simd"
@@ -22,9 +22,6 @@ maintenance = { status = "experimental" }
 [dependencies]
 cfg-if = "1.0.0"
 core_arch = { version = "0.1.5", optional = true }
-
-[build-dependencies]
-rustc_version = "0.4"
 
 [features]
 default = []

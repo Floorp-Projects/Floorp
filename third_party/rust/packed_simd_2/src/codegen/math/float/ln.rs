@@ -5,7 +5,7 @@
 
 use crate::*;
 
-pub(crate) trait Ln {
+crate trait Ln {
     fn ln(self) -> Self;
 }
 
