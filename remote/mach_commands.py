@@ -207,7 +207,7 @@ def npm(*args, **kwargs):
         cwd=kwargs.get("cwd"),
         env=env,
         universal_newlines=True,
-        **proc_kwargs
+        **proc_kwargs,
     )
     if not kwargs.get("wait", True):
         return p
@@ -443,15 +443,21 @@ class PuppeteerRunner(MozbuildObject):
             "20000",
             "--no-parallel",
         ]
+        env["HEADLESS"] = str(params.get("headless", False))
+
         if product == "firefox":
             env["BINARY"] = binary
             env["PUPPETEER_PRODUCT"] = "firefox"
 
             env["MOZ_WEBRENDER"] = "%d" % params.get("enable_webrender", False)
 
-        command = ["run", "unit", "--"] + mocha_options
+            test_command = "test:firefox"
+        elif env["HEADLESS"] == "False":
+            test_command = "test:chrome:headful"
+        else:
+            test_command = "test:chrome:headless"
 
-        env["HEADLESS"] = str(params.get("headless", False))
+        command = ["run", test_command, "--"] + mocha_options
 
         prefs = {}
         for k, v in params.get("extra_prefs", {}).items():
@@ -479,7 +485,7 @@ class PuppeteerRunner(MozbuildObject):
             cwd=self.puppeteer_dir,
             env=env,
             processOutputLine=output_handler,
-            wait=False
+            wait=False,
         )
         output_handler.proc = proc
 
@@ -610,7 +616,7 @@ def puppeteer_test(
     product="firefox",
     write_results=None,
     subset=False,
-    **kwargs
+    **kwargs,
 ):
 
     logger = mozlog.commandline.setup_logging(

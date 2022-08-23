@@ -16,12 +16,12 @@
 
 import packageJson from '../package.json';
 
-const allDeps = { ...packageJson.dependencies, ...packageJson.devDependencies };
+const allDeps = {...packageJson.dependencies, ...packageJson.devDependencies};
 
 const invalidDeps = new Map<string, string>();
 
 for (const [depKey, depValue] of Object.entries(allDeps)) {
-  if (/[0-9]/.test(depValue[0])) {
+  if (/[0-9]/.test(depValue[0]!)) {
     continue;
   }
 
@@ -30,7 +30,13 @@ for (const [depKey, depValue] of Object.entries(allDeps)) {
 
 if (invalidDeps.size > 0) {
   console.error('Found non-pinned dependencies in package.json:');
-  console.log([...invalidDeps.keys()].map((k) => `  ${k}`).join('\n'));
+  console.log(
+    [...invalidDeps.keys()]
+      .map(k => {
+        return `  ${k}`;
+      })
+      .join('\n')
+  );
   process.exit(1);
 }
 

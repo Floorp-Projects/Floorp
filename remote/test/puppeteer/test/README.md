@@ -37,23 +37,21 @@ There are also tests that assume a normal install flow, with browser binaries en
 
 ## Running tests
 
-Despite being named 'unit', these are integration tests, making sure public API methods and events work as expected.
-
 - To run all tests:
 
 ```bash
-npm run unit
+npm test
 ```
 
-- **Important**: don't forget to first run TypeScript if you're testing local changes:
+- **Important**: don't forget to first build the code if you're testing local changes:
 
 ```bash
-npm run tsc && npm run unit
+npm run build && npm test
 ```
 
 - To run a specific test, substitute the `it` with `it.only`:
 
-```js
+```ts
   ...
   it.only('should work', async function() {
     const {server, page} = getTestState();
@@ -64,7 +62,7 @@ npm run tsc && npm run unit
 
 - To disable a specific test, substitute the `it` with `xit` (mnemonic rule: '_cross it_'):
 
-```js
+```ts
   ...
   // Using "xit" to skip specific test
   xit('should work', async function({server, page}) {
@@ -74,14 +72,14 @@ npm run tsc && npm run unit
   });
 ```
 
-- To run tests in non-headless mode:
+- To run Chrome headful tests:
 
 ```bash
-HEADLESS=false npm run unit
+npm run test:chrome:headful
 ```
 
 - To run tests with custom browser executable:
 
 ```bash
-BINARY=<path-to-executable> npm run unit
+BINARY=<path-to-executable> npm run test:chrome:headless # Or npm run test:firefox
 ```

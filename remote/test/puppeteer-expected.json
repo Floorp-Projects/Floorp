@@ -1,2371 +1,2452 @@
 {
-  "Accessibility should work (accessibility.spec.ts)": [
+  "Accessibility should work (accessibility.spec.js)": [
     "SKIP"
   ],
-  "Accessibility should report uninteresting nodes (accessibility.spec.ts)": [
+  "Accessibility should report uninteresting nodes (accessibility.spec.js)": [
     "SKIP"
   ],
-  "Accessibility roledescription (accessibility.spec.ts)": [
+  "Accessibility roledescription (accessibility.spec.js)": [
     "SKIP"
   ],
-  "Accessibility orientation (accessibility.spec.ts)": [
+  "Accessibility orientation (accessibility.spec.js)": [
     "SKIP"
   ],
-  "Accessibility autocomplete (accessibility.spec.ts)": [
+  "Accessibility autocomplete (accessibility.spec.js)": [
     "SKIP"
   ],
-  "Accessibility multiselectable (accessibility.spec.ts)": [
+  "Accessibility multiselectable (accessibility.spec.js)": [
     "SKIP"
   ],
-  "Accessibility keyshortcuts (accessibility.spec.ts)": [
+  "Accessibility keyshortcuts (accessibility.spec.js)": [
     "SKIP"
   ],
-  "Accessibility filtering children of leaf nodes should not report text nodes inside controls (accessibility.spec.ts)": [
+  "Accessibility filtering children of leaf nodes should not report text nodes inside controls (accessibility.spec.js)": [
     "SKIP"
   ],
-  "Accessibility filtering children of leaf nodes rich text editable fields should have children (accessibility.spec.ts)": [
+  "Accessibility filtering children of leaf nodes rich text editable fields should have children (accessibility.spec.js)": [
     "SKIP"
   ],
-  "Accessibility filtering children of leaf nodes rich text editable fields with role should have children (accessibility.spec.ts)": [
+  "Accessibility filtering children of leaf nodes rich text editable fields with role should have children (accessibility.spec.js)": [
     "SKIP"
   ],
-  "Accessibility filtering children of leaf nodes non editable textbox with role and tabIndex and label should not have children (accessibility.spec.ts)": [
+  "Accessibility filtering children of leaf nodes non editable textbox with role and tabIndex and label should not have children (accessibility.spec.js)": [
     "SKIP"
   ],
-  "Accessibility filtering children of leaf nodes checkbox with and tabIndex and label should not have children (accessibility.spec.ts)": [
+  "Accessibility filtering children of leaf nodes checkbox with and tabIndex and label should not have children (accessibility.spec.js)": [
     "SKIP"
   ],
-  "Accessibility filtering children of leaf nodes checkbox without label should not have children (accessibility.spec.ts)": [
+  "Accessibility filtering children of leaf nodes checkbox without label should not have children (accessibility.spec.js)": [
     "SKIP"
   ],
-  "Accessibility filtering children of leaf nodes plaintext contenteditable plain text field with role should not have children (accessibility.spec.ts)": [
+  "Accessibility filtering children of leaf nodes plaintext contenteditable plain text field with role should not have children (accessibility.spec.js)": [
     "SKIP"
   ],
-  "Accessibility filtering children of leaf nodes root option should work a button (accessibility.spec.ts)": [
+  "Accessibility filtering children of leaf nodes root option should work a button (accessibility.spec.js)": [
     "SKIP"
   ],
-  "Accessibility filtering children of leaf nodes root option should work an input (accessibility.spec.ts)": [
+  "Accessibility filtering children of leaf nodes root option should work an input (accessibility.spec.js)": [
     "SKIP"
   ],
-  "Accessibility filtering children of leaf nodes root option should work a menu (accessibility.spec.ts)": [
+  "Accessibility filtering children of leaf nodes root option should work a menu (accessibility.spec.js)": [
     "SKIP"
   ],
-  "Accessibility filtering children of leaf nodes root option should return null when the element is no longer in DOM (accessibility.spec.ts)": [
+  "Accessibility filtering children of leaf nodes root option should return null when the element is no longer in DOM (accessibility.spec.js)": [
     "SKIP"
   ],
-  "Accessibility filtering children of leaf nodes root option should support the interestingOnly option (accessibility.spec.ts)": [
+  "Accessibility filtering children of leaf nodes root option should support the interestingOnly option (accessibility.spec.js)": [
     "SKIP"
   ],
-  "Browser specs Browser.version should return whether we are in headless (browser.spec.ts)": [
+  "Browser specs Browser.version should return whether we are in headless (browser.spec.js)": [
     "PASS"
   ],
-  "Browser specs Browser.userAgent should include WebKit (browser.spec.ts)": [
+  "Browser specs Browser.userAgent should include WebKit (browser.spec.js)": [
     "PASS"
   ],
-  "Browser specs Browser.target should return browser target (browser.spec.ts)": [
+  "Browser specs Browser.target should return browser target (browser.spec.js)": [
     "PASS"
   ],
-  "Browser specs Browser.process should return child_process instance (browser.spec.ts)": [
+  "Browser specs Browser.process should return child_process instance (browser.spec.js)": [
     "PASS"
   ],
-  "Browser specs Browser.process should not return child_process for remote browser (browser.spec.ts)": [
+  "Browser specs Browser.process should not return child_process for remote browser (browser.spec.js)": [
     "PASS"
   ],
-  "Browser specs Browser.isConnected should set the browser connected state (browser.spec.ts)": [
+  "Browser specs Browser.isConnected should set the browser connected state (browser.spec.js)": [
     "PASS"
   ],
-  "BrowserContext should have default context (browsercontext.spec.ts)": [
+  "BrowserContext should have default context (browsercontext.spec.js)": [
     "PASS"
   ],
-  "BrowserContext should create new incognito context (browsercontext.spec.ts)": [
+  "BrowserContext should create new incognito context (browsercontext.spec.js)": [
     "PASS"
   ],
-  "BrowserContext should close all belonging targets once closing context (browsercontext.spec.ts)": [
+  "BrowserContext should close all belonging targets once closing context (browsercontext.spec.js)": [
     "PASS"
   ],
-  "BrowserContext window.open should use parent tab context (browsercontext.spec.ts)": [
+  "BrowserContext window.open should use parent tab context (browsercontext.spec.js)": [
     "FAIL"
   ],
-  "BrowserContext should fire target events (browsercontext.spec.ts)": [
+  "BrowserContext should fire target events (browsercontext.spec.js)": [
     "FAIL"
   ],
-  "BrowserContext should wait for a target (browsercontext.spec.ts)": [
+  "BrowserContext should wait for a target (browsercontext.spec.js)": [
     "TIMEOUT"
   ],
-  "BrowserContext should timeout waiting for a non-existent target (browsercontext.spec.ts)": [
+  "BrowserContext should timeout waiting for a non-existent target (browsercontext.spec.js)": [
     "PASS"
   ],
-  "BrowserContext should isolate localStorage and cookies (browsercontext.spec.ts)": [
+  "BrowserContext should isolate localStorage and cookies (browsercontext.spec.js)": [
     "FAIL"
   ],
-  "BrowserContext should work across sessions (browsercontext.spec.ts)": [
+  "BrowserContext should work across sessions (browsercontext.spec.js)": [
     "FAIL"
   ],
-  "Page.click should click the button (click.spec.ts)": [
+  "Page.click should click the button (click.spec.js)": [
     "PASS"
   ],
-  "Page.click should click svg (click.spec.ts)": [
+  "Page.click should click svg (click.spec.js)": [
     "PASS"
   ],
-  "Page.click should click the button if window.Node is removed (click.spec.ts)": [
+  "Page.click should click the button if window.Node is removed (click.spec.js)": [
     "FAIL"
   ],
-  "Page.click should click on a span with an inline element inside (click.spec.ts)": [
+  "Page.click should click on a span with an inline element inside (click.spec.js)": [
     "PASS"
   ],
-  "Page.click should not throw UnhandledPromiseRejection when page closes (click.spec.ts)": [
+  "Page.click should not throw UnhandledPromiseRejection when page closes (click.spec.js)": [
     "PASS"
   ],
-  "Page.click should click the button after navigation  (click.spec.ts)": [
+  "Page.click should click the button after navigation  (click.spec.js)": [
     "PASS"
   ],
-  "Page.click should click with disabled javascript (click.spec.ts)": [
+  "Page.click should click with disabled javascript (click.spec.js)": [
     "FAIL"
   ],
-  "Page.click should click when one of inline box children is outside of viewport (click.spec.ts)": [
+  "Page.click should click when one of inline box children is outside of viewport (click.spec.js)": [
     "PASS"
   ],
-  "Page.click should select the text by triple clicking (click.spec.ts)": [
+  "Page.click should select the text by triple clicking (click.spec.js)": [
     "PASS"
   ],
-  "Page.click should click offscreen buttons (click.spec.ts)": [
+  "Page.click should click offscreen buttons (click.spec.js)": [
     "PASS"
   ],
-  "Page.click should click wrapped links (click.spec.ts)": [
+  "Page.click should click wrapped links (click.spec.js)": [
     "PASS"
   ],
-  "Page.click should click on checkbox input and toggle (click.spec.ts)": [
+  "Page.click should click on checkbox input and toggle (click.spec.js)": [
     "PASS"
   ],
-  "Page.click should click on checkbox label and toggle (click.spec.ts)": [
+  "Page.click should click on checkbox label and toggle (click.spec.js)": [
     "FAIL", "PASS"
   ],
-  "Page.click should fail to click a missing button (click.spec.ts)": [
+  "Page.click should fail to click a missing button (click.spec.js)": [
     "PASS"
   ],
-  "Page.click should not hang with touch-enabled viewports (click.spec.ts)": [
+  "Page.click should not hang with touch-enabled viewports (click.spec.js)": [
     "PASS"
   ],
-  "Page.click should scroll and click the button (click.spec.ts)": [
+  "Page.click should scroll and click the button (click.spec.js)": [
     "PASS"
   ],
-  "Page.click should double click the button (click.spec.ts)": [
+  "Page.click should double click the button (click.spec.js)": [
     "PASS"
   ],
-  "Page.click should click a partially obscured button (click.spec.ts)": [
+  "Page.click should click a partially obscured button (click.spec.js)": [
     "PASS"
   ],
-  "Page.click should click a rotated button (click.spec.ts)": [
+  "Page.click should click a rotated button (click.spec.js)": [
     "PASS"
   ],
-  "Page.click should fire contextmenu event on right click (click.spec.ts)": [
+  "Page.click should fire contextmenu event on right click (click.spec.js)": [
     "PASS"
   ],
-  "Page.click should click links which cause navigation (click.spec.ts)": [
+  "Page.click should fire aux event on middle click (click.spec.js)": [
     "PASS"
   ],
-  "Page.click should click the button inside an iframe (click.spec.ts)": [
+  "Page.click should fire back click (click.spec.js)": [
     "PASS"
   ],
-  "Page.click should click the button with fixed position inside an iframe (click.spec.ts)": [
+  "Page.click should fire forward click (click.spec.js)": [
+    "PASS"
+  ],
+  "Page.click should click links which cause navigation (click.spec.js)": [
+    "PASS"
+  ],
+  "Page.click should click the button inside an iframe (click.spec.js)": [
+    "PASS"
+  ],
+  "Page.click should click the button with fixed position inside an iframe (click.spec.js)": [
     "SKIP"
   ],
-  "Page.click should click the button with deviceScaleFactor set (click.spec.ts)": [
+  "Page.click should click the button with deviceScaleFactor set (click.spec.js)": [
     "PASS"
   ],
-  "Cookie specs Page.cookies should return no cookies in pristine browser context (cookies.spec.ts)": [
+  "Cookie specs Page.cookies should return no cookies in pristine browser context (cookies.spec.js)": [
     "PASS"
   ],
-  "Cookie specs Page.cookies should get a cookie (cookies.spec.ts)": [
+  "Cookie specs Page.cookies should get a cookie (cookies.spec.js)": [
     "PASS"
   ],
-  "Cookie specs Page.cookies should properly report httpOnly cookie (cookies.spec.ts)": [
+  "Cookie specs Page.cookies should properly report httpOnly cookie (cookies.spec.js)": [
     "PASS"
   ],
-  "Cookie specs Page.cookies should properly report \"Strict\" sameSite cookie (cookies.spec.ts)": [
+  "Cookie specs Page.cookies should properly report \"Strict\" sameSite cookie (cookies.spec.js)": [
     "PASS"
   ],
-  "Cookie specs Page.cookies should properly report \"Lax\" sameSite cookie (cookies.spec.ts)": [
+  "Cookie specs Page.cookies should properly report \"Lax\" sameSite cookie (cookies.spec.js)": [
     "PASS"
   ],
-  "Cookie specs Page.cookies should get multiple cookies (cookies.spec.ts)": [
+  "Cookie specs Page.cookies should get multiple cookies (cookies.spec.js)": [
     "PASS"
   ],
-  "Cookie specs Page.cookies should get cookies from multiple urls (cookies.spec.ts)": [
+  "Cookie specs Page.cookies should get cookies from multiple urls (cookies.spec.js)": [
     "PASS"
   ],
-  "Cookie specs Page.setCookie should work (cookies.spec.ts)": [
+  "Cookie specs Page.setCookie should work (cookies.spec.js)": [
     "FAIL"
   ],
-  "Cookie specs Page.setCookie should isolate cookies in browser contexts (cookies.spec.ts)": [
+  "Cookie specs Page.setCookie should isolate cookies in browser contexts (cookies.spec.js)": [
     "FAIL"
   ],
-  "Cookie specs Page.setCookie should set multiple cookies (cookies.spec.ts)": [
+  "Cookie specs Page.setCookie should set multiple cookies (cookies.spec.js)": [
     "FAIL"
   ],
-  "Cookie specs Page.setCookie should have |expires| set to |-1| for session cookies (cookies.spec.ts)": [
+  "Cookie specs Page.setCookie should have |expires| set to |-1| for session cookies (cookies.spec.js)": [
     "PASS"
   ],
-  "Cookie specs Page.setCookie should set cookie with reasonable defaults (cookies.spec.ts)": [
+  "Cookie specs Page.setCookie should set cookie with reasonable defaults (cookies.spec.js)": [
     "FAIL"
   ],
-  "Cookie specs Page.setCookie should set a cookie with a path (cookies.spec.ts)": [
+  "Cookie specs Page.setCookie should set a cookie with a path (cookies.spec.js)": [
     "FAIL"
   ],
-  "Cookie specs Page.setCookie should not set a cookie on a blank page (cookies.spec.ts)": [
+  "Cookie specs Page.setCookie should not set a cookie on a blank page (cookies.spec.js)": [
     "PASS"
   ],
-  "Cookie specs Page.setCookie should not set a cookie with blank page URL (cookies.spec.ts)": [
+  "Cookie specs Page.setCookie should not set a cookie with blank page URL (cookies.spec.js)": [
     "PASS"
   ],
-  "Cookie specs Page.setCookie should not set a cookie on a data URL page (cookies.spec.ts)": [
+  "Cookie specs Page.setCookie should not set a cookie on a data URL page (cookies.spec.js)": [
     "PASS"
   ],
-  "Cookie specs Page.setCookie should default to setting secure cookie for HTTPS websites (cookies.spec.ts)": [
+  "Cookie specs Page.setCookie should default to setting secure cookie for HTTPS websites (cookies.spec.js)": [
     "PASS"
   ],
-  "Cookie specs Page.setCookie should be able to set unsecure cookie for HTTP website (cookies.spec.ts)": [
+  "Cookie specs Page.setCookie should be able to set unsecure cookie for HTTP website (cookies.spec.js)": [
     "PASS"
   ],
-  "Cookie specs Page.setCookie should set a cookie on a different domain (cookies.spec.ts)": [
+  "Cookie specs Page.setCookie should set a cookie on a different domain (cookies.spec.js)": [
     "FAIL"
   ],
-  "Cookie specs Page.setCookie should set cookies from a frame (cookies.spec.ts)": [
+  "Cookie specs Page.setCookie should set cookies from a frame (cookies.spec.js)": [
     "FAIL"
   ],
-  "Cookie specs Page.setCookie should set secure same-site cookies from a frame (cookies.spec.ts)": [
+  "Cookie specs Page.setCookie should set secure same-site cookies from a frame (cookies.spec.js)": [
     "PASS"
   ],
-  "Cookie specs Page.deleteCookie should work (cookies.spec.ts)": [
+  "Cookie specs Page.deleteCookie should work (cookies.spec.js)": [
     "FAIL"
   ],
-  "DefaultBrowserContext page.cookies() should work (defaultbrowsercontext.spec.ts)": [
+  "DefaultBrowserContext page.cookies() should work (defaultbrowsercontext.spec.js)": [
     "PASS"
   ],
-  "DefaultBrowserContext page.setCookie() should work (defaultbrowsercontext.spec.ts)": [
+  "DefaultBrowserContext page.setCookie() should work (defaultbrowsercontext.spec.js)": [
     "FAIL"
   ],
-  "DefaultBrowserContext page.deleteCookie() should work (defaultbrowsercontext.spec.ts)": [
+  "DefaultBrowserContext page.deleteCookie() should work (defaultbrowsercontext.spec.js)": [
     "FAIL"
   ],
-  "Page.Events.Dialog should fire (dialog.spec.ts)": [
+  "Page.Events.Dialog should fire (dialog.spec.js)": [
     "PASS"
   ],
-  "Page.Events.Dialog should allow accepting prompts (dialog.spec.ts)": [
+  "Page.Events.Dialog should allow accepting prompts (dialog.spec.js)": [
     "FAIL"
   ],
-  "Page.Events.Dialog should dismiss the prompt (dialog.spec.ts)": [
+  "Page.Events.Dialog should dismiss the prompt (dialog.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs ElementHandle.boundingBox should work (elementhandle.spec.ts)": [
+  "ElementHandle specs ElementHandle.boundingBox should work (elementhandle.spec.js)": [
     "FAIL"
   ],
-  "ElementHandle specs ElementHandle.boundingBox should handle nested frames (elementhandle.spec.ts)": [
+  "ElementHandle specs ElementHandle.boundingBox should handle nested frames (elementhandle.spec.js)": [
     "PASS", "FAIL"
   ],
-  "ElementHandle specs ElementHandle.boundingBox should return null for invisible elements (elementhandle.spec.ts)": [
+  "ElementHandle specs ElementHandle.boundingBox should return null for invisible elements (elementhandle.spec.js)": [
     "FAIL"
   ],
-  "ElementHandle specs ElementHandle.boundingBox should force a layout (elementhandle.spec.ts)": [
+  "ElementHandle specs ElementHandle.boundingBox should force a layout (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs ElementHandle.boundingBox should work with SVG nodes (elementhandle.spec.ts)": [
+  "ElementHandle specs ElementHandle.boundingBox should work with SVG nodes (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs ElementHandle.boxModel should work (elementhandle.spec.ts)": [
+  "ElementHandle specs ElementHandle.boxModel should work (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs ElementHandle.boxModel should return null for invisible elements (elementhandle.spec.ts)": [
+  "ElementHandle specs ElementHandle.boxModel should return null for invisible elements (elementhandle.spec.js)": [
     "FAIL"
   ],
-  "ElementHandle specs ElementHandle.contentFrame should work (elementhandle.spec.ts)": [
+  "ElementHandle specs ElementHandle.contentFrame should work (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs ElementHandle.click should work (elementhandle.spec.ts)": [
+  "ElementHandle specs ElementHandle.click should work (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs ElementHandle.click should work for Shadow DOM v1 (elementhandle.spec.ts)": [
+  "ElementHandle specs ElementHandle.click should work for Shadow DOM v1 (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs ElementHandle.click should work for TextNodes (elementhandle.spec.ts)": [
+  "ElementHandle specs ElementHandle.click should not work for TextNodes (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs ElementHandle.click should throw for detached nodes (elementhandle.spec.ts)": [
+  "ElementHandle specs ElementHandle.click should throw for detached nodes (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs ElementHandle.click should throw for hidden nodes (elementhandle.spec.ts)": [
+  "ElementHandle specs ElementHandle.click should throw for hidden nodes (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs ElementHandle.click should throw for recursively hidden nodes (elementhandle.spec.ts)": [
+  "ElementHandle specs ElementHandle.click should throw for recursively hidden nodes (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs ElementHandle.click should throw for <br> elements (elementhandle.spec.ts)": [
+  "ElementHandle specs ElementHandle.click should throw for <br> elements (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs Element.waitForSelector should wait correctly with waitForSelector on an element (elementhandle.spec.ts)": [
+  "ElementHandle specs Element.waitForSelector should wait correctly with waitForSelector on an element (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs ElementHandle.hover should work (elementhandle.spec.ts)": [
+  "ElementHandle specs Element.waitForXPath should wait correctly with waitForXPath on an element (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs ElementHandle.isIntersectingViewport should work (elementhandle.spec.ts)": [
+  "ElementHandle specs ElementHandle.hover should work (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs ElementHandle.isIntersectingViewport should work with threshold (elementhandle.spec.ts)": [
+  "ElementHandle specs ElementHandle.isIntersectingViewport should work (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs ElementHandle.isIntersectingViewport should work with threshold of 1 (elementhandle.spec.ts)": [
+  "ElementHandle specs ElementHandle.isIntersectingViewport should work with threshold (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs Custom queries should register and unregister (elementhandle.spec.ts)": [
+  "ElementHandle specs ElementHandle.isIntersectingViewport should work with threshold of 1 (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs Custom queries should throw with invalid query names (elementhandle.spec.ts)": [
+  "ElementHandle specs Custom queries should register and unregister (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs Custom queries should work for multiple elements (elementhandle.spec.ts)": [
+  "ElementHandle specs Custom queries should throw with invalid query names (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs Custom queries should eval correctly (elementhandle.spec.ts)": [
+  "ElementHandle specs Custom queries should work for multiple elements (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs Custom queries should wait correctly with waitForSelector (elementhandle.spec.ts)": [
+  "ElementHandle specs Custom queries should eval correctly (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs Custom queries should wait correctly with waitForSelector on an element (elementhandle.spec.ts)": [
+  "ElementHandle specs Custom queries should wait correctly with waitForSelector (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs Custom queries should wait correctly with waitFor (elementhandle.spec.ts)": [
+  "ElementHandle specs Custom queries should wait correctly with waitForSelector on an element (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs Custom queries should work when both queryOne and queryAll are registered (elementhandle.spec.ts)": [
+  "ElementHandle specs Custom queries should wait correctly with waitFor (elementhandle.spec.js)": [
     "PASS"
   ],
-  "ElementHandle specs Custom queries should eval when both queryOne and queryAll are registered (elementhandle.spec.ts)": [
+  "ElementHandle specs Custom queries should work when both queryOne and queryAll are registered (elementhandle.spec.js)": [
     "PASS"
   ],
-  "Emulation Page.viewport should get the proper viewport size (emulation.spec.ts)": [
+  "ElementHandle specs Custom queries should eval when both queryOne and queryAll are registered (elementhandle.spec.js)": [
     "PASS"
   ],
-  "Emulation Page.viewport should support mobile emulation (emulation.spec.ts)": [
+  "Emulation Page.viewport should get the proper viewport size (emulation.spec.js)": [
     "PASS"
   ],
-  "Emulation Page.viewport should support touch emulation (emulation.spec.ts)": [
+  "Emulation Page.viewport should support mobile emulation (emulation.spec.js)": [
     "PASS"
   ],
-  "Emulation Page.viewport should be detectable by Modernizr (emulation.spec.ts)": [
+  "Emulation Page.viewport should support touch emulation (emulation.spec.js)": [
     "PASS"
   ],
-  "Emulation Page.viewport should detect touch when applying viewport with touches (emulation.spec.ts)": [
+  "Emulation Page.viewport should be detectable by Modernizr (emulation.spec.js)": [
     "PASS"
   ],
-  "Emulation Page.viewport should support landscape emulation (emulation.spec.ts)": [
+  "Emulation Page.viewport should detect touch when applying viewport with touches (emulation.spec.js)": [
+    "PASS"
+  ],
+  "Emulation Page.viewport should support landscape emulation (emulation.spec.js)": [
     "FAIL"
   ],
-  "Emulation Page.emulate should work (emulation.spec.ts)": [
+  "Emulation Page.emulate should work (emulation.spec.js)": [
     "PASS"
   ],
-  "Emulation Page.emulate should support clicking (emulation.spec.ts)": [
+  "Emulation Page.emulate should support clicking (emulation.spec.js)": [
     "PASS", "FAIL"
   ],
-  "Emulation Page.emulateMediaType should work (emulation.spec.ts)": [
+  "Emulation Page.emulateMediaType should work (emulation.spec.js)": [
     "FAIL"
   ],
-  "Emulation Page.emulateMediaType should throw in case of bad argument (emulation.spec.ts)": [
+  "Emulation Page.emulateMediaType should throw in case of bad argument (emulation.spec.js)": [
     "PASS"
   ],
-  "Emulation Page.emulateMediaFeatures should work (emulation.spec.ts)": [
+  "Emulation Page.emulateMediaFeatures should work (emulation.spec.js)": [
     "FAIL"
   ],
-  "Emulation Page.emulateMediaFeatures should throw in case of bad argument (emulation.spec.ts)": [
+  "Emulation Page.emulateMediaFeatures should throw in case of bad argument (emulation.spec.js)": [
     "PASS"
   ],
-  "Emulation Page.emulateTimezone should work (emulation.spec.ts)": [
+  "Emulation Page.emulateTimezone should work (emulation.spec.js)": [
     "FAIL"
   ],
-  "Emulation Page.emulateTimezone should throw for invalid timezone IDs (emulation.spec.ts)": [
+  "Emulation Page.emulateTimezone should throw for invalid timezone IDs (emulation.spec.js)": [
     "FAIL"
   ],
-  "Emulation Page.emulateVisionDeficiency should work (emulation.spec.ts)": [
+  "Emulation Page.emulateVisionDeficiency should work (emulation.spec.js)": [
     "FAIL"
   ],
-  "Emulation Page.emulateVisionDeficiency should throw for invalid vision deficiencies (emulation.spec.ts)": [
+  "Emulation Page.emulateVisionDeficiency should throw for invalid vision deficiencies (emulation.spec.js)": [
     "PASS"
   ],
-  "Emulation Page.emulateNetworkConditions should change navigator.connection.effectiveType (emulation.spec.ts)": [
+  "Emulation Page.emulateNetworkConditions should change navigator.connection.effectiveType (emulation.spec.js)": [
     "FAIL"
   ],
-  "Emulation Page.emulateCPUThrottling should change the CPU throttling rate successfully (emulation.spec.ts)": [
+  "Emulation Page.emulateCPUThrottling should change the CPU throttling rate successfully (emulation.spec.js)": [
     "FAIL"
   ],
-  "Evaluation specs Page.evaluate should work (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should work (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should transfer BigInt (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should transfer BigInt (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should transfer NaN (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should transfer NaN (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should transfer -0 (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should transfer -0 (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should transfer Infinity (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should transfer Infinity (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should transfer -Infinity (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should transfer -Infinity (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should transfer arrays (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should transfer arrays (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should transfer arrays as arrays, not objects (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should transfer arrays as arrays, not objects (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should modify global environment (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should modify global environment (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should evaluate in the page context (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should evaluate in the page context (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should return undefined for objects with symbols (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should return undefined for objects with symbols (evaluation.spec.js)": [
     "FAIL"
   ],
-  "Evaluation specs Page.evaluate should work with function shorthands (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should work with function shorthands (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should work with unicode chars (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should work with unicode chars (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should throw when evaluation triggers reload (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should throw when evaluation triggers reload (evaluation.spec.js)": [
     "TIMEOUT"
   ],
-  "Evaluation specs Page.evaluate should await promise (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should await promise (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should work right after framenavigated (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should work right after framenavigated (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should work from-inside an exposed function (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should work from-inside an exposed function (evaluation.spec.js)": [
     "FAIL"
   ],
-  "Evaluation specs Page.evaluate should reject promise with exception (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should reject promise with exception (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should support thrown strings as error messages (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should support thrown strings as error messages (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should support thrown numbers as error messages (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should support thrown numbers as error messages (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should return complex objects (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should return complex objects (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should return BigInt (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should return BigInt (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should return NaN (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should return NaN (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should return -0 (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should return -0 (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should return Infinity (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should return Infinity (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should return -Infinity (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should return -Infinity (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should accept \"undefined\" as one of multiple parameters (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should accept \"null\" as one of multiple parameters (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should properly serialize null fields (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should properly serialize null fields (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should return undefined for non-serializable objects (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should return undefined for non-serializable objects (evaluation.spec.js)": [
     "FAIL"
   ],
-  "Evaluation specs Page.evaluate should fail for circular object (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should fail for circular object (evaluation.spec.js)": [
     "FAIL"
   ],
-  "Evaluation specs Page.evaluate should be able to throw a tricky error (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should be able to throw a tricky error (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should accept a string (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should accept a string (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should accept a string with semi colons (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should accept a string with semi colons (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should accept a string with comments (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should accept a string with comments (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should accept element handle as an argument (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should accept element handle as an argument (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should throw if underlying element was disposed (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should throw if underlying element was disposed (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should throw if elementHandles are from other frames (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should throw if elementHandles are from other frames (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should simulate a user gesture (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should simulate a user gesture (evaluation.spec.js)": [
     "FAIL"
   ],
-  "Evaluation specs Page.evaluate should throw a nice error after a navigation (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should throw a nice error after a navigation (evaluation.spec.js)": [
     "FAIL"
   ],
-  "Evaluation specs Page.evaluate should not throw an error when evaluation does a navigation (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should not throw an error when evaluation does a navigation (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should transfer 100Mb of data from page to node.js (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should transfer 100Mb of data from page to node.js (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluate should throw error with detailed information on exception inside promise  (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluate should throw error with detailed information on exception inside promise  (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Page.evaluateOnNewDocument should evaluate before anything else on the page (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluateOnNewDocument should evaluate before anything else on the page (evaluation.spec.js)": [
     "FAIL"
   ],
-  "Evaluation specs Page.evaluateOnNewDocument should work with CSP (evaluation.spec.ts)": [
+  "Evaluation specs Page.evaluateOnNewDocument should work with CSP (evaluation.spec.js)": [
     "FAIL"
   ],
-  "Evaluation specs Frame.evaluate should have different execution contexts (evaluation.spec.ts)": [
+  "Evaluation specs Frame.evaluate should have different execution contexts (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Frame.evaluate should have correct execution contexts (evaluation.spec.ts)": [
+  "Evaluation specs Frame.evaluate should have correct execution contexts (evaluation.spec.js)": [
     "PASS"
   ],
-  "Evaluation specs Frame.evaluate should execute after cross-site navigation (evaluation.spec.ts)": [
+  "Evaluation specs Frame.evaluate should execute after cross-site navigation (evaluation.spec.js)": [
     "PASS"
   ],
-  "EventEmitter on on: adds an event listener that is fired when the event is emitted (EventEmitter.spec.ts)": [
+  "EventEmitter on on: adds an event listener that is fired when the event is emitted (EventEmitter.spec.js)": [
     "PASS"
   ],
-  "EventEmitter on on sends the event data to the handler (EventEmitter.spec.ts)": [
+  "EventEmitter on on sends the event data to the handler (EventEmitter.spec.js)": [
     "PASS"
   ],
-  "EventEmitter on on: supports chaining (EventEmitter.spec.ts)": [
+  "EventEmitter on on: supports chaining (EventEmitter.spec.js)": [
     "PASS"
   ],
-  "EventEmitter on addListener: adds an event listener that is fired when the event is emitted (EventEmitter.spec.ts)": [
+  "EventEmitter on addListener: adds an event listener that is fired when the event is emitted (EventEmitter.spec.js)": [
     "PASS"
   ],
-  "EventEmitter on addListener sends the event data to the handler (EventEmitter.spec.ts)": [
+  "EventEmitter on addListener sends the event data to the handler (EventEmitter.spec.js)": [
     "PASS"
   ],
-  "EventEmitter on addListener: supports chaining (EventEmitter.spec.ts)": [
+  "EventEmitter on addListener: supports chaining (EventEmitter.spec.js)": [
     "PASS"
   ],
-  "EventEmitter off off: removes the listener so it is no longer called (EventEmitter.spec.ts)": [
+  "EventEmitter off off: removes the listener so it is no longer called (EventEmitter.spec.js)": [
     "PASS"
   ],
-  "EventEmitter off off: supports chaining (EventEmitter.spec.ts)": [
+  "EventEmitter off off: supports chaining (EventEmitter.spec.js)": [
     "PASS"
   ],
-  "EventEmitter off removeListener: removes the listener so it is no longer called (EventEmitter.spec.ts)": [
+  "EventEmitter off removeListener: removes the listener so it is no longer called (EventEmitter.spec.js)": [
     "PASS"
   ],
-  "EventEmitter off removeListener: supports chaining (EventEmitter.spec.ts)": [
+  "EventEmitter off removeListener: supports chaining (EventEmitter.spec.js)": [
     "PASS"
   ],
-  "EventEmitter once only calls the listener once and then removes it (EventEmitter.spec.ts)": [
+  "EventEmitter once only calls the listener once and then removes it (EventEmitter.spec.js)": [
     "PASS"
   ],
-  "EventEmitter once supports chaining (EventEmitter.spec.ts)": [
+  "EventEmitter once supports chaining (EventEmitter.spec.js)": [
     "PASS"
   ],
-  "EventEmitter emit calls all the listeners for an event (EventEmitter.spec.ts)": [
+  "EventEmitter emit calls all the listeners for an event (EventEmitter.spec.js)": [
     "PASS"
   ],
-  "EventEmitter emit passes data through to the listener (EventEmitter.spec.ts)": [
+  "EventEmitter emit passes data through to the listener (EventEmitter.spec.js)": [
     "PASS"
   ],
-  "EventEmitter emit returns true if the event has listeners (EventEmitter.spec.ts)": [
+  "EventEmitter emit returns true if the event has listeners (EventEmitter.spec.js)": [
     "PASS"
   ],
-  "EventEmitter emit returns false if the event has listeners (EventEmitter.spec.ts)": [
+  "EventEmitter emit returns false if the event has listeners (EventEmitter.spec.js)": [
     "PASS"
   ],
-  "EventEmitter listenerCount returns the number of listeners for the given event (EventEmitter.spec.ts)": [
+  "EventEmitter listenerCount returns the number of listeners for the given event (EventEmitter.spec.js)": [
     "PASS"
   ],
-  "EventEmitter removeAllListeners removes every listener from all events by default (EventEmitter.spec.ts)": [
+  "EventEmitter removeAllListeners removes every listener from all events by default (EventEmitter.spec.js)": [
     "PASS"
   ],
-  "EventEmitter removeAllListeners returns the emitter for chaining (EventEmitter.spec.ts)": [
+  "EventEmitter removeAllListeners returns the emitter for chaining (EventEmitter.spec.js)": [
     "PASS"
   ],
-  "EventEmitter removeAllListeners can filter to remove only listeners for a given event name (EventEmitter.spec.ts)": [
+  "EventEmitter removeAllListeners can filter to remove only listeners for a given event name (EventEmitter.spec.js)": [
     "PASS"
   ],
-  "Fixtures dumpio option should work with pipe option  (fixtures.spec.ts)": [
+  "Fixtures dumpio option should work with pipe option (fixtures.spec.js)": [
     "SKIP"
   ],
-  "Fixtures should dump browser process stderr (fixtures.spec.ts)": [
+  "Fixtures should dump browser process stderr (fixtures.spec.js)": [
     "PASS"
   ],
-  "Fixtures should close the browser when the node process closes (fixtures.spec.ts)": [
+  "Fixtures should close the browser when the node process closes (fixtures.spec.js)": [
     "PASS"
   ],
-  "Frame specs Frame.executionContext should work (frame.spec.ts)": [
+  "Frame specs Frame.executionContext should work (frame.spec.js)": [
     "PASS"
   ],
-  "Frame specs Frame.evaluateHandle should work (frame.spec.ts)": [
+  "Frame specs Frame.evaluateHandle should work (frame.spec.js)": [
     "PASS"
   ],
-  "Frame specs Frame.evaluate should throw for detached frames (frame.spec.ts)": [
+  "Frame specs Frame.evaluate should throw for detached frames (frame.spec.js)": [
     "TIMEOUT"
   ],
-  "Frame specs Frame.evaluate allows readonly array to be an argument (frame.spec.ts)": [
+  "Frame specs Frame.evaluate allows readonly array to be an argument (frame.spec.js)": [
     "PASS"
   ],
-  "Frame specs Frame Management should handle nested frames (frame.spec.ts)": [
+  "Frame specs Frame.page should retrieve the page from a frame (frame.spec.js)": [
     "PASS"
   ],
-  "Frame specs Frame Management should send events when frames are manipulated dynamically (frame.spec.ts)": [
+  "Frame specs Frame Management should handle nested frames (frame.spec.js)": [
+    "PASS"
+  ],
+  "Frame specs Frame Management should send events when frames are manipulated dynamically (frame.spec.js)": [
     "FAIL"
   ],
-  "Frame specs Frame Management should send \"framenavigated\" when navigating on anchor URLs (frame.spec.ts)": [
+  "Frame specs Frame Management should send \"framenavigated\" when navigating on anchor URLs (frame.spec.js)": [
     "PASS"
   ],
-  "Frame specs Frame Management should persist mainFrame on cross-process navigation (frame.spec.ts)": [
+  "Frame specs Frame Management should persist mainFrame on cross-process navigation (frame.spec.js)": [
     "PASS"
   ],
-  "Frame specs Frame Management should not send attach/detach events for main frame (frame.spec.ts)": [
+  "Frame specs Frame Management should not send attach/detach events for main frame (frame.spec.js)": [
     "PASS"
   ],
-  "Frame specs Frame Management should detach child frames on navigation (frame.spec.ts)": [
+  "Frame specs Frame Management should detach child frames on navigation (frame.spec.js)": [
     "PASS"
   ],
-  "Frame specs Frame Management should support framesets (frame.spec.ts)": [
+  "Frame specs Frame Management should support framesets (frame.spec.js)": [
     "PASS"
   ],
-  "Frame specs Frame Management should report frame from-inside shadow DOM (frame.spec.ts)": [
+  "Frame specs Frame Management should report frame from-inside shadow DOM (frame.spec.js)": [
     "PASS"
   ],
-  "Frame specs Frame Management should report frame.name() (frame.spec.ts)": [
+  "Frame specs Frame Management should report frame.name() (frame.spec.js)": [
     "PASS"
   ],
-  "Frame specs Frame Management should report frame.parent() (frame.spec.ts)": [
+  "Frame specs Frame Management should report frame.parent() (frame.spec.js)": [
     "PASS"
   ],
-  "Frame specs Frame Management should report different frame instance when frame re-attaches (frame.spec.ts)": [
+  "Frame specs Frame Management should report different frame instance when frame re-attaches (frame.spec.js)": [
     "FAIL"
   ],
-  "Frame specs Frame Management should support url fragment (frame.spec.ts)": [
+  "Frame specs Frame Management should support url fragment (frame.spec.js)": [
     "PASS"
   ],
-  "Emulate idle state changing idle state emulation causes change of the IdleDetector state (idle_override.spec.ts)": [
+  "Frame specs Frame Management should support lazy frames (frame.spec.js)": [
     "FAIL"
   ],
-  "ignoreHTTPSErrors should work (ignorehttpserrors.spec.ts)": [
+  "Frame specs Frame.client should return the client instance (frame.spec.js)": [
     "PASS"
   ],
-  "ignoreHTTPSErrors should work with request interception (ignorehttpserrors.spec.ts)": [
+  "Emulate idle state changing idle state emulation causes change of the IdleDetector state (idle_override.spec.js)": [
     "FAIL"
   ],
-  "ignoreHTTPSErrors should work with mixed content (ignorehttpserrors.spec.ts)": [
+  "ignoreHTTPSErrors should work (ignorehttpserrors.spec.js)": [
     "PASS"
   ],
-  "ignoreHTTPSErrors Response.securityDetails should work (ignorehttpserrors.spec.ts)": [
+  "ignoreHTTPSErrors should work with request interception (ignorehttpserrors.spec.js)": [
     "FAIL"
   ],
-  "ignoreHTTPSErrors Response.securityDetails should be |null| for non-secure requests (ignorehttpserrors.spec.ts)": [
+  "ignoreHTTPSErrors should work with mixed content (ignorehttpserrors.spec.js)": [
     "PASS"
   ],
-  "ignoreHTTPSErrors Response.securityDetails Network redirects should report SecurityDetails (ignorehttpserrors.spec.ts)": [
+  "ignoreHTTPSErrors Response.securityDetails should work (ignorehttpserrors.spec.js)": [
+    "FAIL"
+  ],
+  "ignoreHTTPSErrors Response.securityDetails should be |null| for non-secure requests (ignorehttpserrors.spec.js)": [
+    "PASS"
+  ],
+  "ignoreHTTPSErrors Response.securityDetails Network redirects should report SecurityDetails (ignorehttpserrors.spec.js)": [
     "PASS", "FAIL"
   ],
-  "input tests input should upload the file (input.spec.ts)": [
+  "input tests input should upload the file (input.spec.js)": [
     "SKIP"
   ],
-  "input tests Page.waitForFileChooser should work when file input is attached to DOM (input.spec.ts)": [
+  "input tests Page.waitForFileChooser should work when file input is attached to DOM (input.spec.js)": [
     "SKIP"
   ],
-  "input tests Page.waitForFileChooser should work when file input is not attached to DOM (input.spec.ts)": [
+  "input tests Page.waitForFileChooser should work when file input is not attached to DOM (input.spec.js)": [
     "SKIP"
   ],
-  "input tests Page.waitForFileChooser should respect timeout (input.spec.ts)": [
+  "input tests Page.waitForFileChooser should respect timeout (input.spec.js)": [
     "SKIP"
   ],
-  "input tests Page.waitForFileChooser should respect default timeout when there is no custom timeout (input.spec.ts)": [
+  "input tests Page.waitForFileChooser should respect default timeout when there is no custom timeout (input.spec.js)": [
     "SKIP"
   ],
-  "input tests Page.waitForFileChooser should prioritize exact timeout over default timeout (input.spec.ts)": [
+  "input tests Page.waitForFileChooser should prioritize exact timeout over default timeout (input.spec.js)": [
     "SKIP"
   ],
-  "input tests Page.waitForFileChooser should work with no timeout (input.spec.ts)": [
+  "input tests Page.waitForFileChooser should work with no timeout (input.spec.js)": [
     "SKIP"
   ],
-  "input tests Page.waitForFileChooser should return the same file chooser when there are many watchdogs simultaneously (input.spec.ts)": [
+  "input tests Page.waitForFileChooser should return the same file chooser when there are many watchdogs simultaneously (input.spec.js)": [
     "SKIP"
   ],
-  "input tests FileChooser.accept should accept single file (input.spec.ts)": [
+  "input tests FileChooser.accept should accept single file (input.spec.js)": [
     "SKIP"
   ],
-  "input tests FileChooser.accept should be able to read selected file (input.spec.ts)": [
+  "input tests FileChooser.accept should be able to read selected file (input.spec.js)": [
     "SKIP"
   ],
-  "input tests FileChooser.accept should be able to reset selected files with empty file list (input.spec.ts)": [
+  "input tests FileChooser.accept should be able to reset selected files with empty file list (input.spec.js)": [
     "SKIP"
   ],
-  "input tests FileChooser.accept should not accept multiple files for single-file input (input.spec.ts)": [
+  "input tests FileChooser.accept should not accept multiple files for single-file input (input.spec.js)": [
     "SKIP"
   ],
-  "input tests FileChooser.accept should fail for non-existent files (input.spec.ts)": [
+  "input tests FileChooser.accept should succeed even for non-existent files (input.spec.js)": [
     "SKIP"
   ],
-  "input tests FileChooser.accept should fail when accepting file chooser twice (input.spec.ts)": [
+  "input tests FileChooser.accept should error on read of non-existent files (input.spec.js)": [
     "SKIP"
   ],
-  "input tests FileChooser.cancel should cancel dialog (input.spec.ts)": [
+  "input tests FileChooser.accept should fail when accepting file chooser twice (input.spec.js)": [
     "SKIP"
   ],
-  "input tests FileChooser.cancel should fail when canceling file chooser twice (input.spec.ts)": [
+  "input tests FileChooser.cancel should cancel dialog (input.spec.js)": [
     "SKIP"
   ],
-  "input tests FileChooser.isMultiple should work for single file pick (input.spec.ts)": [
+  "input tests FileChooser.cancel should fail when canceling file chooser twice (input.spec.js)": [
     "SKIP"
   ],
-  "input tests FileChooser.isMultiple should work for \"multiple\" (input.spec.ts)": [
+  "input tests FileChooser.isMultiple should work for single file pick (input.spec.js)": [
     "SKIP"
   ],
-  "input tests FileChooser.isMultiple should work for \"webkitdirectory\" (input.spec.ts)": [
+  "input tests FileChooser.isMultiple should work for \"multiple\" (input.spec.js)": [
     "SKIP"
   ],
-  "JSHandle Page.evaluateHandle should work (jshandle.spec.ts)": [
+  "input tests FileChooser.isMultiple should work for \"webkitdirectory\" (input.spec.js)": [
+    "SKIP"
+  ],
+  "JSHandle Page.evaluateHandle should work (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle Page.evaluateHandle should accept object handle as an argument (jshandle.spec.ts)": [
+  "JSHandle Page.evaluateHandle should return the RemoteObject (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle Page.evaluateHandle should accept object handle to primitive types (jshandle.spec.ts)": [
+  "JSHandle Page.evaluateHandle should accept object handle as an argument (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle Page.evaluateHandle should warn on nested object handles (jshandle.spec.ts)": [
+  "JSHandle Page.evaluateHandle should accept object handle to primitive types (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle Page.evaluateHandle should accept object handle to unserializable value (jshandle.spec.ts)": [
+  "JSHandle Page.evaluateHandle should warn about recursive objects (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle Page.evaluateHandle should use the same JS wrappers (jshandle.spec.ts)": [
+  "JSHandle Page.evaluateHandle should accept object handle to unserializable value (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle JSHandle.getProperty should work (jshandle.spec.ts)": [
+  "JSHandle Page.evaluateHandle should use the same JS wrappers (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle JSHandle.getProperty should return a JSHandle even if the property does not exist (jshandle.spec.ts)": [
+  "JSHandle JSHandle.getProperty should work (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle JSHandle.jsonValue should work (jshandle.spec.ts)": [
+  "JSHandle JSHandle.jsonValue should work (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle JSHandle.jsonValue works with jsonValues that are not objects (jshandle.spec.ts)": [
+  "JSHandle JSHandle.jsonValue works with jsonValues that are not objects (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle JSHandle.jsonValue works with jsonValues that are primitives (jshandle.spec.ts)": [
+  "JSHandle JSHandle.jsonValue works with jsonValues that are primitives (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle JSHandle.jsonValue should not work with dates (jshandle.spec.ts)": [
+  "JSHandle JSHandle.jsonValue should not work with dates (jshandle.spec.js)": [
     "FAIL"
   ],
-  "JSHandle JSHandle.jsonValue should throw for circular objects (jshandle.spec.ts)": [
+  "JSHandle JSHandle.jsonValue should throw for circular objects (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle JSHandle.getProperties should work (jshandle.spec.ts)": [
+  "JSHandle JSHandle.getProperties should work (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle JSHandle.getProperties should return even non-own properties (jshandle.spec.ts)": [
+  "JSHandle JSHandle.getProperties should return even non-own properties (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle JSHandle.asElement should work (jshandle.spec.ts)": [
+  "JSHandle JSHandle.asElement should work (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle JSHandle.asElement should return null for non-elements (jshandle.spec.ts)": [
+  "JSHandle JSHandle.asElement should return null for non-elements (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle JSHandle.asElement should return ElementHandle for TextNodes (jshandle.spec.ts)": [
+  "JSHandle JSHandle.asElement should return ElementHandle for TextNodes (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle JSHandle.toString should work for primitives (jshandle.spec.ts)": [
+  "JSHandle JSHandle.toString should work for primitives (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle JSHandle.toString should work for complicated objects (jshandle.spec.ts)": [
+  "JSHandle JSHandle.toString should work for complicated objects (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle JSHandle.toString should work with different subtypes (jshandle.spec.ts)": [
+  "JSHandle JSHandle.toString should work with different subtypes (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle JSHandle.clickablePoint should work (jshandle.spec.ts)": [
+  "JSHandle JSHandle.clickablePoint should work (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle JSHandle.clickablePoint should work for iframes (jshandle.spec.ts)": [
+  "JSHandle JSHandle.clickablePoint should work for iframes (jshandle.spec.js)": [
     "PASS"
   ],
-  "JSHandle JSHandle.click should work (jshandle.spec.ts)": [
+  "JSHandle JSHandle.click should work (jshandle.spec.js)": [
     "FAIL"
   ],
-  "Keyboard should type into a textarea (keyboard.spec.ts)": [
+  "Keyboard should type into a textarea (keyboard.spec.js)": [
     "PASS"
   ],
-  "Keyboard should press the metaKey (keyboard.spec.ts)": [
+  "Keyboard should press the metaKey (keyboard.spec.js)": [
     "FAIL"
   ],
-  "Keyboard should move with the arrow keys (keyboard.spec.ts)": [
+  "Keyboard should move with the arrow keys (keyboard.spec.js)": [
     "PASS"
   ],
-  "Keyboard should send a character with ElementHandle.press (keyboard.spec.ts)": [
+  "Keyboard should send a character with ElementHandle.press (keyboard.spec.js)": [
     "PASS"
   ],
-  "Keyboard ElementHandle.press should support |text| option (keyboard.spec.ts)": [
+  "Keyboard ElementHandle.press should support |text| option (keyboard.spec.js)": [
     "FAIL"
   ],
-  "Keyboard should send a character with sendCharacter (keyboard.spec.ts)": [
+  "Keyboard should send a character with sendCharacter (keyboard.spec.js)": [
     "FAIL"
   ],
-  "Keyboard should report shiftKey (keyboard.spec.ts)": [
+  "Keyboard should report shiftKey (keyboard.spec.js)": [
     "PASS", "FAIL"
   ],
-  "Keyboard should report multiple modifiers (keyboard.spec.ts)": [
+  "Keyboard should report multiple modifiers (keyboard.spec.js)": [
     "PASS"
   ],
-  "Keyboard should send proper codes while typing (keyboard.spec.ts)": [
+  "Keyboard should send proper codes while typing (keyboard.spec.js)": [
     "PASS"
   ],
-  "Keyboard should send proper codes while typing with shift (keyboard.spec.ts)": [
+  "Keyboard should send proper codes while typing with shift (keyboard.spec.js)": [
     "PASS"
   ],
-  "Keyboard should not type canceled events (keyboard.spec.ts)": [
+  "Keyboard should not type canceled events (keyboard.spec.js)": [
     "PASS"
   ],
-  "Keyboard should specify repeat property (keyboard.spec.ts)": [
+  "Keyboard should specify repeat property (keyboard.spec.js)": [
     "FAIL"
   ],
-  "Keyboard should type all kinds of characters (keyboard.spec.ts)": [
+  "Keyboard should type all kinds of characters (keyboard.spec.js)": [
     "FAIL"
   ],
-  "Keyboard should specify location (keyboard.spec.ts)": [
+  "Keyboard should specify location (keyboard.spec.js)": [
     "FAIL"
   ],
-  "Keyboard should throw on unknown keys (keyboard.spec.ts)": [
+  "Keyboard should throw on unknown keys (keyboard.spec.js)": [
     "PASS"
   ],
-  "Keyboard should type emoji (keyboard.spec.ts)": [
+  "Keyboard should type emoji (keyboard.spec.js)": [
     "FAIL"
   ],
-  "Keyboard should type emoji into an iframe (keyboard.spec.ts)": [
+  "Keyboard should type emoji into an iframe (keyboard.spec.js)": [
     "FAIL"
   ],
-  "Keyboard should press the meta key (keyboard.spec.ts)": [
+  "Keyboard should press the meta key (keyboard.spec.js)": [
     "PASS", "FAIL"
   ],
-  "Launcher specs Puppeteer BrowserFetcher should download and extract chrome linux binary (launcher.spec.ts)": [
+  "Launcher specs Puppeteer BrowserFetcher should download and extract chrome linux binary (launcher.spec.js)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer BrowserFetcher should download and extract firefox linux binary (launcher.spec.ts)": [
+  "Launcher specs Puppeteer BrowserFetcher should download and extract firefox linux binary (launcher.spec.js)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer Browser.disconnect should reject navigation when browser closes (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Browser.disconnect should reject navigation when browser closes (launcher.spec.js)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer Browser.disconnect should reject waitForSelector when browser closes (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Browser.disconnect should reject waitForSelector when browser closes (launcher.spec.js)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer Browser.close should terminate network waiters (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Browser.close should terminate network waiters (launcher.spec.js)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch should reject all promises when browser is closed (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch should reject all promises when browser is closed (launcher.spec.js)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch should reject if executable path is invalid (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch should reject if executable path is invalid (launcher.spec.js)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch userDataDir option (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch userDataDir option (launcher.spec.js)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch userDataDir option restores preferences (launcher.spec.ts)": [
-    "PASS"
-  ],
-  "Launcher specs Puppeteer Puppeteer.launch userDataDir argument (launcher.spec.ts)": [
-    "PASS"
-  ],
-  "Launcher specs Puppeteer Puppeteer.launch userDataDir option should restore state (launcher.spec.ts)": [
-    "PASS"
-  ],
-  "Launcher specs Puppeteer Puppeteer.launch userDataDir option should restore cookies (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch tmp profile should be cleaned up (launcher.spec.js)": [
     "SKIP"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch should return the default arguments (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch userDataDir option restores preferences (launcher.spec.js)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch should report the correct product (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch userDataDir argument (launcher.spec.js)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch should work with no default arguments (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch userDataDir argument with non-existent dir (launcher.spec.js)": [
+    "SKIP"
+  ],
+  "Launcher specs Puppeteer Puppeteer.launch userDataDir option should restore state (launcher.spec.js)": [
+    "PASS"
+  ],
+  "Launcher specs Puppeteer Puppeteer.launch userDataDir option should restore cookies (launcher.spec.js)": [
+    "SKIP"
+  ],
+  "Launcher specs Puppeteer Puppeteer.launch should return the default arguments (launcher.spec.js)": [
+    "PASS"
+  ],
+  "Launcher specs Puppeteer Puppeteer.launch should report the correct product (launcher.spec.js)": [
+    "PASS"
+  ],
+  "Launcher specs Puppeteer Puppeteer.launch should work with no default arguments (launcher.spec.js)": [
     "FAIL", "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch should filter out ignored default arguments in Chrome (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch should filter out ignored default arguments in Chrome (launcher.spec.js)": [
     "SKIP"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch should filter out ignored default argument in Firefox (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch should filter out ignored default argument in Firefox (launcher.spec.js)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch should have default URL when launching browser (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch should have default URL when launching browser (launcher.spec.js)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch should have custom URL when launching browser (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch should have custom URL when launching browser (launcher.spec.js)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch should pass the timeout parameter to browser.waitForTarget (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch should pass the timeout parameter to browser.waitForTarget (launcher.spec.js)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch should set the default viewport (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch should work with timeout = 0 (launcher.spec.js)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch should disable the default viewport (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch should set the default viewport (launcher.spec.js)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch should take fullPage screenshots when defaultViewport is null (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch should disable the default viewport (launcher.spec.js)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch should set the debugging port (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch should take fullPage screenshots when defaultViewport is null (launcher.spec.js)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch should not allow setting debuggingPort and pipe (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch should set the debugging port (launcher.spec.js)": [
     "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch should launch Chrome properly with --no-startup-window and waitForInitialPage=false (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch should not allow setting debuggingPort and pipe (launcher.spec.js)": [
+    "PASS"
+  ],
+  "Launcher specs Puppeteer Puppeteer.launch should launch Chrome properly with --no-startup-window and waitForInitialPage=false (launcher.spec.js)": [
     "SKIP"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch should be able to launch Chrome (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch should be able to launch Chrome (launcher.spec.js)": [
     "SKIP"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch falls back to launching chrome if there is an unknown product but logs a warning (launcher.spec.ts)": [
-    "SKIP"
-  ],
-  "Launcher specs Puppeteer Puppeteer.launch should be able to launch Firefox (launcher.spec.ts)": [
-    "SKIP"
-  ],
-  "Launcher specs Puppeteer Puppeteer.connect should be able to connect multiple times to the same browser (launcher.spec.ts)": [
-    "PASS"
-  ],
-  "Launcher specs Puppeteer Puppeteer.connect should be able to close remote browser (launcher.spec.ts)": [
-    "PASS"
-  ],
-  "Launcher specs Puppeteer Puppeteer.connect should support ignoreHTTPSErrors option (launcher.spec.ts)": [
-    "PASS"
-  ],
-  "Launcher specs Puppeteer Puppeteer.connect should support targetFilter option (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch should be able to launch Firefox (launcher.spec.js)": [
     "FAIL"
   ],
-  "Launcher specs Puppeteer Puppeteer.connect should be able to reconnect to a disconnected browser (launcher.spec.ts)": [
-    "FAIL"
+  "Launcher specs Puppeteer Puppeteer.connect should be able to connect multiple times to the same browser (launcher.spec.js)": [
+    "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.connect should be able to connect to the same page simultaneously (launcher.spec.ts)": [
-    "FAIL"
+  "Launcher specs Puppeteer Puppeteer.connect should be able to close remote browser (launcher.spec.js)": [
+    "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.connect should be able to reconnect (launcher.spec.ts)": [
-    "FAIL"
+  "Launcher specs Puppeteer Puppeteer.connect should be able to connect to a browser with no page targets (launcher.spec.js)": [
+    "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.executablePath should work (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.connect should support ignoreHTTPSErrors option (launcher.spec.js)": [
+    "PASS"
+  ],
+  "Launcher specs Puppeteer Puppeteer.connect should support targetFilter option in puppeteer.launch (launcher.spec.js)": [
+    "PASS"
+  ],
+  "Launcher specs Puppeteer Puppeteer.connect should support targetFilter option (launcher.spec.js)": [
+    "PASS"
+  ],
+  "Launcher specs Puppeteer Puppeteer.connect should be able to reconnect to a disconnected browser (launcher.spec.js)": [
+    "PASS"
+  ],
+  "Launcher specs Puppeteer Puppeteer.connect should be able to connect to the same page simultaneously (launcher.spec.js)": [
+    "PASS", "TIMEOUT"
+  ],
+  "Launcher specs Puppeteer Puppeteer.connect should be able to reconnect (launcher.spec.js)": [
+    "PASS"
+  ],
+  "Launcher specs Puppeteer Puppeteer.executablePath should work (launcher.spec.js)": [
     "SKIP"
   ],
-  "Launcher specs Puppeteer Puppeteer.executablePath returns executablePath for channel (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.executablePath returns executablePath for channel (launcher.spec.js)": [
     "PASS"
   ],
-  "Launcher specs Browser target events should work (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.executablePath when PUPPETEER_EXECUTABLE_PATH is set its value is returned (launcher.spec.js)": [
+    "PASS"
+  ],
+  "Launcher specs Puppeteer Puppeteer.executablePath when the product is chrome, platform is not darwin, and arch is arm64 and the executable exists returns /usr/bin/chromium-browser (launcher.spec.js)": [
+    "SKIP"
+  ],
+  "Launcher specs Puppeteer Puppeteer.executablePath when the product is chrome, platform is not darwin, and arch is arm64 and the executable exists and PUPPETEER_EXECUTABLE_PATH is set its value is returned (launcher.spec.js)": [
+    "PASS"
+  ],
+  "Launcher specs Puppeteer Puppeteer.executablePath when the product is chrome, platform is not darwin, and arch is arm64 and the executable does not exist does not return /usr/bin/chromium-browser (launcher.spec.js)": [
+    "SKIP"
+  ],
+  "Launcher specs Browser target events should work (launcher.spec.js)": [
     "FAIL"
   ],
-  "Launcher specs Browser.Events.disconnected should be emitted when: browser gets closed, disconnected or underlying websocket gets closed (launcher.spec.ts)": [
+  "Launcher specs Browser.Events.disconnected should be emitted when: browser gets closed, disconnected or underlying websocket gets closed (launcher.spec.js)": [
     "PASS"
   ],
-  "Mouse should click the document (mouse.spec.ts)": [
+  "Mouse should click the document (mouse.spec.js)": [
     "PASS"
   ],
-  "Mouse should resize the textarea (mouse.spec.ts)": [
+  "Mouse should resize the textarea (mouse.spec.js)": [
     "PASS"
   ],
-  "Mouse should select the text with mouse (mouse.spec.ts)": [
+  "Mouse should select the text with mouse (mouse.spec.js)": [
     "PASS"
   ],
-  "Mouse should trigger hover state (mouse.spec.ts)": [
+  "Mouse should trigger hover state (mouse.spec.js)": [
     "PASS", "FAIL"
   ],
-  "Mouse should trigger hover state with removed window.Node (mouse.spec.ts)": [
+  "Mouse should trigger hover state with removed window.Node (mouse.spec.js)": [
     "FAIL"
   ],
-  "Mouse should set modifier keys on click (mouse.spec.ts)": [
+  "Mouse should set modifier keys on click (mouse.spec.js)": [
     "PASS"
   ],
-  "Mouse should send mouse wheel events (mouse.spec.ts)": [
+  "Mouse should send mouse wheel events (mouse.spec.js)": [
     "FAIL"
   ],
-  "Mouse should tween mouse movement (mouse.spec.ts)": [
+  "Mouse should tween mouse movement (mouse.spec.js)": [
     "PASS", "FAIL"
   ],
-  "Mouse should work with mobile viewports and cross process navigations (mouse.spec.ts)": [
+  "Mouse should work with mobile viewports and cross process navigations (mouse.spec.js)": [
     "PASS"
   ],
-  "navigation Page.goto should work (navigation.spec.ts)": [
+  "navigation Page.goto should work (navigation.spec.js)": [
     "PASS"
   ],
-  "navigation Page.goto should work with anchor navigation (navigation.spec.ts)": [
+  "navigation Page.goto should work with anchor navigation (navigation.spec.js)": [
     "PASS"
   ],
-  "navigation Page.goto should work with redirects (navigation.spec.ts)": [
+  "navigation Page.goto should work with redirects (navigation.spec.js)": [
     "PASS"
   ],
-  "navigation Page.goto should navigate to about:blank (navigation.spec.ts)": [
+  "navigation Page.goto should navigate to about:blank (navigation.spec.js)": [
     "PASS"
   ],
-  "navigation Page.goto should return response when page changes its URL after load (navigation.spec.ts)": [
+  "navigation Page.goto should return response when page changes its URL after load (navigation.spec.js)": [
     "PASS"
   ],
-  "navigation Page.goto should work with subframes return 204 (navigation.spec.ts)": [
+  "navigation Page.goto should work with subframes return 204 (navigation.spec.js)": [
+    "PASS"
+  ],
+  "navigation Page.goto should fail when server returns 204 (navigation.spec.js)": [
     "TIMEOUT"
   ],
-  "navigation Page.goto should fail when server returns 204 (navigation.spec.ts)": [
+  "navigation Page.goto should navigate to empty page with domcontentloaded (navigation.spec.js)": [
+    "PASS"
+  ],
+  "navigation Page.goto should work when page calls history API in beforeunload (navigation.spec.js)": [
+    "PASS"
+  ],
+  "navigation Page.goto should navigate to empty page with networkidle0 (navigation.spec.js)": [
     "TIMEOUT"
   ],
-  "navigation Page.goto should navigate to empty page with domcontentloaded (navigation.spec.ts)": [
-    "PASS"
-  ],
-  "navigation Page.goto should work when page calls history API in beforeunload (navigation.spec.ts)": [
-    "PASS"
-  ],
-  "navigation Page.goto should navigate to empty page with networkidle0 (navigation.spec.ts)": [
+  "navigation Page.goto should navigate to empty page with networkidle2 (navigation.spec.js)": [
     "TIMEOUT"
   ],
-  "navigation Page.goto should navigate to empty page with networkidle2 (navigation.spec.ts)": [
+  "navigation Page.goto should fail when navigating to bad url (navigation.spec.js)": [
+    "FAIL"
+  ],
+  "navigation Page.goto should fail when navigating to bad SSL (navigation.spec.js)": [
+    "FAIL"
+  ],
+  "navigation Page.goto should fail when navigating to bad SSL after redirects (navigation.spec.js)": [
+    "PASS"
+  ],
+  "navigation Page.goto should throw if networkidle is passed as an option (navigation.spec.js)": [
+    "PASS"
+  ],
+  "navigation Page.goto should fail when main resources failed to load (navigation.spec.js)": [
+    "PASS"
+  ],
+  "navigation Page.goto should fail when exceeding maximum navigation timeout (navigation.spec.js)": [
+    "PASS"
+  ],
+  "navigation Page.goto should fail when exceeding default maximum navigation timeout (navigation.spec.js)": [
+    "PASS"
+  ],
+  "navigation Page.goto should fail when exceeding default maximum timeout (navigation.spec.js)": [
+    "PASS"
+  ],
+  "navigation Page.goto should prioritize default navigation timeout over default timeout (navigation.spec.js)": [
+    "PASS"
+  ],
+  "navigation Page.goto should disable timeout when its set to 0 (navigation.spec.js)": [
+    "PASS"
+  ],
+  "navigation Page.goto should work when navigating to valid url (navigation.spec.js)": [
+    "PASS"
+  ],
+  "navigation Page.goto should work when navigating to data url (navigation.spec.js)": [
+    "FAIL"
+  ],
+  "navigation Page.goto should work when navigating to 404 (navigation.spec.js)": [
+    "PASS"
+  ],
+  "navigation Page.goto should return last response in redirect chain (navigation.spec.js)": [
+    "PASS"
+  ],
+  "navigation Page.goto should wait for network idle to succeed navigation (navigation.spec.js)": [
     "TIMEOUT"
   ],
-  "navigation Page.goto should fail when navigating to bad url (navigation.spec.ts)": [
+  "navigation Page.goto should not leak listeners during navigation (navigation.spec.js)": [
+    "PASS"
+  ],
+  "navigation Page.goto should not leak listeners during bad navigation (navigation.spec.js)": [
+    "PASS"
+  ],
+  "navigation Page.goto should not leak listeners during navigation of 11 pages (navigation.spec.js)": [
+    "PASS"
+  ],
+  "navigation Page.goto should navigate to dataURL and fire dataURL requests (navigation.spec.js)": [
     "FAIL"
   ],
-  "navigation Page.goto should fail when navigating to bad SSL (navigation.spec.ts)": [
+  "navigation Page.goto should navigate to URL with hash and fire requests without hash (navigation.spec.js)": [
+    "PASS"
+  ],
+  "navigation Page.goto should work with self requesting page (navigation.spec.js)": [
+    "PASS"
+  ],
+  "navigation Page.goto should fail when navigating and show the url at the error message (navigation.spec.js)": [
+    "PASS"
+  ],
+  "navigation Page.goto should send referer (navigation.spec.js)": [
     "FAIL"
   ],
-  "navigation Page.goto should fail when navigating to bad SSL after redirects (navigation.spec.ts)": [
+  "navigation Page.waitForNavigation should work (navigation.spec.js)": [
     "PASS"
   ],
-  "navigation Page.goto should throw if networkidle is passed as an option (navigation.spec.ts)": [
+  "navigation Page.waitForNavigation should work with both domcontentloaded and load (navigation.spec.js)": [
     "PASS"
   ],
-  "navigation Page.goto should fail when main resources failed to load (navigation.spec.ts)": [
+  "navigation Page.waitForNavigation should work with clicking on anchor links (navigation.spec.js)": [
     "PASS"
   ],
-  "navigation Page.goto should fail when exceeding maximum navigation timeout (navigation.spec.ts)": [
-    "PASS"
-  ],
-  "navigation Page.goto should fail when exceeding default maximum navigation timeout (navigation.spec.ts)": [
-    "PASS"
-  ],
-  "navigation Page.goto should fail when exceeding default maximum timeout (navigation.spec.ts)": [
-    "PASS"
-  ],
-  "navigation Page.goto should prioritize default navigation timeout over default timeout (navigation.spec.ts)": [
-    "PASS"
-  ],
-  "navigation Page.goto should disable timeout when its set to 0 (navigation.spec.ts)": [
-    "PASS"
-  ],
-  "navigation Page.goto should work when navigating to valid url (navigation.spec.ts)": [
-    "PASS"
-  ],
-  "navigation Page.goto should work when navigating to data url (navigation.spec.ts)": [
-    "FAIL"
-  ],
-  "navigation Page.goto should work when navigating to 404 (navigation.spec.ts)": [
-    "PASS"
-  ],
-  "navigation Page.goto should return last response in redirect chain (navigation.spec.ts)": [
-    "PASS"
-  ],
-  "navigation Page.goto should wait for network idle to succeed navigation (navigation.spec.ts)": [
-    "TIMEOUT"
-  ],
-  "navigation Page.goto should not leak listeners during navigation (navigation.spec.ts)": [
-    "PASS"
-  ],
-  "navigation Page.goto should not leak listeners during bad navigation (navigation.spec.ts)": [
-    "PASS"
-  ],
-  "navigation Page.goto should not leak listeners during navigation of 11 pages (navigation.spec.ts)": [
-    "PASS"
-  ],
-  "navigation Page.goto should navigate to dataURL and fire dataURL requests (navigation.spec.ts)": [
-    "FAIL"
-  ],
-  "navigation Page.goto should navigate to URL with hash and fire requests without hash (navigation.spec.ts)": [
-    "PASS"
-  ],
-  "navigation Page.goto should work with self requesting page (navigation.spec.ts)": [
-    "PASS"
-  ],
-  "navigation Page.goto should fail when navigating and show the url at the error message (navigation.spec.ts)": [
-    "PASS"
-  ],
-  "navigation Page.goto should send referer (navigation.spec.ts)": [
-    "FAIL"
-  ],
-  "navigation Page.waitForNavigation should work (navigation.spec.ts)": [
-    "PASS"
-  ],
-  "navigation Page.waitForNavigation should work with both domcontentloaded and load (navigation.spec.ts)": [
-    "PASS"
-  ],
-  "navigation Page.waitForNavigation should work with clicking on anchor links (navigation.spec.ts)": [
-    "PASS"
-  ],
-  "navigation Page.waitForNavigation should work with history.pushState() (navigation.spec.ts)": [
+  "navigation Page.waitForNavigation should work with history.pushState() (navigation.spec.js)": [
     "FAIL", "TIMEOUT"
   ],
-  "navigation Page.waitForNavigation should work with history.replaceState() (navigation.spec.ts)": [
+  "navigation Page.waitForNavigation should work with history.replaceState() (navigation.spec.js)": [
     "FAIL", "TIMEOUT"
   ],
-  "navigation Page.waitForNavigation should work with DOM history.back()/history.forward() (navigation.spec.ts)": [
+  "navigation Page.waitForNavigation should work with DOM history.back()/history.forward() (navigation.spec.js)": [
     "FAIL", "TIMEOUT"
   ],
-  "navigation Page.waitForNavigation should work when subframe issues window.stop() (navigation.spec.ts)": [
+  "navigation Page.waitForNavigation should work when subframe issues window.stop() (navigation.spec.js)": [
     "TIMEOUT"
   ],
-  "navigation Page.goBack should work (navigation.spec.ts)": [
+  "navigation Page.goBack should work (navigation.spec.js)": [
     "PASS"
   ],
-  "navigation Page.goBack should work with HistoryAPI (navigation.spec.ts)": [
+  "navigation Page.goBack should work with HistoryAPI (navigation.spec.js)": [
     "FAIL"
   ],
-  "navigation Frame.goto should navigate subframes (navigation.spec.ts)": [
+  "navigation Frame.goto should navigate subframes (navigation.spec.js)": [
     "FAIL"
   ],
-  "navigation Frame.goto should reject when frame detaches (navigation.spec.ts)": [
+  "navigation Frame.goto should reject when frame detaches (navigation.spec.js)": [
     "TIMEOUT"
   ],
-  "navigation Frame.goto should return matching responses (navigation.spec.ts)": [
+  "navigation Frame.goto should return matching responses (navigation.spec.js)": [
     "FAIL"
   ],
-  "navigation Frame.waitForNavigation should work (navigation.spec.ts)": [
+  "navigation Frame.waitForNavigation should work (navigation.spec.js)": [
     "FAIL"
   ],
-  "navigation Frame.waitForNavigation should fail when frame detaches (navigation.spec.ts)": [
+  "navigation Frame.waitForNavigation should fail when frame detaches (navigation.spec.js)": [
     "TIMEOUT"
   ],
-  "navigation Page.reload should work (navigation.spec.ts)": [
+  "navigation Page.reload should work (navigation.spec.js)": [
     "PASS"
   ],
-  "network Page.Events.Request should fire for navigation requests (network.spec.ts)": [
+  "network Page.Events.Request should fire for navigation requests (network.spec.js)": [
     "PASS"
   ],
-  "network Page.Events.Request should fire for iframes (network.spec.ts)": [
+  "network Page.Events.Request should fire for iframes (network.spec.js)": [
     "PASS"
   ],
-  "network Page.Events.Request should fire for fetches (network.spec.ts)": [
+  "network Page.Events.Request should fire for fetches (network.spec.js)": [
     "PASS"
   ],
-  "network Request.frame should work for main frame navigation request (network.spec.ts)": [
+  "network Request.frame should work for main frame navigation request (network.spec.js)": [
     "PASS"
   ],
-  "network Request.frame should work for subframe navigation request (network.spec.ts)": [
+  "network Request.frame should work for subframe navigation request (network.spec.js)": [
     "PASS"
   ],
-  "network Request.frame should work for fetch requests (network.spec.ts)": [
+  "network Request.frame should work for fetch requests (network.spec.js)": [
     "PASS"
   ],
-  "network Request.headers should work (network.spec.ts)": [
+  "network Request.headers should define Chrome as user agent header (network.spec.js)": [
+    "SKIP"
+  ],
+  "network Request.headers should define Firefox as user agent header (network.spec.js)": [
     "PASS"
   ],
-  "network Response.headers should work (network.spec.ts)": [
+  "network Response.headers should work (network.spec.js)": [
     "PASS"
   ],
-  "network Request.initiator shoud return the initiator (network.spec.ts)": [
+  "network Request.initiator should return the initiator (network.spec.js)": [
     "FAIL"
   ],
-  "network Response.fromCache should return |false| for non-cached content (network.spec.ts)": [
+  "network Response.fromCache should return |false| for non-cached content (network.spec.js)": [
     "PASS"
   ],
-  "network Response.fromCache should work (network.spec.ts)": [
+  "network Response.fromCache should work (network.spec.js)": [
     "FAIL"
   ],
-  "network Response.fromServiceWorker should return |false| for non-service-worker content (network.spec.ts)": [
+  "network Response.fromServiceWorker should return |false| for non-service-worker content (network.spec.js)": [
     "PASS"
   ],
-  "network Response.fromServiceWorker Response.fromServiceWorker (network.spec.ts)": [
+  "network Response.fromServiceWorker Response.fromServiceWorker (network.spec.js)": [
     "TIMEOUT"
   ],
-  "network Request.postData should work (network.spec.ts)": [
+  "network Request.postData should work (network.spec.js)": [
     "FAIL"
   ],
-  "network Request.postData should be |undefined| when there is no post data (network.spec.ts)": [
+  "network Request.postData should be |undefined| when there is no post data (network.spec.js)": [
     "PASS"
   ],
-  "network Response.text should work (network.spec.ts)": [
+  "network Response.text should work (network.spec.js)": [
     "TIMEOUT"
   ],
-  "network Response.text should return uncompressed text (network.spec.ts)": [
+  "network Response.text should return uncompressed text (network.spec.js)": [
     "TIMEOUT"
   ],
-  "network Response.text should throw when requesting body of redirected response (network.spec.ts)": [
+  "network Response.text should throw when requesting body of redirected response (network.spec.js)": [
     "FAIL"
   ],
-  "network Response.text should wait until response completes (network.spec.ts)": [
+  "network Response.text should wait until response completes (network.spec.js)": [
     "TIMEOUT"
   ],
-  "network Response.json should work (network.spec.ts)": [
+  "network Response.json should work (network.spec.js)": [
     "TIMEOUT"
   ],
-  "network Response.buffer should work (network.spec.ts)": [
+  "network Response.buffer should work (network.spec.js)": [
     "FAIL", "TIMEOUT"
   ],
-  "network Response.buffer should work with compression (network.spec.ts)": [
+  "network Response.buffer should work with compression (network.spec.js)": [
     "FAIL", "TIMEOUT"
   ],
-  "network Response.buffer should throw if the response does not have a body (network.spec.ts)": [
+  "network Response.buffer should throw if the response does not have a body (network.spec.js)": [
     "TIMEOUT"
   ],
-  "network Response.statusText should work (network.spec.ts)": [
+  "network Response.statusText should work (network.spec.js)": [
     "PASS"
   ],
-  "network Response.statusText handles missing status text (network.spec.ts)": [
+  "network Response.statusText handles missing status text (network.spec.js)": [
     "PASS"
   ],
-  "network Network Events Page.Events.Request (network.spec.ts)": [
+  "network Response.timing returns timing information (network.spec.js)": [
+    "FAIL"
+  ],
+  "network Network Events Page.Events.Request (network.spec.js)": [
     "FAIL", "PASS"
   ],
-  "network Network Events Page.Events.RequestServedFromCache (network.spec.ts)": [
+  "network Network Events Page.Events.RequestServedFromCache (network.spec.js)": [
     "FAIL"
   ],
-  "network Network Events Page.Events.Response (network.spec.ts)": [
+  "network Network Events Page.Events.Response (network.spec.js)": [
     "PASS", "FAIL"
   ],
-  "network Network Events Page.Events.RequestFailed (network.spec.ts)": [
+  "network Network Events Page.Events.RequestFailed (network.spec.js)": [
     "FAIL"
   ],
-  "network Network Events Page.Events.RequestFinished (network.spec.ts)": [
+  "network Network Events Page.Events.RequestFinished (network.spec.js)": [
     "FAIL"
   ],
-  "network Network Events should fire events in proper order (network.spec.ts)": [
+  "network Network Events should fire events in proper order (network.spec.js)": [
     "FAIL"
   ],
-  "network Network Events should support redirects (network.spec.ts)": [
+  "network Network Events should support redirects (network.spec.js)": [
     "FAIL"
   ],
-  "network Request.isNavigationRequest should work (network.spec.ts)": [
+  "network Request.isNavigationRequest should work (network.spec.js)": [
     "FAIL"
   ],
-  "network Request.isNavigationRequest should work with request interception (network.spec.ts)": [
+  "network Request.isNavigationRequest should work with request interception (network.spec.js)": [
     "FAIL"
   ],
-  "network Request.isNavigationRequest should work when navigating to image (network.spec.ts)": [
+  "network Request.isNavigationRequest should work when navigating to image (network.spec.js)": [
     "SKIP"
   ],
-  "network Page.setExtraHTTPHeaders should work (network.spec.ts)": [
+  "network Page.setExtraHTTPHeaders should work (network.spec.js)": [
     "FAIL"
   ],
-  "network Page.setExtraHTTPHeaders should throw for non-string header values (network.spec.ts)": [
+  "network Page.setExtraHTTPHeaders should throw for non-string header values (network.spec.js)": [
     "PASS"
   ],
-  "network Page.authenticate should work (network.spec.ts)": [
+  "network Page.authenticate should work (network.spec.js)": [
     "TIMEOUT"
   ],
-  "network Page.authenticate should fail if wrong credentials (network.spec.ts)": [
+  "network Page.authenticate should fail if wrong credentials (network.spec.js)": [
     "FAIL"
   ],
-  "network Page.authenticate should allow disable authentication (network.spec.ts)": [
+  "network Page.authenticate should allow disable authentication (network.spec.js)": [
     "FAIL"
   ],
-  "network Page.authenticate should not disable caching (network.spec.ts)": [
+  "network Page.authenticate should not disable caching (network.spec.js)": [
     "FAIL"
   ],
-  "network raw network headers Same-origin set-cookie navigation (network.spec.ts)": [
+  "network raw network headers Same-origin set-cookie navigation (network.spec.js)": [
     "PASS"
   ],
-  "network raw network headers Same-origin set-cookie subresource (network.spec.ts)": [
+  "network raw network headers Same-origin set-cookie subresource (network.spec.js)": [
     "PASS",
     "FAIL"
   ],
-  "network raw network headers Cross-origin set-cookie (network.spec.ts)": [
+  "network raw network headers Cross-origin set-cookie (network.spec.js)": [
     "PASS",
     "FAIL"
   ],
-  "Page Page.close should reject all promises when page is closed (page.spec.ts)": [
+  "Page Page.close should reject all promises when page is closed (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.close should not be visible in browser.pages (page.spec.ts)": [
+  "Page Page.close should not be visible in browser.pages (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.close should run beforeunload if asked for (page.spec.ts)": [
+  "Page Page.close should run beforeunload if asked for (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.close should *not* run beforeunload by default (page.spec.ts)": [
+  "Page Page.close should *not* run beforeunload by default (page.spec.js)": [
     "TIMEOUT"
   ],
-  "Page Page.close should set the page close state (page.spec.ts)": [
+  "Page Page.close should set the page close state (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.close should terminate network waiters (page.spec.ts)": [
+  "Page Page.close should terminate network waiters (page.spec.js)": [
     "TIMEOUT"
   ],
-  "Page Page.Events.Load should fire when expected (page.spec.ts)": [
+  "Page Page.Events.Load should fire when expected (page.spec.js)": [
     "PASS"
   ],
-  "Page removing and adding event handlers should correctly fire event handlers as they are added and then removed (page.spec.ts)": [
+  "Page removing and adding event handlers should correctly fire event handlers as they are added and then removed (page.spec.js)": [
     "PASS"
   ],
-  "Page removing and adding event handlers should correctly added and removed request events (page.spec.ts)": [
+  "Page removing and adding event handlers should correctly added and removed request events (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.Events.error should throw when page crashes (page.spec.ts)": [
+  "Page Page.Events.error should throw when page crashes (page.spec.js)": [
     "TIMEOUT"
   ],
-  "Page Page.Events.Popup should work (page.spec.ts)": [
+  "Page Page.Events.Popup should work (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.Events.Popup should work with noopener (page.spec.ts)": [
+  "Page Page.Events.Popup should work with noopener (page.spec.js)": [
     "TIMEOUT"
   ],
-  "Page Page.Events.Popup should work with clicking target=_blank and without rel=opener (page.spec.ts)": [
+  "Page Page.Events.Popup should work with clicking target=_blank and without rel=opener (page.spec.js)": [
     "TIMEOUT"
   ],
-  "Page Page.Events.Popup should work with clicking target=_blank and with rel=opener (page.spec.ts)": [
+  "Page Page.Events.Popup should work with clicking target=_blank and with rel=opener (page.spec.js)": [
     "TIMEOUT"
   ],
-  "Page Page.Events.Popup should work with fake-clicking target=_blank and rel=noopener (page.spec.ts)": [
+  "Page Page.Events.Popup should work with fake-clicking target=_blank and rel=noopener (page.spec.js)": [
     "TIMEOUT"
   ],
-  "Page Page.Events.Popup should work with clicking target=_blank and rel=noopener (page.spec.ts)": [
+  "Page Page.Events.Popup should work with clicking target=_blank and rel=noopener (page.spec.js)": [
     "TIMEOUT"
   ],
-  "Page BrowserContext.overridePermissions should be prompt by default (page.spec.ts)": [
+  "Page BrowserContext.overridePermissions should be prompt by default (page.spec.js)": [
     "PASS"
   ],
-  "Page BrowserContext.overridePermissions should deny permission when not listed (page.spec.ts)": [
+  "Page BrowserContext.overridePermissions should deny permission when not listed (page.spec.js)": [
     "FAIL"
   ],
-  "Page BrowserContext.overridePermissions should fail when bad permission is given (page.spec.ts)": [
+  "Page BrowserContext.overridePermissions should fail when bad permission is given (page.spec.js)": [
     "PASS"
   ],
-  "Page BrowserContext.overridePermissions should grant permission when listed (page.spec.ts)": [
+  "Page BrowserContext.overridePermissions should grant permission when listed (page.spec.js)": [
     "FAIL"
   ],
-  "Page BrowserContext.overridePermissions should reset permissions (page.spec.ts)": [
+  "Page BrowserContext.overridePermissions should reset permissions (page.spec.js)": [
     "FAIL"
   ],
-  "Page BrowserContext.overridePermissions should trigger permission onchange (page.spec.ts)": [
+  "Page BrowserContext.overridePermissions should trigger permission onchange (page.spec.js)": [
     "FAIL"
   ],
-  "Page BrowserContext.overridePermissions should isolate permissions between browser contexts (page.spec.ts)": [
+  "Page BrowserContext.overridePermissions should isolate permissions between browser contexts (page.spec.js)": [
     "FAIL"
   ],
-  "Page BrowserContext.overridePermissions should grant persistent-storage (page.spec.ts)": [
+  "Page BrowserContext.overridePermissions should grant persistent-storage (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.setGeolocation should work (page.spec.ts)": [
+  "Page Page.setGeolocation should work (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.setGeolocation should throw when invalid longitude (page.spec.ts)": [
+  "Page Page.setGeolocation should throw when invalid longitude (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.setOfflineMode should work (page.spec.ts)": [
+  "Page Page.setOfflineMode should work (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.setOfflineMode should emulate navigator.onLine (page.spec.ts)": [
+  "Page Page.setOfflineMode should emulate navigator.onLine (page.spec.js)": [
     "FAIL"
   ],
-  "Page ExecutionContext.queryObjects should work (page.spec.ts)": [
+  "Page ExecutionContext.queryObjects should work (page.spec.js)": [
     "FAIL"
   ],
-  "Page ExecutionContext.queryObjects should work for non-blank page (page.spec.ts)": [
+  "Page ExecutionContext.queryObjects should work for non-blank page (page.spec.js)": [
     "FAIL"
   ],
-  "Page ExecutionContext.queryObjects should fail for disposed handles (page.spec.ts)": [
+  "Page ExecutionContext.queryObjects should fail for disposed handles (page.spec.js)": [
     "PASS"
   ],
-  "Page ExecutionContext.queryObjects should fail primitive values as prototypes (page.spec.ts)": [
+  "Page ExecutionContext.queryObjects should fail primitive values as prototypes (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.Events.Console should work (page.spec.ts)": [
+  "Page Page.Events.Console should work (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.Events.Console should work for different console API calls (page.spec.ts)": [
+  "Page Page.Events.Console should work for different console API calls (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.Events.Console should not fail for window object (page.spec.ts)": [
+  "Page Page.Events.Console should not fail for window object (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.Events.Console should trigger correct Log (page.spec.ts)": [
+  "Page Page.Events.Console should trigger correct Log (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.Events.Console should have location when fetch fails (page.spec.ts)": [
+  "Page Page.Events.Console should have location when fetch fails (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.Events.Console should have location and stack trace for console API calls (page.spec.ts)": [
+  "Page Page.Events.Console should have location and stack trace for console API calls (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.Events.Console should not throw when there are console messages in detached iframes (page.spec.ts)": [
+  "Page Page.Events.Console should not throw when there are console messages in detached iframes (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.Events.DOMContentLoaded should fire when expected (page.spec.ts)": [
+  "Page Page.Events.DOMContentLoaded should fire when expected (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.metrics should get metrics from a page (page.spec.ts)": [
+  "Page Page.metrics should get metrics from a page (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.metrics metrics event fired on console.timeStamp (page.spec.ts)": [
+  "Page Page.metrics metrics event fired on console.timeStamp (page.spec.js)": [
     "TIMEOUT"
   ],
-  "Page Page.waitForRequest should work (page.spec.ts)": [
+  "Page Page.waitForRequest should work (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.waitForRequest should work with predicate (page.spec.ts)": [
+  "Page Page.waitForRequest should work with predicate (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.waitForRequest should respect timeout (page.spec.ts)": [
+  "Page Page.waitForRequest should respect timeout (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.waitForRequest should respect default timeout (page.spec.ts)": [
+  "Page Page.waitForRequest should respect default timeout (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.waitForRequest should work with async predicate (page.spec.ts)": [
+  "Page Page.waitForRequest should work with no timeout (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.waitForRequest should work with no timeout (page.spec.ts)": [
+  "Page Page.waitForResponse should work (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.waitForResponse should work (page.spec.ts)": [
+  "Page Page.waitForResponse should respect timeout (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.waitForResponse should respect timeout (page.spec.ts)": [
+  "Page Page.waitForResponse should respect default timeout (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.waitForResponse should respect default timeout (page.spec.ts)": [
+  "Page Page.waitForResponse should work with predicate (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.waitForResponse should work with predicate (page.spec.ts)": [
+  "Page Page.waitForResponse should work with async predicate (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.waitForResponse should work with no timeout (page.spec.ts)": [
+  "Page Page.waitForResponse should work with no timeout (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.waitForNetworkIdle should work (page.spec.ts)": [
+  "Page Page.waitForNetworkIdle should work (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.waitForNetworkIdle should respect timeout (page.spec.ts)": [
+  "Page Page.waitForNetworkIdle should respect timeout (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.waitForNetworkIdle should respect idleTime (page.spec.ts)": [
+  "Page Page.waitForNetworkIdle should respect idleTime (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.waitForNetworkIdle should work with no timeout (page.spec.ts)": [
+  "Page Page.waitForNetworkIdle should work with no timeout (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.exposeFunction should work (page.spec.ts)": [
+  "Page Page.exposeFunction should work (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.exposeFunction should throw exception in page context (page.spec.ts)": [
+  "Page Page.exposeFunction should throw exception in page context (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.exposeFunction should support throwing \"null\" (page.spec.ts)": [
+  "Page Page.exposeFunction should support throwing \"null\" (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.exposeFunction should be callable from-inside evaluateOnNewDocument (page.spec.ts)": [
+  "Page Page.exposeFunction should be callable from-inside evaluateOnNewDocument (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.exposeFunction should survive navigation (page.spec.ts)": [
+  "Page Page.exposeFunction should survive navigation (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.exposeFunction should await returned promise (page.spec.ts)": [
+  "Page Page.exposeFunction should await returned promise (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.exposeFunction should work on frames (page.spec.ts)": [
+  "Page Page.exposeFunction should work on frames (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.exposeFunction should work on frames before navigation (page.spec.ts)": [
+  "Page Page.exposeFunction should work on frames before navigation (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.exposeFunction should work with complex objects (page.spec.ts)": [
+  "Page Page.exposeFunction should not throw when frames detach (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.exposeFunction should fallback to default export when passed a module object (page.spec.ts)": [
+  "Page Page.exposeFunction should work with complex objects (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.Events.PageError should fire (page.spec.ts)": [
-    "PASS"
-  ],
-  "Page Page.setUserAgent should work (page.spec.ts)": [
-    "PASS"
-  ],
-  "Page Page.setUserAgent should work for subframes (page.spec.ts)": [
-    "PASS"
-  ],
-  "Page Page.setUserAgent should emulate device user-agent (page.spec.ts)": [
-    "PASS"
-  ],
-  "Page Page.setUserAgent should work with additional userAgentMetdata (page.spec.ts)": [
+  "Page Page.exposeFunction should fallback to default export when passed a module object (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.setContent should work (page.spec.ts)": [
+  "Page Page.Events.PageError should fire (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.setContent should work with doctype (page.spec.ts)": [
+  "Page Page.setUserAgent should work (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.setContent should work with HTML 4 doctype (page.spec.ts)": [
+  "Page Page.setUserAgent should work for subframes (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.setContent should respect timeout (page.spec.ts)": [
+  "Page Page.setUserAgent should emulate device user-agent (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.setContent should respect default navigation timeout (page.spec.ts)": [
-    "PASS"
-  ],
-  "Page Page.setContent should await resources to load (page.spec.ts)": [
-    "PASS"
-  ],
-  "Page Page.setContent should work fast enough (page.spec.ts)": [
-    "PASS"
-  ],
-  "Page Page.setContent should work with tricky content (page.spec.ts)": [
-    "PASS"
-  ],
-  "Page Page.setContent should work with accents (page.spec.ts)": [
-    "PASS"
-  ],
-  "Page Page.setContent should work with emojis (page.spec.ts)": [
-    "PASS"
-  ],
-  "Page Page.setContent should work with newline (page.spec.ts)": [
-    "PASS"
-  ],
-  "Page Page.setBypassCSP should bypass CSP meta tag (page.spec.ts)": [
+  "Page Page.setUserAgent should work with additional userAgentMetdata (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.setBypassCSP should bypass CSP header (page.spec.ts)": [
+  "Page Page.setContent should work (page.spec.js)": [
+    "PASS"
+  ],
+  "Page Page.setContent should work with doctype (page.spec.js)": [
+    "PASS"
+  ],
+  "Page Page.setContent should work with HTML 4 doctype (page.spec.js)": [
+    "PASS"
+  ],
+  "Page Page.setContent should respect timeout (page.spec.js)": [
+    "PASS"
+  ],
+  "Page Page.setContent should respect default navigation timeout (page.spec.js)": [
+    "PASS"
+  ],
+  "Page Page.setContent should await resources to load (page.spec.js)": [
+    "PASS"
+  ],
+  "Page Page.setContent should work fast enough (page.spec.js)": [
+    "PASS"
+  ],
+  "Page Page.setContent should work with tricky content (page.spec.js)": [
+    "PASS"
+  ],
+  "Page Page.setContent should work with accents (page.spec.js)": [
+    "PASS"
+  ],
+  "Page Page.setContent should work with emojis (page.spec.js)": [
+    "PASS"
+  ],
+  "Page Page.setContent should work with newline (page.spec.js)": [
+    "PASS"
+  ],
+  "Page Page.setBypassCSP should bypass CSP meta tag (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.setBypassCSP should bypass after cross-process navigation (page.spec.ts)": [
+  "Page Page.setBypassCSP should bypass CSP header (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.setBypassCSP should bypass CSP in iframes as well (page.spec.ts)": [
+  "Page Page.setBypassCSP should bypass after cross-process navigation (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.addScriptTag should throw an error if no options are provided (page.spec.ts)": [
+  "Page Page.setBypassCSP should bypass CSP in iframes as well (page.spec.js)": [
+    "FAIL"
+  ],
+  "Page Page.addScriptTag should throw an error if no options are provided (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.addScriptTag should work with a url (page.spec.ts)": [
+  "Page Page.addScriptTag should work with a url (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.addScriptTag should work with a url and type=module (page.spec.ts)": [
+  "Page Page.addScriptTag should work with a url and type=module (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.addScriptTag should work with a path and type=module (page.spec.ts)": [
+  "Page Page.addScriptTag should work with a path and type=module (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.addScriptTag should work with a content and type=module (page.spec.ts)": [
+  "Page Page.addScriptTag should work with a content and type=module (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.addScriptTag should throw an error if loading from url fail (page.spec.ts)": [
+  "Page Page.addScriptTag should throw an error if loading from url fail (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.addScriptTag should work with a path (page.spec.ts)": [
+  "Page Page.addScriptTag should work with a path (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.addScriptTag should include sourcemap when path is provided (page.spec.ts)": [
+  "Page Page.addScriptTag should include sourcemap when path is provided (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.addScriptTag should work with content (page.spec.ts)": [
+  "Page Page.addScriptTag should work with content (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.addScriptTag should add id when provided (page.spec.ts)": [
+  "Page Page.addScriptTag should add id when provided (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.addScriptTag should throw when added with content to the CSP page (page.spec.ts)": [
+  "Page Page.addScriptTag should throw when added with content to the CSP page (page.spec.js)": [
     "SKIP"
   ],
-  "Page Page.addScriptTag should throw when added with URL to the CSP page (page.spec.ts)": [
+  "Page Page.addScriptTag should throw when added with URL to the CSP page (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.addStyleTag should throw an error if no options are provided (page.spec.ts)": [
+  "Page Page.addStyleTag should throw an error if no options are provided (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.addStyleTag should work with a url (page.spec.ts)": [
+  "Page Page.addStyleTag should work with a url (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.addStyleTag should throw an error if loading from url fail (page.spec.ts)": [
+  "Page Page.addStyleTag should throw an error if loading from url fail (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.addStyleTag should work with a path (page.spec.ts)": [
+  "Page Page.addStyleTag should work with a path (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.addStyleTag should include sourcemap when path is provided (page.spec.ts)": [
+  "Page Page.addStyleTag should include sourcemap when path is provided (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.addStyleTag should work with content (page.spec.ts)": [
+  "Page Page.addStyleTag should work with content (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.addStyleTag should throw when added with content to the CSP page (page.spec.ts)": [
+  "Page Page.addStyleTag should throw when added with content to the CSP page (page.spec.js)": [
     "TIMEOUT"
   ],
-  "Page Page.addStyleTag should throw when added with URL to the CSP page (page.spec.ts)": [
+  "Page Page.addStyleTag should throw when added with URL to the CSP page (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.url should work (page.spec.ts)": [
+  "Page Page.url should work (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.setJavaScriptEnabled should work (page.spec.ts)": [
+  "Page Page.setJavaScriptEnabled should work (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.setCacheEnabled should enable or disable the cache based on the state passed (page.spec.ts)": [
+  "Page Page.setCacheEnabled should enable or disable the cache based on the state passed (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.setCacheEnabled should stay disabled when toggling request interception on/off (page.spec.ts)": [
+  "Page Page.setCacheEnabled should stay disabled when toggling request interception on/off (page.spec.js)": [
     "FAIL"
   ],
-  "Page printing to PDF can print to PDF and save to file (page.spec.ts)": [
+  "Page printing to PDF can print to PDF and save to file (page.spec.js)": [
     "PASS"
   ],
-  "Page printing to PDF can print to PDF and stream the result (page.spec.ts)": [
+  "Page printing to PDF can print to PDF and stream the result (page.spec.js)": [
     "PASS"
   ],
-  "Page printing to PDF should respect timeout (page.spec.ts)": [
+  "Page printing to PDF should respect timeout (page.spec.js)": [
     "SKIP"
   ],
-  "Page Page.title should return the page title (page.spec.ts)": [
+  "Page Page.title should return the page title (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.select should select single option (page.spec.ts)": [
+  "Page Page.select should select single option (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.select should select only first option (page.spec.ts)": [
+  "Page Page.select should select only first option (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.select should not throw when select causes navigation (page.spec.ts)": [
+  "Page Page.select should not throw when select causes navigation (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.select should select multiple options (page.spec.ts)": [
+  "Page Page.select should select multiple options (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.select should respect event bubbling (page.spec.ts)": [
+  "Page Page.select should respect event bubbling (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.select should throw when element is not a <select> (page.spec.ts)": [
+  "Page Page.select should throw when element is not a <select> (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.select should return [] on no matched values (page.spec.ts)": [
+  "Page Page.select should return [] on no matched values (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.select should return an array of matched values (page.spec.ts)": [
+  "Page Page.select should return an array of matched values (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.select should return an array of one element when multiple is not set (page.spec.ts)": [
+  "Page Page.select should return an array of one element when multiple is not set (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.select should return [] on no values (page.spec.ts)": [
+  "Page Page.select should return [] on no values (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.select should deselect all options when passed no values for a multiple select (page.spec.ts)": [
+  "Page Page.select should deselect all options when passed no values for a multiple select (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.select should deselect all options when passed no values for a select without multiple (page.spec.ts)": [
+  "Page Page.select should deselect all options when passed no values for a select without multiple (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.select should throw if passed in non-strings (page.spec.ts)": [
+  "Page Page.select should throw if passed in non-strings (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.select should work when re-defining top-level Event class (page.spec.ts)": [
+  "Page Page.select should work when re-defining top-level Event class (page.spec.js)": [
     "FAIL"
   ],
-  "Page Page.Events.Close should work with window.close (page.spec.ts)": [
+  "Page Page.Events.Close should work with window.close (page.spec.js)": [
     "SKIP"
   ],
-  "Page Page.Events.Close should work with page.close (page.spec.ts)": [
+  "Page Page.Events.Close should work with page.close (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.browser should return the correct browser instance (page.spec.ts)": [
+  "Page Page.browser should return the correct browser instance (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.browserContext should return the correct browser context instance (page.spec.ts)": [
+  "Page Page.browserContext should return the correct browser context instance (page.spec.js)": [
     "PASS"
   ],
-  "Page Page.client should return the client instance (page.spec.ts)": [
+  "Page Page.client should return the client instance (page.spec.js)": [
     "PASS"
   ],
-  "querySelector Page.$eval should work (queryselector.spec.ts)": [
+  "request proxy should proxy requests when configured (proxy.spec.js)": [
+    "SKIP"
+  ],
+  "request proxy should respect proxy bypass list (proxy.spec.js)": [
+    "SKIP"
+  ],
+  "request proxy in incognito browser context should proxy requests when configured at browser level (proxy.spec.js)": [
+    "SKIP"
+  ],
+  "request proxy in incognito browser context should respect proxy bypass list when configured at browser level (proxy.spec.js)": [
+    "SKIP"
+  ],
+  "request proxy in incognito browser context should proxy requests when configured at context level (proxy.spec.js)": [
+    "SKIP"
+  ],
+  "request proxy in incognito browser context should respect proxy bypass list when configured at context level (proxy.spec.js)": [
+    "SKIP"
+  ],
+  "Query handler tests Pierce selectors should find first element in shadow (queryhandler.spec.js)": [
     "PASS"
   ],
-  "querySelector Page.$eval should accept arguments (queryselector.spec.ts)": [
+  "Query handler tests Pierce selectors should find all elements in shadow (queryhandler.spec.js)": [
     "PASS"
   ],
-  "querySelector Page.$eval should accept ElementHandles as arguments (queryselector.spec.ts)": [
+  "Query handler tests Pierce selectors should find first child element (queryhandler.spec.js)": [
     "PASS"
   ],
-  "querySelector Page.$eval should throw error if no element is found (queryselector.spec.ts)": [
+  "Query handler tests Pierce selectors should find all child elements (queryhandler.spec.js)": [
     "PASS"
   ],
-  "querySelector pierceHandler should find first element in shadow (queryselector.spec.ts)": [
+  "Query handler tests XPath selectors in Page should query existing element (queryhandler.spec.js)": [
     "PASS"
   ],
-  "querySelector pierceHandler should find all elements in shadow (queryselector.spec.ts)": [
+  "Query handler tests XPath selectors in Page should return empty array for non-existing element (queryhandler.spec.js)": [
     "PASS"
   ],
-  "querySelector Page.$$eval should work (queryselector.spec.ts)": [
+  "Query handler tests XPath selectors in Page should return first element (queryhandler.spec.js)": [
     "PASS"
   ],
-  "querySelector Page.$$eval should accept extra arguments (queryselector.spec.ts)": [
+  "Query handler tests XPath selectors in Page should return multiple elements (queryhandler.spec.js)": [
     "PASS"
   ],
-  "querySelector Page.$$eval should accept ElementHandles as arguments (queryselector.spec.ts)": [
+  "Query handler tests XPath selectors in ElementHandles should query existing element (queryhandler.spec.js)": [
     "PASS"
   ],
-  "querySelector Page.$$eval should handle many elements (queryselector.spec.ts)": [
+  "Query handler tests XPath selectors in ElementHandles should return null for non-existing element (queryhandler.spec.js)": [
     "PASS"
   ],
-  "querySelector Page.$ should query existing element (queryselector.spec.ts)": [
+  "querySelector Page.$eval should work (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector Page.$ should return null for non-existing element (queryselector.spec.ts)": [
+  "querySelector Page.$eval should accept arguments (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector Page.$$ should query existing elements (queryselector.spec.ts)": [
+  "querySelector Page.$eval should accept ElementHandles as arguments (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector Page.$$ should return empty array if nothing is found (queryselector.spec.ts)": [
+  "querySelector Page.$eval should throw error if no element is found (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector Path.$x should query existing element (queryselector.spec.ts)": [
+  "querySelector Page.$$eval should work (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector Path.$x should return empty array for non-existing element (queryselector.spec.ts)": [
+  "querySelector Page.$$eval should accept extra arguments (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector Path.$x should return multiple elements (queryselector.spec.ts)": [
+  "querySelector Page.$$eval should accept ElementHandles as arguments (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector ElementHandle.$ should query existing element (queryselector.spec.ts)": [
+  "querySelector Page.$$eval should handle many elements (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector ElementHandle.$ should return null for non-existing element (queryselector.spec.ts)": [
+  "querySelector Page.$ should query existing element (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector ElementHandle.$eval should work (queryselector.spec.ts)": [
+  "querySelector Page.$ should return null for non-existing element (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector ElementHandle.$eval should retrieve content from subtree (queryselector.spec.ts)": [
+  "querySelector Page.$$ should query existing elements (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector ElementHandle.$eval should throw in case of missing selector (queryselector.spec.ts)": [
+  "querySelector Page.$$ should return empty array if nothing is found (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector ElementHandle.$$eval should work (queryselector.spec.ts)": [
+  "querySelector Page.$x should query existing element (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector ElementHandle.$$eval should retrieve content from subtree (queryselector.spec.ts)": [
+  "querySelector Page.$x should return empty array for non-existing element (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector ElementHandle.$$eval should not throw in case of missing selector (queryselector.spec.ts)": [
+  "querySelector Page.$x should return multiple elements (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector ElementHandle.$$ should query existing elements (queryselector.spec.ts)": [
+  "querySelector ElementHandle.$ should query existing element (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector ElementHandle.$$ should return empty array for non-existing elements (queryselector.spec.ts)": [
+  "querySelector ElementHandle.$ should return null for non-existing element (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector ElementHandle.$x should query existing element (queryselector.spec.ts)": [
+  "querySelector ElementHandle.$eval should work (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector ElementHandle.$x should return null for non-existing element (queryselector.spec.ts)": [
+  "querySelector ElementHandle.$eval should retrieve content from subtree (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector QueryAll should have registered handler (queryselector.spec.ts)": [
+  "querySelector ElementHandle.$eval should throw in case of missing selector (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector QueryAll $$ should query existing elements (queryselector.spec.ts)": [
+  "querySelector ElementHandle.$$eval should work (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector QueryAll $$ should return empty array for non-existing elements (queryselector.spec.ts)": [
+  "querySelector ElementHandle.$$eval should retrieve content from subtree (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector QueryAll $$eval should work (queryselector.spec.ts)": [
+  "querySelector ElementHandle.$$eval should not throw in case of missing selector (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector QueryAll $$eval should accept extra arguments (queryselector.spec.ts)": [
+  "querySelector ElementHandle.$$ should query existing elements (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector QueryAll $$eval should accept ElementHandles as arguments (queryselector.spec.ts)": [
+  "querySelector ElementHandle.$$ should return empty array for non-existing elements (queryselector.spec.js)": [
     "PASS"
   ],
-  "querySelector QueryAll $$eval should handle many elements (queryselector.spec.ts)": [
+  "querySelector ElementHandle.$x should query existing element (queryselector.spec.js)": [
     "PASS"
   ],
-  "request interception Page.setRequestInterception should cooperatively respond by priority (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should cooperatively continue by priority (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should cooperatively abort by priority (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should intercept (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should work when POST is redirected with 302 (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should work when header manipulation headers with redirect (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should be able to remove headers (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should contain referer header (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should properly return navigation response when URL has cookies (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should stop intercepting (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should show custom HTTP headers (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should work with redirect inside sync XHR (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should work with custom referer headers (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should be abortable (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should be able to access the error reason (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should be abortable with custom error codes (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should send referer (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should fail navigation when aborting main resource (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should work with redirects (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should work with redirects for subresources (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should be able to abort redirects (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should work with equal requests (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should navigate to dataURL and fire dataURL requests (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should be able to fetch dataURL and fire dataURL requests (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should navigate to URL with hash and fire requests without hash (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should work with encoded server (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should work with badly encoded server (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should work with encoded server - 2 (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should not throw \"Invalid Interception Id\" if the request was cancelled (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should throw if interception is not enabled (requestinterception-experimental.spec.ts)": [
+  "querySelector ElementHandle.$x should return null for non-existing element (queryselector.spec.js)": [
     "PASS"
   ],
-  "request interception Page.setRequestInterception should work with file URLs (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should not cache if cache disabled (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should cache if cache enabled (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should load fonts if cache enabled (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.continue should work (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.continue should amend HTTP headers (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.continue should redirect in a way non-observable to page (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.continue should amend method (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.continue should amend post data (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.continue should amend both post data and method on navigation (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.respond should work (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.respond should be able to access the response (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.respond should work with status code 422 (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.respond should redirect (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.respond should allow mocking binary responses (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.respond should stringify intercepted request response headers (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.respond should indicate already-handled if an intercept has been handled (requestinterception-experimental.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should intercept (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should work when POST is redirected with 302 (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should work when header manipulation headers with redirect (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should be able to remove headers (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should contain referer header (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should properly return navigation response when URL has cookies (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should stop intercepting (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should show custom HTTP headers (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should work with redirect inside sync XHR (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should work with custom referer headers (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should be abortable (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should be abortable with custom error codes (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should send referer (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should fail navigation when aborting main resource (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should work with redirects (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should work with redirects for subresources (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should be able to abort redirects (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should work with equal requests (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should navigate to dataURL and fire dataURL requests (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should be able to fetch dataURL and fire dataURL requests (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should navigate to URL with hash and fire requests without hash (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should work with encoded server (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should work with badly encoded server (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should work with encoded server - 2 (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should not throw \"Invalid Interception Id\" if the request was cancelled (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should throw if interception is not enabled (requestinterception.spec.ts)": [
+  "querySelector QueryAll should have registered handler (queryselector.spec.js)": [
     "PASS"
   ],
-  "request interception Page.setRequestInterception should work with file URLs (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should not cache if cache disabled (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should cache if cache enabled (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Page.setRequestInterception should load fonts if cache enabled (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.continue should work (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.continue should amend HTTP headers (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.continue should redirect in a way non-observable to page (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.continue should amend method (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.continue should amend post data (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.continue should amend both post data and method on navigation (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.continue should fail if the header value is invalid (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.respond should work (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.respond should work with status code 422 (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.respond should redirect (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.respond should allow mocking binary responses (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.respond should stringify intercepted request response headers (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "request interception Request.respond should fail if the header value is invalid (requestinterception.spec.ts)": [
-    "FAIL"
-  ],
-  "Screenshots Page.screenshot should work (screenshot.spec.ts)": [
-    "FAIL"
-  ],
-  "Screenshots Page.screenshot should clip rect (screenshot.spec.ts)": [
-    "FAIL"
-  ],
-  "Screenshots Page.screenshot should get screenshot bigger than the viewport (screenshot.spec.ts)": [
+  "querySelector QueryAll $$ should query existing elements (queryselector.spec.js)": [
     "PASS"
   ],
-  "Screenshots Page.screenshot should run in parallel (screenshot.spec.ts)": [
+  "querySelector QueryAll $$ should return empty array for non-existing elements (queryselector.spec.js)": [
     "PASS"
   ],
-  "Screenshots Page.screenshot should take fullPage screenshots (screenshot.spec.ts)": [
+  "querySelector QueryAll $$eval should work (queryselector.spec.js)": [
+    "PASS"
+  ],
+  "querySelector QueryAll $$eval should accept extra arguments (queryselector.spec.js)": [
+    "PASS"
+  ],
+  "querySelector QueryAll $$eval should accept ElementHandles as arguments (queryselector.spec.js)": [
+    "PASS"
+  ],
+  "querySelector QueryAll $$eval should handle many elements (queryselector.spec.js)": [
+    "PASS"
+  ],
+  "request interception Page.setRequestInterception should cooperatively respond by priority (requestinterception-experimental.spec.js)": [
     "FAIL"
   ],
-  "Screenshots Page.screenshot should run in parallel in multiple pages (screenshot.spec.ts)": [
-    "PASS"
-  ],
-  "Screenshots Page.screenshot should allow transparency (screenshot.spec.ts)": [
+  "request interception Page.setRequestInterception should cooperatively continue by priority (requestinterception-experimental.spec.js)": [
     "FAIL"
   ],
-  "Screenshots Page.screenshot should render white background on jpeg file (screenshot.spec.ts)": [
+  "request interception Page.setRequestInterception should cooperatively abort by priority (requestinterception-experimental.spec.js)": [
     "FAIL"
   ],
-  "Screenshots Page.screenshot should work with webp (screenshot.spec.ts)": [
-    "PASS"
-  ],
-  "Screenshots Page.screenshot should work with odd clip size on Retina displays (screenshot.spec.ts)": [
-    "PASS"
-  ],
-  "Screenshots Page.screenshot should return base64 (screenshot.spec.ts)": [
+  "request interception Page.setRequestInterception should intercept (requestinterception-experimental.spec.js)": [
     "FAIL"
   ],
-  "Screenshots ElementHandle.screenshot should work (screenshot.spec.ts)": [
-    "PASS"
-  ],
-  "Screenshots ElementHandle.screenshot should take into account padding and border (screenshot.spec.ts)": [
-    "PASS"
-  ],
-  "Screenshots ElementHandle.screenshot should capture full element when larger than viewport (screenshot.spec.ts)": [
-    "PASS"
-  ],
-  "Screenshots ElementHandle.screenshot should scroll element into view (screenshot.spec.ts)": [
-    "PASS"
-  ],
-  "Screenshots ElementHandle.screenshot should work with a rotated element (screenshot.spec.ts)": [
+  "request interception Page.setRequestInterception should work when POST is redirected with 302 (requestinterception-experimental.spec.js)": [
     "FAIL"
   ],
-  "Screenshots ElementHandle.screenshot should fail to screenshot a detached element (screenshot.spec.ts)": [
+  "request interception Page.setRequestInterception should work when header manipulation headers with redirect (requestinterception-experimental.spec.js)": [
     "FAIL"
   ],
-  "Screenshots ElementHandle.screenshot should not hang with zero width/height element (screenshot.spec.ts)": [
-    "PASS"
-  ],
-  "Screenshots ElementHandle.screenshot should work for an element with fractional dimensions (screenshot.spec.ts)": [
-    "PASS"
-  ],
-  "Screenshots ElementHandle.screenshot should work for an element with an offset (screenshot.spec.ts)": [
+  "request interception Page.setRequestInterception should be able to remove headers (requestinterception-experimental.spec.js)": [
     "FAIL"
   ],
-  "Target Browser.targets should return all of the targets (target.spec.ts)": [
-    "PASS"
-  ],
-  "Target Browser.pages should return all of the pages (target.spec.ts)": [
-    "PASS"
-  ],
-  "Target should contain browser target (target.spec.ts)": [
-    "PASS"
-  ],
-  "Target should be able to use the default page in the browser (target.spec.ts)": [
-    "PASS"
-  ],
-  "Target should report when a new page is created and closed (target.spec.ts)": [
+  "request interception Page.setRequestInterception should contain referer header (requestinterception-experimental.spec.js)": [
     "FAIL"
   ],
-  "Target should report when a service worker is created and destroyed (target.spec.ts)": [
+  "request interception Page.setRequestInterception should properly return navigation response when URL has cookies (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should stop intercepting (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should show custom HTTP headers (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with redirect inside sync XHR (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with custom referer headers (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should be abortable (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should be able to access the error reason (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should be abortable with custom error codes (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should send referer (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should fail navigation when aborting main resource (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with redirects (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with redirects for subresources (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should be able to abort redirects (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with equal requests (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should navigate to dataURL and fire dataURL requests (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should be able to fetch dataURL and fire dataURL requests (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should navigate to URL with hash and fire requests without hash (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with encoded server (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with badly encoded server (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with encoded server - 2 (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should not throw \"Invalid Interception Id\" if the request was cancelled (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should throw if interception is not enabled (requestinterception-experimental.spec.js)": [
+    "PASS"
+  ],
+  "request interception Page.setRequestInterception should work with file URLs (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should not cache if cache disabled (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should cache if cache enabled (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should load fonts if cache enabled (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.continue should work (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.continue should amend HTTP headers (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.continue should redirect in a way non-observable to page (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.continue should amend method (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.continue should amend post data (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.continue should amend both post data and method on navigation (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should work (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should be able to access the response (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should work with status code 422 (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should redirect (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should allow mocking binary responses (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should stringify intercepted request response headers (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should indicate already-handled if an intercept has been handled (requestinterception-experimental.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should intercept (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work when POST is redirected with 302 (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work when header manipulation headers with redirect (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should be able to remove headers (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should contain referer header (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should properly return navigation response when URL has cookies (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should stop intercepting (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should show custom HTTP headers (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with redirect inside sync XHR (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with custom referer headers (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should be abortable (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should be abortable with custom error codes (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should send referer (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should fail navigation when aborting main resource (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with redirects (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with redirects for subresources (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should be able to abort redirects (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with equal requests (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should navigate to dataURL and fire dataURL requests (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should be able to fetch dataURL and fire dataURL requests (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should navigate to URL with hash and fire requests without hash (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with encoded server (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with badly encoded server (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should work with encoded server - 2 (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should not throw \"Invalid Interception Id\" if the request was cancelled (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should throw if interception is not enabled (requestinterception.spec.js)": [
+    "PASS"
+  ],
+  "request interception Page.setRequestInterception should work with file URLs (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should not cache if cache disabled (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should cache if cache enabled (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Page.setRequestInterception should load fonts if cache enabled (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.continue should work (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.continue should amend HTTP headers (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.continue should redirect in a way non-observable to page (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.continue should amend method (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.continue should amend post data (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.continue should amend both post data and method on navigation (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.continue should fail if the header value is invalid (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should work (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should work with status code 422 (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should redirect (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should allow mocking multiple headers with same key (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should allow mocking binary responses (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should stringify intercepted request response headers (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "request interception Request.respond should fail if the header value is invalid (requestinterception.spec.js)": [
+    "FAIL"
+  ],
+  "Screenshots Page.screenshot should work (screenshot.spec.js)": [
+    "FAIL"
+  ],
+  "Screenshots Page.screenshot should clip rect (screenshot.spec.js)": [
+    "FAIL"
+  ],
+  "Screenshots Page.screenshot should get screenshot bigger than the viewport (screenshot.spec.js)": [
+    "PASS"
+  ],
+  "Screenshots Page.screenshot should run in parallel (screenshot.spec.js)": [
+    "PASS"
+  ],
+  "Screenshots Page.screenshot should take fullPage screenshots (screenshot.spec.js)": [
+    "FAIL"
+  ],
+  "Screenshots Page.screenshot should run in parallel in multiple pages (screenshot.spec.js)": [
+    "PASS"
+  ],
+  "Screenshots Page.screenshot should allow transparency (screenshot.spec.js)": [
+    "FAIL"
+  ],
+  "Screenshots Page.screenshot should render white background on jpeg file (screenshot.spec.js)": [
+    "FAIL"
+  ],
+  "Screenshots Page.screenshot should work with webp (screenshot.spec.js)": [
+    "PASS"
+  ],
+  "Screenshots Page.screenshot should work with odd clip size on Retina displays (screenshot.spec.js)": [
+    "PASS"
+  ],
+  "Screenshots Page.screenshot should return base64 (screenshot.spec.js)": [
+    "FAIL"
+  ],
+  "Screenshots Page.screenshot should work in \"fromSurface: false\" mode (screenshot.spec.js)": [
+    "SKIP"
+  ],
+  "Screenshots ElementHandle.screenshot should work (screenshot.spec.js)": [
+    "PASS"
+  ],
+  "Screenshots ElementHandle.screenshot should work with a null viewport (screenshot.spec.js)": [
+    "SKIP"
+  ],
+  "Screenshots ElementHandle.screenshot should take into account padding and border (screenshot.spec.js)": [
+    "PASS"
+  ],
+  "Screenshots ElementHandle.screenshot should capture full element when larger than viewport (screenshot.spec.js)": [
+    "PASS"
+  ],
+  "Screenshots ElementHandle.screenshot should scroll element into view (screenshot.spec.js)": [
+    "PASS"
+  ],
+  "Screenshots ElementHandle.screenshot should work with a rotated element (screenshot.spec.js)": [
+    "FAIL"
+  ],
+  "Screenshots ElementHandle.screenshot should fail to screenshot a detached element (screenshot.spec.js)": [
+    "FAIL"
+  ],
+  "Screenshots ElementHandle.screenshot should not hang with zero width/height element (screenshot.spec.js)": [
+    "PASS"
+  ],
+  "Screenshots ElementHandle.screenshot should work for an element with fractional dimensions (screenshot.spec.js)": [
+    "PASS"
+  ],
+  "Screenshots ElementHandle.screenshot should work for an element with an offset (screenshot.spec.js)": [
+    "FAIL"
+  ],
+  "Target Browser.targets should return all of the targets (target.spec.js)": [
+    "PASS"
+  ],
+  "Target Browser.pages should return all of the pages (target.spec.js)": [
+    "PASS"
+  ],
+  "Target should contain browser target (target.spec.js)": [
+    "PASS"
+  ],
+  "Target should be able to use the default page in the browser (target.spec.js)": [
+    "PASS"
+  ],
+  "Target should be able to use async waitForTarget (target.spec.js)": [
+    "SKIP"
+  ],
+  "Target should report when a new page is created and closed (target.spec.js)": [
+    "FAIL"
+  ],
+  "Target should report when a service worker is created and destroyed (target.spec.js)": [
     "TIMEOUT"
   ],
-  "Target should create a worker from a service worker (target.spec.ts)": [
+  "Target should create a worker from a service worker (target.spec.js)": [
     "TIMEOUT"
   ],
-  "Target should create a worker from a shared worker (target.spec.ts)": [
+  "Target should create a worker from a shared worker (target.spec.js)": [
     "TIMEOUT"
   ],
-  "Target should report when a target url changes (target.spec.ts)": [
+  "Target should report when a target url changes (target.spec.js)": [
     "TIMEOUT"
   ],
-  "Target should not report uninitialized pages (target.spec.ts)": [
+  "Target should not report uninitialized pages (target.spec.js)": [
     "FAIL"
   ],
-  "Target should not crash while redirecting if original request was missed (target.spec.ts)": [
+  "Target should not crash while redirecting if original request was missed (target.spec.js)": [
     "FAIL"
   ],
-  "Target should have an opener (target.spec.ts)": [
+  "Target should have an opener (target.spec.js)": [
     "TIMEOUT", "FAIL"
   ],
-  "Target Browser.waitForTarget should wait for a target (target.spec.ts)": [
+  "Target Browser.waitForTarget should wait for a target (target.spec.js)": [
     "TIMEOUT"
   ],
-  "Target Browser.waitForTarget should timeout waiting for a non-existent target (target.spec.ts)": [
+  "Target Browser.waitForTarget should timeout waiting for a non-existent target (target.spec.js)": [
     "PASS"
   ],
-  "Touchscreen should tap the button (touchscreen.spec.ts)": [
+  "Touchscreen should tap the button (touchscreen.spec.js)": [
     "FAIL"
   ],
-  "Touchscreen should report touches (touchscreen.spec.ts)": [
+  "Touchscreen should report touches (touchscreen.spec.js)": [
     "FAIL"
   ],
-  "waittask specs Page.waitFor should wait for selector (waittask.spec.ts)": [
+  "waittask specs Frame.waitForFunction should accept a string (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Page.waitFor should wait for an xpath (waittask.spec.ts)": [
+  "waittask specs Frame.waitForFunction should work when resolved right before execution context disposal (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Page.waitFor should allow you to select an element with parenthesis-starting xpath (waittask.spec.ts)": [
+  "waittask specs Frame.waitForFunction should poll on interval (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Page.waitFor should not allow you to select an element with single slash xpath (waittask.spec.ts)": [
+  "waittask specs Frame.waitForFunction should poll on interval async (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Page.waitFor should timeout (waittask.spec.ts)": [
+  "waittask specs Frame.waitForFunction should poll on mutation (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Page.waitFor should work with multiline body (waittask.spec.ts)": [
+  "waittask specs Frame.waitForFunction should poll on mutation async (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Page.waitFor should wait for predicate (waittask.spec.ts)": [
+  "waittask specs Frame.waitForFunction should poll on raf (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Page.waitFor should throw when unknown type (waittask.spec.ts)": [
+  "waittask specs Frame.waitForFunction should poll on raf async (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Page.waitFor should wait for predicate with arguments (waittask.spec.ts)": [
-    "PASS"
-  ],
-  "waittask specs Page.waitFor should log a deprecation warning (waittask.spec.ts)": [
-    "PASS"
-  ],
-  "waittask specs Frame.waitForFunction should accept a string (waittask.spec.ts)": [
-    "PASS"
-  ],
-  "waittask specs Frame.waitForFunction should work when resolved right before execution context disposal (waittask.spec.ts)": [
-    "PASS"
-  ],
-  "waittask specs Frame.waitForFunction should poll on interval (waittask.spec.ts)": [
-    "PASS"
-  ],
-  "waittask specs Frame.waitForFunction should poll on interval async (waittask.spec.ts)": [
-    "PASS"
-  ],
-  "waittask specs Frame.waitForFunction should poll on mutation (waittask.spec.ts)": [
-    "PASS"
-  ],
-  "waittask specs Frame.waitForFunction should poll on mutation async (waittask.spec.ts)": [
-    "PASS"
-  ],
-  "waittask specs Frame.waitForFunction should poll on raf (waittask.spec.ts)": [
-    "PASS"
-  ],
-  "waittask specs Frame.waitForFunction should poll on raf async (waittask.spec.ts)": [
-    "PASS"
-  ],
-  "waittask specs Frame.waitForFunction should work with strict CSP policy (waittask.spec.ts)": [
+  "waittask specs Frame.waitForFunction should work with strict CSP policy (waittask.spec.js)": [
     "FAIL"
   ],
-  "waittask specs Frame.waitForFunction should throw on bad polling value (waittask.spec.ts)": [
+  "waittask specs Frame.waitForFunction should throw on bad polling value (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForFunction should throw negative polling interval (waittask.spec.ts)": [
+  "waittask specs Frame.waitForFunction should throw negative polling interval (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForFunction should return the success value as a JSHandle (waittask.spec.ts)": [
+  "waittask specs Frame.waitForFunction should return the success value as a JSHandle (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForFunction should return the window as a success value (waittask.spec.ts)": [
+  "waittask specs Frame.waitForFunction should return the window as a success value (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForFunction should accept ElementHandle arguments (waittask.spec.ts)": [
+  "waittask specs Frame.waitForFunction should accept ElementHandle arguments (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForFunction should respect timeout (waittask.spec.ts)": [
+  "waittask specs Frame.waitForFunction should respect timeout (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForFunction should respect default timeout (waittask.spec.ts)": [
+  "waittask specs Frame.waitForFunction should respect default timeout (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForFunction should disable timeout when its set to 0 (waittask.spec.ts)": [
+  "waittask specs Frame.waitForFunction should disable timeout when its set to 0 (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForFunction should survive cross-process navigation (waittask.spec.ts)": [
+  "waittask specs Frame.waitForFunction should survive cross-process navigation (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForFunction should survive navigations (waittask.spec.ts)": [
+  "waittask specs Frame.waitForFunction should survive navigations (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Page.waitForTimeout waits for the given timeout before resolving (waittask.spec.ts)": [
+  "waittask specs Page.waitForTimeout waits for the given timeout before resolving (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForTimeout waits for the given timeout before resolving (waittask.spec.ts)": [
+  "waittask specs Frame.waitForTimeout waits for the given timeout before resolving (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForSelector should immediately resolve promise if node exists (waittask.spec.ts)": [
+  "waittask specs Frame.waitForSelector should immediately resolve promise if node exists (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForSelector should work with removed MutationObserver (waittask.spec.ts)": [
+  "waittask specs Frame.waitForSelector should work with removed MutationObserver (waittask.spec.js)": [
     "FAIL"
   ],
-  "waittask specs Frame.waitForSelector should resolve promise when node is added (waittask.spec.ts)": [
+  "waittask specs Frame.waitForSelector should resolve promise when node is added (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForSelector should work when node is added through innerHTML (waittask.spec.ts)": [
+  "waittask specs Frame.waitForSelector should work when node is added through innerHTML (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForSelector Page.waitForSelector is shortcut for main frame (waittask.spec.ts)": [
+  "waittask specs Frame.waitForSelector Page.waitForSelector is shortcut for main frame (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForSelector should run in specified frame (waittask.spec.ts)": [
+  "waittask specs Frame.waitForSelector should run in specified frame (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForSelector should throw when frame is detached (waittask.spec.ts)": [
+  "waittask specs Frame.waitForSelector should throw when frame is detached (waittask.spec.js)": [
     "TIMEOUT"
   ],
-  "waittask specs Frame.waitForSelector should survive cross-process navigation (waittask.spec.ts)": [
+  "waittask specs Frame.waitForSelector should survive cross-process navigation (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForSelector should wait for visible (waittask.spec.ts)": [
+  "waittask specs Frame.waitForSelector should wait for visible (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForSelector should wait for visible recursively (waittask.spec.ts)": [
+  "waittask specs Frame.waitForSelector should wait for visible recursively (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForSelector hidden should wait for visibility: hidden (waittask.spec.ts)": [
+  "waittask specs Frame.waitForSelector hidden should wait for visibility: hidden (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForSelector hidden should wait for display: none (waittask.spec.ts)": [
+  "waittask specs Frame.waitForSelector hidden should wait for display: none (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForSelector hidden should wait for removal (waittask.spec.ts)": [
+  "waittask specs Frame.waitForSelector hidden should wait for removal (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForSelector should return null if waiting to hide non-existing element (waittask.spec.ts)": [
+  "waittask specs Frame.waitForSelector should return null if waiting to hide non-existing element (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForSelector should respect timeout (waittask.spec.ts)": [
+  "waittask specs Frame.waitForSelector should respect timeout (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForSelector should have an error message specifically for awaiting an element to be hidden (waittask.spec.ts)": [
+  "waittask specs Frame.waitForSelector should have an error message specifically for awaiting an element to be hidden (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForSelector should respond to node attribute mutation (waittask.spec.ts)": [
+  "waittask specs Frame.waitForSelector should respond to node attribute mutation (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForSelector should return the element handle (waittask.spec.ts)": [
+  "waittask specs Frame.waitForSelector should return the element handle (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForSelector should have correct stack trace for timeout (waittask.spec.ts)": [
+  "waittask specs Frame.waitForSelector should have correct stack trace for timeout (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForXPath should support some fancy xpath (waittask.spec.ts)": [
+  "waittask specs Frame.waitForXPath should support some fancy xpath (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForXPath should respect timeout (waittask.spec.ts)": [
+  "waittask specs Frame.waitForXPath should respect timeout (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForXPath should run in specified frame (waittask.spec.ts)": [
+  "waittask specs Frame.waitForXPath should run in specified frame (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForXPath should throw when frame is detached (waittask.spec.ts)": [
+  "waittask specs Frame.waitForXPath should throw when frame is detached (waittask.spec.js)": [
     "TIMEOUT"
   ],
-  "waittask specs Frame.waitForXPath hidden should wait for display: none (waittask.spec.ts)": [
+  "waittask specs Frame.waitForXPath hidden should wait for display: none (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForXPath should return the element handle (waittask.spec.ts)": [
+  "waittask specs Frame.waitForXPath should return the element handle (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForXPath should allow you to select a text node (waittask.spec.ts)": [
+  "waittask specs Frame.waitForXPath should allow you to select a text node (waittask.spec.js)": [
     "PASS"
   ],
-  "waittask specs Frame.waitForXPath should allow you to select an element with single slash (waittask.spec.ts)": [
+  "waittask specs Frame.waitForXPath should allow you to select an element with single slash (waittask.spec.js)": [
     "PASS"
   ],
-  "Workers Page.workers (worker.spec.ts)": [
+  "Workers Page.workers (worker.spec.js)": [
     "SKIP"
   ],
-  "Workers should emit created and destroyed events (worker.spec.ts)": [
+  "Workers should emit created and destroyed events (worker.spec.js)": [
     "SKIP"
   ],
-  "Workers should report console logs (worker.spec.ts)": [
+  "Workers should report console logs (worker.spec.js)": [
     "SKIP"
   ],
-  "Workers should have JSHandles for console logs (worker.spec.ts)": [
+  "Workers should have JSHandles for console logs (worker.spec.js)": [
     "SKIP"
   ],
-  "Workers should have an execution context (worker.spec.ts)": [
+  "Workers should have an execution context (worker.spec.js)": [
     "SKIP"
   ],
-  "Workers should report errors (worker.spec.ts)": [
+  "Workers should report errors (worker.spec.js)": [
     "SKIP"
   ]
 }
