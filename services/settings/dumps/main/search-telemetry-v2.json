@@ -1,6 +1,44 @@
 {
   "data": [
     {
+      "schema": 1660832831028,
+      "taggedCodes": [
+        "ffab",
+        "ffcm",
+        "ffhp",
+        "ffip",
+        "ffit",
+        "ffnt",
+        "ffocus",
+        "ffos",
+        "ffsb",
+        "fpas",
+        "fpsa",
+        "ftas",
+        "ftsa",
+        "newext"
+      ],
+      "telemetryId": "duckduckgo",
+      "organicCodes": [],
+      "codeParamName": "t",
+      "queryParamName": "q",
+      "searchPageRegexp": "^https://duckduckgo\\.com/",
+      "expectedOrganicCodes": [
+        "hz",
+        "h_",
+        "hs",
+        "ha",
+        "hb",
+        "hc"
+      ],
+      "extraAdServersRegexps": [
+        "^https://duckduckgo.com/y\\.js?.*ad_provider\\=",
+        "^https://www\\.amazon\\.(?:[a-z.]{2,24}).*(?:tag=duckduckgo-)"
+      ],
+      "id": "9dfd626b-26f2-4913-9d0a-27db6cb7d8ca",
+      "last_modified": 1661199890666
+    },
+    {
       "schema": 1660225143655,
       "taggedCodes": [
         "MOZ2",
@@ -42,42 +80,6 @@
       ],
       "id": "e1eec461-f1f3-40de-b94b-3b670b78108c",
       "last_modified": 1660832830989
-    },
-    {
-      "schema": 1657989403056,
-      "taggedCodes": [
-        "ffab",
-        "ffcm",
-        "ffhp",
-        "ffip",
-        "ffit",
-        "ffnt",
-        "ffocus",
-        "ffos",
-        "ffsb",
-        "fpas",
-        "fpsa",
-        "ftas",
-        "ftsa",
-        "newext"
-      ],
-      "telemetryId": "duckduckgo",
-      "organicCodes": [],
-      "codeParamName": "t",
-      "queryParamName": "q",
-      "searchPageRegexp": "^https://duckduckgo\\.com/",
-      "expectedOrganicCodes": [
-        "hz",
-        "h_",
-        "hs",
-        "ha"
-      ],
-      "extraAdServersRegexps": [
-        "^https://duckduckgo.com/y\\.js?.*ad_provider\\=",
-        "^https://www\\.amazon\\.(?:[a-z.]{2,24}).*(?:tag=duckduckgo-)"
-      ],
-      "id": "9dfd626b-26f2-4913-9d0a-27db6cb7d8ca",
-      "last_modified": 1658249696566
     },
     {
       "schema": 1643100256547,
@@ -154,5 +156,5 @@
       "last_modified": 1643136933989
     }
   ],
-  "timestamp": 1660832830989
+  "timestamp": 1661199890666
 }
