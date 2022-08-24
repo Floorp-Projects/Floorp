@@ -475,7 +475,7 @@ def make_job_description(config, jobs):
 
         worker["artifacts"] = _generate_task_output_files(
             dep_job,
-            worker_type_implementation(config.graph_config, worker_type),
+            worker_type_implementation(config.graph_config, config.params, worker_type),
             repackage_config=repackage_config,
             locale=locale,
         )

@@ -107,7 +107,7 @@ graph_config_schema = Schema(
                     Required("implementation"): str,
                     Required("os"): str,
                     Required("worker-type"): optionally_keyed_by(
-                        "level", "release-level", str
+                        "level", "release-level", "project", str
                     ),
                 }
             },
