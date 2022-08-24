@@ -43,7 +43,7 @@ const RefreshDevicesButton = createFactory(
   require("devtools/client/aboutdebugging/src/components/sidebar/RefreshDevicesButton")
 );
 const FIREFOX_ICON =
-  "chrome://devtools/skin/images/aboutdebugging-firefox-logo.svg";
+  "chrome://branding/content/about-logo.png";
 const CONNECT_ICON = "chrome://devtools/skin/images/settings.svg";
 const GLOBE_ICON =
   "chrome://devtools/skin/images/aboutdebugging-globe-icon.svg";
