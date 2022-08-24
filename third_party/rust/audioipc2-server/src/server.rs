@@ -252,14 +252,11 @@ impl ServerStreamCallbacks {
             return cubeb::ffi::CUBEB_ERROR.try_into().unwrap();
         }
 
-        let r = self
-            .data_callback_rpc
-            .call(CallbackReq::Data {
-                nframes,
-                input_frame_size: self.input_frame_size as usize,
-                output_frame_size: self.output_frame_size as usize,
-            })
-            .wait();
+        let r = self.data_callback_rpc.call(CallbackReq::Data {
+            nframes,
+            input_frame_size: self.input_frame_size as usize,
+            output_frame_size: self.output_frame_size as usize,
+        });
 
         match r {
             Ok(CallbackResp::Data(frames)) => {
@@ -282,8 +279,7 @@ impl ServerStreamCallbacks {
         trace!("Stream state callback: {:?}", state);
         let r = self
             .state_callback_rpc
-            .call(CallbackReq::State(state.into()))
-            .wait();
+            .call(CallbackReq::State(state.into()));
         match r {
             Ok(CallbackResp::State) => {}
             _ => {
@@ -296,8 +292,7 @@ impl ServerStreamCallbacks {
         trace!("Stream device change callback");
         let r = self
             .device_change_callback_rpc
-            .call(CallbackReq::DeviceChange)
-            .wait();
+            .call(CallbackReq::DeviceChange);
         match r {
             Ok(CallbackResp::DeviceChange) => {}
             _ => {
@@ -347,8 +342,7 @@ impl DeviceCollectionChangeCallback {
         );
         let _ = self
             .rpc
-            .call(DeviceCollectionReq::DeviceChange(device_type))
-            .wait();
+            .call(DeviceCollectionReq::DeviceChange(device_type));
     }
 }
 
