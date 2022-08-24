@@ -38,6 +38,7 @@ import org.mozilla.focus.ext.isTablet
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.menu.browser.CustomTabMenu
+import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
@@ -238,7 +239,7 @@ class BrowserToolbarIntegration(
                                 .last()
                         CFRPopup(
                             container = fragment.requireView(),
-                            text = fragment.getString(R.string.cfr_for_toolbar_delete_icon),
+                            text = fragment.getString(R.string.cfr_for_toolbar_delete_icon2),
                             anchor = eraseActionView,
                             onDismiss = ::onDismissEraseTabsCfr
                         ).apply {
@@ -280,6 +281,8 @@ class BrowserToolbarIntegration(
             fragment.components?.appStore?.dispatch(AppAction.ShowTrackingProtectionCfrChange(mapOf(it to false)))
         }
         fragment.requireContext().settings.shouldShowCfrForTrackingProtection = false
+        FocusNimbus.features.onboarding.recordExposure()
+        fragment.components?.appStore?.dispatch(AppAction.ShowEraseTabsCfrChange(true))
     }
 
     @VisibleForTesting

@@ -15,15 +15,8 @@ class FeatureSettingsHelper {
     // saving default values of feature flags
     private var shouldShowCfrForTrackingProtection: Boolean = settings.shouldShowCfrForTrackingProtection
 
-    // saving default value of number of tabs opened, which is used for erase tabs cfr
-    private var numberOfTabsOpened: Int = settings.numberOfTabsOpened
-
     fun setCfrForTrackingProtectionEnabled(enabled: Boolean) {
         settings.shouldShowCfrForTrackingProtection = enabled
-    }
-
-    fun setNumberOfTabsOpened(tabsOpened: Int) {
-        settings.numberOfTabsOpened = tabsOpened
     }
 
     // Important:
@@ -31,6 +24,5 @@ class FeatureSettingsHelper {
     // to make sure the app goes back to the default state
     fun resetAllFeatureFlags() {
         settings.shouldShowCfrForTrackingProtection = shouldShowCfrForTrackingProtection
-        settings.numberOfTabsOpened = numberOfTabsOpened
     }
 }

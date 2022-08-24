@@ -7,7 +7,6 @@ import android.content.Context
 import androidx.core.net.toUri
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
-import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.BrowserState
@@ -18,7 +17,6 @@ import org.mozilla.focus.ext.truncatedHost
 import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.nimbus.Onboarding
 import org.mozilla.focus.state.AppAction
-import org.mozilla.focus.utils.ERASE_CFR_LIMIT
 
 /**
  * Middleware used to intercept browser store actions in order to decide when should we display a specific CFR
@@ -43,26 +41,9 @@ class CfrMiddleware(private val appContext: Context) : Middleware<BrowserState, 
 
             next(action)
 
-            showEraseTabsCfr(action, context)
-
             showTrackingProtectionCfr(action, context)
         } else {
             next(action)
-        }
-    }
-
-    private fun showEraseTabsCfr(
-        action: BrowserAction,
-        context: MiddlewareContext<BrowserState, BrowserAction>
-    ) {
-        if (action is TabListAction.AddTabAction &&
-            components.appStore.state.showTrackingProtectionCfrForTab[context.state.selectedTabId] != true
-        ) {
-            components.settings.numberOfTabsOpened++
-            if (components.settings.numberOfTabsOpened == ERASE_CFR_LIMIT) {
-                onboardingFeature.recordExposure()
-                components.appStore.dispatch(AppAction.ShowEraseTabsCfrChange(true))
-            }
         }
     }
 

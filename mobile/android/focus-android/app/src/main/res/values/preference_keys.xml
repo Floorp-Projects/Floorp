@@ -81,9 +81,6 @@
     <string name="pref_key_dark_theme" translatable="false">pref_key_dark_theme</string>
     <string name="pref_key_default_theme" translatable="false">pref_key_default_theme</string>
 
-    <!-- Opened tabs counter used to trigger erase tabs CFR -->
-    <string name="number_of_opened_tabs" translatable="false">number_of_opened_tabs</string>
-
     <!-- Site Permissions Settings -->
     <string name="pref_key_allow_autoplay_audio_video" translatable="false"><xliff:g id="preference_key">pref_key_allow_autoplay_audio_video</xliff:g></string>
     <string name="pref_key_block_autoplay_audio_only" translatable="false"><xliff:g id="preference_key">pref_key_block_autoplay_audio_only</xliff:g></string>

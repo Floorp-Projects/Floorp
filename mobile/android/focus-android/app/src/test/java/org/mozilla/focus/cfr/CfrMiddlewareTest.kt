@@ -15,7 +15,6 @@ import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -38,27 +37,6 @@ class CfrMiddlewareTest {
     fun setUp() {
         MockitoAnnotations.openMocks(this)
         onboardingExperiment = FocusNimbus.features.onboarding.value(testContext)
-    }
-
-    @Test
-    fun `GIVEN erase cfr is enabled and tracking protection cfr is not displayed WHEN AddTabAction is intercepted THEN the numberOfTabsOpened is increased`() {
-        if (onboardingExperiment.isCfrEnabled) {
-            browserStore.dispatch(TabListAction.AddTabAction(createTab())).joinBlocking()
-
-            assertEquals(1, testContext.components.settings.numberOfTabsOpened)
-        }
-    }
-
-    @Test
-    fun `GIVEN erase cfr is enabled and tracking protection cfr is not displayed WHEN AddTabAction is intercepted for the third time THEN showEraseTabsCfr is changed to true`() {
-        if (onboardingExperiment.isCfrEnabled) {
-            browserStore.dispatch(TabListAction.AddTabAction(createTab(tabId = 1))).joinBlocking()
-            browserStore.dispatch(TabListAction.AddTabAction(createTab(tabId = 2))).joinBlocking()
-            browserStore.dispatch(TabListAction.AddTabAction(createTab(tabId = 3))).joinBlocking()
-            appStore.waitUntilIdle()
-
-            assertTrue(appStore.state.showEraseTabsCfr)
-        }
     }
 
     @Test
