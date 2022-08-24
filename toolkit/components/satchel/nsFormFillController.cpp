@@ -144,17 +144,6 @@ void nsFormFillController::AttributeChanged(mozilla::dom::Element* aElement,
        aAttribute == nsGkAtoms::autocomplete) &&
       aNameSpaceID == kNameSpaceID_None) {
     RefPtr<HTMLInputElement> focusedInput(mFocusedInput);
-
-    // When the type prop changes the older element is already in a focused
-    // state. To be able to refresh the styles we reset focus. This way we are
-    // able to change focus UI styles of the element if necessary.
-    RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager();
-    if (fm && aAttribute == nsGkAtoms::type) {
-      nsCOMPtr<nsPIDOMWindowOuter> outerWindow =
-          aElement->OwnerDoc()->GetWindow();
-      fm->ClearFocus(outerWindow);
-      fm->SetFocus(focusedInput, 0);
-    }
     // Reset the current state of the controller, unconditionally.
     StopControllingInput();
     // Then restart based on the new values.  We have to delay this
@@ -1013,17 +1002,13 @@ void nsFormFillController::MaybeStartControllingInput(
     return;
   }
 
-  bool hasList = !!aInput->GetList();
-
   if (!IsTextControl(aInput)) {
-    // Even if this is not a text control yet, it can become one in the future
-    if (hasList) {
-      StartControllingInput(aInput);
-    }
     return;
   }
 
   bool autocomplete = nsContentUtils::IsAutocompleteEnabled(aInput);
+
+  bool hasList = !!aInput->GetList();
 
   bool isPwmgrInput = false;
   if (mPwmgrInputs.Get(aInput) || aInput->HasBeenTypePassword()) {
