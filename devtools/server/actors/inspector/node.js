@@ -427,7 +427,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     // node with `name="attributes"` exists in the DOM we need to bail.
     if (
       !this.rawNode.attributes ||
-      !(this.rawNode.attributes instanceof NamedNodeMap)
+      !NamedNodeMap.isInstance(this.rawNode.attributes)
     ) {
       return undefined;
     }

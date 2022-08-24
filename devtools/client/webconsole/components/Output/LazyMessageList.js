@@ -130,7 +130,7 @@ class LazyMessageList extends Component {
     let element = this.#topBufferRef.current.nextSibling;
     let elementRect = element?.getBoundingClientRect();
     while (
-      element instanceof Element &&
+      Element.isInstance(element) &&
       index < this.#clampedEndIndex &&
       element !== this.#bottomBufferRef.current
     ) {

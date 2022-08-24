@@ -1998,7 +1998,7 @@
       if (isMovingTabs) {
         let sourceNode = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
         if (
-          sourceNode instanceof XULElement &&
+          XULElement.isInstance(sourceNode) &&
           sourceNode.localName == "tab" &&
           sourceNode.ownerGlobal.isChromeWindow &&
           sourceNode.ownerDocument.documentElement.getAttribute("windowtype") ==

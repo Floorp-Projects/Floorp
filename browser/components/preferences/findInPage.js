@@ -576,7 +576,7 @@ var gSearchResultsPane = {
       // add it to the list of subitems. The items that don't match the search term
       // will be hidden.
       if (
-        child instanceof Element &&
+        Element.isInstance(child) &&
         (child.classList.contains("featureGate") ||
           child.classList.contains("mozilla-product-item"))
       ) {

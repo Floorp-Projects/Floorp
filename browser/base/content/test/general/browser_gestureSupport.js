@@ -972,7 +972,7 @@ async function test_rotateGesturesOnTab() {
     true
   );
 
-  if (!(content.document instanceof ImageDocument)) {
+  if (!ImageDocument.isInstance(content.document)) {
     ok(false, "Image document failed to open for rotation testing");
     gBrowser.removeTab(test_imageTab);
     BrowserTestUtils.removeTab(test_normalTab);

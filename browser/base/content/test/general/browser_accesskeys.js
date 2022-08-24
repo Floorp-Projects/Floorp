@@ -140,7 +140,7 @@ function performAccessKey(browser, key) {
       callback,
       { capture: true },
       event => {
-        if (!(event.target instanceof HTMLElement)) {
+        if (!HTMLElement.isInstance(event.target)) {
           return false; // ignore window and document focus events
         }
 

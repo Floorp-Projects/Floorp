@@ -95,9 +95,17 @@ function isChromeContext(context) {
     return fs.readFileSync(filename).includes("there.is.only.xul");
   }
 
-  // Treat scripts using ChromeUtils as chrome scripts, but not SpecialPowers.ChromeUtils
+  // Treat scripts as chrome privileged when using:
+  // 1. ChromeUtils, but not SpecialPowers.ChromeUtils
+  // 2. BrowserTestUtils, PlacesUtils
+  // 3. document.createXULElement
+  // 4. loader.lazyRequireGetter
+  // 5. Services.foo, but not SpecialPowers.Services.foo
+  // 6. evalInSandbox
   const source = context.getSourceCode().text;
-  return !!source.match(/(^|\s)ChromeUtils/);
+  return !!source.match(
+    /(^|\s)ChromeUtils|BrowserTestUtils|PlacesUtils|createXULElement|lazyRequireGetter|(^|\s)Services\.|evalInSandbox/
+  );
 }
 
 module.exports = {

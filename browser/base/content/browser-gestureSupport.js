@@ -501,7 +501,7 @@ var gGestureSupport = {
    *        The MozRotateGestureUpdate event triggering this call
    */
   rotate(aEvent) {
-    if (!(window.content.document instanceof ImageDocument)) {
+    if (!ImageDocument.isInstance(window.content.document)) {
       return;
     }
 
@@ -523,7 +523,7 @@ var gGestureSupport = {
    * Perform a rotation end for ImageDocuments
    */
   rotateEnd() {
-    if (!(window.content.document instanceof ImageDocument)) {
+    if (!ImageDocument.isInstance(window.content.document)) {
       return;
     }
 
@@ -607,7 +607,7 @@ var gGestureSupport = {
       return;
     }
 
-    if (!(window.content.document instanceof ImageDocument)) {
+    if (!ImageDocument.isInstance(window.content.document)) {
       return;
     }
 
@@ -637,7 +637,7 @@ var gGestureSupport = {
   _clearCompleteRotation() {
     let contentElement =
       window.content.document &&
-      window.content.document instanceof ImageDocument &&
+      ImageDocument.isInstance(window.content.document) &&
       window.content.document.body &&
       window.content.document.body.firstElementChild;
     if (!contentElement) {

@@ -26,7 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
     // gA11yEventDumpToConsole = true; // debugging
 
     function changeARIAActiveDescendant(aContainer, aItem, aPrevItemId) {
-      let itemID = aItem instanceof Node ? aItem.id : aItem;
+      let itemID = Node.isInstance(aItem) ? aItem.id : aItem;
       this.eventSeq = [new focusChecker(aItem)];
 
       if (aPrevItemId) {

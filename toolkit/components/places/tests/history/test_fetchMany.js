@@ -48,7 +48,7 @@ add_task(async function test_fetchMany() {
   for (let key of keys) {
     let page = pages.find(p => p.guid == key || p.url == key);
     Assert.deepEqual(page, fetched.get(key));
-    Assert.ok(fetched.get(key).url instanceof URL);
+    Assert.ok(URL.isInstance(fetched.get(key).url));
   }
 });
 
