@@ -53,7 +53,6 @@ class MultitaskingTest {
     @Throws(Exception::class)
     fun startWebServer() {
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
-        featureSettingsHelper.setNumberOfTabsOpened(4)
         webServer = MockWebServer().apply {
             dispatcher = MockWebServerHelper.AndroidAssetDispatcher()
             start()

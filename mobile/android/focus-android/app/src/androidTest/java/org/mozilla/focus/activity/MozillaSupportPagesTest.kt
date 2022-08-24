@@ -27,7 +27,6 @@ class MozillaSupportPagesTest {
     @Before
     fun setUp() {
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
-        featureSettingsHelper.setNumberOfTabsOpened(4)
     }
 
     @After

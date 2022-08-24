@@ -28,7 +28,6 @@ class ErrorPagesTest {
     @Before
     fun setUp() {
         featureSettingsHelper.setCfrForTrackingProtectionEnabled(false)
-        featureSettingsHelper.setNumberOfTabsOpened(4)
     }
 
     @After
