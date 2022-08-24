@@ -16,7 +16,6 @@
   locale/@AB_CD@/global/browser.properties              (%chrome/global/browser.properties)
   locale/@AB_CD@/global/commonDialogs.properties        (%chrome/global/commonDialogs.properties)
   locale/@AB_CD@/global/contentAreaCommands.properties  (%chrome/global/contentAreaCommands.properties)
-  locale/@AB_CD@/global/datetimebox.dtd                 (%chrome/global/datetimebox.dtd)
 #ifndef MOZ_FENNEC
   locale/@AB_CD@/global/editMenuOverlay.dtd             (%chrome/global/editMenuOverlay.dtd)
 #endif
