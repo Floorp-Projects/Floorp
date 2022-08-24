@@ -292,9 +292,9 @@ impl Display for Number {
     #[cfg(not(feature = "arbitrary_precision"))]
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         match self.n {
-            N::PosInt(u) => Display::fmt(&u, formatter),
-            N::NegInt(i) => Display::fmt(&i, formatter),
-            N::Float(f) => Display::fmt(&f, formatter),
+            N::PosInt(u) => formatter.write_str(itoa::Buffer::new().format(u)),
+            N::NegInt(i) => formatter.write_str(itoa::Buffer::new().format(i)),
+            N::Float(f) => formatter.write_str(ryu::Buffer::new().format_finite(f)),
         }
     }
 
@@ -305,29 +305,8 @@ impl Display for Number {
 }
 
 impl Debug for Number {
-    #[cfg(not(feature = "arbitrary_precision"))]
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        let mut debug = formatter.debug_tuple("Number");
-        match self.n {
-            N::PosInt(i) => {
-                debug.field(&i);
-            }
-            N::NegInt(i) => {
-                debug.field(&i);
-            }
-            N::Float(f) => {
-                debug.field(&f);
-            }
-        }
-        debug.finish()
-    }
-
-    #[cfg(feature = "arbitrary_precision")]
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter
-            .debug_tuple("Number")
-            .field(&format_args!("{}", self.n))
-            .finish()
+        write!(formatter, "Number({})", self)
     }
 }
 

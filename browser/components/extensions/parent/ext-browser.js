@@ -1045,7 +1045,10 @@ class Window extends WindowBase {
       return;
     }
 
-    if (initialState == window.STATE_FULLSCREEN) {
+    // We check for window.fullScreen here to make sure to exit fullscreen even
+    // if DOM and widget disagree on what the state is. This is a speculative
+    // fix for bug 1780876, ideally it should not be needed.
+    if (initialState == window.STATE_FULLSCREEN || window.fullScreen) {
       window.fullScreen = false;
     }
 

@@ -583,14 +583,6 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   void HidePopupsInDocShell(nsIDocShellTreeItem* aDocShellToHide);
 
   /**
-   * Enable or disable the dynamic noautohide state of a panel.
-   *
-   * aPanel - the panel whose state is to change
-   * aShouldRollup - whether the panel is no longer noautohide
-   */
-  void EnableRollup(nsIContent* aPopup, bool aShouldRollup);
-
-  /**
    * Check if any popups need to be repositioned or hidden after a style or
    * layout change. This will update, for example, any arrow type panels when
    * the anchor that is is pointing to has moved, resized or gone away.

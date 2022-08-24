@@ -6,6 +6,7 @@
 
 #include "nsCookieBannerRule.h"
 #include "nsCookieInjector.h"
+#include "nsIClickRule.h"
 #include "nsICookieBannerListService.h"
 #include "nsICookieBannerRule.h"
 #include "nsICookie.h"
@@ -246,6 +247,33 @@ nsCookieBannerService::GetCookiesForURI(
     return rule->GetCookiesOptIn(aCookies);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookieBannerService::GetClickRuleForDomain(const nsACString& aDomain,
+                                             nsIClickRule** aRule) {
+  NS_ENSURE_ARG_POINTER(aRule);
+
+  // Service is disabled, throw with empty rule.
+  if (!mIsInitialized) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsCOMPtr<nsICookieBannerRule> rule;
+  nsresult rv = GetRuleForDomain(aDomain, getter_AddRefs(rule));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // No click rule for the given domain, bail out.
+  if (!rule) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIClickRule> clickRule;
+  rv = rule->GetClickRule(getter_AddRefs(clickRule));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  clickRule.forget(aRule);
   return NS_OK;
 }
 

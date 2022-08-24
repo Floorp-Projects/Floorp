@@ -2173,12 +2173,21 @@ var gBrowserInit = {
       }
 
       // For custom new window URLs that are not empty, we need to wait for the
-      // page to load before we select the URL bar. So we set the
-      // _selectUrlbarOnLoad flag here and will make use of it in
-      // onLocationChange.
+      // page to load before we select the URL bar. So we listen for the "SetURI"
+      // event called in onLocationChange, then select the URL bar.
       if (!isBlankPageURL(uriToLoad) && HomePage.get(window) == uriToLoad) {
-        gBrowserInit._selectUrlbarOnLoad = true;
-        gBrowserInit._initiallyFocusedElement = initiallyFocusedElement;
+        gURLBar.inputField.addEventListener(
+          "SetURI",
+          () => {
+            if (
+              initiallyFocusedElement ==
+              document.commandDispatcher.focusedElement
+            ) {
+              gURLBar.select();
+            }
+          },
+          { once: true }
+        );
         shouldRemoveFocusedAttribute = false;
         return;
       }
@@ -5426,17 +5435,6 @@ var XULBrowserWindow = {
     // if this is a document navigation then PopupNotifications will be updated
     // via TabsProgressListener.onLocationChange and we do not want it called twice
     gURLBar.setURI(aLocationURI, aIsSimulated, isSessionRestore);
-
-    if (gBrowserInit._selectUrlbarOnLoad) {
-      if (
-        document.commandDispatcher.focusedElement ==
-        gBrowserInit._initiallyFocusedElement
-      ) {
-        gURLBar.select();
-      }
-      gBrowserInit._selectUrlbarOnLoad = false;
-      gBrowserInit._initiallyFocusedElement = null;
-    }
 
     BookmarkingUI.onLocationChange();
     // If we've actually changed document, update the toolbar visibility.

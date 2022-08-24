@@ -40,7 +40,7 @@
 // The anyhow! macro will set up the call in this form:
 //
 //     #[allow(unused_imports)]
-//     use $crate::private::{AdhocKind, TraitKind};
+//     use $crate::__private::{AdhocKind, TraitKind};
 //     let error = $msg;
 //     (&error).anyhow_kind().new(error)
 

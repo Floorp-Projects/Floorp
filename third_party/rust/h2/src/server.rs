@@ -554,7 +554,7 @@ where
     ///
     /// This limit is configured by the client peer by sending the
     /// [`SETTINGS_MAX_CONCURRENT_STREAMS` parameter][1] in a `SETTINGS` frame.
-    /// This method returns the currently acknowledged value recieved from the
+    /// This method returns the currently acknowledged value received from the
     /// remote.
     ///
     /// [1]: https://tools.ietf.org/html/rfc7540#section-5.1.2

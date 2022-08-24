@@ -1,0 +1,24 @@
+<!doctype html>
+<title>Test load of media document in sandboxed iframe</title>
+<link rel="motivation" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1783601">
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<body></body>
+<script>
+promise_test(async () => {
+  const frame = document.createElement('iframe');
+  frame.sandbox = '';
+  frame.src =
+    // 'PartialContent' ensures that the entire video resource does not load
+    // in one fetch.
+    '/service-workers/service-worker/resources/fetch-access-control.py?'
+    + 'VIDEO&PartialContent';
+
+  document.body.appendChild(frame);
+  await new Promise(resolve => frame.onload = resolve);
+
+  const video = SpecialPowers.wrap(frame).contentDocument.body.childNodes[0];
+  video.muted = true;  // to allow playback
+  return video.play();
+});
+</script>

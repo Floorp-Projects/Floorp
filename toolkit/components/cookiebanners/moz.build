@@ -8,6 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Privacy: Anti-Tracking")
 
 XPIDL_SOURCES += [
+    "nsIClickRule.idl",
     "nsICookieBannerListService.idl",
     "nsICookieBannerRule.idl",
     "nsICookieBannerService.idl",
@@ -25,6 +26,7 @@ XPCOM_MANIFESTS += [
 ]
 
 EXPORTS.mozilla += [
+    "nsClickRule.h",
     "nsCookieBannerRule.h",
     "nsCookieBannerService.h",
     "nsCookieInjector.h",
@@ -32,10 +34,16 @@ EXPORTS.mozilla += [
 ]
 
 UNIFIED_SOURCES += [
+    "nsClickRule.cpp",
     "nsCookieBannerRule.cpp",
     "nsCookieBannerService.cpp",
     "nsCookieInjector.cpp",
     "nsCookieRule.cpp",
+]
+
+FINAL_TARGET_FILES.actors += [
+    "CookieBannerChild.jsm",
+    "CookieBannerParent.jsm",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

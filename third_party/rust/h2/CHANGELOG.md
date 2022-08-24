@@ -1,3 +1,9 @@
+# 0.3.14 (August 16, 2022)
+
+* Add `Error::is_reset` function.
+* Bump MSRV to Rust 1.56.
+* Return `RST_STREAM(NO_ERROR)` when the server early responds.
+
 # 0.3.13 (March 31, 2022)
 
 * Update private internal `tokio-util` dependency.

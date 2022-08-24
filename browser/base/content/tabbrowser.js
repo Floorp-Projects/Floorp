@@ -1071,7 +1071,9 @@
         TelemetryStopwatch.start("FX_TAB_SWITCH_UPDATE_MS");
 
         if (gMultiProcessBrowser) {
+          this._asyncTabSwitching = true;
           this._getSwitcher().requestTab(newTab);
+          this._asyncTabSwitching = false;
         }
 
         document.commandDispatcher.lock();
@@ -1392,7 +1394,26 @@
         }
 
         if (!window.fullScreen || newTab.isEmpty) {
-          gURLBar.select();
+          if (this._asyncTabSwitching) {
+            // The onLocationChange event called in updateCurrentBrowser() will
+            // be captured in browser.js, then it calls gURLBar.setURI(). In case
+            // of that doing processing of here before doing above processing,
+            // the selection status that gURLBar.select() does will be releasing
+            // by gURLBar.setURI(). To resolve it, we call gURLBar.select() after
+            // finishing gURLBar.setURI().
+            const currentActiveElement = document.activeElement;
+            gURLBar.inputField.addEventListener(
+              "SetURI",
+              () => {
+                if (currentActiveElement === document.activeElement) {
+                  gURLBar.select();
+                }
+              },
+              { once: true }
+            );
+          } else {
+            gURLBar.select();
+          }
           return;
         }
       }
