@@ -34,6 +34,7 @@ function setupRecentDeviceListMocks() {
 }
 
 function waitForWindowActive(win, active) {
+  info("Waiting for window activation");
   return Promise.all([
     BrowserTestUtils.waitForEvent(win, active ? "focus" : "blur"),
     BrowserTestUtils.waitForEvent(win, active ? "activate" : "deactivate"),
@@ -41,6 +42,7 @@ function waitForWindowActive(win, active) {
 }
 
 async function waitForNotificationBadgeToBeShowing(fxViewButton) {
+  info("Waiting for attention attribute to be set");
   await BrowserTestUtils.waitForMutationCondition(
     fxViewButton,
     { attributes: true },
@@ -50,6 +52,7 @@ async function waitForNotificationBadgeToBeShowing(fxViewButton) {
 }
 
 async function waitForNotificationBadgeToBeHidden(fxViewButton) {
+  info("Waiting for attention attribute to be removed");
   await BrowserTestUtils.waitForMutationCondition(
     fxViewButton,
     { attributes: true },
@@ -59,7 +62,7 @@ async function waitForNotificationBadgeToBeHidden(fxViewButton) {
 }
 
 function getBackgroundPositionForElement(ele) {
-  let style = getComputedStyle(ele);
+  let style = ele.ownerGlobal.getComputedStyle(ele);
   return style.getPropertyValue("background-position");
 }
 
@@ -71,16 +74,6 @@ async function initTabSync() {
   await TestUtils.waitForTick();
 }
 
-add_setup(async () => {
-  await window.delayedStartupPromise;
-  await addFirefoxViewButtonToToolbar();
-
-  registerCleanupFunction(() => {
-    BrowserTestUtils.removeTab(FirefoxViewHandler.tab);
-    removeFirefoxViewButtonFromToolbar();
-  });
-});
-
 /**
  * Test that the notification badge will show and hide in the correct cases
  */
@@ -88,12 +81,13 @@ add_task(async function testNotificationDot() {
   const sandbox = setupRecentDeviceListMocks();
   const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
 
-  syncedTabsMock.returns(tabsList1);
-  // Initiate a synced tabs update  with new tabs
-  await initTabSync();
-
-  let fxViewBtn = document.getElementById("firefox-view-button");
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  let fxViewBtn = win.document.getElementById("firefox-view-button");
   ok(fxViewBtn, "Got the Firefox View button");
+
+  // Initiate a synced tabs update with new tabs
+  syncedTabsMock.returns(tabsList1);
+  await initTabSync();
 
   ok(
     BrowserTestUtils.is_visible(fxViewBtn),
@@ -105,8 +99,8 @@ add_task(async function testNotificationDot() {
     "The notification badge is not showing initially"
   );
 
+  // Initiate a synced tabs update with new tabs
   syncedTabsMock.returns(tabsList2);
-  // Initiate a synced tabs update  with new tabs
   await initTabSync();
 
   ok(
@@ -132,7 +126,7 @@ add_task(async function testNotificationDot() {
     "The notification badge is not showing after tab sync while Firefox View is focused"
   );
 
-  let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  let newTab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser);
   syncedTabsMock.returns(tabsList2);
   await initTabSync();
 
@@ -149,7 +143,7 @@ add_task(async function testNotificationDot() {
     "The notification badge is not showing after focusing the Firefox View tab"
   );
 
-  await BrowserTestUtils.switchTab(gBrowser, newTab);
+  await BrowserTestUtils.switchTab(win.gBrowser, newTab);
 
   // Initiate a synced tabs update with no new tabs
   await initTabSync();
@@ -159,9 +153,7 @@ add_task(async function testNotificationDot() {
     "The notification badge is not showing after a tab sync with the same tabs"
   );
 
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
-
-  BrowserTestUtils.removeTab(newTab);
+  await BrowserTestUtils.closeWindow(win);
 
   sandbox.restore();
 });
@@ -170,23 +162,31 @@ add_task(async function testNotificationDot() {
  * Tests the notification badge with multiple windows
  */
 add_task(async function testNotificationDotOnMultipleWindows() {
+  // FIXME: This sub-test is disabled, should be re-enabled in bug 1786565.
+  /* eslint-disable no-unreachable */
+  return;
+
   const sandbox = setupRecentDeviceListMocks();
   const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
+
+  // Create a new window
+  let win1 = await BrowserTestUtils.openNewBrowserWindow();
+  await win1.delayedStartupPromise;
+  let fxViewBtn = win1.document.getElementById("firefox-view-button");
+  ok(fxViewBtn, "Got the Firefox View button");
 
   syncedTabsMock.returns(tabsList1);
   // Initiate a synced tabs update
   await initTabSync();
 
-  let fxViewBtn = document.getElementById("firefox-view-button");
-  ok(fxViewBtn, "Got the Firefox View button");
+  // Create another window
+  let win2 = await BrowserTestUtils.openNewBrowserWindow();
+  await win2.delayedStartupPromise;
+  let fxViewBtn2 = win2.document.getElementById("firefox-view-button");
 
-  // Create a new window
-  let win = await BrowserTestUtils.openNewBrowserWindow();
-  await win.delayedStartupPromise;
-  let fxViewBtn2 = win.document.getElementById("firefox-view-button");
   fxViewBtn2.click();
 
-  // Make sure the badge doesn't shows on all windows
+  // Make sure the badge doesn't show on any window
   ok(
     await waitForNotificationBadgeToBeHidden(fxViewBtn),
     "The notification badge is not showing in the inital window"
@@ -197,14 +197,15 @@ add_task(async function testNotificationDotOnMultipleWindows() {
   );
 
   // Minimize the window.
-  win.minimize();
+  win2.minimize();
 
   await TestUtils.waitForCondition(
-    () => !win.gBrowser.selectedTab.linkedBrowser.docShellIsActive
+    () => !win2.gBrowser.selectedBrowser.docShellIsActive,
+    "Waiting for docshell to be marked as inactive after minimizing the window"
   );
 
   syncedTabsMock.returns(tabsList2);
-  // Initiate a synced tabs update  with new tabs
+  info("Initiate a synced tabs update with new tabs");
   await initTabSync();
 
   // The badge will show because the View tab is minimized
@@ -218,12 +219,14 @@ add_task(async function testNotificationDotOnMultipleWindows() {
     "The notification badge is showing in the second window"
   );
 
-  win.restore();
+  win2.restore();
   await TestUtils.waitForCondition(
-    () => win.gBrowser.selectedTab.linkedBrowser.docShellIsActive
+    () => win2.gBrowser.selectedBrowser.docShellIsActive,
+    "Waiting for docshell to be marked as active after restoring the window"
   );
 
-  await BrowserTestUtils.closeWindow(win);
+  await BrowserTestUtils.closeWindow(win1);
+  await BrowserTestUtils.closeWindow(win2);
 
   sandbox.restore();
 });
@@ -237,14 +240,15 @@ add_task(async function testNotificationDotLocation() {
   const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
 
   syncedTabsMock.returns(tabsList1);
-  // Initiate a synced tabs update
-  await initTabSync();
 
-  let fxViewBtn = document.getElementById("firefox-view-button");
+  let win1 = await BrowserTestUtils.openNewBrowserWindow();
+  let fxViewBtn = win1.document.getElementById("firefox-view-button");
   ok(fxViewBtn, "Got the Firefox View button");
 
-  syncedTabsMock.returns(tabsList2);
   // Initiate a synced tabs update
+  await initTabSync();
+  syncedTabsMock.returns(tabsList2);
+  // Initiate another synced tabs update
   await initTabSync();
 
   ok(
@@ -253,12 +257,11 @@ add_task(async function testNotificationDotLocation() {
   );
 
   // Create a new window
-  let win = await BrowserTestUtils.openNewBrowserWindow();
-  await win.delayedStartupPromise;
-  // let newTab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "");
+  let win2 = await BrowserTestUtils.openNewBrowserWindow();
+  await win2.delayedStartupPromise;
 
   // Make sure the badge doesn't showing on the new window
-  let fxViewBtn2 = win.document.getElementById("firefox-view-button");
+  let fxViewBtn2 = win2.document.getElementById("firefox-view-button");
   ok(
     await waitForNotificationBadgeToBeShowing(fxViewBtn2),
     "The notification badge is showing in the second window after opening"
@@ -303,7 +306,9 @@ add_task(async function testNotificationDotLocation() {
     "The notification badge is showing in the top right in the second window"
   );
 
-  await BrowserTestUtils.closeWindow(win);
+  CustomizableUI.reset();
+  await BrowserTestUtils.closeWindow(win1);
+  await BrowserTestUtils.closeWindow(win2);
 
   sandbox.restore();
 });

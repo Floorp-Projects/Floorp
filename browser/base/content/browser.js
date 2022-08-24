@@ -1696,6 +1696,7 @@ var gBrowserInit = {
 
     BrowserWindowTracker.track(window);
 
+    FirefoxViewHandler.earlyInit();
     gNavToolbox.palette = document.getElementById(
       "BrowserToolbarPalette"
     ).content;
@@ -9913,17 +9914,22 @@ var FirefoxViewHandler = {
   get button() {
     return document.getElementById("firefox-view-button");
   },
+  earlyInit() {
+    if (!Services.prefs.getBoolPref("browser.tabs.firefox-view")) {
+      document.getElementById("menu_openFirefoxView").hidden = true;
+      this.button.remove();
+    }
+  },
   init() {
+    if (!Services.prefs.getBoolPref("browser.tabs.firefox-view")) {
+      return;
+    }
     const { FirefoxViewNotificationManager } = ChromeUtils.importESModule(
       "resource:///modules/firefox-view-notification-manager.sys.mjs"
     );
-    if (!Services.prefs.getBoolPref("browser.tabs.firefox-view")) {
-      document.getElementById("menu_openFirefoxView").hidden = true;
-    } else {
-      this._toggleNotificationDot(
-        FirefoxViewNotificationManager.shouldNotificationDotBeShowing()
-      );
-    }
+    this._toggleNotificationDot(
+      FirefoxViewNotificationManager.shouldNotificationDotBeShowing()
+    );
     Services.obs.addObserver(this, "firefoxview-notification-dot-update");
     this._observerAdded = true;
   },
@@ -9932,7 +9938,10 @@ var FirefoxViewHandler = {
       Services.obs.removeObserver(this, "firefoxview-notification-dot-update");
     }
   },
-  openTab() {
+  openTab(event) {
+    if (event?.type == "mousedown" && event?.button != 0) {
+      return;
+    }
     if (!this.tab) {
       this.tab = gBrowser.addTrustedTab("about:firefoxview", { index: 0 });
       this.tab.addEventListener("TabClose", this, { once: true });
