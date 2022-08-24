@@ -759,6 +759,7 @@ license file's hash.
         )
         if res.returncode:
             vet = json.loads(res.stdout)
+            logged_error = False
             for failure in vet.get("failures", []):
                 failure["crate"] = failure.pop("name")
                 self.log(
@@ -768,9 +769,61 @@ license file's hash.
                     "Missing audit for {crate}:{version} (requires {missing_criteria})."
                     " Run `./mach cargo vet` for more information.",
                 )
-                failed = True
-
-        if failed:
+                logged_error = True
+            # NOTE: This could log more information, but the violation JSON
+            # output isn't super stable yet, so it's probably simpler to tell
+            # the caller to run `./mach cargo vet` directly.
+            for key in vet.get("violations", {}).keys():
+                self.log(
+                    logging.ERROR,
+                    "cargo_vet_failed",
+                    {"key": key},
+                    "Violation conflict for {key}. Run `./mach cargo vet` for more information.",
+                )
+                logged_error = True
+            if "error" in vet:
+                # NOTE: The error format produced by cargo-vet is from the
+                # `miette` crate, and can include a lot of metadata and context.
+                # If we want to show more details in the future, we can expand
+                # this rendering to also include things like source labels and
+                # related error metadata.
+                error = vet["error"]
+                self.log(
+                    logging.ERROR,
+                    "cargo_vet_failed",
+                    error,
+                    "Vet {severity}: {message}",
+                )
+                if "help" in error:
+                    self.log(logging.INFO, "cargo_vet_failed", error, " help: {help}")
+                for cause in error.get("causes", []):
+                    self.log(
+                        logging.INFO,
+                        "cargo_vet_failed",
+                        {"cause": cause},
+                        " cause: {cause}",
+                    )
+                for related in error.get("related", []):
+                    self.log(
+                        logging.INFO,
+                        "cargo_vet_failed",
+                        related,
+                        " related {severity}: {message}",
+                    )
+                self.log(
+                    logging.INFO,
+                    "cargo_vet_failed",
+                    {},
+                    "Run `./mach cargo vet` for more information.",
+                )
+                logged_error = True
+            if not logged_error:
+                self.log(
+                    logging.ERROR,
+                    "cargo_vet_failed",
+                    {},
+                    "Unknown vet error. Run `./mach cargo vet` for more information.",
+                )
             return False
 
         res = subprocess.run(
