@@ -306,6 +306,13 @@ add_task(
         );
       }
     );
+
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        // Revert layout direction to left to right
+        ["intl.l10n.pseudo", ""],
+      ],
+    });
   }
 );
 
@@ -356,10 +363,7 @@ add_task(async function feature_callout_only_highlights_existing_elements() {
 
 add_task(async function feature_callout_arrow_class_exists() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.firefox-view.feature-tour", defaultPrefValue],
-      ["intl.l10n.pseudo", ""],
-    ],
+    set: [["browser.firefox-view.feature-tour", defaultPrefValue]],
   });
 
   await BrowserTestUtils.withNewTab(
@@ -379,10 +383,7 @@ add_task(async function feature_callout_arrow_class_exists() {
 
 add_task(async function feature_callout_arrow_is_not_flipped_on_ltr() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.firefox-view.feature-tour", defaultPrefValue],
-      ["intl.l10n.pseudo", ""],
-    ],
+    set: [["browser.firefox-view.feature-tour", defaultPrefValue]],
   });
 
   await BrowserTestUtils.withNewTab(
@@ -413,10 +414,7 @@ add_task(async function feature_callout_arrow_is_not_flipped_on_ltr() {
 // Tour is accessible using a screen reader and keyboard navigation
 add_task(async function feature_callout_is_accessible() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.firefox-view.feature-tour", defaultPrefValue],
-      ["intl.l10n.pseudo", ""],
-    ],
+    set: [["browser.firefox-view.feature-tour", defaultPrefValue]],
   });
 
   await BrowserTestUtils.withNewTab(
@@ -455,6 +453,53 @@ add_task(async function feature_callout_is_accessible() {
         document.querySelector(`${calloutSelector}[role="alert"]`),
         "The callout container has role of alert after advancing screens"
       );
+    }
+  );
+});
+
+add_task(async function feature_callout_is_repositioned_if_it_does_not_fit() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.firefox-view.feature-tour",
+        '{"message":"FIREFOX_VIEW_FEATURE_TOUR","screen":"FEATURE_CALLOUT_3","complete":false}',
+      ],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      let startHeight = window.outerHeight;
+      let startWidth = window.outerWidth;
+
+      const { document } = browser.contentWindow;
+      await waitForCalloutScreen(document, ".FEATURE_CALLOUT_3");
+      browser.contentWindow.resizeTo(1200, 800);
+      ok(
+        document.querySelector(`${calloutSelector}.arrow-inline-end`),
+        "On third screen, the callout is positioned at the start of the parent element originally configured"
+      );
+
+      const startingTop = document.querySelector(calloutSelector).style.top;
+
+      browser.contentWindow.resizeTo(800, 800);
+      // Wait for callout to be repositioned
+      await BrowserTestUtils.waitForMutationCondition(
+        document.querySelector(calloutSelector),
+        { attributeFilter: ["style"], attributes: true },
+        () => document.querySelector(calloutSelector).style.top != startingTop
+      );
+
+      ok(
+        document.querySelector(`${calloutSelector}.arrow-top`),
+        "On third screen at a narrower window width, the callout is positioned below the parent element"
+      );
+
+      browser.contentWindow.resizeTo(startWidth, startHeight);
     }
   );
 });

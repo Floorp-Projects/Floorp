@@ -34,6 +34,7 @@ input {
 .onboardingContainer.featureCallout {
   position: absolute;
   transition: opacity 0.5s ease;
+  z-index: 2147483645;
 }
 .onboardingContainer.featureCallout.hidden {
   opacity: 0;
@@ -419,9 +420,6 @@ body[lwt-newtab-brighttext] {
   text-decoration: none;
   background-color: var(--in-content-button-background-hover) !important;
 }
-.onboardingContainer .screen[pos=split] .section-main .main-content .logo-container {
-  text-align: start;
-}
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .arrow-icon {
   background: url("chrome://browser/skin/forward.svg") no-repeat right 8px center;
   background-size: 12px;
@@ -430,6 +428,9 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .arrow-icon:dir(rtl) {
   background-image: url("chrome://browser/skin/back.svg");
   background-position-x: left 8px;
+}
+.onboardingContainer .screen[pos=split] .section-main .main-content .logo-container {
+  text-align: start;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .brand-logo {
   height: 25px;
