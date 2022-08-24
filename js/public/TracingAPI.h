@@ -232,18 +232,10 @@ class GenericTracer : public JSTracer {
   // have to have distinct names to allow us to override them individually,
   // which is freqently useful if, for example, we only want to process one type
   // of edge.
-  virtual JSObject* onObjectEdge(JSObject* obj) = 0;
-  virtual JSString* onStringEdge(JSString* str) = 0;
-  virtual JS::Symbol* onSymbolEdge(JS::Symbol* sym) = 0;
-  virtual JS::BigInt* onBigIntEdge(JS::BigInt* bi) = 0;
-  virtual js::BaseScript* onScriptEdge(js::BaseScript* script) = 0;
-  virtual js::Shape* onShapeEdge(js::Shape* shape) = 0;
-  virtual js::RegExpShared* onRegExpSharedEdge(js::RegExpShared* shared) = 0;
-  virtual js::GetterSetter* onGetterSetterEdge(js::GetterSetter* gs) = 0;
-  virtual js::PropMap* onPropMapEdge(js::PropMap* map) = 0;
-  virtual js::BaseShape* onBaseShapeEdge(js::BaseShape* base) = 0;
-  virtual js::jit::JitCode* onJitCodeEdge(js::jit::JitCode* code) = 0;
-  virtual js::Scope* onScopeEdge(js::Scope* scope) = 0;
+#define DEFINE_ON_EDGE_METHOD(name, type, _1, _2) \
+  virtual type* on##name##Edge(type* thing) = 0;
+  JS_FOR_EACH_TRACEKIND(DEFINE_ON_EDGE_METHOD)
+#undef DEFINE_ON_EDGE_METHOD
 };
 
 // A helper class that implements a GenericTracer by calling template method
@@ -258,38 +250,12 @@ class GenericTracerImpl : public GenericTracer {
  private:
   T* derived() { return static_cast<T*>(this); }
 
-  JSObject* onObjectEdge(JSObject* obj) override {
-    return derived()->onEdge(obj);
+#define DEFINE_ON_EDGE_METHOD(name, type, _1, _2) \
+  type* on##name##Edge(type* thing) override {    \
+    return derived()->onEdge(thing);              \
   }
-  Shape* onShapeEdge(Shape* shape) override { return derived()->onEdge(shape); }
-  JSString* onStringEdge(JSString* string) override {
-    return derived()->onEdge(string);
-  }
-  BaseScript* onScriptEdge(BaseScript* script) override {
-    return derived()->onEdge(script);
-  }
-  BaseShape* onBaseShapeEdge(BaseShape* base) override {
-    return derived()->onEdge(base);
-  }
-  GetterSetter* onGetterSetterEdge(GetterSetter* gs) override {
-    return derived()->onEdge(gs);
-  }
-  PropMap* onPropMapEdge(PropMap* map) override {
-    return derived()->onEdge(map);
-  }
-  Scope* onScopeEdge(Scope* scope) override { return derived()->onEdge(scope); }
-  RegExpShared* onRegExpSharedEdge(RegExpShared* shared) override {
-    return derived()->onEdge(shared);
-  }
-  JS::BigInt* onBigIntEdge(JS::BigInt* bi) override {
-    return derived()->onEdge(bi);
-  }
-  JS::Symbol* onSymbolEdge(JS::Symbol* sym) override {
-    return derived()->onEdge(sym);
-  }
-  jit::JitCode* onJitCodeEdge(jit::JitCode* jit) override {
-    return derived()->onEdge(jit);
-  }
+  JS_FOR_EACH_TRACEKIND(DEFINE_ON_EDGE_METHOD)
+#undef DEFINE_ON_EDGE_METHOD
 };
 
 }  // namespace js
