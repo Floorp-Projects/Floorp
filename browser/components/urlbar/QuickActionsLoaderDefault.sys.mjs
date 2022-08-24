@@ -51,6 +51,22 @@ let currentPageIsWebContentFilter = () =>
   !currentBrowser()?.currentURI.spec.startsWith("about:");
 let currentBrowser = () =>
   lazy.BrowserWindowTracker.getTopWindow()?.gBrowser.selectedBrowser;
+let currentTab = () =>
+  lazy.BrowserWindowTracker.getTopWindow()?.gBrowser.selectedTab;
+
+let inspectorIsAvailable = () => {
+  // The inspect action is available if:
+  // 1. DevTools is enabled.
+  // 2. The user can be considered as a DevTools user.
+  // 3. The url is not about:devtools-toolbox.
+  // 4. The inspector is not opened yet on the page.
+  return (
+    lazy.DevToolsShim.isEnabled() &&
+    lazy.DevToolsShim.isDevToolsUser() &&
+    !currentBrowser()?.currentURI.spec.startsWith("about:devtools-toolbox") &&
+    !lazy.DevToolsShim.hasToolboxForTab(currentTab())
+  );
+};
 
 XPCOMUtils.defineLazyGetter(lazy, "gFluentStrings", function() {
   return new Localization(["browser/browser.ftl"], true);
@@ -96,7 +112,7 @@ const DEFAULT_ACTIONS = {
     l10nCommands: "quickactions-cmd-inspector",
     icon: "chrome://devtools/skin/images/tool-inspector.svg",
     label: "quickactions-inspector",
-    isActive: currentPageIsWebContentFilter,
+    isActive: inspectorIsAvailable,
     onPick: openInspector,
   },
   logins: {
@@ -177,9 +193,9 @@ const DEFAULT_ACTIONS = {
 };
 
 function openInspector() {
-  // TODO: This is supposed to be called with an element to start inspecting.
-  lazy.DevToolsShim.inspectNode(
-    lazy.BrowserWindowTracker.getTopWindow().gBrowser.selectedTab
+  lazy.DevToolsShim.showToolboxForTab(
+    lazy.BrowserWindowTracker.getTopWindow().gBrowser.selectedTab,
+    { toolId: "inspector" }
   );
 }
 

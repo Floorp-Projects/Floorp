@@ -886,6 +886,18 @@ DevTools.prototype = {
   getToolboxes() {
     return Array.from(this._toolboxes.values());
   },
+
+  /**
+   * Returns whether the given tab has toolbox.
+   *
+   * @param {XULTab} tab
+   *        The browser tab.
+   * @return {boolean}
+   *        Returns true if the tab has toolbox.
+   */
+  hasToolboxForTab(tab) {
+    return this.getToolboxes().some(t => t.descriptorFront.localTab === tab);
+  },
 };
 
 const gDevTools = (exports.gDevTools = new DevTools());

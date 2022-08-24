@@ -320,7 +320,12 @@ const webExtensionsMethods = [
 const otherToolMethods = [
   // gDevTools.showToolboxForTab is used by wptrunner to start devtools
   // https://github.com/web-platform-tests/wpt
+  // And also, Quick Actions on URL bar.
   "showToolboxForTab",
+  // Used for Quick Actions on URL bar.
+  "hasToolboxForTab",
+  // Used for Quick Actions test.
+  "getToolboxForTab",
 ];
 
 for (const method of [...webExtensionsMethods, ...otherToolMethods]) {
