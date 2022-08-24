@@ -57,18 +57,20 @@ class ToastNotificationHandler final
  protected:
   virtual ~ToastNotificationHandler();
 
-  typedef ABI::Windows::Data::Xml::Dom::IXmlDocument IXmlDocument;
-  typedef ABI::Windows::UI::Notifications::IToastNotifier IToastNotifier;
-  typedef ABI::Windows::UI::Notifications::IToastNotification
-      IToastNotification;
-  typedef ABI::Windows::UI::Notifications::IToastDismissedEventArgs
-      IToastDismissedEventArgs;
-  typedef ABI::Windows::UI::Notifications::IToastFailedEventArgs
-      IToastFailedEventArgs;
-  typedef ABI::Windows::UI::Notifications::ToastTemplateType ToastTemplateType;
+  using IXmlDocument = ABI::Windows::Data::Xml::Dom::IXmlDocument;
+  using IToastNotifier = ABI::Windows::UI::Notifications::IToastNotifier;
+  using IToastNotification =
+      ABI::Windows::UI::Notifications::IToastNotification;
+  using IToastDismissedEventArgs =
+      ABI::Windows::UI::Notifications::IToastDismissedEventArgs;
+  using IToastFailedEventArgs =
+      ABI::Windows::UI::Notifications::IToastFailedEventArgs;
+  using ToastTemplateType = ABI::Windows::UI::Notifications::ToastTemplateType;
+  template <typename T>
+  using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-  Microsoft::WRL::ComPtr<IToastNotification> mNotification;
-  Microsoft::WRL::ComPtr<IToastNotifier> mNotifier;
+  ComPtr<IToastNotification> mNotification;
+  ComPtr<IToastNotifier> mNotifier;
 
   RefPtr<ToastNotification> mBackend;
 
@@ -100,15 +102,15 @@ class ToastNotificationHandler final
   nsresult OnWriteBitmapSuccess();
   void SendFinished();
 
-  bool CreateWindowsNotificationFromXml(IXmlDocument* aToastXml);
-  Microsoft::WRL::ComPtr<IXmlDocument> CreateToastXmlDocument();
+  bool CreateWindowsNotificationFromXml(ComPtr<IXmlDocument>& aToastXml);
+  ComPtr<IXmlDocument> CreateToastXmlDocument();
 
-  HRESULT OnActivate(IToastNotification* notification,
-                     IInspectable* inspectable);
-  HRESULT OnDismiss(IToastNotification* notification,
-                    IToastDismissedEventArgs* aArgs);
-  HRESULT OnFail(IToastNotification* notification,
-                 IToastFailedEventArgs* aArgs);
+  HRESULT OnActivate(const ComPtr<IToastNotification>& notification,
+                     const ComPtr<IInspectable>& inspectable);
+  HRESULT OnDismiss(const ComPtr<IToastNotification>& notification,
+                    const ComPtr<IToastDismissedEventArgs>& aArgs);
+  HRESULT OnFail(const ComPtr<IToastNotification>& notification,
+                 const ComPtr<IToastFailedEventArgs>& aArgs);
 };
 
 }  // namespace widget

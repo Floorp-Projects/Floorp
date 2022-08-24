@@ -43,15 +43,15 @@ using namespace Microsoft::WRL::Wrappers;
 using namespace mozilla;
 
 // Needed to disambiguate internal and Windows `ToastNotification` classes.
-typedef ABI::Windows::UI::Notifications::ToastNotification WinToastNotification;
-typedef ITypedEventHandler<WinToastNotification*, IInspectable*>
-    ToastActivationHandler;
-typedef ITypedEventHandler<WinToastNotification*, ToastDismissedEventArgs*>
-    ToastDismissedHandler;
-typedef ITypedEventHandler<WinToastNotification*, ToastFailedEventArgs*>
-    ToastFailedHandler;
-typedef Collections::IVectorView<WinToastNotification*>
-    IVectorView_ToastNotification;
+using WinToastNotification = ABI::Windows::UI::Notifications::ToastNotification;
+using ToastActivationHandler =
+    ITypedEventHandler<WinToastNotification*, IInspectable*>;
+using ToastDismissedHandler =
+    ITypedEventHandler<WinToastNotification*, ToastDismissedEventArgs*>;
+using ToastFailedHandler =
+    ITypedEventHandler<WinToastNotification*, ToastFailedEventArgs*>;
+using IVectorView_ToastNotification =
+    Collections::IVectorView<WinToastNotification*>;
 
 NS_IMPL_ISUPPORTS(ToastNotificationHandler, nsIAlertNotificationImageListener)
 
@@ -73,8 +73,8 @@ static bool SetNodeValueString(const nsString& aString, IXmlNode* node,
   return true;
 }
 
-static bool SetAttribute(IXmlElement* element, const HStringReference& name,
-                         const nsAString& value) {
+static bool SetAttribute(ComPtr<IXmlElement>& element,
+                         const HStringReference& name, const nsAString& value) {
   HString valueStr;
   valueStr.Set(PromiseFlatString(value).get());
 
@@ -84,7 +84,8 @@ static bool SetAttribute(IXmlElement* element, const HStringReference& name,
   return true;
 }
 
-static bool AddActionNode(IXmlDocument* toastXml, IXmlNode* actionsNode,
+static bool AddActionNode(ComPtr<IXmlDocument>& toastXml,
+                          ComPtr<IXmlNode>& actionsNode,
                           const nsAString& actionTitle,
                           const nsAString& launchArg,
                           const nsAString& actionArgs,
@@ -95,7 +96,7 @@ static bool AddActionNode(IXmlDocument* toastXml, IXmlNode* actionsNode,
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   bool success =
-      SetAttribute(action.Get(), HStringReference(L"content"), actionTitle);
+      SetAttribute(action, HStringReference(L"content"), actionTitle);
   NS_ENSURE_TRUE(success, false);
 
   // Action arguments overwrite the toast's launch arguments, so we need to
@@ -106,12 +107,12 @@ static bool AddActionNode(IXmlDocument* toastXml, IXmlNode* actionsNode,
   // argument parsing the action argument must be last. All delimiters after
   // `action` are part of the action arugment.
   nsAutoString args = launchArg + u"\naction\n"_ns + actionArgs;
-  success = SetAttribute(action.Get(), HStringReference(L"arguments"), args);
+  success = SetAttribute(action, HStringReference(L"arguments"), args);
   NS_ENSURE_TRUE(success, false);
 
   if (!actionPlacement.IsEmpty()) {
-    success = SetAttribute(action.Get(), HStringReference(L"placement"),
-                           actionPlacement);
+    success =
+        SetAttribute(action, HStringReference(L"placement"), actionPlacement);
     NS_ENSURE_TRUE(success, false);
   }
 
@@ -254,7 +255,7 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
     hr = imageNode.As(&image);
     NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
-    success = SetAttribute(image.Get(), HStringReference(L"src"), mImageUri);
+    success = SetAttribute(image, HStringReference(L"src"), mImageUri);
     NS_ENSURE_TRUE(success, nullptr);
   }
 
@@ -291,8 +292,8 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
     hr = toastNodeRoot.As(&toastNode);
     NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
-    success = SetAttribute(toastNode.Get(), HStringReference(L"scenario"),
-                           u"reminder"_ns);
+    success =
+        SetAttribute(toastNode, HStringReference(L"scenario"), u"reminder"_ns);
     NS_ENSURE_TRUE(success, nullptr);
   }
   ComPtr<IXmlElement> toastElement;
@@ -303,8 +304,7 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
   NS_ENSURE_TRUE(maybeLaunchArg.isOk(), nullptr);
   nsString launchArg = maybeLaunchArg.unwrap();
 
-  success =
-      SetAttribute(toastElement.Get(), HStringReference(L"launch"), launchArg);
+  success = SetAttribute(toastElement, HStringReference(L"launch"), launchArg);
   NS_ENSURE_TRUE(success, nullptr);
 
   ComPtr<IXmlElement> actions;
@@ -343,7 +343,7 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
       hr = urlTextNodeRoot.As(&placementText);
       if (SUCCEEDED(hr)) {
         // placement is supported on Windows 10 Anniversary Update or later
-        SetAttribute(placementText.Get(), HStringReference(L"placement"),
+        SetAttribute(placementText, HStringReference(L"placement"),
                      u"attribution"_ns);
       }
     }
@@ -353,15 +353,14 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
                                       formatStrings, disableButtonTitle);
     NS_ENSURE_SUCCESS(ns, nullptr);
 
-    AddActionNode(toastXml.Get(), actionsNode.Get(), disableButtonTitle,
-                  launchArg, u"snooze"_ns, u"contextmenu"_ns);
+    AddActionNode(toastXml, actionsNode, disableButtonTitle, launchArg,
+                  u"snooze"_ns, u"contextmenu"_ns);
   }
 
   nsAutoString settingsButtonTitle;
   bundle->GetStringFromName("webActions.settings.label", settingsButtonTitle);
-  success =
-      AddActionNode(toastXml.Get(), actionsNode.Get(), settingsButtonTitle,
-                    launchArg, u"settings"_ns, u"contextmenu"_ns);
+  success = AddActionNode(toastXml, actionsNode, settingsButtonTitle, launchArg,
+                          u"settings"_ns, u"contextmenu"_ns);
   NS_ENSURE_TRUE(success, nullptr);
 
   for (const auto& action : mActions) {
@@ -374,8 +373,8 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
     ns = action->GetAction(actionString);
     NS_ENSURE_SUCCESS(ns, nullptr);
 
-    success = AddActionNode(toastXml.Get(), actionsNode.Get(), title, launchArg,
-                            actionString);
+    success =
+        AddActionNode(toastXml, actionsNode, title, launchArg, actionString);
     NS_ENSURE_TRUE(success, nullptr);
   }
 
@@ -428,11 +427,11 @@ bool ToastNotificationHandler::ShowAlert() {
     return false;
   }
 
-  return CreateWindowsNotificationFromXml(toastXml.Get());
+  return CreateWindowsNotificationFromXml(toastXml);
 }
 
 bool ToastNotificationHandler::CreateWindowsNotificationFromXml(
-    IXmlDocument* aXml) {
+    ComPtr<IXmlDocument>& aXml) {
   ComPtr<IToastNotificationFactory> factory;
   HRESULT hr;
 
@@ -442,7 +441,7 @@ bool ToastNotificationHandler::CreateWindowsNotificationFromXml(
       &factory);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
-  hr = factory->CreateToastNotification(aXml, &mNotification);
+  hr = factory->CreateToastNotification(aXml.Get(), &mNotification);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   RefPtr<ToastNotificationHandler> self = this;
@@ -450,7 +449,8 @@ bool ToastNotificationHandler::CreateWindowsNotificationFromXml(
   hr = mNotification->add_Activated(
       Callback<ToastActivationHandler>([self](IToastNotification* aNotification,
                                               IInspectable* aInspectable) {
-        return self->OnActivate(aNotification, aInspectable);
+        return self->OnActivate(ComPtr<IToastNotification>(aNotification),
+                                ComPtr<IInspectable>(aInspectable));
       }).Get(),
       &mActivatedToken);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
@@ -458,7 +458,8 @@ bool ToastNotificationHandler::CreateWindowsNotificationFromXml(
   hr = mNotification->add_Dismissed(
       Callback<ToastDismissedHandler>([self](IToastNotification* aNotification,
                                              IToastDismissedEventArgs* aArgs) {
-        return self->OnDismiss(aNotification, aArgs);
+        return self->OnDismiss(ComPtr<IToastNotification>(aNotification),
+                               ComPtr<IToastDismissedEventArgs>(aArgs));
       }).Get(),
       &mDismissedToken);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
@@ -466,7 +467,8 @@ bool ToastNotificationHandler::CreateWindowsNotificationFromXml(
   hr = mNotification->add_Failed(
       Callback<ToastFailedHandler>([self](IToastNotification* aNotification,
                                           IToastFailedEventArgs* aArgs) {
-        return self->OnFail(aNotification, aArgs);
+        return self->OnFail(ComPtr<IToastNotification>(aNotification),
+                            ComPtr<IToastFailedEventArgs>(aArgs));
       }).Get(),
       &mFailedToken);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
@@ -520,15 +522,15 @@ void ToastNotificationHandler::SendFinished() {
 }
 
 HRESULT
-ToastNotificationHandler::OnActivate(IToastNotification* notification,
-                                     IInspectable* inspectable) {
+ToastNotificationHandler::OnActivate(
+    const ComPtr<IToastNotification>& notification,
+    const ComPtr<IInspectable>& inspectable) {
   if (mAlertListener) {
     // Extract the `action` value from the argument string.
     nsAutoString actionString;
     if (inspectable) {
       ComPtr<IToastActivatedEventArgs> eventArgs;
-      HRESULT hr = inspectable->QueryInterface(
-          __uuidof(IToastActivatedEventArgs), (void**)&eventArgs);
+      HRESULT hr = inspectable.As(&eventArgs);
       if (SUCCEEDED(hr)) {
         HString arguments;
         hr = eventArgs->get_Arguments(arguments.GetAddressOf());
@@ -596,7 +598,7 @@ ToastNotificationHandler::OnActivate(IToastNotification* notification,
 // notifications, therefore we have to check if the toast remains in the history
 // (action center) to determine if the toast is fully dismissed.
 static bool NotificationStillPresent(
-    ComPtr<IToastNotification>& current_notification, nsString& nsAumid) {
+    const ComPtr<IToastNotification>& current_notification, nsString& nsAumid) {
   HRESULT hr = S_OK;
 
   ComPtr<IToastNotification2> current_notification2;
@@ -662,12 +664,12 @@ static bool NotificationStillPresent(
 }
 
 HRESULT
-ToastNotificationHandler::OnDismiss(IToastNotification* notification,
-                                    IToastDismissedEventArgs* aArgs) {
-  ComPtr<IToastNotification> comptrNotification(notification);
+ToastNotificationHandler::OnDismiss(
+    const ComPtr<IToastNotification>& notification,
+    const ComPtr<IToastDismissedEventArgs>& aArgs) {
   // Don't dismiss notifications when they are still in the action center. We
   // can receive multiple dismiss events.
-  if (NotificationStillPresent(comptrNotification, mAumid)) {
+  if (NotificationStillPresent(notification, mAumid)) {
     return S_OK;
   }
 
@@ -677,8 +679,8 @@ ToastNotificationHandler::OnDismiss(IToastNotification* notification,
 }
 
 HRESULT
-ToastNotificationHandler::OnFail(IToastNotification* notification,
-                                 IToastFailedEventArgs* aArgs) {
+ToastNotificationHandler::OnFail(const ComPtr<IToastNotification>& notification,
+                                 const ComPtr<IToastFailedEventArgs>& aArgs) {
   SendFinished();
   mBackend->RemoveHandler(mName, this);
   return S_OK;
