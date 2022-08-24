@@ -4,20 +4,30 @@
 
 ## These strings are used in the about:preferences moreFromMozilla page
 
-more-from-moz-title = More from { -vendor-short-name }
+## Floorp専用
+
+about-floorp = About Floorp Projects
+about-floorp-sub = The Floorp project is a project under Ablaze, and the Floorp Legacy browser is its development product, based on the Firefox browser developed by Mozilla. The project is developed entirely on a non-profit basis. Enjoy the enhanced browsing experience. The source code can be found at the Github link below.
+
 more-from-moz-category =
-  .tooltiptext =  More from { -vendor-short-name }
+  .tooltiptext = about Floorp 
+more-from-moz-title = About Ablaze Floorp
+about-floorp-sub-sub = Floorp 
+about-floorp-browser = About Floorp Projects 
+ablaze-floorp = Ablaze Floorp 10 -Catostylus Mosaicus-
 
-more-from-moz-subtitle = Check out other { -vendor-short-name } products that work to support a healthy internet.
+about-floorp-discription = <label data-l10n-name="floorp-browser-link">{ -brand-product-name }</label> is one of the domestic browsers developed in Japan. It is based on Firefox and continues to operate under <label data-l10n-name="ablaze-Link">{ -vendor-short-name }</label>, to improve the web. Want to help? <label data-l10n-name="helpus-donateLink">Make a donation</label>
+icon-creator = Icon creator <label data-l10n-name="browser-logo-twitter">@CutterKnife_</label> and <label data-l10n-name="brand-logo-twitter">@mwxdxx.</label>
+contributors = A list of <label data-l10n-name="about-contributor">contributors and Developers</label>
 
-more-from-moz-firefox-mobile-title = { -brand-product-name } Mobile
-more-from-moz-firefox-mobile-description = The mobile browser that puts your privacy first.
-more-from-moz-firefox-mobile-description-advanced = From blocking trackers to putting the brakes on autoplay annoyances, { -brand-product-name } mobile browsers work overtime to make sure you’re getting the good internet.
+about-ablaze = About Ablaze
+ablaze-twitter = Ablaze URLs : Twitter <label data-l10n-name="ablaze-twitter-id">@Ablaze_MIRAI</label>　Github : <label data-l10n-name="ablaze-github-id">@Ablaze-MIRAI</label>　alexandriteOS  : <label data-l10n-name="alexandriteos-url">official site</label> 
+about-ablaze-sub = Ablaze is a group on top of the Floorp project, which is developing Floorp, and the Floorp project is being run here, with support from Floorp. We also run other projects such as NekoLinux and AlexandriteOS.
 
-more-from-moz-mozilla-vpn-title = { -mozilla-vpn-brand-name }
+## Floorp 専用終わり
+more-from-moz-mozilla-vpn-title = { -mozilla-vpn-brand-name } Unsuppoted in japan, korea etc...
 more-from-moz-mozilla-vpn-description = Discover an added layer of anonymous browsing and protection.
 more-from-moz-mozilla-vpn-description-advanced = { -mozilla-vpn-brand-name } adds another layer of anonymous browsing and protection. And, unlike some other VPNs, it’s secure and doesn’t track your activity.
-
 # This string is specific to the product Mozilla Rally which is US only.
 more-from-moz-mozilla-rally-title = { -rally-brand-name }
 # This string is specific to the product Mozilla Rally which is US only.
@@ -25,13 +35,10 @@ more-from-moz-mozilla-rally-description = Put your data to work for a better int
 # This string is specific to the product Mozilla Rally which is US only.
 more-from-moz-mozilla-rally-description-advanced = Donate your data to research studies working to create a safer, more open internet that helps people, not Big Tech.
 # This string is specific to the product Mozilla Rally which is US only.
-more-from-moz-button-mozilla-rally-2 = Join { -rally-short-name }
-
+more-from-moz-button-mozilla-rally =
+  .label = Join { -rally-short-name }
 more-from-moz-qr-code-box-firefox-mobile-title = Download using your mobile device. Point your camera at the QR code. When a link appears, tap it.
 more-from-moz-qr-code-box-firefox-mobile-button = Send an email to your phone instead
-more-from-moz-qr-code-firefox-mobile-img =
-  .alt = QR code to download { -brand-product-name } Mobile
-
-more-from-moz-button-mozilla-vpn-2 = Get VPN
-
+more-from-moz-button-mozilla-vpn =
+  .label = Get VPN
 more-from-moz-learn-more-link = Learn more

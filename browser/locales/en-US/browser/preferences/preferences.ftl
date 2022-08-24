@@ -72,10 +72,12 @@ close-button =
 
 feature-enable-requires-restart = { -brand-short-name } must restart to enable this feature.
 feature-disable-requires-restart = { -brand-short-name } must restart to disable this feature.
+feature-requires-restart = A reboot is required to change the settings
 should-restart-title = Restart { -brand-short-name }
 should-restart-ok = Restart { -brand-short-name } now
 cancel-no-restart-button = Cancel
 restart-later = Restart Later
+feature-change-requires-restart = { -brand-short-name } must restart to change this feature.
 
 ## Extension Control Notifications
 ##
@@ -636,7 +638,7 @@ home-restore-defaults =
 # "Firefox" should be treated as a brand and kept in English,
 # while "Home" and "(Default)" can be localized.
 home-mode-choice-default =
-    .label = Firefox Home (Default)
+    .label = Floorp Home (Default)
 
 home-mode-choice-custom =
     .label = Custom URLs…
@@ -663,10 +665,10 @@ choose-bookmark =
     .label = Use Bookmark…
     .accesskey = B
 
-## Home Section - Firefox Home Content Customization
+## Home Section - Floorp Home Content Customization
 
-home-prefs-content-header = Firefox Home Content
-home-prefs-content-description = Choose what content you want on your Firefox Home screen.
+home-prefs-content-header = Floorp Home Content
+home-prefs-content-description = Choose what content you want on your Floorp Home screen.
 
 home-prefs-search-header =
     .label = Web Search
@@ -1413,3 +1415,194 @@ httpsonly-radio-disabled =
 desktop-folder-name = Desktop
 downloads-folder-name = Downloads
 choose-download-folder-title = Choose Download Folder:
+
+# Variables:
+#   $service-name (String) - Name of a cloud storage provider like Dropbox, Google Drive, etc...
+save-files-to-cloud-storage =
+    .label = Save files to { $service-name }
+
+# Floorp の固有設定。Firefox のソースコードではありません。from 8.7.2
+
+notice-from-floorp-projects = Floorp Administration Notice
+
+floorp-preference = Experimet Preferences
+browser-design-settings = Tab Bar Settings
+
+auto-reboot = If you change any of the settings below, your browser will be restarted to apply the changes. Please save the data you are working with before making any changes.
+enable-multitab = 
+ .label = Enable multi-level tabs 
+enable-tab-scroll-change = 
+ .label = Switch Tabs by Scrolling
+enable-doble-click-block = 
+ .label = Double-click to Close the Tab
+operation-settings = 
+  .label = Browser Operation Settings
+Mouse-side-button = 
+  .label = Browser optimized for mouse operation with side buttons
+
+tabbar-preference = Tabbar
+
+None-mode = 
+ .label= Normal mode
+
+hide-horizontality-tabs = 
+ .label= Hide horizontality tabbar
+
+verticalTab-setting = 
+ .label = Browser optimized for vertical tabs
+
+move-tabbar-position =
+ .label = Move the tab bar position to below the bookmark
+
+tabbar-on-bottom = 
+ .label = Display at the Bottom of the Window
+
+treestyletabSettings-l10 = Tree Style vertical tab settings
+treestyletab-Settings = 
+ .label = Expand when mouse focus
+treestyletab-open-option = TreeStyleTab Settings
+
+bookmarks-bar-settings = Bookmark Bar Settings (Can`t be used in parallel)
+bookmarks-focus-mode =
+ .label = Show the bookmark bar when the mouse is focused on the toolbar
+bookmarks-bottom-mode =
+ .label = Bookmark bar at the bottom of the browser
+
+material-effect =
+ .label = Allow Mica for Everyone to modify the browser design 
+other-preference = Other Preferences
+
+enable-userscript = 
+ .label = Enable legacy components
+about-legacy-components = Enabling this feature may cause unexpected bugs or fatal errors
+
+Search-positon-top =
+ .label = Display the search bar at the top of the page
+allow-auto-restart =
+ .label = Automatic restart when settings are changed that require a restart
+
+## macOS version use legacy update system 
+floorp-updater = { -brand-short-name } Updater Settings
+enable-floorp-updater = 
+ .label = Check for { -brand-short-name } updates at startup
+floorp-update-latest = 
+ .label = Notification that { -brand-short-name } is up-to-date during automatic update checks
+
+## system theme color
+
+system-color-settings = Both light and dark modes are available for this theme, and the design can be specified.
+preferences-theme-appearance-header = Setting the system theme
+
+system-theme-dark =
+ .label = Enforce dark mode
+
+system-theme-light = 
+ .label = Enforce light mode
+ 
+system-theme-auto =  
+ .label = Default mode
+
+## user interface prefernces
+
+ui-preference = Browser appearance
+preferences-browser-appearance-description = You can choose from a selection of great designs written by Floorp third parties. Some designs may not be compatible with your configuration.
+
+firefox-proton =
+ .label = Firefox modern Proton UI
+
+firefox-proton-fix =
+ .label = Firefox Proton FIX UI
+
+firefox-photon = 
+ .label = Firefox Legacy Photon UI
+ 
+floorp-legacy =  
+ .label = Floorp Legacy material UI・Unsupported
+
+floorp-fluentUI =
+ .label = fluentUI
+
+floorp-gnomeUI =
+ .label = Gnome Theme
+ 
+waterfox-lepton =
+ .label = Firefox Lepton UI
+
+## BlockMoreTracker
+
+privacy-hub-header = Privacy Hub
+
+block-tracker = Learn how to block more ads and trackers:
+block-more-tracker = Block more Ads and Trackers
+
+view-at-AMO = View at AMO
+uBlock-Origin = uBlock Origin
+about-uboori = uBlock Origin blocks ads, extensive trackers, and additional dangerous sites.
+
+Privacy-Badger = Privacy Badger
+about-PBadger = Privacy Badger automatically learns to block hidden trackers based on their behaviour across websites.
+
+Duck-Duck-Go = DuckDuckGo Privacy Essentials
+about-DDG = DuckDuckGo Privacy Essentials replaces a default search engine with DuckDuckGo while blocking trackers on visited sites.
+
+## Fingerprint
+
+fingerprint-header = Resist Fingerprinting & IP address leak
+block-fingerprint = Fingerprinting is the process by which a website collects personal data and device information. This section provides settings to further increase this protection beyond the default blocker.
+enable-firefox-fingerprint-protections = Enable strong protection against fingerprinting
+about-firefox-fingerprint-protection = Enabling protection by Firefox includes forced light mode, disabling some APIs, etc. Some sites may be broken.
+fingerprint-Protection =
+ .label =  Anti-fingerprinting protections
+html5-canvas-prompt-settings =
+ .label =  Automatically approve access confirmation prompts for HTML5 image data
+canvas-prompt = Automatically reject the canvas-reading prompt
+disable-webgl =
+ .label =  Disable WebGL
+about-webgl = WebGL is a Javascript API used to render graphics, which can be used to identify GPU.
+Canvas-Blocker = Canvas Blocker
+about-CB = This add-on spoofs data used by fingerprinting techniques.
+WebRTC-connection = WebRTC is a standard that provides real-time calling. If you disable this setting, you will not be able to use Discord, etc.
+WebRTC = 
+ .label = Enable WebRTC Connection
+
+## download mgr
+download-notification-preferences = Download Notification
+start-always-notify =
+ .label = Notify Only at Start
+finish-always-notify = 
+ .label = Notify Only when Finished
+always-notify =
+ .label = Notify Both at Start and End
+do-not-notify =
+ .label = Do not Enable Notifications
+
+floorp-translater = Translation Function Settings
+click-to-option =
+    .label = Open Settings...
+    .accesskey = O
+
+## sidebar
+profiles-button-label = Manage profiles
+
+appmenuitem-reboot =
+ .label = Reboot
+
+## useagent
+
+UserAgent-preference = UserAgent
+default-useragent-mode =
+ .label = Use Firefox User Agent (Default)
+windows-chrome-useragent-mode =
+ .label = Spoof Chrome on Windows
+macOS-chrome-useragent-mode =
+ .label = Spoof Chrome on macOS
+linux-chrome-useragent-mode =
+ .label = Spoof Chrome on Linux
+mobile-chrome-useragent-mode =
+ .label = Impersonate Moblie
+
+## DMR UI
+download-mgr-UI =
+ .label = Use a Simple UI download manager
+downloading-red-color =
+ .label = Highlight the Download Manager icon in red during download  
