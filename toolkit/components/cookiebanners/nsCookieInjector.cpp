@@ -6,6 +6,8 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Logging.h"
+#include "mozilla/RefPtr.h"
+#include "nsDebug.h"
 #include "nsICookieBannerService.h"
 #include "nsICookieManager.h"
 #include "nsIObserverService.h"
@@ -227,21 +229,21 @@ nsresult nsCookieInjector::InjectCookiesFromRules(
 
     // Check if the cookie is already set to avoid overwriting any custom
     // settings.
-    bool exists = false;
-    rv = cookieManager->CookieExistsNative(c->Host(), c->Path(), c->Name(),
-                                           &aOriginAttributes, &exists);
+    nsCOMPtr<nsICookie> existingCookie;
+    rv = cookieManager->GetCookieNative(c->Host(), c->Path(), c->Name(),
+                                        &aOriginAttributes,
+                                        getter_AddRefs(existingCookie));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // If a cookie with the same name already exists we need to perform further
     // checks. We can only overwrite if the rule defines the cookie's value as
     // the "unset" state.
-    if (exists) {
+    if (existingCookie) {
       nsCString unsetValue;
       rv = cookieRule->GetUnsetValue(unsetValue);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      // No defined unset value means we shouldn't overwrite the cookie if it is
-      // set. Skip setting this cookie.
+      // Cookie exists and the rule doesn't specify an unset value, skip.
       if (unsetValue.IsEmpty()) {
         MOZ_LOG(
             gCookieInjectorLog, LogLevel::Info,
@@ -251,12 +253,24 @@ nsresult nsCookieInjector::InjectCookiesFromRules(
         continue;
       }
 
-      // TODO: Bug 1784874
-      // Check if cookie value == unsetValue. In this case we can
-      // overwrite the cookie. Otherwise log a message and skip setting this
-      // cookie. This might require extending CookieExistsNative and
-      // CookieStorage::FindCookie to take an optional "value" argument or
-      // passing in a lambda that can inspect cookies found.
+      nsAutoCString existingCookieValue;
+      rv = existingCookie->GetValue(existingCookieValue);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // If the unset value specified by the rule does not match the cookie
+      // value. We must not overwrite, skip.
+      if (!unsetValue.Equals(existingCookieValue)) {
+        MOZ_LOG(gCookieInjectorLog, LogLevel::Info,
+                ("Skip setting already existing cookie. Cookie: %s, %s, %s, "
+                 "%s. Rule unset value: %s",
+                 c->Host().get(), c->Name().get(), c->Path().get(),
+                 c->Value().get(), unsetValue.get()));
+        continue;
+      }
+
+      MOZ_LOG(gCookieInjectorLog, LogLevel::Info,
+              ("Overwriting cookie because of known unset value state %s.",
+               unsetValue.get()));
     }
 
     MOZ_LOG(gCookieInjectorLog, LogLevel::Info,
