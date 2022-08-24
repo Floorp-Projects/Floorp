@@ -8,8 +8,7 @@
   --body-columns: 1fr;
   --body-rows: auto auto 1fr auto;
 
-  --figure-height: 200px;
-  --figure-width: 200px;
+  --figure-width: min(37.5vw, 300px);
 
   --colorway-selector-align: center;
   --colorway-name-font-size: 1.5em;
@@ -42,13 +41,6 @@
 
     --homepage-reset-column: 1/4;
     --homepage-reset-align: end;
-  }
-}
-
-@media (min-width: 50em) {
-  :root {
-    --figure-height: 300px;
-    --figure-width: 300px;
   }
 }
 
@@ -114,12 +106,12 @@ figure {
 
   margin: 1em 0 0;
   min-width: var(--figure-width);
-  min-height: var(--figure-height);
+  min-height: var(--figure-width);
 }
 
 figure > img {
   max-width: var(--figure-width);
-  max-height: var(--figure-height);
+  max-height: var(--figure-width);
   object-fit: scale-down;
 }
 
