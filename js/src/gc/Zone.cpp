@@ -713,21 +713,42 @@ Zone* ZoneList::front() const {
   return head;
 }
 
-void ZoneList::append(Zone* zone) {
-  ZoneList singleZone(zone);
-  transferFrom(singleZone);
-}
+void ZoneList::prepend(Zone* zone) { prependList(ZoneList(zone)); }
 
-void ZoneList::transferFrom(ZoneList& other) {
+void ZoneList::append(Zone* zone) { appendList(ZoneList(zone)); }
+
+void ZoneList::prependList(ZoneList&& other) {
   check();
   other.check();
-  if (!other.head) {
+
+  if (other.isEmpty()) {
     return;
   }
 
   MOZ_ASSERT(tail != other.tail);
 
-  if (tail) {
+  if (!isEmpty()) {
+    other.tail->listNext_ = head;
+  } else {
+    tail = other.tail;
+  }
+  head = other.head;
+
+  other.head = nullptr;
+  other.tail = nullptr;
+}
+
+void ZoneList::appendList(ZoneList&& other) {
+  check();
+  other.check();
+
+  if (other.isEmpty()) {
+    return;
+  }
+
+  MOZ_ASSERT(tail != other.tail);
+
+  if (!isEmpty()) {
     tail->listNext_ = other.head;
   } else {
     head = other.head;
