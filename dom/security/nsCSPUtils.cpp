@@ -971,6 +971,18 @@ nsCSPHashSrc::nsCSPHashSrc(const nsAString& aAlgo, const nsAString& aHash)
   // Only the algo should be rewritten to lowercase, the hash must remain the
   // same.
   ToLowerCase(mAlgorithm);
+  // Normalize the base64url encoding to base64 encoding:
+  char16_t* cur = mHash.BeginWriting();
+  char16_t* end = mHash.EndWriting();
+
+  for (; cur < end; ++cur) {
+    if (char16_t('-') == *cur) {
+      *cur = char16_t('+');
+    }
+    if (char16_t('_') == *cur) {
+      *cur = char16_t('/');
+    }
+  }
 }
 
 nsCSPHashSrc::~nsCSPHashSrc() = default;
