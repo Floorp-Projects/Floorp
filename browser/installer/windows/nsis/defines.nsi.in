@@ -21,7 +21,7 @@
 !endif
 
 # These defines should match application.ini settings
-!define AppName               "Firefox"
+!define AppName               "Floorp"
 !define AppVersion            "@APP_VERSION@"
 !define GREVersion            @MOZILLA_VERSION@
 !define AB_CD                 "@AB_CD@"
@@ -33,7 +33,7 @@
 !define AppRegName            "Floorp"
 !define ToastAumidPrefix      "@MOZ_TOAST_APP_NAME@Toast-"
 
-!define BrandProductName      "Firefox"
+!define BrandProductName      "Floorp"
 !ifndef DEV_EDITION
 !define BrandShortName        "@MOZ_APP_DISPLAYNAME@"
 !endif
@@ -70,7 +70,7 @@
 
 #ifdef MOZ_LAUNCHER_PROCESS
 !define MOZ_LAUNCHER_PROCESS
-!define MOZ_LAUNCHER_SUBKEY "Software\Mozilla\${AppName}\Launcher"
+!define MOZ_LAUNCHER_SUBKEY "Software\Ablaze\${AppName}\Launcher"
 #endif
 
 #ifdef RELEASE_OR_BETA

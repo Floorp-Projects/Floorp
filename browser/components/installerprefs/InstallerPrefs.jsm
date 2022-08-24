@@ -48,7 +48,7 @@ function InstallerPrefs(prefsList) {
 
   // Each pref to be reflected will get a value created under this key, in HKCU.
   // The path will look something like:
-  // "Software\Mozilla\Firefox\Installer\71AE18FE3142402B\".
+  // "Software\Ablaze\Floorp\Installer\71AE18FE3142402B\".
   XPCOMUtils.defineLazyGetter(this, "_registryKeyPath", function() {
     const app = AppConstants.MOZ_APP_NAME;
     const vendor = Services.appinfo.vendor || "Mozilla";
