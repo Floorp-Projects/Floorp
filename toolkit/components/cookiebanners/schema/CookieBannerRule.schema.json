@@ -10,46 +10,64 @@
       "description": "JSON representation of a cookie to inject.",
       "properties": {
         "name": {
+          "title": "Name / Key",
           "type": "string",
           "description": "The name of the cookie."
         },
         "value": {
+          "title": "Value",
           "type": "string",
           "description": "The cookie value."
         },
         "host": {
+          "title": "Host",
           "type": "string",
           "description": "Host to set cookie for. Defaults to .<domain> if unset."
         },
         "path": {
+          "title": "Path",
           "type": "string",
-          "description": "The path pertaining to the cookie. Defaults to '/'"
+          "default": "/",
+          "description": "The path pertaining to the cookie."
         },
         "expiryRelative": {
+          "title": "Relative Expiry Time",
           "type": "number",
           "description": "Expiry time of the cookie in seconds relative to the injection time. Defaults to pref value for cookiebanners.cookieInjector.defaultExpiryRelative."
         },
         "unsetValue": {
+          "title": "Unset Value",
           "type": "string",
           "description": "If an existing cookie of the same name sets this value it may be overwritten by this rule."
         },
         "isSecure": {
+          "title": "Secure Cookie",
           "type": "boolean",
           "description": "true if the cookie was transmitted over ssl, false otherwise."
         },
         "sameSite": {
+          "title": "SameSite",
           "type": "number",
-          "description": "the SameSite attribute; this controls the cookie behavior for cross-site requests as per https://tools.ietf.org/html/draft-west-first-party-cookies-07"
+          "enum": [
+            0,
+            1,
+            2
+          ],
+          "default": 0,
+          "description": "The SameSite attribute. See nsICookie.idl."
         },
         "isSession": {
+          "title": "Session Cookie",
           "type": "boolean",
           "description": "true if the cookie is a session cookie."
         },
         "schemeMap": {
+          "title": "Scheme Map",
           "type": "number",
           "description": "Bitmap of schemes."
         },
         "isHTTPOnly": {
+          "title": "HTTP-Only",
           "type": "boolean",
           "description": "true if the cookie is an http only cookie."
         }
@@ -58,17 +76,27 @@
   },
   "title": "Cookie Banner Rule",
   "required": [
+    "id",
     "domain"
   ],
   "properties": {
+    "id": {
+      "title": "ID",
+      "type": "string",
+      "description": "Unique identifier of the rule. This should match the domain field."
+    },
     "domain": {
+      "title": "Domain",
       "type": "string",
       "description": "Domain of the site the rule describes."
     },
     "cookies": {
+      "title": "Cookies",
+      "description": "Cookie banner related cookies to be injected when the side loads.",
       "type": "object",
       "properties": {
         "optIn": {
+          "title": "Opt-in cookies",
           "type": "array",
           "items": {
             "$ref": "#/definitions/cookie"
@@ -76,6 +104,7 @@
           "description": "Cookies to be set to signal opt-in state."
         },
         "optOut": {
+          "title": "Opt-out cookies",
           "type": "array",
           "items": {
             "$ref": "#/definitions/cookie"
@@ -85,24 +114,41 @@
       }
     },
     "click": {
+      "title": "Click",
+      "description": "Rules for detection of the cookie banner and simulated clicks.",
       "type": "object",
       "properties": {
         "presence": {
+          "title": "Presence Selector",
           "type": "string",
           "description": "Query selector to detect cookie banner element."
         },
         "hide": {
+          "title": "Hide Selector",
           "type": "string",
-          "description": "Query selector for element to hide while handling cookie banner"
+          "description": "Query selector for element to hide while handling cookie banner. Defaults to 'presence' selector."
         },
         "optOut": {
+          "title": "Opt-out Selector",
           "type": "string",
           "description": "Query selector for opt-out / reject all button"
         },
         "optIn": {
+          "title": "Opt-in Selector",
           "type": "string",
           "description": "Query selector for opt-in / accept all button"
         }
+      },
+      "dependencies": {
+        "hide": [
+          "presence"
+        ],
+        "optOut": [
+          "presence"
+        ],
+        "optIn": [
+          "presence"
+        ]
       }
     }
   },

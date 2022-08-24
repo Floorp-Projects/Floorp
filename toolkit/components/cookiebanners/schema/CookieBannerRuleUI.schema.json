@@ -1,0 +1,9 @@
+{
+  "ui:order": ["id", "domain", "cookies", "click"],
+  "cookies": {
+    "ui:order": ["optOut", "optIn"]
+  },
+  "click": {
+    "ui:order": ["presence", "hide", "optOut", "optIn"]
+  }
+}
