@@ -1173,8 +1173,6 @@
     },
 
     "SearchEngines": {
-      "enterprise_only": true,
-
       "type": "object",
       "properties": {
         "Add": {
