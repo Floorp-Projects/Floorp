@@ -70,7 +70,10 @@ const PropertyIteratorActor = protocol.ActorClassWithSpec(
           this.iterator = enumURLSearchParamsEntries(objectActor);
         } else if (cls == "Headers") {
           this.iterator = enumHeadersEntries(objectActor);
-        } else {
+        } else if (cls == "FormData") {
+          this.iterator = enumFormDataEntries(objectActor);
+        }
+         else {
           throw new Error(
             "Unsupported class to enumerate entries from: " + cls
           );
@@ -383,6 +386,38 @@ function enumURLSearchParamsEntries(objectActor) {
   };
 }
 
+function enumFormDataEntries(objectActor) {
+  let obj = objectActor.obj;
+  let raw = obj.unsafeDereference();
+  const entries = [...waiveXrays(FormData.prototype.entries.call(raw))];
+
+  return {
+    [Symbol.iterator]: function*() {
+      for (const [key, value] of entries) {
+        yield [key, value];
+      }
+    },
+    size: entries.length,
+    propertyName(index) {
+      return index;
+    },
+    propertyDescription(index) {
+      const [key, value] = entries[index];
+
+      return {
+        enumerable: true,
+        value: {
+          type: "formDataEntry",
+          preview: {
+            key: gripFromEntry(objectActor, key),
+            value: gripFromEntry(objectActor, value),
+          },
+        },
+      };
+    },
+  };
+}
+
 function enumHeadersEntries(objectActor) {
   let raw = objectActor.obj.unsafeDereference();
   const entries = [...waiveXrays(Headers.prototype.entries.call(raw))];
@@ -550,6 +585,7 @@ module.exports = {
   enumMapEntries,
   enumSetEntries,
   enumURLSearchParamsEntries,
+  enumFormDataEntries,
   enumHeadersEntries,
   enumWeakMapEntries,
   enumWeakSetEntries,

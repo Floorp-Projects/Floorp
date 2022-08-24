@@ -149,6 +149,7 @@ class ObjectFront extends FrontClassWithSpec(objectSpec) {
         "WeakSet",
         "Storage",
         "URLSearchParams",
+        "FormData",
       ].includes(this._grip.class)
     ) {
       console.error(
