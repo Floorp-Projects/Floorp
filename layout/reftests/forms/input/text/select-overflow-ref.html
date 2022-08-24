@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+function selectEnd() {
+  e = document.getElementById('e');
+  // Just get to the end
+  e.scrollLeft = e.scrollWidth;
+  window.requestAnimationFrame(() => {
+    document.documentElement.removeAttribute("class");
+  });
+}
+</script>
+<body onload="selectEnd();">
+<input
+  id="e"
+  style="padding: 100px; width: 200px;"
+  type="text"
+  value="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab">

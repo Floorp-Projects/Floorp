@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+function selectEnd() {
+  e = document.getElementById('e');
+  // Make sure we are at the beginning
+  e.scrollLeft = 0;
+  e.setSelectionRange(e.value.length, e.value.length);
+  // Focusing scrolls to where the cursor is
+  e.focus();
+  window.requestAnimationFrame(() => {
+    // Now take the cursor out of equation
+    e.blur();
+    window.requestAnimationFrame(() => {
+      document.documentElement.removeAttribute("class");
+    });
+  });
+}
+</script>
+<body onload="selectEnd();">
+<input
+  id="e"
+  style="padding: 100px; width: 200px;"
+  type="text"
+  value="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab">
