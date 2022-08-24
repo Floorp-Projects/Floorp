@@ -47,6 +47,7 @@
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
+#include "vm/JSONPrinter.h"
 #include "vm/JSScript.h"
 #include "vm/Opcodes.h"
 #include "vm/Printer.h"
