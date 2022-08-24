@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -11,9 +11,10 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "rustc_version"
-version = "0.2.3"
-authors = ["Marvin Löbel <loebel.marvin@gmail.com>"]
+version = "0.4.0"
+authors = ["Dirkjan Ochtman <dirkjan@ochtman.nl>", "Marvin Löbel <loebel.marvin@gmail.com>"]
 description = "A library for querying the version of a installed rustc compiler"
 documentation = "https://docs.rs/rustc_version/"
 readme = "README.md"
@@ -21,6 +22,6 @@ keywords = ["version", "rustc"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/Kimundi/rustc-version-rs"
 [dependencies.semver]
-version = "0.9"
-[badges.travis-ci]
-repository = "Kimundi/rustc-version-rs"
+version = "1.0"
+[dev-dependencies.doc-comment]
+version = "0.3"

@@ -1,6 +1,6 @@
 [package]
 name = "mozversion"
-version = "0.4.3"
+version = "0.5.0-alpha"
 authors = ["Mozilla"]
 description = "Utility for accessing Firefox version metadata"
 keywords = ["mozilla", "firefox"]
@@ -11,4 +11,4 @@ edition = "2018"
 [dependencies]
 regex = { version = "1", default-features = false, features = ["perf", "std"] }
 rust-ini = "0.10"
-semver = "0.9"
+semver = "1.0"

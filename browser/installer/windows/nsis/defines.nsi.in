@@ -31,6 +31,7 @@
 !define DialogWindowClass     "FloorpDialogClass"
 !define DDEApplication        "Floorp"
 !define AppRegName            "Floorp"
+!define ToastAumidPrefix      "@MOZ_TOAST_APP_NAME@Toast-"
 
 !define BrandProductName      "Floorp"
 !ifndef DEV_EDITION
