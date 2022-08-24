@@ -1262,11 +1262,12 @@ void DocAccessibleParent::SelectionRanges(nsTArray<TextRange>* aRanges) const {
       continue;
     }
     uint32_t startCount = startAcc->CharacterCount();
-    if (data.StartOffset() > static_cast<int32_t>(startCount)) {
+    if (startCount == 0 ||
+        data.StartOffset() > static_cast<int32_t>(startCount)) {
       continue;
     }
     uint32_t endCount = endAcc->CharacterCount();
-    if (data.EndOffset() > static_cast<int32_t>(endCount)) {
+    if (endCount == 0 || data.EndOffset() > static_cast<int32_t>(endCount)) {
       continue;
     }
     aRanges->AppendElement(TextRange(const_cast<DocAccessibleParent*>(this),
