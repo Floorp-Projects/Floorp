@@ -192,6 +192,41 @@ if (AppConstants.MOZ_UPDATER) {
   }
 }
 
+// Floorp 固有の Preference from 8.7.2
+
+Preferences.addAll([
+  { id: "floorp.optimized.msbutton.ope", type: "bool" },
+  { id: "floorp.hide.tabbrowser-tab.enable", type: "bool" },
+  { id: "floorp.optimized.verticaltab", type: "bool" },
+  { id: "floorp.horizontal.tab.position.shift", type: "bool" },
+  { id: "floorp.Tree-type.verticaltab.optimization", type: "bool" },
+  { id: "floorp.bookmarks.bar.focus.mode", type: "bool" },
+  { id: "floorp.material.effect.enable", type: "bool" },
+
+  { id: "enable.floorp.update", type: "bool" },
+  { id: "enable.floorp.updater.latest", type: "bool" },
+
+  { id: "ui.systemUsesDarkTheme", type: "int" },
+  { id: "floorp.browser.user.interface", type: "int"},
+  { id: "floorp.browser.tabbar.settings", type:"int"},
+
+  { id: "floorp.bookmarks.fakestatus.mode", type:"bool"},
+  { id: "floorp.search.top.mode", type:"bool"},
+  { id: "floorp.legacy.menu.mode", type:"bool"},
+  { id: "floorp.enable.auto.restart", type:"bool"},
+  { id: "floorp.enable.multitab", type:"bool"},
+  { id: "toolkit.legacyUserProfileCustomizations.script", type:"bool"},
+  { id: "toolkit.tabbox.switchByScrolling", type:"bool"},
+  { id: "browser.tabs.closeTabByDblclick", type:"bool"},
+  { id: "floorp.download.notification", type:"int"},
+  { id: "floorp.chrome.theme.mode", type:"int"},
+  { id: "floorp.browser.UserAgent", type:"int"},
+  { id: "floorp.legacy.dlui.enable", type:"bool"},
+  { id: "floorp.downloading.red.color", type:"bool"},
+]);
+
+// Floorp の設定項目終わり
+
 XPCOMUtils.defineLazyGetter(this, "gHasWinPackageId", () => {
   let hasWinPackageId = false;
   try {
@@ -521,6 +556,34 @@ var gMainPane = {
       let link = document.getElementById("mediaControlLearnMore");
       link.setAttribute("href", mediaControlLearnMoreUrl);
     }
+
+        const needreboot = document.getElementsByClassName("needeboot");
+        for(let i = 0; i < needreboot.length; i++) {
+          needreboot[i].addEventListener("click",
+  
+          function()
+          {
+            if (!Services.prefs.getBoolPref("floorp.enable.auto.restart", false)){
+            (async() => {
+              let userConfirm = await confirmRestartPrompt(null)
+              if (userConfirm == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
+                Services.startup.quit(
+                  Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
+                );
+              }
+            })()
+          }
+          else {
+            window.setTimeout(function(){
+              Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
+            }, 500);
+          }
+         }
+  
+            ,false);
+        }
+
+        //fininsh
 
     // Initializes the fonts dropdowns displayed in this pane.
     this._rebuildFonts();
@@ -3778,3 +3841,20 @@ const AppearanceChooser = {
     this.warning.hidden = !forcingColorsAndNoColorSchemeSupport;
   },
 };
+
+window.setTimeout(function(){
+
+  async function opentranslateroption(){
+    const addon = await AddonManager.getAddonByID("{036a55b4-5e72-4d05-a06c-cba2dfcc134a}");
+    await window.open(addon.optionsURL, '_blank');
+  }
+  let el = document.getElementById("translateoption");
+  el.addEventListener("click", opentranslateroption, false);
+
+  async function opentreestyletaboption(){
+    const addon = await AddonManager.getAddonByID("treestyletab@piro.sakura.ne.jp");
+    await window.open(addon.optionsURL, '_blank');
+  }
+  el = document.getElementById("treestyletaboption");
+  el.addEventListener("click", opentreestyletaboption, false);
+}, 4000);
