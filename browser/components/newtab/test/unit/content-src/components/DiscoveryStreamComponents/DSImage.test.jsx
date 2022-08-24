@@ -93,7 +93,7 @@ describe("Discovery Stream <DSImage>", () => {
     img.instance().onNonOptimizedImageError();
     img.update();
 
-    assert.equal(img.find("div").prop("className"), "broken-image");
+    assert.equal(img.find("div").prop("className"), "placeholder-image");
   });
 
   it("should update loaded state when seen", () => {
