@@ -159,7 +159,9 @@ def setup_nofis(config, tasks):
         task["run"]["command"].append("--disable-fission")
 
         # Build taskcluster group and symol
-        task["treeherder"]["symbol"].replace("Btime", "Btime-nofis")
+        task["treeherder"]["symbol"] = (
+            task["treeherder"]["symbol"].replace("Btime", "Btime-nofis")
+        )
         task["name"] += "-nofis"
 
         yield task
