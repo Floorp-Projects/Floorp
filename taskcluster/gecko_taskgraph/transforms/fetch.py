@@ -123,9 +123,7 @@ def make_task(config, jobs):
         if alias:
             attributes["fetch-alias"] = alias
 
-        task_expires = "2 days" \
-            if attributes.get("cached_task") is False\
-            else expires
+        task_expires = "2 days" if attributes.get("cached_task") is False else expires
 
         task = {
             "attributes": attributes,
