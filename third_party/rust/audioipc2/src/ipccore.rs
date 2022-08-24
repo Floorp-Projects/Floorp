@@ -7,6 +7,7 @@ use std::io::{self, Result};
 use std::sync::{mpsc, Arc};
 use std::thread;
 
+use crossbeam_channel::{self, Receiver, Sender};
 use mio::{event::Event, Events, Interest, Poll, Registry, Token, Waker};
 use slab::Slab;
 
@@ -53,7 +54,7 @@ enum Request {
 #[derive(Clone, Debug)]
 pub struct EventLoopHandle {
     waker: Arc<Waker>,
-    requests_tx: mpsc::Sender<Request>,
+    requests_tx: Sender<Request>,
 }
 
 impl EventLoopHandle {
@@ -140,8 +141,8 @@ struct EventLoop {
     waker: Arc<Waker>,
     name: String,
     connections: Slab<Connection>,
-    requests_rx: mpsc::Receiver<Request>,
-    requests_tx: mpsc::Sender<Request>,
+    requests_rx: Receiver<Request>,
+    requests_tx: Sender<Request>,
 }
 
 const EVENT_LOOP_INITIAL_CLIENTS: usize = 64; // Initial client allocation, exceeding this will cause the connection slab to grow.
@@ -151,7 +152,7 @@ impl EventLoop {
     fn new(name: String) -> Result<EventLoop> {
         let poll = Poll::new()?;
         let waker = Arc::new(Waker::new(poll.registry(), WAKE_TOKEN)?);
-        let (tx, rx) = mpsc::channel();
+        let (tx, rx) = crossbeam_channel::bounded(EVENT_LOOP_INITIAL_CLIENTS);
         let eventloop = EventLoop {
             poll,
             events: Events::with_capacity(EVENT_LOOP_EVENTS_PER_ITERATION),
@@ -824,7 +825,7 @@ mod test {
 
         // RPC message from client to server.
         let response = client_proxy.call(TestServerMessage::TestRequest);
-        let response = response.wait().expect("client response");
+        let response = response.expect("client response");
         assert_eq!(response, TestClientMessage::TestResponse);
 
         // Explicit shutdown.
@@ -840,7 +841,7 @@ mod test {
 
         // RPC message from client to server.
         let response = client_proxy.call(TestServerMessage::TestRequest);
-        let response = response.wait().expect("client response");
+        let response = response.expect("client response");
         assert_eq!(response, TestClientMessage::TestResponse);
 
         // Explicit shutdown.
@@ -855,7 +856,7 @@ mod test {
         drop(server);
 
         let response = client_proxy.call(TestServerMessage::TestRequest);
-        response.wait().expect_err("sending on closed channel");
+        response.expect_err("sending on closed channel");
     }
 
     #[test]
@@ -865,7 +866,7 @@ mod test {
         drop(client);
 
         let response = client_proxy.call(TestServerMessage::TestRequest);
-        response.wait().expect_err("sending on a closed channel");
+        response.expect_err("sending on a closed channel");
     }
 
     #[test]

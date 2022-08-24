@@ -43,7 +43,7 @@ macro_rules! send_recv {
         $rpc.call(ServerMessage::$smsg($($a),*))
     });
     (__recv $resp:expr, $rmsg:ident) => ({
-        match $resp.wait() {
+        match $resp {
             Ok(ClientMessage::$rmsg) => Ok(()),
             Ok(ClientMessage::Error(e)) => Err($crate::send_recv::_err(e)),
             Ok(m) => {
@@ -57,7 +57,7 @@ macro_rules! send_recv {
         }
     });
     (__recv $resp:expr, $rmsg:ident __result) => ({
-        match $resp.wait() {
+        match $resp {
             Ok(ClientMessage::$rmsg(v)) => Ok(v),
             Ok(ClientMessage::Error(e)) => Err($crate::send_recv::_err(e)),
             Ok(m) => {
