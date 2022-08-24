@@ -1785,7 +1785,8 @@ static bool ResolvePrototypeOrConstructor(
       }
     }
 
-    if (id.isWellKnownSymbol(JS::SymbolCode::hasInstance)) {
+    if (StaticPrefs::dom_webidl_crosscontext_hasinstance_enabled() &&
+        id.isWellKnownSymbol(JS::SymbolCode::hasInstance)) {
       const JSClass* objClass = JS::GetClass(obj);
       if (IsDOMIfaceAndProtoClass(objClass) &&
           DOMIfaceAndProtoJSClass::FromJSClass(objClass)
