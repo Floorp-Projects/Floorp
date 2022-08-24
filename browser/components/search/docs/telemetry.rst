@@ -56,7 +56,7 @@ SEARCH_COUNTS - SAP usage
     - ``searchbar``
     - ``system``
     - ``urlbar`` Except aliases and search mode.
-    - ``urlbar_handoff`` Used when searching from about:newtab.
+    - ``urlbar-handoff`` Used when searching from about:newtab.
     - ``urlbar-searchmode`` Used when the Urlbar is in search mode.
     - ``webextension``
 
