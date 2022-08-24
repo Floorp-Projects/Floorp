@@ -11,6 +11,9 @@ ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderQuickActions:
     "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
 });
+XPCOMUtils.defineLazyModuleGetters(this, {
+  DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
+});
 
 const DUMMY_PAGE =
   "http://example.com/browser/browser/base/content/test/general/dummy_page.html";
@@ -356,4 +359,122 @@ add_task(async function test_about_pages_refocused() {
 
     BrowserTestUtils.removeTab(newTab);
   }
+});
+
+const assertInspectAction = async (expectedEnabled, description) => {
+  await BrowserTestUtils.waitForCondition(() =>
+    window.document.querySelector("[data-key=inspect]")
+  );
+  const target = window.document.querySelector("[data-key=inspect]");
+  Assert.equal(!target.hasAttribute("disabled"), expectedEnabled, description);
+};
+
+add_task(async function test_inspector() {
+  const testData = [
+    {
+      description: "Test for 'about:' page",
+      page: "about:home",
+      isDevToolsUser: true,
+      actionEnabled: true,
+    },
+    {
+      description: "Test for another 'about:' page",
+      page: "about:about",
+      isDevToolsUser: true,
+      actionEnabled: true,
+    },
+    {
+      description: "Test for another devtools-toolbox page",
+      page: "about:devtools-toolbox",
+      isDevToolsUser: true,
+      actionEnabled: false,
+    },
+    {
+      description: "Test for web content",
+      page: "http://example.com",
+      isDevToolsUser: true,
+      actionEnabled: true,
+    },
+    {
+      description: "Test for disabled DevTools",
+      page: "http://example.com",
+      prefs: [["devtools.policy.disabled", true]],
+      isDevToolsUser: true,
+      actionEnabled: false,
+    },
+    {
+      description: "Test for not DevTools user",
+      page: "http://example.com",
+      isDevToolsUser: false,
+      actionEnabled: false,
+    },
+  ];
+
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+
+  for (const {
+    description,
+    page,
+    prefs = [],
+    isDevToolsUser,
+    actionEnabled,
+  } of testData) {
+    info(description);
+
+    info("Set preferences");
+    await SpecialPowers.pushPrefEnv({
+      set: [...prefs, ["devtools.selfxss.count", isDevToolsUser ? 5 : 0]],
+    });
+
+    info("Check the button status");
+    const onLoad = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, page);
+    await onLoad;
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "inspector",
+    });
+    await assertInspectAction(
+      actionEnabled,
+      "The status of action button is correct"
+    );
+
+    await SpecialPowers.popPrefEnv();
+
+    if (!actionEnabled) {
+      continue;
+    }
+
+    info("Do inspect action");
+    EventUtils.synthesizeKey("KEY_ArrowDown", {}, window);
+    EventUtils.synthesizeKey("KEY_Enter", {}, window);
+    await BrowserTestUtils.waitForCondition(
+      () => DevToolsShim.hasToolboxForTab(gBrowser.selectedTab),
+      "Wait for opening inspector for current selected tab"
+    );
+    const toolbox = await DevToolsShim.getToolboxForTab(gBrowser.selectedTab);
+    await BrowserTestUtils.waitForCondition(
+      () => toolbox.currentToolId === "inspector",
+      "Wait until the inspector is selected"
+    );
+
+    info("Do inspect action again in the same page during opening inspector");
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "inspector",
+    });
+    await assertInspectAction(
+      false,
+      "The action button should be disabled since the inspector is already opening"
+    );
+
+    info(
+      "Select another tool to check whether the inspector will be selected in next test even if the previous tool is not inspector"
+    );
+    await toolbox.selectTool("options");
+    await toolbox.destroy();
+  }
+
+  // Clean up.
+  BrowserTestUtils.removeTab(tab);
 });
