@@ -25,15 +25,12 @@ if (major < 3) or (major == 3 and minor < 5):
 
 import os
 import shutil
-import stat
 import subprocess
 import tempfile
-import zipfile
 import ctypes
 
 from pathlib import Path
 from optparse import OptionParser
-from urllib.request import urlopen
 
 CLONE_MERCURIAL_PULL_FAIL = """
 Failed to pull from hg.mozilla.org.
@@ -167,27 +164,18 @@ def git_clone_firefox(git: Path, dest: Path, watchman: Path):
     try:
         cinnabar = which("git-cinnabar")
         if not cinnabar:
-            cinnabar_url = (
-                "https://github.com/glandium/git-cinnabar/archive/" "master.zip"
-            )
+            cinnabar_url = "https://github.com/glandium/git-cinnabar/"
             # If git-cinnabar isn't installed already, that's fine; we can
             # download a temporary copy. `mach bootstrap` will clone a full copy
             # of the repo in the state dir; we don't want to copy all that logic
             # to this tiny bootstrapping script.
             tempdir = Path(tempfile.mkdtemp())
-            with open(tempdir / "git-cinnabar.zip", mode="w+b") as archive:
-                with urlopen(cinnabar_url) as repo:
-                    shutil.copyfileobj(repo, archive)
-                archive.seek(0)
-                with zipfile.ZipFile(archive) as zipf:
-                    zipf.extractall(path=tempdir)
             cinnabar_dir = tempdir / "git-cinnabar-master"
-            cinnabar = cinnabar_dir / "git-cinnabar"
-            # Make git-cinnabar and git-remote-hg executable.
-            st = os.stat(cinnabar)
-            cinnabar.chmod(st.st_mode | stat.S_IEXEC)
-            st = os.stat(cinnabar_dir / "git-remote-hg")
-            (cinnabar_dir / "git-remote-hg").chmod(st.st_mode | stat.S_IEXEC)
+            subprocess.check_call(
+                [str(git), "clone", "--depth=1", str(cinnabar_url), str(cinnabar_dir)],
+                cwd=str(tempdir),
+                env=env,
+            )
             env["PATH"] = str(cinnabar_dir) + os.pathsep + env["PATH"]
             subprocess.check_call(
                 [sys.executable, str(cinnabar_dir / "download.py")],
