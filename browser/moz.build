@@ -56,6 +56,7 @@ if CONFIG["MOZ_UPDATE_AGENT"]:
 # These files are specified in this moz.build to pick up DIST_SUBDIR as set in
 # this directory, which is un-set in browser/app.
 JS_PREFERENCE_PP_FILES += [
+    "app/profile/000-floorp.js",
     "app/profile/firefox.js",
 ]
 FINAL_TARGET_FILES.defaults += ["app/permissions"]

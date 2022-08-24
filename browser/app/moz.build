@@ -28,6 +28,8 @@ with Files("profile/channel-prefs.js"):
     BUG_COMPONENT = ("Firefox", "Installer")
 with Files("profile/firefox.js"):
     BUG_COMPONENT = ("Firefox", "General")
+with Files("profile/000-floorp.js"):
+    BUG_COMPONENT = ("Firefox", "General")
 
 if CONFIG["MOZ_MACBUNDLE_NAME"]:
     DIRS += ["macbuild/Contents"]
@@ -167,3 +169,7 @@ for icon in ("firefox", "document", "newwindow", "newtab", "pbmode", "document_p
         CONFIG["MOZ_BRANDING_DIRECTORY"],
         icon,
     )
+
+DIRS += [
+    "distribution",
+]
