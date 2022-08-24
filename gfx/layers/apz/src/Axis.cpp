@@ -328,17 +328,8 @@ bool Axis::CanScroll(ParentLayerCoord aDelta) const {
     return false;
   }
 
-  const auto zoom = GetFrameMetrics().GetZoom();
-  CSSCoord availableToScroll = 0;
-
-  if (zoom != CSSToParentLayerScale(0)) {
-    availableToScroll =
-        ParentLayerCoord(
-            fabs(DisplacementWillOverscrollAmount(aDelta) - aDelta)) /
-        zoom;
-  }
-
-  return availableToScroll > COORDINATE_EPSILON;
+  return fabs(DisplacementWillOverscrollAmount(aDelta) - aDelta) >
+         COORDINATE_EPSILON;
 }
 
 CSSCoord Axis::ClampOriginToScrollableRect(CSSCoord aOrigin) const {
