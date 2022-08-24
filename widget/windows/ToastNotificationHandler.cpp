@@ -664,8 +664,6 @@ static bool NotificationStillPresent(
 HRESULT
 ToastNotificationHandler::OnDismiss(IToastNotification* notification,
                                     IToastDismissedEventArgs* aArgs) {
-  // AddRef as ComPtr doesn't own the object and shouldn't release.
-  notification->AddRef();
   ComPtr<IToastNotification> comptrNotification(notification);
   // Don't dismiss notifications when they are still in the action center. We
   // can receive multiple dismiss events.
