@@ -428,7 +428,10 @@ add_task(async function test_container_tab() {
 add_task(async function test_no_overwrite() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["cookiebanners.service.mode", Ci.nsICookieBannerService.MODE_REJECT],
+      [
+        "cookiebanners.service.mode",
+        Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT,
+      ],
       ["cookiebanners.cookieInjector.enabled", true],
     ],
   });
@@ -468,7 +471,7 @@ add_task(async function test_no_overwrite() {
     ]),
     "Should retain pre-set opt-in cookies for ORIGIN_A, but write new secondary cookie from rules."
   );
-  todo(
+  ok(
     SiteDataTestUtils.hasCookies(ORIGIN_B, [
       {
         key: `cookieConsent_${DOMAIN_B}_1`,
