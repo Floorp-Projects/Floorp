@@ -152,6 +152,11 @@ add_task(async function test_setup() {
   await new Promise(resolve =>
     Telemetry.asyncFetchTelemetryData(wrapWithExceptionHandler(resolve))
   );
+
+  // On Android FOG is set up through head.js.
+  if (AppConstants.platform != "android") {
+    Services.fog.initializeFOG();
+  }
 });
 
 add_task(async function asyncSetup() {
@@ -1216,6 +1221,45 @@ add_task(function test_scalar_filtering() {
     "test keyed scalars should not be snapshotted"
   );
 });
+
+add_task(
+  /* After bug 1752139 we should be able to re-enable this. */
+  { skip_if: () => AppConstants.platform == "android" },
+  function test_pseudo_main() {
+    const PING_REASON = "test-reason";
+    const PROFILE_SUBSESSION_COUNTER = 42;
+
+    // Step 0: Clear values.
+    TelemetryController.testReset();
+    Services.fog.testResetFOG();
+
+    // Step 1: Assert no value.
+    Assert.ok(!Glean.legacyTelemetry.profileSubsessionCounter.testGetValue());
+
+    // Step 3: Assert correct value.
+    let pingSubmitted = false;
+    GleanPings.pseudoMain.testBeforeNextSubmit(reason => {
+      pingSubmitted = true;
+      Assert.equal(reason, PING_REASON.replaceAll("-", "_"));
+      Assert.equal(
+        Glean.legacyTelemetry.profileSubsessionCounter.testGetValue(),
+        PROFILE_SUBSESSION_COUNTER
+      );
+    });
+
+    // Step 2: Express behaviour.
+    const payload = {
+      info: {
+        reason: PING_REASON,
+        profileSubsessionCounter: PROFILE_SUBSESSION_COUNTER,
+      },
+    };
+    TelemetryController.submitExternalPing("main", payload, {});
+
+    // Step 3a: Assert we actually ran Step 3.
+    Assert.ok(pingSubmitted, "'pseudo-main' ping was actually submitted");
+  }
+);
 
 add_task(async function stopServer() {
   await PingServer.stop();
