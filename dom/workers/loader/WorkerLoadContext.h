@@ -78,7 +78,7 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
     DebuggerScript
   };
 
-  explicit WorkerLoadContext(WorkerLoadContext::Kind aKind);
+  explicit WorkerLoadContext(Kind aKind, const Maybe<ClientInfo>& aClientInfo);
 
   ~WorkerLoadContext() = default;
 
@@ -102,6 +102,7 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
   nsresult mLoadResult = NS_ERROR_NOT_INITIALIZED;
   bool mLoadingFinished = false;
   Kind mKind;
+  Maybe<ClientInfo> mClientInfo;
 
   /* These fields are only used by service workers */
   /* TODO: Split out a ServiceWorkerLoadContext */

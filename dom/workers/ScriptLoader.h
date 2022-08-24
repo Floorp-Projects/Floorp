@@ -134,7 +134,6 @@ class WorkerScriptLoader final : public nsINamed {
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
   JS::loader::ScriptLoadRequestList mLoadingRequests;
   JS::loader::ScriptLoadRequestList mLoadedRequests;
-  Maybe<ClientInfo> mClientInfo;
   Maybe<ServiceWorkerDescriptor> mController;
   WorkerScriptType mWorkerScriptType;
   Maybe<nsresult> mCancelMainThread;
