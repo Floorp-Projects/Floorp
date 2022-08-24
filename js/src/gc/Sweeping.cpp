@@ -632,6 +632,8 @@ bool Compartment::findSweepGroupEdges() {
 }
 
 bool Zone::findSweepGroupEdges(Zone* atomsZone) {
+  MOZ_ASSERT_IF(this != atomsZone, !isAtomsZone());
+
 #ifdef DEBUG
   if (FinalizationObservers* observers = finalizationObservers()) {
     observers->checkTables();
@@ -1612,20 +1614,16 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(JS::GCContext* gcx,
   }
 
   /*
-   * Start background thread to sweep zones if required, sweeping the atoms
-   * zone last if present.
+   * Start background thread to sweep zones if required, sweeping any atoms
+   * zones last if present.
    */
-  bool sweepAtomsZone = false;
   ZoneList zones;
   for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
     if (zone->isAtomsZone()) {
-      sweepAtomsZone = true;
-    } else {
       zones.append(zone);
+    } else {
+      zones.prepend(zone);
     }
-  }
-  if (sweepAtomsZone) {
-    zones.append(atomsZone());
   }
 
   queueZonesAndStartBackgroundSweep(std::move(zones));

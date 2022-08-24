@@ -876,6 +876,7 @@ bool GCRuntime::init(uint32_t maxbytes) {
 
 void GCRuntime::finish() {
   MOZ_ASSERT(inPageLoadCount == 0);
+  MOZ_ASSERT(!sharedAtomsZone_);
 
   // Wait for nursery background free to end and disable it to release memory.
   if (nursery().isEnabled()) {
@@ -923,63 +924,70 @@ void GCRuntime::finish() {
   stats().printTotalProfileTimes();
 }
 
-#ifdef DEBUG
-void GCRuntime::assertNoPermanentSharedThings() {
-  MOZ_ASSERT(atomsZone()->cellIterUnsafe<JSAtom>(AllocKind::ATOM).done());
-  MOZ_ASSERT(
-      atomsZone()->cellIterUnsafe<JSAtom>(AllocKind::FAT_INLINE_ATOM).done());
-  MOZ_ASSERT(atomsZone()->cellIterUnsafe<JS::Symbol>(AllocKind::SYMBOL).done());
-}
-#endif
-
-void GCRuntime::freezePermanentSharedThings() {
+bool GCRuntime::freezeSharedAtomsZone() {
   // This is called just after permanent atoms and well-known symbols have been
-  // created. At this point all existing atoms and symbols are permanent. Move
-  // the arenas containing these things out of atoms zone arena lists until
-  // shutdown. This has two benefits:
+  // created. At this point all existing atoms and symbols are permanent.
   //
-  //  - since we won't sweep them, we don't need to mark them at the start of
-  //    every GC.
-  //  - shared things are always marked so we don't have to check whether a
-  //    thing is shared when marking
+  // This method makes the current atoms zone into a shared atoms zone and
+  // removes it from the zones list. Everything in it is marked black. A new
+  // empty atoms zone is created, where all atoms local to this runtime will
+  // live.
+  //
+  // The shared atoms zone will not be collected until shutdown when it is
+  // returned to the zone list by restoreSharedAtomsZone().
 
-  MOZ_ASSERT(atomsZone());
+  MOZ_ASSERT(rt->isMainRuntime());
+  MOZ_ASSERT(!sharedAtomsZone_);
   MOZ_ASSERT(zones().length() == 1);
+  MOZ_ASSERT(atomsZone());
+  MOZ_ASSERT(!atomsZone()->wasGCStarted());
+  MOZ_ASSERT(!atomsZone()->needsIncrementalBarrier());
 
-  atomsZone()->arenas.clearFreeLists();
-  freezeAtomsZoneArenas<JSAtom>(AllocKind::ATOM, permanentAtoms.ref());
-  freezeAtomsZoneArenas<JSAtom>(AllocKind::FAT_INLINE_ATOM,
-                                permanentFatInlineAtoms.ref());
-  freezeAtomsZoneArenas<JS::Symbol>(AllocKind::SYMBOL,
-                                    permanentWellKnownSymbols.ref());
-}
+  sharedAtomsZone_ = atomsZone();
+  zones().clear();
 
-template <typename T>
-void GCRuntime::freezeAtomsZoneArenas(AllocKind kind, ArenaList& arenaList) {
-  for (auto thing = atomsZone()->cellIterUnsafe<T>(kind); !thing.done();
-       thing.next()) {
-    MOZ_ASSERT(thing->isPermanentAndMayBeShared());
-    thing->asTenured().markBlack();
+  sharedAtomsZone_->arenas.clearFreeLists();
+
+  for (auto kind : AllAllocKinds()) {
+    for (auto thing = sharedAtomsZone_->cellIterUnsafe<TenuredCell>(kind);
+         !thing.done(); thing.next()) {
+      TenuredCell* cell = thing.getCell();
+      MOZ_ASSERT((cell->is<JSString>() &&
+                  cell->as<JSString>()->isPermanentAndMayBeShared()) ||
+                 (cell->is<JS::Symbol>() &&
+                  cell->as<JS::Symbol>()->isPermanentAndMayBeShared()));
+      cell->markBlack();
+    }
   }
 
-  arenaList = std::move(atomsZone()->arenas.arenaList(kind));
+  UniquePtr<Zone> zone = MakeUnique<Zone>(rt, Zone::AtomsZone);
+  if (!zone || !zone->init()) {
+    return false;
+  }
+
+  MOZ_ASSERT(zone->isAtomsZone());
+  zones().infallibleAppend(zone.release());
+
+  return true;
 }
 
-void GCRuntime::restorePermanentSharedThings() {
-  // Move the arenas containing permanent atoms that were removed by
-  // freezePermanentSharedThings() back to the atoms zone arena lists so we can
-  // collect them.
+void GCRuntime::restoreSharedAtomsZone() {
+  // Return the shared atoms zone to the zone list. This allows the contents of
+  // the shared atoms zone to be collected when the parent runtime is shut down.
 
-  MOZ_ASSERT(heapState() == JS::HeapState::MajorCollecting);
+  if (!sharedAtomsZone_) {
+    return;
+  }
 
-  restoreAtomsZoneArenas(AllocKind::ATOM, permanentAtoms.ref());
-  restoreAtomsZoneArenas(AllocKind::FAT_INLINE_ATOM,
-                         permanentFatInlineAtoms.ref());
-  restoreAtomsZoneArenas(AllocKind::SYMBOL, permanentWellKnownSymbols.ref());
-}
+  MOZ_ASSERT(rt->isMainRuntime());
+  MOZ_ASSERT(rt->childRuntimeCount == 0);
 
-void GCRuntime::restoreAtomsZoneArenas(AllocKind kind, ArenaList& arenaList) {
-  atomsZone()->arenas.arenaList(kind).insertListWithCursorAtEnd(arenaList);
+  AutoEnterOOMUnsafeRegion oomUnsafe;
+  if (!zones().append(sharedAtomsZone_)) {
+    oomUnsafe.crash("restoreSharedAtomsZone");
+  }
+
+  sharedAtomsZone_ = nullptr;
 }
 
 bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value) {
@@ -1982,8 +1990,8 @@ void Zone::destroy(JS::GCContext* gcx) {
 }
 
 /*
- * It's simpler if we preserve the invariant that every zone (except the atoms
- * zone) has at least one compartment, and every compartment has at least one
+ * It's simpler if we preserve the invariant that every zone (except atoms
+ * zones) has at least one compartment, and every compartment has at least one
  * realm. If we know we're deleting the entire zone, then sweepCompartments is
  * allowed to delete all compartments. In this case, |keepAtleastOne| is false.
  * If any cells remain alive in the zone, set |keepAtleastOne| true to prohibit
@@ -1992,7 +2000,7 @@ void Zone::destroy(JS::GCContext* gcx) {
  */
 void Zone::sweepCompartments(JS::GCContext* gcx, bool keepAtleastOne,
                              bool destroyingRuntime) {
-  MOZ_ASSERT(!compartments().empty());
+  MOZ_ASSERT_IF(!isAtomsZone(), !compartments().empty());
   MOZ_ASSERT_IF(destroyingRuntime, !keepAtleastOne);
 
   Compartment** read = compartments().begin();
@@ -2471,10 +2479,6 @@ bool GCRuntime::beginPreparePhase(JS::GCReason reason, AutoGCSession& session) {
 
   if (!prepareZonesForCollection(reason, &isFull.ref())) {
     return false;
-  }
-
-  if (reason == JS::GCReason::DESTROY_RUNTIME) {
-    restorePermanentSharedThings();
   }
 
   /*
@@ -3661,6 +3665,10 @@ static void ScheduleZones(GCRuntime* gc, JS::GCReason reason) {
         reason == JS::GCReason::ALLOC_TRIGGER &&
         zone->gcHeapSize.bytes() < zone->gcHeapThreshold.startBytes()) {
       zone->unscheduleGC();  // May still be re-scheduled below.
+    }
+
+    if (gc->isShutdownGC()) {
+      zone->scheduleGC();
     }
 
     if (!gc->isPerZoneGCEnabled()) {

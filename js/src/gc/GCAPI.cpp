@@ -224,8 +224,14 @@ JS::TraceKind JS::GCCellPtr::outOfLineKind() const {
 JS_PUBLIC_API void JS::PrepareZoneForGC(JSContext* cx, Zone* zone) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  MOZ_ASSERT(cx->runtime()->gc.hasZone(zone));
 
+  // If we got the zone from a shared atom, we may have the wrong atoms zone
+  // here.
+  if (zone->isAtomsZone()) {
+    zone = cx->runtime()->atomsZone();
+  }
+
+  MOZ_ASSERT(cx->runtime()->gc.hasZone(zone));
   zone->scheduleGC();
 }
 

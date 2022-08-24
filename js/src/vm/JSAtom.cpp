@@ -214,10 +214,6 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
     return bool(atoms_);
   }
 
-#ifdef DEBUG
-  gc.assertNoPermanentSharedThings();
-#endif
-
   // NOTE: There's no GC, but `gc.freezePermanentSharedThings` below contains
   //       a function call that's marked as "Can GC".
   Rooted<UniquePtr<AtomSet>> atomSet(cx,
@@ -312,7 +308,9 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
     wellKnownSymbols = wks;
   }
 
-  gc.freezePermanentSharedThings();
+  if (!gc.freezeSharedAtomsZone()) {
+    return false;
+  }
 
   // The permanent atoms table has now been populated.
   permanentAtoms_ =
