@@ -173,6 +173,27 @@ interface nsICookieManager : nsISupports
                               out boolean aExists);
 
   /**
+   * Get a specific cookie by host, path, name and OriginAttributes.
+   *
+   * @param aHost
+   *        the cookie's host to look for
+   * @param aPath
+   *        the cookie's path to look for
+   * @param aName
+   *        the cookie's name to look for
+   * @param aOriginAttributes
+   *        the cookie's originAttributes to look for
+   *
+   * @return cookie matching the arguments or nullptr if not existing.
+   */
+  [notxpcom]
+  nsresult getCookieNative(in AUTF8String aHost,
+                           in AUTF8String aPath,
+                           in ACString    aName,
+                           in OriginAttributesPtr aOriginAttributes,
+                           out nsICookie aCookie);
+
+  /**
    * Count how many cookies exist within the base domain of 'aHost'.
    * Thus, for a host "weather.yahoo.com", the base domain would be "yahoo.com",
    * and any host or domain cookies for "yahoo.com" and its subdomains would be
