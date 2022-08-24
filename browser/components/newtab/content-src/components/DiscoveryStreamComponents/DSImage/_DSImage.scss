@@ -12,12 +12,36 @@
   }
 
   img,
-  .broken-image {
+  .placeholder-image {
     background-color: var(--newtab-element-secondary-color);
     position: absolute;
     top: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+
+  .placeholder-image {
+    overflow: hidden;
+    background-color: var(--placeholderBackgroundColor);
+
+    &::before {
+      content: '';
+      background-image: url('chrome://activity-stream/content/data/content/assets/pocket-swoosh.svg');
+      background-repeat: no-repeat;
+      background-position: center;
+      transform: rotate(var(--placeholderBackgroundRotation));
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      // We use margin-left over margin-inline-start on purpose.
+      // This is because we are using it to offset an image's content,
+      // and the image content is the same in ltr and rtl.
+      margin-left: var(--placeholderBackgroundOffsetx); // sass-lint:disable-line no-disallowed-properties
+      margin-top: var(--placeholderBackgroundOffsety);
+      background-size: var(--placeholderBackgroundScale);
+    }
   }
 }

@@ -4,6 +4,98 @@
 
 import React from "react";
 
+const PLACEHOLDER_IMAGE_DATA_ARRAY = [
+  {
+    rotation: "0deg",
+    offsetx: "20px",
+    offsety: "8px",
+    scale: "45%",
+  },
+  {
+    rotation: "54deg",
+    offsetx: "-26px",
+    offsety: "62px",
+    scale: "55%",
+  },
+  {
+    rotation: "-30deg",
+    offsetx: "78px",
+    offsety: "30px",
+    scale: "68%",
+  },
+  {
+    rotation: "-22deg",
+    offsetx: "0",
+    offsety: "92px",
+    scale: "60%",
+  },
+  {
+    rotation: "-65deg",
+    offsetx: "66px",
+    offsety: "28px",
+    scale: "60%",
+  },
+  {
+    rotation: "22deg",
+    offsetx: "-35px",
+    offsety: "62px",
+    scale: "52%",
+  },
+  {
+    rotation: "-25deg",
+    offsetx: "86px",
+    offsety: "-15px",
+    scale: "68%",
+  },
+];
+
+const PLACEHOLDER_IMAGE_COLORS_ARRAY = "#0090ED #FF4F5F #2AC3A2 #FF7139 #A172FF #FFA437 #FF2A8A".split(
+  " "
+);
+
+function generateIndex({ keyCode, max }) {
+  if (!keyCode) {
+    // Just grab a random index if we cannot generate an index from a key.
+    return Math.floor(Math.random() * max);
+  }
+
+  const hashStr = str => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      let charCode = str.charCodeAt(i);
+      hash += charCode;
+    }
+    return hash;
+  };
+
+  const hash = hashStr(keyCode);
+  return hash % max;
+}
+
+export function PlaceholderImage({ urlKey, titleKey }) {
+  const dataIndex = generateIndex({
+    keyCode: urlKey,
+    max: PLACEHOLDER_IMAGE_DATA_ARRAY.length,
+  });
+  const colorIndex = generateIndex({
+    keyCode: titleKey,
+    max: PLACEHOLDER_IMAGE_COLORS_ARRAY.length,
+  });
+  const { rotation, offsetx, offsety, scale } = PLACEHOLDER_IMAGE_DATA_ARRAY[
+    dataIndex
+  ];
+  const color = PLACEHOLDER_IMAGE_COLORS_ARRAY[colorIndex];
+  const style = {
+    "--placeholderBackgroundColor": color,
+    "--placeholderBackgroundRotation": rotation,
+    "--placeholderBackgroundOffsetx": offsetx,
+    "--placeholderBackgroundOffsety": offsety,
+    "--placeholderBackgroundScale": scale,
+  };
+
+  return <div style={style} className="placeholder-image" />;
+}
+
 export class DSImage extends React.PureComponent {
   constructor(props) {
     super(props);
@@ -106,7 +198,7 @@ export class DSImage extends React.PureComponent {
             srcSet={srcSetRules.join(",")}
           />
         );
-      } else if (!this.state.nonOptimizedImageFailed) {
+      } else if (this.props.source && !this.state.nonOptimizedImageFailed) {
         img = (
           <img
             loading="lazy"
@@ -118,8 +210,16 @@ export class DSImage extends React.PureComponent {
           />
         );
       } else {
+        // We consider a failed to load img or source without an image as loaded.
+        classNames = `${classNames} loaded`;
         // Remove the img element if both sources fail. Render a placeholder instead.
-        img = <div className="broken-image" />;
+        // This only happens if the sources are invalid or all attempts to load it failed.
+        img = (
+          <PlaceholderImage
+            urlKey={this.props.url}
+            titleKey={this.props.title}
+          />
+        );
       }
     }
 

@@ -362,6 +362,8 @@ export class _DSCard extends React.PureComponent {
               source={this.props.image_src}
               rawSource={this.props.raw_image_src}
               sizes={this.dsImageSizes}
+              url={this.props.url}
+              title={this.props.title}
             />
           </div>
           <DefaultMeta

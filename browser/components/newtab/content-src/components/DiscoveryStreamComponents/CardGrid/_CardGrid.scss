@@ -37,8 +37,11 @@ $col4-header-font-size: 14;
       border-radius: $border-radius-new;
       box-shadow: $shadow-card;
 
-      .img-wrapper .img img {
-        border-radius: $border-radius-new $border-radius-new 0 0;
+      .img-wrapper .img {
+        img,
+        .placeholder-image {
+          border-radius: $border-radius-new $border-radius-new 0 0;
+        }
       }
     }
   }
