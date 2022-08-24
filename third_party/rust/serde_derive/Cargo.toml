@@ -12,7 +12,7 @@
 [package]
 rust-version = "1.31"
 name = "serde_derive"
-version = "1.0.143"
+version = "1.0.144"
 authors = [
     "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
     "David Tolnay <dtolnay@gmail.com>",
@@ -38,7 +38,6 @@ keywords = [
 categories = ["no-std"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/serde-rs/serde"
-resolver = "1"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

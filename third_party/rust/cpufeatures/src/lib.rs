@@ -59,12 +59,17 @@
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/6ee8e381/logo.svg"
 )]
 
+#[cfg(not(miri))]
 #[cfg(all(target_arch = "aarch64"))]
 #[doc(hidden)]
 pub mod aarch64;
 
+#[cfg(not(miri))]
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod x86;
+
+#[cfg(miri)]
+mod miri;
 
 #[cfg(not(any(target_arch = "aarch64", target_arch = "x86", target_arch = "x86_64")))]
 compile_error!("This crate works only on `aarch64`, `x86`, and `x86-64` targets.");

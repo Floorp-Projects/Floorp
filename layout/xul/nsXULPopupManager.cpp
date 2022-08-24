@@ -1405,25 +1405,6 @@ void nsXULPopupManager::HidePopupsInList(
   SetCaptureState(nullptr);
 }
 
-void nsXULPopupManager::EnableRollup(nsIContent* aPopup, bool aShouldRollup) {
-#ifndef MOZ_GTK
-  nsMenuChainItem* item = mPopups;
-  while (item) {
-    if (item->Content() == aPopup) {
-      nsIContent* oldmenu = nullptr;
-      if (mPopups) {
-        oldmenu = mPopups->Content();
-      }
-
-      item->SetNoAutoHide(!aShouldRollup);
-      SetCaptureState(oldmenu);
-      return;
-    }
-    item = item->GetParent();
-  }
-#endif
-}
-
 bool nsXULPopupManager::IsChildOfDocShell(Document* aDoc,
                                           nsIDocShellTreeItem* aExpected) {
   nsCOMPtr<nsIDocShellTreeItem> docShellItem(aDoc->GetDocShell());

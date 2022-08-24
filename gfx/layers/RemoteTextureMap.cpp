@@ -278,7 +278,6 @@ RemoteTextureMap::RegisterTextureConsumer(const RemoteTextureOwnerId aOwnerId,
 void RemoteTextureMap::UnregisterTextureConsumer(
     const RemoteTextureOwnerId aOwnerId, const CompositableHandle& aHandle,
     const base::ProcessId aForPid) {
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   UniquePtr<TextureConsumer> consumer;  // Release outside the mutex
   {
     MutexAutoLock lock(mMutex);

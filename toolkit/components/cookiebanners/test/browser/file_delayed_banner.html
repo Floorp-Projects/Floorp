@@ -1,0 +1,48 @@
+<html>
+<head>
+  <title>A top-level page with delayed cookie banner</title>
+  <script>
+    function clickOptOut() {
+      document.getElementById("result").textContent = "OptOut";
+    }
+
+    function clickOptIn() {
+      document.getElementById("result").textContent = "OptIn";
+    }
+
+    function generateBanner() {
+      let banner = document.createElement("div");
+      banner.id = "banner";
+
+      let buttonOptOut = document.createElement("button");
+      buttonOptOut.id = "OptOut";
+      buttonOptOut.onclick = () => {clickOptOut();};
+
+      let buttonOptIn = document.createElement("button");
+      buttonOptIn.id = "OptIn";
+      buttonOptIn.onclick = () => {clickOptIn();};
+
+      banner.appendChild(buttonOptOut);
+      banner.appendChild(buttonOptIn);
+      document.body.appendChild(banner);
+    }
+
+    window.onload = () => {
+      const params = (new URL(document.location)).searchParams;
+      let delay = 0;
+
+      if (params.has("delay")) {
+        delay = parseInt(params.get("delay"));
+      }
+
+      window.setTimeout(() => {
+        generateBanner();
+      }, delay);
+    };
+  </script>
+</head>
+<body>
+  <h1>This is the top-level page</h1>
+  <p id="result">NoClick</p>
+</body>
+</html>

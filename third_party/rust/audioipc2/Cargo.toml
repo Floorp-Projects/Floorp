@@ -21,6 +21,7 @@ serde_bytes = "0.11"
 mio = { version = "0.8",  features = ["os-poll", "net", "os-ext"] }
 slab = "0.4"
 scopeguard = "1.1.0"
+crossbeam-channel = "0.5"
 
 [target.'cfg(unix)'.dependencies]
 iovec = "0.1"

@@ -4,7 +4,7 @@ version = 3
 
 [[package]]
 name = "devd-rs"
-version = "0.3.4"
+version = "0.3.5"
 dependencies = [
  "libc",
  "nom",

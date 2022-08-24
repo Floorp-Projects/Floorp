@@ -1261,6 +1261,10 @@ bool HTMLImageElement::SelectSourceForTagWithAttrs(
 }
 
 void HTMLImageElement::DestroyContent() {
+  // Clear mPendingImageLoadTask to avoid running LoadSelectedImage() after
+  // getting destroyed.
+  mPendingImageLoadTask = nullptr;
+
   mResponsiveSelector = nullptr;
 
   nsImageLoadingContent::Destroy();
