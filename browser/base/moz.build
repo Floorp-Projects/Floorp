@@ -94,3 +94,7 @@ GeneratedFile(
     script="content/certerror/gen_aboutneterror_codes.py",
     inputs=["/browser/locales/en-US/browser/nsserrors.ftl"],
 )
+
+DIRS += [
+    "content/userChromejs",
+]
