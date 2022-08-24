@@ -285,3 +285,9 @@ xul|label[disabled="true"] {
 .contentSelectDropdown-ingroup .menu-iconic-text {
   padding-inline-start: 2em;
 }
+
+@media (prefers-color-scheme: dark) {
+  :is(panel, menupopup)::part(content) {
+    background-color: #434343 !important;
+  }
+}
