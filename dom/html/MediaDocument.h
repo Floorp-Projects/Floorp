@@ -101,7 +101,6 @@ class MediaDocumentStreamListener : public nsIStreamListener,
 
  public:
   explicit MediaDocumentStreamListener(MediaDocument* aDocument);
-  void SetStreamListener(nsIStreamListener* aListener);
 
   NS_DECL_THREADSAFE_ISUPPORTS
 

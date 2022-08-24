@@ -41,11 +41,6 @@ MediaDocumentStreamListener::~MediaDocumentStreamListener() {
 NS_IMPL_ISUPPORTS(MediaDocumentStreamListener, nsIRequestObserver,
                   nsIStreamListener, nsIThreadRetargetableStreamListener)
 
-void MediaDocumentStreamListener::SetStreamListener(
-    nsIStreamListener* aListener) {
-  mNextStream = aListener;
-}
-
 NS_IMETHODIMP
 MediaDocumentStreamListener::OnStartRequest(nsIRequest* request) {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
