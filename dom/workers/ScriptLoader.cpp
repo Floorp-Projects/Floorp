@@ -250,20 +250,9 @@ void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
     return;
   }
 
-  Maybe<ClientInfo> clientInfo;
-  Maybe<ServiceWorkerDescriptor> controller;
-  nsIGlobalObject* global =
-      aWorkerScriptType == WorkerScript
-          ? static_cast<nsIGlobalObject*>(aWorkerPrivate->GlobalScope())
-          : aWorkerPrivate->DebuggerGlobalScope();
-
-  clientInfo = global->GetClientInfo();
-  controller = global->GetController();
-
   RefPtr<loader::WorkerScriptLoader> loader = new loader::WorkerScriptLoader(
       aWorkerPrivate, std::move(aOriginStack), syncLoopTarget, aScriptURLs,
-      aDocumentEncoding, clientInfo, controller, aIsMainScript,
-      aWorkerScriptType, aRv);
+      aDocumentEncoding, aIsMainScript, aWorkerScriptType, aRv);
 
   if (NS_WARN_IF(aRv.Failed())) {
     return;
@@ -434,14 +423,10 @@ WorkerScriptLoader::WorkerScriptLoader(
     WorkerPrivate* aWorkerPrivate,
     UniquePtr<SerializedStackHolder> aOriginStack,
     nsIEventTarget* aSyncLoopTarget, const nsTArray<nsString>& aScriptURLs,
-    const mozilla::Encoding* aDocumentEncoding,
-    const Maybe<ClientInfo>& aClientInfo,
-    const Maybe<ServiceWorkerDescriptor>& aController, bool aIsMainScript,
+    const mozilla::Encoding* aDocumentEncoding, bool aIsMainScript,
     WorkerScriptType aWorkerScriptType, ErrorResult& aRv)
     : mOriginStack(std::move(aOriginStack)),
       mSyncLoopTarget(aSyncLoopTarget),
-      mClientInfo(aClientInfo),
-      mController(aController),
       mWorkerScriptType(aWorkerScriptType),
       mCancelMainThread(Nothing()),
       mRv(aRv) {
@@ -464,6 +449,11 @@ WorkerScriptLoader::WorkerScriptLoader(
     mRv.Throw(NS_ERROR_FAILURE);
     return;
   }
+
+  nsIGlobalObject* global = GetGlobal();
+
+  mClientInfo = global->GetClientInfo();
+  mController = global->GetController();
 
   for (const nsString& aScriptURL : aScriptURLs) {
     WorkerLoadContext::Kind kind =
@@ -535,6 +525,14 @@ nsIURI* WorkerScriptLoader::GetBaseURI() {
   NS_ASSERTION(baseURI, "Should have been set already!");
 
   return baseURI;
+}
+
+nsIGlobalObject* WorkerScriptLoader::GetGlobal() {
+  mWorkerRef->Private()->AssertIsOnWorkerThread();
+  return mWorkerScriptType == WorkerScript
+             ? static_cast<nsIGlobalObject*>(
+                   mWorkerRef->Private()->GlobalScope())
+             : mWorkerRef->Private()->DebuggerGlobalScope();
 }
 
 void WorkerScriptLoader::LoadingFinished(ScriptLoadRequest* aRequest,
