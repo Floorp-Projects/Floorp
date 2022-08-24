@@ -183,8 +183,14 @@ LayoutDeviceIntRect HyperTextAccessibleBase::CharBounds(int32_t aOffset,
 LayoutDeviceIntRect HyperTextAccessibleBase::TextBounds(int32_t aStartOffset,
                                                         int32_t aEndOffset,
                                                         uint32_t aCoordType) {
-  if (CharacterCount() == 0 ||
-      (aEndOffset > -1 && aStartOffset >= aEndOffset)) {
+  LayoutDeviceIntRect result;
+  if (CharacterCount() == 0) {
+    result = Acc()->Bounds();
+    nsAccUtils::ConvertScreenCoordsTo(&result.x, &result.y, aCoordType, Acc());
+    return result;
+  }
+
+  if (aEndOffset > -1 && aStartOffset >= aEndOffset) {
     return LayoutDeviceIntRect();
   }
 
@@ -204,7 +210,6 @@ LayoutDeviceIntRect HyperTextAccessibleBase::TextBounds(int32_t aStartOffset,
   endPoint = endPoint.FindBoundary(nsIAccessibleText::BOUNDARY_CHAR,
                                    eDirPrevious, false);
 
-  LayoutDeviceIntRect result;
   if (endPoint == currPoint) {
     result = currPoint.CharBounds();
     nsAccUtils::ConvertScreenCoordsTo(&result.x, &result.y, aCoordType, Acc());
