@@ -152,7 +152,7 @@
   display: flex;
   flex-wrap: wrap;
   flex-grow: 1;
-  gap: 2em;
+  gap: 0.9em 1.8em;
 }
 
 .urlbarView-results[wrap] > .urlbarView-row[dynamicType=quickactions] > .urlbarView-row-inner {
