@@ -836,6 +836,10 @@ AtkRelationSet* refRelationSetCB(AtkObject* aAtkObj) {
       ATK_OBJECT_CLASS(parent_class)->ref_relation_set(aAtkObj);
 
   Accessible* acc = GetInternalObj(aAtkObj);
+  if (!acc) {
+    return relation_set;
+  }
+
   if (!StaticPrefs::accessibility_cache_enabled_AtStartup() &&
       acc->IsRemote()) {
     RemoteAccessible* proxy = acc->AsRemote();
