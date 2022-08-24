@@ -51,7 +51,10 @@ in order to fix the problem. Therefore, if FxA and Push are used together,
 include the support feature as well:
 
 ```kotlin
-FxaPushSupportFeature(context, fxaAccountManager, autoPushFeature)
+val feature = FxaPushSupportFeature(context, fxaAccountManager, autoPushFeature)
+
+// initialize the feature; this can be done immediately if needed.
+feature.initalize()
 ```
 
 ## License

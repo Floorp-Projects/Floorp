@@ -17,6 +17,10 @@ permalink: /changelog/
 * **support-ktx**
   * 🚒 Bug fixed [issue #12689](https://github.com/mozilla-mobile/android-components/issues/12689)  Make `Context.shareMedia` work with Android Direct Share.
 
+* **feature-accounts-push**:
+  * ⚠️ **This is a breaking change**: `FxaPushSupportFeature` now requires to be explicitly started with `initialize`.
+  * The constructor for `FxaPushSupportFeature` has a `coroutineScope` parameter that defaults to a `CoroutineScope(Dispatchers.IO)`.
+
 # 105.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v104.0.0...v105.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/152?closed=1)
@@ -29,7 +33,7 @@ permalink: /changelog/
 
 * **feature-findinpage**:
   * 🚒 Bug fixed [issue #12637](https://github.com/mozilla-mobile/android-components/issues/12637) Disable find in page previous and forward buttons if the query is empty
-  
+
 * **feature-search**:
   * Implement the common part of search widget in Android Components [#12565](https://github.com/mozilla-mobile/android-components/issues/12565).
 
