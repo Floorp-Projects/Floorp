@@ -11821,37 +11821,3 @@ void PresShell::PingPerTickTelemetry(FlushType aFlushType) {
 bool PresShell::GetZoomableByAPZ() const {
   return mZoomConstraintsClient && mZoomConstraintsClient->GetAllowZoom();
 }
-
-void PresShell::EnsureReflowIfFrameHasHiddenContent(nsIFrame* aFrame) {
-  if (!aFrame || !aFrame->IsSubtreeDirty() ||
-      !StaticPrefs::layout_css_content_visibility_enabled()) {
-    return;
-  }
-
-  MOZ_ASSERT(mHiddenContentInForcedLayout.IsEmpty());
-  nsIFrame* topmostFrameWithContentHidden = nullptr;
-  for (nsIFrame* cur = aFrame->GetInFlowParent(); cur;
-       cur = cur->GetInFlowParent()) {
-    if (cur->IsContentHidden()) {
-      topmostFrameWithContentHidden = cur;
-      mHiddenContentInForcedLayout.Insert(cur->GetContent());
-    }
-  }
-
-  if (mHiddenContentInForcedLayout.IsEmpty()) {
-    return;
-  }
-
-  // Queue and immediately flush a reflow for this node.
-  MOZ_ASSERT(topmostFrameWithContentHidden);
-  FrameNeedsReflow(topmostFrameWithContentHidden, IntrinsicDirty::Resize,
-                   NS_FRAME_IS_DIRTY);
-  aFrame->PresContext()->Document()->FlushPendingNotifications(
-      FlushType::Layout);
-
-  mHiddenContentInForcedLayout.Clear();
-}
-
-bool PresShell::IsForcingLayoutForHiddenContent(const nsIFrame* aFrame) const {
-  return mHiddenContentInForcedLayout.Contains(aFrame->GetContent());
-}
