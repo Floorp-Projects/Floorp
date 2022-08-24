@@ -134,9 +134,7 @@ def rewrite_when_to_optimization(config, jobs):
 @transforms.add
 def set_implementation(config, jobs):
     for job in jobs:
-        impl, os = worker_type_implementation(
-            config.graph_config, config.params, job["worker-type"]
-        )
+        impl, os = worker_type_implementation(config.graph_config, job["worker-type"])
         if os:
             job.setdefault("tags", {})["os"] = os
         if impl:
@@ -166,7 +164,7 @@ def add_resource_monitor(config, jobs):
     for job in jobs:
         if job.get("attributes", {}).get("resource-monitor"):
             worker_implementation, worker_os = worker_type_implementation(
-                config.graph_config, config.params, job["worker-type"]
+                config.graph_config, job["worker-type"]
             )
             # Normalise worker os so that linux-bitbar and similar use linux tools.
             worker_os = worker_os.split("-")[0]

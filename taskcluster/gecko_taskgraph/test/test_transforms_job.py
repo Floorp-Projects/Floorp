@@ -45,7 +45,6 @@ def config():
             "head_repository": "http://hg.example.com",
             "head_rev": "abcdef",
             "level": 1,
-            "project": "example",
         }
     )
     return TransformConfig(

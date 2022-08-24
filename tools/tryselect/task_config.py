@@ -505,7 +505,10 @@ class WorkerOverrides(TryConfig):
                     )
                     sys.exit(1)
                 provisioner, worker_type = get_worker_type(
-                    graph_config, worker_type=alias, parameters={"level": "1"}
+                    graph_config,
+                    alias,
+                    level="1",
+                    release_level="staging",
                 )
                 overrides[alias] = "{provisioner}/{worker_type}{suffix}".format(
                     provisioner=provisioner, worker_type=worker_type, suffix=suffix
