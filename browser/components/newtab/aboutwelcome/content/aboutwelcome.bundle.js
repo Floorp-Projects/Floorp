@@ -668,24 +668,16 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
 
   renderLogo({
     imageURL = "chrome://branding/content/about-logo.svg",
-    darkModeImageURL,
-    reducedMotionImageURL,
-    darkModeReducedMotionImageURL,
     alt = "",
+    darkModeImageURL,
     height
   }) {
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("picture", {
       className: "logo-container"
-    }, darkModeReducedMotionImageURL ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("source", {
-      srcSet: darkModeReducedMotionImageURL,
-      media: "(prefers-color-scheme: dark) and (prefers-reduced-motion: reduce)"
-    }) : null, darkModeImageURL ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("source", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("source", {
       srcSet: darkModeImageURL,
       media: "(prefers-color-scheme: dark)"
-    }) : null, reducedMotionImageURL ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("source", {
-      srcSet: reducedMotionImageURL,
-      media: "(prefers-reduced-motion: reduce)"
-    }) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", {
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", {
       className: "brand-logo",
       style: {
         height
