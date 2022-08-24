@@ -461,36 +461,6 @@ const CustomizableWidgets = [
       win.MailIntegration.sendLinkForBrowser(win.gBrowser.selectedBrowser);
     },
   },
-  {
-    id: "firefox-view-button",
-    l10nId: "toolbar-button-firefox-view",
-    defaultArea: CustomizableUI.AREA_TABSTRIP,
-    introducedInVersion: Services.prefs.getBoolPref("browser.tabs.firefox-view")
-      ? "pref"
-      : 0,
-    onBeforeCreated() {
-      return Services.prefs.getBoolPref("browser.tabs.firefox-view");
-    },
-    onCreated(aNode) {
-      aNode.setAttribute("role", "tab");
-      aNode.addEventListener("mousedown", this);
-      aNode.ownerGlobal.addEventListener(
-        "unload",
-        () => {
-          aNode.removeEventListener("mousedown", this);
-        },
-        { once: true }
-      );
-    },
-    onCommand(e) {
-      e.view.FirefoxViewHandler.openTab();
-    },
-    handleEvent(e) {
-      if (e.type == "mousedown" && e.button == 0) {
-        e.view.FirefoxViewHandler.openTab();
-      }
-    },
-  },
 ];
 
 if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {

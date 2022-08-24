@@ -158,25 +158,10 @@ async function tearDown(sandbox) {
 add_setup(async function() {
   // we only use this for the first test, then we reset it
   Services.prefs.lockPref("identity.fxaccounts.enabled");
-
-  if (!Services.prefs.getBoolPref("browser.tabs.firefox-view")) {
-    info(
-      "firefox-view pref was off, toggling it on and adding the tabstrip widget"
-    );
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.tabs.firefox-view", true]],
-    });
-    CustomizableUI.addWidgetToArea(
-      "firefox-view-button",
-      CustomizableUI.AREA_TABSTRIP,
-      0
-    );
-    registerCleanupFunction(() => {
-      CustomizableUI.removeWidgetFromArea("firefox-view-button");
-      // reset internal state so it doesn't affect the next tests
-      TabsSetupFlowManager.resetInternalState();
-    });
-  }
+  registerCleanupFunction(() => {
+    // reset internal state so it doesn't affect the next tests
+    TabsSetupFlowManager.resetInternalState();
+  });
 
   await promiseSyncReady();
   // gSync.init() is called in a requestIdleCallback. Force its initialization.
@@ -274,7 +259,6 @@ add_task(async function test_unconfigured_initial_state() {
     );
   });
   await tearDown(sandbox);
-  gBrowser.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function test_signed_in() {
@@ -333,7 +317,6 @@ add_task(async function test_signed_in() {
     );
   });
   await tearDown(sandbox);
-  gBrowser.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function test_2nd_desktop_connected() {

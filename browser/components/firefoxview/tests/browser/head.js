@@ -109,7 +109,7 @@ async function waitForElementVisible(browser, selector, isVisible = true) {
   );
 }
 
-function assertFirefoxViewTab(w = window) {
+function assertFirefoxViewTab(w) {
   ok(w.FirefoxViewHandler.tab, "Firefox View tab exists");
   ok(w.FirefoxViewHandler.tab?.hidden, "Firefox View tab is hidden");
   is(
@@ -124,7 +124,7 @@ function assertFirefoxViewTab(w = window) {
   );
 }
 
-async function openFirefoxViewTab(w = window) {
+async function openFirefoxViewTab(w) {
   ok(
     !w.FirefoxViewHandler.tab,
     "Firefox View tab doesn't exist prior to clicking the button"
@@ -141,7 +141,7 @@ async function openFirefoxViewTab(w = window) {
   return w.FirefoxViewHandler.tab;
 }
 
-function closeFirefoxViewTab(w = window) {
+function closeFirefoxViewTab(w) {
   w.gBrowser.removeTab(w.FirefoxViewHandler.tab);
   ok(
     !w.FirefoxViewHandler.tab,
@@ -150,9 +150,14 @@ function closeFirefoxViewTab(w = window) {
 }
 
 async function withFirefoxView(
-  { resetFlowManager = true, win = window },
+  { resetFlowManager = true, win = null },
   taskFn
 ) {
+  let shouldCloseWin = false;
+  if (!win) {
+    win = await BrowserTestUtils.openNewBrowserWindow();
+    shouldCloseWin = true;
+  }
   if (resetFlowManager) {
     const { TabsSetupFlowManager } = ChromeUtils.importESModule(
       "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs"
@@ -176,23 +181,10 @@ async function withFirefoxView(
         "removeTab would have been called"
     );
   }
-  return Promise.resolve(result);
-}
-
-async function addFirefoxViewButtonToToolbar() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.tabs.firefox-view", true]],
-  });
-  info(Services.prefs.getBoolPref("browser.tabs.firefox-view", false));
-  CustomizableUI.addWidgetToArea(
-    "firefox-view-button",
-    CustomizableUI.AREA_TABSTRIP,
-    0
-  );
-}
-
-function removeFirefoxViewButtonFromToolbar() {
-  CustomizableUI.removeWidgetFromArea("firefox-view-button");
+  if (shouldCloseWin) {
+    await BrowserTestUtils.closeWindow(win);
+  }
+  return result;
 }
 
 function setupRecentDeviceListMocks() {
