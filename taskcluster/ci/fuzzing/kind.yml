@@ -22,6 +22,7 @@ job-defaults:
     treeherder:
         kind: test
         tier: 3
+    if-dependencies: [build]
 
 jobs:
     simple:
@@ -61,6 +62,3 @@ jobs:
             command: >
                 export GECKO_BINARY_PATH=$MOZ_FETCHES_DIR/firefox/firefox &&
                 ./mach python-test --subsuite fuzzing
-        when:
-            files-changed:
-                - 'tools/fuzzing/smoke/**'
