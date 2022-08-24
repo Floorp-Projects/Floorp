@@ -334,7 +334,7 @@ const ONBOARDING_MESSAGES = () => [
                 data: {
                   args:
                     "https://www.mozilla.org/firefox/mobile/get-app/?utm_medium=firefox-desktop&utm_source=onboarding-modal&utm_campaign=mr2022&utm_content=existing-global",
-                  where: "tabshifted",
+                  where: "tab",
                 },
               },
             },
