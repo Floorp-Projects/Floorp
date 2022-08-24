@@ -8,8 +8,8 @@ const { ActorClassWithSpec } = require("devtools/shared/protocol");
 
 loader.lazyRequireGetter(
   this,
-  "SessionData",
-  "devtools/server/actors/targets/session-data/index",
+  "SessionDataProcessors",
+  "devtools/server/actors/targets/session-data-processors/index",
   true
 );
 loader.lazyRequireGetter(
@@ -39,7 +39,7 @@ module.exports = function(targetType, targetActorSpec, implementation) {
      *        associated target) is created.
      */
     async addSessionDataEntry(type, entries, isDocumentCreation = false) {
-      const processor = SessionData[type];
+      const processor = SessionDataProcessors[type];
       if (processor) {
         await processor.addSessionDataEntry(this, entries, isDocumentCreation);
       }
@@ -51,7 +51,7 @@ module.exports = function(targetType, targetActorSpec, implementation) {
      * See addSessionDataEntry for argument description.
      */
     removeSessionDataEntry(type, entries) {
-      const processor = SessionData[type];
+      const processor = SessionDataProcessors[type];
       if (processor) {
         processor.removeSessionDataEntry(this, entries);
       }

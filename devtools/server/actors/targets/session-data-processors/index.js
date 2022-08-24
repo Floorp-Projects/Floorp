@@ -9,42 +9,42 @@ const {
 } = require("devtools/server/actors/watcher/SessionDataHelpers.jsm");
 const { SUPPORTED_DATA } = SessionDataHelpers;
 
-const SessionData = {};
+const SessionDataProcessors = {};
 
 loader.lazyRequireGetter(
-  SessionData,
+  SessionDataProcessors,
   SUPPORTED_DATA.BLACKBOXING,
-  "devtools/server/actors/targets/session-data/blackboxing"
+  "devtools/server/actors/targets/session-data-processors/blackboxing"
 );
 loader.lazyRequireGetter(
-  SessionData,
+  SessionDataProcessors,
   SUPPORTED_DATA.BREAKPOINTS,
-  "devtools/server/actors/targets/session-data/breakpoints"
+  "devtools/server/actors/targets/session-data-processors/breakpoints"
 );
 loader.lazyRequireGetter(
-  SessionData,
+  SessionDataProcessors,
   SUPPORTED_DATA.EVENT_BREAKPOINTS,
-  "devtools/server/actors/targets/session-data/event-breakpoints"
+  "devtools/server/actors/targets/session-data-processors/event-breakpoints"
 );
 loader.lazyRequireGetter(
-  SessionData,
+  SessionDataProcessors,
   SUPPORTED_DATA.RESOURCES,
-  "devtools/server/actors/targets/session-data/resources"
+  "devtools/server/actors/targets/session-data-processors/resources"
 );
 loader.lazyRequireGetter(
-  SessionData,
+  SessionDataProcessors,
   SUPPORTED_DATA.TARGET_CONFIGURATION,
-  "devtools/server/actors/targets/session-data/target-configuration"
+  "devtools/server/actors/targets/session-data-processors/target-configuration"
 );
 loader.lazyRequireGetter(
-  SessionData,
+  SessionDataProcessors,
   SUPPORTED_DATA.THREAD_CONFIGURATION,
-  "devtools/server/actors/targets/session-data/thread-configuration"
+  "devtools/server/actors/targets/session-data-processors/thread-configuration"
 );
 loader.lazyRequireGetter(
-  SessionData,
+  SessionDataProcessors,
   SUPPORTED_DATA.XHR_BREAKPOINTS,
-  "devtools/server/actors/targets/session-data/xhr-breakpoints"
+  "devtools/server/actors/targets/session-data-processors/xhr-breakpoints"
 );
 
-exports.SessionData = SessionData;
+exports.SessionDataProcessors = SessionDataProcessors;
