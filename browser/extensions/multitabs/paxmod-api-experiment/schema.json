@@ -1,0 +1,14 @@
+[
+  {
+    "namespace": "paxmod",
+    "description": "Privileged code for Paxmod",
+    "functions": [
+      {
+        "name": "load",
+        "type": "function",
+        "async": true,
+        "parameters": []
+      }
+    ]
+  }
+]

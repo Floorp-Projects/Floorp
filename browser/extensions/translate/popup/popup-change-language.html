@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="stylesheet" href="/w3css/4/w3.css">
+    <style>
+        body {
+            user-select: none;
+            font-family: Arial, sans-serif;
+            width: 275px;
+            background-color: #181A1B;
+            color: white;
+        }
+
+        #mdiv {
+            width: 14px;
+            height: 14px;
+        }
+
+        .mdiv {
+            height: 15px;
+            width: 2px;
+            margin-left: 5px;
+            background-color: white;
+            transform: rotate(45deg);
+            Z-index: 1;
+            alignment: center;
+        }
+
+        .md {
+            height: 15px;
+            width: 2px;
+            background-color: white;
+            transform: rotate(90deg);
+            Z-index: 2;
+        }
+
+        #btnClose {
+            border-radius: 30%;
+            position: relative;
+            padding: 7px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        #btnClose:hover {
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+
+        .flex-container {
+            display: flex;
+            justify-content: center;
+            padding: 0;
+            margin-top: 10px;
+            flex: 1;
+        }
+        
+        .title {
+            margin-left: 7px;
+            margin-top: 3px;
+        }
+        
+        .select {
+            padding: 5px;
+            background-color: rgba(0, 0, 0, 0.4);
+            border-radius: 5px;
+            margin: 5px;
+            border: none;
+            width: 60%;
+            float: left;
+            box-shadow: 1px 1px 10px 0 rgba(0, 0, 0, 0.5);
+            transition: 0.2s;
+            color: white;
+        }
+        .select:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        
+        #btnApply {
+            color: white;
+            width: 30%;
+            height: 10%;
+            margin: 5px;
+            padding: 3px;
+            float: right;
+            background-color: rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 1px 1px 10px 0 rgba(0, 0, 0, 0.5);
+            transition: 0.2s;
+        }
+        
+        #btnApply:hover {
+            transform: translateY(-2px);
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="w3-display-topright">
+        <div id="btnClose">
+            <div id="mdiv">
+                <div class="mdiv">
+                    <div class="md"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div data-i18n="lblTargetLanguage" data-i18n-ph-value="" class="title">Target language</div>
+
+    <div style="margin-top: 10px;">
+        <label>
+            <select class="select">
+                <optgroup name="targets" label="Recents" data-i18n-label="msgRecents"></optgroup>
+                <optgroup name="all" label="All" data-i18n-label="msgAll"></optgroup>
+            </select>
+        </label>
+    
+        <button data-i18n="btnApply" id="btnApply">Apply</button>
+    </div>
+
+    <script src="/lib/languages.js"></script>
+    <script src="/lib/config.js"></script>
+    <script src="/lib/i18n.js"></script>
+    <script src="popup-change-language.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,13 @@
+Each file under this directory is licensed under MPL 2.0 by default, if the file includes no license information.
+All rights reserved.
+
+----
+
+This project includes files licensed under different type licenses:
+
+ * Mozilla Public License 2.0 (MPL 2.0)
+ * Mozilla Public License MPL 1.1 (MPL 1.1)
+ * MIT License
+ * Python Software Foundation License (PSFL)
+
+Please note that these licenses are applied "per-file". In most cases each file includes a license header in itself. If a file has no license header due to some reasons (for example, image files), please see a file named "license.txt" in closest parent directory. Otherwise please treat the file is licensed under the default license declared at the top of this file.

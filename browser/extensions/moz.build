@@ -6,10 +6,23 @@
 
 DIRS += [
     "doh-rollout",
+    "fake-gesturefy",
     "formautofill",
     "screenshots",
     "webcompat",
     "report-site-issue",
     "pictureinpicture",
     "search-detection",
+    "translate",
+    "treestyletab",
+    "undo-closed-tab",
+    "official-site-ua",
+    "multitabs",
 ]
+
+if CONFIG["OS_TARGET"] == "Linux":
+ DIRS += ["floorp-system/linux"]
+elif CONFIG["OS_TARGET"] == "WINNT":
+  DIRS += ["floorp-system/windows"]
+else:
+    DIRS += ["floorp-system/macOS"]

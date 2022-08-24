@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            width: 350px;
+            background-color: #181A1B;
+            color: white;
+        }
+
+        .title {
+            padding-top: 3px;
+            padding-bottom: 3px;
+            text-align: center;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+        
+        .alert {
+            padding-top: 3px;
+            padding-bottom: 3px;
+            text-align: center;
+            width: 100%;
+            background-color: rgba(255, 81, 81, 0.4);
+            margin-bottom: 10px;
+        }
+        
+        .servicebutton, .sendbutton {
+            padding: 8px;
+            background-color: rgba(0, 0, 0, 0.4);
+            border-radius: 5px;
+            margin: 13px;
+            box-shadow: 1px 1px 10px 0 rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .servicebutton:hover, .sendbutton:hover {
+            transform: translateY(-2px);
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+    </style>
+    <link rel="stylesheet" href="/w3css/4/w3.css">
+</head>
+<body>
+    <div class="title" data-i18n="extensionName">Translate Web Pages</div>
+    <div class="alert" data-i18n="msgToTranslateThisDocument" data-i18n-ph-value="(.pdf)" id="conversionalert">To translate this document (.pdf) it is necessary to convert it to HTML.</div>
+    <div style="text-align: center;">
+        <div data-i18n="msgSelectServiceConversion" style="margin-bottom: 10px;" id="conversion">Select a service to do this conversion</div>
+        <div data-i18n="msgPleaseWait" style="margin: 10px;display: none;" id="pleasewait">Please wait...</div>
+        <div data-i18n="msgErrorDownloadingDocument" style="margin: 13px;display: none;" id="cannotDownload">Error downloading document</div>
+        <div id="selectService">
+            <div class="servicebutton" id="translatewebpages" data-name="translatewebpages">Translate Web Pages</div>
+            <div class="servicebutton"  id="googletranslate" data-name="google">Google Translate</div>
+        </div>
+        <div style="margin: 13px;display: none;" id="cannotusegoogle"></div>
+        <div id="send" style="display: none;" data-i18n="msgOpenTranslated" class="sendbutton">Open translated PDF</div>
+    </div>
+    
+    <form action="https://translatewebpages.org/pdftohtml" method="POST" target="_blank" enctype="multipart/form-data" id="form_translatewebpages" style="display: none;">
+        <input type="text" name="autotranslate" hidden>
+        <input type="file" name="file">
+        <input type="submit" value="Submit">
+    </form>
+
+    <form action="https://translate.googleusercontent.com/translate_f" method="POST" target="_blank" enctype="multipart/form-data" id="form_google" style="display: none;">
+        <!-- <input type="text" name="hl" value="en-US"> -->
+        <input type="text" name="ie" value="UTF-8">
+        <input type="text" name="js" value="y">
+        <input type="text" name="prev" value="_t">
+        <input type="text" name="sl" value="auto">
+        <input type="text" name="tl" value="en">
+        <input type="file" name="file">
+        <input type="submit" value="Submit">
+    </form>
+
+    <script src="/lib/languages.js"></script>
+    <script src="/lib/config.js"></script>
+    <script src="/lib/i18n.js"></script>
+    <script src="popup-translate-document.js"></script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+/*
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
+@import url("/resources/ui-color.css");
+@import url("base.css");
+
+
+/* Coloring */
+
+:root {
+  --in-content-page-background: white;
+  --toolbar-non-lwt-bgcolor: var(--in-content-page-background);
+  --toolbar-non-lwt-textcolor: var(--in-content-page-color);
+
+  --tab-like-surface: var(--browser-bg-base, var(--toolbar-non-lwt-bgcolor));
+  --tab-surface-regular: transparent;
+  --tab-text-regular: var(--browser-fg, var(--toolbar-non-lwt-textcolor));
+  --tab-text-inverted: var(--browser-bg-more-lighter, var(--toolbar-non-lwt-bgcolor));
+  --tab-text-active: var(--tab-text-regular);
+  --tab-text-active-inverted: var(--toolbar-non-lwt-bgcolor);
+  --tab-border: var(--browser-border, var(--browser-bg-more-darker, var(--in-content-box-border-color-mixed)));
+  --tab-active-border-near: var(--grey-90-a40) /* color-mix(in srgb, var(--grey-90, currentcolor) 40%, transparent) */;
+  --tab-active-border-far: var(--grey-90-a20) /* color-mix(in srgb, var(--grey-90, currentcolor) 20%, transparent) */;
+  --tab-surface-hover-color: var(--browser-bg-hover-for-header-image-proton, var(--grey-90-a11) /* color-mix(in srgb, currentcolor 11%, transparent) */);
+  --tab-surface-hover: var(--tab-surface-hover-color, var(--in-content-box-background-hover));
+  --tab-surface-active: var(--browser-bg-active-for-header-image, var(--browser-selected-tab-bg, var(--tab-like-surface, var(--in-content-button-background-mixed))));
+  --tab-surface-active-hover: var(--browser-bg-active-for-header-image, var(--browser-selected-tab-bg, var(--tab-like-surface, var(--in-content-button-background-active-mixed))));
+  --tab-dropmarker: var(--browser-fg, var(--toolbar-non-lwt-textcolor));
+  --throbber-color: var(--browser-loading-indicator, var(--tab-text));
+  --throbber-color-active: var(--browser-loading-indicator, var(--tab-text-active));
+
+  --tabbar-bg: -moz-dialog;
+
+  --tab-highlighted-glow: rgb(42, 195, 162); /* https://searchfox.org/mozilla-central/rev/74f3c420ee54001059e1850bef3be876749ff873/browser/themes/shared/tabs.inc.css#927 */
+}
+
+:root.platform-mac {
+  --tabbar-bg: #f0f0f4; /* https://searchfox.org/mozilla-central/rev/e9eb869e90a8d717678c3f38bf75843e345729ab/browser/themes/osx/browser.css#52 */
+}
+
+:root,
+body,
+#background {
+  background-color: var(--browser-background, var(--tabbar-bg));
+  background-image: var(--browser-bg-images, none);
+  background-position: var(--browser-bg-position, left);
+  background-size: var(--browser-bg-size, auto);
+  background-repeat: var(--browser-bg-repeat, none);
+}
+:root.right,
+:root.right #background {
+  background-position: right;
+}
+
+#tabbar {
+  scrollbar-color: var(--theme-colors-toolbar_bottom_separator, var(--in-content-button-background-hover-mixed))
+                   var(--theme-colors-toolbar, var(--in-content-box-background));
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tab-highlighter: var(--browser-tab-highlighter, var(--dark-tab-line));
+    --tabbar-bg: var(--browser-bg-darker, var(--dark-frame));
+    --tab-highlighted-glow: rgb(84, 255, 189); /* https://searchfox.org/mozilla-central/rev/74f3c420ee54001059e1850bef3be876749ff873/browser/themes/shared/tabs.inc.css#931 */
+  }
+}
+
+@media not (prefers-color-scheme: dark) {
+  :root[color-scheme="system-color"] {
+    --tab-text-regular: var(--browser-fg, -moz-dialogtext);
+    --tab-text-inverted: var(--browser-bg-more-lighter, -moz-dialog);
+    --tab-text-active: -moz-dialogtext;
+    --tab-text-active-inverted: -moz-dialog;
+    --tab-border: var(--browser-border, var(--browser-bg-more-darker, ThreeDShadow));
+    --tab-surface-hover-color: var(--browser-bg-hover-for-header-image-proton, ThreeDHighlight);
+    --tab-surface-active: var(--browser-bg-active-for-header-image, var(--browser-selected-tab-bg, -moz-dialog));
+    --tab-surface-active-hover: var(--browser-bg-active-for-header-image, var(--browser-selected-tab-bg, -moz-dialog));
+    --tab-dropmarker: var(--browser-fg, -moz-dialogtext);
+  }
+  :root[color-scheme="system-color"] #background::after {
+    background: var(--browser-bg-darker, AppWorkspace);
+    opacity: 0.15;
+
+    bottom: 0;
+    content: "";
+    left: 0;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 20;
+  }
+  /* we cannot know the GNOME3 "headerbar" color, so use inverted menu color instead. */
+  :root[color-scheme="system-color"][data-user-agent*="Linux"] {
+    --tab-text-regular: var(--browser-fg, Menu);
+    --tab-text-inverted: var(--browser-bg-more-lighter, MenuText);
+    --tab-dropmarker: var(--browser-fg, var(--tab-text));
+  }
+  :root[color-scheme="system-color"][data-user-agent*="Linux"] tab-item:not(.active).highlighted {
+    --tab-text: var(--tab-text-active);
+  }
+  :root[color-scheme="system-color"][data-user-agent*="Linux"] tab-item:not(.active):not(.highlighted):hover .background {
+    opacity: 0.1;
+  }
+  :root[color-scheme="system-color"][data-user-agent*="Linux"] #background::after {
+    background: var(--browser-bg-darker, MenuText);
+    opacity: 1;
+  }
+}
+
+tab-item,
+.after-tabs button,
+.after-tabs [role="button"],
+#subpanel-container,
+#dummy-tab-color-box {
+  --tab-surface: var(--tab-surface-regular);
+  --tab-text: var(--tab-text-regular);
+  --tab-text-shadow: var(--browser-textshadow-for-header-image, none);
+  background: transparent;
+  color: var(--tab-text);
+  text-shadow: var(--tab-text-shadow);
+}
+
+.after-tabs button,
+.after-tabs [role="button"] {
+  padding-bottom: var(--tab-dropshadow-size) !important;
+  padding-top: var(--tab-dropshadow-size) !important;
+}
+
+.after-tabs button::after,
+.after-tabs [role="button"]::after {
+  content: " ";
+  display: inline-block;
+  position: absolute;
+}
+
+.after-tabs button::before {
+  height: calc(var(--tab-dropshadow-size) * 2 + var(--favicon-size));
+  max-height: calc(var(--tab-dropshadow-size) * 2 + var(--favicon-size));
+  min-height: calc(var(--tab-dropshadow-size) * 2 + var(--favicon-size));
+}
+
+tab-item .background,
+.after-tabs button:hover::after,
+.after-tabs [role="button"]:hover::after {
+  background: var(--tab-surface);
+  border-radius: var(--tab-border-radius-size);
+  bottom: var(--tab-dropshadow-size);
+  left: var(--tab-dropshadow-size);
+  right: var(--tab-dropshadow-size);
+  top: var(--tab-dropshadow-size);
+}
+
+:root.left tab-item:not(.faviconized) .contextual-identity-marker {
+  right: calc(var(--tab-dropshadow-size) - var(--tab-highlighter-size));
+}
+
+:root.right tab-item:not(.faviconized) .contextual-identity-marker {
+  left: calc(var(--tab-dropshadow-size) - var(--tab-highlighter-size));
+}
+
+tab-item.faviconized .contextual-identity-marker {
+  bottom: auto;
+  top: 0;
+}
+
+tab-item * {
+  color: var(--tab-text);
+}
+
+tab-item:not(.active):hover,
+.after-tabs button:hover,
+.after-tabs [role="button"]:hover {
+  --tab-surface: var(--tab-surface-hover);
+  --tab-text: var(--tab-text-regular);
+}
+
+#subpanel-selector-anchor:hover {
+  background: var(--tab-surface-hover);
+  color: var(--tab-text-regular);
+}
+
+tab-item.active {
+  --multiselected-color: transparent;
+  --tab-surface: var(--tab-surface-active);
+  --throbber-color: var(--throbber-color-active);
+  --tab-text: var(--tab-text-active);
+  --tab-text-inverted: var(--tab-text-active-inverted);
+}
+tab-item.bundled-active,
+tab-item.active:hover {
+  --tab-surface: var(--tab-surface-active-hover);
+}
+
+tab-closebox {
+  background: none transparent;
+  border: none 0 transparent;
+  margin: 0;
+  padding: 0.1em;
+}
+
+tab-item .burster {
+  --throbber-color: var(--tab-loading-fill);
+}
+
+
+/* hide regular active tab marker */
+.highlighter::before {
+  display: none !important;
+}
+
+
+/* Dropshadow */
+
+tab-item:not(collapsed).active .background,
+.mutiple-highlighted > tab-item.highlighted::after {
+  box-shadow: 0 0 0.15em var(--browser-tab-highlighter, var(--tab-active-border-near)),
+              0 0 var(--tab-dropshadow-size) var(--browser-tab-highlighter, var(--tab-active-border-far));
+}
+
+
+/* Transparent tabs are shown above solid tabs.
+   We have to set z-index to show all tabs in the same layer. */
+tab-item {
+  z-index: auto;
+}
+
+.after-tabs button,
+.after-tabs [role="button"] {
+  z-index: 100;
+}
+
