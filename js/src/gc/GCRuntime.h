@@ -292,6 +292,12 @@ class GCRuntime {
   void assertNoPermanentSharedThings();
 #endif
 
+  Zone* atomsZone() {
+    Zone* zone = zones()[0];
+    MOZ_ASSERT(JS::shadow::Zone::from(zone)->isAtomsZone());
+    return zone;
+  }
+
   void freezePermanentSharedThings();
   template <typename T>
   void freezeAtomsZoneArenas(AllocKind kind, ArenaList& arenaList);
@@ -928,16 +934,13 @@ class GCRuntime {
  public:
   JSRuntime* const rt;
 
-  // The unique atoms zone.
-  WriteOnceData<Zone*> atomsZone;
-
   // Embedders can use this zone however they wish.
   MainThreadData<JS::Zone*> systemZone;
 
   MainThreadData<JS::GCContext> mainThreadContext;
 
  private:
-  // All zones in the runtime, except the atoms zone.
+  // All zones in the runtime. The first element is always the atoms zone.
   MainThreadOrGCTaskData<ZoneVector> zones_;
 
   // Any activity affecting the heap.

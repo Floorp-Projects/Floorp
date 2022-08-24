@@ -94,6 +94,9 @@ struct Zone {
   static shadow::Zone* from(JS::Zone* zone) {
     return reinterpret_cast<shadow::Zone*>(zone);
   }
+  static const shadow::Zone* from(const JS::Zone* zone) {
+    return reinterpret_cast<const shadow::Zone*>(zone);
+  }
 };
 
 }  // namespace shadow

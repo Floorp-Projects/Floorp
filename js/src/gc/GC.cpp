@@ -377,7 +377,6 @@ void GCRuntime::releaseArena(Arena* arena, const AutoLockGC& lock) {
 
 GCRuntime::GCRuntime(JSRuntime* rt)
     : rt(rt),
-      atomsZone(nullptr),
       systemZone(nullptr),
       mainThreadContext(rt),
       heapState_(JS::HeapState::Idle),
@@ -863,8 +862,11 @@ bool GCRuntime::init(uint32_t maxbytes) {
     return false;
   }
 
+  // The atoms zone is stored as the first element of the zones vector.
   MOZ_ASSERT(zone->isAtomsZone());
-  atomsZone = zone.release();
+  MOZ_ASSERT(zones().empty());
+  MOZ_ALWAYS_TRUE(zones().reserve(1));  // ZonesVector has inline capacity 4.
+  zones().infallibleAppend(zone.release());
 
   gcprobes::Init(this);
 
@@ -923,10 +925,10 @@ void GCRuntime::finish() {
 
 #ifdef DEBUG
 void GCRuntime::assertNoPermanentSharedThings() {
-  MOZ_ASSERT(atomsZone->cellIterUnsafe<JSAtom>(AllocKind::ATOM).done());
+  MOZ_ASSERT(atomsZone()->cellIterUnsafe<JSAtom>(AllocKind::ATOM).done());
   MOZ_ASSERT(
-      atomsZone->cellIterUnsafe<JSAtom>(AllocKind::FAT_INLINE_ATOM).done());
-  MOZ_ASSERT(atomsZone->cellIterUnsafe<JS::Symbol>(AllocKind::SYMBOL).done());
+      atomsZone()->cellIterUnsafe<JSAtom>(AllocKind::FAT_INLINE_ATOM).done());
+  MOZ_ASSERT(atomsZone()->cellIterUnsafe<JS::Symbol>(AllocKind::SYMBOL).done());
 }
 #endif
 
@@ -941,10 +943,10 @@ void GCRuntime::freezePermanentSharedThings() {
   //  - shared things are always marked so we don't have to check whether a
   //    thing is shared when marking
 
-  MOZ_ASSERT(atomsZone);
-  MOZ_ASSERT(zones().empty());
+  MOZ_ASSERT(atomsZone());
+  MOZ_ASSERT(zones().length() == 1);
 
-  atomsZone->arenas.clearFreeLists();
+  atomsZone()->arenas.clearFreeLists();
   freezeAtomsZoneArenas<JSAtom>(AllocKind::ATOM, permanentAtoms.ref());
   freezeAtomsZoneArenas<JSAtom>(AllocKind::FAT_INLINE_ATOM,
                                 permanentFatInlineAtoms.ref());
@@ -954,13 +956,13 @@ void GCRuntime::freezePermanentSharedThings() {
 
 template <typename T>
 void GCRuntime::freezeAtomsZoneArenas(AllocKind kind, ArenaList& arenaList) {
-  for (auto thing = atomsZone->cellIterUnsafe<T>(kind); !thing.done();
+  for (auto thing = atomsZone()->cellIterUnsafe<T>(kind); !thing.done();
        thing.next()) {
     MOZ_ASSERT(thing->isPermanentAndMayBeShared());
     thing->asTenured().markBlack();
   }
 
-  arenaList = std::move(atomsZone->arenas.arenaList(kind));
+  arenaList = std::move(atomsZone()->arenas.arenaList(kind));
 }
 
 void GCRuntime::restorePermanentSharedThings() {
@@ -977,7 +979,7 @@ void GCRuntime::restorePermanentSharedThings() {
 }
 
 void GCRuntime::restoreAtomsZoneArenas(AllocKind kind, ArenaList& arenaList) {
-  atomsZone->arenas.arenaList(kind).insertListWithCursorAtEnd(arenaList);
+  atomsZone()->arenas.arenaList(kind).insertListWithCursorAtEnd(arenaList);
 }
 
 bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value) {
@@ -2055,7 +2057,9 @@ void GCRuntime::sweepZones(JS::GCContext* gcx, bool destroyingRuntime) {
 
   assertBackgroundSweepingFinished();
 
-  Zone** read = zones().begin();
+  // Sweep zones following the atoms zone.
+  MOZ_ASSERT(zones()[0]->isAtomsZone());
+  Zone** read = zones().begin() + 1;
   Zone** end = zones().end();
   Zone** write = read;
 
