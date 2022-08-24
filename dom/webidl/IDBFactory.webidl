@@ -22,7 +22,7 @@ dictionary IDBOpenDBOptions
  * https://w3c.github.io/IndexedDB/#idbfactory
  * for more information.
  */
-[Exposed=(Window,Worker), Func="IDBFactory::IsEnabled"]
+[Exposed=(Window,Worker)]
 interface IDBFactory {
   [NewObject, Throws, NeedsCallerType]
   IDBOpenDBRequest

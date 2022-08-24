@@ -2163,12 +2163,6 @@
   value: false
   mirror: always
 
-# Disable CacheStorage in private browsing mode.
-- name: dom.caches.hide_in_pbmode.enabled
-  type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
 # Disable capture attribute for input elements; only supported on GeckoView.
 - name: dom.capture.enabled
   type: bool
@@ -2626,12 +2620,6 @@
 - name: dom.indexedDB.privateBrowsing.enabled
   type: RelaxedAtomicBool
   value: false
-  mirror: always
-
-# Disable IndexedDB in private browsing mode.
-- name: dom.indexedDB.hide_in_pbmode.enabled
-  type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Whether or not indexedDB test mode is enabled.
@@ -3733,12 +3721,6 @@
 - name: dom.serviceWorkers.testing.persistTemporarilyInstalledAddons
   type: RelaxedAtomicBool
   value: false
-  mirror: always
-
-# Disable ServiceWorker in private browsing mode.
-- name: dom.serviceWorkers.hide_in_pbmode.enabled
-  type: RelaxedAtomicBool
-  value: true
   mirror: always
 
 - name: dom.workers.requestAnimationFrame

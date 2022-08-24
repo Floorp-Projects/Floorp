@@ -38,7 +38,7 @@ interface IDBCursor {
     [NewObject, Throws] IDBRequest delete();
 };
 
-[Exposed=(Window,Worker), Func="IDBFactory::IsEnabled"]
+[Exposed=(Window,Worker)]
 interface IDBCursorWithValue : IDBCursor {
     [Pure, Throws] readonly attribute any value;
 };
