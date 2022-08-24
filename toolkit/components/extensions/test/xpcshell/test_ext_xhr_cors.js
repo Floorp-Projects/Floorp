@@ -134,7 +134,7 @@ async function test_xhr({ manifest_version }) {
       let x = await runXHR("http://example.com/dummy", {
         responseType: "document",
       });
-      browser.test.assertTrue(x.response instanceof HTMLDocument, "is doc");
+      browser.test.assertTrue(HTMLDocument.isInstance(x.response), "is doc");
       browser.test.assertTrue(
         x.response.querySelector("#id_of_some_element"),
         "got parsed document"

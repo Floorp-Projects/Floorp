@@ -51,7 +51,7 @@ add_task(async function test() {
     });
   });
 
-  ok(blob instanceof File, "We have a file");
+  ok(File.isInstance(blob), "We have a file");
 
   is(blob.size, file.fileSize, "The size matches");
   is(blob.name, file.leafName, "The name is correct");

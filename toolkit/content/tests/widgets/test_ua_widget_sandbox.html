@@ -37,8 +37,8 @@ const sandboxScript = function(shadowRoot) {
   let doc = element.ownerDocument;
   let win = doc.defaultView;
 
-  ok(shadowRoot instanceof win.ShadowRoot, "shadowRoot is a ShadowRoot");
-  ok(element instanceof win.HTMLDivElement, "Element is a <div>");
+  ok(win.ShadowRoot.isInstance(shadowRoot), "shadowRoot is a ShadowRoot");
+  ok(win.HTMLDivElement.isInstance(element), "Element is a <div>");
 
   is("createElement" in doc, false, "No document.createElement");
   is("createElementNS" in doc, false, "No document.createElementNS");
@@ -67,7 +67,7 @@ const sandboxScript = function(shadowRoot) {
     `<div xmlns="http://www.w3.org/1999/xhtml">Hello from DOMParser!</div>`, "application/xml");
   shadowRoot.importNodeAndAppendChildAt(shadowRoot, parserDoc.documentElement, true);
 
-  ok(shadowRoot.lastChild instanceof win.HTMLDivElement, "<div> inserted");
+  ok(win.HTMLDivElement.isInstance(shadowRoot.lastChild), "<div> inserted");
   is(shadowRoot.lastChild.textContent, "Hello from DOMParser!", "Deep import node worked");
 
   info("UA Widget reflectors tests");
@@ -78,8 +78,8 @@ const sandboxScript = function(shadowRoot) {
 SpecialPowers.Cu.evalInSandbox("this.script = " + sandboxScript.toString(), sandbox);
 sandbox.script(div.shadowRoot);
 
-ok(SpecialPowers.call_Instanceof(window.spanElementFromUAWidget, HTMLSpanElement), "<span> exposed");
-ok(SpecialPowers.call_Instanceof(window.divElementFromUAWidget, HTMLDivElement), "<div> exposed");
+ok(SpecialPowers.wrap(HTMLSpanElement).isInstance(window.spanElementFromUAWidget), "<span> exposed");
+ok(SpecialPowers.wrap(HTMLDivElement).isInstance(window.divElementFromUAWidget), "<div> exposed");
 
 try {
   window.spanElementFromUAWidget.textContent;

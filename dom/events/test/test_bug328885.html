@@ -41,7 +41,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=328885
     inputelement.addEventListener('click',
       function(event) {
         var evt = SpecialPowers.wrap(event);
-        ok(SpecialPowers.call_Instanceof(evt.originalTarget, HTMLDivElement),
+        ok(SpecialPowers.wrap(HTMLDivElement).isInstance(evt.originalTarget),
            "(1) Wrong originalTarget!");
         is(SpecialPowers.unwrap(evt.originalTarget.parentNode), inputelement,
            "(2) Wront parent node!");

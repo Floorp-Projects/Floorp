@@ -6,7 +6,7 @@ async function observeDiscarded(browsingContexts, callback) {
   let discarded = [];
 
   let promise = BrowserUtils.promiseObserved(TOPIC, subject => {
-    ok(subject instanceof BrowsingContext, "subject to be a BrowsingContext");
+    ok(BrowsingContext.isInstance(subject), "subject to be a BrowsingContext");
     discarded.push(subject);
 
     return browsingContexts.every(item => discarded.includes(item));

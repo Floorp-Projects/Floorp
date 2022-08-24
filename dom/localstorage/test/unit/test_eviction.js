@@ -54,7 +54,7 @@ add_task(async function testSteps() {
       ok(false, "Should have thrown");
     } catch (ex) {
       ok(true, "Did throw");
-      ok(ex instanceof DOMException, "Threw DOMException");
+      ok(DOMException.isInstance(ex), "Threw DOMException");
       is(ex.name, "QuotaExceededError", "Threw right DOMException");
       is(ex.code, NS_ERROR_DOM_QUOTA_EXCEEDED_ERR, "Threw with right code");
     }

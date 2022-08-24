@@ -203,8 +203,8 @@ gImageView.getCellProperties = function(row, col) {
   var props = "";
   if (
     !checkProtocol(data) ||
-    item instanceof HTMLEmbedElement ||
-    (item instanceof HTMLObjectElement && !item.type.startsWith("image/"))
+    HTMLEmbedElement.isInstance(item) ||
+    (HTMLObjectElement.isInstance(item) && !item.type.startsWith("image/"))
   ) {
     props += "broken";
   }
@@ -720,9 +720,9 @@ function saveMedia() {
     if (url) {
       var titleKey = "SaveImageTitle";
 
-      if (item instanceof HTMLVideoElement) {
+      if (HTMLVideoElement.isInstance(item)) {
         titleKey = "SaveVideoTitle";
-      } else if (item instanceof HTMLAudioElement) {
+      } else if (HTMLAudioElement.isInstance(item)) {
         titleKey = "SaveAudioTitle";
       }
 

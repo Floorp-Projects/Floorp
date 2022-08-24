@@ -137,13 +137,12 @@ add_task(async function test_returns_false_when_pref_disabled() {
   // Use registration form test case, where we know it should return true if enabled
   const testcase = TESTCASES[1];
   info("Starting testcase: " + testcase.description);
-  const document =
-    testcase.document instanceof Document
-      ? testcase.document
-      : MockDocument.createTestDocument(
-          "http://localhost:8080/test/",
-          testcase.document
-        );
+  const document = Document.isInstance(testcase.document)
+    ? testcase.document
+    : MockDocument.createTestDocument(
+        "http://localhost:8080/test/",
+        testcase.document
+      );
   for (let [i, input] of testcase.inputs ||
     document.querySelectorAll(`input[type="password"]`).entries()) {
     const result = LoginAutoComplete.isProbablyANewPasswordField(input);
@@ -164,13 +163,12 @@ for (let testcase of TESTCASES) {
   (function() {
     add_task(async function() {
       info("Starting testcase: " + testcase.description);
-      let document =
-        testcase.document instanceof Document
-          ? testcase.document
-          : MockDocument.createTestDocument(
-              "http://localhost:8080/test/",
-              testcase.document
-            );
+      let document = Document.isInstance(testcase.document)
+        ? testcase.document
+        : MockDocument.createTestDocument(
+            "http://localhost:8080/test/",
+            testcase.document
+          );
 
       document = makeDocumentVisibleToFathom(document);
 

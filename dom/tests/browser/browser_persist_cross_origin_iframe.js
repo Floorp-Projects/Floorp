@@ -77,7 +77,7 @@ async function addFrame(browser, path, selector) {
   ) {
     let document = content.document;
     let target = document.querySelector(selector);
-    if (target instanceof content.HTMLIFrameElement) {
+    if (content.HTMLIFrameElement.isInstance(target)) {
       document = target.contentDocument;
       target = document.body;
     }

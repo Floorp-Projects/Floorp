@@ -79,7 +79,7 @@ add_task(async function test_structuredCloneHolder() {
   res = await resultPromise;
 
   ok(
-    res.data instanceof StructuredCloneHolder,
+    StructuredCloneHolder.isInstance(res.data),
     "Sending structured clone holders through message managers works as expected"
   );
 
