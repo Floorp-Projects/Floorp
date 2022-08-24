@@ -160,7 +160,7 @@ def setup_nofis(config, tasks):
 
         # Build taskcluster group and symol
         task["treeherder"]["symbol"].replace("Btime", "Btime-nofis")
-        task["name"] += ("-nofis")
+        task["name"] += "-nofis"
 
         yield task
 
