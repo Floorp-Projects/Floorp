@@ -307,9 +307,9 @@ nsWindowsShellService::CheckAllProgIDsExist(bool* aResult) {
     return NS_OK;
   }
   *aResult =
-      CheckProgIDExists(FormatProgID(L"FirefoxURL", aumid.get()).get()) &&
-      CheckProgIDExists(FormatProgID(L"FirefoxHTML", aumid.get()).get()) &&
-      CheckProgIDExists(FormatProgID(L"FirefoxPDF", aumid.get()).get());
+      CheckProgIDExists(FormatProgID(L"FloorpURL", aumid.get()).get()) &&
+      CheckProgIDExists(FormatProgID(L"FloorpHTML", aumid.get()).get()) &&
+      CheckProgIDExists(FormatProgID(L"FloorpPDF", aumid.get()).get());
   return NS_OK;
 }
 
@@ -574,7 +574,7 @@ nsWindowsShellService::SetDesktopBackground(dom::Element* aElement,
                               getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // eventually, the path is "%APPDATA%\Mozilla\Firefox\Desktop Background.bmp"
+  // eventually, the path is "%APPDATA%\Ablaze\Floorp\Desktop Background.bmp"
   rv = file->Append(fileLeafName);
   NS_ENSURE_SUCCESS(rv, rv);
 

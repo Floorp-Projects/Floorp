@@ -328,19 +328,19 @@ Function .onInit
   ; path for this install, even if it's not the same architecture.
   SetRegView 32
   SetShellVarContext all ; Set SHCTX to HKLM
-  ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
+  ${GetSingleInstallPath} "Software\Ablaze\${BrandFullNameInternal}" $R9
 
   ${If} "$R9" == "false"
     ${If} ${IsNativeAMD64}
     ${OrIf} ${IsNativeARM64}
       SetRegView 64
-      ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
+      ${GetSingleInstallPath} "Software\Ablaze\${BrandFullNameInternal}" $R9
     ${EndIf}
   ${EndIf}
 
   ${If} "$R9" == "false"
     SetShellVarContext current ; Set SHCTX to HKCU
-    ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
+    ${GetSingleInstallPath} "Software\Ablaze\${BrandFullNameInternal}" $R9
   ${EndIf}
 
   StrCpy $PreviousInstallDir ""
@@ -353,7 +353,7 @@ Function .onInit
   StrCpy $InitialInstallDir "$INSTDIR"
 
   ClearErrors
-  WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" \
+  WriteRegStr HKLM "Software\Ablaze" "${BrandShortName}InstallerTest" \
                    "Write Test"
 
   ; Only display set as default when there is write access to HKLM and on Win7
@@ -362,7 +362,7 @@ Function .onInit
   ${OrIf} ${AtLeastWin8}
     StrCpy $CanSetAsDefault "false"
   ${Else}
-    DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
+    DeleteRegValue HKLM "Software\Ablaze" "${BrandShortName}InstallerTest"
     StrCpy $CanSetAsDefault "true"
   ${EndIf}
   StrCpy $CheckboxSetAsDefault "0"
@@ -472,7 +472,7 @@ Function .onInit
     Quit
   ${EndIf}
 
-  ${InitHashAppModelId} "$INSTDIR" "Software\Mozilla\${AppName}\TaskBarIDs"
+  ${InitHashAppModelId} "$INSTDIR" "Software\Ablaze\${AppName}\TaskBarIDs"
 
   File /oname=$PLUGINSDIR\stub_common.css "stub_common.css"
   File /oname=$PLUGINSDIR\stub_common.js "stub_common.js"
@@ -685,7 +685,7 @@ Function createInstall
   ${EndIf}
 
   ${GetLocalAppDataFolder} $0
-  ${If} ${FileExists} "$0\Mozilla\Firefox"
+  ${If} ${FileExists} "$0\Mozilla\Floorp"
     StrCpy $ExistingProfile "1"
   ${Else}
     StrCpy $ExistingProfile "0"
@@ -1071,12 +1071,12 @@ Function SendPing
     ${EndIf}
 
     ClearErrors
-    WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" \
+    WriteRegStr HKLM "Software\Ablaze" "${BrandShortName}InstallerTest" \
                      "Write Test"
     ${If} ${Errors}
       StrCpy $R8 "0"
     ${Else}
-      DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
+      DeleteRegValue HKLM "Software\Ablaze" "${BrandShortName}InstallerTest"
       StrCpy $R8 "1"
     ${EndIf}
 
@@ -1094,7 +1094,7 @@ Function SendPing
       ${If} $R3 == $INSTDIR
         StrCpy $R2 "1" ; This Firefox install is set as default.
       ${Else}
-        StrCpy $R2 "$R2" "" -11 # length of firefox.exe
+        StrCpy $R2 "$R2" "" -10 # length of floorp.exe
         ${If} "$R2" == "${FileMainEXE}"
           StrCpy $R2 "2" ; Another Firefox install is set as default.
         ${Else}
@@ -1115,7 +1115,7 @@ Function SendPing
         ${If} $R3 == $INSTDIR
           StrCpy $R2 "1" ; This Firefox install is set as default.
         ${Else}
-          StrCpy $R2 "$R2" "" -11 # length of firefox.exe
+          StrCpy $R2 "$R2" "" -10 # length of floorp.exe
           ${If} "$R2" == "${FileMainEXE}"
             StrCpy $R2 "2" ; Another Firefox install is set as default.
           ${Else}
@@ -1497,21 +1497,21 @@ Function ShouldPromptForProfileCleanup
     ${Do}
       ClearErrors
       ; Check if the section exists by reading a value that must be present.
-      ReadINIStr $1 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "Path"
+      ReadINIStr $1 "$APPDATA\Ablaze\Floorp\profiles.ini" "Profile$0" "Path"
       ${If} ${Errors}
         ; We've run out of profile sections.
         ${Break}
       ${EndIf}
 
       ClearErrors
-      ReadINIStr $1 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "Default"
+      ReadINIStr $1 "$APPDATA\Ablaze\Floorp\profiles.ini" "Profile$0" "Default"
       ${IfNot} ${Errors}
       ${AndIf} $1 == "1"
         ; We've found the default profile
-        ReadINIStr $1 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "Path"
-        ReadINIStr $2 "$APPDATA\Mozilla\Firefox\profiles.ini" "Profile$0" "IsRelative"
+        ReadINIStr $1 "$APPDATA\Ablaze\Floorp\profiles.ini" "Profile$0" "Path"
+        ReadINIStr $2 "$APPDATA\Ablaze\Floorp\profiles.ini" "Profile$0" "IsRelative"
         ${If} $2 == "1"
-          StrCpy $R0 "$APPDATA\Mozilla\Firefox\$1"
+          StrCpy $R0 "$APPDATA\Ablaze\Floorp\$1"
         ${Else}
           StrCpy $R0 "$1"
         ${EndIf}
@@ -1531,7 +1531,7 @@ Function ShouldPromptForProfileCleanup
 
   ; We have at least one profile present. If we don't have any installations,
   ; then we need to show the re-install prompt. We'll say there's an
-  ; installation present if HKCR\FirefoxURL* exists and points to a real path.
+  ; installation present if HKCR\FloorpURL* exists and points to a real path.
   StrCpy $0 0
   StrCpy $R9 ""
   ${Do}
@@ -1542,7 +1542,7 @@ Function ShouldPromptForProfileCleanup
       ${Break}
     ${EndIf}
     ${WordFind} "$1" "-" "+1{" $2
-    ${If} $2 == "FirefoxURL"
+    ${If} $2 == "FloorpURL"
       ClearErrors
       ReadRegStr $2 HKCR "$1\DefaultIcon" ""
       ${IfNot} ${Errors}
@@ -1562,10 +1562,10 @@ Function ShouldPromptForProfileCleanup
 
   ; Okay, there's at least one install, let's see if it's for this channel.
   SetShellVarContext all
-  ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $0
+  ${GetSingleInstallPath} "Software\Ablaze\${BrandFullNameInternal}" $0
   ${If} $0 == "false"
     SetShellVarContext current
-    ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $0
+    ${GetSingleInstallPath} "Software\Ablaze\${BrandFullNameInternal}" $0
     ${If} $0 == "false"
       ; Existing installs are not for this channel. Don't show any prompt.
       GoTo end
