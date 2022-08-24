@@ -1095,10 +1095,11 @@ void WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname,
 
   ////////////////
 
-  if (!clamped.isFloat)
+  if (!clamped.isFloat) {
     mContext->gl->fTexParameteri(texTarget.get(), pname, clamped.i);
-  else
+  } else {
     mContext->gl->fTexParameterf(texTarget.get(), pname, clamped.f);
+  }
 }
 
 void WebGLTexture::Truncate() {
