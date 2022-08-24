@@ -6,6 +6,13 @@ const { OnboardingMessageProvider } = ChromeUtils.import(
 );
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
+function getOnboardingScreenById(screens, screenId) {
+  return screens.find(screen => {
+    console.log(screen?.id);
+    return screen?.id === screenId;
+  });
+}
+
 add_task(
   async function test_OnboardingMessageProvider_getUpgradeMessage_no_pin() {
     let sandbox = sinon.createSandbox();
@@ -125,10 +132,11 @@ add_task(
     const message = await OnboardingMessageProvider.getUpgradeMessage();
 
     // Pin Private screen is shown when user doesn't have Firefox private pinned but has Firefox pinned
-    Assert.equal(
-      message.content.screens[4]?.id,
-      "UPGRADE_PIN_PRIVATE_WINDOW",
-      "Screen has pin private window screen id"
+    Assert.ok(
+      getOnboardingScreenById(
+        message.content.screens,
+        "UPGRADE_PIN_PRIVATE_WINDOW"
+      )
     );
     sandbox.restore();
   }
@@ -151,10 +159,11 @@ add_task(
     const message = await OnboardingMessageProvider.getUpgradeMessage();
 
     // Pin Private screen is not shown when user doesn't have Firefox pinned
-    Assert.notEqual(
-      message.content.screens[4]?.id,
-      "UPGRADE_PIN_PRIVATE_WINDOW",
-      "Screen doesn't have pin private window screen id"
+    Assert.ok(
+      !getOnboardingScreenById(
+        message.content.screens,
+        "UPGRADE_PIN_PRIVATE_WINDOW"
+      )
     );
     sandbox.restore();
   }
