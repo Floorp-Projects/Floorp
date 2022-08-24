@@ -7,7 +7,6 @@ package org.mozilla.focus.browser.integration
 import android.app.Activity
 import android.os.Build
 import android.view.View
-import androidx.annotation.RequiresApi
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -76,9 +75,10 @@ class FullScreenIntegration(
     }
 
     @VisibleForTesting
-    @RequiresApi(Build.VERSION_CODES.P)
     internal fun viewportFitChanged(viewportFit: Int) {
-        activity.window.attributes.layoutInDisplayCutoutMode = viewportFit
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            activity.window.attributes.layoutInDisplayCutoutMode = viewportFit
+        }
     }
 
     /**
