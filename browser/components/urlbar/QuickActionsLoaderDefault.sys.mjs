@@ -68,6 +68,10 @@ let inspectorIsAvailable = () => {
   );
 };
 
+let viewsourceIsAvailable = () => {
+  return currentBrowser()?.currentURI.scheme !== "view-source";
+};
+
 XPCOMUtils.defineLazyGetter(lazy, "gFluentStrings", function() {
   return new Localization(["browser/browser.ftl"], true);
 });
@@ -187,7 +191,7 @@ const DEFAULT_ACTIONS = {
     l10nCommands: "quickactions-cmd-viewsource",
     icon: "chrome://global/skin/icons/settings.svg",
     label: "quickactions-viewsource",
-    isActive: currentPageIsWebContentFilter,
+    isActive: viewsourceIsAvailable,
     onPick: () => openUrl("view-source:" + currentBrowser().currentURI.spec),
   },
 };

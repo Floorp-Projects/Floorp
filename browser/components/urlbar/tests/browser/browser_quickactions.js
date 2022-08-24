@@ -361,11 +361,11 @@ add_task(async function test_about_pages_refocused() {
   }
 });
 
-const assertInspectAction = async (expectedEnabled, description) => {
+const assertActionButtonStatus = async (name, expectedEnabled, description) => {
   await BrowserTestUtils.waitForCondition(() =>
-    window.document.querySelector("[data-key=inspect]")
+    window.document.querySelector(`[data-key=${name}]`)
   );
-  const target = window.document.querySelector("[data-key=inspect]");
+  const target = window.document.querySelector(`[data-key=${name}]`);
   Assert.equal(!target.hasAttribute("disabled"), expectedEnabled, description);
 };
 
@@ -434,7 +434,8 @@ add_task(async function test_inspector() {
       window,
       value: "inspector",
     });
-    await assertInspectAction(
+    await assertActionButtonStatus(
+      "inspect",
       actionEnabled,
       "The status of action button is correct"
     );
@@ -463,7 +464,8 @@ add_task(async function test_inspector() {
       window,
       value: "inspector",
     });
-    await assertInspectAction(
+    await assertActionButtonStatus(
+      "inspect",
       false,
       "The action button should be disabled since the inspector is already opening"
     );
@@ -476,5 +478,60 @@ add_task(async function test_inspector() {
   }
 
   // Clean up.
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_viewsource() {
+  info("Check the button status of when the page is not web content");
+  const tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    opening: "about:home",
+    waitForLoad: true,
+  });
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "viewsource",
+  });
+  await assertActionButtonStatus(
+    "viewsource",
+    true,
+    "Should be enabled even if the page is not web content"
+  );
+
+  info("Check the button status of when the page is web content");
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "http://example.com");
+  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "viewsource",
+  });
+  await assertActionButtonStatus(
+    "viewsource",
+    true,
+    "Should be enabled on web content as well"
+  );
+
+  info("Do view source action");
+  const onLoad = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    "view-source:http://example.com/"
+  );
+  EventUtils.synthesizeKey("KEY_ArrowDown", {}, window);
+  EventUtils.synthesizeKey("KEY_Enter", {}, window);
+  const viewSourceTab = await onLoad;
+
+  info("Do view source action on the view-source page");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "viewsource",
+  });
+  await assertActionButtonStatus(
+    "viewsource",
+    false,
+    "Should be disabled since the page is view-source content"
+  );
+
+  // Clean up.
+  BrowserTestUtils.removeTab(viewSourceTab);
   BrowserTestUtils.removeTab(tab);
 });
