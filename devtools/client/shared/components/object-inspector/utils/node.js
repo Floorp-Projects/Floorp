@@ -292,7 +292,11 @@ function nodeHasEntries(item) {
     // @backward-compat { version 105 } Support for enumerate Headers entries was
     // added in 105. When connecting to older server, we don't want to show the <entries>
     // node for them. The extra check can be removed once 105 hits release.
-    (className === "Headers" && Array.isArray(value.preview?.entries))
+    (className === "Headers" && Array.isArray(value.preview?.entries)) ||
+    // @backward-compat { version 106 } Support for enumerate FormData entries was
+    // added in 105. When connecting to older server, we don't want to show the <entries>
+    // node for them. The extra check can be removed once 105 hits release.
+    (className === "FormData" && Array.isArray(value.preview?.entries))
   );
 }
 
