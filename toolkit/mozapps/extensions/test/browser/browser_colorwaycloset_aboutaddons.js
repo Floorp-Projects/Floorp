@@ -332,7 +332,7 @@ add_task(async function testColorwayNoActiveCollection() {
 
 /**
  * Tests that the Colorway Closet card's CTA button changes text when there
- * is a colorway from the active collection enabled.
+ * is a colorway enabled.
  */
 add_task(async function testColorwayButtonTextWithColorwayEnabled() {
   const clearBuiltInThemesStubs = initBuiltInThemesStubs();
@@ -340,20 +340,15 @@ add_task(async function testColorwayButtonTextWithColorwayEnabled() {
     set: [["browser.theme.colorway-closet", true]],
   });
 
-  const { addon: validColorway } = await installTestTheme(
-    BALANCED_COLORWAY_THEME_ID
-  );
-  const { addon: expiredColorway } = await installTestTheme(
-    NO_INTENSITY_EXPIRED_THEME_ID
-  );
-
-  await expiredColorway.disable();
+  const { addon } = await installTestTheme(NO_INTENSITY_THEME_ID);
 
   let win = await loadInitialView("theme");
   let doc = win.document;
 
   // Add mocked fluent resources
   doc.l10n.addResourceIds(["mock-colorways.ftl"]);
+
+  await addon.disable();
 
   let colorwaySection = getSection(doc, "colorways-section");
   ok(colorwaySection, "colorway section was found");
@@ -367,31 +362,22 @@ add_task(async function testColorwayButtonTextWithColorwayEnabled() {
   is(
     colorwaysButton.getAttribute("data-l10n-id"),
     "theme-colorways-button",
-    "button has the expected fluent id when no colorway is enabled"
+    "button has the expected fluent id when no colorways theme is not enabled"
   );
 
-  await expiredColorway.enable();
-
-  is(
-    colorwaysButton.getAttribute("data-l10n-id"),
-    "theme-colorways-button",
-    "button fluent id remains unchanged since enabled colorway is not in active collection"
-  );
-
-  await validColorway.enable();
+  await addon.enable();
 
   is(
     colorwaysButton.getAttribute("data-l10n-id"),
     "theme-colorways-button-colorway-enabled",
-    "button fluent id is updated since newly enabled colorway is found in active collection"
+    "button has the expected fluent id when colorways theme is enabled"
   );
 
   // Make sure the updated fluent id is also defined in the fluent files loaded
   await doc.l10n.translateFragment(colorwaySection);
 
   await closeView(win);
-  await validColorway.uninstall(true);
-  await expiredColorway.uninstall(true);
+  await addon.uninstall(true);
   await SpecialPowers.popPrefEnv();
   clearBuiltInThemesStubs();
 });

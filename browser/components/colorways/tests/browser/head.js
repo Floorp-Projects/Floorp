@@ -94,8 +94,9 @@ function initBuiltInThemesStubs(hasActiveCollection = true) {
       id =>
         id === SOFT_COLORWAY_THEME_ID ||
         id === BALANCED_COLORWAY_THEME_ID ||
-        id === BOLD_COLORWAY_THEME_ID ||
-        id === NO_INTENSITY_THEME_ID
+        BOLD_COLORWAY_THEME_ID ||
+        NO_INTENSITY_THEME_ID ||
+        NO_INTENSITY_EXPIRED_THEME_ID
     );
   return sandbox.restore.bind(sandbox);
 }
