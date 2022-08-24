@@ -151,7 +151,12 @@
 .urlbarView-row[dynamicType=quickactions] .urlbarView-dynamic-quickactions-buttons {
   display: flex;
   flex-wrap: wrap;
+  flex-grow: 1;
   gap: 2em;
+}
+
+.urlbarView-results[wrap] > .urlbarView-row[dynamicType=quickactions] > .urlbarView-row-inner {
+  flex-wrap: unset;
 }
 
 .urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row {
