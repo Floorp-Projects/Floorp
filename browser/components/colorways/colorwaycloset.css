@@ -17,13 +17,13 @@
   --homepage-reset-align: start;
 }
 
-@media (max-width: 35em) {
+@media (max-width: 560px) {
   :root {
     --font-scale: 0.9em;
   }
 }
 
-@media (min-width: 40em) {
+@media (min-width: 640px) {
   :root {
     --body-columns: 1em auto 1fr;
     --body-rows: auto 1fr auto;
