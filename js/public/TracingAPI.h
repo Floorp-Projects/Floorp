@@ -251,9 +251,7 @@ class GenericTracerImpl : public GenericTracer {
   T* derived() { return static_cast<T*>(this); }
 
 #define DEFINE_ON_EDGE_METHOD(name, type, _1, _2) \
-  type* on##name##Edge(type* thing) override {    \
-    return derived()->onEdge(thing);              \
-  }
+  type* on##name##Edge(type* thing) final { return derived()->onEdge(thing); }
   JS_FOR_EACH_TRACEKIND(DEFINE_ON_EDGE_METHOD)
 #undef DEFINE_ON_EDGE_METHOD
 };
