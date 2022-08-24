@@ -12,6 +12,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/NativeKeyBindingsType.h"
+#include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/WritingModes.h"
@@ -545,13 +546,14 @@ nsresult HeadlessWidget::SynthesizeNativeTouchPadPinch(
       return NS_ERROR_INVALID_ARG;
   }
 
-  LayoutDeviceIntPoint touchpadPoint = aPoint - WidgetToScreenOffset();
+  ScreenPoint touchpadPoint = ViewAs<ScreenPixel>(
+      aPoint - WidgetToScreenOffset(),
+      PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
   // The headless widget does not support modifiers.
   // Do not pass `aModifierFlags` because it contains native modifier values.
   PinchGestureInput inputToDispatch(
       pinchGestureType, PinchGestureInput::TRACKPAD, PR_IntervalNow(),
-      TimeStamp::Now(), ExternalPoint(0, 0),
-      ScreenPoint(touchpadPoint.x, touchpadPoint.y),
+      TimeStamp::Now(), ExternalPoint(0, 0), touchpadPoint,
       100.0 * ((aEventPhase == PHASE_END) ? ScreenCoord(1.f) : CurrentSpan),
       100.0 * ((aEventPhase == PHASE_END) ? ScreenCoord(1.f) : PreviousSpan),
       0);
@@ -564,5 +566,48 @@ nsresult HeadlessWidget::SynthesizeNativeTouchPadPinch(
   DispatchPinchGestureInput(inputToDispatch);
   return NS_OK;
 }
+
+nsresult HeadlessWidget::SynthesizeNativeTouchpadPan(
+    TouchpadGesturePhase aEventPhase, LayoutDeviceIntPoint aPoint,
+    double aDeltaX, double aDeltaY, int32_t aModifierFlags,
+    nsIObserver* aObserver) {
+  AutoObserverNotifier notifier(aObserver, "touchpadpanevent");
+
+  MOZ_ASSERT(NS_IsMainThread());
+
+  PanGestureInput::PanGestureType eventType = PanGestureInput::PANGESTURE_PAN;
+  switch (aEventPhase) {
+    case PHASE_BEGIN:
+      eventType = PanGestureInput::PANGESTURE_START;
+      break;
+    case PHASE_UPDATE:
+      eventType = PanGestureInput::PANGESTURE_PAN;
+      break;
+    case PHASE_END:
+      eventType = PanGestureInput::PANGESTURE_END;
+      break;
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
+
+  ScreenPoint touchpadPoint = ViewAs<ScreenPixel>(
+      aPoint - WidgetToScreenOffset(),
+      PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
+  PanGestureInput input(eventType, PR_IntervalNow(), TimeStamp::Now(),
+                        touchpadPoint,
+                        ScreenPoint(float(aDeltaX), float(aDeltaY)),
+                        // Same as SynthesizeNativeTouchPadPinch case we ignore
+                        // aModifierFlags.
+                        0);
+
+  // Setting mSimulateMomentum flag based on `apz.gtk.kinetic_scroll.enabled`
+  // value as we do for the GTK backend.
+  input.mSimulateMomentum = StaticPrefs::apz_gtk_kinetic_scroll_enabled();
+
+  DispatchPanGestureInput(input);
+
+  return NS_OK;
+}
+
 }  // namespace widget
 }  // namespace mozilla
