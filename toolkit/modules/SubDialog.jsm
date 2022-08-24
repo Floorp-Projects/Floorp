@@ -348,9 +348,17 @@ SubDialog.prototype = {
     }
 
     let { contentDocument } = this._frame;
-    // Provide the ability for the dialog to know that it is being loaded "in-content".
+    // Provide the ability for the dialog to know that it is loaded in a frame
+    // rather than as a top-level window.
     for (let dialog of contentDocument.querySelectorAll("dialog")) {
       dialog.setAttribute("subdialog", "true");
+    }
+    // Sub-dialogs loaded in a chrome window should use the system font size so
+    // that the user has a way to increase or decrease it via system settings.
+    // Sub-dialogs loaded in the content area, on the other hand, can be zoomed
+    // like web content.
+    if (this._window.isChromeWindow) {
+      contentDocument.documentElement.classList.add("system-font-size");
     }
     // Used by CSS to give the appropriate background colour in dark mode.
     contentDocument.documentElement.setAttribute("dialogroot", "true");
