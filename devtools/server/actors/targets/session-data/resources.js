@@ -4,12 +4,14 @@
 
 "use strict";
 
+const Resources = require("devtools/server/actors/resources/index");
+
 module.exports = {
   async addSessionDataEntry(targetActor, entries, isDocumentCreation) {
-    await targetActor._watchTargetResources(entries);
+    await Resources.watchResources(targetActor, entries);
   },
 
   removeSessionDataEntry(targetActor, entries, isDocumentCreation) {
-    targetActor._unwatchTargetResources(entries);
+    Resources.unwatchResources(targetActor, entries);
   },
 };

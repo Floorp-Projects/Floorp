@@ -260,7 +260,11 @@ function getResourceTypeEntry(rootOrWatcherOrTargetActor, resourceType) {
  *            Via browsingContextID, windows, docShells attributes for the target actor.
  *            Via the `sessionContext` object for the watcher actor.
  *            (only for Watcher and Target actors. Root actor is context-less.)
- *          - exposes `notifyResourceAvailable` method to be notified about the available resources
+ *          - exposes `notifyResources` method to be notified about all the resources updates
+ *            This method will receive two arguments:
+ *            - {String} updateType, which can be "available", "updated", or "destroyed"
+ *            - {Array<Object>} resources, which will be the list of resource's forms
+ *              or special update object for "updated" scenario.
  * @param Array<String> resourceTypes
  *        List of all type of resource to listen to.
  */
@@ -296,9 +300,18 @@ async function watchResources(rootOrWatcherOrTargetActor, resourceTypes) {
 
     const watcher = new WatcherClass();
     await watcher.watch(rootOrWatcherOrTargetActor, {
-      onAvailable: rootOrWatcherOrTargetActor.notifyResourceAvailable,
-      onDestroyed: rootOrWatcherOrTargetActor.notifyResourceDestroyed,
-      onUpdated: rootOrWatcherOrTargetActor.notifyResourceUpdated,
+      onAvailable: rootOrWatcherOrTargetActor.notifyResources.bind(
+        rootOrWatcherOrTargetActor,
+        "available"
+      ),
+      onUpdated: rootOrWatcherOrTargetActor.notifyResources.bind(
+        rootOrWatcherOrTargetActor,
+        "updated"
+      ),
+      onDestroyed: rootOrWatcherOrTargetActor.notifyResources.bind(
+        rootOrWatcherOrTargetActor,
+        "destroyed"
+      ),
     });
     watchers.set(rootOrWatcherOrTargetActor, watcher);
   }
