@@ -22,7 +22,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   HomePage: "resource:///modules/HomePage.jsm",
   FirstStartup: "resource://gre/modules/FirstStartup.jsm",
   LaterRun: "resource:///modules/LaterRun.jsm",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
@@ -45,6 +44,8 @@ const ONCE_PREF = "browser.startup.homepage_override.once";
 // Index of Private Browsing icon in firefox.exe
 // Must line up with the one in nsNativeAppSupportWin.h.
 const PRIVATE_BROWSING_ICON_INDEX = 5;
+const PRIVATE_WINDOW_SEPARATION_PREF =
+  "browser.privacySegmentation.windowSeparation.enabled";
 
 function shouldLoadURI(aURI) {
   if (aURI && !aURI.schemeIs("chrome")) {
@@ -282,11 +283,11 @@ function openBrowserWindow(
         win.docShell.QueryInterface(
           Ci.nsILoadContext
         ).usePrivateBrowsing = true;
-        if (
-          lazy.NimbusFeatures.majorRelease2022.getVariable(
-            "feltPrivacyWindowSeparation"
-          )
-        ) {
+        if (Services.prefs.getBoolPref(PRIVATE_WINDOW_SEPARATION_PREF)) {
+          // TODO: Changing this after the Window has been painted causes it to
+          // change Taskbar icons if the original one had a different AUMID.
+          // This must stay pref'ed off until this is resolved.
+          // https://bugzilla.mozilla.org/show_bug.cgi?id=1751010
           lazy.WinTaskbar.setGroupIdForWindow(
             win,
             lazy.WinTaskbar.defaultPrivateGroupId

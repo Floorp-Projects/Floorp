@@ -585,8 +585,4 @@ majorRelease2022:
   owner: firefoxview@mozilla.com
   hasExposure: false
   isEarlyStartup: true
-  variables:
-    feltPrivacyWindowSeparation:
-      type: boolean
-      fallbackPref: "browser.privacySegmentation.windowSeparation.enabled"
-      description: "Whether or not private browsing windows use a separate icon in the Windows taskbar"
+  variables: {}
