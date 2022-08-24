@@ -18,7 +18,7 @@
   --tab-attention-icon-color: var(--lwt-tab-attention-icon-color, rgb(42,195,162));
 }
 
-#tabbrowser-tabpanels browser {
+#tabbrowser-tabpanels browser[type=content] {
   color-scheme: env(-moz-content-preferred-color-scheme);
 }
 
