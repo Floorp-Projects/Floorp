@@ -32,7 +32,11 @@ class CookieBannerParent extends JSWindowActorParent {
     ) {
       return undefined;
     }
-    let { domain } = message.data;
+    let domain = this.manager.documentPrincipal?.baseDomain;
+
+    if (!domain) {
+      return null;
+    }
 
     let rule = Services.cookieBanners.getClickRuleForDomain(domain);
 

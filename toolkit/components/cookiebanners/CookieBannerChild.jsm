@@ -62,19 +62,13 @@ class CookieBannerChild extends JSWindowActorChild {
       return;
     }
 
-    // Ask the parent process for the click rule to the domain.
-    let domain = principal.baseDomain;
-    if (!domain) {
-      return;
-    }
-
-    lazy.logConsole.debug(`Send message to get rule for ${domain}`);
+    lazy.logConsole.debug(
+      `Send message to get rule for ${principal.baseDomain}`
+    );
     let rule;
 
     try {
-      rule = await this.sendQuery("CookieBanner::GetClickRule", {
-        domain,
-      });
+      rule = await this.sendQuery("CookieBanner::GetClickRule", {});
     } catch (e) {
       lazy.logConsole.warn("Failed to get click rule from parent.");
     }
