@@ -797,8 +797,16 @@ void ChannelMediaResource::UpdatePrincipal() {
     return;
   }
   bool hadData = mSharedInfo->mPrincipal != nullptr;
+  // Channels created from a media element (in RecreateChannel() or
+  // HTMLMediaElement::ChannelLoader) do not have SANDBOXED_ORIGIN set in the
+  // LoadInfo.  Document loads for a sandboxed iframe, however, may have
+  // SANDBOXED_ORIGIN set.  Ignore sandboxing so that on such loads the result
+  // principal is not replaced with a null principal but describes the source
+  // of the data and is the same as would be obtained from a load from the
+  // media host element.
   nsCOMPtr<nsIPrincipal> principal;
-  secMan->GetChannelResultPrincipal(mChannel, getter_AddRefs(principal));
+  secMan->GetChannelResultPrincipalIfNotSandboxed(mChannel,
+                                                  getter_AddRefs(principal));
   if (nsContentUtils::CombineResourcePrincipals(&mSharedInfo->mPrincipal,
                                                 principal)) {
     for (auto* r : mSharedInfo->mResources) {
