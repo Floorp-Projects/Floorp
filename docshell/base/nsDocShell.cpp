@@ -6791,6 +6791,8 @@ nsresult nsDocShell::CreateAboutBlankContentViewer(
       // after being set here.
       blankDoc->SetSandboxFlags(sandboxFlags);
 
+      blankDoc->InitFeaturePolicy();
+
       // create a content viewer for us and the new document
       docFactory->CreateInstanceForDocument(
           NS_ISUPPORTS_CAST(nsIDocShell*, this), blankDoc, "view",
