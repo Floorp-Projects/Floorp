@@ -167,7 +167,7 @@ const TestTargetActor = protocol.ActorClassWithSpec(windowGlobalTargetSpec, {
       shouldAddNewGlobalAsDebuggee: g => gAllowNewThreadGlobals,
     });
     this.dbg = this.makeDebugger();
-    this.notifyResourceAvailable = this.notifyResourceAvailable.bind(this);
+    this.notifyResources = this.notifyResources.bind(this);
   },
 
   targetType: Targets.TYPES.FRAME,
@@ -234,7 +234,7 @@ const TestTargetActor = protocol.ActorClassWithSpec(windowGlobalTargetSpec, {
     delete this._extraActors[name];
   },
 
-  notifyResourceAvailable(resources) {
-    this.emit("resource-available-form", resources);
+  notifyResources(updateType, resources) {
+    this.emit(`resource-${updateType}-form`, resources);
   },
 });
