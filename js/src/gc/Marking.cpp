@@ -173,15 +173,16 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
   }
 
   /*
-   * Permanent atoms and things in the self-hosting zone are not associated
-   * with this runtime, but will be ignored during marking.
+   * Permanent shared things that are not associated with this runtime will be
+   * ignored during marking.
    */
+  Zone* zone = thing->zoneFromAnyThread();
   if (IsOwnedByOtherRuntime(trc->runtime(), thing)) {
+    MOZ_ASSERT(!zone->wasGCStarted());
     MOZ_ASSERT(thing->isMarkedBlack());
     return;
   }
 
-  Zone* zone = thing->zoneFromAnyThread();
   JSRuntime* rt = trc->runtime();
   MOZ_ASSERT(zone->runtimeFromAnyThread() == rt);
 
@@ -908,19 +909,16 @@ template void GCMarker::markImplicitEdges(BaseScript*);
 
 template <typename T>
 static inline bool ShouldMark(GCMarker* gcmarker, T* thing) {
-  // Don't trace things that are owned by another runtime.
-  if (IsOwnedByOtherRuntime(gcmarker->runtime(), thing)) {
-    return false;
-  }
-
   // We may encounter nursery things during normal marking since we don't
   // collect the nursery at the start of every GC slice.
   if (!thing->isTenured()) {
     return false;
   }
 
-  // Don't mark things outside a zone if we are in a per-zone GC.
-  return thing->asTenured().zone()->shouldMarkInZone();
+  // Don't mark things outside a zone if we are in a per-zone GC. Don't mark
+  // permanent shared things owned by other runtimes (we will never observe
+  // their zone being collected).
+  return thing->asTenured().zoneFromAnyThread()->shouldMarkInZone();
 }
 
 template <typename T>
@@ -931,6 +929,8 @@ void DoMarking(GCMarker* gcmarker, T* thing) {
                js::gc::CellColor::Black);
     return;
   }
+
+  MOZ_ASSERT(!IsOwnedByOtherRuntime(gcmarker->runtime(), thing));
 
   // Don't mark gray in zones which we are still marking black, except for the
   // atoms zone.
@@ -1155,6 +1155,9 @@ inline void GCMarker::checkTraversedEdge(S source, T* target) {
 
   // Shared things are already black so we will not mark them.
   if (target->isPermanentAndMayBeShared()) {
+    Zone* zone = target->zoneFromAnyThread();
+    MOZ_ASSERT(!zone->wasGCStarted());
+    MOZ_ASSERT(!zone->needsIncrementalBarrier());
     MOZ_ASSERT(target->isMarkedBlack());
     MOZ_ASSERT(!target->maybeCompartment());
     return;
@@ -2741,7 +2744,10 @@ static inline void CheckIsMarkedThing(T* thing) {
   MOZ_ASSERT(thing);
 
   // Allow any thread access to uncollected things.
+  Zone* zone = thing->zoneFromAnyThread();
   if (thing->isPermanentAndMayBeShared()) {
+    MOZ_ASSERT(!zone->wasGCStarted());
+    MOZ_ASSERT(!zone->needsIncrementalBarrier());
     MOZ_ASSERT(thing->isMarkedBlack());
     return;
   }
@@ -2751,7 +2757,6 @@ static inline void CheckIsMarkedThing(T* thing) {
   JS::GCContext* gcx = TlsGCContext.get();
   MOZ_ASSERT(gcx->gcUse() != GCUse::Finalizing);
   if (gcx->gcUse() == GCUse::Sweeping || gcx->gcUse() == GCUse::Marking) {
-    Zone* zone = thing->zoneFromAnyThread();
     MOZ_ASSERT_IF(gcx->gcSweepZone(),
                   gcx->gcSweepZone() == zone || zone->isAtomsZone());
     return;
@@ -2772,21 +2777,19 @@ bool js::gc::IsMarkedInternal(JSRuntime* rt, T* thing) {
   MOZ_ASSERT(thing);
   CheckIsMarkedThing(thing);
 
-  if (IsOwnedByOtherRuntime(rt, thing)) {
-    return true;
-  }
-
   // This is not used during minor sweeping nor used to update moved GC things.
   MOZ_ASSERT(!IsForwarded(thing));
 
-  // Permanent things are never marked by non-owning runtimes. Zone state is
-  // unknown in this case.
-#ifdef DEBUG
-  MOZ_ASSERT_IF(!thing->isTenured(), thing->isMarkedBlack());
-#endif
-
+  // Permanent things are never marked by non-owning runtimes.
   TenuredCell* cell = &thing->asTenured();
   Zone* zone = cell->zoneFromAnyThread();
+#ifdef DEBUG
+  if (IsOwnedByOtherRuntime(rt, thing)) {
+    MOZ_ASSERT(!zone->wasGCStarted());
+    MOZ_ASSERT(thing->isMarkedBlack());
+  }
+#endif
+
   return !zone->isGCMarking() || cell->isMarkedAny();
 }
 
@@ -2797,13 +2800,6 @@ bool js::gc::IsAboutToBeFinalizedInternal(T* thing) {
   MOZ_ASSERT(thing);
   CheckIsMarkedThing(thing);
 
-  // Permanent things are never finalized by non-owning runtimes. Zone state is
-  // unknown in this case.
-#ifdef DEBUG
-  JSRuntime* rt = TlsGCContext.get()->runtimeFromAnyThread();
-  MOZ_ASSERT_IF(IsOwnedByOtherRuntime(rt, thing), thing->isMarkedBlack());
-#endif
-
   // This is not used during minor sweeping nor used to update moved GC things.
   MOZ_ASSERT(!IsForwarded(thing));
 
@@ -2811,8 +2807,17 @@ bool js::gc::IsAboutToBeFinalizedInternal(T* thing) {
     return false;
   }
 
+  // Permanent things are never finalized by non-owning runtimes.
   TenuredCell* cell = &thing->asTenured();
   Zone* zone = cell->zoneFromAnyThread();
+#ifdef DEBUG
+  JSRuntime* rt = TlsGCContext.get()->runtimeFromAnyThread();
+  if (IsOwnedByOtherRuntime(rt, thing)) {
+    MOZ_ASSERT(!zone->wasGCStarted());
+    MOZ_ASSERT(thing->isMarkedBlack());
+  }
+#endif
+
   return zone->isGCSweeping() && !cell->isMarkedAny();
 }
 
@@ -2832,17 +2837,26 @@ template <typename T>
 inline T* SweepingTracer::onEdge(T* thing) {
   CheckIsMarkedThing(thing);
 
-  // Permanent things are never finalized by non-owning runtimes. Zone state is
-  // unknown in this case.
-  MOZ_ASSERT_IF(IsOwnedByOtherRuntime(runtime(), thing),
-                thing->isMarkedBlack());
+  if (!thing->isTenured()) {
+    return thing;
+  }
+
+  // Permanent things are never finalized by non-owning runtimes.
+  TenuredCell* cell = &thing->asTenured();
+  Zone* zone = cell->zoneFromAnyThread();
+#ifdef DEBUG
+  if (IsOwnedByOtherRuntime(runtime(), thing)) {
+    MOZ_ASSERT(!zone->wasGCStarted());
+    MOZ_ASSERT(thing->isMarkedBlack());
+  }
+#endif
 
   // It would be nice if we could assert that the zone of the tenured cell is in
   // the Sweeping state, but that isn't always true for:
   //  - atoms
   //  - the jitcode map
   //  - the mark queue
-  if (thing->zoneFromAnyThread()->isGCSweeping() && !thing->isMarkedAny()) {
+  if (zone->isGCSweeping() && !cell->isMarkedAny()) {
     return nullptr;
   }
 
