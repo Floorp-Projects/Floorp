@@ -24,32 +24,32 @@ class SitePermissionsFacts {
 
 internal fun emitPermissionDialogDisplayed(permission: Permission) = emitSitePermissionsFact(
     action = Action.DISPLAY,
-    permissions = permission.id!!
+    permissions = permission.name
 )
 
 internal fun emitPermissionsDialogDisplayed(permissions: List<Permission>) = emitSitePermissionsFact(
     action = Action.DISPLAY,
-    permissions = permissions.joinToString { it.id!! }
+    permissions = permissions.distinctBy { it.name }.joinToString { it.name }
 )
 
 internal fun emitPermissionDenied(permission: Permission) = emitSitePermissionsFact(
     action = Action.CANCEL,
-    permissions = permission.id!!
+    permissions = permission.name
 )
 
 internal fun emitPermissionsDenied(permissions: List<Permission>) = emitSitePermissionsFact(
     action = Action.CANCEL,
-    permissions = permissions.joinToString { it.id!! }
+    permissions = permissions.distinctBy { it.name }.joinToString { it.name }
 )
 
 internal fun emitPermissionAllowed(permission: Permission) = emitSitePermissionsFact(
     action = Action.CONFIRM,
-    permissions = permission.id!!
+    permissions = permission.name
 )
 
 internal fun emitPermissionsAllowed(permissions: List<Permission>) = emitSitePermissionsFact(
     action = Action.CONFIRM,
-    permissions = permissions.joinToString { it.id!! }
+    permissions = permissions.distinctBy { it.name }.joinToString { it.name }
 )
 
 private fun emitSitePermissionsFact(

@@ -21,78 +21,96 @@ class SitePermissionsFactsTest {
     @Test
     fun `GIVEN a fact for a prompt shown for one permission WHEN it is emitted THEN it is properly configured`() {
         CollectionProcessor.withFactCollection { facts ->
-            emitPermissionDialogDisplayed(Generic())
+            emitPermissionDialogDisplayed(Generic("test", "test"))
 
             assertEquals(1, facts.size)
             assertEquals(FEATURE_SITEPERMISSIONS, facts[0].component)
             assertEquals(Action.DISPLAY, facts[0].action)
             assertEquals(SitePermissionsFacts.Items.PERMISSIONS, facts[0].item)
-            assertEquals(Generic().id, facts[0].value)
+            assertEquals("Generic", facts[0].value)
         }
     }
 
     @Test
     fun `GIVEN a fact for a prompt shown for multiple permissions WHEN it is emitted THEN it is properly configured`() {
         CollectionProcessor.withFactCollection { facts ->
-            emitPermissionsDialogDisplayed(listOf(AppCamera(), ContentCrossOriginStorageAccess()))
+            emitPermissionsDialogDisplayed(
+                listOf(
+                    AppCamera("test", "test"),
+                    ContentCrossOriginStorageAccess("test", "test"),
+                    AppCamera("test2", "test2"),
+                )
+            )
 
             assertEquals(1, facts.size)
             assertEquals(FEATURE_SITEPERMISSIONS, facts[0].component)
             assertEquals(Action.DISPLAY, facts[0].action)
             assertEquals(SitePermissionsFacts.Items.PERMISSIONS, facts[0].item)
-            assertEquals(listOf(AppCamera(), ContentCrossOriginStorageAccess()).joinToString { it.id!! }, facts[0].value)
+            assertEquals("AppCamera, ContentCrossOriginStorageAccess", facts[0].value)
         }
     }
 
     @Test
     fun `GIVEN a fact for a permission prompt being allowed WHEN it is emitted THEN it is properly configured`() {
         CollectionProcessor.withFactCollection { facts ->
-            emitPermissionAllowed(ContentAudioCapture())
+            emitPermissionAllowed(ContentAudioCapture("test", "test"))
 
             assertEquals(1, facts.size)
             assertEquals(FEATURE_SITEPERMISSIONS, facts[0].component)
             assertEquals(Action.CONFIRM, facts[0].action)
             assertEquals(SitePermissionsFacts.Items.PERMISSIONS, facts[0].item)
-            assertEquals(ContentAudioCapture().id, facts[0].value)
+            assertEquals("ContentAudioCapture", facts[0].value)
         }
     }
 
     @Test
     fun `GIVEN a fact for a multiple permission prompt being allowed WHEN it is emitted THEN it is properly configured`() {
         CollectionProcessor.withFactCollection { facts ->
-            emitPermissionsAllowed(listOf(ContentAudioCapture(), ContentVideoCapture()))
+            emitPermissionsAllowed(
+                listOf(
+                    ContentAudioCapture("test", "test"),
+                    ContentVideoCapture("test", "test"),
+                    ContentVideoCapture("test2", "test2"),
+                )
+            )
 
             assertEquals(1, facts.size)
             assertEquals(FEATURE_SITEPERMISSIONS, facts[0].component)
             assertEquals(Action.CONFIRM, facts[0].action)
             assertEquals(SitePermissionsFacts.Items.PERMISSIONS, facts[0].item)
-            assertEquals(listOf(ContentAudioCapture(), ContentVideoCapture()).joinToString { it.id!! }, facts[0].value)
+            assertEquals("ContentAudioCapture, ContentVideoCapture", facts[0].value)
         }
     }
 
     @Test
     fun `GIVEN a fact for a permission prompt being blocked WHEN it is emitted THEN it is properly configured`() {
         CollectionProcessor.withFactCollection { facts ->
-            emitPermissionDenied(AppLocationFine())
+            emitPermissionDenied(AppLocationFine("test", "test"))
 
             assertEquals(1, facts.size)
             assertEquals(FEATURE_SITEPERMISSIONS, facts[0].component)
             assertEquals(Action.CANCEL, facts[0].action)
             assertEquals(SitePermissionsFacts.Items.PERMISSIONS, facts[0].item)
-            assertEquals(AppLocationFine().id, facts[0].value)
+            assertEquals("AppLocationFine", facts[0].value)
         }
     }
 
     @Test
     fun `GIVEN a fact for a multiple permission prompt being blocked WHEN it is emitted THEN it is properly configured`() {
         CollectionProcessor.withFactCollection { facts ->
-            emitPermissionsDenied(listOf(ContentAudioCapture(), ContentVideoCapture()))
+            emitPermissionsDenied(
+                listOf(
+                    ContentAudioCapture("test", "test"),
+                    ContentVideoCapture("test", "test"),
+                    ContentAudioCapture("test2", "test2")
+                )
+            )
 
             assertEquals(1, facts.size)
             assertEquals(FEATURE_SITEPERMISSIONS, facts[0].component)
             assertEquals(Action.CANCEL, facts[0].action)
             assertEquals(SitePermissionsFacts.Items.PERMISSIONS, facts[0].item)
-            assertEquals(listOf(ContentAudioCapture(), ContentVideoCapture()).joinToString { it.id!! }, facts[0].value)
+            assertEquals("ContentAudioCapture, ContentVideoCapture", facts[0].value)
         }
     }
 }

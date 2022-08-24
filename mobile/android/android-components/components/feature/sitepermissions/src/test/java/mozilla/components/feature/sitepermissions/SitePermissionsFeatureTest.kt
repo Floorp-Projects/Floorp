@@ -1167,7 +1167,7 @@ class SitePermissionsFeatureTest {
             assertEquals(FEATURE_SITEPERMISSIONS, facts[0].component)
             assertEquals(Action.DISPLAY, facts[0].action)
             assertEquals(SitePermissionsFacts.Items.PERMISSIONS, facts[0].item)
-            assertEquals("permission", facts[0].value)
+            assertEquals("ContentGeoLocation", facts[0].value)
         }
     }
 

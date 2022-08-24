@@ -61,11 +61,17 @@ interface PermissionRequest {
  *
  * @property id an optional native engine-specific ID of this permission.
  * @property desc an optional description of what this permission type is for.
+ * @property name permission name allowing to easily identify and differentiate one from the other.
  */
 @Suppress("UndocumentedPublicClass")
 sealed class Permission {
     abstract val id: String?
     abstract val desc: String?
+    val name: String = with(this::class.java) {
+        // Using the canonicalName is safer - see https://github.com/mozilla-mobile/android-components/pull/10810
+        // simpleName is used as a backup to the avoid not null assertion (!!) operator.
+        canonicalName?.substringAfterLast('.') ?: simpleName
+    }
 
     data class ContentAudioCapture(
         override val id: String? = "ContentAudioCapture",

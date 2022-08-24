@@ -11,6 +11,10 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **concept-engine**, **feature-sitepermissions**
+  * 🆕 New `name` property for Permission which allows to easily identify and differentiate Permissions.
+  * Use the permission name when reporting telemetry for the permission dialogs. [#12683](https://github.com/mozilla-mobile/android-components/issues/12683).
+
 * **browser-storage-sync**:
   * 🚒 Bug fixed [issue #12689](https://github.com/mozilla-mobile/android-components/issues/12689) Decouple autocomplete suggestions from history search suggestions by using a separate reader which allows for separate management.
 
