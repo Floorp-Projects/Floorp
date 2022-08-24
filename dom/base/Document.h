@@ -1525,6 +1525,7 @@ class Document : public nsINode,
 
   void DoNotifyPossibleTitleChange();
 
+  void InitFeaturePolicy();
   nsresult InitFeaturePolicy(nsIChannel* aChannel);
 
  protected:

@@ -3888,8 +3888,8 @@ already_AddRefed<dom::FeaturePolicy> Document::GetParentFeaturePolicy() {
   return do_AddRef(child->GetContainerFeaturePolicy());
 }
 
-nsresult Document::InitFeaturePolicy(nsIChannel* aChannel) {
-  MOZ_ASSERT(mFeaturePolicy, "we should only call init once");
+void Document::InitFeaturePolicy() {
+  MOZ_ASSERT(mFeaturePolicy, "we should have FeaturePolicy created");
 
   mFeaturePolicy->ResetDeclaredPolicy();
 
@@ -3901,6 +3901,10 @@ nsresult Document::InitFeaturePolicy(nsIChannel* aChannel) {
     mFeaturePolicy->InheritPolicy(parentPolicy);
     mFeaturePolicy->SetSrcOrigin(parentPolicy->GetSrcOrigin());
   }
+}
+
+nsresult Document::InitFeaturePolicy(nsIChannel* aChannel) {
+  InitFeaturePolicy();
 
   // We don't want to parse the http Feature-Policy header if this pref is off.
   if (!StaticPrefs::dom_security_featurePolicy_header_enabled()) {
