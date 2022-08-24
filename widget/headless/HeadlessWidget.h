@@ -135,12 +135,6 @@ class HeadlessWidget : public nsBaseWidget {
       TouchpadGesturePhase aEventPhase, float aScale,
       LayoutDeviceIntPoint aPoint, int32_t aModifierFlags) override;
 
-  virtual nsresult SynthesizeNativeTouchpadPan(TouchpadGesturePhase aEventPhase,
-                                               LayoutDeviceIntPoint aPoint,
-                                               double aDeltaX, double aDeltaY,
-                                               int32_t aModifierFlags,
-                                               nsIObserver* aObserver) override;
-
  private:
   ~HeadlessWidget();
   bool mEnabled;
