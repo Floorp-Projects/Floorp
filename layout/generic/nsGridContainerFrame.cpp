@@ -8426,6 +8426,12 @@ nscoord nsGridContainerFrame::ReflowChildren(GridReflowInput& aState,
                                              const nsSize& aContainerSize,
                                              ReflowOutput& aDesiredSize,
                                              nsReflowStatus& aStatus) {
+  WritingMode wm = aState.mReflowInput->GetWritingMode();
+  nscoord bSize = aContentArea.BSize(wm);
+  if (IsContentHiddenForLayout()) {
+    return bSize;
+  }
+
   MOZ_ASSERT(aState.mReflowInput);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
@@ -8437,8 +8443,6 @@ nscoord nsGridContainerFrame::ReflowChildren(GridReflowInput& aState,
                                     ocStatus, MergeSortedFrameListsFor);
   }
 
-  WritingMode wm = aState.mReflowInput->GetWritingMode();
-  nscoord bSize = aContentArea.BSize(wm);
   Maybe<Fragmentainer> fragmentainer = GetNearestFragmentainer(aState);
   // MasonryLayout() can only handle fragmentation in the masonry-axis,
   // so we let ReflowInFragmentainer() deal with grid-axis fragmentation
@@ -8532,6 +8536,10 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
                                   ReflowOutput& aDesiredSize,
                                   const ReflowInput& aReflowInput,
                                   nsReflowStatus& aStatus) {
+  if (GetInFlowParent() && GetInFlowParent()->IsContentHiddenForLayout()) {
+    return;
+  }
+
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsGridContainerFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
