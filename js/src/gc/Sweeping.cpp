@@ -389,11 +389,11 @@ void GCRuntime::assertBackgroundSweepingFinished() {
 #endif
 }
 
-void GCRuntime::queueZonesAndStartBackgroundSweep(ZoneList& zones) {
+void GCRuntime::queueZonesAndStartBackgroundSweep(ZoneList&& zones) {
   {
     AutoLockHelperThreadState lock;
     MOZ_ASSERT(!requestSliceAfterBackgroundTask);
-    backgroundSweepZones.ref().transferFrom(zones);
+    backgroundSweepZones.ref().appendList(std::move(zones));
     if (sweepOnBackgroundThread) {
       sweepTask.startOrRunIfIdle(lock);
     }
@@ -414,7 +414,7 @@ void BackgroundSweepTask::run(AutoLockHelperThreadState& lock) {
 void GCRuntime::sweepFromBackgroundThread(AutoLockHelperThreadState& lock) {
   do {
     ZoneList zones;
-    zones.transferFrom(backgroundSweepZones.ref());
+    zones.appendList(std::move(backgroundSweepZones.ref()));
 
     AutoUnlockHelperThreadState unlock(lock);
     sweepBackgroundThings(zones);
@@ -1628,7 +1628,7 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(JS::GCContext* gcx,
     zones.append(atomsZone());
   }
 
-  queueZonesAndStartBackgroundSweep(zones);
+  queueZonesAndStartBackgroundSweep(std::move(zones));
 
   return Finished;
 }
