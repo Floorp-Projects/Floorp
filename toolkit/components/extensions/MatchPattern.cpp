@@ -224,7 +224,7 @@ const nsCString& CookieInfo::RawHost() const {
  * MatchPattern
  *****************************************************************************/
 
-const char* PERMITTED_SCHEMES[] = {"http", "https", "ws",   "wss",
+const char* PERMITTED_SCHEMES[] = {"http", "https", "ws",   "wss", "about",
                                    "file", "ftp",   "data", nullptr};
 
 // Known schemes that are followed by "://" instead of ":".
