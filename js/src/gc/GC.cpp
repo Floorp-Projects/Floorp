@@ -809,6 +809,8 @@ void js::gc::DumpArenaInfo() {
 #endif  // JS_GC_ZEAL
 
 bool GCRuntime::init(uint32_t maxbytes) {
+  MOZ_ASSERT(!wasInitialized());
+
   MOZ_ASSERT(SystemPageSize());
   Arena::checkLookupTables();
 
@@ -856,7 +858,17 @@ bool GCRuntime::init(uint32_t maxbytes) {
 
   updateHelperThreadCount();
 
+  UniquePtr<Zone> zone = MakeUnique<Zone>(rt, Zone::AtomsZone);
+  if (!zone || !zone->init()) {
+    return false;
+  }
+
+  MOZ_ASSERT(zone->isAtomsZone());
+  atomsZone = zone.release();
+
   gcprobes::Init(this);
+
+  initialized = true;
   return true;
 }
 
@@ -882,19 +894,17 @@ void GCRuntime::finish() {
 #endif
 
   // Delete all remaining zones.
-  if (rt->gcInitialized) {
-    for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
-      AutoSetThreadIsSweeping threadIsSweeping(rt->gcContext(), zone);
-      for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
-        for (RealmsInCompartmentIter realm(comp); !realm.done(); realm.next()) {
-          js_delete(realm.get());
-        }
-        comp->realms().clear();
-        js_delete(comp.get());
+  for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
+    AutoSetThreadIsSweeping threadIsSweeping(rt->gcContext(), zone);
+    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
+      for (RealmsInCompartmentIter realm(comp); !realm.done(); realm.next()) {
+        js_delete(realm.get());
       }
-      zone->compartments().clear();
-      js_delete(zone.get());
+      comp->realms().clear();
+      js_delete(comp.get());
     }
+    zone->compartments().clear();
+    js_delete(zone.get());
   }
 
   zones().clear();

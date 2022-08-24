@@ -284,6 +284,7 @@ class GCRuntime {
  public:
   explicit GCRuntime(JSRuntime* rt);
   [[nodiscard]] bool init(uint32_t maxbytes);
+  bool wasInitialized() const { return initialized; }
   void finishRoots();
   void finish();
 
@@ -1030,6 +1031,7 @@ class GCRuntime {
   MainThreadData<mozilla::TimeStamp> lastGCStartTime_;
   MainThreadData<mozilla::TimeStamp> lastGCEndTime_;
 
+  WriteOnceData<bool> initialized;
   MainThreadData<bool> incrementalGCEnabled;
   MainThreadData<bool> perZoneGCEnabled;
 
