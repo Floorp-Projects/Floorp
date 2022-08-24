@@ -417,6 +417,7 @@ void js::gc::GCRuntime::finishRoots() {
 
   rt->finishParserAtoms();
   rt->finishAtoms();
+  restoreSharedAtomsZone();
 
   rootsHash.ref().clear();
 

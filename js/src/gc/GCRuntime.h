@@ -290,21 +290,14 @@ class GCRuntime {
   void finishRoots();
   void finish();
 
-#ifdef DEBUG
-  void assertNoPermanentSharedThings();
-#endif
-
   Zone* atomsZone() {
     Zone* zone = zones()[0];
     MOZ_ASSERT(JS::shadow::Zone::from(zone)->isAtomsZone());
     return zone;
   }
 
-  void freezePermanentSharedThings();
-  template <typename T>
-  void freezeAtomsZoneArenas(AllocKind kind, ArenaList& arenaList);
-  void restorePermanentSharedThings();
-  void restoreAtomsZoneArenas(AllocKind kind, ArenaList& arenaList);
+  [[nodiscard]] bool freezeSharedAtomsZone();
+  void restoreSharedAtomsZone();
 
   JS::HeapState heapState() const { return heapState_; }
 
@@ -942,6 +935,10 @@ class GCRuntime {
   MainThreadData<JS::GCContext> mainThreadContext;
 
  private:
+  // For parent runtimes, a zone containing atoms that is shared by child
+  // runtimes.
+  MainThreadData<Zone*> sharedAtomsZone_;
+
   // All zones in the runtime. The first element is always the atoms zone.
   MainThreadOrGCTaskData<ZoneVector> zones_;
 
