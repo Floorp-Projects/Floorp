@@ -452,13 +452,15 @@ WorkerScriptLoader::WorkerScriptLoader(
 
   nsIGlobalObject* global = GetGlobal();
 
-  mClientInfo = global->GetClientInfo();
+  Maybe<ClientInfo> clientInfo = global->GetClientInfo();
   mController = global->GetController();
 
   for (const nsString& aScriptURL : aScriptURLs) {
     WorkerLoadContext::Kind kind =
         WorkerLoadContext::GetKind(aIsMainScript, IsDebuggerScript());
-    RefPtr<WorkerLoadContext> loadContext = new WorkerLoadContext(kind);
+
+    RefPtr<WorkerLoadContext> loadContext =
+        new WorkerLoadContext(kind, clientInfo);
 
     // Create ScriptLoadRequests for this WorkerScriptLoader
     ReferrerPolicy aReferrerPolicy = mWorkerRef->Private()->GetReferrerPolicy();
@@ -782,9 +784,10 @@ nsresult WorkerScriptLoader::LoadScript(ScriptLoadRequest* aRequest) {
 
     rv = ChannelFromScriptURL(
         principal, parentDoc, mWorkerRef->Private(), loadGroup, ios, secMan,
-        aRequest->mURI, mClientInfo, mController, loadContext->IsTopLevel(),
-        mWorkerScriptType, mWorkerRef->Private()->ContentPolicyType(),
-        loadFlags, mWorkerRef->Private()->CookieJarSettings(), referrerInfo,
+        aRequest->mURI, loadContext->mClientInfo, mController,
+        loadContext->IsTopLevel(), mWorkerScriptType,
+        mWorkerRef->Private()->ContentPolicyType(), loadFlags,
+        mWorkerRef->Private()->CookieJarSettings(), referrerInfo,
         getter_AddRefs(channel));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -816,7 +819,7 @@ nsresult WorkerScriptLoader::LoadScript(ScriptLoadRequest* aRequest) {
   }
 
   if (loadContext->IsTopLevel()) {
-    MOZ_DIAGNOSTIC_ASSERT(mClientInfo.isSome());
+    MOZ_DIAGNOSTIC_ASSERT(loadContext->mClientInfo.isSome());
 
     // In order to get the correct foreign partitioned prinicpal, we need to
     // set the `IsThirdPartyContextToTopWindow` to the channel's loadInfo.
@@ -826,7 +829,9 @@ nsresult WorkerScriptLoader::LoadScript(ScriptLoadRequest* aRequest) {
     loadInfo->SetIsThirdPartyContextToTopWindow(
         mWorkerRef->Private()->IsThirdPartyContextToTopWindow());
 
-    rv = AddClientChannelHelper(channel, std::move(mClientInfo),
+    Maybe<ClientInfo> clientInfo;
+    clientInfo.emplace(loadContext->mClientInfo.ref());
+    rv = AddClientChannelHelper(channel, std::move(clientInfo),
                                 Maybe<ClientInfo>(),
                                 mWorkerRef->Private()->HybridEventTarget());
     if (NS_WARN_IF(NS_FAILED(rv))) {
