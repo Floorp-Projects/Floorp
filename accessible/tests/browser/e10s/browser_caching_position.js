@@ -181,7 +181,7 @@ addAccessibleTask(
       imgNode.style = "margin-left: 1000px; margin-top: 500px;";
     });
 
-    untilCacheOk(() => {
+    await untilCacheOk(() => {
       return origCachedBounds != getCachedBounds(imgAcc);
     }, "Cached bounds update after mutation");
   },
