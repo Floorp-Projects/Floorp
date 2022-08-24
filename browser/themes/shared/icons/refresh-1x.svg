@@ -1,0 +1,16 @@
+<svg
+	xmlns="http://www.w3.org/2000/svg"
+	width="16" height="16" viewBox="0 0 16 16"
+	fill-rule="evenodd" 
+>
+	<path
+		fill="none"
+		stroke-opacity="context-fill-opacity" stroke="context-fill" stroke-linecap="round" stroke-width="2"
+		d="M13.719,10.25A5.881,5.881,0,0,1,8,14,6,6,0,1,1,12.243,3.757"
+	/>
+	<path
+		fill-opacity="context-fill-opacity"
+		fill="context-fill"
+		d="M15,1V7H9Z"
+	/>
+</svg>
