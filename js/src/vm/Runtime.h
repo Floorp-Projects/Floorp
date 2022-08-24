@@ -841,10 +841,6 @@ struct JSRuntime {
     return *atoms_;
   }
 
-  const JS::Zone* atomsZone() const {
-    MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(this));
-    return gc.atomsZone;
-  }
   JS::Zone* atomsZone() {
     MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(this));
     return gc.atomsZone;
