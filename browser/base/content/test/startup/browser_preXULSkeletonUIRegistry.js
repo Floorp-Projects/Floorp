@@ -57,7 +57,7 @@ add_task(async function testWritesEnabledOnPrefChange() {
   const firefoxPath = getFirefoxExecutableFile().path;
   let enabled = WindowsRegistry.readRegKey(
     Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-    "Software\\Mozilla\\Firefox\\PreXULSkeletonUISettings",
+    "Software\\Ablaze\\Floorp\\PreXULSkeletonUISettings",
     `${firefoxPath}|Enabled`
   );
   is(enabled, 1, "Pre-XUL skeleton UI is enabled in the Windows registry");
@@ -65,7 +65,7 @@ add_task(async function testWritesEnabledOnPrefChange() {
   Services.prefs.setBoolPref("browser.startup.preXulSkeletonUI", false);
   enabled = WindowsRegistry.readRegKey(
     Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-    "Software\\Mozilla\\Firefox\\PreXULSkeletonUISettings",
+    "Software\\Ablaze\\Floorp\\PreXULSkeletonUISettings",
     `${firefoxPath}|Enabled`
   );
   is(enabled, 0, "Pre-XUL skeleton UI is disabled in the Windows registry");
@@ -74,7 +74,7 @@ add_task(async function testWritesEnabledOnPrefChange() {
   Services.prefs.setIntPref("browser.tabs.inTitlebar", 0);
   enabled = WindowsRegistry.readRegKey(
     Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-    "Software\\Mozilla\\Firefox\\PreXULSkeletonUISettings",
+    "Software\\Ablaze\\Floorp\\PreXULSkeletonUISettings",
     `${firefoxPath}|Enabled`
   );
   is(enabled, 0, "Pre-XUL skeleton UI is disabled in the Windows registry");
@@ -107,7 +107,7 @@ add_task(async function testPersistsNecessaryValuesOnChange() {
   for (let key of regKeys) {
     WindowsRegistry.removeRegKey(
       Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-      "Software\\Mozilla\\Firefox\\PreXULSkeletonUISettings",
+      "Software\\Ablaze\\Floorp\\PreXULSkeletonUISettings",
       key
     );
   }
@@ -117,7 +117,7 @@ add_task(async function testPersistsNecessaryValuesOnChange() {
   for (let key of regKeys) {
     let value = readRegKeyExtended(
       Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-      "Software\\Mozilla\\Firefox\\PreXULSkeletonUISettings",
+      "Software\\Ablaze\\Floorp\\PreXULSkeletonUISettings",
       `${firefoxPath}|${key}`
     );
     isnot(
