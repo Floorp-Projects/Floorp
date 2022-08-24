@@ -544,7 +544,7 @@ toolbarbutton.bookmark-item {
 }
 
 @media not (prefers-contrast) {
-  .sidepanel-icon:hover,.sidepanel-browser-icon:hover {
+  .sidepanel-icon:hover,.sidepanel-browser-icon:hover, .sidebar2-icon:hover {
     box-shadow: 0 0 4px rgba(0,0,0,.4) ;
     background-color: var(--tab-selected-bgcolor, var(--toolbar-bgcolor));
   }
@@ -555,7 +555,7 @@ toolbarbutton.bookmark-item {
 }
 
 @media (prefers-contrast) {
-  .sidebar2-icon:hover, .sidepanel-icon:hover, .sidepanel-browser-icon:hover {
+  .sidebar2-icon:hover, .sidepanel-icon:hover, .sidepanel-browser-icon:hover, .sidebar2-icon:hover {
     outline: 1px solid currentColor;
   }
 }
