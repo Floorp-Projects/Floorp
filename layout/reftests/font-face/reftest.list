@@ -187,8 +187,10 @@ fuzzy(0-237,0-277) == colrv1-01.html#T colrv1-01-ref.html#T
 defaults
 
 # Check that the tech(color-COLRv1) function responds to whether COLRv1 support is enabled.
+defaults pref(layout.css.font-tech.enabled,true)
 pref(gfx.font_rendering.colr_v1.enabled,true) == colrv1-02.html colrv1-02a-ref.html
 pref(gfx.font_rendering.colr_v1.enabled,false) == colrv1-02.html colrv1-02b-ref.html
+defaults
 
 == woff2-1.html woff2-1-ref.html
 == woff2-totalsfntsize.html woff2-totalsfntsize-ref.html

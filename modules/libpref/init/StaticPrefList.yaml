@@ -7916,6 +7916,13 @@
   mirror: always
   rust: true
 
+# Is support for the tech() function in the @font-face src descriptor enabled?
+- name: layout.css.font-tech.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Visibility level of font families available to CSS font-matching:
 #   1 - only base system fonts
 #   2 - also fonts from optional language packs
