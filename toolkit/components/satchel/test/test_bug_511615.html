@@ -22,13 +22,6 @@ Test for Form History Autocomplete Untrusted Events: Bug 511615
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-var resolvePopupShownListener;
-registerPopupShownListener(() => resolvePopupShownListener());
-
-function waitForNextPopup() {
-  return new Promise(resolve => { resolvePopupShownListener = resolve; });
-}
-
 /**
  * Indicates the time to wait before checking that the state of the autocomplete
  * popup, including whether it is open, has not changed in response to events.
@@ -53,7 +46,7 @@ SimpleTest.requestFlakyTimeout("Must ensure that an event does not happen.");
  * @returns {Promise}
  */
 function expectPopupDoesNotOpen(triggerFn) {
-  let popupShown = waitForNextPopup();
+  const popupShown = promiseACShown();
   triggerFn();
   return Promise.race([
     popupShown.then(() => Promise.reject("Popup opened unexpectedly.")),
@@ -172,9 +165,9 @@ add_task(async function test_untrusted_events_ignored() {
   }
 
   // A privileged key press will actually open the popup.
-  let popupShown = waitForNextPopup();
+  const promisePopupShown = promiseACShown();
   synthesizeKey("KEY_ArrowDown");
-  await popupShown;
+  await promisePopupShown;
 
   // The selected autocomplete item should not change from untrusted events.
   for (let triggerFn of [
@@ -186,7 +179,7 @@ add_task(async function test_untrusted_events_ignored() {
   }
 
   // A privileged key press will actually change the selected index.
-  let indexChanged = new Promise(resolve => notifySelectedIndex(0, resolve));
+  const indexChanged = new Promise(resolve => notifySelectedIndex(0, resolve));
   synthesizeKey("KEY_ArrowDown");
   await indexChanged;
 
@@ -205,9 +198,8 @@ add_task(async function test_untrusted_events_ignored() {
     await checkSelectedIndexAfterResponseTime(0);
     is(input.value, "", "The selected item should not have been used.");
   }
+  input.blur(); // Close popup
 
-  // Close the popup.
-  input.blur();
 });
 </script>
 </pre>
