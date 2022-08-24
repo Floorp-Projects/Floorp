@@ -93,11 +93,15 @@ var UpdateUtils = {
           case "BUILD_TARGET":
             return Services.appinfo.OS + "_" + this.ABI;
           case "OS_VERSION":
-            return this.OSVersion;
+            return this.OSVersion;   
+          case "OS":
+            return Services.appinfo.OS;
           case "LOCALE":
             return locale;
           case "CHANNEL":
             return this.UpdateChannel;
+          case "DISPLAY_VERSION":
+            return AppConstants.MOZ_APP_VERSION_DISPLAY;
           case "PLATFORM_VERSION":
             return Services.appinfo.platformVersion;
           case "SYSTEM_CAPABILITIES":
