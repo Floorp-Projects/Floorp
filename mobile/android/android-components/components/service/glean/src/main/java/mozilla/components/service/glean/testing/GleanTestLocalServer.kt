@@ -14,6 +14,10 @@ package mozilla.components.service.glean.testing
  * initialize Glean more than once but still want to send pings to a local
  * server for validation.
  *
+ * FIXME(bug 1787234): State of the local server can persist across multiple test classes,
+ * leading to hard-to-diagnose intermittent test failures.
+ * It might be necessary to limit use of `GleanTestLocalServer` to a single test class for now.
+ *
  * Example usage:
  *
  * ```

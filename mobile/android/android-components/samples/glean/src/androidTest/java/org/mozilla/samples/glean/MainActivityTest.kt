@@ -4,14 +4,11 @@
 
 package org.mozilla.samples.glean
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.service.glean.testing.GleanTestLocalServer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Rule
@@ -23,12 +20,6 @@ import org.mozilla.samples.glean.GleanMetrics.Test as GleanTestMetrics
 class MainActivityTest {
     @get:Rule
     val activityRule: ActivityScenarioRule<MainActivity> = ActivityScenarioRule(MainActivity::class.java)
-
-    @get:Rule
-    val gleanRule = GleanTestLocalServer(context, 0)
-
-    private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun checkGleanClickData() {
