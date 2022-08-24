@@ -22,7 +22,7 @@ def add_dependencies(config, tasks):
         if release_type is None:
             continue
 
-        for dep_task in config.kind_dependencies_tasks:
+        for dep_task in config.kind_dependencies_tasks.values():
             # Weed out unwanted tasks.
             # XXX we have run-on-projects which specifies the on-push behavior;
             # we need another attribute that specifies release promotion,

@@ -230,7 +230,7 @@ tasks:
                             # Note: This task is built server side without the context or tooling that
                             # exist in tree so we must hard code the hash
                             image:
-                                mozillareleases/taskgraph:decision-mobile-7e11b0cc3966ad9729e08b19551399b3343d3b385eac067b6335d4c34431a899@sha256:b309fa59efd59991ba286a326cb43b724c38e6f3872c52d0f85e96428899c2fc
+                                mozillareleases/taskgraph:decision-mobile-625975b642c148be4c6f1d8ee5cedf7399f5d0dd33d275ff69d5934e3082d4a9@sha256:bfb26700182486e1c6c52701baea6f386fa39e5e25417423c27845933605ad43
 
                             maxRunTime: 1800
 
