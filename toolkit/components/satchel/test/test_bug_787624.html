@@ -50,15 +50,6 @@ Form History Layout test: form field autocomplete: Bug 787624
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-/** Test for Form History autocomplete Layout: Bug 787624 **/
-
-var resolvePopupShownListener;
-registerPopupShownListener(() => resolvePopupShownListener());
-
-function waitForNextPopup() {
-  return new Promise(resolve => { resolvePopupShownListener = resolve; });
-}
-
 add_setup(async () => {
   await updateFormHistory([
     { op: "remove" },
@@ -68,15 +59,15 @@ add_setup(async () => {
 });
 
 add_task(async function test_popup_not_move_input() {
-  let input = getFormElementByName(1, "field1");
-  let rect = input.getBoundingClientRect();
+  const input = getFormElementByName(1, "field1");
+  const rect = input.getBoundingClientRect();
 
-  let popupShown = waitForNextPopup();
   input.focus();
-  synthesizeKey("KEY_ArrowDown", {});
-  await popupShown;
+  const promisePopupShown = promiseACShown();
+  synthesizeKey("KEY_ArrowDown");
+  await promisePopupShown;
 
-  let newRect = input.getBoundingClientRect();
+  const newRect = input.getBoundingClientRect();
   is(newRect.left, rect.left,
      "autocomplete popup does not disturb the input position");
   is(newRect.top, rect.top,

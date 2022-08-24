@@ -27,13 +27,6 @@
 <script class="testbody" type="text/javascript">
 const input = document.getElementById("field1");
 
-let resolvePopupShownListener;
-registerPopupShownListener(() => resolvePopupShownListener());
-
-function waitForNextPopup() {
-  return new Promise(resolve => { resolvePopupShownListener = resolve; });
-}
-
 add_setup(async () => {
   await new Promise(resolve => updateFormHistory([
     { op: "add", fieldname: "field1", value: "Mozilla" },
@@ -61,10 +54,12 @@ add_task(async function test_non_duplicate_entries_are_shown_once() {
 async function triggerAutofillAndCheckEntriesValue(inputValue, expectedValues) {
   SpecialPowers.wrap(input).setUserInput(inputValue);
   input.focus();
-  synthesizeKey("KEY_ArrowDown"); // trigger autocomplete dropdown
-  await waitForNextPopup();
+  const promisePopupShown = promiseACShown();
+  synthesizeKey("KEY_ArrowDown");
+  await promisePopupShown;
   isDeeply(getMenuEntries(), expectedValues, "Matching deduplicated autocomplete list entries with expected values.");
-  input.blur();
+  input.blur(); // Close popup
+
 }
 
 </script>
