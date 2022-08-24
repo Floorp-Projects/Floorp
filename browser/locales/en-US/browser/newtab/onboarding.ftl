@@ -400,9 +400,9 @@ mr2022-upgrade-onboarding-pin-private-window-primary-button-label = { PLATFORM()
 
 mr2022-onboarding-privacy-segmentation-title = We always respect your privacy
 mr2022-onboarding-privacy-segmentation-subtitle = From intelligent suggestions to smarter search, we’re constantly working to create a better, more personal { -brand-product-name }.
-mr2022-onboarding-privacy-segmentation-cta-text = When we offer new features that use your data to enhance your browsing, do you want to see:
-mr2022-onboarding-privacy-segmentation-primary-button-label = { -brand-product-name } recommendations
-mr2022-onboarding-privacy-segmentation-secondary-button-label = Detailed information
+mr2022-onboarding-privacy-segmentation-text-cta = What do you want to see when we offer new features that use your data to enhance your browsing?
+mr2022-onboarding-privacy-segmentation-button-primary-label = Use { -brand-product-name } recommendations
+mr2022-onboarding-privacy-segmentation-button-secondary-label = Show detailed information
 
 ## MR2022 Multistage Gratitude screen strings
 
