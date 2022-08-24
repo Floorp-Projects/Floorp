@@ -814,14 +814,27 @@ void ChannelMediaResource::UpdatePrincipal() {
         mode == nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT ||
             mode == nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
         "no-cors request");
+    MOZ_ASSERT(!hadData || !mChannel->IsDocument(),
+               "Only the initial load may be a document load");
     bool finalResponseIsOpaque =
-        // GetChannelResultPrincipal() returns the original request URL for
-        // null-origin Responses from ServiceWorker, in which case the URL
-        // does not indicate the real source of data.  Such null-origin
-        // Responses have Basic LoadTainting.  CORS filtered Responses from
-        // ServiceWorker also cannot be mixed with no-cors cross-origin
-        // responses.
-        loadInfo->GetTainting() == LoadTainting::Opaque &&
+        // NS_GetFinalChannelURI() and GetChannelResultPrincipal() return the
+        // original request URI for null-origin Responses from ServiceWorker,
+        // in which case the URI does not necessarily indicate the real source
+        // of data.  Such null-origin Responses have Basic LoadTainting, and
+        // so can be distinguished from true cross-origin responses when the
+        // channel is not a document load.
+        //
+        // When the channel is a document load, LoadTainting indicates opacity
+        // wrt the parent document and so does not indicate whether the
+        // response is cross-origin wrt to the media element.  However,
+        // ServiceWorkers for document loads are always same-origin with the
+        // channel URI and so there is no need to distinguish null-origin
+        // ServiceWorker responses to document loads.
+        //
+        // CORS filtered Responses from ServiceWorker also cannot be mixed
+        // with no-cors cross-origin responses.
+        (mChannel->IsDocument() ||
+         loadInfo->GetTainting() == LoadTainting::Opaque) &&
         // Although intermediate cross-origin redirects back to URIs with
         // loadingPrincipal will have LoadTainting::Opaque and will taint the
         // media element, they are not considered opaque when verifying
