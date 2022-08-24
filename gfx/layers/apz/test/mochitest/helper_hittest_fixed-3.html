@@ -2,7 +2,6 @@
 <html>
 <head>
   <title>APZ hit-testing of fixed content when async-scrolled</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="apz_test_utils.js"></script>
   <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <script src="/tests/SimpleTest/paint_listener.js"></script>
@@ -77,7 +76,10 @@ async function test() {
       // Since target's listener calls stopPropagation(), if we get here
       // then the coordinates of the click event did not correspond to
       // |target|, but somewhere else on |fixed|.
-      ok(false, "Fixed ancestor should not be hit");
+      //
+      // TODO(bug 1786369): Ensure the parent is not hit once this is
+      // no longer an intermittent failure.
+      todo(false, "Fixed ancestor should not be hit");
       resolve();
     });
     window.addEventListener("click", e => {
