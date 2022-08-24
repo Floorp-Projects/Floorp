@@ -1827,6 +1827,16 @@ already_AddRefed<ServiceWorkerContainer> Navigator::ServiceWorker() {
   return ref.forget();
 }
 
+already_AddRefed<ServiceWorkerContainer> Navigator::ServiceWorkerJS() {
+  if (mWindow->AsGlobal()->GetStorageAccess() ==
+      StorageAccess::ePrivateBrowsing) {
+    SetUseCounter(mWindow->AsGlobal()->GetGlobalJSObject(),
+                  eUseCounter_custom_PrivateBrowsingNavigatorServiceWorker);
+  }
+
+  return ServiceWorker();
+}
+
 size_t Navigator::SizeOfIncludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) const {
   size_t n = aMallocSizeOf(this);

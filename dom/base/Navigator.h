@@ -203,6 +203,10 @@ class Navigator final : public nsISupports, public nsWrapperCache {
                        CallerType aCallerType, ErrorResult& aRv);
 
   already_AddRefed<ServiceWorkerContainer> ServiceWorker();
+  // NOTE(krosylight): This currently exists solely for use counter purpose,
+  // since Navigator::ServiceWorker is also called by native functions. Remove
+  // this when we don't need the counter.
+  already_AddRefed<ServiceWorkerContainer> ServiceWorkerJS();
 
   mozilla::dom::CredentialsContainer* Credentials();
   dom::Clipboard* Clipboard();
