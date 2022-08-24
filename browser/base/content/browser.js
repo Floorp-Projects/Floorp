@@ -12,6 +12,10 @@ var { AppConstants } = ChromeUtils.import(
 );
 ChromeUtils.import("resource://gre/modules/NotificationDB.jsm");
 
+//import utils
+Components.utils.import("resource://gre/modules/osfile.jsm");
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
 // lazy module getters
 
 XPCOMUtils.defineLazyModuleGetters(this, {
