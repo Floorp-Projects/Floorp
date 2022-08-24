@@ -92,7 +92,7 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">ᱵᱟᱹᱰ</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message">ᱟᱢᱟᱜ ᱴᱮᱵ ᱚᱠᱟ ᱫᱚ ᱵᱟᱨ ᱦᱟᱴ ᱫᱷᱟᱹᱵᱤᱡ ᱵᱟᱝ ᱧᱮᱞ ᱠᱟᱱᱟ ᱚᱱᱟ ᱫᱚ ᱱᱚᱰᱮ ᱩᱪᱟᱹᱲᱚᱜᱼᱟ ᱾</string>
+    <string name="tab_tray_inactive_onboarding_message">ᱟᱢᱟᱜ ᱴᱮᱵᱽ ᱚᱠᱟ ᱫᱚ ᱵᱟᱨ ᱦᱟᱴ ᱫᱷᱟᱹᱵᱤᱡ ᱵᱟᱝ ᱧᱮᱞ ᱠᱟᱱᱟ ᱚᱱᱟ ᱫᱚ ᱱᱚᱰᱮ ᱩᱪᱟᱹᱲᱚᱜᱼᱟ ᱾</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
     <string name="tab_tray_inactive_onboarding_button_text">ᱥᱟᱡᱟᱣ ᱠᱚ ᱨᱮ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
 
@@ -100,7 +100,7 @@
     <string name="tab_tray_inactive_auto_close_title">ᱢᱤᱫ ᱪᱟᱸᱫᱚ ᱛᱟᱭᱚᱢ ᱟᱡ ᱛᱮ ᱵᱚᱸᱫᱽ ᱟᱢ ᱥᱮ?</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
-    <string name="tab_tray_inactive_auto_close_body_2">ᱛᱤᱱᱟᱹᱜ ᱜᱟᱱ ᱪᱟᱸᱫᱚ ᱨᱮ ᱵᱟᱝ ᱠᱷᱩᱞᱟᱹ ᱠᱟᱱ ᱴᱮᱵ ᱠᱚ %1$s ᱵᱚᱸᱫ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱭ ᱾</string>
+    <string name="tab_tray_inactive_auto_close_body_2">ᱛᱤᱱᱟᱹᱜ ᱜᱟᱱ ᱪᱟᱸᱫᱚ ᱨᱮ ᱵᱟᱝ ᱠᱷᱩᱞᱟᱹ ᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ %1$s ᱵᱚᱸᱫ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱭ ᱾</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
 
@@ -117,7 +117,7 @@
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
-    <string name="recent_tabs_header">ᱦᱮᱡ ᱨᱩᱟᱹᱲᱚᱜ ᱢᱮ</string>
+    <string name="recent_tabs_header">ᱦᱮᱡ ᱨᱩᱣᱟᱹᱲᱚᱜ ᱢᱮ</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">ᱡᱷᱚᱛᱚ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
 
@@ -267,7 +267,7 @@
     <string name="onboarding_home_screen_section_useful_history_title_2">ᱱᱤᱛᱚᱜᱟᱜ ᱥᱮᱸᱫᱽᱨᱟ ᱠᱚ</string>
 
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">ᱟᱢᱟᱜ ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ ᱟᱨ ᱴᱮᱵ ᱠᱷᱚᱱ ᱱᱤᱛᱚᱜᱟᱜ ᱥᱮᱸᱫᱽᱨᱟ ᱛᱮ ᱫᱩᱦᱲᱟᱹ ᱪᱟᱞᱟᱜ ᱞᱟᱹᱜᱤᱫ ᱾</string>
+    <string name="onboarding_home_screen_section_useful_history_description_2">ᱟᱢᱟᱜ ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ ᱟᱨ ᱴᱮᱵᱽ ᱠᱷᱚᱱ ᱱᱤᱛᱚᱜᱟᱜ ᱥᱮᱸᱫᱽᱨᱟ ᱛᱮ ᱫᱩᱦᱲᱟᱹ ᱪᱟᱞᱟᱜ ᱞᱟᱹᱜᱤᱫ ᱾</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱢᱚᱱᱮᱛᱮᱭᱟᱜ Firefox ᱚᱲᱟᱜᱥᱟᱦᱴᱟ ᱫᱚ ᱱᱤᱛᱚᱜ ᱡᱟᱦᱟᱸ ᱨᱮ ᱟᱲᱟᱜ ᱠᱟᱜᱼᱟᱢ ᱚᱱᱰᱮ ᱜᱮ ᱤᱫᱤ ᱢᱮᱭᱟᱭ ᱾ ᱟᱢᱟᱜ ᱱᱤᱛᱚᱜᱟᱜ ᱴᱮᱵᱽ ᱠᱚ, ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ ᱟᱨ ᱥᱮᱸᱫᱽᱨᱟ ᱠᱚ ᱯᱟᱱᱛᱮ ᱛᱟᱢ ᱾</string>
@@ -420,7 +420,7 @@
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
-    <string name="customize_toggle_jump_back_in">ᱦᱮᱡ ᱨᱩᱟᱹᱲᱚᱜ ᱢᱮ</string>
+    <string name="customize_toggle_jump_back_in">ᱦᱮᱡ ᱨᱩᱣᱟᱹᱲᱚᱜ ᱢᱮ</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recent_bookmarks">ᱱᱤᱛᱚᱜᱼᱟᱜ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
@@ -446,11 +446,11 @@
     <string name="wallpaper_updated_snackbar_action">ᱧᱮᱞ</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Firefox ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ ᱞᱚᱜᱚ ᱨᱮ ᱴᱤᱯᱟᱹᱣ ᱠᱟᱛᱮ ᱞᱟᱴᱷᱟ ᱪᱤᱛᱟᱹᱨ ᱵᱚᱫᱚᱞ ᱢᱮ</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Firefox ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ ᱞᱚᱜᱚ ᱨᱮ ᱴᱤᱯᱟᱹᱣ ᱠᱟᱛᱮ ᱞᱟᱴᱷᱟ ᱪᱤᱛᱟᱹᱨ ᱵᱚᱫᱚᱞ ᱢᱮ</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Firefox ᱪᱤᱱᱦᱟᱹᱯ - ᱠᱟᱸᱛᱷᱥᱟᱦᱴᱟ, ᱵᱩᱛᱟᱹᱢ ᱵᱚᱫᱚᱞ ᱢᱮ</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Firefox ᱪᱤᱱᱦᱟᱹᱯ - ᱠᱟᱸᱛᱷᱥᱟᱦᱴᱟ, ᱵᱩᱛᱟᱹᱢ ᱵᱚᱫᱚᱞ ᱢᱮ</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -668,7 +668,7 @@
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
     <string name="preferences_inactive_tabs">ᱢᱟᱨᱮ ᱴᱟᱵᱽ ᱫᱚ ᱵᱟᱝ ᱪᱟᱹᱞᱩ ᱨᱮ ᱩᱪᱟᱹᱲ ᱢᱮ</string>
     <!-- Title of inactive tabs preference -->
-    <string name="preferences_inactive_tabs_title">ᱟᱢᱟᱜ ᱴᱮᱵ ᱚᱠᱟ ᱫᱚ ᱵᱟᱨ ᱦᱟᱴ ᱫᱷᱟᱹᱵᱤᱡ ᱵᱟᱝ ᱧᱮᱞ ᱠᱟᱱᱟ ᱚᱱᱟ ᱫᱚ ᱵᱟᱝ ᱪᱟᱹᱞᱩᱜ ᱛᱷᱟᱨ ᱨᱮ ᱩᱪᱟᱹᱲᱚᱜᱼᱟ ᱾</string>
+    <string name="preferences_inactive_tabs_title">ᱟᱢᱟᱜ ᱴᱮᱵᱽ ᱚᱠᱟ ᱫᱚ ᱵᱟᱨ ᱦᱟᱴ ᱫᱷᱟᱹᱵᱤᱡ ᱵᱟᱝ ᱧᱮᱞ ᱠᱟᱱᱟ ᱚᱱᱟ ᱫᱚ ᱵᱟᱝ ᱪᱟᱹᱞᱩᱜ ᱛᱷᱟᱨ ᱨᱮ ᱩᱪᱟᱹᱲᱚᱜᱼᱟ ᱾</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
@@ -737,8 +737,6 @@
     <string name="open_tabs_menu">ᱴᱮᱵᱽ ᱢᱮᱱᱭᱩ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">ᱴᱮᱵᱽ ᱠᱚ ᱛᱩᱢᱟᱹᱞ ᱨᱮ ᱥᱟᱺᱪᱟᱣ ᱢᱮ</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">ᱴᱮᱵᱽ ᱢᱮᱱᱭᱩ</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">ᱛᱩᱢᱟᱹᱞ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- Text for the menu button to rename a collection -->
@@ -787,17 +785,17 @@
     <string name="history_empty_message">ᱱᱚᱰᱮ ᱱᱟᱜᱟᱢ ᱵᱚᱱᱩᱜ-ᱟ</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">ᱮᱴᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱠᱷᱚᱱ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱠᱟᱱᱟ</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">ᱮᱴᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱠᱷᱚᱱ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱠᱟᱱᱟ</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">ᱮᱴᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱠᱷᱚᱱ</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">ᱮᱴᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱠᱷᱚᱱ</string>
 
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">ᱮᱴᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱠᱷᱚᱱ ᱦᱤᱛᱟᱹᱞ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱥᱩᱦᱤ ᱮᱢ ᱢᱮ ᱾</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">ᱮᱴᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱠᱷᱚᱱ ᱦᱤᱛᱟᱹᱞ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱥᱩᱦᱤ ᱮᱢ ᱢᱮ ᱾</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ</string>
 
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>ᱟᱨᱵᱟᱝᱠᱷᱟᱱ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱞᱟᱹᱜᱤᱫ ᱢᱤᱫᱴᱟᱹᱝ Firefox ᱠᱷᱟᱛᱟ ᱛᱮᱭᱟᱨ ᱢᱮ</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>ᱟᱨᱵᱟᱝᱠᱷᱟᱱ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱞᱟᱹᱜᱤᱫ ᱢᱤᱫᱴᱟᱹᱝ Firefox ᱠᱷᱟᱛᱟ ᱛᱮᱭᱟᱨ ᱢᱮ</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1830,7 +1828,7 @@
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">ᱢᱤᱫ ᱪᱟᱸᱫᱚ ᱛᱟᱭᱚᱢ ᱟᱡ ᱛᱮ ᱵᱚᱸᱫᱽ ᱟᱢ ᱥᱮ?</string>
     <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
-    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">ᱛᱤᱱᱟᱹᱜ ᱜᱟᱱ ᱪᱟᱸᱫᱚ ᱨᱮ ᱵᱟᱝ ᱠᱷᱩᱞᱟᱹ ᱠᱟᱱ ᱴᱮᱵ ᱠᱚ Firefox ᱵᱚᱸᱫ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱭ᱾</string>
+    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">ᱛᱤᱱᱟᱹᱜ ᱜᱟᱱ ᱪᱟᱸᱫᱚ ᱨᱮ ᱵᱟᱝ ᱠᱷᱩᱞᱟᱹ ᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ Firefox ᱵᱚᱸᱫ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱭ᱾</string>
     <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">ᱟᱡ ᱛᱮ ᱵᱚᱸᱫ ᱮᱢ ᱪᱷᱚᱭ ᱢᱮ</string>
 
