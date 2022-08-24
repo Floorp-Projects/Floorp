@@ -26,8 +26,6 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withHint
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withParent
-import androidx.test.espresso.matcher.ViewMatchers.withParentIndex
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiObject
@@ -47,6 +45,7 @@ import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.Constants.LISTS_MAXSWIPES
+import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.appContext
@@ -141,7 +140,7 @@ class HomeScreenRobot {
     fun verifyNotExistingTopSitesList(title: String) = assertNotExistingTopSitesList(title)
     fun verifyNotExistingSponsoredTopSitesList() = assertSponsoredTopSitesNotDisplayed()
     fun verifyExistingTopSitesTabs(title: String) = assertExistingTopSitesTabs(title)
-    fun verifyExistingSponsoredTopSitesTabs(position: Int) = assertSponsoredTopSiteIsDisplayed(position)
+    fun verifyExistingSponsoredTopSitesTabs(sponsoredShortcutTitle: String, position: Int) = assertSponsoredTopSiteIsDisplayed(sponsoredShortcutTitle, position)
     fun verifyTopSiteContextMenuItems() = assertTopSiteContextMenuItems()
 
     fun verifyJumpBackInSectionIsDisplayed() = assertJumpBackInSectionIsDisplayed()
@@ -290,6 +289,19 @@ class HomeScreenRobot {
         }
     }
 
+    fun getSponsoredShortcutTitle(position: Int): String {
+        val sponsoredShortcut = mDevice.findObject(
+            UiSelector()
+                .className("android.widget.FrameLayout")
+                .index(position - 1),
+        ).getChild(
+            UiSelector()
+                .resourceId("$packageName:id/top_site_title"),
+        ).text
+
+        return sponsoredShortcut
+    }
+
     class Transition {
 
         fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
@@ -393,6 +405,13 @@ class HomeScreenRobot {
             return Transition()
         }
 
+        fun openContextMenuOnSponsoredShortcut(sponsoredShortcutTitle: String, interact: HomeScreenRobot.() -> Unit): Transition {
+            sponsoredShortcut(sponsoredShortcutTitle).click(LONG_CLICK_DURATION)
+
+            HomeScreenRobot().interact()
+            return Transition()
+        }
+
         fun openTopSiteTabWithTitle(
             title: String,
             interact: BrowserRobot.() -> Unit,
@@ -400,6 +419,13 @@ class HomeScreenRobot {
             onView(withId(R.id.top_sites_list)).perform(
                 actionOnItem<RecyclerView.ViewHolder>(hasDescendant(withText(title)), click()),
             )
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun openSponsoredShortcut(sponsoredShortcutTitle: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            sponsoredShortcut(sponsoredShortcutTitle).click()
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -443,6 +469,22 @@ class HomeScreenRobot {
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
+        }
+
+        fun clickSponsorsAndPrivacyButton(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            sponsorsAndPrivacyButton.waitForExists(waitingTime)
+            sponsorsAndPrivacyButton.clickAndWaitForNewWindow(waitingTime)
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun clickSponsoredShortcutsSettingsButton(interact: SettingsSubMenuHomepageRobot.() -> Unit): SettingsSubMenuHomepageRobot.Transition {
+            sponsoredShortcutsSettingsButton.waitForExists(waitingTime)
+            sponsoredShortcutsSettingsButton.clickAndWaitForNewWindow(waitingTime)
+
+            SettingsSubMenuHomepageRobot().interact()
+            return SettingsSubMenuHomepageRobot.Transition()
         }
 
         fun openCommonMythsLink(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
@@ -747,19 +789,34 @@ private fun assertExistingTopSitesTabs(title: String) {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertSponsoredTopSiteIsDisplayed(position: Int) {
-    mDevice.findObject(
-        UiSelector()
-            .resourceId("$packageName:id/top_site_subtitle")
-            .textContains(getStringResource(R.string.top_sites_sponsored_label)),
-    ).waitForExists(waitingTime)
+private fun assertSponsoredTopSiteIsDisplayed(sponsoredShortcutTitle: String, position: Int) {
+    assertSponsoredShortcutTitle(sponsoredShortcutTitle, position)
+    assertSponsoredSubtitleIsDisplayed(position)
+}
 
-    onView(
-        allOf(
-            withText(R.string.top_sites_sponsored_label),
-            withParent(withParentIndex(position - 1)),
-        ),
-    ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+private fun assertSponsoredSubtitleIsDisplayed(position: Int) =
+    assertTrue(
+        mDevice.findObject(
+            UiSelector()
+                .className("android.widget.FrameLayout")
+                .index(position - 1),
+        ).getChild(
+            UiSelector()
+                .resourceId("$packageName:id/top_site_subtitle"),
+        ).waitForExists(waitingTime),
+    )
+
+private fun assertSponsoredShortcutTitle(sponsoredShortcutTitle: String, position: Int) {
+    assertTrue(
+        mDevice.findObject(
+            UiSelector()
+                .className("android.widget.FrameLayout")
+                .index(position - 1),
+        ).getChild(
+            UiSelector()
+                .textContains(sponsoredShortcutTitle),
+        ).waitForExists(waitingTime),
+    )
 }
 
 private fun assertNotExistingTopSitesList(title: String) {
@@ -822,6 +879,13 @@ private fun startBrowsingButton(): UiObject {
     return startBrowsingButton
 }
 
+private fun sponsoredShortcut(sponsoredShortcutTitle: String) =
+    mDevice.findObject(
+        By
+            .res("$packageName:id/top_site_title")
+            .textContains(sponsoredShortcutTitle),
+    )
+
 val deleteFromHistory =
     onView(
         allOf(
@@ -835,3 +899,19 @@ private val recentlyVisitedList =
         UiSelector()
             .className("android.widget.HorizontalScrollView"),
     ).setAsHorizontalList()
+
+private val sponsoredShortcutsSettingsButton =
+    mDevice
+        .findObject(
+            UiSelector()
+                .textContains(getStringResource(R.string.top_sites_menu_settings))
+                .resourceId("$packageName:id/simple_text"),
+        )
+
+private val sponsorsAndPrivacyButton =
+    mDevice
+        .findObject(
+            UiSelector()
+                .textContains(getStringResource(R.string.top_sites_menu_sponsor_privacy))
+                .resourceId("$packageName:id/simple_text"),
+        )

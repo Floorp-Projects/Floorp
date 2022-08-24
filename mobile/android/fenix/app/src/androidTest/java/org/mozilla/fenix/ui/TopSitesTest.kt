@@ -9,7 +9,6 @@ import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -242,23 +241,69 @@ class TopSitesTest {
         }
     }
 
-    @Ignore("Failing after updates to Top Sites UI. See: https://github.com/mozilla-mobile/fenix/issues/26698")
     @SmokeTest
     @Test
     fun verifySponsoredShortcutsListTest() {
         homeScreen {
+            var sponsoredShortcutTitle = getSponsoredShortcutTitle(2)
+            var sponsoredShortcutTitle2 = getSponsoredShortcutTitle(3)
+
+            verifyExistingSponsoredTopSitesTabs(sponsoredShortcutTitle, 2)
+            verifyExistingSponsoredTopSitesTabs(sponsoredShortcutTitle2, 3)
         }.openThreeDotMenu {
         }.openCustomizeHome {
             verifySponsoredShortcutsCheckBox(true)
-        }.goBack {
-            verifyExistingSponsoredTopSitesTabs(2)
-            verifyExistingSponsoredTopSitesTabs(3)
-        }.openThreeDotMenu {
-        }.openCustomizeHome {
             clickSponsoredShortcuts()
             verifySponsoredShortcutsCheckBox(false)
         }.goBack {
             verifyNotExistingSponsoredTopSitesList()
+        }
+    }
+
+    @Test
+    fun openSponsoredShortcutTest() {
+        var sponsoredShortcutTitle = ""
+
+        homeScreen {
+            sponsoredShortcutTitle = getSponsoredShortcutTitle(2)
+        }.openSponsoredShortcut(sponsoredShortcutTitle) {
+            verifyUrl(sponsoredShortcutTitle)
+        }
+    }
+
+    @Test
+    fun openSponsoredShortcutInPrivateBrowsingTest() {
+        var sponsoredShortcutTitle = ""
+
+        homeScreen {
+            sponsoredShortcutTitle = getSponsoredShortcutTitle(2)
+        }.openContextMenuOnSponsoredShortcut(sponsoredShortcutTitle) {
+        }.openTopSiteInPrivateTab {
+            verifyUrl(sponsoredShortcutTitle)
+        }
+    }
+
+    @Test
+    fun verifySponsoredShortcutsSponsorsAndPrivacyOptionTest() {
+        var sponsoredShortcutTitle = ""
+
+        homeScreen {
+            sponsoredShortcutTitle = getSponsoredShortcutTitle(2)
+        }.openContextMenuOnSponsoredShortcut(sponsoredShortcutTitle) {
+        }.clickSponsorsAndPrivacyButton {
+            verifyUrl("support.mozilla.org/en-US/kb/sponsor-privacy")
+        }
+    }
+
+    @Test
+    fun verifySponsoredShortcutsSettingsOptionTest() {
+        var sponsoredShortcutTitle = ""
+
+        homeScreen {
+            sponsoredShortcutTitle = getSponsoredShortcutTitle(2)
+        }.openContextMenuOnSponsoredShortcut(sponsoredShortcutTitle) {
+        }.clickSponsoredShortcutsSettingsButton {
+            verifyHomePageView()
         }
     }
 }
