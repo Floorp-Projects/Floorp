@@ -102,6 +102,7 @@ task-defaults:
 
 tasks:
     tp6m:
+        run-with-fission: True
         page-load-tests:
             - amazon
             - instagram
@@ -125,6 +126,7 @@ tasks:
             - [google-search-restaurants, gsearch-r]
 
     tp6m-hv:
+        run-with-fission: True
         page-load-tests:
             - google
             - [amazon-search, amazon-s]

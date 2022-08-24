@@ -146,6 +146,26 @@ def build_browsertime_task(config, tasks):
 
 
 @transforms.add
+def setup_nofis(config, tasks):
+    for task in tasks:
+        if task.pop("run-with-fission", False):
+            # Don't continue after this since this flag says
+            # that a fission and a non-fission variant should
+            # run
+            fission_task = copy.deepcopy(task)
+            yield fission_task
+
+        # Disable fission
+        task["run"]["command"].append("--disable-fission")
+
+        # Build taskcluster group and symol
+        task["treeherder"]["symbol"] = "Btime-nofis(%s)" % symbol
+        task["name"].append("-nofis")
+
+        yield task
+
+
+@transforms.add
 def fill_email_data(config, tasks):
     product_name = config.graph_config["taskgraph"]["repositories"]["mobile"]["name"]
     format_kwargs = {

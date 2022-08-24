@@ -3,7 +3,8 @@ trust-domain: mobile
 treeherder:
     group-names:
         'beta': 'Beta-related tasks with same APK configuration as Fennec'
-        'Btime': 'Raptor-Browsertime tests'
+        'Btime': 'Raptor-Browsertime tests with Fission enabled'
+        'Btime-nofis': 'Raptor-Browsertime tests with Fission disabled'
         'debug': 'Builds made for testing'
         'Fetch': 'Fetch and store content'
         'forPerformanceTest': 'Builds made for Raptor and other performance tests'
