@@ -351,47 +351,12 @@ void GetTraceThingInfo(char* buf, size_t bufsize, void* thing,
 
 // Overloaded function to call the correct GenericTracer method based on the
 // argument type.
-inline JSObject* DispatchToOnEdge(GenericTracer* trc, JSObject* obj) {
-  return trc->onObjectEdge(obj);
-}
-inline JSString* DispatchToOnEdge(GenericTracer* trc, JSString* str) {
-  return trc->onStringEdge(str);
-}
-inline JS::Symbol* DispatchToOnEdge(GenericTracer* trc, JS::Symbol* sym) {
-  return trc->onSymbolEdge(sym);
-}
-inline JS::BigInt* DispatchToOnEdge(GenericTracer* trc, JS::BigInt* bi) {
-  return trc->onBigIntEdge(bi);
-}
-inline js::BaseScript* DispatchToOnEdge(GenericTracer* trc,
-                                        js::BaseScript* script) {
-  return trc->onScriptEdge(script);
-}
-inline js::Shape* DispatchToOnEdge(GenericTracer* trc, js::Shape* shape) {
-  return trc->onShapeEdge(shape);
-}
-inline js::BaseShape* DispatchToOnEdge(GenericTracer* trc,
-                                       js::BaseShape* base) {
-  return trc->onBaseShapeEdge(base);
-}
-inline js::GetterSetter* DispatchToOnEdge(GenericTracer* trc,
-                                          js::GetterSetter* gs) {
-  return trc->onGetterSetterEdge(gs);
-}
-inline js::PropMap* DispatchToOnEdge(GenericTracer* trc, js::PropMap* map) {
-  return trc->onPropMapEdge(map);
-}
-inline js::jit::JitCode* DispatchToOnEdge(GenericTracer* trc,
-                                          js::jit::JitCode* code) {
-  return trc->onJitCodeEdge(code);
-}
-inline js::Scope* DispatchToOnEdge(GenericTracer* trc, js::Scope* scope) {
-  return trc->onScopeEdge(scope);
-}
-inline js::RegExpShared* DispatchToOnEdge(GenericTracer* trc,
-                                          js::RegExpShared* shared) {
-  return trc->onRegExpSharedEdge(shared);
-}
+#define DEFINE_DISPATCH_FUNCTION(name, type, _1, _2)               \
+  inline type* DispatchToOnEdge(GenericTracer* trc, type* thing) { \
+    return trc->on##name##Edge(thing);                             \
+  }
+JS_FOR_EACH_TRACEKIND(DEFINE_DISPATCH_FUNCTION)
+#undef DEFINE_DISPATCH_FUNCTION
 
 }  // namespace gc
 }  // namespace js

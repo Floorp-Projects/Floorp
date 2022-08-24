@@ -35,18 +35,10 @@ class TenuringTracer final : public GenericTracer {
   gc::RelocationOverlay* objHead = nullptr;
   gc::StringRelocationOverlay* stringHead = nullptr;
 
-  JSObject* onObjectEdge(JSObject* obj) override;
-  JSString* onStringEdge(JSString* str) override;
-  JS::Symbol* onSymbolEdge(JS::Symbol* sym) override;
-  JS::BigInt* onBigIntEdge(JS::BigInt* bi) override;
-  js::BaseScript* onScriptEdge(BaseScript* script) override;
-  js::Shape* onShapeEdge(Shape* shape) override;
-  js::RegExpShared* onRegExpSharedEdge(RegExpShared* shared) override;
-  js::BaseShape* onBaseShapeEdge(BaseShape* base) override;
-  js::GetterSetter* onGetterSetterEdge(GetterSetter* gs) override;
-  js::PropMap* onPropMapEdge(PropMap* map) override;
-  js::jit::JitCode* onJitCodeEdge(jit::JitCode* code) override;
-  js::Scope* onScopeEdge(Scope* scope) override;
+#define DEFINE_ON_EDGE_METHOD(name, type, _1, _2) \
+  type* on##name##Edge(type* thing) override;
+  JS_FOR_EACH_TRACEKIND(DEFINE_ON_EDGE_METHOD)
+#undef DEFINE_ON_EDGE_METHOD
 
  public:
   TenuringTracer(JSRuntime* rt, Nursery* nursery);
