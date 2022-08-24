@@ -433,6 +433,10 @@ export class UrlbarInput {
     } else if (valid) {
       this.searchMode = null;
     }
+
+    // Dispatch URIUpdate event to synchronize the tab status when switching.
+    let event = new CustomEvent("SetURI", { bubbles: true });
+    this.inputField.dispatchEvent(event);
   }
 
   /**

@@ -66,3 +66,68 @@ add_task(async function invalidURL() {
   is(tab.linkedBrowser.userTypedValue, input, "Text still stored on browser");
   BrowserTestUtils.removeTab(tab);
 });
+
+/**
+ * Test whether the text will be selected properly when tab switching if the text
+ * field had focused.
+ */
+add_task(async function select() {
+  const tab1 = gBrowser.selectedTab;
+  const tab1ExpectedResult = {
+    value: "",
+    textSelected: false,
+  };
+
+  const tab2 = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example.com/"
+  );
+  const tab2ExpectedResult = {
+    value: "example.com",
+    textSelected: false,
+  };
+
+  const tab3 = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://example.org/"
+  );
+  gURLBar.focus();
+  const tab3ExpectedResult = {
+    value: "example.org",
+    textSelected: true,
+  };
+
+  await assertInputStatusAfterSwitchingTab(tab1, tab1ExpectedResult);
+  await assertInputStatusAfterSwitchingTab(tab2, tab2ExpectedResult);
+  await assertInputStatusAfterSwitchingTab(tab3, tab3ExpectedResult);
+  await assertInputStatusAfterSwitchingTab(tab2, tab2ExpectedResult);
+  await assertInputStatusAfterSwitchingTab(tab3, tab3ExpectedResult);
+
+  BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab3);
+});
+
+async function assertInputStatusAfterSwitchingTab(tab, expected) {
+  await BrowserTestUtils.switchTab(gBrowser, tab);
+  info(`Test for ${expected.value}`);
+  is(gURLBar.value, expected.value, "Text is correct");
+  if (expected.textSelected) {
+    is(
+      gURLBar.inputField.ownerDocument.activeElement,
+      gURLBar.inputField,
+      "The input field has focus"
+    );
+    is(gURLBar.inputField.selectionStart, 0, "selectionStart is correct");
+    is(
+      gURLBar.inputField.selectionEnd,
+      expected.value.length,
+      "selectionEnd is correct"
+    );
+  } else {
+    isnot(
+      gURLBar.inputField.ownerDocument.activeElement,
+      gURLBar.inputField,
+      "The input field does not have focus"
+    );
+  }
+}
