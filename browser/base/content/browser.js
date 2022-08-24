@@ -9917,9 +9917,6 @@ var FirefoxViewHandler = {
     const { FirefoxViewNotificationManager } = ChromeUtils.importESModule(
       "resource:///modules/firefox-view-notification-manager.sys.mjs"
     );
-    XPCOMUtils.defineLazyModuleGetters(this, {
-      SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
-    });
     if (!Services.prefs.getBoolPref("browser.tabs.firefox-view")) {
       document.getElementById("menu_openFirefoxView").hidden = true;
     } else {
@@ -9951,7 +9948,7 @@ var FirefoxViewHandler = {
       case "TabSelect":
         this.button?.toggleAttribute("open", e.target == this.tab);
         this.button?.setAttribute("aria-selected", e.target == this.tab);
-        this.handleFirefoxViewSelect();
+        this._removeNotificationDotIfTabSelected();
         break;
       case "TabClose":
         this.tab = null;
@@ -9959,7 +9956,7 @@ var FirefoxViewHandler = {
         this.button?.removeAttribute("aria-controls");
         break;
       case "activate":
-        this.handleFirefoxViewSelect();
+        this._removeNotificationDotIfTabSelected();
         break;
     }
   },
@@ -9969,9 +9966,8 @@ var FirefoxViewHandler = {
       this._toggleNotificationDot(shouldShow);
     }
   },
-  handleFirefoxViewSelect() {
+  _removeNotificationDotIfTabSelected() {
     if (this.tab?.selected) {
-      this.SyncedTabs.syncTabs();
       Services.obs.notifyObservers(
         null,
         "firefoxview-notification-dot-update",
