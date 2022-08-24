@@ -85,7 +85,7 @@ var NetUtil = {
   /**
    * Asynchronously opens a source and fetches the response.  While the fetch
    * is asynchronous, I/O may happen on the main thread.  When reading from
-   * a local file, prefer using "OS.File" methods instead.
+   * a local file, prefer using IOUtils methods instead.
    *
    * @param aSource
    *        This argument can be one of the following:

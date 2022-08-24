@@ -2,18 +2,11 @@
  * Tests for bug 1241100: Post to local file should not overwrite the file.
  */
 "use strict";
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 async function createTestFile(filename, content) {
-  let path = OS.Path.join(OS.Constants.Path.tmpDir, filename);
-  await OS.File.writeAtomic(path, content);
+  let path = PathUtils.join(PathUtils.tempDir, filename);
+  await IOUtils.writeUTF8(path, content);
   return path;
-}
-
-async function readFile(path) {
-  var array = await OS.File.read(path);
-  var decoder = new TextDecoder();
-  return decoder.decode(array);
 }
 
 add_task(async function() {
@@ -53,8 +46,8 @@ add_task(async function() {
   var postPath = await createTestFile(postFilename, postFileContent);
   var actionPath = await createTestFile(actionFilename, actionFileContent);
 
-  var postURI = OS.Path.toFileURI(postPath);
-  var actionURI = OS.Path.toFileURI(actionPath);
+  var postURI = PathUtils.toFileURI(postPath);
+  var actionURI = PathUtils.toFileURI(actionPath);
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -68,11 +61,11 @@ add_task(async function() {
   BrowserTestUtils.loadURI(tab.linkedBrowser, postURI);
   await browserLoadedPromise;
 
-  var actionFileContentAfter = await readFile(actionPath);
+  var actionFileContentAfter = await IOUtils.readUTF8(actionPath);
   is(actionFileContentAfter, actionFileContent, "action file is not modified");
 
-  await OS.File.remove(postPath);
-  await OS.File.remove(actionPath);
+  await IOUtils.remove(postPath);
+  await IOUtils.remove(actionPath);
 
   gBrowser.removeCurrentTab();
 });
