@@ -740,6 +740,8 @@ const char* StateName(JS::Zone::GCState state) {
       return "Finished";
     case JS::Zone::Compact:
       return "Compact";
+    case JS::Zone::Limit:
+      break;
   }
   MOZ_CRASH("Invalid Zone::GCState enum value");
 }
