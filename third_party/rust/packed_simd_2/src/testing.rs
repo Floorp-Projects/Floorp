@@ -5,4 +5,4 @@ mod macros;
 
 #[cfg(test)]
 #[macro_use]
-crate mod utils;
+pub(crate) mod utils;

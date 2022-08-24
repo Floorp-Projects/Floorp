@@ -113,7 +113,7 @@ chardetng_c = { git = "https://github.com/hsivonen/chardetng_c", rev="ed8a4c6f90
 coremidi = { git = "https://github.com/chris-zen/coremidi.git", rev="fc68464b5445caf111e41f643a2e69ccce0b4f83" }
 fog = { path = "toolkit/components/glean/api" }
 libudev-sys = { path = "dom/webauthn/libudev-sys" }
-packed_simd = { package = "packed_simd_2", git = "https://github.com/hsivonen/packed_simd", rev="c149d0a519bf878567c7630096737669ec2ff15f" }
+packed_simd = { package = "packed_simd_2", git = "https://github.com/hsivonen/packed_simd", rev="f38664024b29d44c506431eada7c112629bb1aa9" }
 midir = { git = "https://github.com/mozilla/midir.git", rev = "4c11f0ffb5d6a10de4aff40a7b81218b33b94e6f" }
 minidump_writer_linux = { git = "https://github.com/rust-minidump/minidump-writer.git", rev = "75ada456c92a429704691a85e1cb42fef8cafc0d" }
 

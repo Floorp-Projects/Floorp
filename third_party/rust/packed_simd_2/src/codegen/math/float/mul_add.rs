@@ -4,7 +4,7 @@ use crate::*;
 
 // FIXME: 64-bit 1 element mul_add
 
-crate trait MulAdd {
+pub(crate) trait MulAdd {
     fn mul_add(self, y: Self, z: Self) -> Self;
 }
 
