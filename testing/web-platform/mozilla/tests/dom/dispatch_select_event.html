@@ -1,0 +1,35 @@
+<!-- See also Bug 1679427.
+Ensure `select` event is only fired once when tab-ing to an `<input>` element.
+-->
+<!doctype html>
+<html>
+<head>
+    <script src=/resources/testharness.js></script>
+    <script src=/resources/testharnessreport.js></script>
+    <script src="/resources/testdriver.js"></script>
+    <script src="/resources/testdriver-vendor.js"></script>
+</head>
+<body>
+    <button>Press this button and Press Tab</button><input value="abc">
+    <script>
+        promise_test(async t => {
+            await new Promise(resolve => { window.onload = resolve; });
+            const button = document.querySelector("button");
+            const input = document.querySelector("input");
+
+            let countSelectEvent = 0;
+            input.addEventListener("select", event => {
+                countSelectEvent++;
+            });
+
+            button.focus();
+            const tabKey = "\uE004";
+            await test_driver.send_keys(button, tabKey);
+            await new Promise(resolve => requestAnimationFrame(
+                () => requestAnimationFrame(resolve)
+            ));
+            assert_equals(countSelectEvent, 1, "Select event was fired more than once!");
+        }, "Select event should only be fired once.");
+    </script>
+</body>
+</html>
