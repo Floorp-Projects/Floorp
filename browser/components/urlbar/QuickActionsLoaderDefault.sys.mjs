@@ -133,7 +133,6 @@ const DEFAULT_ACTIONS = {
   print: {
     l10nCommands: "quickactions-cmd-print",
     label: "quickactions-print",
-    isActive: currentPageIsWebContentFilter,
     onPick: () => {
       lazy.BrowserWindowTracker.getTopWindow()
         .document.getElementById("cmd_print")
