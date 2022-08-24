@@ -73,7 +73,8 @@ export const TabsSetupFlowManager = new (class {
           this.networkIsOnline &&
           this.syncIsWorking &&
           !Services.prefs.prefIsLocked(FXA_ENABLED) &&
-          this.syncIsConnected
+          // its only an error for sync to not be connected if we are signed-in.
+          (this.syncIsConnected || !this.fxaSignedIn)
         );
       },
     });
@@ -351,6 +352,10 @@ export const TabsSetupFlowManager = new (class {
     for (let state of this.setupState.values()) {
       nextSetupStateName = state.name;
       if (!state.exitConditions()) {
+        this.logger.debug(
+          "maybeUpdateUI, conditions not met to exit state: ",
+          nextSetupStateName
+        );
         break;
       }
     }
