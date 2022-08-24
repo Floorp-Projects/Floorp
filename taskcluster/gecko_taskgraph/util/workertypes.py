@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from gecko_taskgraph.util.attributes import release_level as _release_level
+
 from mozbuild.util import memoize
 from taskgraph.util.attributes import keymatch
 from taskgraph.util.keyed_by import evaluate_keyed_by
@@ -20,7 +20,7 @@ WORKER_TYPES = {
 
 
 @memoize
-def _get(graph_config, alias, level, release_level, project):
+def _get(graph_config, alias, level, release_level):
     """Get the configuration for this worker_type alias: {provisioner,
     worker-type, implementation, os}"""
     level = str(level)
@@ -61,13 +61,10 @@ def _get(graph_config, alias, level, release_level, project):
             "alias": alias,
         }
     )
-    attrs = {"level": level, "release-level": release_level}
-    if project:
-        attrs["project"] = project
     worker_config["worker-type"] = evaluate_keyed_by(
         worker_config["worker-type"],
         f"worker-type alias {alias} field worker-type",
-        attrs,
+        {"level": level, "release-level": release_level},
     ).format(
         **{
             "trust-domain": graph_config["trust-domain"],
@@ -79,26 +76,18 @@ def _get(graph_config, alias, level, release_level, project):
     return worker_config
 
 
-def worker_type_implementation(graph_config, parameters, worker_type):
+def worker_type_implementation(graph_config, worker_type):
     """Get the worker implementation and OS for the given workerType, where the
     OS represents the host system, not the target OS, in the case of
     cross-compiles."""
-    worker_config = _get(
-        graph_config, worker_type, "1", "staging", parameters["project"]
-    )
+    worker_config = _get(graph_config, worker_type, "1", "staging")
     return worker_config["implementation"], worker_config.get("os")
 
 
-def get_worker_type(graph_config, parameters, worker_type):
+def get_worker_type(graph_config, worker_type, level, release_level):
     """
     Get the worker type provisioner and worker-type, optionally evaluating
     aliases from the graph config.
     """
-    worker_config = _get(
-        graph_config,
-        worker_type,
-        parameters["level"],
-        _release_level(parameters.get("project")),
-        parameters.get("project"),
-    )
+    worker_config = _get(graph_config, worker_type, level, release_level)
     return worker_config["provisioner"], worker_config["worker-type"]
