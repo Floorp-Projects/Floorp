@@ -43,41 +43,6 @@ features:
             "pocket-sponsored-stories": true,
           }
         }
-  onboarding:
-    description: The onboarding features displayed on homescreen.
-    variables:
-      sections-enabled:
-        description: "This property provides a lookup table of whether or not the given section should be enabled."
-        type: Map<OnboardingSection, Boolean>
-        default:
-          {
-            "sync-cfr": false,
-            "wallpapers": false,
-            "home-onboarding-dialog": false,
-            "jump-back-in-cfr": false,
-            "first-run-onboarding": false,
-          }
-    defaults:
-      - channel: nightly
-        value: {
-          "sections-enabled": {
-            "sync-cfr": false,
-            "wallpapers": false,
-            "home-onboarding-dialog": false,
-            "jump-back-in-cfr": false,
-            "first-run-onboarding": false,
-          }
-        }
-      - channel: developer
-        value: {
-          "sections-enabled": {
-            "sync-cfr": false,
-            "wallpapers": true,
-            "home-onboarding-dialog": false,
-            "jump-back-in-cfr": false,
-            "first-run-onboarding": false,
-          }
-        }
   nimbus-validation:
     description: "A feature that does not correspond to an application feature suitable for showing
     that Nimbus is working. This should never be used in production."
@@ -367,19 +332,6 @@ types:
           description: A setting in the settings screen.
         homescreen-banner:
           description: A banner in the homescreen.
-    OnboardingSection:
-      description: The identifiers for the sections of the onboarding.
-      variants:
-        sync-cfr:
-          description: Sync onboarding CFR.
-        wallpapers:
-          description: Wallpapers onboarding dialog.
-        home-onboarding-dialog:
-          description: Home onboarding dialog for upgraded users.
-        jump-back-in-cfr:
-          description: Jump back in onboarding CFR.
-        first-run-onboarding:
-          description: First run onboarding page updates.
     MR2022Section:
       description: The identifiers for the sections of the MR 2022.
       variants:
