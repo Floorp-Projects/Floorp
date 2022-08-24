@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.components
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.content.Intent
@@ -179,6 +180,7 @@ class Components(private val context: Context) {
         )
     }
 
+    @delegate:SuppressLint("NewApi")
     val autofillConfiguration by lazyMonitored {
         AutofillConfiguration(
             storage = core.passwordsStorage,
