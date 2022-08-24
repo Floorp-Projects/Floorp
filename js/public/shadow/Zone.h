@@ -33,6 +33,7 @@ struct Zone {
     Sweep,
     Finished,
     Compact,
+    VerifyPreBarriers,
 
     Limit
   };
@@ -97,9 +98,15 @@ struct Zone {
     return hasAnyGCState(gcStateMask(MarkBlackOnly) |
                          gcStateMask(MarkBlackAndGray) | gcStateMask(Sweep));
   }
+  bool isGCMarkingOrVerifyingPreBarriers() const {
+    return hasAnyGCState(gcStateMask(MarkBlackOnly) |
+                         gcStateMask(MarkBlackAndGray) |
+                         gcStateMask(VerifyPreBarriers));
+  }
   bool isGCSweepingOrCompacting() const {
     return hasAnyGCState(gcStateMask(Sweep) | gcStateMask(Compact));
   }
+  bool isVerifyingPreBarriers() const { return gcState() == VerifyPreBarriers; }
 
   bool isAtomsZone() const { return kind_ == AtomsZone; }
   bool isSystemZone() const { return kind_ == SystemZone; }

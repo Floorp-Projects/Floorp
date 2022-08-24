@@ -269,6 +269,7 @@ void gc::GCRuntime::startVerifyPreBarriers() {
   marker.start();
 
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
+    zone->changeGCState(Zone::NoGC, Zone::VerifyPreBarriers);
     zone->setNeedsIncrementalBarrier(true);
     zone->arenas.clearFreeLists();
   }
@@ -361,10 +362,14 @@ void gc::GCRuntime::endVerifyPreBarriers() {
 
   /* We need to disable barriers before tracing, which may invoke barriers. */
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
-    if (!zone->needsIncrementalBarrier()) {
+    if (zone->isVerifyingPreBarriers()) {
+      zone->changeGCState(Zone::VerifyPreBarriers, Zone::NoGC);
+    } else {
       compartmentCreated = true;
     }
-    zone->setNeedsIncrementalBarrier(false);
+
+    MOZ_ASSERT(!zone->wasGCStarted());
+    MOZ_ASSERT(!zone->needsIncrementalBarrier());
   }
 
   verifyPreData = nullptr;
