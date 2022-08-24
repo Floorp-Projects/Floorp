@@ -687,7 +687,7 @@ static bool AddEdgesForMarkQueue(GCMarker& marker) {
 
 bool GCRuntime::findSweepGroupEdges() {
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
-    if (!zone->findSweepGroupEdges(atomsZone)) {
+    if (!zone->findSweepGroupEdges(atomsZone())) {
       return false;
     }
   }
@@ -1625,7 +1625,7 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(JS::GCContext* gcx,
     }
   }
   if (sweepAtomsZone) {
-    zones.append(atomsZone);
+    zones.append(atomsZone());
   }
 
   queueZonesAndStartBackgroundSweep(zones);
@@ -1784,7 +1784,7 @@ void GCRuntime::startSweepingAtomsTable() {
 
 IncrementalProgress GCRuntime::sweepAtomsTable(JS::GCContext* gcx,
                                                SliceBudget& budget) {
-  if (!atomsZone->isGCSweeping()) {
+  if (!atomsZone()->isGCSweeping()) {
     return Finished;
   }
 

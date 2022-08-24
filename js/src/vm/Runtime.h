@@ -36,6 +36,7 @@
 #include "js/MemoryCallbacks.h"
 #include "js/Modules.h"  // JS::Module{DynamicImport,Metadata,Resolve}Hook
 #include "js/ScriptPrivate.h"
+#include "js/shadow/Zone.h"
 #include "js/ShadowRealmCallbacks.h"
 #include "js/Stack.h"
 #include "js/StreamConsumer.h"
@@ -842,12 +843,14 @@ struct JSRuntime {
 
   JS::Zone* atomsZone() {
     MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(this));
-    return gc.atomsZone;
+    return unsafeAtomsZone();
   }
-  JS::Zone* unsafeAtomsZone() { return gc.atomsZone; }
+  JS::Zone* unsafeAtomsZone() { return gc.atomsZone(); }
 
 #ifdef DEBUG
-  bool isAtomsZone(const JS::Zone* zone) const { return zone == gc.atomsZone; }
+  bool isAtomsZone(const JS::Zone* zone) const {
+    return JS::shadow::Zone::from(zone)->isAtomsZone();
+  }
 #endif
 
   bool activeGCInAtomsZone();

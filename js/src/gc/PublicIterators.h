@@ -34,7 +34,10 @@ class NonAtomZonesIter {
 
  public:
   explicit NonAtomZonesIter(gc::GCRuntime* gc)
-      : iterMarker(gc), it(gc->zones().begin()), end(gc->zones().end()) {}
+      : iterMarker(gc), it(gc->zones().begin()), end(gc->zones().end()) {
+    MOZ_ASSERT(get()->isAtomsZone());
+    next();
+  }
   explicit NonAtomZonesIter(JSRuntime* rt) : NonAtomZonesIter(&rt->gc) {}
 
   bool done() const { return it == end; }
@@ -61,7 +64,7 @@ class ZonesIter {
 
  public:
   ZonesIter(gc::GCRuntime* gc, ZoneSelector selector)
-      : atomsZone(selector == WithAtoms ? gc->atomsZone.ref() : nullptr),
+      : atomsZone(selector == WithAtoms ? gc->atomsZone() : nullptr),
         otherZones(gc) {}
   ZonesIter(JSRuntime* rt, ZoneSelector selector)
       : ZonesIter(&rt->gc, selector) {}

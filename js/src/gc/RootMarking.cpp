@@ -227,7 +227,7 @@ void js::gc::GCRuntime::traceRuntimeForMajorGC(JSTracer* trc,
 
   // We only need to trace atoms when we're marking; atoms are never moved by
   // compacting GC.
-  if (atomsZone->isGCMarking()) {
+  if (atomsZone()->isGCMarking()) {
     traceRuntimeAtoms(trc);
   }
 
