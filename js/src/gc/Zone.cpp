@@ -192,7 +192,7 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
   /* Ensure that there are no vtables to mess us up here. */
   MOZ_ASSERT(reinterpret_cast<JS::shadow::Zone*>(this) ==
              static_cast<JS::shadow::Zone*>(this));
-  MOZ_ASSERT_IF(isAtomsZone(), !rt->unsafeAtomsZone());
+  MOZ_ASSERT_IF(isAtomsZone(), rt->gc.zones().empty());
 
   updateGCStartThresholds(rt->gc);
 }
