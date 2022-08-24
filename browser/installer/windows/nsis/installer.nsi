@@ -316,6 +316,19 @@ Section "-InstallStartCleanup"
   ${If} ${FileExists} "$INSTDIR\defaults\pref\channel-prefs.js"
     Delete "$INSTDIR\defaults\pref\channel-prefs.js"
   ${EndIf}
+
+  ${If} ${FileExists} "$INSTDIR\distribution\policies.json"
+    Delete "$INSTDIR\distribution\policies.json"
+  ${EndIf}
+
+  ${If} ${FileExists} "$INSTDIR\autoconfig.js"
+    Delete "$INSTDIR\autoconfig.js"
+  ${EndIf}
+
+  ${If} ${FileExists} "$INSTDIR\distribution"
+    RmDir "$INSTDIR\distribution"
+  ${EndIf}
+
   ${If} ${FileExists} "$INSTDIR\defaults\pref"
     RmDir "$INSTDIR\defaults\pref"
   ${EndIf}
@@ -534,6 +547,10 @@ Section "-Application" APP_IDX
   ; majority of cases.
   WriteRegDWORD HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Telemetry" 1
 !endif
+
+  ${If} ${AtLeastWin10}
+    ${WriteToastNotificationRegistration} $TmpVal
+  ${EndIf}
 
   ; Create shortcuts
   ${LogHeader} "Adding Shortcuts"

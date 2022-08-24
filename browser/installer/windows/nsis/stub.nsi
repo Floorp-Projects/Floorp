@@ -231,11 +231,11 @@ Var ArchToInstall
 !undef URLStubDownloadX86
 !undef URLStubDownloadAMD64
 !undef URLStubDownloadAArch64
-!define URLStubDownloadX86 "https://download.mozilla.org/?os=win&lang=${AB_CD}&product=firefox-beta-latest"
-!define URLStubDownloadAMD64 "https://download.mozilla.org/?os=win64&lang=${AB_CD}&product=firefox-beta-latest"
-!define URLStubDownloadAArch64 "https://download.mozilla.org/?os=win64-aarch64&lang=${AB_CD}&product=firefox-beta-latest"
+!define URLStubDownloadX86 ""
+!define URLStubDownloadAMD64 "https://github.com/Floorp-Projects/Floorp/releases/latest/download/floorp-${AppVersion}.win64.installer.exe"
+!define URLStubDownloadAArch64 ""
 !undef URLManualDownload
-!define URLManualDownload "https://www.mozilla.org/${AB_CD}/firefox/installer-help/?channel=beta&installer_lang=${AB_CD}"
+!define URLManualDownload ""
 !undef Channel
 !define Channel "beta"
 !endif
@@ -685,7 +685,7 @@ Function createInstall
   ${EndIf}
 
   ${GetLocalAppDataFolder} $0
-  ${If} ${FileExists} "$0\Mozilla\Floorp"
+  ${If} ${FileExists} "$0\Ablaze\Floorp"
     StrCpy $ExistingProfile "1"
   ${Else}
     StrCpy $ExistingProfile "0"
@@ -847,9 +847,7 @@ Function OnDownload
         ; Use a timer so the UI has a chance to update
         ${StartTimer} ${InstallIntervalMS} DisplayDownloadError
       ${Else}
-        CertCheck::CheckPETrustAndInfoAsync "$PLUGINSDIR\download.exe" \
-          "${CertNameDownload}" "${CertIssuerDownload}"
-        ${StartTimer} ${DownloadIntervalMS} OnCertCheck
+        Call LaunchFullInstaller
       ${EndIf}
     ${Else}
       StrCpy $DownloadedBytes "$3"
@@ -1143,7 +1141,7 @@ Function SendPing
 
 !ifdef STUB_DEBUG
     MessageBox MB_OK "${BaseURLStubPing} \
-                      $\nStub URL Version = ${StubURLVersion}${StubURLVersionAppend} \
+                      $\nStub URL Version = ${URLStubDownloadAMD64} \
                       $\nBuild Channel = ${Channel} \
                       $\nUpdate Channel = ${UpdateChannel} \
                       $\nLocale = ${AB_CD} \
