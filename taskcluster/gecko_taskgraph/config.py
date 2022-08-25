@@ -130,7 +130,6 @@ graph_config_schema = Schema(
             ): str,
             Optional("decision-parameters"): str,
         },
-        Required("expiration-policy"): optionally_keyed_by("project", {str: str}),
     }
 )
 
