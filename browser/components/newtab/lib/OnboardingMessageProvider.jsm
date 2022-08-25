@@ -100,6 +100,7 @@ const ONBOARDING_MESSAGES = () => [
               action: {
                 navigate: true,
               },
+              has_arrow_icon: true,
             },
           },
         },
@@ -133,6 +134,7 @@ const ONBOARDING_MESSAGES = () => [
               action: {
                 navigate: true,
               },
+              has_arrow_icon: true,
             },
           },
         },
@@ -168,6 +170,7 @@ const ONBOARDING_MESSAGES = () => [
               action: {
                 navigate: true,
               },
+              has_arrow_icon: true,
             },
           },
         },
@@ -303,6 +306,7 @@ const ONBOARDING_MESSAGES = () => [
                 theme: "automatic",
                 navigate: true,
               },
+              has_arrow_icon: true,
             },
           },
         },
@@ -345,6 +349,7 @@ const ONBOARDING_MESSAGES = () => [
               action: {
                 navigate: true,
               },
+              has_arrow_icon: true,
             },
           },
         },
@@ -383,6 +388,7 @@ const ONBOARDING_MESSAGES = () => [
               action: {
                 navigate: true,
               },
+              has_arrow_icon: true,
             },
           },
         },
