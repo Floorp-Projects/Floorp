@@ -153,16 +153,16 @@ static bool IsObjectEscaped(MDefinition* ins, MInstruction* newObject,
 
 // Returns False if the lambda is not escaped and if it is optimizable by
 // ScalarReplacementOfObject.
-static bool IsLambdaEscaped(MInstruction* lambda, MInstruction* newObject,
-                            const Shape* shape) {
+static bool IsLambdaEscaped(MInstruction* ins, MInstruction* lambda,
+                            MInstruction* newObject, const Shape* shape) {
   MOZ_ASSERT(lambda->isLambda() || lambda->isFunctionWithProto());
   MOZ_ASSERT(IsOptimizableObjectInstruction(newObject));
-  JitSpewDef(JitSpew_Escape, "Check lambda\n", lambda);
+  JitSpewDef(JitSpew_Escape, "Check lambda\n", ins);
   JitSpewIndent spewIndent(JitSpew_Escape);
 
   // The scope chain is not escaped if none of the Lambdas which are
   // capturing it are escaped.
-  for (MUseIterator i(lambda->usesBegin()); i != lambda->usesEnd(); i++) {
+  for (MUseIterator i(ins->usesBegin()); i != ins->usesEnd(); i++) {
     MNode* consumer = (*i)->consumer();
     if (!consumer->isDefinition()) {
       // Cannot optimize if it is observable from fun.arguments or others.
@@ -174,18 +174,56 @@ static bool IsLambdaEscaped(MInstruction* lambda, MInstruction* newObject,
     }
 
     MDefinition* def = consumer->toDefinition();
-    if (!def->isFunctionEnvironment()) {
-      JitSpewDef(JitSpew_Escape, "is escaped by\n", def);
-      return true;
-    }
+    switch (def->op()) {
+      case MDefinition::Opcode::GuardToFunction: {
+        auto* guard = def->toGuardToFunction();
+        if (IsLambdaEscaped(guard, lambda, newObject, shape)) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
 
-    if (IsObjectEscaped(def->toInstruction(), newObject, shape)) {
-      JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
-      return true;
+      case MDefinition::Opcode::GuardFunctionScript: {
+        auto* guard = def->toGuardFunctionScript();
+        BaseScript* actual;
+        if (lambda->isLambda()) {
+          actual = lambda->toLambda()->templateFunction()->baseScript();
+        } else {
+          actual = lambda->toFunctionWithProto()->function()->baseScript();
+        }
+        if (actual != guard->expected()) {
+          JitSpewDef(JitSpew_Escape, "has a non-matching script guard\n",
+                     guard);
+          return true;
+        }
+        if (IsLambdaEscaped(guard, lambda, newObject, shape)) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
+      case MDefinition::Opcode::FunctionEnvironment: {
+        if (IsObjectEscaped(def->toFunctionEnvironment(), newObject, shape)) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
+      default:
+        JitSpewDef(JitSpew_Escape, "is escaped by\n", def);
+        return true;
     }
   }
   JitSpew(JitSpew_Escape, "Lambda is not escaped");
   return false;
+}
+
+static bool IsLambdaEscaped(MInstruction* lambda, MInstruction* newObject,
+                            const Shape* shape) {
+  return IsLambdaEscaped(lambda, lambda, newObject, shape);
 }
 
 // Returns False if the object is not escaped and if it is optimizable by
@@ -393,6 +431,9 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop {
 
   bool oom() const { return oom_; }
 
+ private:
+  MDefinition* functionForCallObject(MDefinition* ins);
+
  public:
   void visitResumePoint(MResumePoint* rp);
   void visitObjectState(MObjectState* ins);
@@ -406,6 +447,8 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop {
   void visitCheckIsObj(MCheckIsObj* ins);
   void visitUnbox(MUnbox* ins);
   void visitFunctionEnvironment(MFunctionEnvironment* ins);
+  void visitGuardToFunction(MGuardToFunction* ins);
+  void visitGuardFunctionScript(MGuardFunctionScript* ins);
   void visitLambda(MLambda* ins);
   void visitFunctionWithProto(MFunctionWithProto* ins);
   void visitPhi(MPhi* ins);
@@ -752,23 +795,80 @@ void ObjectMemoryView::visitUnbox(MUnbox* ins) {
   ins->block()->discard(ins);
 }
 
+MDefinition* ObjectMemoryView::functionForCallObject(MDefinition* ins) {
+  // Return early when we don't replace MNewCallObject.
+  if (!obj_->isNewCallObject()) {
+    return nullptr;
+  }
+
+  // Unwrap instructions until we found either MLambda or MFunctionWithProto.
+  // Return the function instruction if their environment chain matches the
+  // MNewCallObject we're about to replace.
+  while (true) {
+    switch (ins->op()) {
+      case MDefinition::Opcode::Lambda: {
+        if (ins->toLambda()->environmentChain() == obj_) {
+          return ins;
+        }
+        return nullptr;
+      }
+      case MDefinition::Opcode::FunctionWithProto: {
+        if (ins->toFunctionWithProto()->environmentChain() == obj_) {
+          return ins;
+        }
+        return nullptr;
+      }
+      case MDefinition::Opcode::FunctionEnvironment:
+        ins = ins->toFunctionEnvironment()->function();
+        break;
+      case MDefinition::Opcode::GuardToFunction:
+        ins = ins->toGuardToFunction()->object();
+        break;
+      case MDefinition::Opcode::GuardFunctionScript:
+        ins = ins->toGuardFunctionScript()->function();
+        break;
+      default:
+        return nullptr;
+    }
+  }
+}
+
 void ObjectMemoryView::visitFunctionEnvironment(MFunctionEnvironment* ins) {
   // Skip function environment which are not aliases of the NewCallObject.
-  MDefinition* input = ins->input();
-  if (input->isLambda()) {
-    if (input->toLambda()->environmentChain() != obj_) {
-      return;
-    }
-  } else if (input->isFunctionWithProto()) {
-    if (input->toFunctionWithProto()->environmentChain() != obj_) {
-      return;
-    }
-  } else {
+  if (!functionForCallObject(ins)) {
     return;
   }
 
   // Replace the function environment by the scope chain of the lambda.
   ins->replaceAllUsesWith(obj_);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void ObjectMemoryView::visitGuardToFunction(MGuardToFunction* ins) {
+  // Skip guards on other objects.
+  auto* function = functionForCallObject(ins);
+  if (!function) {
+    return;
+  }
+
+  // Replace the guard by its object.
+  ins->replaceAllUsesWith(function);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void ObjectMemoryView::visitGuardFunctionScript(MGuardFunctionScript* ins) {
+  // Skip guards on other objects.
+  auto* function = functionForCallObject(ins);
+  if (!function) {
+    return;
+  }
+
+  // Replace the guard by its object.
+  ins->replaceAllUsesWith(function);
 
   // Remove original instruction.
   ins->block()->discard(ins);

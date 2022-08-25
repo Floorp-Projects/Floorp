@@ -323,13 +323,26 @@ bool Axis::CanScroll() const {
   return GetPageLength() - GetCompositionLength() > COORDINATE_EPSILON;
 }
 
+bool Axis::CanScroll(CSSCoord aDelta) const {
+  return CanScroll(aDelta * GetFrameMetrics().GetZoom());
+}
+
 bool Axis::CanScroll(ParentLayerCoord aDelta) const {
   if (!CanScroll()) {
     return false;
   }
 
-  return fabs(DisplacementWillOverscrollAmount(aDelta) - aDelta) >
-         COORDINATE_EPSILON;
+  const auto zoom = GetFrameMetrics().GetZoom();
+  CSSCoord availableToScroll = 0;
+
+  if (zoom != CSSToParentLayerScale(0)) {
+    availableToScroll =
+        ParentLayerCoord(
+            fabs(DisplacementWillOverscrollAmount(aDelta) - aDelta)) /
+        zoom;
+  }
+
+  return availableToScroll > COORDINATE_EPSILON;
 }
 
 CSSCoord Axis::ClampOriginToScrollableRect(CSSCoord aOrigin) const {
@@ -539,9 +552,9 @@ const char* AxisX::Name() const { return "X"; }
 bool AxisX::CanScrollTo(Side aSide) const {
   switch (aSide) {
     case eSideLeft:
-      return CanScroll(-COORDINATE_EPSILON * 2);
+      return CanScroll(CSSCoord(-COORDINATE_EPSILON * 2));
     case eSideRight:
-      return CanScroll(COORDINATE_EPSILON * 2);
+      return CanScroll(CSSCoord(COORDINATE_EPSILON * 2));
     default:
       MOZ_ASSERT_UNREACHABLE("aSide is out of valid values");
       return false;
@@ -618,9 +631,9 @@ const char* AxisY::Name() const { return "Y"; }
 bool AxisY::CanScrollTo(Side aSide) const {
   switch (aSide) {
     case eSideTop:
-      return CanScroll(-COORDINATE_EPSILON * 2);
+      return CanScroll(CSSCoord(-COORDINATE_EPSILON * 2));
     case eSideBottom:
-      return CanScroll(COORDINATE_EPSILON * 2);
+      return CanScroll(CSSCoord(COORDINATE_EPSILON * 2));
     default:
       MOZ_ASSERT_UNREACHABLE("aSide is out of valid values");
       return false;

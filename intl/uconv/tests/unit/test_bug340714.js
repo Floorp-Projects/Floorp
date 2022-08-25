@@ -28,16 +28,10 @@ registerCleanupFunction(() => {
 });
 
 function makeText(withBOM, charset) {
-  // eslint-disable-next-line no-eval
-  var theText = eval("sample" + charset);
-  if (withBOM) {
-    if (charset == "UTF16BE") {
-      theText = beBOM + theText;
-    } else {
-      theText = leBOM + theText;
-    }
-  }
-  return theText;
+  const isBE = charset === "UTF16BE";
+  const sampleText = isBE ? sampleUTF16BE : sampleUTF16LE;
+  const bom = isBE ? beBOM : leBOM;
+  return withBOM ? bom + sampleText : sampleText;
 }
 
 function testCase(withBOM, charset, charsetDec, decoder, bufferLength) {

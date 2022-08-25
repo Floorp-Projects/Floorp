@@ -12,11 +12,6 @@ xul|tabs {
   position: static;
 }
 
-xul|button[dlgtype="help"] {
-  appearance: none;
-  width: auto;
-}
-
 xul|menulist > xul|menupopup > xul|menuitem[checked="true"]::before,
 xul|menulist > xul|menupopup > xul|menuitem[selected="true"]::before {
   display: none;

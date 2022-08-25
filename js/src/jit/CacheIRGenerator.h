@@ -184,8 +184,8 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
                                             ObjOperandId objId);
 
   AttachDecision tryAttachGenericElement(HandleObject obj, ObjOperandId objId,
-                                         uint32_t index,
-                                         Int32OperandId indexId);
+                                         uint32_t index, Int32OperandId indexId,
+                                         ValOperandId receiverId);
 
   AttachDecision tryAttachProxyElement(HandleObject obj, ObjOperandId objId);
 

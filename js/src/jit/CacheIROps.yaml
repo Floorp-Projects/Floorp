@@ -2100,6 +2100,15 @@
     obj: ObjId
     index: Int32Id
 
+- name: CallNativeGetElementSuperResult
+  shared: true
+  transpile: true
+  cost_estimate: 5
+  args:
+    obj: ObjId
+    index: Int32Id
+    receiver: ValId
+
 - name: GetNextMapSetEntryForIteratorResult
   shared: true
   transpile: true

@@ -248,6 +248,26 @@ class ResponseHeaderChanger extends HeaderChanger {
       if (value) {
         merge = merge || this.didModifyCSP;
       }
+
+      // For manifest_version 3 extension, we are currently only allowing to
+      // merge additional CSP strings to the existing ones, which will be initially
+      // stricter than currently allowed to manifest_version 2 extensions, then
+      // following up with either a new permission and/or some more changes to the
+      // APIs (and possibly making the behavior more deterministic than it is for
+      // manifest_version 2 at the moment).
+      if (opts.policy.manifestVersion > 2) {
+        if (value) {
+          // If the given CSP header value is non empty, then it should be
+          // merged to the existing one.
+          merge = true;
+        } else {
+          // If the given CSP header value is empty (which would be clearing the
+          // CSP header), it should be considered a no-op and this.didModifyCSP
+          // shouldn't be changed to true.
+          return;
+        }
+      }
+
       this.didModifyCSP = true;
     }
     try {

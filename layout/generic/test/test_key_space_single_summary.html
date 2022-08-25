@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script>
+  SimpleTest.waitForExplicitFinish();
+  function runTest() {
+    const summary = document.querySelector("summary");
+    summary.focus();
+    synthesizeKey(" ");
+
+    const details = document.querySelector("details");
+    ok(details.open, "Dispatch space key on summary should open details.");
+
+    SimpleTest.finish();
+  }
+  </script>
+</head>
+<body onload="runTest();">
+  <details>
+    <summary>Summary</summary>
+    <p>This is the details.</p>
+  </details>
+</body>
+</html>

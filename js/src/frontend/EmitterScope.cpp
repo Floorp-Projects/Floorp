@@ -179,8 +179,11 @@ NameLocation EmitterScope::searchAndCache(BytecodeEmitter* bce,
                    CompilationInput::CompilationTarget::Eval);
     inCurrentScript = false;
     loc = Some(bce->compilationState.scopeContext.searchInEnclosingScope(
-        bce->cx, bce->ec, bce->compilationState.input, bce->parserAtoms(), name,
-        hops));
+        bce->cx, bce->ec, bce->compilationState.input, bce->parserAtoms(),
+        name));
+    if (loc->kind() == NameLocation::Kind::EnvironmentCoordinate) {
+      *loc = loc->addHops(hops);
+    }
   }
 
   // Each script has its own frame. A free name that is accessed

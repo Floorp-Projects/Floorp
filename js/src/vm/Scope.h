@@ -48,6 +48,7 @@ class GenericPrinter;
 namespace frontend {
 class ScopeStencil;
 struct ScopeStencilRef;
+class RuntimeScopeBindingCache;
 }  // namespace frontend
 
 template <typename NameT>
@@ -294,6 +295,7 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
   friend class GCMarker;
   friend class frontend::ScopeStencil;
   friend class js::AbstractBindingIter<JSAtom>;
+  friend class js::frontend::RuntimeScopeBindingCache;
 
  protected:
   // The raw data pointer, stored in the cell header.

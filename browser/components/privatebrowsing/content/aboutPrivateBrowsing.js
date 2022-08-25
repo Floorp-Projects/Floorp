@@ -277,11 +277,7 @@ document.addEventListener("DOMContentLoaded", function() {
     return;
   }
 
-  let newLogoEnabled = RPMGetBoolPref(
-    "browser.privatebrowsing.enable-new-logo",
-    false
-  );
-
+  let newLogoEnabled = window.PrivateBrowsingEnableNewLogo();
   document
     .getElementById("about-private-browsing-logo")
     .toggleAttribute("legacy", !newLogoEnabled);
