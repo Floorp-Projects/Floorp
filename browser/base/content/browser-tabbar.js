@@ -55,10 +55,9 @@ const CustomCssPref = Services.prefs.getIntPref("floorp.browser.tabbar.settings"
    try {
     document.getElementById("tabbardesgin").remove();
     document.getElementById("tabbar-script").remove();
-    document.getElementById("navigator-toolbox").insertBefore(document.getElementById("titlebar"), document.getElementById("navigator-toolbox").firstChild);
-    document.getElementById("TabsToolbar").before(document.getElementById("toolbar-menubar"));
-   } catch(e) {
-   }
+   } catch(e) {}
+   document.getElementById("navigator-toolbox").insertBefore(document.getElementById("titlebar"), document.getElementById("navigator-toolbox").firstChild);
+   document.getElementById("TabsToolbar").before(document.getElementById("toolbar-menubar"));
 
    switch(CustomCssPref){
       case 1: 
