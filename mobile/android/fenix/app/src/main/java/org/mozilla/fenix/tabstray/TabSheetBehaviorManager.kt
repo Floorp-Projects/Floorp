@@ -85,8 +85,8 @@ internal class TabSheetBehaviorManager(
 
 @VisibleForTesting
 internal class TraySheetBehaviorCallback(
-    @VisibleForTesting internal val behavior: BottomSheetBehavior<ConstraintLayout>,
-    @VisibleForTesting internal val trayInteractor: NavigationInteractor,
+    @get:VisibleForTesting internal val behavior: BottomSheetBehavior<ConstraintLayout>,
+    @get:VisibleForTesting internal val trayInteractor: NavigationInteractor,
 ) : BottomSheetBehavior.BottomSheetCallback() {
 
     override fun onStateChanged(bottomSheet: View, newState: Int) {

@@ -18,7 +18,7 @@ import org.mozilla.fenix.utils.Do
 
 class AccountDeviceViewHolder(
     itemView: View,
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @get:VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     val interactor: ShareToAccountDevicesInteractor,
 ) : RecyclerView.ViewHolder(itemView) {
 

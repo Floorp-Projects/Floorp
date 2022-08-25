@@ -15,11 +15,11 @@ import org.mozilla.fenix.utils.Do
  * A wrapper class that building the tabs tray menu that handles item clicks.
  */
 class MenuIntegration(
-    @VisibleForTesting internal val context: Context,
-    @VisibleForTesting internal val browserStore: BrowserStore,
-    @VisibleForTesting internal val tabsTrayStore: TabsTrayStore,
-    @VisibleForTesting internal val tabLayout: TabLayout,
-    @VisibleForTesting internal val navigationInteractor: NavigationInteractor,
+    @get:VisibleForTesting internal val context: Context,
+    @get:VisibleForTesting internal val browserStore: BrowserStore,
+    @get:VisibleForTesting internal val tabsTrayStore: TabsTrayStore,
+    @get:VisibleForTesting internal val tabLayout: TabLayout,
+    @get:VisibleForTesting internal val navigationInteractor: NavigationInteractor,
 ) {
     private val tabsTrayItemMenu by lazy {
         TabsTrayMenu(
