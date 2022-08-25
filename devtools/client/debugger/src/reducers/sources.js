@@ -34,7 +34,7 @@ export function initialSourcesState(state) {
      * "source" are the objects stored in this reducer, in the `sources` attribute.
      * "source-actor" are the objects stored in the "source-actors.js" reducer, in its `sourceActors` attribute.
      *
-     * Dictionary(source id => array<SourceActor ID>)
+     * Dictionary(source id => array<Object(id: SourceActor Id, thread: Thread Actor ID)>)
      */
     actors: {},
 
@@ -138,13 +138,7 @@ function update(state = initialSourcesState(), action) {
       return initialSourcesState(state);
 
     case "REMOVE_THREAD": {
-      const threadSources = [];
-      for (const source of state.sources.values()) {
-        if (source.thread == action.threadActorID) {
-          threadSources.push(source);
-        }
-      }
-      return removeSourcesAndActors(state, threadSources);
+      return removeSourcesAndActors(state, action.threadActorID);
     }
   }
 
@@ -177,29 +171,43 @@ function addSources(state, sources) {
   return state;
 }
 
-function removeSourcesAndActors(state, sources) {
+function removeSourcesAndActors(state, threadActorID) {
   state = {
     ...state,
+    actors: { ...state.actors },
     urls: { ...state.urls },
   };
 
   const newSourceMap = new Map(state.sources);
-  for (const source of sources) {
-    newSourceMap.delete(source.id);
-
-    if (source.url) {
-      // urls
-      if (state.urls[source.url]) {
-        state.urls[source.url] = state.urls[source.url].filter(
-          id => id !== source.id
-        );
-      }
-      if (state.urls[source.url]?.length == 0) {
-        delete state.urls[source.url];
+  for (const sourceId in state.actors) {
+    let i = state.actors[sourceId].length;
+    while (i--) {
+      // delete the source actors which belong to the
+      // specified thread.
+      if (state.actors[sourceId][i].thread == threadActorID) {
+        state.actors[sourceId].splice(i, 1);
       }
     }
-    // actors
-    delete state.actors[source.id];
+    // Delete the source only if all its actors belong to
+    // the same thread.
+    if (!state.actors[sourceId].length) {
+      delete state.actors[sourceId];
+
+      const source = newSourceMap.get(sourceId);
+      if (source.url) {
+        // urls
+        if (state.urls[source.url]) {
+          state.urls[source.url] = state.urls[source.url].filter(
+            id => id !== source.id
+          );
+        }
+        if (state.urls[source.url]?.length == 0) {
+          delete state.urls[source.url];
+        }
+      }
+
+      newSourceMap.delete(sourceId);
+    }
   }
   state.sources = newSourceMap;
   return state;
@@ -217,7 +225,7 @@ function insertSourceActors(state, action) {
   for (const sourceActor of items) {
     state.actors[sourceActor.source] = [
       ...(state.actors[sourceActor.source] || []),
-      sourceActor.id,
+      { id: sourceActor.id, thread: sourceActor.thread },
     ];
   }
 
