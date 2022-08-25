@@ -144,13 +144,198 @@ bool InputName::isEqualTo(JSContext* cx, ErrorContext* ec,
       });
 }
 
+GenericAtom::GenericAtom(JSContext* cx, ErrorContext* ec,
+                         ParserAtomsTable& parserAtoms,
+                         CompilationAtomCache& atomCache,
+                         TaggedParserAtomIndex index)
+    : ref(EmitterName(cx, ec, parserAtoms, atomCache, index)) {
+  hash = parserAtoms.hash(index);
+}
+
+GenericAtom::GenericAtom(const CompilationStencil& context,
+                         TaggedParserAtomIndex index)
+    : ref(StencilName{context, index}) {
+  if (index.isParserAtomIndex()) {
+    ParserAtom* atom = context.parserAtomData[index.toParserAtomIndex()];
+    hash = atom->hash();
+  } else {
+    hash = index.staticOrWellKnownHash();
+  }
+}
+
+GenericAtom::GenericAtom(ScopeStencilRef& scope, TaggedParserAtomIndex index)
+    : GenericAtom(scope.context_, index) {}
+
+BindingHasher<TaggedParserAtomIndex>::Lookup::Lookup(ScopeStencilRef& scope_ref,
+                                                     const GenericAtom& other)
+    : keyStencil(scope_ref.context_), other(other) {}
+
+bool GenericAtom::operator==(const GenericAtom& other) const {
+  return ref.match(
+      [&other](const EmitterName& name) -> bool {
+        return other.ref.match(
+            [&name](const EmitterName& other) -> bool {
+              // We never have multiple Emitter context at the same time.
+              MOZ_ASSERT(name.cx == other.cx);
+              MOZ_ASSERT(&name.parserAtoms == &other.parserAtoms);
+              MOZ_ASSERT(&name.atomCache == &other.atomCache);
+              return name.index == other.index;
+            },
+            [&name](const StencilName& other) -> bool {
+              return name.parserAtoms.isEqualToExternalParserAtomIndex(
+                  name.index, other.stencil, other.index);
+            },
+            [&name](JSAtom* other) -> bool {
+              AutoEnterOOMUnsafeRegion oomUnsafe;
+              JSAtom* namePtr = name.parserAtoms.toJSAtom(
+                  name.cx, name.ec, name.index, name.atomCache);
+              if (!namePtr) {
+                oomUnsafe.crash("GenericAtom(EmitterName == JSAtom*)");
+              }
+              return namePtr == other;
+            });
+      },
+      [&other](const StencilName& name) -> bool {
+        return other.ref.match(
+            [&name](const EmitterName& other) -> bool {
+              return other.parserAtoms.isEqualToExternalParserAtomIndex(
+                  other.index, name.stencil, name.index);
+            },
+            [&name](const StencilName& other) -> bool {
+              // Technically it is possible to have multiple stencils, but in
+              // this particular case let's assume we never encounter a case
+              // where we are comparing names from different stencils.
+              //
+              // The reason this assumption is safe today is that we are only
+              // using this in the context of a stencil-delazification, where
+              // the only StencilNames are coming from the CompilationStencil
+              // provided to CompilationInput::initFromStencil.
+              MOZ_ASSERT(&name.stencil == &other.stencil);
+              return name.index == other.index;
+            },
+            [](JSAtom* other) -> bool {
+              MOZ_CRASH("Never used.");
+              return false;
+            });
+      },
+      [&other](JSAtom* name) -> bool {
+        return other.ref.match(
+            [&name](const EmitterName& other) -> bool {
+              AutoEnterOOMUnsafeRegion oomUnsafe;
+              JSAtom* otherPtr = other.parserAtoms.toJSAtom(
+                  other.cx, other.ec, other.index, other.atomCache);
+              if (!otherPtr) {
+                oomUnsafe.crash("GenericAtom(JSAtom* == EmitterName)");
+              }
+              return name == otherPtr;
+            },
+            [](const StencilName& other) -> bool {
+              MOZ_CRASH("Never used.");
+              return false;
+            },
+            [&name](JSAtom* other) -> bool { return name == other; });
+      });
+}
+
+#ifdef DEBUG
+template <typename SpanT, typename VecT>
+void AssertBorrowingSpan(const SpanT& span, const VecT& vec) {
+  MOZ_ASSERT(span.size() == vec.length());
+  MOZ_ASSERT(span.data() == vec.begin());
+}
+#endif
+
+bool ScopeBindingCache::canCacheFor(Scope* ptr) {
+  MOZ_CRASH("Unexpected scope chain type: Scope*");
+}
+
+bool ScopeBindingCache::canCacheFor(ScopeStencilRef ref) {
+  MOZ_CRASH("Unexpected scope chain type: ScopeStencilRef");
+}
+
+BindingMap<JSAtom*>* ScopeBindingCache::createCacheFor(Scope* ptr) {
+  MOZ_CRASH("Unexpected scope chain type: Scope*");
+}
+
+BindingMap<JSAtom*>* ScopeBindingCache::lookupScope(Scope* ptr,
+                                                    CacheGeneration gen) {
+  MOZ_CRASH("Unexpected scope chain type: Scope*");
+}
+
+BindingMap<TaggedParserAtomIndex>* ScopeBindingCache::createCacheFor(
+    ScopeStencilRef ref) {
+  MOZ_CRASH("Unexpected scope chain type: ScopeStencilRef");
+}
+
+BindingMap<TaggedParserAtomIndex>* ScopeBindingCache::lookupScope(
+    ScopeStencilRef ref, CacheGeneration gen) {
+  MOZ_CRASH("Unexpected scope chain type: ScopeStencilRef");
+}
+
+bool NoScopeBindingCache::canCacheFor(Scope* ptr) { return false; }
+
+bool NoScopeBindingCache::canCacheFor(ScopeStencilRef ref) { return false; }
+
+bool RuntimeScopeBindingCache::canCacheFor(Scope* ptr) { return true; }
+
+BindingMap<JSAtom*>* RuntimeScopeBindingCache::createCacheFor(Scope* ptr) {
+  BaseScopeData* dataPtr = ptr->rawData();
+  BindingMap<JSAtom*> bindingCache;
+  if (!scopeMap.putNew(dataPtr, std::move(bindingCache))) {
+    return nullptr;
+  }
+
+  return lookupScope(ptr, cacheGeneration);
+}
+
+BindingMap<JSAtom*>* RuntimeScopeBindingCache::lookupScope(
+    Scope* ptr, CacheGeneration gen) {
+  MOZ_ASSERT(gen == cacheGeneration);
+  BaseScopeData* dataPtr = ptr->rawData();
+  auto valuePtr = scopeMap.lookup(dataPtr);
+  if (!valuePtr) {
+    return nullptr;
+  }
+  return &valuePtr->value();
+}
+
+bool StencilScopeBindingCache::canCacheFor(ScopeStencilRef ref) { return true; }
+
+BindingMap<TaggedParserAtomIndex>* StencilScopeBindingCache::createCacheFor(
+    ScopeStencilRef ref) {
+#ifdef DEBUG
+  AssertBorrowingSpan(ref.context_.scopeNames, merger_.getResult().scopeNames);
+#endif
+  auto* dataPtr = ref.context_.scopeNames[ref.scopeIndex_];
+  BindingMap<TaggedParserAtomIndex> bindingCache;
+  if (!scopeMap.putNew(dataPtr, std::move(bindingCache))) {
+    return nullptr;
+  }
+
+  return lookupScope(ref, 1);
+}
+
+BindingMap<TaggedParserAtomIndex>* StencilScopeBindingCache::lookupScope(
+    ScopeStencilRef ref, CacheGeneration gen) {
+#ifdef DEBUG
+  AssertBorrowingSpan(ref.context_.scopeNames, merger_.getResult().scopeNames);
+#endif
+  auto* dataPtr = ref.context_.scopeNames[ref.scopeIndex_];
+  auto ptr = scopeMap.lookup(dataPtr);
+  if (!ptr) {
+    return nullptr;
+  }
+  return &ptr->value();
+}
+
 bool ScopeContext::init(JSContext* cx, ErrorContext* ec,
                         CompilationInput& input, ParserAtomsTable& parserAtoms,
                         ScopeBindingCache* scopeCache, InheritThis inheritThis,
                         JSObject* enclosingEnv) {
   // Record the scopeCache to be used while looking up NameLocation bindings.
-  // Flag the cache as used to prevent garabge collection of the cache content.
   this->scopeCache = scopeCache;
+  scopeCacheGen = scopeCache->getCurrentGeneration();
+
   InputScope maybeNonDefaultEnclosingScope(
       input.maybeNonDefaultEnclosingScope());
 
@@ -305,6 +490,205 @@ void ScopeContext::cacheEnclosingScope(const InputScope& enclosingScope) {
     }
   }
 #endif
+
+  // Pre-fill the scope cache by iterating over all the names. Stop iterating
+  // as soon as we find a scope which already has a filled scope cache.
+  AutoEnterOOMUnsafeRegion oomUnsafe;
+  for (InputScopeIter si(enclosingScope); si; si++) {
+    // If the current scope already exists, then there is no need to go deeper
+    // as the scope which are encoded after this one should already be present
+    // in the cache.
+    bool hasScopeCache = si.scope().match([&](auto& scope_ref) -> bool {
+      MOZ_ASSERT(scopeCache->canCacheFor(scope_ref));
+      return scopeCache->lookupScope(scope_ref, scopeCacheGen);
+    });
+    if (hasScopeCache) {
+      return;
+    }
+
+    bool hasEnv = si.hasSyntacticEnvironment();
+    auto setCacthAll = [&](NameLocation loc) {
+      return si.scope().match([&](auto& scope_ref) {
+        using BindingMapPtr = decltype(scopeCache->createCacheFor(scope_ref));
+        BindingMapPtr bindingMapPtr = scopeCache->createCacheFor(scope_ref);
+        if (!bindingMapPtr) {
+          oomUnsafe.crash(
+              "ScopeContext::cacheEnclosingScope: scopeCache->createCacheFor");
+          return;
+        }
+
+        bindingMapPtr->catchAll.emplace(loc);
+      });
+    };
+    auto createEmpty = [&]() {
+      return si.scope().match([&](auto& scope_ref) {
+        using BindingMapPtr = decltype(scopeCache->createCacheFor(scope_ref));
+        BindingMapPtr bindingMapPtr = scopeCache->createCacheFor(scope_ref);
+        if (!bindingMapPtr) {
+          oomUnsafe.crash(
+              "ScopeContext::cacheEnclosingScope: scopeCache->createCacheFor");
+          return;
+        }
+      });
+    };
+
+    switch (si.kind()) {
+      case ScopeKind::Function:
+        if (hasEnv) {
+          if (si.scope().funHasExtensibleScope()) {
+            setCacthAll(NameLocation::Dynamic());
+            return;
+          }
+
+          si.scope().match([&](auto& scope_ref) {
+            using BindingMapPtr =
+                decltype(scopeCache->createCacheFor(scope_ref));
+            using Lookup =
+                typename std::remove_pointer_t<BindingMapPtr>::Lookup;
+            BindingMapPtr bindingMapPtr = scopeCache->createCacheFor(scope_ref);
+            if (!bindingMapPtr) {
+              oomUnsafe.crash(
+                  "ScopeContext::cacheEnclosingScope: "
+                  "scopeCache->createCacheFor");
+              return;
+            }
+
+            for (auto bi = InputBindingIter(scope_ref); bi; bi++) {
+              NameLocation loc = bi.nameLocation();
+              if (loc.kind() != NameLocation::Kind::EnvironmentCoordinate) {
+                continue;
+              }
+              auto ctxFreeKey = bi.name();
+              GenericAtom ctxKey(scope_ref, ctxFreeKey);
+              Lookup ctxLookup(scope_ref, ctxKey);
+              if (!bindingMapPtr->hashMap.put(ctxLookup, ctxFreeKey, loc)) {
+                oomUnsafe.crash(
+                    "ScopeContext::cacheEnclosingScope: bindingMapPtr->put");
+                return;
+              }
+            }
+          });
+        } else {
+          createEmpty();
+        }
+        break;
+
+      case ScopeKind::StrictEval:
+      case ScopeKind::FunctionBodyVar:
+      case ScopeKind::Lexical:
+      case ScopeKind::NamedLambda:
+      case ScopeKind::StrictNamedLambda:
+      case ScopeKind::SimpleCatch:
+      case ScopeKind::Catch:
+      case ScopeKind::FunctionLexical:
+      case ScopeKind::ClassBody:
+        if (hasEnv) {
+          si.scope().match([&](auto& scope_ref) {
+            using BindingMapPtr =
+                decltype(scopeCache->createCacheFor(scope_ref));
+            using Lookup =
+                typename std::remove_pointer_t<BindingMapPtr>::Lookup;
+            BindingMapPtr bindingMapPtr = scopeCache->createCacheFor(scope_ref);
+            if (!bindingMapPtr) {
+              oomUnsafe.crash(
+                  "ScopeContext::cacheEnclosingScope: "
+                  "scopeCache->createCacheFor");
+              return;
+            }
+
+            for (auto bi = InputBindingIter(scope_ref); bi; bi++) {
+              NameLocation loc = bi.nameLocation();
+              if (loc.kind() != NameLocation::Kind::EnvironmentCoordinate) {
+                continue;
+              }
+              auto ctxFreeKey = bi.name();
+              GenericAtom ctxKey(scope_ref, ctxFreeKey);
+              Lookup ctxLookup(scope_ref, ctxKey);
+              if (!bindingMapPtr->hashMap.putNew(ctxLookup, ctxFreeKey, loc)) {
+                oomUnsafe.crash(
+                    "ScopeContext::cacheEnclosingScope: bindingMapPtr->put");
+                return;
+              }
+            }
+          });
+        } else {
+          createEmpty();
+        }
+        break;
+
+      case ScopeKind::Module:
+        // This case is used only when delazifying a function inside
+        // module.
+        // Initial compilation of module doesn't have enlcosing scope.
+        if (hasEnv) {
+          si.scope().match([&](auto& scope_ref) {
+            using BindingMapPtr =
+                decltype(scopeCache->createCacheFor(scope_ref));
+            using Lookup =
+                typename std::remove_pointer_t<BindingMapPtr>::Lookup;
+            BindingMapPtr bindingMapPtr = scopeCache->createCacheFor(scope_ref);
+            if (!bindingMapPtr) {
+              oomUnsafe.crash(
+                  "ScopeContext::cacheEnclosingScope: "
+                  "scopeCache->createCacheFor");
+              return;
+            }
+
+            for (auto bi = InputBindingIter(scope_ref); bi; bi++) {
+              // Imports are on the environment but are indirect
+              // bindings and must be accessed dynamically instead of
+              // using an EnvironmentCoordinate.
+              NameLocation loc = bi.nameLocation();
+              if (loc.kind() != NameLocation::Kind::EnvironmentCoordinate &&
+                  loc.kind() != NameLocation::Kind::Import) {
+                continue;
+              }
+              auto ctxFreeKey = bi.name();
+              GenericAtom ctxKey(scope_ref, ctxFreeKey);
+              Lookup ctxLookup(scope_ref, ctxKey);
+              if (!bindingMapPtr->hashMap.putNew(ctxLookup, ctxFreeKey, loc)) {
+                oomUnsafe.crash(
+                    "ScopeContext::cacheEnclosingScope: bindingMapPtr->put");
+                return;
+              }
+            }
+          });
+        } else {
+          createEmpty();
+        }
+        break;
+
+      case ScopeKind::Eval:
+        // As an optimization, if the eval doesn't have its own var
+        // environment and its immediate enclosing scope is a global
+        // scope, all accesses are global.
+        if (!hasEnv) {
+          ScopeKind kind = si.scope().enclosing().kind();
+          if (kind == ScopeKind::Global || kind == ScopeKind::NonSyntactic) {
+            setCacthAll(NameLocation::Global(BindingKind::Var));
+            return;
+          }
+        }
+
+        setCacthAll(NameLocation::Dynamic());
+        return;
+
+      case ScopeKind::Global:
+        setCacthAll(NameLocation::Global(BindingKind::Var));
+        return;
+
+      case ScopeKind::With:
+      case ScopeKind::NonSyntactic:
+        setCacthAll(NameLocation::Dynamic());
+        return;
+
+      case ScopeKind::WasmInstance:
+      case ScopeKind::WasmFunction:
+        MOZ_CRASH("No direct eval inside wasm functions");
+    }
+  }
+
+  MOZ_CRASH("Malformed scope chain");
 }
 
 InputScope ScopeContext::determineEffectiveScope(InputScope& scope,
@@ -603,12 +987,104 @@ static bool NameIsOnEnvironment(JSContext* cx, ErrorContext* ec,
 }
 #endif
 
-/* static */
 NameLocation ScopeContext::searchInEnclosingScope(JSContext* cx,
                                                   ErrorContext* ec,
                                                   CompilationInput& input,
                                                   ParserAtomsTable& parserAtoms,
                                                   TaggedParserAtomIndex name) {
+  MOZ_ASSERT(input.target ==
+                 CompilationInput::CompilationTarget::Delazification ||
+             input.target == CompilationInput::CompilationTarget::Eval);
+
+  MOZ_ASSERT(scopeCache);
+  if (scopeCacheGen != scopeCache->getCurrentGeneration()) {
+    return searchInEnclosingScopeNoCache(cx, ec, input, parserAtoms, name);
+  }
+
+#ifdef DEBUG
+  // Catch assertion failures in the NoCache variant before looking at the
+  // cached content.
+  NameLocation expect =
+      searchInEnclosingScopeNoCache(cx, ec, input, parserAtoms, name);
+#endif
+
+  NameLocation found =
+      searchInEnclosingScopeWithCache(cx, ec, input, parserAtoms, name);
+  MOZ_ASSERT(expect == found);
+  return found;
+}
+
+NameLocation ScopeContext::searchInEnclosingScopeWithCache(
+    JSContext* cx, ErrorContext* ec, CompilationInput& input,
+    ParserAtomsTable& parserAtoms, TaggedParserAtomIndex name) {
+  MOZ_ASSERT(input.target ==
+                 CompilationInput::CompilationTarget::Delazification ||
+             input.target == CompilationInput::CompilationTarget::Eval);
+
+  // Generic atom of the looked up name.
+  GenericAtom genName(cx, ec, parserAtoms, input.atomCache, name);
+  mozilla::Maybe<NameLocation> found;
+
+  // Number of enclosing scope we walked over.
+  uint8_t hops = 0;
+
+  for (InputScopeIter si(input.enclosingScope); si; si++) {
+    MOZ_ASSERT(NameIsOnEnvironment(cx, ec, parserAtoms, input.atomCache,
+                                   si.scope(), name));
+
+    // If the result happens to be in the cached content of the scope that we
+    // are iterating over, then return it.
+    si.scope().match([&](auto& scope_ref) {
+      using BindingMapPtr =
+          decltype(scopeCache->lookupScope(scope_ref, scopeCacheGen));
+      BindingMapPtr bindingMapPtr =
+          scopeCache->lookupScope(scope_ref, scopeCacheGen);
+      MOZ_ASSERT(bindingMapPtr);
+
+      auto& bindingMap = *bindingMapPtr;
+      if (bindingMap.catchAll.isSome()) {
+        found = bindingMap.catchAll;
+        return;
+      }
+
+      // The scope_ref is given as argument to know where to lookup the key
+      // index of the hash table if the names have to be compared.
+      using Lookup = typename std::remove_pointer_t<BindingMapPtr>::Lookup;
+      Lookup ctxName(scope_ref, genName);
+      auto ptr = bindingMap.hashMap.lookup(ctxName);
+      if (!ptr) {
+        return;
+      }
+
+      found.emplace(ptr->value());
+    });
+
+    if (found.isSome()) {
+      // Cached entries do not store the number of hops, as it might be reused
+      // by multiple inner functions, which might different number of hops.
+      found = found.map([&hops](NameLocation loc) {
+        if (loc.kind() != NameLocation::Kind::EnvironmentCoordinate) {
+          return loc;
+        }
+        return loc.addHops(hops);
+      });
+      return found.value();
+    }
+
+    bool hasEnv = si.hasSyntacticEnvironment();
+
+    if (hasEnv) {
+      MOZ_ASSERT(hops < ENVCOORD_HOPS_LIMIT - 1);
+      hops++;
+    }
+  }
+
+  MOZ_CRASH("Malformed scope chain");
+}
+
+NameLocation ScopeContext::searchInEnclosingScopeNoCache(
+    JSContext* cx, ErrorContext* ec, CompilationInput& input,
+    ParserAtomsTable& parserAtoms, TaggedParserAtomIndex name) {
   MOZ_ASSERT(input.target ==
                  CompilationInput::CompilationTarget::Delazification ||
              input.target == CompilationInput::CompilationTarget::Eval);
@@ -627,7 +1103,6 @@ NameLocation ScopeContext::searchInEnclosingScope(JSContext* cx,
                                    si.scope(), name));
 
     bool hasEnv = si.hasSyntacticEnvironment();
-
     switch (si.kind()) {
       case ScopeKind::Function:
         if (hasEnv) {
@@ -1879,12 +2354,6 @@ void CompilationStencil::borrowFromExtensibleCompilationStencil(
 }
 
 #ifdef DEBUG
-template <typename SpanT, typename VecT>
-void AssertBorrowingSpan(const SpanT& span, const VecT& vec) {
-  MOZ_ASSERT(span.size() == vec.length());
-  MOZ_ASSERT(span.data() == vec.begin());
-}
-
 void CompilationStencil::assertBorrowingFromExtensibleCompilationStencil(
     const ExtensibleCompilationStencil& extensibleStencil) const {
   MOZ_ASSERT(canLazilyParse == extensibleStencil.canLazilyParse);

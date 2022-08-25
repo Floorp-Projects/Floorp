@@ -392,6 +392,16 @@ struct ScopeContext {
   // scope to the equivalent NameLocation.
   ScopeBindingCache* scopeCache = nullptr;
 
+  // Generation number of the `scopeCache` collected before filling the cache
+  // with enclosing scope information.
+  //
+  // The generation number, obtained from `scopeCache->getCurrentGeneration()`
+  // is incremented each time the GC invalidate the content of the cache. The
+  // `scopeCache` can only be used when the generation number collected before
+  // filling the cache is identical to the generation number seen when querying
+  // the cached content.
+  size_t scopeCacheGen = 0;
+
   // Class field initializer info if we are nested within a class constructor.
   // We may be an combination of arrow and eval context within the constructor.
   mozilla::Maybe<MemberInitializers> memberInitializers = {};
@@ -497,6 +507,14 @@ struct ScopeContext {
   void computeThisEnvironment(const InputScope& enclosingScope);
   void computeInScope(const InputScope& enclosingScope);
   void cacheEnclosingScope(const InputScope& enclosingScope);
+  NameLocation searchInEnclosingScopeWithCache(JSContext* cx, ErrorContext* ec,
+                                               CompilationInput& input,
+                                               ParserAtomsTable& parserAtoms,
+                                               TaggedParserAtomIndex name);
+  NameLocation searchInEnclosingScopeNoCache(JSContext* cx, ErrorContext* ec,
+                                             CompilationInput& input,
+                                             ParserAtomsTable& parserAtoms,
+                                             TaggedParserAtomIndex name);
 
   InputScope determineEffectiveScope(InputScope& scope, JSObject* environment);
 

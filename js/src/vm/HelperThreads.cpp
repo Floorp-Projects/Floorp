@@ -1131,7 +1131,7 @@ bool DelazifyTask::runTask(JSContext* cx) {
   //
   // We do not use the one from the JSContext/Runtime, as it is not thread safe
   // to use it, as it could be purged by a GC in the mean time.
-  ScopeBindingCache scopeCache;
+  StencilScopeBindingCache scopeCache(merger);
 
   while (!strategy->done() || isInterrupted()) {
     RefPtr<CompilationStencil> innerStencil;
