@@ -118,6 +118,16 @@ who = "Jeff Muizelaar <jmuizelaar@mozilla.com>"
 criteria = "safe-to-deploy"
 version = "0.1.2"
 
+[[audits.bumpalo]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-run"
+delta = "3.9.1 -> 3.10.0"
+notes = """
+Some nontrivial functional changes but certainly meets the no-malware bar of
+safe-to-run. If we needed safe-to-deploy for this in m-c I'd ask Nick to re-
+certify this version, but we don't, so this is fine for now.
+"""
+
 [[audits.bytes]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"

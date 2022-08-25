@@ -279,10 +279,6 @@ criteria = "safe-to-deploy"
 version = "0.10.2"
 criteria = "safe-to-deploy"
 
-[[exemptions.bumpalo]]
-version = "3.10.0"
-criteria = "safe-to-run"
-
 [[exemptions.byteorder]]
 version = "1.4.3"
 criteria = "safe-to-deploy"
