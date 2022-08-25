@@ -97,8 +97,8 @@ addAccessibleTask(
         .setAttribute("aria-haspopup", "true");
     });
 
-    is(
-      menuID.getAttributeValue("AXPopupValue"),
+    await untilCacheIs(
+      () => menuID.getAttributeValue("AXPopupValue"),
       "true",
       "Correct AXPopupValue after change for menu"
     );
@@ -114,8 +114,8 @@ addAccessibleTask(
     });
     await stateChanged;
 
-    is(
-      menuID.getAttributeValue("AXPopupValue"),
+    await untilCacheIs(
+      () => menuID.getAttributeValue("AXPopupValue"),
       null,
       "Correct AXPopupValue after remove for menu"
     );
@@ -144,8 +144,8 @@ addAccessibleTask(
         .setAttribute("aria-haspopup", "true");
     });
 
-    is(
-      listboxID.getAttributeValue("AXPopupValue"),
+    await untilCacheIs(
+      () => listboxID.getAttributeValue("AXPopupValue"),
       "true",
       "Correct AXPopupValue after change for listbox"
     );
@@ -193,8 +193,8 @@ addAccessibleTask(
         .setAttribute("aria-haspopup", "true");
     });
 
-    is(
-      treeID.getAttributeValue("AXPopupValue"),
+    await untilCacheIs(
+      () => treeID.getAttributeValue("AXPopupValue"),
       "true",
       "Correct AXPopupValue after change for tree"
     );
@@ -240,8 +240,8 @@ addAccessibleTask(
         .setAttribute("aria-haspopup", "true");
     });
 
-    is(
-      gridID.getAttributeValue("AXPopupValue"),
+    await untilCacheIs(
+      () => gridID.getAttributeValue("AXPopupValue"),
       "true",
       "Correct AXPopupValue after change for grid"
     );
@@ -287,8 +287,8 @@ addAccessibleTask(
         .setAttribute("aria-haspopup", "true");
     });
 
-    is(
-      dialogID.getAttributeValue("AXPopupValue"),
+    await untilCacheIs(
+      () => dialogID.getAttributeValue("AXPopupValue"),
       "true",
       "Correct AXPopupValue after change for dialog"
     );
