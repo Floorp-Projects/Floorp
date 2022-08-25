@@ -126,7 +126,8 @@ private fun RecentTabItem(
                 tab = tab,
                 modifier = Modifier
                     .size(108.dp, 80.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop,
             )
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -214,7 +215,8 @@ fun RecentTabImage(
         else -> ThumbnailCard(
             url = tab.state.content.url,
             key = tab.state.id,
-            modifier = modifier
+            modifier = modifier,
+            contentScale = contentScale,
         )
     }
 }
@@ -305,7 +307,7 @@ private fun RecentTabIcon(
                         painter = icon.painter,
                         contentDescription = null,
                         modifier = modifier,
-                        contentScale = ContentScale.Fit
+                        contentScale = contentScale,
                     )
                 }
             }
