@@ -826,13 +826,19 @@ struct PaintLinearGradient : public PaintPatternBase {
       return nullptr;
     }
     if (firstStop != 0.0 || lastStop != 1.0) {
-      // Normalize the gradient stops range to 0.0 - 1.0, and adjust positions
-      // of the endpoints accordingly.
-      Point v = p1 - p0;
-      p0 += v * firstStop;
-      p1 -= v * (1.0f - lastStop);
-      // Move the rotation vector to maintain the same direction from p0.
-      p2 += v * firstStop;
+      if (firstStop == lastStop) {
+        if (aColorLine->extend != T::EXTEND_PAD) {
+          return MakeUnique<ColorPattern>(DeviceColor());
+        }
+      } else {
+        // Normalize the gradient stops range to 0.0 - 1.0, and adjust positions
+        // of the endpoints accordingly.
+        Point v = p1 - p0;
+        p0 += v * firstStop;
+        p1 -= v * (1.0f - lastStop);
+        // Move the rotation vector to maintain the same direction from p0.
+        p2 += v * firstStop;
+      }
     }
     Point p3;
     if (FuzzyEqualsMultiplicative(p2.y, p0.y)) {
@@ -929,12 +935,18 @@ struct PaintRadialGradient : public PaintPatternBase {
       return nullptr;
     }
     if (firstStop != 0.0 || lastStop != 1.0) {
-      Point v = c2 - c1;
-      c1 += v * firstStop;
-      c2 -= v * (1.0f - lastStop);
-      float deltaR = r2 - r1;
-      r1 = fabsf(r1 + deltaR * firstStop);
-      r2 = fabsf(r2 - deltaR * (1.0f - lastStop));
+      if (firstStop == lastStop) {
+        if (aColorLine->extend != T::EXTEND_PAD) {
+          return MakeUnique<ColorPattern>(DeviceColor());
+        }
+      } else {
+        Point v = c2 - c1;
+        c1 += v * firstStop;
+        c2 -= v * (1.0f - lastStop);
+        float deltaR = r2 - r1;
+        r1 = fabsf(r1 + deltaR * firstStop);
+        r2 = fabsf(r2 - deltaR * (1.0f - lastStop));
+      }
     }
     return MakeUnique<RadialGradientPattern>(c1, c2, r1, r2, std::move(stops),
                                              Matrix::Scaling(1.0, -1.0));
@@ -999,7 +1011,7 @@ struct PaintSweepGradient : public PaintPatternBase {
                                               const T* aColorLine,
                                               Point aCenter, float aStart,
                                               float aEnd) const {
-    if (aStart == aEnd && aColorLine->extend != ColorLine::EXTEND_PAD) {
+    if (aStart == aEnd && aColorLine->extend != T::EXTEND_PAD) {
       return MakeUnique<ColorPattern>(DeviceColor());
     }
     UniquePtr<Pattern> solidColor = aColorLine->AsSolidColor(aState);
@@ -1017,9 +1029,15 @@ struct PaintSweepGradient : public PaintPatternBase {
       return nullptr;
     }
     if (firstStop != 0.0 || lastStop != 1.0) {
-      float sweep = aEnd - aStart;
-      aStart = aStart + sweep * firstStop;
-      aEnd = aStart + sweep * (lastStop - firstStop);
+      if (firstStop == lastStop) {
+        if (aColorLine->extend != T::EXTEND_PAD) {
+          return MakeUnique<ColorPattern>(DeviceColor());
+        }
+      } else {
+        float sweep = aEnd - aStart;
+        aStart = aStart + sweep * firstStop;
+        aEnd = aStart + sweep * (lastStop - firstStop);
+      }
     }
     return MakeUnique<ConicGradientPattern>(aCenter, M_PI / 2.0, aStart / 2.0,
                                             aEnd / 2.0, std::move(stops),
