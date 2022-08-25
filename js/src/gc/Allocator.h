@@ -17,6 +17,7 @@ namespace js {
 namespace gc {
 class AllocSite;
 struct Cell;
+class TenuredCell;
 }  // namespace gc
 
 // [SMDOC] AllowGC template parameter
@@ -37,9 +38,10 @@ enum AllowGC { NoGC = 0, CanGC = 1 };
 
 // Allocator implementation functions.
 template <AllowGC allowGC = CanGC>
-gc::Cell* AllocateTenuredImpl(JSContext* cx, gc::AllocKind kind, size_t size);
+gc::TenuredCell* AllocateTenuredImpl(JSContext* cx, gc::AllocKind kind,
+                                     size_t size);
 template <AllowGC allowGC = CanGC>
-JSString* AllocateStringImpl(JSContext* cx, gc::AllocKind kind, size_t size,
+gc::Cell* AllocateStringCell(JSContext* cx, gc::AllocKind kind, size_t size,
                              gc::InitialHeap heap);
 
 // Allocate a new tenured GC thing that's not nursery-allocatable.
@@ -74,9 +76,11 @@ template <typename StringT, AllowGC allowGC = CanGC>
 StringT* AllocateString(JSContext* cx, gc::InitialHeap heap) {
   static_assert(std::is_base_of_v<JSString, StringT>);
   gc::AllocKind kind = gc::MapTypeToAllocKind<StringT>::kind;
-  JSString* string =
-      AllocateStringImpl<allowGC>(cx, kind, sizeof(StringT), heap);
-  return static_cast<StringT*>(string);
+  gc::Cell* cell = AllocateStringCell<allowGC>(cx, kind, sizeof(StringT), heap);
+  if (!cell) {
+    return nullptr;
+  }
+  return StringT::emplace(cell);
 }
 
 // Allocate a BigInt.

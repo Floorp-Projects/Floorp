@@ -2081,9 +2081,9 @@ bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result) {
 }
 
 // Called from CreateDependentString::generateFallback.
-void* AllocateString(JSContext* cx) {
+void* AllocateDependentString(JSContext* cx) {
   AutoUnsafeCallWithABI unsafe;
-  return js::AllocateString<JSString, NoGC>(cx, js::gc::DefaultHeap);
+  return js::AllocateString<JSDependentString, NoGC>(cx, js::gc::DefaultHeap);
 }
 void* AllocateFatInlineString(JSContext* cx) {
   AutoUnsafeCallWithABI unsafe;
