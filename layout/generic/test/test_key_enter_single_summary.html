@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script>
+  SimpleTest.waitForExplicitFinish();
+  function runTest() {
+    // Dispatch 'return' key to the summary element.
+    const summary = document.querySelector("summary");
+    summary.focus();
+    synthesizeKey("KEY_Enter");
+
+    const details = document.querySelector("details");
+    ok(details.open, "Dispatch return key on summary should open details.");
+
+    SimpleTest.finish();
+  }
+  </script>
+</head>
+<body onload="runTest();">
+  <details>
+    <summary>Summary</summary>
+    <p>This is the details.</p>
+  </details>
+</body>
+</html>

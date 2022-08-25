@@ -1033,19 +1033,18 @@
   </vbox>
 #endif
   <vbox id="privacySegmentationSection" data-subcategory="privacy-segmentation" hidden="true">
-    <hbox align="center">
-      <!-- TODO: Bug 1752172, provisional copy  -->
-      <checkbox id="privacySegmentationCheck"
-                preference="browser.privacySegmentation.enabled"
-                class="tail-with-learn-more"
-                label="Always ask before enabling new features that use my data"
-                accesskey="A">
-      </checkbox>
-      <!-- TODO: Bug 1752172, provisional copy  -->
-      <label id="privacy-segmentation-learn-more-link"
-             class="learnMore"
-             is="text-link">Learn more</label>
-    </hbox>
+    <label>
+      <html:h2 data-l10n-id="privacy-segmentation-section-header"/>
+    </label>
+    <label data-l10n-id="privacy-segmentation-section-description"/>
+    <radiogroup id="privacySegmentationRadioGroup" preference="browser.privacySegmentation.enabled">
+        <radio id="privacySegmentationDisabled"
+               data-l10n-id="privacy-segmentation-radio-off"
+               value="false"/>
+        <radio id="privacySegmentationEnabled"
+               data-l10n-id="privacy-segmentation-radio-on"
+               value="true"/>
+    </radiogroup>
   </vbox>
 </groupbox>
 

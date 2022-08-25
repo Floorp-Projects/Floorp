@@ -5,7 +5,6 @@
 #include "mozilla/DebugOnly.h"
 
 #include "nsXULAppAPI.h"
-#include "mozmemory.h"
 
 #include <stdlib.h>
 #if defined(MOZ_WIDGET_GTK)
@@ -266,17 +265,6 @@ void XRE_SetAndroidChildFds(JNIEnv* env, const XRE_AndroidChildFds& fds) {
 
 void XRE_SetProcessType(const char* aProcessTypeString) {
   SetGeckoProcessType(aProcessTypeString);
-
-#if defined(MOZ_MEMORY) && defined(XP_WIN)
-  GeckoProcessType const processType = GetGeckoProcessType();
-
-  // For the parent process, we're probably willing to accept an apparent
-  // lockup in preference to a crash. Always stall and retry.
-  //
-  // For child processes, an obvious OOM-crash may be preferable to slow
-  // performance. Retry at most once per process, then give up.
-  mozjemalloc_win_set_always_stall(processType == GeckoProcessType_Default);
-#endif
 }
 
 #if defined(XP_WIN)

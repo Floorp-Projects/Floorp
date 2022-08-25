@@ -176,7 +176,6 @@ module.exports = {
         // per bug.
         "extensions/permissions/**",
         "image/test/unit/**",
-        "intl/uconv/tests/unit/test_bug340714.js",
         "modules/libjar/test/unit/test_empty_jar_telemetry.js",
         "modules/libjar/zipwriter/test/unit/test_alignment.js",
         "modules/libjar/zipwriter/test/unit/test_bug419769_2.js",

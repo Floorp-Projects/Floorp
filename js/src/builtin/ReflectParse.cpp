@@ -4142,8 +4142,9 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  frontend::NoScopeBindingCache scopeCache;
   frontend::CompilationState compilationState(cx, allocScope, input.get());
-  if (!compilationState.init(cx, &ec)) {
+  if (!compilationState.init(cx, &ec, &scopeCache)) {
     return false;
   }
 

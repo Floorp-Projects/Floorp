@@ -47,8 +47,9 @@ uint8_t *dav1d_data_create_internal(Dav1dData *const buf, const size_t sz) {
     buf->ref = dav1d_ref_create(sz);
     if (!buf->ref) return NULL;
     buf->data = buf->ref->const_data;
-    buf->sz = buf->m.size = sz;
+    buf->sz = sz;
     dav1d_data_props_set_defaults(&buf->m);
+    buf->m.size = sz;
 
     return buf->ref->data;
 }
@@ -66,8 +67,9 @@ int dav1d_data_wrap_internal(Dav1dData *const buf, const uint8_t *const ptr,
     buf->ref = dav1d_ref_wrap(ptr, free_callback, cookie);
     if (!buf->ref) return DAV1D_ERR(ENOMEM);
     buf->data = ptr;
-    buf->sz = buf->m.size = sz;
+    buf->sz = sz;
     dav1d_data_props_set_defaults(&buf->m);
+    buf->m.size = sz;
 
     return 0;
 }

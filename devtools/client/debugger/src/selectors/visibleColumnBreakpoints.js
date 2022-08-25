@@ -58,9 +58,10 @@ function findBreakpoint(location, breakpointMap) {
   const { line, column } = location;
   const breakpoints = breakpointMap[line]?.[column];
 
-  if (breakpoints) {
-    return breakpoints[0];
+  if (!breakpoints) {
+    return null;
   }
+  return breakpoints[0];
 }
 
 function filterByLineCount(positions, selectedSource) {
@@ -182,7 +183,7 @@ export function getFirstBreakpointPosition(state, { line, sourceId }) {
   const source = getSource(state, sourceId);
 
   if (!source || !positions) {
-    return;
+    return null;
   }
 
   return sortSelectedLocations(convertToList(positions), source).find(

@@ -6086,6 +6086,23 @@ void LIRGenerator::visitCallNativeGetElement(MCallNativeGetElement* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitCallNativeGetElementSuper(
+    MCallNativeGetElementSuper* ins) {
+  MDefinition* object = ins->object();
+  MOZ_ASSERT(object->type() == MIRType::Object);
+
+  MDefinition* index = ins->index();
+  MOZ_ASSERT(index->type() == MIRType::Int32);
+
+  MDefinition* receiver = ins->receiver();
+
+  auto* lir = new (alloc()) LCallNativeGetElementSuper(
+      useRegisterAtStart(object), useRegisterAtStart(index),
+      useBoxAtStart(receiver));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitCallObjectHasSparseElement(
     MCallObjectHasSparseElement* ins) {
   MDefinition* object = ins->object();

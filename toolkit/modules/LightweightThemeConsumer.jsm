@@ -29,6 +29,11 @@ ChromeUtils.defineModuleGetter(
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "NimbusFeatures",
+  "resource://nimbus/ExperimentAPI.jsm"
+);
 
 // Whether the content and chrome areas should always use the same color
 // scheme (unless user-overridden). Thunderbird uses this.
@@ -260,9 +265,8 @@ LightweightThemeConsumer.prototype = {
 
       // If enabled, apply the dark theme variant to private browsing windows.
       if (
-        !Services.prefs.getBoolPref(
-          "browser.theme.dark-private-windows",
-          false
+        !lazy.NimbusFeatures.majorRelease2022.getVariable(
+          "feltPrivacyPBMDarkTheme"
         ) ||
         !lazy.PrivateBrowsingUtils.isWindowPrivate(this._win) ||
         lazy.PrivateBrowsingUtils.permanentPrivateBrowsing

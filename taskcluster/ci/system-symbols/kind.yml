@@ -17,6 +17,9 @@ job-defaults:
         cron: true
         # This enables uploading symbols.
         enable-full-crashsymbols: true
+    fetches:
+        toolchain:
+            - linux64-dump_syms
     treeherder:
         platform: symbols/opt
         kind: other
@@ -72,9 +75,6 @@ jobs:
                 ./run.sh
         treeherder:
             symbol: system-symbols-win
-        fetches:
-            toolchain:
-                - linux64-dump_syms
     archlinux:
         description: Extract ArchLinux system symbols found in crashreports
         attributes:
@@ -97,8 +97,6 @@ jobs:
         treeherder:
             symbol: sys-symbols-archlinux
         fetches:
-            toolchain:
-                - linux64-dump_syms
             fetch:
                 - symbol-scrapers
     debian:
@@ -123,8 +121,6 @@ jobs:
         treeherder:
             symbol: sys-symbols-debian
         fetches:
-            toolchain:
-                - linux64-dump_syms
             fetch:
                 - symbol-scrapers
     firefox-snap:
@@ -149,8 +145,6 @@ jobs:
         treeherder:
             symbol: firefox-symbols-snap
         fetches:
-            toolchain:
-                - linux64-dump_syms
             fetch:
                 - symbol-scrapers
     gnome-sdk-snap:
@@ -175,8 +169,6 @@ jobs:
         treeherder:
             symbol: gnome-sdk-symbols-snap
         fetches:
-            toolchain:
-                - linux64-dump_syms
             fetch:
                 - symbol-scrapers
     fedora:
@@ -201,8 +193,6 @@ jobs:
         treeherder:
             symbol: sys-symbols-fedora
         fetches:
-            toolchain:
-                - linux64-dump_syms
             fetch:
                 - symbol-scrapers
     opensuse:
@@ -227,8 +217,6 @@ jobs:
         treeherder:
             symbol: sys-symbols-opensuse
         fetches:
-            toolchain:
-                - linux64-dump_syms
             fetch:
                 - symbol-scrapers
     ubuntu:
@@ -253,7 +241,5 @@ jobs:
         treeherder:
             symbol: sys-symbols-ubuntu
         fetches:
-            toolchain:
-                - linux64-dump_syms
             fetch:
                 - symbol-scrapers

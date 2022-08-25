@@ -67,6 +67,11 @@ html|input:disabled {
   font-style: italic;
 }
 
+.help-button {
+  appearance: auto;
+  -moz-default-appearance: -moz-mac-help-button;
+}
+
 /* General Tab */
 
 #securityBox description {

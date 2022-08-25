@@ -29,20 +29,6 @@ export function getSourceActor(state, id) {
   return state.sourceActors.get(id);
 }
 
-// Used by sources selectors
-/**
- * Get many Source Actor objects. See create.js:createSourceActor()
- *
- * @param {Object} state
- * @param {Array<String>} ids
- *        List of Source Actor IDs
- * @return {Array<Object>}
- *        List of sources actors
- */
-export function getSourceActors(state, ids) {
-  return ids.map(id => getSourceActor(state, id)).filter(source => !!source);
-}
-
 // Used by threads selectors
 /**
  * Get all Source Actor objects for a given thread. See create.js:createSourceActor()
