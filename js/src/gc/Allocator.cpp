@@ -621,8 +621,9 @@ Arena* GCRuntime::allocateArena(TenuredChunk* chunk, Zone* zone,
 
   // Fail the allocation if we are over our heap size limits.
   if ((checkThresholds != ShouldCheckThresholds::DontCheckThresholds) &&
-      (heapSize.bytes() >= tunables.gcMaxBytes()))
+      (heapSize.bytes() >= tunables.gcMaxBytes())) {
     return nullptr;
+  }
 
   Arena* arena = chunk->allocateArena(this, zone, thingKind, lock);
   zone->gcHeapSize.addGCArena(heapSize);

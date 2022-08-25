@@ -51,11 +51,10 @@ gc::Cell* AllocateStringCell(JSContext* cx, gc::AllocKind kind, size_t size,
 // that GC tracing never sees junk values stored in the partially initialized
 // thing.
 template <typename T, AllowGC allowGC = CanGC>
-T* Allocate(JSContext* cx) {
+gc::TenuredCell* Allocate(JSContext* cx) {
   static_assert(std::is_base_of_v<gc::Cell, T>);
   gc::AllocKind kind = gc::MapTypeToAllocKind<T>::kind;
-  gc::Cell* cell = AllocateTenuredImpl<allowGC>(cx, kind, sizeof(T));
-  return static_cast<T*>(cell);
+  return AllocateTenuredImpl<allowGC>(cx, kind, sizeof(T));
 }
 
 // Allocate a JSObject.

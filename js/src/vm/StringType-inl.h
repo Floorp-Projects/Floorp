@@ -307,10 +307,11 @@ MOZ_ALWAYS_INLINE JSLinearString* JSLinearString::newValidLength(
     JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars, size_t length,
     js::gc::InitialHeap heap) {
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
-  JSLinearString* str = js::AllocateString<JSLinearString, allowGC>(cx, heap);
-  if (!str) {
+  js::gc::Cell* cell = js::AllocateString<JSLinearString, allowGC>(cx, heap);
+  if (!cell) {
     return nullptr;
   }
+  JSLinearString* str = JSLinearString::emplace(cell);
 
   if (!str->isTenured()) {
     // If the following registration fails, the string is partially initialized
@@ -340,15 +341,16 @@ MOZ_ALWAYS_INLINE JSLinearString* JSLinearString::newForAtomValidLength(
     size_t length) {
   MOZ_ASSERT(validateLength(cx, length));
   MOZ_ASSERT(cx->zone()->isAtomsZone());
-  JSLinearString* str = js::Allocate<js::NormalAtom, js::NoGC>(cx);
-  if (!str) {
+  js::gc::Cell* cell = js::Allocate<js::NormalAtom, js::NoGC>(cx);
+  if (!cell) {
     return nullptr;
   }
 
-  MOZ_ASSERT(str->isTenured());
-  cx->zone()->addCellMemory(str, length * sizeof(CharT),
+  MOZ_ASSERT(cell->isTenured());
+  cx->zone()->addCellMemory(cell, length * sizeof(CharT),
                             js::MemoryUse::StringContents);
 
+  JSLinearString* str = js::NormalAtom::emplace(cell);
   str->init(chars.release(), length);
   return str;
 }
@@ -378,7 +380,11 @@ MOZ_ALWAYS_INLINE JSThinInlineString* JSThinInlineString::new_(
 MOZ_ALWAYS_INLINE JSThinInlineString* JSThinInlineString::newForAtom(
     JSContext* cx) {
   MOZ_ASSERT(cx->zone()->isAtomsZone());
-  return (JSThinInlineString*)(js::Allocate<js::NormalAtom, js::NoGC>(cx));
+  js::gc::Cell* cell = js::Allocate<js::NormalAtom, js::NoGC>(cx);
+  if (!cell) {
+    return nullptr;
+  }
+  return reinterpret_cast<JSThinInlineString*>(js::NormalAtom::emplace(cell));
 }
 
 template <js::AllowGC allowGC>
@@ -391,7 +397,11 @@ MOZ_ALWAYS_INLINE JSFatInlineString* JSFatInlineString::new_(
 MOZ_ALWAYS_INLINE JSFatInlineString* JSFatInlineString::newForAtom(
     JSContext* cx) {
   MOZ_ASSERT(cx->zone()->isAtomsZone());
-  return (JSFatInlineString*)(js::Allocate<js::FatInlineAtom, js::NoGC>(cx));
+  js::gc::Cell* cell = js::Allocate<js::FatInlineAtom, js::NoGC>(cx);
+  if (!cell) {
+    return nullptr;
+  }
+  return reinterpret_cast<JSFatInlineString*>(js::FatInlineAtom::emplace(cell));
 }
 
 template <>
@@ -439,10 +449,11 @@ MOZ_ALWAYS_INLINE JSExternalString* JSExternalString::new_(
   if (MOZ_UNLIKELY(!validateLength(cx, length))) {
     return nullptr;
   }
-  JSExternalString* str = js::Allocate<JSExternalString>(cx);
-  if (!str) {
+  js::gc::Cell* cell = js::Allocate<JSExternalString>(cx);
+  if (!cell) {
     return nullptr;
   }
+  auto* str = JSExternalString::emplace(cell);
   str->init(chars, length, callbacks);
   size_t nbytes = length * sizeof(char16_t);
 

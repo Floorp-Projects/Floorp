@@ -17,13 +17,12 @@ js::GetterSetter::GetterSetter(JSObject* getter, JSObject* setter)
 // static
 GetterSetter* GetterSetter::create(JSContext* cx, HandleObject getter,
                                    HandleObject setter) {
-  auto gs = Allocate<GetterSetter>(cx);
-  if (!gs) {
+  gc::Cell* cell = Allocate<GetterSetter>(cx);
+  if (!cell) {
     return nullptr;
   }
 
-  new (gs) GetterSetter(getter, setter);
-  return gs;
+  return new (cell) GetterSetter(getter, setter);
 }
 
 JS::ubi::Node::Size JS::ubi::Concrete<GetterSetter>::size(
