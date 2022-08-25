@@ -61,11 +61,6 @@ static inline void jemalloc_stats(jemalloc_stats_t* aStats) {
 }
 #  endif
 
-// Configurator for delaying on OOM. See bug 1716727.
-#  if defined(XP_WIN)
-MOZ_JEMALLOC_API void mozjemalloc_win_set_always_stall(bool);
-#  endif
-
 #endif  // MOZ_MEMORY
 
 #define NOTHROW_MALLOC_DECL(name, return_type, ...) \

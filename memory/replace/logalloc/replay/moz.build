@@ -16,6 +16,11 @@ SOURCES += [
     "Replay.cpp",
 ]
 
+if CONFIG["OS_TARGET"] == "WINNT":
+    SOURCES += [
+        "/mozglue/misc/ProcessType.cpp",
+    ]
+
 if CONFIG["OS_TARGET"] == "Linux":
     LDFLAGS += ["-static-libstdc++"]
 
