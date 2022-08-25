@@ -102,12 +102,12 @@ export function getPendingSelectedLocation(state) {
 
 export function getPrettySource(state, id) {
   if (!id) {
-    return;
+    return null;
   }
 
   const source = getSource(state, id);
   if (!source) {
-    return;
+    return null;
   }
 
   return getOriginalSourceByURL(state, getPrettySourceURL(source.url));
@@ -148,7 +148,7 @@ export const getSelectedSource = createSelector(
   getSourcesMap,
   (selectedLocation, sourcesMap) => {
     if (!selectedLocation) {
-      return;
+      return undefined;
     }
 
     return sourcesMap.get(selectedLocation.sourceId);

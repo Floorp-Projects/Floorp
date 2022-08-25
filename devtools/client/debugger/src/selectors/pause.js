@@ -156,7 +156,7 @@ export function getSelectedFrameBindings(state, thread) {
 
   const frameScope = scopes.generated[selectedFrameId];
   if (!frameScope || frameScope.pending) {
-    return;
+    return null;
   }
 
   let currentScope = frameScope.scope;
