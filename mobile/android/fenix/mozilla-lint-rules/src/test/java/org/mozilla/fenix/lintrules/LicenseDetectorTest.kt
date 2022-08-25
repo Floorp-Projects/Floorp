@@ -6,6 +6,7 @@ package org.mozilla.fenix.lintrules
 
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest
 import com.android.tools.lint.checks.infrastructure.TestFiles
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Issue
 import org.junit.Test
@@ -84,6 +85,7 @@ class LicenseDetectorTest : LintDetectorTest() {
         lint()
             .files(TestFiles.kt(code))
             .allowMissingSdk(true)
+            .testModes(TestMode.UI_INJECTION_HOST)
             .run()
             .expect(expectedReport)
             .expectFixDiffs(expectedFixOutput)
@@ -106,6 +108,7 @@ class LicenseDetectorTest : LintDetectorTest() {
         lint()
             .files(TestFiles.kt(code))
             .allowMissingSdk(true)
+            .testModes(TestMode.UI_INJECTION_HOST)
             .run()
             .expectClean()
     }
@@ -143,6 +146,7 @@ class LicenseDetectorTest : LintDetectorTest() {
         lint()
             .files(TestFiles.kt(code))
             .allowMissingSdk(true)
+            .testModes(TestMode.UI_INJECTION_HOST)
             .run()
             .expect(expectedReport)
             .expectFixDiffs(expectedFixOutput)
