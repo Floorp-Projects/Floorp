@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<meta charset=utf-8>
+<title>COLRv1 font test: gradient color-stop edge cases</title>
+<style>
+.ref { margin: 10px; padding: 10px; line-height: 0; }
+span { display: inline-block; width: 100px; height: 100px; }
+.A { background: linear-gradient(to right, rgb(255, 0, 0) 10%, rgb(0, 255, 0), rgb(0, 0, 255) 90%); }
+.B { background: linear-gradient(to right, rgb(255, 0, 0) 30%, rgb(0, 255, 0), rgb(0, 0, 255) 70%); }
+.C { background: linear-gradient(to right, rgb(255, 0, 0) 50%, rgb(0, 0, 255) 50%); }
+.D { background: linear-gradient(to right, rgb(0, 0, 255) 30%, rgb(0, 255, 0), rgb(255, 0, 0) 70%); }
+.E { background: linear-gradient(to right, rgb(0, 0, 255) 10%, rgb(0, 255, 0), rgb(255, 0, 0) 90%); }
+.F { background: repeating-linear-gradient(to right, rgb(255, 0, 0) 10%, rgb(0, 255, 0), rgb(0, 0, 255) 90%); }
+.G { background: repeating-linear-gradient(to right, rgb(255, 0, 0) 30%, rgb(0, 255, 0), rgb(0, 0, 255) 70%); }
+.H { background: transparent; }
+.I { background: repeating-linear-gradient(to right, rgb(0, 0, 255) 30%, rgb(0, 255, 0), rgb(255, 0, 0) 70%); }
+.J { background: repeating-linear-gradient(to right, rgb(0, 0, 255) 10%, rgb(0, 255, 0), rgb(255, 0, 0) 90%); }
+</style>
+
+<p>The middle of the five glyphs should be purely red and blue:</p>
+<div class="ref"><span class=A></span> <span class=B></span> <span class=C></span> <span class=D></span> <span class=E></span></div>
+
+<p>The middle of the five glyphs should not render anything:</p>
+<div class="ref"><span class=F></span> <span class=G></span> <span class=H></span> <span class=I></span> <span class=J></span></div>

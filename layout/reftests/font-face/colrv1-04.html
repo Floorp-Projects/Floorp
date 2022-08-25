@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<meta charset=utf-8>
+<title>COLRv1 font test: gradient color-stop edge cases</title>
+<style>
+@font-face {
+  font-family: CAhem;
+  src: url("CAhem.ttf");
+}
+.test { margin: 10px; padding: 10px; }
+span { font: 100px/1 CAhem; }
+.a { font-variation-settings: initial; }
+.b { font-variation-settings: "COL1" 0.4, "COL3" -0.4; }
+.c { font-variation-settings: "COL1" 0.8, "COL3" -0.8; }
+.d { font-variation-settings: "COL1" 1.2, "COL3" -1.2; }
+.e { font-variation-settings: "COL1" 1.6, "COL3" -1.6; }
+</style>
+
+<p>The middle of the five glyphs should be purely red and blue:</p>
+<div class="test">
+<span class="a">e</span> <span class="b">e</span> <span class="c">e</span> <span class="d">e</span> <span class="e">e</span><br>
+</div>
+
+<p>The middle of the five glyphs should not render anything:</p>
+<div class="test">
+<span class="a">f</span> <span class="b">f</span> <span class="c">f</span> <span class="d">f</span> <span class="e">f</span><br>
+</div>
