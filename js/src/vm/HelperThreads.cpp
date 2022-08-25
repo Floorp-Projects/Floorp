@@ -16,6 +16,7 @@
 #include "frontend/BytecodeCompilation.h"  // frontend::{CompileGlobalScriptToExtensibleStencil, FireOnNewScript}
 #include "frontend/BytecodeCompiler.h"  // frontend::ParseModuleToExtensibleStencil
 #include "frontend/CompilationStencil.h"  // frontend::{CompilationStencil, ExtensibleCompilationStencil, CompilationInput, BorrowingCompilationStencil, ScriptStencilRef}
+#include "frontend/ScopeBindingCache.h"   // frontend::ScopeBindingCache
 #include "gc/GC.h"
 #include "jit/IonCompileTask.h"
 #include "jit/JitRuntime.h"
@@ -716,9 +717,11 @@ void CompileToStencilTask<Unit>::parse(JSContext* cx, ErrorContext* ec) {
     return;
   }
 
+  frontend::NoScopeBindingCache scopeCache;
   js::LifoAlloc tempLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
   stencil_ = frontend::CompileGlobalScriptToStencil(
-      cx, ec, stackLimit, tempLifoAlloc, *stencilInput_, data, scopeKind);
+      cx, ec, stackLimit, tempLifoAlloc, *stencilInput_, &scopeCache, data,
+      scopeKind);
   if (!stencil_) {
     return;
   }
@@ -748,8 +751,9 @@ void CompileModuleToStencilTask<Unit>::parse(JSContext* cx, ErrorContext* ec) {
     return;
   }
 
-  stencil_ =
-      frontend::ParseModuleToStencil(cx, ec, stackLimit, *stencilInput_, data);
+  frontend::NoScopeBindingCache scopeCache;
+  stencil_ = frontend::ParseModuleToStencil(cx, ec, stackLimit, *stencilInput_,
+                                            &scopeCache, data);
   if (!stencil_) {
     return;
   }
@@ -1120,6 +1124,15 @@ bool DelazifyTask::runTask(JSContext* cx) {
   gc::AutoSuppressNurseryCellAlloc noNurseryAlloc(cx);
 
   using namespace js::frontend;
+
+  // Create a scope-binding cache dedicated to this Delazification task. The
+  // memory would be reclaimed if the task is interrupted or if all
+  // delazification are completed.
+  //
+  // We do not use the one from the JSContext/Runtime, as it is not thread safe
+  // to use it, as it could be purged by a GC in the mean time.
+  ScopeBindingCache scopeCache;
+
   while (!strategy->done() || isInterrupted()) {
     RefPtr<CompilationStencil> innerStencil;
     ScriptIndex scriptIndex = strategy->next();
@@ -1132,8 +1145,8 @@ bool DelazifyTask::runTask(JSContext* cx) {
       MOZ_ASSERT(!scriptRef.scriptData().hasSharedData());
 
       // Parse and generate bytecode for the inner function.
-      innerStencil = DelazifyCanonicalScriptedFunction(cx, &ec_, stackLimit,
-                                                       borrow, scriptIndex);
+      innerStencil = DelazifyCanonicalScriptedFunction(
+          cx, &ec_, stackLimit, &scopeCache, borrow, scriptIndex);
       if (!innerStencil) {
         return false;
       }

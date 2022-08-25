@@ -6447,16 +6447,18 @@ static bool CompileToStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
 
   /* Compile the script text to stencil. */
   MainThreadErrorContext ec(cx);
+  frontend::NoScopeBindingCache scopeCache;
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
   UniquePtr<frontend::ExtensibleCompilationStencil> stencil;
   if (isModule) {
     stencil = frontend::ParseModuleToExtensibleStencil(
-        cx, &ec, cx->stackLimitForCurrentPrincipal(), input.get(), srcBuf);
+        cx, &ec, cx->stackLimitForCurrentPrincipal(), input.get(), &scopeCache,
+        srcBuf);
   } else {
     stencil = frontend::CompileGlobalScriptToExtensibleStencil(
-        cx, &ec, cx->stackLimitForCurrentPrincipal(), input.get(), srcBuf,
-        ScopeKind::Global);
+        cx, &ec, cx->stackLimitForCurrentPrincipal(), input.get(), &scopeCache,
+        srcBuf, ScopeKind::Global);
   }
   if (!stencil) {
     return false;
