@@ -44,6 +44,8 @@ const subtests = [
    "prefs": [["layout.css.scroll-behavior.spring-constant", 1000],
              // Avoid fling at the end of pan.
              ["apz.fling_min_velocity_threshold", "10000"],
+             // This test needs mSimilateMomentum flag on headless mode.
+             ["apz.test.headless.simulate_momentum", true],
              ["apz.gtk.kinetic_scroll.enabled", true],
              // Use the pixel mode to make the test predictable easily.
              ["apz.gtk.kinetic_scroll.delta_mode", 2],
