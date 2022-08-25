@@ -706,9 +706,12 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   }
 
  private:
-  JSString() = delete;
   JSString(const JSString& other) = delete;
   void operator=(const JSString& other) = delete;
+
+ protected:
+  // For calling by concrete subclasses' emplace() static methods.
+  JSString() = default;
 };
 
 class JSRope : public JSString {
@@ -785,6 +788,9 @@ class JSRope : public JSString {
 
   static size_t offsetOfLeft() { return offsetof(JSRope, d.s.u2.left); }
   static size_t offsetOfRight() { return offsetof(JSRope, d.s.u3.right); }
+
+ public:
+  static JSRope* emplace(Cell* cell) { return new (cell) JSRope(); }
 };
 
 static_assert(sizeof(JSRope) == sizeof(JSString),
@@ -828,6 +834,10 @@ class JSLinearString : public JSString {
  public:
   void init(const char16_t* chars, size_t length);
   void init(const JS::Latin1Char* chars, size_t length);
+
+  static JSLinearString* emplace(Cell* cell) {
+    return new (cell) JSLinearString();
+  }
 
   template <js::AllowGC allowGC, typename CharT>
   static inline JSLinearString* new_(
@@ -988,6 +998,12 @@ class JSDependentString : public JSLinearString {
   }
 
  public:
+  static JSDependentString* emplace(Cell* cell) {
+    return new (cell) JSDependentString();
+  }
+
+  // This may return an inline string if the chars fit rather than a dependent
+  // string.
   static inline JSLinearString* new_(JSContext* cx, JSLinearString* base,
                                      size_t start, size_t length,
                                      js::gc::InitialHeap heap);
@@ -1036,6 +1052,10 @@ static_assert(sizeof(JSExtensibleString) == sizeof(JSString),
 
 class JSInlineString : public JSLinearString {
  public:
+  static JSInlineString* emplace(Cell* cell) {
+    return new (cell) JSInlineString();
+  }
+
   MOZ_ALWAYS_INLINE
   const JS::Latin1Char* latin1Chars(const JS::AutoRequireNoGC& nogc) const {
     MOZ_ASSERT(JSString::isInline());
@@ -1079,6 +1099,10 @@ class JSThinInlineString : public JSInlineString {
   static const size_t MAX_LENGTH_LATIN1 = NUM_INLINE_CHARS_LATIN1;
   static const size_t MAX_LENGTH_TWO_BYTE = NUM_INLINE_CHARS_TWO_BYTE;
 
+  static JSThinInlineString* emplace(Cell* cell) {
+    return new (cell) JSThinInlineString();
+  }
+
   template <js::AllowGC allowGC>
   static inline JSThinInlineString* new_(JSContext* cx,
                                          js::gc::InitialHeap heap);
@@ -1120,6 +1144,10 @@ class JSFatInlineString : public JSInlineString {
   };
 
  public:
+  static JSFatInlineString* emplace(Cell* cell) {
+    return new (cell) JSFatInlineString();
+  }
+
   template <js::AllowGC allowGC>
   static inline JSFatInlineString* new_(JSContext* cx,
                                         js::gc::InitialHeap heap);
@@ -1156,6 +1184,10 @@ class JSExternalString : public JSLinearString {
   JSExternalString& asExternal() const = delete;
 
  public:
+  static JSExternalString* emplace(Cell* cell) {
+    return new (cell) JSExternalString();
+  }
+
   static inline JSExternalString* new_(
       JSContext* cx, const char16_t* chars, size_t length,
       const JSExternalStringCallbacks* callbacks);
@@ -1242,6 +1274,8 @@ class NormalAtom : public JSAtom {
   HashNumber hash_;
 
  public:
+  static NormalAtom* emplace(Cell* cell) { return new (cell) NormalAtom(); }
+
   HashNumber hash() const { return hash_; }
   void initHash(HashNumber hash) { hash_ = hash; }
 
@@ -1258,6 +1292,11 @@ class FatInlineAtom : public JSAtom {
   HashNumber hash_;
 
  public:
+  // For a fresh allocation.
+  static FatInlineAtom* emplace(Cell* cell) {
+    return new (cell) FatInlineAtom();
+  }
+
   HashNumber hash() const { return hash_; }
   void initHash(HashNumber hash) { hash_ = hash; }
 
@@ -1289,11 +1328,18 @@ inline void JSAtom::initHash(js::HashNumber hash) {
   return static_cast<js::NormalAtom*>(this)->initHash(hash);
 }
 
+// Note that any pre-existing pointers to this string are invalidated
+// (UB, though they will most likely be fine.)
 MOZ_ALWAYS_INLINE JSAtom* JSLinearString::morphAtomizedStringIntoAtom(
     js::HashNumber hash) {
   MOZ_ASSERT(!isAtom());
   setFlagBit(ATOM_BIT);
-  JSAtom* atom = &asAtom();
+  if (isFatInline()) {
+    auto* atom = static_cast<js::FatInlineAtom*>(this);
+    atom->initHash(hash);
+    return atom;
+  }
+  auto* atom = static_cast<js::NormalAtom*>(this);
   atom->initHash(hash);
   return atom;
 }
@@ -1302,7 +1348,12 @@ MOZ_ALWAYS_INLINE JSAtom* JSLinearString::morphAtomizedStringIntoPermanentAtom(
     js::HashNumber hash) {
   MOZ_ASSERT(!isAtom());
   setFlagBit(PERMANENT_ATOM_MASK);
-  JSAtom* atom = &asAtom();
+  if (isFatInline()) {
+    auto* atom = static_cast<js::FatInlineAtom*>(this);
+    atom->initHash(hash);
+    return atom;
+  }
+  auto* atom = static_cast<js::NormalAtom*>(this);
   atom->initHash(hash);
   return atom;
 }
