@@ -12,9 +12,6 @@ var ignorelist = {
     'terminate': true,
     'nukeAllCCWs': true,
     'cacheIRHealthReport': true,
-    'getInnerMostEnvironmentObject': true,
-    'getEnclosingEnvironmentObject': true,
-    'getEnvironmentObjectType' : true,
 };
 
 function f(y) {}
