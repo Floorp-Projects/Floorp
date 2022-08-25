@@ -1632,6 +1632,16 @@ bool Gecko_GetBoolPrefValue(const char* aPrefName) {
   return Preferences::GetBool(aPrefName);
 }
 
+bool Gecko_IsFontFormatSupported(StyleFontFaceSourceFormatKeyword aFormat) {
+  return gfxPlatform::GetPlatform()->IsFontFormatSupported(
+      aFormat, StyleFontFaceSourceTechFlags::Empty());
+}
+
+bool Gecko_IsFontTechSupported(StyleFontFaceSourceTechFlags aFlag) {
+  return gfxPlatform::GetPlatform()->IsFontFormatSupported(
+      StyleFontFaceSourceFormatKeyword::None, aFlag);
+}
+
 bool Gecko_IsInServoTraversal() { return ServoStyleSet::IsInServoTraversal(); }
 
 bool Gecko_IsMainThread() { return NS_IsMainThread(); }
