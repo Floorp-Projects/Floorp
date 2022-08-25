@@ -126,6 +126,21 @@
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">رازداری تے سلامتی</string>
 
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">ٹریکنگ، کوکیاں، ڈیٹا چوائس</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">ڈیفالٹ مقرر کرو، خودکار مکمل</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">%1$s دا تعارف، مدد</string>
+
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">بہتر ٹریکنگ حفاظت</string>
+
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">ویب مواد</string>
 
@@ -134,6 +149,12 @@
 
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">عمومی</string>
+
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">ڈیفالٹ براؤزر، زبان</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">ڈیٹا مجموعہ تے ورتاوا</string>
 
     <string name="preference_category_search">ڳولو</string>
 
@@ -215,6 +236,7 @@
 
     <string name="preference_privacy_block_ads">اشتہار ٹریکر کوں بلاک کرو</string>
     <string name="preference_privacy_block_analytics">تجزیاتی ٹریکر  بلاک کرو</string>
+    <string name="preference_privacy_block_social">سماجی ٹریکراں کوں بلاک کرو</string>
     <string name="preference_privacy_category_cookies">کوکیاں بلاک کرو</string>
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
@@ -275,7 +297,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">ہوم سکریں گُر ݙکھاؤ</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">ہوم سکریں گُر ݙکھاؤ</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">ڳولݨ انجݨ شامل کرو</string>
@@ -374,6 +396,9 @@
     <!-- Onboarding: Title -->
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
     <string name="onboarding_title">%1$s وچ ست بسم اللہ!</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">براؤز کرو جین٘ویں ایہ کݙان٘ہ کائنی تھیا</string>
 
     <!-- Onboarding: Start browsing -->
     <string name="onboarding_start_browsing">براؤزنگ شروع کرو</string>
@@ -586,6 +611,9 @@
     <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_yes">جیا</string>
 
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">کجھ ڳولݨ انجݨ تجویزاں کائنی ݙکھا سڳدے۔</string>
+
     <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
     <string name="dismiss_no_suggestions_prompt_button">فارغ کرو</string>
 
@@ -605,6 +633,8 @@
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">استثنيات</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">انہاں ویب سائٹاں کیتے تساں مواد بلاک کرݨ غیرفعال کر ݙتا ہے۔</string>
     <!-- Menu item to remove existing exceptions. -->
     <string name="preference_exceptions_menu_remove">ہٹاؤ</string>
 
@@ -619,6 +649,8 @@
 
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">ٹیب تباہ تھی ڳیا</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">افسوس، ساکوں ایں ٹیب نال ہک مسئلہ ہے۔</string>
     <!-- Label for button to close the tab-->
     <string name="tab_crash_report_close_tab_button_label">ٹیب بند کرو</string>
 
