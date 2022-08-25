@@ -96,9 +96,10 @@ static JSScript* CompileSourceBufferAndStartIncrementalEncoding(
   MainThreadErrorContext ec(cx);
   Rooted<frontend::CompilationInput> input(cx,
                                            frontend::CompilationInput(options));
+  js::frontend::NoScopeBindingCache scopeCache;
   auto stencil = frontend::CompileGlobalScriptToExtensibleStencil(
-      cx, &ec, cx->stackLimitForCurrentPrincipal(), input.get(), srcBuf,
-      scopeKind);
+      cx, &ec, cx->stackLimitForCurrentPrincipal(), input.get(), &scopeCache,
+      srcBuf, scopeKind);
   if (!stencil) {
     return nullptr;
   }
@@ -231,8 +232,9 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  js::frontend::NoScopeBindingCache scopeCache;
   frontend::CompilationState compilationState(cx, allocScope, input.get());
-  if (!compilationState.init(cx, &ec)) {
+  if (!compilationState.init(cx, &ec, &scopeCache)) {
     return false;
   }
 

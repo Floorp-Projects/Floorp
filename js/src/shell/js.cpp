@@ -83,6 +83,7 @@
 #endif
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/Parser.h"
+#include "frontend/ScopeBindingCache.h"  // js::frontend::ScopeBindingCache
 #include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
 #include "gc/PublicIterators.h"
 #ifdef DEBUG
@@ -5442,14 +5443,16 @@ template <typename Unit>
   }
 
   MainThreadErrorContext ec(cx);
+  js::frontend::NoScopeBindingCache scopeCache;
   UniquePtr<frontend::ExtensibleCompilationStencil> stencil;
   if (goal == frontend::ParseGoal::Script) {
     stencil = frontend::CompileGlobalScriptToExtensibleStencil(
-        cx, &ec, cx->stackLimitForCurrentPrincipal(), input.get(), srcBuf,
-        ScopeKind::Global);
+        cx, &ec, cx->stackLimitForCurrentPrincipal(), input.get(), &scopeCache,
+        srcBuf, ScopeKind::Global);
   } else {
     stencil = frontend::ParseModuleToExtensibleStencil(
-        cx, &ec, cx->stackLimitForCurrentPrincipal(), input.get(), srcBuf);
+        cx, &ec, cx->stackLimitForCurrentPrincipal(), input.get(), &scopeCache,
+        srcBuf);
   }
 
   if (!stencil) {
@@ -5678,8 +5681,9 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  frontend::NoScopeBindingCache scopeCache;
   frontend::CompilationState compilationState(cx, allocScope, input.get());
-  if (!compilationState.init(cx, &ec)) {
+  if (!compilationState.init(cx, &ec, &scopeCache)) {
     return false;
   }
 
@@ -5754,8 +5758,9 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  frontend::NoScopeBindingCache scopeCache;
   frontend::CompilationState compilationState(cx, allocScope, input.get());
-  if (!compilationState.init(cx, &ec)) {
+  if (!compilationState.init(cx, &ec, &scopeCache)) {
     return false;
   }
 

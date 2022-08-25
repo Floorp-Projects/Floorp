@@ -9,6 +9,7 @@
 
 #include "mozilla/Array.h"
 
+#include "frontend/ScopeBindingCache.h"
 #include "gc/Tracer.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
@@ -253,6 +254,11 @@ class RuntimeCaches {
   UncompressedSourceCache uncompressedSourceCache;
   EvalCache evalCache;
   StringToAtomCache stringToAtomCache;
+
+  // Delazification: Cache binding for runtime objects which are used during
+  // delazification to quickly resolve NameLocation of bindings without linearly
+  // iterating over the list of bindings.
+  frontend::RuntimeScopeBindingCache scopeCache;
 
   // This cache is used to store the result of delazification compilations which
   // might be happening off-thread. The main-thread will concurrently read the
