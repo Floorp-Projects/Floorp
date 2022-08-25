@@ -1,6 +1,9 @@
 
 # cargo-vet config file
 
+[imports.bytecodealliance]
+url = "https://raw.githubusercontent.com/bytecodealliance/wasmtime/main/supply-chain/audits.toml"
+
 [policy.async-task]
 audit-as-crates-io = true
 notes = "This is the upstream code plus an extra fix that hasn't been released yet, see bug 1746533."
@@ -193,10 +196,6 @@ criteria = "safe-to-run"
 version = "0.3.6"
 criteria = "safe-to-deploy"
 
-[[exemptions.arrayvec]]
-version = "0.7.2"
-criteria = "safe-to-deploy"
-
 [[exemptions.ash]]
 version = "0.37.0+1.3.209"
 criteria = "safe-to-deploy"
@@ -309,16 +308,8 @@ criteria = "safe-to-deploy"
 version = "0.14.2"
 criteria = "safe-to-deploy"
 
-[[exemptions.cc]]
-version = "1.0.73"
-criteria = "safe-to-deploy"
-
 [[exemptions.cexpr]]
 version = "0.6.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.cfg-if]]
-version = "1.0.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.cfg_aliases]]
@@ -1255,10 +1246,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.rust_decimal]]
 version = "1.24.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.rustc-demangle]]
-version = "0.1.21"
 criteria = "safe-to-deploy"
 
 [[exemptions.rustc_version]]
