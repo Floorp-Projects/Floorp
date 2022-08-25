@@ -143,7 +143,7 @@ BigInt* BigInt::createUninitialized(JSContext* cx, size_t digitLength,
     return nullptr;
   }
 
-  BigInt* x = AllocateBigInt(cx, heap);
+  BigInt* x = cx->newCell<BigInt>(heap);
   if (!x) {
     return nullptr;
   }

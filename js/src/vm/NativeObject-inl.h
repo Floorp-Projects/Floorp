@@ -440,13 +440,12 @@ inline NativeObject* NativeObject::create(
   const uint32_t slotSpan = shape->slotSpan();
   const size_t nDynamicSlots = calculateDynamicSlots(nfixed, slotSpan, clasp);
 
-  JSObject* obj =
-      js::AllocateObject(cx, kind, nDynamicSlots, heap, clasp, site);
-  if (!obj) {
+  NativeObject* nobj =
+      cx->newCell<NativeObject>(kind, nDynamicSlots, heap, clasp, site);
+  if (!nobj) {
     return nullptr;
   }
 
-  NativeObject* nobj = static_cast<NativeObject*>(obj);
   nobj->initShape(shape);
   // NOTE: Dynamic slots are created internally by Allocate<JSObject>.
   if (!nDynamicSlots) {

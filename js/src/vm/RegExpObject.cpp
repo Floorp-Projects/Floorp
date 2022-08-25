@@ -925,12 +925,10 @@ RegExpShared* RegExpZone::get(JSContext* cx, Handle<JSAtom*> source,
     return *p;
   }
 
-  gc::Cell* cell = Allocate<RegExpShared>(cx);
-  if (!cell) {
+  auto* shared = cx->newCell<RegExpShared>(source, flags);
+  if (!shared) {
     return nullptr;
   }
-
-  auto shared = new (cell) RegExpShared(source, flags);
 
   if (!p.add(cx, set_, Key(source, flags), shared)) {
     return nullptr;

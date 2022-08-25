@@ -703,13 +703,11 @@ T* TypedObject::create(JSContext* cx, js::gc::AllocKind allocKind,
 
   debugCheckNewObject(shape, allocKind, heap);
 
-  JSObject* obj =
-      js::AllocateObject(cx, allocKind, /* nDynamicSlots = */ 0, heap, clasp);
-  if (!obj) {
+  T* tobj = cx->newCell<T>(allocKind, /* nDynamicSlots = */ 0, heap, clasp);
+  if (!tobj) {
     return nullptr;
   }
 
-  T* tobj = static_cast<T*>(obj);
   tobj->initShape(shape);
 
   MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());

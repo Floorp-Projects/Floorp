@@ -250,6 +250,7 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
   friend class TenuringTracer;
   friend class JS::ubi::Concrete<Shape>;
   friend class js::gc::RelocationOverlay;
+  friend struct js::gc::CellAllocator;
 
  public:
   // Base shape, stored in the cell header.
@@ -549,6 +550,7 @@ class SharedShape : public js::Shape {
 };
 
 class DictionaryShape : public js::Shape {
+  friend struct js::gc::CellAllocator;
   DictionaryShape(BaseShape* base, ObjectFlags objectFlags, uint32_t nfixed,
                   PropMap* map, uint32_t mapLength)
       : Shape(base, objectFlags, nfixed, map, mapLength,

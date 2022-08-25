@@ -1507,7 +1507,7 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native i32.div_u (in wasm)";
 #endif
     case SymbolicAddress::AllocateBigInt:
-      return "call to native Allocate<BigInt, NoGC> (in wasm)";
+      return "call to native newCell<BigInt, NoGC> (in wasm)";
     case SymbolicAddress::ModD:
       return "call to asm.js native f64 % (mod)";
     case SymbolicAddress::SinD:

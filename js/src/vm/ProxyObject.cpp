@@ -119,13 +119,12 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
 
   debugCheckNewObject(shape, allocKind, heap);
 
-  JSObject* obj =
-      AllocateObject(cx, allocKind, /* nDynamicSlots = */ 0, heap, clasp);
-  if (!obj) {
+  ProxyObject* proxy =
+      cx->newCell<ProxyObject>(allocKind, /* nDynamicSlots = */ 0, heap, clasp);
+  if (!proxy) {
     return nullptr;
   }
 
-  ProxyObject* proxy = static_cast<ProxyObject*>(obj);
   proxy->initShape(shape);
 
   MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
