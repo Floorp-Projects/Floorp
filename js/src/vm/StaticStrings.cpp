@@ -17,7 +17,7 @@
 #include "vm/StringType.h"  // JSString, JSLinearString
 
 #include "vm/Realm-inl.h"       // AutoAllocInAtomsZone
-#include "vm/StringType-inl.h"  // NewInlineStringForAtom
+#include "vm/StringType-inl.h"  // NewInlineAtom
 
 using namespace js;
 
@@ -40,22 +40,24 @@ bool StaticStrings::init(JSContext* cx) {
 
   for (uint32_t i = 0; i < UNIT_STATIC_LIMIT; i++) {
     Latin1Char ch = Latin1Char(i);
-    JSLinearString* s = NewInlineStringForAtom(cx, &ch, 1);
-    if (!s) {
+    HashNumber hash = mozilla::HashString(&ch, 1);
+    JSAtom* a = NewInlineAtom(cx, &ch, 1, hash);
+    if (!a) {
       return false;
     }
-    HashNumber hash = mozilla::HashString(&ch, 1);
-    unitStaticTable[i] = s->morphAtomizedStringIntoPermanentAtom(hash);
+    a->makePermanent();
+    unitStaticTable[i] = a;
   }
 
   for (uint32_t i = 0; i < NUM_LENGTH2_ENTRIES; i++) {
     Latin1Char buffer[] = {firstCharOfLength2(i), secondCharOfLength2(i)};
-    JSLinearString* s = NewInlineStringForAtom(cx, buffer, 2);
-    if (!s) {
+    HashNumber hash = mozilla::HashString(buffer, 2);
+    JSAtom* a = NewInlineAtom(cx, buffer, 2, hash);
+    if (!a) {
       return false;
     }
-    HashNumber hash = mozilla::HashString(buffer, 2);
-    length2StaticTable[i] = s->morphAtomizedStringIntoPermanentAtom(hash);
+    a->makePermanent();
+    length2StaticTable[i] = a;
   }
 
   for (uint32_t i = 0; i < INT_STATIC_LIMIT; i++) {
@@ -69,12 +71,13 @@ bool StaticStrings::init(JSContext* cx) {
       Latin1Char buffer[] = {Latin1Char(firstCharOfLength3(i)),
                              Latin1Char(secondCharOfLength3(i)),
                              Latin1Char(thirdCharOfLength3(i))};
-      JSLinearString* s = NewInlineStringForAtom(cx, buffer, 3);
-      if (!s) {
+      HashNumber hash = mozilla::HashString(buffer, 3);
+      JSAtom* a = NewInlineAtom(cx, buffer, 3, hash);
+      if (!a) {
         return false;
       }
-      HashNumber hash = mozilla::HashString(buffer, 3);
-      intStaticTable[i] = s->morphAtomizedStringIntoPermanentAtom(hash);
+      a->makePermanent();
+      intStaticTable[i] = a;
     }
 
     // Static string initialization can not race, so allow even without the

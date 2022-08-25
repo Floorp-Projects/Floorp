@@ -714,6 +714,8 @@ class JSString : public js::gc::CellWithLengthAndFlags {
 };
 
 class JSRope : public JSString {
+  friend class js::gc::CellAllocator;
+
   template <typename CharT>
   js::UniquePtr<CharT[], JS::FreePolicy> copyCharsInternal(
       JSContext* cx, arena_id_t destArenaId) const;
@@ -733,7 +735,7 @@ class JSRope : public JSString {
   template <UsingBarrier usingBarrier>
   static void ropeBarrierDuringFlattening(JSRope* rope);
 
-  void init(JSContext* cx, JSString* left, JSString* right, size_t length);
+  JSRope(JSString* left, JSString* right, size_t length);
 
  public:
   template <js::AllowGC allowGC>
@@ -806,13 +808,20 @@ class JSLinearString : public JSString {
   friend class JSString;
   friend class JS::AutoStableStringChars;
   friend class js::TenuringTracer;
+  friend class js::gc::CellAllocator;
 
   /* Vacuous and therefore unimplemented. */
   JSLinearString* ensureLinear(JSContext* cx) = delete;
   bool isLinear() const = delete;
   JSLinearString& asLinear() const = delete;
 
+  JSLinearString(const char16_t* chars, size_t length);
+  JSLinearString(const JS::Latin1Char* chars, size_t length);
+
  protected:
+  // Used to construct subclasses that do a full initialization themselves.
+  JSLinearString() = default;
+
   /* Returns void pointer to latin1/twoByte chars, for finalizers. */
   MOZ_ALWAYS_INLINE
   void* nonInlineCharsRaw() const {
@@ -828,9 +837,6 @@ class JSLinearString : public JSString {
   MOZ_ALWAYS_INLINE const char16_t* rawTwoByteChars() const;
 
  public:
-  void init(const char16_t* chars, size_t length);
-  void init(const JS::Latin1Char* chars, size_t length);
-
   template <js::AllowGC allowGC, typename CharT>
   static inline JSLinearString* new_(
       JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars,
@@ -840,11 +846,6 @@ class JSLinearString : public JSString {
   static inline JSLinearString* newValidLength(
       JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars,
       size_t length, js::gc::InitialHeap heap);
-
-  template <typename CharT>
-  static inline JSLinearString* newForAtomValidLength(
-      JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars,
-      size_t length);
 
   template <typename CharT>
   MOZ_ALWAYS_INLINE const CharT* nonInlineChars(
@@ -954,13 +955,8 @@ class JSLinearString : public JSString {
   void dumpRepresentation(js::GenericPrinter& out, int indent) const;
 #endif
 
-  /*
-   * Once a JSLinearString sub-class has been added to the atom state, this
-   * operation changes the string to the JSAtom type, in place.
-   */
-  MOZ_ALWAYS_INLINE JSAtom* morphAtomizedStringIntoAtom(js::HashNumber hash);
-  MOZ_ALWAYS_INLINE JSAtom* morphAtomizedStringIntoPermanentAtom(
-      js::HashNumber hash);
+  // Make a partially-initialized string safe for finalization.
+  inline void disownCharsBecauseError();
 };
 
 static_assert(sizeof(JSLinearString) == sizeof(JSString),
@@ -968,8 +964,12 @@ static_assert(sizeof(JSLinearString) == sizeof(JSString),
 
 class JSDependentString : public JSLinearString {
   friend class JSString;
+  friend class js::gc::CellAllocator;
 
-  void init(JSContext* cx, JSLinearString* base, size_t start, size_t length);
+  JSDependentString(JSLinearString* base, size_t start, size_t length);
+
+  // For JIT string allocation.
+  JSDependentString() = default;
 
   /* Vacuous and therefore unimplemented. */
   bool isDependent() const = delete;
@@ -1079,6 +1079,17 @@ static_assert(sizeof(JSInlineString) == sizeof(JSString),
  * respectively.
  */
 class JSThinInlineString : public JSInlineString {
+  friend class js::gc::CellAllocator;
+
+  // The constructors return a mutable pointer to the data, because the first
+  // thing any creator will do is copy in the string value. This also
+  // conveniently allows doing overload resolution on CharT.
+  explicit JSThinInlineString(size_t length, JS::Latin1Char** chars);
+  explicit JSThinInlineString(size_t length, char16_t** chars);
+
+  // For JIT string allocation.
+  JSThinInlineString() = default;
+
  public:
   static const size_t MAX_LENGTH_LATIN1 = NUM_INLINE_CHARS_LATIN1;
   static const size_t MAX_LENGTH_TWO_BYTE = NUM_INLINE_CHARS_TWO_BYTE;
@@ -1086,11 +1097,6 @@ class JSThinInlineString : public JSInlineString {
   template <js::AllowGC allowGC>
   static inline JSThinInlineString* new_(JSContext* cx,
                                          js::gc::InitialHeap heap);
-
-  static inline JSThinInlineString* newForAtom(JSContext* cx);
-
-  template <typename CharT>
-  inline CharT* init(size_t length);
 
   template <typename CharT>
   static bool lengthFits(size_t length);
@@ -1112,10 +1118,21 @@ static_assert(sizeof(JSThinInlineString) == sizeof(JSString),
  * 64-bit platforms.
  */
 class JSFatInlineString : public JSInlineString {
+  friend class js::gc::CellAllocator;
+
   static const size_t INLINE_EXTENSION_CHARS_LATIN1 =
       24 - NUM_INLINE_CHARS_LATIN1;
   static const size_t INLINE_EXTENSION_CHARS_TWO_BYTE =
       12 - NUM_INLINE_CHARS_TWO_BYTE;
+
+  // The constructors return a mutable pointer to the data, because the first
+  // thing any creator will do is copy in the string value. This also
+  // conveniently allows doing overload resolution on CharT.
+  explicit JSFatInlineString(size_t length, JS::Latin1Char** chars);
+  explicit JSFatInlineString(size_t length, char16_t** chars);
+
+  // For JIT string allocation.
+  JSFatInlineString() = default;
 
  protected: /* to fool clang into not warning this is unused */
   union {
@@ -1128,16 +1145,11 @@ class JSFatInlineString : public JSInlineString {
   static inline JSFatInlineString* new_(JSContext* cx,
                                         js::gc::InitialHeap heap);
 
-  static inline JSFatInlineString* newForAtom(JSContext* cx);
-
   static const size_t MAX_LENGTH_LATIN1 =
       JSString::NUM_INLINE_CHARS_LATIN1 + INLINE_EXTENSION_CHARS_LATIN1;
 
   static const size_t MAX_LENGTH_TWO_BYTE =
       JSString::NUM_INLINE_CHARS_TWO_BYTE + INLINE_EXTENSION_CHARS_TWO_BYTE;
-
-  template <typename CharT>
-  inline CharT* init(size_t length);
 
   template <typename CharT>
   static bool lengthFits(size_t length);
@@ -1152,8 +1164,10 @@ static_assert(sizeof(JSFatInlineString) % js::gc::CellAlignBytes == 0,
               "boundary");
 
 class JSExternalString : public JSLinearString {
-  void init(const char16_t* chars, size_t length,
-            const JSExternalStringCallbacks* callbacks);
+  friend class js::gc::CellAllocator;
+
+  JSExternalString(const char16_t* chars, size_t length,
+                   const JSExternalStringCallbacks* callbacks);
 
   /* Vacuous and therefore unimplemented. */
   bool isExternal() const = delete;
@@ -1191,11 +1205,22 @@ class JSAtom : public JSLinearString {
   JSAtom& asAtom() const = delete;
 
  public:
+  template <typename CharT>
+  static inline JSAtom* newValidLength(
+      JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars,
+      size_t length, js::HashNumber hash);
+
   /* Returns the PropertyName for this.  isIndex() must be false. */
   inline js::PropertyName* asPropertyName();
 
   MOZ_ALWAYS_INLINE
   bool isPermanent() const { return JSString::isPermanentAtom(); }
+
+  MOZ_ALWAYS_INLINE
+  void makePermanent() {
+    MOZ_ASSERT(JSString::isAtom());
+    setFlagBit(PERMANENT_ATOM_MASK);
+  }
 
   MOZ_ALWAYS_INLINE bool isIndex() const {
     MOZ_ASSERT(JSString::isAtom());
@@ -1242,8 +1267,19 @@ static_assert(sizeof(JSAtom) == sizeof(JSString),
 namespace js {
 
 class NormalAtom : public JSAtom {
+  friend class gc::CellAllocator;
+
  protected:
   HashNumber hash_;
+
+  // Inline atoms, mimicking JSThinInlineString constructors.
+  explicit NormalAtom(size_t length, JS::Latin1Char** chars,
+                      js::HashNumber hash);
+  explicit NormalAtom(size_t length, char16_t** chars, js::HashNumber hash);
+
+  // Out of line atoms, mimicking JSLinearString constructors.
+  NormalAtom(const char16_t* chars, size_t length, js::HashNumber hash);
+  NormalAtom(const JS::Latin1Char* chars, size_t length, js::HashNumber hash);
 
  public:
   HashNumber hash() const { return hash_; }
@@ -1257,9 +1293,16 @@ static_assert(sizeof(NormalAtom) == sizeof(JSString) + sizeof(uint64_t),
               "aligned to gc::CellAlignBytes");
 
 class FatInlineAtom : public JSAtom {
+  friend class gc::CellAllocator;
+
  protected:  // Silence Clang unused-field warning.
   char inlineStorage_[sizeof(JSFatInlineString) - sizeof(JSString)];
   HashNumber hash_;
+
+  // Mimicking JSFatInlineString constructors.
+  explicit FatInlineAtom(size_t length, JS::Latin1Char** chars,
+                         js::HashNumber hash);
+  explicit FatInlineAtom(size_t length, char16_t** chars, js::HashNumber hash);
 
  public:
   HashNumber hash() const { return hash_; }
@@ -1291,36 +1334,6 @@ inline void JSAtom::initHash(js::HashNumber hash) {
     return static_cast<js::FatInlineAtom*>(this)->initHash(hash);
   }
   return static_cast<js::NormalAtom*>(this)->initHash(hash);
-}
-
-// Note that any pre-existing pointers to this string are invalidated
-// (UB, though they will most likely be fine.)
-MOZ_ALWAYS_INLINE JSAtom* JSLinearString::morphAtomizedStringIntoAtom(
-    js::HashNumber hash) {
-  MOZ_ASSERT(!isAtom());
-  setFlagBit(ATOM_BIT);
-  if (isFatInline()) {
-    auto* atom = static_cast<js::FatInlineAtom*>(this);
-    atom->initHash(hash);
-    return atom;
-  }
-  auto* atom = static_cast<js::NormalAtom*>(this);
-  atom->initHash(hash);
-  return atom;
-}
-
-MOZ_ALWAYS_INLINE JSAtom* JSLinearString::morphAtomizedStringIntoPermanentAtom(
-    js::HashNumber hash) {
-  MOZ_ASSERT(!isAtom());
-  setFlagBit(PERMANENT_ATOM_MASK);
-  if (isFatInline()) {
-    auto* atom = static_cast<js::FatInlineAtom*>(this);
-    atom->initHash(hash);
-    return atom;
-  }
-  auto* atom = static_cast<js::NormalAtom*>(this);
-  atom->initHash(hash);
-  return atom;
 }
 
 namespace js {
@@ -1411,12 +1424,14 @@ inline JSLinearString* NewStringCopyN(
 }
 
 template <typename CharT>
-extern JSLinearString* NewStringForAtomCopyNMaybeDeflateValidLength(
-    JSContext* cx, const CharT* s, size_t n);
+extern JSAtom* NewAtomCopyNMaybeDeflateValidLength(JSContext* cx,
+                                                   const CharT* s, size_t n,
+                                                   js::HashNumber hash);
 
 template <typename CharT>
-extern JSLinearString* NewStringForAtomCopyNDontDeflateValidLength(
-    JSContext* cx, const CharT* s, size_t n);
+extern JSAtom* NewAtomCopyNDontDeflateValidLength(JSContext* cx, const CharT* s,
+                                                  size_t n,
+                                                  js::HashNumber hash);
 
 /* Copy a counted string and GC-allocate a descriptor for it. */
 template <js::AllowGC allowGC, typename CharT>

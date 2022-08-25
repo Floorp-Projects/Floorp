@@ -609,22 +609,21 @@ struct AtomizeUTF8CharsWrapper {
       : utf8(chars), encoding(minEncode) {}
 };
 
-// MakeLinearStringForAtomizationNonStaticValidLength has 3 variants.
+// NewAtomNonStaticValidLength has 3 variants.
 // This is used by Latin1Char and char16_t.
 template <typename CharT>
-static MOZ_ALWAYS_INLINE JSLinearString*
-MakeLinearStringForAtomizationNonStaticValidLength(JSContext* cx,
-                                                   const CharT* chars,
-                                                   size_t length) {
-  return NewStringForAtomCopyNMaybeDeflateValidLength(cx, chars, length);
+static MOZ_ALWAYS_INLINE JSAtom* NewAtomNonStaticValidLength(
+    JSContext* cx, const CharT* chars, size_t length, js::HashNumber hash) {
+  return NewAtomCopyNMaybeDeflateValidLength(cx, chars, length, hash);
 }
 
 template <typename CharT>
-static MOZ_ALWAYS_INLINE JSLinearString* MakeUTF8AtomHelperNonStaticValidLength(
-    JSContext* cx, const AtomizeUTF8CharsWrapper* chars, size_t length) {
+static MOZ_ALWAYS_INLINE JSAtom* MakeUTF8AtomHelperNonStaticValidLength(
+    JSContext* cx, const AtomizeUTF8CharsWrapper* chars, size_t length,
+    js::HashNumber hash) {
   if (JSInlineString::lengthFits<CharT>(length)) {
     CharT* storage;
-    JSInlineString* str = AllocateInlineStringForAtom(cx, length, &storage);
+    JSAtom* str = AllocateInlineAtom(cx, length, &storage, hash);
     if (!str) {
       return nullptr;
     }
@@ -643,22 +642,23 @@ static MOZ_ALWAYS_INLINE JSLinearString* MakeUTF8AtomHelperNonStaticValidLength(
 
   InflateUTF8CharsToBuffer(chars->utf8, newStr.get(), length, chars->encoding);
 
-  return JSLinearString::newForAtomValidLength(cx, std::move(newStr), length);
+  return JSAtom::newValidLength(cx, std::move(newStr), length, hash);
 }
 
-// Another variant of MakeLinearStringForAtomizationNonStaticValidLength.
-static MOZ_ALWAYS_INLINE JSLinearString*
-MakeLinearStringForAtomizationNonStaticValidLength(
-    JSContext* cx, const AtomizeUTF8CharsWrapper* chars, size_t length) {
+// Another variant of NewAtomNonStaticValidLength.
+static MOZ_ALWAYS_INLINE JSAtom* NewAtomNonStaticValidLength(
+    JSContext* cx, const AtomizeUTF8CharsWrapper* chars, size_t length,
+    js::HashNumber hash) {
   if (length == 0) {
     return cx->emptyString();
   }
 
   if (chars->encoding == JS::SmallestEncoding::UTF16) {
-    return MakeUTF8AtomHelperNonStaticValidLength<char16_t>(cx, chars, length);
+    return MakeUTF8AtomHelperNonStaticValidLength<char16_t>(cx, chars, length,
+                                                            hash);
   }
   return MakeUTF8AtomHelperNonStaticValidLength<JS::Latin1Char>(cx, chars,
-                                                                length);
+                                                                length, hash);
 }
 
 template <typename CharT>
@@ -667,16 +667,14 @@ static MOZ_ALWAYS_INLINE JSAtom* AllocateNewAtomNonStaticValidLength(
     const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup) {
   AutoAllocInAtomsZone ac(cx);
 
-  JSLinearString* linear =
-      MakeLinearStringForAtomizationNonStaticValidLength(cx, chars, length);
-  if (!linear) {
+  JSAtom* atom = NewAtomNonStaticValidLength(cx, chars, length, lookup.hash);
+  if (!atom) {
     // Grudgingly forgo last-ditch GC. The alternative would be to manually GC
     // here, and retry from the top.
     ReportOutOfMemory(cx);
     return nullptr;
   }
 
-  JSAtom* atom = linear->morphAtomizedStringIntoAtom(lookup.hash);
   MOZ_ASSERT(atom->hash() == lookup.hash);
 
   if (indexValue) {
@@ -706,16 +704,16 @@ static MOZ_ALWAYS_INLINE JSAtom* AllocateNewPermanentAtomNonStaticValidLength(
   }
 #endif
 
-  JSLinearString* linear =
-      NewStringForAtomCopyNDontDeflateValidLength(cx, chars, length);
-  if (!linear) {
+  JSAtom* atom =
+      NewAtomCopyNDontDeflateValidLength(cx, chars, length, lookup.hash);
+  if (!atom) {
     // Do not bother with a last-ditch GC here since we are very early in
     // startup and there is no potential garbage to collect.
     ReportOutOfMemory(cx);
     return nullptr;
   }
+  atom->makePermanent();
 
-  JSAtom* atom = linear->morphAtomizedStringIntoPermanentAtom(lookup.hash);
   MOZ_ASSERT(atom->hash() == lookup.hash);
 
   uint32_t index;
