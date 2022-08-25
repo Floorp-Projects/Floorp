@@ -52,11 +52,3 @@ button.plain {
   margin: 0 !important;
   padding: 0 !important;
 }
-
-/* ::::: help button ::::: */
-
-button[dlgtype="help"] {
-  appearance: auto;
-  -moz-default-appearance: -moz-mac-help-button;
-  width: 20px;
-}
