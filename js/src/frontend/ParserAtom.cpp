@@ -77,6 +77,32 @@ void TaggedParserAtomIndex::validateRaw() {
 }
 #endif
 
+HashNumber TaggedParserAtomIndex::staticOrWellKnownHash() const {
+  MOZ_ASSERT(!isParserAtomIndex());
+
+  if (isWellKnownAtomId()) {
+    const auto& info = GetWellKnownAtomInfo(toWellKnownAtomId());
+    return info.hash;
+  }
+
+  if (isLength1StaticParserString()) {
+    Latin1Char content[1];
+    ParserAtomsTable::getLength1Content(toLength1StaticParserString(), content);
+    return mozilla::HashString(content, 1);
+  }
+
+  if (isLength2StaticParserString()) {
+    char content[2];
+    ParserAtomsTable::getLength2Content(toLength2StaticParserString(), content);
+    return mozilla::HashString(reinterpret_cast<const Latin1Char*>(content), 2);
+  }
+
+  MOZ_ASSERT(isLength3StaticParserString());
+  char content[3];
+  ParserAtomsTable::getLength3Content(toLength3StaticParserString(), content);
+  return mozilla::HashString(reinterpret_cast<const Latin1Char*>(content), 3);
+}
+
 template <typename CharT, typename SeqCharT>
 /* static */ ParserAtom* ParserAtom::allocate(
     ErrorContext* ec, LifoAlloc& alloc, InflatedChar16Sequence<SeqCharT> seq,
@@ -866,6 +892,14 @@ uint32_t ParserAtomsTable::length(TaggedParserAtomIndex index) const {
 
   MOZ_ASSERT(index.isLength3StaticParserString());
   return 3;
+}
+
+HashNumber ParserAtomsTable::hash(TaggedParserAtomIndex index) const {
+  if (index.isParserAtomIndex()) {
+    return getParserAtom(index.toParserAtomIndex())->hash();
+  }
+
+  return index.staticOrWellKnownHash();
 }
 
 double ParserAtomsTable::toNumber(TaggedParserAtomIndex index) const {
