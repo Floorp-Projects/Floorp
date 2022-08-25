@@ -1,5 +1,7 @@
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+
 //! # serial_test
-//! `serial_test` allows for the creation of serialised Rust tests using the [serial](attr.serial.html) attribute
+//! `serial_test` allows for the creation of serialised Rust tests using the [serial](macro@serial) attribute
 //! e.g.
 //! ````
 //! #[test]
@@ -14,79 +16,45 @@
 //!   // Do things
 //! }
 //! ````
-//! Multiple tests with the [serial](attr.serial.html) attribute are guaranteed to be executed in serial. Ordering
+//! Multiple tests with the [serial](macro@serial) attribute are guaranteed to be executed in serial. Ordering
 //! of the tests is not guaranteed however.
+//!
+//! For cases like doctests and integration tests where the tests are run as separate processes, we also support
+//! [file_serial](macro@file_serial), with similar properties but based off file locking. Note that there are no
+//! guarantees about one test with [serial](macro@serial) and another with [file_serial](macro@file_serial)
+//! as they lock using different methods.
+//! ````
+//! #[test]
+//! #[file_serial]
+//! fn test_serial_three() {
+//!   // Do things
+//! }
+//! ````
+//!
+//! ## Feature flags
+#![cfg_attr(
+    feature = "docsrs",
+    cfg_attr(doc, doc = ::document_features::document_features!())
+)]
 
-use lazy_static::lazy_static;
-use parking_lot::ReentrantMutex;
-use std::collections::HashMap;
-use std::ops::{Deref, DerefMut};
-use std::sync::{Arc, RwLock};
+mod code_lock;
+#[cfg(feature = "file_locks")]
+mod file_lock;
 
-lazy_static! {
-    static ref LOCKS: Arc<RwLock<HashMap<String, ReentrantMutex<()>>>> =
-        Arc::new(RwLock::new(HashMap::new()));
-}
+pub use code_lock::{
+    local_async_serial_core, local_async_serial_core_with_return, local_serial_core,
+    local_serial_core_with_return,
+};
 
-fn check_new_key(name: &str) {
-    // Check if a new key is needed. Just need a read lock, which can be done in sync with everyone else
-    let new_key = {
-        let unlock = LOCKS.read().unwrap();
-        !unlock.deref().contains_key(name)
-    };
-    if new_key {
-        // This is the rare path, which avoids the multi-writer situation mostly
-        LOCKS
-            .write()
-            .unwrap()
-            .deref_mut()
-            .insert(name.to_string(), ReentrantMutex::new(()));
-    }
-}
+#[cfg(feature = "file_locks")]
+pub use file_lock::{
+    fs_async_serial_core, fs_async_serial_core_with_return, fs_serial_core,
+    fs_serial_core_with_return,
+};
 
-#[doc(hidden)]
-pub fn serial_core_with_return<E>(name: &str, function: fn() -> Result<(), E>) -> Result<(), E> {
-    check_new_key(name);
-
-    let unlock = LOCKS.read().unwrap();
-    // _guard needs to be named to avoid being instant dropped
-    let _guard = unlock.deref()[name].lock();
-    function()
-}
-
-#[doc(hidden)]
-pub fn serial_core(name: &str, function: fn()) {
-    check_new_key(name);
-
-    let unlock = LOCKS.read().unwrap();
-    // _guard needs to be named to avoid being instant dropped
-    let _guard = unlock.deref()[name].lock();
-    function();
-}
-
-#[doc(hidden)]
-pub async fn async_serial_core_with_return<E>(
-    name: &str,
-    fut: impl std::future::Future<Output = Result<(), E>>,
-) -> Result<(), E> {
-    check_new_key(name);
-
-    let unlock = LOCKS.read().unwrap();
-    // _guard needs to be named to avoid being instant dropped
-    let _guard = unlock.deref()[name].lock();
-    fut.await
-}
-
-#[doc(hidden)]
-pub async fn async_serial_core(name: &str, fut: impl std::future::Future<Output = ()>) {
-    check_new_key(name);
-
-    let unlock = LOCKS.read().unwrap();
-    // _guard needs to be named to avoid being instant dropped
-    let _guard = unlock.deref()[name].lock();
-    fut.await
-}
-
-// Re-export #[serial].
+// Re-export #[serial/file_serial].
 #[allow(unused_imports)]
 pub use serial_test_derive::serial;
+
+#[cfg(feature = "file_locks")]
+pub use serial_test_derive::file_serial;
