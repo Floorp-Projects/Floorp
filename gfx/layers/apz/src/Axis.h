@@ -229,6 +229,7 @@ class Axis {
   /**
    * Returns whether this axis can scroll any more in a particular direction.
    */
+  bool CanScroll(CSSCoord aDelta) const;
   bool CanScroll(ParentLayerCoord aDelta) const;
 
   /**
