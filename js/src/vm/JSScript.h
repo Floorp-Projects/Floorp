@@ -1409,7 +1409,7 @@ class alignas(uintptr_t) PrivateScriptData final : public TrailingArray {
 // NOTE: Scripts may be directly created with bytecode and skip the lazy script
 //       form. This is always the case for top-level scripts.
 class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
-  friend struct js::gc::CellAllocator;
+  friend class js::gc::CellAllocator;
 
  public:
   // Pointer to baseline->method()->raw(), ion->method()->raw(), a wasm jit

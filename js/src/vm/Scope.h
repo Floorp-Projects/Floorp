@@ -296,7 +296,7 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
   friend class frontend::ScopeStencil;
   friend class js::AbstractBindingIter<JSAtom>;
   friend class js::frontend::RuntimeScopeBindingCache;
-  friend struct gc::CellAllocator;
+  friend class gc::CellAllocator;
 
  protected:
   // The raw data pointer, stored in the cell header.

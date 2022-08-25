@@ -27,7 +27,7 @@ namespace JS {
 
 class Symbol
     : public js::gc::CellWithTenuredGCPointer<js::gc::TenuredCell, JSAtom> {
-  friend struct js::gc::CellAllocator;
+  friend class js::gc::CellAllocator;
 
  public:
   // User description of symbol, stored in the cell header.

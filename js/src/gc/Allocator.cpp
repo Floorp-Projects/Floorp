@@ -194,8 +194,8 @@ Cell* GCRuntime::tryNewNurseryStringCell(JSContext* cx, size_t thingSize,
 }
 
 template <AllowGC allowGC /* = CanGC */>
-Cell* gc::detail::AllocateStringCell(JSContext* cx, AllocKind kind, size_t size,
-                                     InitialHeap heap) {
+Cell* gc::CellAllocator::AllocateStringCell(JSContext* cx, AllocKind kind,
+                                            size_t size, InitialHeap heap) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
   MOZ_ASSERT(size == Arena::thingSize(kind));
   MOZ_ASSERT(size == sizeof(JSString) || size == sizeof(JSFatInlineString));
@@ -236,10 +236,12 @@ Cell* gc::detail::AllocateStringCell(JSContext* cx, AllocKind kind, size_t size,
   return GCRuntime::tryNewTenuredThing<allowGC>(cx, kind, size);
 }
 
-template Cell* gc::detail::AllocateStringCell<NoGC>(JSContext*, AllocKind,
-                                                    size_t, InitialHeap);
-template Cell* gc::detail::AllocateStringCell<CanGC>(JSContext*, AllocKind,
-                                                     size_t, InitialHeap);
+template Cell* gc::CellAllocator::AllocateStringCell<NoGC>(JSContext*,
+                                                           AllocKind, size_t,
+                                                           InitialHeap);
+template Cell* gc::CellAllocator::AllocateStringCell<CanGC>(JSContext*,
+                                                            AllocKind, size_t,
+                                                            InitialHeap);
 
 // Attempt to allocate a new BigInt out of the nursery. If there is not enough
 // room in the nursery or there is an OOM, this method will return nullptr.
