@@ -22,7 +22,6 @@ const FXA_MOBILE_EVENT = [
 ];
 
 var gMockFxaDevices = null;
-var gUIStateStatus;
 
 function promiseSyncReady() {
   let service = Cc["@mozilla.org/weave/service;1"].getService(Ci.nsISupports)
@@ -39,17 +38,19 @@ async function touchLastTabFetch() {
   await TestUtils.waitForTick();
 }
 
-function setupMocks({ fxaDevices = null, state, syncEnabled = true }) {
-  gUIStateStatus = state || UIState.STATUS_SIGNED_IN;
+function setupMocks({
+  fxaDevices = null,
+  state = UIState.STATUS_SIGNED_IN,
+  syncEnabled = true,
+}) {
   const sandbox = sinon.createSandbox();
   gMockFxaDevices = fxaDevices;
   sandbox.stub(fxAccounts.device, "recentDeviceList").get(() => fxaDevices);
-  sandbox.stub(UIState, "get").callsFake(() => {
-    return {
-      status: gUIStateStatus,
-      syncEnabled,
-    };
+  sandbox.stub(UIState, "get").returns({
+    status: state,
+    syncEnabled,
   });
+
   sandbox
     .stub(Weave.Service.clientsEngine, "getClientByFxaDeviceId")
     .callsFake(fxaDeviceId => {
@@ -637,34 +638,6 @@ add_task(async function test_mobile_promo() {
     checkMobilePromo(browser, {
       mobilePromo: false,
       mobileConfirmation: true,
-    });
-
-    info("checking mobile promo disappears on log out");
-    gMockFxaDevices.pop();
-    Services.obs.notifyObservers(null, "fxaccounts:devicelist_updated");
-    await waitForElementVisible(
-      browser,
-      "#tab-pickup-container > .promo-box",
-      true
-    );
-    checkMobilePromo(browser, {
-      mobilePromo: true,
-      mobileConfirmation: false,
-    });
-    gUIStateStatus = UIState.STATUS_NOT_CONFIGURED;
-
-    info(
-      "notifying that we've signed out of fxa, UIState.get().status:" +
-        UIState.get().status
-    );
-    Services.obs.notifyObservers(null, UIState.ON_UPDATE);
-    info("waiting for setup card 1 to appear again");
-    await waitForVisibleStep(browser, {
-      expectedVisible: "#tabpickup-steps-view1",
-    });
-    checkMobilePromo(browser, {
-      mobilePromo: false,
-      mobileConfirmation: false,
     });
   });
   await tearDown(sandbox);

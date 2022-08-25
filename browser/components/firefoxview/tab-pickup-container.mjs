@@ -214,9 +214,6 @@ class TabPickupContainer extends HTMLElement {
     const stateIndex = this._currentSetupStateIndex;
     const isLoading = stateIndex == 4;
 
-    mobilePromoElem.hidden = !this._showMobilePromo;
-    mobileSuccessElem.hidden = !this._showMobilePairSuccess;
-
     // show/hide either the setup or tab list containers, creating each as necessary
     if (stateIndex < 4) {
       if (!setupElem) {
@@ -256,6 +253,8 @@ class TabPickupContainer extends HTMLElement {
     if (stateIndex == 5) {
       this.collapsibleButton.hidden = false;
     }
+    mobilePromoElem.hidden = !this._showMobilePromo;
+    mobileSuccessElem.hidden = !this._showMobilePairSuccess;
   }
 }
 customElements.define("tab-pickup-container", TabPickupContainer);
