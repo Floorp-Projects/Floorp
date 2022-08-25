@@ -115,8 +115,7 @@
   <keyset id="mainKeyset">
     <key 
         keycode="VK_F9"
-        oncommand="gBrowser.selectedTab.toggleMuteAudio();
-        reloadAllOtherTabs();
+        oncommand="
         bosshascomming();"/>  
     <key id="key_newNavigator"
          data-l10n-id="window-new-shortcut"

@@ -223,6 +223,7 @@ Preferences.addAll([
   { id: "floorp.browser.UserAgent", type:"int"},
   { id: "floorp.legacy.dlui.enable", type:"bool"},
   { id: "floorp.downloading.red.color", type:"bool"},
+  { id: "floorp.browser.rest.mode", type : "bool"},
 ]);
 
 // Floorp の設定項目終わり

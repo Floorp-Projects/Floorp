@@ -45,6 +45,8 @@ pref("floorp.browser.tabbar.settings", 1);// タブの設定
 
 pref("floorp.enable.auto.restart", false);
 
+pref("floorp.browser.rest.mode", false);// 休止モード
+
 pref("contentblocking.cryptomining_blocking_enabled", true);
 pref("contentblocking.cryptomining_blocking_enabled",true);
 pref("contentblocking.category", true);

@@ -1481,6 +1481,9 @@ Search-positon-top =
 allow-auto-restart =
  .label = Automatic restart when settings are changed that require a restart
 
+browser-rest-mode =
+ .label = Enable Rest-mode Shortcut key
+
 ## macOS version use legacy update system 
 floorp-updater = { -brand-short-name } Updater Settings
 enable-floorp-updater = 

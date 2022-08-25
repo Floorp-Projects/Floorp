@@ -3,11 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function bosshascomming() {
+ function bosshascomming() {
+  if(Services.prefs.getBoolPref("floorp.browser.rest.mode", false)){
     var Tag = document.createElement("style");
     Tag.innerText = `*{display:none !important;}`
     document.getElementsByTagName("head")[0].insertAdjacentElement('beforeend',Tag);
     Tag.setAttribute("id", "none");
+
+    gBrowser.selectedTab.toggleMuteAudio();
+    reloadAllOtherTabs();
   
     var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
     .getService(Components.interfaces.nsIPromptService);
@@ -18,6 +22,7 @@ function bosshascomming() {
   
     const none =document.getElementById("none");
     none.remove();
+   }
   }
   
   function reloadAllOtherTabs() {
