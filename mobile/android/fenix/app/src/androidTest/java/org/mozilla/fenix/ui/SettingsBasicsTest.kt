@@ -55,6 +55,7 @@ class SettingsBasicsTest {
         }
 
         featureSettingsHelper.setJumpBackCFREnabled(false)
+        featureSettingsHelper.setTCPCFREnabled(false)
     }
 
     @After

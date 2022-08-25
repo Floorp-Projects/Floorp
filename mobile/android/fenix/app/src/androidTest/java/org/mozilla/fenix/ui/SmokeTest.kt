@@ -96,6 +96,7 @@ class SmokeTest {
 
         // disabling the new homepage pop-up that interferes with the tests.
         featureSettingsHelper.setJumpBackCFREnabled(false)
+        featureSettingsHelper.setTCPCFREnabled(false)
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mockWebServer = MockWebServer().apply {
@@ -708,6 +709,7 @@ class SmokeTest {
     // Test running on beta/release builds in CI:
     // caution when making changes to it, so they don't block the builds
     fun noHistoryInPrivateBrowsingTest() {
+        FeatureSettingsHelper().setTCPCFREnabled(false)
         val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         homeScreen {

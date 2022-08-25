@@ -64,6 +64,7 @@ class SearchTest {
             start()
         }
         featureSettingsHelper.setJumpBackCFREnabled(false)
+        featureSettingsHelper.setTCPCFREnabled(false)
         featureSettingsHelper.setPocketEnabled(false)
     }
 

@@ -53,6 +53,7 @@ class TopSitesTest {
         }
 
         featureSettingsHelper.setJumpBackCFREnabled(false)
+        featureSettingsHelper.setTCPCFREnabled(false)
     }
 
     @After

@@ -48,6 +48,7 @@ class StrictEnhancedTrackingProtectionTest {
         }
         featureSettingsHelper.setStrictETPEnabled()
         featureSettingsHelper.setJumpBackCFREnabled(false)
+        featureSettingsHelper.setTCPCFREnabled(false)
     }
 
     @After

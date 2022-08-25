@@ -18,6 +18,7 @@ class FeatureSettingsHelper {
     private var isRecentTabsFeatureEnabled: Boolean = settings.showRecentTabsFeature
     private var isRecentlyVisitedFeatureEnabled: Boolean = settings.historyMetadataUIFeature
     private var isUserKnowsAboutPwasTrue: Boolean = settings.userKnowsAboutPwas
+    private var isTCPCFREnabled: Boolean = settings.shouldShowTotalCookieProtectionCFR
 
     fun setPocketEnabled(enabled: Boolean) {
         settings.showPocketRecommendationsFeature = enabled
@@ -47,6 +48,13 @@ class FeatureSettingsHelper {
         settings.deleteSitePermissions = delete
     }
 
+    /**
+     * Enable or disable showing the TCP CFR when accessing a webpage for the first time.
+     */
+    fun setTCPCFREnabled(shouldShowCFR: Boolean) {
+        settings.shouldShowTotalCookieProtectionCFR = shouldShowCFR
+    }
+
     // Important:
     // Use this after each test if you have modified these feature settings
     // to make sure the app goes back to the default state
@@ -56,5 +64,6 @@ class FeatureSettingsHelper {
         settings.showRecentTabsFeature = isRecentTabsFeatureEnabled
         settings.historyMetadataUIFeature = isRecentlyVisitedFeatureEnabled
         settings.userKnowsAboutPwas = isUserKnowsAboutPwasTrue
+        settings.shouldShowTotalCookieProtectionCFR = isTCPCFREnabled
     }
 }

@@ -39,6 +39,7 @@ class BrowsingErrorPagesTest {
     fun setUp() {
         // disabling the jump-back-in pop-up that interferes with the tests.
         featureSettingsHelper.setJumpBackCFREnabled(false)
+        featureSettingsHelper.setTCPCFREnabled(false)
     }
 
     @After

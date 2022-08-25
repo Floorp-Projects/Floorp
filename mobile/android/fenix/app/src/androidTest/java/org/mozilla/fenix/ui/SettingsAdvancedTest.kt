@@ -44,6 +44,7 @@ class SettingsAdvancedTest {
             start()
         }
         featureSettingsHelper.setPocketEnabled(false)
+        featureSettingsHelper.setTCPCFREnabled(false)
     }
 
     @After

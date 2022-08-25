@@ -43,6 +43,7 @@ class SettingsHomepageTest {
             start()
         }
         featureSettingsHelper.setJumpBackCFREnabled(false)
+        featureSettingsHelper.setTCPCFREnabled(false)
     }
 
     @After

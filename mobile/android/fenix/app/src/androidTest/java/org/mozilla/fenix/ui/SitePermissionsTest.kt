@@ -58,6 +58,7 @@ class SitePermissionsTest {
     fun setUp() {
         // disabling the new homepage pop-up that interferes with the tests.
         featureSettingsHelper.setJumpBackCFREnabled(false)
+        featureSettingsHelper.setTCPCFREnabled(false)
         featureSettingsHelper.deleteSitePermissions(true)
         featureSettingsHelper.disablePwaCFR(true)
     }

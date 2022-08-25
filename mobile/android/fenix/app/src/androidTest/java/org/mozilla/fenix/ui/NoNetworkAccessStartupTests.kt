@@ -7,11 +7,13 @@ package org.mozilla.fenix.ui
 import androidx.core.net.toUri
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
+import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.setNetworkEnabled
@@ -30,10 +32,18 @@ class NoNetworkAccessStartupTests {
     @get:Rule
     val activityTestRule = HomeActivityTestRule(launchActivity = false)
 
+    private val featureSettingsHelper = FeatureSettingsHelper()
+
+    @Before
+    fun setUp() {
+        featureSettingsHelper.setTCPCFREnabled(false)
+    }
+
     @After
     fun tearDown() {
         // Restoring network connection
         setNetworkEnabled(true)
+        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     @Test

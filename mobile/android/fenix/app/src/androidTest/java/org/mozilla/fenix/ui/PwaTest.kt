@@ -31,6 +31,7 @@ class PwaTest {
     @Before
     fun setUp() {
         featureSettingsHelper.disablePwaCFR(true)
+        featureSettingsHelper.setTCPCFREnabled(false)
     }
 
     @After

@@ -15,6 +15,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.getEnhancedTrackingProtectionAsset
@@ -32,6 +33,7 @@ class SettingsAddonsTest {
     private lateinit var mockWebServer: MockWebServer
     private var addonsListIdlingResource: RecyclerViewIdlingResource? = null
     private var addonContainerIdlingResource: ViewVisibilityIdlingResource? = null
+    private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get:Rule
     val activityTestRule = HomeActivityIntentTestRule()
@@ -42,6 +44,8 @@ class SettingsAddonsTest {
             dispatcher = AndroidAssetDispatcher()
             start()
         }
+
+        featureSettingsHelper.setTCPCFREnabled(false)
     }
 
     @After
@@ -55,6 +59,8 @@ class SettingsAddonsTest {
         if (addonContainerIdlingResource != null) {
             IdlingRegistry.getInstance().unregister(addonContainerIdlingResource!!)
         }
+
+        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     // Walks through settings add-ons menu to ensure all items are present
