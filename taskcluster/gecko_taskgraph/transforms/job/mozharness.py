@@ -26,7 +26,6 @@ from gecko_taskgraph.transforms.job.common import (
     setup_secrets,
     docker_worker_add_artifacts,
     generic_worker_add_artifacts,
-    get_expiration,
 )
 from gecko_taskgraph.transforms.task import (
     get_branch_repo,
@@ -148,7 +147,6 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
             "name": "public/logs",
             "path": "{workdir}/logs/".format(**run),
             "type": "directory",
-            "expires-after": get_expiration(config, "medium"),
         }
     )
     worker["taskcluster-proxy"] = run.pop("taskcluster-proxy", None)
@@ -258,14 +256,8 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     setup_secrets(config, job, taskdesc)
 
     taskdesc["worker"].setdefault("artifacts", []).append(
-        {
-            "name": "public/logs",
-            "path": "logs",
-            "type": "directory",
-            "expires-after": get_expiration(config, "medium"),
-        }
+        {"name": "public/logs", "path": "logs", "type": "directory"}
     )
-
     if not worker.get("skip-artifacts", False):
         generic_worker_add_artifacts(config, job, taskdesc)
 
