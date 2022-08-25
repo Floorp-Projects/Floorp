@@ -107,7 +107,7 @@ interface TabsTrayController {
     fun handleMediaClicked(tab: SessionState)
 }
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LongParameterList")
 class DefaultTabsTrayController(
     private val trayStore: TabsTrayStore,
     private val browserStore: BrowserStore,

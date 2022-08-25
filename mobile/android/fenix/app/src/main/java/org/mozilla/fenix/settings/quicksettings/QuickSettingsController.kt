@@ -98,7 +98,7 @@ interface QuickSettingsController {
  * specific Android runtime permissions.
  * @param displayPermissions callback for when [WebsitePermissionsView] needs to be displayed.
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LongParameterList")
 class DefaultQuickSettingsController(
     private val context: Context,
     private val quickSettingsStore: QuickSettingsFragmentStore,
