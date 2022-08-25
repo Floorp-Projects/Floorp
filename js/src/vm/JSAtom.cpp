@@ -50,9 +50,9 @@ using mozilla::Nothing;
 using mozilla::RangedPtr;
 
 template <typename CharT>
-extern void InflateUTF8CharsToBufferAndTerminate(const JS::UTF8Chars src,
-                                                 CharT* dst, size_t dstLen,
-                                                 JS::SmallestEncoding encoding);
+extern void InflateUTF8CharsToBuffer(const JS::UTF8Chars src, CharT* dst,
+                                     size_t dstLen,
+                                     JS::SmallestEncoding encoding);
 
 template <typename CharT>
 extern bool UTF8EqualsChars(const JS::UTF8Chars utf8, const CharT* chars);
@@ -629,23 +629,19 @@ static MOZ_ALWAYS_INLINE JSLinearString* MakeUTF8AtomHelperNonStaticValidLength(
       return nullptr;
     }
 
-    InflateUTF8CharsToBufferAndTerminate(chars->utf8, storage, length,
-                                         chars->encoding);
+    InflateUTF8CharsToBuffer(chars->utf8, storage, length, chars->encoding);
     return str;
   }
 
   // MakeAtomUTF8Helper is called from deep in the Atomization path, which
   // expects functions to fail gracefully with nullptr on OOM, without throwing.
-  //
-  // Flat strings are null-terminated. Leave room with length + 1
   UniquePtr<CharT[], JS::FreePolicy> newStr(
-      js_pod_arena_malloc<CharT>(js::StringBufferArena, length + 1));
+      js_pod_arena_malloc<CharT>(js::StringBufferArena, length));
   if (!newStr) {
     return nullptr;
   }
 
-  InflateUTF8CharsToBufferAndTerminate(chars->utf8, newStr.get(), length,
-                                       chars->encoding);
+  InflateUTF8CharsToBuffer(chars->utf8, newStr.get(), length, chars->encoding);
 
   return JSLinearString::newForAtomValidLength(cx, std::move(newStr), length);
 }
