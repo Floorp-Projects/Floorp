@@ -187,10 +187,6 @@ criteria = "safe-to-deploy"
 version = "0.2.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.anyhow]]
-version = "1.0.57"
-criteria = "safe-to-deploy"
-
 [[exemptions.arbitrary]]
 version = "1.1.0"
 criteria = "safe-to-run"
