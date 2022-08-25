@@ -71,26 +71,6 @@ add_task(async function basic() {
   Assert.equal(testActionCalled, 1, "Test actionwas called");
 });
 
-add_task(async function test_label_command() {
-  info("A prefix of the label matches");
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "Open Dow",
-  });
-  Assert.equal(
-    UrlbarTestUtils.getResultCount(window),
-    2,
-    "We matched the action"
-  );
-
-  let { result } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.DYNAMIC);
-  Assert.equal(result.providerName, "quickactions");
-  await UrlbarTestUtils.promisePopupClose(window, () => {
-    EventUtils.synthesizeKey("KEY_Escape");
-  });
-});
-
 add_task(async function enter_search_mode_button() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
