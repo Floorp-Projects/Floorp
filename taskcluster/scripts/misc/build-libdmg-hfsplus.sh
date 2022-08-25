@@ -11,11 +11,13 @@ mkdir -p $UPLOAD_DIR $STAGE
 
 cd $MOZ_FETCHES_DIR/libdmg-hfsplus
 
+# The openssl libraries in the sysroot cannot be linked in a PIE executable so we use -no-pie
 cmake \
   -DCMAKE_C_COMPILER=$MOZ_FETCHES_DIR/clang/bin/clang \
   -DCMAKE_CXX_COMPILER=$MOZ_FETCHES_DIR/clang/bin/clang++ \
   -DCMAKE_SYSROOT=$MOZ_FETCHES_DIR/sysroot \
   -DOPENSSL_USE_STATIC_LIBS=1 \
+  -DCMAKE_EXE_LINKER_FLAGS=-no-pie \
   .
 
 make VERBOSE=1 -j$(nproc)
