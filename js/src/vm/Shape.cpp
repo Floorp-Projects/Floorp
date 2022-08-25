@@ -1020,11 +1020,10 @@ BaseShape* BaseShape::get(JSContext* cx, const JSClass* clasp, JS::Realm* realm,
     return *p;
   }
 
-  gc::Cell* cell = Allocate<BaseShape>(cx);
-  if (!cell) {
+  BaseShape* nbase = cx->newCell<BaseShape>(clasp, realm, proto);
+  if (!nbase) {
     return nullptr;
   }
-  BaseShape* nbase = new (cell) BaseShape(clasp, realm, proto);
 
   if (!p.add(cx, table, Lookup(clasp, realm, proto), nbase)) {
     return nullptr;
@@ -1036,24 +1035,15 @@ BaseShape* BaseShape::get(JSContext* cx, const JSClass* clasp, JS::Realm* realm,
 Shape* SharedShape::new_(JSContext* cx, Handle<BaseShape*> base,
                          ObjectFlags objectFlags, uint32_t nfixed,
                          Handle<SharedPropMap*> map, uint32_t mapLength) {
-  gc::Cell* cell = Allocate<Shape>(cx);
-  if (!cell) {
-    return nullptr;
-  }
-
-  return new (cell) SharedShape(base, objectFlags, nfixed, map, mapLength);
+  return cx->newCell<Shape>(base, objectFlags, nfixed, map, mapLength, false);
 }
 
 Shape* DictionaryShape::new_(JSContext* cx, Handle<BaseShape*> base,
                              ObjectFlags objectFlags, uint32_t nfixed,
                              Handle<DictionaryPropMap*> map,
                              uint32_t mapLength) {
-  gc::Cell* cell = Allocate<Shape>(cx);
-  if (!cell) {
-    return nullptr;
-  }
-
-  return new (cell) DictionaryShape(base, objectFlags, nfixed, map, mapLength);
+  return cx->newCell<DictionaryShape>(base, objectFlags, nfixed, map,
+                                      mapLength);
 }
 
 MOZ_ALWAYS_INLINE HashNumber ShapeForAddHasher::hash(const Lookup& l) {

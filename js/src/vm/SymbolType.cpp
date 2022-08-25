@@ -21,12 +21,7 @@ Symbol* Symbol::newInternal(JSContext* cx, JS::SymbolCode code, uint32_t hash,
                             Handle<JSAtom*> description) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
   AutoAllocInAtomsZone az(cx);
-
-  gc::Cell* cell = Allocate<JS::Symbol>(cx);
-  if (!cell) {
-    return nullptr;
-  }
-  return new (cell) Symbol(code, hash, description);
+  return cx->newCell<Symbol>(code, hash, description);
 }
 
 Symbol* Symbol::new_(JSContext* cx, JS::SymbolCode code,

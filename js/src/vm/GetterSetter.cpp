@@ -7,22 +7,18 @@
 #include "vm/GetterSetter.h"
 
 #include "gc/Allocator.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 
 using namespace js;
 
-js::GetterSetter::GetterSetter(JSObject* getter, JSObject* setter)
+js::GetterSetter::GetterSetter(HandleObject getter, HandleObject setter)
     : TenuredCellWithGCPointer(getter), setter_(setter) {}
 
 // static
 GetterSetter* GetterSetter::create(JSContext* cx, HandleObject getter,
                                    HandleObject setter) {
-  gc::Cell* cell = Allocate<GetterSetter>(cx);
-  if (!cell) {
-    return nullptr;
-  }
-
-  return new (cell) GetterSetter(getter, setter);
+  return cx->newCell<GetterSetter>(getter, setter);
 }
 
 JS::ubi::Node::Size JS::ubi::Concrete<GetterSetter>::size(

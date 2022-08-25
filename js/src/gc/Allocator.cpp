@@ -33,10 +33,10 @@ using namespace js;
 using namespace gc;
 
 template <AllowGC allowGC /* = CanGC */>
-JSObject* js::AllocateObject(JSContext* cx, AllocKind kind,
-                             size_t nDynamicSlots, gc::InitialHeap heap,
-                             const JSClass* clasp,
-                             AllocSite* site /* = nullptr */) {
+JSObject* gc::detail::AllocateObject(JSContext* cx, AllocKind kind,
+                                     size_t nDynamicSlots, gc::InitialHeap heap,
+                                     const JSClass* clasp,
+                                     AllocSite* site /* = nullptr */) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
   MOZ_ASSERT(IsObjectAllocKind(kind));
   size_t thingSize = Arena::thingSize(kind);
@@ -92,16 +92,12 @@ JSObject* js::AllocateObject(JSContext* cx, AllocKind kind,
   return GCRuntime::tryNewTenuredObject<allowGC>(cx, kind, thingSize,
                                                  nDynamicSlots);
 }
-template JSObject* js::AllocateObject<NoGC>(JSContext* cx, gc::AllocKind kind,
-                                            size_t nDynamicSlots,
-                                            gc::InitialHeap heap,
-                                            const JSClass* clasp,
-                                            gc::AllocSite* site);
-template JSObject* js::AllocateObject<CanGC>(JSContext* cx, gc::AllocKind kind,
-                                             size_t nDynamicSlots,
-                                             gc::InitialHeap heap,
-                                             const JSClass* clasp,
-                                             gc::AllocSite* site);
+template JSObject* gc::detail::AllocateObject<NoGC>(
+    JSContext* cx, gc::AllocKind kind, size_t nDynamicSlots,
+    gc::InitialHeap heap, const JSClass* clasp, gc::AllocSite* site);
+template JSObject* gc::detail::AllocateObject<CanGC>(
+    JSContext* cx, gc::AllocKind kind, size_t nDynamicSlots,
+    gc::InitialHeap heap, const JSClass* clasp, gc::AllocSite* site);
 
 // Attempt to allocate a new JSObject out of the nursery. If there is not
 // enough room in the nursery or there is an OOM, this method will return
@@ -198,8 +194,8 @@ Cell* GCRuntime::tryNewNurseryStringCell(JSContext* cx, size_t thingSize,
 }
 
 template <AllowGC allowGC /* = CanGC */>
-Cell* js::AllocateStringCell(JSContext* cx, AllocKind kind, size_t size,
-                             InitialHeap heap) {
+Cell* gc::detail::AllocateStringCell(JSContext* cx, AllocKind kind, size_t size,
+                                     InitialHeap heap) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
   MOZ_ASSERT(size == Arena::thingSize(kind));
   MOZ_ASSERT(size == sizeof(JSString) || size == sizeof(JSFatInlineString));
@@ -240,10 +236,10 @@ Cell* js::AllocateStringCell(JSContext* cx, AllocKind kind, size_t size,
   return GCRuntime::tryNewTenuredThing<allowGC>(cx, kind, size);
 }
 
-template Cell* js::AllocateStringCell<NoGC>(JSContext*, AllocKind, size_t,
-                                            InitialHeap);
-template Cell* js::AllocateStringCell<CanGC>(JSContext*, AllocKind, size_t,
-                                             InitialHeap);
+template Cell* gc::detail::AllocateStringCell<NoGC>(JSContext*, AllocKind,
+                                                    size_t, InitialHeap);
+template Cell* gc::detail::AllocateStringCell<CanGC>(JSContext*, AllocKind,
+                                                     size_t, InitialHeap);
 
 // Attempt to allocate a new BigInt out of the nursery. If there is not enough
 // room in the nursery or there is an OOM, this method will return nullptr.
@@ -277,7 +273,7 @@ JS::BigInt* GCRuntime::tryNewNurseryBigInt(JSContext* cx, size_t thingSize,
 }
 
 template <AllowGC allowGC /* = CanGC */>
-JS::BigInt* js::AllocateBigInt(JSContext* cx, InitialHeap heap) {
+JS::BigInt* gc::detail::AllocateBigInt(JSContext* cx, InitialHeap heap) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
 
   AllocKind kind = MapTypeToAllocKind<JS::BigInt>::kind;
@@ -323,14 +319,14 @@ JS::BigInt* js::AllocateBigInt(JSContext* cx, InitialHeap heap) {
 
   return JS::BigInt::emplace(cell);
 }
-template JS::BigInt* js::AllocateBigInt<NoGC>(JSContext* cx,
-                                              gc::InitialHeap heap);
-template JS::BigInt* js::AllocateBigInt<CanGC>(JSContext* cx,
-                                               gc::InitialHeap heap);
+template JS::BigInt* gc::detail::AllocateBigInt<NoGC>(JSContext* cx,
+                                                      gc::InitialHeap heap);
+template JS::BigInt* gc::detail::AllocateBigInt<CanGC>(JSContext* cx,
+                                                       gc::InitialHeap heap);
 
 template <AllowGC allowGC /* = CanGC */>
-TenuredCell* js::AllocateTenuredImpl(JSContext* cx, gc::AllocKind kind,
-                                     size_t size) {
+TenuredCell* gc::detail::AllocateTenuredImpl(JSContext* cx, gc::AllocKind kind,
+                                             size_t size) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
   MOZ_ASSERT(!IsNurseryAllocable(kind));
   MOZ_ASSERT(size == Arena::thingSize(kind));
@@ -345,10 +341,10 @@ TenuredCell* js::AllocateTenuredImpl(JSContext* cx, gc::AllocKind kind,
   return GCRuntime::tryNewTenuredThing<allowGC>(cx, kind, size);
 }
 
-template TenuredCell* js::AllocateTenuredImpl<NoGC>(JSContext*, AllocKind,
-                                                    size_t);
-template TenuredCell* js::AllocateTenuredImpl<CanGC>(JSContext*, AllocKind,
-                                                     size_t);
+template TenuredCell* gc::detail::AllocateTenuredImpl<NoGC>(JSContext*,
+                                                            AllocKind, size_t);
+template TenuredCell* gc::detail::AllocateTenuredImpl<CanGC>(JSContext*,
+                                                             AllocKind, size_t);
 
 template <AllowGC allowGC>
 /* static */

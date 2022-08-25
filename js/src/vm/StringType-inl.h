@@ -202,7 +202,7 @@ MOZ_ALWAYS_INLINE JSRope* JSRope::new_(
   if (MOZ_UNLIKELY(!validateLengthInternal<allowGC>(cx, length))) {
     return nullptr;
   }
-  JSRope* str = js::AllocateString<JSRope, allowGC>(cx, heap);
+  JSRope* str = cx->newCell<JSRope, allowGC>(heap);
   if (!str) {
     return nullptr;
   }
@@ -258,8 +258,7 @@ MOZ_ALWAYS_INLINE JSLinearString* JSDependentString::new_(
                : js::NewInlineString<char16_t>(cx, base, start, length, heap);
   }
 
-  JSDependentString* str =
-      js::AllocateString<JSDependentString, js::NoGC>(cx, heap);
+  JSDependentString* str = cx->newCell<JSDependentString, js::NoGC>(heap);
   if (str) {
     str->init(cx, baseArg, start, length);
     return str;
@@ -267,7 +266,7 @@ MOZ_ALWAYS_INLINE JSLinearString* JSDependentString::new_(
 
   JS::Rooted<JSLinearString*> base(cx, baseArg);
 
-  str = js::AllocateString<JSDependentString>(cx, heap);
+  str = cx->newCell<JSDependentString>(heap);
   if (!str) {
     return nullptr;
   }
@@ -307,11 +306,10 @@ MOZ_ALWAYS_INLINE JSLinearString* JSLinearString::newValidLength(
     JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars, size_t length,
     js::gc::InitialHeap heap) {
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
-  js::gc::Cell* cell = js::AllocateString<JSLinearString, allowGC>(cx, heap);
-  if (!cell) {
+  JSLinearString* str = cx->newCell<JSLinearString, allowGC>(heap);
+  if (!str) {
     return nullptr;
   }
-  JSLinearString* str = JSLinearString::emplace(cell);
 
   if (!str->isTenured()) {
     // If the following registration fails, the string is partially initialized
@@ -341,16 +339,15 @@ MOZ_ALWAYS_INLINE JSLinearString* JSLinearString::newForAtomValidLength(
     size_t length) {
   MOZ_ASSERT(validateLength(cx, length));
   MOZ_ASSERT(cx->zone()->isAtomsZone());
-  js::gc::Cell* cell = js::Allocate<js::NormalAtom, js::NoGC>(cx);
-  if (!cell) {
+  js::NormalAtom* str = cx->newCell<js::NormalAtom, js::NoGC>();
+  if (!str) {
     return nullptr;
   }
 
-  MOZ_ASSERT(cell->isTenured());
-  cx->zone()->addCellMemory(cell, length * sizeof(CharT),
+  MOZ_ASSERT(str->isTenured());
+  cx->zone()->addCellMemory(str, length * sizeof(CharT),
                             js::MemoryUse::StringContents);
 
-  JSLinearString* str = js::NormalAtom::emplace(cell);
   str->init(chars.release(), length);
   return str;
 }
@@ -374,34 +371,28 @@ template <js::AllowGC allowGC>
 MOZ_ALWAYS_INLINE JSThinInlineString* JSThinInlineString::new_(
     JSContext* cx, js::gc::InitialHeap heap) {
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
-  return js::AllocateString<JSThinInlineString, allowGC>(cx, heap);
+  return cx->newCell<JSThinInlineString, allowGC>(heap);
 }
 
 MOZ_ALWAYS_INLINE JSThinInlineString* JSThinInlineString::newForAtom(
     JSContext* cx) {
   MOZ_ASSERT(cx->zone()->isAtomsZone());
-  js::gc::Cell* cell = js::Allocate<js::NormalAtom, js::NoGC>(cx);
-  if (!cell) {
-    return nullptr;
-  }
-  return reinterpret_cast<JSThinInlineString*>(js::NormalAtom::emplace(cell));
+  return reinterpret_cast<JSThinInlineString*>(
+      cx->newCell<js::NormalAtom, js::NoGC>());
 }
 
 template <js::AllowGC allowGC>
 MOZ_ALWAYS_INLINE JSFatInlineString* JSFatInlineString::new_(
     JSContext* cx, js::gc::InitialHeap heap) {
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
-  return js::AllocateString<JSFatInlineString, allowGC>(cx, heap);
+  return cx->newCell<JSFatInlineString, allowGC>(heap);
 }
 
 MOZ_ALWAYS_INLINE JSFatInlineString* JSFatInlineString::newForAtom(
     JSContext* cx) {
   MOZ_ASSERT(cx->zone()->isAtomsZone());
-  js::gc::Cell* cell = js::Allocate<js::FatInlineAtom, js::NoGC>(cx);
-  if (!cell) {
-    return nullptr;
-  }
-  return reinterpret_cast<JSFatInlineString*>(js::FatInlineAtom::emplace(cell));
+  return reinterpret_cast<JSFatInlineString*>(
+      cx->newCell<js::FatInlineAtom, js::NoGC>());
 }
 
 template <>
@@ -449,11 +440,10 @@ MOZ_ALWAYS_INLINE JSExternalString* JSExternalString::new_(
   if (MOZ_UNLIKELY(!validateLength(cx, length))) {
     return nullptr;
   }
-  js::gc::Cell* cell = js::Allocate<JSExternalString>(cx);
-  if (!cell) {
+  auto* str = cx->newCell<JSExternalString>();
+  if (!str) {
     return nullptr;
   }
-  auto* str = JSExternalString::emplace(cell);
   str->init(chars, length, callbacks);
   size_t nbytes = length * sizeof(char16_t);
 
