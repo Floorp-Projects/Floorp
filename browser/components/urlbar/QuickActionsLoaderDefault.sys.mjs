@@ -73,18 +73,18 @@ let viewsourceIsAvailable = () => {
 };
 
 XPCOMUtils.defineLazyGetter(lazy, "gFluentStrings", function() {
-  return new Localization(["browser/browser.ftl"], true);
+  return new Localization(["branding/brand.ftl", "browser/browser.ftl"], true);
 });
 
 const DEFAULT_ACTIONS = {
   addons: {
-    l10nCommands: "quickactions-cmd-addons2",
+    l10nCommands: ["quickactions-cmd-addons2", "quickactions-addons"],
     icon: "chrome://mozapps/skin/extensions/category-extensions.svg",
     label: "quickactions-addons",
     onPick: openAddonsUrl("addons://discover/"),
   },
   bookmarks: {
-    l10nCommands: "quickactions-cmd-bookmarks",
+    l10nCommands: ["quickactions-cmd-bookmarks", "quickactions-bookmarks"],
     icon: "chrome://browser/skin/bookmark.svg",
     label: "quickactions-bookmarks",
     onPick: () => {
@@ -94,14 +94,17 @@ const DEFAULT_ACTIONS = {
     },
   },
   clear: {
-    l10nCommands: "quickactions-cmd-clearhistory",
+    l10nCommands: [
+      "quickactions-cmd-clearhistory",
+      "quickactions-clearhistory",
+    ],
     label: "quickactions-clearhistory",
     onPick: openUrlFun(
       `${BASE_URL}delete-browsing-search-download-history-firefox`
     ),
   },
   downloads: {
-    l10nCommands: "quickactions-cmd-downloads",
+    l10nCommands: ["quickactions-cmd-downloads", "quickactions-downloads"],
     icon: "chrome://browser/skin/downloads/downloads.svg",
     label: "quickactions-downloads",
     onPick: openUrlFun("about:downloads"),
@@ -113,14 +116,14 @@ const DEFAULT_ACTIONS = {
     onPick: openAddonsUrl("addons://list/extension"),
   },
   inspect: {
-    l10nCommands: "quickactions-cmd-inspector",
+    l10nCommands: ["quickactions-cmd-inspector", "quickactions-inspector"],
     icon: "chrome://devtools/skin/images/tool-inspector.svg",
     label: "quickactions-inspector",
     isActive: inspectorIsAvailable,
     onPick: openInspector,
   },
   logins: {
-    l10nCommands: "quickactions-cmd-logins",
+    l10nCommands: ["quickactions-cmd-logins", "quickactions-logins"],
     label: "quickactions-logins",
     onPick: openUrlFun("about:logins"),
   },
@@ -131,7 +134,7 @@ const DEFAULT_ACTIONS = {
     onPick: openAddonsUrl("addons://list/plugin"),
   },
   print: {
-    l10nCommands: "quickactions-cmd-print",
+    l10nCommands: ["quickactions-cmd-print", "quickactions-print"],
     label: "quickactions-print",
     onPick: () => {
       lazy.BrowserWindowTracker.getTopWindow()
@@ -140,7 +143,7 @@ const DEFAULT_ACTIONS = {
     },
   },
   private: {
-    l10nCommands: "quickactions-cmd-private",
+    l10nCommands: ["quickactions-cmd-private", "quickactions-private"],
     label: "quickactions-private",
     icon: "chrome://global/skin/icons/indicator-private-browsing.svg",
     onPick: () => {
@@ -150,17 +153,17 @@ const DEFAULT_ACTIONS = {
     },
   },
   refresh: {
-    l10nCommands: "quickactions-cmd-refresh",
+    l10nCommands: ["quickactions-cmd-refresh", "quickactions-refresh"],
     label: "quickactions-refresh",
     onPick: openUrlFun(`${BASE_URL}refresh-firefox-reset-add-ons-and-settings`),
   },
   restart: {
-    l10nCommands: "quickactions-cmd-restart",
+    l10nCommands: ["quickactions-cmd-restart", "quickactions-restart"],
     label: "quickactions-restart",
     onPick: restartBrowser,
   },
   screenshot: {
-    l10nCommands: "quickactions-cmd-screenshot",
+    l10nCommands: ["quickactions-cmd-screenshot", "quickactions-screenshot2"],
     label: "quickactions-screenshot2",
     isActive: currentPageIsWebContentFilter,
     onPick: () => {
@@ -171,7 +174,7 @@ const DEFAULT_ACTIONS = {
     },
   },
   settings: {
-    l10nCommands: "quickactions-cmd-settings",
+    l10nCommands: ["quickactions-cmd-settings", "quickactions-settings"],
     label: "quickactions-settings",
     onPick: openUrlFun("about:preferences"),
   },
@@ -182,12 +185,12 @@ const DEFAULT_ACTIONS = {
     onPick: openAddonsUrl("addons://list/theme"),
   },
   update: {
-    l10nCommands: "quickactions-cmd-update",
+    l10nCommands: ["quickactions-cmd-update", "quickactions-update"],
     label: "quickactions-update",
     onPick: openUrlFun(`${BASE_URL}update-firefox-latest-release`),
   },
   viewsource: {
-    l10nCommands: "quickactions-cmd-viewsource",
+    l10nCommands: ["quickactions-cmd-viewsource", "quickactions-viewsource"],
     icon: "chrome://global/skin/icons/settings.svg",
     label: "quickactions-viewsource",
     isActive: viewsourceIsAvailable,
@@ -235,10 +238,12 @@ export class QuickActionsLoaderDefault {
   static async load() {
     for (const key in DEFAULT_ACTIONS) {
       let actionData = DEFAULT_ACTIONS[key];
-      let messages = await lazy.gFluentStrings.formatMessages([
-        { id: actionData.l10nCommands },
-      ]);
-      actionData.commands = messages[0].value.split(",").map(x => x.trim());
+      let messages = await lazy.gFluentStrings.formatMessages(
+        actionData.l10nCommands.map(id => ({ id }))
+      );
+      actionData.commands = messages
+        .map(({ value }) => value.split(",").map(x => x.trim().toLowerCase()))
+        .flat();
       lazy.UrlbarProviderQuickActions.addAction(key, actionData);
     }
   }
