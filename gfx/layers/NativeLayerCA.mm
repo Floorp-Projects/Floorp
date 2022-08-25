@@ -553,12 +553,15 @@ VideoLowPowerType NativeLayerRootCA::CheckVideoLowPower() {
     return VideoLowPowerType::NotVideo;
   }
 
-  if (videoLayerCount > 1) {
-    return VideoLowPowerType::FailMultipleVideo;
-  }
-
+  // Most importantly, check if the window is fullscreen. If the user is watching
+  // video in a window, then all of the other enums are irrelevant to achieving
+  // the low power mode.
   if (!mWindowIsFullscreen) {
     return VideoLowPowerType::FailWindowed;
+  }
+
+  if (videoLayerCount > 1) {
+    return VideoLowPowerType::FailMultipleVideo;
   }
 
   if (!topLayerIsVideo) {
