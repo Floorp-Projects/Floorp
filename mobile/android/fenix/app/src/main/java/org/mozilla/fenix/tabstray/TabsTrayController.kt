@@ -120,7 +120,6 @@ class DefaultTabsTrayController(
     private val selectTabPosition: (Int, Boolean) -> Unit,
     private val dismissTray: () -> Unit,
     private val showUndoSnackbarForTab: (Boolean) -> Unit,
-    @VisibleForTesting
     internal val showCancelledDownloadWarning: (downloadCount: Int, tabId: String?, source: String?) -> Unit,
 
 ) : TabsTrayController {

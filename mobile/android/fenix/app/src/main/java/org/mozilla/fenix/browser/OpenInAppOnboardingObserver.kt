@@ -38,7 +38,6 @@ class OpenInAppOnboardingObserver(
     private val settings: Settings,
     private val appLinksUseCases: AppLinksUseCases,
     private val container: ViewGroup,
-    @VisibleForTesting
     internal val shouldScrollWithTopToolbar: Boolean = false,
 ) : LifecycleAwareFeature {
     private var scope: CoroutineScope? = null

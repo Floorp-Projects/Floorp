@@ -5,7 +5,6 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
-import androidx.annotation.VisibleForTesting
 import androidx.paging.DataSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -16,8 +15,8 @@ import kotlin.coroutines.CoroutineContext
 
 class PermissionStorage(
     private val context: Context,
-    @VisibleForTesting internal val dispatcher: CoroutineContext = Dispatchers.IO,
-    @VisibleForTesting internal val permissionsStorage: SitePermissionsStorage =
+    private val dispatcher: CoroutineContext = Dispatchers.IO,
+    internal val permissionsStorage: SitePermissionsStorage =
         context.components.core.geckoSitePermissionsStorage,
 ) {
 

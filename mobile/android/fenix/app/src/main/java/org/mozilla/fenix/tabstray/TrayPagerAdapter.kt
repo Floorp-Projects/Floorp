@@ -7,7 +7,6 @@ package org.mozilla.fenix.tabstray
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.annotation.VisibleForTesting
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.ConcatAdapter
@@ -25,15 +24,15 @@ import org.mozilla.fenix.tabstray.viewholders.SyncedTabsPageViewHolder
 
 @Suppress("LongParameterList")
 class TrayPagerAdapter(
-    @VisibleForTesting internal val context: Context,
-    @VisibleForTesting internal val lifecycleOwner: LifecycleOwner,
-    @VisibleForTesting internal val tabsTrayStore: TabsTrayStore,
-    @VisibleForTesting internal val browserInteractor: BrowserTrayInteractor,
-    @VisibleForTesting internal val navInteractor: NavigationInteractor,
-    @VisibleForTesting internal val tabsTrayInteractor: TabsTrayInteractor,
-    @VisibleForTesting internal val browserStore: BrowserStore,
-    @VisibleForTesting internal val appStore: AppStore,
-    @VisibleForTesting internal val inactiveTabsInteractor: InactiveTabsInteractor,
+    internal val context: Context,
+    internal val lifecycleOwner: LifecycleOwner,
+    internal val tabsTrayStore: TabsTrayStore,
+    internal val browserInteractor: BrowserTrayInteractor,
+    internal val navInteractor: NavigationInteractor,
+    internal val tabsTrayInteractor: TabsTrayInteractor,
+    internal val browserStore: BrowserStore,
+    internal val appStore: AppStore,
+    internal val inactiveTabsInteractor: InactiveTabsInteractor,
 ) : RecyclerView.Adapter<AbstractPageViewHolder>() {
 
     /**

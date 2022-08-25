@@ -14,7 +14,7 @@ import org.mozilla.fenix.share.listadapters.AppShareOption
 
 class AppViewHolder(
     itemView: View,
-    @VisibleForTesting val interactor: ShareToAppsInteractor,
+    @get:VisibleForTesting val interactor: ShareToAppsInteractor,
 ) : RecyclerView.ViewHolder(itemView) {
 
     private var application: AppShareOption? = null

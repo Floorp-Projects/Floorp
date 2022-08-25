@@ -43,8 +43,7 @@ private const val VIEW_HOLDER_TYPE_STUDY = 1
 class StudiesAdapter(
     private val studiesDelegate: StudiesAdapterDelegate,
     studies: List<EnrolledExperiment>,
-    @VisibleForTesting
-    internal val shouldSubmitOnInit: Boolean = true,
+    private val shouldSubmitOnInit: Boolean = true,
 ) : ListAdapter<Any, CustomViewHolder>(DifferCallback) {
     /**
      * Represents all the studies that will be distributed in multiple headers like

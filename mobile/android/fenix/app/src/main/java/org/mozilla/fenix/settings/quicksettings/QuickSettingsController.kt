@@ -105,9 +105,7 @@ class DefaultQuickSettingsController(
     private val browserStore: BrowserStore,
     private val ioScope: CoroutineScope,
     private val navController: NavController,
-    @VisibleForTesting
     internal val sessionId: String,
-    @VisibleForTesting
     internal var sitePermissions: SitePermissions?,
     private val settings: Settings,
     private val permissionStorage: PermissionStorage,
