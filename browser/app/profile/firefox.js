@@ -645,10 +645,10 @@ pref("browser.search.separatePrivateDefault.ui.banner.max", 0);
 pref("browser.privatebrowsing.vpnpromourl", "https://vpn.mozilla.org/?utm_source=firefox-browser&utm_medium=firefox-%CHANNEL%-browser&utm_campaign=private-browsing-vpn-link");
 
 // Enables the new private browsing indicator.
-pref("browser.privatebrowsing.enable-new-indicator", false);
+pref("browser.privatebrowsing.enable-new-indicator", true);
 
 // Enables the new about:privatebrowsing logo.
-pref("browser.privatebrowsing.enable-new-logo", false);
+pref("browser.privatebrowsing.enable-new-logo", true);
 
 // Whether the user is opted-in to privacy segmentation.
 pref("browser.privacySegmentation.enabled", false);
@@ -660,10 +660,10 @@ pref("browser.privacySegmentation.windowSeparation.enabled", false);
 
 // Use dark theme variant for PBM windows. This is only supported if the theme
 // sets darkTheme data.
-pref("browser.theme.dark-private-windows", false);
+pref("browser.theme.dark-private-windows", true);
 
 // Controls visibility of the privacy segmentation preferences section.
-pref("browser.privacySegmentation.preferences.show", false);
+pref("browser.privacySegmentation.preferences.show", true);
 
 pref("browser.sessionhistory.max_entries", 50);
 

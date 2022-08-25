@@ -585,4 +585,20 @@ majorRelease2022:
   owner: firefoxview@mozilla.com
   hasExposure: false
   isEarlyStartup: true
-  variables: {}
+  variables:
+    feltPrivacyPBMDarkTheme:
+      type: boolean
+      fallbackPref: "browser.theme.dark-private-windows"
+      description: "Use dark theme variant for PBM windows. This is only supported if the theme sets darkTheme data."
+    feltPrivacyPBMNewIndicator:
+      type: boolean
+      fallbackPref: "browser.privatebrowsing.enable-new-indicator"
+      description: "Enables the new private browsing indicator."
+    feltPrivacyPBMNewLogo:
+      type: boolean
+      fallbackPref: "browser.privatebrowsing.enable-new-logo"
+      description: "Enables the new about:privatebrowsing logo."
+    feltPrivacyShowPreferencesSection:
+      type: boolean
+      fallbackPref: "browser.privacySegmentation.preferences.show"
+      description: "Controls visibility of the privacy segmentation preferences section."
