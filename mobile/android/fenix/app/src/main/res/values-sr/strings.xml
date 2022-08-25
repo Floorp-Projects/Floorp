@@ -41,8 +41,6 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Недавни обележивачи</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Прикажи све</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Прикажи све сачуване обележиваче</string>
 
@@ -66,10 +64,16 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Не, хвала</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Можете да подесите %1$s да аутоматски отвара везе у апликацијама.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Иди у подешавања</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Одбаци</string>
+
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">Одбаци</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Потребан је приступ камери. Отворите Андроид подешавања, одаберите дозволе и омогућите приступ.</string>
@@ -87,8 +91,19 @@
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
     <string name="tab_tray_inactive_onboarding_message">Картице које нисте погледали више од две недеље су премештене овде.</string>
+    <!-- Text for the action link to go to Settings for inactive tabs. -->
+    <string name="tab_tray_inactive_onboarding_button_text">Искључи у подешавањима</string>
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Аутоматски затвори након једног месеца?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">%1$s може да затвори језичке које нисте прегледали прошлог месеца.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Затвори</string>
+
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">Укључи аутоматско затварање</string>
 
 
     <!-- Home screen icons - Long press shortcuts -->
@@ -103,10 +118,19 @@
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Прикажи све</string>
 
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description_2">Дугме за приказ свих недавних језичака</string>
+    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
+        The first parameter is the search term that the user used. (for example: your search for "cat")-->
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Ваша претрага за \&quot;%1$s\&quot;</string>
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d сајтови</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d сајтови</string>
 
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">Погледај све синхронизоване језичке</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">Синхронизовани уређај</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Уклони</string>
@@ -224,9 +248,28 @@
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_title_3">Шта је ново у %1$s</string>
+    <!-- Onboarding home screen dialog description text. -->
+    <string name="onboarding_home_screen_description_2">Сада је лакше да наставите тамо где сте стали.</string>
+    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_section_home_title_3">Прилагођена %1$s почетна страница</string>
+    <!-- Onboarding home screen dialog description text for the home section. -->
+    <string name="onboarding_home_screen_section_home_description_2">Приступите отвореним језичцима, обележивачима и историји прегледања.</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Чисти, организовани језичци</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Очистите неред на језичцима помоћу побољшаног распореда и аутоматског затварања језичака.</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
     <string name="onboarding_home_screen_section_useful_history_title_2">Недавне претраге</string>
 
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_description_2">Поново посетите своје недавне претраге са почетне странице и језичака.</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Ваша лична Firefox почетна страница сада олакшава да наставите тамо где сте стали. Пронађите своје недавне језичке, обележиваче и резултате претраге.</string>
+
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Отвори нови %1$s језичак</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Претрага</string>
     <!-- Text preview for larger sized widgets -->
@@ -314,7 +357,9 @@
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Прилагоди</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Синхронизујте забелешке, историјат и још много тога са својим Firefox налогом</string>
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Синхронизујте забелешке, историјат и још много тога са својим Firefox налогом</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Пријавите се да бисте синхронизовали своје језичке, обележиваче, лозинке и друго.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox налог</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -382,6 +427,8 @@
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">Спонзорисане приче</string>
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">Позадине</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
@@ -395,10 +442,10 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Погледај</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Промени позадину додиром на лого почетне стране Firefox-а</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Промени позадину додиром на лого почетне стране Firefox-а</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Firefox лого - промени позадину, дугме</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Firefox лого - промени позадину, дугме</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -482,7 +529,9 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Укључите Sync</string>
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Укључите Sync</string>
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">Синхронизујте и сачувате своје податке</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Пријавите се за поновно повезивање</string>
     <!-- Preference for removing FxA account -->
@@ -573,9 +622,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Мрежа</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Претраживачке групе</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Претраживачке групе</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Групиши сродне сајтове</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Групиши сродне сајтове</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Затвори језичак</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -619,6 +668,8 @@
     <string name="studies_remove">Уклони</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Активно</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s може повремено да инсталира и покрене истраживања.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Сазнајте више</string>
 
@@ -679,8 +730,6 @@
     <string name="open_tabs_menu">Отворите мени за језичке</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Сачувај језичке у збирку</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Мени за језичке</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Обриши збирку</string>
     <!-- Text for the menu button to rename a collection -->
@@ -700,8 +749,11 @@
     <string name="pwa_site_controls_title_private">%1$s (приватни режим)</string>
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title_1">Други језичци</string>
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">Други језичци</string>
 
+    <!-- History -->
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Унеси појмове за претрагу</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Обриши историјат</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
@@ -725,6 +777,17 @@
     <string name="history_older">Старије</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Овде нема историјата</string>
+
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Синхронизовано са другог уређаја</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">Са других уређаја</string>
+    <!-- The synced history sign in dialog message -->
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Пријавите се да бисте видели историју синхронизовану са других уређаја.</string>
+    <!-- The synced history sign in dialog button text -->
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Пријавите се</string>
+    <!-- The synced history sign in dialog create a new account link -->
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>или направите Firefox налог да почнете синхронизацију</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -758,6 +821,8 @@
     <string name="bookmark_delete_folder_confirmation_dialog">Да ли сте сигурни да желите да избришете ову фасциклу?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s ће обрисати одабране ставке.</string>
+    <!-- Text for the cancel button on delete bookmark dialog -->
+    <string name="bookmark_delete_negative">Откажи</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Додај фасциклу</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -813,6 +878,9 @@
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">ОПОЗОВИ</string>
 
+    <!-- Text for the button to search all bookmarks -->
+    <string name="bookmark_search">Унеси појмове за претрагу</string>
+
     <!-- Site Permissions -->
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Иди у подешавања</string>
@@ -824,8 +892,16 @@
     <string name="phone_feature_recommended">Препоручено</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Управљај дозволама</string>
+    <!-- Text for the OK button on Clear permissions dialog -->
+    <string name="clear_permissions_positive">У реду</string>
+    <!-- Text for the cancel button on Clear permissions dialog -->
+    <string name="clear_permissions_negative">Откажи</string>
     <!-- Button label for clearing a site permission-->
     <string name="clear_permission">Укини дозволу</string>
+    <!-- Text for the OK button on Clear permission dialog -->
+    <string name="clear_permission_positive">У реду</string>
+    <!-- Text for the cancel button on Clear permission dialog -->
+    <string name="clear_permission_negative">Откажи</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Укини дозволе на свим страницама</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
@@ -840,6 +916,8 @@
     <string name="preference_phone_feature_notification">Обавештење</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Трајно складиште</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">Колачићи трећих страна</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">Садржај контолисан DRM-ом</string>
     <!-- Label that indicates that a permission must be asked always -->
@@ -924,6 +1002,11 @@
     <!-- Snackbar action to view the collection the user just created or updated -->
     <string name="create_collection_view">Преглед</string>
 
+    <!-- Text for the OK button from collection dialogs -->
+    <string name="create_collection_positive">У реду</string>
+    <!-- Text for the cancel button from collection dialogs -->
+    <string name="create_collection_negative">Откажи</string>
+
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Збирка %d</string>
 
@@ -939,6 +1022,10 @@
     <string name="share_link_all_apps_subheader">Све радње</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Недавно затворено</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Копирај у оставу</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Копирано у остави</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Синхронизација</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -990,8 +1077,6 @@
     <string name="snackbar_tabs_closed">Језичци затворени</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Забелешке сачуване!</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Додато у омиљене странице!</string>
     <!-- Text shown in snackbar when user adds a site to shortcuts -->
     <string name="snackbar_added_to_shortcuts">Додато у пречице!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1070,7 +1155,19 @@
     <string name="delete_browsing_data_on_quit_action">Изађи</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Ово ће обрисати све ваше податке прегледања.</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Ово ће обрисати све ваше податке прегледања.</string>
+
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Временски распон за брисање</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body">Брише историју (укључујући историју синхронизовану са других уређаја), колачиће и друге податке о прегледању.</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">Последњи сат</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">Данас и јуче</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">Све</string>
+
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">Апликација %s ће обрисати изабране податке прегледања.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -1083,6 +1180,15 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Бришем податке прегледања…</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">Обриши све странице у “%s”</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">Откажи</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">Обриши</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">Група је обрисана</string>
+
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1090,6 +1196,8 @@
 
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Синхронизујте Firefox на више уређаја</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
+    <string name="onboarding_manual_sign_in_description_2">Пренесите обележиваче, историју и лозинке у %1$s на овом уређају.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Пријави се</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1097,6 +1205,8 @@
 
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Увек укључена приватност</string>
+    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_4">%1$s аутоматски спречава компаније да вас тајно прате на мрежи.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Стандардно (подразумевано)</string>
     <!-- text for standard blocking option button description -->
@@ -1265,6 +1375,9 @@
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Брише колачиће постављене преусмеравањем на познате страница за праћење.</string>
 
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">Неки од доле приказаних елемената за праћење су делимично одблокирани на овој страници јер сте били у интеракцији са њима *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Сазнајте више</string>
 
@@ -1402,6 +1515,11 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Сортирај мени пријава</string>
 
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">Аутоматско попуњавање</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">Адресе</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Кредитне картице</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1417,6 +1535,15 @@
 
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Управљај сачуваним картицама</string>
+
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">Додај адресе</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">Управљај адресама</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Сачувај и аутоматски попуни адресе</string>
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Укључи податке као што су бројеви, адресу е-поште и адресе за испоруку</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Додај картицу</string>
@@ -1436,6 +1563,10 @@
     <string name="credit_cards_menu_delete_card">Обриши картицу</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Обриши картицу</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">Да ли сте сигурни да желите да обришете ову кредитну картицу?</string>
+    <!-- The text for the positive button on "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_button">Обриши</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
     <string name="credit_cards_menu_save">Сачувај</string>
     <!-- The text for the "Save" button for saving a credit card -->
@@ -1463,6 +1594,51 @@
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Откључај за употребу сачуваних кредитних картица</string>
+
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">Додај адресе</string>
+    <!-- Title of the "Edit address" screen -->
+    <string name="addresses_edit_address">Измени адресу</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">Управљај адресама</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">Име</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">Средње име</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">Презиме</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">Улица и број</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">Град</string>
+    <!-- The header for the subregion of an address when "state" should be used -->
+    <string name="addresses_state">Држава</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">Општина</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">Поштански број</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Држава или покрајина</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">Телефон</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">Е-пошта</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">Сачувај</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">Откажи</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">Обриши адресу</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message">Да ли сте сигурни да желите да обришете ову адресу?</string>
+    <!-- The text for the positive button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_ok_button">Обриши</string>
+    <!-- The text for the negative button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_cancel_button">Откажи</string>
+    <!-- The text for the "Save address" menu item for saving an address -->
+    <string name="address_menu_save_address">Сачувај адресу</string>
+    <!-- The text for the "Delete address" menu item for deleting an address -->
+    <string name="address_menu_delete_address">Обриши адресу</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Додај претраживач</string>
@@ -1531,8 +1707,6 @@
     <string name="no_site_exceptions">Нема изузетака за страницу</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Јесте ли сигурни да желите да избришете ову ознаку?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Додај у омиљене странице</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
     <string name="browser_menu_add_to_shortcuts">Додај у пречице</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
@@ -1548,6 +1722,8 @@
     <string name="login_deletion_confirmation">Јесте ли сигурни да желите да избришете ову пријаву?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Обриши</string>
+    <!-- Negative action of a dialog asking to delete login -->
+    <string name="dialog_delete_negative">Откажи</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Опције за пријаву</string>
     <!--  The editable text field for a login's web address. -->
@@ -1581,6 +1757,9 @@
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
     <string name="add_login_hostname_invalid_text_3">Веб адресе морају садржати &quot;https://&quot; или &quot;http://&quot;</string>
 
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">Потребно је ваљано име машине</string>
+
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Повежите други уређај.</string>
@@ -1599,13 +1778,14 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">Нема отворених језичака</string>
 
+    <!-- Content description for expanding a group of synced tabs. -->
+    <string name="synced_tabs_expand_group">Проширите групу синхронизованих језичака</string>
+    <!-- Content description for collapsing a group of synced tabs. -->
+    <string name="synced_tabs_collapse_group">Скупите групу синхронизованих језичака</string>
+
     <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Достигнуто је ограничење популарних страница</string>
     <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
     <string name="shortcut_max_limit_title">Ограничење пречица достигнуто</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">За додавање новог омиљеног сајта, прво уклоните један. Дуго притисните и изаберите уклони.</string>
     <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
     <string name="shortcut_max_limit_content">Да бисте додали нову пречицу, уклоните једну постојећу. Додирните и држите прст над страницом па изаберите опцију за уклањање.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
@@ -1615,14 +1795,19 @@
     <string name="top_sites_toggle_top_recent_sites_4">Пречице</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Назив</string>
-	<!-- Hint for renaming title of a top site -->
-	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Назив омиљене странице</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Назив пречице</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">У реду</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Откажи</string>
+
+    <!-- Text for the menu button to open the homepage settings. -->
+    <string name="top_sites_menu_settings">Подешавања</string>
+    <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="top_sites_menu_sponsor_privacy">Наши спонзори и ваша приватност</string>
+    <!-- Label text displayed for a sponsored top site. -->
+    <string name="top_sites_sponsored_label">Спонзорисано</string>
 
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
@@ -1631,9 +1816,21 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Затвори све неактивне језичке</string>
 
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">Проширите неактивне језичке</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">Скупите неактивне језичке</string>
+
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">Самостално затвори након једног месеца?</string>
+
+    <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
+    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Firefox може да затвори језичке које нисте прегледали прошлог месеца.</string>
+    <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">УКЉУЧИ АУТОМАТСКО ЗАТВАРАЊЕ</string>
+    <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
+    <string name="inactive_tabs_auto_close_message_snackbar">Аутоматско затварање омогућено</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Подешава самостално отварање адреса са страница, мејлова и порука унутар Firefox-a.</string>
@@ -1664,4 +1861,12 @@
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Сазнајте више</string>
 
-    </resources>
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">Спонзорисано</string>
+
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Омогућите телеметрију да шаље податке.</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">Иди у подешавања</string>
+    <string name="firefox_suggest_header">Firefox предлози</string>
+</resources>

@@ -2,6 +2,11 @@
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
 
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">تېخىمۇ كۆپ تاللاش تۈرى</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">ئىزدەڭ ياكى تور ئادرېسىنى كىرگۈزۈپ زىيارەت قىلىڭ</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
     <string name="tab_tray_add_new_collection">يېڭى ساقلانما قۇرۇش</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
@@ -147,6 +152,8 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">ھېسابات تەڭشىكى</string>
 
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">ھەئە</string>
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">بىكار قىلىش</string>
 
@@ -160,6 +167,13 @@
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">ئادرېس</string>
 
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">تەپسىلاتى</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">چوققا</string>
+
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
     <string name="preference_light_theme">يورۇق</string>
@@ -169,25 +183,42 @@
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">چۈشۈرۈلمىلەر</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">تارىخ</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">يېڭى بەتكۈچ</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">تەڭشەك</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">تاقاش</string>
 
     <!-- Option for always opening the homepage when re-opening the app -->
     <string name="opening_screen_homepage">باشبەت</string>
 
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">ئاخىرقى بەتكۈچ</string>
+
     <!-- Studies -->
     <!-- Title of the remove studies button -->
     <string name="studies_remove">چىقىرىۋەت</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">تەپسىلاتى</string>
 
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">ھېسابات تەڭشىكى</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_close">تاقاش</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">بەتكۈچنى تاقاش</string>
     <!-- Text for the menu button to rename a top site -->
 	<string name="rename_top_site">ئىسىم ئۆزگەرتىش</string>
 	<!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">چىقىرىۋەت</string>
 
+
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">باشقا بەتكۈچلەر</string>
 
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">بۈگۈن</string>
@@ -215,6 +246,17 @@
     <string name="bookmark_menu_delete_button">ئۆچۈرۈش</string>
     <!--Bookmark overflow menu save button -->
     <string name="bookmark_menu_save_button">ساقلاش</string>
+
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">چېكىنىش</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header"> %sگە خۇش كەپسىز!</string>
+
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">ئاپتوماتىك</string>
 
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">تەپسىلاتى</string>
@@ -249,4 +291,6 @@
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">تەپسىلاتى</string>
 
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">تەڭشەكنى ئاچ</string>
     </resources>

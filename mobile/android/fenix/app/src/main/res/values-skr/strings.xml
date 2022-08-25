@@ -54,7 +54,7 @@
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">
-        %1$s نجی ٹیب نال تہاݙٖے ڳولݨ تے براؤزنگ دی تاریخ کوں صاف کریندے جہڑے ویلے تساں انہاں کوں بند کریندے ہو یا ایپ کوں چھوڑ ݙیندے ہو۔ جڈاں جو ایہ تہاکوں ویب سائٹاں یا انٹرنیٹ سروس فراہم کرݨ آلیاں کیتے گمنام کائنی بݨیندا، تساں ایندے نال جو کجھ وی آن لائن کریندے ہو، اوں کوں ایہ ڈیوائس ورتݨ آلے کہیں وی ٻئے کنوں نجی رکھݨ سوکھا بݨیندے۔</string>
+        %1$s نجی ٹیب نال تہاݙے ڳولݨ تے براؤزنگ دی تاریخ کوں صاف کریندے جہڑے ویلے تساں انہاں کوں بند کریندے ہو یا ایپ کوں چھوڑ ݙیندے ہو۔ جڈاں جو ایہ تہاکوں ویب سائٹاں یا انٹرنیٹ سروس فراہم کرݨ آلیاں کیتے گمنام کائنی بݨیندا، تساں ایندے نال جو کجھ وی آن لائن کریندے ہو، اوں کوں ایہ ڈیوائس ورتݨ آلے کہیں وی ٻئے کنوں نجی رکھݨ سوکھا بݨیندے۔</string>
     <string name="private_browsing_common_myths">
         نجی براؤزنگ بارے عام فرضی قصے
     </string>
@@ -443,10 +443,10 @@
     <string name="wallpaper_updated_snackbar_action">نظارہ</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">فائرفوکس مکھ پنے لوگو تے انگل پھیرݨ نال وال پیپر وٹاؤ</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">فائرفوکس مکھ پنے لوگو تے انگل پھیرݨ نال وال پیپر وٹاؤ</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">فائر فوکس لوگو ــ وال پیپر وٹاؤ، بٹݨ</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">فائر فوکس لوگو ــ وال پیپر وٹاؤ، بٹݨ</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -736,8 +736,6 @@
     <string name="open_tabs_menu">ٹیبز مینیو کھولو</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">مجموعے وچ ٹیباں محفوظ کرو</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">ٹیب مینیو</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">مجموعہ مٹاؤ</string>
     <!-- Text for the menu button to rename a collection -->
@@ -787,16 +785,16 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">اتھ کوئی تاریخ کائنی</string>
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">ٻیاں ڈیوائساں کنوں ہم وقت تھیاں</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">ٻیاں ڈیوائساں کنوں ہم وقت تھیاں</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">ٻیاں ڈیوائساں کنوں</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">ٻیاں ڈیوائساں کنوں</string>
 
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">آپݨیاں ٻنھاں ڈیوائساں کنوں ہم وقت تھئی تاریخ ݙیکھݨ کیتے سائن ان تھیوو۔</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">آپݨیاں ٻنھاں ڈیوائساں کنوں ہم وقت تھئی تاریخ ݙیکھݨ کیتے سائن ان تھیوو۔</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">سائن ان</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">سائن ان</string>
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u> یا ہم وقت کرݨ کیتے فائرفوکس کھاتہ بݨاؤ</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u> یا ہم وقت کرݨ کیتے فائرفوکس کھاتہ بݨاؤ</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
