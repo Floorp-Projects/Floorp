@@ -9,11 +9,11 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
+import android.util.Patterns
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
-import android.webkit.URLUtil
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -47,7 +47,7 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login) {
 
     private var duplicateLogin: SavedLogin? = null
 
-    private var validPassword = true
+    private var validPassword = false
     private var validUsername = true
     private var validHostname = false
     private var usernameChanged = false
@@ -158,7 +158,7 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login) {
                         setHostnameError()
                         binding.clearHostnameTextButton.isEnabled = false
                     }
-                    !URLUtil.isHttpUrl(hostnameText) && !URLUtil.isHttpsUrl(hostnameText) -> {
+                    !Patterns.WEB_URL.matcher(hostnameText).matches() -> {
                         setHostnameError()
                         binding.clearHostnameTextButton.isEnabled = true
                     }
