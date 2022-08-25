@@ -2363,6 +2363,14 @@
   result_type: Value
   possibly_calls: true
 
+- name: CallNativeGetElementSuper
+  operands:
+    object: Object
+    index: Int32
+    receiver: Value
+  result_type: Value
+  possibly_calls: true
+
 # Test if a native object has an own element (sparse or dense) at an index.
 - name: CallObjectHasSparseElement
   operands:
