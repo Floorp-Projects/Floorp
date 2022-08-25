@@ -550,11 +550,6 @@ const nsTArray<mozilla::dom::Element*>* Gecko_ShadowRoot_GetElementsWithId(
 // be null-terminated.
 bool Gecko_GetBoolPrefValue(const char* pref_name);
 
-// Check whether font format/tech is supported.
-bool Gecko_IsFontFormatSupported(
-    mozilla::StyleFontFaceSourceFormatKeyword aFormat);
-bool Gecko_IsFontTechSupported(mozilla::StyleFontFaceSourceTechFlags aFlag);
-
 // Returns true if we're currently performing the servo traversal.
 bool Gecko_IsInServoTraversal();
 
