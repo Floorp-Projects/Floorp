@@ -219,13 +219,7 @@ if (AppConstants.MOZ_DATA_REPORTING) {
   ]);
 }
 // Privacy segmentation section
-Preferences.addAll([
-  {
-    id: "browser.privacySegmentation.preferences.show",
-    type: "bool",
-  },
-  { id: "browser.privacySegmentation.enabled", type: "bool" },
-]);
+Preferences.add({ id: "browser.privacySegmentation.enabled", type: "bool" });
 
 // Data Choices tab
 if (AppConstants.MOZ_CRASHREPORTER) {
@@ -2753,9 +2747,8 @@ var gPrivacyPane = {
   initDataCollection() {
     if (
       !AppConstants.MOZ_DATA_REPORTING &&
-      !Services.prefs.getBoolPref(
-        "browser.privacySegmentation.preferences.show",
-        false
+      !NimbusFeatures.majorRelease2022.getVariable(
+        "feltPrivacyShowPreferencesSection"
       )
     ) {
       // Nothing to control in the data collection section, remove it.
@@ -2787,17 +2780,22 @@ var gPrivacyPane = {
 
   initPrivacySegmentation() {
     // Section visibility
-    let visibilityPref = Preferences.get(
-      "browser.privacySegmentation.preferences.show"
-    );
     let section = document.getElementById("privacySegmentationSection");
     let updatePrivacySegmentationSectionVisibilityState = () => {
-      section.hidden = !visibilityPref.value;
+      section.hidden = !NimbusFeatures.majorRelease2022.getVariable(
+        "feltPrivacyShowPreferencesSection"
+      );
     };
-    visibilityPref.on(
-      "change",
+
+    NimbusFeatures.majorRelease2022.onUpdate(
       updatePrivacySegmentationSectionVisibilityState
     );
+    window.addEventListener("unload", () => {
+      NimbusFeatures.majorRelease2022.off(
+        updatePrivacySegmentationSectionVisibilityState
+      );
+    });
+
     updatePrivacySegmentationSectionVisibilityState();
   },
 
