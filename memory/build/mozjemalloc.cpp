@@ -1389,6 +1389,9 @@ static inline bool ShouldStallAndRetry() {
   // on Windows mostly skips this in favor of directly calling ::VirtualAlloc(),
   // though, so it's probably not going to matter whether we stall here or not.)
   return true;
+#  elif defined(NIGHTLY_BUILD)
+  // On Nightly, always stall, for experiment's sake (bug 1785162).
+  return true;
 #  else
   // In the main process, always stall.
   if (GetGeckoProcessType() == GeckoProcessType::GeckoProcessType_Default) {
