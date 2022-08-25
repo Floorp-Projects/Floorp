@@ -401,6 +401,7 @@ linux64/codeql-cpp:
     shipping-phase: ship
     shipping-product: firefox
     worker-type: b-linux-xlarge
+    expires-after: 4 days
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: cpp
