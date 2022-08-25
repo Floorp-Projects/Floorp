@@ -8,8 +8,14 @@
     <string name="mozac_feature_addons_permissions_bookmarks_description">خەتكۈچلەرنى ئوقۇش ۋە ئۆزگەرتىش</string>
     <!-- Description for browser_setting permission. -->
     <string name="mozac_feature_addons_permissions_browser_setting_description">توركۆرگۈ تەڭشىكىنى ئوقۇش ۋە ئۆزگەرتىش</string>
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">يېقىنقى كۆرۈش تارىخى ، ساقلانمىلار ۋە مۇناسىۋەتلىك سانلىق مەلۇماتلارنى تازىلاش</string>
     <!-- Description for clipboard_read permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_read_description">چاپلاش تاختىسىدىن سانلىق مەلۇماتقا ئېرىشىش</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">چاپلاش تاختىسىغا سانلىق مەلۇمات كىرگۈزۈش</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">ھەر قانداق بەتتىكى مەزمۇننى چەكلەش</string>
     <!-- Description for downloads_open permission. -->
     <string name="mozac_feature_addons_permissions_downloads_open_description">ئۈسكۈنىڭىزگە چۈشۈرۈلگەن ھۆججەتلەرنى ئېچىش</string>
     <!-- The version on of add-on. -->
@@ -84,6 +90,16 @@
     <string name="mozac_feature_addons_unsupported_learn_more">تەپسىلاتىنى بىلىش</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated. -->
     <string name="mozac_feature_addons_updater_status_successfully_updated">مۇۋەپپەقىيەتلىك يېڭىلاندى</string>
+    <!-- Displayed in the "Status" field for the updater when an add-on has no updates available. -->
+    <string name="mozac_feature_addons_updater_status_no_update_available">يېڭىلانما يوق</string>
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
     <string name="mozac_feature_addons_updater_status_error">خاتالىق</string>
+    <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
+    <string name="mozac_feature_addons_updater_dialog_title">يېڭىلاش ئۇچۇرى</string>
+    <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
+    <string name="mozac_feature_addons_updater_dialog_last_attempt">ئاخىرقى سىناق:</string>
+    <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
+    <string name="mozac_feature_addons_updater_dialog_status">ھالىتى:</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_installed_dialog_description">تىزىملىكتىن ئېچىش</string>
     </resources>
