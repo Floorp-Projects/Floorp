@@ -424,7 +424,6 @@ cbindgen-types = [
     { gecko = "StyleFillRule", servo = "crate::values::generics::basic_shape::FillRule" },
     { gecko = "StyleFontDisplay", servo = "crate::font_face::FontDisplay" },
     { gecko = "StyleFontFaceSourceListComponent", servo = "crate::font_face::FontFaceSourceListComponent" },
-    { gecko = "StyleFontFaceSourceFormatKeyword", servo = "crate::font_face::FontFaceSourceFormatKeyword" },
     { gecko = "StyleFontFaceSourceTechFlags", servo = "crate::font_face::FontFaceSourceTechFlags" },
     { gecko = "StyleFontLanguageOverride", servo = "crate::values::computed::font::FontLanguageOverride" },
     { gecko = "StyleOffsetPath", servo = "crate::values::computed::motion::OffsetPath" },
