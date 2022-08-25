@@ -248,7 +248,14 @@ class HashMap {
   // false on OOM.
   template <typename KeyInput, typename ValueInput>
   [[nodiscard]] bool put(KeyInput&& aKey, ValueInput&& aValue) {
-    AddPtr p = lookupForAdd(aKey);
+    return put(aKey, std::forward<KeyInput>(aKey),
+               std::forward<ValueInput>(aValue));
+  }
+
+  template <typename KeyInput, typename ValueInput>
+  [[nodiscard]] bool put(const Lookup& aLookup, KeyInput&& aKey,
+                         ValueInput&& aValue) {
+    AddPtr p = lookupForAdd(aLookup);
     if (p) {
       p->value() = std::forward<ValueInput>(aValue);
       return true;
