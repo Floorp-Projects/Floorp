@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<meta charset=utf-8>
+<title>COLRv1 font test: radial-gradient edge cases</title>
+<style>
+@font-face {
+  font-family: CAhem;
+  src: url("CAhem.ttf");
+}
+#test { font: 128px/1 CAhem, serif; margin: 10px; padding: 10px; }
+</style>
+
+<p>The two glyphs in each row should match:</p>
+<div id="test">
+0 0<br>
+1 1<br>
+2 2<br>
+a a<br>
+c c<br>
