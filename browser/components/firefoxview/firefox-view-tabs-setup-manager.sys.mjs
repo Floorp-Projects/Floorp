@@ -240,9 +240,7 @@ export const TabsSetupFlowManager = new (class {
   }
   get shouldShowMobilePromo() {
     return (
-      this.syncIsConnected &&
-      this.fxaSignedIn &&
-      this.currentSetupState.uiStateIndex >= 4 &&
+      this.currentSetupState.uiStateIndex >= 3 &&
       !this.mobileDeviceConnected &&
       !this.mobilePromoDismissedPref
     );
