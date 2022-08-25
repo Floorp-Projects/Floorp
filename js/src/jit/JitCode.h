@@ -41,7 +41,7 @@ struct JitCodeHeader {
 };
 
 class JitCode : public gc::TenuredCellWithNonGCPointer<uint8_t> {
-  friend struct gc::CellAllocator;
+  friend class gc::CellAllocator;
 
  public:
   // Raw code pointer, stored in the cell header.

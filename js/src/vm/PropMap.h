@@ -707,7 +707,7 @@ class CompactPropMap final : public SharedPropMap {
   friend class PropMap;
   friend class SharedPropMap;
   friend class DictionaryPropMap;
-  friend struct js::gc::CellAllocator;
+  friend class js::gc::CellAllocator;
 
   CompactPropMap(JS::Handle<PropertyKey> key, PropertyInfo prop) {
     setHeaderFlagBits(IsCompactFlag);
@@ -813,7 +813,7 @@ class NormalPropMap final : public SharedPropMap {
   friend class PropMap;
   friend class SharedPropMap;
   friend class DictionaryPropMap;
-  friend struct js::gc::CellAllocator;
+  friend class js::gc::CellAllocator;
 
   LinkedPropMap::Data linkedData_;
   TreeData treeData_;
@@ -875,7 +875,7 @@ class NormalPropMap final : public SharedPropMap {
 class DictionaryPropMap final : public PropMap {
   friend class PropMap;
   friend class SharedPropMap;
-  friend struct js::gc::CellAllocator;
+  friend class js::gc::CellAllocator;
 
   LinkedPropMap::Data linkedData_;
 
