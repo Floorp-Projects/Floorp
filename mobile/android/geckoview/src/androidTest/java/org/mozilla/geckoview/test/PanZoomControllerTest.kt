@@ -13,6 +13,7 @@ import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoResult
 import org.junit.Assume.assumeTrue
 import org.mozilla.geckoview.PanZoomController
+import kotlin.math.roundToInt;
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -179,7 +180,9 @@ class PanZoomControllerTest : BaseSessionTest() {
         assertThat("Visual viewport height is not zero", originalVH, greaterThan(0.0))
 
         val innerHeight = mainSession.evaluateJS("window.innerHeight") as Double
-        assertThat("Visual viewport height equals to window.innerHeight", originalVH, equalTo(innerHeight))
+        // Need to round due to dom.InnerSize.rounded=true
+        assertThat("Visual viewport height equals to window.innerHeight",
+                   originalVH.roundToInt(), equalTo(innerHeight.roundToInt()))
 
         val originalScale = mainSession.evaluateJS("visualViewport.scale") as Double
         assertThat("Visual viewport scale is the initial scale", originalScale, closeTo(0.5, 0.01))
