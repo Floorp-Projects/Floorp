@@ -431,7 +431,8 @@ AttachDecision GetPropIRGenerator::tryAttachStub() {
       TRY_ATTACH(tryAttachSparseElement(obj, objId, index, indexId));
       TRY_ATTACH(tryAttachArgumentsObjectArg(obj, objId, index, indexId));
       TRY_ATTACH(tryAttachArgumentsObjectArgHole(obj, objId, index, indexId));
-      TRY_ATTACH(tryAttachGenericElement(obj, objId, index, indexId));
+      TRY_ATTACH(
+          tryAttachGenericElement(obj, objId, index, indexId, receiverId));
 
       trackAttached(IRGenerator::NotAttached);
       return AttachDecision::NoAction;
@@ -2565,6 +2566,12 @@ AttachDecision GetPropIRGenerator::tryAttachSparseElement(
     return AttachDecision::NoAction;
   }
 
+  // GetSparseElementHelper assumes that the target and the receiver
+  // are the same.
+  if (isSuper()) {
+    return AttachDecision::NoAction;
+  }
+
   // Here, we ensure that the prototype chain does not define any sparse
   // indexed properties on the shape lineage. This allows us to guard on
   // the shapes up the prototype chain to ensure that no indexed properties
@@ -2667,10 +2674,17 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArrayElement(
 
 AttachDecision GetPropIRGenerator::tryAttachGenericElement(
     HandleObject obj, ObjOperandId objId, uint32_t index,
-    Int32OperandId indexId) {
+    Int32OperandId indexId, ValOperandId receiverId) {
   if (!obj->is<NativeObject>()) {
     return AttachDecision::NoAction;
   }
+
+#ifdef JS_CODEGEN_X86
+  if (isSuper()) {
+    // There aren't enough registers available on x86.
+    return AttachDecision::NoAction;
+  }
+#endif
 
   // To allow other types to attach in the non-megamorphic case we test the
   // specific matching native receiver; however, once megamorphic we can attach
@@ -2682,7 +2696,11 @@ AttachDecision GetPropIRGenerator::tryAttachGenericElement(
     TestMatchingNativeReceiver(writer, nobj, objId);
   }
   writer.guardIndexIsNotDenseElement(objId, indexId);
-  writer.callNativeGetElementResult(objId, indexId);
+  if (isSuper()) {
+    writer.callNativeGetElementSuperResult(objId, indexId, receiverId);
+  } else {
+    writer.callNativeGetElementResult(objId, indexId);
+  }
   writer.returnFromIC();
 
   trackAttached(mode_ == ICState::Mode::Megamorphic

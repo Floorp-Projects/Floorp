@@ -7623,6 +7623,28 @@ bool CacheIRCompiler::emitCallNativeGetElementResult(ObjOperandId objId,
   return true;
 }
 
+bool CacheIRCompiler::emitCallNativeGetElementSuperResult(
+    ObjOperandId objId, Int32OperandId indexId, ValOperandId receiverId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoCallVM callvm(masm, this, allocator);
+
+  Register obj = allocator.useRegister(masm, objId);
+  Register index = allocator.useRegister(masm, indexId);
+  ValueOperand receiver = allocator.useValueRegister(masm, receiverId);
+
+  callvm.prepare();
+
+  masm.Push(index);
+  masm.Push(receiver);
+  masm.Push(obj);
+
+  using Fn = bool (*)(JSContext*, Handle<NativeObject*>, HandleValue, int32_t,
+                      MutableHandleValue);
+  callvm.call<Fn, NativeGetElement>();
+
+  return true;
+}
+
 bool CacheIRCompiler::emitProxyHasPropResult(ObjOperandId objId,
                                              ValOperandId idId, bool hasOwn) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

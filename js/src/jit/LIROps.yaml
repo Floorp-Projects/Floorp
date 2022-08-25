@@ -3182,6 +3182,14 @@
     index: WordSized
   call_instruction: true
 
+- name: CallNativeGetElementSuper
+  result_type: BoxedValue
+  operands:
+    object: WordSized
+    index: WordSized
+    receiver: BoxedValue
+  call_instruction: true
+
 - name: CallObjectHasSparseElement
   result_type: WordSized
   operands:
