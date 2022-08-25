@@ -647,8 +647,9 @@ class TenuredChunk : public TenuredChunkBase {
   // system call for each arena but is only used during OOM.
   void decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock);
 
-  static TenuredChunk* allocate(GCRuntime* gc);
-  void init(GCRuntime* gc, bool allMemoryCommitted);
+  static void* allocate(GCRuntime* gc);
+  static TenuredChunk* emplace(void* ptr, GCRuntime* gc,
+                               bool allMemoryCommitted);
 
   /* Unlink and return the freeArenasHead. */
   Arena* fetchNextFreeArena(GCRuntime* gc);

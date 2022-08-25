@@ -19,7 +19,9 @@ BEGIN_TEST(testGCChunkPool) {
 
   // Create.
   for (int i = 0; i < N; ++i) {
-    TenuredChunk* chunk = TenuredChunk::allocate(&cx->runtime()->gc);
+    void* ptr = TenuredChunk::allocate(&cx->runtime()->gc);
+    CHECK(ptr);
+    TenuredChunk* chunk = TenuredChunk::emplace(ptr, &cx->runtime()->gc, true);
     CHECK(chunk);
     pool.push(chunk);
   }
