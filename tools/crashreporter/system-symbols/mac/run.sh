@@ -5,6 +5,8 @@ set -v -e -x
 base="$(realpath "$(dirname "$0")")"
 export PATH="$PATH:/builds/worker/bin:$base"
 
+DUMP_SYMS_PATH="${MOZ_FETCHES_DIR}/dump_syms/dump_syms"
+
 cd /builds/worker
 
 if test "$PROCESSED_PACKAGES_INDEX" && test "$PROCESSED_PACKAGES_PATH" && test "$TASKCLUSTER_ROOT_URL"; then
@@ -42,7 +44,7 @@ du -sh /opt/data-reposado
 
 # Now scrape symbols out of anything that was downloaded.
 mkdir -p symbols artifacts
-python3 "${base}/PackageSymbolDumper.py" --tracking-file=/builds/worker/processed-packages --dump_syms=/builds/worker/bin/dump_syms_mac /opt/data-reposado/html/content/downloads /builds/worker/symbols
+python3 "${base}/PackageSymbolDumper.py" --tracking-file=/builds/worker/processed-packages --dump_syms="${DUMP_SYMS_PATH}" /opt/data-reposado/html/content/downloads /builds/worker/symbols
 
 # Hand out artifacts
 gzip -c processed-packages > artifacts/processed-packages.gz
