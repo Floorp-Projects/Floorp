@@ -22,9 +22,10 @@ export function getExpression(state, input) {
 
 export function getAutocompleteMatchset(state) {
   const input = state.expressions.currentAutocompleteInput;
-  if (input) {
-    return getAutocompleteMatches(state)[input];
+  if (!input) {
+    return null;
   }
+  return getAutocompleteMatches(state)[input];
 }
 
 export const getExpressionError = createSelector(

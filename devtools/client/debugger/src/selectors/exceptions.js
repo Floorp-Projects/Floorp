@@ -44,7 +44,7 @@ export function getSelectedException(state, line, column) {
   const sourceExceptions = getSelectedSourceExceptions(state);
 
   if (!sourceExceptions) {
-    return;
+    return undefined;
   }
 
   return sourceExceptions.find(
