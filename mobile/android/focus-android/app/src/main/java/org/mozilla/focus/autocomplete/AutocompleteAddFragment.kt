@@ -86,9 +86,7 @@ class AutocompleteAddFragment : BaseSettingsLikeFragment(), CoroutineScope {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.save) {
 
-            val domain = binding.domainView.text.toString()
-                .trim()
-                .lowercase()
+            val domain = binding.domainView.text.toString().trim()
 
             launch(IO) {
                 val domains = CustomDomains.load(requireActivity())
