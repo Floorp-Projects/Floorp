@@ -665,9 +665,6 @@ pref("browser.theme.dark-private-windows", false);
 // Controls visibility of the privacy segmentation preferences section.
 pref("browser.privacySegmentation.preferences.show", false);
 
-// Suffix for the SUMO learn more link for the privacy segmentation checkbox.
-pref("browser.privacySegmentation.preferences.learnMoreURLSuffix", "data-features");
-
 pref("browser.sessionhistory.max_entries", 50);
 
 // Built-in default permissions.

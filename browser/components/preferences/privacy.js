@@ -2786,17 +2786,6 @@ var gPrivacyPane = {
   },
 
   initPrivacySegmentation() {
-    // Learn more link
-    document
-      .getElementById("privacy-segmentation-learn-more-link")
-      .setAttribute(
-        "href",
-        Services.urlFormatter.formatURLPref("app.support.baseURL") +
-          Services.prefs.getStringPref(
-            "browser.privacySegmentation.preferences.learnMoreURLSuffix"
-          )
-      );
-
     // Section visibility
     let visibilityPref = Preferences.get(
       "browser.privacySegmentation.preferences.show"
