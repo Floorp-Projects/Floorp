@@ -278,6 +278,7 @@ class RuntimeCaches {
     evalCache.clear();
     stringToAtomCache.purge();
     megamorphicCache.bumpGeneration();
+    scopeCache.purge();
   }
 
   void purgeStencils() { delazificationCache.clearAndDisable(); }
