@@ -178,7 +178,7 @@ already_AddRefed<DOMIntersectionObserver>
 DOMIntersectionObserver::CreateLazyLoadObserver(Document& aDocument) {
   RefPtr<DOMIntersectionObserver> observer =
       new DOMIntersectionObserver(aDocument, LazyLoadCallback);
-  observer->mThresholds.AppendElement(std::numeric_limits<double>::min());
+  observer->mThresholds.AppendElement(0.0f);
 
 #define SET_MARGIN(side_, side_lower_)                                 \
   observer->mRootMargin.Get(eSide##side_) = PrefMargin(                \
@@ -198,7 +198,7 @@ already_AddRefed<DOMIntersectionObserver>
 DOMIntersectionObserver::CreateLazyLoadObserverViewport(Document& aDocument) {
   RefPtr<DOMIntersectionObserver> observer =
       new DOMIntersectionObserver(aDocument, LazyLoadCallbackReachViewport);
-  observer->mThresholds.AppendElement(std::numeric_limits<double>::min());
+  observer->mThresholds.AppendElement(0.0f);
   return observer.forget();
 }
 
