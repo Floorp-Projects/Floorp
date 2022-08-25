@@ -114,6 +114,10 @@ bool InputName::isEqualTo(JSContext* cx, ErrorContext* ec,
                           JSAtom** otherCached) const {
   return variant_.match(
       [&](const JSAtom* ptr) -> bool {
+        if (ptr->hash() != parserAtoms.hash(other)) {
+          return false;
+        }
+
         if (!*otherCached) {
           // TODO-Stencil:
           // Here, we convert our name into a JSAtom*, and hard-crash on failure
@@ -641,9 +645,7 @@ NameLocation ScopeContext::searchInEnclosingScope(JSContext* cx,
                 using InputBindingIter = decltype(bi);
                 for (InputBindingIter bi2(bi); bi2 && bi2.hasArgumentSlot();
                      bi2++) {
-                  InputName binding2(scope_ref, bi2.name());
-                  if (binding2.isEqualTo(cx, ec, parserAtoms, input.atomCache,
-                                         name, &jsname)) {
+                  if (bi.name() == bi2.name()) {
                     bindLoc = bi2.location();
                   }
                 }

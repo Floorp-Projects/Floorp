@@ -274,6 +274,7 @@ class TaggedParserAtomIndex {
     MOZ_ASSERT_IF(result, (data_ & TagMask) == NullTag);
     return result;
   }
+  HashNumber staticOrWellKnownHash() const;
 
   ParserAtomIndex toParserAtomIndex() const {
     MOZ_ASSERT(isParserAtomIndex());
@@ -759,6 +760,7 @@ class ParserAtomsTable {
   bool isIndex(TaggedParserAtomIndex index, uint32_t* indexp) const;
   bool isInstantiatedAsJSAtom(TaggedParserAtomIndex index) const;
   uint32_t length(TaggedParserAtomIndex index) const;
+  HashNumber hash(TaggedParserAtomIndex index) const;
 
   // Methods for atom.
   void markUsedByStencil(TaggedParserAtomIndex index,
