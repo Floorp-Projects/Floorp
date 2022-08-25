@@ -1319,14 +1319,6 @@ criteria = "safe-to-deploy"
 version = "0.8.24"
 criteria = "safe-to-run"
 
-[[exemptions.serial_test]]
-version = "0.5.1"
-criteria = "safe-to-run"
-
-[[exemptions.serial_test_derive]]
-version = "0.5.1"
-criteria = "safe-to-run"
-
 [[exemptions.servo_arc]]
 version = "0.1.1"
 criteria = "safe-to-deploy"
