@@ -2046,13 +2046,15 @@ tests.push({
 
   check() {
     let stmt = mDBConn.createStatement(
-      `SELECT h.id FROM moz_places h
-       JOIN moz_historyvisits v ON v.place_id = h.id AND visit_type NOT IN (0,4,7,8,9)
-       GROUP BY h.id HAVING h.visit_count <> count(*)
+      `SELECT h.id, h.last_visit_date as v_date
+       FROM moz_places h
+       LEFT JOIN moz_historyvisits v ON v.place_id = h.id AND visit_type NOT IN (0,4,7,8,9)
+       GROUP BY h.id HAVING h.visit_count <> count(v.id)
        UNION ALL
-       SELECT h.id FROM moz_places h
-       JOIN moz_historyvisits v ON v.place_id = h.id
-       GROUP BY h.id HAVING h.last_visit_date <> MAX(v.visit_date)`
+       SELECT h.id, MAX(v.visit_date) as v_date
+       FROM moz_places h
+       LEFT JOIN moz_historyvisits v ON v.place_id = h.id
+       GROUP BY h.id HAVING h.last_visit_date IS NOT v_date`
     );
     Assert.ok(!stmt.executeStep());
     stmt.finalize();
