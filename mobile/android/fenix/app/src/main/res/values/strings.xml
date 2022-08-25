@@ -1323,7 +1323,7 @@
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Blocks cookies that ad networks and analytics companies use to compile your browsing data across many sites.</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description_2">Total Cookie Protection isolates cookies to the site you\'re on so trackers like ad networks can\'t use them to follow you across sites.</string>
+    <string name="etp_cookies_description_2">Total Cookie Protection isolates cookies to the site you’re on so trackers like ad networks can’t use them to follow you across sites.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Cryptominers</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
