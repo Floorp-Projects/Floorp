@@ -3,7 +3,7 @@
    - You can obtain one at http://mozilla.org/MPL/2.0/.*/ 
 
 window.setTimeout( function(){
-  const imgpass = "https://images.unsplash.com/";
+  const imgpath = "https://images.unsplash.com/";
   const imgfile = [];
      imgfile[0] = "photo-1510020553968-30f966e1ec9e?ixid=MnwxMTI1OHwwfDF8cmFuZG9tfHx8fHx8fHx8MTY2MDE3ODY5MQ&ixlib=rb-1.2.1&q=85&w=1920";
      imgfile[1] = "photo-1459664018906-085c36f472af?ixid=MnwxMTI1OHwwfDF8cmFuZG9tfHx8fHx8fHx8MTY2MDE3ODY5MQ&ixlib=rb-1.2.1&q=85&w=1920";
@@ -124,7 +124,7 @@ window.setTimeout( function(){
      imgfile[116] = "photo-1535378900448-9e4a89a30802?ixid=MnwxMTI1OHwwfDF8cmFuZG9tfHx8fHx8fHx8MTY2MDk2MDYzNw&ixlib=rb-1.2.1&q=85&w=1920"
      
   const n = Math.floor(Math.random() * imgfile.length)
-  document.getElementById("background").style.backgroundImage = "url(" + imgpass + imgfile[n] + ")"
+  document.getElementById("background").style.backgroundImage = "url(" + imgpath + imgfile[n] + ")"
   try{document.querySelector(".darkreader").remove()}catch(e){};
 }, 100)
 try{document.querySelector(".darkreader").remove()}catch(e){};
