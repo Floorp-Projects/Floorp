@@ -595,9 +595,11 @@ static bool NameIsOnEnvironment(JSContext* cx, ErrorContext* ec,
 #endif
 
 /* static */
-NameLocation ScopeContext::searchInEnclosingScope(
-    JSContext* cx, ErrorContext* ec, CompilationInput& input,
-    ParserAtomsTable& parserAtoms, TaggedParserAtomIndex name, uint8_t hops) {
+NameLocation ScopeContext::searchInEnclosingScope(JSContext* cx,
+                                                  ErrorContext* ec,
+                                                  CompilationInput& input,
+                                                  ParserAtomsTable& parserAtoms,
+                                                  TaggedParserAtomIndex name) {
   MOZ_ASSERT(input.target ==
                  CompilationInput::CompilationTarget::Delazification ||
              input.target == CompilationInput::CompilationTarget::Eval);
@@ -607,6 +609,9 @@ NameLocation ScopeContext::searchInEnclosingScope(
 
   // NameLocation which contains relative locations to access `name`.
   mozilla::Maybe<NameLocation> result;
+
+  // Number of enclosing scoep we walked over.
+  uint8_t hops = 0;
 
   for (InputScopeIter si(input.enclosingScope); si; si++) {
     MOZ_ASSERT(NameIsOnEnvironment(cx, ec, parserAtoms, input.atomCache,

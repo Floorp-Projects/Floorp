@@ -479,7 +479,7 @@ struct ScopeContext {
   NameLocation searchInEnclosingScope(JSContext* cx, ErrorContext* ec,
                                       CompilationInput& input,
                                       ParserAtomsTable& parserAtoms,
-                                      TaggedParserAtomIndex name, uint8_t hops);
+                                      TaggedParserAtomIndex name);
 
   bool effectiveScopePrivateFieldCacheHas(TaggedParserAtomIndex name);
   mozilla::Maybe<NameLocation> getPrivateFieldLocation(
