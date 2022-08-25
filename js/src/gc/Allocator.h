@@ -92,7 +92,7 @@ StringT* AllocateString(JSContext* cx,
   if (!cell) {
     return nullptr;
   }
-  return StringT::emplace(cell);
+  return new (cell) StringT();
 }
 
 // Allocate a BigInt. Use cx->newCell<BigInt>(heap).
