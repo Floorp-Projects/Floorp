@@ -84,12 +84,6 @@ fuzzy(0-1,0-172) == mouse-click-overflow-auto-details.html overflow-auto-open-de
 fuzzy-if(geckoview,0-7,0-1) == mouse-click-float-details.html open-float-details.html
 fuzzy(0-4,0-1) == mouse-click-twice-float-details.html float-details.html # Bug 1316430
 
-# Dispatch keyboard event to summary
-== key-enter-single-summary.html open-single-summary.html
-== key-enter-open-second-summary.html open-multiple-summary.html
-== key-enter-prevent-default.html single-summary.html
-== key-space-single-summary.html open-single-summary.html
-
 # Generated content bits
 == details-after.html single-summary.html
 == details-before.html single-summary.html
