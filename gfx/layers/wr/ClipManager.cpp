@@ -53,24 +53,20 @@ void ClipManager::BeginList(const StackingContextHelper& aStackingContext) {
   CLIP_LOG("begin list %p affects = %d, ref-frame = %d\n", &aStackingContext,
            aStackingContext.AffectsClipPositioning(),
            aStackingContext.ReferenceFrameId().isSome());
+
+  ItemClips clips(nullptr, nullptr, false);
+  if (!mItemClipStack.empty()) {
+    clips = mItemClipStack.top();
+  }
+
   if (aStackingContext.AffectsClipPositioning()) {
-    if (aStackingContext.ReferenceFrameId()) {
-      PushOverrideForASR(
-          mItemClipStack.empty() ? nullptr : mItemClipStack.top().mASR,
-          aStackingContext.ReferenceFrameId().ref());
+    if (auto referenceFrameId = aStackingContext.ReferenceFrameId()) {
+      PushOverrideForASR(clips.mASR, *referenceFrameId);
+      clips.mScrollId = *referenceFrameId;
     } else {
       // Start a new cache
       mCacheStack.emplace();
     }
-  }
-
-  ItemClips clips(nullptr, nullptr, false);
-  if (!mItemClipStack.empty()) {
-    clips.CopyOutputsFrom(mItemClipStack.top());
-  }
-
-  if (aStackingContext.ReferenceFrameId()) {
-    clips.mScrollId = aStackingContext.ReferenceFrameId().ref();
   }
 
   CLIP_LOG("  push: clip: %p, asr: %p, scroll = %zu, clip = %zu\n",
@@ -104,8 +100,14 @@ void ClipManager::PushOverrideForASR(const ActiveScrolledRoot* aASR,
   Maybe<wr::WrSpatialId> space = GetScrollLayer(aASR);
   MOZ_ASSERT(space.isSome());
 
-  CLIP_LOG("Pushing %p override %zu -> %s\n", aASR, space->id,
-           ToString(aSpatialId.id).c_str());
+  CLIP_LOG("Pushing %p override %zu -> %zu\n", aASR, space->id, aSpatialId.id);
+
+  if (!mItemClipStack.empty()) {
+    auto& top = mItemClipStack.top();
+    if (top.mASR == aASR) {
+      top.mScrollId = aSpatialId;
+    }
+  }
 
   auto it = mASROverride.insert({*space, std::stack<wr::WrSpatialId>()});
   it.first->second.push(aSpatialId);
@@ -126,6 +128,14 @@ void ClipManager::PopOverrideForASR(const ActiveScrolledRoot* aASR) {
            ToString(it->second.top().id).c_str());
 
   it->second.pop();
+
+  if (!mItemClipStack.empty()) {
+    auto& top = mItemClipStack.top();
+    if (top.mASR == aASR) {
+      top.mScrollId = it->second.empty() ? *space : it->second.top();
+    }
+  }
+
   if (it->second.empty()) {
     mASROverride.erase(it);
   }
@@ -450,11 +460,6 @@ void ClipManager::ItemClips::UpdateSeparateLeaf(
 bool ClipManager::ItemClips::HasSameInputs(const ItemClips& aOther) {
   return mASR == aOther.mASR && mChain == aOther.mChain &&
          mSeparateLeaf == aOther.mSeparateLeaf;
-}
-
-void ClipManager::ItemClips::CopyOutputsFrom(const ItemClips& aOther) {
-  mScrollId = aOther.mScrollId;
-  mClipChainId = aOther.mClipChainId;
 }
 
 wr::WrSpaceAndClipChain ClipManager::ItemClips::GetSpaceAndClipChain() const {
