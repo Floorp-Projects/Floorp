@@ -8,6 +8,10 @@
   list-style-image: url("chrome://browser/skin/lepton/mail-inbox-all.svg");
 }
 
+#AblazehelpButton {
+  list-style-image: url("chrome://browser/skin/lepton/help.svg");
+}
+
 #browserContainersExtensionContent{
   display: none !important;
 }

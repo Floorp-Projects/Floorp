@@ -59,7 +59,7 @@ pane-experimental-reset =
   .label = Restore Defaults
   .accesskey = R
 
-help-button-label = { -brand-short-name } Support
+help-button-label = Firefox Support
 addons-button-label = Extensions & Themes
 
 focus-search =
@@ -1586,6 +1586,7 @@ click-to-option =
 
 ## sidebar
 profiles-button-label = Manage profiles
+floorp-help-button-label = { -brand-short-name } Support
 
 appmenuitem-reboot =
  .label = Reboot
