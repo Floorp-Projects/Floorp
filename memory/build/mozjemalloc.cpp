@@ -163,6 +163,11 @@
 #include "Mutex.h"
 #include "Utils.h"
 
+// For GetGeckoProcessType(), when it's used.
+#if defined(XP_WIN) && !defined(JS_STANDALONE)
+#  include "mozilla/ProcessType.h"
+#endif
+
 using namespace mozilla;
 
 // On Linux, we use madvise(MADV_DONTNEED) to release memory back to the
@@ -1364,14 +1369,9 @@ static inline void ApplyZeroOrJunk(void* aPtr, size_t aSize) {
   }
 }
 
-// Experiment under bug 1716727. (See ./moz.build for details.)
+// On Windows, delay crashing on OOM. Partly experimental. (See bug 1785145 for
+// more details.)
 #ifdef XP_WIN
-
-// Whether the current process should always stall, or only stall once.
-static bool sShouldAlwaysStall = true;
-MOZ_JEMALLOC_API void mozjemalloc_win_set_always_stall(bool aVal) {
-  sShouldAlwaysStall = aVal;
-}
 
 // Implementation of VirtualAlloc wrapper (bug 1716727).
 namespace MozAllocRetries {
@@ -1383,12 +1383,20 @@ constexpr size_t kMaxAttempts = 10;
 constexpr size_t kDelayMs = 50;
 
 Atomic<bool> sHasStalled{false};
-static bool ShouldStallAndRetry() {
-  if (sShouldAlwaysStall) {
+static inline bool ShouldStallAndRetry() {
+#  if defined(JS_STANDALONE)
+  // GetGeckoProcessType() isn't available in this configuration. (SpiderMonkey
+  // on Windows mostly skips this in favor of directly calling ::VirtualAlloc(),
+  // though, so it's probably not going to matter whether we stall here or not.)
+  return true;
+#  else
+  // In the main process, always stall.
+  if (GetGeckoProcessType() == GeckoProcessType::GeckoProcessType_Default) {
     return true;
   }
   // Otherwise, stall at most once.
   return sHasStalled.compareExchange(false, true);
+#  endif
 }
 
 // Drop-in wrapper around VirtualAlloc. When out of memory, may attempt to stall
@@ -1453,7 +1461,7 @@ static bool ShouldStallAndRetry() {
 }  // namespace MozAllocRetries
 
 using MozAllocRetries::MozVirtualAlloc;
-#endif    // XP_WIN
+#endif  // XP_WIN
 
 // ***************************************************************************
 
