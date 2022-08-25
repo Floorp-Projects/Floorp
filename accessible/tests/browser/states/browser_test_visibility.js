@@ -27,7 +27,7 @@ async function runTest(browser, accDoc) {
   testStates(lastLi, STATE_OFFSCREEN, 0, STATE_INVISIBLE);
 
   // scroll into view the item
-  await SpecialPowers.spawn(browser, [], () => {
+  await invokeContentTask(browser, [], () => {
     content.document.getElementById("li_last").scrollIntoView(true);
   });
   testStates(lastLi, 0, 0, STATE_OFFSCREEN | STATE_INVISIBLE);
@@ -51,5 +51,6 @@ addAccessibleTask(
     <li id="li_first">item1</li><li>item2</li><li>item3</li>
     <li>item4</li><li>item5</li><li id="li_last">item6</li>
   </ul>`,
-  runTest
+  runTest,
+  { chrome: true, iframe: true, remoteIframe: true }
 );
