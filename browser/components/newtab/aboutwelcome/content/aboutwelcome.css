@@ -205,6 +205,9 @@ body[lwt-newtab-brighttext] {
 :root[dialogroot] .onboardingContainer:dir(rtl) {
   transform: unset;
 }
+:root[dialogroot] .onboardingContainer .logo-container {
+  pointer-events: none;
+}
 :root[dialogroot] .onboardingContainer .screen:dir(rtl) {
   transform: unset;
 }

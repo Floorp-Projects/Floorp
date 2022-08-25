@@ -60,6 +60,10 @@ body {
         transform: unset;
       }
 
+      .logo-container {
+        pointer-events: none;
+      }
+
       .screen {
         &:dir(rtl) {
           transform: unset;
