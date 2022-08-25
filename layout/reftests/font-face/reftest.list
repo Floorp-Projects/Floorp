@@ -184,9 +184,6 @@ fuzzy(0-138,0-318) == colrv1-01.html#Q colrv1-01-ref.html#Q
 fuzzy(0-214,0-158) == colrv1-01.html#R colrv1-01-ref.html#R
 fuzzy(0-255,0-156) == colrv1-01.html#S colrv1-01-ref.html#S
 fuzzy(0-237,0-277) == colrv1-01.html#T colrv1-01-ref.html#T
-
-fuzzy(0-1,0-1) == colrv1-03.html colrv1-03-ref.html
-fuzzy(0-1,0-600) fuzzy-if(Android,0-64,0-37100) == colrv1-04.html colrv1-04-ref.html
 defaults
 
 # Check that the tech(color-COLRv1) function responds to whether COLRv1 support is enabled.
