@@ -70,16 +70,32 @@ export class ProtonScreen extends React.PureComponent {
 
   renderLogo({
     imageURL = "chrome://branding/content/about-logo.svg",
-    alt = "",
     darkModeImageURL,
+    reducedMotionImageURL,
+    darkModeReducedMotionImageURL,
+    alt = "",
     height,
   }) {
     return (
       <picture className="logo-container">
-        <source
-          srcSet={darkModeImageURL}
-          media="(prefers-color-scheme: dark)"
-        />
+        {darkModeReducedMotionImageURL ? (
+          <source
+            srcSet={darkModeReducedMotionImageURL}
+            media="(prefers-color-scheme: dark) and (prefers-reduced-motion: reduce)"
+          />
+        ) : null}
+        {darkModeImageURL ? (
+          <source
+            srcSet={darkModeImageURL}
+            media="(prefers-color-scheme: dark)"
+          />
+        ) : null}
+        {reducedMotionImageURL ? (
+          <source
+            srcSet={reducedMotionImageURL}
+            media="(prefers-reduced-motion: reduce)"
+          />
+        ) : null}
         <img
           className="brand-logo"
           style={{ height }}

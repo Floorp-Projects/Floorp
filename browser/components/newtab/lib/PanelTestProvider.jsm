@@ -417,8 +417,13 @@ const MESSAGES = () => [
               string_id: "mr1-onboarding-pin-header",
             },
             logo: {
+              imageURL: "chrome://browser/content/callout-tab-pickup.svg",
               darkModeImageURL:
-                "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/a3c640c8-7594-4bb2-bc18-8b4744f3aaf2.gif",
+                "chrome://browser/content/callout-tab-pickup-dark.svg",
+              reducedMotionImageURL:
+                "chrome://browser/content/callout-colorways.svg",
+              darkModeReducedMotionImageURL:
+                "chrome://browser/content/callout-colorways-dark.svg",
               alt: "sample alt text",
             },
             hero_text: {
