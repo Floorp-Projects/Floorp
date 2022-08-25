@@ -97,7 +97,6 @@
         ? `
       <hbox class="dialog-button-box">
         <button dlgtype="disclosure" hidden="true"/>
-        <button dlgtype="help" hidden="true"/>
         <button dlgtype="extra2" hidden="true"/>
         <button dlgtype="extra1" hidden="true"/>
         <spacer class="button-spacer" part="button-spacer" flex="1"/>
@@ -111,18 +110,8 @@
         <button dlgtype="accept"/>
         <button dlgtype="extra1" hidden="true"/>
         <button dlgtype="cancel"/>
-        <button dlgtype="help" hidden="true"/>
         <button dlgtype="disclosure" hidden="true"/>
       </hbox>`;
-
-      let key =
-        AppConstants.platform == "macosx"
-          ? `<key phase="capturing"
-            oncommand="document.querySelector('dialog').openHelp(event)"
-            key="&openHelpMac.commandkey;" modifiers="accel"/>`
-          : `<key phase="capturing"
-            oncommand="document.querySelector('dialog').openHelp(event)"
-            keycode="&openHelp.commandkey;"/>`;
 
       return `
       <html:link rel="stylesheet" href="chrome://global/skin/button.css"/>
@@ -131,8 +120,7 @@
       <vbox class="box-inherit dialog-content-box" part="content-box" flex="1">
         <html:slot></html:slot>
       </vbox>
-      ${buttons}
-      <keyset>${key}</keyset>`;
+      ${buttons}`;
     }
 
     connectedCallback() {
@@ -144,9 +132,7 @@
 
       this.shadowRoot.textContent = "";
       this.shadowRoot.appendChild(
-        MozXULElement.parseXULToFragment(this._markup, [
-          "chrome://global/locale/globalKeys.dtd",
-        ])
+        MozXULElement.parseXULToFragment(this._markup)
       );
       this.initializeAttributeInheritance();
 
@@ -325,29 +311,12 @@
       }
     }
 
-    openHelp(event) {
-      var helpButton = this.getButton("help");
-      if (helpButton.disabled || helpButton.hidden) {
-        return;
-      }
-      this._fireButtonEvent("help");
-      event.stopPropagation();
-      event.preventDefault();
-    }
-
     _configureButtons(aButtons) {
       // by default, get all the anonymous button elements
       var buttons = {};
       this._buttons = buttons;
 
-      for (let type of [
-        "accept",
-        "cancel",
-        "extra1",
-        "extra2",
-        "help",
-        "disclosure",
-      ]) {
+      for (let type of ["accept", "cancel", "extra1", "extra2", "disclosure"]) {
         buttons[type] = this.shadowRoot.querySelector(`[dlgtype="${type}"]`);
       }
 
@@ -417,7 +386,6 @@
         var shown = {
           accept: false,
           cancel: false,
-          help: false,
           disclosure: false,
           extra1: false,
           extra2: false,
