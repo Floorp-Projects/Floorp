@@ -332,7 +332,7 @@ class IntermediatePreloads {
     lazy.log.debug(
       `There are ${waiting.length} intermediates awaiting download.`
     );
-    if (waiting.length == 0) {
+    if (!waiting.length) {
       // Nothing to do.
       Services.obs.notifyObservers(
         null,
@@ -605,7 +605,7 @@ class CRLiteFilters {
     let fullFiltersDownloaded = filtersDownloaded.filter(
       filter => !filter.incremental
     );
-    if (fullFiltersDownloaded.length > 0) {
+    if (fullFiltersDownloaded.length) {
       if (fullFiltersDownloaded.length > 1) {
         lazy.log.warn("trying to install more than one full CRLite filter?");
       }
@@ -643,7 +643,7 @@ class CRLiteFilters {
       concatenatedStashes.set(filter.bytes, offset);
       offset += filter.bytes.length;
     }
-    if (concatenatedStashes.length > 0) {
+    if (concatenatedStashes.length) {
       lazy.log.debug(
         `adding concatenated incremental updates of total length ${concatenatedStashes.length}`
       );

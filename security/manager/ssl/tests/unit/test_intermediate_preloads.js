@@ -337,7 +337,7 @@ add_task(async function test_preload_basic() {
 
   let localDB = await IntermediatePreloadsClient.client.db;
   let data = await localDB.list();
-  ok(data.length > 0, "should have some entries");
+  ok(!!data.length, "should have some entries");
   // simulate a sync (syncAndDownload doesn't actually... sync.)
   await IntermediatePreloadsClient.client.emit("sync", {
     data: {
@@ -402,7 +402,7 @@ add_task(async function test_delete() {
 
   let localDB = await IntermediatePreloadsClient.client.db;
   let data = await localDB.list();
-  ok(data.length > 0, "should have some entries");
+  ok(!!data.length, "should have some entries");
   let subject = data[0].subjectDN;
   let certStorage = Cc["@mozilla.org/security/certstorage;1"].getService(
     Ci.nsICertStorage

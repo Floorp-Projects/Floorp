@@ -85,18 +85,17 @@ function asyncTestEV(
 ) {
   let now = Date.now() / 1000;
   return new Promise((resolve, reject) => {
-    let ocspResponder =
-      expectedOCSPRequestPaths.length > 0
-        ? startOCSPResponder(
-            SERVER_PORT,
-            "www.example.com",
-            "test_ev_certs",
-            expectedOCSPRequestPaths,
-            expectedOCSPRequestPaths.slice(),
-            null,
-            ocspResponseTypes
-          )
-        : failingOCSPResponder();
+    let ocspResponder = expectedOCSPRequestPaths.length
+      ? startOCSPResponder(
+          SERVER_PORT,
+          "www.example.com",
+          "test_ev_certs",
+          expectedOCSPRequestPaths,
+          expectedOCSPRequestPaths.slice(),
+          null,
+          ocspResponseTypes
+        )
+      : failingOCSPResponder();
     let result = new EVCertVerificationResult(
       cert.subjectName,
       expectedPRErrorCode,

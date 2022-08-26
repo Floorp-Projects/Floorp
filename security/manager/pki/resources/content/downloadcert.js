@@ -46,7 +46,7 @@ function onLoad() {
 
   let bundle = document.getElementById("pippki_bundle");
   let caName = gCert.commonName;
-  if (caName.length == 0) {
+  if (!caName.length) {
     caName = bundle.getString("unnamedCA");
   }
 

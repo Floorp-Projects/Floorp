@@ -90,7 +90,7 @@ function doHash(algo, value, cmp) {
 
 function doHashStream(algo, value, cmp) {
   // TODO(Bug 459835): Make updateFromStream() accept zero length streams.
-  if (value.length == 0) {
+  if (!value.length) {
     return;
   }
 

@@ -62,7 +62,7 @@ class OID {
     bytes.shift();
     let accumulator = 0;
     // Lint TODO: prevent overflow here
-    while (bytes.length > 0) {
+    while (bytes.length) {
       let value = bytes.shift();
       accumulator *= 128;
       if (value > 128) {
