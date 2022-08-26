@@ -932,7 +932,7 @@ function String_toLocaleLowerCase() {
 
   // Handle the common cases (no locales argument or a single string
   // argument) first.
-  var locales = arguments.length > 0 ? arguments[0] : undefined;
+  var locales = arguments.length ? arguments[0] : undefined;
   var requestedLocale;
   if (locales === undefined) {
     // Steps 3, 6.
@@ -945,8 +945,7 @@ function String_toLocaleLowerCase() {
     var requestedLocales = CanonicalizeLocaleList(locales);
 
     // Steps 4-6.
-    requestedLocale =
-      requestedLocales.length > 0 ? requestedLocales[0] : undefined;
+    requestedLocale = requestedLocales.length ? requestedLocales[0] : undefined;
   }
 
   // Trivial case: When the input is empty, directly return the empty string.
@@ -978,7 +977,7 @@ function String_toLocaleUpperCase() {
 
   // Handle the common cases (no locales argument or a single string
   // argument) first.
-  var locales = arguments.length > 0 ? arguments[0] : undefined;
+  var locales = arguments.length ? arguments[0] : undefined;
   var requestedLocale;
   if (locales === undefined) {
     // Steps 3, 6.
@@ -991,8 +990,7 @@ function String_toLocaleUpperCase() {
     var requestedLocales = CanonicalizeLocaleList(locales);
 
     // Steps 4-6.
-    requestedLocale =
-      requestedLocales.length > 0 ? requestedLocales[0] : undefined;
+    requestedLocale = requestedLocales.length ? requestedLocales[0] : undefined;
   }
 
   // Trivial case: When the input is empty, directly return the empty string.
