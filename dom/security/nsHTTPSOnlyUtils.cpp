@@ -995,8 +995,7 @@ TestHTTPAnswerRunnable::Notify(nsITimer* aTimer) {
   }
 
   mozilla::OriginAttributes attrs = origLoadInfo->GetOriginAttributes();
-  RefPtr<nsIPrincipal> nullPrincipal =
-      mozilla::NullPrincipal::CreateWithInheritedAttributes(attrs);
+  RefPtr<nsIPrincipal> nullPrincipal = mozilla::NullPrincipal::Create(attrs);
 
   uint32_t loadFlags =
       nsIRequest::LOAD_ANONYMOUS | nsIRequest::INHIBIT_CACHING |
