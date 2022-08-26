@@ -44,14 +44,16 @@ struct PropItem {
   // - mAttribute is not nullptr
   // - mTag is CSS invertible style and "-moz-editor-invert-value"
   nsString mAttributeValueOrCSSValue;
-  // Whether the class and style attribute should be perserved or discarded.
-  SpecifiedStyle mSpecifiedStyle = SpecifiedStyle::Preserve;
+  // Whether the class and style attribute should be preserved or discarded.
+  const SpecifiedStyle mSpecifiedStyle = SpecifiedStyle::Preserve;
 
   PropItem() = delete;
-  PropItem(nsStaticAtom* aTag, nsAtom* aAttribute, const nsAString& aValue)
+  PropItem(nsStaticAtom* aTag, nsAtom* aAttribute, const nsAString& aValue,
+           SpecifiedStyle aSpecifiedStyle = SpecifiedStyle::Preserve)
       : mTag(aTag),
         mAttribute(aAttribute != nsGkAtoms::_empty ? aAttribute : nullptr),
-        mAttributeValueOrCSSValue(aValue) {
+        mAttributeValueOrCSSValue(aValue),
+        mSpecifiedStyle(aSpecifiedStyle) {
     MOZ_COUNT_CTOR(PropItem);
   }
   MOZ_COUNTED_DTOR(PropItem)
@@ -120,7 +122,8 @@ class TypeInState final {
   void SetProp(nsStaticAtom& aProp, nsAtom* aAttr, const nsAString& aValue);
 
   void ClearAllProps();
-  void ClearProp(nsStaticAtom* aProp, nsAtom* aAttr);
+  void ClearProp(nsStaticAtom* aProp, nsAtom* aAttr,
+                 SpecifiedStyle aSpecifiedStyle = SpecifiedStyle::Preserve);
   void ClearLinkPropAndDiscardItsSpecifiedStyle();
 
   /**
