@@ -109,10 +109,11 @@ add_task(async function setup() {
 
 add_task(async function test_application_name() {
   for (const { name, version, expected } of tests) {
-    Services.appinfo = { name, version };
     let { engines } = await engineSelector.fetchEngineConfiguration({
       locale: "default",
       region: "default",
+      name,
+      version,
     });
     const engineIds = engines.map(obj => obj.webExtension.id);
     Assert.deepEqual(
