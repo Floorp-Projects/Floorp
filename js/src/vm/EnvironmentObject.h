@@ -342,8 +342,6 @@ class CallObject : public EnvironmentObject {
                                           HandleObject enclosing,
                                           gc::InitialHeap heap);
 
-  static CallObject* create(JSContext* cx, HandleFunction callee,
-                            HandleObject enclosing);
   static CallObject* create(JSContext* cx, AbstractFramePtr frame);
 
   static CallObject* createHollowForDebug(JSContext* cx, HandleFunction callee);
