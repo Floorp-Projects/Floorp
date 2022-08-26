@@ -8723,12 +8723,6 @@
   value: true
   mirror: always
 
-# Whether to disable deprecated numalign/denomalign/align attributes
-- name: mathml.deprecated_alignment_attributes.disabled
-  type: bool
-  value: true
-  mirror: always
-
 # Whether to disable the scriptminsize attribute.
 # Note that this only disables parsing, not the default effect when no attribute
 # is unspecified.
