@@ -55,6 +55,14 @@ void CSSContainerRule::GetCssText(nsACString& aCssText) const {
   Servo_ContainerRule_GetCssText(mRawRule, &aCssText);
 }
 
+void CSSContainerRule::GetContainerName(nsACString& aName) const {
+  Servo_ContainerRule_GetContainerName(mRawRule, &aName);
+}
+
+void CSSContainerRule::GetContainerQuery(nsACString& aQuery) const {
+  Servo_ContainerRule_GetContainerQuery(mRawRule, &aQuery);
+}
+
 void CSSContainerRule::SetRawAfterClone(RefPtr<RawServoContainerRule> aRaw) {
   mRawRule = std::move(aRaw);
 

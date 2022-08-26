@@ -2968,7 +2968,30 @@ pub extern "C" fn Servo_ContainerRule_GetConditionText(
     result: &mut nsACString,
 ) {
     read_locked_arc(rule, |rule: &ContainerRule| {
+        rule.condition.to_css(&mut CssWriter::new(result)).unwrap();
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ContainerRule_GetContainerQuery(
+    rule: &RawServoContainerRule,
+    result: &mut nsACString,
+) {
+    read_locked_arc(rule, |rule: &ContainerRule| {
         rule.query_condition().to_css(&mut CssWriter::new(result)).unwrap();
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ContainerRule_GetContainerName(
+    rule: &RawServoContainerRule,
+    result: &mut nsACString,
+) {
+    read_locked_arc(rule, |rule: &ContainerRule| {
+        let name = rule.container_name();
+        if !name.is_none() {
+            name.to_css(&mut CssWriter::new(result)).unwrap();
+        }
     })
 }
 
