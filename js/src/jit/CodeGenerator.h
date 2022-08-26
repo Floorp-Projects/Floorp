@@ -324,8 +324,7 @@ class CodeGenerator final : public CodeGeneratorSpecific {
                                    Register scratch, OutOfLineTestObject* ool);
 
   void emitStoreElementTyped(const LAllocation* value, MIRType valueType,
-                             MIRType elementType, Register elements,
-                             const LAllocation* index);
+                             Register elements, const LAllocation* index);
 
   // Bailout if an element about to be written to is a hole.
   void emitStoreHoleCheck(Register elements, const LAllocation* index,
