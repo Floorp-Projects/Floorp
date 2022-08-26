@@ -292,6 +292,8 @@ urlbar.picked.*
     A URL from history.
   - ``keyword``
     A bookmark keyword.
+  - ``quickaction``
+    A QuickAction.
   - ``quicksuggest``
     A Firefox Suggest (a.k.a. quick suggest) suggestion.
   - ``remotetab``
