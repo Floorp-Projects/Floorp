@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
       // Get the sequence number of the last paint on the compositor side.
       // We do this before converting the APZ test data because the conversion
       // loses the order of the paints.
-      ok(compositorTestData.paints.length > 0,
+      ok(!!compositorTestData.paints.length,
                     "expected at least one paint in compositor test data");
       var lastCompositorPaint = compositorTestData.paints[compositorTestData.paints.length - 1];
       var lastCompositorPaintSeqNo = lastCompositorPaint.sequenceNumber;

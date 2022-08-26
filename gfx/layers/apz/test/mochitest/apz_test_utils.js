@@ -139,7 +139,7 @@ function convertTestData(testData) {
 // because those don't contain any useful data.
 function getLastNonemptyBucket(buckets) {
   for (var i = buckets.length - 1; i >= 0; --i) {
-    if (buckets[i].scrollFrames.length > 0) {
+    if (buckets[i].scrollFrames.length) {
       return buckets[i];
     }
   }
@@ -269,7 +269,7 @@ function getLastApzcTree() {
     ok(false, "expected to have compositor apz test data");
     return null;
   }
-  if (data.paints.length == 0) {
+  if (!data.paints.length) {
     ok(false, "expected to have at least one compositor paint bucket");
     return null;
   }
@@ -756,7 +756,7 @@ function getSnapshot(rect) {
 //     produces { "key": { "x": 0, "y": 0 }, "key2": [1, 2, true] }
 function getQueryArgs() {
   var args = {};
-  if (location.search.length > 0) {
+  if (location.search.length) {
     var params = location.search.substr(1).split("&");
     for (var p of params) {
       var [k, v] = p.split("=");
@@ -866,7 +866,7 @@ function hitInfoToString(hitInfo) {
       strs.push(flag);
     }
   }
-  if (strs.length == 0) {
+  if (!strs.length) {
     return "INVISIBLE";
   }
   strs.sort(function(a, b) {
@@ -1070,7 +1070,7 @@ var ApzCleanup = {
   _cleanups: [],
 
   register(func) {
-    if (this._cleanups.length == 0) {
+    if (!this._cleanups.length) {
       if (!window.isApzSubtest) {
         SimpleTest.registerCleanupFunction(this.execute.bind(this));
       } // else ApzCleanup.execute is called from runSubtestsSeriallyInFreshWindows
@@ -1079,7 +1079,7 @@ var ApzCleanup = {
   },
 
   execute() {
-    while (this._cleanups.length > 0) {
+    while (this._cleanups.length) {
       var func = this._cleanups.pop();
       try {
         func();

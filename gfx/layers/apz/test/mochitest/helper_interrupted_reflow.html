@@ -578,7 +578,7 @@ function getAsyncScrollOffsets(aPaintsToIgnore) {
     if (rcd == null) {
       continue;
     }
-    if (rcd.children.length > 0) {
+    if (rcd.children.length) {
       // The child may not be layerized in the first few paints, but once it is
       // layerized, it should stay layerized.
       childIsLayerized = true;
@@ -654,7 +654,7 @@ async function test() {
   var asyncScrollOffsets = getAsyncScrollOffsets(framesToSkip);
   dump("Got scroll offsets: " + JSON.stringify(asyncScrollOffsets) + "\n");
   var maxScrollParentLayerPixels = maxScroll;
-  while (asyncScrollOffsets.length > 0) {
+  while (asyncScrollOffsets.length) {
     let offset = asyncScrollOffsets.shift();
     switch (state) {
       // 0 is the initial state, the scroll offset might be zero but should
