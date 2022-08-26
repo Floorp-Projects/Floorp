@@ -24,7 +24,7 @@ async function triggerSaveAs({ selector }) {
   contextMenu.activateItem(saveLinkCommand);
 }
 
-add_task(function test_setup() {
+add_setup(() => {
   const tempDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
   tempDir.append("test-download-dir");
   if (!tempDir.exists()) {
@@ -62,6 +62,13 @@ add_task(async function test_download_item_referrer_info() {
       browser.downloads.onCreated.addListener(async downloadInfo => {
         browser.test.sendMessage("download-on-created", downloadInfo);
       });
+      browser.downloads.onChanged.addListener(async downloadInfo => {
+        // Wait download to be completed.
+        if (downloadInfo.state?.current !== "complete") {
+          return;
+        }
+        browser.test.sendMessage("download-completed");
+      });
 
       // Call an API method implemented in the parent process to make sure
       // registering the downloas.onCreated event listener has been completed.
@@ -80,6 +87,9 @@ add_task(async function test_download_item_referrer_info() {
     is(downloadInfo.url, DOWNLOAD_URL, "Got the expected download url");
     is(downloadInfo.referrer, TEST_URL, "Got the expected referrer");
   });
+
+  // Wait for the download to have been completed and removed.
+  await extension.awaitMessage("download-completed");
 
   await extension.unload();
 });
