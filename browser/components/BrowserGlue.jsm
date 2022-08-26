@@ -143,6 +143,8 @@ const PRIVATE_BROWSING_BINARY = "private_browsing.exe";
 // Index of Private Browsing icon in private_browsing.exe
 // Must line up with IDI_PBICON_PB_PB_EXE in nsNativeAppSupportWin.h.
 const PRIVATE_BROWSING_EXE_ICON_INDEX = 1;
+const PREF_PRIVATE_WINDOW_SEPARATION =
+  "browser.privacySegmentation.windowSeparation.enabled";
 const PREF_PRIVATE_BROWSING_SHORTCUT_CREATED =
   "browser.privacySegmentation.createdShortcut";
 
@@ -2534,9 +2536,7 @@ BrowserGlue.prototype = {
           // Pref'ed off until Private Browsing window separation is enabled by default
           // to avoid a situation where a user pins the Private Browsing shortcut to
           // the Taskbar, which will end up launching into a different Taskbar icon.
-          lazy.NimbusFeatures.majorRelease2022.getVariable(
-            "feltPrivacyWindowSeparation"
-          ) &&
+          Services.prefs.getBoolPref(PREF_PRIVATE_WINDOW_SEPARATION, false) &&
           // Private Browsing shortcuts for packaged builds come with the package,
           // if they exist at all. We shouldn't try to create our own.
           !Services.sysinfo.getProperty("hasWinPackageId") &&
@@ -2556,10 +2556,10 @@ BrowserGlue.prototype = {
           );
 
           if (
-            !(await shellService.hasMatchingShortcut(
+            !shellService.hasMatchingShortcut(
               winTaskbar.defaultPrivateGroupId,
               true
-            ))
+            )
           ) {
             let appdir = Services.dirsvc.get("GreD", Ci.nsIFile);
             let exe = appdir.clone();
@@ -2571,7 +2571,7 @@ BrowserGlue.prototype = {
             let [desc] = await strings.formatValues([
               "private-browsing-shortcut-text",
             ]);
-            await shellService.createShortcut(
+            shellService.createShortcut(
               exe,
               [],
               desc,
@@ -2583,16 +2583,11 @@ BrowserGlue.prototype = {
               desc + ".lnk",
               appdir
             );
+            Services.prefs.setBoolPref(
+              PREF_PRIVATE_BROWSING_SHORTCUT_CREATED,
+              true
+            );
           }
-          // We always set this as long as no exception has been thrown. This
-          // ensure that it is `true` both if we created one because it didn't
-          // exist, or if it already existed (most likely because it was created
-          // by the installer). This avoids the need to call `hasMatchingShortcut`
-          // again, which necessarily does pointless I/O.
-          Services.prefs.setBoolPref(
-            PREF_PRIVATE_BROWSING_SHORTCUT_CREATED,
-            true
-          );
         },
       },
 

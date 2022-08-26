@@ -47,8 +47,7 @@ interface nsIWindowsShellService : nsISupports
    *         created or accessed
    * @throws NS_ERROR_FAILURE for other types of failures
    */
-  [implicit_jscontext]
-  Promise createShortcut(in nsIFile aBinary, in Array<AString> aArguments,
+  AString createShortcut(in nsIFile aBinary, in Array<AString> aArguments,
     in AString aDescription, in nsIFile aIconFile, in unsigned short aIconIndex,
     in AString aAppUserModelId, in AString aShortcutFolder, in AString aShortcutName);
 
@@ -145,8 +144,7 @@ interface nsIWindowsShellService : nsISupports
    */
   AString classifyShortcut(in AString aPath);
 
-  [implicit_jscontext]
-  Promise hasMatchingShortcut(in AString aAUMID, in bool aPrivateBrowsing);
+  bool hasMatchingShortcut(in AString aAUMID, in bool aPrivateBrowsing);
 
   /*
    * Check if setDefaultBrowserUserChoice() is expected to succeed.
