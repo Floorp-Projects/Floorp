@@ -25,7 +25,6 @@ addMessageListener("add-turns-certs", certs => {
       port,
       {},
       cert,
-      Ci.nsICertOverrideService.ERROR_UNTRUSTED,
       false
     );
   });

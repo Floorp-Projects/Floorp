@@ -38,6 +38,8 @@ SECStatus AuthCertificateHookWithInfo(
     Maybe<nsTArray<nsTArray<uint8_t>>>& stapledOCSPResponses,
     Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension, uint32_t providerFlags);
 
+enum class OverridableErrorCategory : uint32_t;
+
 // Base class for dispatching the certificate verification result.
 class BaseSSLServerCertVerificationResult {
  public:
@@ -47,7 +49,8 @@ class BaseSSLServerCertVerificationResult {
                         nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
                         uint16_t aCertificateTransparencyStatus,
                         EVStatus aEVStatus, bool aSucceeded,
-                        PRErrorCode aFinalError, uint32_t aCollectedErrors,
+                        PRErrorCode aFinalError,
+                        OverridableErrorCategory aOverridableErrorCategory,
                         bool aIsBuiltCertChainRootBuiltInRoot,
                         uint32_t aProviderFlags) = 0;
 };
@@ -71,7 +74,7 @@ class SSLServerCertVerificationResult final
                 nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
                 uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
                 bool aSucceeded, PRErrorCode aFinalError,
-                uint32_t aCollectedErrors,
+                OverridableErrorCategory aOverridableErrorCategory,
                 bool aIsBuiltCertChainRootBuiltInRoot,
                 uint32_t aProviderFlags) override;
 
@@ -85,7 +88,7 @@ class SSLServerCertVerificationResult final
   EVStatus mEVStatus;
   bool mSucceeded;
   PRErrorCode mFinalError;
-  uint32_t mCollectedErrors;
+  OverridableErrorCategory mOverridableErrorCategory;
   bool mIsBuiltCertChainRootBuiltInRoot;
   uint32_t mProviderFlags;
 };
