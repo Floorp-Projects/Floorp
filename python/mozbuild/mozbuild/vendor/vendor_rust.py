@@ -13,7 +13,7 @@ import os
 import re
 import subprocess
 from collections import defaultdict, OrderedDict
-from distutils.version import LooseVersion
+from looseversion import LooseVersion
 from itertools import dropwhile
 from mozboot.util import MINIMUM_RUST_VERSION
 from pathlib import Path
