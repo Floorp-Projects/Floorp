@@ -1968,10 +1968,12 @@ TEST_F(TlsConnectStreamTls13, EchRejectUnknownCriticalExtension) {
   len_buf.Write(0, tmp + non_crit_exts.len() - 2, 2);
   echconfig.Splice(len_buf, 4, 2);
 
+  /* Expect that retry configs containing unsupported mandatory extensions can
+   * not be set and lead to SEC_ERROR_INVALID_ARGS. */
   EXPECT_EQ(SECFailure,
             SSL_SetClientEchConfigs(client_->ssl_fd(), crit_rec.data(),
                                     crit_rec.len()));
-  EXPECT_EQ(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION, PORT_GetError());
+  EXPECT_EQ(SEC_ERROR_INVALID_ARGS, PORT_GetError());
   EXPECT_EQ(SECSuccess, SSL_EnableTls13GreaseEch(client_->ssl_fd(),
                                                  PR_FALSE));  // Don't GREASE
   auto filter = MakeTlsFilter<TlsExtensionCapture>(

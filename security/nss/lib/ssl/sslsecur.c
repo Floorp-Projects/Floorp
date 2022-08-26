@@ -183,6 +183,11 @@ SSL_ResetHandshake(PRFileDesc *s, PRBool asServer)
         PORT_Assert(ss->ssl3.hs.echPublicName);
         PORT_Free((void *)ss->ssl3.hs.echPublicName); /* CONST */
         ss->ssl3.hs.echPublicName = NULL;
+    }
+    /* Make sure greaseEchBuf is freed in ECH setups without echHpkeCtx. */
+    if (ss->ssl3.hs.echHpkeCtx ||
+        ss->opt.enableTls13BackendEch ||
+        ss->opt.enableTls13GreaseEch) {
         sslBuffer_Clear(&ss->ssl3.hs.greaseEchBuf);
     }
 
