@@ -287,7 +287,7 @@ FxAccountsStorageManager.prototype = {
     // As a sanity check, .cachedPlain must be empty (as we are called by init)
     // XXX - this would be a good use-case for a RuntimeAssert or similar, as
     // being added in bug 1080457.
-    if (Object.keys(this.cachedPlain).length != 0) {
+    if (Object.keys(this.cachedPlain).length) {
       throw new Error("should be impossible to have cached data already.");
     }
     for (let [name, value] of Object.entries(got.accountData)) {
@@ -326,7 +326,7 @@ FxAccountsStorageManager.prototype = {
       // If we already have anything in .cachedSecure it means something has
       // updated cachedSecure before we've read it. That means that after we do
       // manage to read we must write back the merged data.
-      let needWrite = Object.keys(this.cachedSecure).length != 0;
+      let needWrite = !!Object.keys(this.cachedSecure).length;
       let readSecure = await this.secureStorage.get(uid, email);
       // and update our cached data with it - anything already in .cachedSecure
       // wins (including the fact it may be null or undefined, the latter
@@ -605,7 +605,7 @@ LoginManagerStorage.prototype = {
         null,
         FXA_PWDMGR_REALM
       );
-      if (logins.length == 0) {
+      if (!logins.length) {
         // This could happen if the MP was locked when we wrote the data.
         log.info("Can't find any credentials in the login manager");
         return null;

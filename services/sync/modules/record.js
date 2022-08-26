@@ -491,7 +491,7 @@ CollectionKeyManager.prototype = {
     changed.sort();
     let last;
     changed = changed.filter(x => x != last && (last = x));
-    return { same: changed.length == 0, changed };
+    return { same: !changed.length, changed };
   },
 
   get isClear() {
@@ -815,7 +815,7 @@ Collection.prototype = {
 
     this.uri = this.uri
       .mutate()
-      .setQuery(args.length > 0 ? "?" + args.join("&") : "")
+      .setQuery(args.length ? "?" + args.join("&") : "")
       .finalize();
   },
 

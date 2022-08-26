@@ -474,7 +474,7 @@ Bookmark.prototype = {
     if (tags != null) {
       let URI = Services.io.newURI(this.props.uri);
       PlacesUtils.tagging.untagURI(URI, null);
-      if (tags.length > 0) {
+      if (tags.length) {
         PlacesUtils.tagging.tagURI(URI, tags);
       }
     }

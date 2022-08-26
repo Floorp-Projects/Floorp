@@ -251,7 +251,7 @@ class FxAccountsKeys {
       const toRemove = DEPRECATED_KEY_SCOPES.filter(scope =>
         userData.scopedKeys.hasOwnProperty(scope)
       );
-      if (toRemove.length > 0) {
+      if (toRemove.length) {
         for (const scope of toRemove) {
           delete userData.scopedKeys[scope];
         }
