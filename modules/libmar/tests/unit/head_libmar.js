@@ -91,7 +91,7 @@ function run_tests(obj) {
  */
 function createMAR(outMAR, dataDir, files) {
   // You cannot create an empy MAR.
-  Assert.ok(files.length > 0);
+  Assert.ok(!!files.length);
 
   // Get an nsIProcess to the signmar binary.
   let process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);

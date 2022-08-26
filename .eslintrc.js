@@ -480,7 +480,6 @@ module.exports = {
         "dom/**",
         "image/test/browser/browser_image.js",
         "layout/**",
-        "modules/**",
         "netwerk/**",
         "remote/**",
         "storage/test/unit/test_vacuum.js",
