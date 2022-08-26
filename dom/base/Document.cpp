@@ -1735,22 +1735,28 @@ void Document::GetFailedCertSecurityInfo(FailedCertSecurityInfo& aInfo,
   }
   aInfo.mErrorCodeString.Assign(errorCodeString);
 
-  rv = tsi->GetIsUntrusted(&aInfo.mIsUntrusted);
+  nsITransportSecurityInfo::OverridableErrorCategory errorCategory;
+  rv = tsi->GetOverridableErrorCategory(&errorCategory);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
     return;
   }
-
-  rv = tsi->GetIsDomainMismatch(&aInfo.mIsDomainMismatch);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
-    return;
-  }
-
-  rv = tsi->GetIsNotValidAtThisTime(&aInfo.mIsNotValidAtThisTime);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
-    return;
+  switch (errorCategory) {
+    case nsITransportSecurityInfo::OverridableErrorCategory::ERROR_TRUST:
+      aInfo.mOverridableErrorCategory =
+          dom::OverridableErrorCategory::Trust_error;
+      break;
+    case nsITransportSecurityInfo::OverridableErrorCategory::ERROR_DOMAIN:
+      aInfo.mOverridableErrorCategory =
+          dom::OverridableErrorCategory::Domain_mismatch;
+      break;
+    case nsITransportSecurityInfo::OverridableErrorCategory::ERROR_TIME:
+      aInfo.mOverridableErrorCategory =
+          dom::OverridableErrorCategory::Expired_or_not_yet_valid;
+      break;
+    default:
+      aInfo.mOverridableErrorCategory = dom::OverridableErrorCategory::Unset;
+      break;
   }
 
   nsCOMPtr<nsIX509Cert> cert;

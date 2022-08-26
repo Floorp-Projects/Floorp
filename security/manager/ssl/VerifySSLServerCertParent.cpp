@@ -66,7 +66,8 @@ class IPCServerCertVerificationResult final
                 nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
                 uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
                 bool aSucceeded, PRErrorCode aFinalError,
-                OverridableErrorCategory aOverridableErrorCategory,
+                nsITransportSecurityInfo::OverridableErrorCategory
+                    aOverridableErrorCategory,
                 bool aIsBuiltCertChainRootBuiltInRoot,
                 uint32_t aProviderFlags) override;
 
@@ -82,7 +83,8 @@ void IPCServerCertVerificationResult::Dispatch(
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
     uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
     bool aSucceeded, PRErrorCode aFinalError,
-    OverridableErrorCategory aOverridableErrorCategory,
+    nsITransportSecurityInfo::OverridableErrorCategory
+        aOverridableErrorCategory,
     bool aIsBuiltCertChainRootBuiltInRoot, uint32_t aProviderFlags) {
   nsTArray<ByteArray> builtCertChain;
   if (aSucceeded) {

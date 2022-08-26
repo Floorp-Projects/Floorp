@@ -38,11 +38,11 @@ ipc::IPCResult VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertSuccess(
     certBytesArray.AppendElement(std::move(cert.data()));
   }
 
-  mResultTask->Dispatch(std::move(certBytesArray), std::move(mPeerCertChain),
-                        aCertTransparencyStatus,
-                        static_cast<EVStatus>(aEVStatus), true, 0,
-                        OverridableErrorCategory::Unset,
-                        aIsBuiltCertChainRootBuiltInRoot, mProviderFlags);
+  mResultTask->Dispatch(
+      std::move(certBytesArray), std::move(mPeerCertChain),
+      aCertTransparencyStatus, static_cast<EVStatus>(aEVStatus), true, 0,
+      nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET,
+      aIsBuiltCertChainRootBuiltInRoot, mProviderFlags);
   return IPC_OK();
 }
 
@@ -52,8 +52,9 @@ ipc::IPCResult VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertFailure(
       nsTArray<nsTArray<uint8_t>>(), std::move(mPeerCertChain),
       nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE,
       EVStatus::NotEV, false, aFinalError,
-      static_cast<OverridableErrorCategory>(aOverridableErrorCategory), false,
-      mProviderFlags);
+      static_cast<nsITransportSecurityInfo::OverridableErrorCategory>(
+          aOverridableErrorCategory),
+      false, mProviderFlags);
   return IPC_OK();
 }
 
