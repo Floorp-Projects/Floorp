@@ -6168,7 +6168,7 @@ EditorBase::AutoEditActionDataSetter::AutoEditActionDataSetter(
               ->GetSelectedRangeItemForTopLevelEditSubAction();
       mTopLevelEditSubActionData.mChangedRange =
           mEditorBase.AsHTMLEditor()->GetChangedRangeForTopLevelEditSubAction();
-      mTopLevelEditSubActionData.mCachedInlineStyles.emplace();
+      mTopLevelEditSubActionData.mCachedPendingStyles.emplace();
     }
   }
   mEditorBase.mEditActionData = this;

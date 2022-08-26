@@ -89,12 +89,16 @@ nsresult StateUpdatingCommandBase::GetCommandStateParams(
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
-  nsAtom* tagName = GetTagName(aCommand);
+  nsStaticAtom* tagName = GetTagName(aCommand);
   if (NS_WARN_IF(!tagName)) {
     return NS_ERROR_UNEXPECTED;
   }
-  nsresult rv = GetCurrentState(MOZ_KnownLive(tagName),
-                                MOZ_KnownLive(htmlEditor), aParams);
+  // MOZ_KnownLive(htmlEditor) because the lifetime of aEditorBase is guaranteed
+  // by the callers.
+  // MOZ_KnownLive(tagName) because nsStaticAtom instances are alive until
+  // shutting down.
+  nsresult rv = GetCurrentState(MOZ_KnownLive(*tagName),
+                                MOZ_KnownLive(*htmlEditor), aParams);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "StateUpdatingCommandBase::GetCurrentState() failed");
   return rv;
@@ -144,18 +148,14 @@ nsresult PasteNoFormattingCommand::GetCommandStateParams(
 
 StaticRefPtr<StyleUpdatingCommand> StyleUpdatingCommand::sInstance;
 
-nsresult StyleUpdatingCommand::GetCurrentState(nsAtom* aTagName,
-                                               HTMLEditor* aHTMLEditor,
+nsresult StyleUpdatingCommand::GetCurrentState(nsStaticAtom& aTagName,
+                                               HTMLEditor& aHTMLEditor,
                                                nsCommandParams& aParams) const {
-  if (NS_WARN_IF(!aTagName) || NS_WARN_IF(!aHTMLEditor)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   bool firstOfSelectionHasProp = false;
   bool anyOfSelectionHasProp = false;
   bool allOfSelectionHasProp = false;
 
-  nsresult rv = aHTMLEditor->GetInlineProperty(
+  nsresult rv = aHTMLEditor.GetInlineProperty(
       aTagName, nullptr, u""_ns, &firstOfSelectionHasProp,
       &anyOfSelectionHasProp, &allOfSelectionHasProp);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -183,7 +183,7 @@ nsresult StyleUpdatingCommand::ToggleState(nsStaticAtom& aTagName,
     doTagRemoval = true;
   } else {
     // check current selection; set doTagRemoval if formatting should be removed
-    nsresult rv = GetCurrentState(&aTagName, &aHTMLEditor, *params);
+    nsresult rv = GetCurrentState(aTagName, aHTMLEditor, *params);
     if (NS_FAILED(rv)) {
       NS_WARNING("StyleUpdatingCommand::GetCurrentState() failed");
       return rv;
@@ -216,21 +216,18 @@ nsresult StyleUpdatingCommand::ToggleState(nsStaticAtom& aTagName,
 
 StaticRefPtr<ListCommand> ListCommand::sInstance;
 
-nsresult ListCommand::GetCurrentState(nsAtom* aTagName, HTMLEditor* aHTMLEditor,
+nsresult ListCommand::GetCurrentState(nsStaticAtom& aTagName,
+                                      HTMLEditor& aHTMLEditor,
                                       nsCommandParams& aParams) const {
-  if (NS_WARN_IF(!aTagName) || NS_WARN_IF(!aHTMLEditor)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   bool bMixed;
   nsAutoString localName;
-  nsresult rv = GetListState(aHTMLEditor, &bMixed, localName);
+  nsresult rv = GetListState(&aHTMLEditor, &bMixed, localName);
   if (NS_FAILED(rv)) {
     NS_WARNING("GetListState() failed");
     return rv;
   }
 
-  bool inList = aTagName->Equals(localName);
+  bool inList = aTagName.Equals(localName);
   aParams.SetBool(STATE_ALL, !bMixed && inList);
   aParams.SetBool(STATE_MIXED, bMixed);
   aParams.SetBool(STATE_ENABLED, true);
@@ -241,7 +238,7 @@ nsresult ListCommand::ToggleState(nsStaticAtom& aTagName,
                                   HTMLEditor& aHTMLEditor,
                                   nsIPrincipal* aPrincipal) const {
   RefPtr<nsCommandParams> params = new nsCommandParams();
-  nsresult rv = GetCurrentState(&aTagName, &aHTMLEditor, *params);
+  nsresult rv = GetCurrentState(aTagName, aHTMLEditor, *params);
   if (NS_FAILED(rv)) {
     NS_WARNING("ListCommand::GetCurrentState() failed");
     return rv;
@@ -274,15 +271,11 @@ nsresult ListCommand::ToggleState(nsStaticAtom& aTagName,
 
 StaticRefPtr<ListItemCommand> ListItemCommand::sInstance;
 
-nsresult ListItemCommand::GetCurrentState(nsAtom* aTagName,
-                                          HTMLEditor* aHTMLEditor,
+nsresult ListItemCommand::GetCurrentState(nsStaticAtom& aTagName,
+                                          HTMLEditor& aHTMLEditor,
                                           nsCommandParams& aParams) const {
-  if (NS_WARN_IF(!aTagName) || NS_WARN_IF(!aHTMLEditor)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   ErrorResult error;
-  ListItemElementSelectionState state(*aHTMLEditor, error);
+  ListItemElementSelectionState state(aHTMLEditor, error);
   if (error.Failed()) {
     NS_WARNING("ListItemElementSelectionState failed");
     return error.StealNSResult();
@@ -302,7 +295,7 @@ nsresult ListItemCommand::GetCurrentState(nsAtom* aTagName,
   } else if (state.IsDDElementSelected()) {
     selectedListItemTagName = nsGkAtoms::dd;
   }
-  aParams.SetBool(STATE_ALL, aTagName == selectedListItemTagName);
+  aParams.SetBool(STATE_ALL, &aTagName == selectedListItemTagName);
   aParams.SetBool(STATE_MIXED, false);
   return NS_OK;
 }
@@ -312,7 +305,7 @@ nsresult ListItemCommand::ToggleState(nsStaticAtom& aTagName,
                                       nsIPrincipal* aPrincipal) const {
   // Need to use aTagName????
   RefPtr<nsCommandParams> params = new nsCommandParams();
-  GetCurrentState(&aTagName, &aHTMLEditor, *params);
+  GetCurrentState(aTagName, aHTMLEditor, *params);
   ErrorResult error;
   bool inList = params->GetBool(STATE_ALL, error);
   if (NS_WARN_IF(error.Failed())) {
@@ -621,7 +614,7 @@ nsresult FontSizeStateCommand::GetCurrentState(HTMLEditor* aHTMLEditor,
   nsAutoString outStateString;
   bool firstHas, anyHas, allHas;
   nsresult rv = aHTMLEditor->GetInlinePropertyWithAttrValue(
-      nsGkAtoms::font, nsGkAtoms::size, u""_ns, &firstHas, &anyHas, &allHas,
+      *nsGkAtoms::font, nsGkAtoms::size, u""_ns, &firstHas, &anyHas, &allHas,
       outStateString);
   if (NS_FAILED(rv)) {
     NS_WARNING(
@@ -884,19 +877,16 @@ nsresult AlignCommand::SetState(HTMLEditor* aHTMLEditor,
 StaticRefPtr<AbsolutePositioningCommand> AbsolutePositioningCommand::sInstance;
 
 nsresult AbsolutePositioningCommand::GetCurrentState(
-    nsAtom* aTagName, HTMLEditor* aHTMLEditor, nsCommandParams& aParams) const {
-  if (NS_WARN_IF(!aHTMLEditor)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  if (!aHTMLEditor->IsAbsolutePositionEditorEnabled()) {
+    nsStaticAtom& aTagName, HTMLEditor& aHTMLEditor,
+    nsCommandParams& aParams) const {
+  if (!aHTMLEditor.IsAbsolutePositionEditorEnabled()) {
     aParams.SetBool(STATE_MIXED, false);
     aParams.SetCString(STATE_ATTRIBUTE, ""_ns);
     return NS_OK;
   }
 
   RefPtr<Element> container =
-      aHTMLEditor->GetAbsolutelyPositionedSelectionContainer();
+      aHTMLEditor.GetAbsolutelyPositionedSelectionContainer();
   aParams.SetBool(STATE_MIXED, false);
   aParams.SetCString(STATE_ATTRIBUTE, container ? "absolute"_ns : ""_ns);
   return NS_OK;

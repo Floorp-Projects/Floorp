@@ -4809,3 +4809,19 @@ nsDOMWindowUtils::GetOrientationLock(uint32_t* aOrientationLock) {
   *aOrientationLock = static_cast<uint32_t>(bc->GetOrientationLock());
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SetHiDPIMode(bool aHiDPI) {
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) return NS_ERROR_FAILURE;
+
+  return widget->SetHiDPIMode(aHiDPI);
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::RestoreHiDPIMode() {
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) return NS_ERROR_FAILURE;
+
+  return widget->RestoreHiDPIMode();
+}

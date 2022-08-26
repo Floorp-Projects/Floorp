@@ -3,19 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TypeInState.h"
+#include "PendingStyles.h"
 
 #include <stddef.h>
 
+#include "EditAction.h"
+#include "EditorBase.h"
+#include "HTMLEditor.h"
 #include "HTMLEditUtils.h"
-#include "mozilla/EditAction.h"
-#include "mozilla/EditorBase.h"
-#include "mozilla/HTMLEditor.h"
+
 #include "mozilla/mozalloc.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/Selection.h"
-#include "nsAString.h"
+
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
@@ -23,52 +24,31 @@
 #include "nsISupportsBase.h"
 #include "nsISupportsImpl.h"
 #include "nsReadableUtils.h"
-#include "nsStringFwd.h"
-
-// Workaround for windows headers
-#ifdef SetProp
-#  undef SetProp
-#endif
-
-class nsAtom;
+#include "nsString.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 
 using namespace dom;
 
 /********************************************************************
- * mozilla::TypeInState
+ * mozilla::PendingStyles
  *******************************************************************/
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(TypeInState)
+NS_IMPL_CYCLE_COLLECTION_CLASS(PendingStyles)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TypeInState)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(PendingStyles)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLastSelectionPoint)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TypeInState)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(PendingStyles)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLastSelectionPoint)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(TypeInState, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(TypeInState, Release)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PendingStyles, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PendingStyles, Release)
 
-TypeInState::TypeInState()
-    : mRelativeFontSize(0),
-      mLastSelectionCommand(Command::DoNothing),
-      mMouseDownFiredInLinkElement(false),
-      mMouseUpFiredInLinkElement(false) {
-  Reset();
-}
-
-TypeInState::~TypeInState() {
-  // Call Reset() to release any data that may be in
-  // mClearedArray and mSetArray.
-
-  Reset();
-}
-
-nsresult TypeInState::UpdateSelState(const HTMLEditor& aHTMLEditor) {
+nsresult PendingStyles::UpdateSelState(const HTMLEditor& aHTMLEditor) {
   if (!aHTMLEditor.SelectionRef().IsCollapsed()) {
     return NS_OK;
   }
@@ -84,7 +64,7 @@ nsresult TypeInState::UpdateSelState(const HTMLEditor& aHTMLEditor) {
   return NS_OK;
 }
 
-void TypeInState::PreHandleMouseEvent(const MouseEvent& aMouseDownOrUpEvent) {
+void PendingStyles::PreHandleMouseEvent(const MouseEvent& aMouseDownOrUpEvent) {
   MOZ_ASSERT(aMouseDownOrUpEvent.WidgetEventPtr()->mMessage == eMouseDown ||
              aMouseDownOrUpEvent.WidgetEventPtr()->mMessage == eMouseUp);
   bool& eventFiredInLinkElement =
@@ -109,11 +89,11 @@ void TypeInState::PreHandleMouseEvent(const MouseEvent& aMouseDownOrUpEvent) {
       HTMLEditUtils::IsContentInclusiveDescendantOfLink(*targetContent);
 }
 
-void TypeInState::PreHandleSelectionChangeCommand(Command aCommand) {
+void PendingStyles::PreHandleSelectionChangeCommand(Command aCommand) {
   mLastSelectionCommand = aCommand;
 }
 
-void TypeInState::PostHandleSelectionChangeCommand(
+void PendingStyles::PostHandleSelectionChangeCommand(
     const HTMLEditor& aHTMLEditor, Command aCommand) {
   if (mLastSelectionCommand != aCommand) {
     return;
@@ -146,16 +126,16 @@ void TypeInState::PostHandleSelectionChangeCommand(
   // style.
   if (AreSomeStylesSet() ||
       (AreSomeStylesCleared() && !IsOnlyLinkStyleCleared())) {
-    ClearLinkPropAndDiscardItsSpecifiedStyle();
+    ClearLinkAndItsSpecifiedStyle();
     return;
   }
 
   Reset();
-  ClearLinkPropAndDiscardItsSpecifiedStyle();
+  ClearLinkAndItsSpecifiedStyle();
 }
 
-void TypeInState::OnSelectionChange(const HTMLEditor& aHTMLEditor,
-                                    int16_t aReason) {
+void PendingStyles::OnSelectionChange(const HTMLEditor& aHTMLEditor,
+                                      int16_t aReason) {
   // XXX: Selection currently generates bogus selection changed notifications
   // XXX: (bug 140303). It can notify us when the selection hasn't actually
   // XXX: changed, and it notifies us more than once for the same change.
@@ -324,7 +304,7 @@ void TypeInState::OnSelectionChange(const HTMLEditor& aHTMLEditor,
   if (resetAllStyles) {
     Reset();
     if (unlink) {
-      ClearLinkPropAndDiscardItsSpecifiedStyle();
+      ClearLinkAndItsSpecifiedStyle();
     }
     return;
   }
@@ -336,207 +316,140 @@ void TypeInState::OnSelectionChange(const HTMLEditor& aHTMLEditor,
   // Even if we shouldn't touch existing style, we need to set/clear only link
   // style in some cases.
   if (unlink) {
-    ClearLinkPropAndDiscardItsSpecifiedStyle();
-  } else if (!unlink) {
-    RemovePropFromClearedList(nsGkAtoms::a, nullptr);
+    ClearLinkAndItsSpecifiedStyle();
+    return;
+  }
+  CancelClearingStyle(*nsGkAtoms::a, nullptr);
+}
+
+void PendingStyles::PreserveStyles(
+    const nsTArray<EditorInlineStyleAndValue>& aStylesToPreserve) {
+  for (const EditorInlineStyleAndValue& styleToPreserve : aStylesToPreserve) {
+    PreserveStyle(styleToPreserve.HTMLPropertyRef(), styleToPreserve.mAttribute,
+                  styleToPreserve.mAttributeValue);
   }
 }
 
-void TypeInState::Reset() {
-  for (size_t i = 0, n = mClearedArray.Length(); i < n; i++) {
-    delete mClearedArray[i];
-  }
-  mClearedArray.Clear();
-  for (size_t i = 0, n = mSetArray.Length(); i < n; i++) {
-    delete mSetArray[i];
-  }
-  mSetArray.Clear();
-}
-
-void TypeInState::SetProp(nsAtom* aProp, nsAtom* aAttr,
-                          const nsAString& aValue) {
+void PendingStyles::PreserveStyle(nsStaticAtom& aHTMLProperty,
+                                  nsAtom* aAttribute,
+                                  const nsAString& aAttributeValueOrCSSValue) {
   // special case for big/small, these nest
-  if (nsGkAtoms::big == aProp) {
+  if (nsGkAtoms::big == &aHTMLProperty) {
     mRelativeFontSize++;
     return;
   }
-  if (nsGkAtoms::small == aProp) {
+  if (nsGkAtoms::small == &aHTMLProperty) {
     mRelativeFontSize--;
     return;
   }
 
-  int32_t index;
-  if (IsPropSet(aProp, aAttr, nullptr, index)) {
-    // if it's already set, update the value
-    mSetArray[index]->value = aValue;
+  Maybe<size_t> index = IndexOfPreservingStyle(aHTMLProperty, aAttribute);
+  if (index.isSome()) {
+    // If it's already set, update the value
+    mPreservingStyles[index.value()]->UpdateAttributeValueOrCSSValue(
+        aAttributeValueOrCSSValue);
     return;
   }
 
-  // Make a new propitem and add it to the list of set properties.
-  mSetArray.AppendElement(new PropItem(aProp, aAttr, aValue));
+  mPreservingStyles.AppendElement(MakeUnique<PendingStyle>(
+      &aHTMLProperty, aAttribute, aAttributeValueOrCSSValue));
 
-  // remove it from the list of cleared properties, if we have a match
-  RemovePropFromClearedList(aProp, aAttr);
+  CancelClearingStyle(aHTMLProperty, aAttribute);
 }
 
-void TypeInState::ClearAllProps() {
-  // null prop means "all" props
-  ClearProp(nullptr, nullptr);
+void PendingStyles::ClearStyles(
+    const nsTArray<EditorInlineStyle>& aStylesToClear) {
+  for (const EditorInlineStyle& styleToClear : aStylesToClear) {
+    if (styleToClear.IsStyleToClearAllInlineStyles()) {
+      ClearAllStyles();
+      return;
+    }
+    if (styleToClear.mHTMLProperty == nsGkAtoms::href ||
+        styleToClear.mHTMLProperty == nsGkAtoms::name) {
+      ClearStyleInternal(nsGkAtoms::a, nullptr);
+    } else {
+      ClearStyleInternal(styleToClear.mHTMLProperty, styleToClear.mAttribute);
+    }
+  }
 }
 
-void TypeInState::ClearProp(nsAtom* aProp, nsAtom* aAttr) {
-  // if it's already cleared we are done
-  if (IsPropCleared(aProp, aAttr)) {
+void PendingStyles::ClearStyleInternal(
+    nsStaticAtom* aHTMLProperty, nsAtom* aAttribute,
+    SpecifiedStyle aSpecifiedStyle /* = SpecifiedStyle::Preserve */) {
+  if (IsStyleCleared(aHTMLProperty, aAttribute)) {
     return;
   }
 
-  // make a new propitem
-  PropItem* item = new PropItem(aProp, aAttr, u""_ns);
+  CancelPreservingStyle(aHTMLProperty, aAttribute);
 
-  // remove it from the list of set properties, if we have a match
-  RemovePropFromSetList(aProp, aAttr);
-
-  // add it to the list of cleared properties
-  mClearedArray.AppendElement(item);
-}
-
-void TypeInState::ClearLinkPropAndDiscardItsSpecifiedStyle() {
-  ClearProp(nsGkAtoms::a, nullptr);
-  int32_t index = -1;
-  MOZ_ALWAYS_TRUE(IsPropCleared(nsGkAtoms::a, nullptr, index));
-  if (index >= 0) {
-    mClearedArray[index]->specifiedStyle = SpecifiedStyle::Discard;
-  }
-}
-
-/**
- * TakeClearProperty() hands back next property item on the clear list.
- * Caller assumes ownership of PropItem and must delete it.
- */
-UniquePtr<PropItem> TypeInState::TakeClearProperty() {
-  return mClearedArray.Length()
-             ? UniquePtr<PropItem>{mClearedArray.PopLastElement()}
-             : nullptr;
-}
-
-/**
- * TakeSetProperty() hands back next poroperty item on the set list.
- * Caller assumes ownership of PropItem and must delete it.
- */
-UniquePtr<PropItem> TypeInState::TakeSetProperty() {
-  return mSetArray.Length() ? UniquePtr<PropItem>{mSetArray.PopLastElement()}
-                            : nullptr;
+  mClearingStyles.AppendElement(MakeUnique<PendingStyle>(
+      aHTMLProperty, aAttribute, u""_ns, aSpecifiedStyle));
 }
 
 /**
  * TakeRelativeFontSize() hands back relative font value, which is then
  * cleared out.
  */
-int32_t TypeInState::TakeRelativeFontSize() {
+int32_t PendingStyles::TakeRelativeFontSize() {
   int32_t relSize = mRelativeFontSize;
   mRelativeFontSize = 0;
   return relSize;
 }
 
-void TypeInState::GetTypingState(bool& isSet, bool& theSetting, nsAtom* aProp,
-                                 nsAtom* aAttr, nsString* aValue) {
-  if (IsPropSet(aProp, aAttr, aValue)) {
-    isSet = true;
-    theSetting = true;
-  } else if (IsPropCleared(aProp, aAttr)) {
-    isSet = true;
-    theSetting = false;
-  } else {
-    isSet = false;
+PendingStyleState PendingStyles::GetStyleState(
+    nsStaticAtom& aHTMLProperty, nsAtom* aAttribute /* = nullptr */,
+    nsString* aOutNewAttributeValueOrCSSValue /* = nullptr */) const {
+  if (IndexOfPreservingStyle(aHTMLProperty, aAttribute,
+                             aOutNewAttributeValueOrCSSValue)
+          .isSome()) {
+    return PendingStyleState::BeingPreserved;
   }
+
+  if (IsStyleCleared(&aHTMLProperty, aAttribute)) {
+    return PendingStyleState::BeingCleared;
+  }
+
+  return PendingStyleState::NotUpdated;
 }
 
-void TypeInState::RemovePropFromSetList(nsAtom* aProp, nsAtom* aAttr) {
-  int32_t index;
-  if (!aProp) {
-    // clear _all_ props
-    for (size_t i = 0, n = mSetArray.Length(); i < n; i++) {
-      delete mSetArray[i];
-    }
-    mSetArray.Clear();
+void PendingStyles::CancelPreservingStyle(nsStaticAtom* aHTMLProperty,
+                                          nsAtom* aAttribute) {
+  if (!aHTMLProperty) {
+    mPreservingStyles.Clear();
     mRelativeFontSize = 0;
-  } else if (FindPropInList(aProp, aAttr, nullptr, mSetArray, index)) {
-    delete mSetArray[index];
-    mSetArray.RemoveElementAt(index);
+    return;
+  }
+  Maybe<size_t> index = IndexOfPreservingStyle(*aHTMLProperty, aAttribute);
+  if (index.isSome()) {
+    mPreservingStyles.RemoveElementAt(index.value());
   }
 }
 
-void TypeInState::RemovePropFromClearedList(nsAtom* aProp, nsAtom* aAttr) {
-  int32_t index;
-  if (FindPropInList(aProp, aAttr, nullptr, mClearedArray, index)) {
-    delete mClearedArray[index];
-    mClearedArray.RemoveElementAt(index);
+void PendingStyles::CancelClearingStyle(nsStaticAtom& aHTMLProperty,
+                                        nsAtom* aAttribute) {
+  Maybe<size_t> index =
+      IndexOfStyleInArray(&aHTMLProperty, aAttribute, nullptr, mClearingStyles);
+  if (index.isSome()) {
+    mClearingStyles.RemoveElementAt(index.value());
   }
 }
 
-bool TypeInState::IsPropSet(nsAtom* aProp, nsAtom* aAttr, nsAString* outValue) {
-  int32_t i;
-  return IsPropSet(aProp, aAttr, outValue, i);
-}
-
-bool TypeInState::IsPropSet(nsAtom* aProp, nsAtom* aAttr, nsAString* outValue,
-                            int32_t& outIndex) {
-  if (aAttr == nsGkAtoms::_empty) {
-    aAttr = nullptr;
+Maybe<size_t> PendingStyles::IndexOfStyleInArray(
+    nsStaticAtom* aHTMLProperty, nsAtom* aAttribute, nsAString* aOutValue,
+    const nsTArray<UniquePtr<PendingStyle>>& aArray) {
+  if (aAttribute == nsGkAtoms::_empty) {
+    aAttribute = nullptr;
   }
-  // linear search.  list should be short.
-  size_t count = mSetArray.Length();
-  for (size_t i = 0; i < count; i++) {
-    PropItem* item = mSetArray[i];
-    if (item->tag == aProp && item->attr == aAttr) {
-      if (outValue) {
-        *outValue = item->value;
+  for (size_t i : IntegerRange(aArray.Length())) {
+    const UniquePtr<PendingStyle>& item = aArray[i];
+    if (item->GetTag() == aHTMLProperty && item->GetAttribute() == aAttribute) {
+      if (aOutValue) {
+        *aOutValue = item->AttributeValueOrCSSValueRef();
       }
-      outIndex = i;
-      return true;
+      return Some(i);
     }
   }
-  return false;
-}
-
-bool TypeInState::IsPropCleared(nsAtom* aProp, nsAtom* aAttr) {
-  int32_t i;
-  return IsPropCleared(aProp, aAttr, i);
-}
-
-bool TypeInState::IsPropCleared(nsAtom* aProp, nsAtom* aAttr,
-                                int32_t& outIndex) {
-  if (FindPropInList(aProp, aAttr, nullptr, mClearedArray, outIndex)) {
-    return true;
-  }
-  if (AreAllStylesCleared()) {
-    // special case for all props cleared
-    outIndex = -1;
-    return true;
-  }
-  return false;
-}
-
-bool TypeInState::FindPropInList(nsAtom* aProp, nsAtom* aAttr,
-                                 nsAString* outValue,
-                                 const nsTArray<PropItem*>& aList,
-                                 int32_t& outIndex) {
-  if (aAttr == nsGkAtoms::_empty) {
-    aAttr = nullptr;
-  }
-  // linear search.  list should be short.
-  size_t count = aList.Length();
-  for (size_t i = 0; i < count; i++) {
-    PropItem* item = aList[i];
-    if (item->tag == aProp && item->attr == aAttr) {
-      if (outValue) {
-        *outValue = item->value;
-      }
-      outIndex = i;
-      return true;
-    }
-  }
-  return false;
+  return Nothing();
 }
 
 }  // namespace mozilla

@@ -15,9 +15,9 @@
 #include "InsertNodeTransaction.h"
 #include "JoinNodesTransaction.h"
 #include "MoveNodeTransaction.h"
+#include "PendingStyles.h"
 #include "ReplaceTextTransaction.h"
 #include "SplitNodeTransaction.h"
-#include "TypeInState.h"
 #include "WSRunObject.h"
 
 #include "mozilla/ComposerCommandsUpdater.h"
@@ -227,7 +227,7 @@ HTMLEditor::~HTMLEditor() {
             : 0);
   }
 
-  mTypeInState = nullptr;
+  mPendingStylesToApplyToNewContent = nullptr;
 
   if (mDisabledLinkHandling) {
     if (Document* doc = GetDocument()) {
@@ -243,7 +243,7 @@ HTMLEditor::~HTMLEditor() {
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLEditor)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLEditor, EditorBase)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTypeInState)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingStylesToApplyToNewContent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mComposerCommandsUpdater)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChangedRangeForTopLevelEditSubAction)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPaddingBRElementForEmptyEditor)
@@ -251,7 +251,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLEditor, EditorBase)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLEditor, EditorBase)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTypeInState)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingStylesToApplyToNewContent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mComposerCommandsUpdater)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChangedRangeForTopLevelEditSubAction)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPaddingBRElementForEmptyEditor)
@@ -349,7 +349,7 @@ nsresult HTMLEditor::Init(Document& aDocument,
   }
 
   // init the type-in state
-  mTypeInState = new TypeInState();
+  mPendingStylesToApplyToNewContent = new PendingStyles();
 
   if (!IsInteractionAllowed()) {
     nsCOMPtr<nsIURI> uaURI;
@@ -592,14 +592,14 @@ NS_IMETHODIMP HTMLEditor::NotifySelectionChanged(Document* aDocument,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (mTypeInState) {
-    RefPtr<TypeInState> typeInState = mTypeInState;
-    typeInState->OnSelectionChange(*this, aReason);
+  if (mPendingStylesToApplyToNewContent) {
+    RefPtr<PendingStyles> pendingStyles = mPendingStylesToApplyToNewContent;
+    pendingStyles->OnSelectionChange(*this, aReason);
 
     // We used a class which derived from nsISelectionListener to call
     // HTMLEditor::RefreshEditingUI().  The lifetime of the class was
-    // exactly same as mTypeInState.  So, call it only when mTypeInState
-    // is not nullptr.
+    // exactly same as mPendingStylesToApplyToNewContent.  So, call it only when
+    // mPendingStylesToApplyToNewContent is not nullptr.
     if ((aReason & (nsISelectionListener::MOUSEDOWN_REASON |
                     nsISelectionListener::KEYPRESS_REASON |
                     nsISelectionListener::SELECTALL_REASON)) &&
@@ -1030,31 +1030,32 @@ void HTMLEditor::StopPreservingSelection() {
 }
 
 void HTMLEditor::PreHandleMouseDown(const MouseEvent& aMouseDownEvent) {
-  if (mTypeInState) {
-    // mTypeInState will be notified of selection change even if aMouseDownEvent
-    // is not an acceptable event for this editor.  Therefore, we need to notify
-    // it of this event too.
-    mTypeInState->PreHandleMouseEvent(aMouseDownEvent);
+  if (mPendingStylesToApplyToNewContent) {
+    // mPendingStylesToApplyToNewContent will be notified of selection change
+    // even if aMouseDownEvent is not an acceptable event for this editor.
+    // Therefore, we need to notify it of this event too.
+    mPendingStylesToApplyToNewContent->PreHandleMouseEvent(aMouseDownEvent);
   }
 }
 
 void HTMLEditor::PreHandleMouseUp(const MouseEvent& aMouseUpEvent) {
-  if (mTypeInState) {
-    // mTypeInState will be notified of selection change even if aMouseUpEvent
-    // is not an acceptable event for this editor.  Therefore, we need to notify
-    // it of this event too.
-    mTypeInState->PreHandleMouseEvent(aMouseUpEvent);
+  if (mPendingStylesToApplyToNewContent) {
+    // mPendingStylesToApplyToNewContent will be notified of selection change
+    // even if aMouseUpEvent is not an acceptable event for this editor.
+    // Therefore, we need to notify it of this event too.
+    mPendingStylesToApplyToNewContent->PreHandleMouseEvent(aMouseUpEvent);
   }
 }
 
 void HTMLEditor::PreHandleSelectionChangeCommand(Command aCommand) {
-  if (mTypeInState) {
-    mTypeInState->PreHandleSelectionChangeCommand(aCommand);
+  if (mPendingStylesToApplyToNewContent) {
+    mPendingStylesToApplyToNewContent->PreHandleSelectionChangeCommand(
+        aCommand);
   }
 }
 
 void HTMLEditor::PostHandleSelectionChangeCommand(Command aCommand) {
-  if (!mTypeInState) {
+  if (!mPendingStylesToApplyToNewContent) {
     return;
   }
 
@@ -1062,7 +1063,8 @@ void HTMLEditor::PostHandleSelectionChangeCommand(Command aCommand) {
   if (!editActionData.CanHandle()) {
     return;
   }
-  mTypeInState->PostHandleSelectionChangeCommand(*this, aCommand);
+  mPendingStylesToApplyToNewContent->PostHandleSelectionChangeCommand(*this,
+                                                                      aCommand);
 }
 
 nsresult HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {

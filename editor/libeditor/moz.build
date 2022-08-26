@@ -29,9 +29,9 @@ EXPORTS.mozilla += [
     "HTMLEditorController.h",
     "HTMLEditUtils.h",
     "ManualNAC.h",
+    "PendingStyles.h",
     "SelectionState.h",
     "TextEditor.h",
-    "TypeInState.h",
 ]
 
 UNIFIED_SOURCES += [
@@ -72,6 +72,7 @@ UNIFIED_SOURCES += [
     "InternetCiter.cpp",
     "JoinNodesTransaction.cpp",
     "MoveNodeTransaction.cpp",
+    "PendingStyles.cpp",
     "PlaceholderTransaction.cpp",
     "ReplaceTextTransaction.cpp",
     "SelectionState.cpp",
@@ -79,7 +80,6 @@ UNIFIED_SOURCES += [
     "TextEditor.cpp",
     "TextEditorDataTransfer.cpp",
     "TextEditSubActionHandler.cpp",
-    "TypeInState.cpp",
     "WSRunObject.cpp",
 ]
 

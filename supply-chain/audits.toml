@@ -30,6 +30,12 @@ criteria = "safe-to-deploy"
 delta = "1.0.57 -> 1.0.61"
 
 [[audits.anyhow]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "1.0.58 -> 1.0.57"
+notes = "No functional differences, just CI config and docs."
+
+[[audits.anyhow]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.0.61 -> 1.0.62"
@@ -111,6 +117,16 @@ notes = "Another crate I own via contain-rs that is ancient and in maintenance m
 who = "Jeff Muizelaar <jmuizelaar@mozilla.com>"
 criteria = "safe-to-deploy"
 version = "0.1.2"
+
+[[audits.bumpalo]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-run"
+delta = "3.9.1 -> 3.10.0"
+notes = """
+Some nontrivial functional changes but certainly meets the no-malware bar of
+safe-to-run. If we needed safe-to-deploy for this in m-c I'd ask Nick to re-
+certify this version, but we don't, so this is fine for now.
+"""
 
 [[audits.bytes]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -641,6 +657,17 @@ who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-deploy"
 version = "1.1.0"
 notes = "Straightforward crate with no unsafe code, does what it says on the tin."
+
+[[audits.rustversion]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+version = "1.0.9"
+notes = """
+This crate has a build-time component and procedural macro logic, which I looked
+at enough to convince myself it wasn't going to do anything dramatically wrong.
+I don't think logic bugs in the version parsing etc can realistically introduce
+a security vulnerability.
+"""
 
 [[audits.ryu]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
