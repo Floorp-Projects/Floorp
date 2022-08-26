@@ -4,6 +4,9 @@
 [imports.bytecodealliance]
 url = "https://raw.githubusercontent.com/bytecodealliance/wasmtime/main/supply-chain/audits.toml"
 
+[imports.embark]
+url = "https://raw.githubusercontent.com/EmbarkStudios/rust-ecosystem/main/audits.toml"
+
 [policy.async-task]
 audit-as-crates-io = true
 notes = "This is the upstream code plus an extra fix that hasn't been released yet, see bug 1746533."
@@ -430,10 +433,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.cssparser-macros]]
 version = "0.6.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.cty]]
-version = "0.2.2"
 criteria = "safe-to-deploy"
 
 [[exemptions.cubeb]]
