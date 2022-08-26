@@ -2129,7 +2129,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   template <typename T>
   void storeUnboxedValue(const ConstantOrRegister& value, MIRType valueType,
-                         const T& dest, MIRType slotType) PER_ARCH;
+                         const T& dest) PER_ARCH;
 
   inline void memoryBarrier(MemoryBarrierBits barrier) PER_SHARED_ARCH;
 

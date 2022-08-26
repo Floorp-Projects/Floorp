@@ -414,7 +414,7 @@ class MacroAssemblerNone : public Assembler {
     MOZ_CRASH();
   }
   template <typename T>
-  void storeUnboxedValue(const ConstantOrRegister&, MIRType, T, MIRType) {
+  void storeUnboxedValue(const ConstantOrRegister&, MIRType, T) {
     MOZ_CRASH();
   }
   template <typename T>

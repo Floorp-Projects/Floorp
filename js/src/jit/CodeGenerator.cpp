@@ -3930,7 +3930,7 @@ void CodeGenerator::visitStoreDynamicSlotT(LStoreDynamicSlotT* lir) {
 
   MIRType valueType = lir->mir()->value()->type();
   ConstantOrRegister value = ToConstantOrRegister(lir->value(), valueType);
-  masm.storeUnboxedValue(value, valueType, dest, MIRType::Value);
+  masm.storeUnboxedValue(value, valueType, dest);
 }
 
 void CodeGenerator::visitStoreDynamicSlotV(LStoreDynamicSlotV* lir) {
@@ -11443,10 +11443,10 @@ void CodeGenerator::emitStoreElementTyped(const LAllocation* value,
   ConstantOrRegister v = ToConstantOrRegister(value, valueType);
   if (index->isConstant()) {
     Address dest(elements, ToInt32(index) * sizeof(js::Value));
-    masm.storeUnboxedValue(v, valueType, dest, MIRType::Value);
+    masm.storeUnboxedValue(v, valueType, dest);
   } else {
     BaseObjectElementIndex dest(elements, ToRegister(index));
-    masm.storeUnboxedValue(v, valueType, dest, MIRType::Value);
+    masm.storeUnboxedValue(v, valueType, dest);
   }
 }
 
