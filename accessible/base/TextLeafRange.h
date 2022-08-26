@@ -95,10 +95,13 @@ class TextLeafPoint final {
    * (depending on the direction).
    * If aIncludeorigin is true and this is at a boundary, this will be
    * returned unchanged.
+   * If aStopInEditable is true the boundary returned will be within the
+   * current editable (if this point is in an editable).
    */
   TextLeafPoint FindBoundary(AccessibleTextBoundary aBoundaryType,
                              nsDirection aDirection,
-                             bool aIncludeOrigin = false) const;
+                             bool aIncludeOrigin = false,
+                             bool aStopInEditable = false) const;
 
   /**
    * These two functions find a line start boundary within the same
@@ -196,8 +199,10 @@ class TextLeafPoint final {
   TextLeafPoint FindLineStartSameAcc(nsDirection aDirection,
                                      bool aIncludeOrigin) const;
 
-  TextLeafPoint FindLineEnd(nsDirection aDirection, bool aIncludeOrigin) const;
-  TextLeafPoint FindWordEnd(nsDirection aDirection, bool aIncludeOrigin) const;
+  TextLeafPoint FindLineEnd(nsDirection aDirection, bool aIncludeOrigin,
+                            bool aStopInEditable) const;
+  TextLeafPoint FindWordEnd(nsDirection aDirection, bool aIncludeOrigin,
+                            bool aStopInEditable) const;
 
   TextLeafPoint FindParagraphSameAcc(nsDirection aDirection,
                                      bool aIncludeOrigin) const;

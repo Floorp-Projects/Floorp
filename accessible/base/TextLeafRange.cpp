@@ -123,20 +123,32 @@ static HyperTextAccessible* HyperTextFor(LocalAccessible* aAcc) {
   return nullptr;
 }
 
-static Accessible* NextLeaf(Accessible* aOrigin) {
+static Accessible* NextLeaf(Accessible* aOrigin, bool aIsEditable = false) {
   MOZ_ASSERT(aOrigin);
   Accessible* doc = nsAccUtils::DocumentFor(aOrigin);
   Pivot pivot(doc);
   auto rule = LeafRule();
-  return pivot.Next(aOrigin, rule);
+  Accessible* leaf = pivot.Next(aOrigin, rule);
+  if (aIsEditable && leaf) {
+    return leaf->Parent() && (leaf->Parent()->State() & states::EDITABLE)
+               ? leaf
+               : nullptr;
+  }
+  return leaf;
 }
 
-static Accessible* PrevLeaf(Accessible* aOrigin) {
+static Accessible* PrevLeaf(Accessible* aOrigin, bool aIsEditable = false) {
   MOZ_ASSERT(aOrigin);
   Accessible* doc = nsAccUtils::DocumentFor(aOrigin);
   Pivot pivot(doc);
   auto rule = LeafRule();
-  return pivot.Prev(aOrigin, rule);
+  Accessible* leaf = pivot.Prev(aOrigin, rule);
+  if (aIsEditable && leaf) {
+    return leaf->Parent() && (leaf->Parent()->State() & states::EDITABLE)
+               ? leaf
+               : nullptr;
+  }
+  return leaf;
 }
 
 static nsIFrame* GetFrameInBlock(const LocalAccessible* aAcc) {
@@ -820,7 +832,8 @@ TextLeafPoint TextLeafPoint::ActualizeCaret(bool aAdjustAtEndOfLine) const {
 
 TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
                                           nsDirection aDirection,
-                                          bool aIncludeOrigin) const {
+                                          bool aIncludeOrigin,
+                                          bool aStopInEditable) const {
   if (IsCaret()) {
     if (aBoundaryType == nsIAccessibleText::BOUNDARY_CHAR) {
       if (IsCaretAtEndOfLine()) {
@@ -831,11 +844,14 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
     return ActualizeCaret().FindBoundary(aBoundaryType, aDirection,
                                          aIncludeOrigin);
   }
+
+  bool inEditableAndStopInIt = aStopInEditable && mAcc->Parent() &&
+                               (mAcc->Parent()->State() & states::EDITABLE);
   if (aBoundaryType == nsIAccessibleText::BOUNDARY_LINE_END) {
-    return FindLineEnd(aDirection, aIncludeOrigin);
+    return FindLineEnd(aDirection, aIncludeOrigin, inEditableAndStopInIt);
   }
   if (aBoundaryType == nsIAccessibleText::BOUNDARY_WORD_END) {
-    return FindWordEnd(aDirection, aIncludeOrigin);
+    return FindWordEnd(aDirection, aIncludeOrigin, inEditableAndStopInIt);
   }
   if ((aBoundaryType == nsIAccessibleText::BOUNDARY_LINE_START ||
        aBoundaryType == nsIAccessibleText::BOUNDARY_PARAGRAPH) &&
@@ -892,8 +908,9 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
       return boundary;
     }
     // We didn't find it in this Accessible, so try the previous/next leaf.
-    Accessible* acc = aDirection == eDirPrevious ? PrevLeaf(searchFrom.mAcc)
-                                                 : NextLeaf(searchFrom.mAcc);
+    Accessible* acc = aDirection == eDirPrevious
+                          ? PrevLeaf(searchFrom.mAcc, inEditableAndStopInIt)
+                          : NextLeaf(searchFrom.mAcc, inEditableAndStopInIt);
     if (!acc) {
       // No further leaf was found. Use the start/end of the first/last leaf.
       return TextLeafPoint(
@@ -917,22 +934,24 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
 }
 
 TextLeafPoint TextLeafPoint::FindLineEnd(nsDirection aDirection,
-                                         bool aIncludeOrigin) const {
+                                         bool aIncludeOrigin,
+                                         bool aStopInEditable) const {
   if (aDirection == eDirPrevious && IsEmptyLastLine()) {
     // If we're at an empty line at the end of an Accessible,  we don't want to
     // walk into the previous line. For example, this can happen if the caret
     // is positioned on an empty line at the end of a textarea.
     // Because we want the line end, we must walk back to the line feed
     // character.
-    return FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious);
+    return FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious, false,
+                        aStopInEditable);
   }
   if (aIncludeOrigin && IsLineFeedChar()) {
     return *this;
   }
   if (aDirection == eDirPrevious && !aIncludeOrigin) {
     // If there is a line feed immediately before us, return that.
-    TextLeafPoint prevChar =
-        FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious);
+    TextLeafPoint prevChar = FindBoundary(nsIAccessibleText::BOUNDARY_CHAR,
+                                          eDirPrevious, false, aStopInEditable);
     if (prevChar.IsLineFeedChar()) {
       return prevChar;
     }
@@ -942,14 +961,16 @@ TextLeafPoint TextLeafPoint::FindLineEnd(nsDirection aDirection,
     // If we search for the next line start from a line feed, we'll get the
     // character immediately following the line feed. We actually want the
     // next line start after that. Skip the line feed.
-    searchFrom = FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirNext);
+    searchFrom = FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirNext, false,
+                              aStopInEditable);
   }
-  TextLeafPoint lineStart = searchFrom.FindBoundary(
-      nsIAccessibleText::BOUNDARY_LINE_START, aDirection, aIncludeOrigin);
+  TextLeafPoint lineStart =
+      searchFrom.FindBoundary(nsIAccessibleText::BOUNDARY_LINE_START,
+                              aDirection, aIncludeOrigin, aStopInEditable);
   // If there is a line feed before this line start (at the end of the previous
   // line), we must return that.
   TextLeafPoint prevChar = lineStart.FindBoundary(
-      nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious, false);
+      nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious, false, aStopInEditable);
   if (prevChar && prevChar.IsLineFeedChar()) {
     return prevChar;
   }
@@ -961,14 +982,15 @@ bool TextLeafPoint::IsSpace() const {
 }
 
 TextLeafPoint TextLeafPoint::FindWordEnd(nsDirection aDirection,
-                                         bool aIncludeOrigin) const {
+                                         bool aIncludeOrigin,
+                                         bool aStopInEditable) const {
   char16_t origChar = GetChar();
   const bool origIsSpace = GetWordBreakClass(origChar) == eWbcSpace;
   bool prevIsSpace = false;
   if (aDirection == eDirPrevious || (aIncludeOrigin && origIsSpace) ||
       !origChar) {
-    TextLeafPoint prev =
-        FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious, false);
+    TextLeafPoint prev = FindBoundary(nsIAccessibleText::BOUNDARY_CHAR,
+                                      eDirPrevious, false, aStopInEditable);
     if (aDirection == eDirPrevious && prev == *this) {
       return *this;  // Can't go any further.
     }
@@ -984,13 +1006,13 @@ TextLeafPoint TextLeafPoint::FindWordEnd(nsDirection aDirection,
     // If there isn't space immediately before us, first find the start of the
     // previous word.
     boundary = FindBoundary(nsIAccessibleText::BOUNDARY_WORD_START,
-                            eDirPrevious, aIncludeOrigin);
+                            eDirPrevious, aIncludeOrigin, aStopInEditable);
   } else if (aDirection == eDirNext &&
              (origIsSpace || (!origChar && prevIsSpace))) {
     // We're within the space at the end of the word. Skip over the space. We
     // can do that by searching for the next word start.
-    boundary =
-        FindBoundary(nsIAccessibleText::BOUNDARY_WORD_START, eDirNext, false);
+    boundary = FindBoundary(nsIAccessibleText::BOUNDARY_WORD_START, eDirNext,
+                            false, aStopInEditable);
     if (boundary.IsSpace()) {
       // The next word starts with a space. This can happen if there is a space
       // after or at the start of a block element.
@@ -999,14 +1021,15 @@ TextLeafPoint TextLeafPoint::FindWordEnd(nsDirection aDirection,
   }
   if (aDirection == eDirNext) {
     boundary = boundary.FindBoundary(nsIAccessibleText::BOUNDARY_WORD_START,
-                                     eDirNext, aIncludeOrigin);
+                                     eDirNext, aIncludeOrigin, aStopInEditable);
   }
   // At this point, boundary is either the start of a word or at a space. A
   // word ends at the beginning of consecutive space. Therefore, skip back to
   // the start of any space before us.
   TextLeafPoint prev = boundary;
   for (;;) {
-    prev = prev.FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious);
+    prev = prev.FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious,
+                             false, aStopInEditable);
     if (prev == boundary) {
       break;  // Can't go any further.
     }
