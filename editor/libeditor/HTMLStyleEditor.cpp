@@ -206,7 +206,7 @@ nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
     // Manipulating text attributes on a collapsed selection only sets state
     // for the next text insertion
     for (const EditorInlineStyleAndValue& styleToSet : aStylesToSet) {
-      mTypeInState->SetProp(styleToSet.mHTMLProperty, styleToSet.mAttribute,
+      mTypeInState->SetProp(styleToSet.HTMLPropertyRef(), styleToSet.mAttribute,
                             styleToSet.mAttributeValue);
     }
     return NS_OK;
@@ -274,7 +274,7 @@ nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
             SetInlinePropertyOnTextNode(
                 MOZ_KnownLive(*range.StartRef().ContainerAs<Text>()),
                 range.StartRef().Offset(), range.EndRef().Offset(),
-                MOZ_KnownLive(*styleToSet.mHTMLProperty),
+                MOZ_KnownLive(styleToSet.HTMLPropertyRef()),
                 MOZ_KnownLive(styleToSet.mAttribute),
                 styleToSet.mAttributeValue);
         if (wrapTextInStyledElementResult.isErr()) {
@@ -322,7 +322,7 @@ nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
                 MOZ_KnownLive(*range.StartRef().ContainerAs<Text>()),
                 range.StartRef().Offset(),
                 range.StartRef().ContainerAs<Text>()->TextDataLength(),
-                MOZ_KnownLive(*styleToSet.mHTMLProperty),
+                MOZ_KnownLive(styleToSet.HTMLPropertyRef()),
                 MOZ_KnownLive(styleToSet.mAttribute),
                 styleToSet.mAttributeValue);
         if (wrapTextInStyledElementResult.isErr()) {
@@ -339,7 +339,7 @@ nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
         // MOZ_KnownLive due to bug 1622253.
         Result<EditorDOMPoint, nsresult> setStyleResult =
             SetInlinePropertyOnNode(MOZ_KnownLive(*content),
-                                    MOZ_KnownLive(*styleToSet.mHTMLProperty),
+                                    MOZ_KnownLive(styleToSet.HTMLPropertyRef()),
                                     MOZ_KnownLive(styleToSet.mAttribute),
                                     styleToSet.mAttributeValue);
         if (MOZ_UNLIKELY(setStyleResult.isErr())) {
@@ -360,7 +360,7 @@ nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
             SetInlinePropertyOnTextNode(
                 MOZ_KnownLive(*range.EndRef().ContainerAs<Text>()), 0,
                 range.EndRef().Offset(),
-                MOZ_KnownLive(*styleToSet.mHTMLProperty),
+                MOZ_KnownLive(styleToSet.HTMLPropertyRef()),
                 MOZ_KnownLive(styleToSet.mAttribute),
                 styleToSet.mAttributeValue);
         if (wrapTextInStyledElementResult.isErr()) {
@@ -1747,7 +1747,7 @@ bool HTMLEditor::IsEndOfContainerOrEqualsOrAfterLastEditableChild(
   return EditorRawDOMPoint(lastEditableChild).Offset() < aPoint.Offset();
 }
 
-nsresult HTMLEditor::GetInlinePropertyBase(nsAtom& aHTMLProperty,
+nsresult HTMLEditor::GetInlinePropertyBase(nsStaticAtom& aHTMLProperty,
                                            nsAtom* aAttribute,
                                            const nsAString* aValue,
                                            bool* aFirst, bool* aAny, bool* aAll,
@@ -1775,13 +1775,13 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsAtom& aHTMLProperty,
       bool isSet, theSetting;
       nsString tOutString;
       if (aAttribute) {
-        mTypeInState->GetTypingState(isSet, theSetting, &aHTMLProperty,
+        mTypeInState->GetTypingState(isSet, theSetting, aHTMLProperty,
                                      aAttribute, &tOutString);
         if (outValue) {
           outValue->Assign(tOutString);
         }
       } else {
-        mTypeInState->GetTypingState(isSet, theSetting, &aHTMLProperty);
+        mTypeInState->GetTypingState(isSet, theSetting, aHTMLProperty);
       }
       if (isSet) {
         *aFirst = *aAny = *aAll = theSetting;
@@ -1954,12 +1954,11 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsAtom& aHTMLProperty,
   return NS_OK;
 }
 
-nsresult HTMLEditor::GetInlineProperty(nsAtom* aHTMLProperty,
+nsresult HTMLEditor::GetInlineProperty(nsStaticAtom& aHTMLProperty,
                                        nsAtom* aAttribute,
                                        const nsAString& aValue, bool* aFirst,
                                        bool* aAny, bool* aAll) const {
-  if (NS_WARN_IF(!aHTMLProperty) || NS_WARN_IF(!aFirst) || NS_WARN_IF(!aAny) ||
-      NS_WARN_IF(!aAll)) {
+  if (NS_WARN_IF(!aFirst) || NS_WARN_IF(!aAny) || NS_WARN_IF(!aAll)) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -1969,7 +1968,7 @@ nsresult HTMLEditor::GetInlineProperty(nsAtom* aHTMLProperty,
   }
 
   const nsAString* val = !aValue.IsEmpty() ? &aValue : nullptr;
-  nsresult rv = GetInlinePropertyBase(*aHTMLProperty, aAttribute, val, aFirst,
+  nsresult rv = GetInlinePropertyBase(aHTMLProperty, aAttribute, val, aFirst,
                                       aAny, aAll, nullptr);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::GetInlinePropertyBase() failed");
@@ -1980,20 +1979,24 @@ NS_IMETHODIMP HTMLEditor::GetInlinePropertyWithAttrValue(
     const nsAString& aHTMLProperty, const nsAString& aAttribute,
     const nsAString& aValue, bool* aFirst, bool* aAny, bool* aAll,
     nsAString& outValue) {
-  RefPtr<nsAtom> property = NS_Atomize(aHTMLProperty);
+  nsStaticAtom* property = NS_GetStaticAtom(aHTMLProperty);
+  if (NS_WARN_IF(!property)) {
+    return NS_ERROR_INVALID_ARG;
+  }
   nsStaticAtom* attribute = EditorUtils::GetAttributeAtom(aAttribute);
-  nsresult rv = GetInlinePropertyWithAttrValue(
-      property, MOZ_KnownLive(attribute), aValue, aFirst, aAny, aAll, outValue);
+  // MOZ_KnownLive because nsStaticAtom is available until shutting down.
+  nsresult rv = GetInlinePropertyWithAttrValue(MOZ_KnownLive(*property),
+                                               MOZ_KnownLive(attribute), aValue,
+                                               aFirst, aAny, aAll, outValue);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::GetInlinePropertyWithAttrValue() failed");
   return rv;
 }
 
 nsresult HTMLEditor::GetInlinePropertyWithAttrValue(
-    nsAtom* aHTMLProperty, nsAtom* aAttribute, const nsAString& aValue,
+    nsStaticAtom& aHTMLProperty, nsAtom* aAttribute, const nsAString& aValue,
     bool* aFirst, bool* aAny, bool* aAll, nsAString& outValue) {
-  if (NS_WARN_IF(!aHTMLProperty) || NS_WARN_IF(!aFirst) || NS_WARN_IF(!aAny) ||
-      NS_WARN_IF(!aAll)) {
+  if (NS_WARN_IF(!aFirst) || NS_WARN_IF(!aAny) || NS_WARN_IF(!aAll)) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -2003,7 +2006,7 @@ nsresult HTMLEditor::GetInlinePropertyWithAttrValue(
   }
 
   const nsAString* val = !aValue.IsEmpty() ? &aValue : nullptr;
-  nsresult rv = GetInlinePropertyBase(*aHTMLProperty, aAttribute, val, aFirst,
+  nsresult rv = GetInlinePropertyBase(aHTMLProperty, aAttribute, val, aFirst,
                                       aAny, aAll, &outValue);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::GetInlinePropertyBase() failed");
@@ -2649,7 +2652,7 @@ nsresult HTMLEditor::IncrementOrDecrementFontSizeAsSubAction(
 
     // Manipulating text attributes on a collapsed selection only sets state
     // for the next text insertion
-    mTypeInState->SetProp(&bigOrSmallTagName, nullptr, u""_ns);
+    mTypeInState->SetProp(bigOrSmallTagName, nullptr, u""_ns);
     return NS_OK;
   }
 

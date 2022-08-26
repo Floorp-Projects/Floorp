@@ -5791,8 +5791,10 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
     while (item && pointToPutCaret.GetContainer() != documentRootElement) {
+      // MOZ_KnownLive because we own `item` which guarantees the lifetime of
+      // its members.
       Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
-          ClearStyleAt(pointToPutCaret, MOZ_KnownLive(item->tag),
+          ClearStyleAt(pointToPutCaret, MOZ_KnownLive(item->mTag),
                        MOZ_KnownLive(item->attr), item->specifiedStyle);
       if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
         NS_WARNING("HTMLEditor::ClearStyleAt() failed");
@@ -5868,9 +5870,13 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
     }
 
     while (item) {
+      // MOZ_KnownLive(...ContainerAs<nsIContent>()) because pointToPutCaret()
+      // grabs the result.
+      // MOZ_KnownLive(item->*) because we own `item` which guarantees the
+      // lifetime of its members.
       Result<EditorDOMPoint, nsresult> setStyleResult = SetInlinePropertyOnNode(
           MOZ_KnownLive(*pointToPutCaret.ContainerAs<nsIContent>()),
-          MOZ_KnownLive(*item->tag), MOZ_KnownLive(item->attr), item->value);
+          MOZ_KnownLive(*item->mTag), MOZ_KnownLive(item->attr), item->value);
       if (MOZ_UNLIKELY(setStyleResult.isErr())) {
         NS_WARNING("HTMLEditor::SetInlinePropertyOnNode() failed");
         return Err(setStyleResult.unwrapErr());
@@ -8657,7 +8663,7 @@ nsresult HTMLEditor::GetInlineStyles(nsIContent& aContent,
     }
     // If type-in state is set, don't intervene
     bool typeInSet, unused;
-    mTypeInState->GetTypingState(typeInSet, unused, tag, attribute, nullptr);
+    mTypeInState->GetTypingState(typeInSet, unused, *tag, attribute, nullptr);
     if (typeInSet) {
       continue;
     }
@@ -8680,7 +8686,7 @@ nsresult HTMLEditor::GetInlineStyles(nsIContent& aContent,
       isSet = isComputedCSSEquivalentToHTMLInlineStyleOrError.unwrap();
     }
     if (isSet) {
-      aStyleCacheArray.AppendElement(StyleCache(tag, attribute, value));
+      aStyleCacheArray.AppendElement(StyleCache(*tag, attribute, value));
     }
   }
   return NS_OK;
@@ -8729,9 +8735,12 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
     nsAutoString currentValue;
     if (useCSS) {
       // check computed style first in css case
+      // MOZ_KnownLive(styleCacheBeforeEdit.*) because they are nsStaticAtom
+      // and its instances are alive until shutting down.
       Result<bool, nsresult> isComputedCSSEquivalentToHTMLInlineStyleOrError =
           mCSSEditUtils->IsComputedCSSEquivalentToHTMLInlineStyleSet(
-              *startContainerContent, MOZ_KnownLive(styleCacheBeforeEdit.Tag()),
+              *startContainerContent,
+              MOZ_KnownLive(&styleCacheBeforeEdit.TagRef()),
               MOZ_KnownLive(styleCacheBeforeEdit.GetAttribute()), currentValue);
       if (isComputedCSSEquivalentToHTMLInlineStyleOrError.isErr()) {
         NS_WARNING(
@@ -8743,8 +8752,10 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
     }
     if (!isAny) {
       // then check typeinstate and html style
+      // MOZ_KnownLive(styleCacheBeforeEdit.*) because they are nsStaticAtom
+      // and its instances are alive until shutting down.
       nsresult rv = GetInlinePropertyBase(
-          MOZ_KnownLive(*styleCacheBeforeEdit.Tag()),
+          MOZ_KnownLive(styleCacheBeforeEdit.TagRef()),
           MOZ_KnownLive(styleCacheBeforeEdit.GetAttribute()),
           &styleCacheBeforeEdit.Value(), &isFirst, &isAny, &isAll,
           &currentValue);
@@ -8760,11 +8771,11 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
     }
     AutoStyleCacheArray::index_type index =
         styleCacheArrayAtInsertionPoint.IndexOf(
-            styleCacheBeforeEdit.Tag(), styleCacheBeforeEdit.GetAttribute());
+            styleCacheBeforeEdit.TagRef(), styleCacheBeforeEdit.GetAttribute());
     if (index == AutoStyleCacheArray::NoIndex ||
         styleCacheBeforeEdit.Value() !=
             styleCacheArrayAtInsertionPoint.ElementAt(index).Value()) {
-      mTypeInState->SetProp(styleCacheBeforeEdit.Tag(),
+      mTypeInState->SetProp(styleCacheBeforeEdit.TagRef(),
                             styleCacheBeforeEdit.GetAttribute(),
                             styleCacheBeforeEdit.Value());
     }
