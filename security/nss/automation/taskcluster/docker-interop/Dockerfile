@@ -1,11 +1,12 @@
 # Dockerfile for running interop tests.
 # This includes Rust, golang, and nodejs.
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 LABEL maintainer="Martin Thomson <martin.thomson@gmail.com>"
 
 RUN dpkg --add-architecture i386
-RUN apt-get update \
- && apt-get install -y --no-install-recommends \
+RUN apt-get update && \
+   DEBIAN_FRONTEND=noninteractive \
+   apt-get install -y --no-install-recommends \
     build-essential \
     ca-certificates \
     clang \

@@ -3835,7 +3835,7 @@ ssl3_InitHandshakeHashes(sslSocket *ss)
                 return SECFailure;
             }
 
-            /* Alternate transcript hash used in Encrypted Client Hello. */
+            /* Transcript hash used on ECH client. */
             if (!ss->sec.isServer && ss->ssl3.hs.echHpkeCtx) {
                 ss->ssl3.hs.shaEchInner = PK11_CreateDigestContext(hash_oid->offset);
                 if (ss->ssl3.hs.shaEchInner == NULL) {
@@ -3877,16 +3877,21 @@ ssl3_InitHandshakeHashes(sslSocket *ss)
 
     if (ss->ssl3.hs.hashType != handshake_hash_record &&
         ss->ssl3.hs.messages.len > 0) {
-        /* When doing ECH, ssl3_UpdateHandshakeHashes will store outer messages into
-         * the both the outer and inner transcripts. ssl3_UpdateDefaultHandshakeHashes
-         * uses only the default context (which is the outer when doing ECH). */
+        /* When doing ECH, ssl3_UpdateHandshakeHashes will store outer messages
+         * into the both the outer and inner transcripts.
+         * ssl3_UpdateDefaultHandshakeHashes uses the default context which is
+         * the outer when doing client ECH. For ECH shared-mode or backend
+         * servers only the hs.messages buffer is used. */
         if (ssl3_UpdateDefaultHandshakeHashes(ss, ss->ssl3.hs.messages.buf,
                                               ss->ssl3.hs.messages.len) != SECSuccess) {
             return SECFailure;
         }
-        /* When doing ECH, deriving accept_confirmation requires all messages
-         * up to SH, then a synthetic SH. Don't free the buffers just yet. */
-        if (!ss->ssl3.hs.echHpkeCtx) {
+        /* When doing ECH, deriving the accept_confirmation value requires all
+         * messages up to and including the ServerHello
+         * (see draft-ietf-tls-esni-14, Section 7.2).
+         *
+         * Don't free the transcript buffer until confirmation calculation. */
+        if (!ss->ssl3.hs.echHpkeCtx && !ss->opt.enableTls13BackendEch) {
             sslBuffer_Clear(&ss->ssl3.hs.messages);
         }
     }

@@ -176,6 +176,7 @@ tls13_DecodeEchConfigContents(const sslReadBuffer *rawConfig,
     sslReader suiteReader;
     sslReader extensionReader;
     PRBool hasValidSuite = PR_FALSE;
+    PRBool unsupportedMandatoryXtn = PR_FALSE;
 
     /* HpkeKeyConfig key_config */
     /* uint8 config_id */
@@ -297,10 +298,12 @@ tls13_DecodeEchConfigContents(const sslReadBuffer *rawConfig,
         }
         extensionTypes[extensionIndex++] = (PRUint16)tmpn;
 
-        /* If it's mandatory, fail. */
+        /* Clients MUST parse the extension list and check for unsupported
+         * mandatory extensions.  If an unsupported mandatory extension is
+         * present, clients MUST ignore the ECHConfig
+         * [draft-ietf-tls-esni, Section 4.2]. */
         if (tmpn & (1 << 15)) {
-            PORT_SetError(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION);
-            goto loser;
+            unsupportedMandatoryXtn = PR_TRUE;
         }
 
         /* Skip. */
@@ -316,10 +319,10 @@ tls13_DecodeEchConfigContents(const sslReadBuffer *rawConfig,
         goto loser;
     }
 
-    /* If the ciphersuites weren't compatible, don't
-     * set the outparam. Return success to indicate
-     * the config was well-formed. */
-    if (hasValidSuite) {
+    /* If the ciphersuites were compatible AND if NO unsupported mandatory
+     * extensions were found set the outparam. Return success either way if the
+     * config was well-formed. */
+    if (hasValidSuite && !unsupportedMandatoryXtn) {
         decodedConfig = PORT_ZNew(sslEchConfig);
         if (!decodedConfig) {
             goto loser;
@@ -758,11 +761,6 @@ tls13_ClientSetupEch(sslSocket *ss, sslClientHelloType type)
      * one version and one KEM. Each ECHConfig can specify multiple
      * KDF/AEADs, so just use the first. */
     cfg = (sslEchConfig *)PR_LIST_HEAD(&ss->echConfigs);
-
-    /* Skip ECH if the public name matches the private name. */
-    if (0 == PORT_Strcmp(cfg->contents.publicName, ss->url)) {
-        return SECSuccess;
-    }
 
     SSL_TRC(50, ("%d: TLS13[%d]: Setup client ECH",
                  SSL_GETPID(), ss->fd));
@@ -1382,6 +1380,17 @@ tls13_ConstructInnerExtensionsFromOuter(sslSocket *ss, sslBuffer *chOuterXtnsBuf
             goto loser;
         }
 
+        /* Skip extensions that are TLS < 1.3 only, since CHInner MUST
+         * negotiate TLS 1.3 or above.
+         * If the extension is supported by default (sslSupported) but unknown
+         * to TLS 1.3 it must be a TLS < 1.3 only extension. */
+        SSLExtensionSupport sslSupported;
+        (void)SSLExp_GetExtensionSupport(extensionType, &sslSupported);
+        if (sslSupported != ssl_ext_none &&
+            tls13_ExtensionStatus(extensionType, ssl_hs_client_hello) == tls13_extension_unknown) {
+            continue;
+        }
+
         switch (extensionType) {
             case ssl_server_name_xtn:
                 /* Write the real (private) SNI value. */
@@ -1990,10 +1999,10 @@ loser:
     return SECFailure;
 }
 
-/* Compute the ECH signal using the transcript (up to, excluding) Server Hello.
- * We'll append an artificial SH (ServerHelloECHConf). The server sources
- * this transcript prefix from ss->ssl3.hs.messages, as it never uses
- * ss->ssl3.hs.echInnerMessages. The client uses the inner transcript, echInnerMessages. */
+/* Compute the ECH signal using the transcript (up to, including)
+ * ServerHello. The server sources this transcript prefix from
+ * ss->ssl3.hs.messages, as it never uses ss->ssl3.hs.echInnerMessages.
+ * The client uses the inner transcript, echInnerMessages. */
 SECStatus
 tls13_ComputeEchSignal(sslSocket *ss, PRBool isHrr, const PRUint8 *sh, unsigned int shLen, PRUint8 *out)
 {
@@ -2402,7 +2411,12 @@ tls13_MaybeHandleEchSignal(sslSocket *ss, const PRUint8 *sh, PRUint32 shLen, PRB
             return SECFailure;
         }
         ss->xtnData.negotiated[ss->xtnData.numNegotiated++] = ssl_tls13_encrypted_client_hello_xtn;
-        PORT_Memcpy(ss->ssl3.hs.client_random, ss->ssl3.hs.client_inner_random, SSL3_RANDOM_LENGTH);
+
+        /* Only overwrite client_random with client_inner_random if CHInner was
+         *  succesfully used for handshake (NOT if HRR is received). */
+        if (!isHrr) {
+            PORT_Memcpy(ss->ssl3.hs.client_random, ss->ssl3.hs.client_inner_random, SSL3_RANDOM_LENGTH);
+        }
     }
     /* If rejected, leave echHpkeCtx and echPublicName for rejection paths. */
     ssl3_CoalesceEchHandshakeHashes(ss);
@@ -2655,11 +2669,10 @@ tls13_MaybeAcceptEch(sslSocket *ss, const SECItem *sidBytes, const PRUint8 *chOu
         }
 
         ss->ssl3.hs.echHpkeCtx = echData.hpkeCtx;
-        ss->ssl3.hs.greaseEchBuf = echData.signal;
 
         const PRUint8 greaseConstant[TLS13_ECH_SIGNAL_LEN] = { 0 };
         ss->ssl3.hs.echAccepted = previouslyOfferedEch &&
-                                  !NSS_SecureMemcmp(greaseConstant, ss->ssl3.hs.greaseEchBuf.buf, TLS13_ECH_SIGNAL_LEN);
+                                  !NSS_SecureMemcmp(greaseConstant, echData.signal, TLS13_ECH_SIGNAL_LEN);
 
         if (echData.configId != ss->xtnData.ech->configId ||
             echData.kdfId != ss->xtnData.ech->kdfId ||
@@ -2787,7 +2800,8 @@ tls13_WriteServerEchHrrSignal(sslSocket *ss, PRUint8 *sh, unsigned int shLen)
     if (rv != SECSuccess) {
         return SECFailure;
     }
-    /* We extract this value from the HRR Cookie later when we need it. */
+    /* Free HRR GREASE/accept_confirmation value, it MUST be restored from
+     * cookie when handling CH2 after HRR. */
     sslBuffer_Clear(&ss->ssl3.hs.greaseEchBuf);
     return SECSuccess;
 }
