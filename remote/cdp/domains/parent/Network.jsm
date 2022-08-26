@@ -104,7 +104,7 @@ class Network extends Domain {
 
     // Retrieve host. Check domain first because it has precedence.
     let hostname = domain || "";
-    if (hostname.length == 0) {
+    if (!hostname.length) {
       const cookieURL = new URL(url);
       if (!["http:", "https:"].includes(cookieURL.protocol)) {
         throw new TypeError("An http or https url must be specified");
@@ -283,7 +283,7 @@ class Network extends Domain {
     let hostname = cookie.domain || "";
     let cookieURL;
     let schemeType = Ci.nsICookie.SCHEME_UNSET;
-    if (hostname.length == 0) {
+    if (!hostname.length) {
       try {
         cookieURL = new URL(cookie.url);
       } catch (e) {

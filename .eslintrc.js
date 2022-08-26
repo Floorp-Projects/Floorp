@@ -481,7 +481,6 @@ module.exports = {
         "image/test/browser/browser_image.js",
         "layout/**",
         "netwerk/**",
-        "remote/**",
         "storage/test/unit/test_vacuum.js",
         "taskcluster/docker/periodic-updates/scripts/**",
         "testing/**",

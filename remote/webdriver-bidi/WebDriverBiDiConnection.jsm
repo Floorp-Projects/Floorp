@@ -220,7 +220,7 @@ class WebDriverBiDiConnection extends WebSocketConnection {
 function splitMethod(method) {
   const parts = method.split(".");
 
-  if (parts.length != 2 || parts[0].length == 0 || parts[1].length == 0) {
+  if (parts.length != 2 || !parts[0].length || !parts[1].length) {
     throw new TypeError(`Invalid method format: '${method}'`);
   }
 

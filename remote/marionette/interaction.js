@@ -373,7 +373,7 @@ function clearResettableElement(el) {
   let isEmpty;
   switch (el.type) {
     case "file":
-      isEmpty = el.files.length == 0;
+      isEmpty = !el.files.length;
       break;
 
     default:

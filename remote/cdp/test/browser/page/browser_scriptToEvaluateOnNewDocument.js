@@ -18,12 +18,12 @@ add_task(async function uniqueIdForAddedScripts({ client }) {
     source: "1 + 1;",
   });
   is(typeof id1, "string", "Script id should be a string");
-  ok(id1.length > 0, "Script id is non-empty");
+  ok(id1.length, "Script id is non-empty");
 
   const { identifier: id2 } = await Page.addScriptToEvaluateOnNewDocument({
     source: "1 + 1;",
   });
-  ok(id2.length > 0, "Script id is non-empty");
+  ok(id2.length, "Script id is non-empty");
   isnot(id1, id2, "Two scripts should have different ids");
 
   await Runtime.enable();
@@ -42,14 +42,14 @@ add_task(async function addScriptAfterNavigation({ client }) {
     source: "1 + 1;",
   });
   is(typeof id1, "string", "Script id should be a string");
-  ok(id1.length > 0, "Script id is non-empty");
+  ok(id1.length, "Script id is non-empty");
 
   await loadURL(PAGE_FRAME_URL);
 
   const { identifier: id2 } = await Page.addScriptToEvaluateOnNewDocument({
     source: "1 + 2;",
   });
-  ok(id2.length > 0, "Script id is non-empty");
+  ok(id2.length, "Script id is non-empty");
   isnot(id1, id2, "Two scripts should have different ids");
 });
 

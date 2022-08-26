@@ -91,7 +91,7 @@ class DOM extends ContentProcessDomain {
       localName: unsafeObj.localName,
       nodeValue: unsafeObj.nodeValue ? unsafeObj.nodeValue.toString() : "",
       childNodeCount: unsafeObj.childElementCount,
-      attributes: attributes.length > 0 ? attributes : undefined,
+      attributes: attributes.length ? attributes : undefined,
       frameId: context.id.toString(),
     };
 

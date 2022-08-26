@@ -188,7 +188,7 @@ class ModuleCache {
    */
   hasModule(moduleName, destination) {
     const classes = this.getAllModuleClasses(moduleName, destination);
-    return classes.length != 0;
+    return !!classes.length;
   }
 
   toString() {
