@@ -36,15 +36,17 @@ enum class SpecifiedStyle : uint8_t { Preserve, Discard };
 
 struct PropItem {
   MOZ_KNOWN_LIVE nsStaticAtom* const mTag = nullptr;
-  nsAtom* attr = nullptr;
+  // TODO: Once we stop using `HTMLEditor::SetInlinePropertiesAsSubAction` to
+  //       add any attributes of <a href>, we can make this `nsStaticAtom*`.
+  MOZ_KNOWN_LIVE const RefPtr<nsAtom> mAttribute;
   nsString value;
   // Whether the class and style attribute should be perserved or discarded.
   SpecifiedStyle specifiedStyle = SpecifiedStyle::Preserve;
 
   PropItem() { MOZ_COUNT_CTOR(PropItem); }
-  PropItem(nsStaticAtom* aTag, nsAtom* aAttr, const nsAString& aValue)
+  PropItem(nsStaticAtom* aTag, nsAtom* aAttribute, const nsAString& aValue)
       : mTag(aTag),
-        attr(aAttr != nsGkAtoms::_empty ? aAttr : nullptr),
+        mAttribute(aAttribute != nsGkAtoms::_empty ? aAttribute : nullptr),
         value(aValue) {
     MOZ_COUNT_CTOR(PropItem);
   }

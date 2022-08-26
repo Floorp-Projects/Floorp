@@ -492,7 +492,7 @@ bool TypeInState::IsPropSet(nsStaticAtom& aProp, nsAtom* aAttr,
   size_t count = mSetArray.Length();
   for (size_t i = 0; i < count; i++) {
     PropItem* item = mSetArray[i];
-    if (item->mTag == &aProp && item->attr == aAttr) {
+    if (item->mTag == &aProp && item->mAttribute == aAttr) {
       if (outValue) {
         *outValue = item->value;
       }
@@ -532,7 +532,7 @@ bool TypeInState::FindPropInList(nsStaticAtom* aProp, nsAtom* aAttr,
   size_t count = aList.Length();
   for (size_t i = 0; i < count; i++) {
     PropItem* item = aList[i];
-    if (item->mTag == aProp && item->attr == aAttr) {
+    if (item->mTag == aProp && item->mAttribute == aAttr) {
       if (outValue) {
         *outValue = item->value;
       }
