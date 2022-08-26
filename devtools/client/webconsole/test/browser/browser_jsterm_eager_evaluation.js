@@ -108,6 +108,9 @@ add_task(async function() {
   setInputValue(hud, "4 + 7");
   await waitForEagerEvaluationResult(hud, "11");
 
+  // go back to inline layout.
+  await toggleLayout(hud);
+
   setInputValue(hud, "typeof new Proxy({}, {})");
   await waitForEagerEvaluationResult(hud, `"object"`);
 
@@ -236,8 +239,10 @@ add_task(async function() {
   setInputValue(hud, "array");
   await waitForEagerEvaluationResult(hud, "Array(3) [ 1, 2, 3 ]");
 
-  // go back to inline layout.
-  await toggleLayout(hud);
+  info("Check that top-level await expression are not evaluated");
+  setInputValue(hud, "await 1; 2 + 3;");
+  await waitForNoEagerEvaluationResult(hud);
+  ok(true, "instant evaluation is disabled for top-level await expressions");
 });
 
 // Test that the currently selected autocomplete result is eagerly evaluated.
