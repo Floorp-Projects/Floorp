@@ -2060,18 +2060,23 @@ var CustomizableUIInternal = {
     let area = this.getPlacementOfWidget(aNode.id).area;
     let areaType = CustomizableUI.getAreaType(area);
     let anchor = aNode;
-    if (areaType != CustomizableUI.TYPE_MENU_PANEL) {
-      let wrapper = this.wrapWidget(aWidget.id).forWindow(ownerWindow);
 
-      let hasMultiView = !!aNode.closest("panelmultiview");
-      if (wrapper && !hasMultiView && wrapper.anchor) {
-        this.hidePanelForNode(aNode);
-        anchor = wrapper.anchor;
-      }
-    } else if (aWidget.disallowSubView) {
+    if (
+      aWidget.disallowSubView &&
+      (areaType == CustomizableUI.TYPE_MENU_PANEL ||
+        aNode.hasAttribute("overflowedItem"))
+    ) {
       // Close the containing panel (e.g. overflow), PanelUI will reopen.
       let wrapper = this.wrapWidget(aWidget.id).forWindow(ownerWindow);
       if (wrapper?.anchor) {
+        this.hidePanelForNode(aNode);
+        anchor = wrapper.anchor;
+      }
+    } else if (areaType != CustomizableUI.TYPE_MENU_PANEL) {
+      let wrapper = this.wrapWidget(aWidget.id).forWindow(ownerWindow);
+
+      let hasMultiView = !!aNode.closest("panelmultiview");
+      if (!hasMultiView && wrapper?.anchor) {
         this.hidePanelForNode(aNode);
         anchor = wrapper.anchor;
       }

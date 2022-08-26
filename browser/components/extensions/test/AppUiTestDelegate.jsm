@@ -84,10 +84,15 @@ async function showBrowserAction(window, extensionId) {
     return;
   }
 
+  let navbar = window.document.getElementById("nav-bar");
   if (group.areaType == lazy.CustomizableUI.TYPE_TOOLBAR) {
-    Assert.ok(!widget.overflowed, "Expect widget not to be overflowed");
+    Assert.equal(
+      widget.overflowed,
+      navbar.hasAttribute("overflowing"),
+      "Expect widget overflow state to match toolbar"
+    );
   } else if (group.areaType == lazy.CustomizableUI.TYPE_MENU_PANEL) {
-    await window.document.getElementById("nav-bar").overflowable.show();
+    await navbar.overflowable.show();
   }
 }
 
