@@ -73,4 +73,13 @@ export var SearchUIUtils = {
     }
     return true;
   },
+
+  /**
+   * Returns the URL to use for where to get more search engines.
+   */
+  get searchEnginesURL() {
+    return Services.urlFormatter.formatURLPref(
+      "browser.search.searchEnginesURL"
+    );
+  },
 };
