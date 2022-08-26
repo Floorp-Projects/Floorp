@@ -5795,7 +5795,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
       // its members.
       Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
           ClearStyleAt(pointToPutCaret, MOZ_KnownLive(item->mTag),
-                       MOZ_KnownLive(item->attr), item->specifiedStyle);
+                       MOZ_KnownLive(item->mAttribute), item->specifiedStyle);
       if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
         NS_WARNING("HTMLEditor::ClearStyleAt() failed");
         return pointToPutCaretOrError;
@@ -5876,7 +5876,8 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
       // lifetime of its members.
       Result<EditorDOMPoint, nsresult> setStyleResult = SetInlinePropertyOnNode(
           MOZ_KnownLive(*pointToPutCaret.ContainerAs<nsIContent>()),
-          MOZ_KnownLive(*item->mTag), MOZ_KnownLive(item->attr), item->value);
+          MOZ_KnownLive(*item->mTag), MOZ_KnownLive(item->mAttribute),
+          item->value);
       if (MOZ_UNLIKELY(setStyleResult.isErr())) {
         NS_WARNING("HTMLEditor::SetInlinePropertyOnNode() failed");
         return Err(setStyleResult.unwrapErr());
