@@ -707,13 +707,14 @@ class CompactPropMap final : public SharedPropMap {
   friend class PropMap;
   friend class SharedPropMap;
   friend class DictionaryPropMap;
+  friend class js::gc::CellAllocator;
 
-  CompactPropMap(PropertyKey key, PropertyInfo prop) {
+  CompactPropMap(JS::Handle<PropertyKey> key, PropertyInfo prop) {
     setHeaderFlagBits(IsCompactFlag);
     initProperty(0, key, prop);
   }
 
-  CompactPropMap(CompactPropMap* orig, uint32_t length) {
+  CompactPropMap(JS::Handle<CompactPropMap*> orig, uint32_t length) {
     setHeaderFlagBits(IsCompactFlag);
     for (uint32_t i = 0; i < length; i++) {
       keys_[i].init(orig->keys_[i]);
@@ -812,11 +813,13 @@ class NormalPropMap final : public SharedPropMap {
   friend class PropMap;
   friend class SharedPropMap;
   friend class DictionaryPropMap;
+  friend class js::gc::CellAllocator;
 
   LinkedPropMap::Data linkedData_;
   TreeData treeData_;
 
-  NormalPropMap(SharedPropMap* prev, PropertyKey key, PropertyInfo prop)
+  NormalPropMap(JS::Handle<SharedPropMap*> prev, PropertyKey key,
+                PropertyInfo prop)
       : linkedData_(prev) {
     if (prev) {
       setHeaderFlagBits(HasPrevFlag);
@@ -828,7 +831,7 @@ class NormalPropMap final : public SharedPropMap {
     initProperty(0, key, prop);
   }
 
-  NormalPropMap(NormalPropMap* orig, uint32_t length)
+  NormalPropMap(JS::Handle<NormalPropMap*> orig, uint32_t length)
       : linkedData_(orig->previous()) {
     if (orig->hasPrevious()) {
       setHeaderFlagBits(HasPrevFlag);
@@ -872,6 +875,7 @@ class NormalPropMap final : public SharedPropMap {
 class DictionaryPropMap final : public PropMap {
   friend class PropMap;
   friend class SharedPropMap;
+  friend class js::gc::CellAllocator;
 
   LinkedPropMap::Data linkedData_;
 
@@ -883,17 +887,24 @@ class DictionaryPropMap final : public PropMap {
   // compacting heuristics.
   uint32_t holeCount_ = 0;
 
-  DictionaryPropMap(DictionaryPropMap* prev, PropertyKey key, PropertyInfo prop)
+  DictionaryPropMap(JS::Handle<DictionaryPropMap*> prev, PropertyKey key,
+                    PropertyInfo prop)
       : linkedData_(prev) {
     setHeaderFlagBits(IsDictionaryFlag | CanHaveTableFlag |
                       (prev ? HasPrevFlag : 0));
     initProperty(0, key, prop);
   }
 
-  template <typename T>
-  DictionaryPropMap(T* orig, uint32_t length) : linkedData_(nullptr) {
-    static_assert(std::is_same_v<T, CompactPropMap> ||
-                  std::is_same_v<T, NormalPropMap>);
+  DictionaryPropMap(JS::Handle<NormalPropMap*> orig, uint32_t length)
+      : linkedData_(nullptr) {
+    setHeaderFlagBits(IsDictionaryFlag | CanHaveTableFlag);
+    for (uint32_t i = 0; i < length; i++) {
+      initProperty(i, orig->getKey(i), orig->getPropertyInfo(i));
+    }
+  }
+
+  DictionaryPropMap(JS::Handle<CompactPropMap*> orig, uint32_t length)
+      : linkedData_(nullptr) {
     setHeaderFlagBits(IsDictionaryFlag | CanHaveTableFlag);
     for (uint32_t i = 0; i < length; i++) {
       initProperty(i, orig->getKey(i), orig->getPropertyInfo(i));

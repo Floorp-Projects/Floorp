@@ -84,7 +84,8 @@ make -j `nproc --all` install
 
 # Build ldid
 cd $LDID_SOURCE_DIR
-make -j `nproc --all` install INSTALLPREFIX=$CROSSTOOLS_BUILD_DIR LDFLAGS="-Wl,-Bstatic -lcrypto -Wl,-Bdynamic -ldl -pthread"
+# The crypto library in the sysroot cannot be linked in a PIE executable so we use -no-pie
+make -j `nproc --all` install INSTALLPREFIX=$CROSSTOOLS_BUILD_DIR LDFLAGS="-no-pie -Wl,-Bstatic -lcrypto -Wl,-Bdynamic -ldl -pthread"
 
 strip $CROSSTOOLS_BUILD_DIR/bin/*
 # various build scripts based on cmake want to find `lipo` without a prefix

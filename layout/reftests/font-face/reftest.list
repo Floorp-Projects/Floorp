@@ -141,9 +141,9 @@ skip-if(Android) == cjkcisvs-1.html cjkcisvs-1-ref.html # Android bug 1250229, B
 
 # Tests for bug 670900 - handling of 404 (not found) error in @font-face URL
 # (using Chunkfive font data returned from a .sjs file)
-HTTP(..) == font-error-404-1.html font-error-404-1-ref.html # HTTP status 404, don't load
-HTTP(..) == font-error-404-2.html font-error-404-2-ref.html # HTTP status 200, load
-HTTP(..) != font-error-404-1.html font-error-404-2.html # sanity-check that the results differ
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) HTTP(..) == font-error-404-1.html font-error-404-1-ref.html # HTTP status 404, don't load
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) HTTP(..) == font-error-404-2.html font-error-404-2-ref.html # HTTP status 200, load # random on win7, see bug 1786796 comment 9
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) HTTP(..) != font-error-404-1.html font-error-404-2.html # sanity-check that the results differ
 
 # Font load redirection
 HTTP(..) == font-redirect.html order-1-ref.html
@@ -184,6 +184,10 @@ fuzzy(0-138,0-318) == colrv1-01.html#Q colrv1-01-ref.html#Q
 fuzzy(0-214,0-158) == colrv1-01.html#R colrv1-01-ref.html#R
 fuzzy(0-255,0-156) == colrv1-01.html#S colrv1-01-ref.html#S
 fuzzy(0-237,0-277) == colrv1-01.html#T colrv1-01-ref.html#T
+
+# Skip tests that require font variations on Win7, as not supported by DWrite there.
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-1,0-1) == colrv1-03.html colrv1-03-ref.html
+skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-1,0-600) fuzzy-if(Android,0-64,0-37100) == colrv1-04.html colrv1-04-ref.html
 defaults
 
 # Check that the tech(color-COLRv1) function responds to whether COLRv1 support is enabled.
@@ -196,9 +200,9 @@ defaults
 == woff2-totalsfntsize.html woff2-totalsfntsize-ref.html
 
 # sanity tests for reflow behavior with downloadable fonts
-HTTP(..) == reflow-sanity-1.html reflow-sanity-1-ref.html
-HTTP(..) == reflow-sanity-1-data.html reflow-sanity-1-ref.html
-HTTP(..) == reflow-sanity-1.html reflow-sanity-1-data.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) HTTP(..) == reflow-sanity-1.html reflow-sanity-1-ref.html # random on win7, see bug 1786796 comment 9
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) HTTP(..) == reflow-sanity-1-data.html reflow-sanity-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) HTTP(..) == reflow-sanity-1.html reflow-sanity-1-data.html
 HTTP(..) == reflow-sanity-delay-1a.html reflow-sanity-1-ref.html
 HTTP(..) == reflow-sanity-delay-1b.html reflow-sanity-1-ref.html
 HTTP(..) == reflow-sanity-delay-1c.html reflow-sanity-1-ref.html

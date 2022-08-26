@@ -8,6 +8,7 @@
 #define vm_BigIntType_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/Range.h"
 #include "mozilla/Span.h"
 
@@ -63,6 +64,10 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
 
  public:
   static const JS::TraceKind TraceKind = JS::TraceKind::BigInt;
+
+  static BigInt* emplace(js::gc::Cell* cell) {
+    return new (mozilla::KnownNotNull, cell) BigInt();
+  }
 
   void fixupAfterMovingGC() {}
 
@@ -411,7 +416,6 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
   friend struct ::JSStructuredCloneReader;
   friend struct ::JSStructuredCloneWriter;
 
-  BigInt() = delete;
   BigInt(const BigInt& other) = delete;
   void operator=(const BigInt& other) = delete;
 
@@ -436,6 +440,10 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
 
  private:
   friend class js::TenuringTracer;
+
+ protected:
+  // For calling by emplace().
+  BigInt() = default;
 };
 
 static_assert(

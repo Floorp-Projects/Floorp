@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<meta charset=utf-8>
+<title>COLRv1 font test: radial-gradient edge cases</title>
+<style>
+@font-face {
+  font-family: CAhem;
+  src: url("CAhem.ttf");
+}
+#test { font: 128px/1 CAhem, serif; margin: 10px; padding: 10px; }
+#_3a { font-variation-settings: "GRR1" 0; }
+#_3b { font-variation-settings: "GRR1" -100; }
+#_3c { font-variation-settings: "GRR1" -200; }
+#_d { font-variation-settings: "GRR1" -25; }
+</style>
+
+<p>The two glyphs in each row should match:</p>
+<div id="test">
+0 <span id="_3a">3</span><br>
+1 <span id="_3b">3</span><br>
+2 <span id="_3c">3</span><br>
+a b<br>
+c <span id="_d">d</span><br>

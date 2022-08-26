@@ -103,14 +103,13 @@ RecordType* RecordType::createUninitialized(JSContext* cx,
     return nullptr;
   }
 
-  JSObject* obj = js::AllocateObject(cx, NewObjectGCKind(), initialLength,
-                                     gc::DefaultHeap, &RecordType::class_);
-  if (!obj) {
+  Rooted<RecordType*> rec(
+      cx, cx->newCell<RecordType>(NewObjectGCKind(), initialLength,
+                                  gc::DefaultHeap, &RecordType::class_));
+  if (!rec) {
     return nullptr;
   }
-  obj->initShape(shape);
-
-  Rooted<RecordType*> rec(cx, static_cast<RecordType*>(obj));
+  rec->initShape(shape);
   rec->setEmptyElements();
   rec->initEmptyDynamicSlots();
   rec->initFixedSlots(SLOT_COUNT);

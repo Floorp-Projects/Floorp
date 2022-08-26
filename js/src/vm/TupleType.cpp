@@ -279,13 +279,12 @@ static TupleType* allocate(JSContext* cx, gc::AllocKind allocKind) {
     return nullptr;
   }
 
-  JSObject* obj =
-      js::AllocateObject(cx, allocKind, 0, gc::DefaultHeap, &TupleType::class_);
-  if (!obj) {
+  TupleType* tup =
+      cx->newCell<TupleType>(allocKind, 0, gc::DefaultHeap, &TupleType::class_);
+  if (!tup) {
     return nullptr;
   }
 
-  TupleType* tup = static_cast<TupleType*>(obj);
   tup->initShape(shape);
   tup->initEmptyDynamicSlots();
   tup->initFixedElements(allocKind, 0);

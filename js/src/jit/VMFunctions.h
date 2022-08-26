@@ -577,7 +577,7 @@ bool DoConcatStringObject(JSContext* cx, HandleValue lhs, HandleValue rhs,
 
 bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result);
 
-void* AllocateString(JSContext* cx);
+void* AllocateDependentString(JSContext* cx);
 void* AllocateFatInlineString(JSContext* cx);
 void* AllocateBigIntNoGC(JSContext* cx, bool requestMinorGC);
 void AllocateAndInitTypedArrayBuffer(JSContext* cx, TypedArrayObject* obj,

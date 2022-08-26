@@ -69,6 +69,8 @@ inline bool IsNativeRegExpEnabled() {
  */
 class RegExpShared
     : public gc::CellWithTenuredGCPointer<gc::TenuredCell, JSAtom> {
+  friend class js::gc::CellAllocator;
+
  public:
   enum class Kind { Unparsed, Atom, RegExp };
   enum class CodeKind { Bytecode, Jitcode, Any };

@@ -534,14 +534,14 @@ template <AllowGC allowGC>
 JitCode* JitCode::New(JSContext* cx, uint8_t* code, uint32_t totalSize,
                       uint32_t headerSize, ExecutablePool* pool,
                       CodeKind kind) {
-  JitCode* codeObj = Allocate<JitCode, allowGC>(cx);
+  uint32_t bufferSize = totalSize - headerSize;
+  JitCode* codeObj =
+      cx->newCell<JitCode, allowGC>(code, bufferSize, headerSize, pool, kind);
   if (!codeObj) {
+    // The caller already allocated `totalSize` bytes of executable memory.
     pool->release(totalSize, kind);
     return nullptr;
   }
-
-  uint32_t bufferSize = totalSize - headerSize;
-  new (codeObj) JitCode(code, bufferSize, headerSize, pool, kind);
 
   cx->zone()->incJitMemory(totalSize);
 

@@ -3188,11 +3188,6 @@ BaseScript* BaseScript::New(JSContext* cx, JS::Handle<JSFunction*> function,
                             Handle<ScriptSourceObject*> sourceObject,
                             const SourceExtent& extent,
                             uint32_t immutableFlags) {
-  void* script = Allocate<BaseScript>(cx);
-  if (!script) {
-    return nullptr;
-  }
-
   uint8_t* stubEntry = nullptr;
   if (jit::HasJitBackend()) {
     stubEntry = cx->runtime()->jitRuntime()->interpreterStub().value;
@@ -3202,8 +3197,8 @@ BaseScript* BaseScript::New(JSContext* cx, JS::Handle<JSFunction*> function,
                 function->compartment() == sourceObject->compartment());
   MOZ_ASSERT_IF(function, function->realm() == sourceObject->realm());
 
-  return new (script)
-      BaseScript(stubEntry, function, sourceObject, extent, immutableFlags);
+  return cx->newCell<BaseScript>(stubEntry, function, sourceObject, extent,
+                                 immutableFlags);
 }
 
 /* static */
