@@ -6715,7 +6715,7 @@ nsresult nsDocShell::CreateAboutBlankContentViewer(
       if (aPrincipal) {
         principal = NullPrincipal::CreateWithInheritedAttributes(aPrincipal);
       } else {
-        principal = NullPrincipal::CreateWithInheritedAttributes(this);
+        principal = NullPrincipal::Create(GetOriginAttributes());
       }
       partitionedPrincipal = principal;
     } else {
@@ -12061,7 +12061,7 @@ nsresult nsDocShell::LoadHistoryEntry(nsDocShellLoadState* aLoadState,
       // URIs will pick it up from the about:blank page we just loaded,
       // and we don't really want even that in this case.
       nsCOMPtr<nsIPrincipal> principal =
-          NullPrincipal::CreateWithInheritedAttributes(this);
+          NullPrincipal::Create(GetOriginAttributes());
       aLoadState->SetTriggeringPrincipal(principal);
     }
   }

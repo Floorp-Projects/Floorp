@@ -839,8 +839,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       // inherit origin attributes from the system principal, so use the parent
       // BC if it's available.
       if (parentBC) {
-        newWindowPrincipal = NullPrincipal::CreateWithInheritedAttributes(
-            parentBC->OriginAttributesRef());
+        newWindowPrincipal =
+            NullPrincipal::Create(parentBC->OriginAttributesRef());
       } else {
         newWindowPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
       }
