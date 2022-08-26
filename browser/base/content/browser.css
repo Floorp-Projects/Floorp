@@ -1259,6 +1259,12 @@ toolbarpaletteitem:not([place="palette"]) > #stop-reload-button {
   display: none;
 }
 
+/* Firefox View */
+:root[firefoxviewhidden] #wrapper-firefox-view-button,
+:root[firefoxviewhidden] #firefox-view-button {
+  display: none;
+}
+
 /* UI Tour */
 
 @keyframes uitour-wobble {
