@@ -810,7 +810,7 @@ function statesToString(aStates, aExtraStates) {
     str += list.item(index) + ", ";
   }
 
-  if (list.length != 0) {
+  if (list.length) {
     str += list.item(index);
   }
 

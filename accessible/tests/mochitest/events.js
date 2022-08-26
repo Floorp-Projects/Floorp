@@ -367,8 +367,8 @@ function eventQueue(aEventType) {
             if (idx == eventSeq.length) {
               if (
                 matchIdx != -1 &&
-                eventSeq.length > 0 &&
-                this.mScenarios[matchIdx].length > 0
+                !!eventSeq.length &&
+                this.mScenarios[matchIdx].length
               ) {
                 ok(
                   false,
@@ -378,7 +378,7 @@ function eventQueue(aEventType) {
                 );
               }
 
-              if (matchIdx == -1 || eventSeq.length > 0) {
+              if (matchIdx == -1 || eventSeq.length) {
                 matchIdx = scnIdx;
               }
 
@@ -803,7 +803,7 @@ function eventQueue(aEventType) {
   };
 
   this.setEventHandler = function eventQueue_setEventHandler(aInvoker) {
-    if (!("scenarios" in aInvoker) || aInvoker.scenarios.length == 0) {
+    if (!("scenarios" in aInvoker) || !aInvoker.scenarios.length) {
       var eventSeq = aInvoker.eventSeq;
       var unexpectedEventSeq = aInvoker.unexpectedEventSeq;
       if (!eventSeq && !unexpectedEventSeq && this.mDefEventType) {
@@ -841,7 +841,7 @@ function eventQueue(aEventType) {
 
       // Do not warn about empty event sequances when more than one scenario
       // was registered.
-      if (this.mScenarios.length == 1 && eventSeq.length == 0) {
+      if (this.mScenarios.length == 1 && !eventSeq.length) {
         ok(
           false,
           "Broken scenario #" +

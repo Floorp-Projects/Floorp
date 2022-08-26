@@ -477,7 +477,6 @@ module.exports = {
     },
     {
       files: [
-        "accessible/**",
         "devtools/**",
         "dom/**",
         "docshell/**",
