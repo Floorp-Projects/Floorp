@@ -248,7 +248,7 @@ function testSharedContainers() {
 var tests = [testBFCache, testSharedContainers];
 
 function nextTest() {
-  if (tests.length == 0) {
+  if (!tests.length) {
     finish();
     return;
   }
