@@ -480,7 +480,6 @@ module.exports = {
         "dom/**",
         "image/test/browser/browser_image.js",
         "layout/**",
-        "mobile/android/**",
         "modules/**",
         "netwerk/**",
         "remote/**",

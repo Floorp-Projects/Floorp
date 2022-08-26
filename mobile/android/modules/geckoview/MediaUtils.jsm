@@ -64,7 +64,7 @@ const MediaUtils = {
       return aElement;
     }
     const childrenMedia = aElement.getElementsByTagName("video");
-    if (childrenMedia && childrenMedia.length > 0) {
+    if (childrenMedia && childrenMedia.length) {
       return childrenMedia[0];
     }
     return null;
@@ -75,7 +75,7 @@ const MediaUtils = {
       return aElement;
     }
     const childrenMedia = aElement.getElementsByTagName("audio");
-    if (childrenMedia && childrenMedia.length > 0) {
+    if (childrenMedia && childrenMedia.length) {
       return childrenMedia[0];
     }
     return null;
