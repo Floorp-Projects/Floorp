@@ -602,7 +602,6 @@ class BlockLexicalEnvironmentObject : public ScopedLexicalEnvironmentObject {
 
 class NamedLambdaObject : public BlockLexicalEnvironmentObject {
   static NamedLambdaObject* create(JSContext* cx, HandleFunction callee,
-                                   HandleFunction replacement,
                                    HandleObject enclosing,
                                    gc::InitialHeap heap);
 

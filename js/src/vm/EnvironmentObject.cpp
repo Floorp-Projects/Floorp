@@ -1026,7 +1026,6 @@ BlockLexicalEnvironmentObject* BlockLexicalEnvironmentObject::recreate(
 /* static */
 NamedLambdaObject* NamedLambdaObject::create(JSContext* cx,
                                              HandleFunction callee,
-                                             HandleFunction func,
                                              HandleObject enclosing,
                                              gc::InitialHeap heap) {
   MOZ_ASSERT(callee->isNamedLambda());
@@ -1055,14 +1054,14 @@ NamedLambdaObject* NamedLambdaObject::create(JSContext* cx,
     return nullptr;
   }
 
-  obj->initFixedSlot(lambdaSlot(), ObjectValue(*func));
+  obj->initFixedSlot(lambdaSlot(), ObjectValue(*callee));
   return static_cast<NamedLambdaObject*>(obj);
 }
 
 /* static */
 NamedLambdaObject* NamedLambdaObject::createTemplateObject(
     JSContext* cx, HandleFunction callee, gc::InitialHeap heap) {
-  return create(cx, callee, callee, nullptr, heap);
+  return create(cx, callee, nullptr, heap);
 }
 
 /* static */
@@ -1070,7 +1069,7 @@ NamedLambdaObject* NamedLambdaObject::create(JSContext* cx,
                                              AbstractFramePtr frame) {
   RootedFunction fun(cx, frame.callee());
   RootedObject enclosing(cx, frame.environmentChain());
-  return create(cx, fun, fun, enclosing, gc::DefaultHeap);
+  return create(cx, fun, enclosing, gc::DefaultHeap);
 }
 
 /* static */
