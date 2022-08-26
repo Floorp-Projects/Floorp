@@ -51,7 +51,7 @@ var TESTS = [
     },
     check(markers) {
       markers = markers.filter(m => m.name == "Reflow");
-      ok(markers.length > 0, "Reflow marker includes stack");
+      ok(!!markers.length, "Reflow marker includes stack");
       ok(markers[0].stack.functionDisplayName == "forceSyncReflow");
     },
   },
@@ -70,7 +70,7 @@ var TESTS = [
     },
     check(markers) {
       markers = markers.filter(m => m.name == "DOMEvent");
-      ok(markers.length > 0, "DOMEvent marker includes stack");
+      ok(!!markers.length, "DOMEvent marker includes stack");
       ok(
         markers[0].stack.functionDisplayName == "testSendingEvent",
         "testSendingEvent is on the stack"
@@ -86,7 +86,7 @@ var TESTS = [
     },
     check(markers) {
       markers = markers.filter(m => m.name == "ConsoleTime");
-      ok(markers.length > 0, "ConsoleTime marker includes stack");
+      ok(!!markers.length, "ConsoleTime marker includes stack");
       ok(
         markers[0].stack.functionDisplayName == "testConsoleTime",
         "testConsoleTime is on the stack"
@@ -113,7 +113,7 @@ if (
     },
     check(markers) {
       markers = markers.filter(m => m.name == "ConsoleTime");
-      ok(markers.length > 0, "Promise marker includes stack");
+      ok(!!markers.length, "Promise marker includes stack");
       ok(
         markers[0].stack.functionDisplayName == "testConsoleTime",
         "testConsoleTime is on the stack"

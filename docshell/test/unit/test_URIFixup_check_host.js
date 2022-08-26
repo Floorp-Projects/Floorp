@@ -53,7 +53,7 @@ class Listener {
 
   async firstAddress() {
     let all = await this.addresses();
-    if (all.length > 0) {
+    if (all.length) {
       return all[0];
     }
     return undefined;
