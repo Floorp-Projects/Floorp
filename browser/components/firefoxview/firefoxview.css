@@ -72,10 +72,12 @@ body {
   color: var(--newtab-text-primary-color);
 }
 
-body[lwt-newtab-brighttext] {
-  --fxview-element-hover-color: color-mix(in srgb, var(--fxview-background-color) 80%, white);
-  --fxview-element-active-color: color-mix(in srgb, var(--fxview-background-color) 60%, white);
-  --newtab-background-color-secondary: #42414d;
+@media (prefers-color-scheme: dark) {
+  body {
+    --fxview-element-hover-color: color-mix(in srgb, var(--fxview-background-color) 80%, white);
+    --fxview-element-active-color: color-mix(in srgb, var(--fxview-background-color) 60%, white);
+    --newtab-background-color-secondary: #42414d;
+  }
 }
 
 h1 {

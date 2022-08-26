@@ -37,21 +37,31 @@
       {
         lwtProperty: "ntp_text",
         processColor(rgbaChannels, element) {
+          // We only have access to the browser when we're in a chrome
+          // docshell, so for now only set the color scheme in that case, and
+          // use the `lwt-newtab-brighttext` attribute as a fallback mechanism.
+          let browserStyle =
+            element.ownerGlobal?.docShell?.chromeEventHandler.style;
+
           if (!rgbaChannels) {
             element.removeAttribute("lwt-newtab");
             element.toggleAttribute(
               "lwt-newtab-brighttext",
               prefersDarkQuery.matches
             );
+            if (browserStyle) {
+              browserStyle.colorScheme = "";
+            }
             return null;
           }
 
           element.setAttribute("lwt-newtab", "true");
           const { r, g, b, a } = rgbaChannels;
-          element.toggleAttribute(
-            "lwt-newtab-brighttext",
-            !_isTextColorDark(r, g, b)
-          );
+          let darkMode = !_isTextColorDark(r, g, b);
+          element.toggleAttribute("lwt-newtab-brighttext", darkMode);
+          if (browserStyle) {
+            browserStyle.colorScheme = darkMode ? "dark" : "light";
+          }
 
           return `rgba(${r}, ${g}, ${b}, ${a})`;
         },
