@@ -23,6 +23,38 @@ const MATCH_INTENSITY_FROM_ID = new RegExp(
   `-(${INTENSITY_SOFT}|${INTENSITY_BALANCED}|${INTENSITY_BOLD})-colorway@mozilla\\.org$`
 );
 
+/**
+ * Helper for colorway closet related telemetry probes.
+ */
+const ColorwaysTelemetry = {
+  init() {
+    Services.telemetry.setEventRecordingEnabled("colorways_modal", true);
+  },
+
+  recordEvent(telemetryEventData) {
+    if (!telemetryEventData || !Object.entries(telemetryEventData).length) {
+      console.error("Unable to record event due to missing telemetry data");
+      return;
+    }
+
+    if (telemetryEventData.source && ColorwayCloset.previousTheme?.id) {
+      telemetryEventData.method = BuiltInThemes.isColorwayFromCurrentCollection(
+        ColorwayCloset.previousTheme.id
+      )
+        ? "change_colorway"
+        : "try_colorways";
+      telemetryEventData.object = telemetryEventData.source;
+    }
+    Services.telemetry.recordEvent(
+      "colorways_modal",
+      telemetryEventData.method,
+      telemetryEventData.object,
+      telemetryEventData.value || null,
+      telemetryEventData.extraKeys || null
+    );
+  },
+};
+
 const ColorwayCloset = {
   // This is essentially an instant-apply dialog, but we make an effort to only
   // keep the theme change if the user hits the "Set colorway" button, and
@@ -47,17 +79,25 @@ const ColorwayCloset = {
   init() {
     window.addEventListener("unload", this);
 
+    ColorwaysTelemetry.init();
+
     this._displayCollectionData();
 
     AddonManager.addAddonListener(this);
-    this._initColorwayRadios();
-    this.el.colorwayRadios.addEventListener("change", this);
-    this.el.intensityContainer.addEventListener("change", this);
+    this._initColorwayRadios().then(() => {
+      this.el.colorwayRadios.addEventListener("change", this);
+      this.el.intensityContainer.addEventListener("change", this);
 
-    this.el.setColorwayButton.onclick = () => {
-      this.revertToPreviousTheme = false;
-      window.close();
-    };
+      let args = window?.arguments?.[0];
+      // Record telemetry probes that are called upon opening the modal.
+      ColorwaysTelemetry.recordEvent(args);
+
+      this.el.setColorwayButton.onclick = () => {
+        this.revertToPreviousTheme = false;
+        window.close();
+      };
+    });
+
     this.el.cancelButton.onclick = () => {
       window.close();
     };
@@ -87,7 +127,9 @@ const ColorwayCloset = {
       input.name = "colorway";
       input.value = addon.id;
       input.setAttribute("title", this._getColorwayGroupName(addon));
-      input.style.setProperty("--colorway-icon", `url(${addon.iconURL})`);
+      if (addon.iconURL) {
+        input.style.setProperty("--colorway-icon", `url(${addon.iconURL})`);
+      }
       this.el.colorwayRadios.appendChild(input);
     }
 
@@ -118,6 +160,10 @@ const ColorwayCloset = {
       this.el.homepageResetContainer
         .querySelector(".reset-prompt > button")
         .addEventListener("click", () => {
+          ColorwaysTelemetry.recordEvent({
+            method: "homepage_reset",
+            object: "modal",
+          });
           homeState = HomePage.get();
           HomePage.reset();
           this.el.homepageResetContainer.classList.add("success");
@@ -125,6 +171,10 @@ const ColorwayCloset = {
       this.el.homepageResetContainer
         .querySelector(".success-prompt > button")
         .addEventListener("click", () => {
+          ColorwaysTelemetry.recordEvent({
+            method: "homepage_reset_undo",
+            object: "modal",
+          });
           HomePage.set(homeState);
           this.el.homepageResetContainer.classList.remove("success");
         });
@@ -221,6 +271,17 @@ const ColorwayCloset = {
         AddonManager.removeAddonListener(this);
         if (this.revertToPreviousTheme) {
           this.previousTheme.enable();
+          ColorwaysTelemetry.recordEvent({
+            method: "cancel",
+            object: "modal",
+          });
+        } else {
+          ColorwaysTelemetry.recordEvent({
+            method: "set_colorway",
+            object: "modal",
+            value: null,
+            extraKeys: { colorway_id: this.selectedColorway.id },
+          });
         }
         break;
     }

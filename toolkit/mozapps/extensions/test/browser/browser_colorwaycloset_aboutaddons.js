@@ -44,7 +44,7 @@ add_task(async function testColorwayClosetPrefEnabled() {
     set: [["browser.theme.colorway-closet", true]],
   });
 
-  const { addon } = await installTestTheme(NO_INTENSITY_THEME_ID);
+  const { addon } = await installTestTheme(NO_INTENSITY_COLORWAY_THEME_ID);
 
   let win = await loadInitialView("theme");
   let doc = win.document;
@@ -129,7 +129,7 @@ add_task(async function testColorwayClosetSectionPrefDisabled() {
     set: [["browser.theme.colorway-closet", false]],
   });
 
-  const { addon } = await installTestTheme(NO_INTENSITY_THEME_ID);
+  const { addon } = await installTestTheme(NO_INTENSITY_COLORWAY_THEME_ID);
 
   let win = await loadInitialView("theme");
   let doc = win.document;
@@ -155,7 +155,7 @@ add_task(async function testButtonOpenModal() {
     set: [["browser.theme.colorway-closet", true]],
   });
 
-  const { addon } = await installTestTheme(NO_INTENSITY_THEME_ID);
+  const { addon } = await installTestTheme(NO_INTENSITY_COLORWAY_THEME_ID);
 
   let win = await loadInitialView("theme");
   let doc = win.document;
@@ -194,15 +194,20 @@ add_task(async function testColorwayClosetSectionOneRetainedOneUnexpired() {
   const retainedThemePrefName = "browser.theme.retainedExpiredThemes";
   await SpecialPowers.pushPrefEnv({
     set: [
-      [retainedThemePrefName, JSON.stringify([NO_INTENSITY_EXPIRED_THEME_ID])],
+      [
+        retainedThemePrefName,
+        JSON.stringify([NO_INTENSITY_EXPIRED_COLORWAY_THEME_ID]),
+      ],
     ],
   });
   const { addon: expiredAddon } = await installTestTheme(
-    NO_INTENSITY_EXPIRED_THEME_ID
+    NO_INTENSITY_EXPIRED_COLORWAY_THEME_ID
   );
 
   // Set up a valid addon that acts as a colorway theme that is not yet expired
-  const { addon: validAddon } = await installTestTheme(NO_INTENSITY_THEME_ID);
+  const { addon: validAddon } = await installTestTheme(
+    NO_INTENSITY_COLORWAY_THEME_ID
+  );
 
   await expiredAddon.disable();
   await validAddon.disable();
@@ -239,7 +244,7 @@ add_task(async function testColorwayClosetSectionOneRetainedOneUnexpired() {
 
   info("Verifying cards in list of retained colorway themes");
   let expiredAddonCard = colorwaySection.querySelector(
-    `addon-card[addon-id='${NO_INTENSITY_EXPIRED_THEME_ID}']`
+    `addon-card[addon-id='${NO_INTENSITY_EXPIRED_COLORWAY_THEME_ID}']`
   );
   ok(
     colorwaySection.contains(expiredAddonCard),
@@ -248,7 +253,7 @@ add_task(async function testColorwayClosetSectionOneRetainedOneUnexpired() {
 
   let disabledSection = getSection(doc, "theme-disabled-section");
   expiredAddonCard = disabledSection.querySelector(
-    `addon-card[addon-id='${NO_INTENSITY_EXPIRED_THEME_ID}']`
+    `addon-card[addon-id='${NO_INTENSITY_EXPIRED_COLORWAY_THEME_ID}']`
   );
   ok(
     !disabledSection.contains(expiredAddonCard),
@@ -256,7 +261,7 @@ add_task(async function testColorwayClosetSectionOneRetainedOneUnexpired() {
   );
 
   let validAddonCard = colorwaySection.querySelector(
-    `addon-card[addon-id='${NO_INTENSITY_THEME_ID}']`
+    `addon-card[addon-id='${NO_INTENSITY_COLORWAY_THEME_ID}']`
   );
   ok(
     !colorwaySection.contains(validAddonCard),
@@ -285,11 +290,14 @@ add_task(async function testColorwayNoActiveCollection() {
   const retainedThemePrefName = "browser.theme.retainedExpiredThemes";
   await SpecialPowers.pushPrefEnv({
     set: [
-      [retainedThemePrefName, JSON.stringify([NO_INTENSITY_EXPIRED_THEME_ID])],
+      [
+        retainedThemePrefName,
+        JSON.stringify([NO_INTENSITY_EXPIRED_COLORWAY_THEME_ID]),
+      ],
     ],
   });
   const { addon: expiredAddon } = await installTestTheme(
-    NO_INTENSITY_EXPIRED_THEME_ID
+    NO_INTENSITY_EXPIRED_COLORWAY_THEME_ID
   );
   await expiredAddon.disable();
 
@@ -316,7 +324,7 @@ add_task(async function testColorwayNoActiveCollection() {
   );
 
   let expiredAddonCard = colorwaySection.querySelector(
-    `addon-card[addon-id='${NO_INTENSITY_EXPIRED_THEME_ID}']`
+    `addon-card[addon-id='${NO_INTENSITY_EXPIRED_COLORWAY_THEME_ID}']`
   );
   ok(
     colorwaySection.contains(expiredAddonCard),
@@ -340,7 +348,7 @@ add_task(async function testColorwayButtonTextWithColorwayEnabled() {
     set: [["browser.theme.colorway-closet", true]],
   });
 
-  const { addon } = await installTestTheme(NO_INTENSITY_THEME_ID);
+  const { addon } = await installTestTheme(NO_INTENSITY_COLORWAY_THEME_ID);
 
   let win = await loadInitialView("theme");
   let doc = win.document;
@@ -380,4 +388,78 @@ add_task(async function testColorwayButtonTextWithColorwayEnabled() {
   await addon.uninstall(true);
   await SpecialPowers.popPrefEnv();
   clearBuiltInThemesStubs();
+});
+
+/**
+ * Tests that telemetry is registered when the Try Colorways and Change Colorways buttons are selected.
+ */
+add_task(async function test_telemetry_colorways_button() {
+  const clearBuiltInThemesStubs = initBuiltInThemesStubs();
+  Services.telemetry.clearEvents();
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.theme.colorway-closet", true]],
+  });
+
+  const { addon: colorwaySoft } = await installTestTheme(
+    SOFT_COLORWAY_THEME_ID
+  );
+  const { addon: colorwayBalanced } = await installTestTheme(
+    BALANCED_COLORWAY_THEME_ID
+  );
+  const { addon: colorwayBold } = await installTestTheme(
+    BOLD_COLORWAY_THEME_ID
+  );
+
+  // Install colorway themes, but disable them so that no colorway themes are enabled
+  await colorwaySoft.disable();
+  await colorwayBalanced.disable();
+  await colorwayBold.disable();
+
+  let win = await loadInitialView("theme");
+  let doc = win.document;
+  let colorwaySection = getSection(doc, "colorways-section");
+  let card = colorwaySection.querySelector("colorways-card");
+
+  let colorwaysButton = card.querySelector("#colorways-button");
+  ok(colorwaysButton, "colorway collection button found");
+
+  colorwaysButton.click();
+
+  await waitForColorwaysTelemetryPromise();
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        category: "colorways_modal",
+        method: "try_colorways",
+        object: "aboutaddons",
+      },
+    ],
+    { category: "colorways_modal", object: "aboutaddons" }
+  );
+
+  // Enable a colorway theme and see if the button label changes in about:addons
+  await colorwayBalanced.enable();
+  colorwaysButton.click();
+
+  await waitForColorwaysTelemetryPromise();
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        category: "colorways_modal",
+        method: "change_colorway",
+        object: "aboutaddons",
+      },
+    ],
+    { category: "colorways_modal", object: "aboutaddons" }
+  );
+
+  await closeView(win);
+  await colorwaySoft.uninstall(true);
+  await colorwayBalanced.uninstall(true);
+  await colorwayBold.uninstall(true);
+  await SpecialPowers.popPrefEnv();
+  clearBuiltInThemesStubs();
+  Services.telemetry.clearEvents();
 });

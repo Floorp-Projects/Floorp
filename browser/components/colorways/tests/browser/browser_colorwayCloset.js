@@ -3,19 +3,14 @@
 
 "use strict";
 
-add_setup(async function setup_tests() {
-  initBuiltInThemesStubs();
-});
-
 add_task(async function colorwaycloset_show_colorway() {
-  await testInColorwayClosetModal(document => {
+  await testInColorwayClosetModal(async document => {
     is(
       document.documentElement.style.width,
       "",
       "In order for the modal layout to be responsive, the modal document " +
         "should not have a width set after the dialog frame has been set up"
     );
-
     const el = getColorwayClosetTestElements(document);
     const expiryL10nAttributes = document.l10n.getAttributes(el.expiryDateSpan);
     is(
@@ -33,7 +28,14 @@ add_task(async function colorwaycloset_show_colorway() {
       EXPIRY_DATE_L10N_ID,
       "Correct expiry date format should be shown"
     );
-    is(el.colorwayFigure.src, MOCK_THEME_FIGURE_URL, "figure image is shown");
+
+    info("Verifying figure src");
+    await BrowserTestUtils.waitForMutationCondition(
+      el.colorwayFigure,
+      { childList: true, attributeFilter: ["src"] },
+      () => el.colorwayFigure.src === MOCK_THEME_FIGURE_URL,
+      "Waiting for figure image to have expected URL"
+    );
   });
 });
 
