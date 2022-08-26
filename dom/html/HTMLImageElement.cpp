@@ -1028,7 +1028,7 @@ void HTMLImageElement::PictureSourceDimensionChanged(
   // impact on the selection of <source> elements. In other words,
   // UpdateResponsiveSource doesn't change the source, so all we need to do is
   // just request restyle.
-  if (mResponsiveSelector->Content() == aSourceNode) {
+  if (mResponsiveSelector && mResponsiveSelector->Content() == aSourceNode) {
     InvalidateAttributeMapping();
   }
 }
