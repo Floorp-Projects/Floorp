@@ -18,11 +18,6 @@
 #include "nsTArray.h"
 #include "nscore.h"
 
-// Workaround for windows headers
-#ifdef SetProp
-#  undef SetProp
-#endif
-
 class nsAtom;
 class nsINode;
 
@@ -119,7 +114,38 @@ class TypeInState final {
 
   void OnSelectionChange(const HTMLEditor& aHTMLEditor, int16_t aReason);
 
-  void SetProp(nsStaticAtom& aProp, nsAtom* aAttr, const nsAString& aValue);
+  /**
+   * Preserve the style for next inserting content.  E.g., when user types next
+   * character, an inline element which provides the style will be inserted
+   * and the typing character will appear in it.
+   *
+   * @param aHTMLProperty       The HTML tag name which represents the style.
+   *                            For example, nsGkAtoms::b for bold text.
+   * @param aAttribute          nullptr or attribute name which represents the
+   *                            style with aHTMLProperty.  E.g., nsGkAtoms::size
+   *                            for nsGkAtoms::font.
+   * @param aAttributeValueOrCSSValue
+   *                            New value of aAttribute or new CSS value if the
+   *                            editor is in the CSS mode.
+   */
+  void PreserveStyle(nsStaticAtom& aHTMLProperty, nsAtom* aAttribute,
+                     const nsAString& aAttributeValueOrCSSValue);
+
+  /**
+   * Preserve the styles with new values in aStylesToPreserve.
+   * See above for the detail.
+   */
+  void PreserveStyles(
+      const nsTArray<EditorInlineStyleAndValue>& aStylesToPreserve);
+
+  /**
+   * Preserve the style with new value specified with aStyleToPreserve.
+   * See above for the detail.
+   */
+  void PreserveStyle(const StyleCache& aStyleToPreserve) {
+    PreserveStyle(aStyleToPreserve.TagRef(), aStyleToPreserve.GetAttribute(),
+                  aStyleToPreserve.AttributeValueOrCSSValueRef());
+  }
 
   void ClearAllProps();
   void ClearProp(nsStaticAtom* aProp, nsAtom* aAttr,
@@ -133,10 +159,16 @@ class TypeInState final {
   UniquePtr<PropItem> TakeClearProperty();
 
   /**
-   * TakeSetProperty() hands back next property item on the set list.
-   * Caller assumes ownership of PropItem and must delete it.
+   * TakePreservedStyle() hands back next property item on the preserving
+   * styles. This should be used only for handling setting new style for
+   * inserted content.
    */
-  UniquePtr<PropItem> TakeSetProperty();
+  UniquePtr<PropItem> TakePreservedStyle() {
+    if (mPreservingStyles.IsEmpty()) {
+      return nullptr;
+    }
+    return mPreservingStyles.PopLastElement();
+  }
 
   /**
    * TakeRelativeFontSize() hands back relative font value, which is then

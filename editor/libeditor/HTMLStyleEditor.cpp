@@ -205,10 +205,7 @@ nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
   if (SelectionRef().IsCollapsed()) {
     // Manipulating text attributes on a collapsed selection only sets state
     // for the next text insertion
-    for (const EditorInlineStyleAndValue& styleToSet : aStylesToSet) {
-      mTypeInState->SetProp(styleToSet.HTMLPropertyRef(), styleToSet.mAttribute,
-                            styleToSet.mAttributeValue);
-    }
+    mTypeInState->PreserveStyles(aStylesToSet);
     return NS_OK;
   }
 
@@ -2652,7 +2649,7 @@ nsresult HTMLEditor::IncrementOrDecrementFontSizeAsSubAction(
 
     // Manipulating text attributes on a collapsed selection only sets state
     // for the next text insertion
-    mTypeInState->SetProp(bigOrSmallTagName, nullptr, u""_ns);
+    mTypeInState->PreserveStyle(bigOrSmallTagName, nullptr, u""_ns);
     return NS_OK;
   }
 

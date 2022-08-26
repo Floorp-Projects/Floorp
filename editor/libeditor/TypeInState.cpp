@@ -25,13 +25,6 @@
 #include "nsReadableUtils.h"
 #include "nsStringFwd.h"
 
-// Workaround for windows headers
-#ifdef SetProp
-#  undef SetProp
-#endif
-
-class nsAtom;
-
 namespace mozilla {
 
 using namespace dom;
@@ -347,30 +340,39 @@ void TypeInState::Reset() {
   mPreservingStyles.Clear();
 }
 
-void TypeInState::SetProp(nsStaticAtom& aProp, nsAtom* aAttr,
-                          const nsAString& aValue) {
+void TypeInState::PreserveStyles(
+    const nsTArray<EditorInlineStyleAndValue>& aStylesToPreserve) {
+  for (const EditorInlineStyleAndValue& styleToPreserve : aStylesToPreserve) {
+    PreserveStyle(styleToPreserve.HTMLPropertyRef(), styleToPreserve.mAttribute,
+                  styleToPreserve.mAttributeValue);
+  }
+}
+
+void TypeInState::PreserveStyle(nsStaticAtom& aHTMLProperty, nsAtom* aAttribute,
+                                const nsAString& aAttributeValueOrCSSValue) {
   // special case for big/small, these nest
-  if (nsGkAtoms::big == &aProp) {
+  if (nsGkAtoms::big == &aHTMLProperty) {
     mRelativeFontSize++;
     return;
   }
-  if (nsGkAtoms::small == &aProp) {
+  if (nsGkAtoms::small == &aHTMLProperty) {
     mRelativeFontSize--;
     return;
   }
 
   int32_t index;
-  if (IsPropSet(aProp, aAttr, nullptr, index)) {
-    // if it's already set, update the value
-    mPreservingStyles[index]->mAttributeValueOrCSSValue = aValue;
+  if (IsPropSet(aHTMLProperty, aAttribute, nullptr, index)) {
+    // If it's already set, update the value
+    mPreservingStyles[index]->mAttributeValueOrCSSValue =
+        aAttributeValueOrCSSValue;
     return;
   }
 
-  // Make a new propitem and add it to the list of set properties.
-  mPreservingStyles.AppendElement(MakeUnique<PropItem>(&aProp, aAttr, aValue));
+  mPreservingStyles.AppendElement(MakeUnique<PropItem>(
+      &aHTMLProperty, aAttribute, aAttributeValueOrCSSValue));
 
   // remove it from the list of cleared properties, if we have a match
-  RemovePropFromClearedList(&aProp, aAttr);
+  RemovePropFromClearedList(&aHTMLProperty, aAttribute);
 }
 
 void TypeInState::ClearAllProps() {
@@ -403,13 +405,6 @@ UniquePtr<PropItem> TypeInState::TakeClearProperty() {
     return nullptr;
   }
   return mClearingStyles.PopLastElement();
-}
-
-UniquePtr<PropItem> TypeInState::TakeSetProperty() {
-  if (mPreservingStyles.IsEmpty()) {
-    return nullptr;
-  }
-  return mPreservingStyles.PopLastElement();
 }
 
 /**
