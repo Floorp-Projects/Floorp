@@ -34,6 +34,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   HomePage: "resource:///modules/HomePage.jsm",
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  BuiltInThemes: "resource:///modules/BuiltInThemes.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
@@ -275,6 +276,12 @@ const QueryCache = {
       true,
       FRECENT_SITES_UPDATE_INTERVAL,
       ShellService
+    ),
+    currentThemes: new CachedTargetingGetter(
+      "getAddonsByTypes",
+      ["theme"],
+      FRECENT_SITES_UPDATE_INTERVAL,
+      lazy.AddonManager // eslint-disable-line mozilla/valid-lazy
     ),
   },
 };
@@ -745,6 +752,26 @@ const TargetingGetters = {
   get userPrefersReducedMotion() {
     let window = lazy.BrowserWindowTracker.getTopWindow();
     return window?.matchMedia("(prefers-reduced-motion: reduce)")?.matches;
+  },
+  /**
+   * Is there an active Colorway collection?
+   * @return {boolean} `true` if an active collection exists.
+   */
+  get colorwaysActive() {
+    return !!lazy.BuiltInThemes.findActiveColorwayCollection();
+  },
+  /**
+   * Has the user enabled an active Colorway as their theme?
+   * @return {boolean} `true` if an active theme from the current
+   * collection is enabled.
+   */
+  get userEnabledActiveColoway() {
+    return QueryCache.getters.currentThemes.get().then(themes => {
+      let themeId = themes.find(theme => theme.isActive)?.id;
+      return (
+        themeId && lazy.BuiltInThemes.isColorwayFromCurrentCollection(themeId)
+      );
+    });
   },
 };
 
