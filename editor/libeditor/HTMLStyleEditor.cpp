@@ -11,8 +11,8 @@
 #include "EditorUtils.h"
 #include "HTMLEditHelpers.h"
 #include "HTMLEditUtils.h"
+#include "PendingStyles.h"
 #include "SelectionState.h"
-#include "TypeInState.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/ContentIterator.h"
@@ -205,7 +205,7 @@ nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
   if (SelectionRef().IsCollapsed()) {
     // Manipulating text attributes on a collapsed selection only sets state
     // for the next text insertion
-    mTypeInState->PreserveStyles(aStylesToSet);
+    mPendingStylesToApplyToNewContent->PreserveStyles(aStylesToSet);
     return NS_OK;
   }
 
@@ -1772,13 +1772,14 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsStaticAtom& aHTMLProperty,
       bool isSet, theSetting;
       nsString tOutString;
       if (aAttribute) {
-        mTypeInState->GetTypingState(isSet, theSetting, aHTMLProperty,
-                                     aAttribute, &tOutString);
+        mPendingStylesToApplyToNewContent->GetTypingState(
+            isSet, theSetting, aHTMLProperty, aAttribute, &tOutString);
         if (outValue) {
           outValue->Assign(tOutString);
         }
       } else {
-        mTypeInState->GetTypingState(isSet, theSetting, aHTMLProperty);
+        mPendingStylesToApplyToNewContent->GetTypingState(isSet, theSetting,
+                                                          aHTMLProperty);
       }
       if (isSet) {
         *aFirst = *aAny = *aAll = theSetting;
@@ -2175,7 +2176,7 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
   if (SelectionRef().IsCollapsed()) {
     // Manipulating text attributes on a collapsed selection only sets state
     // for the next text insertion
-    mTypeInState->ClearStyles(aStylesToRemove);
+    mPendingStylesToApplyToNewContent->ClearStyles(aStylesToRemove);
     return NS_OK;
   }
 
@@ -2637,7 +2638,8 @@ nsresult HTMLEditor::IncrementOrDecrementFontSizeAsSubAction(
 
     // Manipulating text attributes on a collapsed selection only sets state
     // for the next text insertion
-    mTypeInState->PreserveStyle(bigOrSmallTagName, nullptr, u""_ns);
+    mPendingStylesToApplyToNewContent->PreserveStyle(bigOrSmallTagName, nullptr,
+                                                     u""_ns);
     return NS_OK;
   }
 

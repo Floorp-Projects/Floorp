@@ -1052,8 +1052,8 @@ class HTMLEditor final : public EditorBase,
 
   /**
    * PrepareInlineStylesForCaret() consider inline styles from top level edit
-   * sub-action and setting it to `mTypeInState` and clear inline style cache
-   * if necessary.
+   * sub-action and setting it to `mPendingStylesToApplyToNewContent` and clear
+   * inline style cache if necessary.
    * NOTE: This method should be called only when `Selection` is collapsed.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult PrepareInlineStylesForCaret();
@@ -1069,14 +1069,15 @@ class HTMLEditor final : public EditorBase,
 
   /**
    * GetInlineStyles() retrieves the style of aNode and modifies each item of
-   * aStyleCacheArray.  This might cause flushing layout at retrieving computed
-   * values of CSS properties.
+   * aPendingStyleCacheArray.  This might cause flushing layout at retrieving
+   * computed values of CSS properties.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  GetInlineStyles(nsIContent& aContent, AutoStyleCacheArray& aStyleCacheArray);
+  GetInlineStyles(nsIContent& aContent,
+                  AutoPendingStyleCacheArray& aPendingStyleCacheArray);
 
   /**
-   * CacheInlineStyles() caches style of aContent into mCachedInlineStyles of
+   * CacheInlineStyles() caches style of aContent into mCachedPendingStyles of
    * TopLevelEditSubAction.  This may cause flushing layout at retrieving
    * computed value of CSS properties.
    */
@@ -1092,7 +1093,7 @@ class HTMLEditor final : public EditorBase,
 
   /**
    * CreateStyleForInsertText() sets CSS properties which are stored in
-   * TypeInState to proper element node.
+   * PendingStyles to proper element node.
    *
    * @param aPointToInsertText  The point to insert text.
    * @return                    A suggest point to put caret or unset point.
@@ -3298,9 +3299,9 @@ class HTMLEditor final : public EditorBase,
       Document& aDocument, const nsACString& aCharacterSet);
 
   /**
-   * SetInlinePropertiesAsSubAction() stores new styles with mTypeInState if
-   * `Selection` is collapsed.  Otherwise, applying the styles to all selected
-   * contents.
+   * SetInlinePropertiesAsSubAction() stores new styles with
+   * mPendingStylesToApplyToNewContent if `Selection` is collapsed.  Otherwise,
+   * applying the styles to all selected contents.
    *
    * @param aStylesToSet        The styles which should be applied to the
    *                            selected content.
@@ -3311,7 +3312,8 @@ class HTMLEditor final : public EditorBase,
 
   /**
    * RemoveInlinePropertiesAsSubAction() removes specified styles from
-   * mTypeInState if `Selection` is collapsed.  Otherwise, removing the style.
+   * mPendingStylesToApplyToNewContent if `Selection` is collapsed.  Otherwise,
+   * removing the style.
    *
    * @param aStylesToRemove     Styles to remove from the selected contents.
    */
@@ -4432,7 +4434,7 @@ class HTMLEditor final : public EditorBase,
     const char* const mRequesterFuncName;
   };
 
-  RefPtr<TypeInState> mTypeInState;
+  RefPtr<PendingStyles> mPendingStylesToApplyToNewContent;
   RefPtr<ComposerCommandsUpdater> mComposerCommandsUpdater;
 
   // Used by TopLevelEditSubActionData::mSelectedRange.
