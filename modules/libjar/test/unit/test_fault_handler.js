@@ -124,7 +124,7 @@ add_task(async function test() {
   Assert.throws(
     () => {
       while (true) {
-        Assert.ok(stream.read(1024).length > 0);
+        Assert.ok(!!stream.read(1024).length);
       }
     },
     /NS_ERROR_FAILURE/,

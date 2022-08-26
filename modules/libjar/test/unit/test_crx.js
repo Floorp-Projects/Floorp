@@ -38,6 +38,6 @@ function run_test() {
   zipreader.close();
   zipreader = null;
   Cu.forceGC();
-  Assert.ok(stream.read(1024).length > 0);
-  Assert.ok(dirstream.read(100).length > 0);
+  Assert.ok(!!stream.read(1024).length);
+  Assert.ok(!!dirstream.read(100).length);
 }
