@@ -2794,7 +2794,7 @@ GeckoDriver.prototype.quit = async function(cmd) {
 
   let quitSeen;
   let mode = 0;
-  if (flags.length > 0) {
+  if (flags.length) {
     for (let k of flags) {
       lazy.assert.in(k, Ci.nsIAppStartup);
 

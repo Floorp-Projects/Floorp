@@ -154,7 +154,7 @@ class Emulation extends Domain {
 
     const { browsingContext } = this.session.target;
 
-    if (userAgent.length == 0) {
+    if (!userAgent.length) {
       browsingContext.customUserAgent = null;
     } else if (this._isValidHTTPRequestHeaderValue(userAgent)) {
       browsingContext.customUserAgent = userAgent;

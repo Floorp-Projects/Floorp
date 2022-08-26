@@ -208,7 +208,7 @@ class RemoteAgentParentProcess {
     // localhost if the hostname cannot be resolved.
     try {
       const addresses = await this.#resolveHostname(DEFAULT_HOST);
-      if (addresses.length > 0) {
+      if (addresses.length) {
         this.#host = addresses[0];
       }
     } catch (e) {
@@ -493,7 +493,7 @@ class RemoteAgentContentProcess {
 
   get running() {
     let reply = Services.cpmm.sendSyncMessage("RemoteAgent:IsRunning");
-    if (reply.length == 0) {
+    if (!reply.length) {
       lazy.logger.warn("No reply from parent process");
       return false;
     }

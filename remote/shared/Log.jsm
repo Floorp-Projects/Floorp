@@ -59,7 +59,7 @@ class Log {
    */
   static get(type = Log.TYPES.REMOTE_AGENT) {
     const logger = StdLog.repository.getLogger(type);
-    if (logger.ownAppenders.length == 0) {
+    if (!logger.ownAppenders.length) {
       logger.addAppender(new StdLog.DumpAppender());
       logger.manageLevelFromPref(lazy.prefLogLevel);
     }

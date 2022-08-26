@@ -274,7 +274,7 @@ element.find = function(container, strategy, selector, options = {}) {
           all,
           startNode,
         });
-        if (res.length > 0) {
+        if (res.length) {
           resolve(Array.from(res));
         } else {
           reject([]);
@@ -286,7 +286,7 @@ element.find = function(container, strategy, selector, options = {}) {
     findElements.then(foundEls => {
       // the following code ought to be moved into findElement
       // and findElements when bug 1254486 is addressed
-      if (!all && (!foundEls || foundEls.length == 0)) {
+      if (!all && (!foundEls || !foundEls.length)) {
         let msg = `Unable to locate element: ${selector}`;
         reject(new lazy.error.NoSuchElementError(msg));
       }
@@ -1091,7 +1091,7 @@ element.isInView = function(el) {
 
     // Bug 1413493 - <tr> is not part of the returned paint tree yet. As
     // workaround check the visibility based on the first contained cell.
-    if (el.localName === "tr" && el.cells && el.cells.length > 0) {
+    if (el.localName === "tr" && el.cells && el.cells.length) {
       return tree.includes(el.cells[0]);
     }
 
@@ -1234,7 +1234,7 @@ element.getPointerInteractablePaintTree = function(el) {
 
   // steps 2-3
   let rects = el.getClientRects();
-  if (rects.length == 0) {
+  if (!rects.length) {
     return [];
   }
 

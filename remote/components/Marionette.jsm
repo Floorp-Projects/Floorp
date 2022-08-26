@@ -295,7 +295,7 @@ class MarionetteContentProcess {
 
   get running() {
     let reply = Services.cpmm.sendSyncMessage("Marionette:IsRunning");
-    if (reply.length == 0) {
+    if (!reply.length) {
       lazy.logger.warn("No reply from parent process");
       return false;
     }
