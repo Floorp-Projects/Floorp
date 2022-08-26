@@ -76,7 +76,6 @@ export class OpenSearchEngine extends SearchEngine {
    */
   constructor(options = {}) {
     super({
-      isAppProvided: false,
       // We don't know what this is until after it has loaded, so add a placeholder.
       loadPath: options.json?._loadPath ?? "[opensearch]loading",
     });

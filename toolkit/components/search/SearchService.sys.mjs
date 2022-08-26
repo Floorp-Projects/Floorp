@@ -663,7 +663,7 @@ export class SearchService {
       });
     }
 
-    if (engineToRemove._isAppProvided) {
+    if (engineToRemove.isAppProvided) {
       // Just hide it (the "hidden" setter will notify) and remove its alias to
       // avoid future conflicts with other engines.
       engineToRemove.hidden = true;
@@ -2003,7 +2003,7 @@ export class SearchService {
 
     let skippedEngines = 0;
     for (let engineJSON of enginesCache) {
-      // We renamed isBuiltin to isAppProvided in 1631898,
+      // We renamed isBuiltin to isAppProvided in bug 1631898,
       // keep checking isBuiltin for older settings.
       if (engineJSON._isAppProvided || engineJSON._isBuiltin) {
         ++skippedEngines;

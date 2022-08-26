@@ -593,8 +593,6 @@ export class SearchEngine {
   _extensionID = null;
   // The locale, or "DEFAULT", if required.
   _locale = null;
-  // Whether the engine is provided by the application.
-  _isAppProvided = false;
   // The order hint from the configuration (if any).
   _orderHint = null;
   // The telemetry id from the configuration (if any).
@@ -620,21 +618,13 @@ export class SearchEngine {
    *
    * @param {object} options
    *   The options for this search engine.
-   * @param {boolean} options.isAppProvided
-   *   Indicates whether the engine is provided by Firefox, either
-   *   shipped in omni.ja or via Normandy. If it is, it will
-   *   be treated as read-only.
    * @param {string} options.loadPath
    *   The path of the engine was originally loaded from. Should be anonymized.
    */
   constructor(options = {}) {
-    if (!("isAppProvided" in options)) {
-      throw new Error("isAppProvided missing from options.");
-    }
     if (!("loadPath" in options)) {
       throw new Error("loadPath missing from options.");
     }
-    this._isAppProvided = options.isAppProvided;
     this._loadPath = options.loadPath;
   }
 
@@ -1139,16 +1129,6 @@ export class SearchEngine {
    *   An object suitable for serialization as JSON.
    */
   toJSON() {
-    // For built-in engines we don't want to store all their data in the settings
-    // file so just store the relevant metadata.
-    if (this._isAppProvided) {
-      return {
-        _name: this.name,
-        _isAppProvided: true,
-        _metaData: this._metaData,
-      };
-    }
-
     const fieldsToCopy = [
       "_name",
       "_loadPath",
@@ -1157,7 +1137,6 @@ export class SearchEngine {
       "_iconMapObj",
       "_metaData",
       "_urls",
-      "_isAppProvided",
       "_orderHint",
       "_telemetryId",
       "_updateInterval",
@@ -1314,8 +1293,16 @@ export class SearchEngine {
     return this._loadPath;
   }
 
+  /**
+   * Whether or not this engine is provided by the application, e.g. it is
+   * in the list of configured search engines.
+   *
+   * @returns {boolean}
+   *   This returns false for most engines, but may be overridden by particular
+   *   engine types, such as add-on engines which are used by the application.
+   */
   get isAppProvided() {
-    return !!(this._extensionID && this._isAppProvided);
+    return false;
   }
 
   get isGeneralPurposeEngine() {
