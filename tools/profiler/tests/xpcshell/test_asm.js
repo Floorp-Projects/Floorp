@@ -30,7 +30,7 @@ add_task(async () => {
 
       delayMS *= 2;
 
-      if (thread0.samples.data.length == 0) {
+      if (!thread0.samples.data.length) {
         continue;
       }
 

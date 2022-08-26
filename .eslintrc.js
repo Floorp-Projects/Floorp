@@ -482,7 +482,6 @@ module.exports = {
         "layout/**",
         "netwerk/**",
         "storage/test/unit/test_vacuum.js",
-        "tools/**",
         "widget/tests/test_assign_event_data.html",
       ],
       rules: {
