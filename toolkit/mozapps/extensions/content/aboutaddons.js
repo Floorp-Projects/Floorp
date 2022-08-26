@@ -3788,7 +3788,9 @@ class ColorwayClosetCard extends HTMLElement {
 
     colorwaysButton.hidden = false;
     colorwaysButton.onclick = () => {
-      ColorwayClosetOpener.openModal();
+      ColorwayClosetOpener.openModal({
+        source: "aboutaddons",
+      });
     };
   }
 }
