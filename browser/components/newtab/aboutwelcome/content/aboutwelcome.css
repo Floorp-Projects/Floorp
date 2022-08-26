@@ -557,7 +557,10 @@ body[lwt-newtab-brighttext] {
     --mr-secondary-position: center var(--mr-secondary-background-position-y) / cover;
     border-radius: 8px 8px 0 0;
     margin: auto auto 0;
-    height: 150px;
+    height: 100px;
+  }
+  .onboardingContainer .screen[pos=split] .section-secondary .hero-image img {
+    margin: 6px 0;
   }
   .onboardingContainer .screen[pos=split] .section-secondary h1 {
     font-size: 35px;
