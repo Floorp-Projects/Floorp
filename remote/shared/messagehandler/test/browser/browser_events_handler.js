@@ -50,7 +50,6 @@ add_task(async function test_windowGlobalHandlerCreated() {
       );
     });
     is(contextEvents.length, 1, `Found event for context ${context.id}`);
-    ok(!events[0].isProtocolEvent, "Received expected internal event");
   }
 
   rootMessageHandler.off("message-handler-event", onEvent);

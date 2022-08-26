@@ -10,7 +10,7 @@ const { WindowGlobalMessageHandler } = ChromeUtils.import(
 /**
  * Check the basic behavior of on/off.
  */
-add_task(async function test_add_remove_internal_event_listener() {
+add_task(async function test_add_remove_event_listener() {
   const tab = await addTab("https://example.com/document-builder.sjs?html=tab");
   const browsingContext = tab.linkedBrowser.browsingContext;
   const contextDescriptor = {
@@ -23,68 +23,68 @@ add_task(async function test_add_remove_internal_event_listener() {
   await emitTestEvent(root, browsingContext, monitoringEvents);
   is(await isSubscribed(root, browsingContext), false);
 
-  info("Add an listener for internaleventemitter.testEvent");
-  const internalEvents = [];
-  const onInternalEvent = (event, data) => internalEvents.push(data.text);
+  info("Add an listener for eventemitter.testEvent");
+  const events = [];
+  const onEvent = (event, data) => events.push(data.text);
   await root.eventsDispatcher.on(
-    "internaleventemitter.testEvent",
+    "eventemitter.testEvent",
     contextDescriptor,
-    onInternalEvent
+    onEvent
   );
   is(await isSubscribed(root, browsingContext), true);
 
   await emitTestEvent(root, browsingContext, monitoringEvents);
-  is(internalEvents.length, 1);
+  is(events.length, 1);
 
   info(
     "Remove a listener for a callback not added before and check that the first one is still registered"
   );
   const anotherCallback = () => {};
   await root.eventsDispatcher.off(
-    "internaleventemitter.testEvent",
+    "eventemitter.testEvent",
     contextDescriptor,
     anotherCallback
   );
   is(await isSubscribed(root, browsingContext), true);
 
   await emitTestEvent(root, browsingContext, monitoringEvents);
-  is(internalEvents.length, 2);
+  is(events.length, 2);
 
-  info("Remove the listener for internaleventemitter.testEvent");
+  info("Remove the listener for eventemitter.testEvent");
   await root.eventsDispatcher.off(
-    "internaleventemitter.testEvent",
+    "eventemitter.testEvent",
     contextDescriptor,
-    onInternalEvent
+    onEvent
   );
   is(await isSubscribed(root, browsingContext), false);
 
   await emitTestEvent(root, browsingContext, monitoringEvents);
-  is(internalEvents.length, 2);
+  is(events.length, 2);
 
-  info("Add the listener for internaleventemitter.testEvent again");
+  info("Add the listener for eventemitter.testEvent again");
   await root.eventsDispatcher.on(
-    "internaleventemitter.testEvent",
+    "eventemitter.testEvent",
     contextDescriptor,
-    onInternalEvent
+    onEvent
   );
   is(await isSubscribed(root, browsingContext), true);
 
   await emitTestEvent(root, browsingContext, monitoringEvents);
-  is(internalEvents.length, 3);
+  is(events.length, 3);
 
-  info("Remove the listener for internaleventemitter.testEvent");
+  info("Remove the listener for eventemitter.testEvent");
   await root.eventsDispatcher.off(
-    "internaleventemitter.testEvent",
+    "eventemitter.testEvent",
     contextDescriptor,
-    onInternalEvent
+    onEvent
   );
   is(await isSubscribed(root, browsingContext), false);
 
   info("Remove the listener again to check the API will not throw");
   await root.eventsDispatcher.off(
-    "internaleventemitter.testEvent",
+    "eventemitter.testEvent",
     contextDescriptor,
-    onInternalEvent
+    onEvent
   );
 
   root.destroy();
@@ -106,55 +106,55 @@ add_task(async function test_two_callbacks() {
   const root = createRootMessageHandler("session-id-event");
   const monitoringEvents = await setupEventMonitoring(root);
 
-  info("Add an listener for internaleventemitter.testEvent");
-  const internalEvents = [];
-  const onInternalEvent = (event, data) => internalEvents.push(data.text);
+  info("Add an listener for eventemitter.testEvent");
+  const events = [];
+  const onEvent = (event, data) => events.push(data.text);
   await root.eventsDispatcher.on(
-    "internaleventemitter.testEvent",
+    "eventemitter.testEvent",
     contextDescriptor,
-    onInternalEvent
+    onEvent
   );
 
   await emitTestEvent(root, browsingContext, monitoringEvents);
-  is(internalEvents.length, 1);
+  is(events.length, 1);
 
-  info("Add another listener for internaleventemitter.testEvent");
-  const otherInternalEvents = [];
-  const otherCallback = (event, data) => otherInternalEvents.push(data.text);
+  info("Add another listener for eventemitter.testEvent");
+  const otherevents = [];
+  const otherCallback = (event, data) => otherevents.push(data.text);
   await root.eventsDispatcher.on(
-    "internaleventemitter.testEvent",
+    "eventemitter.testEvent",
     contextDescriptor,
     otherCallback
   );
   is(await isSubscribed(root, browsingContext), true);
 
   await emitTestEvent(root, browsingContext, monitoringEvents);
-  is(internalEvents.length, 2);
-  is(otherInternalEvents.length, 1);
+  is(events.length, 2);
+  is(otherevents.length, 1);
 
-  info("Remove the other listener for internaleventemitter.testEvent");
+  info("Remove the other listener for eventemitter.testEvent");
   await root.eventsDispatcher.off(
-    "internaleventemitter.testEvent",
+    "eventemitter.testEvent",
     contextDescriptor,
     otherCallback
   );
   is(await isSubscribed(root, browsingContext), true);
 
   await emitTestEvent(root, browsingContext, monitoringEvents);
-  is(internalEvents.length, 3);
-  is(otherInternalEvents.length, 1);
+  is(events.length, 3);
+  is(otherevents.length, 1);
 
-  info("Remove the first listener for internaleventemitter.testEvent");
+  info("Remove the first listener for eventemitter.testEvent");
   await root.eventsDispatcher.off(
-    "internaleventemitter.testEvent",
+    "eventemitter.testEvent",
     contextDescriptor,
-    onInternalEvent
+    onEvent
   );
   is(await isSubscribed(root, browsingContext), false);
 
   await emitTestEvent(root, browsingContext, monitoringEvents);
-  is(internalEvents.length, 3);
-  is(otherInternalEvents.length, 1);
+  is(events.length, 3);
+  is(otherevents.length, 1);
 
   root.destroy();
   gBrowser.removeTab(tab);
@@ -183,44 +183,44 @@ add_task(async function test_two_contexts() {
 
   const monitoringEvents = await setupEventMonitoring(root);
 
-  const internalEvents1 = [];
-  const onInternalEvent1 = (event, data) => internalEvents1.push(data.text);
+  const events1 = [];
+  const onEvent1 = (event, data) => events1.push(data.text);
   await root.eventsDispatcher.on(
-    "internaleventemitter.testEvent",
+    "eventemitter.testEvent",
     contextDescriptor1,
-    onInternalEvent1
+    onEvent1
   );
   is(await isSubscribed(root, browsingContext1), true);
   is(await isSubscribed(root, browsingContext2), false);
 
-  const internalEvents2 = [];
-  const onInternalEvent2 = (event, data) => internalEvents2.push(data.text);
+  const events2 = [];
+  const onEvent2 = (event, data) => events2.push(data.text);
   await root.eventsDispatcher.on(
-    "internaleventemitter.testEvent",
+    "eventemitter.testEvent",
     contextDescriptor2,
-    onInternalEvent2
+    onEvent2
   );
   is(await isSubscribed(root, browsingContext1), true);
   is(await isSubscribed(root, browsingContext2), true);
 
   // Note that events are not filtered by context at the moment, even though
   // a context descriptor is provided to on/off.
-  // Consumers are still responsible for checking that the internal event
-  // matches the correct context.
+  // Consumers are still responsible for checking that the event matches the
+  // correct context.
   // Consequently, emitting an event on browsingContext1 will trigger both
   // callbacks.
   // TODO: This should be handled by the framework in Bug 1763137.
   await emitTestEvent(root, browsingContext1, monitoringEvents);
-  is(internalEvents1.length, 1);
-  is(internalEvents2.length, 1);
+  is(events1.length, 1);
+  is(events2.length, 1);
   await emitTestEvent(root, browsingContext2, monitoringEvents);
-  is(internalEvents1.length, 2);
-  is(internalEvents2.length, 2);
+  is(events1.length, 2);
+  is(events2.length, 2);
 
   await root.eventsDispatcher.off(
-    "internaleventemitter.testEvent",
+    "eventemitter.testEvent",
     contextDescriptor1,
-    onInternalEvent1
+    onEvent1
   );
   is(await isSubscribed(root, browsingContext1), false);
   is(await isSubscribed(root, browsingContext2), true);
@@ -228,26 +228,26 @@ add_task(async function test_two_contexts() {
   // No event expected here since the module for browsingContext1 is no longer
   // subscribed
   await emitTestEvent(root, browsingContext1, monitoringEvents);
-  is(internalEvents1.length, 2);
-  is(internalEvents2.length, 2);
+  is(events1.length, 2);
+  is(events2.length, 2);
 
   // Whereas the module for browsingContext2 is still subscribed
   await emitTestEvent(root, browsingContext2, monitoringEvents);
-  is(internalEvents1.length, 2);
-  is(internalEvents2.length, 3);
+  is(events1.length, 2);
+  is(events2.length, 3);
 
   await root.eventsDispatcher.off(
-    "internaleventemitter.testEvent",
+    "eventemitter.testEvent",
     contextDescriptor2,
-    onInternalEvent2
+    onEvent2
   );
   is(await isSubscribed(root, browsingContext1), false);
   is(await isSubscribed(root, browsingContext2), false);
 
   await emitTestEvent(root, browsingContext1, monitoringEvents);
   await emitTestEvent(root, browsingContext2, monitoringEvents);
-  is(internalEvents1.length, 2);
-  is(internalEvents2.length, 3);
+  is(events1.length, 2);
+  is(events2.length, 3);
 
   root.destroy();
   gBrowser.removeTab(tab2);
@@ -257,10 +257,10 @@ add_task(async function test_two_contexts() {
 async function setupEventMonitoring(root) {
   const monitoringEvents = [];
   const onMonitoringEvent = (event, data) => monitoringEvents.push(data.text);
-  root.on("internaleventemitter.monitoringEvent", onMonitoringEvent);
+  root.on("eventemitter.monitoringEvent", onMonitoringEvent);
 
   registerCleanupFunction(() =>
-    root.off("internaleventemitter.monitoringEvent", onMonitoringEvent)
+    root.off("eventemitter.monitoringEvent", onMonitoringEvent)
   );
 
   return monitoringEvents;
@@ -268,9 +268,9 @@ async function setupEventMonitoring(root) {
 
 async function emitTestEvent(root, browsingContext, monitoringEvents) {
   const count = monitoringEvents.length;
-  info("Call internaleventemitter.emitTestEvent");
+  info("Call eventemitter.emitTestEvent");
   await root.handleCommand({
-    moduleName: "internaleventemitter",
+    moduleName: "eventemitter",
     commandName: "emitTestEvent",
     destination: {
       type: WindowGlobalMessageHandler.type,
@@ -288,9 +288,9 @@ async function emitTestEvent(root, browsingContext, monitoringEvents) {
 }
 
 function isSubscribed(root, browsingContext) {
-  info("Call internaleventemitter.isSubscribed");
+  info("Call eventemitter.isSubscribed");
   return root.handleCommand({
-    moduleName: "internaleventemitter",
+    moduleName: "eventemitter",
     commandName: "isSubscribed",
     destination: {
       type: WindowGlobalMessageHandler.type,

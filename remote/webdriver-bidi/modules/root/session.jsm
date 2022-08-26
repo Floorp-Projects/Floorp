@@ -24,7 +24,24 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 });
 
 class SessionModule extends Module {
-  destroy() {}
+  #globalEventSet;
+
+  constructor(messageHandler) {
+    super(messageHandler);
+
+    // Set of event names which are strings of the form [moduleName].[eventName]
+    // We should only add an actual event listener on the MessageHandler the
+    // first time an event is subscribed to.
+    // TODO: This should completely be handled by the EventsDispatcher, however
+    // at the moment the EventsDispatcher can only be used for content process
+    // events which rely only on SessionData and not on an explicit call to
+    // _subscribeEvent.
+    this.#globalEventSet = new Set();
+  }
+
+  destroy() {
+    this.#globalEventSet = null;
+  }
 
   /**
    * Commands
@@ -66,6 +83,13 @@ class SessionModule extends Module {
       allEvents.map(event => {
         const [moduleName] = event.split(".");
         this.#assertModuleSupportsEvent(moduleName, event);
+
+        if (this.#globalEventSet.has(event)) {
+          return Promise.resolve();
+        }
+
+        this.#globalEventSet.add(event);
+        this.messageHandler.on(event, this.#onMessageHandlerEvent);
 
         return this.messageHandler.handleCommand({
           moduleName,
@@ -117,6 +141,12 @@ class SessionModule extends Module {
       allEvents.map(event => {
         const [moduleName] = event.split(".");
         this.#assertModuleSupportsEvent(moduleName, event);
+
+        if (!this.#globalEventSet.has(event)) {
+          return Promise.resolve();
+        }
+        this.#globalEventSet.delete(event);
+        this.messageHandler.off(event, this.#onMessageHandlerEvent);
 
         return this.messageHandler.handleCommand({
           moduleName,
@@ -196,6 +226,16 @@ class SessionModule extends Module {
 
     return events;
   }
+
+  #onMessageHandlerEvent = (name, event) => {
+    // TODO: As long as we only support subscribing to all available top-level
+    // browsing contexts, it is fine to always emit an event captured here as
+    // protocol event.
+    // However when we start supporting subscribing per context, the event
+    // should only be emitted if the origin of the event matches a context
+    // descriptor passed to session.subscribe for this event.
+    this.messageHandler.emitProtocolEvent(name, event);
+  };
 }
 
 // To export the class as lower-case

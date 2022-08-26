@@ -17,15 +17,9 @@ class EventModule extends Module {
    * Commands
    */
 
-  testEmitInternalRootEvent() {
-    this.emitEvent("internal-event-from-root", {
-      text: "internal event from root",
-    });
-  }
-
-  testEmitProtocolRootEvent() {
-    this.emitProtocolEvent("event.testRootEvent", {
-      text: "protocol event from root",
+  testEmitRootEvent() {
+    this.emitEvent("event-from-root", {
+      text: "event from root",
     });
   }
 }

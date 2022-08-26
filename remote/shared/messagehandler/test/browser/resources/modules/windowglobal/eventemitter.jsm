@@ -4,13 +4,13 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["internaleventemitter"];
+const EXPORTED_SYMBOLS = ["eventemitter"];
 
 const { Module } = ChromeUtils.import(
   "chrome://remote/content/shared/messagehandler/Module.jsm"
 );
 
-class InternalEventEmitterModule extends Module {
+class EventEmitterModule extends Module {
   #isSubscribed;
 
   constructor(messageHandler) {
@@ -26,12 +26,12 @@ class InternalEventEmitterModule extends Module {
 
   emitTestEvent() {
     if (this.#isSubscribed) {
-      const text = `internal event from ${this.messageHandler.contextId}`;
-      this.emitEvent("internaleventemitter.testEvent", { text });
+      const text = `event from ${this.messageHandler.contextId}`;
+      this.emitEvent("eventemitter.testEvent", { text });
     }
 
     // Emit another event consistently for monitoring during the test.
-    this.emitEvent("internaleventemitter.monitoringEvent", {});
+    this.emitEvent("eventemitter.monitoringEvent", {});
   }
 
   isSubscribed() {
@@ -40,7 +40,7 @@ class InternalEventEmitterModule extends Module {
 
   _applySessionData(params) {
     const { category, added = [], removed = [] } = params;
-    if (category === "internal-event") {
+    if (category === "event") {
       for (const event of added) {
         this.#subscribeEvent(event);
       }
@@ -51,22 +51,22 @@ class InternalEventEmitterModule extends Module {
   }
 
   #subscribeEvent(event) {
-    if (event === "internaleventemitter.testEvent") {
+    if (event === "eventemitter.testEvent") {
       if (this.#isSubscribed) {
-        throw new Error("Already subscribed to internaleventemitter.testEvent");
+        throw new Error("Already subscribed to eventemitter.testEvent");
       }
       this.#isSubscribed = true;
     }
   }
 
   #unsubscribeEvent(event) {
-    if (event === "internaleventemitter.testEvent") {
+    if (event === "eventemitter.testEvent") {
       if (!this.#isSubscribed) {
-        throw new Error("Not subscribed to internaleventemitter.testEvent");
+        throw new Error("Not subscribed to eventemitter.testEvent");
       }
       this.#isSubscribed = false;
     }
   }
 }
 
-const internaleventemitter = InternalEventEmitterModule;
+const eventemitter = EventEmitterModule;
