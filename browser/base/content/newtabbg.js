@@ -125,6 +125,9 @@ window.setTimeout( function(){
      
   const n = Math.floor(Math.random() * imgfile.length)
   document.getElementById("background").style.backgroundImage = "url(" + imgpath + imgfile[n] + ")"
+  document.querySelectorAll('.background').forEach(element => {
+    element.src = imgpath + imgfile[n];
+  });
   try{document.querySelector(".darkreader").remove()}catch(e){};
 }, 100)
 try{document.querySelector(".darkreader").remove()}catch(e){};
