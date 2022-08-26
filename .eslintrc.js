@@ -478,7 +478,6 @@ module.exports = {
     {
       files: [
         "dom/**",
-        "docshell/**",
         "editor/libeditor/tests/**",
         "editor/spellchecker/tests/test_bug338427.html",
         "gfx/**",

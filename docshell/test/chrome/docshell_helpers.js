@@ -127,13 +127,11 @@ function doPageNavigation(params) {
       ? params.eventsToListenFor
       : ["pageshow"];
   gExpectedEvents =
-    typeof params.eventsToListenFor == "undefined" ||
-    eventsToListenFor.length == 0
+    typeof params.eventsToListenFor == "undefined" || !eventsToListenFor.length
       ? undefined
       : params.expectedEvents;
   gUnexpectedEvents =
-    typeof params.eventsToListenFor == "undefined" ||
-    eventsToListenFor.length == 0
+    typeof params.eventsToListenFor == "undefined" || !eventsToListenFor.length
       ? undefined
       : params.unexpectedEvents;
   let preventBFCache =
@@ -149,15 +147,15 @@ function doPageNavigation(params) {
   );
   if (navigation.length > 1) {
     throw new Error(`Can't specify both ${navigation[0]} and ${navigation[1]}`);
-  } else if (navigation.length == 0 && !waitOnly) {
+  } else if (!navigation.length && !waitOnly) {
     throw new Error(
       "Must specify back or forward or gotoIndex or reload or uri"
     );
   }
-  if (params.onNavComplete && eventsToListenFor.length == 0) {
+  if (params.onNavComplete && !eventsToListenFor.length) {
     throw new Error("Can't use onNavComplete when eventsToListenFor == []");
   }
-  if (params.preventBFCache && eventsToListenFor.length == 0) {
+  if (params.preventBFCache && !eventsToListenFor.length) {
     throw new Error("Can't use preventBFCache when eventsToListenFor == []");
   }
   if (params.preventBFCache && waitOnly) {
@@ -168,7 +166,7 @@ function doPageNavigation(params) {
       "Must specify onNavComplete when specifying waitForEventsOnly"
     );
   }
-  if (waitOnly && navigation.length > 0) {
+  if (waitOnly && navigation.length) {
     throw new Error(
       "Can't specify a navigation type when using waitForEventsOnly"
     );
@@ -202,7 +200,7 @@ function doPageNavigation(params) {
 
   // If the test explicitly sets .eventsToListenFor to [], don't wait for any
   // events.
-  gFinalEvent = eventsToListenFor.length == 0;
+  gFinalEvent = !eventsToListenFor.length;
 
   // Add observers as needed.
   let observers = new Map();
@@ -307,7 +305,7 @@ function doPageNavigation(params) {
 
   // If we're listening for events and there is an .onNavComplete callback,
   // wait for all events to occur, and then call doPageNavigation_complete().
-  if (eventsToListenFor.length > 0 && params.onNavComplete) {
+  if (eventsToListenFor.length && params.onNavComplete) {
     waitForTrue(
       function() {
         return gFinalEvent;
@@ -487,7 +485,7 @@ function pageEventListener(
 
   // If there are explicitly no expected events, but we receive one, it's an
   // error.
-  if (gExpectedEvents.length == 0) {
+  if (!gExpectedEvents.length) {
     ok(false, "Unexpected event (" + event.type + ") occurred");
     return;
   }
@@ -556,7 +554,7 @@ function pageEventListener(
   }
 
   // If we're out of expected events, let doPageNavigation() return.
-  if (gExpectedEvents.length == 0) {
+  if (!gExpectedEvents.length) {
     waitForNextPaint(function() {
       gFinalEvent = true;
     });

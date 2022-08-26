@@ -33,7 +33,7 @@ var TESTS = [
       let jsMarkers = markers.filter(
         m => m.name == "Javascript" && m.causeName
       );
-      ok(jsMarkers.length > 0, "Got some Javascript markers");
+      ok(!!jsMarkers.length, "Got some Javascript markers");
       is(
         jsMarkers[0].stack.functionDisplayName,
         "do_xhr",
@@ -63,7 +63,7 @@ if (
         markers = markers.filter(
           m => m.name == "Javascript" && m.causeName == "promise callback"
         );
-        ok(markers.length > 0, "Found a Javascript marker");
+        ok(!!markers.length, "Found a Javascript marker");
 
         let frame = markers[0].stack;
         ok(frame.asyncParent !== null, "Parent frame has async parent");
@@ -98,7 +98,7 @@ if (
         markers = markers.filter(
           m => m.name == "Javascript" && m.causeName == "promise callback"
         );
-        ok(markers.length > 0, "Found a Javascript marker");
+        ok(!!markers.length, "Found a Javascript marker");
 
         let frame = markers[0].stack;
         ok(frame.asyncParent !== null, "Parent frame has async parent");
