@@ -2175,19 +2175,7 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
   if (SelectionRef().IsCollapsed()) {
     // Manipulating text attributes on a collapsed selection only sets state
     // for the next text insertion
-    if (aStylesToRemove[0].mHTMLProperty) {
-      for (const EditorInlineStyle& styleToRemove : aStylesToRemove) {
-        if (styleToRemove.mHTMLProperty == nsGkAtoms::href ||
-            styleToRemove.mHTMLProperty == nsGkAtoms::name) {
-          mTypeInState->ClearProp(nsGkAtoms::a, nullptr);
-        } else {
-          mTypeInState->ClearProp(styleToRemove.mHTMLProperty,
-                                  styleToRemove.mAttribute);
-        }
-      }
-    } else {
-      mTypeInState->ClearAllProps();
-    }
+    mTypeInState->ClearStyles(aStylesToRemove);
     return NS_OK;
   }
 

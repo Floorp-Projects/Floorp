@@ -10,6 +10,7 @@
 #include "mozilla/EditorForwards.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/UniquePtr.h"
+#include "nsAtom.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsGkAtoms.h"
@@ -18,7 +19,6 @@
 #include "nsTArray.h"
 #include "nscore.h"
 
-class nsAtom;
 class nsINode;
 
 namespace mozilla {
@@ -147,16 +147,56 @@ class TypeInState final {
                   aStyleToPreserve.AttributeValueOrCSSValueRef());
   }
 
-  void ClearAllProps();
-  void ClearProp(nsStaticAtom* aProp, nsAtom* aAttr,
-                 SpecifiedStyle aSpecifiedStyle = SpecifiedStyle::Preserve);
-  void ClearLinkPropAndDiscardItsSpecifiedStyle();
+  /**
+   * Clear the style when next content is inserted.  E.g., when user types next
+   * character, it'll will be inserted after parent element which provides the
+   * style and clones element which represents other styles in the parent
+   * element.
+   *
+   * @param aHTMLProperty       The HTML tag name which represents the style.
+   *                            For example, nsGkAtoms::b for bold text.
+   * @param aAttribute          nullptr or attribute name which represents the
+   *                            style with aHTMLProperty.  E.g., nsGkAtoms::size
+   *                            for nsGkAtoms::font.
+   */
+  void ClearStyle(nsStaticAtom& aHTMLProperty, nsAtom* aAttribute) {
+    ClearStyleInternal(&aHTMLProperty, aAttribute);
+  }
 
   /**
-   * TakeClearProperty() hands back next property item on the clear list.
-   * Caller assumes ownership of PropItem and must delete it.
+   * Clear all styles specified by aStylesToClear when next content is inserted.
+   * See above for the detail.
    */
-  UniquePtr<PropItem> TakeClearProperty();
+  void ClearStyles(const nsTArray<EditorInlineStyle>& aStylesToClear);
+
+  /**
+   * Clear all styles when next inserting content.  E.g., when user types next
+   * character, it will be inserted outside any inline parents which provides
+   * current text style.
+   */
+  void ClearAllStyles() {
+    // XXX Why don't we clear mClearingStyles first?
+    ClearStyleInternal(nullptr, nullptr);
+  }
+
+  /**
+   * Clear <a> element and discard styles which is applied by it.
+   */
+  void ClearLinkAndItsSpecifiedStyle() {
+    ClearStyleInternal(nsGkAtoms::a, nullptr, SpecifiedStyle::Discard);
+  }
+
+  /**
+   * TakeClearingStyle() hands back next property item on the clearing styles.
+   * This must be used only for handling to clear the styles from inserting
+   * content.
+   */
+  UniquePtr<PropItem> TakeClearingStyle() {
+    if (mClearingStyles.IsEmpty()) {
+      return nullptr;
+    }
+    return mClearingStyles.PopLastElement();
+  }
 
   /**
    * TakePreservedStyle() hands back next property item on the preserving
@@ -181,6 +221,10 @@ class TypeInState final {
 
  protected:
   virtual ~TypeInState();
+
+  void ClearStyleInternal(
+      nsStaticAtom* aHTMLProperty, nsAtom* aAttribute,
+      SpecifiedStyle aSpecifiedStyle = SpecifiedStyle::Preserve);
 
   void RemovePropFromSetList(nsStaticAtom* aProp, nsAtom* aAttr);
   void RemovePropFromClearedList(nsStaticAtom* aProp, nsAtom* aAttr);
