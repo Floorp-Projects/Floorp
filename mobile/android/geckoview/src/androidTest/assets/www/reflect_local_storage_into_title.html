@@ -4,7 +4,7 @@
     <title>no title</title>
     <script>
       // If we have a query string, save it to the local storage.
-      if (window.location.search.length > 0) {
+      if (window.location.search.length) {
         const value = window.location.search.substr(1);
         localStorage.setItem("ctx", value);
       }
