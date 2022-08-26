@@ -1227,7 +1227,7 @@ function ArrayFlat(/* depth */) {
   var depthNum = 1;
 
   // Step 4.
-  if (arguments.length > 0 && arguments[0] !== undefined) {
+  if (arguments.length && arguments[0] !== undefined) {
     depthNum = ToInteger(arguments[0]);
   }
 

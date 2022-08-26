@@ -485,7 +485,6 @@ module.exports = {
         "editor/spellchecker/tests/test_bug338427.html",
         "gfx/**",
         "image/test/browser/browser_image.js",
-        "js/src/builtin/**",
         "layout/**",
         "mobile/android/**",
         "modules/**",
