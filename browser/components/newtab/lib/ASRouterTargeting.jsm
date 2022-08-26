@@ -276,6 +276,12 @@ const QueryCache = {
       FRECENT_SITES_UPDATE_INTERVAL,
       ShellService
     ),
+    isDefaultbrowser: new CachedTargetingGetter(
+      "isDefaultBrowser",
+      null,
+      FRECENT_SITES_UPDATE_INTERVAL,
+      ShellService
+    ),
   },
 };
 
@@ -500,7 +506,7 @@ const TargetingGetters = {
   },
   get isDefaultBrowser() {
     try {
-      return ShellService.isDefaultBrowser();
+      return QueryCache.getters.isDefaultBrowser.get();
     } catch (e) {}
     return null;
   },
