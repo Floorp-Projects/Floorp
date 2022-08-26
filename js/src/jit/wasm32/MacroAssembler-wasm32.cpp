@@ -226,17 +226,15 @@ CodeOffset MacroAssembler::wasmTrapInstruction() {
 
 template void MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value,
                                                 MIRType valueType,
-                                                const Address& dest,
-                                                MIRType slotType);
+                                                const Address& dest);
 
 template void MacroAssembler::storeUnboxedValue(
     const ConstantOrRegister& value, MIRType valueType,
-    const BaseObjectElementIndex& dest, MIRType slotType);
+    const BaseObjectElementIndex& dest);
 
 template <typename T>
 void MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value,
-                                       MIRType valueType, const T& dest,
-                                       MIRType slotType) {
+                                       MIRType valueType, const T& dest) {
   MOZ_CRASH();
 }
 

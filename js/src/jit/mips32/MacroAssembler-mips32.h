@@ -494,10 +494,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS {
   }
 
   template <typename T>
-  void storeUnboxedValue(ConstantOrRegister value, MIRType valueType,
-                         const T& dest, MIRType slotType);
-
-  template <typename T>
   void storeUnboxedPayload(ValueOperand value, T address, size_t nbytes,
                            JSValueType) {
     switch (nbytes) {
