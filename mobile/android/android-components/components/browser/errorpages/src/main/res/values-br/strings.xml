@@ -56,6 +56,20 @@
  </ul>
 ]]></string>
 
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Kempleshoc’h…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> <b>%1$s</b> a zo gantañ ur politikerezh surentez anvet HTTP Strict Transport Security (HSTS), pezh a dalv ne c’hall <b>%2$s</b> kevreañ outañ nemet en un doare sur. Ne c’hallit ket ouzhpennañ un nemedenn evit gweladenniñ al lec’hienn-mañ.
+        ]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> a zo gantañ ur politikerezh surentez anvet HTTP Strict Transport Security (HSTS), pezh a dalv ne c’hall <b>%2$s</b> kevreañ outañ nemet en un doare sur. Ne c’hallit ket ouzhpennañ un nemedenn evit gweladenniñ al lec’hienn-mañ. </label>
+        ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Distreiñ</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Harzet eo bet treuzkas ar roadennoù</string>
 

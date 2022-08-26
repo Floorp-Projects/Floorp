@@ -38,6 +38,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Алмасу буферінен деректерді алу</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Деректерді алмасу буферіне енгізу</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Кез келген беттегі мазмұнды блоктау</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Файлдарды жүктеп алу және браузердің жүктеп алулар тарихын түзету</string>
     <!-- Description for downloads_open permission. -->

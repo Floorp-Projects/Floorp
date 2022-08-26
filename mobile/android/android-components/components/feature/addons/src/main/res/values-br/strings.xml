@@ -38,6 +38,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Kaout roadennoù ar golver</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Enankañ roadennoù er golver</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Stankañ danvezioù war forzh peseurt pajenn</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Pellgargañ restroù, lenn ha kemmañ roll istor pellgargadennoù ar merdeer</string>
     <!-- Description for downloads_open permission. -->

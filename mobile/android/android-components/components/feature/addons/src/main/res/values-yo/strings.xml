@@ -107,7 +107,7 @@
     <!-- Displays a page with all the permissions of an add-on. -->
     <string name="mozac_feature_addons_permissions">Ìfàyègbà</string>
     <!-- This is button that remove (uninstall an add-on). -->
-    <string name="mozac_feature_addons_remove">Yọọ́ kúrò</string>
+    <string name="mozac_feature_addons_remove">Yọ ọ́ kúrò</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">Fi %1$s? kún</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
