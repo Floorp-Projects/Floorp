@@ -60,7 +60,8 @@ class CellAllocator {
     if (!cell) {
       return nullptr;
     }
-    return new (mozilla::KnownNotNull, cell) StringT(std::forward<Args>(args)...);
+    return new (mozilla::KnownNotNull, cell)
+        StringT(std::forward<Args>(args)...);
   }
 
  public:
