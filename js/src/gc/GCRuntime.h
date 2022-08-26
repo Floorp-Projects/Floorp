@@ -1106,8 +1106,9 @@ class GCRuntime {
   // marking.
   MainThreadData<bool> markOnBackgroundThreadDuringSweeping;
 
-  /* Whether any sweeping will take place in the separate GC helper thread. */
-  MainThreadData<bool> sweepOnBackgroundThread;
+  // Whether any sweeping and decommitting will run on a separate GC helper
+  // thread.
+  MainThreadData<bool> useBackgroundThreads;
 
 #ifdef DEBUG
   /* Shutdown has started. Further collections must be shutdown collections. */
