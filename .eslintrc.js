@@ -478,8 +478,6 @@ module.exports = {
     {
       files: [
         "dom/**",
-        "editor/libeditor/tests/**",
-        "editor/spellchecker/tests/test_bug338427.html",
         "gfx/**",
         "image/test/browser/browser_image.js",
         "layout/**",
