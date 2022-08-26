@@ -984,7 +984,13 @@ var CustomizableUIInternal = {
       //
       // This notion of being "dirty" is stored in a cache which is persisted
       // in the saved state.
-      if (gDirtyAreaCache.has(area)) {
+      //
+      // Secondly, if the list of placements contains an API-provided widget,
+      // we need to call `buildArea` or it won't be built and put in the toolbar.
+      if (
+        gDirtyAreaCache.has(area) ||
+        placements.some(id => gPalette.has(id))
+      ) {
         this.buildArea(area, placements, aToolbar);
       } else {
         // We must have a builtin toolbar that's in the default state. We need
