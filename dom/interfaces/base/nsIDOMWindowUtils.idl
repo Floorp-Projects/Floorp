@@ -2209,6 +2209,16 @@ interface nsIDOMWindowUtils : nsISupports {
   bool isCoepCredentialless();
 
   /**
+   * Simulate enabling/disabling HiDPI mode. This function only works on
+   * environments where HiDPI mode is available by default.
+   */
+  void setHiDPIMode(in boolean aHiDPI);
+  /**
+   * Restore the simulated HiDPI mode.
+   */
+  void restoreHiDPIMode();
+
+  /**
    * NOTE: Currently works only on GTK+.
    */
   attribute ACString systemFont;

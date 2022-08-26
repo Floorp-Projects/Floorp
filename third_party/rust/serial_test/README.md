@@ -3,9 +3,8 @@
 [![Downloads](https://img.shields.io/crates/d/serial_test)](https://crates.io/crates/serial_test)
 [![Docs](https://docs.rs/serial_test/badge.svg)](https://docs.rs/serial_test/)
 [![MIT license](https://img.shields.io/crates/l/serial_test.svg)](./LICENSE)
-[![Build Status](https://travis-ci.com/palfrey/serial_test.svg?branch=main)](https://travis-ci.com/palfrey/serial_test)
+[![Build Status](https://github.com/palfrey/serial_test/workflows/Continuous%20integration/badge.svg?branch=main)](https://github.com/palfrey/serial_test/actions)
 [![MSRV: 1.39.0](https://flat.badgen.net/badge/MSRV/1.39.0/purple)](https://blog.rust-lang.org/2019/11/07/Rust-1.39.0.html)
-[![dependency status](https://deps.rs/repo/github/palfrey/serial_test/status.svg)](https://deps.rs/repo/github/palfrey/serial_test)
 
 `serial_test` allows for the creation of serialised Rust tests using the `serial` attribute
 e.g.
@@ -29,6 +28,9 @@ async fn test_serial_another() {
 }
 ```
 Multiple tests with the `serial` attribute are guaranteed to be executed in serial. Ordering of the tests is not guaranteed however.
+Tests without the `serial` attribute may run at any time, including in parallel to tests marked as `serial`. Note that if you're using
+an async test reactor attribute (e.g. `tokio::test` or `actix_rt::test`) then they should be listed *before* `serial`, otherwise we
+don't get an async function and things break. There's now an error for this case to improve debugging.
 
 ## Usage
 We require at least Rust 1.39 for [async/await](https://blog.rust-lang.org/2019/11/07/Async-await-stable.html) support

@@ -14,8 +14,8 @@
 #include "HTMLEditHelpers.h"
 #include "HTMLEditUtils.h"
 #include "InternetCiter.h"
+#include "PendingStyles.h"
 #include "SelectionState.h"
-#include "TypeInState.h"
 #include "WSRunObject.h"
 
 #include "mozilla/dom/Comment.h"
