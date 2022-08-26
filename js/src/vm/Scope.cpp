@@ -266,11 +266,7 @@ static UniquePtr<typename ConcreteScope::RuntimeData> LiftParserScopeData(
 /* static */
 Scope* Scope::create(JSContext* cx, ScopeKind kind, Handle<Scope*> enclosing,
                      Handle<Shape*> envShape) {
-  Scope* scope = Allocate<Scope>(cx);
-  if (scope) {
-    new (scope) Scope(kind, enclosing, envShape);
-  }
-  return scope;
+  return cx->newCell<Scope>(kind, enclosing, envShape);
 }
 
 template <typename ConcreteScope>

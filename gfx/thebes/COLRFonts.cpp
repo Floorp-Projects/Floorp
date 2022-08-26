@@ -826,13 +826,19 @@ struct PaintLinearGradient : public PaintPatternBase {
       return nullptr;
     }
     if (firstStop != 0.0 || lastStop != 1.0) {
-      // Normalize the gradient stops range to 0.0 - 1.0, and adjust positions
-      // of the endpoints accordingly.
-      Point v = p1 - p0;
-      p0 += v * firstStop;
-      p1 -= v * (1.0f - lastStop);
-      // Move the rotation vector to maintain the same direction from p0.
-      p2 += v * firstStop;
+      if (firstStop == lastStop) {
+        if (aColorLine->extend != T::EXTEND_PAD) {
+          return MakeUnique<ColorPattern>(DeviceColor());
+        }
+      } else {
+        // Normalize the gradient stops range to 0.0 - 1.0, and adjust positions
+        // of the endpoints accordingly.
+        Point v = p1 - p0;
+        p0 += v * firstStop;
+        p1 -= v * (1.0f - lastStop);
+        // Move the rotation vector to maintain the same direction from p0.
+        p2 += v * firstStop;
+      }
     }
     Point p3;
     if (FuzzyEqualsMultiplicative(p2.y, p0.y)) {
@@ -904,18 +910,44 @@ struct PaintRadialGradient : public PaintPatternBase {
     }
     const auto* colorLine =
         reinterpret_cast<const ColorLine*>(aState.COLRv1BaseAddr() + clOffset);
-    UniquePtr<Pattern> solidColor = colorLine->AsSolidColor(aState);
-    if (solidColor) {
-      return solidColor;
-    }
-    RefPtr stops = colorLine->MakeGradientStops(aState);
-    if (!stops) {
-      return nullptr;
-    }
     Point c1(aState.F2P(int16_t(x0)), aState.F2P(int16_t(y0)));
     Point c2(aState.F2P(int16_t(x1)), aState.F2P(int16_t(y1)));
     float r1 = aState.F2P(uint16_t(radius0));
     float r2 = aState.F2P(uint16_t(radius1));
+    return NormalizeAndMakeGradient(aState, colorLine, c1, c2, r1, r2);
+  }
+
+  template <typename T>
+  UniquePtr<Pattern> NormalizeAndMakeGradient(const PaintState& aState,
+                                              const T* aColorLine, Point c1,
+                                              Point c2, float r1,
+                                              float r2) const {
+    if ((c1 == c2 && r1 == r2) || (r1 == 0.0 && r2 == 0.0)) {
+      return MakeUnique<ColorPattern>(DeviceColor());
+    }
+    UniquePtr<Pattern> solidColor = aColorLine->AsSolidColor(aState);
+    if (solidColor) {
+      return solidColor;
+    }
+    float firstStop, lastStop;
+    RefPtr stops = aColorLine->MakeGradientStops(aState, &firstStop, &lastStop);
+    if (!stops) {
+      return nullptr;
+    }
+    if (firstStop != 0.0 || lastStop != 1.0) {
+      if (firstStop == lastStop) {
+        if (aColorLine->extend != T::EXTEND_PAD) {
+          return MakeUnique<ColorPattern>(DeviceColor());
+        }
+      } else {
+        Point v = c2 - c1;
+        c1 += v * firstStop;
+        c2 -= v * (1.0f - lastStop);
+        float deltaR = r2 - r1;
+        r1 = fabsf(r1 + deltaR * firstStop);
+        r2 = fabsf(r2 - deltaR * (1.0f - lastStop));
+      }
+    }
     return MakeUnique<RadialGradientPattern>(c1, c2, r1, r2, std::move(stops),
                                              Matrix::Scaling(1.0, -1.0));
   }
@@ -935,27 +967,18 @@ struct PaintVarRadialGradient : public PaintRadialGradient {
     }
     const auto* colorLine = reinterpret_cast<const VarColorLine*>(
         aState.COLRv1BaseAddr() + clOffset);
-    UniquePtr<Pattern> solidColor = colorLine->AsSolidColor(aState);
-    if (solidColor) {
-      return solidColor;
-    }
-    RefPtr stops = colorLine->MakeGradientStops(aState);
-    if (!stops) {
-      return nullptr;
-    }
     Point c1(aState.F2P(ApplyVariation(aState, int16_t(x0), varIndexBase)),
              aState.F2P(
                  ApplyVariation(aState, int16_t(y0), SatAdd(varIndexBase, 1))));
-    float r1 = aState.F2P(
-        ApplyVariation(aState, uint16_t(radius0), SatAdd(varIndexBase, 2)));
+    float r1 = fabsf(aState.F2P(
+        ApplyVariation(aState, uint16_t(radius0), SatAdd(varIndexBase, 2))));
     Point c2(aState.F2P(
                  ApplyVariation(aState, int16_t(x1), SatAdd(varIndexBase, 3))),
              aState.F2P(
                  ApplyVariation(aState, int16_t(y1), SatAdd(varIndexBase, 4))));
-    float r2 = aState.F2P(
-        ApplyVariation(aState, uint16_t(radius1), SatAdd(varIndexBase, 5)));
-    return MakeUnique<RadialGradientPattern>(c1, c2, r1, r2, std::move(stops),
-                                             Matrix::Scaling(1.0, -1.0));
+    float r2 = fabsf(aState.F2P(
+        ApplyVariation(aState, uint16_t(radius1), SatAdd(varIndexBase, 5))));
+    return NormalizeAndMakeGradient(aState, colorLine, c1, c2, r1, r2);
   }
 };
 
@@ -988,7 +1011,7 @@ struct PaintSweepGradient : public PaintPatternBase {
                                               const T* aColorLine,
                                               Point aCenter, float aStart,
                                               float aEnd) const {
-    if (aStart == aEnd && aColorLine->extend != ColorLine::EXTEND_PAD) {
+    if (aStart == aEnd && aColorLine->extend != T::EXTEND_PAD) {
       return MakeUnique<ColorPattern>(DeviceColor());
     }
     UniquePtr<Pattern> solidColor = aColorLine->AsSolidColor(aState);
@@ -1006,9 +1029,15 @@ struct PaintSweepGradient : public PaintPatternBase {
       return nullptr;
     }
     if (firstStop != 0.0 || lastStop != 1.0) {
-      float sweep = aEnd - aStart;
-      aStart = aStart + sweep * firstStop;
-      aEnd = aStart + sweep * (lastStop - firstStop);
+      if (firstStop == lastStop) {
+        if (aColorLine->extend != T::EXTEND_PAD) {
+          return MakeUnique<ColorPattern>(DeviceColor());
+        }
+      } else {
+        float sweep = aEnd - aStart;
+        aStart = aStart + sweep * firstStop;
+        aEnd = aStart + sweep * (lastStop - firstStop);
+      }
     }
     return MakeUnique<ConicGradientPattern>(aCenter, M_PI / 2.0, aStart / 2.0,
                                             aEnd / 2.0, std::move(stops),

@@ -629,10 +629,11 @@ class GCRuntime {
   template <AllowGC allowGC>
   static JSObject* tryNewTenuredObject(JSContext* cx, AllocKind kind,
                                        size_t thingSize, size_t nDynamicSlots);
-  template <typename T, AllowGC allowGC>
-  static T* tryNewTenuredThing(JSContext* cx, AllocKind kind, size_t thingSize);
   template <AllowGC allowGC>
-  JSString* tryNewNurseryString(JSContext* cx, size_t thingSize,
+  static TenuredCell* tryNewTenuredThing(JSContext* cx, AllocKind kind,
+                                         size_t thingSize);
+  template <AllowGC allowGC>
+  Cell* tryNewNurseryStringCell(JSContext* cx, size_t thingSize,
                                 AllocKind kind);
   template <AllowGC allowGC>
   JS::BigInt* tryNewNurseryBigInt(JSContext* cx, size_t thingSize,

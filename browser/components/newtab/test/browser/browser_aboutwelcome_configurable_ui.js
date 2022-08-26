@@ -44,6 +44,60 @@ async function openAboutWelcome(json) {
   return tab.linkedBrowser;
 }
 
+async function testAboutWelcomeLogoFor(logo = {}) {
+  info(`Testing logo: ${JSON.stringify(logo)}`);
+
+  let screens = [makeTestContent("TEST_LOGO_SELECTION_STEP", { logo })];
+
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "aboutwelcome",
+    value: { enabled: true, screens },
+  });
+
+  let browser = await openAboutWelcome(JSON.stringify(screens));
+
+  let expected = [
+    `.brand-logo[src="${logo.imageURL ??
+      "chrome://branding/content/about-logo.svg"}"][alt="${logo.alt ?? ""}"]${
+      logo.height ? `[style*="height"]` : ""
+    }${logo.alt ? "" : `[role="presentation"]`}`,
+  ];
+  let unexpected = [];
+  if (!logo.height) {
+    unexpected.push(`.brand-logo[style*="height"]`);
+  }
+  if (logo.alt) {
+    unexpected.push(`.brand-logo[role="presentation"]`);
+  }
+  (logo.darkModeImageURL ? expected : unexpected).push(
+    `.logo-container source[media="(prefers-color-scheme: dark)"]${
+      logo.darkModeImageURL ? `[srcset="${logo.darkModeImageURL}"]` : ""
+    }`
+  );
+  (logo.reducedMotionImageURL ? expected : unexpected).push(
+    `.logo-container source[media="(prefers-reduced-motion: reduce)"]${
+      logo.reducedMotionImageURL
+        ? `[srcset="${logo.reducedMotionImageURL}"]`
+        : ""
+    }`
+  );
+  (logo.darkModeReducedMotionImageURL ? expected : unexpected).push(
+    `.logo-container source[media="(prefers-color-scheme: dark) and (prefers-reduced-motion: reduce)"]${
+      logo.darkModeReducedMotionImageURL
+        ? `[srcset="${logo.darkModeReducedMotionImageURL}"]`
+        : ""
+    }`
+  );
+  await test_screen_content(
+    browser,
+    "renders screen with passed logo",
+    expected,
+    unexpected
+  );
+
+  await doExperimentCleanup();
+}
+
 /**
  * Test rendering a screen in about welcome with decorative noodles
  */
@@ -500,48 +554,35 @@ add_task(async function test_aboutwelcome_history_updates_disabled() {
 });
 
 /**
- * Test rendering a screen with a dark mode logo
+ * Test rendering a screen with different logos depending on reduced motion and
+ * color scheme preferences
  */
-add_task(async function test_aboutwelcome_with_dark_mode_logo() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      // Override the system color scheme to dark
-      ["ui.systemUsesDarkTheme", 1],
-    ],
+add_task(async function test_aboutwelcome_logo_selection() {
+  // Test a screen config that includes every logo parameter
+  await testAboutWelcomeLogoFor({
+    imageURL: "chrome://branding/content/icon16.png",
+    darkModeImageURL: "chrome://branding/content/icon32.png",
+    reducedMotionImageURL: "chrome://branding/content/icon64.png",
+    darkModeReducedMotionImageURL: "chrome://branding/content/icon128.png",
+    alt: "TEST_LOGO_SELECTION_ALT",
+    height: "16px",
   });
-
-  let screens = [];
-  // we need at least two screens to test the step indicator
-  for (let i = 0; i < 2; i++) {
-    screens.push(
-      makeTestContent("TEST_TEXT_COLOR_OVERRIDE_STEP", {
-        logo: {
-          darkModeImageURL:
-            "chrome://activity-stream/content/data/content/assets/heart.webp",
-        },
-      })
-    );
-  }
-
-  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    featureId: "aboutwelcome",
-    value: {
-      enabled: true,
-      screens,
-    },
+  // Test a screen config with no animated/static logos
+  await testAboutWelcomeLogoFor({
+    imageURL: "chrome://branding/content/icon16.png",
+    darkModeImageURL: "chrome://branding/content/icon32.png",
   });
-  let browser = await openAboutWelcome(JSON.stringify(screens));
-
-  await test_screen_content(
-    browser,
-    "renders screen with dark mode logo",
-    // Expected selectors:
-    [
-      '.logo-container source[srcset="chrome://activity-stream/content/data/content/assets/heart.webp"]',
-    ]
-  );
-
-  await doExperimentCleanup();
+  // Test a screen config with no dark mode logos
+  await testAboutWelcomeLogoFor({
+    imageURL: "chrome://branding/content/icon16.png",
+    reducedMotionImageURL: "chrome://branding/content/icon64.png",
+  });
+  // Test a screen config that includes only the default logo
+  await testAboutWelcomeLogoFor({
+    imageURL: "chrome://branding/content/icon16.png",
+  });
+  // Test a screen config with no logos
+  await testAboutWelcomeLogoFor();
 });
 
 /**

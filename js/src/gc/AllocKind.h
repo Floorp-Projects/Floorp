@@ -34,6 +34,7 @@ class FatInlineAtom;
 class NormalAtom;
 class NormalPropMap;
 class DictionaryPropMap;
+class DictionaryShape;
 
 namespace gc {
 
@@ -198,8 +199,8 @@ using ObjectAllocKindArray =
  *
  * The AllocKind is available as MapTypeToAllocKind<SomeType>::kind.
  *
- * There are specializations for strings since more than one derived string type
- * shares the same alloc kind.
+ * There are specializations for strings and shapes since more than one derived
+ * type shares the same alloc kind.
  */
 template <typename T>
 struct MapTypeToAllocKind {};
@@ -227,6 +228,11 @@ struct MapTypeToAllocKind<JSLinearString> {
 template <>
 struct MapTypeToAllocKind<JSThinInlineString> {
   static const AllocKind kind = AllocKind::STRING;
+};
+
+template <>
+struct MapTypeToAllocKind<js::DictionaryShape> {
+  static const AllocKind kind = AllocKind::SHAPE;
 };
 
 static inline JS::TraceKind MapAllocToTraceKind(AllocKind kind) {

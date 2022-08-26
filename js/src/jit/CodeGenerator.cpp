@@ -2459,7 +2459,7 @@ void CreateDependentString::generateFallback(MacroAssembler& masm) {
     if (kind == FallbackKind::FatInlineString) {
       masm.callWithABI<Fn, AllocateFatInlineString>();
     } else {
-      masm.callWithABI<Fn, AllocateString>();
+      masm.callWithABI<Fn, AllocateDependentString>();
     }
     masm.storeCallPointerResult(string_);
 

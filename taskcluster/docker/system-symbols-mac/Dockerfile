@@ -29,13 +29,6 @@ RUN chmod +x /usr/local/bin/lipo
 COPY topsrcdir/tools/crashreporter/system-symbols/mac /builds/worker/mac-update-symbols
 WORKDIR /builds/worker/mac-update-symbols
 
-# Set up first-run experience for interactive mode
-# %include taskcluster/docker/debian10-test/motd
-COPY topsrcdir/taskcluster/docker/debian10-test/motd /etc/taskcluster-motd
-# %include taskcluster/docker/debian10-test/taskcluster-interactive-shell
-COPY topsrcdir/taskcluster/docker/debian10-test/taskcluster-interactive-shell /bin/taskcluster-interactive-shell
-RUN chmod +x /bin/taskcluster-interactive-shell
-
 RUN chown -R worker:worker /builds/worker
 
 # Set a default command useful for debugging
