@@ -4019,7 +4019,7 @@ const BrowserSearch = {
     );
   },
 
-  addEngine(browser, engine, uri) {
+  addEngine(browser, engine) {
     if (!this._searchInitComplete) {
       // We haven't finished initialising search yet. This means we can't
       // call getEngineByName here. Since this is only on start-up and unlikely
@@ -4037,8 +4037,6 @@ const BrowserSearch = {
     var hidden = false;
     // If this engine (identified by title) is already in the list, add it
     // to the list of hidden engines rather than to the main list.
-    // XXX This will need to be changed when engines are identified by URL;
-    // see bug 335102.
     if (Services.search.getEngineByName(engine.title)) {
       hidden = true;
     }
