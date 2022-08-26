@@ -7736,14 +7736,12 @@ class MAddAndStoreSlot
 class MStoreDynamicSlot : public MBinaryInstruction,
                           public NoFloatPolicy<1>::Data {
   uint32_t slot_;
-  MIRType slotType_;
   bool needsBarrier_;
 
   MStoreDynamicSlot(MDefinition* slots, uint32_t slot, MDefinition* value,
                     bool barrier)
       : MBinaryInstruction(classOpcode, slots, value),
         slot_(slot),
-        slotType_(MIRType::Value),
         needsBarrier_(barrier) {
     MOZ_ASSERT(slots->type() == MIRType::Slots);
   }
@@ -7764,13 +7762,7 @@ class MStoreDynamicSlot : public MBinaryInstruction,
   }
 
   uint32_t slot() const { return slot_; }
-  MIRType slotType() const { return slotType_; }
-  void setSlotType(MIRType slotType) {
-    MOZ_ASSERT(slotType != MIRType::None);
-    slotType_ = slotType;
-  }
   bool needsBarrier() const { return needsBarrier_; }
-  void setNeedsBarrier() { needsBarrier_ = true; }
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::DynamicSlot);
   }
