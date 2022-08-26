@@ -4,17 +4,6 @@
 
 "use strict";
 
-/**
- * Test if getOffsetAtPoint returns the given text offset at given coordinates.
- */
-async function testOffsetAtPoint(hyperText, x, y, coordType, expectedOffset) {
-  await untilCacheIs(
-    () => hyperText.getOffsetAtPoint(x, y, coordType),
-    expectedOffset,
-    `Wrong offset at given point (${x}, ${y}) for ${prettyName(hyperText)}`
-  );
-}
-
 async function runTests(browser, accDoc) {
   const expectedLength = await invokeContentTask(browser, [], () => {
     const { CommonUtils } = ChromeUtils.import(
