@@ -2634,8 +2634,9 @@ nsresult nsDocumentViewer::GetContentSizeInternal(int32_t* aWidth,
 
   nscoord height = wm.IsVertical() ? prefISize : aMaxHeight;
   nscoord width = wm.IsVertical() ? aMaxWidth : prefISize;
-
-  presShell->ResizeReflow(width, height, ResizeReflowOptions::BSizeLimit);
+  nsresult rv =
+      presShell->ResizeReflow(width, height, ResizeReflowOptions::BSizeLimit);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<nsPresContext> presContext = GetPresContext();
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
