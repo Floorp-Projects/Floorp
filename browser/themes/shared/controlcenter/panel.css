@@ -387,7 +387,9 @@
 }
 
 #identity-popup-security-button[footerHidden=true] {
-  margin-bottom: 6px;
+  /* Set the footer's bottom margin according to menuitems inline margin
+     to make sure the footer's margin is even from all sides. */
+  margin-bottom: var(--arrowpanel-menuitem-margin-inline);
 }
 
 .identity-popup-security-connection {
