@@ -40,7 +40,7 @@
     if (debug) {
       dump("Dispatching " + onpaint.length + " onpaint listeners\n");
     }
-    while (onpaint.length > 0) {
+    while (onpaint.length) {
       window.setTimeout(onpaint.pop(), 0);
     }
   }

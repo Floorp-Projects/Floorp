@@ -942,7 +942,7 @@ TestRunner.displayLoopErrors = function(tableName, tests) {
   if (TestRunner.countResults(tests).notOK > 0) {
     var table = $(tableName);
     var curtest;
-    if (table.rows.length == 0) {
+    if (!table.rows.length) {
       //if table headers are not yet generated, make them
       var row = table.insertRow(table.rows.length);
       var cell = row.insertCell(0);

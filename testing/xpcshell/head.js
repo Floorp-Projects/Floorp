@@ -651,7 +651,7 @@ function _execute_test() {
     });
   };
 
-  let complete = _cleanupFunctions.length == 0;
+  let complete = !_cleanupFunctions.length;
   let cleanupStartTime = complete ? 0 : Cu.now();
   (async () => {
     for (let func of _cleanupFunctions.reverse()) {

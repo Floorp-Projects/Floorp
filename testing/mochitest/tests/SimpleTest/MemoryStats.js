@@ -94,7 +94,7 @@ MemoryStats.dump = function(
       );
     }
   }
-  if (statMessage.length > 0) {
+  if (statMessage.length) {
     info("MEMORY STAT" + statMessage);
   }
 

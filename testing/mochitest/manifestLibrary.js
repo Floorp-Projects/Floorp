@@ -49,7 +49,7 @@ function parseTestManifest(testManifest, params, callback) {
       });
     }
   }
-  if (paths.length > 0) {
+  if (paths.length) {
     callback(paths);
   } else {
     callback(links);

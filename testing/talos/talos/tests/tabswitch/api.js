@@ -230,7 +230,7 @@ async function test(window) {
   } catch (ex) {
     /* error condition handled below */
   }
-  if (!testURLs || testURLs.length == 0) {
+  if (!testURLs || !testURLs.length) {
     dump(
       "no tabs to test, 'addon.test.tabswitch.urlfile' pref isn't set to page set path\n"
     );

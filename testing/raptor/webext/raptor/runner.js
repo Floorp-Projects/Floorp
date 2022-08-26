@@ -233,7 +233,7 @@ async function closeTab(tabId) {
 
 async function getCurrentTabId() {
   const tabs = await queryForTabs({ currentWindow: true, active: true });
-  if (tabs.length == 0) {
+  if (!tabs.length) {
     throw new Error("No active tab has been found.");
   }
 
@@ -594,7 +594,7 @@ function resultListener(request, sender, sendResponse) {
           const index = pendingHeroes.indexOf(_found);
           if (index > -1) {
             pendingHeroes.splice(index, 1);
-            if (pendingHeroes.length == 0) {
+            if (!pendingHeroes.length) {
               raptorLog("measured all expected hero elements");
               isHeroPending = false;
             }
