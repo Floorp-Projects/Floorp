@@ -15,11 +15,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AMTelemetry: "resource://gre/modules/AddonManager.jsm",
   BuiltInThemes: "resource:///modules/BuiltInThemes.jsm",
   ClientID: "resource://gre/modules/ClientID.jsm",
+  ColorwayClosetOpener: "resource:///modules/ColorwayClosetOpener.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
 });
 
@@ -38,10 +40,6 @@ XPCOMUtils.defineLazyGetter(this, "extensionStylesheets", () => {
     "resource://gre/modules/ExtensionParent.jsm"
   );
   return ExtensionParent.extensionStylesheets;
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  ColorwayClosetOpener: "resource:///modules/ColorwayClosetOpener.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -66,12 +64,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
   true
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "COLORWAY_CLOSET_ENABLED",
-  "browser.theme.colorway-closet",
-  false
-);
+XPCOMUtils.defineLazyGetter(this, "COLORWAY_CLOSET_ENABLED", () => {
+  return NimbusFeatures.majorRelease2022.getVariable("colorwayCloset");
+});
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
