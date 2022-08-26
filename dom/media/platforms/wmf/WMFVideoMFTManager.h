@@ -81,7 +81,15 @@ class WMFVideoMFTManager : public MFTManager {
   const VideoInfo mVideoInfo;
   const gfx::IntSize mImageSize;
   const WMFStreamType mStreamType;
-  gfx::IntSize mDecodedImageSize;
+
+  // The size we ask from the IMFMediaType which might include paddings. This is
+  // only used for softwate decoding.
+  gfx::IntSize mSoftwareImageSize;
+
+  // The display size we ask from the IMFMediaType, which might be different
+  // from the video info. This is only used for softwate decoding.
+  gfx::IntSize mSoftwareDisplaySize;
+
   uint32_t mVideoStride;
   Maybe<gfx::YUVColorSpace> mColorSpace;
   gfx::ColorRange mColorRange;
