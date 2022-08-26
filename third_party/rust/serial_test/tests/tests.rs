@@ -1,8 +1,8 @@
-use serial_test::serial_core;
+use serial_test::local_serial_core;
 
 #[test]
 fn test_empty_serial_call() {
-    serial_core("beta", || {
+    local_serial_core("beta", || {
         println!("Bar");
     });
 }

@@ -19,7 +19,7 @@ unic-langid = "0.9"
 
 [dev-dependencies]
 unic-langid = { version = "0.9", features = ["macros"] }
-serial_test = "0.5"
+serial_test = "0.6"
 # The mozilla-central vendoring process unfortunately always pulls in
 # dev-dependencies. The criterion package pulls in duplicated versions of
 # other crates as well as large data files that the vendoring process is
