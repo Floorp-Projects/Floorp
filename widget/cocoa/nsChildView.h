@@ -507,6 +507,10 @@ class nsChildView final : public nsBaseWidget {
   // Called by nsCocoaWindow when the window's fullscreen state changes.
   void UpdateFullscreen(bool aFullscreen);
 
+  // test only.
+  virtual nsresult SetHiDPIMode(bool aHiDPI) override;
+  virtual nsresult RestoreHiDPIMode() override;
+
  protected:
   virtual ~nsChildView();
 
