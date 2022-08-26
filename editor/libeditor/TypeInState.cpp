@@ -7,15 +7,16 @@
 
 #include <stddef.h>
 
+#include "EditAction.h"
+#include "EditorBase.h"
+#include "HTMLEditor.h"
 #include "HTMLEditUtils.h"
-#include "mozilla/EditAction.h"
-#include "mozilla/EditorBase.h"
-#include "mozilla/HTMLEditor.h"
+
 #include "mozilla/mozalloc.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/Selection.h"
-#include "nsAString.h"
+
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
@@ -23,7 +24,8 @@
 #include "nsISupportsBase.h"
 #include "nsISupportsImpl.h"
 #include "nsReadableUtils.h"
-#include "nsStringFwd.h"
+#include "nsString.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 
@@ -330,9 +332,9 @@ void TypeInState::OnSelectionChange(const HTMLEditor& aHTMLEditor,
   // style in some cases.
   if (unlink) {
     ClearLinkAndItsSpecifiedStyle();
-  } else if (!unlink) {
-    RemovePropFromClearedList(nsGkAtoms::a, nullptr);
+    return;
   }
+  CancelClearingStyle(*nsGkAtoms::a, nullptr);
 }
 
 void TypeInState::Reset() {
@@ -360,10 +362,10 @@ void TypeInState::PreserveStyle(nsStaticAtom& aHTMLProperty, nsAtom* aAttribute,
     return;
   }
 
-  int32_t index;
-  if (IsPropSet(aHTMLProperty, aAttribute, nullptr, index)) {
+  Maybe<size_t> index = IndexOfPreservingStyle(aHTMLProperty, aAttribute);
+  if (index.isSome()) {
     // If it's already set, update the value
-    mPreservingStyles[index]->mAttributeValueOrCSSValue =
+    mPreservingStyles[index.value()]->mAttributeValueOrCSSValue =
         aAttributeValueOrCSSValue;
     return;
   }
@@ -371,8 +373,7 @@ void TypeInState::PreserveStyle(nsStaticAtom& aHTMLProperty, nsAtom* aAttribute,
   mPreservingStyles.AppendElement(MakeUnique<PropItem>(
       &aHTMLProperty, aAttribute, aAttributeValueOrCSSValue));
 
-  // remove it from the list of cleared properties, if we have a match
-  RemovePropFromClearedList(&aHTMLProperty, aAttribute);
+  CancelClearingStyle(aHTMLProperty, aAttribute);
 }
 
 void TypeInState::ClearStyles(
@@ -394,15 +395,12 @@ void TypeInState::ClearStyles(
 void TypeInState::ClearStyleInternal(
     nsStaticAtom* aHTMLProperty, nsAtom* aAttribute,
     SpecifiedStyle aSpecifiedStyle /* = SpecifiedStyle::Preserve */) {
-  // if it's already cleared we are done
-  if (IsPropCleared(aHTMLProperty, aAttribute)) {
+  if (IsStyleCleared(aHTMLProperty, aAttribute)) {
     return;
   }
 
-  // remove it from the list of set properties, if we have a match
-  RemovePropFromSetList(aHTMLProperty, aAttribute);
+  CancelPreservingStyle(aHTMLProperty, aAttribute);
 
-  // add it to the list of cleared properties
   mClearingStyles.AppendElement(
       MakeUnique<PropItem>(aHTMLProperty, aAttribute, u""_ns, aSpecifiedStyle));
 }
@@ -421,82 +419,59 @@ void TypeInState::GetTypingState(bool& isSet, bool& theSetting,
                                  nsStaticAtom& aProp,
                                  nsAtom* aAttr /* = nullptr */,
                                  nsString* aOutValue /* = nullptr */) {
-  if (IsPropSet(aProp, aAttr, aOutValue)) {
+  if (IndexOfPreservingStyle(aProp, aAttr, aOutValue).isSome()) {
     isSet = true;
     theSetting = true;
-  } else if (IsPropCleared(&aProp, aAttr)) {
+    return;
+  }
+
+  if (IsStyleCleared(&aProp, aAttr)) {
     isSet = true;
     theSetting = false;
-  } else {
-    isSet = false;
+    return;
   }
+
+  isSet = false;
 }
 
-void TypeInState::RemovePropFromSetList(nsStaticAtom* aProp, nsAtom* aAttr) {
-  int32_t index;
-  if (!aProp) {
+void TypeInState::CancelPreservingStyle(nsStaticAtom* aHTMLProperty,
+                                        nsAtom* aAttribute) {
+  if (!aHTMLProperty) {
     mPreservingStyles.Clear();
     mRelativeFontSize = 0;
-  } else if (FindPropInList(aProp, aAttr, nullptr, mPreservingStyles, index)) {
-    mPreservingStyles.RemoveElementAt(index);
+    return;
+  }
+  Maybe<size_t> index = IndexOfPreservingStyle(*aHTMLProperty, aAttribute);
+  if (index.isSome()) {
+    mPreservingStyles.RemoveElementAt(index.value());
   }
 }
 
-void TypeInState::RemovePropFromClearedList(nsStaticAtom* aProp,
-                                            nsAtom* aAttr) {
-  int32_t index;
-  if (FindPropInList(aProp, aAttr, nullptr, mClearingStyles, index)) {
-    mClearingStyles.RemoveElementAt(index);
+void TypeInState::CancelClearingStyle(nsStaticAtom& aHTMLProperty,
+                                      nsAtom* aAttribute) {
+  Maybe<size_t> index =
+      IndexOfStyleInArray(&aHTMLProperty, aAttribute, nullptr, mClearingStyles);
+  if (index.isSome()) {
+    mClearingStyles.RemoveElementAt(index.value());
   }
 }
 
-bool TypeInState::IsPropSet(nsStaticAtom& aProp, nsAtom* aAttr,
-                            nsAString* outValue) {
-  int32_t i;
-  return IsPropSet(aProp, aAttr, outValue, i);
-}
-
-bool TypeInState::IsPropSet(nsStaticAtom& aProp, nsAtom* aAttr,
-                            nsAString* outValue, int32_t& outIndex) {
-  return FindPropInList(&aProp, aAttr, outValue, mPreservingStyles, outIndex);
-}
-
-bool TypeInState::IsPropCleared(nsStaticAtom* aProp, nsAtom* aAttr) {
-  int32_t i;
-  return IsPropCleared(aProp, aAttr, i);
-}
-
-bool TypeInState::IsPropCleared(nsStaticAtom* aProp, nsAtom* aAttr,
-                                int32_t& outIndex) {
-  if (FindPropInList(aProp, aAttr, nullptr, mClearingStyles, outIndex)) {
-    return true;
+Maybe<size_t> TypeInState::IndexOfStyleInArray(
+    nsStaticAtom* aHTMLProperty, nsAtom* aAttribute, nsAString* aOutValue,
+    const nsTArray<UniquePtr<PropItem>>& aArray) {
+  if (aAttribute == nsGkAtoms::_empty) {
+    aAttribute = nullptr;
   }
-  if (AreAllStylesCleared()) {
-    // special case for all props cleared
-    outIndex = -1;
-    return true;
-  }
-  return false;
-}
-
-bool TypeInState::FindPropInList(nsStaticAtom* aProp, nsAtom* aAttr,
-                                 nsAString* outValue,
-                                 const nsTArray<UniquePtr<PropItem>>& aList,
-                                 int32_t& outIndex) {
-  if (aAttr == nsGkAtoms::_empty) {
-    aAttr = nullptr;
-  }
-  for (size_t i : IntegerRange(aList.Length())) {
-    const UniquePtr<PropItem>& item = aList[i];
-    if (item->mTag == aProp && item->mAttribute == aAttr) {
-      if (outValue) {
-        *outValue = item->mAttributeValueOrCSSValue;
+  for (size_t i : IntegerRange(aArray.Length())) {
+    const UniquePtr<PropItem>& item = aArray[i];
+    if (item->mTag == aHTMLProperty && item->mAttribute == aAttribute) {
+      if (aOutValue) {
+        *aOutValue = item->mAttributeValueOrCSSValue;
       }
-      outIndex = static_cast<int32_t>(i);
-      return true;
+      return Some(i);
     }
   }
-  return false;
+  return Nothing();
 }
 
 }  // namespace mozilla

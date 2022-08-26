@@ -9,6 +9,7 @@
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorForwards.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 #include "nsAtom.h"
 #include "nsCOMPtr.h"
@@ -226,39 +227,43 @@ class TypeInState final {
       nsStaticAtom* aHTMLProperty, nsAtom* aAttribute,
       SpecifiedStyle aSpecifiedStyle = SpecifiedStyle::Preserve);
 
-  void RemovePropFromSetList(nsStaticAtom* aProp, nsAtom* aAttr);
-  void RemovePropFromClearedList(nsStaticAtom* aProp, nsAtom* aAttr);
-  bool IsPropSet(nsStaticAtom& aProp, nsAtom* aAttr, nsAString* outValue);
-  bool IsPropSet(nsStaticAtom& aProp, nsAtom* aAttr, nsAString* outValue,
-                 int32_t& outIndex);
-  bool IsPropCleared(nsStaticAtom* aProp, nsAtom* aAttr);
-  bool IsPropCleared(nsStaticAtom* aProp, nsAtom* aAttr, int32_t& outIndex);
+  void CancelPreservingStyle(nsStaticAtom* aHTMLProperty, nsAtom* aAttribute);
+  void CancelClearingStyle(nsStaticAtom& aHTMLProperty, nsAtom* aAttribute);
+
+  Maybe<size_t> IndexOfPreservingStyle(nsStaticAtom& aHTMLProperty,
+                                       nsAtom* aAttribute,
+                                       nsAString* aOutValue = nullptr) const {
+    return IndexOfStyleInArray(&aHTMLProperty, aAttribute, aOutValue,
+                               mPreservingStyles);
+  }
+  Maybe<size_t> IndexOfClearingStyle(nsStaticAtom* aHTMLProperty,
+                                     nsAtom* aAttribute) const {
+    return IndexOfStyleInArray(aHTMLProperty, aAttribute, nullptr,
+                               mClearingStyles);
+  }
 
   bool IsLinkStyleSet() const {
-    int32_t unusedIndex = -1;
-    return FindPropInList(nsGkAtoms::a, nullptr, nullptr, mPreservingStyles,
-                          unusedIndex);
+    return IndexOfPreservingStyle(*nsGkAtoms::a, nullptr).isSome();
   }
   bool IsExplicitlyLinkStyleCleared() const {
-    int32_t unusedIndex = -1;
-    return FindPropInList(nsGkAtoms::a, nullptr, nullptr, mClearingStyles,
-                          unusedIndex);
+    return IndexOfClearingStyle(nsGkAtoms::a, nullptr).isSome();
   }
   bool IsOnlyLinkStyleCleared() const {
     return mClearingStyles.Length() == 1 && IsExplicitlyLinkStyleCleared();
   }
+  bool IsStyleCleared(nsStaticAtom* aHTMLProperty, nsAtom* aAttribute) const {
+    return IndexOfClearingStyle(aHTMLProperty, aAttribute).isSome() ||
+           AreAllStylesCleared();
+  }
   bool AreAllStylesCleared() const {
-    int32_t unusedIndex = -1;
-    return FindPropInList(nullptr, nullptr, nullptr, mClearingStyles,
-                          unusedIndex);
+    return IndexOfClearingStyle(nullptr, nullptr).isSome();
   }
   bool AreSomeStylesSet() const { return !mPreservingStyles.IsEmpty(); }
   bool AreSomeStylesCleared() const { return !mClearingStyles.IsEmpty(); }
 
-  static bool FindPropInList(nsStaticAtom* aProp, nsAtom* aAttr,
-                             nsAString* outValue,
-                             const nsTArray<UniquePtr<PropItem>>& aList,
-                             int32_t& outIndex);
+  static Maybe<size_t> IndexOfStyleInArray(
+      nsStaticAtom* aHTMLProperty, nsAtom* aAttribute, nsAString* aOutValue,
+      const nsTArray<UniquePtr<PropItem>>& aArray);
 
   nsTArray<UniquePtr<PropItem>> mPreservingStyles;
   nsTArray<UniquePtr<PropItem>> mClearingStyles;
