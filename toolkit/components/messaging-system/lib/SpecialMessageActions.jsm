@@ -352,10 +352,6 @@ const SpecialMessageActions = {
         break;
       case "CONFIGURE_HOMEPAGE":
         this.configureHomepage(action.data);
-        const topWindow = browser.ownerGlobal.window.BrowserWindowTracker.getTopWindow();
-        if (topWindow) {
-          topWindow.BrowserHome();
-        }
         break;
       case "ENABLE_TOTAL_COOKIE_PROTECTION":
         Services.prefs.setBoolPref(
