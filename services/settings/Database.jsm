@@ -127,7 +127,7 @@ class Database {
             storeTimestamps.put({ cid: _cid, value: timestamp });
           }
 
-          if (records.length == 0) {
+          if (!records.length) {
             return;
           }
 

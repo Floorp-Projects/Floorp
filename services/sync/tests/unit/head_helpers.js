@@ -280,7 +280,7 @@ function assert_valid_ping(record) {
   // will typically have no recorded syncs, and the validator complains about
   // it. So ignore such records (but only ignore when *both* shutdown and
   // no Syncs - either of them not being true might be an actual problem)
-  if (record && (record.why != "shutdown" || record.syncs.length != 0)) {
+  if (record && (record.why != "shutdown" || !!record.syncs.length)) {
     const result = SyncPingValidator.validate(record);
     if (!result.valid) {
       if (result.errors.length) {

@@ -485,7 +485,7 @@ class SyncRecord {
     for (let engine of this.engines) {
       engines.push(engine.toJSON());
     }
-    if (engines.length > 0) {
+    if (engines.length) {
       result.engines = engines;
     }
     return result;
@@ -756,10 +756,11 @@ class SyncTelemetryImpl {
       syncNodeType: this.lastSyncNodeType || undefined,
       deviceID,
       sessionStartDate: this.sessionStartDate,
-      events: this.events.length == 0 ? undefined : this.events,
-      migrations: this.migrations.length == 0 ? undefined : this.migrations,
-      histograms:
-        Object.keys(this.histograms).length == 0 ? undefined : this.histograms,
+      events: !this.events.length ? undefined : this.events,
+      migrations: !this.migrations.length ? undefined : this.migrations,
+      histograms: !Object.keys(this.histograms).length
+        ? undefined
+        : this.histograms,
     };
   }
 

@@ -595,7 +595,7 @@ ClientEngine.prototype = {
       const fxaDeviceId = this.getClientFxaDeviceId(id);
       return fxaDeviceId ? acc.concat(fxaDeviceId) : acc;
     }, []);
-    if (idsToNotify.length > 0) {
+    if (idsToNotify.length) {
       this._notifyOtherClientsModified(idsToNotify);
     }
   },

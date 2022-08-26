@@ -296,7 +296,7 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
         let preload;
         let more = options.preload;
 
-        while (more.length > 0) {
+        while (more.length) {
           preload = more.slice(0, limit);
           more = more.slice(limit, more.length);
 
@@ -328,7 +328,7 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
       record_id: id,
     };
     return this._executeStatement(statements.getRecord, params).then(result => {
-      if (result.length == 0) {
+      if (!result.length) {
         return null;
       }
       return JSON.parse(result[0].getResultByName("record"));
@@ -390,7 +390,7 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
       const previousLastModified = await connection
         .execute(statements.getLastModified, params)
         .then(result => {
-          return result.length > 0
+          return result.length
             ? result[0].getResultByName("last_modified")
             : -1;
         });
@@ -422,7 +422,7 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
     };
     return this._executeStatement(statements.getLastModified, params).then(
       result => {
-        if (result.length == 0) {
+        if (!result.length) {
           return 0;
         }
         return result[0].getResultByName("last_modified");
@@ -444,7 +444,7 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
       collection_name: this.collection,
     };
     const result = await this._executeStatement(statements.getMetadata, params);
-    if (result.length == 0) {
+    if (!result.length) {
       return null;
     }
     return JSON.parse(result[0].getResultByName("metadata"));

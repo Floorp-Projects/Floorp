@@ -35,7 +35,7 @@ function getLoginMgrData() {
     null,
     FXA_PWDMGR_REALM
   );
-  if (logins.length == 0) {
+  if (!logins.length) {
     return null;
   }
   Assert.equal(logins.length, 1, "only 1 login available");

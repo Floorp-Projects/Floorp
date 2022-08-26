@@ -208,7 +208,7 @@ add_task(async function test_sync_event_is_sent_even_if_up_to_date() {
 
   await clientWithDump.maybeSync(uptodateTimestamp);
 
-  ok(received.current.length > 0, "Dump records are listed as created");
+  ok(!!received.current.length, "Dump records are listed as created");
   equal(received.current.length, received.created.length);
 
   const endSnapshot = getUptakeTelemetrySnapshot(
@@ -291,7 +291,7 @@ add_task(async function test_get_falls_back_to_dump_if_db_fails() {
   };
 
   const records = await clientWithDump.get({ dumpFallback: true });
-  ok(records.length > 0, "dump content is returned");
+  ok(!!records.length, "dump content is returned");
 
   // If fallback is disabled, error is thrown.
   let error;
@@ -363,7 +363,7 @@ add_task(async function test_get_falls_back_to_dump_if_db_fails_later() {
   };
 
   const records = await clientWithDump.get({ dumpFallback: true });
-  ok(records.length > 0, "dump content is returned");
+  ok(!!records.length, "dump content is returned");
 
   // If fallback is disabled, error is thrown.
   let error;
@@ -389,7 +389,7 @@ add_task(async function test_get_falls_back_to_dump_if_network_fails() {
   };
 
   const records = await clientWithDump.get();
-  ok(records.length > 0, "dump content is returned");
+  ok(!!records.length, "dump content is returned");
 
   clientWithDump.sync = backup;
 });
@@ -540,7 +540,7 @@ add_task(async function test_get_does_not_verify_signature_if_load_dump() {
 
   // When dump is loaded, signature is not verified.
   const records = await clientWithDump.get({ verifySignature: true });
-  ok(records.length > 0, "dump is loaded");
+  ok(!!records.length, "dump is loaded");
   ok(!called, "signature is missing but not verified");
 
   // If metadata is missing locally, it is not fetched if `syncIfEmpty` is disabled.
@@ -560,7 +560,7 @@ add_task(async function test_get_does_not_verify_signature_if_load_dump() {
   // If metadata is missing locally, it is fetched by default (`syncIfEmpty: true`)
   await clientWithDump.get({ verifySignature: true });
   const metadata = await clientWithDump.db.getMetadata();
-  ok(Object.keys(metadata).length > 0, "metadata was fetched");
+  ok(!!Object.keys(metadata).length, "metadata was fetched");
   ok(called, "signature was verified for the data that was in dump");
 });
 add_task(clear_state);
@@ -618,7 +618,7 @@ add_task(
     };
     // When dump is loaded, signature is not verified.
     const records = await clientWithDump.get({ verifySignature: true });
-    ok(records.length > 0, "dump is loaded");
+    ok(!!records.length, "dump is loaded");
     ok(!called, "signature is missing but not verified");
 
     // Synchronize the collection (local data is up-to-date).
@@ -635,7 +635,7 @@ add_task(
 
     // With signature verification, metadata was fetched.
     metadata = await clientWithDump.db.getMetadata();
-    ok(Object.keys(metadata).length > 0, "metadata was fetched");
+    ok(!!Object.keys(metadata).length, "metadata was fetched");
     ok(called, "signature was verified for the data that was in dump");
 
     // Metadata is present, signature will now verified.

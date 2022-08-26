@@ -51,7 +51,7 @@ add_task(async function test_import_json_dump_into_idb() {
   await RemoteSettingsWorker.importJSONDump("main", "language-dictionaries");
 
   const after = await client.get({ syncIfEmpty: false });
-  Assert.ok(after.length > 0);
+  Assert.ok(!!after.length);
   let lastModifiedStamp = await client.getLastModified();
 
   Assert.equal(

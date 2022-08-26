@@ -492,7 +492,6 @@ module.exports = {
         "netwerk/**",
         "remote/**",
         "security/manager/**",
-        "services/**",
         "storage/test/unit/test_vacuum.js",
         "taskcluster/docker/periodic-updates/scripts/**",
         "testing/**",

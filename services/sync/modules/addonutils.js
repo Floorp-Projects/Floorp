@@ -311,7 +311,7 @@ AddonUtilsInternal.prototype = {
 
     await Promise.all(installPromises);
 
-    if (ourResult.errors.length > 0) {
+    if (ourResult.errors.length) {
       throw new Error("1 or more add-ons failed to install");
     }
     return ourResult;

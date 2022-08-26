@@ -177,7 +177,7 @@ add_task(async function test_get_throws() {
 });
 
 function checkRecordsOrder(records) {
-  ok(records.length > 0);
+  ok(!!records.length);
   for (let i = 0; i < records.length; i++) {
     equal(records[i].id, String(i));
     equal(records[i].payload, "test:" + i);

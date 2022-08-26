@@ -272,10 +272,10 @@ var SyncedTabs = {
     // most recent tab for that client (ie, it is important the tabs for
     // each client are already sorted.)
     clients.sort((a, b) => {
-      if (a.tabs.length == 0) {
+      if (!a.tabs.length) {
         return 1; // b comes first.
       }
-      if (b.tabs.length == 0) {
+      if (!b.tabs.length) {
         return -1; // a comes first.
       }
       return b.tabs[0].lastUsed - a.tabs[0].lastUsed;
