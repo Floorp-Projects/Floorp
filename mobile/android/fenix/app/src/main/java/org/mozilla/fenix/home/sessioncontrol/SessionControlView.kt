@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.pocket.PocketStory
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -41,7 +42,8 @@ internal fun normalModeAdapterItems(
     showRecentTab: Boolean,
     showRecentSyncedTab: Boolean,
     recentVisits: List<RecentlyVisitedItem>,
-    pocketStories: List<PocketStory>
+    pocketStories: List<PocketStory>,
+    firstFrameDrawn: Boolean = false,
 ): List<AdapterItem> {
     val items = mutableListOf<AdapterItem>()
     var shouldShowCustomizeHome = false
@@ -86,7 +88,11 @@ internal fun normalModeAdapterItems(
         showCollections(collections, expandedCollections, items)
     }
 
-    if (settings.showPocketRecommendationsFeature && pocketStories.isNotEmpty()) {
+    // When Pocket is enabled and the initial layout of the app is done, then we can add these items
+    // to render to the home screen.
+    // This is only useful while we have a RecyclerView + Compose implementation. We can remove this
+    // when we switch to a Compose-only home screen.
+    if (firstFrameDrawn && settings.showPocketRecommendationsFeature && pocketStories.isNotEmpty()) {
         shouldShowCustomizeHome = true
         items.add(AdapterItem.PocketStoriesItem)
         items.add(AdapterItem.PocketCategoriesItem)
@@ -166,7 +172,8 @@ private fun AppState.toAdapterList(settings: Settings): List<AdapterItem> = when
         shouldShowRecentTabs(settings),
         shouldShowRecentSyncedTabs(settings),
         recentHistory,
-        pocketStories
+        pocketStories,
+        firstFrameDrawn
     )
     is Mode.Private -> privateModeAdapterItems()
     is Mode.Onboarding -> onboardingAdapterItems(mode.state)
@@ -207,6 +214,15 @@ class SessionControlView(
                         ).showSyncCFR()
                         context.settings().showSyncCFR = false
                     }
+
+                    // We want some parts of the home screen UI to be rendered first if they are
+                    // the most prominent parts of the visible part of the screen.
+                    // For this reason, we wait for the home screen recycler view to finish it's
+                    // layout and post an update for when it's best for non-visible parts of the
+                    // home screen to render itself.
+                    containerView.context.components.appStore.dispatch(
+                        AppAction.UpdateFirstFrameDrawn(true)
+                    )
                 }
             }
         }

@@ -217,7 +217,8 @@ class SessionControlViewTest {
             false,
             showRecentSyncedTab = false,
             historyMetadata,
-            pocketStories
+            pocketStories,
+            true
         )
 
         assertTrue(results[0] is AdapterItem.TopPlaceholderItem)
@@ -225,6 +226,25 @@ class SessionControlViewTest {
         assertTrue(results[2] is AdapterItem.PocketCategoriesItem)
         assertTrue(results[3] is AdapterItem.PocketRecommendationsFooterItem)
         assertTrue(results[4] is AdapterItem.CustomizeHomeButton)
+
+        // When the first frame has not yet drawn don't add pocket.
+        val results2 = normalModeAdapterItems(
+            settings,
+            topSites,
+            collections,
+            expandedCollections,
+            recentBookmarks,
+            false,
+            null,
+            false,
+            showRecentSyncedTab = false,
+            historyMetadata,
+            pocketStories,
+            false
+        )
+
+        assertTrue(results2[0] is AdapterItem.TopPlaceholderItem)
+        assertTrue(results2[1] is AdapterItem.BottomSpacer)
     }
 
     @Test
