@@ -528,43 +528,6 @@ nsCertOverrideService::RememberValidityOverrideScriptable(
 }
 
 NS_IMETHODIMP
-nsCertOverrideService::RememberTemporaryValidityOverrideUsingFingerprint(
-    const nsACString& aHostName, int32_t aPort,
-    const OriginAttributes& aOriginAttributes,
-    const nsACString& aCertFingerprint, uint32_t aOverrideBits) {
-  if (aCertFingerprint.IsEmpty() || aHostName.IsEmpty() ||
-      !IsAscii(aCertFingerprint) || !IsAscii(aHostName) || (aPort < -1)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  MutexAutoLock lock(mMutex);
-  AddEntryToList(aHostName, aPort, aOriginAttributes,
-                 nullptr,  // No cert to keep alive
-                 true,     // temporary
-                 aCertFingerprint, (nsCertOverride::OverrideBits)aOverrideBits,
-                 ""_ns,  // dbkey
-                 lock);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCertOverrideService::
-    RememberTemporaryValidityOverrideUsingFingerprintScriptable(
-        const nsACString& aHostName, int32_t aPort,
-        JS::Handle<JS::Value> aOriginAttributes,
-        const nsACString& aCertFingerprint, uint32_t aOverrideBits,
-        JSContext* aCx) {
-  OriginAttributes attrs;
-  if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  return RememberTemporaryValidityOverrideUsingFingerprint(
-      aHostName, aPort, attrs, aCertFingerprint, aOverrideBits);
-}
-
-NS_IMETHODIMP
 nsCertOverrideService::HasMatchingOverride(
     const nsACString& aHostName, int32_t aPort,
     const OriginAttributes& aOriginAttributes, nsIX509Cert* aCert,
