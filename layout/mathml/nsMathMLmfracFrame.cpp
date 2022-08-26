@@ -401,32 +401,6 @@ nsresult nsMathMLmfracFrame::PlaceInternal(DrawTarget* aDrawTarget,
     nscoord dxDen = leftSpace + (width - sizeDen.Width()) / 2;
     width += leftSpace + rightSpace;
 
-    if (!StaticPrefs::mathml_deprecated_alignment_attributes_disabled()) {
-      // see if the numalign attribute is there
-      if (mContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                         nsGkAtoms::numalign_, value)) {
-        mContent->OwnerDoc()->WarnOnceAbout(
-            dom::DeprecatedOperations::eMathML_DeprecatedAlignmentAttributes);
-        if (value.EqualsLiteral("left")) {
-          dxNum = leftSpace;
-        } else if (value.EqualsLiteral("right")) {
-          dxNum = width - rightSpace - sizeNum.Width();
-        }
-      }
-
-      // see if the denomalign attribute is there
-      if (mContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                         nsGkAtoms::denomalign_, value)) {
-        mContent->OwnerDoc()->WarnOnceAbout(
-            dom::DeprecatedOperations::eMathML_DeprecatedAlignmentAttributes);
-        if (value.EqualsLiteral("left")) {
-          dxDen = leftSpace;
-        } else if (value.EqualsLiteral("right")) {
-          dxDen = width - rightSpace - sizeDen.Width();
-        }
-      }
-    }
-
     mBoundingMetrics.rightBearing =
         std::max(dxNum + bmNum.rightBearing, dxDen + bmDen.rightBearing);
     if (mBoundingMetrics.rightBearing < width - rightSpace)

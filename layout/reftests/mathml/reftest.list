@@ -15,7 +15,7 @@ pref(mathml.scriptminsize_attribute.disabled,false) pref(mathml.scriptsizemultip
 fuzzy(0-2,0-529) == 393760-2.xml 393760-2-ref.xml
 == 414123.xhtml 414123-ref.xhtml
 == dir-1.html dir-1-ref.html
-pref(mathml.deprecated_alignment_attributes.disabled,false) == dir-2.html dir-2-ref.html
+== dir-2.html dir-2-ref.html
 pref(mathml.mfrac_bevelled_attribute.disabled,false) random-if(gtkWidget) == dir-3.html dir-3-ref.html # bug 1309426
 == dir-5.html dir-5-ref.html
 fuzzy-if(cocoaWidget,0-135,0-56) == dir-6a.html dir-6a-ref.html
@@ -119,10 +119,10 @@ random-if(gtkWidget) == mpadded-8.html mpadded-8-ref.html # bug 1309430
 random-if(gtkWidget) == mpadded-9.html mpadded-9-ref.html # bug 1309430
 pref(mathml.scriptsizemultiplier_attribute.disabled,false) == scriptlevel-1.html scriptlevel-1-ref.html
 == scriptlevel-movablelimits-1.html scriptlevel-movablelimits-1-ref.html
-pref(mathml.deprecated_alignment_attributes.disabled,false) == munderover-align-accent-false.html munderover-align-accent-false-ref.html
-pref(mathml.deprecated_alignment_attributes.disabled,false) == munderover-align-accent-true.html munderover-align-accent-true-ref.html
-pref(mathml.deprecated_alignment_attributes.disabled,false) == munder-mover-align-accent-true.html munder-mover-align-accent-true-ref.html
-pref(mathml.deprecated_alignment_attributes.disabled,false) == munder-mover-align-accent-false.html munder-mover-align-accent-false-ref.html
+== munderover-align-accent-false.html munderover-align-accent-false-ref.html
+== munderover-align-accent-true.html munderover-align-accent-true-ref.html
+== munder-mover-align-accent-true.html munder-mover-align-accent-true-ref.html
+== munder-mover-align-accent-false.html munder-mover-align-accent-false-ref.html
 pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-linethickness-1.xhtml mfrac-linethickness-1-ref.xhtml
 == mfrac-linethickness-2.xhtml mfrac-linethickness-2-ref.xhtml
 == mfrac-linethickness-3.xhtml mfrac-linethickness-3-ref.xhtml
@@ -307,28 +307,16 @@ random-if(gtkWidget) == rowlines-3-2.html rowlines-3-2-ref.html # bug 1309426
 == op-dict-12.html op-dict-12-ref.html
 != op-dict-13.html op-dict-13-ref.html
 pref(mathml.mfrac_bevelled_attribute.disabled,false) == mfrac-A-1.html mfrac-A-1-ref.html
-pref(mathml.deprecated_alignment_attributes.disabled,false) == mfrac-A-2.html mfrac-A-2-ref.html
-pref(mathml.deprecated_alignment_attributes.disabled,false) == mfrac-A-3.html mfrac-A-3-ref.html
 == mfrac-A-4.html mfrac-A-4-ref.html
 pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-A-5.html mfrac-A-5-ref.html # bug 1309426
-pref(mathml.deprecated_alignment_attributes.disabled,false) == mfrac-A-6.html mfrac-A-6-ref.html
-pref(mathml.deprecated_alignment_attributes.disabled,false) == mfrac-A-7.html mfrac-A-7-ref.html
 == mfrac-A-8.html mfrac-A-8-ref.html
 pref(mathml.mfrac_bevelled_attribute.disabled,false) == mfrac-B-1.html mfrac-B-1-ref.html
 pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-B-2.html mfrac-B-2-3-ref.html
 pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-B-3.html mfrac-B-2-3-ref.html
-pref(mathml.deprecated_alignment_attributes.disabled,false) fuzzy-if(geckoview,0-239,0-781) == mfrac-B-4.html mfrac-B-4-5-ref.html
-pref(mathml.deprecated_alignment_attributes.disabled,false)  == mfrac-B-5.html mfrac-B-4-5-ref.html
-pref(mathml.deprecated_alignment_attributes.disabled,false) fuzzy-if(geckoview,0-239,0-781) == mfrac-B-6.html mfrac-B-6-7-ref.html
-pref(mathml.deprecated_alignment_attributes.disabled,false) == mfrac-B-7.html mfrac-B-6-7-ref.html
 pref(mathml.mfrac_bevelled_attribute.disabled,false) fuzzy(0-1,0-14) == mfrac-C-1.html mfrac-C-1-ref.html
 pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-C-2.html mfrac-C-2-ref.html
-pref(mathml.deprecated_alignment_attributes.disabled,false) fuzzy-if(geckoview,0-239,0-776) == mfrac-C-3.html mfrac-C-3-ref.html
-pref(mathml.deprecated_alignment_attributes.disabled,false) fuzzy-if(geckoview,0-239,0-271) == mfrac-C-4.html mfrac-C-4-ref.html
 pref(mathml.mfrac_bevelled_attribute.disabled,false) fuzzy(0-1,0-14) == mfrac-D-1.html mfrac-D-1-ref.html
 pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-D-2.html mfrac-D-2-ref.html
-pref(mathml.deprecated_alignment_attributes.disabled,false) fuzzy-if(geckoview,0-239,0-776) == mfrac-D-3.html mfrac-D-3-ref.html
-pref(mathml.deprecated_alignment_attributes.disabled,false) fuzzy-if(geckoview,0-239,0-271) == mfrac-D-4.html mfrac-D-4-ref.html
 == mfrac-E-1.html mfrac-E-1-ref.html
 == shadow-dom-1.html shadow-dom-1-ref.html
 pref(ui.useOverlayScrollbars,1) pref(dom.meta-viewport.enabled,true) pref(font.size.inflation.emPerLine,25) fuzzy-if(!gtkWidget,0-255,0-324) fuzzy-if(gtkWidget,0-255,0-66) == font-inflation-1.html font-inflation-1-ref.html # gtkWidget due to Bug 1607294

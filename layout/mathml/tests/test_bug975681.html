@@ -34,24 +34,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=975681
   
   <p>
     <math>
-      <mfrac numalign="left" id="mfrac_numalign">
-        <mspace width="50px" height="20px" mathbackground="red"></mspace>
-        <mspace width="100px" height="20px" mathbackground="red"></mspace>
-      </mfrac>
-    </math>
-  </p>
-  
-  <p>
-    <math>
-      <mfrac denomalign="right" id="mfrac_denomalign">
-        <mspace width="100px" height="20px" mathbackground="red"></mspace>
-        <mspace width="50px" height="20px" mathbackground="red"></mspace>
-      </mfrac>
-    </math>
-  </p>
-  
-  <p>
-    <math>
       <mfrac bevelled="true" id="mfrac_bevelled">
         <mspace width="100px" height="20px" mathbackground="red"></mspace>
         <mspace width="100px" height="20px" mathbackground="red"></mspace>
@@ -96,18 +78,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=975681
 
       ok(almostLessThanAbs(num.height + 30 + denom.height, mfrac.height) &&
         almostLessThanAbs(num.bottom + 30, denom.top), "numerator and denominator should be separated by linethickness");
-
-      if (!SpecialPowers.getBoolPref('mathml.deprecated_alignment_attributes.disabled')) {
-          num = document.getElementById("mfrac_numalign").firstElementChild.getBoundingClientRect();
-          mfrac = document.getElementById("mfrac_numalign").getBoundingClientRect();
-
-          ok(almostEqualAbs(num.left, mfrac.left), "numerator should be aligned left");
-
-          mfrac = document.getElementById("mfrac_denomalign").getBoundingClientRect();
-          denom = document.getElementById("mfrac_denomalign").lastElementChild.getBoundingClientRect();
-
-          ok(almostEqualAbs(mfrac.right, denom.right), "denominator should be aligned right");
-      }
 
       num = document.getElementById("mfrac_bevelled").firstElementChild.getBoundingClientRect();
       denom = document.getElementById("mfrac_bevelled").lastElementChild.getBoundingClientRect();

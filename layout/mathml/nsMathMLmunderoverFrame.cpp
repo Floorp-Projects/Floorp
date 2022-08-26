@@ -579,19 +579,6 @@ nsresult nsMathMLmunderoverFrame::Place(DrawTarget* aDrawTarget,
 
   nscoord dxBase = 0, dxOver = 0, dxUnder = 0;
   nsAutoString valueAlign;
-  enum { center, left, right } alignPosition = center;
-
-  if (!StaticPrefs::mathml_deprecated_alignment_attributes_disabled() &&
-      mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::align,
-                                     valueAlign)) {
-    mContent->OwnerDoc()->WarnOnceAbout(
-        dom::DeprecatedOperations::eMathML_DeprecatedAlignmentAttributes);
-    if (valueAlign.EqualsLiteral("left")) {
-      alignPosition = left;
-    } else if (valueAlign.EqualsLiteral("right")) {
-      alignPosition = right;
-    }
-  }
 
   //////////
   // pass 1, do what <mover> does: attach the overscript on the base
@@ -607,23 +594,14 @@ nsresult nsMathMLmunderoverFrame::Place(DrawTarget* aDrawTarget,
 
   if (NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags)) {
     mBoundingMetrics.width = bmBase.width;
-    if (alignPosition == center) {
-      dxOver += correction;
-    }
+    dxOver += correction;
   } else {
     mBoundingMetrics.width = std::max(bmBase.width, overWidth);
-    if (alignPosition == center) {
-      dxOver += correction / 2;
-    }
+    dxOver += correction / 2;
   }
 
-  if (alignPosition == center) {
-    dxOver += (mBoundingMetrics.width - overWidth) / 2;
-    dxBase = (mBoundingMetrics.width - bmBase.width) / 2;
-  } else if (alignPosition == right) {
-    dxOver += mBoundingMetrics.width - overWidth;
-    dxBase = mBoundingMetrics.width - bmBase.width;
-  }
+  dxOver += (mBoundingMetrics.width - overWidth) / 2;
+  dxBase = (mBoundingMetrics.width - bmBase.width) / 2;
 
   mBoundingMetrics.ascent =
       bmBase.ascent + overDelta1 + bmOver.ascent + bmOver.descent;
@@ -656,19 +634,13 @@ nsresult nsMathMLmunderoverFrame::Place(DrawTarget* aDrawTarget,
   }
 
   nscoord maxWidth = std::max(bmAnonymousBase.width, underWidth);
-  if (alignPosition == center &&
-      !NS_MATHML_EMBELLISH_IS_ACCENTUNDER(mEmbellishData.flags)) {
+  if (!NS_MATHML_EMBELLISH_IS_ACCENTUNDER(mEmbellishData.flags)) {
     GetItalicCorrection(bmAnonymousBase, correction);
     dxUnder += -correction / 2;
   }
   nscoord dxAnonymousBase = 0;
-  if (alignPosition == center) {
-    dxUnder += (maxWidth - underWidth) / 2;
-    dxAnonymousBase = (maxWidth - bmAnonymousBase.width) / 2;
-  } else if (alignPosition == right) {
-    dxUnder += maxWidth - underWidth;
-    dxAnonymousBase = maxWidth - bmAnonymousBase.width;
-  }
+  dxUnder += (maxWidth - underWidth) / 2;
+  dxAnonymousBase = (maxWidth - bmAnonymousBase.width) / 2;
 
   // adjust the offsets of the real base and overscript since their
   // final offsets should be relative to us...
