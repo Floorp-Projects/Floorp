@@ -102,6 +102,15 @@ class MOZ_STACK_CLASS AutoPendingStyleCacheArray final
   }
 };
 
+enum class PendingStyleState {
+  // Will be not changed in new content
+  NotUpdated,
+  // Will be applied to new content
+  BeingPreserved,
+  // Will be cleared from new content
+  BeingCleared,
+};
+
 /******************************************************************************
  * PendingStyles stores pending inline styles which WILL be applied to new
  * content when it'll be inserted.  I.e., updating styles of this class means
@@ -238,8 +247,22 @@ class PendingStyles final {
    */
   int32_t TakeRelativeFontSize();
 
-  void GetTypingState(bool& isSet, bool& theSetting, nsStaticAtom& aProp,
-                      nsAtom* aAttr = nullptr, nsString* aOutValue = nullptr);
+  /**
+   * GetStyleState() returns whether the style will be applied to new content,
+   * removed from new content or not changed.
+   *
+   * @param aHTMLProperty       The HTML tag name which represents the style.
+   *                            For example, nsGkAtoms::b for bold text.
+   * @param aAttribute          nullptr or attribute name which represents the
+   *                            style with aHTMLProperty.  E.g., nsGkAtoms::size
+   *                            for nsGkAtoms::font.
+   * @param aOutNewAttributeValueOrCSSValue
+   *                            [out, optional] If applied to new content, this
+   *                            is set to the new value.
+   */
+  PendingStyleState GetStyleState(
+      nsStaticAtom& aHTMLProperty, nsAtom* aAttribute = nullptr,
+      nsString* aOutNewAttributeValueOrCSSValue = nullptr) const;
 
  protected:
   virtual ~PendingStyles() { Reset(); };

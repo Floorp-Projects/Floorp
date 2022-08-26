@@ -8666,10 +8666,9 @@ nsresult HTMLEditor::GetInlineStyles(
       attribute = nullptr;
     }
     // If type-in state is set, don't intervene
-    bool typeInSet, unused;
-    mPendingStylesToApplyToNewContent->GetTypingState(typeInSet, unused, *tag,
-                                                      attribute, nullptr);
-    if (typeInSet) {
+    const PendingStyleState styleState =
+        mPendingStylesToApplyToNewContent->GetStyleState(*tag, attribute);
+    if (styleState != PendingStyleState::NotUpdated) {
       continue;
     }
     bool isSet = false;

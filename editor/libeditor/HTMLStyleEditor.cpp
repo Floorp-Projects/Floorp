@@ -1769,20 +1769,21 @@ nsresult HTMLEditor::GetInlinePropertyBase(nsStaticAtom& aHTMLProperty,
       if (NS_WARN_IF(!collapsedNode)) {
         return NS_ERROR_FAILURE;
       }
-      bool isSet, theSetting;
       nsString tOutString;
-      if (aAttribute) {
-        mPendingStylesToApplyToNewContent->GetTypingState(
-            isSet, theSetting, aHTMLProperty, aAttribute, &tOutString);
-        if (outValue) {
-          outValue->Assign(tOutString);
+      const PendingStyleState styleState = [&]() {
+        if (aAttribute) {
+          auto state = mPendingStylesToApplyToNewContent->GetStyleState(
+              aHTMLProperty, aAttribute, &tOutString);
+          if (outValue) {
+            outValue->Assign(tOutString);
+          }
+          return state;
         }
-      } else {
-        mPendingStylesToApplyToNewContent->GetTypingState(isSet, theSetting,
-                                                          aHTMLProperty);
-      }
-      if (isSet) {
-        *aFirst = *aAny = *aAll = theSetting;
+        return mPendingStylesToApplyToNewContent->GetStyleState(aHTMLProperty);
+      }();
+      if (styleState != PendingStyleState::NotUpdated) {
+        *aFirst = *aAny = *aAll =
+            (styleState == PendingStyleState::BeingPreserved);
         return NS_OK;
       }
 
