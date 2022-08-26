@@ -28,8 +28,6 @@ export default class RemoveLoginsDialog extends HTMLElement {
     this._title = this.shadowRoot.querySelector(".title");
     this._checkbox = this.shadowRoot.querySelector(".checkbox");
     this._checkboxLabel = this.shadowRoot.querySelector(".checkbox-text");
-
-    this._buttons.classList.toggle("macosx", navigator.platform == "MacIntel");
   }
 
   handleEvent(event) {

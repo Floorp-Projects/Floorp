@@ -26,8 +26,6 @@ export default class ConfirmationDialog extends HTMLElement {
     this._message = this.shadowRoot.querySelector(".message");
     this._overlay = this.shadowRoot.querySelector(".overlay");
     this._title = this.shadowRoot.querySelector(".title");
-
-    this._buttons.classList.toggle("macosx", navigator.platform == "MacIntel");
   }
 
   handleEvent(event) {

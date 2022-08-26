@@ -103,8 +103,10 @@
   margin-inline: 48px;
 }
 
-.buttons.macosx > .confirm-button {
-  order: 1;
+@media (-moz-platform: linux), (-moz-platform: macos) {
+  .buttons > .confirm-button {
+    order: 1;
+  }
 }
 
 .buttons > button {
