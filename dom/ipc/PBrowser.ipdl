@@ -107,6 +107,7 @@ using mozilla::IntrinsicSize from "nsIFrame.h";
 using mozilla::AspectRatio from "mozilla/AspectRatio.h";
 using mozilla::NativeKeyBindingsType from "mozilla/NativeKeyBindingsType.h";
 using mozilla::StyleImageRendering from "mozilla/ServoStyleConsts.h";
+[MoveOnly] using class mozilla::ipc::BigBuffer from "mozilla/ipc/BigBuffer.h";
 
 namespace mozilla {
 namespace dom {
@@ -415,7 +416,7 @@ parent:
      */
     async SetCursor(nsCursor value,
                     bool hasCustomCursor,
-                    nsCString customCursorData,
+                    BigBuffer? customCursorData,
                     uint32_t width, uint32_t height,
                     float resolutionX, float resolutionY,
                     uint32_t stride, SurfaceFormat format,

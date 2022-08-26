@@ -80,8 +80,8 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
         }
 
         mozilla::Unused << child->SendInvokeDragSession(
-            dataTransfers, aActionType, Some(std::move(surfaceData)), stride,
-            dataSurface->GetFormat(), dragRect, principal, csp, csArgs,
+            std::move(dataTransfers), aActionType, Some(std::move(surfaceData)),
+            stride, dataSurface->GetFormat(), dragRect, principal, csp, csArgs,
             mSourceWindowContext);
         StartDragSession();
         return NS_OK;
@@ -90,8 +90,9 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
   }
 
   mozilla::Unused << child->SendInvokeDragSession(
-      dataTransfers, aActionType, Nothing(), 0, static_cast<SurfaceFormat>(0),
-      dragRect, principal, csp, csArgs, mSourceWindowContext);
+      std::move(dataTransfers), aActionType, Nothing(), 0,
+      static_cast<SurfaceFormat>(0), dragRect, principal, csp, csArgs,
+      mSourceWindowContext);
   StartDragSession();
   return NS_OK;
 }
