@@ -738,8 +738,6 @@
     <string name="open_tabs_menu">Ṣí àwọn àtẹ táàbù</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Tọ́jú àwọn táàbù sínú àkójọpọ̀</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Àtẹ táàbù</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Pa àkójọpọ̀ rẹ́</string>
     <!-- Text for the menu button to rename a collection -->
@@ -1237,6 +1235,8 @@
     <string name="sync_scan_code">Síkáànì kóòdù náà</string>
     <!-- Instructions on how to access pairing -->
     <string name="sign_in_instructions"><![CDATA[Lóri kọ̀m̀pútà rẹ ṣí Firefox ko sì lọ sí <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Gbaradì láti síkáànì</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Wọlé pẹ̀lú kámẹ́rà rẹ</string>
     <!-- Text shown for settings option for sign with email -->
@@ -1290,6 +1290,10 @@
     <string name="etp_cryptominers_title">Àwọn kíríputomínà</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Àwọn ẹ̀rọ ìtẹ̀ka</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">Kóòdù ítọpasẹ̀</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Àwọn ìdáàbòbò wà ní TÍTÀN fún sáìtì yìí</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
     <string name="etp_panel_off">Àwọn ìdáábòbò wà ní PÍPA fún sáìtì yìí </string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
@@ -1419,6 +1423,8 @@
     <string name="preferences_addresses">Àwọn àdírẹ́ẹ̀sì</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Àwọn káàdì kírẹ́díìtì</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">Ìfipamọ́ àti àwọn káàdì dátààdáṣe</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">Dátà ti di ìṣọdi kóòdù</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
@@ -1622,7 +1628,7 @@
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Ìnílò pásíwọọ̀dù</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">Ìnílò orúkọ aṣàmúlò</string>
+    <string name="saved_login_username_required">Ìnílò orúkọ ìgbàwọlé</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Ìwádìí olóhùn</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1694,4 +1700,45 @@
     <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
     <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Firefox lè ti àwọn táàbù tí oò tíì yẹ̀wò ní oṣù tó kọjá.</string>
 
-    </resources>
+    <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">TAN TÌ-FÚNRA-Ẹ̀</string>
+    <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
+    <string name="inactive_tabs_auto_close_message_snackbar">Tí-fúnra-ẹ̀ ti di ṣíṣe</string>
+
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Ṣètò àwọn líǹkì láti àwọn wẹ́íbúsaìtì, íméèlì àti àwọn ìfiráńṣẹ láti ṣí fún ra wọn ní Firefox.</string>
+
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Yọ kúrò</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Tẹ̀ẹ́ fún àlàyé nípa kókó díẹ̀ si</string>
+
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Lọ kiri sókẹ̀</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Tì</string>
+
+    <!-- Pocket recommended stories -->
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_header_1">Àwọn ìtàn tó ń mú ni ronú</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_categories_header">Àwọn ìtàn nípasẹ̀ kókó-ọ̀rọ̀</string>
+    <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
+    <string name="pocket_stories_placeholder_text">Ṣàwárí si</string>
+    <!-- Title of an app feature. Smaller than a heading.-->
+    <string name="pocket_stories_feature_title">Pocket ni onígbọ̀wọ́.</string>
+    <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
+    <string name="pocket_stories_feature_caption">Ara ìdílé Firefox. %s</string>
+    <!-- Clickable text for opening an external link for more information about Pocket. -->
+    <string name="pocket_stories_feature_learn_more">Kọ́ ẹ̀kọ́ si</string>
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">Onígbọ̀wọ́</string>
+
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Jẹ́ kí tẹlẹmẹ́tìrì fi dátà ráńṣẹ́.</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">Lọ sí àwọn ààtò</string>
+    <string name="firefox_suggest_header">Firefox Dábàá</string>
+</resources>
