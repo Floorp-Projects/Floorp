@@ -5033,8 +5033,8 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   const uint32_t removingContentLength = aContentToRemove.Length();
-  const Maybe<uint32_t> removingContentIndex =
-      aContentToRemove.ComputeIndexInParentNode();
+  const Maybe<uint32_t> keepingContentExIndex =
+      aContentToKeep.ComputeIndexInParentNode();
 
   // Remember all selection points.
   // XXX Do we need to restore all types of selections by ourselves?  Normal
@@ -5149,11 +5149,11 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
     }
   }
 
-  if (MOZ_LIKELY(removingContentIndex.isSome())) {
+  if (MOZ_LIKELY(keepingContentExIndex.isSome())) {
     DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjJoinNodes(
         EditorRawDOMPoint(&aContentToKeep, std::min(removingContentLength,
                                                     aContentToKeep.Length())),
-        aContentToRemove, *removingContentIndex, GetJoinNodesDirection());
+        aContentToRemove, *keepingContentExIndex, GetJoinNodesDirection());
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "RangeUpdater::SelAdjJoinNodes() failed, but ignored");
   }
