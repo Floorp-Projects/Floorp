@@ -581,6 +581,7 @@ button.close {
 }
 
 .closed-tab-li-time {
+  white-space: nowrap;
   text-align: end;
 }
 
@@ -712,7 +713,7 @@ button.close {
   grid-template-areas:
   "favicon favicon badge badge"
   "title title title title"
-  "domain domain domain time"
+  "domain domain domain domain"
   "device device device time";
 }
 
@@ -768,6 +769,7 @@ button.close {
   grid-area: time;
   justify-self: end;
   align-self: end;
+  white-space: nowrap;
 }
 
 .synced-tab-li:first-child > .synced-tab-a > .synced-tab-li-time {
