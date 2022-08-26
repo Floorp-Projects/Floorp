@@ -157,7 +157,6 @@ class LinkHandlerChild extends JSWindowActorChild {
               let engine = { title: link.title, href: link.href };
               this.sendAsyncMessage("Link:AddSearch", {
                 engine,
-                url: link.ownerDocument.documentURI,
               });
               searchAdded = true;
             }

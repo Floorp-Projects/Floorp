@@ -89,11 +89,7 @@ class LinkHandlerParent extends JSWindowActorParent {
         }
 
         if (win.BrowserSearch) {
-          win.BrowserSearch.addEngine(
-            browser,
-            aMsg.data.engine,
-            Services.io.newURI(aMsg.data.url)
-          );
+          win.BrowserSearch.addEngine(browser, aMsg.data.engine);
         }
         break;
     }
