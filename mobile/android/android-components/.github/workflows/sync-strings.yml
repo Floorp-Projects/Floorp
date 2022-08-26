@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: "Discover A-C Version"
         id: ac-version-for-fenix-beta
-        uses: mozilla-mobile/ac-version-for-fenix-beta@1.1.0
+        uses: mozilla-mobile/ac-version-for-fenix-beta@1.2.0
       - name: "Checkout Main Branch"
         uses: actions/checkout@v2
         with:
