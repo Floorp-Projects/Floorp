@@ -394,11 +394,11 @@ void GCRuntime::queueZonesAndStartBackgroundSweep(ZoneList&& zones) {
     AutoLockHelperThreadState lock;
     MOZ_ASSERT(!requestSliceAfterBackgroundTask);
     backgroundSweepZones.ref().appendList(std::move(zones));
-    if (sweepOnBackgroundThread) {
+    if (useBackgroundThreads) {
       sweepTask.startOrRunIfIdle(lock);
     }
   }
-  if (!sweepOnBackgroundThread) {
+  if (!useBackgroundThreads) {
     sweepTask.join();
     sweepTask.runFromMainThread();
   }
@@ -2297,7 +2297,7 @@ void GCRuntime::endSweepPhase(bool destroyingRuntime) {
 
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP);
 
-  MOZ_ASSERT_IF(destroyingRuntime, !sweepOnBackgroundThread);
+  MOZ_ASSERT_IF(destroyingRuntime, !useBackgroundThreads);
 
   {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::DESTROY);
@@ -2328,7 +2328,7 @@ void GCRuntime::endSweepPhase(bool destroyingRuntime) {
 #ifdef DEBUG
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
     for (auto i : AllAllocKinds()) {
-      MOZ_ASSERT_IF(!IsBackgroundFinalized(i) || !sweepOnBackgroundThread,
+      MOZ_ASSERT_IF(!IsBackgroundFinalized(i) || !useBackgroundThreads,
                     zone->arenas.collectingArenaList(i).isEmpty());
     }
   }
