@@ -11515,9 +11515,7 @@ void CodeGenerator::visitStoreElementHoleT(LStoreElementHoleT* lir) {
   Address initLength(elements, ObjectElements::offsetOfInitializedLength());
   masm.spectreBoundsCheck32(index, initLength, spectreTemp, ool->entry());
 
-  if (lir->mir()->needsBarrier()) {
-    emitPreBarrier(elements, lir->index());
-  }
+  emitPreBarrier(elements, lir->index());
 
   masm.bind(ool->rejoinStore());
   emitStoreElementTyped(lir->value(), lir->mir()->value()->type(),
@@ -11539,9 +11537,7 @@ void CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV* lir) {
   Address initLength(elements, ObjectElements::offsetOfInitializedLength());
   masm.spectreBoundsCheck32(index, initLength, spectreTemp, ool->entry());
 
-  if (lir->mir()->needsBarrier()) {
-    emitPreBarrier(elements, lir->index());
-  }
+  emitPreBarrier(elements, lir->index());
 
   masm.bind(ool->rejoinStore());
   masm.storeValue(value, BaseObjectElementIndex(elements, index));
