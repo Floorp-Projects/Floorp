@@ -1431,7 +1431,9 @@ def set_implementation(config, tasks):
             yield task
             continue
 
-        impl, os = worker_type_implementation(config.graph_config, task["worker-type"])
+        impl, os = worker_type_implementation(
+            config.graph_config, config.params, task["worker-type"]
+        )
 
         tags = task.setdefault("tags", {})
         tags["worker-implementation"] = impl
@@ -1820,9 +1822,8 @@ def build_task(config, tasks):
         else:
             provisioner_id, worker_type = get_worker_type(
                 config.graph_config,
+                config.params,
                 task["worker-type"],
-                level=level,
-                release_level=release_level(config.params["project"]),
             )
         task["worker-type"] = "/".join([provisioner_id, worker_type])
         project = config.params["project"]

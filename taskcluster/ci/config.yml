@@ -555,7 +555,10 @@ workers:
             worker-type:
                 by-release-level:
                     production: '{trust-domain}-3-tree'
-                    staging: '{trust-domain}-1-tree'
+                    staging:
+                        by-project:
+                            autoland: '{trust-domain}-3-tree'
+                            default: '{trust-domain}-1-tree'
         tree-dev:
             provisioner: scriptworker-k8s
             implementation: treescript
