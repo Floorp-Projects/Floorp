@@ -35,21 +35,17 @@ class Selection;
 enum class SpecifiedStyle : uint8_t { Preserve, Discard };
 
 struct PropItem {
-  nsAtom* tag;
-  nsAtom* attr;
+  MOZ_KNOWN_LIVE nsStaticAtom* const mTag = nullptr;
+  nsAtom* attr = nullptr;
   nsString value;
   // Whether the class and style attribute should be perserved or discarded.
-  SpecifiedStyle specifiedStyle;
+  SpecifiedStyle specifiedStyle = SpecifiedStyle::Preserve;
 
-  PropItem()
-      : tag(nullptr), attr(nullptr), specifiedStyle(SpecifiedStyle::Preserve) {
-    MOZ_COUNT_CTOR(PropItem);
-  }
-  PropItem(nsAtom* aTag, nsAtom* aAttr, const nsAString& aValue)
-      : tag(aTag),
+  PropItem() { MOZ_COUNT_CTOR(PropItem); }
+  PropItem(nsStaticAtom* aTag, nsAtom* aAttr, const nsAString& aValue)
+      : mTag(aTag),
         attr(aAttr != nsGkAtoms::_empty ? aAttr : nullptr),
-        value(aValue),
-        specifiedStyle(SpecifiedStyle::Preserve) {
+        value(aValue) {
     MOZ_COUNT_CTOR(PropItem);
   }
   MOZ_COUNTED_DTOR(PropItem)
@@ -58,30 +54,29 @@ struct PropItem {
 class StyleCache final {
  public:
   StyleCache() = delete;
-  StyleCache(nsStaticAtom* aTag, nsStaticAtom* aAttribute,
+  StyleCache(nsStaticAtom& aTag, nsStaticAtom* aAttribute,
              const nsAString& aValue)
-      : mTag(aTag), mAttribute(aAttribute), mValue(aValue) {
-    MOZ_ASSERT(mTag);
-  }
+      : mTag(aTag), mAttribute(aAttribute), mValue(aValue) {}
 
-  nsStaticAtom* Tag() const { return mTag; }
-  nsStaticAtom* GetAttribute() const { return mAttribute; }
+  MOZ_KNOWN_LIVE nsStaticAtom& TagRef() const { return mTag; }
+  MOZ_KNOWN_LIVE nsStaticAtom* GetAttribute() const { return mAttribute; }
   const nsString& Value() const { return mValue; }
 
  private:
-  nsStaticAtom* mTag;
-  nsStaticAtom* mAttribute;
-  nsString mValue;
+  MOZ_KNOWN_LIVE nsStaticAtom& mTag;
+  MOZ_KNOWN_LIVE nsStaticAtom* const mAttribute;
+  const nsString mValue;
 };
 
 class MOZ_STACK_CLASS AutoStyleCacheArray final
     : public AutoTArray<StyleCache, 21> {
  public:
-  index_type IndexOf(const nsStaticAtom* aTag,
+  index_type IndexOf(const nsStaticAtom& aTag,
                      const nsStaticAtom* aAttribute) const {
     for (index_type index = 0; index < Length(); ++index) {
       const StyleCache& styleCache = ElementAt(index);
-      if (styleCache.Tag() == aTag && styleCache.GetAttribute() == aAttribute) {
+      if (&styleCache.TagRef() == &aTag &&
+          styleCache.GetAttribute() == aAttribute) {
         return index;
       }
     }
@@ -114,10 +109,10 @@ class TypeInState final {
 
   void OnSelectionChange(const HTMLEditor& aHTMLEditor, int16_t aReason);
 
-  void SetProp(nsAtom* aProp, nsAtom* aAttr, const nsAString& aValue);
+  void SetProp(nsStaticAtom& aProp, nsAtom* aAttr, const nsAString& aValue);
 
   void ClearAllProps();
-  void ClearProp(nsAtom* aProp, nsAtom* aAttr);
+  void ClearProp(nsStaticAtom* aProp, nsAtom* aAttr);
   void ClearLinkPropAndDiscardItsSpecifiedStyle();
 
   /**
@@ -138,23 +133,24 @@ class TypeInState final {
    */
   int32_t TakeRelativeFontSize();
 
-  void GetTypingState(bool& isSet, bool& theSetting, nsAtom* aProp,
-                      nsAtom* aAttr = nullptr, nsString* outValue = nullptr);
+  void GetTypingState(bool& isSet, bool& theSetting, nsStaticAtom& aProp,
+                      nsAtom* aAttr = nullptr, nsString* aOutValue = nullptr);
 
-  static bool FindPropInList(nsAtom* aProp, nsAtom* aAttr, nsAString* outValue,
+  static bool FindPropInList(nsStaticAtom* aProp, nsAtom* aAttr,
+                             nsAString* outValue,
                              const nsTArray<PropItem*>& aList,
                              int32_t& outIndex);
 
  protected:
   virtual ~TypeInState();
 
-  void RemovePropFromSetList(nsAtom* aProp, nsAtom* aAttr);
-  void RemovePropFromClearedList(nsAtom* aProp, nsAtom* aAttr);
-  bool IsPropSet(nsAtom* aProp, nsAtom* aAttr, nsAString* outValue);
-  bool IsPropSet(nsAtom* aProp, nsAtom* aAttr, nsAString* outValue,
+  void RemovePropFromSetList(nsStaticAtom* aProp, nsAtom* aAttr);
+  void RemovePropFromClearedList(nsStaticAtom* aProp, nsAtom* aAttr);
+  bool IsPropSet(nsStaticAtom& aProp, nsAtom* aAttr, nsAString* outValue);
+  bool IsPropSet(nsStaticAtom& aProp, nsAtom* aAttr, nsAString* outValue,
                  int32_t& outIndex);
-  bool IsPropCleared(nsAtom* aProp, nsAtom* aAttr);
-  bool IsPropCleared(nsAtom* aProp, nsAtom* aAttr, int32_t& outIndex);
+  bool IsPropCleared(nsStaticAtom* aProp, nsAtom* aAttr);
+  bool IsPropCleared(nsStaticAtom* aProp, nsAtom* aAttr, int32_t& outIndex);
 
   bool IsLinkStyleSet() const {
     int32_t unusedIndex = -1;

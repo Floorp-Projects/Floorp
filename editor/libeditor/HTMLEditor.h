@@ -513,11 +513,11 @@ class HTMLEditor final : public EditorBase,
    *                              selection have the property
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult GetInlineProperty(
-      nsAtom* aHTMLProperty, nsAtom* aAttribute, const nsAString& aValue,
+      nsStaticAtom& aHTMLProperty, nsAtom* aAttribute, const nsAString& aValue,
       bool* aFirst, bool* aAny, bool* aAll) const;
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult GetInlinePropertyWithAttrValue(
-      nsAtom* aHTMLProperty, nsAtom* aAttribute, const nsAString& aValue,
+      nsStaticAtom& aHTMLProperty, nsAtom* aAttribute, const nsAString& aValue,
       bool* aFirst, bool* aAny, bool* aAll, nsAString& outValue);
 
   /**
@@ -920,7 +920,7 @@ class HTMLEditor final : public EditorBase,
                                       nsAtom* aProperty, nsAtom* aAttribute);
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult GetInlinePropertyBase(
-      nsAtom& aHTMLProperty, nsAtom* aAttribute, const nsAString* aValue,
+      nsStaticAtom& aHTMLProperty, nsAtom* aAttribute, const nsAString* aValue,
       bool* aFirst, bool* aAny, bool* aAll, nsAString* outValue) const;
 
   /**

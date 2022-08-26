@@ -353,14 +353,14 @@ void TypeInState::Reset() {
   mSetArray.Clear();
 }
 
-void TypeInState::SetProp(nsAtom* aProp, nsAtom* aAttr,
+void TypeInState::SetProp(nsStaticAtom& aProp, nsAtom* aAttr,
                           const nsAString& aValue) {
   // special case for big/small, these nest
-  if (nsGkAtoms::big == aProp) {
+  if (nsGkAtoms::big == &aProp) {
     mRelativeFontSize++;
     return;
   }
-  if (nsGkAtoms::small == aProp) {
+  if (nsGkAtoms::small == &aProp) {
     mRelativeFontSize--;
     return;
   }
@@ -373,10 +373,10 @@ void TypeInState::SetProp(nsAtom* aProp, nsAtom* aAttr,
   }
 
   // Make a new propitem and add it to the list of set properties.
-  mSetArray.AppendElement(new PropItem(aProp, aAttr, aValue));
+  mSetArray.AppendElement(new PropItem(&aProp, aAttr, aValue));
 
   // remove it from the list of cleared properties, if we have a match
-  RemovePropFromClearedList(aProp, aAttr);
+  RemovePropFromClearedList(&aProp, aAttr);
 }
 
 void TypeInState::ClearAllProps() {
@@ -384,7 +384,7 @@ void TypeInState::ClearAllProps() {
   ClearProp(nullptr, nullptr);
 }
 
-void TypeInState::ClearProp(nsAtom* aProp, nsAtom* aAttr) {
+void TypeInState::ClearProp(nsStaticAtom* aProp, nsAtom* aAttr) {
   // if it's already cleared we are done
   if (IsPropCleared(aProp, aAttr)) {
     return;
@@ -438,12 +438,14 @@ int32_t TypeInState::TakeRelativeFontSize() {
   return relSize;
 }
 
-void TypeInState::GetTypingState(bool& isSet, bool& theSetting, nsAtom* aProp,
-                                 nsAtom* aAttr, nsString* aValue) {
-  if (IsPropSet(aProp, aAttr, aValue)) {
+void TypeInState::GetTypingState(bool& isSet, bool& theSetting,
+                                 nsStaticAtom& aProp,
+                                 nsAtom* aAttr /* = nullptr */,
+                                 nsString* aOutValue /* = nullptr */) {
+  if (IsPropSet(aProp, aAttr, aOutValue)) {
     isSet = true;
     theSetting = true;
-  } else if (IsPropCleared(aProp, aAttr)) {
+  } else if (IsPropCleared(&aProp, aAttr)) {
     isSet = true;
     theSetting = false;
   } else {
@@ -451,7 +453,7 @@ void TypeInState::GetTypingState(bool& isSet, bool& theSetting, nsAtom* aProp,
   }
 }
 
-void TypeInState::RemovePropFromSetList(nsAtom* aProp, nsAtom* aAttr) {
+void TypeInState::RemovePropFromSetList(nsStaticAtom* aProp, nsAtom* aAttr) {
   int32_t index;
   if (!aProp) {
     // clear _all_ props
@@ -466,7 +468,8 @@ void TypeInState::RemovePropFromSetList(nsAtom* aProp, nsAtom* aAttr) {
   }
 }
 
-void TypeInState::RemovePropFromClearedList(nsAtom* aProp, nsAtom* aAttr) {
+void TypeInState::RemovePropFromClearedList(nsStaticAtom* aProp,
+                                            nsAtom* aAttr) {
   int32_t index;
   if (FindPropInList(aProp, aAttr, nullptr, mClearedArray, index)) {
     delete mClearedArray[index];
@@ -474,13 +477,14 @@ void TypeInState::RemovePropFromClearedList(nsAtom* aProp, nsAtom* aAttr) {
   }
 }
 
-bool TypeInState::IsPropSet(nsAtom* aProp, nsAtom* aAttr, nsAString* outValue) {
+bool TypeInState::IsPropSet(nsStaticAtom& aProp, nsAtom* aAttr,
+                            nsAString* outValue) {
   int32_t i;
   return IsPropSet(aProp, aAttr, outValue, i);
 }
 
-bool TypeInState::IsPropSet(nsAtom* aProp, nsAtom* aAttr, nsAString* outValue,
-                            int32_t& outIndex) {
+bool TypeInState::IsPropSet(nsStaticAtom& aProp, nsAtom* aAttr,
+                            nsAString* outValue, int32_t& outIndex) {
   if (aAttr == nsGkAtoms::_empty) {
     aAttr = nullptr;
   }
@@ -488,7 +492,7 @@ bool TypeInState::IsPropSet(nsAtom* aProp, nsAtom* aAttr, nsAString* outValue,
   size_t count = mSetArray.Length();
   for (size_t i = 0; i < count; i++) {
     PropItem* item = mSetArray[i];
-    if (item->tag == aProp && item->attr == aAttr) {
+    if (item->mTag == &aProp && item->attr == aAttr) {
       if (outValue) {
         *outValue = item->value;
       }
@@ -499,12 +503,12 @@ bool TypeInState::IsPropSet(nsAtom* aProp, nsAtom* aAttr, nsAString* outValue,
   return false;
 }
 
-bool TypeInState::IsPropCleared(nsAtom* aProp, nsAtom* aAttr) {
+bool TypeInState::IsPropCleared(nsStaticAtom* aProp, nsAtom* aAttr) {
   int32_t i;
   return IsPropCleared(aProp, aAttr, i);
 }
 
-bool TypeInState::IsPropCleared(nsAtom* aProp, nsAtom* aAttr,
+bool TypeInState::IsPropCleared(nsStaticAtom* aProp, nsAtom* aAttr,
                                 int32_t& outIndex) {
   if (FindPropInList(aProp, aAttr, nullptr, mClearedArray, outIndex)) {
     return true;
@@ -517,7 +521,7 @@ bool TypeInState::IsPropCleared(nsAtom* aProp, nsAtom* aAttr,
   return false;
 }
 
-bool TypeInState::FindPropInList(nsAtom* aProp, nsAtom* aAttr,
+bool TypeInState::FindPropInList(nsStaticAtom* aProp, nsAtom* aAttr,
                                  nsAString* outValue,
                                  const nsTArray<PropItem*>& aList,
                                  int32_t& outIndex) {
@@ -528,7 +532,7 @@ bool TypeInState::FindPropInList(nsAtom* aProp, nsAtom* aAttr,
   size_t count = aList.Length();
   for (size_t i = 0; i < count; i++) {
     PropItem* item = aList[i];
-    if (item->tag == aProp && item->attr == aAttr) {
+    if (item->mTag == aProp && item->attr == aAttr) {
       if (outValue) {
         *outValue = item->value;
       }
