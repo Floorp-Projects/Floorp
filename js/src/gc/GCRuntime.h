@@ -944,7 +944,7 @@ class GCRuntime {
   MainThreadOrGCTaskData<ZoneVector> zones_;
 
   // Any activity affecting the heap.
-  mozilla::Atomic<JS::HeapState, mozilla::SequentiallyConsistent> heapState_;
+  MainThreadOrGCTaskData<JS::HeapState> heapState_;
   friend class AutoHeapSession;
   friend class JS::AutoEnterCycleCollection;
 
@@ -1022,7 +1022,7 @@ class GCRuntime {
   MainThreadData<RootedValueMap> rootsHash;
 
   // An incrementing id used to assign unique ids to cells that require one.
-  mozilla::Atomic<uint64_t, mozilla::ReleaseAcquire> nextCellUniqueId_;
+  MainThreadData<uint64_t> nextCellUniqueId_;
 
   /*
    * Number of the committed arenas in all GC chunks including empty chunks.
