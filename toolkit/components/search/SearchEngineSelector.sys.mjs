@@ -26,15 +26,6 @@ XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
   });
 });
 
-function getAppInfo(key) {
-  let value = null;
-  try {
-    // Services.appinfo is often null in tests.
-    value = Services.appinfo[key].toLowerCase();
-  } catch (e) {}
-  return value;
-}
-
 function hasAppKey(config, key) {
   return "application" in config && key in config.application;
 }
@@ -184,6 +175,10 @@ export class SearchEngineSelector {
    *   The distribution ID of the application.
    * @param {string} [options.experiment]
    *   Any associated experiment id.
+   * @param {string} [options.name]
+   *   The name of the application.
+   * @param {string} [options.version]
+   *   The version of the application.
    * @returns {object}
    *   An object with "engines" field, a sorted list of engines and
    *   optionally "privateDefault" which is an object containing the engine
@@ -195,16 +190,18 @@ export class SearchEngineSelector {
     channel = "default",
     distroID,
     experiment,
+    name = Services.appinfo.name ?? "",
+    version = Services.appinfo.version ?? "",
   }) {
     if (!this._configuration) {
       await this.getEngineConfiguration();
     }
-    let name = getAppInfo("name");
-    let version = getAppInfo("version");
     lazy.logConsole.debug(
       `fetchEngineConfiguration ${locale}:${region}:${channel}:${distroID}:${experiment}:${name}:${version}`
     );
     let engines = [];
+    const lcName = name.toLowerCase();
+    const lcVersion = version.toLowerCase();
     const lcLocale = locale.toLowerCase();
     const lcRegion = region.toLowerCase();
     for (let config of this._configuration) {
@@ -243,10 +240,10 @@ export class SearchEngineSelector {
 
         if (
           sectionExcludes(section, "channel", channel) ||
-          sectionExcludes(section, "name", name) ||
+          sectionExcludes(section, "name", lcName) ||
           distroExcluded ||
-          belowMinVersion(section, version) ||
-          aboveMaxVersion(section, version)
+          belowMinVersion(section, lcVersion) ||
+          aboveMaxVersion(section, lcVersion)
         ) {
           return false;
         }

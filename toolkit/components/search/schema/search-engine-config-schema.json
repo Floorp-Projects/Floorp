@@ -48,14 +48,18 @@
       "title": "Application Details",
       "properties": {
         "name": {
-          "type": "string",
+          "type": "array",
           "title": "Name",
-          "pattern": "^[a-z]{0,100}$",
-          "description": "The application this applies to (default/not specified is everywhere)",
-          "enum": [
-            "",
-            "firefox"
-          ]
+          "description": "The application(s) this applies to (default/not specified is everywhere)",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z]{0,100}$",
+            "enum": [
+              "",
+              "firefox"
+            ]
+          },
+          "uniqueItems": true
         },
         "channel": {
           "type": "array",
