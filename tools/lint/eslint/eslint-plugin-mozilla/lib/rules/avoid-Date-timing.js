@@ -43,7 +43,7 @@ module.exports = {
         if (
           callee.type !== "Identifier" ||
           callee.name !== "Date" ||
-          node.arguments.length > 0
+          node.arguments.length
         ) {
           return;
         }

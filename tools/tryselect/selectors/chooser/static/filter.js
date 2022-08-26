@@ -42,7 +42,7 @@ var apply = () => {
   updateLabels();
 
   if (
-    Object.keys(filters).length == 0 ||
+    !Object.keys(filters).length ||
     (Object.keys(filters).length == 1 && "build_type" in filters)
   ) {
     selection.value = "";

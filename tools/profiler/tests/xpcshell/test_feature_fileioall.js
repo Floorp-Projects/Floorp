@@ -27,7 +27,7 @@ add_task(async () => {
     // Check for FileIO in any of the background threads.
     if (thread.name.startsWith("BgIOThreadPool")) {
       const markers = getInflatedFileIOMarkers(thread, filename);
-      if (markers.length > 0) {
+      if (markers.length) {
         backgroundThread = thread;
         backgroundThreadFileIO = markers;
         break;

@@ -188,7 +188,7 @@ module.exports = {
       },
 
       leave(node, parent) {
-        if (parents.length == 0) {
+        if (!parents.length) {
           throw new Error("Left more nodes than entered.");
         }
         parents.pop();
