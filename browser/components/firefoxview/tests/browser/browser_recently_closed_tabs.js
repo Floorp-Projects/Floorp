@@ -314,8 +314,10 @@ add_task(async function test_time_updates_correctly() {
         .lastChild;
       const timeLabel = lastListItem.querySelector("span.closed-tab-li-time");
 
-      ok(
-        timeLabel.textContent.includes("Just now"),
+      let initialTimeText = timeLabel.textContent;
+      Assert.stringContains(
+        initialTimeText,
+        "Just now",
         "recently-closed-tabs list item time is 'Just now'"
       );
 
@@ -329,8 +331,9 @@ add_task(async function test_time_updates_correctly() {
         () => !timeLabel.textContent.includes("now")
       );
 
-      ok(
-        timeLabel.textContent.includes("second"),
+      isnot(
+        timeLabel.textContent,
+        initialTimeText,
         "recently-closed-tabs list item time has updated"
       );
 
