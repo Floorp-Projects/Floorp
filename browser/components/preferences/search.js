@@ -5,6 +5,12 @@
 /* import-globals-from extensionControlled.js */
 /* import-globals-from preferences.js */
 
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  SearchUIUtils: "resource:///modules/SearchUIUtils.sys.mjs",
+});
+
 Preferences.addAll([
   { id: "browser.search.suggest.enabled", type: "bool" },
   { id: "browser.urlbar.suggest.searches", type: "bool" },
@@ -35,10 +41,7 @@ var gSearchPane = {
       document.getElementById("addEnginesBox").hidden = true;
     } else {
       let addEnginesLink = document.getElementById("addEngines");
-      let searchEnginesURL = Services.wm.getMostRecentWindow(
-        "navigator:browser"
-      ).BrowserSearch.searchEnginesURL;
-      addEnginesLink.setAttribute("href", searchEnginesURL);
+      addEnginesLink.setAttribute("href", lazy.SearchUIUtils.searchEnginesURL);
     }
 
     window.addEventListener("click", this);

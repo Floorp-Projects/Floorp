@@ -2237,7 +2237,9 @@ class nsContextMenu {
   }
 
   addDictionaries() {
-    var uri = formatURL("browser.dictionaries.download.url", true);
+    var uri = Services.urlFormatter.formatURLPref(
+      "browser.dictionaries.download.url"
+    );
 
     var locale = "-";
     try {
