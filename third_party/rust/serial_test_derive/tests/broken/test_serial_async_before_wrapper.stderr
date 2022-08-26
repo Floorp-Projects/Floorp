@@ -1,0 +1,7 @@
+error: Found async test attribute after serial, which will break
+ --> tests/broken/test_serial_async_before_wrapper.rs:3:1
+  |
+3 | #[serial]
+  | ^^^^^^^^^
+  |
+  = note: this error originates in the attribute macro `serial` (in Nightly builds, run with -Z macro-backtrace for more info)
