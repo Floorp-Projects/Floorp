@@ -167,8 +167,7 @@ interface nsISearchEngine : nsISupports
 
   /**
    * Whether or not this engine is provided by the application, e.g. it is
-   * in the list of configured search engines, or provided by a distribution
-   * set-up.
+   * in the list of configured search engines.
    */
   readonly attribute boolean isAppProvided;
 

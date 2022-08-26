@@ -22,6 +22,9 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
  * AddonSearchEngine represents a search engine defined by an add-on.
  */
 export class AddonSearchEngine extends SearchEngine {
+  // Whether the engine is provided by the application.
+  #isAppProvided = false;
+
   /**
    * Creates a AddonSearchEngine.
    *
@@ -36,8 +39,9 @@ export class AddonSearchEngine extends SearchEngine {
       loadPath:
         "[other]addEngineWithDetails:" +
         (details?.extensionID ?? json.extensionID ?? json._extensionID ?? null),
-      isAppProvided,
     });
+
+    this.#isAppProvided = isAppProvided;
 
     if (details) {
       if (!details.extensionID) {
@@ -95,6 +99,36 @@ export class AddonSearchEngine extends SearchEngine {
   }
 
   /**
+   * Whether or not this engine is provided by the application, e.g. it is
+   * in the list of configured search engines. Overrides the definition in
+   * `SearchEngine`.
+   *
+   * @returns {boolean}
+   */
+  get isAppProvided() {
+    return this.#isAppProvided;
+  }
+
+  /**
+   * Creates a JavaScript object that represents this engine.
+   *
+   * @returns {object}
+   *   An object suitable for serialization as JSON.
+   */
+  toJSON() {
+    // For built-in engines we don't want to store all their data in the settings
+    // file so just store the relevant metadata.
+    if (this.#isAppProvided) {
+      return {
+        _name: this.name,
+        _isAppProvided: true,
+        _metaData: this._metaData,
+      };
+    }
+    return super.toJSON();
+  }
+
+  /**
    * Initializes the engine based on the manifest and other values.
    *
    * @param {string} extensionID
@@ -123,7 +157,7 @@ export class AddonSearchEngine extends SearchEngine {
 
     // We only set _telemetryId for app-provided engines. See also telemetryId
     // getter.
-    if (this._isAppProvided) {
+    if (this.#isAppProvided) {
       if (configuration.telemetryId) {
         this._telemetryId = configuration.telemetryId;
       } else {

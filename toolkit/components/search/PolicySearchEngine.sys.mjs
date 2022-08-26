@@ -30,7 +30,6 @@ export class PolicySearchEngine extends SearchEngine {
   constructor(options = {}) {
     super({
       loadPath: "[other]addEngineWithDetails:set-via-policy",
-      isAppProvided: false,
     });
 
     if (options.details) {
