@@ -56,8 +56,6 @@ Please note that some targeting attributes require stricter controls on the tele
 * [isBackgroundTaskMode](#isbackgroundtaskmode)
 * [backgroundTaskName](#backgroundtaskname)
 * [userPrefersReducedMotion](#userPrefersReducedMotion)
-* [colorwaysActive](#colorwaysActive)
-* [userEnabledActiveColoway](#userEnabledActiveColoway)
 
 ## Detailed usage
 
@@ -851,10 +849,3 @@ mode, or `null` if this invocation is not running in background task mode.
 
 Checks if user prefers reduced motion as indicated by the value of a media query for `prefers-reduced-motion`.
 
-### `colorwaysActive`
-
-A boolean. `true` when there are Colorways available.
-
-### `userEnabledActiveColoway`
-
-A boolean. `true` when user has an active Colorway theme enabled.
