@@ -7,10 +7,10 @@
 const EXPORTED_SYMBOLS = ["EventsDispatcher"];
 
 /**
- * Helper to listen to internal events which rely on SessionData.
- * In order to support the EventsDispatcher, a module emitting internal events
- * should subscribe and unsubscribe to those events based on SessionData updates
- * and should use the "internal-event" SessionData category.
+ * Helper to listen to events which rely on SessionData.
+ * In order to support the EventsDispatcher, a module emitting events should
+ * subscribe and unsubscribe to those events based on SessionData updates
+ * and should use the "event" SessionData category.
  */
 class EventsDispatcher {
   // The MessageHandler owning this EventsDispatcher.
@@ -38,11 +38,11 @@ class EventsDispatcher {
   }
 
   /**
-   * Stop listening for an internal event relying on SessionData and relayed by
-   * the message handler.
+   * Stop listening for an event relying on SessionData and relayed by the
+   * message handler.
    *
    * @param {string} event
-   *     Name of the internal event to unsubscribe from.
+   *     Name of the event to unsubscribe from.
    * @param {ContextDescriptor} contextDescriptor
    *     Context descriptor for this event.
    * @param {function} callback
@@ -77,11 +77,11 @@ class EventsDispatcher {
   }
 
   /**
-   * Listen for an internal event relying on SessionData and relayed by the
-   * message handler.
+   * Listen for an event relying on SessionData and relayed by the message
+   * handler.
    *
    * @param {string} event
-   *     Name of the internal event to subscribe to.
+   *     Name of the event to subscribe to.
    * @param {ContextDescriptor} contextDescriptor
    *     Context descriptor for this event.
    * @param {function} callback
@@ -119,7 +119,7 @@ class EventsDispatcher {
     const [moduleName] = event.split(".");
     return {
       moduleName,
-      category: "internal-event",
+      category: "event",
       contextDescriptor,
       values: [event],
     };

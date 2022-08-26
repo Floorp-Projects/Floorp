@@ -28,7 +28,10 @@ add_task(async function test_event() {
 
   const rootMessageHandler = createRootMessageHandler("session-id-event");
 
-  const onTestEvent = rootMessageHandler.once("message-handler-event");
+  // Events are emitted both as generic message-handler-event events as well
+  // as under their own name. We expect to receive the event for both.
+  const onHandlerEvent = rootMessageHandler.once("message-handler-event");
+  const onNamedEvent = rootMessageHandler.once("event-from-window-global");
   // MessageHandlerRegistry should forward all the message-handler-events.
   const onRegistryEvent = RootMessageHandlerRegistry.once(
     "message-handler-registry-event"
@@ -36,21 +39,25 @@ add_task(async function test_event() {
 
   callTestEmitEvent(rootMessageHandler, browsingContext.id);
 
-  const messageHandlerEvent = await onTestEvent;
+  const messageHandlerEvent = await onHandlerEvent;
   is(
     messageHandlerEvent.name,
-    "event.testEvent",
+    "event-from-window-global",
     "Received event on the ROOT MessageHandler"
   );
   is(
     messageHandlerEvent.data.text,
-    `protocol event from ${browsingContext.id}`,
+    `event from ${browsingContext.id}`,
     "Received the expected payload"
   );
-  ok(
-    messageHandlerEvent.isProtocolEvent,
-    "Received expected flag for protocol event"
+
+  const namedEvent = await onNamedEvent;
+  is(
+    namedEvent.text,
+    `event from ${browsingContext.id}`,
+    "Received the expected payload"
   );
+
   const registryEvent = await onRegistryEvent;
   is(
     registryEvent,
@@ -63,104 +70,31 @@ add_task(async function test_event() {
 });
 
 /**
- * Emit an event from a WindowGlobal module triggered by a specific command.
- * Check that the event is intercepted and the event payload is modified.
- */
-add_task(async function test_event_with_interception() {
-  const tab = BrowserTestUtils.addTab(
-    gBrowser,
-    "https://example.com/document-builder.sjs?html=tab"
-  );
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  const browsingContext = tab.linkedBrowser.browsingContext;
-
-  const rootMessageHandler = createRootMessageHandler("session-id-event");
-
-  const onTestEvent = rootMessageHandler.once("message-handler-event");
-
-  rootMessageHandler.handleCommand({
-    moduleName: "event",
-    commandName: "testEmitProtocolEventWithInterception",
-    destination: {
-      type: WindowGlobalMessageHandler.type,
-      id: browsingContext.id,
-    },
-  });
-
-  const messageHandlerEvent = await onTestEvent;
-  is(
-    messageHandlerEvent.name,
-    "event.testEventWithInterception",
-    "Received event on the ROOT MessageHandler"
-  );
-  is(
-    messageHandlerEvent.data.additionalInformation,
-    `information added through interception`,
-    "Payload was extended through interception"
-  );
-
-  rootMessageHandler.destroy();
-  gBrowser.removeTab(tab);
-});
-
-/**
- * Make sure that event emission without interception in windowglobal-in-root
- * still works.
- */
-add_task(async function test_event_without_interception() {
-  const tab = BrowserTestUtils.addTab(
-    gBrowser,
-    "https://example.com/document-builder.sjs?html=tab"
-  );
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  const browsingContext = tab.linkedBrowser.browsingContext;
-  const rootMessageHandler = createRootMessageHandler("session-id-event");
-  const onTestEvent = rootMessageHandler.once("message-handler-event");
-
-  rootMessageHandler.handleCommand({
-    moduleName: "eventnointercept",
-    commandName: "testEvent",
-    destination: {
-      type: WindowGlobalMessageHandler.type,
-      id: browsingContext.id,
-    },
-  });
-
-  const messageHandlerEvent = await onTestEvent;
-  is(
-    messageHandlerEvent.name,
-    "eventnointercept.testEvent",
-    "Received event on the ROOT MessageHandler"
-  );
-  Assert.deepEqual(
-    messageHandlerEvent.data,
-    { text: `event no interception` },
-    "Received the expected payload"
-  );
-
-  rootMessageHandler.destroy();
-  gBrowser.removeTab(tab);
-});
-/**
  * Emit an event from a Root module triggered by a specific command.
  * Check that the event is emitted on the RootMessageHandler.
  */
 add_task(async function test_root_event() {
   const rootMessageHandler = createRootMessageHandler("session-id-root_event");
 
-  const onTestEvent = rootMessageHandler.once("message-handler-event");
+  // events are emitted both as generic message-handler-event events as
+  // well as under their own name. We expect to receive the event for both.
+  const onHandlerEvent = rootMessageHandler.once("message-handler-event");
+  const onNamedEvent = rootMessageHandler.once("event-from-root");
+
   rootMessageHandler.handleCommand({
     moduleName: "event",
-    commandName: "testEmitProtocolRootEvent",
+    commandName: "testEmitRootEvent",
     destination: {
       type: RootMessageHandler.type,
     },
   });
 
-  const { name, data, isProtocolEvent } = await onTestEvent;
-  is(name, "event.testRootEvent", "Received event on the ROOT MessageHandler");
-  is(data.text, "protocol event from root", "Received the expected payload");
-  ok(isProtocolEvent, "Received expected flag for protocol event");
+  const { name, data } = await onHandlerEvent;
+  is(name, "event-from-root", "Received event on the ROOT MessageHandler");
+  is(data.text, "event from root", "Received the expected payload");
+
+  const namedEvent = await onNamedEvent;
+  is(namedEvent.text, "event from root", "Received the expected payload");
 
   rootMessageHandler.destroy();
 });
@@ -181,28 +115,39 @@ add_task(async function test_windowglobal_in_root_event() {
     "session-id-windowglobal_in_root_event"
   );
 
-  const onTestEvent = rootMessageHandler.once("message-handler-event");
+  // events are emitted both as generic message-handler-event events as
+  // well as under their own name. We expect to receive the event for both.
+  const onHandlerEvent = rootMessageHandler.once("message-handler-event");
+  const onNamedEvent = rootMessageHandler.once(
+    "event-from-window-global-in-root"
+  );
   rootMessageHandler.handleCommand({
     moduleName: "event",
-    commandName: "testEmitProtocolWindowGlobalInRootEvent",
+    commandName: "testEmitWindowGlobalInRootEvent",
     destination: {
       type: WindowGlobalMessageHandler.type,
       id: browsingContext.id,
     },
   });
 
-  const { name, data, isProtocolEvent } = await onTestEvent;
+  const { name, data } = await onHandlerEvent;
   is(
     name,
-    "event.testWindowGlobalInRootEvent",
+    "event-from-window-global-in-root",
     "Received event on the ROOT MessageHandler"
   );
   is(
     data.text,
-    `protocol windowglobal-in-root event for ${browsingContext.id}`,
+    `windowglobal-in-root event for ${browsingContext.id}`,
     "Received the expected payload"
   );
-  ok(isProtocolEvent, "Received expected flag for protocol event");
+
+  const namedEvent = await onNamedEvent;
+  is(
+    namedEvent.text,
+    `windowglobal-in-root event for ${browsingContext.id}`,
+    "Received the expected payload"
+  );
 
   rootMessageHandler.destroy();
   gBrowser.removeTab(tab);
@@ -224,7 +169,7 @@ add_task(async function test_event_multisession() {
   const root1 = createRootMessageHandler("session-id-event_multisession-1");
   let root1Events = 0;
   const onRoot1Event = function(evtName, wrappedEvt) {
-    if (wrappedEvt.name === "event.testEvent") {
+    if (wrappedEvt.name === "event-from-window-global") {
       root1Events++;
     }
   };
@@ -233,7 +178,7 @@ add_task(async function test_event_multisession() {
   const root2 = createRootMessageHandler("session-id-event_multisession-2");
   let root2Events = 0;
   const onRoot2Event = function(evtName, wrappedEvt) {
-    if (wrappedEvt.name === "event.testEvent") {
+    if (wrappedEvt.name === "event-from-window-global") {
       root2Events++;
     }
   };
@@ -241,7 +186,7 @@ add_task(async function test_event_multisession() {
 
   let registryEvents = 0;
   const onRegistryEvent = function(evtName, wrappedEvt) {
-    if (wrappedEvt.name === "event.testEvent") {
+    if (wrappedEvt.name === "event-from-window-global") {
       registryEvents++;
     }
   };
@@ -295,19 +240,25 @@ add_task(async function test_event_with_frames() {
     "session-id-event_with_frames"
   );
 
-  let rootEvents = [];
+  const rootEvents = [];
   const onRootEvent = function(evtName, wrappedEvt) {
-    if (wrappedEvt.name === "event.testEvent") {
+    if (wrappedEvt.name === "event-from-window-global") {
       rootEvents.push(wrappedEvt.data.text);
     }
   };
   rootMessageHandler.on("message-handler-event", onRootEvent);
 
+  const namedEvents = [];
+  const onNamedEvent = (name, event) => namedEvents.push(event.text);
+  rootMessageHandler.on("event-from-window-global", onNamedEvent);
+
   for (const context of contexts) {
     callTestEmitEvent(rootMessageHandler, context.id);
-    info("Wait for root event to be received");
+    info("Wait for root event to be received in both event arrays");
     await TestUtils.waitForCondition(() =>
-      rootEvents.includes(`protocol event from ${context.id}`)
+      [namedEvents, rootEvents].every(events =>
+        events.includes(`event from ${context.id}`)
+      )
     );
   }
 
@@ -316,45 +267,14 @@ add_task(async function test_event_with_frames() {
   is(rootEvents.length, 4, "Only received 4 events");
 
   rootMessageHandler.off("message-handler-event", onRootEvent);
+  rootMessageHandler.off("event-from-window-global", onNamedEvent);
   rootMessageHandler.destroy();
-});
-
-/**
- * Test that protocol events are only emitted via message-handler-event and not
- * using their original name.
- */
-add_task(async function test_event_no_named_event() {
-  info("Navigate the initial tab to the test URL");
-  const tab = BrowserTestUtils.addTab(
-    gBrowser,
-    "https://example.com/document-builder.sjs?html=tab"
-  );
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  const browsingContext = tab.linkedBrowser.browsingContext;
-
-  const rootMessageHandler = createRootMessageHandler("session-id-event");
-
-  const onTestEvent = rootMessageHandler.once("message-handler-event");
-
-  let resolvedNamedEvent = false;
-  const onNamedEvent = () => (resolvedNamedEvent = true);
-  rootMessageHandler.on("event.testEvent", onNamedEvent);
-
-  callTestEmitEvent(rootMessageHandler, browsingContext.id);
-
-  const testEvent = await onTestEvent;
-  is(testEvent.name, "event.testEvent", "Received the expected event");
-  is(resolvedNamedEvent, false, "The named event promise did not resolve");
-
-  rootMessageHandler.off("event.testEvent", onNamedEvent);
-  rootMessageHandler.destroy();
-  gBrowser.removeTab(tab);
 });
 
 function callTestEmitEvent(rootMessageHandler, browsingContextId) {
   rootMessageHandler.handleCommand({
     moduleName: "event",
-    commandName: "testEmitProtocolEvent",
+    commandName: "testEmitEvent",
     destination: {
       type: WindowGlobalMessageHandler.type,
       id: browsingContextId,

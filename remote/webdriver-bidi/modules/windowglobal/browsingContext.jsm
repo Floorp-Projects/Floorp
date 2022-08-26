@@ -65,7 +65,7 @@ class BrowsingContextModule extends Module {
     // TODO: Bug 1775231. Move this logic to a shared module or an abstract
     // class.
     const { category, added = [], removed = [] } = params;
-    if (category === "internal-event") {
+    if (category === "event") {
       for (const event of added) {
         this.#subscribeEvent(event);
       }

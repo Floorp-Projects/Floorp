@@ -95,6 +95,23 @@ class RootMessageHandler extends MessageHandler {
   }
 
   /**
+   * Emit a public protocol event. This event will be sent over to the client.
+   *
+   * @param {String} name
+   *     Name of the event. Protocol level events should be of the
+   *     form [module name].[event name].
+   * @param {Object} data
+   *     The event's data.
+   */
+  emitProtocolEvent(name, data) {
+    this.emit("message-handler-protocol-event", {
+      name,
+      data,
+      sessionId: this.sessionId,
+    });
+  }
+
+  /**
    * Forward the provided command to WINDOW_GLOBAL MessageHandlers via the
    * FrameTransport.
    *

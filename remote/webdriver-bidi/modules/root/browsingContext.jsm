@@ -516,7 +516,7 @@ class BrowsingContextModule extends Module {
     const contextInfo = this.#getBrowsingContextInfo(browsingContext, {
       maxDepth: 0,
     });
-    this.emitProtocolEvent("browsingContext.contextCreated", contextInfo);
+    this.emitEvent("browsingContext.contextCreated", contextInfo);
   };
 
   /**

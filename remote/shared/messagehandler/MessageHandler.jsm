@@ -153,26 +153,17 @@ class MessageHandler extends EventEmitter {
    *     form [module name].[event name].
    * @param {Object} data
    *     The event's data.
-   * @param {Object=} options
-   * @param {boolean=} options.isProtocolEvent
-   *     Flag that indicates if it is a protocol or internal event.
-   *     Defaults to `false`.
    */
-  emitEvent(name, data, options = {}) {
-    const { isProtocolEvent = false } = options;
-
+  emitEvent(name, data) {
+    // Events are emitted both under their own name for consumers listening to
+    // a specific and as `message-handler-event` for consumers which need to
+    // catch all events.
+    this.emit(name, data);
     this.emit("message-handler-event", {
       name,
       data,
-      isProtocolEvent,
       sessionId: this.sessionId,
     });
-
-    // Internal events should also be emitted using their original event name
-    // for ease of use.
-    if (!isProtocolEvent) {
-      this.emit(name, data);
-    }
   }
 
   /**

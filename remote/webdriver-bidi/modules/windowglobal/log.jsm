@@ -174,7 +174,7 @@ class LogModule extends Module {
     //   only react to events if there is a session & if the session subscribed
     //   to those events.
 
-    this.emitProtocolEvent("log.entryAdded", entry);
+    this.emitEvent("log.entryAdded", entry);
   };
 
   #onJavaScriptError = (eventName, data = {}) => {
@@ -190,7 +190,7 @@ class LogModule extends Module {
       stackTrace: this.#buildStackTrace(stacktrace),
     };
 
-    this.emitProtocolEvent("log.entryAdded", entry);
+    this.emitEvent("log.entryAdded", entry);
   };
 
   #subscribeEvent(event) {

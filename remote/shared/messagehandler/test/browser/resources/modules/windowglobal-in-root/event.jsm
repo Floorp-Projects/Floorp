@@ -27,15 +27,9 @@ class EventModule extends Module {
    * Commands
    */
 
-  testEmitInternalWindowGlobalInRootEvent(params, destination) {
-    this.emitEvent("internal-event-from-window-global-in-root", {
-      text: `internal windowglobal-in-root event for ${destination.id}`,
-    });
-  }
-
-  testEmitProtocolWindowGlobalInRootEvent(params, destination) {
-    this.emitProtocolEvent("event.testWindowGlobalInRootEvent", {
-      text: `protocol windowglobal-in-root event for ${destination.id}`,
+  testEmitWindowGlobalInRootEvent(params, destination) {
+    this.emitEvent("event-from-window-global-in-root", {
+      text: `windowglobal-in-root event for ${destination.id}`,
     });
   }
 }

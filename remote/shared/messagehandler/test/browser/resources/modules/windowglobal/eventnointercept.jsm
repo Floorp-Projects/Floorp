@@ -15,7 +15,7 @@ class EventNoInterceptModule extends Module {
 
   testEvent() {
     const text = `event no interception`;
-    this.emitProtocolEvent("eventnointercept.testEvent", { text });
+    this.emitEvent("eventnointercept.testEvent", { text });
   }
 }
 
