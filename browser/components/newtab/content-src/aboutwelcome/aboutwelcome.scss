@@ -310,6 +310,17 @@ body {
             text-align: initial;
             height: 100%;
 
+            .checkbox-container {
+              font-size: 13px;
+              margin-block: 1em;
+              transition: var(--transition);
+
+              input,
+              label {
+                vertical-align: middle;
+              }
+            }
+
             .secondary-cta {
               position: absolute;
               bottom: -30px;
@@ -537,6 +548,10 @@ body {
 
             .action-buttons {
               text-align: center;
+
+              .checkbox-container {
+                display: none;
+              }
 
               .secondary-cta {
                 position: relative;
@@ -1648,6 +1663,7 @@ body {
       .brand-logo,
       .welcome-text,
       .primary,
+      .checkbox-container,
       .secondary,
       .secondary-cta:not(.top),
       .message-text {
@@ -1685,6 +1701,7 @@ body {
       .tiles-theme-section,
       .colorway-text,
       .primary,
+      .checkbox-container,
       .secondary,
       .secondary-cta:not(.top) {
         opacity: 0;
@@ -1745,6 +1762,7 @@ body {
       }
 
       .primary,
+      .checkbox-container,
       .secondary,
       .secondary-cta:not(.top) {
         opacity: 0;

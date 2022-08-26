@@ -39,21 +39,6 @@ add_setup(async function() {
   });
 });
 
-function waitForHomeNavigation() {
-  let deferred = PromiseUtils.defer();
-  let navigation = {
-    observe(subject) {
-      if (subject === "browser-open-homepage-start") {
-        deferred.resolve();
-        Services.obs.removeObserver(navigation, "browser-open-homepage-start");
-      }
-    },
-  };
-  Services.obs.addObserver(navigation, "browser-open-homepage-start");
-
-  return deferred;
-}
-
 add_task(async function test_CONFIGURE_HOMEPAGE_newtab_home_prefs() {
   const action = {
     type: "CONFIGURE_HOMEPAGE",
@@ -120,22 +105,4 @@ add_task(async function test_CONFIGURE_HOMEPAGE_layout_prefs() {
     !Services.prefs.getBoolPref(SNIPPETS_PREF),
     "Snippets are turned off"
   );
-});
-
-add_task(async function test_CONFIGURE_HOMEPAGE_home_redirect() {
-  const action = {
-    type: "CONFIGURE_HOMEPAGE",
-    data: { homePage: "default", newtab: "default" },
-  };
-
-  let browser = gBrowser.selectedBrowser;
-  // Wait for any other navigation events from previous tests
-  await BrowserTestUtils.browserLoaded(browser, false, "about:home");
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:config");
-  await BrowserTestUtils.browserLoaded(browser, false, "about:config");
-
-  await SMATestUtils.executeAndValidateAction(action);
-
-  await waitForHomeNavigation();
-  Assert.ok(true, "Redirected to about:home");
 });
