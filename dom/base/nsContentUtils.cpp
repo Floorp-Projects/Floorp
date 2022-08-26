@@ -205,7 +205,6 @@
 #include "mozilla/gfx/Types.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/SharedMemory.h"
-#include "mozilla/ipc/Shmem.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "mozilla/widget/IMEData.h"
 #include "nsAboutProtocolUtils.h"
@@ -8208,62 +8207,12 @@ void nsContentUtils::TransferableToIPCTransferable(
   }
 }
 
-namespace {
-// The default type used for calling GetSurfaceData(). Gets surface data as
-// raw bigbuffer.
-struct GetSurfaceDataBigBuffer {
-  using ReturnType = Maybe<BigBuffer>;
-  using BufferType = char*;
-
-  ReturnType Allocate(size_t aSize) { return Some(BigBuffer(aSize)); }
-
-  static BufferType GetBuffer(ReturnType& aReturnValue) {
-    return aReturnValue ? reinterpret_cast<char*>(aReturnValue->Data())
-                        : nullptr;
-  }
-
-  static ReturnType NullValue() { return ReturnType(); }
-};
-
-// The type used for calling GetSurfaceData() that allocates and writes to
-// a shared memory buffer.
-struct GetSurfaceDataShmem {
-  using ReturnType = Maybe<Shmem>;
-  using BufferType = char*;
-
-  explicit GetSurfaceDataShmem(IShmemAllocator* aAllocator)
-      : mAllocator(aAllocator) {}
-
-  ReturnType Allocate(size_t aSize) {
-    Shmem shmem;
-    if (!mAllocator->AllocShmem(aSize, &shmem)) {
-      return Nothing();
-    }
-
-    return Some(shmem);
-  }
-
-  static BufferType GetBuffer(const ReturnType& aReturnValue) {
-    return aReturnValue.isSome() ? aReturnValue.ref().get<char>() : nullptr;
-  }
-
-  static ReturnType NullValue() { return ReturnType(); }
-
- private:
-  IShmemAllocator* mAllocator;
-};
-
-/*
- * Get the pixel data from the given source surface and return it as a buffer.
- * The length and stride will be assigned from the surface.
- */
-template <typename GetSurfaceDataContext = GetSurfaceDataBigBuffer>
-typename GetSurfaceDataContext::ReturnType GetSurfaceDataImpl(
-    DataSourceSurface& aSurface, size_t* aLength, int32_t* aStride,
-    GetSurfaceDataContext aContext = GetSurfaceDataContext()) {
+Maybe<BigBuffer> nsContentUtils::GetSurfaceData(DataSourceSurface& aSurface,
+                                                size_t* aLength,
+                                                int32_t* aStride) {
   mozilla::gfx::DataSourceSurface::MappedSurface map;
   if (!aSurface.Map(mozilla::gfx::DataSourceSurface::MapType::READ, &map)) {
-    return GetSurfaceDataContext::NullValue();
+    return Nothing();
   }
 
   size_t bufLen = 0;
@@ -8273,38 +8222,18 @@ typename GetSurfaceDataContext::ReturnType GetSurfaceDataImpl(
       &bufLen);
   if (NS_FAILED(rv)) {
     aSurface.Unmap();
-    return GetSurfaceDataContext::NullValue();
+    return Nothing();
   }
 
-  // nsDependentCString wants null-terminated string.
-  typename GetSurfaceDataContext::ReturnType surfaceData =
-      aContext.Allocate(maxBufLen + 1);
-  if (GetSurfaceDataContext::GetBuffer(surfaceData)) {
-    memcpy(GetSurfaceDataContext::GetBuffer(surfaceData),
-           reinterpret_cast<char*>(map.mData), bufLen);
-    memset(GetSurfaceDataContext::GetBuffer(surfaceData) + bufLen, 0,
-           maxBufLen - bufLen + 1);
-  }
+  BigBuffer surfaceData(maxBufLen);
+  memcpy(surfaceData.Data(), map.mData, bufLen);
+  memset(surfaceData.Data() + bufLen, 0, maxBufLen - bufLen);
 
   *aLength = maxBufLen;
   *aStride = map.mStride;
 
   aSurface.Unmap();
-  return surfaceData;
-}
-}  // Anonymous namespace.
-
-Maybe<BigBuffer> nsContentUtils::GetSurfaceData(DataSourceSurface& aSurface,
-                                                size_t* aLength,
-                                                int32_t* aStride) {
-  return GetSurfaceDataImpl(aSurface, aLength, aStride);
-}
-
-Maybe<Shmem> nsContentUtils::GetSurfaceData(DataSourceSurface& aSurface,
-                                            size_t* aLength, int32_t* aStride,
-                                            IShmemAllocator* aAllocator) {
-  return GetSurfaceDataImpl(aSurface, aLength, aStride,
-                            GetSurfaceDataShmem(aAllocator));
+  return Some(std::move(surfaceData));
 }
 
 Maybe<IPCImage> nsContentUtils::SurfaceToIPCImage(DataSourceSurface& aSurface) {
