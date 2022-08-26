@@ -384,14 +384,16 @@ void TypeInState::ClearAllProps() {
   ClearProp(nullptr, nullptr);
 }
 
-void TypeInState::ClearProp(nsStaticAtom* aProp, nsAtom* aAttr) {
+void TypeInState::ClearProp(
+    nsStaticAtom* aProp, nsAtom* aAttr,
+    SpecifiedStyle aSpecifiedStyle /* = SpecifiedStyle::Preserve */) {
   // if it's already cleared we are done
   if (IsPropCleared(aProp, aAttr)) {
     return;
   }
 
   // make a new propitem
-  PropItem* item = new PropItem(aProp, aAttr, u""_ns);
+  PropItem* item = new PropItem(aProp, aAttr, u""_ns, aSpecifiedStyle);
 
   // remove it from the list of set properties, if we have a match
   RemovePropFromSetList(aProp, aAttr);
@@ -401,12 +403,7 @@ void TypeInState::ClearProp(nsStaticAtom* aProp, nsAtom* aAttr) {
 }
 
 void TypeInState::ClearLinkPropAndDiscardItsSpecifiedStyle() {
-  ClearProp(nsGkAtoms::a, nullptr);
-  int32_t index = -1;
-  MOZ_ALWAYS_TRUE(IsPropCleared(nsGkAtoms::a, nullptr, index));
-  if (index >= 0) {
-    mClearedArray[index]->mSpecifiedStyle = SpecifiedStyle::Discard;
-  }
+  ClearProp(nsGkAtoms::a, nullptr, SpecifiedStyle::Discard);
 }
 
 /**
