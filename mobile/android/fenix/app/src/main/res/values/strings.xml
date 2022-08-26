@@ -272,7 +272,7 @@
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">More colors. Better privacy. Same commitment to people over profits.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title">Switching screens is easier than ever</string>
+    <string name="onboarding_home_sync_title">Hop from phone to laptop and back</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">Pick up where you left off with tabs from other devices now on your homepage.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
