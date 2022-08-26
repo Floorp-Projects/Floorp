@@ -3930,7 +3930,7 @@ void CodeGenerator::visitStoreDynamicSlotT(LStoreDynamicSlotT* lir) {
 
   MIRType valueType = lir->mir()->value()->type();
   ConstantOrRegister value = ToConstantOrRegister(lir->value(), valueType);
-  masm.storeUnboxedValue(value, valueType, dest, lir->mir()->slotType());
+  masm.storeUnboxedValue(value, valueType, dest, MIRType::Value);
 }
 
 void CodeGenerator::visitStoreDynamicSlotV(LStoreDynamicSlotV* lir) {
