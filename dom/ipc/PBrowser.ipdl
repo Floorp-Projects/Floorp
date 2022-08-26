@@ -636,7 +636,7 @@ parent:
     [Nested=inside_sync] sync DispatchTouchEvent(WidgetTouchEvent event);
 
     async InvokeDragSession(IPCDataTransfer[] transfers, uint32_t action,
-                            Shmem? visualData,
+                            BigBuffer? visualData,
                             uint32_t stride, SurfaceFormat format,
                             LayoutDeviceIntRect dragRect,
                             nsIPrincipal principal, nsIContentSecurityPolicy csp,
