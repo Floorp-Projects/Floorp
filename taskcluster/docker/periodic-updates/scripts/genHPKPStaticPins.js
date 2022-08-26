@@ -222,7 +222,7 @@ function downloadAndParseChromeCerts(filename, certNameToSKD, certSKDToName) {
   let chromeName;
   for (let line of lines) {
     // Skip comments and newlines.
-    if (line.length == 0 || line[0] == "#") {
+    if (!line.length || line[0] == "#") {
       continue;
     }
     switch (state) {
@@ -463,7 +463,7 @@ function genExpirationTime() {
 }
 
 function writeFullPinset(certNameToSKD, certSKDToName, pinset) {
-  if (!pinset.sha256_hashes || pinset.sha256_hashes.length == 0) {
+  if (!pinset.sha256_hashes || !pinset.sha256_hashes.length) {
     throw new Error(`ERROR: Pinset ${pinset.name} does not contain any hashes`);
   }
   writeFingerprints(
@@ -487,7 +487,7 @@ function writeFingerprints(certNameToSKD, certSKDToName, name, hashes) {
   for (let skd of SKDList.sort()) {
     writeString("  " + nameToAlias(certSKDToName[skd]) + ",\n");
   }
-  if (hashes.length == 0) {
+  if (!hashes.length) {
     // ANSI C requires that an initialiser list be non-empty.
     writeString("  0\n");
   }
