@@ -446,15 +446,13 @@ function _setupWindowFunctions() {
   const receive = name => data =>
     AWParent.onContentMessage(`AWPage:${name}`, data, document);
   // Expose top level functions expected by the bundle.
-  window.AWGetDefaultSites = () => {};
   window.AWGetFeatureConfig = () => CONFIG;
-  window.AWGetFxAMetricsFlowURI = () => {};
-  window.AWGetImportableSites = () => "[]";
   window.AWGetRegion = receive("GET_REGION");
   window.AWGetSelectedTheme = receive("GET_SELECTED_THEME");
   // Do not send telemetry if message config sets metrics as 'block'.
-  window.AWSendEventTelemetry =
-    CONFIG?.metrics === "block" ? () => {} : receive("TELEMETRY_EVENT");
+  if (CONFIG?.metrics !== "block") {
+    window.AWSendEventTelemetry = receive("TELEMETRY_EVENT");
+  }
   window.AWSendToDeviceEmailsSupported = receive(
     "SEND_TO_DEVICE_EMAILS_SUPPORTED"
   );
