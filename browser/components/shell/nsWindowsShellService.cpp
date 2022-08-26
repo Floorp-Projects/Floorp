@@ -778,7 +778,7 @@ static nsresult WriteShortcutToLog(KNOWNFOLDERID aFolderId,
 }
 
 static nsresult CreateShortcutImpl(
-    nsIFile* aBinary, const nsTArray<nsString>& aArguments,
+    nsIFile* aBinary, const CopyableTArray<nsString>& aArguments,
     const nsAString& aDescription, nsIFile* aIconFile, uint16_t aIconIndex,
     const nsAString& aAppUserModelId, KNOWNFOLDERID aShortcutFolder,
     const nsAString& aShortcutName, nsAString& aShortcutPath) {
@@ -874,7 +874,18 @@ nsWindowsShellService::CreateShortcut(
     nsIFile* aBinary, const nsTArray<nsString>& aArguments,
     const nsAString& aDescription, nsIFile* aIconFile, uint16_t aIconIndex,
     const nsAString& aAppUserModelId, const nsAString& aShortcutFolder,
-    const nsAString& aShortcutName, nsAString& aShortcutPath) {
+    const nsAString& aShortcutName, JSContext* aCx, dom::Promise** aPromise) {
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+
+  ErrorResult rv;
+  RefPtr<dom::Promise> promise =
+      dom::Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
+
+  if (MOZ_UNLIKELY(rv.Failed())) {
+    return rv.StealNSResult();
+  }
   // In an ideal world we'd probably send along nsIFile pointers
   // here, but it's easier to determine the needed shortcuts log
   // entry with a KNOWNFOLDERID - so we pass this along instead
@@ -889,9 +900,48 @@ nsWindowsShellService::CreateShortcut(
     return NS_ERROR_INVALID_ARG;
   }
 
-  return CreateShortcutImpl(aBinary, aArguments, aDescription, aIconFile,
-                            aIconIndex, aAppUserModelId, folderId,
-                            aShortcutName, aShortcutPath);
+  auto promiseHolder = MakeRefPtr<nsMainThreadPtrHolder<dom::Promise>>(
+      "CreateShortcut promise", promise);
+
+  RefPtr<nsIFile> binary(aBinary);
+  RefPtr<nsIFile> iconFile(aIconFile);
+  NS_DispatchBackgroundTask(
+      NS_NewRunnableFunction(
+          "CreateShortcut",
+          [binary, aArguments = CopyableTArray<nsString>(aArguments),
+           aDescription = nsString{aDescription}, iconFile, aIconIndex,
+           aAppUserModelId = nsString{aAppUserModelId}, folderId,
+           aShortcutFolder = nsString{aShortcutFolder},
+           aShortcutName = nsString{aShortcutName},
+           promiseHolder = std::move(promiseHolder)] {
+            nsresult rv = NS_ERROR_FAILURE;
+            nsAutoString shortcutPath;
+            HRESULT hr = CoInitialize(nullptr);
+
+            if (SUCCEEDED(hr)) {
+              rv = CreateShortcutImpl(binary.get(), aArguments, aDescription,
+                                      iconFile.get(), aIconIndex,
+                                      aAppUserModelId, folderId, aShortcutName,
+                                      shortcutPath);
+              CoUninitialize();
+            }
+
+            NS_DispatchToMainThread(NS_NewRunnableFunction(
+                "CreateShortcut callback",
+                [rv, shortcutPath, promiseHolder = std::move(promiseHolder)] {
+                  dom::Promise* promise = promiseHolder.get()->get();
+
+                  if (NS_SUCCEEDED(rv)) {
+                    promise->MaybeResolve(shortcutPath);
+                  } else {
+                    promise->MaybeReject(rv);
+                  }
+                }));
+          }),
+      NS_DISPATCH_EVENT_MAY_BLOCK);
+
+  promise.forget(aPromise);
+  return NS_OK;
 }
 
 // Constructs a path to an installer-created shortcut, under a directory
@@ -1055,10 +1105,35 @@ static nsresult FindMatchingShortcut(const nsAString& aAppUserModelId,
   return NS_ERROR_FILE_NOT_FOUND;
 }
 
-NS_IMETHODIMP
-nsWindowsShellService::HasMatchingShortcut(const nsAString& aAppUserModelId,
-                                           const bool aPrivateBrowsing,
-                                           bool* aHasMatch) {
+static bool HasMatchingShortcutImpl(const nsAString& aAppUserModelId,
+                                    const bool aPrivateBrowsing,
+                                    const nsAutoString& aShortcutName) {
+  // unused by us, but required
+  nsAutoString shortcutPath;
+  nsresult rv =
+      FindMatchingShortcut(aAppUserModelId, aShortcutName, shortcutPath);
+  if (SUCCEEDED(rv)) {
+    return true;
+  }
+
+  return false;
+}
+
+NS_IMETHODIMP nsWindowsShellService::HasMatchingShortcut(
+    const nsAString& aAppUserModelId, const bool aPrivateBrowsing,
+    JSContext* aCx, dom::Promise** aPromise) {
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+
+  ErrorResult rv;
+  RefPtr<dom::Promise> promise =
+      dom::Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
+
+  if (MOZ_UNLIKELY(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+
   // NOTE: In the installer, non-private shortcuts are named
   // "${BrandShortName}.lnk". This is set from MOZ_APP_DISPLAYNAME in
   // defines.nsi.in. (Except in dev edition where it's explicitly set to
@@ -1088,15 +1163,34 @@ nsWindowsShellService::HasMatchingShortcut(const nsAString& aAppUserModelId,
     shortcutName.AppendLiteral(MOZ_APP_DISPLAYNAME ".lnk");
   }
 
-  nsAutoString shortcutPath;
-  nsresult rv =
-      FindMatchingShortcut(aAppUserModelId, shortcutName, shortcutPath);
-  if (SUCCEEDED(rv)) {
-    *aHasMatch = true;
-  } else {
-    *aHasMatch = false;
-  }
+  auto promiseHolder = MakeRefPtr<nsMainThreadPtrHolder<dom::Promise>>(
+      "HasMatchingShortcut promise", promise);
 
+  NS_DispatchBackgroundTask(
+      NS_NewRunnableFunction(
+          "HasMatchingShortcut",
+          [aAppUserModelId = nsString{aAppUserModelId}, aPrivateBrowsing,
+           shortcutName, promiseHolder = std::move(promiseHolder)] {
+            bool rv = false;
+            HRESULT hr = CoInitialize(nullptr);
+
+            if (SUCCEEDED(hr)) {
+              rv = HasMatchingShortcutImpl(aAppUserModelId, aPrivateBrowsing,
+                                           shortcutName);
+              CoUninitialize();
+            }
+
+            NS_DispatchToMainThread(NS_NewRunnableFunction(
+                "HasMatchingShortcut callback",
+                [rv, promiseHolder = std::move(promiseHolder)] {
+                  dom::Promise* promise = promiseHolder.get()->get();
+
+                  promise->MaybeResolve(rv);
+                }));
+          }),
+      NS_DISPATCH_EVENT_MAY_BLOCK);
+
+  promise.forget(aPromise);
   return NS_OK;
 }
 
