@@ -6671,21 +6671,10 @@ class MLoadElementHole : public MTernaryInstruction, public NoTypePolicy::Data {
   ALLOW_CLONE(MLoadElementHole)
 };
 
-class MStoreElementCommon {
-  bool needsBarrier_ = false;
-
- protected:
-  MStoreElementCommon() = default;
-
- public:
-  bool needsBarrier() const { return needsBarrier_; }
-  void setNeedsBarrier() { needsBarrier_ = true; }
-};
-
 // Store a value to a dense array slots vector.
 class MStoreElement : public MTernaryInstruction,
-                      public MStoreElementCommon,
                       public NoFloatPolicy<2>::Data {
+  bool needsBarrier_ = false;
   bool needsHoleCheck_;
 
   MStoreElement(MDefinition* elements, MDefinition* index, MDefinition* value,
@@ -6705,6 +6694,8 @@ class MStoreElement : public MTernaryInstruction,
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::Element);
   }
+  bool needsBarrier() const { return needsBarrier_; }
+  void setNeedsBarrier() { needsBarrier_ = true; }
   bool needsHoleCheck() const { return needsHoleCheck_; }
   bool fallible() const { return needsHoleCheck(); }
 
@@ -6738,8 +6729,9 @@ class MStoreHoleValueElement : public MBinaryInstruction,
 // vector.
 class MStoreElementHole
     : public MQuaternaryInstruction,
-      public MStoreElementCommon,
       public MixPolicy<SingleObjectPolicy, NoFloatPolicy<3>>::Data {
+  bool needsBarrier_ = false;
+
   MStoreElementHole(MDefinition* object, MDefinition* elements,
                     MDefinition* index, MDefinition* value)
       : MQuaternaryInstruction(classOpcode, object, elements, index, value) {
@@ -6752,6 +6744,9 @@ class MStoreElementHole
   INSTRUCTION_HEADER(StoreElementHole)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object), (1, elements), (2, index), (3, value))
+
+  bool needsBarrier() const { return needsBarrier_; }
+  void setNeedsBarrier() { needsBarrier_ = true; }
 
   ALLOW_CLONE(MStoreElementHole)
 };
