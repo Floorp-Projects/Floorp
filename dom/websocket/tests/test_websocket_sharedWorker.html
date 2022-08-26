@@ -13,7 +13,7 @@
 
 <script class="testbody" type="text/javascript">
 
-var sw = new SharedWorker('webSocket_sharedWorker.js');
+var sw = new SharedWorker('websocket_sharedWorker.js');
 sw.port.onmessage = function(event) {
   if (event.data.type == 'finish') {
     SimpleTest.finish();
