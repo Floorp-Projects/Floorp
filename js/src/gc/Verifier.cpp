@@ -617,7 +617,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
 
     /* Update zone state for gray marking. */
     for (GCZonesIter zone(gc); !zone.done(); zone.next()) {
-      zone->changeGCState(Zone::MarkBlackOnly, Zone::MarkBlackAndGray);
+      zone->changeGCState(zone->initialMarkingState(), Zone::MarkBlackAndGray);
     }
 
     AutoSetMarkColor setColorGray(*gcmarker, MarkColor::Gray);
@@ -627,7 +627,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
 
     /* Restore zone state. */
     for (GCZonesIter zone(gc); !zone.done(); zone.next()) {
-      zone->changeGCState(Zone::MarkBlackAndGray, Zone::MarkBlackOnly);
+      zone->changeGCState(Zone::MarkBlackAndGray, zone->initialMarkingState());
     }
     MOZ_ASSERT(gc->marker.isDrained());
   }
