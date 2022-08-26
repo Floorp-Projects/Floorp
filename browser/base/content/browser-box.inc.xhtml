@@ -21,8 +21,21 @@
     <browser id="sidebar" flex="1" autoscroll="false" disablehistory="true" disablefullscreen="true"
               style="min-width: 14em; width: 18em; max-width: 36em;" tooltip="aHTMLTooltip"/>
   </vbox>
-
   <splitter id="sidebar-splitter" class="chromeclass-extrachrome sidebar-splitter" hidden="true"/>
+
+  <splitter id="sidebar-splitter2" class="browser-sidebar2 devtools-side-splitter" hidden="false"/>
+    <vbox id="sidebar2-box" class="browser-sidebar2" >
+      <box id="sidebar2-header" style="min-width: 0em; min-height: 2em" align="center">
+        <toolbarbutton class="close-icon tabbable" data-l10n-id="sidebar-close-button"  oncommand="changeSidebarVisibility();" id="sidebar-icon"/>
+        <image id="sidebar-throbber"/>
+        <spacer flex="1000"/>
+        </box>
+    <browser id="sidebar2" autoscroll="false" disablehistory="true" disablefullscreen="true" 
+               style="width: 18em; height: 60em;" tooltip="aHTMLTooltip"
+               src="chrome://browser/content/places/places.xhtml"/> 
+    </vbox>
+    <splitter id="sidebar-splitter3" class="browser-sidebar2 devtools-side-splitter"  hidden="false"/>
+
   <vbox id="appcontent" flex="1">
     <!-- gNotificationBox will be added here lazily. -->
     <tabbox id="tabbrowser-tabbox"

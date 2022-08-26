@@ -1610,3 +1610,7 @@ download-mgr-UI =
  .label = Use a Simple UI download manager
 downloading-red-color =
  .label = Highlight the Download Manager icon in red during download  
+
+sidebar-preferences = Sidebar
+view-sidebar2-right = 
+ .label = View the Browser Manager Sidebar on the Right

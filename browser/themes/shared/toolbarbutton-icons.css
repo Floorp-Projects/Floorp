@@ -485,3 +485,12 @@ toolbarbutton.bookmark-item {
 #firefox-view-button {
   list-style-image: url("chrome://branding/content/icon32.png");
 }
+
+#sidebar-button2 {
+  list-style-image: url("chrome://browser/skin/sidebars.svg");
+  fill: rgb(0, 192, 209) !important;
+}
+
+.browser-sidebar2 {
+  -moz-box-ordinal-group: 0 !important;
+}

@@ -290,6 +290,14 @@ const CustomizableWidgets = [
     },
   },
   {
+    id: "sidebar-button2",
+    l10nId: "Sidebar2",
+    onCommand(aEvent) {
+      let win = aEvent.target.ownerGlobal;
+      win.changeSidebarVisibility();
+    },
+  },
+  {
     id: "add-ons-button",
     shortcutId: "key_openAddons",
     l10nId: "toolbar-addons-themes-button",

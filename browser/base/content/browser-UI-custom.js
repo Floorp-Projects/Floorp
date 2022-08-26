@@ -142,3 +142,20 @@ Services.prefs.addObserver("floorp.downloading.red.color", function(){
  else {
    document.getElementById("dlredcolor").remove();
  }});
+
+ if (Services.prefs.getBoolPref("floorp.browser.sidebar.right", false)) {    
+  var Tag = document.createElement("style");
+  Tag.innerText = `.browser-sidebar2 {-moz-box-ordinal-group: 10 !important;}`
+  document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
+  Tag.setAttribute("id", "sidebar2");
+}
+Services.prefs.addObserver("floorp.browser.sidebar.right", function(){
+  if (Services.prefs.getBoolPref("floorp.browser.sidebar.right", false)) {
+    var Tag = document.createElement("style");
+    Tag.innerText = `.browser-sidebar2 {-moz-box-ordinal-group: 10 !important;}`
+    document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
+    Tag.setAttribute("id", "sidebar2");
+  }
+  else {
+    document.getElementById("sidebar2").remove();
+  }});
