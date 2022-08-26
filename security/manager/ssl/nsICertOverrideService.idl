@@ -113,34 +113,6 @@ interface nsICertOverrideService : nsISupports {
                                 in boolean aTemporary);
 
   /**
-   *  Certs with the given fingerprint should always be accepted for the
-   *  given hostname:port, regardless of errors verifying the cert.
-   *  Host:Port is a primary key, only one entry per host:port can exist.
-   *  The fingerprint should be an SHA-256 hash of the certificate.
-   *
-   *  @param aHostName The host (punycode) this mapping belongs to
-   *  @param aPort The port this mapping belongs to, if it is -1 then it
-   *          is internaly treated as 443
-   *  @param aCertFingerprint The cert fingerprint that should be accepted, in
-   *          the format 'AA:BB:...' (colon-separated upper-case hex bytes).
-   *  @param aOverrideBits The errors we want to be overriden
-   */
-  [binaryname(RememberTemporaryValidityOverrideUsingFingerprint), noscript, must_use]
-  void rememberTemporaryValidityOverrideUsingFingerprintNative(
-      in AUTF8String aHostName,
-      in int32_t aPort,
-      in const_OriginAttributesRef aOriginAttributes,
-      in AUTF8String aCertFingerprint,
-      in uint32_t aOverrideBits);
-  [binaryname(RememberTemporaryValidityOverrideUsingFingerprintScriptable), implicit_jscontext, must_use]
-  void rememberTemporaryValidityOverrideUsingFingerprint(
-      in AUTF8String aHostName,
-      in int32_t aPort,
-      in jsval aOriginAttributes,
-      in AUTF8String aCertFingerprint,
-      in uint32_t aOverrideBits);
-
-  /**
    *  Return whether this host, port, cert triple has a stored override.
    *  If so, the outparams will contain the specific errors that were
    *  overridden, and whether the override is permanent, or only for the current

@@ -74,13 +74,6 @@ async function deleteOverride(win, expectedLength) {
 }
 
 async function testViewButton(win) {
-  win.document.getElementById("serverList").selectedIndex = 1;
-
-  Assert.ok(
-    win.document.getElementById("websites_viewButton").disabled,
-    "View button should be disabled for override without cert"
-  );
-
   win.document.getElementById("serverList").selectedIndex = 0;
 
   Assert.ok(
@@ -139,43 +132,11 @@ add_task(async function test_cert_manager_server_tab() {
     },
   ]);
 
-  win.document.getElementById("certmanager").acceptDialog();
-  await BrowserTestUtils.windowClosed(win);
-
-  certOverrideService.rememberTemporaryValidityOverrideUsingFingerprint(
-    "example.com",
-    9999,
-    {},
-    "40:20:3E:57:FB:82:95:0D:3F:62:D7:04:39:F6:32:CC:B2:2F:70:9F:3E:66:C5:35:64:6E:49:2A:F1:02:75:9F",
-    Ci.nsICertOverrideService.ERROR_UNTRUSTED
-  );
-
-  win = await openCertManager();
-
-  await checkServerCertificates(win, [
-    {
-      hostPort: "example.com:443",
-      certName: "md5-ee",
-      isTemporary: false,
-    },
-    {
-      hostPort: "example.com:9999",
-      certName: "(Not Stored)",
-      isTemporary: true,
-    },
-  ]);
-
   await testViewButton(win);
 
-  await deleteOverride(win, 2);
+  await deleteOverride(win, 1);
 
-  await checkServerCertificates(win, [
-    {
-      hostPort: "example.com:9999",
-      certName: "(Not Stored)",
-      isTemporary: true,
-    },
-  ]);
+  await checkServerCertificates(win, []);
 
   win.document.getElementById("certmanager").acceptDialog();
   await BrowserTestUtils.windowClosed(win);
