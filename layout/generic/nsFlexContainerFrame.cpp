@@ -1375,10 +1375,15 @@ FlexItem* nsFlexContainerFrame::GenerateFlexItemForChild(
       // If we get here, we're resolving the flex base size for a flex item, and
       // we fall into the flexbox spec section 9.2 step 3, substep C (if we have
       // a definite cross size) or E (if not).
-      if (aChildFrame->GetAspectRatio()) {
+      if (aChildFrame->GetAspectRatio() ||
+          aChildFrame->IsFrameOfType(eReplacedSizing)) {
         // FIXME: This is a workaround. Once bug 1670151 is fixed, aspect-ratio
         // will be considered when resolving flex item's flex base size with the
-        // value 'max-content'.
+        // value 'max-content'. Replaced elements without preferred
+        // aspect-ratio, e.g. <svg> without viewBox nor aspect-ratio property,
+        // need this workaround since we still want to use replaced elements'
+        // intrinsic sizing rules in
+        // https://drafts.csswg.org/css-sizing-3/#intrinsic-sizes
         styleFlexBaseSize.emplace(StyleSize::Auto());
       } else {
         styleFlexBaseSize.emplace(StyleSize::MaxContent());
