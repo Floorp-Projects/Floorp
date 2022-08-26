@@ -20,7 +20,7 @@ DevToolsModules(
     "event.js",
     "function.js",
     "grip-array.js",
-    "grip-map-entry.js",
+    "grip-entry.js",
     "grip-map.js",
     "grip.js",
     "infinity.js",
