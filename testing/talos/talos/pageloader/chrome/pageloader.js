@@ -173,7 +173,7 @@ async function plInit() {
       plStop(true);
     }
 
-    if (pages.length == 0) {
+    if (!pages.length) {
       dumpLine("tp: no pages to test, quitting");
       plStop(true);
     }

@@ -287,7 +287,7 @@ class SpecialPowersParent extends JSWindowActorParent {
       return false;
     }
 
-    var success = aFilenames.length != 0;
+    var success = !!aFilenames.length;
     aFilenames.forEach(function(crashFilename) {
       var file = crashDumpDir.clone();
       file.append(crashFilename);

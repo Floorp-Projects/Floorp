@@ -312,7 +312,7 @@ function handleRequest(req, res) {
 
   function responseType(packet, responseIP) {
     if (
-      packet.questions.length > 0 &&
+      !!packet.questions.length &&
       packet.questions[0].name == "confirm.example.com" &&
       packet.questions[0].type == "NS"
     ) {
@@ -343,24 +343,18 @@ function handleRequest(req, res) {
 
   function createDNSAnswer(response, packet, responseIP, requestPayload) {
     // This shuts down the connection so we can test if the client reconnects
-    if (
-      packet.questions.length > 0 &&
-      packet.questions[0].name == "closeme.com"
-    ) {
+    if (packet.questions.length && packet.questions[0].name == "closeme.com") {
       response.stream.connection.close("INTERNAL_ERROR", response.stream.id);
       return null;
     }
 
-    if (
-      packet.questions.length > 0 &&
-      packet.questions[0].name.endsWith(".pd")
-    ) {
+    if (packet.questions.length && packet.questions[0].name.endsWith(".pd")) {
       // Bug 1543811: test edns padding extension. Return whether padding was
       // included via the first half of the ip address (1.1 vs 2.2) and the
       // size of the request in the second half of the ip address allowing to
       // verify that the correct amount of padding was added.
       if (
-        packet.additionals.length > 0 &&
+        !!packet.additionals.length &&
         packet.additionals[0].type == "OPT" &&
         packet.additionals[0].options.some(o => o.type === "PADDING")
       ) {
@@ -394,7 +388,7 @@ function handleRequest(req, res) {
 
     function responseData() {
       if (
-        packet.questions.length > 0 &&
+        !!packet.questions.length &&
         packet.questions[0].name == "confirm.example.com" &&
         packet.questions[0].type == "NS"
       ) {

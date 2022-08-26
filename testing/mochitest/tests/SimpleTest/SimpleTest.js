@@ -252,7 +252,7 @@ if (typeof partial == "undefined") {
       args.push(arguments[i]);
     }
     return function() {
-      if (arguments.length > 0) {
+      if (arguments.length) {
         for (let i = 1; i < arguments.length; i++) {
           args.push(arguments[i]);
         }
@@ -1409,7 +1409,7 @@ SimpleTest.finish = function() {
         "expectUncaughtException was called but no uncaught exception was detected!"
       );
     }
-    if (SimpleTest._tests.length == 0) {
+    if (!SimpleTest._tests.length) {
       SimpleTest.ok(
         false,
         "[SimpleTest.finish()] No checks actually run. " +
@@ -1429,7 +1429,7 @@ SimpleTest.finish = function() {
           "This test is expected to leave a service worker registered"
         );
       }
-    } else if (workers.length > 0) {
+    } else if (workers.length) {
       let FULL_PROFILE_WORKERS_TO_IGNORE = [];
       if (parentRunner.conditionedProfile) {
         // Full profile has service workers in the profile, without clearing the profile
