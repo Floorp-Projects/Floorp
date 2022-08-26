@@ -11406,7 +11406,6 @@ void CodeGenerator::visitSpectreMaskIndex(LSpectreMaskIndex* lir) {
 class OutOfLineStoreElementHole : public OutOfLineCodeBase<CodeGenerator> {
   LInstruction* ins_;
   Label rejoinStore_;
-  Label callStub_;
   bool strict_;
 
  public:
@@ -11420,7 +11419,6 @@ class OutOfLineStoreElementHole : public OutOfLineCodeBase<CodeGenerator> {
   }
   LInstruction* ins() const { return ins_; }
   Label* rejoinStore() { return &rejoinStore_; }
-  Label* callStub() { return &callStub_; }
   bool strict() const { return strict_; }
 };
 
@@ -11582,19 +11580,20 @@ void CodeGenerator::visitOutOfLineStoreElementHole(
   // condition flags sticking from the incoming branch.
   // Also note: this branch does not need Spectre mitigations, doing that for
   // the capacity check below is sufficient.
+  Label callStub;
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64) || \
     defined(JS_CODEGEN_LOONG64)
   // Had to reimplement for MIPS because there are no flags.
   Address initLength(elements, ObjectElements::offsetOfInitializedLength());
-  masm.branch32(Assembler::NotEqual, initLength, indexReg, ool->callStub());
+  masm.branch32(Assembler::NotEqual, initLength, indexReg, &callStub);
 #else
-  masm.j(Assembler::NotEqual, ool->callStub());
+  masm.j(Assembler::NotEqual, &callStub);
 #endif
 
   // Check array capacity.
   masm.spectreBoundsCheck32(
       indexReg, Address(elements, ObjectElements::offsetOfCapacity()),
-      spectreTemp, ool->callStub());
+      spectreTemp, &callStub);
 
   // Update initialized length. The capacity guard above ensures this won't
   // overflow, due to MAX_DENSE_ELEMENTS_COUNT.
@@ -11615,7 +11614,7 @@ void CodeGenerator::visitOutOfLineStoreElementHole(
   // Jump to the inline path where we will store the value.
   masm.jump(ool->rejoinStore());
 
-  masm.bind(ool->callStub());
+  masm.bind(&callStub);
   saveLive(ins);
 
   pushArg(Imm32(ool->strict()));
