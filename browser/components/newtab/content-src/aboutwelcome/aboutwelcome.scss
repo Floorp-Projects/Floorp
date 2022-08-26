@@ -495,7 +495,11 @@ body {
           --mr-secondary-position: center var(--mr-secondary-background-position-y) / cover;
           border-radius: 8px 8px 0 0;
           margin: auto auto 0;
-          height: 150px;
+          height: 100px;
+
+          .hero-image img {
+            margin: 6px 0;
+          }
 
           h1 {
             font-size: 35px;
