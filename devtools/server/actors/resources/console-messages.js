@@ -247,7 +247,7 @@ function prepareConsoleMessageForRemote(targetActor, message) {
     });
   }
 
-  if (message.styles && message.styles.length > 0) {
+  if (message.styles && message.styles.length) {
     result.styles = message.styles.map(string => {
       return createValueGripForTarget(targetActor, string);
     });

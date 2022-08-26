@@ -60,7 +60,7 @@ class NetworkLocationsList extends PureComponent {
   }
 
   render() {
-    return this.props.networkLocations.length > 0 ? this.renderList() : null;
+    return this.props.networkLocations.length ? this.renderList() : null;
   }
 }
 

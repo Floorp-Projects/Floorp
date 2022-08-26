@@ -25,7 +25,7 @@ add_task(async function() {
     breakdown,
   });
   ok(
-    partialTree.children.length > 0,
+    !!partialTree.children.length,
     "root should immediately dominate some nodes"
   );
 

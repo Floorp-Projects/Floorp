@@ -88,6 +88,6 @@ async function waitForMessageByType(dbg, msg, typeSelector) {
   const webConsolePanel = await getDebuggerSplitConsole(dbg);
   const hud = webConsolePanel.hud;
   return waitFor(
-    async () => findMessagesByType(hud, msg, typeSelector).length > 0
+    async () => !!findMessagesByType(hud, msg, typeSelector).length
   );
 }

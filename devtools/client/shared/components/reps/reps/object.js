@@ -49,7 +49,7 @@ define(function(require, exports, module) {
             },
             "{"
           ),
-          Object.keys(object).length > 0 ? ellipsisElement : null,
+          Object.keys(object).length ? ellipsisElement : null,
           span(
             {
               className: "objectRightBrace",

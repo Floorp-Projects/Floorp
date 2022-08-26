@@ -287,7 +287,7 @@ function testAPI(tree, doc) {
   );
 
   // test if collapseAll/expandAll work
-  ok(doc.querySelectorAll("[expanded]").length > 0, "Some nodes are expanded");
+  ok(!!doc.querySelectorAll("[expanded]").length, "Some nodes are expanded");
   tree.collapseAll();
   is(
     doc.querySelectorAll("[expanded]").length,

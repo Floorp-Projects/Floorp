@@ -42,7 +42,7 @@ class ManifestIssueList extends PureComponent {
   }
 
   render() {
-    const groups = this.groupIssuesByLevel().filter(list => list.length > 0);
+    const groups = this.groupIssuesByLevel().filter(list => !!list.length);
 
     return groups.map((list, listIndex) => {
       return ul(

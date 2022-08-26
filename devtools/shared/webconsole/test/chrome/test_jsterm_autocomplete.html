@@ -232,7 +232,7 @@
     const response = await webConsoleFront.autocomplete("[1,2,3].");
     let {matches} = response;
 
-    ok(matches.length > 0, "There are completion results for the array");
+    ok(!!matches.length, "There are completion results for the array");
     ok(matches.includes("length") && matches.includes("filter"),
       "Array autocomplete contains expected results");
 
@@ -273,7 +273,7 @@
     const response = await webConsoleFront.autocomplete(`"foo".`);
     let {matches} = response;
 
-    ok(matches.length > 0, "There are completion results for the string");
+    ok(!!matches.length, "There are completion results for the string");
     ok(matches.includes("substr") && matches.includes("trim"),
       "String autocomplete contains expected results");
 

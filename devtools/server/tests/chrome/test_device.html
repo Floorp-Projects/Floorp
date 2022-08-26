@@ -60,7 +60,7 @@ window.onload = function() {
 
       const currProfD = Services.dirsvc.get("ProfD", Ci.nsIFile);
       const profileDir = currProfD.path;
-      ok(profileDir.includes(desc.profile.length > 0 && desc.profile),
+      ok(profileDir.includes(!!desc.profile.length && desc.profile),
          "valid profile name");
 
       client.close().then(() => {

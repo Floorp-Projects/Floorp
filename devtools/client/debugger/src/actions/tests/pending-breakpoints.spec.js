@@ -334,7 +334,7 @@ describe("initializing with disabled pending breakpoints in prefs", () => {
 
     await waitForState(store, state => {
       const bps = selectors.getBreakpointsForSource(state, source.id);
-      return bps && Object.values(bps).length > 0;
+      return bps && !!Object.values(bps).length;
     });
 
     const bp = selectors.getBreakpointsList(getState()).find(({ location }) => {

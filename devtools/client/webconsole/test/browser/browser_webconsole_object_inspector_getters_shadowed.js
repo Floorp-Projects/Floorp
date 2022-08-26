@@ -64,7 +64,7 @@ async function testObject(oi, values) {
 
 function expand(node) {
   expandObjectInspectorNode(node);
-  return waitFor(() => getObjectInspectorChildrenNodes(node).length > 0);
+  return waitFor(() => !!getObjectInspectorChildrenNodes(node).length);
 }
 
 function invokeGetter(node) {

@@ -146,16 +146,15 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
 
   info("Trigger some code in the background page logging some stuff");
   const onMessage = waitUntil(() => {
-    return (
-      findMessagesByType(hud, "Background page exception", ".error").length > 0
-    );
+    return !!findMessagesByType(hud, "Background page exception", ".error")
+      .length;
   });
   hud.ui.wrapper.dispatchEvaluateExpression("myWebExtensionAddonFunction()");
   await onMessage;
 
   info("Open the two add-ons popups to cover popups messages");
   const onPopupMessage = waitUntil(() => {
-    return findMessagesByType(hud, "Popup exception", ".error").length > 0;
+    return !!findMessagesByType(hud, "Popup exception", ".error").length;
   });
   clickOnAddonWidget(OTHER_ADDON_ID);
   clickOnAddonWidget(ADDON_ID);
@@ -314,7 +313,7 @@ add_task(async function testWebExtensionNoBgScript() {
 
   info("Open the add-on popup");
   const onPopupMessage = waitUntil(() => {
-    return findMessagesByType(hud, "Popup-only exception", ".error").length > 0;
+    return !!findMessagesByType(hud, "Popup-only exception", ".error").length;
   });
   clickOnAddonWidget(POPUPONLY_ADDON_ID);
   await onPopupMessage;

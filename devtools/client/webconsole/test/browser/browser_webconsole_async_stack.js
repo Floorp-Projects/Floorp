@@ -76,7 +76,7 @@ async function getSimplifiedStack(messageEl) {
     const frames = messageEl.querySelectorAll(
       ".message-body-wrapper > .stacktrace .frame"
     );
-    return frames.length > 0 ? frames : null;
+    return frames.length ? frames : null;
   }, "Couldn't find stacktrace");
 
   return Array.from(framesEl)

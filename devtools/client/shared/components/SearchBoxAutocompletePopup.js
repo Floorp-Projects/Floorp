@@ -52,7 +52,7 @@ class SearchBoxAutocompletePopup extends Component {
 
   computeState({ autocompleteProvider, filter }) {
     const list = autocompleteProvider(filter);
-    const selectedIndex = list.length > 0 ? 0 : -1;
+    const selectedIndex = list.length ? 0 : -1;
 
     return { list, selectedIndex };
   }
@@ -115,7 +115,7 @@ class SearchBoxAutocompletePopup extends Component {
     const { list } = this.state;
 
     return (
-      list.length > 0 &&
+      !!list.length &&
       dom.div(
         { className: "devtools-autocomplete-popup devtools-monospace" },
         dom.ul(

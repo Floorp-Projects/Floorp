@@ -71,7 +71,7 @@ InspectorSearch.prototype = {
 
     if (query.length === 0) {
       searchContainer.classList.remove("devtools-searchbox-no-match");
-      if (!lastSearched || lastSearched.length > 0) {
+      if (!lastSearched || lastSearched.length) {
         this.emit("search-cleared");
       }
       return;

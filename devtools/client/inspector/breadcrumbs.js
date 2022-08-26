@@ -936,7 +936,7 @@ HTMLBreadcrumbs.prototype = {
       this.setCursor(idx);
     } else {
       // No. Is the breadcrumbs display empty?
-      if (this.nodeHierarchy.length > 0) {
+      if (this.nodeHierarchy.length) {
         // No. We drop all the element that are not direct ancestors
         // of the selection
         const parent = this.selection.nodeFront.parentNode();

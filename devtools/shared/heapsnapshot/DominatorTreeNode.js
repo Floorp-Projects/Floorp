@@ -233,7 +233,7 @@ DominatorTreeNode.partialTraversal = function(
       }
       node.moreChildrenAvailable = endIdx < childNodeIds.length;
     } else {
-      node.moreChildrenAvailable = childNodeIds.length > 0;
+      node.moreChildrenAvailable = !!childNodeIds.length;
     }
 
     return node;

@@ -30,7 +30,7 @@ const SearchProvider = {
   },
 
   hasChildren(object) {
-    return this.getChildren(object).length > 0;
+    return !!this.getChildren(object).length;
   },
 
   getLabel(object) {

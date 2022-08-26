@@ -98,7 +98,7 @@ function updateBlackboxRangesForSourceUrl(
     });
 
     // if the last blackboxed line has been removed, unblackbox the source.
-    if (currentRanges[url].length == 0) {
+    if (!currentRanges[url].length) {
       currentSet.delete(url);
       delete currentRanges[url];
     }

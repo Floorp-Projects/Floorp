@@ -101,15 +101,15 @@ const rsBrowsersRecordsEndpoint = `${rsBrowsersCollectionEndpoint}/records`;
 
   console.group("Results");
   console.log("Added:", operations.added.length);
-  if (operations.added.length > 0) {
+  if (operations.added.length) {
     console.table(operations.added);
   }
   console.log("Updated:", operations.updated.length);
-  if (operations.updated.length > 0) {
+  if (operations.updated.length) {
     console.table(operations.updated);
   }
   console.log("Removed:", operations.removed.length);
-  if (operations.removed.length > 0) {
+  if (operations.removed.length) {
     console.table(operations.removed);
   }
   console.groupEnd();

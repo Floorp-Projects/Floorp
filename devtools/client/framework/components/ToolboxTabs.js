@@ -203,7 +203,7 @@ class ToolboxTabs extends Component {
       const selectedToolWidth = this._cachedToolTabsWidthMap.get(currentToolId);
       while (
         sumWidth + selectedToolWidth > toolboxWidth &&
-        visibleTabs.length > 0
+        visibleTabs.length
       ) {
         const removingToolId = visibleTabs.pop();
         const removingToolWidth = this._cachedToolTabsWidthMap.get(
@@ -321,7 +321,7 @@ class ToolboxTabs extends Component {
           onMouseDown: e => this._tabsOrderManager.onMouseDown(e),
         },
         tabs,
-        this.state.overflowedTabIds.length > 0
+        this.state.overflowedTabIds.length
           ? this.renderToolsChevronButton()
           : null
       )

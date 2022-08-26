@@ -185,7 +185,7 @@ export function clearASTs() {
 
 export function traverseAst(sourceId, visitor, state) {
   const ast = getAst(sourceId);
-  if (!ast || Object.keys(ast).length == 0) {
+  if (!ast || !Object.keys(ast).length) {
     return null;
   }
 

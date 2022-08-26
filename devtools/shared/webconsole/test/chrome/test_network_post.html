@@ -53,7 +53,7 @@ async function startTest()
   info("checking request headers");
   const requestHeadersPacket = await webConsoleFront.getRequestHeaders(netActor);
 
-  ok(requestHeadersPacket.headers.length > 0, "request headers > 0");
+  ok(!!requestHeadersPacket.headers.length, "request headers > 0");
   ok(requestHeadersPacket.headersSize > 0, "request headersSize > 0");
   ok(!!requestHeadersPacket.rawHeaders.length, "request rawHeaders available");
 
@@ -91,7 +91,7 @@ async function startTest()
 
   info("checking response headers");
   const responseHeadersPacket = await webConsoleFront.getResponseHeaders(netActor);
-  ok(responseHeadersPacket.headers.length > 0, "response headers > 0");
+  ok(!!responseHeadersPacket.headers.length, "response headers > 0");
   ok(responseHeadersPacket.headersSize > 0, "response headersSize > 0");
   ok(!!responseHeadersPacket.rawHeaders, "response rawHeaders available");
 

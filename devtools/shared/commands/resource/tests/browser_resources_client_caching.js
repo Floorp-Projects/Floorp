@@ -293,7 +293,7 @@ add_task(async function() {
   let onAvailableCallCount = 0;
   const onAvailable = resources => {
     ok(
-      resources.length > 0,
+      !!resources.length,
       "onAvailable is called with a non empty resources array"
     );
     availableResources.push(...resources);

@@ -240,7 +240,7 @@ function testGetHeadersFromMultipartText(data) {
   const headers = CurlUtils.getHeadersFromMultipartText(data.postDataText);
 
   ok(Array.isArray(headers), "Should return an array.");
-  ok(headers.length > 0, "There should exist at least one request header.");
+  ok(!!headers.length, "There should exist at least one request header.");
   is(
     headers[0].name,
     "Content-Type",

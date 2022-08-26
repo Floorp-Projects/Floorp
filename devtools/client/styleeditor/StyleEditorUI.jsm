@@ -379,7 +379,7 @@ class StyleEditorUI extends EventEmitter {
     const hasVisibleSummary = summaries.some(
       node => !node.classList.contains(FILTERED_CLASSNAME)
     );
-    const allFiltered = summaries.length > 0 && !hasVisibleSummary;
+    const allFiltered = !!summaries.length && !hasVisibleSummary;
 
     this.#nav.classList.toggle(ALL_FILTERED_CLASSNAME, allFiltered);
 

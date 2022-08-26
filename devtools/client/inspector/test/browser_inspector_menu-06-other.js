@@ -91,7 +91,7 @@ add_task(async function() {
       "#nestedHiddenElement"
     );
     const nodesAfter = (await walker.children(divAfter)).nodes;
-    ok(nodesAfter.length == 0, "the node still had children");
+    ok(!nodesAfter.length, "the node still had children");
   }
 
   async function testDeleteRootNode() {

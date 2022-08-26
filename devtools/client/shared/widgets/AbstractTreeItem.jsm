@@ -362,7 +362,7 @@ AbstractTreeItem.prototype = {
     if (visible) {
       if (!this._populated) {
         this._populateSelf(this._childTreeItems);
-        this._populated = this._childTreeItems.length > 0;
+        this._populated = !!this._childTreeItems.length;
       }
       this._showChildren();
     } else {

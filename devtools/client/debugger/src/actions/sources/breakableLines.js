@@ -10,7 +10,7 @@ import { loadSourceActorBreakableLines } from "../source-actors";
 function calculateBreakableLines(positions) {
   const lines = [];
   for (const line in positions) {
-    if (positions[line].length > 0) {
+    if (positions[line].length) {
       lines.push(Number(line));
     }
   }

@@ -142,7 +142,7 @@ var DevToolsServer = {
   },
 
   hasConnection() {
-    return this._connections && Object.keys(this._connections).length > 0;
+    return this._connections && !!Object.keys(this._connections).length;
   },
 
   hasConnectionForPrefix(prefix) {

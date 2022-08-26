@@ -99,7 +99,7 @@ function onContentProcessActorDestroyed(msg) {
 
 function onMessageManagerClose(messageManager, topic, data) {
   const list = actors.get(messageManager);
-  if (!list || list.length == 0) {
+  if (!list || !list.length) {
     return;
   }
   for (const { prefix, childTransport, actor, watcher } of list) {
@@ -127,7 +127,7 @@ function onMessageManagerClose(messageManager, topic, data) {
  */
 function unregisterWatcherForMessageManager(watcher, messageManager, options) {
   const targetActorDescriptions = actors.get(messageManager);
-  if (!targetActorDescriptions || targetActorDescriptions.length == 0) {
+  if (!targetActorDescriptions || !targetActorDescriptions.length) {
     return;
   }
 
@@ -150,7 +150,7 @@ function unregisterWatcherForMessageManager(watcher, messageManager, options) {
   const remainingTargetActorDescriptions = targetActorDescriptions.filter(
     item => item.watcher !== watcher
   );
-  if (remainingTargetActorDescriptions.length == 0) {
+  if (!remainingTargetActorDescriptions.length) {
     actors.delete(messageManager);
   } else {
     actors.set(messageManager, remainingTargetActorDescriptions);

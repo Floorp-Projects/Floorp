@@ -721,7 +721,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       isAfterPseudoElement(rawNode) ||
       isShadowHost(rawNode) ||
       rawNode.nodeType != Node.ELEMENT_NODE ||
-      rawNode.children.length > 0 ||
+      !!rawNode.children.length ||
       isFrameWithChildTarget(this.targetActor, rawNode) ||
       isFrameBlockedByCSP(rawNode)
     ) {
@@ -1055,7 +1055,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     }
 
     let hasFirst, hasLast;
-    if (nodes.length > 0) {
+    if (nodes.length) {
       // Compare first/last with expected nodes before modifying the nodes array in case
       // this is a shadow host.
       hasFirst = nodes[0] == firstChild;
@@ -2318,7 +2318,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       return;
     }
 
-    if (this._waitingForGetMutations || this._pendingMutations.length == 0) {
+    if (this._waitingForGetMutations || !this._pendingMutations.length) {
       // Bail out if we already fired the new-mutation event or if no mutations are
       // waiting to be retrieved.
       return;
@@ -2427,7 +2427,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     }
 
     const parentActor = this.getNode(target.parentNode);
-    if (!parentActor || parentActor.rawNode.children.length > 0) {
+    if (!parentActor || parentActor.rawNode.children.length) {
       // If the parent node has other children, a character data mutation will
       // not change anything regarding inlining text nodes.
       return;
@@ -2543,7 +2543,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       }
     }
 
-    if (releasedOrphans.length > 0) {
+    if (releasedOrphans.length) {
       this.queueMutation({
         target: this.rootNode.actorID,
         type: "unretained",

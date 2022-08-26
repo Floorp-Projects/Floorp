@@ -178,7 +178,7 @@ class SourceTreeItem extends Component {
       blackBoxInsideMenuItemLabel = allInsideBlackBoxed
         ? L10N.getStr("unignoreAllInGroup.label")
         : L10N.getStr("ignoreAllInGroup.label");
-      if (sourcesOutside.length > 0) {
+      if (sourcesOutside.length) {
         blackBoxOutsideMenuItemLabel = allOutsideBlackBoxed
           ? L10N.getStr("unignoreAllOutsideGroup.label")
           : L10N.getStr("ignoreAllOutsideGroup.label");
@@ -187,7 +187,7 @@ class SourceTreeItem extends Component {
       blackBoxInsideMenuItemLabel = allInsideBlackBoxed
         ? L10N.getStr("unignoreAllInDir.label")
         : L10N.getStr("ignoreAllInDir.label");
-      if (sourcesOutside.length > 0) {
+      if (sourcesOutside.length) {
         blackBoxOutsideMenuItemLabel = allOutsideBlackBoxed
           ? L10N.getStr("unignoreAllOutsideDir.label")
           : L10N.getStr("ignoreAllOutsideDir.label");
@@ -204,7 +204,7 @@ class SourceTreeItem extends Component {
         this.props.blackBoxSources(cx, sourcesInside, !allInsideBlackBoxed),
     };
 
-    if (sourcesOutside.length > 0) {
+    if (sourcesOutside.length) {
       menuOptions.push({
         id: "node-blackbox-all",
         label: L10N.getStr("ignoreAll.label"),

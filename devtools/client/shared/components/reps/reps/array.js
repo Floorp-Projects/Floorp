@@ -55,7 +55,7 @@ define(function(require, exports, module) {
       brackets = needSpace(false);
     } else {
       items = arrayIterator(props, object, maxLengthMap.get(mode));
-      brackets = needSpace(items.length > 0);
+      brackets = needSpace(!!items.length);
     }
 
     return span(

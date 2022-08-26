@@ -31,7 +31,7 @@ add_task(async function() {
     "An timeline label should be displayed when the frontend is opened."
   );
   ok(
-    $all(".requests-list-timings-division").length == 0,
+    !$all(".requests-list-timings-division").length,
     "No tick labels should be displayed when the frontend is opened."
   );
 

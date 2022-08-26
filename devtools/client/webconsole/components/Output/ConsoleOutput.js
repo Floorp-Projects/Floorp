@@ -100,7 +100,7 @@ class ConsoleOutput extends Component {
       return;
     }
 
-    if (this.props.visibleMessages.length > 0) {
+    if (this.props.visibleMessages.length) {
       this.scrollToBottom();
     }
 

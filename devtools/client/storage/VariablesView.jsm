@@ -3005,7 +3005,7 @@ Variable.prototype = extend(Scope.prototype, {
       target.setAttribute("pseudo-item", "");
     }
 
-    if (Object.keys(descriptor).length == 0) {
+    if (!Object.keys(descriptor).length) {
       target.setAttribute("pseudo-item", "");
     }
   },

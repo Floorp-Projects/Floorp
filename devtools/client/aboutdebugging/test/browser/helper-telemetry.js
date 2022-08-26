@@ -40,7 +40,7 @@ function checkTelemetryEvents(expectedEvents, expectedSessionId) {
       e => e.method === expectedEvent.method
     );
     ok(
-      sameMethodEvents.length > 0,
+      !!sameMethodEvents.length,
       "Found event for method: " + expectedEvent.method
     );
 

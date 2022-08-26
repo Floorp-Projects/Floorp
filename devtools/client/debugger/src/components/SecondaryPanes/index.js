@@ -388,7 +388,7 @@ class SecondaryPanes extends Component {
     const { horizontal, hasFrames } = this.props;
 
     if (horizontal) {
-      if (features.workers && this.props.workers.length > 0) {
+      if (features.workers && this.props.workers.length) {
         items.push(this.getThreadsItem());
       }
 
@@ -425,7 +425,7 @@ class SecondaryPanes extends Component {
     }
 
     const items = [];
-    if (features.workers && this.props.workers.length > 0) {
+    if (features.workers && this.props.workers.length) {
       items.push(this.getThreadsItem());
     }
 

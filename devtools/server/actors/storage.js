@@ -3082,7 +3082,7 @@ var indexedDBHelpers = {
       });
     }
 
-    if (files.length > 0) {
+    if (files.length) {
       for (const { file, storage } of files) {
         const name = await this.getNameFromDatabaseFile(file);
         if (name) {
@@ -3823,7 +3823,7 @@ const StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
 
       for (const host in data) {
         if (
-          data[host].length == 0 &&
+          !data[host].length &&
           this.boundUpdate.added &&
           this.boundUpdate.added[storeType] &&
           this.boundUpdate.added[storeType][host]
@@ -3831,7 +3831,7 @@ const StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
           delete this.boundUpdate.added[storeType][host];
         }
         if (
-          data[host].length == 0 &&
+          !data[host].length &&
           this.boundUpdate.changed &&
           this.boundUpdate.changed[storeType] &&
           this.boundUpdate.changed[storeType][host]

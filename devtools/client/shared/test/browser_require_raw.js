@@ -17,7 +17,7 @@ const variableFileContents = browserRequire(
 );
 
 function test() {
-  ok(variableFileContents.length > 0, "raw browserRequire worked");
+  ok(!!variableFileContents.length, "raw browserRequire worked");
   delete window.getBrowserLoaderForWindow;
   finish();
 }

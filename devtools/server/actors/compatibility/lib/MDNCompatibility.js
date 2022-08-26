@@ -393,7 +393,7 @@ class MDNCompatibility {
   }
 
   _getMDNLink(compatNode, ...terms) {
-    for (; terms.length > 0; terms.pop()) {
+    for (; terms.length; terms.pop()) {
       const compatTable = this._getCompatTable(compatNode, terms);
       const url = compatTable ? compatTable.mdn_url : null;
 

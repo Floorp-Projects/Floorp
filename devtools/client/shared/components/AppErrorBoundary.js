@@ -59,7 +59,7 @@ class AppErrorBoundary extends Component {
    *  componentStack: {"\n in (component) \n in (other component)..."}
    */
   renderErrorInfo(info = {}) {
-    if (Object.keys(info).length > 0) {
+    if (Object.keys(info).length) {
       return Object.keys(info).map((obj, outerIdx) => {
         const traceParts = info[obj]
           .split("\n")

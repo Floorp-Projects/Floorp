@@ -568,7 +568,7 @@ Scanner.prototype = {
 
     if (
       (eofChars & eEOFCharacters_DropBackslash) != 0 &&
-      result.length > 0 &&
+      !!result.length &&
       result.endsWith("\\")
     ) {
       result = result.slice(0, -1);

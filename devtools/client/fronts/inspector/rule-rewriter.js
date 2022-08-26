@@ -216,7 +216,7 @@ RuleRewriter.prototype = {
 
     // Pop a closing paren from the stack.
     const popSomeParens = closer => {
-      while (parenStack.length > 0) {
+      while (parenStack.length) {
         const paren = parenStack.pop();
 
         if (paren.closer === closer) {
@@ -523,7 +523,7 @@ RuleRewriter.prototype = {
     this.completeInitialization(index);
     let newIndentation = "";
     if (this.hasNewLine) {
-      if (this.declarations.length > 0) {
+      if (this.declarations.length) {
         newIndentation = this.getIndentation(
           this.inputString,
           this.declarations[0].offsets[0]

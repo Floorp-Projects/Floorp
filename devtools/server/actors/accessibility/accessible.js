@@ -491,7 +491,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       !isDefunct(rawAccessible) &&
       TEXT_ROLES.has(rawAccessible.role) &&
       rawAccessible.name &&
-      rawAccessible.name.trim().length > 0
+      !!rawAccessible.name.trim().length
     );
   },
 
@@ -573,7 +573,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
 
     const { types } = options;
     let auditTypes = Object.values(AUDIT_TYPE);
-    if (types && types.length > 0) {
+    if (types && types.length) {
       auditTypes = auditTypes.filter(auditType => types.includes(auditType));
     }
 

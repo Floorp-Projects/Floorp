@@ -31,7 +31,7 @@ add_task(async function() {
     }
   );
 
-  ok(treeNode.children.length > 0, "treeNode has children");
+  ok(!!treeNode.children.length, "treeNode has children");
   ok(
     treeNode.children.every(type => {
       return "name" in type && "bytes" in type && "count" in type;

@@ -478,7 +478,7 @@ function getFormattedProtocol(item) {
        *
        * @see https://bugzilla.mozilla.org/show_bug.cgi?id=1501357
        */
-      if (h.value !== undefined && h.value.length > 0) {
+      if (h.value !== undefined && h.value.length) {
         if (
           h.value.toLowerCase() !== "http/1.1" ||
           protocol[0].toLowerCase() !== "http/1.1"

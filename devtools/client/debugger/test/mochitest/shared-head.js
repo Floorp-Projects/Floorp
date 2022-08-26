@@ -344,7 +344,7 @@ function _assertDebugLine(dbg, line, column) {
   ok(isVisibleInEditor(dbg, debugLine), "debug line is visible");
 
   const markedSpans = lineInfo.handle.markedSpans;
-  if (markedSpans && markedSpans.length > 0) {
+  if (markedSpans && markedSpans.length) {
     const hasExpectedDebugLine = markedSpans.some(
       span =>
         span.marker.className?.includes("debug-expression") &&
@@ -2104,10 +2104,10 @@ async function waitForSourcesInSourceTree(
         missingElements.push(source);
       }
     }
-    if (missingElements.length > 0) {
+    if (missingElements.length) {
       msg += "Missing elements: " + missingElements.join(", ") + "\n";
     }
-    if (displayedSources.length > 0) {
+    if (displayedSources.length) {
       msg += "Unexpected elements: " + displayedSources.join(", ");
     }
     throw new Error(msg);
@@ -2258,7 +2258,7 @@ async function findConsoleMessages(toolbox, query) {
 async function hasConsoleMessage({ toolbox }, msg) {
   return waitFor(async () => {
     const messages = await findConsoleMessages(toolbox, msg);
-    return messages.length > 0;
+    return !!messages.length;
   });
 }
 

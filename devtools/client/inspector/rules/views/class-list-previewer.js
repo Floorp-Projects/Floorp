@@ -260,10 +260,7 @@ class ClassListPreviewer {
       console.warn("Error when calling getClassNames", e);
     }
 
-    if (
-      items.length == 0 ||
-      (items.length == 1 && items[0].label === newValue)
-    ) {
+    if (!items.length || (items.length == 1 && items[0].label === newValue)) {
       this.autocompletePopup.clearItems();
       await this.autocompletePopup.hidePopup();
       this.model.previewClass(newValue);

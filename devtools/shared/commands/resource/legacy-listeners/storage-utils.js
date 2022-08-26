@@ -20,7 +20,7 @@ function getFilteredStorageEvents(updates, storageType) {
     }
   }
 
-  return Object.keys(filteredUpdate).length > 0 ? filteredUpdate : null;
+  return Object.keys(filteredUpdate).length ? filteredUpdate : null;
 }
 
 // This is a mixin that provides all shared cored between storage legacy

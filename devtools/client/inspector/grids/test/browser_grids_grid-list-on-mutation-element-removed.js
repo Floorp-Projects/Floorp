@@ -47,7 +47,7 @@ add_task(async function() {
 
   info("Removing the #grid container in the content page.");
   const onHighlighterHidden = highlighters.once("grid-highlighter-hidden");
-  onCheckboxChange = waitUntilState(store, state => state.grids.length == 0);
+  onCheckboxChange = waitUntilState(store, state => !state.grids.length);
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], () =>
     content.document.getElementById("grid").remove()
   );

@@ -130,7 +130,7 @@ async function stopRecordingAllocations(
   );
 
   const objectNodeIds = TrackedObjects.getAllNodeIds();
-  if (objectNodeIds.length > 0) {
+  if (objectNodeIds.length) {
     tracker.traceObjects(objectNodeIds);
   }
 
@@ -161,7 +161,7 @@ async function stopRecordingAllocations(
         "resource://devtools/shared/test-helpers/tracked-objects.jsm"
       );
       const objectNodeIds = TrackedObjects.getAllNodeIds();
-      if (objectNodeIds.length > 0) {
+      if (objectNodeIds.length) {
         const { DevToolsLoader } = ChromeUtils.import(
           "resource://devtools/shared/loader/Loader.jsm"
         );

@@ -168,7 +168,7 @@ add_task(
     let consoleElements;
     await waitUntil(() => {
       consoleElements = findMessagesByType(hud, expectedWarning, ".warn");
-      return consoleElements.length > 0;
+      return !!consoleElements.length;
     });
 
     const locationElement = consoleElements[0].querySelector(

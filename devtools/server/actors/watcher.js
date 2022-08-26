@@ -485,7 +485,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
         resourceTypes,
         targetType
       );
-      if (targetResourceTypes.length == 0) {
+      if (!targetResourceTypes.length) {
         continue;
       }
       const targetHelperModule = TARGET_HELPERS[targetType];
@@ -517,7 +517,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       resourceTypes,
       Targets.TYPES.FRAME
     );
-    if (frameResourceTypes.length > 0) {
+    if (frameResourceTypes.length) {
       const targetActor = this._getTargetActorInParentProcess();
       if (targetActor) {
         await targetActor.addSessionDataEntry("resources", frameResourceTypes);
@@ -570,7 +570,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           resourceTypes,
           targetType
         );
-        if (targetResourceTypes.length == 0) {
+        if (!targetResourceTypes.length) {
           continue;
         }
         const targetHelperModule = TARGET_HELPERS[targetType];
@@ -587,7 +587,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       resourceTypes,
       Targets.TYPES.FRAME
     );
-    if (frameResourceTypes.length > 0) {
+    if (frameResourceTypes.length) {
       const targetActor = this._getTargetActorInParentProcess();
       if (targetActor) {
         targetActor.removeSessionDataEntry("resources", frameResourceTypes);

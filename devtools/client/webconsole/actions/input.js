@@ -276,7 +276,7 @@ function handleHelperResult(response) {
             );
           }
 
-          if (screenshotMessages && screenshotMessages.length > 0) {
+          if (screenshotMessages && screenshotMessages.length) {
             dispatch(
               messagesActions.messagesAdd(
                 screenshotMessages.map(message => ({

@@ -368,7 +368,7 @@ async function findGeneratedBinding(
       locationType,
       sourceMaps
     );
-    if (applicableBindings.length > 0) {
+    if (applicableBindings.length) {
       hadApplicableBindings = true;
     }
     if (locationType === "ref") {

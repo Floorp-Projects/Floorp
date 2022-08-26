@@ -135,7 +135,7 @@ async function assertBreakablePositions(
     // If there is no column breakpoint, skip all further assertions
     // Last lines of inline script are reported as breakable lines and selectors reports
     // one breakable column, but, we don't report any available column breakpoint for them.
-    if (columns.length == 0) {
+    if (!columns.length) {
       // So, only ensure that the really is no marker on this line
       const lineElement = await getTokenFromPosition(dbg, { line, ch: -1 });
       const columnMarkers = lineElement.querySelectorAll(".column-breakpoint");

@@ -556,7 +556,7 @@ class StorageUI {
    *         An array of keys of columns to be made editable
    */
   makeFieldsEditable(editableFields) {
-    if (editableFields && editableFields.length > 0) {
+    if (editableFields && editableFields.length) {
       this.table.makeFieldsEditable(editableFields);
     } else if (this.table._editableFieldsEngine) {
       this.table._editableFieldsEngine.destroy();
@@ -813,7 +813,7 @@ class StorageUI {
                 }
 
                 // Remove the item from table if currently displayed.
-                if (names.length > 0) {
+                if (names.length) {
                   const tableItemName = names.pop();
                   if (this.tree.isSelected([type, host, ...names])) {
                     await this.removeItemFromTable(tableItemName);
@@ -847,11 +847,7 @@ class StorageUI {
     }
 
     const [type, host, db, objectStore] = selectedItem;
-    if (
-      !changed[type] ||
-      !changed[type][host] ||
-      changed[type][host].length == 0
-    ) {
+    if (!changed[type] || !changed[type][host] || !changed[type][host].length) {
       return;
     }
     try {
@@ -1643,7 +1639,7 @@ class StorageUI {
     const data = this.table.items.get(rowId);
 
     let name = data[uniqueId];
-    if (path.length > 0) {
+    if (path.length) {
       name = JSON.stringify([...path, name]);
     }
     front.removeItem(host, name);
@@ -1660,7 +1656,7 @@ class StorageUI {
     // data from server are successfully fetched (and that's async).
     const [, host, ...path] = this.tree.selectedItem;
     const front = this.getCurrentFront();
-    const name = path.length > 0 ? JSON.stringify(path) : undefined;
+    const name = path.length ? JSON.stringify(path) : undefined;
     front.removeAll(host, name);
   }
 
@@ -1673,7 +1669,7 @@ class StorageUI {
     // table data from server is successfully fetched (and that's async).
     const [, host, ...path] = this.tree.selectedItem;
     const front = this.getCurrentFront();
-    const name = path.length > 0 ? JSON.stringify(path) : undefined;
+    const name = path.length ? JSON.stringify(path) : undefined;
     front.removeAllSessionCookies(host, name);
   }
 

@@ -29,7 +29,7 @@ function run_test() {
 
   const seen = new Set();
   const stack = [root];
-  while (stack.length > 0) {
+  while (stack.length) {
     const top = stack.pop();
 
     if (seen.has(top)) {

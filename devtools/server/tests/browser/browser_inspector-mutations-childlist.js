@@ -105,14 +105,14 @@ add_task(
     postCheck(walker, mutations) {
       const remove = mutations[0];
       is(remove.type, "childList", "First mutation should be a childList.");
-      ok(remove.removed.length > 0, "First mutation should be a removal.");
+      ok(!!remove.removed.length, "First mutation should be a removal.");
       const add = mutations[1];
       is(
         add.type,
         "childList",
         "Second mutation should be a childList removal."
       );
-      ok(add.added.length > 0, "Second mutation should be an addition.");
+      ok(!!add.added.length, "Second mutation should be an addition.");
       const a = add.added[0];
       is(a.id, "a", "Added node should be #a");
       is(a.parentNode(), remove.target, "Should still be a child of longlist.");
@@ -134,14 +134,14 @@ add_task(
     postCheck(walker, mutations) {
       const remove = mutations[0];
       is(remove.type, "childList", "First mutation should be a childList.");
-      ok(remove.removed.length > 0, "First mutation should be a removal.");
+      ok(!!remove.removed.length, "First mutation should be a removal.");
       const add = mutations[1];
       is(
         add.type,
         "childList",
         "Second mutation should be a childList removal."
       );
-      ok(add.added.length > 0, "Second mutation should be an addition.");
+      ok(!!add.added.length, "Second mutation should be an addition.");
       const a = add.added[0];
       is(a.id, "a", "Added node should be #a");
       is(a.parentNode(), add.target, "Should still be a child of longlist.");

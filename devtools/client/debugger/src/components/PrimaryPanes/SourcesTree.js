@@ -162,7 +162,7 @@ class SourcesTree extends Component {
   };
 
   isEmpty() {
-    return this.getRoots().length == 0;
+    return !this.getRoots().length;
   }
 
   renderEmptyElement(message) {

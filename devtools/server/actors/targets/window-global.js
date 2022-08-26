@@ -979,7 +979,7 @@ const windowGlobalTargetPrototype = {
         // Unfortunately docshell.isBeingDestroyed() doesn't return true...
         return d != this.docShell && this._isRootDocShell(d) && d.DOMWindow;
       });
-      if (rootDocShells.length > 0) {
+      if (rootDocShells.length) {
         const newRoot = rootDocShells[0];
         this._originalWindow = newRoot.DOMWindow;
         this._changeTopLevelDocument(this._originalWindow);
@@ -1069,7 +1069,7 @@ const windowGlobalTargetPrototype = {
     const windows = this._docShellsToWindows(docshells);
 
     // Do not send the `frameUpdate` event if the windows array is empty.
-    if (windows.length == 0) {
+    if (!windows.length) {
       return;
     }
 

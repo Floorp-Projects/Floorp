@@ -79,7 +79,7 @@ export default function update(state = initialSourcesTreeState(), action) {
             state.isWebExtension
           )
       );
-      if (newSources.length == 0) {
+      if (!newSources.length) {
         return state;
       }
       let changed = false;
@@ -109,7 +109,7 @@ export default function update(state = initialSourcesTreeState(), action) {
           state.isWebExtension
         )
       );
-      if (newSourceActors.length == 0) {
+      if (!newSourceActors.length) {
         return state;
       }
       let changed = false;

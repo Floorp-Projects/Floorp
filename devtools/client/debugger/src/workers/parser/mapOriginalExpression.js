@@ -20,7 +20,7 @@ function replaceNode(ancestors, node) {
 
 function getFirstExpression(ast) {
   const statements = ast.program.body;
-  if (statements.length == 0) {
+  if (!statements.length) {
     return null;
   }
 

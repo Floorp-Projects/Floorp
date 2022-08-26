@@ -65,7 +65,7 @@ add_task(async function() {
       async function expandContainer(container, expectedChildName) {
         info(`Expand the node expected to contain a ${expectedChildName}`);
         await inspector.markup.expandNode(container.node);
-        await waitUntil(() => container.getChildContainers().length > 0);
+        await waitUntil(() => !!container.getChildContainers().length);
 
         const children = container
           .getChildContainers()

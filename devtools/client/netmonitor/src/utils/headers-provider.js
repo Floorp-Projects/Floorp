@@ -31,7 +31,7 @@ var HeadersProvider = {
 
   hasChildren(object) {
     if (object.value instanceof HeaderList) {
-      return object.value.headers.length > 0;
+      return !!object.value.headers.length;
     } else if (object instanceof Header) {
       return false;
     }

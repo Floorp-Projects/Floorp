@@ -100,7 +100,7 @@ const readHttpRequest = async function(input) {
 
   while (true) {
     const line = await readLine(input);
-    if (line.length == 0) {
+    if (!line.length) {
       break;
     }
 

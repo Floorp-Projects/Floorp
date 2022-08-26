@@ -70,7 +70,7 @@ add_task(async function() {
   ok(getState().individuals, "Should have individuals state");
   ok(getState().individuals.nodes, "Should have individuals nodes");
   ok(
-    getState().individuals.nodes.length > 0,
+    !!getState().individuals.nodes.length,
     "Should have a positive number of nodes"
   );
 

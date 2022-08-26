@@ -69,9 +69,8 @@ StackTraceCollector.prototype = {
     for (const { messageManager } of this.netmonitors) {
       messageManager.sendAsyncMessage("debug:request-stack-available", {
         channelId: id,
-        stacktrace: stacktrace && stacktrace.length > 0,
-        lastFrame:
-          stacktrace && stacktrace.length > 0 ? stacktrace[0] : undefined,
+        stacktrace: stacktrace && !!stacktrace.length,
+        lastFrame: stacktrace && stacktrace.length ? stacktrace[0] : undefined,
       });
     }
     this.stacktracesById.set(id, stacktrace);

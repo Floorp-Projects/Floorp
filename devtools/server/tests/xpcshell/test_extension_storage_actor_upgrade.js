@@ -108,7 +108,7 @@ add_task(async function test_panel_live_reload() {
     storageFront.on("stores-update", function updateListener(updates) {
       info(`Got stores-update event: ${JSON.stringify(updates)}`);
       const extStorageAdded = updates.added?.extensionStorage;
-      if (host in extStorageAdded && extStorageAdded[host].length > 0) {
+      if (host in extStorageAdded && extStorageAdded[host].length) {
         storageFront.off("stores-update", updateListener);
         resolve();
       }

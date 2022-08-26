@@ -237,7 +237,7 @@ class RequestListContextMenu {
       id: "request-list-context-copy-all-as-har",
       label: L10N.getStr("netmonitor.context.copyAllAsHar"),
       accesskey: L10N.getStr("netmonitor.context.copyAllAsHar.accesskey"),
-      visible: requests.length > 0,
+      visible: !!requests.length,
       click: () => HarMenuUtils.copyAllAsHar(requests, connector),
     });
 
@@ -286,7 +286,7 @@ class RequestListContextMenu {
       id: "request-list-context-save-all-as-har",
       label: L10N.getStr("netmonitor.context.saveAllAsHar"),
       accesskey: L10N.getStr("netmonitor.context.saveAllAsHar.accesskey"),
-      visible: requests.length > 0,
+      visible: !!requests.length,
       click: () => HarMenuUtils.saveAllAsHar(requests, connector),
     });
 
@@ -415,7 +415,7 @@ class RequestListContextMenu {
       id: "request-list-context-perf",
       label: L10N.getStr("netmonitor.context.perfTools"),
       accesskey: L10N.getStr("netmonitor.context.perfTools.accesskey"),
-      visible: requests.length > 0,
+      visible: !!requests.length,
       click: () => openStatistics(true),
     });
 

@@ -58,7 +58,7 @@ class Manifest extends PureComponent {
 
   renderIssueSection() {
     const { validation } = this.props;
-    const shouldRender = validation && validation.length > 0;
+    const shouldRender = validation && !!validation.length;
 
     return shouldRender
       ? ManifestSection(

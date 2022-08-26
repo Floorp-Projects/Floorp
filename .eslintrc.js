@@ -477,7 +477,6 @@ module.exports = {
     },
     {
       files: [
-        "devtools/**",
         "dom/**",
         "docshell/**",
         "editor/libeditor/tests/**",

@@ -212,7 +212,7 @@ class ChangesApp extends PureComponent {
   }
 
   render() {
-    const hasChanges = Object.keys(this.props.changesTree).length > 0;
+    const hasChanges = !!Object.keys(this.props.changesTree).length;
     return dom.div(
       {
         className: "theme-sidebar inspector-tabpanel",

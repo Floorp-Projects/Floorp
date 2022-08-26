@@ -53,7 +53,7 @@ async function testNetmonitor(toolbox) {
     "devtools/client/netmonitor/src/selectors/index"
   );
 
-  await waitFor(() => store.getState().requests.requests.length > 0);
+  await waitFor(() => !!store.getState().requests.requests.length);
 
   is(
     store.getState().requests.requests.length,

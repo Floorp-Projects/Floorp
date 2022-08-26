@@ -241,7 +241,7 @@ class Tabbar extends Component {
       () => {
         // Select the next active tab and force the select event handler to initialize
         // the panel if needed.
-        if (tabs.length > 0 && this.props.onSelect) {
+        if (tabs.length && this.props.onSelect) {
           this.props.onSelect(this.getTabId(activeTab));
         }
       }

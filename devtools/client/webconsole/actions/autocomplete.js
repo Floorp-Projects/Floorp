@@ -99,14 +99,11 @@ function updateAuthorizedEvaluations(
   getterPath,
   mappedVars
 ) {
-  if (
-    !Array.isArray(authorizedEvaluations) ||
-    authorizedEvaluations.length == 0
-  ) {
+  if (!Array.isArray(authorizedEvaluations) || !authorizedEvaluations.length) {
     authorizedEvaluations = [];
   }
 
-  if (Array.isArray(getterPath) && getterPath.length > 0) {
+  if (Array.isArray(getterPath) && getterPath.length) {
     // We need to check for any previous authorizations. For example, here if getterPath
     // is ["a", "b", "c", "d"], we want to see if there was any other path that was
     // authorized in a previous request. For that, we only add the previous
@@ -147,7 +144,7 @@ function updateAuthorizedEvaluations(
  * @returns {String} The source-mapped expression to autocomplete.
  */
 async function getMappedInput(rawInput, mappedVars, hud) {
-  if (!mappedVars || Object.keys(mappedVars).length == 0) {
+  if (!mappedVars || !Object.keys(mappedVars).length) {
     return { input: rawInput, originalExpression: undefined };
   }
 

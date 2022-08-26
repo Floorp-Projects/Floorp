@@ -510,7 +510,7 @@ const makeParentMap = items => {
   const map = new WeakMap();
 
   function _traverse(item) {
-    if (item.children.length > 0) {
+    if (item.children.length) {
       for (const child of item.children) {
         map.set(child, item);
         _traverse(child);

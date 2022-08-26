@@ -51,7 +51,7 @@ function findBreakpointAtLocation(
 
 // returns the closest active column breakpoint
 function findClosestBreakpoint(breakpoints, column) {
-  if (!breakpoints || breakpoints.length == 0) {
+  if (!breakpoints || !breakpoints.length) {
     return null;
   }
 

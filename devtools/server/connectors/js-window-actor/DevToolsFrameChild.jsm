@@ -289,7 +289,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
       // `sessionData` will also contain `browserId` as well as entries with empty arrays,
       // which shouldn't be processed.
       const entries = sessionData[type];
-      if (!Array.isArray(entries) || entries.length == 0) {
+      if (!Array.isArray(entries) || !entries.length) {
         continue;
       }
       targetActor.addSessionDataEntry(type, entries, isDocumentCreation);
@@ -661,7 +661,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
         existingTarget.destroy();
       }
 
-      if (actors.length > 0) {
+      if (actors.length) {
         // The most important is to unregister the actor from TargetActorRegistry,
         // so that it is no longer present in the list when new DOMWindowCreated fires.
         // This will also help notify the client that the target has been destroyed.

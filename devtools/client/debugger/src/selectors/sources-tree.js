@@ -20,7 +20,7 @@ export const getSourcesTreeSources = createSelector(
     // Also filter out threads which have no sources, in case we had
     // INSERT_THREAD with no ADD_SOURCES.
     threadItems = threadItems.filter(
-      item => !!item.thread && item.children.length > 0
+      item => !!item.thread && !!item.children.length
     );
 
     if (projectDirectoryRoot) {
@@ -106,7 +106,7 @@ function getDirectoryForUniquePath(projectRoot, threadItems) {
 
   // If we selected a thread, the project root is for a Thread Item
   // and it only contains `${thread}`
-  if (sections.length == 0) {
+  if (!sections.length) {
     return threadItem;
   }
 
@@ -117,7 +117,7 @@ function getDirectoryForUniquePath(projectRoot, threadItems) {
     }
     // In case we picked a group, return it...
     // project root looked like this `${thread}|${group}`
-    if (sections.length == 0) {
+    if (!sections.length) {
       return child;
     }
     // ..otherwise, we picked a directory, so look for it by traversing the tree

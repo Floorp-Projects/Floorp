@@ -62,7 +62,7 @@ function getHighlighterCanvasFrameHelper(conn, actorID) {
   if (
     highlighter._highlighters &&
     Array.isArray(highlighter._highlighters) &&
-    highlighter._highlighters.length > 0
+    highlighter._highlighters.length
   ) {
     highlighter = highlighter._highlighters[0];
   }

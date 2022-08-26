@@ -219,7 +219,7 @@ class Scopes extends PureComponent {
       return expandedScopes.some(path => path == getScopeItemPath(item));
     }
 
-    if (scopes && scopes.length > 0 && !isLoading) {
+    if (scopes && !!scopes.length && !isLoading) {
       return (
         <div className="pane scopes-list">
           <ObjectInspector

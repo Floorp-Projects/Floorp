@@ -185,7 +185,7 @@ function restoreBlackBoxedSources(cx, sources) {
   return async ({ dispatch, getState }) => {
     const currentRanges = getBlackBoxRanges(getState());
 
-    if (Object.keys(currentRanges).length == 0) {
+    if (!Object.keys(currentRanges).length) {
       return;
     }
 
@@ -246,7 +246,7 @@ export function newGeneratedSource(sourceInfo) {
 
 export function newGeneratedSources(sourceResources) {
   return async ({ dispatch, getState, client }) => {
-    if (sourceResources.length == 0) {
+    if (!sourceResources.length) {
       return [];
     }
 

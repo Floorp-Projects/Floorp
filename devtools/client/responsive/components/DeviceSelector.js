@@ -121,7 +121,7 @@ class DeviceSelector extends PureComponent {
       return a.props.label.localeCompare(b.props.label);
     });
 
-    if (menuItems.length > 0) {
+    if (menuItems.length) {
       menuItems.push(hr({ key: "separator" }));
     }
 

@@ -290,7 +290,7 @@ class HTTPCustomRequestPanel extends Component {
 
     let finalURL = url.split("?")[0];
 
-    if (queryString.length > 0) {
+    if (queryString.length) {
       finalURL += `?${queryString.substring(0, queryString.length - 1)}`;
     }
     this.updateStateAndPref({

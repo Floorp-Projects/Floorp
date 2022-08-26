@@ -1062,7 +1062,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     for (const prop of ["top", "bottom", "left", "right"]) {
       const info = cssLogic.getPropertyInfo("margin-" + prop);
       const selectors = info.matchedSelectors;
-      if (selectors && selectors.length > 0 && selectors[0].value == "auto") {
+      if (selectors && !!selectors.length && selectors[0].value == "auto") {
         margins[prop] = "auto";
       }
     }
@@ -1180,13 +1180,13 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     let selector;
     if (rawNode.id) {
       selector = "#" + CSS.escape(rawNode.id);
-    } else if (classes.length > 0) {
+    } else if (classes.length) {
       selector = "." + classes.map(c => CSS.escape(c)).join(".");
     } else {
       selector = rawNode.localName;
     }
 
-    if (pseudoClasses && pseudoClasses.length > 0) {
+    if (pseudoClasses && pseudoClasses.length) {
       selector += pseudoClasses.join("");
     }
 

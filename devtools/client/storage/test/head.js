@@ -268,7 +268,7 @@ function variablesViewExpandTo(options) {
       const name = expandTo.shift();
       const newProp = prop.get(name);
 
-      if (expandTo.length > 0) {
+      if (expandTo.length) {
         ok(newProp, "found property " + name);
         if (newProp && newProp.expand) {
           newProp.expand();

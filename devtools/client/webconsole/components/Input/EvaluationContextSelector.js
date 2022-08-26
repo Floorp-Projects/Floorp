@@ -206,7 +206,7 @@ class EvaluationContextSelector extends Component {
     }
 
     for (const [targetType, menuItems] of Object.entries(sections)) {
-      if (menuItems.length > 0) {
+      if (menuItems.length) {
         items.push(
           dom.hr({ role: "menuseparator", key: `${targetType}-separator` }),
           ...menuItems
