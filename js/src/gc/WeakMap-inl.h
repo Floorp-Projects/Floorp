@@ -27,19 +27,17 @@ namespace detail {
 // Return the effective cell color given the current marking state.
 // This must be kept in sync with ShouldMark in Marking.cpp.
 template <typename T>
-static CellColor GetEffectiveColor(JSRuntime* rt, const T& item) {
+static CellColor GetEffectiveColor(GCMarker* marker, const T& item) {
   Cell* cell = ToMarkable(item);
   if (!cell->isTenured()) {
     return CellColor::Black;
   }
   const TenuredCell& t = cell->asTenured();
-  if (rt != t.runtimeFromAnyThread()) {
+  if (!t.zoneFromAnyThread()->shouldMarkInZone(marker->markColor())) {
     return CellColor::Black;
   }
-  if (!t.zoneFromAnyThread()->shouldMarkInZone()) {
-    return CellColor::Black;
-  }
-  return cell->color();
+  MOZ_ASSERT(t.runtimeFromAnyThread() == marker->runtime());
+  return t.color();
 }
 
 // Only objects have delegates, so default to returning nullptr. Note that some
@@ -155,13 +153,12 @@ void WeakMap<K, V>::markKey(GCMarker* marker, gc::Cell* markedCell,
 template <class K, class V>
 bool WeakMap<K, V>::markEntry(GCMarker* marker, K& key, V& value) {
   bool marked = false;
-  JSRuntime* rt = zone()->runtimeFromAnyThread();
-  CellColor markColor = CellColor(marker->markColor());
-  CellColor keyColor = gc::detail::GetEffectiveColor(rt, key);
+  CellColor markColor = marker->markColor();
+  CellColor keyColor = gc::detail::GetEffectiveColor(marker, key);
   JSObject* delegate = gc::detail::GetDelegate(key);
 
   if (delegate) {
-    CellColor delegateColor = gc::detail::GetEffectiveColor(rt, delegate);
+    CellColor delegateColor = gc::detail::GetEffectiveColor(marker, delegate);
     MOZ_ASSERT(mapColor);
     // The key needs to stay alive while both the delegate and map are live.
     CellColor proxyPreserveColor = std::min(delegateColor, mapColor);
@@ -181,7 +178,7 @@ bool WeakMap<K, V>::markEntry(GCMarker* marker, K& key, V& value) {
     gc::Cell* cellValue = gc::ToMarkable(value);
     if (cellValue) {
       CellColor targetColor = std::min(mapColor, keyColor);
-      CellColor valueColor = gc::detail::GetEffectiveColor(rt, cellValue);
+      CellColor valueColor = gc::detail::GetEffectiveColor(marker, cellValue);
       if (valueColor < targetColor) {
         MOZ_ASSERT(markColor >= targetColor);
         if (markColor == targetColor) {
@@ -308,9 +305,8 @@ bool WeakMap<K, V>::markEntries(GCMarker* marker) {
     // delegate, so we only need to check whether keyColor < mapColor to tell
     // this.
 
-    JSRuntime* rt = zone()->runtimeFromAnyThread();
     CellColor keyColor =
-        gc::detail::GetEffectiveColor(rt, e.front().key().get());
+        gc::detail::GetEffectiveColor(marker, e.front().key().get());
 
     if (keyColor < mapColor) {
       MOZ_ASSERT(marker->weakMapAction() == JS::WeakMapTraceAction::Expand);
