@@ -8,6 +8,7 @@ addAccessibleTask(
   `
 a
 <div id="noChars" style="width: 5px; height: 5px;"><p></p></div>
+<p id="twoText"><span>a</span><span>b</span></p>
   `,
   async function(browser, docAcc) {
     const dpr = await getContentDPR(browser);
@@ -18,6 +19,15 @@ a
     ]);
     let [x, y] = Layout.getBounds(noChars, dpr);
     await testOffsetAtPoint(noChars, x, y, COORDTYPE_SCREEN_RELATIVE, -1);
+
+    // Test that the correct offset is returned for a point in a second text
+    // leaf.
+    const twoText = findAccessibleChildByID(docAcc, "twoText", [
+      Ci.nsIAccessibleText,
+    ]);
+    const text2 = twoText.getChildAt(1);
+    [x, y] = Layout.getBounds(text2, dpr);
+    await testOffsetAtPoint(twoText, x, y, COORDTYPE_SCREEN_RELATIVE, 1);
   },
   {
     topLevel: true,

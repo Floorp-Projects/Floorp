@@ -281,7 +281,15 @@ int32_t HyperTextAccessibleBase::OffsetAtPoint(int32_t aX, int32_t aY,
                                     /* aIncludeOrigin */ false)) {
     }
   }
-  return point.ContainsPoint(coords.x, coords.y) ? point.mOffset : -1;
+  if (!point.ContainsPoint(coords.x, coords.y)) {
+    return -1;
+  }
+  DebugOnly<bool> ok = false;
+  int32_t htOffset;
+  std::tie(ok, htOffset) =
+      TransformOffset(point.mAcc, point.mOffset, /* aIsEndOffset */ false);
+  MOZ_ASSERT(ok, "point should be a descendant of this");
+  return htOffset;
 }
 
 TextLeafPoint HyperTextAccessibleBase::ToTextLeafPoint(int32_t aOffset,
