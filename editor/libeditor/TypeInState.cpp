@@ -368,7 +368,7 @@ void TypeInState::SetProp(nsStaticAtom& aProp, nsAtom* aAttr,
   int32_t index;
   if (IsPropSet(aProp, aAttr, nullptr, index)) {
     // if it's already set, update the value
-    mSetArray[index]->value = aValue;
+    mSetArray[index]->mAttributeValueOrCSSValue = aValue;
     return;
   }
 
@@ -405,7 +405,7 @@ void TypeInState::ClearLinkPropAndDiscardItsSpecifiedStyle() {
   int32_t index = -1;
   MOZ_ALWAYS_TRUE(IsPropCleared(nsGkAtoms::a, nullptr, index));
   if (index >= 0) {
-    mClearedArray[index]->specifiedStyle = SpecifiedStyle::Discard;
+    mClearedArray[index]->mSpecifiedStyle = SpecifiedStyle::Discard;
   }
 }
 
@@ -494,7 +494,7 @@ bool TypeInState::IsPropSet(nsStaticAtom& aProp, nsAtom* aAttr,
     PropItem* item = mSetArray[i];
     if (item->mTag == &aProp && item->mAttribute == aAttr) {
       if (outValue) {
-        *outValue = item->value;
+        *outValue = item->mAttributeValueOrCSSValue;
       }
       outIndex = i;
       return true;
@@ -534,7 +534,7 @@ bool TypeInState::FindPropInList(nsStaticAtom* aProp, nsAtom* aAttr,
     PropItem* item = aList[i];
     if (item->mTag == aProp && item->mAttribute == aAttr) {
       if (outValue) {
-        *outValue = item->value;
+        *outValue = item->mAttributeValueOrCSSValue;
       }
       outIndex = i;
       return true;
