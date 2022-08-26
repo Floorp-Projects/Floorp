@@ -11467,7 +11467,7 @@ void CodeGenerator::visitStoreElementT(LStoreElementT* store) {
   }
 
   emitStoreElementTyped(store->value(), store->mir()->value()->type(),
-                        store->mir()->elementType(), elements, index);
+                        MIRType::Value, elements, index);
 }
 
 void CodeGenerator::visitStoreElementV(LStoreElementV* lir) {
@@ -11521,7 +11521,7 @@ void CodeGenerator::visitStoreElementHoleT(LStoreElementHoleT* lir) {
 
   masm.bind(ool->rejoinStore());
   emitStoreElementTyped(lir->value(), lir->mir()->value()->type(),
-                        lir->mir()->elementType(), elements, lir->index());
+                        MIRType::Value, elements, lir->index());
 
   masm.bind(ool->rejoin());
 }

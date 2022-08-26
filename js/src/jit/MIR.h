@@ -6672,18 +6672,12 @@ class MLoadElementHole : public MTernaryInstruction, public NoTypePolicy::Data {
 };
 
 class MStoreElementCommon {
-  MIRType elementType_;
-  bool needsBarrier_;
+  bool needsBarrier_ = false;
 
  protected:
-  MStoreElementCommon() : elementType_(MIRType::Value), needsBarrier_(false) {}
+  MStoreElementCommon() = default;
 
  public:
-  MIRType elementType() const { return elementType_; }
-  void setElementType(MIRType elementType) {
-    MOZ_ASSERT(elementType != MIRType::None);
-    elementType_ = elementType;
-  }
   bool needsBarrier() const { return needsBarrier_; }
   void setNeedsBarrier() { needsBarrier_ = true; }
 };
