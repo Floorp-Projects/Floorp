@@ -5778,33 +5778,33 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
   }
 
   // process clearing any styles first
-  UniquePtr<PropItem> item = mTypeInState->TakeClearProperty();
+  UniquePtr<PropItem> style = mTypeInState->TakeClearingStyle();
 
   EditorDOMPoint pointToPutCaret(aPointToInsertText);
   {
     // Transactions may set selection, but we will set selection if necessary.
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
-    while (item && pointToPutCaret.GetContainer() != documentRootElement) {
-      // MOZ_KnownLive because we own `item` which guarantees the lifetime of
+    while (style && pointToPutCaret.GetContainer() != documentRootElement) {
+      // MOZ_KnownLive because we own `style` which guarantees the lifetime of
       // its members.
-      Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
-          ClearStyleAt(pointToPutCaret, MOZ_KnownLive(item->mTag),
-                       MOZ_KnownLive(item->mAttribute), item->mSpecifiedStyle);
+      Result<EditorDOMPoint, nsresult> pointToPutCaretOrError = ClearStyleAt(
+          pointToPutCaret, MOZ_KnownLive(style->mTag),
+          MOZ_KnownLive(style->mAttribute), style->mSpecifiedStyle);
       if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
         NS_WARNING("HTMLEditor::ClearStyleAt() failed");
         return pointToPutCaretOrError;
       }
       pointToPutCaret = pointToPutCaretOrError.unwrap();
-      item = mTypeInState->TakeClearProperty();
+      style = mTypeInState->TakeClearingStyle();
     }
   }
 
   // then process setting any styles
   const int32_t relFontSize = mTypeInState->TakeRelativeFontSize();
-  item = mTypeInState->TakePreservedStyle();
+  style = mTypeInState->TakePreservedStyle();
 
-  if (item || relFontSize) {
+  if (style || relFontSize) {
     // we have at least one style to add; make a new text node to insert style
     // nodes above.
     EditorDOMPoint pointToInsertTextNode(pointToPutCaret);
@@ -5864,15 +5864,15 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
       }
     }
 
-    while (item) {
+    while (style) {
       // MOZ_KnownLive(...ContainerAs<nsIContent>()) because pointToPutCaret()
       // grabs the result.
-      // MOZ_KnownLive(item->*) because we own `item` which guarantees the
+      // MOZ_KnownLive(style->*) because we own `style` which guarantees the
       // lifetime of its members.
       Result<EditorDOMPoint, nsresult> setStyleResult = SetInlinePropertyOnNode(
           MOZ_KnownLive(*pointToPutCaret.ContainerAs<nsIContent>()),
-          MOZ_KnownLive(*item->mTag), MOZ_KnownLive(item->mAttribute),
-          item->mAttributeValueOrCSSValue);
+          MOZ_KnownLive(*style->mTag), MOZ_KnownLive(style->mAttribute),
+          style->mAttributeValueOrCSSValue);
       if (MOZ_UNLIKELY(setStyleResult.isErr())) {
         NS_WARNING("HTMLEditor::SetInlinePropertyOnNode() failed");
         return Err(setStyleResult.unwrapErr());
@@ -5880,7 +5880,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::CreateStyleForInsertText(
       // We don't need to update here because we'll suggest caret position which
       // is computed above.
       MOZ_ASSERT(pointToPutCaret.IsSet());
-      item = mTypeInState->TakePreservedStyle();
+      style = mTypeInState->TakePreservedStyle();
     }
   }
 
@@ -7102,7 +7102,7 @@ SplitNodeResult HTMLEditor::HandleInsertParagraphInHeadingElement(
   }
 
   TopLevelEditSubActionDataRef().mCachedInlineStyles->Clear();
-  mTypeInState->ClearAllProps();
+  mTypeInState->ClearAllStyles();
 
   // Create a paragraph if the right heading element is not followed by an
   // editable <br> element.
