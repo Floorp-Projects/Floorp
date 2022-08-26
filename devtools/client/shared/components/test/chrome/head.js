@@ -104,7 +104,7 @@ TEST_TREE_VIEW.children = {
 const TEST_TREE_VIEW_INTERFACE = {
   provider: {
     getChildren: x => TEST_TREE_VIEW.children[x.label],
-    hasChildren: x => TEST_TREE_VIEW.children[x.label].length > 0,
+    hasChildren: x => !!TEST_TREE_VIEW.children[x.label].length,
     getLabel: x => x.label,
     getValue: x => x.value,
     getKey: x => x.label,

@@ -397,7 +397,7 @@ async function checkUniqueMessageExists(hud, msg, typeSelector) {
         text: msg,
         typeSelector,
       });
-      return msgs.length > 0 ? msgs : null;
+      return msgs.length ? msgs : null;
     });
   } catch (e) {
     ok(false, `Message "${msg}" wasn't logged\n`);

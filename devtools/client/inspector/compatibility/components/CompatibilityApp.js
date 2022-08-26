@@ -61,7 +61,7 @@ class CompatibilityApp extends PureComponent {
     });
 
     const topLevelTargetIssuePane =
-      topLevelTargetIssues.length > 0 || !isTopLevelTargetProcessing
+      topLevelTargetIssues.length || !isTopLevelTargetProcessing
         ? IssuePane({
             dispatch,
             issues: topLevelTargetIssues,

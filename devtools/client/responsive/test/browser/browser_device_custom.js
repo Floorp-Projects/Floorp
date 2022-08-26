@@ -119,7 +119,7 @@ addRDMTask(
 
     const deviceRemoveButton = document.querySelector(".device-remove-button");
     const removed = Promise.all([
-      waitUntilState(store, state => state.devices.custom.length == 0),
+      waitUntilState(store, state => !state.devices.custom.length),
       once(ui, "device-association-removed"),
     ]);
     deviceRemoveButton.click();

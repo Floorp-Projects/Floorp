@@ -617,8 +617,7 @@ CssComputedView.prototype = {
                 const searchBox = this.searchField.parentNode;
                 searchBox.classList.toggle(
                   "devtools-searchbox-no-match",
-                  this.searchField.value.length > 0 &&
-                    !this.numVisibleProperties
+                  !!this.searchField.value.length && !this.numVisibleProperties
                 );
 
                 this.inspector.emit("computed-view-refreshed");
@@ -673,8 +672,9 @@ CssComputedView.prototype = {
       clearTimeout(this._filterChangedTimeout);
     }
 
-    const filterTimeout =
-      this.searchField.value.length > 0 ? FILTER_CHANGED_TIMEOUT : 0;
+    const filterTimeout = this.searchField.value.length
+      ? FILTER_CHANGED_TIMEOUT
+      : 0;
     this.searchClearButton.hidden = this.searchField.value.length === 0;
 
     this._filterChangedTimeout = setTimeout(() => {
@@ -1011,7 +1011,7 @@ PropertyView.prototype = {
     }
 
     const searchTerm = this.tree.searchField.value.toLowerCase();
-    const isValidSearchTerm = searchTerm.trim().length > 0;
+    const isValidSearchTerm = !!searchTerm.trim().length;
     if (
       isValidSearchTerm &&
       !this.name.toLowerCase().includes(searchTerm) &&

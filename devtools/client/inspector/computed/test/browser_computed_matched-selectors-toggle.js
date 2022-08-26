@@ -45,10 +45,7 @@ async function testExpandOnTwistyClick(
   const div = styleDocument.querySelector(
     ".computed-property-content .matchedselectors"
   );
-  ok(
-    div.childNodes.length > 0,
-    "Matched selectors are expanded on twisty click"
-  );
+  ok(!!div.childNodes.length, "Matched selectors are expanded on twisty click");
 }
 
 async function testCollapseOnTwistyClick(
@@ -98,7 +95,7 @@ async function testExpandOnDblClick({ styleDocument, styleWindow }, inspector) {
   const div = styleDocument.querySelector(
     ".computed-property-content .matchedselectors"
   );
-  ok(div.childNodes.length > 0, "Matched selectors are expanded on dblclick");
+  ok(!!div.childNodes.length, "Matched selectors are expanded on dblclick");
 }
 
 async function testCollapseOnDblClick(

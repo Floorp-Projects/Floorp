@@ -126,7 +126,7 @@ function writeTestTempFile(fileName, content) {
     do {
       const numWritten = stream.write(content, content.length);
       content = content.slice(numWritten);
-    } while (content.length > 0);
+    } while (content.length);
   } finally {
     stream.close();
   }

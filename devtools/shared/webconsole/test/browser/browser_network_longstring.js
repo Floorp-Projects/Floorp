@@ -73,7 +73,7 @@ add_task(async function() {
 function assertRequestHeaders(response) {
   info("checking request headers");
 
-  ok(response.headers.length > 0, "request headers > 0");
+  ok(!!response.headers.length, "request headers > 0");
   ok(response.headersSize > 0, "request headersSize > 0");
 
   checkHeadersOrCookies(response.headers, {
@@ -119,7 +119,7 @@ function assertRequestPostData(response) {
 function assertResponseHeaders(response) {
   info("checking response headers");
 
-  ok(response.headers.length > 0, "response headers > 0");
+  ok(!!response.headers.length, "response headers > 0");
   ok(response.headersSize > 0, "response headersSize > 0");
 
   checkHeadersOrCookies(response.headers, {

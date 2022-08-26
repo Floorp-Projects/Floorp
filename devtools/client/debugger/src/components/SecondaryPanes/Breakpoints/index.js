@@ -60,7 +60,7 @@ class Breakpoints extends Component {
       pauseOnExceptions,
     } = this.props;
 
-    const isEmpty = breakpointSources.length == 0;
+    const isEmpty = !breakpointSources.length;
 
     return (
       <div

@@ -98,7 +98,7 @@ async function runAutocompletionTest(toolbox, inspector, view) {
 
   info("Starting to test for css property completion");
   for (let i = 0; i < testData.length; i++) {
-    if (testData[i].length == 0) {
+    if (!testData[i].length) {
       continue;
     }
     await testCompletion(testData[i], editor, view);

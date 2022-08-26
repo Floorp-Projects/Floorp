@@ -205,7 +205,7 @@ class RequestPanel extends Component {
     let error;
 
     // Form Data section
-    if (formDataSections && formDataSections.length > 0) {
+    if (formDataSections && formDataSections.length) {
       const sections = formDataSections.filter(str => /\S/.test(str)).join("&");
       component = PropertiesView;
       componentProps = {

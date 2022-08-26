@@ -437,7 +437,7 @@ class MarkupContextMenu {
    */
   _getClipboardContentForPaste() {
     const content = clipboardHelper.getText();
-    if (content && content.trim().length > 0) {
+    if (content && content.trim().length) {
       return content;
     }
     return null;
@@ -928,7 +928,7 @@ class MarkupContextMenu {
     );
 
     const nodeLinkMenuItems = this._getNodeLinkMenuItems();
-    if (nodeLinkMenuItems.filter(item => item.visible).length > 0) {
+    if (nodeLinkMenuItems.filter(item => item.visible).length) {
       menu.append(
         new MenuItem({
           id: "node-menu-link-separator",

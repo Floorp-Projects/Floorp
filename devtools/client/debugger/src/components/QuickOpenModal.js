@@ -201,7 +201,7 @@ export class QuickOpenModal extends Component {
     // If there is some tabs opened, only show tab's sources.
     // Otherwise, we display all visible sources (per SourceTree definition),
     // setResults will restrict the number of results to a maximum limit.
-    if (tabUrls.length > 0) {
+    if (tabUrls.length) {
       displayedSources = displayedSources.filter(
         source => !!source.url && tabUrls.includes(source.url)
       );
@@ -431,7 +431,7 @@ export class QuickOpenModal extends Component {
       return null;
     }
     const items = this.highlightMatching(query, results || []);
-    const expanded = !!items && items.length > 0;
+    const expanded = !!items && !!items.length;
 
     return (
       <Modal in={enabled} handleClose={this.closeModal}>

@@ -37,7 +37,7 @@ function run_test() {
     targetSet.delete(target);
 
     ok(
-      paths.length > 0,
+      !!paths.length,
       "We must have at least one path, since the target is dominated by the root"
     );
     ok(
@@ -61,7 +61,7 @@ function run_test() {
     dumpn("---------------------");
 
     for (const path2 of paths) {
-      ok(path2.length > 0, "Cannot have zero length paths");
+      ok(!!path2.length, "Cannot have zero length paths");
       ok(
         path2[0].predecessor === dominatorTree.root,
         "The first predecessor is always our start node"

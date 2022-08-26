@@ -214,7 +214,7 @@ DebuggerTransport.prototype = {
       this._finishCurrentOutgoing();
     }
 
-    if (this._outgoing.length > 0) {
+    if (this._outgoing.length) {
       const threadManager = Cc["@mozilla.org/thread-manager;1"].getService();
       this._output.asyncWait(this, 0, 0, threadManager.currentThread);
     }

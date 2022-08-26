@@ -43,7 +43,7 @@ async function runStyleAttributeAutocompleteTests(inspector, testData) {
     const data = testData[i];
 
     // Skip empty key.
-    if (data.length == 0) {
+    if (!data.length) {
       continue;
     }
 

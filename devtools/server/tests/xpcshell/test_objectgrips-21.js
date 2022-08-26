@@ -318,7 +318,7 @@ function check_properties(props, data, isUnsafe) {
 function check_property_names(props, data, isUnsafe) {
   if (isUnsafe) {
     strictEqual(
-      props.length > 0,
+      !!props.length,
       data.hasOwnPropertyNames,
       "Check presence of own string properties."
     );
@@ -346,7 +346,7 @@ function check_symbols(symbols, data, isUnsafe) {
 function check_symbol_names(props, data, isUnsafe) {
   if (isUnsafe) {
     strictEqual(
-      props.length > 0,
+      !!props.length,
       data.hasOwnPropertySymbols,
       "Check presence of own symbol properties."
     );

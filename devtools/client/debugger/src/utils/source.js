@@ -244,7 +244,7 @@ export function getDisplayPath(mySource, sources) {
     );
   });
 
-  if (similarSources.length == 0) {
+  if (!similarSources.length) {
     return undefined;
   }
 

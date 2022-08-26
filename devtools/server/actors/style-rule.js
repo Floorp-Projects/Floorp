@@ -1101,7 +1101,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         }
 
         isMatching = ruleProps.entries.some(
-          ruleProp => ruleProp.matchedSelectors.length > 0
+          ruleProp => !!ruleProp.matchedSelectors.length
         );
       }
 

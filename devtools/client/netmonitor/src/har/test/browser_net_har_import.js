@@ -69,11 +69,11 @@ add_task(async () => {
     "There must be some page title"
   );
   ok(
-    har2.log.entries[0].request.headers.length > 0,
+    !!har2.log.entries[0].request.headers.length,
     "There must be some request headers"
   );
   ok(
-    har2.log.entries[0].response.headers.length > 0,
+    !!har2.log.entries[0].response.headers.length,
     "There must be some response headers"
   );
   is(

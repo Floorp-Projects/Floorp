@@ -673,7 +673,7 @@ CSSCompleter.prototype = {
           break;
       }
       if (_state == CSS_STATES.null) {
-        if (this.nullStates.length == 0) {
+        if (!this.nullStates.length) {
           this.nullStates.push([
             token.loc.end.line,
             token.loc.end.column,

@@ -107,7 +107,7 @@ async function checkNoMessageExists(hud, msg, selector) {
   try {
     messages = await waitFor(async () => {
       const msgs = await findMessagesVirtualized({ hud, text: msg, selector });
-      return msgs.length > 0 ? msgs : null;
+      return msgs.length ? msgs : null;
     });
     ok(!messages.length, `"${msg}" was logged once`);
   } catch (e) {

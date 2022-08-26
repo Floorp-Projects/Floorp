@@ -120,7 +120,7 @@ async function runTestData(inspector, view, data) {
   }
 
   const rule = idRuleEditor.rule;
-  if (rule.textProps.length > 0) {
+  if (rule.textProps.length) {
     is(
       inplaceEditor(rule.textProps[0].editor.nameSpan).input,
       activeElement,

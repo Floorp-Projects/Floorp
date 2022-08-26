@@ -268,11 +268,11 @@ async function assertNetworkResourcesOnPage(
 
   // Make sure we processed all the expected request updates
   await waitFor(
-    () => expectedAvailable.length == 0,
+    () => !expectedAvailable.length,
     "Wait for all expected available notifications"
   );
   await waitFor(
-    () => expectedUpdated.length == 0,
+    () => !expectedUpdated.length,
     "Wait for all expected updated notifications"
   );
 

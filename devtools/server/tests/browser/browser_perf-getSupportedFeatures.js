@@ -10,7 +10,7 @@ add_task(async function() {
   const features = await front.getSupportedFeatures();
 
   ok(Array.isArray(features), "The features are an array.");
-  ok(features.length > 0, "There are many features supported.");
+  ok(!!features.length, "There are many features supported.");
   ok(
     features.includes("js"),
     "All platforms support the js feature, and it's in this list."

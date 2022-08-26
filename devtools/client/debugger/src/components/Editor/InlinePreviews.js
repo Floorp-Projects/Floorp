@@ -13,7 +13,7 @@ import {
 } from "../../selectors";
 
 function hasPreviews(previews) {
-  return !!previews && Object.keys(previews).length > 0;
+  return !!previews && !!Object.keys(previews).length;
 }
 
 class InlinePreviews extends Component {

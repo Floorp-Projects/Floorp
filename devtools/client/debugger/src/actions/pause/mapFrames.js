@@ -49,7 +49,7 @@ export function updateFrameLocation(frame, sourceMaps) {
 }
 
 function updateFrameLocations(frames, sourceMaps) {
-  if (!frames || frames.length == 0) {
+  if (!frames || !frames.length) {
     return Promise.resolve(frames);
   }
 
@@ -86,7 +86,7 @@ async function expandFrames(frames, sourceMaps, getState) {
       continue;
     }
 
-    assert(originalFrames.length > 0, "Expected at least one original frame");
+    assert(!!originalFrames.length, "Expected at least one original frame");
     // First entry has not specific location -- use one from original frame.
     originalFrames[0] = {
       ...originalFrames[0],

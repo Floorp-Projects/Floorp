@@ -92,7 +92,7 @@ add_task(async function() {
 
   const { workers } = await mainRoot.listWorkers();
 
-  ok(workers.length > 0, "list workers returned a non-empty list of workers");
+  ok(!!workers.length, "list workers returned a non-empty list of workers");
 
   for (const workerDescriptorFront of workers) {
     const targetFront = await workerDescriptorFront.getTarget();

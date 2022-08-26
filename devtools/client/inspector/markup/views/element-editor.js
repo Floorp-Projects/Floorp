@@ -960,7 +960,7 @@ ElementEditor.prototype = {
         el => el.style.display != "none"
       );
       let activeEditor;
-      if (visibleAttrs.length > 0) {
+      if (visibleAttrs.length) {
         if (!direction) {
           // No direction was given; stay on current attribute.
           activeEditor = visibleAttrs[attributeIndex];

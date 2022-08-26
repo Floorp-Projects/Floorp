@@ -22,7 +22,7 @@ function handleWalkerMutations(mutations, store) {
   const mutationItems = mutations.filter(
     mutation => mutation.type === "mutationBreakpoint"
   );
-  if (mutationItems.length > 0) {
+  if (mutationItems.length) {
     store.dispatch(updateBreakpointsForMutations(mutationItems));
   }
 }
@@ -90,7 +90,7 @@ function updateBreakpointsForMutations(mutationItems) {
       }
     }
 
-    if (removedNodeFronts.length > 0) {
+    if (removedNodeFronts.length) {
       dispatch({
         type: "REMOVE_DOM_MUTATION_BREAKPOINTS_FOR_FRONTS",
         nodeFronts: removedNodeFronts,

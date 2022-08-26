@@ -58,11 +58,11 @@ add_task(async function() {
   await onTrackChange;
 
   await waitFor(
-    () => getRemovedDeclarations(doc).length == 0,
+    () => !getRemovedDeclarations(doc).length,
     "No declaration tracked as removed"
   );
   await waitFor(
-    () => getAddedDeclarations(doc).length == 0,
+    () => !getAddedDeclarations(doc).length,
     "No declaration tracked as added"
   );
 });

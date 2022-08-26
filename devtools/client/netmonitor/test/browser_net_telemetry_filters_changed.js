@@ -74,7 +74,7 @@ add_task(async function() {
   setFreetextFilter(monitor, "nomatch");
 
   // Wait till the text filter is applied.
-  await waitUntil(() => getDisplayedRequests(store.getState()).length == 0);
+  await waitUntil(() => !getDisplayedRequests(store.getState()).length);
 
   checkTelemetryEvent(
     {

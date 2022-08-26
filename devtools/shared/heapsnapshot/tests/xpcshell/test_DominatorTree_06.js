@@ -27,7 +27,7 @@ function run_test() {
 
   const root = dominatorTree.root;
   const stack = [root];
-  while (stack.length > 0) {
+  while (stack.length) {
     const top = stack.pop();
 
     const children = dominatorTree.getImmediatelyDominated(top);

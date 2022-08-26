@@ -302,7 +302,7 @@ define(function(require, exports, module) {
 
     // Clean up any non-URL text at the end of the source string,
     // i.e. not handled in the loop.
-    if (text.length > 0) {
+    if (text.length) {
       if (currentIndex < endCropIndex) {
         text = getCroppedString(
           text,

@@ -1992,7 +1992,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
         "debug:get-blocked-urls",
         "debug:get-blocked-urls:response"
       )) || [];
-    if (!responses || responses.length == 0) {
+    if (!responses || !responses.length) {
       return [];
     }
 
@@ -2091,7 +2091,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       });
     }
 
-    if (message.styles && message.styles.length > 0) {
+    if (message.styles && message.styles.length) {
       result.styles = message.styles.map(string => {
         return this.createValueGrip(string);
       });
@@ -2133,7 +2133,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     if (
       !result ||
       !Array.isArray(result.arguments) ||
-      result.arguments.length == 0
+      !result.arguments.length
     ) {
       return null;
     }

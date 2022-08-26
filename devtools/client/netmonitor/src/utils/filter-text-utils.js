@@ -69,7 +69,7 @@ function parseFilters(query) {
         return item.toLowerCase().startsWith(part.toLowerCase());
       });
 
-      if (filteredStatusCodes.length > 0) {
+      if (filteredStatusCodes.length) {
         flags.push({
           type: "status-code", // a standard key before a colon
           value: isNegative ? part.substring(1) : part,
@@ -222,7 +222,7 @@ function isFlagFilterMatch(item, { type, value, negative }) {
     priority: () =>
       getRequestPriorityAsText(item.priority).toLowerCase() == value,
     "set-cookie-domain": () => {
-      if (responseCookies.length > 0) {
+      if (responseCookies.length) {
         const { host } = item.urlDetails;
         const i = responseCookies.findIndex(c => {
           const domain = c.hasOwnProperty("domain") ? c.domain : host;

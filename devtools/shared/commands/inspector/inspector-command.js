@@ -200,7 +200,7 @@ class InspectorCommand {
         return null;
       }
 
-      if (nodeSelectors.length > 0) {
+      if (nodeSelectors.length) {
         if (!nodeFront.isShadowHost) {
           await this.#waitForFrameLoad(nodeFront);
         }

@@ -30,11 +30,11 @@ add_task(async function() {
 
   ok(stackTraceElement, "There's a stacktrace element");
   ok(
-    stackTraceElement.querySelectorAll(".frame .title").length > 0,
+    !!stackTraceElement.querySelectorAll(".frame .title").length,
     "Frames functions are displayed"
   );
   ok(
-    stackTraceElement.querySelectorAll(".frame .location").length > 0,
+    !!stackTraceElement.querySelectorAll(".frame .location").length,
     "Frames location are displayed"
   );
 });

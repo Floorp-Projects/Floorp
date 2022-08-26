@@ -23,7 +23,7 @@ export default {
     queuedOriginalSources = [];
   },
   queueOriginalSources: sources => {
-    if (sources.length > 0) {
+    if (sources.length) {
       queuedOriginalSources = queuedOriginalSources.concat(sources);
       queue();
     }

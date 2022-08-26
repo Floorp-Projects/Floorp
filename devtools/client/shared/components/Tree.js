@@ -91,7 +91,7 @@ class TreeNode extends Component {
     const elms = this.getFocusableElements();
     if (this.props.active) {
       const doc = this.treeNodeRef.current.ownerDocument;
-      if (elms.length > 0 && !elms.includes(doc.activeElement)) {
+      if (elms.length && !elms.includes(doc.activeElement)) {
         elms[0].focus();
       }
     } else {

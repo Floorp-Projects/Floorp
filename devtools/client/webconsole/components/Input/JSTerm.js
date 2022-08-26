@@ -1076,7 +1076,7 @@ class JSTerm extends Component {
       return { preLabel, label, isElementAccess };
     });
 
-    if (items.length > 0) {
+    if (items.length) {
       const { preLabel, label } = items[0];
       let suffix = label.substring(preLabel.length);
       if (isElementAccess) {

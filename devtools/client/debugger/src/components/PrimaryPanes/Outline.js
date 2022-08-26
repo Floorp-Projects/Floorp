@@ -111,7 +111,7 @@ export class Outline extends Component {
         name != "anonymous" && containsPosition(location, cursorPosition)
     );
 
-    if (enclosedItems.length == 0) {
+    if (!enclosedItems.length) {
       return this.setState({ focusedItem: null });
     }
 
@@ -221,7 +221,7 @@ export class Outline extends Component {
   renderClassFunctions(klass, functions) {
     const { symbols } = this.props;
 
-    if (!symbols || klass == null || functions.length == 0) {
+    if (!symbols || klass == null || !functions.length) {
       return null;
     }
 

@@ -91,7 +91,7 @@ class Front extends Pool {
   baseFrontClassDestroy() {
     // Reject all outstanding requests, they won't make sense after
     // the front is destroyed.
-    while (this._requests.length > 0) {
+    while (this._requests.length) {
       const { deferred, to, type, stack } = this._requests.shift();
       // Note: many tests are ignoring `Connection closed` promise rejections,
       // via PromiseTestUtils.allowMatchingRejectionsGlobally.

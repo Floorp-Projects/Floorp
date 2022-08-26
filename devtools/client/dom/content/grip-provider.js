@@ -62,7 +62,7 @@ GripProvider.prototype = {
         const k = preview.kind;
         const objectsWithProps = ["DOMNode", "ObjectWithURL"];
         hasChildren = hasChildren || objectsWithProps.includes(k);
-        hasChildren = hasChildren || (k == "ArrayLike" && preview.length > 0);
+        hasChildren = hasChildren || (k == "ArrayLike" && !!preview.length);
       }
 
       return grip.type == "object" && hasChildren;

@@ -13,19 +13,19 @@ add_task(async function() {
   let devices = await getDevices();
 
   let types = [...devices.keys()];
-  ok(types.length > 0, `Found ${types.length} device types.`);
+  ok(!!types.length, `Found ${types.length} device types.`);
 
   for (const type of types) {
     const string = getDeviceString(type);
     ok(
       typeof string === "string" &&
-        string.length > 0 &&
+        !!string.length &&
         string != `device.${type}`,
       `Able to localize "${type}": "${string}"`
     );
 
     ok(
-      devices.get(type).length > 0,
+      !!devices.get(type).length,
       `Found ${devices.get(type).length} ${type} devices`
     );
   }

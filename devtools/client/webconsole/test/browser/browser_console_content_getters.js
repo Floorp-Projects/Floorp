@@ -370,7 +370,7 @@ async function testObjectGetter(oi) {
   is(isObjectInspectorNodeExpandable(node), true, "The node can be expanded");
 
   expandObjectInspectorNode(node);
-  await waitFor(() => getObjectInspectorChildrenNodes(node).length > 0);
+  await waitFor(() => !!getObjectInspectorChildrenNodes(node).length);
   checkChildren(node, [`foo: "bar"`, `<prototype>`]);
 }
 
@@ -402,7 +402,7 @@ async function testArrayGetter(oi) {
   is(isObjectInspectorNodeExpandable(node), true, "The node can be expanded");
 
   expandObjectInspectorNode(node);
-  await waitFor(() => getObjectInspectorChildrenNodes(node).length > 0);
+  await waitFor(() => !!getObjectInspectorChildrenNodes(node).length);
   const children = getObjectInspectorChildrenNodes(node);
 
   const firstBucket = children[0];
@@ -414,7 +414,7 @@ async function testArrayGetter(oi) {
     "The bucket can be expanded"
   );
   expandObjectInspectorNode(firstBucket);
-  await waitFor(() => getObjectInspectorChildrenNodes(firstBucket).length > 0);
+  await waitFor(() => !!getObjectInspectorChildrenNodes(firstBucket).length);
   checkChildren(
     firstBucket,
     Array.from({ length: 100 }, (_, i) => `${i}: ${i}`)
@@ -447,17 +447,17 @@ async function testMapGetter(oi) {
   is(isObjectInspectorNodeExpandable(node), true, "The node can be expanded");
 
   expandObjectInspectorNode(node);
-  await waitFor(() => getObjectInspectorChildrenNodes(node).length > 0);
+  await waitFor(() => !!getObjectInspectorChildrenNodes(node).length);
   checkChildren(node, [`size`, `<entries>`, `<prototype>`]);
 
   const entriesNode = findObjectInspectorNode(oi, "<entries>");
   expandObjectInspectorNode(entriesNode);
-  await waitFor(() => getObjectInspectorChildrenNodes(entriesNode).length > 0);
+  await waitFor(() => !!getObjectInspectorChildrenNodes(entriesNode).length);
   checkChildren(entriesNode, [`foo → Object { bar: "baz" }`]);
 
   const entryNode = getObjectInspectorChildrenNodes(entriesNode)[0];
   expandObjectInspectorNode(entryNode);
-  await waitFor(() => getObjectInspectorChildrenNodes(entryNode).length > 0);
+  await waitFor(() => !!getObjectInspectorChildrenNodes(entryNode).length);
   checkChildren(entryNode, [`<key>: "foo"`, `<value>: Object { bar: "baz" }`]);
 }
 
@@ -487,17 +487,17 @@ async function testProxyGetter(oi) {
   is(isObjectInspectorNodeExpandable(node), true, "The node can be expanded");
 
   expandObjectInspectorNode(node);
-  await waitFor(() => getObjectInspectorChildrenNodes(node).length > 0);
+  await waitFor(() => !!getObjectInspectorChildrenNodes(node).length);
   checkChildren(node, [`<target>`, `<handler>`]);
 
   const targetNode = findObjectInspectorNode(oi, "<target>");
   expandObjectInspectorNode(targetNode);
-  await waitFor(() => getObjectInspectorChildrenNodes(targetNode).length > 0);
+  await waitFor(() => !!getObjectInspectorChildrenNodes(targetNode).length);
   checkChildren(targetNode, [`a: 1`, `<prototype>`]);
 
   const handlerNode = findObjectInspectorNode(oi, "<handler>");
   expandObjectInspectorNode(handlerNode);
-  await waitFor(() => getObjectInspectorChildrenNodes(handlerNode).length > 0);
+  await waitFor(() => !!getObjectInspectorChildrenNodes(handlerNode).length);
   checkChildren(handlerNode, [`get:`, `<prototype>`]);
 }
 
@@ -527,7 +527,7 @@ async function testThrowingGetter(oi) {
   is(isObjectInspectorNodeExpandable(node), true, "The node can be expanded");
 
   expandObjectInspectorNode(node);
-  await waitFor(() => getObjectInspectorChildrenNodes(node).length > 0);
+  await waitFor(() => !!getObjectInspectorChildrenNodes(node).length);
   checkChildren(node, [
     `columnNumber`,
     `fileName`,

@@ -26,7 +26,7 @@ add_task(async function() {
   await jstermComplete("document.title.");
 
   const newItemsLabels = getAutocompletePopupLabels(popup);
-  ok(newItemsLabels.length > 0, "'document.title.' gave a list of suggestions");
+  ok(!!newItemsLabels.length, "'document.title.' gave a list of suggestions");
   ok(newItemsLabels.includes("substr"), `results do contain "substr"`);
   ok(
     newItemsLabels.includes("toLowerCase"),

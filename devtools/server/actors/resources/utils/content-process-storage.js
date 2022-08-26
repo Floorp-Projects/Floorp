@@ -35,7 +35,7 @@ function getFilteredStorageEvents(updates, storageType) {
     }
   }
 
-  return Object.keys(filteredUpdate).length > 0 ? filteredUpdate : null;
+  return Object.keys(filteredUpdate).length ? filteredUpdate : null;
 }
 
 class ContentProcessStorage {
@@ -392,7 +392,7 @@ class StorageActorMock extends EventEmitter {
 
       for (const host in data) {
         if (
-          data[host].length == 0 &&
+          !data[host].length &&
           this.boundUpdate.added &&
           this.boundUpdate.added[storeType] &&
           this.boundUpdate.added[storeType][host]
@@ -400,7 +400,7 @@ class StorageActorMock extends EventEmitter {
           delete this.boundUpdate.added[storeType][host];
         }
         if (
-          data[host].length == 0 &&
+          !data[host].length &&
           this.boundUpdate.changed &&
           this.boundUpdate.changed[storeType] &&
           this.boundUpdate.changed[storeType][host]

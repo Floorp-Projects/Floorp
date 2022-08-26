@@ -254,7 +254,7 @@ class MonitorPanel extends Component {
 
 module.exports = connect(
   state => ({
-    isEmpty: state.requests.requests.length == 0,
+    isEmpty: !state.requests.requests.length,
     networkDetailsOpen: state.ui.networkDetailsOpen,
     networkActionOpen: state.ui.networkActionOpen,
     request: getSelectedRequest(state),

@@ -144,7 +144,7 @@ async function assertEditValue(ruleView, doc, store, prop, iterations) {
       );
     } else {
       await waitFor(
-        () => getAddedDeclarations(doc).length == 0,
+        () => !getAddedDeclarations(doc).length,
         "Added declaration was cleared"
       );
     }
@@ -162,7 +162,7 @@ async function assertEditValue(ruleView, doc, store, prop, iterations) {
       );
     } else {
       await waitFor(
-        () => getRemovedDeclarations(doc).length == 0,
+        () => !getRemovedDeclarations(doc).length,
         "Removed declaration was cleared"
       );
     }

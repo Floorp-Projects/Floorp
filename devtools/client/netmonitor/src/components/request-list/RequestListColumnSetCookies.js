@@ -45,8 +45,9 @@ class RequestListColumnSetCookies extends Component {
   render() {
     let { responseCookies = { cookies: [] } } = this.props.item;
     responseCookies = responseCookies.cookies || responseCookies;
-    const responseCookiesLength =
-      responseCookies.length > 0 ? responseCookies.length : "";
+    const responseCookiesLength = responseCookies.length
+      ? responseCookies.length
+      : "";
     return dom.td(
       {
         className: "requests-list-column requests-list-set-cookies",

@@ -17,7 +17,7 @@ const listDevices = function() {
     const lines = data.split("\n");
     const res = [];
     lines.forEach(function(line) {
-      if (line.length == 0) {
+      if (!line.length) {
         return;
       }
       const [device] = line.split("\t");

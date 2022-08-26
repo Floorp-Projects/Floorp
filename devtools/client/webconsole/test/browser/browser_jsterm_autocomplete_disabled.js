@@ -33,7 +33,7 @@ async function performTests_false() {
   await onUpdated;
 
   ok(popup.isOpen, "popup opens on Ctrl+Space");
-  ok(popup.getItems().length > 0, "'w' gave a list of suggestions");
+  ok(!!popup.getItems().length, "'w' gave a list of suggestions");
 
   onUpdated = jsterm.once("autocomplete-updated");
   EventUtils.synthesizeKey("in");

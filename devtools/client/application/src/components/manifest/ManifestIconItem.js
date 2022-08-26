@@ -41,7 +41,7 @@ class ManifestIconItem extends PureComponent {
   getLocalizedImgTitle() {
     const { sizes } = this.props.label;
 
-    return sizes && sizes.length > 0
+    return sizes && sizes.length
       ? l10n.getString("manifest-icon-img-title", { sizes })
       : l10n.getString("manifest-icon-img-title-no-sizes");
   }

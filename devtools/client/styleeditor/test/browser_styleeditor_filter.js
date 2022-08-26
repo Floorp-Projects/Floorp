@@ -315,7 +315,7 @@ function navHasAllFilteredClass(panel) {
  * @returns Boolean
  */
 function isListFiltered(doc) {
-  return doc.querySelectorAll("ol > li.splitview-filtered").length > 0;
+  return !!doc.querySelectorAll("ol > li.splitview-filtered").length;
 }
 
 /**

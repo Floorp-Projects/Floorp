@@ -24,7 +24,7 @@ add_task(async function() {
   });
 
   info("Wait until the service worker appears in the application panel");
-  await waitUntil(() => getWorkerContainers(doc).length > 0);
+  await waitUntil(() => !!getWorkerContainers(doc).length);
 
   let workerContainer = getWorkerContainers(doc)[0];
 

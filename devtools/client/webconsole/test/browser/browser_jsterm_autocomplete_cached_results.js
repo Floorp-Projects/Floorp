@@ -84,7 +84,7 @@ add_task(async function() {
 
   // Test if 'dump(d' gives non-zero results
   await jstermComplete("dump(d");
-  ok(popup.getItems().length > 0, "'dump(d' gives non-zero results");
+  ok(!!popup.getItems().length, "'dump(d' gives non-zero results");
 
   // Test that 'dump(x.)' works.
   await jstermComplete("dump(x)", -1);

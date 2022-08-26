@@ -86,7 +86,7 @@ define(function(require, exports, module) {
 
     const max = maxLengthMap.get(mode);
     const items = arrayIterator(props, object, max);
-    brackets = needSpace(items.length > 0);
+    brackets = needSpace(!!items.length);
 
     return span(
       config,

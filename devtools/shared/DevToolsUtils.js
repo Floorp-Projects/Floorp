@@ -878,7 +878,7 @@ exports.showSaveFileDialog = function(
   }
 
   fp.init(parentWindow, null, fp.modeSave);
-  if (Array.isArray(filters) && filters.length > 0) {
+  if (Array.isArray(filters) && filters.length) {
     for (const { pattern, label } of filters) {
       fp.appendFilter(label, pattern);
     }

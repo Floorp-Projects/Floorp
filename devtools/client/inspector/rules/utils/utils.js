@@ -273,7 +273,7 @@ function getShapePoint(node) {
       insetClasses.push(className);
     }
   });
-  if (insetClasses.length > 0) {
+  if (insetClasses.length) {
     point = insetClasses.join(",");
   }
   return point;

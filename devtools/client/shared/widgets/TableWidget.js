@@ -1437,7 +1437,7 @@ Column.prototype = {
    *        true if the column is visible
    */
   toggleColumn(id, checked) {
-    if (arguments.length == 0) {
+    if (!arguments.length) {
       // Act like a toggling method when called with no params
       id = this.id;
       checked = this.wrapper.hidden;

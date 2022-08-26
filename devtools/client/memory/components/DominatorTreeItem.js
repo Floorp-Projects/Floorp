@@ -70,7 +70,7 @@ class DominatorTreeItem extends Component {
     // Build up our label UI as an array of each label piece, which is either a
     // string or a frame, and separators in between them.
 
-    assert(item.label.length > 0, "Our label should not be empty");
+    assert(!!item.label.length, "Our label should not be empty");
     const label = Array(item.label.length * 2 - 1);
     label.fill(undefined);
 

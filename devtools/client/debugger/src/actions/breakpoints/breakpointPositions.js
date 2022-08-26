@@ -20,7 +20,7 @@ import { memoizeableAction } from "../../utils/memoizableAction";
 import { fulfilled } from "../../utils/async-value";
 
 async function mapLocations(generatedLocations, { sourceMaps }) {
-  if (generatedLocations.length == 0) {
+  if (!generatedLocations.length) {
     return [];
   }
 

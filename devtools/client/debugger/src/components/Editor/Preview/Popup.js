@@ -127,7 +127,7 @@ export class Popup extends Component {
       unHighlightDomElement,
     } = this.props;
 
-    if (properties.length == 0) {
+    if (!properties.length) {
       return (
         <div className="preview-popup">
           <span className="label">{L10N.getStr("preview.noProperties")}</span>

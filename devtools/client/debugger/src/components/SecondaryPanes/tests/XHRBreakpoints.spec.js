@@ -261,7 +261,7 @@ describe("XHR Breakpoints", function() {
       stopPropagation: jest.fn(),
     };
     const availableXHRMethods = xhrMethods;
-    expect(availableXHRMethods.length > 0).toBeTruthy();
+    expect(!!availableXHRMethods.length).toBeTruthy();
 
     // check each of the available methods to see whether
     // adding them as a method to a new breakpoint works as expected

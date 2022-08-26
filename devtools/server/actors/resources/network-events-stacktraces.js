@@ -192,9 +192,8 @@ class NetworkEventStackTracesWatcher {
       {
         resourceType: NETWORK_EVENT_STACKTRACE,
         resourceId,
-        stacktraceAvailable: stacktrace && stacktrace.length > 0,
-        lastFrame:
-          stacktrace && stacktrace.length > 0 ? stacktrace[0] : undefined,
+        stacktraceAvailable: stacktrace && !!stacktrace.length,
+        lastFrame: stacktrace && stacktrace.length ? stacktrace[0] : undefined,
       },
     ]);
   }

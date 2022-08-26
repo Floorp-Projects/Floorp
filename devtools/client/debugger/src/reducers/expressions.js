@@ -89,7 +89,7 @@ function update(state = initialExpressionState(), action) {
 
 function restoreExpressions() {
   const exprs = prefs.expressions;
-  if (exprs.length == 0) {
+  if (!exprs.length) {
     return [];
   }
 

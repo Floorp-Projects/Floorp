@@ -135,7 +135,7 @@ RuleEditor.prototype = {
 
     this.updateSourceLink();
 
-    if (this.rule.domRule.ancestorData.length > 0) {
+    if (this.rule.domRule.ancestorData.length) {
       const parts = this.rule.domRule.ancestorData.map(ancestorData => {
         if (ancestorData.type == "layer") {
           return `@layer${ancestorData.value ? " " + ancestorData.value : ""}`;
@@ -760,7 +760,7 @@ RuleEditor.prototype = {
       return;
     }
 
-    if (this.rule.textProps.length > 0) {
+    if (this.rule.textProps.length) {
       this.rule.textProps[0].editor.nameSpan.click();
     } else {
       this.propertyList.click();

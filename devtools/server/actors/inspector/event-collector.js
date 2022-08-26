@@ -1005,7 +1005,7 @@ class EventCollector {
       // Arrow function text always contains the parameters. Function
       // parameters are often missing e.g. if Array.sort is used as a handler.
       // If they are missing we provide the parameters ourselves.
-      if (parameterNames && parameterNames.length > 0) {
+      if (parameterNames && parameterNames.length) {
         const prefix = "function " + name + "()";
         const paramString = parameterNames.join(", ");
 

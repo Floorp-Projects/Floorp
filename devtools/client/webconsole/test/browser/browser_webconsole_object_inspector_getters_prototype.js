@@ -97,9 +97,7 @@ async function testObject(oi, { myValue, value }) {
 async function getValueNode(prototypeNode) {
   expandObjectInspectorNode(prototypeNode);
 
-  await waitFor(
-    () => getObjectInspectorChildrenNodes(prototypeNode).length > 0
-  );
+  await waitFor(() => !!getObjectInspectorChildrenNodes(prototypeNode).length);
 
   const children = getObjectInspectorChildrenNodes(prototypeNode);
   const valueNode = children.find(

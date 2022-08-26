@@ -10,17 +10,17 @@ function run_test() {
   const require = loader.require;
 
   const variableFileContents = require("raw!chrome://devtools/skin/variables.css");
-  ok(variableFileContents.length > 0, "raw browserRequire worked");
+  ok(!!variableFileContents.length, "raw browserRequire worked");
 
   const propertiesFileContents = require("raw!devtools/client/locales/shared.properties");
   ok(
-    propertiesFileContents.length > 0,
+    !!propertiesFileContents.length,
     "unprefixed properties raw require worked"
   );
 
   const chromePropertiesFileContents = require("raw!chrome://devtools/locale/shared.properties");
   ok(
-    chromePropertiesFileContents.length > 0,
+    !!chromePropertiesFileContents.length,
     "prefixed properties raw require worked"
   );
 }

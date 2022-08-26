@@ -862,7 +862,7 @@ function getNewCurrentGroup(currentGroup, groupsById, ignoredIds = []) {
   const parents = groupsById.get(currentGroup);
 
   // If there's at least one parent, make the first one the new currentGroup.
-  if (Array.isArray(parents) && parents.length > 0) {
+  if (Array.isArray(parents) && parents.length) {
     // If the found group must be ignored, let's search for its parent.
     if (ignoredIds.includes(parents[0])) {
       return getNewCurrentGroup(parents[0], groupsById, ignoredIds);
@@ -882,7 +882,7 @@ function getParentGroups(currentGroup, groupsById) {
 
     // As well as all its parents, if it has some.
     const parentGroups = groupsById.get(currentGroup);
-    if (Array.isArray(parentGroups) && parentGroups.length > 0) {
+    if (Array.isArray(parentGroups) && parentGroups.length) {
       groups = groups.concat(parentGroups);
     }
   }
@@ -980,7 +980,7 @@ function removeMessagesFromState(state, removedMessagesIds) {
     state.visibleMessages = visibleMessages;
   }
 
-  if (frontsToRelease.length > 0) {
+  if (frontsToRelease.length) {
     state.frontsToRelease = state.frontsToRelease.concat(frontsToRelease);
   }
 

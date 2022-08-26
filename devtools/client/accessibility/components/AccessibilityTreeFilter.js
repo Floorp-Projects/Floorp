@@ -93,7 +93,7 @@ class AccessibilityTreeFilter extends Component {
         className: `filter ${FILTERS.NONE}`,
         label: L10N.getStr(FILTER_LABELS[FILTERS.NONE]),
         onClick: this.onClick.bind(this, FILTERS.NONE),
-        disabled: auditing.length > 0,
+        disabled: !!auditing.length,
       }),
       hr({ key: "hr-1" }),
     ];
@@ -106,7 +106,7 @@ class AccessibilityTreeFilter extends Component {
         className: `filter ${FILTERS.ALL}`,
         label: L10N.getStr(FILTER_LABELS[FILTERS.ALL]),
         onClick: this.onClick.bind(this, FILTERS.ALL),
-        disabled: auditing.length > 0,
+        disabled: !!auditing.length,
       }),
       hr({ key: "hr-2" }),
       Object.entries(filtersWithoutAll).map(([filterKey, active]) =>
@@ -116,7 +116,7 @@ class AccessibilityTreeFilter extends Component {
           className: `filter ${filterKey}`,
           label: L10N.getStr(FILTER_LABELS[filterKey]),
           onClick: this.onClick.bind(this, filterKey),
-          disabled: auditing.length > 0,
+          disabled: !!auditing.length,
         })
       )
     );

@@ -165,7 +165,7 @@ async function testMessagesVisibility(hud, checkNetworkMessage = true) {
     }
   }
 
-  if (expectedMessages.length > 0) {
+  if (expectedMessages.length) {
     ok(
       false,
       `Some messages are not visible or not in the expected order. Expected to find: \n\n${EXPECTED_MESSAGES.map(

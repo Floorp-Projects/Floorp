@@ -694,7 +694,7 @@ CssRuleView.prototype = {
   get isEditing() {
     return (
       this.tooltips.isEditing ||
-      this.element.querySelectorAll(".styleinspector-propertyeditor").length > 0
+      !!this.element.querySelectorAll(".styleinspector-propertyeditor").length
     );
   },
 
@@ -741,8 +741,7 @@ CssRuleView.prototype = {
       clearTimeout(this._filterChangedTimeout);
     }
 
-    const filterTimeout =
-      this.searchValue.length > 0 ? FILTER_CHANGED_TIMEOUT : 0;
+    const filterTimeout = this.searchValue.length ? FILTER_CHANGED_TIMEOUT : 0;
     this.searchClearButton.hidden = this.searchValue.length === 0;
 
     this._filterChangedTimeout = setTimeout(() => {

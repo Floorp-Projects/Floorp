@@ -795,7 +795,7 @@ function testFilterButtons(monitor, filterType) {
   const buttons = [
     ...doc.querySelectorAll(".requests-list-filter-buttons button"),
   ];
-  ok(buttons.length > 0, "More than zero filter buttons were found");
+  ok(!!buttons.length, "More than zero filter buttons were found");
 
   // Only target should be checked.
   const checkStatus = buttons.map(button => (button == target ? 1 : 0));

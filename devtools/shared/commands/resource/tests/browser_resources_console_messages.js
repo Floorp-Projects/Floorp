@@ -53,7 +53,7 @@ async function testTabConsoleMessagesResources(executeInIframe) {
         "Received a message"
       );
       ok(resource.message, "message is wrapped into a message attribute");
-      const isCachedMessage = expectedExistingCalls.length > 0;
+      const isCachedMessage = !!expectedExistingCalls.length;
       const expected = (isCachedMessage
         ? expectedExistingCalls
         : expectedRuntimeCalls
@@ -65,7 +65,7 @@ async function testTabConsoleMessagesResources(executeInIframe) {
         "isAlreadyExistingResource has the expected value"
       );
 
-      if (expectedRuntimeCalls.length == 0) {
+      if (!expectedRuntimeCalls.length) {
         runtimeDoneResolve();
       }
     }

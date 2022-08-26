@@ -41,7 +41,7 @@ async function runTestData(inspector, view, pseudoClasses) {
 }
 
 async function setPseudoLocks(inspector, view, pseudoClasses) {
-  if (pseudoClasses.length == 0) {
+  if (!pseudoClasses.length) {
     return;
   }
 

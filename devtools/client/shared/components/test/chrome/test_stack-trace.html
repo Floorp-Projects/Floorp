@@ -89,7 +89,7 @@ window.onload = function() {
     // Check the tabs and newlines in the stack trace textContent
     const traceText = traceEl.textContent;
     const traceLines = traceText.split("\n");
-    ok(traceLines.length > 0, "There are newlines in the stack trace text");
+    ok(!!traceLines.length, "There are newlines in the stack trace text");
     is(traceLines.pop(), "", "There is a newline at the end of the stack trace text");
     is(traceLines.length, 3, "The stack trace text has 3 lines");
     ok(traceLines.every(l => l[0] == "\t"), "Every stack trace line starts with tab");

@@ -344,7 +344,7 @@ add_task(async function testParentProcessPrivilegedSources() {
     onAvailable: resources => availableResources.push(...resources),
   });
   ok(
-    availableResources.length > 0,
+    !!availableResources.length,
     "We get many sources reported from a multiprocess command"
   );
 

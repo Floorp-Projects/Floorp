@@ -80,7 +80,7 @@ function cacheReactionsForFrame(frame) {
     const reactions = frame.asyncPromise.getPromiseReactions();
     const existingReactions = PROMISE_REACTIONS.get(frame.asyncPromise);
     if (
-      reactions.length > 0 &&
+      reactions.length &&
       (!existingReactions || reactions.length > existingReactions.length)
     ) {
       PROMISE_REACTIONS.set(frame.asyncPromise, reactions);
@@ -726,7 +726,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       return false;
     }
 
-    if (this._xhrBreakpoints.length > 0 && !this._observingNetwork) {
+    if (this._xhrBreakpoints.length && !this._observingNetwork) {
       this._observingNetwork = true;
       Services.obs.addObserver(
         this._onOpeningRequest,

@@ -343,7 +343,7 @@ class Rule {
 
     // Store disabled properties in the disabled store.
     const disabled = this.elementStyle.store.disabled;
-    if (disabledProps.length > 0) {
+    if (disabledProps.length) {
       disabled.set(this.domRule, disabledProps);
     } else {
       disabled.delete(this.domRule);

@@ -80,7 +80,7 @@ function ConsoleApiCall(props) {
 
   if (type === "trace") {
     const traceParametersBody =
-      Array.isArray(parameters) && parameters.length > 0
+      Array.isArray(parameters) && parameters.length
         ? [" "].concat(formatReps(messageBodyConfig))
         : [];
 

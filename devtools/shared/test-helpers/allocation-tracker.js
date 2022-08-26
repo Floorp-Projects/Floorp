@@ -200,7 +200,7 @@ exports.allocationTracker = function({
       // If means that the test we are recording is having pending operation which aren't properly recorded.
       if (!watchAllGlobals) {
         const allocations = dbg.memory.drainAllocationsLog();
-        if (allocations.length > 0) {
+        if (allocations.length) {
           this.logAllocationLog(
             allocations,
             "Allocation that happened during the GC"

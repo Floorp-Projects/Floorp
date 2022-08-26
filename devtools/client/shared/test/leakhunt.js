@@ -116,7 +116,7 @@ leakHunt.digProperty = function(prop, data, path, seen, direct, log) {
   if (recurse) {
     seen.push(data);
     const lines = leakHunt.inner(data, newPath, seen);
-    if (lines.length == 0) {
+    if (!lines.length) {
       if (message !== "function") {
         log(prefix + prop + " = " + message + " { }");
       }

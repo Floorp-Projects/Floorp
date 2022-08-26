@@ -152,13 +152,12 @@ async function getElementNodeRectWithinTarget(selectors) {
   // Retrieve the browsing context in which the element is
   const inBCSelector = selectors.pop();
   const frameSelectors = selectors;
-  const bc =
-    frameSelectors.length > 0
-      ? await getBrowsingContextInFrames(
-          gBrowser.selectedBrowser.browsingContext,
-          frameSelectors
-        )
-      : gBrowser.selectedBrowser.browsingContext;
+  const bc = frameSelectors.length
+    ? await getBrowsingContextInFrames(
+        gBrowser.selectedBrowser.browsingContext,
+        frameSelectors
+      )
+    : gBrowser.selectedBrowser.browsingContext;
 
   // Get the element bounds within the Firefox window
   const elementBounds = await SpecialPowers.spawn(

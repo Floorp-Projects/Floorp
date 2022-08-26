@@ -32,7 +32,7 @@ add_task(async function() {
   await onRefresh;
 
   ok(
-    propertyViews.filter(p => p.visible).length > 0,
+    !!propertyViews.filter(p => p.visible).length,
     "CSS properties are displayed"
   );
   ok(view.noResults.hasAttribute("hidden"), "no-results message is hidden");
@@ -50,7 +50,7 @@ add_task(async function() {
   await onRefresh;
 
   ok(
-    propertyViews.filter(p => p.visible).length > 0,
+    !!propertyViews.filter(p => p.visible).length,
     "CSS properties are displayed"
   );
   ok(view.noResults.hasAttribute("hidden"), "no-results message is hidden");

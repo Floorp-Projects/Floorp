@@ -65,7 +65,7 @@ add_task(async function() {
       const frames = message.querySelectorAll(
         ".message-body-wrapper > .stacktrace .frame"
       );
-      return frames.length > 0 ? frames : null;
+      return frames.length ? frames : null;
     }, "Couldn't find stacktrace");
 
     const frames = Array.from(framesEl)

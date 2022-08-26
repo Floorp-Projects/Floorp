@@ -45,6 +45,6 @@ async function hasMessageByType(dbg, msg, typeSelector) {
   const webConsole = await dbg.toolbox.getPanel("webconsole");
   const hud = webConsole.hud;
   return waitFor(
-    async () => findMessagesByType(hud, msg, typeSelector).length > 0
+    async () => !!findMessagesByType(hud, msg, typeSelector).length
   );
 }
