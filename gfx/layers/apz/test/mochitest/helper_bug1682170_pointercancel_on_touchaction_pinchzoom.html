@@ -40,7 +40,7 @@ async function test() {
     // end the test at the right time.
     body.addEventListener("touchend", function(e) {
       dump(`Got touchend with ${e.touches.length} touches\n`);
-      if (e.touches.length == 0) {
+      if (!e.touches.length) {
         resolve();
       }
     });

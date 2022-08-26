@@ -82,7 +82,7 @@ waitUntilApzStable().then(async () => {
   }, { once: true });
 
   target0.addEventListener("pointerup", (event) => {
-    ok(target0_events.length == 0, " should receive " + target0_events + " on target0");
+    ok(!target0_events.length, " should receive " + target0_events + " on target0");
     // Wait until the event is done processing before we end the subtest,
     // otherwise on Android the pointer events pref is flipped back to false
     // and debug builds will assert.
