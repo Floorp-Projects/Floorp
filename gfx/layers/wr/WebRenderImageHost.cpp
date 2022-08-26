@@ -33,7 +33,10 @@ WebRenderImageHost::WebRenderImageHost(const TextureInfo& aTextureInfo)
       ImageComposite(),
       mCurrentAsyncImageManager(nullptr) {}
 
-WebRenderImageHost::~WebRenderImageHost() { MOZ_ASSERT(mWrBridges.empty()); }
+WebRenderImageHost::~WebRenderImageHost() {
+  MOZ_ASSERT(!mRemoteTextureConsumer);
+  MOZ_ASSERT(mWrBridges.empty());
+}
 
 void WebRenderImageHost::OnReleased() {
   if (mRemoteTextureConsumer) {
