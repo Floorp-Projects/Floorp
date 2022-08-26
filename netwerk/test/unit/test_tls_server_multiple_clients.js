@@ -62,16 +62,11 @@ function startServer(cert) {
 }
 
 function storeCertOverride(port, cert) {
-  let overrideBits =
-    Ci.nsICertOverrideService.ERROR_UNTRUSTED |
-    Ci.nsICertOverrideService.ERROR_TIME |
-    Ci.nsICertOverrideService.ERROR_MISMATCH;
   certOverrideService.rememberValidityOverride(
     "127.0.0.1",
     port,
     {},
     cert,
-    overrideBits,
     true
   );
 }

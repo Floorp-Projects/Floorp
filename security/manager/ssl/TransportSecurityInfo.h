@@ -27,6 +27,8 @@
 namespace mozilla {
 namespace psm {
 
+enum class OverridableErrorCategory : uint32_t;
+
 class TransportSecurityInfo : public nsITransportSecurityInfo,
                               public nsIInterfaceRequestor,
                               public nsISerializable,
@@ -79,7 +81,7 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   bool IsCanceled();
 
   void SetStatusErrorBits(const nsCOMPtr<nsIX509Cert>& cert,
-                          uint32_t collected_errors);
+                          OverridableErrorCategory overridableErrorCategory);
 
   nsresult SetFailedCertChain(nsTArray<nsTArray<uint8_t>>&& certList);
 

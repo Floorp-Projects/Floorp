@@ -31,11 +31,7 @@ addCertFromFile(certdb, "bad_certs/ev-test-intermediate.pem", ",,");
 // information object.
 function add_resume_non_ev_with_override_test() {
   // This adds the override and makes one successful connection.
-  add_cert_override_test(
-    "expired.example.com",
-    Ci.nsICertOverrideService.ERROR_TIME,
-    SEC_ERROR_EXPIRED_CERTIFICATE
-  );
+  add_cert_override_test("expired.example.com", SEC_ERROR_EXPIRED_CERTIFICATE);
 
   // This connects again, using session resumption. Note that we don't clear
   // the TLS session cache between these operations (that would defeat the

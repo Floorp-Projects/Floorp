@@ -118,7 +118,6 @@ add_task(async function test_cert_manager_server_tab() {
     443,
     {},
     cert,
-    Ci.nsICertOverrideService.ERROR_UNTRUSTED,
     false
   );
 

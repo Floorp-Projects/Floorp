@@ -955,13 +955,24 @@ void RememberCertErrorsTable::LookupCertErrorBits(
 }
 
 void TransportSecurityInfo::SetStatusErrorBits(
-    const nsCOMPtr<nsIX509Cert>& cert, uint32_t collected_errors) {
+    const nsCOMPtr<nsIX509Cert>& cert,
+    OverridableErrorCategory overridableErrorCategory) {
   SetServerCert(cert, EVStatus::NotEV);
 
   mHaveCertErrorBits = true;
-  mIsDomainMismatch = collected_errors & nsICertOverrideService::ERROR_MISMATCH;
-  mIsNotValidAtThisTime = collected_errors & nsICertOverrideService::ERROR_TIME;
-  mIsUntrusted = collected_errors & nsICertOverrideService::ERROR_UNTRUSTED;
+  switch (overridableErrorCategory) {
+    case OverridableErrorCategory::Trust:
+      mIsUntrusted = true;
+      break;
+    case OverridableErrorCategory::Time:
+      mIsNotValidAtThisTime = true;
+      break;
+    case OverridableErrorCategory::Domain:
+      mIsDomainMismatch = true;
+      break;
+    default:
+      break;
+  }
 
   RememberCertErrorsTable::GetInstance().RememberCertHasError(this, SECFailure);
 }

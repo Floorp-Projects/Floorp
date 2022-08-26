@@ -91,7 +91,6 @@ add_task(async function checkPermanentExceptionPref() {
       -1,
       {},
       cert,
-      {},
       isTemporary
     );
     ok(hasException, "Has stored an exception for the page.");
