@@ -7716,16 +7716,7 @@ void nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(
 
 nsresult nsContentUtils::IPCTransferableToTransferable(
     const IPCDataTransfer& aDataTransfer, bool aAddDataFlavor,
-    nsITransferable* aTransferable, IShmemAllocator* aAllocator) {
-  auto release = MakeScopeExit([&] {
-    const nsTArray<IPCDataTransferItem>& items = aDataTransfer.items();
-    for (const auto& item : items) {
-      if (item.data().type() == IPCDataTransferData::TShmem) {
-        Unused << aAllocator->DeallocShmem(item.data().get_Shmem());
-      }
-    }
-  });
-
+    nsITransferable* aTransferable) {
   nsresult rv;
   const nsTArray<IPCDataTransferItem>& items = aDataTransfer.items();
   for (const auto& item : items) {
@@ -7733,70 +7724,63 @@ nsresult nsContentUtils::IPCTransferableToTransferable(
       aTransferable->AddDataFlavor(item.flavor().get());
     }
 
-    if (item.dataType() == TransferableDataType::String) {
-      nsCOMPtr<nsISupportsString> dataWrapper =
-          do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (item.data().type() == IPCDataTransferData::TShmem) {
-        Shmem itemData = item.data().get_Shmem();
-        const nsDependentSubstring text(itemData.get<char16_t>(),
-                                        itemData.Size<char16_t>());
-        rv = dataWrapper->SetData(text);
+    nsCOMPtr<nsISupports> transferData;
+    switch (item.data().type()) {
+      case IPCDataTransferData::TIPCDataTransferString: {
+        const auto& data = item.data().get_IPCDataTransferString();
+        nsCOMPtr<nsISupportsString> dataWrapper =
+            do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
-      } else {
-        const nsString& text = item.data().get_nsString();
-        rv = dataWrapper->SetData(text);
+        rv = dataWrapper->SetData(nsDependentSubstring(
+            reinterpret_cast<const char16_t*>(data.data().Data()),
+            data.data().Size() / sizeof(char16_t)));
         NS_ENSURE_SUCCESS(rv, rv);
+        transferData = dataWrapper;
+        break;
       }
-
-      rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper);
-      NS_ENSURE_SUCCESS(rv, rv);
-      continue;
+      case IPCDataTransferData::TIPCDataTransferCString: {
+        const auto& data = item.data().get_IPCDataTransferCString();
+        nsCOMPtr<nsISupportsCString> dataWrapper =
+            do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = dataWrapper->SetData(nsDependentCSubstring(
+            reinterpret_cast<const char*>(data.data().Data()),
+            data.data().Size()));
+        NS_ENSURE_SUCCESS(rv, rv);
+        transferData = dataWrapper;
+        break;
+      }
+      case IPCDataTransferData::TIPCDataTransferInputStream: {
+        const auto& data = item.data().get_IPCDataTransferInputStream();
+        nsCOMPtr<nsIInputStream> stream;
+        rv = NS_NewByteInputStream(getter_AddRefs(stream),
+                                   AsChars(data.data().AsSpan()),
+                                   NS_ASSIGNMENT_COPY);
+        NS_ENSURE_SUCCESS(rv, rv);
+        transferData = stream.forget();
+        break;
+      }
+      case IPCDataTransferData::TIPCDataTransferImageContainer: {
+        const auto& data = item.data().get_IPCDataTransferImageContainer();
+        nsCOMPtr<imgIContainer> container;
+        rv = DeserializeDataTransferImageContainer(data,
+                                                   getter_AddRefs(container));
+        NS_ENSURE_SUCCESS(rv, rv);
+        transferData = container;
+        break;
+      }
+      case IPCDataTransferData::TIPCDataTransferBlob: {
+        const auto& data = item.data().get_IPCDataTransferBlob();
+        transferData = IPCBlobUtils::Deserialize(data.blob());
+        break;
+      }
+      case IPCDataTransferData::T__None:
+        MOZ_ASSERT_UNREACHABLE();
+        return NS_ERROR_FAILURE;
     }
 
-    if (item.dataType() == TransferableDataType::ImageContainer) {
-      nsCOMPtr<imgIContainer> imageContainer;
-      rv = nsContentUtils::DataTransferItemToImage(
-          item, getter_AddRefs(imageContainer));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = aTransferable->SetTransferData(item.flavor().get(), imageContainer);
-      NS_ENSURE_SUCCESS(rv, rv);
-      continue;
-    }
-
-    if (item.dataType() == TransferableDataType::InputStream) {
-      Shmem data = item.data().get_Shmem();
-      nsCOMPtr<nsIInputStream> stream;
-      rv = NS_NewCStringInputStream(
-          getter_AddRefs(stream),
-          nsDependentCSubstring(data.get<char>(), data.Size<char>()));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = aTransferable->SetTransferData(item.flavor().get(), stream);
-      NS_ENSURE_SUCCESS(rv, rv);
-      continue;
-    }
-
-    if (item.dataType() == TransferableDataType::CString) {
-      nsCOMPtr<nsISupportsCString> dataWrapper =
-          do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // The buffer contains the terminating null.
-      Shmem itemData = item.data().get_Shmem();
-      const nsDependentCSubstring text(itemData.get<char>(),
-                                       itemData.Size<char>());
-      rv = dataWrapper->SetData(text);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper);
-      NS_ENSURE_SUCCESS(rv, rv);
-      continue;
-    }
-
-    MOZ_ASSERT_UNREACHABLE("Unknown transferable data type");
+    rv = aTransferable->SetTransferData(item.flavor().get(), transferData);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
 }
@@ -7805,11 +7789,11 @@ nsresult nsContentUtils::IPCTransferableToTransferable(
     const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
     nsIPrincipal* aRequestingPrincipal,
     const nsContentPolicyType& aContentPolicyType, bool aAddDataFlavor,
-    nsITransferable* aTransferable, IShmemAllocator* aAllocator) {
+    nsITransferable* aTransferable) {
   aTransferable->SetIsPrivateData(aIsPrivateData);
 
   nsresult rv = IPCTransferableToTransferable(aDataTransfer, aAddDataFlavor,
-                                              aTransferable, aAllocator);
+                                              aTransferable);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aTransferable->SetRequestingPrincipal(aRequestingPrincipal);
@@ -7823,53 +7807,48 @@ nsresult nsContentUtils::IPCTransferableItemToVariant(
   MOZ_ASSERT(aVariant);
   MOZ_ASSERT(aActor);
 
-  auto release = MakeScopeExit([&] {
-    if (aDataTransferItem.data().type() == IPCDataTransferData::TShmem) {
-      aActor->DeallocShmem(aDataTransferItem.data().get_Shmem());
+  switch (aDataTransferItem.data().type()) {
+    case IPCDataTransferData::TIPCDataTransferString: {
+      const auto& data = aDataTransferItem.data().get_IPCDataTransferString();
+      return aVariant->SetAsAString(nsDependentSubstring(
+          reinterpret_cast<const char16_t*>(data.data().Data()),
+          data.data().Size() / sizeof(char16_t)));
     }
-  });
-
-  if (aDataTransferItem.dataType() == TransferableDataType::String) {
-    if (aDataTransferItem.data().type() == IPCDataTransferData::TShmem) {
-      Shmem data = aDataTransferItem.data().get_Shmem();
-      aVariant->SetAsAString(
-          nsDependentSubstring(data.get<char16_t>(), data.Size<char16_t>()));
-      return NS_OK;
+    case IPCDataTransferData::TIPCDataTransferCString: {
+      const auto& data = aDataTransferItem.data().get_IPCDataTransferCString();
+      return aVariant->SetAsACString(nsDependentCSubstring(
+          reinterpret_cast<const char*>(data.data().Data()),
+          data.data().Size()));
     }
-
-    const nsString& data = aDataTransferItem.data().get_nsString();
-    aVariant->SetAsAString(data);
-    return NS_OK;
-  }
-
-  if (aDataTransferItem.dataType() == TransferableDataType::ImageContainer) {
-    // An image! Get the imgIContainer for it and set it in the
-    // variant.
-    nsCOMPtr<imgIContainer> imageContainer;
-    nsresult rv = nsContentUtils::DataTransferItemToImage(
-        aDataTransferItem, getter_AddRefs(imageContainer));
-    if (NS_FAILED(rv)) {
-      return rv;
+    case IPCDataTransferData::TIPCDataTransferInputStream: {
+      const auto& data =
+          aDataTransferItem.data().get_IPCDataTransferInputStream();
+      nsCOMPtr<nsIInputStream> stream;
+      nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream),
+                                          AsChars(data.data().AsSpan()),
+                                          NS_ASSIGNMENT_COPY);
+      NS_ENSURE_SUCCESS(rv, rv);
+      return aVariant->SetAsISupports(stream);
     }
-    aVariant->SetAsISupports(imageContainer);
-    return NS_OK;
+    case IPCDataTransferData::TIPCDataTransferImageContainer: {
+      const auto& data =
+          aDataTransferItem.data().get_IPCDataTransferImageContainer();
+      nsCOMPtr<imgIContainer> container;
+      nsresult rv = DeserializeDataTransferImageContainer(
+          data, getter_AddRefs(container));
+      NS_ENSURE_SUCCESS(rv, rv);
+      return aVariant->SetAsISupports(container);
+    }
+    case IPCDataTransferData::TIPCDataTransferBlob: {
+      const auto& data = aDataTransferItem.data().get_IPCDataTransferBlob();
+      RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(data.blob());
+      return aVariant->SetAsISupports(blobImpl);
+    }
+    case IPCDataTransferData::T__None:
+      break;
   }
 
-  if (aDataTransferItem.dataType() == TransferableDataType::CString) {
-    Shmem data = aDataTransferItem.data().get_Shmem();
-    aVariant->SetAsACString(
-        nsDependentCSubstring(data.get<char>(), data.Size<char>()));
-    return NS_OK;
-  }
-
-  if (aDataTransferItem.dataType() == TransferableDataType::Blob) {
-    RefPtr<BlobImpl> blobImpl =
-        IPCBlobUtils::Deserialize(aDataTransferItem.data().get_IPCBlob());
-    aVariant->SetAsISupports(blobImpl);
-    return NS_OK;
-  }
-
-  MOZ_ASSERT_UNREACHABLE("Unknown transferable data type");
+  MOZ_ASSERT_UNREACHABLE();
   return NS_ERROR_UNEXPECTED;
 }
 
@@ -7984,22 +7963,24 @@ static already_AddRefed<DataSourceSurface> ShmemToDataSurface(
                                          aData.get<uint8_t>(), aStride);
 }
 
-nsresult nsContentUtils::DataTransferItemToImage(
-    const IPCDataTransferItem& aItem, imgIContainer** aContainer) {
-  MOZ_ASSERT(aItem.data().type() == IPCDataTransferData::TShmem);
-  MOZ_ASSERT(aItem.dataType() == TransferableDataType::ImageContainer);
-  MOZ_ASSERT(aItem.imageDetails().isSome());
-
-  const IPCDataTransferImage& imageDetails = aItem.imageDetails().value();
-  const IntSize size(imageDetails.width(), imageDetails.height());
-  RefPtr<DataSourceSurface> image =
-      ShmemToDataSurface(aItem.data().get_Shmem(), imageDetails.stride(), size,
-                         imageDetails.format());
-  if (!image) {
+nsresult nsContentUtils::DeserializeDataTransferImageContainer(
+    const IPCDataTransferImageContainer& aData, imgIContainer** aContainer) {
+  const IntSize size(aData.width(), aData.height());
+  size_t maxBufferSize = 0;
+  size_t usedBufferSize = 0;
+  nsresult rv = CalculateBufferSizeForImage(
+      aData.stride(), size, aData.format(), &maxBufferSize, &usedBufferSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (usedBufferSize > aData.data().Size()) {
     return NS_ERROR_FAILURE;
   }
-
-  RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(image, size);
+  RefPtr<DataSourceSurface> surface =
+      CreateDataSourceSurfaceFromData(size, aData.format(), aData.data().Data(),
+                                      static_cast<int32_t>(aData.stride()));
+  if (!surface) {
+    return NS_ERROR_FAILURE;
+  }
+  RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(surface, size);
   nsCOMPtr<imgIContainer> imageContainer =
       image::ImageOps::CreateFromDrawable(drawable);
   imageContainer.forget(aContainer);
@@ -8015,43 +7996,18 @@ bool nsContentUtils::IsFlavorImage(const nsACString& aFlavor) {
          aFlavor.EqualsLiteral(kGIFImageMime);
 }
 
-static bool AllocateShmem(mozilla::dom::ContentChild* aChild,
-                          mozilla::dom::ContentParent* aParent, size_t aSize,
-                          mozilla::ipc::Shmem* aShmem) {
-  MOZ_ASSERT((aChild && !aParent) || (!aChild && aParent));
-  MOZ_ASSERT(aShmem);
-
-  IShmemAllocator* allocator = aChild ? static_cast<IShmemAllocator*>(aChild)
-                                      : static_cast<IShmemAllocator*>(aParent);
-
-  return allocator->AllocShmem(aSize, aShmem);
+// FIXME: This can probably be removed once bug 1783240 lands, as `nsString`
+// will be implicitly serialized in shmem when sent over IPDL directly.
+static IPCDataTransferString AsIPCDataTransferString(
+    Span<const char16_t> aInput) {
+  return IPCDataTransferString{BigBuffer(AsBytes(aInput))};
 }
 
-static Shmem ConvertToShmem(mozilla::dom::ContentChild* aChild,
-                            mozilla::dom::ContentParent* aParent,
-                            const nsACString& aInput) {
-  Shmem result;
-  if (!AllocateShmem(aChild, aParent, aInput.Length(), &result)) {
-    return result;
-  }
-
-  memcpy(result.get<char>(), aInput.BeginReading(), aInput.Length());
-
-  return result;
-}
-
-static Shmem ConvertToShmem(mozilla::dom::ContentChild* aChild,
-                            mozilla::dom::ContentParent* aParent,
-                            const nsAString& aInput) {
-  Shmem result;
-  uint32_t size = aInput.Length() * sizeof(char16_t);
-  if (!AllocateShmem(aChild, aParent, size, &result)) {
-    return result;
-  }
-
-  memcpy(result.get<char>(), aInput.BeginReading(), size);
-
-  return result;
+// FIXME: This can probably be removed once bug 1783240 lands, as `nsCString`
+// will be implicitly serialized in shmem when sent over IPDL directly.
+static IPCDataTransferCString AsIPCDataTransferCString(
+    Span<const char> aInput) {
+  return IPCDataTransferCString{BigBuffer(AsBytes(aInput))};
 }
 
 void nsContentUtils::TransferableToIPCTransferable(
@@ -8077,6 +8033,7 @@ void nsContentUtils::TransferableToIPCTransferable(
       if (NS_FAILED(rv) || !data) {
         if (aInSyncMessage) {
           // Can't do anything.
+          // FIXME: This shouldn't be the case anymore!
           continue;
         }
 
@@ -8087,83 +8044,54 @@ void nsContentUtils::TransferableToIPCTransferable(
         if (flavorStr.EqualsLiteral(kFilePromiseMime)) {
           IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
           item->flavor() = flavorStr;
-          item->data() = NS_ConvertUTF8toUTF16(flavorStr);
-          item->dataType() = TransferableDataType::String;
+          item->data() =
+              AsIPCDataTransferString(NS_ConvertUTF8toUTF16(flavorStr));
           continue;
         }
 
         // Empty element, transfer only the flavor
         IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
         item->flavor() = flavorStr;
-        item->data() = nsString();
-        item->dataType() = TransferableDataType::String;
+        item->data() = AsIPCDataTransferString(EmptyString());
+        continue;
+      }
+
+      // We need to handle nsIInputStream before nsISupportsCString, otherwise
+      // nsStringInputStream would be converted into a wrong type.
+      if (nsCOMPtr<nsIInputStream> stream = do_QueryInterface(data)) {
+        IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
+        item->flavor() = flavorStr;
+        nsCString imageData;
+        DebugOnly<nsresult> rv =
+            NS_ConsumeStream(stream, UINT32_MAX, imageData);
+        MOZ_ASSERT(
+            rv != NS_BASE_STREAM_WOULD_BLOCK,
+            "cannot use async input streams in nsITransferable right now");
+        // FIXME: This can probably be simplified once bug 1783240 lands, as
+        // `nsCString` will be implicitly serialized in shmem when sent over
+        // IPDL directly.
+        item->data() =
+            IPCDataTransferInputStream(BigBuffer(AsBytes(Span(imageData))));
         continue;
       }
 
       if (nsCOMPtr<nsISupportsString> text = do_QueryInterface(data)) {
         nsAutoString dataAsString;
-        text->GetData(dataAsString);
-
-        Maybe<Shmem> dataAsShmem;
-        uint32_t size = dataAsString.Length() * sizeof(char16_t);
-        // XXX IPCDataTransfer could contain multiple items, we give each item
-        // same bucket size. The IPC message includes more than data payload, so
-        // subtract 10 KB to make the total size within the bucket size. It
-        // would be nice if we could have a smarter way to decide when to use
-        // Shmem.
-        uint32_t threshold =
-            (IPC::Channel::kMaximumMessageSize / flavorList.Length()) -
-            (10 * 1024);
-        if (size > threshold) {
-          dataAsShmem.emplace(ConvertToShmem(aChild, aParent, dataAsString));
-          if (!dataAsShmem->IsReadable() || !dataAsShmem->Size<char16_t>()) {
-            continue;
-          }
-        }
+        MOZ_ALWAYS_SUCCEEDS(text->GetData(dataAsString));
 
         IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
         item->flavor() = flavorStr;
-        if (dataAsShmem) {
-          item->data() = dataAsShmem.value();
-        } else {
-          item->data() = dataAsString;
-        }
-        item->dataType() = TransferableDataType::String;
-        continue;
-      }
-
-      // We need to handle nsIInputStream before nsISupportsCString, otherwise
-      // nsStringInputStream would be coverted into a wrong type.
-      if (nsCOMPtr<nsIInputStream> stream = do_QueryInterface(data)) {
-        // Images to be pasted on the clipboard are nsIInputStreams
-        nsCString imageData;
-        NS_ConsumeStream(stream, UINT32_MAX, imageData);
-
-        Shmem imageDataShmem = ConvertToShmem(aChild, aParent, imageData);
-        if (!imageDataShmem.IsReadable() || !imageDataShmem.Size<char>()) {
-          continue;
-        }
-
-        IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
-        item->flavor() = flavorStr;
-        item->data() = std::move(imageDataShmem);
-        item->dataType() = TransferableDataType::InputStream;
+        item->data() = AsIPCDataTransferString(dataAsString);
         continue;
       }
 
       if (nsCOMPtr<nsISupportsCString> ctext = do_QueryInterface(data)) {
         nsAutoCString dataAsString;
-        ctext->GetData(dataAsString);
-
-        Shmem dataAsShmem = ConvertToShmem(aChild, aParent, dataAsString);
-        if (!dataAsShmem.IsReadable() || !dataAsShmem.Size<char>()) {
-          continue;
-        }
+        MOZ_ALWAYS_SUCCEEDS(ctext->GetData(dataAsString));
 
         IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
         item->flavor() = flavorStr;
-        item->data() = std::move(dataAsShmem);
-        item->dataType() = TransferableDataType::CString;
+        item->data() = AsIPCDataTransferCString(dataAsString);
         continue;
       }
 
@@ -8182,11 +8110,8 @@ void nsContentUtils::TransferableToIPCTransferable(
         }
         size_t length;
         int32_t stride;
-        IShmemAllocator* allocator =
-            aChild ? static_cast<IShmemAllocator*>(aChild)
-                   : static_cast<IShmemAllocator*>(aParent);
-        Maybe<Shmem> surfaceData =
-            GetSurfaceData(*dataSurface, &length, &stride, allocator);
+        Maybe<BigBuffer> surfaceData =
+            GetSurfaceData(*dataSurface, &length, &stride);
 
         if (surfaceData.isNothing()) {
           continue;
@@ -8194,40 +8119,35 @@ void nsContentUtils::TransferableToIPCTransferable(
 
         IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
         item->flavor() = flavorStr;
-        // Turn item->data() into an nsCString prior to accessing it.
-        item->data() = std::move(surfaceData.ref());
-        item->dataType() = TransferableDataType::ImageContainer;
 
         mozilla::gfx::IntSize size = dataSurface->GetSize();
-        item->imageDetails().emplace(size.width, size.height, stride,
-                                     dataSurface->GetFormat());
+        item->data() = IPCDataTransferImageContainer(
+            std::move(*surfaceData), size.width, size.height, stride,
+            dataSurface->GetFormat());
         continue;
       }
 
       // Otherwise, handle this as a file.
       nsCOMPtr<BlobImpl> blobImpl;
       if (nsCOMPtr<nsIFile> file = do_QueryInterface(data)) {
-        // If we can send this over as a blob, do so. Otherwise, we're
-        // responding to a sync message and the child can't process the blob
-        // constructor before processing our response, which would crash. In
-        // that case, hope that the caller is nsClipboardProxy::GetData,
-        // called from editor and send over images as raw data.
+        // FIXME(bug 1778565): Historically, attempting to send a Blob over IPC
+        // in response to a sync message would lead to a crash, however this
+        // isn't an issue anymore. Unfortunately, code in HTMLEditor depends on
+        // the old behaviour, so we need to preserve this oddity, and hope that
+        // the caller is HTMLEditor and can handle a nsIInputStream.
         if (aInSyncMessage) {
           nsAutoCString type;
           if (IsFileImage(file, type)) {
-            nsAutoCString data;
-            SlurpFileToString(file, data);
-
-            Shmem dataAsShmem = ConvertToShmem(aChild, aParent, data);
-            if (!dataAsShmem.IsReadable() || !dataAsShmem.Size<char>()) {
-              continue;
-            }
-
             IPCDataTransferItem* item =
                 aIPCDataTransfer->items().AppendElement();
             item->flavor() = type;
-            item->data() = std::move(dataAsShmem);
-            item->dataType() = TransferableDataType::InputStream;
+            nsCString data;
+            SlurpFileToString(file, data);
+            // FIXME: This can probably be simplified once bug 1783240 lands, as
+            // `nsCString` will be implicitly serialized in shmem when sent over
+            // IPDL directly.
+            item->data() =
+                IPCDataTransferInputStream(BigBuffer(AsBytes(Span(data))));
           }
           continue;
         }
@@ -8263,6 +8183,7 @@ void nsContentUtils::TransferableToIPCTransferable(
       } else {
         if (aInSyncMessage) {
           // Can't do anything.
+          // FIXME: This shouldn't be the case anymore!
           continue;
         }
 
@@ -8281,8 +8202,7 @@ void nsContentUtils::TransferableToIPCTransferable(
 
         IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
         item->flavor() = flavorStr;
-        item->data() = ipcBlob;
-        item->dataType() = TransferableDataType::Blob;
+        item->data() = IPCDataTransferBlob(ipcBlob);
       }
     }
   }
@@ -8290,15 +8210,16 @@ void nsContentUtils::TransferableToIPCTransferable(
 
 namespace {
 // The default type used for calling GetSurfaceData(). Gets surface data as
-// raw buffer.
-struct GetSurfaceDataRawBuffer {
-  using ReturnType = mozilla::UniquePtr<char[]>;
+// raw bigbuffer.
+struct GetSurfaceDataBigBuffer {
+  using ReturnType = Maybe<BigBuffer>;
   using BufferType = char*;
 
-  ReturnType Allocate(size_t aSize) { return ReturnType(new char[aSize]); }
+  ReturnType Allocate(size_t aSize) { return Some(BigBuffer(aSize)); }
 
-  static BufferType GetBuffer(const ReturnType& aReturnValue) {
-    return aReturnValue.get();
+  static BufferType GetBuffer(ReturnType& aReturnValue) {
+    return aReturnValue ? reinterpret_cast<char*>(aReturnValue->Data())
+                        : nullptr;
   }
 
   static ReturnType NullValue() { return ReturnType(); }
@@ -8336,7 +8257,7 @@ struct GetSurfaceDataShmem {
  * Get the pixel data from the given source surface and return it as a buffer.
  * The length and stride will be assigned from the surface.
  */
-template <typename GetSurfaceDataContext = GetSurfaceDataRawBuffer>
+template <typename GetSurfaceDataContext = GetSurfaceDataBigBuffer>
 typename GetSurfaceDataContext::ReturnType GetSurfaceDataImpl(
     DataSourceSurface& aSurface, size_t* aLength, int32_t* aStride,
     GetSurfaceDataContext aContext = GetSurfaceDataContext()) {
@@ -8373,9 +8294,9 @@ typename GetSurfaceDataContext::ReturnType GetSurfaceDataImpl(
 }
 }  // Anonymous namespace.
 
-UniquePtr<char[]> nsContentUtils::GetSurfaceData(DataSourceSurface& aSurface,
-                                                 size_t* aLength,
-                                                 int32_t* aStride) {
+Maybe<BigBuffer> nsContentUtils::GetSurfaceData(DataSourceSurface& aSurface,
+                                                size_t* aLength,
+                                                int32_t* aStride) {
   return GetSurfaceDataImpl(aSurface, aLength, aStride);
 }
 

@@ -2318,7 +2318,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvAsyncMessage(
 
 mozilla::ipc::IPCResult BrowserParent::RecvSetCursor(
     const nsCursor& aCursor, const bool& aHasCustomCursor,
-    const nsCString& aCursorData, const uint32_t& aWidth,
+    Maybe<BigBuffer>&& aCursorData, const uint32_t& aWidth,
     const uint32_t& aHeight, const float& aResolutionX,
     const float& aResolutionY, const uint32_t& aStride,
     const gfx::SurfaceFormat& aFormat, const uint32_t& aHotspotX,
@@ -2334,16 +2334,14 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetCursor(
 
   nsCOMPtr<imgIContainer> cursorImage;
   if (aHasCustomCursor) {
-    if (aHeight * aStride != aCursorData.Length() ||
+    if (!aCursorData || aHeight * aStride >= aCursorData->Size() ||
         aStride < aWidth * gfx::BytesPerPixel(aFormat)) {
       return IPC_FAIL(this, "Invalid custom cursor data");
     }
     const gfx::IntSize size(aWidth, aHeight);
     RefPtr<gfx::DataSourceSurface> customCursor =
-        gfx::CreateDataSourceSurfaceFromData(
-            size, aFormat,
-            reinterpret_cast<const uint8_t*>(aCursorData.BeginReading()),
-            aStride);
+        gfx::CreateDataSourceSurfaceFromData(size, aFormat, aCursorData->Data(),
+                                             aStride);
 
     RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(customCursor, size);
     cursorImage = image::ImageOps::CreateFromDrawable(drawable);
@@ -3215,11 +3213,12 @@ bool BrowserParent::SendInsertText(const nsString& aStringToInsert) {
 }
 
 bool BrowserParent::SendPasteTransferable(
-    const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
+    IPCDataTransfer&& aDataTransfer, const bool& aIsPrivateData,
     nsIPrincipal* aRequestingPrincipal,
     const nsContentPolicyType& aContentPolicyType) {
   return PBrowserParent::SendPasteTransferable(
-      aDataTransfer, aIsPrivateData, aRequestingPrincipal, aContentPolicyType);
+      std::move(aDataTransfer), aIsPrivateData, aRequestingPrincipal,
+      aContentPolicyType);
 }
 
 /* static */
