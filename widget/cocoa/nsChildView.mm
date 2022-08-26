@@ -4641,6 +4641,20 @@ nsresult nsChildView::GetSelectionAsPlaintext(nsAString& aResult) {
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
+nsresult nsChildView::SetHiDPIMode(bool aHiDPI) {
+  nsCocoaUtils::InvalidateHiDPIState();
+  Preferences::SetInt("gfx.hidpi.enabled", aHiDPI ? 1 : 0);
+  BackingScaleFactorChanged();
+  return NS_OK;
+}
+
+nsresult nsChildView::RestoreHiDPIMode() {
+  nsCocoaUtils::InvalidateHiDPIState();
+  Preferences::ClearUser("gfx.hidpi.enabled");
+  BackingScaleFactorChanged();
+  return NS_OK;
+}
+
 #pragma mark -
 
 #ifdef ACCESSIBILITY
