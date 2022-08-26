@@ -35,8 +35,8 @@ export default {
 const Template = ({ dismissable, type }) =>
   html`
     <message-bar type=${type} ?dismissable=${dismissable}>
-      <span>An error occurred.</span>
-      <button>Try again</button>
+      <span>A very expressive and slightly whimsical message goes here.</span>
+      <button>Click me, please!</button>
     </message-bar>
   `;
 
