@@ -2250,9 +2250,9 @@ bool WarpBuilder::buildSuspend(BytecodeLocation loc, MDefinition* gen,
       // Use peekUnchecked because we're also writing out the argument slots
       int32_t peek = -slotsToCopy + i;
       MDefinition* stackElem = current->peekUnchecked(peek);
-      auto* store = MStoreElement::New(alloc(), stackStorage,
-                                       constant(Int32Value(i)), stackElem,
-                                       /* needsHoleCheck = */ false);
+      auto* store = MStoreElement::NewUnbarriered(
+          alloc(), stackStorage, constant(Int32Value(i)), stackElem,
+          /* needsHoleCheck = */ false);
 
       current->add(store);
       current->add(MPostWriteBarrier::New(alloc(), arrayObj, stackElem));
@@ -2694,8 +2694,9 @@ bool WarpBuilder::build_InitElemArray(BytecodeLocation loc) {
     current->add(store);
   } else {
     current->add(MPostWriteBarrier::New(alloc(), obj, val));
-    auto* store = MStoreElement::New(alloc(), elements, indexConst, val,
-                                     /* needsHoleCheck = */ false);
+    auto* store =
+        MStoreElement::NewUnbarriered(alloc(), elements, indexConst, val,
+                                      /* needsHoleCheck = */ false);
     current->add(store);
   }
 
@@ -2917,8 +2918,9 @@ bool WarpBuilder::build_Rest(BytecodeLocation loc) {
       current->add(index);
 
       MDefinition* arg = inlineCallInfo()->argv()[i];
-      MStoreElement* store = MStoreElement::New(alloc(), elements, index, arg,
-                                                /* needsHoleCheck = */ false);
+      MStoreElement* store =
+          MStoreElement::NewUnbarriered(alloc(), elements, index, arg,
+                                        /* needsHoleCheck = */ false);
       current->add(store);
       current->add(MPostWriteBarrier::New(alloc(), newArray, arg));
     }
