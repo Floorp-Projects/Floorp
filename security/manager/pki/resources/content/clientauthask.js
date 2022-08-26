@@ -155,13 +155,13 @@ async function setDetails() {
   ];
   let parsedCert = await parse(pemToDER(cert.getBase64DERString()));
   let keyUsages = parsedCert.ext.keyUsages;
-  if (keyUsages && keyUsages.purposes.length > 0) {
+  if (keyUsages && keyUsages.purposes.length) {
     detailLines.push(
       bundle.getFormattedString("clientAuthKeyUsages", [keyUsages.purposes])
     );
   }
   let emailAddresses = cert.getEmailAddresses();
-  if (emailAddresses.length > 0) {
+  if (emailAddresses.length) {
     let joinedAddresses = emailAddresses.join(", ");
     detailLines.push(
       bundle.getFormattedString("clientAuthEmailAddresses", [joinedAddresses])

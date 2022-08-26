@@ -271,7 +271,7 @@ add_task(async function() {
   );
   let recoveryPhrase = await keystore.asyncGenerateSecret(LABELS[0]);
   ok(
-    recoveryPhrase && recoveryPhrase.length > 0,
+    recoveryPhrase && !!recoveryPhrase.length,
     "we should be able to re-use that label to generate a new secret"
   );
   await delete_all_secrets();
@@ -401,7 +401,7 @@ add_task(async function() {
 
   let recoveryPhrase = await keystore.asyncGenerateSecret(LABELS[0]);
   ok(
-    recoveryPhrase && recoveryPhrase.length > 0,
+    recoveryPhrase && !!recoveryPhrase.length,
     "we should be able to use that label to generate a new secret"
   );
   ok(

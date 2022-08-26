@@ -188,7 +188,7 @@ add_task(async function testRememberedDecisionsUI() {
   );
 
   await BrowserTestUtils.waitForCondition(
-    () => labels[10].textContent.length > 0,
+    () => !!labels[10].textContent.length,
     "Localized label is populated"
   );
 

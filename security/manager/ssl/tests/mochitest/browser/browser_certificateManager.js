@@ -18,9 +18,9 @@ async function checkServerCertificates(win, expectedValues = []) {
 
   // The strings we will get from the DOM are localized with Fluent.
   // This will wait until the translation is applied.
-  if (expectedValues.length > 0) {
+  if (expectedValues.length) {
     await BrowserTestUtils.waitForCondition(
-      () => labels[1].value || labels[1].textContent.length > 0,
+      () => labels[1].value || !!labels[1].textContent.length,
       "At least one label is populated"
     );
   }

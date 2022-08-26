@@ -700,7 +700,7 @@ async function restoreCerts() {
         errorCode = certdb.importPKCS12File(fp.file, password.value);
         if (
           errorCode == Ci.nsIX509CertDB.ERROR_BAD_PASSWORD &&
-          password.value.length == 0
+          !password.value.length
         ) {
           // It didn't like empty string password, try no password.
           errorCode = certdb.importPKCS12File(fp.file, null);
