@@ -15,7 +15,9 @@
   --menu-panel-width: 22.35em;
   --menu-panel-width-wide: 29em;
 
-  --arrowpanel-menuitem-margin: 0 8px;
+  --arrowpanel-menuitem-margin-block: 0;
+  --arrowpanel-menuitem-margin-inline: 8px;
+  --arrowpanel-menuitem-margin: var(--arrowpanel-menuitem-margin-block) var(--arrowpanel-menuitem-margin-inline);
   --arrowpanel-menuitem-padding-block: 8px;
   --arrowpanel-menuitem-padding-inline: 8px;
   --arrowpanel-menuitem-padding: var(--arrowpanel-menuitem-padding-block) var(--arrowpanel-menuitem-padding-inline);
@@ -23,7 +25,9 @@
   --panel-separator-margin-vertical: 4px;
   --panel-separator-margin-horizontal: 8px;
   --panel-separator-margin: var(--panel-separator-margin-vertical) var(--panel-separator-margin-horizontal);
-  --panel-subview-body-padding: 8px 0;
+  --panel-subview-body-padding-block: 8px;
+  --panel-subview-body-padding-inline: 0;
+  --panel-subview-body-padding: var(--panel-subview-body-padding-block) var(--panel-subview-body-padding-inline);
 
   --panel-and-palette-icon-size: 16px;
 }
@@ -33,8 +37,10 @@
 }
 
 :root[uidensity=compact] {
-  --arrowpanel-menuitem-margin: 0 4px;
+  --arrowpanel-menuitem-margin-inline: 4px;
   --arrowpanel-menuitem-padding-block: 0;
+  --panel-separator-margin-horizontal: 4px;
+  --panel-subview-body-padding-block: 4px;
 }
 
 #PanelUI-menu-button[badge-status] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
@@ -1100,7 +1106,9 @@ panelview .toolbarbutton-1,
 }
 
 .panel-subview-footer-button {
-  margin-bottom: 6px;
+  /* Set the footer's bottom margin according to menuitems inline margin
+     to make sure the footer's margin is even from all sides. */
+  margin-bottom: var(--arrowpanel-menuitem-margin-inline);
 }
 
 .subviewbutton > .menu-text {
