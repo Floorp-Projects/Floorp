@@ -310,7 +310,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">顯示主畫面貼士</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">顯示主畫面貼士</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">加入搜尋引擎</string>
@@ -440,6 +440,14 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">唔好</string>
 
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">私隱瀏覽工作階段</string>
+
     <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
     <string name="tabs_tray_action_erase">刪除瀏覽紀錄</string>
 
@@ -563,6 +571,14 @@
     <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
     <string moz:removedIn="103" name="biometric_auth_description">請觸碰指紋感應器以繼續。</string>
 
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string moz:removedIn="103" name="biometric_auth_new_session">開一個新工作階段</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">用一個新嘅工作階段開啟連結</string>
+
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">指紋圖標</string>
 
@@ -608,6 +624,8 @@
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">例外</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">你喺呢啲網站停用咗內容阻擋。</string>
     <!-- Menu item to remove existing exceptions. -->
     <string name="preference_exceptions_menu_remove">移除</string>
     <!-- Button to remove all websites from the exception list -->
@@ -654,6 +672,9 @@
     <string name="secure_connection">安全連線</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="insecure_connection">不安全連線</string>
+
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">要阻擋嘅追蹤器同程式碼</string>
 
     <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
     <string name="go_back">返回</string>
