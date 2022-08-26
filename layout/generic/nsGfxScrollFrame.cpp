@@ -1601,8 +1601,14 @@ nsMargin ScrollFrameHelper::GetDesiredScrollbarSizes(nsBoxLayoutState* aState) {
                "computations");
 
   nsMargin result(0, 0, 0, 0);
+  ScrollStyles styles = GetScrollStylesFromFrame();
 
-  if (mVScrollbarBox) {
+  const auto& style = *nsLayoutUtils::StyleForScrollbar(mOuter);
+  if (style.StyleUIReset()->ScrollbarWidth() == StyleScrollbarWidth::None) {
+    return {};
+  }
+
+  if (mVScrollbarBox && styles.mVertical != StyleOverflow::Hidden) {
     nsSize size = mVScrollbarBox->GetXULPrefSize(*aState);
     nsIFrame::AddXULMargin(mVScrollbarBox, size);
     if (IsScrollbarOnRight())
@@ -1611,7 +1617,7 @@ nsMargin ScrollFrameHelper::GetDesiredScrollbarSizes(nsBoxLayoutState* aState) {
       result.right = size.width;
   }
 
-  if (mHScrollbarBox) {
+  if (mHScrollbarBox && styles.mHorizontal != StyleOverflow::Hidden) {
     nsSize size = mHScrollbarBox->GetXULPrefSize(*aState);
     nsIFrame::AddXULMargin(mHScrollbarBox, size);
     // We don't currently support any scripts that would require a scrollbar
