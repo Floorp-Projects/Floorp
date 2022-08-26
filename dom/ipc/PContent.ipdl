@@ -443,8 +443,8 @@ union TextRecognitionResultOrError {
     nsCString;
 };
 
-struct ShmemImage {
-    Shmem data;
+struct IPCImage {
+    BigBuffer data;
     uint32_t stride;
     SurfaceFormat format;
     ImageIntSize size;
@@ -1243,7 +1243,7 @@ parent:
 
     async CopyFavicon(nsIURI oldURI, nsIURI newURI, bool isPrivate);
 
-    async FindImageText(ShmemImage image, nsCString[] languages)
+    async FindImageText(IPCImage image, nsCString[] languages)
         returns (TextRecognitionResultOrError result);
 
     /**
