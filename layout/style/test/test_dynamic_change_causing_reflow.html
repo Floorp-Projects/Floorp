@@ -21,6 +21,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1131371
   <div id="elemWithFixedPosChild"><div style="position:fixed"></div></div>
   <div id="elemWithScrollbars"></div>
   <div id="elemWithoutScrollbars"></div>
+  <input id="inputElem">
+  <textarea id="textareaElem">
+    Some
+    lines
+    of
+    text
+  </textarea>
   <select id="selectElem">
     <option>A</option>
     <option>B</option>
@@ -41,6 +48,8 @@ const elemWithAbsPosChild = document.getElementById("elemWithAbsPosChild");
 const elemWithFixedPosChild = document.getElementById("elemWithFixedPosChild");
 const elemWithScrollbars = document.getElementById("elemWithScrollbars");
 const elemWithoutScrollbars = document.getElementById("elemWithoutScrollbars");
+const inputElem = document.getElementById("inputElem");
+const textareaElem = document.getElementById("textareaElem");
 const selectElem = document.getElementById("selectElem");
 const buttonElem = document.getElementById("buttonElem");
 const buttonElemWithAbsPosChild = document.getElementById("buttonElemWithAbsPosChild");
@@ -528,6 +537,20 @@ const gTestcases = [
     afterStyle:  "scroll-snap-type: none",
     expectConstruction: false,
     expectReflow: false,
+  },
+  {
+    elem: inputElem,
+    beforeStyle: "overflow: auto",
+    afterStyle:  "overflow: hidden",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: textareaElem,
+    beforeStyle: "overflow: auto",
+    afterStyle:  "overflow: hidden",
+    expectConstruction: false,
+    expectReflow: true,
   },
 ];
 

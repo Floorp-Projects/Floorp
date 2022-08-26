@@ -1392,6 +1392,13 @@ static inline void TryToDealWithScrollbarChange(nsChangeHint& aHint,
       aHint |= nsChangeHint_ReflowHintsForScrollbarChange;
       return;
     }
+  } else if (aFrame->IsTextInputFrame()) {
+    // input / textarea for the most part don't honor overflow themselves, the
+    // editor root will deal with the change if needed.
+    // However the textarea intrinsic size relies on GetDesiredScrollbarSizes(),
+    // so we need to reflow the textarea itself, not just the inner control.
+    aHint |= nsChangeHint_ReflowHintsForScrollbarChange;
+    return;
   } else if (!scrollable) {
     // Something changed, but we don't have nor will have a scroll frame,
     // there's nothing to do here.
