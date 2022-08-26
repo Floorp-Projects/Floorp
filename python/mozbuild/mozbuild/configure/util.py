@@ -14,7 +14,7 @@ import six
 import sys
 from collections import deque
 from contextlib import contextmanager
-from distutils.version import LooseVersion
+from looseversion import LooseVersion
 
 
 def getpreferredencoding():
@@ -34,7 +34,7 @@ def getpreferredencoding():
 
 
 class Version(LooseVersion):
-    """A simple subclass of distutils.version.LooseVersion.
+    """A simple subclass of looseversion.LooseVersion.
     Adds attributes for `major`, `minor`, `patch` for the first three
     version components so users can easily pull out major/minor
     versions, like:
