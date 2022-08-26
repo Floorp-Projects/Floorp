@@ -194,16 +194,12 @@ void GeckoMVMContext::UpdateDisplayPortMargins() {
 }
 
 void GeckoMVMContext::Reflow(const CSSSize& aNewSize) {
-  RefPtr doc = mDocument;
-  RefPtr ps = mPresShell;
+  MOZ_ASSERT(mPresShell);
 
-  MOZ_ASSERT(doc);
-  MOZ_ASSERT(ps);
-
-  if (ps->ResizeReflowIgnoreOverride(CSSPixel::ToAppUnits(aNewSize.width),
-                                     CSSPixel::ToAppUnits(aNewSize.height))) {
-    doc->FlushPendingNotifications(FlushType::InterruptibleLayout);
-  }
+  RefPtr<PresShell> presShell = mPresShell;
+  presShell->ResizeReflowIgnoreOverride(CSSPixel::ToAppUnits(aNewSize.width),
+                                        CSSPixel::ToAppUnits(aNewSize.height),
+                                        ResizeReflowOptions::NoOption);
 }
 
 }  // namespace mozilla

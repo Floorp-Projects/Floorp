@@ -278,6 +278,7 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mUsesFontMetricDependentFontUnits(false),
       mCounterStylesDirty(true),
       mFontFeatureValuesDirty(true),
+      mSuppressResizeReflow(false),
       mIsVisual(false),
       mHasWarnedAboutPositionedTableParts(false),
       mHasWarnedAboutTooLargeDashedOrDottedRadius(false),
@@ -1284,6 +1285,15 @@ void nsPresContext::SetFullZoom(float aZoom) {
   float oldHeightDevPixels = oldHeightAppUnits / float(mCurAppUnitsPerDevPixel);
   mDeviceContext->SetFullZoom(aZoom);
 
+  NS_ASSERTION(!mSuppressResizeReflow,
+               "two zooms happening at the same time? Impossible!");
+
+  // We can't suppress the resize reflow if we support APZ zooming, as MVM
+  // relies on ResizeReflowIgnoreOverride() actually updating layout to update
+  // the viewport based on that.
+  RefPtr<MobileViewportManager> mvm = mPresShell->GetMobileViewportManager();
+  mSuppressResizeReflow = !mvm;
+
   mFullZoom = aZoom;
 
   AppUnitsPerDevPixelChanged();
@@ -1291,6 +1301,8 @@ void nsPresContext::SetFullZoom(float aZoom) {
   mPresShell->GetViewManager()->SetWindowDimensions(
       NSToCoordRound(oldWidthDevPixels * AppUnitsPerDevPixel()),
       NSToCoordRound(oldHeightDevPixels * AppUnitsPerDevPixel()));
+
+  mSuppressResizeReflow = false;
 }
 
 void nsPresContext::SetOverrideDPPX(float aDPPX) {
@@ -2824,7 +2836,8 @@ void nsPresContext::SetDynamicToolbarMaxHeight(ScreenIntCoord aHeight) {
     nscoord currentWidth, currentHeight;
     presShell->GetViewManager()->GetWindowDimensions(&currentWidth,
                                                      &currentHeight);
-    presShell->ResizeReflow(currentWidth, currentHeight);
+    presShell->ResizeReflow(currentWidth, currentHeight,
+                            ResizeReflowOptions::NoOption);
   }
 }
 

@@ -1031,8 +1031,9 @@ nsRect Element::GetClientAreaRect() {
       doc->IsScrollingElement(this)) {
     if (PresShell* presShell = doc->GetPresShell()) {
       // Ensure up to date dimensions, but don't reflow
-      if (RefPtr<nsViewManager> viewManager = presShell->GetViewManager()) {
-        viewManager->FlushDelayedResize();
+      RefPtr<nsViewManager> viewManager = presShell->GetViewManager();
+      if (viewManager) {
+        viewManager->FlushDelayedResize(false);
       }
       return nsRect(nsPoint(), presContext->GetVisibleArea().Size());
     }
