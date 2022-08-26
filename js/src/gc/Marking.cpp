@@ -932,11 +932,10 @@ void DoMarking(GCMarker* gcmarker, T* thing) {
 
   MOZ_ASSERT(!IsOwnedByOtherRuntime(gcmarker->runtime(), thing));
 
-  // Don't mark gray in zones which we are still marking black, except for the
-  // atoms zone.
+  // Don't mark gray in zones which we are still marking black.
   Zone* zone = thing->asTenured().zone();
   if (gcmarker->markColor() == MarkColor::Gray &&
-      zone->isGCMarkingBlackOnly() && !zone->isAtomsZone()) {
+      zone->isGCMarkingBlackOnly()) {
     return;
   }
 
@@ -3204,6 +3203,7 @@ bool GCMarker::traceBarrieredCells(SliceBudget& budget) {
 }
 
 void GCMarker::traceBarrieredCell(JS::GCCellPtr cell) {
+  MOZ_ASSERT(markColor() == gc::MarkColor::Black);
   MOZ_ASSERT(cell.asCell()->isTenured());
   MOZ_ASSERT(cell.asCell()->isMarkedBlack());
   MOZ_ASSERT(!cell.asCell()->isForwarded());

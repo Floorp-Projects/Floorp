@@ -380,6 +380,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
     return needsIncrementalBarrier() || wasGCStarted();
   }
 
+  GCState initialMarkingState() const;
+
   bool shouldMarkInZone() const { return isGCMarkingOrVerifyingPreBarriers(); }
 
   // Was this zone collected in the last GC.
