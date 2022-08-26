@@ -9,12 +9,14 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderQuickActions:
     "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
 });
 
@@ -231,12 +233,37 @@ function restartBrowser() {
   }
 }
 
+function random(seed) {
+  let x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function shuffle(array, seed) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(random(seed) * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
 /**
  * Loads the default QuickActions.
  */
 export class QuickActionsLoaderDefault {
   static async load() {
-    for (const key in DEFAULT_ACTIONS) {
+    let keys = Object.keys(DEFAULT_ACTIONS);
+    if (lazy.UrlbarPrefs.get("quickactions.randomOrderActions")) {
+      // We insert the actions in a random order which means they will be returned
+      // in a random but consistent order (the order of results for "view" and "views"
+      // should be the same).
+      // We use the Nimbus randomizationId as the seed as the order should not change
+      // for the user between restarts, it should be random between users but a user should
+      // see actions the same order.
+      let seed = [...lazy.ClientEnvironment.randomizationId]
+        .map(x => x.charCodeAt(0))
+        .reduce((sum, a) => sum + a, 0);
+      shuffle(keys, seed);
+    }
+    for (const key of keys) {
       let actionData = DEFAULT_ACTIONS[key];
       let messages = await lazy.gFluentStrings.formatMessages(
         actionData.l10nCommands.map(id => ({ id }))
