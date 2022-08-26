@@ -31,6 +31,7 @@ variant_description_schema = Schema(
             Required("description"): str,
             Required("suffix"): str,
             Required("component"): str,
+            Required("expiration"): str,
             Optional("when"): {Any("$eval", "$if"): str},
             Optional("replace"): {str: object},
             Optional("merge"): {str: object},

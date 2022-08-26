@@ -2,6 +2,7 @@
 1proc:
     description: "{description} with e10s disabled"
     component: "Testing::General"
+    expiration: "never"
     suffix: "1proc"
     merge:
         mozharness:
@@ -12,6 +13,7 @@
 headless:
     description: "{description} without a window"
     component: "Firefox::Headless"
+    expiration: "never"
     suffix: "headless"
     replace:
         tier: 2
@@ -23,6 +25,7 @@ headless:
 a11y-checks:
     description: "{description} with accessibility checks enabled"
     component: "Core::Disability Access APIs"
+    expiration: "2023-03-01"
     suffix: "a11y-checks"
     replace:
         tier: 2
@@ -34,6 +37,7 @@ a11y-checks:
 aab:
     description: "{description} with aab test_runner"
     component: "GeckoView::General"
+    expiration: "2023-03-01"
     when: &gv_e10s_filter
         $eval: '"android" in task["test-platform"]'
     suffix: "aab"
@@ -54,6 +58,7 @@ aab:
 geckoview-e10s-single:
     description: "{description} with single-process e10s"
     component: "Core::DOM: Content Processes"
+    expiration: "2023-03-01"
     when:
         <<: *gv_e10s_filter
     suffix: "e10s-single"
@@ -66,6 +71,7 @@ geckoview-e10s-single:
 geckoview-no-fission:
     description: "{description} without fission enabled"
     component: "Core::DOM: Content Processes"
+    expiration: "2023-03-01"
     when:
         <<: *gv_e10s_filter
     suffix: "nofis"
@@ -77,6 +83,7 @@ geckoview-no-fission:
 geckoview-fission:
     description: "{description} with fission enabled"
     component: "Core::DOM: Content Processes"
+    expiration: "2023-03-01"
     when:
         <<: *gv_e10s_filter
     suffix: "fis"
@@ -84,11 +91,13 @@ geckoview-fission:
 fission:
     description: "{description} with fission enabled"
     component: "Testing::General"
+    expiration: "2023-03-01"
     suffix: "fis"
 
 fission-no-isolate:
     description: "{description} with fission and webContentIsolationStrategy=0"
     component: "Core::DOM: Content Processes"
+    expiration: "2023-03-01"
     suffix: "fis-0"
     merge:
         mozharness:
@@ -98,6 +107,7 @@ fission-no-isolate:
 no-fission:
     description: "{description} without fission enabled"
     component: "Testing::General"
+    expiration: "2023-03-01"
     suffix: "nofis"
     merge:
         mozharness:
@@ -107,6 +117,7 @@ no-fission:
 xorigin:
     description: "{description} with cross-origin"
     component: "Core::DOM: Content Processes"
+    expiration: "2023-03-01"
     suffix: "xorig"
     replace:
         e10s: true
@@ -119,6 +130,7 @@ xorigin:
 conditioned_profile:
     description: "{description} with conditioned profile"
     component: "Testing::General"
+    expiration: "2023-03-01"
     suffix: "condprof"
     merge:
         mozharness:
@@ -130,6 +142,7 @@ conditioned_profile:
 socketprocess:
     description: "{description} with socket process enabled"
     component: "Core::Networking"
+    expiration: "2023-03-01"
     suffix: "spi"
     merge:
         mozharness:
@@ -140,6 +153,7 @@ socketprocess:
 socketprocess_networking:
     description: "{description} with networking on socket process enabled"
     component: "Core::Networking"
+    expiration: "2023-03-01"
     suffix: "spi-nw"
     merge:
         mozharness:
@@ -151,6 +165,7 @@ socketprocess_networking:
 wayland:
     description: "{description} with Wayland backend enabled"
     component: "Core::Widget: Gtk"
+    expiration: "2023-03-01"
     when:
         $eval: '"linux" in task["test-platform"]'
     suffix: "wayland"
@@ -168,6 +183,7 @@ wayland:
 webrender-dcomp-disabled:
     description: "{description} with dcomp disabled"
     component: "Core::Graphics: WebRender"
+    expiration: "2023-03-01"
     suffix: "wr-dc0"
     when:
         $eval: '"windows10" in task["test-platform"]'
@@ -183,6 +199,7 @@ webrender-dcomp-disabled:
 webrender-dcomp-present:  # Default variant ends up like this.
     description: "{description} with dcomp present but not overlays"
     component: "Core::Graphics: WebRender"
+    expiration: "2023-03-01"
     suffix: "wr-dc1-p"
     when:
         $eval: '"windows10" in task["test-platform"]'
@@ -198,6 +215,7 @@ webrender-dcomp-present:  # Default variant ends up like this.
 webrender-dcomp-overlays:
     description: "{description} with dcomp overlays but not compositing"
     component: "Core::Graphics: WebRender"
+    expiration: "2023-03-01"
     suffix: "wr-dc2-o"
     when:
         $eval: '"windows10" in task["test-platform"]'
@@ -213,6 +231,7 @@ webrender-dcomp-overlays:
 webrender-dcomp-compositing:
     description: "{description} with dcomp compositing"
     component: "Core::Graphics: WebRender"
+    expiration: "2023-03-01"
     suffix: "wr-dc3-c"
     when:
         $eval: '"windows10" in task["test-platform"]'
@@ -230,6 +249,7 @@ webrender-dcomp-compositing:
 webrender-sw:
     description: "{description} with software webrender enabled"
     component: "Core::Graphics: WebRender"
+    expiration: "2023-03-01"
     suffix: "swr"
     merge:
         webrender: true
@@ -240,6 +260,7 @@ webrender-sw:
 webgl-ipc:
     description: "{description} with WebGL IPC process enabled"
     component: "Core::Canvas: WebGL"
+    expiration: "2023-03-01"
     suffix: "gli"
     merge:
         mozharness:
@@ -250,6 +271,7 @@ webgl-ipc:
 devtools-no-eft:
     description: "{description} with DevTools EFT disabled"
     component: "DevTools::Framework"
+    expiration: "2023-03-01"
     suffix: "dt-no-eft"
     merge:
         mozharness:
