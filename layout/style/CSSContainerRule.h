@@ -32,6 +32,9 @@ class CSSContainerRule final : public css::ConditionRule {
   void GetCssText(nsACString& aCssText) const final;
   void GetConditionText(nsACString& aConditionText) final;
 
+  void GetContainerName(nsACString&) const;
+  void GetContainerQuery(nsACString&) const;
+
   size_t SizeOfIncludingThis(MallocSizeOf) const override;
 
   JSObject* WrapObject(JSContext* aCx,
