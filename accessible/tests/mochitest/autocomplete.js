@@ -141,7 +141,7 @@ function AutoCompleteResult(aValues, aComments) {
   this.values = aValues;
   this.comments = aComments;
 
-  if (this.values.length > 0) {
+  if (this.values.length) {
     this.searchResult = nsIAutoCompleteResult.RESULT_SUCCESS;
   } else {
     this.searchResult = nsIAutoCompleteResult.NOMATCH;
