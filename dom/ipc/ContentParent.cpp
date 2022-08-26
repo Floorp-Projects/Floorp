@@ -4993,10 +4993,10 @@ mozilla::ipc::IPCResult ContentParent::RecvCopyFavicon(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvFindImageText(
-    ShmemImage&& aImage, nsTArray<nsCString>&& aLanguages,
+    IPCImage&& aImage, nsTArray<nsCString>&& aLanguages,
     FindImageTextResolver&& aResolver) {
   RefPtr<DataSourceSurface> surf =
-      nsContentUtils::IPCImageToSurface(std::move(aImage), this);
+      nsContentUtils::IPCImageToSurface(std::move(aImage));
   if (!surf) {
     aResolver(TextRecognitionResultOrError("Failed to read image"_ns));
     return IPC_OK();

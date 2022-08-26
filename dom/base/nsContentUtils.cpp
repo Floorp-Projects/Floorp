@@ -7942,10 +7942,10 @@ nsresult nsContentUtils::CalculateBufferSizeForImage(
   return NS_OK;
 }
 
-static already_AddRefed<DataSourceSurface> ShmemToDataSurface(
-    Shmem& aData, uint32_t aStride, const IntSize& aImageSize,
+static already_AddRefed<DataSourceSurface> BigBufferToDataSurface(
+    BigBuffer& aData, uint32_t aStride, const IntSize& aImageSize,
     SurfaceFormat aFormat) {
-  if (!aData.IsReadable() || !aImageSize.width || !aImageSize.height) {
+  if (!aData.Size() || !aImageSize.width || !aImageSize.height) {
     return nullptr;
   }
 
@@ -7956,11 +7956,11 @@ static already_AddRefed<DataSourceSurface> ShmemToDataSurface(
           aStride, aImageSize, aFormat, &maxBufLen, &imageBufLen))) {
     return nullptr;
   }
-  if (imageBufLen > aData.Size<uint8_t>()) {
+  if (imageBufLen > aData.Size()) {
     return nullptr;
   }
-  return CreateDataSourceSurfaceFromData(aImageSize, aFormat,
-                                         aData.get<uint8_t>(), aStride);
+  return CreateDataSourceSurfaceFromData(aImageSize, aFormat, aData.Data(),
+                                         aStride);
 }
 
 nsresult nsContentUtils::DeserializeDataTransferImageContainer(
@@ -8307,24 +8307,21 @@ Maybe<Shmem> nsContentUtils::GetSurfaceData(DataSourceSurface& aSurface,
                             GetSurfaceDataShmem(aAllocator));
 }
 
-Maybe<ShmemImage> nsContentUtils::SurfaceToIPCImage(
-    DataSourceSurface& aSurface, IShmemAllocator* aAllocator) {
+Maybe<IPCImage> nsContentUtils::SurfaceToIPCImage(DataSourceSurface& aSurface) {
   size_t len = 0;
   int32_t stride = 0;
-  auto mem = GetSurfaceData(aSurface, &len, &stride, aAllocator);
+  auto mem = GetSurfaceData(aSurface, &len, &stride);
   if (!mem) {
     return Nothing();
   }
-  return Some(ShmemImage{*mem, uint32_t(stride), aSurface.GetFormat(),
-                         ImageIntSize::FromUnknownSize(aSurface.GetSize())});
+  return Some(IPCImage{std::move(*mem), uint32_t(stride), aSurface.GetFormat(),
+                       ImageIntSize::FromUnknownSize(aSurface.GetSize())});
 }
 
 already_AddRefed<DataSourceSurface> nsContentUtils::IPCImageToSurface(
-    ShmemImage&& aImage, IShmemAllocator* aAllocator) {
-  auto release =
-      MakeScopeExit([&] { aAllocator->DeallocShmem(aImage.data()); });
-  return ShmemToDataSurface(aImage.data(), aImage.stride(),
-                            aImage.size().ToUnknownSize(), aImage.format());
+    IPCImage&& aImage) {
+  return BigBufferToDataSurface(aImage.data(), aImage.stride(),
+                                aImage.size().ToUnknownSize(), aImage.format());
 }
 
 Modifiers nsContentUtils::GetWidgetModifiers(int32_t aModifiers) {
