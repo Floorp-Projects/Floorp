@@ -2307,7 +2307,6 @@ bool WarpCacheIRTranspiler::emitStoreDenseElementHole(ObjOperandId objId,
   if (handleAdd) {
     // TODO(post-Warp): Consider changing MStoreElementHole to match IC code.
     auto* ins = MStoreElementHole::New(alloc(), obj, elements, index, rhs);
-    ins->setNeedsBarrier();
     store = ins;
   } else {
     auto* length = MInitializedLength::New(alloc(), elements);

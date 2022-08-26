@@ -6730,7 +6730,6 @@ class MStoreHoleValueElement : public MBinaryInstruction,
 class MStoreElementHole
     : public MQuaternaryInstruction,
       public MixPolicy<SingleObjectPolicy, NoFloatPolicy<3>>::Data {
-  bool needsBarrier_ = false;
 
   MStoreElementHole(MDefinition* object, MDefinition* elements,
                     MDefinition* index, MDefinition* value)
@@ -6744,9 +6743,6 @@ class MStoreElementHole
   INSTRUCTION_HEADER(StoreElementHole)
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, object), (1, elements), (2, index), (3, value))
-
-  bool needsBarrier() const { return needsBarrier_; }
-  void setNeedsBarrier() { needsBarrier_ = true; }
 
   ALLOW_CLONE(MStoreElementHole)
 };
