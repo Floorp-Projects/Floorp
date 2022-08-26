@@ -9927,6 +9927,7 @@ var FirefoxViewHandler = {
         this.button?.toggleAttribute("open", e.target == this.tab);
         this.button?.setAttribute("aria-selected", e.target == this.tab);
         this._removeNotificationDotIfTabSelected();
+        this._recordViewIfTabSelected();
         break;
       case "TabClose":
         this.tab = null;
@@ -9956,6 +9957,16 @@ var FirefoxViewHandler = {
         "firefoxview-notification-dot-update",
         "false"
       );
+    }
+  },
+  _recordViewIfTabSelected() {
+    if (this.tab?.selected) {
+      const PREF_NAME = "browser.firefox-view.view-count";
+      const MAX_VIEW_COUNT = 10;
+      let viewCount = Services.prefs.getIntPref(PREF_NAME, 0);
+      if (viewCount < MAX_VIEW_COUNT) {
+        Services.prefs.setIntPref(PREF_NAME, viewCount + 1);
+      }
     }
   },
   _toggleNotificationDot(shouldShow) {
