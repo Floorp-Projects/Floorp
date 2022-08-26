@@ -31,7 +31,7 @@ function init() {
 
     onSpellCheck(textarea, function() {
         var list = spellchecker.spellChecker.GetDictionaryList();
-        ok(list.length > 0, "At least one dictionary should be present");
+        ok(!!list.length, "At least one dictionary should be present");
 
         var lang = list[0];
         spellchecker.spellChecker.setCurrentDictionaries([lang]).then(() => {

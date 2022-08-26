@@ -499,7 +499,7 @@ SimpleTest.waitForFocus(() => {
   checkInputEvent(beforeInputEvents[0], "when spanned <tr>'s last child cell element is removed (removing middle row)");
   todo_is(inputEvents.length, 1,
           'Only one "input" event should be fired when spanned <tr>\'s last child cell element is removed (removing middle row)');
-  if (inputEvents.length > 0) {
+  if (inputEvents.length) {
     checkInputEvent(inputEvents[0], "when spanned <tr>'s last child cell element is removed (removing middle row)");
   }
 

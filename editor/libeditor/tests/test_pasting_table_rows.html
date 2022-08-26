@@ -175,7 +175,7 @@
         let expectedTableOuterHTML = '\
 <table>';
 
-        if (rowsInTableHead.length > 0) {
+        if (rowsInTableHead.length) {
           expectedTableOuterHTML += '\
 <thead>';
           rowsInTableHead.forEach(rowName =>
@@ -186,7 +186,7 @@
 </thead>';
         }
 
-        if (rowsInTableBody.length > 0) {
+        if (rowsInTableBody.length) {
           expectedTableOuterHTML += '\
 <tbody>';
 
@@ -199,7 +199,7 @@
 </tbody>';
         }
 
-        if (rowsInTableFoot.length > 0) {
+        if (rowsInTableFoot.length) {
           expectedTableOuterHTML += '\
 <tfoot>';
           rowsInTableFoot.forEach(rowName =>
@@ -316,8 +316,8 @@
     }
 
     function ContainsRowWithParentTag(aTableName, aRowsInTable, aTagName) {
-      return FilterRowsWithParentTag(aTableName, aRowsInTable,
-        aTagName).length > 0;
+      return !!FilterRowsWithParentTag(aTableName, aRowsInTable,
+        aTagName).length;
     }
 
     function DoesContainRowInTheadAndTbody(aTableName, aRowsInTable) {
