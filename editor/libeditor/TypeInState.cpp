@@ -63,7 +63,7 @@ TypeInState::TypeInState()
 
 TypeInState::~TypeInState() {
   // Call Reset() to release any data that may be in
-  // mClearedArray and mSetArray.
+  // mClearingStyles and mPreservingStyles.
 
   Reset();
 }
@@ -343,14 +343,8 @@ void TypeInState::OnSelectionChange(const HTMLEditor& aHTMLEditor,
 }
 
 void TypeInState::Reset() {
-  for (size_t i = 0, n = mClearedArray.Length(); i < n; i++) {
-    delete mClearedArray[i];
-  }
-  mClearedArray.Clear();
-  for (size_t i = 0, n = mSetArray.Length(); i < n; i++) {
-    delete mSetArray[i];
-  }
-  mSetArray.Clear();
+  mClearingStyles.Clear();
+  mPreservingStyles.Clear();
 }
 
 void TypeInState::SetProp(nsStaticAtom& aProp, nsAtom* aAttr,
@@ -368,12 +362,12 @@ void TypeInState::SetProp(nsStaticAtom& aProp, nsAtom* aAttr,
   int32_t index;
   if (IsPropSet(aProp, aAttr, nullptr, index)) {
     // if it's already set, update the value
-    mSetArray[index]->mAttributeValueOrCSSValue = aValue;
+    mPreservingStyles[index]->mAttributeValueOrCSSValue = aValue;
     return;
   }
 
   // Make a new propitem and add it to the list of set properties.
-  mSetArray.AppendElement(new PropItem(&aProp, aAttr, aValue));
+  mPreservingStyles.AppendElement(MakeUnique<PropItem>(&aProp, aAttr, aValue));
 
   // remove it from the list of cleared properties, if we have a match
   RemovePropFromClearedList(&aProp, aAttr);
@@ -392,37 +386,30 @@ void TypeInState::ClearProp(
     return;
   }
 
-  // make a new propitem
-  PropItem* item = new PropItem(aProp, aAttr, u""_ns, aSpecifiedStyle);
-
   // remove it from the list of set properties, if we have a match
   RemovePropFromSetList(aProp, aAttr);
 
   // add it to the list of cleared properties
-  mClearedArray.AppendElement(item);
+  mClearingStyles.AppendElement(
+      MakeUnique<PropItem>(aProp, aAttr, u""_ns, aSpecifiedStyle));
 }
 
 void TypeInState::ClearLinkPropAndDiscardItsSpecifiedStyle() {
   ClearProp(nsGkAtoms::a, nullptr, SpecifiedStyle::Discard);
 }
 
-/**
- * TakeClearProperty() hands back next property item on the clear list.
- * Caller assumes ownership of PropItem and must delete it.
- */
 UniquePtr<PropItem> TypeInState::TakeClearProperty() {
-  return mClearedArray.Length()
-             ? UniquePtr<PropItem>{mClearedArray.PopLastElement()}
-             : nullptr;
+  if (mClearingStyles.IsEmpty()) {
+    return nullptr;
+  }
+  return mClearingStyles.PopLastElement();
 }
 
-/**
- * TakeSetProperty() hands back next poroperty item on the set list.
- * Caller assumes ownership of PropItem and must delete it.
- */
 UniquePtr<PropItem> TypeInState::TakeSetProperty() {
-  return mSetArray.Length() ? UniquePtr<PropItem>{mSetArray.PopLastElement()}
-                            : nullptr;
+  if (mPreservingStyles.IsEmpty()) {
+    return nullptr;
+  }
+  return mPreservingStyles.PopLastElement();
 }
 
 /**
@@ -453,24 +440,18 @@ void TypeInState::GetTypingState(bool& isSet, bool& theSetting,
 void TypeInState::RemovePropFromSetList(nsStaticAtom* aProp, nsAtom* aAttr) {
   int32_t index;
   if (!aProp) {
-    // clear _all_ props
-    for (size_t i = 0, n = mSetArray.Length(); i < n; i++) {
-      delete mSetArray[i];
-    }
-    mSetArray.Clear();
+    mPreservingStyles.Clear();
     mRelativeFontSize = 0;
-  } else if (FindPropInList(aProp, aAttr, nullptr, mSetArray, index)) {
-    delete mSetArray[index];
-    mSetArray.RemoveElementAt(index);
+  } else if (FindPropInList(aProp, aAttr, nullptr, mPreservingStyles, index)) {
+    mPreservingStyles.RemoveElementAt(index);
   }
 }
 
 void TypeInState::RemovePropFromClearedList(nsStaticAtom* aProp,
                                             nsAtom* aAttr) {
   int32_t index;
-  if (FindPropInList(aProp, aAttr, nullptr, mClearedArray, index)) {
-    delete mClearedArray[index];
-    mClearedArray.RemoveElementAt(index);
+  if (FindPropInList(aProp, aAttr, nullptr, mClearingStyles, index)) {
+    mClearingStyles.RemoveElementAt(index);
   }
 }
 
@@ -482,22 +463,7 @@ bool TypeInState::IsPropSet(nsStaticAtom& aProp, nsAtom* aAttr,
 
 bool TypeInState::IsPropSet(nsStaticAtom& aProp, nsAtom* aAttr,
                             nsAString* outValue, int32_t& outIndex) {
-  if (aAttr == nsGkAtoms::_empty) {
-    aAttr = nullptr;
-  }
-  // linear search.  list should be short.
-  size_t count = mSetArray.Length();
-  for (size_t i = 0; i < count; i++) {
-    PropItem* item = mSetArray[i];
-    if (item->mTag == &aProp && item->mAttribute == aAttr) {
-      if (outValue) {
-        *outValue = item->mAttributeValueOrCSSValue;
-      }
-      outIndex = i;
-      return true;
-    }
-  }
-  return false;
+  return FindPropInList(&aProp, aAttr, outValue, mPreservingStyles, outIndex);
 }
 
 bool TypeInState::IsPropCleared(nsStaticAtom* aProp, nsAtom* aAttr) {
@@ -507,7 +473,7 @@ bool TypeInState::IsPropCleared(nsStaticAtom* aProp, nsAtom* aAttr) {
 
 bool TypeInState::IsPropCleared(nsStaticAtom* aProp, nsAtom* aAttr,
                                 int32_t& outIndex) {
-  if (FindPropInList(aProp, aAttr, nullptr, mClearedArray, outIndex)) {
+  if (FindPropInList(aProp, aAttr, nullptr, mClearingStyles, outIndex)) {
     return true;
   }
   if (AreAllStylesCleared()) {
@@ -520,20 +486,18 @@ bool TypeInState::IsPropCleared(nsStaticAtom* aProp, nsAtom* aAttr,
 
 bool TypeInState::FindPropInList(nsStaticAtom* aProp, nsAtom* aAttr,
                                  nsAString* outValue,
-                                 const nsTArray<PropItem*>& aList,
+                                 const nsTArray<UniquePtr<PropItem>>& aList,
                                  int32_t& outIndex) {
   if (aAttr == nsGkAtoms::_empty) {
     aAttr = nullptr;
   }
-  // linear search.  list should be short.
-  size_t count = aList.Length();
-  for (size_t i = 0; i < count; i++) {
-    PropItem* item = aList[i];
+  for (size_t i : IntegerRange(aList.Length())) {
+    const UniquePtr<PropItem>& item = aList[i];
     if (item->mTag == aProp && item->mAttribute == aAttr) {
       if (outValue) {
         *outValue = item->mAttributeValueOrCSSValue;
       }
-      outIndex = i;
+      outIndex = static_cast<int32_t>(i);
       return true;
     }
   }

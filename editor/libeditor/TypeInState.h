@@ -147,11 +147,6 @@ class TypeInState final {
   void GetTypingState(bool& isSet, bool& theSetting, nsStaticAtom& aProp,
                       nsAtom* aAttr = nullptr, nsString* aOutValue = nullptr);
 
-  static bool FindPropInList(nsStaticAtom* aProp, nsAtom* aAttr,
-                             nsAString* outValue,
-                             const nsTArray<PropItem*>& aList,
-                             int32_t& outIndex);
-
  protected:
   virtual ~TypeInState();
 
@@ -165,27 +160,32 @@ class TypeInState final {
 
   bool IsLinkStyleSet() const {
     int32_t unusedIndex = -1;
-    return FindPropInList(nsGkAtoms::a, nullptr, nullptr, mSetArray,
+    return FindPropInList(nsGkAtoms::a, nullptr, nullptr, mPreservingStyles,
                           unusedIndex);
   }
   bool IsExplicitlyLinkStyleCleared() const {
     int32_t unusedIndex = -1;
-    return FindPropInList(nsGkAtoms::a, nullptr, nullptr, mClearedArray,
+    return FindPropInList(nsGkAtoms::a, nullptr, nullptr, mClearingStyles,
                           unusedIndex);
   }
   bool IsOnlyLinkStyleCleared() const {
-    return mClearedArray.Length() == 1 && IsExplicitlyLinkStyleCleared();
+    return mClearingStyles.Length() == 1 && IsExplicitlyLinkStyleCleared();
   }
   bool AreAllStylesCleared() const {
     int32_t unusedIndex = -1;
-    return FindPropInList(nullptr, nullptr, nullptr, mClearedArray,
+    return FindPropInList(nullptr, nullptr, nullptr, mClearingStyles,
                           unusedIndex);
   }
-  bool AreSomeStylesSet() const { return !mSetArray.IsEmpty(); }
-  bool AreSomeStylesCleared() const { return !mClearedArray.IsEmpty(); }
+  bool AreSomeStylesSet() const { return !mPreservingStyles.IsEmpty(); }
+  bool AreSomeStylesCleared() const { return !mClearingStyles.IsEmpty(); }
 
-  nsTArray<PropItem*> mSetArray;
-  nsTArray<PropItem*> mClearedArray;
+  static bool FindPropInList(nsStaticAtom* aProp, nsAtom* aAttr,
+                             nsAString* outValue,
+                             const nsTArray<UniquePtr<PropItem>>& aList,
+                             int32_t& outIndex);
+
+  nsTArray<UniquePtr<PropItem>> mPreservingStyles;
+  nsTArray<UniquePtr<PropItem>> mClearingStyles;
   EditorDOMPoint mLastSelectionPoint;
   int32_t mRelativeFontSize;
   Command mLastSelectionCommand;
