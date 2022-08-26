@@ -906,8 +906,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   // Is this presentation in a chrome docshell?
   bool IsChrome() const;
 
-  bool SuppressingResizeReflow() const { return mSuppressResizeReflow; }
-
   gfxUserFontSet* GetUserFontSet();
 
   // Should be called whenever the set of fonts available in the user
@@ -1363,10 +1361,6 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 
   // Is the current mFontFeatureValuesLookup valid?
   unsigned mFontFeatureValuesDirty : 1;
-
-  // resize reflow is suppressed when the only change has been to zoom
-  // the document rather than to change the document's dimensions
-  unsigned mSuppressResizeReflow : 1;
 
   unsigned mIsVisual : 1;
 

@@ -36,12 +36,6 @@ enum class ResizeReflowOptions : uint32_t {
   // the resulting BSize can be less than the given one, producing
   // shrink-to-fit sizing in the block dimension
   BSizeLimit = 1 << 0,
-  // Invalidate layout, but don't reflow.
-  //
-  // TODO(emilio): Ideally this should just become the default, or we should
-  // unconditionally not reflow and rely on the caller to do so, having a
-  // separate API for shrink-to-fit.
-  SuppressReflow = 1 << 1,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ResizeReflowOptions)
