@@ -298,6 +298,7 @@ const ONBOARDING_MESSAGES = () => [
                 string_id: "mr2022-onboarding-colorway-primary-button-label",
               },
               action: {
+                persistActiveTheme: true,
                 navigate: true,
               },
             },
@@ -320,6 +321,11 @@ const ONBOARDING_MESSAGES = () => [
                 navigate: true,
               },
               has_arrow_icon: true,
+            },
+            navigate_away: {
+              action: {
+                theme: "revert",
+              },
             },
           },
         },

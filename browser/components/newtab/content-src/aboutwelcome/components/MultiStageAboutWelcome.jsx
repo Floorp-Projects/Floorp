@@ -203,6 +203,7 @@ export const MultiStageAboutWelcome = props => {
               activeTheme={activeTheme}
               initialTheme={initialTheme}
               setActiveTheme={setActiveTheme}
+              setInitialTheme={setInitialTheme}
               autoAdvance={screen.auto_advance}
               negotiatedLanguage={negotiatedLanguage}
               langPackInstallPhase={langPackInstallPhase}
@@ -329,6 +330,10 @@ export class WelcomeScreen extends React.PureComponent {
 
       this.props.setActiveTheme(themeToUse);
       window.AWSelectTheme(themeToUse);
+    }
+
+    if (action.persistActiveTheme) {
+      this.props.setInitialTheme(this.props.activeTheme);
     }
 
     if (action.navigate) {
