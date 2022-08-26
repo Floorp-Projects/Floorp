@@ -8,7 +8,7 @@ const {
 const ArrayRep = require("devtools/client/shared/components/reps/reps/array");
 const GripArrayRep = require("devtools/client/shared/components/reps/reps/grip-array");
 const GripMap = require("devtools/client/shared/components/reps/reps/grip-map");
-const GripMapEntryRep = require("devtools/client/shared/components/reps/reps/grip-map-entry");
+const GripEntryRep = require("devtools/client/shared/components/reps/reps/grip-entry");
 const ErrorRep = require("devtools/client/shared/components/reps/reps/error");
 const BigIntRep = require("devtools/client/shared/components/reps/reps/big-int");
 const {
@@ -94,7 +94,7 @@ function nodeIsEntries(item) {
 }
 
 function nodeIsMapEntry(item) {
-  return GripMapEntryRep.supportsObject(getValue(item));
+  return GripEntryRep.supportsObject(getValue(item));
 }
 
 function nodeHasChildren(item) {

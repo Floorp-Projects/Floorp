@@ -12,8 +12,8 @@ const {
   getRep,
 } = require("devtools/client/shared/components/reps/reps/rep");
 
-const { GripMapEntry } = REPS;
-const { createGripMapEntry } = GripMapEntry;
+const { GripEntry } = REPS;
+const { createGripMapEntry } = GripEntry;
 const {
   MODE,
 } = require("devtools/client/shared/components/reps/reps/constants");
@@ -21,13 +21,13 @@ const {
   getGripLengthBubbleText,
 } = require("devtools/client/shared/components/test/node/components/reps/test-helpers");
 
-const stubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-map-entry");
+const stubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-entry");
 const nodeStubs = require("devtools/client/shared/components/test/node/stubs/reps/element-node");
 const gripArrayStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-array");
 
 const renderRep = (object, mode, props) => {
   return shallow(
-    GripMapEntry.rep({
+    GripEntry.rep({
       object,
       mode,
       ...props,
@@ -35,27 +35,27 @@ const renderRep = (object, mode, props) => {
   );
 };
 
-describe("GripMapEntry - simple", () => {
+describe("GripEntry - simple", () => {
   const stub = stubs.get("A → 0");
 
-  it("Rep correctly selects GripMapEntry Rep", () => {
-    expect(getRep(stub)).toBe(GripMapEntry.rep);
+  it("Rep correctly selects GripEntry Rep", () => {
+    expect(getRep(stub)).toBe(GripEntry.rep);
   });
 
-  it("GripMapEntry rep has expected text content", () => {
+  it("GripEntry rep has expected text content", () => {
     const renderedComponent = renderRep(stub);
     expect(renderedComponent.text()).toEqual("A → 0");
   });
 });
 
-describe("GripMapEntry - createGripMapEntry", () => {
+describe("GripEntry - createGripMapEntry", () => {
   it("return the expected object", () => {
     const entry = createGripMapEntry("A", 0);
     expect(entry).toEqual(stubs.get("A → 0"));
   });
 });
 
-describe("GripMapEntry - complex", () => {
+describe("GripEntry - complex", () => {
   it("Handles complex objects as key and value", () => {
     let stub = gripArrayStubs.get("testBasic");
     let length = getGripLengthBubbleText(stub);

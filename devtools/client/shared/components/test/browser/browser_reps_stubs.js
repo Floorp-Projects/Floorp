@@ -109,7 +109,7 @@ const EXPRESSIONS_BY_FILE = {
   // "failure.js",
   // "function.js",
   // "grip-array.js",
-  // "grip-map-entry.js",
+  // "grip-entry.js",
   // "grip-map.js",
   // "grip.js",
   // "long-string.js",

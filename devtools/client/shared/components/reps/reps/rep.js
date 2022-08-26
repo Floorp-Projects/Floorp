@@ -38,8 +38,8 @@ define(function(require, exports, module) {
   const ObjectWithText = require("devtools/client/shared/components/reps/reps/object-with-text");
   const ObjectWithURL = require("devtools/client/shared/components/reps/reps/object-with-url");
   const GripArray = require("devtools/client/shared/components/reps/reps/grip-array");
+  const GripEntry = require("devtools/client/shared/components/reps/reps/grip-entry");
   const GripMap = require("devtools/client/shared/components/reps/reps/grip-map");
-  const GripMapEntry = require("devtools/client/shared/components/reps/reps/grip-map-entry");
   const Grip = require("devtools/client/shared/components/reps/reps/grip");
 
   // List of all registered template.
@@ -65,7 +65,7 @@ define(function(require, exports, module) {
     ErrorRep,
     GripArray,
     GripMap,
-    GripMapEntry,
+    GripEntry,
     Grip,
     Undefined,
     Null,
@@ -115,7 +115,7 @@ define(function(require, exports, module) {
     Grip,
     GripArray,
     GripMap,
-    GripMapEntry,
+    GripEntry,
     InfinityRep,
     NaNRep,
     Null,

@@ -17,20 +17,11 @@ define(function(require, exports, module) {
   const {
     MODE,
   } = require("devtools/client/shared/components/reps/reps/constants");
-  /**
-   * Renders an map entry. A map entry is represented by its key,
-   * a column and its value.
-   *
-   * tooltipTitle Notes:
-   * ---
-   * 1. Renders a Map Entry.
-   * 2. Implements tooltipTitle: <TODO>
-   * 3. ElementTitle = <TODO>
-   *      POTENTIAL: full key/value pair for display
-   * 4. Chrome: chrome displays full key-value pair
-   */
 
-  GripMapEntry.propTypes = {
+  /**
+   * Renders an entry of a Map, (Local|Session)Storage, Header or FormData entry.
+   */
+  GripEntry.propTypes = {
     object: PropTypes.object,
     mode: PropTypes.oneOf(Object.values(MODE)),
     onDOMNodeMouseOver: PropTypes.func,
@@ -38,7 +29,7 @@ define(function(require, exports, module) {
     onInspectIconClick: PropTypes.func,
   };
 
-  function GripMapEntry(props) {
+  function GripEntry(props) {
     const { object } = props;
 
     let { key, value } = object.preview;
@@ -90,7 +81,7 @@ define(function(require, exports, module) {
 
   // Exports from this module
   module.exports = {
-    rep: wrapRender(GripMapEntry),
+    rep: wrapRender(GripEntry),
     createGripMapEntry,
     supportsObject,
   };

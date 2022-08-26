@@ -6,7 +6,7 @@ const accessorStubs = require("devtools/client/shared/components/test/node/stubs
 const performanceStubs = require("devtools/client/shared/components/test/node/stubs/object-inspector/performance");
 const gripMapStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-map");
 const gripArrayStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-array");
-const gripMapEntryStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-map-entry");
+const gripEntryStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-entry");
 const gripStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip");
 
 const {
@@ -226,7 +226,7 @@ describe("getChildren", () => {
     const cachedNodes = new Map();
     const node = createNode({
       name: "root",
-      contents: { value: gripMapEntryStubs.get("A → 0") },
+      contents: { value: gripEntryStubs.get("A → 0") },
     });
     const children = getChildren({
       cachedNodes,
