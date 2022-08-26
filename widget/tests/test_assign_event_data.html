@@ -628,7 +628,7 @@ function doTest(aTest) {
   gCallback = function() {
     target.removeEventListener(aTest.eventType, onEvent, true);
     ok(gEvent !== null, gDescription + ": failed to get duplicated event");
-    ok(gCopiedEvent.length > 0, gDescription + ": count of attribute of the event must be larger than 0");
+    ok(!!gCopiedEvent.length, gDescription + ": count of attribute of the event must be larger than 0");
     for (var i = 0; i < gCopiedEvent.length; ++i) {
       var name = gCopiedEvent[i].name;
       if (name == "rangeOffset") {

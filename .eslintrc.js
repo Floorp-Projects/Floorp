@@ -241,6 +241,7 @@ module.exports = {
         "mozilla/reject-importGlobalProperties": "off",
         "mozilla/no-arbitrary-setTimeout": "off",
         "mozilla/no-define-cc-etc": "off",
+        "mozilla/prefer-boolean-length-check": "off",
         "mozilla/use-chromeutils-generateqi": "off",
         "mozilla/use-default-preference-values": "off",
         "mozilla/use-includes-instead-of-indexOf": "off",
@@ -476,14 +477,7 @@ module.exports = {
       },
     },
     {
-      files: [
-        "dom/**",
-        "image/test/browser/browser_image.js",
-        "layout/**",
-        "netwerk/**",
-        "storage/test/unit/test_vacuum.js",
-        "widget/tests/test_assign_event_data.html",
-      ],
+      files: ["dom/**", "netwerk/**"],
       rules: {
         "mozilla/prefer-boolean-length-check": "off",
       },

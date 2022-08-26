@@ -312,7 +312,7 @@ const TESTS = [
 ];
 
 function run_next_test() {
-  if (TESTS.length == 0) {
+  if (!TESTS.length) {
     Services.obs.notifyObservers(null, "test-options", "dispose");
     do_test_finished();
   } else {
