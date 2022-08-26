@@ -34,13 +34,13 @@
     <a href=".github/workflow.md">Explore the docs »</a>
     <br />
     <br />
-    <a href="https://floorp.ablaze.one">official site</a>
+    <a href="https://floorp.ablaze.one">Official Site</a>
     ・
-    <a href="https://github.com/Floorp-Projects/Floorp">Floorp Browser source code</a>
+    <a href="https://github.com/Floorp-Projects/Floorp">Source code</a>
     ・
-    <a href="https://blog.ablaze.one">Blog & release notes</a>
+    <a href="https://blog.ablaze.one">Blog & Release Notes</a>
     ・
-    <a href="https://support.ablaze.one">official support site & Send feedback</a>
+    <a href="https://support.ablaze.one">Official Support Site & Send feedback</a>
   </p>
 </div>
 
