@@ -989,7 +989,7 @@ async function setTechnicalDetailsOnCertError(
   let args = {
     hostname: hostString,
   };
-  if (failedCertInfo.isUntrusted) {
+  if (failedCertInfo.overridableErrorCategory == "trust-error") {
     switch (failedCertInfo.errorCodeString) {
       case "MOZILLA_PKIX_ERROR_MITM_DETECTED":
         setL10NLabel("cert-error-mitm-intro");
@@ -1033,7 +1033,7 @@ async function setTechnicalDetailsOnCertError(
         setL10NLabel("cert-error-intro", args);
         setL10NLabel("cert-error-untrusted-default", {}, {}, false);
     }
-  } else if (failedCertInfo.isDomainMismatch) {
+  } else if (failedCertInfo.overridableErrorCategory == "domain-mismatch") {
     let serverCertBase64 = failedCertInfo.certChainStrings[0];
     let parsed = await parse(pemToDER(serverCertBase64));
     let subjectAltNamesExtension = parsed.ext.san;
@@ -1116,7 +1116,9 @@ async function setTechnicalDetailsOnCertError(
     } else {
       setL10NLabel("cert-error-domain-mismatch", { hostname: hostString });
     }
-  } else if (failedCertInfo.isNotValidAtThisTime) {
+  } else if (
+    failedCertInfo.overridableErrorCategory == "expired-or-not-yet-valid"
+  ) {
     let notBefore = failedCertInfo.validNotBefore;
     let notAfter = failedCertInfo.validNotAfter;
     args = {

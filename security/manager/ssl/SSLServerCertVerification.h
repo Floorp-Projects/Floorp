@@ -10,6 +10,7 @@
 #include "ScopedNSSTypes.h"
 #include "mozilla/Maybe.h"
 #include "mozpkix/pkix.h"
+#include "nsITransportSecurityInfo.h"
 #include "nsIX509Cert.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
@@ -38,8 +39,6 @@ SECStatus AuthCertificateHookWithInfo(
     Maybe<nsTArray<nsTArray<uint8_t>>>& stapledOCSPResponses,
     Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension, uint32_t providerFlags);
 
-enum class OverridableErrorCategory : uint32_t;
-
 // Base class for dispatching the certificate verification result.
 class BaseSSLServerCertVerificationResult {
  public:
@@ -50,7 +49,8 @@ class BaseSSLServerCertVerificationResult {
                         uint16_t aCertificateTransparencyStatus,
                         EVStatus aEVStatus, bool aSucceeded,
                         PRErrorCode aFinalError,
-                        OverridableErrorCategory aOverridableErrorCategory,
+                        nsITransportSecurityInfo::OverridableErrorCategory
+                            aOverridableErrorCategory,
                         bool aIsBuiltCertChainRootBuiltInRoot,
                         uint32_t aProviderFlags) = 0;
 };
@@ -74,7 +74,8 @@ class SSLServerCertVerificationResult final
                 nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
                 uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
                 bool aSucceeded, PRErrorCode aFinalError,
-                OverridableErrorCategory aOverridableErrorCategory,
+                nsITransportSecurityInfo::OverridableErrorCategory
+                    aOverridableErrorCategory,
                 bool aIsBuiltCertChainRootBuiltInRoot,
                 uint32_t aProviderFlags) override;
 
@@ -88,7 +89,7 @@ class SSLServerCertVerificationResult final
   EVStatus mEVStatus;
   bool mSucceeded;
   PRErrorCode mFinalError;
-  OverridableErrorCategory mOverridableErrorCategory;
+  nsITransportSecurityInfo::OverridableErrorCategory mOverridableErrorCategory;
   bool mIsBuiltCertChainRootBuiltInRoot;
   uint32_t mProviderFlags;
 };

@@ -264,18 +264,11 @@ static uint32_t MapCertErrorToProbeValue(PRErrorCode errorCode) {
   return probeValue;
 }
 
-enum class OverridableErrorCategory : uint32_t {
-  Unset = 0,
-  Trust = 1,
-  Domain = 2,
-  Time = 3,
-};
-
 // If the given PRErrorCode is an overridable certificate error, return which
 // category (trust, time, domain mismatch) it falls in. If it is not
 // overridable, return Nothing.
-Maybe<OverridableErrorCategory> CategorizeCertificateError(
-    PRErrorCode certificateError) {
+Maybe<nsITransportSecurityInfo::OverridableErrorCategory>
+CategorizeCertificateError(PRErrorCode certificateError) {
   switch (certificateError) {
     case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
     case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
@@ -289,15 +282,18 @@ Maybe<OverridableErrorCategory> CategorizeCertificateError(
     case mozilla::pkix::MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE:
     case mozilla::pkix::MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT:
     case mozilla::pkix::MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA:
-      return Some(OverridableErrorCategory::Trust);
+      return Some(
+          nsITransportSecurityInfo::OverridableErrorCategory::ERROR_TRUST);
+
+    case SSL_ERROR_BAD_CERT_DOMAIN:
+      return Some(
+          nsITransportSecurityInfo::OverridableErrorCategory::ERROR_DOMAIN);
 
     case SEC_ERROR_INVALID_TIME:
     case SEC_ERROR_EXPIRED_CERTIFICATE:
     case mozilla::pkix::MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE:
-      return Some(OverridableErrorCategory::Time);
-
-    case SSL_ERROR_BAD_CERT_DOMAIN:
-      return Some(OverridableErrorCategory::Domain);
+      return Some(
+          nsITransportSecurityInfo::OverridableErrorCategory::ERROR_TIME);
 
     default:
       break;
@@ -632,12 +628,15 @@ PRErrorCode AuthCertificateParseResults(
     const OriginAttributes& aOriginAttributes,
     const nsCOMPtr<nsIX509Cert>& aCert, mozilla::pkix::Time aTime,
     PRErrorCode aCertVerificationError,
-    /* out */ OverridableErrorCategory& aOverridableErrorCategory) {
+    /* out */
+    nsITransportSecurityInfo::OverridableErrorCategory&
+        aOverridableErrorCategory) {
   uint32_t probeValue = MapCertErrorToProbeValue(aCertVerificationError);
   Telemetry::Accumulate(Telemetry::SSL_CERT_VERIFICATION_ERRORS, probeValue);
 
-  Maybe<OverridableErrorCategory> maybeOverridableErrorCategory =
-      CategorizeCertificateError(aCertVerificationError);
+  Maybe<nsITransportSecurityInfo::OverridableErrorCategory>
+      maybeOverridableErrorCategory =
+          CategorizeCertificateError(aCertVerificationError);
   // If this isn't an overridable error, return it now. This will stop the
   // connection and report the given error.
   if (!maybeOverridableErrorCategory.isSome()) {
@@ -780,7 +779,8 @@ SSLServerCertVerificationJob::Run() {
         std::move(builtChainBytesArray), std::move(mPeerCertChain),
         TransportSecurityInfo::ConvertCertificateTransparencyInfoToStatus(
             certificateTransparencyInfo),
-        evStatus, true, 0, OverridableErrorCategory::Unset,
+        evStatus, true, 0,
+        nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET,
         isCertChainRootBuiltInRoot, mProviderFlags);
     return NS_OK;
   }
@@ -790,8 +790,8 @@ SSLServerCertVerificationJob::Run() {
       jobStartTime, TimeStamp::Now());
 
   PRErrorCode error = MapResultToPRErrorCode(rv);
-  OverridableErrorCategory overridableErrorCategory =
-      OverridableErrorCategory::Unset;
+  nsITransportSecurityInfo::OverridableErrorCategory overridableErrorCategory =
+      nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET;
   nsCOMPtr<nsIX509Cert> cert(new nsNSSCertificate(std::move(certBytes)));
   PRErrorCode finalError = AuthCertificateParseResults(
       mAddrForLogging, mHostName, mPort, mOriginAttributes, cert, mTime, error,
@@ -1022,7 +1022,8 @@ SSLServerCertVerificationResult::SSLServerCertVerificationResult(
       mEVStatus(EVStatus::NotEV),
       mSucceeded(false),
       mFinalError(0),
-      mOverridableErrorCategory(OverridableErrorCategory::Unset),
+      mOverridableErrorCategory(
+          nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET),
       mProviderFlags(0) {}
 
 void SSLServerCertVerificationResult::Dispatch(
@@ -1030,7 +1031,8 @@ void SSLServerCertVerificationResult::Dispatch(
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
     uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
     bool aSucceeded, PRErrorCode aFinalError,
-    OverridableErrorCategory aOverridableErrorCategory,
+    nsITransportSecurityInfo::OverridableErrorCategory
+        aOverridableErrorCategory,
     bool aIsBuiltCertChainRootBuiltInRoot, uint32_t aProviderFlags) {
   mBuiltChain = std::move(aBuiltChain);
   mPeerCertChain = std::move(aPeerCertChain);
@@ -1106,7 +1108,8 @@ SSLServerCertVerificationResult::Run() {
     // Certificate validation failed; store the peer certificate chain on
     // infoObject so it can be used for error reporting.
     mInfoObject->SetFailedCertChain(std::move(mPeerCertChain));
-    if (mOverridableErrorCategory != OverridableErrorCategory::Unset) {
+    if (mOverridableErrorCategory !=
+        nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET) {
       mInfoObject->SetStatusErrorBits(cert, mOverridableErrorCategory);
     }
   }

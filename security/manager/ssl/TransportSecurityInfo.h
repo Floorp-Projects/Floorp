@@ -27,8 +27,6 @@
 namespace mozilla {
 namespace psm {
 
-enum class OverridableErrorCategory : uint32_t;
-
 class TransportSecurityInfo : public nsITransportSecurityInfo,
                               public nsIInterfaceRequestor,
                               public nsISerializable,
@@ -109,12 +107,10 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
 
   void SetResumed(bool aResumed);
 
-  Atomic<bool> mIsDomainMismatch;
-  Atomic<bool> mIsNotValidAtThisTime;
-  Atomic<bool> mIsUntrusted;
+  Atomic<OverridableErrorCategory> mOverridableErrorCategory;
   Atomic<bool> mIsEV;
-
   Atomic<bool> mHasIsEVStatus;
+
   Atomic<bool> mHaveCipherSuiteAndProtocol;
 
   /* mHaveCertErrrorBits is relied on to determine whether or not a SPDY
@@ -195,6 +191,8 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   /* Peer cert chain for failed connections (for error reporting) */
   nsTArray<RefPtr<nsIX509Cert>> mFailedCertChain MOZ_GUARDED_BY(mMutex);
 
+  nsresult ReadOldOverridableErrorBits(nsIObjectInputStream* aStream,
+                                       MutexAutoLock& aProofOfLock);
   nsresult ReadSSLStatus(nsIObjectInputStream* aStream,
                          MutexAutoLock& aProofOfLock);
 
@@ -213,13 +211,9 @@ class RememberCertErrorsTable {
  private:
   RememberCertErrorsTable();
 
-  struct CertStateBits {
-    bool mIsDomainMismatch;
-    bool mIsNotValidAtThisTime;
-    bool mIsUntrusted;
-  };
-  nsTHashMap<nsCStringHashKey, CertStateBits> mErrorHosts
-      MOZ_GUARDED_BY(mMutex);
+  nsTHashMap<nsCStringHashKey,
+             nsITransportSecurityInfo::OverridableErrorCategory>
+      mErrorHosts MOZ_GUARDED_BY(mMutex);
 
  public:
   void RememberCertHasError(TransportSecurityInfo* infoObject,
