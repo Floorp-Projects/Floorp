@@ -1,0 +1,53 @@
+<html><body>
+Creating WebSocket
+<iframe id="frame" sandbox="allow-scripts"></iframe>
+<script type="application/javascript">
+
+onmessage = function(e) {
+  window.opener.postMessage(e.data, '*');
+}
+
+// Mixed content blocker will prevent loading iframes via http, so in that case pass back the error
+window.document.getElementById("frame").onerror = function(e) {
+  window.opener.postMessage("Error - iframe not loaded", '*');
+}
+
+// Load one of the iframe variants?
+if (location.search == '?https_iframe_wss') {
+  window.document.getElementById("frame").src = "https://example.com/tests/dom/websocket/tests/iframe_websocket_wss.html";
+} else if (location.search == '?https_iframe_ws') {
+  window.document.getElementById("frame").src = "https://example.com/tests/dom/websocket/tests/iframe_websocket_wss.html?insecure";
+} else if (location.search == '?http_iframe_wss' || location.search == '?http_iframe_ws') {
+  let iFrameUrl = "http://example.com/tests/dom/websocket/tests/iframe_websocket_wss.html";
+  if (location.search == '?http_iframe_ws') {
+    iFrameUrl += "?insecure";
+  }
+  window.document.getElementById("frame").src = iFrameUrl;
+}
+else {
+  try {
+    let socket;
+    if (location.search == '?insecure') {
+      socket = new WebSocket('ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_hello');
+    }
+    else {
+      socket = new WebSocket('wss://example.com/tests/dom/websocket/tests/file_websocket_hello');
+    }
+    socket.onerror = function(e) {
+      window.opener.postMessage("WS onerror", "*");
+    };
+    socket.onopen = function(event) {
+      window.opener.postMessage("WS onopen", "*");
+    };
+  }
+  catch(e) {
+    if (e.name == 'SecurityError') {
+      window.opener.postMessage("SecurityError", "*");
+    } else {
+      window.opener.postMessage("Test Throws", "*");
+    }
+  }
+}
+
+</script>
+</body></html>

@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"></meta>
+  <title>WebSocket mixed content opener tests - load secure and insecure websockets in secure and insecure iframes through secure and insecure opened windows</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="text/javascript" src="websocket_helpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="testWebSockets()">
+<div id="container"></div>
+<script class="testbody" type="text/javascript">
+
+let tests = [ testSecureWindowWSS, testSecureWindowWS, testInsecureWindowWSS, testInsecureWindowWS,
+              testSecureWindowSecureIframeWSS, testSecureWindowSecureIframeWS, testSecureWindowInsecureIframeWSS, testSecureWindowInsecureIframeWS,
+              testInsecureWindowSecureIframeWSS, testInsecureWindowSecureIframeWS, testInsecureWindowInsecureIframeWSS, testInsecureWindowInsecureIframeWS]
+
+function nextTest() {
+  if(tests.length == 0) {
+   SimpleTest.finish();
+  }
+  else {
+    let test = tests.shift();
+    test();
+  }
+}
+
+function testWebSockets () {
+  SimpleTest.waitForExplicitFinish();
+  nextTest();
+}
+
+function cleanupAndLaunchNextTest(win) {
+    win.close();
+    nextTest();
+}
+
+function testSecureWindowWSS() {
+  let win = window.open("https://example.com/tests/dom/websocket/tests/window_websocket_wss.html", '_blank', 'location=yes,height=570,width=520,scrollbars=yes,status=yes');
+  onmessage = function(e) {
+    is(e.data, "WS onopen", "wss://URI opened");
+    cleanupAndLaunchNextTest(win);
+   }
+}
+
+function testSecureWindowWS() {
+  let win = window.open("https://example.com/tests/dom/websocket/tests/window_websocket_wss.html?insecure", '_blank', 'location=yes,height=570,width=520,scrollbars=yes,status=yes');
+  onmessage = function(e) {
+    is(e.data, "SecurityError", "ws://URI cannot be used when loaded over https");
+    cleanupAndLaunchNextTest(win);
+  }
+}
+
+function testInsecureWindowWSS() {
+    let win = window.open("http://example.com/tests/dom/websocket/tests/window_websocket_wss.html", '_blank', 'location=yes,height=570,width=520,scrollbars=yes,status=yes');
+    onmessage = function(e) {
+      is(e.data, "WS onopen", "wss://URI opened");
+      cleanupAndLaunchNextTest(win);
+    }
+}
+
+function testInsecureWindowWS() {
+  let win = window.open("http://example.com/tests/dom/websocket/tests/window_websocket_wss.html?insecure", '_blank', 'location=yes,height=570,width=520,scrollbars=yes,status=yes');
+  onmessage = function(e) {
+    is(e.data, "WS onopen", "ws://URI opened");
+    cleanupAndLaunchNextTest(win);
+  }
+}
+
+function testSecureWindowSecureIframeWSS() {
+  let win = window.open("https://example.com/tests/dom/websocket/tests/window_websocket_wss.html?https_iframe_wss", '_blank', 'location=yes,height=570,width=520,scrollbars=yes,status=yes');
+  onmessage = function(e) {
+    is(e.data, "WS onopen", "ws://URI opened");
+    cleanupAndLaunchNextTest(win);
+  }
+}
+
+function testSecureWindowSecureIframeWS() {
+  let win = window.open("https://example.com/tests/dom/websocket/tests/window_websocket_wss.html?https_iframe_ws", '_blank', 'location=yes,height=570,width=520,scrollbars=yes,status=yes');
+  onmessage = function(e) {
+    is(e.data, "SecurityError", "ws://URI cannot be used when loaded over https");
+    cleanupAndLaunchNextTest(win);
+  }
+}
+
+function testSecureWindowInsecureIframeWSS() {
+  let win = window.open("https://example.com/tests/dom/websocket/tests/window_websocket_wss.html?http_iframe_wss", '_blank', 'location=yes,height=570,width=520,scrollbars=yes,status=yes');
+  onmessage = function(e) {
+    is(e.data, "Error - iframe not loaded", "http iframe cannot be loaded in secure context (mixed content)");
+    cleanupAndLaunchNextTest(win);
+  }
+}
+
+function testSecureWindowInsecureIframeWS() {
+  let win = window.open("https://example.com/tests/dom/websocket/tests/window_websocket_wss.html?http_iframe_ws", '_blank', 'location=yes,height=570,width=520,scrollbars=yes,status=yes');
+  onmessage = function(e) {
+    is(e.data, "Error - iframe not loaded", "http iframe cannot be loaded in secure context (mixed content)");
+    cleanupAndLaunchNextTest(win);
+  }
+}
+
+function testInsecureWindowSecureIframeWSS() {
+  let win = window.open("http://example.com/tests/dom/websocket/tests/window_websocket_wss.html?https_iframe_wss", '_blank', 'location=yes,height=570,width=520,scrollbars=yes,status=yes');
+  onmessage = function(e) {
+    is(e.data, "WS onopen", "ws://URI opened");
+    cleanupAndLaunchNextTest(win);
+  }
+}
+
+function testInsecureWindowSecureIframeWS() {
+  let win = window.open("http://example.com/tests/dom/websocket/tests/window_websocket_wss.html?https_iframe_ws", '_blank', 'location=yes,height=570,width=520,scrollbars=yes,status=yes');
+  onmessage = function(e) {
+    is(e.data, "SecurityError", "ws://URI cannot be used when loaded from an https iframe");
+    cleanupAndLaunchNextTest(win);
+  }
+}
+
+function testInsecureWindowInsecureIframeWSS() {
+  let win = window.open("http://example.com/tests/dom/websocket/tests/window_websocket_wss.html?http_iframe_wss", '_blank', 'location=yes,height=570,width=520,scrollbars=yes,status=yes');
+  onmessage = function(e) {
+    is(e.data, "WS onopen", "ws://URI opened");
+    cleanupAndLaunchNextTest(win);
+  }
+}
+
+function testInsecureWindowInsecureIframeWS() {
+  let win = window.open("http://example.com/tests/dom/websocket/tests/window_websocket_wss.html?http_iframe_ws", '_blank', 'location=yes,height=570,width=520,scrollbars=yes,status=yes');
+  onmessage = function(e) {
+    is(e.data, "WS onopen", "ws://URI opened");
+    cleanupAndLaunchNextTest(win);
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>

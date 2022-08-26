@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"></meta>
+  <title>WebSocket mixed content tests - load secure and insecure websockets</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="text/javascript" src="websocket_helpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="testWebSockets()">
+<div id="container"></div>
+<iframe id="frame" sandbox="allow-scripts"></iframe>
+<script class="testbody" type="text/javascript">
+
+let iFrameTests = [testSameOriginSandboxInsecure, testSameOriginSandboxSecure, testCrossOriginSandboxInsecure, testCrossOriginSandboxSecure];
+
+function nextIFrameTest() {
+  if(iFrameTests.length == 0) {
+    SimpleTest.finish();
+  }
+  else {
+    let test = iFrameTests.shift();
+    test();
+  }
+}
+
+async function testWebSockets () {
+  SimpleTest.waitForExplicitFinish();
+
+  testWebSocketSecure();
+  testWebSocketInsecure();
+
+  nextIFrameTest();
+}
+
+function testWebSocketSecure () {
+  var ws = CreateTestWS("wss://example.com/tests/dom/websocket/tests/file_websocket_hello");
+  ws.onopen = function(e) {
+    ws.send("data");
+  }
+  ws.onmessage = function(e) {
+    is(e.data, "Hello world!", "Wrong data");
+    ws.close();
+  }
+}
+
+// Negative test: this should fail as the page was loaded over https
+function testWebSocketInsecure () {
+  try {
+    ws = new WebSocket("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_hello");
+    ok(false, "Should throw DOMException");
+  } catch (e) {
+    ok(e instanceof DOMException, "DOMException thrown ");
+  }
+}
+
+// Negative test: this should fail as the page was loaded over https
+function testSameOriginSandboxInsecure() {
+  document.getElementById("frame").src = "https://example.com/tests/dom/websocket/tests/iframe_websocket_wss.html?insecure";
+  onmessage = function(e) {
+    is(e.data, "SecurityError", "ws://URI cannot be used when loaded over https");
+    nextIFrameTest();
+  }
+}
+
+function testSameOriginSandboxSecure() {
+  document.getElementById("frame").src = "https://example.com/tests/dom/websocket/tests/iframe_websocket_wss.html"
+  onmessage = function(e) {
+    is(e.data, "WS onopen", "wss://URI opened");
+    nextIFrameTest();
+  }
+}
+
+// Negative test: this should fail as the page was loaded over https
+function testCrossOriginSandboxInsecure() {
+  document.getElementById("frame").src = "https://example.org/tests/dom/websocket/tests/iframe_websocket_wss.html?insecure";
+  onmessage = function(e) {
+    is(e.data, "SecurityError", "ws://URI cannot be used when loaded over https");
+    nextIFrameTest();
+  }
+}
+
+function testCrossOriginSandboxSecure() {
+  document.getElementById("frame").src = "https://example.org/tests/dom/websocket/tests/iframe_websocket_wss.html"
+
+  onmessage = function(e) {
+    is(e.data, "WS onopen", "wss://URI opened");
+    nextIFrameTest();
+  }
+}
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>
