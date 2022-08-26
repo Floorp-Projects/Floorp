@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_TypeInState_h
-#define mozilla_TypeInState_h
+#ifndef mozilla_PendingStyles_h
+#define mozilla_PendingStyles_h
 
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorForwards.h"
@@ -30,7 +30,30 @@ class Selection;
 
 enum class SpecifiedStyle : uint8_t { Preserve, Discard };
 
-struct PropItem {
+class PendingStyle final {
+ public:
+  PendingStyle() = delete;
+  PendingStyle(nsStaticAtom* aTag, nsAtom* aAttribute, const nsAString& aValue,
+               SpecifiedStyle aSpecifiedStyle = SpecifiedStyle::Preserve)
+      : mTag(aTag),
+        mAttribute(aAttribute != nsGkAtoms::_empty ? aAttribute : nullptr),
+        mAttributeValueOrCSSValue(aValue),
+        mSpecifiedStyle(aSpecifiedStyle) {
+    MOZ_COUNT_CTOR(PendingStyle);
+  }
+  MOZ_COUNTED_DTOR(PendingStyle)
+
+  MOZ_KNOWN_LIVE nsStaticAtom* GetTag() const { return mTag; }
+  MOZ_KNOWN_LIVE nsAtom* GetAttribute() const { return mAttribute; }
+  const nsString& AttributeValueOrCSSValueRef() const {
+    return mAttributeValueOrCSSValue;
+  }
+  void UpdateAttributeValueOrCSSValue(const nsAString& aNewValue) {
+    mAttributeValueOrCSSValue = aNewValue;
+  }
+  SpecifiedStyle GetSpecifiedStyle() const { return mSpecifiedStyle; }
+
+ private:
   MOZ_KNOWN_LIVE nsStaticAtom* const mTag = nullptr;
   // TODO: Once we stop using `HTMLEditor::SetInlinePropertiesAsSubAction` to
   //       add any attributes of <a href>, we can make this `nsStaticAtom*`.
@@ -42,24 +65,13 @@ struct PropItem {
   nsString mAttributeValueOrCSSValue;
   // Whether the class and style attribute should be preserved or discarded.
   const SpecifiedStyle mSpecifiedStyle = SpecifiedStyle::Preserve;
-
-  PropItem() = delete;
-  PropItem(nsStaticAtom* aTag, nsAtom* aAttribute, const nsAString& aValue,
-           SpecifiedStyle aSpecifiedStyle = SpecifiedStyle::Preserve)
-      : mTag(aTag),
-        mAttribute(aAttribute != nsGkAtoms::_empty ? aAttribute : nullptr),
-        mAttributeValueOrCSSValue(aValue),
-        mSpecifiedStyle(aSpecifiedStyle) {
-    MOZ_COUNT_CTOR(PropItem);
-  }
-  MOZ_COUNTED_DTOR(PropItem)
 };
 
-class StyleCache final {
+class PendingStyleCache final {
  public:
-  StyleCache() = delete;
-  StyleCache(nsStaticAtom& aTag, nsStaticAtom* aAttribute,
-             const nsAString& aValue)
+  PendingStyleCache() = delete;
+  PendingStyleCache(nsStaticAtom& aTag, nsStaticAtom* aAttribute,
+                    const nsAString& aValue)
       : mTag(aTag), mAttribute(aAttribute), mAttributeValueOrCSSValue(aValue) {}
 
   MOZ_KNOWN_LIVE nsStaticAtom& TagRef() const { return mTag; }
@@ -74,13 +86,13 @@ class StyleCache final {
   const nsString mAttributeValueOrCSSValue;
 };
 
-class MOZ_STACK_CLASS AutoStyleCacheArray final
-    : public AutoTArray<StyleCache, 21> {
+class MOZ_STACK_CLASS AutoPendingStyleCacheArray final
+    : public AutoTArray<PendingStyleCache, 21> {
  public:
   index_type IndexOf(const nsStaticAtom& aTag,
                      const nsStaticAtom* aAttribute) const {
     for (index_type index = 0; index < Length(); ++index) {
-      const StyleCache& styleCache = ElementAt(index);
+      const PendingStyleCache& styleCache = ElementAt(index);
       if (&styleCache.TagRef() == &aTag &&
           styleCache.GetAttribute() == aAttribute) {
         return index;
@@ -90,13 +102,22 @@ class MOZ_STACK_CLASS AutoStyleCacheArray final
   }
 };
 
-class TypeInState final {
+/******************************************************************************
+ * PendingStyles stores pending inline styles which WILL be applied to new
+ * content when it'll be inserted.  I.e., updating styles of this class means
+ * that it does NOT update the DOM tree immediately.
+ ******************************************************************************/
+class PendingStyles final {
  public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(TypeInState)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(TypeInState)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PendingStyles)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(PendingStyles)
 
-  TypeInState();
-  void Reset();
+  PendingStyles() = default;
+
+  void Reset() {
+    mClearingStyles.Clear();
+    mPreservingStyles.Clear();
+  }
 
   nsresult UpdateSelState(const HTMLEditor& aHTMLEditor);
 
@@ -143,7 +164,7 @@ class TypeInState final {
    * Preserve the style with new value specified with aStyleToPreserve.
    * See above for the detail.
    */
-  void PreserveStyle(const StyleCache& aStyleToPreserve) {
+  void PreserveStyle(const PendingStyleCache& aStyleToPreserve) {
     PreserveStyle(aStyleToPreserve.TagRef(), aStyleToPreserve.GetAttribute(),
                   aStyleToPreserve.AttributeValueOrCSSValueRef());
   }
@@ -192,7 +213,7 @@ class TypeInState final {
    * This must be used only for handling to clear the styles from inserting
    * content.
    */
-  UniquePtr<PropItem> TakeClearingStyle() {
+  UniquePtr<PendingStyle> TakeClearingStyle() {
     if (mClearingStyles.IsEmpty()) {
       return nullptr;
     }
@@ -204,7 +225,7 @@ class TypeInState final {
    * styles. This should be used only for handling setting new style for
    * inserted content.
    */
-  UniquePtr<PropItem> TakePreservedStyle() {
+  UniquePtr<PendingStyle> TakePreservedStyle() {
     if (mPreservingStyles.IsEmpty()) {
       return nullptr;
     }
@@ -221,7 +242,7 @@ class TypeInState final {
                       nsAtom* aAttr = nullptr, nsString* aOutValue = nullptr);
 
  protected:
-  virtual ~TypeInState();
+  virtual ~PendingStyles() { Reset(); };
 
   void ClearStyleInternal(
       nsStaticAtom* aHTMLProperty, nsAtom* aAttribute,
@@ -263,17 +284,17 @@ class TypeInState final {
 
   static Maybe<size_t> IndexOfStyleInArray(
       nsStaticAtom* aHTMLProperty, nsAtom* aAttribute, nsAString* aOutValue,
-      const nsTArray<UniquePtr<PropItem>>& aArray);
+      const nsTArray<UniquePtr<PendingStyle>>& aArray);
 
-  nsTArray<UniquePtr<PropItem>> mPreservingStyles;
-  nsTArray<UniquePtr<PropItem>> mClearingStyles;
+  nsTArray<UniquePtr<PendingStyle>> mPreservingStyles;
+  nsTArray<UniquePtr<PendingStyle>> mClearingStyles;
   EditorDOMPoint mLastSelectionPoint;
-  int32_t mRelativeFontSize;
-  Command mLastSelectionCommand;
-  bool mMouseDownFiredInLinkElement;
-  bool mMouseUpFiredInLinkElement;
+  int32_t mRelativeFontSize = 0;
+  Command mLastSelectionCommand = Command::DoNothing;
+  bool mMouseDownFiredInLinkElement = false;
+  bool mMouseUpFiredInLinkElement = false;
 };
 
 }  // namespace mozilla
 
-#endif  // #ifndef mozilla_TypeInState_h
+#endif  // #ifndef mozilla_PendingStyles_h

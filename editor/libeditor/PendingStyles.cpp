@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TypeInState.h"
+#include "PendingStyles.h"
 
 #include <stddef.h>
 
@@ -32,38 +32,23 @@ namespace mozilla {
 using namespace dom;
 
 /********************************************************************
- * mozilla::TypeInState
+ * mozilla::PendingStyles
  *******************************************************************/
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(TypeInState)
+NS_IMPL_CYCLE_COLLECTION_CLASS(PendingStyles)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TypeInState)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(PendingStyles)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLastSelectionPoint)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TypeInState)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(PendingStyles)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLastSelectionPoint)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(TypeInState, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(TypeInState, Release)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PendingStyles, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PendingStyles, Release)
 
-TypeInState::TypeInState()
-    : mRelativeFontSize(0),
-      mLastSelectionCommand(Command::DoNothing),
-      mMouseDownFiredInLinkElement(false),
-      mMouseUpFiredInLinkElement(false) {
-  Reset();
-}
-
-TypeInState::~TypeInState() {
-  // Call Reset() to release any data that may be in
-  // mClearingStyles and mPreservingStyles.
-
-  Reset();
-}
-
-nsresult TypeInState::UpdateSelState(const HTMLEditor& aHTMLEditor) {
+nsresult PendingStyles::UpdateSelState(const HTMLEditor& aHTMLEditor) {
   if (!aHTMLEditor.SelectionRef().IsCollapsed()) {
     return NS_OK;
   }
@@ -79,7 +64,7 @@ nsresult TypeInState::UpdateSelState(const HTMLEditor& aHTMLEditor) {
   return NS_OK;
 }
 
-void TypeInState::PreHandleMouseEvent(const MouseEvent& aMouseDownOrUpEvent) {
+void PendingStyles::PreHandleMouseEvent(const MouseEvent& aMouseDownOrUpEvent) {
   MOZ_ASSERT(aMouseDownOrUpEvent.WidgetEventPtr()->mMessage == eMouseDown ||
              aMouseDownOrUpEvent.WidgetEventPtr()->mMessage == eMouseUp);
   bool& eventFiredInLinkElement =
@@ -104,11 +89,11 @@ void TypeInState::PreHandleMouseEvent(const MouseEvent& aMouseDownOrUpEvent) {
       HTMLEditUtils::IsContentInclusiveDescendantOfLink(*targetContent);
 }
 
-void TypeInState::PreHandleSelectionChangeCommand(Command aCommand) {
+void PendingStyles::PreHandleSelectionChangeCommand(Command aCommand) {
   mLastSelectionCommand = aCommand;
 }
 
-void TypeInState::PostHandleSelectionChangeCommand(
+void PendingStyles::PostHandleSelectionChangeCommand(
     const HTMLEditor& aHTMLEditor, Command aCommand) {
   if (mLastSelectionCommand != aCommand) {
     return;
@@ -149,8 +134,8 @@ void TypeInState::PostHandleSelectionChangeCommand(
   ClearLinkAndItsSpecifiedStyle();
 }
 
-void TypeInState::OnSelectionChange(const HTMLEditor& aHTMLEditor,
-                                    int16_t aReason) {
+void PendingStyles::OnSelectionChange(const HTMLEditor& aHTMLEditor,
+                                      int16_t aReason) {
   // XXX: Selection currently generates bogus selection changed notifications
   // XXX: (bug 140303). It can notify us when the selection hasn't actually
   // XXX: changed, and it notifies us more than once for the same change.
@@ -337,12 +322,7 @@ void TypeInState::OnSelectionChange(const HTMLEditor& aHTMLEditor,
   CancelClearingStyle(*nsGkAtoms::a, nullptr);
 }
 
-void TypeInState::Reset() {
-  mClearingStyles.Clear();
-  mPreservingStyles.Clear();
-}
-
-void TypeInState::PreserveStyles(
+void PendingStyles::PreserveStyles(
     const nsTArray<EditorInlineStyleAndValue>& aStylesToPreserve) {
   for (const EditorInlineStyleAndValue& styleToPreserve : aStylesToPreserve) {
     PreserveStyle(styleToPreserve.HTMLPropertyRef(), styleToPreserve.mAttribute,
@@ -350,8 +330,9 @@ void TypeInState::PreserveStyles(
   }
 }
 
-void TypeInState::PreserveStyle(nsStaticAtom& aHTMLProperty, nsAtom* aAttribute,
-                                const nsAString& aAttributeValueOrCSSValue) {
+void PendingStyles::PreserveStyle(nsStaticAtom& aHTMLProperty,
+                                  nsAtom* aAttribute,
+                                  const nsAString& aAttributeValueOrCSSValue) {
   // special case for big/small, these nest
   if (nsGkAtoms::big == &aHTMLProperty) {
     mRelativeFontSize++;
@@ -365,18 +346,18 @@ void TypeInState::PreserveStyle(nsStaticAtom& aHTMLProperty, nsAtom* aAttribute,
   Maybe<size_t> index = IndexOfPreservingStyle(aHTMLProperty, aAttribute);
   if (index.isSome()) {
     // If it's already set, update the value
-    mPreservingStyles[index.value()]->mAttributeValueOrCSSValue =
-        aAttributeValueOrCSSValue;
+    mPreservingStyles[index.value()]->UpdateAttributeValueOrCSSValue(
+        aAttributeValueOrCSSValue);
     return;
   }
 
-  mPreservingStyles.AppendElement(MakeUnique<PropItem>(
+  mPreservingStyles.AppendElement(MakeUnique<PendingStyle>(
       &aHTMLProperty, aAttribute, aAttributeValueOrCSSValue));
 
   CancelClearingStyle(aHTMLProperty, aAttribute);
 }
 
-void TypeInState::ClearStyles(
+void PendingStyles::ClearStyles(
     const nsTArray<EditorInlineStyle>& aStylesToClear) {
   for (const EditorInlineStyle& styleToClear : aStylesToClear) {
     if (styleToClear.IsStyleToClearAllInlineStyles()) {
@@ -392,7 +373,7 @@ void TypeInState::ClearStyles(
   }
 }
 
-void TypeInState::ClearStyleInternal(
+void PendingStyles::ClearStyleInternal(
     nsStaticAtom* aHTMLProperty, nsAtom* aAttribute,
     SpecifiedStyle aSpecifiedStyle /* = SpecifiedStyle::Preserve */) {
   if (IsStyleCleared(aHTMLProperty, aAttribute)) {
@@ -401,24 +382,24 @@ void TypeInState::ClearStyleInternal(
 
   CancelPreservingStyle(aHTMLProperty, aAttribute);
 
-  mClearingStyles.AppendElement(
-      MakeUnique<PropItem>(aHTMLProperty, aAttribute, u""_ns, aSpecifiedStyle));
+  mClearingStyles.AppendElement(MakeUnique<PendingStyle>(
+      aHTMLProperty, aAttribute, u""_ns, aSpecifiedStyle));
 }
 
 /**
  * TakeRelativeFontSize() hands back relative font value, which is then
  * cleared out.
  */
-int32_t TypeInState::TakeRelativeFontSize() {
+int32_t PendingStyles::TakeRelativeFontSize() {
   int32_t relSize = mRelativeFontSize;
   mRelativeFontSize = 0;
   return relSize;
 }
 
-void TypeInState::GetTypingState(bool& isSet, bool& theSetting,
-                                 nsStaticAtom& aProp,
-                                 nsAtom* aAttr /* = nullptr */,
-                                 nsString* aOutValue /* = nullptr */) {
+void PendingStyles::GetTypingState(bool& isSet, bool& theSetting,
+                                   nsStaticAtom& aProp,
+                                   nsAtom* aAttr /* = nullptr */,
+                                   nsString* aOutValue /* = nullptr */) {
   if (IndexOfPreservingStyle(aProp, aAttr, aOutValue).isSome()) {
     isSet = true;
     theSetting = true;
@@ -434,8 +415,8 @@ void TypeInState::GetTypingState(bool& isSet, bool& theSetting,
   isSet = false;
 }
 
-void TypeInState::CancelPreservingStyle(nsStaticAtom* aHTMLProperty,
-                                        nsAtom* aAttribute) {
+void PendingStyles::CancelPreservingStyle(nsStaticAtom* aHTMLProperty,
+                                          nsAtom* aAttribute) {
   if (!aHTMLProperty) {
     mPreservingStyles.Clear();
     mRelativeFontSize = 0;
@@ -447,8 +428,8 @@ void TypeInState::CancelPreservingStyle(nsStaticAtom* aHTMLProperty,
   }
 }
 
-void TypeInState::CancelClearingStyle(nsStaticAtom& aHTMLProperty,
-                                      nsAtom* aAttribute) {
+void PendingStyles::CancelClearingStyle(nsStaticAtom& aHTMLProperty,
+                                        nsAtom* aAttribute) {
   Maybe<size_t> index =
       IndexOfStyleInArray(&aHTMLProperty, aAttribute, nullptr, mClearingStyles);
   if (index.isSome()) {
@@ -456,17 +437,17 @@ void TypeInState::CancelClearingStyle(nsStaticAtom& aHTMLProperty,
   }
 }
 
-Maybe<size_t> TypeInState::IndexOfStyleInArray(
+Maybe<size_t> PendingStyles::IndexOfStyleInArray(
     nsStaticAtom* aHTMLProperty, nsAtom* aAttribute, nsAString* aOutValue,
-    const nsTArray<UniquePtr<PropItem>>& aArray) {
+    const nsTArray<UniquePtr<PendingStyle>>& aArray) {
   if (aAttribute == nsGkAtoms::_empty) {
     aAttribute = nullptr;
   }
   for (size_t i : IntegerRange(aArray.Length())) {
-    const UniquePtr<PropItem>& item = aArray[i];
-    if (item->mTag == aHTMLProperty && item->mAttribute == aAttribute) {
+    const UniquePtr<PendingStyle>& item = aArray[i];
+    if (item->GetTag() == aHTMLProperty && item->GetAttribute() == aAttribute) {
       if (aOutValue) {
-        *aOutValue = item->mAttributeValueOrCSSValue;
+        *aOutValue = item->AttributeValueOrCSSValueRef();
       }
       return Some(i);
     }
