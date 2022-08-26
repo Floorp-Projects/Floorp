@@ -382,7 +382,17 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   GCState initialMarkingState() const;
 
-  bool shouldMarkInZone() const { return isGCMarkingOrVerifyingPreBarriers(); }
+  bool shouldMarkInZone(js::gc::MarkColor color) const {
+    // Check whether the zone is in one or both of the MarkBlackOnly and
+    // MarkBlackAndGray states, depending on the mark color. Also check for
+    // VerifyPreBarriers when the mark color is black (we don't do any gray
+    // marking when verifying pre-barriers).
+    if (color == js::gc::MarkColor::Black) {
+      return isGCMarkingOrVerifyingPreBarriers();
+    }
+
+    return isGCMarkingBlackAndGray();
+  }
 
   // Was this zone collected in the last GC.
   bool wasCollected() const { return wasCollected_; }

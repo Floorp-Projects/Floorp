@@ -208,7 +208,7 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
 
   if (isGcMarkingTracer) {
     GCMarker* gcMarker = GCMarker::fromTracer(trc);
-    MOZ_ASSERT(zone->shouldMarkInZone());
+    MOZ_ASSERT(zone->shouldMarkInZone(gcMarker->markColor()));
 
     MOZ_ASSERT_IF(gcMarker->shouldCheckCompartments(),
                   zone->isCollectingFromAnyThread() || zone->isAtomsZone());
@@ -359,11 +359,12 @@ static bool ShouldTraceCrossCompartment(JSTracer* trc, JSObject* src,
          ShouldTraceCrossCompartment(trc, src, val.toGCThing());
 }
 
-static inline void AssertShouldMarkInZone(Cell* thing) {
+static inline void AssertShouldMarkInZone(GCMarker* marker, Cell* thing) {
 #ifdef DEBUG
   if (!thing->isMarkedBlack()) {
     Zone* zone = thing->zone();
-    MOZ_ASSERT(zone->isAtomsZone() || zone->shouldMarkInZone());
+    MOZ_ASSERT(zone->isAtomsZone() ||
+               zone->shouldMarkInZone(marker->markColor()));
   }
 #endif
 }
@@ -890,7 +891,7 @@ void GCMarker::markImplicitEdgesHelper(T markedThing) {
   // values that are in a different compartment.
   AutoClearTracingSource acts(this);
 
-  CellColor thingColor = gc::detail::GetEffectiveColor(runtime(), markedThing);
+  CellColor thingColor = gc::detail::GetEffectiveColor(this, markedThing);
   markEphemeronEdges(edges, thingColor);
 }
 
@@ -918,26 +919,20 @@ static inline bool ShouldMark(GCMarker* gcmarker, T* thing) {
   // Don't mark things outside a zone if we are in a per-zone GC. Don't mark
   // permanent shared things owned by other runtimes (we will never observe
   // their zone being collected).
-  return thing->asTenured().zoneFromAnyThread()->shouldMarkInZone();
+  Zone* zone = thing->asTenured().zoneFromAnyThread();
+  return zone->shouldMarkInZone(gcmarker->markColor());
 }
 
 template <typename T>
 void DoMarking(GCMarker* gcmarker, T* thing) {
   // Do per-type marking precondition checks.
   if (!ShouldMark(gcmarker, thing)) {
-    MOZ_ASSERT(gc::detail::GetEffectiveColor(gcmarker->runtime(), thing) ==
+    MOZ_ASSERT(gc::detail::GetEffectiveColor(gcmarker, thing) ==
                js::gc::CellColor::Black);
     return;
   }
 
   MOZ_ASSERT(!IsOwnedByOtherRuntime(gcmarker->runtime(), thing));
-
-  // Don't mark gray in zones which we are still marking black.
-  Zone* zone = thing->asTenured().zone();
-  if (gcmarker->markColor() == MarkColor::Gray &&
-      zone->isGCMarkingBlackOnly()) {
-    return;
-  }
 
   CheckTracedThing(gcmarker, thing);
   AutoClearTracingSource acts(gcmarker);
@@ -1230,7 +1225,7 @@ bool js::GCMarker::mark(T* thing) {
     return false;
   }
 
-  AssertShouldMarkInZone(thing);
+  AssertShouldMarkInZone(this, thing);
 
   MarkColor color =
       TraceKindCanBeGray<T>::value ? markColor() : MarkColor::Black;
@@ -1302,7 +1297,7 @@ void JSString::traceBase(JSTracer* trc) {
   TraceManuallyBarrieredEdge(trc, &d.s.u3.base, "base");
 }
 inline void js::GCMarker::eagerlyMarkChildren(JSLinearString* linearStr) {
-  AssertShouldMarkInZone(linearStr);
+  AssertShouldMarkInZone(this, linearStr);
   MOZ_ASSERT(linearStr->isMarkedAny());
   MOZ_ASSERT(linearStr->JSString::isLinear());
 
@@ -1320,7 +1315,7 @@ inline void js::GCMarker::eagerlyMarkChildren(JSLinearString* linearStr) {
 
     MOZ_ASSERT(linearStr->JSString::isLinear());
     MOZ_ASSERT(!linearStr->isPermanentAtom());
-    AssertShouldMarkInZone(linearStr);
+    AssertShouldMarkInZone(this, linearStr);
     if (!mark(static_cast<JSString*>(linearStr))) {
       break;
     }
@@ -1345,7 +1340,7 @@ inline void js::GCMarker::eagerlyMarkChildren(JSRope* rope) {
   while (true) {
     MOZ_DIAGNOSTIC_ASSERT(rope->getTraceKind() == JS::TraceKind::String);
     MOZ_DIAGNOSTIC_ASSERT(rope->JSString::isRope());
-    AssertShouldMarkInZone(rope);
+    AssertShouldMarkInZone(this, rope);
     MOZ_ASSERT(rope->isMarkedAny());
     JSRope* next = nullptr;
 
@@ -1923,7 +1918,7 @@ inline void GCMarker::processMarkStackTop(SliceBudget& budget) {
 
     case MarkStack::ObjectTag: {
       obj = stack.popPtr().as<JSObject>();
-      AssertShouldMarkInZone(obj);
+      AssertShouldMarkInZone(this, obj);
       goto scan_obj;
     }
 
@@ -1989,7 +1984,7 @@ scan_value_range:
   return;
 
 scan_obj : {
-  AssertShouldMarkInZone(obj);
+  AssertShouldMarkInZone(this, obj);
 
   budget.step();
   if (budget.isOverBudget()) {
@@ -2558,7 +2553,7 @@ IncrementalProgress JS::Zone::enterWeakMarkingMode(GCMarker* marker,
   EphemeronEdgeTable::MutableRange r = gcEphemeronEdges().mutableAll();
   while (!r.empty()) {
     Cell* src = r.front().key;
-    CellColor srcColor = gc::detail::GetEffectiveColor(marker->runtime(), src);
+    CellColor srcColor = gc::detail::GetEffectiveColor(marker, src);
     auto& edges = r.front().value;
     r.popFront();  // Pop before any mutations happen.
 
