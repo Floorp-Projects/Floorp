@@ -160,7 +160,6 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "nsNativeAppSupportWin.h"
-#include "mozilla/browser/NimbusFeatures.h"
 
 #include "nsIGfxInfo.h"
 #include "nsUXThemeConstants.h"
@@ -1113,8 +1112,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   }
 
   if (aInitData->mIsPrivate) {
-    if (NimbusFeatures::GetBool("majorRelease2022"_ns,
-                                "feltPrivacyWindowSeparation"_ns, true) &&
+    if (Preferences::GetBool(
+            "browser.privacySegmentation.windowSeparation.enabled", false) &&
         // Although permanent Private Browsing mode is indeed Private Browsing,
         // we choose to make it look like regular Firefox in terms of the icon
         // it uses (which also means we shouldn't use the Private Browsing
