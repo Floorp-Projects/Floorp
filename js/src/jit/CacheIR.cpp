@@ -4223,6 +4223,8 @@ AttachDecision SetPropIRGenerator::tryAttachSetDenseElementHole(
   // In the case where index > initLength, we need noteHasDenseAdd to be called
   // to ensure Ion is aware that writes have occurred to-out-of-bound indexes
   // before.
+  //
+  // TODO(post-Warp): noteHasDenseAdd (nee: noteArrayWriteHole) no longer exists
   bool isAdd = index == initLength;
   bool isHoleInBounds =
       index < initLength && !nobj->containsDenseElement(index);
