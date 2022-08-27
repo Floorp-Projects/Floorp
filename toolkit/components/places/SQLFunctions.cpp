@@ -675,17 +675,19 @@ CalculateFrecencyFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
              visitType != nsINavHistoryService::TRANSITION_TYPED);
       }
 
+      uint32_t visitSource = getVisits->AsInt32(3);
       if (hasBookmark) {
         // For bookmarked visit, add full bonus.
         bonus = history->GetFrecencyTransitionBonus(visitType, true,
                                                     useRedirectBonus);
         bonus += history->GetFrecencyTransitionBonus(
             nsINavHistoryService::TRANSITION_BOOKMARK, true);
-      } else if (getVisits->AsInt32(3) !=
-                 nsINavHistoryService::VISIT_SOURCE_SPONSORED) {
-        // For not sponsored visit, add only transition bonus by visit type.
+      } else if (visitSource == nsINavHistoryService::VISIT_SOURCE_ORGANIC) {
         bonus = history->GetFrecencyTransitionBonus(visitType, true,
                                                     useRedirectBonus);
+      } else if (visitSource == nsINavHistoryService::VISIT_SOURCE_SEARCHED) {
+        bonus = history->GetFrecencyTransitionBonus(
+            nsINavHistoryService::TRANSITION_LINK, true, useRedirectBonus);
       }
 
       // If bonus was zero, we can skip the work to determine the weight.
