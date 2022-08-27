@@ -108,6 +108,7 @@ $letter-fallback-color: $white;
   background-color: color-mix(in srgb, var(--newtab-background-color) 50%, transparent);
   border: 1px solid rgba(170, 170, 170, 0.6);
   backdrop-filter: blur(12px);
+  z-index: 1;
 
   // container for context menu
   .top-site-inner {
@@ -124,6 +125,10 @@ $letter-fallback-color: $white;
     .context-menu-button {
       opacity: 1;
     }
+  }
+
+  &:is(.active) {
+    z-index: 2;
   }
 
   .context-menu-button {
