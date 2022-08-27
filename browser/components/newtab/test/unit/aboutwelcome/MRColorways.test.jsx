@@ -171,7 +171,9 @@ describe("Multistage AboutWelcome module", () => {
 
     it("should handle colorway clicks", () => {
       sandbox.stub(React, "useEffect").callsFake((fn, vals) => {
-        if (vals[0] === "in") {
+        if (vals === undefined) {
+          fn();
+        } else if (vals[0] === "in") {
           fn();
         }
       });

@@ -547,6 +547,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
             string_id: "mr2022-onboarding-colorway-primary-button-label",
           },
           action: {
+            persistActiveTheme: true,
             navigate: true,
           },
         },
@@ -559,6 +560,11 @@ const MR_ABOUT_WELCOME_DEFAULT = {
             navigate: true,
           },
           has_arrow_icon: true,
+        },
+        navigate_away: {
+          action: {
+            theme: "revert",
+          },
         },
       },
     },

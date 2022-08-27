@@ -348,6 +348,7 @@ const MultiStageAboutWelcome = props => {
       activeTheme: activeTheme,
       initialTheme: initialTheme,
       setActiveTheme: setActiveTheme,
+      setInitialTheme: setInitialTheme,
       autoAdvance: screen.auto_advance,
       negotiatedLanguage: negotiatedLanguage,
       langPackInstallPhase: langPackInstallPhase
@@ -465,6 +466,12 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       let themeToUse = action.theme === "<event>" ? event.currentTarget.value : this.props.initialTheme || action.theme;
       this.props.setActiveTheme(themeToUse);
       window.AWSelectTheme(themeToUse);
+    } // If the action has persistActiveTheme: true, we set the initial theme to the currently active theme
+    // so that it can be reverted to in the event that the user navigates away from the screen
+
+
+    if (action.persistActiveTheme) {
+      this.props.setInitialTheme(this.props.activeTheme);
     }
 
     if (action.navigate) {
@@ -976,11 +983,39 @@ function Colorways(props) {
     defaultVariationIndex,
     systemVariations,
     variations
-  } = props.content.tiles; // Active theme id from JSON e.g. "expressionist"
+  } = props.content.tiles;
+  let hasReverted = false; // Active theme id from JSON e.g. "expressionist"
 
   const activeId = computeColorWay(props.activeTheme, systemVariations);
   const [colorwayId, setState] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(activeId);
-  const [variationIndex, setVariationIndex] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(defaultVariationIndex); // Update state any time activeTheme changes.
+  const [variationIndex, setVariationIndex] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(defaultVariationIndex);
+
+  function revertToDefaultTheme() {
+    if (hasReverted) return; // Spoofing an event with current target value of "navigate_away"
+    // helps the handleAction method to read the colorways theme as "revert"
+    // which causes the initial theme to be activated.
+    // The "navigate_away" action is set in content in the colorways screen JSON config.
+    // Any value in the JSON for theme will work, provided it is not `<event>`.
+
+    const event = {
+      currentTarget: {
+        value: "navigate_away"
+      }
+    };
+    props.handleAction(event);
+    hasReverted = true;
+  } // Revert to default theme if the user navigates away from the page or spotlight modal
+  // before clicking on the primary button to officially set theme.
+
+
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    addEventListener("beforeunload", revertToDefaultTheme);
+    addEventListener("pagehide", revertToDefaultTheme);
+    return () => {
+      removeEventListener("beforeunload", revertToDefaultTheme);
+      removeEventListener("pagehide", revertToDefaultTheme);
+    };
+  }); // Update state any time activeTheme changes.
 
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     setState(computeColorWay(props.activeTheme, systemVariations));
