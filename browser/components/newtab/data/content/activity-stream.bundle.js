@@ -14217,7 +14217,7 @@ function Background() {
   return /*#__PURE__*/external_React_default().createElement("div", {
     id: "background",
     style: {
-      backgroundImage: `url(${imgSrc})`
+      background: `url(${imgSrc})`
     }
   });
 }
