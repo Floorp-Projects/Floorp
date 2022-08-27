@@ -14,7 +14,7 @@ export const AboutWelcomeUtils = {
     window.AWSendToParent("SPECIAL_ACTION", action);
   },
   sendImpressionTelemetry(messageId, context) {
-    window.AWSendEventTelemetry({
+    window.AWSendEventTelemetry?.({
       event: "IMPRESSION",
       event_context: {
         ...context,
@@ -32,7 +32,7 @@ export const AboutWelcomeUtils = {
       },
       message_id: messageId,
     };
-    window.AWSendEventTelemetry(ping);
+    window.AWSendEventTelemetry?.(ping);
   },
   async fetchFlowParams(metricsFlowUri) {
     let flowParams;

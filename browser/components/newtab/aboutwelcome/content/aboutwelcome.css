@@ -406,6 +406,15 @@ body[lwt-newtab-brighttext] {
   text-align: initial;
   height: 100%;
 }
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .checkbox-container {
+  font-size: 13px;
+  margin-block: 1em;
+  transition: var(--transition);
+}
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .checkbox-container input,
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .checkbox-container label {
+  vertical-align: middle;
+}
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta {
   position: absolute;
   bottom: -30px;
@@ -548,7 +557,10 @@ body[lwt-newtab-brighttext] {
     --mr-secondary-position: center var(--mr-secondary-background-position-y) / cover;
     border-radius: 8px 8px 0 0;
     margin: auto auto 0;
-    height: 150px;
+    height: 100px;
+  }
+  .onboardingContainer .screen[pos=split] .section-secondary .hero-image img {
+    margin: 6px 0;
   }
   .onboardingContainer .screen[pos=split] .section-secondary h1 {
     font-size: 35px;
@@ -591,6 +603,9 @@ body[lwt-newtab-brighttext] {
   }
   .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons {
     text-align: center;
+  }
+  .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .checkbox-container {
+    display: none;
   }
   .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta {
     position: relative;
@@ -1473,6 +1488,7 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer.transition-in [pos=corner] .brand-logo,
 .onboardingContainer.transition-in [pos=corner] .welcome-text,
 .onboardingContainer.transition-in [pos=corner] .primary,
+.onboardingContainer.transition-in [pos=corner] .checkbox-container,
 .onboardingContainer.transition-in [pos=corner] .secondary,
 .onboardingContainer.transition-in [pos=corner] .secondary-cta:not(.top),
 .onboardingContainer.transition-in [pos=corner] .message-text {
@@ -1499,6 +1515,7 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer.transition-in .screen:not([pos=corner]) .tiles-theme-section,
 .onboardingContainer.transition-in .screen:not([pos=corner]) .colorway-text,
 .onboardingContainer.transition-in .screen:not([pos=corner]) .primary,
+.onboardingContainer.transition-in .screen:not([pos=corner]) .checkbox-container,
 .onboardingContainer.transition-in .screen:not([pos=corner]) .secondary,
 .onboardingContainer.transition-in .screen:not([pos=corner]) .secondary-cta:not(.top) {
   opacity: 0;
@@ -1543,6 +1560,7 @@ body[lwt-newtab-brighttext] {
   transition-delay: 0.2s;
 }
 .onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .primary,
+.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .checkbox-container,
 .onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .secondary,
 .onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .secondary-cta:not(.top) {
   opacity: 0;

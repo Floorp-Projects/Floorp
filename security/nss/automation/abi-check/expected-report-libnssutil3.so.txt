@@ -1,6 +1,0 @@
-
-2 Added functions:
-
-  'function const SECItem* PK11URI_GetPathAttributeItem(PK11URI*, const char*)'    {PK11URI_GetPathAttributeItem@@NSSUTIL_3.82}
-  'function const SECItem* PK11URI_GetQueryAttributeItem(PK11URI*, const char*)'    {PK11URI_GetQueryAttributeItem@@NSSUTIL_3.82}
-

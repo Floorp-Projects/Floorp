@@ -29,7 +29,6 @@ from taskgraph.graph import Graph
 from taskgraph.task import Task
 from taskgraph.taskgraph import TaskGraph
 
-from .util.attributes import release_level
 from .util.workertypes import get_worker_type
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -71,7 +70,9 @@ def derive_misc_task(
     image_taskid = label_to_taskid["docker-image-" + image]
 
     provisioner_id, worker_type = get_worker_type(
-        graph_config, "misc", parameters["level"], release_level(parameters["project"])
+        graph_config,
+        parameters,
+        "misc",
     )
 
     deps = copy.copy(dependencies)

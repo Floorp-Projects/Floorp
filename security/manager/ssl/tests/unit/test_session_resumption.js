@@ -31,11 +31,7 @@ addCertFromFile(certdb, "bad_certs/ev-test-intermediate.pem", ",,");
 // information object.
 function add_resume_non_ev_with_override_test() {
   // This adds the override and makes one successful connection.
-  add_cert_override_test(
-    "expired.example.com",
-    Ci.nsICertOverrideService.ERROR_TIME,
-    SEC_ERROR_EXPIRED_CERTIFICATE
-  );
+  add_cert_override_test("expired.example.com", SEC_ERROR_EXPIRED_CERTIFICATE);
 
   // This connects again, using session resumption. Note that we don't clear
   // the TLS session cache between these operations (that would defeat the
@@ -55,17 +51,10 @@ function add_resume_non_ev_with_override_test() {
         0,
         "ev-test.example.com should not have succeededCertChain set"
       );
-      ok(
-        !transportSecurityInfo.isDomainMismatch,
-        "expired.example.com should not have isDomainMismatch set"
-      );
-      ok(
-        transportSecurityInfo.isNotValidAtThisTime,
-        "expired.example.com should have isNotValidAtThisTime set"
-      );
-      ok(
-        !transportSecurityInfo.isUntrusted,
-        "expired.example.com should not have isUntrusted set"
+      equal(
+        transportSecurityInfo.overridableErrorCategory,
+        Ci.nsITransportSecurityInfo.ERROR_TIME,
+        "expired.example.com should have time overridable error category"
       );
       ok(
         !transportSecurityInfo.isExtendedValidation,
@@ -105,17 +94,10 @@ function add_one_ev_test() {
         transportSecurityInfo.succeededCertChain,
         "ev-test.example.com should have succeededCertChain set"
       );
-      ok(
-        !transportSecurityInfo.isDomainMismatch,
-        "ev-test.example.com should not have isDomainMismatch set"
-      );
-      ok(
-        !transportSecurityInfo.isNotValidAtThisTime,
-        "ev-test.example.com should not have isNotValidAtThisTime set"
-      );
-      ok(
-        !transportSecurityInfo.isUntrusted,
-        "ev-test.example.com should not have isUntrusted set"
+      equal(
+        transportSecurityInfo.overridableErrorCategory,
+        Ci.nsITransportSecurityInfo.ERROR_UNSET,
+        "ev-test.example.com should not have an overridable error category"
       );
       ok(
         !gEVExpected || transportSecurityInfo.isExtendedValidation,
@@ -185,17 +167,10 @@ function add_one_non_ev_test() {
         transportSecurityInfo.succeededCertChain,
         `${GOOD_DOMAIN} should have succeededCertChain set`
       );
-      ok(
-        !transportSecurityInfo.isDomainMismatch,
-        `${GOOD_DOMAIN} should not have isDomainMismatch set`
-      );
-      ok(
-        !transportSecurityInfo.isNotValidAtThisTime,
-        `${GOOD_DOMAIN} should not have isNotValidAtThisTime set`
-      );
-      ok(
-        !transportSecurityInfo.isUntrusted,
-        `${GOOD_DOMAIN} should not have isUntrusted set`
+      equal(
+        transportSecurityInfo.overridableErrorCategory,
+        0,
+        `${GOOD_DOMAIN} should not have an overridable error category set`
       );
       ok(
         !transportSecurityInfo.isExtendedValidation,

@@ -2,10 +2,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<!DOCTYPE window [
-<!ENTITY % editMenuStrings SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
- %editMenuStrings;
-]>
+<!DOCTYPE window>
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
@@ -61,9 +58,9 @@
                 data-l10n-id="text-action-select-all" command="cmd_selectAll"/>
       <menuseparator/>
       <menuitem id="se-menu-find"
-        label="&findCmd.label;" accesskey="&findCmd.accesskey;" command="cmd_find"/>
-      <menuitem id="cMenu_findAgain" label="&findAgainCmd.label;"
-                accesskey="&findAgainCmd.accesskey;" command="cmd_findAgain"/>
+                data-l10n-id="styleeditor-find" command="cmd_find"/>
+      <menuitem id="cMenu_findAgain"
+                data-l10n-id="styleeditor-find-again" command="cmd_findAgain"/>
       <menuseparator/>
       <menuitem id="se-menu-gotoLine"
           data-l10n-id="styleeditor-go-to-line"

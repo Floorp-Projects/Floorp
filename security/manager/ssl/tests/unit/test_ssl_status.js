@@ -66,7 +66,6 @@ function run_test() {
   };
   add_cert_override_test(
     "expired.example.com",
-    Ci.nsICertOverrideService.ERROR_TIME,
     SEC_ERROR_EXPIRED_CERTIFICATE,
     undefined,
     overrideStatus

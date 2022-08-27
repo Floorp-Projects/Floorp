@@ -36,7 +36,7 @@ class VerifySSLServerCertChild : public PVerifySSLServerCertChild {
       const bool& aIsBuiltCertChainRootBuiltInRoot);
 
   ipc::IPCResult RecvOnVerifiedSSLServerCertFailure(
-      const uint32_t& aFinalError, const uint32_t& aCollectedErrors);
+      const int32_t& aFinalError, const uint32_t& aOverridableErrorCategory);
 
  private:
   ~VerifySSLServerCertChild() = default;

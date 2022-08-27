@@ -16,7 +16,7 @@ fuzzy(0-2,0-529) == 393760-2.xml 393760-2-ref.xml
 == 414123.xhtml 414123-ref.xhtml
 == dir-1.html dir-1-ref.html
 == dir-2.html dir-2-ref.html
-pref(mathml.mfrac_bevelled_attribute.disabled,false) random-if(gtkWidget) == dir-3.html dir-3-ref.html # bug 1309426
+random-if(gtkWidget) == dir-3.html dir-3-ref.html # bug 1309426
 == dir-5.html dir-5-ref.html
 fuzzy-if(cocoaWidget,0-135,0-56) == dir-6a.html dir-6a-ref.html
 == css-spacing-1.html css-spacing-1-ref.html
@@ -64,7 +64,7 @@ fails == stretchy-mover-2a.html stretchy-mover-2-ref.html
 == stretchy-largeop-1.html stretchy-largeop-1-ref.html
 == stretchy-largeop-2.html stretchy-largeop-2-ref.html
 == stretchy-largeop-3.html stretchy-largeop-3-ref.html
-pref(mathml.mfrac_bevelled_attribute.disabled,false) == table-width-1.xhtml table-width-1-ref.xhtml
+== table-width-1.xhtml table-width-1-ref.xhtml
 == table-width-2.html table-width-2-ref.html
 == table-width-3.html table-width-3-ref.html
 == table-width-4.html table-width-4-ref.html
@@ -158,7 +158,7 @@ pref(mathml.mathspace_names.disabled,false) == positive-namedspace.html positive
 == mo-lspace-rspace.html mo-lspace-rspace-ref.html
 == mo-lspace-rspace-2.html mo-lspace-rspace-2-ref.html
 == mo-lspace-rspace-3.html mo-lspace-rspace-3-ref.html
-pref(mathml.mfrac_bevelled_attribute.disabled,false) == mo-lspace-rspace-4.html mo-lspace-rspace-4-ref.html
+== mo-lspace-rspace-4.html mo-lspace-rspace-4-ref.html
 == mo-invisibleoperators.html mo-invisibleoperators-ref.html
 == mo-invisibleoperators-2.html mo-invisibleoperators-2-ref.html
 random-if(gtkWidget) == mo-glyph-size.html mo-glyph-size-ref.html # bug 1309426
@@ -306,16 +306,12 @@ random-if(gtkWidget) == rowlines-3-2.html rowlines-3-2-ref.html # bug 1309426
 != op-dict-11.html op-dict-11-ref.html
 == op-dict-12.html op-dict-12-ref.html
 != op-dict-13.html op-dict-13-ref.html
-pref(mathml.mfrac_bevelled_attribute.disabled,false) == mfrac-A-1.html mfrac-A-1-ref.html
 == mfrac-A-4.html mfrac-A-4-ref.html
 == mfrac-A-5.html mfrac-A-5-ref.html
 == mfrac-A-8.html mfrac-A-8-ref.html
-pref(mathml.mfrac_bevelled_attribute.disabled,false) == mfrac-B-1.html mfrac-B-1-ref.html
 == mfrac-B-2.html mfrac-B-2-3-ref.html
 == mfrac-B-3.html mfrac-B-2-3-ref.html
-pref(mathml.mfrac_bevelled_attribute.disabled,false) fuzzy(0-1,0-14) == mfrac-C-1.html mfrac-C-1-ref.html
 == mfrac-C-2.html mfrac-C-2-ref.html
-pref(mathml.mfrac_bevelled_attribute.disabled,false) fuzzy(0-1,0-14) == mfrac-D-1.html mfrac-D-1-ref.html
 == mfrac-D-2.html mfrac-D-2-ref.html
 == mfrac-E-1.html mfrac-E-1-ref.html
 == shadow-dom-1.html shadow-dom-1-ref.html

@@ -1572,27 +1572,6 @@ already_AddRefed<mozilla::dom::Promise> Document::AddCertException(
     return promise.forget();
   }
 
-  bool isUntrusted = true;
-  rv = tsi->GetIsUntrusted(&isUntrusted);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    promise->MaybeReject(rv);
-    return promise.forget();
-  }
-
-  bool isDomainMismatch = true;
-  rv = tsi->GetIsDomainMismatch(&isDomainMismatch);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    promise->MaybeReject(rv);
-    return promise.forget();
-  }
-
-  bool isNotValidAtThisTime = true;
-  rv = tsi->GetIsNotValidAtThisTime(&isNotValidAtThisTime);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    promise->MaybeReject(rv);
-    return promise.forget();
-  }
-
   nsCOMPtr<nsIX509Cert> cert;
   rv = tsi->GetServerCert(getter_AddRefs(cert));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1604,17 +1583,6 @@ already_AddRefed<mozilla::dom::Promise> Document::AddCertException(
     return promise.forget();
   }
 
-  uint32_t flags = 0;
-  if (isUntrusted) {
-    flags |= nsICertOverrideService::ERROR_UNTRUSTED;
-  }
-  if (isDomainMismatch) {
-    flags |= nsICertOverrideService::ERROR_MISMATCH;
-  }
-  if (isNotValidAtThisTime) {
-    flags |= nsICertOverrideService::ERROR_TIME;
-  }
-
   if (XRE_IsContentProcess()) {
     nsCOMPtr<nsISerializable> certSer = do_QueryInterface(cert);
     nsCString certSerialized;
@@ -1623,8 +1591,7 @@ already_AddRefed<mozilla::dom::Promise> Document::AddCertException(
     ContentChild* cc = ContentChild::GetSingleton();
     MOZ_ASSERT(cc);
     OriginAttributes const& attrs = NodePrincipal()->OriginAttributesRef();
-    cc->SendAddCertException(certSerialized, flags, host, port, attrs,
-                             aIsTemporary)
+    cc->SendAddCertException(certSerialized, host, port, attrs, aIsTemporary)
         ->Then(GetCurrentSerialEventTarget(), __func__,
                [promise](const mozilla::MozPromise<
                          nsresult, mozilla::ipc::ResponseRejectReason,
@@ -1648,7 +1615,7 @@ already_AddRefed<mozilla::dom::Promise> Document::AddCertException(
 
     OriginAttributes const& attrs = NodePrincipal()->OriginAttributesRef();
     rv = overrideService->RememberValidityOverride(host, port, attrs, cert,
-                                                   flags, aIsTemporary);
+                                                   aIsTemporary);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       promise->MaybeReject(rv);
       return promise.forget();
@@ -1768,22 +1735,28 @@ void Document::GetFailedCertSecurityInfo(FailedCertSecurityInfo& aInfo,
   }
   aInfo.mErrorCodeString.Assign(errorCodeString);
 
-  rv = tsi->GetIsUntrusted(&aInfo.mIsUntrusted);
+  nsITransportSecurityInfo::OverridableErrorCategory errorCategory;
+  rv = tsi->GetOverridableErrorCategory(&errorCategory);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
     return;
   }
-
-  rv = tsi->GetIsDomainMismatch(&aInfo.mIsDomainMismatch);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
-    return;
-  }
-
-  rv = tsi->GetIsNotValidAtThisTime(&aInfo.mIsNotValidAtThisTime);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
-    return;
+  switch (errorCategory) {
+    case nsITransportSecurityInfo::OverridableErrorCategory::ERROR_TRUST:
+      aInfo.mOverridableErrorCategory =
+          dom::OverridableErrorCategory::Trust_error;
+      break;
+    case nsITransportSecurityInfo::OverridableErrorCategory::ERROR_DOMAIN:
+      aInfo.mOverridableErrorCategory =
+          dom::OverridableErrorCategory::Domain_mismatch;
+      break;
+    case nsITransportSecurityInfo::OverridableErrorCategory::ERROR_TIME:
+      aInfo.mOverridableErrorCategory =
+          dom::OverridableErrorCategory::Expired_or_not_yet_valid;
+      break;
+    default:
+      aInfo.mOverridableErrorCategory = dom::OverridableErrorCategory::Unset;
+      break;
   }
 
   nsCOMPtr<nsIX509Cert> cert;

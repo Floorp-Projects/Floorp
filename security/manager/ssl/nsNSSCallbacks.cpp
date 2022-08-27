@@ -1272,16 +1272,13 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
     }
   }
 
-  bool domainMismatch;
-  bool untrusted;
-  bool notValidAtThisTime;
-  // These all return NS_OK, so don't even bother checking the return values.
-  Unused << infoObject->GetIsDomainMismatch(&domainMismatch);
-  Unused << infoObject->GetIsUntrusted(&untrusted);
-  Unused << infoObject->GetIsNotValidAtThisTime(&notValidAtThisTime);
+  nsITransportSecurityInfo::OverridableErrorCategory overridableErrorCategory;
+  // This returns NS_OK, so don't even bother checking the return value.
+  Unused << infoObject->GetOverridableErrorCategory(&overridableErrorCategory);
   // If we're here, the TLS handshake has succeeded. Thus if any of these
   // booleans are true, the user has added an override for a certificate error.
-  if (domainMismatch || untrusted || notValidAtThisTime) {
+  if (overridableErrorCategory !=
+      nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET) {
     state |= nsIWebProgressListener::STATE_CERT_USER_OVERRIDDEN;
   }
 

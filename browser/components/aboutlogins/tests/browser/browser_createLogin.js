@@ -88,10 +88,9 @@ add_task(async function test_create_login() {
         );
 
         let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
-        is(
-          ContentTaskUtils.is_hidden(cancelButton),
-          index == 0,
-          "cancel button should be hidden in create mode with no logins saved"
+        ok(
+          ContentTaskUtils.is_visible(cancelButton),
+          "cancel button should be visible in create mode with no logins saved"
         );
 
         let originInput = loginItem.shadowRoot.querySelector(

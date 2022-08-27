@@ -1236,10 +1236,9 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvBHRThreadHang(const HangDetails& aHangDetails);
 
   mozilla::ipc::IPCResult RecvAddCertException(
-      const nsACString& aSerializedCert, uint32_t aFlags,
-      const nsACString& aHostName, int32_t aPort,
-      const OriginAttributes& aOriginAttributes, bool aIsTemporary,
-      AddCertExceptionResolver&& aResolver);
+      const nsACString& aSerializedCert, const nsACString& aHostName,
+      int32_t aPort, const OriginAttributes& aOriginAttributes,
+      bool aIsTemporary, AddCertExceptionResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvAutomaticStorageAccessPermissionCanBeGranted(
       nsIPrincipal* aPrincipal,

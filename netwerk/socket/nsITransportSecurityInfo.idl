@@ -20,6 +20,13 @@ class MessageReader;
 
 [builtinclass, scriptable, uuid(216112d3-28bc-4671-b057-f98cc09ba1ea)]
 interface nsITransportSecurityInfo : nsISupports {
+    cenum OverridableErrorCategory : 32 {
+      ERROR_UNSET,
+      ERROR_TRUST,
+      ERROR_DOMAIN,
+      ERROR_TIME,
+    };
+
     readonly attribute unsigned long securityState;
     readonly attribute long errorCode; // PRErrorCode
     // errorCode as string (e.g. "SEC_ERROR_UNKNOWN_ISSUER")
@@ -71,12 +78,7 @@ interface nsITransportSecurityInfo : nsISupports {
     [must_use]
     readonly attribute boolean isDelegatedCredential;
     [must_use]
-    readonly attribute boolean isDomainMismatch;
-    [must_use]
-    readonly attribute boolean isNotValidAtThisTime;
-
-    [must_use]
-    readonly attribute boolean isUntrusted;
+    readonly attribute nsITransportSecurityInfo_OverridableErrorCategory overridableErrorCategory;
 
     /**
      * True only if (and after) serverCert was successfully validated as

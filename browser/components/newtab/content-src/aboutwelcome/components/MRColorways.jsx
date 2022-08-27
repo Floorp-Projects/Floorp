@@ -64,12 +64,41 @@ export function Colorways(props) {
     systemVariations,
     variations,
   } = props.content.tiles;
+  let hasReverted = false;
 
   // Active theme id from JSON e.g. "expressionist"
   const activeId = computeColorWay(props.activeTheme, systemVariations);
   const [colorwayId, setState] = useState(activeId);
   const [variationIndex, setVariationIndex] = useState(defaultVariationIndex);
 
+  function revertToDefaultTheme() {
+    if (hasReverted) return;
+
+    // Spoofing an event with current target value of "navigate_away"
+    // helps the handleAction method to read the colorways theme as "revert"
+    // which causes the initial theme to be activated.
+    // The "navigate_away" action is set in content in the colorways screen JSON config.
+    // Any value in the JSON for theme will work, provided it is not `<event>`.
+    const event = {
+      currentTarget: {
+        value: "navigate_away",
+      },
+    };
+    props.handleAction(event);
+    hasReverted = true;
+  }
+
+  // Revert to default theme if the user navigates away from the page or spotlight modal
+  // before clicking on the primary button to officially set theme.
+  useEffect(() => {
+    addEventListener("beforeunload", revertToDefaultTheme);
+    addEventListener("pagehide", revertToDefaultTheme);
+
+    return () => {
+      removeEventListener("beforeunload", revertToDefaultTheme);
+      removeEventListener("pagehide", revertToDefaultTheme);
+    };
+  });
   // Update state any time activeTheme changes.
   useEffect(() => {
     setState(computeColorWay(props.activeTheme, systemVariations));

@@ -14,7 +14,7 @@ import six
 import sys
 from collections import deque
 from contextlib import contextmanager
-from distutils.version import LooseVersion
+from looseversion import LooseVersion
 
 
 def getpreferredencoding():
@@ -34,7 +34,7 @@ def getpreferredencoding():
 
 
 class Version(LooseVersion):
-    """A simple subclass of distutils.version.LooseVersion.
+    """A simple subclass of looseversion.LooseVersion.
     Adds attributes for `major`, `minor`, `patch` for the first three
     version components so users can easily pull out major/minor
     versions, like:
@@ -56,31 +56,6 @@ class Version(LooseVersion):
                 (0, 0, 0),
             )
         )[:3]
-
-    def _cmp(self, other):
-        # LooseVersion checks isinstance(StringType), so work around it.
-        if six.PY2 and isinstance(other, six.text_type):
-            other = other.encode("ascii")
-        if six.PY2:
-            return LooseVersion.__cmp__(self, other)
-        return LooseVersion._cmp(self, other)
-
-    # These method definitions can be deleted when we remove support for Python
-    # 2.
-    def __eq__(self, other):
-        return self._cmp(other) == 0
-
-    def __lt__(self, other):
-        return self._cmp(other) < 0
-
-    def __le__(self, other):
-        return self._cmp(other) <= 0
-
-    def __gt__(self, other):
-        return self._cmp(other) > 0
-
-    def __ge__(self, other):
-        return self._cmp(other) >= 0
 
 
 class ConfigureOutputHandler(logging.Handler):

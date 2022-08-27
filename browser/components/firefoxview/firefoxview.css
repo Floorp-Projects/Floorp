@@ -550,12 +550,15 @@ button.close {
 
 .closed-tabs-list {
   padding-inline-start: 0;
+  display: grid;
+  grid-template-columns: min-content repeat(5, 1fr) min-content;
+  column-gap: 8px;
 }
 
 .closed-tab-li {
   display: grid;
-  grid-template-columns: min-content repeat(8, 1fr);
-  column-gap: 16px;
+  grid-template-columns: subgrid;
+  grid-column: span 7;
   padding: 8px;
   cursor: pointer;
   align-items: center;
@@ -570,17 +573,19 @@ button.close {
 }
 
 .closed-tab-li-title {
-  grid-column: span 5;
-  padding-inline-start: 2px;
+  grid-column: span 3;
+  padding-inline-start: 10px;
   font-weight: 500;
 }
 
 .closed-tab-li-url {
   grid-column: span 2;
+  padding-inline-start: 8px;
   text-decoration-line: underline;
 }
 
 .closed-tab-li-time {
+  white-space: nowrap;
   text-align: end;
 }
 
@@ -712,7 +717,7 @@ button.close {
   grid-template-areas:
   "favicon favicon badge badge"
   "title title title title"
-  "domain domain domain time"
+  "domain domain domain domain"
   "device device device time";
 }
 
@@ -768,6 +773,7 @@ button.close {
   grid-area: time;
   justify-self: end;
   align-self: end;
+  white-space: nowrap;
 }
 
 .synced-tab-li:first-child > .synced-tab-a > .synced-tab-li-time {

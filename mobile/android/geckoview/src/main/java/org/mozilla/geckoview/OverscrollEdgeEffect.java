@@ -31,14 +31,12 @@ public final class OverscrollEdgeEffect {
   // All four edges of the screen
   private final EdgeEffect[] mEdges = new EdgeEffect[4];
 
-  private final GeckoSession mSession;
+  private GeckoSession mSession;
   private Runnable mInvalidationCallback;
   private int mWidth;
   private int mHeight;
 
-  /* package */ OverscrollEdgeEffect(final GeckoSession session) {
-    mSession = session;
-  }
+  /* package */ OverscrollEdgeEffect() {}
 
   private static Field sPaintField;
 
@@ -61,9 +59,16 @@ public final class OverscrollEdgeEffect {
 
     for (int i = 0; i < mEdges.length; i++) {
       final EdgeEffect edgeEffect = new EdgeEffect(context);
+      if (mWidth != 0 || mHeight != 0) {
+        edgeEffect.setSize(mWidth, mHeight);
+      }
       setBlendMode(edgeEffect);
       mEdges[i] = edgeEffect;
     }
+  }
+
+  /* package */ void setSession(final @Nullable GeckoSession session) {
+    mSession = session;
   }
 
   /**
@@ -153,6 +158,10 @@ public final class OverscrollEdgeEffect {
    */
   public void draw(final @NonNull Canvas canvas) {
     ThreadUtils.assertOnUiThread();
+
+    if (mSession == null) {
+      return;
+    }
 
     final Rect pageRect = new Rect();
     mSession.getSurfaceBounds(pageRect);

@@ -223,7 +223,7 @@
 - name: accessibility.cache.enabled
   type: bool
 #ifdef ANDROID
-  value: @IS_NOT_RELEASE_OR_BETA@
+  value: true
 #else
   value: false
 #endif
@@ -8708,12 +8708,6 @@
 - name: mathml.mathspace_names.disabled
   type: bool
   value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
-# Whether to disable the mfrac bevelled  attribute.
-- name: mathml.mfrac_bevelled_attribute.disabled
-  type: bool
-  value: true
   mirror: always
 
 # Whether to disable the scriptminsize attribute.

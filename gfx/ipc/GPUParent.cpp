@@ -691,8 +691,8 @@ void GPUParent::ActorDestroy(ActorDestroyReason aWhy) {
         // This could be running on either the Compositor or the Renderer
         // thread.
         CanvasManagerParent::Shutdown();
-        RemoteTextureMap::Shutdown();
         CompositorThreadHolder::Shutdown();
+        RemoteTextureMap::Shutdown();
         // There is a case that RenderThread exists when gfxVars::UseWebRender()
         // is false. This could happen when WebRender was fallbacked to
         // compositor.

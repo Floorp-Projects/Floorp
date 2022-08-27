@@ -400,7 +400,7 @@ class CrashInfo(object):
             # Either `_` or `-` may be used in the name, so be careful of that
             # (newer versions should use `-`). Otherwise the actual version number
             # is the usual `<major>.<minor>.<patch>` that can be parsed with
-            # `distutils.version.LooseVersion`.
+            # `looseversion.LooseVersion`.
             rust_minidump = stackwalk_version_check.returncode == 0
 
             # Now build up the actual command

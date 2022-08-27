@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import, division
-from distutils.version import LooseVersion
+from looseversion import LooseVersion
 import json
 import math
 import os

@@ -454,21 +454,12 @@ nsresult nsSiteSecurityService::ProcessHeaderInternal(
   }
 
   if (aSecInfo) {
-    bool tlsIsBroken = false;
-    bool trustcheck;
-    nsresult rv;
-    rv = aSecInfo->GetIsDomainMismatch(&trustcheck);
+    nsITransportSecurityInfo::OverridableErrorCategory overridableErrorCategory;
+    nsresult rv =
+        aSecInfo->GetOverridableErrorCategory(&overridableErrorCategory);
     NS_ENSURE_SUCCESS(rv, rv);
-    tlsIsBroken = tlsIsBroken || trustcheck;
-
-    rv = aSecInfo->GetIsNotValidAtThisTime(&trustcheck);
-    NS_ENSURE_SUCCESS(rv, rv);
-    tlsIsBroken = tlsIsBroken || trustcheck;
-
-    rv = aSecInfo->GetIsUntrusted(&trustcheck);
-    NS_ENSURE_SUCCESS(rv, rv);
-    tlsIsBroken = tlsIsBroken || trustcheck;
-    if (tlsIsBroken) {
+    if (overridableErrorCategory !=
+        nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET) {
       SSSLOG(("SSS: discarding header from untrustworthy connection"));
       if (aFailureResult) {
         *aFailureResult =
