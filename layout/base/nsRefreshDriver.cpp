@@ -2629,6 +2629,10 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
     const uint32_t& delay = entry.GetKey();
     ImageStartData* data = entry.GetWeak();
 
+    if (data->mEntries.IsEmpty()) {
+      continue;
+    }
+
     if (data->mStartTime) {
       TimeStamp& start = *data->mStartTime;
       TimeDuration prev = previousRefresh - start;
