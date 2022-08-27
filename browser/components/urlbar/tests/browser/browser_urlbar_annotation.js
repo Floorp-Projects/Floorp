@@ -13,6 +13,7 @@ const FRECENCY = {
   ORGANIC: 2000,
   SPONSORED: -1,
   BOOKMARKED: 2075,
+  SEARCHED: 100,
 };
 
 const {
@@ -231,7 +232,7 @@ add_task(async function search() {
       resultURL: "https://example.com/?q=abc",
       expected: {
         source: VISIT_SOURCE_SEARCHED,
-        frecency: FRECENCY.ORGANIC,
+        frecency: FRECENCY.SEARCHED,
       },
     },
     {

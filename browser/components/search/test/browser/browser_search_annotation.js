@@ -10,7 +10,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 const FRECENCY = {
-  TYPED: 100,
+  SEARCHED: 100,
   BOOKMARKED: 175,
 };
 
@@ -64,7 +64,7 @@ add_task(async function basic() {
       resultURL: "https://example.com/?q=abc",
       expected: {
         source: VISIT_SOURCE_SEARCHED,
-        frecency: FRECENCY.TYPED,
+        frecency: FRECENCY.SEARCHED,
       },
     },
     {
@@ -152,7 +152,7 @@ add_task(async function contextmenu() {
         targetURL,
         expected: {
           source: VISIT_SOURCE_SEARCHED,
-          frecency: FRECENCY.TYPED,
+          frecency: FRECENCY.SEARCHED,
         },
       });
 
