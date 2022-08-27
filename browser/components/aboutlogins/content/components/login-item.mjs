@@ -366,13 +366,22 @@ export default class LoginItem extends HTMLElement {
               object: "new_login",
               method: "cancel",
             });
+
+            this.setLogin(this._login, { skipFocusChange: true });
+            this._toggleEditing(false);
+            this.render();
           } else {
             this.showConfirmationDialog("discard-changes", () => {
               window.dispatchEvent(
                 new CustomEvent("AboutLoginsClearSelection")
               );
+
+              this.setLogin({}, { skipFocusChange: true });
+              this._toggleEditing(false);
+              this.render();
             });
           }
+
           return;
         }
         if (
