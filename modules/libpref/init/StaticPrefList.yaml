@@ -8710,12 +8710,6 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
-# Whether to disable the mfrac bevelled  attribute.
-- name: mathml.mfrac_bevelled_attribute.disabled
-  type: bool
-  value: true
-  mirror: always
-
 # Whether to disable the scriptminsize attribute.
 # Note that this only disables parsing, not the default effect when no attribute
 # is unspecified.
