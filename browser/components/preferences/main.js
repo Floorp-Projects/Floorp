@@ -225,6 +225,7 @@ Preferences.addAll([
   { id: "floorp.downloading.red.color", type:"bool"},
   { id: "floorp.browser.rest.mode", type : "bool"},
   { id: "floorp.browser.sidebar.right", type : "bool"},
+  { id: "floorp.browser.sidebar.enable", type : "bool"},
 ]);
 
 // Floorp の設定項目終わり

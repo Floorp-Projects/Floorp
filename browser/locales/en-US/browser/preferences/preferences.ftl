@@ -1614,3 +1614,5 @@ downloading-red-color =
 sidebar-preferences = Sidebar
 view-sidebar2-right = 
  .label = View the Browser Manager Sidebar on the Right
+enable-sidebar2 =
+ .label = Enable the Browser Manager Sidebar
