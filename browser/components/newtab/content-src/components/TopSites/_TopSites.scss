@@ -23,7 +23,7 @@ $letter-fallback-color: $white;
 
   &:not(.dnd-active) {
     .top-site-outer:is(.active, :focus, :hover) {
-      background: var(--newtab-element-hover-color);
+      background-color: color-mix(in srgb, var(--newtab-element-hover-color) 80%, transparent);
     }
   }
 
