@@ -996,6 +996,8 @@ void DeviceManagerDx::ResetDevices() {
   mContentDevice = nullptr;
   mCanvasDevice = nullptr;
   mImageDevice = nullptr;
+  mVRDevice = nullptr;
+  mDecoderDevice = nullptr;
   mDirectCompositionDevice = nullptr;
   mDeviceStatus = Nothing();
   mDeviceResetReason = Nothing();

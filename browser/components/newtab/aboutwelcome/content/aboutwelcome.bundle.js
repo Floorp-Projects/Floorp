@@ -41,7 +41,9 @@ const AboutWelcomeUtils = {
   },
 
   sendImpressionTelemetry(messageId, context) {
-    window.AWSendEventTelemetry({
+    var _window$AWSendEventTe, _window;
+
+    (_window$AWSendEventTe = (_window = window).AWSendEventTelemetry) === null || _window$AWSendEventTe === void 0 ? void 0 : _window$AWSendEventTe.call(_window, {
       event: "IMPRESSION",
       event_context: { ...context,
         page
@@ -51,6 +53,8 @@ const AboutWelcomeUtils = {
   },
 
   sendActionTelemetry(messageId, elementId, eventName = "CLICK_BUTTON") {
+    var _window$AWSendEventTe2, _window2;
+
     const ping = {
       event: eventName,
       event_context: {
@@ -59,7 +63,7 @@ const AboutWelcomeUtils = {
       },
       message_id: messageId
     };
-    window.AWSendEventTelemetry(ping);
+    (_window$AWSendEventTe2 = (_window2 = window).AWSendEventTelemetry) === null || _window$AWSendEventTe2 === void 0 ? void 0 : _window$AWSendEventTe2.call(_window2, ping);
   },
 
   async fetchFlowParams(metricsFlowUri) {
@@ -283,8 +287,10 @@ const MultiStageAboutWelcome = props => {
   const [topSites, setTopSites] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     (async () => {
-      let DEFAULT_SITES = await window.AWGetDefaultSites();
-      const importable = JSON.parse(await window.AWGetImportableSites());
+      var _window$AWGetDefaultS, _window, _window$AWGetImportab, _window2;
+
+      let DEFAULT_SITES = await ((_window$AWGetDefaultS = (_window = window).AWGetDefaultSites) === null || _window$AWGetDefaultS === void 0 ? void 0 : _window$AWGetDefaultS.call(_window));
+      const importable = JSON.parse((await ((_window$AWGetImportab = (_window2 = window).AWGetImportableSites) === null || _window$AWGetImportab === void 0 ? void 0 : _window$AWGetImportab.call(_window2))) || "[]");
       const showImportable = useImportable && importable.length >= 5;
 
       if (!importTelemetrySent.current) {
@@ -342,6 +348,7 @@ const MultiStageAboutWelcome = props => {
       activeTheme: activeTheme,
       initialTheme: initialTheme,
       setActiveTheme: setActiveTheme,
+      setInitialTheme: setInitialTheme,
       autoAdvance: screen.auto_advance,
       negotiatedLanguage: negotiatedLanguage,
       langPackInstallPhase: langPackInstallPhase
@@ -459,6 +466,12 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       let themeToUse = action.theme === "<event>" ? event.currentTarget.value : this.props.initialTheme || action.theme;
       this.props.setActiveTheme(themeToUse);
       window.AWSelectTheme(themeToUse);
+    } // If the action has persistActiveTheme: true, we set the initial theme to the currently active theme
+    // so that it can be reverted to in the event that the user navigates away from the screen
+
+
+    if (action.persistActiveTheme) {
+      this.props.setInitialTheme(this.props.activeTheme);
     }
 
     if (action.navigate) {
@@ -591,6 +604,7 @@ const Localized = ({
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "MultiStageProtonScreen": () => (/* binding */ MultiStageProtonScreen),
+/* harmony export */   "ProtonScreenActionButtons": () => (/* binding */ ProtonScreenActionButtons),
 /* harmony export */   "ProtonScreen": () => (/* binding */ ProtonScreen)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
@@ -655,6 +669,43 @@ const MultiStageProtonScreen = props => {
     negotiatedLanguage: props.negotiatedLanguage,
     langPackInstallPhase: props.langPackInstallPhase
   });
+};
+const ProtonScreenActionButtons = props => {
+  var _content$primary_butt, _content$primary_butt2;
+
+  const {
+    content
+  } = props;
+  const [isChecked, setIsChecked] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "action-buttons"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
+    text: (_content$primary_butt = content.primary_button) === null || _content$primary_butt === void 0 ? void 0 : _content$primary_butt.label
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
+    className: "primary" // Whether or not the checkbox is checked determines which action
+    // should be handled. By setting value here, we indicate to
+    // this.handleAction() where in the content tree it should take
+    // the action to execute from.
+    ,
+    value: isChecked ? "checkbox" : "primary_button",
+    disabled: ((_content$primary_butt2 = content.primary_button) === null || _content$primary_butt2 === void 0 ? void 0 : _content$primary_butt2.disabled) === true,
+    onClick: props.handleAction
+  })), content.checkbox ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    className: "checkbox-container"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
+    type: "checkbox",
+    id: "action-checkbox",
+    onChange: () => {
+      setIsChecked(!isChecked);
+    }
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
+    text: content.checkbox.label
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", {
+    htmlFor: "action-checkbox"
+  }))) : null, content.secondary_button ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_5__.SecondaryCTA, {
+    content: content,
+    handleAction: props.handleAction
+  }) : null);
 };
 class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComponent) {
   componentDidMount() {
@@ -772,7 +823,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
   }
 
   render() {
-    var _this$props$appAndSys, _content$primary_butt, _content$primary_butt2;
+    var _this$props$appAndSys;
 
     const {
       autoAdvance,
@@ -836,19 +887,10 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     })), content.cta_paragraph ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_CTAParagraph__WEBPACK_IMPORTED_MODULE_7__.CTAParagraph, {
       content: content.cta_paragraph,
       handleAction: this.props.handleAction
-    }) : null), this.renderContentTiles(), this.renderLanguageSwitcher(), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-      className: "action-buttons"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
-      text: (_content$primary_butt = content.primary_button) === null || _content$primary_butt === void 0 ? void 0 : _content$primary_butt.label
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
-      className: "primary",
-      value: "primary_button",
-      disabled: ((_content$primary_butt2 = content.primary_button) === null || _content$primary_butt2 === void 0 ? void 0 : _content$primary_butt2.disabled) === true,
-      onClick: this.props.handleAction
-    })), content.secondary_button ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_5__.SecondaryCTA, {
+    }) : null), this.renderContentTiles(), this.renderLanguageSwitcher(), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(ProtonScreenActionButtons, {
       content: content,
       handleAction: this.props.handleAction
-    }) : null)), hideStepsIndicator ? null : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    })), hideStepsIndicator ? null : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: `steps ${content.progress_bar ? "progress-bar" : ""}`,
       "data-l10n-id": "onboarding-welcome-steps-indicator2",
       "data-l10n-args": JSON.stringify({
@@ -941,11 +983,39 @@ function Colorways(props) {
     defaultVariationIndex,
     systemVariations,
     variations
-  } = props.content.tiles; // Active theme id from JSON e.g. "expressionist"
+  } = props.content.tiles;
+  let hasReverted = false; // Active theme id from JSON e.g. "expressionist"
 
   const activeId = computeColorWay(props.activeTheme, systemVariations);
   const [colorwayId, setState] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(activeId);
-  const [variationIndex, setVariationIndex] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(defaultVariationIndex); // Update state any time activeTheme changes.
+  const [variationIndex, setVariationIndex] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(defaultVariationIndex);
+
+  function revertToDefaultTheme() {
+    if (hasReverted) return; // Spoofing an event with current target value of "navigate_away"
+    // helps the handleAction method to read the colorways theme as "revert"
+    // which causes the initial theme to be activated.
+    // The "navigate_away" action is set in content in the colorways screen JSON config.
+    // Any value in the JSON for theme will work, provided it is not `<event>`.
+
+    const event = {
+      currentTarget: {
+        value: "navigate_away"
+      }
+    };
+    props.handleAction(event);
+    hasReverted = true;
+  } // Revert to default theme if the user navigates away from the page or spotlight modal
+  // before clicking on the primary button to officially set theme.
+
+
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    addEventListener("beforeunload", revertToDefaultTheme);
+    addEventListener("pagehide", revertToDefaultTheme);
+    return () => {
+      removeEventListener("beforeunload", revertToDefaultTheme);
+      removeEventListener("pagehide", revertToDefaultTheme);
+    };
+  }); // Update state any time activeTheme changes.
 
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     setState(computeColorWay(props.activeTheme, systemVariations));
@@ -1709,8 +1779,10 @@ class AboutWelcome extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
   }
 
   async fetchFxAFlowUri() {
+    var _window$AWGetFxAMetri, _window;
+
     this.setState({
-      metricsFlowUri: await window.AWGetFxAMetricsFlowURI()
+      metricsFlowUri: await ((_window$AWGetFxAMetri = (_window = window).AWGetFxAMetricsFlowURI) === null || _window$AWGetFxAMetri === void 0 ? void 0 : _window$AWGetFxAMetri.call(_window))
     });
   }
 

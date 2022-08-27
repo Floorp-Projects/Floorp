@@ -328,8 +328,10 @@ add_task(async function test_time_updates_correctly() {
 
       await setupListState(browser);
 
+      let initialTimeText = document.querySelector("span.synced-tab-li-time")
+        .textContent;
       Assert.stringContains(
-        document.querySelector("span.synced-tab-li-time").textContent,
+        initialTimeText,
         "Just now",
         "synced-tab-li-time text is 'Just now'"
       );
@@ -345,8 +347,9 @@ add_task(async function test_time_updates_correctly() {
         () => !timeLabel.textContent.includes("now")
       );
 
-      ok(
-        timeLabel.textContent.includes("minute"),
+      isnot(
+        timeLabel.textContent,
+        initialTimeText,
         "synced-tab-li-time text has updated"
       );
 

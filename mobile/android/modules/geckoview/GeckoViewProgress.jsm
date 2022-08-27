@@ -156,7 +156,6 @@ var IdentityHandler = {
         uri.port,
         {},
         cert,
-        {},
         {}
       );
 

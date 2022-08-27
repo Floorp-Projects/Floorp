@@ -448,6 +448,7 @@ public class GeckoView extends FrameLayout {
     final GeckoSession session = mSession;
     mSession.releaseDisplay(mDisplay.release());
     mSession.getOverscrollEdgeEffect().setInvalidationCallback(null);
+    mSession.getOverscrollEdgeEffect().setSession(null);
     mSession.getCompositorController().setFirstPaintCallback(null);
 
     if (mSession.getAccessibility().getView() == this) {
@@ -525,6 +526,7 @@ public class GeckoView extends FrameLayout {
 
     final Context context = getContext();
     session.getOverscrollEdgeEffect().setTheme(context);
+    session.getOverscrollEdgeEffect().setSession(session);
     session
         .getOverscrollEdgeEffect()
         .setInvalidationCallback(

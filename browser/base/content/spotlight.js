@@ -124,16 +124,14 @@ function renderMultistage(ready) {
     AWParent.onContentMessage(`AWPage:${name}`, data, browser);
 
   // Expose top level functions expected by the bundle.
-  window.AWGetDefaultSites = () => {};
   window.AWGetFeatureConfig = () => CONFIG;
-  window.AWGetFxAMetricsFlowURI = () => {};
-  window.AWGetImportableSites = () => "[]";
   window.AWGetRegion = receive("GET_REGION");
   window.AWGetSelectedTheme = receive("GET_SELECTED_THEME");
   window.AWSelectTheme = data => receive("SELECT_THEME")(data?.toUpperCase());
   // Do not send telemetry if message (e.g. spotlight in PBM) config sets metrics as 'block'.
-  window.AWSendEventTelemetry =
-    CONFIG?.metrics === "block" ? () => {} : receive("TELEMETRY_EVENT");
+  if (CONFIG?.metrics !== "block") {
+    window.AWSendEventTelemetry = receive("TELEMETRY_EVENT");
+  }
   window.AWSendToDeviceEmailsSupported = receive(
     "SEND_TO_DEVICE_EMAILS_SUPPORTED"
   );

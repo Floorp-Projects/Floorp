@@ -21,8 +21,8 @@ child:
                                        uint8_t aEVStatus,
                                        bool isBuiltCertChainRootBuiltInRoot);
 
-  async OnVerifiedSSLServerCertFailure(uint32_t aFinalError,
-                                       uint32_t aCollectedErrors);
+  async OnVerifiedSSLServerCertFailure(int32_t aFinalError,
+                                       uint32_t aOverridableErrorCategory);
 
   async __delete__();
 };

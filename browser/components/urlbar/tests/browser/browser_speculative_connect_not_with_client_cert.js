@@ -160,15 +160,11 @@ add_setup(async function() {
     },
   ]);
 
-  let overrideBits =
-    Ci.nsICertOverrideService.ERROR_UNTRUSTED |
-    Ci.nsICertOverrideService.ERROR_MISMATCH;
   certOverrideService.rememberValidityOverride(
     "localhost",
     server.port,
     {},
     cert,
-    overrideBits,
     true
   );
 

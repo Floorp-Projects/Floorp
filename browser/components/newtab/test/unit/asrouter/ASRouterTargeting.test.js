@@ -19,6 +19,7 @@ describe("#CachedTargetingGetter", () => {
   let topsitesCache;
   let globals;
   let doesAppNeedPinStub;
+  let getAddonsByTypesStub;
   beforeEach(() => {
     sandbox = sinon.createSandbox();
     clock = sinon.useFakeTimers();
@@ -42,6 +43,7 @@ describe("#CachedTargetingGetter", () => {
       }
     );
     doesAppNeedPinStub = sandbox.stub().resolves();
+    getAddonsByTypesStub = sandbox.stub().resolves();
   });
 
   afterEach(() => {
@@ -51,7 +53,7 @@ describe("#CachedTargetingGetter", () => {
   });
 
   it("should cache allow for optional getter argument", async () => {
-    let cachedGetter = new CachedTargetingGetter(
+    let pinCachedGetter = new CachedTargetingGetter(
       "doesAppNeedPin",
       true,
       undefined,
@@ -60,9 +62,9 @@ describe("#CachedTargetingGetter", () => {
     // Need to tick forward because Date.now() is stubbed
     clock.tick(sixHours);
 
-    await cachedGetter.get();
-    await cachedGetter.get();
-    await cachedGetter.get();
+    await pinCachedGetter.get();
+    await pinCachedGetter.get();
+    await pinCachedGetter.get();
 
     // Called once; cached request
     assert.calledOnce(doesAppNeedPinStub);
@@ -72,10 +74,37 @@ describe("#CachedTargetingGetter", () => {
 
     // Expire and call again
     clock.tick(sixHours);
-    await cachedGetter.get();
+    await pinCachedGetter.get();
 
     // Call goes through
     assert.calledTwice(doesAppNeedPinStub);
+
+    let themesCachedGetter = new CachedTargetingGetter(
+      "getAddonsByTypes",
+      ["foo"],
+      undefined,
+      { getAddonsByTypes: getAddonsByTypesStub }
+    );
+
+    // Need to tick forward because Date.now() is stubbed
+    clock.tick(sixHours);
+
+    await themesCachedGetter.get();
+    await themesCachedGetter.get();
+    await themesCachedGetter.get();
+
+    // Called once; cached request
+    assert.calledOnce(getAddonsByTypesStub);
+
+    // Called with option argument
+    assert.calledWith(getAddonsByTypesStub, ["foo"]);
+
+    // Expire and call again
+    clock.tick(sixHours);
+    await themesCachedGetter.get();
+
+    // Call goes through
+    assert.calledTwice(getAddonsByTypesStub);
   });
 
   it("should only make a request every 6 hours", async () => {

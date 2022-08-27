@@ -134,15 +134,11 @@ add_task(async function() {
   let cert = getTestServerCertificate();
   // Start the proxy and configure Firefox to trust its certificate.
   let server = startServer(cert);
-  let overrideBits =
-    Ci.nsICertOverrideService.ERROR_UNTRUSTED |
-    Ci.nsICertOverrideService.ERROR_MISMATCH;
   certOverrideService.rememberValidityOverride(
     "localhost",
     server.port,
     {},
     cert,
-    overrideBits,
     true
   );
   // Configure Firefox to use the proxy.

@@ -124,8 +124,10 @@ export const MultiStageAboutWelcome = props => {
   const [topSites, setTopSites] = useState([]);
   useEffect(() => {
     (async () => {
-      let DEFAULT_SITES = await window.AWGetDefaultSites();
-      const importable = JSON.parse(await window.AWGetImportableSites());
+      let DEFAULT_SITES = await window.AWGetDefaultSites?.();
+      const importable = JSON.parse(
+        (await window.AWGetImportableSites?.()) || "[]"
+      );
       const showImportable = useImportable && importable.length >= 5;
       if (!importTelemetrySent.current) {
         AboutWelcomeUtils.sendImpressionTelemetry(`${props.message_id}_SITES`, {
@@ -201,6 +203,7 @@ export const MultiStageAboutWelcome = props => {
               activeTheme={activeTheme}
               initialTheme={initialTheme}
               setActiveTheme={setActiveTheme}
+              setInitialTheme={setInitialTheme}
               autoAdvance={screen.auto_advance}
               negotiatedLanguage={negotiatedLanguage}
               langPackInstallPhase={langPackInstallPhase}
@@ -327,6 +330,12 @@ export class WelcomeScreen extends React.PureComponent {
 
       this.props.setActiveTheme(themeToUse);
       window.AWSelectTheme(themeToUse);
+    }
+
+    // If the action has persistActiveTheme: true, we set the initial theme to the currently active theme
+    // so that it can be reverted to in the event that the user navigates away from the screen
+    if (action.persistActiveTheme) {
+      this.props.setInitialTheme(this.props.activeTheme);
     }
 
     if (action.navigate) {

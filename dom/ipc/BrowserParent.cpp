@@ -2334,7 +2334,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetCursor(
 
   nsCOMPtr<imgIContainer> cursorImage;
   if (aHasCustomCursor) {
-    if (!aCursorData || aHeight * aStride >= aCursorData->Size() ||
+    if (!aCursorData || aHeight * aStride != aCursorData->Size() ||
         aStride < aWidth * gfx::BytesPerPixel(aFormat)) {
       return IPC_FAIL(this, "Invalid custom cursor data");
     }

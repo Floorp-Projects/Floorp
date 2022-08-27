@@ -412,6 +412,9 @@ void WebRenderBridgeParent::Destroy() {
     mWebRenderBridgeRef->Clear();
     mWebRenderBridgeRef = nullptr;
   }
+  for (const auto& entry : mCompositables) {
+    entry.second->OnReleased();
+  }
   mCompositables.clear();
   ClearResources();
 }

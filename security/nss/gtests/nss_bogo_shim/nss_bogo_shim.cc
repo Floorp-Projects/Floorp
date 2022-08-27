@@ -19,6 +19,9 @@
 #include "sslerr.h"
 #include "sslproto.h"
 #include "nss_scoped_ptrs.h"
+#include "sslimpl.h"
+#include "tls13ech.h"
+#include "base64.h"
 
 #include "nsskeys.h"
 
@@ -337,14 +340,40 @@ class TestAgent {
     }
 
     if (!cfg_.get<bool>("server")) {
-      // Needed to make resumption work.
-      rv = SSL_SetURL(ssl_fd_.get(), "server");
+      auto hostname = cfg_.get<std::string>("host-name");
+      if (!hostname.empty()) {
+        rv = SSL_SetURL(ssl_fd_.get(), hostname.c_str());
+      } else {
+        // Needed to make resumption work.
+        rv = SSL_SetURL(ssl_fd_.get(), "server");
+      }
       if (rv != SECSuccess) return false;
+
+      // Setup ECH configs on client if provided
+      auto echConfigList = cfg_.get<std::string>("ech-config-list");
+      if (!echConfigList.empty()) {
+        unsigned int binLen;
+        auto bin = ATOB_AsciiToData(echConfigList.c_str(), &binLen);
+        rv = SSLExp_SetClientEchConfigs(ssl_fd_.get(), bin, binLen);
+        if (rv != SECSuccess) return false;
+        free(bin);
+      }
     }
 
     rv = SSL_OptionSet(ssl_fd_.get(), SSL_ENABLE_EXTENDED_MASTER_SECRET,
                        PR_TRUE);
     if (rv != SECSuccess) return false;
+
+    if (cfg_.get<bool>("server")) {
+      // BoGo expects servers to enable ECH (backend) by default
+      rv = SSLExp_EnableTls13BackendEch(ssl_fd_.get(), true);
+      if (rv != SECSuccess) return false;
+    }
+
+    if (cfg_.get<bool>("enable-ech-grease")) {
+      rv = SSLExp_EnableTls13GreaseEch(ssl_fd_.get(), true);
+      if (rv != SECSuccess) return false;
+    }
 
     if (!ConfigureCiphers()) return false;
 
@@ -536,20 +565,38 @@ class TestAgent {
       }
     }
 
+    SSLChannelInfo info;
+    rv = SSL_GetChannelInfo(ssl_fd_.get(), &info, sizeof(info));
+    if (rv != SECSuccess) {
+      PRErrorCode err = PR_GetError();
+      std::cerr << "SSL_GetChannelInfo failed with error=" << FormatError(err)
+                << std::endl;
+      return SECFailure;
+    }
+
     auto sig_alg = cfg_.get<int>("expect-peer-signature-algorithm");
     if (sig_alg) {
-      SSLChannelInfo info;
-      rv = SSL_GetChannelInfo(ssl_fd_.get(), &info, sizeof(info));
-      if (rv != SECSuccess) {
-        PRErrorCode err = PR_GetError();
-        std::cerr << "SSL_GetChannelInfo failed with error=" << FormatError(err)
-                  << std::endl;
-        return SECFailure;
-      }
-
       auto expected = static_cast<SSLSignatureScheme>(sig_alg);
       if (info.signatureScheme != expected) {
         std::cerr << "Unexpected signature scheme" << std::endl;
+        return SECFailure;
+      }
+    }
+
+    if (cfg_.get<bool>("expect-ech-accept")) {
+      if (!info.echAccepted) {
+        std::cerr << "Expected ECH" << std::endl;
+        return SECFailure;
+      }
+    }
+
+    if (cfg_.get<bool>("expect-hrr")) {
+      sslSocket* ss = ssl_FindSocket(ssl_fd_.get());
+      if (!ss) {
+        return SECFailure;
+      }
+      if (!ss->ssl3.hs.helloRetry) {
+        std::cerr << "Expected HRR" << std::endl;
         return SECFailure;
       }
     }
@@ -592,6 +639,11 @@ std::unique_ptr<const Config> ReadConfig(int argc, char** argv) {
   cfg->AddEntry<std::vector<int>>("verify-prefs", std::vector<int>());
   cfg->AddEntry<int>("expect-peer-signature-algorithm", 0);
   cfg->AddEntry<std::string>("nss-cipher", "");
+  cfg->AddEntry<std::string>("host-name", "");
+  cfg->AddEntry<std::string>("ech-config-list", "");
+  cfg->AddEntry<bool>("expect-ech-accept", false);
+  cfg->AddEntry<bool>("expect-hrr", false);
+  cfg->AddEntry<bool>("enable-ech-grease", false);
 
   auto rv = cfg->ParseArgs(argc, argv);
   switch (rv) {

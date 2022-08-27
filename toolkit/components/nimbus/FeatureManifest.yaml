@@ -602,3 +602,7 @@ majorRelease2022:
       type: boolean
       fallbackPref: "browser.privacySegmentation.preferences.show"
       description: "Controls visibility of the privacy segmentation preferences section."
+    colorwayCloset:
+      type: boolean
+      fallbackPref: "browser.theme.colorway-closet"
+      description: "Whether or not to show the colorway closet modal"

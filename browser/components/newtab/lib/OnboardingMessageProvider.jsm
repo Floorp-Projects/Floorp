@@ -36,6 +36,9 @@ const L10N = new Localization([
   "browser/newtab/onboarding.ftl",
 ]);
 
+const HOMEPAGE_PREF = "browser.startup.homepage";
+const NEWTAB_PREF = "browser.newtabpage.enabled";
+
 const ONBOARDING_MESSAGES = () => [
   {
     id: "FXA_ACCOUNTS_BADGE",
@@ -295,6 +298,17 @@ const ONBOARDING_MESSAGES = () => [
                 string_id: "mr2022-onboarding-colorway-primary-button-label",
               },
               action: {
+                persistActiveTheme: true,
+                navigate: true,
+              },
+            },
+            checkbox: {
+              label: {
+                string_id: "mr2022-onboarding-existing-colorway-checkbox-label",
+              },
+              action: {
+                type: "CONFIGURE_HOMEPAGE",
+                data: { homePage: "default", newtab: "default" },
                 navigate: true,
               },
             },
@@ -307,6 +321,11 @@ const ONBOARDING_MESSAGES = () => [
                 navigate: true,
               },
               has_arrow_icon: true,
+            },
+            navigate_away: {
+              action: {
+                theme: "revert",
+              },
             },
           },
         },
@@ -837,6 +856,13 @@ const OnboardingMessageProvider = {
     let isDefault = await lazy.ShellService.isDefaultBrowser();
     return checkDefault && !isDefault;
   },
+  _doesHomepageNeedReset() {
+    return (
+      Services.prefs.prefHasUserValue(HOMEPAGE_PREF) ||
+      Services.prefs.prefHasUserValue(NEWTAB_PREF)
+    );
+  },
+
   async getUpgradeMessage() {
     let message = (await OnboardingMessageProvider.getMessages()).find(
       ({ id }) => id === "FX_MR_106_UPGRADE"
@@ -927,6 +953,12 @@ const OnboardingMessageProvider = {
       removeScreens(screen => screen.id?.startsWith("UPGRADE_COLORWAY"));
     }
 
+    // If the newtab and home page are already set to defaults, remove the
+    // checkbox that offers to reset them.
+    if (!this._doesHomepageNeedReset()) {
+      delete content.screens?.find(screen => screen.id === "UPGRADE_COLORWAY")
+        ?.content?.checkbox;
+    }
     return message;
   },
 };

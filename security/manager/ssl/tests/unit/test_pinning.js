@@ -52,7 +52,6 @@ function test_strict() {
   // this host, we don't allow overrides.
   add_prevented_cert_override_test(
     "unknownissuer.include-subdomains.pinning.example.com",
-    Ci.nsICertOverrideService.ERROR_UNTRUSTED,
     SEC_ERROR_UNKNOWN_ISSUER
   );
   add_clear_override("unknownissuer.include-subdomains.pinning.example.com");
@@ -103,7 +102,6 @@ function test_strict() {
   // Similarly, this pin is in test-mode, so it should be overridable.
   add_cert_override_test(
     "unknownissuer.test-mode.pinning.example.com",
-    Ci.nsICertOverrideService.ERROR_UNTRUSTED,
     SEC_ERROR_UNKNOWN_ISSUER
   );
   add_clear_override("unknownissuer.test-mode.pinning.example.com");
@@ -132,7 +130,6 @@ function test_mitm() {
   // anchor, so we can't allow overrides for it).
   add_prevented_cert_override_test(
     "unknownissuer.include-subdomains.pinning.example.com",
-    Ci.nsICertOverrideService.ERROR_UNTRUSTED,
     SEC_ERROR_UNKNOWN_ISSUER
   );
   add_clear_override("unknownissuer.include-subdomains.pinning.example.com");
@@ -155,7 +152,6 @@ function test_mitm() {
   add_connection_test("test-mode.pinning.example.com", PRErrorCodeSuccess);
   add_cert_override_test(
     "unknownissuer.test-mode.pinning.example.com",
-    Ci.nsICertOverrideService.ERROR_UNTRUSTED,
     SEC_ERROR_UNKNOWN_ISSUER
   );
   add_clear_override("unknownissuer.test-mode.pinning.example.com");
@@ -192,13 +188,11 @@ function test_disabled() {
 
   add_cert_override_test(
     "unknownissuer.include-subdomains.pinning.example.com",
-    Ci.nsICertOverrideService.ERROR_UNTRUSTED,
     SEC_ERROR_UNKNOWN_ISSUER
   );
   add_clear_override("unknownissuer.include-subdomains.pinning.example.com");
   add_cert_override_test(
     "unknownissuer.test-mode.pinning.example.com",
-    Ci.nsICertOverrideService.ERROR_UNTRUSTED,
     SEC_ERROR_UNKNOWN_ISSUER
   );
   add_clear_override("unknownissuer.test-mode.pinning.example.com");
@@ -215,7 +209,6 @@ function test_enforce_test_mode() {
   // this host, we don't allow overrides.
   add_prevented_cert_override_test(
     "unknownissuer.include-subdomains.pinning.example.com",
-    Ci.nsICertOverrideService.ERROR_UNTRUSTED,
     SEC_ERROR_UNKNOWN_ISSUER
   );
   add_clear_override("unknownissuer.include-subdomains.pinning.example.com");
@@ -259,7 +252,6 @@ function test_enforce_test_mode() {
   // this host (and since we're enforcing test mode), we don't allow overrides.
   add_prevented_cert_override_test(
     "unknownissuer.test-mode.pinning.example.com",
-    Ci.nsICertOverrideService.ERROR_UNTRUSTED,
     SEC_ERROR_UNKNOWN_ISSUER
   );
   add_clear_override("unknownissuer.test-mode.pinning.example.com");

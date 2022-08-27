@@ -57,88 +57,33 @@ interface nsICertOverride : nsISupports {
   readonly attribute jsval originAttributes;
 };
 
-/**
- * This represents the global list of triples
- *   {host:port, cert-fingerprint, allowed-overrides}
- * that the user wants to accept without further warnings.
- */
 [scriptable, builtinclass, uuid(be019e47-22fc-4355-9f16-9ab047d6742d)]
 interface nsICertOverrideService : nsISupports {
-
   /**
-   *  Override Untrusted
-   */
-  const short ERROR_UNTRUSTED = 1;
-
-  /**
-   *  Override hostname Mismatch
-   */
-  const short ERROR_MISMATCH = 2;
-
-  /**
-   *  Override Time error
-   */
-  const short ERROR_TIME = 4;
-
-  /**
-   *  The given cert should always be accepted for the given hostname:port,
-   *  regardless of errors verifying the cert.
-   *  Host:Port is a primary key, only one entry per host:port can exist.
-   *  The implementation will store a fingerprint of the cert.
-   *  The implementation will decide which fingerprint alg is used.
+   * When making a TLS connection to the given hostname and port (in the
+   * context of the given origin attributes), if the certificate verifier
+   * encounters an overridable error when verifying the given certificate, the
+   * connection will continue (provided overrides are allowed for that host).
    *
-   *  Each override is specific to exactly the errors overridden, so
-   *  overriding everything won't match certs at the given host:port
-   *  which only exhibit some subset of errors.
-   *
-   *  @param aHostName The host (punycode) this mapping belongs to
-   *  @param aPort The port this mapping belongs to, if it is -1 then it
-   *          is internaly treated as 443
-   *  @param aCert The cert that should always be accepted
-   *  @param aOverrideBits The precise set of errors we want to be overriden
+   * @param aHostName The host (punycode) this mapping belongs to
+   * @param aPort The port this mapping belongs to. If it is -1 then it
+   *              is internaly treated as 443.
+   * @param aOriginAttributes the origin attributes of the mapping
+   * @param aCert The certificate used by the server
+   * @param aTemporary Whether or not to only store the mapping for the session
    */
   [binaryname(RememberValidityOverride), noscript, must_use]
   void rememberValidityOverrideNative(in AUTF8String aHostName,
                                 in int32_t aPort,
                                 in const_OriginAttributesRef aOriginAttributes,
                                 in nsIX509Cert aCert,
-                                in uint32_t aOverrideBits,
                                 in boolean aTemporary);
   [binaryname(RememberValidityOverrideScriptable), implicit_jscontext, must_use]
   void rememberValidityOverride(in AUTF8String aHostName,
                                 in int32_t aPort,
                                 in jsval aOriginAttributes,
                                 in nsIX509Cert aCert,
-                                in uint32_t aOverrideBits,
                                 in boolean aTemporary);
-
-  /**
-   *  Certs with the given fingerprint should always be accepted for the
-   *  given hostname:port, regardless of errors verifying the cert.
-   *  Host:Port is a primary key, only one entry per host:port can exist.
-   *  The fingerprint should be an SHA-256 hash of the certificate.
-   *
-   *  @param aHostName The host (punycode) this mapping belongs to
-   *  @param aPort The port this mapping belongs to, if it is -1 then it
-   *          is internaly treated as 443
-   *  @param aCertFingerprint The cert fingerprint that should be accepted, in
-   *          the format 'AA:BB:...' (colon-separated upper-case hex bytes).
-   *  @param aOverrideBits The errors we want to be overriden
-   */
-  [binaryname(RememberTemporaryValidityOverrideUsingFingerprint), noscript, must_use]
-  void rememberTemporaryValidityOverrideUsingFingerprintNative(
-      in AUTF8String aHostName,
-      in int32_t aPort,
-      in const_OriginAttributesRef aOriginAttributes,
-      in AUTF8String aCertFingerprint,
-      in uint32_t aOverrideBits);
-  [binaryname(RememberTemporaryValidityOverrideUsingFingerprintScriptable), implicit_jscontext, must_use]
-  void rememberTemporaryValidityOverrideUsingFingerprint(
-      in AUTF8String aHostName,
-      in int32_t aPort,
-      in jsval aOriginAttributes,
-      in AUTF8String aCertFingerprint,
-      in uint32_t aOverrideBits);
 
   /**
    *  Return whether this host, port, cert triple has a stored override.
@@ -150,7 +95,6 @@ interface nsICertOverrideService : nsISupports {
    *  @param aPort The port this mapping belongs to, if it is -1 then it
    *         is internally treated as 443
    *  @param aCert The certificate this mapping belongs to
-   *  @param aOverrideBits The errors that are currently overridden
    *  @param aIsTemporary Whether the stored override is session-only,
    *         or permanent
    *  @return Whether an override has been stored for this host+port+cert
@@ -160,14 +104,12 @@ interface nsICertOverrideService : nsISupports {
                               in int32_t aPort,
                               in const_OriginAttributesRef aOriginAttributes,
                               in nsIX509Cert aCert,
-                              out uint32_t aOverrideBits,
                               out boolean aIsTemporary);
   [binaryname(HasMatchingOverrideScriptable), implicit_jscontext, must_use]
   boolean hasMatchingOverride(in AUTF8String aHostName,
                               in int32_t aPort,
                               in jsval aOriginAttributes,
                               in nsIX509Cert aCert,
-                              out uint32_t aOverrideBits,
                               out boolean aIsTemporary);
 
   /**

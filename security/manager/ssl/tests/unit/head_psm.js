@@ -909,47 +909,23 @@ function stopOCSPResponder(responder) {
 
 // Helper function for add_cert_override_test. Probably doesn't need to be
 // called directly.
-function add_cert_override(aHost, aExpectedBits, aSecurityInfo) {
-  let bits =
-    (aSecurityInfo.isUntrusted
-      ? Ci.nsICertOverrideService.ERROR_UNTRUSTED
-      : 0) |
-    (aSecurityInfo.isDomainMismatch
-      ? Ci.nsICertOverrideService.ERROR_MISMATCH
-      : 0) |
-    (aSecurityInfo.isNotValidAtThisTime
-      ? Ci.nsICertOverrideService.ERROR_TIME
-      : 0);
-
-  Assert.equal(
-    bits,
-    aExpectedBits,
-    "Actual and expected override bits should match"
-  );
+function add_cert_override(aHost, aSecurityInfo) {
   let cert = aSecurityInfo.serverCert;
   let certOverrideService = Cc[
     "@mozilla.org/security/certoverride;1"
   ].getService(Ci.nsICertOverrideService);
-  certOverrideService.rememberValidityOverride(
-    aHost,
-    8443,
-    {},
-    cert,
-    aExpectedBits,
-    true
-  );
+  certOverrideService.rememberValidityOverride(aHost, 8443, {}, cert, true);
 }
 
-// Given a host, expected error bits (see nsICertOverrideService.idl), and an
-// expected error code, tests that an initial connection to the host fails
-// with the expected errors and that adding an override results in a subsequent
-// connection succeeding.
-function add_cert_override_test(aHost, aExpectedBits, aExpectedError) {
+// Given a host and an expected error code, tests that an initial connection to
+// the host fails with the expected error and that adding an override results
+// in a subsequent connection succeeding.
+function add_cert_override_test(aHost, aExpectedError) {
   add_connection_test(
     aHost,
     aExpectedError,
     null,
-    add_cert_override.bind(this, aHost, aExpectedBits)
+    add_cert_override.bind(this, aHost)
   );
   add_connection_test(aHost, PRErrorCodeSuccess, null, aSecurityInfo => {
     Assert.ok(
@@ -964,54 +940,28 @@ function add_cert_override_test(aHost, aExpectedBits, aExpectedError) {
 // add_cert_override except it may not be the case that the connection has an
 // SecInfo set on it. In this case, the error was not overridable anyway, so
 // we consider it a success.
-function attempt_adding_cert_override(aHost, aExpectedBits, aSecurityInfo) {
+function attempt_adding_cert_override(aHost, aSecurityInfo) {
   if (aSecurityInfo.serverCert) {
-    let bits =
-      (aSecurityInfo.isUntrusted
-        ? Ci.nsICertOverrideService.ERROR_UNTRUSTED
-        : 0) |
-      (aSecurityInfo.isDomainMismatch
-        ? Ci.nsICertOverrideService.ERROR_MISMATCH
-        : 0) |
-      (aSecurityInfo.isNotValidAtThisTime
-        ? Ci.nsICertOverrideService.ERROR_TIME
-        : 0);
-    Assert.equal(
-      bits,
-      aExpectedBits,
-      "Actual and expected override bits should match"
-    );
     let cert = aSecurityInfo.serverCert;
     let certOverrideService = Cc[
       "@mozilla.org/security/certoverride;1"
     ].getService(Ci.nsICertOverrideService);
-    certOverrideService.rememberValidityOverride(
-      aHost,
-      8443,
-      {},
-      cert,
-      aExpectedBits,
-      true
-    );
+    certOverrideService.rememberValidityOverride(aHost, 8443, {}, cert, true);
   }
 }
 
-// Given a host, expected error bits (see nsICertOverrideService.idl), and
-// an expected error code, tests that an initial connection to the host fails
-// with the expected errors and that adding an override does not result in a
-// subsequent connection succeeding (i.e. the same error code is encountered).
+// Given a host and an expected error code, tests that an initial connection to
+// the host fails with the expected error and that adding an override does not
+// result in a subsequent connection succeeding (i.e. the same error code is
+// encountered).
 // The idea here is that for HSTS hosts or hosts with key pins, no error is
 // overridable, even if an entry is added to the override service.
-function add_prevented_cert_override_test(
-  aHost,
-  aExpectedBits,
-  aExpectedError
-) {
+function add_prevented_cert_override_test(aHost, aExpectedError) {
   add_connection_test(
     aHost,
     aExpectedError,
     null,
-    attempt_adding_cert_override.bind(this, aHost, aExpectedBits)
+    attempt_adding_cert_override.bind(this, aHost)
   );
   add_connection_test(aHost, aExpectedError);
 }

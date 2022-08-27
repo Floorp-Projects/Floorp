@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Localized } from "./MSLocalized";
 import { Colorways } from "./MRColorways";
 import { MobileDownloads } from "./MobileDownloads";
@@ -49,6 +49,46 @@ export const MultiStageProtonScreen = props => {
       negotiatedLanguage={props.negotiatedLanguage}
       langPackInstallPhase={props.langPackInstallPhase}
     />
+  );
+};
+
+export const ProtonScreenActionButtons = props => {
+  const { content } = props;
+
+  const [isChecked, setIsChecked] = useState(false);
+
+  return (
+    <div className="action-buttons">
+      <Localized text={content.primary_button?.label}>
+        <button
+          className="primary"
+          // Whether or not the checkbox is checked determines which action
+          // should be handled. By setting value here, we indicate to
+          // this.handleAction() where in the content tree it should take
+          // the action to execute from.
+          value={isChecked ? "checkbox" : "primary_button"}
+          disabled={content.primary_button?.disabled === true}
+          onClick={props.handleAction}
+        />
+      </Localized>
+      {content.checkbox ? (
+        <div className="checkbox-container">
+          <input
+            type="checkbox"
+            id="action-checkbox"
+            onChange={() => {
+              setIsChecked(!isChecked);
+            }}
+          ></input>
+          <Localized text={content.checkbox.label}>
+            <label htmlFor="action-checkbox"></label>
+          </Localized>
+        </div>
+      ) : null}
+      {content.secondary_button ? (
+        <SecondaryCTA content={content} handleAction={props.handleAction} />
+      ) : null}
+    </div>
   );
 };
 
@@ -302,22 +342,10 @@ export class ProtonScreen extends React.PureComponent {
               </div>
               {this.renderContentTiles()}
               {this.renderLanguageSwitcher()}
-              <div className="action-buttons">
-                <Localized text={content.primary_button?.label}>
-                  <button
-                    className="primary"
-                    value="primary_button"
-                    disabled={content.primary_button?.disabled === true}
-                    onClick={this.props.handleAction}
-                  />
-                </Localized>
-                {content.secondary_button ? (
-                  <SecondaryCTA
-                    content={content}
-                    handleAction={this.props.handleAction}
-                  />
-                ) : null}
-              </div>
+              <ProtonScreenActionButtons
+                content={content}
+                handleAction={this.props.handleAction}
+              />
             </div>
             {hideStepsIndicator ? null : (
               <div

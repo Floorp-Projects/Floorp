@@ -9,53 +9,25 @@
 
 // Helper function for add_read_only_cert_override_test. Probably doesn't need
 // to be called directly.
-function add_read_only_cert_override(aHost, aExpectedBits, aSecurityInfo) {
-  let bits =
-    (aSecurityInfo.isUntrusted
-      ? Ci.nsICertOverrideService.ERROR_UNTRUSTED
-      : 0) |
-    (aSecurityInfo.isDomainMismatch
-      ? Ci.nsICertOverrideService.ERROR_MISMATCH
-      : 0) |
-    (aSecurityInfo.isNotValidAtThisTime
-      ? Ci.nsICertOverrideService.ERROR_TIME
-      : 0);
-
-  Assert.equal(
-    bits,
-    aExpectedBits,
-    "Actual and expected override bits should match"
-  );
+function add_read_only_cert_override(aHost, aSecurityInfo) {
   let cert = aSecurityInfo.serverCert;
   let certOverrideService = Cc[
     "@mozilla.org/security/certoverride;1"
   ].getService(Ci.nsICertOverrideService);
   // Setting the last argument to false here ensures that we attempt to store a
   // permanent override (which is what was failing in bug 1427273).
-  certOverrideService.rememberValidityOverride(
-    aHost,
-    8443,
-    {},
-    cert,
-    aExpectedBits,
-    false
-  );
+  certOverrideService.rememberValidityOverride(aHost, 8443, {}, cert, false);
 }
 
-// Given a host, expected error bits (see nsICertOverrideService.idl), and an
-// expected error code, tests that an initial connection to the host fails with
-// the expected errors and that adding an override results in a subsequent
-// connection succeeding.
-function add_read_only_cert_override_test(
-  aHost,
-  aExpectedBits,
-  aExpectedError
-) {
+// Given a host and an expected error code, tests that an initial connection to
+// the host fails with the expected errors and that adding an override results
+// in a subsequent connection succeeding.
+function add_read_only_cert_override_test(aHost, aExpectedError) {
   add_connection_test(
     aHost,
     aExpectedError,
     null,
-    add_read_only_cert_override.bind(this, aHost, aExpectedBits)
+    add_read_only_cert_override.bind(this, aHost)
   );
   add_connection_test(aHost, PRErrorCodeSuccess, null, aSecurityInfo => {
     Assert.ok(
@@ -103,19 +75,14 @@ function run_test() {
   // set in addition to whatever other specific error bits are necessary.
   add_read_only_cert_override_test(
     "expired.example.com",
-    Ci.nsICertOverrideService.ERROR_TIME |
-      Ci.nsICertOverrideService.ERROR_UNTRUSTED,
     SEC_ERROR_UNKNOWN_ISSUER
   );
   add_read_only_cert_override_test(
     "selfsigned.example.com",
-    Ci.nsICertOverrideService.ERROR_UNTRUSTED,
     MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT
   );
   add_read_only_cert_override_test(
     "mismatch.example.com",
-    Ci.nsICertOverrideService.ERROR_MISMATCH |
-      Ci.nsICertOverrideService.ERROR_UNTRUSTED,
     SEC_ERROR_UNKNOWN_ISSUER
   );
 

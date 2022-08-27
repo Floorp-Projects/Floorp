@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -10,6 +14,10 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
+});
+
+XPCOMUtils.defineLazyGetter(lazy, "relativeTimeFormat", () => {
+  return new Services.intl.RelativeTimeFormat(undefined, { style: "narrow" });
 });
 
 // Cutoff of 1.5 minutes + 1 second to determine what text string to display
@@ -24,10 +32,6 @@ export function convertTimestamp(
   fluentStrings,
   _nowThresholdMs = NOW_THRESHOLD_MS
 ) {
-  const relativeTimeFormat = new Services.intl.RelativeTimeFormat(
-    undefined,
-    {}
-  );
   const elapsed = Date.now() - timestamp;
   let formattedTime;
   if (elapsed <= _nowThresholdMs) {
@@ -36,7 +40,7 @@ export function convertTimestamp(
       "firefoxview-just-now-timestamp"
     );
   } else {
-    formattedTime = relativeTimeFormat.formatBestUnit(new Date(timestamp));
+    formattedTime = lazy.relativeTimeFormat.formatBestUnit(new Date(timestamp));
   }
   return formattedTime;
 }

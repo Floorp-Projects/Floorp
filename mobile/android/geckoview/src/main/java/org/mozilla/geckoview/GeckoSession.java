@@ -5255,7 +5255,7 @@ public class GeckoSession {
     ThreadUtils.assertOnUiThread();
 
     if (mOverscroll == null) {
-      mOverscroll = new OverscrollEdgeEffect(this);
+      mOverscroll = new OverscrollEdgeEffect();
     }
     return mOverscroll;
   }

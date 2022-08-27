@@ -110,11 +110,7 @@ void nsMathMLmfracFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   /////////////
   // paint the fraction line
-  if (mIsBevelled) {
-    DisplaySlash(aBuilder, mLineRect, mLineThickness, aLists);
-  } else {
-    DisplayBar(aBuilder, this, mLineRect, aLists);
-  }
+  DisplayBar(aBuilder, this, mLineRect, aLists);
 }
 
 nsresult nsMathMLmfracFrame::AttributeChanged(int32_t aNameSpaceID,
@@ -202,389 +198,177 @@ nsresult nsMathMLmfracFrame::PlaceInternal(DrawTarget* aDrawTarget,
       CalcLineThickness(presContext, mComputedStyle, value, onePixel,
                         defaultRuleThickness, fontSizeInflation);
 
-  // bevelled attribute
-  mIsBevelled = false;
-  if (!StaticPrefs::mathml_mfrac_bevelled_attribute_disabled()) {
-    if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::bevelled_,
-                                       value)) {
-      mContent->OwnerDoc()->WarnOnceAbout(
-          dom::DeprecatedOperations::eMathML_DeprecatedBevelledAttribute);
-      mIsBevelled = value.EqualsLiteral("true");
+  bool displayStyle = StyleFont()->mMathStyle == NS_STYLE_MATH_STYLE_NORMAL;
+
+  mLineRect.height = mLineThickness;
+
+  // by default, leave at least one-pixel padding at either end, and add
+  // lspace & rspace that may come from <mo> if we are an outermost
+  // embellished container (we fetch values from the core since they may use
+  // units that depend on style data, and style changes could have occurred
+  // in the core since our last visit there)
+  nscoord leftSpace = onePixel;
+  nscoord rightSpace = onePixel;
+  if (outermostEmbellished) {
+    const bool isRTL = StyleVisibility()->mDirection == StyleDirection::Rtl;
+    nsEmbellishData coreData;
+    GetEmbellishDataFrom(mEmbellishData.coreFrame, coreData);
+    leftSpace += isRTL ? coreData.trailingSpace : coreData.leadingSpace;
+    rightSpace += isRTL ? coreData.leadingSpace : coreData.trailingSpace;
+  }
+
+  nscoord actualRuleThickness = mLineThickness;
+
+  //////////////////
+  // Get shifts
+  nscoord numShift = 0;
+  nscoord denShift = 0;
+
+  // Rule 15b, App. G, TeXbook
+  nscoord numShift1, numShift2, numShift3;
+  nscoord denShift1, denShift2;
+
+  GetNumeratorShifts(fm, numShift1, numShift2, numShift3);
+  GetDenominatorShifts(fm, denShift1, denShift2);
+
+  if (0 == actualRuleThickness) {
+    numShift = displayStyle ? numShift1 : numShift3;
+    denShift = displayStyle ? denShift1 : denShift2;
+    if (mathFont) {
+      numShift = mathFont->MathTable()->Constant(
+          displayStyle ? gfxMathTable::StackTopDisplayStyleShiftUp
+                       : gfxMathTable::StackTopShiftUp,
+          oneDevPixel);
+      denShift = mathFont->MathTable()->Constant(
+          displayStyle ? gfxMathTable::StackBottomDisplayStyleShiftDown
+                       : gfxMathTable::StackBottomShiftDown,
+          oneDevPixel);
+    }
+  } else {
+    numShift = displayStyle ? numShift1 : numShift2;
+    denShift = displayStyle ? denShift1 : denShift2;
+    if (mathFont) {
+      numShift = mathFont->MathTable()->Constant(
+          displayStyle ? gfxMathTable::FractionNumeratorDisplayStyleShiftUp
+                       : gfxMathTable::FractionNumeratorShiftUp,
+          oneDevPixel);
+      denShift = mathFont->MathTable()->Constant(
+          displayStyle ? gfxMathTable::FractionDenominatorDisplayStyleShiftDown
+                       : gfxMathTable::FractionDenominatorShiftDown,
+          oneDevPixel);
     }
   }
 
-  bool displayStyle = StyleFont()->mMathStyle == NS_STYLE_MATH_STYLE_NORMAL;
+  if (0 == actualRuleThickness) {
+    // Rule 15c, App. G, TeXbook
 
-  if (!mIsBevelled) {
-    mLineRect.height = mLineThickness;
-
-    // by default, leave at least one-pixel padding at either end, and add
-    // lspace & rspace that may come from <mo> if we are an outermost
-    // embellished container (we fetch values from the core since they may use
-    // units that depend on style data, and style changes could have occurred
-    // in the core since our last visit there)
-    nscoord leftSpace = onePixel;
-    nscoord rightSpace = onePixel;
-    if (outermostEmbellished) {
-      const bool isRTL = StyleVisibility()->mDirection == StyleDirection::Rtl;
-      nsEmbellishData coreData;
-      GetEmbellishDataFrom(mEmbellishData.coreFrame, coreData);
-      leftSpace += isRTL ? coreData.trailingSpace : coreData.leadingSpace;
-      rightSpace += isRTL ? coreData.leadingSpace : coreData.trailingSpace;
+    // min clearance between numerator and denominator
+    nscoord minClearance =
+        displayStyle ? 7 * defaultRuleThickness : 3 * defaultRuleThickness;
+    if (mathFont) {
+      minClearance = mathFont->MathTable()->Constant(
+          displayStyle ? gfxMathTable::StackDisplayStyleGapMin
+                       : gfxMathTable::StackGapMin,
+          oneDevPixel);
     }
 
-    nscoord actualRuleThickness = mLineThickness;
-
-    //////////////////
-    // Get shifts
-    nscoord numShift = 0;
-    nscoord denShift = 0;
-
-    // Rule 15b, App. G, TeXbook
-    nscoord numShift1, numShift2, numShift3;
-    nscoord denShift1, denShift2;
-
-    GetNumeratorShifts(fm, numShift1, numShift2, numShift3);
-    GetDenominatorShifts(fm, denShift1, denShift2);
-
-    if (0 == actualRuleThickness) {
-      numShift = displayStyle ? numShift1 : numShift3;
-      denShift = displayStyle ? denShift1 : denShift2;
-      if (mathFont) {
-        numShift = mathFont->MathTable()->Constant(
-            displayStyle ? gfxMathTable::StackTopDisplayStyleShiftUp
-                         : gfxMathTable::StackTopShiftUp,
-            oneDevPixel);
-        denShift = mathFont->MathTable()->Constant(
-            displayStyle ? gfxMathTable::StackBottomDisplayStyleShiftDown
-                         : gfxMathTable::StackBottomShiftDown,
-            oneDevPixel);
-      }
-    } else {
-      numShift = displayStyle ? numShift1 : numShift2;
-      denShift = displayStyle ? denShift1 : denShift2;
-      if (mathFont) {
-        numShift = mathFont->MathTable()->Constant(
-            displayStyle ? gfxMathTable::FractionNumeratorDisplayStyleShiftUp
-                         : gfxMathTable::FractionNumeratorShiftUp,
-            oneDevPixel);
-        denShift = mathFont->MathTable()->Constant(
-            displayStyle
-                ? gfxMathTable::FractionDenominatorDisplayStyleShiftDown
-                : gfxMathTable::FractionDenominatorShiftDown,
-            oneDevPixel);
-      }
-    }
-
-    if (0 == actualRuleThickness) {
-      // Rule 15c, App. G, TeXbook
-
-      // min clearance between numerator and denominator
-      nscoord minClearance =
-          displayStyle ? 7 * defaultRuleThickness : 3 * defaultRuleThickness;
-      if (mathFont) {
-        minClearance = mathFont->MathTable()->Constant(
-            displayStyle ? gfxMathTable::StackDisplayStyleGapMin
-                         : gfxMathTable::StackGapMin,
-            oneDevPixel);
-      }
-
-      nscoord actualClearance =
-          (numShift - bmNum.descent) - (bmDen.ascent - denShift);
-      // actualClearance should be >= minClearance
-      if (actualClearance < minClearance) {
-        nscoord halfGap = (minClearance - actualClearance) / 2;
-        numShift += halfGap;
-        denShift += halfGap;
-      }
-    } else {
-      // Rule 15d, App. G, TeXbook
-
-      // min clearance between numerator or denominator and middle of bar
-
-      // TeX has a different interpretation of the thickness.
-      // Try $a \above10pt b$ to see. Here is what TeX does:
-      // minClearance = displayStyle ?
-      //   3 * actualRuleThickness : actualRuleThickness;
-
-      // we slightly depart from TeX here. We use the defaultRuleThickness
-      // instead of the value coming from the linethickness attribute, i.e., we
-      // recover what TeX does if the user hasn't set linethickness. But when
-      // the linethickness is set, we avoid the wide gap problem.
-      nscoord minClearanceNum = displayStyle ? 3 * defaultRuleThickness
-                                             : defaultRuleThickness + onePixel;
-      nscoord minClearanceDen = minClearanceNum;
-      if (mathFont) {
-        minClearanceNum = mathFont->MathTable()->Constant(
-            displayStyle ? gfxMathTable::FractionNumDisplayStyleGapMin
-                         : gfxMathTable::FractionNumeratorGapMin,
-            oneDevPixel);
-        minClearanceDen = mathFont->MathTable()->Constant(
-            displayStyle ? gfxMathTable::FractionDenomDisplayStyleGapMin
-                         : gfxMathTable::FractionDenominatorGapMin,
-            oneDevPixel);
-      }
-
-      // adjust numShift to maintain minClearanceNum if needed
-      nscoord actualClearanceNum =
-          (numShift - bmNum.descent) - (axisHeight + actualRuleThickness / 2);
-      if (actualClearanceNum < minClearanceNum) {
-        numShift += (minClearanceNum - actualClearanceNum);
-      }
-      // adjust denShift to maintain minClearanceDen if needed
-      nscoord actualClearanceDen =
-          (axisHeight - actualRuleThickness / 2) - (bmDen.ascent - denShift);
-      if (actualClearanceDen < minClearanceDen) {
-        denShift += (minClearanceDen - actualClearanceDen);
-      }
-    }
-
-    //////////////////
-    // Place Children
-
-    // XXX Need revisiting the width. TeX uses the exact width
-    // e.g. in $$\huge\frac{\displaystyle\int}{i}$$
-    nscoord width = std::max(bmNum.width, bmDen.width);
-    nscoord dxNum = leftSpace + (width - sizeNum.Width()) / 2;
-    nscoord dxDen = leftSpace + (width - sizeDen.Width()) / 2;
-    width += leftSpace + rightSpace;
-
-    mBoundingMetrics.rightBearing =
-        std::max(dxNum + bmNum.rightBearing, dxDen + bmDen.rightBearing);
-    if (mBoundingMetrics.rightBearing < width - rightSpace)
-      mBoundingMetrics.rightBearing = width - rightSpace;
-    mBoundingMetrics.leftBearing =
-        std::min(dxNum + bmNum.leftBearing, dxDen + bmDen.leftBearing);
-    if (mBoundingMetrics.leftBearing > leftSpace)
-      mBoundingMetrics.leftBearing = leftSpace;
-    mBoundingMetrics.ascent = bmNum.ascent + numShift;
-    mBoundingMetrics.descent = bmDen.descent + denShift;
-    mBoundingMetrics.width = width;
-
-    aDesiredSize.SetBlockStartAscent(sizeNum.BlockStartAscent() + numShift);
-    aDesiredSize.Height() = aDesiredSize.BlockStartAscent() + sizeDen.Height() -
-                            sizeDen.BlockStartAscent() + denShift;
-    aDesiredSize.Width() = mBoundingMetrics.width;
-    aDesiredSize.mBoundingMetrics = mBoundingMetrics;
-
-    mReference.x = 0;
-    mReference.y = aDesiredSize.BlockStartAscent();
-
-    if (aPlaceOrigin) {
-      nscoord dy;
-      // place numerator
-      dy = 0;
-      FinishReflowChild(frameNum, presContext, sizeNum, nullptr, dxNum, dy,
-                        ReflowChildFlags::Default);
-      // place denominator
-      dy = aDesiredSize.Height() - sizeDen.Height();
-      FinishReflowChild(frameDen, presContext, sizeDen, nullptr, dxDen, dy,
-                        ReflowChildFlags::Default);
-      // place the fraction bar - dy is top of bar
-      dy = aDesiredSize.BlockStartAscent() -
-           (axisHeight + actualRuleThickness / 2);
-      mLineRect.SetRect(leftSpace, dy, width - (leftSpace + rightSpace),
-                        actualRuleThickness);
+    nscoord actualClearance =
+        (numShift - bmNum.descent) - (bmDen.ascent - denShift);
+    // actualClearance should be >= minClearance
+    if (actualClearance < minClearance) {
+      nscoord halfGap = (minClearance - actualClearance) / 2;
+      numShift += halfGap;
+      denShift += halfGap;
     }
   } else {
-    nscoord numShift = 0.0;
-    nscoord denShift = 0.0;
-    nscoord padding = 3 * defaultRuleThickness;
-    nscoord slashRatio = 3;
+    // Rule 15d, App. G, TeXbook
 
-    // Define the constant used in the expression of the maximum width
-    nscoord em = fm->EmHeight();
-    nscoord slashMaxWidthConstant = 2 * em;
+    // min clearance between numerator or denominator and middle of bar
 
-    // For large line thicknesses the minimum slash height is limited to the
-    // largest expected height of a fraction
-    nscoord slashMinHeight =
-        slashRatio * std::min(2 * mLineThickness, slashMaxWidthConstant);
+    // TeX has a different interpretation of the thickness.
+    // Try $a \above10pt b$ to see. Here is what TeX does:
+    // minClearance = displayStyle ?
+    //   3 * actualRuleThickness : actualRuleThickness;
 
-    nscoord leadingSpace = padding;
-    nscoord trailingSpace = padding;
-    if (outermostEmbellished) {
-      nsEmbellishData coreData;
-      GetEmbellishDataFrom(mEmbellishData.coreFrame, coreData);
-      leadingSpace += coreData.leadingSpace;
-      trailingSpace += coreData.trailingSpace;
-    }
-    nscoord delta;
-
-    //           ___________
-    //          |           |    /
-    //         {|-NUMERATOR-|   /
-    //         {|___________|  S
-    //         {               L
-    // numShift{               A
-    // ------------------------------------------------------- baseline
-    //                         S   _____________ } denShift
-    //                         H  |             |}
-    //                        /   |-DENOMINATOR-|}
-    //                       /    |_____________|
-    //
-
-    // first, ensure that the top of the numerator is at least as high as the
-    // top of the denominator (and the reverse for the bottoms)
-    delta =
-        std::max(bmDen.ascent - bmNum.ascent, bmNum.descent - bmDen.descent) /
-        2;
-    if (delta > 0) {
-      numShift += delta;
-      denShift += delta;
+    // we slightly depart from TeX here. We use the defaultRuleThickness
+    // instead of the value coming from the linethickness attribute, i.e., we
+    // recover what TeX does if the user hasn't set linethickness. But when
+    // the linethickness is set, we avoid the wide gap problem.
+    nscoord minClearanceNum = displayStyle ? 3 * defaultRuleThickness
+                                           : defaultRuleThickness + onePixel;
+    nscoord minClearanceDen = minClearanceNum;
+    if (mathFont) {
+      minClearanceNum = mathFont->MathTable()->Constant(
+          displayStyle ? gfxMathTable::FractionNumDisplayStyleGapMin
+                       : gfxMathTable::FractionNumeratorGapMin,
+          oneDevPixel);
+      minClearanceDen = mathFont->MathTable()->Constant(
+          displayStyle ? gfxMathTable::FractionDenomDisplayStyleGapMin
+                       : gfxMathTable::FractionDenominatorGapMin,
+          oneDevPixel);
     }
 
-    if (StyleFont()->mMathStyle == NS_STYLE_MATH_STYLE_NORMAL) {
-      delta =
-          std::min(bmDen.ascent + bmDen.descent, bmNum.ascent + bmNum.descent) /
-          2;
-      numShift += delta;
-      denShift += delta;
-    } else {
-      nscoord xHeight = fm->XHeight();
-      numShift += xHeight / 2;
-      denShift += xHeight / 4;
+    // adjust numShift to maintain minClearanceNum if needed
+    nscoord actualClearanceNum =
+        (numShift - bmNum.descent) - (axisHeight + actualRuleThickness / 2);
+    if (actualClearanceNum < minClearanceNum) {
+      numShift += (minClearanceNum - actualClearanceNum);
     }
-
-    // Set the ascent/descent of our BoundingMetrics.
-    mBoundingMetrics.ascent = bmNum.ascent + numShift;
-    mBoundingMetrics.descent = bmDen.descent + denShift;
-
-    // At this point the height of the slash is
-    // mBoundingMetrics.ascent + mBoundingMetrics.descent
-    // Ensure that it is greater than slashMinHeight
-    delta = (slashMinHeight -
-             (mBoundingMetrics.ascent + mBoundingMetrics.descent)) /
-            2;
-    if (delta > 0) {
-      mBoundingMetrics.ascent += delta;
-      mBoundingMetrics.descent += delta;
+    // adjust denShift to maintain minClearanceDen if needed
+    nscoord actualClearanceDen =
+        (axisHeight - actualRuleThickness / 2) - (bmDen.ascent - denShift);
+    if (actualClearanceDen < minClearanceDen) {
+      denShift += (minClearanceDen - actualClearanceDen);
     }
+  }
 
-    // Set the width of the slash
-    if (aWidthOnly) {
-      mLineRect.width = mLineThickness + slashMaxWidthConstant;
-    } else {
-      mLineRect.width =
-          mLineThickness +
-          std::min(slashMaxWidthConstant,
-                   (mBoundingMetrics.ascent + mBoundingMetrics.descent) /
-                       slashRatio);
-    }
+  //////////////////
+  // Place Children
 
-    // Set horizontal bounding metrics
-    if (StyleVisibility()->mDirection == StyleDirection::Rtl) {
-      mBoundingMetrics.leftBearing = trailingSpace + bmDen.leftBearing;
-      mBoundingMetrics.rightBearing =
-          trailingSpace + bmDen.width + mLineRect.width + bmNum.rightBearing;
-    } else {
-      mBoundingMetrics.leftBearing = leadingSpace + bmNum.leftBearing;
-      mBoundingMetrics.rightBearing =
-          leadingSpace + bmNum.width + mLineRect.width + bmDen.rightBearing;
-    }
-    mBoundingMetrics.width = leadingSpace + bmNum.width + mLineRect.width +
-                             bmDen.width + trailingSpace;
+  // XXX Need revisiting the width. TeX uses the exact width
+  // e.g. in $$\huge\frac{\displaystyle\int}{i}$$
+  nscoord width = std::max(bmNum.width, bmDen.width);
+  nscoord dxNum = leftSpace + (width - sizeNum.Width()) / 2;
+  nscoord dxDen = leftSpace + (width - sizeDen.Width()) / 2;
+  width += leftSpace + rightSpace;
 
-    // Set aDesiredSize
-    aDesiredSize.SetBlockStartAscent(mBoundingMetrics.ascent + padding);
-    aDesiredSize.Height() =
-        mBoundingMetrics.ascent + mBoundingMetrics.descent + 2 * padding;
-    aDesiredSize.Width() = mBoundingMetrics.width;
-    aDesiredSize.mBoundingMetrics = mBoundingMetrics;
+  mBoundingMetrics.rightBearing =
+      std::max(dxNum + bmNum.rightBearing, dxDen + bmDen.rightBearing);
+  if (mBoundingMetrics.rightBearing < width - rightSpace)
+    mBoundingMetrics.rightBearing = width - rightSpace;
+  mBoundingMetrics.leftBearing =
+      std::min(dxNum + bmNum.leftBearing, dxDen + bmDen.leftBearing);
+  if (mBoundingMetrics.leftBearing > leftSpace)
+    mBoundingMetrics.leftBearing = leftSpace;
+  mBoundingMetrics.ascent = bmNum.ascent + numShift;
+  mBoundingMetrics.descent = bmDen.descent + denShift;
+  mBoundingMetrics.width = width;
 
-    mReference.x = 0;
-    mReference.y = aDesiredSize.BlockStartAscent();
+  aDesiredSize.SetBlockStartAscent(sizeNum.BlockStartAscent() + numShift);
+  aDesiredSize.Height() = aDesiredSize.BlockStartAscent() + sizeDen.Height() -
+                          sizeDen.BlockStartAscent() + denShift;
+  aDesiredSize.Width() = mBoundingMetrics.width;
+  aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
-    if (aPlaceOrigin) {
-      nscoord dx, dy;
+  mReference.x = 0;
+  mReference.y = aDesiredSize.BlockStartAscent();
 
-      // place numerator
-      dx = MirrorIfRTL(aDesiredSize.Width(), sizeNum.Width(), leadingSpace);
-      dy = aDesiredSize.BlockStartAscent() - numShift -
-           sizeNum.BlockStartAscent();
-      FinishReflowChild(frameNum, presContext, sizeNum, nullptr, dx, dy,
-                        ReflowChildFlags::Default);
-
-      // place the fraction bar
-      dx = MirrorIfRTL(aDesiredSize.Width(), mLineRect.width,
-                       leadingSpace + bmNum.width);
-      dy = aDesiredSize.BlockStartAscent() - mBoundingMetrics.ascent;
-      mLineRect.SetRect(dx, dy, mLineRect.width,
-                        aDesiredSize.Height() - 2 * padding);
-
-      // place denominator
-      dx = MirrorIfRTL(aDesiredSize.Width(), sizeDen.Width(),
-                       leadingSpace + bmNum.width + mLineRect.width);
-      dy = aDesiredSize.BlockStartAscent() + denShift -
-           sizeDen.BlockStartAscent();
-      FinishReflowChild(frameDen, presContext, sizeDen, nullptr, dx, dy,
-                        ReflowChildFlags::Default);
-    }
+  if (aPlaceOrigin) {
+    nscoord dy;
+    // place numerator
+    dy = 0;
+    FinishReflowChild(frameNum, presContext, sizeNum, nullptr, dxNum, dy,
+                      ReflowChildFlags::Default);
+    // place denominator
+    dy = aDesiredSize.Height() - sizeDen.Height();
+    FinishReflowChild(frameDen, presContext, sizeDen, nullptr, dxDen, dy,
+                      ReflowChildFlags::Default);
+    // place the fraction bar - dy is top of bar
+    dy = aDesiredSize.BlockStartAscent() -
+         (axisHeight + actualRuleThickness / 2);
+    mLineRect.SetRect(leftSpace, dy, width - (leftSpace + rightSpace),
+                      actualRuleThickness);
   }
 
   return NS_OK;
-}
-
-namespace mozilla {
-
-class nsDisplayMathMLSlash : public nsPaintedDisplayItem {
- public:
-  nsDisplayMathMLSlash(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                       const nsRect& aRect, nscoord aThickness)
-      : nsPaintedDisplayItem(aBuilder, aFrame),
-        mRect(aRect),
-        mThickness(aThickness) {
-    MOZ_COUNT_CTOR(nsDisplayMathMLSlash);
-  }
-  MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayMathMLSlash)
-
-  virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
-  NS_DISPLAY_DECL_NAME("MathMLSlash", TYPE_MATHML_SLASH)
-
- private:
-  nsRect mRect;
-  nscoord mThickness;
-};
-
-void nsDisplayMathMLSlash::Paint(nsDisplayListBuilder* aBuilder,
-                                 gfxContext* aCtx) {
-  DrawTarget& aDrawTarget = *aCtx->GetDrawTarget();
-
-  // get the gfxRect
-  nsPresContext* presContext = mFrame->PresContext();
-  Rect rect = NSRectToRect(mRect + ToReferenceFrame(),
-                           presContext->AppUnitsPerDevPixel());
-
-  ColorPattern color(ToDeviceColor(
-      mFrame->GetVisitedDependentColor(&nsStyleText::mWebkitTextFillColor)));
-
-  // draw the slash as a parallelogram
-  Point delta = Point(presContext->AppUnitsToGfxUnits(mThickness), 0);
-  RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
-  if (mFrame->StyleVisibility()->mDirection == StyleDirection::Rtl) {
-    builder->MoveTo(rect.TopLeft());
-    builder->LineTo(rect.TopLeft() + delta);
-    builder->LineTo(rect.BottomRight());
-    builder->LineTo(rect.BottomRight() - delta);
-  } else {
-    builder->MoveTo(rect.BottomLeft());
-    builder->LineTo(rect.BottomLeft() + delta);
-    builder->LineTo(rect.TopRight());
-    builder->LineTo(rect.TopRight() - delta);
-  }
-  RefPtr<Path> path = builder->Finish();
-  aDrawTarget.Fill(path, color);
-}
-
-}  // namespace mozilla
-
-void nsMathMLmfracFrame::DisplaySlash(nsDisplayListBuilder* aBuilder,
-                                      const nsRect& aRect, nscoord aThickness,
-                                      const nsDisplayListSet& aLists) {
-  if (!StyleVisibility()->IsVisible() || aRect.IsEmpty()) {
-    return;
-  }
-
-  aLists.Content()->AppendNewToTop<nsDisplayMathMLSlash>(aBuilder, this, aRect,
-                                                         aThickness);
 }

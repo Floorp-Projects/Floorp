@@ -337,6 +337,8 @@ export default class LoginList extends HTMLElement {
       }
       case "AboutLoginsClearSelection": {
         if (!this._loginGuidsSortedOrder.length) {
+          this._createLoginButton.disabled = false;
+          this.classList.remove("create-login-selected");
           return;
         }
 

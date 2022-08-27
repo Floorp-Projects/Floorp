@@ -110,23 +110,10 @@ FuzzySecurityInfo::GetCertificateTransparencyStatus(
 }
 
 NS_IMETHODIMP
-FuzzySecurityInfo::GetIsDomainMismatch(bool* aIsDomainMismatch) {
-  NS_ENSURE_ARG_POINTER(aIsDomainMismatch);
-  *aIsDomainMismatch = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FuzzySecurityInfo::GetIsNotValidAtThisTime(bool* aIsNotValidAtThisTime) {
-  NS_ENSURE_ARG_POINTER(aIsNotValidAtThisTime);
-  *aIsNotValidAtThisTime = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FuzzySecurityInfo::GetIsUntrusted(bool* aIsUntrusted) {
-  NS_ENSURE_ARG_POINTER(aIsUntrusted);
-  *aIsUntrusted = false;
+FuzzySecurityInfo::GetOverridableErrorCategory(
+    OverridableErrorCategory* aOverridableErrorCode) {
+  NS_ENSURE_ARG_POINTER(aOverridableErrorCode);
+  *aOverridableErrorCode = OverridableErrorCategory::ERROR_UNSET;
   return NS_OK;
 }
 

@@ -38,26 +38,23 @@ ipc::IPCResult VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertSuccess(
     certBytesArray.AppendElement(std::move(cert.data()));
   }
 
-  mResultTask->Dispatch(std::move(certBytesArray), std::move(mPeerCertChain),
-                        aCertTransparencyStatus,
-                        static_cast<EVStatus>(aEVStatus), true, 0, 0,
-                        aIsBuiltCertChainRootBuiltInRoot, mProviderFlags);
+  mResultTask->Dispatch(
+      std::move(certBytesArray), std::move(mPeerCertChain),
+      aCertTransparencyStatus, static_cast<EVStatus>(aEVStatus), true, 0,
+      nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET,
+      aIsBuiltCertChainRootBuiltInRoot, mProviderFlags);
   return IPC_OK();
 }
 
 ipc::IPCResult VerifySSLServerCertChild::RecvOnVerifiedSSLServerCertFailure(
-    const uint32_t& aFinalError, const uint32_t& aCollectedErrors) {
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-          ("[%p]VerifySSLServerCertChild::"
-           "RecvOnVerifiedSSLServerCertFailure - aFinalError=%u, "
-           "aCollectedErrors=%u",
-           this, aFinalError, aCollectedErrors));
-
+    const int32_t& aFinalError, const uint32_t& aOverridableErrorCategory) {
   mResultTask->Dispatch(
       nsTArray<nsTArray<uint8_t>>(), std::move(mPeerCertChain),
       nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE,
-      EVStatus::NotEV, false, aFinalError, aCollectedErrors, false,
-      mProviderFlags);
+      EVStatus::NotEV, false, aFinalError,
+      static_cast<nsITransportSecurityInfo::OverridableErrorCategory>(
+          aOverridableErrorCategory),
+      false, mProviderFlags);
   return IPC_OK();
 }
 

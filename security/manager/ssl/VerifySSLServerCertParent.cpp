@@ -31,7 +31,7 @@ VerifySSLServerCertParent::VerifySSLServerCertParent() {}
 void VerifySSLServerCertParent::OnVerifiedSSLServerCert(
     const nsTArray<ByteArray>& aBuiltCertChain,
     uint16_t aCertificateTransparencyStatus, uint8_t aEVStatus, bool aSucceeded,
-    PRErrorCode aFinalError, uint32_t aCollectedErrors,
+    PRErrorCode aFinalError, uint32_t aOverridableErrorCategory,
     bool aIsBuiltCertChainRootBuiltInRoot) {
   AssertIsOnBackgroundThread();
 
@@ -44,7 +44,8 @@ void VerifySSLServerCertParent::OnVerifiedSSLServerCert(
         aBuiltCertChain, aCertificateTransparencyStatus, aEVStatus,
         aIsBuiltCertChainRootBuiltInRoot);
   } else {
-    Unused << SendOnVerifiedSSLServerCertFailure(aFinalError, aCollectedErrors);
+    Unused << SendOnVerifiedSSLServerCertFailure(aFinalError,
+                                                 aOverridableErrorCategory);
   }
   Unused << Send__delete__(this);
 }
@@ -65,7 +66,8 @@ class IPCServerCertVerificationResult final
                 nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
                 uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
                 bool aSucceeded, PRErrorCode aFinalError,
-                uint32_t aCollectedErrors,
+                nsITransportSecurityInfo::OverridableErrorCategory
+                    aOverridableErrorCategory,
                 bool aIsBuiltCertChainRootBuiltInRoot,
                 uint32_t aProviderFlags) override;
 
@@ -80,7 +82,9 @@ void IPCServerCertVerificationResult::Dispatch(
     nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
     uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
-    bool aSucceeded, PRErrorCode aFinalError, uint32_t aCollectedErrors,
+    bool aSucceeded, PRErrorCode aFinalError,
+    nsITransportSecurityInfo::OverridableErrorCategory
+        aOverridableErrorCategory,
     bool aIsBuiltCertChainRootBuiltInRoot, uint32_t aProviderFlags) {
   nsTArray<ByteArray> builtCertChain;
   if (aSucceeded) {
@@ -94,7 +98,7 @@ void IPCServerCertVerificationResult::Dispatch(
           "psm::VerifySSLServerCertParent::OnVerifiedSSLServerCert",
           [parent(mParent), builtCertChain{std::move(builtCertChain)},
            aCertificateTransparencyStatus, aEVStatus, aSucceeded, aFinalError,
-           aCollectedErrors, aIsBuiltCertChainRootBuiltInRoot,
+           aOverridableErrorCategory, aIsBuiltCertChainRootBuiltInRoot,
            aProviderFlags]() {
             if (aSucceeded &&
                 !(aProviderFlags & nsISocketProvider::NO_PERMANENT_STORAGE)) {
@@ -109,7 +113,8 @@ void IPCServerCertVerificationResult::Dispatch(
             parent->OnVerifiedSSLServerCert(
                 builtCertChain, aCertificateTransparencyStatus,
                 static_cast<uint8_t>(aEVStatus), aSucceeded, aFinalError,
-                aCollectedErrors, aIsBuiltCertChainRootBuiltInRoot);
+                static_cast<uint32_t>(aOverridableErrorCategory),
+                aIsBuiltCertChainRootBuiltInRoot);
           }),
       NS_DISPATCH_NORMAL);
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(nrv));
