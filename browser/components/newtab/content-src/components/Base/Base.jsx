@@ -13,6 +13,7 @@ import { CustomizeMenu } from "content-src/components/CustomizeMenu/CustomizeMen
 import React from "react";
 import { Search } from "content-src/components/Search/Search";
 import { Sections } from "content-src/components/Sections/Sections";
+import { Background } from "content-src/components/Background/Background"
 
 export const PrefsButton = ({ onClick, icon }) => (
   <div className="prefs-button">
@@ -211,6 +212,7 @@ export class BaseContent extends React.PureComponent {
 
     return (
       <div>
+        <Background />
         <CustomizeMenu
           onClose={this.closeCustomizationMenu}
           onOpen={this.openCustomizationMenu}
@@ -255,6 +257,13 @@ export class BaseContent extends React.PureComponent {
             <ConfirmDialog />
           </main>
         </div>
+        <div id="floorp">
+          {/* TODO: use css instead this br tag */}
+          <a class="releasenote" href="https://support.ablaze.one" target="_blank">Support</a><br /><br />
+          <a class="releasenote" href="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp" target="_blank">Release Note</a>
+        </div>
+        {/* TODO: move to _Base.scss */}
+        <a href="https://unsplash.com/" style={{position: "fixed", bottom: "1em", left: "1em", fontSize: "16px",  color: "#ffffff"}} target="_blank">Unsplash</a>
       </div>
     );
   }

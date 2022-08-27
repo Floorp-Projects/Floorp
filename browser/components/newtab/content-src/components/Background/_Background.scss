@@ -1,0 +1,13 @@
+#background{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  animation: fadeIn 1.7s ease 0s 1 normal;
+  opacity: 0.8;
+  z-index: -1;
+}
