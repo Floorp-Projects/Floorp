@@ -13,8 +13,13 @@ $letter-fallback-color: $white;
 
 .top-sites-list {
   list-style: none;
-  margin: 0 (-$half-base-gutter);
+  margin: 0 -40px!important;
   padding: 0;
+  justify-content: center;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 
   &:not(.dnd-active) {
     .top-site-outer:is(.active, :focus, :hover) {
