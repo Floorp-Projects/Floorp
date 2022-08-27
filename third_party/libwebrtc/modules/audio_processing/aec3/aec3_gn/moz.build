@@ -82,7 +82,8 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/audio_processing/aec3/subtractor_output.cc",
     "/third_party/libwebrtc/modules/audio_processing/aec3/subtractor_output_analyzer.cc",
     "/third_party/libwebrtc/modules/audio_processing/aec3/suppression_filter.cc",
-    "/third_party/libwebrtc/modules/audio_processing/aec3/suppression_gain.cc"
+    "/third_party/libwebrtc/modules/audio_processing/aec3/suppression_gain.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/transparent_mode.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
