@@ -7,18 +7,23 @@
   <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
   <?xml-stylesheet href="chrome://global/skin/appPicker.css" type="text/css"?>
 
-  <!DOCTYPE window SYSTEM "chrome://global/locale/appPicker.dtd" >
+  <!DOCTYPE window>
 
   <window
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:html="http://www.w3.org/1999/xhtml"
     onload="g_dialog.appPickerLoad();"
     aria-describedby="content-description suggested-filename"
     persist="screenX screenY">
   <dialog id="app-picker"
     buttons="accept,cancel,extra2"
-    buttonlabelextra2="&BrowseButton.label;"
+    data-l10n-id="app-picker-browse-button"
+    data-l10n-attrs="buttonlabelextra2"
     defaultButton="accept">
 
+    <linkset>
+      <html:link rel="localization" href="toolkit/global/appPicker.ftl"/>
+    </linkset>
     <script src="chrome://global/content/appPicker.js"/>
 
     <hbox id="file-info" align="center">
@@ -29,11 +34,11 @@
       </vbox>
     </hbox>
 
-    <label id="sendto-message" value="&SendMsg.label;" control="app-picker-listbox"/>
+    <label id="sendto-message" data-l10n-id="app-picker-send-msg" control="app-picker-listbox"/>
 
     <richlistbox id="app-picker-listbox"
                  ondblclick="g_dialog.appDoubleClick();"/>
 
-    <label id="app-picker-notfound" value="&NoAppFound.label;" hidden="true"/>
+    <label id="app-picker-notfound" data-l10n-id="app-picker-no-app-found" hidden="true"/>
   </dialog>
   </window>
