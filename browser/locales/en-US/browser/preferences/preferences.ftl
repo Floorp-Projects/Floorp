@@ -1616,3 +1616,16 @@ view-sidebar2-right =
  .label = View the Browser Manager Sidebar on the Right
 enable-sidebar2 =
  .label = Enable the Browser Manager Sidebar
+
+sidebar-mode = Choose the Sidebar Mode
+
+AllInOne-mode =
+ .label = Browser Manager Mode
+bookmark-mode =
+  .label = Bookmark Mode
+history-mode =
+ .label = History Mode
+downloads-mode =
+ .label = Download Mode
+syncedtabs-mode =
+ .label = Synced Tabs Mode

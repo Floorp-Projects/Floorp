@@ -226,6 +226,7 @@ Preferences.addAll([
   { id: "floorp.browser.rest.mode", type : "bool"},
   { id: "floorp.browser.sidebar.right", type : "bool"},
   { id: "floorp.browser.sidebar.enable", type : "bool"},
+  { id: "floorp.browser.sidebar2.mode", type : "int"},
 ]);
 
 // Floorp の設定項目終わり

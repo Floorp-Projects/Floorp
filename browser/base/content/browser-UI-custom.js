@@ -147,17 +147,17 @@ Services.prefs.addObserver("floorp.downloading.red.color", function(){
   var Tag = document.createElement("style");
   Tag.innerText = `.browser-sidebar2 {-moz-box-ordinal-group: 10 !important;}`
   document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
-  Tag.setAttribute("id", "sidebar2");
+  Tag.setAttribute("id", "sidebar2css");
 }
 Services.prefs.addObserver("floorp.browser.sidebar.right", function(){
   if (Services.prefs.getBoolPref("floorp.browser.sidebar.right", false)) {
     var Tag = document.createElement("style");
     Tag.innerText = `.browser-sidebar2 {-moz-box-ordinal-group: 10 !important;}`
     document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
-    Tag.setAttribute("id", "sidebar2");
+    Tag.setAttribute("id", "sidebar2css");
   }
   else {
-    document.getElementById("sidebar2").remove();
+    document.getElementById("sidebar2css").remove();
   }});
 
   if (!Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
@@ -171,7 +171,6 @@ Services.prefs.addObserver("floorp.browser.sidebar.right", function(){
     var Tag = document.createElement("style");
     Tag.innerText = `.browser-sidebar2 {-moz-box-ordinal-group: 10 !important;}`
     document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
-    Tag.setAttribute("id", "sidebar2");
     sidebar2.style.display = "none";
     siderbar2header.style.display = "none";
     sidebarsplit2.setAttribute("hidden", "true");
@@ -180,3 +179,48 @@ Services.prefs.addObserver("floorp.browser.sidebar.right", function(){
 
     }, 250);
   }
+
+
+window.setTimeout(function(){
+  const pref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined)
+  const sidebar2elem = document.getElementById("sidebar2");
+  switch (pref) {
+    default:
+      sidebar2elem.setAttribute("src", "chrome://browser/content/places/places.xhtml");
+     break;
+    case 1:
+      sidebar2elem.setAttribute("src", "chrome://browser/content/places/bookmarksSidebar.xhtml");
+      break;
+    case 2:
+      sidebar2elem.setAttribute("src", "chrome://browser/content/places/historySidebar.xhtml");
+      break;
+    case 3:
+      sidebar2elem.setAttribute("src", "about:downloads");
+      break;
+    case 4:
+      sidebar2elem.setAttribute("src", "chrome://browser/content/syncedtabs/sidebar.xhtml");
+  }
+  }, 1000);
+  
+  window.setTimeout(function(){
+  Services.prefs.addObserver("floorp.browser.sidebar2.mode", function(){
+    const pref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
+    const sidebar2elem = document.getElementById("sidebar2");
+    switch (pref) {
+     default:
+       sidebar2elem.setAttribute("src", "chrome://browser/content/places/places.xhtml");
+      break;
+     case 1:
+       sidebar2elem.setAttribute("src", "chrome://browser/content/places/bookmarksSidebar.xhtml");
+       break;
+     case 2:
+       sidebar2elem.setAttribute("src", "chrome://browser/content/places/historySidebar.xhtml");
+       break;
+     case 3:
+       sidebar2elem.setAttribute("src", "about:downloads");
+       break;
+     case 4:
+       sidebar2elem.setAttribute("src", "chrome://browser/content/syncedtabs/sidebar.xhtml");
+    }
+  });
+  }, 1000);
