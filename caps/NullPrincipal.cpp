@@ -46,27 +46,29 @@ NullPrincipal::NullPrincipal(nsIURI* aURI, const nsACString& aOriginNoSuffix,
 already_AddRefed<NullPrincipal> NullPrincipal::CreateWithInheritedAttributes(
     nsIPrincipal* aInheritFrom) {
   MOZ_ASSERT(aInheritFrom);
-  nsCOMPtr<nsIURI> uri = CreateURI(aInheritFrom);
-  return Create(Cast(aInheritFrom)->OriginAttributesRef(), uri);
+  return CreateInternal(Cast(aInheritFrom)->OriginAttributesRef(), false,
+                        nullptr, aInheritFrom);
+}
+
+/* static */
+already_AddRefed<NullPrincipal> NullPrincipal::CreateWithInheritedAttributes(
+    nsIDocShell* aDocShell, bool aIsFirstParty) {
+  MOZ_ASSERT(aDocShell);
+
+  OriginAttributes attrs = nsDocShell::Cast(aDocShell)->GetOriginAttributes();
+  return CreateWithInheritedAttributes(attrs, aIsFirstParty);
+}
+
+/* static */
+already_AddRefed<NullPrincipal> NullPrincipal::CreateWithInheritedAttributes(
+    const OriginAttributes& aOriginAttributes, bool aIsFirstParty) {
+  return CreateInternal(aOriginAttributes, aIsFirstParty);
 }
 
 /* static */
 already_AddRefed<NullPrincipal> NullPrincipal::Create(
-    const OriginAttributes& aOriginAttributes, nsIURI* aNullPrincipalURI) {
-  nsCOMPtr<nsIURI> uri = aNullPrincipalURI;
-  if (!uri) {
-    uri = NullPrincipal::CreateURI(nullptr);
-  }
-
-  MOZ_RELEASE_ASSERT(uri->SchemeIs(NS_NULLPRINCIPAL_SCHEME));
-
-  nsAutoCString originNoSuffix;
-  DebugOnly<nsresult> rv = uri->GetSpec(originNoSuffix);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-  RefPtr<NullPrincipal> nullPrin =
-      new NullPrincipal(uri, originNoSuffix, aOriginAttributes);
-  return nullPrin.forget();
+    const OriginAttributes& aOriginAttributes, nsIURI* aURI) {
+  return CreateInternal(aOriginAttributes, false, aURI);
 }
 
 /* static */
@@ -148,6 +150,40 @@ already_AddRefed<nsIURI> NullPrincipal::CreateURI(
   nsCOMPtr<nsIURI> uri;
   MOZ_ALWAYS_SUCCEEDS(mutator.Finalize(getter_AddRefs(uri)));
   return uri.forget();
+}
+
+already_AddRefed<NullPrincipal> NullPrincipal::CreateInternal(
+    const OriginAttributes& aOriginAttributes, bool aIsFirstParty, nsIURI* aURI,
+    nsIPrincipal* aPrecursor) {
+  MOZ_ASSERT_IF(aPrecursor, !aURI);
+  nsCOMPtr<nsIURI> uri = aURI;
+  if (!uri) {
+    uri = NullPrincipal::CreateURI(aPrecursor);
+  }
+
+  MOZ_RELEASE_ASSERT(uri->SchemeIs(NS_NULLPRINCIPAL_SCHEME));
+
+  nsAutoCString originNoSuffix;
+  DebugOnly<nsresult> rv = uri->GetSpec(originNoSuffix);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  OriginAttributes attrs(aOriginAttributes);
+  if (aIsFirstParty) {
+    // The FirstPartyDomain attribute will not include information about the
+    // precursor origin.
+    nsAutoCString path;
+    rv = uri->GetFilePath(path);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    // remove the '{}' characters from both ends.
+    path.Mid(path, 1, path.Length() - 2);
+    path.AppendLiteral(".mozilla");
+    attrs.SetFirstPartyDomain(true, path);
+  }
+
+  RefPtr<NullPrincipal> nullPrin =
+      new NullPrincipal(uri, originNoSuffix, attrs);
+  return nullPrin.forget();
 }
 
 nsresult NullPrincipal::GetScriptLocation(nsACString& aStr) {
