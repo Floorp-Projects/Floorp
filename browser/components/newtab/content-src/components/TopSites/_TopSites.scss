@@ -100,6 +100,10 @@ $letter-fallback-color: $white;
 
   display: inline-block;
 
+  background-color: color-mix(in srgb, var(--newtab-background-color) 50%, transparent);
+  border: 1px solid rgba(170, 170, 170, 0.6);
+  backdrop-filter: blur(12px);
+
   // container for context menu
   .top-site-inner {
     position: relative;

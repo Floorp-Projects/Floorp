@@ -635,6 +635,9 @@ main.has-snippet {
   padding: 20px 16px 4px;
   border-radius: 8px;
   display: inline-block;
+  background-color: color-mix(in srgb, var(--newtab-background-color) 50%, transparent);
+  border: 1px solid rgba(170, 170, 170, 0.6);
+  backdrop-filter: blur(12px);
 }
 .top-site-outer .top-site-inner {
   position: relative;
