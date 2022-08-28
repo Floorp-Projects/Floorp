@@ -161,23 +161,9 @@ Services.prefs.addObserver("floorp.browser.sidebar.right", function(){
   }});
 
   if (!Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
-    window.setTimeout(function(){
-    let sidebar2 = document.getElementById("sidebar2-box");
-    let siderbar2header = document.getElementById("sidebar2-header");
-    let sidebarsplit2 = document.getElementById("sidebar-splitter2");
-    let sidebarsplit3 = document.getElementById("sidebar-splitter3");
-    let sidebar2icon = document.getElementById("sidebar-button2");
-
-    var Tag = document.createElement("style");
-    Tag.innerText = `.browser-sidebar2 {-moz-box-ordinal-group: 10 !important;}`
-    document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
-    sidebar2.style.display = "none";
-    siderbar2header.style.display = "none";
-    sidebarsplit2.setAttribute("hidden", "true");
-    sidebarsplit3.setAttribute("hidden", "true");
-    sidebar2icon.setAttribute("hidden", "true");
-
-    }, 250);
+      var Tag = document.createElement("style");
+      Tag.innerText = `#sidebar-button2, .browser-sidebar2 {display: none !important;}`
+      document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag)
   }
 
 
