@@ -14,14 +14,21 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
 });
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
+  AppUpdater: "resource:///modules/AppUpdater.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
   ResetProfile: "resource://gre/modules/ResetProfile.jsm",
 });
 
-const BASE_URL = "https://support.mozilla.org/kb/";
+XPCOMUtils.defineLazyGetter(lazy, "BrowserUpdater", () => {
+  return AppConstants.MOZ_UPDATER ? new lazy.AppUpdater() : null;
+});
 
 let openUrlFun = url => () => openUrl(url);
 let openUrl = url => {
@@ -196,7 +203,8 @@ const DEFAULT_ACTIONS = {
   update: {
     l10nCommands: ["quickactions-cmd-update", "quickactions-update"],
     label: "quickactions-update",
-    onPick: openUrlFun(`${BASE_URL}update-firefox-latest-release`),
+    isActive: () => !!lazy.BrowserUpdater?.isReadyForRestart,
+    onPick: () => restartBrowser,
   },
   viewsource: {
     l10nCommands: ["quickactions-cmd-viewsource", "quickactions-viewsource"],
