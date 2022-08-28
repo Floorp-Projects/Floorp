@@ -494,4 +494,5 @@ toolbarbutton.bookmark-item {
 .browser-sidebar2 {
   -moz-box-ordinal-group: 0 !important;
   background: var(--toolbar-bgcolor);
-}
+  border: var(--win-sidebar-bgcolor) 0.1px solid;
+} 
