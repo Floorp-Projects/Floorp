@@ -698,6 +698,9 @@
      %1$s is replaced with the app name -->
     <string moz:removedIn="103" name="biometric_auth_title">Kuna %1$s</string>
 
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">Kuna</string>
+
     <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
     <string moz:removedIn="103" name="biometric_auth_description">Katavi sensor ña huella digital tava kitasu.</string>
 

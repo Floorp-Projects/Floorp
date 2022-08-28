@@ -198,6 +198,10 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">بہترین سائٹاں کیتے</string>
 
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">پتہ پٹی وچ ٤٥٠ کنوں ودھ مقبول یوآرایل آں  کیتے %s خودکار تکمیل کوں فعال کرو۔</string>
+
     <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
     <string name="preference_switch_autocomplete_user_list">سائٹاں کیتے جہڑیاں تساں شامل کرو</string>
 
@@ -295,6 +299,12 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">ایپ دا جندرا کھولݨ کیتے فنگرپرنٹ ورتو</string>
+
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string name="preference_security_biometric_summary2">جے تساں شاٹ کٹ شامل کیتے ہن یا کوئی ویب سائٹ %s وچ پہلے ہی کھلی ہے تاں فنگر پرنٹ نال جندرہ کھولو</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
@@ -477,8 +487,15 @@
     <!-- Onboarding: Incognito Title -->
     <string name="onboarding_incognito_title">جتھ انکاگنیٹو اوڈھر تھیندی ہے</string>
 
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s وادھوں  مضبوط ٹریکنگ تے کوکیاں حفاظت نال بݨیا رازداری ــ پہلا براؤزر ہے۔</string>
+
     <!-- Onboarding: History Title -->
     <string name="onboarding_history_title">براؤز کرو جین٘ویں ایہ کݙان٘ہ کائنی تھیا</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description2">ہک انگل لاوݨ تہاݙی براؤزنگ تاریخ تے کوکیاں کوں مٹا ݙیندے ـــــ تے مشہوریاں کوں تہاݙا پیچھا کرݨ کنوں روکیندے۔</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">رازداری جہڑی ہر حالات وچ فِٹ آندی ہے</string>
@@ -504,8 +521,14 @@
     <!-- First run tour (Shortcut): Title -->
     <string name="firstrun_shortcut_title">آپݨی ہوم سکرین تے شارٹ کٹاں شامل کرو</string>
 
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">%1$s وچ تکھے تکھے آپݨی پسند دی سائٹ تے واپس آؤ۔ صرف %1$s مینو وچوں \&quot;گھر سکرین تے شامل کرو\&quot; کوں چُݨو۔</string>
+
     <!-- First run tour (Privacy): Title -->
     <string name="firstrun_privacy_title">رازداری کوں عادت بݨاؤ</string>
+
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">%1$s کوں آپݨاں ڈیفالٹ براؤزر مقرر کرو تے ڄݙݨ تساں ویب ورقے ٻئی ایپاں وچ کھولو تاں نجی براؤزنگ دے فائدے گھنو۔</string>
 
     <string name="firstrun_close_button">ٹھیک ہے، میکوں سمجھ آڳئی ہے!</string>
     <string name="firstrun_skip_button">چھوڑو</string>
@@ -536,6 +559,14 @@
     -->
     <string name="notification_browsing_session_channel_name">نجی براؤزنگ سیشن</string>
 
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">اطلاعواں تہاکوں %1$s مجلس ہک انگل پھیرݨ نال مٹاوݨ دی اجازت ݙیندیاں ہن۔ تہاکوں ایپ کھولݨ یا ایہ ݙیکھݨ دی لوڑ کائنی جو تہاݙے براؤزر وچ کیا چلدا پئے۔</string>
+
     <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
     <string name="tabs_tray_action_erase">براؤزنگ تاریخ مٹاؤ</string>
 
@@ -546,6 +577,27 @@
     <!-- Text shown in the "Your rights" screen.
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
     <string name="your_rights_content1"><![CDATA[%1$s ہک مفت کھلا ماخذ سافٹ ویئر ہے جہڑا موزلّا تے ٻئے ونگارواں بݨایا ہے۔]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[ <a href="%2$s">موزلّا عوامی لائسنس</a>  تے ٻئے کھلے ماخذ لائسنساں دیاں شرطاں دے تحت تہاݙے کیتے %1$s دستیاب بݨایا ڳئے۔]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[تہاکوں موزلّا فاؤنڈیشن یا کہیں ٻئی پارٹی  دے ٹریڈ مارک، موزلّا، فائرفوکس یا %1$s ناں یا لوگو سمیت، کوئی خاص حق یا لائسنس کائنی ݙتا ڳیا۔ وادھوں ڄاݨکاری <a href="%2$s">اتھ</a> لبھ سڳدی ہے۔]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[%1$s کیتے ٻئے ٻہوں سارے مفتی تے کھلے ماخذ <a href="%2$s">لائسنس</a> دے تحت وادھوں ماخذ کوڈ دستیاب ہے۔]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[ %1$s<a href="%2$s">جی این یو عمومی عوامی لائسنس وی3</a> دے تحت انج تے آزاد کماں دے طور تے ڈسکنکٹ، انک۔ ولوں فراہم تھیاں بلاک تندیراں کوں وی ورتیندے،   تے <a href="%3$s">اِتھ</a> دستیاب ہے۔]]></string>
 
     <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">ورتݨ ناں</string>
@@ -748,6 +800,15 @@
     <string name="tip_disable_tracking_protection">بھلا سائٹ غیر متوقع سلوک کریندی پئی ہے؟\n
     ٹریکنگ حفاظت بند کر تے ݙیکھو</string>
 
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">سائٹ مواد چھوڑیندی پئی ہے یا انوکھڑا کم کریندی پئی ہے؟\n
+    بہترین ٹریکنگ حفاظت بند کرݨ ازماؤ</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[جہڑیاں سائٹاں کوں تساں ڈھیر ورتیندے ہو %1$s انہاں تے ہک انگل پھیرݨ نال رسائی گھنو مینیو> گھر سکرین وچ شامل کرو]]></string>
+
     <!-- Tip displayed on home view explaining how to make Focus the default browser
     Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
     The new line here must be kept as the second half of the string is clickable for the user. -->
@@ -774,6 +835,21 @@
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">موہری سکرین تے تجویزاں بند کرو</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">جہڑی سائٹ تے تساں بھروسہ کریندے ہو، بھلا اوندے کیتے بہتر ٹریکنگ حفاظت بند کرݨ چاہندے ہو؟\n
+        ترتیباں وچ ایں کوں اجازت تندیر وچ شامل کرو
+    </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">کیوں جیا، ساݙے کول ہک نویں شکل ہے!\n ایں تے %1$s دیاں ٻیاں اپ ڈیٹاں بارے ٻیا پڑھو۔</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">تساں جہڑیاں سائٹاں تے ودھ ویندے ہو انہاں شاٹ کٹ بݨاؤ:\n
+    %1$s مینیو وچوں شاٹ کٹ شامل کرݨ چݨو</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">نواں ٹیب کھل ڳیا</string>
@@ -862,6 +938,10 @@
     <!-- Placeholder text for the input field of rename top site-->
     <string name="placeholder_rename_top_site">شارٹ کٹ ناں</string>
 
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">تساں جہڑے ویلے %1$s تاریخ مٹیسو تاں محفوظ  تے شیئر تھیاں تصویراں &lt;b&gt;کائناں مٹسن&lt;/b&gt;</string>
+
     <!-- Theme Preferences -->
     <!-- Preference category for changing default theme to dark or light mode -->
     <string name="preferences_theme">تھیم</string>
@@ -876,6 +956,9 @@
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
     <string name="errorpage_httpsonly_title">جہڑی سائٹ دی تساں ارداس کیتی ہے ایچ ٹی ٹی پی ایس کوں سہارا کائنی ݙیندی</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">ڈیفالٹ نال، ایچ ٹی ٹی پی ایس ورتیندے ہوئے ودھائی سلامتی کیتے %1$s کنکٹ کرݨ دی کوشش کریندے۔ ایہ ترتیب وٹاوݨ کیتے یا ٻیا سکھݨ کیتے، ترتیباں &gt; رازداری تے سلامتی &gt; سلامتی تے ون٘ڄو۔ </string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->

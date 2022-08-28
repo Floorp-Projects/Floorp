@@ -1,0 +1,763 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
+
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">අවලංගු</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">හරි</string>
+
+    <string name="action_save">සුරකින්න</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">සොයන්න හෝ ලිපිනය යොදන්න</string>
+
+    <string name="teaser">ස්වයංක්‍රීය පෞද්. පිරික්සීම.\nපිරික්සන්න. මකන්න. නැවතත්.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">ඔබගේ පිරික්සුම් ඉතිහාසය මකා දමා ඇත.</string>
+    <string name="feedback_erase2">පිරික්සුම් ඉතිහාසය මැකිණි</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">පටිත්තෙහි පිරික්සුම් ඉතිහාසය මකා දමා ඇත.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">%1$s සඳහා සොයන්න</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">බෙදාගන්න…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">අඩවියේ දෝෂ වාර්තාව</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">%1$s හි අරින්න</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">මෙහි අරින්න…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">මුල් තිරයට යොදන්න</string>
+
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">කෙටිමං වෙත යොදන්න</string>
+
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">කෙටිමං වෙතින් ඉවත් කරන්න</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">අළුත් දෑ</string>
+    <string name="menu_settings">සැකසුම්</string>
+    <string name="menu_about">පිළිබඳව</string>
+    <string name="menu_help">උදව්</string>
+    <string name="menu_rights">ඔබේ අයිතීන්</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">ලුහුබැඳීම් අවහිරයි</string>
+
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">මෙය අක්‍රිය කිරීමෙන් ඇතැම් අඩවිවල ගැටලු විසඳේ</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">අන්තර්ගත අවහිරය</string>
+
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">ඇතැම් අඩවි නිරාකරණයට නවතන්න</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">%s මගින් බලගැන්වේ</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">හරහා බෙදාගන්න</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">පිරික්සුම් ඉතිහාසය මකන්න</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">අරින්න</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">මකා දමා අරින්න</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">මකන්න</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">පිරික්සුම් ඉතිහාසය මකන්න</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">මකා දමා අරින්න</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">මකා දමා %1$s අරින්න</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">පෞද්ගලිකව සොයන්න</string>
+
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s ඔබව පාලනයේ තබයි.</p>
+<p>පෞද්. අතිරික්සුවක් ලෙස යොදාගන්න:
+  <ul>
+    <li>යෙදුමෙහි සොයන්න සහ පිරික්සන්න</li>
+    <li>ලුහුබැඳීම් අවහිර කරන්න (හෝ සැකසුම් තුළින් ඉඩ දෙන්න)</li>
+    <li>දත්තකඩ මෙන්ම සෙවුම් හා පිරික්සුම් ඉතිහාසය ඉවත් කිරීමට මකන්න</li>
+  </ul>
+</p>
+<p>මොසිල්ලා හරහා %1$s නිෂ්පාදනය කෙරේ. හිතකර, විවෘත අන්තර්ජාලයකට පිහිටාධාර සැපයීම අපගේ මෙහෙවරයි.<br/>
+<a href="%2$s">තව දැනගන්න</a></p>]]></string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">පෞද්ගලිකත්වය හා ආරක්‍ෂාව</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">ලුහුබැඳීම්, දත්තකඩ, දත්ත තේරීම්</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">පෙරනිමි සකසන්න, ස්වයං පිරවීම</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">%1$s ගැන, උදව්</string>
+
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">දියුණු කළ ලුහුබැඳීමේ රැකවරණය</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">වියමන අන්තර්ගතය</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">යෙදුම් මාරුව</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">සාමාන්‍ය</string>
+
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">පෙරනිමි අතිරික්සුව, භාෂාව</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">දත්ත රැස් කිරීම හා භාවිතය</string>
+
+    <string name="preference_category_search">සොයන්න</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">සෙවුම් යෝජනා ගන්න</string>
+
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">ඔබ ලිපින තීරුවේ ලියන දෑ ඔබගේ සෙවුම් යන්ත්‍රයට %1$s හරහා යවයි</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">පෙරනිමි</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">සෙචුම් එළවුම</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">සක්‍රිය</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">අක්‍රිය</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">ඒ.ස.නි. ස්වයං පිරවීම</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">ප්‍රචලිත අඩවි සඳහා</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">ලිපින තීරුවේ %s ජනප්‍රිය ඒ.ස.නි. 450 කට වඩා ස්වයං පිරවීමට සබල කරන්න.</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">එක් කරන අඩවි සඳහා</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">%s ඔබගේ ප්‍රියතම ඒ.ස.නි. ස්වයං පිරවීම සබල කරන්න.</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">අඩවි කළමනාකරණය</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">අඩවි කළමනාකරණය</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ අභිරුචි ඒ.ස.නි. යොදන්න</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">ඔබගේ ස්වයං පිරවුම් ලේඛනය:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">ඒ.ස.නි. යොදන්න</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">අභිරුචි ඒ.ස.නි. යොදන්න</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">අභිරුචි ඒ.ස.නි. යොදන්න</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">ස්වයං පිරවීමට සබැඳිය යොදන්න</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">දත්තකඩ හා අඩවි දත්ත</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">දත්ත තේරීම්</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">අභිරුචි ඒ.ස.නි. ඉවත් කරන්න</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">තව දැනගන්න</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">අභිරුචි ස්වයං පිරවුම් ඒ.ස.නි. එක් කර කළමනාකරණය.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">එක් කිරීමට ඒ.ස.නි.</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">අලවන්න හෝ ඒ.ස.නි. යොදන්න</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">නිදසුන: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">නිදසුන: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">නව අභිරුචි ඒ.ස.නි. එක් කෙරිණි.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">ඉවත් කරන්න</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">ඉවත් කරන්න</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">ඇතුල් කළ ඒ.ස.නි. දෙවරක් පරීක්‍ෂා කරන්න.</string>
+
+    <string name="preference_language">භාෂාව</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">පද්ධතියේ පෙරනිමි</string>
+
+    <string name="preference_category_privacy">පෞද්ගලිකත්වය</string>
+
+    <string name="preference_privacy_block_ads">දැන්වීම් ලුහුබැඳීම් අවහිරය</string>
+    <string name="preference_privacy_block_ads_summary">ඔබ දැන්වීම් නොඑබුවත් ඇතැම් දැන්වීම් අඩවියට පැමිණීම් ලුහුබඳියි</string>
+    <string name="preference_privacy_block_analytics">විශ්ලේෂ ලුහුබැඳීම් අවහිරය</string>
+    <string name="preference_privacy_block_analytics_summary">තට්ටු කිරීම හා අනුචලනය වැනි ක්‍රියාකාරකම් රැස් කිරීමට, විශ්ලේෂණයට සහ මැනීමට භාවිතා කරයි</string>
+    <string name="preference_privacy_block_social">සමාජ ලුහුබැඳීම් අවහිරය</string>
+    <string name="preference_privacy_block_social_summary">ඔබගේ ගොඩවැදීම් ලුහුබැඳීමට හා බෙදාගැනීමේ බොත්තම් වැනි දෑ පෙන්වීමට අඩවි වෙත කාවද්දා තිබේ</string>
+    <string name="preference_privacy_block_content">අන් අන්තර්ගත ලුහුබැඳීම් අවහිරය</string>
+    <string name="preference_privacy_block_content_summary2">සබල කිරීමෙන් ඇතැම් පිටු අනපේක්‍ෂිත ලෙස හැසිරීමට හේතු වනු ඇත</string>
+    <string name="preference_privacy_category_cookies">දත්තකඩ අවහිරය</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">එපා, ස්තුතියි</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">තෙවන පාර්ශ්ව ලුහුබඳින දත්තකඩ අවහිරය</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">තෙවන පාර්ශ්ව දත්තකඩ අවහිරය</string>
+    <string name="preference_privacy_should_block_cookies_cross_site_option">හරස් අඩවි දත්තකඩ අවහිරය</string>
+
+    <string name="preference_privacy_should_block_cookies_yes_option2">ඔව්, කරුණාකර</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">යෙදුම අගුළු ඇරීමට ඇඟිලි සටහන</string>
+
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string name="preference_security_biometric_summary2">ඔබ කෙටිමං එක් කර ඇත්නම් හෝ අඩවියක් දැනටමත් %s තුළ විවෘතව තිබෙන විට ඇඟිලි සටහන භාවිතයෙන් අගුලු හරින්න.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">රහසිගත</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">යෙදුම් මාරු කිරීමේදී පිටු සඟවන්න සහ තිරසේයා ගැනීම අවහිර කරන්න.</string>
+
+    <string name="preference_category_security">ආරක්‍ෂාව</string>
+
+    <string name="preference_category_performance">කාර්ය සාධනය</string>
+    <string name="preference_performance_block_webfonts">වියමන අකුරු අවහිරය</string>
+
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">නිරූපක හෝ රූප මඟහැරීමට හේතු විය හැකිය</string>
+
+    <string name="preference_performance_block_javascript">ජාවාස්ක්‍රිප්ට් අවහිරය</string>
+
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">පිටු වේගයෙන් පූරණය වන නමුත් අනපේක්‍ෂිත ලෙස හැසිරිය හැකිය</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">%1$s පෙරනිමි අතිරික්සුව කරන්න</string>
+
+    <string name="preference_mozilla_telemetry2">භාවිත දත්ත යවන්න</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">තව දැනගන්න</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">පෞද්ගලිකත්ව දැන්වීම</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">%1$s ගැන</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">ස්ථාපිත සෙවුම් යන්ත්‍ර</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">සෙවුම් යන්ත්‍රය තෝරන්න</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">පෙරනිමි සෙවුම් එළවුම් ප්‍රත්‍යර්පණය</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ අන් සෙවුම් යන්ත්‍රයක් එක් කරන්න</string>
+    <string name="preference_search_remove_title">සෙවුම් යන්ත්‍ර ඉවත් කරන්න</string>
+    <string name="preference_search_remove">ඉවත් කරන්න</string>
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">අන් සෙවුම් යන්ත්‍රයක් එක් කරන්න</string>
+
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">ප්‍රියතම යන්ත්‍රය තෝරන්න:</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">මුල් තිර ඉඟි පෙන්වන්න</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">සෙවුම් යන්ත්‍රයක් යොදන්න</string>
+
+    <string name="search_add_manually_name_hint">සෙවුම් යන්ත්‍රයේ නම</string>
+    <string name="search_add_manually_string">භාවිතයට සෙවුම් තන්තුව</string>
+    <string name="search_add_manually_save">සුරකින්න</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">උදාහරණය: නිදසුන.ලංකා/සොයන්න/?q=%s</string>
+
+    <string name="search_add_confirmation">නව සෙවුම් යන්ත්‍රයක් එක් විය.</string>
+
+    <string name="search_add_error_empty_name">සෙවුම් යන්ත්‍රයේ නම යොදන්න</string>
+    <string name="search_add_error_duplicate_name">ස්ථාපිත සෙවුම් යන්ත්‍රයක් දැනටමත් එම නම භාවිතා කරයි.</string>
+
+    <string name="search_add_error_empty_search">සෙවුම් පදය යොදන්න</string>
+
+    <string name="search_add_error_format">සෙවුම් තන්තු උදාහරණ ආකෘතියට ගැළපෙන බව පරීක්‍ෂා කරන්න</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">ආදානය මකන්න</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">ඉවතලන්න</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">පිරික්සුම් ඉතිහාසය මකන්න</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">විවෘත පටිති: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">ආරක්‍ෂිත සම්බන්ධතාවයකි</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">පූරණය වෙමින්</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">අඩවිය පූරණය විය</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">තවත් විකල්ප</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">තවත් විකල්ප බොත්තම</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">ඉදිරියට යාත්‍රණය</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">අඩවිය යළි පූරණය</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">ආපසු යාත්‍රණය</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">අඩවිය පූරණය වීම නවතන්න</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">කලින් යෙදුමට ආපසු</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">අවහිර කළ ලුහුබැඳීම් ගණන</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">ලුහුබැඳීම් අවහිරය</string>
+
+    <string name="your_rights">ඔබගේ අයිතීන්</string>
+
+    <string name="external_app_prompt_title">අන් යෙදුමක සබැඳිය අරින්න</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">මෙම සබැඳිය %2$s හි විවෘත කිරීමට %1$s හැර යාමට හැකිය.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">සබැඳිය විවෘත කළ හැකි යෙදුමක් සොයන්න</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">ඔබගේ උපාංගයේ තිබෙන යෙදුම් කිසිවකට මෙම සබැඳිය විවෘත කළ නොහැකිය. %2$s හි යෙදුමක් සොයා ගැනීම සඳහා %1$s හැර යාමට හැකිය.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">පෞද්. පිරික්සුමෙන් පිටවන්නද?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s අවසන්</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">අරින්න</string>
+
+    <string name="error_hostLookup_title">සේවාදායකය හමු නොවුණි</string>
+
+    <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">%1$s වෙත පිළිගනිමු!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">ඔබට අවශ්‍ය විට ඊළඟ මට්ටමේ පෞද්. පිරික්සුම</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s යනු තිළෑලි අති-ප්‍රබල ලුහුබැඳීම් හා දත්තකඩ රැකවරණය සහිත පෞද්ගලිකත්වය මූලික වූ අතිරික්සුවකි.</string>
+
+    <!-- Onboarding: History Description -->
+    <string name="onboarding_history_description2">එක් තට්ටුවකින් ඔබගේ පිරික්සුම් ඉතිහාසය හා දත්තකඩ මකා දමයි — සහ දැන්වීම් ඔබව ලුහුබැඳීම නවත්වයි.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">ඕනෑම තත්‍වයකට උචිත පෞද්ගලිකත්‍වය</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">පිරික්සුම අරඹන්න</string>
+
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">පෞද්ගලික පිරික්සීම ඊළඟ මට්ටමට ගෙන යන්න. අඩවි හරහා ඔබව ලුහුබැඳීමට හැකි දැන්වීම් හා වෙනත් අන්තර්ගත අවහිර කර පිටු පූරණ කාලය අවම කර ගන්න.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">ඔබගේ සෙවීම, ඔබගේ මාවත</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">වෙනස් දෙයක් සොයනවාද? සැකසුම් තුළ වෙනත් පෙරනිමි සෙවුම් යන්ත්‍රයක් තෝරන්න.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">ඔබගේ මුල් තිරයට කෙටිමං එක් කරන්න</string>
+
+    <string name="firstrun_close_button">හරි, තේරුණා!</string>
+    <string name="firstrun_skip_button">මඟහරින්න</string>
+    <string name="firstrun_next_button">ඊළඟ</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">එකතු</string>
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">ඔව්</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">අවලංගු</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">නැහැ</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">පෞද්. පිරික්සුම් වාරය</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">පිරික්සුම් ඉතිහාසය මකන්න</string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">පරිශීලක නාමය</string>
+    <string name="gv_prompt_password_hint">මුරපදය</string>
+    <string name="gv_prompt_clear">මකන්න</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">ආරක්‍ෂිත සම්බන්ධතාවයකි</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">තහවුරු කළේ: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">අඩවියේ ආරක්‍ෂාව</string>
+    <string name="preference_autocomplete_duplicate_url_error">ඒ.ස.නි. දැනටමත් පවතී</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">පිටුවේ සොයන්න</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">පිටුවේ සොයන්න</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">ඊළඟ ප්‍රතිඵලය සොයන්න</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">කලින් ප්‍රතිඵලය සොයන්න</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">වැඩතල අඩවිය ඉල්ලන්න</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">වැඩතල අඩවිය</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">සංවර්ධක මෙවලම්</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">වැඩිදුර</string>
+
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">අඩවියේ අවසර</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">ස්වයං වාදනය</string>
+
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">සැකසුම් වෙත යන්න</string>
+
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">ශබ්දවාහිනිය</string>
+
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">ස්ථානය</string>
+
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">දැනුම්දීම්</string>
+
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">DRM-පාලිත අන්තර්ගතය</string>
+
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">අවහිරයි</string>
+
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">ඉඩ දුන්</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">හඬ පමණක් අවහිරය</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">නිර්දේශිත</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">ශ්‍රව්‍ය සහ දෘශ්‍ය අවහිරය</string>
+
+    <!-- Preference for studies -->
+    <string name="preference_studies">අධ්‍යන</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">තව දැනගන්න</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">වෙනස්කම් යෙදීම සඳහා යෙදුම ඉවත් වනු ඇත</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">ඉවත් කරන්න</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">සක්‍රිය</string>
+
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">සම්පූර්ණයි</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">USB/වයි-ෆයි හරහා දුරස්ථ නිදොස්කරණය</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string moz:removedIn="103" name="biometric_auth_title">%1$s අගුළු හරින්න</string>
+
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">අගුළු හරින්න</string>
+
+    <!-- Title text for biometric prompt pop-up -->
+    <string name="biometric_prompt_title">ඇඟිලි සටහන භාවිතයෙන් තහවුරු කරන්න</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string moz:removedIn="103" name="biometric_auth_new_session">නව වාරය</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">නව පටිත්තකින් වාරය අරින්න</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">සෙවුම් යෝජනා පෙන්වන්නද?</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">නැහැ</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">ඔව්</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">ඉවතලන්න</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">නව පටිත්තක් විවෘතයි</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">මාරු වන්න</string>
+
+    <!-- Title of the preference to enable "HTTPS-Only" mode -->
+    <string name="preference_https_only_title">HTTPS-පමණි ප්‍රකාරය</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">හැරදැමීම්</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">ඔබ මෙම අඩවි සඳහා අන්තර්ගත අවහිර කිරීම අබල කර ඇත.</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">ඉවත් කරන්න</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">සියළු අඩවි ඉවත් කරන්න</string>
+
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">දත්තකඩ අවහිරය</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">ඔබ දත්තකඩ අවහිර කිරීමට කැමතිද?</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">පටිත්ත බිඳ වැටුණි</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">සමාවන්න. මෙම පටිත්ත සමඟ ගැටලුවක් තිබේ.</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">පටිත්ත වසන්න</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">%s සිට අවහිර කළ ලුහුබැඳීම්</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">අන්තර්ගතය</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">දැන්වීම්</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">සමාජ</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">විශ්ලේෂ</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">දියුණු කළ ලුහුබැඳීමේ රැකවරණය</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">අඩවියට දියුණු කළ ලුහුබැඳීමේ රැකවරණය අක්‍රියයි</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">අඩවියට දියුණු කළ ලුහුබැඳීමේ රැකවරණය සක්‍රියයි</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">සම්බන්ධතාවය ආරක්‍ෂිතයි</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">සම්බන්ධතාවය අනාරක්‍ෂිතයි</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">අවහිර කිරීමට ලුහුබැඳීම් හා අත්පත්</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">ආපසු යන්න</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">ඉවත් කරන්න</string>
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">නම් කරන්න</string>
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">නම් කරන්න</string>
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">කෙටිමඟ නාමය</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">තේමාව</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">දීප්ත</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">අඳුරු</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">විදුලිකෝෂ සුරැකුමෙන් සැකසූ</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">උපාංගයේ තේමාව</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">ඔබ ඉල්ලූ අඩවිය HTTPS සඳහා සහය නොදක්වයි</string>
+
+    <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">පටිත්ත වසන්න</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">උත්පතනය වසන්න</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">ඔබ සුරක්‍ෂිතයි!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">මෙම පෙරනිමි සැකසුම් ඉහළ ආරක්‍ෂාවක් සපයයි. නමුත් ඔබගේ අවශ්‍යතා වලට යෝග්‍ය ලෙස සැකසුම් හැඩගැසීමට පහසුය.</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">ඉවතලන්න</string>
+
+    </resources>
