@@ -102,9 +102,11 @@ const DEFAULT_ACTIONS = {
       "quickactions-clearhistory",
     ],
     label: "quickactions-clearhistory",
-    onPick: openUrlFun(
-      `${BASE_URL}delete-browsing-search-download-history-firefox`
-    ),
+    onPick: () => {
+      lazy.BrowserWindowTracker.getTopWindow()
+        .document.getElementById("Tools:Sanitize")
+        .doCommand();
+    },
   },
   downloads: {
     l10nCommands: ["quickactions-cmd-downloads", "quickactions-downloads"],

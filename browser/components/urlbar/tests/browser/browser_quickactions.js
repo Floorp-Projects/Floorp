@@ -557,20 +557,16 @@ add_task(async function test_viewsource() {
   BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function test_refresh() {
+async function doAlertDialogTest({ input, dialogContentURI }) {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    value: "refresh",
+    value: input,
   });
 
   const onDialog = BrowserTestUtils.promiseAlertDialog(null, null, {
     isSubDialog: true,
     callback: win => {
-      Assert.equal(
-        win.location.href,
-        "chrome://global/content/resetProfile.xhtml",
-        "ResetProfile dialog is opened"
-      );
+      Assert.equal(win.location.href, dialogContentURI, "The dialog is opened");
       EventUtils.synthesizeKey("KEY_Escape", {}, win);
     },
   });
@@ -579,4 +575,18 @@ add_task(async function test_refresh() {
   EventUtils.synthesizeKey("KEY_Enter", {}, window);
 
   await onDialog;
+}
+
+add_task(async function test_refresh() {
+  await doAlertDialogTest({
+    input: "refresh",
+    dialogContentURI: "chrome://global/content/resetProfile.xhtml",
+  });
+});
+
+add_task(async function test_clear() {
+  await doAlertDialogTest({
+    input: "clear",
+    dialogContentURI: "chrome://browser/content/sanitize.xhtml",
+  });
 });
