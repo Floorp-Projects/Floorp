@@ -115,9 +115,6 @@ var TabManager = {
       // Firefox
     } else if ("gBrowser" in win) {
       return win.gBrowser;
-      // Thunderbird
-    } else if (win.document.getElementById("tabmail")) {
-      return win.document.getElementById("tabmail");
     }
 
     return null;
