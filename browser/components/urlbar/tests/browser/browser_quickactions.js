@@ -12,6 +12,8 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
 });
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  AppUpdater: "resource:///modules/AppUpdater.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
 });
@@ -589,4 +591,39 @@ add_task(async function test_clear() {
     input: "clear",
     dialogContentURI: "chrome://browser/content/sanitize.xhtml",
   });
+});
+
+async function doUpdateActionTest(isActiveExpected, description) {
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "update",
+  });
+
+  await assertActionButtonStatus("update", isActiveExpected, description);
+}
+
+add_task(async function test_update() {
+  if (!AppConstants.MOZ_UPDATER) {
+    await doUpdateActionTest(
+      false,
+      "Should be disabled since not AppConstants.MOZ_UPDATER"
+    );
+    return;
+  }
+
+  const sandbox = sinon.createSandbox();
+  try {
+    sandbox.stub(AppUpdater.prototype, "isReadyForRestart").get(() => false);
+    await doUpdateActionTest(
+      false,
+      "Should be disabled since AppUpdater.isReadyForRestart returns false"
+    );
+    sandbox.stub(AppUpdater.prototype, "isReadyForRestart").get(() => true);
+    await doUpdateActionTest(
+      true,
+      "Should be enabled since AppUpdater.isReadyForRestart returns true"
+    );
+  } finally {
+    sandbox.restore();
+  }
 });
