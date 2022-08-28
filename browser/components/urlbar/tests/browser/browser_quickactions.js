@@ -12,6 +12,7 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource:///modules/UrlbarProviderQuickActions.sys.mjs",
 });
 XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
 });
 
@@ -554,4 +555,28 @@ add_task(async function test_viewsource() {
   // Clean up.
   BrowserTestUtils.removeTab(viewSourceTab);
   BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_refresh() {
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "refresh",
+  });
+
+  const onDialog = BrowserTestUtils.promiseAlertDialog(null, null, {
+    isSubDialog: true,
+    callback: win => {
+      Assert.equal(
+        win.location.href,
+        "chrome://global/content/resetProfile.xhtml",
+        "ResetProfile dialog is opened"
+      );
+      EventUtils.synthesizeKey("KEY_Escape", {}, win);
+    },
+  });
+
+  EventUtils.synthesizeKey("KEY_ArrowDown", {}, window);
+  EventUtils.synthesizeKey("KEY_Enter", {}, window);
+
+  await onDialog;
 });

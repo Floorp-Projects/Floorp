@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
+  ResetProfile: "resource://gre/modules/ResetProfile.jsm",
 });
 
 const BASE_URL = "https://support.mozilla.org/kb/";
@@ -157,7 +158,11 @@ const DEFAULT_ACTIONS = {
   refresh: {
     l10nCommands: ["quickactions-cmd-refresh", "quickactions-refresh"],
     label: "quickactions-refresh",
-    onPick: openUrlFun(`${BASE_URL}refresh-firefox-reset-add-ons-and-settings`),
+    onPick: () => {
+      lazy.ResetProfile.openConfirmationDialog(
+        lazy.BrowserWindowTracker.getTopWindow()
+      );
+    },
   },
   restart: {
     l10nCommands: ["quickactions-cmd-restart", "quickactions-restart"],
