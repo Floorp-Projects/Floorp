@@ -81,4 +81,5 @@ pref(layout.css.marker.restricted,false) == marker-reframe-and-animation-starts-
 == transform-animation-in-delay.html transform-animation-in-delay-ref.html
 == containing-block-on-visibility-hidden.html containing-block-on-visibility-hidden-ref.html
 == background-color.html background-color-ref.html
+== replace-with-new-positive-delay-animation.html replace-with-new-positive-delay-animation-ref.html
 == background-color-on-html.html background-color-on-html-ref.html
