@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">ลองอีกครั้ง</string>
@@ -41,8 +41,26 @@
     <!-- The document title and heading of the error page shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">เว็บไซต์นี้ต้องการการเชื่อมต่อที่ปลอดภัย</string>
 
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>ไม่สามารถแสดงหน้าที่คุณต้องการเข้าชมได้ เนื่องจากเว็บไซต์นี้บังคับใช้การเชื่อมต่อที่ปลอดภัย</li>
+         <li>โดยส่วนใหญ่แล้ว ปัญหานี้จะเกิดขึ้นที่ฝั่งเว็บไซต์ และคุณไม่สามารถแก้ปัญหาที่ฝั่งของคุณได้</li>
+         <li>คุณสามารถแจ้งผู้ดูแลเว็บไซต์ให้ทราบถึงปัญหานี้</li>
+      </ul>
+    ]]></string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">ขั้นสูง…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> <b>%1$s</b> มีนโยบายการรักษาความปลอดภัยที่เรียกว่า HTTP Strict Transport Security (HSTS) ซึ่งหมายความว่า <b>%2$s</b> สามารถทำการเชื่อมต่อได้อย่างปลอดภัยเท่านั้น คุณไม่สามารถเพิ่มข้อยกเว้นเพื่อเยี่ยมชมไซต์นี้ได้
+    ]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> มีนโยบายการรักษาความปลอดภัยที่เรียกว่า HTTP Strict Transport Security (HSTS) ซึ่งหมายความว่า <b>%2$s</b> สามารถทำการเชื่อมต่อได้อย่างปลอดภัยเท่านั้น คุณไม่สามารถเพิ่มข้อยกเว้นเพื่อเยี่ยมชมไซต์นี้ได้ </label>
+    ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">ย้อนกลับ</string>
 
