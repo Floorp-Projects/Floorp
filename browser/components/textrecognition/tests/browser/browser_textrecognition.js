@@ -97,10 +97,15 @@ add_task(async function() {
     const close = contentDocument.querySelector("#text-recognition-close");
     close.click();
 
+    const expectedResultText = "Mozilla\nFirefox\n";
+    is(getTextFromClipboard(), expectedResultText, "The copied text matches.");
+
     is(
-      getTextFromClipboard(),
-      "Mozilla\nFirefox\n",
-      "The copied text matches."
+      Services.telemetry
+        .getHistogramById("TEXT_RECOGNITION_TEXT_LENGTH")
+        .snapshot().sum,
+      expectedResultText.length,
+      "The length of the text was recorded."
     );
 
     info("Waiting for the dialog frame to close.");
