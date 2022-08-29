@@ -1320,7 +1320,16 @@ XPCOMUtils.defineLazyPreferenceGetter(
   FormAutofillUtils,
   "ccHeuristicsThreshold",
   "extensions.formautofill.creditCards.heuristics.confidenceThreshold",
-  "0.5",
+  null,
+  null,
+  pref => parseFloat(pref)
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofillUtils,
+  "ccHeuristicsNumberOnlyThreshold",
+  "extensions.formautofill.creditCards.heuristics.numberOnly.confidenceThreshold",
+  null,
   null,
   pref => parseFloat(pref)
 );
