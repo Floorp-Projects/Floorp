@@ -27,7 +27,7 @@ async function checkOpensOnFocus(win = window) {
   });
 }
 
-add_task(async function setUp() {
+add_setup(async function() {
   // Add some history for the empty panel.
   await PlacesTestUtils.addVisits([
     {
