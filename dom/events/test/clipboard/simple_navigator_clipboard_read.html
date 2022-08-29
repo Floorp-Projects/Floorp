@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <!-- Required by the .js part of the test. In a more ideal world, the script
+    could be loaded in the .js part; however, currently, that causes other
+    problems, which would require other changes in test framework code. -->
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js"></script>
+  <script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
+
+  <script>
+    function onLoad() {
+      const readResult = document.getElementById("readResultId");
+
+      async function getClipboardText() {
+        let items = await navigator.clipboard.read();
+        if (items.length != 1) {
+          throw Error(`incorrect number of clipboard item (${items.length})`);
+          return;
+        }
+
+        let item = items[0];
+        for (let type of item.types) {
+          if (type == "text/plain") {
+            let blob = await item.getType(type);
+            return await blob.text();
+          }
+        }
+
+        throw Error("no text/plain type");
+      }
+
+      const b1 = document.getElementById("invokeReadOnceId");
+      b1.addEventListener("click", async () => {
+        getClipboardText().then(text => {
+          readResult.textContent = `Resolved: ${text}`;
+        }, (e) => { readResult.textContent = `Rejected: ${e.message}`});
+      });
+
+      const b2 = document.getElementById("invokeReadTwiceId");
+      b2.addEventListener("click", async () => {
+        const t1 = getClipboardText();
+        const t2 = getClipboardText();
+
+        const r1 = await t1.then(text => {
+          return `Resolved 1: ${text}`;
+        }, (e) => { return `Rejected 1: ${e.message}`;});
+
+        const r2 = await t2.then(text => {
+          return "Resolved 2: " + text;
+        }, (e) => { return `Rejected 2: ${e.message}`;});
+
+        readResult.textContent = r1 + "; " + r2;
+      });
+    }
+  </script>
+  </head>
+  <body onload="onLoad()">
+   <button id="invokeReadOnceId">1</button>
+   <button id="invokeReadTwiceId">2</button>
+   <div id="readResultId"/>
+  </body>
+</html>

@@ -71,13 +71,12 @@ class Clipboard : public DOMEventTargetHelper {
   static bool IsTestingPrefEnabledOrHasReadPermission(
       nsIPrincipal& aSubjectPrincipal);
 
-  // @return the remaining work to fill aPromise.
-  already_AddRefed<nsIRunnable> CheckReadTextPermissionAndHandleRequest(
-      Promise& aPromise, nsIPrincipal& aSubjectPrincipal);
+  void CheckReadTextPermissionAndHandleRequest(Promise& aPromise,
+                                               nsIPrincipal& aSubjectPrincipal,
+                                               ReadRequestType aType);
 
-  // @return the remaining work to fill aPromise.
-  already_AddRefed<nsIRunnable> HandleReadTextRequestWhichRequiresPasteButton(
-      Promise& aPromise);
+  void HandleReadTextRequestWhichRequiresPasteButton(Promise& aPromise,
+                                                     ReadRequestType aType);
 
   already_AddRefed<Promise> ReadHelper(nsIPrincipal& aSubjectPrincipal,
                                        ReadRequestType aType, ErrorResult& aRv);
@@ -86,17 +85,21 @@ class Clipboard : public DOMEventTargetHelper {
 
   class ReadTextRequest final {
    public:
-    explicit ReadTextRequest(Promise& aPromise) : mPromise{&aPromise} {}
+    ReadTextRequest(Promise& aPromise, ReadRequestType aType,
+                    nsPIDOMWindowInner& aOwner)
+        : mType(aType), mPromise(&aPromise), mOwner(&aOwner) {}
 
     // Clears the request too.
-    already_AddRefed<nsIRunnable> Answer();
+    void Answer();
 
     void MaybeRejectWithNotAllowedError(const nsACString& aMessage);
 
    private:
+    ReadRequestType mType;
     // Not cycle-collected, because it's nulled when the request is answered or
     // destructed.
     RefPtr<Promise> mPromise;
+    RefPtr<nsPIDOMWindowInner> mOwner;
   };
 
   AutoTArray<UniquePtr<ReadTextRequest>, 1> mReadTextRequests;
