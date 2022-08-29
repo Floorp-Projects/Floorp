@@ -31,7 +31,11 @@ class TestDeletionRequestPing(FOGTestCase):
 
         self.restart_browser()
 
-        self.assertEqual(self.fog_ping_server.pings[-1], ping1)
+        # We'd like to assert that a "deletion-request" is the last ping we
+        # ever receive, but it's possible there's another ping on another
+        # thread that gets sent after the sync-sent "deletion-request".
+        # (This is fine, it'll be deleted within 28 days on the server.)
+        # self.assertEqual(self.fog_ping_server.pings[-1], ping1)
 
         self.enable_telemetry()
         self.restart_browser()
