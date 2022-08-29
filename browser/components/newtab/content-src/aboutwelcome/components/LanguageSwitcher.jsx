@@ -200,7 +200,7 @@ export function LanguageSwitcher(props) {
             <button
               value="decline_waiting"
               type="button"
-              className="secondary text-link"
+              className="secondary text-link arrow-icon"
               onClick={handleAction}
             />
           </Localized>

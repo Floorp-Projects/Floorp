@@ -335,5 +335,17 @@ describe("MultiStageAboutWelcomeProton module", () => {
         { id: "world" },
       ]);
     });
+
+    it("should not render action buttons if a primary and secondary button does not exist", async () => {
+      const SCREEN_PROPS = {
+        content: {
+          title: "test title",
+          subtitle: "test subtitle",
+        },
+      };
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+      assert.equal(wrapper.find(".action-buttons").exists(), false);
+    });
   });
 });

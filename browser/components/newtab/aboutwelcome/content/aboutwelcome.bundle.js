@@ -677,6 +677,11 @@ const ProtonScreenActionButtons = props => {
     content
   } = props;
   const [isChecked, setIsChecked] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+
+  if (!content.primary_button && !content.secondary_button) {
+    return null;
+  }
+
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "action-buttons"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
@@ -1367,7 +1372,7 @@ function LanguageSwitcher(props) {
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", {
     value: "decline_waiting",
     type: "button",
-    className: "secondary text-link",
+    className: "secondary text-link arrow-icon",
     onClick: handleAction
   })))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     style: {
