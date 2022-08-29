@@ -582,6 +582,18 @@ class TestInfoReport(TestInfo):
                             # "skip-if(Android&&webrender) skip-if(OSX)", would be
                             # encoded as t['skip-if'] = "Android&&webrender;OSX".
                             annotation_conditions = t[key].split(";")
+
+                            # if key has \n in it, we need to strip it. for manifestparser format
+                            #  1) from the beginning of the line
+                            #  2) different conditions if in the middle of the line
+                            annotation_conditions = [
+                                x.strip("\n") for x in annotation_conditions
+                            ]
+                            temp = []
+                            for condition in annotation_conditions:
+                                temp.extend(condition.split("\n"))
+                            annotation_conditions = temp
+
                             for condition in annotation_conditions:
                                 condition_count += 1
                                 # Trim reftest fuzzy-if ranges: everything after the first comma
