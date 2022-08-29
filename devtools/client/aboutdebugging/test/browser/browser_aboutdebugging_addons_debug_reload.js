@@ -40,12 +40,11 @@ add_task(async function testWebExtensionToolboxReload() {
     document
   );
 
-  const { devtoolsTab, devtoolsWindow } = await openAboutDevtoolsToolbox(
-    document,
-    tab,
-    window,
-    ADDON_NAME
-  );
+  const {
+    devtoolsDocument,
+    devtoolsTab,
+    devtoolsWindow,
+  } = await openAboutDevtoolsToolbox(document, tab, window, ADDON_NAME);
   const toolbox = getToolbox(devtoolsWindow);
 
   const webconsole = await toolbox.selectTool("webconsole");
@@ -64,13 +63,35 @@ add_task(async function testWebExtensionToolboxReload() {
   synthesizeKeyShortcut(L10N.getStr("toolbox.reload.key"), toolbox.win);
 
   info("Wait until a new background log message is logged");
+  const secondMessage = await waitFor(() => {
+    const newMessage = findMessagesByType(
+      hud,
+      "background script executed",
+      ".console-api"
+    );
+    if (newMessage && newMessage !== initialMessage) {
+      return newMessage;
+    }
+    return false;
+  });
+
+  await waitForLoadedPanelsReload();
+
+  info("Reload via the debug target info bar button");
+  clickReload(devtoolsDocument);
+
+  info("Wait until yet another background log message is logged");
   await waitFor(() => {
     const newMessage = findMessagesByType(
       hud,
       "background script executed",
       ".console-api"
     );
-    return newMessage && newMessage !== initialMessage;
+    return (
+      newMessage &&
+      newMessage !== initialMessage &&
+      newMessage !== secondMessage
+    );
   });
 
   await waitForLoadedPanelsReload();
@@ -79,3 +100,7 @@ add_task(async function testWebExtensionToolboxReload() {
   await removeTemporaryExtension(ADDON_NAME, document);
   await removeTab(tab);
 });
+
+function clickReload(devtoolsDocument) {
+  devtoolsDocument.querySelector(".qa-reload-button").click();
+}
