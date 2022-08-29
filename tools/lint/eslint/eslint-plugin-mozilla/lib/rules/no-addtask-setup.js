@@ -9,9 +9,9 @@
 
 "use strict";
 
-// -----------------------------------------------------------------------------
-// Rule Definition
-// -----------------------------------------------------------------------------
+function isNamedLikeSetup(name) {
+  return name.toLowerCase() === "setup";
+}
 
 module.exports = {
   meta: {
@@ -27,7 +27,7 @@ module.exports = {
           if (
             arg.type !== "FunctionExpression" ||
             !arg.id ||
-            arg.id.name !== "setup"
+            !isNamedLikeSetup(arg.id.name)
           ) {
             return;
           }

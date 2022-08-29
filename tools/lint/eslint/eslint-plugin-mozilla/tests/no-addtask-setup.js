@@ -63,5 +63,12 @@ ruleTester.run("no-addtask-setup", rule, {
         "Do not use add_task() for setup, use add_setup() instead."
       ),
     },
+    {
+      code: "add_task(async function setUp() {});",
+      output: "add_setup(async function() {});",
+      errors: callError(
+        "Do not use add_task() for setup, use add_setup() instead."
+      ),
+    },
   ],
 });
