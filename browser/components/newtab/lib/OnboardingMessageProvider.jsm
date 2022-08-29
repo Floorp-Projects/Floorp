@@ -7,9 +7,6 @@
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { FeatureCalloutMessages } = ChromeUtils.import(
-  "resource://activity-stream/lib/FeatureCalloutMessages.jsm"
-);
 
 const lazy = {};
 
@@ -42,7 +39,7 @@ const L10N = new Localization([
 const HOMEPAGE_PREF = "browser.startup.homepage";
 const NEWTAB_PREF = "browser.newtabpage.enabled";
 
-const BASE_MESSAGES = () => [
+const ONBOARDING_MESSAGES = () => [
   {
     id: "FXA_ACCOUNTS_BADGE",
     template: "toolbar_badge",
@@ -800,10 +797,6 @@ const BASE_MESSAGES = () => [
     targeting: "doesAppNeedPrivatePin",
   },
 ];
-
-// Eventually, move Feature Callout messages to their own provider
-const ONBOARDING_MESSAGES = () =>
-  BASE_MESSAGES().concat(FeatureCalloutMessages.getMessages());
 
 const OnboardingMessageProvider = {
   async getExtraAttributes() {
