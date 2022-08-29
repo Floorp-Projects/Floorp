@@ -332,6 +332,9 @@ check_and_add_warning(
     ),
 )
 
+# Warn if APIs are used without available() checks on macOS.
+check_and_add_warning("-Werror=unguarded-availability-new", when=target_is_osx)
+
 # Please keep these last in this file
 add_old_configure_assignment("_WARNINGS_CFLAGS", warnings_flags.cflags)
 add_old_configure_assignment("_WARNINGS_CXXFLAGS", warnings_flags.cxxflags)
