@@ -17,11 +17,6 @@
 
 namespace mozilla::dom {
 
-enum ClipboardReadType {
-  eRead,
-  eReadText,
-};
-
 class Promise;
 class ClipboardItem;
 
@@ -62,6 +57,11 @@ class Clipboard : public DOMEventTargetHelper {
                                JS::Handle<JSObject*> aGivenProto) override;
 
  private:
+  enum class ReadRequestType {
+    eRead,
+    eReadText,
+  };
+
   // Checks if dom.events.testing.asyncClipboard pref is enabled.
   // The aforementioned pref allows automated tests to bypass the security
   // checks when writing to
@@ -80,8 +80,7 @@ class Clipboard : public DOMEventTargetHelper {
       Promise& aPromise);
 
   already_AddRefed<Promise> ReadHelper(nsIPrincipal& aSubjectPrincipal,
-                                       ClipboardReadType aClipboardReadType,
-                                       ErrorResult& aRv);
+                                       ReadRequestType aType, ErrorResult& aRv);
 
   ~Clipboard();
 
