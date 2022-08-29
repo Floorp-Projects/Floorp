@@ -109,7 +109,12 @@ add_task(
       });
     }
 
-    await extension.terminateBackground();
+    await extension.terminateBackground({ disableResetIdleForTest: true });
+    ok(
+      !extension.extension.backgroundContext,
+      "Background Extension context should have been destroyed"
+    );
+
     for (let event of EVENTS) {
       assertPersistentListeners(extension, "downloads", event, {
         primed: true,
@@ -129,7 +134,12 @@ add_task(
       });
     }
     await extension.awaitMessage("onChanged");
-    await extension.terminateBackground();
+
+    await extension.terminateBackground({ disableResetIdleForTest: true });
+    ok(
+      !extension.extension.backgroundContext,
+      "Background Extension context should have been destroyed"
+    );
 
     await dl_extension.awaitMessage("downloadComplete");
     dl_extension.sendMessage("erase");

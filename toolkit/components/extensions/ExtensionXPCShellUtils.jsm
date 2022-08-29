@@ -269,8 +269,8 @@ class ExtensionWrapper {
    * This method sends the message to force-sleep the background scripts.
    * @returns {Promise} resolves after the background is asleep and listeners primed.
    */
-  terminateBackground() {
-    return this.extension.terminateBackground();
+  terminateBackground(...args) {
+    return this.extension.terminateBackground(...args);
   }
 
   wakeupBackground() {

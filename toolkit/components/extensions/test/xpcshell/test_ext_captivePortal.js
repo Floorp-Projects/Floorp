@@ -146,7 +146,12 @@ add_task(async function test_captivePortal_basic() {
   });
 
   info("Test event page terminate/waken");
-  await extension.terminateBackground();
+
+  await extension.terminateBackground({ disableResetIdleForTest: true });
+  ok(
+    !extension.extension.backgroundContext,
+    "Background Extension context should have been destroyed"
+  );
 
   assertPersistentListeners(extension, "captivePortal", "onStateChanged", {
     primed: true,
@@ -171,7 +176,12 @@ add_task(async function test_captivePortal_basic() {
   equal(details.state, "locked_portal", "state in portal");
 
   info("Test event page terminate/waken with settings");
-  await extension.terminateBackground();
+
+  await extension.terminateBackground({ disableResetIdleForTest: true });
+  ok(
+    !extension.extension.backgroundContext,
+    "Background Extension context should have been destroyed"
+  );
 
   assertPersistentListeners(extension, "captivePortal", "captiveURL.onChange", {
     primed: true,

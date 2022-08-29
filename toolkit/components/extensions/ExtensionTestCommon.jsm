@@ -226,9 +226,9 @@ class MockExtension {
       });
   }
 
-  terminateBackground() {
+  terminateBackground(...args) {
     return this._extensionPromise.then(extension => {
-      return extension.terminateBackground();
+      return extension.terminateBackground(...args);
     });
   }
 
