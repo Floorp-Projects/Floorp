@@ -10,9 +10,15 @@ add_task(async function() {
     set: [["dom.text-recognition.enabled", true]],
   });
 
+  clearTelemetry();
+
   await BrowserTestUtils.withNewTab(URL_IMG, async function(browser) {
     setClipboardText("");
     is(getTextFromClipboard(), "", "The copied text is empty.");
+    ok(
+      !getTelemetryScalars()["browser.ui.interaction.content_context"],
+      "No telemetry has been recorded yet."
+    );
 
     info("Right click image to show context menu.");
     let popupShownPromise = BrowserTestUtils.waitForEvent(
@@ -43,6 +49,17 @@ add_task(async function() {
       document.querySelector(".textRecognitionDialogFrame")
     );
 
+    {
+      info("Check the scalar telemetry.");
+      const scalars = await BrowserTestUtils.waitForCondition(() =>
+        getTelemetryScalars()
+      );
+      const contentContext = scalars["browser.ui.interaction.content_context"];
+      ok(contentContext, "Opening the context menu was recorded.");
+
+      is(contentContext["context-imagetext"], 1, "Telemetry has been recorded");
+    }
+
     info("Waiting for text results.");
     const resultsHeader = contentDocument.querySelector(
       "#text-recognition-header-results"
@@ -51,14 +68,16 @@ add_task(async function() {
       return resultsHeader.style.display !== "none";
     });
 
-    info("Checking the text results.");
-    const text = contentDocument.querySelector(".textRecognitionText");
-    is(text.children.length, 2, "Two piece of text were found");
-    const [p1, p2] = text.children;
-    is(p1.tagName, "P", "The children are paragraph tags.");
-    is(p2.tagName, "P", "The children are paragraph tags.");
-    is(p1.innerText, "Mozilla\n", "The first piece of text matches.");
-    is(p2.innerText, "Firefox\n", "The second piece of text matches.");
+    {
+      info("Check the text results.");
+      const text = contentDocument.querySelector(".textRecognitionText");
+      is(text.children.length, 2, "Two piece of text were found");
+      const [p1, p2] = text.children;
+      is(p1.tagName, "P", "The children are paragraph tags.");
+      is(p2.tagName, "P", "The children are paragraph tags.");
+      is(p1.innerText, "Mozilla\n", "The first piece of text matches.");
+      is(p2.innerText, "Firefox\n", "The second piece of text matches.");
+    }
 
     info("Close the dialog box.");
     const close = contentDocument.querySelector("#text-recognition-close");
@@ -75,5 +94,6 @@ add_task(async function() {
       () => !document.querySelector(".textRecognitionDialogFrame")
     );
     setClipboardText("");
+    clearTelemetry();
   });
 });

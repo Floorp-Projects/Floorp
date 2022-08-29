@@ -1153,6 +1153,22 @@ browser.ui.interaction:
     record_in_processes:
       - 'main'
 
+  textrecognition_error:
+    bug_numbers:
+      - 1783261
+    description: >
+      Recorded when text recognition in images fails for some unknown reason.
+    notification_emails:
+      - gtatum@mozilla.com
+      - nordzilla@mozilla.com
+    expires: never
+    kind: uint
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
 gecko:
   version:
     bug_numbers:
