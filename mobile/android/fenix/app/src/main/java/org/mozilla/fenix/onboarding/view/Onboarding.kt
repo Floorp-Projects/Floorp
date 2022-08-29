@@ -188,7 +188,7 @@ private fun OnboardingSyncSignInContent() {
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = stringResource(id = R.string.onboarding_home_sync_title),
+            text = stringResource(id = R.string.onboarding_home_sync_title_2),
             color = FirefoxTheme.colors.textPrimary,
             textAlign = TextAlign.Center,
             style = FirefoxTheme.typography.headline5,
