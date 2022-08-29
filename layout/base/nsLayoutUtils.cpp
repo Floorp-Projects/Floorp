@@ -1756,7 +1756,8 @@ nsIFrame* nsLayoutUtils::GetPopupFrameForEventCoordinates(
 
 nsIFrame* nsLayoutUtils::GetPopupFrameForPoint(
     nsPresContext* aRootPresContext, nsIWidget* aWidget,
-    const mozilla::LayoutDeviceIntPoint& aPoint) {
+    const mozilla::LayoutDeviceIntPoint& aPoint,
+    GetPopupFrameForPointFlags aFlags /* = GetPopupFrameForPointFlags(0) */) {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (!pm) {
     return nullptr;
@@ -1765,11 +1766,19 @@ nsIFrame* nsLayoutUtils::GetPopupFrameForPoint(
   pm->GetVisiblePopups(popups);
   // Search from top to bottom
   for (nsIFrame* popup : popups) {
-    if (popup->PresContext()->GetRootPresContext() == aRootPresContext &&
-        popup->ScrollableOverflowRect().Contains(GetEventCoordinatesRelativeTo(
-            aWidget, aPoint, RelativeTo{popup}))) {
-      return popup;
+    if (popup->PresContext()->GetRootPresContext() != aRootPresContext) {
+      continue;
     }
+    if (!popup->ScrollableOverflowRect().Contains(GetEventCoordinatesRelativeTo(
+            aWidget, aPoint, RelativeTo{popup}))) {
+      continue;
+    }
+    if (aFlags & GetPopupFrameForPointFlags::OnlyReturnFramesWithWidgets) {
+      if (!popup->HasView() || !popup->GetView()->HasWidget()) {
+        continue;
+      }
+    }
+    return popup;
   }
   return nullptr;
 }
