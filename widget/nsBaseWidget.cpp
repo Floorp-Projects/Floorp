@@ -1641,10 +1641,9 @@ void nsBaseWidget::NotifyWindowDestroyed() {
   }
 }
 
-void nsBaseWidget::NotifyWindowMoved(int32_t aX, int32_t aY,
-                                     ByMoveToRect aByMoveToRect) {
+void nsBaseWidget::NotifyWindowMoved(int32_t aX, int32_t aY) {
   if (mWidgetListener) {
-    mWidgetListener->WindowMoved(this, aX, aY, aByMoveToRect);
+    mWidgetListener->WindowMoved(this, aX, aY);
   }
 
   if (mIMEHasFocus && IMENotificationRequestsRef().WantPositionChanged()) {

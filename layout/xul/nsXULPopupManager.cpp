@@ -558,8 +558,7 @@ static nsMenuPopupFrame* GetPopupToMoveOrResize(nsIFrame* aFrame) {
   return menuPopupFrame;
 }
 
-void nsXULPopupManager::PopupMoved(nsIFrame* aFrame, nsIntPoint aPnt,
-                                   bool aByMoveToRect) {
+void nsXULPopupManager::PopupMoved(nsIFrame* aFrame, nsIntPoint aPnt) {
   nsMenuPopupFrame* menuPopupFrame = GetPopupToMoveOrResize(aFrame);
   if (!menuPopupFrame) {
     return;
@@ -592,7 +591,7 @@ void nsXULPopupManager::PopupMoved(nsIFrame* aFrame, nsIntPoint aPnt,
   } else {
     CSSPoint cssPos = LayoutDeviceIntPoint::FromUnknownPoint(aPnt) /
                       menuPopupFrame->PresContext()->CSSToDevPixelScale();
-    menuPopupFrame->MoveTo(cssPos, false, aByMoveToRect);
+    menuPopupFrame->MoveTo(cssPos, false);
   }
 }
 

@@ -21,8 +21,8 @@ nsView* nsIWidgetListener::GetView() { return nullptr; }
 
 PresShell* nsIWidgetListener::GetPresShell() { return nullptr; }
 
-bool nsIWidgetListener::WindowMoved(nsIWidget* aWidget, int32_t aX, int32_t aY,
-                                    ByMoveToRect) {
+bool nsIWidgetListener::WindowMoved(nsIWidget* aWidget, int32_t aX,
+                                    int32_t aY) {
   return false;
 }
 

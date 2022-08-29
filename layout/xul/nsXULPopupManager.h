@@ -659,9 +659,9 @@ class nsXULPopupManager final : public nsIDOMEventListener,
 
   /**
    * Indicate that the popup associated with aView has been moved to the
-   * specified screen coordinates.
+   * specified screen coordiates.
    */
-  void PopupMoved(nsIFrame* aFrame, nsIntPoint aPoint, bool aByMoveToRect);
+  void PopupMoved(nsIFrame* aFrame, nsIntPoint aPoint);
 
   /**
    * Indicate that the popup associated with aView has been resized to the
