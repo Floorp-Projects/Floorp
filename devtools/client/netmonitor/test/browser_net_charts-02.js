@@ -30,7 +30,7 @@ add_task(async function() {
   });
 
   const { node } = pie;
-  const slices = node.querySelectorAll(".pie-chart-slice.chart-colored-blob");
+  const slices = node.querySelectorAll(".pie-chart-slice");
   const labels = node.querySelectorAll(".pie-chart-label");
 
   ok(
@@ -58,7 +58,7 @@ add_task(async function() {
     "The first slice should also be the smallest one."
   );
   is(
-    slices[0].getAttribute("name"),
+    slices[0].getAttribute("data-statistic-name"),
     L10N.getStr("pieChart.loading"),
     "The first slice's name is correct."
   );

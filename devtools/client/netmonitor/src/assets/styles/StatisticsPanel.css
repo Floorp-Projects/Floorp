@@ -65,60 +65,52 @@
 }
 
 .statistics-panel .table-chart-container {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
   min-width: 240px;
   margin-inline-start: 1vw;
   margin-inline-end: 3vw;
 }
 
-.chart-colored-blob[name=html] {
-  fill: var(--theme-highlight-bluegrey);
-  background: var(--theme-highlight-bluegrey);
+tr[data-statistic-name] td:first-of-type {
+  border-inline-start: 15px solid var(--stat-color);
 }
 
-.chart-colored-blob[name=css] {
-  fill: var(--theme-highlight-blue);
-  background: var(--theme-highlight-blue);
+path[data-statistic-name] {
+  fill: var(--stat-color);
 }
 
-.chart-colored-blob[name=js] {
-  fill: var(--theme-highlight-lightorange);
-  background: var(--theme-highlight-lightorange);
+[data-statistic-name=html] {
+  --stat-color: var(--theme-highlight-bluegrey);
 }
 
-.chart-colored-blob[name=xhr] {
-  fill: var(--theme-highlight-orange);
-  background: var(--theme-highlight-orange);
+[data-statistic-name=css] {
+  --stat-color: var(--theme-highlight-blue);
 }
 
-.chart-colored-blob[name=fonts] {
-  fill: var(--theme-highlight-purple);
-  background: var(--theme-highlight-purple);
+[data-statistic-name=js] {
+  --stat-color: var(--theme-highlight-lightorange);
 }
 
-.chart-colored-blob[name=images] {
-  fill: var(--theme-highlight-pink);
-  background: var(--theme-highlight-pink);
+[data-statistic-name=xhr] {
+  --stat-color: var(--theme-highlight-orange);
 }
 
-.chart-colored-blob[name=media] {
-  fill: var(--theme-highlight-green);
-  background: var(--theme-highlight-green);
+[data-statistic-name=fonts] {
+  --stat-color: var(--theme-highlight-purple);
 }
 
-.chart-colored-blob[name=flash] {
-  fill: var(--theme-highlight-red);
-  background: var(--theme-highlight-red);
+[data-statistic-name=images] {
+  --stat-color: var(--theme-highlight-pink);
 }
 
-.table-chart-row {
-  display: flex;
+[data-statistic-name=media] {
+  --stat-color: var(--theme-highlight-green);
 }
 
-.table-chart-row-label[name=cached] {
-  display: none;
+/*
+ * Align cell text to the center by default.
+ */
+.table-chart-row-label {
+  text-align: center;
 }
 
 .table-chart-row-label[name=count] {
@@ -168,4 +160,12 @@
   .statistics-panel .pie-table-chart-container{
     margin-bottom: 2rem;
   }
+}
+
+.offscreen{
+    position: absolute!important;
+    font-size: 0px;
+    overflow: hidden;
+    clip: rect(1px,1px,1px,1px);
+    clip-path: polygon(0 0,0 0,0 0,0 0);
 }

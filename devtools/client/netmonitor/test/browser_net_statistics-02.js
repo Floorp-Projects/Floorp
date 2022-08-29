@@ -57,7 +57,7 @@ add_task(async function() {
 
   EventUtils.sendMouseEvent(
     { type: "click" },
-    document.querySelector(".pie-chart-slice")
+    document.querySelector(".pie-chart-slice-container")
   );
 
   ok(

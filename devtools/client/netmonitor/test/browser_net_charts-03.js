@@ -78,97 +78,85 @@ add_task(async function() {
   );
 
   is(
-    rows[0].querySelectorAll("span")[0].getAttribute("name"),
+    rows[0].querySelectorAll(".table-chart-row-label")[0].getAttribute("name"),
     "label1",
     "The first column of the header exists."
   );
   is(
-    rows[0].querySelectorAll("span")[1].getAttribute("name"),
+    rows[0].querySelectorAll(".table-chart-row-label")[1].getAttribute("name"),
     "label2",
     "The second column of the header exists."
   );
   is(
-    rows[0].querySelectorAll("span")[0].textContent,
+    rows[0].querySelectorAll(".table-chart-row-label")[0].textContent,
     "label1header",
     "The first column of the header displays the correct text."
   );
   is(
-    rows[0].querySelectorAll("span")[1].textContent,
+    rows[0].querySelectorAll(".table-chart-row-label")[1].textContent,
     "label2header",
     "The second column of the header displays the correct text."
   );
 
-  ok(
-    rows[1].querySelector(".table-chart-row-box.chart-colored-blob"),
-    "A colored blob exists for the first row."
-  );
   is(
-    rows[1].querySelectorAll("span")[0].getAttribute("name"),
+    rows[1].querySelectorAll(".table-chart-row-label")[0].getAttribute("name"),
     "label1",
     "The first column of the first row exists."
   );
   is(
-    rows[1].querySelectorAll("span")[1].getAttribute("name"),
+    rows[1].querySelectorAll(".table-chart-row-label")[1].getAttribute("name"),
     "label2",
     "The second column of the first row exists."
   );
   is(
-    rows[1].querySelectorAll("span")[0].textContent,
+    rows[1].querySelectorAll(".table-chart-row-label")[0].textContent,
     "1",
     "The first column of the first row displays the correct text."
   );
   is(
-    rows[1].querySelectorAll("span")[1].textContent,
+    rows[1].querySelectorAll(".table-chart-row-label")[1].textContent,
     "11.1foo",
     "The second column of the first row displays the correct text."
   );
 
-  ok(
-    rows[2].querySelector(".table-chart-row-box.chart-colored-blob"),
-    "A colored blob exists for the second row."
-  );
   is(
-    rows[2].querySelectorAll("span")[0].getAttribute("name"),
+    rows[2].querySelectorAll(".table-chart-row-label")[0].getAttribute("name"),
     "label1",
     "The first column of the second row exists."
   );
   is(
-    rows[2].querySelectorAll("span")[1].getAttribute("name"),
+    rows[2].querySelectorAll(".table-chart-row-label")[1].getAttribute("name"),
     "label2",
     "The second column of the second row exists."
   );
   is(
-    rows[2].querySelectorAll("span")[0].textContent,
+    rows[2].querySelectorAll(".table-chart-row-label")[0].textContent,
     "2",
     "The first column of the second row displays the correct text."
   );
   is(
-    rows[2].querySelectorAll("span")[1].textContent,
+    rows[2].querySelectorAll(".table-chart-row-label")[1].textContent,
     "12.2bar",
     "The second column of the first row displays the correct text."
   );
 
-  ok(
-    rows[3].querySelector(".table-chart-row-box.chart-colored-blob"),
-    "A colored blob exists for the third row."
-  );
   is(
-    rows[3].querySelectorAll("span")[0].getAttribute("name"),
+    rows[3].querySelectorAll(".table-chart-row-label")[0].getAttribute("name"),
     "label1",
     "The first column of the third row exists."
   );
   is(
-    rows[3].querySelectorAll("span")[1].getAttribute("name"),
+    rows[3].querySelectorAll(".table-chart-row-label")[1].getAttribute("name"),
     "label2",
     "The second column of the third row exists."
   );
   is(
-    rows[3].querySelectorAll("span")[0].textContent,
+    rows[3].querySelectorAll(".table-chart-row-label")[0].textContent,
     "3",
     "The first column of the third row displays the correct text."
   );
   is(
-    rows[3].querySelectorAll("span")[1].textContent,
+    rows[3].querySelectorAll(".table-chart-row-label")[1].textContent,
     "13.3baz",
     "The second column of the third row displays the correct text."
   );

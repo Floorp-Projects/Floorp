@@ -41,13 +41,25 @@ add_task(async function() {
   });
 
   const { node } = pie;
-  const slices = node.querySelectorAll(".pie-chart-slice.chart-colored-blob");
+  const slicesContainer = node.querySelectorAll(".pie-chart-slice-container");
+  const slices = node.querySelectorAll(".pie-chart-slice");
   const labels = node.querySelectorAll(".pie-chart-label");
 
   ok(
     node.classList.contains("pie-chart-container") &&
       node.classList.contains("generic-chart-container"),
     "A pie chart container was created successfully."
+  );
+  is(
+    node.getAttribute("aria-label"),
+    "Pie chart representing the size of each type of request in proportion to each other",
+    "pie chart container has expected aria-label"
+  );
+
+  is(
+    slicesContainer.length,
+    3,
+    "There should be 3 pie chart slices container created."
   );
 
   is(slices.length, 3, "There should be 3 pie chart slices created.");
@@ -76,6 +88,22 @@ add_task(async function() {
     "The third slice has the correct data."
   );
 
+  is(
+    slicesContainer[0].getAttribute("aria-label"),
+    "baz: 50%",
+    "First slice container has expected aria-label"
+  );
+  is(
+    slicesContainer[1].getAttribute("aria-label"),
+    "bar: 33.33%",
+    "Second slice container has expected aria-label"
+  );
+  is(
+    slicesContainer[2].getAttribute("aria-label"),
+    "foo: 16.67%",
+    "Third slice container has expected aria-label"
+  );
+
   ok(
     slices[0].hasAttribute("largest"),
     "The first slice should be the largest one."
@@ -86,17 +114,17 @@ add_task(async function() {
   );
 
   is(
-    slices[0].getAttribute("name"),
+    slices[0].getAttribute("data-statistic-name"),
     "baz",
     "The first slice's name is correct."
   );
   is(
-    slices[1].getAttribute("name"),
+    slices[1].getAttribute("data-statistic-name"),
     "bar",
     "The first slice's name is correct."
   );
   is(
-    slices[2].getAttribute("name"),
+    slices[2].getAttribute("data-statistic-name"),
     "foo",
     "The first slice's name is correct."
   );
@@ -105,6 +133,21 @@ add_task(async function() {
   is(labels[0].textContent, "baz", "The first label's text is correct.");
   is(labels[1].textContent, "bar", "The first label's text is correct.");
   is(labels[2].textContent, "foo", "The first label's text is correct.");
+  is(
+    labels[0].getAttribute("aria-hidden"),
+    "true",
+    "The first label has aria-hidden."
+  );
+  is(
+    labels[1].getAttribute("aria-hidden"),
+    "true",
+    "The first label has aria-hidden."
+  );
+  is(
+    labels[2].getAttribute("aria-hidden"),
+    "true",
+    "The first label has aria-hidden."
+  );
 
   await teardown(monitor);
 });
