@@ -59,7 +59,7 @@ bool Clipboard::IsTestingPrefEnabledOrHasReadPermission(
 }
 
 // @return true iff the event was dispatched successfully.
-static bool MaybeCreateAndDispatchMozClipboardReadTextPasteEvent(
+static bool MaybeCreateAndDispatchMozClipboardReadPasteEvent(
     nsPIDOMWindowInner& aOwner) {
   RefPtr<Document> document = aOwner.GetDoc();
 
@@ -70,15 +70,15 @@ static bool MaybeCreateAndDispatchMozClipboardReadTextPasteEvent(
     return false;
   }
 
-  // Conceptionally, `ClipboardReadTextPasteChild` is the target of the event.
+  // Conceptionally, `ClipboardReadPasteChild` is the target of the event.
   // It ensures to receive the event by declaring the event in
   // <BrowserGlue.jsm>.
   return !NS_WARN_IF(NS_FAILED(nsContentUtils::DispatchChromeEvent(
-      document, ToSupports(document), u"MozClipboardReadTextPaste"_ns,
+      document, ToSupports(document), u"MozClipboardReadPaste"_ns,
       CanBubble::eNo, Cancelable::eNo)));
 }
 
-void Clipboard::ReadTextRequest::Answer() {
+void Clipboard::ReadRequest::Answer() {
   RefPtr<Promise> p(std::move(mPromise));
   RefPtr<nsPIDOMWindowInner> owner(std::move(mOwner));
 
@@ -189,7 +189,7 @@ static bool IsReadTextExposedToContent() {
   return StaticPrefs::dom_events_asyncClipboard_readText_DoNotUseDirectly();
 }
 
-void Clipboard::CheckReadTextPermissionAndHandleRequest(
+void Clipboard::CheckReadPermissionAndHandleRequest(
     Promise& aPromise, nsIPrincipal& aSubjectPrincipal, ReadRequestType aType) {
   if (IsTestingPrefEnabledOrHasReadPermission(aSubjectPrincipal)) {
     MOZ_LOG(GetClipboardLog(), LogLevel::Debug,
@@ -200,7 +200,7 @@ void Clipboard::CheckReadTextPermissionAndHandleRequest(
       return;
     }
 
-    ReadTextRequest{aPromise, aType, *owner}.Answer();
+    ReadRequest{aPromise, aType, *owner}.Answer();
     return;
   }
 
@@ -212,10 +212,10 @@ void Clipboard::CheckReadTextPermissionAndHandleRequest(
     return;
   }
 
-  HandleReadTextRequestWhichRequiresPasteButton(aPromise, aType);
+  HandleReadRequestWhichRequiresPasteButton(aPromise, aType);
 }
 
-void Clipboard::HandleReadTextRequestWhichRequiresPasteButton(
+void Clipboard::HandleReadRequestWhichRequiresPasteButton(
     Promise& aPromise, ReadRequestType aType) {
   nsPIDOMWindowInner* owner = GetOwner();
   WindowContext* windowContext = owner ? owner->GetWindowContext() : nullptr;
@@ -228,7 +228,7 @@ void Clipboard::HandleReadTextRequestWhichRequiresPasteButton(
   // If no transient user activation, reject the promise and return.
   if (!windowContext->HasValidTransientUserGestureActivation()) {
     aPromise.MaybeRejectWithNotAllowedError(
-        "`navigator.clipboard.readText()` was blocked due to lack of "
+        "Clipboard read request was blocked due to lack of "
         "user activation.");
     return;
   }
@@ -239,13 +239,13 @@ void Clipboard::HandleReadTextRequestWhichRequiresPasteButton(
 
   switch (mTransientUserPasteState.RefreshAndGet(*windowContext)) {
     case TransientUserPasteState::Value::Initial: {
-      MOZ_ASSERT(mReadTextRequests.IsEmpty());
+      MOZ_ASSERT(mReadRequests.IsEmpty());
 
-      if (MaybeCreateAndDispatchMozClipboardReadTextPasteEvent(*owner)) {
+      if (MaybeCreateAndDispatchMozClipboardReadPasteEvent(*owner)) {
         mTransientUserPasteState.OnStartWaitingForUserReactionToPasteMenuPopup(
             windowContext->GetUserGestureStart());
-        mReadTextRequests.AppendElement(
-            MakeUnique<ReadTextRequest>(aPromise, aType, *owner));
+        mReadRequests.AppendElement(
+            MakeUnique<ReadRequest>(aPromise, aType, *owner));
       } else {
         // This shouldn't happen but let's handle this case.
         aPromise.MaybeRejectWithUndefined();
@@ -254,20 +254,20 @@ void Clipboard::HandleReadTextRequestWhichRequiresPasteButton(
     }
     case TransientUserPasteState::Value::
         WaitingForUserReactionToPasteMenuPopup: {
-      MOZ_ASSERT(!mReadTextRequests.IsEmpty());
+      MOZ_ASSERT(!mReadRequests.IsEmpty());
 
-      mReadTextRequests.AppendElement(
-          MakeUnique<ReadTextRequest>(aPromise, aType, *owner));
+      mReadRequests.AppendElement(
+          MakeUnique<ReadRequest>(aPromise, aType, *owner));
       break;
     }
     case TransientUserPasteState::Value::TransientlyForbiddenByUser: {
       aPromise.MaybeRejectWithNotAllowedError(
-          "`navigator.clipboard.readText()` was blocked due to the user "
+          "`Clipboard read request was blocked due to the user "
           "dismissing the 'Paste' button.");
       break;
     }
     case TransientUserPasteState::Value::TransientlyAllowedByUser: {
-      ReadTextRequest{aPromise, aType, *owner}.Answer();
+      ReadRequest{aPromise, aType, *owner}.Answer();
       break;
     }
   }
@@ -282,7 +282,7 @@ already_AddRefed<Promise> Clipboard::ReadHelper(nsIPrincipal& aSubjectPrincipal,
     return nullptr;
   }
 
-  CheckReadTextPermissionAndHandleRequest(*p, aSubjectPrincipal, aType);
+  CheckReadPermissionAndHandleRequest(*p, aSubjectPrincipal, aType);
   return p.forget();
 }
 
@@ -692,7 +692,7 @@ already_AddRefed<Promise> Clipboard::WriteText(const nsAString& aData,
   return Write(std::move(sequence), aSubjectPrincipal, aRv);
 }
 
-void Clipboard::ReadTextRequest::MaybeRejectWithNotAllowedError(
+void Clipboard::ReadRequest::MaybeRejectWithNotAllowedError(
     const nsACString& aMessage) {
   mPromise->MaybeRejectWithNotAllowedError(aMessage);
 }
@@ -702,9 +702,9 @@ void Clipboard::OnUserReactedToPasteMenuPopup(const bool aAllowed) {
 
   mTransientUserPasteState.OnUserReactedToPasteMenuPopup(aAllowed);
 
-  MOZ_ASSERT(!mReadTextRequests.IsEmpty());
+  MOZ_ASSERT(!mReadRequests.IsEmpty());
 
-  for (UniquePtr<ReadTextRequest>& request : mReadTextRequests) {
+  for (UniquePtr<ReadRequest>& request : mReadRequests) {
     if (aAllowed) {
       request->Answer();
     } else {
@@ -713,7 +713,7 @@ void Clipboard::OnUserReactedToPasteMenuPopup(const bool aAllowed) {
     }
   }
 
-  mReadTextRequests.Clear();
+  mReadRequests.Clear();
 }
 
 JSObject* Clipboard::WrapObject(JSContext* aCx,
