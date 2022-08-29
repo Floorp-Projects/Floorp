@@ -113,11 +113,8 @@ using dom::AutoNoJSAPI;
 using dom::BrowserHost;
 using dom::BrowsingContext;
 using dom::Document;
-using dom::DocumentL10n;
 using dom::Element;
 using dom::EventTarget;
-using dom::LoadURIOptions;
-using dom::Promise;
 
 AppWindow::AppWindow(uint32_t aChromeFlags)
     : mChromeTreeOwner(nullptr),
@@ -3330,7 +3327,8 @@ PresShell* AppWindow::WidgetListenerDelegate::GetPresShell() {
 }
 
 bool AppWindow::WidgetListenerDelegate::WindowMoved(nsIWidget* aWidget,
-                                                    int32_t aX, int32_t aY) {
+                                                    int32_t aX, int32_t aY,
+                                                    ByMoveToRect) {
   RefPtr<AppWindow> holder = mAppWindow;
   return holder->WindowMoved(aWidget, aX, aY);
 }
