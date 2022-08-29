@@ -136,6 +136,25 @@
               "template": {
                 "type": "string",
                 "enum": [
+                  "feature_callout"
+                ]
+              }
+            },
+            "required": [
+              "template"
+            ]
+          },
+          "then": {
+            "$ref": "resource://activity-stream/schemas/MessagingExperiment.schema.json#/$defs/Spotlight"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "template": {
+                "type": "string",
+                "enum": [
                   "toast_notification"
                 ]
               }
@@ -1258,7 +1277,7 @@
         },
         "template": {
           "type": "string",
-          "const": "spotlight"
+          "enum": ["spotlight", "feature_callout"]
         }
       },
       "additionalProperties": true,
@@ -1576,6 +1595,7 @@
             "pb_newtab",
             "protections_panel",
             "spotlight",
+            "feature_callout",
             "toast_notification",
             "toolbar_badge",
             "update_action",
