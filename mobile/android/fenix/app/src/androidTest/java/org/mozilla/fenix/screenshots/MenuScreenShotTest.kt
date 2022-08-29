@@ -24,6 +24,7 @@ import org.junit.Test
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -39,6 +40,7 @@ import tools.fastlane.screengrab.locale.LocaleTestRule
 class MenuScreenShotTest : ScreenshotTest() {
     private lateinit var mockWebServer: MockWebServer
     private lateinit var mDevice: UiDevice
+    private val featureSettingsHelper = FeatureSettingsHelper()
 
     @Rule
     @JvmField
@@ -54,10 +56,13 @@ class MenuScreenShotTest : ScreenshotTest() {
             dispatcher = AndroidAssetDispatcher()
             start()
         }
+
+        featureSettingsHelper.setTCPCFREnabled(false)
     }
 
     @After
     fun tearDown() {
+        featureSettingsHelper.resetAllFeatureFlags()
         mActivityTestRule.getActivity().finishAndRemoveTask()
         mockWebServer.shutdown()
     }
