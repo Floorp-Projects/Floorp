@@ -1,0 +1,8 @@
+# verify that the results of a root-level mix-blend are available as
+# input to a backdrop-filter following that follows the blend container
+---
+root:
+  items:
+    - type: rect
+      bounds: 0 0 100 100
+      color: cyan
