@@ -96,4 +96,11 @@
     <string name="pref_key_phone_feature_location" translatable="false"><xliff:g id="preference_key">pref_key_phone_feature_location</xliff:g></string>
     <string name="pref_key_phone_feature_microphone" translatable="false"><xliff:g id="preference_key">pref_key_phone_feature_microphone</xliff:g></string>
     <string name="pref_key_phone_feature_notification" translatable="false"><xliff:g id="preference_key">pref_key_phone_feature_notification</xliff:g></string>
+
+    <!-- OnBoarding Step -->
+    <string name="pref_key_onboarding_step" translatable="false"><xliff:g id="preference_key">pref_key_onboarding_step</xliff:g></string>
+    <string name="pref_key_first_screen" translatable="false"><xliff:g id="preference_key">pref_key_first_screen</xliff:g></string>
+    <string name="pref_key_second_screen" translatable="false"><xliff:g id="preference_key">pref_key_second_screen</xliff:g></string>
+    <string name="firstrun_shown" translatable="false"><xliff:g id="preference_key">firstrun_shown</xliff:g></string>
+
 </resources>

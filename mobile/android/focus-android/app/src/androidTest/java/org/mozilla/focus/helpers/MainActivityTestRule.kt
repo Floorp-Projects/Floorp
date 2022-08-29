@@ -8,7 +8,6 @@ package org.mozilla.focus.helpers
 
 import android.view.ViewConfiguration.getLongPressTimeout
 import androidx.annotation.CallSuper
-import androidx.preference.PreferenceManager
 import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
@@ -18,7 +17,7 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.ext.components
-import org.mozilla.focus.fragment.FirstrunFragment.Companion.FIRSTRUN_PREF
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.helpers.TestHelper.pressBackKey
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.AppStore
@@ -109,11 +108,7 @@ private fun updateFirstRun(showFirstRun: Boolean) {
     } else if (appStore.state.screen !is Screen.FirstRun && showFirstRun) {
         showFirstRun(appStore)
     }
-
-    PreferenceManager.getDefaultSharedPreferences(appContext)
-        .edit()
-        .putBoolean(FIRSTRUN_PREF, !showFirstRun)
-        .apply()
+    appContext.settings.isFirstRun = showFirstRun
 }
 
 private fun showFirstRun(appStore: AppStore) {

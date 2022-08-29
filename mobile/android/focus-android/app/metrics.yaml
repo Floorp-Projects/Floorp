@@ -1591,6 +1591,66 @@ context_menu:
         type: string
 
 onboarding:
+  first_screen_close_button:
+    type: event
+    description: The user has tapped on close button from the first screen.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/7500
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/7566#issuecomment-1235551604
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+  get_started_button:
+    type: event
+    description: The user has tapped on get started button.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/7500
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/7566#issuecomment-1235551604
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+  default_browser_button:
+    type: event
+    description: The user has tapped on set as default browser button.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/7500
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/7566#issuecomment-1235551604
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+  skip_button:
+    type: event
+    description: The user has tapped on skip button.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/7500
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/7566#issuecomment-1235551604
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
+  second_screen_close_button:
+    type: event
+    description: The user has tapped on close button from the second screen.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/7500
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/7566#issuecomment-1235551604
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 119
   page_displayed:
     type: event
     description: A page from onboarding has been displayed.

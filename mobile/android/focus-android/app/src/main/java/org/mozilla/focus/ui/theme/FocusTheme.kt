@@ -124,8 +124,9 @@ private fun lightColorsMaterial(): Colors = lightColors(
     onPrimary = PhotonColors.Ink50
 )
 fun phoneDimensions() = FocusDimensions(
-    onboardingTitle = 20.sp,
-    onboardingDescription = 14.sp,
+    onboardingTitle = 24.sp,
+    onboardingSubtitleOne = 16.sp,
+    onboardingSubtitleTwo = 14.sp,
     onboardingStartBrowsingWidth = 232.dp,
     onboardingStartBrowsingHeight = 36.dp,
     onboardingFeaturesPaddingBottom = 40.dp,
@@ -134,7 +135,8 @@ fun phoneDimensions() = FocusDimensions(
 
 fun tabletDimensions() = FocusDimensions(
     onboardingTitle = 28.sp,
-    onboardingDescription = 18.sp,
+    onboardingSubtitleOne = 18.sp,
+    onboardingSubtitleTwo = 18.sp,
     onboardingStartBrowsingWidth = 400.dp,
     onboardingStartBrowsingHeight = 36.dp,
     onboardingFeaturesPaddingBottom = 180.dp,

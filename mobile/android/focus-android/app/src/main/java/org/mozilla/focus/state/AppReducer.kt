@@ -38,6 +38,7 @@ object AppReducer : Reducer<AppState, AppAction> {
             is AppAction.ShowTrackingProtectionCfrChange -> showTrackingProtectionCfrChanged(state, action)
             is AppAction.OpenSitePermissionOptionsScreen -> openSitePermissionOptionsScreen(state, action)
             is AppAction.ShowHomeScreen -> showHomeScreen(state)
+            is AppAction.ShowOnboardingSecondScreen -> showOnBoardingSecondScreen(state)
         }
     }
 }
@@ -112,12 +113,17 @@ private fun showFirstRun(state: AppState): AppState {
     return state.copy(screen = Screen.FirstRun)
 }
 
+private fun showOnBoardingSecondScreen(state: AppState): AppState {
+    return state.copy(screen = Screen.OnboardingSecondScreen)
+}
+
 /**
  * Force showing the home screen.
  */
 private fun showHomeScreen(state: AppState): AppState {
     return state.copy(screen = Screen.Home)
 }
+
 /**
  * Lock the application.
  */

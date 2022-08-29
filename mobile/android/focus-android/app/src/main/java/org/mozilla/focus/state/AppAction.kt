@@ -69,6 +69,8 @@ sealed class AppAction : Action {
      */
     internal object ShowFirstRun : AppAction()
 
+    internal object ShowOnboardingSecondScreen : AppAction()
+
     /**
      * Forces showing the home screen.
      */

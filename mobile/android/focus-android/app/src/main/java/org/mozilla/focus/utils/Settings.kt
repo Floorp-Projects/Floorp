@@ -17,7 +17,6 @@ import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.support.ktx.android.content.PreferencesHolder
 import mozilla.components.support.ktx.android.content.booleanPreference
 import org.mozilla.focus.R
-import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsPreferences
 import org.mozilla.focus.utils.AppConstants.isKlarBuild
 
@@ -184,6 +183,14 @@ class Settings(
                 .apply()
         }
 
+    var isFirstRun: Boolean
+        get() = preferences.getBoolean(getPreferenceKey(R.string.firstrun_shown), true)
+        set(value) {
+            preferences.edit()
+                .putBoolean(getPreferenceKey(R.string.firstrun_shown), value)
+                .apply()
+        }
+
     var shouldShowPrivacySecuritySettingsToolTip: Boolean
         get() = preferences.getBoolean(getPreferenceKey(R.string.pref_tool_tip_privacy_security_settings), true)
         set(value) {
@@ -230,9 +237,6 @@ class Settings(
             .putString(getPreferenceKey(R.string.pref_key_performance_enable_cookies), newValue)
             .apply()
     }
-
-    fun isFirstRun(): Boolean =
-        !preferences.getBoolean(FirstrunFragment.FIRSTRUN_PREF, false)
 
     fun shouldUseBiometrics(): Boolean =
         preferences.getBoolean(getPreferenceKey(R.string.pref_key_biometric), false)

@@ -199,7 +199,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     private fun showFirstScreen(safeIntent: SafeIntent) {
         // The performance check was added after the shouldShowFirstRun to take as much of the
         // code path as possible
-        if (settings.isFirstRun() &&
+        if (settings.isFirstRun &&
             !Performance.processIntentIfPerformanceTest(safeIntent, this)
         ) {
             components.appStore.dispatch(AppAction.ShowFirstRun)

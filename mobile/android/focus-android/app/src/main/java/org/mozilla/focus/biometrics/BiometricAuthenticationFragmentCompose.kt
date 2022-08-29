@@ -50,12 +50,12 @@ fun BiometricPromptContent(biometricErrorText: String, showBiometricPrompt: () -
             .background(
                 brush = Brush.linearGradient(
                     colors = listOf(
-                        colorResource(R.color.biometric_background_fragment_one),
-                        colorResource(R.color.biometric_background_fragment_two),
-                        colorResource(R.color.biometric_background_fragment_three),
-                        colorResource(R.color.biometric_background_fragment_four),
-                        colorResource(R.color.biometric_background_fragment_five),
-                        colorResource(R.color.biometric_background_fragment_six),
+                        colorResource(R.color.home_screen_modal_gradient_one),
+                        colorResource(R.color.home_screen_modal_gradient_two),
+                        colorResource(R.color.home_screen_modal_gradient_three),
+                        colorResource(R.color.home_screen_modal_gradient_four),
+                        colorResource(R.color.home_screen_modal_gradient_five),
+                        colorResource(R.color.home_screen_modal_gradient_six),
                     ),
                     end = Offset(0f, Float.POSITIVE_INFINITY),
                     start = Offset(Float.POSITIVE_INFINITY, 0f)

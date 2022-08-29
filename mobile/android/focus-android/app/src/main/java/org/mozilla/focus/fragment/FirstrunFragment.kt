@@ -11,12 +11,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.preference.PreferenceManager
 import androidx.viewpager.widget.ViewPager
 import org.mozilla.focus.GleanMetrics.Onboarding
 import org.mozilla.focus.R
 import org.mozilla.focus.databinding.FragmentFirstrunBinding
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.firstrun.FirstrunPagerAdapter
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -109,11 +109,7 @@ class FirstrunFragment : Fragment(), View.OnClickListener {
     }
 
     private fun finishFirstrun() {
-        PreferenceManager.getDefaultSharedPreferences(requireContext())
-            .edit()
-            .putBoolean(FIRSTRUN_PREF, true)
-            .apply()
-
+        requireContext().settings.isFirstRun = false
         val selectedTabId = requireComponents.store.state.selectedTabId
         requireComponents.appStore.dispatch(AppAction.FinishFirstRun(selectedTabId))
     }
@@ -137,7 +133,6 @@ class FirstrunFragment : Fragment(), View.OnClickListener {
 
     companion object {
         const val FRAGMENT_TAG = "firstrun"
-        const val FIRSTRUN_PREF = "firstrun_shown"
 
         fun create(): FirstrunFragment {
             val arguments = Bundle()

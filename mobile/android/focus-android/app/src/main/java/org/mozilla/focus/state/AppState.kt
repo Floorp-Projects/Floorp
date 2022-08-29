@@ -44,6 +44,11 @@ sealed class Screen {
     object FirstRun : Screen()
 
     /**
+     * Second screen from new onboarding flow.
+     */
+    object OnboardingSecondScreen : Screen()
+
+    /**
      * The home screen.
      */
     object Home : Screen()

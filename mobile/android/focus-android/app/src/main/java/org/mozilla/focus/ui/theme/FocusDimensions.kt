@@ -11,7 +11,8 @@ import androidx.compose.ui.unit.TextUnit
  */
 data class FocusDimensions(
     val onboardingTitle: TextUnit,
-    val onboardingDescription: TextUnit,
+    val onboardingSubtitleOne: TextUnit,
+    val onboardingSubtitleTwo: TextUnit,
     val onboardingStartBrowsingWidth: Dp,
     val onboardingStartBrowsingHeight: Dp,
     val onboardingFeaturesPaddingBottom: Dp,

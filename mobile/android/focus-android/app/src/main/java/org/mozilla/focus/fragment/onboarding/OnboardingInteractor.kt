@@ -4,19 +4,31 @@
 
 package org.mozilla.focus.fragment.onboarding
 
-import android.content.Context
-import androidx.preference.PreferenceManager
-import org.mozilla.focus.state.AppAction
-import org.mozilla.focus.state.AppStore
+import android.content.Intent
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
 
-class OnboardingInteractor(val appStore: AppStore) {
+interface OnboardingInteractor {
+    fun onFinishOnBoarding()
+    fun onGetStartedButtonClicked()
+    fun onMakeFocusDefaultBrowserButtonClicked(activityResultLauncher: ActivityResultLauncher<Intent>)
+    fun onActivityResultImplementation(activityResult: ActivityResult)
+}
 
-    fun finishOnboarding(context: Context, selectedTabId: String?) {
-        PreferenceManager.getDefaultSharedPreferences(context)
-            .edit()
-            .putBoolean(OnboardingFragment.ONBOARDING_PREF, true)
-            .apply()
+class DefaultOnboardingInteractor(private val controller: OnboardingController) : OnboardingInteractor {
+    override fun onFinishOnBoarding() {
+        controller.handleFinishOnBoarding()
+    }
 
-        appStore.dispatch(AppAction.FinishFirstRun(selectedTabId))
+    override fun onGetStartedButtonClicked() {
+        controller.handleGetStartedButtonClicked()
+    }
+
+    override fun onMakeFocusDefaultBrowserButtonClicked(activityResultLauncher: ActivityResultLauncher<Intent>) {
+        controller.handleMakeFocusDefaultBrowserButtonClicked(activityResultLauncher)
+    }
+
+    override fun onActivityResultImplementation(activityResult: ActivityResult) {
+        controller.handleActivityResultImplementation(activityResult)
     }
 }

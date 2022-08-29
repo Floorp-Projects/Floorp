@@ -344,7 +344,7 @@ class UrlInputFragment :
         super.onStart()
 
         activity?.let {
-            if (requireContext().settings.isFirstRun()) return@onStart
+            if (requireContext().settings.isFirstRun) return@onStart
         }
     }
 

@@ -80,6 +80,9 @@
     <!-- Onboarding -->
     <color name="onboarding_indicator_default">#7FFFFFFF</color>
     <color name="onboarding_indicator_selected">#FFFFFFFF</color>
+    <color name="onboardingButtonOneColor">#312A64</color>
+    <color name="onboardingButtonTwoColor">#E0E0E6</color>
+    <color name="onboardingCloseButtonColor">#F2F2F7</color>
 
     <!-- Session -->
     <color name="colorSession">@color/photonLightGrey05</color>
@@ -130,11 +133,13 @@
 
     <!-- Biometric screen colors -->
     <color name="biometric_show_button_background">#312A64</color>
-    <color name="biometric_background_fragment_one">#D3D4FA</color>
-    <color name="biometric_background_fragment_two">#D7D6F9</color>
-    <color name="biometric_background_fragment_three">#ECEAFA</color>
-    <color name="biometric_background_fragment_four">#F0EFFA</color>
-    <color name="biometric_background_fragment_five">#D9D3F5</color>
-    <color name="biometric_background_fragment_six">#D6C9EB</color>
+
+    <!-- HomeScreen background colors -->
+    <color name="home_screen_modal_gradient_one">#D3D4FA</color>
+    <color name="home_screen_modal_gradient_two">#D7D6F9</color>
+    <color name="home_screen_modal_gradient_three">#ECEAFA</color>
+    <color name="home_screen_modal_gradient_four">#F0EFFA</color>
+    <color name="home_screen_modal_gradient_five">#D9D3F5</color>
+    <color name="home_screen_modal_gradient_six">#D6C9EB</color>
 
 </resources>

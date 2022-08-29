@@ -50,6 +50,7 @@ class Navigator(
             is Screen.Locked -> navigation.lock()
             is Screen.Settings -> navigation.settings(screen.page)
             is Screen.SitePermissionOptionsScreen -> navigation.sitePermissionOptionsFragment(screen.sitePermission)
+            is Screen.OnboardingSecondScreen -> navigation.showOnBoardingSecondScreen()
         }
     }
 }

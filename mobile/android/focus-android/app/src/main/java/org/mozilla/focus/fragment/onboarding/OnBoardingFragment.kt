@@ -46,13 +46,12 @@ import org.mozilla.focus.ui.theme.focusColors
 import org.mozilla.focus.ui.theme.focusDimensions
 import org.mozilla.focus.ui.theme.focusTypography
 
-class OnboardingFragment : Fragment() {
+class OnBoardingFragment : Fragment() {
 
-    private lateinit var onboardingInteractor: OnboardingInteractor
+    private lateinit var onBoardingInteractor: OnBoardingInteractor
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-
         val transition =
             TransitionInflater.from(context).inflateTransition(R.transition.firstrun_exit)
         exitTransition = transition
@@ -64,11 +63,15 @@ class OnboardingFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        onboardingInteractor = OnboardingInteractor(requireComponents.appStore)
+        onBoardingInteractor = OnBoardingInteractor(
+            requireComponents.appStore,
+            requireActivity(),
+            requireComponents.store.state.selectedTabId
+        )
         return ComposeView(requireContext()).apply {
             setContent {
                 FocusTheme {
-                    OnboardingContent(onboardingInteractor)
+                    OnBoardingContent(onBoardingInteractor)
                 }
             }
         }
@@ -76,7 +79,7 @@ class OnboardingFragment : Fragment() {
 
     @Composable
     @Suppress("LongMethod")
-    fun OnboardingContent(onboardingInteractor: OnboardingInteractor) {
+    fun OnBoardingContent(onBoardingInteractor: OnBoardingInteractor) {
         Box {
             ConstraintLayout(
                 modifier = Modifier
@@ -154,10 +157,7 @@ class OnboardingFragment : Fragment() {
                 Button(
                     onClick = {
                         Onboarding.finishButtonTapped.record(Onboarding.FinishButtonTappedExtra())
-                        onboardingInteractor.finishOnboarding(
-                            requireContext(),
-                            requireComponents.store.state.selectedTabId
-                        )
+                        onBoardingInteractor.finishOnBoarding()
                     },
                     modifier = Modifier
                         .width(focusDimensions.onboardingStartBrowsingWidth)
@@ -208,10 +208,12 @@ class OnboardingFragment : Fragment() {
                     id = descriptionId,
                     getString(R.string.onboarding_short_app_name)
                 ),
-                modifier = Modifier.width(focusDimensions.onboardingFeatureDescriptionWidth).constrainAs(description) {
-                    top.linkTo(title.bottom)
-                    start.linkTo(title.start)
-                },
+                modifier = Modifier
+                    .width(focusDimensions.onboardingFeatureDescriptionWidth)
+                    .constrainAs(description) {
+                        top.linkTo(title.bottom)
+                        start.linkTo(title.start)
+                    },
                 style = focusTypography.onboardingFeatureDescription
             )
         }
@@ -221,10 +223,10 @@ class OnboardingFragment : Fragment() {
         const val FRAGMENT_TAG = "firstrun"
         const val ONBOARDING_PREF = "firstrun_shown"
 
-        fun create(): OnboardingFragment {
+        fun create(): OnBoardingFragment {
             val arguments = Bundle()
 
-            val fragment = OnboardingFragment()
+            val fragment = OnBoardingFragment()
             fragment.arguments = arguments
 
             return fragment
