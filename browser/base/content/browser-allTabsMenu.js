@@ -139,10 +139,6 @@ var gTabsPanel = {
   },
 
   showAllTabsPanel(event) {
-    // Only space and enter should open the popup, ignore other keypresses:
-    if (event.type == "keypress" && event.key != "Enter" && event.key != " ") {
-      return;
-    }
     this.init();
     if (this.canOpen) {
       PanelUI.showSubView(
