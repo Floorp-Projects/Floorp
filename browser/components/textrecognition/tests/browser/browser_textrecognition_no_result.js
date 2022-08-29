@@ -67,6 +67,13 @@ add_task(async function() {
     const text = contentDocument.querySelector(".textRecognitionText");
     is(text.children.length, 0, "No results are listed.");
 
+    ok(
+      Services.telemetry
+        .getHistogramById("TEXT_RECOGNITION_API_PERFORMANCE")
+        .snapshot().sum > 0,
+      "Histogram timing was recorded even though there were no results."
+    );
+
     info("Close the dialog box.");
     const close = contentDocument.querySelector("#text-recognition-close");
     close.click();
