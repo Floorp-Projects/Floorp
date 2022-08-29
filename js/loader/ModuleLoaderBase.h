@@ -296,6 +296,10 @@ class ModuleLoaderBase : public nsISupports {
   static bool HostPopulateImportMeta(JSContext* aCx,
                                      JS::Handle<JS::Value> aReferencingPrivate,
                                      JS::Handle<JSObject*> aMetaObject);
+  static bool ImportMetaResolve(JSContext* cx, unsigned argc, Value* vp);
+  static JSString* ImportMetaResolveImpl(
+      JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
+      JS::Handle<JSString*> aSpecifier);
   static bool HostImportModuleDynamically(
       JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
       JS::Handle<JSObject*> aModuleRequest, JS::Handle<JSObject*> aPromise);
@@ -377,6 +381,14 @@ class ModuleLoaderBase : public nsISupports {
   void RemoveDynamicImport(ModuleLoadRequest* aRequest);
 
   nsresult CreateModuleScript(ModuleLoadRequest* aRequest);
+
+  // The slot stored in ImportMetaResolve function.
+  enum { ModulePrivateSlot = 0, SlotCount };
+
+  // The number of args in ImportMetaResolve.
+  static const uint32_t ImportMetaResolveNumArgs = 1;
+  // The index of the 'specifier' argument in ImportMetaResolve.
+  static const uint32_t ImportMetaResolveSpecifierArg = 0;
 
  public:
   static mozilla::LazyLogModule gCspPRLog;

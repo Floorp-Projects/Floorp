@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<head>
+  <meta charset=utf-8>
+  <title>Test import.meta.resolve with import maps</title>
+</head>
+<body onload='testLoaded()'>
+
+<script type="importmap">
+{
+  "imports": {
+    "simple": "./module_simpleExport.js"
+  }
+}
+</script>
+
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  var wasRun = false;
+  var hasThrown = false;
+  window.onerror = handleError;
+
+  function handleError(msg, url, line, col, error) {
+    ok(error instanceof TypeError, "Thrown error should be TypeError.");
+    hasThrown = true;
+  }
+</script>
+
+<script type="module">
+  ok(import.meta.resolve("simple") ==
+     "chrome://mochitests/content/chrome/dom/base/test/jsmodules/importmaps/module_simpleExport.js",
+     "calling import.meta.resolve with a specifier from import map.");
+  wasRun = true;
+</script>
+
+<script type="module">
+  // should throw a TypeError
+  import.meta.resolve("fail");
+</script>
+
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  function testLoaded() {
+    ok(wasRun, "Check inline module has run.");
+    ok(hasThrown, "Check inline module has thrown.");
+    SimpleTest.finish();
+  }
+</script>
+</body>
