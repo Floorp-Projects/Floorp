@@ -355,10 +355,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 
   void NotifyWindowDestroyed();
   void NotifySizeMoveDone();
-
-  using ByMoveToRect = nsIWidgetListener::ByMoveToRect;
-  void NotifyWindowMoved(int32_t aX, int32_t aY,
-                         ByMoveToRect = ByMoveToRect::No);
+  void NotifyWindowMoved(int32_t aX, int32_t aY);
 
   void SetNativeData(uint32_t aDataType, uintptr_t aVal) override {}
 

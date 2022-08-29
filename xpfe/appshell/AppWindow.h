@@ -91,8 +91,7 @@ class AppWindow final : public nsIBaseWindow,
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
     virtual mozilla::PresShell* GetPresShell() override;
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    virtual bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y,
-                             ByMoveToRect) override;
+    virtual bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) override;
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
     virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth,
                                int32_t aHeight) override;

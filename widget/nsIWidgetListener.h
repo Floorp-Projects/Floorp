@@ -65,9 +65,7 @@ class nsIWidgetListener {
    * Called when a window is moved to location (x, y). Returns true if the
    * notification was handled. Coordinates are outer window screen coordinates.
    */
-  enum class ByMoveToRect : bool { No, Yes };
-  virtual bool WindowMoved(nsIWidget* aWidget, int32_t aX, int32_t aY,
-                           ByMoveToRect);
+  virtual bool WindowMoved(nsIWidget* aWidget, int32_t aX, int32_t aY);
 
   /**
    * Called when a window is resized to (width, height). Returns true if the
