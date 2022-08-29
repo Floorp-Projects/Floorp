@@ -295,7 +295,9 @@ add_task(
       )
     );
     const timingHist = histSnapshot.content.TELEMETRY_TEST_EXPONENTIAL;
-    Assert.greaterOrEqual(timingHist.sum, 15, "Histogram's in milliseconds.");
+    Assert.greaterOrEqual(timingHist.sum, 13, "Histogram's in milliseconds.");
+    // Both values, 10 and 5, are truncated by a cast in AccumulateTimeDelta
+    // Minimally downcast 9. + 4. could realistically result in 13.
     Assert.equal(
       2,
       Object.entries(timingHist.values).reduce(
