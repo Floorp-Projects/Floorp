@@ -15,6 +15,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import android.view.View
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.test.espresso.Espresso
@@ -316,6 +317,10 @@ object TestHelper {
                 )
             ).click()
         }
+    }
+
+    fun isTestLab(): Boolean {
+        return Settings.System.getString(appContext.contentResolver, "firebase.test.lab").toBoolean()
     }
 
     private val charPool: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
