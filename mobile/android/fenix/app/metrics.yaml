@@ -227,6 +227,7 @@ events:
       programmatically redirect to a new location.
     send_in_pings:
       - metrics
+      - baseline
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/17089
     data_reviews:
@@ -239,6 +240,8 @@ events:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    no_lint:
+      - BASELINE_PING
     metadata:
       tags:
         - PrivateBrowsing
