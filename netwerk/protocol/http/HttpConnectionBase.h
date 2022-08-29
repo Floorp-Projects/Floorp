@@ -107,7 +107,7 @@ class HttpConnectionBase : public nsSupportsWeakReference {
   void GetConnectionInfo(nsHttpConnectionInfo** ci) {
     *ci = do_AddRef(mConnInfo).take();
   }
-  virtual void GetSecurityInfo(nsISupports** result) = 0;
+  virtual void GetTLSSocketControl(nsISSLSocketControl** result) = 0;
 
   [[nodiscard]] virtual nsresult ResumeSend() = 0;
   [[nodiscard]] virtual nsresult ResumeRecv() = 0;
@@ -177,7 +177,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpConnectionBase, HTTPCONNECTIONBASE_IID)
   void PrintDiagnostics(nsCString&) override;                                  \
   bool TestJoinConnection(const nsACString&, int32_t) override;                \
   bool JoinConnection(const nsACString&, int32_t) override;                    \
-  void GetSecurityInfo(nsISupports** result) override;                         \
+  void GetTLSSocketControl(nsISSLSocketControl** result) override;             \
   [[nodiscard]] nsresult ResumeSend() override;                                \
   [[nodiscard]] nsresult ResumeRecv() override;                                \
   [[nodiscard]] nsresult ForceSend() override;                                 \
