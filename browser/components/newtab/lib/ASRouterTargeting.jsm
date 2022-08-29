@@ -774,7 +774,7 @@ const TargetingGetters = {
     }
     return QueryCache.getters.currentThemes.get().then(themes => {
       let themeId = themes.find(theme => theme.isActive)?.id;
-      return (
+      return !!(
         themeId && lazy.BuiltInThemes.isColorwayFromCurrentCollection(themeId)
       );
     });
