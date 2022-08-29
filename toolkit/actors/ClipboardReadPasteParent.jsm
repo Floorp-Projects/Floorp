@@ -3,16 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["ClipboardReadTextPasteParent"];
+var EXPORTED_SYMBOLS = ["ClipboardReadPasteParent"];
 
 const kPasteMenuItemClickedEventType = "PasteMenuItemClicked";
 const kPasteMenupopupHidingEventType = "PasteMenupopupHiding";
 
-const kMenuPopupId = "clipboardReadTextPasteMenuPopup";
+const kMenuPopupId = "clipboardReadPasteMenuPopup";
 
 // Exchanges messages with the child actor and handles events from the
 // pasteMenuHandler.
-class ClipboardReadTextPasteParent extends JSWindowActorParent {
+class ClipboardReadPasteParent extends JSWindowActorParent {
   constructor() {
     super();
 
@@ -25,7 +25,7 @@ class ClipboardReadTextPasteParent extends JSWindowActorParent {
     switch (aEvent.type) {
       case kPasteMenuItemClickedEventType: {
         this._pasteMenuItemClicked = true;
-        this.sendAsyncMessage("ClipboardReadTextPaste:PasteMenuItemClicked");
+        this.sendAsyncMessage("ClipboardReadPaste:PasteMenuItemClicked");
         break;
       }
       case kPasteMenupopupHidingEventType: {
@@ -38,9 +38,7 @@ class ClipboardReadTextPasteParent extends JSWindowActorParent {
           // click/dismiss events properly.
           this._pasteMenuItemClicked = false;
         } else {
-          this.sendAsyncMessage(
-            "ClipboardReadTextPaste:PasteMenuItemDismissed"
-          );
+          this.sendAsyncMessage("ClipboardReadPaste:PasteMenuItemDismissed");
         }
         break;
       }
@@ -49,7 +47,7 @@ class ClipboardReadTextPasteParent extends JSWindowActorParent {
 
   // For JSWindowActorParent.
   receiveMessage(value) {
-    if (value.name == "ClipboardReadTextPaste:ShowMenupopup") {
+    if (value.name == "ClipboardReadPaste:ShowMenupopup") {
       if (!this._menupopup) {
         this._menupopup = this._getMenupopup();
       }
@@ -68,15 +66,15 @@ class ClipboardReadTextPasteParent extends JSWindowActorParent {
       );
 
       // `openPopup` is a no-op if the popup is already opened.
-      // That property is used when `navigator.clipboard.readText()` is called
-      // from two different frames, e.g. an iframe and the top level frame.
-      // In that scenario, the two frames correspond to different
-      // `navigator.clipboard` instances. When `readText()` is called from both
-      // frames, an actor pair is instantiated for each of them. Both actor
-      // parents will call `openPopup` on the same `_menupopup` object. If the
-      // popup is already open, `openPopup` is a no-op. When the popup is
-      // clicked or dismissed both actor parents will receive the corresponding
-      // event.
+      // That property is used when `navigator.clipboard.readText()` or
+      // `navigator.clipboard.read()`is called from two different frames, e.g.
+      // an iframe and the top level frame. In that scenario, the two frames
+      // correspond to different `navigator.clipboard` instances. When
+      // `readText()` or `read()` is called from both frames, an actor pair is
+      // instantiated for each of them. Both actor parents will call `openPopup`
+      // on the same `_menupopup` object. If the popup is already open,
+      // `openPopup` is a no-op. When the popup is clicked or dismissed both
+      // actor parents will receive the corresponding event.
       this._menupopup.openPopup(
         null,
         "overlap" /* options */,
@@ -99,7 +97,7 @@ class ClipboardReadTextPasteParent extends JSWindowActorParent {
 
   _createMenupopup(aChromeDoc) {
     let menuitem = aChromeDoc.createXULElement("menuitem");
-    menuitem.id = "clipboardReadTextPasteMenuItem";
+    menuitem.id = "clipboardReadPasteMenuItem";
     menuitem.setAttribute("data-l10n-id", "text-action-paste");
     menuitem.setAttribute(
       "oncommand",

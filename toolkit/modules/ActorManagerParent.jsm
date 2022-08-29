@@ -513,15 +513,15 @@ if (!Services.prefs.getBoolPref("browser.pagedata.enabled", false)) {
 
 if (AppConstants.platform != "android") {
   // For GeckoView support see bug 1776829.
-  JSWINDOWACTORS.ClipboardReadTextPaste = {
+  JSWINDOWACTORS.ClipboardReadPaste = {
     parent: {
-      moduleURI: "resource://gre/actors/ClipboardReadTextPasteParent.jsm",
+      moduleURI: "resource://gre/actors/ClipboardReadPasteParent.jsm",
     },
 
     child: {
-      moduleURI: "resource://gre/actors/ClipboardReadTextPasteChild.jsm",
+      moduleURI: "resource://gre/actors/ClipboardReadPasteChild.jsm",
       events: {
-        MozClipboardReadTextPaste: {},
+        MozClipboardReadPaste: {},
       },
     },
 

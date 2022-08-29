@@ -5,8 +5,8 @@
 
 "use strict";
 
-const kPasteMenuPopupId = "clipboardReadTextPasteMenuPopup";
-const kPasteMenuItemId = "clipboardReadTextPasteMenuItem";
+const kPasteMenuPopupId = "clipboardReadPasteMenuPopup";
+const kPasteMenuItemId = "clipboardReadPasteMenuItem";
 
 function promiseWritingRandomTextToClipboard() {
   const clipboardText = "X" + Math.random();

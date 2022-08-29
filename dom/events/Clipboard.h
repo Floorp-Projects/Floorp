@@ -71,22 +71,22 @@ class Clipboard : public DOMEventTargetHelper {
   static bool IsTestingPrefEnabledOrHasReadPermission(
       nsIPrincipal& aSubjectPrincipal);
 
-  void CheckReadTextPermissionAndHandleRequest(Promise& aPromise,
-                                               nsIPrincipal& aSubjectPrincipal,
-                                               ReadRequestType aType);
+  void CheckReadPermissionAndHandleRequest(Promise& aPromise,
+                                           nsIPrincipal& aSubjectPrincipal,
+                                           ReadRequestType aType);
 
-  void HandleReadTextRequestWhichRequiresPasteButton(Promise& aPromise,
-                                                     ReadRequestType aType);
+  void HandleReadRequestWhichRequiresPasteButton(Promise& aPromise,
+                                                 ReadRequestType aType);
 
   already_AddRefed<Promise> ReadHelper(nsIPrincipal& aSubjectPrincipal,
                                        ReadRequestType aType, ErrorResult& aRv);
 
   ~Clipboard();
 
-  class ReadTextRequest final {
+  class ReadRequest final {
    public:
-    ReadTextRequest(Promise& aPromise, ReadRequestType aType,
-                    nsPIDOMWindowInner& aOwner)
+    ReadRequest(Promise& aPromise, ReadRequestType aType,
+                nsPIDOMWindowInner& aOwner)
         : mType(aType), mPromise(&aPromise), mOwner(&aOwner) {}
 
     // Clears the request too.
@@ -102,7 +102,7 @@ class Clipboard : public DOMEventTargetHelper {
     RefPtr<nsPIDOMWindowInner> mOwner;
   };
 
-  AutoTArray<UniquePtr<ReadTextRequest>, 1> mReadTextRequests;
+  AutoTArray<UniquePtr<ReadRequest>, 1> mReadRequests;
 
   class TransientUserPasteState final {
    public:
