@@ -161,8 +161,7 @@
     },
     "template": {
       "type": "string",
-      "description": "Specify whether the surface is shown as a Spotlight modal or an in-surface Feature Callout dialog",
-      "enum": ["spotlight", "feature_callout"]
+      "const": "spotlight"
     }
   },
   "additionalProperties": true,
