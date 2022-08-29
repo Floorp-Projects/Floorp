@@ -4400,6 +4400,18 @@ pref("extensions.formautofill.creditCards.hideui", false);
 // 2:Fathom in c++ implementation
 pref("extensions.formautofill.creditCards.heuristics.mode", 2);
 pref("extensions.formautofill.creditCards.heuristics.confidenceThreshold", "0.5");
+
+// Confidence threshold hold to determin whether a credit card form is valid when
+// the form only contains a credit card number field.
+#ifdef EARLY_BETA_OR_EARLIER
+// Set the credit card number only confidence threshold to the same value as the default
+// confidence threshold. This means as long as a form contains a cc-number fieild, we consider it
+// as a valid credit card form.
+pref("extensions.formautofill.creditCards.heuristics.numberOnly.confidenceThreshold", "0.5");
+#else
+pref("extensions.formautofill.creditCards.heuristics.numberOnly.confidenceThreshold", "0.95");
+#endif
+
 // Pref for shield/heartbeat to recognize users who have used Credit Card
 // Autofill. The valid values can be:
 // 0: none

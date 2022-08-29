@@ -1017,13 +1017,8 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
   }
 
   isValidSection() {
-    // TODO: Bug 1783013 - Re-enable this feature in release
-    if (AppConstants.EARLY_BETA_OR_EARLIER) {
-      // A valid cc section must contain a cc-number field
-      return this.fieldDetails.some(detail => detail.fieldName == "cc-number");
-    }
-
     let ccNumberReason = "";
+    let ccNumberConfidence = 0;
     let hasCCNumber = false;
     let hasExpiryDate = false;
     let hasCCName = false;
@@ -1033,6 +1028,7 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
         case "cc-number":
           hasCCNumber = true;
           ccNumberReason = detail._reason;
+          ccNumberConfidence = detail.confidence;
           break;
         case "cc-name":
         case "cc-given-name":
@@ -1048,10 +1044,20 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
       }
     }
 
-    return (
-      hasCCNumber &&
-      (ccNumberReason == "autocomplete" || hasExpiryDate || hasCCName)
-    );
+    if (hasCCNumber) {
+      if (ccNumberReason == "autocomplete" || hasExpiryDate || hasCCName) {
+        return true;
+      }
+
+      // This form has only one credit card number field. Treat this
+      // form as a valid credit card section only if we are confident enough.
+      if (
+        ccNumberConfidence >= FormAutofillUtils.ccHeuristicsNumberOnlyThreshold
+      ) {
+        return true;
+      }
+    }
+    return false;
   }
 
   isEnabled() {
