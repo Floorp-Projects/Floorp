@@ -18,7 +18,20 @@ async function test_data_single() {
   info(`AsyncIterableSingle: Testing simple iterable creation and functionality`);
 
   // eslint-disable-next-line no-undef
-  let itr = new TestInterfaceAsyncIterableSingle();
+  let itr = new TestInterfaceAsyncIterableSingle({ failToInit: true });
+  let initFailed = false;
+  try {
+    itr.values();
+  } catch (e) {
+    initFailed = true;
+  }
+  ok(initFailed,
+     "AsyncIterableSingle: A failure in asynchronous iterator initialization " +
+     "steps should propagate to the caller of the asynchronous iterator's " +
+     "constructor.");
+
+  // eslint-disable-next-line no-undef
+  itr = new TestInterfaceAsyncIterableSingle();
   is(itr.values, itr[Symbol.asyncIterator],
     `AsyncIterableSingle: Should be using @@asyncIterator for 'values'`);
 

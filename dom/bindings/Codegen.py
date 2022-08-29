@@ -22142,38 +22142,42 @@ class CGIterableMethodGenerator(CGGeneric):
                 ),
             )
             return
+
         if descriptor.interface.isIterable():
-            CGGeneric.__init__(
-                self,
-                fill(
-                    """
-                typedef ${iterClass} itrType;
-                RefPtr<itrType> result(new itrType(self,
-                                                   itrType::IteratorType::${itrMethod},
-                                                   &${ifaceName}Iterator_Binding::Wrap));
-                """,
-                    iterClass=iteratorNativeType(descriptor),
-                    ifaceName=descriptor.interface.identifier.name,
-                    itrMethod=methodName.title(),
-                ),
-            )
+            binding = descriptor.interface.identifier.name + "Iterator_Binding"
+            init = ""
         else:
             assert descriptor.interface.isAsyncIterable()
-            CGGeneric.__init__(
-                self,
-                fill(
-                    """
+
+            binding = descriptor.interface.identifier.name + "AsyncIterator_Binding"
+            init = fill(
+                """
+                {
+                  ErrorResult initError;
+                  self->InitAsyncIterator(result.get(), initError);
+                  if (initError.MaybeSetPendingException(cx, "Asynchronous iterator initialization steps for ${ifaceName} failed")) {
+                    return false;
+                  }
+                }
+                """,
+                ifaceName=descriptor.interface.identifier.name,
+            )
+        CGGeneric.__init__(
+            self,
+            fill(
+                """
                 typedef ${iterClass} itrType;
                 RefPtr<itrType> result(new itrType(self,
                                                    itrType::IteratorType::${itrMethod},
-                                                   &${ifaceName}AsyncIterator_Binding::Wrap));
-                self->InitAsyncIterator(result.get());
+                                                   &${binding}::Wrap));
+                $*{init}
                 """,
-                    iterClass=iteratorNativeType(descriptor),
-                    ifaceName=descriptor.interface.identifier.name,
-                    itrMethod=methodName.title(),
-                ),
-            )
+                iterClass=iteratorNativeType(descriptor),
+                itrMethod=methodName.title(),
+                binding=binding,
+                init=init,
+            ),
+        )
 
 
 def getObservableArrayBackingObject(descriptor, attr, errorReturn="return false;\n"):
