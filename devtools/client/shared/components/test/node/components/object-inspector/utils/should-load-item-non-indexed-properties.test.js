@@ -14,7 +14,9 @@ const {
 
 const { shouldLoadItemNonIndexedProperties } = Utils.loadProperties;
 
-const GripEntryRep = require("devtools/client/shared/components/reps/reps/grip-entry");
+const {
+  createGripMapEntry,
+} = require("devtools/client/shared/components/test/node/components/reps/test-helpers");
 const accessorStubs = require("devtools/client/shared/components/test/node/stubs/reps/accessor");
 const gripMapStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-map");
 const gripArrayStubs = require("devtools/client/shared/components/test/node/stubs/reps/grip-array");
@@ -152,7 +154,7 @@ describe("shouldLoadItemNonIndexedProperties", () => {
   });
 
   it("returns false for a MapEntry node", () => {
-    const node = GripEntryRep.createGripMapEntry("key", "value");
+    const node = createGripMapEntry("key", "value");
     expect(shouldLoadItemNonIndexedProperties(node)).toBeFalsy();
   });
 

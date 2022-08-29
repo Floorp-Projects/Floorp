@@ -13,11 +13,11 @@ const {
 } = require("devtools/client/shared/components/reps/reps/rep");
 
 const { GripEntry } = REPS;
-const { createGripMapEntry } = GripEntry;
 const {
   MODE,
 } = require("devtools/client/shared/components/reps/reps/constants");
 const {
+  createGripMapEntry,
   getGripLengthBubbleText,
 } = require("devtools/client/shared/components/test/node/components/reps/test-helpers");
 

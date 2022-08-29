@@ -69,20 +69,9 @@ define(function(require, exports, module) {
     );
   }
 
-  function createGripMapEntry(key, value) {
-    return {
-      type: "mapEntry",
-      preview: {
-        key,
-        value,
-      },
-    };
-  }
-
   // Exports from this module
   module.exports = {
     rep: wrapRender(GripEntry),
-    createGripMapEntry,
     supportsObject,
   };
 });

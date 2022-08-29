@@ -97,7 +97,18 @@ function getMapLengthBubbleText(object, props) {
   });
 }
 
+function createGripMapEntry(key, value) {
+  return {
+    type: "mapEntry",
+    preview: {
+      key,
+      value,
+    },
+  };
+}
+
 module.exports = {
+  createGripMapEntry,
   expectActorAttribute,
   getSelectableInInspectorGrips,
   getGripLengthBubbleText,
