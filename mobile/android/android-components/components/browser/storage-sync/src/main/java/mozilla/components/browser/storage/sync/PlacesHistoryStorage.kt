@@ -6,8 +6,10 @@ package mozilla.components.browser.storage.sync
 
 import android.content.Context
 import android.net.Uri
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.PlacesApi
+import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.uniffi.PlacesException
 import mozilla.appservices.places.uniffi.VisitObservation
 import mozilla.components.concept.base.crash.CrashReporting
@@ -44,6 +46,12 @@ open class PlacesHistoryStorage(
     context: Context,
     crashReporter: CrashReporting? = null
 ) : PlacesStorage(context, crashReporter), HistoryStorage, HistoryMetadataStorage, SyncableStore {
+    /**
+     * Separate reader used only for autocomplete suggestions allowing to decouple this functionality
+     * from the history suggestions feature and independent reader management.
+     */
+    @VisibleForTesting
+    internal val autocompleteReader: PlacesReaderConnection by lazy { places.newReader() }
 
     override val logger = Logger("PlacesHistoryStorage")
 
@@ -151,7 +159,8 @@ open class PlacesHistoryStorage(
 
     override fun getAutocompleteSuggestion(query: String): HistoryAutocompleteResult? {
         val url = handlePlacesExceptions("getAutoCompleteSuggestions", default = null) {
-            places.reader().matchUrl(query)
+            autocompleteReader.interrupt()
+            autocompleteReader.matchUrl(query)
         } ?: return null
 
         val resultText = segmentAwareDomainMatch(query, arrayListOf(url))

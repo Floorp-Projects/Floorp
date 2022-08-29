@@ -31,6 +31,7 @@ import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -39,6 +40,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import java.io.File
@@ -457,6 +459,20 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
+    fun `store uses a different reader for autocomplete suggestions`() {
+        val connection: RustPlacesConnection = mock()
+        doReturn(mock<PlacesReaderConnection>()).`when`(connection).reader()
+        doReturn(mock<PlacesReaderConnection>()).`when`(connection).newReader()
+        val storage = MockingPlacesHistoryStorage(connection)
+
+        storage.getAutocompleteSuggestion("Test")
+
+        assertNotEquals(storage.reader, storage.autocompleteReader)
+        verify(storage.autocompleteReader).interrupt()
+        verify(storage.autocompleteReader).matchUrl("Test")
+    }
+
+    @Test
     fun `store ignores url parse exceptions during record operations`() = runTestOnMain {
         // These aren't valid URIs, and if we're not explicitly ignoring exceptions from the underlying
         // storage layer, these calls will throw.
@@ -602,6 +618,11 @@ class PlacesHistoryStorageTest {
                 return mock()
             }
 
+            override fun newReader(): PlacesReaderConnection {
+                fail()
+                return mock()
+            }
+
             override fun writer(): PlacesWriterConnection {
                 fail()
                 return mock()
@@ -658,6 +679,11 @@ class PlacesHistoryStorageTest {
                 return mock()
             }
 
+            override fun newReader(): PlacesReaderConnection {
+                fail()
+                return mock()
+            }
+
             override fun writer(): PlacesWriterConnection {
                 fail()
                 return mock()
@@ -702,6 +728,11 @@ class PlacesHistoryStorageTest {
         val exception = PlacesException.UrlParseFailed("test error")
         val conn = object : Connection {
             override fun reader(): PlacesReaderConnection {
+                fail()
+                return mock()
+            }
+
+            override fun newReader(): PlacesReaderConnection {
                 fail()
                 return mock()
             }
@@ -757,6 +788,11 @@ class PlacesHistoryStorageTest {
         val exception = PlacesException.UnexpectedPlacesException("test panic")
         val conn = object : Connection {
             override fun reader(): PlacesReaderConnection {
+                fail()
+                return mock()
+            }
+
+            override fun newReader(): PlacesReaderConnection {
                 fail()
                 return mock()
             }

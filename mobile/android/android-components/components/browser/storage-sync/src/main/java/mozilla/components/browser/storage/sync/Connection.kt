@@ -29,7 +29,26 @@ const val DB_NAME = "places.sqlite"
 internal interface Connection : Closeable {
     fun registerWithSyncManager()
 
+    /**
+     * Allows to read history, bookmarks, and other data from persistent storage.
+     * All calls on the same reader are queued. Multiple readers are allowed.
+     */
     fun reader(): PlacesReaderConnection
+
+    /**
+     * Create a new reader for history, bookmarks and other data from persistent storage.
+     * Allows for disbanded calls from the default reader from [reader] and so being able to
+     * easily start and cancel any data requests without impacting others using another reader.
+     *
+     * All [PlacesApi] requests are synchronized at lower levels so even with using multiple readers
+     * all requests are ordered with concurrent reads not possible.
+     */
+    fun newReader(): PlacesReaderConnection
+
+    /**
+     * Allowed to add history, bookmarks and other data to persistent storage.
+     * All calls are queued and synchronized at lower levels. Only one writer is recommended.
+     */
     fun writer(): PlacesWriterConnection
 
     // Until we get a real SyncManager in application-services libraries, we'll have to live with this
@@ -85,6 +104,12 @@ internal object RustPlacesConnection : Connection {
     override fun reader(): PlacesReaderConnection = synchronized(this) {
         check(cachedReader != null) { "must call init first" }
         return cachedReader!!
+    }
+
+    override fun newReader(): PlacesReaderConnection = synchronized(this) {
+        val api = safeGetApi()
+        check(api != null) { "must call init first" }
+        return api.openReader()
     }
 
     override fun writer(): PlacesWriterConnection {
