@@ -10912,6 +10912,10 @@ theshop.jp
 shopselect.net
 base.shop
 
+// BeagleBoard.org Foundation : https://beagleboard.org
+// Submitted by Jason Kridner <jkridner@beagleboard.org>
+beagleboard.io
+
 // Beget Ltd
 // Submitted by Lev Nekrasov <lnekrasov@beget.com>
 *.beget.app
@@ -11689,6 +11693,11 @@ dynv6.net
 // E4YOU spol. s.r.o. : https://e4you.cz/
 // Submitted by Vladimir Dudr <info@e4you.cz>
 e4.cz
+
+// Easypanel : https://easypanel.io
+// Submitted by Andrei Canta <andrei@easypanel.io>
+easypanel.app
+easypanel.host
 
 // eero : https://eero.com/
 // Submitted by Yue Kang <eero-dynamic-dns@amazon.com>
@@ -13598,6 +13607,10 @@ small-web.org
 // Smoove.io : https://www.smoove.io/
 // Submitted by Dan Kozak <dan@smoove.io>
 vp4.me
+
+// Snowflake Inc : https://www.snowflake.com/
+// Submitted by Faith Olapade <faith.olapade@snowflake.com>
+streamlitapp.com
 
 // Snowplow Analytics : https://snowplowanalytics.com/
 // Submitted by Ian Streeter <ian@snowplowanalytics.com>
