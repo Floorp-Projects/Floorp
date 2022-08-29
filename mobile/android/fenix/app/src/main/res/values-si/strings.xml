@@ -1,0 +1,1482 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">පෞද්. %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (පෞද්ගලික)</string>
+
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">තවත් විකල්ප</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">පෞද්. පිරික්සීම සබල කරන්න</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">පෞද්. පිරික්සීම අබල කරන්න</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">සොයන්න හෝ ලිපිනය යොදන්න</string>
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">සෙවුම් පද යොදන්න</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">ඔබගේ විවෘත පටිති මෙහි පෙන්වනු ඇත.</string>
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">ඔබගේ පෞද්. පටිති මෙහි පෙන්වනු ඇත.</string>
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d ක් තෝරා ඇත</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">නව එකතුවක් යොදන්න</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">නම</string>
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">එකතුව තෝරන්න</string>
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">බහු තේරීම් ප්‍රකාරයෙන් පිටවන්න</string>
+    <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+    <string name="tab_tray_collection_button_multiselect_content_description">තේරූ පටිති එකතුවට සුරකින්න</string>
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">තෝරාගත්</string>
+
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">මෑත පොත්යොමු</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">මෑතදී සුරැකි</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description_2">සුරැකි සියළු පොත්යොමු පෙන්වන්න</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">ඉවත් කරන්න</string>
+
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">මොසිල්ලා හරහා %1$s නිෂ්පාදනය කෙරේ.</string>
+
+
+    <string name="private_browsing_common_myths">
+  පෞද්ගලික පිරික්සීම පිළිබඳව සුලබ මිථ්‍යා
+  </string>
+
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">එපා, ස්තුතියි</string>
+
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">සැකසුම් වෙත යන්න</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">ඉවතලන්න</string>
+
+    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
+    <string name="cfr_dismiss_button_default_content_description">ඉවතලන්න</string>
+
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">සැකසුම් වෙත යන්න</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">ඉවතලන්න</string>
+
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">විකල්ප බලන්න</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">ඉවතලන්න</string>
+    <!-- Text for the banner message to tell users about our inactive tabs feature. -->
+    <string name="tab_tray_inactive_onboarding_message">ඔබ සති දෙකක් තිස්සේ නොබැලූ පටිති මෙහි ගෙන එනු ලැබේ.</string>
+    <!-- Text for the action link to go to Settings for inactive tabs. -->
+    <string name="tab_tray_inactive_onboarding_button_text">සැකසුම් තුළ අක්‍රිය කරන්න</string>
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">මාසයකට පසු ස්වයංක්‍රීයව වසන්නද?</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">වසන්න</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">ස්වයං වැසීම සක්‍රිය කරන්න</string>
+
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">නව පටිත්ත</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">නව පෞද්. පටිත්ත</string>
+
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">සියල්ල පෙන්වන්න</string>
+    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
+        The first parameter is the search term that the user used. (for example: your search for "cat")-->
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">\&quot;%1$s\&quot; සඳහා ඔබගේ සෙවුම</string>
+    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
+        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">අඩවි %d</string>
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">සියළු සමමුහූර්ත පටිති බලන්න</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">සමමුහූර්ත උපාංගය</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">ඉවත් කරන්න</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">ඉවත් කරන්න</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">මෑතදී ගොඩවැදුණු</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">ඉවත් කරන්න</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">ආපසු</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">ඉදිරියට</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">නැවුම් කරන්න</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">නවතන්න</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">එක්කහු</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">මෙහි එක්කහු නැත</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">උදව්</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">අළුත් දෑ</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">සැකසුම්</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">පුස්තකාලය</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">වැඩතල අඩවිය</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">මුල් තිරයට යොදන්න</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">ස්ථාපනය</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">පිටුවේ සොයන්න</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">එකතුවට සුරකින්න</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">බෙදාගන්න</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">%1$s හි අරින්න</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">%1$s මගින් බල ගැන්වේ</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">%s මගින් බලගැන්වේ</string>
+    <!-- Browser menu button to put the current page in reader mode -->
+    <string name="browser_menu_read">කියවීමේ දැක්ම</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">කියවීමේ දැක්ම වසන්න</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">යෙදුමෙහි අරින්න</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">එකතු</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">සංස්කරණය</string>
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">මුල්පිටුව අභිරුචිකරණය</string>
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">මුල් තිරය</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">තෝරාගත් භාෂාව</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">උපාංගයේ භාෂාව අනුගමනය</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">පරිලෝකනය</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">සෙවුම් යන්ත්‍රය</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">සෙවුම් යන්ත්‍රයේ සැකසුම්</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">ඉඩදෙන්න</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">ඉඩ නොදෙන්න</string>
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">%s සොයන්න</string>
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">සෙවුම් සැකසුම්</string>
+
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">මෑත සෙවුම්</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">පටන් ගන්න</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">පිවිසෙන්න</string>
+
+
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">මඟහරින්න</string>
+
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">නව %1$s පටිත්තක් අරින්න</string>
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">සොයන්න</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">වියමනහි සොයන්න</string>
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">හඬ සෙවුම</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">සැකසුම්</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">සාමාන්‍ය</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">පිළිබඳව</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">පෙරනිමි සෙවුම් යන්ත්‍රය</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">සොයන්න</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">ලිපින තීරුව</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">ගූගල් ප්ලේ හි අගයන්න</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">%1$s ගැන</string>
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">පෙරනිමි අතිරික්සුව කරන්න</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">වැඩිදුර</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">පෞද්ගලිකත්‍වය හා ආරක්‍ෂාව</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">අඩවියේ අවසර</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">පෞද්. පිරික්සුම</string>
+
+
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">HTTPS-පමණි ප්‍රකාරය</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">සක්‍රිය</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">අක්‍රිය</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">තව දැනගන්න</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">ආරක්‍ෂිත අඩවිය නැත</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">ප්‍රවේශ්‍යතාව</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">අභිරුචි සමමුහුර්ත සේවාදායකය</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">ෆයර්ෆොක්ස් ගිණුම/සමමුහුර්ත සේවාදායකය වෙනස් කර ඇත. වෙනස්කම් යෙදීමට යෙදුමෙන් ඉවත් වෙමින්…</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">ගිණුම</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">මෙවලම් තීරුව</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">තේමාව</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">මුල් පිටුව</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">රිසිකරණය</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">පටිති, පොත්යොමු, මුරපද හා තවත් දෑ සමමුහූර්තයට පිවිසෙන්න.</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">ෆයර්ෆොක්ස් ගිණුම</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">භාෂාව</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">දත්ත තේරීම්</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">දත්ත එකතුව</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">USB හරහා දුරස්ථ නිදොස්කරණය</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">සෙවුම් යන්ත්‍ර පෙන්වන්න</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">සෙවුම් යෝජනා පෙන්වන්න</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">හඬ සෙවුම පෙන්වන්න</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">පෞද්. වාරයන්හි පෙන්වන්න</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">පසුරු පුවරුවේ යෝජනා පෙන්වන්න</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">පිරික්සුම් ඉතිහාසය සොයන්න</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">පොත්යොමු සොයන්න</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">සමමුහූර්ත පටිති සොයන්න</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">ගිණුමේ සැකසුම්</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">ඒ.ස.නි. ස්වයං පිරවීම</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">යෙදුම්වල සබැඳි අරින්න</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">බාහිර බාගැනීම් කළමනාකරු</string>
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">එක්කහු</string>
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">දැනුම්දීම්</string>
+
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">අභිරුචි එක්කහු එකතුව</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">හරි</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">අවලංගු</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">එකතුවෙහි නම</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">එකතුවේ හිමිකරු (පරිශීලක හැඳු.)</string>
+
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">මෑත පොත්යොමු</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is
+    a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">මෑතදී ගොඩවැදුණු</string>
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">අනුග්‍රහය ලද කතා</string>
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">බිතුපත්</string>
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">අනුග්‍රහය ලද කෙටිමං</string>
+
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">බිතුපත් අථකය: %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">බිතුපත යාවත්කාල විය!</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">එක්කහුව සහාය නොදක්වයි</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">එක්කහුව දැනටමත් ස්ථාපිතයි</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">සමමුහූර්ත කරන්න</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">සමමුහූර්ත කළ යුතු දෑ තෝරන්න</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">ඉතිහාසය</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">පොත්යොමු</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">පිවිසුම්</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">පටිති අරින්න</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">නික්මෙන්න</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">උපාංගයේ නම</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">උපාංගයේ නම හිස් විය නොහැකිය.</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">සමමුහූර්ත වෙමින්…</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">සමමුහූර්තයට අසමත්! අවසන සඵලත්‍වය: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">සමමුහූර්තයට අසමත්! අවසන සඵලත්‍වය: කවදාවත්</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">අවසාන සමමුහූර්තය: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">අවසාන සමමුහූර්තය: කවදාවත්</string>
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name_2">%2$s %3$s හි %1$s</string>
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">ණය පත්</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">ලිපින</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">ලැබුණු පටිති</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">පටිත්ත ලැබුණි</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">%s වෙතින් පටිත්ත</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">හැරදැමීම්</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">සියළු අඩවි සඳහා සක්‍රි කරන්න</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">තව දැනගන්න</string>
+
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">භාවිතය සහ තාක්‍ෂණික දත්ත</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">අලෙවිකරණ දත්ත</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">අධ්‍යන</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">සමමුහූර්තය සක්‍රිය කරන්න</string>
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">සමමුහූර්ත කර සුරකින්න</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">යළි සබැඳීමට පිවිසෙන්න</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">ගිණුම ඉවත් කරන්න</string>
+
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2"><![CDATA[<b>firefox.com/pair</b> හි පෙන්වන QR කේතය සුපිරික්සන්න]]></string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">මුදුන</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">පතුළ</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">දීප්ත</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">අඳුරු</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">විදුලිකෝෂ සුරැකුමෙන් සැකසූ</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">උපාංගයේ තේමාව</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">නැවුම් කිරීමට අදින්න</string>
+
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">මෙවලම් තීරුව සැඟවීමට අනුචලනය</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">බාගැනීම්</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">පොත්යොමු</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">වැඩතල පොත්යොමු</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">පොත්යොමු වට්ටෝරුව</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">පොත්යොමු මෙවලම් තීරුව</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">වෙනත් පොත්යොමු</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">ඉතිහාසය</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">නව පටිත්ත</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">සැකසුම්</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">වසන්න</string>
+
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">අඩවි %d</string>
+
+
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">අඩවි %d</string>
+
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">මෑත දී වසා දැමූ පටිති</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">පූර්ණ ඉතිහාසය පෙන්වන්න</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">පටිති %d</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">පටිති %d</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">පටිති</string>
+
+
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">ලේඛනය</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">ජාලකය</string>
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">පටිති වසන්න</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">කවදාවත්</string>
+
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">දවසකට පසු</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">සතියකට පසු</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">මාසයකට පසු</string>
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">විවෘත පටිති ස්වයං වැසීම</string>
+
+    <!-- Opening screen -->
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">විවෘත වන තිරය</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">මුල් පිටුව</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">අවසාන පටිත්ත</string>
+
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">පැය හතරක නිෂ්ක්‍රියාවෙන් පසු මුල් පිටුව</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">අතින් වසන්න</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">දවසකට පසු වසන්න</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">සතියකට පසු වසන්න</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">මාසයකට පසු වසන්න</string>
+
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">ඔබ සති දෙකක් තුළ නොබැලූ පටිති අක්‍රිය කොටස වෙත ගෙන යනු ලැබේ.</string>
+
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">ඉවත් කරන්න</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">සක්‍රිය</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s කලින් කලට අධ්‍යන ස්ථාපනය කර ධාවනය කරයි.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">තව දැනගන්න</string>
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">වෙනස්කම් යෙදීම සඳහා යෙදුම ඉවත් වනු ඇත</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">හරි</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">අවලංගු</string>
+
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">වෙනස්කම් යෙදීමට යෙදුමෙන් ඉවත් වෙමින්…</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">පටිති අරින්න</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">පෞද්. පටිති</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">සමමුහූර්ත පටිති</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">පටිත්තක් යොදන්න</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">පෞද්. පටිත්තක් යොදන්න</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">පෞද්ගලික</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">සමමුහූර්ත</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">සියළු පටිති බෙදාගන්න</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">මෑත දී වසා දැමූ පටිති</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">මෑතදී වසා දැමූ</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">ගිණුමේ සැකසුම්</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">පටිති සැකසුම්</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">සියළු පටිති වසන්න</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">පොත්යොමුව</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">වසන්න</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">තේරූ පටිති බෙදාගන්න</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">තේරූ පටිති වට්ටෝරුව</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">එකතුවෙන් පටිත්ත ඉවත් කරන්න</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">පටිති තෝරන්න</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">පටිත්ත වසන්න</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">%s පටිත්ත වසන්න</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">පටිති වට්ටෝරුව අරින්න</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">එකතුව මකන්න</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">එකතුව නම් කරන්න</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">පටිති අරින්න</string>
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">එකතුවෙහි නම</string>
+	<!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">නම් කරන්න</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">ඉවත් කරන්න</string>
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">ඉතිහාසයෙන් මකන්න</string>
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string moz:removedIn="104" name="tab_tray_header_title_1" tools:ignore="UnusedResources">වෙනත් පටිති</string>
+
+    <!-- History -->
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">සෙවුම් පද යොදන්න</string>
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">ඉතිහාසය මකන්න</string>
+    <!-- Context description text for the button to delete a single history item -->
+    <string name="history_delete_item">මකන්න</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">අද</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">ඊයේ</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">පසුගිය දවස් 7</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">පසුගිය දවස් 30</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">පරණ</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">මෙහි ඉතිහාසයක් නැත</string>
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">වෙනත් උපාංග වලින් සමමුහූර්තයි</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">වෙනත් උපාංග වෙතින්</string>
+    <!-- The synced history sign in dialog button text -->
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">පිවිසෙන්න</string>
+
+    <!-- Downloads -->
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">බාගැනීම් ඉවත් කෙරිණි</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">%1$s ඉවත් කෙරිණි</string>
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message_1">බාගත වූ ගොනු නැත</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d ක් තෝරා ඇත</string>
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">ඉවත් කරන්න</string>
+
+
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">පටිත්ත වසන්න</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">පටිත්ත ප්‍රත්‍යර්පණය</string>
+
+    <!-- Text for the cancel button on delete bookmark dialog -->
+    <string name="bookmark_delete_negative">අවලංගු</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">බහාලුමක් යොදන්න</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">පොත්යොමුව සුරැකිණි!</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">සංස්කරණය</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">සංස්කරණය</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">පිටපතක්</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">බෙදාගන්න</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">නව පටිත්තක අරින්න</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">පෞද්. පටිත්තක අරින්න</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">මකන්න</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">සුරකින්න</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">%1$d ක් තෝරා ඇත</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">පොත්යොමුව සංස්කරණය</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">බහාලුම සංස්කරණය</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">සමමුහූර්ත පොත්යොමු දැකීමට පිවිසෙන්න</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">ඒ.ස.නි.</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">බහාලුම</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">නම</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">බහාලුමක් යොදන්න</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">බහාලුම තෝරන්න</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">සිරැසියක් අවශ්‍යයි</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">වැරදි ඒ.ස.නි.</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">මෙහි පොත්යොමු නැත</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">%1$s මැකිණි</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_2">පොත්යොමුව මැකිණි</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">තේරූ බහාලුම් මැකෙමින්</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">පෙරසේ</string>
+    <!-- Text for the button to search all bookmarks -->
+    <string name="bookmark_search">සෙවුම් පද යොදන්න</string>
+
+    <!-- Site Permissions -->
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">සැකසුම් වෙත යන්න</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">ඉක්මන් සැකසුම් පත්‍රය</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">නිර්දේශිත</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">අවසර මකන්න</string>
+    <!-- Text for the OK button on Clear permissions dialog -->
+    <string name="clear_permissions_positive">හරි</string>
+    <!-- Text for the cancel button on Clear permissions dialog -->
+    <string name="clear_permissions_negative">අවලංගු</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">අවසරය මකන්න</string>
+    <!-- Text for the OK button on Clear permission dialog -->
+    <string name="clear_permission_positive">හරි</string>
+    <!-- Text for the cancel button on Clear permission dialog -->
+    <string name="clear_permission_negative">අවලංගු</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">සියළු අඩවිවල අවසර මකන්න</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">ස්වයං වාදනය</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">ශබ්දවාහිනිය</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">ස්ථානය</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">දැනුම්දීම</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">අනවරත ආචයනය</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">හරස් අඩවි දත්තකඩ</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">DRM-පාලිත අන්තර්ගතය</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">ඉඩදීමට අසන්න</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">අවහිරයි</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">ඉඩ දුන්</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">ඇන්ඩ්‍රොයිඩ් මගින් අවහිරයි</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">හැරදැමීම්</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">සක්‍රිය</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">අක්‍රිය</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">ශ්‍රව්‍ය හා දෘශ්‍ය සඳහා ඉඩදෙන්න</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">ශ්‍රව්‍ය හා දෘශ්‍ය සඳහා ඉඩදෙන්න</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">ජංගම දත්ත සඳහා ශ්‍රව්‍ය හා දෘශ්‍ය අවහිරය</string>
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio2">හඬ පමණක් අවහිරය</string>
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">හඬ පමණක් අවහිරය</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked3">ශ්‍රව්‍ය සහ දෘශ්‍ය අවහිරය</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_blocked">ශ්‍රව්‍ය සහ දෘශ්‍ය අවහිරය</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">සක්‍රිය</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">අක්‍රිය</string>
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">සක්‍රිය</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">අක්‍රිය</string>
+
+    <!-- Collections -->
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">එකතුව</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">පටිති තෝරන්න</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">එකතුව තෝරන්න</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">එකතුව නම් කරන්න</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">නව එකතුවක් යොදන්න</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">සියල්ල තෝරන්න</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">සියල්ල නොතෝරන්න</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">සුරැකීමට පටිති තෝරන්න</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">පටිති %d ක් තෝරා ඇත</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">පටිති %d ක් තෝරා ඇත</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">පටිත්ත සුරැකිණි!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">එකතුව සුරැකිණි!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">පටිත්ත සුරැකිණි!</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">වසන්න</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">සුරකින්න</string>
+    <!-- Text for the OK button from collection dialogs -->
+    <string name="create_collection_positive">හරි</string>
+    <!-- Text for the cancel button from collection dialogs -->
+    <string name="create_collection_negative">අවලංගු</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">එකතු %d</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header_2">බෙදාගන්න</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">බෙදාගන්න</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">උපාංගයට යවන්න</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">සියළු ක්‍රියාමාර්ග</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">මෑතදී භාවිත</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">පසුරු පුවරුවට පිටපතක්</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">පසුරු පුවරුවට පිටපත් විය</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">සමමුහූර්තයට පිවිසෙන්න</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">සමමුහූර්තයට පිවිසෙන්න</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">සියළු උපාංග වෙත යවන්න</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">සමමුහූර්තයට යළි සබඳින්න</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">මාර්ගඅපගතයි</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">අන් උපාංගයක් සබඳින්න</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">තේරුණා</string>
+    <!-- Share error message -->
+    <string name="share_error_snackbar">මෙම යෙදුම වෙත බෙදා ගැනීමට නොහැකිය</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">උපාංගයට යවන්න</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">සම්බන්ධිත උපාංග නැත</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">පටිති යැවීම ගැන දැනගන්න…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">අන් උපාංගයක් සබඳින්න…</string>
+
+    <!-- Notifications -->
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">පෞද්. පටිති වසන්න</string>
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">අළෙවිකරණය</string>
+
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_title">%1$s වේගවත් හා පෞද්ගලිකයි</string>
+
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_text">%1$s පෙරනිමි අතිරික්සුව කරන්න</string>
+
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">පෙරසේ</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">ඉඩ දෙන්න</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">හරි</string>
+
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">%1$s මකන්නද?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">මකන්න</string>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">ඒ.ස.නි. පිටපත් විය</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">අකුරේ තරම</string>
+
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">පටිති %d</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">ලිපින %d</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">දත්තකඩ</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">අඩවියේ අවසර</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">බාගැනීම්</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">ඉවත් වන්න</string>
+
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">පසුගිය පැය</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">අද සහ ඊයේ</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">සෑමදෙයම</string>
+
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">අවලංගු</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">මකන්න</string>
+
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">“%s” හි සියළුම අඩවි මකන්න</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">අවලංගු</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">මකන්න</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">%s වෙත පිළිගනිමු!</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">ලියාපදිංචිය</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">සම්මත (පෙරනිමි)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">දැඩි</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">පිරික්සුම අරඹන්න</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">ඔබගේ තේමාව තෝරන්න</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">ස්වයංක්‍රීය</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">අඳුරු තේමාව</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">දීප්ත තේමාව</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">පටිත්ත යැවිණි!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">පටිත්ත යැවිණි!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">යැවීමට නොහැකිය</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">විසන්ධි</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">අවලංගු</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">රැකවරණ සැකසුම්</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">දියුණු කළ ලුහුබැඳීමේ රැකවරණය</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">ලුහුබැඳීම් මඟහැර පිරික්සන්න</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">තව දැනගන්න</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">සම්මත (පෙරනිමි)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_4">ආරක්‍ෂාව හා කාර්ය සාධනය අතර සංතුලිතයි. පිටු සාමාන්‍ය ලෙස පූරණය වේ.</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">දැඩි</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">අභිරුචි</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">අවහිර කළ යුතු ලුහුබැඳීම් හා අත්පත් තෝරන්න.</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">දත්තකඩ</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">ලුහුබැඳීමේ අන්තර්ගතය</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">සියළු පටිතිවල</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">පෞද්. පටිතිවලදී පමණි</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">ඇඟිලි සටහන්</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">විස්තර</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">සමාජ මාධ්‍ය ලුහුබැඳීම්</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">හරස්-අඩවි ලුහුබඳින දත්තකඩ</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">හරස් අඩවි දත්තකඩ</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">ඇඟිලි සටහන්</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">ලුහුබැඳීමේ අන්තර්ගතය</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">අඩවියට දියුණු කළ ලුහුබැඳීමේ රැකවරණය සක්‍රියයි</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">අඩවියට දියුණු කළ ලුහුබැඳීමේ රැකවරණය අක්‍රියයි</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">මෙම අඩවි සඳහා දියුණු කළ ලුහුබැඳීමේ රැකවරණය අක්‍රියයි</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">ආපසු යාත්‍රණය</string>
+
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">%s හි අළුත් දෑ</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">තව දැනගන්න</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">සහාය</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">බිඳ වැටීම්</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">පෞද්ගලිකත්‍ව දැන්වීම</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">ඔබගේ අයිතීන්</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">බලපත්‍ර තොරතුරු</string>
+
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">අපි භාවිතා කරන එකතු</string>
+    <string name="about_debug_menu_toast_done">නිදොස්කරණ වට්ටෝරුව සබලයි</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">පිටපතක්</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">අලවන්න හා යන්න</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">අලවන්න</string>
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">ඒ.ස.නි. පසුරුපුවරුවට පිටපත් විය</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">මුල් තිරයට යොදන්න</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">අවලංගු</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">එකතු</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">අඩවියට යන්න</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">කෙටිමඟ නාමය</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">පිවිසුම් සහ මුරපද</string>
+
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">පිවිසුම් සහ මුරපද සුරකින්න</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">සුරැකීමට අසන්න</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">කිසිවිට නොසුරකින්න</string>
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">%1$s හි ඉබේ පුරවයි</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">%1$s භාවිත කරන අතරතුර අඩවිවල පරිශීලක නාම සහ මුරපද පුරවා සුරකින්න.</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">වෙනත් යෙදුම්වල ස්වයං පිරවීම</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">ඔබගේ උපාංගයේ වෙනත් යෙදුම්වල පරිශීලක නාම සහ මුරපද පුරවන්න.</string>
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">පිවිසුම යොදන්න</string>
+
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">පිවිසුම් සමමුහූර්තය</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">උපාංග අතර පිවිසුම් සමමුහූර්තය</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">සුරැකි පිවිසුම්</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">ඔබ සුරකින හෝ %s වෙත සමමුහූර්ත කරන පිවිසුම් මෙහි පෙන්වයි.</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">සමමුහූර්තය ගැන තව දැනගන්න.</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">හැරදැමීම්</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">නොසුරැකි පිවිසුම් සහ මුරපද මෙහි පෙන්වනු ඇත.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">මෙම අඩවි සඳහා පිවිසුම් සහ මුරපද සුරැකෙන්නේ නැත.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">සියළු හැරදැමීම් මකන්න</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">පිවිසුම් සොයන්න</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">අඩවිය</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">පරිශීලක නාමය</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">මුරපදය</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">මුරපදය පසුරු පුවරුවට පිටපත් විය</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">ඒ.ස.නි. පසුරුපුවරුවට පිටපත් විය</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">මුරපදයේ පිටපතක්</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">මුරපදය මකන්න</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">පරි. නාමය පිටපතක්</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">පරි. නාමය මකන්න</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">සත්කාරක නාමය මකන්න</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">අඩවිය අතිරික්සුවෙහි අරින්න</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">මුරපදය පෙන්වන්න</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">මුරපදය සඟවන්න</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">සුරැකි පිවිසුම් දැකීමට අගුළු හරින්න</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">පිවිසුම් සහ මුරපද ආරක්‍ෂා කරන්න</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">වෙනත් අයෙක් අතට ඔබගේ උපාංගය පත්වේ නම්, ඔබගේ සුරැකි පිවිසුම් හා මුරපද වෙත ප්‍රවේශය ආරක්‍ෂා කර ගැනීමට උපාංග අගුළු රටාවක්, අංකයක්, හෝ මුරපදයක් සකසන්න.</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">පසුව</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">දැන් පිහිටුවන්න</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">උපාංගය අගුළු හරින්න</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">සියළු අඩවි විශාලනය</string>
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">නම (අ-ෆ)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">අවසන් භාවිතය</string>
+
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">ස්වයං පිරවීම</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">ලිපින</string>
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">ණය පත්</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">පත් සුරැකීම හා ස්වයං පිරවීම</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">දත්ත සංකේතිතයි</string>
+
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">උපාංග අතර පත් සමමුහූර්තය</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">පත් සමමුහූර්තය</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">ණය පත යොදන්න</string>
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">සුරැකි පත් කළමනාකරණය</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">ලිපිනය යොදන්න</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">ලිපින කළමනාකරණය</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">ලිපින සුරැකීම හා ස්වයං පිරවීම</string>
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">අංක, වි-තැපැල් සහ බාර දීමේ ලිපින වැනි තොරතුරු ඇතුළත් කරන්න</string>
+
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">පත එක් කරන්න</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">පත සංස්කරණය</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">පතෙහි අංකය</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">ඉකුත් වන දිනය</string>
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_month">ඉකුත් වන මාසය</string>
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_year">ඉකුත් වන වසර</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">ණයපත මත නම</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">පත මකන්න</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">පත මකන්න</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">ඔබට මෙම ණය පත මකා දැමීමට වුවමනා ද?</string>
+    <!-- The text for the positive button on "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_button">මකන්න</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">සුරකින්න</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">සුරකින්න</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting a credit card -->
+    <string name="credit_cards_cancel_button">අවලංගු</string>
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">සුරැකි පත්</string>
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">වලංගු ණයපත් අංකයක් යොදන්න</string>
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">මෙම ක්‍ෂේත්‍රය පුරවන්න</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">සුරැකි පත් බැලීමට අගුළු හරින්න</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">ණයපත් ආරක්‍ෂා කර ගන්න</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">වෙනත් අයෙක් අතට ඔබගේ උපාංගය පත්වේ නම්, ඔබගේ සුරැකි ණයපත් වෙත ප්‍රවේශය ආරක්‍ෂා කර ගැනීමට උපාංග අගුළු රටාවක්, අංකයක්, හෝ මුරපදයක් සකසන්න.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">දැන් පිහිටුවන්න</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">පසුව</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">උපාංගය අගුළු හරින්න</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">ගබඩා කළ ණයපත් තොරතුරු භාවිතයට අගුළු හරින්න</string>
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">ලිපිනය යොදන්න</string>
+    <!-- Title of the "Edit address" screen -->
+    <string name="addresses_edit_address">ලිපිනය සංස්කරණය</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">ලිපින කළමනාකරණය</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">මුල් නම</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">මැද නම</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">අග නම</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">වීදියේ ලිපිනය</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">නගරය</string>
+    <!-- The header for the subregion of an address when "state" should be used -->
+    <string name="addresses_state">ප්‍රාන්තය</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">පළාත</string>
+
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">තැපැල් කේතය</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">රට හෝ කලාපය</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">දුරකථනය</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">වි-තැපෑල</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">සුරකින්න</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">අවලංගු</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">ලිපිනය මකන්න</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message">ඔබට මෙම ලිපිනය මකා දැමීමට වුවමනා ද?</string>
+    <!-- The text for the positive button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_ok_button">මකන්න</string>
+    <!-- The text for the negative button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_cancel_button">අවලංගු</string>
+    <!-- The text for the "Save address" menu item for saving an address -->
+    <string name="address_menu_save_address">ලිපිනය සුරකින්න</string>
+    <!-- The text for the "Delete address" menu item for deleting an address -->
+    <string name="address_menu_delete_address">ලිපිනය මකන්න</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">සෙවුම් යන්ත්‍රයක් යොදන්න</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">සෙවුම් යන්ත්‍රය සංස්කරණය</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">එකතු</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">සුරකින්න</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">සංස්කරණය</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">මකන්න</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">වෙනත්</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">නම</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">භාවිතයට සෙවුම් තන්තුව</string>
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">අභිරුචි සෙවුම් යන්ත්‍රයේ විස්තර</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">සෙවුම් යන්ත්‍රයේ නම යොදන්න</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">සෙවුම් පදය යොදන්න</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">සෙවුම් තන්තු උදාහරණ ආකෘතියට ගැළපෙන බව පරීක්‍ෂා කරන්න</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">“%s” වෙත සම්බන්ධ වීමේ දෝෂයකි</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">%s සෑදිණි</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">%s සුරැකිණි</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">%s මැකිණි</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">එයට ඉඩ දීමට:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. ඇන්ඩ්‍රොයිඩ් සැකසුම් වෙත යන්න</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. <b>අවසර</b> තට්ටු කරන්න]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b>%1$s</b> සබල කරන්න]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection_2">සම්බන්ධතාවය ආරක්‍ෂිතයි</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection_2">සම්බන්ධතාවය අනාරක්‍ෂිතයි</string>
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">දත්තකඩ හා අඩවි දත්ත මකන්න</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[<b>%s</b> අඩවිය සඳහා සියළු දත්තකඩ හා වෙනත් දත්ත හිස් කිරීමට වුවමනා ද?]]></string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">ඔබට සියළුම අඩවි සඳහා සියළු අවසර හිස් කිරීමට වුවමනා ද?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">ඔබට මෙම අඩවිය සඳහා සියළු අවසර හිස් කිරීමට වුවමනා ද?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">ඔබට මෙම අඩවිය සඳහා මෙම අවසරය හිස් කිරීමට වුවමනා ද?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">අඩවි හැරදැමීම් නැත</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">මෙම පොත්යොමුව මකා දැමීමට වුවමනා ද?</string>
+    <!-- Browser menu button that adds a shortcut to the home fragment -->
+    <string name="browser_menu_add_to_shortcuts">කෙටිමං වෙත දමන්න</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">කෙටිමං වෙතින් ඉවත් කරන්න</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">තහවුරු කළේ: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">මකන්න</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">සංස්කරණය</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">ඔබට මෙම පිවිසුම මකා දැමීමට වුවමනා ද?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">මකන්න</string>
+    <!-- Negative action of a dialog asking to delete login -->
+    <string name="dialog_delete_negative">අවලංගු</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">පිවිසුම් විකල්ප</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">පිවිසීමේ ලිපිනය සඳහා සංස්කරණය කළ හැකි පෙළ ක්‍ෂේත්‍රය.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">පිවිසීමේ පරිශීලක නාමය සඳහා සංස්කරණය කළ හැකි පෙළ ක්‍ෂේත්‍රය.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">පිවිසීමේ මුරපදය සඳහා සංස්කරණය කළ හැකි පෙළ ක්‍ෂේත්‍රය.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">පිවිසීමට වෙනස්කම් සුරකින්න.</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">සංස්කරණය</string>
+    <!--  The page title for adding new login. -->
+    <string name="add_login">නව පිවිසුමක් යොදන්න</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
+    <string name="saved_login_password_required">මුරපදයක් අවශ්‍යයි</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">පරිශීලක නාමය අවශ්‍යයි</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">සත්කාරක නාමය අවශ්‍යයි</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">හඬ සෙවුම</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">දැන් කතා කරන්න</string>
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">පරිශීලක නාමය සහිත පිවිසීමක් දැනටමත් පවතී</string>
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
+
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_3">ලිපිනයෙහි &quot;https://&quot; හෝ &quot;http://&quot; අඩංගු විය යුතුය</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">වලංගු සත්කාරක නාමයක් අවශ්‍යයි</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">අන් උපාංගයක් සබඳින්න.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">නැවත සත්‍යාපනය කරන්න.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">පටිති සමමුහූර්තය සබල කරන්න.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">ඔබගේ අනෙකුත් උපාංග වලින් පටිති ලේඛනයක් බලන්න.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">සමමුහූර්තයට පිවිසෙන්න</string>
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">විවෘත පටිති නැත</string>
+    <!-- Content description for expanding a group of synced tabs. -->
+    <string name="synced_tabs_expand_group">සමමුහූර්ත පටිති සමූහය විහිදන්න</string>
+    <!-- Content description for collapsing a group of synced tabs. -->
+    <string name="synced_tabs_collapse_group">සමමුහූර්ත පටිති සමූහය හකුළන්න</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">කෙටිමං සීමාවට ළඟා විය</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">නව කෙටිමඟක් යෙදීමට, එකක් ඉවත් කරන්න. අඩවිය ඔබාගෙන ඉවත් කරන්න තෝරන්න.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">හරි, තේරුණා</string>
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_4">කෙටිමං</string>
+	<!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">නම</string>
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">කෙටිමඟ නාමය</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">හරි</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">අවලංගු</string>
+    <!-- Text for the menu button to open the homepage settings. -->
+    <string name="top_sites_menu_settings">සැකසුම්</string>
+    <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="top_sites_menu_sponsor_privacy">අපගේ අනුග්‍රහකයින් හා ඔබගේ පෞද්ගලිකත්‍වය</string>
+    <!-- Label text displayed for a sponsored top site. -->
+    <string name="top_sites_sponsored_label">අනුග්‍රහය ලද</string>
+
+    <!-- Inactive tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
+    <string name="inactive_tabs_title">අක්‍රිය පටිති</string>
+    <!-- Content description for closing all inactive tabs -->
+    <string name="inactive_tabs_delete_all">සියළු අක්‍රිය පටිති වසන්න</string>
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">අක්‍රිය පටිති විහිදන්න</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">අක්‍රිය පටිති හකුළන්න</string>
+
+    <!-- Inactive tabs auto-close message in the tabs tray -->
+    <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">මාසයකට පසු ස්වයංක්‍රීයව වසන්නද?</string>
+    <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">ස්වයං වැසීම සක්‍රිය කරන්න</string>
+    <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
+    <string name="inactive_tabs_auto_close_message_snackbar">ස්වයං වැසීම සබලයි</string>
+
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">ඉවත් කරන්න</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">වැඩි විස්තර සඳහා ඔබන්න</string>
+
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">ඉහළට යාත්‍රණය</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">වසන්න</string>
+
+    <!-- Pocket recommended stories -->
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_header_1">සිතුවිලි අවුස්සන කතා</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_categories_header">මාතෘකාව අනුව කතා</string>
+    <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
+    <string name="pocket_stories_placeholder_text">තව සොයා ගන්න</string>
+    <!-- Clickable text for opening an external link for more information about Pocket. -->
+    <string name="pocket_stories_feature_learn_more">තව දැනගන්න</string>
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">අනුග්‍රහය ලද</string>
+
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">සැකසුම් වෙත යන්න</string>
+    </resources>

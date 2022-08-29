@@ -43,7 +43,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">Ticraḍ n yisebtar n melmi kan</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Ticraḍ n yisebtar n melmi kan</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Yettwasekles melmi kan</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Sken akk ticraḍ n yisebtar yettwaskelsen</string>
 
@@ -79,6 +81,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">Zgel</string>
+
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Issin ugar ɣef ummesten asemday mgal inagan n tuqqna</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Isɛa anekcum ɣer tkamiṛat. Ddu ɣer iɣewwaṛen Android, sit ɣef tisirag, sakin senned sireg.</string>
@@ -137,6 +142,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="recent_tabs_see_all_synced_tabs_button_text">Wali akk accaren yemtawan</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">Ibenkan yemtawin</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Kkes</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Kkes</string>
@@ -253,25 +260,36 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">D acu i d maynut deg %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">D acu i d maynut deg %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">Akka tura fessus ad tkemmleḍ ansi akken i tḥebseḍ.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Akka tura fessus ad tkemmleḍ ansi akken i tḥebseḍ.</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">Asebter agejdan n %1$s yettwasagnen</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Asebter agejdan n %1$s yettwasagnen</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">Ɛeddi ɣer waccaren yeldin, ticraḍ n yisebtar, d uzray n tunigin.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Ɛeddi ɣer waccaren yeldin, ticraḍ n yisebtar, d uzray n tunigin.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Accaren zeddigen, yuddsen</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Accaren zeddigen, yuddsen</string>
 
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Sfeḍ accaren ur tesriḍ ara s taneɣruft igerrzen akked waccaren n umdal awurman.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Sfeḍ accaren ur tesriḍ ara s taneɣruft igerrzen akked waccaren n umdal awurman.</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">Inadiyen imaynuten</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Inadiyen imaynuten</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">Ales rzu ɣer yinadiyen ineggura seg usebtar-inek•inem d waccaren.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Ales rzu ɣer yinadiyen ineggura seg usebtar-inek•inem d waccaren.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Asebter-inek•inem n Firefox udmawan yettarra tura fessus ugar akemmel seg wanda akken i tḥebseḍ. Af accaren-ik•im n melmi kan, ticraḍ n yisebtar, d yigmaḍ n unadi.</string>
+    <string name="onboarding_home_screen_jump_back_contextual_hint">Asebter-inek•inem n Firefox udmawan yettarra tura fessus ugar akemmel seg wanda akken i tḥebseḍ. Af accaren-ik•im n melmi kan, ticraḍ n yisebtar, d yigmaḍ n unadi.</string>
+
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title">Ansuf ɣer internet ilelli</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title">Abeddel seg ugdil ɣer wayeḍ fessus ugar ɣef wayen iɛeddan</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Aha bdu</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Qqen</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Suref</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -452,11 +470,11 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="wallpaper_updated_snackbar_action">Wali</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Beddel tugna n ugilal s tira n ulugu n usebter agejdan n Firefox</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Beddel tugna n ugilal s tira n ulugu n usebter agejdan n Firefox</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Alogo Firefox - beddel agilal, taqeffalt</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Alogo Firefox - beddel agilal, taqeffalt</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -633,9 +651,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Iẓiki</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Igrawen n unadi</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Igrawen n unadi</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Ismal n yinagrawen i d-yittuɣalen lwaḥid</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Ismal n yinagrawen i d-yittuɣalen lwaḥid</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Mdel iccaren</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -743,8 +761,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="open_tabs_menu">Ldi umuɣ n yiccaren</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Sekles iccaren ɣer tegrumma</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Umuɣ n yiccaren</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Kkes tagrumma</string>
     <!-- Text for the menu button to rename a collection -->
@@ -796,17 +812,17 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="history_empty_message">Ulac amazray dagi</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">Yemtawi seg yibenk-nniḍen</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Yemtawi seg yibenk-nniḍen</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">Seg yibenkan-nniḍen</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">Seg yibenkan-nniḍen</string>
 
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">Qqen akken ad twaliḍ azray yemtawan seg yibenkan-ik-nniḍen.</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Qqen akken ad twaliḍ azray yemtawan seg yibenkan-ik-nniḍen.</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">Qqen</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Qqen</string>
 
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>Neɣ fren amiḍan Firefox i beddu n umtawi</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>Neɣ fren amiḍan Firefox i beddu n umtawi</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1333,6 +1349,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Akk inagan n tuqqna n wis kraḍ (zemren ad rẓen isaml web)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Akk inagan n tuqqna (ad rẓen isaml web)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Ɛzel inagan n tuqqna gar yismal</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Agbur n uḍfaṛ</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1355,6 +1373,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="etp_social_media_trackers_description">Talast n tezmert n yiẓeḍwa n tmetti deg uḍfaṛ n urmud-ik n tunigin deg web.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Inagan n tuqqna i uḍfaṛ gar yismal</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Inagan n tuqqna gar yismal</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Ad isewḥel inagan n tuqqna i seqdacen iberraḥen n udellel akked tkebbaniyin n tesledt i ulqaḍ n yisefka-ik n tunigin deg ddeqs n yismal.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->

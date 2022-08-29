@@ -40,7 +40,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">סימניות אחרונות</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">סימניות אחרונות</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">נשמרו לאחרונה</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">הצגת כל הסימניות השמורות</string>
 
@@ -76,6 +78,12 @@
 
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">סגירה</string>
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">תכונת הפרטיות החזקה ביותר שלנו אי פעם מבודדת רכיבי מעקב חוצות אתרים.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">מידע נוסף על הגנת עוגיות מלאה</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">דרושה גישה למצלמה. יש לעבור להגדרות ה־Android, להקיש על הרשאות ולאחר מכן על ״לאפשר״.</string>
@@ -124,16 +132,18 @@
     <string name="recent_tabs_show_all_content_description_2">כפתור להצגת כל הלשוניות האחרונות</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">החיפוש שלך עבור ״%1$s״</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">החיפוש שלך עבור ״%1$s״</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d אתרים</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d אתרים</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">הצגת כל הלשוניות המסונכרנות</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">מכשיר מסונכרן</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">הסרה</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">הסרה</string>
@@ -249,25 +259,40 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">מה חדש ב־%1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">מה חדש ב־%1$s</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">עכשיו קל יותר לחזור למקום שבו הפסקת.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">עכשיו קל יותר לחזור למקום שבו הפסקת.</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">מסך בית מותאם אישית של %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">מסך בית מותאם אישית של %1$s</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">ניתן לעבור ללשוניות הפתוחות שלך, לסימניות ולהיסטוריית הגלישה שלך.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">ניתן לעבור ללשוניות הפתוחות שלך, לסימניות ולהיסטוריית הגלישה שלך.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">לשוניות נקיות ומאורגנות</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">לשוניות נקיות ומאורגנות</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">ניקוי עומס הלשוניות עם פריסה משופרת ואפשרות לסגירה אוטומטית של לשוניות.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">ניקוי עומס הלשוניות עם פריסה משופרת ואפשרות לסגירה אוטומטית של לשוניות.</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">חיפושים אחרונים</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">חיפושים אחרונים</string>
 
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">ניתן לבקר שוב בחיפושים האחרונים שלך ממסך הבית והלשוניות שלך.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">ניתן לבקר שוב בחיפושים האחרונים שלך ממסך הבית והלשוניות שלך.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">כעת קל יותר להמשיך מהמקום שבו הפסקת, במסך הבית של Firefox המותאם אישית שלך. ניתן למצוא את הלשוניות האחרונות, הסימניות ותוצאות החיפוש שלך.</string>
+    <string name="onboarding_home_screen_jump_back_contextual_hint">כעת קל יותר להמשיך מהמקום שבו הפסקת, במסך הבית של Firefox המותאם אישית שלך. ניתן למצוא את הלשוניות האחרונות, הסימניות ותוצאות החיפוש שלך.</string>
+
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title">ברוכים הבאים לאינטרנט עצמאי</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">יותר צבעים. פרטיות טובה יותר. אותה המחויבות לאנשים על פני רווחים.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title">מעבר בין מסכים קל מאי פעם</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">אפשר להמשיך מאיפה שעצרת עם לשוניות ממכשירים אחרים בעמוד הבית שלך.</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">תחילת עבודה</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">כניסה</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">דילוג</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -447,11 +472,11 @@
     <string name="wallpaper_updated_snackbar_action">הצגה</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">החלפת הרקע על־ידי נגיעה בלוגו דף הבית של Firefox</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">החלפת הרקע על־ידי נגיעה בלוגו דף הבית של Firefox</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">הלוגו של Firefox - החלפת תמונת הרקע, כפתור</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">הלוגו של Firefox - החלפת תמונת הרקע, כפתור</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -626,7 +651,7 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">רשת</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">קיבוץ אתרים קשורים</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">קיבוץ אתרים קשורים</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">סגירת לשוניות</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -733,8 +758,6 @@
     <string name="open_tabs_menu">תפריט לשוניות פתוחות</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">שמירת לשוניות לאוסף</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">תפריט לשוניות</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">מחיקת אוסף</string>
     <!-- Text for the menu button to rename a collection -->
@@ -785,17 +808,17 @@
     <string name="history_empty_message">אין היסטוריה כאן</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">סונכרן ממכשירים אחרים</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">סונכרן ממכשירים אחרים</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">ממכשירים אחרים</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">ממכשירים אחרים</string>
 
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">יש להיכנס כדי לצפות בהיסטוריה המסונכרנת משאר מהמכשירים שלך.</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">יש להיכנס כדי לצפות בהיסטוריה המסונכרנת משאר מהמכשירים שלך.</string>
 
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">כניסה</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">כניסה</string>
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>או יצירת חשבון Firefox כדי להתחיל לסנכרן</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>או יצירת חשבון Firefox כדי להתחיל לסנכרן</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1322,6 +1345,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">כל העוגיות צד־שלישי (עשוי לשבש פעילות של חלק מהאתרים)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">כל העוגיות (ישבש פעילות של אתרים)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">בידוד עוגיות חוצות אתרים</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">תוכן מעקב</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1344,8 +1369,12 @@
     <string name="etp_social_media_trackers_description">מגביל את היכולת של רשתות חברתיות לעקוב אחר פעילות הגלישה שלך ברשת.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">עוגיות מעקב חוצות אתרים</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">עוגיות חוצות אתרים</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">חוסם עוגיות שרשתות פרסומות וחברות ניתוח תעבורה משתמשות בהן כדי לאסוף פרופיל על נתוני הגלישה שלך על פני מגוון רחב של אתרים.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">הגנת עוגיות מלאה מגבילה עוגיות לאתר שבו אתה נמצא, כך שרכיבי מעקב כמו רשתות פרסום לא יכולים להשתמש בהן כדי לעקוב אחרי בין אתרים.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">כורי מטבעות דיגיטליים</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

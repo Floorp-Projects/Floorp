@@ -41,7 +41,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">حالیہ کتاب نشان</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">حالیہ کتاب نشان</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">حالیہ محفوظ تھیاں</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">سارے محفوظ تھئے کتاب نشان ݙکھاؤ</string>
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
@@ -77,6 +79,12 @@
 
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">فارغ کرو</string>
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">ساݙی سب کنوں تکڑی رازداری خصوصیت اڄݨ تائیں کراس سائٹ ٹریکراں کوں انج کریندی ہے۔ </string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">کُل کوکی حفاظت بارے سِکھو</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">کیمرے تائیں رسائی دی لوڑ ہے۔ انڈرائیڈ دیاں ترتیباں تے ون٘ڄو، اجازتاں تے ٹیپ کرو تے اجازت ݙیوو تے انگل پھیرو۔</string>
@@ -132,6 +140,8 @@
     <string name="recent_tabs_see_all_synced_tabs_button_text">ساریاں ہم وقت تھیاں ٹیباں ݙیکھو</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">ہم وقت تھئے ڈیوائس</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">ہٹاؤ</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">ہٹاؤ</string>
@@ -245,25 +255,40 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">%1$s وچ کیا نواں ہے؟</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">%1$s وچ کیا نواں ہے؟</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">جتھ تساں چھوڑیا ہے، ہݨ اُتھوں بیک اپ چاوݨ سوکھڑا ہے۔</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">جتھ تساں چھوڑیا ہے، ہݨ اُتھوں بیک اپ چاوݨ سوکھڑا ہے۔</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">ذاتی تھیا %1$s مکھ پناں</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">ذاتی تھیا %1$s مکھ پناں</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">ٹیب، نشانیاں تے براؤزنگ تاریخ کھولݨ کیتے ٹپ مارو۔</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">ٹیب، نشانیاں تے براؤزنگ تاریخ کھولݨ کیتے ٹپ مارو۔</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">ستھریاں، منظم ٹیباں</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">ستھریاں، منظم ٹیباں</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">بہترین خاکے تے خود کار بند تھیندیاں ٹیباں نال ٹیباں دی بے ترتیبی کوں صاف کرو۔</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">بہترین خاکے تے خود کار بند تھیندیاں ٹیباں نال ٹیباں دی بے ترتیبی کوں صاف کرو۔</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">حالیہ ڳولاں</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">حالیہ ڳولاں</string>
 
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">آپݨے مکھ پنے تے ٹیباں نال آپݨیاں تازہ ترین ڳولاں تے ولدا ون٘جو۔</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">آپݨے مکھ پنے تے ٹیباں نال آپݨیاں تازہ ترین ڳولاں تے ولدا ون٘جو۔</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">جتھوں تساں چھوڑیا ہائی تہاݙا ذاتی تھیا فائرفوکس مُکھ پناں ہݨ اُتھوں شروع کرݨ سوکھا بݨیندا ہے۔ آپݨے حالیہ ٹیب، کتاب نشانیاں تے ڳولݨ نتیجے لبھو۔</string>
+    <string name="onboarding_home_screen_jump_back_contextual_hint">جتھوں تساں چھوڑیا ہائی تہاݙا ذاتی تھیا فائرفوکس مُکھ پناں ہݨ اُتھوں شروع کرݨ سوکھا بݨیندا ہے۔ آپݨے حالیہ ٹیب، کتاب نشانیاں تے ڳولݨ نتیجے لبھو۔</string>
+
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title">آزاد انٹرنیٹ وچ ست بسم اللہ</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">ٻئے رنگ۔ چنگی رازداری۔ نفعے کنوں ودھ لوکاں نال پریت پالݨ۔</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title">سکریناں سوئچ کرݨ ہݨ پہلے کنوں ٻہوں سوکھا ہے</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">آپݨے مکھ پنّے تے ٻئی ڈیوائساں دے  ٹیباں نال  اُتھاؤں شروع کرو جتھوں تساں چھوڑیا ہائی۔</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">شروع کرو</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">سائن ان</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">چھوڑو</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1324,6 +1349,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">ساریاں تریجھی پارٹی کوکیاں (ویب سائٹاں دے ترٹݨ دا سبب بݨ سڳدی ہے)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">ساریاں کوکیاں (ویب سائٹاں دے ترٹݨ دا سبب بݨ سڳدی ہے)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">کراس سائٹ کوکیاں کوں الڳ تھلگ کرو</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">ٹریکنگ مواد</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1346,8 +1373,12 @@
     <string name="etp_social_media_trackers_description">ویب تے تہاݙیاں براؤزنگ سرگرمیاں کوں ٹریک کرݨ آلے سماجی نیٹ ورک دی صلاحیت کوں محدود کریندے۔</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">کراس سائٹ ٹریکنگ کوکیاں</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">کراس سائٹ کوکیاں</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">کوکیاں کوں بلاک کریندا ہے جہڑا اشتہاری نیٹ ورکس تے تجزیاتی کمپنیاں تہاݙے براؤزنگ ڈیٹا کوں کئی سائٹاں تے مرتب کرݨ کیتے ورتیندیاں ہن۔</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">کُل کوکی حفاظت کوکیاں کوں  تہاݙی سائٹ کنوں انج کر ݙیندے تاں جو ٹریکراں وانگوں مشہوری نیٹ ورک تہاݙیاں سائٹاں وچ تہاکوں فالو کرݨ کیتے انہاں کوں نہ ورت سڳن۔</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">کریپٹومینرز</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

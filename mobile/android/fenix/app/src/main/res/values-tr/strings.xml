@@ -40,7 +40,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">Son yer imleri</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Son yer imleri</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Son kaydedilenler</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Tüm kayıtlı yer imlerini göster</string>
 
@@ -76,6 +78,12 @@
 
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">Kapat</string>
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Şimdiye kadarki en güçlü gizlilik özelliğimiz, siteler arası takip kodlarını izole ediyor.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Komple çerez koruması hakkında bilgi al</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Kamera erişimi gerekiyor. Android ayarlarına gidin, izinlere girin ve izin verin.</string>
@@ -134,6 +142,8 @@
     <string name="recent_tabs_see_all_synced_tabs_button_text">Tüm eşitlenmiş sekmeleri gör</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">Eşitlenen cihaz</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Kaldır</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Kaldır</string>
@@ -251,25 +261,40 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">%1$s tarayıcınızdaki yenilikler</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">%1$s tarayıcınızdaki yenilikler</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">Kaldığınız yerden devam etmek artık daha kolay.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Kaldığınız yerden devam etmek artık daha kolay.</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">Size özel %1$s giriş sayfası</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Size özel %1$s giriş sayfası</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">Açık sekmelerinizi, yer imlerinizi ve gezinti geçmişinizi görün.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Açık sekmelerinizi, yer imlerinizi ve gezinti geçmişinizi görün.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Düzenli sekmeler</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Düzenli sekmeler</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Yeni sekme düzeni ve kendiliğinden kapanan sekmelerle karmaşayı ortadan kaldırın.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Yeni sekme düzeni ve kendiliğinden kapanan sekmelerle karmaşayı ortadan kaldırın.</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">Son aramalar</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Son aramalar</string>
 
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">Son aramalarınıza giriş sayfasından ve sekmelerden tekrar ulaşın.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Son aramalarınıza giriş sayfasından ve sekmelerden tekrar ulaşın.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Kişisel Firefox giriş sayfanız, kaldığınız yerden devam etmeyi kolaylaştırıyor. Son sekmeleriniz, yer imleriniz ve arama sonuçlarınız artık giriş sayfanızda.</string>
+    <string name="onboarding_home_screen_jump_back_contextual_hint">Kişisel Firefox giriş sayfanız, kaldığınız yerden devam etmeyi kolaylaştırıyor. Son sekmeleriniz, yer imleriniz ve arama sonuçlarınız artık giriş sayfanızda.</string>
+
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title">Bağımsız bir internete hoş geldiniz</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Daha renkli. Daha gizli. Para için değil, insanlık için.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title">Cihazdan cihaza geçmek artık daha kolay</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Diğer cihazlardaki sekmeleriniz artık giriş sayfanızda.</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Başlayın</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Giriş yap</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Geç</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -446,11 +471,11 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Göster</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Giriş sayfasındaki Firefox logosuna dokunarak duvar kâğıdını değiştirin</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Giriş sayfasındaki Firefox logosuna dokunarak duvar kâğıdını değiştirin</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Firefox logosu - duvar kağıdını değiştir, düğme</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Firefox logosu - duvar kağıdını değiştir, düğme</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -625,9 +650,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Izgara</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Arama grupları</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Arama grupları</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">İlgili siteleri gruplandırın</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">İlgili siteleri gruplandırın</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Sekmeleri kapat</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -733,8 +758,6 @@
     <string name="open_tabs_menu">Açık sekmeler menüsü aç</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Sekmeleri koleksiyona kaydet</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Sekmeler menüsü</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Koleksiyonu sil</string>
     <!-- Text for the menu button to rename a collection -->
@@ -786,17 +809,17 @@
     <string name="history_empty_message">Geçmiş yok</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">Diğer cihazlarla eşitlendi</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Diğer cihazlarla eşitlendi</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">Diğer cihazlardan</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">Diğer cihazlardan</string>
 
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">Diğer cihazlarınızdan eşitlenen geçmişi görmek için giriş yapın.</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Diğer cihazlarınızdan eşitlenen geçmişi görmek için giriş yapın.</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">Giriş yap</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Giriş yap</string>
 
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>Veya eşitlemeye başlamak için Firefox hesabı açın</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>Veya eşitlemeye başlamak için Firefox hesabı açın</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1320,6 +1343,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Tüm üçüncü taraf çerezleri (Bazı web siteleri bozulabilir.)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Tüm çerezler (Bazı web siteleri bozulabilir.)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Siteler arası çerezleri izole et</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Takip amaçlı içerikler</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1342,8 +1367,12 @@
     <string name="etp_social_media_trackers_description">Sosyal ağların web’deki gezinme etkinliğinizi izleyebilme özelliğini sınırlar.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Siteler arası takip çerezleri</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Siteler arası çerezler</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Reklam ağlarının ve analitik şirketlerinin farklı siteler arasındaki gezintilerinizi izlemek için kullandığı çerezleri engeller.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Komple çerez koruması, çerezleri sadece bulunduğunuz sitenin kullanabileceği şekilde izole eder. Bu sayede, reklam ağları hangi sitelerde gezindiğinizi izlemek için çerezleri kullanamaz.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Kripto madencileri</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

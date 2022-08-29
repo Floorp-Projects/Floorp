@@ -43,7 +43,7 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">Marcadores de recién</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Marcadores de recién</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Amosar tolos marcadores guardaos</string>
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
@@ -200,14 +200,14 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">Novedaes de: %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Novedaes de: %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">Agora ye más fácil siguir dende onde lo dexesti.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Agora ye más fácil siguir dende onde lo dexesti.</string>
 
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">Busques de recién</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Busques de recién</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">Volvi visitar les últimes busques dende la páxina d\'aniciu y les llingüetes.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Volvi visitar les últimes busques dende la páxina d\'aniciu y les llingüetes.</string>
 
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Buscar</string>
@@ -530,9 +530,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">En rexáu</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Grupos de busca</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Grupos de busca</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Axunta los sitios rellacionaos</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Axunta los sitios rellacionaos</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Zarru de llingüetes</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -634,8 +634,6 @@
 
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Guardar llingüetes nuna coleición</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Menú de llingüetes</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Desaniciar la coleición</string>
     <!-- Text for the menu button to rename a collection -->
@@ -684,13 +682,13 @@
 
 
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">D\'otros preseos</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">D\'otros preseos</string>
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">Anicia la sesión pa ver l\'historial sincronizáu de los otros preseos de to.</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Anicia la sesión pa ver l\'historial sincronizáu de los otros preseos de to.</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">Aniciar la sesión</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Aniciar la sesión</string>
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>O crea una cuenta de Firefox pa comenzar a sincronizar</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>O crea una cuenta de Firefox pa comenzar a sincronizar</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1125,7 +1123,7 @@ en llinia y con nós.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Curia los tos datos. %s protéxite de la mayoría de rastrexadores comunes que siguen lo que faes en llinia.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Deprender más</string>
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Saber más</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Estándar (por defeutu)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
@@ -1279,7 +1277,7 @@ en llinia y con nós.</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text">Equí apaecen les cuentes que guardes o sincronices con %s.</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Deprender más tocante a Sync</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Saber más tocante a Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Esceiciones</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->

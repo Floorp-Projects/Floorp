@@ -43,7 +43,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">Recente bladwijzers</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Recente bladwijzers</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Onlangs opgeslagen</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Alle opgeslagen bladwijzers tonen</string>
 
@@ -81,6 +83,12 @@
 
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">Sluiten</string>
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Onze krachtigste privacyfunctie tot nu toe isoleert cross-sitetrackers.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Meer info over Totale cookiebescherming</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Cameratoegang vereist. Ga naar uw Android-instellingen, tik op machtigingen en tik op toestaan.</string>
@@ -139,6 +147,8 @@
     <string name="recent_tabs_see_all_synced_tabs_button_text">Alle gesynchroniseerde tabbladen bekijken</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">Gesynchroniseerd apparaat</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Verwijderen</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Verwijderen</string>
@@ -257,25 +267,40 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">Wat is er nieuw in %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Wat is er nieuw in %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">Het is nu eenvoudiger om verder te gaan waar u was gebleven.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Het is nu eenvoudiger om verder te gaan waar u was gebleven.</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">Gepersonaliseerde %1$s-startpagina</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Gepersonaliseerde %1$s-startpagina</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">Spring naar uw open tabbladen, bladwijzers en navigatiegeschiedenis.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Spring naar uw open tabbladen, bladwijzers en navigatiegeschiedenis.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Nette, geordende tabbladen</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Nette, geordende tabbladen</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Verwijder tabbladrommel met een verbeterde opmaak en automatisch sluitende tabbladen.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Verwijder tabbladrommel met een verbeterde opmaak en automatisch sluitende tabbladen.</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">Recente zoekopdrachten</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Recente zoekopdrachten</string>
 
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">Bekijk uw laatste zoekopdrachten opnieuw vanaf uw startpagina en tabbladen.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Bekijk uw laatste zoekopdrachten opnieuw vanaf uw startpagina en tabbladen.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Uw gepersonaliseerde Firefox-startpagina maakt het nu eenvoudiger om verder te gaan waar u was gebleven. Vind uw recente tabbladen, bladwijzers en zoekresultaten.</string>
+    <string name="onboarding_home_screen_jump_back_contextual_hint">Uw gepersonaliseerde Firefox-startpagina maakt het nu eenvoudiger om verder te gaan waar u was gebleven. Vind uw recente tabbladen, bladwijzers en zoekresultaten.</string>
+
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title">Welkom bij een onafhankelijk internet</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Meer kleuren. Betere privacy. Dezelfde toewijding aan mensen boven winst.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title">Van scherm wisselen is eenvoudiger dan ooit</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Ga verder waar u was gebleven met tabbladen van andere apparaten nu op uw startpagina.</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Beginnen</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Aanmelden</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Overslaan</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -741,8 +766,6 @@
     <string name="open_tabs_menu">Menu Open tabbladen</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Tabbladen in collectie opslaan</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Tabbladmenu</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Collectie verwijderen</string>
     <!-- Text for the menu button to rename a collection -->
@@ -794,16 +817,16 @@
     <string name="history_empty_message">Geen geschiedenis hier</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">Gesynchroniseerd vanaf andere apparaten</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Gesynchroniseerd vanaf andere apparaten</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">Vanaf andere apparaten</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">Vanaf andere apparaten</string>
 
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">Meld u aan om van uw andere apparaten gesynchroniseerde geschiedenis te bekijken.</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Meld u aan om van uw andere apparaten gesynchroniseerde geschiedenis te bekijken.</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">Aanmelden</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Aanmelden</string>
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>Of maak een Firefox-account om te beginnen met synchroniseren</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>Of maak een Firefox-account om te beginnen met synchroniseren</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1328,6 +1351,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Alle cookies van derden (kan ervoor zorgen dat websites niet goed werken)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Alle cookies (zal ervoor zorgen dat websites niet goed werken)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Cross-sitecookies isoleren</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Volginhoud</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1350,8 +1375,12 @@
     <string name="etp_social_media_trackers_description">Beperkt de mogelijkheid van sociale netwerken om uw surfactiviteit op internet te volgen.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Cross-site-trackingcookies</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Cross-sitecookies</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Blokkeert cookies die advertentienetwerken en analysebedrijven gebruiken om uw surfgegevens op veel websites te verzamelen.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Totale cookiebescherming isoleert cookies tot de website die u bezoekt, zodat trackers zoals advertentienetwerken ze niet kunnen gebruiken om u tussen websites te volgen.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Cryptominers</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

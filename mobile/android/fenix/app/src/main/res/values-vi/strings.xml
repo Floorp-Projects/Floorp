@@ -40,7 +40,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">Dấu trang gần đây</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Dấu trang gần đây</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Đã lưu gần đây</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Hiển thị tất cả các dấu trang đã lưu</string>
 
@@ -76,6 +78,12 @@
 
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">Bỏ qua</string>
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Tính năng bảo mật mạnh mẽ nhất của chúng tôi nhưng vẫn tách biệt các trình theo dõi trên nhiều trang web.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Tìm hiểu về trình chống cookie chung</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Cần có quyền truy cập máy ảnh. Đi tới cài đặt Android, chạm vào quyền và chạm cho phép.</string>
@@ -124,16 +132,18 @@
     <string name="recent_tabs_show_all_content_description_2">Hiển thị nút tất cả các thẻ gần đây</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">Tìm kiếm của bạn cho \&quot;%1$s\&quot;</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Tìm kiếm của bạn cho \&quot;%1$s\&quot;</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d trang web</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d trang web</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Xem các thẻ đã đồng bộ hóa</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">Thiết bị được đồng bộ hóa</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Xóa</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Xóa</string>
@@ -249,24 +259,39 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">Có gì mới trong %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Có gì mới trong %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">Giờ đây, việc tiếp tục nơi bạn đã dừng lại sẽ trở nên dễ dàng hơn.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Giờ đây, việc tiếp tục nơi bạn đã dừng lại sẽ trở nên dễ dàng hơn.</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">Trang chủ %1$s được cá nhân hóa</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Trang chủ %1$s được cá nhân hóa</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">Chuyển đến các thẻ đang mở, dấu trang và lịch sử duyệt web của bạn.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Chuyển đến các thẻ đang mở, dấu trang và lịch sử duyệt web của bạn.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Các thẻ gọn gàng, có tổ chức</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Các thẻ gọn gàng, có tổ chức</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Xóa các thẻ lộn xộn với bố cục được cải thiện và tự động đóng các thẻ. </string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Xóa các thẻ lộn xộn với bố cục được cải thiện và tự động đóng các thẻ. </string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">Tìm kiếm gần đây</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Tìm kiếm gần đây</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">Xem lại các tìm kiếm mới nhất của bạn từ trang chủ và các thẻ của bạn.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Xem lại các tìm kiếm mới nhất của bạn từ trang chủ và các thẻ của bạn.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Trang chủ Firefox được cá nhân hóa của bạn giờ đây giúp bạn tiếp tục lại nơi bạn đã dừng lại dễ dàng hơn. Tìm các thẻ, dấu trang và kết quả tìm kiếm gần đây của bạn.</string>
+    <string name="onboarding_home_screen_jump_back_contextual_hint">Trang chủ Firefox được cá nhân hóa của bạn giờ đây giúp bạn tiếp tục lại nơi bạn đã dừng lại dễ dàng hơn. Tìm các thẻ, dấu trang và kết quả tìm kiếm gần đây của bạn.</string>
+
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title">Chào mừng bạn đến với internet độc lập</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Màu sắc mới. Riêng tư hơn. Cùng cam kết với mọi người vì lợi nhuận.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title">Chuyển đổi màn hình dễ dàng hơn bao giờ hết</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Tiếp tục nơi bạn đã dừng lại với các thẻ từ các thiết bị khác ngay bây giờ trên trang chủ của bạn.</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Bắt đầu</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Đăng nhập</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Bỏ qua</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -442,11 +467,11 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Hiển thị</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Thay đổi hình nền bằng cách nhấn vào biểu trưng trang chủ của Firefox</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Thay đổi hình nền bằng cách nhấn vào biểu trưng trang chủ của Firefox</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Logo Firefox - thay đổi hình nền, nút</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Logo Firefox - thay đổi hình nền, nút</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -620,9 +645,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Lưới</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Tìm kiếm nhóm</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Tìm kiếm nhóm</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Nhóm các trang web liên quan lại với nhau</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Nhóm các trang web liên quan lại với nhau</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Đóng thẻ</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -727,8 +752,6 @@
     <string name="open_tabs_menu">Menu các thẻ đang mở</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Lưu các thẻ vào bộ sưu tập</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Menu thẻ</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Xóa bộ sưu tập</string>
     <!-- Text for the menu button to rename a collection -->
@@ -779,16 +802,16 @@
     <string name="history_empty_message">Không có lịch sử ở đây</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">Được đồng bộ hóa từ thiết bị khác</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Được đồng bộ hóa từ thiết bị khác</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">Từ các thiết bị khác</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">Từ các thiết bị khác</string>
 
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">Đăng nhập để xem lịch sử được đồng bộ hóa từ các thiết bị khác của bạn.</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Đăng nhập để xem lịch sử được đồng bộ hóa từ các thiết bị khác của bạn.</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">Đăng nhập</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Đăng nhập</string>
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>Hoặc tạo tài khoản Firefox để bắt đầu đồng bộ hóa</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>Hoặc tạo tài khoản Firefox để bắt đầu đồng bộ hóa</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1309,6 +1332,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Tất cả cookie của bên thứ ba (có thể khiến các trang web bị hỏng)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Tất cả các cookie (có thể khiến các trang web bị hỏng)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Cô lập cookie trên nhiều trang web</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Trình theo dõi nội dung</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1331,8 +1356,12 @@
     <string name="etp_social_media_trackers_description">Hạn chế khả năng của các mạng xã hội mà nó theo dõi hoạt động duyệt web của bạn trên web.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Cookie theo dõi chéo trang web</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Cookie trên nhiều trang web</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Chặn cookie mà các mạng quảng cáo và công ty phân tích sử dụng mà nó biên dịch dữ liệu duyệt web của bạn trên nhiều trang web.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Trình chống cookie chung cô lập các cookie với trang web mà bạn đang truy cập, do đó, những người theo dõi như mạng quảng cáo không thể sử dụng chúng để theo dõi bạn trên các trang web.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Tiền điện tử</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
