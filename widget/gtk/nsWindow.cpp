@@ -930,14 +930,16 @@ void nsWindow::Show(bool aState) {
 void nsWindow::ResizeInt(const Maybe<LayoutDeviceIntPoint>& aMove,
                          LayoutDeviceIntSize aSize) {
   LOG("nsWindow::ResizeInt w:%d h:%d\n", aSize.width, aSize.height);
-  if (aMove) {
-    mBounds.x = aMove->x;
-    mBounds.y = aMove->y;
+  const bool moved = aMove && *aMove != mBounds.TopLeft();
+  if (moved) {
+    mBounds.MoveTo(*aMove);
     LOG("  with move to left:%d top:%d", aMove->x, aMove->y);
   }
 
   ConstrainSize(&aSize.width, &aSize.height);
   LOG("  ConstrainSize: w:%d h;%d\n", aSize.width, aSize.height);
+
+  const bool resized = aSize != mLastSizeRequest;
 
   // For top-level windows, aSize should possibly be
   // interpreted as frame bounds, but NativeMoveResize treats these as window
@@ -959,7 +961,11 @@ void nsWindow::ResizeInt(const Maybe<LayoutDeviceIntPoint>& aMove,
     return;
   }
 
-  NativeMoveResize(aMove.isSome(), true);
+  if (!moved && !resized) {
+    return;
+  }
+
+  NativeMoveResize(moved, resized);
 
   // We optimistically assume size changes immediately in two cases:
   // 1. Override-redirect window: Size is controlled by only us.
