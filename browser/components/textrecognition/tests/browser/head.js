@@ -45,4 +45,7 @@ function getTelemetryScalars() {
 
 function clearTelemetry() {
   Services.telemetry.clearScalars();
+  Services.telemetry
+    .getHistogramById("TEXT_RECOGNITION_API_PERFORMANCE")
+    .clear();
 }

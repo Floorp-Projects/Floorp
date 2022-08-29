@@ -2324,6 +2324,10 @@ class nsContextMenu {
   getImageText() {
     let dialogBox = gBrowser.getTabDialogBox(this.browser);
     const imageTextResult = this.actor.getImageText(this.targetIdentifier);
+    TelemetryStopwatch.start(
+      "TEXT_RECOGNITION_API_PERFORMANCE",
+      imageTextResult
+    );
     const { dialog } = dialogBox.open(
       "chrome://browser/content/textrecognition/textrecognition.html",
       {

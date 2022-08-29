@@ -17077,6 +17077,18 @@
     "alert_emails": ["necko@mozilla.com", "mwoodrow@mozilla.com"],
     "description": "Time spent waiting on the main-thread to be available to run AsyncOpen, for image preload requests"
   },
+  "TEXT_RECOGNITION_API_PERFORMANCE": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["gtatum@mozilla.com", "nordzilla@mozilla.com"],
+    "expires_in_version": "109",
+    "kind": "exponential",
+    "high": 120000,
+    "n_buckets": 20,
+    "bug_numbers": [1783261],
+    "description": "The milliseconds of time the text recognition results took to display, including the UI time and OS response time."
+  },
   "DOWNLOADS_USER_ACTION_ON_BLOCKED_DOWNLOAD": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
