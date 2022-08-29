@@ -117,7 +117,8 @@
               "template": {
                 "type": "string",
                 "enum": [
-                  "spotlight"
+                  "spotlight",
+                  "feature_callout"
                 ]
               }
             },
@@ -1258,7 +1259,7 @@
         },
         "template": {
           "type": "string",
-          "const": "spotlight"
+          "enum": ["spotlight", "feature_callout"]
         }
       },
       "additionalProperties": true,
@@ -1576,6 +1577,7 @@
             "pb_newtab",
             "protections_panel",
             "spotlight",
+            "feature_callout",
             "toast_notification",
             "toolbar_badge",
             "update_action",
