@@ -308,12 +308,8 @@ add_task(
     info(`wait first alarm`);
     await extension.awaitMessage("alarms-create-with-options");
 
-    await extension.terminateBackground({ disableResetIdleForTest: true });
-    ok(
-      !extension.extension.backgroundContext,
-      "Background Extension context should have been destroyed"
-    );
-
+    // Shutdown the background page
+    await extension.terminateBackground();
     assertPersistentListeners(extension, "alarms", "onAlarm", {
       primed: true,
     });
