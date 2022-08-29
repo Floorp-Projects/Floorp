@@ -27,3 +27,6 @@ platform(linux) == mix-blend-complex-transform.yaml mix-blend-complex-transform.
 == raster-roots-1.yaml raster-roots-1-ref.yaml
 == child-surface.yaml child-surface-ref.yaml
 == blend-overflow.yaml blend-overflow-ref.yaml
+
+== backdrop-filter-blend-container.yaml backdrop-filter-blend-container-ref.yaml
+== backdrop-filter-preceding.yaml backdrop-filter-preceding-ref.yaml

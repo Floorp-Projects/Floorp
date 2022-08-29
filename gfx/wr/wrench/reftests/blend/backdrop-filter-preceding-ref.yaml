@@ -1,0 +1,9 @@
+---
+root:
+  items:
+    - type: rect
+      bounds: 0 0 100 100
+      color: cyan
+    - type: rect
+      bounds: 100 0 100 100
+      color: magenta

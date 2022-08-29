@@ -3,6 +3,7 @@ root:
   items:
     - type: stacking-context
       bounds: 0 0 2000 2000
+      blend-container: true
       items:
         - type: stacking-context
           bounds: 0 0 2000 2000

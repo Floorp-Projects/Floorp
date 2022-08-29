@@ -2111,10 +2111,6 @@ impl<'a> SceneBuilder<'a> {
         // clip node doesn't affect the stacking context rect.
         let mut blit_reason = BlitReason::empty();
 
-        if flags.contains(StackingContextFlags::IS_BLEND_CONTAINER) {
-            blit_reason |= BlitReason::ISOLATE;
-        }
-
         // If backface visibility is explicitly set, we force a surface. This
         // simplifies handling this grouping as an atomic primitive that can
         // be culled if the transform changes. It also allows us to cache
@@ -2131,13 +2127,49 @@ impl<'a> SceneBuilder<'a> {
             }
         }
 
-        let is_redundant = FlattenedStackingContext::is_redundant(
-            flags,
+        // Check if we know this stacking context is redundant (doesn't need a surface)
+        // The check for blend-container redundancy is more involved so it's handled below.
+        let mut is_redundant = FlattenedStackingContext::is_redundant(
             &context_3d,
             &composite_ops,
             blit_reason,
             self.sc_stack.last(),
         );
+
+        // If the stacking context is a blend container, and if we're at the top level
+        // of the stacking context tree, we may be able to make this blend container into a tile
+        // cache. This means that we get caching and correct scrolling invalidation for
+        // root level blend containers. For these cases, the readbacks of the backdrop
+        // are handled by doing partial reads of the picture cache tiles during rendering.
+        if flags.contains(StackingContextFlags::IS_BLEND_CONTAINER) {
+            // Check if we're inside a stacking context hierarchy with an existing surface
+            match self.sc_stack.last() {
+                Some(_) => {
+                    // If we are already inside a stacking context hierarchy with a surface, then we
+                    // need to do the normal isolate of this blend container as a regular surface
+                    blit_reason |= BlitReason::ISOLATE;
+                    is_redundant = false;
+                }
+                None => {
+                    // If the current slice is empty, then we can just mark the slice as
+                    // atomic (so that compositor surfaces don't get promoted within it)
+                    // and use that slice as the backing surface for the blend container
+                    if self.tile_cache_builder.is_current_slice_empty() &&
+                       self.spatial_tree.is_root_coord_system(spatial_node_index) &&
+                       !self.clip_tree_builder.clip_node_has_complex_clips(clip_node_id, &self.interners)
+                    {
+                        self.add_tile_cache_barrier_if_needed(SliceFlags::IS_ATOMIC);
+                        self.tile_cache_builder.make_current_slice_atomic();
+                    } else {
+                        // If the slice wasn't empty, we need to isolate a separate surface
+                        // to ensure that the content already in the slice is not used as
+                        // an input to the mix-blend composite
+                        blit_reason |= BlitReason::ISOLATE;
+                        is_redundant = false;
+                    }
+                }
+            }
+        }
 
         // If stacking context is a scrollbar, force a new slice for the primitives
         // within. The stacking context will be redundant and removed by above check.
@@ -2208,31 +2240,6 @@ impl<'a> SceneBuilder<'a> {
         }
 
         let stacking_context = self.sc_stack.pop().unwrap();
-
-        // If the stacking context is a blend container, and if we're at the top level
-        // of the stacking context tree, we can make this blend container into a tile
-        // cache. This means that we get caching and correct scrolling invalidation for
-        // root level blend containers. For these cases, the readbacks of the backdrop
-        // are handled by doing partial reads of the picture cache tiles during rendering.
-        if stacking_context.flags.intersects(StackingContextFlags::IS_BLEND_CONTAINER) &&
-           self.sc_stack.is_empty() &&
-           self.spatial_tree.is_root_coord_system(stacking_context.spatial_node_index) &&
-           !self.clip_tree_builder.clip_node_has_complex_clips(stacking_context.clip_node_id, &self.interners)
-        {
-            self.tile_cache_builder.add_tile_cache(
-                stacking_context.prim_list,
-                self.root_iframe_clip,
-            );
-
-            return;
-        }
-
-        let parent_is_empty = match self.sc_stack.last() {
-            Some(parent_sc) => {
-                parent_sc.prim_list.is_empty()
-            },
-            None => true,
-        };
 
         let mut source = match stacking_context.context_3d {
             // TODO(gw): For now, as soon as this picture is in
@@ -2449,29 +2456,18 @@ impl<'a> SceneBuilder<'a> {
         // If we're the first primitive within a stacking context, then we can guarantee that the
         // backdrop alpha will be 0, and then the blend equation collapses to just
         // Cs = Cs, and the blend mode isn't taken into account at all.
-        if let (Some(mix_blend_mode), false) = (stacking_context.composite_ops.mix_blend_mode, parent_is_empty) {
-            let parent_is_isolated = match self.sc_stack.last() {
-                Some(parent_sc) => parent_sc.blit_reason.contains(BlitReason::ISOLATE),
-                None => false,
-            };
-            if parent_is_isolated {
-                let composite_mode = PictureCompositeMode::MixBlend(mix_blend_mode);
+        if let Some(mix_blend_mode) = stacking_context.composite_ops.mix_blend_mode {
+            let composite_mode = PictureCompositeMode::MixBlend(mix_blend_mode);
 
-                source = source.add_picture(
-                    composite_mode,
-                    stacking_context.clip_node_id,
-                    Picture3DContext::Out,
-                    &mut self.interners,
-                    &mut self.prim_store,
-                    &mut self.prim_instances,
-                    &mut self.clip_tree_builder,
-                );
-            } else {
-                // If we have a mix-blend-mode, the stacking context needs to be isolated
-                // to blend correctly as per the CSS spec.
-                // If not already isolated, we can't correctly blend.
-                warn!("found a mix-blend-mode outside a blend container, ignoring");
-            }
+            source = source.add_picture(
+                composite_mode,
+                stacking_context.clip_node_id,
+                Picture3DContext::Out,
+                &mut self.interners,
+                &mut self.prim_store,
+                &mut self.prim_instances,
+                &mut self.clip_tree_builder,
+            );
         }
 
         // Set the stacking context clip on the outermost picture in the chain,
@@ -3877,17 +3873,11 @@ impl FlattenedStackingContext {
 
     /// Return true if the stacking context isn't needed.
     pub fn is_redundant(
-        sc_flags: StackingContextFlags,
         context_3d: &Picture3DContext<ExtendedPrimitiveInstance>,
         composite_ops: &CompositeOps,
         blit_reason: BlitReason,
         parent: Option<&FlattenedStackingContext>,
     ) -> bool {
-        // If this is a blend container, it's needed
-        if sc_flags.intersects(StackingContextFlags::IS_BLEND_CONTAINER) {
-            return false;
-        }
-
         // Any 3d context is required
         if let Picture3DContext::In { .. } = context_3d {
             return false;
@@ -3898,11 +3888,20 @@ impl FlattenedStackingContext {
             return false;
         }
 
-        // We can skip mix-blend modes if they are the first primitive in a stacking context,
-        // see pop_stacking_context for a full explanation.
+        // If a mix-blend is active, we'll need to apply it in most cases
         if composite_ops.mix_blend_mode.is_some() {
-            if let Some(parent) = parent {
-                if !parent.prim_list.is_empty() {
+            match parent {
+                Some(ref parent) => {
+                    // However, if the parent stacking context is empty, then the mix-blend
+                    // is a no-op, and we can skip it
+                    if !parent.prim_list.is_empty() {
+                        return false;
+                    }
+                }
+                None => {
+                    // TODO(gw): For now, we apply mix-blend ops that may be no-ops on a root
+                    //           level picture cache slice. We could apply a similar optimization
+                    //           to above with a few extra checks here, but it's probably quite rare.
                     return false;
                 }
             }

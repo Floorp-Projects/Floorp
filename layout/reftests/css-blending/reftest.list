@@ -88,7 +88,7 @@ test-pref(image.animation_mode,"none") == background-blending-image-color-gif.ht
 == background-blending-background-attachement-fixed-scroll.html background-blending-background-attachement-fixed-scroll-ref.html
 
 fuzzy(0-1,0-49719) == background-blend-mode-body-image.html background-blend-mode-body-image-ref.html
-fuzzy(0-1,0-78472) == background-blend-mode-body-transparent-image.html background-blend-mode-body-transparent-image-ref.html
+fuzzy(0-2,0-78472) == background-blend-mode-body-transparent-image.html background-blend-mode-body-transparent-image-ref.html
 
 == background-blend-mode-body-fixed.html background-blend-mode-body-fixed-ref.html
 
