@@ -14,7 +14,7 @@
   <script type="application/javascript">
     async function testGotStyleChange(elem, name, value) {
       let waitFor = waitForEvent(
-        EVENT_TABLE_STYLING_CHANGED, elem
+        EVENT_TABLE_STYLING_CHANGED, "table"
       );
       if (value) {
         document.getElementById(elem).style.setProperty(name, value);
@@ -45,7 +45,7 @@
   </script>
 </head>
 <body>
-  <table>
+  <table id="table">
       <tr id="rowOne" style="background-color: red;">
         <td id="cellOne">cell1</td>
         <td>cell2</td>

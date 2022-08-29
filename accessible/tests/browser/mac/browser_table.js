@@ -297,9 +297,10 @@ addAccessibleTask(
 );
 
 /*
- * After executing function 'change', verify that the element identified by the
- * id 'elem' recieves the event 'event'. After the event, check if the given
- * native accessible 'table' is a layout or data table by role using 'isLayout'.
+ * After executing function 'change' which operates on 'elem', verify the specified
+ * 'event' is fired on the test's table (assumed id="table"). After the event, check
+ * if the given native accessible 'table' is a layout or data table by role
+ * using 'isLayout'.
  */
 async function testIsLayout(table, elem, event, change, isLayout) {
   info(
@@ -308,7 +309,7 @@ async function testIsLayout(table, elem, event, change, isLayout) {
       ", expecting table change to " +
       (isLayout ? "AXGroup" : "AXTable")
   );
-  const toWait = waitForEvent(event, elem);
+  const toWait = waitForEvent(event, "table");
   await change();
   await toWait;
   is(
@@ -326,7 +327,7 @@ async function testIsLayout(table, elem, event, change, isLayout) {
  * appropriately. Attrs: summary, abbr, scope, headers
  */
 addAccessibleTask(
-  `<table id="sampleTable" summary="example summary">
+  `<table id="table" summary="example summary">
     <tr role="presentation">
       <td id="cellOne">cell1</td>
       <td>cell2</td>
@@ -337,7 +338,7 @@ addAccessibleTask(
     </tr>
   </table>`,
   async (browser, accDoc) => {
-    let table = getNativeInterface(accDoc, "sampleTable");
+    let table = getNativeInterface(accDoc, "table");
     // summary attr should take precedence over role="presentation" to make this
     // a data table
     is(table.getAttributeValue("AXRole"), "AXTable", "Table is data table");
@@ -346,13 +347,11 @@ addAccessibleTask(
     // after summary is removed, we should have a layout table
     await testIsLayout(
       table,
-      "sampleTable",
+      "table",
       EVENT_OBJECT_ATTRIBUTE_CHANGED,
       async () => {
         await SpecialPowers.spawn(browser, [], () => {
-          content.document
-            .getElementById("sampleTable")
-            .removeAttribute("summary");
+          content.document.getElementById("table").removeAttribute("summary");
         });
       },
       true
