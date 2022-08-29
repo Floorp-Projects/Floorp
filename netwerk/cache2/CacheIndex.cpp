@@ -72,6 +72,41 @@ class FrecencyComparator {
 
 }  // namespace
 
+// used to dispatch a wrapper deletion the caller's thread
+// cannot be used on IOThread after shutdown begins
+class DeleteCacheIndexRecordWrapper : public Runnable {
+  CacheIndexRecordWrapper* mWrapper;
+
+ public:
+  explicit DeleteCacheIndexRecordWrapper(CacheIndexRecordWrapper* wrapper)
+      : Runnable("net::CacheIndex::DeleteCacheIndexRecordWrapper"),
+        mWrapper(wrapper) {}
+  NS_IMETHOD Run() override {
+    StaticMutexAutoLock lock(CacheIndex::sLock);
+
+    // if somehow the item is still in the frecency array, remove it
+    RefPtr<CacheIndex> index = CacheIndex::gInstance;
+    if (index) {
+      bool found = index->mFrecencyArray.RecordExistedUnlocked(mWrapper);
+      if (found) {
+        LOG(
+            ("DeleteCacheIndexRecordWrapper::Run() - \
+            record wrapper found in frecency array during deletion"));
+        index->mFrecencyArray.RemoveRecord(mWrapper, lock);
+      }
+    }
+
+    delete mWrapper;
+    return NS_OK;
+  }
+};
+
+void CacheIndexRecordWrapper::DispatchDeleteSelfToCurrentThread() {
+  // Dispatch during shutdown will not trigger DeleteCacheIndexRecordWrapper
+  nsCOMPtr<nsIRunnable> event = new DeleteCacheIndexRecordWrapper(this);
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(event));
+}
+
 CacheIndexRecordWrapper::~CacheIndexRecordWrapper() {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   CacheIndex::sLock.AssertCurrentThreadOwns();
