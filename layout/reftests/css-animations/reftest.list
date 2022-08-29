@@ -82,3 +82,4 @@ pref(layout.css.marker.restricted,false) == marker-reframe-and-animation-starts-
 == containing-block-on-visibility-hidden.html containing-block-on-visibility-hidden-ref.html
 == background-color.html background-color-ref.html
 == background-color-on-html.html background-color-on-html-ref.html
+skip-if(Android) == replace-with-new-positive-delay-animation.html replace-with-new-positive-delay-animation-ref.html # bug 1787682 for Android

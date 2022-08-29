@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-no-flush">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+@keyframes first {
+  0% { opacity: 0; }
+  100% { opacity: 0; }
+}
+@keyframes second {
+  0% { opacity: 0.5; }
+  100% { opacity: 0.5; }
+}
+#target {
+  width: 100px;
+  height: 100px;
+  opacity: 1;
+  background-color: green;
+}
+</style>
+<div id="target"></div>
+<script>
+document.addEventListener("MozReftestInvalidate", async () => {
+  target.style.animation = "first 100s";
+  await new Promise(resolve => {
+    target.addEventListener("animationstart", resolve);
+  });
+
+  // Wait two frames to make sure the animation is composited.
+  await new Promise(resolve => { requestAnimationFrame(resolve); });
+  await new Promise(resolve => { requestAnimationFrame(resolve); });
+
+  target.style.animation = "second 100s 100s";
+
+  // To take a snapshot in the delay phase, wait two frames instead of
+  // wait for the animationstart event.
+  await new Promise(resolve => { requestAnimationFrame(resolve); });
+  await new Promise(resolve => { requestAnimationFrame(resolve); });
+
+  document.documentElement.classList.remove("reftest-wait");
+}, { once: true });
+</script>
+</html>
