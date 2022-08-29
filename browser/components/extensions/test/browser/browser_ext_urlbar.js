@@ -89,7 +89,7 @@ async function updateTopSites(condition, searchShortcuts = false) {
   }, "Waiting for top sites to be updated");
 }
 
-add_task(async function setUp() {
+add_setup(async function() {
   Services.prefs.setBoolPref("browser.urlbar.suggest.quickactions", false);
   registerCleanupFunction(async () => {
     Services.prefs.clearUserPref("browser.urlbar.suggest.quickactions");
