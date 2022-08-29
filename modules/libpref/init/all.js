@@ -694,16 +694,16 @@ pref("toolkit.telemetry.debugSlowSql", false);
 // Whether to use the unified telemetry behavior, requires a restart.
 pref("toolkit.telemetry.unified", true);
 // AsyncShutdown delay before crashing in case of shutdown freeze
-#if !defined(MOZ_ASAN) && !defined(MOZ_TSAN)
-  pref("toolkit.asyncshutdown.crash_timeout", 60000); // 1 minute
+// ASan, TSan and code coverage builds can be considerably slower. Extend the
+// grace period for both the asyncshutdown and the terminator.
+#if defined(MOZ_ASAN)
+  pref("toolkit.asyncshutdown.crash_timeout", 300000); // 5 minutes
+#elif defined(MOZ_TSAN)
+  pref("toolkit.asyncshutdown.crash_timeout", 360000); // 6 minutes
+#elif defined(MOZ_CODE_COVERAGE)
+  pref("toolkit.asyncshutdown.crash_timeout", 180000); // 3 minutes
 #else
-  // ASan and TSan builds can be considerably slower. Extend the grace period
-  // of both asyncshutdown and the terminator.
-  #if defined(MOZ_TSAN)
-    pref("toolkit.asyncshutdown.crash_timeout", 360000); // 6 minutes
-  #else
-    pref("toolkit.asyncshutdown.crash_timeout", 300000); // 5 minutes
-  #endif
+  pref("toolkit.asyncshutdown.crash_timeout", 60000); // 1 minute
 #endif // !defined(MOZ_ASAN) && !defined(MOZ_TSAN)
 // Extra logging for AsyncShutdown barriers and phases
 pref("toolkit.asyncshutdown.log", false);
