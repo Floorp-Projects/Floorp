@@ -106,6 +106,44 @@ class BrowserRobot {
         }
     }
 
+    /* Verifies the information displayed on the about:cache page */
+    fun verifyNetworkCacheIsEmpty(storage: String) {
+        val memorySection = mDevice.findObject(UiSelector().description(storage))
+
+        val gridView =
+            if (storage == "memory") {
+                memorySection.getFromParent(
+                    UiSelector()
+                        .className("android.widget.GridView")
+                        .index(2)
+                )
+            } else {
+                memorySection.getFromParent(
+                    UiSelector()
+                        .className("android.widget.GridView")
+                        .index(4)
+                )
+            }
+
+        val cacheSizeInfo =
+            gridView.getChild(
+                UiSelector().text("Number of entries:")
+            ).getFromParent(
+                UiSelector().text("0")
+            )
+
+        for (i in 1..RETRY_COUNT) {
+            try {
+                assertTrue(cacheSizeInfo.waitForExists(waitingTime))
+                break
+            } catch (e: AssertionError) {
+                browserScreen {
+                }.openThreeDotMenu {
+                }.refreshPage { }
+            }
+        }
+    }
+
     fun verifyTabCounter(expectedText: String) {
         val counter =
             mDevice.findObject(
@@ -734,6 +772,12 @@ class BrowserRobot {
                 }
             }
         }
+    }
+
+    fun clickSetCookiesButton() {
+        val setCookiesButton = mDevice.findObject(UiSelector().resourceId("setCookies"))
+        setCookiesButton.waitForExists(waitingTimeLong)
+        setCookiesButton.click()
     }
 
     class Transition {

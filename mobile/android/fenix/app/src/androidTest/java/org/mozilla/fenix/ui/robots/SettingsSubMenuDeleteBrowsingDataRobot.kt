@@ -20,7 +20,6 @@ import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -62,13 +61,87 @@ class SettingsSubMenuDeleteBrowsingDataRobot {
     fun switchDownloadsCheckBox() = clickDownloadsCheckBox()
     fun clickDeleteBrowsingDataButton() = deleteBrowsingDataButton().click()
     fun clickDialogCancelButton() = dialogCancelButton().click()
-    fun selectOnlyOpenTabsCheckBox() = checkOnlyOpenTabsCheckBox()
-    fun selectOnlyBrowsingHistoryCheckBox() = checkOnlyBrowsingHistoryCheckBox()
+
+    fun selectOnlyOpenTabsCheckBox() {
+        clickBrowsingHistoryCheckBox()
+        assertBrowsingHistoryCheckBox(false)
+
+        clickCookiesCheckBox()
+        assertCookiesCheckBox(false)
+
+        clickCachedFilesCheckBox()
+        assertCachedFilesCheckBox(false)
+
+        clickSitePermissionsCheckBox()
+        assertSitePermissionsCheckBox(false)
+
+        clickDownloadsCheckBox()
+        assertDownloadsCheckBox(false)
+
+        assertOpenTabsCheckBox(true)
+    }
+
+    fun selectOnlyBrowsingHistoryCheckBox() {
+        clickOpenTabsCheckBox()
+        assertOpenTabsCheckBox(false)
+
+        clickCookiesCheckBox()
+        assertCookiesCheckBox(false)
+
+        clickCachedFilesCheckBox()
+        assertCachedFilesCheckBox(false)
+
+        clickSitePermissionsCheckBox()
+        assertSitePermissionsCheckBox(false)
+
+        clickDownloadsCheckBox()
+        assertDownloadsCheckBox(false)
+
+        assertBrowsingHistoryCheckBox(true)
+    }
+
+    fun selectOnlyCookiesCheckBox() {
+        clickOpenTabsCheckBox()
+        assertOpenTabsCheckBox(false)
+
+        assertCookiesCheckBox(true)
+
+        clickCachedFilesCheckBox()
+        assertCachedFilesCheckBox(false)
+
+        clickSitePermissionsCheckBox()
+        assertSitePermissionsCheckBox(false)
+
+        clickDownloadsCheckBox()
+        assertDownloadsCheckBox(false)
+
+        clickBrowsingHistoryCheckBox()
+        assertBrowsingHistoryCheckBox(false)
+    }
+
+    fun selectOnlyCachedFilesCheckBox() {
+        clickOpenTabsCheckBox()
+        assertOpenTabsCheckBox(false)
+
+        clickBrowsingHistoryCheckBox()
+        assertBrowsingHistoryCheckBox(false)
+
+        clickCookiesCheckBox()
+        assertCookiesCheckBox(false)
+
+        assertCachedFilesCheckBox(true)
+
+        clickSitePermissionsCheckBox()
+        assertSitePermissionsCheckBox(false)
+
+        clickDownloadsCheckBox()
+        assertDownloadsCheckBox(false)
+    }
 
     fun clickCancelButtonInDialogBoxAndVerifyContentsInDialogBox() {
         mDevice.wait(
             Until.findObject(By.text("Delete browsing data")),
-            TestAssetHelper.waitingTime
+            waitingTime
         )
         clickDeleteBrowsingDataButton()
         verifyDialogElements()
@@ -232,41 +305,3 @@ private fun clickSitePermissionsCheckBox() = sitePermissionsCheckBox().click()
 private fun assertSitePermissionsCheckBox(status: Boolean) = sitePermissionsCheckBox().assertIsChecked(status)
 private fun clickDownloadsCheckBox() = downloadsCheckBox().click()
 private fun assertDownloadsCheckBox(status: Boolean) = downloadsCheckBox().assertIsChecked(status)
-
-fun checkOnlyOpenTabsCheckBox() {
-    clickBrowsingHistoryCheckBox()
-    assertBrowsingHistoryCheckBox(false)
-
-    clickCookiesCheckBox()
-    assertCookiesCheckBox(false)
-
-    clickCachedFilesCheckBox()
-    assertCachedFilesCheckBox(false)
-
-    clickSitePermissionsCheckBox()
-    assertSitePermissionsCheckBox(false)
-
-    clickDownloadsCheckBox()
-    assertDownloadsCheckBox(false)
-
-    assertOpenTabsCheckBox(true)
-}
-
-fun checkOnlyBrowsingHistoryCheckBox() {
-    clickOpenTabsCheckBox()
-    assertOpenTabsCheckBox(false)
-
-    clickCookiesCheckBox()
-    assertCookiesCheckBox(false)
-
-    clickCachedFilesCheckBox()
-    assertCachedFilesCheckBox(false)
-
-    clickSitePermissionsCheckBox()
-    assertSitePermissionsCheckBox(false)
-
-    clickDownloadsCheckBox()
-    assertDownloadsCheckBox(false)
-
-    assertBrowsingHistoryCheckBox(true)
-}
