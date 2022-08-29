@@ -208,11 +208,9 @@ addAccessibleTask(
 <table id="mutate"><tr><td>a</td><td>b</td></tr></table>
   `,
   async function(browser, docAcc) {
-    const layout = findAccessibleChildByID(docAcc, "layout", [
-      nsIAccessibleTable,
-    ]);
+    const layout = findAccessibleChildByID(docAcc, "layout");
     testAttrs(layout, { "layout-guess": "true" }, true);
-    const data = findAccessibleChildByID(docAcc, "data", [nsIAccessibleTable]);
+    const data = findAccessibleChildByID(docAcc, "data");
     testAbsentAttrs(data, { "layout-guess": "true" });
     const mutate = findAccessibleChildByID(docAcc, "mutate");
     testAttrs(mutate, { "layout-guess": "true" }, true);
@@ -232,9 +230,36 @@ addAccessibleTask(
   },
   {
     chrome: true,
-    topLevel: isCacheEnabled,
-    iframe: isCacheEnabled,
-    remoteIframe: isCacheEnabled,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
+  }
+);
+
+/**
+ * Test table layout guess with border styling changes.
+ */
+addAccessibleTask(
+  `
+  <table id="layout"><tr><td id="cell">a</td><td>b</td></tr>
+  <tr><td>c</td><td>d</td></tr><tr><td>c</td><td>d</td></tr></table>
+  `,
+  async function(browser, docAcc) {
+    const layout = findAccessibleChildByID(docAcc, "layout");
+    testAttrs(layout, { "layout-guess": "true" }, true);
+    info("changing border style on table cell");
+    let styleChanged = waitForEvent(EVENT_TABLE_STYLING_CHANGED, layout);
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("cell").style.border = "1px solid black";
+    });
+    await styleChanged;
+    testAbsentAttrs(layout, { "layout-guess": "true" });
+  },
+  {
+    chrome: true,
+    topLevel: true,
+    iframe: true,
+    remoteIframe: true,
   }
 );
 
