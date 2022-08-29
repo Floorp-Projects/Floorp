@@ -4552,6 +4552,10 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
                                   ReflowOutput& aReflowOutput,
                                   const ReflowInput& aReflowInput,
                                   nsReflowStatus& aStatus) {
+  if (GetInFlowParent() && GetInFlowParent()->IsContentHiddenForLayout()) {
+    return;
+  }
+
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsFlexContainerFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aReflowOutput, aStatus);
@@ -5296,6 +5300,10 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
     const nscoord aSumOfPrevInFlowsChildrenBlockSize,
     const FlexboxAxisTracker& aAxisTracker, bool aHasLineClampEllipsis,
     FlexLayoutResult& aFlr) {
+  if (IsContentHiddenForLayout()) {
+    return {0, false};
+  }
+
   // Before giving each child a final reflow, calculate the origin of the
   // flex container's content box (with respect to its border-box), so that
   // we can compute our flex item's final positions.
@@ -5514,11 +5522,11 @@ void nsFlexContainerFrame::PopulateReflowOutput(
 
   if (aFlexContainerAscent == nscoord_MIN) {
     // Still don't have our baseline set -- this happens if we have no
-    // children (or if our children are huge enough that they have nscoord_MIN
-    // as their baseline... in which case, we'll use the wrong baseline, but no
-    // big deal)
+    // children, if our children are huge enough that they have nscoord_MIN
+    // as their baseline, or our content is hidden in which case, we'll use the
+    // wrong baseline (but no big deal).
     NS_WARNING_ASSERTION(
-        aLines[0].IsEmpty(),
+        IsContentHidden() || aLines[0].IsEmpty(),
         "Have flex items but didn't get an ascent - that's odd (or there are "
         "just gigantic sizes involved)");
     // Per spec, synthesize baseline from the flex container's content box

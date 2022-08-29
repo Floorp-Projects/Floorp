@@ -253,7 +253,17 @@ nsIFrame* nsIContent::GetPrimaryFrame(mozilla::FlushType aType) {
     doc->FlushPendingNotifications(aType);
   }
 
-  return GetPrimaryFrame();
+  auto* frame = GetPrimaryFrame();
+  if (!frame) {
+    return nullptr;
+  }
+
+  if (aType == mozilla::FlushType::Layout) {
+    frame->PresShell()->EnsureReflowIfFrameHasHiddenContent(frame);
+    frame = GetPrimaryFrame();
+  }
+
+  return frame;
 }
 
 namespace mozilla::dom {
