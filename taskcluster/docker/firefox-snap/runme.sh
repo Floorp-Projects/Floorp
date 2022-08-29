@@ -57,6 +57,12 @@ for locale in $locales; do
         "$CANDIDATES_DIR/${VERSION}-candidates/build${BUILD_NUMBER}/linux-x86_64/xpi/${locale}.xpi"
 done
 
+# In addition to the packages downloaded below, snapcraft fetches deb packages from ubuntu.com,
+# when a snap is built,. They may bump packages there and remove the old ones. Updating the
+# database allows snapcraft to find the latest packages.
+# For more context, see 1448239
+apt-get update
+
 # Extract gtk30.mo from Ubuntu language packs
 apt download language-pack-gnome-*-base
 for i in *.deb; do
@@ -73,11 +79,6 @@ cd "${WORKSPACE}"
 
 # Make sure snapcraft knows we're building amd64, even though we may not be on this arch.
 export SNAP_ARCH='amd64'
-
-# When a snap is built, snapcraft fetches deb packages from ubuntu.com. They may bump packages
-# there and remove the old ones. Updating the database allows snapcraft to find the latest packages.
-# For more context, see 1448239
-apt-get update
 
 snapcraft
 
