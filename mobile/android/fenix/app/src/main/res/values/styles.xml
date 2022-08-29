@@ -667,10 +667,14 @@
         <item name="behavior_halfExpandedRatio">0.001</item>
     </style>
 
-    <style name="TopSite.FaviconCard" parent="Mozac.Widgets.Favicon">
-        <item name="android:layout_width">@dimen/top_sites_card_size</item>
-        <item name="android:layout_height">@dimen/top_sites_card_size</item>
-        <item name="android:padding">@dimen/top_sites_card_padding</item>
+    <style name="TopSite.Card" parent="Mozac.Widgets.Favicon">
+        <item name="android:layout_width">@dimen/top_sites_card_width</item>
+        <item name="android:layout_height">@dimen/top_sites_card_height</item>
+        <item name="android:layout_marginTop">@dimen/top_sites_item_margin_top</item>
+        <item name="android:layout_marginBottom">@dimen/top_sites_item_margin_bottom</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:importantForAccessibility">noHideDescendants</item>
+        <item name="contentPadding">@dimen/top_sites_card_padding</item>
         <item name="cardBackgroundColor">?mozac_widget_favicon_background_color</item>
         <item name="cardCornerRadius">@dimen/top_sites_card_radius</item>
         <item name="cardElevation">@dimen/top_sites_card_elevation</item>
