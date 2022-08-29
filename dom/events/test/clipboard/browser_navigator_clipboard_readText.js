@@ -22,8 +22,6 @@ const kApzTestNativeEventUtilsUrl =
 
 Services.scriptloader.loadSubScript(kApzTestNativeEventUtilsUrl, this);
 
-const chromeDoc = window.document;
-
 // @param aBrowser browser object of the content tab.
 // @param aMultipleReadTextCalls if false, exactly one call is made, two
 //                               otherwise.
@@ -31,75 +29,18 @@ function promiseClickContentToTriggerClipboardReadText(
   aBrowser,
   aMultipleReadTextCalls
 ) {
-  const contentButtonId = aMultipleReadTextCalls
-    ? "invokeReadTextTwiceId"
-    : "invokeReadTextOnceId";
-
-  // `aBrowser.contentDocument` is null, therefore use `SpecialPowers.spawn`.
-  return SpecialPowers.spawn(
+  return promiseClickContentElement(
     aBrowser,
-    [contentButtonId],
-    async _contentButtonId => {
-      const contentButton = content.document.getElementById(_contentButtonId);
-      let promise = new Promise(resolve => {
-        contentButton.addEventListener(
-          "click",
-          function(e) {
-            resolve({ x: e.screenX, y: e.screenY });
-          },
-          { once: true }
-        );
-      });
-
-      EventUtils.synthesizeMouseAtCenter(contentButton, {}, content.window);
-
-      return promise;
-    }
+    aMultipleReadTextCalls ? "invokeReadTextTwiceId" : "invokeReadTextOnceId"
   );
 }
 
 // @param aBrowser browser object of the content tab.
 function promiseMutatedReadTextResultFromContentElement(aBrowser) {
-  return SpecialPowers.spawn(aBrowser, [], async () => {
-    const readTextResultElement = content.document.getElementById(
-      "readTextResultId"
-    );
-
-    const promiseReadTextResult = new Promise(resolve => {
-      const mutationObserver = new content.MutationObserver(
-        (aMutationRecord, aMutationObserver) => {
-          info("Observed mutation.");
-          aMutationObserver.disconnect();
-          resolve(readTextResultElement.textContent);
-        }
-      );
-
-      mutationObserver.observe(readTextResultElement, {
-        childList: true,
-      });
-    });
-
-    return await promiseReadTextResult;
-  });
-}
-
-function promiseWritingRandomTextToClipboard() {
-  const clipboardText = "X" + Math.random();
-  return navigator.clipboard.writeText(clipboardText).then(() => {
-    return clipboardText;
-  });
-}
-
-function promiseDismissPasteButton() {
-  // nsXULPopupManager rollup is handled in widget code, so we have to
-  // synthesize native mouse events.
-  return EventUtils.promiseNativeMouseEvent({
-    type: "click",
-    target: chromeDoc.body,
-    // Relies on the assumption that the center of chrome document doesn't
-    // overlay with the paste button showed for clipboard readText request.
-    atCenter: true,
-  });
+  return promiseMutatedTextContentFromContentElement(
+    aBrowser,
+    "readTextResultId"
+  );
 }
 
 add_task(async function init() {

@@ -89,3 +89,71 @@ function isCloselyLeftOnTopOf(aCoordsP1, aCoordsP2, aDelta = 10) {
     Math.abs(aCoordsP2.y - aCoordsP1.y) < aDelta
   );
 }
+
+function promiseDismissPasteButton() {
+  // nsXULPopupManager rollup is handled in widget code, so we have to
+  // synthesize native mouse events.
+  return EventUtils.promiseNativeMouseEvent({
+    type: "click",
+    target: document.body,
+    // Relies on the assumption that the center of chrome document doesn't
+    // overlay with the paste button showed for clipboard readText request.
+    atCenter: true,
+  });
+}
+
+// @param aBrowser browser object of the content tab.
+// @param aContentElementId the ID of the element to be clicked.
+function promiseClickContentElement(aBrowser, aContentElementId) {
+  return SpecialPowers.spawn(
+    aBrowser,
+    [aContentElementId],
+    async _contentElementId => {
+      const contentElement = content.document.getElementById(_contentElementId);
+      let promise = new Promise(resolve => {
+        contentElement.addEventListener(
+          "click",
+          function(e) {
+            resolve({ x: e.screenX, y: e.screenY });
+          },
+          { once: true }
+        );
+      });
+
+      EventUtils.synthesizeMouseAtCenter(contentElement, {}, content.window);
+
+      return promise;
+    }
+  );
+}
+
+// @param aBrowser browser object of the content tab.
+// @param aContentElementId the ID of the element to observe.
+function promiseMutatedTextContentFromContentElement(
+  aBrowser,
+  aContentElementId
+) {
+  return SpecialPowers.spawn(
+    aBrowser,
+    [aContentElementId],
+    async _contentElementId => {
+      const contentElement = content.document.getElementById(_contentElementId);
+
+      const promiseTextContentResult = new Promise(resolve => {
+        const mutationObserver = new content.MutationObserver(
+          (aMutationRecord, aMutationObserver) => {
+            info("Observed mutation.");
+            aMutationObserver.disconnect();
+            resolve(contentElement.textContent);
+          }
+        );
+
+        mutationObserver.observe(contentElement, {
+          childList: true,
+        });
+      });
+
+      return await promiseTextContentResult;
+    }
+  );
+}
