@@ -224,8 +224,7 @@ bool RemoteDecoderManagerChild::Supports(
   }
   if (!supported) {
     // We haven't received the correct information yet from either the GPU or
-    // the RDD process nor the Utility process; assume it is supported to
-    // prevent false negative.
+    // the RDD process nor the Utility process.
     if (aLocation == RemoteDecodeIn::UtilityProcess) {
       LaunchUtilityProcessIfNeeded();
     }
@@ -234,7 +233,20 @@ bool RemoteDecoderManagerChild::Supports(
       // TODO: This can be removed once bug 1684991 is fixed.
       LaunchRDDProcessIfNeeded();
     }
-    return true;
+
+    // Assume the format is supported to prevent false negative, if the remote
+    // process supports that specific track type.
+    const bool isVideo = aParams.mConfig.IsVideo();
+    const bool isAudio = aParams.mConfig.IsAudio();
+    const auto trackSupport = GetTrackSupport(aLocation);
+    if (isVideo) {
+      return trackSupport.contains(TrackSupport::Video);
+    }
+    if (isAudio) {
+      return trackSupport.contains(TrackSupport::Audio);
+    }
+    MOZ_ASSERT_UNREACHABLE("Not audio and video?!");
+    return false;
   }
 
   // We can ignore the SupportDecoderParams argument for now as creation of the
