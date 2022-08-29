@@ -437,16 +437,6 @@ var PlacesOrganizer = {
         ? [view.selectedNode]
         : view.selectedNodes;
       this._fillDetailsPane(selectedNodes);
-      window
-        .promiseDocumentFlushed(() => {})
-        .then(() => {
-          if (view.selectedNode && ContentArea.currentView.view) {
-            let row = ContentArea.currentView.view.treeIndexForNode(
-              view.selectedNode
-            );
-            ContentTree.view.ensureRowIsVisible(row);
-          }
-        });
     }
   },
 
