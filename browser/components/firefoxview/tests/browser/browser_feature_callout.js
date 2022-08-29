@@ -1,12 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
-
-"use strict";
-
-const { BuiltInThemes } = ChromeUtils.import(
-  "resource:///modules/BuiltInThemes.jsm"
-);
-
 const calloutId = "root";
 const calloutSelector = `#${calloutId}.featureCallout`;
 const primaryButtonSelector = `#${calloutId} .primary`;
@@ -334,10 +327,6 @@ add_task(async function feature_callout_only_highlights_existing_elements() {
     ],
   });
 
-  const sandbox = sinon.createSandbox();
-  // Return no active colorways
-  sandbox.stub(BuiltInThemes, "findActiveColorwayCollection").returns(false);
-
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -346,6 +335,9 @@ add_task(async function feature_callout_only_highlights_existing_elements() {
     async browser => {
       const { document } = browser.contentWindow;
       await waitForCalloutScreen(document, ".FEATURE_CALLOUT_1");
+
+      // Remove parent element for third screen in tour
+      document.querySelector("#colorways.content-container").remove();
       // Advance to second screen
       await clickPrimaryButton(document);
       await waitForCalloutScreen(document, ".FEATURE_CALLOUT_2");
@@ -365,8 +357,6 @@ add_task(async function feature_callout_only_highlights_existing_elements() {
         !document.querySelector(`${calloutSelector}:not(.hidden)`),
         "Feature Callout screen does not render if its parent element does not exist"
       );
-
-      sandbox.restore();
     }
   );
 });

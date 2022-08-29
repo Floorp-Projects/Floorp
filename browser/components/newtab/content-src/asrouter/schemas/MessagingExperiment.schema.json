@@ -117,8 +117,7 @@
               "template": {
                 "type": "string",
                 "enum": [
-                  "spotlight",
-                  "feature_callout"
+                  "spotlight"
                 ]
               }
             },
@@ -1259,8 +1258,7 @@
         },
         "template": {
           "type": "string",
-          "description": "Specify whether the surface is shown as a Spotlight modal or an in-surface Feature Callout dialog",
-          "enum": ["spotlight", "feature_callout"]
+          "const": "spotlight"
         }
       },
       "additionalProperties": true,
@@ -1578,7 +1576,6 @@
             "pb_newtab",
             "protections_panel",
             "spotlight",
-            "feature_callout",
             "toast_notification",
             "toolbar_badge",
             "update_action",
