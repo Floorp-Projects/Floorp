@@ -15,7 +15,7 @@
 
     <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
-        <li>Nun se pue amosar la páxina que tas tentando de ver porque nun se pudo verificar l\'autenticidá de los datos recibíos.</li>
+        <li>Nun se pue amosar la páxina que tentes de ver porque nun se pudo verificar l\'autenticidá de los datos recibíos.</li>
         <li>Ponte en contautu colos propietarios del sitiu web pa informalos d\'esti problema.</li>
       </ul>]]></string>
 
@@ -44,7 +44,7 @@
     <!-- The error message shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
       <ul>
-         <li>Nun se pue amosar la páxina que tas tentando de ver porque esti sitiu web rique una conexón segura.</li>
+         <li>Nun se pue amosar la páxina que tentes de ver porque esti sitiu web rique una conexón segura.</li>
          <li>Ye mui probable que\'l problema seya del sitiu web y nun puedas facer nada pa igualu.</li>
          <li>Pues avisar a l\'alministración del sitiu web pa informar del problema.</li>
       </ul>
@@ -53,6 +53,14 @@
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Opciones avanzaes…</string>
 
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> <b>%1$s</b> tien una política de seguranza llamada HSTS (HTTP Strict Transport Security), lo que significa que <b>%2$s</b> namás se pue conectar con seguranza al sitiu. Nun pues amestar nenguna esceición pa visitar esti sitiu.
+    ]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> tien una política de seguranza llamada HSTS (HTTP Strict Transport Security), lo que significa que <b>%2$s</b> namás se pue conectar con seguranza al sitiu. Nun pues amestar nenguna esceición pa visitar esti sitiu. </label>
+    ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Dir p\'atrás</string>
 
@@ -137,7 +145,7 @@
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">Fallu de conteníu toyíu</string>
     <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
-    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Nun se pue amosar la páxina que tas tentando de ver porque se detectó un fallu na tresmisión de los datos.</p>
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>Nun se pue amosar la páxina que tentes de ver porque se detectó un fallu na tresmisión de los datos.</p>
       <ul>
         <li>Ponte en contautu colos propietarios del sitiu web pa informalos d\'esti problema.</li>
       </ul>]]></string>
@@ -145,7 +153,7 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">Cascó\'l conteníu</string>
 
-    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Nun se pue amosar la páxina que tas tentando de ver porque se detectó un fallu na tresmisión de los datos.</p>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>Nun se pue amosar la páxina que tentes de ver porque se detectó un fallu na tresmisión de los datos.</p>
       <ul>
         <li>Ponte en contautu colos propietarios del sitiu web pa informalos d\'esti problema.</li>
       </ul>]]></string>
@@ -153,7 +161,7 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Fallu de la codificación del conteníu</string>
 
-    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Nun se pue amosar la páxina que tas tentando de ver porque usa un tipu de compresión que nun ye válidu o compatible.</p>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Nun se pue amosar la páxina que tentes de ver porque usa un tipu de compresión que nun ye válidu o compatible.</p>
       <ul>
         <li>Ponte en contautu colos propietarios del sitiu web pa informalos d\'esti problema.</li>
       </ul>]]></string>
