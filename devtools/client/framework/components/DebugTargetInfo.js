@@ -289,13 +289,20 @@ class DebugTargetInfo extends PureComponent {
     const { debugTargetData } = this.props;
     const { targetType } = debugTargetData;
 
-    if (targetType !== DEBUG_TARGET_TYPES.TAB) {
+    if (
+      targetType !== DEBUG_TARGET_TYPES.TAB &&
+      targetType !== DEBUG_TARGET_TYPES.EXTENSION
+    ) {
       return null;
     }
 
     const items = [];
 
-    if (this.props.toolbox.target.getTrait("navigation")) {
+    // There is little value in exposing back/forward for WebExtensions
+    if (
+      this.props.toolbox.target.getTrait("navigation") &&
+      targetType === DEBUG_TARGET_TYPES.TAB
+    ) {
       items.push(
         this.renderNavigationButton({
           className: "qa-back-button",
