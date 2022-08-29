@@ -444,3 +444,47 @@ add_task(
     );
   }
 );
+
+add_task(
+  { pref_set: [["extensions.background.idle.timeout", 500]] },
+  async function test_eventpage_idle_reset_once_on_pending_async_listeners() {
+    let extension = createPendingListenerTestExtension();
+    await extension.startup();
+    await extension.awaitMessage("bg-script-ready");
+
+    info("Trigger the API event listener call");
+    ExtensionPreferencesManager.setSetting(
+      extension.id,
+      "allowPopupsForUserEvents",
+      "click"
+    );
+
+    await extension.awaitMessage("allowPopupsForUserEvents:awaiting");
+
+    info("Wait for suspend on the first idle timeout to be reset");
+    const [, resetIdleData] = await promiseExtensionEvent(
+      extension,
+      "background-script-reset-idle"
+    );
+
+    Assert.deepEqual(
+      resetIdleData,
+      {
+        reason: "pendingListeners",
+        pendingListeners: 1,
+      },
+      "Got the expected idle reset reason and pendingListeners count"
+    );
+
+    info(
+      "Await for the runtime.onSuspend event to be emitted on the second idle timeout hit"
+    );
+    // We expect this part of the test to trigger a uncaught rejection for the
+    // "Actor 'Conduits' destroyed before query 'RunListener' was resolved" error,
+    // due to the listener left purposely pending in this test
+    // and so that expected rejection is ignored using PromiseTestUtils in the preamble
+    // of this test file.
+    await extension.awaitMessage("runtime-on-suspend");
+    await extension.unload();
+  }
+);
