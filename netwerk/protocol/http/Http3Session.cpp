@@ -1543,12 +1543,9 @@ bool Http3Session::RealJoinConnection(const nsACString& hostname, int32_t port,
   nsresult rv;
   bool isJoined = false;
 
-  nsCOMPtr<nsISupports> securityInfo;
   nsCOMPtr<nsISSLSocketControl> sslSocketControl;
-
-  mConnection->GetSecurityInfo(getter_AddRefs(securityInfo));
-  sslSocketControl = do_QueryInterface(securityInfo, &rv);
-  if (NS_FAILED(rv) || !sslSocketControl) {
+  mConnection->GetTLSSocketControl(getter_AddRefs(sslSocketControl));
+  if (!sslSocketControl) {
     return false;
   }
 
@@ -1888,10 +1885,9 @@ void Http3Session::ZeroRttTelemetry(ZeroRttOutcome aOutcome) {
   }
 }
 
-nsresult Http3Session::GetTransactionSecurityInfo(nsISupports** secinfo) {
-  nsCOMPtr<nsISupports> info;
-  mSocketControl->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(info));
-  info.forget(secinfo);
+nsresult Http3Session::GetTransactionTLSSocketControl(
+    nsISSLSocketControl** tlsSocketControl) {
+  NS_IF_ADDREF(*tlsSocketControl = mSocketControl);
   return NS_OK;
 }
 

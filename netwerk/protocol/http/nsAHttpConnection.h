@@ -11,9 +11,10 @@
 #include "nsAHttpTransaction.h"
 #include "HttpTrafficAnalyzer.h"
 
-class nsISocketTransport;
 class nsIAsyncInputStream;
 class nsIAsyncOutputStream;
+class nsISSLSocketControl;
+class nsISocketTransport;
 
 namespace mozilla {
 namespace net {
@@ -105,8 +106,8 @@ class nsAHttpConnection : public nsISupports {
                                                nsIAsyncInputStream**,
                                                nsIAsyncOutputStream**) = 0;
 
-  // called by a transaction to get the security info from the socket.
-  virtual void GetSecurityInfo(nsISupports**) = 0;
+  // called by a transaction to get the TLS socket control from the socket.
+  virtual void GetTLSSocketControl(nsISSLSocketControl**) = 0;
 
   // called by a transaction to determine whether or not the connection is
   // persistent... important in determining the end of a response.
@@ -195,12 +196,12 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
     }                                                                        \
     return (fwdObject)->GetConnectionInfo(result);                           \
   }                                                                          \
-  void GetSecurityInfo(nsISupports** result) override {                      \
+  void GetTLSSocketControl(nsISSLSocketControl** result) override {          \
     if (!(fwdObject)) {                                                      \
       *result = nullptr;                                                     \
       return;                                                                \
     }                                                                        \
-    return (fwdObject)->GetSecurityInfo(result);                             \
+    return (fwdObject)->GetTLSSocketControl(result);                         \
   }                                                                          \
   [[nodiscard]] nsresult ResumeSend() override {                             \
     if (!(fwdObject)) return NS_ERROR_FAILURE;                               \
