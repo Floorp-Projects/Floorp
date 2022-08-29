@@ -51,7 +51,7 @@
 }
 .AMOURL{
   position: relative;
-  width: 6em;
+  width: max-content;
   top: 2.5em;
   height: 2em;
 }
