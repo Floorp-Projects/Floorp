@@ -182,10 +182,10 @@ RefPtr<AsyncPanZoomController> OverscrollHandoffChain::FindFirstScrollable(
       ScrollDirections allowedOverscrollDirections =
           mChain[i]->GetOverscrollableDirections();
       ParentLayerPoint delta = mChain[i]->GetDeltaForEvent(aInput);
-      if (FuzzyEqualsAdditive(delta.x, 0.0f, COORDINATE_EPSILON)) {
+      if (mChain[i]->IsZero(delta.x)) {
         allowedOverscrollDirections -= ScrollDirection::eHorizontal;
       }
-      if (FuzzyEqualsAdditive(delta.y, 0.0f, COORDINATE_EPSILON)) {
+      if (mChain[i]->IsZero(delta.y)) {
         allowedOverscrollDirections -= ScrollDirection::eVertical;
       }
 
