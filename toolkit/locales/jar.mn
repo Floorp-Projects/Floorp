@@ -6,6 +6,9 @@
 [localization] @AB_CD@.jar:
   crashreporter                                    (%crashreporter/**/*.ftl)
   toolkit                                          (%toolkit/**/*.ftl)
+#ifdef MOZ_LAYOUT_DEBUGGER
+  layoutdebug/layoutdebug.ftl                      (../../layout/tools/layout-debug/ui/content/layoutdebug.ftl)
+#endif
 
 @AB_CD@.jar:
 % locale global @AB_CD@ %locale/@AB_CD@/global/
