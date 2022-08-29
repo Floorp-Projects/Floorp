@@ -112,6 +112,17 @@ class TextRecognitionModal {
     window.addEventListener("unload", finish);
   }
 
+  /**
+   * After the results are shown, measure how long a user interacts with the modal.
+   * @param {number} length
+   */
+  static recordTextLengthTelemetry(length) {
+    const histogram = Services.telemetry.getHistogramById(
+      "TEXT_RECOGNITION_TEXT_LENGTH"
+    );
+    histogram.add(length);
+  }
+
   setupCloseHandler() {
     document
       .querySelector("#text-recognition-close")
@@ -215,6 +226,7 @@ class TextRecognitionModal {
     this.textEl.style.display = "block";
 
     TextRecognitionModal.copy(text);
+    TextRecognitionModal.recordTextLengthTelemetry(text.length);
   }
 }
 
