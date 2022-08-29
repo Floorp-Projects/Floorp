@@ -19,15 +19,12 @@ class nsCookieRule final : public nsICookieRule {
  public:
   nsCookieRule() = default;
 
-  explicit nsCookieRule(
-      bool aIsOptOut, const nsACString& aHost, const nsACString& aName,
-      const nsACString& aValue, const nsACString& aPath = "/"_ns,
-      int64_t aExpiryRelative =
-          StaticPrefs::cookiebanners_cookieInjector_defaultExpiryRelative(),
-      const nsACString& aUnsetValue = ""_ns, bool aIsSecure = true,
-      bool aIsHttpOnly = false, bool aIsSession = false,
-      int32_t aSameSite = nsICookie::SAMESITE_LAX,
-      nsICookie::schemeType aSchemeMap = nsICookie::SCHEME_HTTPS);
+  explicit nsCookieRule(bool aIsOptOut, const nsACString& aName,
+                        const nsACString& aValue, const nsACString& aHost,
+                        const nsACString& aPath, int64_t aExpiryRelative,
+                        const nsACString& aUnsetValue, bool aIsSecure,
+                        bool aIsHttpOnly, bool aIsSession, int32_t aSameSite,
+                        nsICookie::schemeType aSchemeMap);
 
  private:
   ~nsCookieRule() = default;

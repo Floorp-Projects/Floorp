@@ -28,6 +28,7 @@ const RULE_A_ORIGINAL = {
         name: "doOptOut",
         value: "true",
         isSecure: true,
+        isSession: false,
       },
     ],
   },
@@ -61,6 +62,8 @@ const RULE_C = {
       {
         name: "gdpr",
         value: "1",
+        path: "/myPath",
+        host: "foo.example.net",
       },
     ],
   },
@@ -160,13 +163,45 @@ add_task(async function test_initial_import() {
   Assert.equal(rulesInserted.length, 2, "Two inserted rules after init.");
   Assert.equal(rulesRemoved.length, 0, "No removed rules after init.");
 
-  Assert.ok(
-    rulesInserted.some(rule => rule.domain == RULE_A_ORIGINAL.domain),
-    "Has rule A."
+  let ruleA = rulesInserted.find(rule => rule.domain == RULE_A_UPDATED.domain);
+  let cookieRuleA = ruleA.cookiesOptOut[0].cookie;
+  let ruleC = rulesInserted.find(rule => rule.domain == RULE_C.domain);
+  let cookieRuleC = ruleC.cookiesOptIn[0].cookie;
+
+  Assert.ok(ruleA, "Has rule A.");
+  // Test the defaults which CookieBannerListService sets when the rule does
+  // not.
+  Assert.equal(
+    cookieRuleA.isSession,
+    false,
+    "Cookie for rule A should not be a session cookie."
   );
-  Assert.ok(
-    rulesInserted.some(rule => rule.domain == RULE_C.domain),
-    "Has rule C."
+  Assert.equal(
+    cookieRuleA.host,
+    ".example.com",
+    "Cookie host for rule A should be default."
+  );
+  Assert.equal(
+    cookieRuleA.path,
+    "/",
+    "Cookie path for rule A should be default."
+  );
+
+  Assert.ok(ruleC, "Has rule C.");
+  Assert.equal(
+    ruleC.cookiesOptIn[0].cookie.isSession,
+    true,
+    "Cookie for rule C should should be a session cookie."
+  );
+  Assert.equal(
+    cookieRuleC.host,
+    "foo.example.net",
+    "Cookie host for rule C should be custom."
+  );
+  Assert.equal(
+    cookieRuleC.path,
+    "/myPath",
+    "Cookie path for rule C should be custom."
   );
 
   // Cleanup

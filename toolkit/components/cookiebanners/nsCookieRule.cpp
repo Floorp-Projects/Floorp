@@ -16,30 +16,19 @@ namespace mozilla {
 
 NS_IMPL_ISUPPORTS(nsCookieRule, nsICookieRule)
 
-nsCookieRule::nsCookieRule(bool aIsOptOut, const nsACString& aHost,
-                           const nsACString& aName, const nsACString& aValue,
-                           // Optional
+nsCookieRule::nsCookieRule(bool aIsOptOut, const nsACString& aName,
+                           const nsACString& aValue, const nsACString& aHost,
                            const nsACString& aPath, int64_t aExpiryRelative,
                            const nsACString& aUnsetValue, bool aIsSecure,
                            bool aIsHttpOnly, bool aIsSession, int32_t aSameSite,
                            nsICookie::schemeType aSchemeMap) {
-  // Default expiry time is defined by pref.
-  if (aExpiryRelative <= 0) {
-    aExpiryRelative =
-        StaticPrefs::cookiebanners_cookieInjector_defaultExpiryRelative();
-  }
   mExpiryRelative = aExpiryRelative;
-
-  nsCString path(aPath);
-  if (path.IsEmpty()) {
-    path.AssignLiteral("/");
-  }
-
   mUnsetValue = aUnsetValue;
 
-  net::CookieStruct cookieData(
-      nsCString(aName), nsCString(aValue), nsCString(aHost), path, 0, 0, 0,
-      aIsHttpOnly, aIsSession, aIsSecure, aSameSite, aSameSite, aSchemeMap);
+  net::CookieStruct cookieData(nsCString(aName), nsCString(aValue),
+                               nsCString(aHost), nsCString(aPath), 0, 0, 0,
+                               aIsHttpOnly, aIsSession, aIsSecure, aSameSite,
+                               aSameSite, aSchemeMap);
 
   OriginAttributes attrs;
   mCookie = net::Cookie::Create(cookieData, attrs);
