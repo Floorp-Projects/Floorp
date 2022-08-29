@@ -97,10 +97,16 @@ nsresult TlsHandshaker::InitSSLParams(bool connectingToProxy,
     return NS_ERROR_ABORT;
   }
 
-  nsCOMPtr<nsISSLSocketControl> ssl;
-  mOwner->GetTLSSocketControl(getter_AddRefs(ssl));
-  if (!ssl) {
+  nsresult rv;
+  nsCOMPtr<nsISupports> securityInfo;
+  mOwner->GetSecurityInfo(getter_AddRefs(securityInfo));
+  if (!securityInfo) {
     return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsISSLSocketControl> ssl = do_QueryInterface(securityInfo, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   // If proxy is use or 0RTT is excluded for a origin, don't use early-data.
@@ -109,7 +115,7 @@ nsresult TlsHandshaker::InitSSLParams(bool connectingToProxy,
   }
 
   if (proxyStartSSL) {
-    nsresult rv = ssl->ProxyStartSSL();
+    rv = ssl->ProxyStartSSL();
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -179,9 +185,16 @@ bool TlsHandshaker::EnsureNPNComplete() {
     return false;
   }
 
-  nsCOMPtr<nsISSLSocketControl> ssl;
-  mOwner->GetTLSSocketControl(getter_AddRefs(ssl));
-  if (!ssl) {
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsISupports> securityInfo;
+  mOwner->GetSecurityInfo(getter_AddRefs(securityInfo));
+  if (!securityInfo) {
+    FinishNPNSetup(false, false);
+    return true;
+  }
+
+  nsCOMPtr<nsISSLSocketControl> ssl = do_QueryInterface(securityInfo, &rv);
+  if (NS_FAILED(rv)) {
     FinishNPNSetup(false, false);
     return true;
   }
@@ -198,7 +211,7 @@ bool TlsHandshaker::EnsureNPNComplete() {
 
   LOG(("TlsHandshaker::EnsureNPNComplete [mOwner=%p] drive TLS handshake",
        mOwner.get()));
-  nsresult rv = ssl->DriveHandshake();
+  rv = ssl->DriveHandshake();
   if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
     FinishNPNSetup(false, true);
     return true;

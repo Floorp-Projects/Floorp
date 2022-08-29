@@ -6,26 +6,26 @@
 #ifndef nsHttpTransaction_h__
 #define nsHttpTransaction_h__
 
-#include "ARefBase.h"
-#include "EventTokenBucket.h"
-#include "Http2Push.h"
+#include "nsHttp.h"
+#include "nsAHttpTransaction.h"
 #include "HttpTransactionShell.h"
+#include "nsAHttpConnection.h"
+#include "EventTokenBucket.h"
+#include "nsCOMPtr.h"
+#include "nsIAsyncOutputStream.h"
+#include "nsThreadUtils.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIAsyncOutputStream.h"
+#include "nsITimer.h"
+#include "nsIEarlyHintObserver.h"
+#include "nsTHashMap.h"
+#include "nsIClassOfService.h"
 #include "TimingStruct.h"
-#include "mozilla/StaticPrefs_security.h"
+#include "Http2Push.h"
 #include "mozilla/net/DNS.h"
 #include "mozilla/net/NeckoChannelParams.h"
-#include "nsAHttpConnection.h"
-#include "nsAHttpTransaction.h"
-#include "nsCOMPtr.h"
-#include "nsHttp.h"
-#include "nsIAsyncOutputStream.h"
-#include "nsIClassOfService.h"
-#include "nsIEarlyHintObserver.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsISSLSocketControl.h"
-#include "nsITimer.h"
-#include "nsTHashMap.h"
-#include "nsThreadUtils.h"
+#include "mozilla/StaticPrefs_security.h"
+#include "ARefBase.h"
 
 //-----------------------------------------------------------------------------
 
@@ -306,7 +306,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsITransportEventSink> mTransportSink;
   nsCOMPtr<nsIEventTarget> mConsumerTarget;
-  nsCOMPtr<nsISSLSocketControl> mTLSSocketControl;
+  nsCOMPtr<nsISupports> mSecurityInfo;
   nsCOMPtr<nsIAsyncInputStream> mPipeIn;
   nsCOMPtr<nsIAsyncOutputStream> mPipeOut;
   nsCOMPtr<nsIRequestContext> mRequestContext;

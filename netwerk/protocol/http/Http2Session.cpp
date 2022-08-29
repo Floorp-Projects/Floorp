@@ -2558,8 +2558,9 @@ nsresult Http2Session::RecvAltSvc(Http2Session* self) {
 
   if (!impliedOrigin) {
     bool okToReroute = true;
-    nsCOMPtr<nsISSLSocketControl> ssl;
-    self->mConnection->GetTLSSocketControl(getter_AddRefs(ssl));
+    nsCOMPtr<nsISupports> securityInfo;
+    self->mConnection->GetSecurityInfo(getter_AddRefs(securityInfo));
+    nsCOMPtr<nsISSLSocketControl> ssl = do_QueryInterface(securityInfo);
     if (!ssl) {
       okToReroute = false;
     }
@@ -2594,15 +2595,12 @@ nsresult Http2Session::RecvAltSvc(Http2Session* self) {
     }
   }
 
-  nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
-  self->mConnection->GetTLSSocketControl(getter_AddRefs(tlsSocketControl));
-  nsCOMPtr<nsIInterfaceRequestor> callbacks;
-  if (tlsSocketControl) {
-    tlsSocketControl->GetNotificationCallbacks(getter_AddRefs(callbacks));
-  }
+  nsCOMPtr<nsISupports> callbacks;
+  self->mConnection->GetSecurityInfo(getter_AddRefs(callbacks));
+  nsCOMPtr<nsIInterfaceRequestor> irCallbacks = do_QueryInterface(callbacks);
 
   RefPtr<UpdateAltSvcEvent> event =
-      new UpdateAltSvcEvent(altSvcFieldValue, origin, ci, callbacks);
+      new UpdateAltSvcEvent(altSvcFieldValue, origin, ci, irCallbacks);
   NS_DispatchToMainThread(event);
   self->ResetDownstreamState();
   return NS_OK;
@@ -4140,8 +4138,9 @@ nsresult Http2Session::ConfirmTLSProfile() {
 
   if (!mConnection) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsISSLSocketControl> ssl;
-  mConnection->GetTLSSocketControl(getter_AddRefs(ssl));
+  nsCOMPtr<nsISupports> securityInfo;
+  mConnection->GetSecurityInfo(getter_AddRefs(securityInfo));
+  nsCOMPtr<nsISSLSocketControl> ssl = do_QueryInterface(securityInfo);
   LOG3(("Http2Session::ConfirmTLSProfile %p sslsocketcontrol=%p\n", this,
         ssl.get()));
   if (!ssl) return NS_ERROR_FAILURE;
@@ -4464,9 +4463,12 @@ bool Http2Session::RealJoinConnection(const nsACString& hostname, int32_t port,
   nsresult rv;
   bool isJoined = false;
 
+  nsCOMPtr<nsISupports> securityInfo;
   nsCOMPtr<nsISSLSocketControl> sslSocketControl;
-  mConnection->GetTLSSocketControl(getter_AddRefs(sslSocketControl));
-  if (!sslSocketControl) {
+
+  mConnection->GetSecurityInfo(getter_AddRefs(securityInfo));
+  sslSocketControl = do_QueryInterface(securityInfo, &rv);
+  if (NS_FAILED(rv) || !sslSocketControl) {
     return false;
   }
 
