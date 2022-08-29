@@ -4,7 +4,5 @@
 
 layoutdebug.jar:
 % content layoutdebug %content/layoutdebug/
-% locale layoutdebug en-US %locale/en-US/layoutdebug/
   content/layoutdebug/layoutdebug.xhtml              (content/layoutdebug.xhtml)
   content/layoutdebug/layoutdebug.js               (content/layoutdebug.js)
-  locale/en-US/layoutdebug/layoutdebug.dtd         (locale/en-US/layoutdebug.dtd)

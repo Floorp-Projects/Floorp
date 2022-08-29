@@ -24,7 +24,7 @@ codespell:
         - intl/docs/
         - intl/locales/en-US/
         - js/src/doc/
-        - layout/tools/layout-debug/ui/locale/en-US/
+        - layout/tools/layout-debug/ui/content/layoutdebug.ftl
         - mobile/android/branding/
         - mobile/android/docs/
         - mobile/android/locales/en-US/
