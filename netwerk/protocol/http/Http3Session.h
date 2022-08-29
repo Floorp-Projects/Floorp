@@ -82,8 +82,7 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
 
   void TransactionHasDataToWrite(nsAHttpTransaction* caller) override;
   void TransactionHasDataToRecv(nsAHttpTransaction* caller) override;
-  [[nodiscard]] nsresult GetTransactionTLSSocketControl(
-      nsISSLSocketControl**) override;
+  [[nodiscard]] nsresult GetTransactionSecurityInfo(nsISupports**) override;
 
   // This function will be called by QuicSocketControl when the certificate
   // verification is done.

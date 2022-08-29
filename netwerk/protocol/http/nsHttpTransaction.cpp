@@ -735,10 +735,10 @@ nsresult nsHttpTransaction::ReadSegments(nsAHttpSegmentReader* reader,
 
   if (!mConnected && !m0RTTInProgress) {
     mConnected = true;
-    nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
-    mConnection->GetTLSSocketControl(getter_AddRefs(tlsSocketControl));
+    nsCOMPtr<nsISupports> info;
+    mConnection->GetSecurityInfo(getter_AddRefs(info));
     MutexAutoLock lock(mLock);
-    mTLSSocketControl = tlsSocketControl;
+    mSecurityInfo = info;
   }
 
   mDeferredSendProgress = false;
@@ -979,7 +979,7 @@ bool nsHttpTransaction::DataSentToChildProcess() { return false; }
 
 already_AddRefed<nsISupports> nsHttpTransaction::SecurityInfo() {
   MutexAutoLock lock(mLock);
-  return do_AddRef(mTLSSocketControl);
+  return do_AddRef(mSecurityInfo);
 }
 
 bool nsHttpTransaction::HasStickyConnection() const {
@@ -1220,10 +1220,12 @@ void nsHttpTransaction::PrepareConnInfoForRetry(nsresult aReason) {
     LOG((" Got SSL_ERROR_ECH_RETRY_WITH_ECH, use retry echConfig"));
     MOZ_ASSERT(mConnection);
 
-    nsCOMPtr<nsISSLSocketControl> socketControl;
+    nsCOMPtr<nsISupports> secInfo;
     if (mConnection) {
-      mConnection->GetTLSSocketControl(getter_AddRefs(socketControl));
+      mConnection->GetSecurityInfo(getter_AddRefs(secInfo));
     }
+
+    nsCOMPtr<nsISSLSocketControl> socketControl = do_QueryInterface(secInfo);
     MOZ_ASSERT(socketControl);
 
     nsAutoCString retryEchConfig;
@@ -1381,11 +1383,11 @@ void nsHttpTransaction::Close(nsresult reason) {
     connReused = mConnection->IsReused();
     isHttp2or3 = mConnection->Version() >= HttpVersion::v2_0;
     if (!mConnected) {
-      // Try to get TLSSocketControl for this transaction.
-      nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
-      mConnection->GetTLSSocketControl(getter_AddRefs(tlsSocketControl));
+      // Try to get SecurityInfo for this transaction.
+      nsCOMPtr<nsISupports> info;
+      mConnection->GetSecurityInfo(getter_AddRefs(info));
       MutexAutoLock lock(mLock);
-      mTLSSocketControl = tlsSocketControl;
+      mSecurityInfo = info;
     }
   }
   mConnected = false;
@@ -1751,7 +1753,7 @@ nsresult nsHttpTransaction::Restart() {
   // clear old connection state...
   {
     MutexAutoLock lock(mLock);
-    mTLSSocketControl = nullptr;
+    mSecurityInfo = nullptr;
   }
 
   if (mConnection) {
@@ -2918,10 +2920,10 @@ nsresult nsHttpTransaction::Finish0RTT(bool aRestart,
   } else if (!mConnected) {
     // this is code that was skipped in ::ReadSegments while in 0RTT
     mConnected = true;
-    nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
-    mConnection->GetTLSSocketControl(getter_AddRefs(tlsSocketControl));
+    nsCOMPtr<nsISupports> info;
+    mConnection->GetSecurityInfo(getter_AddRefs(info));
     MutexAutoLock lock(mLock);
-    mTLSSocketControl = tlsSocketControl;
+    mSecurityInfo = info;
   }
   return NS_OK;
 }
@@ -3043,8 +3045,9 @@ void nsHttpTransaction::NotifyTransactionObserver(nsresult reason) {
                  ((mConnection->Version() == HttpVersion::v2_0) ||
                   (mConnection->Version() == HttpVersion::v3_0)));
 
-    nsCOMPtr<nsISSLSocketControl> socketControl;
-    mConnection->GetTLSSocketControl(getter_AddRefs(socketControl));
+    nsCOMPtr<nsISupports> secInfo;
+    mConnection->GetSecurityInfo(getter_AddRefs(secInfo));
+    nsCOMPtr<nsISSLSocketControl> socketControl = do_QueryInterface(secInfo);
     LOG(
         ("nsHttpTransaction::NotifyTransactionObserver"
          " version %u socketControl %p\n",

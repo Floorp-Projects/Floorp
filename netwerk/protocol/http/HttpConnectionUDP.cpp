@@ -346,13 +346,13 @@ nsresult HttpConnectionUDP::TakeTransport(
   return NS_ERROR_FAILURE;
 }
 
-void HttpConnectionUDP::GetTLSSocketControl(nsISSLSocketControl** secinfo) {
+void HttpConnectionUDP::GetSecurityInfo(nsISupports** secinfo) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  LOG(("HttpConnectionUDP::GetTLSSocketControl http3Session=%p\n",
+  LOG(("HttpConnectionUDP::GetSecurityInfo http3Session=%p\n",
        mHttp3Session.get()));
 
   if (mHttp3Session &&
-      NS_SUCCEEDED(mHttp3Session->GetTransactionTLSSocketControl(secinfo))) {
+      NS_SUCCEEDED(mHttp3Session->GetTransactionSecurityInfo(secinfo))) {
     return;
   }
 
