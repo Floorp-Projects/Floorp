@@ -60,7 +60,9 @@ DOMHighResTimeStamp IdleDeadline::TimeRemaining() {
       return 0.0;
     }
 
-    return std::max(mDeadline - performance->Now(), 0.0);
+    // The web API doesn't expect deadlines > 50ms, but conversion from the
+    // internal API may lead to some rounding errors.
+    return std::min(std::max(mDeadline - performance->Now(), 0.0), 50.0);
   }
 
   // If there's no window, we're in a system scope, and can just use
