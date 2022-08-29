@@ -21,6 +21,7 @@ class ErrorResult;
 namespace dom {
 
 class GlobalObject;
+struct TestInterfaceAsyncIterableSingleOptions;
 
 // Implementation of test binding for webidl iterable interfaces, using
 // primitives for value type
@@ -30,15 +31,17 @@ class TestInterfaceAsyncIterableSingle final : public nsISupports,
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TestInterfaceAsyncIterableSingle)
 
-  explicit TestInterfaceAsyncIterableSingle(nsPIDOMWindowInner* aParent);
+  TestInterfaceAsyncIterableSingle(nsPIDOMWindowInner* aParent,
+                                   bool aFailToInit);
   nsPIDOMWindowInner* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
   static already_AddRefed<TestInterfaceAsyncIterableSingle> Constructor(
-      const GlobalObject& aGlobal, ErrorResult& rv);
+      const GlobalObject& aGlobal,
+      const TestInterfaceAsyncIterableSingleOptions& aOptions, ErrorResult& rv);
 
   using Iterator = AsyncIterableIterator<TestInterfaceAsyncIterableSingle>;
-  void InitAsyncIterator(Iterator* aIterator);
+  void InitAsyncIterator(Iterator* aIterator, ErrorResult& aError);
   void DestroyAsyncIterator(Iterator* aIterator);
   already_AddRefed<Promise> GetNextPromise(JSContext* aCx, Iterator* aIterator,
                                            ErrorResult& aRv);
@@ -59,6 +62,7 @@ class TestInterfaceAsyncIterableSingle final : public nsISupports,
   void ResolvePromise(IteratorData* aData);
 
   nsCOMPtr<nsPIDOMWindowInner> mParent;
+  bool mFailToInit;
 };
 
 }  // namespace dom

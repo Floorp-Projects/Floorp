@@ -23,13 +23,14 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TestInterfaceAsyncIterableSingle)
 NS_INTERFACE_MAP_END
 
 TestInterfaceAsyncIterableSingle::TestInterfaceAsyncIterableSingle(
-    nsPIDOMWindowInner* aParent)
-    : mParent(aParent) {}
+    nsPIDOMWindowInner* aParent, bool aFailToInit)
+    : mParent(aParent), mFailToInit(aFailToInit) {}
 
 // static
 already_AddRefed<TestInterfaceAsyncIterableSingle>
-TestInterfaceAsyncIterableSingle::Constructor(const GlobalObject& aGlobal,
-                                              ErrorResult& aRv) {
+TestInterfaceAsyncIterableSingle::Constructor(
+    const GlobalObject& aGlobal,
+    const TestInterfaceAsyncIterableSingleOptions& aOptions, ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> window =
       do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
@@ -38,7 +39,7 @@ TestInterfaceAsyncIterableSingle::Constructor(const GlobalObject& aGlobal,
   }
 
   RefPtr<TestInterfaceAsyncIterableSingle> r =
-      new TestInterfaceAsyncIterableSingle(window);
+      new TestInterfaceAsyncIterableSingle(window, aOptions.mFailToInit);
   return r.forget();
 }
 
@@ -51,7 +52,13 @@ nsPIDOMWindowInner* TestInterfaceAsyncIterableSingle::GetParentObject() const {
   return mParent;
 }
 
-void TestInterfaceAsyncIterableSingle::InitAsyncIterator(Iterator* aIterator) {
+void TestInterfaceAsyncIterableSingle::InitAsyncIterator(Iterator* aIterator,
+                                                         ErrorResult& aError) {
+  if (mFailToInit) {
+    aError.ThrowTypeError("Caller asked us to fail");
+    return;
+  }
+
   UniquePtr<IteratorData> data(new IteratorData(0));
   aIterator->SetData((void*)data.release());
 }

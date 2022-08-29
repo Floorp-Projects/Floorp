@@ -96,11 +96,15 @@ interface TestInterfaceIterableDoubleUnion {
   iterable<DOMString, (DOMString or long)>;
 };
 
+dictionary TestInterfaceAsyncIterableSingleOptions {
+  boolean failToInit = false;
+};
+
 [Pref="dom.expose_test_interfaces",
  Exposed=Window]
 interface TestInterfaceAsyncIterableSingle {
   [Throws]
-  constructor();
+  constructor(optional TestInterfaceAsyncIterableSingleOptions options = {});
 
   async iterable<long>;
 };

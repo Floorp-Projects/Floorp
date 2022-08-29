@@ -39,7 +39,7 @@ class TestInterfaceAsyncIterableDoubleUnion final : public nsISupports,
       const GlobalObject& aGlobal, ErrorResult& rv);
 
   using Iterator = AsyncIterableIterator<TestInterfaceAsyncIterableDoubleUnion>;
-  void InitAsyncIterator(Iterator* aIterator);
+  void InitAsyncIterator(Iterator* aIterator, ErrorResult& aError);
   void DestroyAsyncIterator(Iterator* aIterator);
   already_AddRefed<Promise> GetNextPromise(JSContext* aCx, Iterator* aIterator,
                                            ErrorResult& aRv);

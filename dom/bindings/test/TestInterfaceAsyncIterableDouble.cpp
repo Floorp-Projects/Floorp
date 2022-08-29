@@ -54,7 +54,8 @@ nsPIDOMWindowInner* TestInterfaceAsyncIterableDouble::GetParentObject() const {
   return mParent;
 }
 
-void TestInterfaceAsyncIterableDouble::InitAsyncIterator(Iterator* aIterator) {
+void TestInterfaceAsyncIterableDouble::InitAsyncIterator(Iterator* aIterator,
+                                                         ErrorResult& aError) {
   UniquePtr<IteratorData> data(new IteratorData(0));
   aIterator->SetData((void*)data.release());
 }

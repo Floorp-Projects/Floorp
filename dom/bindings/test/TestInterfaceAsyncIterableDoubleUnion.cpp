@@ -61,7 +61,7 @@ nsPIDOMWindowInner* TestInterfaceAsyncIterableDoubleUnion::GetParentObject()
 }
 
 void TestInterfaceAsyncIterableDoubleUnion::InitAsyncIterator(
-    Iterator* aIterator) {
+    Iterator* aIterator, ErrorResult& aError) {
   UniquePtr<IteratorData> data(new IteratorData(0));
   aIterator->SetData((void*)data.release());
 }
