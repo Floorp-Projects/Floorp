@@ -93,6 +93,22 @@ const EXTENSION_ID = "formautofill@mozilla.org";
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 
+function SetPref(name, value) {
+  switch (typeof value) {
+    case "string":
+      Services.prefs.setCharPref(name, value);
+      break;
+    case "number":
+      Services.prefs.setIntPref(name, value);
+      break;
+    case "boolean":
+      Services.prefs.setBoolPref(name, value);
+      break;
+    default:
+      throw new Error("Unknown type");
+  }
+}
+
 async function loadExtension() {
   AddonTestUtils.createAppInfo(
     "xpcshell@tests.mozilla.org",

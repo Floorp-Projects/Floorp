@@ -4,10 +4,6 @@
 
 "use strict";
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
-
 var FormAutofillHandler;
 add_setup(async () => {
   ({ FormAutofillHandler } = ChromeUtils.import(
@@ -480,33 +476,48 @@ const TESTCASES = [
   },
   {
     description:
-      "A valid credit card form with non-autocomplete-attr cc-number only",
+      "A valid credit card form with non-autocomplete-attr cc-number only (high confidence).",
     document: `<form>
                <input id="cc-number" name="cc-number">
                </form>`,
-    sections: AppConstants.EARLY_BETA_OR_EARLIER
-      ? [
-          [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "cc-number",
-            },
-          ],
-        ]
-      : [[]],
-    validFieldDetails: AppConstants.EARLY_BETA_OR_EARLIER
-      ? [
-          {
-            section: "",
-            addressType: "",
-            contactType: "",
-            fieldName: "cc-number",
-          },
-        ]
-      : [],
-    ids: AppConstants.EARLY_BETA_OR_EARLIER ? ["cc-number"] : [],
+    sections: [
+      [
+        {
+          section: "",
+          addressType: "",
+          contactType: "",
+          fieldName: "cc-number",
+        },
+      ],
+    ],
+    validFieldDetails: [
+      { section: "", addressType: "", contactType: "", fieldName: "cc-number" },
+    ],
+    ids: ["cc-number"],
+    prefs: [
+      [
+        "extensions.formautofill.creditCards.heuristics.numberOnly.confidenceThreshold",
+        "0.95",
+      ],
+      ["extensions.formautofill.creditCards.heuristics.testConfidence", "0.96"],
+    ],
+  },
+  {
+    description:
+      "A valid credit card form with non-autocomplete-attr cc-number only (low confidence).",
+    document: `<form>
+               <input id="cc-number" name="cc-number">
+               </form>`,
+    sections: [[]],
+    validFieldDetails: [],
+    ids: [],
+    prefs: [
+      [
+        "extensions.formautofill.creditCards.heuristics.numberOnly.confidenceThreshold",
+        "0.95",
+      ],
+      ["extensions.formautofill.creditCards.heuristics.testConfidence", "0.9"],
+    ],
   },
   {
     description: "An invalid credit card form due to omitted cc-number.",
@@ -1140,6 +1151,10 @@ for (let tc of TESTCASES) {
     add_task(async function() {
       info("Starting testcase: " + testcase.description);
 
+      if (testcase.prefs) {
+        testcase.prefs.forEach(pref => SetPref(pref[0], pref[1]));
+      }
+
       let doc = MockDocument.createTestDocument(
         "http://localhost:8080/test/",
         testcase.document
@@ -1226,6 +1241,10 @@ for (let tc of TESTCASES) {
         verifyDetails(section.fieldDetails, testcase.sections[i]);
       }
       verifyDetails(validFieldDetails, testcase.validFieldDetails);
+
+      if (testcase.prefs) {
+        testcase.prefs.forEach(pref => Services.prefs.clearUserPref(pref[0]));
+      }
     });
   })();
 }

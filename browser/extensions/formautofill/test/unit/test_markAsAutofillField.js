@@ -97,9 +97,10 @@ const TESTCASES = [
                 <input id="cc-number3" maxlength="4">
                </form>`,
     targetElementId: "cc-number1",
-    expectedResult: AppConstants.EARLY_BETA_OR_EARLIER
-      ? ["cc-number1", "cc-number2", "cc-number3"]
-      : [],
+    expectedResult: ["cc-number1", "cc-number2", "cc-number3"],
+    prefs: [
+      ["extensions.formautofill.creditCards.heuristics.testConfidence", "1.0"],
+    ],
   },
   {
     description:
@@ -112,9 +113,16 @@ const TESTCASES = [
                 <input id="cc-number5" maxlength="4">
                </form>`,
     targetElementId: "cc-number1",
-    expectedResult: AppConstants.EARLY_BETA_OR_EARLIER
-      ? ["cc-number1", "cc-number2", "cc-number3", "cc-number4", "cc-number5"]
-      : [],
+    expectedResult: [
+      "cc-number1",
+      "cc-number2",
+      "cc-number3",
+      "cc-number4",
+      "cc-number5",
+    ],
+    prefs: [
+      ["extensions.formautofill.creditCards.heuristics.testConfidence", "1.0"],
+    ],
   },
   {
     description:
@@ -128,16 +136,17 @@ const TESTCASES = [
                 <input id="cc-exp-year">
                </form>`,
     targetElementId: "cc-number1",
-    expectedResult: AppConstants.EARLY_BETA_OR_EARLIER
-      ? [
-          "cc-number1",
-          "cc-number2",
-          "cc-number3",
-          "cc-name",
-          "cc-exp-month",
-          "cc-exp-year",
-        ]
-      : ["cc-number3", "cc-name", "cc-exp-month", "cc-exp-year"],
+    expectedResult: [
+      "cc-number1",
+      "cc-number2",
+      "cc-number3",
+      "cc-name",
+      "cc-exp-month",
+      "cc-exp-year",
+    ],
+    prefs: [
+      ["extensions.formautofill.creditCards.heuristics.testConfidence", "1.0"],
+    ],
   },
   {
     description:
@@ -185,6 +194,10 @@ TESTCASES.forEach(testcase => {
   add_task(async function() {
     info("Starting testcase: " + testcase.description);
 
+    if (testcase.prefs) {
+      testcase.prefs.forEach(pref => SetPref(pref[0], pref[1]));
+    }
+
     markedFieldId = [];
 
     let doc = MockDocument.createTestDocument(
@@ -199,5 +212,9 @@ TESTCASES.forEach(testcase => {
       testcase.expectedResult,
       "Check the fields were marked correctly."
     );
+
+    if (testcase.prefs) {
+      testcase.prefs.forEach(pref => Services.prefs.clearUserPref(pref[0]));
+    }
   });
 });
