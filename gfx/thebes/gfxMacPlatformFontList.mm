@@ -729,6 +729,10 @@ bool MacOSFontEntry::SupportsOpenTypeFeature(Script aScript, uint32_t aFeatureTa
     if (!cgFont) {
       return mHasAATSmallCaps;
     }
+
+    CrashReporter::AutoAnnotateCrashReport autoFontName(CrashReporter::Annotation::FontName,
+                                                        FamilyName());
+
     AutoCFRelease<CTFontRef> ctFont = CTFontCreateWithGraphicsFont(cgFont, 0.0, nullptr, nullptr);
     if (ctFont) {
       AutoCFRelease<CFArrayRef> features = CTFontCopyFeatures(ctFont);
@@ -1717,6 +1721,9 @@ gfxFontEntry* gfxMacPlatformFontList::LookupLocalFont(nsPresContext* aPresContex
 
   nsAutoreleasePool localPool;
 
+  CrashReporter::AutoAnnotateCrashReport autoFontName(CrashReporter::Annotation::FontName,
+                                                      aFontName);
+
   NSString* faceName = GetNSStringForString(NS_ConvertUTF8toUTF16(aFontName));
 
   // lookup face based on postscript or full name
@@ -1781,6 +1788,9 @@ gfxFontEntry* gfxMacPlatformFontList::MakePlatformFont(const nsACString& aFontNa
   if (NS_FAILED(rv)) {
     return nullptr;
   }
+
+  CrashReporter::AutoAnnotateCrashReport autoFontName(CrashReporter::Annotation::FontName,
+                                                      aFontName);
 
   AutoCFRelease<CGDataProviderRef> provider =
       ::CGDataProviderCreateWithData(nullptr, aFontData, aLength, &ReleaseData);
@@ -2029,8 +2039,10 @@ void gfxMacPlatformFontList::GetFacesInitDataForFamily(const fontlist::Family* a
                                                        bool aLoadCmaps) const {
   nsAutoreleasePool localPool;
 
-  NS_ConvertUTF8toUTF16 name(aFamily->Key().AsString(SharedFontList()));
-  NSString* family = GetNSStringForString(name);
+  auto name = aFamily->Key().AsString(SharedFontList());
+  NSString* family = GetNSStringForString(NS_ConvertUTF8toUTF16(name));
+
+  CrashReporter::AutoAnnotateCrashReport autoFontName(CrashReporter::Annotation::FontName, name);
 
   // returns an array of [psname, style name, weight, traits] elements, goofy api
   NSArray* fontfaces = [sFontManager availableMembersOfFontFamily:family];
