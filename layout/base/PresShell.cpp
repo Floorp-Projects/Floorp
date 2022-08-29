@@ -5635,8 +5635,9 @@ void PresShell::SynthesizeMouseMove(bool aFromScroll) {
 static nsView* FindFloatingViewContaining(nsPresContext* aRootPresContext,
                                           nsIWidget* aRootWidget,
                                           const LayoutDeviceIntPoint& aPt) {
-  nsIFrame* popupFrame =
-      nsLayoutUtils::GetPopupFrameForPoint(aRootPresContext, aRootWidget, aPt);
+  nsIFrame* popupFrame = nsLayoutUtils::GetPopupFrameForPoint(
+      aRootPresContext, aRootWidget, aPt,
+      nsLayoutUtils::GetPopupFrameForPointFlags::OnlyReturnFramesWithWidgets);
   return popupFrame ? popupFrame->GetView() : nullptr;
 }
 
