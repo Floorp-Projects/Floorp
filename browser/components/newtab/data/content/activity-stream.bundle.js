@@ -14334,21 +14334,16 @@ class BaseContent extends (external_React_default()).PureComponent {
   }
 
   componentDidMount() {
+    var _document$querySelect;
+
     __webpack_require__.g.addEventListener("scroll", this.onWindowScroll);
     __webpack_require__.g.addEventListener("keydown", this.handleOnKeyDown);
-    __webpack_require__.g.addEventListener("load", this.onContentLoaded);
+    (_document$querySelect = document.querySelector(".darkreader")) === null || _document$querySelect === void 0 ? void 0 : _document$querySelect.remove();
   }
 
   componentWillUnmount() {
     __webpack_require__.g.removeEventListener("scroll", this.onWindowScroll);
     __webpack_require__.g.removeEventListener("keydown", this.handleOnKeyDown);
-    __webpack_require__.g.removeEventListener("load", this.onContentLoaded);
-  }
-
-  onContentLoaded() {
-    var _document$querySelect;
-
-    (_document$querySelect = document.querySelector(".darkreader")) === null || _document$querySelect === void 0 ? void 0 : _document$querySelect.remove();
   }
 
   onWindowScroll() {
