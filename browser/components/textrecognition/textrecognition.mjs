@@ -56,9 +56,17 @@ class TextRecognitionModal {
       },
       error => {
         // There was an error in the text recognition call. Treat this as the same
-        // as if there were no results, but report the error to the console.
-        console.error(error);
+        // as if there were no results, but report the error to the console and telemetry.
         this.showHeaderByID("text-recognition-header-no-results");
+
+        console.error(
+          "There was an error recognizing the text from an image.",
+          error
+        );
+        Services.telemetry.scalarAdd(
+          "browser.ui.interaction.textrecognition_error",
+          1
+        );
       }
     );
   }
