@@ -167,7 +167,7 @@ var SidebarUI = {
           // support live switching the app locale. Reload the entire sidebar to
           // invalidate any old text.
           this.hide();
-          this._show(this.lastOpenedId);
+          this.showInitially(this.lastOpenedId);
           break;
         }
       }

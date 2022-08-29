@@ -54,3 +54,58 @@ add_task(async function test_bookmarks_sidebar() {
 add_task(async function test_history_sidebar() {
   await testLiveReloading("viewHistorySidebar");
 });
+
+add_task(async function test_ext_sidebar_panel_reloaded_on_locale_changes() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      sidebar_action: {
+        default_panel: "sidebar.html",
+      },
+    },
+    useAddonManager: "temporary",
+
+    files: {
+      "sidebar.html": `<html>
+          <head>
+            <meta charset="utf-8"/>
+            <script src="sidebar.js"></script>
+          </head>
+          <body>
+            A Test Sidebar
+          </body>
+        </html>`,
+      "sidebar.js": function() {
+        const { browser } = this;
+        window.onload = () => {
+          browser.test.sendMessage("sidebar");
+        };
+      },
+    },
+  });
+  await extension.startup();
+  // Test sidebar is opened on install
+  await extension.awaitMessage("sidebar");
+
+  // Test sidebar is opened on simulated locale changes.
+  info("Switch browser to bidi and expect the sidebar panel to be reloaded");
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["intl.l10n.pseudo", "bidi"]],
+  });
+  await extension.awaitMessage("sidebar");
+  is(
+    window.document.documentElement.getAttribute("dir"),
+    "rtl",
+    "browser window changed direction to rtl as expected"
+  );
+
+  await SpecialPowers.popPrefEnv();
+  await extension.awaitMessage("sidebar");
+  is(
+    window.document.documentElement.getAttribute("dir"),
+    "ltr",
+    "browser window changed direction to ltr as expected"
+  );
+
+  await extension.unload();
+});
