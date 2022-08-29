@@ -167,7 +167,8 @@ add_task(async function test_gifft_timing_dist() {
   const EPSILON = 40000;
 
   // Variance in timing makes getting the sum impossible to know.
-  Assert.greater(data.sum, 15 * NANOS_IN_MILLIS - EPSILON);
+  // 10 and 5 input value can be trunacted to 4. + 9. >= 13. from cast
+  Assert.greater(data.sum, 13 * NANOS_IN_MILLIS - EPSILON);
 
   // No guarantees from timers means no guarantees on buckets.
   // But we can guarantee it's only two samples.
