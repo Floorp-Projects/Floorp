@@ -107,6 +107,19 @@ add_task(async function() {
     await BrowserTestUtils.waitForCondition(
       () => !document.querySelector(".textRecognitionDialogFrame")
     );
+
+    info("Check for interaction telemetry.");
+    const timing = await BrowserTestUtils.waitForCondition(() => {
+      const { sum } = Services.telemetry
+        .getHistogramById("TEXT_RECOGNITION_INTERACTION_TIMING")
+        .snapshot();
+      if (sum > 0) {
+        return sum;
+      }
+      return false;
+    });
+    ok(timing > 0, "Interaction timing was measured.");
+
     setClipboardText("");
     clearTelemetry();
   });
