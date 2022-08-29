@@ -1956,6 +1956,7 @@ void APZCTreeManager::ProcessTouchInput(InputHandlingState& aState,
     RecursiveMutexAutoLock lock(mTreeLock);
     // Repopulate mTouchBlockHitResult from the input state.
     mTouchBlockHitResult = mHitTester->CloneHitTestResult(lock, aState.mHit);
+    hitScrollbarNode = std::move(aState.mHit.mScrollbarNode);
 
     // Check if this event starts a scrollbar touch-drag. The conditions
     // checked are similar to the ones we check for MOUSE_INPUT starting
