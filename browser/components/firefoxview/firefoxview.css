@@ -649,25 +649,26 @@ button.close {
   grid-template-columns: min-content repeat(2, 1fr) minmax(min-content, auto);
   grid-template-rows: auto;
   grid-template-areas:
-  "favicon title title title"
-  "favicon domain domain domain"
-  "favicon device device time"
+    "favicon title title title"
+    "favicon domain domain domain"
+    "favicon device device time"
 }
 
 .synced-tab-a:hover {
   box-shadow: 0px 2px 14px var(--fxview-contrast-border);
 }
 
-.synced-tab-a:not(:first-child) {
+.synced-tab-li:not(:first-child) > .synced-tab-a {
   align-content: center;
 }
 
 @media only screen and (max-width: 60rem) {
-  .synced-tab-li {
+  .synced-tab-li > .synced-tab-a,
+  .synced-tab-li-placeholder {
     grid-template-areas:
-    "favicon title title title"
-    "favicon domain domain domain"
-    "favicon device device device"
+      "favicon title title title"
+      "favicon domain domain domain"
+      "favicon device device device"
   }
   .synced-tab-li:not(:first-child) > .synced-tab-a > .synced-tab-li-time {
     display: none;
@@ -693,7 +694,7 @@ button.close {
 }
 
 .li-placeholder-domain {
-  grid-area: url;
+  grid-area: domain;
   height: 8px;
   width: 100%;
 }
@@ -715,10 +716,10 @@ button.close {
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: auto;
   grid-template-areas:
-  "favicon favicon badge badge"
-  "title title title title"
-  "domain domain domain domain"
-  "device device device time";
+    "favicon favicon badge badge"
+    "title title title title"
+    "domain domain domain domain"
+    "device device device time";
 }
 
 .synced-tab-li:nth-child(2) {
@@ -738,14 +739,11 @@ button.close {
 
 .synced-tab-li-url {
   text-decoration-line: underline;
-}
-
-.synced-tab-li:first-child > .synced-tab-a > .synced-tab-li-url {
-  align-self: end;
   grid-area: domain;
+  align-self: end;
 }
 
-.synced-tab-li:not(:first-child) > .synced-tab-li-url {
+.synced-tab-li:not(:first-child) > .synced-tab-a > .synced-tab-li-url {
   margin-top: 4px;
 }
 
