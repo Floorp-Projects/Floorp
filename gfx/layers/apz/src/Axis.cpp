@@ -30,9 +30,10 @@ static mozilla::LazyLogModule sApzAxsLog("apz.axis");
 namespace mozilla {
 namespace layers {
 
-bool FuzzyEqualsCoordinate(float aValue1, float aValue2) {
-  return FuzzyEqualsAdditive(aValue1, aValue2, COORDINATE_EPSILON) ||
-         FuzzyEqualsMultiplicative(aValue1, aValue2);
+bool FuzzyEqualsCoordinate(CSSCoord aValue1, CSSCoord aValue2) {
+  return FuzzyEqualsAdditive(aValue1.value, aValue2.value,
+                             COORDINATE_EPSILON.value) ||
+         FuzzyEqualsMultiplicative(aValue1.value, aValue2.value);
 }
 
 Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
@@ -150,7 +151,7 @@ void Axis::OverscrollBy(ParentLayerCoord aOverscroll) {
   MOZ_ASSERT(CanScroll());
   // We can get some spurious calls to OverscrollBy() with near-zero values
   // due to rounding error. Ignore those (they might trip the asserts below.)
-  if (FuzzyEqualsAdditive(aOverscroll.value, 0.0f, COORDINATE_EPSILON)) {
+  if (mAsyncPanZoomController->IsZero(aOverscroll)) {
     return;
   }
   EndOverscrollAnimation();
@@ -255,11 +256,23 @@ bool Axis::IsOverscrollAnimationAlive() const {
 bool Axis::IsOverscrolled() const { return mOverscroll != 0.f; }
 
 bool Axis::IsScrolledToStart() const {
-  return FuzzyEqualsCoordinate(GetOrigin().value, GetPageStart().value);
+  const auto zoom = GetFrameMetrics().GetZoom();
+
+  if (zoom == CSSToParentLayerScale(0)) {
+    return true;
+  }
+
+  return FuzzyEqualsCoordinate(GetOrigin() / zoom, GetPageStart() / zoom);
 }
 
 bool Axis::IsScrolledToEnd() const {
-  return FuzzyEqualsCoordinate(GetCompositionEnd().value, GetPageEnd().value);
+  const auto zoom = GetFrameMetrics().GetZoom();
+
+  if (zoom == CSSToParentLayerScale(0)) {
+    return true;
+  }
+
+  return FuzzyEqualsCoordinate(GetCompositionEnd() / zoom, GetPageEnd() / zoom);
 }
 
 bool Axis::IsInInvalidOverscroll() const {
@@ -320,7 +333,8 @@ void Axis::CancelGesture() {
 }
 
 bool Axis::CanScroll() const {
-  return GetPageLength() - GetCompositionLength() > COORDINATE_EPSILON;
+  return mAsyncPanZoomController->FuzzyGreater(GetPageLength(),
+                                               GetCompositionLength());
 }
 
 bool Axis::CanScroll(CSSCoord aDelta) const {
@@ -664,14 +678,17 @@ SideBits AxisY::ScrollableDirectionsWithDynamicToolbar(
   SideBits directions = ScrollableDirections();
 
   if (HasDynamicToolbar()) {
-    ScreenCoord toolbarHeight = ViewAs<ScreenPixel>(
-        GetCompositionLength() - GetCompositionLengthWithoutDynamicToolbar(),
-        PixelCastJustification::ScreenIsParentLayerForRoot);
+    ParentLayerCoord toolbarHeight =
+        GetCompositionLength() - GetCompositionLengthWithoutDynamicToolbar();
 
-    if (fabs(aFixedLayerMargins.bottom) > COORDINATE_EPSILON) {
+    ParentLayerMargin fixedLayerMargins = ViewAs<ParentLayerPixel>(
+        aFixedLayerMargins, PixelCastJustification::ScreenIsParentLayerForRoot);
+
+    if (!mAsyncPanZoomController->IsZero(fixedLayerMargins.bottom)) {
       directions |= SideBits::eTop;
     }
-    if (toolbarHeight + aFixedLayerMargins.bottom > COORDINATE_EPSILON) {
+    if (mAsyncPanZoomController->FuzzyGreater(
+            aFixedLayerMargins.bottom + toolbarHeight, 0)) {
       directions |= SideBits::eBottom;
     }
   }
@@ -682,8 +699,9 @@ SideBits AxisY::ScrollableDirectionsWithDynamicToolbar(
 bool AxisY::CanVerticalScrollWithDynamicToolbar() const {
   return !HasDynamicToolbar()
              ? CanScroll()
-             : GetPageLength() - GetCompositionLengthWithoutDynamicToolbar() >
-                   COORDINATE_EPSILON;
+             : mAsyncPanZoomController->FuzzyGreater(
+                   GetPageLength(),
+                   GetCompositionLengthWithoutDynamicToolbar());
 }
 
 OverscrollBehavior AxisY::GetOverscrollBehavior() const {
