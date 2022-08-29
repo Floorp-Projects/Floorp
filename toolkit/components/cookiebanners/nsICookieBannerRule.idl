@@ -37,17 +37,17 @@ interface nsICookieBannerRule : nsISupports {
      * For a description of the other fields see nsICookieManager#addNative.
      */
     void addCookie(in boolean     aIsOptOut,
-                   in AUTF8String aHost,
                    in ACString    aName,
                    in AUTF8String aValue,
-                   [optional] in AUTF8String aPath,
-                   [optional] in int64_t     aExpiryRelative,
-                   [optional] in AUTF8String aUnsetValue,
-                   [optional] in boolean     aIsSecure,
-                   [optional] in boolean     aIsHttpOnly,
-                   [optional] in boolean     aIsSession,
-                   [optional] in int32_t     aSameSite,
-                   [optional] in nsICookie_schemeType aSchemeMap);
+                   in AUTF8String aHost,
+                   in AUTF8String aPath,
+                   in int64_t     aExpiryRelative,
+                   in AUTF8String aUnsetValue,
+                   in boolean     aIsSecure,
+                   in boolean     aIsHttpOnly,
+                   in boolean     aIsSession,
+                   in int32_t     aSameSite,
+                   in nsICookie_schemeType aSchemeMap);
 
     // The clicking rule that associates with this rule. The banner auto
     // clicking will use this rule to detect and click the banner.

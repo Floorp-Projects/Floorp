@@ -7,11 +7,20 @@
 const lazy = {};
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 ChromeUtils.defineModuleGetter(
   lazy,
   "RemoteSettings",
   "resource://services-settings/remote-settings.js"
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "DEFAULT_EXPIRY_RELATIVE",
+  "cookiebanners.cookieInjector.defaultExpiryRelative"
 );
 
 // Name of the RemoteSettings collection containing the rules.
@@ -131,19 +140,24 @@ class CookieBannerListService {
       let isOptOut = category == "optOut";
 
       for (let c of cookies[category]) {
+        let { expiryRelative } = c;
+        if (expiryRelative == null || expiryRelative <= 0) {
+          expiryRelative = lazy.DEFAULT_EXPIRY_RELATIVE;
+        }
+
         rule.addCookie(
           isOptOut,
-          c.host,
           c.name,
           c.value,
           // The following fields are optional and may not be defined by the
-          // rule. They will fall back to defaults.
-          c.path,
-          c.expiryRelative,
+          // rule.
+          c.host || `.${rule.domain}`,
+          c.path || "/",
+          expiryRelative,
           c.unsetValue,
           c.isSecure,
           c.isHTTPOnly,
-          c.isSession,
+          c.isSession ?? true,
           c.sameSite,
           c.schemeMap
         );

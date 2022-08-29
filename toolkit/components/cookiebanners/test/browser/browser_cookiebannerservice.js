@@ -163,9 +163,48 @@ add_task(async function test_insertAndGetRule() {
   rule.clearCookies();
 
   info("Adding cookies to the rule for example.com.");
-  rule.addCookie(true, "example.com", "foo", "bar");
-  rule.addCookie(true, "example.com", "foobar", "barfoo");
-  rule.addCookie(false, "foo.example.com", "foo", "bar", "/myPath", 3600);
+  rule.addCookie(
+    true,
+    "foo",
+    "bar",
+    "example.com",
+    "/",
+    3600,
+    "",
+    false,
+    false,
+    false,
+    0,
+    0
+  );
+  rule.addCookie(
+    true,
+    "foobar",
+    "barfoo",
+    "example.com",
+    "/",
+    3600,
+    "",
+    false,
+    false,
+    false,
+    0,
+    0
+  );
+  rule.addCookie(
+    false,
+    "foo",
+    "bar",
+    "foo.example.com",
+    "/myPath",
+    3600,
+    "",
+    false,
+    false,
+    true,
+    0,
+    0
+  );
 
   info("Adding a click rule to the rule for example.com.");
   rule.addClickRule("div#presence", "div#hide", "div#optOut", "div#optIn");
@@ -189,7 +228,20 @@ add_task(async function test_insertAndGetRule() {
   rule2.clearCookies();
 
   info("Adding a cookie to the rule for example.org.");
-  rule2.addCookie(false, "example.org", "foo2", "bar2");
+  rule2.addCookie(
+    false,
+    "foo2",
+    "bar2",
+    "example.org",
+    "/",
+    0,
+    "",
+    false,
+    false,
+    false,
+    0,
+    0
+  );
 
   info("Adding a click rule to the rule for example.org.");
   rule2.addClickRule("div#presence", null, null, "div#optIn");
@@ -384,7 +436,20 @@ add_task(async function test_overwriteRule() {
   rule.domain = "example.com";
 
   info("Adding a cookie so we can detect if the rule updates.");
-  rule.addCookie(true, "", "foo", "original");
+  rule.addCookie(
+    true,
+    "foo",
+    "original",
+    "example.com",
+    "/",
+    3600,
+    "",
+    false,
+    false,
+    false,
+    0,
+    0
+  );
 
   info("Adding a click rule so we can detect if the rule updates.");
   rule.addClickRule("div#original");
@@ -403,7 +468,20 @@ add_task(async function test_overwriteRule() {
   );
   ruleNew.domain = "example.com";
 
-  ruleNew.addCookie(true, "", "foo", "new");
+  ruleNew.addCookie(
+    true,
+    "foo",
+    "new",
+    "example.com",
+    "/",
+    3600,
+    "",
+    false,
+    false,
+    false,
+    0,
+    0
+  );
 
   ruleNew.addClickRule("div#new");
 
