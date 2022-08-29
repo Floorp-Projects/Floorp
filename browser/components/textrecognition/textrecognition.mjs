@@ -62,6 +62,8 @@ class TextRecognitionModal {
           "TEXT_RECOGNITION_API_PERFORMANCE",
           resultsPromise
         );
+
+        TextRecognitionModal.recordInteractionTime();
       },
       error => {
         // There was an error in the text recognition call. Treat this as the same
@@ -82,6 +84,32 @@ class TextRecognitionModal {
         );
       }
     );
+  }
+
+  /**
+   * After the results are shown, measure how long a user interacts with the modal.
+   */
+  static recordInteractionTime() {
+    TelemetryStopwatch.start(
+      "TEXT_RECOGNITION_INTERACTION_TIMING",
+      // Pass the instance of the window in case multiple tabs are doing text recognition
+      // and there is a race condition.
+      window
+    );
+
+    const finish = () => {
+      TelemetryStopwatch.finish("TEXT_RECOGNITION_INTERACTION_TIMING", window);
+      window.removeEventListener("blur", finish);
+      window.removeEventListener("unload", finish);
+    };
+
+    // The user's focus went away, record this as the total interaction, even if they
+    // go back and interact with it more. This can be triggered by doing actions like
+    // clicking the URL bar, or by switching tabs.
+    window.addEventListener("blur", finish);
+
+    // The modal is closed.
+    window.addEventListener("unload", finish);
   }
 
   setupCloseHandler() {

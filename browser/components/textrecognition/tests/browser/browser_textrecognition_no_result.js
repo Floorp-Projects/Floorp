@@ -74,6 +74,14 @@ add_task(async function() {
       "Histogram timing was recorded even though there were no results."
     );
 
+    is(
+      Services.telemetry
+        .getHistogramById("TEXT_RECOGNITION_INTERACTION_TIMING")
+        .snapshot().sum,
+      0,
+      "No interaction timing has been measured yet."
+    );
+
     info("Close the dialog box.");
     const close = contentDocument.querySelector("#text-recognition-close");
     close.click();
