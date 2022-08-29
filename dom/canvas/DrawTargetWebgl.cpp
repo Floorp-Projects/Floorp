@@ -1088,6 +1088,9 @@ bool DrawTargetWebgl::SharedContext::SupportsPattern(const Pattern& aPattern) {
       return true;
     case PatternType::SURFACE: {
       auto surfacePattern = static_cast<const SurfacePattern&>(aPattern);
+      if (surfacePattern.mExtendMode != ExtendMode::CLAMP) {
+        return false;
+      }
       if (surfacePattern.mSurface) {
         IntSize size = surfacePattern.mSurface->GetSize();
         // The maximum size a surface can be before triggering a fallback to
