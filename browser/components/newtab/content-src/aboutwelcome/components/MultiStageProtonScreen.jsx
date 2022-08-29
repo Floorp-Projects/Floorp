@@ -57,6 +57,10 @@ export const ProtonScreenActionButtons = props => {
 
   const [isChecked, setIsChecked] = useState(false);
 
+  if (!content.primary_button && !content.secondary_button) {
+    return null;
+  }
+
   return (
     <div className="action-buttons">
       <Localized text={content.primary_button?.label}>
