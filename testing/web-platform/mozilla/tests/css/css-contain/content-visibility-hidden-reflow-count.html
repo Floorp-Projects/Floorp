@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <meta charset="utf-8">
+  <title>CSS Contain: Test content-visibility:hidden reflow counts</title>
+  <link rel="author" title="Ting-Yu Lin" href="mailto:tlin@mozilla.com">
+  <link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1746098">
+
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+
+  <style>
+  .container {
+    content-visibility: visible;
+    contain: strict;
+  }
+  .flex {
+    display: flex;
+  }
+  .grid {
+    display: grid;
+    grid: repeat(2, 60px) / auto-flow 80px;
+  }
+  </style>
+
+  <div id="test"></div>
+
+  <script>
+  let gUtils = SpecialPowers.getDOMWindowUtils(window);
+  let gTestContainer = document.getElementById("test");
+
+  function setupContainerWithStrictContainment() {
+    const container = document.createElement("div");
+    container.classList.add("container");
+    gTestContainer.innerHTML = "";
+    gTestContainer.appendChild(container);
+    return container;
+  }
+
+  function flushLayout() {
+    document.documentElement.offsetHeight;
+  }
+
+  function getReflowCount() {
+    flushLayout();
+    return gUtils.framesReflowed;
+  }
+
+  function runTestFunctionAndCountReflows(testFunction, container) {
+    const beforeCount = getReflowCount();
+    testFunction(container);
+    const afterCount = getReflowCount();
+    return afterCount - beforeCount;
+  }
+
+  function assertContentVisibilityHiddenHasFewerReflows(testSetup, testFunction) {
+    let container = setupContainerWithStrictContainment();
+    testSetup(container);
+    flushLayout();
+
+    const visibleReflows = runTestFunctionAndCountReflows(testFunction, container);
+
+    container = setupContainerWithStrictContainment();
+    testSetup(container);
+    container.style.contentVisibility = "hidden";
+    flushLayout();
+
+    const hiddenReflows = runTestFunctionAndCountReflows(testFunction, container);
+    assert_less_than(hiddenReflows, visibleReflows,
+                     "Style / layout changes in hidden content resulted in fewer reflows than visible content.");
+  }
+
+  test(() => {
+    assertContentVisibilityHiddenHasFewerReflows(
+      (container) => {
+          const div = document.createElement("div");
+          div.innerText = "Test Content";
+          container.appendChild(div);
+      },
+      (container) => {
+          container.children[0].style.width = "100px";
+          container.children[0].style.height = "100px";
+    });
+  }, `Avoiding layout while modifying a simple div's style.`);
+
+  test(() => {
+    assertContentVisibilityHiddenHasFewerReflows(
+      (container) => {
+        container.classList.add("flex");
+
+        const flexContainer = document.createElement("div");
+        flexContainer.classList.add("flex");
+        container.appendChild(flexContainer);
+
+        container.appendChild(document.createElement("div"));
+      },
+      (container) => {
+        container.children[0].style.flexDirection = "row-reverse";
+       }
+    );
+  }, `Avoiding layout while modifying a div with flex display mode.`);
+
+  test(() => {
+    assertContentVisibilityHiddenHasFewerReflows(
+      (container) => {
+        container.classList.add("grid");
+
+        const gridChild = document.createElement("div");
+        gridChild.style.display = "grid";
+        container.appendChild(gridChild);
+
+        container.appendChild(document.createElement("div"));
+      },
+      (container) => {
+        container.children[0].style.rowGap = "30px";
+       },
+    );
+  }, `Avoiding layout while modifying a div with grid display mode.`);
+
+  </script>
+</html>
