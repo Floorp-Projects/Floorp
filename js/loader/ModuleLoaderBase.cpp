@@ -142,75 +142,6 @@ JSObject* ModuleLoaderBase::HostResolveImportedModule(
 }
 
 // static
-bool ModuleLoaderBase::ImportMetaResolve(JSContext* cx, unsigned argc,
-                                         Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  RootedValue modulePrivate(
-      cx, js::GetFunctionNativeReserved(&args.callee(), ModulePrivateSlot));
-
-  // https://html.spec.whatwg.org/#hostgetimportmetaproperties
-  // Step 4.1. Set specifier to ? ToString(specifier).
-  //
-  // https://tc39.es/ecma262/#sec-tostring
-  RootedValue v(cx, args.get(ImportMetaResolveSpecifierArg));
-  RootedString specifier(cx, JS::ToString(cx, v));
-  if (!specifier) {
-    return false;
-  }
-
-  // Step 4.2, 4.3 are implemented in ImportMetaResolveImpl.
-  RootedString url(cx, ImportMetaResolveImpl(cx, modulePrivate, specifier));
-  if (!url) {
-    return false;
-  }
-
-  // Step 4.4. Return the serialization of url.
-  args.rval().setString(url);
-  return true;
-}
-
-// static
-JSString* ModuleLoaderBase::ImportMetaResolveImpl(
-    JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
-    JS::Handle<JSString*> aSpecifier) {
-  RefPtr<ModuleScript> script =
-      static_cast<ModuleScript*>(aReferencingPrivate.toPrivate());
-  MOZ_ASSERT(script->IsModuleScript());
-  MOZ_ASSERT(JS::GetModulePrivate(script->ModuleRecord()) ==
-             aReferencingPrivate);
-
-  RefPtr<ModuleLoaderBase> loader = GetCurrentModuleLoader(aCx);
-  if (!loader) {
-    return nullptr;
-  }
-
-  nsAutoJSString specifier;
-  if (!specifier.init(aCx, aSpecifier)) {
-    return nullptr;
-  }
-
-  auto result = loader->ResolveModuleSpecifier(script, specifier);
-  if (result.isErr()) {
-    JS::Rooted<JS::Value> error(aCx);
-    nsresult rv = HandleResolveFailure(aCx, script, specifier,
-                                       result.unwrapErr(), 0, 0, &error);
-    if (NS_FAILED(rv)) {
-      JS_ReportOutOfMemory(aCx);
-      return nullptr;
-    }
-
-    JS_SetPendingException(aCx, error);
-
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIURI> uri = result.unwrap();
-  nsAutoCString url;
-  MOZ_ALWAYS_SUCCEEDS(uri->GetAsciiSpec(url));
-  return JS_NewStringCopyZ(aCx, url.get());
-}
-
-// static
 bool ModuleLoaderBase::HostPopulateImportMeta(
     JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
     JS::Handle<JSObject*> aMetaObject) {
@@ -230,28 +161,8 @@ bool ModuleLoaderBase::HostPopulateImportMeta(
     return false;
   }
 
-  // https://html.spec.whatwg.org/#import-meta-url
-  if (!JS_DefineProperty(aCx, aMetaObject, "url", urlString,
-                         JSPROP_ENUMERATE)) {
-    return false;
-  }
-
-  // https://html.spec.whatwg.org/#import-meta-resolve
-  // Define 'resolve' function on the import.meta object.
-  JSFunction* resolveFunc = js::DefineFunctionWithReserved(
-      aCx, aMetaObject, "resolve", ImportMetaResolve, ImportMetaResolveNumArgs,
-      JSPROP_ENUMERATE);
-  if (!resolveFunc) {
-    return false;
-  }
-
-  // Store the 'active script' of the meta object into the function slot.
-  // https://html.spec.whatwg.org/#active-script
-  RootedObject resolveFuncObj(aCx, JS_GetFunctionObject(resolveFunc));
-  js::SetFunctionNativeReserved(resolveFuncObj, ModulePrivateSlot,
-                                aReferencingPrivate);
-
-  return true;
+  return JS_DefineProperty(aCx, aMetaObject, "url", urlString,
+                           JSPROP_ENUMERATE);
 }
 
 // static
