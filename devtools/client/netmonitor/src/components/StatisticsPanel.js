@@ -173,8 +173,7 @@ class StatisticsPanel extends Component {
       diameter: NETWORK_ANALYSIS_PIE_CHART_DIAMETER,
       title,
       header: {
-        cached: "",
-        count: "",
+        count: L10N.getStr("charts.requestsNumber"),
         label: L10N.getStr("charts.type"),
         size: L10N.getStr("charts.size"),
         transferredSize: L10N.getStr("charts.transferred"),

@@ -197,9 +197,6 @@ function createPieChart(
   radius = radius || (width + height) / 4;
   let isPlaceholder = false;
 
-  // Filter out very small sizes, as they'll just render invisible slices.
-  data = data ? data.filter(e => e.size > EPSILON) : null;
-
   // If there's no data available, display an empty placeholder.
   if (!data) {
     data = loadingPieChartData();
@@ -215,13 +212,18 @@ function createPieChart(
     "class",
     "generic-chart-container pie-chart-container"
   );
-  container.setAttribute("pack", "center");
-  container.setAttribute("flex", "1");
+
   container.setAttribute("width", width);
   container.setAttribute("height", height);
   container.setAttribute("viewBox", "0 0 " + width + " " + height);
   container.setAttribute("slices", data.length);
   container.setAttribute("placeholder", isPlaceholder);
+  container.setAttribute("role", "group");
+  container.setAttribute("aria-label", L10N.getStr("pieChart.ariaLabel"));
+
+  const slicesGroup = document.createElementNS(SVG_NS, "g");
+  slicesGroup.setAttribute("role", "list");
+  container.append(slicesGroup);
 
   const proxy = new PieChart(container);
 
@@ -240,9 +242,37 @@ function createPieChart(
   for (let i = data.length - 1; i >= 0; i--) {
     const sliceInfo = data[i];
     const sliceAngle = angles[i];
-    if (!sliceInfo.size || sliceAngle < EPSILON) {
-      continue;
+
+    const sliceNode = document.createElementNS(SVG_NS, "g");
+    sliceNode.setAttribute("role", "listitem");
+    slicesGroup.append(sliceNode);
+
+    const interactiveNodeId = `${sliceInfo.label}-slice`;
+    const textNodeId = `${sliceInfo.label}-slice-label`;
+
+    // The only way to make this keyboard accessible is to have a link
+    const interactiveNode = document.createElementNS(SVG_NS, "a");
+    interactiveNode.setAttribute("id", interactiveNodeId);
+    interactiveNode.setAttribute("xlink:href", `#${interactiveNodeId}`);
+    interactiveNode.setAttribute("tabindex", `0`);
+    interactiveNode.setAttribute("role", `button`);
+    interactiveNode.classList.add("pie-chart-slice-container");
+    if (!isPlaceholder) {
+      interactiveNode.setAttribute(
+        "aria-label",
+        L10N.getFormatStr(
+          "pieChart.sliceAriaLabel",
+          sliceInfo.label,
+          new Intl.NumberFormat(undefined, {
+            style: "unit",
+            unit: "percent",
+            maximumFractionDigits: 2,
+          }).format((sliceInfo.size / total) * 100)
+        )
+      );
     }
+
+    sliceNode.append(interactiveNode);
 
     endAngle = startAngle - sliceAngle;
     midAngle = (startAngle + endAngle) / 2;
@@ -254,8 +284,8 @@ function createPieChart(
     const largeArcFlag = Math.abs(startAngle - endAngle) > PI ? 1 : 0;
 
     const pathNode = document.createElementNS(SVG_NS, "path");
-    pathNode.setAttribute("class", "pie-chart-slice chart-colored-blob");
-    pathNode.setAttribute("name", sliceInfo.label);
+    pathNode.classList.add("pie-chart-slice");
+    pathNode.setAttribute("data-statistic-name", sliceInfo.label);
     pathNode.setAttribute(
       "d",
       " M " +
@@ -293,19 +323,30 @@ function createPieChart(
     pathNode.setAttribute("style", data.length > 1 ? hoverTransform : "");
 
     proxy.slices.set(sliceInfo, pathNode);
-    delegate(proxy, ["click", "mouseover", "mouseout"], pathNode, sliceInfo);
-    container.appendChild(pathNode);
+    delegate(
+      proxy,
+      ["click", "mouseover", "mouseout", "focus"],
+      interactiveNode,
+      sliceInfo
+    );
+    interactiveNode.appendChild(pathNode);
 
-    if (sliceInfo.label && sliceAngle > NAMED_SLICE_MIN_ANGLE) {
-      const textX = centerX + textDistance * Math.sin(midAngle);
-      const textY = centerY - textDistance * Math.cos(midAngle);
+    const textX = centerX + textDistance * Math.sin(midAngle);
+    const textY = centerY - textDistance * Math.cos(midAngle);
+
+    // Don't add the label if the slice isn't large enough so it doesn't look cramped.
+    if (sliceAngle >= NAMED_SLICE_MIN_ANGLE) {
       const label = document.createElementNS(SVG_NS, "text");
       label.appendChild(document.createTextNode(sliceInfo.label));
+      label.setAttribute("id", textNodeId);
+      // A label is already set on `interactiveNode`, so hide this from the accessibility tree
+      // to avoid duplicating text.
+      label.setAttribute("aria-hidden", "true");
       label.setAttribute("class", "pie-chart-label");
       label.setAttribute("style", data.length > 1 ? hoverTransform : "");
       label.setAttribute("x", data.length > 1 ? textX : centerX);
       label.setAttribute("y", data.length > 1 ? textY : centerY);
-      container.appendChild(label);
+      interactiveNode.append(label);
     }
 
     startAngle = endAngle;
@@ -376,11 +417,7 @@ function createTableChart(document, { title, data, strings, totals, header }) {
 
   const container = document.createElement("div");
   container.className = "generic-chart-container table-chart-container";
-  container.setAttribute("pack", "center");
-  container.setAttribute("flex", "1");
-  container.setAttribute("rows", data.length);
   container.setAttribute("placeholder", isPlaceholder);
-  container.setAttribute("style", "-moz-box-orient: vertical");
 
   const proxy = new TableChart(container);
 
@@ -389,43 +426,46 @@ function createTableChart(document, { title, data, strings, totals, header }) {
   titleNode.textContent = title;
   container.appendChild(titleNode);
 
-  const tableNode = document.createElement("div");
+  const tableNode = document.createElement("table");
   tableNode.className = "plain table-chart-grid";
-  tableNode.setAttribute("style", "-moz-box-orient: vertical");
   container.appendChild(tableNode);
 
-  const headerNode = document.createElement("div");
+  const headerNode = document.createElement("thead");
   headerNode.className = "table-chart-row";
 
-  const headerBoxNode = document.createElement("div");
+  const bodyNode = document.createElement("tbody");
+
+  const headerBoxNode = document.createElement("tr");
   headerBoxNode.className = "table-chart-row-box";
   headerNode.appendChild(headerBoxNode);
 
   for (const [key, value] of Object.entries(header)) {
-    const headerLabelNode = document.createElement("span");
+    const headerLabelNode = document.createElement("th");
     headerLabelNode.className = "plain table-chart-row-label";
     headerLabelNode.setAttribute("name", key);
     headerLabelNode.textContent = value;
-
-    headerNode.appendChild(headerLabelNode);
+    if (key == "count") {
+      headerLabelNode.classList.add("offscreen");
+    }
+    headerBoxNode.appendChild(headerLabelNode);
   }
 
-  tableNode.appendChild(headerNode);
+  tableNode.append(headerNode, bodyNode);
 
   for (const rowInfo of data) {
-    const rowNode = document.createElement("div");
+    const rowNode = document.createElement("tr");
     rowNode.className = "table-chart-row";
-    rowNode.setAttribute("align", "center");
-
-    const boxNode = document.createElement("div");
-    boxNode.className = "table-chart-row-box chart-colored-blob";
-    boxNode.setAttribute("name", rowInfo.label);
-    rowNode.appendChild(boxNode);
+    rowNode.setAttribute("data-statistic-name", rowInfo.label);
 
     for (const [key, value] of Object.entries(rowInfo)) {
+      // Don't render the "cached" column. We only have it in here so it can be displayed
+      // in the `totals` section.
+      if (key == "cached") {
+        continue;
+      }
       const index = data.indexOf(rowInfo);
       const stringified = strings[key] ? strings[key](value, index) : value;
-      const labelNode = document.createElement("span");
+      const labelNode = document.createElement("td");
       labelNode.className = "plain table-chart-row-label";
       labelNode.setAttribute("name", key);
       labelNode.textContent = stringified;
@@ -434,12 +474,11 @@ function createTableChart(document, { title, data, strings, totals, header }) {
 
     proxy.rows.set(rowInfo, rowNode);
     delegate(proxy, ["click", "mouseover", "mouseout"], rowNode, rowInfo);
-    tableNode.appendChild(rowNode);
+    bodyNode.appendChild(rowNode);
   }
 
   const totalsNode = document.createElement("div");
   totalsNode.className = "table-chart-totals";
-  totalsNode.setAttribute("style", "-moz-box-orient: vertical");
 
   for (const [key, value] of Object.entries(totals)) {
     const total = data.reduce((acc, e) => acc + e[key], 0);

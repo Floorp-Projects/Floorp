@@ -62,27 +62,23 @@ add_task(async function() {
     "There should be 1 table chart row and a 1 header created."
   );
 
-  ok(
-    rows[1].querySelector(".table-chart-row-box.chart-colored-blob"),
-    "A colored blob exists for the first row."
-  );
   is(
-    rows[1].querySelectorAll("span")[0].getAttribute("name"),
+    rows[1].querySelectorAll(".table-chart-row-label")[0].getAttribute("name"),
     "size",
     "The first column of the first row exists."
   );
   is(
-    rows[1].querySelectorAll("span")[1].getAttribute("name"),
+    rows[1].querySelectorAll(".table-chart-row-label")[1].getAttribute("name"),
     "label",
     "The second column of the first row exists."
   );
   is(
-    rows[1].querySelectorAll("span")[0].textContent,
+    rows[1].querySelectorAll(".table-chart-row-label")[0].textContent,
     "",
     "The first column of the first row displays the correct text."
   );
   is(
-    rows[1].querySelectorAll("span")[1].textContent,
+    rows[1].querySelectorAll(".table-chart-row-label")[1].textContent,
     L10N.getStr("tableChart.loading"),
     "The second column of the first row displays the correct text."
   );
