@@ -57,6 +57,12 @@ int FOG_GetProcessType() { return XRE_GetProcessType(); }
  * We should probably flush before we reach the max IPC message size.
  */
 void FOG_IPCPayloadFull() {
+  // NS_DispatchToMainThread can leak the runnable (bug 1787589), so let's be
+  // sure not to create it too late in shutdown.
+  // We choose XPCOMShutdown to match gFOG->Shutdown().
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdown)) {
+    return;
+  }
   // FOG IPC must happen on the main thread until bug 1641989.
   // If there is no main thread (too early in startup or too late in shutdown),
   // there's nothing we can do but log.
