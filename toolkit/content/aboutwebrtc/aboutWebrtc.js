@@ -411,11 +411,11 @@ function renderPeerConnection(report) {
         renderText("span", pcid, { className: "info-body" }),
       ]),
       renderConfiguration(configuration),
+      renderRTPStats(report),
       renderICEStats(report),
       renderSDPStats(report),
       renderBandwidthStats(report),
-      renderFrameRateStats(report),
-      renderRTPStats(report)
+      renderFrameRateStats(report)
     );
     pcDiv.append(section);
   }
