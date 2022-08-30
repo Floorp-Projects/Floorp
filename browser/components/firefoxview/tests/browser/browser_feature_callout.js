@@ -185,7 +185,7 @@ add_task(
         const { document } = browser.contentWindow;
         await waitForCalloutScreen(document, ".FEATURE_CALLOUT_1");
         let parentTop = document
-          .querySelector("#tabpickup-steps")
+          .querySelector("#tab-pickup-container")
           .getBoundingClientRect().top;
         let containerTop = document
           .querySelector(calloutSelector)
