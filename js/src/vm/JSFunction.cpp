@@ -1929,8 +1929,9 @@ bool js::GetFunctionPrototype(JSContext* cx, js::GeneratorKind generatorKind,
   return !!proto;
 }
 
-bool js::CanReuseScriptForClone(JS::Realm* realm, HandleFunction fun,
-                                HandleObject newEnclosingEnv) {
+#ifdef DEBUG
+static bool CanReuseScriptForClone(JS::Realm* realm, HandleFunction fun,
+                                   HandleObject newEnclosingEnv) {
   MOZ_ASSERT(fun->isInterpreted());
 
   if (realm != fun->realm()) {
@@ -1957,6 +1958,7 @@ bool js::CanReuseScriptForClone(JS::Realm* realm, HandleFunction fun,
   return script->hasNonSyntacticScope() ||
          script->enclosingScope()->hasOnChain(ScopeKind::NonSyntactic);
 }
+#endif
 
 static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
                                            HandleObject proto) {
