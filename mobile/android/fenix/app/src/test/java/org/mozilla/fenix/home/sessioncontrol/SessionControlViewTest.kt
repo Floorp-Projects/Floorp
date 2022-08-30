@@ -36,7 +36,8 @@ class SessionControlViewTest {
         val controller = SessionControlView(
             view,
             mockk(relaxed = true),
-            interactor
+            interactor,
+            mockk(relaxed = true),
         )
 
         val state = AppState()

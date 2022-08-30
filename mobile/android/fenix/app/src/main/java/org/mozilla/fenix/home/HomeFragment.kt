@@ -385,9 +385,10 @@ class HomeFragment : Fragment() {
 
         updateLayout(binding.root)
         sessionControlView = SessionControlView(
-            binding.sessionControlRecyclerView,
-            viewLifecycleOwner,
-            sessionControlInteractor
+            containerView = binding.sessionControlRecyclerView,
+            viewLifecycleOwner = viewLifecycleOwner,
+            interactor = sessionControlInteractor,
+            onboarding = onboarding,
         )
 
         updateSessionControlView()
