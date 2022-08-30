@@ -3606,12 +3606,14 @@ bool BytecodeEmitter::emitDestructuringOpsObject(ListNode* pattern,
                  member->isKind(ParseNodeKind::Shorthand));
       subpattern = member->as<BinaryNode>().right();
     }
+    MOZ_ASSERT_IF(member->isKind(ParseNodeKind::Spread),
+                  !subpattern->isKind(ParseNodeKind::AssignExpr));
 
     ParseNode* lhs = subpattern;
-    MOZ_ASSERT_IF(member->isKind(ParseNodeKind::Spread),
-                  !lhs->isKind(ParseNodeKind::AssignExpr));
-    if (lhs->isKind(ParseNodeKind::AssignExpr)) {
-      lhs = lhs->as<AssignmentNode>().left();
+    ParseNode* pndefault = nullptr;
+    if (subpattern->isKind(ParseNodeKind::AssignExpr)) {
+      lhs = subpattern->as<AssignmentNode>().left();
+      pndefault = subpattern->as<AssignmentNode>().right();
     }
 
     size_t emitted;
@@ -3740,15 +3742,15 @@ bool BytecodeEmitter::emitDestructuringOpsObject(ListNode* pattern,
       return false;
     }
 
-    if (subpattern->isKind(ParseNodeKind::AssignExpr)) {
-      if (!emitDefault(subpattern->as<AssignmentNode>().right(), lhs)) {
+    if (pndefault) {
+      if (!emitDefault(pndefault, lhs)) {
         //          [stack] ... SET? RHS LREF* VALUE
         return false;
       }
     }
 
     // Destructure PROP per this member's lhs.
-    if (!emitSetOrInitializeDestructuring(subpattern, flav)) {
+    if (!emitSetOrInitializeDestructuring(lhs, flav)) {
       //            [stack] ... SET? RHS
       return false;
     }
