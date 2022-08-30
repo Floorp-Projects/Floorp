@@ -136,6 +136,10 @@ let HomePage = {
       }
     }
 
+    if (homePages == "about:blank") {
+      homePages = "chrome://browser/content/blanktab.html";
+    }
+
     return homePages;
   },
 
