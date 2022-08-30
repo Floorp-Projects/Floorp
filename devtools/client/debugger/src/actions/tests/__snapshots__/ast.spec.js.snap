@@ -5,6 +5,7 @@ Object {
   "callExpressions": Array [],
   "classes": Array [],
   "comments": Array [],
+  "framework": null,
   "functions": Array [
     Object {
       "identifier": Object {
