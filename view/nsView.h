@@ -444,7 +444,8 @@ class nsView final : public nsIWidgetListener {
   // nsIWidgetListener
   virtual mozilla::PresShell* GetPresShell() override;
   virtual nsView* GetView() override { return this; }
-  virtual bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) override;
+  virtual bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y,
+                           ByMoveToRect) override;
   virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth,
                              int32_t aHeight) override;
 #if defined(MOZ_WIDGET_ANDROID)

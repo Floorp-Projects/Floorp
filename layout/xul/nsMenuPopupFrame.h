@@ -318,7 +318,8 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // If aUpdateAttrs is true, and the popup already has left or top attributes,
   // then those attributes are updated to the new location.
   // The frame may be destroyed by this method.
-  void MoveTo(const mozilla::CSSPoint& aPos, bool aUpdateAttrs);
+  void MoveTo(const mozilla::CSSPoint& aPos, bool aUpdateAttrs,
+              bool aByMoveToRect = false);
 
   void MoveToAnchor(nsIContent* aAnchorContent, const nsAString& aPosition,
                     int32_t aXPos, int32_t aYPos, bool aAttributesOverride);
@@ -568,6 +569,11 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // without margins applied, as GTK is what takes care of determining how to
   // flip etc. on Wayland.
   nsRect mUntransformedAnchorRect;
+
+  // Whether we were moved by the move-to-rect Wayland callback. In that case,
+  // we stop updating the anchor so that we can end up with a stable position.
+  bool mPositionedByMoveToRect = false;
+
   // Store SizedToPopup attribute for MoveTo call to avoid
   // unwanted popup resize there.
   bool mSizedToPopup = false;
