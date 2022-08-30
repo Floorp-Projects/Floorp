@@ -1941,8 +1941,9 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
     // is replaced by the block size from aspect-ratio and inline size.
     aMetrics.mCarriedOutBEndMargin.Zero();
   } else {
-    Maybe<nscoord> containBSize = ContainIntrinsicBSize();
-    if (!IsComboboxControlFrame() && containBSize) {
+    Maybe<nscoord> containBSize = ContainIntrinsicBSize(
+        IsComboboxControlFrame() ? NS_UNCONSTRAINEDSIZE : 0);
+    if (containBSize && *containBSize != NS_UNCONSTRAINEDSIZE) {
       // If we're size-containing in block axis and we don't have a specified
       // block size, then our final size should actually be computed from only
       // our border, padding and contain-intrinsic-block-size, ignoring the
@@ -1950,13 +1951,13 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
       // below.
       //
       // NOTE: We exempt the nsComboboxControlFrame subclass from taking this
-      // special case, because comboboxes implicitly honors the size-containment
-      // behavior on its nsComboboxDisplayFrame child (which it shrinkwraps)
-      // rather than on the nsComboboxControlFrame. (Moreover, the DisplayFrame
-      // child doesn't even need any special content-size-ignoring behavior in
-      // its reflow method, because that method just resolves "auto" BSize
-      // values to one line-height rather than by measuring its contents'
-      // BSize.)
+      // special case when it has 'contain-intrinsic-block-size: none', because
+      // comboboxes implicitly honors the size-containment behavior on its
+      // nsComboboxDisplayFrame child (which it shrinkwraps) rather than on the
+      // nsComboboxControlFrame. (Moreover, the DisplayFrame child doesn't even
+      // need any special content-size-ignoring behavior in its reflow method,
+      // because that method just resolves "auto" BSize values to one
+      // line-height rather than by measuring its contents' BSize.)
       nscoord contentBSize = *containBSize;
       nscoord autoBSize =
           aReflowInput.ApplyMinMaxBSize(contentBSize, aState.mConsumedBSize);
