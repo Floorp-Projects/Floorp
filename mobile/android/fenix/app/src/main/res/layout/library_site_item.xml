@@ -80,7 +80,7 @@
             android:layout_height="wrap_content"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/content_description_menu"
-            app:srcCompat="@drawable/ic_close"
+            app:srcCompat="@drawable/ic_menu"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
