@@ -35,16 +35,27 @@
       );
     }
 
-    const pc = SpecialPowers.wrap(test.pcRemote._pc);
-    const havePacketWithMid = midId => getRtpPacketWithExtension(pc, midId);
+    let havePacketWithMid;
+    let sdpExtmaps;
+
+    // MID can stop being sent when acked causing failures if packets are checked later.
+    // Starting packet sniffer before PC_LOCAL_SET_REMOTE_DESCRIPTION to be ready
+    // to inspect packets ahead of any packets arriving.
+    test.chain.insertBefore('PC_LOCAL_SET_REMOTE_DESCRIPTION', [
+      function PC_REMOTE_FIND_RTP_PACKETS_WITH_MIDID() {
+
+        sdpExtmaps = sdputils.findExtmapIdsUrnsDirections(test.originalAnswer.sdp);
+        const [midId] = sdpExtmaps.find(([, urn]) => urn == "urn:ietf:params:rtp-hdrext:sdes:mid");
+        const pc = SpecialPowers.wrap(test.pcRemote._pc);
+        havePacketWithMid = getRtpPacketWithExtension(pc, midId);
+      }
+    ]);
 
     test.chain.insertBefore('PC_REMOTE_WAIT_FOR_MEDIA_FLOW', [
       async function PC_REMOTE_CHECK_RTP_HEADER_EXTS_AGAINST_SDP() {
 
-        const sdpExtmaps = sdputils.findExtmapIdsUrnsDirections(test.originalAnswer.sdp);
         const sdpExtmapIds = sdpExtmaps.map(e => e[0]);
-        const midId = sdpExtmaps.find(([_id, urn, dir]) => urn == "urn:ietf:params:rtp-hdrext:sdes:mid")[0];
-        const packet = await havePacketWithMid(midId);
+        const packet = await havePacketWithMid;
         const extIds = packet.header.extensions.map(e => `${e.id}`);
         // make sure we got the same number of rtp header extensions in
         // the received packet as were negotiated in the sdp.  Then
