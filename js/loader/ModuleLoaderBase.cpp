@@ -173,41 +173,50 @@ bool ModuleLoaderBase::ImportMetaResolve(JSContext* cx, unsigned argc,
 JSString* ModuleLoaderBase::ImportMetaResolveImpl(
     JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
     JS::Handle<JSString*> aSpecifier) {
-  RefPtr<ModuleScript> script =
-      static_cast<ModuleScript*>(aReferencingPrivate.toPrivate());
-  MOZ_ASSERT(script->IsModuleScript());
-  MOZ_ASSERT(JS::GetModulePrivate(script->ModuleRecord()) ==
-             aReferencingPrivate);
+  RootedString urlString(aCx);
 
-  RefPtr<ModuleLoaderBase> loader = GetCurrentModuleLoader(aCx);
-  if (!loader) {
-    return nullptr;
-  }
+  {
+    // ModuleScript should only live in this block, otherwise it will be a GC
+    // hazard
+    RefPtr<ModuleScript> script =
+        static_cast<ModuleScript*>(aReferencingPrivate.toPrivate());
+    MOZ_ASSERT(script->IsModuleScript());
+    MOZ_ASSERT(JS::GetModulePrivate(script->ModuleRecord()) ==
+               aReferencingPrivate);
 
-  nsAutoJSString specifier;
-  if (!specifier.init(aCx, aSpecifier)) {
-    return nullptr;
-  }
-
-  auto result = loader->ResolveModuleSpecifier(script, specifier);
-  if (result.isErr()) {
-    JS::Rooted<JS::Value> error(aCx);
-    nsresult rv = HandleResolveFailure(aCx, script, specifier,
-                                       result.unwrapErr(), 0, 0, &error);
-    if (NS_FAILED(rv)) {
-      JS_ReportOutOfMemory(aCx);
+    RefPtr<ModuleLoaderBase> loader = GetCurrentModuleLoader(aCx);
+    if (!loader) {
       return nullptr;
     }
 
-    JS_SetPendingException(aCx, error);
+    nsAutoJSString specifier;
+    if (!specifier.init(aCx, aSpecifier)) {
+      return nullptr;
+    }
 
-    return nullptr;
+    auto result = loader->ResolveModuleSpecifier(script, specifier);
+    if (result.isErr()) {
+      JS::Rooted<JS::Value> error(aCx);
+      nsresult rv = HandleResolveFailure(aCx, script, specifier,
+                                         result.unwrapErr(), 0, 0, &error);
+      if (NS_FAILED(rv)) {
+        JS_ReportOutOfMemory(aCx);
+        return nullptr;
+      }
+
+      JS_SetPendingException(aCx, error);
+
+      return nullptr;
+    }
+
+    nsCOMPtr<nsIURI> uri = result.unwrap();
+    nsAutoCString url;
+    MOZ_ALWAYS_SUCCEEDS(uri->GetAsciiSpec(url));
+
+    urlString.set(JS_NewStringCopyZ(aCx, url.get()));
   }
 
-  nsCOMPtr<nsIURI> uri = result.unwrap();
-  nsAutoCString url;
-  MOZ_ALWAYS_SUCCEEDS(uri->GetAsciiSpec(url));
-  return JS_NewStringCopyZ(aCx, url.get());
+  return urlString;
 }
 
 // static
