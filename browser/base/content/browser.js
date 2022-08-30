@@ -649,6 +649,7 @@ var gInitialPages = [
   "about:sessionrestore",
   "about:welcome",
   "about:welcomeback",
+  "chrome://browser/content/blanktab.html",
 ];
 
 function isInitialPage(url) {
