@@ -2493,14 +2493,6 @@ void LocalAccessible::BindToParent(LocalAccessible* aParent,
         table->GetHeaderCache().Clear();
       }
     }
-  } else if (IsTableRow() && aParent->IsTable() &&
-             StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    // This table might have previously been treated as a layout table. Now that
-    // a row has been added, it might have sufficient rows to be considered a
-    // data table. We do this here rather than when handling the reorder event
-    // because queuing a cache update once we start firing events means waiting
-    // for the next tick before the cache update is sent.
-    mDoc->QueueCacheUpdate(aParent, CacheDomain::Table);
   }
 
 #if defined(XP_WIN)
