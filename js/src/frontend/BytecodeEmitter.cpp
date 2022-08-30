@@ -2534,29 +2534,21 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode) {
 
 bool BytecodeEmitter::emitDestructuringLHSRef(ParseNode* target,
                                               size_t* emitted) {
-  *emitted = 0;
-
-  if (target->isKind(ParseNodeKind::Spread)) {
-    target = target->as<UnaryNode>().kid();
-  } else if (target->isKind(ParseNodeKind::AssignExpr)) {
-    target = target->as<AssignmentNode>().left();
-  }
-
-  // No need to recur into ParseNodeKind::Array and
-  // ParseNodeKind::Object subpatterns here, since
-  // emitSetOrInitializeDestructuring does the recursion when
-  // setting or initializing value.  Getting reference doesn't recur.
-  if (target->isKind(ParseNodeKind::Name) ||
-      target->isKind(ParseNodeKind::ArrayExpr) ||
-      target->isKind(ParseNodeKind::ObjectExpr)) {
-    return true;
-  }
-
 #ifdef DEBUG
   int depth = bytecodeSection().stackDepth();
 #endif
 
   switch (target->getKind()) {
+    case ParseNodeKind::Name:
+    case ParseNodeKind::ArrayExpr:
+    case ParseNodeKind::ObjectExpr:
+      // No need to recurse into ParseNodeKind::Array and ParseNodeKind::Object
+      // subpatterns here, since emitSetOrInitializeDestructuring does the
+      // recursion when setting or initializing the value. Getting reference
+      // doesn't recurse.
+      *emitted = 0;
+      break;
+
     case ParseNodeKind::DotExpr: {
       PropertyAccess* prop = &target->as<PropertyAccess>();
       bool isSuper = prop->isSuper();
@@ -2572,14 +2564,11 @@ bool BytecodeEmitter::emitDestructuringLHSRef(ParseNode* target,
           //        [stack] THIS SUPERBASE
           return false;
         }
-        // SUPERBASE is pushed onto THIS in poe.prepareForRhs below.
-        *emitted = 2;
       } else {
         if (!emitTree(&prop->expression())) {
           //        [stack] OBJ
           return false;
         }
-        *emitted = 1;
       }
       if (!poe.prepareForRhs()) {
         //          [stack] # if Super
@@ -2588,6 +2577,9 @@ bool BytecodeEmitter::emitDestructuringLHSRef(ParseNode* target,
         //          [stack] OBJ
         return false;
       }
+
+      // SUPERBASE was pushed onto THIS in poe.prepareForRhs above.
+      *emitted = 1 + isSuper;
       break;
     }
 
@@ -2605,12 +2597,6 @@ bool BytecodeEmitter::emitDestructuringLHSRef(ParseNode* target,
         //          [stack] OBJ KEY
         return false;
       }
-      if (isSuper) {
-        // SUPERBASE is pushed onto KEY in eoe.prepareForRhs below.
-        *emitted = 3;
-      } else {
-        *emitted = 2;
-      }
       if (!eoe.prepareForRhs()) {
         //          [stack] # if Super
         //          [stack] THIS KEY SUPERBASE
@@ -2618,6 +2604,9 @@ bool BytecodeEmitter::emitDestructuringLHSRef(ParseNode* target,
         //          [stack] OBJ KEY
         return false;
       }
+
+      // SUPERBASE was pushed onto KEY in eoe.prepareForRhs above.
+      *emitted = 2 + isSuper;
       break;
     }
 
@@ -2659,11 +2648,6 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
   // destructuring initialiser-form, call ourselves to handle it, then pop
   // the matched value. Otherwise emit an lvalue bytecode sequence followed
   // by an assignment op.
-  if (target->isKind(ParseNodeKind::Spread)) {
-    target = target->as<UnaryNode>().kid();
-  } else if (target->isKind(ParseNodeKind::AssignExpr)) {
-    target = target->as<AssignmentNode>().left();
-  }
 
   switch (target->getKind()) {
     case ParseNodeKind::ArrayExpr:
@@ -3280,14 +3264,26 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
     bool isFirst = member == pattern->head();
     DebugOnly<bool> hasNext = !!member->pn_next;
 
+    ParseNode* subpattern;
+    if (member->isKind(ParseNodeKind::Spread)) {
+      subpattern = member->as<UnaryNode>().kid();
+
+      MOZ_ASSERT(!subpattern->isKind(ParseNodeKind::AssignExpr));
+    } else {
+      subpattern = member;
+    }
+
+    ParseNode* lhsPattern = subpattern;
+    ParseNode* pndefault = nullptr;
+    if (subpattern->isKind(ParseNodeKind::AssignExpr)) {
+      lhsPattern = subpattern->as<AssignmentNode>().left();
+      pndefault = subpattern->as<AssignmentNode>().right();
+    }
+
+    // Number of stack slots emitted for the LHS reference.
     size_t emitted = 0;
 
     // Spec requires LHS reference to be evaluated first.
-    ParseNode* lhsPattern = member;
-    if (lhsPattern->isKind(ParseNodeKind::AssignExpr)) {
-      lhsPattern = lhsPattern->as<AssignmentNode>().left();
-    }
-
     bool isElision = lhsPattern->isKind(ParseNodeKind::Elision);
     if (!isElision) {
       auto emitLHSRef = [lhsPattern, &emitted](BytecodeEmitter* bce) {
@@ -3381,8 +3377,8 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
         return false;
       }
 
-      auto emitAssignment = [member, flav](BytecodeEmitter* bce) {
-        return bce->emitSetOrInitializeDestructuring(member, flav);
+      auto emitAssignment = [lhsPattern, flav](BytecodeEmitter* bce) {
+        return bce->emitSetOrInitializeDestructuring(lhsPattern, flav);
         //          [stack] ... OBJ NEXT ITER TRUE
       };
       if (!wrapWithDestructuringTryNote(tryNoteDepth, emitAssignment)) {
@@ -3392,13 +3388,6 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
       MOZ_ASSERT(!hasNext);
       break;
     }
-
-    ParseNode* pndefault = nullptr;
-    if (member->isKind(ParseNodeKind::AssignExpr)) {
-      pndefault = member->as<AssignmentNode>().right();
-    }
-
-    MOZ_ASSERT(!member->isKind(ParseNodeKind::Spread));
 
     InternalIfEmitter ifAlreadyDone(this);
     if (!isFirst) {
@@ -3601,13 +3590,13 @@ bool BytecodeEmitter::emitDestructuringOpsObject(ListNode* pattern,
     if (member->isKind(ParseNodeKind::MutateProto) ||
         member->isKind(ParseNodeKind::Spread)) {
       subpattern = member->as<UnaryNode>().kid();
+
+      MOZ_ASSERT(!subpattern->isKind(ParseNodeKind::AssignExpr));
     } else {
       MOZ_ASSERT(member->isKind(ParseNodeKind::PropertyDefinition) ||
                  member->isKind(ParseNodeKind::Shorthand));
       subpattern = member->as<BinaryNode>().right();
     }
-    MOZ_ASSERT_IF(member->isKind(ParseNodeKind::Spread),
-                  !subpattern->isKind(ParseNodeKind::AssignExpr));
 
     ParseNode* lhs = subpattern;
     ParseNode* pndefault = nullptr;
@@ -3616,7 +3605,10 @@ bool BytecodeEmitter::emitDestructuringOpsObject(ListNode* pattern,
       pndefault = subpattern->as<AssignmentNode>().right();
     }
 
-    size_t emitted;
+    // Number of stack slots emitted for the LHS reference.
+    size_t emitted = 0;
+
+    // Spec requires LHS reference to be evaluated first.
     if (!emitDestructuringLHSRef(lhs, &emitted)) {
       //            [stack] ... SET? RHS LREF*
       return false;
