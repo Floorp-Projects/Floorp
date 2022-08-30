@@ -162,7 +162,7 @@ Services.prefs.addObserver("floorp.browser.sidebar.right", function(){
 
   if (!Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
       var Tag = document.createElement("style");
-      Tag.innerText = `#sidebar-button2, .browser-sidebar2 {display: none !important;}`
+      Tag.innerText = `#sidebar-button2, #wrapper-sidebar-button2, .browser-sidebar2 {display: none !important;}`
       document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag)
   }
 
