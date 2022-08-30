@@ -62,7 +62,11 @@ export const ProtonScreenActionButtons = props => {
   }
 
   return (
-    <div className="action-buttons">
+    <div
+      className={`action-buttons ${
+        content.dual_action_buttons ? "dual-action-buttons" : ""
+      }`}
+    >
       <Localized text={content.primary_button?.label}>
         <button
           className="primary"

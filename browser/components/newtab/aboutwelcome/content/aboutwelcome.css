@@ -415,6 +415,19 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .checkbox-container label {
   vertical-align: middle;
 }
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons.dual-action-buttons button {
+  padding: 8px 16px;
+}
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons.dual-action-buttons .secondary-cta {
+  display: block;
+  position: relative;
+  bottom: unset;
+  margin-block: 5px 0;
+}
+.onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons.dual-action-buttons .secondary-cta .secondary {
+  margin-inline: 0;
+  font-size: 13px;
+}
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta {
   position: absolute;
   bottom: -30px;

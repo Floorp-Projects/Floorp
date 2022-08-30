@@ -412,6 +412,60 @@ const ONBOARDING_MESSAGES = () => [
           },
         },
         {
+          id: "UPGRADE_PRIVACY_SEGMENTATION",
+          content: {
+            position: "split",
+            progress_bar: "true",
+            dual_action_buttons: true,
+            background:
+              "url('chrome://activity-stream/content/data/content/assets/mr-pintaskbar.svg') var(--mr-secondary-position) no-repeat, var(--in-content-page-background) radial-gradient(83.12% 83.12% at 80.59% 16.88%, rgba(103, 51, 205, 0.75) 0%, rgba(0, 108, 207, 0.75) 54.51%, rgba(128, 199, 247, 0.75) 100%)",
+            logo: {},
+            title: {
+              string_id: "mr2022-onboarding-privacy-segmentation-title",
+            },
+            subtitle: {
+              string_id: "mr2022-onboarding-privacy-segmentation-subtitle",
+            },
+            cta_paragraph: {
+              text: {
+                string_id: "mr2022-onboarding-privacy-segmentation-text-cta",
+              },
+            },
+            primary_button: {
+              label: {
+                string_id:
+                  "mr2022-onboarding-privacy-segmentation-button-primary-label",
+              },
+              action: {
+                type: "SET_PREF",
+                data: {
+                  pref: {
+                    name: "browser.privacySegmentation.enabled",
+                    value: true,
+                  },
+                },
+                navigate: true,
+              },
+            },
+            secondary_button: {
+              label: {
+                string_id:
+                  "mr2022-onboarding-privacy-segmentation-button-secondary-label",
+              },
+              action: {
+                type: "SET_PREF",
+                data: {
+                  pref: {
+                    name: "browser.privacySegmentation.enabled",
+                    value: false,
+                  },
+                },
+                navigate: true,
+              },
+            },
+          },
+        },
+        {
           id: "UPGRADE_GRATITUDE",
           content: {
             position: "split",
