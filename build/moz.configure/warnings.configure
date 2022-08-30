@@ -175,10 +175,6 @@ check_and_add_warning("-Wno-error=free-nonheap-object")
 # Would be a pain to fix all occurrences, for very little gain
 check_and_add_warning("-Wno-multistatement-macros")
 
-# Disable the -Werror for return-std-move because of a false positive
-# on nsTAutoStringN: https://bugs.llvm.org/show_bug.cgi?id=37249
-check_and_add_warning("-Wno-error=return-std-move")
-
 # Disable the -Werror for -Wclass-memaccess as we have a long
 # tail of issues to fix
 check_and_add_warning("-Wno-error=class-memaccess")
