@@ -71,7 +71,7 @@
 
 /* General styles */
 
-*|*.plain {
+.plain {
   appearance: none;
   margin: 0 !important;
   border: none;
