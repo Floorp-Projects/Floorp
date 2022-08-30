@@ -7,37 +7,23 @@
 #ifndef DOM_FS_CHILD_FILESYSTEMREQUESTHANDLER_H_
 #define DOM_FS_CHILD_FILESYSTEMREQUESTHANDLER_H_
 
-#include "fs/FileSystemChildFactory.h"
-
+#include "mozilla/dom/FileSystemActorHolder.h"
 #include "mozilla/dom/FileSystemTypes.h"
-#include "mozilla/dom/FileSystemHandle.h"
-#include "nsStringFwd.h"
-
-template <class T>
-class RefPtr;
 
 namespace mozilla::dom {
-class FileSystemHandle;
+
 class Promise;
-class OriginPrivateFileSystemChild;
-}  // namespace mozilla::dom
 
-namespace mozilla::dom::fs {
+namespace fs {
 
+class ArrayAppendable {};
 class FileSystemChildMetadata;
 class FileSystemEntryMetadata;
 
-class ArrayAppendable {};
-
 class FileSystemRequestHandler {
  public:
-  explicit FileSystemRequestHandler(FileSystemChildFactory* aChildFactory)
-      : mChildFactory(aChildFactory) {}
-
-  FileSystemRequestHandler()
-      : FileSystemRequestHandler(new FileSystemChildFactory()) {}
-
-  virtual void GetRoot(RefPtr<Promise> aPromise);
+  virtual void GetRootHandle(RefPtr<FileSystemActorHolder>& aActor,
+                             RefPtr<Promise> aPromise);
 
   virtual void GetDirectoryHandle(RefPtr<FileSystemActorHolder>& aActor,
                                   const FileSystemChildMetadata& aDirectory,
@@ -60,12 +46,9 @@ class FileSystemRequestHandler {
                            bool aRecursive, RefPtr<Promise> aPromise);
 
   virtual ~FileSystemRequestHandler() = default;
-
- protected:
-  const UniquePtr<FileSystemChildFactory> mChildFactory;
-
 };  // class FileSystemRequestHandler
 
-}  // namespace mozilla::dom::fs
+}  // namespace fs
+}  // namespace mozilla::dom
 
 #endif  // DOM_FS_CHILD_FILESYSTEMREQUESTHANDLER_H_

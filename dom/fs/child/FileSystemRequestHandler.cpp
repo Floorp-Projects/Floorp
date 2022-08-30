@@ -5,94 +5,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "fs/FileSystemRequestHandler.h"
-#include "fs/FileSystemConstants.h"
 
-#include "nsIScriptObjectPrincipal.h"
-#include "mozilla/dom/BackgroundFileSystemChild.h"
-#include "mozilla/dom/OriginPrivateFileSystemChild.h"
+#include "fs/FileSystemConstants.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/FileSystemFileHandle.h"
 #include "mozilla/dom/FileSystemDirectoryHandle.h"
+#include "mozilla/dom/FileSystemFileHandle.h"
+#include "mozilla/dom/FileSystemHandle.h"
+#include "mozilla/dom/OriginPrivateFileSystemChild.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/ipc/Endpoint.h"
-#include "mozilla/ipc/BackgroundChild.h"
-#include "mozilla/ipc/BackgroundUtils.h"
-#include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
 
 namespace mozilla::dom::fs {
 
 using mozilla::ipc::RejectCallback;
 
 namespace {
-
-// Not static: BackgroundFileSystemChild must be owned by calling thread
-RefPtr<mozilla::dom::BackgroundFileSystemChild> GetRootProvider(
-    nsIGlobalObject* aGlobal) {
-  using mozilla::dom::BackgroundFileSystemChild;
-  using mozilla::ipc::BackgroundChild;
-  using mozilla::ipc::PBackgroundChild;
-  using mozilla::ipc::PrincipalInfo;
-
-  // TODO: It would be nice to convert all error checks to QM_TRY some time
-  //       later.
-
-  // TODO: It would be cleaner if we were called with a PrincipalInfo, instead
-  //       of an nsIGlobalObject, so we wouldn't have the dependency on the
-  //       workers code.
-
-  PBackgroundChild* backgroundActor =
-      BackgroundChild::GetOrCreateForCurrentThread();
-
-  if (NS_WARN_IF(!backgroundActor)) {
-    MOZ_ASSERT(false);
-    return nullptr;
-  }
-
-  RefPtr<BackgroundFileSystemChild> result;
-
-  if (NS_IsMainThread()) {
-    nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(aGlobal);
-    if (!sop) {
-      return nullptr;
-    }
-
-    nsCOMPtr<nsIPrincipal> principal = sop->GetEffectiveStoragePrincipal();
-    if (!principal) {
-      return nullptr;
-    }
-
-    auto principalInfo = MakeUnique<PrincipalInfo>();
-    nsresult rv = PrincipalToPrincipalInfo(principal, principalInfo.get());
-    if (NS_FAILED(rv)) {
-      return nullptr;
-    }
-
-    auto* actor = new BackgroundFileSystemChild();
-
-    result = static_cast<BackgroundFileSystemChild*>(
-        backgroundActor->SendPBackgroundFileSystemConstructor(actor,
-                                                              *principalInfo));
-  } else {
-    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    if (!workerPrivate) {
-      return nullptr;
-    }
-
-    const PrincipalInfo& principalInfo =
-        workerPrivate->GetEffectiveStoragePrincipalInfo();
-
-    BackgroundFileSystemChild* actor = new BackgroundFileSystemChild();
-
-    result = static_cast<BackgroundFileSystemChild*>(
-        backgroundActor->SendPBackgroundFileSystemConstructor(actor,
-                                                              principalInfo));
-  }
-
-  MOZ_ASSERT(result);
-
-  return result;
-}
 
 // TODO: This is just a dummy implementation
 RefPtr<File> MakeGetFileResult(nsIGlobalObject* aGlobal, const nsString& aName,
@@ -128,11 +55,12 @@ void GetDirectoryContentsResponseHandler(
 }
 
 RefPtr<FileSystemDirectoryHandle> MakeResolution(
-    nsIGlobalObject* aGlobal, FileSystemGetRootResponse&& aResponse,
+    nsIGlobalObject* aGlobal, FileSystemGetHandleResponse&& aResponse,
     const RefPtr<FileSystemDirectoryHandle>& /* aResolution */,
-    const Name& aName, RefPtr<FileSystemActorHolder>& aActor) {
+    RefPtr<FileSystemActorHolder>& aActor) {
   RefPtr<FileSystemDirectoryHandle> result = new FileSystemDirectoryHandle(
-      aGlobal, aActor, FileSystemEntryMetadata(aResponse.get_EntryId(), aName));
+      aGlobal, aActor,
+      FileSystemEntryMetadata(aResponse.get_EntryId(), kRootName));
   return result;
 }
 
@@ -301,42 +229,21 @@ mozilla::ipc::RejectCallback GetRejectCallback(
 
 }  // namespace
 
-void FileSystemRequestHandler::GetRoot(
+void FileSystemRequestHandler::GetRootHandle(
+    RefPtr<FileSystemActorHolder>& aActor,
     RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
-  using mozilla::ipc::Endpoint;
-
   MOZ_ASSERT(aPromise);
 
-  // Create a new IPC connection
-  Endpoint<POriginPrivateFileSystemParent> parentEp;
-  Endpoint<POriginPrivateFileSystemChild> childEp;
-  MOZ_ALWAYS_SUCCEEDS(
-      POriginPrivateFileSystem::CreateEndpoints(&parentEp, &childEp));
-
-  RefPtr<OriginPrivateFileSystemChild> child = mChildFactory->Create();
-  RefPtr<FileSystemActorHolder> actor =
-      MakeAndAddRef<FileSystemActorHolder>(child);
-  if (!childEp.Bind(actor->Actor()->AsBindable())) {
-    aPromise->MaybeRejectWithUndefined();
-    return;
-  }
-
-  auto&& onResolve = SelectResolveCallback<FileSystemGetRootResponse,
+  auto&& onResolve = SelectResolveCallback<FileSystemGetHandleResponse,
                                            RefPtr<FileSystemDirectoryHandle>>(
-      aPromise, kRootName, actor);
+      aPromise, aActor);
+
   auto&& onReject = GetRejectCallback(aPromise);
 
-  // XXX do something (register with global?) so that we can Close() the actor
-  // before the event queue starts to shut down.  That will cancel all
-  // outstanding async requests (returns lambdas with errors).
-  RefPtr<mozilla::dom::BackgroundFileSystemChild> rootProvider =
-      GetRootProvider(aPromise->GetGlobalObject());
-  if (!rootProvider) {
-    aPromise->MaybeRejectWithUnknownError("Could not access the file system");
-    return;
-  }
-  rootProvider->SendGetRoot(std::move(parentEp), std::move(onResolve),
-                            std::move(onReject));
+  QM_TRY(OkIf(aActor && aActor->Actor()), QM_VOID, [aPromise](const auto&) {
+    aPromise->MaybeRejectWithUnknownError("Invalid actor");
+  });
+  aActor->Actor()->SendGetRootHandle(std::move(onResolve), std::move(onReject));
 }
 
 void FileSystemRequestHandler::GetDirectoryHandle(
