@@ -721,6 +721,30 @@ DOM Events and Event Handling
     * - Bugzilla Components
       - Core::DOM: Events, Core::DOM: UI Events & Focus Handling
 
+Core: Firefox Source Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The infrastructure platform used to generate Firefox's source documentation, excluding editorial control over the content.
+
+
+.. list-table::
+    :stub-columns: 1
+    :widths: 30 70
+
+    * - Owner(s)
+      -
+        | `Andrew Halberstadt (ahal) <https://people.mozilla.org/s?query=ahal>`__
+    * - Peer(s)
+      -
+        | `Sylvestre Ledru (Sylvestre) <https://people.mozilla.org/s?query=Sylvestre>`__
+    * - Includes
+      -
+        | `docs/ <https://searchfox.org/mozilla-central/search?q=&path=docs/>`__
+        | `tools/moztreedocs/ <https://searchfox.org/mozilla-central/search?q=&path=tools/moztreedocs/>`__
+    * - URL
+      - https://firefox-source-docs.mozilla.org/
+    * - Bugzilla Components
+      - Developer Infrastructure::Source Documentation
+
 Core: Gecko Profiler
 ~~~~~~~~~~~~~~~~~~~~
 Gecko's built-in profiler
@@ -2288,7 +2312,7 @@ Submodule of WebRTC responsible for access to media input devices (microphones, 
         | `Randell Jesup (jesup) <https://people.mozilla.org/s?query=jesup>`__
     * - Peer(s)
       -
-        | `Jan-Ivar Bruaroey (jib) <https://people.mozilla.org/s?query=jib>`__
+        | `On PTO back Aug 29 (jib) <https://people.mozilla.org/s?query=jib>`__
         | `Dan Minor (dminor) <https://people.mozilla.org/s?query=dminor>`__
         | `Andreas Pehrson (pehrsons) <https://people.mozilla.org/s?query=pehrsons>`__
     * - Peer(s) Emeritus
@@ -2673,7 +2697,7 @@ Standalone Web Browser.
     * - Peer(s)
       -
         | `Dão Gottwald (dao) <https://people.mozilla.org/s?query=dao>`__
-        | `Jared Wein (jaws) <https://people.mozilla.org/s?query=jaws>`__
+        | `jaws <https://people.mozilla.org/s?query=jaws>`__
         | `Marco Bonardo (mak) <https://people.mozilla.org/s?query=mak>`__
         | `Matthew N (MattN) <https://people.mozilla.org/s?query=MattN>`__
     * - Peer(s) Emeritus
@@ -2820,7 +2844,7 @@ The main browser UI except where covered by more specific submodules.
 
     * - Owner(s)
       -
-        | `Jared Wein (jaws) <https://people.mozilla.org/s?query=jaws>`__
+        | `jaws <https://people.mozilla.org/s?query=jaws>`__
     * - Peer(s)
       -
         | `Mike Conley (mconley) <https://people.mozilla.org/s?query=mconley>`__
@@ -2867,7 +2891,7 @@ System policies for controlling Firefox.
     * - Peer(s)
       -
         | `Dão Gottwald (dao) <https://people.mozilla.org/s?query=dao>`__
-        | `Jared Wein (jaws) <https://people.mozilla.org/s?query=jaws>`__
+        | `jaws <https://people.mozilla.org/s?query=jaws>`__
         | `Marco Bonardo (mak) <https://people.mozilla.org/s?query=mak>`__
         | `Matthew N (MattN) <https://people.mozilla.org/s?query=MattN>`__
     * - Includes
@@ -3058,7 +3082,7 @@ Managing, saving and filling logins.
         | `Sergey Galich (serg) <https://people.mozilla.org/s?query=serg>`__
     * - Peer(s)
       -
-        | `Jared Wein (jaws) <https://people.mozilla.org/s?query=jaws>`__
+        | `jaws <https://people.mozilla.org/s?query=jaws>`__
         | `Tim Giles (tgiles) <https://people.mozilla.org/s?query=tgiles>`__
         | `Dimi Lee (dimi) <https://people.mozilla.org/s?query=dimi>`__
         | `Sam Foster (sfoster) <https://people.mozilla.org/s?query=sfoster>`__
@@ -3087,7 +3111,7 @@ The front-end preferences system.
 
     * - Owner(s)
       -
-        | `Jared Wein (jaws) <https://people.mozilla.org/s?query=jaws>`__
+        | `jaws <https://people.mozilla.org/s?query=jaws>`__
     * - Peer(s)
       -
         | `Mark Striemer (mstriemer) <https://people.mozilla.org/s?query=mstriemer>`__
@@ -3249,7 +3273,7 @@ The UI component controlling browser tabs.
     * - Peer(s)
       -
         | `Dão Gottwald (dao) <https://people.mozilla.org/s?query=dao>`__
-        | `Jared Wein (jaws) <https://people.mozilla.org/s?query=jaws>`__
+        | `jaws <https://people.mozilla.org/s?query=jaws>`__
         | `Marco Bonardo (mak) <https://people.mozilla.org/s?query=mak>`__
         | `Matthew N (MattN) <https://people.mozilla.org/s?query=MattN>`__
     * - Includes
@@ -3559,7 +3583,7 @@ Components shared between desktop and mobile browsers.
         | `Gijs <https://people.mozilla.org/s?query=Gijs>`__
     * - Peer(s)
       -
-        | `Jared Wein (jaws) <https://people.mozilla.org/s?query=jaws>`__
+        | `jaws <https://people.mozilla.org/s?query=jaws>`__
         | `Marco Bonardo (mak) <https://people.mozilla.org/s?query=mak>`__
         | `Matthew N (MattN) <https://people.mozilla.org/s?query=MattN>`__
     * - Includes
@@ -3636,7 +3660,7 @@ The base widgets used throughout the UI.
         | `Neil Deakin (enndeakin) <https://people.mozilla.org/s?query=enndeakin>`__
     * - Peer(s)
       -
-        | `Jared Wein (jaws) <https://people.mozilla.org/s?query=jaws>`__
+        | `jaws <https://people.mozilla.org/s?query=jaws>`__
         | `Marco Bonardo (mak) <https://people.mozilla.org/s?query=mak>`__
         | `Matthew N (MattN) <https://people.mozilla.org/s?query=MattN>`__
     * - Peer(s) Emeritus
