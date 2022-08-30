@@ -162,6 +162,7 @@ input[type="text"] {
 
 #open-dialog-link::after {
   display: block;
+  flex-shrink: 0;
   content: "";
   background: url(chrome://global/skin/icons/open-in-new.svg) no-repeat center;
   background-size: 12px;
