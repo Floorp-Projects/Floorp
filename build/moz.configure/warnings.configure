@@ -143,18 +143,6 @@ with only_when(depends(target)(lambda t: t.kernel == "Darwin")):
     # catch ObjC method parameter type not matching super class method
     check_and_add_warning("-Wsuper-class-method-mismatch")
 
-# catches expressions used as a null pointer constant
-# XXX: at the time of writing, the version of clang used on the OS X test
-# machines has a bug that causes it to reject some valid files if both
-# -Wnon-literal-null-conversion and -Wsometimes-uninitialized are
-# specified. We work around this by instead using
-# -Werror=non-literal-null-conversion, but we only do that when
-# --enable-warnings-as-errors is specified so that no unexpected fatal
-# warnings are produced.
-check_and_add_warning(
-    "-Werror=non-literal-null-conversion", when="--enable-warnings-as-errors"
-)
-
 # catches string literals used in boolean expressions
 check_and_add_warning("-Wstring-conversion")
 
