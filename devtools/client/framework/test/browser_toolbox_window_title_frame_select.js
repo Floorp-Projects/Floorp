@@ -135,7 +135,6 @@ add_task(async function() {
   gBrowser.removeCurrentTab();
   Services.prefs.clearUserPref("devtools.toolbox.host");
   Services.prefs.clearUserPref("devtools.toolbox.selectedTool");
-  Services.prefs.clearUserPref("devtools.toolbox.sideEnabled");
   Services.prefs.clearUserPref("devtools.command-button-frames.enabled");
   finish();
 });

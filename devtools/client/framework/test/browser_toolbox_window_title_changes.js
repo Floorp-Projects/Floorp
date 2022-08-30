@@ -72,7 +72,6 @@ add_task(async function test() {
   gBrowser.removeCurrentTab();
   Services.prefs.clearUserPref("devtools.toolbox.host");
   Services.prefs.clearUserPref("devtools.toolbox.selectedTool");
-  Services.prefs.clearUserPref("devtools.toolbox.sideEnabled");
 });
 
 function getExpectedTitle(name, url) {
