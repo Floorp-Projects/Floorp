@@ -1259,13 +1259,11 @@ class InsertVisitedURIs final : public Runnable {
     rv = stmt->ExecuteStep(&exists);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!exists) {
-      // Not in sponsored session since no history.
-      return NS_OK;
+    if (exists) {
+      rv = stmt->GetInt64(0, &aPlace.triggeringPlaceId);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    rv = stmt->GetInt64(0, &aPlace.triggeringPlaceId);
-    NS_ENSURE_SUCCESS(rv, rv);
     aPlace.source = nsINavHistoryService::VISIT_SOURCE_SPONSORED;
 
     return NS_OK;
