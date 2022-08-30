@@ -10,9 +10,6 @@ onboarding:
     is-enabled:
       type: boolean
       description: "If `true`, the app will show the new onboarding screen"
-    is-new-onboarding-enable:
-      type: boolean
-      description: "If `true`, the app will show the new onboarding with two screens"
 tabs:
   description: Nimbus feature name intended to control the multiple tabs feature in the app.
   hasExposure: true
