@@ -17,13 +17,10 @@
 #include <string>
 
 #include "modules/audio_device/audio_device_generic.h"
+#include "rtc_base/platform_thread.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/file_wrapper.h"
 #include "rtc_base/time_utils.h"
-
-namespace rtc {
-class PlatformThread;
-}  // namespace rtc
 
 namespace webrtc {
 
@@ -31,8 +28,8 @@ namespace webrtc {
 // and plays out into a file.
 class FileAudioDevice : public AudioDeviceGeneric {
  public:
-  // Constructs a file audio device with |id|. It will read audio from
-  // |inputFilename| and record output audio to |outputFilename|.
+  // Constructs a file audio device with `id`. It will read audio from
+  // `inputFilename` and record output audio to `outputFilename`.
   //
   // The input file should be a readable 48k stereo raw file, and the output
   // file should point to a writable location. The output format will also be
@@ -145,9 +142,8 @@ class FileAudioDevice : public AudioDeviceGeneric {
   size_t _recordingFramesIn10MS;
   size_t _playoutFramesIn10MS;
 
-  // TODO(pbos): Make plain members instead of pointers and stop resetting them.
-  std::unique_ptr<rtc::PlatformThread> _ptrThreadRec;
-  std::unique_ptr<rtc::PlatformThread> _ptrThreadPlay;
+  rtc::PlatformThread _ptrThreadRec;
+  rtc::PlatformThread _ptrThreadPlay;
 
   bool _playing;
   bool _recording;

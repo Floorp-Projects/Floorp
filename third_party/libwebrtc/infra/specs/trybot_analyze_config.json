@@ -1,0 +1,8 @@
+{
+  "base": {
+      "exclusions": [
+          "DEPS",
+          "infra/specs/.*"
+      ]
+  }
+}

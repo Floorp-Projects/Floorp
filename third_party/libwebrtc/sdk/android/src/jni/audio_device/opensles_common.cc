@@ -106,16 +106,15 @@ OpenSLEngineManager::OpenSLEngineManager() {
   thread_checker_.Detach();
 }
 
-OpenSLEngineManager::~OpenSLEngineManager() = default;
-
 SLObjectItf OpenSLEngineManager::GetOpenSLEngine() {
-  RTC_LOG(INFO) << "GetOpenSLEngine";
+  RTC_LOG(LS_INFO) << "GetOpenSLEngine";
   RTC_DCHECK(thread_checker_.IsCurrent());
   // OpenSL ES for Android only supports a single engine per application.
   // If one already has been created, return existing object instead of
   // creating a new.
   if (engine_object_.Get() != nullptr) {
-    RTC_LOG(WARNING) << "The OpenSL ES engine object has already been created";
+    RTC_LOG(LS_WARNING)
+        << "The OpenSL ES engine object has already been created";
     return engine_object_.Get();
   }
   // Create the engine object in thread safe mode.

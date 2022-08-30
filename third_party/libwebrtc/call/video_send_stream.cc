@@ -14,6 +14,7 @@
 
 #include "api/crypto/frame_encryptor_interface.h"
 #include "rtc_base/strings/string_builder.h"
+#include "rtc_base/strings/string_format.h"
 
 namespace webrtc {
 
@@ -28,6 +29,7 @@ const char* StreamTypeToString(VideoSendStream::StreamStats::StreamType type) {
     case VideoSendStream::StreamStats::StreamType::kFlexfec:
       return "flexfec";
   }
+  RTC_CHECK_NOTREACHED();
 }
 
 }  // namespace
@@ -50,8 +52,13 @@ std::string VideoSendStream::StreamStats::ToString() const {
   ss << "retransmit_bps: " << retransmit_bitrate_bps << ", ";
   ss << "avg_delay_ms: " << avg_delay_ms << ", ";
   ss << "max_delay_ms: " << max_delay_ms << ", ";
-  ss << "cum_loss: " << rtcp_stats.packets_lost << ", ";
-  ss << "max_ext_seq: " << rtcp_stats.extended_highest_sequence_number << ", ";
+  if (report_block_data) {
+    ss << "cum_loss: " << report_block_data->report_block().packets_lost
+       << ", ";
+    ss << "max_ext_seq: "
+       << report_block_data->report_block().extended_highest_sequence_number
+       << ", ";
+  }
   ss << "nack: " << rtcp_packet_type_counts.nack_packets << ", ";
   ss << "fir: " << rtcp_packet_type_counts.fir_packets << ", ";
   ss << "pli: " << rtcp_packet_type_counts.pli_packets;
@@ -65,7 +72,7 @@ std::string VideoSendStream::Stats::ToString(int64_t time_ms) const {
   char buf[2048];
   rtc::SimpleStringBuilder ss(buf);
   ss << "VideoSendStream stats: " << time_ms << ", {";
-  ss << "input_fps: " << input_frame_rate << ", ";
+  ss << "input_fps: " << rtc::StringFormat("%.1f", input_frame_rate) << ", ";
   ss << "encode_fps: " << encode_frame_rate << ", ";
   ss << "encode_ms: " << avg_encode_time_ms << ", ";
   ss << "encode_usage_perc: " << encode_usage_percent << ", ";

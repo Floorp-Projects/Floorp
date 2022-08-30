@@ -12,8 +12,18 @@
 # you add a new build file, there must be some path of dependencies from this
 # file to your new one or GN won't know about it.
 
+# Use of visibility = clauses:
+# The default visibility for all rtc_ targets is equivalent to "//*", or
+# "all targets in webrtc can depend on this, nothing outside can".
+#
+# When overriding, the choices are:
+# - visibility = [ "*" ] - public. Stuff outside webrtc can use this.
+# - visibility = [ ":*" ] - directory private.
+# As a general guideline, only targets in api/ should have public visibility.
+
 import("//build/config/linux/pkg_config.gni")
 import("//build/config/sanitizers/sanitizers.gni")
+import("//third_party/google_benchmark/buildconfig.gni")
 import("webrtc.gni")
 if (rtc_enable_protobuf) {
   import("//third_party/protobuf/proto_library.gni")
@@ -38,7 +48,6 @@ if (!build_with_chromium && !build_with_mozilla) {
     if (rtc_include_tests) {
       deps += [
         ":rtc_unittests",
-        ":slow_tests",
         ":video_engine_tests",
         ":voip_unittests",
         ":webrtc_nonparallel_tests",
@@ -54,8 +63,10 @@ if (!build_with_chromium && !build_with_mozilla) {
         "modules/remote_bitrate_estimator:rtp_to_text",
         "modules/rtp_rtcp:test_packet_masks_metrics",
         "modules/video_capture:video_capture_internal_impl",
+        "net/dcsctp:dcsctp_unittests",
         "pc:peerconnection_unittests",
         "pc:rtc_pc_unittests",
+        "pc:slow_peer_connection_unittests",
         "rtc_tools:rtp_generator",
         "rtc_tools:video_replay",
         "stats:rtc_stats_unittests",
@@ -71,6 +82,13 @@ if (!build_with_chromium && !build_with_mozilla) {
         # see bugs.webrtc.org/11027#c5.
         deps += [ ":webrtc_lib_link_test" ]
       }
+      if (is_ios) {
+        deps += [
+          "examples:apprtcmobile_tests",
+          "sdk:sdk_framework_unittests",
+          "sdk:sdk_unittests",
+        ]
+      }
       if (is_android) {
         deps += [
           "examples:android_examples_junit_tests",
@@ -82,11 +100,14 @@ if (!build_with_chromium && !build_with_mozilla) {
       }
       if (rtc_enable_protobuf) {
         deps += [
-          "audio:low_bandwidth_audio_test",
+          "audio:low_bandwidth_audio_perf_test",
           "logging:rtc_event_log_rtp_dump",
           "tools_webrtc/perf:webrtc_dashboard_upload",
         ]
       }
+    }
+    if (target_os == "android") {
+      deps += [ "tools_webrtc:binary_version_check" ]
     }
   }
 }
@@ -113,8 +134,15 @@ config("common_inherited_config") {
   cflags = []
   ldflags = []
 
+  if (rtc_dlog_always_on) {
+    defines += [ "DLOG_ALWAYS_ON" ]
+  }
+
   if (rtc_enable_symbol_export || is_component_build) {
-    defines = [ "WEBRTC_ENABLE_SYMBOL_EXPORT" ]
+    defines += [ "WEBRTC_ENABLE_SYMBOL_EXPORT" ]
+  }
+  if (rtc_enable_objc_symbol_export) {
+    defines += [ "WEBRTC_ENABLE_OBJC_SYMBOL_EXPORT" ]
   }
 
   if (build_with_mozilla) {
@@ -131,6 +159,10 @@ config("common_inherited_config") {
 
   if (rtc_enable_avx2) {
     defines += [ "WEBRTC_ENABLE_AVX2" ]
+  }
+
+  if (rtc_enable_win_wgc) {
+    defines += [ "RTC_ENABLE_WIN_WGC" ]
   }
 
   # Some tests need to declare their own trace event handlers. If this define is
@@ -215,14 +247,6 @@ config("common_inherited_config") {
 
 # TODO(bugs.webrtc.org/9693): Remove the possibility to suppress this warning
 # as soon as WebRTC compiles without it.
-config("no_exit_time_destructors") {
-  if (is_clang) {
-    cflags = [ "-Wno-exit-time-destructors" ]
-  }
-}
-
-# TODO(bugs.webrtc.org/9693): Remove the possibility to suppress this warning
-# as soon as WebRTC compiles without it.
 config("no_global_constructors") {
   if (is_clang) {
     cflags = [ "-Wno-global-constructors" ]
@@ -260,8 +284,12 @@ config("common_config") {
     defines += [ "RTC_ENABLE_VP9" ]
   }
 
+  if (rtc_include_dav1d_in_internal_decoder_factory) {
+    defines += [ "RTC_DAV1D_IN_INTERNAL_DECODER_FACTORY" ]
+  }
+
   if (rtc_enable_sctp) {
-    defines += [ "HAVE_SCTP" ]
+    defines += [ "WEBRTC_HAVE_SCTP" ]
   }
 
   if (rtc_enable_external_auth) {
@@ -296,7 +324,10 @@ config("common_config") {
     defines += [ "WEBRTC_EXCLUDE_AUDIO_PROCESSING_MODULE" ]
   }
 
-  cflags = []
+  # TODO(webrtc:13219): Fix -Wshadow instances and enable.
+  if (is_clang) {
+    cflags += [ "-Wno-shadow" ]
+  }
 
   if (build_with_chromium) {
     defines += [
@@ -334,18 +365,11 @@ config("common_config") {
     if (is_clang) {
       cflags += [
         "-Wc++11-narrowing",
-        "-Wimplicit-fallthrough",
-        "-Wthread-safety",
-        "-Winconsistent-missing-override",
         "-Wundef",
       ]
 
-      # use_xcode_clang only refers to the iOS toolchain, host binaries use
-      # chromium's clang always.
-      if (!is_nacl &&
-          (!use_xcode_clang || current_toolchain == host_toolchain)) {
-        # Flags NaCl (Clang 3.7) and Xcode 7.3 (Clang clang-703.0.31) do not
-        # recognize.
+      if (!is_nacl) {
+        # Flags NaCl (Clang 3.7) do not recognize.
         cflags += [ "-Wunused-lambda-capture" ]
       }
     }
@@ -421,14 +445,10 @@ config("common_config") {
 }
 
 if (is_mac) {
-  config("common_objc") {
-    frameworks = [ "Foundation.framework" ]
-
-    if (rtc_use_metal_rendering) {
-      defines = [ "RTC_SUPPORTS_METAL" ]
-    }
-    cflags = [ "-fobjc-arc" ]
-  }
+config("common_objc") {
+  frameworks = [ "Foundation.framework" ]
+  cflags = [ "-fobjc-arc" ]
+}
 }
 
 if (!build_with_chromium) {
@@ -464,9 +484,7 @@ if (!build_with_chromium) {
       "modules/video_capture:video_capture_internal_impl",
       #"p2p:rtc_p2p",
       #"pc:libjingle_peerconnection",
-      #"pc:peerconnection",
       #"pc:rtc_pc",
-      #"pc:rtc_pc_base",
       "rtc_base",
       #"sdk",
       "video",
@@ -511,6 +529,10 @@ if (!build_with_chromium) {
     rtc_executable("webrtc_lib_link_test") {
       testonly = true
 
+      # This target is used for checking to link, so do not check dependencies
+      # on gn check.
+      check_includes = false  # no-presubmit-check TODO(bugs.webrtc.org/12785)
+
       sources = [ "webrtc_lib_link_test.cc" ]
       deps = [
         # NOTE: Don't add deps here. If this test fails to link, it means you
@@ -530,7 +552,7 @@ if (use_libfuzzer || use_afl) {
   }
 }
 
-if (rtc_include_tests) {
+if (rtc_include_tests && !build_with_chromium) {
   rtc_test("rtc_unittests") {
     testonly = true
 
@@ -543,10 +565,11 @@ if (rtc_include_tests) {
       "api/transport:stun_unittest",
       "api/video/test:rtc_api_video_unittests",
       "api/video_codecs/test:video_codecs_api_unittests",
+      "api/voip:compile_all_headers",
       "call:fake_network_pipe_unittests",
       "p2p:libstunprober_unittests",
       "p2p:rtc_p2p_unittests",
-      "rtc_base:robo_caller_unittests",
+      "rtc_base:callback_list_unittests",
       "rtc_base:rtc_base_approved_unittests",
       "rtc_base:rtc_base_unittests",
       "rtc_base:rtc_json_unittests",
@@ -557,9 +580,12 @@ if (rtc_include_tests) {
       "rtc_base:untyped_function_unittest",
       "rtc_base:weak_ptr_unittests",
       "rtc_base/experiments:experiments_unittests",
-      "rtc_base/synchronization:sequence_checker_unittests",
+      "rtc_base/system:file_wrapper_unittests",
       "rtc_base/task_utils:pending_task_safety_flag_unittests",
+      "rtc_base/task_utils:repeating_task_unittests",
       "rtc_base/task_utils:to_queued_task_unittests",
+      "rtc_base/time:timestamp_extrapolator_unittests",
+      "rtc_base/units:units_unittests",
       "sdk:sdk_tests",
       "test:rtp_test_utils",
       "test:test_main",
@@ -587,23 +613,14 @@ if (rtc_include_tests) {
     }
   }
 
-  rtc_test("benchmarks") {
-    testonly = true
-    deps = [
-      "rtc_base/synchronization:mutex_benchmark",
-      "test:benchmark_main",
-    ]
-  }
-
-  # This runs tests that must run in real time and therefore can take some
-  # time to execute. They are in a separate executable to avoid making the
-  # regular unittest suite too slow to run frequently.
-  rtc_test("slow_tests") {
-    testonly = true
-    deps = [
-      "rtc_base/task_utils:repeating_task_unittests",
-      "test:test_main",
-    ]
+  if (enable_google_benchmarks) {
+    rtc_test("benchmarks") {
+      testonly = true
+      deps = [
+        "rtc_base/synchronization:mutex_benchmark",
+        "test:benchmark_main",
+      ]
+    }
   }
 
   # TODO(pbos): Rename test suite, this is no longer "just" for video targets.
@@ -632,12 +649,18 @@ if (rtc_include_tests) {
       "test:test_common",
       "test:test_main",
       "test:video_test_common",
+      "video:video_legacy_tests",
       "video:video_tests",
       "video/adaptation:video_adaptation_tests",
     ]
     data = video_engine_tests_resources
     if (is_android) {
-      deps += [ "//testing/android/native_test:native_test_native_code" ]
+      use_default_launcher = false
+      deps += [
+        "//build/android/gtest_apk:native_test_instrumentation_test_runner_java",
+        "//testing/android/native_test:native_test_java",
+        "//testing/android/native_test:native_test_support",
+      ]
       shard_timeout = 900
     }
     if (is_ios) {
@@ -682,7 +705,12 @@ if (rtc_include_tests) {
 
     data = webrtc_perf_tests_resources
     if (is_android) {
-      deps += [ "//testing/android/native_test:native_test_native_code" ]
+      use_default_launcher = false
+      deps += [
+        "//build/android/gtest_apk:native_test_instrumentation_test_runner_java",
+        "//testing/android/native_test:native_test_java",
+        "//testing/android/native_test:native_test_support",
+      ]
       shard_timeout = 4500
     }
     if (is_ios) {
@@ -702,6 +730,7 @@ if (rtc_include_tests) {
   rtc_test("voip_unittests") {
     testonly = true
     deps = [
+      "api/voip:compile_all_headers",
       "api/voip:voip_engine_factory_unittests",
       "audio/voip/test:audio_channel_unittests",
       "audio/voip/test:audio_egress_unittests",
@@ -710,6 +739,25 @@ if (rtc_include_tests) {
       "test:test_main",
     ]
   }
+}
+
+if (!build_with_mozilla) {
+# Build target for standalone dcsctp
+rtc_static_library("dcsctp") {
+  # Only the root target should depend on this.
+  visibility = [ "//:default" ]
+  sources = []
+  complete_static_lib = true
+  suppressed_configs += [ "//build/config/compiler:thin_archive" ]
+  defines = []
+  deps = [
+    "net/dcsctp/public:factory",
+    "net/dcsctp/public:socket",
+    "net/dcsctp/public:types",
+    "net/dcsctp/socket:dcsctp_socket",
+    "net/dcsctp/timer:task_queue_timeout",
+  ]
+}
 }
 
 # ---- Poisons ----
@@ -725,6 +773,9 @@ group("poison_audio_codecs") {
 }
 
 group("poison_default_task_queue") {
+}
+
+group("poison_default_echo_detector") {
 }
 
 group("poison_rtc_json") {

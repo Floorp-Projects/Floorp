@@ -9,9 +9,11 @@
  */
 
 #include "rtc_base/system/file_wrapper.h"
-#include "rtc_base/numerics/safe_conversions.h"
 
 #include <cerrno>
+
+#include "absl/strings/string_view.h"
+#include "rtc_base/numerics/safe_conversions.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -23,14 +25,17 @@
 
 namespace webrtc {
 namespace {
-FILE* FileOpen(const char* file_name_utf8, bool read_only, int* error) {
+FILE* FileOpen(absl::string_view file_name_utf8, bool read_only, int* error) {
+  RTC_CHECK_EQ(file_name_utf8.find_first_of('\0'), absl::string_view::npos)
+      << "Invalid filename, containing NUL character";
+  std::string file_name = std::string(file_name_utf8);
 #if defined(_WIN32)
-  int len = MultiByteToWideChar(CP_UTF8, 0, file_name_utf8, -1, nullptr, 0);
+  int len = MultiByteToWideChar(CP_UTF8, 0, file_name.c_str(), -1, nullptr, 0);
   std::wstring wstr(len, 0);
-  MultiByteToWideChar(CP_UTF8, 0, file_name_utf8, -1, &wstr[0], len);
+  MultiByteToWideChar(CP_UTF8, 0, file_name.c_str(), -1, &wstr[0], len);
   FILE* file = _wfopen(wstr.c_str(), read_only ? L"rb" : L"wb");
 #else
-  FILE* file = fopen(file_name_utf8, read_only ? "rb" : "wb");
+  FILE* file = fopen(file_name.c_str(), read_only ? "rb" : "wb");
 #endif
   if (!file && error) {
     *error = errno;
@@ -38,34 +43,17 @@ FILE* FileOpen(const char* file_name_utf8, bool read_only, int* error) {
   return file;
 }
 
-const char* GetCstrCheckNoEmbeddedNul(const std::string& s) {
-  const char* p = s.c_str();
-  RTC_CHECK_EQ(strlen(p), s.size())
-      << "Invalid filename, containing NUL character";
-  return p;
-}
 }  // namespace
 
 // static
-FileWrapper FileWrapper::OpenReadOnly(const char* file_name_utf8) {
+FileWrapper FileWrapper::OpenReadOnly(absl::string_view file_name_utf8) {
   return FileWrapper(FileOpen(file_name_utf8, true, nullptr));
 }
 
 // static
-FileWrapper FileWrapper::OpenReadOnly(const std::string& file_name_utf8) {
-  return OpenReadOnly(GetCstrCheckNoEmbeddedNul(file_name_utf8));
-}
-
-// static
-FileWrapper FileWrapper::OpenWriteOnly(const char* file_name_utf8,
+FileWrapper FileWrapper::OpenWriteOnly(absl::string_view file_name_utf8,
                                        int* error /*=nullptr*/) {
   return FileWrapper(FileOpen(file_name_utf8, false, error));
-}
-
-// static
-FileWrapper FileWrapper::OpenWriteOnly(const std::string& file_name_utf8,
-                                       int* error /*=nullptr*/) {
-  return OpenWriteOnly(GetCstrCheckNoEmbeddedNul(file_name_utf8), error);
 }
 
 FileWrapper::FileWrapper(FileWrapper&& other) {
@@ -87,6 +75,22 @@ bool FileWrapper::SeekRelative(int64_t offset) {
 bool FileWrapper::SeekTo(int64_t position) {
   RTC_DCHECK(file_);
   return fseek(file_, rtc::checked_cast<long>(position), SEEK_SET) == 0;
+}
+
+long FileWrapper::FileSize() {
+  if (file_ == nullptr)
+    return -1;
+  long original_position = ftell(file_);
+  if (original_position < 0)
+    return -1;
+  int seek_error = fseek(file_, 0, SEEK_END);
+  if (seek_error)
+    return -1;
+  long file_size = ftell(file_);
+  seek_error = fseek(file_, original_position, SEEK_SET);
+  if (seek_error)
+    return -1;
+  return file_size;
 }
 
 bool FileWrapper::Flush() {

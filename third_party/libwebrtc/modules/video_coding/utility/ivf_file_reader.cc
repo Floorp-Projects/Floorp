@@ -15,12 +15,12 @@
 
 #include "api/video_codecs/video_codec.h"
 #include "modules/rtp_rtcp/source/byte_io.h"
+#include "modules/video_coding/utility/ivf_defines.h"
 #include "rtc_base/logging.h"
 
 namespace webrtc {
 namespace {
 
-constexpr size_t kIvfHeaderSize = 32;
 constexpr size_t kIvfFrameHeaderSize = 12;
 constexpr int kCodecTypeBytesCount = 4;
 
@@ -104,10 +104,10 @@ bool IvfFileReader::Reset() {
   has_error_ = false;
 
   const char* codec_name = CodecTypeToPayloadString(codec_type_);
-  RTC_LOG(INFO) << "Opened IVF file with codec data of type " << codec_name
-                << " at resolution " << width_ << " x " << height_ << ", using "
-                << (using_capture_timestamps_ ? "1" : "90")
-                << "kHz clock resolution.";
+  RTC_LOG(LS_INFO) << "Opened IVF file with codec data of type " << codec_name
+                   << " at resolution " << width_ << " x " << height_
+                   << ", using " << (using_capture_timestamps_ ? "1" : "90")
+                   << "kHz clock resolution.";
 
   return true;
 }
@@ -164,14 +164,13 @@ absl::optional<EncodedImage> IvfFileReader::NextFrame() {
     image.SetTimestamp(static_cast<uint32_t>(current_timestamp));
   }
   image.SetEncodedData(payload);
-  image.SetSpatialIndex(static_cast<int>(layer_sizes.size()));
+  image.SetSpatialIndex(static_cast<int>(layer_sizes.size()) - 1);
   for (size_t i = 0; i < layer_sizes.size(); ++i) {
     image.SetSpatialLayerFrameSize(static_cast<int>(i), layer_sizes[i]);
   }
   if (is_first_frame) {
     image._frameType = VideoFrameType::kVideoFrameKey;
   }
-  image._completeFrame = true;
 
   return image;
 }

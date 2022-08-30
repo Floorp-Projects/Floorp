@@ -11,19 +11,22 @@
 package org.webrtc;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
+import android.os.Bundle;
+import androidx.test.runner.AndroidJUnit4;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
-import org.chromium.testing.local.LocalRobolectricTestRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,6 +39,7 @@ import org.webrtc.EncodedImage.FrameType;
 import org.webrtc.FakeMediaCodecWrapper.State;
 import org.webrtc.VideoCodecStatus;
 import org.webrtc.VideoEncoder;
+import org.webrtc.VideoEncoder.BitrateAllocation;
 import org.webrtc.VideoEncoder.CodecSpecificInfo;
 import org.webrtc.VideoEncoder.EncodeInfo;
 import org.webrtc.VideoEncoder.Settings;
@@ -43,7 +47,7 @@ import org.webrtc.VideoFrame;
 import org.webrtc.VideoFrame.Buffer;
 import org.webrtc.VideoFrame.I420Buffer;
 
-@RunWith(LocalRobolectricTestRunner.class)
+@RunWith(AndroidJUnit4.class)
 @Config(manifest = Config.NONE)
 public class HardwareVideoEncoderTest {
   private static final VideoEncoder.Settings TEST_ENCODER_SETTINGS = new Settings(
@@ -57,6 +61,10 @@ public class HardwareVideoEncoderTest {
       /* capabilities= */ new VideoEncoder.Capabilities(false /* lossNotification */));
   private static final long POLL_DELAY_MS = 10;
   private static final long DELIVER_ENCODED_IMAGE_DELAY_MS = 10;
+  private static final EncodeInfo ENCODE_INFO_KEY_FRAME =
+      new EncodeInfo(new FrameType[] {FrameType.VideoFrameKey});
+  private static final EncodeInfo ENCODE_INFO_DELTA_FRAME =
+      new EncodeInfo(new FrameType[] {FrameType.VideoFrameDelta});
 
   private static class TestEncoder extends HardwareVideoEncoder {
     private final Object deliverEncodedImageLock = new Object();
@@ -114,9 +122,15 @@ public class HardwareVideoEncoderTest {
 
   private class TestEncoderBuilder {
     private VideoCodecMimeType codecType = VideoCodecMimeType.VP8;
+    private BitrateAdjuster bitrateAdjuster = new BaseBitrateAdjuster();
 
     public TestEncoderBuilder setCodecType(VideoCodecMimeType codecType) {
       this.codecType = codecType;
+      return this;
+    }
+
+    public TestEncoderBuilder setBitrateAdjuster(BitrateAdjuster bitrateAdjuster) {
+      this.bitrateAdjuster = bitrateAdjuster;
       return this;
     }
 
@@ -128,10 +142,17 @@ public class HardwareVideoEncoderTest {
           /* yuvColorFormat= */ MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar,
           /* params= */ new HashMap<>(),
           /* keyFrameIntervalSec= */ 0,
-          /* forceKeyFrameIntervalMs= */ 0,
-          /* bitrateAdjuster= */ new BaseBitrateAdjuster(),
+          /* forceKeyFrameIntervalMs= */ 0, bitrateAdjuster,
           /* sharedContext= */ null);
     }
+  }
+
+  private VideoFrame createTestVideoFrame(long timestampNs) {
+    byte[] i420 = CodecTestHelper.generateRandomData(
+        TEST_ENCODER_SETTINGS.width * TEST_ENCODER_SETTINGS.height * 3 / 2);
+    final VideoFrame.I420Buffer testBuffer =
+        CodecTestHelper.wrapI420(TEST_ENCODER_SETTINGS.width, TEST_ENCODER_SETTINGS.height, i420);
+    return new VideoFrame(testBuffer, /* rotation= */ 0, timestampNs);
   }
 
   @Mock VideoEncoder.Callback mockEncoderCallback;
@@ -140,9 +161,10 @@ public class HardwareVideoEncoderTest {
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
+    MediaFormat inputFormat = new MediaFormat();
     MediaFormat outputFormat = new MediaFormat();
     // TODO(sakal): Add more details to output format as needed.
-    fakeMediaCodecWrapper = spy(new FakeMediaCodecWrapper(outputFormat));
+    fakeMediaCodecWrapper = spy(new FakeMediaCodecWrapper(inputFormat, outputFormat));
   }
 
   @Test
@@ -201,21 +223,13 @@ public class HardwareVideoEncoderTest {
 
   @Test
   public void testDeliversOutputData() throws InterruptedException {
-    final int outputDataLength = 100;
-
     // Set-up.
     TestEncoder encoder = new TestEncoderBuilder().build();
     encoder.initEncode(TEST_ENCODER_SETTINGS, mockEncoderCallback);
-    byte[] i420 = CodecTestHelper.generateRandomData(
-        TEST_ENCODER_SETTINGS.width * TEST_ENCODER_SETTINGS.height * 3 / 2);
-    final VideoFrame.I420Buffer testBuffer =
-        CodecTestHelper.wrapI420(TEST_ENCODER_SETTINGS.width, TEST_ENCODER_SETTINGS.height, i420);
-    final VideoFrame testFrame =
-        new VideoFrame(testBuffer, /* rotation= */ 0, /* timestampNs= */ 42);
-    encoder.encode(testFrame, new EncodeInfo(new FrameType[] {FrameType.VideoFrameKey}));
+    encoder.encode(createTestVideoFrame(/* timestampNs= */ 42), ENCODE_INFO_KEY_FRAME);
 
     // Test.
-    byte[] outputData = CodecTestHelper.generateRandomData(outputDataLength);
+    byte[] outputData = CodecTestHelper.generateRandomData(100);
     fakeMediaCodecWrapper.addOutputData(outputData,
         /* presentationTimestampUs= */ 0,
         /* flags= */ MediaCodec.BUFFER_FLAG_SYNC_FRAME);
@@ -233,7 +247,6 @@ public class HardwareVideoEncoderTest {
     assertThat(videoFrame.encodedHeight).isEqualTo(TEST_ENCODER_SETTINGS.height);
     assertThat(videoFrame.rotation).isEqualTo(0);
     assertThat(videoFrame.captureTimeNs).isEqualTo(42);
-    assertThat(videoFrame.completeFrame).isTrue();
     assertThat(videoFrame.frameType).isEqualTo(FrameType.VideoFrameKey);
     CodecTestHelper.assertEqualContents(
         outputData, videoFrame.buffer, /* offset= */ 0, videoFrame.buffer.capacity());
@@ -264,5 +277,94 @@ public class HardwareVideoEncoderTest {
 
     // Verify.
     assertThat(fakeMediaCodecWrapper.getState()).isEqualTo(State.RELEASED);
+  }
+
+  @Test
+  public void testFramerateWithFramerateBitrateAdjuster() {
+    // Enable FramerateBitrateAdjuster and initialize encoder with frame rate 15fps. Vefity that our
+    // initial frame rate setting is ignored and media encoder is initialized with 30fps
+    // (FramerateBitrateAdjuster default).
+    HardwareVideoEncoder encoder =
+        new TestEncoderBuilder().setBitrateAdjuster(new FramerateBitrateAdjuster()).build();
+    encoder.initEncode(
+        new Settings(
+            /* numberOfCores= */ 1,
+            /* width= */ 640,
+            /* height= */ 480,
+            /* startBitrate= */ 10000,
+            /* maxFramerate= */ 15,
+            /* numberOfSimulcastStreams= */ 1,
+            /* automaticResizeOn= */ true,
+            /* capabilities= */ new VideoEncoder.Capabilities(false /* lossNotification */)),
+        mockEncoderCallback);
+
+    MediaFormat mediaFormat = fakeMediaCodecWrapper.getConfiguredFormat();
+    assertThat(mediaFormat.getFloat(MediaFormat.KEY_FRAME_RATE)).isEqualTo(30.0f);
+  }
+
+  @Test
+  public void testBitrateWithFramerateBitrateAdjuster() throws InterruptedException {
+    // Enable FramerateBitrateAdjuster and change frame rate while encoding video. Verify that
+    // bitrate setting passed to media encoder is adjusted to compensate for changes in frame rate.
+    TestEncoder encoder =
+        new TestEncoderBuilder().setBitrateAdjuster(new FramerateBitrateAdjuster()).build();
+    encoder.initEncode(TEST_ENCODER_SETTINGS, mockEncoderCallback);
+
+    encoder.encode(createTestVideoFrame(/* timestampNs= */ 0), ENCODE_INFO_KEY_FRAME);
+
+    // Reduce frame rate by half.
+    BitrateAllocation bitrateAllocation = new BitrateAllocation(
+        /* bitratesBbs= */ new int[][] {new int[] {TEST_ENCODER_SETTINGS.startBitrate}});
+    encoder.setRateAllocation(bitrateAllocation, TEST_ENCODER_SETTINGS.maxFramerate / 2);
+
+    // Generate output to trigger bitrate update in encoder wrapper.
+    fakeMediaCodecWrapper.addOutputData(
+        CodecTestHelper.generateRandomData(100), /* presentationTimestampUs= */ 0, /* flags= */ 0);
+    encoder.waitDeliverEncodedImage();
+
+    // Frame rate has been reduced by half. Verify that bitrate doubled.
+    ArgumentCaptor<Bundle> bundleCaptor = ArgumentCaptor.forClass(Bundle.class);
+    verify(fakeMediaCodecWrapper, times(2)).setParameters(bundleCaptor.capture());
+    Bundle params = bundleCaptor.getAllValues().get(1);
+    assertThat(params.containsKey(MediaCodec.PARAMETER_KEY_VIDEO_BITRATE)).isTrue();
+    assertThat(params.getInt(MediaCodec.PARAMETER_KEY_VIDEO_BITRATE))
+        .isEqualTo(TEST_ENCODER_SETTINGS.startBitrate * 2);
+  }
+
+  @Test
+  public void testTimestampsWithFramerateBitrateAdjuster() throws InterruptedException {
+    // Enable FramerateBitrateAdjuster and change frame rate while encoding video. Verify that
+    // encoder ignores changes in frame rate and calculates frame timestamps based on fixed frame
+    // rate 30fps.
+    TestEncoder encoder =
+        new TestEncoderBuilder().setBitrateAdjuster(new FramerateBitrateAdjuster()).build();
+    encoder.initEncode(TEST_ENCODER_SETTINGS, mockEncoderCallback);
+
+    encoder.encode(createTestVideoFrame(/* timestampNs= */ 0), ENCODE_INFO_KEY_FRAME);
+
+    // Reduce frametate by half.
+    BitrateAllocation bitrateAllocation = new BitrateAllocation(
+        /* bitratesBbs= */ new int[][] {new int[] {TEST_ENCODER_SETTINGS.startBitrate}});
+    encoder.setRateAllocation(bitrateAllocation, TEST_ENCODER_SETTINGS.maxFramerate / 2);
+
+    // Encoder is allowed to buffer up to 2 frames. Generate output to avoid frame dropping.
+    fakeMediaCodecWrapper.addOutputData(
+        CodecTestHelper.generateRandomData(100), /* presentationTimestampUs= */ 0, /* flags= */ 0);
+    encoder.waitDeliverEncodedImage();
+
+    encoder.encode(createTestVideoFrame(/* timestampNs= */ 1), ENCODE_INFO_DELTA_FRAME);
+    encoder.encode(createTestVideoFrame(/* timestampNs= */ 2), ENCODE_INFO_DELTA_FRAME);
+
+    ArgumentCaptor<Long> timestampCaptor = ArgumentCaptor.forClass(Long.class);
+    verify(fakeMediaCodecWrapper, times(3))
+        .queueInputBuffer(
+            /* index= */ anyInt(),
+            /* offset= */ anyInt(),
+            /* size= */ anyInt(), timestampCaptor.capture(),
+            /* flags= */ anyInt());
+
+    long frameDurationMs = SECONDS.toMicros(1) / 30;
+    assertThat(timestampCaptor.getAllValues())
+        .containsExactly(0L, frameDurationMs, 2 * frameDurationMs);
   }
 }

@@ -2,8 +2,10 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+
 import logging
 
+from six.moves import range  # pylint: disable=redefined-builtin
 from devil import base_error
 from devil.android import device_errors
 from devil.android import device_utils

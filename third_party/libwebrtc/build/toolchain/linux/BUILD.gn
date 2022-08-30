@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import("//build/config/ozone.gni")
 import("//build/config/sysroot.gni")
 import("//build/toolchain/gcc_toolchain.gni")
 
@@ -43,6 +44,9 @@ gcc_toolchain("arm64") {
   toolchain_args = {
     target_cpu = "arm64"
     current_os = "linux"
+
+    # reclient does not support gcc.
+    use_rbe = false
     is_clang = false
   }
 }
@@ -61,6 +65,9 @@ gcc_toolchain("arm") {
   toolchain_args = {
     target_cpu = "arm"
     current_os = "linux"
+
+    # reclient does not support gcc.
+    use_rbe = false
     is_clang = false
   }
 }
@@ -114,6 +121,9 @@ gcc_toolchain("x86") {
   toolchain_args = {
     target_cpu = "x86"
     current_os = "linux"
+
+    # reclient does not support gcc.
+    use_rbe = false
     is_clang = false
   }
 }
@@ -152,6 +162,54 @@ clang_toolchain("clang_x64_v8_mips64") {
   }
 }
 
+clang_toolchain("clang_x64_v8_riscv64") {
+  toolchain_args = {
+    target_cpu = "x64"
+    v8_target_cpu = "riscv64"
+    current_os = "linux"
+  }
+}
+
+clang_toolchain("clang_x64_v8_loong64") {
+  toolchain_args = {
+    target_cpu = "x64"
+    v8_target_cpu = "loong64"
+    current_os = "linux"
+  }
+}
+
+# In a LaCrOS build, this toolchain is intended to be used as an alternate
+# toolchain to build Ash-Chrome in a subdirectory.
+clang_toolchain("ash_clang_x64") {
+  toolchain_args = {
+    # This turns the toolchain into the "Linux ChromeOS" build
+    current_os = "chromeos"
+    target_os = "chromeos"
+    target_cpu = target_cpu
+
+    # This turns off all of the LaCrOS-specific flags.
+    also_build_ash_chrome = false
+    chromeos_is_browser_only = false
+    use_clang_coverage = false
+  }
+}
+
+# In an ash build, this toolchain is intended to be used as an alternate
+# toolchain to build lacros-Chrome in a subdirectory.
+clang_toolchain("lacros_clang_x64") {
+  toolchain_args = {
+    # This turns the toolchain into the "Lacros" build
+    current_os = "chromeos"
+    target_os = "chromeos"
+    target_cpu = target_cpu
+
+    # This turns on the LaCrOS-specific flag.
+    also_build_lacros_chrome = false
+    chromeos_is_browser_only = true
+    use_clang_coverage = false
+  }
+}
+
 gcc_toolchain("x64") {
   cc = "gcc"
   cxx = "g++"
@@ -167,6 +225,9 @@ gcc_toolchain("x64") {
   toolchain_args = {
     target_cpu = "x64"
     current_os = "linux"
+
+    # reclient does not support gcc.
+    use_rbe = false
     is_clang = false
   }
 }
@@ -206,6 +267,9 @@ gcc_toolchain("mipsel") {
     cc_wrapper = ""
     target_cpu = "mipsel"
     current_os = "linux"
+
+    # reclient does not support gcc.
+    use_rbe = false
     is_clang = false
     use_goma = false
   }
@@ -225,8 +289,29 @@ gcc_toolchain("mips64el") {
     cc_wrapper = ""
     target_cpu = "mips64el"
     current_os = "linux"
+
+    # reclient does not support gcc.
+    use_rbe = false
     is_clang = false
     use_goma = false
+  }
+}
+
+gcc_toolchain("riscv64") {
+  toolprefix = "riscv64-linux-gnu"
+
+  cc = "${toolprefix}-gcc"
+  cxx = "${toolprefix}-g++"
+
+  readelf = "${toolprefix}-readelf"
+  nm = "${toolprefix}-nm"
+  ar = "${toolprefix}-ar"
+  ld = cxx
+
+  toolchain_args = {
+    target_cpu = "riscv64"
+    current_os = "linux"
+    is_clang = false
   }
 }
 
@@ -250,6 +335,9 @@ gcc_toolchain("s390x") {
   toolchain_args = {
     target_cpu = "s390x"
     current_os = "linux"
+
+    # reclient does not support gcc.
+    use_rbe = false
     is_clang = false
   }
 }
@@ -282,6 +370,9 @@ gcc_toolchain("ppc64") {
   toolchain_args = {
     target_cpu = "ppc64"
     current_os = "linux"
+
+    # reclient does not support gcc.
+    use_rbe = false
     is_clang = false
   }
 }
@@ -300,6 +391,9 @@ gcc_toolchain("mips") {
   toolchain_args = {
     target_cpu = "mips"
     current_os = "linux"
+
+    # reclient does not support gcc.
+    use_rbe = false
     is_clang = false
   }
 }
@@ -317,6 +411,34 @@ gcc_toolchain("mips64") {
 
   toolchain_args = {
     target_cpu = "mips64"
+    current_os = "linux"
+
+    # reclient does not support gcc.
+    use_rbe = false
+    is_clang = false
+  }
+}
+
+clang_toolchain("clang_loong64") {
+  toolchain_args = {
+    target_cpu = "loong64"
+    current_os = "linux"
+  }
+}
+
+gcc_toolchain("loong64") {
+  toolprefix = "loongarch64-linux-gnu"
+
+  cc = "${toolprefix}-gcc"
+  cxx = "${toolprefix}-g++"
+
+  readelf = "${toolprefix}-readelf"
+  nm = "${toolprefix}-nm"
+  ar = "${toolprefix}-ar"
+  ld = cxx
+
+  toolchain_args = {
+    target_cpu = "loong64"
     current_os = "linux"
     is_clang = false
   }

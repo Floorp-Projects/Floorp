@@ -29,9 +29,15 @@
 extern "C" {
 #endif
 
+/**
+ * \addtogroup spa_node
+ * \{
+ */
+
 /** node keys */
 #define SPA_KEY_NODE_NAME		"node.name"		/**< a node name */
 #define SPA_KEY_NODE_LATENCY		"node.latency"		/**< the requested node latency */
+#define SPA_KEY_NODE_MAX_LATENCY	"node.max-latency"	/**< maximum supported latency */
 
 #define SPA_KEY_NODE_DRIVER		"node.driver"		/**< the node can be a driver */
 #define SPA_KEY_NODE_ALWAYS_PROCESS	"node.always-process"	/**< call the process function even if
@@ -46,6 +52,10 @@ extern "C" {
 #define SPA_KEY_PORT_ALIAS		"port.alias"		/**< a port alias */
 #define SPA_KEY_PORT_MONITOR		"port.monitor"		/**< this port is a monitor port */
 
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

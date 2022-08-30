@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2017 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -118,7 +118,7 @@ def main(args):
             z, 'AndroidManifest.xml', src_path=options.android_manifest)
 
         path_transform = filter_zip.CreatePathTransform(
-            options.jar_excluded_globs, options.jar_included_globs, [])
+            options.jar_excluded_globs, options.jar_included_globs)
         with tempfile.NamedTemporaryFile() as jar_file:
           build_utils.MergeZips(
               jar_file.name, options.jars, path_transform=path_transform)

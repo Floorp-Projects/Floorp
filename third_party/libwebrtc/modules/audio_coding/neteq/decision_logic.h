@@ -11,12 +11,13 @@
 #ifndef MODULES_AUDIO_CODING_NETEQ_DECISION_LOGIC_H_
 #define MODULES_AUDIO_CODING_NETEQ_DECISION_LOGIC_H_
 
+#include <memory>
+
 #include "api/neteq/neteq.h"
 #include "api/neteq/neteq_controller.h"
 #include "api/neteq/tick_timer.h"
 #include "modules/audio_coding/neteq/buffer_level_filter.h"
 #include "modules/audio_coding/neteq/delay_manager.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 
 namespace webrtc {
@@ -29,8 +30,14 @@ class DecisionLogic : public NetEqController {
 
   // Constructor.
   DecisionLogic(NetEqController::Config config);
+  DecisionLogic(NetEqController::Config config,
+                std::unique_ptr<DelayManager> delay_manager,
+                std::unique_ptr<BufferLevelFilter> buffer_level_filter);
 
   ~DecisionLogic() override;
+
+  DecisionLogic(const DecisionLogic&) = delete;
+  DecisionLogic& operator=(const DecisionLogic&) = delete;
 
   // Resets object to a clean state.
   void Reset() override;
@@ -42,47 +49,39 @@ class DecisionLogic : public NetEqController {
   void SetSampleRate(int fs_hz, size_t output_size_samples) override;
 
   // Given info about the latest received packet, and current jitter buffer
-  // status, returns the operation. |target_timestamp| and |expand_mutefactor|
-  // are provided for reference. |last_packet_samples| is the number of samples
+  // status, returns the operation. `target_timestamp` and `expand_mutefactor`
+  // are provided for reference. `last_packet_samples` is the number of samples
   // obtained from the last decoded frame. If there is a packet available, it
-  // should be supplied in |packet|; otherwise it should be NULL. The mode
+  // should be supplied in `packet`; otherwise it should be NULL. The mode
   // resulting from the last call to NetEqImpl::GetAudio is supplied in
-  // |last_mode|. If there is a DTMF event to play, |play_dtmf| should be set to
-  // true. The output variable |reset_decoder| will be set to true if a reset is
+  // `last_mode`. If there is a DTMF event to play, `play_dtmf` should be set to
+  // true. The output variable `reset_decoder` will be set to true if a reset is
   // required; otherwise it is left unchanged (i.e., it can remain true if it
   // was true before the call).
   NetEq::Operation GetDecision(const NetEqController::NetEqStatus& status,
                                bool* reset_decoder) override;
 
-  // These methods test the |cng_state_| for different conditions.
+  // These methods test the `cng_state_` for different conditions.
   bool CngRfc3389On() const override { return cng_state_ == kCngRfc3389On; }
   bool CngOff() const override { return cng_state_ == kCngOff; }
 
-  // Resets the |cng_state_| to kCngOff.
+  // Resets the `cng_state_` to kCngOff.
   void SetCngOff() override { cng_state_ = kCngOff; }
 
-  // Reports back to DecisionLogic whether the decision to do expand remains or
-  // not. Note that this is necessary, since an expand decision can be changed
-  // to kNormal in NetEqImpl::GetDecision if there is still enough data in the
-  // sync buffer.
-  void ExpandDecision(NetEq::Operation operation) override;
+  void ExpandDecision(NetEq::Operation operation) override {}
 
-  // Adds |value| to |sample_memory_|.
+  // Adds `value` to `sample_memory_`.
   void AddSampleMemory(int32_t value) override { sample_memory_ += value; }
 
-  int TargetLevelMs() const override {
-    return ((delay_manager_->TargetLevel() * packet_length_samples_) >> 8) /
-           rtc::CheckedDivExact(sample_rate_, 1000);
-  }
+  int TargetLevelMs() const override { return delay_manager_->TargetDelayMs(); }
 
-  absl::optional<int> PacketArrived(bool last_cng_or_dtmf,
-                                    size_t packet_length_samples,
+  absl::optional<int> PacketArrived(int fs_hz,
                                     bool should_update_stats,
-                                    uint16_t main_sequence_number,
-                                    uint32_t main_timestamp,
-                                    int fs_hz) override;
+                                    const PacketArrivedInfo& info) override;
 
-  void RegisterEmptyPacket() override { delay_manager_->RegisterEmptyPacket(); }
+  void RegisterEmptyPacket() override {}
+
+  void NotifyMutedState() override;
 
   bool SetMaximumDelay(int delay_ms) override {
     return delay_manager_->SetMaximumDelay(delay_ms);
@@ -99,7 +98,7 @@ class DecisionLogic : public NetEqController {
   bool PeakFound() const override { return false; }
 
   int GetFilteredBufferLevel() const override {
-    return buffer_level_filter_.filtered_current_level();
+    return buffer_level_filter_->filtered_current_level();
   }
 
   // Accessors and mutators.
@@ -119,9 +118,9 @@ class DecisionLogic : public NetEqController {
 
   enum CngState { kCngOff, kCngRfc3389On, kCngInternalOn };
 
-  // Updates the |buffer_level_filter_| with the current buffer level
-  // |buffer_size_packets|.
-  void FilterBufferLevel(size_t buffer_size_packets);
+  // Updates the `buffer_level_filter_` with the current buffer level
+  // `buffer_size_samples`.
+  void FilterBufferLevel(size_t buffer_size_samples);
 
   // Returns the operation given that the next available packet is a comfort
   // noise payload (RFC 3389 only, not codec-internal).
@@ -131,7 +130,7 @@ class DecisionLogic : public NetEqController {
                                         size_t generated_noise_samples);
 
   // Returns the operation given that no packets are available (except maybe
-  // a DTMF event, flagged by setting |play_dtmf| true).
+  // a DTMF event, flagged by setting `play_dtmf` true).
   virtual NetEq::Operation NoPacket(bool play_dtmf);
 
   // Returns the operation to do given that the expected packet is available.
@@ -159,20 +158,20 @@ class DecisionLogic : public NetEqController {
   // Checks if the current (filtered) buffer level is under the target level.
   bool UnderTargetLevel() const;
 
-  // Checks if |timestamp_leap| is so long into the future that a reset due
+  // Checks if `timestamp_leap` is so long into the future that a reset due
   // to exceeding kReinitAfterExpands will be done.
   bool ReinitAfterExpands(uint32_t timestamp_leap) const;
 
   // Checks if we still have not done enough expands to cover the distance from
   // the last decoded packet to the next available packet, the distance beeing
-  // conveyed in |timestamp_leap|.
+  // conveyed in `timestamp_leap`.
   bool PacketTooEarly(uint32_t timestamp_leap) const;
 
   // Checks if num_consecutive_expands_ >= kMaxWaitForPacket.
   bool MaxWaitForPacket() const;
 
   std::unique_ptr<DelayManager> delay_manager_;
-  BufferLevelFilter buffer_level_filter_;
+  std::unique_ptr<BufferLevelFilter> buffer_level_filter_;
   const TickTimer* tick_timer_;
   int sample_rate_;
   size_t output_size_samples_;
@@ -186,11 +185,9 @@ class DecisionLogic : public NetEqController {
   std::unique_ptr<TickTimer::Countdown> timescale_countdown_;
   int num_consecutive_expands_ = 0;
   int time_stretched_cn_samples_ = 0;
-  FieldTrialParameter<bool> estimate_dtx_delay_;
-  FieldTrialParameter<bool> time_stretch_cn_;
+  bool last_pack_cng_or_dtmf_ = true;
+  bool buffer_flush_ = false;
   FieldTrialConstrained<int> target_level_window_ms_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(DecisionLogic);
 };
 
 }  // namespace webrtc

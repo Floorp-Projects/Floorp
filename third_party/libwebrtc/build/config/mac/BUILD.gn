@@ -2,9 +2,9 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import("//build/config/apple/symbols.gni")
 import("//build/config/c++/c++.gni")
 import("//build/config/mac/mac_sdk.gni")
-import("//build/config/mac/symbols.gni")
 import("//build/config/sysroot.gni")
 
 # This is included by reference in the //build/config/compiler config that
@@ -15,33 +15,21 @@ config("compiler") {
 
   # CPU architecture.
   if (target_cpu == "x64") {
-    common_mac_flags += [
-      "-arch",
-      "x86_64",
-    ]
+    clang_arch = "x86_64"
   } else if (target_cpu == "x86") {
-    common_mac_flags += [
-      "-arch",
-      "i386",
-    ]
+    clang_arch = "i386"
   } else if (target_cpu == "arm64") {
-    common_mac_flags += [
-      "-arch",
-      target_cpu,
-
-      # The baseline CPU for macOS on arm64 is the Apple A12 (Vortex/Tempest),
-      # and clang should default to this when building for this OS/CPU
-      # combination. Apple clang embedded in Xcode 12 does, but trunk clang does
-      # not, instead targeting the Apple A7 (Cyclone), the proper baseline CPU
-      # for iOS on arm64. https://reviews.llvm.org/D82699 would fix it, but it
-      # hasn't gained any traction. Specify the baseline CPU explicitly here.
-      #
-      # TODO(https://crbug.com/1119249): Remove this when trunk clang has a
-      # better default.
-      "-mcpu=apple-a12",
-    ]
+    clang_arch = target_cpu
   } else {
     assert(false, "unknown target_cpu $target_cpu")
+  }
+  if (host_os == "mac") {
+    common_mac_flags += [
+      "-arch",
+      clang_arch,
+    ]
+  } else {
+    common_mac_flags += [ "--target=$clang_arch-apple-macos" ]
   }
 
   # This is here so that all files get recompiled after an Xcode update.
@@ -106,7 +94,7 @@ config("mac_dynamic_flags") {
 }
 
 # The ldflags referenced below are handled by
-# //build/toolchain/mac/linker_driver.py.
+# //build/toolchain/apple/linker_driver.py.
 # Remove this config if a target wishes to change the arguments passed to the
 # strip command during linking. This config by default strips all symbols
 # from a binary, but some targets may wish to specify an exports file to
@@ -114,5 +102,35 @@ config("mac_dynamic_flags") {
 config("strip_all") {
   if (enable_stripping) {
     ldflags = [ "-Wcrl,strip,-x,-S" ]
+  }
+}
+
+# When building with Goma, all inputs must be relative to the build directory.
+# If using the system Xcode, which typically resides outside the build root, a
+# symlink to the SDK is created in the build directory, and the path to that
+# link is stored in $mac_sdk_path. If an action references a file in the SDK as
+# an input, GN will complain that no target generates the file because it is
+# below the $root_build_dir. The below action lists as outputs the files in the
+# SDK that are referenced as inputs to actions, so that GN thinks a target has
+# generated them. The list is centralized here, as multiple targets need to
+# reference the same files, and an output can only be generated once.
+#
+# The symbolic link for $mac_sdk_path is set up by
+# //build/config/apple/sdk_info.py in //build/config/mac/mac_sdk.gni.
+if (use_system_xcode && use_goma && target_os == "mac" &&
+    current_toolchain == default_toolchain) {
+  action("sdk_inputs") {
+    script = "//build/noop.py"
+    outputs = [
+      "$mac_sdk_path/usr/include/mach/exc.defs",
+      "$mac_sdk_path/usr/include/mach/mach_exc.defs",
+      "$mac_sdk_path/usr/include/mach/notify.defs",
+    ]
+  }
+} else {
+  group("sdk_inputs") {
+    if (current_toolchain != default_toolchain) {
+      public_deps = [ ":sdk_inputs($default_toolchain)" ]
+    }
   }
 }

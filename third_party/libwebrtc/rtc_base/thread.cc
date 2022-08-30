@@ -10,6 +10,8 @@
 
 #include "rtc_base/thread.h"
 
+#include "absl/strings/string_view.h"
+
 #if defined(WEBRTC_WIN)
 #include <comdef.h>
 #elif defined(WEBRTC_POSIX)
@@ -29,13 +31,14 @@
 #include <utility>
 
 #include "absl/algorithm/container.h"
+#include "api/sequence_checker.h"
 #include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/deprecated/recursive_critical_section.h"
 #include "rtc_base/event.h"
+#include "rtc_base/internal/default_socket_server.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/null_socket_server.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
@@ -70,11 +73,12 @@ class ScopedAutoReleasePool {
 namespace rtc {
 namespace {
 
-const int kSlowDispatchLoggingThreshold = 50;  // 50 ms
-
 class MessageHandlerWithTask final : public MessageHandler {
  public:
-  MessageHandlerWithTask() : MessageHandler(false) {}
+  MessageHandlerWithTask() {}
+
+  MessageHandlerWithTask(const MessageHandlerWithTask&) = delete;
+  MessageHandlerWithTask& operator=(const MessageHandlerWithTask&) = delete;
 
   void OnMessage(Message* msg) override {
     static_cast<rtc_thread_internal::MessageLikeTask*>(msg->pdata)->Run();
@@ -83,8 +87,6 @@ class MessageHandlerWithTask final : public MessageHandler {
 
  private:
   ~MessageHandlerWithTask() override {}
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(MessageHandlerWithTask);
 };
 
 class RTC_SCOPED_LOCKABLE MarkProcessingCritScope {
@@ -101,11 +103,12 @@ class RTC_SCOPED_LOCKABLE MarkProcessingCritScope {
     cs_->Leave();
   }
 
+  MarkProcessingCritScope(const MarkProcessingCritScope&) = delete;
+  MarkProcessingCritScope& operator=(const MarkProcessingCritScope&) = delete;
+
  private:
   const RecursiveCriticalSection* const cs_;
   size_t* processing_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(MarkProcessingCritScope);
 };
 
 }  // namespace
@@ -117,7 +120,7 @@ ThreadManager* ThreadManager::Instance() {
 
 ThreadManager::~ThreadManager() {
   // By above RTC_DEFINE_STATIC_LOCAL.
-  RTC_NOTREACHED() << "ThreadManager should never be destructed.";
+  RTC_DCHECK_NOTREACHED() << "ThreadManager should never be destructed.";
 }
 
 // static
@@ -254,19 +257,11 @@ Thread* Thread::Current() {
   ThreadManager* manager = ThreadManager::Instance();
   Thread* thread = manager->CurrentThread();
 
-#ifndef NO_MAIN_THREAD_WRAPPING
-  // Only autowrap the thread which instantiated the ThreadManager.
-  if (!thread && manager->IsMainThread()) {
-    thread = new Thread(SocketServer::CreateDefault());
-    thread->WrapCurrentWithThreadManager(manager, true);
-  }
-#endif
-
   return thread;
 }
 
 #if defined(WEBRTC_POSIX)
-ThreadManager::ThreadManager() : main_thread_ref_(CurrentThreadRef()) {
+ThreadManager::ThreadManager() {
 #if defined(WEBRTC_MAC)
   InitCocoaMultiThreading();
 #endif
@@ -283,8 +278,7 @@ void ThreadManager::SetCurrentThreadInternal(Thread* thread) {
 #endif
 
 #if defined(WEBRTC_WIN)
-ThreadManager::ThreadManager()
-    : key_(TlsAlloc()), main_thread_ref_(CurrentThreadRef()) {}
+ThreadManager::ThreadManager() : key_(TlsAlloc()) {}
 
 Thread* ThreadManager::CurrentThread() {
   return static_cast<Thread*>(TlsGetValue(key_));
@@ -326,7 +320,7 @@ void rtc::ThreadManager::ChangeCurrentThreadForTest(rtc::Thread* thread) {
 Thread* ThreadManager::WrapCurrentThread() {
   Thread* result = CurrentThread();
   if (nullptr == result) {
-    result = new Thread(SocketServer::CreateDefault());
+    result = new Thread(CreateDefaultSocketServer());
     result->WrapCurrentWithThreadManager(this, true);
   }
   return result;
@@ -340,10 +334,6 @@ void ThreadManager::UnwrapCurrentThread() {
   }
 }
 
-bool ThreadManager::IsMainThread() {
-  return IsThreadRefEqual(CurrentThreadRef(), main_thread_ref_);
-}
-
 Thread::ScopedDisallowBlockingCalls::ScopedDisallowBlockingCalls()
     : thread_(Thread::Current()),
       previous_state_(thread_->SetAllowBlockingCalls(false)) {}
@@ -352,6 +342,35 @@ Thread::ScopedDisallowBlockingCalls::~ScopedDisallowBlockingCalls() {
   RTC_DCHECK(thread_->IsCurrent());
   thread_->SetAllowBlockingCalls(previous_state_);
 }
+
+#if RTC_DCHECK_IS_ON
+Thread::ScopedCountBlockingCalls::ScopedCountBlockingCalls(
+    std::function<void(uint32_t, uint32_t)> callback)
+    : thread_(Thread::Current()),
+      base_blocking_call_count_(thread_->GetBlockingCallCount()),
+      base_could_be_blocking_call_count_(
+          thread_->GetCouldBeBlockingCallCount()),
+      result_callback_(std::move(callback)) {}
+
+Thread::ScopedCountBlockingCalls::~ScopedCountBlockingCalls() {
+  if (GetTotalBlockedCallCount() >= min_blocking_calls_for_callback_) {
+    result_callback_(GetBlockingCallCount(), GetCouldBeBlockingCallCount());
+  }
+}
+
+uint32_t Thread::ScopedCountBlockingCalls::GetBlockingCallCount() const {
+  return thread_->GetBlockingCallCount() - base_blocking_call_count_;
+}
+
+uint32_t Thread::ScopedCountBlockingCalls::GetCouldBeBlockingCallCount() const {
+  return thread_->GetCouldBeBlockingCallCount() -
+         base_could_be_blocking_call_count_;
+}
+
+uint32_t Thread::ScopedCountBlockingCalls::GetTotalBlockedCallCount() const {
+  return GetBlockingCallCount() + GetCouldBeBlockingCallCount();
+}
+#endif
 
 Thread::Thread(SocketServer* ss) : Thread(ss, /*do_init=*/true) {}
 
@@ -401,13 +420,11 @@ void Thread::DoDestroy() {
   // The signal is done from here to ensure
   // that it always gets called when the queue
   // is going away.
-  SignalQueueDestroyed();
-  ThreadManager::Remove(this);
-  ClearInternal(nullptr, MQID_ANY, nullptr);
-
   if (ss_) {
     ss_->SetMessageQueue(nullptr);
   }
+  ThreadManager::Remove(this);
+  ClearInternal(nullptr, MQID_ANY, nullptr);
 }
 
 SocketServer* Thread::socketserver() {
@@ -680,14 +697,18 @@ void Thread::Dispatch(Message* pmsg) {
   TRACE_EVENT2("webrtc", "Thread::Dispatch", "src_file",
                pmsg->posted_from.file_name(), "src_func",
                pmsg->posted_from.function_name());
+  RTC_DCHECK_RUN_ON(this);
   int64_t start_time = TimeMillis();
   pmsg->phandler->OnMessage(pmsg);
   int64_t end_time = TimeMillis();
   int64_t diff = TimeDiff(end_time, start_time);
-  if (diff >= kSlowDispatchLoggingThreshold) {
-    RTC_LOG(LS_INFO) << "Message took " << diff
+  if (diff >= dispatch_warning_ms_) {
+    RTC_LOG(LS_INFO) << "Message to " << name() << " took " << diff
                      << "ms to dispatch. Posted from: "
                      << pmsg->posted_from.ToString();
+    // To avoid log spew, move the warning limit to only give warning
+    // for delays that are larger than the one observed.
+    dispatch_warning_ms_ = diff + 1;
   }
 }
 
@@ -696,7 +717,7 @@ bool Thread::IsCurrent() const {
 }
 
 std::unique_ptr<Thread> Thread::CreateWithSocketServer() {
-  return std::unique_ptr<Thread>(new Thread(SocketServer::CreateDefault()));
+  return std::unique_ptr<Thread>(new Thread(CreateDefaultSocketServer()));
 }
 
 std::unique_ptr<Thread> Thread::Create() {
@@ -725,10 +746,10 @@ bool Thread::SleepMs(int milliseconds) {
 #endif
 }
 
-bool Thread::SetName(const std::string& name, const void* obj) {
+bool Thread::SetName(absl::string_view name, const void* obj) {
   RTC_DCHECK(!IsRunning());
 
-  name_ = name;
+  name_ = std::string(name);
   if (obj) {
     // The %p specifier typically produce at most 16 hex digits, possibly with a
     // 0x prefix. But format is implementation defined, so add some margin.
@@ -737,6 +758,16 @@ bool Thread::SetName(const std::string& name, const void* obj) {
     name_ += buf;
   }
   return true;
+}
+
+void Thread::SetDispatchWarningMs(int deadline) {
+  if (!IsCurrent()) {
+    PostTask(webrtc::ToQueuedTask(
+        [this, deadline]() { SetDispatchWarningMs(deadline); }));
+    return;
+  }
+  RTC_DCHECK_RUN_ON(this);
+  dispatch_warning_ms_ = deadline;
 }
 
 bool Thread::Start() {
@@ -888,6 +919,11 @@ void Thread::Send(const Location& posted_from,
   msg.message_id = id;
   msg.pdata = pdata;
   if (IsCurrent()) {
+#if RTC_DCHECK_IS_ON
+    RTC_DCHECK(this->IsInvokeToThreadAllowed(this));
+    RTC_DCHECK_RUN_ON(this);
+    could_be_blocking_call_count_++;
+#endif
     msg.phandler->OnMessage(&msg);
     return;
   }
@@ -898,6 +934,8 @@ void Thread::Send(const Location& posted_from,
 
 #if RTC_DCHECK_IS_ON
   if (current_thread) {
+    RTC_DCHECK_RUN_ON(current_thread);
+    current_thread->blocking_call_count_++;
     RTC_DCHECK(current_thread->IsInvokeToThreadAllowed(this));
     ThreadManager::Instance()->RegisterSendAndCheckForCycles(current_thread,
                                                              this);
@@ -961,7 +999,7 @@ void Thread::InvokeInternal(const Location& posted_from,
   class FunctorMessageHandler : public MessageHandler {
    public:
     explicit FunctorMessageHandler(rtc::FunctionView<void()> functor)
-        : MessageHandler(false), functor_(functor) {}
+        : functor_(functor) {}
     void OnMessage(Message* msg) override { functor_(); }
 
    private:
@@ -985,7 +1023,7 @@ void Thread::ClearCurrentTaskQueue() {
 void Thread::QueuedTaskHandler::OnMessage(Message* msg) {
   RTC_DCHECK(msg);
   auto* data = static_cast<ScopedMessageData<webrtc::QueuedTask>*>(msg->pdata);
-  std::unique_ptr<webrtc::QueuedTask> task = std::move(data->data());
+  std::unique_ptr<webrtc::QueuedTask> task(data->Release());
   // Thread expects handler to own Message::pdata when OnMessage is called
   // Since MessageData is no longer needed, delete it.
   delete data;
@@ -997,7 +1035,7 @@ void Thread::QueuedTaskHandler::OnMessage(Message* msg) {
 }
 
 void Thread::AllowInvokesToThread(Thread* thread) {
-#if (!defined(NDEBUG) || defined(DCHECK_ALWAYS_ON))
+#if (!defined(NDEBUG) || RTC_DCHECK_IS_ON)
   if (!IsCurrent()) {
     PostTask(webrtc::ToQueuedTask(
         [thread, this]() { AllowInvokesToThread(thread); }));
@@ -1010,7 +1048,7 @@ void Thread::AllowInvokesToThread(Thread* thread) {
 }
 
 void Thread::DisallowAllInvokes() {
-#if (!defined(NDEBUG) || defined(DCHECK_ALWAYS_ON))
+#if (!defined(NDEBUG) || RTC_DCHECK_IS_ON)
   if (!IsCurrent()) {
     PostTask(webrtc::ToQueuedTask([this]() { DisallowAllInvokes(); }));
     return;
@@ -1021,10 +1059,21 @@ void Thread::DisallowAllInvokes() {
 #endif
 }
 
+#if RTC_DCHECK_IS_ON
+uint32_t Thread::GetBlockingCallCount() const {
+  RTC_DCHECK_RUN_ON(this);
+  return blocking_call_count_;
+}
+uint32_t Thread::GetCouldBeBlockingCallCount() const {
+  RTC_DCHECK_RUN_ON(this);
+  return could_be_blocking_call_count_;
+}
+#endif
+
 // Returns true if no policies added or if there is at least one policy
-// that permits invocation to |target| thread.
+// that permits invocation to `target` thread.
 bool Thread::IsInvokeToThreadAllowed(rtc::Thread* target) {
-#if (!defined(NDEBUG) || defined(DCHECK_ALWAYS_ON))
+#if (!defined(NDEBUG) || RTC_DCHECK_IS_ON)
   RTC_DCHECK_RUN_ON(this);
   if (!invoke_policy_enabled_) {
     return true;
@@ -1049,10 +1098,16 @@ void Thread::PostTask(std::unique_ptr<webrtc::QueuedTask> task) {
 
 void Thread::PostDelayedTask(std::unique_ptr<webrtc::QueuedTask> task,
                              uint32_t milliseconds) {
+  // This implementation does not support low precision yet.
+  PostDelayedHighPrecisionTask(std::move(task), milliseconds);
+}
+
+void Thread::PostDelayedHighPrecisionTask(
+    std::unique_ptr<webrtc::QueuedTask> task,
+    uint32_t milliseconds) {
   // Though PostDelayed takes MessageData by raw pointer (last parameter),
   // it still takes it with ownership.
-  PostDelayed(RTC_FROM_HERE, milliseconds, &queued_task_handler_,
-              /*id=*/0,
+  PostDelayed(RTC_FROM_HERE, milliseconds, &queued_task_handler_, /*id=*/0,
               new ScopedMessageData<webrtc::QueuedTask>(std::move(task)));
 }
 
@@ -1137,7 +1192,7 @@ MessageHandler* Thread::GetPostTaskMessageHandler() {
 }
 
 AutoThread::AutoThread()
-    : Thread(SocketServer::CreateDefault(), /*do_init=*/false) {
+    : Thread(CreateDefaultSocketServer(), /*do_init=*/false) {
   if (!ThreadManager::Instance()->CurrentThread()) {
     // DoInit registers with ThreadManager. Do that only if we intend to
     // be rtc::Thread::Current(), otherwise ProcessAllMessageQueuesInternal will
@@ -1170,11 +1225,6 @@ AutoSocketServerThread::AutoSocketServerThread(SocketServer* ss)
 
 AutoSocketServerThread::~AutoSocketServerThread() {
   RTC_DCHECK(ThreadManager::Instance()->CurrentThread() == this);
-  // Some tests post destroy messages to this thread. To avoid memory
-  // leaks, we have to process those messages. In particular
-  // P2PTransportChannelPingTest, relying on the message posted in
-  // cricket::Connection::Destroy.
-  ProcessMessages(0);
   // Stop and destroy the thread before clearing it as the current thread.
   // Sometimes there are messages left in the Thread that will be
   // destroyed by DoDestroy, and sometimes the destructors of the message and/or

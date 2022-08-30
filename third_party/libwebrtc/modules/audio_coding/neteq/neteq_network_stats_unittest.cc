@@ -162,7 +162,7 @@ class NetEqNetworkStatsTest {
   NetEqNetworkStatsTest(const SdpAudioFormat& format, MockAudioDecoder* decoder)
       : decoder_(decoder),
         decoder_factory_(
-            new rtc::RefCountedObject<AudioDecoderProxyFactory>(decoder)),
+            rtc::make_ref_counted<AudioDecoderProxyFactory>(decoder)),
         samples_per_ms_(format.clockrate_hz / 1000),
         frame_size_samples_(kFrameSizeMs * samples_per_ms_),
         rtp_generator_(new RtpGenerator(samples_per_ms_)),
@@ -188,11 +188,11 @@ class NetEqNetworkStatsTest {
                            : 0xffffffff);
   }
 
-  // |stats_ref|
+  // `stats_ref`
   // expects.x = -1, do not care
-  // expects.x = 0, 'x' in current stats should equal 'x' in |stats_ref|
-  // expects.x = 1, 'x' in current stats should < 'x' in |stats_ref|
-  // expects.x = 2, 'x' in current stats should > 'x' in |stats_ref|
+  // expects.x = 0, 'x' in current stats should equal 'x' in `stats_ref`
+  // expects.x = 1, 'x' in current stats should < 'x' in `stats_ref`
+  // expects.x = 2, 'x' in current stats should > 'x' in `stats_ref`
   void CheckNetworkStatistics(NetEqNetworkStatsCheck expects) {
     NetEqNetworkStatistics stats;
     neteq_->NetworkStatistics(&stats);
@@ -229,7 +229,7 @@ class NetEqNetworkStatsTest {
     uint32_t time_now;
     uint32_t next_send_time;
 
-    // Initiate |last_lost_time_|.
+    // Initiate `last_lost_time_`.
     time_now = next_send_time = last_lost_time_ = rtp_generator_->GetRtpHeader(
         kPayloadType, frame_size_samples_, &rtp_header_);
     for (int k = 0; k < num_loops; ++k) {
@@ -274,7 +274,7 @@ class NetEqNetworkStatsTest {
 
     // Next we introduce packet losses.
     SetPacketLossRate(0.1);
-    expects.stats_ref.expand_rate = expects.stats_ref.speech_expand_rate = 1065;
+    expects.stats_ref.expand_rate = expects.stats_ref.speech_expand_rate = 898;
     RunTest(50, expects);
 
     // Next we enable FEC.

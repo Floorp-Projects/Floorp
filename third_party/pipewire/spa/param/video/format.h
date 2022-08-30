@@ -29,6 +29,11 @@
 extern "C" {
 #endif
 
+/**
+ * \addtogroup spa_param
+ * \{
+ */
+
 #include <spa/param/video/raw.h>
 #include <spa/param/video/encoded.h>
 
@@ -42,6 +47,10 @@ struct spa_video_info {
 		struct spa_video_info_mjpg mjpg;
 	} info;
 };
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 } /* extern "C" */

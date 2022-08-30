@@ -21,6 +21,8 @@
   },
   "non_unified_sources": [
     "third_party/libwebrtc/api/audio_codecs/opus/audio_encoder_opus_config.cc",
+    "third_party/libwebrtc/api/video/i422_buffer.cc",
+    "third_party/libwebrtc/api/video/i444_buffer.cc",
     "third_party/libwebrtc/audio/channel_send_frame_transformer_delegate.cc",
     "third_party/libwebrtc/common_audio/vad/vad_core.c",
     "third_party/libwebrtc/common_audio/vad/webrtc_vad.c",
@@ -29,6 +31,7 @@
     "third_party/libwebrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter.c",
     "third_party/libwebrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c",
     "third_party/libwebrtc/modules/audio_coding/neteq/audio_vector.cc",
+    "third_party/libwebrtc/modules/audio_coding/neteq/underrun_optimizer.cc",
     "third_party/libwebrtc/modules/audio_device/android/audio_manager.cc",
     "third_party/libwebrtc/modules/audio_device/android/audio_record_jni.cc",
     "third_party/libwebrtc/modules/audio_device/android/audio_track_jni.cc",
@@ -45,8 +48,11 @@
     "third_party/libwebrtc/modules/audio_processing/echo_detector/normalized_covariance_estimator.cc",
     "third_party/libwebrtc/modules/audio_processing/gain_control_impl.cc",
     "third_party/libwebrtc/modules/audio_processing/rms_level.cc",
-    "third_party/libwebrtc/modules/desktop_capture/linux/base_capturer_pipewire.cc",
+    "third_party/libwebrtc/modules/congestion_controller/goog_cc/loss_based_bandwidth_estimation.cc",
+    "third_party/libwebrtc/modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.cc",
+    "third_party/libwebrtc/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc",
     "third_party/libwebrtc/modules/desktop_capture/win/screen_capturer_win_gdi.cc",
+    "third_party/libwebrtc/modules/pacing/prioritized_packet_queue.cc",
     "third_party/libwebrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_single_stream.cc",
     "third_party/libwebrtc/modules/rtp_rtcp/source/flexfec_receiver.cc",
     "third_party/libwebrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbn.cc",
@@ -56,6 +62,7 @@
     "third_party/libwebrtc/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc",
     "third_party/libwebrtc/modules/rtp_rtcp/source/rtp_sender_egress.cc",
     "third_party/libwebrtc/modules/rtp_rtcp/source/rtp_sender_video.cc",
+    "third_party/libwebrtc/modules/rtp_rtcp/source/rtp_util.cc",
     "third_party/libwebrtc/modules/rtp_rtcp/source/ulpfec_generator.cc",
     "third_party/libwebrtc/modules/rtp_rtcp/source/video_rtp_depacketizer_vp9.cc",
     "third_party/libwebrtc/modules/third_party/g722/g722_encode.c",
@@ -63,11 +70,13 @@
     "third_party/libwebrtc/modules/video_capture/windows/help_functions_ds.cc",
     "third_party/libwebrtc/modules/video_capture/windows/sink_filter_ds.cc",
     "third_party/libwebrtc/modules/video_coding/codecs/vp8/screenshare_layers.cc",
+    "third_party/libwebrtc/modules/video_coding/svc/scalability_structure_key_svc.cc",
+    "third_party/libwebrtc/modules/video_coding/svc/scalability_structure_simulcast.cc",
+    "third_party/libwebrtc/rtc_base/win/hstring.cc",
     "third_party/libwebrtc/third_party/abseil-cpp/absl/strings/numbers.cc",
     "third_party/libwebrtc/third_party/abseil-cpp/absl/synchronization/blocking_counter.cc",
     "third_party/libwebrtc/third_party/abseil-cpp/absl/time/internal/cctz/src/time_zone_posix.cc",
     "third_party/libwebrtc/third_party/abseil-cpp/absl/time/time.cc",
-    "third_party/libwebrtc/video/rtp_video_stream_receiver2.cc",
-    "third_party/libwebrtc/video/video_receive_stream.cc"
+    "third_party/libwebrtc/video/rtp_video_stream_receiver2.cc"
   ]
 }

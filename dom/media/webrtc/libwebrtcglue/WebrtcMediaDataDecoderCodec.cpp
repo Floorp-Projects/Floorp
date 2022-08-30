@@ -11,7 +11,6 @@
 #include "VideoUtils.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/media/MediaUtils.h"
-#include "rtc_base/keep_ref_until_done.h"
 
 namespace mozilla {
 
@@ -27,14 +26,15 @@ WebrtcMediaDataDecoder::WebrtcMediaDataDecoder(nsACString& aCodecMimeType)
 
 WebrtcMediaDataDecoder::~WebrtcMediaDataDecoder() {}
 
-int32_t WebrtcMediaDataDecoder::InitDecode(
-    const webrtc::VideoCodec* aCodecSettings, int32_t aNumberOfCores) {
+bool WebrtcMediaDataDecoder::Configure(
+    const webrtc::VideoDecoder::Settings& settings) {
   nsCString codec;
   mTrackType = TrackInfo::kVideoTrack;
-  mInfo = VideoInfo(aCodecSettings->width, aCodecSettings->height);
+  mInfo = VideoInfo(settings.max_render_resolution().Width(),
+                    settings.max_render_resolution().Height());
   mInfo.mMimeType = mCodecType;
 
-  return CreateDecoder();
+  return WEBRTC_VIDEO_CODEC_OK == CreateDecoder();
 }
 
 int32_t WebrtcMediaDataDecoder::Decode(const webrtc::EncodedImage& aInputImage,
@@ -53,11 +53,7 @@ int32_t WebrtcMediaDataDecoder::Decode(const webrtc::EncodedImage& aInputImage,
     if (aInputImage._frameType != webrtc::VideoFrameType::kVideoFrameKey)
       return WEBRTC_VIDEO_CODEC_ERROR;
     // We have a key frame - is it complete?
-    if (aInputImage._completeFrame) {
-      mNeedKeyframe = false;
-    } else {
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
+    mNeedKeyframe = false;
   }
 
   auto disabledHardwareAcceleration =

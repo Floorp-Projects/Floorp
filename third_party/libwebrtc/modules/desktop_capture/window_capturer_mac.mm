@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <assert.h>
 #include <ApplicationServices/ApplicationServices.h>
 #include <Cocoa/Cocoa.h>
 #include <CoreFoundation/CoreFoundation.h>
@@ -24,7 +23,7 @@
 #include "modules/desktop_capture/mac/desktop_frame_cgimage.h"
 #include "modules/desktop_capture/mac/window_list_utils.h"
 #include "modules/desktop_capture/window_finder_mac.h"
-#include "rtc_base/constructor_magic.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/trace_event.h"
 
@@ -52,6 +51,9 @@ class WindowCapturerMac : public DesktopCapturer {
       rtc::scoped_refptr<DesktopConfigurationMonitor> configuration_monitor);
   ~WindowCapturerMac() override;
 
+  WindowCapturerMac(const WindowCapturerMac&) = delete;
+  WindowCapturerMac& operator=(const WindowCapturerMac&) = delete;
+
   // DesktopCapturer interface.
   void Start(Callback* callback) override;
   void CaptureFrame() override;
@@ -71,8 +73,6 @@ class WindowCapturerMac : public DesktopCapturer {
   const rtc::scoped_refptr<DesktopConfigurationMonitor> configuration_monitor_;
 
   WindowFinderMac window_finder_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(WindowCapturerMac);
 };
 
 WindowCapturerMac::WindowCapturerMac(
@@ -142,8 +142,8 @@ bool WindowCapturerMac::IsOccluded(const DesktopVector& pos) {
 }
 
 void WindowCapturerMac::Start(Callback* callback) {
-  assert(!callback_);
-  assert(callback);
+  RTC_DCHECK(!callback_);
+  RTC_DCHECK(callback);
 
   callback_ = callback;
 }

@@ -10,6 +10,7 @@ COMPILE_FLAGS["OS_INCLUDES"] = []
 AllowCompilerWarnings()
 
 DEFINES["ABSL_ALLOCATOR_NOTHROW"] = "1"
+DEFINES["RTC_DAV1D_IN_INTERNAL_DECODER_FACTORY"] = True
 DEFINES["RTC_ENABLE_VP9"] = True
 DEFINES["WEBRTC_ENABLE_PROTOBUF"] = "0"
 DEFINES["WEBRTC_LIBRARY_IMPL"] = True
@@ -28,15 +29,16 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
+    "/third_party/libwebrtc/api/video_codecs/h264_profile_level_id.cc",
     "/third_party/libwebrtc/api/video_codecs/sdp_video_format.cc",
     "/third_party/libwebrtc/api/video_codecs/spatial_layer.cc",
     "/third_party/libwebrtc/api/video_codecs/video_codec.cc",
     "/third_party/libwebrtc/api/video_codecs/video_decoder.cc",
-    "/third_party/libwebrtc/api/video_codecs/video_decoder_factory.cc",
     "/third_party/libwebrtc/api/video_codecs/video_encoder.cc",
     "/third_party/libwebrtc/api/video_codecs/video_encoder_config.cc",
     "/third_party/libwebrtc/api/video_codecs/vp8_frame_config.cc",
-    "/third_party/libwebrtc/api/video_codecs/vp8_temporal_layers.cc"
+    "/third_party/libwebrtc/api/video_codecs/vp8_temporal_layers.cc",
+    "/third_party/libwebrtc/api/video_codecs/vp9_profile.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -52,10 +54,11 @@ if CONFIG["MOZ_DEBUG"] == "1":
 if CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["ANDROID"] = True
-    DEFINES["ANDROID_NDK_VERSION_ROLL"] = "r20_1"
+    DEFINES["ANDROID_NDK_VERSION_ROLL"] = "r22_1"
     DEFINES["HAVE_SYS_UIO_H"] = True
     DEFINES["WEBRTC_ANDROID"] = True
     DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_GNU_SOURCE"] = True
@@ -68,6 +71,7 @@ if CONFIG["OS_TARGET"] == "Android":
 
 if CONFIG["OS_TARGET"] == "Darwin":
 
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_MAC"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_LIBCPP_HAS_NO_ALIGNED_ALLOCATION"] = True
@@ -93,8 +97,10 @@ if CONFIG["OS_TARGET"] == "Linux":
 if CONFIG["OS_TARGET"] == "OpenBSD":
 
     DEFINES["USE_GLIB"] = "1"
+    DEFINES["USE_OZONE"] = "1"
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
     DEFINES["_LARGEFILE64_SOURCE"] = True
@@ -110,6 +116,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["PSAPI_VERSION"] = "2"
     DEFINES["UNICODE"] = True
     DEFINES["USE_AURA"] = "1"
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_WIN"] = True
     DEFINES["WIN32"] = True
     DEFINES["WIN32_LEAN_AND_MEAN"] = True
@@ -180,32 +187,28 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android":
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 
-    CXXFLAGS += [
-        "-msse2"
-    ]
-
     OS_LIBS += [
         "android_support"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
 
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
 if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
 
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
-    CXXFLAGS += [
-        "-msse2"
-    ]
-
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
 
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
 Library("video_codecs_api_gn")

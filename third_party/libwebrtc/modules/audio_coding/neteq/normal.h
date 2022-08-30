@@ -15,8 +15,8 @@
 #include <string.h>  // Access to size_t.
 
 #include "api/neteq/neteq.h"
+#include "modules/audio_coding/neteq/statistics_calculator.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/numerics/safe_conversions.h"
 
 namespace webrtc {
@@ -35,22 +35,27 @@ class Normal {
   Normal(int fs_hz,
          DecoderDatabase* decoder_database,
          const BackgroundNoise& background_noise,
-         Expand* expand)
+         Expand* expand,
+         StatisticsCalculator* statistics)
       : fs_hz_(fs_hz),
         decoder_database_(decoder_database),
         background_noise_(background_noise),
         expand_(expand),
         samples_per_ms_(rtc::CheckedDivExact(fs_hz_, 1000)),
         default_win_slope_Q14_(
-            rtc::dchecked_cast<uint16_t>((1 << 14) / samples_per_ms_)) {}
+            rtc::dchecked_cast<uint16_t>((1 << 14) / samples_per_ms_)),
+        statistics_(statistics) {}
 
   virtual ~Normal() {}
 
-  // Performs the "Normal" operation. The decoder data is supplied in |input|,
-  // having |length| samples in total for all channels (interleaved). The
-  // result is written to |output|. The number of channels allocated in
-  // |output| defines the number of channels that will be used when
-  // de-interleaving |input|. |last_mode| contains the mode used in the previous
+  Normal(const Normal&) = delete;
+  Normal& operator=(const Normal&) = delete;
+
+  // Performs the "Normal" operation. The decoder data is supplied in `input`,
+  // having `length` samples in total for all channels (interleaved). The
+  // result is written to `output`. The number of channels allocated in
+  // `output` defines the number of channels that will be used when
+  // de-interleaving `input`. `last_mode` contains the mode used in the previous
   // GetAudio call (i.e., not the current one).
   int Process(const int16_t* input,
               size_t length,
@@ -64,8 +69,7 @@ class Normal {
   Expand* expand_;
   const size_t samples_per_ms_;
   const int16_t default_win_slope_Q14_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(Normal);
+  StatisticsCalculator* const statistics_;
 };
 
 }  // namespace webrtc

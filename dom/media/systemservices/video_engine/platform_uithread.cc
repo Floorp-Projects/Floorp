@@ -109,8 +109,8 @@ bool PlatformUIThread::RequestCallbackTimer(unsigned int milliseconds) {
 
 void PlatformUIThread::Stop() {
   {
+    RTC_DCHECK_RUN_ON(&thread_checker_);
     CritScope scoped_lock(&cs_);
-    RTC_DCHECK(thread_checker_.CalledOnValidThread());
     // Shut down the dispatch loop and let the background thread exit.
     if (timerid_) {
       MOZ_ASSERT(hwnd_);
@@ -138,7 +138,7 @@ void PlatformUIThread::Stop() {
     // Always set our state to STOPPED
     state_ = State::STOPPED;
   }
-  PlatformThread::Stop();
+  monitor_thread_.Finalize();
 }
 
 void PlatformUIThread::Run() {
@@ -167,7 +167,7 @@ void PlatformUIThread::Run() {
   }
 }
 
-void PlatformUIThread::NativeEventCallback() { run_function_(obj_); }
+void PlatformUIThread::NativeEventCallback() { native_event_callback_(); }
 
 /* static */
 LRESULT CALLBACK PlatformUIThread::EventWindowProc(HWND hwnd, UINT uMsg,

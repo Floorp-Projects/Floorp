@@ -176,6 +176,28 @@ TEST(MatchedFilter, TestAvx2Optimizations) {
 
 #endif
 
+// Verifies that the (optimized) function MaxSquarePeakIndex() produces output
+// equal to the corresponding std-functions.
+TEST(MatchedFilter, MaxSquarePeakIndex) {
+  Random random_generator(42U);
+  constexpr int kMaxLength = 128;
+  constexpr int kNumIterationsPerLength = 256;
+  for (int length = 1; length < kMaxLength; ++length) {
+    std::vector<float> y(length);
+    for (int i = 0; i < kNumIterationsPerLength; ++i) {
+      RandomizeSampleVector(&random_generator, y);
+
+      size_t lag_from_function = MaxSquarePeakIndex(y);
+      size_t lag_from_std = std::distance(
+          y.begin(),
+          std::max_element(y.begin(), y.end(), [](float a, float b) -> bool {
+            return a * a < b * b;
+          }));
+      EXPECT_EQ(lag_from_function, lag_from_std);
+    }
+  }
+}
+
 // Verifies that the matched filter produces proper lag estimates for
 // artificially
 // delayed signals.
@@ -206,6 +228,7 @@ TEST(MatchedFilter, LagEstimation) {
                            kWindowSizeSubBlocks, kNumMatchedFilters,
                            kAlignmentShiftSubBlocks, 150,
                            config.delay.delay_estimate_smoothing,
+                           config.delay.delay_estimate_smoothing_delay_found,
                            config.delay.delay_candidate_detection_threshold);
 
       std::unique_ptr<RenderDelayBuffer> render_delay_buffer(
@@ -231,7 +254,7 @@ TEST(MatchedFilter, LagEstimation) {
             downsampled_capture_data.data(), sub_block_size);
         capture_decimator.Decimate(capture[0], downsampled_capture);
         filter.Update(render_delay_buffer->GetDownsampledRenderBuffer(),
-                      downsampled_capture);
+                      downsampled_capture, false);
       }
 
       // Obtain the lag estimates.
@@ -318,6 +341,7 @@ TEST(MatchedFilter, LagNotReliableForUncorrelatedRenderAndCapture) {
                          kWindowSizeSubBlocks, kNumMatchedFilters,
                          kAlignmentShiftSubBlocks, 150,
                          config.delay.delay_estimate_smoothing,
+                         config.delay.delay_estimate_smoothing_delay_found,
                          config.delay.delay_candidate_detection_threshold);
 
     // Analyze the correlation between render and capture.
@@ -325,7 +349,8 @@ TEST(MatchedFilter, LagNotReliableForUncorrelatedRenderAndCapture) {
       RandomizeSampleVector(&random_generator, render[0][0]);
       RandomizeSampleVector(&random_generator, capture);
       render_delay_buffer->Insert(render);
-      filter.Update(render_delay_buffer->GetDownsampledRenderBuffer(), capture);
+      filter.Update(render_delay_buffer->GetDownsampledRenderBuffer(), capture,
+                    false);
     }
 
     // Obtain the lag estimates.
@@ -361,6 +386,7 @@ TEST(MatchedFilter, LagNotUpdatedForLowLevelRender) {
                          kWindowSizeSubBlocks, kNumMatchedFilters,
                          kAlignmentShiftSubBlocks, 150,
                          config.delay.delay_estimate_smoothing,
+                         config.delay.delay_estimate_smoothing_delay_found,
                          config.delay.delay_candidate_detection_threshold);
     std::unique_ptr<RenderDelayBuffer> render_delay_buffer(
         RenderDelayBuffer::Create(EchoCanceller3Config(), kSampleRateHz,
@@ -379,7 +405,7 @@ TEST(MatchedFilter, LagNotUpdatedForLowLevelRender) {
                                                 sub_block_size);
       capture_decimator.Decimate(capture[0], downsampled_capture);
       filter.Update(render_delay_buffer->GetDownsampledRenderBuffer(),
-                    downsampled_capture);
+                    downsampled_capture, false);
     }
 
     // Obtain the lag estimates.
@@ -407,6 +433,7 @@ TEST(MatchedFilter, NumberOfLagEstimates) {
       MatchedFilter filter(&data_dumper, DetectOptimization(), sub_block_size,
                            32, num_matched_filters, 1, 150,
                            config.delay.delay_estimate_smoothing,
+                           config.delay.delay_estimate_smoothing_delay_found,
                            config.delay.delay_candidate_detection_threshold);
       EXPECT_EQ(num_matched_filters, filter.GetLagEstimates().size());
     }
@@ -421,6 +448,7 @@ TEST(MatchedFilterDeathTest, ZeroWindowSize) {
   EchoCanceller3Config config;
   EXPECT_DEATH(MatchedFilter(&data_dumper, DetectOptimization(), 16, 0, 1, 1,
                              150, config.delay.delay_estimate_smoothing,
+                             config.delay.delay_estimate_smoothing_delay_found,
                              config.delay.delay_candidate_detection_threshold),
                "");
 }
@@ -430,6 +458,7 @@ TEST(MatchedFilterDeathTest, NullDataDumper) {
   EchoCanceller3Config config;
   EXPECT_DEATH(MatchedFilter(nullptr, DetectOptimization(), 16, 1, 1, 1, 150,
                              config.delay.delay_estimate_smoothing,
+                             config.delay.delay_estimate_smoothing_delay_found,
                              config.delay.delay_candidate_detection_threshold),
                "");
 }
@@ -441,6 +470,7 @@ TEST(MatchedFilterDeathTest, DISABLED_BlockSizeMultipleOf4) {
   EchoCanceller3Config config;
   EXPECT_DEATH(MatchedFilter(&data_dumper, DetectOptimization(), 15, 1, 1, 1,
                              150, config.delay.delay_estimate_smoothing,
+                             config.delay.delay_estimate_smoothing_delay_found,
                              config.delay.delay_candidate_detection_threshold),
                "");
 }
@@ -453,6 +483,7 @@ TEST(MatchedFilterDeathTest, DISABLED_SubBlockSizeAddsUpToBlockSize) {
   EchoCanceller3Config config;
   EXPECT_DEATH(MatchedFilter(&data_dumper, DetectOptimization(), 12, 1, 1, 1,
                              150, config.delay.delay_estimate_smoothing,
+                             config.delay.delay_estimate_smoothing_delay_found,
                              config.delay.delay_candidate_detection_threshold),
                "");
 }

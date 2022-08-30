@@ -14,7 +14,6 @@
 #include <vector>
 
 #include "modules/audio_processing/test/audio_processing_simulator.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 namespace test {
@@ -25,10 +24,19 @@ class WavBasedSimulator final : public AudioProcessingSimulator {
   WavBasedSimulator(const SimulationSettings& settings,
                     rtc::scoped_refptr<AudioProcessing> audio_processing,
                     std::unique_ptr<AudioProcessingBuilder> ap_builder);
+
+  WavBasedSimulator() = delete;
+  WavBasedSimulator(const WavBasedSimulator&) = delete;
+  WavBasedSimulator& operator=(const WavBasedSimulator&) = delete;
+
   ~WavBasedSimulator() override;
 
   // Processes the WAV input.
   void Process() override;
+
+  // Only analyzes the data for the simulation, instead of perform any
+  // processing.
+  void Analyze() override;
 
  private:
   enum SimulationEventType {
@@ -46,8 +54,6 @@ class WavBasedSimulator final : public AudioProcessingSimulator {
       const std::string& filename);
 
   std::vector<SimulationEventType> call_chain_;
-
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(WavBasedSimulator);
 };
 
 }  // namespace test

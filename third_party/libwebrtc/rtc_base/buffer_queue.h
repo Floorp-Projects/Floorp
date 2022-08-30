@@ -16,23 +16,26 @@
 #include <deque>
 #include <vector>
 
+#include "api/sequence_checker.h"
 #include "rtc_base/buffer.h"
-#include "rtc_base/constructor_magic.h"
-#include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread_annotations.h"
 
 namespace rtc {
 
-class BufferQueue {
+class BufferQueue final {
  public:
   // Creates a buffer queue with a given capacity and default buffer size.
   BufferQueue(size_t capacity, size_t default_size);
-  virtual ~BufferQueue();
+  ~BufferQueue();
+
+  BufferQueue(const BufferQueue&) = delete;
+  BufferQueue& operator=(const BufferQueue&) = delete;
 
   // Return number of queued buffers.
   size_t size() const;
 
-  // Clear the BufferQueue by moving all Buffers from |queue_| to |free_list_|.
+  // Clear the BufferQueue by moving all Buffers from `queue_` to `free_list_`.
   void Clear();
 
   // ReadFront will only read one buffer at a time and will truncate buffers
@@ -44,19 +47,22 @@ class BufferQueue {
   // Returns true unless no data could be written.
   bool WriteBack(const void* data, size_t bytes, size_t* bytes_written);
 
- protected:
-  // These methods are called when the state of the queue changes.
-  virtual void NotifyReadableForTest() {}
-  virtual void NotifyWritableForTest() {}
+  bool is_writable() const {
+    RTC_DCHECK_RUN_ON(&sequence_checker_);
+    return queue_.size() < capacity_;
+  }
+
+  bool is_readable() const {
+    RTC_DCHECK_RUN_ON(&sequence_checker_);
+    return !queue_.empty();
+  }
 
  private:
-  size_t capacity_;
-  size_t default_size_;
-  mutable webrtc::Mutex mutex_;
-  std::deque<Buffer*> queue_ RTC_GUARDED_BY(mutex_);
-  std::vector<Buffer*> free_list_ RTC_GUARDED_BY(mutex_);
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(BufferQueue);
+  RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker sequence_checker_;
+  const size_t capacity_;
+  const size_t default_size_;
+  std::deque<Buffer*> queue_ RTC_GUARDED_BY(sequence_checker_);
+  std::vector<Buffer*> free_list_ RTC_GUARDED_BY(sequence_checker_);
 };
 
 }  // namespace rtc

@@ -29,9 +29,13 @@
 extern "C" {
 #endif
 
-/** \class pw_work_queue
- *
- * PipeWire work queue object
+/** \defgroup pw_work_queue Work Queue
+ * Queued processing of work items.
+ */
+
+/**
+ * \addtogroup pw_work_queue
+ * \{
  */
 struct pw_work_queue;
 
@@ -55,6 +59,10 @@ pw_work_queue_cancel(struct pw_work_queue *queue, void *obj, uint32_t id);
 
 int
 pw_work_queue_complete(struct pw_work_queue *queue, void *obj, uint32_t seq, int res);
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }

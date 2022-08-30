@@ -363,8 +363,7 @@ class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy {
 
   // Implement VideoEncoder interface, sort of.
   // (We cannot use |Release|, since that's needed for nsRefPtr)
-  virtual int32_t InitDecode(const webrtc::VideoCodec* aCodecSettings,
-                             int32_t aNumberOfCores);
+  virtual bool Configure(const webrtc::VideoDecoder::Settings& settings);
   virtual int32_t Decode(const webrtc::EncodedImage& aInputImage,
                          bool aMissingFrames, int64_t aRenderTimeMs);
   virtual int32_t RegisterDecodeCompleteCallback(
@@ -403,10 +402,9 @@ class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy {
  private:
   virtual ~WebrtcGmpVideoDecoder();
 
-  static void InitDecode_g(const RefPtr<WebrtcGmpVideoDecoder>& aThis,
-                           const webrtc::VideoCodec* aCodecSettings,
-                           int32_t aNumberOfCores,
-                           const RefPtr<GmpInitDoneRunnable>& aInitDone);
+  static void Configure_g(const RefPtr<WebrtcGmpVideoDecoder>& aThis,
+                          const webrtc::VideoDecoder::Settings& settings,
+                          const RefPtr<GmpInitDoneRunnable>& aInitDone);
   int32_t GmpInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost,
                       std::string* aErrorOut);
   static void ReleaseGmp_g(const RefPtr<WebrtcGmpVideoDecoder>& aDecoder);
@@ -475,9 +473,8 @@ class WebrtcVideoDecoderProxy : public WebrtcVideoDecoder {
     return mDecoderImpl->ReleasePluginEvent();
   }
 
-  int32_t InitDecode(const webrtc::VideoCodec* aCodecSettings,
-                     int32_t aNumberOfCores) override {
-    return mDecoderImpl->InitDecode(aCodecSettings, aNumberOfCores);
+  bool Configure(const Settings& settings) override {
+    return mDecoderImpl->Configure(settings);
   }
 
   int32_t Decode(const webrtc::EncodedImage& aInputImage, bool aMissingFrames,

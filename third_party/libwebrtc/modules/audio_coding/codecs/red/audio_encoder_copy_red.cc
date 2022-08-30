@@ -17,22 +17,54 @@
 
 #include "rtc_base/byte_order.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
 
 namespace webrtc {
-// RED packets must be less than 1024 bytes to fit the 10 bit block length.
-static constexpr const int kRedMaxPacketSize = 1 << 10;
-// The typical MTU is 1200 bytes.
-static constexpr const size_t kAudioMaxRtpPacketLen = 1200;
+static constexpr const int kRedMaxPacketSize =
+    1 << 10;  // RED packets must be less than 1024 bytes to fit the 10 bit
+              // block length.
+static constexpr const size_t kRedMaxTimestampDelta =
+    1 << 14;  // RED packets can encode a timestamp delta of 14 bits.
+static constexpr const size_t kAudioMaxRtpPacketLen =
+    1200;  // The typical MTU is 1200 bytes.
+
+static constexpr size_t kRedHeaderLength = 4;  // 4 bytes RED header.
+static constexpr size_t kRedLastHeaderLength =
+    1;  // reduced size for last RED header.
+
+static constexpr size_t kRedNumberOfRedundantEncodings =
+    1;  // The level of redundancy we support.
 
 AudioEncoderCopyRed::Config::Config() = default;
 AudioEncoderCopyRed::Config::Config(Config&&) = default;
 AudioEncoderCopyRed::Config::~Config() = default;
 
-AudioEncoderCopyRed::AudioEncoderCopyRed(Config&& config)
+size_t GetMaxRedundancyFromFieldTrial(const FieldTrialsView& field_trials) {
+  const std::string red_trial =
+      field_trials.Lookup("WebRTC-Audio-Red-For-Opus");
+  size_t redundancy = 0;
+  if (sscanf(red_trial.c_str(), "Enabled-%zu", &redundancy) != 1 ||
+      redundancy > 9) {
+    return kRedNumberOfRedundantEncodings;
+  }
+  return redundancy;
+}
+
+AudioEncoderCopyRed::AudioEncoderCopyRed(Config&& config,
+                                         const FieldTrialsView& field_trials)
     : speech_encoder_(std::move(config.speech_encoder)),
+      primary_encoded_(0, kAudioMaxRtpPacketLen),
       max_packet_length_(kAudioMaxRtpPacketLen),
       red_payload_type_(config.payload_type) {
   RTC_CHECK(speech_encoder_) << "Speech encoder not provided.";
+
+  auto number_of_redundant_encodings =
+      GetMaxRedundancyFromFieldTrial(field_trials);
+  for (size_t i = 0; i < number_of_redundant_encodings; i++) {
+    std::pair<EncodedInfo, rtc::Buffer> redundant;
+    redundant.second.EnsureCapacity(kAudioMaxRtpPacketLen);
+    redundant_encodings_.push_front(std::move(redundant));
+  }
 }
 
 AudioEncoderCopyRed::~AudioEncoderCopyRed() = default;
@@ -61,117 +93,102 @@ int AudioEncoderCopyRed::GetTargetBitrate() const {
   return speech_encoder_->GetTargetBitrate();
 }
 
-size_t AudioEncoderCopyRed::CalculateHeaderLength(size_t encoded_bytes) const {
-  size_t header_size = 1;
-  size_t bytes_available = max_packet_length_ - encoded_bytes;
-  if (secondary_info_.encoded_bytes > 0 &&
-      secondary_info_.encoded_bytes < bytes_available) {
-    header_size += 4;
-    bytes_available -= secondary_info_.encoded_bytes;
-  }
-  if (tertiary_info_.encoded_bytes > 0 &&
-      tertiary_info_.encoded_bytes < bytes_available) {
-    header_size += 4;
-  }
-  return header_size > 1 ? header_size : 0;
-}
-
 AudioEncoder::EncodedInfo AudioEncoderCopyRed::EncodeImpl(
     uint32_t rtp_timestamp,
     rtc::ArrayView<const int16_t> audio,
     rtc::Buffer* encoded) {
-  rtc::Buffer primary_encoded;
+  primary_encoded_.Clear();
   EncodedInfo info =
-      speech_encoder_->Encode(rtp_timestamp, audio, &primary_encoded);
+      speech_encoder_->Encode(rtp_timestamp, audio, &primary_encoded_);
   RTC_CHECK(info.redundant.empty()) << "Cannot use nested redundant encoders.";
-  RTC_DCHECK_EQ(primary_encoded.size(), info.encoded_bytes);
+  RTC_DCHECK_EQ(primary_encoded_.size(), info.encoded_bytes);
 
-  if (info.encoded_bytes == 0 || info.encoded_bytes > kRedMaxPacketSize) {
+  if (info.encoded_bytes == 0 || info.encoded_bytes >= kRedMaxPacketSize) {
     return info;
   }
   RTC_DCHECK_GT(max_packet_length_, info.encoded_bytes);
 
-  // Allocate room for RFC 2198 header if there is redundant data.
-  // Otherwise this will send the primary payload type without
-  // wrapping in RED.
-  const size_t header_length_bytes = CalculateHeaderLength(info.encoded_bytes);
+  size_t header_length_bytes = kRedLastHeaderLength;
+  size_t bytes_available = max_packet_length_ - info.encoded_bytes;
+  auto it = redundant_encodings_.begin();
+
+  // Determine how much redundancy we can fit into our packet by
+  // iterating forward. This is determined both by the length as well
+  // as the timestamp difference. The latter can occur with opus DTX which
+  // has timestamp gaps of 400ms which exceeds REDs timestamp delta field size.
+  for (; it != redundant_encodings_.end(); it++) {
+    if (bytes_available < kRedHeaderLength + it->first.encoded_bytes) {
+      break;
+    }
+    if (it->first.encoded_bytes == 0) {
+      break;
+    }
+    if (rtp_timestamp - it->first.encoded_timestamp >= kRedMaxTimestampDelta) {
+      break;
+    }
+    bytes_available -= kRedHeaderLength + it->first.encoded_bytes;
+    header_length_bytes += kRedHeaderLength;
+  }
+
+  // Allocate room for RFC 2198 header.
   encoded->SetSize(header_length_bytes);
 
+  // Iterate backwards and append the data.
   size_t header_offset = 0;
-  size_t bytes_available = max_packet_length_ - info.encoded_bytes;
-  if (tertiary_info_.encoded_bytes > 0 &&
-      tertiary_info_.encoded_bytes + secondary_info_.encoded_bytes <
-          bytes_available) {
-    encoded->AppendData(tertiary_encoded_);
+  while (it-- != redundant_encodings_.begin()) {
+    encoded->AppendData(it->second);
 
     const uint32_t timestamp_delta =
-        info.encoded_timestamp - tertiary_info_.encoded_timestamp;
-
-    encoded->data()[header_offset] = tertiary_info_.payload_type | 0x80;
+        info.encoded_timestamp - it->first.encoded_timestamp;
+    encoded->data()[header_offset] = it->first.payload_type | 0x80;
     rtc::SetBE16(static_cast<uint8_t*>(encoded->data()) + header_offset + 1,
-                 (timestamp_delta << 2) | (tertiary_info_.encoded_bytes >> 8));
-    encoded->data()[header_offset + 3] = tertiary_info_.encoded_bytes & 0xff;
-    header_offset += 4;
-    bytes_available -= tertiary_info_.encoded_bytes;
+                 (timestamp_delta << 2) | (it->first.encoded_bytes >> 8));
+    encoded->data()[header_offset + 3] = it->first.encoded_bytes & 0xff;
+    header_offset += kRedHeaderLength;
+    info.redundant.push_back(it->first);
   }
 
-  if (secondary_info_.encoded_bytes > 0 &&
-      secondary_info_.encoded_bytes < bytes_available) {
-    encoded->AppendData(secondary_encoded_);
-
-    const uint32_t timestamp_delta =
-        info.encoded_timestamp - secondary_info_.encoded_timestamp;
-
-    encoded->data()[header_offset] = secondary_info_.payload_type | 0x80;
-    rtc::SetBE16(static_cast<uint8_t*>(encoded->data()) + header_offset + 1,
-                 (timestamp_delta << 2) | (secondary_info_.encoded_bytes >> 8));
-    encoded->data()[header_offset + 3] = secondary_info_.encoded_bytes & 0xff;
-    header_offset += 4;
-    bytes_available -= secondary_info_.encoded_bytes;
-  }
-
-  encoded->AppendData(primary_encoded);
-  if (header_length_bytes > 0) {
-    RTC_DCHECK_EQ(header_offset, header_length_bytes - 1);
-    encoded->data()[header_offset] = info.payload_type;
-  }
-
-  // |info| will be implicitly cast to an EncodedInfoLeaf struct, effectively
+  // `info` will be implicitly cast to an EncodedInfoLeaf struct, effectively
   // discarding the (empty) vector of redundant information. This is
   // intentional.
-  info.redundant.push_back(info);
-  RTC_DCHECK_EQ(info.redundant.size(), 1);
-  RTC_DCHECK_EQ(info.speech, info.redundant[0].speech);
-  if (secondary_info_.encoded_bytes > 0) {
-    info.redundant.push_back(secondary_info_);
-    RTC_DCHECK_EQ(info.redundant.size(), 2);
-  }
-  if (tertiary_info_.encoded_bytes > 0) {
-    info.redundant.push_back(tertiary_info_);
-    RTC_DCHECK_EQ(info.redundant.size(),
-                  2 + (secondary_info_.encoded_bytes > 0 ? 1 : 0));
+  if (header_length_bytes > kRedHeaderLength) {
+    info.redundant.push_back(info);
+    RTC_DCHECK_EQ(info.speech,
+                  info.redundant[info.redundant.size() - 1].speech);
   }
 
-  // Save secondary to tertiary.
-  tertiary_encoded_.SetData(secondary_encoded_);
-  tertiary_info_ = secondary_info_;
+  encoded->AppendData(primary_encoded_);
+  RTC_DCHECK_EQ(header_offset, header_length_bytes - 1);
+  encoded->data()[header_offset] = info.payload_type;
 
-  // Save primary to secondary.
-  secondary_encoded_.SetData(primary_encoded);
-  secondary_info_ = info;
+  // Shift the redundant encodings.
+  auto rit = redundant_encodings_.rbegin();
+  for (auto next = std::next(rit); next != redundant_encodings_.rend();
+       rit++, next = std::next(rit)) {
+    rit->first = next->first;
+    rit->second.SetData(next->second);
+  }
+  it = redundant_encodings_.begin();
+  if (it != redundant_encodings_.end()) {
+    it->first = info;
+    it->second.SetData(primary_encoded_);
+  }
 
   // Update main EncodedInfo.
-  if (header_length_bytes > 0) {
-    info.payload_type = red_payload_type_;
-  }
+  info.payload_type = red_payload_type_;
   info.encoded_bytes = encoded->size();
   return info;
 }
 
 void AudioEncoderCopyRed::Reset() {
   speech_encoder_->Reset();
-  secondary_encoded_.Clear();
-  secondary_info_.encoded_bytes = 0;
+  auto number_of_redundant_encodings = redundant_encodings_.size();
+  redundant_encodings_.clear();
+  for (size_t i = 0; i < number_of_redundant_encodings; i++) {
+    std::pair<EncodedInfo, rtc::Buffer> redundant;
+    redundant.second.EnsureCapacity(kAudioMaxRtpPacketLen);
+    redundant_encodings_.push_front(std::move(redundant));
+  }
 }
 
 bool AudioEncoderCopyRed::SetFec(bool enable) {
@@ -182,6 +199,10 @@ bool AudioEncoderCopyRed::SetDtx(bool enable) {
   return speech_encoder_->SetDtx(enable);
 }
 
+bool AudioEncoderCopyRed::GetDtx() const {
+  return speech_encoder_->GetDtx();
+}
+
 bool AudioEncoderCopyRed::SetApplication(Application application) {
   return speech_encoder_->SetApplication(application);
 }
@@ -190,9 +211,14 @@ void AudioEncoderCopyRed::SetMaxPlaybackRate(int frequency_hz) {
   speech_encoder_->SetMaxPlaybackRate(frequency_hz);
 }
 
-rtc::ArrayView<std::unique_ptr<AudioEncoder>>
-AudioEncoderCopyRed::ReclaimContainedEncoders() {
-  return rtc::ArrayView<std::unique_ptr<AudioEncoder>>(&speech_encoder_, 1);
+bool AudioEncoderCopyRed::EnableAudioNetworkAdaptor(
+    const std::string& config_string,
+    RtcEventLog* event_log) {
+  return speech_encoder_->EnableAudioNetworkAdaptor(config_string, event_log);
+}
+
+void AudioEncoderCopyRed::DisableAudioNetworkAdaptor() {
+  speech_encoder_->DisableAudioNetworkAdaptor();
 }
 
 void AudioEncoderCopyRed::OnReceivedUplinkPacketLossFraction(
@@ -208,14 +234,38 @@ void AudioEncoderCopyRed::OnReceivedUplinkBandwidth(
                                              bwe_period_ms);
 }
 
+void AudioEncoderCopyRed::OnReceivedUplinkAllocation(
+    BitrateAllocationUpdate update) {
+  speech_encoder_->OnReceivedUplinkAllocation(update);
+}
+
 absl::optional<std::pair<TimeDelta, TimeDelta>>
 AudioEncoderCopyRed::GetFrameLengthRange() const {
   return speech_encoder_->GetFrameLengthRange();
 }
 
+void AudioEncoderCopyRed::OnReceivedRtt(int rtt_ms) {
+  speech_encoder_->OnReceivedRtt(rtt_ms);
+}
+
 void AudioEncoderCopyRed::OnReceivedOverhead(size_t overhead_bytes_per_packet) {
   max_packet_length_ = kAudioMaxRtpPacketLen - overhead_bytes_per_packet;
   return speech_encoder_->OnReceivedOverhead(overhead_bytes_per_packet);
+}
+
+void AudioEncoderCopyRed::SetReceiverFrameLengthRange(int min_frame_length_ms,
+                                                      int max_frame_length_ms) {
+  return speech_encoder_->SetReceiverFrameLengthRange(min_frame_length_ms,
+                                                      max_frame_length_ms);
+}
+
+ANAStats AudioEncoderCopyRed::GetANAStats() const {
+  return speech_encoder_->GetANAStats();
+}
+
+rtc::ArrayView<std::unique_ptr<AudioEncoder>>
+AudioEncoderCopyRed::ReclaimContainedEncoders() {
+  return rtc::ArrayView<std::unique_ptr<AudioEncoder>>(&speech_encoder_, 1);
 }
 
 }  // namespace webrtc

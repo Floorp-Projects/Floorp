@@ -13,7 +13,8 @@
 
 #include <memory>
 
-#include "rtc_base/synchronization/sequence_checker.h"
+#include "api/sequence_checker.h"
+#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/task_utils/repeating_task.h"
 #include "video/stream_synchronization.h"
@@ -34,9 +35,9 @@ class RtpStreamsSynchronizer {
   void ConfigureSync(Syncable* syncable_audio);
 
   // Gets the estimated playout NTP timestamp for the video frame with
-  // |rtp_timestamp| and the sync offset between the current played out audio
+  // `rtp_timestamp` and the sync offset between the current played out audio
   // frame and the video frame. Returns true on success, false otherwise.
-  // The |estimated_freq_khz| is the frequency used in the RTP to NTP timestamp
+  // The `estimated_freq_khz` is the frequency used in the RTP to NTP timestamp
   // conversion.
   bool GetStreamSyncOffsetInMs(uint32_t rtp_timestamp,
                                int64_t render_time_ms,
@@ -54,7 +55,7 @@ class RtpStreamsSynchronizer {
   // we might be running on an rtc::Thread implementation of TaskQueue, which
   // does not consistently set itself as the active TaskQueue.
   // Instead, we rely on a SequenceChecker for now.
-  SequenceChecker main_checker_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker main_checker_;
 
   Syncable* const syncable_video_;
 

@@ -61,7 +61,11 @@
 #define OS_MAC 1
 #endif  // defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
 #elif defined(__linux__)
+#if !defined(OS_CHROMEOS)
+// Do not define OS_LINUX on Chrome OS build.
+// The OS_CHROMEOS macro is defined in GN.
 #define OS_LINUX 1
+#endif  // !defined(OS_CHROMEOS)
 // Include a system header to pull in features.h for glibc/uclibc macros.
 #include <unistd.h>
 #if defined(__GLIBC__) && !defined(__UCLIBC__)
@@ -90,7 +94,7 @@
 #error Please add support for your platform in build/build_config.h
 #endif
 // NOTE: Adding a new port? Please follow
-// https://chromium.googlesource.com/chromium/src/+/master/docs/new_port_policy.md
+// https://chromium.googlesource.com/chromium/src/+/main/docs/new_port_policy.md
 
 #if defined(OS_MAC) || defined(OS_IOS)
 #define OS_APPLE 1
@@ -233,7 +237,7 @@
 // The compiler thinks std::string::const_iterator and "const char*" are
 // equivalent types.
 #define STD_STRING_ITERATOR_IS_CHAR_POINTER
-// The compiler thinks base::string16::const_iterator and "char16*" are
+// The compiler thinks std::u16string::const_iterator and "char16*" are
 // equivalent types.
 #define BASE_STRING16_ITERATOR_IS_CHAR16_POINTER
 #endif

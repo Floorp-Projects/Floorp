@@ -23,10 +23,10 @@
 
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "api/network_state_predictor.h"
 #include "api/rtp_headers.h"
 #include "api/rtp_parameters.h"
 #include "modules/audio_coding/audio_network_adaptor/include/audio_network_adaptor_config.h"
-#include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 #include "modules/rtp_rtcp/include/rtp_cvo.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/dlrr.h"
@@ -338,6 +338,19 @@ rtcp::Pli EventGenerator::NewPli() {
   return pli;
 }
 
+rtcp::Bye EventGenerator::NewBye() {
+  rtcp::Bye bye;
+  bye.SetSenderSsrc(prng_.Rand<uint32_t>());
+  std::vector<uint32_t> csrcs{prng_.Rand<uint32_t>(), prng_.Rand<uint32_t>()};
+  bye.SetCsrcs(csrcs);
+  if (prng_.Rand(0, 2)) {
+    bye.SetReason("foo");
+  } else {
+    bye.SetReason("bar");
+  }
+  return bye;
+}
+
 rtcp::TransportFeedback EventGenerator::NewTransportFeedback() {
   rtcp::TransportFeedback transport_feedback;
   uint16_t base_seq_no = prng_.Rand<uint16_t>();
@@ -396,6 +409,7 @@ EventGenerator::NewRtcpPacketIncoming() {
     kPli,
     kNack,
     kRemb,
+    kBye,
     kTransportFeedback,
     kNumValues
   };
@@ -437,13 +451,18 @@ EventGenerator::NewRtcpPacketIncoming() {
       rtc::Buffer buffer = remb.Build();
       return std::make_unique<RtcEventRtcpPacketIncoming>(buffer);
     }
+    case SupportedRtcpTypes::kBye: {
+      rtcp::Bye bye = NewBye();
+      rtc::Buffer buffer = bye.Build();
+      return std::make_unique<RtcEventRtcpPacketIncoming>(buffer);
+    }
     case SupportedRtcpTypes::kTransportFeedback: {
       rtcp::TransportFeedback transport_feedback = NewTransportFeedback();
       rtc::Buffer buffer = transport_feedback.Build();
       return std::make_unique<RtcEventRtcpPacketIncoming>(buffer);
     }
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       rtc::Buffer buffer;
       return std::make_unique<RtcEventRtcpPacketIncoming>(buffer);
   }
@@ -459,6 +478,7 @@ EventGenerator::NewRtcpPacketOutgoing() {
     kPli,
     kNack,
     kRemb,
+    kBye,
     kTransportFeedback,
     kNumValues
   };
@@ -500,13 +520,18 @@ EventGenerator::NewRtcpPacketOutgoing() {
       rtc::Buffer buffer = remb.Build();
       return std::make_unique<RtcEventRtcpPacketOutgoing>(buffer);
     }
+    case SupportedRtcpTypes::kBye: {
+      rtcp::Bye bye = NewBye();
+      rtc::Buffer buffer = bye.Build();
+      return std::make_unique<RtcEventRtcpPacketOutgoing>(buffer);
+    }
     case SupportedRtcpTypes::kTransportFeedback: {
       rtcp::TransportFeedback transport_feedback = NewTransportFeedback();
       rtc::Buffer buffer = transport_feedback.Build();
       return std::make_unique<RtcEventRtcpPacketOutgoing>(buffer);
     }
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       rtc::Buffer buffer;
       return std::make_unique<RtcEventRtcpPacketOutgoing>(buffer);
   }
@@ -906,7 +931,8 @@ void EventVerifier::VerifyLoggedIceCandidatePairEvent(
   }
 }
 
-void VerifyLoggedRtpHeader(const RtpPacket& original_header,
+template <typename Event>
+void VerifyLoggedRtpHeader(const Event& original_header,
                            const RTPHeader& logged_header) {
   // Standard RTP header.
   EXPECT_EQ(original_header.Marker(), logged_header.markerBit);
@@ -915,53 +941,57 @@ void VerifyLoggedRtpHeader(const RtpPacket& original_header,
   EXPECT_EQ(original_header.Timestamp(), logged_header.timestamp);
   EXPECT_EQ(original_header.Ssrc(), logged_header.ssrc);
 
-  EXPECT_EQ(original_header.headers_size(), logged_header.headerLength);
+  EXPECT_EQ(original_header.header_length(), logged_header.headerLength);
 
   // TransmissionOffset header extension.
-  ASSERT_EQ(original_header.HasExtension<TransmissionOffset>(),
+  ASSERT_EQ(original_header.template HasExtension<TransmissionOffset>(),
             logged_header.extension.hasTransmissionTimeOffset);
   if (logged_header.extension.hasTransmissionTimeOffset) {
     int32_t offset;
-    ASSERT_TRUE(original_header.GetExtension<TransmissionOffset>(&offset));
+    ASSERT_TRUE(
+        original_header.template GetExtension<TransmissionOffset>(&offset));
     EXPECT_EQ(offset, logged_header.extension.transmissionTimeOffset);
   }
 
   // AbsoluteSendTime header extension.
-  ASSERT_EQ(original_header.HasExtension<AbsoluteSendTime>(),
+  ASSERT_EQ(original_header.template HasExtension<AbsoluteSendTime>(),
             logged_header.extension.hasAbsoluteSendTime);
   if (logged_header.extension.hasAbsoluteSendTime) {
     uint32_t sendtime;
-    ASSERT_TRUE(original_header.GetExtension<AbsoluteSendTime>(&sendtime));
+    ASSERT_TRUE(
+        original_header.template GetExtension<AbsoluteSendTime>(&sendtime));
     EXPECT_EQ(sendtime, logged_header.extension.absoluteSendTime);
   }
 
   // TransportSequenceNumber header extension.
-  ASSERT_EQ(original_header.HasExtension<TransportSequenceNumber>(),
+  ASSERT_EQ(original_header.template HasExtension<TransportSequenceNumber>(),
             logged_header.extension.hasTransportSequenceNumber);
   if (logged_header.extension.hasTransportSequenceNumber) {
     uint16_t seqnum;
-    ASSERT_TRUE(original_header.GetExtension<TransportSequenceNumber>(&seqnum));
+    ASSERT_TRUE(original_header.template GetExtension<TransportSequenceNumber>(
+        &seqnum));
     EXPECT_EQ(seqnum, logged_header.extension.transportSequenceNumber);
   }
 
   // AudioLevel header extension.
-  ASSERT_EQ(original_header.HasExtension<AudioLevel>(),
+  ASSERT_EQ(original_header.template HasExtension<AudioLevel>(),
             logged_header.extension.hasAudioLevel);
   if (logged_header.extension.hasAudioLevel) {
     bool voice_activity;
     uint8_t audio_level;
-    ASSERT_TRUE(original_header.GetExtension<AudioLevel>(&voice_activity,
-                                                         &audio_level));
+    ASSERT_TRUE(original_header.template GetExtension<AudioLevel>(
+        &voice_activity, &audio_level));
     EXPECT_EQ(voice_activity, logged_header.extension.voiceActivity);
     EXPECT_EQ(audio_level, logged_header.extension.audioLevel);
   }
 
   // VideoOrientation header extension.
-  ASSERT_EQ(original_header.HasExtension<VideoOrientation>(),
+  ASSERT_EQ(original_header.template HasExtension<VideoOrientation>(),
             logged_header.extension.hasVideoRotation);
   if (logged_header.extension.hasVideoRotation) {
     uint8_t rotation;
-    ASSERT_TRUE(original_header.GetExtension<VideoOrientation>(&rotation));
+    ASSERT_TRUE(
+        original_header.template GetExtension<VideoOrientation>(&rotation));
     EXPECT_EQ(ConvertCVOByteToVideoRotation(rotation),
               logged_header.extension.videoRotation);
   }
@@ -990,8 +1020,7 @@ void EventVerifier::VerifyLoggedRtpPacketIncoming(
     const LoggedRtpPacketIncoming& logged_event) const {
   EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
 
-  EXPECT_EQ(original_event.header().headers_size(),
-            logged_event.rtp.header_length);
+  EXPECT_EQ(original_event.header_length(), logged_event.rtp.header_length);
 
   EXPECT_EQ(original_event.packet_length(), logged_event.rtp.total_length);
 
@@ -1000,7 +1029,7 @@ void EventVerifier::VerifyLoggedRtpPacketIncoming(
   EXPECT_EQ(original_event.padding_length(),
             logged_event.rtp.header.paddingLength);
 
-  VerifyLoggedRtpHeader(original_event.header(), logged_event.rtp.header);
+  VerifyLoggedRtpHeader(original_event, logged_event.rtp.header);
 }
 
 void EventVerifier::VerifyLoggedRtpPacketOutgoing(
@@ -1008,8 +1037,7 @@ void EventVerifier::VerifyLoggedRtpPacketOutgoing(
     const LoggedRtpPacketOutgoing& logged_event) const {
   EXPECT_EQ(original_event.timestamp_ms(), logged_event.log_time_ms());
 
-  EXPECT_EQ(original_event.header().headers_size(),
-            logged_event.rtp.header_length);
+  EXPECT_EQ(original_event.header_length(), logged_event.rtp.header_length);
 
   EXPECT_EQ(original_event.packet_length(), logged_event.rtp.total_length);
 
@@ -1021,7 +1049,7 @@ void EventVerifier::VerifyLoggedRtpPacketOutgoing(
   // TODO(terelius): Probe cluster ID isn't parsed, used or tested. Unless
   // someone has a strong reason to keep it, it'll be removed.
 
-  VerifyLoggedRtpHeader(original_event.header(), logged_event.rtp.header);
+  VerifyLoggedRtpHeader(original_event, logged_event.rtp.header);
 }
 
 void EventVerifier::VerifyLoggedGenericPacketSent(
@@ -1096,10 +1124,10 @@ void EventVerifier::VerifyReportBlock(
 }
 
 void EventVerifier::VerifyLoggedSenderReport(
-    int64_t log_time_us,
+    int64_t log_time_ms,
     const rtcp::SenderReport& original_sr,
     const LoggedRtcpPacketSenderReport& logged_sr) {
-  EXPECT_EQ(log_time_us, logged_sr.log_time_us());
+  EXPECT_EQ(log_time_ms, logged_sr.log_time_ms());
   EXPECT_EQ(original_sr.sender_ssrc(), logged_sr.sr.sender_ssrc());
   EXPECT_EQ(original_sr.ntp(), logged_sr.sr.ntp());
   EXPECT_EQ(original_sr.rtp_timestamp(), logged_sr.sr.rtp_timestamp());
@@ -1116,10 +1144,10 @@ void EventVerifier::VerifyLoggedSenderReport(
 }
 
 void EventVerifier::VerifyLoggedReceiverReport(
-    int64_t log_time_us,
+    int64_t log_time_ms,
     const rtcp::ReceiverReport& original_rr,
     const LoggedRtcpPacketReceiverReport& logged_rr) {
-  EXPECT_EQ(log_time_us, logged_rr.log_time_us());
+  EXPECT_EQ(log_time_ms, logged_rr.log_time_ms());
   EXPECT_EQ(original_rr.sender_ssrc(), logged_rr.rr.sender_ssrc());
   ASSERT_EQ(original_rr.report_blocks().size(),
             logged_rr.rr.report_blocks().size());
@@ -1130,9 +1158,10 @@ void EventVerifier::VerifyLoggedReceiverReport(
 }
 
 void EventVerifier::VerifyLoggedExtendedReports(
-    int64_t log_time_us,
+    int64_t log_time_ms,
     const rtcp::ExtendedReports& original_xr,
     const LoggedRtcpPacketExtendedReports& logged_xr) {
+  EXPECT_EQ(log_time_ms, logged_xr.log_time_ms());
   EXPECT_EQ(original_xr.sender_ssrc(), logged_xr.xr.sender_ssrc());
 
   EXPECT_EQ(original_xr.rrtr().has_value(), logged_xr.xr.rrtr().has_value());
@@ -1170,11 +1199,11 @@ void EventVerifier::VerifyLoggedExtendedReports(
   }
 }
 
-void EventVerifier::VerifyLoggedFir(int64_t log_time_us,
+void EventVerifier::VerifyLoggedFir(int64_t log_time_ms,
                                     const rtcp::Fir& original_fir,
                                     const LoggedRtcpPacketFir& logged_fir) {
+  EXPECT_EQ(log_time_ms, logged_fir.log_time_ms());
   EXPECT_EQ(original_fir.sender_ssrc(), logged_fir.fir.sender_ssrc());
-
   const auto& original_requests = original_fir.requests();
   const auto& logged_requests = logged_fir.fir.requests();
   ASSERT_EQ(original_requests.size(), logged_requests.size());
@@ -1184,25 +1213,35 @@ void EventVerifier::VerifyLoggedFir(int64_t log_time_us,
   }
 }
 
-void EventVerifier::VerifyLoggedPli(int64_t log_time_us,
+void EventVerifier::VerifyLoggedPli(int64_t log_time_ms,
                                     const rtcp::Pli& original_pli,
                                     const LoggedRtcpPacketPli& logged_pli) {
+  EXPECT_EQ(log_time_ms, logged_pli.log_time_ms());
   EXPECT_EQ(original_pli.sender_ssrc(), logged_pli.pli.sender_ssrc());
   EXPECT_EQ(original_pli.media_ssrc(), logged_pli.pli.media_ssrc());
 }
 
-void EventVerifier::VerifyLoggedNack(int64_t log_time_us,
+void EventVerifier::VerifyLoggedBye(int64_t log_time_ms,
+                                    const rtcp::Bye& original_bye,
+                                    const LoggedRtcpPacketBye& logged_bye) {
+  EXPECT_EQ(log_time_ms, logged_bye.log_time_ms());
+  EXPECT_EQ(original_bye.sender_ssrc(), logged_bye.bye.sender_ssrc());
+  EXPECT_EQ(original_bye.csrcs(), logged_bye.bye.csrcs());
+  EXPECT_EQ(original_bye.reason(), logged_bye.bye.reason());
+}
+
+void EventVerifier::VerifyLoggedNack(int64_t log_time_ms,
                                      const rtcp::Nack& original_nack,
                                      const LoggedRtcpPacketNack& logged_nack) {
-  EXPECT_EQ(log_time_us, logged_nack.log_time_us());
+  EXPECT_EQ(log_time_ms, logged_nack.log_time_ms());
   EXPECT_EQ(original_nack.packet_ids(), logged_nack.nack.packet_ids());
 }
 
 void EventVerifier::VerifyLoggedTransportFeedback(
-    int64_t log_time_us,
+    int64_t log_time_ms,
     const rtcp::TransportFeedback& original_transport_feedback,
     const LoggedRtcpPacketTransportFeedback& logged_transport_feedback) {
-  EXPECT_EQ(log_time_us, logged_transport_feedback.log_time_us());
+  EXPECT_EQ(log_time_ms, logged_transport_feedback.log_time_ms());
   ASSERT_EQ(
       original_transport_feedback.GetReceivedPackets().size(),
       logged_transport_feedback.transport_feedback.GetReceivedPackets().size());
@@ -1219,19 +1258,19 @@ void EventVerifier::VerifyLoggedTransportFeedback(
   }
 }
 
-void EventVerifier::VerifyLoggedRemb(int64_t log_time_us,
+void EventVerifier::VerifyLoggedRemb(int64_t log_time_ms,
                                      const rtcp::Remb& original_remb,
                                      const LoggedRtcpPacketRemb& logged_remb) {
-  EXPECT_EQ(log_time_us, logged_remb.log_time_us());
+  EXPECT_EQ(log_time_ms, logged_remb.log_time_ms());
   EXPECT_EQ(original_remb.ssrcs(), logged_remb.remb.ssrcs());
   EXPECT_EQ(original_remb.bitrate_bps(), logged_remb.remb.bitrate_bps());
 }
 
 void EventVerifier::VerifyLoggedLossNotification(
-    int64_t log_time_us,
+    int64_t log_time_ms,
     const rtcp::LossNotification& original_loss_notification,
     const LoggedRtcpPacketLossNotification& logged_loss_notification) {
-  EXPECT_EQ(log_time_us, logged_loss_notification.log_time_us());
+  EXPECT_EQ(log_time_ms, logged_loss_notification.log_time_ms());
   EXPECT_EQ(original_loss_notification.last_decoded(),
             logged_loss_notification.loss_notification.last_decoded());
   EXPECT_EQ(original_loss_notification.last_received(),
@@ -1246,7 +1285,7 @@ void EventVerifier::VerifyLoggedStartEvent(
     const LoggedStartEvent& logged_event) const {
   EXPECT_EQ(start_time_us / 1000, logged_event.log_time_ms());
   if (encoding_type_ == RtcEventLog::EncodingType::NewFormat) {
-    EXPECT_EQ(utc_start_time_us / 1000, logged_event.utc_start_time_ms);
+    EXPECT_EQ(utc_start_time_us / 1000, logged_event.utc_start_time.ms());
   }
 }
 

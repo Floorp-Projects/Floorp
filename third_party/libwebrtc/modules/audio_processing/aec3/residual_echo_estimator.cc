@@ -23,60 +23,33 @@
 namespace webrtc {
 namespace {
 
-bool UseLowEarlyReflectionsTransparentModeGain() {
-  return field_trial::IsEnabled(
-      "WebRTC-Aec3UseLowEarlyReflectionsTransparentModeGain");
-}
-
-bool UseLowLateReflectionsTransparentModeGain() {
-  return field_trial::IsEnabled(
-      "WebRTC-Aec3UseLowLateReflectionsTransparentModeGain");
-}
-
-bool UseLowEarlyReflectionsDefaultGain() {
-  return field_trial::IsEnabled("WebRTC-Aec3UseLowEarlyReflectionsDefaultGain");
-}
-
-bool UseLowLateReflectionsDefaultGain() {
-  return field_trial::IsEnabled("WebRTC-Aec3UseLowLateReflectionsDefaultGain");
-}
-
-bool ModelReverbInNonlinearMode() {
-  return !field_trial::IsEnabled("WebRTC-Aec3rNonlinearModeReverbKillSwitch");
-}
-
 constexpr float kDefaultTransparentModeGain = 0.01f;
 
-float GetEarlyReflectionsTransparentModeGain() {
-  if (UseLowEarlyReflectionsTransparentModeGain()) {
-    return 0.001f;
-  }
-  return kDefaultTransparentModeGain;
-}
-
-float GetLateReflectionsTransparentModeGain() {
-  if (UseLowLateReflectionsTransparentModeGain()) {
-    return 0.001f;
-  }
-
+float GetTransparentModeGain() {
   return kDefaultTransparentModeGain;
 }
 
 float GetEarlyReflectionsDefaultModeGain(
     const EchoCanceller3Config::EpStrength& config) {
-  if (UseLowEarlyReflectionsDefaultGain()) {
+  if (field_trial::IsEnabled("WebRTC-Aec3UseLowEarlyReflectionsDefaultGain")) {
     return 0.1f;
   }
-
   return config.default_gain;
 }
 
 float GetLateReflectionsDefaultModeGain(
     const EchoCanceller3Config::EpStrength& config) {
-  if (UseLowLateReflectionsDefaultGain()) {
+  if (field_trial::IsEnabled("WebRTC-Aec3UseLowLateReflectionsDefaultGain")) {
     return 0.1f;
   }
   return config.default_gain;
+}
+
+bool UseErleOnsetCompensationInDominantNearend(
+    const EchoCanceller3Config::EpStrength& config) {
+  return config.erle_onset_compensation_in_dominant_nearend ||
+         field_trial::IsEnabled(
+             "WebRTC-Aec3UseErleOnsetCompensationInDominantNearend");
 }
 
 // Computes the indexes that will be used for computing spectral power over
@@ -114,22 +87,6 @@ void LinearEstimate(
     for (size_t k = 0; k < kFftLengthBy2Plus1; ++k) {
       RTC_DCHECK_LT(0.f, erle[ch][k]);
       R2[ch][k] = S2_linear[ch][k] / erle[ch][k];
-    }
-  }
-}
-
-// Estimates the residual echo power based on an uncertainty estimate of the
-// echo return loss enhancement (ERLE) and the linear power estimate.
-void LinearEstimate(
-    rtc::ArrayView<const std::array<float, kFftLengthBy2Plus1>> S2_linear,
-    float erle_uncertainty,
-    rtc::ArrayView<std::array<float, kFftLengthBy2Plus1>> R2) {
-  RTC_DCHECK_EQ(S2_linear.size(), R2.size());
-
-  const size_t num_capture_channels = R2.size();
-  for (size_t ch = 0; ch < num_capture_channels; ++ch) {
-    for (size_t k = 0; k < kFftLengthBy2Plus1; ++k) {
-      R2[ch][k] = S2_linear[ch][k] * erle_uncertainty;
     }
   }
 }
@@ -201,15 +158,14 @@ ResidualEchoEstimator::ResidualEchoEstimator(const EchoCanceller3Config& config,
                                              size_t num_render_channels)
     : config_(config),
       num_render_channels_(num_render_channels),
-      early_reflections_transparent_mode_gain_(
-          GetEarlyReflectionsTransparentModeGain()),
-      late_reflections_transparent_mode_gain_(
-          GetLateReflectionsTransparentModeGain()),
+      early_reflections_transparent_mode_gain_(GetTransparentModeGain()),
+      late_reflections_transparent_mode_gain_(GetTransparentModeGain()),
       early_reflections_general_gain_(
           GetEarlyReflectionsDefaultModeGain(config_.ep_strength)),
       late_reflections_general_gain_(
           GetLateReflectionsDefaultModeGain(config_.ep_strength)),
-      model_reverb_in_nonlinear_mode_(ModelReverbInNonlinearMode()) {
+      erle_onset_compensation_in_dominant_nearend_(
+          UseErleOnsetCompensationInDominantNearend(config_.ep_strength)) {
   Reset();
 }
 
@@ -220,7 +176,9 @@ void ResidualEchoEstimator::Estimate(
     const RenderBuffer& render_buffer,
     rtc::ArrayView<const std::array<float, kFftLengthBy2Plus1>> S2_linear,
     rtc::ArrayView<const std::array<float, kFftLengthBy2Plus1>> Y2,
-    rtc::ArrayView<std::array<float, kFftLengthBy2Plus1>> R2) {
+    bool dominant_nearend,
+    rtc::ArrayView<std::array<float, kFftLengthBy2Plus1>> R2,
+    rtc::ArrayView<std::array<float, kFftLengthBy2Plus1>> R2_unbounded) {
   RTC_DCHECK_EQ(R2.size(), Y2.size());
   RTC_DCHECK_EQ(R2.size(), S2_linear.size());
 
@@ -236,17 +194,19 @@ void ResidualEchoEstimator::Estimate(
     if (aec_state.SaturatedEcho()) {
       for (size_t ch = 0; ch < num_capture_channels; ++ch) {
         std::copy(Y2[ch].begin(), Y2[ch].end(), R2[ch].begin());
+        std::copy(Y2[ch].begin(), Y2[ch].end(), R2_unbounded[ch].begin());
       }
     } else {
-      absl::optional<float> erle_uncertainty = aec_state.ErleUncertainty();
-      if (erle_uncertainty) {
-        LinearEstimate(S2_linear, *erle_uncertainty, R2);
-      } else {
-        LinearEstimate(S2_linear, aec_state.Erle(), R2);
-      }
+      const bool onset_compensated =
+          erle_onset_compensation_in_dominant_nearend_ || !dominant_nearend;
+      LinearEstimate(S2_linear, aec_state.Erle(onset_compensated), R2);
+      LinearEstimate(S2_linear, aec_state.ErleUnbounded(), R2_unbounded);
     }
 
-    AddReverb(ReverbType::kLinear, aec_state, render_buffer, R2);
+    UpdateReverb(ReverbType::kLinear, aec_state, render_buffer,
+                 dominant_nearend);
+    AddReverb(R2);
+    AddReverb(R2_unbounded);
   } else {
     const float echo_path_gain =
         GetEchoPathGain(aec_state, /*gain_for_early_reflections=*/true);
@@ -256,6 +216,7 @@ void ResidualEchoEstimator::Estimate(
     if (aec_state.SaturatedEcho()) {
       for (size_t ch = 0; ch < num_capture_channels; ++ch) {
         std::copy(Y2[ch].begin(), Y2[ch].end(), R2[ch].begin());
+        std::copy(Y2[ch].begin(), Y2[ch].end(), R2_unbounded[ch].begin());
       }
     } else {
       // Estimate the echo generating signal power.
@@ -275,10 +236,15 @@ void ResidualEchoEstimator::Estimate(
       }
 
       NonLinearEstimate(echo_path_gain, X2, R2);
+      NonLinearEstimate(echo_path_gain, X2, R2_unbounded);
     }
 
-    if (model_reverb_in_nonlinear_mode_ && !aec_state.TransparentMode()) {
-      AddReverb(ReverbType::kNonLinear, aec_state, render_buffer, R2);
+    if (config_.echo_model.model_reverb_in_nonlinear_mode &&
+        !aec_state.TransparentModeActive()) {
+      UpdateReverb(ReverbType::kNonLinear, aec_state, render_buffer,
+                   dominant_nearend);
+      AddReverb(R2);
+      AddReverb(R2_unbounded);
     }
   }
 
@@ -289,6 +255,7 @@ void ResidualEchoEstimator::Estimate(
     for (size_t ch = 0; ch < num_capture_channels; ++ch) {
       for (size_t k = 0; k < kFftLengthBy2Plus1; ++k) {
         R2[ch][k] *= residual_scaling[k];
+        R2_unbounded[ch][k] *= residual_scaling[k];
       }
     }
   }
@@ -337,14 +304,11 @@ void ResidualEchoEstimator::UpdateRenderNoisePower(
   }
 }
 
-// Adds the estimated power of the reverb to the residual echo power.
-void ResidualEchoEstimator::AddReverb(
-    ReverbType reverb_type,
-    const AecState& aec_state,
-    const RenderBuffer& render_buffer,
-    rtc::ArrayView<std::array<float, kFftLengthBy2Plus1>> R2) {
-  const size_t num_capture_channels = R2.size();
-
+// Updates the reverb estimation.
+void ResidualEchoEstimator::UpdateReverb(ReverbType reverb_type,
+                                         const AecState& aec_state,
+                                         const RenderBuffer& render_buffer,
+                                         bool dominant_nearend) {
   // Choose reverb partition based on what type of echo power model is used.
   const size_t first_reverb_partition =
       reverb_type == ReverbType::kLinear
@@ -369,16 +333,21 @@ void ResidualEchoEstimator::AddReverb(
   }
 
   // Update the reverb estimate.
+  float reverb_decay = aec_state.ReverbDecay(/*mild=*/dominant_nearend);
   if (reverb_type == ReverbType::kLinear) {
-    echo_reverb_.UpdateReverb(render_power,
-                              aec_state.GetReverbFrequencyResponse(),
-                              aec_state.ReverbDecay());
+    echo_reverb_.UpdateReverb(
+        render_power, aec_state.GetReverbFrequencyResponse(), reverb_decay);
   } else {
     const float echo_path_gain =
         GetEchoPathGain(aec_state, /*gain_for_early_reflections=*/false);
     echo_reverb_.UpdateReverbNoFreqShaping(render_power, echo_path_gain,
-                                           aec_state.ReverbDecay());
+                                           reverb_decay);
   }
+}
+// Adds the estimated power of the reverb to the residual echo power.
+void ResidualEchoEstimator::AddReverb(
+    rtc::ArrayView<std::array<float, kFftLengthBy2Plus1>> R2) const {
+  const size_t num_capture_channels = R2.size();
 
   // Add the reverb power.
   rtc::ArrayView<const float, kFftLengthBy2Plus1> reverb_power =
@@ -395,7 +364,7 @@ float ResidualEchoEstimator::GetEchoPathGain(
     const AecState& aec_state,
     bool gain_for_early_reflections) const {
   float gain_amplitude;
-  if (aec_state.TransparentMode()) {
+  if (aec_state.TransparentModeActive()) {
     gain_amplitude = gain_for_early_reflections
                          ? early_reflections_transparent_mode_gain_
                          : late_reflections_transparent_mode_gain_;

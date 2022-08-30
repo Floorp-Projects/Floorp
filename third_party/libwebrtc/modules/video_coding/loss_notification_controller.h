@@ -17,8 +17,9 @@
 
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "api/sequence_checker.h"
 #include "modules/include/module_common_types.h"
-#include "rtc_base/synchronization/sequence_checker.h"
+#include "rtc_base/system/no_unique_address.h"
 
 namespace webrtc {
 
@@ -35,7 +36,7 @@ class LossNotificationController {
   ~LossNotificationController();
 
   // An RTP packet was received from the network.
-  // |frame| is non-null iff the packet is the first packet in the frame.
+  // `frame` is non-null iff the packet is the first packet in the frame.
   void OnReceivedPacket(uint16_t rtp_seq_num, const FrameDetails* frame);
 
   // A frame was assembled from packets previously received.
@@ -53,9 +54,9 @@ class LossNotificationController {
 
   // When the loss of a packet or the non-decodability of a frame is detected,
   // produces a key frame request or a loss notification.
-  // 1. |last_received_seq_num| is the last received sequence number.
-  // 2. |decodability_flag| refers to the frame associated with the last packet.
-  //    It is set to |true| if and only if all of that frame's dependencies are
+  // 1. `last_received_seq_num` is the last received sequence number.
+  // 2. `decodability_flag` refers to the frame associated with the last packet.
+  //    It is set to `true` if and only if all of that frame's dependencies are
   //    known to be decodable, and the frame itself is not yet known to be
   //    unassemblable (i.e. no earlier parts of it were lost).
   //    Clarifications:
@@ -89,7 +90,7 @@ class LossNotificationController {
   // the last decodable-and-non-discardable frame. Since this is a bit of
   // a mouthful, last_decodable_non_discardable_.first_seq_num is used,
   // which hopefully is a bit easier for human beings to parse
-  // than |first_seq_num_of_last_decodable_non_discardable_|.
+  // than `first_seq_num_of_last_decodable_non_discardable_`.
   struct FrameInfo {
     explicit FrameInfo(uint16_t first_seq_num) : first_seq_num(first_seq_num) {}
     uint16_t first_seq_num;
@@ -102,7 +103,7 @@ class LossNotificationController {
   // (Naturally, later frames must also be assemblable to be decodable.)
   std::set<int64_t> decodable_frame_ids_ RTC_GUARDED_BY(sequence_checker_);
 
-  SequenceChecker sequence_checker_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker sequence_checker_;
 };
 
 }  // namespace webrtc

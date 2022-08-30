@@ -22,7 +22,6 @@
 #include "common_audio/include/audio_util.h"
 #include "common_audio/wav_file.h"
 #include "modules/audio_processing/test/conversational_speech/wavreader_interface.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "test/testsupport/file_utils.h"
@@ -125,8 +124,8 @@ std::unique_ptr<std::map<std::string, std::vector<int16_t>>> PreloadAudioTracks(
   return audiotracks_map;
 }
 
-// Writes all the values in |source_samples| via |wav_writer|. If the number of
-// previously written samples in |wav_writer| is less than |interval_begin|, it
+// Writes all the values in `source_samples` via `wav_writer`. If the number of
+// previously written samples in `wav_writer` is less than `interval_begin`, it
 // adds zeros as left padding. The padding corresponds to intervals during which
 // a speaker is not active.
 void PadLeftWriteChunk(rtc::ArrayView<const int16_t> source_samples,
@@ -145,9 +144,9 @@ void PadLeftWriteChunk(rtc::ArrayView<const int16_t> source_samples,
   wav_writer->WriteSamples(source_samples.data(), source_samples.size());
 }
 
-// Appends zeros via |wav_writer|. The number of zeros is always non-negative
+// Appends zeros via `wav_writer`. The number of zeros is always non-negative
 // and equal to the difference between the previously written samples and
-// |pad_samples|.
+// `pad_samples`.
 void PadRightWrite(WavWriter* wav_writer, size_t pad_samples) {
   RTC_CHECK(wav_writer);
   RTC_CHECK_GE(pad_samples, wav_writer->num_samples());

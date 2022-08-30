@@ -28,6 +28,9 @@ class TabCapturer {
  private:
   ~TabCapturer();
 
+  TabCapturer(const TabCapturer&) = delete;
+  TabCapturer& operator=(const TabCapturer&) = delete;
+
  public:
   friend class TabCapturedHandler;
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TabCapturer)
@@ -66,8 +69,6 @@ class TabCapturer {
 
   uint64_t mBrowserId = 0;
   bool mCapturing = false;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(TabCapturer);
 };
 
 // Warning: webrtc capture wants this in a uniqueptr, but it greatly eases

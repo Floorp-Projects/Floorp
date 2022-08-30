@@ -14,7 +14,6 @@
 #include <vector>
 
 #include "common_audio/vad/mock/mock_vad.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "test/gtest.h"
 #include "test/mock_audio_encoder.h"
@@ -49,6 +48,9 @@ class AudioEncoderCngTest : public ::testing::Test {
     memset(audio_, 0, kMaxNumSamples * 2);
     EXPECT_CALL(*mock_encoder_, NumChannels()).WillRepeatedly(Return(1));
   }
+
+  AudioEncoderCngTest(const AudioEncoderCngTest&) = delete;
+  AudioEncoderCngTest& operator=(const AudioEncoderCngTest&) = delete;
 
   void TearDown() override {
     EXPECT_CALL(*mock_vad_, Die()).Times(1);
@@ -92,8 +94,8 @@ class AudioEncoderCngTest : public ::testing::Test {
     timestamp_ += static_cast<uint32_t>(num_audio_samples_10ms_);
   }
 
-  // Expect |num_calls| calls to the encoder, all successful. The last call
-  // claims to have encoded |kMockReturnEncodedBytes| bytes, and all the
+  // Expect `num_calls` calls to the encoder, all successful. The last call
+  // claims to have encoded `kMockReturnEncodedBytes` bytes, and all the
   // preceding ones 0 bytes.
   void ExpectEncodeCalls(size_t num_calls) {
     InSequence s;
@@ -108,7 +110,7 @@ class AudioEncoderCngTest : public ::testing::Test {
   }
 
   // Verifies that the cng_ object waits until it has collected
-  // |blocks_per_frame| blocks of audio, and then dispatches all of them to
+  // `blocks_per_frame` blocks of audio, and then dispatches all of them to
   // the underlying codec (speech or cng).
   void CheckBlockGrouping(size_t blocks_per_frame, bool active_speech) {
     EXPECT_CALL(*mock_encoder_, Num10MsFramesInNextPacket())
@@ -169,7 +171,7 @@ class AudioEncoderCngTest : public ::testing::Test {
           .WillOnce(Return(Vad::kPassive));
     }
 
-    // With this call to Encode(), |mock_vad_| should be called according to the
+    // With this call to Encode(), `mock_vad_` should be called according to the
     // above expectations.
     Encode();
   }
@@ -201,15 +203,13 @@ class AudioEncoderCngTest : public ::testing::Test {
   std::unique_ptr<AudioEncoder> cng_;
   std::unique_ptr<MockAudioEncoder> mock_encoder_owner_;
   MockAudioEncoder* mock_encoder_;
-  MockVad* mock_vad_;  // Ownership is transferred to |cng_|.
+  MockVad* mock_vad_;  // Ownership is transferred to `cng_`.
   uint32_t timestamp_;
   int16_t audio_[kMaxNumSamples];
   size_t num_audio_samples_10ms_;
   rtc::Buffer encoded_;
   AudioEncoder::EncodedInfo encoded_info_;
   int sample_rate_hz_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(AudioEncoderCngTest);
 };
 
 TEST_F(AudioEncoderCngTest, CreateAndDestroy) {
@@ -294,7 +294,7 @@ TEST_F(AudioEncoderCngTest, EncodePassive) {
   for (size_t i = 0; i < 100; ++i) {
     Encode();
     // Check if it was time to call the cng encoder. This is done once every
-    // |kBlocksPerFrame| calls.
+    // `kBlocksPerFrame` calls.
     if ((i + 1) % kBlocksPerFrame == 0) {
       // Now check if a SID interval has elapsed.
       if ((i % (sid_frame_interval_ms / 10)) < kBlocksPerFrame) {
@@ -334,7 +334,7 @@ TEST_F(AudioEncoderCngTest, MixedActivePassive) {
   EXPECT_TRUE(CheckMixedActivePassive(Vad::kPassive, Vad::kActive));
   EXPECT_TRUE(encoded_info_.speech);
 
-  // All of the frame is passive speech. Expect no calls to |mock_encoder_|.
+  // All of the frame is passive speech. Expect no calls to `mock_encoder_`.
   EXPECT_FALSE(CheckMixedActivePassive(Vad::kPassive, Vad::kPassive));
   EXPECT_FALSE(encoded_info_.speech);
 }
@@ -442,7 +442,7 @@ class AudioEncoderCngDeathTest : public AudioEncoderCngTest {
   }
 
   // Override AudioEncoderCngTest::TearDown, since that one expects a call to
-  // the destructor of |mock_vad_|. In this case, that object is already
+  // the destructor of `mock_vad_`. In this case, that object is already
   // deleted.
   void TearDown() override { cng_.reset(); }
 

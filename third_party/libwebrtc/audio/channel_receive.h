@@ -29,6 +29,7 @@
 #include "call/syncable.h"
 #include "modules/audio_coding/include/audio_coding_module_typedefs.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "modules/rtp_rtcp/source/source_tracker.h"
 #include "system_wrappers/include/clock.h"
 
 // TODO(solenberg, nisse): This file contains a few NOLINT marks, to silence
@@ -44,7 +45,6 @@ namespace webrtc {
 class AudioDeviceModule;
 class FrameDecryptorInterface;
 class PacketRouter;
-class ProcessThread;
 class RateLimiter;
 class ReceiveStatistics;
 class RtcEventLog;
@@ -58,6 +58,7 @@ struct CallReceiveStatistics {
   int64_t payload_bytes_rcvd = 0;
   int64_t header_and_padding_bytes_rcvd = 0;
   int packetsReceived;
+  uint32_t nacks_sent = 0;
   // The capture NTP time (in local timebase) of the first played out audio
   // frame.
   int64_t capture_start_ntp_time_ms_;
@@ -74,6 +75,9 @@ struct CallReceiveStatistics {
   uint32_t sender_reports_packets_sent = 0;
   uint64_t sender_reports_bytes_sent = 0;
   uint64_t sender_reports_reports_count = 0;
+  absl::optional<TimeDelta> round_trip_time;
+  TimeDelta total_round_trip_time = TimeDelta::Zero();
+  int round_trip_time_measurements;
 };
 
 namespace voe {
@@ -138,12 +142,17 @@ class ChannelReceiveInterface : public RtpPacketSinkInterface {
 
   virtual CallReceiveStatistics GetRTCPStatistics() const = 0;
   virtual void SetNACKStatus(bool enable, int max_packets) = 0;
+  virtual void SetNonSenderRttMeasurement(bool enabled) = 0;
 
   virtual AudioMixer::Source::AudioFrameInfo GetAudioFrameWithInfo(
       int sample_rate_hz,
       AudioFrame* audio_frame) = 0;
 
   virtual int PreferredSampleRate() const = 0;
+
+  // Sets the source tracker to notify about "delivered" packets when output is
+  // muted.
+  virtual void SetSourceTracker(SourceTracker* source_tracker) = 0;
 
   // Associate to a send channel.
   // Used for obtaining RTT for a receive-only channel.
@@ -155,11 +164,16 @@ class ChannelReceiveInterface : public RtpPacketSinkInterface {
   virtual void SetDepacketizerToDecoderFrameTransformer(
       rtc::scoped_refptr<webrtc::FrameTransformerInterface>
           frame_transformer) = 0;
+
+  virtual void SetFrameDecryptor(
+      rtc::scoped_refptr<webrtc::FrameDecryptorInterface> frame_decryptor) = 0;
+
+  virtual void OnLocalSsrcChange(uint32_t local_ssrc) = 0;
+  virtual uint32_t GetLocalSsrc() const = 0;
 };
 
 std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
     Clock* clock,
-    ProcessThread* module_process_thread,
     NetEqFactory* neteq_factory,
     AudioDeviceModule* audio_device_module,
     Transport* rtcp_send_transport,
@@ -170,6 +184,7 @@ std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
     bool jitter_buffer_fast_playout,
     int jitter_buffer_min_delay_ms,
     bool jitter_buffer_enable_rtx_handling,
+    bool enable_non_sender_rtt,
     rtc::scoped_refptr<AudioDecoderFactory> decoder_factory,
     absl::optional<AudioCodecPairId> codec_pair_id,
     rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,

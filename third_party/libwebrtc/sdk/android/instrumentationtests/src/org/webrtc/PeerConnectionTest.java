@@ -19,17 +19,14 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.SmallTest;
+import androidx.test.filters.SmallTest;
 import java.util.Arrays;
 import java.util.List;
-import org.chromium.base.test.BaseJUnit4ClassRunner;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.webrtc.PeerConnection.TlsCertPolicy;
 
 /** Unit tests for {@link PeerConnection}. */
-@RunWith(BaseJUnit4ClassRunner.class)
 public class PeerConnectionTest {
   @Before
   public void setUp() {
@@ -145,7 +142,7 @@ public class PeerConnectionTest {
   // TODO(fischman) MOAR test ideas:
   // - Test that PC.removeStream() works; requires a second
   //   createOffer/createAnswer dance.
-  // - audit each place that uses |constraints| for specifying non-trivial
+  // - audit each place that uses `constraints` for specifying non-trivial
   //   constraints (and ensure they're honored).
   // - test error cases
   // - ensure reasonable coverage of jni code is achieved.  Coverage is
@@ -165,6 +162,7 @@ public class PeerConnectionTest {
             .setPassword("fakePassword")
             .createIceServer());
     PeerConnection.RTCConfiguration config = new PeerConnection.RTCConfiguration(iceServers);
+    config.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
 
     // Test configuration options.
     config.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY;
@@ -179,6 +177,7 @@ public class PeerConnectionTest {
   public void testCreationWithCertificate() throws Exception {
     PeerConnectionFactory factory = PeerConnectionFactory.builder().createPeerConnectionFactory();
     PeerConnection.RTCConfiguration config = new PeerConnection.RTCConfiguration(Arrays.asList());
+    config.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
 
     // Test certificate.
     RtcCertificatePem originalCert = RtcCertificatePem.generateCertificate();
@@ -197,6 +196,7 @@ public class PeerConnectionTest {
   public void testCreationWithCryptoOptions() throws Exception {
     PeerConnectionFactory factory = PeerConnectionFactory.builder().createPeerConnectionFactory();
     PeerConnection.RTCConfiguration config = new PeerConnection.RTCConfiguration(Arrays.asList());
+    config.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
 
     assertNull(config.cryptoOptions);
 

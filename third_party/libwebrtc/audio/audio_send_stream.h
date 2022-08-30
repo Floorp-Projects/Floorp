@@ -15,18 +15,18 @@
 #include <utility>
 #include <vector>
 
+#include "api/field_trials_view.h"
+#include "api/sequence_checker.h"
 #include "audio/audio_level.h"
 #include "audio/channel_send.h"
 #include "call/audio_send_stream.h"
 #include "call/audio_state.h"
 #include "call/bitrate_allocator.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_interface.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/experiments/struct_parameters_parser.h"
 #include "rtc_base/race_checker.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/task_queue.h"
-#include "rtc_base/thread_checker.h"
 
 namespace webrtc {
 class RtcEventLog;
@@ -47,7 +47,7 @@ struct AudioAllocationConfig {
   absl::optional<double> bitrate_priority;
 
   std::unique_ptr<StructParametersParser> Parser();
-  AudioAllocationConfig();
+  explicit AudioAllocationConfig(const FieldTrialsView& field_trials);
 };
 namespace internal {
 class AudioState;
@@ -59,12 +59,12 @@ class AudioSendStream final : public webrtc::AudioSendStream,
                   const webrtc::AudioSendStream::Config& config,
                   const rtc::scoped_refptr<webrtc::AudioState>& audio_state,
                   TaskQueueFactory* task_queue_factory,
-                  ProcessThread* module_process_thread,
                   RtpTransportControllerSendInterface* rtp_transport,
                   BitrateAllocatorInterface* bitrate_allocator,
                   RtcEventLog* event_log,
                   RtcpRttStats* rtcp_rtt_stats,
-                  const absl::optional<RtpState>& suspended_rtp_state);
+                  const absl::optional<RtpState>& suspended_rtp_state,
+                  const FieldTrialsView& field_trials);
   // For unit tests, which need to supply a mock ChannelSend.
   AudioSendStream(Clock* clock,
                   const webrtc::AudioSendStream::Config& config,
@@ -74,7 +74,13 @@ class AudioSendStream final : public webrtc::AudioSendStream,
                   BitrateAllocatorInterface* bitrate_allocator,
                   RtcEventLog* event_log,
                   const absl::optional<RtpState>& suspended_rtp_state,
-                  std::unique_ptr<voe::ChannelSendInterface> channel_send);
+                  std::unique_ptr<voe::ChannelSendInterface> channel_send,
+                  const FieldTrialsView& field_trials);
+
+  AudioSendStream() = delete;
+  AudioSendStream(const AudioSendStream&) = delete;
+  AudioSendStream& operator=(const AudioSendStream&) = delete;
+
   ~AudioSendStream() override;
 
   // webrtc::AudioSendStream implementation.
@@ -117,22 +123,29 @@ class AudioSendStream final : public webrtc::AudioSendStream,
   internal::AudioState* audio_state();
   const internal::AudioState* audio_state() const;
 
-  void StoreEncoderProperties(int sample_rate_hz, size_t num_channels);
+  void StoreEncoderProperties(int sample_rate_hz, size_t num_channels)
+      RTC_RUN_ON(worker_thread_checker_);
 
-  void ConfigureStream(const Config& new_config, bool first_time);
-  bool SetupSendCodec(const Config& new_config);
-  bool ReconfigureSendCodec(const Config& new_config);
-  void ReconfigureANA(const Config& new_config);
-  void ReconfigureCNG(const Config& new_config);
-  void ReconfigureBitrateObserver(const Config& new_config);
+  void ConfigureStream(const Config& new_config, bool first_time)
+      RTC_RUN_ON(worker_thread_checker_);
+  bool SetupSendCodec(const Config& new_config)
+      RTC_RUN_ON(worker_thread_checker_);
+  bool ReconfigureSendCodec(const Config& new_config)
+      RTC_RUN_ON(worker_thread_checker_);
+  void ReconfigureANA(const Config& new_config)
+      RTC_RUN_ON(worker_thread_checker_);
+  void ReconfigureCNG(const Config& new_config)
+      RTC_RUN_ON(worker_thread_checker_);
+  void ReconfigureBitrateObserver(const Config& new_config)
+      RTC_RUN_ON(worker_thread_checker_);
 
-  void ConfigureBitrateObserver() RTC_RUN_ON(worker_queue_);
-  void RemoveBitrateObserver();
+  void ConfigureBitrateObserver() RTC_RUN_ON(worker_thread_checker_);
+  void RemoveBitrateObserver() RTC_RUN_ON(worker_thread_checker_);
 
   // Returns bitrate constraints, maybe including overhead when enabled by
   // field trial.
-  TargetAudioBitrateConstraints GetMinMaxBitrateConstraints() const
-      RTC_RUN_ON(worker_queue_);
+  absl::optional<TargetAudioBitrateConstraints> GetMinMaxBitrateConstraints()
+      const RTC_RUN_ON(worker_thread_checker_);
 
   // Sets per-packet overhead on encoded (for ANA) based on current known values
   // of transport and packetization overheads.
@@ -143,37 +156,46 @@ class AudioSendStream final : public webrtc::AudioSendStream,
   size_t GetPerPacketOverheadBytes() const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(overhead_per_packet_lock_);
 
-  void RegisterCngPayloadType(int payload_type, int clockrate_hz);
+  void RegisterCngPayloadType(int payload_type, int clockrate_hz)
+      RTC_RUN_ON(worker_thread_checker_);
+
+  void UpdateCachedTargetAudioBitrateConstraints()
+      RTC_RUN_ON(worker_thread_checker_);
+
   Clock* clock_;
+  const FieldTrialsView& field_trials_;
 
-  rtc::ThreadChecker worker_thread_checker_;
-  rtc::ThreadChecker pacer_thread_checker_;
+  SequenceChecker worker_thread_checker_;
+  SequenceChecker pacer_thread_checker_;
   rtc::RaceChecker audio_capture_race_checker_;
-  rtc::TaskQueue* worker_queue_;
+  rtc::TaskQueue* rtp_transport_queue_;
 
-  const bool audio_send_side_bwe_;
   const bool allocate_audio_without_feedback_;
   const bool force_no_audio_feedback_ = allocate_audio_without_feedback_;
   const bool enable_audio_alr_probing_;
   const bool send_side_bwe_with_overhead_;
   const AudioAllocationConfig allocation_settings_;
 
-  webrtc::AudioSendStream::Config config_;
+  webrtc::AudioSendStream::Config config_
+      RTC_GUARDED_BY(worker_thread_checker_);
   rtc::scoped_refptr<webrtc::AudioState> audio_state_;
   const std::unique_ptr<voe::ChannelSendInterface> channel_send_;
   RtcEventLog* const event_log_;
   const bool use_legacy_overhead_calculation_;
 
-  int encoder_sample_rate_hz_ = 0;
-  size_t encoder_num_channels_ = 0;
-  bool sending_ = false;
+  int encoder_sample_rate_hz_ RTC_GUARDED_BY(worker_thread_checker_) = 0;
+  size_t encoder_num_channels_ RTC_GUARDED_BY(worker_thread_checker_) = 0;
+  bool sending_ RTC_GUARDED_BY(worker_thread_checker_) = false;
   mutable Mutex audio_level_lock_;
   // Keeps track of audio level, total audio energy and total samples duration.
   // https://w3c.github.io/webrtc-stats/#dom-rtcaudiohandlerstats-totalaudioenergy
   webrtc::voe::AudioLevel audio_level_ RTC_GUARDED_BY(audio_level_lock_);
 
   BitrateAllocatorInterface* const bitrate_allocator_
-      RTC_GUARDED_BY(worker_queue_);
+      RTC_GUARDED_BY(rtp_transport_queue_);
+  // Constrains cached to be accessed from `rtp_transport_queue_`.
+  absl::optional<AudioSendStream::TargetAudioBitrateConstraints>
+      cached_constraints_ RTC_GUARDED_BY(rtp_transport_queue_) = absl::nullopt;
   RtpTransportControllerSendInterface* const rtp_transport_;
 
   RtpRtcpInterface* const rtp_rtcp_module_;
@@ -202,12 +224,12 @@ class AudioSendStream final : public webrtc::AudioSendStream,
   size_t transport_overhead_per_packet_bytes_
       RTC_GUARDED_BY(overhead_per_packet_lock_) = 0;
 
-  bool registered_with_allocator_ RTC_GUARDED_BY(worker_queue_) = false;
-  size_t total_packet_overhead_bytes_ RTC_GUARDED_BY(worker_queue_) = 0;
+  bool registered_with_allocator_ RTC_GUARDED_BY(worker_thread_checker_) =
+      false;
+  size_t total_packet_overhead_bytes_ RTC_GUARDED_BY(worker_thread_checker_) =
+      0;
   absl::optional<std::pair<TimeDelta, TimeDelta>> frame_length_range_
-      RTC_GUARDED_BY(worker_queue_);
-
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(AudioSendStream);
+      RTC_GUARDED_BY(worker_thread_checker_);
 };
 }  // namespace internal
 }  // namespace webrtc

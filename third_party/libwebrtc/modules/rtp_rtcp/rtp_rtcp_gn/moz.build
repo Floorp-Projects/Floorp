@@ -11,6 +11,7 @@ AllowCompilerWarnings()
 
 DEFINES["ABSL_ALLOCATOR_NOTHROW"] = "1"
 DEFINES["BWE_TEST_LOGGING_COMPILE_TIME_ENABLE"] = "0"
+DEFINES["RTC_DAV1D_IN_INTERNAL_DECODER_FACTORY"] = True
 DEFINES["RTC_ENABLE_VP9"] = True
 DEFINES["WEBRTC_ENABLE_PROTOBUF"] = "0"
 DEFINES["WEBRTC_LIBRARY_IMPL"] = True
@@ -40,11 +41,11 @@ SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/modules/rtp_rtcp/source/absolute_capture_time_receiver.cc",
+    "/third_party/libwebrtc/modules/rtp_rtcp/source/absolute_capture_time_interpolator.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/absolute_capture_time_sender.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/active_decode_targets_helper.cc",
+    "/third_party/libwebrtc/modules/rtp_rtcp/source/capture_clock_offset_updater.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/create_video_rtp_depacketizer.cc",
-    "/third_party/libwebrtc/modules/rtp_rtcp/source/deprecated/deprecated_rtp_sender_egress.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/dtmf_queue.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/fec_private_tables_bursty.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/fec_private_tables_random.cc",
@@ -53,6 +54,7 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/rtp_rtcp/source/forward_error_correction.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/forward_error_correction_internal.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/packet_loss_stats.cc",
+    "/third_party/libwebrtc/modules/rtp_rtcp/source/packet_sequencer.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/receive_statistics_impl.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/remote_ntp_time_estimator.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtcp_nack_stats.cc",
@@ -65,12 +67,10 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_header_extension_size.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_packet_history.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_packetizer_av1.cc",
-    "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_rtcp_impl.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_sender.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_sender_audio.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_sequence_number_map.cc",
-    "/third_party/libwebrtc/modules/rtp_rtcp/source/rtp_utility.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/source_tracker.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/time_util.cc",
     "/third_party/libwebrtc/modules/rtp_rtcp/source/tmmbr_help.cc",
@@ -97,10 +97,11 @@ if CONFIG["MOZ_DEBUG"] == "1":
 if CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["ANDROID"] = True
-    DEFINES["ANDROID_NDK_VERSION_ROLL"] = "r20_1"
+    DEFINES["ANDROID_NDK_VERSION_ROLL"] = "r22_1"
     DEFINES["HAVE_SYS_UIO_H"] = True
     DEFINES["WEBRTC_ANDROID"] = True
     DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_GNU_SOURCE"] = True
@@ -114,6 +115,7 @@ if CONFIG["OS_TARGET"] == "Android":
 
 if CONFIG["OS_TARGET"] == "Darwin":
 
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_MAC"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_LIBCPP_HAS_NO_ALIGNED_ALLOCATION"] = True
@@ -144,8 +146,10 @@ if CONFIG["OS_TARGET"] == "Linux":
 if CONFIG["OS_TARGET"] == "OpenBSD":
 
     DEFINES["USE_GLIB"] = "1"
+    DEFINES["USE_OZONE"] = "1"
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
     DEFINES["_LARGEFILE64_SOURCE"] = True
@@ -161,6 +165,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["PSAPI_VERSION"] = "2"
     DEFINES["UNICODE"] = True
     DEFINES["USE_AURA"] = "1"
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_WIN"] = True
     DEFINES["WIN32"] = True
     DEFINES["WIN32_LEAN_AND_MEAN"] = True
@@ -234,32 +239,28 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android":
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 
-    CXXFLAGS += [
-        "-msse2"
-    ]
-
     OS_LIBS += [
         "android_support"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
 
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
 if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
 
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
-    CXXFLAGS += [
-        "-msse2"
-    ]
-
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
 
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
 Library("rtp_rtcp_gn")

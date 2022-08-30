@@ -8,6 +8,7 @@
 #include <map>
 #include <string>
 
+#include "api/field_trials_view.h"
 #include "api/scoped_refptr.h"
 #include "call/audio_state.h"
 #include "MediaTransportHandler.h"  // Mostly for IceLogPromise
@@ -20,7 +21,29 @@
 namespace webrtc {
 class AudioDecoderFactory;
 class SharedModuleThread;
-class WebRtcKeyValueConfig;
+
+// Used for testing in mediapipeline_unittest.cpp, MockCall.h
+class NoTrialsConfig : public FieldTrialsView {
+ public:
+  NoTrialsConfig() = default;
+  std::string Lookup(absl::string_view key) const override {
+    // Upstream added a new default field trial string for
+    // CongestionWindow, that we don't want.  In
+    // third_party/libwebrtc/rtc_base/experiments/rate_control_settings.cc
+    // they set kCongestionWindowDefaultFieldTrialString to
+    // "QueueSize:350,MinBitrate:30000,DropFrame:true". With QueueSize
+    // set, GoogCcNetworkController::UpdateCongestionWindowSize is
+    // called.  Because negative values are calculated in
+    // feedback_rtt, an assert fires when calculating data_window in
+    // GoogCcNetworkController::UpdateCongestionWindowSize.  We probably
+    // need to figure out why we're calculating negative feedback_rtt.
+    // See Bug 1780620.
+    if ("WebRTC-CongestionWindow" == key) {
+      return std::string("MinBitrate:30000,DropFrame:true");
+    }
+    return std::string();
+  }
+};
 }  // namespace webrtc
 
 namespace mozilla {
@@ -42,7 +65,7 @@ class SharedWebrtcState {
   SharedWebrtcState(RefPtr<AbstractThread> aCallWorkerThread,
                     webrtc::AudioState::Config&& aAudioStateConfig,
                     RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory,
-                    UniquePtr<webrtc::WebRtcKeyValueConfig> aTrials);
+                    UniquePtr<webrtc::FieldTrialsView> aTrials);
 
   webrtc::SharedModuleThread* GetModuleThread();
 
@@ -62,7 +85,7 @@ class SharedWebrtcState {
 
   // Trials instance shared between calls, to limit the number of instances in
   // large calls.
-  const UniquePtr<webrtc::WebRtcKeyValueConfig> mTrials;
+  const UniquePtr<webrtc::FieldTrialsView> mTrials;
 
  private:
   virtual ~SharedWebrtcState();

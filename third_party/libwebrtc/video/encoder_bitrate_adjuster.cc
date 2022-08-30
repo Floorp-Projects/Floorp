@@ -17,7 +17,6 @@
 #include "rtc_base/experiments/rate_control_settings.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/time_utils.h"
-#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 namespace {
@@ -163,7 +162,7 @@ VideoBitrateAllocation EncoderBitrateAdjuster::AdjustRateAllocation(
             weight * ti_media_utilization_factor.value();
       }
     } else {
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
     }
 
     if (layer_info.link_utilization_factor < 1.0) {
@@ -314,15 +313,14 @@ void EncoderBitrateAdjuster::OnEncoderInfo(
   AdjustRateAllocation(current_rate_control_parameters_);
 }
 
-void EncoderBitrateAdjuster::OnEncodedFrame(const EncodedImage& encoded_image,
+void EncoderBitrateAdjuster::OnEncodedFrame(DataSize size,
+                                            int spatial_index,
                                             int temporal_index) {
   ++frames_since_layout_change_;
   // Detectors may not exist, for instance if ScreenshareLayers is used.
-  auto& detector =
-      overshoot_detectors_[encoded_image.SpatialIndex().value_or(0)]
-                          [temporal_index];
+  auto& detector = overshoot_detectors_[spatial_index][temporal_index];
   if (detector) {
-    detector->OnEncodedFrame(encoded_image.size(), rtc::TimeMillis());
+    detector->OnEncodedFrame(size.bytes(), rtc::TimeMillis());
   }
 }
 

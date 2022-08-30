@@ -15,8 +15,10 @@ CXXFLAGS += [
 ]
 
 DEFINES["ABSL_ALLOCATOR_NOTHROW"] = "1"
+DEFINES["RTC_DAV1D_IN_INTERNAL_DECODER_FACTORY"] = True
 DEFINES["RTC_ENABLE_VP9"] = True
 DEFINES["WEBRTC_APM_DEBUG_DUMP"] = "0"
+DEFINES["WEBRTC_ENABLE_AVX2"] = True
 DEFINES["WEBRTC_ENABLE_PROTOBUF"] = "0"
 DEFINES["WEBRTC_LIBRARY_IMPL"] = True
 DEFINES["WEBRTC_MOZILLA_BUILD"] = True
@@ -54,7 +56,7 @@ if CONFIG["MOZ_DEBUG"] == "1":
 if CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["ANDROID"] = True
-    DEFINES["ANDROID_NDK_VERSION_ROLL"] = "r20_1"
+    DEFINES["ANDROID_NDK_VERSION_ROLL"] = "r22_1"
     DEFINES["HAVE_SYS_UIO_H"] = True
     DEFINES["WEBRTC_ANDROID"] = True
     DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
@@ -100,6 +102,7 @@ if CONFIG["OS_TARGET"] == "Linux":
 if CONFIG["OS_TARGET"] == "OpenBSD":
 
     DEFINES["USE_GLIB"] = "1"
+    DEFINES["USE_OZONE"] = "1"
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
     DEFINES["WEBRTC_POSIX"] = True
@@ -168,18 +171,8 @@ if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 
-    CXXFLAGS += [
-        "-msse2"
-    ]
-
     OS_LIBS += [
         "android_support"
-    ]
-
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
-
-    CXXFLAGS += [
-        "-msse2"
     ]
 
 Library("aec3_avx2_gn")

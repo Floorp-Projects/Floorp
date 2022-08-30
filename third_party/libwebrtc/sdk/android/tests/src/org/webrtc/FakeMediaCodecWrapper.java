@@ -16,8 +16,8 @@ import android.media.MediaCodecInfo.CodecCapabilities;
 import android.media.MediaCrypto;
 import android.media.MediaFormat;
 import android.os.Bundle;
-import androidx.annotation.Nullable;
 import android.view.Surface;
+import androidx.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -104,6 +104,7 @@ public class FakeMediaCodecWrapper implements MediaCodecWrapper {
   private State state = State.STOPPED_UNINITIALIZED;
   private @Nullable MediaFormat configuredFormat;
   private int configuredFlags;
+  private final MediaFormat inputFormat;
   private final MediaFormat outputFormat;
   private final ByteBuffer[] inputBuffers = new ByteBuffer[NUM_INPUT_BUFFERS];
   private final ByteBuffer[] outputBuffers = new ByteBuffer[NUM_OUTPUT_BUFFERS];
@@ -111,7 +112,8 @@ public class FakeMediaCodecWrapper implements MediaCodecWrapper {
   private final boolean[] outputBufferReserved = new boolean[NUM_OUTPUT_BUFFERS];
   private final List<QueuedOutputBufferInfo> queuedOutputBuffers = new ArrayList<>();
 
-  public FakeMediaCodecWrapper(MediaFormat outputFormat) {
+  public FakeMediaCodecWrapper(MediaFormat inputFormat, MediaFormat outputFormat) {
+    this.inputFormat = inputFormat;
     this.outputFormat = outputFormat;
   }
 
@@ -297,6 +299,11 @@ public class FakeMediaCodecWrapper implements MediaCodecWrapper {
   @Override
   public ByteBuffer[] getOutputBuffers() {
     return outputBuffers;
+  }
+
+  @Override
+  public MediaFormat getInputFormat() {
+    return inputFormat;
   }
 
   @Override

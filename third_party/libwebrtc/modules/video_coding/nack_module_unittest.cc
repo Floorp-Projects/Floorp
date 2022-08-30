@@ -16,8 +16,8 @@
 #include <memory>
 
 #include "system_wrappers/include/clock.h"
-#include "test/field_trial.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 namespace webrtc {
 class TestNackModule : public ::testing::TestWithParam<bool>,
@@ -29,7 +29,7 @@ class TestNackModule : public ::testing::TestWithParam<bool>,
         field_trial_(GetParam()
                          ? "WebRTC-ExponentialNackBackoff/enabled:true/"
                          : "WebRTC-ExponentialNackBackoff/enabled:false/"),
-        nack_module_(clock_.get(), this, this),
+        nack_module_(clock_.get(), this, this, field_trial_),
         keyframes_requested_(0) {}
 
   void SetUp() override { nack_module_.UpdateRtt(kDefaultRttMs); }
@@ -44,7 +44,7 @@ class TestNackModule : public ::testing::TestWithParam<bool>,
 
   static constexpr int64_t kDefaultRttMs = 20;
   std::unique_ptr<SimulatedClock> clock_;
-  test::ScopedFieldTrials field_trial_;
+  test::ScopedKeyValueConfig field_trial_;
   DEPRECATED_NackModule nack_module_;
   std::vector<uint16_t> sent_nacks_;
   int keyframes_requested_;
@@ -339,7 +339,7 @@ class TestNackModuleWithFieldTrial : public ::testing::Test,
   TestNackModuleWithFieldTrial()
       : nack_delay_field_trial_("WebRTC-SendNackDelayMs/10/"),
         clock_(new SimulatedClock(0)),
-        nack_module_(clock_.get(), this, this),
+        nack_module_(clock_.get(), this, this, nack_delay_field_trial_),
         keyframes_requested_(0) {}
 
   void SendNack(const std::vector<uint16_t>& sequence_numbers,
@@ -350,7 +350,7 @@ class TestNackModuleWithFieldTrial : public ::testing::Test,
 
   void RequestKeyFrame() override { ++keyframes_requested_; }
 
-  test::ScopedFieldTrials nack_delay_field_trial_;
+  test::ScopedKeyValueConfig nack_delay_field_trial_;
   std::unique_ptr<SimulatedClock> clock_;
   DEPRECATED_NackModule nack_module_;
   std::vector<uint16_t> sent_nacks_;

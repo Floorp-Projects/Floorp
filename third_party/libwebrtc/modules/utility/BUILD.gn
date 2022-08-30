@@ -31,26 +31,32 @@ rtc_library("utility") {
 
   deps = [
     "..:module_api",
+    "../../api:sequence_checker",
     "../../api/task_queue",
     "../../common_audio",
     "../../rtc_base:checks",
-    "../../rtc_base:rtc_base_approved",
+    "../../rtc_base:event_tracer",
+    "../../rtc_base:location",
+    "../../rtc_base:logging",
+    "../../rtc_base:platform_thread",
+    "../../rtc_base:rtc_event",
+    "../../rtc_base:timeutils",
     "../../rtc_base/system:arch",
     "../../system_wrappers",
   ]
 }
 
 if (rtc_include_tests) {
-  rtc_library("mock_process_thread") {
-    testonly = true
-    visibility = [ "*" ]
-    sources = [ "include/mock/mock_process_thread.h" ]
-    deps = [
-      ":utility",
-      "../../rtc_base:rtc_base_approved",
-      "../../test:test_support",
-    ]
-  }
+rtc_library("mock_process_thread") {
+  testonly = true
+  visibility = [ "*" ]
+  sources = [ "include/mock/mock_process_thread.h" ]
+  deps = [
+    ":utility",
+    "../../rtc_base:location",
+    "../../test:test_support",
+  ]
+}
 }
 
 if (rtc_include_tests) {
@@ -63,7 +69,8 @@ if (rtc_include_tests) {
       "..:module_api",
       "../../api/task_queue",
       "../../api/task_queue:task_queue_test",
-      "../../rtc_base:rtc_base_approved",
+      "../../rtc_base:location",
+      "../../rtc_base:timeutils",
       "../../test:test_support",
     ]
   }

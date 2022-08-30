@@ -14,8 +14,13 @@
 #include <stdint.h>
 
 #include <memory>
+#include <string>
+#include <vector>
 
+#include "absl/strings/string_view.h"
 #include "api/rtc_event_log/rtc_event.h"
+#include "api/units/timestamp.h"
+#include "logging/rtc_event_log/events/rtc_event_field_encoding_parser.h"
 
 namespace webrtc {
 
@@ -27,23 +32,58 @@ enum class IceCandidatePairEventType {
   kNumValues,
 };
 
+struct LoggedIceCandidatePairEvent {
+  LoggedIceCandidatePairEvent() = default;
+  LoggedIceCandidatePairEvent(Timestamp timestamp,
+                              IceCandidatePairEventType type,
+                              uint32_t candidate_pair_id,
+                              uint32_t transaction_id)
+      : timestamp(timestamp),
+        type(type),
+        candidate_pair_id(candidate_pair_id),
+        transaction_id(transaction_id) {}
+
+  int64_t log_time_us() const { return timestamp.us(); }
+  int64_t log_time_ms() const { return timestamp.ms(); }
+  Timestamp log_time() const { return timestamp; }
+
+  Timestamp timestamp = Timestamp::MinusInfinity();
+  IceCandidatePairEventType type;
+  uint32_t candidate_pair_id;
+  uint32_t transaction_id;
+};
+
 class RtcEventIceCandidatePair final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::IceCandidatePairEvent;
+
   RtcEventIceCandidatePair(IceCandidatePairEventType type,
                            uint32_t candidate_pair_id,
                            uint32_t transaction_id);
 
   ~RtcEventIceCandidatePair() override;
 
-  Type GetType() const override;
-
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return false; }
 
   std::unique_ptr<RtcEventIceCandidatePair> Copy() const;
 
   IceCandidatePairEventType type() const { return type_; }
   uint32_t candidate_pair_id() const { return candidate_pair_id_; }
   uint32_t transaction_id() const { return transaction_id_; }
+
+  static std::string Encode(rtc::ArrayView<const RtcEvent*> batch) {
+    // TODO(terelius): Implement
+    return "";
+  }
+
+  static RtcEventLogParseStatus Parse(
+      absl::string_view encoded_bytes,
+      bool batched,
+      std::vector<LoggedIceCandidatePairEvent>& output) {
+    // TODO(terelius): Implement
+    return RtcEventLogParseStatus::Error("Not Implemented", __FILE__, __LINE__);
+  }
 
  private:
   RtcEventIceCandidatePair(const RtcEventIceCandidatePair& other);

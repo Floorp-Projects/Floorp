@@ -10,7 +10,9 @@ COMPILE_FLAGS["OS_INCLUDES"] = []
 AllowCompilerWarnings()
 
 DEFINES["ABSL_ALLOCATOR_NOTHROW"] = "1"
+DEFINES["RTC_DAV1D_IN_INTERNAL_DECODER_FACTORY"] = True
 DEFINES["RTC_ENABLE_VP9"] = True
+DEFINES["WEBRTC_ENABLE_AVX2"] = True
 DEFINES["WEBRTC_ENABLE_PROTOBUF"] = "0"
 DEFINES["WEBRTC_LIBRARY_IMPL"] = True
 DEFINES["WEBRTC_MOZILLA_BUILD"] = True
@@ -56,6 +58,10 @@ if CONFIG["OS_TARGET"] == "Darwin":
 
 if CONFIG["OS_TARGET"] == "Linux":
 
+    CXXFLAGS += [
+        "-msse2"
+    ]
+
     DEFINES["USE_AURA"] = "1"
     DEFINES["USE_GLIB"] = "1"
     DEFINES["USE_NSS_CERTS"] = "1"
@@ -77,6 +83,7 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
     ]
 
     DEFINES["USE_GLIB"] = "1"
+    DEFINES["USE_OZONE"] = "1"
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
     DEFINES["WEBRTC_POSIX"] = True
@@ -131,18 +138,5 @@ if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "WINNT":
 if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["USE_X11"] = "1"
-
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
-
-    CXXFLAGS += [
-        "-msse2",
-        "-msse2"
-    ]
-
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
-
-    CXXFLAGS += [
-        "-msse2"
-    ]
 
 Library("desktop_capture_differ_sse2_gn")

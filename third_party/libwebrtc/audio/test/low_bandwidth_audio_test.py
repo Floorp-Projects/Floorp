@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env vpython3
 # Copyright (c) 2017 The WebRTC project authors. All Rights Reserved.
 #
 # Use of this source code is governed by a BSD-style license
@@ -6,7 +6,6 @@
 # tree. An additional intellectual property rights grant can be found
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
-
 """
 This script is the wrapper that runs the low-bandwidth audio test.
 
@@ -16,6 +15,7 @@ output files will be performed.
 
 import argparse
 import collections
+import json
 import logging
 import os
 import re
@@ -23,21 +23,20 @@ import shutil
 import subprocess
 import sys
 
-
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, os.pardir, os.pardir))
 
 NO_TOOLS_ERROR_MESSAGE = (
-  'Could not find PESQ or POLQA at %s.\n'
-  '\n'
-  'To fix this run:\n'
-  '  python %s %s\n'
-  '\n'
-  'Note that these tools are Google-internal due to licensing, so in order to '
-  'use them you will have to get your own license and manually put them in the '
-  'right location.\n'
-  'See https://cs.chromium.org/chromium/src/third_party/webrtc/tools_webrtc/'
-  'download_tools.py?rcl=bbceb76f540159e2dba0701ac03c514f01624130&l=13')
+    'Could not find PESQ or POLQA at %s.\n'
+    '\n'
+    'To fix this run:\n'
+    '  python %s %s\n'
+    '\n'
+    'Note that these tools are Google-internal due to licensing, so in order '
+    'to use them you will have to get your own license and manually put them '
+    'in the right location.\n'
+    'See https://cs.chromium.org/chromium/src/third_party/webrtc/tools_webrtc/'
+    'download_tools.py?rcl=bbceb76f540159e2dba0701ac03c514f01624130&l=13')
 
 
 def _LogCommand(command):
@@ -48,34 +47,38 @@ def _LogCommand(command):
 def _ParseArgs():
   parser = argparse.ArgumentParser(description='Run low-bandwidth audio tests.')
   parser.add_argument('build_dir',
-      help='Path to the build directory (e.g. out/Release).')
-  parser.add_argument('--remove', action='store_true',
-      help='Remove output audio files after testing.')
-  parser.add_argument('--android', action='store_true',
+                      help='Path to the build directory (e.g. out/Release).')
+  parser.add_argument('--remove',
+                      action='store_true',
+                      help='Remove output audio files after testing.')
+  parser.add_argument(
+      '--android',
+      action='store_true',
       help='Perform the test on a connected Android device instead.')
   parser.add_argument('--adb-path', help='Path to adb binary.', default='adb')
-  parser.add_argument('--num-retries', default='0',
+  parser.add_argument('--num-retries',
+                      default='0',
                       help='Number of times to retry the test on Android.')
-  parser.add_argument('--isolated-script-test-perf-output', default=None,
+  parser.add_argument(
+      '--isolated-script-test-perf-output',
+      default=None,
       help='Path to store perf results in histogram proto format.')
-  parser.add_argument('--extra-test-args', default=[], action='append',
-      help='Extra args to path to the test binary.')
+  parser.add_argument(
+      '--isolated-script-test-output',
+      default=None,
+      help='Path to output an empty JSON file which Chromium infra requires.')
 
-  # Ignore Chromium-specific flags
-  parser.add_argument('--test-launcher-summary-output',
-                      type=str, default=None)
-  args = parser.parse_args()
-
-  return args
+  return parser.parse_known_args()
 
 
 def _GetPlatform():
   if sys.platform == 'win32':
     return 'win'
-  elif sys.platform == 'darwin':
+  if sys.platform == 'darwin':
     return 'mac'
-  elif sys.platform.startswith('linux'):
+  if sys.platform.startswith('linux'):
     return 'linux'
+  raise AssertionError('Unknown platform %s' % sys.platform)
 
 
 def _GetExtension():
@@ -98,10 +101,8 @@ def _GetPathToTools():
     polqa_path = None
 
   if (platform != 'mac' and not polqa_path) or not pesq_path:
-    logging.error(NO_TOOLS_ERROR_MESSAGE,
-                  toolchain_dir,
-                  os.path.join(tools_dir, 'download_tools.py'),
-                  toolchain_dir)
+    logging.error(NO_TOOLS_ERROR_MESSAGE, toolchain_dir,
+                  os.path.join(tools_dir, 'download_tools.py'), toolchain_dir)
 
   return pesq_path, polqa_path
 
@@ -126,8 +127,11 @@ def ExtractTestRuns(lines, echo=False):
       yield match.groups()
 
 
-def _GetFile(file_path, out_dir, move=False,
-             android=False, adb_prefix=('adb',)):
+def _GetFile(file_path,
+             out_dir,
+             move=False,
+             android=False,
+             adb_prefix=('adb', )):
   out_file_name = os.path.basename(file_path)
   out_file_path = os.path.join(out_dir, out_file_name)
 
@@ -148,39 +152,48 @@ def _GetFile(file_path, out_dir, move=False,
   return out_file_path
 
 
-def _RunPesq(executable_path, reference_file, degraded_file,
+def _RunPesq(executable_path,
+             reference_file,
+             degraded_file,
              sample_rate_hz=16000):
   directory = os.path.dirname(reference_file)
   assert os.path.dirname(degraded_file) == directory
 
   # Analyze audio.
-  command = [executable_path, '+%d' % sample_rate_hz,
-             os.path.basename(reference_file),
-             os.path.basename(degraded_file)]
+  command = [
+      executable_path,
+      '+%d' % sample_rate_hz,
+      os.path.basename(reference_file),
+      os.path.basename(degraded_file)
+  ]
   # Need to provide paths in the current directory due to a bug in PESQ:
   # On Mac, for some 'path/to/file.wav', if 'file.wav' is longer than
   # 'path/to', PESQ crashes.
   out = subprocess.check_output(_LogCommand(command),
-                                cwd=directory, stderr=subprocess.STDOUT)
+                                cwd=directory,
+                                universal_newlines=True,
+                                stderr=subprocess.STDOUT)
 
   # Find the scores in stdout of PESQ.
   match = re.search(
       r'Prediction \(Raw MOS, MOS-LQO\):\s+=\s+([\d.]+)\s+([\d.]+)', out)
   if match:
     raw_mos, _ = match.groups()
-
     return {'pesq_mos': (raw_mos, 'unitless')}
-  else:
-    logging.error('PESQ: %s', out.splitlines()[-1])
-    return {}
+  logging.error('PESQ: %s', out.splitlines()[-1])
+  return {}
 
 
 def _RunPolqa(executable_path, reference_file, degraded_file):
   # Analyze audio.
-  command = [executable_path, '-q', '-LC', 'NB',
-             '-Ref', reference_file, '-Test', degraded_file]
+  command = [
+      executable_path, '-q', '-LC', 'NB', '-Ref', reference_file, '-Test',
+      degraded_file
+  ]
   process = subprocess.Popen(_LogCommand(command),
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                             universal_newlines=True,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
   out, err = process.communicate()
 
   # Find the scores in stdout of POLQA.
@@ -212,46 +225,47 @@ def _MergeInPerfResultsFromCcTests(histograms, run_perf_results_file):
   histograms.Merge(cc_histograms)
 
 
-Analyzer = collections.namedtuple('Analyzer', ['name', 'func', 'executable',
-                                               'sample_rate_hz'])
+Analyzer = collections.namedtuple(
+    'Analyzer', ['name', 'func', 'executable', 'sample_rate_hz'])
 
 
 def _ConfigurePythonPath(args):
   script_dir = os.path.dirname(os.path.realpath(__file__))
-  checkout_root = os.path.abspath(
-      os.path.join(script_dir, os.pardir, os.pardir))
+  checkout_root = os.path.abspath(os.path.join(script_dir, os.pardir,
+                                               os.pardir))
 
-  # TODO(https://crbug.com/1029452): Use a copy rule and add these from the out
-  # dir like for the third_party/protobuf code.
-  sys.path.insert(0, os.path.join(checkout_root, 'third_party', 'catapult',
-                                  'tracing'))
+  # TODO(https://crbug.com/1029452): Use a copy rule and add these from the
+  # out dir like for the third_party/protobuf code.
+  sys.path.insert(
+      0, os.path.join(checkout_root, 'third_party', 'catapult', 'tracing'))
 
-  # The low_bandwidth_audio_perf_test gn rule will build the protobuf stub for
-  # python, so put it in the path for this script before we attempt to import
-  # it.
-  histogram_proto_path = os.path.join(
-      os.path.abspath(args.build_dir), 'pyproto', 'tracing', 'tracing', 'proto')
+  # The low_bandwidth_audio_perf_test gn rule will build the protobuf stub
+  # for python, so put it in the path for this script before we attempt to
+  # import it.
+  histogram_proto_path = os.path.join(os.path.abspath(args.build_dir),
+                                      'pyproto', 'tracing', 'tracing', 'proto')
   sys.path.insert(0, histogram_proto_path)
   proto_stub_path = os.path.join(os.path.abspath(args.build_dir), 'pyproto')
   sys.path.insert(0, proto_stub_path)
 
   # Fail early in case the proto hasn't been built.
   try:
+    #pylint: disable=unused-import
     import histogram_pb2
   except ImportError as e:
-    logging.exception(e)
     raise ImportError('Could not import histogram_pb2. You need to build the '
                       'low_bandwidth_audio_perf_test target before invoking '
                       'this script. Expected to find '
-                      'histogram_pb2.py in %s.' % histogram_proto_path)
+                      'histogram_pb2.py in %s.' % histogram_proto_path) from e
 
 
 def main():
-  # pylint: disable=W0101
-  logging.basicConfig(level=logging.INFO)
+  logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
+                      level=logging.INFO,
+                      datefmt='%Y-%m-%d %H:%M:%S')
   logging.info('Invoked with %s', str(sys.argv))
 
-  args = _ParseArgs()
+  args, extra_test_args = _ParseArgs()
 
   _ConfigurePythonPath(args)
 
@@ -266,28 +280,30 @@ def main():
 
   out_dir = os.path.join(args.build_dir, '..')
   if args.android:
-    test_command = [os.path.join(args.build_dir, 'bin',
-                                 'run_low_bandwidth_audio_test'),
-                    '-v', '--num-retries', args.num_retries]
+    test_command = [
+        os.path.join(args.build_dir, 'bin', 'run_low_bandwidth_audio_test'),
+        '-v', '--num-retries', args.num_retries
+    ]
   else:
     test_command = [os.path.join(args.build_dir, 'low_bandwidth_audio_test')]
 
   analyzers = [Analyzer('pesq', _RunPesq, pesq_path, 16000)]
   # Check if POLQA can run at all, or skip the 48 kHz tests entirely.
-  example_path = os.path.join(SRC_DIR, 'resources',
-                              'voice_engine', 'audio_tiny48.wav')
+  example_path = os.path.join(SRC_DIR, 'resources', 'voice_engine',
+                              'audio_tiny48.wav')
   if polqa_path and _RunPolqa(polqa_path, example_path, example_path):
     analyzers.append(Analyzer('polqa', _RunPolqa, polqa_path, 48000))
 
   histograms = histogram_set.HistogramSet()
   for analyzer in analyzers:
     # Start the test executable that produces audio files.
-    test_process = subprocess.Popen(
-        _LogCommand(test_command + [
-            '--sample_rate_hz=%d' % analyzer.sample_rate_hz,
-            '--test_case_prefix=%s' % analyzer.name,
-          ] + args.extra_test_args),
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    test_process = subprocess.Popen(_LogCommand(test_command + [
+        '--sample_rate_hz=%d' % analyzer.sample_rate_hz,
+        '--test_case_prefix=%s' % analyzer.name,
+    ] + extra_test_args),
+                                    universal_newlines=True,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT)
     perf_results_file = None
     try:
       lines = iter(test_process.stdout.readline, '')
@@ -295,24 +311,29 @@ def main():
         (android_device, test_name, reference_file, degraded_file,
          perf_results_file) = result
 
-        adb_prefix = (args.adb_path,)
+        adb_prefix = (args.adb_path, )
         if android_device:
           adb_prefix += ('-s', android_device)
 
-        reference_file = _GetFile(reference_file, out_dir,
-                                  android=args.android, adb_prefix=adb_prefix)
-        degraded_file = _GetFile(degraded_file, out_dir, move=True,
-                                 android=args.android, adb_prefix=adb_prefix)
+        reference_file = _GetFile(reference_file,
+                                  out_dir,
+                                  android=args.android,
+                                  adb_prefix=adb_prefix)
+        degraded_file = _GetFile(degraded_file,
+                                 out_dir,
+                                 move=True,
+                                 android=args.android,
+                                 adb_prefix=adb_prefix)
 
-        analyzer_results = analyzer.func(analyzer.executable,
-                                         reference_file, degraded_file)
-        for metric, (value, units) in analyzer_results.items():
+        analyzer_results = analyzer.func(analyzer.executable, reference_file,
+                                         degraded_file)
+        for metric, (value, units) in list(analyzer_results.items()):
           hist = histograms.CreateHistogram(metric, units, [value])
           user_story = generic_set.GenericSet([test_name])
           hist.diagnostics[reserved_infos.STORIES.name] = user_story
 
           # Output human readable results.
-          print 'RESULT %s: %s= %s %s' % (metric, test_name, value, units)
+          print('RESULT %s: %s= %s %s' % (metric, test_name, value, units))
 
         if args.remove:
           os.remove(reference_file)
@@ -320,8 +341,11 @@ def main():
     finally:
       test_process.terminate()
     if perf_results_file:
-      perf_results_file = _GetFile(perf_results_file, out_dir, move=True,
-                           android=args.android, adb_prefix=adb_prefix)
+      perf_results_file = _GetFile(perf_results_file,
+                                   out_dir,
+                                   move=True,
+                                   android=args.android,
+                                   adb_prefix=adb_prefix)
       _MergeInPerfResultsFromCcTests(histograms, perf_results_file)
       if args.remove:
         os.remove(perf_results_file)
@@ -329,6 +353,10 @@ def main():
   if args.isolated_script_test_perf_output:
     with open(args.isolated_script_test_perf_output, 'wb') as f:
       f.write(histograms.AsProto().SerializeToString())
+
+  if args.isolated_script_test_output:
+    with open(args.isolated_script_test_output, 'w') as f:
+      json.dump({"version": 3}, f)
 
   return test_process.wait()
 

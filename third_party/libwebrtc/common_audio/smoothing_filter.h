@@ -14,7 +14,6 @@
 #include <stdint.h>
 
 #include "absl/types/optional.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 
@@ -34,14 +33,19 @@ class SmoothingFilter {
 // assumed to equal the last received sample.
 class SmoothingFilterImpl final : public SmoothingFilter {
  public:
-  // |init_time_ms| is initialization time. It defines a period starting from
+  // `init_time_ms` is initialization time. It defines a period starting from
   // the arriving time of the first sample. During this period, the exponential
   // filter uses a varying time constant so that a smaller time constant will be
   // applied to the earlier samples. This is to allow the the filter to adapt to
   // earlier samples quickly. After the initialization period, the time constant
-  // will be set to |init_time_ms| first and can be changed through
-  // |SetTimeConstantMs|.
+  // will be set to `init_time_ms` first and can be changed through
+  // `SetTimeConstantMs`.
   explicit SmoothingFilterImpl(int init_time_ms);
+
+  SmoothingFilterImpl() = delete;
+  SmoothingFilterImpl(const SmoothingFilterImpl&) = delete;
+  SmoothingFilterImpl& operator=(const SmoothingFilterImpl&) = delete;
+
   ~SmoothingFilterImpl() override;
 
   void AddSample(float sample) override;
@@ -64,8 +68,6 @@ class SmoothingFilterImpl final : public SmoothingFilter {
   float alpha_;
   float state_;
   int64_t last_state_time_ms_;
-
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(SmoothingFilterImpl);
 };
 
 }  // namespace webrtc

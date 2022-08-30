@@ -17,6 +17,8 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
+#include "api/sequence_checker.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/units/timestamp.h"
 #include "call/video_receive_stream.h"
@@ -27,10 +29,9 @@
 #include "rtc_base/numerics/sample_counter.h"
 #include "rtc_base/rate_statistics.h"
 #include "rtc_base/rate_tracker.h"
-#include "rtc_base/synchronization/sequence_checker.h"
+#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/thread_annotations.h"
-#include "rtc_base/thread_checker.h"
 #include "video/quality_threshold.h"
 #include "video/stats_counter.h"
 #include "video/video_quality_observer2.h"
@@ -48,9 +49,10 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
                                public RtcpCnameCallback,
                                public RtcpPacketTypeCounterObserver {
  public:
-  ReceiveStatisticsProxy(const VideoReceiveStream::Config* config,
+  ReceiveStatisticsProxy(uint32_t remote_ssrc,
                          Clock* clock,
-                         TaskQueueBase* worker_thread);
+                         TaskQueueBase* worker_thread,
+                         const FieldTrialsView& field_trials);
   ~ReceiveStatisticsProxy() override;
 
   VideoReceiveStream::Stats GetStats() const;
@@ -66,6 +68,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
   void OnDecodedFrame(const VideoFrameMetaData& frame_meta,
                       absl::optional<uint8_t> qp,
                       int32_t decode_time_ms,
+                      webrtc::TimeDelta processing_delay_ms,
                       VideoContentType content_type);
 
   void OnSyncOffsetUpdated(int64_t video_playout_ntp_ms,
@@ -164,7 +167,7 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
   rtc::SampleCounter qp_sample_ RTC_GUARDED_BY(main_thread_);
   int num_bad_states_ RTC_GUARDED_BY(main_thread_);
   int num_certain_states_ RTC_GUARDED_BY(main_thread_);
-  // Note: The |stats_.rtp_stats| member is not used or populated by this class.
+  // Note: The `stats_.rtp_stats` member is not used or populated by this class.
   mutable VideoReceiveStream::Stats stats_ RTC_GUARDED_BY(main_thread_);
   // Same as stats_.ssrc, but const (no lock required).
   const uint32_t remote_ssrc_;
@@ -214,9 +217,9 @@ class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
 
   ScopedTaskSafety task_safety_;
 
-  SequenceChecker decode_queue_;
-  rtc::ThreadChecker main_thread_;
-  SequenceChecker incoming_render_queue_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker decode_queue_;
+  SequenceChecker main_thread_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker incoming_render_queue_;
 };
 
 }  // namespace internal

@@ -29,14 +29,16 @@
 extern "C" {
 #endif
 
+/**
+ * \addtogroup spa_debug
+ * \{
+ */
+
+#include <spa/debug/log.h>
 #include <spa/debug/mem.h>
 #include <spa/debug/types.h>
 #include <spa/pod/pod.h>
 #include <spa/pod/iter.h>
-
-#ifndef spa_debug
-#define spa_debug(...)	({ fprintf(stderr, __VA_ARGS__);fputc('\n', stderr); })
-#endif
 
 static inline int
 spa_debug_pod_value(int indent, const struct spa_type_info *info,
@@ -99,6 +101,7 @@ spa_debug_pod_value(int indent, const struct spa_type_info *info,
 		spa_debug("%*s" "Array: child.size %d, child.type %s", indent, "",
 		       b->child.size, ti ? ti->name : "unknown");
 
+		info = info && info->values ? info->values : info;
 		SPA_POD_ARRAY_BODY_FOREACH(b, size, p)
 			spa_debug_pod_value(indent + 2, info, b->child.type, p, b->child.size);
 		break;
@@ -199,6 +202,11 @@ static inline int spa_debug_pod(int indent,
 			SPA_POD_BODY(pod),
 			SPA_POD_BODY_SIZE(pod));
 }
+
+/**
+ * \}
+ */
+
 
 #ifdef __cplusplus
 }  /* extern "C" */

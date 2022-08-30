@@ -14,6 +14,7 @@
 #include "call/fake_network_pipe.h"
 #include "call/simulated_network.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
+#include "modules/rtp_rtcp/source/rtp_util.h"
 #include "rtc_base/task_queue_for_test.h"
 #include "test/call_test.h"
 #include "test/gtest.h"
@@ -60,7 +61,7 @@ TEST_F(SsrcEndToEndTest, UnknownRtpPacketGivesUnknownSsrcReturnCode) {
     DeliveryStatus DeliverPacket(MediaType media_type,
                                  rtc::CopyOnWriteBuffer packet,
                                  int64_t packet_time_us) override {
-      if (RtpHeaderParser::IsRtcp(packet.cdata(), packet.size())) {
+      if (IsRtcpPacket(packet)) {
         return receiver_->DeliverPacket(media_type, std::move(packet),
                                         packet_time_us);
       }
@@ -132,13 +133,15 @@ void SsrcEndToEndTest::TestSendsSetSsrcs(size_t num_ssrcs,
    public:
     SendsSetSsrcs(const uint32_t* ssrcs,
                   size_t num_ssrcs,
-                  bool send_single_ssrc_first)
+                  bool send_single_ssrc_first,
+                  TaskQueueBase* task_queue)
         : EndToEndTest(kDefaultTimeoutMs),
           num_ssrcs_(num_ssrcs),
           send_single_ssrc_first_(send_single_ssrc_first),
           ssrcs_to_observe_(num_ssrcs),
           expect_single_ssrc_(send_single_ssrc_first),
-          send_stream_(nullptr) {
+          send_stream_(nullptr),
+          task_queue_(task_queue) {
       for (size_t i = 0; i < num_ssrcs; ++i)
         valid_ssrcs_[ssrcs[i]] = true;
     }
@@ -171,38 +174,17 @@ void SsrcEndToEndTest::TestSendsSetSsrcs(size_t num_ssrcs,
 
     size_t GetNumVideoStreams() const override { return num_ssrcs_; }
 
-    // This test use other VideoStream settings than the the default settings
-    // implemented in DefaultVideoStreamFactory. Therefore  this test implement
-    // its own VideoEncoderConfig::VideoStreamFactoryInterface which is created
-    // in ModifyVideoConfigs.
-    class VideoStreamFactory
-        : public VideoEncoderConfig::VideoStreamFactoryInterface {
-     public:
-      VideoStreamFactory() {}
-
-     private:
-      std::vector<VideoStream> CreateEncoderStreams(
-          int width,
-          int height,
-          const VideoEncoderConfig& encoder_config) override {
-        std::vector<VideoStream> streams =
-            test::CreateVideoStreams(width, height, encoder_config);
-        // Set low simulcast bitrates to not have to wait for bandwidth ramp-up.
-        for (size_t i = 0; i < encoder_config.number_of_streams; ++i) {
-          streams[i].min_bitrate_bps = 10000;
-          streams[i].target_bitrate_bps = 15000;
-          streams[i].max_bitrate_bps = 20000;
-        }
-        return streams;
-      }
-    };
-
     void ModifyVideoConfigs(
         VideoSendStream::Config* send_config,
         std::vector<VideoReceiveStream::Config>* receive_configs,
         VideoEncoderConfig* encoder_config) override {
-      encoder_config->video_stream_factory =
-          new rtc::RefCountedObject<VideoStreamFactory>();
+      // Set low simulcast bitrates to not have to wait for bandwidth ramp-up.
+      encoder_config->max_bitrate_bps = 50000;
+      for (auto& layer : encoder_config->simulcast_layers) {
+        layer.min_bitrate_bps = 10000;
+        layer.target_bitrate_bps = 15000;
+        layer.max_bitrate_bps = 20000;
+      }
       video_encoder_config_all_streams_ = encoder_config->Copy();
       if (send_single_ssrc_first_)
         encoder_config->number_of_streams = 1;
@@ -221,8 +203,10 @@ void SsrcEndToEndTest::TestSendsSetSsrcs(size_t num_ssrcs,
 
       if (send_single_ssrc_first_) {
         // Set full simulcast and continue with the rest of the SSRCs.
-        send_stream_->ReconfigureVideoEncoder(
-            std::move(video_encoder_config_all_streams_));
+        SendTask(RTC_FROM_HERE, task_queue_, [&]() {
+          send_stream_->ReconfigureVideoEncoder(
+              std::move(video_encoder_config_all_streams_));
+        });
         EXPECT_TRUE(Wait()) << "Timed out while waiting on additional SSRCs.";
       }
     }
@@ -239,7 +223,8 @@ void SsrcEndToEndTest::TestSendsSetSsrcs(size_t num_ssrcs,
 
     VideoSendStream* send_stream_;
     VideoEncoderConfig video_encoder_config_all_streams_;
-  } test(kVideoSendSsrcs, num_ssrcs, send_single_ssrc_first);
+    TaskQueueBase* task_queue_;
+  } test(kVideoSendSsrcs, num_ssrcs, send_single_ssrc_first, task_queue());
 
   RunBaseTest(&test);
 }

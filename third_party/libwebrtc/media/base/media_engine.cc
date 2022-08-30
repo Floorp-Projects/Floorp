@@ -106,15 +106,6 @@ webrtc::RTCError CheckRtpParametersValues(
                              "num_temporal_layers to an invalid number.");
       }
     }
-    if (i > 0 && (rtp_parameters.encodings[i].num_temporal_layers !=
-                  rtp_parameters.encodings[i - 1].num_temporal_layers)) {
-      LOG_AND_RETURN_ERROR(
-          RTCErrorType::INVALID_MODIFICATION,
-          "Attempted to set RtpParameters num_temporal_layers "
-          "at encoding layer i: " +
-              rtc::ToString(i) +
-              " to a different value than other encoding layers.");
-    }
   }
 
   return webrtc::RTCError::OK();
@@ -161,10 +152,19 @@ webrtc::RTCError CheckRtpParametersInvalidModificationAndValues(
 }
 
 CompositeMediaEngine::CompositeMediaEngine(
-    std::unique_ptr<VoiceEngineInterface> voice_engine,
+    std::unique_ptr<webrtc::FieldTrialsView> trials,
+    std::unique_ptr<VoiceEngineInterface> audio_engine,
     std::unique_ptr<VideoEngineInterface> video_engine)
-    : voice_engine_(std::move(voice_engine)),
+    : trials_(std::move(trials)),
+      voice_engine_(std::move(audio_engine)),
       video_engine_(std::move(video_engine)) {}
+
+CompositeMediaEngine::CompositeMediaEngine(
+    std::unique_ptr<VoiceEngineInterface> audio_engine,
+    std::unique_ptr<VideoEngineInterface> video_engine)
+    : CompositeMediaEngine(nullptr,
+                           std::move(audio_engine),
+                           std::move(video_engine)) {}
 
 CompositeMediaEngine::~CompositeMediaEngine() = default;
 

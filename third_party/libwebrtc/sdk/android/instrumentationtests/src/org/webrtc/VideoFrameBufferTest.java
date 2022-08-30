@@ -19,19 +19,19 @@ import android.graphics.Matrix;
 import android.opengl.GLES20;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.support.test.filters.SmallTest;
+import androidx.test.filters.SmallTest;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import org.chromium.base.test.params.BaseJUnit4RunnerDelegate;
-import org.chromium.base.test.params.ParameterAnnotations.ClassParameter;
-import org.chromium.base.test.params.ParameterAnnotations.UseRunnerDelegate;
-import org.chromium.base.test.params.ParameterSet;
-import org.chromium.base.test.params.ParameterizedRunner;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
+import org.webrtc.VideoFrame;
 
 /**
  * Test VideoFrame buffers of different kind of formats: I420, RGB, OES, NV12, NV21, and verify
@@ -39,21 +39,16 @@ import org.junit.runner.RunWith;
  * GlRectDrawer and we are testing the full chain I420 -> OES/RGB texture -> I420, with and without
  * cropping in the middle. Reading textures back to I420 also exercises the YuvConverter code.
  */
-@RunWith(ParameterizedRunner.class)
-@UseRunnerDelegate(BaseJUnit4RunnerDelegate.class)
+@RunWith(Parameterized.class)
 public class VideoFrameBufferTest {
   /**
    * These tests are parameterized on this enum which represents the different VideoFrame.Buffers.
    */
-  private static enum BufferType { I420, RGB_TEXTURE, OES_TEXTURE, NV21, NV12 }
+  private static enum BufferType { I420_JAVA, I420_NATIVE, RGB_TEXTURE, OES_TEXTURE, NV21, NV12 }
 
-  @ClassParameter private static List<ParameterSet> CLASS_PARAMS = new ArrayList<>();
-
-  static {
-    for (BufferType bufferType : BufferType.values()) {
-      // The parameterization framework can not send Enums, so we pass it as a string instead.
-      CLASS_PARAMS.add(new ParameterSet().value(bufferType.name()).name(bufferType.name()));
-    }
+  @Parameters(name = "{0}")
+  public static Collection<BufferType> parameters() {
+    return Arrays.asList(BufferType.values());
   }
 
   @BeforeClass
@@ -64,9 +59,8 @@ public class VideoFrameBufferTest {
 
   private final BufferType bufferType;
 
-  public VideoFrameBufferTest(String bufferTypeName) {
-    // Parse the string back to an enum.
-    bufferType = BufferType.valueOf(bufferTypeName);
+  public VideoFrameBufferTest(BufferType bufferType) {
+    this.bufferType = bufferType;
   }
 
   /**
@@ -75,17 +69,39 @@ public class VideoFrameBufferTest {
    */
   private static VideoFrame.Buffer createBufferWithType(
       BufferType bufferType, VideoFrame.I420Buffer i420Buffer) {
+    VideoFrame.Buffer buffer;
     switch (bufferType) {
-      case I420:
-        return i420Buffer.toI420();
+      case I420_JAVA:
+        buffer = i420Buffer;
+        buffer.retain();
+        assertEquals(VideoFrameBufferType.I420, buffer.getBufferType());
+        assertEquals(VideoFrameBufferType.I420, nativeGetBufferType(buffer));
+        return buffer;
+      case I420_NATIVE:
+        buffer = nativeGetNativeI420Buffer(i420Buffer);
+        assertEquals(VideoFrameBufferType.I420, buffer.getBufferType());
+        assertEquals(VideoFrameBufferType.I420, nativeGetBufferType(buffer));
+        return buffer;
       case RGB_TEXTURE:
-        return createRgbTextureBuffer(/* eglContext= */ null, i420Buffer);
+        buffer = createRgbTextureBuffer(/* eglContext= */ null, i420Buffer);
+        assertEquals(VideoFrameBufferType.NATIVE, buffer.getBufferType());
+        assertEquals(VideoFrameBufferType.NATIVE, nativeGetBufferType(buffer));
+        return buffer;
       case OES_TEXTURE:
-        return createOesTextureBuffer(/* eglContext= */ null, i420Buffer);
+        buffer = createOesTextureBuffer(/* eglContext= */ null, i420Buffer);
+        assertEquals(VideoFrameBufferType.NATIVE, buffer.getBufferType());
+        assertEquals(VideoFrameBufferType.NATIVE, nativeGetBufferType(buffer));
+        return buffer;
       case NV21:
-        return createNV21Buffer(i420Buffer);
+        buffer = createNV21Buffer(i420Buffer);
+        assertEquals(VideoFrameBufferType.NATIVE, buffer.getBufferType());
+        assertEquals(VideoFrameBufferType.NATIVE, nativeGetBufferType(buffer));
+        return buffer;
       case NV12:
-        return createNV12Buffer(i420Buffer);
+        buffer = createNV12Buffer(i420Buffer);
+        assertEquals(VideoFrameBufferType.NATIVE, buffer.getBufferType());
+        assertEquals(VideoFrameBufferType.NATIVE, nativeGetBufferType(buffer));
+        return buffer;
       default:
         throw new IllegalArgumentException("Unknown buffer type: " + bufferType);
     }
@@ -130,7 +146,7 @@ public class VideoFrameBufferTest {
   }
 
   /**
-   * Create an RGB texture buffer available in |eglContext| with the same pixel content as the given
+   * Create an RGB texture buffer available in `eglContext` with the same pixel content as the given
    * I420 buffer.
    */
   public static VideoFrame.TextureBuffer createRgbTextureBuffer(
@@ -168,7 +184,7 @@ public class VideoFrameBufferTest {
   }
 
   /**
-   * Create an OES texture buffer available in |eglContext| with the same pixel content as the given
+   * Create an OES texture buffer available in `eglContext` with the same pixel content as the given
    * I420 buffer.
    */
   public static VideoFrame.TextureBuffer createOesTextureBuffer(
@@ -452,6 +468,7 @@ public class VideoFrameBufferTest {
     final VideoFrame.I420Buffer outputI420Buffer = bufferToTest.toI420();
     bufferToTest.release();
 
+    assertEquals(VideoFrameBufferType.I420, nativeGetBufferType(outputI420Buffer));
     assertAlmostEqualI420Buffers(referenceI420Buffer, outputI420Buffer);
     referenceI420Buffer.release();
     outputI420Buffer.release();
@@ -504,4 +521,10 @@ public class VideoFrameBufferTest {
     testCropAndScale(4 /* cropX= */, 4 /* cropY= */, /* cropWidth= */ 12, /* cropHeight= */ 12,
         /* scaleWidth= */ 8, /* scaleHeight= */ 8);
   }
+
+  @VideoFrameBufferType private static native int nativeGetBufferType(VideoFrame.Buffer buffer);
+
+  /** Returns the copy of I420Buffer using WrappedNativeI420Buffer. */
+  private static native VideoFrame.Buffer nativeGetNativeI420Buffer(
+      VideoFrame.I420Buffer i420Buffer);
 }

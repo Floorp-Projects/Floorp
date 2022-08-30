@@ -18,7 +18,6 @@
 #include "api/audio_codecs/audio_encoder.h"
 #include "api/scoped_refptr.h"
 #include "api/units/time_delta.h"
-#include "rtc_base/constructor_magic.h"
 #include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
@@ -43,6 +42,9 @@ class AudioEncoderIsacT final : public AudioEncoder {
 
   explicit AudioEncoderIsacT(const Config& config);
   ~AudioEncoderIsacT() override;
+
+  AudioEncoderIsacT(const AudioEncoderIsacT&) = delete;
+  AudioEncoderIsacT& operator=(const AudioEncoderIsacT&) = delete;
 
   int SampleRateHz() const override;
   size_t NumChannels() const override;
@@ -93,14 +95,12 @@ class AudioEncoderIsacT final : public AudioEncoder {
 
   // Cache the value of the "WebRTC-SendSideBwe-WithOverhead" field trial.
   const bool send_side_bwe_with_overhead_ =
-      field_trial::IsEnabled("WebRTC-SendSideBwe-WithOverhead");
+      !field_trial::IsDisabled("WebRTC-SendSideBwe-WithOverhead");
 
   // When we send a packet, expect this many bytes of headers to be added to it.
   // Start out with a reasonable default that we can use until we receive a real
   // value.
   DataSize overhead_per_packet_ = DataSize::Bytes(28);
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(AudioEncoderIsacT);
 };
 
 }  // namespace webrtc

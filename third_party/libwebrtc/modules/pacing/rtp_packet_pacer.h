@@ -34,8 +34,7 @@ class RtpPacketPacer {
   // Resume sending packets.
   virtual void Resume() = 0;
 
-  virtual void SetCongestionWindow(DataSize congestion_window_size) = 0;
-  virtual void UpdateOutstandingData(DataSize outstanding_data) = 0;
+  virtual void SetCongested(bool congested) = 0;
 
   // Sets the pacing rates. Must be called once before packets can be sent.
   virtual void SetPacingRates(DataRate pacing_rate, DataRate padding_rate) = 0;
@@ -56,7 +55,7 @@ class RtpPacketPacer {
 
   // Set the average upper bound on pacer queuing delay. The pacer may send at
   // a higher rate than what was configured via SetPacingRates() in order to
-  // keep ExpectedQueueTimeMs() below |limit_ms| on average.
+  // keep ExpectedQueueTimeMs() below `limit_ms` on average.
   virtual void SetQueueTimeLimit(TimeDelta limit) = 0;
 
   // Currently audio traffic is not accounted by pacer and passed through.

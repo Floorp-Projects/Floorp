@@ -16,7 +16,6 @@
 #include <vector>
 
 #include "modules/rtp_rtcp/source/rtcp_packet.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 namespace rtcp {
@@ -26,14 +25,10 @@ class CompoundPacket : public RtcpPacket {
   CompoundPacket();
   ~CompoundPacket() override;
 
-  void Append(std::unique_ptr<RtcpPacket> packet);
+  CompoundPacket(const CompoundPacket&) = delete;
+  CompoundPacket& operator=(const CompoundPacket&) = delete;
 
-  // Fallback for call-sites that have not yet migrated to passing a unique_ptr.
-  // TODO(bugs.webrtc.org/11925): Remove when all usage is gone.
-  template <typename T>
-  void Append(T* packet) {
-    Append(std::make_unique<T>(*packet));
-  }
+  void Append(std::unique_ptr<RtcpPacket> packet);
 
   // Size of this packet in bytes (i.e. total size of nested packets).
   size_t BlockLength() const override;
@@ -45,9 +40,6 @@ class CompoundPacket : public RtcpPacket {
 
  protected:
   std::vector<std::unique_ptr<RtcpPacket>> appended_packets_;
-
- private:
-  RTC_DISALLOW_COPY_AND_ASSIGN(CompoundPacket);
 };
 
 }  // namespace rtcp

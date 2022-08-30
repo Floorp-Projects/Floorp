@@ -312,7 +312,7 @@ void WebrtcAudioConduit::OnControlConfigChange() {
 
   if (mRecvStream && recvStreamReconfigureNeeded) {
     MOZ_ASSERT(!recvStreamRecreationNeeded);
-    mRecvStream->Reconfigure(mRecvStreamConfig);
+    mRecvStream->SetDecoderMap(mRecvStreamConfig.decoder_map);
   }
 
   if (mSendStream && sendStreamReconfigureNeeded) {
@@ -391,7 +391,7 @@ Maybe<webrtc::AudioSendStream::Stats> WebrtcAudioConduit::GetSenderStats()
   return Some(mSendStream->GetStats());
 }
 
-Maybe<webrtc::Call::Stats> WebrtcAudioConduit::GetCallStats() const {
+Maybe<webrtc::CallBasicStats> WebrtcAudioConduit::GetCallStats() const {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   if (!mCall->Call()) {
     return Nothing();
@@ -744,7 +744,7 @@ RtpExtList WebrtcAudioConduit::FilterExtensions(LocalDirection aDirection,
     }
 
     // csrc-audio-level RTP header extension
-    if (extension.uri == webrtc::RtpExtension::kCsrcAudioLevelUri) {
+    if (extension.uri == webrtc::RtpExtension::kCsrcAudioLevelsUri) {
       if (isSend) {
         continue;
       }

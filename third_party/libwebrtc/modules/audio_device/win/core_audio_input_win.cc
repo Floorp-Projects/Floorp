@@ -33,24 +33,24 @@ CoreAudioInput::CoreAudioInput(bool automatic_restart)
           automatic_restart,
           [this](uint64_t freq) { return OnDataCallback(freq); },
           [this](ErrorType err) { return OnErrorCallback(err); }) {
-  RTC_DLOG(INFO) << __FUNCTION__;
+  RTC_DLOG(LS_INFO) << __FUNCTION__;
   RTC_DCHECK_RUN_ON(&thread_checker_);
   thread_checker_audio_.Detach();
 }
 
 CoreAudioInput::~CoreAudioInput() {
-  RTC_DLOG(INFO) << __FUNCTION__;
+  RTC_DLOG(LS_INFO) << __FUNCTION__;
   RTC_DCHECK_RUN_ON(&thread_checker_);
 }
 
 int CoreAudioInput::Init() {
-  RTC_DLOG(INFO) << __FUNCTION__;
+  RTC_DLOG(LS_INFO) << __FUNCTION__;
   RTC_DCHECK_RUN_ON(&thread_checker_);
   return 0;
 }
 
 int CoreAudioInput::Terminate() {
-  RTC_DLOG(INFO) << __FUNCTION__;
+  RTC_DLOG(LS_INFO) << __FUNCTION__;
   RTC_DCHECK_RUN_ON(&thread_checker_);
   StopRecording();
   return 0;
@@ -62,17 +62,17 @@ int CoreAudioInput::NumDevices() const {
 }
 
 int CoreAudioInput::SetDevice(int index) {
-  RTC_DLOG(INFO) << __FUNCTION__ << ": " << index;
+  RTC_DLOG(LS_INFO) << __FUNCTION__ << ": " << index;
   RTC_DCHECK_GE(index, 0);
   RTC_DCHECK_RUN_ON(&thread_checker_);
   return CoreAudioBase::SetDevice(index);
 }
 
 int CoreAudioInput::SetDevice(AudioDeviceModule::WindowsDeviceType device) {
-  RTC_DLOG(INFO) << __FUNCTION__ << ": "
-                 << ((device == AudioDeviceModule::kDefaultDevice)
-                         ? "Default"
-                         : "DefaultCommunication");
+  RTC_DLOG(LS_INFO) << __FUNCTION__ << ": "
+                    << ((device == AudioDeviceModule::kDefaultDevice)
+                            ? "Default"
+                            : "DefaultCommunication");
   RTC_DCHECK_RUN_ON(&thread_checker_);
   return SetDevice((device == AudioDeviceModule::kDefaultDevice) ? 0 : 1);
 }
@@ -80,42 +80,42 @@ int CoreAudioInput::SetDevice(AudioDeviceModule::WindowsDeviceType device) {
 int CoreAudioInput::DeviceName(int index,
                                std::string* name,
                                std::string* guid) {
-  RTC_DLOG(INFO) << __FUNCTION__ << ": " << index;
+  RTC_DLOG(LS_INFO) << __FUNCTION__ << ": " << index;
   RTC_DCHECK_RUN_ON(&thread_checker_);
   RTC_DCHECK(name);
   return CoreAudioBase::DeviceName(index, name, guid);
 }
 
 void CoreAudioInput::AttachAudioBuffer(AudioDeviceBuffer* audio_buffer) {
-  RTC_DLOG(INFO) << __FUNCTION__;
+  RTC_DLOG(LS_INFO) << __FUNCTION__;
   RTC_DCHECK_RUN_ON(&thread_checker_);
   audio_device_buffer_ = audio_buffer;
 }
 
 bool CoreAudioInput::RecordingIsInitialized() const {
-  RTC_DLOG(INFO) << __FUNCTION__ << ": " << initialized_;
+  RTC_DLOG(LS_INFO) << __FUNCTION__ << ": " << initialized_;
   RTC_DCHECK_RUN_ON(&thread_checker_);
   return initialized_;
 }
 
 int CoreAudioInput::InitRecording() {
-  RTC_DLOG(INFO) << __FUNCTION__;
+  RTC_DLOG(LS_INFO) << __FUNCTION__;
   RTC_DCHECK(!initialized_);
   RTC_DCHECK(!Recording());
   RTC_DCHECK(!audio_capture_client_);
 
   // Creates an IAudioClient instance and stores the valid interface pointer in
-  // |audio_client3_|, |audio_client2_|, or |audio_client_| depending on
+  // `audio_client3_`, `audio_client2_`, or `audio_client_` depending on
   // platform support. The base class will use optimal input parameters and do
   // an event driven shared mode initialization. The utilized format will be
-  // stored in |format_| and can be used for configuration and allocation of
+  // stored in `format_` and can be used for configuration and allocation of
   // audio buffers.
   if (!CoreAudioBase::Init()) {
     return -1;
   }
   RTC_DCHECK(audio_client_);
 
-  // Configure the recording side of the audio device buffer using |format_|
+  // Configure the recording side of the audio device buffer using `format_`
   // after a trivial sanity check of the format structure.
   RTC_DCHECK(audio_device_buffer_);
   WAVEFORMATEX* format = &format_.Format;
@@ -155,7 +155,7 @@ int CoreAudioInput::InitRecording() {
 }
 
 int CoreAudioInput::StartRecording() {
-  RTC_DLOG(INFO) << __FUNCTION__;
+  RTC_DLOG(LS_INFO) << __FUNCTION__;
   RTC_DCHECK(!Recording());
   RTC_DCHECK(fine_audio_buffer_);
   RTC_DCHECK(audio_device_buffer_);
@@ -179,7 +179,7 @@ int CoreAudioInput::StartRecording() {
 }
 
 int CoreAudioInput::StopRecording() {
-  RTC_DLOG(INFO) << __FUNCTION__;
+  RTC_DLOG(LS_INFO) << __FUNCTION__;
   if (!initialized_) {
     return 0;
   }
@@ -187,7 +187,7 @@ int CoreAudioInput::StopRecording() {
   // Release resources allocated in InitRecording() and then return if this
   // method is called without any active input audio.
   if (!Recording()) {
-    RTC_DLOG(WARNING) << "No input stream is active";
+    RTC_DLOG(LS_WARNING) << "No input stream is active";
     ReleaseCOMObjects();
     initialized_ = false;
     return 0;
@@ -214,7 +214,7 @@ int CoreAudioInput::StopRecording() {
 }
 
 bool CoreAudioInput::Recording() {
-  RTC_DLOG(INFO) << __FUNCTION__ << ": " << is_active_;
+  RTC_DLOG(LS_INFO) << __FUNCTION__ << ": " << is_active_;
   return is_active_;
 }
 
@@ -222,7 +222,7 @@ bool CoreAudioInput::Recording() {
 // are not compatible with the old ADM implementation since it allows accessing
 // the volume control with any active audio output stream.
 int CoreAudioInput::VolumeIsAvailable(bool* available) {
-  RTC_DLOG(INFO) << __FUNCTION__;
+  RTC_DLOG(LS_INFO) << __FUNCTION__;
   RTC_DCHECK_RUN_ON(&thread_checker_);
   return IsVolumeControlAvailable(available) ? 0 : -1;
 }
@@ -230,7 +230,7 @@ int CoreAudioInput::VolumeIsAvailable(bool* available) {
 // Triggers the restart sequence. Only used for testing purposes to emulate
 // a real event where e.g. an active input device is removed.
 int CoreAudioInput::RestartRecording() {
-  RTC_DLOG(INFO) << __FUNCTION__;
+  RTC_DLOG(LS_INFO) << __FUNCTION__;
   RTC_DCHECK_RUN_ON(&thread_checker_);
   if (!Recording()) {
     return 0;
@@ -249,14 +249,14 @@ bool CoreAudioInput::Restarting() const {
 }
 
 int CoreAudioInput::SetSampleRate(uint32_t sample_rate) {
-  RTC_DLOG(INFO) << __FUNCTION__;
+  RTC_DLOG(LS_INFO) << __FUNCTION__;
   RTC_DCHECK_RUN_ON(&thread_checker_);
   sample_rate_ = sample_rate;
   return 0;
 }
 
 void CoreAudioInput::ReleaseCOMObjects() {
-  RTC_DLOG(INFO) << __FUNCTION__;
+  RTC_DLOG(LS_INFO) << __FUNCTION__;
   CoreAudioBase::ReleaseCOMObjects();
   if (audio_capture_client_.Get()) {
     audio_capture_client_.Reset();
@@ -273,7 +273,7 @@ bool CoreAudioInput::OnDataCallback(uint64_t device_frequency) {
     return false;
   }
   if (num_data_callbacks_ == 0) {
-    RTC_LOG(INFO) << "--- Input audio stream is alive ---";
+    RTC_LOG(LS_INFO) << "--- Input audio stream is alive ---";
   }
   UINT32 num_frames_in_next_packet = 0;
   _com_error error =
@@ -328,7 +328,7 @@ bool CoreAudioInput::OnDataCallback(uint64_t device_frequency) {
       }
     }
     if (num_data_callbacks_ % 500 == 0) {
-      RTC_DLOG(INFO) << "latency: " << latency_ms_;
+      RTC_DLOG(LS_INFO) << "latency: " << latency_ms_;
     }
 
     // The data in the packet is not correlated with the previous packet's
@@ -353,7 +353,7 @@ bool CoreAudioInput::OnDataCallback(uint64_t device_frequency) {
                               format_.Format.nBlockAlign * num_frames_to_read);
       RTC_DLOG(LS_WARNING) << "Captured audio is replaced by silence";
     } else {
-      // Copy recorded audio in |audio_data| to the WebRTC sink using the
+      // Copy recorded audio in `audio_data` to the WebRTC sink using the
       // FineAudioBuffer object.
       fine_audio_buffer_->DeliverRecordedData(
           rtc::MakeArrayView(reinterpret_cast<const int16_t*>(audio_data),
@@ -382,12 +382,12 @@ bool CoreAudioInput::OnDataCallback(uint64_t device_frequency) {
 }
 
 bool CoreAudioInput::OnErrorCallback(ErrorType error) {
-  RTC_DLOG(INFO) << __FUNCTION__ << ": " << as_integer(error);
+  RTC_DLOG(LS_INFO) << __FUNCTION__ << ": " << as_integer(error);
   RTC_DCHECK_RUN_ON(&thread_checker_audio_);
   if (error == CoreAudioBase::ErrorType::kStreamDisconnected) {
     HandleStreamDisconnected();
   } else {
-    RTC_DLOG(WARNING) << "Unsupported error type";
+    RTC_DLOG(LS_WARNING) << "Unsupported error type";
   }
   return true;
 }
@@ -397,13 +397,13 @@ absl::optional<int> CoreAudioInput::EstimateLatencyMillis(
   if (!qpc_to_100ns_) {
     return absl::nullopt;
   }
-  // Input parameter |capture_time_100ns| contains the performance counter at
+  // Input parameter `capture_time_100ns` contains the performance counter at
   // the time that the audio endpoint device recorded the device position of
   // the first audio frame in the data packet converted into 100ns units.
   // We derive a delay estimate by:
   // - sampling the current performance counter (qpc_now_raw),
   // - converting it into 100ns time units (now_time_100ns), and
-  // - subtracting |capture_time_100ns| from now_time_100ns.
+  // - subtracting `capture_time_100ns` from now_time_100ns.
   LARGE_INTEGER perf_counter_now = {};
   if (!::QueryPerformanceCounter(&perf_counter_now)) {
     return absl::nullopt;
@@ -426,7 +426,7 @@ absl::optional<int> CoreAudioInput::EstimateLatencyMillis(
 // safe.
 // TODO(henrika): add more details.
 bool CoreAudioInput::HandleStreamDisconnected() {
-  RTC_DLOG(INFO) << "<<<--- " << __FUNCTION__;
+  RTC_DLOG(LS_INFO) << "<<<--- " << __FUNCTION__;
   RTC_DCHECK_RUN_ON(&thread_checker_audio_);
   RTC_DCHECK(automatic_restart());
 
@@ -445,7 +445,7 @@ bool CoreAudioInput::HandleStreamDisconnected() {
     return false;
   }
 
-  RTC_DLOG(INFO) << __FUNCTION__ << " --->>>";
+  RTC_DLOG(LS_INFO) << __FUNCTION__ << " --->>>";
   return true;
 }
 

@@ -10,9 +10,11 @@
 
 #include "modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.h"
 
+#include "api/network_state_predictor.h"
 #include "api/rtc_event_log/rtc_event.h"
 #include "logging/rtc_event_log/events/rtc_event_bwe_update_loss_based.h"
 #include "logging/rtc_event_log/mock/mock_rtc_event_log.h"
+#include "test/explicit_key_value_config.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -36,7 +38,8 @@ MATCHER(LossBasedBweUpdateWithBitrateAndLossFraction, "") {
 
 void TestProbing(bool use_delay_based) {
   ::testing::NiceMock<MockRtcEventLog> event_log;
-  SendSideBandwidthEstimation bwe(&event_log);
+  test::ExplicitKeyValueConfig key_value_config("");
+  SendSideBandwidthEstimation bwe(&key_value_config, &event_log);
   int64_t now_ms = 0;
   bwe.SetMinMaxBitrate(DataRate::BitsPerSec(100000),
                        DataRate::BitsPerSec(1500000));
@@ -52,7 +55,8 @@ void TestProbing(bool use_delay_based) {
   // Initial REMB applies immediately.
   if (use_delay_based) {
     bwe.UpdateDelayBasedEstimate(Timestamp::Millis(now_ms),
-                                 DataRate::BitsPerSec(kRembBps));
+                                 DataRate::BitsPerSec(kRembBps),
+                                 BandwidthUsage::kBwNormal);
   } else {
     bwe.UpdateReceiverEstimate(Timestamp::Millis(now_ms),
                                DataRate::BitsPerSec(kRembBps));
@@ -64,7 +68,8 @@ void TestProbing(bool use_delay_based) {
   now_ms += 2001;
   if (use_delay_based) {
     bwe.UpdateDelayBasedEstimate(Timestamp::Millis(now_ms),
-                                 DataRate::BitsPerSec(kSecondRembBps));
+                                 DataRate::BitsPerSec(kSecondRembBps),
+                                 BandwidthUsage::kBwNormal);
   } else {
     bwe.UpdateReceiverEstimate(Timestamp::Millis(now_ms),
                                DataRate::BitsPerSec(kSecondRembBps));
@@ -88,7 +93,8 @@ TEST(SendSideBweTest, DoesntReapplyBitrateDecreaseWithoutFollowingRemb) {
   EXPECT_CALL(event_log,
               LogProxy(LossBasedBweUpdateWithBitrateAndLossFraction()))
       .Times(1);
-  SendSideBandwidthEstimation bwe(&event_log);
+  test::ExplicitKeyValueConfig key_value_config("");
+  SendSideBandwidthEstimation bwe(&key_value_config, &event_log);
   static const int kMinBitrateBps = 100000;
   static const int kInitialBitrateBps = 1000000;
   int64_t now_ms = 1000;
@@ -138,7 +144,8 @@ TEST(SendSideBweTest, DoesntReapplyBitrateDecreaseWithoutFollowingRemb) {
 
 TEST(SendSideBweTest, SettingSendBitrateOverridesDelayBasedEstimate) {
   ::testing::NiceMock<MockRtcEventLog> event_log;
-  SendSideBandwidthEstimation bwe(&event_log);
+  test::ExplicitKeyValueConfig key_value_config("");
+  SendSideBandwidthEstimation bwe(&key_value_config, &event_log);
   static const int kMinBitrateBps = 10000;
   static const int kMaxBitrateBps = 10000000;
   static const int kInitialBitrateBps = 300000;
@@ -153,7 +160,8 @@ TEST(SendSideBweTest, SettingSendBitrateOverridesDelayBasedEstimate) {
                      Timestamp::Millis(now_ms));
 
   bwe.UpdateDelayBasedEstimate(Timestamp::Millis(now_ms),
-                               DataRate::BitsPerSec(kDelayBasedBitrateBps));
+                               DataRate::BitsPerSec(kDelayBasedBitrateBps),
+                               BandwidthUsage::kBwNormal);
   bwe.UpdateEstimate(Timestamp::Millis(now_ms));
   EXPECT_GE(bwe.target_rate().bps(), kInitialBitrateBps);
   EXPECT_LE(bwe.target_rate().bps(), kDelayBasedBitrateBps);
@@ -161,6 +169,19 @@ TEST(SendSideBweTest, SettingSendBitrateOverridesDelayBasedEstimate) {
   bwe.SetSendBitrate(DataRate::BitsPerSec(kForcedHighBitrate),
                      Timestamp::Millis(now_ms));
   EXPECT_EQ(bwe.target_rate().bps(), kForcedHighBitrate);
+}
+
+TEST(RttBasedBackoff, DefaultEnabled) {
+  test::ExplicitKeyValueConfig key_value_config("");
+  RttBasedBackoff rtt_backoff(&key_value_config);
+  EXPECT_TRUE(rtt_backoff.rtt_limit_.IsFinite());
+}
+
+TEST(RttBasedBackoff, CanBeDisabled) {
+  test::ExplicitKeyValueConfig key_value_config(
+      "WebRTC-Bwe-MaxRttLimit/Disabled/");
+  RttBasedBackoff rtt_backoff(&key_value_config);
+  EXPECT_TRUE(rtt_backoff.rtt_limit_.IsPlusInfinity());
 }
 
 }  // namespace webrtc

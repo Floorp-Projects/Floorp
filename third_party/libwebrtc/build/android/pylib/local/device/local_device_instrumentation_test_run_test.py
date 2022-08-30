@@ -1,4 +1,4 @@
-#!/usr/bin/env vpython
+#!/usr/bin/env vpython3
 # Copyright 2017 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
@@ -6,6 +6,7 @@
 """Tests for local_device_instrumentation_test_run."""
 
 # pylint: disable=protected-access
+
 
 import unittest
 

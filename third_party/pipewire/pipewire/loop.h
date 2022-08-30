@@ -32,12 +32,18 @@ extern "C" {
 #include <spa/support/loop.h>
 #include <spa/utils/dict.h>
 
-/** \class pw_loop
+/** \defgroup pw_loop Loop
  *
  * PipeWire loop object provides an implementation of
  * the spa loop interfaces. It can be used to implement various
  * event loops.
  */
+
+/**
+ * \addtogroup pw_loop
+ * \{
+ */
+
 struct pw_loop {
 	struct spa_system *system;		/**< system utils */
 	struct spa_loop *loop;			/**< wrapped loop */
@@ -52,8 +58,8 @@ void
 pw_loop_destroy(struct pw_loop *loop);
 
 #define pw_loop_add_source(l,...)	spa_loop_add_source((l)->loop,__VA_ARGS__)
-#define pw_loop_update_source(l,...)	spa_loop_update_source(__VA_ARGS__)
-#define pw_loop_remove_source(l,...)	spa_loop_remove_source(__VA_ARGS__)
+#define pw_loop_update_source(l,...)	spa_loop_update_source((l)->loop,__VA_ARGS__)
+#define pw_loop_remove_source(l,...)	spa_loop_remove_source((l)->loop,__VA_ARGS__)
 #define pw_loop_invoke(l,...)		spa_loop_invoke((l)->loop,__VA_ARGS__)
 
 #define pw_loop_get_fd(l)		spa_loop_control_get_fd((l)->control)
@@ -72,6 +78,10 @@ pw_loop_destroy(struct pw_loop *loop);
 #define pw_loop_update_timer(l,...)	spa_loop_utils_update_timer((l)->utils,__VA_ARGS__)
 #define pw_loop_add_signal(l,...)	spa_loop_utils_add_signal((l)->utils,__VA_ARGS__)
 #define pw_loop_destroy_source(l,...)	spa_loop_utils_destroy_source((l)->utils,__VA_ARGS__)
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }

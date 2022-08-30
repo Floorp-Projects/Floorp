@@ -14,152 +14,148 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "modules/video_coding/internal_defines.h"
+#include <algorithm>
+
+#include "absl/algorithm/container.h"
+#include "absl/container/inlined_vector.h"
+#include "api/units/time_delta.h"
 
 namespace webrtc {
 
+namespace {
+
+constexpr TimeDelta kMaxRtt = TimeDelta::Seconds(3);
+constexpr uint32_t kFilterFactorMax = 35;
+constexpr double kJumpStddev = 2.5;
+constexpr double kDriftStdDev = 3.5;
+
+}  // namespace
+
 VCMRttFilter::VCMRttFilter()
-    : _filtFactMax(35),
-      _jumpStdDevs(2.5),
-      _driftStdDevs(3.5),
-      _detectThreshold(kMaxDriftJumpCount) {
+    : avg_rtt_(TimeDelta::Zero()),
+      var_rtt_(0),
+      max_rtt_(TimeDelta::Zero()),
+      jump_buf_(kMaxDriftJumpCount, TimeDelta::Zero()),
+      drift_buf_(kMaxDriftJumpCount, TimeDelta::Zero()) {
   Reset();
 }
 
-VCMRttFilter& VCMRttFilter::operator=(const VCMRttFilter& rhs) {
-  if (this != &rhs) {
-    _gotNonZeroUpdate = rhs._gotNonZeroUpdate;
-    _avgRtt = rhs._avgRtt;
-    _varRtt = rhs._varRtt;
-    _maxRtt = rhs._maxRtt;
-    _filtFactCount = rhs._filtFactCount;
-    _jumpCount = rhs._jumpCount;
-    _driftCount = rhs._driftCount;
-    memcpy(_jumpBuf, rhs._jumpBuf, sizeof(_jumpBuf));
-    memcpy(_driftBuf, rhs._driftBuf, sizeof(_driftBuf));
-  }
-  return *this;
-}
-
 void VCMRttFilter::Reset() {
-  _gotNonZeroUpdate = false;
-  _avgRtt = 0;
-  _varRtt = 0;
-  _maxRtt = 0;
-  _filtFactCount = 1;
-  _jumpCount = 0;
-  _driftCount = 0;
-  memset(_jumpBuf, 0, sizeof(_jumpBuf));
-  memset(_driftBuf, 0, sizeof(_driftBuf));
+  got_non_zero_update_ = false;
+  avg_rtt_ = TimeDelta::Zero();
+  var_rtt_ = 0;
+  max_rtt_ = TimeDelta::Zero();
+  filt_fact_count_ = 1;
+  absl::c_fill(jump_buf_, TimeDelta::Zero());
+  absl::c_fill(drift_buf_, TimeDelta::Zero());
 }
 
-void VCMRttFilter::Update(int64_t rttMs) {
-  if (!_gotNonZeroUpdate) {
-    if (rttMs == 0) {
+void VCMRttFilter::Update(TimeDelta rtt) {
+  if (!got_non_zero_update_) {
+    if (rtt.IsZero()) {
       return;
     }
-    _gotNonZeroUpdate = true;
+    got_non_zero_update_ = true;
   }
 
   // Sanity check
-  if (rttMs > 3000) {
-    rttMs = 3000;
+  if (rtt > kMaxRtt) {
+    rtt = kMaxRtt;
   }
 
-  double filtFactor = 0;
-  if (_filtFactCount > 1) {
-    filtFactor = static_cast<double>(_filtFactCount - 1) / _filtFactCount;
+  double filt_factor = 0;
+  if (filt_fact_count_ > 1) {
+    filt_factor = static_cast<double>(filt_fact_count_ - 1) / filt_fact_count_;
   }
-  _filtFactCount++;
-  if (_filtFactCount > _filtFactMax) {
-    // This prevents filtFactor from going above
-    // (_filtFactMax - 1) / _filtFactMax,
-    // e.g., _filtFactMax = 50 => filtFactor = 49/50 = 0.98
-    _filtFactCount = _filtFactMax;
+  filt_fact_count_++;
+  if (filt_fact_count_ > kFilterFactorMax) {
+    // This prevents filt_factor from going above
+    // (_filt_fact_max - 1) / filt_fact_max_,
+    // e.g., filt_fact_max_ = 50 => filt_factor = 49/50 = 0.98
+    filt_fact_count_ = kFilterFactorMax;
   }
-  double oldAvg = _avgRtt;
-  double oldVar = _varRtt;
-  _avgRtt = filtFactor * _avgRtt + (1 - filtFactor) * rttMs;
-  _varRtt = filtFactor * _varRtt +
-            (1 - filtFactor) * (rttMs - _avgRtt) * (rttMs - _avgRtt);
-  _maxRtt = VCM_MAX(rttMs, _maxRtt);
-  if (!JumpDetection(rttMs) || !DriftDetection(rttMs)) {
+  TimeDelta old_avg = avg_rtt_;
+  int64_t old_var = var_rtt_;
+  avg_rtt_ = filt_factor * avg_rtt_ + (1 - filt_factor) * rtt;
+  int64_t delta_ms = (rtt - avg_rtt_).ms();
+  var_rtt_ = filt_factor * var_rtt_ + (1 - filt_factor) * (delta_ms * delta_ms);
+  max_rtt_ = std::max(rtt, max_rtt_);
+  if (!JumpDetection(rtt) || !DriftDetection(rtt)) {
     // In some cases we don't want to update the statistics
-    _avgRtt = oldAvg;
-    _varRtt = oldVar;
+    avg_rtt_ = old_avg;
+    var_rtt_ = old_var;
   }
 }
 
-bool VCMRttFilter::JumpDetection(int64_t rttMs) {
-  double diffFromAvg = _avgRtt - rttMs;
-  if (fabs(diffFromAvg) > _jumpStdDevs * sqrt(_varRtt)) {
-    int diffSign = (diffFromAvg >= 0) ? 1 : -1;
-    int jumpCountSign = (_jumpCount >= 0) ? 1 : -1;
-    if (diffSign != jumpCountSign) {
+bool VCMRttFilter::JumpDetection(TimeDelta rtt) {
+  TimeDelta diff_from_avg = avg_rtt_ - rtt;
+  // Unit of var_rtt_ is ms^2.
+  TimeDelta jump_threshold = TimeDelta::Millis(kJumpStddev * sqrt(var_rtt_));
+  if (diff_from_avg.Abs() > jump_threshold) {
+    bool positive_diff = diff_from_avg >= TimeDelta::Zero();
+    if (!jump_buf_.empty() && positive_diff != last_jump_positive_) {
       // Since the signs differ the samples currently
       // in the buffer is useless as they represent a
       // jump in a different direction.
-      _jumpCount = 0;
+      jump_buf_.clear();
     }
-    if (abs(_jumpCount) < kMaxDriftJumpCount) {
-      // Update the buffer used for the short time
-      // statistics.
+    if (jump_buf_.size() < kMaxDriftJumpCount) {
+      // Update the buffer used for the short time statistics.
       // The sign of the diff is used for updating the counter since
       // we want to use the same buffer for keeping track of when
       // the RTT jumps down and up.
-      _jumpBuf[abs(_jumpCount)] = rttMs;
-      _jumpCount += diffSign;
+      jump_buf_.push_back(rtt);
+      last_jump_positive_ = positive_diff;
     }
-    if (abs(_jumpCount) >= _detectThreshold) {
+    if (jump_buf_.size() >= kMaxDriftJumpCount) {
       // Detected an RTT jump
-      ShortRttFilter(_jumpBuf, abs(_jumpCount));
-      _filtFactCount = _detectThreshold + 1;
-      _jumpCount = 0;
+      ShortRttFilter(jump_buf_);
+      filt_fact_count_ = kMaxDriftJumpCount + 1;
+      jump_buf_.clear();
     } else {
       return false;
     }
   } else {
-    _jumpCount = 0;
+    jump_buf_.clear();
   }
   return true;
 }
 
-bool VCMRttFilter::DriftDetection(int64_t rttMs) {
-  if (_maxRtt - _avgRtt > _driftStdDevs * sqrt(_varRtt)) {
-    if (_driftCount < kMaxDriftJumpCount) {
-      // Update the buffer used for the short time
-      // statistics.
-      _driftBuf[_driftCount] = rttMs;
-      _driftCount++;
+bool VCMRttFilter::DriftDetection(TimeDelta rtt) {
+  // Unit of sqrt of var_rtt_ is ms.
+  TimeDelta drift_threshold = TimeDelta::Millis(kDriftStdDev * sqrt(var_rtt_));
+  if (max_rtt_ - avg_rtt_ > drift_threshold) {
+    if (drift_buf_.size() < kMaxDriftJumpCount) {
+      // Update the buffer used for the short time statistics.
+      drift_buf_.push_back(rtt);
     }
-    if (_driftCount >= _detectThreshold) {
+    if (drift_buf_.size() >= kMaxDriftJumpCount) {
       // Detected an RTT drift
-      ShortRttFilter(_driftBuf, _driftCount);
-      _filtFactCount = _detectThreshold + 1;
-      _driftCount = 0;
+      ShortRttFilter(drift_buf_);
+      filt_fact_count_ = kMaxDriftJumpCount + 1;
+      drift_buf_.clear();
     }
   } else {
-    _driftCount = 0;
+    drift_buf_.clear();
   }
   return true;
 }
 
-void VCMRttFilter::ShortRttFilter(int64_t* buf, uint32_t length) {
-  if (length == 0) {
-    return;
-  }
-  _maxRtt = 0;
-  _avgRtt = 0;
-  for (uint32_t i = 0; i < length; i++) {
-    if (buf[i] > _maxRtt) {
-      _maxRtt = buf[i];
+void VCMRttFilter::ShortRttFilter(const BufferList& buf) {
+  RTC_DCHECK_EQ(buf.size(), kMaxDriftJumpCount);
+  max_rtt_ = TimeDelta::Zero();
+  avg_rtt_ = TimeDelta::Zero();
+  for (const TimeDelta& rtt : buf) {
+    if (rtt > max_rtt_) {
+      max_rtt_ = rtt;
     }
-    _avgRtt += buf[i];
+    avg_rtt_ += rtt;
   }
-  _avgRtt = _avgRtt / static_cast<double>(length);
+  avg_rtt_ = avg_rtt_ / static_cast<double>(buf.size());
 }
 
-int64_t VCMRttFilter::RttMs() const {
-  return static_cast<int64_t>(_maxRtt + 0.5);
+TimeDelta VCMRttFilter::Rtt() const {
+  return max_rtt_;
 }
+
 }  // namespace webrtc

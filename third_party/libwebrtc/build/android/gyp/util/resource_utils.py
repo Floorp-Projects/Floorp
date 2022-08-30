@@ -45,9 +45,9 @@ _ANDROID_TO_CHROMIUM_LANGUAGE_MAP = {
 
 _ALL_RESOURCE_TYPES = {
     'anim', 'animator', 'array', 'attr', 'bool', 'color', 'dimen', 'drawable',
-    'font', 'fraction', 'id', 'integer', 'interpolator', 'layout', 'menu',
-    'mipmap', 'plurals', 'raw', 'string', 'style', 'styleable', 'transition',
-    'xml'
+    'font', 'fraction', 'id', 'integer', 'interpolator', 'layout', 'macro',
+    'menu', 'mipmap', 'plurals', 'raw', 'string', 'style', 'styleable',
+    'transition', 'xml'
 }
 
 AAPT_IGNORE_PATTERN = ':'.join([
@@ -305,7 +305,7 @@ class ResourceInfoFile(object):
     """
     entries = self._ApplyRenames()
     lines = []
-    for archive_path, source_path in entries.iteritems():
+    for archive_path, source_path in entries.items():
       lines.append('{}\t{}\n'.format(archive_path, source_path))
     with open(info_file_path, 'w') as info_file:
       info_file.writelines(sorted(lines))
@@ -505,7 +505,8 @@ def CreateRJavaFiles(srcjar_dir,
                      srcjar_out,
                      custom_root_package_name=None,
                      grandparent_custom_package_name=None,
-                     extra_main_r_text_files=None):
+                     extra_main_r_text_files=None,
+                     ignore_mismatched_values=False):
   """Create all R.java files for a set of packages and R.txt files.
 
   Args:
@@ -526,6 +527,9 @@ def CreateRJavaFiles(srcjar_dir,
       is identical to custom_root_package_name.
       (eg. for vr grandparent_custom_package_name would be "base")
     extra_main_r_text_files: R.txt files to be added to the root R.java file.
+    ignore_mismatched_values: If True, ignores if a resource appears multiple
+      times with different entry values (useful when all the values are
+      dummy anyways).
   Raises:
     Exception if a package name appears several times in |extra_res_packages|
   """
@@ -550,10 +554,11 @@ def CreateRJavaFiles(srcjar_dir,
     for entry in _ParseTextSymbolsFile(r_txt_file, fix_package_ids=True):
       entry_key = (entry.resource_type, entry.name)
       if entry_key in all_resources:
-        assert entry == all_resources[entry_key], (
-            'Input R.txt %s provided a duplicate resource with a different '
-            'entry value. Got %s, expected %s.' % (r_txt_file, entry,
-                                                   all_resources[entry_key]))
+        if not ignore_mismatched_values:
+          assert entry == all_resources[entry_key], (
+              'Input R.txt %s provided a duplicate resource with a different '
+              'entry value. Got %s, expected %s.' %
+              (r_txt_file, entry, all_resources[entry_key]))
       else:
         all_resources[entry_key] = entry
         all_resources_by_type[entry.resource_type].append(entry)
@@ -648,7 +653,7 @@ def _RenderRootRJavaSource(package, all_resources_by_type, rjava_build_options,
   """Render an R.java source file. See _CreateRJaveSourceFile for args info."""
   final_resources_by_type = collections.defaultdict(list)
   non_final_resources_by_type = collections.defaultdict(list)
-  for res_type, resources in all_resources_by_type.iteritems():
+  for res_type, resources in all_resources_by_type.items():
     for entry in resources:
       # Entries in stylable that are not int[] are not actually resource ids
       # but constants.
@@ -656,14 +661,6 @@ def _RenderRootRJavaSource(package, all_resources_by_type, rjava_build_options,
         final_resources_by_type[res_type].append(entry)
       else:
         non_final_resources_by_type[res_type].append(entry)
-
-  # Keep these assignments all on one line to make diffing against regular
-  # aapt-generated files easier.
-  create_id = ('{{ e.resource_type }}.{{ e.name }} ^= packageIdTransform;')
-  create_id_arr = ('{{ e.resource_type }}.{{ e.name }}[i] ^='
-                   ' packageIdTransform;')
-  for_loop_condition = ('int i = {{ startIndex(e) }}; i < '
-                        '{{ e.resource_type }}.{{ e.name }}.length; ++i')
 
   # Here we diverge from what aapt does. Because we have so many
   # resources, the onResourcesLoaded method was exceeding the 64KB limit that
@@ -700,21 +697,36 @@ public final class R {
     }
       {% else %}
     private static boolean sResourcesDidLoad;
+
+    private static void patchArray(
+            int[] arr, int startIndex, int packageIdTransform) {
+        for (int i = startIndex; i < arr.length; ++i) {
+            arr[i] ^= packageIdTransform;
+        }
+    }
+
     public static void onResourcesLoaded(int packageId) {
         if (sResourcesDidLoad) {
             return;
         }
         sResourcesDidLoad = true;
         int packageIdTransform = (packageId ^ 0x7f) << 24;
+        {#  aapt2 makes int[] resources refer to other resources by reference
+            rather than by value. Thus, need to transform the int[] resources
+            first, before the referenced resources are transformed in order to
+            ensure the transform applies exactly once.
+            See https://crbug.com/1237059 for context.
+        #}
         {% for resource_type in resource_types %}
-        onResourcesLoaded{{ resource_type|title }}(packageIdTransform);
         {% for e in non_final_resources[resource_type] %}
         {% if e.java_type == 'int[]' %}
-        for(""" + for_loop_condition + """) {
-            """ + create_id_arr + """
-        }
+        patchArray({{ e.resource_type }}.{{ e.name }}, {{ startIndex(e) }}, \
+packageIdTransform);
         {% endif %}
         {% endfor %}
+        {% endfor %}
+        {% for resource_type in resource_types %}
+        onResourcesLoaded{{ resource_type|title }}(packageIdTransform);
         {% endfor %}
     }
     {% for res_type in resource_types %}
@@ -722,7 +734,7 @@ public final class R {
             int packageIdTransform) {
         {% for e in non_final_resources[res_type] %}
         {% if res_type != 'styleable' and e.java_type != 'int[]' %}
-        """ + create_id + """
+        {{ e.resource_type }}.{{ e.name }} ^= packageIdTransform;
         {% endif %}
         {% endfor %}
     }
@@ -748,7 +760,7 @@ def ExtractBinaryManifestValues(aapt2_path, apk_path):
   """Returns (version_code, version_name, package_name) for the given apk."""
   output = subprocess.check_output([
       aapt2_path, 'dump', 'xmltree', apk_path, '--file', 'AndroidManifest.xml'
-  ])
+  ]).decode('utf-8')
   version_code = re.search(r'versionCode.*?=(\d*)', output).group(1)
   version_name = re.search(r'versionName.*?="(.*?)"', output).group(1)
   package_name = re.search(r'package.*?="(.*?)"', output).group(1)
@@ -756,11 +768,19 @@ def ExtractBinaryManifestValues(aapt2_path, apk_path):
 
 
 def ExtractArscPackage(aapt2_path, apk_path):
-  """Returns (package_name, package_id) of resources.arsc from apk_path."""
+  """Returns (package_name, package_id) of resources.arsc from apk_path.
+
+  When the apk does not have any entries in its resources file, in recent aapt2
+  versions it will not contain a "Package" line. The package is not even in the
+  actual resources.arsc/resources.pb file (which itself is mostly empty). Thus
+  return (None, None) when dump succeeds and there are no errors to indicate
+  that the package name does not exist in the resources file.
+  """
   proc = subprocess.Popen([aapt2_path, 'dump', 'resources', apk_path],
                           stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE)
   for line in proc.stdout:
+    line = line.decode('utf-8')
     # Package name=org.chromium.webview_shell id=7f
     if line.startswith('Package'):
       proc.kill()
@@ -771,8 +791,11 @@ def ExtractArscPackage(aapt2_path, apk_path):
 
   # aapt2 currently crashes when dumping webview resources, but not until after
   # it prints the "Package" line (b/130553900).
-  sys.stderr.write(proc.stderr.read())
-  raise Exception('Failed to find arsc package name')
+  stderr_output = proc.stderr.read().decode('utf-8')
+  if stderr_output:
+    sys.stderr.write(stderr_output)
+    raise Exception('Failed to find arsc package name')
+  return None, None
 
 
 def _RenameSubdirsWithPrefix(dir_path, prefix):
@@ -847,11 +870,10 @@ class _ResourceBuildContext(object):
     # The top-level temporary directory.
     if temp_dir:
       self.temp_dir = temp_dir
-      self.remove_on_exit = not keep_files
       os.makedirs(temp_dir)
     else:
       self.temp_dir = tempfile.mkdtemp()
-      self.remove_on_exit = True
+    self.remove_on_exit = not keep_files
 
     # A location to store resources extracted form dependency zip files.
     self.deps_dir = os.path.join(self.temp_dir, 'deps')
@@ -915,11 +937,6 @@ def ResourceArgsParser():
                     help='Resources zip archives from dependents. Required to '
                          'resolve @type/foo references into dependent '
                          'libraries.')
-
-  input_opts.add_argument(
-      '--r-text-in',
-       help='Path to pre-existing R.txt. Its resource IDs override those found '
-            'in the aapt-generated R.txt when generating R.java.')
 
   input_opts.add_argument(
       '--extra-res-packages',
@@ -1021,16 +1038,16 @@ def GenerateAndroidResourceStringsXml(names_to_utf8_text, namespaces=None):
   result = '<?xml version="1.0" encoding="utf-8"?>\n'
   result += '<resources'
   if namespaces:
-    for prefix, url in sorted(namespaces.iteritems()):
+    for prefix, url in sorted(namespaces.items()):
       result += ' xmlns:%s="%s"' % (prefix, url)
   result += '>\n'
   if not names_to_utf8_text:
     result += '<!-- this file intentionally empty -->\n'
   else:
-    for name, utf8_text in sorted(names_to_utf8_text.iteritems()):
+    for name, utf8_text in sorted(names_to_utf8_text.items()):
       result += '<string name="%s">"%s"</string>\n' % (name, utf8_text)
   result += '</resources>\n'
-  return result
+  return result.encode('utf8')
 
 
 def FilterAndroidResourceStringsXml(xml_file_path, string_predicate):
@@ -1050,7 +1067,7 @@ def FilterAndroidResourceStringsXml(xml_file_path, string_predicate):
   strings_map, namespaces = ParseAndroidResourceStringsFromXml(xml_data)
 
   string_deletion = False
-  for name in strings_map.keys():
+  for name in list(strings_map.keys()):
     if not string_predicate(name):
       del strings_map[name]
       string_deletion = True

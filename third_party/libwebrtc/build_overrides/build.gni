@@ -9,9 +9,6 @@
 # Some non-Chromium builds don't support building java targets.
 enable_java_templates = true
 
-# Some non-Chromium builds don't use Chromium's third_party/binutils.
-linux_use_bundled_binutils_override = true
-
 # Don't set this variable to true when building stadalone WebRTC, it is
 # only needed to support both WebRTC standalone and Chromium builds.
 build_with_chromium = false
@@ -23,11 +20,11 @@ checkout_google_benchmark = true
 asan_suppressions_file = "//build/sanitizers/asan_suppressions.cc"
 lsan_suppressions_file = "//tools_webrtc/sanitizers/lsan_suppressions_webrtc.cc"
 tsan_suppressions_file = "//tools_webrtc/sanitizers/tsan_suppressions_webrtc.cc"
-msan_blacklist_path =
+msan_ignorelist_path =
     rebase_path("//tools_webrtc/msan/suppressions.txt", root_build_dir)
-ubsan_blacklist_path =
+ubsan_ignorelist_path =
     rebase_path("//tools_webrtc/ubsan/suppressions.txt", root_build_dir)
-ubsan_vptr_blacklist_path =
+ubsan_vptr_ignorelist_path =
     rebase_path("//tools_webrtc/ubsan/vptr_suppressions.txt", root_build_dir)
 
 # For Chromium, Android 32-bit non-component, non-clang builds hit a 4GiB size
@@ -37,7 +34,8 @@ ignore_elf32_limitations = true
 
 # Use bundled hermetic Xcode installation maintainted by Chromium,
 # except for local iOS builds where it's unsupported.
-if (host_os == "mac") {
+# Allow for mac cross compile on linux machines.
+if (host_os == "mac" || host_os == "linux") {
   _result = exec_script("//build/mac/should_use_hermetic_xcode.py",
                         [ target_os ],
                         "value")
@@ -57,6 +55,13 @@ declare_args() {
   # is used for base tracing, so this feature is disabled.
   enable_base_tracing = false
   use_perfetto_client_library = false
+
+  # Limits the defined //third_party/android_deps targets to only "buildCompile"
+  # and "buildCompileNoDeps" targets. This is useful for third-party
+  # repositories which do not use JUnit tests. For instance,
+  # limit_android_deps == true removes "gn gen" requirement for
+  # //third_party/robolectric .
+  limit_android_deps = false
 
   # If true, it assumes that //third_party/abseil-cpp is an available
   # dependency for googletest.

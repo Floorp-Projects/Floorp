@@ -19,7 +19,7 @@ namespace webrtc {
 
 // static
 rtc::scoped_refptr<FakeResource> FakeResource::Create(std::string name) {
-  return new rtc::RefCountedObject<FakeResource>(name);
+  return rtc::make_ref_counted<FakeResource>(name);
 }
 
 FakeResource::FakeResource(std::string name)
@@ -29,7 +29,8 @@ FakeResource::~FakeResource() {}
 
 void FakeResource::SetUsageState(ResourceUsageState usage_state) {
   if (listener_) {
-    listener_->OnResourceUsageStateMeasured(this, usage_state);
+    listener_->OnResourceUsageStateMeasured(rtc::scoped_refptr<Resource>(this),
+                                            usage_state);
   }
 }
 

@@ -13,12 +13,12 @@
 
 #include <vector>
 
+#include "absl/base/attributes.h"
 #include "absl/types/optional.h"
 #include "api/video/video_frame.h"
 #include "api/video_codecs/video_decoder.h"
 #include "api/video_codecs/video_encoder.h"
 #include "common_video/generic_frame_descriptor/generic_frame_info.h"
-#include "modules/include/module_common_types.h"
 #include "modules/video_coding/codecs/h264/include/h264_globals.h"
 #include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
 #include "modules/video_coding/include/video_error_codes.h"
@@ -36,12 +36,12 @@ struct CodecSpecificInfoVP8 {
   int8_t keyIdx;  // Negative value to skip keyIdx.
 
   // Used to generate the list of dependency frames.
-  // |referencedBuffers| and |updatedBuffers| contain buffer IDs.
+  // `referencedBuffers` and `updatedBuffers` contain buffer IDs.
   // Note that the buffer IDs here have a one-to-one mapping with the actual
   // codec buffers, but the exact mapping (i.e. whether 0 refers to Last,
   // to Golden or to Arf) is not pre-determined.
   // More references may be specified than are strictly necessary, but not less.
-  // TODO(bugs.webrtc.org/10242): Remove |useExplicitDependencies| once all
+  // TODO(bugs.webrtc.org/10242): Remove `useExplicitDependencies` once all
   // encoder-wrappers are updated.
   bool useExplicitDependencies;
   static constexpr size_t kBuffersCount = 3;
@@ -79,7 +79,7 @@ struct CodecSpecificInfoVP9 {
   uint8_t num_ref_pics;
   uint8_t p_diff[kMaxVp9RefPics];
 
-  bool end_of_picture;
+  ABSL_DEPRECATED("") bool end_of_picture;
 };
 static_assert(std::is_pod<CodecSpecificInfoVP9>::value, "");
 
@@ -109,6 +109,7 @@ struct RTC_EXPORT CodecSpecificInfo {
 
   VideoCodecType codecType;
   CodecSpecificInfoUnion codecSpecific;
+  bool end_of_picture = true;
   absl::optional<GenericFrameInfo> generic_frame_info;
   absl::optional<FrameDependencyStructure> template_structure;
 };

@@ -19,17 +19,20 @@
 #include <string>
 #include <vector>
 
+#include "api/ref_counted_base.h"
 #include "api/scoped_refptr.h"
 #include "api/stats/rtc_stats.h"
-#include "rtc_base/ref_count.h"
+// TODO(tommi): Remove this include after fixing iwyu issue in chromium.
+// See: third_party/blink/renderer/platform/peerconnection/rtc_stats.cc
 #include "rtc_base/ref_counted_object.h"
 #include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
 
 // A collection of stats.
-// This is accessible as a map from |RTCStats::id| to |RTCStats|.
-class RTC_EXPORT RTCStatsReport : public rtc::RefCountInterface {
+// This is accessible as a map from `RTCStats::id` to `RTCStats`.
+class RTC_EXPORT RTCStatsReport final
+    : public rtc::RefCountedNonVirtual<RTCStatsReport> {
  public:
   typedef std::map<std::string, std::unique_ptr<const RTCStats>> StatsMap;
 
@@ -68,8 +71,8 @@ class RTC_EXPORT RTCStatsReport : public rtc::RefCountInterface {
   const RTCStats* Get(const std::string& id) const;
   size_t size() const { return stats_.size(); }
 
-  // Gets the stat object of type |T| by ID, where |T| is any class descending
-  // from |RTCStats|.
+  // Gets the stat object of type `T` by ID, where `T` is any class descending
+  // from `RTCStats`.
   // Returns null if there is no stats object for the given ID or it is the
   // wrong type.
   template <typename T>
@@ -82,17 +85,17 @@ class RTC_EXPORT RTCStatsReport : public rtc::RefCountInterface {
   }
 
   // Removes the stats object from the report, returning ownership of it or null
-  // if there is no object with |id|.
+  // if there is no object with `id`.
   std::unique_ptr<const RTCStats> Take(const std::string& id);
-  // Takes ownership of all the stats in |victim|, leaving it empty.
-  void TakeMembersFrom(rtc::scoped_refptr<RTCStatsReport> victim);
+  // Takes ownership of all the stats in `other`, leaving it empty.
+  void TakeMembersFrom(rtc::scoped_refptr<RTCStatsReport> other);
 
-  // Stats iterators. Stats are ordered lexicographically on |RTCStats::id|.
+  // Stats iterators. Stats are ordered lexicographically on `RTCStats::id`.
   ConstIterator begin() const;
   ConstIterator end() const;
 
-  // Gets the subset of stats that are of type |T|, where |T| is any class
-  // descending from |RTCStats|.
+  // Gets the subset of stats that are of type `T`, where `T` is any class
+  // descending from `RTCStats`.
   template <typename T>
   std::vector<const T*> GetStatsOfType() const {
     std::vector<const T*> stats_of_type;
@@ -107,11 +110,11 @@ class RTC_EXPORT RTCStatsReport : public rtc::RefCountInterface {
   // listing all of its stats objects.
   std::string ToJson() const;
 
-  friend class rtc::RefCountedObject<RTCStatsReport>;
+ protected:
+  friend class rtc::RefCountedNonVirtual<RTCStatsReport>;
+  ~RTCStatsReport() = default;
 
  private:
-  ~RTCStatsReport() override;
-
   int64_t timestamp_us_;
   StatsMap stats_;
 };

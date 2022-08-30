@@ -16,19 +16,18 @@
 #include <initializer_list>
 #include <vector>
 
+#include "absl/base/attributes.h"
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/transport/network_control.h"
-#include "api/transport/webrtc_key_value_config.h"
 #include "api/units/data_rate.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/experiments/field_trial_parser.h"
-#include "rtc_base/system/unused.h"
 
 namespace webrtc {
 
 struct ProbeControllerConfig {
-  explicit ProbeControllerConfig(const WebRtcKeyValueConfig* key_value_config);
+  explicit ProbeControllerConfig(const FieldTrialsView* key_value_config);
   ProbeControllerConfig(const ProbeControllerConfig&);
   ProbeControllerConfig& operator=(const ProbeControllerConfig&) = default;
   ~ProbeControllerConfig();
@@ -59,11 +58,14 @@ struct ProbeControllerConfig {
 // bitrate is adjusted by an application.
 class ProbeController {
  public:
-  explicit ProbeController(const WebRtcKeyValueConfig* key_value_config,
+  explicit ProbeController(const FieldTrialsView* key_value_config,
                            RtcEventLog* event_log);
   ~ProbeController();
 
-  RTC_WARN_UNUSED_RESULT std::vector<ProbeClusterConfig> SetBitrates(
+  ProbeController(const ProbeController&) = delete;
+  ProbeController& operator=(const ProbeController&) = delete;
+
+  ABSL_MUST_USE_RESULT std::vector<ProbeClusterConfig> SetBitrates(
       int64_t min_bitrate_bps,
       int64_t start_bitrate_bps,
       int64_t max_bitrate_bps,
@@ -71,14 +73,14 @@ class ProbeController {
 
   // The total bitrate, as opposed to the max bitrate, is the sum of the
   // configured bitrates for all active streams.
-  RTC_WARN_UNUSED_RESULT std::vector<ProbeClusterConfig>
+  ABSL_MUST_USE_RESULT std::vector<ProbeClusterConfig>
   OnMaxTotalAllocatedBitrate(int64_t max_total_allocated_bitrate,
                              int64_t at_time_ms);
 
-  RTC_WARN_UNUSED_RESULT std::vector<ProbeClusterConfig> OnNetworkAvailability(
+  ABSL_MUST_USE_RESULT std::vector<ProbeClusterConfig> OnNetworkAvailability(
       NetworkAvailability msg);
 
-  RTC_WARN_UNUSED_RESULT std::vector<ProbeClusterConfig> SetEstimatedBitrate(
+  ABSL_MUST_USE_RESULT std::vector<ProbeClusterConfig> SetEstimatedBitrate(
       int64_t bitrate_bps,
       int64_t at_time_ms);
 
@@ -87,17 +89,17 @@ class ProbeController {
   void SetAlrStartTimeMs(absl::optional<int64_t> alr_start_time);
   void SetAlrEndedTimeMs(int64_t alr_end_time);
 
-  RTC_WARN_UNUSED_RESULT std::vector<ProbeClusterConfig> RequestProbe(
+  ABSL_MUST_USE_RESULT std::vector<ProbeClusterConfig> RequestProbe(
       int64_t at_time_ms);
 
   // Sets a new maximum probing bitrate, without generating a new probe cluster.
   void SetMaxBitrate(int64_t max_bitrate_bps);
 
   // Resets the ProbeController to a state equivalent to as if it was just
-  // created EXCEPT for |enable_periodic_alr_probing_|.
+  // created EXCEPT for `enable_periodic_alr_probing_`.
   void Reset(int64_t at_time_ms);
 
-  RTC_WARN_UNUSED_RESULT std::vector<ProbeClusterConfig> Process(
+  ABSL_MUST_USE_RESULT std::vector<ProbeClusterConfig> Process(
       int64_t at_time_ms);
 
  private:
@@ -110,9 +112,9 @@ class ProbeController {
     kProbingComplete,
   };
 
-  RTC_WARN_UNUSED_RESULT std::vector<ProbeClusterConfig>
+  ABSL_MUST_USE_RESULT std::vector<ProbeClusterConfig>
   InitiateExponentialProbing(int64_t at_time_ms);
-  RTC_WARN_UNUSED_RESULT std::vector<ProbeClusterConfig> InitiateProbing(
+  ABSL_MUST_USE_RESULT std::vector<ProbeClusterConfig> InitiateProbing(
       int64_t now_ms,
       std::vector<int64_t> bitrates_to_probe,
       bool probe_further);
@@ -143,8 +145,6 @@ class ProbeController {
   int32_t next_probe_cluster_id_ = 1;
 
   ProbeControllerConfig config_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(ProbeController);
 };
 
 }  // namespace webrtc

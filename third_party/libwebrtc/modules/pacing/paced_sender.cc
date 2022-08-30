@@ -16,7 +16,6 @@
 
 #include "absl/memory/memory.h"
 #include "absl/strings/match.h"
-#include "api/rtc_event_log/rtc_event_log.h"
 #include "modules/utility/include/process_thread.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/location.h"
@@ -31,20 +30,14 @@ const float PacedSender::kDefaultPaceMultiplier = 2.5f;
 
 PacedSender::PacedSender(Clock* clock,
                          PacketRouter* packet_router,
-                         RtcEventLog* event_log,
-                         const WebRtcKeyValueConfig* field_trials,
+                         const FieldTrialsView& field_trials,
                          ProcessThread* process_thread)
     : process_mode_(
-          (field_trials != nullptr &&
-           absl::StartsWith(field_trials->Lookup("WebRTC-Pacer-DynamicProcess"),
-                            "Enabled"))
+          absl::StartsWith(field_trials.Lookup("WebRTC-Pacer-DynamicProcess"),
+                           "Enabled")
               ? PacingController::ProcessMode::kDynamic
               : PacingController::ProcessMode::kPeriodic),
-      pacing_controller_(clock,
-                         packet_router,
-                         event_log,
-                         field_trials,
-                         process_mode_),
+      pacing_controller_(clock, packet_router, field_trials, process_mode_),
       clock_(clock),
       process_thread_(process_thread) {
   if (process_thread_)
@@ -58,13 +51,13 @@ PacedSender::~PacedSender() {
 }
 
 void PacedSender::CreateProbeCluster(DataRate bitrate, int cluster_id) {
-  rtc::CritScope cs(&critsect_);
+  MutexLock lock(&mutex_);
   return pacing_controller_.CreateProbeCluster(bitrate, cluster_id);
 }
 
 void PacedSender::Pause() {
   {
-    rtc::CritScope cs(&critsect_);
+    MutexLock lock(&mutex_);
     pacing_controller_.Pause();
   }
 
@@ -77,7 +70,7 @@ void PacedSender::Pause() {
 
 void PacedSender::Resume() {
   {
-    rtc::CritScope cs(&critsect_);
+    MutexLock lock(&mutex_);
     pacing_controller_.Resume();
   }
 
@@ -88,25 +81,17 @@ void PacedSender::Resume() {
   }
 }
 
-void PacedSender::SetCongestionWindow(DataSize congestion_window_size) {
+void PacedSender::SetCongested(bool congested) {
   {
-    rtc::CritScope cs(&critsect_);
-    pacing_controller_.SetCongestionWindow(congestion_window_size);
-  }
-  MaybeWakupProcessThread();
-}
-
-void PacedSender::UpdateOutstandingData(DataSize outstanding_data) {
-  {
-    rtc::CritScope cs(&critsect_);
-    pacing_controller_.UpdateOutstandingData(outstanding_data);
+    MutexLock lock(&mutex_);
+    pacing_controller_.SetCongested(congested);
   }
   MaybeWakupProcessThread();
 }
 
 void PacedSender::SetPacingRates(DataRate pacing_rate, DataRate padding_rate) {
   {
-    rtc::CritScope cs(&critsect_);
+    MutexLock lock(&mutex_);
     pacing_controller_.SetPacingRates(pacing_rate, padding_rate);
   }
   MaybeWakupProcessThread();
@@ -117,13 +102,14 @@ void PacedSender::EnqueuePackets(
   {
     TRACE_EVENT0(TRACE_DISABLED_BY_DEFAULT("webrtc"),
                  "PacedSender::EnqueuePackets");
-    rtc::CritScope cs(&critsect_);
+    MutexLock lock(&mutex_);
     for (auto& packet : packets) {
       TRACE_EVENT2(TRACE_DISABLED_BY_DEFAULT("webrtc"),
                    "PacedSender::EnqueuePackets::Loop", "sequence_number",
                    packet->SequenceNumber(), "rtp_timestamp",
                    packet->Timestamp());
 
+      RTC_DCHECK_GE(packet->capture_time(), Timestamp::Zero());
       pacing_controller_.EnqueuePacket(std::move(packet));
     }
   }
@@ -131,42 +117,50 @@ void PacedSender::EnqueuePackets(
 }
 
 void PacedSender::SetAccountForAudioPackets(bool account_for_audio) {
-  rtc::CritScope cs(&critsect_);
+  MutexLock lock(&mutex_);
   pacing_controller_.SetAccountForAudioPackets(account_for_audio);
 }
 
 void PacedSender::SetIncludeOverhead() {
-  rtc::CritScope cs(&critsect_);
+  MutexLock lock(&mutex_);
   pacing_controller_.SetIncludeOverhead();
 }
 
 void PacedSender::SetTransportOverhead(DataSize overhead_per_packet) {
-  rtc::CritScope cs(&critsect_);
+  MutexLock lock(&mutex_);
   pacing_controller_.SetTransportOverhead(overhead_per_packet);
 }
 
 TimeDelta PacedSender::ExpectedQueueTime() const {
-  rtc::CritScope cs(&critsect_);
+  MutexLock lock(&mutex_);
   return pacing_controller_.ExpectedQueueTime();
 }
 
 DataSize PacedSender::QueueSizeData() const {
-  rtc::CritScope cs(&critsect_);
+  MutexLock lock(&mutex_);
   return pacing_controller_.QueueSizeData();
 }
 
 absl::optional<Timestamp> PacedSender::FirstSentPacketTime() const {
-  rtc::CritScope cs(&critsect_);
+  MutexLock lock(&mutex_);
   return pacing_controller_.FirstSentPacketTime();
 }
 
 TimeDelta PacedSender::OldestPacketWaitTime() const {
-  rtc::CritScope cs(&critsect_);
-  return pacing_controller_.OldestPacketWaitTime();
+  MutexLock lock(&mutex_);
+  Timestamp oldest_packet = pacing_controller_.OldestPacketEnqueueTime();
+  if (oldest_packet.IsInfinite())
+    return TimeDelta::Zero();
+
+  // (webrtc:9716): The clock is not always monotonic.
+  Timestamp current = clock_->CurrentTime();
+  if (current < oldest_packet)
+    return TimeDelta::Zero();
+  return current - oldest_packet;
 }
 
 int64_t PacedSender::TimeUntilNextProcess() {
-  rtc::CritScope cs(&critsect_);
+  MutexLock lock(&mutex_);
 
   Timestamp next_send_time = pacing_controller_.NextSendTime();
   TimeDelta sleep_time =
@@ -178,7 +172,7 @@ int64_t PacedSender::TimeUntilNextProcess() {
 }
 
 void PacedSender::Process() {
-  rtc::CritScope cs(&critsect_);
+  MutexLock lock(&mutex_);
   pacing_controller_.ProcessPackets();
 }
 
@@ -198,7 +192,7 @@ void PacedSender::MaybeWakupProcessThread() {
 
 void PacedSender::SetQueueTimeLimit(TimeDelta limit) {
   {
-    rtc::CritScope cs(&critsect_);
+    MutexLock lock(&mutex_);
     pacing_controller_.SetQueueTimeLimit(limit);
   }
   MaybeWakupProcessThread();

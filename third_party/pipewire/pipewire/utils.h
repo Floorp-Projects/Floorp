@@ -29,15 +29,27 @@
 extern "C" {
 #endif
 
+#include <stdlib.h>
+#include <string.h>
+#include <sys/un.h>
+#ifndef _POSIX_C_SOURCE
+# include <sys/mount.h>
+#endif
+
 #include <spa/utils/defs.h>
 #include <spa/pod/pod.h>
 
-/** \class pw_utils
+/** \defgroup pw_utils Utilities
  *
  * Various utility functions
  */
 
-/** a function to destroy an item \memberof pw_utils */
+/**
+ * \addtogroup pw_utils
+ * \{
+ */
+
+/** a function to destroy an item */
 typedef void (*pw_destroy_t) (void *object);
 
 const char *
@@ -51,6 +63,36 @@ pw_free_strv(char **str);
 
 char *
 pw_strip(char *str, const char *whitespace);
+
+#if !defined(strndupa)
+# define strndupa(s, n)								      \
+	({									      \
+		const char *__old = (s);					      \
+		size_t __len = strnlen(__old, (n));				      \
+		char *__new = (char *) __builtin_alloca(__len + 1);		      \
+		memcpy(__new, __old, __len);					      \
+		__new[__len] = '\0';						      \
+		__new;								      \
+	})
+#endif
+
+#if !defined(strdupa)
+# define strdupa(s)								      \
+	({									      \
+		const char *__old = (s);					      \
+		size_t __len = strlen(__old) + 1;				      \
+		char *__new = (char *) alloca(__len);				      \
+		(char *) memcpy(__new, __old, __len);				      \
+	})
+#endif
+
+ssize_t pw_getrandom(void *buf, size_t buflen, unsigned int flags);
+
+void* pw_reallocarray(void *ptr, size_t nmemb, size_t size);
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 } /* extern "C" */

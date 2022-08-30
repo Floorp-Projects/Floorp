@@ -21,7 +21,7 @@
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/video_encoder_config.h"
-#include "media/base/vp9_profile.h"
+#include "api/video_codecs/vp9_profile.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
 #include "system_wrappers/include/field_trial.h"
 #include "test/field_trial.h"
@@ -48,8 +48,6 @@ namespace webrtc {
 
 namespace {
 static const int kFullStackTestDurationSecs = 45;
-const char kVp8TrustedRateControllerFieldTrial[] =
-    "WebRTC-LibvpxVp8TrustedRateController/Enabled/";
 
 struct ParamsWithLogging : public VideoQualityTest::Params {
  public:
@@ -228,28 +226,6 @@ TEST(GenericDescriptorTest,
   foreman_cif.analyzer = {
       "foreman_cif_30kbps_net_delay_0_0_plr_0_generic_descriptor", 0.0, 0.0,
       kFullStackTestDurationSecs};
-  foreman_cif.call.generic_descriptor = true;
-  fixture->RunWithAnalyzer(foreman_cif);
-}
-
-// TODO(webrtc:9722): Remove when experiment is cleaned up.
-TEST(GenericDescriptorTest,
-     Foreman_Cif_30kbps_Net_Delay_0_0_Plr_0_Trusted_Rate_Ctrl) {
-  test::ScopedFieldTrials override_field_trials(
-      AppendFieldTrials(kVp8TrustedRateControllerFieldTrial));
-  auto fixture = CreateVideoQualityTestFixture();
-
-  ParamsWithLogging foreman_cif;
-  foreman_cif.call.send_side_bwe = true;
-  foreman_cif.video[0] = {
-      true,  352,   288,   10,
-      30000, 30000, 30000, false,
-      "VP8", 1,     0,     0,
-      false, false, true,  ClipNameToClipPath("foreman_cif")};
-  foreman_cif.analyzer = {
-      "foreman_cif_30kbps_net_delay_0_0_plr_0_trusted_rate_ctrl_generic_"
-      "descriptor",
-      0.0, 0.0, kFullStackTestDurationSecs};
   foreman_cif.call.generic_descriptor = true;
   fixture->RunWithAnalyzer(foreman_cif);
 }
@@ -626,34 +602,6 @@ TEST(FullStackTest, Conference_Motion_Hd_2000kbps_100ms_32pkts_Queue) {
   conf_motion_hd.analyzer = {"conference_motion_hd_2000kbps_100ms_32pkts_queue",
                              0.0, 0.0, kFullStackTestDurationSecs};
   conf_motion_hd.config->queue_length_packets = 32;
-  conf_motion_hd.config->queue_delay_ms = 100;
-  conf_motion_hd.config->link_capacity_kbps = 2000;
-  fixture->RunWithAnalyzer(conf_motion_hd);
-}
-
-// TODO(webrtc:9722): Remove when experiment is cleaned up.
-TEST(FullStackTest,
-     Conference_Motion_Hd_1tl_Moderate_Limits_Trusted_Rate_Ctrl) {
-  test::ScopedFieldTrials override_field_trials(
-      AppendFieldTrials(kVp8TrustedRateControllerFieldTrial));
-  auto fixture = CreateVideoQualityTestFixture();
-
-  ParamsWithLogging conf_motion_hd;
-  conf_motion_hd.call.send_side_bwe = true;
-  conf_motion_hd.video[0] = {
-      true,    1280,
-      720,     50,
-      30000,   3000000,
-      3000000, false,
-      "VP8",   1,
-      -1,      0,
-      false,   false,
-      false,   ClipNameToClipPath("ConferenceMotion_1280_720_50")};
-  conf_motion_hd.analyzer = {
-      "conference_motion_hd_1tl_moderate_limits_trusted_rate_ctrl", 0.0, 0.0,
-      kFullStackTestDurationSecs};
-  conf_motion_hd.config->queue_length_packets = 50;
-  conf_motion_hd.config->loss_percent = 3;
   conf_motion_hd.config->queue_delay_ms = 100;
   conf_motion_hd.config->link_capacity_kbps = 2000;
   fixture->RunWithAnalyzer(conf_motion_hd);
@@ -1065,8 +1013,7 @@ TEST(FullStackTest, Vp9ksvc_3sl_Medium_Network_Restricted) {
 // TODO(webrtc:9722): Remove when experiment is cleaned up.
 TEST(FullStackTest, Vp9ksvc_3sl_Medium_Network_Restricted_Trusted_Rate) {
   webrtc::test::ScopedFieldTrials override_trials(
-      AppendFieldTrials("WebRTC-Vp9IssueKeyFrameOnLayerDeactivation/Enabled/"
-                        "WebRTC-LibvpxVp9TrustedRateController/Enabled/"));
+      AppendFieldTrials("WebRTC-Vp9IssueKeyFrameOnLayerDeactivation/Enabled/"));
   auto fixture = CreateVideoQualityTestFixture();
   ParamsWithLogging simulcast;
   simulcast.call.send_side_bwe = true;

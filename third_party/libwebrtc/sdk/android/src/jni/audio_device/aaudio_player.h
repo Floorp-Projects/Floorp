@@ -12,15 +12,16 @@
 #define SDK_ANDROID_SRC_JNI_AUDIO_DEVICE_AAUDIO_PLAYER_H_
 
 #include <aaudio/AAudio.h>
+
 #include <memory>
 
 #include "absl/types/optional.h"
+#include "api/sequence_checker.h"
 #include "modules/audio_device/audio_device_buffer.h"
 #include "modules/audio_device/include/audio_device_defines.h"
 #include "rtc_base/message_handler.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
-#include "rtc_base/thread_checker.h"
 #include "sdk/android/src/jni/audio_device/aaudio_wrapper.h"
 #include "sdk/android/src/jni/audio_device/audio_device_module.h"
 
@@ -80,8 +81,8 @@ class AAudioPlayer final : public AudioOutput,
  protected:
   // AAudioObserverInterface implementation.
 
-  // For an output stream, this function should render and write |num_frames|
-  // of data in the streams current data format to the |audio_data| buffer.
+  // For an output stream, this function should render and write `num_frames`
+  // of data in the streams current data format to the `audio_data` buffer.
   // Called on a real-time thread owned by AAudio.
   aaudio_data_callback_result_t OnDataCallback(void* audio_data,
                                                int32_t num_frames) override;
@@ -99,12 +100,12 @@ class AAudioPlayer final : public AudioOutput,
 
   // Ensures that methods are called from the same thread as this object is
   // created on.
-  rtc::ThreadChecker main_thread_checker_;
+  SequenceChecker main_thread_checker_;
 
   // Stores thread ID in first call to AAudioPlayer::OnDataCallback from a
   // real-time thread owned by AAudio. Detached during construction of this
   // object.
-  rtc::ThreadChecker thread_checker_aaudio_;
+  SequenceChecker thread_checker_aaudio_;
 
   // The thread on which this object is created on.
   rtc::Thread* main_thread_;

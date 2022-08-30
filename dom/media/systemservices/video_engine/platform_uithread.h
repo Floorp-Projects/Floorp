@@ -12,10 +12,10 @@
 #define RTC_BASE_PLATFORM_UITHREAD_H_
 
 #if defined(WEBRTC_WIN)
-
 #  include "Assertions.h"
-#  include "rtc_base/platform_thread.h"
 #  include "rtc_base/deprecated/recursive_critical_section.h"
+#  include "rtc_base/platform_thread.h"
+#  include "api/sequence_checker.h"
 #  include "ThreadSafety.h"
 
 namespace rtc {
@@ -45,15 +45,18 @@ namespace rtc {
  *
  */
 
-class PlatformUIThread : public PlatformThread {
+class PlatformUIThread {
  public:
-  PlatformUIThread(ThreadRunFunction func, void* obj, const char* thread_name)
-      : PlatformThread(func, obj, thread_name) {
-    MOZ_ASSERT(func);
-  }
+  PlatformUIThread(std::function<void()> func, const char* name,
+                   ThreadAttributes attributes)
+      : name_(name),
+        native_event_callback_(std::move(func)),
+        monitor_thread_(PlatformThread::SpawnJoinable([this]() { Run(); }, name,
+                                                      attributes)) {}
+
   virtual ~PlatformUIThread();
 
-  void Stop() override;
+  void Stop();
 
   /**
    * Request a recurring callback.
@@ -61,7 +64,7 @@ class PlatformUIThread : public PlatformThread {
   bool RequestCallbackTimer(unsigned int milliseconds);
 
  protected:
-  void Run() override;
+  void Run();
 
  private:
   static LRESULT CALLBACK EventWindowProc(HWND, UINT, WPARAM, LPARAM);
@@ -69,6 +72,13 @@ class PlatformUIThread : public PlatformThread {
   // Initialize the UI thread that is servicing the timer events
   bool InternalInit();
 
+  // Needs to be initialized before monitor_thread_ as it takes a string view to
+  // name_
+  std::string name_;
+  RecursiveCriticalSection cs_;
+  std::function<void()> native_event_callback_;
+  webrtc::SequenceChecker thread_checker_;
+  PlatformThread monitor_thread_;
   HWND hwnd_ MOZ_GUARDED_BY(cs_) = nullptr;
   UINT_PTR timerid_ MOZ_GUARDED_BY(cs_) = 0;
   unsigned int timeout_ MOZ_GUARDED_BY(cs_) = 0;

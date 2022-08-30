@@ -27,6 +27,9 @@ RTC_OBJC_EXPORT
 - (nullable RTC_OBJC_TYPE(RTCVideoCodecInfo) *)encoderForBitrate:(NSInteger)bitrate;
 - (nullable RTC_OBJC_TYPE(RTCVideoCodecInfo) *)encoderForBrokenEncoder;
 
+@optional
+- (nullable RTC_OBJC_TYPE(RTCVideoCodecInfo) *)encoderForResolutionChangeBySize:(CGSize)size;
+
 @end
 
 /** RTCVideoEncoderFactory is an Objective-C version of webrtc::VideoEncoderFactory.

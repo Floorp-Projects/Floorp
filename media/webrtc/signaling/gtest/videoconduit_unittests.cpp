@@ -687,8 +687,8 @@ TEST_F(VideoConduitTest, TestOnSinkWantsChanged) {
         Call()->CreateEncoderStreams(sink->mVideoFrame.width(),
                                      sink->mVideoFrame.height());
     ASSERT_EQ(videoStreams.size(), 1U);
-    EXPECT_EQ(videoStreams[0].width, 480U);
-    EXPECT_EQ(videoStreams[0].height, 270U);
+    EXPECT_EQ(videoStreams[0].width, 640U);
+    EXPECT_EQ(videoStreams[0].height, 360U);
   }
 
   mControl.Update([&](auto& aControl) {
@@ -705,8 +705,8 @@ TEST_F(VideoConduitTest, TestOnSinkWantsChanged) {
         Call()->CreateEncoderStreams(sink->mVideoFrame.width(),
                                      sink->mVideoFrame.height());
     ASSERT_EQ(videoStreams.size(), 1U);
-    EXPECT_EQ(videoStreams[0].width, 360U);
-    EXPECT_EQ(videoStreams[0].height, 201U);
+    EXPECT_EQ(videoStreams[0].width, 320U);
+    EXPECT_EQ(videoStreams[0].height, 180U);
   }
 
   mControl.Update([&](auto& aControl) {
@@ -723,8 +723,8 @@ TEST_F(VideoConduitTest, TestOnSinkWantsChanged) {
         Call()->CreateEncoderStreams(sink->mVideoFrame.width(),
                                      sink->mVideoFrame.height());
     ASSERT_EQ(videoStreams.size(), 1U);
-    EXPECT_EQ(videoStreams[0].width, 480U);
-    EXPECT_EQ(videoStreams[0].height, 270U);
+    EXPECT_EQ(videoStreams[0].width, 640U);
+    EXPECT_EQ(videoStreams[0].height, 360U);
   }
 
   mControl.Update([&](auto& aControl) {
@@ -741,8 +741,8 @@ TEST_F(VideoConduitTest, TestOnSinkWantsChanged) {
         Call()->CreateEncoderStreams(sink->mVideoFrame.width(),
                                      sink->mVideoFrame.height());
     ASSERT_EQ(videoStreams.size(), 1U);
-    EXPECT_EQ(videoStreams[0].width, 240U);
-    EXPECT_EQ(videoStreams[0].height, 135U);
+    EXPECT_EQ(videoStreams[0].width, 320U);
+    EXPECT_EQ(videoStreams[0].height, 180U);
   }
 }
 
@@ -799,8 +799,8 @@ TEST_F(VideoConduitTestScalingLocked, TestOnSinkWantsChanged) {
         Call()->CreateEncoderStreams(sink->mVideoFrame.width(),
                                      sink->mVideoFrame.height());
     ASSERT_EQ(videoStreams.size(), 1U);
-    EXPECT_EQ(videoStreams[0].width, 360U);
-    EXPECT_EQ(videoStreams[0].height, 201U);
+    EXPECT_EQ(videoStreams[0].width, 320U);
+    EXPECT_EQ(videoStreams[0].height, 180U);
   }
 }
 

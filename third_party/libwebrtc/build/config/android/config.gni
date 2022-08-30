@@ -9,6 +9,7 @@
 # toolchains. Checking |is_android| here would therefore be too restrictive.
 if (is_android || is_chromeos) {
   import("//build/config/chromecast_build.gni")
+  import("//build/config/dcheck_always_on.gni")
   import("//build_overrides/build.gni")
   import("abi.gni")
 
@@ -49,17 +50,23 @@ if (is_android || is_chromeos) {
     # not explicitly set it.
     default_min_sdk_version = 21
 
-    # Android API level for 32 bits platforms
-    android32_ndk_api_level = 16
-
-    # Android API level for 64 bits platforms
-    android64_ndk_api_level = 21
-
     # [WIP] Allows devs to achieve much faster edit-build-install cycles.
     # Currently only works for ChromeModern apks due to incremental install.
     # This needs to be in a separate declare_args as it determines some of the
     # args in the main declare_args block below.
     android_fast_local_dev = false
+  }
+
+  declare_args() {
+    # Android API level for 32 bits platforms
+    android32_ndk_api_level = default_min_sdk_version
+
+    # Android API level for 64 bits platforms
+    if (default_min_sdk_version < 21) {
+      android64_ndk_api_level = 21
+    } else {
+      android64_ndk_api_level = default_min_sdk_version
+    }
   }
 
   if (enable_chrome_android_internal) {
@@ -74,18 +81,18 @@ if (is_android || is_chromeos) {
 
   if (!defined(default_android_ndk_root)) {
     default_android_ndk_root = "//third_party/android_ndk"
-    default_android_ndk_version = "r20"
-    default_android_ndk_major_version = 20
+    default_android_ndk_version = "r22"
+    default_android_ndk_major_version = 22
   } else {
     assert(defined(default_android_ndk_version))
     assert(defined(default_android_ndk_major_version))
   }
 
   public_android_sdk_root = "//third_party/android_sdk/public"
-  if (android_sdk_release == "r") {
+  if (android_sdk_release == "s") {
     default_android_sdk_root = public_android_sdk_root
-    default_android_sdk_version = "30"
-    default_android_sdk_build_tools_version = "30.0.1"
+    default_android_sdk_version = "31"
+    default_android_sdk_build_tools_version = "31.0.0"
     public_android_sdk = true
   }
 
@@ -98,7 +105,7 @@ if (is_android || is_chromeos) {
     # Purposefully repeated so that downstream can change
     # default_android_sdk_root without changing lint version.
     default_lint_android_sdk_root = public_android_sdk_root
-    default_lint_android_sdk_version = 30
+    default_lint_android_sdk_version = 31
   }
 
   if (!defined(default_extras_android_sdk_root)) {
@@ -122,6 +129,21 @@ if (is_android || is_chromeos) {
     } else {
       google_play_services_package = "//third_party/android_deps"
     }
+  }
+
+  if (!defined(dagger_java_target)) {
+    dagger_java_target =
+        "//third_party/android_deps:com_google_dagger_dagger_java"
+  }
+
+  if (!defined(dagger_annotation_processor_target)) {
+    dagger_annotation_processor_target =
+        "//third_party/android_deps:com_google_dagger_dagger_compiler_java"
+  }
+
+  if (!defined(guava_android_target)) {
+    guava_android_target =
+        "//third_party/android_deps:com_google_guava_guava_android_java"
   }
 
   if (!defined(material_design_target)) {
@@ -226,7 +248,14 @@ if (is_android || is_chromeos) {
     enable_arsc_obfuscation = true
 
     # The target to use as the system WebView implementation.
-    system_webview_apk_target = "//android_webview:system_webview_apk"
+    if (android_64bit_target_cpu && skip_secondary_abi_for_cq) {
+      system_webview_apk_target = "//android_webview:system_webview_64_apk"
+    } else {
+      system_webview_apk_target = "//android_webview:system_webview_apk"
+    }
+
+    # Where to write failed expectations for bots to read.
+    expectations_failure_dir = "$root_build_dir/failed_expectations"
   }
 
   # We need a second declare_args block to make sure we are using the overridden
@@ -238,19 +267,18 @@ if (is_android || is_chromeos) {
       android_sdk_platform_version = android_sdk_version
     }
 
+    # Whether java assertions and Preconditions checks are enabled.
+    enable_java_asserts = is_java_debug || dcheck_always_on
+
     # Reduce build time by using d8 incremental build.
     enable_incremental_d8 = true
 
     # Use hashed symbol names to reduce JNI symbol overhead.
     use_hashed_jni_names = !is_java_debug
 
-    # Desugar lambdas and interfaces methods using Desugar.jar rather than
-    # D8/R8. D8/R8 will still be used for backported method desugaring.
-    enable_bazel_desugar = true
-
     # Enables Java library desugaring.
     # This will cause an extra classes.dex file to appear in every apk.
-    enable_jdk_library_desugaring = false
+    enable_jdk_library_desugaring = true
   }
 
   # Host stuff -----------------------------------------------------------------

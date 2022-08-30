@@ -14,25 +14,44 @@
 #include <stdint.h>
 
 #include <memory>
+#include <string>
+#include <vector>
 
+#include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "api/rtc_event_log/rtc_event.h"
+#include "logging/rtc_event_log/events/logged_rtp_rtcp.h"
+#include "logging/rtc_event_log/events/rtc_event_field_encoding_parser.h"
 #include "rtc_base/buffer.h"
 
 namespace webrtc {
 
 class RtcEventRtcpPacketIncoming final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::RtcpPacketIncoming;
+
   explicit RtcEventRtcpPacketIncoming(rtc::ArrayView<const uint8_t> packet);
   ~RtcEventRtcpPacketIncoming() override;
 
-  Type GetType() const override;
-
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return false; }
 
   std::unique_ptr<RtcEventRtcpPacketIncoming> Copy() const;
 
   const rtc::Buffer& packet() const { return packet_; }
+
+  static std::string Encode(rtc::ArrayView<const RtcEvent*> batch) {
+    // TODO(terelius): Implement
+    return "";
+  }
+
+  static RtcEventLogParseStatus Parse(
+      absl::string_view encoded_bytes,
+      bool batched,
+      std::vector<LoggedRtcpPacketIncoming>& output) {
+    // TODO(terelius): Implement
+    return RtcEventLogParseStatus::Error("Not Implemented", __FILE__, __LINE__);
+  }
 
  private:
   RtcEventRtcpPacketIncoming(const RtcEventRtcpPacketIncoming& other);

@@ -4,7 +4,7 @@
 
 """Implements commands for running/interacting with Fuchsia on an emulator."""
 
-import amber_repo
+import pkg_repo
 import boot_data
 import logging
 import os
@@ -25,26 +25,7 @@ class EmuTarget(target.Target):
     super(EmuTarget, self).__init__(out_dir, target_cpu)
     self._emu_process = None
     self._system_log_file = system_log_file
-    self._amber_repo = None
-
-  @staticmethod
-  def RegisterArgs(arg_parser):
-    target.Target.RegisterArgs(arg_parser)
-    emu_args = arg_parser.add_argument_group('emu', 'Emulator arguments')
-    emu_args.add_argument('--cpu-cores',
-                          type=int,
-                          default=4,
-                          help='Sets the number of CPU cores to provide.')
-    emu_args.add_argument('--ram-size-mb',
-                          type=int,
-                          default=2048,
-                          help='Sets the RAM size (MB) if launching in a VM'),
-    emu_args.add_argument('--allow-no-kvm',
-                          action='store_false',
-                          dest='require_kvm',
-                          default=True,
-                          help='Do not require KVM acceleration for '
-                          'emulators.')
+    self._pkg_repo = None
 
   def __enter__(self):
     return self
@@ -84,9 +65,8 @@ class EmuTarget(target.Target):
       temporary_log_file = tempfile.NamedTemporaryFile('w')
       stdout = temporary_log_file
 
-    # TODO(crbug.com/1100402): Delete when no longer needed for debug info.
-    # Log system statistics at the start of the emulator run.
-    _LogSystemStatistics('system_start_statistics_log')
+    LogProcessStatistics('proc_stat_start_log')
+    LogSystemStatistics('system_statistics_start_log')
 
     self._emu_process = subprocess.Popen(emu_command,
                                          stdin=open(os.devnull),
@@ -96,17 +76,18 @@ class EmuTarget(target.Target):
 
     try:
       self._WaitUntilReady()
+      LogProcessStatistics('proc_stat_ready_log')
     except target.FuchsiaTargetException:
       if temporary_log_file:
         logging.info('Kernel logs:\n' +
                      open(temporary_log_file.name, 'r').read())
       raise
 
-  def GetAmberRepo(self):
-    if not self._amber_repo:
-      self._amber_repo = amber_repo.ManagedAmberRepo(self)
+  def GetPkgRepo(self):
+    if not self._pkg_repo:
+      self._pkg_repo = pkg_repo.ManagedPkgRepo(self)
 
-    return self._amber_repo
+    return self._pkg_repo
 
   def Shutdown(self):
     if not self._emu_process:
@@ -125,9 +106,8 @@ class EmuTarget(target.Target):
       logging.error('%s quit unexpectedly with exit code %d' %
                     (self.EMULATOR_NAME, returncode))
 
-    # TODO(crbug.com/1100402): Delete when no longer needed for debug info.
-    # Log system statistics at the end of the emulator run.
-    _LogSystemStatistics('system_end_statistics_log')
+    LogProcessStatistics('proc_stat_end_log')
+    LogSystemStatistics('system_statistics_end_log')
 
 
   def _IsEmuStillRunning(self):
@@ -141,11 +121,10 @@ class EmuTarget(target.Target):
     return ('localhost', self._host_ssh_port)
 
   def _GetSshConfigPath(self):
-    return boot_data.GetSSHConfigPath(self._out_dir)
+    return boot_data.GetSSHConfigPath()
 
 
-# TODO(crbug.com/1100402): Delete when no longer needed for debug info.
-def _LogSystemStatistics(log_file_name):
+def LogSystemStatistics(log_file_name):
   statistics_log = runner_logs.FileStreamFor(log_file_name)
   # Log the cpu load and process information.
   subprocess.call(['top', '-b', '-n', '1'],
@@ -153,6 +132,14 @@ def _LogSystemStatistics(log_file_name):
                   stdout=statistics_log,
                   stderr=subprocess.STDOUT)
   subprocess.call(['ps', '-ax'],
+                  stdin=open(os.devnull),
+                  stdout=statistics_log,
+                  stderr=subprocess.STDOUT)
+
+
+def LogProcessStatistics(log_file_name):
+  statistics_log = runner_logs.FileStreamFor(log_file_name)
+  subprocess.call(['cat', '/proc/stat'],
                   stdin=open(os.devnull),
                   stdout=statistics_log,
                   stderr=subprocess.STDOUT)

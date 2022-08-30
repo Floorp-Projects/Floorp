@@ -199,20 +199,6 @@ static const unsigned char kStunMessageWithErrorAttribute[] = {
   0x69, 0x7a, 0x65, 0x64
 };
 
-static const unsigned char kStunMessageWithOriginAttribute[] = {
-  0x00, 0x01, 0x00, 0x18,  // message header (binding request), length 24
-  0x21, 0x12, 0xA4, 0x42,  // magic cookie
-  0x29, 0x1f, 0xcd, 0x7c,  // transaction id
-  0xba, 0x58, 0xab, 0xd7,
-  0xf2, 0x41, 0x01, 0x00,
-  0x80, 0x2f, 0x00, 0x12,  // origin attribute (length 18)
-  0x68, 0x74, 0x74, 0x70,  // http://example.com
-  0x3A, 0x2F, 0x2F, 0x65,
-  0x78, 0x61, 0x6d, 0x70,
-  0x6c, 0x65, 0x2e, 0x63,
-  0x6f, 0x6d, 0x00, 0x00,
-};
-
 // Sample messages with an invalid length Field
 
 // The actual length in bytes of the invalid messages (including STUN header)
@@ -551,7 +537,6 @@ const in_addr kIPv4TestAddress1 = {{{0x0ac, 0x017, 0x044, 0x0e6}}};
 const char kTestUserName1[] = "abcdefgh";
 const char kTestUserName2[] = "abc";
 const char kTestErrorReason[] = "Unauthorized";
-const char kTestOrigin[] = "http://example.com";
 const int kTestErrorClass = 4;
 const int kTestErrorNumber = 1;
 const int kTestErrorCode = 401;
@@ -1097,15 +1082,6 @@ TEST_F(StunTest, ReadMessageWithAnUnknownAttribute) {
   EXPECT_EQ(kTestUserName2, username->GetString());
 }
 
-TEST_F(StunTest, ReadMessageWithOriginAttribute) {
-  StunMessage msg;
-  size_t size = ReadStunMessage(&msg, kStunMessageWithOriginAttribute);
-  CheckStunHeader(msg, STUN_BINDING_REQUEST, size);
-  const StunByteStringAttribute* origin = msg.GetByteString(STUN_ATTR_ORIGIN);
-  ASSERT_TRUE(origin != NULL);
-  EXPECT_EQ(kTestOrigin, origin->GetString());
-}
-
 TEST_F(StunTest, WriteMessageWithAnErrorCodeAttribute) {
   StunMessage msg;
   size_t size = sizeof(kStunMessageWithErrorAttribute);
@@ -1152,25 +1128,6 @@ TEST_F(StunTest, WriteMessageWithAUInt16ListAttribute) {
             memcmp(out.Data(), kStunMessageWithUInt16ListAttribute, size - 2));
 }
 
-TEST_F(StunTest, WriteMessageWithOriginAttribute) {
-  StunMessage msg;
-  size_t size = sizeof(kStunMessageWithOriginAttribute);
-
-  msg.SetType(STUN_BINDING_REQUEST);
-  msg.SetTransactionID(
-      std::string(reinterpret_cast<const char*>(kTestTransactionId1),
-                  kStunTransactionIdLength));
-  auto origin =
-      std::make_unique<StunByteStringAttribute>(STUN_ATTR_ORIGIN, kTestOrigin);
-  msg.AddAttribute(std::move(origin));
-
-  rtc::ByteBufferWriter out;
-  EXPECT_TRUE(msg.Write(&out));
-  ASSERT_EQ(size, out.Length());
-  // Check everything up to the padding
-  ASSERT_EQ(0, memcmp(out.Data(), kStunMessageWithOriginAttribute, size - 2));
-}
-
 // Test that we fail to read messages with invalid lengths.
 void CheckFailureToRead(const unsigned char* testcase, size_t length) {
   StunMessage msg;
@@ -1196,24 +1153,24 @@ TEST_F(StunTest, FailToReadRtcpPacket) {
 // Check our STUN message validation code against the RFC5769 test messages.
 TEST_F(StunTest, ValidateMessageIntegrity) {
   // Try the messages from RFC 5769.
-  EXPECT_TRUE(StunMessage::ValidateMessageIntegrity(
+  EXPECT_TRUE(StunMessage::ValidateMessageIntegrityForTesting(
       reinterpret_cast<const char*>(kRfc5769SampleRequest),
       sizeof(kRfc5769SampleRequest), kRfc5769SampleMsgPassword));
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrityForTesting(
       reinterpret_cast<const char*>(kRfc5769SampleRequest),
       sizeof(kRfc5769SampleRequest), "InvalidPassword"));
 
-  EXPECT_TRUE(StunMessage::ValidateMessageIntegrity(
+  EXPECT_TRUE(StunMessage::ValidateMessageIntegrityForTesting(
       reinterpret_cast<const char*>(kRfc5769SampleResponse),
       sizeof(kRfc5769SampleResponse), kRfc5769SampleMsgPassword));
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrityForTesting(
       reinterpret_cast<const char*>(kRfc5769SampleResponse),
       sizeof(kRfc5769SampleResponse), "InvalidPassword"));
 
-  EXPECT_TRUE(StunMessage::ValidateMessageIntegrity(
+  EXPECT_TRUE(StunMessage::ValidateMessageIntegrityForTesting(
       reinterpret_cast<const char*>(kRfc5769SampleResponseIPv6),
       sizeof(kRfc5769SampleResponseIPv6), kRfc5769SampleMsgPassword));
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrityForTesting(
       reinterpret_cast<const char*>(kRfc5769SampleResponseIPv6),
       sizeof(kRfc5769SampleResponseIPv6), "InvalidPassword"));
 
@@ -1222,40 +1179,40 @@ TEST_F(StunTest, ValidateMessageIntegrity) {
   ComputeStunCredentialHash(kRfc5769SampleMsgWithAuthUsername,
                             kRfc5769SampleMsgWithAuthRealm,
                             kRfc5769SampleMsgWithAuthPassword, &key);
-  EXPECT_TRUE(StunMessage::ValidateMessageIntegrity(
+  EXPECT_TRUE(StunMessage::ValidateMessageIntegrityForTesting(
       reinterpret_cast<const char*>(kRfc5769SampleRequestLongTermAuth),
       sizeof(kRfc5769SampleRequestLongTermAuth), key));
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrityForTesting(
       reinterpret_cast<const char*>(kRfc5769SampleRequestLongTermAuth),
       sizeof(kRfc5769SampleRequestLongTermAuth), "InvalidPassword"));
 
   // Try some edge cases.
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrityForTesting(
       reinterpret_cast<const char*>(kStunMessageWithZeroLength),
       sizeof(kStunMessageWithZeroLength), kRfc5769SampleMsgPassword));
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrityForTesting(
       reinterpret_cast<const char*>(kStunMessageWithExcessLength),
       sizeof(kStunMessageWithExcessLength), kRfc5769SampleMsgPassword));
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrityForTesting(
       reinterpret_cast<const char*>(kStunMessageWithSmallLength),
       sizeof(kStunMessageWithSmallLength), kRfc5769SampleMsgPassword));
 
   // Again, but with the lengths matching what is claimed in the headers.
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrityForTesting(
       reinterpret_cast<const char*>(kStunMessageWithZeroLength),
       kStunHeaderSize + rtc::GetBE16(&kStunMessageWithZeroLength[2]),
       kRfc5769SampleMsgPassword));
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrityForTesting(
       reinterpret_cast<const char*>(kStunMessageWithExcessLength),
       kStunHeaderSize + rtc::GetBE16(&kStunMessageWithExcessLength[2]),
       kRfc5769SampleMsgPassword));
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrityForTesting(
       reinterpret_cast<const char*>(kStunMessageWithSmallLength),
       kStunHeaderSize + rtc::GetBE16(&kStunMessageWithSmallLength[2]),
       kRfc5769SampleMsgPassword));
 
   // Check that a too-short HMAC doesn't cause buffer overflow.
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrityForTesting(
       reinterpret_cast<const char*>(kStunMessageWithBadHmacAtEnd),
       sizeof(kStunMessageWithBadHmacAtEnd), kRfc5769SampleMsgPassword));
 
@@ -1268,8 +1225,8 @@ TEST_F(StunTest, ValidateMessageIntegrity) {
     if (i > 0)
       buf[i - 1] ^= 0x01;
     EXPECT_EQ(i >= sizeof(buf) - 8,
-              StunMessage::ValidateMessageIntegrity(buf, sizeof(buf),
-                                                    kRfc5769SampleMsgPassword));
+              StunMessage::ValidateMessageIntegrityForTesting(
+                  buf, sizeof(buf), kRfc5769SampleMsgPassword));
   }
 }
 
@@ -1291,7 +1248,7 @@ TEST_F(StunTest, AddMessageIntegrity) {
 
   rtc::ByteBufferWriter buf1;
   EXPECT_TRUE(msg.Write(&buf1));
-  EXPECT_TRUE(StunMessage::ValidateMessageIntegrity(
+  EXPECT_TRUE(StunMessage::ValidateMessageIntegrityForTesting(
       reinterpret_cast<const char*>(buf1.Data()), buf1.Length(),
       kRfc5769SampleMsgPassword));
 
@@ -1309,7 +1266,7 @@ TEST_F(StunTest, AddMessageIntegrity) {
 
   rtc::ByteBufferWriter buf3;
   EXPECT_TRUE(msg2.Write(&buf3));
-  EXPECT_TRUE(StunMessage::ValidateMessageIntegrity(
+  EXPECT_TRUE(StunMessage::ValidateMessageIntegrityForTesting(
       reinterpret_cast<const char*>(buf3.Data()), buf3.Length(),
       kRfc5769SampleMsgPassword));
 }
@@ -1317,40 +1274,40 @@ TEST_F(StunTest, AddMessageIntegrity) {
 // Check our STUN message validation code against the RFC5769 test messages.
 TEST_F(StunTest, ValidateMessageIntegrity32) {
   // Try the messages from RFC 5769.
-  EXPECT_TRUE(StunMessage::ValidateMessageIntegrity32(
+  EXPECT_TRUE(StunMessage::ValidateMessageIntegrity32ForTesting(
       reinterpret_cast<const char*>(kSampleRequestMI32),
       sizeof(kSampleRequestMI32), kRfc5769SampleMsgPassword));
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity32(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity32ForTesting(
       reinterpret_cast<const char*>(kSampleRequestMI32),
       sizeof(kSampleRequestMI32), "InvalidPassword"));
 
   // Try some edge cases.
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity32(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity32ForTesting(
       reinterpret_cast<const char*>(kStunMessageWithZeroLength),
       sizeof(kStunMessageWithZeroLength), kRfc5769SampleMsgPassword));
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity32(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity32ForTesting(
       reinterpret_cast<const char*>(kStunMessageWithExcessLength),
       sizeof(kStunMessageWithExcessLength), kRfc5769SampleMsgPassword));
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity32(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity32ForTesting(
       reinterpret_cast<const char*>(kStunMessageWithSmallLength),
       sizeof(kStunMessageWithSmallLength), kRfc5769SampleMsgPassword));
 
   // Again, but with the lengths matching what is claimed in the headers.
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity32(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity32ForTesting(
       reinterpret_cast<const char*>(kStunMessageWithZeroLength),
       kStunHeaderSize + rtc::GetBE16(&kStunMessageWithZeroLength[2]),
       kRfc5769SampleMsgPassword));
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity32(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity32ForTesting(
       reinterpret_cast<const char*>(kStunMessageWithExcessLength),
       kStunHeaderSize + rtc::GetBE16(&kStunMessageWithExcessLength[2]),
       kRfc5769SampleMsgPassword));
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity32(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity32ForTesting(
       reinterpret_cast<const char*>(kStunMessageWithSmallLength),
       kStunHeaderSize + rtc::GetBE16(&kStunMessageWithSmallLength[2]),
       kRfc5769SampleMsgPassword));
 
   // Check that a too-short HMAC doesn't cause buffer overflow.
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity32(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity32ForTesting(
       reinterpret_cast<const char*>(kStunMessageWithBadHmacAtEnd),
       sizeof(kStunMessageWithBadHmacAtEnd), kRfc5769SampleMsgPassword));
 
@@ -1363,7 +1320,7 @@ TEST_F(StunTest, ValidateMessageIntegrity32) {
     if (i > 0)
       buf[i - 1] ^= 0x01;
     EXPECT_EQ(i >= sizeof(buf) - 8,
-              StunMessage::ValidateMessageIntegrity32(
+              StunMessage::ValidateMessageIntegrity32ForTesting(
                   buf, sizeof(buf), kRfc5769SampleMsgPassword));
   }
 }
@@ -1384,7 +1341,7 @@ TEST_F(StunTest, AddMessageIntegrity32) {
 
   rtc::ByteBufferWriter buf1;
   EXPECT_TRUE(msg.Write(&buf1));
-  EXPECT_TRUE(StunMessage::ValidateMessageIntegrity32(
+  EXPECT_TRUE(StunMessage::ValidateMessageIntegrity32ForTesting(
       reinterpret_cast<const char*>(buf1.Data()), buf1.Length(),
       kRfc5769SampleMsgPassword));
 
@@ -1402,7 +1359,7 @@ TEST_F(StunTest, AddMessageIntegrity32) {
 
   rtc::ByteBufferWriter buf3;
   EXPECT_TRUE(msg2.Write(&buf3));
-  EXPECT_TRUE(StunMessage::ValidateMessageIntegrity32(
+  EXPECT_TRUE(StunMessage::ValidateMessageIntegrity32ForTesting(
       reinterpret_cast<const char*>(buf3.Data()), buf3.Length(),
       kRfc5769SampleMsgPassword));
 }
@@ -1420,14 +1377,14 @@ TEST_F(StunTest, AddMessageIntegrity32AndMessageIntegrity) {
 
   rtc::ByteBufferWriter buf1;
   EXPECT_TRUE(msg.Write(&buf1));
-  EXPECT_TRUE(StunMessage::ValidateMessageIntegrity32(
+  EXPECT_TRUE(StunMessage::ValidateMessageIntegrity32ForTesting(
       reinterpret_cast<const char*>(buf1.Data()), buf1.Length(), "password1"));
-  EXPECT_TRUE(StunMessage::ValidateMessageIntegrity(
+  EXPECT_TRUE(StunMessage::ValidateMessageIntegrityForTesting(
       reinterpret_cast<const char*>(buf1.Data()), buf1.Length(), "password2"));
 
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity32(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity32ForTesting(
       reinterpret_cast<const char*>(buf1.Data()), buf1.Length(), "password2"));
-  EXPECT_FALSE(StunMessage::ValidateMessageIntegrity(
+  EXPECT_FALSE(StunMessage::ValidateMessageIntegrityForTesting(
       reinterpret_cast<const char*>(buf1.Data()), buf1.Length(), "password1"));
 }
 
@@ -1901,6 +1858,18 @@ TEST_F(StunTest, IsStunMethod) {
   EXPECT_TRUE(StunMessage::IsStunMethod(
       methods, reinterpret_cast<const char*>(kRfc5769SampleRequest),
       sizeof(kRfc5769SampleRequest)));
+}
+
+TEST_F(StunTest, SizeRestrictionOnAttributes) {
+  StunMessage msg;
+  msg.SetType(STUN_BINDING_REQUEST);
+  msg.SetTransactionID("ABCDEFGH");
+  auto long_username = StunAttribute::CreateByteString(STUN_ATTR_USERNAME);
+  std::string long_string(509, 'x');
+  long_username->CopyBytes(long_string.c_str(), long_string.size());
+  msg.AddAttribute(std::move(long_username));
+  rtc::ByteBufferWriter out;
+  ASSERT_FALSE(msg.Write(&out));
 }
 
 }  // namespace cricket

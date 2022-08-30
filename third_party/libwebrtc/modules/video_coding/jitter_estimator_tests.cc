@@ -14,14 +14,17 @@
 
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "api/units/data_size.h"
+#include "api/units/frequency.h"
+#include "api/units/time_delta.h"
 #include "modules/video_coding/jitter_estimator.h"
 #include "rtc_base/experiments/jitter_upper_bound_experiment.h"
 #include "rtc_base/numerics/histogram_percentile_counter.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/clock.h"
-#include "test/field_trial.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 namespace webrtc {
 
@@ -30,14 +33,12 @@ class TestVCMJitterEstimator : public ::testing::Test {
   TestVCMJitterEstimator() : fake_clock_(0) {}
 
   virtual void SetUp() {
-    estimator_ = std::make_unique<VCMJitterEstimator>(&fake_clock_);
-  }
-
-  void AdvanceClock(int64_t microseconds) {
-    fake_clock_.AdvanceTimeMicroseconds(microseconds);
+    estimator_ =
+        std::make_unique<VCMJitterEstimator>(&fake_clock_, field_trials_);
   }
 
   SimulatedClock fake_clock_;
+  test::ScopedKeyValueConfig field_trials_;
   std::unique_ptr<VCMJitterEstimator> estimator_;
 };
 
@@ -46,11 +47,16 @@ class ValueGenerator {
  public:
   explicit ValueGenerator(int32_t amplitude)
       : amplitude_(amplitude), counter_(0) {}
-  virtual ~ValueGenerator() {}
 
-  int64_t Delay() const { return ((counter_ % 11) - 5) * amplitude_; }
+  virtual ~ValueGenerator() = default;
 
-  uint32_t FrameSize() const { return 1000 + Delay(); }
+  TimeDelta Delay() const {
+    return TimeDelta::Millis((counter_ % 11) - 5) * amplitude_;
+  }
+
+  DataSize FrameSize() const {
+    return DataSize::Bytes(1000 + Delay().ms() / 5);
+  }
 
   void Advance() { ++counter_; }
 
@@ -62,28 +68,30 @@ class ValueGenerator {
 // 5 fps, disable jitter delay altogether.
 TEST_F(TestVCMJitterEstimator, TestLowRate) {
   ValueGenerator gen(10);
-  uint64_t time_delta_us = rtc::kNumMicrosecsPerSec / 5;
+  TimeDelta time_delta = 1 / Frequency::Hertz(5);
   for (int i = 0; i < 60; ++i) {
     estimator_->UpdateEstimate(gen.Delay(), gen.FrameSize());
-    AdvanceClock(time_delta_us);
+    fake_clock_.AdvanceTime(time_delta);
     if (i > 2)
-      EXPECT_EQ(estimator_->GetJitterEstimate(0, absl::nullopt), 0);
+      EXPECT_EQ(estimator_->GetJitterEstimate(0, absl::nullopt),
+                TimeDelta::Zero());
     gen.Advance();
   }
 }
 
 TEST_F(TestVCMJitterEstimator, TestLowRateDisabled) {
-  test::ScopedFieldTrials field_trials(
-      "WebRTC-ReducedJitterDelayKillSwitch/Enabled/");
+  test::ScopedKeyValueConfig field_trials(
+      field_trials_, "WebRTC-ReducedJitterDelayKillSwitch/Enabled/");
   SetUp();
 
   ValueGenerator gen(10);
-  uint64_t time_delta_us = rtc::kNumMicrosecsPerSec / 5;
+  TimeDelta time_delta = 1 / Frequency::Hertz(5);
   for (int i = 0; i < 60; ++i) {
     estimator_->UpdateEstimate(gen.Delay(), gen.FrameSize());
-    AdvanceClock(time_delta_us);
+    fake_clock_.AdvanceTime(time_delta);
     if (i > 2)
-      EXPECT_GT(estimator_->GetJitterEstimate(0, absl::nullopt), 0);
+      EXPECT_GT(estimator_->GetJitterEstimate(0, absl::nullopt),
+                TimeDelta::Zero());
     gen.Advance();
   }
 }
@@ -97,7 +105,7 @@ TEST_F(TestVCMJitterEstimator, TestUpperBound) {
           percentiles(1000) {}
     double upper_bound;
     double rtt_mult;
-    absl::optional<double> rtt_mult_add_cap_ms;
+    absl::optional<TimeDelta> rtt_mult_add_cap_ms;
     rtc::HistogramPercentileCounter percentiles;
   };
   std::vector<TestContext> test_cases(4);
@@ -113,11 +121,11 @@ TEST_F(TestVCMJitterEstimator, TestUpperBound) {
   // Large upper bound, rtt_mult = 1, and large rtt_mult addition cap value.
   test_cases[2].upper_bound = 1000.0;
   test_cases[2].rtt_mult = 1.0;
-  test_cases[2].rtt_mult_add_cap_ms = 200.0;
+  test_cases[2].rtt_mult_add_cap_ms = TimeDelta::Millis(200);
   // Large upper bound, rtt_mult = 1, and small rtt_mult addition cap value.
   test_cases[3].upper_bound = 1000.0;
   test_cases[3].rtt_mult = 1.0;
-  test_cases[3].rtt_mult_add_cap_ms = 10.0;
+  test_cases[3].rtt_mult_add_cap_ms = TimeDelta::Millis(10);
 
   // Test jitter buffer upper_bound and rtt_mult addition cap sizes.
   for (TestContext& context : test_cases) {
@@ -126,20 +134,21 @@ TEST_F(TestVCMJitterEstimator, TestUpperBound) {
     rtc::SimpleStringBuilder ssb(string_buf);
     ssb << JitterUpperBoundExperiment::kJitterUpperBoundExperimentName
         << "/Enabled-" << context.upper_bound << "/";
-    test::ScopedFieldTrials field_trials(ssb.str());
+    test::ScopedKeyValueConfig field_trials(field_trials_, ssb.str());
     SetUp();
 
     ValueGenerator gen(50);
-    uint64_t time_delta_us = rtc::kNumMicrosecsPerSec / 30;
-    constexpr int64_t kRttMs = 250;
+    TimeDelta time_delta = 1 / Frequency::Hertz(30);
+    constexpr TimeDelta kRtt = TimeDelta::Millis(250);
     for (int i = 0; i < 100; ++i) {
       estimator_->UpdateEstimate(gen.Delay(), gen.FrameSize());
-      AdvanceClock(time_delta_us);
+      fake_clock_.AdvanceTime(time_delta);
       estimator_->FrameNacked();      // To test rtt_mult.
-      estimator_->UpdateRtt(kRttMs);  // To test rtt_mult.
+      estimator_->UpdateRtt(kRtt);    // To test rtt_mult.
       context.percentiles.Add(
-          static_cast<uint32_t>(estimator_->GetJitterEstimate(
-              context.rtt_mult, context.rtt_mult_add_cap_ms)));
+          estimator_
+              ->GetJitterEstimate(context.rtt_mult, context.rtt_mult_add_cap_ms)
+              .ms());
       gen.Advance();
     }
   }

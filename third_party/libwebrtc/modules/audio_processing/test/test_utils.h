@@ -23,7 +23,6 @@
 #include "common_audio/channel_buffer.h"
 #include "common_audio/wav_file.h"
 #include "modules/audio_processing/include/audio_processing.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 
@@ -35,13 +34,14 @@ class RawFile final {
   explicit RawFile(const std::string& filename);
   ~RawFile();
 
+  RawFile(const RawFile&) = delete;
+  RawFile& operator=(const RawFile&) = delete;
+
   void WriteSamples(const int16_t* samples, size_t num_samples);
   void WriteSamples(const float* samples, size_t num_samples);
 
  private:
   FILE* file_handle_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(RawFile);
 };
 
 // Encapsulates samples and metadata for an integer frame.
@@ -78,15 +78,16 @@ class ChannelBufferWavReader final {
   explicit ChannelBufferWavReader(std::unique_ptr<WavReader> file);
   ~ChannelBufferWavReader();
 
-  // Reads data from the file according to the |buffer| format. Returns false if
+  ChannelBufferWavReader(const ChannelBufferWavReader&) = delete;
+  ChannelBufferWavReader& operator=(const ChannelBufferWavReader&) = delete;
+
+  // Reads data from the file according to the `buffer` format. Returns false if
   // a full buffer can't be read from the file.
   bool Read(ChannelBuffer<float>* buffer);
 
  private:
   std::unique_ptr<WavReader> file_;
   std::vector<float> interleaved_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(ChannelBufferWavReader);
 };
 
 // Writes ChannelBuffers to a provided WavWriter.
@@ -95,13 +96,14 @@ class ChannelBufferWavWriter final {
   explicit ChannelBufferWavWriter(std::unique_ptr<WavWriter> file);
   ~ChannelBufferWavWriter();
 
+  ChannelBufferWavWriter(const ChannelBufferWavWriter&) = delete;
+  ChannelBufferWavWriter& operator=(const ChannelBufferWavWriter&) = delete;
+
   void Write(const ChannelBuffer<float>& buffer);
 
  private:
   std::unique_ptr<WavWriter> file_;
   std::vector<float> interleaved_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(ChannelBufferWavWriter);
 };
 
 // Takes a pointer to a vector. Allows appending the samples of channel buffers
@@ -115,7 +117,7 @@ class ChannelBufferVectorWriter final {
       delete;
   ~ChannelBufferVectorWriter();
 
-  // Creates an interleaved copy of |buffer|, converts the samples to float S16
+  // Creates an interleaved copy of `buffer`, converts the samples to float S16
   // and appends the result to output_.
   void Write(const ChannelBuffer<float>& buffer);
 
@@ -151,8 +153,6 @@ void SetContainerFormat(int sample_rate_hz,
   frame->num_channels = num_channels;
   cb->reset(new ChannelBuffer<T>(frame->samples_per_channel, num_channels));
 }
-
-AudioProcessing::ChannelLayout LayoutFromChannels(size_t num_channels);
 
 template <typename T>
 float ComputeSNR(const T* ref, const T* test, size_t length, float* variance) {

@@ -8,11 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <assert.h>
-
 #include "modules/desktop_capture/desktop_capturer.h"
 #include "modules/desktop_capture/desktop_frame.h"
-#include "rtc_base/constructor_magic.h"
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 
@@ -23,6 +21,9 @@ class WindowCapturerNull : public DesktopCapturer {
   WindowCapturerNull();
   ~WindowCapturerNull() override;
 
+  WindowCapturerNull(const WindowCapturerNull&) = delete;
+  WindowCapturerNull& operator=(const WindowCapturerNull&) = delete;
+
   // DesktopCapturer interface.
   void Start(Callback* callback) override;
   void CaptureFrame() override;
@@ -31,8 +32,6 @@ class WindowCapturerNull : public DesktopCapturer {
 
  private:
   Callback* callback_ = nullptr;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(WindowCapturerNull);
 };
 
 WindowCapturerNull::WindowCapturerNull() {}
@@ -49,8 +48,8 @@ bool WindowCapturerNull::SelectSource(SourceId id) {
 }
 
 void WindowCapturerNull::Start(Callback* callback) {
-  assert(!callback_);
-  assert(callback);
+  RTC_DCHECK(!callback_);
+  RTC_DCHECK(callback);
 
   callback_ = callback;
 }

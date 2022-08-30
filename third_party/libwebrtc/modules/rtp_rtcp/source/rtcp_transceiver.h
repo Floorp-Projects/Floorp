@@ -43,15 +43,15 @@ class RtcpTransceiver : public RtcpFeedbackSenderInterface {
   // No other methods can be called.
   // Note that interfaces provided in constructor or registered with AddObserver
   // still might be used by the transceiver on the task queue
-  // until |on_destroyed| runs.
+  // until `on_destroyed` runs.
   void Stop(std::function<void()> on_destroyed);
 
   // Registers observer to be notified about incoming rtcp packets.
-  // Calls to observer will be done on the |config.task_queue|.
+  // Calls to observer will be done on the `config.task_queue`.
   void AddMediaReceiverRtcpObserver(uint32_t remote_ssrc,
                                     MediaReceiverRtcpObserver* observer);
   // Deregisters the observer. Might return before observer is deregistered.
-  // Runs |on_removed| when observer is deregistered.
+  // Runs `on_removed` when observer is deregistered.
   void RemoveMediaReceiverRtcpObserver(uint32_t remote_ssrc,
                                        MediaReceiverRtcpObserver* observer,
                                        std::function<void()> on_removed);

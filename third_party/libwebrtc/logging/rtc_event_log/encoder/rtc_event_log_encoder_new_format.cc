@@ -12,6 +12,7 @@
 
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "api/network_state_predictor.h"
 #include "logging/rtc_event_log/encoder/blob_encoding.h"
 #include "logging/rtc_event_log/encoder/delta_encoding.h"
 #include "logging/rtc_event_log/encoder/rtc_event_log_encoder_common.h"
@@ -43,7 +44,6 @@
 #include "logging/rtc_event_log/events/rtc_event_video_send_stream_config.h"
 #include "logging/rtc_event_log/rtc_stream_config.h"
 #include "modules/audio_coding/audio_network_adaptor/include/audio_network_adaptor_config.h"
-#include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 #include "modules/rtp_rtcp/include/rtp_cvo.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/app.h"
@@ -86,9 +86,9 @@ rtclog2::DelayBasedBweUpdates::DetectorState ConvertToProtoFormat(
     case BandwidthUsage::kBwOverusing:
       return rtclog2::DelayBasedBweUpdates::BWE_OVERUSING;
     case BandwidthUsage::kLast:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return rtclog2::DelayBasedBweUpdates::BWE_UNKNOWN_STATE;
 }
 
@@ -108,7 +108,7 @@ rtclog2::FrameDecodedEvents::Codec ConvertToProtoFormat(VideoCodecType codec) {
       // This codec type is afaik not used.
       return rtclog2::FrameDecodedEvents::CODEC_UNKNOWN;
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return rtclog2::FrameDecodedEvents::CODEC_UNKNOWN;
 }
 
@@ -122,16 +122,16 @@ rtclog2::BweProbeResultFailure::FailureReason ConvertToProtoFormat(
     case ProbeFailureReason::kTimeout:
       return rtclog2::BweProbeResultFailure::TIMEOUT;
     case ProbeFailureReason::kLast:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return rtclog2::BweProbeResultFailure::UNKNOWN;
 }
 
 // Returns true if there are recognized extensions that we should log
 // and false if there are no extensions or all extensions are types we don't
 // log. The protobuf representation of the header configs is written to
-// |proto_config|.
+// `proto_config`.
 bool ConvertToProtoFormat(const std::vector<RtpExtension>& extensions,
                           rtclog2::RtpHeaderExtensionConfig* proto_config) {
   size_t unknown_extensions = 0;
@@ -167,9 +167,9 @@ rtclog2::DtlsTransportStateEvent::DtlsTransportState ConvertToProtoFormat(
     case webrtc::DtlsTransportState::kFailed:
       return rtclog2::DtlsTransportStateEvent::DTLS_TRANSPORT_FAILED;
     case webrtc::DtlsTransportState::kNumValues:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return rtclog2::DtlsTransportStateEvent::UNKNOWN_DTLS_TRANSPORT_STATE;
 }
 
@@ -185,9 +185,9 @@ ConvertToProtoFormat(IceCandidatePairConfigType type) {
     case IceCandidatePairConfigType::kSelected:
       return rtclog2::IceCandidatePairConfig::SELECTED;
     case IceCandidatePairConfigType::kNumValues:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return rtclog2::IceCandidatePairConfig::UNKNOWN_CONFIG_TYPE;
 }
 
@@ -205,9 +205,9 @@ rtclog2::IceCandidatePairConfig::IceCandidateType ConvertToProtoFormat(
     case IceCandidateType::kRelay:
       return rtclog2::IceCandidatePairConfig::RELAY;
     case IceCandidateType::kNumValues:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return rtclog2::IceCandidatePairConfig::UNKNOWN_CANDIDATE_TYPE;
 }
 
@@ -225,9 +225,9 @@ rtclog2::IceCandidatePairConfig::Protocol ConvertToProtoFormat(
     case IceCandidatePairProtocol::kTls:
       return rtclog2::IceCandidatePairConfig::TLS;
     case IceCandidatePairProtocol::kNumValues:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return rtclog2::IceCandidatePairConfig::UNKNOWN_PROTOCOL;
 }
 
@@ -241,9 +241,9 @@ rtclog2::IceCandidatePairConfig::AddressFamily ConvertToProtoFormat(
     case IceCandidatePairAddressFamily::kIpv6:
       return rtclog2::IceCandidatePairConfig::IPV6;
     case IceCandidatePairAddressFamily::kNumValues:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return rtclog2::IceCandidatePairConfig::UNKNOWN_ADDRESS_FAMILY;
 }
 
@@ -263,9 +263,9 @@ rtclog2::IceCandidatePairConfig::NetworkType ConvertToProtoFormat(
     case IceCandidateNetworkType::kCellular:
       return rtclog2::IceCandidatePairConfig::CELLULAR;
     case IceCandidateNetworkType::kNumValues:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return rtclog2::IceCandidatePairConfig::UNKNOWN_NETWORK_TYPE;
 }
 
@@ -281,18 +281,16 @@ rtclog2::IceCandidatePairEvent::IceCandidatePairEventType ConvertToProtoFormat(
     case IceCandidatePairEventType::kCheckResponseReceived:
       return rtclog2::IceCandidatePairEvent::CHECK_RESPONSE_RECEIVED;
     case IceCandidatePairEventType::kNumValues:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return rtclog2::IceCandidatePairEvent::UNKNOWN_CHECK_TYPE;
 }
 
-// Copies all RTCP blocks except APP, SDES and unknown from |packet| to
-// |buffer|. |buffer| must have space for |IP_PACKET_SIZE| bytes. |packet| must
-// be at most |IP_PACKET_SIZE| bytes long.
-size_t RemoveNonWhitelistedRtcpBlocks(const rtc::Buffer& packet,
+// Copies all RTCP blocks except APP, SDES and unknown from `packet` to
+// `buffer`. `buffer` must have space for at least `packet.size()` bytes.
+size_t RemoveNonAllowlistedRtcpBlocks(const rtc::Buffer& packet,
                                       uint8_t* buffer) {
-  RTC_DCHECK(packet.size() <= IP_PACKET_SIZE);
   RTC_DCHECK(buffer != nullptr);
   rtcp::CommonHeader header;
   const uint8_t* block_begin = packet.data();
@@ -318,7 +316,7 @@ size_t RemoveNonWhitelistedRtcpBlocks(const rtc::Buffer& packet,
         // inter-arrival jitter, third-party loss reports, payload-specific
         // feedback and extended reports.
         // TODO(terelius): As an optimization, don't copy anything if all blocks
-        // in the packet are whitelisted types.
+        // in the packet are allowlisted types.
         memcpy(buffer + buffer_length, block_begin, block_size);
         buffer_length += block_size;
         break;
@@ -346,10 +344,10 @@ void EncodeRtcpPacket(rtc::ArrayView<const EventType*> batch,
   const EventType* const base_event = batch[0];
   proto_batch->set_timestamp_ms(base_event->timestamp_ms());
   {
-    uint8_t buffer[IP_PACKET_SIZE];
+    std::vector<uint8_t> buffer(base_event->packet().size());
     size_t buffer_length =
-        RemoveNonWhitelistedRtcpBlocks(base_event->packet(), buffer);
-    proto_batch->set_raw_packet(buffer, buffer_length);
+        RemoveNonAllowlistedRtcpBlocks(base_event->packet(), buffer.data());
+    proto_batch->set_raw_packet(buffer.data(), buffer_length);
   }
 
   if (batch.size() == 1) {
@@ -377,7 +375,7 @@ void EncodeRtcpPacket(rtc::ArrayView<const EventType*> batch,
     const EventType* event = batch[i + 1];
     scrubed_packets[i].resize(event->packet().size());
     static_assert(sizeof(std::string::value_type) == sizeof(uint8_t), "");
-    const size_t buffer_length = RemoveNonWhitelistedRtcpBlocks(
+    const size_t buffer_length = RemoveNonAllowlistedRtcpBlocks(
         event->packet(), reinterpret_cast<uint8_t*>(&scrubed_packets[i][0]));
     if (buffer_length < event->packet().size()) {
       scrubed_packets[i].resize(buffer_length);
@@ -396,12 +394,12 @@ void EncodeRtpPacket(const std::vector<const EventType*>& batch,
   // Base event
   const EventType* const base_event = batch[0];
   proto_batch->set_timestamp_ms(base_event->timestamp_ms());
-  proto_batch->set_marker(base_event->header().Marker());
+  proto_batch->set_marker(base_event->Marker());
   // TODO(terelius): Is payload type needed?
-  proto_batch->set_payload_type(base_event->header().PayloadType());
-  proto_batch->set_sequence_number(base_event->header().SequenceNumber());
-  proto_batch->set_rtp_timestamp(base_event->header().Timestamp());
-  proto_batch->set_ssrc(base_event->header().Ssrc());
+  proto_batch->set_payload_type(base_event->PayloadType());
+  proto_batch->set_sequence_number(base_event->SequenceNumber());
+  proto_batch->set_rtp_timestamp(base_event->Timestamp());
+  proto_batch->set_ssrc(base_event->Ssrc());
   proto_batch->set_payload_size(base_event->payload_length());
   proto_batch->set_header_size(base_event->header_length());
   proto_batch->set_padding_size(base_event->padding_length());
@@ -410,8 +408,7 @@ void EncodeRtpPacket(const std::vector<const EventType*>& batch,
   absl::optional<uint64_t> base_transport_sequence_number;
   {
     uint16_t seqnum;
-    if (base_event->header().template GetExtension<TransportSequenceNumber>(
-            &seqnum)) {
+    if (base_event->template GetExtension<TransportSequenceNumber>(&seqnum)) {
       proto_batch->set_transport_sequence_number(seqnum);
       base_transport_sequence_number = seqnum;
     }
@@ -420,8 +417,7 @@ void EncodeRtpPacket(const std::vector<const EventType*>& batch,
   absl::optional<uint64_t> unsigned_base_transmission_time_offset;
   {
     int32_t offset;
-    if (base_event->header().template GetExtension<TransmissionOffset>(
-            &offset)) {
+    if (base_event->template GetExtension<TransmissionOffset>(&offset)) {
       proto_batch->set_transmission_time_offset(offset);
       unsigned_base_transmission_time_offset = ToUnsigned(offset);
     }
@@ -430,8 +426,7 @@ void EncodeRtpPacket(const std::vector<const EventType*>& batch,
   absl::optional<uint64_t> base_absolute_send_time;
   {
     uint32_t sendtime;
-    if (base_event->header().template GetExtension<AbsoluteSendTime>(
-            &sendtime)) {
+    if (base_event->template GetExtension<AbsoluteSendTime>(&sendtime)) {
       proto_batch->set_absolute_send_time(sendtime);
       base_absolute_send_time = sendtime;
     }
@@ -440,8 +435,7 @@ void EncodeRtpPacket(const std::vector<const EventType*>& batch,
   absl::optional<uint64_t> base_video_rotation;
   {
     VideoRotation video_rotation;
-    if (base_event->header().template GetExtension<VideoOrientation>(
-            &video_rotation)) {
+    if (base_event->template GetExtension<VideoOrientation>(&video_rotation)) {
       proto_batch->set_video_rotation(
           ConvertVideoRotationToCVOByte(video_rotation));
       base_video_rotation = ConvertVideoRotationToCVOByte(video_rotation);
@@ -453,8 +447,8 @@ void EncodeRtpPacket(const std::vector<const EventType*>& batch,
   {
     bool voice_activity;
     uint8_t audio_level;
-    if (base_event->header().template GetExtension<AudioLevel>(&voice_activity,
-                                                               &audio_level)) {
+    if (base_event->template GetExtension<AudioLevel>(&voice_activity,
+                                                      &audio_level)) {
       RTC_DCHECK_LE(audio_level, 0x7Fu);
       base_audio_level = audio_level;
       proto_batch->set_audio_level(audio_level);
@@ -486,9 +480,9 @@ void EncodeRtpPacket(const std::vector<const EventType*>& batch,
   // marker (RTP base)
   for (size_t i = 0; i < values.size(); ++i) {
     const EventType* event = batch[i + 1];
-    values[i] = event->header().Marker();
+    values[i] = event->Marker();
   }
-  encoded_deltas = EncodeDeltas(base_event->header().Marker(), values);
+  encoded_deltas = EncodeDeltas(base_event->Marker(), values);
   if (!encoded_deltas.empty()) {
     proto_batch->set_marker_deltas(encoded_deltas);
   }
@@ -496,9 +490,9 @@ void EncodeRtpPacket(const std::vector<const EventType*>& batch,
   // payload_type (RTP base)
   for (size_t i = 0; i < values.size(); ++i) {
     const EventType* event = batch[i + 1];
-    values[i] = event->header().PayloadType();
+    values[i] = event->PayloadType();
   }
-  encoded_deltas = EncodeDeltas(base_event->header().PayloadType(), values);
+  encoded_deltas = EncodeDeltas(base_event->PayloadType(), values);
   if (!encoded_deltas.empty()) {
     proto_batch->set_payload_type_deltas(encoded_deltas);
   }
@@ -506,9 +500,9 @@ void EncodeRtpPacket(const std::vector<const EventType*>& batch,
   // sequence_number (RTP base)
   for (size_t i = 0; i < values.size(); ++i) {
     const EventType* event = batch[i + 1];
-    values[i] = event->header().SequenceNumber();
+    values[i] = event->SequenceNumber();
   }
-  encoded_deltas = EncodeDeltas(base_event->header().SequenceNumber(), values);
+  encoded_deltas = EncodeDeltas(base_event->SequenceNumber(), values);
   if (!encoded_deltas.empty()) {
     proto_batch->set_sequence_number_deltas(encoded_deltas);
   }
@@ -516,9 +510,9 @@ void EncodeRtpPacket(const std::vector<const EventType*>& batch,
   // rtp_timestamp (RTP base)
   for (size_t i = 0; i < values.size(); ++i) {
     const EventType* event = batch[i + 1];
-    values[i] = event->header().Timestamp();
+    values[i] = event->Timestamp();
   }
-  encoded_deltas = EncodeDeltas(base_event->header().Timestamp(), values);
+  encoded_deltas = EncodeDeltas(base_event->Timestamp(), values);
   if (!encoded_deltas.empty()) {
     proto_batch->set_rtp_timestamp_deltas(encoded_deltas);
   }
@@ -526,9 +520,9 @@ void EncodeRtpPacket(const std::vector<const EventType*>& batch,
   // ssrc (RTP base)
   for (size_t i = 0; i < values.size(); ++i) {
     const EventType* event = batch[i + 1];
-    values[i] = event->header().Ssrc();
+    values[i] = event->Ssrc();
   }
-  encoded_deltas = EncodeDeltas(base_event->header().Ssrc(), values);
+  encoded_deltas = EncodeDeltas(base_event->Ssrc(), values);
   if (!encoded_deltas.empty()) {
     proto_batch->set_ssrc_deltas(encoded_deltas);
   }
@@ -567,8 +561,7 @@ void EncodeRtpPacket(const std::vector<const EventType*>& batch,
   for (size_t i = 0; i < values.size(); ++i) {
     const EventType* event = batch[i + 1];
     uint16_t seqnum;
-    if (event->header().template GetExtension<TransportSequenceNumber>(
-            &seqnum)) {
+    if (event->template GetExtension<TransportSequenceNumber>(&seqnum)) {
       values[i] = seqnum;
     } else {
       values[i].reset();
@@ -583,7 +576,7 @@ void EncodeRtpPacket(const std::vector<const EventType*>& batch,
   for (size_t i = 0; i < values.size(); ++i) {
     const EventType* event = batch[i + 1];
     int32_t offset;
-    if (event->header().template GetExtension<TransmissionOffset>(&offset)) {
+    if (event->template GetExtension<TransmissionOffset>(&offset)) {
       values[i] = ToUnsigned(offset);
     } else {
       values[i].reset();
@@ -598,7 +591,7 @@ void EncodeRtpPacket(const std::vector<const EventType*>& batch,
   for (size_t i = 0; i < values.size(); ++i) {
     const EventType* event = batch[i + 1];
     uint32_t sendtime;
-    if (event->header().template GetExtension<AbsoluteSendTime>(&sendtime)) {
+    if (event->template GetExtension<AbsoluteSendTime>(&sendtime)) {
       values[i] = sendtime;
     } else {
       values[i].reset();
@@ -613,8 +606,7 @@ void EncodeRtpPacket(const std::vector<const EventType*>& batch,
   for (size_t i = 0; i < values.size(); ++i) {
     const EventType* event = batch[i + 1];
     VideoRotation video_rotation;
-    if (event->header().template GetExtension<VideoOrientation>(
-            &video_rotation)) {
+    if (event->template GetExtension<VideoOrientation>(&video_rotation)) {
       values[i] = ConvertVideoRotationToCVOByte(video_rotation);
     } else {
       values[i].reset();
@@ -630,8 +622,8 @@ void EncodeRtpPacket(const std::vector<const EventType*>& batch,
     const EventType* event = batch[i + 1];
     bool voice_activity;
     uint8_t audio_level;
-    if (event->header().template GetExtension<AudioLevel>(&voice_activity,
-                                                          &audio_level)) {
+    if (event->template GetExtension<AudioLevel>(&voice_activity,
+                                                 &audio_level)) {
       RTC_DCHECK_LE(audio_level, 0x7Fu);
       values[i] = audio_level;
     } else {
@@ -648,8 +640,8 @@ void EncodeRtpPacket(const std::vector<const EventType*>& batch,
     const EventType* event = batch[i + 1];
     bool voice_activity;
     uint8_t audio_level;
-    if (event->header().template GetExtension<AudioLevel>(&voice_activity,
-                                                          &audio_level)) {
+    if (event->template GetExtension<AudioLevel>(&voice_activity,
+                                                 &audio_level)) {
       RTC_DCHECK_LE(audio_level, 0x7Fu);
       values[i] = voice_activity;
     } else {
@@ -825,14 +817,14 @@ std::string RtcEventLogEncoderNewFormat::EncodeBatch(
         case RtcEvent::Type::RtpPacketIncoming: {
           auto* rtc_event =
               static_cast<const RtcEventRtpPacketIncoming* const>(it->get());
-          auto& v = incoming_rtp_packets[rtc_event->header().Ssrc()];
+          auto& v = incoming_rtp_packets[rtc_event->Ssrc()];
           v.emplace_back(rtc_event);
           break;
         }
         case RtcEvent::Type::RtpPacketOutgoing: {
           auto* rtc_event =
               static_cast<const RtcEventRtpPacketOutgoing* const>(it->get());
-          auto& v = outgoing_rtp_packets[rtc_event->header().Ssrc()];
+          auto& v = outgoing_rtp_packets[rtc_event->Ssrc()];
           v.emplace_back(rtc_event);
           break;
         }
@@ -888,6 +880,12 @@ std::string RtcEventLogEncoderNewFormat::EncodeBatch(
           frames_decoded[rtc_event->ssrc()].emplace_back(rtc_event);
           break;
         }
+        case RtcEvent::Type::BeginV3Log:
+        case RtcEvent::Type::EndV3Log:
+          // These special events are written as part of starting
+          // and stopping the log, and only as part of version 3 of the format.
+          RTC_DCHECK_NOTREACHED();
+          break;
       }
     }
 
@@ -964,7 +962,7 @@ void RtcEventLogEncoderNewFormat::EncodeAudioNetworkAdaptation(
     proto_batch->set_enable_fec(base_event->config().enable_fec.value());
   if (base_event->config().enable_dtx.has_value())
     proto_batch->set_enable_dtx(base_event->config().enable_dtx.value());
-  // Note that |num_channels_deltas| encodes N as N-1, to keep deltas smaller,
+  // Note that `num_channels_deltas` encodes N as N-1, to keep deltas smaller,
   // but there's no reason to do the same for the base event's value, since
   // no bits will be spared.
   if (base_event->config().num_channels.has_value())

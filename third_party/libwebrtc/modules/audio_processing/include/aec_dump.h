@@ -15,9 +15,9 @@
 
 #include <string>
 
+#include "absl/base/attributes.h"
 #include "modules/audio_processing/include/audio_frame_view.h"
 #include "modules/audio_processing/include/audio_processing.h"
-#include "rtc_base/deprecation.h"
 
 namespace webrtc {
 
@@ -31,7 +31,7 @@ struct InternalAPMConfig {
   InternalAPMConfig& operator=(const InternalAPMConfig&);
   InternalAPMConfig& operator=(InternalAPMConfig&&) = delete;
 
-  bool operator==(const InternalAPMConfig& other);
+  bool operator==(const InternalAPMConfig& other) const;
 
   bool aec_enabled = false;
   bool aec_delay_agnostic_enabled = false;
@@ -76,7 +76,8 @@ class AecDump {
   // Logs Event::Type INIT message.
   virtual void WriteInitMessage(const ProcessingConfig& api_format,
                                 int64_t time_now_ms) = 0;
-  RTC_DEPRECATED void WriteInitMessage(const ProcessingConfig& api_format) {
+  ABSL_DEPRECATED("")
+  void WriteInitMessage(const ProcessingConfig& api_format) {
     WriteInitMessage(api_format, 0);
   }
 

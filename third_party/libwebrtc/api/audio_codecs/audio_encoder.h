@@ -16,12 +16,12 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/attributes.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/call/bitrate_allocation.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/buffer.h"
-#include "rtc_base/deprecation.h"
 
 namespace webrtc {
 
@@ -95,13 +95,13 @@ class AudioEncoder {
 
   // This is the main struct for auxiliary encoding information. Each encoded
   // packet should be accompanied by one EncodedInfo struct, containing the
-  // total number of |encoded_bytes|, the |encoded_timestamp| and the
-  // |payload_type|. If the packet contains redundant encodings, the |redundant|
+  // total number of `encoded_bytes`, the `encoded_timestamp` and the
+  // `payload_type`. If the packet contains redundant encodings, the `redundant`
   // vector will be populated with EncodedInfoLeaf structs. Each struct in the
   // vector represents one encoding; the order of structs in the vector is the
   // same as the order in which the actual payloads are written to the byte
   // stream. When EncoderInfoLeaf structs are present in the vector, the main
-  // struct's |encoded_bytes| will be the sum of all the |encoded_bytes| in the
+  // struct's `encoded_bytes` will be the sum of all the `encoded_bytes` in the
   // vector.
   struct EncodedInfo : public EncodedInfoLeaf {
     EncodedInfo();
@@ -143,7 +143,7 @@ class AudioEncoder {
 
   // Accepts one 10 ms block of input audio (i.e., SampleRateHz() / 100 *
   // NumChannels() samples). Multi-channel audio must be sample-interleaved.
-  // The encoder appends zero or more bytes of output to |encoded| and returns
+  // The encoder appends zero or more bytes of output to `encoded` and returns
   // additional encoding information.  Encode() checks some preconditions, calls
   // EncodeImpl() which does the actual work, and then checks some
   // postconditions.
@@ -182,12 +182,11 @@ class AudioEncoder {
   // implementation does nothing.
   virtual void SetMaxPlaybackRate(int frequency_hz);
 
-  // This is to be deprecated. Please use |OnReceivedTargetAudioBitrate|
-  // instead.
   // Tells the encoder what average bitrate we'd like it to produce. The
   // encoder is free to adjust or disregard the given bitrate (the default
   // implementation does the latter).
-  RTC_DEPRECATED virtual void SetTargetBitrate(int target_bps);
+  ABSL_DEPRECATED("Use OnReceivedTargetAudioBitrate instead")
+  virtual void SetTargetBitrate(int target_bps);
 
   // Causes this encoder to let go of any other encoders it contains, and
   // returns a pointer to an array where they are stored (which is required to
@@ -206,11 +205,12 @@ class AudioEncoder {
   virtual void DisableAudioNetworkAdaptor();
 
   // Provides uplink packet loss fraction to this encoder to allow it to adapt.
-  // |uplink_packet_loss_fraction| is in the range [0.0, 1.0].
+  // `uplink_packet_loss_fraction` is in the range [0.0, 1.0].
   virtual void OnReceivedUplinkPacketLossFraction(
       float uplink_packet_loss_fraction);
 
-  RTC_DEPRECATED virtual void OnReceivedUplinkRecoverablePacketLossFraction(
+  ABSL_DEPRECATED("")
+  virtual void OnReceivedUplinkRecoverablePacketLossFraction(
       float uplink_recoverable_packet_loss_fraction);
 
   // Provides target audio bitrate to this encoder to allow it to adapt.
@@ -245,6 +245,9 @@ class AudioEncoder {
   // overhead.
   virtual absl::optional<std::pair<TimeDelta, TimeDelta>> GetFrameLengthRange()
       const = 0;
+
+  // The maximum number of audio channels supported by WebRTC encoders.
+  static constexpr int kMaxNumberOfChannels = 24;
 
  protected:
   // Subclasses implement this to perform the actual encoding. Called by

@@ -7,7 +7,7 @@
 #include "api/audio/audio_mixer.h"
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "call/audio_state.h"
-#include "call/call.h"
+#include "call/shared_module_thread.h"
 #include "common/browser_logging/CSFLog.h"
 #include "common/browser_logging/WebRtcLog.h"
 #include "gmp-video-decode.h"  // GMP_API_VIDEO_DECODER
@@ -16,6 +16,7 @@
 #include "modules/audio_device/include/fake_audio_device.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/audio_processing/include/aec_dump.h"
+#include "modules/utility/include/process_thread.h"
 #include "mozilla/dom/RTCPeerConnectionBinding.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -56,10 +57,6 @@ class DummyAudioProcessing : public AudioProcessing {
     return kNoError;
   }
   int Initialize(const ProcessingConfig&) override { return Initialize(); }
-  int Initialize(int, int, int, ChannelLayout, ChannelLayout,
-                 ChannelLayout) override {
-    return Initialize();
-  }
   void ApplyConfig(const Config&) override { MOZ_CRASH("Unexpected call"); }
   int proc_sample_rate_hz() const override {
     MOZ_CRASH("Unexpected call");
@@ -89,6 +86,7 @@ class DummyAudioProcessing : public AudioProcessing {
   void SetRuntimeSetting(RuntimeSetting) override {
     MOZ_CRASH("Unexpected call");
   }
+  bool PostRuntimeSetting(RuntimeSetting setting) override { return false; }
   int ProcessStream(const int16_t* const, const StreamConfig&,
                     const StreamConfig&, int16_t* const) override {
     MOZ_CRASH("Unexpected call");
@@ -152,14 +150,6 @@ class DummyAudioProcessing : public AudioProcessing {
   AudioProcessing::Config GetConfig() const override {
     MOZ_CRASH("Unexpected call");
     return Config();
-  }
-};
-
-class NoTrialsConfig : public WebRtcKeyValueConfig {
- public:
-  NoTrialsConfig() = default;
-  std::string Lookup(absl::string_view key) const override {
-    return std::string();
   }
 };
 }  // namespace

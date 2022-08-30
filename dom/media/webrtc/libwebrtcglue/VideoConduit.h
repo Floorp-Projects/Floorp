@@ -25,8 +25,8 @@
 #include "api/video_codecs/video_decoder.h"
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/sdp_video_format.h"
-#include "call/call.h"
-#include "common_video/include/i420_buffer_pool.h"
+#include "call/call_basic_stats.h"
+#include "common_video/include/video_frame_buffer_pool.h"
 #include "media/base/video_adapter.h"
 #include "media/base/video_broadcaster.h"
 #include <functional>
@@ -178,7 +178,7 @@ class WebrtcVideoConduit
 
   Maybe<webrtc::VideoReceiveStream::Stats> GetReceiverStats() const override;
   Maybe<webrtc::VideoSendStream::Stats> GetSenderStats() const override;
-  Maybe<webrtc::Call::Stats> GetCallStats() const override;
+  Maybe<webrtc::CallBasicStats> GetCallStats() const override;
 
   bool AddFrameHistory(dom::Sequence<dom::RTCVideoFrameHistoryInternal>*
                            outHistories) const override;
@@ -361,7 +361,7 @@ class WebrtcVideoConduit
 
   // Buffer pool used for scaling frames.
   // Accessed on the frame-feeding thread only.
-  webrtc::I420BufferPool mBufferPool;
+  webrtc::VideoFrameBufferPool mBufferPool;
 
   // Engine state we are concerned with. Written on the Call thread and read
   // anywhere.

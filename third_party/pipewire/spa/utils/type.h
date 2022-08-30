@@ -31,49 +31,58 @@ extern "C" {
 
 #include <spa/utils/defs.h>
 
+/** \defgroup spa_types Types
+ * Data type information enumerations
+ */
+
+/**
+ * \addtogroup spa_types
+ * \{
+ */
+
 enum {
 	/* Basic types */
 	SPA_TYPE_START = 0x00000,
 	SPA_TYPE_None,
-        SPA_TYPE_Bool,
-        SPA_TYPE_Id,
-        SPA_TYPE_Int,
-        SPA_TYPE_Long,
-        SPA_TYPE_Float,
-        SPA_TYPE_Double,
-        SPA_TYPE_String,
-        SPA_TYPE_Bytes,
-        SPA_TYPE_Rectangle,
-        SPA_TYPE_Fraction,
-        SPA_TYPE_Bitmap,
-        SPA_TYPE_Array,
-        SPA_TYPE_Struct,
-        SPA_TYPE_Object,
-        SPA_TYPE_Sequence,
-        SPA_TYPE_Pointer,
-        SPA_TYPE_Fd,
-        SPA_TYPE_Choice,
-        SPA_TYPE_Pod,
-	SPA_TYPE_LAST,				/**< not part of ABI */
+	SPA_TYPE_Bool,
+	SPA_TYPE_Id,
+	SPA_TYPE_Int,
+	SPA_TYPE_Long,
+	SPA_TYPE_Float,
+	SPA_TYPE_Double,
+	SPA_TYPE_String,
+	SPA_TYPE_Bytes,
+	SPA_TYPE_Rectangle,
+	SPA_TYPE_Fraction,
+	SPA_TYPE_Bitmap,
+	SPA_TYPE_Array,
+	SPA_TYPE_Struct,
+	SPA_TYPE_Object,
+	SPA_TYPE_Sequence,
+	SPA_TYPE_Pointer,
+	SPA_TYPE_Fd,
+	SPA_TYPE_Choice,
+	SPA_TYPE_Pod,
+	_SPA_TYPE_LAST,				/**< not part of ABI */
 
 	/* Pointers */
 	SPA_TYPE_POINTER_START = 0x10000,
 	SPA_TYPE_POINTER_Buffer,
 	SPA_TYPE_POINTER_Meta,
 	SPA_TYPE_POINTER_Dict,
-	SPA_TYPE_POINTER_LAST,			/**< not part of ABI */
+	_SPA_TYPE_POINTER_LAST,			/**< not part of ABI */
 
 	/* Events */
 	SPA_TYPE_EVENT_START = 0x20000,
 	SPA_TYPE_EVENT_Device,
 	SPA_TYPE_EVENT_Node,
-	SPA_TYPE_EVENT_LAST,			/**< not part of ABI */
+	_SPA_TYPE_EVENT_LAST,			/**< not part of ABI */
 
 	/* Commands */
 	SPA_TYPE_COMMAND_START = 0x30000,
 	SPA_TYPE_COMMAND_Device,
 	SPA_TYPE_COMMAND_Node,
-	SPA_TYPE_COMMAND_LAST,			/**< not part of ABI */
+	_SPA_TYPE_COMMAND_LAST,			/**< not part of ABI */
 
 	/* Objects */
 	SPA_TYPE_OBJECT_START = 0x40000,
@@ -87,7 +96,9 @@ enum {
 	SPA_TYPE_OBJECT_ParamPortConfig,
 	SPA_TYPE_OBJECT_ParamRoute,
 	SPA_TYPE_OBJECT_Profiler,
-	SPA_TYPE_OBJECT_LAST,			/**< not part of ABI */
+	SPA_TYPE_OBJECT_ParamLatency,
+	SPA_TYPE_OBJECT_ParamProcessLatency,
+	_SPA_TYPE_OBJECT_LAST,			/**< not part of ABI */
 
 	/* vendor extensions */
 	SPA_TYPE_VENDOR_PipeWire	= 0x02000000,
@@ -130,6 +141,10 @@ struct spa_type_info {
 	const char *name;
 	const struct spa_type_info *values;
 };
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

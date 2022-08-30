@@ -29,7 +29,12 @@
 extern "C" {
 #endif
 
-/** \page page_global Global
+/** \defgroup pw_global Global
+ *
+ * \brief A global object visible to remote clients
+ *
+ * A global object is visible to remote clients and represents a resource
+ * that can be used or inspected.
  *
  * Global objects represent resources that are available on the PipeWire
  * context and are accessible to remote clients.
@@ -37,25 +42,23 @@ extern "C" {
  * clients.
  *
  * Remote clients receives a list of globals when it binds to the registry
- * object. See \ref page_registry.
+ * object. See \ref pw_registry.
  *
  * A client can bind to a global to send methods or receive events from
  * the global.
+ *
+ * See \ref page_proxy
  */
-/** \class pw_global
- *
- * \brief A global object visible to remote clients
- *
- * A global object is visible to remote clients and represents a resource
- * that can be used or inspected.
- *
- * See \ref page_remote_api
+
+/**
+ * \addtogroup pw_global
+ * \{
  */
 struct pw_global;
 
 #include <pipewire/impl.h>
 
-typedef int (*pw_global_bind_func_t) (void *object,
+typedef int (*pw_global_bind_func_t) (void *object,	/**< global object, see \ref pw_global_new */
 		      struct pw_impl_client *client,	/**< client that binds */
 		      uint32_t permissions,	/**< permissions for the bind */
 		      uint32_t version,		/**< client interface version */
@@ -115,7 +118,7 @@ const struct pw_properties *pw_global_get_properties(struct pw_global *global);
 
 /** Update the global properties, must be done when unregistered */
 int pw_global_update_keys(struct pw_global *global,
-		     const struct spa_dict *dict, const char *keys[]);
+		     const struct spa_dict *dict, const char * const keys[]);
 
 /** Get the object associated with the global. This depends on the type of the
   * global */
@@ -123,6 +126,9 @@ void *pw_global_get_object(struct pw_global *global);
 
 /** Get the unique id of the global */
 uint32_t pw_global_get_id(struct pw_global *global);
+
+/** Get the serial number of the global */
+uint64_t pw_global_get_serial(struct pw_global *global);
 
 /** Add a resource to a global */
 int pw_global_add_resource(struct pw_global *global, struct pw_resource *resource);
@@ -147,6 +153,10 @@ int pw_global_update_permissions(struct pw_global *global, struct pw_impl_client
 
 /** Destroy a global */
 void pw_global_destroy(struct pw_global *global);
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }

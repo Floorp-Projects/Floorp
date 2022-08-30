@@ -13,7 +13,6 @@
 
 #include <string>
 
-#include "rtc_base/stringize_macros.h"
 #include "rtc_base/system/rtc_export.h"
 
 namespace rtc {
@@ -37,7 +36,7 @@ class RTC_EXPORT Location {
   const char* file_name() const { return file_name_; }
   int line_number() const { return line_number_; }
   // TODO(steveanton): Remove once all downstream users have been updated to use
-  // |file_name()| and/or |line_number()|.
+  // `file_name()` and/or `line_number()`.
   const char* file_and_line() const { return file_name_; }
 
   std::string ToString() const;

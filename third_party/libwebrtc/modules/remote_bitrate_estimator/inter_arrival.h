@@ -14,8 +14,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "rtc_base/constructor_magic.h"
-
 namespace webrtc {
 
 // Helper class to compute the inter-arrival time delta and the size delta
@@ -35,14 +33,18 @@ class InterArrival {
                double timestamp_to_ms_coeff,
                bool enable_burst_grouping);
 
+  InterArrival() = delete;
+  InterArrival(const InterArrival&) = delete;
+  InterArrival& operator=(const InterArrival&) = delete;
+
   // This function returns true if a delta was computed, or false if the current
   // group is still incomplete or if only one group has been completed.
-  // |timestamp| is the timestamp.
-  // |arrival_time_ms| is the local time at which the packet arrived.
-  // |packet_size| is the size of the packet.
-  // |timestamp_delta| (output) is the computed timestamp delta.
-  // |arrival_time_delta_ms| (output) is the computed arrival-time delta.
-  // |packet_size_delta| (output) is the computed size delta.
+  // `timestamp` is the timestamp.
+  // `arrival_time_ms` is the local time at which the packet arrived.
+  // `packet_size` is the size of the packet.
+  // `timestamp_delta` (output) is the computed timestamp delta.
+  // `arrival_time_delta_ms` (output) is the computed arrival-time delta.
+  // `packet_size_delta` (output) is the computed size delta.
   bool ComputeDeltas(uint32_t timestamp,
                      int64_t arrival_time_ms,
                      int64_t system_time_ms,
@@ -70,11 +72,11 @@ class InterArrival {
     int64_t last_system_time_ms;
   };
 
-  // Returns true if the packet with timestamp |timestamp| arrived in order.
+  // Returns true if the packet with timestamp `timestamp` arrived in order.
   bool PacketInOrder(uint32_t timestamp);
 
   // Returns true if the last packet was the end of the current batch and the
-  // packet with |timestamp| is the first of a new batch.
+  // packet with `timestamp` is the first of a new batch.
   bool NewTimestampGroup(int64_t arrival_time_ms, uint32_t timestamp) const;
 
   bool BelongsToBurst(int64_t arrival_time_ms, uint32_t timestamp) const;
@@ -87,8 +89,6 @@ class InterArrival {
   double timestamp_to_ms_coeff_;
   bool burst_grouping_;
   int num_consecutive_reordered_packets_;
-
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(InterArrival);
 };
 }  // namespace webrtc
 

@@ -202,7 +202,8 @@ VideoStatistics VideoCodecTestStatsImpl::SliceAndCalcVideoStatistic(
   const size_t target_bitrate_kbps =
       CalcLayerTargetBitrateKbps(first_frame_num, last_frame_num, spatial_idx,
                                  temporal_idx, aggregate_independent_layers);
-  RTC_CHECK_GT(target_bitrate_kbps, 0);  // We divide by |target_bitrate_kbps|.
+  const size_t target_bitrate_bps = 1000 * target_bitrate_kbps;
+  RTC_CHECK_GT(target_bitrate_kbps, 0);  // We divide by `target_bitrate_kbps`.
 
   for (size_t frame_num = first_frame_num; frame_num <= last_frame_num;
        ++frame_num) {
@@ -252,12 +253,6 @@ VideoStatistics VideoCodecTestStatsImpl::SliceAndCalcVideoStatistic(
       video_stat.height =
           std::max(video_stat.height, frame_stat.decoded_height);
 
-      psnr_y.AddSample(frame_stat.psnr_y);
-      psnr_u.AddSample(frame_stat.psnr_u);
-      psnr_v.AddSample(frame_stat.psnr_v);
-      psnr.AddSample(frame_stat.psnr);
-      ssim.AddSample(frame_stat.ssim);
-
       if (video_stat.num_decoded_frames > 1) {
         if (last_successfully_decoded_frame.decoded_width !=
                 frame_stat.decoded_width ||
@@ -269,6 +264,14 @@ VideoStatistics VideoCodecTestStatsImpl::SliceAndCalcVideoStatistic(
 
       frame_decoding_time_us.AddSample(frame_stat.decode_time_us);
       last_successfully_decoded_frame = frame_stat;
+    }
+
+    if (frame_stat.quality_analysis_successful) {
+      psnr_y.AddSample(frame_stat.psnr_y);
+      psnr_u.AddSample(frame_stat.psnr_u);
+      psnr_v.AddSample(frame_stat.psnr_v);
+      psnr.AddSample(frame_stat.psnr);
+      ssim.AddSample(frame_stat.ssim);
     }
 
     if (video_stat.num_input_frames > 0) {
@@ -311,8 +314,8 @@ VideoStatistics VideoCodecTestStatsImpl::SliceAndCalcVideoStatistic(
   video_stat.temporal_idx = temporal_idx;
 
   RTC_CHECK_GT(duration_sec, 0);
-  video_stat.bitrate_kbps =
-      static_cast<size_t>(8 * video_stat.length_bytes / 1000 / duration_sec);
+  const float bitrate_bps = 8 * video_stat.length_bytes / duration_sec;
+  video_stat.bitrate_kbps = static_cast<size_t>((bitrate_bps + 500) / 1000);
   video_stat.framerate_fps = video_stat.num_encoded_frames / duration_sec;
 
   // http://bugs.webrtc.org/10400: On Windows, we only get millisecond
@@ -329,6 +332,16 @@ VideoStatistics VideoCodecTestStatsImpl::SliceAndCalcVideoStatistic(
                                  ? 1000000.0f / mean_decode_time_us
                                  : std::numeric_limits<float>::max();
 
+  video_stat.avg_encode_latency_sec =
+      frame_encoding_time_us.GetMean().value_or(0) / 1000000.0f;
+  video_stat.max_encode_latency_sec =
+      frame_encoding_time_us.GetMax().value_or(0) / 1000000.0f;
+
+  video_stat.avg_decode_latency_sec =
+      frame_decoding_time_us.GetMean().value_or(0) / 1000000.0f;
+  video_stat.max_decode_latency_sec =
+      frame_decoding_time_us.GetMax().value_or(0) / 1000000.0f;
+
   auto MaxDelaySec = [target_bitrate_kbps](
                          const webrtc_impl::RunningStatistics<size_t>& stats) {
     return 8 * stats.GetMax().value_or(0) / 1000 / target_bitrate_kbps;
@@ -336,7 +349,13 @@ VideoStatistics VideoCodecTestStatsImpl::SliceAndCalcVideoStatistic(
 
   video_stat.avg_delay_sec = buffer_level_sec.GetMean().value_or(0);
   video_stat.max_key_frame_delay_sec = MaxDelaySec(key_frame_size_bytes);
-  video_stat.max_delta_frame_delay_sec = MaxDelaySec(key_frame_size_bytes);
+  video_stat.max_delta_frame_delay_sec = MaxDelaySec(delta_frame_size_bytes);
+
+  video_stat.avg_bitrate_mismatch_pct =
+      100 * (bitrate_bps - target_bitrate_bps) / target_bitrate_bps;
+  video_stat.avg_framerate_mismatch_pct =
+      100 * (video_stat.framerate_fps - input_framerate_fps) /
+      input_framerate_fps;
 
   video_stat.avg_key_frame_size_bytes =
       key_frame_size_bytes.GetMean().value_or(0);

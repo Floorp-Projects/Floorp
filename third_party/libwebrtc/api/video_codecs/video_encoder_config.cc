@@ -57,7 +57,8 @@ VideoEncoderConfig::VideoEncoderConfig()
       max_bitrate_bps(0),
       bitrate_priority(1.0),
       number_of_streams(0),
-      legacy_conference_mode(false) {}
+      legacy_conference_mode(false),
+      is_quality_scaling_allowed(false) {}
 
 VideoEncoderConfig::VideoEncoderConfig(VideoEncoderConfig&&) = default;
 
@@ -78,7 +79,7 @@ std::string VideoEncoderConfig::ToString() const {
       break;
   }
   ss << ", encoder_specific_settings: ";
-  ss << (encoder_specific_settings != NULL ? "(ptr)" : "NULL");
+  ss << (encoder_specific_settings != nullptr ? "(ptr)" : "NULL");
 
   ss << ", min_transmit_bitrate_bps: " << min_transmit_bitrate_bps;
   ss << '}';
@@ -96,23 +97,24 @@ void VideoEncoderConfig::EncoderSpecificSettings::FillEncoderSpecificSettings(
   } else if (codec->codecType == kVideoCodecVP9) {
     FillVideoCodecVp9(codec->VP9());
   } else {
-    RTC_NOTREACHED() << "Encoder specifics set/used for unknown codec type.";
+    RTC_DCHECK_NOTREACHED()
+        << "Encoder specifics set/used for unknown codec type.";
   }
 }
 
 void VideoEncoderConfig::EncoderSpecificSettings::FillVideoCodecH264(
     VideoCodecH264* h264_settings) const {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
 }
 
 void VideoEncoderConfig::EncoderSpecificSettings::FillVideoCodecVp8(
     VideoCodecVP8* vp8_settings) const {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
 }
 
 void VideoEncoderConfig::EncoderSpecificSettings::FillVideoCodecVp9(
     VideoCodecVP9* vp9_settings) const {
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
 }
 
 VideoEncoderConfig::H264EncoderSpecificSettings::H264EncoderSpecificSettings(

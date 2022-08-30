@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <assert.h>
 #include <string.h>
 
 #include <memory>
@@ -79,7 +78,7 @@ MouseCursorMonitorWin::MouseCursorMonitorWin(ScreenId screen)
       callback_(NULL),
       mode_(SHAPE_AND_POSITION),
       desktop_dc_(NULL) {
-  assert(screen >= kFullDesktopScreenId);
+  RTC_DCHECK_GE(screen, kFullDesktopScreenId);
   memset(&last_cursor_, 0, sizeof(CURSORINFO));
 }
 
@@ -89,9 +88,9 @@ MouseCursorMonitorWin::~MouseCursorMonitorWin() {
 }
 
 void MouseCursorMonitorWin::Init(Callback* callback, Mode mode) {
-  assert(!callback_);
-  assert(callback);
-  assert(IsGUIThread(false));
+  RTC_DCHECK(!callback_);
+  RTC_DCHECK(callback);
+  RTC_DCHECK(IsGUIThread(false));
 
   callback_ = callback;
   mode_ = mode;
@@ -101,8 +100,8 @@ void MouseCursorMonitorWin::Init(Callback* callback, Mode mode) {
 
 void MouseCursorMonitorWin::Capture() {
 // TODO: Bug 1666266. Commented out to pass new tests added in bug 1634044.
-//  assert(IsGUIThread(false));
-  assert(callback_);
+//  RTC_DCHECK(IsGUIThread(false));
+  RTC_DCHECK(callback_);
 
   CURSORINFO cursor_info;
   cursor_info.cbSize = sizeof(CURSORINFO);
@@ -164,7 +163,7 @@ void MouseCursorMonitorWin::Capture() {
       position = position.subtract(cropped_rect.top_left());
     }
   } else {
-    assert(screen_ != kInvalidScreenId);
+    RTC_DCHECK_NE(screen_, kInvalidScreenId);
     DesktopRect rect = GetScreenRect();
     if (inside)
       inside = rect.Contains(position);
@@ -175,8 +174,8 @@ void MouseCursorMonitorWin::Capture() {
 }
 
 DesktopRect MouseCursorMonitorWin::GetScreenRect() {
-  assert(IsGUIThread(false));
-  assert(screen_ != kInvalidScreenId);
+  RTC_DCHECK(IsGUIThread(false));
+  RTC_DCHECK_NE(screen_, kInvalidScreenId);
   if (screen_ == kFullDesktopScreenId) {
     return DesktopRect::MakeXYWH(GetSystemMetrics(SM_XVIRTUALSCREEN),
                                  GetSystemMetrics(SM_YVIRTUALSCREEN),

@@ -15,8 +15,8 @@
 
 #include "modules/desktop_capture/desktop_geometry.h"
 #include "modules/desktop_capture/desktop_region.h"
-#include "rtc_base/constructor_magic.h"
-#include "rtc_base/synchronization/rw_lock_wrapper.h"
+#include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
 
@@ -26,8 +26,11 @@ namespace webrtc {
 // ScreenCapturer that owns it.
 class ScreenCapturerHelper {
  public:
-  ScreenCapturerHelper();
-  ~ScreenCapturerHelper();
+  ScreenCapturerHelper() = default;
+  ~ScreenCapturerHelper() = default;
+
+  ScreenCapturerHelper(const ScreenCapturerHelper&) = delete;
+  ScreenCapturerHelper& operator=(const ScreenCapturerHelper&) = delete;
 
   // Clear out the invalid region.
   void ClearInvalidRegion();
@@ -38,7 +41,7 @@ class ScreenCapturerHelper {
   // Invalidate the entire screen, of a given size.
   void InvalidateScreen(const DesktopSize& size);
 
-  // Copies current invalid region to |invalid_region| clears invalid region
+  // Copies current invalid region to `invalid_region` clears invalid region
   // storage for the next frame.
   void TakeInvalidRegion(DesktopRegion* invalid_region);
 
@@ -51,16 +54,16 @@ class ScreenCapturerHelper {
   // be changed in the compressed output. So we need to re-render an entire
   // block whenever part of the block changes.
   //
-  // If |log_grid_size| is >= 1, then this function makes TakeInvalidRegion()
+  // If `log_grid_size` is >= 1, then this function makes TakeInvalidRegion()
   // produce an invalid region expanded so that its vertices lie on a grid of
-  // size 2 ^ |log_grid_size|. The expanded region is then clipped to the size
+  // size 2 ^ `log_grid_size`. The expanded region is then clipped to the size
   // of the most recently captured screen, as previously set by
   // set_size_most_recent().
-  // If |log_grid_size| is <= 0, then the invalid region is not expanded.
+  // If `log_grid_size` is <= 0, then the invalid region is not expanded.
   void SetLogGridSize(int log_grid_size);
 
   // Expands a region so that its vertices all lie on a grid.
-  // The grid size must be >= 2, so |log_grid_size| must be >= 1.
+  // The grid size must be >= 2, so `log_grid_size` must be >= 1.
   static void ExpandToGrid(const DesktopRegion& region,
                            int log_grid_size,
                            DesktopRegion* result);
@@ -69,10 +72,10 @@ class ScreenCapturerHelper {
   // A region that has been manually invalidated (through InvalidateRegion).
   // These will be returned as dirty_region in the capture data during the next
   // capture.
-  DesktopRegion invalid_region_;
+  DesktopRegion invalid_region_ RTC_GUARDED_BY(invalid_region_mutex_);
 
-  // A lock protecting |invalid_region_| across threads.
-  std::unique_ptr<RWLockWrapper> invalid_region_lock_;
+  // A lock protecting `invalid_region_` across threads.
+  Mutex invalid_region_mutex_;
 
   // The size of the most recently captured screen.
   DesktopSize size_most_recent_;
@@ -80,9 +83,7 @@ class ScreenCapturerHelper {
   // The log (base 2) of the size of the grid to which the invalid region is
   // expanded.
   // If the value is <= 0, then the invalid region is not expanded to a grid.
-  int log_grid_size_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(ScreenCapturerHelper);
+  int log_grid_size_ = 0;
 };
 
 }  // namespace webrtc

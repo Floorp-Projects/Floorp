@@ -148,18 +148,15 @@ config("default_sanitizer_ldflags") {
   visibility = [
     ":default_sanitizer_flags",
     ":deps",
+
+    # https://crbug.com/360158.
+    "//tools/ipc_fuzzer/fuzzer:ipc_fuzzer",
   ]
 
   if (is_posix || is_fuchsia) {
     ldflags = []
     if (is_asan) {
       ldflags += [ "-fsanitize=address" ]
-      if (is_mac) {
-        # https://crbug.com/708707
-        ldflags += [ "-fno-sanitize-address-use-after-scope" ]
-      } else {
-        ldflags += [ "-fsanitize-address-use-after-scope" ]
-      }
     }
     if (is_hwasan) {
       ldflags += [ "-fsanitize=hwaddress" ]
@@ -274,34 +271,12 @@ config("asan_flags") {
   cflags = []
   if (is_asan) {
     cflags += [ "-fsanitize=address" ]
-    if (!is_mac) {
-      cflags += [ "-fsanitize-address-use-after-scope" ]
-    } else {
-      # https://crbug.com/708707
-      cflags += [ "-fno-sanitize-address-use-after-scope" ]
-    }
-    if (!asan_globals) {
-      cflags += [
-        "-mllvm",
-        "-asan-globals=0",
-      ]
-    }
-    if (asan_use_blacklist) {
-      if (is_win) {
-        if (!defined(asan_win_blacklist_path)) {
-          asan_win_blacklist_path =
-              rebase_path("//tools/memory/asan/blacklist_win.txt",
-                          root_build_dir)
-        }
-        cflags += [ "-fsanitize-blacklist=$asan_win_blacklist_path" ]
-      } else {
-        # TODO(rnk): Remove this as discussed in http://crbug.com/427202.
-        if (!defined(asan_blacklist_path)) {
-          asan_blacklist_path =
-              rebase_path("//tools/memory/asan/blacklist.txt", root_build_dir)
-        }
-        cflags += [ "-fsanitize-blacklist=$asan_blacklist_path" ]
+    if (is_win) {
+      if (!defined(asan_win_blocklist_path)) {
+        asan_win_blocklist_path =
+            rebase_path("//tools/memory/asan/blocklist_win.txt", root_build_dir)
       }
+      cflags += [ "-fsanitize-ignorelist=$asan_win_blocklist_path" ]
     }
   }
 }
@@ -331,13 +306,13 @@ config("link_shared_library") {
 config("cfi_flags") {
   cflags = []
   if (is_cfi && current_toolchain == default_toolchain) {
-    if (!defined(cfi_blacklist_path)) {
-      cfi_blacklist_path =
+    if (!defined(cfi_ignorelist_path)) {
+      cfi_ignorelist_path =
           rebase_path("//tools/cfi/ignores.txt", root_build_dir)
     }
     cflags += [
       "-fsanitize=cfi-vcall",
-      "-fsanitize-blacklist=$cfi_blacklist_path",
+      "-fsanitize-ignorelist=$cfi_ignorelist_path",
     ]
 
     if (use_cfi_cast) {
@@ -432,15 +407,16 @@ config("lsan_flags") {
 
 config("msan_flags") {
   if (is_msan) {
-    assert(is_linux || is_chromeos, "msan only supported on linux x86_64/ChromeOS")
-    if (!defined(msan_blacklist_path)) {
-      msan_blacklist_path =
-          rebase_path("//tools/msan/blacklist.txt", root_build_dir)
+    assert(is_linux || is_chromeos,
+           "msan only supported on linux x86_64/ChromeOS")
+    if (!defined(msan_ignorelist_path)) {
+      msan_ignorelist_path =
+          rebase_path("//tools/msan/ignorelist.txt", root_build_dir)
     }
     cflags = [
       "-fsanitize=memory",
       "-fsanitize-memory-track-origins=$msan_track_origins",
-      "-fsanitize-blacklist=$msan_blacklist_path",
+      "-fsanitize-ignorelist=$msan_ignorelist_path",
     ]
   }
 }
@@ -448,13 +424,13 @@ config("msan_flags") {
 config("tsan_flags") {
   if (is_tsan) {
     assert(is_linux || is_chromeos, "tsan only supported on linux x86_64")
-    if (!defined(tsan_blacklist_path)) {
-      tsan_blacklist_path =
+    if (!defined(tsan_ignorelist_path)) {
+      tsan_ignorelist_path =
           rebase_path("//tools/memory/tsan_v2/ignores.txt", root_build_dir)
     }
     cflags = [
       "-fsanitize=thread",
-      "-fsanitize-blacklist=$tsan_blacklist_path",
+      "-fsanitize-ignorelist=$tsan_ignorelist_path",
     ]
   }
 }
@@ -462,9 +438,9 @@ config("tsan_flags") {
 config("ubsan_flags") {
   cflags = []
   if (is_ubsan) {
-    if (!defined(ubsan_blacklist_path)) {
-      ubsan_blacklist_path =
-          rebase_path("//tools/ubsan/blacklist.txt", root_build_dir)
+    if (!defined(ubsan_ignorelist_path)) {
+      ubsan_ignorelist_path =
+          rebase_path("//tools/ubsan/ignorelist.txt", root_build_dir)
     }
     cflags += [
       "-fsanitize=bool",
@@ -480,7 +456,7 @@ config("ubsan_flags") {
       "-fsanitize=signed-integer-overflow",
       "-fsanitize=unreachable",
       "-fsanitize=vla-bound",
-      "-fsanitize-blacklist=$ubsan_blacklist_path",
+      "-fsanitize-ignorelist=$ubsan_ignorelist_path",
     ]
 
     # Chromecast ubsan builds fail to compile with these
@@ -510,17 +486,16 @@ config("ubsan_no_recover") {
 
 config("ubsan_security_flags") {
   if (is_ubsan_security) {
-    if (!defined(ubsan_security_blacklist_path)) {
-      ubsan_security_blacklist_path =
-          rebase_path("//tools/ubsan/security_blacklist.txt", root_build_dir)
+    if (!defined(ubsan_security_ignorelist_path)) {
+      ubsan_security_ignorelist_path =
+          rebase_path("//tools/ubsan/security_ignorelist.txt", root_build_dir)
     }
     cflags = [
       "-fsanitize=function",
       "-fsanitize=shift",
       "-fsanitize=signed-integer-overflow",
       "-fsanitize=vla-bound",
-      "-fsanitize=vptr",
-      "-fsanitize-blacklist=$ubsan_security_blacklist_path",
+      "-fsanitize-ignorelist=$ubsan_security_ignorelist_path",
     ]
   }
 }
@@ -533,13 +508,13 @@ config("ubsan_null_flags") {
 
 config("ubsan_vptr_flags") {
   if (is_ubsan_vptr) {
-    if (!defined(ubsan_vptr_blacklist_path)) {
-      ubsan_vptr_blacklist_path =
-          rebase_path("//tools/ubsan/vptr_blacklist.txt", root_build_dir)
+    if (!defined(ubsan_vptr_ignorelist_path)) {
+      ubsan_vptr_ignorelist_path =
+          rebase_path("//tools/ubsan/vptr_ignorelist.txt", root_build_dir)
     }
     cflags = [
       "-fsanitize=vptr",
-      "-fsanitize-blacklist=$ubsan_vptr_blacklist_path",
+      "-fsanitize-ignorelist=$ubsan_vptr_ignorelist_path",
     ]
   }
 }

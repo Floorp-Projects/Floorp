@@ -231,5 +231,16 @@ TEST(UnitBaseTest, InfinityOperations) {
   EXPECT_TRUE((finite + TestUnit::MinusInfinity()).IsMinusInfinity());
   EXPECT_TRUE((finite - TestUnit::PlusInfinity()).IsMinusInfinity());
 }
+
+TEST(UnitBaseTest, UnaryMinus) {
+  const int64_t kValue = 1337;
+  const TestUnit unit = TestUnit::FromValue(kValue);
+  EXPECT_EQ(-unit.ToValue(), -kValue);
+
+  // Check infinity.
+  EXPECT_EQ(-TestUnit::PlusInfinity(), TestUnit::MinusInfinity());
+  EXPECT_EQ(-TestUnit::MinusInfinity(), TestUnit::PlusInfinity());
+}
+
 }  // namespace test
 }  // namespace webrtc

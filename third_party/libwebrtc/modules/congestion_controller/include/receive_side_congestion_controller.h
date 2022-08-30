@@ -16,9 +16,11 @@
 
 #include "api/transport/field_trial_based_config.h"
 #include "api/transport/network_control.h"
+#include "api/units/data_rate.h"
+#include "modules/congestion_controller/remb_throttler.h"
 #include "modules/include/module.h"
+#include "modules/pacing/packet_router.h"
 #include "modules/remote_bitrate_estimator/remote_estimator_proxy.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/synchronization/mutex.h"
 
 namespace webrtc {
@@ -33,10 +35,10 @@ class RemoteBitrateObserver;
 class ReceiveSideCongestionController : public CallStatsObserver,
                                         public Module {
  public:
-  ReceiveSideCongestionController(Clock* clock, PacketRouter* packet_router);
   ReceiveSideCongestionController(
       Clock* clock,
-      PacketRouter* packet_router,
+      RemoteEstimatorProxy::TransportFeedbackSender feedback_sender,
+      RembThrottler::RembSender remb_sender,
       NetworkStateEstimator* network_state_estimator);
 
   ~ReceiveSideCongestionController() override {}
@@ -57,6 +59,10 @@ class ReceiveSideCongestionController : public CallStatsObserver,
   // This is send bitrate, used to control the rate of feedback messages.
   void OnBitrateChanged(int bitrate_bps);
 
+  // Ensures the remote party is notified of the receive bitrate no larger than
+  // `bitrate` using RTCP REMB.
+  void SetMaxDesiredReceiveBitrate(DataRate bitrate);
+
   // Implements Module.
   int64_t TimeUntilNextProcess() override;
   void Process() override;
@@ -65,6 +71,11 @@ class ReceiveSideCongestionController : public CallStatsObserver,
   class WrappingBitrateEstimator : public RemoteBitrateEstimator {
    public:
     WrappingBitrateEstimator(RemoteBitrateObserver* observer, Clock* clock);
+
+    WrappingBitrateEstimator() = delete;
+    WrappingBitrateEstimator(const WrappingBitrateEstimator&) = delete;
+    WrappingBitrateEstimator& operator=(const WrappingBitrateEstimator&) =
+        delete;
 
     ~WrappingBitrateEstimator() override;
 
@@ -96,11 +107,10 @@ class ReceiveSideCongestionController : public CallStatsObserver,
     bool using_absolute_send_time_;
     uint32_t packets_since_absolute_send_time_;
     int min_bitrate_bps_;
-
-    RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(WrappingBitrateEstimator);
   };
 
   const FieldTrialBasedConfig field_trial_config_;
+  RembThrottler remb_throttler_;
   WrappingBitrateEstimator remote_bitrate_estimator_;
   RemoteEstimatorProxy remote_estimator_proxy_;
 };

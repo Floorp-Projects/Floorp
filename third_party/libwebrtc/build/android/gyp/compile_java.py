@@ -1,10 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2013 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import distutils.spawn
 import functools
 import logging
 import multiprocessing
@@ -16,25 +15,22 @@ import sys
 import time
 import zipfile
 
+import javac_output_processor
 from util import build_utils
 from util import md5_check
 from util import jar_info_utils
-
-sys.path.insert(
-    0,
-    os.path.join(build_utils.DIR_SOURCE_ROOT, 'third_party', 'colorama', 'src'))
-import colorama
+from util import server_utils
 
 _JAVAC_EXTRACTOR = os.path.join(build_utils.DIR_SOURCE_ROOT, 'third_party',
                                 'android_prebuilts', 'build_tools', 'common',
                                 'framework', 'javac_extractor.jar')
 
+# Add a check here to cause the suggested fix to be applied while compiling.
+# Use this when trying to enable more checks.
+ERRORPRONE_CHECKS_TO_APPLY = []
+
 # Full list of checks: https://errorprone.info/bugpatterns
 ERRORPRONE_WARNINGS_TO_DISABLE = [
-    # These should really be turned on.
-    'ParameterNotNullable',
-    'CollectionUndefinedEquality',
-    'ModifyCollectionInEnhancedForLoop',
     # The following are super useful, but existing issues need to be fixed first
     # before they can start failing the build on new errors.
     'InvalidParam',
@@ -47,8 +43,19 @@ ERRORPRONE_WARNINGS_TO_DISABLE = [
     'MutablePublicArray',
     'UnescapedEntity',
     'NonCanonicalType',
-    'ProtectedMembersInFinalClass',
     'AlmostJavadoc',
+    # The following are added for errorprone update: https://crbug.com/1216032
+    'InlineMeSuggester',
+    'DoNotClaimAnnotations',
+    'JavaUtilDate',
+    'IdentityHashMapUsage',
+    'UnnecessaryMethodReference',
+    'LongFloatConversion',
+    'CharacterGetNumericValue',
+    'ErroneousThreadPoolConstructorChecker',
+    'StaticMockMember',
+    'MissingSuperCall',
+    'ToStringReturnsNull',
     # TODO(crbug.com/834807): Follow steps in bug
     'DoubleBraceInitialization',
     # TODO(crbug.com/834790): Follow steps in bug.
@@ -61,13 +68,11 @@ ERRORPRONE_WARNINGS_TO_DISABLE = [
     'CatchFail',
     # TODO(crbug.com/803485): Follow steps in bug.
     'JUnitAmbiguousTestClass',
-    # TODO(crbug.com/1027683): Follow steps in bug.
-    'UnnecessaryParentheses',
-    # TODO(wnwen): Fix issue in JavaUploadDataSinkBase.java
-    'PrimitiveAtomicReference',
     # Android platform default is always UTF-8.
     # https://developer.android.com/reference/java/nio/charset/Charset.html#defaultCharset()
     'DefaultCharset',
+    # Low priority since there are lots of tags that don't fit this check.
+    'UnrecognisedJavadocTag',
     # Low priority since the alternatives still work.
     'JdkObsolete',
     # We don't use that many lambdas.
@@ -171,6 +176,8 @@ ERRORPRONE_WARNINGS_TO_DISABLE = [
     # We already have presubmit checks for this. Not necessary to warn on
     # every build.
     'RemoveUnusedImports',
+    # We do not care about unnecessary parenthesis enough to check for them.
+    'UnnecessaryParentheses',
 ]
 
 # Full list of checks: https://errorprone.info/bugpatterns
@@ -193,14 +200,7 @@ ERRORPRONE_WARNINGS_TO_ENABLE = [
 ]
 
 
-def ProcessJavacOutput(output):
-  fileline_prefix = r'(?P<fileline>(?P<file>[-.\w/\\]+.java):(?P<line>[0-9]+):)'
-  warning_re = re.compile(fileline_prefix +
-                          r'(?P<full_message> warning: (?P<message>.*))$')
-  error_re = re.compile(fileline_prefix +
-                        r'(?P<full_message> (?P<message>.*))$')
-  marker_re = re.compile(r'\s*(?P<marker>\^)\s*$')
-
+def ProcessJavacOutput(output, target_name):
   # These warnings cannot be suppressed even for third party code. Deprecation
   # warnings especially do not help since we must support older android version.
   deprecated_re = re.compile(
@@ -209,41 +209,28 @@ def ProcessJavacOutput(output):
       r'(Note: .* uses? unchecked or unsafe operations.)$')
   recompile_re = re.compile(r'(Note: Recompile with -Xlint:.* for details.)$')
 
-  warning_color = ['full_message', colorama.Fore.YELLOW + colorama.Style.DIM]
-  error_color = ['full_message', colorama.Fore.MAGENTA + colorama.Style.BRIGHT]
-  marker_color = ['marker', colorama.Fore.BLUE + colorama.Style.BRIGHT]
-
-  def Colorize(line, regex, color):
-    match = regex.match(line)
-    start = match.start(color[0])
-    end = match.end(color[0])
-    return (line[:start] + color[1] + line[start:end] + colorama.Fore.RESET +
-            colorama.Style.RESET_ALL + line[end:])
+  activity_re = re.compile(r'^(?P<prefix>\s*location: )class Activity$')
 
   def ApplyFilters(line):
     return not (deprecated_re.match(line) or unchecked_re.match(line)
                 or recompile_re.match(line))
 
-  def ApplyColors(line):
-    if warning_re.match(line):
-      line = Colorize(line, warning_re, warning_color)
-    elif error_re.match(line):
-      line = Colorize(line, error_re, error_color)
-    elif marker_re.match(line):
-      line = Colorize(line, marker_re, marker_color)
+  def Elaborate(line):
+    if activity_re.match(line):
+      prefix = ' ' * activity_re.match(line).end('prefix')
+      return '{}\n{}Expecting a FragmentActivity? See {}'.format(
+          line, prefix, 'docs/ui/android/bytecode_rewriting.md')
     return line
 
-  return '\n'.join(map(ApplyColors, filter(ApplyFilters, output.split('\n'))))
+  output = build_utils.FilterReflectiveAccessJavaWarnings(output)
 
+  lines = (l for l in output.split('\n') if ApplyFilters(l))
+  lines = (Elaborate(l) for l in lines)
 
-def CheckErrorproneStderrWarning(jar_path, expected_warning_regex,
-                                 javac_output):
-  if not re.search(expected_warning_regex, javac_output):
-    raise Exception('Expected `{}` warning when compiling `{}`'.format(
-        expected_warning_regex, os.path.basename(jar_path)))
+  output_processor = javac_output_processor.JavacOutputProcessor(target_name)
+  lines = output_processor.Process(lines)
 
-  # Do not print warning
-  return ''
+  return '\n'.join(lines)
 
 
 def _ParsePackageAndClassNames(java_file):
@@ -360,7 +347,7 @@ class _InfoFileContext(object):
     entries = self._Collect()
 
     logging.info('Writing info file: %s', output_path)
-    with build_utils.AtomicOutput(output_path) as f:
+    with build_utils.AtomicOutput(output_path, mode='wb') as f:
       jar_info_utils.WriteJarInfoFile(f, entries, self._srcjar_files)
     logging.info('Completed info file: %s', output_path)
 
@@ -385,7 +372,7 @@ def _CreateJarFile(jar_path, service_provider_configuration_dir,
   logging.info('Completed jar file: %s', jar_path)
 
 
-def _OnStaleMd5(options, javac_cmd, javac_args, java_files):
+def _OnStaleMd5(changes, options, javac_cmd, javac_args, java_files):
   logging.info('Starting _OnStaleMd5')
   if options.enable_kythe_annotations:
     # Kythe requires those env variables to be set and compile_java.py does the
@@ -400,29 +387,73 @@ def _OnStaleMd5(options, javac_cmd, javac_args, java_files):
         _JAVAC_EXTRACTOR,
     ]
     try:
-      _RunCompiler(options, javac_extractor_cmd + javac_args, java_files,
-                   options.classpath, options.jar_path + '.javac_extractor',
-                   save_outputs=False),
+      # _RunCompiler()'s partial javac implementation does not support
+      # generating outputs in $KYTHE_OUTPUT_DIRECTORY.
+      _RunCompiler(changes,
+                   options,
+                   javac_extractor_cmd + javac_args,
+                   java_files,
+                   options.jar_path + '.javac_extractor',
+                   enable_partial_javac=False)
     except build_utils.CalledProcessError as e:
       # Having no index for particular target is better than failing entire
       # codesearch. Log and error and move on.
       logging.error('Could not generate kzip: %s', e)
 
+  intermediates_out_dir = None
+  jar_info_path = None
+  if not options.enable_errorprone:
+    # Delete any stale files in the generated directory. The purpose of
+    # options.generated_dir is for codesearch.
+    shutil.rmtree(options.generated_dir, True)
+    intermediates_out_dir = options.generated_dir
+
+    jar_info_path = options.jar_path + '.info'
+
   # Compiles with Error Prone take twice as long to run as pure javac. Thus GN
   # rules run both in parallel, with Error Prone only used for checks.
-  _RunCompiler(options, javac_cmd + javac_args, java_files,
-               options.classpath, options.jar_path,
-               save_outputs=not options.enable_errorprone)
+  _RunCompiler(changes,
+               options,
+               javac_cmd + javac_args,
+               java_files,
+               options.jar_path,
+               jar_info_path=jar_info_path,
+               intermediates_out_dir=intermediates_out_dir,
+               enable_partial_javac=True)
   logging.info('Completed all steps in _OnStaleMd5')
 
 
-def _RunCompiler(options, javac_cmd, java_files, classpath, jar_path,
-                 save_outputs=True):
+def _RunCompiler(changes,
+                 options,
+                 javac_cmd,
+                 java_files,
+                 jar_path,
+                 jar_info_path=None,
+                 intermediates_out_dir=None,
+                 enable_partial_javac=False):
+  """Runs java compiler.
+
+  Args:
+    changes: md5_check.Changes object.
+    options: Object with command line flags.
+    javac_cmd: Command to execute.
+    java_files: List of java files passed from command line.
+    jar_path: Path of output jar file.
+    jar_info_path: Path of the .info file to generate.
+        If None, .info file will not be generated.
+    intermediates_out_dir: Directory for saving intermediate outputs.
+        If None a temporary directory is used.
+    enable_partial_javac: Enables compiling only Java files which have changed
+        in the special case that no method signatures have changed. This is
+        useful for large GN targets.
+        Not supported if compiling generates outputs other than |jar_path| and
+        |jar_info_path|.
+  """
   logging.info('Starting _RunCompiler')
 
-  # Compiles with Error Prone take twice as long to run as pure javac. Thus GN
-  # rules run both in parallel, with Error Prone only used for checks.
-  save_outputs = not options.enable_errorprone
+  java_files = java_files.copy()
+  java_srcjars = options.java_srcjars
+  save_info_file = jar_info_path is not None
 
   # Use jar_path's directory to ensure paths are relative (needed for goma).
   temp_dir = jar_path + '.staging'
@@ -433,28 +464,48 @@ def _RunCompiler(options, javac_cmd, java_files, classpath, jar_path,
     service_provider_configuration = os.path.join(
         temp_dir, 'service_provider_configuration')
 
-    if save_outputs:
-      input_srcjars_dir = os.path.join(options.generated_dir, 'input_srcjars')
-      annotation_processor_outputs_dir = os.path.join(
-          options.generated_dir, 'annotation_processor_outputs')
-      # Delete any stale files in the generated directory. The purpose of
-      # options.generated_dir is for codesearch.
-      shutil.rmtree(options.generated_dir, True)
+    if java_files:
+      os.makedirs(classes_dir)
+
+      if enable_partial_javac:
+        all_changed_paths_are_java = all(
+            [p.endswith(".java") for p in changes.IterChangedPaths()])
+        if (all_changed_paths_are_java and not changes.HasStringChanges()
+            and os.path.exists(jar_path)
+            and (jar_info_path is None or os.path.exists(jar_info_path))):
+          # Log message is used by tests to determine whether partial javac
+          # optimization was used.
+          logging.info('Using partial javac optimization for %s compile' %
+                       (jar_path))
+
+          # Header jar corresponding to |java_files| did not change.
+          # As a build speed optimization (crbug.com/1170778), re-compile only
+          # java files which have changed. Re-use old jar .info file.
+          java_files = list(changes.IterChangedPaths())
+          java_srcjars = None
+
+          # Reuse old .info file.
+          save_info_file = False
+
+          build_utils.ExtractAll(jar_path, classes_dir)
+
+    if save_info_file:
       info_file_context = _InfoFileContext(options.chromium_code,
                                            options.jar_info_exclude_globs)
-    else:
-      input_srcjars_dir = os.path.join(temp_dir, 'input_srcjars')
-      annotation_processor_outputs_dir = os.path.join(
-          temp_dir, 'annotation_processor_outputs')
 
-    if options.java_srcjars:
+    if intermediates_out_dir is None:
+      input_srcjars_dir = os.path.join(temp_dir, 'input_srcjars')
+    else:
+      input_srcjars_dir = os.path.join(intermediates_out_dir, 'input_srcjars')
+
+    if java_srcjars:
       logging.info('Extracting srcjars to %s', input_srcjars_dir)
       build_utils.MakeDirectory(input_srcjars_dir)
       for srcjar in options.java_srcjars:
         extracted_files = build_utils.ExtractAll(
             srcjar, no_clobber=True, path=input_srcjars_dir, pattern='*.java')
         java_files.extend(extracted_files)
-        if save_outputs:
+        if save_info_file:
           info_file_context.AddSrcJarSources(srcjar, extracted_files,
                                              input_srcjars_dir)
       logging.info('Done extracting srcjars')
@@ -469,22 +520,17 @@ def _RunCompiler(options, javac_cmd, java_files, classpath, jar_path,
                              pattern='META-INF/services/*')
       logging.info('Done extracting service provider configs')
 
-    if save_outputs and java_files:
+    if save_info_file and java_files:
       info_file_context.SubmitFiles(java_files)
 
     if java_files:
       # Don't include the output directory in the initial set of args since it
       # being in a temp dir makes it unstable (breaks md5 stamping).
       cmd = list(javac_cmd)
-      os.makedirs(classes_dir)
       cmd += ['-d', classes_dir]
 
-      if options.processors:
-        os.makedirs(annotation_processor_outputs_dir)
-        cmd += ['-s', annotation_processor_outputs_dir]
-
-      if classpath:
-        cmd += ['-classpath', ':'.join(classpath)]
+      if options.classpath:
+        cmd += ['-classpath', ':'.join(options.classpath)]
 
       # Pass source paths as response files to avoid extremely long command
       # lines that are tedius to debug.
@@ -493,39 +539,24 @@ def _RunCompiler(options, javac_cmd, java_files, classpath, jar_path,
         f.write(' '.join(java_files))
       cmd += ['@' + java_files_rsp_path]
 
-
-      # |errorprone_expected_warning_regex| is used in tests for errorprone
-      # warnings. Fail compile if expected warning is not present.
-      stderr_filter = ProcessJavacOutput
-      if (options.enable_errorprone
-          and options.errorprone_expected_warning_regex):
-        stderr_filter = functools.partial(
-            CheckErrorproneStderrWarning, options.jar_path,
-            options.errorprone_expected_warning_regex)
+      process_javac_output_partial = functools.partial(
+          ProcessJavacOutput, target_name=options.target_name)
 
       logging.debug('Build command %s', cmd)
       start = time.time()
       build_utils.CheckOutput(cmd,
                               print_stdout=options.chromium_code,
-                              stdout_filter=ProcessJavacOutput,
-                              stderr_filter=stderr_filter,
+                              stdout_filter=process_javac_output_partial,
+                              stderr_filter=process_javac_output_partial,
                               fail_on_output=options.warnings_as_errors)
       end = time.time() - start
       logging.info('Java compilation took %ss', end)
 
-    if save_outputs:
-      if options.processors:
-        annotation_processor_java_files = build_utils.FindInDirectory(
-            annotation_processor_outputs_dir)
-        if annotation_processor_java_files:
-          info_file_context.SubmitFiles(annotation_processor_java_files)
+    _CreateJarFile(jar_path, service_provider_configuration,
+                   options.additional_jar_files, classes_dir)
 
-      _CreateJarFile(jar_path, service_provider_configuration,
-                     options.additional_jar_files, classes_dir)
-
-      info_file_context.Commit(jar_path + '.info')
-    else:
-      build_utils.Touch(jar_path)
+    if save_info_file:
+      info_file_context.Commit(jar_info_path)
 
     logging.info('Completed all steps in _RunCompiler')
   finally:
@@ -536,6 +567,10 @@ def _ParseOptions(argv):
   parser = optparse.OptionParser()
   build_utils.AddDepfileOption(parser)
 
+  parser.add_option('--target-name', help='Fully qualified GN target name.')
+  parser.add_option('--skip-build-server',
+                    action='store_true',
+                    help='Avoid using the build server.')
   parser.add_option(
       '--java-srcjars',
       action='append',
@@ -555,10 +590,6 @@ def _ParseOptions(argv):
       '--java-version',
       help='Java language version to use in -source and -target args to javac.')
   parser.add_option('--classpath', action='append', help='Classpath to use.')
-  parser.add_option(
-      '--processors',
-      action='append',
-      help='GN list of annotation processor main classes.')
   parser.add_option(
       '--processorpath',
       action='append',
@@ -593,10 +624,6 @@ def _ParseOptions(argv):
       action='store_true',
       help='Enable errorprone checks')
   parser.add_option(
-      '--errorprone-expected-warning-regex',
-      help='When set, throws an exception if the errorprone compile does not '
-      'log a warning which matches the regex.')
-  parser.add_option(
       '--warnings-as-errors',
       action='store_true',
       help='Treat all warnings as errors.')
@@ -622,7 +649,6 @@ def _ParseOptions(argv):
   options.bootclasspath = build_utils.ParseGnList(options.bootclasspath)
   options.classpath = build_utils.ParseGnList(options.classpath)
   options.processorpath = build_utils.ParseGnList(options.processorpath)
-  options.processors = build_utils.ParseGnList(options.processors)
   options.java_srcjars = build_utils.ParseGnList(options.java_srcjars)
   options.jar_info_exclude_globs = build_utils.ParseGnList(
       options.jar_info_exclude_globs)
@@ -646,10 +672,15 @@ def _ParseOptions(argv):
 
 def main(argv):
   build_utils.InitLogging('JAVAC_DEBUG')
-  colorama.init()
-
   argv = build_utils.ExpandFileArgs(argv)
   options, java_files = _ParseOptions(argv)
+
+  # Only use the build server for errorprone runs.
+  if (options.enable_errorprone and not options.skip_build_server
+      and server_utils.MaybeRunCommand(name=options.target_name,
+                                       argv=sys.argv,
+                                       stamp_file=options.jar_path)):
+    return
 
   javac_cmd = []
   if options.gomacc_path:
@@ -674,15 +705,26 @@ def main(argv):
     # Make everything a warning so that when treat_warnings_as_errors is false,
     # they do not fail the build.
     errorprone_flags += ['-XepAllErrorsAsWarnings']
-    for warning in ERRORPRONE_WARNINGS_TO_DISABLE:
-      errorprone_flags.append('-Xep:{}:OFF'.format(warning))
-    for warning in ERRORPRONE_WARNINGS_TO_ENABLE:
-      errorprone_flags.append('-Xep:{}:WARN'.format(warning))
+    # Don't check generated files.
+    errorprone_flags += ['-XepDisableWarningsInGeneratedCode']
+    errorprone_flags.extend('-Xep:{}:OFF'.format(x)
+                            for x in ERRORPRONE_WARNINGS_TO_DISABLE)
+    errorprone_flags.extend('-Xep:{}:WARN'.format(x)
+                            for x in ERRORPRONE_WARNINGS_TO_ENABLE)
+
+    if ERRORPRONE_CHECKS_TO_APPLY:
+      errorprone_flags += [
+          '-XepPatchLocation:IN_PLACE',
+          '-XepPatchChecks:,' + ','.join(ERRORPRONE_CHECKS_TO_APPLY)
+      ]
+
     javac_args += ['-XDcompilePolicy=simple', ' '.join(errorprone_flags)]
+
     # This flag quits errorprone after checks and before code generation, since
     # we do not need errorprone outputs, this speeds up errorprone by 4 seconds
     # for chrome_java.
-    javac_args += ['-XDshould-stop.ifNoError=FLOW']
+    if not ERRORPRONE_CHECKS_TO_APPLY:
+      javac_args += ['-XDshould-stop.ifNoError=FLOW']
 
   if options.java_version:
     javac_args.extend([
@@ -695,14 +737,11 @@ def main(argv):
     # Android's boot jar doesn't contain all java 8 classes.
     options.bootclasspath.append(build_utils.RT_JAR_PATH)
 
-  if options.processors:
-    javac_args.extend(['-processor', ','.join(options.processors)])
-  else:
-    # This effectively disables all annotation processors, even including
-    # annotation processors in service provider configuration files named
-    # META-INF/. See the following link for reference:
-    #     https://docs.oracle.com/en/java/javase/11/tools/javac.html
-    javac_args.extend(['-proc:none'])
+  # This effectively disables all annotation processors, even including
+  # annotation processors in service provider configuration files named
+  # META-INF/. See the following link for reference:
+  #     https://docs.oracle.com/en/java/javase/11/tools/javac.html
+  javac_args.extend(['-proc:none'])
 
   if options.bootclasspath:
     javac_args.extend(['-bootclasspath', ':'.join(options.bootclasspath)])
@@ -725,22 +764,23 @@ def main(argv):
     input_paths.append(options.header_jar)
   input_paths += [x[0] for x in options.additional_jar_files]
 
-  output_paths = [
-      options.jar_path,
-      options.jar_path + '.info',
-  ]
+  output_paths = [options.jar_path]
+  if not options.enable_errorprone:
+    output_paths += [options.jar_path + '.info']
 
   input_strings = javac_cmd + javac_args + options.classpath + java_files + [
       options.warnings_as_errors, options.jar_info_exclude_globs
   ]
 
-  md5_check.CallAndWriteDepfileIfStale(
-      lambda: _OnStaleMd5(options, javac_cmd, javac_args, java_files),
-      options,
-      depfile_deps=depfile_deps,
-      input_paths=input_paths,
-      input_strings=input_strings,
-      output_paths=output_paths)
+  # Use md5_check for |pass_changes| feature.
+  md5_check.CallAndWriteDepfileIfStale(lambda changes: _OnStaleMd5(
+      changes, options, javac_cmd, javac_args, java_files),
+                                       options,
+                                       depfile_deps=depfile_deps,
+                                       input_paths=input_paths,
+                                       input_strings=input_strings,
+                                       output_paths=output_paths,
+                                       pass_changes=True)
 
 
 if __name__ == '__main__':

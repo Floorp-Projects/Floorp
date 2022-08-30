@@ -57,12 +57,12 @@
 #include <atomic>
 #include <sstream>  // no-presubmit-check TODO(webrtc:8982)
 #include <string>
+#include <type_traits>
 #include <utility>
 
+#include "absl/base/attributes.h"
 #include "absl/meta/type_traits.h"
 #include "absl/strings/string_view.h"
-#include "rtc_base/constructor_magic.h"
-#include "rtc_base/deprecation.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/system/inline.h"
 
@@ -81,9 +81,7 @@
 namespace rtc {
 
 //////////////////////////////////////////////////////////////////////
-
-// Note that the non-standard LoggingSeverity aliases exist because they are
-// still in broad use.  The meanings of the levels are:
+// The meanings of the levels are:
 //  LS_VERBOSE: This level is for data which we do not want to appear in the
 //   normal debug log, but should appear in diagnostic logs.
 //  LS_INFO: Chatty level used in debugging for all sorts of things, the default
@@ -97,9 +95,6 @@ enum LoggingSeverity {
   LS_WARNING,
   LS_ERROR,
   LS_NONE,
-  INFO = LS_INFO,
-  WARNING = LS_WARNING,
-  LERROR = LS_ERROR
 };
 
 // LogErrorContext assists in interpreting the meaning of an error value.
@@ -125,6 +120,13 @@ class LogSink {
   virtual void OnLogMessage(const std::string& message,
                             LoggingSeverity severity);
   virtual void OnLogMessage(const std::string& message) = 0;
+
+  virtual void OnLogMessage(absl::string_view msg,
+                            LoggingSeverity severity,
+                            const char* tag);
+  virtual void OnLogMessage(absl::string_view message,
+                            LoggingSeverity severity);
+  virtual void OnLogMessage(absl::string_view message);
 
  private:
   friend class ::rtc::LogMessage;
@@ -284,8 +286,15 @@ inline Val<LogArgType::kLogMetadataTag, LogMetadataTag> MakeVal(
 template <typename T, class = void>
 struct has_to_log_string : std::false_type {};
 template <typename T>
-struct has_to_log_string<T, decltype(ToLogString(std::declval<T>()))>
-    : std::true_type {};
+struct has_to_log_string<T,
+                         absl::enable_if_t<std::is_convertible<
+                             decltype(ToLogString(std::declval<T>())),
+                             std::string>::value>> : std::true_type {};
+
+template <typename T, absl::enable_if_t<has_to_log_string<T>::value>* = nullptr>
+ToStringVal MakeVal(const T& x) {
+  return {ToLogString(x)};
+}
 
 // Handle arbitrary types other than the above by falling back to stringstream.
 // TODO(bugs.webrtc.org/9278): Get rid of this overload when callers don't need
@@ -305,11 +314,6 @@ ToStringVal MakeVal(const T& x) {
   std::ostringstream os;  // no-presubmit-check TODO(webrtc:8982)
   os << x;
   return {os.str()};
-}
-
-template <typename T, absl::enable_if_t<has_to_log_string<T>::value>* = nullptr>
-ToStringVal MakeVal(const T& x) {
-  return {ToLogString(x)};
 }
 
 #if RTC_LOG_ENABLED()
@@ -442,12 +446,15 @@ class LogMessage {
   // DEPRECATED - DO NOT USE - PLEASE USE THE MACROS INSTEAD OF THE CLASS.
   // Android code should use the 'const char*' version since tags are static
   // and we want to avoid allocating a std::string copy per log line.
-  RTC_DEPRECATED
+  ABSL_DEPRECATED("Use RTC_LOG macros instead of accessing this class directly")
   LogMessage(const char* file,
              int line,
              LoggingSeverity sev,
-             const std::string& tag);
+             absl::string_view tag);
   ~LogMessage();
+
+  LogMessage(const LogMessage&) = delete;
+  LogMessage& operator=(const LogMessage&) = delete;
 
   void AddTag(const char* tag);
   rtc::StringBuilder& stream();
@@ -457,7 +464,7 @@ class LogMessage {
   // which case the logging start time will be the time of the first LogMessage
   // instance is created.
   static int64_t LogStartTime();
-  // Returns the wall clock equivalent of |LogStartTime|, in seconds from the
+  // Returns the wall clock equivalent of `LogStartTime`, in seconds from the
   // epoch.
   static uint32_t WallClockStartTime();
   //  LogThreads: Display the thread identifier of the current thread
@@ -471,14 +478,14 @@ class LogMessage {
   // Sets whether logs will be directed to stderr in debug mode.
   static void SetLogToStderr(bool log_to_stderr);
   // Stream: Any non-blocking stream interface.
-  // Installs the |stream| to collect logs with severtiy |min_sev| or higher.
-  // |stream| must live until deinstalled by RemoveLogToStream.
-  // If |stream| is the first stream added to the system, we might miss some
+  // Installs the `stream` to collect logs with severtiy `min_sev` or higher.
+  // `stream` must live until deinstalled by RemoveLogToStream.
+  // If `stream` is the first stream added to the system, we might miss some
   // early concurrent log statement happening from another thread happening near
   // this instant.
   static void AddLogToStream(LogSink* stream, LoggingSeverity min_sev);
   // Removes the specified stream, without destroying it. When the method
-  // has completed, it's guaranteed that |stream| will receive no more logging
+  // has completed, it's guaranteed that `stream` will receive no more logging
   // calls.
   static void RemoveLogToStream(LogSink* stream);
   // Returns the severity for the specified stream, of if none is specified,
@@ -489,12 +496,18 @@ class LogMessage {
   static int GetMinLogSeverity();
   // Parses the provided parameter stream to configure the options above.
   // Useful for configuring logging from the command line.
-  static void ConfigureLogging(const char* params);
-  // Checks the current global debug severity and if the |streams_| collection
-  // is empty. If |severity| is smaller than the global severity and if the
-  // |streams_| collection is empty, the LogMessage will be considered a noop
+  static void ConfigureLogging(absl::string_view params);
+  // Checks the current global debug severity and if the `streams_` collection
+  // is empty. If `severity` is smaller than the global severity and if the
+  // `streams_` collection is empty, the LogMessage will be considered a noop
   // LogMessage.
   static bool IsNoop(LoggingSeverity severity);
+  // Version of IsNoop that uses fewer instructions at the call site, since the
+  // caller doesn't have to pass an argument.
+  template <LoggingSeverity S>
+  RTC_NO_INLINE static bool IsNoop() {
+    return IsNoop(S);
+  }
 #else
   // Next methods do nothing; no one will call these functions.
   LogMessage(const char* file, int line, LoggingSeverity sev) {}
@@ -510,11 +523,11 @@ class LogMessage {
   // DEPRECATED - DO NOT USE - PLEASE USE THE MACROS INSTEAD OF THE CLASS.
   // Android code should use the 'const char*' version since tags are static
   // and we want to avoid allocating a std::string copy per log line.
-  RTC_DEPRECATED
+  ABSL_DEPRECATED("Use RTC_LOG macros instead of accessing this class directly")
   LogMessage(const char* file,
              int line,
              LoggingSeverity sev,
-             const std::string& tag) {}
+             absl::string_view tag) {}
   ~LogMessage() = default;
 
   inline void AddTag(const char* tag) {}
@@ -532,8 +545,12 @@ class LogMessage {
   inline static void RemoveLogToStream(LogSink* stream) {}
   inline static int GetLogToStream(LogSink* stream = nullptr) { return 0; }
   inline static int GetMinLogSeverity() { return 0; }
-  inline static void ConfigureLogging(const char* params) {}
-  inline static bool IsNoop(LoggingSeverity severity) { return true; }
+  inline static void ConfigureLogging(absl::string_view params) {}
+  static constexpr bool IsNoop(LoggingSeverity severity) { return true; }
+  template <LoggingSeverity S>
+  static constexpr bool IsNoop() {
+    return IsNoop(S);
+  }
 #endif  // RTC_LOG_ENABLED()
 
   // Enable dumping of AEC inputs and outputs.  Can be changed in mid-call
@@ -555,11 +572,11 @@ class LogMessage {
 
 // These write out the actual log messages.
 #if defined(WEBRTC_ANDROID)
-  static void OutputToDebug(const std::string& msg,
+  static void OutputToDebug(absl::string_view msg,
                             LoggingSeverity severity,
                             const char* tag);
 #else
-  static void OutputToDebug(const std::string& msg, LoggingSeverity severity);
+  static void OutputToDebug(absl::string_view msg, LoggingSeverity severity);
 #endif  // defined(WEBRTC_ANDROID)
 
   // Called from the dtor (or from a test) to append optional extra error
@@ -581,7 +598,7 @@ class LogMessage {
   // The output streams and their associated severities
   static LogSink* streams_;
 
-  // Holds true with high probability if |streams_| is empty, false with high
+  // Holds true with high probability if `streams_` is empty, false with high
   // probability otherwise. Operated on with std::memory_order_relaxed because
   // it's ok to lose or log some additional statements near the instant streams
   // are added/removed.
@@ -596,11 +613,11 @@ class LogMessage {
   // Next methods do nothing; no one will call these functions.
   inline static void UpdateMinLogSeverity() {}
 #if defined(WEBRTC_ANDROID)
-  inline static void OutputToDebug(const std::string& msg,
+  inline static void OutputToDebug(absl::string_view msg,
                                    LoggingSeverity severity,
                                    const char* tag) {}
 #else
-  inline static void OutputToDebug(const std::string& msg,
+  inline static void OutputToDebug(absl::string_view msg,
                                    LoggingSeverity severity) {}
 #endif  // defined(WEBRTC_ANDROID)
   inline void FinishPrintStream() {}
@@ -612,24 +629,24 @@ class LogMessage {
   static bool aec_debug_;
   static uint32_t aec_debug_size_;
   static std::string aec_filename_base_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(LogMessage);
 };
 
 //////////////////////////////////////////////////////////////////////
 // Logging Helpers
 //////////////////////////////////////////////////////////////////////
 
-#define RTC_LOG_FILE_LINE(sev, file, line)              \
-  RTC_LOG_ENABLED() && !rtc::LogMessage::IsNoop(sev) && \
-      ::rtc::webrtc_logging_impl::LogCall() &           \
-          ::rtc::webrtc_logging_impl::LogStreamer<>()   \
-              << ::rtc::webrtc_logging_impl::LogMetadata(file, line, sev)
+#define RTC_LOG_FILE_LINE(sev, file, line)        \
+  ::rtc::webrtc_logging_impl::LogCall() &         \
+      ::rtc::webrtc_logging_impl::LogStreamer<>() \
+          << ::rtc::webrtc_logging_impl::LogMetadata(file, line, sev)
 
-#define RTC_LOG(sev) RTC_LOG_FILE_LINE(::rtc::sev, __FILE__, __LINE__)
+#define RTC_LOG(sev)                        \
+  !rtc::LogMessage::IsNoop<::rtc::sev>() && \
+      RTC_LOG_FILE_LINE(::rtc::sev, __FILE__, __LINE__)
 
 // The _V version is for when a variable is passed in.
-#define RTC_LOG_V(sev) RTC_LOG_FILE_LINE(sev, __FILE__, __LINE__)
+#define RTC_LOG_V(sev) \
+  !rtc::LogMessage::IsNoop(sev) && RTC_LOG_FILE_LINE(sev, __FILE__, __LINE__)
 
 // The _F version prefixes the message with the current function name.
 #if (defined(__GNUC__) && !defined(NDEBUG)) || defined(WANT_PRETTY_LOG_F)
@@ -648,11 +665,12 @@ inline bool LogCheckLevel(LoggingSeverity sev) {
   return (LogMessage::GetMinLogSeverity() <= sev);
 }
 
-#define RTC_LOG_E(sev, ctx, err)                                               \
-  RTC_LOG_ENABLED() && ::rtc::webrtc_logging_impl::LogCall() &                 \
-                           ::rtc::webrtc_logging_impl::LogStreamer<>()         \
-                               << ::rtc::webrtc_logging_impl::LogMetadataErr { \
-    {__FILE__, __LINE__, ::rtc::sev}, ::rtc::ERRCTX_##ctx, (err)               \
+#define RTC_LOG_E(sev, ctx, err)                                 \
+  !rtc::LogMessage::IsNoop<::rtc::sev>() &&                      \
+      ::rtc::webrtc_logging_impl::LogCall() &                    \
+          ::rtc::webrtc_logging_impl::LogStreamer<>()            \
+              << ::rtc::webrtc_logging_impl::LogMetadataErr {    \
+    {__FILE__, __LINE__, ::rtc::sev}, ::rtc::ERRCTX_##ctx, (err) \
   }
 
 #define RTC_LOG_T(sev) RTC_LOG(sev) << this << ": "
@@ -685,11 +703,12 @@ inline const char* AdaptString(const std::string& str) {
 }
 }  // namespace webrtc_logging_impl
 
-#define RTC_LOG_TAG(sev, tag)                                                  \
-  RTC_LOG_ENABLED() && ::rtc::webrtc_logging_impl::LogCall() &                 \
-                           ::rtc::webrtc_logging_impl::LogStreamer<>()         \
-                               << ::rtc::webrtc_logging_impl::LogMetadataTag { \
-    sev, ::rtc::webrtc_logging_impl::AdaptString(tag)                          \
+#define RTC_LOG_TAG(sev, tag)                                 \
+  !rtc::LogMessage::IsNoop(sev) &&                            \
+      ::rtc::webrtc_logging_impl::LogCall() &                 \
+          ::rtc::webrtc_logging_impl::LogStreamer<>()         \
+              << ::rtc::webrtc_logging_impl::LogMetadataTag { \
+    sev, ::rtc::webrtc_logging_impl::AdaptString(tag)         \
   }
 
 #else

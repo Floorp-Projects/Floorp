@@ -15,7 +15,6 @@
 #include "rtc_base/experiments/field_trial_list.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/logging.h"
-#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 namespace {
@@ -93,7 +92,8 @@ bool IsValid(const BalancedDegradationSettings::CodecTypeSpecific& config1,
 
 bool IsValid(const std::vector<BalancedDegradationSettings::Config>& configs) {
   if (configs.size() <= 1) {
-    RTC_LOG(LS_WARNING) << "Unsupported size, value ignored.";
+    if (configs.size() == 1)
+      RTC_LOG(LS_WARNING) << "Unsupported size, value ignored.";
     return false;
   }
   for (const auto& config : configs) {
@@ -331,7 +331,8 @@ BalancedDegradationSettings::Config::Config(int pixels,
       av1(av1),
       generic(generic) {}
 
-BalancedDegradationSettings::BalancedDegradationSettings() {
+BalancedDegradationSettings::BalancedDegradationSettings(
+    const FieldTrialsView& field_trials) {
   FieldTrialStructList<Config> configs(
       {FieldTrialStructMember("pixels", [](Config* c) { return &c->pixels; }),
        FieldTrialStructMember("fps", [](Config* c) { return &c->fps; }),
@@ -389,7 +390,7 @@ BalancedDegradationSettings::BalancedDegradationSettings() {
                               [](Config* c) { return &c->generic.kbps_res; })},
       {});
 
-  ParseFieldTrial({&configs}, field_trial::FindFullName(kFieldTrial));
+  ParseFieldTrial({&configs}, field_trials.Lookup(kFieldTrial));
 
   configs_ = GetValidOrDefault(configs.Get());
   RTC_DCHECK_GT(configs_.size(), 1);

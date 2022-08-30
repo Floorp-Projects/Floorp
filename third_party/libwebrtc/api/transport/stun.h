@@ -17,10 +17,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "rtc_base/byte_buffer.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/socket_address.h"
@@ -59,7 +62,6 @@ enum StunAttributeType {
   STUN_ATTR_SOFTWARE = 0x8022,            // ByteString
   STUN_ATTR_ALTERNATE_SERVER = 0x8023,    // Address
   STUN_ATTR_FINGERPRINT = 0x8028,         // UInt32
-  STUN_ATTR_ORIGIN = 0x802F,              // ByteString
   STUN_ATTR_RETRANSMIT_COUNT = 0xFF00     // UInt32
 };
 
@@ -92,7 +94,6 @@ enum StunErrorCode {
   STUN_ERROR_BAD_REQUEST = 400,
   STUN_ERROR_UNAUTHORIZED = 401,
   STUN_ERROR_UNKNOWN_ATTRIBUTE = 420,
-  STUN_ERROR_STALE_CREDENTIALS = 430,  // GICE only
   STUN_ERROR_STALE_NONCE = 438,
   STUN_ERROR_SERVER_ERROR = 500,
   STUN_ERROR_GLOBAL_FAILURE = 600
@@ -103,7 +104,6 @@ extern const char STUN_ERROR_REASON_TRY_ALTERNATE_SERVER[];
 extern const char STUN_ERROR_REASON_BAD_REQUEST[];
 extern const char STUN_ERROR_REASON_UNAUTHORIZED[];
 extern const char STUN_ERROR_REASON_UNKNOWN_ATTRIBUTE[];
-extern const char STUN_ERROR_REASON_STALE_CREDENTIALS[];
 extern const char STUN_ERROR_REASON_STALE_NONCE[];
 extern const char STUN_ERROR_REASON_SERVER_ERROR[];
 
@@ -133,7 +133,6 @@ class StunAddressAttribute;
 class StunAttribute;
 class StunByteStringAttribute;
 class StunErrorCodeAttribute;
-
 class StunUInt16ListAttribute;
 class StunUInt32Attribute;
 class StunUInt64Attribute;
@@ -148,15 +147,24 @@ class StunMessage {
   StunMessage();
   virtual ~StunMessage();
 
+  // The verification status of the message. This is checked on parsing,
+  // or set by AddMessageIntegrity.
+  enum class IntegrityStatus {
+    kNotSet,
+    kNoIntegrity,   // Message-integrity attribute missing
+    kIntegrityOk,   // Message-integrity checked OK
+    kIntegrityBad,  // Message-integrity verification failed
+  };
+
   int type() const { return type_; }
   size_t length() const { return length_; }
   const std::string& transaction_id() const { return transaction_id_; }
   uint32_t reduced_transaction_id() const { return reduced_transaction_id_; }
 
   // Returns true if the message confirms to RFC3489 rather than
-  // RFC5389. The main difference between two version of the STUN
+  // RFC5389. The main difference between the two versions of the STUN
   // protocol is the presence of the magic cookie and different length
-  // of transaction ID. For outgoing packets version of the protocol
+  // of transaction ID. For outgoing packets the version of the protocol
   // is determined by the lengths of the transaction ID.
   bool IsLegacy() const;
 
@@ -190,19 +198,27 @@ class StunMessage {
   // Remote all attributes and releases them.
   void ClearAttributes();
 
-  // Validates that a raw STUN message has a correct MESSAGE-INTEGRITY value.
-  // This can't currently be done on a StunMessage, since it is affected by
-  // padding data (which we discard when reading a StunMessage).
-  static bool ValidateMessageIntegrity(const char* data,
-                                       size_t size,
-                                       const std::string& password);
-  static bool ValidateMessageIntegrity32(const char* data,
-                                         size_t size,
-                                         const std::string& password);
+  // Validates that a STUN message has a correct MESSAGE-INTEGRITY value.
+  // This uses the buffered raw-format message stored by Read().
+  IntegrityStatus ValidateMessageIntegrity(const std::string& password);
+
+  // Returns the current integrity status of the message.
+  IntegrityStatus integrity() const { return integrity_; }
+
+  // Shortcut for checking if integrity is verified.
+  bool IntegrityOk() const {
+    return integrity_ == IntegrityStatus::kIntegrityOk;
+  }
+
+  // Returns the password attribute used to set or check the integrity.
+  // Can only be called after adding or checking the integrity.
+  std::string password() const {
+    RTC_DCHECK(integrity_ != IntegrityStatus::kNotSet);
+    return password_;
+  }
 
   // Adds a MESSAGE-INTEGRITY attribute that is valid for the current message.
   bool AddMessageIntegrity(const std::string& password);
-  bool AddMessageIntegrity(const char* key, size_t keylen);
 
   // Adds a STUN_ATTR_GOOG_MESSAGE_INTEGRITY_32 attribute that is valid for the
   // current message.
@@ -235,13 +251,37 @@ class StunMessage {
   // This is used for testing.
   void SetStunMagicCookie(uint32_t val);
 
-  // Contruct a copy of |this|.
+  // Contruct a copy of `this`.
   std::unique_ptr<StunMessage> Clone() const;
 
-  // Check if the attributes of this StunMessage equals those of |other|
-  // for all attributes that |attribute_type_mask| return true
+  // Check if the attributes of this StunMessage equals those of `other`
+  // for all attributes that `attribute_type_mask` return true
   bool EqualAttributes(const StunMessage* other,
                        std::function<bool(int type)> attribute_type_mask) const;
+
+  // Expose raw-buffer ValidateMessageIntegrity function for testing.
+  static bool ValidateMessageIntegrityForTesting(const char* data,
+                                                 size_t size,
+                                                 const std::string& password) {
+    return ValidateMessageIntegrity(data, size, password);
+  }
+  // Expose raw-buffer ValidateMessageIntegrity function for testing.
+  static bool ValidateMessageIntegrity32ForTesting(
+      const char* data,
+      size_t size,
+      const std::string& password) {
+    return ValidateMessageIntegrity32(data, size, password);
+  }
+  // Validates that a STUN message in byte buffer form
+  // has a correct MESSAGE-INTEGRITY value.
+  // These functions are not recommended and will be deprecated; use
+  // ValidateMessageIntegrity(password) on the parsed form instead.
+  static bool ValidateMessageIntegrity(const char* data,
+                                       size_t size,
+                                       const std::string& password);
+  static bool ValidateMessageIntegrity32(const char* data,
+                                         size_t size,
+                                         const std::string& password);
 
  protected:
   // Verifies that the given attribute is allowed for this message.
@@ -268,6 +308,10 @@ class StunMessage {
   std::string transaction_id_;
   uint32_t reduced_transaction_id_;
   uint32_t stun_magic_cookie_;
+  // The original buffer for messages created by Read().
+  std::string buffer_;
+  IntegrityStatus integrity_ = IntegrityStatus::kNotSet;
+  std::string password_;
 };
 
 // Base class for all STUN/TURN attributes.
@@ -523,11 +567,11 @@ class StunUInt16ListAttribute : public StunAttribute {
 std::string StunMethodToString(int msg_type);
 
 // Returns the (successful) response type for the given request type.
-// Returns -1 if |request_type| is not a valid request type.
+// Returns -1 if `request_type` is not a valid request type.
 int GetStunSuccessResponseType(int request_type);
 
 // Returns the error response type for the given request type.
-// Returns -1 if |request_type| is not a valid request type.
+// Returns -1 if `request_type` is not a valid request type.
 int GetStunErrorResponseType(int request_type);
 
 // Returns whether a given message is a request type.
@@ -548,13 +592,13 @@ bool ComputeStunCredentialHash(const std::string& username,
                                const std::string& password,
                                std::string* hash);
 
-// Make a copy af |attribute| and return a new StunAttribute.
+// Make a copy af `attribute` and return a new StunAttribute.
 //   This is useful if you don't care about what kind of attribute you
 //   are handling.
 //
 // The implementation copies by calling Write() followed by Read().
 //
-// If |tmp_buffer| is supplied this buffer will be used, otherwise
+// If `tmp_buffer` is supplied this buffer will be used, otherwise
 // a buffer will created in the method.
 std::unique_ptr<StunAttribute> CopyStunAttribute(
     const StunAttribute& attribute,

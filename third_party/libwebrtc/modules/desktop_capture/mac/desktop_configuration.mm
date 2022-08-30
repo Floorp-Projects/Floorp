@@ -14,6 +14,8 @@
 #include <algorithm>
 #include <Cocoa/Cocoa.h>
 
+#include "rtc_base/checks.h"
+
 namespace webrtc {
 
 namespace {
@@ -26,11 +28,11 @@ DesktopRect NSRectToDesktopRect(const NSRect& ns_rect) {
       static_cast<int>(ceil(ns_rect.origin.y + ns_rect.size.height)));
 }
 
-// Inverts the position of |rect| from bottom-up coordinates to top-down,
-// relative to |bounds|.
+// Inverts the position of `rect` from bottom-up coordinates to top-down,
+// relative to `bounds`.
 void InvertRectYOrigin(const DesktopRect& bounds,
                        DesktopRect* rect) {
-  assert(bounds.top() == 0);
+  RTC_DCHECK_EQ(bounds.top(), 0);
   *rect = DesktopRect::MakeXYWH(
       rect->left(), bounds.bottom() - rect->bottom(),
       rect->width(), rect->height());
@@ -96,7 +98,7 @@ MacDesktopConfiguration MacDesktopConfiguration::GetCurrent(Origin origin) {
   MacDesktopConfiguration desktop_config;
 
   NSArray* screens = [NSScreen screens];
-  assert(screens);
+  RTC_DCHECK(screens);
 
   // Iterator over the monitors, adding the primary monitor and monitors whose
   // DPI match that of the primary monitor.
@@ -113,7 +115,7 @@ MacDesktopConfiguration MacDesktopConfiguration::GetCurrent(Origin origin) {
     if (i > 0 && origin == TopLeftOrigin) {
       InvertRectYOrigin(desktop_config.displays[0].bounds,
                         &display_config.bounds);
-      // |display_bounds| is density dependent, so we need to convert the
+      // `display_bounds` is density dependent, so we need to convert the
       // primay monitor's position into the secondary monitor's density context.
       float scaling_factor = display_config.dip_to_pixel_scale /
           desktop_config.displays[0].dip_to_pixel_scale;

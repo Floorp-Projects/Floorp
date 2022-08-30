@@ -11,20 +11,18 @@
 #ifndef MODULES_AUDIO_CODING_NETEQ_TOOLS_OUTPUT_AUDIO_FILE_H_
 #define MODULES_AUDIO_CODING_NETEQ_TOOLS_OUTPUT_AUDIO_FILE_H_
 
-#include <assert.h>
 #include <stdio.h>
 
 #include <string>
 
 #include "modules/audio_coding/neteq/tools/audio_sink.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 namespace test {
 
 class OutputAudioFile : public AudioSink {
  public:
-  // Creates an OutputAudioFile, opening a file named |file_name| for writing.
+  // Creates an OutputAudioFile, opening a file named `file_name` for writing.
   // The file format is 16-bit signed host-endian PCM.
   explicit OutputAudioFile(const std::string& file_name) {
     out_file_ = fopen(file_name.c_str(), "wb");
@@ -35,15 +33,16 @@ class OutputAudioFile : public AudioSink {
       fclose(out_file_);
   }
 
+  OutputAudioFile(const OutputAudioFile&) = delete;
+  OutputAudioFile& operator=(const OutputAudioFile&) = delete;
+
   bool WriteArray(const int16_t* audio, size_t num_samples) override {
-    assert(out_file_);
+    RTC_DCHECK(out_file_);
     return fwrite(audio, sizeof(*audio), num_samples, out_file_) == num_samples;
   }
 
  private:
   FILE* out_file_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(OutputAudioFile);
 };
 
 }  // namespace test

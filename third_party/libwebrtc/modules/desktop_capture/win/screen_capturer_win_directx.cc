@@ -16,12 +16,15 @@
 #include <utility>
 #include <vector>
 
+#include "modules/desktop_capture/desktop_capture_metrics_helper.h"
+#include "modules/desktop_capture/desktop_capture_types.h"
 #include "modules/desktop_capture/desktop_frame.h"
 #include "modules/desktop_capture/win/screen_capture_utils.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
+#include "system_wrappers/include/metrics.h"
 
 namespace webrtc {
 
@@ -106,6 +109,7 @@ ScreenCapturerWinDirectx::~ScreenCapturerWinDirectx() = default;
 void ScreenCapturerWinDirectx::Start(Callback* callback) {
   RTC_DCHECK(!callback_);
   RTC_DCHECK(callback);
+  RecordCapturerImpl(DesktopCapturerId::kScreenCapturerWinDirectx);
 
   callback_ = callback;
 }
@@ -121,17 +125,23 @@ void ScreenCapturerWinDirectx::CaptureFrame() {
 
   int64_t capture_start_time_nanos = rtc::TimeNanos();
 
-  frames_.MoveToNextFrame();
-  if (!frames_.current_frame()) {
-    frames_.ReplaceCurrentFrame(
+  // Note that the [] operator will create the ScreenCaptureFrameQueue if it
+  // doesn't exist, so this is safe.
+  ScreenCaptureFrameQueue<DxgiFrame>& frames =
+      frame_queue_map_[current_screen_id_];
+
+  frames.MoveToNextFrame();
+
+  if (!frames.current_frame()) {
+    frames.ReplaceCurrentFrame(
         std::make_unique<DxgiFrame>(shared_memory_factory_.get()));
   }
 
   DxgiDuplicatorController::Result result;
   if (current_screen_id_ == kFullDesktopScreenId) {
-    result = controller_->Duplicate(frames_.current_frame());
+    result = controller_->Duplicate(frames.current_frame());
   } else {
-    result = controller_->DuplicateMonitor(frames_.current_frame(),
+    result = controller_->DuplicateMonitor(frames.current_frame(),
                                            current_screen_id_);
   }
 
@@ -168,9 +178,14 @@ void ScreenCapturerWinDirectx::CaptureFrame() {
     }
     case DuplicateResult::SUCCEEDED: {
       std::unique_ptr<DesktopFrame> frame =
-          frames_.current_frame()->frame()->Share();
-      frame->set_capture_time_ms((rtc::TimeNanos() - capture_start_time_nanos) /
-                                 rtc::kNumNanosecsPerMillisec);
+          frames.current_frame()->frame()->Share();
+
+      int capture_time_ms = (rtc::TimeNanos() - capture_start_time_nanos) /
+                            rtc::kNumNanosecsPerMillisec;
+      RTC_HISTOGRAM_COUNTS_1000(
+          "WebRTC.DesktopCapture.Win.DirectXCapturerFrameTime",
+          capture_time_ms);
+      frame->set_capture_time_ms(capture_time_ms);
       frame->set_capturer_id(DesktopCapturerId::kScreenCapturerWinDirectx);
 
       // TODO(julien.isorce): http://crbug.com/945468. Set the icc profile on

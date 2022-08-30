@@ -34,12 +34,21 @@ extern "C" {
 
 #include <pipewire/proxy.h>
 
+/** \defgroup pw_device Device
+ * Device interface
+ */
+
+/**
+ * \addtogroup pw_device
+ * \{
+ */
+
 #define PW_TYPE_INTERFACE_Device	PW_TYPE_INFO_INTERFACE_BASE "Device"
 
 #define PW_VERSION_DEVICE		3
 struct pw_device;
 
-/** The device information. Extra information can be added in later versions \memberof pw_introspect */
+/** The device information. Extra information can be added in later versions */
 struct pw_device_info {
 	uint32_t id;			/**< id of the global */
 #define PW_DEVICE_CHANGE_MASK_PROPS	(1 << 0)
@@ -51,12 +60,15 @@ struct pw_device_info {
 	uint32_t n_params;		/**< number of items in \a params */
 };
 
-/** Update and existing \ref pw_device_info with \a update \memberof pw_introspect */
+/** Update and existing \ref pw_device_info with \a update and reset */
 struct pw_device_info *
 pw_device_info_update(struct pw_device_info *info,
-		      const struct pw_device_info *update);
-
-/** Free a \ref pw_device_info \memberof pw_introspect */
+		const struct pw_device_info *update);
+/** Merge and existing \ref pw_device_info with \a update */
+struct pw_device_info *
+pw_device_info_merge(struct pw_device_info *info,
+		const struct pw_device_info *update, bool reset);
+/** Free a \ref pw_device_info */
 void pw_device_info_free(struct pw_device_info *info);
 
 #define PW_DEVICE_EVENT_INFO	0
@@ -72,7 +84,7 @@ struct pw_device_events {
 	 *
 	 * \param info info about the device
 	 */
-	void (*info) (void *object, const struct pw_device_info *info);
+	void (*info) (void *data, const struct pw_device_info *info);
 	/**
 	 * Notify a device param
 	 *
@@ -84,7 +96,7 @@ struct pw_device_events {
 	 * \param next the param index of the next param
 	 * \param param the parameter
 	 */
-	void (*param) (void *object, int seq,
+	void (*param) (void *data, int seq,
 		      uint32_t id, uint32_t index, uint32_t next,
 		      const struct spa_pod *param);
 };
@@ -154,6 +166,10 @@ struct pw_device_methods {
 #define pw_device_subscribe_params(c,...)	pw_device_method(c,subscribe_params,0,__VA_ARGS__)
 #define pw_device_enum_params(c,...)		pw_device_method(c,enum_params,0,__VA_ARGS__)
 #define pw_device_set_param(c,...)		pw_device_method(c,set_param,0,__VA_ARGS__)
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

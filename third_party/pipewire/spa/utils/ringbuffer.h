@@ -29,6 +29,16 @@
 extern "C" {
 #endif
 
+/**
+ * \defgroup spa_ringbuffer Ringbuffer
+ * Ring buffer implementation
+ */
+
+/**
+ * \addtogroup spa_ringbuffer
+ * \{
+ */
+
 struct spa_ringbuffer;
 
 #include <string.h>
@@ -49,7 +59,6 @@ struct spa_ringbuffer {
  * Initialize a spa_ringbuffer with \a size.
  *
  * \param rbuf a spa_ringbuffer
- * \param size the number of elements in the ringbuffer
  */
 static inline void spa_ringbuffer_init(struct spa_ringbuffer *rbuf)
 {
@@ -60,6 +69,7 @@ static inline void spa_ringbuffer_init(struct spa_ringbuffer *rbuf)
  * Sets the pointers so that the ringbuffer contains \a size bytes.
  *
  * \param rbuf a spa_ringbuffer
+ * \param size the target size of \a rbuf
  */
 static inline void spa_ringbuffer_set_avail(struct spa_ringbuffer *rbuf, uint32_t size)
 {
@@ -87,7 +97,7 @@ static inline int32_t spa_ringbuffer_get_read_index(struct spa_ringbuffer *rbuf,
  * Read \a len bytes from \a rbuf starting \a offset. \a offset must be taken
  * modulo \a size and len should be smaller than \a size.
  *
- * \param rbuf a #struct spa_ringbuffer
+ * \param rbuf a struct \ref spa_ringbuffer
  * \param buffer memory to read from
  * \param size the size of \a buffer
  * \param offset offset in \a buffer to read from
@@ -100,9 +110,9 @@ spa_ringbuffer_read_data(struct spa_ringbuffer *rbuf,
 			 uint32_t offset, void *data, uint32_t len)
 {
 	uint32_t l0 = SPA_MIN(len, size - offset), l1 = len - l0;
-	spa_memcpy(data, SPA_MEMBER(buffer, offset, void), l0);
+	spa_memcpy(data, SPA_PTROFF(buffer, offset, void), l0);
 	if (SPA_UNLIKELY(l1 > 0))
-		spa_memcpy(SPA_MEMBER(data, l0, void), buffer, l1);
+		spa_memcpy(SPA_PTROFF(data, l0, void), buffer, l1);
 }
 
 /**
@@ -150,9 +160,9 @@ spa_ringbuffer_write_data(struct spa_ringbuffer *rbuf,
 			  uint32_t offset, const void *data, uint32_t len)
 {
 	uint32_t l0 = SPA_MIN(len, size - offset), l1 = len - l0;
-	spa_memcpy(SPA_MEMBER(buffer, offset, void), data, l0);
+	spa_memcpy(SPA_PTROFF(buffer, offset, void), data, l0);
 	if (SPA_UNLIKELY(l1 > 0))
-		spa_memcpy(buffer, SPA_MEMBER(data, l0, void), l1);
+		spa_memcpy(buffer, SPA_PTROFF(data, l0, void), l1);
 }
 
 /**
@@ -165,6 +175,10 @@ static inline void spa_ringbuffer_write_update(struct spa_ringbuffer *rbuf, int3
 {
 	__atomic_store_n(&rbuf->writeindex, index, __ATOMIC_RELEASE);
 }
+
+/**
+ * \}
+ */
 
 
 #ifdef __cplusplus

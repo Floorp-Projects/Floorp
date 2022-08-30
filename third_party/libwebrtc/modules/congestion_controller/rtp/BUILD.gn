@@ -24,13 +24,16 @@ rtc_library("control_handler") {
   ]
 
   deps = [
+    "../../../api:sequence_checker",
     "../../../api/transport:network_control",
     "../../../api/units:data_rate",
     "../../../api/units:data_size",
     "../../../api/units:time_delta",
     "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
+    "../../../rtc_base:safe_conversions",
     "../../../rtc_base:safe_minmax",
-    "../../../rtc_base/synchronization:sequence_checker",
+    "../../../rtc_base/system:no_unique_address",
     "../../../system_wrappers:field_trial",
     "../../pacing",
   ]
@@ -51,14 +54,17 @@ rtc_library("transport_feedback") {
 
   deps = [
     "../..:module_api_public",
+    "../../../api:sequence_checker",
     "../../../api/transport:network_control",
     "../../../api/units:data_size",
     "../../../api/units:timestamp",
     "../../../rtc_base",
     "../../../rtc_base:checks",
-    "../../../rtc_base:rtc_base_approved",
+    "../../../rtc_base:logging",
+    "../../../rtc_base:macromagic",
     "../../../rtc_base/network:sent_packet",
     "../../../rtc_base/synchronization:mutex",
+    "../../../rtc_base/system:no_unique_address",
     "../../../system_wrappers",
     "../../../system_wrappers:field_trial",
     "../../rtp_rtcp:rtp_rtcp_format",
@@ -84,7 +90,7 @@ if (rtc_include_tests) {
       "../../../logging:mocks",
       "../../../rtc_base",
       "../../../rtc_base:checks",
-      "../../../rtc_base:rtc_base_approved",
+      "../../../rtc_base:safe_conversions",
       "../../../rtc_base/network:sent_packet",
       "../../../system_wrappers",
       "../../../test:field_trial",

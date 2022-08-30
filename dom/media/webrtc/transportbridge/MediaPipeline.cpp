@@ -51,6 +51,8 @@
 #include "libwebrtcglue/WebrtcImageBuffer.h"
 #include "common_video/include/video_frame_buffer.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp.h"
+#include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
 
 // Max size given stereo is 480*2*2 = 1920 (10ms of 16-bits stereo audio at
 // 48KHz)
@@ -259,7 +261,7 @@ MediaPipeline::MediaPipeline(const std::string& aPc,
       mRtpBytesReceived(0),
       mPc(aPc),
       mFilter(),
-      mRtpParser(webrtc::RtpHeaderParser::CreateForTest().release()),
+      mRtpHeaderExtensionMap(new webrtc::RtpHeaderExtensionMap()),
       mPacketDumper(PacketDumper::GetPacketDumper(mPc)) {}
 
 MediaPipeline::~MediaPipeline() {
@@ -338,7 +340,7 @@ void MediaPipeline::UpdateTransport_s(
 
   if (mFilter) {
     for (const auto& extension : mFilter->GetExtmap()) {
-      mRtpParser->DeregisterRtpHeaderExtension(extension);
+      mRtpHeaderExtensionMap->Deregister(extension.uri);
     }
   }
   if (mFilter && aFilter) {
@@ -350,7 +352,7 @@ void MediaPipeline::UpdateTransport_s(
   }
   if (mFilter) {
     for (const auto& extension : mFilter->GetExtmap()) {
-      mRtpParser->RegisterRtpHeaderExtension(extension);
+      mRtpHeaderExtensionMap->RegisterByUri(extension.id, extension.uri);
     }
   }
 }
@@ -538,9 +540,12 @@ void MediaPipeline::RtpPacketReceived(const MediaPacket& packet) {
   }
 
   webrtc::RTPHeader header;
-  if (!mRtpParser->Parse(packet.data(), packet.len(), &header, true)) {
+  rtc::CopyOnWriteBuffer packet_buffer(packet.data(), packet.len());
+  webrtc::RtpPacketReceived pktHeader(mRtpHeaderExtensionMap.get());
+  if (!pktHeader.Parse(packet_buffer)) {
     return;
   }
+  pktHeader.GetHeader(&header);
 
   if (mFilter && !mFilter->Filter(header)) {
     return;
@@ -1517,8 +1522,8 @@ class MediaPipelineReceiveVideo::PipelineListener
       image = imageBuffer->GetNativeImage();
     } else {
       MOZ_ASSERT(aBuffer.type() == webrtc::VideoFrameBuffer::Type::kI420);
-      rtc::scoped_refptr<const webrtc::I420BufferInterface> i420 =
-          aBuffer.GetI420();
+      rtc::scoped_refptr<const webrtc::I420BufferInterface> i420(
+          aBuffer.GetI420());
 
       MOZ_ASSERT(i420->DataY());
       // Create a video frame using |buffer|.

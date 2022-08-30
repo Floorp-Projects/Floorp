@@ -147,19 +147,8 @@ class VideoAdapterTest : public ::testing::Test,
   const bool use_new_format_request_;
 };
 
-class VideoAdapterTestVariableStartScale : public VideoAdapterTest {
- public:
-  VideoAdapterTestVariableStartScale()
-      : VideoAdapterTest("WebRTC-Video-VariableStartScaleFactor/Enabled/",
-                         /*source_resolution_alignment=*/1) {}
-};
-
 INSTANTIATE_TEST_SUITE_P(OnOutputFormatRequests,
                          VideoAdapterTest,
-                         ::testing::Values(true, false));
-
-INSTANTIATE_TEST_SUITE_P(OnOutputFormatRequests,
-                         VideoAdapterTestVariableStartScale,
                          ::testing::Values(true, false));
 
 // Do not adapt the frame rate or the resolution. Expect no frame drop, no
@@ -195,43 +184,8 @@ TEST_P(VideoAdapterTest, AdaptFramerateToHalf) {
 
   // Capture 10 frames and verify that every other frame is dropped. The first
   // frame should not be dropped.
-  adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
-  EXPECT_GE(adapter_wrapper_->GetStats().captured_frames, 1);
-  EXPECT_EQ(0, adapter_wrapper_->GetStats().dropped_frames);
-
-  adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
-  EXPECT_GE(adapter_wrapper_->GetStats().captured_frames, 2);
-  EXPECT_EQ(1, adapter_wrapper_->GetStats().dropped_frames);
-
-  adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
-  EXPECT_GE(adapter_wrapper_->GetStats().captured_frames, 3);
-  EXPECT_EQ(1, adapter_wrapper_->GetStats().dropped_frames);
-
-  adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
-  EXPECT_GE(adapter_wrapper_->GetStats().captured_frames, 4);
-  EXPECT_EQ(2, adapter_wrapper_->GetStats().dropped_frames);
-
-  adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
-  EXPECT_GE(adapter_wrapper_->GetStats().captured_frames, 5);
-  EXPECT_EQ(2, adapter_wrapper_->GetStats().dropped_frames);
-
-  adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
-  EXPECT_GE(adapter_wrapper_->GetStats().captured_frames, 6);
-  EXPECT_EQ(3, adapter_wrapper_->GetStats().dropped_frames);
-
-  adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
-  EXPECT_GE(adapter_wrapper_->GetStats().captured_frames, 7);
-  EXPECT_EQ(3, adapter_wrapper_->GetStats().dropped_frames);
-
-  adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
-  EXPECT_GE(adapter_wrapper_->GetStats().captured_frames, 8);
-  EXPECT_EQ(4, adapter_wrapper_->GetStats().dropped_frames);
-
-  adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
-  EXPECT_GE(adapter_wrapper_->GetStats().captured_frames, 9);
-  EXPECT_EQ(4, adapter_wrapper_->GetStats().dropped_frames);
-
-  adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
+  for (int i = 0; i < 10; ++i)
+    adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
   EXPECT_GE(adapter_wrapper_->GetStats().captured_frames, 10);
   EXPECT_EQ(5, adapter_wrapper_->GetStats().dropped_frames);
 }
@@ -244,43 +198,8 @@ TEST_P(VideoAdapterTest, AdaptFramerateToTwoThirds) {
 
   // Capture 10 frames and verify that every third frame is dropped. The first
   // frame should not be dropped.
-  adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
-  EXPECT_GE(adapter_wrapper_->GetStats().captured_frames, 1);
-  EXPECT_EQ(0, adapter_wrapper_->GetStats().dropped_frames);
-
-  adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
-  EXPECT_GE(adapter_wrapper_->GetStats().captured_frames, 2);
-  EXPECT_EQ(0, adapter_wrapper_->GetStats().dropped_frames);
-
-  adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
-  EXPECT_GE(adapter_wrapper_->GetStats().captured_frames, 3);
-  EXPECT_EQ(1, adapter_wrapper_->GetStats().dropped_frames);
-
-  adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
-  EXPECT_GE(adapter_wrapper_->GetStats().captured_frames, 4);
-  EXPECT_EQ(1, adapter_wrapper_->GetStats().dropped_frames);
-
-  adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
-  EXPECT_GE(adapter_wrapper_->GetStats().captured_frames, 5);
-  EXPECT_EQ(1, adapter_wrapper_->GetStats().dropped_frames);
-
-  adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
-  EXPECT_GE(adapter_wrapper_->GetStats().captured_frames, 6);
-  EXPECT_EQ(2, adapter_wrapper_->GetStats().dropped_frames);
-
-  adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
-  EXPECT_GE(adapter_wrapper_->GetStats().captured_frames, 7);
-  EXPECT_EQ(2, adapter_wrapper_->GetStats().dropped_frames);
-
-  adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
-  EXPECT_GE(adapter_wrapper_->GetStats().captured_frames, 8);
-  EXPECT_EQ(2, adapter_wrapper_->GetStats().dropped_frames);
-
-  adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
-  EXPECT_GE(adapter_wrapper_->GetStats().captured_frames, 9);
-  EXPECT_EQ(3, adapter_wrapper_->GetStats().dropped_frames);
-
-  adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
+  for (int i = 0; i < 10; ++i)
+    adapter_wrapper_->AdaptFrame(frame_source_->GetFrame());
   EXPECT_GE(adapter_wrapper_->GetStats().captured_frames, 10);
   EXPECT_EQ(3, adapter_wrapper_->GetStats().dropped_frames);
 }
@@ -316,75 +235,6 @@ TEST_P(VideoAdapterTest, AdaptFramerateToHalfWithNoPixelLimit) {
     VerifyAdaptedResolution(adapter_wrapper_->GetStats(), kWidth, kHeight,
                             kWidth, kHeight);
   }
-}
-
-// After the first timestamp, add a big offset to the timestamps. Expect that
-// the adapter is conservative and resets to the new offset and does not drop
-// any frame.
-TEST_P(VideoAdapterTest, AdaptFramerateTimestampOffset) {
-  const int64_t capture_interval = VideoFormat::FpsToInterval(kDefaultFps);
-  OnOutputFormatRequest(640, 480, kDefaultFps);
-
-  const int64_t first_timestamp = 0;
-  adapter_.AdaptFrameResolution(640, 480, first_timestamp, &cropped_width_,
-                                &cropped_height_, &out_width_, &out_height_);
-  EXPECT_GT(out_width_, 0);
-  EXPECT_GT(out_height_, 0);
-
-  const int64_t big_offset = -987654321LL * 1000;
-  const int64_t second_timestamp = big_offset;
-  adapter_.AdaptFrameResolution(640, 480, second_timestamp, &cropped_width_,
-                                &cropped_height_, &out_width_, &out_height_);
-  EXPECT_GT(out_width_, 0);
-  EXPECT_GT(out_height_, 0);
-
-  const int64_t third_timestamp = big_offset + capture_interval;
-  adapter_.AdaptFrameResolution(640, 480, third_timestamp, &cropped_width_,
-                                &cropped_height_, &out_width_, &out_height_);
-  EXPECT_GT(out_width_, 0);
-  EXPECT_GT(out_height_, 0);
-}
-
-// Request 30 fps and send 30 fps with jitter. Expect that no frame is dropped.
-TEST_P(VideoAdapterTest, AdaptFramerateTimestampJitter) {
-  const int64_t capture_interval = VideoFormat::FpsToInterval(kDefaultFps);
-  OnOutputFormatRequest(640, 480, kDefaultFps);
-
-  adapter_.AdaptFrameResolution(640, 480, capture_interval * 0 / 10,
-                                &cropped_width_, &cropped_height_, &out_width_,
-                                &out_height_);
-  EXPECT_GT(out_width_, 0);
-  EXPECT_GT(out_height_, 0);
-
-  adapter_.AdaptFrameResolution(640, 480, capture_interval * 10 / 10 - 1,
-                                &cropped_width_, &cropped_height_, &out_width_,
-                                &out_height_);
-  EXPECT_GT(out_width_, 0);
-  EXPECT_GT(out_height_, 0);
-
-  adapter_.AdaptFrameResolution(640, 480, capture_interval * 25 / 10,
-                                &cropped_width_, &cropped_height_, &out_width_,
-                                &out_height_);
-  EXPECT_GT(out_width_, 0);
-  EXPECT_GT(out_height_, 0);
-
-  adapter_.AdaptFrameResolution(640, 480, capture_interval * 30 / 10,
-                                &cropped_width_, &cropped_height_, &out_width_,
-                                &out_height_);
-  EXPECT_GT(out_width_, 0);
-  EXPECT_GT(out_height_, 0);
-
-  adapter_.AdaptFrameResolution(640, 480, capture_interval * 35 / 10,
-                                &cropped_width_, &cropped_height_, &out_width_,
-                                &out_height_);
-  EXPECT_GT(out_width_, 0);
-  EXPECT_GT(out_height_, 0);
-
-  adapter_.AdaptFrameResolution(640, 480, capture_interval * 50 / 10,
-                                &cropped_width_, &cropped_height_, &out_width_,
-                                &out_height_);
-  EXPECT_GT(out_width_, 0);
-  EXPECT_GT(out_height_, 0);
 }
 
 // Adapt the frame rate to be half of the capture rate after capturing no less
@@ -1094,8 +944,8 @@ TEST_P(VideoAdapterTest, TestAdaptToVerySmallResolution) {
   EXPECT_TRUE(adapter_.AdaptFrameResolution(
       w, h, 0, &cropped_width_, &cropped_height_, &out_width_, &out_height_));
 
-  EXPECT_EQ(180, out_width_);
-  EXPECT_EQ(99, out_height_);
+  EXPECT_EQ(160, out_width_);
+  EXPECT_EQ(90, out_height_);
 }
 
 TEST_P(VideoAdapterTest, AdaptFrameResolutionDropWithResolutionRequest) {
@@ -1192,7 +1042,7 @@ TEST(VideoAdapterTestMultipleOrientation, TestForcePortrait) {
   EXPECT_EQ(640, out_height);
 }
 
-TEST_P(VideoAdapterTest, AdaptResolutionInSteps) {
+TEST_P(VideoAdapterTest, AdaptResolutionInStepsFirst3_4) {
   const int kWidth = 1280;
   const int kHeight = 720;
   OnOutputFormatRequest(kWidth, kHeight, absl::nullopt);  // 16:9 aspect.
@@ -1220,40 +1070,7 @@ TEST_P(VideoAdapterTest, AdaptResolutionInSteps) {
   }
 }
 
-// Scale factors are 3/4, 2/3, 3/4, 2/3, ... (see test above).
-// In VideoAdapterTestVariableStartScale, first scale factor depends on
-// resolution. May start with:
-// - 2/3 (if width/height multiple of 3) or
-// - 2/3, 2/3 (if width/height multiple of 9).
-TEST_P(VideoAdapterTestVariableStartScale, AdaptResolutionInStepsFirst3_4) {
-  const int kWidth = 1280;
-  const int kHeight = 720;
-  OnOutputFormatRequest(kWidth, kHeight, absl::nullopt);  // 16:9 aspect.
-
-  // Scale factors: 3/4, 2/3, 3/4, 2/3, ...
-  // Scale        : 3/4, 1/2, 3/8, 1/4, 3/16, 1/8.
-  const int kExpectedWidths[] = {960, 640, 480, 320, 240, 160};
-  const int kExpectedHeights[] = {540, 360, 270, 180, 135, 90};
-
-  int request_width = kWidth;
-  int request_height = kHeight;
-
-  for (size_t i = 0; i < arraysize(kExpectedWidths); ++i) {
-    // Adapt down one step.
-    adapter_.OnSinkWants(BuildSinkWants(absl::nullopt,
-                                        request_width * request_height - 1,
-                                        std::numeric_limits<int>::max()));
-    EXPECT_TRUE(adapter_.AdaptFrameResolution(kWidth, kHeight, 0,
-                                              &cropped_width_, &cropped_height_,
-                                              &out_width_, &out_height_));
-    EXPECT_EQ(kExpectedWidths[i], out_width_);
-    EXPECT_EQ(kExpectedHeights[i], out_height_);
-    request_width = out_width_;
-    request_height = out_height_;
-  }
-}
-
-TEST_P(VideoAdapterTestVariableStartScale, AdaptResolutionInStepsFirst2_3) {
+TEST_P(VideoAdapterTest, AdaptResolutionInStepsFirst2_3) {
   const int kWidth = 1920;
   const int kHeight = 1080;
   OnOutputFormatRequest(kWidth, kHeight, absl::nullopt);  // 16:9 aspect.
@@ -1281,7 +1098,7 @@ TEST_P(VideoAdapterTestVariableStartScale, AdaptResolutionInStepsFirst2_3) {
   }
 }
 
-TEST_P(VideoAdapterTestVariableStartScale, AdaptResolutionInStepsFirst2x2_3) {
+TEST_P(VideoAdapterTest, AdaptResolutionInStepsFirst2x2_3) {
   const int kWidth = 1440;
   const int kHeight = 1080;
   OnOutputFormatRequest(kWidth, kHeight, absl::nullopt);  // 4:3 aspect.

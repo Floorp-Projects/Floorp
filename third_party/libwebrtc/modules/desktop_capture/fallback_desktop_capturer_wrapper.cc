@@ -14,8 +14,8 @@
 
 #include <utility>
 
+#include "api/sequence_checker.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/thread_checker.h"
 #include "system_wrappers/include/metrics.h"
 
 namespace webrtc {
@@ -27,13 +27,13 @@ namespace {
 // implementations only.
 class SharedMemoryFactoryProxy : public SharedMemoryFactory {
  public:
-  // Users should maintain the lifetime of |factory| to ensure it overlives
+  // Users should maintain the lifetime of `factory` to ensure it overlives
   // current instance.
   static std::unique_ptr<SharedMemoryFactory> Create(
       SharedMemoryFactory* factory);
   ~SharedMemoryFactoryProxy() override;
 
-  // Forwards CreateSharedMemory() calls to |factory_|. Users should always call
+  // Forwards CreateSharedMemory() calls to `factory_`. Users should always call
   // this function in one thread. Users should not call this function after the
   // SharedMemoryFactory which current instance created from has been destroyed.
   std::unique_ptr<SharedMemory> CreateSharedMemory(size_t size) override;
@@ -42,7 +42,7 @@ class SharedMemoryFactoryProxy : public SharedMemoryFactory {
   explicit SharedMemoryFactoryProxy(SharedMemoryFactory* factory);
 
   SharedMemoryFactory* factory_ = nullptr;
-  rtc::ThreadChecker thread_checker_;
+  SequenceChecker thread_checker_;
 };
 
 }  // namespace
@@ -88,7 +88,7 @@ void FallbackDesktopCapturerWrapper::Start(
   main_capturer_->Start(this);
   // For the secondary capturer, we do not have a backup plan anymore, so
   // FallbackDesktopCapturerWrapper won't check its return value any more. It
-  // will directly return to the input |callback|.
+  // will directly return to the input `callback`.
   secondary_capturer_->Start(callback);
 }
 

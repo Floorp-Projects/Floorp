@@ -15,12 +15,12 @@
 
 #include <memory>
 
+#include "api/sequence_checker.h"
 #include "modules/audio_device/android/audio_manager.h"
 #include "modules/audio_device/audio_device_generic.h"
 #include "modules/audio_device/include/audio_device_defines.h"
 #include "modules/utility/include/helpers_android.h"
 #include "modules/utility/include/jvm_android.h"
-#include "rtc_base/thread_checker.h"
 
 namespace webrtc {
 
@@ -87,8 +87,8 @@ class AudioRecordJni {
 
  private:
   // Called from Java side so we can cache the address of the Java-manged
-  // |byte_buffer| in |direct_buffer_address_|. The size of the buffer
-  // is also stored in |direct_buffer_capacity_in_bytes_|.
+  // `byte_buffer` in `direct_buffer_address_`. The size of the buffer
+  // is also stored in `direct_buffer_capacity_in_bytes_`.
   // This method will be called by the WebRtcAudioRecord constructor, i.e.,
   // on the same thread that this object is created on.
   static void JNICALL CacheDirectBufferAddress(JNIEnv* env,
@@ -98,8 +98,8 @@ class AudioRecordJni {
   void OnCacheDirectBufferAddress(JNIEnv* env, jobject byte_buffer);
 
   // Called periodically by the Java based WebRtcAudioRecord object when
-  // recording has started. Each call indicates that there are |length| new
-  // bytes recorded in the memory area |direct_buffer_address_| and it is
+  // recording has started. Each call indicates that there are `length` new
+  // bytes recorded in the memory area `direct_buffer_address_` and it is
   // now time to send these to the consumer.
   // This method is called on a high-priority thread from Java. The name of
   // the thread is 'AudioRecordThread'.
@@ -110,11 +110,11 @@ class AudioRecordJni {
   void OnDataIsRecorded(int length);
 
   // Stores thread ID in constructor.
-  rtc::ThreadChecker thread_checker_;
+  SequenceChecker thread_checker_;
 
   // Stores thread ID in first call to OnDataIsRecorded() from high-priority
   // thread in Java. Detached during construction of this object.
-  rtc::ThreadChecker thread_checker_java_;
+  SequenceChecker thread_checker_java_;
 
   // Calls JavaVM::AttachCurrentThread() if this thread is not attached at
   // construction.
@@ -142,10 +142,10 @@ class AudioRecordJni {
   // possible values. See audio_common.h for details.
   int total_delay_in_milliseconds_;
 
-  // Cached copy of address to direct audio buffer owned by |j_audio_record_|.
+  // Cached copy of address to direct audio buffer owned by `j_audio_record_`.
   void* direct_buffer_address_;
 
-  // Number of bytes in the direct audio buffer owned by |j_audio_record_|.
+  // Number of bytes in the direct audio buffer owned by `j_audio_record_`.
   size_t direct_buffer_capacity_in_bytes_;
 
   // Number audio frames per audio buffer. Each audio frame corresponds to

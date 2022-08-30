@@ -18,14 +18,13 @@
 #include "common_audio/channel_buffer.h"
 #include "common_audio/resampler/push_sinc_resampler.h"
 #include "rtc_base/arraysize.h"
-#include "rtc_base/format_macros.h"
 #include "test/gtest.h"
 
 namespace webrtc {
 
 typedef std::unique_ptr<ChannelBuffer<float>> ScopedBuffer;
 
-// Sets the signal value to increase by |data| with every sample.
+// Sets the signal value to increase by `data` with every sample.
 ScopedBuffer CreateBuffer(const std::vector<float>& data, size_t frames) {
   const size_t num_channels = data.size();
   ScopedBuffer sb(new ChannelBuffer<float>(frames, num_channels));
@@ -41,8 +40,8 @@ void VerifyParams(const ChannelBuffer<float>& ref,
   EXPECT_EQ(ref.num_frames(), test.num_frames());
 }
 
-// Computes the best SNR based on the error between |ref_frame| and
-// |test_frame|. It searches around |expected_delay| in samples between the
+// Computes the best SNR based on the error between `ref_frame` and
+// `test_frame`. It searches around `expected_delay` in samples between the
 // signals to compensate for the resampling delay.
 float ComputeSNR(const ChannelBuffer<float>& ref,
                  const ChannelBuffer<float>& test,
@@ -79,7 +78,7 @@ float ComputeSNR(const ChannelBuffer<float>& ref,
       best_delay = delay;
     }
   }
-  printf("SNR=%.1f dB at delay=%" RTC_PRIuS "\n", best_snr, best_delay);
+  printf("SNR=%.1f dB at delay=%zu\n", best_snr, best_delay);
   return best_snr;
 }
 
@@ -131,8 +130,8 @@ void RunAudioConverterTest(size_t src_channels,
                 PushSincResampler::AlgorithmicDelaySeconds(src_sample_rate_hz) *
                 dst_sample_rate_hz);
   // SNR reported on the same line later.
-  printf("(%" RTC_PRIuS ", %d Hz) -> (%" RTC_PRIuS ", %d Hz) ", src_channels,
-         src_sample_rate_hz, dst_channels, dst_sample_rate_hz);
+  printf("(%zu, %d Hz) -> (%zu, %d Hz) ", src_channels, src_sample_rate_hz,
+         dst_channels, dst_sample_rate_hz);
 
   std::unique_ptr<AudioConverter> converter = AudioConverter::Create(
       src_channels, src_frames, dst_channels, dst_frames);

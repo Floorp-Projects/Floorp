@@ -30,11 +30,19 @@ extern "C" {
 #endif
 
 #include <spa/utils/hook.h>
+#include <spa/support/thread.h>
 
-/** \class pw_data_loop
+/** \defgroup pw_data_loop Data Loop
  *
- * PipeWire rt-loop object. This loop starts a new real-time thread that
+ * \brief PipeWire rt-loop object
+ *
+ * This loop starts a new real-time thread that
  * is designed to run the processing graph.
+ */
+
+/**
+ * \addtogroup pw_data_loop
+ * \{
  */
 struct pw_data_loop;
 
@@ -81,12 +89,22 @@ int pw_data_loop_stop(struct pw_data_loop *loop);
 
 /** Check if the current thread is the processing thread */
 bool pw_data_loop_in_thread(struct pw_data_loop *loop);
+/** Get the thread object */
+struct spa_thread *pw_data_loop_get_thread(struct pw_data_loop *loop);
 
 /** invoke func in the context of the thread or in the caller thread when
  * the loop is not running. Since 0.3.3 */
 int pw_data_loop_invoke(struct pw_data_loop *loop,
 		spa_invoke_func_t func, uint32_t seq, const void *data, size_t size,
 		bool block, void *user_data);
+
+/** Set a custom spa_thread_utils for this loop. Setting NULL restores the
+ * system default implementation. Since 0.3.50 */
+void pw_data_loop_set_thread_utils(struct pw_data_loop *loop,
+		struct spa_thread_utils *impl);
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }

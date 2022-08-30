@@ -19,7 +19,7 @@ constexpr char kFieldTrialName[] = "WebRTC-StableTargetRate";
 }  // namespace
 
 StableTargetRateExperiment::StableTargetRateExperiment(
-    const WebRtcKeyValueConfig* const key_value_config,
+    const FieldTrialsView* const key_value_config,
     double default_video_hysteresis,
     double default_screenshare_hysteresis)
     : enabled_("enabled", false),
@@ -43,7 +43,7 @@ StableTargetRateExperiment StableTargetRateExperiment::ParseFromFieldTrials() {
 }
 
 StableTargetRateExperiment StableTargetRateExperiment::ParseFromKeyValueConfig(
-    const WebRtcKeyValueConfig* const key_value_config) {
+    const FieldTrialsView* const key_value_config) {
   RateControlSettings rate_control =
       RateControlSettings::ParseFromKeyValueConfig(key_value_config);
   return StableTargetRateExperiment(

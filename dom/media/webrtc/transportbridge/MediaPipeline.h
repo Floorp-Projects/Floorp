@@ -26,7 +26,7 @@
 #include "PrincipalChangeObserver.h"
 #include "jsapi/PacketDumper.h"
 
-#include "test/rtp_header_parser.h"
+#include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
 
 // Should come from MediaEngine.h, but that's a pain to include here
 // because of the MOZILLA_EXTERNAL_LINKAGE stuff.
@@ -231,7 +231,7 @@ class MediaPipeline : public sigslot::has_slots<> {
 
   // Written in c'tor, all following accesses are on the STS thread.
   UniquePtr<MediaPipelineFilter> mFilter;
-  const UniquePtr<webrtc::RtpHeaderParser> mRtpParser;
+  const UniquePtr<webrtc::RtpHeaderExtensionMap> mRtpHeaderExtensionMap;
 
   RefPtr<PacketDumper> mPacketDumper;
 

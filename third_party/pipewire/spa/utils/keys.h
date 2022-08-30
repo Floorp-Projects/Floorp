@@ -29,6 +29,15 @@
 extern "C" {
 #endif
 
+/** \defgroup spa_keys  Key Names
+ * Key names used by SPA plugins
+ */
+
+/**
+ * \addtogroup spa_keys
+ * \{
+ */
+
 /** for objects */
 #define SPA_KEY_OBJECT_PATH		"object.path"			/**< a unique path to
 									  *  identity the object */
@@ -52,6 +61,7 @@ extern "C" {
 #define SPA_KEY_API_ALSA_CARD		"api.alsa.card"			/**< alsa card number */
 #define SPA_KEY_API_ALSA_USE_UCM	"api.alsa.use-ucm"		/**< if UCM should be used */
 #define SPA_KEY_API_ALSA_IGNORE_DB	"api.alsa.ignore-dB"		/**< if decibel info should be ignored */
+#define SPA_KEY_API_ALSA_OPEN_UCM	"api.alsa.open.ucm"		/**< if UCM should be opened card */
 
 /** info from alsa card_info */
 #define SPA_KEY_API_ALSA_CARD_ID	"api.alsa.card.id"		/**< id from card_info */
@@ -83,6 +93,8 @@ extern "C" {
 #define SPA_KEY_API_LIBCAMERA		"api.libcamera"			/**< key for the libcamera api */
 #define SPA_KEY_API_LIBCAMERA_PATH	"api.libcamera.path"	/**< libcamera device path as can be
 									  *  used in open() */
+#define SPA_KEY_API_LIBCAMERA_LOCATION	"api.libcamera.location"	/**< location of the camera:
+									  * "front", "back" or "external" */
 
 /** info from libcamera_capability */
 #define SPA_KEY_API_LIBCAMERA_CAP_DRIVER	"api.libcamera.cap.driver"	/**< driver from capbility */
@@ -108,14 +120,22 @@ extern "C" {
 #define SPA_KEY_API_BLUEZ5		"api.bluez5"			/**< key for the bluez5 api */
 #define SPA_KEY_API_BLUEZ5_PATH		"api.bluez5.path"		/**< a bluez5 path */
 #define SPA_KEY_API_BLUEZ5_DEVICE	"api.bluez5.device"		/**< an internal bluez5 device */
+#define SPA_KEY_API_BLUEZ5_CONNECTION	"api.bluez5.connection"		/**< bluez5 device connection status */
 #define SPA_KEY_API_BLUEZ5_TRANSPORT	"api.bluez5.transport"		/**< an internal bluez5 transport */
 #define SPA_KEY_API_BLUEZ5_PROFILE	"api.bluez5.profile"		/**< a bluetooth profile */
 #define SPA_KEY_API_BLUEZ5_ADDRESS	"api.bluez5.address"		/**< a bluetooth address */
+#define SPA_KEY_API_BLUEZ5_CODEC	"api.bluez5.codec"		/**< a bluetooth codec */
+#define SPA_KEY_API_BLUEZ5_CLASS	"api.bluez5.class"		/**< a bluetooth class */
+#define SPA_KEY_API_BLUEZ5_ICON		"api.bluez5.icon"		/**< a bluetooth icon */
 
 /** keys for jack api */
 #define SPA_KEY_API_JACK		"api.jack"			/**< key for the JACK api */
 #define SPA_KEY_API_JACK_SERVER		"api.jack.server"		/**< a jack server name */
 #define SPA_KEY_API_JACK_CLIENT		"api.jack.client"		/**< an internal jack client */
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

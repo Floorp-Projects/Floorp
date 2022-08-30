@@ -1,0 +1,53 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+  ### This moz.build was AUTOMATICALLY GENERATED from a GN config,  ###
+  ### DO NOT edit it by hand.                                       ###
+
+COMPILE_FLAGS["OS_INCLUDES"] = []
+AllowCompilerWarnings()
+
+DEFINES["ABSL_ALLOCATOR_NOTHROW"] = "1"
+DEFINES["ANDROID"] = True
+DEFINES["ANDROID_NDK_VERSION_ROLL"] = "r22_1"
+DEFINES["HAVE_SYS_UIO_H"] = True
+DEFINES["_GNU_SOURCE"] = True
+
+FINAL_LIBRARY = "webrtc"
+
+
+LOCAL_INCLUDES += [
+    "!/ipc/ipdl/_ipdlheaders",
+    "/ipc/chromium/src",
+    "/third_party/libwebrtc/",
+    "/third_party/libwebrtc/third_party/abseil-cpp/",
+    "/tools/profiler/public"
+]
+
+if not CONFIG["MOZ_DEBUG"]:
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
+    DEFINES["NDEBUG"] = True
+    DEFINES["NVALGRIND"] = True
+
+if CONFIG["MOZ_DEBUG"] == "1":
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
+    DEFINES["_DEBUG"] = True
+
+if CONFIG["CPU_ARCH"] == "arm":
+
+    OS_LIBS += [
+        "android_support",
+        "unwind"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86":
+
+    OS_LIBS += [
+        "android_support"
+    ]
+
+Library("cleanup_internal_gn")

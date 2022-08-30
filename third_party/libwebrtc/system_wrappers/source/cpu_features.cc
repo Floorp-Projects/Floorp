@@ -12,6 +12,7 @@
 
 #include "rtc_base/system/arch.h"
 #include "system_wrappers/include/cpu_features_wrapper.h"
+#include "system_wrappers/include/field_trial.h"
 
 #if defined(WEBRTC_ARCH_X86_FAMILY) && defined(_MSC_VER)
 #include <intrin.h>
@@ -29,7 +30,7 @@ int GetCPUInfoNoASM(CPUFeature feature) {
 
 #if defined(WEBRTC_ENABLE_AVX2)
 // xgetbv returns the value of an Intel Extended Control Register (XCR).
-// Currently only XCR0 is defined by Intel so |xcr| should always be zero.
+// Currently only XCR0 is defined by Intel so `xcr` should always be zero.
 static uint64_t xgetbv(uint32_t xcr) {
 #if defined(_MSC_VER)
   return _xgetbv(xcr);
@@ -77,7 +78,8 @@ int GetCPUInfo(CPUFeature feature) {
     return 0 != (cpu_info[2] & 0x00000001);
   }
 #if defined(WEBRTC_ENABLE_AVX2)
-  if (feature == kAVX2) {
+  if (feature == kAVX2 &&
+      !webrtc::field_trial::IsEnabled("WebRTC-Avx2SupportKillSwitch")) {
     int cpu_info7[4];
     __cpuid(cpu_info7, 0);
     int num_ids = cpu_info7[0];
@@ -91,13 +93,14 @@ int GetCPUInfo(CPUFeature feature) {
     //     a) AVX are supported by the CPU,
     //     b) XSAVE is supported by the CPU,
     //     c) XSAVE is enabled by the kernel.
-    // See http://software.intel.com/en-us/blogs/2011/04/14/is-avx-enabled
-    // AVX2 support needs (avx_support && (cpu_info7[1] & 0x00000020) != 0;).
-    return (cpu_info[2] & 0x10000000) != 0 &&
+    // Compiling with MSVC and /arch:AVX2 surprisingly generates BMI2
+    // instructions (see crbug.com/1315519).
+    return (cpu_info[2] & 0x10000000) != 0 /* AVX */ &&
            (cpu_info[2] & 0x04000000) != 0 /* XSAVE */ &&
            (cpu_info[2] & 0x08000000) != 0 /* OSXSAVE */ &&
            (xgetbv(0) & 0x00000006) == 6 /* XSAVE enabled by kernel */ &&
-           (cpu_info7[1] & 0x00000020) != 0;
+           (cpu_info7[1] & 0x00000020) != 0 /* AVX2 */ &&
+           (cpu_info7[1] & 0x00000100) != 0 /* BMI2 */;
   }
 #endif  // WEBRTC_ENABLE_AVX2
   return 0;

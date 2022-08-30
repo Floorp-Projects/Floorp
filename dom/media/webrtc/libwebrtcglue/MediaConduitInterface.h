@@ -22,8 +22,18 @@
 #include "transport/mediapacket.h"
 
 // libwebrtc includes
+#include "api/audio/audio_frame.h"
+#include "api/call/transport.h"
+#include "api/rtp_headers.h"
+#include "api/rtp_parameters.h"
+#include "api/transport/rtp/rtp_source.h"
 #include "api/video/video_frame_buffer.h"
-#include "call/call.h"
+#include "call/audio_receive_stream.h"
+#include "call/audio_send_stream.h"
+#include "call/call_basic_stats.h"
+#include "call/video_receive_stream.h"
+#include "call/video_send_stream.h"
+#include "rtc_base/copy_on_write_buffer.h"
 
 namespace webrtc {
 class VideoFrame;
@@ -169,7 +179,7 @@ class MediaSessionConduit {
   virtual Maybe<RefPtr<AudioSessionConduit>> AsAudioSessionConduit() = 0;
   virtual Maybe<RefPtr<VideoSessionConduit>> AsVideoSessionConduit() = 0;
 
-  virtual Maybe<webrtc::Call::Stats> GetCallStats() const = 0;
+  virtual Maybe<webrtc::CallBasicStats> GetCallStats() const = 0;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaSessionConduit)
 

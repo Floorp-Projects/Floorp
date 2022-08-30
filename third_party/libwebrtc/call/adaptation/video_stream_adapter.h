@@ -18,6 +18,7 @@
 #include "absl/types/optional.h"
 #include "absl/types/variant.h"
 #include "api/adaptation/resource.h"
+#include "api/field_trials_view.h"
 #include "api/rtp_parameters.h"
 #include "api/video/video_adaptation_counters.h"
 #include "api/video/video_stream_encoder_observer.h"
@@ -28,6 +29,7 @@
 #include "call/adaptation/video_stream_input_state_provider.h"
 #include "modules/video_coding/utility/quality_scaler.h"
 #include "rtc_base/experiments/balanced_degradation_settings.h"
+#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
@@ -38,8 +40,8 @@ class VideoSourceRestrictionsListener {
  public:
   virtual ~VideoSourceRestrictionsListener();
 
-  // The |restrictions| are filtered by degradation preference but not the
-  // |adaptation_counters|, which are currently only reported for legacy stats
+  // The `restrictions` are filtered by degradation preference but not the
+  // `adaptation_counters`, which are currently only reported for legacy stats
   // calculation purposes.
   virtual void OnVideoSourceRestrictionsUpdated(
       VideoSourceRestrictions restrictions,
@@ -56,6 +58,7 @@ VideoSourceRestrictions FilterRestrictionsByDegradationPreference(
     VideoSourceRestrictions source_restrictions,
     DegradationPreference degradation_preference);
 
+int GetLowerResolutionThan(int pixel_count);
 int GetHigherResolutionThan(int pixel_count);
 
 // Either represents the next VideoSourceRestrictions the VideoStreamAdapter
@@ -121,7 +124,8 @@ class Adaptation final {
 class VideoStreamAdapter {
  public:
   VideoStreamAdapter(VideoStreamInputStateProvider* input_state_provider,
-                     VideoStreamEncoderObserver* encoder_stats_observer);
+                     VideoStreamEncoderObserver* encoder_stats_observer,
+                     const FieldTrialsView& field_trials);
   ~VideoStreamAdapter();
 
   VideoSourceRestrictions source_restrictions() const;
@@ -160,6 +164,9 @@ class VideoStreamAdapter {
     VideoSourceRestrictions restrictions;
     VideoAdaptationCounters counters;
   };
+
+  static absl::optional<uint32_t> GetSingleActiveLayerPixels(
+      const VideoCodec& codec);
 
  private:
   void BroadcastVideoRestrictionsUpdate(
@@ -214,7 +221,8 @@ class VideoStreamAdapter {
       const VideoStreamInputState& input_state) const
       RTC_RUN_ON(&sequence_checker_);
 
-  SequenceChecker sequence_checker_ RTC_GUARDED_BY(&sequence_checker_);
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker sequence_checker_
+      RTC_GUARDED_BY(&sequence_checker_);
   // Gets the input state which is the basis of all adaptations.
   // Thread safe.
   VideoStreamInputStateProvider* input_state_provider_;

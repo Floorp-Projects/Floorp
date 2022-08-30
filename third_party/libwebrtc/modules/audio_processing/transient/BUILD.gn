@@ -14,10 +14,10 @@ rtc_source_set("transient_suppressor_api") {
 
 rtc_library("transient_suppressor_impl") {
   visibility = [
-    "..:optionally_built_submodule_creators",
+    ":click_annotate",
     ":transient_suppression_test",
     ":transient_suppression_unittests",
-    ":click_annotate",
+    "..:optionally_built_submodule_creators",
   ]
   sources = [
     "common.h",
@@ -37,6 +37,7 @@ rtc_library("transient_suppressor_impl") {
   ]
   deps = [
     ":transient_suppressor_api",
+    ":voice_probability_delay_unit",
     "../../../common_audio:common_audio",
     "../../../common_audio:common_audio_c",
     "../../../common_audio:fir_filter",
@@ -48,43 +49,56 @@ rtc_library("transient_suppressor_impl") {
   ]
 }
 
-if (rtc_include_tests) {
-  rtc_executable("click_annotate") {
-    testonly = true
-    sources = [
-      "click_annotate.cc",
-      "file_utils.cc",
-      "file_utils.h",
-    ]
-    deps = [
-      ":transient_suppressor_impl",
-      "..:audio_processing",
-      "../../../rtc_base/system:file_wrapper",
-      "../../../system_wrappers",
-    ]
-  }
+rtc_library("voice_probability_delay_unit") {
+  sources = [
+    "voice_probability_delay_unit.cc",
+    "voice_probability_delay_unit.h",
+  ]
+  deps = [ "../../../rtc_base:checks" ]
+}
 
-  rtc_executable("transient_suppression_test") {
-    testonly = true
-    sources = [
-      "file_utils.cc",
-      "file_utils.h",
-      "transient_suppression_test.cc",
-    ]
-    deps = [
-      ":transient_suppressor_impl",
-      "..:audio_processing",
-      "../../../common_audio",
-      "../../../rtc_base:rtc_base_approved",
-      "../../../rtc_base/system:file_wrapper",
-      "../../../system_wrappers",
-      "../../../test:fileutils",
-      "../../../test:test_support",
-      "../agc:level_estimation",
-      "//testing/gtest",
-      "//third_party/abseil-cpp/absl/flags:flag",
-      "//third_party/abseil-cpp/absl/flags:parse",
-    ]
+if (rtc_include_tests) {
+  if (!build_with_chromium) {
+    rtc_executable("click_annotate") {
+      testonly = true
+      sources = [
+        "click_annotate.cc",
+        "file_utils.cc",
+        "file_utils.h",
+      ]
+      deps = [
+        ":transient_suppressor_impl",
+        "..:audio_processing",
+        "../../../rtc_base/system:file_wrapper",
+        "../../../system_wrappers",
+      ]
+    }
+
+    rtc_executable("transient_suppression_test") {
+      testonly = true
+      sources = [
+        "file_utils.cc",
+        "file_utils.h",
+        "transient_suppression_test.cc",
+        "voice_probability_delay_unit_unittest.cc",
+      ]
+      deps = [
+        ":transient_suppressor_api",
+        ":transient_suppressor_impl",
+        ":voice_probability_delay_unit",
+        "..:audio_processing",
+        "../../../common_audio",
+        "../../../rtc_base/system:file_wrapper",
+        "../../../system_wrappers",
+        "../../../test:fileutils",
+        "../../../test:test_support",
+        "../agc:level_estimation",
+        "//testing/gtest",
+        "//third_party/abseil-cpp/absl/flags:flag",
+        "//third_party/abseil-cpp/absl/flags:parse",
+        "//third_party/abseil-cpp/absl/types:optional",
+      ]
+    }
   }
 
   rtc_library("transient_suppression_unittests") {
@@ -97,16 +111,20 @@ if (rtc_include_tests) {
       "moving_moments_unittest.cc",
       "transient_detector_unittest.cc",
       "transient_suppressor_unittest.cc",
+      "voice_probability_delay_unit_unittest.cc",
       "wpd_node_unittest.cc",
       "wpd_tree_unittest.cc",
     ]
     deps = [
+      ":transient_suppressor_api",
       ":transient_suppressor_impl",
+      ":voice_probability_delay_unit",
       "../../../rtc_base:stringutils",
       "../../../rtc_base/system:file_wrapper",
       "../../../test:fileutils",
       "../../../test:test_support",
       "//testing/gtest",
     ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   }
 }

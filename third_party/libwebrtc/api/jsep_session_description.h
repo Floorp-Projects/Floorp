@@ -22,8 +22,6 @@
 #include "api/candidate.h"
 #include "api/jsep.h"
 #include "api/jsep_ice_candidate.h"
-#include "rtc_base/constructor_magic.h"
-#include "rtc_base/deprecation.h"
 
 namespace cricket {
 class SessionDescription;
@@ -44,10 +42,15 @@ class JsepSessionDescription : public SessionDescriptionInterface {
       absl::string_view session_version);
   virtual ~JsepSessionDescription();
 
-  // Takes ownership of |description|.
+  JsepSessionDescription(const JsepSessionDescription&) = delete;
+  JsepSessionDescription& operator=(const JsepSessionDescription&) = delete;
+
+  // Takes ownership of `description`.
   bool Initialize(std::unique_ptr<cricket::SessionDescription> description,
                   const std::string& session_id,
                   const std::string& session_version);
+
+  virtual std::unique_ptr<SessionDescriptionInterface> Clone() const;
 
   virtual cricket::SessionDescription* description() {
     return description_.get();
@@ -81,8 +84,6 @@ class JsepSessionDescription : public SessionDescriptionInterface {
   bool GetMediasectionIndex(const IceCandidateInterface* candidate,
                             size_t* index);
   int GetMediasectionIndex(const cricket::Candidate& candidate);
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(JsepSessionDescription);
 };
 
 }  // namespace webrtc

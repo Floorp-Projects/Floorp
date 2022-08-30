@@ -56,28 +56,24 @@ class RtpDemuxerTest : public ::testing::Test {
 
   bool AddSinkOnlySsrc(uint32_t ssrc, RtpPacketSinkInterface* sink) {
     RtpDemuxerCriteria criteria;
-    criteria.ssrcs = {ssrc};
+    criteria.ssrcs().insert(ssrc);
     return AddSink(criteria, sink);
   }
 
   bool AddSinkOnlyRsid(const std::string& rsid, RtpPacketSinkInterface* sink) {
-    RtpDemuxerCriteria criteria;
-    criteria.rsid = rsid;
+    RtpDemuxerCriteria criteria(absl::string_view(), rsid);
     return AddSink(criteria, sink);
   }
 
   bool AddSinkOnlyMid(const std::string& mid, RtpPacketSinkInterface* sink) {
-    RtpDemuxerCriteria criteria;
-    criteria.mid = mid;
+    RtpDemuxerCriteria criteria(mid);
     return AddSink(criteria, sink);
   }
 
   bool AddSinkBothMidRsid(const std::string& mid,
                           const std::string& rsid,
                           RtpPacketSinkInterface* sink) {
-    RtpDemuxerCriteria criteria;
-    criteria.mid = mid;
-    criteria.rsid = rsid;
+    RtpDemuxerCriteria criteria(mid, rsid);
     return AddSink(criteria, sink);
   }
 
@@ -199,15 +195,13 @@ TEST_F(RtpDemuxerTest, AllowAddSinkWithOverlappingPayloadTypesIfDifferentMid) {
   constexpr uint8_t pt2 = 31;
   constexpr uint8_t pt3 = 32;
 
-  RtpDemuxerCriteria pt1_pt2;
-  pt1_pt2.mid = mid1;
-  pt1_pt2.payload_types = {pt1, pt2};
+  RtpDemuxerCriteria pt1_pt2(mid1);
+  pt1_pt2.payload_types() = {pt1, pt2};
   MockRtpPacketSink sink1;
   AddSink(pt1_pt2, &sink1);
 
-  RtpDemuxerCriteria pt1_pt3;
-  pt1_pt2.mid = mid2;
-  pt1_pt3.payload_types = {pt1, pt3};
+  RtpDemuxerCriteria pt1_pt3(mid2);
+  pt1_pt3.payload_types() = {pt1, pt3};
   MockRtpPacketSink sink2;
   EXPECT_TRUE(AddSink(pt1_pt3, &sink2));
 }
@@ -280,12 +274,12 @@ TEST_F(RtpDemuxerTest, DISABLED_RejectAddSinkForSamePayloadTypes) {
   constexpr uint8_t pt2 = 31;
 
   RtpDemuxerCriteria pt1_pt2;
-  pt1_pt2.payload_types = {pt1, pt2};
+  pt1_pt2.payload_types() = {pt1, pt2};
   MockRtpPacketSink sink1;
   AddSink(pt1_pt2, &sink1);
 
   RtpDemuxerCriteria pt2_pt1;
-  pt2_pt1.payload_types = {pt2, pt1};
+  pt2_pt1.payload_types() = {pt2, pt1};
   MockRtpPacketSink sink2;
   EXPECT_FALSE(AddSink(pt2_pt1, &sink2));
 }
@@ -367,7 +361,7 @@ TEST_F(RtpDemuxerTest, OnRtpPacketCalledOnCorrectSinkByPayloadType) {
 
   MockRtpPacketSink sink;
   RtpDemuxerCriteria criteria;
-  criteria.payload_types = {payload_type};
+  criteria.payload_types() = {payload_type};
   AddSink(criteria, &sink);
 
   auto packet = CreatePacketWithSsrc(ssrc);
@@ -631,13 +625,13 @@ TEST_F(RtpDemuxerTest, FirstSsrcAssociatedWithAnRsidIsNotForgotten) {
 
   constexpr uint32_t shared_ssrc = 100;
 
-  // First a packet with |rsid_a| is received, and |sink_a| is associated with
+  // First a packet with `rsid_a` is received, and `sink_a` is associated with
   // its SSRC.
   auto packet_a = CreatePacketWithSsrcRsid(shared_ssrc, rsid_a);
   EXPECT_CALL(sink_a, OnRtpPacket(SamePacketAs(*packet_a))).Times(1);
   EXPECT_TRUE(demuxer_.OnRtpPacket(*packet_a));
 
-  // Second, a packet with |rsid_b| is received. We guarantee that |sink_b|
+  // Second, a packet with `rsid_b` is received. We guarantee that `sink_b`
   // receives it.
   auto packet_b = CreatePacketWithSsrcRsid(shared_ssrc, rsid_b);
   EXPECT_CALL(sink_a, OnRtpPacket(_)).Times(0);
@@ -645,7 +639,7 @@ TEST_F(RtpDemuxerTest, FirstSsrcAssociatedWithAnRsidIsNotForgotten) {
   EXPECT_TRUE(demuxer_.OnRtpPacket(*packet_b));
 
   // Known edge-case; adding a new RSID association makes us re-examine all
-  // SSRCs. |sink_b| may or may not be associated with the SSRC now; we make
+  // SSRCs. `sink_b` may or may not be associated with the SSRC now; we make
   // no promises on that. However, since the RSID is specified and it cannot be
   // found the packet should be dropped.
   MockRtpPacketSink sink_c;
@@ -964,15 +958,13 @@ TEST_F(RtpDemuxerTest, DropByPayloadTypeIfAddedInMultipleSinks) {
   constexpr uint8_t payload_type = 30;
   constexpr uint32_t ssrc = 10;
 
-  RtpDemuxerCriteria mid1_pt;
-  mid1_pt.mid = mid1;
-  mid1_pt.payload_types = {payload_type};
+  RtpDemuxerCriteria mid1_pt(mid1);
+  mid1_pt.payload_types() = {payload_type};
   MockRtpPacketSink sink1;
   AddSink(mid1_pt, &sink1);
 
-  RtpDemuxerCriteria mid2_pt;
-  mid2_pt.mid = mid2;
-  mid2_pt.payload_types = {payload_type};
+  RtpDemuxerCriteria mid2_pt(mid2);
+  mid2_pt.payload_types() = {payload_type};
   MockRtpPacketSink sink2;
   AddSink(mid2_pt, &sink2);
 
@@ -992,15 +984,13 @@ TEST_F(RtpDemuxerTest, RoutedByPayloadTypeIfAmbiguousSinkRemoved) {
   constexpr uint8_t payload_type = 30;
   constexpr uint32_t ssrc = 10;
 
-  RtpDemuxerCriteria mid1_pt;
-  mid1_pt.mid = mid1;
-  mid1_pt.payload_types = {payload_type};
+  RtpDemuxerCriteria mid1_pt(mid1);
+  mid1_pt.payload_types().insert(payload_type);
   MockRtpPacketSink sink1;
   AddSink(mid1_pt, &sink1);
 
-  RtpDemuxerCriteria mid2_pt;
-  mid2_pt.mid = mid2;
-  mid2_pt.payload_types = {payload_type};
+  RtpDemuxerCriteria mid2_pt(mid2);
+  mid2_pt.payload_types().insert(payload_type);
   MockRtpPacketSink sink2;
   AddSink(mid2_pt, &sink2);
 
@@ -1020,7 +1010,7 @@ TEST_F(RtpDemuxerTest, RoutedByPayloadTypeLatchesSsrc) {
   constexpr uint32_t ssrc = 10;
 
   RtpDemuxerCriteria pt;
-  pt.payload_types = {payload_type};
+  pt.payload_types().insert(payload_type);
   NiceMock<MockRtpPacketSink> sink;
   AddSink(pt, &sink);
 
@@ -1107,7 +1097,7 @@ TEST_F(RtpDemuxerTest, RouteByPayloadTypeMultipleMatch) {
 
   MockRtpPacketSink sink;
   RtpDemuxerCriteria criteria;
-  criteria.payload_types = {pt1, pt2};
+  criteria.payload_types() = {pt1, pt2};
   AddSink(criteria, &sink);
 
   auto packet_with_pt1 = CreatePacketWithSsrc(ssrc);
@@ -1140,10 +1130,8 @@ TEST_F(RtpDemuxerTest, DemuxBySsrcEvenWithMidAndRsid) {
   const std::string rsid = "1";
   constexpr uint32_t ssrc = 10;
 
-  RtpDemuxerCriteria criteria;
-  criteria.rsid = rsid;
-  criteria.mid = mid;
-  criteria.ssrcs = {ssrc};
+  RtpDemuxerCriteria criteria(mid, rsid);
+  criteria.ssrcs().insert(ssrc);
   MockRtpPacketSink sink;
   AddSink(criteria, &sink);
 
@@ -1161,8 +1149,8 @@ TEST_F(RtpDemuxerTest, DoNotCheckPayloadTypeIfMatchedByOtherCriteria) {
   constexpr uint8_t different_payload_type = payload_type + 1;
 
   RtpDemuxerCriteria criteria;
-  criteria.ssrcs = {ssrc};
-  criteria.payload_types = {payload_type};
+  criteria.ssrcs().insert(ssrc);
+  criteria.payload_types().insert(payload_type);
   MockRtpPacketSink sink;
   AddSink(criteria, &sink);
 
@@ -1220,10 +1208,8 @@ TEST_F(RtpDemuxerTest, PacketWithMidAndUnknownRsidIsNotRoutedBySsrc) {
   const std::string rsid = "1";
   const std::string wrong_rsid = "2";
 
-  RtpDemuxerCriteria criteria;
-  criteria.mid = mid;
-  criteria.rsid = rsid;
-  criteria.ssrcs = {ssrc};
+  RtpDemuxerCriteria criteria(mid, rsid);
+  criteria.ssrcs().insert(ssrc);
   MockRtpPacketSink sink;
   AddSink(criteria, &sink);
 
@@ -1241,10 +1227,8 @@ TEST_F(RtpDemuxerTest, PacketWithMidAndUnknownRsidIsNotRoutedByPayloadType) {
   const std::string wrong_rsid = "2";
   constexpr uint8_t payload_type = 30;
 
-  RtpDemuxerCriteria criteria;
-  criteria.mid = mid;
-  criteria.rsid = rsid;
-  criteria.payload_types = {payload_type};
+  RtpDemuxerCriteria criteria(mid, rsid);
+  criteria.payload_types().insert(payload_type);
   MockRtpPacketSink sink;
   AddSink(criteria, &sink);
 
@@ -1252,6 +1236,24 @@ TEST_F(RtpDemuxerTest, PacketWithMidAndUnknownRsidIsNotRoutedByPayloadType) {
   packet->SetPayloadType(payload_type);
   EXPECT_CALL(sink, OnRtpPacket(_)).Times(0);
   EXPECT_FALSE(demuxer_.OnRtpPacket(*packet));
+}
+
+TEST_F(RtpDemuxerTest, MidMustNotExceedMaximumLength) {
+  MockRtpPacketSink sink1;
+  std::string mid1(BaseRtpStringExtension::kMaxValueSizeBytes + 1, 'a');
+  // Adding the sink should pass even though the supplied mid is too long.
+  // The mid will be truncated though.
+  EXPECT_TRUE(AddSinkOnlyMid(mid1, &sink1));
+
+  // Adding a second sink with a mid that matches the truncated mid that was
+  // just added, should fail.
+  MockRtpPacketSink sink2;
+  std::string mid2(mid1.substr(0, BaseRtpStringExtension::kMaxValueSizeBytes));
+  EXPECT_FALSE(AddSinkOnlyMid(mid2, &sink2));
+  EXPECT_FALSE(RemoveSink(&sink2));
+
+  // Remove the original sink.
+  EXPECT_TRUE(RemoveSink(&sink1));
 }
 
 #if RTC_DCHECK_IS_ON && GTEST_HAS_DEATH_TEST && !defined(WEBRTC_ANDROID)
@@ -1276,12 +1278,6 @@ TEST_F(RtpDemuxerDeathTest, RsidMustNotExceedMaximumLength) {
   MockRtpPacketSink sink;
   std::string rsid(BaseRtpStringExtension::kMaxValueSizeBytes + 1, 'a');
   EXPECT_DEATH(AddSinkOnlyRsid(rsid, &sink), "");
-}
-
-TEST_F(RtpDemuxerDeathTest, MidMustNotExceedMaximumLength) {
-  MockRtpPacketSink sink;
-  std::string mid(BaseRtpStringExtension::kMaxValueSizeBytes + 1, 'a');
-  EXPECT_DEATH(AddSinkOnlyMid(mid, &sink), "");
 }
 
 #endif

@@ -11,48 +11,38 @@
 package org.webrtc;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import android.annotation.TargetApi;
 import android.graphics.Matrix;
 import android.opengl.GLES11Ext;
-import androidx.annotation.Nullable;
-import android.support.test.filters.SmallTest;
 import android.util.Log;
+import androidx.annotation.Nullable;
+import androidx.test.filters.SmallTest;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import org.chromium.base.test.params.BaseJUnit4RunnerDelegate;
-import org.chromium.base.test.params.ParameterAnnotations.ClassParameter;
-import org.chromium.base.test.params.ParameterAnnotations.UseRunnerDelegate;
-import org.chromium.base.test.params.ParameterSet;
-import org.chromium.base.test.params.ParameterizedRunner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
-@TargetApi(16)
-@RunWith(ParameterizedRunner.class)
-@UseRunnerDelegate(BaseJUnit4RunnerDelegate.class)
+@RunWith(Parameterized.class)
 public class HardwareVideoEncoderTest {
-  @ClassParameter private static List<ParameterSet> CLASS_PARAMS = new ArrayList<>();
-
-  static {
-    CLASS_PARAMS.add(new ParameterSet()
-                         .value(false /* useTextures */, false /* useEglContext */)
-                         .name("I420WithoutEglContext"));
-    CLASS_PARAMS.add(new ParameterSet()
-                         .value(true /* useTextures */, false /* useEglContext */)
-                         .name("TextureWithoutEglContext"));
-    CLASS_PARAMS.add(new ParameterSet()
-                         .value(true /* useTextures */, true /* useEglContext */)
-                         .name("TextureWithEglContext"));
+  @Parameters(name = "textures={0};eglContext={1}")
+  public static Collection<Object[]> parameters() {
+    return Arrays.asList(new Object[] {/*textures=*/false, /*eglContext=*/false},
+        new Object[] {/*textures=*/true, /*eglContext=*/false},
+        new Object[] {/*textures=*/true, /*eglContext=*/true});
   }
 
   private final boolean useTextures;
@@ -75,6 +65,8 @@ public class HardwareVideoEncoderTest {
   private static final int NUM_TEST_FRAMES = 10;
   private static final int NUM_ENCODE_TRIES = 100;
   private static final int ENCODE_RETRY_SLEEP_MS = 1;
+  private static final int PIXEL_ALIGNMENT_REQUIRED = 16;
+  private static final boolean APPLY_ALIGNMENT_TO_ALL_SIMULCAST_LAYERS = false;
 
   // # Mock classes
   /**
@@ -101,7 +93,6 @@ public class HardwareVideoEncoderTest {
                            .setCaptureTimeNs(frame.captureTimeNs)
                            .setFrameType(frame.frameType)
                            .setRotation(frame.rotation)
-                           .setCompleteFrame(frame.completeFrame)
                            .setQp(frame.qp)
                            .createEncodedImage());
     }
@@ -323,7 +314,7 @@ public class HardwareVideoEncoderTest {
     return useTextures ? generateTextureFrame(width, height) : generateI420Frame(width, height);
   }
 
-  static void testEncodeFrame(
+  static VideoCodecStatus testEncodeFrame(
       VideoEncoder encoder, VideoFrame frame, VideoEncoder.EncodeInfo info) {
     int numTries = 0;
 
@@ -333,8 +324,10 @@ public class HardwareVideoEncoderTest {
 
       final VideoCodecStatus returnValue = encoder.encode(frame, info);
       switch (returnValue) {
-        case OK:
-          return; // Success
+        case OK: // Success
+                 // Fall through
+        case ERR_SIZE: // Wrong size
+          return returnValue;
         case NO_OUTPUT:
           if (numTries >= NUM_ENCODE_TRIES) {
             fail("encoder.encode keeps returning NO_OUTPUT");
@@ -349,6 +342,14 @@ public class HardwareVideoEncoderTest {
           fail("encoder.encode returned: " + returnValue); // Error
       }
     }
+  }
+
+  private static int getAlignedNumber(int number, int alignment) {
+    return (number / alignment) * alignment;
+  }
+
+  public static int getPixelAlignmentRequired() {
+    return PIXEL_ALIGNMENT_REQUIRED;
   }
 
   // # Tests
@@ -447,11 +448,60 @@ public class HardwareVideoEncoderTest {
     callback.assertFrameEncoded(frame);
     frame.release();
 
-    frame = generateFrame(SETTINGS.width / 4, SETTINGS.height / 4);
+    // Android MediaCodec only guarantees of proper operation with 16-pixel-aligned input frame.
+    // Force the size of input frame with the greatest multiple of 16 below the original size.
+    frame = generateFrame(getAlignedNumber(SETTINGS.width / 4, PIXEL_ALIGNMENT_REQUIRED),
+        getAlignedNumber(SETTINGS.height / 4, PIXEL_ALIGNMENT_REQUIRED));
     testEncodeFrame(encoder, frame, info);
     callback.assertFrameEncoded(frame);
     frame.release();
 
+    assertEquals(VideoCodecStatus.OK, encoder.release());
+  }
+
+  @Test
+  @SmallTest
+  public void testEncodeAlignmentCheck() {
+    VideoEncoder encoder = createEncoder();
+    org.webrtc.HardwareVideoEncoderTest.MockEncoderCallback callback =
+        new org.webrtc.HardwareVideoEncoderTest.MockEncoderCallback();
+    assertEquals(VideoCodecStatus.OK, encoder.initEncode(SETTINGS, callback));
+
+    VideoFrame frame;
+    VideoEncoder.EncodeInfo info = new VideoEncoder.EncodeInfo(
+        new EncodedImage.FrameType[] {EncodedImage.FrameType.VideoFrameDelta});
+
+    frame = generateFrame(SETTINGS.width / 2, SETTINGS.height / 2);
+    assertEquals(VideoCodecStatus.OK, testEncodeFrame(encoder, frame, info));
+    frame.release();
+
+    // Android MediaCodec only guarantees of proper operation with 16-pixel-aligned input frame.
+    // Following input frame with non-aligned size would return ERR_SIZE.
+    frame = generateFrame(SETTINGS.width / 4, SETTINGS.height / 4);
+    assertNotEquals(VideoCodecStatus.OK, testEncodeFrame(encoder, frame, info));
+    frame.release();
+
+    // Since our encoder has returned with an error, we reinitialize the encoder.
+    assertEquals(VideoCodecStatus.OK, encoder.release());
+    assertEquals(VideoCodecStatus.OK, encoder.initEncode(SETTINGS, callback));
+
+    frame = generateFrame(getAlignedNumber(SETTINGS.width / 4, PIXEL_ALIGNMENT_REQUIRED),
+        getAlignedNumber(SETTINGS.height / 4, PIXEL_ALIGNMENT_REQUIRED));
+    assertEquals(VideoCodecStatus.OK, testEncodeFrame(encoder, frame, info));
+    frame.release();
+
+    assertEquals(VideoCodecStatus.OK, encoder.release());
+  }
+
+  @Test
+  @SmallTest
+  public void testGetEncoderInfo() {
+    VideoEncoder encoder = createEncoder();
+    assertEquals(VideoCodecStatus.OK, encoder.initEncode(SETTINGS, null));
+    VideoEncoder.EncoderInfo info = encoder.getEncoderInfo();
+    assertEquals(PIXEL_ALIGNMENT_REQUIRED, info.getRequestedResolutionAlignment());
+    assertEquals(
+        APPLY_ALIGNMENT_TO_ALL_SIMULCAST_LAYERS, info.getApplyAlignmentToAllSimulcastLayers());
     assertEquals(VideoCodecStatus.OK, encoder.release());
   }
 }

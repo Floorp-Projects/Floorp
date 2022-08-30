@@ -36,14 +36,11 @@ rtc::ThreadPriority TaskQueuePriorityToThreadPriority(
     TaskQueueFactory::Priority priority) {
   switch (priority) {
     case TaskQueueFactory::Priority::HIGH:
-      return rtc::kRealtimePriority;
+      return rtc::ThreadPriority::kRealtime;
     case TaskQueueFactory::Priority::LOW:
-      return rtc::kLowPriority;
+      return rtc::ThreadPriority::kLow;
     case TaskQueueFactory::Priority::NORMAL:
-      return rtc::kNormalPriority;
-    default:
-      RTC_NOTREACHED();
-      return rtc::kNormalPriority;
+      return rtc::ThreadPriority::kNormal;
   }
 }
 
@@ -71,40 +68,32 @@ class TaskQueueStdlib final : public TaskQueueBase {
   };
 
   struct NextTask {
-    bool final_task_{false};
+    bool final_task_ = false;
     std::unique_ptr<QueuedTask> run_task_;
-    int64_t sleep_time_ms_{};
+    int64_t sleep_time_ms_ = 0;
   };
 
-  NextTask GetNextTask();
+  static rtc::PlatformThread InitializeThread(TaskQueueStdlib* me,
+                                              absl::string_view queue_name,
+                                              rtc::ThreadPriority priority);
 
-  static void ThreadMain(void* context);
+  NextTask GetNextTask();
 
   void ProcessTasks();
 
   void NotifyWake();
 
-  // Indicates if the thread has started.
-  rtc::Event started_;
-
-  // Indicates if the thread has stopped.
-  rtc::Event stopped_;
-
   // Signaled whenever a new task is pending.
   rtc::Event flag_notify_;
-
-  // Contains the active worker thread assigned to processing
-  // tasks (including delayed tasks).
-  rtc::PlatformThread thread_;
 
   Mutex pending_lock_;
 
   // Indicates if the worker thread needs to shutdown now.
-  bool thread_should_quit_ RTC_GUARDED_BY(pending_lock_){false};
+  bool thread_should_quit_ RTC_GUARDED_BY(pending_lock_) = false;
 
   // Holds the next order to use for the next task to be
   // put into one of the pending queues.
-  OrderId thread_posting_order_ RTC_GUARDED_BY(pending_lock_){};
+  OrderId thread_posting_order_ RTC_GUARDED_BY(pending_lock_) = 0;
 
   // The list of all pending tasks that need to be processed in the
   // FIFO queue ordering on the worker thread.
@@ -119,16 +108,34 @@ class TaskQueueStdlib final : public TaskQueueBase {
   // std::unique_ptr out of the queue without the presence of a hack.
   std::map<DelayedEntryTimeout, std::unique_ptr<QueuedTask>> delayed_queue_
       RTC_GUARDED_BY(pending_lock_);
+
+  // Contains the active worker thread assigned to processing
+  // tasks (including delayed tasks).
+  // Placing this last ensures the thread doesn't touch uninitialized attributes
+  // throughout it's lifetime.
+  rtc::PlatformThread thread_;
 };
 
 TaskQueueStdlib::TaskQueueStdlib(absl::string_view queue_name,
                                  rtc::ThreadPriority priority)
-    : started_(/*manual_reset=*/false, /*initially_signaled=*/false),
-      stopped_(/*manual_reset=*/false, /*initially_signaled=*/false),
-      flag_notify_(/*manual_reset=*/false, /*initially_signaled=*/false),
-      thread_(&TaskQueueStdlib::ThreadMain, this, queue_name, priority) {
-  thread_.Start();
-  started_.Wait(rtc::Event::kForever);
+    : flag_notify_(/*manual_reset=*/false, /*initially_signaled=*/false),
+      thread_(InitializeThread(this, queue_name, priority)) {}
+
+// static
+rtc::PlatformThread TaskQueueStdlib::InitializeThread(
+    TaskQueueStdlib* me,
+    absl::string_view queue_name,
+    rtc::ThreadPriority priority) {
+  rtc::Event started;
+  auto thread = rtc::PlatformThread::SpawnJoinable(
+      [&started, me] {
+        CurrentTaskQueueSetter set_current(me);
+        started.Set();
+        me->ProcessTasks();
+      },
+      queue_name, rtc::ThreadAttributes().SetPriority(priority));
+  started.Wait(rtc::Event::kForever);
+  return thread;
 }
 
 void TaskQueueStdlib::Delete() {
@@ -141,8 +148,6 @@ void TaskQueueStdlib::Delete() {
 
   NotifyWake();
 
-  stopped_.Wait(rtc::Event::kForever);
-  thread_.Stop();
   delete this;
 }
 
@@ -160,7 +165,7 @@ void TaskQueueStdlib::PostTask(std::unique_ptr<QueuedTask> task) {
 
 void TaskQueueStdlib::PostDelayedTask(std::unique_ptr<QueuedTask> task,
                                       uint32_t milliseconds) {
-  auto fire_at = rtc::TimeMillis() + milliseconds;
+  const auto fire_at = rtc::TimeMillis() + milliseconds;
 
   DelayedEntryTimeout delay;
   delay.next_fire_at_ms_ = fire_at;
@@ -175,9 +180,9 @@ void TaskQueueStdlib::PostDelayedTask(std::unique_ptr<QueuedTask> task,
 }
 
 TaskQueueStdlib::NextTask TaskQueueStdlib::GetNextTask() {
-  NextTask result{};
+  NextTask result;
 
-  auto tick = rtc::TimeMillis();
+  const auto tick = rtc::TimeMillis();
 
   MutexLock lock(&pending_lock_);
 
@@ -219,16 +224,7 @@ TaskQueueStdlib::NextTask TaskQueueStdlib::GetNextTask() {
   return result;
 }
 
-// static
-void TaskQueueStdlib::ThreadMain(void* context) {
-  TaskQueueStdlib* me = static_cast<TaskQueueStdlib*>(context);
-  CurrentTaskQueueSetter set_current(me);
-  me->ProcessTasks();
-}
-
 void TaskQueueStdlib::ProcessTasks() {
-  started_.Set();
-
   while (true) {
     auto task = GetNextTask();
 
@@ -241,17 +237,13 @@ void TaskQueueStdlib::ProcessTasks() {
       if (release_ptr->Run())
         delete release_ptr;
 
-      // attempt to sleep again
+      // Attempt to run more tasks before going to sleep.
       continue;
     }
 
-    if (0 == task.sleep_time_ms_)
-      flag_notify_.Wait(rtc::Event::kForever);
-    else
-      flag_notify_.Wait(task.sleep_time_ms_);
+    flag_notify_.Wait(0 == task.sleep_time_ms_ ? rtc::Event::kForever
+                                               : task.sleep_time_ms_);
   }
-
-  stopped_.Set();
 }
 
 void TaskQueueStdlib::NotifyWake() {

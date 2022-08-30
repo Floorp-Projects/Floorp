@@ -9,320 +9,524 @@
  */
 #include "modules/video_coding/utility/vp9_uncompressed_header_parser.h"
 
-#include "rtc_base/bit_buffer.h"
+#include "absl/numeric/bits.h"
+#include "absl/strings/string_view.h"
+#include "rtc_base/bitstream_reader.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/strings/string_builder.h"
 
 namespace webrtc {
-
-#define RETURN_FALSE_IF_ERROR(x) \
-  if (!(x)) {                    \
-    return false;                \
-  }
-
-namespace vp9 {
 namespace {
 const size_t kVp9NumRefsPerFrame = 3;
 const size_t kVp9MaxRefLFDeltas = 4;
 const size_t kVp9MaxModeLFDeltas = 2;
+const size_t kVp9MinTileWidthB64 = 4;
+const size_t kVp9MaxTileWidthB64 = 64;
 
-bool Vp9ReadProfile(rtc::BitBuffer* br, uint8_t* profile) {
-  uint32_t high_bit;
-  uint32_t low_bit;
-  RETURN_FALSE_IF_ERROR(br->ReadBits(&low_bit, 1));
-  RETURN_FALSE_IF_ERROR(br->ReadBits(&high_bit, 1));
-  *profile = (high_bit << 1) + low_bit;
-  if (*profile > 2) {
-    uint32_t reserved_bit;
-    RETURN_FALSE_IF_ERROR(br->ReadBits(&reserved_bit, 1));
-    if (reserved_bit) {
-      RTC_LOG(LS_WARNING) << "Failed to get QP. Unsupported bitstream profile.";
-      return false;
-    }
-  }
-  return true;
-}
-
-bool Vp9ReadSyncCode(rtc::BitBuffer* br) {
-  uint32_t sync_code;
-  RETURN_FALSE_IF_ERROR(br->ReadBits(&sync_code, 24));
-  if (sync_code != 0x498342) {
-    RTC_LOG(LS_WARNING) << "Failed to get QP. Invalid sync code.";
-    return false;
-  }
-  return true;
-}
-
-bool Vp9ReadColorConfig(rtc::BitBuffer* br,
-                        uint8_t profile,
-                        FrameInfo* frame_info) {
-  if (profile == 0 || profile == 1) {
-    frame_info->bit_detph = BitDept::k8Bit;
-  } else if (profile == 2 || profile == 3) {
-    uint32_t ten_or_twelve_bits;
-    RETURN_FALSE_IF_ERROR(br->ReadBits(&ten_or_twelve_bits, 1));
+void Vp9ReadColorConfig(BitstreamReader& br,
+                        Vp9UncompressedHeader* frame_info) {
+  if (frame_info->profile == 2 || frame_info->profile == 3) {
     frame_info->bit_detph =
-        ten_or_twelve_bits ? BitDept::k12Bit : BitDept::k10Bit;
+        br.Read<bool>() ? Vp9BitDept::k12Bit : Vp9BitDept::k10Bit;
+  } else {
+    frame_info->bit_detph = Vp9BitDept::k8Bit;
   }
-  uint32_t color_space;
-  RETURN_FALSE_IF_ERROR(br->ReadBits(&color_space, 3));
-  frame_info->color_space = static_cast<ColorSpace>(color_space);
 
-  // SRGB is 7.
-  if (color_space != 7) {
-    uint32_t color_range;
-    RETURN_FALSE_IF_ERROR(br->ReadBits(&color_range, 1));
+  frame_info->color_space = static_cast<Vp9ColorSpace>(br.ReadBits(3));
+
+  if (frame_info->color_space != Vp9ColorSpace::CS_RGB) {
     frame_info->color_range =
-        color_range ? ColorRange::kFull : ColorRange::kStudio;
+        br.Read<bool>() ? Vp9ColorRange::kFull : Vp9ColorRange::kStudio;
 
-    if (profile == 1 || profile == 3) {
-      uint32_t subsampling_x;
-      uint32_t subsampling_y;
-      RETURN_FALSE_IF_ERROR(br->ReadBits(&subsampling_x, 1));
-      RETURN_FALSE_IF_ERROR(br->ReadBits(&subsampling_y, 1));
-      if (subsampling_x) {
-        frame_info->sub_sampling =
-            subsampling_y ? YuvSubsampling::k420 : YuvSubsampling::k422;
-      } else {
-        frame_info->sub_sampling =
-            subsampling_y ? YuvSubsampling::k440 : YuvSubsampling::k444;
-      }
+    if (frame_info->profile == 1 || frame_info->profile == 3) {
+      static constexpr Vp9YuvSubsampling kSubSamplings[] = {
+          Vp9YuvSubsampling::k444, Vp9YuvSubsampling::k440,
+          Vp9YuvSubsampling::k422, Vp9YuvSubsampling::k420};
+      frame_info->sub_sampling = kSubSamplings[br.ReadBits(2)];
 
-      uint32_t reserved_bit;
-      RETURN_FALSE_IF_ERROR(br->ReadBits(&reserved_bit, 1));
-      if (reserved_bit) {
+      if (br.Read<bool>()) {
         RTC_LOG(LS_WARNING) << "Failed to parse header. Reserved bit set.";
-        return false;
+        br.Invalidate();
+        return;
       }
     } else {
       // Profile 0 or 2.
-      frame_info->sub_sampling = YuvSubsampling::k420;
+      frame_info->sub_sampling = Vp9YuvSubsampling::k420;
     }
   } else {
     // SRGB
-    frame_info->color_range = ColorRange::kFull;
-    if (profile == 1 || profile == 3) {
-      frame_info->sub_sampling = YuvSubsampling::k444;
-      uint32_t reserved_bit;
-      RETURN_FALSE_IF_ERROR(br->ReadBits(&reserved_bit, 1));
-      if (reserved_bit) {
+    frame_info->color_range = Vp9ColorRange::kFull;
+    if (frame_info->profile == 1 || frame_info->profile == 3) {
+      frame_info->sub_sampling = Vp9YuvSubsampling::k444;
+      if (br.Read<bool>()) {
         RTC_LOG(LS_WARNING) << "Failed to parse header. Reserved bit set.";
-        return false;
+        br.Invalidate();
       }
     } else {
       RTC_LOG(LS_WARNING) << "Failed to parse header. 4:4:4 color not supported"
                              " in profile 0 or 2.";
-      return false;
+      br.Invalidate();
+    }
+  }
+}
+
+void ReadRefreshFrameFlags(BitstreamReader& br,
+                           Vp9UncompressedHeader* frame_info) {
+  // Refresh frame flags.
+  uint8_t flags = br.Read<uint8_t>();
+  for (int i = 0; i < 8; ++i) {
+    frame_info->updated_buffers.set(i, (flags & (0x01 << (7 - i))) != 0);
+  }
+}
+
+void Vp9ReadFrameSize(BitstreamReader& br, Vp9UncompressedHeader* frame_info) {
+  // 16 bits: frame (width|height) - 1.
+  frame_info->frame_width = br.Read<uint16_t>() + 1;
+  frame_info->frame_height = br.Read<uint16_t>() + 1;
+}
+
+void Vp9ReadRenderSize(size_t total_buffer_size_bits,
+                       BitstreamReader& br,
+                       Vp9UncompressedHeader* frame_info) {
+  // render_and_frame_size_different
+  if (br.Read<bool>()) {
+    frame_info->render_size_offset_bits =
+        total_buffer_size_bits - br.RemainingBitCount();
+    // 16 bits: render (width|height) - 1.
+    frame_info->render_width = br.Read<uint16_t>() + 1;
+    frame_info->render_height = br.Read<uint16_t>() + 1;
+  } else {
+    frame_info->render_height = frame_info->frame_height;
+    frame_info->render_width = frame_info->frame_width;
+  }
+}
+
+void Vp9ReadFrameSizeFromRefs(BitstreamReader& br,
+                              Vp9UncompressedHeader* frame_info) {
+  for (size_t i = 0; i < kVp9NumRefsPerFrame; i++) {
+    // Size in refs.
+    if (br.Read<bool>()) {
+      frame_info->infer_size_from_reference = frame_info->reference_buffers[i];
+      return;
     }
   }
 
-  return true;
+  Vp9ReadFrameSize(br, frame_info);
 }
 
-bool Vp9ReadFrameSize(rtc::BitBuffer* br, FrameInfo* frame_info) {
-  // 16 bits: frame width - 1.
-  uint16_t frame_width_minus_one;
-  RETURN_FALSE_IF_ERROR(br->ReadUInt16(&frame_width_minus_one));
-  // 16 bits: frame height - 1.
-  uint16_t frame_height_minus_one;
-  RETURN_FALSE_IF_ERROR(br->ReadUInt16(&frame_height_minus_one));
-  frame_info->frame_width = frame_width_minus_one + 1;
-  frame_info->frame_height = frame_height_minus_one + 1;
-  return true;
-}
+void Vp9ReadLoopfilter(BitstreamReader& br) {
+  // 6 bits: filter level.
+  // 3 bits: sharpness level.
+  br.ConsumeBits(9);
 
-bool Vp9ReadRenderSize(rtc::BitBuffer* br, FrameInfo* frame_info) {
-  uint32_t render_and_frame_size_different;
-  RETURN_FALSE_IF_ERROR(br->ReadBits(&render_and_frame_size_different, 1));
-  if (render_and_frame_size_different) {
-    // 16 bits: render width - 1.
-    uint16_t render_width_minus_one;
-    RETURN_FALSE_IF_ERROR(br->ReadUInt16(&render_width_minus_one));
-    // 16 bits: render height - 1.
-    uint16_t render_height_minus_one;
-    RETURN_FALSE_IF_ERROR(br->ReadUInt16(&render_height_minus_one));
-    frame_info->render_width = render_width_minus_one + 1;
-    frame_info->render_height = render_height_minus_one + 1;
-  } else {
-    frame_info->render_width = frame_info->frame_width;
-    frame_info->render_height = frame_info->frame_height;
+  if (!br.Read<bool>()) {  // mode_ref_delta_enabled
+    return;
   }
-  return true;
+  if (!br.Read<bool>()) {  // mode_ref_delta_update
+    return;
+  }
+
+  for (size_t i = 0; i < kVp9MaxRefLFDeltas; i++) {
+    if (br.Read<bool>()) {  // update_ref_delta
+      br.ConsumeBits(7);
+    }
+  }
+  for (size_t i = 0; i < kVp9MaxModeLFDeltas; i++) {
+    if (br.Read<bool>()) {  // update_mode_delta
+      br.ConsumeBits(7);
+    }
+  }
 }
 
-bool Vp9ReadFrameSizeFromRefs(rtc::BitBuffer* br, FrameInfo* frame_info) {
-  uint32_t found_ref = 0;
-  for (size_t i = 0; i < kVp9NumRefsPerFrame; i++) {
-    // Size in refs.
-    RETURN_FALSE_IF_ERROR(br->ReadBits(&found_ref, 1));
-    if (found_ref)
+void Vp9ReadQp(BitstreamReader& br, Vp9UncompressedHeader* frame_info) {
+  frame_info->base_qp = br.Read<uint8_t>();
+
+  // yuv offsets
+  frame_info->is_lossless = frame_info->base_qp == 0;
+  for (int i = 0; i < 3; ++i) {
+    if (br.Read<bool>()) {  // if delta_coded
+      // delta_q is a signed integer with leading 4 bits containing absolute
+      // value and last bit containing sign. There are are two ways to represent
+      // zero with such encoding.
+      if ((br.ReadBits(5) & 0b1111'0) != 0) {  // delta_q
+        frame_info->is_lossless = false;
+      }
+    }
+  }
+}
+
+void Vp9ReadSegmentationParams(BitstreamReader& br,
+                               Vp9UncompressedHeader* frame_info) {
+  constexpr int kSegmentationFeatureBits[kVp9SegLvlMax] = {8, 6, 2, 0};
+  constexpr bool kSegmentationFeatureSigned[kVp9SegLvlMax] = {true, true, false,
+                                                              false};
+
+  frame_info->segmentation_enabled = br.Read<bool>();
+  if (!frame_info->segmentation_enabled) {
+    return;
+  }
+
+  if (br.Read<bool>()) {  // update_map
+    frame_info->segmentation_tree_probs.emplace();
+    for (int i = 0; i < 7; ++i) {
+      if (br.Read<bool>()) {
+        (*frame_info->segmentation_tree_probs)[i] = br.Read<uint8_t>();
+      } else {
+        (*frame_info->segmentation_tree_probs)[i] = 255;
+      }
+    }
+
+    // temporal_update
+    frame_info->segmentation_pred_prob.emplace();
+    if (br.Read<bool>()) {
+      for (int i = 0; i < 3; ++i) {
+        if (br.Read<bool>()) {
+          (*frame_info->segmentation_pred_prob)[i] = br.Read<uint8_t>();
+        } else {
+          (*frame_info->segmentation_pred_prob)[i] = 255;
+        }
+      }
+    } else {
+      frame_info->segmentation_pred_prob->fill(255);
+    }
+  }
+
+  if (br.Read<bool>()) {  // segmentation_update_data
+    frame_info->segmentation_is_delta = br.Read<bool>();
+    for (size_t i = 0; i < kVp9MaxSegments; ++i) {
+      for (size_t j = 0; j < kVp9SegLvlMax; ++j) {
+        if (!br.Read<bool>()) {  // feature_enabled
+          continue;
+        }
+        if (kSegmentationFeatureBits[j] == 0) {
+          // No feature bits used and no sign, just mark it and return.
+          frame_info->segmentation_features[i][j] = 1;
+          continue;
+        }
+        frame_info->segmentation_features[i][j] =
+            br.ReadBits(kSegmentationFeatureBits[j]);
+        if (kSegmentationFeatureSigned[j] && br.Read<bool>()) {
+          (*frame_info->segmentation_features[i][j]) *= -1;
+        }
+      }
+    }
+  }
+}
+
+void Vp9ReadTileInfo(BitstreamReader& br, Vp9UncompressedHeader* frame_info) {
+  size_t mi_cols = (frame_info->frame_width + 7) >> 3;
+  size_t sb64_cols = (mi_cols + 7) >> 3;
+
+  size_t min_log2 = 0;
+  while ((kVp9MaxTileWidthB64 << min_log2) < sb64_cols) {
+    ++min_log2;
+  }
+
+  size_t max_log2 = 1;
+  while ((sb64_cols >> max_log2) >= kVp9MinTileWidthB64) {
+    ++max_log2;
+  }
+  --max_log2;
+
+  frame_info->tile_cols_log2 = min_log2;
+  while (frame_info->tile_cols_log2 < max_log2) {
+    if (br.Read<bool>()) {
+      ++frame_info->tile_cols_log2;
+    } else {
+      break;
+    }
+  }
+  frame_info->tile_rows_log2 = 0;
+  if (br.Read<bool>()) {
+    ++frame_info->tile_rows_log2;
+    if (br.Read<bool>()) {
+      ++frame_info->tile_rows_log2;
+    }
+  }
+}
+
+const Vp9InterpolationFilter kLiteralToType[4] = {
+    Vp9InterpolationFilter::kEightTapSmooth, Vp9InterpolationFilter::kEightTap,
+    Vp9InterpolationFilter::kEightTapSharp, Vp9InterpolationFilter::kBilinear};
+}  // namespace
+
+std::string Vp9UncompressedHeader::ToString() const {
+  char buf[1024];
+  rtc::SimpleStringBuilder oss(buf);
+
+  oss << "Vp9UncompressedHeader { "
+      << "profile = " << profile;
+
+  if (show_existing_frame) {
+    oss << ", show_existing_frame = " << *show_existing_frame << " }";
+    return oss.str();
+  }
+
+  oss << ", frame type = " << (is_keyframe ? "key" : "delta")
+      << ", show_frame = " << (show_frame ? "true" : "false")
+      << ", error_resilient = " << (error_resilient ? "true" : "false");
+
+  oss << ", bit_depth = ";
+  switch (bit_detph) {
+    case Vp9BitDept::k8Bit:
+      oss << "8bit";
+      break;
+    case Vp9BitDept::k10Bit:
+      oss << "10bit";
+      break;
+    case Vp9BitDept::k12Bit:
+      oss << "12bit";
       break;
   }
 
-  if (!found_ref) {
-    if (!Vp9ReadFrameSize(br, frame_info)) {
-      return false;
+  if (color_space) {
+    oss << ", color_space = ";
+    switch (*color_space) {
+      case Vp9ColorSpace::CS_UNKNOWN:
+        oss << "unknown";
+        break;
+      case Vp9ColorSpace::CS_BT_601:
+        oss << "CS_BT_601 Rec. ITU-R BT.601-7";
+        break;
+      case Vp9ColorSpace::CS_BT_709:
+        oss << "Rec. ITU-R BT.709-6";
+        break;
+      case Vp9ColorSpace::CS_SMPTE_170:
+        oss << "SMPTE-170";
+        break;
+      case Vp9ColorSpace::CS_SMPTE_240:
+        oss << "SMPTE-240";
+        break;
+      case Vp9ColorSpace::CS_BT_2020:
+        oss << "Rec. ITU-R BT.2020-2";
+        break;
+      case Vp9ColorSpace::CS_RESERVED:
+        oss << "Reserved";
+        break;
+      case Vp9ColorSpace::CS_RGB:
+        oss << "sRGB (IEC 61966-2-1)";
+        break;
     }
   }
-  return Vp9ReadRenderSize(br, frame_info);
-}
 
-bool Vp9ReadInterpolationFilter(rtc::BitBuffer* br) {
-  uint32_t bit;
-  RETURN_FALSE_IF_ERROR(br->ReadBits(&bit, 1));
-  if (bit)
-    return true;
-
-  return br->ConsumeBits(2);
-}
-
-bool Vp9ReadLoopfilter(rtc::BitBuffer* br) {
-  // 6 bits: filter level.
-  // 3 bits: sharpness level.
-  RETURN_FALSE_IF_ERROR(br->ConsumeBits(9));
-
-  uint32_t mode_ref_delta_enabled;
-  RETURN_FALSE_IF_ERROR(br->ReadBits(&mode_ref_delta_enabled, 1));
-  if (mode_ref_delta_enabled) {
-    uint32_t mode_ref_delta_update;
-    RETURN_FALSE_IF_ERROR(br->ReadBits(&mode_ref_delta_update, 1));
-    if (mode_ref_delta_update) {
-      uint32_t bit;
-      for (size_t i = 0; i < kVp9MaxRefLFDeltas; i++) {
-        RETURN_FALSE_IF_ERROR(br->ReadBits(&bit, 1));
-        if (bit) {
-          RETURN_FALSE_IF_ERROR(br->ConsumeBits(7));
-        }
-      }
-      for (size_t i = 0; i < kVp9MaxModeLFDeltas; i++) {
-        RETURN_FALSE_IF_ERROR(br->ReadBits(&bit, 1));
-        if (bit) {
-          RETURN_FALSE_IF_ERROR(br->ConsumeBits(7));
-        }
-      }
+  if (color_range) {
+    oss << ", color_range = ";
+    switch (*color_range) {
+      case Vp9ColorRange::kFull:
+        oss << "full";
+        break;
+      case Vp9ColorRange::kStudio:
+        oss << "studio";
+        break;
     }
   }
-  return true;
-}
-}  // namespace
 
-bool Parse(const uint8_t* buf, size_t length, int* qp, FrameInfo* frame_info) {
-  rtc::BitBuffer br(buf, length);
+  if (sub_sampling) {
+    oss << ", sub_sampling = ";
+    switch (*sub_sampling) {
+      case Vp9YuvSubsampling::k444:
+        oss << "444";
+        break;
+      case Vp9YuvSubsampling::k440:
+        oss << "440";
+        break;
+      case Vp9YuvSubsampling::k422:
+        oss << "422";
+        break;
+      case Vp9YuvSubsampling::k420:
+        oss << "420";
+        break;
+    }
+  }
+
+  if (infer_size_from_reference) {
+    oss << ", infer_frame_resolution_from = " << *infer_size_from_reference;
+  } else {
+    oss << ", frame_width = " << frame_width
+        << ", frame_height = " << frame_height;
+  }
+  if (render_width != 0 && render_height != 0) {
+    oss << ", render_width = " << render_width
+        << ", render_height = " << render_height;
+  }
+
+  oss << ", base qp = " << base_qp;
+  if (reference_buffers[0] != -1) {
+    oss << ", last_buffer = " << reference_buffers[0];
+  }
+  if (reference_buffers[1] != -1) {
+    oss << ", golden_buffer = " << reference_buffers[1];
+  }
+  if (reference_buffers[2] != -1) {
+    oss << ", altref_buffer = " << reference_buffers[2];
+  }
+
+  oss << ", updated buffers = { ";
+  bool first = true;
+  for (int i = 0; i < 8; ++i) {
+    if (updated_buffers.test(i)) {
+      if (first) {
+        first = false;
+      } else {
+        oss << ", ";
+      }
+      oss << i;
+    }
+  }
+  oss << " }";
+
+  oss << ", compressed_header_size_bytes = " << compressed_header_size;
+
+  oss << " }";
+  return oss.str();
+}
+
+void Parse(BitstreamReader& br,
+           Vp9UncompressedHeader* frame_info,
+           bool qp_only) {
+  const size_t total_buffer_size_bits = br.RemainingBitCount();
 
   // Frame marker.
-  uint32_t frame_marker;
-  RETURN_FALSE_IF_ERROR(br.ReadBits(&frame_marker, 2));
-  if (frame_marker != 0x2) {
+  if (br.ReadBits(2) != 0b10) {
     RTC_LOG(LS_WARNING) << "Failed to parse header. Frame marker should be 2.";
-    return false;
+    br.Invalidate();
+    return;
   }
 
-  // Profile.
-  uint8_t profile;
-  if (!Vp9ReadProfile(&br, &profile))
-    return false;
-  frame_info->profile = profile;
+  // Profile has low bit first.
+  frame_info->profile = br.ReadBit();
+  frame_info->profile |= br.ReadBit() << 1;
+  if (frame_info->profile > 2 && br.Read<bool>()) {
+    RTC_LOG(LS_WARNING)
+        << "Failed to parse header. Unsupported bitstream profile.";
+    br.Invalidate();
+    return;
+  }
 
   // Show existing frame.
-  uint32_t show_existing_frame;
-  RETURN_FALSE_IF_ERROR(br.ReadBits(&show_existing_frame, 1));
-  if (show_existing_frame)
-    return false;
+  if (br.Read<bool>()) {
+    frame_info->show_existing_frame = br.ReadBits(3);
+    return;
+  }
 
   // Frame type: KEY_FRAME(0), INTER_FRAME(1).
-  uint32_t frame_type;
-  uint32_t show_frame;
-  uint32_t error_resilient;
-  RETURN_FALSE_IF_ERROR(br.ReadBits(&frame_type, 1));
-  RETURN_FALSE_IF_ERROR(br.ReadBits(&show_frame, 1));
-  RETURN_FALSE_IF_ERROR(br.ReadBits(&error_resilient, 1));
-  frame_info->show_frame = show_frame;
-  frame_info->error_resilient = error_resilient;
+  frame_info->is_keyframe = !br.Read<bool>();
+  frame_info->show_frame = br.Read<bool>();
+  frame_info->error_resilient = br.Read<bool>();
 
-  if (frame_type == 0) {
-    // Key-frame.
-    if (!Vp9ReadSyncCode(&br))
-      return false;
-    if (!Vp9ReadColorConfig(&br, profile, frame_info))
-      return false;
-    if (!Vp9ReadFrameSize(&br, frame_info))
-      return false;
-    if (!Vp9ReadRenderSize(&br, frame_info))
-      return false;
+  if (frame_info->is_keyframe) {
+    if (br.ReadBits(24) != 0x498342) {
+      RTC_LOG(LS_WARNING) << "Failed to parse header. Invalid sync code.";
+      br.Invalidate();
+      return;
+    }
+
+    Vp9ReadColorConfig(br, frame_info);
+    Vp9ReadFrameSize(br, frame_info);
+    Vp9ReadRenderSize(total_buffer_size_bits, br, frame_info);
+
+    // Key-frames implicitly update all buffers.
+    frame_info->updated_buffers.set();
   } else {
     // Non-keyframe.
-    uint32_t intra_only = 0;
-    if (!show_frame)
-      RETURN_FALSE_IF_ERROR(br.ReadBits(&intra_only, 1));
-    if (!error_resilient)
-      RETURN_FALSE_IF_ERROR(br.ConsumeBits(2));  // Reset frame context.
+    bool is_intra_only = false;
+    if (!frame_info->show_frame) {
+      is_intra_only = br.Read<bool>();
+    }
+    if (!frame_info->error_resilient) {
+      br.ConsumeBits(2);  // Reset frame context.
+    }
 
-    if (intra_only) {
-      if (!Vp9ReadSyncCode(&br))
-        return false;
-
-      if (profile > 0) {
-        if (!Vp9ReadColorConfig(&br, profile, frame_info))
-          return false;
+    if (is_intra_only) {
+      if (br.ReadBits(24) != 0x498342) {
+        RTC_LOG(LS_WARNING) << "Failed to parse header. Invalid sync code.";
+        br.Invalidate();
+        return;
       }
-      // Refresh frame flags.
-      RETURN_FALSE_IF_ERROR(br.ConsumeBits(8));
-      if (!Vp9ReadFrameSize(&br, frame_info))
-        return false;
-      if (!Vp9ReadRenderSize(&br, frame_info))
-        return false;
+
+      if (frame_info->profile > 0) {
+        Vp9ReadColorConfig(br, frame_info);
+      } else {
+        frame_info->color_space = Vp9ColorSpace::CS_BT_601;
+        frame_info->sub_sampling = Vp9YuvSubsampling::k420;
+        frame_info->bit_detph = Vp9BitDept::k8Bit;
+      }
+      frame_info->reference_buffers.fill(-1);
+      ReadRefreshFrameFlags(br, frame_info);
+      Vp9ReadFrameSize(br, frame_info);
+      Vp9ReadRenderSize(total_buffer_size_bits, br, frame_info);
     } else {
-      // Refresh frame flags.
-      RETURN_FALSE_IF_ERROR(br.ConsumeBits(8));
+      ReadRefreshFrameFlags(br, frame_info);
 
+      frame_info->reference_buffers_sign_bias[0] = false;
       for (size_t i = 0; i < kVp9NumRefsPerFrame; i++) {
-        // 3 bits: Ref frame index.
-        // 1 bit: Ref frame sign biases.
-        RETURN_FALSE_IF_ERROR(br.ConsumeBits(4));
+        frame_info->reference_buffers[i] = br.ReadBits(3);
+        frame_info->reference_buffers_sign_bias[Vp9ReferenceFrame::kLast + i] =
+            br.Read<bool>();
       }
 
-      if (!Vp9ReadFrameSizeFromRefs(&br, frame_info))
-        return false;
+      Vp9ReadFrameSizeFromRefs(br, frame_info);
+      Vp9ReadRenderSize(total_buffer_size_bits, br, frame_info);
 
-      // Allow high precision mv.
-      RETURN_FALSE_IF_ERROR(br.ConsumeBits(1));
+      frame_info->allow_high_precision_mv = br.Read<bool>();
+
       // Interpolation filter.
-      if (!Vp9ReadInterpolationFilter(&br))
-        return false;
+      if (br.Read<bool>()) {
+        frame_info->interpolation_filter = Vp9InterpolationFilter::kSwitchable;
+      } else {
+        frame_info->interpolation_filter = kLiteralToType[br.ReadBits(2)];
+      }
     }
   }
 
-  if (!error_resilient) {
+  if (!frame_info->error_resilient) {
     // 1 bit: Refresh frame context.
     // 1 bit: Frame parallel decoding mode.
-    RETURN_FALSE_IF_ERROR(br.ConsumeBits(2));
+    br.ConsumeBits(2);
   }
 
   // Frame context index.
-  RETURN_FALSE_IF_ERROR(br.ConsumeBits(2));
+  frame_info->frame_context_idx = br.ReadBits(2);
 
-  if (!Vp9ReadLoopfilter(&br))
-    return false;
+  Vp9ReadLoopfilter(br);
 
-  // Base QP.
-  uint8_t base_q0;
-  RETURN_FALSE_IF_ERROR(br.ReadUInt8(&base_q0));
-  *qp = base_q0;
-  return true;
+  // Read base QP.
+  Vp9ReadQp(br, frame_info);
+
+  if (qp_only) {
+    // Not interested in the rest of the header, return early.
+    return;
+  }
+
+  Vp9ReadSegmentationParams(br, frame_info);
+  Vp9ReadTileInfo(br, frame_info);
+  frame_info->compressed_header_size = br.Read<uint16_t>();
+  frame_info->uncompressed_header_size =
+      (total_buffer_size_bits / 8) - (br.RemainingBitCount() / 8);
 }
 
-bool GetQp(const uint8_t* buf, size_t length, int* qp) {
-  FrameInfo frame_info;
-  return Parse(buf, length, qp, &frame_info);
-}
-
-absl::optional<FrameInfo> ParseIntraFrameInfo(const uint8_t* buf,
-                                              size_t length) {
-  int qp = 0;
-  FrameInfo frame_info;
-  if (Parse(buf, length, &qp, &frame_info) && frame_info.frame_width > 0) {
+absl::optional<Vp9UncompressedHeader> ParseUncompressedVp9Header(
+    rtc::ArrayView<const uint8_t> buf) {
+  BitstreamReader reader(buf);
+  Vp9UncompressedHeader frame_info;
+  Parse(reader, &frame_info, /*qp_only=*/false);
+  if (reader.Ok() && frame_info.frame_width > 0) {
     return frame_info;
   }
   return absl::nullopt;
+}
+
+namespace vp9 {
+
+bool GetQp(const uint8_t* buf, size_t length, int* qp) {
+  BitstreamReader reader(rtc::MakeArrayView(buf, length));
+  Vp9UncompressedHeader frame_info;
+  Parse(reader, &frame_info, /*qp_only=*/true);
+  if (!reader.Ok()) {
+    return false;
+  }
+  *qp = frame_info.base_qp;
+  return true;
 }
 
 }  // namespace vp9

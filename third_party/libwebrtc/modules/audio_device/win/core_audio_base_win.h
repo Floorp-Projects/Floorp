@@ -17,9 +17,9 @@
 #include <string>
 
 #include "absl/types/optional.h"
+#include "api/sequence_checker.h"
 #include "modules/audio_device/win/core_audio_utility_win.h"
 #include "rtc_base/platform_thread.h"
-#include "rtc_base/thread_checker.h"
 
 namespace webrtc {
 
@@ -63,7 +63,7 @@ class CoreAudioBase : public IAudioSessionEvents {
 
   // Callback definition for notifications of run-time error messages. It can
   // be called e.g. when an active audio device is removed and an audio stream
-  // is disconnected (|error| is then set to kStreamDisconnected). Both input
+  // is disconnected (`error` is then set to kStreamDisconnected). Both input
   // and output clients implements OnErrorCallback() and will trigger an
   // internal restart sequence for kStreamDisconnected.
   // This method is currently always called on the audio thread.
@@ -103,13 +103,13 @@ class CoreAudioBase : public IAudioSessionEvents {
   // Releases all allocated COM resources in the base class.
   void ReleaseCOMObjects();
 
-  // Returns number of active devices given the specified |direction_| set
+  // Returns number of active devices given the specified `direction_` set
   // by the parent (input or output).
   int NumberOfActiveDevices() const;
 
   // Returns total number of enumerated audio devices which is the sum of all
   // active devices plus two extra (one default and one default
-  // communications). The value in |direction_| determines if capture or
+  // communications). The value in `direction_` determines if capture or
   // render devices are counted.
   int NumberOfEnumeratedDevices() const;
 
@@ -128,8 +128,8 @@ class CoreAudioBase : public IAudioSessionEvents {
   // level here. In addition, calls to Init(), Start() and Stop() are not
   // included to allow for support of internal restart (where these methods are
   // called on the audio thread).
-  rtc::ThreadChecker thread_checker_;
-  rtc::ThreadChecker thread_checker_audio_;
+  SequenceChecker thread_checker_;
+  SequenceChecker thread_checker_audio_;
   AudioDeviceBuffer* audio_device_buffer_ = nullptr;
   bool initialized_ = false;
   WAVEFORMATEXTENSIBLE format_ = {};
@@ -158,7 +158,7 @@ class CoreAudioBase : public IAudioSessionEvents {
   // Set when restart process starts and cleared when restart stops
   // successfully. Accessed atomically.
   std::atomic<bool> is_restarting_;
-  std::unique_ptr<rtc::PlatformThread> audio_thread_;
+  rtc::PlatformThread audio_thread_;
   Microsoft::WRL::ComPtr<IAudioSessionControl> audio_session_control_;
 
   void StopThread();

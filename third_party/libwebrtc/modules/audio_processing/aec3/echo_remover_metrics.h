@@ -15,7 +15,6 @@
 
 #include "modules/audio_processing/aec3/aec3_common.h"
 #include "modules/audio_processing/aec3/aec_state.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 
@@ -34,6 +33,9 @@ class EchoRemoverMetrics {
 
   EchoRemoverMetrics();
 
+  EchoRemoverMetrics(const EchoRemoverMetrics&) = delete;
+  EchoRemoverMetrics& operator=(const EchoRemoverMetrics&) = delete;
+
   // Updates the metric with new data.
   void Update(
       const AecState& aec_state,
@@ -48,15 +50,10 @@ class EchoRemoverMetrics {
   void ResetMetrics();
 
   int block_counter_ = 0;
-  std::array<DbMetric, 2> erl_;
   DbMetric erl_time_domain_;
-  std::array<DbMetric, 2> erle_;
   DbMetric erle_time_domain_;
-  int active_render_count_ = 0;
   bool saturated_capture_ = false;
   bool metrics_reported_ = false;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(EchoRemoverMetrics);
 };
 
 namespace aec3 {

@@ -18,29 +18,33 @@
     test = new PeerConnectionTest(options);
     test.setMediaConstraints([{video: true}], [{video: true}]);
 
-    let getRtpPacket = (pc) => {
+    let getRtpPacketWithExtension = (pc, extension) => {
       // we only examine received packets
       let sending = false;
       pc.mozEnablePacketDump(0, "rtp", sending);
       return new Promise((res, rej) =>
         pc.mozSetPacketCallback((...args) => {
-          res([...args]);
-          pc.mozSetPacketCallback(() => {});
-          pc.mozDisablePacketDump(0, "rtp", sending);
+          const packet = ParseRtpPacket(args[3]);
+          info(`midId = ${extension} packet = ${JSON.stringify(packet, null, 2)}`);
+          if (packet.header.extensions.find(e => e.id == extension) !== undefined) {
+            res(packet);
+            pc.mozSetPacketCallback(() => {});
+            pc.mozDisablePacketDump(0, "rtp", sending);
+          }
         })
       );
     }
 
     const pc = SpecialPowers.wrap(test.pcRemote._pc);
-    const haveFirstPacket = getRtpPacket(pc);
+    const havePacketWithMid = midId => getRtpPacketWithExtension(pc, midId);
 
     test.chain.insertBefore('PC_REMOTE_WAIT_FOR_MEDIA_FLOW', [
       async function PC_REMOTE_CHECK_RTP_HEADER_EXTS_AGAINST_SDP() {
 
-        const sdpExtmapIds = sdputils.findExtmapIds(test.originalAnswer.sdp);
-
-        const [level, type, sending, data] = await haveFirstPacket;
-        const packet = ParseRtpPacket(data);
+        const sdpExtmaps = sdputils.findExtmapIdsUrnsDirections(test.originalAnswer.sdp);
+        const sdpExtmapIds = sdpExtmaps.map(e => e[0]);
+        const midId = sdpExtmaps.find(([_id, urn, dir]) => urn == "urn:ietf:params:rtp-hdrext:sdes:mid")[0];
+        const packet = await havePacketWithMid(midId);
         const extIds = packet.header.extensions.map(e => `${e.id}`);
         // make sure we got the same number of rtp header extensions in
         // the received packet as were negotiated in the sdp.  Then

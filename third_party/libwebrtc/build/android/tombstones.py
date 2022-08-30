@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env vpython3
 #
 # Copyright 2013 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -156,7 +156,7 @@ def _GetTombstonesForDevice(device, resolve_all_tombstones,
     return ret
 
   # Sort the tombstones in date order, descending
-  all_tombstones.sort(cmp=lambda a, b: cmp(b[1], a[1]))
+  all_tombstones.sort(key=lambda a: a[1], reverse=True)
 
   # Only resolve the most recent unless --all-tombstones given.
   tombstones = all_tombstones if resolve_all_tombstones else [all_tombstones[0]]
@@ -233,11 +233,6 @@ def main():
   parser.add_argument('--device',
                       help='The serial number of the device. If not specified '
                            'will use all devices.')
-  # TODO(crbug.com/1097306): Remove this once callers have all switched to
-  # --denylist-file.
-  parser.add_argument('--blacklist-file',
-                      dest='denylist_file',
-                      help=argparse.SUPPRESS)
   parser.add_argument('--denylist-file', help='Device denylist JSON file.')
   parser.add_argument('-a', '--all-tombstones', action='store_true',
                       help='Resolve symbols for all tombstones, rather than '
@@ -256,15 +251,14 @@ def main():
                       help='Path to the adb binary.')
   args = parser.parse_args()
 
-  devil_chromium.Initialize(adb_path=args.adb_path)
+  if args.output_directory:
+    constants.SetOutputDirectory(args.output_directory)
+
+  devil_chromium.Initialize(output_directory=constants.GetOutDirectory(),
+                            adb_path=args.adb_path)
 
   denylist = (device_denylist.Denylist(args.denylist_file)
               if args.denylist_file else None)
-
-  if args.output_directory:
-    constants.SetOutputDirectory(args.output_directory)
-  # Do an up-front test that the output directory is known.
-  constants.CheckOutputDirectory()
 
   if args.device:
     devices = [device_utils.DeviceUtils(args.device)]

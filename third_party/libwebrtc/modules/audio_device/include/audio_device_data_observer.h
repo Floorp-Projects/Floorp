@@ -14,6 +14,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "absl/base/attributes.h"
 #include "api/scoped_refptr.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "modules/audio_device/include/audio_device.h"
@@ -25,16 +26,16 @@ namespace webrtc {
 class AudioDeviceDataObserver {
  public:
   virtual void OnCaptureData(const void* audio_samples,
-                             const size_t num_samples,
-                             const size_t bytes_per_sample,
-                             const size_t num_channels,
-                             const uint32_t samples_per_sec) = 0;
+                             size_t num_samples,
+                             size_t bytes_per_sample,
+                             size_t num_channels,
+                             uint32_t samples_per_sec) = 0;
 
   virtual void OnRenderData(const void* audio_samples,
-                            const size_t num_samples,
-                            const size_t bytes_per_sample,
-                            const size_t num_channels,
-                            const uint32_t samples_per_sec) = 0;
+                            size_t num_samples,
+                            size_t bytes_per_sample,
+                            size_t num_channels,
+                            uint32_t samples_per_sec) = 0;
 
   AudioDeviceDataObserver() = default;
   virtual ~AudioDeviceDataObserver() = default;
@@ -48,21 +49,21 @@ rtc::scoped_refptr<AudioDeviceModule> CreateAudioDeviceWithDataObserver(
 
 // Creates an ADMWrapper around an ADM instance that registers
 // the provided AudioDeviceDataObserver.
-RTC_DEPRECATED
+ABSL_DEPRECATED("")
 rtc::scoped_refptr<AudioDeviceModule> CreateAudioDeviceWithDataObserver(
     rtc::scoped_refptr<AudioDeviceModule> impl,
     AudioDeviceDataObserver* observer);
 
 // Creates an ADM instance with AudioDeviceDataObserver registered.
 rtc::scoped_refptr<AudioDeviceModule> CreateAudioDeviceWithDataObserver(
-    const AudioDeviceModule::AudioLayer audio_layer,
+    AudioDeviceModule::AudioLayer audio_layer,
     TaskQueueFactory* task_queue_factory,
     std::unique_ptr<AudioDeviceDataObserver> observer);
 
 // Creates an ADM instance with AudioDeviceDataObserver registered.
-RTC_DEPRECATED
+ABSL_DEPRECATED("")
 rtc::scoped_refptr<AudioDeviceModule> CreateAudioDeviceWithDataObserver(
-    const AudioDeviceModule::AudioLayer audio_layer,
+    AudioDeviceModule::AudioLayer audio_layer,
     TaskQueueFactory* task_queue_factory,
     AudioDeviceDataObserver* observer);
 

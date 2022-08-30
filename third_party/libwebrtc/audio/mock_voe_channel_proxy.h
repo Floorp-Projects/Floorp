@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 
+#include "api/crypto/frame_decryptor_interface.h"
 #include "api/test/mock_frame_encryptor.h"
 #include "audio/channel_receive.h"
 #include "audio/channel_send.h"
@@ -29,6 +30,7 @@ namespace test {
 class MockChannelReceive : public voe::ChannelReceiveInterface {
  public:
   MOCK_METHOD(void, SetNACKStatus, (bool enable, int max_packets), (override));
+  MOCK_METHOD(void, SetNonSenderRttMeasurement, (bool enabled), (override));
   MOCK_METHOD(void,
               RegisterReceiverCongestionControlObjects,
               (PacketRouter*),
@@ -59,6 +61,7 @@ class MockChannelReceive : public voe::ChannelReceiveInterface {
               (int sample_rate_hz, AudioFrame*),
               (override));
   MOCK_METHOD(int, PreferredSampleRate, (), (const, override));
+  MOCK_METHOD(void, SetSourceTracker, (SourceTracker*), (override));
   MOCK_METHOD(void,
               SetAssociatedSendChannel,
               (const voe::ChannelSendInterface*),
@@ -97,6 +100,13 @@ class MockChannelReceive : public voe::ChannelReceiveInterface {
       SetDepacketizerToDecoderFrameTransformer,
       (rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer),
       (override));
+  MOCK_METHOD(
+      void,
+      SetFrameDecryptor,
+      (rtc::scoped_refptr<webrtc::FrameDecryptorInterface> frame_decryptor),
+      (override));
+  MOCK_METHOD(void, OnLocalSsrcChange, (uint32_t local_ssrc), (override));
+  MOCK_METHOD(uint32_t, GetLocalSsrc, (), (const, override));
 };
 
 class MockChannelSend : public voe::ChannelSendInterface {
@@ -156,7 +166,7 @@ class MockChannelSend : public voe::ChannelSendInterface {
               (std::unique_ptr<AudioFrame>),
               (override));
   MOCK_METHOD(RtpRtcpInterface*, GetRtpRtcp, (), (const, override));
-  MOCK_METHOD(int, GetBitrate, (), (const, override));
+  MOCK_METHOD(int, GetTargetBitrate, (), (const, override));
   MOCK_METHOD(int64_t, GetRTT, (), (const, override));
   MOCK_METHOD(void, StartSend, (), (override));
   MOCK_METHOD(void, StopSend, (), (override));

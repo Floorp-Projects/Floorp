@@ -47,7 +47,17 @@ void VerifyErle(
     float reference_lf,
     float reference_hf) {
   VerifyErleBands(erle, reference_lf, reference_hf);
-  EXPECT_NEAR(reference_lf, erle_time_domain, 0.5);
+  EXPECT_NEAR(kTrueErle, erle_time_domain, 0.5);
+}
+
+void VerifyErleGreaterOrEqual(
+    rtc::ArrayView<const std::array<float, kFftLengthBy2Plus1>> erle1,
+    rtc::ArrayView<const std::array<float, kFftLengthBy2Plus1>> erle2) {
+  for (size_t ch = 0; ch < erle1.size(); ++ch) {
+    for (size_t i = 0; i < kFftLengthBy2Plus1; ++i) {
+      EXPECT_GE(erle1[ch][i], erle2[ch][i]);
+    }
+  }
 }
 
 void FormFarendTimeFrame(std::vector<std::vector<std::vector<float>>>* x) {
@@ -156,9 +166,10 @@ TEST_P(ErleEstimatorMultiChannel, VerifyErleIncreaseAndHold) {
       kNumBands, std::vector<std::vector<float>>(
                      num_render_channels, std::vector<float>(kBlockSize, 0.f)));
   std::vector<std::vector<std::array<float, kFftLengthBy2Plus1>>>
-  filter_frequency_response(
-      config.filter.refined.length_blocks,
-      std::vector<std::array<float, kFftLengthBy2Plus1>>(num_capture_channels));
+      filter_frequency_response(
+          config.filter.refined.length_blocks,
+          std::vector<std::array<float, kFftLengthBy2Plus1>>(
+              num_capture_channels));
   std::unique_ptr<RenderDelayBuffer> render_delay_buffer(
       RenderDelayBuffer::Create(config, kSampleRateHz, num_render_channels));
 
@@ -172,14 +183,19 @@ TEST_P(ErleEstimatorMultiChannel, VerifyErleIncreaseAndHold) {
   // Verifies that the ERLE estimate is properly increased to higher values.
   FormFarendFrame(*render_delay_buffer->GetRenderBuffer(), kTrueErle, &X2, E2,
                   Y2);
-  for (size_t k = 0; k < 200; ++k) {
+  for (size_t k = 0; k < 1000; ++k) {
     render_delay_buffer->Insert(x);
     render_delay_buffer->PrepareCaptureProcessing();
     estimator.Update(*render_delay_buffer->GetRenderBuffer(),
                      filter_frequency_response, X2, Y2, E2, converged_filters);
   }
-  VerifyErle(estimator.Erle(), std::pow(2.f, estimator.FullbandErleLog2()),
-             config.erle.max_l, config.erle.max_h);
+  VerifyErle(estimator.Erle(/*onset_compensated=*/true),
+             std::pow(2.f, estimator.FullbandErleLog2()), config.erle.max_l,
+             config.erle.max_h);
+  VerifyErleGreaterOrEqual(estimator.Erle(/*onset_compensated=*/false),
+                           estimator.Erle(/*onset_compensated=*/true));
+  VerifyErleGreaterOrEqual(estimator.ErleUnbounded(),
+                           estimator.Erle(/*onset_compensated=*/false));
 
   FormNearendFrame(&x, &X2, E2, Y2);
   // Verifies that the ERLE is not immediately decreased during nearend
@@ -190,8 +206,13 @@ TEST_P(ErleEstimatorMultiChannel, VerifyErleIncreaseAndHold) {
     estimator.Update(*render_delay_buffer->GetRenderBuffer(),
                      filter_frequency_response, X2, Y2, E2, converged_filters);
   }
-  VerifyErle(estimator.Erle(), std::pow(2.f, estimator.FullbandErleLog2()),
-             config.erle.max_l, config.erle.max_h);
+  VerifyErle(estimator.Erle(/*onset_compensated=*/true),
+             std::pow(2.f, estimator.FullbandErleLog2()), config.erle.max_l,
+             config.erle.max_h);
+  VerifyErleGreaterOrEqual(estimator.Erle(/*onset_compensated=*/false),
+                           estimator.Erle(/*onset_compensated=*/true));
+  VerifyErleGreaterOrEqual(estimator.ErleUnbounded(),
+                           estimator.Erle(/*onset_compensated=*/false));
 }
 
 TEST_P(ErleEstimatorMultiChannel, VerifyErleTrackingOnOnsets) {
@@ -210,9 +231,10 @@ TEST_P(ErleEstimatorMultiChannel, VerifyErleTrackingOnOnsets) {
       kNumBands, std::vector<std::vector<float>>(
                      num_render_channels, std::vector<float>(kBlockSize, 0.f)));
   std::vector<std::vector<std::array<float, kFftLengthBy2Plus1>>>
-  filter_frequency_response(
-      config.filter.refined.length_blocks,
-      std::vector<std::array<float, kFftLengthBy2Plus1>>(num_capture_channels));
+      filter_frequency_response(
+          config.filter.refined.length_blocks,
+          std::vector<std::array<float, kFftLengthBy2Plus1>>(
+              num_capture_channels));
   std::unique_ptr<RenderDelayBuffer> render_delay_buffer(
       RenderDelayBuffer::Create(config, kSampleRateHz, num_render_channels));
 
@@ -237,7 +259,7 @@ TEST_P(ErleEstimatorMultiChannel, VerifyErleTrackingOnOnsets) {
     }
     FormFarendFrame(*render_delay_buffer->GetRenderBuffer(), kTrueErle, &X2, E2,
                     Y2);
-    for (size_t k = 0; k < 200; ++k) {
+    for (size_t k = 0; k < 1000; ++k) {
       render_delay_buffer->Insert(x);
       render_delay_buffer->PrepareCaptureProcessing();
       estimator.Update(*render_delay_buffer->GetRenderBuffer(),
@@ -253,7 +275,8 @@ TEST_P(ErleEstimatorMultiChannel, VerifyErleTrackingOnOnsets) {
                        converged_filters);
     }
   }
-  VerifyErleBands(estimator.ErleOnsets(), config.erle.min, config.erle.min);
+  VerifyErleBands(estimator.ErleDuringOnsets(), config.erle.min,
+                  config.erle.min);
   FormNearendFrame(&x, &X2, E2, Y2);
   for (size_t k = 0; k < 1000; k++) {
     estimator.Update(*render_delay_buffer->GetRenderBuffer(),
@@ -261,8 +284,9 @@ TEST_P(ErleEstimatorMultiChannel, VerifyErleTrackingOnOnsets) {
   }
   // Verifies that during ne activity, Erle converges to the Erle for
   // onsets.
-  VerifyErle(estimator.Erle(), std::pow(2.f, estimator.FullbandErleLog2()),
-             config.erle.min, config.erle.min);
+  VerifyErle(estimator.Erle(/*onset_compensated=*/true),
+             std::pow(2.f, estimator.FullbandErleLog2()), config.erle.min,
+             config.erle.min);
 }
 
 }  // namespace webrtc

@@ -36,6 +36,7 @@ static const size_t kWidth = 640;
 static const size_t kHeight = 480;
 
 static const uint8_t kStartSequence[] = {0x00, 0x00, 0x00, 0x01};
+static const uint8_t kAud[] = {H264::NaluType::kAud, 0x09, 0x10};
 static const uint8_t kSpsNaluType[] = {H264::NaluType::kSps};
 static const uint8_t kIdr1[] = {H264::NaluType::kIdr, 0xFF, 0x00, 0x00, 0x04};
 static const uint8_t kIdr2[] = {H264::NaluType::kIdr, 0xFF, 0x00, 0x11};
@@ -401,9 +402,8 @@ TEST(SpsVuiRewriterOutgoingVuiTest, ParseOutgoingBitstreamOptimalVui) {
   buffer.AppendData(kStartSequence);
   buffer.AppendData(kIdr1);
 
-  EXPECT_THAT(
-      SpsVuiRewriter::ParseOutgoingBitstreamAndRewriteSps(buffer, nullptr),
-      ::testing::ElementsAreArray(buffer));
+  EXPECT_THAT(SpsVuiRewriter::ParseOutgoingBitstreamAndRewrite(buffer, nullptr),
+              ::testing::ElementsAreArray(buffer));
 }
 
 TEST(SpsVuiRewriterOutgoingVuiTest, ParseOutgoingBitstreamNoVui) {
@@ -433,8 +433,31 @@ TEST(SpsVuiRewriterOutgoingVuiTest, ParseOutgoingBitstreamNoVui) {
   expected_buffer.AppendData(kStartSequence);
   expected_buffer.AppendData(kIdr2);
 
-  EXPECT_THAT(
-      SpsVuiRewriter::ParseOutgoingBitstreamAndRewriteSps(buffer, nullptr),
-      ::testing::ElementsAreArray(expected_buffer));
+  EXPECT_THAT(SpsVuiRewriter::ParseOutgoingBitstreamAndRewrite(buffer, nullptr),
+              ::testing::ElementsAreArray(expected_buffer));
+}
+
+TEST(SpsVuiRewriterOutgoingAudTest, ParseOutgoingBitstreamWithAud) {
+  rtc::LogMessage::LogToDebug(rtc::LS_VERBOSE);
+
+  rtc::Buffer optimal_sps;
+  GenerateFakeSps(kVuiNoFrameBuffering, &optimal_sps);
+
+  rtc::Buffer buffer;
+  buffer.AppendData(kStartSequence);
+  buffer.AppendData(kAud);
+  buffer.AppendData(kStartSequence);
+  buffer.AppendData(optimal_sps);
+  buffer.AppendData(kStartSequence);
+  buffer.AppendData(kIdr1);
+
+  rtc::Buffer expected_buffer;
+  expected_buffer.AppendData(kStartSequence);
+  expected_buffer.AppendData(optimal_sps);
+  expected_buffer.AppendData(kStartSequence);
+  expected_buffer.AppendData(kIdr1);
+
+  EXPECT_THAT(SpsVuiRewriter::ParseOutgoingBitstreamAndRewrite(buffer, nullptr),
+              ::testing::ElementsAreArray(expected_buffer));
 }
 }  // namespace webrtc

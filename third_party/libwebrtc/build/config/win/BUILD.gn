@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import("//build/config/c++/c++.gni")
 import("//build/config/chrome_build.gni")
 import("//build/config/clang/clang.gni")
 import("//build/config/compiler/compiler.gni")
@@ -80,25 +81,12 @@ config("compiler") {
   ]
 
   if (is_clang) {
-    # Don't look for includes in %INCLUDE%.
-    cflags += [ "/X" ]
-
     # Required to make the 19041 SDK compatible with clang-cl.
     # See https://crbug.com/1089996 issue #2 for details.
     cflags += [ "/D__WRL_ENABLE_FUNCTION_STATICS__" ]
 
     # Tell clang which version of MSVC to emulate.
     cflags += [ "-fmsc-version=1916" ]
-
-    # Emit table of address-taken functions for Control-Flow Guard (CFG).
-    # This is needed to allow functions to be called by code that is built
-    # with CFG enabled, such as system libraries.
-    # The CFG guards are only emitted if |win_enable_cfg_guards| is enabled.
-    if (win_enable_cfg_guards) {
-      cflags += [ "/guard:cf" ]
-    } else {
-      cflags += [ "/guard:cf,nochecks" ]
-    }
 
     if (is_component_build) {
       cflags += [
@@ -118,6 +106,13 @@ config("compiler") {
       assert(false, "unknown target_cpu " + target_cpu)
     }
 
+    # Chrome currently requires SSE3. Clang supports targeting any Intel
+    # microarchitecture. MSVC only supports a subset of architectures, and the
+    # next step after SSE2 will be AVX.
+    if (target_cpu == "x86" || target_cpu == "x64") {
+      cflags += [ "-msse3" ]
+    }
+
     if (exec_script("//build/win/use_ansi_codes.py", [], "trim string") ==
         "True") {
       cflags += [
@@ -132,7 +127,8 @@ config("compiler") {
     }
   }
 
-  if (use_lld && !use_thin_lto && (is_clang || !use_goma)) {
+  # Disabled with cc_wrapper because of https://github.com/mozilla/sccache/issues/264
+  if (use_lld && !use_thin_lto && (is_clang || !use_goma) && cc_wrapper == "") {
     # /Brepro lets the compiler not write the mtime field in the .obj output.
     # link.exe /incremental relies on this field to work correctly, but lld
     # never looks at this timestamp, so it's safe to pass this flag with
@@ -346,6 +342,31 @@ config("common_linker_setup") {
   }
 }
 
+config("default_cfg_compiler") {
+  # Emit table of address-taken functions for Control-Flow Guard (CFG).
+  # This is needed to allow functions to be called by code that is built
+  # with CFG enabled, such as system libraries.
+  # The CFG guards are only emitted if |win_enable_cfg_guards| is enabled.
+  if (is_clang) {
+    if (win_enable_cfg_guards) {
+      cflags = [ "/guard:cf" ]
+    } else {
+      cflags = [ "/guard:cf,nochecks" ]
+    }
+  }
+}
+
+# To disable CFG guards for a target, remove the "default_cfg_compiler"
+# config, and add "disable_guards_cfg_compiler" config.
+config("disable_guards_cfg_compiler") {
+  # Emit table of address-taken functions for Control-Flow Guard (CFG).
+  # This is needed to allow functions to be called by code that is built
+  # with CFG enabled, such as system libraries.
+  if (is_clang) {
+    cflags = [ "/guard:cf,nochecks" ]
+  }
+}
+
 config("cfi_linker") {
   # Control Flow Guard (CFG)
   # https://msdn.microsoft.com/en-us/library/windows/desktop/mt637065.aspx
@@ -356,13 +377,7 @@ config("cfi_linker") {
   # for now. https://crbug.com/846966
   if (!is_debug && !is_asan) {
     # Turn on CFG bitmap generation and CFG load config.
-    if (target_cpu == "arm64") {
-      # longjmp protection is temporarily disabled on Windows on Arm64 due to
-      # a code-generation defect. https://crbug.com/1126549
-      ldflags = [ "/guard:cf,nolongjmp" ]
-    } else {
-      ldflags = [ "/guard:cf" ]
-    }
+    ldflags = [ "/guard:cf" ]
   }
 }
 
@@ -476,8 +491,17 @@ config("default_crt") {
 config("release_crt") {
   if (is_component_build) {
     cflags = [ "/MD" ]
+
+    if (use_custom_libcxx) {
+      # On Windows, including libcpmt[d]/msvcprt[d] explicitly links the C++
+      # standard library, which libc++ needs for exception_ptr internals.
+      ldflags = [ "/DEFAULTLIB:msvcprt.lib" ]
+    }
   } else {
     cflags = [ "/MT" ]
+    if (use_custom_libcxx) {
+      ldflags = [ "/DEFAULTLIB:libcpmt.lib" ]
+    }
   }
 }
 
@@ -485,8 +509,14 @@ config("dynamic_crt") {
   if (is_debug) {
     # This pulls in the DLL debug CRT and defines _DEBUG
     cflags = [ "/MDd" ]
+    if (use_custom_libcxx) {
+      ldflags = [ "/DEFAULTLIB:msvcprtd.lib" ]
+    }
   } else {
     cflags = [ "/MD" ]
+    if (use_custom_libcxx) {
+      ldflags = [ "/DEFAULTLIB:msvcprt.lib" ]
+    }
   }
 }
 
@@ -494,8 +524,14 @@ config("static_crt") {
   if (is_debug) {
     # This pulls in the static debug CRT and defines _DEBUG
     cflags = [ "/MTd" ]
+    if (use_custom_libcxx) {
+      ldflags = [ "/DEFAULTLIB:libcpmtd.lib" ]
+    }
   } else {
     cflags = [ "/MT" ]
+    if (use_custom_libcxx) {
+      ldflags = [ "/DEFAULTLIB:libcpmt.lib" ]
+    }
   }
 }
 
@@ -571,22 +607,4 @@ config("lean_and_mean") {
 
 config("nominmax") {
   defines = [ "NOMINMAX" ]
-}
-
-# Generating order files -------------------------------------------------------
-
-config("default_cygprofile_instrumentation") {
-  if (generate_order_files) {
-    assert(is_clang, "cygprofile instrumentation only works with clang")
-    assert(is_official_build, "order files should be made w/ official builds")
-    assert(!is_chrome_branded, "order files could leak internal symbol names")
-    configs = [ ":cygprofile_instrumentation" ]
-  }
-}
-
-config("cygprofile_instrumentation") {
-  cflags = [
-    "-Xclang",
-    "-finstrument-functions-after-inlining",
-  ]
 }

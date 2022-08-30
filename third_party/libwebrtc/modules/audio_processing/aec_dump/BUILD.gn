@@ -14,7 +14,6 @@ rtc_source_set("aec_dump") {
 
   deps = [
     "..:aec_dump_interface",
-    "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base/system:file_wrapper",
     "../../../rtc_base/system:rtc_export",
   ]
@@ -46,7 +45,6 @@ if (rtc_include_tests) {
       "..:api",
       "..:audioproc_test_utils",
       "../",
-      "../../../rtc_base:rtc_base_approved",
       "//testing/gtest",
     ]
   }
@@ -70,8 +68,11 @@ if (rtc_enable_protobuf) {
       "../../../api/task_queue",
       "../../../rtc_base:checks",
       "../../../rtc_base:ignore_wundef",
+      "../../../rtc_base:logging",
+      "../../../rtc_base:macromagic",
       "../../../rtc_base:protobuf_utils",
-      "../../../rtc_base:rtc_base_approved",
+      "../../../rtc_base:race_checker",
+      "../../../rtc_base:rtc_event",
       "../../../rtc_base:rtc_task_queue",
       "../../../rtc_base/system:file_wrapper",
       "../../../system_wrappers",

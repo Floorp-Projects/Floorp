@@ -11,36 +11,24 @@ import("//build/dotfile_settings.gni")
 # The location of the build configuration file.
 buildconfig = "//build/config/BUILDCONFIG.gn"
 
+# The python interpreter to use by default. On Windows, this will look
+# for python3.exe and python3.bat.
+script_executable = "python3"
+
 # The secondary source root is a parallel directory tree where
 # GN build files are placed when they can not be placed directly
 # in the source tree, e.g. for third party source trees.
 secondary_source = "//build/secondary/"
 
-# These are the targets to check headers for by default. The files in targets
-# matching these patterns (see "gn help label_pattern" for format) will have
+# These are the targets to skip header checking by default. The files in targets
+# matching these patterns (see "gn help label_pattern" for format) will not have
 # their includes checked for proper dependencies when you run either
 # "gn check" or "gn gen --check".
-check_targets = [
-  "//api/*",
-  "//audio/*",
-  "//backup/*",
-  "//call/*",
-  "//common_audio/*",
-  "//common_video/*",
-  "//examples/*",
-  "//logging/*",
-  "//media/*",
-  "//modules/*",
-  "//p2p/*",
-  "//pc/*",
-  "//rtc_base/*",
-  "//rtc_tools/*",
-  "//sdk/*",
-  "//stats/*",
-  "//system_wrappers/*",
-  "//test/*",
-  "//video/*",
-  "//third_party/libyuv/*",
+no_check_targets = [
+  "//third_party/icu/*",
+
+  # TODO(crbug.com/1151236) Remove once fixed.
+  "//base/allocator/partition_allocator:partition_alloc",
 ]
 
 # These are the list of GN files that run exec_script. This whitelist exists
@@ -61,7 +49,7 @@ default_args = {
 
   mac_sdk_min = "10.12"
 
-  ios_deployment_target = "10.0"
+  ios_deployment_target = "12.0"
 
   # The SDK API level, in contrast, is set by build/android/AndroidManifest.xml.
   android32_ndk_api_level = 16
@@ -74,6 +62,12 @@ default_args = {
   enable_libaom = true
 
   gtest_enable_absl_printers = true
+
+  # Differently from Chromium, WebRTC still support SDK 21.
+  default_min_sdk_version = 21
+
+  # Prevent jsoncpp to pass -Wno-deprecated-declarations to users
+  jsoncpp_no_deprecated_declarations = false
 
   use_custom_libcxx = false
 }

@@ -37,6 +37,8 @@ rtc_library("aec3") {
     "coarse_filter_update_gain.h",
     "comfort_noise_generator.cc",
     "comfort_noise_generator.h",
+    "config_selector.cc",
+    "config_selector.h",
     "decimator.cc",
     "decimator.h",
     "delay_estimate.h",
@@ -72,6 +74,8 @@ rtc_library("aec3") {
     "matched_filter_lag_aggregator.h",
     "moving_average.cc",
     "moving_average.h",
+    "multi_channel_content_detector.cc",
+    "multi_channel_content_detector.h",
     "nearend_detector.h",
     "refined_filter_update_gain.cc",
     "refined_filter_update_gain.h",
@@ -113,6 +117,8 @@ rtc_library("aec3") {
     "suppression_filter.h",
     "suppression_gain.cc",
     "suppression_gain.h",
+    "transparent_mode.cc",
+    "transparent_mode.h",
   ]
 
   defines = []
@@ -137,9 +143,13 @@ rtc_library("aec3") {
     "../../../api/audio:aec3_config",
     "../../../api/audio:echo_control",
     "../../../common_audio:common_audio_c",
+    "../../../rtc_base:atomicops",
     "../../../rtc_base:checks",
-    "../../../rtc_base:rtc_base_approved",
+    "../../../rtc_base:logging",
+    "../../../rtc_base:macromagic",
+    "../../../rtc_base:race_checker",
     "../../../rtc_base:safe_minmax",
+    "../../../rtc_base:swap_queue",
     "../../../rtc_base/experiments:field_trial_parser",
     "../../../rtc_base/system:arch",
     "../../../system_wrappers",
@@ -166,7 +176,6 @@ rtc_source_set("aec3_fft") {
     "../../../api:array_view",
     "../../../common_audio/third_party/ooura:fft_size_128",
     "../../../rtc_base:checks",
-    "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base/system:arch",
   ]
 }
@@ -183,7 +192,6 @@ rtc_source_set("render_buffer") {
     ":fft_data",
     "../../../api:array_view",
     "../../../rtc_base:checks",
-    "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base/system:arch",
   ]
 }
@@ -215,7 +223,6 @@ rtc_source_set("matched_filter") {
   deps = [
     ":aec3_common",
     "../../../api:array_view",
-    "../../../rtc_base:rtc_base_approved",
     "../../../rtc_base/system:arch",
   ]
 }
@@ -297,15 +304,17 @@ if (rtc_include_tests) {
       "..:apm_logging",
       "..:audio_buffer",
       "..:audio_processing",
-      "..:audio_processing_unittests",
       "..:high_pass_filter",
       "../../../api:array_view",
       "../../../api/audio:aec3_config",
       "../../../rtc_base:checks",
-      "../../../rtc_base:rtc_base_approved",
+      "../../../rtc_base:macromagic",
+      "../../../rtc_base:random",
       "../../../rtc_base:safe_minmax",
+      "../../../rtc_base:stringutils",
       "../../../rtc_base/system:arch",
       "../../../system_wrappers",
+      "../../../system_wrappers:metrics",
       "../../../test:field_trial",
       "../../../test:test_support",
       "../utility:cascaded_biquad_filter",
@@ -329,6 +338,7 @@ if (rtc_include_tests) {
         "clockdrift_detector_unittest.cc",
         "coarse_filter_update_gain_unittest.cc",
         "comfort_noise_generator_unittest.cc",
+        "config_selector_unittest.cc",
         "decimator_unittest.cc",
         "echo_canceller3_unittest.cc",
         "echo_path_delay_estimator_unittest.cc",
@@ -343,6 +353,7 @@ if (rtc_include_tests) {
         "matched_filter_lag_aggregator_unittest.cc",
         "matched_filter_unittest.cc",
         "moving_average_unittest.cc",
+        "multi_channel_content_detector_unittest.cc",
         "refined_filter_update_gain_unittest.cc",
         "render_buffer_unittest.cc",
         "render_delay_buffer_unittest.cc",
@@ -357,6 +368,10 @@ if (rtc_include_tests) {
         "suppression_gain_unittest.cc",
         "vector_math_unittest.cc",
       ]
+    }
+
+    if (!build_with_chromium) {
+      deps += [ "..:audio_processing_unittests" ]
     }
   }
 }

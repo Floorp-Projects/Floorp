@@ -17,6 +17,15 @@ group("linux") {
 # is applied to all targets. It is here to separate out the logic that is
 # Linux-only. This is not applied to Android, but is applied to ChromeOS.
 config("compiler") {
+  if (target_cpu == "arm64") {
+    import("//build/config/arm.gni")
+    cflags = []
+    asmflags = []
+    if (arm_control_flow_integrity == "standard") {
+      cflags += [ "-mbranch-protection=standard" ]
+      asmflags += [ "-mbranch-protection=standard" ]
+    }
+  }
 }
 
 # This is included by reference in the //build/config/compiler:runtime_library
@@ -30,19 +39,11 @@ config("runtime_library") {
     defines = [ "OS_CHROMEOS" ]
   }
 
-  if ((!(is_chromeos || chromeos_is_browser_only) ||
+  if ((!(is_chromeos_ash || is_chromeos_lacros) ||
        default_toolchain != "//build/toolchain/cros:target") &&
       (!use_custom_libcxx || target_cpu == "mipsel") && !build_with_mozilla) {
     libs = [ "atomic" ]
   }
-}
-
-config("x11") {
-  libs = [
-    "X11",
-    "X11-xcb",
-    "xcb",
-  ]
 }
 
 config("libcap") {

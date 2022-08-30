@@ -31,6 +31,8 @@ class RTC_EXPORT NV12Buffer : public NV12BufferInterface {
                                                int height,
                                                int stride_y,
                                                int stride_uv);
+  static rtc::scoped_refptr<NV12Buffer> Copy(
+      const I420BufferInterface& i420_buffer);
 
   rtc::scoped_refptr<I420BufferInterface> ToI420() override;
 
@@ -53,6 +55,14 @@ class RTC_EXPORT NV12Buffer : public NV12BufferInterface {
   // TODO(nisse): Deprecated. Should be deleted if/when those issues
   // are resolved in a better way. Or in the mean time, use SetBlack.
   void InitializeData();
+
+  // Scale the cropped area of `src` to the size of `this` buffer, and
+  // write the result into `this`.
+  void CropAndScaleFrom(const NV12BufferInterface& src,
+                        int offset_x,
+                        int offset_y,
+                        int crop_width,
+                        int crop_height);
 
  protected:
   NV12Buffer(int width, int height);

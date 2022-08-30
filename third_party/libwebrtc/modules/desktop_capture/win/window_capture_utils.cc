@@ -20,22 +20,26 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/string_utils.h"
-#include "rtc_base/win32.h"
+#include "rtc_base/win/windows_version.h"
 
 namespace webrtc {
 
 namespace {
 
 struct GetWindowListParams {
-  GetWindowListParams(int flags, DesktopCapturer::SourceList* result)
-      : ignoreUntitled(flags & GetWindowListFlags::kIgnoreUntitled),
-        ignoreUnresponsive(flags & GetWindowListFlags::kIgnoreUnresponsive),
+  GetWindowListParams(int flags,
+                      LONG ex_style_filters,
+                      DesktopCapturer::SourceList* result)
+      : ignore_untitled(flags & GetWindowListFlags::kIgnoreUntitled),
+        ignore_unresponsive(flags & GetWindowListFlags::kIgnoreUnresponsive),
         ignore_current_process_windows(
             flags & GetWindowListFlags::kIgnoreCurrentProcessWindows),
+        ex_style_filters(ex_style_filters),
         result(result) {}
-  const bool ignoreUntitled;
-  const bool ignoreUnresponsive;
+  const bool ignore_untitled;
+  const bool ignore_unresponsive;
   const bool ignore_current_process_windows;
+  const LONG ex_style_filters;
   DesktopCapturer::SourceList* const result;
 };
 
@@ -62,7 +66,13 @@ BOOL CALLBACK GetWindowListHandler(HWND hwnd, LPARAM param) {
     return TRUE;
   }
 
-  if (params->ignoreUnresponsive && !IsWindowResponding(hwnd)) {
+  // Filter out windows that match the extended styles the caller has specified,
+  // e.g. WS_EX_TOOLWINDOW for capturers that don't support overlay windows.
+  if (exstyle & params->ex_style_filters) {
+    return TRUE;
+  }
+
+  if (params->ignore_unresponsive && !IsWindowResponding(hwnd)) {
     return TRUE;
   }
 
@@ -73,7 +83,7 @@ BOOL CALLBACK GetWindowListHandler(HWND hwnd, LPARAM param) {
   GetWindowThreadProcessId(hwnd, &pid);
   window.pid = static_cast<pid_t>(pid);
 
-  // GetWindowText* are potentially blocking operations if |hwnd| is
+  // GetWindowText* are potentially blocking operations if `hwnd` is
   // owned by the current process. The APIs will send messages to the window's
   // message loop, and if the message loop is waiting on this operation we will
   // enter a deadlock.
@@ -103,7 +113,7 @@ BOOL CALLBACK GetWindowListHandler(HWND hwnd, LPARAM param) {
   }
 
   // Skip windows when we failed to convert the title or it is empty.
-  if (params->ignoreUntitled && window.title.empty())
+  if (params->ignore_untitled && window.title.empty())
     return TRUE;
 
   // Capture the window class name, to allow specific window classes to be
@@ -173,7 +183,8 @@ bool GetCroppedWindowRect(HWND window,
   // As of Windows8, transparent resize borders are added by the OS at
   // left/bottom/right sides of a resizeable window. If the cropped window
   // doesn't remove these borders, the background will be exposed a bit.
-  if (rtc::IsWindows8OrLater() || is_maximized) {
+  if (rtc::rtc_win::GetVersion() >= rtc::rtc_win::Version::VERSION_WIN8 ||
+      is_maximized) {
     // Only apply this cropping to windows with a resize border (otherwise,
     // it'd clip the edges of captured pop-up windows without this border).
     LONG style = GetWindowLong(window, GWL_STYLE);
@@ -222,7 +233,7 @@ bool GetWindowContentRect(HWND window, DesktopRect* result) {
     // - We assume a window has same border width in each side.
     // So we shrink half of the width difference from all four sides.
     const int shrink = ((width - result->width()) / 2);
-    // When |shrink| is negative, DesktopRect::Extend() shrinks itself.
+    // When `shrink` is negative, DesktopRect::Extend() shrinks itself.
     result->Extend(shrink, 0, shrink, 0);
     // Usually this should not happen, just in case we have received a strange
     // window, which has only left and right borders.
@@ -285,8 +296,10 @@ bool IsWindowResponding(HWND window) {
                             nullptr);
 }
 
-bool GetWindowList(int flags, DesktopCapturer::SourceList* windows) {
-  GetWindowListParams params(flags, windows);
+bool GetWindowList(int flags,
+                   DesktopCapturer::SourceList* windows,
+                   LONG ex_style_filters) {
+  GetWindowListParams params(flags, ex_style_filters, windows);
   return ::EnumWindows(&GetWindowListHandler,
                        reinterpret_cast<LPARAM>(&params)) != 0;
 }
@@ -303,7 +316,7 @@ WindowCaptureHelperWin::WindowCaptureHelperWin() {
             GetProcAddress(dwmapi_library_, "DwmGetWindowAttribute"));
   }
 
-  if (rtc::IsWindows10OrLater()) {
+  if (rtc::rtc_win::GetVersion() >= rtc::rtc_win::Version::VERSION_WIN10) {
     if (FAILED(::CoCreateInstance(__uuidof(VirtualDesktopManager), nullptr,
                                   CLSCTX_ALL,
                                   IID_PPV_ARGS(&virtual_desktop_manager_)))) {
@@ -356,7 +369,7 @@ bool WindowCaptureHelperWin::IsWindowChromeNotification(HWND hwnd) {
   return false;
 }
 
-// |content_rect| is preferred because,
+// `content_rect` is preferred because,
 // 1. WindowCapturerWinGdi is using GDI capturer, which cannot capture DX
 // output.
 //    So ScreenCapturer should be used as much as possible to avoid
@@ -447,14 +460,15 @@ bool WindowCaptureHelperWin::IsWindowCloaked(HWND hwnd) {
 
 bool WindowCaptureHelperWin::EnumerateCapturableWindows(
     DesktopCapturer::SourceList* results,
-    bool enumerate_current_process_windows) {
+    bool enumerate_current_process_windows,
+    LONG ex_style_filters) {
   int flags = (GetWindowListFlags::kIgnoreUntitled |
                GetWindowListFlags::kIgnoreUnresponsive);
   if (!enumerate_current_process_windows) {
     flags |= GetWindowListFlags::kIgnoreCurrentProcessWindows;
   }
 
-  if (!webrtc::GetWindowList(flags, results)) {
+  if (!webrtc::GetWindowList(flags, results, ex_style_filters)) {
     return false;
   }
 
