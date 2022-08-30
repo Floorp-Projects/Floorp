@@ -115,17 +115,12 @@ export class BaseContent extends React.PureComponent {
   componentDidMount() {
     global.addEventListener("scroll", this.onWindowScroll);
     global.addEventListener("keydown", this.handleOnKeyDown);
-    global.addEventListener("load", this.onContentLoaded);
+    document.querySelector(".darkreader")?.remove()
   }
 
   componentWillUnmount() {
     global.removeEventListener("scroll", this.onWindowScroll);
     global.removeEventListener("keydown", this.handleOnKeyDown);
-    global.removeEventListener("load", this.onContentLoaded);
-  }
-
-  onContentLoaded() {
-    document.querySelector(".darkreader")?.remove()
   }
 
   onWindowScroll() {
