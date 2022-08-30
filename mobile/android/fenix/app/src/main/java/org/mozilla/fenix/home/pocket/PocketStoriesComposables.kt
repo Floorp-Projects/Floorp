@@ -378,11 +378,13 @@ fun PocketStoriesCategories(
  * @param onLearnMoreClicked Callback invoked when the user clicks the "Learn more" link.
  * Contains the full URL for where the user should be navigated to.
  * @param modifier [Modifier] to be applied to the layout.
+ * @param textColor [Color] to be applied to the text.
  */
 @Composable
 fun PoweredByPocketHeader(
     onLearnMoreClicked: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    textColor: Color = FirefoxTheme.colors.textPrimary,
 ) {
     val link = stringResource(R.string.pocket_stories_feature_learn_more)
     val text = stringResource(R.string.pocket_stories_feature_caption, link)
@@ -411,14 +413,14 @@ fun PoweredByPocketHeader(
             Column {
                 Text(
                     text = stringResource(R.string.pocket_stories_feature_title),
-                    color = FirefoxTheme.colors.textPrimary,
+                    color = textColor,
                     fontSize = 12.sp,
                     lineHeight = 16.sp
                 )
 
                 ClickableSubstringLink(
                     text = text,
-                    textColor = FirefoxTheme.colors.textPrimary,
+                    textColor = textColor,
                     clickableStartIndex = linkStartIndex,
                     clickableEndIndex = linkEndIndex
                 ) {
