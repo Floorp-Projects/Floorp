@@ -11,14 +11,30 @@ const { Module } = ChromeUtils.import(
 );
 
 class RootOnlyModule extends Module {
+  #sessionDataReceived;
+
+  constructor(messageHandler) {
+    super(messageHandler);
+
+    this.#sessionDataReceived = [];
+  }
+
   destroy() {}
 
   /**
    * Commands
    */
 
+  getSessionDataReceived() {
+    return this.#sessionDataReceived;
+  }
+
   testCommand(params = {}) {
     return params;
+  }
+
+  _applySessionData(params) {
+    this.#sessionDataReceived.push(params);
   }
 }
 
