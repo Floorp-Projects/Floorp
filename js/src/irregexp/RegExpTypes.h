@@ -32,22 +32,18 @@ class ByteArrayData {
     MOZ_ASSERT(index < length);
     data()[index] = val;
   }
-  uint16_t get_uint16(uint32_t index) {
-    MOZ_ASSERT(index < length / 2);
-    MOZ_ASSERT(length % 2 == 0);
-    uint32_t hi = index * 2;
-    uint32_t lo = hi + 1;
-    return uint16_t(get(hi)) << 8 | get(lo);
-  }
-  void set_uint16(uint32_t index, uint16_t value) {
-    MOZ_ASSERT(index < length / 2);
-    MOZ_ASSERT(length % 2 == 0);
-    uint32_t hi = index * 2;
-    uint32_t lo = hi + 1;
-    set(hi, value >> 8);
-    set(lo, value & 0xff);
-  }
+
+  // Used for FixedIntegerArray.
+  template <typename T>
+  T getTyped(uint32_t index);
+  template <typename T>
+  void setTyped(uint32_t index, T value);
+
+ private:
+  template <typename T>
+  T* typedData();
 };
+
 class Isolate;
 class RegExpStack;
 class RegExpStackScope;

@@ -249,6 +249,31 @@ Handle<FixedArray> Isolate::NewFixedArray(int length) {
   return Handle<FixedArray>(JS::ObjectValue(*array), this);
 }
 
+template <typename T>
+Handle<FixedIntegerArray<T>> Isolate::NewFixedIntegerArray(uint32_t length) {
+  MOZ_RELEASE_ASSERT(length < std::numeric_limits<uint32_t>::max() / sizeof(T));
+  js::AutoEnterOOMUnsafeRegion oomUnsafe;
+
+  uint32_t rawLength = length * sizeof(T);
+  size_t allocSize = sizeof(ByteArrayData) + rawLength;
+  ByteArrayData* data =
+      static_cast<ByteArrayData*>(allocatePseudoHandle(allocSize));
+  if (!data) {
+    oomUnsafe.crash("Irregexp NewFixedIntegerArray");
+  }
+  data->length = rawLength;
+
+  return Handle<FixedIntegerArray<T>>(JS::PrivateValue(data), this);
+}
+
+template <typename T>
+Handle<FixedIntegerArray<T>> FixedIntegerArray<T>::New(Isolate* isolate,
+                                                       uint32_t length) {
+  return isolate->NewFixedIntegerArray<T>(length);
+}
+
+template class FixedIntegerArray<uint16_t>;
+
 template <typename CharT>
 Handle<String> Isolate::InternalizeString(
     const base::Vector<const CharT>& str) {

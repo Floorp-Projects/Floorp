@@ -252,12 +252,12 @@ bool SMRegExpMacroAssembler::IsCharacterInRangeArray(uint32_t c,
   MOZ_ASSERT(length > 0);
 
   // Fast paths.
-  if (c < ranges->get_uint16(0)) {
+  if (c < ranges->getTyped<uint16_t>(0)) {
     // |c| is lower than the start of the first range.
     // It is not in the range array.
     return false;
   }
-  if (c >= ranges->get_uint16(length - 1)) {
+  if (c >= ranges->getTyped<uint16_t>(length - 1)) {
     // |c| is higher than the last entry. If the table contains an odd
     // number of entries, the last range is open-ended, so |c| is in
     // the range array iff |length| is odd.
@@ -283,7 +283,7 @@ bool SMRegExpMacroAssembler::IsCharacterInRangeArray(uint32_t c,
   uint32_t mid = 0;
   do {
     mid = lower + (upper - lower) / 2;
-    const base::uc16 elem = ranges->get_uint16(mid);
+    const base::uc16 elem = ranges->getTyped<uint16_t>(mid);
     if (c < elem) {
       upper = mid;
     } else if (c > elem) {
@@ -292,7 +292,7 @@ bool SMRegExpMacroAssembler::IsCharacterInRangeArray(uint32_t c,
       break;
     }
   } while (lower < upper);
-  uint32_t rangeIndex = c < ranges->get_uint16(mid) ? mid - 1 : mid;
+  uint32_t rangeIndex = c < ranges->getTyped<uint16_t>(mid) ? mid - 1 : mid;
 
   // Included ranges start at even indices and end at odd indices.
   return rangeIndex % 2 == 0;
