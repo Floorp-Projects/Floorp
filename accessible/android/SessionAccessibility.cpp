@@ -283,10 +283,15 @@ RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
       bp = static_cast<dom::BrowserParent*>(
           aAccessible->AsRemote()->Document()->Manager());
     }
-    nsPresContext* presContext =
-        bp->GetOwnerElement()->OwnerDoc()->GetPresContext();
-    if (presContext) {
-      return GetInstanceFor(presContext->PresShell());
+    if (auto element = bp->GetOwnerElement()) {
+      if (auto doc = element->OwnerDoc()) {
+        if (nsPresContext* presContext = doc->GetPresContext()) {
+          return GetInstanceFor(presContext->PresShell());
+        }
+      } else {
+        MOZ_ASSERT_UNREACHABLE(
+            "Browser parent's element does not have owner doc.");
+      }
     }
   }
 
