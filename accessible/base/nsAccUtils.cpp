@@ -185,27 +185,19 @@ bool nsAccUtils::IsDOMAttrTrue(const LocalAccessible* aAccessible,
                                eCaseMatters);
 }
 
-Accessible* nsAccUtils::TableFor(Accessible* aRow) {
-  if (aRow) {
-    Accessible* table = aRow->Parent();
-    if (table) {
-      roles::Role tableRole = table->Role();
-      const nsRoleMapEntry* roleMapEntry = table->ARIARoleMap();
-      if (tableRole == roles::GROUPING ||  // if there's a rowgroup.
-          (table->IsGenericHyperText() && !roleMapEntry &&
-           !table->IsTable())) {  // or there is a wrapping text container
-        table = table->Parent();
-        if (table) tableRole = table->Role();
-      }
-
-      return (tableRole == roles::TABLE || tableRole == roles::TREE_TABLE ||
-              tableRole == roles::MATHML_TABLE)
-                 ? table
-                 : nullptr;
-    }
+Accessible* nsAccUtils::TableFor(Accessible* aAcc) {
+  if (!aAcc ||
+      (!aAcc->IsTable() && !aAcc->IsTableRow() && !aAcc->IsTableCell())) {
+    return nullptr;
   }
-
-  return nullptr;
+  Accessible* table = aAcc;
+  for (; table && !table->IsTable(); table = table->Parent()) {
+  }
+  // We don't assert (table && table->IsTable()) here because
+  // it's possible for this tree walk to yield no table at all
+  // ex. because a table part has been moved in the tree
+  // using aria-owns.
+  return table;
 }
 
 LocalAccessible* nsAccUtils::TableFor(LocalAccessible* aRow) {

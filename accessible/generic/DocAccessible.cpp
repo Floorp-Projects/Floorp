@@ -1320,17 +1320,9 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
     // status may have changed. We need to invalidate the associated
     // cache, which listens for the following event.
     if (acc->IsTable() || acc->IsTableRow() || acc->IsTableCell()) {
+      LocalAccessible* table = nsAccUtils::TableFor(acc);
       FireDelayedEvent(nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED, acc);
-      LocalAccessible* table;
-      if (acc->IsTable()) {
-        table = acc;
-      } else {
-        for (table = acc->LocalParent(); table; table = table->LocalParent()) {
-          if (table->IsTable()) {
-            break;
-          }
-        }
-      }
+
       if (table && table->IsTable()) {
         QueueCacheUpdate(acc, CacheDomain::Table);
       }
