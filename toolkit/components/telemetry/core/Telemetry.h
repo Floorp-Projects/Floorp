@@ -22,7 +22,7 @@
  * points and gives access to the data.
  *
  * For documentation on how to add and use new Telemetry probes, see:
- * https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Adding_a_new_Telemetry_probe
+ * https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/start/adding-a-new-probe.html
  *
  * For more general information on Telemetry see:
  * https://wiki.mozilla.org/Telemetry
