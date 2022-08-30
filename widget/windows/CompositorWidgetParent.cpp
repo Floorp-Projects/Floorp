@@ -219,7 +219,8 @@ void CompositorWidgetParent::UpdateCompositorWnd(const HWND aCompositorWnd,
       ->Then(
           layers::CompositorThread(), __func__,
           [self](const bool& aSuccess) {
-            if (aSuccess && self->mRootLayerTreeID.isSome()) {
+            if (aSuccess && self->mRootLayerTreeID.isSome() &&
+                layers::CompositorThreadHolder::IsActive()) {
               self->mSetParentCompleted = true;
               // Schedule composition after ::SetParent() call in parent
               // process.
