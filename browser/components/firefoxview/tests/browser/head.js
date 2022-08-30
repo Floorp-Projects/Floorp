@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* exported testVisibility */
+
 const { UIState } = ChromeUtils.import("resource://services-sync/UIState.jsm");
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
@@ -70,7 +72,6 @@ async function clearAllParentTelemetryEvents() {
   });
 }
 
-/* eslint-disable no-unused-vars */
 function testVisibility(browser, expected) {
   const { document } = browser.contentWindow;
   for (let [selector, shouldBeVisible] of Object.entries(
