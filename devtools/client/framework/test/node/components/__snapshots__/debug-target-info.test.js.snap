@@ -348,6 +348,20 @@ exports[`DebugTargetInfo component Target icon renders the expected snapshot for
       Test Tab Name
     </b>
   </span>
+  <div
+    className="debug-target-navigation"
+  >
+    <button
+      className="iconized-label navigation-button qa-reload-button"
+      onClick={[Function]}
+      title="toolbox.debugTargetInfo.reload"
+    >
+      <img
+        alt="toolbox.debugTargetInfo.reload"
+        src="chrome://global/skin/icons/reload.svg"
+      />
+    </button>
+  </div>
   <span
     className="debug-target-url"
   >
