@@ -76,7 +76,7 @@ body {
   display: inline-block;
   min-width: 20px;
   background-color: var(--in-content-accent-color);
-  color: #fff;
+  color: var(--in-content-primary-button-text-color);
   font-weight: bold;
   /* Use a large border-radius to get semi-circles on the sides. */
   border-radius: 1000px;
