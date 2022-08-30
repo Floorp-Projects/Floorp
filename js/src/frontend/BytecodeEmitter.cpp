@@ -3696,12 +3696,11 @@ bool BytecodeEmitter::emitDestructuringOpsObject(ListNode* pattern,
             //      [stack]... SET? RHS LREF* RHS KEY
             return false;
           }
-        } else if (key->isKind(ParseNodeKind::BigIntExpr)) {
-          if (!emitBigIntOp(&key->as<BigIntLiteral>())) {
-            //      [stack]... SET? RHS LREF* RHS KEY
-            return false;
-          }
         } else {
+          // Otherwise this is a computed property name. BigInt keys are parsed
+          // as (synthetic) computed property names, too.
+          MOZ_ASSERT(key->isKind(ParseNodeKind::ComputedName));
+
           if (!emitComputedPropertyName(&key->as<UnaryNode>())) {
             //      [stack] ... SET? RHS LREF* RHS KEY
             return false;
@@ -3829,17 +3828,13 @@ bool BytecodeEmitter::emitDestructuringObjRestExclusionSet(ListNode* pattern) {
           return false;
         }
         isIndex = true;
-      } else if (key->isKind(ParseNodeKind::BigIntExpr)) {
-        if (!emitBigIntOp(&key->as<BigIntLiteral>())) {
-          return false;
-        }
-        isIndex = true;
       } else if (key->isKind(ParseNodeKind::ObjectPropertyName) ||
                  key->isKind(ParseNodeKind::StringExpr)) {
         pnatom = key->as<NameNode>().atom();
       } else {
-        // Otherwise this is a computed property name which needs to
-        // be added dynamically.
+        // Otherwise this is a computed property name which needs to be added
+        // dynamically. BigInt keys are parsed as (synthetic) computed property
+        // names, too.
         MOZ_ASSERT(key->isKind(ParseNodeKind::ComputedName));
         continue;
       }
@@ -8930,17 +8925,9 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
             }
           }
         } else {
-          MOZ_ASSERT(key->isKind(ParseNodeKind::ComputedName) ||
-                     key->isKind(ParseNodeKind::BigIntExpr));
-
-          // If a function name is a BigInt, then treat it as a computed name
-          // equivalent to `[ToString(B)]` for some big-int value `B`.
-          if (key->isKind(ParseNodeKind::BigIntExpr)) {
-            MOZ_ASSERT(accessorType == AccessorType::None);
-            if (!emit1(JSOp::ToString)) {
-              return false;
-            }
-          }
+          // Either a proper computed property name or a synthetic computed
+          // property name for BigInt keys.
+          MOZ_ASSERT(key->isKind(ParseNodeKind::ComputedName));
 
           FunctionPrefixKind prefix =
               accessorType == AccessorType::None     ? FunctionPrefixKind::None
@@ -8973,23 +8960,15 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         (type == ClassBody && propdef->as<ClassMethod>().isStatic())
             ? PropertyEmitter::Kind::Static
             : PropertyEmitter::Kind::Prototype;
-    if (key->isKind(ParseNodeKind::NumberExpr) ||
-        key->isKind(ParseNodeKind::BigIntExpr)) {
+    if (key->isKind(ParseNodeKind::NumberExpr)) {
       //            [stack] CTOR? OBJ
       if (!pe.prepareForIndexPropKey(propdef->pn_pos.begin, kind)) {
         //          [stack] CTOR? OBJ CTOR?
         return false;
       }
-      if (key->isKind(ParseNodeKind::NumberExpr)) {
-        if (!emitNumberOp(key->as<NumericLiteral>().value())) {
-          //        [stack] CTOR? OBJ CTOR? KEY
-          return false;
-        }
-      } else {
-        if (!emitBigIntOp(&key->as<BigIntLiteral>())) {
-          //        [stack] CTOR? OBJ CTOR? KEY
-          return false;
-        }
+      if (!emitNumberOp(key->as<NumericLiteral>().value())) {
+        //        [stack] CTOR? OBJ CTOR? KEY
+        return false;
       }
       if (!pe.prepareForIndexPropValue()) {
         //          [stack] CTOR? OBJ CTOR? KEY
@@ -9040,6 +9019,9 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
     }
 
     if (key->isKind(ParseNodeKind::ComputedName)) {
+      // Either a proper computed property name or a synthetic computed property
+      // name for BigInt keys.
+
       //            [stack] CTOR? OBJ
 
       if (!pe.prepareForComputedPropKey(propdef->pn_pos.begin, kind)) {
