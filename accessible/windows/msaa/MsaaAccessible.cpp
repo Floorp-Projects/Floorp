@@ -862,8 +862,8 @@ MsaaAccessible::QueryInterface(REFIID iid, void** ppv) {
       return E_NOINTERFACE;
     }
     *ppv = static_cast<IEnumVARIANT*>(new ChildrenEnumVariant(this));
-  } else if (IID_ISimpleDOMNode == iid && localAcc) {
-    if (!localAcc->HasOwnContent() && !localAcc->IsDoc()) {
+  } else if (IID_ISimpleDOMNode == iid) {
+    if (mAcc->IsDoc() || (localAcc && !localAcc->HasOwnContent())) {
       return E_NOINTERFACE;
     }
 

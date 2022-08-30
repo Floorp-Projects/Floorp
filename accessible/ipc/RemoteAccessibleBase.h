@@ -408,6 +408,9 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   friend HyperTextAccessibleBase;
   friend class xpcAccessible;
   friend class CachedTableCellAccessible;
+#ifdef XP_WIN
+  friend class sdnAccessible;
+#endif
 
   nsTArray<Derived*> mChildren;
   DocAccessibleParent* mDoc;
