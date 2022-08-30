@@ -82,7 +82,7 @@ static bool fun_enumerate(JSContext* cx, HandleObject obj) {
   RootedId id(cx);
   bool found;
 
-  if (!obj->isBoundFunction() && !obj->as<JSFunction>().isArrow()) {
+  if (obj->as<JSFunction>().needsPrototypeProperty()) {
     id = NameToId(cx->names().prototype);
     if (!HasOwnProperty(cx, obj, id, &found)) {
       return false;
@@ -590,7 +590,7 @@ bool JS::OrdinaryHasInstance(JSContext* cx, HandleObject objArg, HandleValue v,
   }
 
   /* Step 2. */
-  if (obj->is<JSFunction>() && obj->isBoundFunction()) {
+  if (obj->is<JSFunction>() && obj->as<JSFunction>().isBoundFunction()) {
     /* Steps 2a-b. */
     AutoCheckRecursionLimit recursion(cx);
     if (!recursion.check(cx)) {
