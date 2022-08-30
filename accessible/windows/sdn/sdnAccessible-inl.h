@@ -16,6 +16,7 @@ namespace mozilla {
 namespace a11y {
 
 inline DocAccessible* sdnAccessible::GetDocument() const {
+  MOZ_ASSERT(mNode);
   return GetExistingDocAccessible(mNode->OwnerDoc());
 }
 

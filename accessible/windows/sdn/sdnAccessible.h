@@ -25,18 +25,32 @@ class sdnAccessible final : public ISimpleDOMNode {
     if (!mNode) MOZ_CRASH();
   }
 
-  explicit sdnAccessible(NotNull<MsaaAccessible*> aMsaa)
-      : mNode(aMsaa->LocalAcc()->GetNode()), mMsaa(aMsaa) {}
+  explicit sdnAccessible(NotNull<MsaaAccessible*> aMsaa) : mMsaa(aMsaa) {
+    Accessible* acc = aMsaa->Acc();
+    MOZ_ASSERT(acc);
+    if (LocalAccessible* localAcc = acc->AsLocal()) {
+      mNode = localAcc->GetNode();
+    }
+  }
 
   ~sdnAccessible();
 
   /**
    * Return if the object is defunct.
    */
-  bool IsDefunct() const { return !GetDocument(); }
+  bool IsDefunct() const {
+    if (mMsaa && !mMsaa->Acc()) {
+      return true;
+    }
+    if (!mNode) {
+      MOZ_ASSERT(mMsaa && mMsaa->Acc()->IsRemote());
+      return false;
+    }
+    return !GetDocument();
+  }
 
   /**
-   * Return a document accessible it belongs to if any.
+   * Return a local document accessible it belongs to if any.
    */
   DocAccessible* GetDocument() const;
 
@@ -122,6 +136,8 @@ class sdnAccessible final : public ISimpleDOMNode {
       /* [out][retval] */ BSTR __RPC_FAR* aLanguage);
 
  private:
+  // mNode will be null for a RemoteAccessible. In that case, we only partially
+  // implement this interface using data from the RemoteAccessible cache.
   nsCOMPtr<nsINode> mNode;
   RefPtr<MsaaAccessible> mMsaa;
   Maybe<uint32_t> mUniqueId;

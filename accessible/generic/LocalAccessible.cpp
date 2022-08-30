@@ -2502,6 +2502,20 @@ void LocalAccessible::BindToParent(LocalAccessible* aParent,
     // for the next tick before the cache update is sent.
     mDoc->QueueCacheUpdate(aParent, CacheDomain::Table);
   }
+
+#if defined(XP_WIN)
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup() &&
+      aParent->HasOwnContent() && aParent->mContent->IsMathMLElement()) {
+    // For any change in a MathML subtree, update the innerHTML cache on the
+    // root math element.
+    for (LocalAccessible* acc = aParent; acc; acc = acc->LocalParent()) {
+      if (acc->HasOwnContent() &&
+          acc->mContent->IsMathMLElement(nsGkAtoms::math)) {
+        mDoc->QueueCacheUpdate(acc, CacheDomain::InnerHTML);
+      }
+    }
+  }
+#endif  // defined(XP_WIN)
 }
 
 // LocalAccessible protected
@@ -3597,6 +3611,15 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       }
     }
   }
+
+#if defined(XP_WIN)
+  if (aCacheDomain & CacheDomain::InnerHTML && HasOwnContent() &&
+      mContent->IsMathMLElement(nsGkAtoms::math)) {
+    nsString innerHTML;
+    mContent->AsElement()->GetInnerHTML(innerHTML, IgnoreErrors());
+    fields->SetAttribute(nsGkAtoms::html, std::move(innerHTML));
+  }
+#endif  // defined(XP_WIN)
 
   if (aUpdateType == CacheUpdateType::Initial) {
     // Add fields which never change and thus only need to be included in the

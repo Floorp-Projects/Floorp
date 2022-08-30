@@ -85,6 +85,10 @@ sdnAccessible::get_nodeInfo(BSTR __RPC_FAR* aNodeName,
   *aNodeType = 0;
 
   if (IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  if (!mNode) {
+    MOZ_ASSERT(mMsaa && mMsaa->Acc()->IsRemote());
+    return E_NOTIMPL;
+  }
 
   uint16_t nodeType = mNode->NodeType();
   *aNodeType = static_cast<unsigned short>(nodeType);
@@ -133,6 +137,10 @@ sdnAccessible::get_attributes(unsigned short aMaxAttribs,
   *aNumAttribs = 0;
 
   if (IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  if (!mNode) {
+    MOZ_ASSERT(mMsaa && mMsaa->Acc()->IsRemote());
+    return E_NOTIMPL;
+  }
 
   if (!mNode->IsElement()) return S_FALSE;
 
@@ -167,6 +175,13 @@ sdnAccessible::get_attributesForNames(unsigned short aMaxAttribs,
   if (!aAttribNames || !aNameSpaceID || !aAttribValues) return E_INVALIDARG;
 
   if (IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  if (!mNode) {
+    MOZ_ASSERT(mMsaa && mMsaa->Acc()->IsRemote());
+    // NVDA expects this to succeed for MathML and won't call innerHTML if this
+    // fails. Therefore, return S_FALSE here instead of E_NOTIMPL, indicating
+    // that the attributes aren't present.
+    return S_FALSE;
+  }
 
   if (!mNode->IsElement()) return S_FALSE;
 
@@ -205,6 +220,10 @@ sdnAccessible::get_computedStyle(
     return E_INVALIDARG;
 
   if (IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  if (!mNode) {
+    MOZ_ASSERT(mMsaa && mMsaa->Acc()->IsRemote());
+    return E_NOTIMPL;
+  }
 
   *aNumStyleProperties = 0;
 
@@ -248,6 +267,10 @@ sdnAccessible::get_computedStyleForProperties(
   if (!aStyleProperties || !aStyleValues) return E_INVALIDARG;
 
   if (IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  if (!mNode) {
+    MOZ_ASSERT(mMsaa && mMsaa->Acc()->IsRemote());
+    return E_NOTIMPL;
+  }
 
   if (mNode->IsDocument()) return S_FALSE;
 
@@ -271,10 +294,16 @@ sdnAccessible::get_computedStyleForProperties(
 // XXX Use MOZ_CAN_RUN_SCRIPT_BOUNDARY for now due to bug 1543294.
 MOZ_CAN_RUN_SCRIPT_BOUNDARY STDMETHODIMP
 sdnAccessible::scrollTo(boolean aScrollTopLeft) {
-  DocAccessible* document = GetDocument();
-  if (!document)  // that's IsDefunct check
+  if (IsDefunct()) {
     return CO_E_OBJNOTCONNECTED;
+  }
+  if (!mNode) {
+    MOZ_ASSERT(mMsaa && mMsaa->Acc()->IsRemote());
+    return E_NOTIMPL;
+  }
 
+  DocAccessible* document = GetDocument();
+  MOZ_ASSERT(document);
   if (!mNode->IsContent()) return S_FALSE;
 
   uint32_t scrollType = aScrollTopLeft
@@ -293,6 +322,10 @@ sdnAccessible::get_parentNode(ISimpleDOMNode __RPC_FAR* __RPC_FAR* aNode) {
   *aNode = nullptr;
 
   if (IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  if (!mNode) {
+    MOZ_ASSERT(mMsaa && mMsaa->Acc()->IsRemote());
+    return E_NOTIMPL;
+  }
 
   nsINode* resultNode = mNode->GetParentNode();
   if (resultNode) {
@@ -309,6 +342,10 @@ sdnAccessible::get_firstChild(ISimpleDOMNode __RPC_FAR* __RPC_FAR* aNode) {
   *aNode = nullptr;
 
   if (IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  if (!mNode) {
+    MOZ_ASSERT(mMsaa && mMsaa->Acc()->IsRemote());
+    return E_NOTIMPL;
+  }
 
   nsINode* resultNode = mNode->GetFirstChild();
   if (resultNode) {
@@ -325,6 +362,10 @@ sdnAccessible::get_lastChild(ISimpleDOMNode __RPC_FAR* __RPC_FAR* aNode) {
   *aNode = nullptr;
 
   if (IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  if (!mNode) {
+    MOZ_ASSERT(mMsaa && mMsaa->Acc()->IsRemote());
+    return E_NOTIMPL;
+  }
 
   nsINode* resultNode = mNode->GetLastChild();
   if (resultNode) {
@@ -341,6 +382,10 @@ sdnAccessible::get_previousSibling(ISimpleDOMNode __RPC_FAR* __RPC_FAR* aNode) {
   *aNode = nullptr;
 
   if (IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  if (!mNode) {
+    MOZ_ASSERT(mMsaa && mMsaa->Acc()->IsRemote());
+    return E_NOTIMPL;
+  }
 
   nsINode* resultNode = mNode->GetPreviousSibling();
   if (resultNode) {
@@ -357,6 +402,10 @@ sdnAccessible::get_nextSibling(ISimpleDOMNode __RPC_FAR* __RPC_FAR* aNode) {
   *aNode = nullptr;
 
   if (IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  if (!mNode) {
+    MOZ_ASSERT(mMsaa && mMsaa->Acc()->IsRemote());
+    return E_NOTIMPL;
+  }
 
   nsINode* resultNode = mNode->GetNextSibling();
   if (resultNode) {
@@ -374,6 +423,10 @@ sdnAccessible::get_childAt(unsigned aChildIndex,
   *aNode = nullptr;
 
   if (IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  if (!mNode) {
+    MOZ_ASSERT(mMsaa && mMsaa->Acc()->IsRemote());
+    return E_NOTIMPL;
+  }
 
   nsINode* resultNode = mNode->GetChildAt_Deprecated(aChildIndex);
   if (resultNode) {
@@ -391,10 +444,21 @@ sdnAccessible::get_innerHTML(BSTR __RPC_FAR* aInnerHTML) {
 
   if (IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
-  if (!mNode->IsElement()) return S_FALSE;
-
   nsAutoString innerHTML;
-  mNode->AsElement()->GetInnerHTML(innerHTML, IgnoreErrors());
+  if (!mNode) {
+    RemoteAccessible* remoteAcc = mMsaa->Acc()->AsRemote();
+    MOZ_ASSERT(remoteAcc);
+    if (!remoteAcc->mCachedFields) {
+      return S_FALSE;
+    }
+    remoteAcc->mCachedFields->GetAttribute(nsGkAtoms::html, innerHTML);
+  } else {
+    if (!mNode->IsElement()) {
+      return S_FALSE;
+    }
+    mNode->AsElement()->GetInnerHTML(innerHTML, IgnoreErrors());
+  }
+
   if (innerHTML.IsEmpty()) return S_FALSE;
 
   *aInnerHTML = ::SysAllocStringLen(innerHTML.get(), innerHTML.Length());
@@ -422,6 +486,10 @@ sdnAccessible::get_language(BSTR __RPC_FAR* aLanguage) {
   *aLanguage = nullptr;
 
   if (IsDefunct()) return CO_E_OBJNOTCONNECTED;
+  if (!mNode) {
+    MOZ_ASSERT(mMsaa && mMsaa->Acc()->IsRemote());
+    return E_NOTIMPL;
+  }
 
   nsAutoString language;
   if (mNode->IsContent())
