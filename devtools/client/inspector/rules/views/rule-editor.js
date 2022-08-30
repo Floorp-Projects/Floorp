@@ -137,14 +137,22 @@ RuleEditor.prototype = {
 
     if (this.rule.domRule.ancestorData.length) {
       const parts = this.rule.domRule.ancestorData.map(ancestorData => {
+        if (ancestorData.type == "container") {
+          const containerQueryParts = [
+            "@container",
+            ancestorData.containerName,
+            ancestorData.containerQuery,
+          ].filter(p => !!p);
+          return containerQueryParts.join(" ");
+        }
         if (ancestorData.type == "layer") {
           return `@layer${ancestorData.value ? " " + ancestorData.value : ""}`;
         }
         if (ancestorData.type == "media") {
           return `@media ${ancestorData.value}`;
         }
-        // We shouldn't get here as `type` can only be set to "layer" or "media", but just
-        // in case, let's return an empty string.
+        // We shouldn't get here as `type` can only be set to "container", "layer" or "media",
+        // but just in case, let's return an empty string.
         console.warn("Unknown ancestor data type:", ancestorData.type);
         return ``;
       });

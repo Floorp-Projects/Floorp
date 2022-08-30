@@ -333,6 +333,16 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
           type: "layer",
           value: ancestorRule.rawRule.name,
         });
+      } else if (
+        ChromeUtils.getClassName(ancestorRule.rawRule) === "CSSContainerRule"
+      ) {
+        form.ancestorData.push({
+          type: "container",
+          // Send containerName and containerQuery separately (instead of conditionText)
+          // so the client has more flexibility to display the information.
+          containerName: ancestorRule.rawRule.containerName,
+          containerQuery: ancestorRule.rawRule.containerQuery,
+        });
       }
     }
 
