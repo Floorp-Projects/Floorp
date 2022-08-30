@@ -943,13 +943,10 @@ bool GCRuntime::freezeSharedAtomsZone() {
   MOZ_ASSERT(!atomsZone()->wasGCStarted());
   MOZ_ASSERT(!atomsZone()->needsIncrementalBarrier());
 
-  sharedAtomsZone_ = atomsZone();
-  zones().clear();
-
-  sharedAtomsZone_->arenas.clearFreeLists();
+  atomsZone()->arenas.clearFreeLists();
 
   for (auto kind : AllAllocKinds()) {
-    for (auto thing = sharedAtomsZone_->cellIterUnsafe<TenuredCell>(kind);
+    for (auto thing = atomsZone()->cellIterUnsafe<TenuredCell>(kind);
          !thing.done(); thing.next()) {
       TenuredCell* cell = thing.getCell();
       MOZ_ASSERT((cell->is<JSString>() &&
@@ -959,6 +956,9 @@ bool GCRuntime::freezeSharedAtomsZone() {
       cell->markBlack();
     }
   }
+
+  sharedAtomsZone_ = atomsZone();
+  zones().clear();
 
   UniquePtr<Zone> zone = MakeUnique<Zone>(rt, Zone::AtomsZone);
   if (!zone || !zone->init()) {
