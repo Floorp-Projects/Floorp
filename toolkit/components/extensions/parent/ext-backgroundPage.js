@@ -453,6 +453,10 @@ this.backgroundPage = class extends ExtensionAPI {
           pendingListeners:
             extension.backgroundContext.pendingRunListenerPromisesCount,
         });
+        // Clear the pending promises being tracked when we have reset the idle
+        // once because some where still pending, so that the pending listeners
+        // calls can reset the idle timer only once.
+        extension.backgroundContext.clearPendingRunListenerPromises();
         return;
       }
 
