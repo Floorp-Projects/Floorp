@@ -276,6 +276,17 @@ void RemoteAccessibleBase<Derived>::Value(nsString& aValue) const {
       if (option) {
         option->Name(aValue);
       }
+      return;
+    }
+
+    if (IsTextLeaf() || IsImage()) {
+      if (const Accessible* actionAcc = ActionAncestor()) {
+        if (const_cast<Accessible*>(actionAcc)->State() & states::LINKED) {
+          // Text and image descendants of links expose the link URL as the
+          // value.
+          return actionAcc->Value(aValue);
+        }
+      }
     }
   }
 }
