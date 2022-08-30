@@ -49,26 +49,20 @@ FileSystemDataManager::CreateFileSystemDataManager(
 
 }  // namespace fs::data
 
-using RootPromise = MozPromise<fs::FileSystemGetRootResponse, nsresult, false>;
-
-mozilla::ipc::IPCResult BackgroundFileSystemParent::RecvGetRoot(
+mozilla::ipc::IPCResult
+BackgroundFileSystemParent::RecvCreateFileSystemManagerParent(
     Endpoint<POriginPrivateFileSystemParent>&& aParentEp,
-    GetRootResolver&& aResolver) {
-  QM_TRY(
-      OkIf(StaticPrefs::dom_fs_enabled()), IPC_OK(), [aResolver](const auto&) {
-        aResolver(fs::FileSystemGetRootResponse(NS_ERROR_DOM_NOT_ALLOWED_ERR));
-      });
+    CreateFileSystemManagerParentResolver&& aResolver) {
+  QM_TRY(OkIf(StaticPrefs::dom_fs_enabled()), IPC_OK(),
+         [aResolver](const auto&) { aResolver(NS_ERROR_DOM_NOT_ALLOWED_ERR); });
 
-  QM_TRY(OkIf(aParentEp.IsValid()), IPC_OK(), [aResolver](const auto&) {
-    aResolver(fs::FileSystemGetRootResponse(NS_ERROR_INVALID_ARG));
-  });
+  QM_TRY(OkIf(aParentEp.IsValid()), IPC_OK(),
+         [aResolver](const auto&) { aResolver(NS_ERROR_INVALID_ARG); });
 
   nsAutoCString origin =
       quota::QuotaManager::GetOriginFromValidatedPrincipalInfo(mPrincipalInfo);
 
-  auto sendBackError = [aResolver](const auto& aRv) {
-    aResolver(fs::FileSystemGetRootResponse(aRv));
-  };
+  auto sendBackError = [aResolver](const auto& aRv) { aResolver(aRv); };
 
   fs::EntryId rootId = fs::data::GetRootHandle(origin);
 
@@ -96,21 +90,20 @@ mozilla::ipc::IPCResult BackgroundFileSystemParent::RecvGetRoot(
               [origin, parentEp = std::move(aParentEp), aResolver, rootId,
                data = std::move(data), taskqueue, pbackground]() mutable {
                 RefPtr<OriginPrivateFileSystemParent> parent =
-                    new OriginPrivateFileSystemParent(taskqueue);
+                    new OriginPrivateFileSystemParent(taskqueue, rootId);
                 if (!parentEp.Bind(parent)) {
-                  auto response =
-                      fs::FileSystemGetRootResponse(NS_ERROR_FAILURE);
-                  return RootPromise::CreateAndReject(response, __func__);
+                  return BoolPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                      __func__);
                 }
                 // Send response back to pbackground to send to child
-                return RootPromise::CreateAndResolve(rootId, __func__);
+                return BoolPromise::CreateAndResolve(true, __func__);
               })
       ->Then(GetCurrentSerialEventTarget(), __func__,
-             [aResolver](const RootPromise::ResolveOrRejectValue& aValue) {
+             [aResolver](const BoolPromise::ResolveOrRejectValue& aValue) {
                if (aValue.IsReject()) {
                  aResolver(aValue.RejectValue());
                } else {
-                 aResolver(aValue.ResolveValue());
+                 aResolver(NS_OK);
                }
              });
 

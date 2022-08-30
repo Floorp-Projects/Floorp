@@ -191,6 +191,11 @@ struct FileSystemQuotaRequest
 async protocol POriginPrivateFileSystem
 {
  parent:
+  /**
+   * TODO: documentation
+   */
+  async GetRootHandle()
+      returns(FileSystemGetHandleResponse response);
 
   /**
    * Initiates an asynchronous request for the handle of

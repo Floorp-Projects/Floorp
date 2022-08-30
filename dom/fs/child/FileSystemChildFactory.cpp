@@ -38,7 +38,14 @@ class OriginPrivateFileSystemChildImpl final
 
   OriginPrivateFileSystemChildImpl() : mImpl(new TOriginPrivateFileSystem()) {}
 
-  NS_INLINE_DECL_REFCOUNTING(OriginPrivateFileSystemChildImpl, override)
+  NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(OriginPrivateFileSystemChildImpl,
+                                          Destroy(), override)
+
+  void SendGetRootHandle(ResolveGetHandle&& aResolve,
+                         DoReject&& aReject) override {
+    mImpl->SendGetRootHandle(std::forward<ResolveGetHandle>(aResolve),
+                             std::forward<DoReject>(aReject));
+  }
 
   void SendGetDirectoryHandle(const fs::FileSystemGetHandleRequest& aRequest,
                               ResolveGetHandle&& aResolve,
@@ -87,6 +94,13 @@ class OriginPrivateFileSystemChildImpl final
 
  protected:
   ~OriginPrivateFileSystemChildImpl() = default;
+
+  void Destroy() {
+    if (mImpl->CanSend()) {
+      Close();
+    }
+    delete this;
+  }
 
   const RefPtr<TOriginPrivateFileSystem> mImpl;
 };  // class OriginPrivateFileSystemChildImpl

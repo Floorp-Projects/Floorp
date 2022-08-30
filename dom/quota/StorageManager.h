@@ -24,6 +24,7 @@ class ErrorResult;
 
 namespace dom {
 
+class FileSystemManager;
 class Promise;
 struct StorageEstimate;
 
@@ -53,6 +54,8 @@ class StorageManager final : public nsISupports, public nsWrapperCache {
 
  private:
   ~StorageManager();
+
+  RefPtr<FileSystemManager> mFileSystemManager;
 };
 
 }  // namespace dom

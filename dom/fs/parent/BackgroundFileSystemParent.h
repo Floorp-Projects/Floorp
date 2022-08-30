@@ -22,9 +22,9 @@ class BackgroundFileSystemParent : public PBackgroundFileSystemParent {
       const mozilla::ipc::PrincipalInfo& aPrincipalInfo)
       : mPrincipalInfo(aPrincipalInfo) {}
 
-  mozilla::ipc::IPCResult RecvGetRoot(
+  mozilla::ipc::IPCResult RecvCreateFileSystemManagerParent(
       mozilla::ipc::Endpoint<POriginPrivateFileSystemParent>&& aParentEp,
-      GetRootResolver&& aResolver);
+      CreateFileSystemManagerParentResolver&& aResolver);
 
   NS_INLINE_DECL_REFCOUNTING(BackgroundFileSystemParent)
 
