@@ -187,10 +187,6 @@ check_and_add_warning("-Wno-error=class-memaccess")
 # https://bugs.llvm.org/show_bug.cgi?id=38593
 check_and_add_warning("-Wno-error=atomic-alignment")
 
-# New warning with gcc 9. Not useful
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1515356
-check_and_add_warning("-Wno-error=deprecated-copy")
-
 # New warning with clang 15. Catches uses of deprecated builtins in abseil-cpp.
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1779528
 check_and_add_warning("-Wno-error=deprecated-builtins")
