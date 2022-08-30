@@ -41,7 +41,7 @@ import org.mozilla.fenix.wallpapers.Wallpaper
 fun HomeSectionHeader(
     headerText: String,
     description: String,
-    onShowAllClick: () -> Unit
+    onShowAllClick: (() -> Unit)? = null
 ) {
     if (inComposePreview) {
         HomeSectionHeaderContent(
@@ -82,7 +82,7 @@ private fun HomeSectionHeaderContent(
     headerText: String,
     description: String,
     showAllTextColor: Color = FirefoxTheme.colors.textAccent,
-    onShowAllClick: () -> Unit,
+    onShowAllClick: (() -> Unit)? = null,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -94,18 +94,20 @@ private fun HomeSectionHeaderContent(
                 .wrapContentHeight(align = Alignment.Top)
         )
 
-        ClickableText(
-            text = AnnotatedString(text = stringResource(id = R.string.recent_tabs_show_all)),
-            modifier = Modifier.padding(start = 16.dp)
-                .semantics {
-                    contentDescription = description
-                },
-            style = TextStyle(
-                color = showAllTextColor,
-                fontSize = 14.sp
-            ),
-            onClick = { onShowAllClick() }
-        )
+        onShowAllClick?.let {
+            ClickableText(
+                text = AnnotatedString(text = stringResource(id = R.string.recent_tabs_show_all)),
+                modifier = Modifier.padding(start = 16.dp)
+                    .semantics {
+                        contentDescription = description
+                    },
+                style = TextStyle(
+                    color = showAllTextColor,
+                    fontSize = 14.sp
+                ),
+                onClick = { onShowAllClick() }
+            )
+        }
     }
 }
 
@@ -116,7 +118,6 @@ private fun HomeSectionsHeaderPreview() {
         HomeSectionHeader(
             headerText = stringResource(R.string.recently_saved_title),
             description = stringResource(R.string.recently_saved_show_all_content_description_2),
-            onShowAllClick = {}
         )
     }
 }
