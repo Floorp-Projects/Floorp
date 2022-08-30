@@ -3343,7 +3343,7 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
       // If iterator is not completed, create a new array with the rest
       // of the iterator.
       if (!emitDupAt(emitted + 1, 2)) {
-        //          [stack] ... OBJ NEXT ITER LREF* NEXT
+        //          [stack] ... OBJ NEXT ITER LREF* NEXT ITER
         return false;
       }
       if (!emitUint32Operand(JSOp::NewArray, 0)) {
@@ -3376,7 +3376,7 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
         //          [stack] ... OBJ NEXT ITER LREF* ARRAY TRUE
         return false;
       }
-      if (!emit2(JSOp::Unpick, emitted + 1)) {
+      if (!emitUnpickN(emitted + 1)) {
         //          [stack] ... OBJ NEXT ITER TRUE LREF* ARRAY
         return false;
       }
@@ -3423,7 +3423,7 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
         //          [stack] ... OBJ NEXT ITER LREF* UNDEF TRUE
         return false;
       }
-      if (!emit2(JSOp::Unpick, emitted + 1)) {
+      if (!emitUnpickN(emitted + 1)) {
         //          [stack] ... OBJ NEXT ITER TRUE LREF* UNDEF
         return false;
       }
@@ -3455,7 +3455,7 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
       //            [stack] ... OBJ NEXT ITER LREF* RESULT DONE DONE
       return false;
     }
-    if (!emit2(JSOp::Unpick, emitted + 2)) {
+    if (!emitUnpickN(emitted + 2)) {
       //            [stack] ... OBJ NEXT ITER DONE LREF* RESULT DONE
       return false;
     }
