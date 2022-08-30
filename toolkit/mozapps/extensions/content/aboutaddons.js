@@ -3693,13 +3693,13 @@ class ColorwayClosetCard extends HTMLElement {
 
     // Listen for changes to actively selected theme.
     // Update button label for Colorway Closet card, according to
-    // whether or not a colorway theme is currently enabled.
-    const isCurrentThemeColorway = BuiltInThemes.isMonochromaticTheme(addon.id);
+    // whether or not a colorway theme from the active collection is
+    // currently enabled.
     let colorwaysButton = document.querySelector("[action='open-colorways']");
 
     document.l10n.setAttributes(
       colorwaysButton,
-      isCurrentThemeColorway
+      BuiltInThemes.isColorwayFromCurrentCollection?.(addon.id)
         ? "theme-colorways-button-colorway-enabled"
         : "theme-colorways-button"
     );
@@ -3770,13 +3770,9 @@ class ColorwayClosetCard extends HTMLElement {
     );
 
     let colorwaysButton = card.querySelector("[action='open-colorways']");
-    const isCurrentThemeColorway = BuiltInThemes.isMonochromaticTheme(
-      ACTIVE_THEME_ID
-    );
-
     document.l10n.setAttributes(
       colorwaysButton,
-      isCurrentThemeColorway
+      BuiltInThemes.isColorwayFromCurrentCollection?.(ACTIVE_THEME_ID)
         ? "theme-colorways-button-colorway-enabled"
         : "theme-colorways-button"
     );
