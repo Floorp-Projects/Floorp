@@ -277,6 +277,12 @@ const QueryCache = {
       FRECENT_SITES_UPDATE_INTERVAL,
       ShellService
     ),
+    isDefaultBrowser: new CachedTargetingGetter(
+      "isDefaultBrowser",
+      null,
+      FRECENT_SITES_UPDATE_INTERVAL,
+      ShellService
+    ),
     currentThemes: new CachedTargetingGetter(
       "getAddonsByTypes",
       ["theme"],
@@ -507,7 +513,7 @@ const TargetingGetters = {
   },
   get isDefaultBrowser() {
     try {
-      return ShellService.isDefaultBrowser();
+      return QueryCache.getters.isDefaultBrowser.get();
     } catch (e) {}
     return null;
   },

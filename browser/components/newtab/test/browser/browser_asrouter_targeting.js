@@ -355,7 +355,7 @@ add_task(async function checksearchEngines() {
 
 add_task(async function checkisDefaultBrowser() {
   const expected = ShellService.isDefaultBrowser();
-  const result = ASRouterTargeting.Environment.isDefaultBrowser;
+  const result = await ASRouterTargeting.Environment.isDefaultBrowser;
   is(typeof result, "boolean", "isDefaultBrowser should be a boolean value");
   is(
     result,
