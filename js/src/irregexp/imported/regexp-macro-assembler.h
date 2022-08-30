@@ -29,6 +29,7 @@ class RegExpMacroAssembler {
   // The implementation must be able to handle at least:
   static constexpr int kMaxRegisterCount = (1 << 16);
   static constexpr int kMaxRegister = kMaxRegisterCount - 1;
+  static constexpr int kMaxCaptures = (kMaxRegister - 1) / 2;
   static constexpr int kMaxCPOffset = (1 << 15) - 1;
   static constexpr int kMinCPOffset = -(1 << 15);
 
@@ -167,6 +168,7 @@ class RegExpMacroAssembler {
   V(MIPS)                       \
   V(LOONG64)                    \
   V(RISCV)                      \
+  V(RISCV32)                    \
   V(S390)                       \
   V(PPC)                        \
   V(X64)                        \
@@ -349,7 +351,7 @@ class NativeRegExpMacroAssembler: public RegExpMacroAssembler {
                      const byte* input_end, int* output, int output_size,
                      Isolate* isolate, JSRegExp regexp);
 
-  ZoneUnorderedMap<uint32_t, Handle<ByteArray>> range_array_cache_;
+  ZoneUnorderedMap<uint32_t, Handle<FixedUInt16Array>> range_array_cache_;
 };
 
 }  // namespace internal

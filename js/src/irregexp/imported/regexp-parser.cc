@@ -896,7 +896,7 @@ RegExpParserState* RegExpParserImpl<CharT>::ParseOpenParenthesis(
     }
   }
   if (subexpr_type == CAPTURE) {
-    if (captures_started_ >= RegExpMacroAssembler::kMaxRegisterCount) {
+    if (captures_started_ >= RegExpMacroAssembler::kMaxCaptures) {
       ReportError(RegExpError::kTooManyCaptures);
       return nullptr;
     }
@@ -1022,7 +1022,7 @@ bool RegExpParserImpl<CharT>::ParseBackReferenceIndex(int* index_out) {
     base::uc32 c = current();
     if (IsDecimalDigit(c)) {
       value = 10 * value + (c - '0');
-      if (value > RegExpMacroAssembler::kMaxRegisterCount) {
+      if (value > RegExpMacroAssembler::kMaxCaptures) {
         Reset(start);
         return false;
       }
@@ -2216,6 +2216,14 @@ bool RegExpBuilder::NeedsDesugaringForUnicode(RegExpCharacterClass* cc) {
   if (ignore_case()) return true;
   ZoneList<CharacterRange>* ranges = cc->ranges(zone());
   CharacterRange::Canonicalize(ranges);
+
+  if (cc->is_negated()) {
+    ZoneList<CharacterRange>* negated_ranges =
+        zone()->New<ZoneList<CharacterRange>>(ranges->length(), zone());
+    CharacterRange::Negate(ranges, negated_ranges, zone());
+    ranges = negated_ranges;
+  }
+
   for (int i = ranges->length() - 1; i >= 0; i--) {
     base::uc32 from = ranges->at(i).from();
     base::uc32 to = ranges->at(i).to();
