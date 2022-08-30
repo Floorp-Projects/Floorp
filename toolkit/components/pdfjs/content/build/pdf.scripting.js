@@ -436,7 +436,6 @@ class Field extends _pdf_object.PDFObject {
     this.buttonScaleHow = data.buttonScaleHow;
     this.ButtonScaleWhen = data.buttonScaleWhen;
     this.calcOrderIndex = data.calcOrderIndex;
-    this.charLimit = data.charLimit;
     this.comb = data.comb;
     this.commitOnSelChange = data.commitOnSelChange;
     this.currentValueIndices = data.currentValueIndices;
@@ -474,6 +473,7 @@ class Field extends _pdf_object.PDFObject {
     this._browseForFileToSubmit = data.browseForFileToSubmit || null;
     this._buttonCaption = null;
     this._buttonIcon = null;
+    this._charLimit = data.charLimit;
     this._children = null;
     this._currentValueIndices = data.currentValueIndices || 0;
     this._document = data.doc;
@@ -552,6 +552,18 @@ class Field extends _pdf_object.PDFObject {
 
   set bgColor(color) {
     this.fillColor = color;
+  }
+
+  get charLimit() {
+    return this._charLimit;
+  }
+
+  set charLimit(limit) {
+    if (typeof limit !== "number") {
+      throw new Error("Invalid argument value");
+    }
+
+    this._charLimit = Math.max(0, Math.floor(limit));
   }
 
   get numItems() {
@@ -5072,8 +5084,8 @@ Object.defineProperty(exports, "initSandbox", ({
 
 var _initialization = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.16.71';
-const pdfjsBuild = '518115fdd';
+const pdfjsVersion = '3.0.7';
+const pdfjsBuild = '86370bd5c';
 })();
 
 /******/ 	return __webpack_exports__;
