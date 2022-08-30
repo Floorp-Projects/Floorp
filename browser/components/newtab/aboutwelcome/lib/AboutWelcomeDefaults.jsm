@@ -279,8 +279,9 @@ const MR_ABOUT_WELCOME_DEFAULT = {
       id: "AW_PIN_FIREFOX",
       content: {
         position: "split",
+        split_narrow_bkg_position: "-155px",
         background:
-          "url('chrome://activity-stream/content/data/content/assets/mr-pintaskbar.svg') var(--mr-secondary-position) no-repeat, var(--in-content-page-background) radial-gradient(83.12% 83.12% at 80.59% 16.88%, rgba(103, 51, 205, 0.75) 0%, rgba(0, 108, 207, 0.75) 54.51%, rgba(128, 199, 247, 0.75) 100%)",
+          "url('chrome://activity-stream/content/data/content/assets/mr-pintaskbar.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
         progress_bar: true,
         logo: {},
         title: {
@@ -325,8 +326,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
       id: "AW_LANGUAGE_MISMATCH",
       content: {
         position: "split",
-        background:
-          "var(--in-content-page-background) radial-gradient(83.12% 83.12% at 80.59% 16.88%, #9059FF 0%, #3A8EE6 54.51%, #A0C4EA 100%)",
+        background: "var(--mr-screen-background-color)",
         progress_bar: true,
         logo: {},
         title: {
@@ -365,8 +365,9 @@ const MR_ABOUT_WELCOME_DEFAULT = {
       id: "AW_SET_DEFAULT",
       content: {
         position: "split",
+        split_narrow_bkg_position: "-60px",
         background:
-          "url('chrome://activity-stream/content/data/content/assets/mr-settodefault.svg') var(--mr-secondary-position) no-repeat, var(--in-content-page-background) radial-gradient(113% 87.18% at 93.5% 73.82%, rgba(103, 51, 205, 0.75) 0%, rgba(0, 108, 207, 0.75) 54.51%, rgba(128, 199, 247, 0.75) 100%)",
+          "url('chrome://activity-stream/content/data/content/assets/mr-settodefault.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
         progress_bar: true,
         logo: {},
         title: {
@@ -399,8 +400,9 @@ const MR_ABOUT_WELCOME_DEFAULT = {
       id: "AW_IMPORT_SETTINGS",
       content: {
         position: "split",
+        split_narrow_bkg_position: "-42px",
         background:
-          "url('chrome://activity-stream/content/data/content/assets/mr-import.svg') var(--mr-secondary-position) no-repeat, var(--in-content-page-background) radial-gradient(120.14% 108.82% at 69.5% 100%, rgba(103, 51, 205, 0.75) 0%, rgba(0, 108, 207, 0.75) 54.51%, rgba(128, 199, 247, 0.75) 100%)",
+          "url('chrome://activity-stream/content/data/content/assets/mr-import.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
         progress_bar: true,
         logo: {},
         title: {
@@ -435,9 +437,9 @@ const MR_ABOUT_WELCOME_DEFAULT = {
       id: "AW_CHOOSE_COLORWAY",
       content: {
         position: "split",
-        split_narrow_bkg_position: "-100px",
+        split_narrow_bkg_position: "-65px",
         background:
-          "url('chrome://browser/content/colorways/assets/independent-voices-collection.avif') var(--mr-secondary-position) no-repeat, var(--in-content-page-background) radial-gradient(83.12% 83.12% at 80.59% 16.88%, #9059FF 0%, #3A8EE6 54.51%, #A0C4EA 100%)",
+          "url('chrome://activity-stream/content/data/content/assets/mr-colorways.avif') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
         progress_bar: true,
         logo: {},
         title: {
@@ -572,8 +574,9 @@ const MR_ABOUT_WELCOME_DEFAULT = {
       id: "AW_MOBILE_DOWNLOAD",
       content: {
         position: "split",
+        split_narrow_bkg_position: "-160px",
         background:
-          "url('chrome://activity-stream/content/data/content/assets/mr-mobilecrosspromo.svg') var(--mr-secondary-position) no-repeat, var(--in-content-page-background) radial-gradient(109.62% 64.62% at 9.75% 62.91%, rgba(103, 51, 205, 0.75) 0%, rgba(0, 108, 207, 0.75) 54.51%, rgba(128, 199, 247, 0.75) 100%)",
+          "url('chrome://activity-stream/content/data/content/assets/mr-mobilecrosspromo.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
         progress_bar: true,
         logo: {},
         title: {
@@ -615,9 +618,9 @@ const MR_ABOUT_WELCOME_DEFAULT = {
       id: "AW_GRATITUDE",
       content: {
         position: "split",
-        split_narrow_bkg_position: "-60px",
+        split_narrow_bkg_position: "-228px",
         background:
-          "url('chrome://activity-stream/content/data/content/assets/mr-gratitude.svg') var(--mr-secondary-position) no-repeat, var(--in-content-page-background) radial-gradient(124% 67.28% at 0% 39.91%, rgba(103, 51, 205, 0.75) 0%, rgba(0, 108, 207, 0.75) 54.51%, rgba(128, 199, 247, 0.75) 100%)",
+          "url('chrome://activity-stream/content/data/content/assets/mr-gratitude.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
         progress_bar: true,
         logo: {},
         title: {
