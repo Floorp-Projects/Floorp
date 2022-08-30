@@ -40,7 +40,7 @@ import org.mozilla.fenix.wallpapers.Wallpaper
 @Composable
 fun HomeSectionHeader(
     headerText: String,
-    description: String,
+    description: String = "",
     onShowAllClick: (() -> Unit)? = null
 ) {
     if (inComposePreview) {
@@ -80,7 +80,7 @@ fun HomeSectionHeader(
 @Composable
 private fun HomeSectionHeaderContent(
     headerText: String,
-    description: String,
+    description: String = "",
     showAllTextColor: Color = FirefoxTheme.colors.textAccent,
     onShowAllClick: (() -> Unit)? = null,
 ) {

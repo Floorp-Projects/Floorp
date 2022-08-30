@@ -7,16 +7,12 @@ package org.mozilla.fenix.home.pocket
 import android.view.View
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -27,7 +23,7 @@ import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ComposeViewHolder
-import org.mozilla.fenix.compose.SectionHeader
+import org.mozilla.fenix.compose.home.HomeSectionHeader
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 
@@ -44,14 +40,18 @@ class PocketStoriesViewHolder(
     private val interactor: PocketStoriesInteractor
 ) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
+    init {
+        val horizontalPadding =
+            composeView.resources.getDimensionPixelSize(R.dimen.home_item_horizontal_margin)
+        composeView.setPadding(horizontalPadding, 0, horizontalPadding, 0)
+    }
+
     companion object {
         val LAYOUT_ID = View.generateViewId()
     }
 
     @Composable
     override fun Content() {
-        val horizontalPadding = dimensionResource(R.dimen.home_item_horizontal_margin)
-
         val homeScreenReady = components.appStore
             .observeAsComposableState { state -> state.firstFrameDrawn }.value ?: false
 
@@ -79,19 +79,14 @@ class PocketStoriesViewHolder(
         }
 
         Column(modifier = Modifier.padding(top = 72.dp)) {
-            SectionHeader(
-                text = stringResource(R.string.pocket_stories_header_1),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = horizontalPadding)
-                    .wrapContentHeight(align = Alignment.Top)
+            HomeSectionHeader(
+                headerText = stringResource(R.string.pocket_stories_header_1),
             )
 
             Spacer(Modifier.height(16.dp))
 
             PocketStories(
                 stories ?: emptyList(),
-                horizontalPadding,
                 interactor::onStoryShown,
                 interactor::onStoryClicked,
                 interactor::onDiscoverMoreClicked
@@ -105,12 +100,8 @@ class PocketStoriesViewHolder(
 fun PocketStoriesViewHolderPreview() {
     FirefoxTheme(theme = Theme.getTheme()) {
         Column {
-            SectionHeader(
-                text = stringResource(R.string.pocket_stories_header_1),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .wrapContentHeight(align = Alignment.Top)
+            HomeSectionHeader(
+                headerText = stringResource(R.string.pocket_stories_header_1),
             )
 
             Spacer(Modifier.height(16.dp))
@@ -118,7 +109,6 @@ fun PocketStoriesViewHolderPreview() {
             @Suppress("MagicNumber")
             PocketStories(
                 stories = getFakePocketStories(8),
-                contentPadding = 0.dp,
                 onStoryShown = { _, _ -> },
                 onStoryClicked = { _, _ -> },
                 onDiscoverMoreClicked = {}
