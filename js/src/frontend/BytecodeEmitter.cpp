@@ -3670,76 +3670,74 @@ bool BytecodeEmitter::emitDestructuringOpsObject(ListNode* pattern,
       break;
     }
 
-    // Now push the property name currently being matched, which is the
-    // current property name "label" on the left of a colon in the object
+    // Now push the property value currently being matched, which is the value
+    // of the current property name "label" on the left of a colon in the object
     // initialiser.
-    bool needsGetElem = true;
-
     if (member->isKind(ParseNodeKind::MutateProto)) {
       if (!emitAtomOp(JSOp::GetProp,
                       TaggedParserAtomIndex::WellKnown::proto())) {
         //          [stack] ... SET? RHS LREF* PROP
         return false;
       }
-      needsGetElem = false;
     } else {
       MOZ_ASSERT(member->isKind(ParseNodeKind::PropertyDefinition) ||
                  member->isKind(ParseNodeKind::Shorthand));
 
       ParseNode* key = member->as<BinaryNode>().left();
-      if (key->isKind(ParseNodeKind::NumberExpr)) {
-        if (!emitNumberOp(key->as<NumericLiteral>().value())) {
-          //        [stack]... SET? RHS LREF* RHS KEY
-          return false;
-        }
-      } else if (key->isKind(ParseNodeKind::BigIntExpr)) {
-        if (!emitBigIntOp(&key->as<BigIntLiteral>())) {
-          //        [stack]... SET? RHS LREF* RHS KEY
-          return false;
-        }
-      } else if (key->isKind(ParseNodeKind::ObjectPropertyName) ||
-                 key->isKind(ParseNodeKind::StringExpr)) {
+      if (key->isKind(ParseNodeKind::ObjectPropertyName) ||
+          key->isKind(ParseNodeKind::StringExpr)) {
         if (!emitAtomOp(JSOp::GetProp, key->as<NameNode>().atom())) {
           //        [stack] ... SET? RHS LREF* PROP
           return false;
         }
-        needsGetElem = false;
       } else {
-        if (!emitComputedPropertyName(&key->as<UnaryNode>())) {
-          //        [stack] ... SET? RHS LREF* RHS KEY
+        if (key->isKind(ParseNodeKind::NumberExpr)) {
+          if (!emitNumberOp(key->as<NumericLiteral>().value())) {
+            //      [stack]... SET? RHS LREF* RHS KEY
+            return false;
+          }
+        } else if (key->isKind(ParseNodeKind::BigIntExpr)) {
+          if (!emitBigIntOp(&key->as<BigIntLiteral>())) {
+            //      [stack]... SET? RHS LREF* RHS KEY
+            return false;
+          }
+        } else {
+          if (!emitComputedPropertyName(&key->as<UnaryNode>())) {
+            //      [stack] ... SET? RHS LREF* RHS KEY
+            return false;
+          }
+
+          // Add the computed property key to the exclusion set.
+          if (needsRestPropertyExcludedSet) {
+            if (!emitDupAt(emitted + 3)) {
+              //    [stack] ... SET RHS LREF* RHS KEY SET
+              return false;
+            }
+            if (!emitDupAt(1)) {
+              //    [stack] ... SET RHS LREF* RHS KEY SET KEY
+              return false;
+            }
+            if (!emit1(JSOp::Undefined)) {
+              //    [stack] ... SET RHS LREF* RHS KEY SET KEY UNDEFINED
+              return false;
+            }
+            if (!emit1(JSOp::InitElem)) {
+              //    [stack] ... SET RHS LREF* RHS KEY SET
+              return false;
+            }
+            if (!emit1(JSOp::Pop)) {
+              //    [stack] ... SET RHS LREF* RHS KEY
+              return false;
+            }
+          }
+        }
+
+        // Get the property value.
+        if (!emitElemOpBase(JSOp::GetElem)) {
+          //        [stack] ... SET? RHS LREF* PROP
           return false;
         }
-
-        // Add the computed property key to the exclusion set.
-        if (needsRestPropertyExcludedSet) {
-          if (!emitDupAt(emitted + 3)) {
-            //      [stack] ... SET RHS LREF* RHS KEY SET
-            return false;
-          }
-          if (!emitDupAt(1)) {
-            //      [stack] ... SET RHS LREF* RHS KEY SET KEY
-            return false;
-          }
-          if (!emit1(JSOp::Undefined)) {
-            //      [stack] ... SET RHS LREF* RHS KEY SET KEY UNDEFINED
-            return false;
-          }
-          if (!emit1(JSOp::InitElem)) {
-            //      [stack] ... SET RHS LREF* RHS KEY SET
-            return false;
-          }
-          if (!emit1(JSOp::Pop)) {
-            //      [stack] ... SET RHS LREF* RHS KEY
-            return false;
-          }
-        }
       }
-    }
-
-    // Get the property value if not done already.
-    if (needsGetElem && !emitElemOpBase(JSOp::GetElem)) {
-      //            [stack] ... SET? RHS LREF* PROP
-      return false;
     }
 
     if (pndefault) {
