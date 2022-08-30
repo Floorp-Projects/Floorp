@@ -89,7 +89,7 @@ const kRegExpRemovalRegExp = /^\/\^\(\(?|\\|\)\)?\$\/$/g;
 // providers that differ from the existing types.
 XPCOMUtils.defineLazyGetter(lazy, "kXPIAddonTypes", () => {
   // In practice, this result is equivalent to ALL_XPI_TYPES in XPIProvider.jsm.
-  // "plugin" (from GMPProvider.jsm) is intentionally omitted, as we decided to
+  // "plugin" (from GMPProvider.sys.mjs) is intentionally omitted, as we decided to
   // not support blocklisting of GMP plugins in bug 1086668.
   return lazy.AddonManagerPrivate.getAddonTypesByProvider("XPIProvider");
 });

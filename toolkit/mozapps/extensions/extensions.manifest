@@ -3,6 +3,6 @@ category update-timer addonManager @mozilla.org/addons/integration;1,getService,
 #endif
 #ifndef MOZ_THUNDERBIRD
 #ifndef MOZ_WIDGET_ANDROID
-category addon-provider-module GMPProvider resource://gre/modules/addons/GMPProvider.jsm
+category addon-provider-module GMPProvider resource://gre/modules/addons/GMPProvider.sys.mjs
 #endif
 #endif
