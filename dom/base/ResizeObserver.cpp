@@ -168,7 +168,13 @@ ResizeObservation::ResizeObservation(Element& aTarget,
                                      ResizeObserver& aObserver,
                                      ResizeObserverBoxOptions aBox,
                                      WritingMode aWm)
-    : mTarget(&aTarget), mObserver(&aObserver), mObservedBox(aBox) {
+    : mTarget(&aTarget),
+      mObserver(&aObserver),
+      mObservedBox(aBox),
+      mLastReportedSize(
+          aWm, StaticPrefs::dom_resize_observer_last_reported_size_invalid()
+                   ? gfx::Size(-1, -1)
+                   : gfx::Size()) {
   aTarget.BindObject(mObserver);
 }
 
@@ -295,7 +301,8 @@ void ResizeObserver::Observe(Element& aTarget,
   observation =
       new ResizeObservation(aTarget, *this, aOptions.mBox,
                             frame ? frame->GetWritingMode() : WritingMode());
-  if (this == mDocument->GetLastRememberedSizeObserver()) {
+  if (!StaticPrefs::dom_resize_observer_last_reported_size_invalid() &&
+      this == mDocument->GetLastRememberedSizeObserver()) {
     // Resize observations are initialized with a (0, 0) mLastReportedSize,
     // this means that the callback won't be called if the element is 0x0.
     // But we need it called for handling the last remembered size, so set

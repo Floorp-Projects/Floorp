@@ -105,8 +105,6 @@ class ResizeObservation final : public LinkedListElement<ResizeObservation> {
   // The latest recorded of observed target.
   // This will be CSS pixels for border-box/content-box, or device pixels for
   // device-pixel-content-box.
-  // Note: We use default constructor for this because we want to start with a
-  // (0, 0) size, per the spec.
   LogicalPixelSize mLastReportedSize;
 };
 
