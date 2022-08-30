@@ -360,9 +360,13 @@ nscoord nsComboboxControlFrame::GetLongestOptionISize(
 
 nscoord nsComboboxControlFrame::GetIntrinsicISize(gfxContext* aRenderingContext,
                                                   IntrinsicISizeType aType) {
+  Maybe<nscoord> containISize = ContainIntrinsicISize(NS_UNCONSTRAINEDSIZE);
+  if (containISize && *containISize != NS_UNCONSTRAINEDSIZE) {
+    return *containISize;
+  }
+
   nscoord displayISize = mDisplayFrame->IntrinsicISizeOffsets().padding;
-  if (!StyleDisplay()->GetContainSizeAxes().mIContained &&
-      !StyleContent()->mContent.IsNone()) {
+  if (!containISize && !StyleContent()->mContent.IsNone()) {
     displayISize += GetLongestOptionISize(aRenderingContext);
   }
 
