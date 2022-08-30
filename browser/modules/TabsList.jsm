@@ -14,6 +14,8 @@ ChromeUtils.defineModuleGetter(
 
 var EXPORTED_SYMBOLS = ["TabsPanel"];
 
+const TAB_DROP_TYPE = "application/x-moz-tabbrowser-tab";
+
 function setAttributes(element, attrs) {
   for (let [name, value] of Object.entries(attrs)) {
     if (value) {
@@ -25,11 +27,23 @@ function setAttributes(element, attrs) {
 }
 
 class TabsListBase {
-  constructor({ className, filterFn, insertBefore, containerNode }) {
+  constructor({
+    className,
+    filterFn,
+    insertBefore,
+    containerNode,
+    dropIndicator = null,
+  }) {
     this.className = className;
     this.filterFn = filterFn;
     this.insertBefore = insertBefore;
     this.containerNode = containerNode;
+    this.dropIndicator = dropIndicator;
+
+    if (this.dropIndicator) {
+      this.dropTargetRow = null;
+      this.dropTargetDirection = 0;
+    }
 
     this.doc = containerNode.ownerDocument;
     this.gBrowser = this.doc.defaultView.gBrowser;
@@ -59,6 +73,21 @@ class TabsListBase {
         break;
       case "command":
         this._selectTab(event.target.tab);
+        break;
+      case "dragstart":
+        this._onDragStart(event);
+        break;
+      case "dragover":
+        this._onDragOver(event);
+        break;
+      case "dragleave":
+        this._onDragLeave(event);
+        break;
+      case "dragend":
+        this._onDragEnd(event);
+        break;
+      case "drop":
+        this._onDrop(event);
         break;
     }
   }
@@ -104,10 +133,19 @@ class TabsListBase {
 
   _setupListeners() {
     this.listenersRegistered = true;
+
     this.gBrowser.tabContainer.addEventListener("TabAttrModified", this);
     this.gBrowser.tabContainer.addEventListener("TabClose", this);
     this.gBrowser.tabContainer.addEventListener("TabMove", this);
     this.gBrowser.tabContainer.addEventListener("TabPinned", this);
+
+    if (this.dropIndicator) {
+      this.containerNode.addEventListener("dragstart", this);
+      this.containerNode.addEventListener("dragover", this);
+      this.containerNode.addEventListener("dragleave", this);
+      this.containerNode.addEventListener("dragend", this);
+      this.containerNode.addEventListener("drop", this);
+    }
   }
 
   _cleanupListeners() {
@@ -115,6 +153,15 @@ class TabsListBase {
     this.gBrowser.tabContainer.removeEventListener("TabClose", this);
     this.gBrowser.tabContainer.removeEventListener("TabMove", this);
     this.gBrowser.tabContainer.removeEventListener("TabPinned", this);
+
+    if (this.dropIndicator) {
+      this.containerNode.removeEventListener("dragstart", this);
+      this.containerNode.removeEventListener("dragover", this);
+      this.containerNode.removeEventListener("dragleave", this);
+      this.containerNode.removeEventListener("dragend", this);
+      this.containerNode.removeEventListener("drop", this);
+    }
+
     this.listenersRegistered = false;
   }
 
@@ -316,5 +363,159 @@ class TabsPanel extends TabsListBase {
         image.classList.remove("tab-throbber-tabslist");
       }
     }
+  }
+
+  _onDragStart(event) {
+    const row = this._getDragTargetRow(event);
+    if (!row) {
+      return;
+    }
+
+    this.gBrowser.tabContainer.startTabDrag(event, row.firstElementChild.tab, {
+      fromTabList: true,
+    });
+  }
+
+  _getDragTargetRow(event) {
+    let row = event.target;
+    while (row && row.localName !== "toolbaritem") {
+      row = row.parentNode;
+    }
+    return row;
+  }
+
+  _isMovingTabs(event) {
+    var effects = this.gBrowser.tabContainer.getDropEffectForTabDrag(event);
+    return effects == "move";
+  }
+
+  _onDragOver(event) {
+    if (!this._isMovingTabs(event)) {
+      return;
+    }
+
+    if (!this._updateDropTarget(event)) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  _getRowIndex(row) {
+    return Array.prototype.indexOf.call(this.containerNode.children, row);
+  }
+
+  _onDrop(event) {
+    if (!this._isMovingTabs(event)) {
+      return;
+    }
+
+    if (!this._updateDropTarget(event)) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    let draggedTab = event.dataTransfer.mozGetDataAt(TAB_DROP_TYPE, 0);
+
+    if (draggedTab === this.dropTargetRow.firstElementChild.tab) {
+      this._cleanupDragDetails();
+      return;
+    }
+
+    const targetTab = this.dropTargetRow.firstElementChild.tab;
+
+    // NOTE: Given the list is opened only when the window is focused,
+    //       we don't have to check `draggedTab.container`.
+
+    let pos;
+    if (draggedTab._tPos < targetTab._tPos) {
+      pos = targetTab._tPos + this.dropTargetDirection;
+    } else {
+      pos = targetTab._tPos + this.dropTargetDirection + 1;
+    }
+    this.gBrowser.moveTabTo(draggedTab, pos);
+
+    this._cleanupDragDetails();
+  }
+
+  _onDragLeave(event) {
+    if (!this._isMovingTabs(event)) {
+      return;
+    }
+
+    if (event.target !== this.containerNode) {
+      return;
+    }
+
+    this._clearDropTarget();
+  }
+
+  _onDragEnd(event) {
+    if (!this._isMovingTabs(event)) {
+      return;
+    }
+
+    this._cleanupDragDetails();
+  }
+
+  _updateDropTarget(event) {
+    const row = this._getDragTargetRow(event);
+    if (!row) {
+      return false;
+    }
+
+    const rect = row.getBoundingClientRect();
+    const index = this._getRowIndex(row);
+    if (index === -1) {
+      return false;
+    }
+
+    const threshold = rect.height * 0.5;
+    if (event.clientY < rect.top + threshold) {
+      this._setDropTarget(row, -1);
+    } else {
+      this._setDropTarget(row, 0);
+    }
+
+    return true;
+  }
+
+  _setDropTarget(row, direction) {
+    this._clearDropTarget();
+
+    this.dropTargetRow = row;
+    this.dropTargetDirection = direction;
+
+    let offset = this.dropIndicator.parentNode.getBoundingClientRect().top;
+    let top;
+    if (this.dropTargetDirection === -1) {
+      if (this.dropTargetRow.previousSibling) {
+        const rect = this.dropTargetRow.previousSibling.getBoundingClientRect();
+        top = rect.top + rect.height;
+      } else {
+        const rect = this.dropTargetRow.getBoundingClientRect();
+        top = rect.top;
+      }
+    } else {
+      const rect = this.dropTargetRow.getBoundingClientRect();
+      top = rect.top + rect.height;
+    }
+
+    this.dropIndicator.style.top = `${top - offset - 12}px`;
+    this.dropIndicator.collapsed = false;
+  }
+
+  _clearDropTarget() {
+    if (this.dropTargetRow) {
+      this.dropTargetRow = null;
+    }
+    this.dropIndicator.collapsed = true;
+  }
+
+  _cleanupDragDetails() {
+    this._clearDropTarget();
   }
 }
