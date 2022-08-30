@@ -53,16 +53,19 @@ fun HomeSectionHeader(
         val wallpaperState = components.appStore
             .observeAsComposableState { state -> state.wallpaperState }.value
 
+        val wallpaperAdaptedTextColor = wallpaperState?.currentWallpaper?.textColor?.let { Color(it) }
+
         val isWallpaperDefault =
             (wallpaperState?.currentWallpaper ?: Wallpaper.Default) == Wallpaper.Default
 
         HomeSectionHeaderContent(
             headerText = headerText,
+            textColor = wallpaperAdaptedTextColor ?: FirefoxTheme.colors.textPrimary,
             description = description,
             showAllTextColor = if (isWallpaperDefault) {
                 FirefoxTheme.colors.textAccent
             } else {
-                FirefoxTheme.colors.textPrimary
+                wallpaperAdaptedTextColor ?: FirefoxTheme.colors.textAccent
             },
             onShowAllClick = onShowAllClick,
         )
@@ -80,6 +83,7 @@ fun HomeSectionHeader(
 @Composable
 private fun HomeSectionHeaderContent(
     headerText: String,
+    textColor: Color = FirefoxTheme.colors.textPrimary,
     description: String = "",
     showAllTextColor: Color = FirefoxTheme.colors.textAccent,
     onShowAllClick: (() -> Unit)? = null,
@@ -89,6 +93,7 @@ private fun HomeSectionHeaderContent(
     ) {
         SectionHeader(
             text = headerText,
+            textColor = textColor,
             modifier = Modifier
                 .weight(1f)
                 .wrapContentHeight(align = Alignment.Top)
