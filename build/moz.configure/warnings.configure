@@ -282,9 +282,6 @@ with only_when(target_is_windows):
         # build, but we're not sure why.
         check_and_add_warning("-Wno-enum-compare")
 
-# We hit this all over the place with the gtest INSTANTIATE_TEST_CASE_P macro
-check_and_add_warning("-Wno-gnu-zero-variadic-macro-arguments")
-
 # Make it an error to be missing function declarations for C code.
 check_and_add_warning("-Werror=implicit-function-declaration", c_compiler)
 
