@@ -4,6 +4,10 @@
 
 "use strict";
 
+const { AboutPagesUtils } = ChromeUtils.import(
+  "resource://gre/modules/AboutPagesUtils.jsm"
+);
+
 testEngine_setup();
 
 // "about:ab" should match "about:about"
@@ -81,8 +85,23 @@ add_task(async function aboutAboutAndAboutAddons() {
   });
 });
 
-// "about:" should *not* match anything
-add_task(async function aboutColonHasNoMatch() {
+// "about:" by itself matches a list of about: pages and nothing else
+add_task(async function aboutColonMatchesOnlyAboutPages() {
+  // We generate 9 about: page results because there are 10 results total,
+  // and the first result is the heuristic result.
+  function getFirst9AboutPages() {
+    const aboutPageNames = AboutPagesUtils.visibleAboutUrls.slice(0, 9);
+    const aboutPageResults = aboutPageNames.map(aboutPageName => {
+      return makeVisitResult(context, {
+        uri: aboutPageName,
+        title: aboutPageName,
+        tags: null,
+        providerName: "AboutPages",
+      });
+    });
+    return aboutPageResults;
+  }
+
   let context = createContext("about:", { isPrivate: false });
   await check_results({
     context,
@@ -92,6 +111,31 @@ add_task(async function aboutColonHasNoMatch() {
         engineName: SUGGESTIONS_ENGINE_NAME,
         providerName: "HeuristicFallback",
         heuristic: true,
+      }),
+      ...getFirst9AboutPages(),
+    ],
+  });
+});
+
+// Results for about: pages do not match webpage titles from the user's history
+add_task(async function aboutResultsDoNotMatchTitlesInHistory() {
+  await PlacesTestUtils.addVisits([
+    {
+      uri: Services.io.newURI("http://example.com/guide/config/"),
+      title: "Guide to config in Firefox",
+    },
+  ]);
+
+  let context = createContext("about:config", { isPrivate: false });
+  await check_results({
+    context,
+    search: "about:config",
+    matches: [
+      makeVisitResult(context, {
+        uri: "about:config",
+        title: "about:config",
+        heuristic: true,
+        providerName: "Autofill",
       }),
     ],
   });

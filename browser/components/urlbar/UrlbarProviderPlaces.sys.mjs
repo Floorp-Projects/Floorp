@@ -8,7 +8,7 @@
 "use strict";
 
 /**
- * This module exports a provider that providers results from the Places
+ * This module exports a provider that provides results from the Places
  * database, including history, bookmarks, and open tabs.
  */
 // Constants
@@ -420,7 +420,16 @@ function Search(queryContext, listener, provider) {
   let unescapedSearchString = UrlbarUtils.unEscapeURIForUI(
     this._trimmedOriginalSearchString
   );
-  let [prefix, suffix] = UrlbarUtils.stripURLPrefix(unescapedSearchString);
+  // We want to make sure "about:" is not stripped as a prefix so that the
+  // about pages provider will run and ultimately only suggest about pages when
+  // a user types "about:" into the address bar.
+  let prefix, suffix;
+  if (unescapedSearchString.startsWith("about:")) {
+    prefix = "";
+    suffix = unescapedSearchString;
+  } else {
+    [prefix, suffix] = UrlbarUtils.stripURLPrefix(unescapedSearchString);
+  }
   this._searchString = suffix;
   this._strippedPrefix = prefix.toLowerCase();
 
@@ -466,9 +475,15 @@ function Search(queryContext, listener, provider) {
       this._leadingRestrictionToken = tokens[0].value;
     }
 
-    // Check if the first token has a strippable prefix and remove it, but don't
-    // create an empty token.
-    if (prefix && tokens[0].value.length > prefix.length) {
+    // Check if the first token has a strippable prefix other than "about:"
+    // and remove it, but don't create an empty token. We preserve "about:"
+    // so that the about pages provider will run and ultimately only suggest
+    // about pages when a user types "about:" into the address bar.
+    if (
+      prefix &&
+      prefix != "about:" &&
+      tokens[0].value.length > prefix.length
+    ) {
       tokens[0].value = tokens[0].value.substring(prefix.length);
     }
   }

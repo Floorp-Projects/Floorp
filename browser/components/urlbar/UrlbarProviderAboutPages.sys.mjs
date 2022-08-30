@@ -51,10 +51,7 @@ class ProviderAboutPages extends UrlbarProvider {
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   isActive(queryContext) {
-    return (
-      queryContext.trimmedSearchString.toLowerCase().startsWith("about:") &&
-      queryContext.trimmedSearchString.length > 6
-    );
+    return queryContext.trimmedSearchString.toLowerCase().startsWith("about:");
   }
 
   /**
