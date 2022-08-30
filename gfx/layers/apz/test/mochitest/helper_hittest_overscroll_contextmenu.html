@@ -78,11 +78,6 @@ async function test() {
   var config = getHitTestConfig();
   var utils = config.utils;
 
-  if (config.isWindows) {
-    todo(false, "This test does not yet work on Windows");
-    return;
-  }
-
   // Overscroll the root scroll frame at the top, creating a gutter.
   // Note that the size of the gutter will only be 8px, because
   // setAsyncScrollOffset() applies the overscroll as a single delta,
