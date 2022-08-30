@@ -716,7 +716,7 @@ button.close {
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: auto;
   grid-template-areas:
-    "favicon favicon badge badge"
+    "favicon badge badge badge"
     "title title title title"
     "domain domain domain domain"
     "device device device time";
@@ -868,13 +868,13 @@ button.close {
 
 .last-active-badge {
   height: 1.25em;
-  width: 6em;
   background-color: #E3FFF3;
   grid-area: badge;
   border-radius: 2em;
   justify-self: end;
   text-align: center;
-  padding-bottom: 5px;
+  padding: 0.3em 1em;
+  font-size: 0.75em;
 }
 
 .dot {
@@ -887,7 +887,6 @@ button.close {
 
 .badge-text {
   font-weight: 400;
-  font-size: .75em;
   letter-spacing: 0.02em;
   margin-inline-start: 4px;
   color: #000000;
