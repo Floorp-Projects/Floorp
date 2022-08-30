@@ -81,9 +81,9 @@ debugger-tests:
         using: run-task
         cache-dotcache: true
         cwd: '{checkout}'
+        # Re-use rather than re-installing to avoid hitting/requiring
+        # nodejs servers for downloads
         command: >
-            # Re-use rather than re-installing to avoid hitting/requiring
-            # nodejs servers for downloads
             cp -r /build/node_modules_eslint node_modules &&
             cp -r /build/node_modules_eslint-plugin-mozilla/ tools/lint/eslint/eslint-plugin-mozilla/node_modules &&
             ln -s ../tools/lint/eslint/eslint-plugin-mozilla node_modules &&
@@ -112,9 +112,9 @@ devtools-tests:
         using: run-task
         cache-dotcache: true
         cwd: '{checkout}'
+        # Re-use rather than re-installing to avoid hitting/requiring
+        # nodejs servers for downloads
         command: >
-            # Re-use rather than re-installing to avoid hitting/requiring
-            # nodejs servers for downloads
             cp -r /build/node_modules_eslint node_modules &&
             cp -r /build/node_modules_eslint-plugin-mozilla/ tools/lint/eslint/eslint-plugin-mozilla/node_modules &&
             ln -s ../tools/lint/eslint/eslint-plugin-mozilla node_modules &&
@@ -149,9 +149,9 @@ devtools-verify-bundle:
         using: run-task
         cache-dotcache: true
         cwd: '{checkout}'
+        # Re-use rather than re-installing to avoid hitting/requiring
+        # nodejs servers for downloads
         command: >
-            # Re-use rather than re-installing to avoid hitting/requiring
-            # nodejs servers for downloads
             cp -r /build/node_modules_eslint node_modules &&
             cp -r /build/node_modules_eslint-plugin-mozilla/ tools/lint/eslint/eslint-plugin-mozilla/node_modules &&
             ln -s ../tools/lint/eslint/eslint-plugin-mozilla node_modules &&

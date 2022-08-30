@@ -11,6 +11,7 @@
 #include "ChildIterator.h"
 #include "ErrorReporter.h"
 #include "gfxFontFeatures.h"
+#include "gfxMathTable.h"
 #include "gfxTextRun.h"
 #include "imgLoader.h"
 #include "nsAnimationManager.h"
@@ -1368,7 +1369,8 @@ void AssertIsMainThreadOrServoFontMetricsLocked() {
 GeckoFontMetrics Gecko_GetFontMetrics(const nsPresContext* aPresContext,
                                       bool aIsVertical,
                                       const nsStyleFont* aFont,
-                                      Length aFontSize, bool aUseUserFontSet) {
+                                      Length aFontSize, bool aUseUserFontSet,
+                                      bool aRetrieveMathScales) {
   AutoWriteLock guard(*sServoFFILock);
 
   // Getting font metrics can require some main thread only work to be
@@ -1390,6 +1392,16 @@ GeckoFontMetrics Gecko_GetFontMetrics(const nsPresContext* aPresContext,
   RefPtr<gfxFont> font = fm->GetThebesFontGroup()->GetFirstValidFont();
   const auto& metrics = font->GetMetrics(fm->Orientation());
 
+  float scriptPercentScaleDown = 0;
+  float scriptScriptPercentScaleDown = 0;
+  if (aRetrieveMathScales && font->TryGetMathTable()) {
+    scriptPercentScaleDown = static_cast<float>(
+        font->MathTable()->Constant(gfxMathTable::ScriptPercentScaleDown));
+    scriptScriptPercentScaleDown =
+        static_cast<float>(font->MathTable()->Constant(
+            gfxMathTable::ScriptScriptPercentScaleDown));
+  }
+
   int32_t d2a = aPresContext->AppUnitsPerDevPixel();
   auto ToLength = [](nscoord aLen) {
     return Length::FromPixels(CSSPixel::FromAppUnits(aLen));
@@ -1398,7 +1410,9 @@ GeckoFontMetrics Gecko_GetFontMetrics(const nsPresContext* aPresContext,
           ToLength(NS_round(metrics.zeroWidth * d2a)),
           ToLength(NS_round(metrics.capHeight * d2a)),
           ToLength(NS_round(metrics.ideographicWidth * d2a)),
-          ToLength(NS_round(metrics.maxAscent * d2a))};
+          ToLength(NS_round(metrics.maxAscent * d2a)),
+          scriptPercentScaleDown,
+          scriptScriptPercentScaleDown};
 }
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(SheetLoadDataHolder, SheetLoadDataHolder);

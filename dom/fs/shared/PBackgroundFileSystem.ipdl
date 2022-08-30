@@ -5,19 +5,8 @@
 include protocol PBackground;
 include protocol POriginPrivateFileSystem;
 
-using mozilla::dom::fs::EntryId from "mozilla/dom/FileSystemTypes.h";
-
 namespace mozilla {
 namespace dom {
-namespace fs {
-
-union FileSystemGetRootResponse
-{
-  nsresult;
-  EntryId;
-};
-
-}  // namespace fs
 
 async protocol PBackgroundFileSystem
 {
@@ -28,7 +17,9 @@ async protocol PBackgroundFileSystem
   /**
    * This will set up a POriginPrivateFileSystem IPC connection
    */
-  async GetRoot(Endpoint<POriginPrivateFileSystemParent> aParentEP) returns(FileSystemGetRootResponse handle);
+  async CreateFileSystemManagerParent(
+      Endpoint<POriginPrivateFileSystemParent> aParentEP)
+      returns(nsresult rv);
 
  child:
   async __delete__();

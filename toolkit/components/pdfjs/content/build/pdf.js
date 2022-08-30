@@ -1363,7 +1363,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.16.71',
+    apiVersion: '3.0.7',
     source: {
       data: source.data,
       url: source.url,
@@ -1604,6 +1604,10 @@ class PDFDocumentProxy {
     return this._transport.getData();
   }
 
+  saveDocument() {
+    return this._transport.saveDocument();
+  }
+
   getDownloadInfo() {
     return this._transport.downloadInfoCapability.promise;
   }
@@ -1622,10 +1626,6 @@ class PDFDocumentProxy {
 
   get loadingTask() {
     return this._transport.loadingTask;
-  }
-
-  saveDocument() {
-    return this._transport.saveDocument();
   }
 
   getFieldObjects() {
@@ -1729,7 +1729,6 @@ class PDFPageProxy {
     intent = "display",
     annotationMode = _util.AnnotationMode.ENABLE,
     transform = null,
-    imageLayer = null,
     canvasFactory = null,
     background = null,
     optionalContentConfigPromise = null,
@@ -1816,7 +1815,6 @@ class PDFPageProxy {
         canvasContext,
         viewport,
         transform,
-        imageLayer,
         background
       },
       objs: this.objs,
@@ -2460,7 +2458,6 @@ class PDFWorker {
 }
 
 exports.PDFWorker = PDFWorker;
-;
 
 class WorkerTransport {
   #docStats = null;
@@ -2963,6 +2960,21 @@ class WorkerTransport {
     return this.messageHandler.sendWithPromise("GetData", null);
   }
 
+  saveDocument() {
+    if (this.annotationStorage.size <= 0) {
+      (0, _util.warn)("saveDocument called while `annotationStorage` is empty, " + "please use the getData-method instead.");
+    }
+
+    return this.messageHandler.sendWithPromise("SaveDocument", {
+      isPureXfa: !!this._htmlForXfa,
+      numPages: this._numPages,
+      annotationStorage: this.annotationStorage.serializable,
+      filename: this._fullReader?.filename ?? null
+    }).finally(() => {
+      this.annotationStorage.resetModified();
+    });
+  }
+
   getPage(pageNumber) {
     if (!Number.isInteger(pageNumber) || pageNumber <= 0 || pageNumber > this._numPages) {
       return Promise.reject(new Error("Invalid page request."));
@@ -3005,17 +3017,6 @@ class WorkerTransport {
     return this.messageHandler.sendWithPromise("GetAnnotations", {
       pageIndex,
       intent
-    });
-  }
-
-  saveDocument() {
-    return this.messageHandler.sendWithPromise("SaveDocument", {
-      isPureXfa: !!this._htmlForXfa,
-      numPages: this._numPages,
-      annotationStorage: this.annotationStorage.serializable,
-      filename: this._fullReader?.filename ?? null
-    }).finally(() => {
-      this.annotationStorage.resetModified();
     });
   }
 
@@ -3309,10 +3310,9 @@ class InternalRenderTask {
       canvasContext,
       viewport,
       transform,
-      imageLayer,
       background
     } = this.params;
-    this.gfx = new _canvas.CanvasGraphics(canvasContext, this.commonObjs, this.objs, this.canvasFactory, imageLayer, optionalContentConfig, this.annotationCanvasMap, this.pageColors);
+    this.gfx = new _canvas.CanvasGraphics(canvasContext, this.commonObjs, this.objs, this.canvasFactory, optionalContentConfig, this.annotationCanvasMap, this.pageColors);
     this.gfx.beginDrawing({
       transform,
       viewport,
@@ -3410,9 +3410,9 @@ class InternalRenderTask {
 
 }
 
-const version = '2.16.71';
+const version = '3.0.7';
 exports.version = version;
-const build = '518115fdd';
+const build = '86370bd5c';
 exports.build = build;
 
 /***/ }),
@@ -3455,11 +3455,21 @@ class AnnotationStorage {
     return this._storage.get(key);
   }
 
-  removeKey(key) {
+  remove(key) {
     this._storage.delete(key);
 
     if (this._storage.size === 0) {
       this.resetModified();
+    }
+
+    if (typeof this.onAnnotationEditor === "function") {
+      for (const value of this._storage.values()) {
+        if (value instanceof _editor.AnnotationEditor) {
+          return;
+        }
+      }
+
+      this.onAnnotationEditor(null);
     }
   }
 
@@ -3542,16 +3552,6 @@ class AnnotationStorage {
     }
 
     return clone;
-  }
-
-  get hasAnnotationEditors() {
-    for (const value of this._storage.values()) {
-      if (value instanceof _editor.AnnotationEditor) {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   static getHash(map) {
@@ -6659,7 +6659,7 @@ const NORMAL_CLIP = {};
 const EO_CLIP = {};
 
 class CanvasGraphics {
-  constructor(canvasCtx, commonObjs, objs, canvasFactory, imageLayer, optionalContentConfig, annotationCanvasMap, pageColors) {
+  constructor(canvasCtx, commonObjs, objs, canvasFactory, optionalContentConfig, annotationCanvasMap, pageColors) {
     this.ctx = canvasCtx;
     this.current = new CanvasExtraState(this.ctx.canvas.width, this.ctx.canvas.height);
     this.stateStack = [];
@@ -6670,7 +6670,6 @@ class CanvasGraphics {
     this.commonObjs = commonObjs;
     this.objs = objs;
     this.canvasFactory = canvasFactory;
-    this.imageLayer = imageLayer;
     this.groupStack = [];
     this.processingType3 = null;
     this.baseTransform = null;
@@ -6767,10 +6766,6 @@ class CanvasGraphics {
     this.ctx.transform(...viewport.transform);
     this.viewportScale = viewport.scale;
     this.baseTransform = (0, _display_utils.getCurrentTransform)(this.ctx);
-
-    if (this.imageLayer) {
-      this.imageLayer.beginLayout();
-    }
   }
 
   executeOperatorList(operatorList, executionStartIdx, continueCallback, stepper) {
@@ -6861,10 +6856,6 @@ class CanvasGraphics {
     }
 
     this._cachedBitmapsMap.clear();
-
-    if (this.imageLayer) {
-      this.imageLayer.endLayout();
-    }
   }
 
   _scaleImage(img, inverseTransform) {
@@ -8320,19 +8311,7 @@ class CanvasGraphics {
     const scaled = this._scaleImage(imgToPaint, (0, _display_utils.getCurrentTransformInverse)(ctx));
 
     ctx.imageSmoothingEnabled = getImageSmoothingEnabled((0, _display_utils.getCurrentTransform)(ctx), imgData.interpolate);
-    const [rWidth, rHeight] = drawImageAtIntegerCoords(ctx, scaled.img, 0, 0, scaled.paintWidth, scaled.paintHeight, 0, -height, width, height);
-
-    if (this.imageLayer) {
-      const position = this.getCanvasPosition(0, -height);
-      this.imageLayer.appendImage({
-        imgData,
-        left: position[0],
-        top: position[1],
-        width: rWidth,
-        height: rHeight
-      });
-    }
-
+    drawImageAtIntegerCoords(ctx, scaled.img, 0, 0, scaled.paintWidth, scaled.paintHeight, 0, -height, width, height);
     this.compose();
     this.restore();
   }
@@ -8354,18 +8333,6 @@ class CanvasGraphics {
       ctx.transform(...entry.transform);
       ctx.scale(1, -1);
       drawImageAtIntegerCoords(ctx, tmpCanvas.canvas, entry.x, entry.y, entry.w, entry.h, 0, -1, 1, 1);
-
-      if (this.imageLayer) {
-        const position = this.getCanvasPosition(entry.x, entry.y);
-        this.imageLayer.appendImage({
-          imgData,
-          left: position[0],
-          top: position[1],
-          width: w,
-          height: h
-        });
-      }
-
       ctx.restore();
     }
 
@@ -8536,11 +8503,6 @@ class CanvasGraphics {
       ctx.setLineDash(savedDashes);
       ctx.lineDashOffset = savedDashOffset;
     }
-  }
-
-  getCanvasPosition(x, y) {
-    const transform = (0, _display_utils.getCurrentTransform)(this.ctx);
-    return [transform[0] * x + transform[2] * y + transform[4], transform[1] * x + transform[3] * y + transform[5]];
   }
 
   isContentVisible() {
@@ -10556,7 +10518,7 @@ class AnnotationEditorLayer {
   remove(editor) {
     this.#uiManager.removeEditor(editor);
     this.detach(editor);
-    this.annotationStorage.removeKey(editor.id);
+    this.annotationStorage.remove(editor.id);
     editor.div.style.display = "none";
     setTimeout(() => {
       editor.div.style.display = "";
@@ -12765,10 +12727,13 @@ class AnnotationElement {
       const action = commonActions[actionName];
 
       if (action) {
-        action({
-          detail,
+        const eventProxy = {
+          detail: {
+            [actionName]: detail
+          },
           target: element
-        });
+        };
+        action(eventProxy);
         delete storedData[actionName];
       }
     }
@@ -13313,7 +13278,15 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
       const storedData = storage.getValue(id, {
         value: this.data.fieldValue
       });
-      const textContent = storedData.formattedValue || storedData.value || "";
+      let textContent = storedData.formattedValue || storedData.value || "";
+      const maxLen = storage.getValue(id, {
+        charLimit: this.data.maxLen
+      }).charLimit;
+
+      if (maxLen && textContent.length > maxLen) {
+        textContent = textContent.slice(0, maxLen);
+      }
+
       const elementData = {
         userValue: textContent,
         formattedValue: null,
@@ -13344,6 +13317,10 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
       element.tabIndex = DEFAULT_TAB_INDEX;
 
       this._setRequired(element, this.data.required);
+
+      if (maxLen) {
+        element.maxLength = maxLen;
+      }
 
       element.addEventListener("input", event => {
         storage.setValue(id, {
@@ -13404,8 +13381,46 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
 
             selRange(event) {
               event.target.setSelectionRange(...event.detail.selRange);
-            }
+            },
 
+            charLimit: event => {
+              const {
+                charLimit
+              } = event.detail;
+              const {
+                target
+              } = event;
+
+              if (charLimit === 0) {
+                target.removeAttribute("maxLength");
+                return;
+              }
+
+              target.setAttribute("maxLength", charLimit);
+              let value = elementData.userValue;
+
+              if (!value || value.length <= charLimit) {
+                return;
+              }
+
+              value = value.slice(0, charLimit);
+              target.value = elementData.userValue = value;
+              storage.setValue(id, {
+                value
+              });
+              this.linkService.eventBus?.dispatch("dispatcheventinsandbox", {
+                source: this,
+                detail: {
+                  id,
+                  name: "Keystroke",
+                  value,
+                  willCommit: true,
+                  commitKey: 1,
+                  selStart: target.selectionStart,
+                  selEnd: target.selectionEnd
+                }
+              });
+            }
           };
 
           this._dispatchEventFromSandbox(actions, jsEvent);
@@ -13548,13 +13563,9 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
         element.addEventListener("blur", blurListener);
       }
 
-      if (this.data.maxLen !== null) {
-        element.maxLength = this.data.maxLen;
-      }
-
       if (this.data.comb) {
         const fieldWidth = this.data.rect[2] - this.data.rect[0];
-        const combWidth = fieldWidth / this.data.maxLen;
+        const combWidth = fieldWidth / maxLen;
         element.classList.add("comb");
         element.style.letterSpacing = `calc(${combWidth}px * var(--scale-factor) - 1ch)`;
       }
@@ -15138,13 +15149,10 @@ exports.renderTextLayer = renderTextLayer;
 
 var _util = __w_pdfjs_require__(1);
 
-var _display_utils = __w_pdfjs_require__(8);
-
 const MAX_TEXT_DIVS_TO_RENDER = 100000;
 const DEFAULT_FONT_SIZE = 30;
 const DEFAULT_FONT_ASCENT = 0.8;
 const ascentCache = new Map();
-const AllWhitespaceRegexp = /^\s+$/g;
 
 function getAscent(fontFamily, ctx) {
   const cachedAscent = ascentCache.get(fontFamily);
@@ -15205,19 +15213,7 @@ function getAscent(fontFamily, ctx) {
 
 function appendText(task, geom, styles, ctx) {
   const textDiv = document.createElement("span");
-  const textDivProperties = task._enhanceTextSelection ? {
-    angle: 0,
-    canvasWidth: 0,
-    hasText: geom.str !== "",
-    hasEOL: geom.hasEOL,
-    originalTransform: null,
-    paddingBottom: 0,
-    paddingLeft: 0,
-    paddingRight: 0,
-    paddingTop: 0,
-    scale: 1,
-    fontSize: 0
-  } : {
+  const textDivProperties = {
     angle: 0,
     canvasWidth: 0,
     hasText: geom.str !== "",
@@ -15267,7 +15263,7 @@ function appendText(task, geom, styles, ctx) {
 
   let shouldScaleText = false;
 
-  if (geom.str.length > 1 || task._enhanceTextSelection && AllWhitespaceRegexp.test(geom.str)) {
+  if (geom.str.length > 1) {
     shouldScaleText = true;
   } else if (geom.str !== " " && geom.transform[0] !== geom.transform[3]) {
     const absScaleX = Math.abs(geom.transform[0]),
@@ -15290,37 +15286,6 @@ function appendText(task, geom, styles, ctx) {
 
   if (task._textContentStream) {
     task._layoutText(textDiv);
-  }
-
-  if (task._enhanceTextSelection && textDivProperties.hasText) {
-    let angleCos = 1,
-        angleSin = 0;
-
-    if (angle !== 0) {
-      angleCos = Math.cos(angle);
-      angleSin = Math.sin(angle);
-    }
-
-    const divWidth = (style.vertical ? geom.height : geom.width) * task._viewport.scale;
-    const divHeight = fontHeight;
-    let m, b;
-
-    if (angle !== 0) {
-      m = [angleCos, angleSin, -angleSin, angleCos, left, top];
-      b = _util.Util.getAxialAlignedBoundingBox([0, 0, divWidth, divHeight], m);
-    } else {
-      b = [left, top, left + divWidth, top + divHeight];
-    }
-
-    task._bounds.push({
-      left: b[0],
-      top: b[1],
-      right: b[2],
-      bottom: b[3],
-      div: textDiv,
-      size: [divWidth, divHeight],
-      m
-    });
   }
 }
 
@@ -15349,278 +15314,6 @@ function render(task) {
   capability.resolve();
 }
 
-function findPositiveMin(ts, offset, count) {
-  let result = 0;
-
-  for (let i = 0; i < count; i++) {
-    const t = ts[offset++];
-
-    if (t > 0) {
-      result = result ? Math.min(t, result) : t;
-    }
-  }
-
-  return result;
-}
-
-function expand(task) {
-  const bounds = task._bounds;
-  const viewport = task._viewport;
-  const expanded = expandBounds(viewport.width, viewport.height, bounds);
-
-  for (let i = 0; i < expanded.length; i++) {
-    const div = bounds[i].div;
-
-    const divProperties = task._textDivProperties.get(div);
-
-    if (divProperties.angle === 0) {
-      divProperties.paddingLeft = bounds[i].left - expanded[i].left;
-      divProperties.paddingTop = bounds[i].top - expanded[i].top;
-      divProperties.paddingRight = expanded[i].right - bounds[i].right;
-      divProperties.paddingBottom = expanded[i].bottom - bounds[i].bottom;
-
-      task._textDivProperties.set(div, divProperties);
-
-      continue;
-    }
-
-    const e = expanded[i],
-          b = bounds[i];
-    const m = b.m,
-          c = m[0],
-          s = m[1];
-    const points = [[0, 0], [0, b.size[1]], [b.size[0], 0], b.size];
-    const ts = new Float64Array(64);
-
-    for (let j = 0, jj = points.length; j < jj; j++) {
-      const t = _util.Util.applyTransform(points[j], m);
-
-      ts[j + 0] = c && (e.left - t[0]) / c;
-      ts[j + 4] = s && (e.top - t[1]) / s;
-      ts[j + 8] = c && (e.right - t[0]) / c;
-      ts[j + 12] = s && (e.bottom - t[1]) / s;
-      ts[j + 16] = s && (e.left - t[0]) / -s;
-      ts[j + 20] = c && (e.top - t[1]) / c;
-      ts[j + 24] = s && (e.right - t[0]) / -s;
-      ts[j + 28] = c && (e.bottom - t[1]) / c;
-      ts[j + 32] = c && (e.left - t[0]) / -c;
-      ts[j + 36] = s && (e.top - t[1]) / -s;
-      ts[j + 40] = c && (e.right - t[0]) / -c;
-      ts[j + 44] = s && (e.bottom - t[1]) / -s;
-      ts[j + 48] = s && (e.left - t[0]) / s;
-      ts[j + 52] = c && (e.top - t[1]) / -c;
-      ts[j + 56] = s && (e.right - t[0]) / s;
-      ts[j + 60] = c && (e.bottom - t[1]) / -c;
-    }
-
-    const boxScale = 1 + Math.min(Math.abs(c), Math.abs(s));
-    divProperties.paddingLeft = findPositiveMin(ts, 32, 16) / boxScale;
-    divProperties.paddingTop = findPositiveMin(ts, 48, 16) / boxScale;
-    divProperties.paddingRight = findPositiveMin(ts, 0, 16) / boxScale;
-    divProperties.paddingBottom = findPositiveMin(ts, 16, 16) / boxScale;
-
-    task._textDivProperties.set(div, divProperties);
-  }
-}
-
-function expandBounds(width, height, boxes) {
-  const bounds = boxes.map(function (box, i) {
-    return {
-      x1: box.left,
-      y1: box.top,
-      x2: box.right,
-      y2: box.bottom,
-      index: i,
-      x1New: undefined,
-      x2New: undefined
-    };
-  });
-  expandBoundsLTR(width, bounds);
-  const expanded = new Array(boxes.length);
-
-  for (const b of bounds) {
-    const i = b.index;
-    expanded[i] = {
-      left: b.x1New,
-      top: 0,
-      right: b.x2New,
-      bottom: 0
-    };
-  }
-
-  boxes.map(function (box, i) {
-    const e = expanded[i],
-          b = bounds[i];
-    b.x1 = box.top;
-    b.y1 = width - e.right;
-    b.x2 = box.bottom;
-    b.y2 = width - e.left;
-    b.index = i;
-    b.x1New = undefined;
-    b.x2New = undefined;
-  });
-  expandBoundsLTR(height, bounds);
-
-  for (const b of bounds) {
-    const i = b.index;
-    expanded[i].top = b.x1New;
-    expanded[i].bottom = b.x2New;
-  }
-
-  return expanded;
-}
-
-function expandBoundsLTR(width, bounds) {
-  bounds.sort(function (a, b) {
-    return a.x1 - b.x1 || a.index - b.index;
-  });
-  const fakeBoundary = {
-    x1: -Infinity,
-    y1: -Infinity,
-    x2: 0,
-    y2: Infinity,
-    index: -1,
-    x1New: 0,
-    x2New: 0
-  };
-  const horizon = [{
-    start: -Infinity,
-    end: Infinity,
-    boundary: fakeBoundary
-  }];
-
-  for (const boundary of bounds) {
-    let i = 0;
-
-    while (i < horizon.length && horizon[i].end <= boundary.y1) {
-      i++;
-    }
-
-    let j = horizon.length - 1;
-
-    while (j >= 0 && horizon[j].start >= boundary.y2) {
-      j--;
-    }
-
-    let horizonPart, affectedBoundary;
-    let q,
-        k,
-        maxXNew = -Infinity;
-
-    for (q = i; q <= j; q++) {
-      horizonPart = horizon[q];
-      affectedBoundary = horizonPart.boundary;
-      let xNew;
-
-      if (affectedBoundary.x2 > boundary.x1) {
-        xNew = affectedBoundary.index > boundary.index ? affectedBoundary.x1New : boundary.x1;
-      } else if (affectedBoundary.x2New === undefined) {
-        xNew = (affectedBoundary.x2 + boundary.x1) / 2;
-      } else {
-        xNew = affectedBoundary.x2New;
-      }
-
-      if (xNew > maxXNew) {
-        maxXNew = xNew;
-      }
-    }
-
-    boundary.x1New = maxXNew;
-
-    for (q = i; q <= j; q++) {
-      horizonPart = horizon[q];
-      affectedBoundary = horizonPart.boundary;
-
-      if (affectedBoundary.x2New === undefined) {
-        if (affectedBoundary.x2 > boundary.x1) {
-          if (affectedBoundary.index > boundary.index) {
-            affectedBoundary.x2New = affectedBoundary.x2;
-          }
-        } else {
-          affectedBoundary.x2New = maxXNew;
-        }
-      } else if (affectedBoundary.x2New > maxXNew) {
-        affectedBoundary.x2New = Math.max(maxXNew, affectedBoundary.x2);
-      }
-    }
-
-    const changedHorizon = [];
-    let lastBoundary = null;
-
-    for (q = i; q <= j; q++) {
-      horizonPart = horizon[q];
-      affectedBoundary = horizonPart.boundary;
-      const useBoundary = affectedBoundary.x2 > boundary.x2 ? affectedBoundary : boundary;
-
-      if (lastBoundary === useBoundary) {
-        changedHorizon.at(-1).end = horizonPart.end;
-      } else {
-        changedHorizon.push({
-          start: horizonPart.start,
-          end: horizonPart.end,
-          boundary: useBoundary
-        });
-        lastBoundary = useBoundary;
-      }
-    }
-
-    if (horizon[i].start < boundary.y1) {
-      changedHorizon[0].start = boundary.y1;
-      changedHorizon.unshift({
-        start: horizon[i].start,
-        end: boundary.y1,
-        boundary: horizon[i].boundary
-      });
-    }
-
-    if (boundary.y2 < horizon[j].end) {
-      changedHorizon.at(-1).end = boundary.y2;
-      changedHorizon.push({
-        start: boundary.y2,
-        end: horizon[j].end,
-        boundary: horizon[j].boundary
-      });
-    }
-
-    for (q = i; q <= j; q++) {
-      horizonPart = horizon[q];
-      affectedBoundary = horizonPart.boundary;
-
-      if (affectedBoundary.x2New !== undefined) {
-        continue;
-      }
-
-      let used = false;
-
-      for (k = i - 1; !used && k >= 0 && horizon[k].start >= affectedBoundary.y1; k--) {
-        used = horizon[k].boundary === affectedBoundary;
-      }
-
-      for (k = j + 1; !used && k < horizon.length && horizon[k].end <= affectedBoundary.y2; k++) {
-        used = horizon[k].boundary === affectedBoundary;
-      }
-
-      for (k = 0; !used && k < changedHorizon.length; k++) {
-        used = changedHorizon[k].boundary === affectedBoundary;
-      }
-
-      if (!used) {
-        affectedBoundary.x2New = maxXNew;
-      }
-    }
-
-    Array.prototype.splice.apply(horizon, [i, j - i + 1, ...changedHorizon]);
-  }
-
-  for (const horizonPart of horizon) {
-    const affectedBoundary = horizonPart.boundary;
-
-    if (affectedBoundary.x2New === undefined) {
-      affectedBoundary.x2New = Math.max(width, affectedBoundary.x2);
-    }
-  }
-}
-
 class TextLayerRenderTask {
   constructor({
     textContent,
@@ -15628,13 +15321,8 @@ class TextLayerRenderTask {
     container,
     viewport,
     textDivs,
-    textContentItemsStr,
-    enhanceTextSelection
+    textContentItemsStr
   }) {
-    if (enhanceTextSelection) {
-      (0, _display_utils.deprecated)("The `enhanceTextSelection` functionality will be removed in the future.");
-    }
-
     this._textContent = textContent;
     this._textContentStream = textContentStream;
     this._container = container;
@@ -15642,7 +15330,6 @@ class TextLayerRenderTask {
     this._viewport = viewport;
     this._textDivs = textDivs || [];
     this._textContentItemsStr = textContentItemsStr || [];
-    this._enhanceTextSelection = !!enhanceTextSelection;
     this._fontInspectorEnabled = !!globalThis.FontInspector?.enabled;
     this._reader = null;
     this._layoutTextLastFontSize = null;
@@ -15657,9 +15344,7 @@ class TextLayerRenderTask {
     this._devicePixelRatio = globalThis.devicePixelRatio || 1;
 
     this._capability.promise.finally(() => {
-      if (!this._enhanceTextSelection) {
-        this._textDivProperties = null;
-      }
+      this._textDivProperties = null;
 
       if (this._layoutTextCtx) {
         this._layoutTextCtx.canvas.width = 0;
@@ -15741,13 +15426,7 @@ class TextLayerRenderTask {
       } = this._layoutTextCtx.measureText(textDiv.textContent);
 
       if (width > 0) {
-        const scale = this._devicePixelRatio * textDivProperties.canvasWidth / width;
-
-        if (this._enhanceTextSelection) {
-          textDivProperties.scale = scale;
-        }
-
-        transform = `scaleX(${scale})`;
+        transform = `scaleX(${this._devicePixelRatio * textDivProperties.canvasWidth / width})`;
       }
     }
 
@@ -15756,10 +15435,6 @@ class TextLayerRenderTask {
     }
 
     if (transform.length > 0) {
-      if (this._enhanceTextSelection) {
-        textDivProperties.originalTransform = transform;
-      }
-
       textDiv.style.transform = transform;
     }
 
@@ -15832,74 +15507,6 @@ class TextLayerRenderTask {
     }, this._capability.reject);
   }
 
-  expandTextDivs(expandDivs = false) {
-    if (!this._enhanceTextSelection || !this._renderingDone) {
-      return;
-    }
-
-    if (this._bounds !== null) {
-      expand(this);
-      this._bounds = null;
-    }
-
-    const transformBuf = [],
-          paddingBuf = [];
-
-    for (let i = 0, ii = this._textDivs.length; i < ii; i++) {
-      const div = this._textDivs[i];
-
-      const divProps = this._textDivProperties.get(div);
-
-      if (!divProps.hasText) {
-        continue;
-      }
-
-      if (expandDivs) {
-        transformBuf.length = 0;
-        paddingBuf.length = 0;
-
-        if (divProps.originalTransform) {
-          transformBuf.push(divProps.originalTransform);
-        }
-
-        if (divProps.paddingTop > 0) {
-          paddingBuf.push(`${divProps.paddingTop}px`);
-          transformBuf.push(`translateY(${-divProps.paddingTop}px)`);
-        } else {
-          paddingBuf.push(0);
-        }
-
-        if (divProps.paddingRight > 0) {
-          paddingBuf.push(`${divProps.paddingRight / divProps.scale}px`);
-        } else {
-          paddingBuf.push(0);
-        }
-
-        if (divProps.paddingBottom > 0) {
-          paddingBuf.push(`${divProps.paddingBottom}px`);
-        } else {
-          paddingBuf.push(0);
-        }
-
-        if (divProps.paddingLeft > 0) {
-          paddingBuf.push(`${divProps.paddingLeft / divProps.scale}px`);
-          transformBuf.push(`translateX(${-divProps.paddingLeft / divProps.scale}px)`);
-        } else {
-          paddingBuf.push(0);
-        }
-
-        div.style.padding = paddingBuf.join(" ");
-
-        if (transformBuf.length) {
-          div.style.transform = transformBuf.join(" ");
-        }
-      } else {
-        div.style.padding = null;
-        div.style.transform = divProps.originalTransform;
-      }
-    }
-  }
-
 }
 
 exports.TextLayerRenderTask = TextLayerRenderTask;
@@ -15911,8 +15518,7 @@ function renderTextLayer(renderParameters) {
     container: renderParameters.container,
     viewport: renderParameters.viewport,
     textDivs: renderParameters.textDivs,
-    textContentItemsStr: renderParameters.textContentItemsStr,
-    enhanceTextSelection: renderParameters.enhanceTextSelection
+    textContentItemsStr: renderParameters.textContentItemsStr
   });
 
   task._render(renderParameters.timeout);
@@ -16228,8 +15834,8 @@ var _svg = __w_pdfjs_require__(30);
 
 var _xfa_layer = __w_pdfjs_require__(28);
 
-const pdfjsVersion = '2.16.71';
-const pdfjsBuild = '518115fdd';
+const pdfjsVersion = '3.0.7';
+const pdfjsBuild = '86370bd5c';
 ;
 })();
 

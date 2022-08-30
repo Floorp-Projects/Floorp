@@ -379,7 +379,9 @@ static int32_t ApplyVariation(const PaintState& aState, int32_t aValue,
   uint16_t outerIndex = mappedIndex >> 16;
   uint16_t innerIndex = mappedIndex & 0xffff;
   const auto* itemVariationDataOffsets = store->itemVariationDataOffsets();
-  if (mappedIndex == 0xffffffff || !itemVariationDataOffsets[outerIndex]) {
+  if (mappedIndex == 0xffffffff ||
+      outerIndex >= uint16_t(store->itemVariationDataCount) ||
+      !itemVariationDataOffsets[outerIndex]) {
     return aValue;
   }
   const auto* regionList = store->variationRegionList();

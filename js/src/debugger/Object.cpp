@@ -1584,7 +1584,7 @@ bool DebuggerObject::isDebuggeeFunction() const {
 bool DebuggerObject::isBoundFunction() const {
   MOZ_ASSERT(isDebuggeeFunction());
 
-  return referent()->isBoundFunction();
+  return referent()->as<JSFunction>().isBoundFunction();
 }
 
 bool DebuggerObject::isArrowFunction() const {

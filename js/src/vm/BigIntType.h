@@ -219,11 +219,6 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
   template <typename CharT>
   static bool literalIsZero(const mozilla::Range<const CharT> chars);
 
-  // Check a literal for a non-zero character after the radix indicators
-  // have been removed
-  template <typename CharT>
-  static bool literalIsZeroNoRadix(const mozilla::Range<const CharT> chars);
-
   static int8_t compare(BigInt* lhs, BigInt* rhs);
   static bool equal(BigInt* lhs, BigInt* rhs);
   static bool equal(BigInt* lhs, double rhs);

@@ -79,7 +79,7 @@ void SampledAPZCState::RemoveFractionalAsyncDelta() {
   // container layers can trigger the creation of a temporary surface during
   // composition, because it produces a non-integer translation that doesn't
   // play well with layer clips. So we detect the case where the delta is
-  // uselessly small (0.02 parentlayer pixels or less) and tweak the sampled
+  // uselessly small (0.01 parentlayer pixels or less) and tweak the sampled
   // scroll offset to eliminate it. By doing this here at sample time rather
   // than elsewhere in the pipeline we are least likely to break assumptions
   // and invariants elsewhere in the code, since sampling effectively takes
@@ -89,7 +89,7 @@ void SampledAPZCState::RemoveFractionalAsyncDelta() {
   if (mLayoutViewport.TopLeft() == mVisualScrollOffset) {
     return;
   }
-  const ParentLayerCoord EPSILON = 0.02;
+  const ParentLayerCoord EPSILON = 0.01;
   ParentLayerPoint paintedOffset = mLayoutViewport.TopLeft() * mZoom;
   ParentLayerPoint asyncOffset = mVisualScrollOffset * mZoom;
   if (FuzzyEqualsAdditive(paintedOffset.x, asyncOffset.x, EPSILON.value) &&

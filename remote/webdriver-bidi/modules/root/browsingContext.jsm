@@ -519,23 +519,43 @@ class BrowsingContextModule extends Module {
     this.emitEvent("browsingContext.contextCreated", contextInfo);
   };
 
+  #subscribeEvent(event) {
+    if (event === "browsingContext.contextCreated") {
+      this.#contextListener.startListening();
+    }
+  }
+
+  #unsubscribeEvent(event) {
+    if (event === "browsingContext.contextCreated") {
+      this.#contextListener.stopListening();
+    }
+  }
+
   /**
    * Internal commands
    */
 
-  _subscribeEvent(params) {
-    switch (params.event) {
-      case "browsingContext.contextCreated":
-        this.#contextListener.startListening();
+  _applySessionData(params) {
+    // Note: for now events from this module are only subscribed globally,
+    // but once it will be possible to subscribe to a specific eg. tab, the
+    // contextListener will need to read the contextDescriptor from the params.
+    const { category, added = [], removed = [] } = params;
+    if (category === "event") {
+      for (const event of added) {
+        this.#subscribeEvent(event);
+      }
+
+      for (const event of removed) {
+        this.#unsubscribeEvent(event);
+      }
     }
+  }
+
+  _subscribeEvent(params) {
     return this.addEventSessionData("browsingContext", params.event);
   }
 
   _unsubscribeEvent(params) {
-    switch (params.event) {
-      case "browsingContext.contextCreated":
-        this.#contextListener.stopListening();
-    }
     return this.removeEventSessionData("browsingContext", params.event);
   }
 

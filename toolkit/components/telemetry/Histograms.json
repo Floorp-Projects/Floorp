@@ -5479,66 +5479,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "How long (sec) a tab had been unloaded until it was reloaded."
   },
-  "LAZYLOAD_IMAGE_TOTAL": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox"],
-    "alert_emails": ["sefeng@mozilla.com"],
-    "bug_numbers": [1687358],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 2000,
-    "n_buckets": 100,
-    "releaseChannelCollection": "opt-out",
-    "description": "The amount of images that have `loading='lazy'` on the page or have loaded lazily already."
-  },
-  "LAZYLOAD_IMAGE_STARTED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox"],
-    "alert_emails": ["sefeng@mozilla.com"],
-    "bug_numbers": [1687358],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 2000,
-    "n_buckets": 100,
-    "releaseChannelCollection": "opt-out",
-    "description": "Number of lazy-loaded images that we've started loading as a result of triggering the lazy-load observer threshold."
-  },
-  "LAZYLOAD_IMAGE_NOT_VIEWPORT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox"],
-    "alert_emails": ["sefeng@mozilla.com"],
-    "bug_numbers": [1687358],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 2000,
-    "n_buckets": 100,
-    "releaseChannelCollection": "opt-out",
-    "description": "Number of lazy-loaded images that were started to load but didn't reach to the viewport eventually"
-  },
-  "LAZYLOAD_IMAGE_VIEWPORT_LOADING": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox"],
-    "alert_emails": ["sefeng@mozilla.com"],
-    "bug_numbers": [1687358],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 2000,
-    "n_buckets": 100,
-    "releaseChannelCollection": "opt-out",
-    "description": "Number of lazy-loaded images that reached the viewport which were not done loading when they did so."
-  },
-  "LAZYLOAD_IMAGE_VIEWPORT_LOADED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox"],
-    "alert_emails": ["sefeng@mozilla.com"],
-    "bug_numbers": [1687358],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 2000,
-    "n_buckets": 100,
-    "releaseChannelCollection": "opt-out",
-    "description": "Number of lazy-loaded images that reached the viewport and were done loading when they did so."
-  },
   "LOADED_TAB_COUNT": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
@@ -8190,18 +8130,6 @@
     "description": "Firefox: Time taken to load a page (ms). This includes all static contents, no dynamic content. Page reloads and loading of about: pages are not included.",
     "bug_numbers": [1504247, 1549519],
     "alert_emails": ["tdsmith@mozilla.com", "perf-telemetry-alerts@mozilla.com", "product-metrics-telemetry-alerts@mozilla.com"],
-    "releaseChannelCollection": "opt-out"
-  },
-  "FX_LAZYLOAD_IMAGE_PAGE_LOAD_MS": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "expires_in_version": "never",
-    "kind": "linear",
-    "high": 10000,
-    "n_buckets": 100,
-    "description": "Firefox: Time taken to load a page that has at least one `loading='lazy'` image. (This metric includes both loads and reloads)",
-    "bug_numbers": [1692350],
-    "alert_emails": ["sefeng@mozilla.com", "perf-telemetry-alerts@mozilla.com"],
     "releaseChannelCollection": "opt-out"
   },
   "FX_PAGE_RELOAD_NORMAL_MS": {

@@ -24,6 +24,7 @@
 #include "mozilla/TelemetryScalarEnums.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/StorageManagerBinding.h"
@@ -755,20 +756,17 @@ already_AddRefed<Promise> StorageManager::Estimate(ErrorResult& aRv) {
 }
 
 already_AddRefed<Promise> StorageManager::GetDirectory(ErrorResult& aRv) {
-  MOZ_ASSERT(mOwner);
+  if (!mFileSystemManager) {
+    MOZ_ASSERT(mOwner);
 
-  RefPtr<Promise> promise = Promise::Create(mOwner, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
+    mFileSystemManager = MakeRefPtr<FileSystemManager>(mOwner);
   }
 
-  MOZ_ASSERT(promise);
-
-  fs::FileSystemRequestHandler{}.GetRoot(promise);
-  return promise.forget();
+  return mFileSystemManager->GetDirectory(aRv);
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(StorageManager, mOwner)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(StorageManager, mOwner,
+                                      mFileSystemManager)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(StorageManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(StorageManager)

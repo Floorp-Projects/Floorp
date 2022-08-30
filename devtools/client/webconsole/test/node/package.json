@@ -11,8 +11,8 @@
       " * Finally we require mocha-test-setup where we configure Enzyme and",
       "   intercept require() calls with require-hacker and modify them if needed."
     ],
-    "test": "mocha \"./{,!(node_modules)/**}/*.test.js\" -r mock-local-storage -r jsdom-global/register -r ./mocha-test-setup.js",
-    "test-ci": "mocha \"./{,!(node_modules)/**}/*.test.js\" -r mock-local-storage -r jsdom-global/register -r ./mocha-test-setup.js --reporter json"
+    "test": "TZ=Europe/Prague mocha \"./{,!(node_modules)/**}/*.test.js\" -r mock-local-storage -r jsdom-global/register -r ./mocha-test-setup.js",
+    "test-ci": "TZ=Europe/Prague mocha \"./{,!(node_modules)/**}/*.test.js\" -r mock-local-storage -r jsdom-global/register -r ./mocha-test-setup.js --reporter json"
   },
   "dependencies": {
     "@babel/core": "^7.8.7",

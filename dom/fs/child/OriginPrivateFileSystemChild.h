@@ -17,6 +17,10 @@ class OriginPrivateFileSystemChild {
  public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
+  virtual void SendGetRootHandle(
+      mozilla::ipc::ResolveCallback<fs::FileSystemGetHandleResponse>&& aResolve,
+      mozilla::ipc::RejectCallback&& aReject) = 0;
+
   virtual void SendGetDirectoryHandle(
       const fs::FileSystemGetHandleRequest& request,
       mozilla::ipc::ResolveCallback<fs::FileSystemGetHandleResponse>&& aResolve,

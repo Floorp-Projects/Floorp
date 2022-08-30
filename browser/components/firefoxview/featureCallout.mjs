@@ -88,7 +88,7 @@ const MESSAGES = [
     screens: [
       {
         id: "FEATURE_CALLOUT_1",
-        parent_selector: "#tabpickup-steps",
+        parent_selector: "#tab-pickup-container",
         content: {
           position: "callout",
           arrow_position: "top",
@@ -244,6 +244,14 @@ const MESSAGES = [
 ];
 
 function _createContainer() {
+  let parent = document.querySelector(CURRENT_SCREEN?.parent_selector);
+  // Don't render the callout if the parent element is not present.
+  // This means the message was misconfigured, mistargeted, or the
+  // content of the parent page is not as expected.
+  if (!parent) {
+    return false;
+  }
+
   let container = document.createElement("div");
   container.classList.add(
     "onboardingContainer",
@@ -252,7 +260,6 @@ function _createContainer() {
     "hidden"
   );
   container.id = CONTAINER_ID;
-  let parent = document.querySelector(CURRENT_SCREEN?.parent_selector);
   container.setAttribute("aria-describedby", `#${CONTAINER_ID} .welcome-text`);
   container.tabIndex = 0;
   parent.insertAdjacentElement("afterend", container);
@@ -533,9 +540,11 @@ function _loadConfig(messageId) {
 
 async function _renderCallout() {
   let container = _createContainer();
-  // This results in rendering the Feature Callout
-  await _addScriptsAndRender(container);
-  _observeRender(container);
+  if (container) {
+    // This results in rendering the Feature Callout
+    await _addScriptsAndRender(container);
+    _observeRender(container);
+  }
 }
 /**
  * Render content based on about:welcome multistage template.

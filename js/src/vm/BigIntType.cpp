@@ -1644,24 +1644,6 @@ BigInt* BigInt::parseLiteral(JSContext* cx, const Range<const CharT> chars,
                             haveParseError, heap);
 }
 
-template <typename CharT>
-bool BigInt::literalIsZeroNoRadix(const Range<const CharT> chars) {
-  MOZ_ASSERT(chars.length());
-
-  RangedPtr<const CharT> start = chars.begin();
-  RangedPtr<const CharT> end = chars.end();
-
-  // Skipping leading zeroes.
-  while (start[0] == '0') {
-    start++;
-    if (start == end) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 // trim and remove radix selection prefix.
 template <typename CharT>
 bool BigInt::literalIsZero(const Range<const CharT> chars) {
@@ -1674,11 +1656,19 @@ bool BigInt::literalIsZero(const Range<const CharT> chars) {
   if (end - start > 2 && start[0] == '0') {
     if (start[1] == 'b' || start[1] == 'B' || start[1] == 'x' ||
         start[1] == 'X' || start[1] == 'o' || start[1] == 'O') {
-      return literalIsZeroNoRadix(Range<const CharT>(start + 2, end));
+      start += 2;
     }
   }
 
-  return literalIsZeroNoRadix(Range<const CharT>(start, end));
+  // Skipping leading zeroes.
+  while (start[0] == '0') {
+    start++;
+    if (start == end) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 template bool BigInt::literalIsZero(const Range<const char16_t> chars);

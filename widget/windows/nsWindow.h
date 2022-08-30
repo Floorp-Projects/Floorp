@@ -64,6 +64,7 @@ class nsIRollupListener;
 class imgIContainer;
 
 namespace mozilla {
+class WidgetMouseEvent;
 namespace widget {
 class NativeKey;
 class InProcessWinCompositorWidget;
@@ -875,6 +876,28 @@ class nsWindow final : public nsBaseWidget {
   // When true, used to indicate an async call to RequestFxrOutput to the GPU
   // process after the Compositor is created
   bool mRequestFxrOutputPending = false;
+
+  // A stack based class used in DispatchMouseEvent() to tell whether we should
+  // NOT open context menu when we receives WM_CONTEXTMENU after the
+  // DispatchMouseEvent calls.
+  // This class now works only in the case where a mouse up event happened in
+  // the overscroll gutter.
+  class MOZ_STACK_CLASS ContextMenuPreventer final {
+   public:
+    explicit ContextMenuPreventer(nsWindow* aWindow)
+        : mWindow(aWindow), mNeedsToPreventContextMenu(false){};
+    ~ContextMenuPreventer() {
+      mWindow->mNeedsToPreventContextMenu = mNeedsToPreventContextMenu;
+    }
+    void Update(const mozilla::WidgetMouseEvent& aEvent,
+                const nsIWidget::ContentAndAPZEventStatus& aEventStatus);
+
+   private:
+    nsWindow* mWindow;
+    bool mNeedsToPreventContextMenu = false;
+  };
+  friend class ContextMenuPreventer;
+  bool mNeedsToPreventContextMenu = false;
 
   mozilla::UniquePtr<mozilla::widget::DirectManipulationOwner> mDmOwner;
 

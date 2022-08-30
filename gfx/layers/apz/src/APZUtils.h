@@ -74,7 +74,7 @@ inline bool ScrollSourceAllowsOverscroll(ScrollSource aSource) {
 // ten thousands. Note also that the smallest legitimate difference in page
 // coordinates is 1 app unit, which is 1/60 of a (CSS pixel), so this epsilon
 // isn't too large.
-const CSSCoord COORDINATE_EPSILON = 0.02f;
+const CSSCoord COORDINATE_EPSILON = 0.01f;
 
 inline bool IsZero(const CSSPoint& aPoint) {
   return FuzzyEqualsAdditive(aPoint.x, 0.0f, COORDINATE_EPSILON.value) &&

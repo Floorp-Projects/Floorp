@@ -54,6 +54,9 @@
 }
 
 #tabbrowser-tabpanels {
+  appearance: none;
+  padding: 0;
+  color-scheme: unset;
   background-color: var(--tabpanel-background-color);
 }
 

@@ -11,18 +11,18 @@ cases(
   ({ name, file, value }) => {
     const source = populateOriginalSource("frameworks/plainJavascript");
     const symbols = getSymbols(source.id);
-    expect(symbols.framework).toBeUndefined();
+    expect(symbols.framework).toBeNull();
   },
   [
     {
       name: "is undefined when no framework",
       file: "frameworks/plainJavascript",
-      value: undefined,
+      value: null,
     },
     {
       name: "does not get confused with angular (#6833)",
       file: "frameworks/angular1FalsePositive",
-      value: undefined,
+      value: null,
     },
     {
       name: "recognizes ES6 React component",

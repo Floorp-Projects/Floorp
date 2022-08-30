@@ -347,7 +347,7 @@ nsresult HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       SetLazyLoading();
     } else if (aOldValue &&
                Loading(aOldValue->GetEnumValue()) == Loading::Lazy) {
-      StopLazyLoading(FromIntersectionObserver::No, StartLoading::Yes);
+      StopLazyLoading(StartLoading::Yes);
     }
   } else if (aName == nsGkAtoms::src && !aValue) {
     // NOTE: regular src value changes are handled in AfterMaybeChangeAttr, so
@@ -662,7 +662,6 @@ void HTMLImageElement::NodeInfoChanged(Document* aOldDoc) {
 
   if (mLazyLoading) {
     aOldDoc->GetLazyLoadImageObserver()->Unobserve(*this);
-    aOldDoc->DecLazyLoadImageCount();
     mLazyLoading = false;
     SetLazyLoading();
   }
@@ -939,7 +938,7 @@ nsresult HTMLImageElement::LoadSelectedImage(bool aForce, bool aNotify,
                                           triggeringPrincipal, GetCORSMode())) {
       return NS_OK;
     }
-    StopLazyLoading(FromIntersectionObserver::No, StartLoading::No);
+    StopLazyLoading(StartLoading::No);
   }
 
   nsresult rv = NS_ERROR_FAILURE;
@@ -1298,8 +1297,6 @@ void HTMLImageElement::SetLazyLoading() {
   }
 
   doc->EnsureLazyLoadImageObserver().Observe(*this);
-  doc->EnsureLazyLoadImageObserverViewport().Observe(*this);
-  doc->IncLazyLoadImageCount();
   mLazyLoading = true;
   UpdateImageState(true);
 }
@@ -1320,9 +1317,7 @@ void HTMLImageElement::StartLoadingIfNeeded() {
   }
 }
 
-void HTMLImageElement::StopLazyLoading(
-    FromIntersectionObserver aFromIntersectionObserver,
-    StartLoading aStartLoading) {
+void HTMLImageElement::StopLazyLoading(StartLoading aStartLoading) {
   if (!mLazyLoading) {
     return;
   }
@@ -1332,26 +1327,9 @@ void HTMLImageElement::StopLazyLoading(
     obs->Unobserve(*this);
   }
 
-  if (bool(aFromIntersectionObserver)) {
-    doc->IncLazyLoadImageStarted();
-  } else {
-    doc->DecLazyLoadImageCount();
-    if (auto* obs = doc->GetLazyLoadImageObserverViewport()) {
-      obs->Unobserve(*this);
-    }
-  }
-
   if (bool(aStartLoading)) {
     StartLoadingIfNeeded();
   }
-}
-
-void HTMLImageElement::LazyLoadImageReachedViewport() {
-  Document* doc = OwnerDoc();
-  if (auto* obs = doc->GetLazyLoadImageObserverViewport()) {
-    obs->Unobserve(*this);
-  }
-  doc->IncLazyLoadImageReachViewport(!Complete());
 }
 
 const nsMappedAttributes* HTMLImageElement::GetMappedAttributesFromSource()
