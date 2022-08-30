@@ -139,8 +139,7 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
     // invalidate the mIsLayoutTable cache on our parent
     // table.
     if (eventType == nsIAccessibleEvent::EVENT_REORDER ||
-        eventType == nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED ||
-        eventType == nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED) {
+        eventType == nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED) {
       // Invalidate the cache on our parent table
       [self invalidateLayoutTableCache];
     }
