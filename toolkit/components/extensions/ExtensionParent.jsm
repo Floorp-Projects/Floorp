@@ -570,6 +570,10 @@ class ProxyContextParent extends BaseContext {
     this.runListenerPromises.add(runListenerPromise);
   }
 
+  clearPendingRunListenerPromises() {
+    this.runListenerPromises.clear();
+  }
+
   get pendingRunListenerPromisesCount() {
     return this.runListenerPromises.size;
   }
