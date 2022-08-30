@@ -21,9 +21,10 @@ namespace webrtc {
 namespace {
 constexpr char kPayloadNameVp8[] = "VP8";
 constexpr char kPayloadNameVp9[] = "VP9";
-// TODO(bugs.webrtc.org/11042): Rename to AV1 when rtp payload format for av1 is
-// frozen.
-constexpr char kPayloadNameAv1[] = "AV1X";
+constexpr char kPayloadNameAv1[] = "AV1";
+// TODO(bugs.webrtc.org/13166): Remove AV1X when backwards compatibility is not
+// needed.
+constexpr char kPayloadNameAv1x[] = "AV1X";
 constexpr char kPayloadNameH264[] = "H264";
 constexpr char kPayloadNameGeneric[] = "Generic";
 constexpr char kPayloadNameMultiplex[] = "Multiplex";
@@ -120,6 +121,7 @@ const char* CodecTypeToPayloadString(VideoCodecType type) {
     case kVideoCodecGeneric:
       return kPayloadNameGeneric;
   }
+  RTC_CHECK_NOTREACHED();
 }
 
 VideoCodecType PayloadStringToCodecType(const std::string& name) {
@@ -127,13 +129,33 @@ VideoCodecType PayloadStringToCodecType(const std::string& name) {
     return kVideoCodecVP8;
   if (absl::EqualsIgnoreCase(name, kPayloadNameVp9))
     return kVideoCodecVP9;
-  if (absl::EqualsIgnoreCase(name, kPayloadNameAv1))
+  if (absl::EqualsIgnoreCase(name, kPayloadNameAv1) ||
+      absl::EqualsIgnoreCase(name, kPayloadNameAv1x))
     return kVideoCodecAV1;
   if (absl::EqualsIgnoreCase(name, kPayloadNameH264))
     return kVideoCodecH264;
   if (absl::EqualsIgnoreCase(name, kPayloadNameMultiplex))
     return kVideoCodecMultiplex;
   return kVideoCodecGeneric;
+}
+
+VideoCodecComplexity VideoCodec::GetVideoEncoderComplexity() const {
+  if (complexity_.has_value()) {
+    return complexity_.value();
+  }
+  switch (codecType) {
+    case kVideoCodecVP8:
+      return VP8().complexity;
+    case kVideoCodecVP9:
+      return VP9().complexity;
+    default:
+      return VideoCodecComplexity::kComplexityNormal;
+  }
+}
+
+void VideoCodec::SetVideoEncoderComplexity(
+    VideoCodecComplexity complexity_setting) {
+  complexity_ = complexity_setting;
 }
 
 }  // namespace webrtc

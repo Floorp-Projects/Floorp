@@ -11,6 +11,9 @@
 #ifndef MODULES_AUDIO_CODING_CODECS_ILBC_AUDIO_ENCODER_ILBC_H_
 #define MODULES_AUDIO_CODING_CODECS_ILBC_AUDIO_ENCODER_ILBC_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include <utility>
 
 #include "absl/types/optional.h"
@@ -18,7 +21,6 @@
 #include "api/audio_codecs/ilbc/audio_encoder_ilbc_config.h"
 #include "api/units/time_delta.h"
 #include "modules/audio_coding/codecs/ilbc/ilbc.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 
@@ -26,6 +28,9 @@ class AudioEncoderIlbcImpl final : public AudioEncoder {
  public:
   AudioEncoderIlbcImpl(const AudioEncoderIlbcConfig& config, int payload_type);
   ~AudioEncoderIlbcImpl() override;
+
+  AudioEncoderIlbcImpl(const AudioEncoderIlbcImpl&) = delete;
+  AudioEncoderIlbcImpl& operator=(const AudioEncoderIlbcImpl&) = delete;
 
   int SampleRateHz() const override;
   size_t NumChannels() const override;
@@ -50,7 +55,6 @@ class AudioEncoderIlbcImpl final : public AudioEncoder {
   uint32_t first_timestamp_in_buffer_;
   int16_t input_buffer_[kMaxSamplesPerPacket];
   IlbcEncoderInstance* encoder_;
-  RTC_DISALLOW_COPY_AND_ASSIGN(AudioEncoderIlbcImpl);
 };
 
 }  // namespace webrtc

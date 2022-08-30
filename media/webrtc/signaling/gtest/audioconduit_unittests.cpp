@@ -742,14 +742,14 @@ TEST_F(AudioConduitTest, TestSetLocalRTPExtensions) {
     // ignored.
     RtpExtList extensions;
     webrtc::RtpExtension extension;
-    extension.uri = webrtc::RtpExtension::kCsrcAudioLevelUri;
+    extension.uri = webrtc::RtpExtension::kCsrcAudioLevelsUri;
     extensions.emplace_back(extension);
     aControl.mLocalRecvRtpExtensions = extensions;
     aControl.mLocalSendRtpExtensions = extensions;
   });
   ASSERT_TRUE(Call()->mAudioReceiveConfig);
   ASSERT_EQ(Call()->mAudioReceiveConfig->rtp.extensions.back().uri,
-            webrtc::RtpExtension::kCsrcAudioLevelUri);
+            webrtc::RtpExtension::kCsrcAudioLevelsUri);
   ASSERT_TRUE(Call()->mAudioSendConfig);
   ASSERT_TRUE(Call()->mAudioSendConfig->rtp.extensions.empty());
 

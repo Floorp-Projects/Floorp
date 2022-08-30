@@ -20,8 +20,9 @@
 #include <vector>
 
 #include "api/call/bitrate_allocation.h"
+#include "api/sequence_checker.h"
 #include "api/transport/network_types.h"
-#include "rtc_base/synchronization/sequence_checker.h"
+#include "rtc_base/system/no_unique_address.h"
 
 namespace webrtc {
 
@@ -52,9 +53,9 @@ struct MediaStreamAllocationConfig {
   uint32_t pad_up_bitrate_bps;
   int64_t priority_bitrate_bps;
   // True means track may not be paused by allocating 0 bitrate will allocate at
-  // least |min_bitrate_bps| for this observer, even if the BWE is too low,
+  // least `min_bitrate_bps` for this observer, even if the BWE is too low,
   // false will allocate 0 to the observer if BWE doesn't allow
-  // |min_bitrate_bps|.
+  // `min_bitrate_bps`.
   bool enforce_min_bitrate;
   // The amount of bitrate allocated to this observer relative to all other
   // observers. If an observer has twice the bitrate_priority of other
@@ -118,12 +119,12 @@ class BitrateAllocator : public BitrateAllocatorInterface {
   void OnNetworkEstimateChanged(TargetTransferRate msg);
 
   // Set the configuration used by the bandwidth management.
-  // |observer| updates bitrates if already in use.
-  // |config| is the configuration to use for allocation.
-  // Note that |observer|->OnBitrateUpdated() will be called
+  // `observer` updates bitrates if already in use.
+  // `config` is the configuration to use for allocation.
+  // Note that `observer`->OnBitrateUpdated() will be called
   // within the scope of this method with the current rtt, fraction_loss and
   // available bitrate and that the bitrate in OnBitrateUpdated will be zero if
-  // the |observer| is currently not allowed to send data.
+  // the `observer` is currently not allowed to send data.
   void AddObserver(BitrateAllocatorObserver* observer,
                    MediaStreamAllocationConfig config) override;
 
@@ -131,7 +132,7 @@ class BitrateAllocator : public BitrateAllocatorInterface {
   // allocation.
   void RemoveObserver(BitrateAllocatorObserver* observer) override;
 
-  // Returns initial bitrate allocated for |observer|. If |observer| is not in
+  // Returns initial bitrate allocated for `observer`. If `observer` is not in
   // the list of added observers, a best guess is returned.
   int GetStartBitrate(BitrateAllocatorObserver* observer) const override;
 
@@ -148,7 +149,7 @@ class BitrateAllocator : public BitrateAllocatorInterface {
   // video send stream.
   static uint8_t GetTransmissionMaxBitrateMultiplier();
 
-  SequenceChecker sequenced_checker_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker sequenced_checker_;
   LimitObserver* const limit_observer_ RTC_GUARDED_BY(&sequenced_checker_);
   // Stored in a list to keep track of the insertion order.
   std::vector<AllocatableTrack> allocatable_tracks_

@@ -13,7 +13,6 @@
 
 #include "api/video/video_rotation.h"
 #include "api/video/video_sink_interface.h"
-#include "modules/include/module.h"
 #include "modules/desktop_capture/desktop_capture_types.h"
 #include "modules/video_capture/video_capture_defines.h"
 #include <set>
@@ -80,7 +79,7 @@ class VideoCaptureModule : public rtc::RefCountInterface {
 
     // Gets the capabilities of the named device.
     virtual int32_t GetCapability(const char* deviceUniqueIdUTF8,
-                                  const uint32_t deviceCapabilityNumber,
+                                  uint32_t deviceCapabilityNumber,
                                   VideoCaptureCapability& capability) = 0;
 
     // Gets clockwise angle the captured frames should be rotated in order

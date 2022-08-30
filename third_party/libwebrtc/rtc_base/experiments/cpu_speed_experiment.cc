@@ -13,7 +13,6 @@
 #include <stdio.h>
 
 #include "rtc_base/experiments/field_trial_list.h"
-#include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/logging.h"
 #include "system_wrappers/include/field_trial.h"
 
@@ -26,7 +25,6 @@ constexpr int kMaxSetting = -1;
 std::vector<CpuSpeedExperiment::Config> GetValidOrEmpty(
     const std::vector<CpuSpeedExperiment::Config>& configs) {
   if (configs.empty()) {
-    RTC_LOG(LS_WARNING) << "Unsupported size, value ignored.";
     return {};
   }
 
@@ -47,29 +45,43 @@ std::vector<CpuSpeedExperiment::Config> GetValidOrEmpty(
 
   return configs;
 }
+
+bool HasLeCores(const std::vector<CpuSpeedExperiment::Config>& configs) {
+  for (const auto& config : configs) {
+    if (config.cpu_speed_le_cores == 0)
+      return false;
+  }
+  return true;
+}
 }  // namespace
 
-CpuSpeedExperiment::CpuSpeedExperiment() {
+CpuSpeedExperiment::CpuSpeedExperiment() : cores_("cores") {
   FieldTrialStructList<Config> configs(
       {FieldTrialStructMember("pixels", [](Config* c) { return &c->pixels; }),
        FieldTrialStructMember("cpu_speed",
-                              [](Config* c) { return &c->cpu_speed; })},
+                              [](Config* c) { return &c->cpu_speed; }),
+       FieldTrialStructMember(
+           "cpu_speed_le_cores",
+           [](Config* c) { return &c->cpu_speed_le_cores; })},
       {});
-
-  ParseFieldTrial({&configs}, field_trial::FindFullName(kFieldTrial));
+  ParseFieldTrial({&configs, &cores_}, field_trial::FindFullName(kFieldTrial));
 
   configs_ = GetValidOrEmpty(configs.Get());
 }
 
 CpuSpeedExperiment::~CpuSpeedExperiment() {}
 
-absl::optional<int> CpuSpeedExperiment::GetValue(int pixels) const {
+absl::optional<int> CpuSpeedExperiment::GetValue(int pixels,
+                                                 int num_cores) const {
   if (configs_.empty())
     return absl::nullopt;
 
+  bool use_le = HasLeCores(configs_) && cores_ && num_cores <= cores_.Value();
+
   for (const auto& config : configs_) {
     if (pixels <= config.pixels)
-      return absl::optional<int>(config.cpu_speed);
+      return use_le ? absl::optional<int>(config.cpu_speed_le_cores)
+                    : absl::optional<int>(config.cpu_speed);
   }
   return absl::optional<int>(kMinSetting);
 }

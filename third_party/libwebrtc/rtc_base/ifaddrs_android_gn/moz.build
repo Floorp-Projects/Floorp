@@ -1,0 +1,88 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
+  ### This moz.build was AUTOMATICALLY GENERATED from a GN config,  ###
+  ### DO NOT edit it by hand.                                       ###
+
+COMPILE_FLAGS["OS_INCLUDES"] = []
+AllowCompilerWarnings()
+
+DEFINES["ABSL_ALLOCATOR_NOTHROW"] = "1"
+DEFINES["ANDROID"] = True
+DEFINES["ANDROID_NDK_VERSION_ROLL"] = "r22_1"
+DEFINES["HAVE_SYS_UIO_H"] = True
+DEFINES["RTC_DAV1D_IN_INTERNAL_DECODER_FACTORY"] = True
+DEFINES["RTC_ENABLE_VP9"] = True
+DEFINES["WEBRTC_ANDROID"] = True
+DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
+DEFINES["WEBRTC_ENABLE_AVX2"] = True
+DEFINES["WEBRTC_ENABLE_PROTOBUF"] = "0"
+DEFINES["WEBRTC_LIBRARY_IMPL"] = True
+DEFINES["WEBRTC_LINUX"] = True
+DEFINES["WEBRTC_MOZILLA_BUILD"] = True
+DEFINES["WEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS"] = "0"
+DEFINES["WEBRTC_POSIX"] = True
+DEFINES["_GNU_SOURCE"] = True
+DEFINES["__STDC_CONSTANT_MACROS"] = True
+DEFINES["__STDC_FORMAT_MACROS"] = True
+
+FINAL_LIBRARY = "webrtc"
+
+
+LOCAL_INCLUDES += [
+    "!/ipc/ipdl/_ipdlheaders",
+    "/ipc/chromium/src",
+    "/third_party/libwebrtc/",
+    "/third_party/libwebrtc/third_party/abseil-cpp/",
+    "/tools/profiler/public"
+]
+
+OS_LIBS += [
+    "GLESv2",
+    "log"
+]
+
+UNIFIED_SOURCES += [
+    "/third_party/libwebrtc/rtc_base/ifaddrs_android.cc"
+]
+
+if not CONFIG["MOZ_DEBUG"]:
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
+    DEFINES["NDEBUG"] = True
+    DEFINES["NVALGRIND"] = True
+
+if CONFIG["MOZ_DEBUG"] == "1":
+
+    DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
+    DEFINES["_DEBUG"] = True
+
+if CONFIG["CPU_ARCH"] == "aarch64":
+
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+
+if CONFIG["CPU_ARCH"] == "arm":
+
+    CXXFLAGS += [
+        "-mfpu=neon"
+    ]
+
+    DEFINES["WEBRTC_ARCH_ARM"] = True
+    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+
+    OS_LIBS += [
+        "android_support",
+        "unwind"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86":
+
+    OS_LIBS += [
+        "android_support"
+    ]
+
+Library("ifaddrs_android_gn")

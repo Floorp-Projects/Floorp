@@ -31,8 +31,7 @@ constexpr size_t kNumSamples = kSamplesPerSecond / 100;  // 10ms of samples
 }  // namespace
 
 NullAudioPoller::NullAudioPoller(AudioTransport* audio_transport)
-    : MessageHandler(false),
-      audio_transport_(audio_transport),
+    : audio_transport_(audio_transport),
       reschedule_at_(rtc::TimeMillis() + kPollDelayMs) {
   RTC_DCHECK(audio_transport);
   OnMessage(nullptr);  // Start the poll loop.
@@ -48,7 +47,7 @@ void NullAudioPoller::OnMessage(rtc::Message* msg) {
 
   // Buffer to hold the audio samples.
   int16_t buffer[kNumSamples * kNumChannels];
-  // Output variables from |NeedMorePlayData|.
+  // Output variables from `NeedMorePlayData`.
   size_t n_samples;
   int64_t elapsed_time_ms;
   int64_t ntp_time_ms;

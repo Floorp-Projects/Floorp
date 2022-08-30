@@ -23,7 +23,7 @@ import org.webrtc.Logging;
 // This class wraps control of three different platform effects. Supported
 // effects are: AcousticEchoCanceler (AEC) and NoiseSuppressor (NS).
 // Calling enable() will active all effects that are
-// supported by the device if the corresponding |shouldEnableXXX| member is set.
+// supported by the device if the corresponding `shouldEnableXXX` member is set.
 public class WebRtcAudioEffects {
   private static final boolean DEBUG = false;
 
@@ -95,8 +95,6 @@ public class WebRtcAudioEffects {
   // Returns true if the platform AEC should be excluded based on its UUID.
   // AudioEffect.queryEffects() can throw IllegalStateException.
   private static boolean isAcousticEchoCancelerExcludedByUUID() {
-    if (Build.VERSION.SDK_INT < 18)
-      return false;
     for (Descriptor d : getAvailableEffects()) {
       if (d.type.equals(AudioEffect.EFFECT_TYPE_AEC)
           && d.uuid.equals(AOSP_ACOUSTIC_ECHO_CANCELER)) {
@@ -109,8 +107,6 @@ public class WebRtcAudioEffects {
   // Returns true if the platform NS should be excluded based on its UUID.
   // AudioEffect.queryEffects() can throw IllegalStateException.
   private static boolean isNoiseSuppressorExcludedByUUID() {
-    if (Build.VERSION.SDK_INT < 18)
-      return false;
     for (Descriptor d : getAvailableEffects()) {
       if (d.type.equals(AudioEffect.EFFECT_TYPE_NS) && d.uuid.equals(AOSP_NOISE_SUPPRESSOR)) {
         return true;
@@ -121,15 +117,11 @@ public class WebRtcAudioEffects {
 
   // Returns true if the device supports Acoustic Echo Cancellation (AEC).
   private static boolean isAcousticEchoCancelerEffectAvailable() {
-    if (Build.VERSION.SDK_INT < 18)
-      return false;
     return isEffectTypeAvailable(AudioEffect.EFFECT_TYPE_AEC);
   }
 
   // Returns true if the device supports Noise Suppression (NS).
   private static boolean isNoiseSuppressorEffectAvailable() {
-    if (Build.VERSION.SDK_INT < 18)
-      return false;
     return isEffectTypeAvailable(AudioEffect.EFFECT_TYPE_NS);
   }
 
@@ -162,7 +154,7 @@ public class WebRtcAudioEffects {
   }
 
   // Call this method to enable or disable the platform AEC. It modifies
-  // |shouldEnableAec| which is used in enable() where the actual state
+  // `shouldEnableAec` which is used in enable() where the actual state
   // of the AEC effect is modified. Returns true if HW AEC is supported and
   // false otherwise.
   public boolean setAEC(boolean enable) {
@@ -181,7 +173,7 @@ public class WebRtcAudioEffects {
   }
 
   // Call this method to enable or disable the platform NS. It modifies
-  // |shouldEnableNs| which is used in enable() where the actual state
+  // `shouldEnableNs` which is used in enable() where the actual state
   // of the NS effect is modified. Returns true if HW NS is supported and
   // false otherwise.
   public boolean setNS(boolean enable) {
@@ -269,7 +261,7 @@ public class WebRtcAudioEffects {
     }
   }
 
-  // Returns true for effect types in |type| that are of "VoIP" types:
+  // Returns true for effect types in `type` that are of "VoIP" types:
   // Acoustic Echo Canceler (AEC) or Automatic Gain Control (AGC) or
   // Noise Suppressor (NS). Note that, an extra check for support is needed
   // in each comparison since some devices includes effects in the
@@ -277,9 +269,6 @@ public class WebRtcAudioEffects {
   // As an example: Samsung Galaxy S6 includes an AGC in the descriptor but
   // AutomaticGainControl.isAvailable() returns false.
   private boolean effectTypeIsVoIP(UUID type) {
-    if (Build.VERSION.SDK_INT < 18)
-      return false;
-
     return (AudioEffect.EFFECT_TYPE_AEC.equals(type) && isAcousticEchoCancelerSupported())
         || (AudioEffect.EFFECT_TYPE_NS.equals(type) && isNoiseSuppressorSupported());
   }
@@ -306,7 +295,7 @@ public class WebRtcAudioEffects {
   }
 
   // Returns true if an effect of the specified type is available. Functionally
-  // equivalent to (NoiseSuppressor|AutomaticGainControl|...).isAvailable(), but
+  // equivalent to (NoiseSuppressor`AutomaticGainControl`...).isAvailable(), but
   // faster as it avoids the expensive OS call to enumerate effects.
   private static boolean isEffectTypeAvailable(UUID effectType) {
     Descriptor[] effects = getAvailableEffects();

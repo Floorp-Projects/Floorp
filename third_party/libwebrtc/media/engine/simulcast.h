@@ -15,17 +15,18 @@
 
 #include <vector>
 
+#include "api/field_trials_view.h"
 #include "api/units/data_rate.h"
 #include "api/video_codecs/video_encoder_config.h"
 
 namespace cricket {
 
-// Gets the total maximum bitrate for the |streams|.
+// Gets the total maximum bitrate for the `streams`.
 webrtc::DataRate GetTotalMaxBitrate(
     const std::vector<webrtc::VideoStream>& streams);
 
-// Adds any bitrate of |max_bitrate| that is above the total maximum bitrate for
-// the |layers| to the highest quality layer.
+// Adds any bitrate of `max_bitrate` that is above the total maximum bitrate for
+// the `layers` to the highest quality layer.
 void BoostMaxSimulcastLayer(webrtc::DataRate max_bitrate,
                             std::vector<webrtc::VideoStream>* layers);
 
@@ -41,7 +42,8 @@ std::vector<webrtc::VideoStream> GetSimulcastConfig(
     double bitrate_priority,
     int max_qp,
     bool is_screenshare_with_conference_mode,
-    bool temporal_layers_supported);
+    bool temporal_layers_supported,
+    const webrtc::FieldTrialsView& trials);
 
 // Gets the simulcast config layers for a non-screensharing case.
 std::vector<webrtc::VideoStream> GetNormalSimulcastLayers(
@@ -51,7 +53,8 @@ std::vector<webrtc::VideoStream> GetNormalSimulcastLayers(
     double bitrate_priority,
     int max_qp,
     bool temporal_layers_supported,
-    bool base_heavy_tl3_rate_alloc);
+    bool base_heavy_tl3_rate_alloc,
+    const webrtc::FieldTrialsView& trials);
 
 // Gets simulcast config layers for screenshare settings.
 std::vector<webrtc::VideoStream> GetScreenshareLayers(
@@ -61,7 +64,8 @@ std::vector<webrtc::VideoStream> GetScreenshareLayers(
     double bitrate_priority,
     int max_qp,
     bool temporal_layers_supported,
-    bool base_heavy_tl3_rate_alloc);
+    bool base_heavy_tl3_rate_alloc,
+    const webrtc::FieldTrialsView& trials);
 
 }  // namespace cricket
 

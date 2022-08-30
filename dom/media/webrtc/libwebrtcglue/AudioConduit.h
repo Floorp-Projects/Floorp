@@ -174,7 +174,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
   Maybe<webrtc::AudioReceiveStream::Stats> GetReceiverStats() const override;
   Maybe<webrtc::AudioSendStream::Stats> GetSenderStats() const override;
-  Maybe<webrtc::Call::Stats> GetCallStats() const override;
+  Maybe<webrtc::CallBasicStats> GetCallStats() const override;
 
   bool IsSamplingFreqSupported(int freq) const override;
 

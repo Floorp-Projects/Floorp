@@ -23,11 +23,10 @@
 #include "modules/video_coding/test/stream_generator.h"
 #include "rtc_base/location.h"
 #include "system_wrappers/include/clock.h"
-#include "system_wrappers/include/field_trial.h"
 #include "system_wrappers/include/metrics.h"
-#include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 namespace webrtc {
 
@@ -37,7 +36,7 @@ class TestBasicJitterBuffer : public ::testing::Test {
   void SetUp() override {
     clock_.reset(new SimulatedClock(0));
     jitter_buffer_.reset(new VCMJitterBuffer(
-        clock_.get(), absl::WrapUnique(EventWrapper::Create())));
+        clock_.get(), absl::WrapUnique(EventWrapper::Create()), field_trials_));
     jitter_buffer_->Start();
     seq_num_ = 1234;
     timestamp_ = 0;
@@ -67,8 +66,7 @@ class TestBasicJitterBuffer : public ::testing::Test {
     video_header.is_first_packet_in_frame = true;
     video_header.frame_type = VideoFrameType::kVideoFrameDelta;
     packet_.reset(new VCMPacket(data_, size_, rtp_header, video_header,
-                                /*ntp_time_ms=*/0,
-                                clock_->TimeInMilliseconds()));
+                                /*ntp_time_ms=*/0, clock_->CurrentTime()));
   }
 
   VCMEncodedFrame* DecodeCompleteFrame() {
@@ -119,6 +117,7 @@ class TestBasicJitterBuffer : public ::testing::Test {
   uint32_t timestamp_;
   int size_;
   uint8_t data_[1500];
+  test::ScopedKeyValueConfig field_trials_;
   std::unique_ptr<VCMPacket> packet_;
   std::unique_ptr<SimulatedClock> clock_;
   std::unique_ptr<VCMJitterBuffer> jitter_buffer_;
@@ -133,7 +132,7 @@ class TestRunningJitterBuffer : public ::testing::Test {
     max_nack_list_size_ = 150;
     oldest_packet_to_nack_ = 250;
     jitter_buffer_ = new VCMJitterBuffer(
-        clock_.get(), absl::WrapUnique(EventWrapper::Create()));
+        clock_.get(), absl::WrapUnique(EventWrapper::Create()), field_trials_);
     stream_generator_ = new StreamGenerator(0, clock_->TimeInMilliseconds());
     jitter_buffer_->Start();
     jitter_buffer_->SetNackSettings(max_nack_list_size_, oldest_packet_to_nack_,
@@ -213,6 +212,7 @@ class TestRunningJitterBuffer : public ::testing::Test {
     return ret;
   }
 
+  test::ScopedKeyValueConfig field_trials_;
   VCMJitterBuffer* jitter_buffer_;
   StreamGenerator* stream_generator_;
   std::unique_ptr<SimulatedClock> clock_;
@@ -541,7 +541,7 @@ TEST_F(TestBasicJitterBuffer, TestReorderingWithPadding) {
   video_header.codec = kVideoCodecGeneric;
   video_header.frame_type = VideoFrameType::kEmptyFrame;
   VCMPacket empty_packet(data_, 0, rtp_header, video_header,
-                         /*ntp_time_ms=*/0, clock_->TimeInMilliseconds());
+                         /*ntp_time_ms=*/0, clock_->CurrentTime());
   EXPECT_EQ(kOldPacket,
             jitter_buffer_->InsertPacket(empty_packet, &retransmitted));
   empty_packet.seqNum += 1;
@@ -1545,7 +1545,7 @@ TEST_F(TestJitterBufferNack, NackTooOldPackets) {
   EXPECT_GE(InsertFrame(VideoFrameType::kVideoFrameKey), kNoError);
   EXPECT_TRUE(DecodeCompleteFrame());
 
-  // Drop one frame and insert |kNackHistoryLength| to trigger NACKing a too
+  // Drop one frame and insert `kNackHistoryLength` to trigger NACKing a too
   // old packet.
   DropFrame(1);
   // Insert a frame which should trigger a recycle until the next key frame.
@@ -1598,7 +1598,7 @@ TEST_F(TestJitterBufferNack, NackListFull) {
   EXPECT_GE(InsertFrame(VideoFrameType::kVideoFrameKey), kNoError);
   EXPECT_TRUE(DecodeCompleteFrame());
 
-  // Generate and drop |kNackHistoryLength| packets to fill the NACK list.
+  // Generate and drop `kNackHistoryLength` packets to fill the NACK list.
   DropFrame(max_nack_list_size_ + 1);
   // Insert a frame which should trigger a recycle until the next key frame.
   EXPECT_EQ(kFlushIndicator, InsertFrame(VideoFrameType::kVideoFrameDelta));

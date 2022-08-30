@@ -11,32 +11,24 @@ import sys
 import tarfile
 
 
-LIBWEBRTC_USED_IN_FIREFOX = [
-    ".gn",
-    "AUTHORS",
-    "BUILD.gn",
-    "LICENSE",
-    "OWNERS",
-    "PATENTS",
-    "api",
-    "audio",
-    "build_overrides",
-    "call",
-    "common_audio",
-    "common_video",
-    "logging",
-    "media/base",
-    "media/engine",
-    "media/BUILD.gn",
-    "modules",
-    "rtc_base",
-    "sdk/android",
-    "system_wrappers",
-    "test/rtp_header_parser.h",
-    "test/rtp_header_parser.cc",
-    "test/BUILD.gn",
-    "video",
-    "webrtc.gni",
+LIBWEBRTC_UNUSED_IN_FIREFOX = [
+    ".clang-format",
+    ".git-blame-ignore-revs",
+    ".gitignore",
+    ".vpython",
+    "CODE_OF_CONDUCT.md",
+    "ENG_REVIEW_OWNERS",
+    "PRESUBMIT.py",
+    "README.chromium",
+    "WATCHLISTS",
+    "abseil-in-webrtc.md",
+    "codereview.settings",
+    "license_template.txt",
+    "native-api.md",
+    "presubmit_test.py",
+    "presubmit_test_mocks.py",
+    "pylintrc",
+    "style-guide.md",
 ]
 
 
@@ -86,6 +78,8 @@ def fetch(target, url):
         )
         sys.exit(1)
     with open(os.path.join(LIBWEBRTC_DIR, "README.mozilla"), "a") as f:
+        # write the the command line used
+        f.write("# python3 {}\n".format(" ".join(sys.argv[0:])))
         f.write(
             "{} updated from commit {} on {}.\n".format(
                 target, url, datetime.datetime.utcnow().isoformat()
@@ -104,6 +98,8 @@ def fetch_local(target, path, commit):
         sys.exit(1)
 
     with open(os.path.join(LIBWEBRTC_DIR, "README.mozilla"), "a") as f:
+        # write the the command line used
+        f.write("# python3 {}\n".format(" ".join(sys.argv[0:])))
         f.write(
             "{} updated from {} commit {} on {}.\n".format(
                 target, path, commit, datetime.datetime.utcnow().isoformat()
@@ -120,9 +116,10 @@ def unpack(target):
     except FileNotFoundError:
         pass
     tarfile.open(target_archive).extractall(path=target_path)
+    libwebrtc_used_in_firefox = os.listdir(target_path)
 
     if target == "libwebrtc":
-        for path in LIBWEBRTC_USED_IN_FIREFOX:
+        for path in libwebrtc_used_in_firefox:
             try:
                 shutil.rmtree(os.path.join(LIBWEBRTC_DIR, path))
             except FileNotFoundError:
@@ -130,18 +127,22 @@ def unpack(target):
             except NotADirectoryError:
                 pass
 
-        if os.path.exists(os.path.join(target_path, LIBWEBRTC_USED_IN_FIREFOX[0])):
-            for path in LIBWEBRTC_USED_IN_FIREFOX:
-                shutil.move(
-                    os.path.join(target_path, path), os.path.join(LIBWEBRTC_DIR, path)
-                )
-        else:
+        # adjust target_path if GitHub packaging is involved
+        if not os.path.exists(os.path.join(target_path, libwebrtc_used_in_firefox[0])):
             # GitHub packs everything inside a separate directory
             target_path = os.path.join(target_path, os.listdir(target_path)[0])
-            for path in LIBWEBRTC_USED_IN_FIREFOX:
-                shutil.move(
-                    os.path.join(target_path, path), os.path.join(LIBWEBRTC_DIR, path)
-                )
+
+        # remove the exceptions we don't want to vendor into our tree
+        libwebrtc_used_in_firefox = [
+            path
+            for path in libwebrtc_used_in_firefox
+            if (path not in LIBWEBRTC_UNUSED_IN_FIREFOX)
+        ]
+
+        for path in libwebrtc_used_in_firefox:
+            shutil.move(
+                os.path.join(target_path, path), os.path.join(LIBWEBRTC_DIR, path)
+            )
     elif target == "build":
         try:
             shutil.rmtree(os.path.join(LIBWEBRTC_DIR, "build"))

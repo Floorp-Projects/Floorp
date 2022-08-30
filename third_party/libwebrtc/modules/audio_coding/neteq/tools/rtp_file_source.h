@@ -19,8 +19,6 @@
 #include "absl/types/optional.h"
 #include "modules/audio_coding/neteq/tools/packet_source.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "modules/rtp_rtcp/source/rtp_utility.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 
@@ -30,7 +28,7 @@ class RtpFileReader;
 
 class RtpFileSource : public PacketSource {
  public:
-  // Creates an RtpFileSource reading from |file_name|. If the file cannot be
+  // Creates an RtpFileSource reading from `file_name`. If the file cannot be
   // opened, or has the wrong format, NULL will be returned.
   static RtpFileSource* Create(
       const std::string& file_name,
@@ -42,7 +40,10 @@ class RtpFileSource : public PacketSource {
 
   ~RtpFileSource() override;
 
-  // Registers an RTP header extension and binds it to |id|.
+  RtpFileSource(const RtpFileSource&) = delete;
+  RtpFileSource& operator=(const RtpFileSource&) = delete;
+
+  // Registers an RTP header extension and binds it to `id`.
   virtual bool RegisterRtpHeaderExtension(RTPExtensionType type, uint8_t id);
 
   std::unique_ptr<Packet> NextPacket() override;
@@ -59,8 +60,6 @@ class RtpFileSource : public PacketSource {
   std::unique_ptr<RtpFileReader> rtp_reader_;
   const absl::optional<uint32_t> ssrc_filter_;
   RtpHeaderExtensionMap rtp_header_extension_map_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(RtpFileSource);
 };
 
 }  // namespace test

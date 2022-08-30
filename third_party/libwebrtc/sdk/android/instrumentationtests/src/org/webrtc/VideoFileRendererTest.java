@@ -13,18 +13,15 @@ package org.webrtc;
 import static org.junit.Assert.assertEquals;
 
 import android.os.Environment;
-import android.support.test.filters.SmallTest;
+import androidx.test.filters.SmallTest;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import org.chromium.base.test.BaseJUnit4ClassRunner;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(BaseJUnit4ClassRunner.class)
 public class VideoFileRendererTest {
   @Before
   public void setUp() {

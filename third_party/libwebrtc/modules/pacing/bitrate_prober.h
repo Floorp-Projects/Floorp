@@ -24,7 +24,7 @@ namespace webrtc {
 class RtcEventLog;
 
 struct BitrateProberConfig {
-  explicit BitrateProberConfig(const WebRtcKeyValueConfig* key_value_config);
+  explicit BitrateProberConfig(const FieldTrialsView* key_value_config);
   BitrateProberConfig(const BitrateProberConfig&) = default;
   BitrateProberConfig& operator=(const BitrateProberConfig&) = default;
   ~BitrateProberConfig() = default;
@@ -38,7 +38,7 @@ struct BitrateProberConfig {
   // Maximum amount of time each probe can be delayed.
   FieldTrialParameter<TimeDelta> max_probe_delay;
   // If NextProbeTime() is called with a delay higher than specified by
-  // |max_probe_delay|, abort it.
+  // `max_probe_delay`, abort it.
   FieldTrialParameter<bool> abort_delayed_probes;
 };
 
@@ -46,7 +46,7 @@ struct BitrateProberConfig {
 // on being protected by the caller.
 class BitrateProber {
  public:
-  explicit BitrateProber(const WebRtcKeyValueConfig& field_trials);
+  explicit BitrateProber(const FieldTrialsView& field_trials);
   ~BitrateProber();
 
   void SetEnabled(bool enable);
@@ -61,14 +61,14 @@ class BitrateProber {
   // with.
   void OnIncomingPacket(DataSize packet_size);
 
-  // Create a cluster used to probe for |bitrate_bps| with |num_probes| number
+  // Create a cluster used to probe for `bitrate_bps` with `num_probes` number
   // of probes.
   void CreateProbeCluster(DataRate bitrate, Timestamp now, int cluster_id);
 
   // Returns the time at which the next probe should be sent to get accurate
   // probing. If probing is not desired at this time, Timestamp::PlusInfinity()
   // will be returned.
-  // TODO(bugs.webrtc.org/11780): Remove |now| argument when old mode is gone.
+  // TODO(bugs.webrtc.org/11780): Remove `now` argument when old mode is gone.
   Timestamp NextProbeTime(Timestamp now) const;
 
   // Information about the current probing cluster.
@@ -80,7 +80,7 @@ class BitrateProber {
 
   // Called to report to the prober that a probe has been sent. In case of
   // multiple packets per probe, this call would be made at the end of sending
-  // the last packet in probe. |size| is the total size of all packets in probe.
+  // the last packet in probe. `size` is the total size of all packets in probe.
   void ProbeSent(Timestamp now, DataSize size);
 
  private:

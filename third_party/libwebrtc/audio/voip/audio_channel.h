@@ -18,10 +18,10 @@
 
 #include "api/task_queue/task_queue_factory.h"
 #include "api/voip/voip_base.h"
+#include "api/voip/voip_statistics.h"
 #include "audio/voip/audio_egress.h"
 #include "audio/voip/audio_ingress.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_impl2.h"
-#include "modules/utility/include/process_thread.h"
 #include "rtc_base/ref_count.h"
 
 namespace webrtc {
@@ -34,7 +34,6 @@ class AudioChannel : public rtc::RefCountInterface {
   AudioChannel(Transport* transport,
                uint32_t local_ssrc,
                TaskQueueFactory* task_queue_factory,
-               ProcessThread* process_thread,
                AudioMixer* audio_mixer,
                rtc::scoped_refptr<AudioDecoderFactory> decoder_factory);
   ~AudioChannel() override;
@@ -69,6 +68,7 @@ class AudioChannel : public rtc::RefCountInterface {
   bool SendTelephoneEvent(int dtmf_event, int duration_ms) {
     return egress_->SendTelephoneEvent(dtmf_event, duration_ms);
   }
+  void SetMute(bool enable) { egress_->SetMute(enable); }
 
   // APIs relayed to AudioIngress.
   bool IsPlaying() const { return ingress_->IsPlaying(); }
@@ -81,6 +81,35 @@ class AudioChannel : public rtc::RefCountInterface {
   void SetReceiveCodecs(const std::map<int, SdpAudioFormat>& codecs) {
     ingress_->SetReceiveCodecs(codecs);
   }
+  IngressStatistics GetIngressStatistics();
+  ChannelStatistics GetChannelStatistics();
+
+  // See comments on the methods used from AudioEgress and AudioIngress.
+  // Conversion to double is following what is done in
+  // DoubleAudioLevelFromIntAudioLevel method in rtc_stats_collector.cc to be
+  // consistent.
+  double GetInputAudioLevel() const {
+    return egress_->GetInputAudioLevel() / 32767.0;
+  }
+  double GetInputTotalEnergy() const { return egress_->GetInputTotalEnergy(); }
+  double GetInputTotalDuration() const {
+    return egress_->GetInputTotalDuration();
+  }
+  double GetOutputAudioLevel() const {
+    return ingress_->GetOutputAudioLevel() / 32767.0;
+  }
+  double GetOutputTotalEnergy() const {
+    return ingress_->GetOutputTotalEnergy();
+  }
+  double GetOutputTotalDuration() const {
+    return ingress_->GetOutputTotalDuration();
+  }
+
+  // Internal API for testing purpose.
+  void SendRTCPReportForTesting(RTCPPacketType type) {
+    int32_t result = rtp_rtcp_->SendRTCP(type);
+    RTC_DCHECK(result == 0);
+  }
 
  private:
   // ChannelId that this audio channel belongs for logging purpose.
@@ -88,9 +117,6 @@ class AudioChannel : public rtc::RefCountInterface {
 
   // Synchronization is handled internally by AudioMixer.
   AudioMixer* audio_mixer_;
-
-  // Synchronization is handled internally by ProcessThread.
-  ProcessThread* process_thread_;
 
   // Listed in order for safe destruction of AudioChannel object.
   // Synchronization for these are handled internally.

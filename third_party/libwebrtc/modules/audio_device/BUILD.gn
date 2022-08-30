@@ -51,8 +51,7 @@ rtc_source_set("audio_device_api") {
     "../../api:scoped_refptr",
     "../../api/task_queue",
     "../../rtc_base:checks",
-    "../../rtc_base:deprecation",
-    "../../rtc_base:rtc_base_approved",
+    "../../rtc_base:refcount",
     "../../rtc_base:stringutils",
   ]
 }
@@ -68,11 +67,17 @@ rtc_library("audio_device_buffer") {
   deps = [
     ":audio_device_api",
     "../../api:array_view",
+    "../../api:sequence_checker",
     "../../api/task_queue",
     "../../common_audio:common_audio_c",
+    "../../rtc_base:buffer",
     "../../rtc_base:checks",
-    "../../rtc_base:rtc_base_approved",
+    "../../rtc_base:logging",
+    "../../rtc_base:macromagic",
     "../../rtc_base:rtc_task_queue",
+    "../../rtc_base:safe_conversions",
+    "../../rtc_base:timestamp_aligner",
+    "../../rtc_base:timeutils",
     "../../rtc_base/synchronization:mutex",
     "../../system_wrappers",
     "../../system_wrappers:metrics",
@@ -87,7 +92,7 @@ rtc_library("audio_device_generic") {
   deps = [
     ":audio_device_api",
     ":audio_device_buffer",
-    "../../rtc_base:rtc_base_approved",
+    "../../rtc_base:logging",
   ]
 }
 
@@ -110,7 +115,11 @@ rtc_source_set("windows_core_audio_utility") {
       ":audio_device_name",
       "../../api/units:time_delta",
       "../../rtc_base:checks",
-      "../../rtc_base:rtc_base_approved",
+      "../../rtc_base:logging",
+      "../../rtc_base:macromagic",
+      "../../rtc_base:platform_thread_types",
+      "../../rtc_base:stringutils",
+      "../../rtc_base/win:windows_version",
     ]
 
     libs = [ "oleaut32.lib" ]
@@ -144,9 +153,18 @@ rtc_source_set("audio_device_module_from_input_and_output") {
       ":audio_device_buffer",
       ":windows_core_audio_utility",
       "../../api:scoped_refptr",
+      "../../api:sequence_checker",
       "../../api/task_queue",
       "../../rtc_base:checks",
-      "../../rtc_base:rtc_base_approved",
+      "../../rtc_base:logging",
+      "../../rtc_base:macromagic",
+      "../../rtc_base:platform_thread",
+      "../../rtc_base:refcount",
+      "../../rtc_base:safe_conversions",
+      "../../rtc_base:stringutils",
+      "../../rtc_base:timeutils",
+      "../../rtc_base/win:scoped_com_initializer",
+      "../../rtc_base/win:windows_version",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   }
@@ -164,14 +182,23 @@ rtc_library("audio_device_impl") {
     "../../api:array_view",
     "../../api:refcountedbase",
     "../../api:scoped_refptr",
+    "../../api:sequence_checker",
     "../../api/task_queue",
     "../../common_audio",
     "../../common_audio:common_audio_c",
     "../../rtc_base",
+    "../../rtc_base:buffer",
     "../../rtc_base:checks",
-    "../../rtc_base:deprecation",
-    "../../rtc_base:rtc_base_approved",
+    "../../rtc_base:logging",
+    "../../rtc_base:macromagic",
+    "../../rtc_base:platform_thread",
+    "../../rtc_base:random",
+    "../../rtc_base:refcount",
+    "../../rtc_base:rtc_event",
     "../../rtc_base:rtc_task_queue",
+    "../../rtc_base:safe_conversions",
+    "../../rtc_base:stringutils",
+    "../../rtc_base:timeutils",
     "../../rtc_base/synchronization:mutex",
     "../../rtc_base/system:arch",
     "../../rtc_base/system:file_wrapper",
@@ -181,6 +208,7 @@ rtc_library("audio_device_impl") {
     "../../system_wrappers:metrics",
     "../utility",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/base:core_headers" ]
   if (rtc_include_internal_audio_device && is_ios) {
     deps += [ "../../sdk:audio_device" ]
   }
@@ -317,6 +345,10 @@ rtc_library("audio_device_impl") {
           "msdmo.lib",
           "oleaut32.lib",
         ]
+        deps += [
+          "../../rtc_base:win32",
+          "../../rtc_base/win:scoped_com_initializer",
+        ]
       }
       configs += [ ":audio_device_warnings_config" ]
     }
@@ -350,24 +382,25 @@ if (is_mac) {
 }
 
 if (rtc_include_tests) {
-  rtc_source_set("mock_audio_device") {
-    testonly = true
-    sources = [
-      "include/mock_audio_device.h",
-      "include/mock_audio_transport.h",
-      "mock_audio_device_buffer.h",
-    ]
-    deps = [
-      ":audio_device",
-      ":audio_device_buffer",
-      ":audio_device_impl",
-      "../../rtc_base:refcount",
-      "../../test:test_support",
-    ]
-  }
+rtc_source_set("mock_audio_device") {
+  visibility = [ "*" ]
+  testonly = true
+  sources = [
+    "include/mock_audio_device.h",
+    "include/mock_audio_transport.h",
+    "mock_audio_device_buffer.h",
+  ]
+  deps = [
+    ":audio_device",
+    ":audio_device_buffer",
+    ":audio_device_impl",
+    "../../rtc_base:refcount",
+    "../../test:test_support",
+  ]
+}
 }
 
-if (rtc_include_tests) {
+if (rtc_include_tests && !build_with_chromium) {
   rtc_library("audio_device_unittests") {
     testonly = true
 
@@ -382,12 +415,19 @@ if (rtc_include_tests) {
       ":mock_audio_device",
       "../../api:array_view",
       "../../api:scoped_refptr",
+      "../../api:sequence_checker",
       "../../api/task_queue",
       "../../api/task_queue:default_task_queue_factory",
       "../../common_audio",
+      "../../rtc_base:buffer",
       "../../rtc_base:checks",
       "../../rtc_base:ignore_wundef",
-      "../../rtc_base:rtc_base_approved",
+      "../../rtc_base:logging",
+      "../../rtc_base:macromagic",
+      "../../rtc_base:race_checker",
+      "../../rtc_base:rtc_event",
+      "../../rtc_base:safe_conversions",
+      "../../rtc_base:timeutils",
       "../../rtc_base/synchronization:mutex",
       "../../system_wrappers",
       "../../test:fileutils",
@@ -403,14 +443,11 @@ if (rtc_include_tests) {
       deps += [
         ":audio_device_module_from_input_and_output",
         ":windows_core_audio_utility",
+        "../../rtc_base/win:scoped_com_initializer",
+        "../../rtc_base/win:windows_version",
       ]
     }
     if (is_android) {
-      # Need to disable error due to the line in
-      # base/android/jni_android.h triggering it:
-      # const BASE_EXPORT jobject GetApplicationContext()
-      # error: type qualifiers ignored on function return type
-      cflags = [ "-Wno-ignored-qualifiers" ]
       sources += [
         "android/audio_device_unittest.cc",
         "android/audio_manager_unittest.cc",
@@ -418,8 +455,10 @@ if (rtc_include_tests) {
         "android/ensure_initialized.h",
       ]
       deps += [
-        "../../base",
+        "../../sdk/android:internal_jni",
         "../../sdk/android:libjingle_peerconnection_java",
+        "../../sdk/android:native_api_jni",
+        "../../sdk/android:native_test_jni_onload",
       ]
     }
     if (!rtc_include_internal_audio_device) {
@@ -440,7 +479,7 @@ if ((!build_with_chromium && !build_with_mozilla) && is_android) {
     ]
     deps = [
       "../../rtc_base:base_java",
-      "//third_party/android_deps:com_android_support_support_annotations_java",
+      "//third_party/androidx:androidx_annotation_annotation_java",
     ]
   }
 }

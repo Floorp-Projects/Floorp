@@ -17,6 +17,7 @@
 #include <queue>
 #include <utility>
 
+#include "absl/types/optional.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
@@ -58,16 +59,12 @@ void CALLBACK InitializeQueueThread(ULONG_PTR param) {
 ThreadPriority TaskQueuePriorityToThreadPriority(Priority priority) {
   switch (priority) {
     case Priority::HIGH:
-      return kRealtimePriority;
+      return rtc::ThreadPriority::kRealtime;
     case Priority::LOW:
-      return kLowPriority;
+      return rtc::ThreadPriority::kLow;
     case Priority::NORMAL:
-      return kNormalPriority;
-    default:
-      RTC_NOTREACHED();
-      break;
+      return rtc::ThreadPriority::kNormal;
   }
-  return kNormalPriority;
 }
 
 int64_t GetTick() {
@@ -104,13 +101,13 @@ class DelayedTaskInfo {
  private:
   int64_t due_time_ = 0;  // Absolute timestamp in milliseconds.
 
-  // |task| needs to be mutable because std::priority_queue::top() returns
+  // `task` needs to be mutable because std::priority_queue::top() returns
   // a const reference and a key in an ordered queue must not be changed.
   // There are two basic workarounds, one using const_cast, which would also
-  // make the key (|due_time|), non-const and the other is to make the non-key
-  // (|task|), mutable.
-  // Because of this, the |task| variable is made private and can only be
-  // mutated by calling the |take()| method.
+  // make the key (`due_time`), non-const and the other is to make the non-key
+  // (`task`), mutable.
+  // Because of this, the `task` variable is made private and can only be
+  // mutated by calling the `take()` method.
   mutable std::unique_ptr<QueuedTask> task_;
 };
 
@@ -184,19 +181,6 @@ class TaskQueue::Impl : public RefCountInterface {
   void RunPendingTasks();
 
  private:
-  static void ThreadMain(void* context);
-
-  class WorkerThread : public PlatformThread {
-   public:
-    WorkerThread(ThreadRunFunction func, void* obj, const char* thread_name,
-                 ThreadPriority priority)
-        : PlatformThread(func, obj, thread_name, priority) {}
-
-    bool QueueAPC(PAPCFUNC apc_function, ULONG_PTR data) {
-      return PlatformThread::QueueAPC(apc_function, data);
-    }
-  };
-
   void RunThreadMain();
   void RunDueTasks();
   void ScheduleNextTimer();
@@ -217,7 +201,7 @@ class TaskQueue::Impl : public RefCountInterface {
       timer_tasks_ RTC_GUARDED_BY(timer_lock_);
 
   TaskQueue* const queue_;
-  WorkerThread thread_;
+  rtc::PlatformThread thread_;
   rtc::CriticalSection pending_lock_;
   std::queue<std::unique_ptr<QueuedTask>> pending_
       RTC_GUARDED_BY(pending_lock_);
@@ -234,9 +218,7 @@ class TaskQueue::Impl : public RefCountInterface {
 TaskQueue::Impl::Impl(const char* queue_name, TaskQueue* queue,
                       Priority priority)
     : queue_(queue),
-      thread_(&TaskQueue::Impl::ThreadMain, this, queue_name,
-              TaskQueuePriorityToThreadPriority(priority)),
-      in_queue_(::CreateEvent(nullptr, TRUE, FALSE, nullptr)),
+      in_queue_(::CreateEvent(nullptr, true, false, nullptr)),
       stop_queue_(::CreateEvent(nullptr, TRUE, FALSE, nullptr)),
       task_timer_(::CreateWaitableTimer(nullptr, FALSE, nullptr)),
       reply_handler_(std::make_shared<ReplyHandler>()) {
@@ -244,7 +226,10 @@ TaskQueue::Impl::Impl(const char* queue_name, TaskQueue* queue,
   RTC_DCHECK(in_queue_);
   RTC_DCHECK(stop_queue_);
   RTC_DCHECK(task_timer_);
-  thread_.Start();
+  thread_ = rtc::PlatformThread::SpawnJoinable(
+      [this] { RunThreadMain(); }, queue_name,
+      rtc::ThreadAttributes().SetPriority(priority));
+
   Event event(false, false);
   ThreadStartupData startup = {&event, this};
   RTC_CHECK(thread_.QueueAPC(&InitializeQueueThread,
@@ -350,6 +335,7 @@ void TaskQueue::Impl::RunPendingTasks() {
   }
 }
 
+// mjf - this was removed upstream, so may need to be removed here.
 // static
 void TaskQueue::Impl::ThreadMain(void* context) {
   static_cast<TaskQueue::Impl*>(context)->RunThreadMain();

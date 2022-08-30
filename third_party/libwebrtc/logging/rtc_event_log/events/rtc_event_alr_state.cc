@@ -13,6 +13,9 @@
 #include "absl/memory/memory.h"
 
 namespace webrtc {
+constexpr RtcEvent::Type RtcEventAlrState::kType;
+constexpr RtcEventDefinition<RtcEventAlrState, LoggedAlrStateEvent, bool>
+    RtcEventAlrState::definition_;
 
 RtcEventAlrState::RtcEventAlrState(bool in_alr) : in_alr_(in_alr) {}
 
@@ -21,16 +24,15 @@ RtcEventAlrState::RtcEventAlrState(const RtcEventAlrState& other)
 
 RtcEventAlrState::~RtcEventAlrState() = default;
 
-RtcEvent::Type RtcEventAlrState::GetType() const {
-  return RtcEvent::Type::AlrStateEvent;
-}
-
-bool RtcEventAlrState::IsConfigEvent() const {
-  return false;
-}
-
 std::unique_ptr<RtcEventAlrState> RtcEventAlrState::Copy() const {
   return absl::WrapUnique<RtcEventAlrState>(new RtcEventAlrState(*this));
+}
+
+RtcEventLogParseStatus RtcEventAlrState::Parse(
+    absl::string_view s,
+    bool batched,
+    std::vector<LoggedAlrStateEvent>& output) {
+  return RtcEventAlrState::definition_.ParseBatch(s, batched, output);
 }
 
 }  // namespace webrtc

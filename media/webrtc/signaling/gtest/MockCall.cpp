@@ -14,14 +14,40 @@ void MockAudioSendStream::Reconfigure(const Config& config) {
   mCallWrapper->GetMockCall()->mAudioSendConfig = mozilla::Some(config);
 }
 
-void MockAudioReceiveStream::Reconfigure(const Config& config) {
-  mCallWrapper->GetMockCall()->mAudioReceiveConfig = mozilla::Some(config);
+void MockAudioReceiveStream::SetDecoderMap(
+    std::map<int, webrtc::SdpAudioFormat> decoder_map) {
+  MOZ_ASSERT(mCallWrapper->GetMockCall()->mAudioReceiveConfig.isSome());
+  mCallWrapper->GetMockCall()->mAudioReceiveConfig->decoder_map =
+      std::move(decoder_map);
+}
+
+void MockAudioReceiveStream::SetRtpExtensions(
+    std::vector<webrtc::RtpExtension> extensions) {
+  MOZ_ASSERT(mCallWrapper->GetMockCall()->mAudioReceiveConfig.isSome());
+  mCallWrapper->GetMockCall()->mAudioReceiveConfig->rtp.extensions =
+      std::move(extensions);
+}
+
+const std::vector<webrtc::RtpExtension>&
+MockAudioReceiveStream::GetRtpExtensions() const {
+  static std::vector<webrtc::RtpExtension> rtpExtensions;
+  return rtpExtensions;
+}
+
+webrtc::RtpHeaderExtensionMap MockAudioReceiveStream::GetRtpExtensionMap()
+    const {
+  return webrtc::RtpHeaderExtensionMap();
 }
 
 void MockVideoSendStream::ReconfigureVideoEncoder(
     webrtc::VideoEncoderConfig config) {
   mCallWrapper->GetMockCall()->mVideoSendEncoderConfig =
       mozilla::Some(config.Copy());
+}
+
+webrtc::RtpHeaderExtensionMap MockVideoReceiveStream::GetRtpExtensionMap()
+    const {
+  return webrtc::RtpHeaderExtensionMap();
 }
 
 }  // namespace test

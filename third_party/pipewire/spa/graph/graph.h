@@ -29,6 +29,15 @@
 extern "C" {
 #endif
 
+/** \defgroup spa_graph Graph
+ * Node graph
+ */
+
+/**
+ * \addtogroup spa_graph
+ * \{
+ */
+
 #include <spa/utils/defs.h>
 #include <spa/utils/list.h>
 #include <spa/utils/hook.h>
@@ -344,6 +353,10 @@ static const struct spa_graph_node_callbacks spa_graph_node_impl_default = {
 	.process = spa_graph_node_impl_process,
 	.reuse_buffer = spa_graph_node_impl_reuse_buffer,
 };
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

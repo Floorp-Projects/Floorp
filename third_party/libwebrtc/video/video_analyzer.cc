@@ -9,6 +9,8 @@
  */
 #include "video/video_analyzer.h"
 
+#include <inttypes.h>
+
 #include <algorithm>
 #include <utility>
 
@@ -18,8 +20,8 @@
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "modules/rtp_rtcp/source/create_video_rtp_depacketizer.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
+#include "modules/rtp_rtcp/source/rtp_util.h"
 #include "rtc_base/cpu_time.h"
-#include "rtc_base/format_macros.h"
 #include "rtc_base/memory_usage.h"
 #include "rtc_base/task_queue_for_test.h"
 #include "rtc_base/task_utils/repeating_task.h"
@@ -137,10 +139,12 @@ VideoAnalyzer::VideoAnalyzer(test::LayerFilteringTransport* transport,
   }
 
   for (uint32_t i = 0; i < num_cores; ++i) {
-    rtc::PlatformThread* thread =
-        new rtc::PlatformThread(&FrameComparisonThread, this, "Analyzer");
-    thread->Start();
-    comparison_thread_pool_.push_back(thread);
+    comparison_thread_pool_.push_back(rtc::PlatformThread::SpawnJoinable(
+        [this] {
+          while (CompareFrames()) {
+          }
+        },
+        "Analyzer"));
   }
 
   if (!rtp_dump_name.empty()) {
@@ -155,10 +159,8 @@ VideoAnalyzer::~VideoAnalyzer() {
     MutexLock lock(&comparison_lock_);
     quit_ = true;
   }
-  for (rtc::PlatformThread* thread : comparison_thread_pool_) {
-    thread->Stop();
-    delete thread;
-  }
+  // Joins all threads.
+  comparison_thread_pool_.clear();
 }
 
 void VideoAnalyzer::SetReceiver(PacketReceiver* receiver) {
@@ -212,7 +214,7 @@ PacketReceiver::DeliveryStatus VideoAnalyzer::DeliverPacket(
     int64_t packet_time_us) {
   // Ignore timestamps of RTCP packets. They're not synchronized with
   // RTP packet timestamps and so they would confuse wrap_handler_.
-  if (RtpHeaderParser::IsRtcp(packet.cdata(), packet.size())) {
+  if (IsRtcpPacket(packet)) {
     return receiver_->DeliverPacket(media_type, std::move(packet),
                                     packet_time_us);
   }
@@ -457,10 +459,10 @@ bool VideoAnalyzer::IsInSelectedSpatialAndTemporalLayer(
 }
 
 void VideoAnalyzer::PollStats() {
-  // Do not grab |comparison_lock_|, before |GetStats()| completes.
+  // Do not grab `comparison_lock_`, before `GetStats()` completes.
   // Otherwise a deadlock may occur:
-  // 1) |comparison_lock_| is acquired after |lock_|
-  // 2) |lock_| is acquired after internal pacer lock in SendRtp()
+  // 1) `comparison_lock_` is acquired after `lock_`
+  // 2) `lock_` is acquired after internal pacer lock in SendRtp()
   // 3) internal pacer lock is acquired by GetStats().
   Call::Stats call_stats = call_->GetStats();
 
@@ -489,8 +491,8 @@ void VideoAnalyzer::PollStats() {
 
   if (receive_stream_ != nullptr) {
     VideoReceiveStream::Stats receive_stats = receive_stream_->GetStats();
-    // |total_decode_time_ms| gives a good estimate of the mean decode time,
-    // |decode_ms| is used to keep track of the standard deviation.
+    // `total_decode_time_ms` gives a good estimate of the mean decode time,
+    // `decode_ms` is used to keep track of the standard deviation.
     if (receive_stats.frames_decoded > 0)
       mean_decode_time_ms_ =
           static_cast<double>(receive_stats.total_decode_time_ms) /
@@ -503,8 +505,8 @@ void VideoAnalyzer::PollStats() {
       pixels_.AddSample(receive_stats.width * receive_stats.height);
     }
 
-    // |frames_decoded| and |frames_rendered| are used because they are more
-    // accurate than |decode_frame_rate| and |render_frame_rate|.
+    // `frames_decoded` and `frames_rendered` are used because they are more
+    // accurate than `decode_frame_rate` and `render_frame_rate`.
     // The latter two are calculated on a momentary basis.
     const double total_frames_duration_sec_double =
         static_cast<double>(receive_stats.total_frames_duration_ms) / 1000.0;
@@ -531,12 +533,6 @@ void VideoAnalyzer::PollStats() {
   }
 
   memory_usage_.AddSample(rtc::GetProcessResidentSizeBytes());
-}
-
-void VideoAnalyzer::FrameComparisonThread(void* obj) {
-  VideoAnalyzer* analyzer = static_cast<VideoAnalyzer*>(obj);
-  while (analyzer->CompareFrames()) {
-  }
 }
 
 bool VideoAnalyzer::CompareFrames() {
@@ -606,7 +602,7 @@ bool VideoAnalyzer::AllFramesRecordedLocked() {
 bool VideoAnalyzer::FrameProcessed() {
   MutexLock lock(&comparison_lock_);
   ++frames_processed_;
-  assert(frames_processed_ <= frames_to_process_);
+  RTC_DCHECK_LE(frames_processed_, frames_to_process_);
   return frames_processed_ == frames_to_process_ ||
          (clock_->CurrentTime() > test_end_ && comparisons_.empty());
 }
@@ -859,7 +855,7 @@ void VideoAnalyzer::PrintSamplesToFile() {
   });
 
   fprintf(out, "%s\n", graph_title_.c_str());
-  fprintf(out, "%" RTC_PRIuS "\n", samples_.size());
+  fprintf(out, "%zu\n", samples_.size());
   fprintf(out,
           "dropped "
           "input_time_ms "
@@ -872,8 +868,7 @@ void VideoAnalyzer::PrintSamplesToFile() {
           "encode_time_ms\n");
   for (const Sample& sample : samples_) {
     fprintf(out,
-            "%d %" PRId64 " %" PRId64 " %" PRId64 " %" PRId64 " %" RTC_PRIuS
-            " %lf %lf\n",
+            "%d %" PRId64 " %" PRId64 " %" PRId64 " %" PRId64 " %zu %lf %lf\n",
             sample.dropped, sample.input_time_ms, sample.send_time_ms,
             sample.recv_time_ms, sample.render_time_ms,
             sample.encoded_frame_size, sample.psnr, sample.ssim);

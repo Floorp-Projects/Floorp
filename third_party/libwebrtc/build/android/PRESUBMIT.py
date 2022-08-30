@@ -28,9 +28,18 @@ def CommonChecks(input_api, output_api):
           input_api,
           output_api,
           pylintrc='pylintrc',
+          # Temporarily disabled until pylint-2.6: crbug.com/1100664
+          disabled_warnings=[
+              'no-member',
+              'superfluous-parens',
+              'no-name-in-module',
+              'import-error'],
           files_to_skip=[
               r'.*_pb2\.py',
-              r'.*list_java_targets\.py',  # crbug.com/1100664
+              # The following are all temporary due to: crbug.com/1100664
+              r'.*list_java_targets\.py',
+              r'.*fast_local_dev_server\.py',
+              r'.*incremental_javac_test_android_library.py',
           ] + build_pys,
           extra_paths_list=[
               J(),
@@ -72,19 +81,19 @@ def CommonChecks(input_api, output_api):
           input_api,
           output_api,
           unit_tests=[
+              J('.', 'convert_dex_profile_tests.py'),
               J('.', 'emma_coverage_stats_test.py'),
               J('.', 'list_class_verification_failures_test.py'),
-              J('gyp', 'util', 'build_utils_test.py'),
-              J('gyp', 'util', 'manifest_utils_test.py'),
-              J('gyp', 'util', 'md5_check_test.py'),
-              J('gyp', 'util', 'resource_utils_test.py'),
               J('pylib', 'constants', 'host_paths_unittest.py'),
               J('pylib', 'gtest', 'gtest_test_instance_test.py'),
               J('pylib', 'instrumentation',
                 'instrumentation_test_instance_test.py'),
+              J('pylib', 'local', 'device', 'local_device_gtest_run_test.py'),
               J('pylib', 'local', 'device',
                 'local_device_instrumentation_test_run_test.py'),
               J('pylib', 'local', 'device', 'local_device_test_run_test.py'),
+              J('pylib', 'local', 'machine',
+                'local_machine_junit_test_run_test.py'),
               J('pylib', 'output', 'local_output_manager_test.py'),
               J('pylib', 'output', 'noop_output_manager_test.py'),
               J('pylib', 'output', 'remote_output_manager_test.py'),
@@ -99,9 +108,15 @@ def CommonChecks(input_api, output_api):
               J('pylib', 'utils', 'gold_utils_test.py'),
               J('pylib', 'utils', 'proguard_test.py'),
               J('pylib', 'utils', 'test_filter_test.py'),
-              J('.', 'convert_dex_profile_tests.py'),
+              J('gyp', 'util', 'build_utils_test.py'),
+              J('gyp', 'util', 'manifest_utils_test.py'),
+              J('gyp', 'util', 'md5_check_test.py'),
+              J('gyp', 'util', 'resource_utils_test.py'),
           ],
-          env=pylib_test_env))
+          env=pylib_test_env,
+          run_on_python2=False,
+          run_on_python3=True,
+          skip_shebang_check=True))
 
   return input_api.RunTests(tests)
 

@@ -20,7 +20,7 @@ namespace webrtc {
 
 // Creates an AudioDeviceModule (ADM) for Windows based on the Core Audio API.
 // The creating thread must be a COM thread; otherwise nullptr will be returned.
-// By default |automatic_restart| is set to true and it results in support for
+// By default `automatic_restart` is set to true and it results in support for
 // automatic restart of audio if e.g. the existing device is removed. If set to
 // false, no attempt to restart audio is performed under these conditions.
 //
@@ -30,8 +30,8 @@ namespace webrtc {
 //   rtc::scoped_refptr<AudioDeviceModule> CreateAudioDevice() {
 //     task_queue_factory_ = CreateDefaultTaskQueueFactory();
 //     // Tell COM that this thread shall live in the MTA.
-//     com_initializer_ = std::make_unique<webrtc_win::ScopedCOMInitializer>(
-//         webrtc_win::ScopedCOMInitializer::kMTA);
+//     com_initializer_ = std::make_unique<ScopedCOMInitializer>(
+//         ScopedCOMInitializer::kMTA);
 //     if (!com_initializer_->Succeeded()) {
 //       return nullptr;
 //     }
@@ -42,7 +42,7 @@ namespace webrtc {
 //   }
 //
 //   private:
-//    std::unique_ptr<webrtc_win::ScopedCOMInitializer> com_initializer_;
+//    std::unique_ptr<ScopedCOMInitializer> com_initializer_;
 //    std::unique_ptr<TaskQueueFactory> task_queue_factory_;
 //
 rtc::scoped_refptr<AudioDeviceModule> CreateWindowsCoreAudioAudioDeviceModule(

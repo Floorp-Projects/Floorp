@@ -37,7 +37,7 @@ TEST(RtpPacketInfoTest, Ssrc) {
   rhs = RtpPacketInfo();
   EXPECT_NE(rhs.ssrc(), value);
 
-  rhs = RtpPacketInfo(value, {}, {}, {}, {}, {});
+  rhs = RtpPacketInfo(value, {}, {}, {}, {}, Timestamp::Millis(0));
   EXPECT_EQ(rhs.ssrc(), value);
 }
 
@@ -64,7 +64,7 @@ TEST(RtpPacketInfoTest, Csrcs) {
   rhs = RtpPacketInfo();
   EXPECT_NE(rhs.csrcs(), value);
 
-  rhs = RtpPacketInfo({}, value, {}, {}, {}, {});
+  rhs = RtpPacketInfo({}, value, {}, {}, {}, Timestamp::Millis(0));
   EXPECT_EQ(rhs.csrcs(), value);
 }
 
@@ -91,7 +91,7 @@ TEST(RtpPacketInfoTest, RtpTimestamp) {
   rhs = RtpPacketInfo();
   EXPECT_NE(rhs.rtp_timestamp(), value);
 
-  rhs = RtpPacketInfo({}, {}, value, {}, {}, {});
+  rhs = RtpPacketInfo({}, {}, value, {}, {}, Timestamp::Millis(0));
   EXPECT_EQ(rhs.rtp_timestamp(), value);
 }
 
@@ -118,7 +118,7 @@ TEST(RtpPacketInfoTest, AudioLevel) {
   rhs = RtpPacketInfo();
   EXPECT_NE(rhs.audio_level(), value);
 
-  rhs = RtpPacketInfo({}, {}, {}, value, {}, {});
+  rhs = RtpPacketInfo({}, {}, {}, value, {}, Timestamp::Millis(0));
   EXPECT_EQ(rhs.audio_level(), value);
 }
 
@@ -145,12 +145,41 @@ TEST(RtpPacketInfoTest, AbsoluteCaptureTime) {
   rhs = RtpPacketInfo();
   EXPECT_NE(rhs.absolute_capture_time(), value);
 
-  rhs = RtpPacketInfo({}, {}, {}, {}, value, {});
+  rhs = RtpPacketInfo({}, {}, {}, {}, value, Timestamp::Millis(0));
   EXPECT_EQ(rhs.absolute_capture_time(), value);
 }
 
+TEST(RtpPacketInfoTest, LocalCaptureClockOffset) {
+  RtpPacketInfo lhs;
+  RtpPacketInfo rhs;
+
+  EXPECT_TRUE(lhs == rhs);
+  EXPECT_FALSE(lhs != rhs);
+
+  const absl::optional<int64_t> value = 10;
+  rhs.set_local_capture_clock_offset(value);
+  EXPECT_EQ(rhs.local_capture_clock_offset(), value);
+
+  EXPECT_FALSE(lhs == rhs);
+  EXPECT_TRUE(lhs != rhs);
+
+  lhs = rhs;
+
+  EXPECT_TRUE(lhs == rhs);
+  EXPECT_FALSE(lhs != rhs);
+
+  // Default local capture clock offset is null.
+  rhs = RtpPacketInfo();
+  EXPECT_EQ(rhs.local_capture_clock_offset(), absl::nullopt);
+
+  // Default local capture clock offset is null.
+  rhs = RtpPacketInfo({}, {}, {}, {}, AbsoluteCaptureTime{12, 34},
+                      Timestamp::Millis(0));
+  EXPECT_EQ(rhs.local_capture_clock_offset(), absl::nullopt);
+}
+
 TEST(RtpPacketInfoTest, ReceiveTimeMs) {
-  const int64_t value = 8868963877546349045LL;
+  const Timestamp timestamp = Timestamp::Micros(8868963877546349045LL);
 
   RtpPacketInfo lhs;
   RtpPacketInfo rhs;
@@ -158,8 +187,8 @@ TEST(RtpPacketInfoTest, ReceiveTimeMs) {
   EXPECT_TRUE(lhs == rhs);
   EXPECT_FALSE(lhs != rhs);
 
-  rhs.set_receive_time_ms(value);
-  EXPECT_EQ(rhs.receive_time_ms(), value);
+  rhs.set_receive_time(timestamp);
+  EXPECT_EQ(rhs.receive_time(), timestamp);
 
   EXPECT_FALSE(lhs == rhs);
   EXPECT_TRUE(lhs != rhs);
@@ -170,10 +199,10 @@ TEST(RtpPacketInfoTest, ReceiveTimeMs) {
   EXPECT_FALSE(lhs != rhs);
 
   rhs = RtpPacketInfo();
-  EXPECT_NE(rhs.receive_time_ms(), value);
+  EXPECT_NE(rhs.receive_time(), timestamp);
 
-  rhs = RtpPacketInfo({}, {}, {}, {}, {}, value);
-  EXPECT_EQ(rhs.receive_time_ms(), value);
+  rhs = RtpPacketInfo({}, {}, {}, {}, {}, timestamp);
+  EXPECT_EQ(rhs.receive_time(), timestamp);
 }
 
 }  // namespace webrtc

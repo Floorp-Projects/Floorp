@@ -12,12 +12,12 @@
 #define MODULES_DESKTOP_CAPTURE_FULL_SCREEN_WINDOW_DETECTOR_H_
 
 #include <memory>
+
 #include "api/function_view.h"
 #include "api/ref_counted_base.h"
 #include "api/scoped_refptr.h"
 #include "modules/desktop_capture/desktop_capturer.h"
 #include "modules/desktop_capture/full_screen_application_handler.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 
@@ -32,7 +32,8 @@ namespace webrtc {
 // window using criteria provided by application specific
 // FullScreenApplicationHandler.
 
-class FullScreenWindowDetector : public rtc::RefCountedBase {
+class FullScreenWindowDetector
+    : public rtc::RefCountedNonVirtual<FullScreenWindowDetector> {
  public:
   using ApplicationHandlerFactory =
       std::function<std::unique_ptr<FullScreenApplicationHandler>(
@@ -40,6 +41,9 @@ class FullScreenWindowDetector : public rtc::RefCountedBase {
 
   FullScreenWindowDetector(
       ApplicationHandlerFactory application_handler_factory);
+
+  FullScreenWindowDetector(const FullScreenWindowDetector&) = delete;
+  FullScreenWindowDetector& operator=(const FullScreenWindowDetector&) = delete;
 
   // Returns the full-screen window in place of the original window if all the
   // criteria provided by FullScreenApplicationHandler are met, or 0 if no such
@@ -72,7 +76,6 @@ class FullScreenWindowDetector : public rtc::RefCountedBase {
   DesktopCapturer::SourceId no_handler_source_id_;
 
   DesktopCapturer::SourceList window_list_;
-  RTC_DISALLOW_COPY_AND_ASSIGN(FullScreenWindowDetector);
 };
 
 }  // namespace webrtc

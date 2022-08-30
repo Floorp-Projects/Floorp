@@ -16,8 +16,8 @@
 #include <memory>
 #include <string>
 
+#include "api/sequence_checker.h"
 #include "modules/utility/include/helpers_android.h"
-#include "rtc_base/thread_checker.h"
 
 namespace webrtc {
 
@@ -34,7 +34,7 @@ class JvmThreadConnector {
   ~JvmThreadConnector();
 
  private:
-  rtc::ThreadChecker thread_checker_;
+  SequenceChecker thread_checker_;
   bool attached_;
 };
 
@@ -97,9 +97,9 @@ class JNIEnvironment {
   explicit JNIEnvironment(JNIEnv* jni);
   ~JNIEnvironment();
 
-  // Registers native methods with the Java class specified by |name|.
+  // Registers native methods with the Java class specified by `name`.
   // Note that the class name must be one of the names in the static
-  // |loaded_classes| array defined in jvm_android.cc.
+  // `loaded_classes` array defined in jvm_android.cc.
   // This method must be called on the construction thread.
   std::unique_ptr<NativeRegistration> RegisterNatives(
       const char* name,
@@ -111,7 +111,7 @@ class JNIEnvironment {
   std::string JavaToStdString(const jstring& j_string);
 
  private:
-  rtc::ThreadChecker thread_checker_;
+  SequenceChecker thread_checker_;
   JNIEnv* const jni_;
 };
 
@@ -138,7 +138,7 @@ class JNIEnvironment {
 //     obj = reg->NewObject("<init>", ,);
 //   }
 //
-//   // Each User method can now use |reg| and |obj| and call Java functions
+//   // Each User method can now use `reg` and `obj` and call Java functions
 //   // in WebRtcTest.java, e.g. boolean init() {}.
 //   bool User::Foo() {
 //     jmethodID id = reg->GetMethodId("init", "()Z");
@@ -168,9 +168,9 @@ class JVM {
   // called successfully. Use the AttachCurrentThreadIfNeeded class if needed.
   std::unique_ptr<JNIEnvironment> environment();
 
-  // Returns a JavaClass object given class |name|.
+  // Returns a JavaClass object given class `name`.
   // Note that the class name must be one of the names in the static
-  // |loaded_classes| array defined in jvm_android.cc.
+  // `loaded_classes` array defined in jvm_android.cc.
   // This method must be called on the construction thread.
   JavaClass GetClass(const char* name);
 
@@ -184,7 +184,7 @@ class JVM {
  private:
   JNIEnv* jni() const { return GetEnv(jvm_); }
 
-  rtc::ThreadChecker thread_checker_;
+  SequenceChecker thread_checker_;
   JavaVM* const jvm_;
 };
 

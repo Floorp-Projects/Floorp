@@ -23,8 +23,8 @@
 #include "api/video/video_frame_buffer.h"
 #include "api/video/video_rotation.h"
 #include "system_wrappers/include/metrics.h"
-#include "test/field_trial.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 namespace webrtc {
 namespace {
@@ -39,13 +39,17 @@ const int kHeight = 720;
 // TODO(sakal): ReceiveStatisticsProxy is lacking unittesting.
 class ReceiveStatisticsProxyTest : public ::testing::Test {
  public:
-  ReceiveStatisticsProxyTest() : fake_clock_(1234), config_(GetTestConfig()) {}
+  explicit ReceiveStatisticsProxyTest(std::string field_trials = "")
+      : field_trials_(field_trials),
+        fake_clock_(1234),
+        config_(GetTestConfig()) {}
   virtual ~ReceiveStatisticsProxyTest() {}
 
  protected:
   virtual void SetUp() {
     metrics::Reset();
-    statistics_proxy_.reset(new ReceiveStatisticsProxy(&config_, &fake_clock_));
+    statistics_proxy_.reset(new ReceiveStatisticsProxy(
+        config_.rtp.remote_ssrc, &fake_clock_, &field_trials_));
   }
 
   VideoReceiveStream::Config GetTestConfig() {
@@ -75,6 +79,7 @@ class ReceiveStatisticsProxyTest : public ::testing::Test {
     return frame;
   }
 
+  test::ScopedKeyValueConfig field_trials_;
   SimulatedClock fake_clock_;
   const VideoReceiveStream::Config config_;
   std::unique_ptr<ReceiveStatisticsProxy> statistics_proxy_;
@@ -1257,7 +1262,7 @@ TEST_P(ReceiveStatisticsProxyTestWithContent,
     fake_clock_.AdvanceTimeMilliseconds(kInterFrameDelayMs);
   }
 
-  // |kMinRequiredSamples| samples, and thereby intervals, is required. That
+  // `kMinRequiredSamples` samples, and thereby intervals, is required. That
   // means we're one frame short of having a valid data set.
   statistics_proxy_->UpdateHistograms(absl::nullopt, StreamDataCounters(),
                                       nullptr);
@@ -1691,25 +1696,16 @@ TEST_P(ReceiveStatisticsProxyTestWithContent,
   }
 }
 
-class DecodeTimeHistogramsKillswitch {
- public:
-  explicit DecodeTimeHistogramsKillswitch(bool disable_histograms)
-      : field_trial_(disable_histograms
-                         ? "WebRTC-DecodeTimeHistogramsKillSwitch/Enabled/"
-                         : "") {}
-
- private:
-  webrtc::test::ScopedFieldTrials field_trial_;
-};
-
 class ReceiveStatisticsProxyTestWithDecodeTimeHistograms
-    : public DecodeTimeHistogramsKillswitch,
-      public ::testing::WithParamInterface<
+    : public ::testing::WithParamInterface<
           std::tuple<bool, int, int, int, VideoCodecType, std::string>>,
       public ReceiveStatisticsProxyTest {
  public:
   ReceiveStatisticsProxyTestWithDecodeTimeHistograms()
-      : DecodeTimeHistogramsKillswitch(std::get<0>(GetParam())) {}
+      : ReceiveStatisticsProxyTest(
+            std::get<0>(GetParam())
+                ? "WebRTC-DecodeTimeHistogramsKillSwitch/Enabled/"
+                : "") {}
 
  protected:
   const std::string kUmaPrefix = "WebRTC.Video.DecodeTimePerFrameInMs.";

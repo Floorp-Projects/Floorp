@@ -29,6 +29,15 @@
 extern "C" {
 #endif
 
+/** \defgroup spa_param Parameters
+ * Parameter value enumerations and type information
+ */
+
+/**
+ * \addtogroup spa_param
+ * \{
+ */
+
 #include <spa/utils/defs.h>
 
 /** different parameter types that can be queried */
@@ -48,6 +57,8 @@ enum spa_param_type {
 	SPA_PARAM_EnumRoute,		/**< routing enumeration as SPA_TYPE_OBJECT_ParamRoute */
 	SPA_PARAM_Route,		/**< routing configuration as SPA_TYPE_OBJECT_ParamRoute */
 	SPA_PARAM_Control,		/**< Control parameter, a SPA_TYPE_Sequence */
+	SPA_PARAM_Latency,		/**< latency reporting, a SPA_TYPE_OBJECT_ParamLatency */
+	SPA_PARAM_ProcessLatency,	/**< processing latency, a SPA_TYPE_OBJECT_ParamProcessLatency */
 };
 
 /** information about a parameter */
@@ -115,7 +126,11 @@ enum spa_param_profile {
 					  *	   Int : number of items following
 					  *        Struct(
 					  *           String : class name (eg. "Audio/Source"),
-					  *           Int : number of nodes)*)) */
+					  *           Int : number of nodes
+					  *           String : property (eg. "card.profile.devices"),
+					  *           Array of Int: device indexes
+					  *         )*)) */
+	SPA_PARAM_PROFILE_save,		/**< If profile should be saved (Bool) */
 };
 
 enum spa_param_port_config_mode {
@@ -156,8 +171,39 @@ enum spa_param_route {
 	SPA_PARAM_ROUTE_props,			/**< properties SPA_TYPE_OBJECT_Props */
 	SPA_PARAM_ROUTE_devices,		/**< associated device indexes (Array of Int) */
 	SPA_PARAM_ROUTE_profile,		/**< profile id (Int) */
+	SPA_PARAM_ROUTE_save,			/**< If route should be saved (Bool) */
 };
 
+
+/** properties for SPA_TYPE_OBJECT_ParamLatency */
+enum spa_param_latency {
+	SPA_PARAM_LATENCY_START,
+	SPA_PARAM_LATENCY_direction,		/**< direction, input/output (Id enum spa_direction) */
+	SPA_PARAM_LATENCY_minQuantum,		/**< min latency relative to quantum (Float) */
+	SPA_PARAM_LATENCY_maxQuantum,		/**< max latency relative to quantum (Float) */
+	SPA_PARAM_LATENCY_minRate,		/**< min latency (Int) relative to rate */
+	SPA_PARAM_LATENCY_maxRate,		/**< max latency (Int) relative to rate */
+	SPA_PARAM_LATENCY_minNs,		/**< min latency (Long) in nanoseconds */
+	SPA_PARAM_LATENCY_maxNs,		/**< max latency (Long) in nanoseconds */
+};
+
+/** properties for SPA_TYPE_OBJECT_ParamProcessLatency */
+enum spa_param_process_latency {
+	SPA_PARAM_PROCESS_LATENCY_START,
+	SPA_PARAM_PROCESS_LATENCY_quantum,	/**< latency relative to quantum (Float) */
+	SPA_PARAM_PROCESS_LATENCY_rate,		/**< latency (Int) relative to rate */
+	SPA_PARAM_PROCESS_LATENCY_ns,		/**< latency (Long) in nanoseconds */
+};
+
+enum spa_param_bitorder {
+	SPA_PARAM_BITORDER_unknown,	/**< unknown bitorder */
+	SPA_PARAM_BITORDER_msb,		/**< most significant bit */
+	SPA_PARAM_BITORDER_lsb,		/**< least significant bit */
+};
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

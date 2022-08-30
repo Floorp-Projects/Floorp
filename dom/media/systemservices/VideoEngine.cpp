@@ -83,13 +83,16 @@ int32_t VideoEngine::CreateVideoCapture(const char* deviceUniqueIdUTF8) {
         nsIEventTarget::DISPATCH_SYNC);
 
     if (result == NS_OK) {
-      entry = CaptureEntry(id, captureModule);
+      entry = CaptureEntry(
+          id, rtc::scoped_refptr<webrtc::VideoCaptureModule>(captureModule));
     } else {
       return -1;
     }
 #  else
-    entry = CaptureEntry(id, webrtc::DesktopCaptureImpl::Create(
-                                 id, deviceUniqueIdUTF8, mCaptureDevInfo.type));
+    entry = CaptureEntry(
+        id, rtc::scoped_refptr<webrtc::VideoCaptureModule>(
+                webrtc::DesktopCaptureImpl::Create(id, deviceUniqueIdUTF8,
+                                                   mCaptureDevInfo.type)));
 #  endif
 #else
     MOZ_ASSERT("CreateVideoCapture NO DESKTOP CAPTURE IMPL ON ANDROID" ==

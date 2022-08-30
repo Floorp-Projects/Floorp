@@ -39,12 +39,20 @@ extern "C" {
 
 #include <pipewire/proxy.h>
 
+/** \defgroup pw_node Node
+ * Node interface
+ */
+
+/**
+ * \addtogroup pw_node
+ * \{
+ */
 #define PW_TYPE_INTERFACE_Node	PW_TYPE_INFO_INTERFACE_BASE "Node"
 
 #define PW_VERSION_NODE		3
 struct pw_node;
 
-/** \enum pw_node_state The different node states \memberof pw_node */
+/** \enum pw_node_state The different node states */
 enum pw_node_state {
 	PW_NODE_STATE_ERROR = -1,	/**< error state */
 	PW_NODE_STATE_CREATING = 0,	/**< the node is being created */
@@ -55,10 +63,10 @@ enum pw_node_state {
 	PW_NODE_STATE_RUNNING = 3,	/**< the node is running */
 };
 
-/** Convert a \ref pw_node_state to a readable string \memberof pw_node */
+/** Convert a \ref pw_node_state to a readable string */
 const char * pw_node_state_as_string(enum pw_node_state state);
 
-/** The node information. Extra information can be added in later versions \memberof pw_introspect */
+/** The node information. Extra information can be added in later versions */
 struct pw_node_info {
 	uint32_t id;				/**< id of the global */
 	uint32_t max_input_ports;		/**< maximum number of inputs */
@@ -81,7 +89,11 @@ struct pw_node_info {
 
 struct pw_node_info *
 pw_node_info_update(struct pw_node_info *info,
-		    const struct pw_node_info *update);
+		const struct pw_node_info *update);
+
+struct pw_node_info *
+pw_node_info_merge(struct pw_node_info *info,
+		const struct pw_node_info *update, bool reset);
 
 void
 pw_node_info_free(struct pw_node_info *info);
@@ -99,7 +111,7 @@ struct pw_node_events {
 	 *
 	 * \param info info about the node
 	 */
-	void (*info) (void *object, const struct pw_node_info *info);
+	void (*info) (void *data, const struct pw_node_info *info);
 	/**
 	 * Notify a node param
 	 *
@@ -111,7 +123,7 @@ struct pw_node_events {
 	 * \param next the param index of the next param
 	 * \param param the parameter
 	 */
-	void (*param) (void *object, int seq,
+	void (*param) (void *data, int seq,
 		      uint32_t id, uint32_t index, uint32_t next,
 		      const struct spa_pod *param);
 };
@@ -192,6 +204,10 @@ struct pw_node_methods {
 #define pw_node_enum_params(c,...)	pw_node_method(c,enum_params,0,__VA_ARGS__)
 #define pw_node_set_param(c,...)	pw_node_method(c,set_param,0,__VA_ARGS__)
 #define pw_node_send_command(c,...)	pw_node_method(c,send_command,0,__VA_ARGS__)
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

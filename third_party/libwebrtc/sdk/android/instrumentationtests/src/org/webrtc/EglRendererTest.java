@@ -22,19 +22,16 @@ import android.graphics.SurfaceTexture;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.SmallTest;
+import androidx.test.filters.SmallTest;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
-import org.chromium.base.test.BaseJUnit4ClassRunner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 // EmptyActivity is needed for the surface.
-@RunWith(BaseJUnit4ClassRunner.class)
 public class EglRendererTest {
   private final static String TAG = "EglRendererTest";
   private final static int RENDER_WAIT_MS = 1000;

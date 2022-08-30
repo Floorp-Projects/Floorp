@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2017 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -21,7 +21,9 @@ def main():
                       help='Jar input path to include .class files from.')
   parser.add_argument('--output-jar', required=True,
                       help='Jar output path.')
-  parser.add_argument('--classpath', required=True,
+  parser.add_argument('--classpath',
+                      action='append',
+                      required=True,
                       help='Classpath.')
   parser.add_argument('--bootclasspath', required=True,
                       help='Path to javac bootclasspath interface jar.')

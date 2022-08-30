@@ -541,7 +541,7 @@ class CameraVideoCapturerTestFixtures {
     capturerInstance.capturer.stopCapture();
     capturerInstance.observer.releaseFrame();
 
-    // We can't change |capturer| at this point, but we should not crash.
+    // We can't change `capturer` at this point, but we should not crash.
     capturerInstance.capturer.switchCamera(null /* switchEventsHandler */);
     capturerInstance.capturer.changeCaptureFormat(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_FPS);
 

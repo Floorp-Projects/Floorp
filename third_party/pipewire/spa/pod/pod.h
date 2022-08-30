@@ -32,15 +32,20 @@ extern "C" {
 #include <spa/utils/defs.h>
 #include <spa/utils/type.h>
 
+/**
+ * \addtogroup spa_pod
+ * \{
+ */
+
 #define SPA_POD_BODY_SIZE(pod)			(((struct spa_pod*)(pod))->size)
 #define SPA_POD_TYPE(pod)			(((struct spa_pod*)(pod))->type)
 #define SPA_POD_SIZE(pod)			(sizeof(struct spa_pod) + SPA_POD_BODY_SIZE(pod))
 #define SPA_POD_CONTENTS_SIZE(type,pod)		(SPA_POD_SIZE(pod)-sizeof(type))
 
-#define SPA_POD_CONTENTS(type,pod)		SPA_MEMBER((pod),sizeof(type),void)
-#define SPA_POD_CONTENTS_CONST(type,pod)	SPA_MEMBER((pod),sizeof(type),const void)
-#define SPA_POD_BODY(pod)			SPA_MEMBER((pod),sizeof(struct spa_pod),void)
-#define SPA_POD_BODY_CONST(pod)			SPA_MEMBER((pod),sizeof(struct spa_pod),const void)
+#define SPA_POD_CONTENTS(type,pod)		SPA_PTROFF((pod),sizeof(type),void)
+#define SPA_POD_CONTENTS_CONST(type,pod)	SPA_PTROFF((pod),sizeof(type),const void)
+#define SPA_POD_BODY(pod)			SPA_PTROFF((pod),sizeof(struct spa_pod),void)
+#define SPA_POD_BODY_CONST(pod)			SPA_PTROFF((pod),sizeof(struct spa_pod),const void)
 
 struct spa_pod {
 	uint32_t size;		/* size of the body */
@@ -111,7 +116,7 @@ struct spa_pod_bitmap {
 #define SPA_POD_ARRAY_CHILD(arr)	(&((struct spa_pod_array*)(arr))->body.child)
 #define SPA_POD_ARRAY_VALUE_TYPE(arr)	(SPA_POD_TYPE(SPA_POD_ARRAY_CHILD(arr)))
 #define SPA_POD_ARRAY_VALUE_SIZE(arr)	(SPA_POD_BODY_SIZE(SPA_POD_ARRAY_CHILD(arr)))
-#define SPA_POD_ARRAY_N_VALUES(arr)	((SPA_POD_BODY_SIZE(arr) - sizeof(struct spa_pod_array_body)) / SPA_POD_ARRAY_VALUE_SIZE(arr))
+#define SPA_POD_ARRAY_N_VALUES(arr)	(SPA_POD_ARRAY_VALUE_SIZE(arr) ? ((SPA_POD_BODY_SIZE(arr) - sizeof(struct spa_pod_array_body)) / SPA_POD_ARRAY_VALUE_SIZE(arr)) : 0)
 #define SPA_POD_ARRAY_VALUES(arr)	SPA_POD_CONTENTS(struct spa_pod_array, arr)
 
 struct spa_pod_array_body {
@@ -129,7 +134,7 @@ struct spa_pod_array {
 #define SPA_POD_CHOICE_FLAGS(choice)		(((struct spa_pod_choice*)(choice))->body.flags)
 #define SPA_POD_CHOICE_VALUE_TYPE(choice)	(SPA_POD_TYPE(SPA_POD_CHOICE_CHILD(choice)))
 #define SPA_POD_CHOICE_VALUE_SIZE(choice)	(SPA_POD_BODY_SIZE(SPA_POD_CHOICE_CHILD(choice)))
-#define SPA_POD_CHOICE_N_VALUES(choice)		((SPA_POD_BODY_SIZE(choice) - sizeof(struct spa_pod_choice_body)) / SPA_POD_CHOICE_VALUE_SIZE(choice))
+#define SPA_POD_CHOICE_N_VALUES(choice)		(SPA_POD_CHOICE_VALUE_SIZE(choice) ? ((SPA_POD_BODY_SIZE(choice) - sizeof(struct spa_pod_choice_body)) / SPA_POD_CHOICE_VALUE_SIZE(choice)) : 0)
 #define SPA_POD_CHOICE_VALUES(choice)		(SPA_POD_CONTENTS(struct spa_pod_choice, choice))
 
 enum spa_choice_type {
@@ -196,6 +201,13 @@ struct spa_pod_prop {
 					  *  object type */
 #define SPA_POD_PROP_FLAG_READONLY	(1u<<0)		/**< is read-only */
 #define SPA_POD_PROP_FLAG_HARDWARE	(1u<<1)		/**< some sort of hardware parameter */
+#define SPA_POD_PROP_FLAG_HINT_DICT	(1u<<2)		/**< contains a dictionary struct as
+							 *   (Struct(
+							 *	  Int : n_items,
+							 *	  (String : key,
+							 *	   String : value)*)) */
+#define SPA_POD_PROP_FLAG_MANDATORY	(1u<<3)		/**< is mandatory */
+#define SPA_POD_PROP_FLAG_DONT_FIXATE	(1u<<4)		/**< choices need no fixation */
 	uint32_t flags;			/**< flags for property */
 	struct spa_pod value;
 	/* value follows */
@@ -223,6 +235,9 @@ struct spa_pod_sequence {
 	struct spa_pod_sequence_body body;
 };
 
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

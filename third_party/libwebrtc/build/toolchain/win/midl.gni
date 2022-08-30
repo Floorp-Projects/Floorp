@@ -25,11 +25,24 @@ import("//build/config/win/visual_studio_version.gni")
 #       Directory where generated files were previously persisted.
 #       Defaults to third_party\win_build_output\midl\|out_dir|.
 #
-#   dynamic_guid (optional)
-#       If the GUID is not constant across builds, the current GUID.
+#   dynamic_guids (optional)
+#       If the GUIDs are not constant across builds, the current GUID
+#       substitutions.
+#       |dynamic_guids| is of the form:
+#         "PLACEHOLDER-GUID-158428a4-6014-4978-83ba-9fad0dabe791="
+#         "3d852661-c795-4d20-9b95-5561e9a1d2d9,"
+#         "PLACEHOLDER-GUID-63B8FFB1-5314-48C9-9C57-93EC8BC6184B="
+#         "D0E1CACC-C63C-4192-94AB-BF8EAD0E3B83".
+#       See midl.py for more details.
 #
 #   writes_tlb (optional)
 #       Whether a .tlb file should be added to outputs. Defaults to false.
+#
+#   writes_proxy(optional)
+#       Whether a _p.c file should be added to outputs. Defaults to true.
+#
+#   writes_dlldata(optional)
+#       Whether a .dlldata.c file should be added to outputs. Defaults to true.
 #
 #   deps (optional)
 #
@@ -58,10 +71,10 @@ template("midl") {
                     rebase_path(out_dir, root_gen_dir)
   }
 
-  if (defined(invoker.dynamic_guid)) {
-    dynamic_guid = invoker.dynamic_guid
+  if (defined(invoker.dynamic_guids)) {
+    dynamic_guids = invoker.dynamic_guids
   } else {
-    dynamic_guid = "none"
+    dynamic_guids = "none"
   }
 
   if (defined(invoker.header_file)) {
@@ -76,10 +89,37 @@ template("midl") {
     writes_tlb = false
   }
 
-  dlldata_file = "{{source_name_part}}.dlldata.c"
+  if (defined(invoker.writes_proxy)) {
+    writes_proxy = invoker.writes_proxy
+  } else {
+    writes_proxy = true
+  }
+
+  if (defined(invoker.writes_dlldata)) {
+    writes_dlldata = invoker.writes_dlldata
+  } else {
+    writes_dlldata = true
+  }
+
+  if (writes_tlb) {
+    type_library_file = "{{source_name_part}}.tlb"
+  } else {
+    type_library_file = "none"
+  }
+
+  if (writes_dlldata) {
+    dlldata_file = "{{source_name_part}}.dlldata.c"
+  } else {
+    dlldata_file = "none"
+  }
+
+  if (writes_proxy) {
+    proxy_file = "{{source_name_part}}_p.c"
+  } else {
+    proxy_file = "none"
+  }
+
   interface_identifier_file = "{{source_name_part}}_i.c"
-  proxy_file = "{{source_name_part}}_p.c"
-  type_library_file = "{{source_name_part}}.tlb"
 
   action_foreach(action_name) {
     visibility = [ ":$source_set_name" ]
@@ -89,15 +129,20 @@ template("midl") {
 
     outputs = [
       "$out_dir/$header_file",
-      "$out_dir/$dlldata_file",
       "$out_dir/$interface_identifier_file",
-      "$out_dir/$proxy_file",
     ]
 
-    # The .tlb is only added to outputs if the invoker so desires, as it is not
-    # always generated depending on the content of the input idl file.
+    # These files are only added to outputs if the invoker so desires, as it
+    # they are not always generated depending on the content of the input idl
+    # file.
     if (writes_tlb) {
       outputs += [ "$out_dir/$type_library_file" ]
+    }
+    if (writes_dlldata) {
+      outputs += [ "$out_dir/$dlldata_file" ]
+    }
+    if (writes_proxy) {
+      outputs += [ "$out_dir/$proxy_file" ]
     }
 
     if (target_cpu == "x86") {
@@ -117,7 +162,7 @@ template("midl") {
       win_tool_arch,
       generated_dir,
       rebase_path(out_dir, root_build_dir),
-      dynamic_guid,
+      dynamic_guids,
       type_library_file,
       header_file,
       dlldata_file,

@@ -29,27 +29,33 @@
 extern "C" {
 #endif
 
-/** \class pw_filter
+/** \defgroup pw_filter Filter
  *
  * \brief PipeWire filter object class
  *
  * The filter object provides a convenient way to implement
  * processing filters.
  *
- * See also \ref page_filters and \ref page_core_api
+ * See also \ref api_pw_core
+ */
+
+/**
+ * \addtogroup pw_filter
+ * \{
  */
 struct pw_filter;
 
 #include <spa/buffer/buffer.h>
 #include <spa/node/io.h>
 #include <spa/param/param.h>
+#include <spa/pod/command.h>
 
 #include <pipewire/core.h>
 #include <pipewire/stream.h>
 
-/** \enum pw_filter_state The state of a filter \memberof pw_filter */
+/** \enum pw_filter_state The state of a filter  */
 enum pw_filter_state {
-	PW_FILTER_STATE_ERROR = -1,		/**< the strean is in error */
+	PW_FILTER_STATE_ERROR = -1,		/**< the stream is in error */
 	PW_FILTER_STATE_UNCONNECTED = 0,	/**< unconnected */
 	PW_FILTER_STATE_CONNECTING = 1,		/**< connection is in progress */
 	PW_FILTER_STATE_PAUSED = 2,		/**< filter is connected and paused */
@@ -71,7 +77,7 @@ struct pw_buffer {
 /** Events for a filter. These events are always called from the mainloop
  * unless explicitly documented otherwise. */
 struct pw_filter_events {
-#define PW_VERSION_FILTER_EVENTS	0
+#define PW_VERSION_FILTER_EVENTS	1
 	uint32_t version;
 
 	void (*destroy) (void *data);
@@ -98,12 +104,15 @@ struct pw_filter_events {
 
 	/** The filter is drained */
         void (*drained) (void *data);
+
+	/** A command notify, Since 0.3.39:1 */
+	void (*command) (void *data, const struct spa_command *command);
 };
 
-/** Convert a filter state to a readable string \memberof pw_filter */
+/** Convert a filter state to a readable string  */
 const char * pw_filter_state_as_string(enum pw_filter_state state);
 
-/** \enum pw_filter_flags Extra flags that can be used in \ref pw_filter_connect() \memberof pw_filter */
+/** \enum pw_filter_flags Extra flags that can be used in \ref pw_filter_connect()  */
 enum pw_filter_flags {
 	PW_FILTER_FLAG_NONE = 0,			/**< no flags */
 	PW_FILTER_FLAG_INACTIVE		= (1 << 0),	/**< start the filter inactive,
@@ -112,17 +121,20 @@ enum pw_filter_flags {
 	PW_FILTER_FLAG_DRIVER		= (1 << 1),	/**< be a driver */
 	PW_FILTER_FLAG_RT_PROCESS	= (1 << 2),	/**< call process from the realtime
 							  *  thread */
+	PW_FILTER_FLAG_CUSTOM_LATENCY	= (1 << 3),	/**< don't call the default latency algorithm
+							  *  but emit the param_changed event for the
+							  *  ports when Latency params are received. */
 };
 
 enum pw_filter_port_flags {
 	PW_FILTER_PORT_FLAG_NONE		= 0,		/**< no flags */
-	PW_FILTER_PORT_FLAG_MAP_BUFFERS		= (1 << 0),	/**< mmap the buffers */
+	PW_FILTER_PORT_FLAG_MAP_BUFFERS		= (1 << 0),	/**< mmap the buffers except DmaBuf */
 	PW_FILTER_PORT_FLAG_ALLOC_BUFFERS	= (1 << 1),	/**< the application will allocate buffer
 								  *  memory. In the add_buffer event, the
 								  *  data of the buffer should be set */
 };
 
-/** Create a new unconneced \ref pw_filter \memberof pw_filter
+/** Create a new unconneced \ref pw_filter
  * \return a newly allocated \ref pw_filter */
 struct pw_filter *
 pw_filter_new(struct pw_core *core,		/**< a \ref pw_core */
@@ -136,7 +148,7 @@ pw_filter_new_simple(struct pw_loop *loop,		/**< a \ref pw_loop to use */
 		     const struct pw_filter_events *events,	/**< filter events */
 		     void *data					/**< data passed to events */);
 
-/** Destroy a filter \memberof pw_filter */
+/** Destroy a filter  */
 void pw_filter_destroy(struct pw_filter *filter);
 
 void pw_filter_add_listener(struct pw_filter *filter,
@@ -150,7 +162,7 @@ const char *pw_filter_get_name(struct pw_filter *filter);
 
 struct pw_core *pw_filter_get_core(struct pw_filter *filter);
 
-/** Connect a filter for processing. \memberof pw_filter
+/** Connect a filter for processing.
  * \return 0 on success < 0 on error.
  *
  * You should connect to the process event and use pw_filter_dequeue_buffer()
@@ -161,16 +173,16 @@ pw_filter_connect(struct pw_filter *filter,		/**< a \ref pw_filter */
 		  const struct spa_pod **params,	/**< an array with params. */
 		  uint32_t n_params			/**< number of items in \a params */);
 
-/** Get the node ID of the filter. \memberof pw_filter
+/** Get the node ID of the filter.
  * \return node ID. */
 uint32_t
 pw_filter_get_node_id(struct pw_filter *filter);
 
-/** Disconnect \a filter \memberof pw_filter */
+/** Disconnect \a filter  */
 int pw_filter_disconnect(struct pw_filter *filter);
 
 /** add a port to the filter, returns user data of port_data_size. */
-void *pw_filter_add_port(struct pw_filter *filter,
+void *pw_filter_add_port(struct pw_filter *filter,	/**< a \ref pw_filter */
 		enum pw_direction direction,		/**< port direction */
 		enum pw_filter_port_flags flags,	/**< port flags */
 		size_t port_data_size,			/**< allocated and given to the user as port_data */
@@ -193,7 +205,9 @@ int pw_filter_update_properties(struct pw_filter *filter,
 /** Set the filter in error state */
 int pw_filter_set_error(struct pw_filter *filter,	/**< a \ref pw_filter */
 			int res,			/**< a result code */
-			const char *error, ...		/**< an error message */) SPA_PRINTF_FUNC(3, 4);
+			const char *error,		/**< an error message */
+			...
+			) SPA_PRINTF_FUNC(3, 4);
 
 /** Update params, use NULL port_data for global filter params */
 int
@@ -203,17 +217,9 @@ pw_filter_update_params(struct pw_filter *filter,	/**< a \ref pw_filter */
 			uint32_t n_params		/**< number of elements in \a params */);
 
 
-#if 0
-/** A time structure \memberof pw_filter */
-struct pw_time {
-	int64_t now;			/**< the monotonic time */
-	struct spa_fraction rate;	/**< the rate of \a ticks and delay */
-	uint64_t ticks;			/**< the ticks at \a now. This is the current time that
-					  *  the remote end is reading/writing. */
-};
-#endif
-
-/** Query the time on the filter \memberof pw_filter */
+/** Query the time on the filter, deprecated, use the spa_io_position in the
+ * process() method for timing information. */
+SPA_DEPRECATED
 int pw_filter_get_time(struct pw_filter *filter, struct pw_time *time);
 
 /** Get a buffer that can be filled for output ports or consumed
@@ -226,12 +232,16 @@ int pw_filter_queue_buffer(void *port_data, struct pw_buffer *buffer);
 /** Get a data pointer to the buffer data */
 void *pw_filter_get_dsp_buffer(void *port_data, uint32_t n_samples);
 
-/** Activate or deactivate the filter \memberof pw_filter */
+/** Activate or deactivate the filter  */
 int pw_filter_set_active(struct pw_filter *filter, bool active);
 
 /** Flush a filter. When \a drain is true, the drained callback will
  * be called when all data is played or recorded */
 int pw_filter_flush(struct pw_filter *filter, bool drain);
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }

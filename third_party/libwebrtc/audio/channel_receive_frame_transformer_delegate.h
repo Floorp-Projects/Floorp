@@ -14,7 +14,8 @@
 #include <memory>
 
 #include "api/frame_transformer_interface.h"
-#include "rtc_base/synchronization/sequence_checker.h"
+#include "api/sequence_checker.h"
+#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/thread.h"
 
@@ -22,7 +23,7 @@ namespace webrtc {
 
 // Delegates calls to FrameTransformerInterface to transform frames, and to
 // ChannelReceive to receive the transformed frames using the
-// |receive_frame_callback_| on the |channel_receive_thread_|.
+// `receive_frame_callback_` on the `channel_receive_thread_`.
 class ChannelReceiveFrameTransformerDelegate : public TransformedFrameCallback {
  public:
   using ReceiveFrameCallback =
@@ -31,14 +32,14 @@ class ChannelReceiveFrameTransformerDelegate : public TransformedFrameCallback {
   ChannelReceiveFrameTransformerDelegate(
       ReceiveFrameCallback receive_frame_callback,
       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
-      rtc::Thread* channel_receive_thread);
+      TaskQueueBase* channel_receive_thread);
 
-  // Registers |this| as callback for |frame_transformer_|, to get the
+  // Registers `this` as callback for `frame_transformer_`, to get the
   // transformed frames.
   void Init();
 
-  // Unregisters and releases the |frame_transformer_| reference, and resets
-  // |receive_frame_callback_| on |channel_receive_thread_|. Called from
+  // Unregisters and releases the `frame_transformer_` reference, and resets
+  // `receive_frame_callback_` on `channel_receive_thread_`. Called from
   // ChannelReceive destructor to prevent running the callback on a dangling
   // channel.
   void Reset();
@@ -54,19 +55,19 @@ class ChannelReceiveFrameTransformerDelegate : public TransformedFrameCallback {
       std::unique_ptr<TransformableFrameInterface> frame) override;
 
   // Delegates the call to ChannelReceive::OnReceivedPayloadData on the
-  // |channel_receive_thread_|, by calling |receive_frame_callback_|.
+  // `channel_receive_thread_`, by calling `receive_frame_callback_`.
   void ReceiveFrame(std::unique_ptr<TransformableFrameInterface> frame) const;
 
  protected:
   ~ChannelReceiveFrameTransformerDelegate() override = default;
 
  private:
-  SequenceChecker sequence_checker_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker sequence_checker_;
   ReceiveFrameCallback receive_frame_callback_
       RTC_GUARDED_BY(sequence_checker_);
   rtc::scoped_refptr<FrameTransformerInterface> frame_transformer_
       RTC_GUARDED_BY(sequence_checker_);
-  rtc::Thread* channel_receive_thread_;
+  TaskQueueBase* const channel_receive_thread_;
 };
 
 }  // namespace webrtc

@@ -103,12 +103,12 @@ TEST_F(UlpfecGeneratorTest, NoEmptyFecWithSeqNumGaps) {
 }
 
 TEST_F(UlpfecGeneratorTest, OneFrameFec) {
-  // The number of media packets (|kNumPackets|), number of frames (one for
+  // The number of media packets (`kNumPackets`), number of frames (one for
   // this test), and the protection factor (|params->fec_rate|) are set to make
   // sure the conditions for generating FEC are satisfied. This means:
   // (1) protection factor is high enough so that actual overhead over 1 frame
-  // of packets is within |kMaxExcessOverhead|, and (2) the total number of
-  // media packets for 1 frame is at least |minimum_media_packets_fec_|.
+  // of packets is within `kMaxExcessOverhead`, and (2) the total number of
+  // media packets for 1 frame is at least `minimum_media_packets_fec_`.
   constexpr size_t kNumPackets = 4;
   FecProtectionParams params = {15, 3, kFecMaskRandom};
   packet_generator_.NewFrame(kNumPackets);
@@ -137,13 +137,13 @@ TEST_F(UlpfecGeneratorTest, OneFrameFec) {
 }
 
 TEST_F(UlpfecGeneratorTest, TwoFrameFec) {
-  // The number of media packets/frame (|kNumPackets|), the number of frames
-  // (|kNumFrames|), and the protection factor (|params->fec_rate|) are set to
+  // The number of media packets/frame (`kNumPackets`), the number of frames
+  // (`kNumFrames`), and the protection factor (|params->fec_rate|) are set to
   // make sure the conditions for generating FEC are satisfied. This means:
   // (1) protection factor is high enough so that actual overhead over
-  // |kNumFrames| is within |kMaxExcessOverhead|, and (2) the total number of
-  // media packets for |kNumFrames| frames is at least
-  // |minimum_media_packets_fec_|.
+  // `kNumFrames` is within `kMaxExcessOverhead`, and (2) the total number of
+  // media packets for `kNumFrames` frames is at least
+  // `minimum_media_packets_fec_`.
   constexpr size_t kNumPackets = 2;
   constexpr size_t kNumFrames = 2;
 
@@ -215,6 +215,59 @@ TEST_F(UlpfecGeneratorTest, MixedMediaRtpHeaderLengths) {
     fec_packet->SetSequenceNumber(seq_num++);
     EXPECT_EQ(kFecPayloadType, fec_packet->data()[kShortRtpHeaderLength]);
   }
+}
+
+TEST_F(UlpfecGeneratorTest, UpdatesProtectionParameters) {
+  const FecProtectionParams kKeyFrameParams = {25, /*max_fec_frames=*/2,
+                                               kFecMaskRandom};
+  const FecProtectionParams kDeltaFrameParams = {25, /*max_fec_frames=*/5,
+                                                 kFecMaskRandom};
+
+  ulpfec_generator_.SetProtectionParameters(kDeltaFrameParams, kKeyFrameParams);
+
+  // No params applied yet.
+  EXPECT_EQ(ulpfec_generator_.CurrentParams().max_fec_frames, 0);
+
+  // Helper function to add a single-packet frame market as either key-frame
+  // or delta-frame.
+  auto add_frame = [&](bool is_keyframe) {
+    packet_generator_.NewFrame(1);
+    std::unique_ptr<AugmentedPacket> packet =
+        packet_generator_.NextPacket(0, 10);
+    RtpPacketToSend rtp_packet(nullptr);
+    EXPECT_TRUE(rtp_packet.Parse(packet->data.data(), packet->data.size()));
+    rtp_packet.set_is_key_frame(is_keyframe);
+    ulpfec_generator_.AddPacketAndGenerateFec(rtp_packet);
+  };
+
+  // Add key-frame, keyframe params should apply, no FEC generated yet.
+  add_frame(true);
+  EXPECT_EQ(ulpfec_generator_.CurrentParams().max_fec_frames, 2);
+  EXPECT_TRUE(ulpfec_generator_.GetFecPackets().empty());
+
+  // Add delta-frame, generated FEC packet. Params will not be updated until
+  // next added packet though.
+  add_frame(false);
+  EXPECT_EQ(ulpfec_generator_.CurrentParams().max_fec_frames, 2);
+  EXPECT_FALSE(ulpfec_generator_.GetFecPackets().empty());
+
+  // Add delta-frame, now params get updated.
+  add_frame(false);
+  EXPECT_EQ(ulpfec_generator_.CurrentParams().max_fec_frames, 5);
+  EXPECT_TRUE(ulpfec_generator_.GetFecPackets().empty());
+
+  // Add yet another delta-frame.
+  add_frame(false);
+  EXPECT_EQ(ulpfec_generator_.CurrentParams().max_fec_frames, 5);
+  EXPECT_TRUE(ulpfec_generator_.GetFecPackets().empty());
+
+  // Add key-frame, params immediately switch to key-frame ones. The two
+  // buffered frames plus the key-frame is protected and fec emitted,
+  // even though the frame count is technically over the keyframe frame count
+  // threshold.
+  add_frame(true);
+  EXPECT_EQ(ulpfec_generator_.CurrentParams().max_fec_frames, 2);
+  EXPECT_FALSE(ulpfec_generator_.GetFecPackets().empty());
 }
 
 }  // namespace webrtc

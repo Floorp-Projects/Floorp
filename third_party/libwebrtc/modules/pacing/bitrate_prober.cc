@@ -33,13 +33,12 @@ constexpr TimeDelta kProbeClusterTimeout = TimeDelta::Seconds(5);
 }  // namespace
 
 BitrateProberConfig::BitrateProberConfig(
-    const WebRtcKeyValueConfig* key_value_config)
+    const FieldTrialsView* key_value_config)
     : min_probe_packets_sent("min_probe_packets_sent", 5),
       min_probe_delta("min_probe_delta", TimeDelta::Millis(1)),
       min_probe_duration("min_probe_duration", TimeDelta::Millis(15)),
-      max_probe_delay("max_probe_delay", TimeDelta::Millis(3)),
-      // TODO(bugs.webrtc.org/11780): Change to default true.
-      abort_delayed_probes("abort_delayed_probes", false) {
+      max_probe_delay("max_probe_delay", TimeDelta::Millis(10)),
+      abort_delayed_probes("abort_delayed_probes", true) {
   ParseFieldTrial(
       {&min_probe_packets_sent, &min_probe_delta, &min_probe_duration,
        &max_probe_delay, &abort_delayed_probes},
@@ -57,7 +56,7 @@ BitrateProber::~BitrateProber() {
                             total_failed_probe_count_);
 }
 
-BitrateProber::BitrateProber(const WebRtcKeyValueConfig& field_trials)
+BitrateProber::BitrateProber(const FieldTrialsView& field_trials)
     : probing_state_(ProbingState::kDisabled),
       next_probe_time_(Timestamp::PlusInfinity()),
       total_probe_count_(0),
@@ -166,7 +165,7 @@ absl::optional<PacedPacketInfo> BitrateProber::CurrentCluster(Timestamp now) {
 }
 
 // Probe size is recommended based on the probe bitrate required. We choose
-// a minimum of twice |kMinProbeDeltaMs| interval to allow scheduling to be
+// a minimum of twice `kMinProbeDeltaMs` interval to allow scheduling to be
 // feasible.
 DataSize BitrateProber::RecommendedMinProbeSize() const {
   if (clusters_.empty()) {

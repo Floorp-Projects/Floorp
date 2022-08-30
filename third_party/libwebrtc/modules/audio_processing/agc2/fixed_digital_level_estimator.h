@@ -16,7 +16,6 @@
 
 #include "modules/audio_processing/agc2/agc2_common.h"
 #include "modules/audio_processing/include/audio_frame_view.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 
@@ -31,8 +30,12 @@ class FixedDigitalLevelEstimator {
   // kSubFramesInSample. For kFrameDurationMs=10 and
   // kSubFramesInSample=20, this means that sample_rate_hz has to be
   // divisible by 2000.
-  FixedDigitalLevelEstimator(size_t sample_rate_hz,
+  FixedDigitalLevelEstimator(int sample_rate_hz,
                              ApmDataDumper* apm_data_dumper);
+
+  FixedDigitalLevelEstimator(const FixedDigitalLevelEstimator&) = delete;
+  FixedDigitalLevelEstimator& operator=(const FixedDigitalLevelEstimator&) =
+      delete;
 
   // The input is assumed to be in FloatS16 format. Scaled input will
   // produce similarly scaled output. A frame of with kFrameDurationMs
@@ -43,7 +46,7 @@ class FixedDigitalLevelEstimator {
 
   // Rate may be changed at any time (but not concurrently) from the
   // value passed to the constructor. The class is not thread safe.
-  void SetSampleRate(size_t sample_rate_hz);
+  void SetSampleRate(int sample_rate_hz);
 
   // Resets the level estimator internal state.
   void Reset();
@@ -55,10 +58,8 @@ class FixedDigitalLevelEstimator {
 
   ApmDataDumper* const apm_data_dumper_ = nullptr;
   float filter_state_level_;
-  size_t samples_in_frame_;
-  size_t samples_in_sub_frame_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(FixedDigitalLevelEstimator);
+  int samples_in_frame_;
+  int samples_in_sub_frame_;
 };
 }  // namespace webrtc
 

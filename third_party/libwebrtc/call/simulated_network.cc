@@ -77,6 +77,7 @@ bool CoDelSimulation::DropDequeuedPacket(Timestamp now,
       }
       return false;
   }
+  RTC_CHECK_NOTREACHED();
 }
 
 SimulatedNetwork::SimulatedNetwork(Config config, uint64_t random_seed)
@@ -215,8 +216,8 @@ void SimulatedNetwork::UpdateCapacityQueue(ConfigState state,
     pending_drain_bits_ -= packet.packet.size * 8;
     RTC_DCHECK(pending_drain_bits_ >= 0);
 
-    // Drop packets at an average rate of |state.config.loss_percent| with
-    // and average loss burst length of |state.config.avg_burst_loss_length|.
+    // Drop packets at an average rate of `state.config.loss_percent` with
+    // and average loss burst length of `state.config.avg_burst_loss_length`.
     if ((bursting_ && random_.Rand<double>() < state.prob_loss_bursting) ||
         (!bursting_ && random_.Rand<double>() < state.prob_start_bursting)) {
       bursting_ = true;

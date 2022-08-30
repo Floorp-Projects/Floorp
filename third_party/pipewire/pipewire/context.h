@@ -32,12 +32,10 @@ extern "C" {
 #include <spa/utils/defs.h>
 #include <spa/utils/hook.h>
 
-/** \class pw_context
+/** \defgroup pw_context Context
  *
- * \brief the PipeWire context
- *
- * The context object manages all locally available resources. It
- * is used by both clients and servers.
+ * \brief The PipeWire context object manages all locally available
+ * resources. It is used by both clients and servers.
  *
  * The context is used to:
  *
@@ -51,10 +49,15 @@ extern "C" {
  *    clients.
  *
  *  - Connect to another PipeWire instance (the main daemon, for
- *    example) and interact with it (See \subpage page_core_api).
+ *    example) and interact with it (See \ref page_core_api).
  *
  *  - Export a local implementation of an object to another
  *    instance.
+ */
+
+/**
+ * \addtogroup pw_context
+ * @{
  */
 struct pw_context;
 
@@ -64,33 +67,6 @@ struct pw_impl_client;
 #include <pipewire/core.h>
 #include <pipewire/loop.h>
 #include <pipewire/properties.h>
-
-/** \page page_context_api Core API
- *
- * \section page_context_overview Overview
- *
- * \subpage page_context
- *
- * \subpage page_global
- *
- * \subpage page_client
- *
- * \subpage page_resource
- *
- * \subpage page_node
- *
- * \subpage page_port
- *
- * \subpage page_link
- */
-
-/** \page page_context Context
- *
- * \section page_context_overview Overview
- *
- * The context object is an object that manages the state and
- * resources of a PipeWire instance.
- */
 
 /** context events emitted by the context object added with \ref pw_context_add_listener */
 struct pw_context_events {
@@ -132,17 +108,42 @@ const struct pw_properties *pw_context_get_properties(struct pw_context *context
 /** Update the context properties */
 int pw_context_update_properties(struct pw_context *context, const struct spa_dict *dict);
 
+/** Get a config section for this context. Since 0.3.22, deprecated,
+ * use pw_context_conf_section_for_each(). */
+const char *pw_context_get_conf_section(struct pw_context *context, const char *section);
+/** Parse a standard config section for this context. Since 0.3.22 */
+int pw_context_parse_conf_section(struct pw_context *context,
+		struct pw_properties *conf, const char *section);
+
+/** update properties from a section into props. Since 0.3.45 */
+int pw_context_conf_update_props(struct pw_context *context, const char *section,
+		struct pw_properties *props);
+/** emit callback for all config sections. Since 0.3.45 */
+int pw_context_conf_section_for_each(struct pw_context *context, const char *section,
+		int (*callback) (void *data, const char *location, const char *section,
+			const char *str, size_t len),
+		void *data);
+/** emit callback for all matched properties. Since 0.3.46 */
+int pw_context_conf_section_match_rules(struct pw_context *context, const char *section,
+		const struct spa_dict *props,
+		int (*callback) (void *data, const char *location, const char *action,
+			const char *str, size_t len),
+		void *data);
+
 /** Get the context support objects */
 const struct spa_support *pw_context_get_support(struct pw_context *context, uint32_t *n_support);
 
 /** get the context main loop */
 struct pw_loop *pw_context_get_main_loop(struct pw_context *context);
 
+/** Get the work queue from the context: Since 0.3.26 */
+struct pw_work_queue *pw_context_get_work_queue(struct pw_context *context);
+
 /** Iterate the globals of the context. The callback should return
  * 0 to fetch the next item, any other value stops the iteration and returns
  * the value. When all callbacks return 0, this function returns 0 when all
  * globals are iterated. */
-int pw_context_for_each_global(struct pw_context *context,	/**< the context */
+int pw_context_for_each_global(struct pw_context *context,
 			    int (*callback) (void *data, struct pw_global *global),
 			    void *data);
 
@@ -181,6 +182,9 @@ int pw_context_set_object(struct pw_context *context, const char *type, void *va
 /** get an object from the context */
 void *pw_context_get_object(struct pw_context *context, const char *type);
 
+/**
+ * \}
+ */
 #ifdef __cplusplus
 }
 #endif

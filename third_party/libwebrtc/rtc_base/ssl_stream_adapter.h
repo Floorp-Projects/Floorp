@@ -13,12 +13,13 @@
 
 #include <stddef.h>
 #include <stdint.h>
+
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "absl/memory/memory.h"
-#include "rtc_base/deprecation.h"
+#include "absl/strings/string_view.h"
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/ssl_identity.h"
 #include "rtc_base/stream.h"
@@ -27,34 +28,26 @@
 namespace rtc {
 
 // Constants for SSL profile.
-const int TLS_NULL_WITH_NULL_NULL = 0;
-const int SSL_CIPHER_SUITE_MAX_VALUE = 0xFFFF;
+constexpr int kTlsNullWithNullNull = 0;
+constexpr int kSslCipherSuiteMaxValue = 0xFFFF;
 
 // Constants for SRTP profiles.
-const int SRTP_INVALID_CRYPTO_SUITE = 0;
-#ifndef SRTP_AES128_CM_SHA1_80
-const int SRTP_AES128_CM_SHA1_80 = 0x0001;
-#endif
-#ifndef SRTP_AES128_CM_SHA1_32
-const int SRTP_AES128_CM_SHA1_32 = 0x0002;
-#endif
-#ifndef SRTP_AEAD_AES_128_GCM
-const int SRTP_AEAD_AES_128_GCM = 0x0007;
-#endif
-#ifndef SRTP_AEAD_AES_256_GCM
-const int SRTP_AEAD_AES_256_GCM = 0x0008;
-#endif
-const int SRTP_CRYPTO_SUITE_MAX_VALUE = 0xFFFF;
+constexpr int kSrtpInvalidCryptoSuite = 0;
+constexpr int kSrtpAes128CmSha1_80 = 0x0001;
+constexpr int kSrtpAes128CmSha1_32 = 0x0002;
+constexpr int kSrtpAeadAes128Gcm = 0x0007;
+constexpr int kSrtpAeadAes256Gcm = 0x0008;
+constexpr int kSrtpCryptoSuiteMaxValue = 0xFFFF;
 
 // Names of SRTP profiles listed above.
 // 128-bit AES with 80-bit SHA-1 HMAC.
-extern const char CS_AES_CM_128_HMAC_SHA1_80[];
+extern const char kCsAesCm128HmacSha1_80[];
 // 128-bit AES with 32-bit SHA-1 HMAC.
-extern const char CS_AES_CM_128_HMAC_SHA1_32[];
+extern const char kCsAesCm128HmacSha1_32[];
 // 128-bit AES GCM with 16 byte AEAD auth tag.
-extern const char CS_AEAD_AES_128_GCM[];
+extern const char kCsAeadAes128Gcm[];
 // 256-bit AES GCM with 16 byte AEAD auth tag.
-extern const char CS_AEAD_AES_256_GCM[];
+extern const char kCsAeadAes256Gcm[];
 
 // Given the DTLS-SRTP protection profile ID, as defined in
 // https://tools.ietf.org/html/rfc4568#section-6.2 , return the SRTP profile
@@ -62,7 +55,7 @@ extern const char CS_AEAD_AES_256_GCM[];
 std::string SrtpCryptoSuiteToName(int crypto_suite);
 
 // The reverse of above conversion.
-int SrtpCryptoSuiteFromName(const std::string& crypto_suite);
+int SrtpCryptoSuiteFromName(absl::string_view crypto_suite);
 
 // Get key length and salt length for given crypto suite. Returns true for
 // valid suites, otherwise false.
@@ -74,7 +67,7 @@ bool GetSrtpKeyAndSaltLengths(int crypto_suite,
 bool IsGcmCryptoSuite(int crypto_suite);
 
 // Returns true if the given crypto suite name uses a GCM cipher.
-bool IsGcmCryptoSuiteName(const std::string& crypto_suite);
+bool IsGcmCryptoSuiteName(absl::string_view crypto_suite);
 
 // SSLStreamAdapter : A StreamInterfaceAdapter that does SSL/TLS.
 // After SSL has been started, the stream will only open on successful
@@ -93,11 +86,11 @@ bool IsGcmCryptoSuiteName(const std::string& crypto_suite);
 enum SSLRole { SSL_CLIENT, SSL_SERVER };
 enum SSLMode { SSL_MODE_TLS, SSL_MODE_DTLS };
 
-// Note: TLS_10, TLS_11, and DTLS_10 will all be ignored, and only
-// DTLS1_2 will be accepted, if the trial flag
-// WebRTC-LegacyTlsProtocols/Disabled/ is passed in. Support for these
-// protocol versions will be completely removed in M84 or later.
-// TODO(https://bugs.webrtc.org/10261).
+// Note: TLS_10, TLS_11, and DTLS_10 will all be ignored, and only DTLS1_2 will
+// be accepted unless the trial flag WebRTC-LegacyTlsProtocols/Enabled/ is
+// passed in or an explicit override is used. Support for the legacy protocol
+// versions will be completely removed in the future.
+// See https://bugs.webrtc.org/10261.
 enum SSLProtocolVersion {
   SSL_PROTOCOL_NOT_GIVEN = -1,
   SSL_PROTOCOL_TLS_10 = 0,
@@ -119,7 +112,7 @@ enum { SSE_MSG_TRUNC = 0xff0001 };
 // Used to send back UMA histogram value. Logged when Dtls handshake fails.
 enum class SSLHandshakeError { UNKNOWN, INCOMPATIBLE_CIPHERSUITE, MAX_VALUE };
 
-class SSLStreamAdapter : public StreamAdapterInterface {
+class SSLStreamAdapter : public StreamInterface, public sigslot::has_slots<> {
  public:
   // Instantiate an SSLStreamAdapter wrapping the given stream,
   // (using the selected implementation for the platform).
@@ -127,8 +120,8 @@ class SSLStreamAdapter : public StreamAdapterInterface {
   static std::unique_ptr<SSLStreamAdapter> Create(
       std::unique_ptr<StreamInterface> stream);
 
-  explicit SSLStreamAdapter(std::unique_ptr<StreamInterface> stream);
-  ~SSLStreamAdapter() override;
+  SSLStreamAdapter() = default;
+  ~SSLStreamAdapter() override = default;
 
   // Specify our SSL identity: key and certificate. SSLStream takes ownership
   // of the SSLIdentity object and will free it when appropriate. Should be
@@ -183,9 +176,9 @@ class SSLStreamAdapter : public StreamAdapterInterface {
   // certificate, not just a CA. SSLStream makes a copy of the digest value.
   //
   // Returns true if successful.
-  // |error| is optional and provides more information about the failure.
+  // `error` is optional and provides more information about the failure.
   virtual bool SetPeerCertificateDigest(
-      const std::string& digest_alg,
+      absl::string_view digest_alg,
       const unsigned char* digest_val,
       size_t digest_len,
       SSLPeerCertificateDigestError* error = nullptr) = 0;
@@ -217,7 +210,7 @@ class SSLStreamAdapter : public StreamAdapterInterface {
   //                        zero-length ones).
   // result              -- where to put the computed value
   // result_len          -- the length of the computed value
-  virtual bool ExportKeyingMaterial(const std::string& label,
+  virtual bool ExportKeyingMaterial(absl::string_view label,
                                     const uint8_t* context,
                                     size_t context_len,
                                     bool use_context,
@@ -242,7 +235,7 @@ class SSLStreamAdapter : public StreamAdapterInterface {
   // Returns true iff the supplied cipher is deemed to be strong.
   // TODO(torbjorng): Consider removing the KeyType argument.
   static bool IsAcceptableCipher(int cipher, KeyType key_type);
-  static bool IsAcceptableCipher(const std::string& cipher, KeyType key_type);
+  static bool IsAcceptableCipher(absl::string_view cipher, KeyType key_type);
 
   // TODO(guoweis): Move this away from a static class method. Currently this is
   // introduced such that any caller could depend on sslstreamadapter.h without

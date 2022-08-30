@@ -134,11 +134,11 @@ class RTC_EXPORT VideoFrame {
   // Get frame size in pixels.
   uint32_t size() const;
 
-  // Get frame ID. Returns 0 if ID is not set. Not guarantee to be transferred
-  // from the sender to the receiver, but preserved on single side. The id
+  // Get frame ID. Returns 0 if ID is not set. Not guaranteed to be transferred
+  // from the sender to the receiver, but preserved on the sender side. The id
   // should be propagated between all frame modifications during its lifetime
   // from capturing to sending as encoded image. It is intended to be unique
-  // over a time window of a few minutes for peer connection, to which
+  // over a time window of a few minutes for the peer connection to which the
   // corresponding video stream belongs to.
   uint16_t id() const { return id_; }
   void set_id(uint16_t id) { id_ = id; }
@@ -184,6 +184,16 @@ class RTC_EXPORT VideoFrame {
   const absl::optional<ColorSpace>& color_space() const { return color_space_; }
   void set_color_space(const absl::optional<ColorSpace>& color_space) {
     color_space_ = color_space;
+  }
+
+  // max_composition_delay_in_frames() is used in an experiment of a low-latency
+  // renderer algorithm see crbug.com/1138888.
+  absl::optional<int32_t> max_composition_delay_in_frames() const {
+    return max_composition_delay_in_frames_;
+  }
+  void set_max_composition_delay_in_frames(
+      absl::optional<int32_t> max_composition_delay_in_frames) {
+    max_composition_delay_in_frames_ = max_composition_delay_in_frames;
   }
 
   // Get render time in milliseconds.
@@ -255,13 +265,14 @@ class RTC_EXPORT VideoFrame {
   int64_t timestamp_us_;
   VideoRotation rotation_;
   absl::optional<ColorSpace> color_space_;
+  absl::optional<int32_t> max_composition_delay_in_frames_;
   // Updated since the last frame area. If present it means that the bounding
   // box of all the changes is within the rectangular area and is close to it.
   // If absent, it means that there's no information about the change at all and
   // update_rect() will return a rectangle corresponding to the entire frame.
   absl::optional<UpdateRect> update_rect_;
   // Information about packets used to assemble this video frame. This is needed
-  // by |SourceTracker| when the frame is delivered to the RTCRtpReceiver's
+  // by `SourceTracker` when the frame is delivered to the RTCRtpReceiver's
   // MediaStreamTrack, in order to implement getContributingSources(). See:
   // https://w3c.github.io/webrtc-pc/#dom-rtcrtpreceiver-getcontributingsources
   RtpPacketInfos packet_infos_;

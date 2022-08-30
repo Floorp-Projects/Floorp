@@ -14,40 +14,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "absl/types/optional.h"
+#include "api/units/timestamp.h"
 #include "modules/video_coding/encoded_frame.h"
 
 namespace webrtc {
-namespace video_coding {
-
-// NOTE: This class is still under development and may change without notice.
-struct VideoLayerFrameId {
-  // TODO(philipel): The default ctor is currently used internaly, but have a
-  //                 look if we can remove it.
-  VideoLayerFrameId() : picture_id(-1), spatial_layer(0) {}
-  VideoLayerFrameId(int64_t picture_id, uint8_t spatial_layer)
-      : picture_id(picture_id), spatial_layer(spatial_layer) {}
-
-  bool operator==(const VideoLayerFrameId& rhs) const {
-    return picture_id == rhs.picture_id && spatial_layer == rhs.spatial_layer;
-  }
-
-  bool operator!=(const VideoLayerFrameId& rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator<(const VideoLayerFrameId& rhs) const {
-    if (picture_id == rhs.picture_id)
-      return spatial_layer < rhs.spatial_layer;
-    return picture_id < rhs.picture_id;
-  }
-
-  bool operator<=(const VideoLayerFrameId& rhs) const { return !(rhs < *this); }
-  bool operator>(const VideoLayerFrameId& rhs) const { return rhs < *this; }
-  bool operator>=(const VideoLayerFrameId& rhs) const { return rhs <= *this; }
-
-  int64_t picture_id;
-  uint8_t spatial_layer;
-};
 
 // TODO(philipel): Remove webrtc::VCMEncodedFrame inheritance.
 // TODO(philipel): Move transport specific info out of EncodedFrame.
@@ -61,10 +32,18 @@ class EncodedFrame : public webrtc::VCMEncodedFrame {
   virtual ~EncodedFrame() {}
 
   // When this frame was received.
+  // TODO(bugs.webrtc.org/13756): Use Timestamp instead of int.
   virtual int64_t ReceivedTime() const = 0;
+  // Returns a Timestamp from `ReceivedTime`, or nullopt if there is no receive
+  // time.
+  absl::optional<webrtc::Timestamp> ReceivedTimestamp() const;
 
   // When this frame should be rendered.
+  // TODO(bugs.webrtc.org/13756): Use Timestamp instead of int.
   virtual int64_t RenderTime() const = 0;
+  // Returns a Timestamp from `RenderTime`, or nullopt if there is no
+  // render time.
+  absl::optional<webrtc::Timestamp> RenderTimestamp() const;
 
   // This information is currently needed by the timing calculation class.
   // TODO(philipel): Remove this function when a new timing class has
@@ -73,19 +52,23 @@ class EncodedFrame : public webrtc::VCMEncodedFrame {
 
   bool is_keyframe() const { return num_references == 0; }
 
-  VideoLayerFrameId id;
+  void SetId(int64_t id) { id_ = id; }
+  int64_t Id() const { return id_; }
 
   // TODO(philipel): Add simple modify/access functions to prevent adding too
-  // many |references|.
+  // many `references`.
   size_t num_references = 0;
   int64_t references[kMaxFrameReferences];
-  bool inter_layer_predicted = false;
   // Is this subframe the last one in the superframe (In RTP stream that would
   // mean that the last packet has a marker bit set).
   bool is_last_spatial_layer = true;
+
+ private:
+  // The ID of the frame is determined from RTP level information. The IDs are
+  // used to describe order and dependencies between frames.
+  int64_t id_ = -1;
 };
 
-}  // namespace video_coding
 }  // namespace webrtc
 
 #endif  // API_VIDEO_ENCODED_FRAME_H_

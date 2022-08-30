@@ -22,13 +22,19 @@ namespace webrtc {
 class MockPeerConnectionFactoryInterface final
     : public rtc::RefCountedObject<webrtc::PeerConnectionFactoryInterface> {
  public:
-  rtc::scoped_refptr<MockPeerConnectionFactoryInterface> Create() {
-    return new MockPeerConnectionFactoryInterface();
+  static rtc::scoped_refptr<MockPeerConnectionFactoryInterface> Create() {
+    return rtc::scoped_refptr<MockPeerConnectionFactoryInterface>(
+        new MockPeerConnectionFactoryInterface());
   }
 
   MOCK_METHOD(void, SetOptions, (const Options&), (override));
   MOCK_METHOD(rtc::scoped_refptr<PeerConnectionInterface>,
               CreatePeerConnection,
+              (const PeerConnectionInterface::RTCConfiguration&,
+               PeerConnectionDependencies),
+              (override));
+  MOCK_METHOD(RTCErrorOr<rtc::scoped_refptr<PeerConnectionInterface>>,
+              CreatePeerConnectionOrError,
               (const PeerConnectionInterface::RTCConfiguration&,
                PeerConnectionDependencies),
               (override));
@@ -42,11 +48,11 @@ class MockPeerConnectionFactoryInterface final
   MOCK_METHOD(RtpCapabilities,
               GetRtpSenderCapabilities,
               (cricket::MediaType),
-              (const override));
+              (const, override));
   MOCK_METHOD(RtpCapabilities,
               GetRtpReceiverCapabilities,
               (cricket::MediaType),
-              (const override));
+              (const, override));
   MOCK_METHOD(rtc::scoped_refptr<MediaStreamInterface>,
               CreateLocalMediaStream,
               (const std::string&),

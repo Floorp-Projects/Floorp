@@ -16,6 +16,20 @@ declare_args() {
   # generated installation scripts. If not specified, then no default directory
   # will be used.
   default_fuchsia_build_dir_for_installation = ""
+
+  # Sets the Fuchsia device node name which will be used by default by the
+  # generated runner scripts. If not specficed, then no default node name will
+  # be used.
+  default_fuchsia_device_node_name = ""
+
+  # CPU architecture of the host used to run the tests.
+  test_host_cpu = host_cpu
+
+  # Sets whether emulators need to be included in the test isolates
+  test_isolate_uses_emulator = true
+
+  # A list of additional Fuchsia boot images to include in the test isolates.
+  fuchsia_additional_boot_images = []
 }
 
 # Generates a script which deploys and optionally executes a package on a
@@ -33,8 +47,10 @@ declare_args() {
 #       "build/fuchsia". Defaults to "test_runner.py".
 #   install_only: If true, executing the script will only install the package
 #       on the device, but not run it.
+#   is_test_exe: If true, the generated script will run the command under
+#       test_env.py and add arguments expected to be passed to test exes.
 template("fuchsia_package_runner") {
-  forward_variables_from(invoker, [ "runner_script" ])
+  forward_variables_from(invoker, TESTONLY_AND_VISIBILITY + [ "runner_script" ])
 
   if (defined(invoker.package_name_override)) {
     _pkg_shortname = invoker.package_name_override
@@ -55,20 +71,39 @@ template("fuchsia_package_runner") {
 
   # Generates a script which installs and runs a test.
   generate_wrapper(_generate_runner_target) {
-    forward_variables_from(invoker,
-                           [
-                             "target",
-                             "testonly",
-                           ])
+    forward_variables_from(invoker, [ "target" ])
+
+    _is_test_exe = defined(invoker.is_test_exe) && invoker.is_test_exe
 
     if (defined(runner_script)) {
-      executable = rebase_path(runner_script)
+      _runner_script = runner_script
     } else {
-      executable = rebase_path("//build/fuchsia/test_runner.py")
+      _runner_script = "//build/fuchsia/test_runner.py"
     }
+
+    if (_is_test_exe) {
+      executable = "//testing/test_env.py"
+      executable_args =
+          [ "@WrappedPath(" + rebase_path(_runner_script, root_out_dir) + ")" ]
+      data = [
+        _runner_script,
+        "//.vpython",
+      ]
+      data_deps = [ "//testing:test_scripts_shared" ]
+    } else {
+      executable = rebase_path(_runner_script)
+      executable_args = []
+      data = []
+      data_deps = []
+    }
+
+    if (defined(invoker.data)) {
+      data += invoker.data
+    }
+
     wrapper_script = generated_run_pkg_script_path
 
-    data_deps = [
+    data_deps += [
       invoker.package,
 
       # Runner scripts require access to "ids.txt" for symbolization, and to
@@ -86,44 +121,56 @@ template("fuchsia_package_runner") {
 
     # Declares the files that are needed for test execution on the
     # swarming test client.
-    data = [
+    data += [
       "//build/fuchsia/",
       "//build/util/lib/",
       "//third_party/fuchsia-sdk/sdk/.build-id/",
-      "${boot_image_root}/qemu/qemu-kernel.kernel",
-      "${boot_image_root}/qemu/storage-full.blk",
-      "${boot_image_root}/qemu/zircon-a.zbi",
+      "//third_party/fuchsia-sdk/sdk/bin/fpave.sh",
+      "//third_party/fuchsia-sdk/sdk/bin/fuchsia-common.sh",
+      "//third_party/fuchsia-sdk/sdk/meta/manifest.json",
     ]
 
-    if (host_cpu == "x64" && (host_os == "linux" || host_os == "mac")) {
-      data += [ "${aemu_root}/" ]
+    # TODO(crbug.com/1137662): Remove checkout_fuchsia_for_arm64_host from
+    # gclient_gn_args in //DEPS as well as this condition when builders have
+    # test_host_cpu set correctly.
+    if (checkout_fuchsia_for_arm64_host) {
+      test_host_cpu = "arm64"
     }
 
-    # Ensure that the host tools required by runner scripts are in runtime deps.
-    # Note that these must be provided for the test host architecture, which
-    # currently always matches the |target_cpu|, rather than for the build host
-    # architecture.
+    if (test_host_cpu == "x64") {
+      data_deps +=
+          [ "//build/config/clang:llvm-symbolizer_data($host_toolchain)" ]
+    }
+
     data += [
-      "//third_party/fuchsia-sdk/sdk/tools/${target_cpu}/device-finder",
-      "//third_party/fuchsia-sdk/sdk/tools/${target_cpu}/fvm",
-      "//third_party/fuchsia-sdk/sdk/tools/${target_cpu}/merkleroot",
-      "//third_party/fuchsia-sdk/sdk/tools/${target_cpu}/pm",
-      "//third_party/fuchsia-sdk/sdk/tools/${target_cpu}/symbolize",
-      "//third_party/fuchsia-sdk/sdk/tools/${target_cpu}/zbi",
+      "//third_party/fuchsia-sdk/sdk/tools/${test_host_cpu}/device-finder",
+      "//third_party/fuchsia-sdk/sdk/tools/${test_host_cpu}/ffx",
+      "//third_party/fuchsia-sdk/sdk/tools/${test_host_cpu}/fvm",
+      "//third_party/fuchsia-sdk/sdk/tools/${test_host_cpu}/merkleroot",
+      "//third_party/fuchsia-sdk/sdk/tools/${test_host_cpu}/pm",
+
+      # TODO(crbug.com/1162314) Remove "symbolize" when transition to
+      # "symbolizer" is complete.
+      "//third_party/fuchsia-sdk/sdk/tools/${test_host_cpu}/symbolize",
+
+      "//third_party/fuchsia-sdk/sdk/tools/${test_host_cpu}/symbolizer",
+      "//third_party/fuchsia-sdk/sdk/tools/${test_host_cpu}/zbi",
     ]
-    if (target_cpu == "arm64") {
-      data += [ "${qemu_arm64_root}/" ]
-    } else {
+
+    if (test_isolate_uses_emulator) {
       data += [
-        "${qemu_root}/",
-        "//third_party/fuchsia-sdk/sdk/bin/fpave.sh",
-        "//third_party/fuchsia-sdk/sdk/bin/fuchsia-common.sh",
-        "//third_party/fuchsia-sdk/sdk/meta/manifest.json",
-        "//third_party/llvm-build/Release+Asserts/bin/llvm-symbolizer",
+        "${boot_image_root}/qemu/qemu-kernel.kernel",
+        "${boot_image_root}/qemu/storage-full.blk",
+        "${boot_image_root}/qemu/zircon-a.zbi",
+        "//third_party/fuchsia-sdk/sdk/tools/${test_host_cpu}/fvdl",
+        "//third_party/qemu-${host_os}-${test_host_cpu}/",
+        "${aemu_root}/",
       ]
     }
 
-    executable_args = []
+    foreach(fuchsia_additional_boot_image, fuchsia_additional_boot_images) {
+      data += [ "${fuchsia_additional_boot_image}/" ]
+    }
 
     package_paths = [ rebase_path(_package_path, root_build_dir) ]
     if (defined(invoker.package_deps)) {
@@ -160,6 +207,11 @@ template("fuchsia_package_runner") {
       _pkg_shortname,
     ]
 
+    if (defined(invoker.use_run_test_component) &&
+        invoker.use_run_test_component) {
+      executable_args += [ "--use-run-test-component" ]
+    }
+
     if (defined(invoker.use_test_server) && invoker.use_test_server) {
       executable_args += [ "--enable-test-server" ]
     }
@@ -170,14 +222,19 @@ template("fuchsia_package_runner") {
         default_fuchsia_build_dir_for_installation,
       ]
     }
+
+    if (default_fuchsia_device_node_name != "") {
+      executable_args += [
+        "--node-name",
+        default_fuchsia_device_node_name,
+      ]
+    }
   }
 
   # Produces a script which installs a package and its dependencies into the
-  # Amber repository of a pre-existing Fuchsia build directory.
+  # package repository of a pre-existing Fuchsia build directory.
   generate_wrapper(_generate_installer_target) {
-    forward_variables_from(invoker, [ "testonly" ])
-
-    executable = rebase_path("//build/fuchsia/deploy_to_amber_repo.py")
+    executable = rebase_path("//build/fuchsia/deploy_to_pkg_repo.py")
     wrapper_script = generated_install_pkg_script_path
 
     data_deps = [ invoker.package ]
@@ -218,7 +275,6 @@ template("fuchsia_package_runner") {
   }
 
   group(target_name) {
-    forward_variables_from(invoker, [ "testonly" ])
     deps = [ ":${_generate_installer_target}" ]
 
     if (!defined(invoker.install_only) || invoker.install_only == false) {

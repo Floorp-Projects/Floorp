@@ -22,7 +22,6 @@
 #include "modules/desktop_capture/screen_capturer_helper.h"
 #include "modules/desktop_capture/shared_desktop_frame.h"
 #include "modules/desktop_capture/win/scoped_thread_desktop.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 
@@ -41,6 +40,10 @@ class ScreenCapturerWinMagnifier : public DesktopCapturer {
  public:
   ScreenCapturerWinMagnifier();
   ~ScreenCapturerWinMagnifier() override;
+
+  ScreenCapturerWinMagnifier(const ScreenCapturerWinMagnifier&) = delete;
+  ScreenCapturerWinMagnifier& operator=(const ScreenCapturerWinMagnifier&) =
+      delete;
 
   // Overridden from ScreenCapturer:
   void Start(Callback* callback) override;
@@ -80,7 +83,7 @@ class ScreenCapturerWinMagnifier : public DesktopCapturer {
                                                RECT clipped,
                                                HRGN dirty);
 
-  // Captures the screen within |rect| in the desktop coordinates. Returns true
+  // Captures the screen within `rect` in the desktop coordinates. Returns true
   // if succeeded.
   // It can only capture the primary screen for now. The magnification library
   // crashes under some screen configurations (e.g. secondary screen on top of
@@ -95,7 +98,7 @@ class ScreenCapturerWinMagnifier : public DesktopCapturer {
   // Called by OnMagImageScalingCallback to output captured data.
   void OnCaptured(void* data, const MAGIMAGEHEADER& header);
 
-  // Makes sure the current frame exists and matches |size|.
+  // Makes sure the current frame exists and matches `size`.
   void CreateCurrentFrameIfNecessary(const DesktopSize& size);
 
   Callback* callback_ = nullptr;
@@ -130,8 +133,6 @@ class ScreenCapturerWinMagnifier : public DesktopCapturer {
   // True if the last OnMagImageScalingCallback was called and handled
   // successfully. Reset at the beginning of each CaptureImage call.
   bool magnifier_capture_succeeded_ = true;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(ScreenCapturerWinMagnifier);
 };
 
 }  // namespace webrtc

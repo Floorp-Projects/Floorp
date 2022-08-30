@@ -4,22 +4,16 @@
 
 """Implements commands for running and interacting with Fuchsia on devices."""
 
-from __future__ import print_function
-
-import amber_repo
 import boot_data
-import filecmp
 import logging
 import os
+import pkg_repo
 import re
 import subprocess
-import sys
 import target
-import tempfile
 import time
-import uuid
 
-from common import SDK_ROOT, EnsurePathExists, GetHostToolPathFromPlatform
+from common import EnsurePathExists, GetHostToolPathFromPlatform
 
 # The maximum times to attempt mDNS resolution when connecting to a freshly
 # booted Fuchsia instance before aborting.
@@ -28,10 +22,8 @@ BOOT_DISCOVERY_ATTEMPTS = 30
 # Number of failed connection attempts before redirecting system logs to stdout.
 CONNECT_RETRY_COUNT_BEFORE_LOGGING = 10
 
-TARGET_HASH_FILE_PATH = '/data/.hash'
-
-# Number of seconds to wait when querying a list of all devices over mDNS.
-_LIST_DEVICES_TIMEOUT_SECS = 3
+# Number of seconds between each device discovery.
+BOOT_DISCOVERY_DELAY_SECS = 4
 
 # Time between a reboot command is issued and when connection attempts from the
 # host begin.
@@ -87,20 +79,18 @@ class DeviceTarget(target.Target):
 
     super(DeviceTarget, self).__init__(out_dir, target_cpu)
 
-    self._port = port if port else 22
     self._system_log_file = system_log_file
     self._host = host
+    self._port = port
     self._fuchsia_out_dir = None
-    if fuchsia_out_dir:
-      self._fuchsia_out_dir = os.path.expanduser(fuchsia_out_dir)
     self._node_name = node_name
     self._os_check = os_check
-    self._amber_repo = None
+    self._pkg_repo = None
 
     if self._host and self._node_name:
       raise Exception('Only one of "--host" or "--name" can be specified.')
 
-    if self._fuchsia_out_dir:
+    if fuchsia_out_dir:
       if ssh_config:
         raise Exception('Only one of "--fuchsia-out-dir" or "--ssh_config" can '
                         'be specified.')
@@ -117,13 +107,20 @@ class DeviceTarget(target.Target):
 
     else:
       # Default to using an automatically generated SSH config and keys.
-      boot_data.ProvisionSSH(out_dir)
-      self._ssh_config_path = boot_data.GetSSHConfigPath(out_dir)
+      boot_data.ProvisionSSH()
+      self._ssh_config_path = boot_data.GetSSHConfigPath()
+
+  @staticmethod
+  def CreateFromArgs(args):
+    return DeviceTarget(args.out_dir, args.target_cpu, args.host,
+                        args.node_name, args.port, args.ssh_config,
+                        args.fuchsia_out_dir, args.os_check,
+                        args.system_log_file)
 
   @staticmethod
   def RegisterArgs(arg_parser):
-    target.Target.RegisterArgs(arg_parser)
-    device_args = arg_parser.add_argument_group('device', 'Device Arguments')
+    device_args = arg_parser.add_argument_group(
+        'device', 'External device deployment arguments')
     device_args.add_argument('--host',
                              help='The IP of the target device. Optional.')
     device_args.add_argument('--node-name',
@@ -133,17 +130,13 @@ class DeviceTarget(target.Target):
     device_args.add_argument('--port',
                              '-p',
                              type=int,
-                             default=22,
+                             default=None,
                              help='The port of the SSH service running on the '
                              'device. Optional.')
     device_args.add_argument('--ssh-config',
                              '-F',
                              help='The path to the SSH configuration used for '
                              'connecting to the target device.')
-    device_args.add_argument('--fuchsia-out-dir',
-                             help='Path to a Fuchsia build output directory. '
-                             'Equivalent to setting --ssh_config and '
-                             '--os-check=ignore')
     device_args.add_argument(
         '--os-check',
         choices=['check', 'update', 'ignore'],
@@ -153,22 +146,13 @@ class DeviceTarget(target.Target):
         "match. If 'update', then the target device will automatically "
         "be repaved. If 'ignore', then the OS version won\'t be checked.")
 
-  def _SDKHashMatches(self):
-    """Checks if /data/.hash on the device matches SDK_ROOT/.hash.
-
-    Returns True if the files are identical, or False otherwise.
-    """
-    with tempfile.NamedTemporaryFile() as tmp:
-      try:
-        self.GetFile(TARGET_HASH_FILE_PATH, tmp.name)
-      except subprocess.CalledProcessError:
-        # If the file is unretrievable for whatever reason, assume mismatch.
-        return False
-
-      return filecmp.cmp(tmp.name, os.path.join(SDK_ROOT, '.hash'), False)
-
   def _ProvisionDeviceIfNecessary(self):
-    pass
+    if self._Discover():
+      self._WaitUntilReady()
+    else:
+      raise Exception('Could not find device. If the device is connected '
+                      'to the host remotely, make sure that --host flag is '
+                      'set and that remote serving is set up.')
 
   def _Discover(self):
     """Queries mDNS for the IP address of a booted Fuchsia instance whose name
@@ -183,42 +167,41 @@ class DeviceTarget(target.Target):
     dev_finder_path = GetHostToolPathFromPlatform('device-finder')
 
     if self._node_name:
-      command = [dev_finder_path, 'resolve',
-                 '-device-limit', '1',  # Exit early as soon as a host is found.
-                 self._node_name]
-    else:
       command = [
-          dev_finder_path, 'list', '-full', '-timeout',
-          "%ds" % _LIST_DEVICES_TIMEOUT_SECS
+          dev_finder_path,
+          'resolve',
+          '-device-limit',
+          '1',  # Exit early as soon as a host is found.
+          self._node_name
       ]
-
-    proc = subprocess.Popen(command,
-                            stdout=subprocess.PIPE,
-                            stderr=open(os.devnull, 'w'))
+      proc = subprocess.Popen(command,
+                              stdout=subprocess.PIPE,
+                              stderr=open(os.devnull, 'w'))
+    else:
+      proc = self.RunFFXCommand(['target', 'list', '-f', 'simple'],
+                                stdout=subprocess.PIPE,
+                                stderr=open(os.devnull, 'w'))
 
     output = set(proc.communicate()[0].strip().split('\n'))
-
     if proc.returncode != 0:
       return False
 
     if self._node_name:
       # Handle the result of "device-finder resolve".
       self._host = output.pop().strip()
-
     else:
       name_host_pairs = [x.strip().split(' ') for x in output]
 
-      # Handle the output of "device-finder list".
       if len(name_host_pairs) > 1:
-        print('More than one device was discovered on the network.')
-        print('Use --node-name <name> to specify the device to use.')
-        print('\nList of devices:')
-        for pair in name_host_pairs:
-          print('  ' + pair[1])
-        print()
+        logging.info('More than one device was discovered on the network. '
+                     'Use --node-name <name> to specify the device to use.')
+        logging.info('List of devices:')
+        logging.info(output)
         raise Exception('Ambiguous target device specification.')
-
       assert len(name_host_pairs) == 1
+      # Check if device has both address and name.
+      if len(name_host_pairs[0]) < 2:
+        return False
       self._host, self._node_name = name_host_pairs[0]
 
     logging.info('Found device "%s" at address %s.' % (self._node_name,
@@ -231,21 +214,19 @@ class DeviceTarget(target.Target):
       self._WaitUntilReady()
     else:
       self._ProvisionDeviceIfNecessary()
-      assert self._node_name
-      assert self._host
 
-  def GetAmberRepo(self):
-    if not self._amber_repo:
+  def GetPkgRepo(self):
+    if not self._pkg_repo:
       if self._fuchsia_out_dir:
         # Deploy to an already-booted device running a local Fuchsia build.
-        self._amber_repo = amber_repo.ExternalAmberRepo(
+        self._pkg_repo = pkg_repo.ExternalPkgRepo(
             os.path.join(self._fuchsia_out_dir, 'amber-files'))
       else:
-        # Create an ephemeral Amber repo, then start both "pm serve" as well as
-        # the bootserver.
-        self._amber_repo = amber_repo.ManagedAmberRepo(self)
+        # Create an ephemeral package repository, then start both "pm serve" as
+        # well as the bootserver.
+        self._pkg_repo = pkg_repo.ManagedPkgRepo(self)
 
-    return self._amber_repo
+    return self._pkg_repo
 
   def _ParseNodename(self, output):
     # Parse the nodename from bootserver stdout.
@@ -256,21 +237,20 @@ class DeviceTarget(target.Target):
     self._node_name = m.groupdict()['nodename']
     logging.info('Booted device "%s".' % self._node_name)
 
-    # Repeatdly query mDNS until we find the device, or we hit the timeout of
-    # DISCOVERY_TIMEOUT_SECS.
+    # Repeatedly search for a device for |BOOT_DISCOVERY_ATTEMPT|
+    # number of attempts. If a device isn't found, wait
+    # |BOOT_DISCOVERY_DELAY_SECS| before searching again.
     logging.info('Waiting for device to join network.')
-    for _ in xrange(_BOOT_DISCOVERY_ATTEMPTS):
-      if self.__Discover():
+    for _ in xrange(BOOT_DISCOVERY_ATTEMPTS):
+      if self._Discover():
         break
+      time.sleep(BOOT_DISCOVERY_DELAY_SECS)
 
     if not self._host:
       raise Exception('Device %s couldn\'t be discovered via mDNS.' %
                       self._node_name)
 
     self._WaitUntilReady();
-
-    # Update the target's hash to match the current tree's.
-    self.PutFile(os.path.join(SDK_ROOT, '.hash'), TARGET_HASH_FILE_PATH)
 
   def _GetEndpoint(self):
     return (self._host, self._port)

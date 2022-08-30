@@ -42,14 +42,17 @@ rtc_library("audio") {
   deps = [
     "../api:array_view",
     "../api:call_api",
+    "../api:field_trials_view",
     "../api:frame_transformer_interface",
     "../api:function_view",
     "../api:rtp_headers",
     "../api:rtp_parameters",
     "../api:scoped_refptr",
+    "../api:sequence_checker",
     "../api:transport_api",
     "../api/audio:aec3_factory",
     "../api/audio:audio_frame_api",
+    "../api/audio:audio_frame_processor",
     "../api/audio:audio_mixer_api",
     "../api/audio_codecs:audio_codecs_api",
     "../api/crypto:frame_decryptor_interface",
@@ -67,6 +70,7 @@ rtc_library("audio") {
     "../common_audio:common_audio_c",
     "../logging:rtc_event_audio",
     "../logging:rtc_stream_config",
+    "../modules/async_audio_processing",
     "../modules/audio_coding",
     "../modules/audio_coding:audio_coding_module_typedefs",
     "../modules/audio_coding:audio_encoder_cng",
@@ -78,20 +82,30 @@ rtc_library("audio") {
     "../modules/audio_processing:audio_frame_proxies",
     "../modules/audio_processing:rms_level",
     "../modules/pacing",
-    "../modules/remote_bitrate_estimator",
     "../modules/rtp_rtcp",
     "../modules/rtp_rtcp:rtp_rtcp_format",
-    "../modules/utility",
     "../rtc_base",
     "../rtc_base:audio_format_to_string",
+    "../rtc_base:buffer",
     "../rtc_base:checks",
+    "../rtc_base:location",
+    "../rtc_base:logging",
+    "../rtc_base:macromagic",
+    "../rtc_base:race_checker",
     "../rtc_base:rate_limiter",
-    "../rtc_base:rtc_base_approved",
+    "../rtc_base:refcount",
+    "../rtc_base:rtc_event",
     "../rtc_base:rtc_task_queue",
+    "../rtc_base:safe_conversions",
     "../rtc_base:safe_minmax",
+    "../rtc_base:stringutils",
+    "../rtc_base:threading",
+    "../rtc_base:timeutils",
+    "../rtc_base/containers:flat_set",
     "../rtc_base/experiments:field_trial_parser",
     "../rtc_base/synchronization:mutex",
-    "../rtc_base/synchronization:sequence_checker",
+    "../rtc_base/system:no_unique_address",
+    "../rtc_base/task_utils:pending_task_safety_flag",
     "../rtc_base/task_utils:to_queued_task",
     "../system_wrappers",
     "../system_wrappers:field_trial",
@@ -100,6 +114,7 @@ rtc_library("audio") {
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/memory",
+    "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
 }
@@ -136,6 +151,8 @@ if (rtc_include_tests) {
       "mock_voe_channel_proxy.h",
       "remix_resample_unittest.cc",
       "test/audio_stats_test.cc",
+      "test/nack_test.cc",
+      "test/non_sender_rtt_test.cc",
     ]
     deps = [
       ":audio",
@@ -148,6 +165,7 @@ if (rtc_include_tests) {
       "../api/audio_codecs:audio_codecs_api",
       "../api/audio_codecs/opus:audio_decoder_opus",
       "../api/audio_codecs/opus:audio_encoder_opus",
+      "../api/crypto:frame_decryptor_interface",
       "../api/rtc_event_log",
       "../api/task_queue:default_task_queue_factory",
       "../api/units:time_delta",
@@ -170,7 +188,8 @@ if (rtc_include_tests) {
       "../modules/rtp_rtcp:rtp_rtcp_format",
       "../modules/utility",
       "../rtc_base:checks",
-      "../rtc_base:rtc_base_approved",
+      "../rtc_base:macromagic",
+      "../rtc_base:refcount",
       "../rtc_base:rtc_base_tests_utils",
       "../rtc_base:safe_compare",
       "../rtc_base:task_queue_for_test",
@@ -182,6 +201,7 @@ if (rtc_include_tests) {
       "../test:mock_transformable_frame",
       "../test:mock_transport",
       "../test:rtp_test_utils",
+      "../test:scoped_key_value_config",
       "../test:test_common",
       "../test:test_support",
       "utility:utility_tests",
@@ -189,7 +209,7 @@ if (rtc_include_tests) {
     ]
   }
 
-  if (rtc_enable_protobuf) {
+  if (rtc_enable_protobuf && !build_with_chromium) {
     rtc_test("low_bandwidth_audio_test") {
       testonly = true
 
@@ -217,10 +237,18 @@ if (rtc_include_tests) {
         "../test:test_support",
         "../test/pc/e2e:network_quality_metrics_reporter",
         "//testing/gtest",
+      ]
+      absl_deps = [
         "//third_party/abseil-cpp/absl/flags:flag",
+        "//third_party/abseil-cpp/absl/strings",
       ]
       if (is_android) {
-        deps += [ "//testing/android/native_test:native_test_native_code" ]
+        use_default_launcher = false
+        deps += [
+          "//build/android/gtest_apk:native_test_instrumentation_test_runner_java",
+          "//testing/android/native_test:native_test_java",
+          "//testing/android/native_test:native_test_support",
+        ]
       }
       data = [
         "../resources/voice_engine/audio_tiny16.wav",
@@ -271,35 +299,34 @@ if (rtc_include_tests) {
       if (is_mac) {
         data += [ "../tools_webrtc/audio_quality/mac/pesq" ]
       }
-
-      write_runtime_deps = "${root_out_dir}/${target_name}.runtime_deps"
     }
   }
 
-  rtc_library("audio_perf_tests") {
-    testonly = true
+  if (!build_with_chromium) {
+    rtc_library("audio_perf_tests") {
+      testonly = true
 
-    sources = [
-      "test/audio_bwe_integration_test.cc",
-      "test/audio_bwe_integration_test.h",
-    ]
-    deps = [
-      "../api:simulated_network_api",
-      "../api/task_queue",
-      "../call:fake_network",
-      "../call:simulated_network",
-      "../common_audio",
-      "../rtc_base:rtc_base_approved",
-      "../rtc_base:task_queue_for_test",
-      "../system_wrappers",
-      "../test:field_trial",
-      "../test:fileutils",
-      "../test:test_common",
-      "../test:test_main",
-      "../test:test_support",
-      "//testing/gtest",
-    ]
+      sources = [
+        "test/audio_bwe_integration_test.cc",
+        "test/audio_bwe_integration_test.h",
+      ]
+      deps = [
+        "../api:simulated_network_api",
+        "../api/task_queue",
+        "../call:fake_network",
+        "../call:simulated_network",
+        "../common_audio",
+        "../rtc_base:task_queue_for_test",
+        "../system_wrappers",
+        "../test:field_trial",
+        "../test:fileutils",
+        "../test:test_common",
+        "../test:test_main",
+        "../test:test_support",
+        "//testing/gtest",
+      ]
 
-    data = [ "//resources/voice_engine/audio_dtx16.wav" ]
+      data = [ "//resources/voice_engine/audio_dtx16.wav" ]
+    }
   }
 }

@@ -16,7 +16,8 @@
 #include <queue>
 
 #include "api/rtp_headers.h"
-#include "rtc_base/synchronization/rw_lock_wrapper.h"
+#include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
 
@@ -24,11 +25,11 @@ class RTPStream {
  public:
   virtual ~RTPStream() {}
 
-  virtual void Write(const uint8_t payloadType,
-                     const uint32_t timeStamp,
-                     const int16_t seqNo,
+  virtual void Write(uint8_t payloadType,
+                     uint32_t timeStamp,
+                     int16_t seqNo,
                      const uint8_t* payloadData,
-                     const size_t payloadSize,
+                     size_t payloadSize,
                      uint32_t frequency) = 0;
 
   // Returns the packet's payload size. Zero should be treated as an
@@ -70,15 +71,15 @@ class RTPPacket {
 
 class RTPBuffer : public RTPStream {
  public:
-  RTPBuffer();
+  RTPBuffer() = default;
 
-  ~RTPBuffer();
+  ~RTPBuffer() = default;
 
-  void Write(const uint8_t payloadType,
-             const uint32_t timeStamp,
-             const int16_t seqNo,
+  void Write(uint8_t payloadType,
+             uint32_t timeStamp,
+             int16_t seqNo,
              const uint8_t* payloadData,
-             const size_t payloadSize,
+             size_t payloadSize,
              uint32_t frequency) override;
 
   size_t Read(RTPHeader* rtp_header,
@@ -89,8 +90,8 @@ class RTPBuffer : public RTPStream {
   bool EndOfFile() const override;
 
  private:
-  RWLockWrapper* _queueRWLock;
-  std::queue<RTPPacket*> _rtpQueue;
+  mutable Mutex mutex_;
+  std::queue<RTPPacket*> _rtpQueue RTC_GUARDED_BY(&mutex_);
 };
 
 class RTPFile : public RTPStream {
@@ -107,11 +108,11 @@ class RTPFile : public RTPStream {
 
   void ReadHeader();
 
-  void Write(const uint8_t payloadType,
-             const uint32_t timeStamp,
-             const int16_t seqNo,
+  void Write(uint8_t payloadType,
+             uint32_t timeStamp,
+             int16_t seqNo,
              const uint8_t* payloadData,
-             const size_t payloadSize,
+             size_t payloadSize,
              uint32_t frequency) override;
 
   size_t Read(RTPHeader* rtp_header,

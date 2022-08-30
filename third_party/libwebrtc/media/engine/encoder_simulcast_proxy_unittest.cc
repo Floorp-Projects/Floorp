@@ -49,7 +49,8 @@ TEST(EncoderSimulcastProxy, ChoosesCorrectImplementation) {
                                        2000,
                                        1000,
                                        1000,
-                                       56};
+                                       56,
+                                       true};
   codec_settings.simulcastStream[1] = {test::kTestWidth,
                                        test::kTestHeight,
                                        test::kTestFrameRate,
@@ -57,7 +58,8 @@ TEST(EncoderSimulcastProxy, ChoosesCorrectImplementation) {
                                        3000,
                                        1000,
                                        1000,
-                                       56};
+                                       56,
+                                       true};
   codec_settings.simulcastStream[2] = {test::kTestWidth,
                                        test::kTestHeight,
                                        test::kTestFrameRate,
@@ -65,7 +67,8 @@ TEST(EncoderSimulcastProxy, ChoosesCorrectImplementation) {
                                        5000,
                                        1000,
                                        1000,
-                                       56};
+                                       56,
+                                       true};
   codec_settings.numberOfSimulcastStreams = 3;
 
   auto mock_encoder = std::make_unique<NiceMock<MockVideoEncoder>>();
@@ -179,36 +182,6 @@ TEST(EncoderSimulcastProxy, ForwardsHardwareAccelerated) {
   info.is_hardware_accelerated = true;
   EXPECT_CALL(*mock_encoder, GetEncoderInfo()).WillOnce(Return(info));
   EXPECT_TRUE(simulcast_enabled_proxy.GetEncoderInfo().is_hardware_accelerated);
-}
-
-TEST(EncoderSimulcastProxy, ForwardsInternalSource) {
-  auto mock_encoder_owned = std::make_unique<NiceMock<MockVideoEncoder>>();
-  NiceMock<MockVideoEncoder>* mock_encoder = mock_encoder_owned.get();
-  NiceMock<MockVideoEncoderFactory> simulcast_factory;
-
-  EXPECT_CALL(*mock_encoder, InitEncode(_, _))
-      .WillOnce(Return(WEBRTC_VIDEO_CODEC_OK));
-
-  EXPECT_CALL(simulcast_factory, CreateVideoEncoder)
-      .Times(1)
-      .WillOnce(Return(ByMove(std::move(mock_encoder_owned))));
-
-  EncoderSimulcastProxy simulcast_enabled_proxy(&simulcast_factory,
-                                                SdpVideoFormat("VP8"));
-  VideoCodec codec_settings;
-  webrtc::test::CodecSettings(kVideoCodecVP8, &codec_settings);
-  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
-            simulcast_enabled_proxy.InitEncode(&codec_settings, kSettings));
-
-  VideoEncoder::EncoderInfo info;
-
-  info.has_internal_source = false;
-  EXPECT_CALL(*mock_encoder, GetEncoderInfo()).WillOnce(Return(info));
-  EXPECT_FALSE(simulcast_enabled_proxy.GetEncoderInfo().has_internal_source);
-
-  info.has_internal_source = true;
-  EXPECT_CALL(*mock_encoder, GetEncoderInfo()).WillOnce(Return(info));
-  EXPECT_TRUE(simulcast_enabled_proxy.GetEncoderInfo().has_internal_source);
 }
 
 }  // namespace testing

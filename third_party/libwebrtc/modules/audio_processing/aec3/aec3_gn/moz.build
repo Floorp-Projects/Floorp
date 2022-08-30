@@ -10,6 +10,7 @@ COMPILE_FLAGS["OS_INCLUDES"] = []
 AllowCompilerWarnings()
 
 DEFINES["ABSL_ALLOCATOR_NOTHROW"] = "1"
+DEFINES["RTC_DAV1D_IN_INTERNAL_DECODER_FACTORY"] = True
 DEFINES["RTC_ENABLE_VP9"] = True
 DEFINES["WEBRTC_APM_DEBUG_DUMP"] = "0"
 DEFINES["WEBRTC_ENABLE_PROTOBUF"] = "0"
@@ -44,6 +45,7 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/audio_processing/aec3/clockdrift_detector.cc",
     "/third_party/libwebrtc/modules/audio_processing/aec3/coarse_filter_update_gain.cc",
     "/third_party/libwebrtc/modules/audio_processing/aec3/comfort_noise_generator.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/config_selector.cc",
     "/third_party/libwebrtc/modules/audio_processing/aec3/decimator.cc",
     "/third_party/libwebrtc/modules/audio_processing/aec3/dominant_nearend_detector.cc",
     "/third_party/libwebrtc/modules/audio_processing/aec3/downsampled_render_buffer.cc",
@@ -62,6 +64,7 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/audio_processing/aec3/matched_filter.cc",
     "/third_party/libwebrtc/modules/audio_processing/aec3/matched_filter_lag_aggregator.cc",
     "/third_party/libwebrtc/modules/audio_processing/aec3/moving_average.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/multi_channel_content_detector.cc",
     "/third_party/libwebrtc/modules/audio_processing/aec3/refined_filter_update_gain.cc",
     "/third_party/libwebrtc/modules/audio_processing/aec3/render_buffer.cc",
     "/third_party/libwebrtc/modules/audio_processing/aec3/render_delay_buffer.cc",
@@ -82,7 +85,8 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/audio_processing/aec3/subtractor_output.cc",
     "/third_party/libwebrtc/modules/audio_processing/aec3/subtractor_output_analyzer.cc",
     "/third_party/libwebrtc/modules/audio_processing/aec3/suppression_filter.cc",
-    "/third_party/libwebrtc/modules/audio_processing/aec3/suppression_gain.cc"
+    "/third_party/libwebrtc/modules/audio_processing/aec3/suppression_gain.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aec3/transparent_mode.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -98,10 +102,11 @@ if CONFIG["MOZ_DEBUG"] == "1":
 if CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["ANDROID"] = True
-    DEFINES["ANDROID_NDK_VERSION_ROLL"] = "r20_1"
+    DEFINES["ANDROID_NDK_VERSION_ROLL"] = "r22_1"
     DEFINES["HAVE_SYS_UIO_H"] = True
     DEFINES["WEBRTC_ANDROID"] = True
     DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_GNU_SOURCE"] = True
@@ -114,6 +119,7 @@ if CONFIG["OS_TARGET"] == "Android":
 
 if CONFIG["OS_TARGET"] == "Darwin":
 
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_MAC"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_LIBCPP_HAS_NO_ALIGNED_ALLOCATION"] = True
@@ -143,8 +149,10 @@ if CONFIG["OS_TARGET"] == "Linux":
 if CONFIG["OS_TARGET"] == "OpenBSD":
 
     DEFINES["USE_GLIB"] = "1"
+    DEFINES["USE_OZONE"] = "1"
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
     DEFINES["_LARGEFILE64_SOURCE"] = True
@@ -160,6 +168,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["PSAPI_VERSION"] = "2"
     DEFINES["UNICODE"] = True
     DEFINES["USE_AURA"] = "1"
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_WIN"] = True
     DEFINES["WIN32"] = True
     DEFINES["WIN32_LEAN_AND_MEAN"] = True
@@ -233,32 +242,28 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android":
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 
-    CXXFLAGS += [
-        "-msse2"
-    ]
-
     OS_LIBS += [
         "android_support"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
 
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
 if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
 
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
-    CXXFLAGS += [
-        "-msse2"
-    ]
-
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
 
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
 Library("aec3_gn")

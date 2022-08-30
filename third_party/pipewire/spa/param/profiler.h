@@ -29,6 +29,11 @@
 extern "C" {
 #endif
 
+/**
+ * \addtogroup spa_param
+ * \{
+ */
+
 #include <spa/param/param.h>
 
 /** properties for SPA_TYPE_OBJECT_Profiler */
@@ -41,7 +46,8 @@ enum spa_profiler {
 							  *      Long : counter,
 							  *      Float : cpu_load fast,
 							  *      Float : cpu_load medium,
-							  *      Float : cpu_load slow))  */
+							  *      Float : cpu_load slow),
+							  *      Int : xrun-count))  */
 	SPA_PROFILER_clock,				/**< clock information
 							  *  (Struct(
 							  *      Int : clock flags,
@@ -62,7 +68,8 @@ enum spa_profiler {
 							  *      Long : driver signal,
 							  *      Long : driver awake,
 							  *      Long : driver finish,
-							  *      Int : driver status)) */
+							  *      Int : driver status),
+							  *      Fraction : latency))  */
 
 	SPA_PROFILER_START_Follower	= 0x20000,	/**< follower related profiler properties */
 	SPA_PROFILER_followerBlock,			/**< generic follower info block
@@ -73,9 +80,15 @@ enum spa_profiler {
 							  *      Long : signal,
 							  *      Long : awake,
 							  *      Long : finish,
-							  *      Int : status)) */
+							  *      Int : status,
+							  *      Fraction : latency))  */
+
 	SPA_PROFILER_START_CUSTOM	= 0x1000000,
 };
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

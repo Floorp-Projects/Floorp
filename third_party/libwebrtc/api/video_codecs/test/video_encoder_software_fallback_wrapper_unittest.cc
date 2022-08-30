@@ -71,13 +71,6 @@ VideoEncoder::EncoderInfo GetEncoderInfoWithHardwareAccelerated(
   return info;
 }
 
-VideoEncoder::EncoderInfo GetEncoderInfoWithInternalSource(
-    bool internal_source) {
-  VideoEncoder::EncoderInfo info;
-  info.has_internal_source = internal_source;
-  return info;
-}
-
 class FakeEncodedImageCallback : public EncodedImageCallback {
  public:
   Result OnEncodedImage(const EncodedImage& encoded_image,
@@ -145,6 +138,8 @@ class VideoEncoderSoftwareFallbackWrapperTestBase : public ::testing::Test {
       info.scaling_settings = ScalingSettings(kLowThreshold, kHighThreshold);
       info.supports_native_handle = supports_native_handle_;
       info.implementation_name = implementation_name_;
+      if (is_qp_trusted_)
+        info.is_qp_trusted = is_qp_trusted_;
       return info;
     }
 
@@ -156,6 +151,7 @@ class VideoEncoderSoftwareFallbackWrapperTestBase : public ::testing::Test {
     int release_count_ = 0;
     mutable int supports_native_handle_count_ = 0;
     bool supports_native_handle_ = false;
+    bool is_qp_trusted_ = false;
     std::string implementation_name_ = "fake-encoder";
     absl::optional<VideoFrame> last_video_frame_;
   };
@@ -172,7 +168,7 @@ class VideoEncoderSoftwareFallbackWrapperTestBase : public ::testing::Test {
 
   test::ScopedFieldTrials override_field_trials_;
   FakeEncodedImageCallback callback_;
-  // |fake_encoder_| is owned and released by |fallback_wrapper_|.
+  // `fake_encoder_` is owned and released by `fallback_wrapper_`.
   CountingFakeEncoder* fake_encoder_;
   CountingFakeEncoder* fake_sw_encoder_;
   bool wrapper_initialized_;
@@ -207,7 +203,7 @@ void VideoEncoderSoftwareFallbackWrapperTestBase::EncodeFrame(
     int expected_ret) {
   rtc::scoped_refptr<I420Buffer> buffer =
       I420Buffer::Create(codec_.width, codec_.height);
-  I420Buffer::SetBlack(buffer);
+  I420Buffer::SetBlack(buffer.get());
   std::vector<VideoFrameType> types(1, VideoFrameType::kVideoFrameKey);
 
   frame_ =
@@ -419,6 +415,16 @@ TEST_F(VideoEncoderSoftwareFallbackWrapperTest, ReportsImplementationName) {
 }
 
 TEST_F(VideoEncoderSoftwareFallbackWrapperTest,
+       IsQpTrustedNotForwardedDuringFallback) {
+  // Fake encoder signals trusted QP, default (libvpx) does not.
+  fake_encoder_->is_qp_trusted_ = true;
+  EXPECT_TRUE(fake_encoder_->GetEncoderInfo().is_qp_trusted.value_or(false));
+  UtilizeFallbackEncoder();
+  EXPECT_FALSE(fallback_wrapper_->GetEncoderInfo().is_qp_trusted.has_value());
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, fallback_wrapper_->Release());
+}
+
+TEST_F(VideoEncoderSoftwareFallbackWrapperTest,
        ReportsFallbackImplementationName) {
   UtilizeFallbackEncoder();
   CheckLastEncoderName(fake_sw_encoder_->implementation_name_.c_str());
@@ -613,13 +619,13 @@ TEST_F(ForcedFallbackTestEnabled, FallbackIsEndedForNonValidSettings) {
   EncodeFrameAndVerifyLastName("libvpx");
 
   // Re-initialize encoder with invalid setting, expect no fallback.
-  codec_.VP8()->numberOfTemporalLayers = 2;
+  codec_.numberOfSimulcastStreams = 2;
   InitEncode(kWidth, kHeight);
   EXPECT_EQ(1, fake_encoder_->init_encode_count_);
   EncodeFrameAndVerifyLastName("fake-encoder");
 
   // Re-initialize encoder with valid setting.
-  codec_.VP8()->numberOfTemporalLayers = 1;
+  codec_.numberOfSimulcastStreams = 1;
   InitEncode(kWidth, kHeight);
   EXPECT_EQ(1, fake_encoder_->init_encode_count_);
   EncodeFrameAndVerifyLastName("libvpx");
@@ -790,35 +796,6 @@ TEST(SoftwareFallbackEncoderTest, ReportsHardwareAccelerated) {
   EXPECT_FALSE(wrapper->GetEncoderInfo().is_hardware_accelerated);
 }
 
-TEST(SoftwareFallbackEncoderTest, ReportsInternalSource) {
-  auto* sw_encoder = new ::testing::NiceMock<MockVideoEncoder>();
-  auto* hw_encoder = new ::testing::NiceMock<MockVideoEncoder>();
-  EXPECT_CALL(*sw_encoder, GetEncoderInfo())
-      .WillRepeatedly(Return(GetEncoderInfoWithInternalSource(false)));
-  EXPECT_CALL(*hw_encoder, GetEncoderInfo())
-      .WillRepeatedly(Return(GetEncoderInfoWithInternalSource(true)));
-
-  std::unique_ptr<VideoEncoder> wrapper =
-      CreateVideoEncoderSoftwareFallbackWrapper(
-          std::unique_ptr<VideoEncoder>(sw_encoder),
-          std::unique_ptr<VideoEncoder>(hw_encoder));
-  EXPECT_TRUE(wrapper->GetEncoderInfo().has_internal_source);
-
-  VideoCodec codec_ = {};
-  codec_.width = 100;
-  codec_.height = 100;
-  wrapper->InitEncode(&codec_, kSettings);
-
-  // Trigger fallback to software.
-  EXPECT_CALL(*hw_encoder, Encode)
-      .WillOnce(Return(WEBRTC_VIDEO_CODEC_FALLBACK_SOFTWARE));
-  VideoFrame frame = VideoFrame::Builder()
-                         .set_video_frame_buffer(I420Buffer::Create(100, 100))
-                         .build();
-  wrapper->Encode(frame, nullptr);
-  EXPECT_FALSE(wrapper->GetEncoderInfo().has_internal_source);
-}
-
 class PreferTemporalLayersFallbackTest : public ::testing::Test {
  public:
   PreferTemporalLayersFallbackTest() {}
@@ -853,11 +830,15 @@ class PreferTemporalLayersFallbackTest : public ::testing::Test {
 
  protected:
   void SetSupportsLayers(VideoEncoder::EncoderInfo* info, bool tl_enabled) {
-    info->fps_allocation[0].clear();
     int num_layers = 1;
     if (tl_enabled) {
       num_layers = codec_settings.VP8()->numberOfTemporalLayers;
     }
+    SetNumLayers(info, num_layers);
+  }
+
+  void SetNumLayers(VideoEncoder::EncoderInfo* info, int num_layers) {
+    info->fps_allocation[0].clear();
     for (int i = 0; i < num_layers; ++i) {
       info->fps_allocation[0].push_back(
           VideoEncoder::EncoderInfo::kMaxFramerateFraction >>
@@ -908,6 +889,15 @@ TEST_F(PreferTemporalLayersFallbackTest, UsesMainWhenNeitherSupportsTemporal) {
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
             wrapper_->InitEncode(&codec_settings, kSettings));
   EXPECT_EQ(wrapper_->GetEncoderInfo().implementation_name, "hw");
+}
+
+TEST_F(PreferTemporalLayersFallbackTest, UsesFallbackWhenLayersAreUndefined) {
+  codec_settings.VP8()->numberOfTemporalLayers = 2;
+  SetNumLayers(&hw_info_, 1);
+  SetNumLayers(&sw_info_, 0);
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
+            wrapper_->InitEncode(&codec_settings, kSettings));
+  EXPECT_EQ(wrapper_->GetEncoderInfo().implementation_name, "sw");
 }
 
 TEST_F(PreferTemporalLayersFallbackTest, PrimesEncoderOnSwitch) {

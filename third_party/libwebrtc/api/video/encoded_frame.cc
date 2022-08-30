@@ -10,12 +10,24 @@
 
 #include "api/video/encoded_frame.h"
 
-namespace webrtc {
-namespace video_coding {
+#include "absl/types/optional.h"
 
-bool EncodedFrame::delayed_by_retransmission() const {
-  return 0;
+namespace webrtc {
+
+absl::optional<Timestamp> EncodedFrame::ReceivedTimestamp() const {
+  return ReceivedTime() >= 0
+             ? absl::make_optional(Timestamp::Millis(ReceivedTime()))
+             : absl::nullopt;
 }
 
-}  // namespace video_coding
+absl::optional<Timestamp> EncodedFrame::RenderTimestamp() const {
+  return RenderTimeMs() >= 0
+             ? absl::make_optional(Timestamp::Millis(RenderTimeMs()))
+             : absl::nullopt;
+}
+
+bool EncodedFrame::delayed_by_retransmission() const {
+  return false;
+}
+
 }  // namespace webrtc

@@ -19,52 +19,41 @@
 #include <memory>
 #include <queue>
 #include <set>
+#include <unordered_map>
 
 #include "absl/types/optional.h"
-#include "api/transport/webrtc_key_value_config.h"
 #include "api/units/data_size.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
+#include "modules/pacing/pacing_controller.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
-#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 
-class RoundRobinPacketQueue {
+class RoundRobinPacketQueue : public PacingController::PacketQueue {
  public:
-  RoundRobinPacketQueue(Timestamp start_time,
-                        const WebRtcKeyValueConfig* field_trials);
+  explicit RoundRobinPacketQueue(Timestamp start_time);
   ~RoundRobinPacketQueue();
 
-  void Push(int priority,
-            Timestamp enqueue_time,
-            uint64_t enqueue_order,
-            std::unique_ptr<RtpPacketToSend> packet);
-  std::unique_ptr<RtpPacketToSend> Pop();
+  void Push(Timestamp enqueue_time,
+            std::unique_ptr<RtpPacketToSend> packet) override;
+  std::unique_ptr<RtpPacketToSend> Pop() override;
 
-  bool Empty() const;
-  size_t SizeInPackets() const;
-  DataSize Size() const;
-  // If the next packet, that would be returned by Pop() if called
-  // now, is an audio packet this method returns the enqueue time
-  // of that packet. If queue is empty or top packet is not audio,
-  // returns nullopt.
-  absl::optional<Timestamp> LeadingAudioPacketEnqueueTime() const;
-
-  Timestamp OldestEnqueueTime() const;
-  TimeDelta AverageQueueTime() const;
-  void UpdateQueueTime(Timestamp now);
-  void SetPauseState(bool paused, Timestamp now);
-  void SetIncludeOverhead();
-  void SetTransportOverhead(DataSize overhead_per_packet);
+  int SizeInPackets() const override;
+  DataSize SizeInPayloadBytes() const override;
+  Timestamp LeadingAudioPacketEnqueueTime() const override;
+  Timestamp OldestEnqueueTime() const override;
+  TimeDelta AverageQueueTime() const override;
+  void UpdateAverageQueueTime(Timestamp now) override;
+  void SetPauseState(bool paused, Timestamp now) override;
 
  private:
   struct QueuedPacket {
    public:
     QueuedPacket(int priority,
                  Timestamp enqueue_time,
-                 uint64_t enqueue_order,
+                 int64_t enqueue_order,
                  std::multiset<Timestamp>::iterator enqueue_time_it,
                  std::unique_ptr<RtpPacketToSend> packet);
     QueuedPacket(const QueuedPacket& rhs);
@@ -77,7 +66,7 @@ class RoundRobinPacketQueue {
     uint32_t Ssrc() const;
     Timestamp EnqueueTime() const;
     bool IsRetransmission() const;
-    uint64_t EnqueueOrder() const;
+    int64_t EnqueueOrder() const;
     RtpPacketToSend* RtpPacket() const;
 
     std::multiset<Timestamp>::iterator EnqueueTimeIterator() const;
@@ -87,7 +76,7 @@ class RoundRobinPacketQueue {
    private:
     int priority_;
     Timestamp enqueue_time_;  // Absolute time of pacer queue entry.
-    uint64_t enqueue_order_;
+    int64_t enqueue_order_;
     bool is_retransmission_;  // Cached for performance.
     std::multiset<Timestamp>::iterator enqueue_time_it_;
     // Raw pointer since priority_queue doesn't allow for moving
@@ -127,8 +116,8 @@ class RoundRobinPacketQueue {
 
     PriorityPacketQueue packet_queue;
 
-    // Whenever a packet is inserted for this stream we check if |priority_it|
-    // points to an element in |stream_priorities_|, and if it does it means
+    // Whenever a packet is inserted for this stream we check if `priority_it`
+    // points to an element in `stream_priorities_`, and if it does it means
     // this stream has already been scheduled, and if the scheduled priority is
     // lower than the priority of the incoming packet we reschedule this stream
     // with the higher priority.
@@ -149,8 +138,10 @@ class RoundRobinPacketQueue {
 
   Timestamp time_last_updated_;
 
+  int64_t enqueue_count_;
+
   bool paused_;
-  size_t size_packets_;
+  int size_packets_;
   DataSize size_;
   DataSize max_size_;
   TimeDelta queue_time_sum_;
@@ -163,7 +154,7 @@ class RoundRobinPacketQueue {
   std::multimap<StreamPrioKey, uint32_t> stream_priorities_;
 
   // A map of SSRCs to Streams.
-  std::map<uint32_t, Stream> streams_;
+  std::unordered_map<uint32_t, Stream> streams_;
 
   // The enqueue time of every packet currently in the queue. Used to figure out
   // the age of the oldest packet in the queue.

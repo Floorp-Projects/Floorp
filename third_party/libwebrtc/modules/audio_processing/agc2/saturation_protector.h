@@ -11,60 +11,35 @@
 #ifndef MODULES_AUDIO_PROCESSING_AGC2_SATURATION_PROTECTOR_H_
 #define MODULES_AUDIO_PROCESSING_AGC2_SATURATION_PROTECTOR_H_
 
-#include <array>
-
-#include "modules/audio_processing/agc2/agc2_common.h"
-#include "modules/audio_processing/agc2/vad_with_level.h"
+#include <memory>
 
 namespace webrtc {
-
 class ApmDataDumper;
 
+// Saturation protector. Analyzes peak levels and recommends a headroom to
+// reduce the chances of clipping.
 class SaturationProtector {
  public:
-  explicit SaturationProtector(ApmDataDumper* apm_data_dumper);
+  virtual ~SaturationProtector() = default;
 
-  SaturationProtector(ApmDataDumper* apm_data_dumper,
-                      float extra_saturation_margin_db);
+  // Returns the recommended headroom in dB.
+  virtual float HeadroomDb() = 0;
 
-  // Update and return margin estimate. This method should be called
-  // whenever a frame is reliably classified as 'speech'.
-  //
-  // Returned value is in DB scale.
-  void UpdateMargin(const VadWithLevel::LevelAndProbability& vad_data,
-                    float last_speech_level_estimate_dbfs);
+  // Analyzes the peak level of a 10 ms frame along with its speech probability
+  // and the current speech level estimate to update the recommended headroom.
+  virtual void Analyze(float speech_probability,
+                       float peak_dbfs,
+                       float speech_level_dbfs) = 0;
 
-  // Returns latest computed margin. Used in cases when speech is not
-  // detected.
-  float LastMargin() const;
-
-  // Resets the internal memory.
-  void Reset();
-
-  void DebugDumpEstimate() const;
-
- private:
-  // Computes a delayed envelope of peaks.
-  class PeakEnveloper {
-   public:
-    PeakEnveloper();
-    void Process(float frame_peak_dbfs);
-
-    float Query() const;
-
-   private:
-    size_t speech_time_in_estimate_ms_ = 0;
-    float current_superframe_peak_dbfs_ = -90.f;
-    size_t elements_in_buffer_ = 0;
-    std::array<float, kPeakEnveloperBufferSize> peak_delay_buffer_ = {};
-  };
-
-  ApmDataDumper* apm_data_dumper_;
-
-  float last_margin_;
-  PeakEnveloper peak_enveloper_;
-  const float extra_saturation_margin_db_;
+  // Resets the internal state.
+  virtual void Reset() = 0;
 };
+
+// Creates a saturation protector that starts at `initial_headroom_db`.
+std::unique_ptr<SaturationProtector> CreateSaturationProtector(
+    float initial_headroom_db,
+    int adjacent_speech_frames_threshold,
+    ApmDataDumper* apm_data_dumper);
 
 }  // namespace webrtc
 

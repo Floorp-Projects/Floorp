@@ -20,6 +20,7 @@
 #include "system_wrappers/include/clock.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 using ::testing::Return;
 
@@ -43,8 +44,7 @@ class BufferedFrameDecryptorTest : public ::testing::Test,
                                    public OnDecryptionStatusChangeCallback {
  public:
   // Implements the OnDecryptedFrameCallbackInterface
-  void OnDecryptedFrame(
-      std::unique_ptr<video_coding::RtpFrameObject> frame) override {
+  void OnDecryptedFrame(std::unique_ptr<RtpFrameObject> frame) override {
     decrypted_frame_call_count_++;
   }
 
@@ -54,14 +54,13 @@ class BufferedFrameDecryptorTest : public ::testing::Test,
 
   // Returns a new fake RtpFrameObject it abstracts the difficult construction
   // of the RtpFrameObject to simplify testing.
-  std::unique_ptr<video_coding::RtpFrameObject> CreateRtpFrameObject(
-      bool key_frame) {
+  std::unique_ptr<RtpFrameObject> CreateRtpFrameObject(bool key_frame) {
     seq_num_++;
     RTPVideoHeader rtp_video_header;
     rtp_video_header.generic.emplace();
 
     // clang-format off
-    return std::make_unique<video_coding::RtpFrameObject>(
+    return std::make_unique<RtpFrameObject>(
         seq_num_,
         seq_num_,
         /*markerBit=*/true,
@@ -88,14 +87,15 @@ class BufferedFrameDecryptorTest : public ::testing::Test,
     decrypted_frame_call_count_ = 0;
     decryption_status_change_count_ = 0;
     seq_num_ = 0;
-    mock_frame_decryptor_ = new rtc::RefCountedObject<MockFrameDecryptor>();
+    mock_frame_decryptor_ = rtc::make_ref_counted<MockFrameDecryptor>();
     buffered_frame_decryptor_ =
-        std::make_unique<BufferedFrameDecryptor>(this, this);
-    buffered_frame_decryptor_->SetFrameDecryptor(mock_frame_decryptor_.get());
+        std::make_unique<BufferedFrameDecryptor>(this, this, field_trials_);
+    buffered_frame_decryptor_->SetFrameDecryptor(mock_frame_decryptor_);
   }
 
   static const size_t kMaxStashedFrames;
 
+  test::ScopedKeyValueConfig field_trials_;
   std::vector<uint8_t> fake_packet_data_;
   rtc::scoped_refptr<MockFrameDecryptor> mock_frame_decryptor_;
   std::unique_ptr<BufferedFrameDecryptor> buffered_frame_decryptor_;
@@ -221,7 +221,7 @@ TEST_F(BufferedFrameDecryptorTest, FramesStoredIfDecryptorNull) {
       .WillRepeatedly(Return(0));
 
   // Attach the frame decryptor at a later point after frames have arrived.
-  buffered_frame_decryptor_->SetFrameDecryptor(mock_frame_decryptor_.get());
+  buffered_frame_decryptor_->SetFrameDecryptor(mock_frame_decryptor_);
 
   // Next frame should trigger kMaxStashedFrame decryptions.
   buffered_frame_decryptor_->ManageEncryptedFrame(CreateRtpFrameObject(true));

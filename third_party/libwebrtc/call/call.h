@@ -17,79 +17,49 @@
 
 #include "api/adaptation/resource.h"
 #include "api/media_types.h"
+#include "api/task_queue/task_queue_base.h"
 #include "call/audio_receive_stream.h"
 #include "call/audio_send_stream.h"
+#include "call/call_basic_stats.h"
 #include "call/call_config.h"
 #include "call/flexfec_receive_stream.h"
 #include "call/packet_receiver.h"
 #include "call/rtp_transport_controller_send_interface.h"
+#include "call/shared_module_thread.h"
 #include "call/video_receive_stream.h"
 #include "call/video_send_stream.h"
 #include "modules/utility/include/process_thread.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/network/sent_packet.h"
 #include "rtc_base/network_route.h"
-#include "rtc_base/ref_count.h"
 
 namespace webrtc {
 
-// A restricted way to share the module process thread across multiple instances
-// of Call that are constructed on the same worker thread (which is what the
-// peer connection factory guarantees).
-// SharedModuleThread supports a callback that is issued when only one reference
-// remains, which is used to indicate to the original owner that the thread may
-// be discarded.
-class SharedModuleThread : public rtc::RefCountInterface {
- protected:
-  SharedModuleThread(std::unique_ptr<ProcessThread> process_thread,
-                     std::function<void()> on_one_ref_remaining);
-  friend class rtc::scoped_refptr<SharedModuleThread>;
-  ~SharedModuleThread() override;
-
- public:
-  // Allows injection of an externally created process thread.
-  static rtc::scoped_refptr<SharedModuleThread> Create(
-      std::unique_ptr<ProcessThread> process_thread,
-      std::function<void()> on_one_ref_remaining);
-
-  void EnsureStarted();
-
-  ProcessThread* process_thread();
-
- private:
-  void AddRef() const override;
-  rtc::RefCountReleaseStatus Release() const override;
-
-  class Impl;
-  mutable std::unique_ptr<Impl> impl_;
-};
+// A Call represents a two-way connection carrying zero or more outgoing
+// and incoming media streams, transported over one or more RTP transports.
 
 // A Call instance can contain several send and/or receive streams. All streams
 // are assumed to have the same remote endpoint and will share bitrate estimates
 // etc.
+
+// When using the PeerConnection API, there is an one to one relationship
+// between the PeerConnection and the Call.
+
 class Call {
  public:
   using Config = CallConfig;
+  using Stats = CallBasicStats;
 
-  struct Stats {
-    std::string ToString(int64_t time_ms) const;
-
-    int send_bandwidth_bps = 0;       // Estimated available send bandwidth.
-    int max_padding_bitrate_bps = 0;  // Cumulative configured max padding.
-    int recv_bandwidth_bps = 0;       // Estimated available receive bandwidth.
-    int64_t pacer_delay_ms = 0;
-    int64_t rtt_ms = -1;
-  };
-
-/* Mozilla: Avoid this since it could use GetRealTimeClock().
   static Call* Create(const Call::Config& config);
-  static Call* Create(const Call::Config& config,
-                      rtc::scoped_refptr<SharedModuleThread> call_thread);
- */
   static Call* Create(const Call::Config& config,
                       Clock* clock,
                       rtc::scoped_refptr<SharedModuleThread> call_thread,
                       std::unique_ptr<ProcessThread> pacer_thread);
+  static Call* Create(const Call::Config& config,
+                      Clock* clock,
+                      rtc::scoped_refptr<SharedModuleThread> call_thread,
+                      std::unique_ptr<RtpTransportControllerSendInterface>
+                          transportControllerSend);
 
   virtual AudioSendStream* CreateAudioSendStream(
       const AudioSendStream::Config& config) = 0;
@@ -119,7 +89,7 @@ class Call {
   // protected by a FlexfecReceiveStream, the latter should be created before
   // the former.
   virtual FlexfecReceiveStream* CreateFlexfecReceiveStream(
-      const FlexfecReceiveStream::Config& config) = 0;
+      const FlexfecReceiveStream::Config config) = 0;
   virtual void DestroyFlexfecReceiveStream(
       FlexfecReceiveStream* receive_stream) = 0;
 
@@ -153,10 +123,23 @@ class Call {
   virtual void OnAudioTransportOverheadChanged(
       int transport_overhead_per_packet) = 0;
 
+  // Called when a receive stream's local ssrc has changed and association with
+  // send streams needs to be updated.
+  virtual void OnLocalSsrcUpdated(AudioReceiveStream& stream,
+                                  uint32_t local_ssrc) = 0;
+
+  virtual void OnUpdateSyncGroup(AudioReceiveStream& stream,
+                                 const std::string& sync_group) = 0;
+
   virtual void OnSentPacket(const rtc::SentPacket& sent_packet) = 0;
 
   virtual void SetClientBitratePreferences(
       const BitrateSettings& preferences) = 0;
+
+  virtual const FieldTrialsView& trials() const = 0;
+
+  virtual TaskQueueBase* network_thread() const = 0;
+  virtual TaskQueueBase* worker_thread() const = 0;
 
   virtual ~Call() {}
 };

@@ -26,16 +26,13 @@ rtc_library("video_processing") {
 
   deps = [
     ":denoiser_filter",
-    "..:module_api",
     "../../api:scoped_refptr",
     "../../api/video:video_frame",
-    "../../api/video:video_frame_i420",
     "../../api/video:video_rtp_headers",
     "../../common_audio",
     "../../common_video",
     "../../modules/utility",
     "../../rtc_base:checks",
-    "../../rtc_base:rtc_base_approved",
     "../../rtc_base/system:arch",
     "../../system_wrappers",
     #"//third_party/libyuv",
@@ -56,7 +53,6 @@ rtc_source_set("denoiser_filter") {
   # Target that only exists to avoid cyclic depdency errors for the SSE2 and
   # Neon implementations below.
   sources = [ "util/denoiser_filter.h" ]
-  deps = [ "..:module_api" ]
 }
 
 if (build_video_processing_sse2) {
@@ -68,7 +64,6 @@ if (build_video_processing_sse2) {
 
     deps = [
       ":denoiser_filter",
-      "../../rtc_base:rtc_base_approved",
       "../../system_wrappers",
     ]
 
@@ -104,7 +99,6 @@ if (rtc_include_tests) {
       ":video_processing",
       "../../api:scoped_refptr",
       "../../api/video:video_frame",
-      "../../api/video:video_frame_i420",
       "../../api/video:video_rtp_headers",
       "../../common_video",
       "../../test:fileutils",

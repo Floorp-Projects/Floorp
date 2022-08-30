@@ -155,7 +155,7 @@ void AecDumpImpl::WriteRenderStreamMessage(
 
   audioproc::ReverseStream* msg = event->mutable_reverse_stream();
 
-  for (size_t i = 0; i < src.num_channels(); ++i) {
+  for (int i = 0; i < src.num_channels(); ++i) {
     const auto& channel_view = src.channel(i);
     msg->add_channel(channel_view.begin(), sizeof(float) * channel_view.size());
   }
@@ -184,6 +184,12 @@ void AecDumpImpl::WriteRuntimeSetting(
       float x;
       runtime_setting.GetFloat(&x);
       setting->set_capture_pre_gain(x);
+      break;
+    }
+    case AudioProcessing::RuntimeSetting::Type::kCapturePostGain: {
+      float x;
+      runtime_setting.GetFloat(&x);
+      setting->set_capture_post_gain(x);
       break;
     }
     case AudioProcessing::RuntimeSetting::Type::
@@ -224,7 +230,7 @@ void AecDumpImpl::WriteRuntimeSetting(
       break;
     }
     case AudioProcessing::RuntimeSetting::Type::kNotSpecified:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       break;
   }
   worker_queue_->PostTask(std::move(task));
@@ -249,8 +255,8 @@ std::unique_ptr<AecDump> AecDumpFactory::Create(webrtc::FileWrapper file,
 std::unique_ptr<AecDump> AecDumpFactory::Create(std::string file_name,
                                                 int64_t max_log_size_bytes,
                                                 rtc::TaskQueue* worker_queue) {
-  return Create(FileWrapper::OpenWriteOnly(file_name.c_str()),
-                max_log_size_bytes, worker_queue);
+  return Create(FileWrapper::OpenWriteOnly(file_name), max_log_size_bytes,
+                worker_queue);
 }
 
 std::unique_ptr<AecDump> AecDumpFactory::Create(FILE* handle,

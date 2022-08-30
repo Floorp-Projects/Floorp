@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 
+#include "api/array_view.h"
 #include "api/scoped_refptr.h"
 #include "rtc_base/ref_count.h"
 #include "rtc_base/system/rtc_export.h"
@@ -21,6 +22,7 @@ namespace webrtc {
 
 class I420BufferInterface;
 class I420ABufferInterface;
+class I422BufferInterface;
 class I444BufferInterface;
 class I010BufferInterface;
 class NV12BufferInterface;
@@ -45,10 +47,13 @@ class RTC_EXPORT VideoFrameBuffer : public rtc::RefCountInterface {
   // New frame buffer types will be added conservatively when there is an
   // opportunity to optimize the path between some pair of video source and
   // video sink.
+  // GENERATED_JAVA_ENUM_PACKAGE: org.webrtc
+  // GENERATED_JAVA_CLASS_NAME_OVERRIDE: VideoFrameBufferType
   enum class Type {
     kNative,
     kI420,
     kI420A,
+    kI422,
     kI444,
     kI010,
     kNV12,
@@ -66,6 +71,8 @@ class RTC_EXPORT VideoFrameBuffer : public rtc::RefCountInterface {
   // in another format, a conversion will take place. All implementations must
   // provide a fallback to I420 for compatibility with e.g. the internal WebRTC
   // software encoders.
+  // Conversion may fail, for example if reading the pixel data from a texture
+  // fails. If the conversion fails, nullptr is returned.
   virtual rtc::scoped_refptr<I420BufferInterface> ToI420() = 0;
 
   // GetI420() methods should return I420 buffer if conversion is trivial, i.e
@@ -74,18 +81,50 @@ class RTC_EXPORT VideoFrameBuffer : public rtc::RefCountInterface {
   // WebrtcVideoFrameAdapter in Chrome - it's I420 buffer backed by a shared
   // memory buffer. Therefore it must have type kNative. Yet, ToI420()
   // doesn't affect binary data at all. Another example is any I420A buffer.
+  // TODO(https://crbug.com/webrtc/12021): Make this method non-virtual and
+  // behave as the other GetXXX methods below.
   virtual const I420BufferInterface* GetI420() const;
+
+  // A format specific scale function. Default implementation works by
+  // converting to I420. But more efficient implementations may override it,
+  // especially for kNative.
+  // First, the image is cropped to `crop_width` and `crop_height` and then
+  // scaled to `scaled_width` and `scaled_height`.
+  virtual rtc::scoped_refptr<VideoFrameBuffer> CropAndScale(int offset_x,
+                                                            int offset_y,
+                                                            int crop_width,
+                                                            int crop_height,
+                                                            int scaled_width,
+                                                            int scaled_height);
+
+  // Alias for common use case.
+  rtc::scoped_refptr<VideoFrameBuffer> Scale(int scaled_width,
+                                             int scaled_height) {
+    return CropAndScale(0, 0, width(), height(), scaled_width, scaled_height);
+  }
 
   // These functions should only be called if type() is of the correct type.
   // Calling with a different type will result in a crash.
   const I420ABufferInterface* GetI420A() const;
+  const I422BufferInterface* GetI422() const;
   const I444BufferInterface* GetI444() const;
   const I010BufferInterface* GetI010() const;
   const NV12BufferInterface* GetNV12() const;
 
+  // From a kNative frame, returns a VideoFrameBuffer with a pixel format in
+  // the list of types that is in the main memory with a pixel perfect
+  // conversion for encoding with a software encoder. Returns nullptr if the
+  // frame type is not supported, mapping is not possible, or if the kNative
+  // frame has not implemented this method. Only callable if type() is kNative.
+  virtual rtc::scoped_refptr<VideoFrameBuffer> GetMappedFrameBuffer(
+      rtc::ArrayView<Type> types);
+
  protected:
   ~VideoFrameBuffer() override {}
 };
+
+// Update when VideoFrameBuffer::Type is updated.
+const char* VideoFrameBufferTypeToString(VideoFrameBuffer::Type type);
 
 // This interface represents planar formats.
 class PlanarYuvBuffer : public VideoFrameBuffer {
@@ -104,7 +143,7 @@ class PlanarYuvBuffer : public VideoFrameBuffer {
 };
 
 // This interface represents 8-bit color depth formats: Type::kI420,
-// Type::kI420A and Type::kI444.
+// Type::kI420A, Type::kI422 and Type::kI444.
 class PlanarYuv8Buffer : public PlanarYuvBuffer {
  public:
   // Returns pointer to the pixel data for a given plane. The memory is owned by
@@ -141,12 +180,39 @@ class RTC_EXPORT I420ABufferInterface : public I420BufferInterface {
   ~I420ABufferInterface() override {}
 };
 
+// Represents Type::kI422, 4:2:2 planar with 8 bits per pixel.
+class I422BufferInterface : public PlanarYuv8Buffer {
+ public:
+  Type type() const final;
+
+  int ChromaWidth() const final;
+  int ChromaHeight() const final;
+
+  rtc::scoped_refptr<VideoFrameBuffer> CropAndScale(int offset_x,
+                                                    int offset_y,
+                                                    int crop_width,
+                                                    int crop_height,
+                                                    int scaled_width,
+                                                    int scaled_height) override;
+
+ protected:
+  ~I422BufferInterface() override {}
+};
+
+// Represents Type::kI444, 4:4:4 planar with 8 bits per pixel.
 class I444BufferInterface : public PlanarYuv8Buffer {
  public:
   Type type() const final;
 
   int ChromaWidth() const final;
   int ChromaHeight() const final;
+
+  rtc::scoped_refptr<VideoFrameBuffer> CropAndScale(int offset_x,
+                                                    int offset_y,
+                                                    int crop_width,
+                                                    int crop_height,
+                                                    int scaled_width,
+                                                    int scaled_height) override;
 
  protected:
   ~I444BufferInterface() override {}
@@ -203,12 +269,19 @@ class BiplanarYuv8Buffer : public BiplanarYuvBuffer {
 
 // Represents Type::kNV12. NV12 is full resolution Y and half-resolution
 // interleved UV.
-class NV12BufferInterface : public BiplanarYuv8Buffer {
+class RTC_EXPORT NV12BufferInterface : public BiplanarYuv8Buffer {
  public:
   Type type() const override;
 
   int ChromaWidth() const final;
   int ChromaHeight() const final;
+
+  rtc::scoped_refptr<VideoFrameBuffer> CropAndScale(int offset_x,
+                                                    int offset_y,
+                                                    int crop_width,
+                                                    int crop_height,
+                                                    int scaled_width,
+                                                    int scaled_height) override;
 
  protected:
   ~NV12BufferInterface() override {}

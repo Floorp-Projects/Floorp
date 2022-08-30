@@ -15,7 +15,6 @@
 #include <utility>
 #include <vector>
 
-#include "absl/base/macros.h"
 #include "absl/types/optional.h"
 #include "absl/types/variant.h"
 #include "common_video/h264/h264_common.h"
@@ -197,7 +196,7 @@ absl::optional<VideoRtpDepacketizer::ParsedRtpPayload> ProcessStapAOrSingleNalu(
       case H264::NaluType::kIdr:
         parsed_payload->video_header.frame_type =
             VideoFrameType::kVideoFrameKey;
-        ABSL_FALLTHROUGH_INTENDED;
+        [[fallthrough]];
       case H264::NaluType::kSlice: {
         absl::optional<uint32_t> pps_id = PpsParser::ParsePpsIdFromSlice(
             &payload_data[start_offset], end_offset - start_offset);
@@ -264,7 +263,7 @@ absl::optional<VideoRtpDepacketizer::ParsedRtpPayload> ParseFuaNalu(
     uint8_t original_nal_header = fnri | original_nal_type;
     rtp_payload =
         rtp_payload.Slice(kNalHeaderSize, rtp_payload.size() - kNalHeaderSize);
-    rtp_payload[0] = original_nal_header;
+    rtp_payload.MutableData()[0] = original_nal_header;
     parsed_payload->video_payload = std::move(rtp_payload);
   } else {
     parsed_payload->video_payload =

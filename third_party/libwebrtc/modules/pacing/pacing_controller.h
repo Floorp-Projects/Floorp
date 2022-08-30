@@ -19,14 +19,12 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
 #include "api/function_view.h"
-#include "api/rtc_event_log/rtc_event_log.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/transport/network_types.h"
-#include "api/transport/webrtc_key_value_config.h"
 #include "modules/pacing/bitrate_prober.h"
 #include "modules/pacing/interval_budget.h"
-#include "modules/pacing/round_robin_packet_queue.h"
 #include "modules/pacing/rtp_packet_pacer.h"
 #include "modules/rtp_rtcp/include/rtp_packet_sender.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
@@ -38,10 +36,9 @@ namespace webrtc {
 
 // This class implements a leaky-bucket packet pacing algorithm. It handles the
 // logic of determining which packets to send when, but the actual timing of
-// the processing is done externally (e.g. PacedSender). Furthermore, the
+// the processing is done externally (e.g. RtpPacketPacer). Furthermore, the
 // forwarding of packets when they are ready to be sent is also handled
-// externally, via the PacedSendingController::PacketSender interface.
-//
+// externally, via the PacingController::PacketSender interface.
 class PacingController {
  public:
   // Periodic mode uses the IntervalBudget class for tracking bitrate
@@ -62,6 +59,47 @@ class PacingController {
         DataSize size) = 0;
   };
 
+  // Interface for class hanlding storage of and prioritization of packets
+  // pending to be sent by the pacer.
+  // Note that for the methods taking a Timestamp as parameter, the parameter
+  // will never decrease between two subsequent calls.
+  class PacketQueue {
+   public:
+    virtual ~PacketQueue() = default;
+
+    virtual void Push(Timestamp enqueue_time,
+                      std::unique_ptr<RtpPacketToSend> packet) = 0;
+    virtual std::unique_ptr<RtpPacketToSend> Pop() = 0;
+
+    virtual int SizeInPackets() const = 0;
+    bool Empty() const { return SizeInPackets() == 0; }
+    virtual DataSize SizeInPayloadBytes() const = 0;
+
+    // If the next packet, that would be returned by Pop() if called
+    // now, is an audio packet this method returns the enqueue time
+    // of that packet. If queue is empty or top packet is not audio,
+    // returns Timestamp::MinusInfinity().
+    virtual Timestamp LeadingAudioPacketEnqueueTime() const = 0;
+
+    // Enqueue time of the oldest packet in the queue,
+    // Timestamp::MinusInfinity() if queue is empty.
+    virtual Timestamp OldestEnqueueTime() const = 0;
+
+    // Average queue time for the packets currently in the queue.
+    // The queuing time is calculated from Push() to the last UpdateQueueTime()
+    // call - with any time spent in a paused state subtracted.
+    // Returns TimeDelta::Zero() for an empty queue.
+    virtual TimeDelta AverageQueueTime() const = 0;
+
+    // Called during packet processing or when pause stats changes. Since the
+    // AverageQueueTime() method does not look at the wall time, this method
+    // needs to be called before querying queue time.
+    virtual void UpdateAverageQueueTime(Timestamp now) = 0;
+
+    // Set the pause state, while `paused` is true queuing time is not counted.
+    virtual void SetPauseState(bool paused, Timestamp now) = 0;
+  };
+
   // Expected max pacer delay. If ExpectedQueueTime() is higher than
   // this value, the packet producers should wait (eg drop frames rather than
   // encoding them). Bitrate sent may temporarily exceed target set by
@@ -73,17 +111,21 @@ class PacingController {
   // Increasing this factor will result in lower delays in cases of bitrate
   // overshoots from the encoder.
   static const float kDefaultPaceMultiplier;
-  // If no media or paused, wake up at least every |kPausedProcessIntervalMs| in
+  // If no media or paused, wake up at least every `kPausedProcessIntervalMs` in
   // order to send a keep-alive packet so we don't get stuck in a bad state due
   // to lack of feedback.
   static const TimeDelta kPausedProcessInterval;
 
   static const TimeDelta kMinSleepTime;
 
+  // Allow probes to be processed slightly ahead of inteded send time. Currently
+  // set to 1ms as this is intended to allow times be rounded down to the
+  // nearest millisecond.
+  static const TimeDelta kMaxEarlyProbeProcessing;
+
   PacingController(Clock* clock,
                    PacketSender* packet_sender,
-                   RtcEventLog* event_log,
-                   const WebRtcKeyValueConfig* field_trials,
+                   const FieldTrialsView& field_trials,
                    ProcessMode mode);
 
   ~PacingController();
@@ -98,11 +140,11 @@ class PacingController {
   void Resume();  // Resume sending packets.
   bool IsPaused() const;
 
-  void SetCongestionWindow(DataSize congestion_window_size);
-  void UpdateOutstandingData(DataSize outstanding_data);
+  void SetCongested(bool congested);
 
   // Sets the pacing rates. Must be called once before packets can be sent.
   void SetPacingRates(DataRate pacing_rate, DataRate padding_rate);
+  DataRate pacing_rate() const { return pacing_bitrate_; }
 
   // Currently audio traffic is not accounted by pacer and passed through.
   // With the introduction of audio BWE audio traffic will be accounted for
@@ -113,8 +155,8 @@ class PacingController {
 
   void SetTransportOverhead(DataSize overhead_per_packet);
 
-  // Returns the time since the oldest queued packet was enqueued.
-  TimeDelta OldestPacketWaitTime() const;
+  // Returns the time when the oldest packet was queued.
+  Timestamp OldestPacketEnqueueTime() const;
 
   // Number of packets in the pacer queue.
   size_t QueueSizePackets() const;
@@ -124,7 +166,7 @@ class PacingController {
   // Current buffer level, i.e. max of media and padding debt.
   DataSize CurrentBufferLevel() const;
 
-  // Returns the time when the first packet was sent;
+  // Returns the time when the first packet was sent.
   absl::optional<Timestamp> FirstSentPacketTime() const;
 
   // Returns the number of milliseconds it will take to send the current
@@ -145,19 +187,16 @@ class PacingController {
   // is available.
   void ProcessPackets();
 
-  bool Congested() const;
-
   bool IsProbing() const;
 
  private:
-  void EnqueuePacketInternal(std::unique_ptr<RtpPacketToSend> packet,
-                             int priority);
   TimeDelta UpdateTimeAndGetElapsed(Timestamp now);
   bool ShouldSendKeepalive(Timestamp now) const;
 
   // Updates the number of bytes that can be sent for the next time interval.
   void UpdateBudgetWithElapsedTime(TimeDelta delta);
   void UpdateBudgetWithSentData(DataSize size);
+  void UpdatePaddingBudgetWithSentData(DataSize size);
 
   DataSize PaddingToAdd(DataSize recommended_probe_size,
                         DataSize data_sent) const;
@@ -169,20 +208,17 @@ class PacingController {
   void OnPacketSent(RtpPacketMediaType packet_type,
                     DataSize packet_size,
                     Timestamp send_time);
-  void OnPaddingSent(DataSize padding_sent);
 
   Timestamp CurrentTime() const;
 
   const ProcessMode mode_;
   Clock* const clock_;
   PacketSender* const packet_sender_;
-  const std::unique_ptr<FieldTrialBasedConfig> fallback_field_trials_;
-  const WebRtcKeyValueConfig* field_trials_;
+  const FieldTrialsView& field_trials_;
 
   const bool drain_large_queues_;
   const bool send_padding_if_silent_;
   const bool pace_audio_;
-  const bool small_first_probe_packet_;
   const bool ignore_transport_overhead_;
   // In dynamic mode, indicates the target size when requesting padding,
   // expressed as a duration in order to adjust for varying padding rate.
@@ -193,13 +229,14 @@ class PacingController {
   DataSize transport_overhead_per_packet_;
 
   // TODO(webrtc:9716): Remove this when we are certain clocks are monotonic.
-  // The last millisecond timestamp returned by |clock_|.
+  // The last millisecond timestamp returned by `clock_`.
   mutable Timestamp last_timestamp_;
   bool paused_;
 
-  // If |use_interval_budget_| is true, |media_budget_| and |padding_budget_|
-  // will be used to track when packets can be sent. Otherwise the media and
-  // padding debt counters will be used together with the target rates.
+  // In periodic mode, `media_budget_` and `padding_budget_` will be used to
+  // track when packets can be sent.
+  // In dynamic mode, `media_debt_` and `padding_debt_` will be used together
+  // with the target rates.
 
   // This is the media budget, keeping track of how many bits of media
   // we can pace out during the current interval.
@@ -222,14 +259,13 @@ class PacingController {
   Timestamp last_process_time_;
   Timestamp last_send_time_;
   absl::optional<Timestamp> first_sent_packet_time_;
+  bool seen_first_packet_;
 
-  RoundRobinPacketQueue packet_queue_;
-  uint64_t packet_counter_;
+  std::unique_ptr<PacketQueue> packet_queue_;
 
-  DataSize congestion_window_size_;
-  DataSize outstanding_data_;
+  bool congested_;
 
-  TimeDelta queue_time_limit;
+  TimeDelta queue_time_limit_;
   bool account_for_audio_;
   bool include_overhead_;
 };

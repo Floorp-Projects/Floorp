@@ -45,17 +45,34 @@ class ADMWrapper : public AudioDeviceModule, public AudioTransport {
   // Make sure we have a valid ADM before returning it to user.
   bool IsValid() { return is_valid_; }
 
+  int32_t RecordedDataIsAvailable(const void* audioSamples,
+                                  size_t nSamples,
+                                  size_t nBytesPerSample,
+                                  size_t nChannels,
+                                  uint32_t samples_per_sec,
+                                  uint32_t total_delay_ms,
+                                  int32_t clockDrift,
+                                  uint32_t currentMicLevel,
+                                  bool keyPressed,
+                                  uint32_t& newMicLevel) override {
+    return RecordedDataIsAvailable(audioSamples, nSamples, nBytesPerSample,
+                                   nChannels, samples_per_sec, total_delay_ms,
+                                   clockDrift, currentMicLevel, keyPressed,
+                                   newMicLevel, /*capture_timestamp_ns*/ 0);
+  }
+
   // AudioTransport methods overrides.
   int32_t RecordedDataIsAvailable(const void* audioSamples,
-                                  const size_t nSamples,
-                                  const size_t nBytesPerSample,
-                                  const size_t nChannels,
-                                  const uint32_t samples_per_sec,
-                                  const uint32_t total_delay_ms,
-                                  const int32_t clockDrift,
-                                  const uint32_t currentMicLevel,
-                                  const bool keyPressed,
-                                  uint32_t& newMicLevel) override {
+                                  size_t nSamples,
+                                  size_t nBytesPerSample,
+                                  size_t nChannels,
+                                  uint32_t samples_per_sec,
+                                  uint32_t total_delay_ms,
+                                  int32_t clockDrift,
+                                  uint32_t currentMicLevel,
+                                  bool keyPressed,
+                                  uint32_t& newMicLevel,
+                                  int64_t capture_timestamp_ns) override {
     int32_t res = 0;
     // Capture PCM data of locally captured audio.
     if (observer_) {
@@ -67,7 +84,8 @@ class ADMWrapper : public AudioDeviceModule, public AudioTransport {
     if (audio_transport_) {
       res = audio_transport_->RecordedDataIsAvailable(
           audioSamples, nSamples, nBytesPerSample, nChannels, samples_per_sec,
-          total_delay_ms, clockDrift, currentMicLevel, keyPressed, newMicLevel);
+          total_delay_ms, clockDrift, currentMicLevel, keyPressed, newMicLevel,
+          capture_timestamp_ns);
     }
 
     return res;
@@ -110,7 +128,7 @@ class ADMWrapper : public AudioDeviceModule, public AudioTransport {
                       void* audio_data,
                       int64_t* elapsed_time_ms,
                       int64_t* ntp_time_ms) override {
-    RTC_NOTREACHED();
+    RTC_DCHECK_NOTREACHED();
   }
 
   // Override AudioDeviceModule's RegisterAudioCallback method to remember the
@@ -301,9 +319,8 @@ class ADMWrapper : public AudioDeviceModule, public AudioTransport {
 rtc::scoped_refptr<AudioDeviceModule> CreateAudioDeviceWithDataObserver(
     rtc::scoped_refptr<AudioDeviceModule> impl,
     std::unique_ptr<AudioDeviceDataObserver> observer) {
-  rtc::scoped_refptr<ADMWrapper> audio_device(
-      new rtc::RefCountedObject<ADMWrapper>(impl, observer.get(),
-                                            std::move(observer)));
+  auto audio_device = rtc::make_ref_counted<ADMWrapper>(impl, observer.get(),
+                                                        std::move(observer));
 
   if (!audio_device->IsValid()) {
     return nullptr;
@@ -315,8 +332,8 @@ rtc::scoped_refptr<AudioDeviceModule> CreateAudioDeviceWithDataObserver(
 rtc::scoped_refptr<AudioDeviceModule> CreateAudioDeviceWithDataObserver(
     rtc::scoped_refptr<AudioDeviceModule> impl,
     AudioDeviceDataObserver* legacy_observer) {
-  rtc::scoped_refptr<ADMWrapper> audio_device(
-      new rtc::RefCountedObject<ADMWrapper>(impl, legacy_observer, nullptr));
+  auto audio_device =
+      rtc::make_ref_counted<ADMWrapper>(impl, legacy_observer, nullptr);
 
   if (!audio_device->IsValid()) {
     return nullptr;
@@ -329,10 +346,8 @@ rtc::scoped_refptr<AudioDeviceModule> CreateAudioDeviceWithDataObserver(
     AudioDeviceModule::AudioLayer audio_layer,
     TaskQueueFactory* task_queue_factory,
     std::unique_ptr<AudioDeviceDataObserver> observer) {
-  rtc::scoped_refptr<ADMWrapper> audio_device(
-      new rtc::RefCountedObject<ADMWrapper>(audio_layer, task_queue_factory,
-                                            observer.get(),
-                                            std::move(observer)));
+  auto audio_device = rtc::make_ref_counted<ADMWrapper>(
+      audio_layer, task_queue_factory, observer.get(), std::move(observer));
 
   if (!audio_device->IsValid()) {
     return nullptr;
@@ -345,9 +360,8 @@ rtc::scoped_refptr<AudioDeviceModule> CreateAudioDeviceWithDataObserver(
     AudioDeviceModule::AudioLayer audio_layer,
     TaskQueueFactory* task_queue_factory,
     AudioDeviceDataObserver* legacy_observer) {
-  rtc::scoped_refptr<ADMWrapper> audio_device(
-      new rtc::RefCountedObject<ADMWrapper>(audio_layer, task_queue_factory,
-                                            legacy_observer, nullptr));
+  auto audio_device = rtc::make_ref_counted<ADMWrapper>(
+      audio_layer, task_queue_factory, legacy_observer, nullptr);
 
   if (!audio_device->IsValid()) {
     return nullptr;

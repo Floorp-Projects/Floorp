@@ -14,13 +14,17 @@
 #include <string>
 #include <vector>
 
+#include "absl/strings/match.h"
 #include "api/units/data_rate.h"
 #include "api/units/time_delta.h"
-#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 namespace {
 const char kBweLossBasedControl[] = "WebRTC-Bwe-LossBasedControl";
+
+// Expecting RTCP feedback to be sent with roughly 1s intervals, a 5s gap
+// indicates a channel outage.
+constexpr TimeDelta kMaxRtcpFeedbackInterval = TimeDelta::Millis(5000);
 
 // Increase slower when RTT is high.
 double GetIncreaseFactor(const LossBasedControlConfig& config, TimeDelta rtt) {
@@ -33,7 +37,7 @@ double GetIncreaseFactor(const LossBasedControlConfig& config, TimeDelta rtt) {
   auto rtt_range = static_cast<TimeDelta>(config.increase_high_rtt.Get()) -
                    static_cast<TimeDelta>(config.increase_low_rtt);
   if (rtt_range <= TimeDelta::Zero()) {
-    RTC_DCHECK(false);  // Only on misconfiguration.
+    RTC_DCHECK_NOTREACHED();  // Only on misconfiguration.
     return static_cast<double>(config.min_increase_factor);
   }
   auto rtt_offset = rtt - static_cast<TimeDelta>(config.increase_low_rtt);
@@ -56,7 +60,7 @@ DataRate BitrateFromLoss(double loss,
                          DataRate loss_bandwidth_balance,
                          double exponent) {
   if (exponent <= 0) {
-    RTC_DCHECK(false);
+    RTC_DCHECK_NOTREACHED();
     return DataRate::Infinity();
   }
   if (loss < 1e-5)
@@ -68,16 +72,22 @@ double ExponentialUpdate(TimeDelta window, TimeDelta interval) {
   // Use the convention that exponential window length (which is really
   // infinite) is the time it takes to dampen to 1/e.
   if (window <= TimeDelta::Zero()) {
-    RTC_DCHECK(false);
+    RTC_DCHECK_NOTREACHED();
     return 1.0f;
   }
   return 1.0f - exp(interval / window * -1.0);
 }
 
+bool IsEnabled(const webrtc::FieldTrialsView& key_value_config,
+               absl::string_view name) {
+  return absl::StartsWith(key_value_config.Lookup(name), "Enabled");
+}
+
 }  // namespace
 
-LossBasedControlConfig::LossBasedControlConfig()
-    : enabled(field_trial::IsEnabled(kBweLossBasedControl)),
+LossBasedControlConfig::LossBasedControlConfig(
+    const FieldTrialsView* key_value_config)
+    : enabled(IsEnabled(*key_value_config, kBweLossBasedControl)),
       min_increase_factor("min_incr", 1.02),
       max_increase_factor("max_incr", 1.08),
       increase_low_rtt("incr_low_rtt", TimeDelta::Millis(200)),
@@ -91,26 +101,28 @@ LossBasedControlConfig::LossBasedControlConfig()
                                       DataRate::KilobitsPerSec(0.5)),
       loss_bandwidth_balance_decrease("balance_decr",
                                       DataRate::KilobitsPerSec(4)),
+      loss_bandwidth_balance_reset("balance_reset",
+                                   DataRate::KilobitsPerSec(0.1)),
       loss_bandwidth_balance_exponent("exponent", 0.5),
       allow_resets("resets", false),
       decrease_interval("decr_intvl", TimeDelta::Millis(300)),
       loss_report_timeout("timeout", TimeDelta::Millis(6000)) {
-  std::string trial_string = field_trial::FindFullName(kBweLossBasedControl);
   ParseFieldTrial(
       {&min_increase_factor, &max_increase_factor, &increase_low_rtt,
        &increase_high_rtt, &decrease_factor, &loss_window, &loss_max_window,
        &acknowledged_rate_max_window, &increase_offset,
        &loss_bandwidth_balance_increase, &loss_bandwidth_balance_decrease,
-       &loss_bandwidth_balance_exponent, &allow_resets, &decrease_interval,
-       &loss_report_timeout},
-      trial_string);
+       &loss_bandwidth_balance_reset, &loss_bandwidth_balance_exponent,
+       &allow_resets, &decrease_interval, &loss_report_timeout},
+      key_value_config->Lookup(kBweLossBasedControl));
 }
 LossBasedControlConfig::LossBasedControlConfig(const LossBasedControlConfig&) =
     default;
 LossBasedControlConfig::~LossBasedControlConfig() = default;
 
-LossBasedBandwidthEstimation::LossBasedBandwidthEstimation()
-    : config_(LossBasedControlConfig()),
+LossBasedBandwidthEstimation::LossBasedBandwidthEstimation(
+    const FieldTrialsView* key_value_config)
+    : config_(key_value_config),
       average_loss_(0),
       average_loss_max_(0),
       loss_based_bitrate_(DataRate::Zero()),
@@ -125,12 +137,12 @@ void LossBasedBandwidthEstimation::UpdateLossStatistics(
     const std::vector<PacketResult>& packet_results,
     Timestamp at_time) {
   if (packet_results.empty()) {
-    RTC_DCHECK(false);
+    RTC_DCHECK_NOTREACHED();
     return;
   }
   int loss_count = 0;
   for (const auto& pkt : packet_results) {
-    loss_count += pkt.receive_time.IsInfinite() ? 1 : 0;
+    loss_count += !pkt.IsReceived() ? 1 : 0;
   }
   last_loss_ratio_ = static_cast<double>(loss_count) / packet_results.size();
   const TimeDelta time_passed = last_loss_packet_report_.IsFinite()
@@ -172,9 +184,14 @@ void LossBasedBandwidthEstimation::UpdateAcknowledgedBitrate(
   }
 }
 
-void LossBasedBandwidthEstimation::Update(Timestamp at_time,
-                                          DataRate min_bitrate,
-                                          TimeDelta last_round_trip_time) {
+DataRate LossBasedBandwidthEstimation::Update(Timestamp at_time,
+                                              DataRate min_bitrate,
+                                              DataRate wanted_bitrate,
+                                              TimeDelta last_round_trip_time) {
+  if (loss_based_bitrate_.IsZero()) {
+    loss_based_bitrate_ = wanted_bitrate;
+  }
+
   // Only increase if loss has been low for some time.
   const double loss_estimate_for_increase = average_loss_max_;
   // Avoid multiple decreases from averaging over one loss spike.
@@ -185,8 +202,15 @@ void LossBasedBandwidthEstimation::Update(Timestamp at_time,
       (at_time - time_last_decrease_ >=
        last_round_trip_time +
            static_cast<TimeDelta>(config_.decrease_interval));
+  // If packet lost reports are too old, dont increase bitrate.
+  const bool loss_report_valid =
+      at_time - last_loss_packet_report_ < 1.2 * kMaxRtcpFeedbackInterval;
 
-  if (loss_estimate_for_increase < loss_increase_threshold()) {
+  if (loss_report_valid && config_.allow_resets &&
+      loss_estimate_for_increase < loss_reset_threshold()) {
+    loss_based_bitrate_ = wanted_bitrate;
+  } else if (loss_report_valid &&
+             loss_estimate_for_increase < loss_increase_threshold()) {
     // Increase bitrate by RTT-adaptive ratio.
     DataRate new_increased_bitrate =
         min_bitrate * GetIncreaseFactor(config_, last_round_trip_time) +
@@ -214,12 +238,20 @@ void LossBasedBandwidthEstimation::Update(Timestamp at_time,
       loss_based_bitrate_ = new_decreased_bitrate;
     }
   }
+  return loss_based_bitrate_;
 }
 
-void LossBasedBandwidthEstimation::Reset(DataRate bitrate) {
+void LossBasedBandwidthEstimation::Initialize(DataRate bitrate) {
   loss_based_bitrate_ = bitrate;
   average_loss_ = 0;
   average_loss_max_ = 0;
+}
+
+double LossBasedBandwidthEstimation::loss_reset_threshold() const {
+  return LossFromBitrate(
+      loss_based_bitrate_,
+	  static_cast<DataRate>(config_.loss_bandwidth_balance_reset),
+	  static_cast<double>(config_.loss_bandwidth_balance_exponent));
 }
 
 double LossBasedBandwidthEstimation::loss_increase_threshold() const {
@@ -240,14 +272,4 @@ DataRate LossBasedBandwidthEstimation::decreased_bitrate() const {
   return static_cast<double>(config_.decrease_factor) *
          acknowledged_bitrate_max_;
 }
-
-void LossBasedBandwidthEstimation::MaybeReset(DataRate bitrate) {
-  if (config_.allow_resets)
-    Reset(bitrate);
-}
-
-void LossBasedBandwidthEstimation::SetInitialBitrate(DataRate bitrate) {
-  Reset(bitrate);
-}
-
 }  // namespace webrtc

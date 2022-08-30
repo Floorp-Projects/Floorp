@@ -21,7 +21,6 @@
 #include "modules/desktop_capture/mouse_cursor.h"
 #include "modules/desktop_capture/mouse_cursor_monitor.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/constructor_magic.h"
 
 namespace webrtc {
 
@@ -64,13 +63,16 @@ void AlphaBlend(uint8_t* dest,
 // content before releasing the underlying frame.
 class DesktopFrameWithCursor : public DesktopFrame {
  public:
-  // Takes ownership of |frame|.
+  // Takes ownership of `frame`.
   DesktopFrameWithCursor(std::unique_ptr<DesktopFrame> frame,
                          const MouseCursor& cursor,
                          const DesktopVector& position,
                          const DesktopRect& previous_cursor_rect,
                          bool cursor_changed);
   ~DesktopFrameWithCursor() override;
+
+  DesktopFrameWithCursor(const DesktopFrameWithCursor&) = delete;
+  DesktopFrameWithCursor& operator=(const DesktopFrameWithCursor&) = delete;
 
   DesktopRect cursor_rect() const { return cursor_rect_; }
 
@@ -80,8 +82,6 @@ class DesktopFrameWithCursor : public DesktopFrame {
   DesktopVector restore_position_;
   std::unique_ptr<DesktopFrame> restore_frame_;
   DesktopRect cursor_rect_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(DesktopFrameWithCursor);
 };
 
 DesktopFrameWithCursor::DesktopFrameWithCursor(
@@ -105,7 +105,11 @@ DesktopFrameWithCursor::DesktopFrameWithCursor(
 
   if (!previous_cursor_rect.equals(cursor_rect_)) {
     mutable_updated_region()->AddRect(cursor_rect_);
-    mutable_updated_region()->AddRect(previous_cursor_rect);
+
+    // Only add the previous cursor if it is inside the frame.
+    // (it can be outside the frame if the desktop has been resized).
+    if (original_frame_->rect().ContainsRect(previous_cursor_rect))
+      mutable_updated_region()->AddRect(previous_cursor_rect);
   } else if (cursor_changed) {
     mutable_updated_region()->AddRect(cursor_rect_);
   }
@@ -113,7 +117,7 @@ DesktopFrameWithCursor::DesktopFrameWithCursor(
   if (cursor_rect_.is_empty())
     return;
 
-  // Copy original screen content under cursor to |restore_frame_|.
+  // Copy original screen content under cursor to `restore_frame_`.
   restore_position_ = cursor_rect_.top_left();
   restore_frame_.reset(new BasicDesktopFrame(cursor_rect_.size()));
   restore_frame_->CopyPixelsFrom(*this, cursor_rect_.top_left(),
@@ -203,21 +207,28 @@ bool DesktopAndCursorComposer::IsOccluded(const DesktopVector& pos) {
   return desktop_capturer_->IsOccluded(pos);
 }
 
+#if defined(WEBRTC_USE_GIO)
+DesktopCaptureMetadata DesktopAndCursorComposer::GetMetadata() {
+  return desktop_capturer_->GetMetadata();
+}
+#endif  // defined(WEBRTC_USE_GIO)
+
 void DesktopAndCursorComposer::OnCaptureResult(
     DesktopCapturer::Result result,
     std::unique_ptr<DesktopFrame> frame) {
   if (frame && cursor_) {
-    if (frame->rect().Contains(cursor_position_) &&
+    if (!frame->may_contain_cursor() &&
+        frame->rect().Contains(cursor_position_) &&
         !desktop_capturer_->IsOccluded(cursor_position_)) {
       DesktopVector relative_position =
           cursor_position_.subtract(frame->top_left());
-#if defined(WEBRTC_MAC)
+#if defined(WEBRTC_MAC) || defined(CHROMEOS)
       // On OSX, the logical(DIP) and physical coordinates are used mixingly.
       // For example, the captured cursor has its size in physical pixels(2x)
       // and location in logical(DIP) pixels on Retina monitor. This will cause
       // problem when the desktop is mixed with Retina and non-Retina monitors.
       // So we use DIP pixel for all location info and compensate with the scale
-      // factor of current frame to the |relative_position|.
+      // factor of current frame to the `relative_position`.
       const float scale = frame->scale_factor();
       relative_position.set(relative_position.x() * scale,
                             relative_position.y() * scale);
@@ -228,6 +239,7 @@ void DesktopAndCursorComposer::OnCaptureResult(
       previous_cursor_rect_ = frame_with_cursor->cursor_rect();
       cursor_changed_ = false;
       frame = std::move(frame_with_cursor);
+      frame->set_may_contain_cursor(true);
     }
   }
 

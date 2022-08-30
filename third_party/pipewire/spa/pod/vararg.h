@@ -33,6 +33,11 @@ extern "C" {
 
 #include <spa/pod/pod.h>
 
+/**
+ * \addtogroup spa_pod
+ * \{
+ */
+
 #define SPA_POD_Prop(key,...)				\
 	key, ##__VA_ARGS__
 
@@ -96,6 +101,10 @@ extern "C" {
 #define SPA_POD_PodObject(val)				"O", val
 #define SPA_POD_PodStruct(val)				"T", val
 #define SPA_POD_PodChoice(val)				"V", val
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

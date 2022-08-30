@@ -22,9 +22,10 @@ namespace webrtc {
 
 BufferedFrameDecryptor::BufferedFrameDecryptor(
     OnDecryptedFrameCallback* decrypted_frame_callback,
-    OnDecryptionStatusChangeCallback* decryption_status_change_callback)
+    OnDecryptionStatusChangeCallback* decryption_status_change_callback,
+    const FieldTrialsView& field_trials)
     : generic_descriptor_auth_experiment_(
-          !field_trial::IsDisabled("WebRTC-GenericDescriptorAuth")),
+          !field_trials.IsDisabled("WebRTC-GenericDescriptorAuth")),
       decrypted_frame_callback_(decrypted_frame_callback),
       decryption_status_change_callback_(decryption_status_change_callback) {}
 
@@ -36,7 +37,7 @@ void BufferedFrameDecryptor::SetFrameDecryptor(
 }
 
 void BufferedFrameDecryptor::ManageEncryptedFrame(
-    std::unique_ptr<video_coding::RtpFrameObject> encrypted_frame) {
+    std::unique_ptr<RtpFrameObject> encrypted_frame) {
   switch (DecryptFrame(encrypted_frame.get())) {
     case FrameDecision::kStash:
       if (stashed_frames_.size() >= kMaxStashedFrames) {
@@ -55,17 +56,12 @@ void BufferedFrameDecryptor::ManageEncryptedFrame(
 }
 
 BufferedFrameDecryptor::FrameDecision BufferedFrameDecryptor::DecryptFrame(
-    video_coding::RtpFrameObject* frame) {
+    RtpFrameObject* frame) {
   // Optionally attempt to decrypt the raw video frame if it was provided.
   if (frame_decryptor_ == nullptr) {
     RTC_LOG(LS_INFO) << "Frame decryption required but not attached to this "
                         "stream. Stashing frame.";
     return FrameDecision::kStash;
-  }
-  // When using encryption we expect the frame to have the generic descriptor.
-  if (frame->GetRtpVideoHeader().generic == absl::nullopt) {
-    RTC_LOG(LS_ERROR) << "No generic frame descriptor found dropping frame.";
-    return FrameDecision::kDrop;
   }
   // Retrieve the maximum possible size of the decrypted payload.
   const size_t max_plaintext_byte_size =
@@ -73,7 +69,7 @@ BufferedFrameDecryptor::FrameDecision BufferedFrameDecryptor::DecryptFrame(
                                                 frame->size());
   RTC_CHECK_LE(max_plaintext_byte_size, frame->size());
   // Place the decrypted frame inline into the existing frame.
-  rtc::ArrayView<uint8_t> inline_decrypted_bitstream(frame->data(),
+  rtc::ArrayView<uint8_t> inline_decrypted_bitstream(frame->mutable_data(),
                                                      max_plaintext_byte_size);
 
   // Enable authenticating the header if the field trial isn't disabled.

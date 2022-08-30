@@ -20,17 +20,16 @@
 #include "call/test/mock_bitrate_allocator.h"
 #include "call/test/mock_rtp_transport_controller_send.h"
 #include "modules/rtp_rtcp/source/rtp_sequence_number_map.h"
-#include "modules/utility/include/process_thread.h"
 #include "modules/video_coding/fec_controller_default.h"
 #include "rtc_base/experiments/alr_experiment.h"
 #include "rtc_base/fake_clock.h"
 #include "rtc_base/task_queue_for_test.h"
-#include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/mock_transport.h"
-#include "video/call_stats.h"
+#include "test/scoped_key_value_config.h"
 #include "video/test/mock_video_stream_encoder.h"
+#include "video/video_send_stream.h"
 
 namespace webrtc {
 
@@ -61,8 +60,6 @@ std::string GetAlrProbingExperimentString() {
 }
 class MockRtpVideoSender : public RtpVideoSenderInterface {
  public:
-  MOCK_METHOD(void, RegisterProcessThread, (ProcessThread*), (override));
-  MOCK_METHOD(void, DeRegisterProcessThread, (), (override));
   MOCK_METHOD(void, SetActive, (bool), (override));
   MOCK_METHOD(void, SetActiveModules, (const std::vector<bool>), (override));
   MOCK_METHOD(bool, IsActive, (), (override));
@@ -79,6 +76,10 @@ class MockRtpVideoSender : public RtpVideoSenderInterface {
   MOCK_METHOD(void,
               OnBitrateAllocationUpdated,
               (const VideoBitrateAllocation&),
+              (override));
+  MOCK_METHOD(void,
+              OnVideoLayersAllocationUpdated,
+              (const VideoLayersAllocation&),
               (override));
   MOCK_METHOD(EncodedImageCallback::Result,
               OnEncodedImage,
@@ -116,11 +117,10 @@ class VideoSendStreamImplTest : public ::testing::Test {
         config_(&transport_),
         send_delay_stats_(&clock_),
         test_queue_("test_queue"),
-        process_thread_(ProcessThread::Create("test_thread")),
-        call_stats_(&clock_, process_thread_.get()),
         stats_proxy_(&clock_,
                      config_,
-                     VideoEncoderConfig::ContentType::kRealtimeVideo) {
+                     VideoEncoderConfig::ContentType::kRealtimeVideo,
+                     field_trials_) {
     config_.rtp.ssrcs.push_back(8080);
     config_.rtp.payload_type = 1;
 
@@ -141,20 +141,28 @@ class VideoSendStreamImplTest : public ::testing::Test {
       int initial_encoder_max_bitrate,
       double initial_encoder_bitrate_priority,
       VideoEncoderConfig::ContentType content_type) {
+    RTC_DCHECK(!test_queue_.IsCurrent());
+
     EXPECT_CALL(bitrate_allocator_, GetStartBitrate(_))
         .WillOnce(Return(123000));
+
     std::map<uint32_t, RtpState> suspended_ssrcs;
     std::map<uint32_t, RtpPayloadState> suspended_payload_states;
-    return std::make_unique<VideoSendStreamImpl>(
-        &clock_, &stats_proxy_, &test_queue_, &call_stats_,
-        &transport_controller_, &bitrate_allocator_, &send_delay_stats_,
-        &video_stream_encoder_, &event_log_, &config_,
+    auto ret = std::make_unique<VideoSendStreamImpl>(
+        &clock_, &stats_proxy_, &test_queue_, &transport_controller_,
+        &bitrate_allocator_, &video_stream_encoder_, &config_,
         initial_encoder_max_bitrate, initial_encoder_bitrate_priority,
-        suspended_ssrcs, suspended_payload_states, content_type,
-        std::make_unique<FecControllerDefault>(&clock_));
+        content_type, &rtp_video_sender_, field_trials_);
+
+    // The call to GetStartBitrate() executes asynchronously on the tq.
+    test_queue_.WaitForPreviouslyPostedTasks();
+    testing::Mock::VerifyAndClearExpectations(&bitrate_allocator_);
+
+    return ret;
   }
 
  protected:
+  webrtc::test::ScopedKeyValueConfig field_trials_;
   NiceMock<MockTransport> transport_;
   NiceMock<MockRtpTransportControllerSend> transport_controller_;
   NiceMock<MockBitrateAllocator> bitrate_allocator_;
@@ -167,30 +175,27 @@ class VideoSendStreamImplTest : public ::testing::Test {
   VideoSendStream::Config config_;
   SendDelayStats send_delay_stats_;
   TaskQueueForTest test_queue_;
-  std::unique_ptr<ProcessThread> process_thread_;
-  // TODO(tommi): Use internal::CallStats
-  CallStats call_stats_;
   SendStatisticsProxy stats_proxy_;
   PacketRouter packet_router_;
 };
 
 TEST_F(VideoSendStreamImplTest, RegistersAsBitrateObserverOnStart) {
+  auto vss_impl = CreateVideoSendStreamImpl(
+      kDefaultInitialBitrateBps, kDefaultBitratePriority,
+      VideoEncoderConfig::ContentType::kRealtimeVideo);
+  const bool kSuspend = false;
+  config_.suspend_below_min_bitrate = kSuspend;
+  EXPECT_CALL(bitrate_allocator_, AddObserver(vss_impl.get(), _))
+      .WillOnce(Invoke(
+          [&](BitrateAllocatorObserver*, MediaStreamAllocationConfig config) {
+            EXPECT_EQ(config.min_bitrate_bps, 0u);
+            EXPECT_EQ(config.max_bitrate_bps, kDefaultInitialBitrateBps);
+            EXPECT_EQ(config.pad_up_bitrate_bps, 0u);
+            EXPECT_EQ(config.enforce_min_bitrate, !kSuspend);
+            EXPECT_EQ(config.bitrate_priority, kDefaultBitratePriority);
+          }));
   test_queue_.SendTask(
-      [this] {
-        const bool kSuspend = false;
-        config_.suspend_below_min_bitrate = kSuspend;
-        auto vss_impl = CreateVideoSendStreamImpl(
-            kDefaultInitialBitrateBps, kDefaultBitratePriority,
-            VideoEncoderConfig::ContentType::kRealtimeVideo);
-        EXPECT_CALL(bitrate_allocator_, AddObserver(vss_impl.get(), _))
-            .WillOnce(Invoke([&](BitrateAllocatorObserver*,
-                                 MediaStreamAllocationConfig config) {
-              EXPECT_EQ(config.min_bitrate_bps, 0u);
-              EXPECT_EQ(config.max_bitrate_bps, kDefaultInitialBitrateBps);
-              EXPECT_EQ(config.pad_up_bitrate_bps, 0u);
-              EXPECT_EQ(config.enforce_min_bitrate, !kSuspend);
-              EXPECT_EQ(config.bitrate_priority, kDefaultBitratePriority);
-            }));
+      [&] {
         vss_impl->Start();
         EXPECT_CALL(bitrate_allocator_, RemoveObserver(vss_impl.get()))
             .Times(1);
@@ -200,15 +205,16 @@ TEST_F(VideoSendStreamImplTest, RegistersAsBitrateObserverOnStart) {
 }
 
 TEST_F(VideoSendStreamImplTest, UpdatesObserverOnConfigurationChange) {
+  const bool kSuspend = false;
+  config_.suspend_below_min_bitrate = kSuspend;
+  config_.rtp.extensions.emplace_back(RtpExtension::kTransportSequenceNumberUri,
+                                      1);
+  auto vss_impl = CreateVideoSendStreamImpl(
+      kDefaultInitialBitrateBps, kDefaultBitratePriority,
+      VideoEncoderConfig::ContentType::kRealtimeVideo);
+
   test_queue_.SendTask(
-      [this] {
-        const bool kSuspend = false;
-        config_.suspend_below_min_bitrate = kSuspend;
-        config_.rtp.extensions.emplace_back(
-            RtpExtension::kTransportSequenceNumberUri, 1);
-        auto vss_impl = CreateVideoSendStreamImpl(
-            kDefaultInitialBitrateBps, kDefaultBitratePriority,
-            VideoEncoderConfig::ContentType::kRealtimeVideo);
+      [&] {
         vss_impl->Start();
 
         // QVGA + VGA configuration matching defaults in
@@ -265,16 +271,16 @@ TEST_F(VideoSendStreamImplTest, UpdatesObserverOnConfigurationChange) {
 }
 
 TEST_F(VideoSendStreamImplTest, UpdatesObserverOnConfigurationChangeWithAlr) {
+  const bool kSuspend = false;
+  config_.suspend_below_min_bitrate = kSuspend;
+  config_.rtp.extensions.emplace_back(RtpExtension::kTransportSequenceNumberUri,
+                                      1);
+  config_.periodic_alr_bandwidth_probing = true;
+  auto vss_impl = CreateVideoSendStreamImpl(
+      kDefaultInitialBitrateBps, kDefaultBitratePriority,
+      VideoEncoderConfig::ContentType::kScreen);
   test_queue_.SendTask(
-      [this] {
-        const bool kSuspend = false;
-        config_.suspend_below_min_bitrate = kSuspend;
-        config_.rtp.extensions.emplace_back(
-            RtpExtension::kTransportSequenceNumberUri, 1);
-        config_.periodic_alr_bandwidth_probing = true;
-        auto vss_impl = CreateVideoSendStreamImpl(
-            kDefaultInitialBitrateBps, kDefaultBitratePriority,
-            VideoEncoderConfig::ContentType::kScreen);
+      [&] {
         vss_impl->Start();
 
         // Simulcast screenshare.
@@ -334,14 +340,15 @@ TEST_F(VideoSendStreamImplTest, UpdatesObserverOnConfigurationChangeWithAlr) {
 
 TEST_F(VideoSendStreamImplTest,
        UpdatesObserverOnConfigurationChangeWithSimulcastVideoHysteresis) {
-  test::ScopedFieldTrials hysteresis_experiment(
-      "WebRTC-VideoRateControl/video_hysteresis:1.25/");
+  test::ScopedKeyValueConfig hysteresis_experiment(
+      field_trials_, "WebRTC-VideoRateControl/video_hysteresis:1.25/");
+
+  auto vss_impl = CreateVideoSendStreamImpl(
+      kDefaultInitialBitrateBps, kDefaultBitratePriority,
+      VideoEncoderConfig::ContentType::kRealtimeVideo);
 
   test_queue_.SendTask(
-      [this] {
-        auto vss_impl = CreateVideoSendStreamImpl(
-            kDefaultInitialBitrateBps, kDefaultBitratePriority,
-            VideoEncoderConfig::ContentType::kRealtimeVideo);
+      [&] {
         vss_impl->Start();
 
         // 2-layer video simulcast.
@@ -397,17 +404,17 @@ TEST_F(VideoSendStreamImplTest,
 TEST_F(VideoSendStreamImplTest, SetsScreensharePacingFactorWithFeedback) {
   test::ScopedFieldTrials alr_experiment(GetAlrProbingExperimentString());
 
+  constexpr int kId = 1;
+  config_.rtp.extensions.emplace_back(RtpExtension::kTransportSequenceNumberUri,
+                                      kId);
+  EXPECT_CALL(transport_controller_,
+              SetPacingFactor(kAlrProbingExperimentPaceMultiplier))
+      .Times(1);
+  auto vss_impl = CreateVideoSendStreamImpl(
+      kDefaultInitialBitrateBps, kDefaultBitratePriority,
+      VideoEncoderConfig::ContentType::kScreen);
   test_queue_.SendTask(
-      [this] {
-        constexpr int kId = 1;
-        config_.rtp.extensions.emplace_back(
-            RtpExtension::kTransportSequenceNumberUri, kId);
-        EXPECT_CALL(transport_controller_,
-                    SetPacingFactor(kAlrProbingExperimentPaceMultiplier))
-            .Times(1);
-        auto vss_impl = CreateVideoSendStreamImpl(
-            kDefaultInitialBitrateBps, kDefaultBitratePriority,
-            VideoEncoderConfig::ContentType::kScreen);
+      [&] {
         vss_impl->Start();
         vss_impl->Stop();
       },
@@ -416,12 +423,12 @@ TEST_F(VideoSendStreamImplTest, SetsScreensharePacingFactorWithFeedback) {
 
 TEST_F(VideoSendStreamImplTest, DoesNotSetPacingFactorWithoutFeedback) {
   test::ScopedFieldTrials alr_experiment(GetAlrProbingExperimentString());
+  auto vss_impl = CreateVideoSendStreamImpl(
+      kDefaultInitialBitrateBps, kDefaultBitratePriority,
+      VideoEncoderConfig::ContentType::kScreen);
   test_queue_.SendTask(
-      [this] {
+      [&] {
         EXPECT_CALL(transport_controller_, SetPacingFactor(_)).Times(0);
-        auto vss_impl = CreateVideoSendStreamImpl(
-            kDefaultInitialBitrateBps, kDefaultBitratePriority,
-            VideoEncoderConfig::ContentType::kScreen);
         vss_impl->Start();
         vss_impl->Stop();
       },
@@ -429,15 +436,16 @@ TEST_F(VideoSendStreamImplTest, DoesNotSetPacingFactorWithoutFeedback) {
 }
 
 TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationWhenEnabled) {
+  auto vss_impl = CreateVideoSendStreamImpl(
+      kDefaultInitialBitrateBps, kDefaultBitratePriority,
+      VideoEncoderConfig::ContentType::kScreen);
   test_queue_.SendTask(
-      [this] {
+      [&] {
         EXPECT_CALL(transport_controller_, SetPacingFactor(_)).Times(0);
-        auto vss_impl = CreateVideoSendStreamImpl(
-            kDefaultInitialBitrateBps, kDefaultBitratePriority,
-            VideoEncoderConfig::ContentType::kScreen);
+        VideoStreamEncoderInterface::EncoderSink* const sink =
+            static_cast<VideoStreamEncoderInterface::EncoderSink*>(
+                vss_impl.get());
         vss_impl->Start();
-        VideoBitrateAllocationObserver* const observer =
-            static_cast<VideoBitrateAllocationObserver*>(vss_impl.get());
 
         // Populate a test instance of video bitrate allocation.
         VideoBitrateAllocation alloc;
@@ -449,7 +457,7 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationWhenEnabled) {
         // Encoder starts out paused, don't forward allocation.
         EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(alloc))
             .Times(0);
-        observer->OnBitrateAllocationUpdated(alloc);
+        sink->OnBitrateAllocationUpdated(alloc);
 
         // Unpause encoder, allocation should be passed through.
         const uint32_t kBitrateBps = 100000;
@@ -460,7 +468,7 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationWhenEnabled) {
             ->OnBitrateUpdated(CreateAllocation(kBitrateBps));
         EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(alloc))
             .Times(1);
-        observer->OnBitrateAllocationUpdated(alloc);
+        sink->OnBitrateAllocationUpdated(alloc);
 
         // Pause encoder again, and block allocations.
         EXPECT_CALL(rtp_video_sender_, GetPayloadBitrateBps())
@@ -470,7 +478,7 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationWhenEnabled) {
             ->OnBitrateUpdated(CreateAllocation(0));
         EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(alloc))
             .Times(0);
-        observer->OnBitrateAllocationUpdated(alloc);
+        sink->OnBitrateAllocationUpdated(alloc);
 
         vss_impl->Stop();
       },
@@ -478,11 +486,11 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationWhenEnabled) {
 }
 
 TEST_F(VideoSendStreamImplTest, ThrottlesVideoBitrateAllocationWhenTooSimilar) {
+  auto vss_impl = CreateVideoSendStreamImpl(
+      kDefaultInitialBitrateBps, kDefaultBitratePriority,
+      VideoEncoderConfig::ContentType::kScreen);
   test_queue_.SendTask(
-      [this] {
-        auto vss_impl = CreateVideoSendStreamImpl(
-            kDefaultInitialBitrateBps, kDefaultBitratePriority,
-            VideoEncoderConfig::ContentType::kScreen);
+      [&] {
         vss_impl->Start();
         // Unpause encoder, to allows allocations to be passed through.
         const uint32_t kBitrateBps = 100000;
@@ -491,8 +499,9 @@ TEST_F(VideoSendStreamImplTest, ThrottlesVideoBitrateAllocationWhenTooSimilar) {
             .WillOnce(Return(kBitrateBps));
         static_cast<BitrateAllocatorObserver*>(vss_impl.get())
             ->OnBitrateUpdated(CreateAllocation(kBitrateBps));
-        VideoBitrateAllocationObserver* const observer =
-            static_cast<VideoBitrateAllocationObserver*>(vss_impl.get());
+        VideoStreamEncoderInterface::EncoderSink* const sink =
+            static_cast<VideoStreamEncoderInterface::EncoderSink*>(
+                vss_impl.get());
 
         // Populate a test instance of video bitrate allocation.
         VideoBitrateAllocation alloc;
@@ -504,7 +513,7 @@ TEST_F(VideoSendStreamImplTest, ThrottlesVideoBitrateAllocationWhenTooSimilar) {
         // Initial value.
         EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(alloc))
             .Times(1);
-        observer->OnBitrateAllocationUpdated(alloc);
+        sink->OnBitrateAllocationUpdated(alloc);
 
         VideoBitrateAllocation updated_alloc = alloc;
         // Needs 10% increase in bitrate to trigger immediate forward.
@@ -514,22 +523,22 @@ TEST_F(VideoSendStreamImplTest, ThrottlesVideoBitrateAllocationWhenTooSimilar) {
         // Too small increase, don't forward.
         updated_alloc.SetBitrate(0, 0, base_layer_min_update_bitrate_bps - 1);
         EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(_)).Times(0);
-        observer->OnBitrateAllocationUpdated(updated_alloc);
+        sink->OnBitrateAllocationUpdated(updated_alloc);
 
         // Large enough increase, do forward.
         updated_alloc.SetBitrate(0, 0, base_layer_min_update_bitrate_bps);
         EXPECT_CALL(rtp_video_sender_,
                     OnBitrateAllocationUpdated(updated_alloc))
             .Times(1);
-        observer->OnBitrateAllocationUpdated(updated_alloc);
+        sink->OnBitrateAllocationUpdated(updated_alloc);
 
-        // This is now a decrease compared to last forward allocation, forward
-        // immediately.
+        // This is now a decrease compared to last forward allocation,
+        // forward immediately.
         updated_alloc.SetBitrate(0, 0, base_layer_min_update_bitrate_bps - 1);
         EXPECT_CALL(rtp_video_sender_,
                     OnBitrateAllocationUpdated(updated_alloc))
             .Times(1);
-        observer->OnBitrateAllocationUpdated(updated_alloc);
+        sink->OnBitrateAllocationUpdated(updated_alloc);
 
         vss_impl->Stop();
       },
@@ -537,11 +546,11 @@ TEST_F(VideoSendStreamImplTest, ThrottlesVideoBitrateAllocationWhenTooSimilar) {
 }
 
 TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationOnLayerChange) {
+  auto vss_impl = CreateVideoSendStreamImpl(
+      kDefaultInitialBitrateBps, kDefaultBitratePriority,
+      VideoEncoderConfig::ContentType::kScreen);
   test_queue_.SendTask(
-      [this] {
-        auto vss_impl = CreateVideoSendStreamImpl(
-            kDefaultInitialBitrateBps, kDefaultBitratePriority,
-            VideoEncoderConfig::ContentType::kScreen);
+      [&] {
         vss_impl->Start();
         // Unpause encoder, to allows allocations to be passed through.
         const uint32_t kBitrateBps = 100000;
@@ -550,8 +559,9 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationOnLayerChange) {
             .WillOnce(Return(kBitrateBps));
         static_cast<BitrateAllocatorObserver*>(vss_impl.get())
             ->OnBitrateUpdated(CreateAllocation(kBitrateBps));
-        VideoBitrateAllocationObserver* const observer =
-            static_cast<VideoBitrateAllocationObserver*>(vss_impl.get());
+        VideoStreamEncoderInterface::EncoderSink* const sink =
+            static_cast<VideoStreamEncoderInterface::EncoderSink*>(
+                vss_impl.get());
 
         // Populate a test instance of video bitrate allocation.
         VideoBitrateAllocation alloc;
@@ -563,10 +573,10 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationOnLayerChange) {
         // Initial value.
         EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(alloc))
             .Times(1);
-        observer->OnBitrateAllocationUpdated(alloc);
+        sink->OnBitrateAllocationUpdated(alloc);
 
-        // Move some bitrate from one layer to a new one, but keep sum the same.
-        // Since layout has changed, immediately trigger forward.
+        // Move some bitrate from one layer to a new one, but keep sum the
+        // same. Since layout has changed, immediately trigger forward.
         VideoBitrateAllocation updated_alloc = alloc;
         updated_alloc.SetBitrate(2, 0, 10000);
         updated_alloc.SetBitrate(1, 1, alloc.GetBitrate(1, 1) - 10000);
@@ -574,7 +584,7 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationOnLayerChange) {
         EXPECT_CALL(rtp_video_sender_,
                     OnBitrateAllocationUpdated(updated_alloc))
             .Times(1);
-        observer->OnBitrateAllocationUpdated(updated_alloc);
+        sink->OnBitrateAllocationUpdated(updated_alloc);
 
         vss_impl->Stop();
       },
@@ -582,11 +592,11 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationOnLayerChange) {
 }
 
 TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationAfterTimeout) {
+  auto vss_impl = CreateVideoSendStreamImpl(
+      kDefaultInitialBitrateBps, kDefaultBitratePriority,
+      VideoEncoderConfig::ContentType::kScreen);
   test_queue_.SendTask(
-      [this] {
-        auto vss_impl = CreateVideoSendStreamImpl(
-            kDefaultInitialBitrateBps, kDefaultBitratePriority,
-            VideoEncoderConfig::ContentType::kScreen);
+      [&] {
         vss_impl->Start();
         const uint32_t kBitrateBps = 100000;
         // Unpause encoder, to allows allocations to be passed through.
@@ -595,8 +605,9 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationAfterTimeout) {
             .WillRepeatedly(Return(kBitrateBps));
         static_cast<BitrateAllocatorObserver*>(vss_impl.get())
             ->OnBitrateUpdated(CreateAllocation(kBitrateBps));
-        VideoBitrateAllocationObserver* const observer =
-            static_cast<VideoBitrateAllocationObserver*>(vss_impl.get());
+        VideoStreamEncoderInterface::EncoderSink* const sink =
+            static_cast<VideoStreamEncoderInterface::EncoderSink*>(
+                vss_impl.get());
 
         // Populate a test instance of video bitrate allocation.
         VideoBitrateAllocation alloc;
@@ -618,30 +629,31 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationAfterTimeout) {
           // Initial value.
           EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(alloc))
               .Times(1);
-          observer->OnBitrateAllocationUpdated(alloc);
+          sink->OnBitrateAllocationUpdated(alloc);
         }
 
         {
           // Sending same allocation again, this one should be throttled.
           EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(alloc))
               .Times(0);
-          observer->OnBitrateAllocationUpdated(alloc);
+          sink->OnBitrateAllocationUpdated(alloc);
         }
 
         clock_.AdvanceTimeMicroseconds(kMaxVbaThrottleTimeMs * 1000);
 
         {
-          // Sending similar allocation again after timeout, should forward.
+          // Sending similar allocation again after timeout, should
+          // forward.
           EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(alloc))
               .Times(1);
-          observer->OnBitrateAllocationUpdated(alloc);
+          sink->OnBitrateAllocationUpdated(alloc);
         }
 
         {
           // Sending similar allocation again without timeout, throttle.
           EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(alloc))
               .Times(0);
-          observer->OnBitrateAllocationUpdated(alloc);
+          sink->OnBitrateAllocationUpdated(alloc);
         }
 
         {
@@ -653,8 +665,8 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationAfterTimeout) {
         }
 
         {
-          // Advance time and send encoded image, this should wake up and send
-          // cached bitrate allocation.
+          // Advance time and send encoded image, this should wake up and
+          // send cached bitrate allocation.
           clock_.AdvanceTimeMicroseconds(kMaxVbaThrottleTimeMs * 1000);
           EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(alloc))
               .Times(1);
@@ -663,8 +675,8 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationAfterTimeout) {
         }
 
         {
-          // Advance time and send encoded image, there should be no cached
-          // allocation to send.
+          // Advance time and send encoded image, there should be no
+          // cached allocation to send.
           clock_.AdvanceTimeMicroseconds(kMaxVbaThrottleTimeMs * 1000);
           EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(alloc))
               .Times(0);
@@ -678,15 +690,15 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationAfterTimeout) {
 }
 
 TEST_F(VideoSendStreamImplTest, CallsVideoStreamEncoderOnBitrateUpdate) {
+  const bool kSuspend = false;
+  config_.suspend_below_min_bitrate = kSuspend;
+  config_.rtp.extensions.emplace_back(RtpExtension::kTransportSequenceNumberUri,
+                                      1);
+  auto vss_impl = CreateVideoSendStreamImpl(
+      kDefaultInitialBitrateBps, kDefaultBitratePriority,
+      VideoEncoderConfig::ContentType::kRealtimeVideo);
   test_queue_.SendTask(
-      [this] {
-        const bool kSuspend = false;
-        config_.suspend_below_min_bitrate = kSuspend;
-        config_.rtp.extensions.emplace_back(
-            RtpExtension::kTransportSequenceNumberUri, 1);
-        auto vss_impl = CreateVideoSendStreamImpl(
-            kDefaultInitialBitrateBps, kDefaultBitratePriority,
-            VideoEncoderConfig::ContentType::kRealtimeVideo);
+      [&] {
         vss_impl->Start();
 
         VideoStream qvga_stream;
@@ -725,8 +737,8 @@ TEST_F(VideoSendStreamImplTest, CallsVideoStreamEncoderOnBitrateUpdate) {
         static_cast<BitrateAllocatorObserver*>(vss_impl.get())
             ->OnBitrateUpdated(update);
 
-        // Test allocation where the link allocation is larger than the target,
-        // meaning we have some headroom on the link.
+        // Test allocation where the link allocation is larger than the
+        // target, meaning we have some headroom on the link.
         const DataRate qvga_max_bitrate =
             DataRate::BitsPerSec(qvga_stream.max_bitrate_bps);
         const DataRate headroom = DataRate::BitsPerSec(50000);
@@ -742,8 +754,8 @@ TEST_F(VideoSendStreamImplTest, CallsVideoStreamEncoderOnBitrateUpdate) {
         static_cast<BitrateAllocatorObserver*>(vss_impl.get())
             ->OnBitrateUpdated(update);
 
-        // Add protection bitrate to the mix, this should be subtracted from the
-        // headroom.
+        // Add protection bitrate to the mix, this should be subtracted
+        // from the headroom.
         const uint32_t protection_bitrate_bps = 10000;
         EXPECT_CALL(rtp_video_sender_, GetProtectionBitrateBps())
             .WillOnce(Return(protection_bitrate_bps));
@@ -783,14 +795,11 @@ TEST_F(VideoSendStreamImplTest, CallsVideoStreamEncoderOnBitrateUpdate) {
 
 TEST_F(VideoSendStreamImplTest, DisablesPaddingOnPausedEncoder) {
   int padding_bitrate = 0;
-  std::unique_ptr<VideoSendStreamImpl> vss_impl;
-
+  std::unique_ptr<VideoSendStreamImpl> vss_impl = CreateVideoSendStreamImpl(
+      kDefaultInitialBitrateBps, kDefaultBitratePriority,
+      VideoEncoderConfig::ContentType::kRealtimeVideo);
   test_queue_.SendTask(
       [&] {
-        vss_impl = CreateVideoSendStreamImpl(
-            kDefaultInitialBitrateBps, kDefaultBitratePriority,
-            VideoEncoderConfig::ContentType::kRealtimeVideo);
-
         // Capture padding bitrate for testing.
         EXPECT_CALL(bitrate_allocator_, AddObserver(vss_impl.get(), _))
             .WillRepeatedly(Invoke([&](BitrateAllocatorObserver*,
@@ -863,7 +872,6 @@ TEST_F(VideoSendStreamImplTest, DisablesPaddingOnPausedEncoder) {
         EXPECT_EQ(0, padding_bitrate);
         testing::Mock::VerifyAndClearExpectations(&bitrate_allocator_);
         vss_impl->Stop();
-        vss_impl.reset();
         done.Set();
       },
       5000);
@@ -873,12 +881,11 @@ TEST_F(VideoSendStreamImplTest, DisablesPaddingOnPausedEncoder) {
 }
 
 TEST_F(VideoSendStreamImplTest, KeepAliveOnDroppedFrame) {
-  std::unique_ptr<VideoSendStreamImpl> vss_impl;
+  std::unique_ptr<VideoSendStreamImpl> vss_impl = CreateVideoSendStreamImpl(
+      kDefaultInitialBitrateBps, kDefaultBitratePriority,
+      VideoEncoderConfig::ContentType::kRealtimeVideo);
   test_queue_.SendTask(
       [&] {
-        vss_impl = CreateVideoSendStreamImpl(
-            kDefaultInitialBitrateBps, kDefaultBitratePriority,
-            VideoEncoderConfig::ContentType::kRealtimeVideo);
         vss_impl->Start();
         const uint32_t kBitrateBps = 100000;
         EXPECT_CALL(rtp_video_sender_, GetPayloadBitrateBps())
@@ -901,7 +908,6 @@ TEST_F(VideoSendStreamImplTest, KeepAliveOnDroppedFrame) {
       [&] {
         testing::Mock::VerifyAndClearExpectations(&bitrate_allocator_);
         vss_impl->Stop();
-        vss_impl.reset();
         done.Set();
       },
       2000);
@@ -925,18 +931,18 @@ TEST_F(VideoSendStreamImplTest, ConfiguresBitratesForSvc) {
   }
 
   for (const TestConfig& test_config : test_variants) {
+    const bool kSuspend = false;
+    config_.suspend_below_min_bitrate = kSuspend;
+    config_.rtp.extensions.emplace_back(
+        RtpExtension::kTransportSequenceNumberUri, 1);
+    config_.periodic_alr_bandwidth_probing = test_config.alr;
+    auto vss_impl = CreateVideoSendStreamImpl(
+        kDefaultInitialBitrateBps, kDefaultBitratePriority,
+        test_config.screenshare
+            ? VideoEncoderConfig::ContentType::kScreen
+            : VideoEncoderConfig::ContentType::kRealtimeVideo);
     test_queue_.SendTask(
-        [this, test_config] {
-          const bool kSuspend = false;
-          config_.suspend_below_min_bitrate = kSuspend;
-          config_.rtp.extensions.emplace_back(
-              RtpExtension::kTransportSequenceNumberUri, 1);
-          config_.periodic_alr_bandwidth_probing = test_config.alr;
-          auto vss_impl = CreateVideoSendStreamImpl(
-              kDefaultInitialBitrateBps, kDefaultBitratePriority,
-              test_config.screenshare
-                  ? VideoEncoderConfig::ContentType::kScreen
-                  : VideoEncoderConfig::ContentType::kRealtimeVideo);
+        [&] {
           vss_impl->Start();
 
           // Svc
@@ -989,8 +995,16 @@ TEST_F(VideoSendStreamImplTest, ConfiguresBitratesForSvc) {
           const bool using_alr = test_config.alr || test_config.screenshare;
           // If ALR is used, pads only to min bitrate as rampup is handled by
           // probing. Otherwise target_bitrate contains the padding target.
+          const RateControlSettings trials =
+              RateControlSettings::ParseFromFieldTrials();
           int expected_padding =
-              using_alr ? stream.min_bitrate_bps : stream.target_bitrate_bps;
+              using_alr
+                  ? stream.min_bitrate_bps
+                  : static_cast<int>(stream.target_bitrate_bps *
+                                     trials.GetSimulcastHysteresisFactor(
+                                         test_config.screenshare
+                                             ? VideoCodecMode::kScreensharing
+                                             : VideoCodecMode::kRealtimeVideo));
           // Min padding bitrate may override padding target.
           expected_padding =
               std::max(expected_padding, test_config.min_padding_bitrate_bps);

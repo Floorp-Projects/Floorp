@@ -36,7 +36,7 @@ class DummyPeerConnection : public PeerConnectionInterface {
 
   bool AddStream(MediaStreamInterface* stream) override { return false; }
   void RemoveStream(MediaStreamInterface* stream) override {
-    FATAL() << "Not implemented";
+    RTC_CHECK_NOTREACHED();
   }
 
   RTCErrorOr<rtc::scoped_refptr<RtpSenderInterface>> AddTrack(
@@ -45,9 +45,7 @@ class DummyPeerConnection : public PeerConnectionInterface {
     return RTCError(RTCErrorType::UNSUPPORTED_OPERATION, "Not implemented");
   }
 
-  bool RemoveTrack(RtpSenderInterface* sender) override { return false; }
-
-  RTCError RemoveTrackNew(
+  RTCError RemoveTrackOrError(
       rtc::scoped_refptr<RtpSenderInterface> sender) override {
     return RTCError(RTCErrorType::UNSUPPORTED_OPERATION, "Not implemented");
   }
@@ -100,24 +98,24 @@ class DummyPeerConnection : public PeerConnectionInterface {
   }
 
   void GetStats(RTCStatsCollectorCallback* callback) override {
-    FATAL() << "Not implemented";
+    RTC_CHECK_NOTREACHED();
   }
   void GetStats(
       rtc::scoped_refptr<RtpSenderInterface> selector,
       rtc::scoped_refptr<RTCStatsCollectorCallback> callback) override {
-    FATAL() << "Not implemented";
+    RTC_CHECK_NOTREACHED();
   }
   void GetStats(
       rtc::scoped_refptr<RtpReceiverInterface> selector,
       rtc::scoped_refptr<RTCStatsCollectorCallback> callback) override {
-    FATAL() << "Not implemented";
+    RTC_CHECK_NOTREACHED();
   }
   void ClearStatsCache() override {}
 
-  rtc::scoped_refptr<DataChannelInterface> CreateDataChannel(
+  RTCErrorOr<rtc::scoped_refptr<DataChannelInterface>> CreateDataChannelOrError(
       const std::string& label,
       const DataChannelInit* config) override {
-    return nullptr;
+    return RTCError(RTCErrorType::INTERNAL_ERROR, "Dummy function called");
   }
 
   const SessionDescriptionInterface* local_description() const override {
@@ -145,33 +143,33 @@ class DummyPeerConnection : public PeerConnectionInterface {
     return nullptr;
   }
 
-  void RestartIce() override { FATAL() << "Not implemented"; }
+  void RestartIce() override { RTC_CHECK_NOTREACHED(); }
 
   // Create a new offer.
   // The CreateSessionDescriptionObserver callback will be called when done.
   void CreateOffer(CreateSessionDescriptionObserver* observer,
                    const RTCOfferAnswerOptions& options) override {
-    FATAL() << "Not implemented";
+    RTC_CHECK_NOTREACHED();
   }
 
   void CreateAnswer(CreateSessionDescriptionObserver* observer,
                     const RTCOfferAnswerOptions& options) override {
-    FATAL() << "Not implemented";
+    RTC_CHECK_NOTREACHED();
   }
 
   void SetLocalDescription(SetSessionDescriptionObserver* observer,
                            SessionDescriptionInterface* desc) override {
-    FATAL() << "Not implemented";
+    RTC_CHECK_NOTREACHED();
   }
   void SetRemoteDescription(SetSessionDescriptionObserver* observer,
                             SessionDescriptionInterface* desc) override {
-    FATAL() << "Not implemented";
+    RTC_CHECK_NOTREACHED();
   }
   void SetRemoteDescription(
       std::unique_ptr<SessionDescriptionInterface> desc,
       rtc::scoped_refptr<SetRemoteDescriptionObserverInterface> observer)
       override {
-    FATAL() << "Not implemented";
+    RTC_CHECK_NOTREACHED();
   }
 
   PeerConnectionInterface::RTCConfiguration GetConfiguration() override {
@@ -194,10 +192,8 @@ class DummyPeerConnection : public PeerConnectionInterface {
     return RTCError(RTCErrorType::UNSUPPORTED_OPERATION, "Not implemented");
   }
 
-  void SetAudioPlayout(bool playout) override { FATAL() << "Not implemented"; }
-  void SetAudioRecording(bool recording) override {
-    FATAL() << "Not implemented";
-  }
+  void SetAudioPlayout(bool playout) override { RTC_CHECK_NOTREACHED(); }
+  void SetAudioRecording(bool recording) override { RTC_CHECK_NOTREACHED(); }
 
   rtc::scoped_refptr<DtlsTransportInterface> LookupDtlsTransportByMid(
       const std::string& mid) override {
@@ -235,7 +231,7 @@ class DummyPeerConnection : public PeerConnectionInterface {
     return false;
   }
 
-  void StopRtcEventLog() { FATAL() << "Not implemented"; }
+  void StopRtcEventLog() { RTC_CHECK_NOTREACHED(); }
 
   void Close() override {}
 

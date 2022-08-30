@@ -17,11 +17,12 @@
 #include <set>
 #include <vector>
 
+#include "absl/base/attributes.h"
+#include "api/field_trials_view.h"
 #include "api/units/time_delta.h"
 #include "modules/include/module.h"
 #include "modules/include/module_common_types.h"
 #include "modules/video_coding/histogram.h"
-#include "rtc_base/deprecation.h"
 #include "rtc_base/numerics/sequence_number_util.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
@@ -33,7 +34,8 @@ class DEPRECATED_NackModule : public Module {
  public:
   DEPRECATED_NackModule(Clock* clock,
                         NackSender* nack_sender,
-                        KeyFrameRequestSender* keyframe_request_sender);
+                        KeyFrameRequestSender* keyframe_request_sender,
+                        const FieldTrialsView& field_trials);
 
   int OnReceivedPacket(uint16_t seq_num, bool is_keyframe);
   int OnReceivedPacket(uint16_t seq_num, bool is_keyframe, bool is_recovered);
@@ -69,7 +71,8 @@ class DEPRECATED_NackModule : public Module {
 
   struct BackoffSettings {
     BackoffSettings(TimeDelta min_retry, TimeDelta max_rtt, double base);
-    static absl::optional<BackoffSettings> ParseFromFieldTrials();
+    static absl::optional<BackoffSettings> ParseFromFieldTrials(
+        const FieldTrialsView& field_trials);
 
     // Min time between nacks.
     const TimeDelta min_retry_interval;
@@ -93,7 +96,7 @@ class DEPRECATED_NackModule : public Module {
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Returns how many packets we have to wait in order to receive the packet
-  // with probability |probabilty| or higher.
+  // with probability `probabilty` or higher.
   int WaitNumberOfPackets(float probability) const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
@@ -103,7 +106,7 @@ class DEPRECATED_NackModule : public Module {
   KeyFrameRequestSender* const keyframe_request_sender_;
 
   // TODO(philipel): Some of the variables below are consistently used on a
-  // known thread (e.g. see |initialized_|). Those probably do not need
+  // known thread (e.g. see `initialized_`). Those probably do not need
   // synchronized access.
   std::map<uint16_t, NackInfo, DescendingSeqNumComp<uint16_t>> nack_list_
       RTC_GUARDED_BY(mutex_);
@@ -125,7 +128,7 @@ class DEPRECATED_NackModule : public Module {
   const absl::optional<BackoffSettings> backoff_settings_;
 };
 
-using NackModule = RTC_DEPRECATED DEPRECATED_NackModule;
+using NackModule ABSL_DEPRECATED("") = DEPRECATED_NackModule;
 
 }  // namespace webrtc
 

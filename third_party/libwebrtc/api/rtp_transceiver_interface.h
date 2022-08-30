@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/base/attributes.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/media_types.h"
@@ -96,8 +97,7 @@ class RTC_EXPORT RtpTransceiverInterface : public rtc::RefCountInterface {
   // transceiver's stop() method has been called, but the negotiation with
   // the other end for shutting down the transceiver is not yet done.
   // https://w3c.github.io/webrtc-pc/#dfn-stopping-0
-  // TODO(hta): Remove default implementation.
-  virtual bool stopping() const;
+  virtual bool stopping() const = 0;
 
   // The direction attribute indicates the preferred direction of this
   // transceiver, which will be used in calls to CreateOffer and CreateAnswer.
@@ -111,8 +111,8 @@ class RTC_EXPORT RtpTransceiverInterface : public rtc::RefCountInterface {
   // https://w3c.github.io/webrtc-pc/#dom-rtcrtptransceiver-direction
   // TODO(hta): Deprecate SetDirection without error and rename
   // SetDirectionWithError to SetDirection, remove default implementations.
-  RTC_DEPRECATED virtual void SetDirection(
-      RtpTransceiverDirection new_direction);
+  ABSL_DEPRECATED("Use SetDirectionWithError instead")
+  virtual void SetDirection(RtpTransceiverDirection new_direction);
   virtual RTCError SetDirectionWithError(RtpTransceiverDirection new_direction);
 
   // The current_direction attribute indicates the current direction negotiated
@@ -140,28 +140,34 @@ class RTC_EXPORT RtpTransceiverInterface : public rtc::RefCountInterface {
   // This is an internal function, and is exposed for historical reasons.
   // https://w3c.github.io/webrtc-pc/#dfn-stop-the-rtcrtptransceiver
   virtual void StopInternal();
-  RTC_DEPRECATED virtual void Stop();
+  ABSL_DEPRECATED("Use StopStandard instead") virtual void Stop();
 
   // The SetCodecPreferences method overrides the default codec preferences used
   // by WebRTC for this transceiver.
   // https://w3c.github.io/webrtc-pc/#dom-rtcrtptransceiver-setcodecpreferences
   virtual RTCError SetCodecPreferences(
-      rtc::ArrayView<RtpCodecCapability> codecs);
-  virtual std::vector<RtpCodecCapability> codec_preferences() const;
+      rtc::ArrayView<RtpCodecCapability> codecs) = 0;
+  virtual std::vector<RtpCodecCapability> codec_preferences() const = 0;
 
   // Readonly attribute which contains the set of header extensions that was set
   // with SetOfferedRtpHeaderExtensions, or a default set if it has not been
   // called.
   // https://w3c.github.io/webrtc-extensions/#rtcrtptransceiver-interface
   virtual std::vector<RtpHeaderExtensionCapability> HeaderExtensionsToOffer()
-      const;
+      const = 0;
+
+  // Readonly attribute which is either empty if negotation has not yet
+  // happened, or a vector of the negotiated header extensions.
+  // https://w3c.github.io/webrtc-extensions/#rtcrtptransceiver-interface
+  virtual std::vector<RtpHeaderExtensionCapability> HeaderExtensionsNegotiated()
+      const = 0;
 
   // The SetOfferedRtpHeaderExtensions method modifies the next SDP negotiation
   // so that it negotiates use of header extensions which are not kStopped.
   // https://w3c.github.io/webrtc-extensions/#rtcrtptransceiver-interface
   virtual webrtc::RTCError SetOfferedRtpHeaderExtensions(
       rtc::ArrayView<const RtpHeaderExtensionCapability>
-          header_extensions_to_offer);
+          header_extensions_to_offer) = 0;
 
  protected:
   ~RtpTransceiverInterface() override = default;

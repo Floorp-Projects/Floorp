@@ -22,7 +22,6 @@
 #include "api/transport/network_types.h"
 #include "modules/congestion_controller/goog_cc/acknowledged_bitrate_estimator.h"
 #include "modules/congestion_controller/goog_cc/delay_based_bwe.h"
-#include "rtc_base/constructor_magic.h"
 #include "system_wrappers/include/clock.h"
 #include "test/field_trial.h"
 #include "test/gtest.h"
@@ -54,6 +53,9 @@ class RtpStream {
 
   RtpStream(int fps, int bitrate_bps);
 
+  RtpStream(const RtpStream&) = delete;
+  RtpStream& operator=(const RtpStream&) = delete;
+
   // Generates a new frame for this stream. If called too soon after the
   // previous frame, no frame will be generated. The frame is split into
   // packets.
@@ -74,8 +76,6 @@ class RtpStream {
   int fps_;
   int bitrate_bps_;
   int64_t next_rtp_time_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(RtpStream);
 };
 
 class StreamGenerator {
@@ -83,17 +83,20 @@ class StreamGenerator {
   StreamGenerator(int capacity, int64_t time_now);
   ~StreamGenerator();
 
+  StreamGenerator(const StreamGenerator&) = delete;
+  StreamGenerator& operator=(const StreamGenerator&) = delete;
+
   // Add a new stream.
   void AddStream(RtpStream* stream);
 
   // Set the link capacity.
   void set_capacity_bps(int capacity_bps);
 
-  // Divides |bitrate_bps| among all streams. The allocated bitrate per stream
+  // Divides `bitrate_bps` among all streams. The allocated bitrate per stream
   // is decided by the initial allocation ratios.
   void SetBitrateBps(int bitrate_bps);
 
-  // Set the RTP timestamp offset for the stream identified by |ssrc|.
+  // Set the RTP timestamp offset for the stream identified by `ssrc`.
   void set_rtp_timestamp_offset(uint32_t ssrc, uint32_t offset);
 
   // TODO(holmer): Break out the channel simulation part from this class to make
@@ -108,8 +111,6 @@ class StreamGenerator {
   int64_t prev_arrival_time_us_;
   // All streams being transmitted on this simulated channel.
   std::vector<std::unique_ptr<RtpStream>> streams_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(StreamGenerator);
 };
 }  // namespace test
 
@@ -130,6 +131,10 @@ class DelayBasedBweTest : public ::testing::Test {
                         int64_t send_time_ms,
                         size_t payload_size,
                         const PacedPacketInfo& pacing_info);
+  void IncomingFeedback(Timestamp receive_time,
+                        Timestamp send_time,
+                        size_t payload_size,
+                        const PacedPacketInfo& pacing_info);
 
   // Generates a frame of packets belonging to a stream at a given bitrate and
   // with a given ssrc. The stream is pushed through a very simple simulated
@@ -139,8 +144,8 @@ class DelayBasedBweTest : public ::testing::Test {
   // target bitrate after the call to this function.
   bool GenerateAndProcessFrame(uint32_t ssrc, uint32_t bitrate_bps);
 
-  // Run the bandwidth estimator with a stream of |number_of_frames| frames, or
-  // until it reaches |target_bitrate|.
+  // Run the bandwidth estimator with a stream of `number_of_frames` frames, or
+  // until it reaches `target_bitrate`.
   // Can for instance be used to run the estimator for some time to get it
   // into a steady state.
   uint32_t SteadyStateRun(uint32_t ssrc,
@@ -176,9 +181,8 @@ class DelayBasedBweTest : public ::testing::Test {
   std::unique_ptr<test::StreamGenerator> stream_generator_;
   int64_t arrival_time_offset_ms_;
   bool first_update_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(DelayBasedBweTest);
 };
+
 }  // namespace webrtc
 
 #endif  // MODULES_CONGESTION_CONTROLLER_GOOG_CC_DELAY_BASED_BWE_UNITTEST_HELPER_H_

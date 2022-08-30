@@ -19,7 +19,6 @@
 #include "api/audio_codecs/isac/audio_encoder_isac_float.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/time_utils.h"
-#include "system_wrappers/include/sleep.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/testsupport/file_utils.h"
@@ -258,11 +257,6 @@ void ISACTest::EncodeDecode(int testNr,
                   wbISACConfig),
       kISAC16kPayloadType));
 
-  bool adaptiveMode = false;
-  if ((swbISACConfig.currentRateBitPerSec == -1) ||
-      (wbISACConfig.currentRateBitPerSec == -1)) {
-    adaptiveMode = true;
-  }
   _myTimer.Reset();
   _channel_A2B->ResetStats();
   _channel_B2A->ResetStats();

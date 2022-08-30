@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright 2018 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -22,7 +22,7 @@ easy to use in a Python script, e.g. with a line like:
   (0x<start-offset>, 0x<end-offset>, 0x<file-size>, <file-path>),
 """
 
-from __future__ import print_function
+
 
 import argparse
 import os

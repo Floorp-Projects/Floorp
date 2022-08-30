@@ -16,7 +16,6 @@
 #include <utility>
 #include <vector>
 
-#include "rtc_base/bind.h"
 #include "rtc_base/event.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/thread.h"
@@ -79,8 +78,8 @@ class OperationTracker {
     callback();
   }
 
-  // This operation is completed asynchronously; it pings |background_thread_|,
-  // blocking that thread until |unblock_operation_event| is signaled and then
+  // This operation is completed asynchronously; it pings `background_thread_`,
+  // blocking that thread until `unblock_operation_event` is signaled and then
   // completes upon posting back to the thread that the operation started on.
   // Note that this requires the starting thread to be executing tasks (handle
   // messages), i.e. must not be blocked.
@@ -88,17 +87,15 @@ class OperationTracker {
                                   Event* operation_complete_event,
                                   std::function<void()> callback) {
     Thread* current_thread = Thread::Current();
-    background_thread_->PostTask(
-        RTC_FROM_HERE, [this, current_thread, unblock_operation_event,
-                        operation_complete_event, callback]() {
-          unblock_operation_event->Wait(Event::kForever);
-          current_thread->PostTask(
-              RTC_FROM_HERE, [this, operation_complete_event, callback]() {
-                completed_operation_events_.push_back(operation_complete_event);
-                operation_complete_event->Set();
-                callback();
-              });
-        });
+    background_thread_->PostTask([this, current_thread, unblock_operation_event,
+                                  operation_complete_event, callback]() {
+      unblock_operation_event->Wait(Event::kForever);
+      current_thread->PostTask([this, operation_complete_event, callback]() {
+        completed_operation_events_.push_back(operation_complete_event);
+        operation_complete_event->Set();
+        callback();
+      });
+    });
   }
 
   std::unique_ptr<Thread> background_thread_;
@@ -119,19 +116,17 @@ class OperationTrackerProxy {
 
   std::unique_ptr<Event> Initialize() {
     std::unique_ptr<Event> event = std::make_unique<Event>();
-    operations_chain_thread_->PostTask(
-        RTC_FROM_HERE, [this, event_ptr = event.get()]() {
-          operation_tracker_ = std::make_unique<OperationTracker>();
-          operations_chain_ = OperationsChain::Create();
-          event_ptr->Set();
-        });
+    operations_chain_thread_->PostTask([this, event_ptr = event.get()]() {
+      operation_tracker_ = std::make_unique<OperationTracker>();
+      operations_chain_ = OperationsChain::Create();
+      event_ptr->Set();
+    });
     return event;
   }
 
   void SetOnChainEmptyCallback(std::function<void()> on_chain_empty_callback) {
     Event event;
     operations_chain_thread_->PostTask(
-        RTC_FROM_HERE,
         [this, &event,
          on_chain_empty_callback = std::move(on_chain_empty_callback)]() {
           operations_chain_->SetOnChainEmptyCallback(
@@ -144,22 +139,20 @@ class OperationTrackerProxy {
   bool IsEmpty() {
     Event event;
     bool is_empty = false;
-    operations_chain_thread_->PostTask(
-        RTC_FROM_HERE, [this, &event, &is_empty]() {
-          is_empty = operations_chain_->IsEmpty();
-          event.Set();
-        });
+    operations_chain_thread_->PostTask([this, &event, &is_empty]() {
+      is_empty = operations_chain_->IsEmpty();
+      event.Set();
+    });
     event.Wait(Event::kForever);
     return is_empty;
   }
 
   std::unique_ptr<Event> ReleaseOperationChain() {
     std::unique_ptr<Event> event = std::make_unique<Event>();
-    operations_chain_thread_->PostTask(RTC_FROM_HERE,
-                                       [this, event_ptr = event.get()]() {
-                                         operations_chain_ = nullptr;
-                                         event_ptr->Set();
-                                       });
+    operations_chain_thread_->PostTask([this, event_ptr = event.get()]() {
+      operations_chain_ = nullptr;
+      event_ptr->Set();
+    });
     return event;
   }
 
@@ -167,8 +160,8 @@ class OperationTrackerProxy {
   std::unique_ptr<Event> PostSynchronousOperation() {
     std::unique_ptr<Event> operation_complete_event = std::make_unique<Event>();
     operations_chain_thread_->PostTask(
-        RTC_FROM_HERE, [this, operation_complete_event_ptr =
-                                  operation_complete_event.get()]() {
+        [this,
+         operation_complete_event_ptr = operation_complete_event.get()]() {
           operations_chain_->ChainOperation(
               operation_tracker_->BindSynchronousOperation(
                   operation_complete_event_ptr));
@@ -182,7 +175,6 @@ class OperationTrackerProxy {
       Event* unblock_operation_event) {
     std::unique_ptr<Event> operation_complete_event = std::make_unique<Event>();
     operations_chain_thread_->PostTask(
-        RTC_FROM_HERE,
         [this, unblock_operation_event,
          operation_complete_event_ptr = operation_complete_event.get()]() {
           operations_chain_->ChainOperation(
@@ -192,7 +184,7 @@ class OperationTrackerProxy {
     return operation_complete_event;
   }
 
-  // The order of completed events. Touches the |operation_tracker_| on the
+  // The order of completed events. Touches the `operation_tracker_` on the
   // calling thread, this is only thread safe if all chained operations have
   // completed.
   const std::vector<Event*>& completed_operation_events() const {
@@ -213,12 +205,15 @@ class SignalOnDestruction final {
     RTC_DCHECK(destructor_called_);
   }
   ~SignalOnDestruction() {
-    // Moved objects will have |destructor_called_| set to null. Destroying a
+    // Moved objects will have `destructor_called_` set to null. Destroying a
     // moved SignalOnDestruction should not signal.
     if (destructor_called_) {
       *destructor_called_ = true;
     }
   }
+
+  SignalOnDestruction(const SignalOnDestruction&) = delete;
+  SignalOnDestruction& operator=(const SignalOnDestruction&) = delete;
 
   // Move operators.
   SignalOnDestruction(SignalOnDestruction&& other)
@@ -233,8 +228,6 @@ class SignalOnDestruction final {
 
  private:
   bool* destructor_called_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(SignalOnDestruction);
 };
 
 TEST(OperationsChainTest, SynchronousOperation) {

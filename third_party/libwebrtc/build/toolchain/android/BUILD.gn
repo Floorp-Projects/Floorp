@@ -4,6 +4,8 @@
 
 import("//build/config/android/config.gni")
 import("//build/config/clang/clang.gni")
+import("//build/config/compiler/compiler.gni")
+import("//build/config/ozone.gni")
 import("//build/config/sysroot.gni")  # Imports android/config.gni.
 import("//build/toolchain/gcc_toolchain.gni")
 
@@ -23,8 +25,20 @@ template("android_clang_toolchain") {
   gcc_toolchain(target_name) {
     assert(defined(invoker.toolchain_args),
            "toolchain_args must be defined for android_clang_toolchain()")
-    toolchain_args = invoker.toolchain_args
-    toolchain_args.current_os = "android"
+
+    # Android toolchains need to declare .dwp files as outputs, so need to know
+    # the value of "use_debug_fission" when defining them.
+    # The derived value of "use_debug_fission" varies based on current_os, but
+    # toolchain definitions are evaluated under the default toolchain.
+    # Rather than computing the value under current_os="android", just disable
+    # it if target_os != "android".
+    _use_debug_fission = use_debug_fission && target_os == "android"
+
+    toolchain_args = {
+      forward_variables_from(invoker.toolchain_args, "*")
+      current_os = "android"
+      use_debug_fission = _use_debug_fission
+    }
 
     # Output linker map files for binary size analysis.
     enable_linker_map = true
@@ -41,10 +55,11 @@ template("android_clang_toolchain") {
     ar = "$_prefix/llvm-ar"
     ld = cxx
     readelf = _tool_prefix + "readelf"
-    nm = _tool_prefix + "nm"
-    dwp = _tool_prefix + "dwp"
-    strip = rebase_path("//buildtools/third_party/eu-strip/bin/eu-strip",
-                        root_build_dir)
+    nm = "$_prefix/llvm-nm"
+    strip = "$_prefix/llvm-strip"
+    if (_use_debug_fission) {
+      dwp = _tool_prefix + "dwp"
+    }
     use_unstripped_as_runtime_outputs = android_unstripped_runtime_outputs
 
     # Don't use .cr.so for loadable_modules since they are always loaded via
@@ -63,6 +78,18 @@ android_clang_toolchain("android_clang_x86") {
     # Therefore we need to turn off 'use_clang_coverage' for this toolchain.
     # TODO(crbug.com/865376)
     use_clang_coverage = false
+
+    # This turns off all of the LaCrOS-specific flags. A LaCrOS related build
+    # may use |ash_clang_x64| or |lacros_clang_x64| toolchain, which are
+    # chromeos toolchains, to build Ash-Chrome or Lacros-Chrome in a
+    # subdirectory, and because chromeos toolchain uses android toolchain, which
+    # eventually resulted in that android toolchains being used inside a LaCrOS
+    # build.
+    also_build_ash_chrome = false
+    also_build_lacros_chrome = false
+    chromeos_is_browser_only = false
+    ozone_platform = ""
+    ozone_platform_wayland = false
   }
 }
 
@@ -90,6 +117,18 @@ android_clang_toolchain("android_clang_x64") {
     # Therefore we need to turn off 'use_clang_coverage' for this toolchain.
     # TODO(crbug.com/865376)
     use_clang_coverage = false
+
+    # This turns off all of the LaCrOS-specific flags. A LaCrOS related build
+    # may use |ash_clang_x64| or |lacros_clang_x64| toolchain, which are
+    # chromeos toolchains, to build Ash-Chrome or Lacros-Chrome in a
+    # subdirectory, and because chromeos toolchain uses android toolchain, which
+    # eventually resulted in that android toolchains being used inside a LaCrOS
+    # build.
+    also_build_ash_chrome = false
+    also_build_lacros_chrome = false
+    chromeos_is_browser_only = false
+    ozone_platform = ""
+    ozone_platform_wayland = false
   }
 }
 

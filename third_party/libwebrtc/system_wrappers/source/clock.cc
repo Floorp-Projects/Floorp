@@ -28,7 +28,6 @@
 #endif  // defined(WEBRTC_POSIX)
 
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/rw_lock_wrapper.h"
 #include "rtc_base/time_utils.h"
 
 namespace webrtc {
@@ -94,8 +93,8 @@ class RealTimeClock : public Clock {
   }
 
   NtpTime ConvertTimestampToNtpTime(Timestamp timestamp) override {
-    // This method does not check |use_system_independent_ntp_time_| because
-    // all callers never used the old behavior of |CurrentNtpTime|.
+    // This method does not check `use_system_independent_ntp_time_` because
+    // all callers never used the old behavior of `CurrentNtpTime`.
     return TimeMicrosToNtp(timestamp.us());
   }
 
@@ -249,10 +248,7 @@ class UnixRealTimeClock : public RealTimeClock {
  protected:
   timeval CurrentTimeVal() override {
     struct timeval tv;
-    struct timezone tz;
-    tz.tz_minuteswest = 0;
-    tz.tz_dsttime = 0;
-    gettimeofday(&tv, &tz);
+    gettimeofday(&tv, nullptr);
     return tv;
   }
 };
@@ -272,16 +268,15 @@ Clock* Clock::GetRealTimeClockRaw() {
 }
 
 SimulatedClock::SimulatedClock(int64_t initial_time_us)
-    : SimulatedClock(Timestamp::Micros(initial_time_us)) {}
+    : time_us_(initial_time_us) {}
 
 SimulatedClock::SimulatedClock(Timestamp initial_time)
-    : time_(initial_time), lock_(RWLockWrapper::CreateRWLock()) {}
+    : SimulatedClock(initial_time.us()) {}
 
 SimulatedClock::~SimulatedClock() {}
 
 Timestamp SimulatedClock::CurrentTime() {
-  ReadLockScoped synchronize(*lock_);
-  return time_;
+  return Timestamp::Micros(time_us_.load(std::memory_order_relaxed));
 }
 
 NtpTime SimulatedClock::ConvertTimestampToNtpTime(Timestamp timestamp) {
@@ -300,9 +295,13 @@ void SimulatedClock::AdvanceTimeMicroseconds(int64_t microseconds) {
   AdvanceTime(TimeDelta::Micros(microseconds));
 }
 
+// TODO(bugs.webrtc.org(12102): It's desirable to let a single thread own
+// advancement of the clock. We could then replace this read-modify-write
+// operation with just a thread checker. But currently, that breaks a couple of
+// tests, in particular, RepeatingTaskTest.ClockIntegration and
+// CallStatsTest.LastProcessedRtt.
 void SimulatedClock::AdvanceTime(TimeDelta delta) {
-  WriteLockScoped synchronize(*lock_);
-  time_ += delta;
+  time_us_.fetch_add(delta.us(), std::memory_order_relaxed);
 }
 
 }  // namespace webrtc

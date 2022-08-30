@@ -167,7 +167,7 @@ class RTC_EXPORT VideoEncoder {
     ScalingSettings scaling_settings;
 
     // The width and height of the incoming video frames should be divisible
-    // by |requested_resolution_alignment|. If they are not, the encoder may
+    // by `requested_resolution_alignment`. If they are not, the encoder may
     // drop the incoming frame.
     // For example: With I420, this value would be a multiple of 2.
     // Note that this field is unrelated to any horizontal or vertical stride
@@ -175,12 +175,12 @@ class RTC_EXPORT VideoEncoder {
     int requested_resolution_alignment;
 
     // Same as above but if true, each simulcast layer should also be divisible
-    // by |requested_resolution_alignment|.
-    // Note that scale factors |scale_resolution_down_by| may be adjusted so a
+    // by `requested_resolution_alignment`.
+    // Note that scale factors `scale_resolution_down_by` may be adjusted so a
     // common multiple is not too large to avoid largely cropped frames and
     // possibly with an aspect ratio far from the original.
     // Warning: large values of scale_resolution_down_by could be changed
-    // considerably, especially if |requested_resolution_alignment| is large.
+    // considerably, especially if `requested_resolution_alignment` is large.
     bool apply_alignment_to_all_simulcast_layers;
 
     // If true, encoder supports working with a native handle (e.g. texture
@@ -207,15 +207,8 @@ class RTC_EXPORT VideoEncoder {
     // thresholds will be used in CPU adaptation.
     bool is_hardware_accelerated;
 
-    // If this field is true, the encoder uses internal camera sources, meaning
-    // that it does not require/expect frames to be delivered via
-    // webrtc::VideoEncoder::Encode.
-    // Internal source encoders are deprecated and support for them will be
-    // phased out.
-    bool has_internal_source;
-
     // For each spatial layer (simulcast stream or SVC layer), represented as an
-    // element in |fps_allocation| a vector indicates how many temporal layers
+    // element in `fps_allocation` a vector indicates how many temporal layers
     // the encoder is using for that spatial layer.
     // For each spatial/temporal layer pair, the frame rate fraction is given as
     // an 8bit unsigned integer where 0 = 0% and 255 = 100%.
@@ -243,8 +236,8 @@ class RTC_EXPORT VideoEncoder {
     // Recommended bitrate limits for different resolutions.
     std::vector<ResolutionBitrateLimits> resolution_bitrate_limits;
 
-    // Obtains the limits from |resolution_bitrate_limits| that best matches the
-    // |frame_size_pixels|.
+    // Obtains the limits from `resolution_bitrate_limits` that best matches the
+    // `frame_size_pixels`.
     absl::optional<ResolutionBitrateLimits>
     GetEncoderBitrateLimitsForResolution(int frame_size_pixels) const;
 
@@ -254,6 +247,16 @@ class RTC_EXPORT VideoEncoder {
     // in such case the encoder should return
     // WEBRTC_VIDEO_CODEC_ERR_SIMULCAST_PARAMETERS_NOT_SUPPORTED.
     bool supports_simulcast;
+
+    // The list of pixel formats preferred by the encoder. It is assumed that if
+    // the list is empty and supports_native_handle is false, then {I420} is the
+    // preferred pixel format. The order of the formats does not matter.
+    absl::InlinedVector<VideoFrameBuffer::Type, kMaxPreferredPixelFormats>
+        preferred_pixel_formats;
+
+    // Indicates whether or not QP value encoder writes into frame/slice/tile
+    // header can be interpreted as average frame/slice/tile QP.
+    absl::optional<bool> is_qp_trusted;
   };
 
   struct RTC_EXPORT RateControlParameters {
@@ -267,14 +270,17 @@ class RTC_EXPORT VideoEncoder {
 
     // Target bitrate, per spatial/temporal layer.
     // A target bitrate of 0bps indicates a layer should not be encoded at all.
+    VideoBitrateAllocation target_bitrate;
+    // Adjusted target bitrate, per spatial/temporal layer. May be lower or
+    // higher than the target depending on encoder behaviour.
     VideoBitrateAllocation bitrate;
     // Target framerate, in fps. A value <= 0.0 is invalid and should be
     // interpreted as framerate target not available. In this case the encoder
-    // should fall back to the max framerate specified in |codec_settings| of
+    // should fall back to the max framerate specified in `codec_settings` of
     // the last InitEncode() call.
     double framerate_fps;
     // The network bandwidth available for video. This is at least
-    // |bitrate.get_sum_bps()|, but may be higher if the application is not
+    // `bitrate.get_sum_bps()`, but may be higher if the application is not
     // network constrained.
     DataRate bandwidth_allocation;
 
@@ -290,15 +296,15 @@ class RTC_EXPORT VideoEncoder {
     uint32_t timestamp_of_last_received;
     // Describes whether the dependencies of the last received frame were
     // all decodable.
-    // |false| if some dependencies were undecodable, |true| if all dependencies
-    // were decodable, and |nullopt| if the dependencies are unknown.
+    // `false` if some dependencies were undecodable, `true` if all dependencies
+    // were decodable, and `nullopt` if the dependencies are unknown.
     absl::optional<bool> dependencies_of_last_received_decodable;
     // Describes whether the received frame was decodable.
-    // |false| if some dependency was undecodable or if some packet belonging
+    // `false` if some dependency was undecodable or if some packet belonging
     // to the last received frame was missed.
-    // |true| if all dependencies were decodable and all packets belonging
+    // `true` if all dependencies were decodable and all packets belonging
     // to the last received frame were received.
-    // |nullopt| if no packet belonging to the last frame was missed, but the
+    // `nullopt` if no packet belonging to the last frame was missed, but the
     // last packet in the frame was not yet received.
     absl::optional<bool> last_received_decodable;
   };
@@ -355,7 +361,7 @@ class RTC_EXPORT VideoEncoder {
   // TODO(bugs.webrtc.org/10720): After updating downstream projects and posting
   // an announcement to discuss-webrtc, remove the three-parameters variant
   // and make the two-parameters variant pure-virtual.
-  /* RTC_DEPRECATED */ virtual int32_t InitEncode(
+  /* ABSL_DEPRECATED("bugs.webrtc.org/10720") */ virtual int32_t InitEncode(
       const VideoCodec* codec_settings,
       int32_t number_of_cores,
       size_t max_payload_size);
@@ -375,7 +381,7 @@ class RTC_EXPORT VideoEncoder {
   // Return value                : WEBRTC_VIDEO_CODEC_OK if OK, < 0 otherwise.
   virtual int32_t Release() = 0;
 
-  // Encode an I420 image (as a part of a video stream). The encoded image
+  // Encode an image (as a part of a video stream). The encoded image
   // will be returned to the user through the encode complete callback.
   //
   // Input:

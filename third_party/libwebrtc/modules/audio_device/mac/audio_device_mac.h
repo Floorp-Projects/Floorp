@@ -15,20 +15,18 @@
 #include <CoreAudio/CoreAudio.h>
 #include <mach/semaphore.h>
 
+#include <atomic>
 #include <memory>
 
 #include "modules/audio_device/audio_device_generic.h"
 #include "modules/audio_device/mac/audio_mixer_manager_mac.h"
 #include "rtc_base/event.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/platform_thread.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
 
 struct PaUtilRingBuffer;
-
-namespace rtc {
-class PlatformThread;
-}  // namespace rtc
 
 namespace webrtc {
 
@@ -171,16 +169,16 @@ class AudioDeviceMac : public AudioDeviceGeneric {
   static void AtomicSet32(int32_t* theValue, int32_t newValue);
   static int32_t AtomicGet32(int32_t* theValue);
 
-  static void logCAMsg(const rtc::LoggingSeverity sev,
+  static void logCAMsg(rtc::LoggingSeverity sev,
                        const char* msg,
                        const char* err);
 
-  int32_t GetNumberDevices(const AudioObjectPropertyScope scope,
+  int32_t GetNumberDevices(AudioObjectPropertyScope scope,
                            AudioDeviceID scopedDeviceIds[],
-                           const uint32_t deviceListLength);
+                           uint32_t deviceListLength);
 
-  int32_t GetDeviceName(const AudioObjectPropertyScope scope,
-                        const uint16_t index,
+  int32_t GetDeviceName(AudioObjectPropertyScope scope,
+                        uint16_t index,
                         char* name);
 
   int32_t InitDevice(uint16_t userDeviceIndex,
@@ -271,13 +269,11 @@ class AudioDeviceMac : public AudioDeviceGeneric {
   rtc::Event _stopEventRec;
   rtc::Event _stopEvent;
 
-  // TODO(pbos): Replace with direct members, just start/stop, no need to
-  // recreate the thread.
   // Only valid/running between calls to StartRecording and StopRecording.
-  std::unique_ptr<rtc::PlatformThread> capture_worker_thread_;
+  rtc::PlatformThread capture_worker_thread_;
 
   // Only valid/running between calls to StartPlayout and StopPlayout.
-  std::unique_ptr<rtc::PlatformThread> render_worker_thread_;
+  rtc::PlatformThread render_worker_thread_;
 
   AudioMixerManagerMac _mixerManager;
 
@@ -308,8 +304,8 @@ class AudioDeviceMac : public AudioDeviceGeneric {
   bool _playIsInitialized;
 
   // Atomically set varaibles
-  int32_t _renderDeviceIsAlive;
-  int32_t _captureDeviceIsAlive;
+  std::atomic<int32_t> _renderDeviceIsAlive;
+  std::atomic<int32_t> _captureDeviceIsAlive;
 
   bool _twoDevices;
   bool _doStop;  // For play if not shared device or play+rec if shared device
@@ -329,8 +325,8 @@ class AudioDeviceMac : public AudioDeviceGeneric {
   uint32_t _renderLatencyUs;
 
   // Atomically set variables
-  mutable int32_t _captureDelayUs;
-  mutable int32_t _renderDelayUs;
+  mutable std::atomic<int32_t> _captureDelayUs;
+  mutable std::atomic<int32_t> _renderDelayUs;
 
   int32_t _renderDelayOffsetSamples;
 

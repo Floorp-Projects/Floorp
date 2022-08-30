@@ -28,7 +28,7 @@ enum class Aec3Optimization { kNone, kSse2, kAvx2, kNeon };
 constexpr int kNumBlocksPerSecond = 250;
 
 constexpr int kMetricsReportingIntervalBlocks = 10 * kNumBlocksPerSecond;
-constexpr int kMetricsComputationBlocks = 7;
+constexpr int kMetricsComputationBlocks = 3;
 constexpr int kMetricsCollectionBlocks =
     kMetricsReportingIntervalBlocks - kMetricsComputationBlocks;
 
@@ -85,10 +85,10 @@ constexpr size_t GetRenderDelayBufferSize(size_t down_sampling_factor,
 Aec3Optimization DetectOptimization();
 
 // Computes the log2 of the input in a fast an approximate manner.
-float FastApproxLog2f(const float in);
+float FastApproxLog2f(float in);
 
 // Returns dB from a power quantity expressed in log2.
-float Log2TodB(const float in_log2);
+float Log2TodB(float in_log2);
 
 static_assert(1 << kBlockSizeLog2 == kBlockSize,
               "Proper number of shifts for blocksize");

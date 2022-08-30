@@ -15,7 +15,6 @@
 
 #include "api/video/i420_buffer.h"
 #include "common_video/include/video_frame_buffer.h"
-#include "rtc_base/bind.h"
 #include "rtc_base/checks.h"
 #include "libyuv/include/libyuv.h"
 
@@ -52,7 +51,7 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
       buffer_size = width * height * 4;
       break;
     default:
-      RTC_NOTREACHED();
+      RTC_DCHECK_NOTREACHED();
       break;
   }
   return buffer_size;
@@ -123,7 +122,7 @@ int ConvertVideoType(VideoType video_type) {
     case VideoType::kARGB1555:
       return libyuv::FOURCC_RGBO;
   }
-  RTC_NOTREACHED();
+  RTC_DCHECK_NOTREACHED();
   return libyuv::FOURCC_ANY;
 }
 
@@ -139,10 +138,6 @@ int ConvertFromI420(const VideoFrame& src_frame,
       dst_frame, dst_sample_size, src_frame.width(), src_frame.height(),
       ConvertVideoType(dst_video_type));
 }
-
-// Helper functions for keeping references alive.
-void KeepBufferRefs(rtc::scoped_refptr<webrtc::VideoFrameBuffer>,
-                    rtc::scoped_refptr<webrtc::VideoFrameBuffer>) {}
 
 rtc::scoped_refptr<I420ABufferInterface> ScaleI420ABuffer(
     const I420ABufferInterface& buffer,
@@ -162,7 +157,8 @@ rtc::scoped_refptr<I420ABufferInterface> ScaleI420ABuffer(
       yuv_buffer->StrideY(), yuv_buffer->DataU(), yuv_buffer->StrideU(),
       yuv_buffer->DataV(), yuv_buffer->StrideV(), axx_buffer->DataY(),
       axx_buffer->StrideY(),
-      rtc::Bind(&KeepBufferRefs, yuv_buffer, axx_buffer));
+      // To keep references alive.
+      [yuv_buffer, axx_buffer] {});
   return merged_buffer;
 }
 
@@ -273,6 +269,45 @@ double I420PSNR(const VideoFrame* ref_frame, const VideoFrame* test_frame) {
     return -1;
   return I420PSNR(*ref_frame->video_frame_buffer()->ToI420(),
                   *test_frame->video_frame_buffer()->ToI420());
+}
+
+double I420WeightedPSNR(const I420BufferInterface& ref_buffer,
+                        const I420BufferInterface& test_buffer) {
+  RTC_DCHECK_GE(ref_buffer.width(), test_buffer.width());
+  RTC_DCHECK_GE(ref_buffer.height(), test_buffer.height());
+  if ((ref_buffer.width() != test_buffer.width()) ||
+      (ref_buffer.height() != test_buffer.height())) {
+    rtc::scoped_refptr<I420Buffer> scaled_ref_buffer =
+        I420Buffer::Create(test_buffer.width(), test_buffer.height());
+    scaled_ref_buffer->ScaleFrom(ref_buffer);
+    return I420WeightedPSNR(*scaled_ref_buffer, test_buffer);
+  }
+
+  // Luma.
+  int width_y = test_buffer.width();
+  int height_y = test_buffer.height();
+  uint64_t sse_y = libyuv::ComputeSumSquareErrorPlane(
+      ref_buffer.DataY(), ref_buffer.StrideY(), test_buffer.DataY(),
+      test_buffer.StrideY(), width_y, height_y);
+  uint64_t num_samples_y = (uint64_t)width_y * (uint64_t)height_y;
+  double psnr_y = libyuv::SumSquareErrorToPsnr(sse_y, num_samples_y);
+
+  // Chroma.
+  int width_uv = (width_y + 1) >> 1;
+  int height_uv = (height_y + 1) >> 1;
+  uint64_t sse_u = libyuv::ComputeSumSquareErrorPlane(
+      ref_buffer.DataU(), ref_buffer.StrideU(), test_buffer.DataU(),
+      test_buffer.StrideU(), width_uv, height_uv);
+  uint64_t num_samples_uv = (uint64_t)width_uv * (uint64_t)height_uv;
+  double psnr_u = libyuv::SumSquareErrorToPsnr(sse_u, num_samples_uv);
+  uint64_t sse_v = libyuv::ComputeSumSquareErrorPlane(
+      ref_buffer.DataV(), ref_buffer.StrideV(), test_buffer.DataV(),
+      test_buffer.StrideV(), width_uv, height_uv);
+  double psnr_v = libyuv::SumSquareErrorToPsnr(sse_v, num_samples_uv);
+
+  // Weights from Ohm et. al 2012.
+  double psnr_yuv = (6.0 * psnr_y + psnr_u + psnr_v) / 8.0;
+  return (psnr_yuv > kPerfectPSNR) ? kPerfectPSNR : psnr_yuv;
 }
 
 // Compute SSIM for an I420A frame (all planes). Can upscale test frame.

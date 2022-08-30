@@ -143,16 +143,4 @@ void SetFrameSampleRate(Int16FrameData* frame, int sample_rate_hz) {
       AudioProcessing::kChunkSizeMs * sample_rate_hz / 1000;
 }
 
-AudioProcessing::ChannelLayout LayoutFromChannels(size_t num_channels) {
-  switch (num_channels) {
-    case 1:
-      return AudioProcessing::kMono;
-    case 2:
-      return AudioProcessing::kStereo;
-    default:
-      RTC_CHECK(false);
-      return AudioProcessing::kMono;
-  }
-}
-
 }  // namespace webrtc

@@ -29,6 +29,11 @@
 extern "C" {
 #endif
 
+/**
+ * \addtogroup spa_node
+ * \{
+ */
+
 #include <spa/utils/type-info.h>
 
 #include <spa/node/command.h>
@@ -56,14 +61,15 @@ static const struct spa_type_info spa_type_io[] = {
 #define SPA_TYPE_INFO_NODE_EVENT_BASE		SPA_TYPE_INFO_NodeEvent ":"
 
 static const struct spa_type_info spa_type_node_event_id[] = {
-	{ SPA_NODE_EVENT_Error,		 SPA_TYPE_Int, SPA_TYPE_INFO_NODE_EVENT_BASE "Error",   NULL },
-	{ SPA_NODE_EVENT_Buffering,	 SPA_TYPE_Int, SPA_TYPE_INFO_NODE_EVENT_BASE "Buffering", NULL },
-	{ SPA_NODE_EVENT_RequestRefresh, SPA_TYPE_Int, SPA_TYPE_INFO_NODE_EVENT_BASE "RequestRefresh", NULL },
+	{ SPA_NODE_EVENT_Error,		 SPA_TYPE_EVENT_Node, SPA_TYPE_INFO_NODE_EVENT_BASE "Error",   NULL },
+	{ SPA_NODE_EVENT_Buffering,	 SPA_TYPE_EVENT_Node, SPA_TYPE_INFO_NODE_EVENT_BASE "Buffering", NULL },
+	{ SPA_NODE_EVENT_RequestRefresh, SPA_TYPE_EVENT_Node, SPA_TYPE_INFO_NODE_EVENT_BASE "RequestRefresh", NULL },
+	{ SPA_NODE_EVENT_RequestProcess, SPA_TYPE_EVENT_Node, SPA_TYPE_INFO_NODE_EVENT_BASE "RequestProcess", NULL },
 	{ 0, 0, NULL, NULL },
 };
 
 static const struct spa_type_info spa_type_node_event[] = {
-	{ 0, SPA_TYPE_Id, SPA_TYPE_INFO_NODE_EVENT_BASE, spa_type_node_event_id },
+	{ SPA_EVENT_NODE_START, SPA_TYPE_Id, SPA_TYPE_INFO_NODE_EVENT_BASE, spa_type_node_event_id },
 	{ 0, 0, NULL, NULL },
 };
 
@@ -71,14 +77,17 @@ static const struct spa_type_info spa_type_node_event[] = {
 #define SPA_TYPE_INFO_NODE_COMMAND_BASE		SPA_TYPE_INFO_NodeCommand ":"
 
 static const struct spa_type_info spa_type_node_command_id[] = {
-	{ SPA_NODE_COMMAND_Suspend,	SPA_TYPE_Int, SPA_TYPE_INFO_NODE_COMMAND_BASE "Suspend", NULL },
-	{ SPA_NODE_COMMAND_Pause,	SPA_TYPE_Int, SPA_TYPE_INFO_NODE_COMMAND_BASE "Pause",   NULL },
-	{ SPA_NODE_COMMAND_Start,	SPA_TYPE_Int, SPA_TYPE_INFO_NODE_COMMAND_BASE "Start",   NULL },
-	{ SPA_NODE_COMMAND_Enable,	SPA_TYPE_Int, SPA_TYPE_INFO_NODE_COMMAND_BASE "Enable",  NULL },
-	{ SPA_NODE_COMMAND_Disable,	SPA_TYPE_Int, SPA_TYPE_INFO_NODE_COMMAND_BASE "Disable", NULL },
-	{ SPA_NODE_COMMAND_Flush,	SPA_TYPE_Int, SPA_TYPE_INFO_NODE_COMMAND_BASE "Flush",   NULL },
-	{ SPA_NODE_COMMAND_Drain,	SPA_TYPE_Int, SPA_TYPE_INFO_NODE_COMMAND_BASE "Drain",   NULL },
-	{ SPA_NODE_COMMAND_Marker,	SPA_TYPE_Int, SPA_TYPE_INFO_NODE_COMMAND_BASE "Marker",  NULL },
+	{ SPA_NODE_COMMAND_Suspend,	SPA_TYPE_COMMAND_Node, SPA_TYPE_INFO_NODE_COMMAND_BASE "Suspend", NULL },
+	{ SPA_NODE_COMMAND_Pause,	SPA_TYPE_COMMAND_Node, SPA_TYPE_INFO_NODE_COMMAND_BASE "Pause",   NULL },
+	{ SPA_NODE_COMMAND_Start,	SPA_TYPE_COMMAND_Node, SPA_TYPE_INFO_NODE_COMMAND_BASE "Start",   NULL },
+	{ SPA_NODE_COMMAND_Enable,	SPA_TYPE_COMMAND_Node, SPA_TYPE_INFO_NODE_COMMAND_BASE "Enable",  NULL },
+	{ SPA_NODE_COMMAND_Disable,	SPA_TYPE_COMMAND_Node, SPA_TYPE_INFO_NODE_COMMAND_BASE "Disable", NULL },
+	{ SPA_NODE_COMMAND_Flush,	SPA_TYPE_COMMAND_Node, SPA_TYPE_INFO_NODE_COMMAND_BASE "Flush",   NULL },
+	{ SPA_NODE_COMMAND_Drain,	SPA_TYPE_COMMAND_Node, SPA_TYPE_INFO_NODE_COMMAND_BASE "Drain",   NULL },
+	{ SPA_NODE_COMMAND_Marker,	SPA_TYPE_COMMAND_Node, SPA_TYPE_INFO_NODE_COMMAND_BASE "Marker",  NULL },
+	{ SPA_NODE_COMMAND_ParamBegin,	SPA_TYPE_COMMAND_Node, SPA_TYPE_INFO_NODE_COMMAND_BASE "ParamBegin",  NULL },
+	{ SPA_NODE_COMMAND_ParamEnd,	SPA_TYPE_COMMAND_Node, SPA_TYPE_INFO_NODE_COMMAND_BASE "ParamEnd",  NULL },
+	{ SPA_NODE_COMMAND_RequestProcess, SPA_TYPE_COMMAND_Node, SPA_TYPE_INFO_NODE_COMMAND_BASE "RequestProcess",  NULL },
 	{ 0, 0, NULL, NULL },
 };
 
@@ -86,6 +95,10 @@ static const struct spa_type_info spa_type_node_command[] = {
 	{ 0, SPA_TYPE_Id, SPA_TYPE_INFO_NODE_COMMAND_BASE, spa_type_node_command_id },
 	{ 0, 0, NULL, NULL },
 };
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

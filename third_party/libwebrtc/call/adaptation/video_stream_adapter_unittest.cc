@@ -23,12 +23,13 @@
 #include "call/adaptation/encoder_settings.h"
 #include "call/adaptation/test/fake_frame_rate_provider.h"
 #include "call/adaptation/test/fake_resource.h"
+#include "call/adaptation/test/fake_video_stream_input_state_provider.h"
 #include "call/adaptation/video_source_restrictions.h"
 #include "call/adaptation/video_stream_input_state.h"
 #include "rtc_base/string_encode.h"
-#include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 #include "test/testsupport/rtc_expect_death.h"
 
 namespace webrtc {
@@ -58,28 +59,6 @@ std::string BalancedFieldTrialConfig() {
          rtc::ToString(kBalancedMediumFrameRateFps) + "|" +
          rtc::ToString(kBalancedHighFrameRateFps) + "/";
 }
-
-class FakeVideoStreamInputStateProvider : public VideoStreamInputStateProvider {
- public:
-  FakeVideoStreamInputStateProvider()
-      : VideoStreamInputStateProvider(nullptr) {}
-  virtual ~FakeVideoStreamInputStateProvider() = default;
-
-  void SetInputState(int input_pixels,
-                     int input_fps,
-                     int min_pixels_per_frame) {
-    VideoStreamInputState input_state;
-    input_state.set_has_input(true);
-    input_state.set_frame_size_pixels(input_pixels);
-    input_state.set_frames_per_second(input_fps);
-    input_state.set_min_pixels_per_frame(min_pixels_per_frame);
-    fake_input_state_ = input_state;
-  }
-  VideoStreamInputState InputState() override { return fake_input_state_; }
-
- private:
-  VideoStreamInputState fake_input_state_;
-};
 
 // Responsible for adjusting the inputs to VideoStreamAdapter (SetInput), such
 // as pixels and frame rate, according to the most recent source restrictions.
@@ -174,10 +153,12 @@ class VideoStreamAdapterTest : public ::testing::Test {
   VideoStreamAdapterTest()
       : field_trials_(BalancedFieldTrialConfig()),
         resource_(FakeResource::Create("FakeResource")),
-        adapter_(&input_state_provider_, &encoder_stats_observer_) {}
+        adapter_(&input_state_provider_,
+                 &encoder_stats_observer_,
+                 field_trials_) {}
 
  protected:
-  webrtc::test::ScopedFieldTrials field_trials_;
+  webrtc::test::ScopedKeyValueConfig field_trials_;
   FakeVideoStreamInputStateProvider input_state_provider_;
   rtc::scoped_refptr<Resource> resource_;
   testing::StrictMock<MockVideoStreamEncoderObserver> encoder_stats_observer_;
@@ -940,9 +921,11 @@ TEST_F(VideoStreamAdapterTest, AdaptationConstraintDisallowsAdaptationsUp) {
 
 TEST(VideoStreamAdapterDeathTest,
      SetDegradationPreferenceInvalidatesAdaptations) {
+  webrtc::test::ScopedKeyValueConfig field_trials;
   FakeVideoStreamInputStateProvider input_state_provider;
   testing::StrictMock<MockVideoStreamEncoderObserver> encoder_stats_observer_;
-  VideoStreamAdapter adapter(&input_state_provider, &encoder_stats_observer_);
+  VideoStreamAdapter adapter(&input_state_provider, &encoder_stats_observer_,
+                             field_trials);
   adapter.SetDegradationPreference(DegradationPreference::MAINTAIN_FRAMERATE);
   input_state_provider.SetInputState(1280 * 720, 30, kDefaultMinPixelsPerFrame);
   Adaptation adaptation = adapter.GetAdaptationDown();
@@ -951,9 +934,11 @@ TEST(VideoStreamAdapterDeathTest,
 }
 
 TEST(VideoStreamAdapterDeathTest, AdaptDownInvalidatesAdaptations) {
+  webrtc::test::ScopedKeyValueConfig field_trials;
   FakeVideoStreamInputStateProvider input_state_provider;
   testing::StrictMock<MockVideoStreamEncoderObserver> encoder_stats_observer_;
-  VideoStreamAdapter adapter(&input_state_provider, &encoder_stats_observer_);
+  VideoStreamAdapter adapter(&input_state_provider, &encoder_stats_observer_,
+                             field_trials);
   adapter.SetDegradationPreference(DegradationPreference::MAINTAIN_RESOLUTION);
   input_state_provider.SetInputState(1280 * 720, 30, kDefaultMinPixelsPerFrame);
   Adaptation adaptation = adapter.GetAdaptationDown();

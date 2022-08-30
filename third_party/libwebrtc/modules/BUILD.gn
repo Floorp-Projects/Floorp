@@ -47,7 +47,7 @@ rtc_source_set("module_fec_api") {
   sources = [ "include/module_fec_types.h" ]
 }
 
-if (rtc_include_tests) {
+if (rtc_include_tests && !build_with_chromium) {
   modules_tests_resources = [
     "../resources/audio_coding/testfile16kHz.pcm",
     "../resources/audio_coding/testfile32kHz.pcm",
@@ -82,12 +82,14 @@ if (rtc_include_tests) {
     data = modules_tests_resources
 
     if (is_android) {
+      use_default_launcher = false
       deps += [
         # NOTE(brandtr): Including Java classes seems only to be possible from
         # rtc_test targets. Therefore we include this target here, instead of
         # in video_coding_modules_tests, where it is actually used.
         "../sdk/android:libjingle_peerconnection_java",
-        "//testing/android/native_test:native_test_native_code",
+        "//sdk/android:native_test_jni_onload",
+        "//testing/android/native_test:native_test_support",
       ]
       shard_timeout = 900
     }
@@ -121,6 +123,7 @@ if (rtc_include_tests) {
     "../resources/audio_processing/agc/agc_with_circular_buffer.dat",
     "../resources/audio_processing/output_data_fixed.pb",
     "../resources/audio_processing/output_data_float.pb",
+    "../resources/audio_processing/output_data_float_avx2.pb",
     "../resources/audio_processing/output_data_mac.pb",
     "../resources/audio_processing/transient/ajm-macbook-1-spke16m.pcm",
     "../resources/audio_processing/transient/audio16kHz.pcm",
@@ -230,6 +233,7 @@ if (rtc_include_tests) {
     data = modules_unittests_resources
 
     if (is_android) {
+      use_default_launcher = false
       deps += [
         "../sdk/android:libjingle_peerconnection_java",
         "//testing/android/native_test:native_test_support",

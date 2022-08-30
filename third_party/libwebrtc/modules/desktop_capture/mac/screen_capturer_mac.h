@@ -16,6 +16,7 @@
 #include <memory>
 #include <vector>
 
+#include "api/sequence_checker.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
 #include "modules/desktop_capture/desktop_frame.h"
@@ -27,7 +28,6 @@
 #include "modules/desktop_capture/screen_capture_frame_queue.h"
 #include "modules/desktop_capture/screen_capturer_helper.h"
 #include "modules/desktop_capture/shared_desktop_frame.h"
-#include "rtc_base/thread_checker.h"
 
 namespace webrtc {
 
@@ -41,6 +41,9 @@ class ScreenCapturerMac final : public DesktopCapturer {
       bool detect_updated_region,
       bool allow_iosurface);
   ~ScreenCapturerMac() override;
+
+  ScreenCapturerMac(const ScreenCapturerMac&) = delete;
+  ScreenCapturerMac& operator=(const ScreenCapturerMac&) = delete;
 
   // TODO(julien.isorce): Remove Init() or make it private.
   bool Init();
@@ -110,7 +113,7 @@ class ScreenCapturerMac final : public DesktopCapturer {
   DesktopFrameProvider desktop_frame_provider_;
 
   // Start, CaptureFrame and destructor have to called in the same thread.
-  rtc::ThreadChecker thread_checker_;
+  SequenceChecker thread_checker_;
 
   // Used to force CaptureFrame to update it's screen configuration
   // and reregister event handlers. This ensure that this
@@ -118,8 +121,6 @@ class ScreenCapturerMac final : public DesktopCapturer {
   // both the VideoCapture thread and ScreenCapture thread.
   // Protected by desktop_config_monitor_.
   bool update_screen_configuration_ = false;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(ScreenCapturerMac);
 };
 
 }  // namespace webrtc

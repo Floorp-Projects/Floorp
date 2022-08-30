@@ -50,22 +50,22 @@ class UnitBase {
     return value_ == MinusInfinityVal();
   }
 
-  constexpr bool operator==(const Unit_T& other) const {
+  constexpr bool operator==(const UnitBase<Unit_T>& other) const {
     return value_ == other.value_;
   }
-  constexpr bool operator!=(const Unit_T& other) const {
+  constexpr bool operator!=(const UnitBase<Unit_T>& other) const {
     return value_ != other.value_;
   }
-  constexpr bool operator<=(const Unit_T& other) const {
+  constexpr bool operator<=(const UnitBase<Unit_T>& other) const {
     return value_ <= other.value_;
   }
-  constexpr bool operator>=(const Unit_T& other) const {
+  constexpr bool operator>=(const UnitBase<Unit_T>& other) const {
     return value_ >= other.value_;
   }
-  constexpr bool operator>(const Unit_T& other) const {
+  constexpr bool operator>(const UnitBase<Unit_T>& other) const {
     return value_ > other.value_;
   }
-  constexpr bool operator<(const Unit_T& other) const {
+  constexpr bool operator<(const UnitBase<Unit_T>& other) const {
     return value_ < other.value_;
   }
   constexpr Unit_T RoundTo(const Unit_T& resolution) const {
@@ -281,6 +281,9 @@ class RelativeUnit : public UnitBase<Unit_T> {
   constexpr Unit_T operator*(int32_t scalar) const {
     return UnitBase<Unit_T>::FromValue(this->ToValue() * scalar);
   }
+  constexpr Unit_T operator*(size_t scalar) const {
+    return UnitBase<Unit_T>::FromValue(this->ToValue() * scalar);
+  }
 
  protected:
   using UnitBase<Unit_T>::UnitBase;
@@ -297,6 +300,19 @@ inline constexpr Unit_T operator*(int64_t scalar, RelativeUnit<Unit_T> other) {
 template <class Unit_T>
 inline constexpr Unit_T operator*(int32_t scalar, RelativeUnit<Unit_T> other) {
   return other * scalar;
+}
+template <class Unit_T>
+inline constexpr Unit_T operator*(size_t scalar, RelativeUnit<Unit_T> other) {
+  return other * scalar;
+}
+
+template <class Unit_T>
+inline constexpr Unit_T operator-(RelativeUnit<Unit_T> other) {
+  if (other.IsPlusInfinity())
+    return UnitBase<Unit_T>::MinusInfinity();
+  if (other.IsMinusInfinity())
+    return UnitBase<Unit_T>::PlusInfinity();
+  return -1 * other;
 }
 
 }  // namespace rtc_units_impl

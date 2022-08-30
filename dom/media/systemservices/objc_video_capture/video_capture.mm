@@ -52,7 +52,8 @@ rtc::scoped_refptr<VideoCaptureModule> VideoCaptureIos::Create(const char* devic
   strncpy(capture_module->_deviceUniqueId, deviceUniqueIdUTF8, name_length + 1);
   capture_module->_deviceUniqueId[name_length] = '\0';
 
-  capture_module->capture_device_ = [[RTCVideoCaptureIosObjC alloc] initWithOwner:capture_module];
+  capture_module->capture_device_ =
+      [[RTCVideoCaptureIosObjC alloc] initWithOwner:capture_module.get()];
   if (!capture_module->capture_device_) {
     return nullptr;
   }

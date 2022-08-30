@@ -14,6 +14,7 @@
 
 #include <sstream>  // no-presubmit-check TODO(webrtc:8982)
 
+#include "api/array_view.h"
 #include "test/gtest.h"
 
 namespace rtc {
@@ -28,109 +29,106 @@ class HexEncodeTest : public ::testing::Test {
   }
 
   char data_[10];
+  absl::string_view data_view_{data_, sizeof(data_)};
   char decoded_[11];
   size_t dec_res_;
 };
 
 // Test that we can convert to/from hex with no delimiter.
 TEST_F(HexEncodeTest, TestWithNoDelimiter) {
-  std::string encoded = hex_encode(data_, sizeof(data_));
+  std::string encoded = hex_encode(data_view_);
   EXPECT_EQ("80818283848586878889", encoded);
-  dec_res_ =
-      hex_decode(decoded_, sizeof(decoded_), encoded.data(), encoded.size());
+  dec_res_ = hex_decode(ArrayView<char>(decoded_), encoded);
   ASSERT_EQ(sizeof(data_), dec_res_);
   ASSERT_EQ(0, memcmp(data_, decoded_, dec_res_));
 }
 
 // Test that we can convert to/from hex with a colon delimiter.
 TEST_F(HexEncodeTest, TestWithDelimiter) {
-  std::string encoded = hex_encode_with_delimiter(data_, sizeof(data_), ':');
+  std::string encoded = hex_encode_with_delimiter(data_view_, ':');
   EXPECT_EQ("80:81:82:83:84:85:86:87:88:89", encoded);
-  dec_res_ = hex_decode_with_delimiter(decoded_, sizeof(decoded_),
-                                       encoded.data(), encoded.size(), ':');
+  dec_res_ = hex_decode_with_delimiter(ArrayView<char>(decoded_), encoded, ':');
   ASSERT_EQ(sizeof(data_), dec_res_);
   ASSERT_EQ(0, memcmp(data_, decoded_, dec_res_));
 }
 
 // Test that encoding with one delimiter and decoding with another fails.
 TEST_F(HexEncodeTest, TestWithWrongDelimiter) {
-  std::string encoded = hex_encode_with_delimiter(data_, sizeof(data_), ':');
-  dec_res_ = hex_decode_with_delimiter(decoded_, sizeof(decoded_),
-                                       encoded.data(), encoded.size(), '/');
+  std::string encoded = hex_encode_with_delimiter(data_view_, ':');
+  dec_res_ = hex_decode_with_delimiter(ArrayView<char>(decoded_), encoded, '/');
   ASSERT_EQ(0U, dec_res_);
 }
 
 // Test that encoding without a delimiter and decoding with one fails.
 TEST_F(HexEncodeTest, TestExpectedDelimiter) {
-  std::string encoded = hex_encode(data_, sizeof(data_));
+  std::string encoded = hex_encode(data_view_);
   EXPECT_EQ(sizeof(data_) * 2, encoded.size());
-  dec_res_ = hex_decode_with_delimiter(decoded_, sizeof(decoded_),
-                                       encoded.data(), encoded.size(), ':');
+  dec_res_ = hex_decode_with_delimiter(ArrayView<char>(decoded_), encoded, ':');
   ASSERT_EQ(0U, dec_res_);
 }
 
 // Test that encoding with a delimiter and decoding without one fails.
 TEST_F(HexEncodeTest, TestExpectedNoDelimiter) {
-  std::string encoded = hex_encode_with_delimiter(data_, sizeof(data_), ':');
+  std::string encoded = hex_encode_with_delimiter(data_view_, ':');
   EXPECT_EQ(sizeof(data_) * 3 - 1, encoded.size());
-  dec_res_ =
-      hex_decode(decoded_, sizeof(decoded_), encoded.data(), encoded.size());
+  dec_res_ = hex_decode(ArrayView<char>(decoded_), encoded);
   ASSERT_EQ(0U, dec_res_);
 }
 
 // Test that we handle a zero-length buffer with no delimiter.
 TEST_F(HexEncodeTest, TestZeroLengthNoDelimiter) {
-  std::string encoded = hex_encode("", 0);
+  std::string encoded = hex_encode("");
   EXPECT_TRUE(encoded.empty());
-  dec_res_ =
-      hex_decode(decoded_, sizeof(decoded_), encoded.data(), encoded.size());
+  dec_res_ = hex_decode(ArrayView<char>(decoded_), encoded);
   ASSERT_EQ(0U, dec_res_);
 }
 
 // Test that we handle a zero-length buffer with a delimiter.
 TEST_F(HexEncodeTest, TestZeroLengthWithDelimiter) {
-  std::string encoded = hex_encode_with_delimiter("", 0, ':');
+  std::string encoded = hex_encode_with_delimiter("", ':');
   EXPECT_TRUE(encoded.empty());
-  dec_res_ = hex_decode_with_delimiter(decoded_, sizeof(decoded_),
-                                       encoded.data(), encoded.size(), ':');
+  dec_res_ = hex_decode_with_delimiter(ArrayView<char>(decoded_), encoded, ':');
   ASSERT_EQ(0U, dec_res_);
 }
 
 // Test that decoding into a too-small output buffer fails.
 TEST_F(HexEncodeTest, TestDecodeTooShort) {
-  dec_res_ = hex_decode_with_delimiter(decoded_, 4, "0123456789", 10, 0);
+  dec_res_ =
+      hex_decode_with_delimiter(ArrayView<char>(decoded_, 4), "0123456789", 0);
   ASSERT_EQ(0U, dec_res_);
   ASSERT_EQ(0x7f, decoded_[4]);
 }
 
 // Test that decoding non-hex data fails.
 TEST_F(HexEncodeTest, TestDecodeBogusData) {
-  dec_res_ =
-      hex_decode_with_delimiter(decoded_, sizeof(decoded_), "axyz", 4, 0);
+  dec_res_ = hex_decode_with_delimiter(ArrayView<char>(decoded_), "axyz", 0);
   ASSERT_EQ(0U, dec_res_);
 }
 
 // Test that decoding an odd number of hex characters fails.
 TEST_F(HexEncodeTest, TestDecodeOddHexDigits) {
-  dec_res_ = hex_decode_with_delimiter(decoded_, sizeof(decoded_), "012", 3, 0);
+  dec_res_ = hex_decode_with_delimiter(ArrayView<char>(decoded_), "012", 0);
   ASSERT_EQ(0U, dec_res_);
 }
 
 // Test that decoding a string with too many delimiters fails.
 TEST_F(HexEncodeTest, TestDecodeWithDelimiterTooManyDelimiters) {
-  dec_res_ = hex_decode_with_delimiter(decoded_, 4, "01::23::45::67", 14, ':');
+  dec_res_ = hex_decode_with_delimiter(ArrayView<char>(decoded_, 4),
+                                       "01::23::45::67", ':');
   ASSERT_EQ(0U, dec_res_);
 }
 
 // Test that decoding a string with a leading delimiter fails.
 TEST_F(HexEncodeTest, TestDecodeWithDelimiterLeadingDelimiter) {
-  dec_res_ = hex_decode_with_delimiter(decoded_, 4, ":01:23:45:67", 12, ':');
+  dec_res_ = hex_decode_with_delimiter(ArrayView<char>(decoded_, 4),
+                                       ":01:23:45:67", ':');
   ASSERT_EQ(0U, dec_res_);
 }
 
 // Test that decoding a string with a trailing delimiter fails.
 TEST_F(HexEncodeTest, TestDecodeWithDelimiterTrailingDelimiter) {
-  dec_res_ = hex_decode_with_delimiter(decoded_, 4, "01:23:45:67:", 12, ':');
+  dec_res_ = hex_decode_with_delimiter(ArrayView<char>(decoded_, 4),
+                                       "01:23:45:67:", ':');
   ASSERT_EQ(0U, dec_res_);
 }
 
@@ -167,73 +165,6 @@ TEST(TokenizeTest, CompareSubstrings) {
   fields.clear();
   tokenize(" ", ' ', &fields);
   ASSERT_EQ(0ul, fields.size());
-}
-
-TEST(TokenizeTest, TokenizeAppend) {
-  ASSERT_EQ(0ul, tokenize_append("A B C", ' ', nullptr));
-
-  std::vector<std::string> fields;
-
-  tokenize_append("A B C", ' ', &fields);
-  ASSERT_EQ(3ul, fields.size());
-  ASSERT_STREQ("B", fields.at(1).c_str());
-
-  tokenize_append("D E", ' ', &fields);
-  ASSERT_EQ(5ul, fields.size());
-  ASSERT_STREQ("B", fields.at(1).c_str());
-  ASSERT_STREQ("E", fields.at(4).c_str());
-}
-
-TEST(TokenizeTest, TokenizeWithMarks) {
-  ASSERT_EQ(0ul, tokenize("D \"A B", ' ', '(', ')', nullptr));
-
-  std::vector<std::string> fields;
-  tokenize("A B C", ' ', '"', '"', &fields);
-  ASSERT_EQ(3ul, fields.size());
-  ASSERT_STREQ("C", fields.at(2).c_str());
-
-  tokenize("\"A B\" C", ' ', '"', '"', &fields);
-  ASSERT_EQ(2ul, fields.size());
-  ASSERT_STREQ("A B", fields.at(0).c_str());
-
-  tokenize("D \"A B\" C", ' ', '"', '"', &fields);
-  ASSERT_EQ(3ul, fields.size());
-  ASSERT_STREQ("D", fields.at(0).c_str());
-  ASSERT_STREQ("A B", fields.at(1).c_str());
-
-  tokenize("D \"A B\" C \"E F\"", ' ', '"', '"', &fields);
-  ASSERT_EQ(4ul, fields.size());
-  ASSERT_STREQ("D", fields.at(0).c_str());
-  ASSERT_STREQ("A B", fields.at(1).c_str());
-  ASSERT_STREQ("E F", fields.at(3).c_str());
-
-  // No matching marks.
-  tokenize("D \"A B", ' ', '"', '"', &fields);
-  ASSERT_EQ(3ul, fields.size());
-  ASSERT_STREQ("D", fields.at(0).c_str());
-  ASSERT_STREQ("\"A", fields.at(1).c_str());
-
-  tokenize("D (A B) C (E F) G", ' ', '(', ')', &fields);
-  ASSERT_EQ(5ul, fields.size());
-  ASSERT_STREQ("D", fields.at(0).c_str());
-  ASSERT_STREQ("A B", fields.at(1).c_str());
-  ASSERT_STREQ("E F", fields.at(3).c_str());
-}
-
-TEST(TokenizeTest, TokenizeWithEmptyTokens) {
-  std::vector<std::string> fields;
-  EXPECT_EQ(3ul, tokenize_with_empty_tokens("a.b.c", '.', &fields));
-  EXPECT_EQ("a", fields[0]);
-  EXPECT_EQ("b", fields[1]);
-  EXPECT_EQ("c", fields[2]);
-
-  EXPECT_EQ(3ul, tokenize_with_empty_tokens("..c", '.', &fields));
-  EXPECT_TRUE(fields[0].empty());
-  EXPECT_TRUE(fields[1].empty());
-  EXPECT_EQ("c", fields[2]);
-
-  EXPECT_EQ(1ul, tokenize_with_empty_tokens("", '.', &fields));
-  EXPECT_TRUE(fields[0].empty());
 }
 
 TEST(TokenizeFirstTest, NoLeadingSpaces) {
@@ -316,6 +247,22 @@ TEST(SplitTest, CompareSubstrings) {
   split("", ',', &fields);
   ASSERT_EQ(1ul, fields.size());
   ASSERT_STREQ("", fields.at(0).c_str());
+}
+
+TEST(SplitTest, EmptyTokens) {
+  std::vector<std::string> fields;
+  EXPECT_EQ(3ul, split("a.b.c", '.', &fields));
+  EXPECT_EQ("a", fields[0]);
+  EXPECT_EQ("b", fields[1]);
+  EXPECT_EQ("c", fields[2]);
+
+  EXPECT_EQ(3ul, split("..c", '.', &fields));
+  EXPECT_TRUE(fields[0].empty());
+  EXPECT_TRUE(fields[1].empty());
+  EXPECT_EQ("c", fields[2]);
+
+  EXPECT_EQ(1ul, split("", '.', &fields));
+  EXPECT_TRUE(fields[0].empty());
 }
 
 TEST(ToString, SanityCheck) {

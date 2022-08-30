@@ -34,7 +34,7 @@ FIRFilterAVX2::FIRFilterAVX2(const float* unaligned_coefficients,
           AlignedMalloc(sizeof(float) * (max_input_length + state_length_),
                         32))) {
   // Add zeros at the end of the coefficients.
-  RTC_DCHECK_GT(coefficients_length_, unaligned_coefficients_length);
+  RTC_DCHECK_GE(coefficients_length_, unaligned_coefficients_length);
   size_t padding = coefficients_length_ - unaligned_coefficients_length;
   memset(coefficients_.get(), 0, padding * sizeof(coefficients_[0]));
   // The coefficients are reversed to compensate for the order in which the
@@ -54,7 +54,7 @@ void FIRFilterAVX2::Filter(const float* in, size_t length, float* out) {
 
   memcpy(&state_[state_length_], in, length * sizeof(*in));
 
-  // Convolves the input signal |in| with the filter kernel |coefficients_|
+  // Convolves the input signal `in` with the filter kernel `coefficients_`
   // taking into account the previous state.
   for (size_t i = 0; i < length; ++i) {
     float* in_ptr = &state_[i];

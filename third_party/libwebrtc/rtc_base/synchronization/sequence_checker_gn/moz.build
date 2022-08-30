@@ -27,10 +27,6 @@ LOCAL_INCLUDES += [
     "/tools/profiler/public"
 ]
 
-UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/rtc_base/synchronization/sequence_checker.cc"
-]
-
 if not CONFIG["MOZ_DEBUG"]:
 
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
@@ -48,6 +44,7 @@ if CONFIG["OS_TARGET"] == "Android":
     DEFINES["HAVE_SYS_UIO_H"] = True
     DEFINES["WEBRTC_ANDROID"] = True
     DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_GNU_SOURCE"] = True
@@ -60,6 +57,7 @@ if CONFIG["OS_TARGET"] == "Android":
 
 if CONFIG["OS_TARGET"] == "Darwin":
 
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_MAC"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_LIBCPP_HAS_NO_ALIGNED_ALLOCATION"] = True
@@ -87,6 +85,7 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
     DEFINES["USE_GLIB"] = "1"
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
     DEFINES["_LARGEFILE64_SOURCE"] = True
@@ -102,6 +101,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["PSAPI_VERSION"] = "2"
     DEFINES["UNICODE"] = True
     DEFINES["USE_AURA"] = "1"
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_WIN"] = True
     DEFINES["WIN32"] = True
     DEFINES["WIN32_LEAN_AND_MEAN"] = True
@@ -126,10 +126,6 @@ if CONFIG["CPU_ARCH"] == "aarch64":
     DEFINES["WEBRTC_HAS_NEON"] = True
 
 if CONFIG["CPU_ARCH"] == "arm":
-
-    CXXFLAGS += [
-        "-mfpu=neon"
-    ]
 
     DEFINES["WEBRTC_ARCH_ARM"] = True
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
@@ -168,32 +164,28 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android":
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 
-    CXXFLAGS += [
-        "-msse2"
-    ]
-
     OS_LIBS += [
         "android_support"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
 
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
 if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
 
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
-    CXXFLAGS += [
-        "-msse2"
-    ]
-
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
 
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
 Library("sequence_checker_gn")

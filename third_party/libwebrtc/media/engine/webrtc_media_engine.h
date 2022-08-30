@@ -15,12 +15,15 @@
 #include <string>
 #include <vector>
 
+#include "api/audio/audio_frame_processor.h"
 #include "api/audio/audio_mixer.h"
 #include "api/audio_codecs/audio_decoder_factory.h"
 #include "api/audio_codecs/audio_encoder_factory.h"
+#include "api/field_trials_view.h"
 #include "api/rtp_parameters.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/transport/bitrate_settings.h"
+#include "api/transport/field_trial_based_config.h"
 #include "api/video_codecs/video_decoder_factory.h"
 #include "api/video_codecs/video_encoder_factory.h"
 #include "media/base/codec.h"
@@ -45,9 +48,12 @@ struct MediaEngineDependencies {
   rtc::scoped_refptr<webrtc::AudioDecoderFactory> audio_decoder_factory;
   rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer;
   rtc::scoped_refptr<webrtc::AudioProcessing> audio_processing;
+  webrtc::AudioFrameProcessor* audio_frame_processor = nullptr;
 
   std::unique_ptr<webrtc::VideoEncoderFactory> video_encoder_factory;
   std::unique_ptr<webrtc::VideoDecoderFactory> video_decoder_factory;
+
+  const webrtc::FieldTrialsView* trials = nullptr;
 };
 
 // CreateMediaEngine may be called on any thread, though the engine is
@@ -57,8 +63,11 @@ RTC_EXPORT std::unique_ptr<MediaEngineInterface> CreateMediaEngine(
     MediaEngineDependencies dependencies);
 
 // Verify that extension IDs are within 1-byte extension range and are not
-// overlapping.
-bool ValidateRtpExtensions(const std::vector<webrtc::RtpExtension>& extensions);
+// overlapping, and that they form a legal change from previously registerd
+// extensions (if any).
+bool ValidateRtpExtensions(
+    rtc::ArrayView<const webrtc::RtpExtension> extennsions,
+    rtc::ArrayView<const webrtc::RtpExtension> old_extensions);
 
 // Discard any extensions not validated by the 'supported' predicate. Duplicate
 // extensions are removed if 'filter_redundant_extensions' is set, and also any
@@ -66,7 +75,8 @@ bool ValidateRtpExtensions(const std::vector<webrtc::RtpExtension>& extensions);
 std::vector<webrtc::RtpExtension> FilterRtpExtensions(
     const std::vector<webrtc::RtpExtension>& extensions,
     bool (*supported)(absl::string_view),
-    bool filter_redundant_extensions);
+    bool filter_redundant_extensions,
+    const webrtc::FieldTrialsView& trials);
 
 webrtc::BitrateConstraints GetBitrateConfigForCodec(const Codec& codec);
 

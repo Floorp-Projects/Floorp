@@ -31,6 +31,16 @@ extern "C" {
 
 #include <spa/utils/list.h>
 
+/** \defgroup pw_protocol Protocol
+ *
+ * \brief Manages protocols and their implementation
+ */
+
+/**
+ * \addtogroup pw_protocol
+ * \{
+ */
+
 struct pw_protocol;
 
 #include <pipewire/context.h>
@@ -90,7 +100,7 @@ struct pw_protocol_marshal {
 	const void *client_demarshal;
 };
 
-struct pw_protocol_implementaton {
+struct pw_protocol_implementation {
 #define PW_VERSION_PROTOCOL_IMPLEMENTATION	0
 	uint32_t version;
 
@@ -121,7 +131,7 @@ struct pw_context *pw_protocol_get_context(struct pw_protocol *protocol);
 
 void *pw_protocol_get_user_data(struct pw_protocol *protocol);
 
-const struct pw_protocol_implementaton *
+const struct pw_protocol_implementation *
 pw_protocol_get_implementation(struct pw_protocol *protocol);
 
 const void *
@@ -133,10 +143,6 @@ void pw_protocol_add_listener(struct pw_protocol *protocol,
                               const struct pw_protocol_events *events,
                               void *data);
 
-/** \class pw_protocol
- *
- * \brief Manages protocols and their implementation
- */
 int pw_protocol_add_marshal(struct pw_protocol *protocol,
 			    const struct pw_protocol_marshal *marshal);
 
@@ -144,6 +150,10 @@ const struct pw_protocol_marshal *
 pw_protocol_get_marshal(struct pw_protocol *protocol, const char *type, uint32_t version, uint32_t flags);
 
 struct pw_protocol * pw_context_find_protocol(struct pw_context *context, const char *name);
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

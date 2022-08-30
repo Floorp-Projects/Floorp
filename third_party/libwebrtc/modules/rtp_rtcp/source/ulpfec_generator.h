@@ -59,6 +59,9 @@ class UlpfecGenerator : public VideoFecGenerator {
 
   absl::optional<RtpState> GetRtpState() override { return absl::nullopt; }
 
+  // Currently used protection params.
+  const FecProtectionParams& CurrentParams() const;
+
  private:
   struct Params {
     Params();
@@ -78,19 +81,17 @@ class UlpfecGenerator : public VideoFecGenerator {
   int Overhead() const;
 
   // Returns true if the excess overhead (actual - target) for the FEC is below
-  // the amount |kMaxExcessOverhead|. This effects the lower protection level
+  // the amount `kMaxExcessOverhead`. This effects the lower protection level
   // cases and low number of media packets/frame. The target overhead is given
-  // by |params_.fec_rate|, and is only achievable in the limit of large number
+  // by `params_.fec_rate`, and is only achievable in the limit of large number
   // of media packets.
   bool ExcessOverheadBelowMax() const;
 
   // Returns true if the number of added media packets is at least
-  // |min_num_media_packets_|. This condition tries to capture the effect
+  // `min_num_media_packets_`. This condition tries to capture the effect
   // that, for the same amount of protection/overhead, longer codes
   // (e.g. (2k,2m) vs (k,m)) are generally more effective at recovering losses.
   bool MinimumMediaPacketsReached() const;
-
-  const FecProtectionParams& CurrentParams() const;
 
   void ResetState();
 
@@ -110,7 +111,7 @@ class UlpfecGenerator : public VideoFecGenerator {
   int num_protected_frames_ RTC_GUARDED_BY(race_checker_);
   int min_num_media_packets_ RTC_GUARDED_BY(race_checker_);
   Params current_params_ RTC_GUARDED_BY(race_checker_);
-  bool keyframe_in_process_ RTC_GUARDED_BY(race_checker_);
+  bool media_contains_keyframe_ RTC_GUARDED_BY(race_checker_);
 
   mutable Mutex mutex_;
   absl::optional<Params> pending_params_ RTC_GUARDED_BY(mutex_);

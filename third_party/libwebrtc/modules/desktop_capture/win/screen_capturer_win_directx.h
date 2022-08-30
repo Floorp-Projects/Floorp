@@ -14,6 +14,7 @@
 #include <d3dcommon.h>
 
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include "api/scoped_refptr.h"
@@ -52,18 +53,18 @@ class RTC_EXPORT ScreenCapturerWinDirectx : public DesktopCapturer {
   // always try IsSupported() function.
   static bool IsCurrentSessionSupported();
 
-  // Maps |device_names| with the result from GetScreenList() and creates a new
-  // SourceList to include only the ones in |device_names|. If this function
-  // returns true, consumers can always assume |device_names|.size() equals to
-  // |screens|->size(), meanwhile |device_names|[i] and |screens|[i] indicate
+  // Maps `device_names` with the result from GetScreenList() and creates a new
+  // SourceList to include only the ones in `device_names`. If this function
+  // returns true, consumers can always assume `device_names`.size() equals to
+  // `screens`->size(), meanwhile `device_names`[i] and `screens`[i] indicate
   // the same monitor on the system.
   // Public for test only.
   static bool GetScreenListFromDeviceNames(
       const std::vector<std::string>& device_names,
       DesktopCapturer::SourceList* screens);
 
-  // Maps |id| with the result from GetScreenListFromDeviceNames() and returns
-  // the index of the entity in |device_names|. This function returns -1 if |id|
+  // Maps `id` with the result from GetScreenListFromDeviceNames() and returns
+  // the index of the entity in `device_names`. This function returns -1 if `id`
   // cannot be found.
   // Public for test only.
   static int GetIndexFromScreenId(ScreenId id,
@@ -72,6 +73,9 @@ class RTC_EXPORT ScreenCapturerWinDirectx : public DesktopCapturer {
   explicit ScreenCapturerWinDirectx();
 
   ~ScreenCapturerWinDirectx() override;
+
+  ScreenCapturerWinDirectx(const ScreenCapturerWinDirectx&) = delete;
+  ScreenCapturerWinDirectx& operator=(const ScreenCapturerWinDirectx&) = delete;
 
   // DesktopCapturer implementation.
   void Start(Callback* callback) override;
@@ -83,12 +87,17 @@ class RTC_EXPORT ScreenCapturerWinDirectx : public DesktopCapturer {
 
  private:
   const rtc::scoped_refptr<DxgiDuplicatorController> controller_;
-  ScreenCaptureFrameQueue<DxgiFrame> frames_;
+
+  // The underlying DxgiDuplicators may retain a reference to the frames that
+  // we ask them to duplicate so that they can continue returning valid frames
+  // in the event that the target has not been updated. Thus, we need to ensure
+  // that we have a separate frame queue for each source id, so that these held
+  // frames don't get overwritten with the data from another Duplicator/monitor.
+  std::unordered_map<SourceId, ScreenCaptureFrameQueue<DxgiFrame>>
+      frame_queue_map_;
   std::unique_ptr<SharedMemoryFactory> shared_memory_factory_;
   Callback* callback_ = nullptr;
   SourceId current_screen_id_ = kFullDesktopScreenId;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(ScreenCapturerWinDirectx);
 };
 
 }  // namespace webrtc

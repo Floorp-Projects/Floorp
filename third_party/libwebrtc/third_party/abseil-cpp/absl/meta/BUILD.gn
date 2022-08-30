@@ -10,15 +10,15 @@ absl_source_set("type_traits") {
 }
 
 if (!moz_webrtc_build) {
-  absl_source_set("type_traits_test") {
-    testonly = true
-    sources = [ "type_traits_test.cc" ]
-    if (is_clang) {
-      cflags_cc = [ "-Wno-unused-private-field" ]
-    }
-    deps = [
-      ":type_traits",
-      "//third_party/googletest:gtest",
-    ]
+absl_source_set("type_traits_test") {
+  testonly = true
+  sources = [ "type_traits_test.cc" ]
+  if (is_clang) {
+    cflags_cc = [ "-Wno-unused-private-field" ]
   }
+  deps = [
+    ":type_traits",
+    "//third_party/googletest:gtest",
+  ]
+}
 }

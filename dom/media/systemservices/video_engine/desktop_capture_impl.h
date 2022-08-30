@@ -31,14 +31,16 @@
 #include "desktop_device_info.h"
 #include "VideoEngine.h"
 
+#if !defined(_WIN32)
+#  include "rtc_base/platform_thread.h"
+#endif
+
 using namespace webrtc::videocapturemodule;
 using namespace mozilla::camera;  // for mozilla::camera::CaptureDeviceType
 
 namespace rtc {
 #if defined(_WIN32)
 class PlatformUIThread;
-#else
-class PlatformThread;
 #endif
 }  // namespace rtc
 
@@ -208,7 +210,8 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
       _requestedCapability;  // Should be set by platform dependent code in
                              // StartCapture.
  private:
-  int32_t Init();
+  void LazyInitCaptureThread();
+  int32_t LazyInitDesktopCapturer();
   void UpdateFrameCount();
   uint32_t CalculateFrameRate(int64_t now_ns);
 

@@ -11,11 +11,11 @@
 #include "sdk/android/src/jni/android_network_monitor.h"
 
 #include "rtc_base/ip_address.h"
+#include "rtc_base/logging.h"
 #include "sdk/android/native_unittests/application_context_provider.h"
 #include "sdk/android/src/jni/jni_helpers.h"
-#include "system_wrappers/include/field_trial.h"
-#include "test/field_trial.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 namespace webrtc {
 namespace test {
@@ -47,16 +47,26 @@ class AndroidNetworkMonitorTest : public ::testing::Test {
   AndroidNetworkMonitorTest() {
     JNIEnv* env = AttachCurrentThreadIfNeeded();
     ScopedJavaLocalRef<jobject> context = test::GetAppContextForTest(env);
-    network_monitor_ =
-        std::make_unique<jni::AndroidNetworkMonitor>(env, context);
+    network_monitor_ = std::make_unique<jni::AndroidNetworkMonitor>(
+        env, context, field_trials_);
   }
 
-  void SetUp() {
+  void SetUp() override {
     // Reset network monitor states.
     network_monitor_->Stop();
   }
 
+  void TearDown() override {
+    // The network monitor must be stopped, before it is destructed.
+    network_monitor_->Stop();
+  }
+
+  void Disconnect(jni::NetworkHandle handle) {
+    network_monitor_->OnNetworkDisconnected_n(handle);
+  }
+
  protected:
+  test::ScopedKeyValueConfig field_trials_;
   std::unique_ptr<jni::AndroidNetworkMonitor> network_monitor_;
 };
 
@@ -69,7 +79,7 @@ TEST_F(AndroidNetworkMonitorTest, TestFindNetworkHandleUsingIpv4Address) {
   network_monitor_->SetNetworkInfos(net_infos);
 
   auto network_handle =
-      network_monitor_->FindNetworkHandleFromAddress(ipv4_address);
+      network_monitor_->FindNetworkHandleFromAddressOrName(ipv4_address, "");
 
   ASSERT_TRUE(network_handle.has_value());
   EXPECT_EQ(ipv4_handle, *network_handle);
@@ -86,9 +96,9 @@ TEST_F(AndroidNetworkMonitorTest, TestFindNetworkHandleUsingFullIpv6Address) {
   network_monitor_->SetNetworkInfos(net_infos);
 
   auto network_handle1 =
-      network_monitor_->FindNetworkHandleFromAddress(ipv6_address1);
+      network_monitor_->FindNetworkHandleFromAddressOrName(ipv6_address1, "");
   auto network_handle2 =
-      network_monitor_->FindNetworkHandleFromAddress(ipv6_address2);
+      network_monitor_->FindNetworkHandleFromAddressOrName(ipv6_address2, "");
 
   ASSERT_TRUE(network_handle1.has_value());
   EXPECT_EQ(ipv6_handle, *network_handle1);
@@ -97,7 +107,8 @@ TEST_F(AndroidNetworkMonitorTest, TestFindNetworkHandleUsingFullIpv6Address) {
 
 TEST_F(AndroidNetworkMonitorTest,
        TestFindNetworkHandleIgnoringIpv6TemporaryPart) {
-  ScopedFieldTrials field_trials(
+  ScopedKeyValueConfig field_trials(
+      field_trials_,
       "WebRTC-FindNetworkHandleWithoutIpv6TemporaryPart/Enabled/");
   // Start() updates the states introduced by the field trial.
   network_monitor_->Start();
@@ -111,14 +122,114 @@ TEST_F(AndroidNetworkMonitorTest,
   network_monitor_->SetNetworkInfos(net_infos);
 
   auto network_handle1 =
-      network_monitor_->FindNetworkHandleFromAddress(ipv6_address1);
+      network_monitor_->FindNetworkHandleFromAddressOrName(ipv6_address1, "");
   auto network_handle2 =
-      network_monitor_->FindNetworkHandleFromAddress(ipv6_address2);
+      network_monitor_->FindNetworkHandleFromAddressOrName(ipv6_address2, "");
 
   ASSERT_TRUE(network_handle1.has_value());
   EXPECT_EQ(ipv6_handle, *network_handle1);
   ASSERT_TRUE(network_handle2.has_value());
   EXPECT_EQ(ipv6_handle, *network_handle2);
+}
+
+TEST_F(AndroidNetworkMonitorTest, TestFindNetworkHandleUsingIfName) {
+  // Start() updates the states introduced by the field trial.
+  network_monitor_->Start();
+  jni::NetworkHandle ipv6_handle = 200;
+  rtc::IPAddress ipv6_address1 = GetIpAddressFromIpv6String(kTestIpv6Address1);
+
+  // Set up an IPv6 network.
+  jni::NetworkInformation net_info =
+      CreateNetworkInformation("wlan0", ipv6_handle, ipv6_address1);
+  std::vector<jni::NetworkInformation> net_infos(1, net_info);
+  network_monitor_->SetNetworkInfos(net_infos);
+
+  rtc::IPAddress ipv4_address(kTestIpv4Address);
+
+  // Search using ip address only...
+  auto network_handle1 =
+      network_monitor_->FindNetworkHandleFromAddressOrName(ipv4_address, "");
+
+  // Search using ip address AND if_name (for typical ipv4 over ipv6 tunnel).
+  auto network_handle2 = network_monitor_->FindNetworkHandleFromAddressOrName(
+      ipv4_address, "v4-wlan0");
+
+  ASSERT_FALSE(network_handle1.has_value());
+  ASSERT_TRUE(network_handle2.has_value());
+  EXPECT_EQ(ipv6_handle, *network_handle2);
+}
+
+TEST_F(AndroidNetworkMonitorTest, TestUnderlyingVpnType) {
+  ScopedKeyValueConfig field_trials(field_trials_,
+                                    "WebRTC-BindUsingInterfaceName/Enabled/");
+  jni::NetworkHandle ipv4_handle = 100;
+  rtc::IPAddress ipv4_address(kTestIpv4Address);
+  jni::NetworkInformation net_info =
+      CreateNetworkInformation("wlan0", ipv4_handle, ipv4_address);
+  net_info.type = jni::NETWORK_VPN;
+  net_info.underlying_type_for_vpn = jni::NETWORK_WIFI;
+  network_monitor_->SetNetworkInfos({net_info});
+
+  EXPECT_EQ(rtc::ADAPTER_TYPE_WIFI,
+            network_monitor_->GetVpnUnderlyingAdapterType("v4-wlan0"));
+}
+
+// Verify that Disconnect makes interface unavailable.
+TEST_F(AndroidNetworkMonitorTest, Disconnect) {
+  network_monitor_->Start();
+
+  jni::NetworkHandle ipv4_handle = 100;
+  rtc::IPAddress ipv4_address(kTestIpv4Address);
+  jni::NetworkInformation net_info =
+      CreateNetworkInformation("wlan0", ipv4_handle, ipv4_address);
+  net_info.type = jni::NETWORK_WIFI;
+  network_monitor_->SetNetworkInfos({net_info});
+
+  EXPECT_TRUE(network_monitor_->IsAdapterAvailable("wlan0"));
+  EXPECT_TRUE(network_monitor_
+                  ->FindNetworkHandleFromAddressOrName(ipv4_address, "v4-wlan0")
+                  .has_value());
+  EXPECT_EQ(network_monitor_->GetAdapterType("v4-wlan0"),
+            rtc::ADAPTER_TYPE_WIFI);
+
+  // Check that values are reset on disconnect().
+  Disconnect(ipv4_handle);
+  EXPECT_FALSE(network_monitor_->IsAdapterAvailable("wlan0"));
+  EXPECT_FALSE(
+      network_monitor_
+          ->FindNetworkHandleFromAddressOrName(ipv4_address, "v4-wlan0")
+          .has_value());
+  EXPECT_EQ(network_monitor_->GetAdapterType("v4-wlan0"),
+            rtc::ADAPTER_TYPE_UNKNOWN);
+}
+
+// Verify that Stop() resets all caches.
+TEST_F(AndroidNetworkMonitorTest, Reset) {
+  network_monitor_->Start();
+
+  jni::NetworkHandle ipv4_handle = 100;
+  rtc::IPAddress ipv4_address(kTestIpv4Address);
+  jni::NetworkInformation net_info =
+      CreateNetworkInformation("wlan0", ipv4_handle, ipv4_address);
+  net_info.type = jni::NETWORK_WIFI;
+  network_monitor_->SetNetworkInfos({net_info});
+
+  EXPECT_TRUE(network_monitor_->IsAdapterAvailable("wlan0"));
+  EXPECT_TRUE(network_monitor_
+                  ->FindNetworkHandleFromAddressOrName(ipv4_address, "v4-wlan0")
+                  .has_value());
+  EXPECT_EQ(network_monitor_->GetAdapterType("v4-wlan0"),
+            rtc::ADAPTER_TYPE_WIFI);
+
+  // Check that values are reset on Stop().
+  network_monitor_->Stop();
+  EXPECT_FALSE(network_monitor_->IsAdapterAvailable("wlan0"));
+  EXPECT_FALSE(
+      network_monitor_
+          ->FindNetworkHandleFromAddressOrName(ipv4_address, "v4-wlan0")
+          .has_value());
+  EXPECT_EQ(network_monitor_->GetAdapterType("v4-wlan0"),
+            rtc::ADAPTER_TYPE_UNKNOWN);
 }
 
 }  // namespace test

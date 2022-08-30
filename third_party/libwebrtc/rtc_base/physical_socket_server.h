@@ -21,9 +21,11 @@
 #include <unordered_map>
 #include <vector>
 
+#include "rtc_base/async_resolver.h"
+#include "rtc_base/async_resolver_interface.h"
 #include "rtc_base/deprecated/recursive_critical_section.h"
-#include "rtc_base/net_helpers.h"
 #include "rtc_base/socket_server.h"
+#include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/thread_annotations.h"
 
@@ -48,7 +50,6 @@ class Dispatcher {
  public:
   virtual ~Dispatcher() {}
   virtual uint32_t GetRequestedEvents() = 0;
-  virtual void OnPreEvent(uint32_t ff) = 0;
   virtual void OnEvent(uint32_t ff, int err) = 0;
 #if defined(WEBRTC_WIN)
   virtual WSAEVENT GetWSAEvent() = 0;
@@ -68,10 +69,9 @@ class RTC_EXPORT PhysicalSocketServer : public SocketServer {
 
   // SocketFactory:
   Socket* CreateSocket(int family, int type) override;
-  AsyncSocket* CreateAsyncSocket(int family, int type) override;
 
   // Internal Factory for Accept (virtual so it can be overwritten in tests).
-  virtual AsyncSocket* WrapSocket(SOCKET s);
+  virtual Socket* WrapSocket(SOCKET s);
 
   // SocketServer:
   bool Wait(int cms, bool process_io) override;
@@ -129,7 +129,7 @@ class RTC_EXPORT PhysicalSocketServer : public SocketServer {
   bool waiting_ = false;
 };
 
-class PhysicalSocket : public AsyncSocket, public sigslot::has_slots<> {
+class PhysicalSocket : public Socket, public sigslot::has_slots<> {
  public:
   PhysicalSocket(PhysicalSocketServer* ss, SOCKET s = INVALID_SOCKET);
   ~PhysicalSocket() override;
@@ -163,7 +163,7 @@ class PhysicalSocket : public AsyncSocket, public sigslot::has_slots<> {
                int64_t* timestamp) override;
 
   int Listen(int backlog) override;
-  AsyncSocket* Accept(SocketAddress* out_addr) override;
+  Socket* Accept(SocketAddress* out_addr) override;
 
   int Close() override;
 
@@ -202,8 +202,8 @@ class PhysicalSocket : public AsyncSocket, public sigslot::has_slots<> {
   SOCKET s_;
   bool udp_;
   int family_ = 0;
-  RecursiveCriticalSection crit_;
-  int error_ RTC_GUARDED_BY(crit_);
+  mutable webrtc::Mutex mutex_;
+  int error_ RTC_GUARDED_BY(mutex_);
   ConnState state_;
   AsyncResolver* resolver_;
 
@@ -236,7 +236,6 @@ class SocketDispatcher : public Dispatcher, public PhysicalSocket {
 #endif
 
   uint32_t GetRequestedEvents() override;
-  void OnPreEvent(uint32_t ff) override;
   void OnEvent(uint32_t ff, int err) override;
 
   int Close() override;

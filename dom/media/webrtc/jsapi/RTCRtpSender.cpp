@@ -328,10 +328,10 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal() {
                   *streamStats->report_block_data;
               RTCRemoteInboundRtpStreamStats remote;
               remote.mJitter.Construct(
-                  static_cast<double>(streamStats->rtcp_stats.jitter) /
+                  static_cast<double>(rtcpReportData.report_block().jitter) /
                   webrtc::kVideoPayloadTypeFrequency);
               remote.mPacketsLost.Construct(
-                  streamStats->rtcp_stats.packets_lost);
+                  rtcpReportData.report_block().packets_lost);
               if (rtcpReportData.has_rtt()) {
                 remote.mRoundTripTime.Construct(
                     static_cast<double>(rtcpReportData.last_rtt_ms()) / 1000.0);

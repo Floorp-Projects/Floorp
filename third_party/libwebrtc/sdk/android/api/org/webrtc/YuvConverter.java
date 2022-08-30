@@ -12,6 +12,8 @@ package org.webrtc;
 
 import android.graphics.Matrix;
 import android.opengl.GLES20;
+import android.opengl.GLException;
+import androidx.annotation.Nullable;
 import java.nio.ByteBuffer;
 import org.webrtc.VideoFrame.I420Buffer;
 import org.webrtc.VideoFrame.TextureBuffer;
@@ -20,7 +22,9 @@ import org.webrtc.VideoFrame.TextureBuffer;
  * Class for converting OES textures to a YUV ByteBuffer. It can be constructed on any thread, but
  * should only be operated from a single thread with an active EGL context.
  */
-public class YuvConverter {
+public final class YuvConverter {
+  private static final String TAG = "YuvConverter";
+
   private static final String FRAGMENT_SHADER =
       // Difference in texture coordinate corresponding to one
       // sub-pixel in the x direction.
@@ -122,9 +126,17 @@ public class YuvConverter {
   }
 
   /** Converts the texture buffer to I420. */
+  @Nullable
   public I420Buffer convert(TextureBuffer inputTextureBuffer) {
-    threadChecker.checkIsOnValidThread();
+    try {
+      return convertInternal(inputTextureBuffer);
+    } catch (GLException e) {
+      Logging.w(TAG, "Failed to convert TextureBuffer", e);
+    }
+    return null;
+  }
 
+  private I420Buffer convertInternal(TextureBuffer inputTextureBuffer) {
     TextureBuffer preparedBuffer = (TextureBuffer) videoFrameDrawer.prepareBufferForViewportSize(
         inputTextureBuffer, inputTextureBuffer.getWidth(), inputTextureBuffer.getHeight());
 
@@ -141,7 +153,7 @@ public class YuvConverter {
     //    +----+----+
     //
     // In memory, we use the same stride for all of Y, U and V. The
-    // U data starts at offset |height| * |stride| from the Y data,
+    // U data starts at offset `height` * `stride` from the Y data,
     // and the V data starts at at offset |stride/2| from the U
     // data, with rows of U and V data alternating.
     //
@@ -149,12 +161,12 @@ public class YuvConverter {
     // a single byte per pixel (EGL10.EGL_COLOR_BUFFER_TYPE,
     // EGL10.EGL_LUMINANCE_BUFFER,), but that seems to be
     // unsupported by devices. So do the following hack: Allocate an
-    // RGBA buffer, of width |stride|/4. To render each of these
+    // RGBA buffer, of width `stride`/4. To render each of these
     // large pixels, sample the texture at 4 different x coordinates
     // and store the results in the four components.
     //
     // Since the V data needs to start on a boundary of such a
-    // larger pixel, it is not sufficient that |stride| is even, it
+    // larger pixel, it is not sufficient that `stride` is even, it
     // has to be a multiple of 8 pixels.
     final int frameWidth = preparedBuffer.getWidth();
     final int frameHeight = preparedBuffer.getHeight();

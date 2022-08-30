@@ -25,7 +25,7 @@ namespace rnn_vad {
 // At a sample rate of 24 kHz, the last 3 Opus bands are beyond the Nyquist
 // frequency. However, band #19 gets the contributions from band #18 because
 // of the symmetric triangular filter with peak response at 12 kHz.
-constexpr size_t kOpusBands24kHz = 20;
+constexpr int kOpusBands24kHz = 20;
 static_assert(kOpusBands24kHz < kNumBands,
               "The number of bands at 24 kHz must be less than those defined "
               "in the Opus scale at 48 kHz.");
@@ -50,8 +50,8 @@ class SpectralCorrelator {
   ~SpectralCorrelator();
 
   // Computes the band-wise spectral auto-correlations.
-  // |x| must:
-  //  - have size equal to |kFrameSize20ms24kHz|;
+  // `x` must:
+  //  - have size equal to `kFrameSize20ms24kHz`;
   //  - be encoded as vectors of interleaved real-complex FFT coefficients
   //    where x[1] = y[1] = 0 (the Nyquist frequency coefficient is omitted).
   void ComputeAutoCorrelation(
@@ -59,8 +59,8 @@ class SpectralCorrelator {
       rtc::ArrayView<float, kOpusBands24kHz> auto_corr) const;
 
   // Computes the band-wise spectral cross-correlations.
-  // |x| and |y| must:
-  //  - have size equal to |kFrameSize20ms24kHz|;
+  // `x` and `y` must:
+  //  - have size equal to `kFrameSize20ms24kHz`;
   //  - be encoded as vectors of interleaved real-complex FFT coefficients where
   //    x[1] = y[1] = 0 (the Nyquist frequency coefficient is omitted).
   void ComputeCrossCorrelation(
@@ -82,12 +82,12 @@ void ComputeSmoothedLogMagnitudeSpectrum(
 
 // TODO(bugs.webrtc.org/10480): Move to anonymous namespace in
 // spectral_features.cc. Creates a DCT table for arrays having size equal to
-// |kNumBands|. Declared here for unit testing.
+// `kNumBands`. Declared here for unit testing.
 std::array<float, kNumBands * kNumBands> ComputeDctTable();
 
 // TODO(bugs.webrtc.org/10480): Move to anonymous namespace in
-// spectral_features.cc. Computes DCT for |in| given a pre-computed DCT table.
-// In-place computation is not allowed and |out| can be smaller than |in| in
+// spectral_features.cc. Computes DCT for `in` given a pre-computed DCT table.
+// In-place computation is not allowed and `out` can be smaller than `in` in
 // order to only compute the first DCT coefficients. Declared here for unit
 // testing.
 void ComputeDct(rtc::ArrayView<const float> in,

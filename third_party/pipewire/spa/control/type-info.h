@@ -29,6 +29,11 @@
 extern "C" {
 #endif
 
+/**
+ * \addtogroup spa_control
+ * \{
+ */
+
 #include <spa/utils/defs.h>
 #include <spa/utils/type-info.h>
 #include <spa/control/control.h>
@@ -44,6 +49,10 @@ static const struct spa_type_info spa_type_control[] = {
 	{ SPA_CONTROL_OSC, SPA_TYPE_Int, SPA_TYPE_INFO_CONTROL_BASE "OSC", NULL },
 	{ 0, 0, NULL, NULL },
 };
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

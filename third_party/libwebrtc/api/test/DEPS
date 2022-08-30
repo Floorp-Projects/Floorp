@@ -8,14 +8,6 @@ specific_include_rules = {
   "dummy_peer_connection\.h": [
     "+rtc_base/ref_counted_object.h",
   ],
-  "fake_constraints\.h": [
-    "+rtc_base/string_encode.h",
-  ],
-  "loopback_media_transport\.h": [
-    "+rtc_base/async_invoker.h",
-    "+rtc_base/thread.h",
-    "+rtc_base/thread_checker.h",
-  ],
   "neteq_factory_with_codecs\.h": [
     "+system_wrappers/include/clock.h",
   ],
@@ -24,6 +16,10 @@ specific_include_rules = {
     "+rtc_base/network.h",
     "+rtc_base/network_constants.h",
   ],
+  "peer_network_dependencies\.h": [
+    "+rtc_base/network.h",
+    "+rtc_base/thread.h",
+  ],
   "peerconnection_quality_test_fixture\.h": [
     "+logging/rtc_event_log/rtc_event_log_factory_interface.h",
     "+rtc_base/network.h",
@@ -31,6 +27,7 @@ specific_include_rules = {
     "+rtc_base/ssl_certificate.h",
     "+rtc_base/thread.h",
     "+media/base/media_constants.h",
+    "+modules/audio_processing/include/audio_processing.h",
   ],
   "time_controller\.h": [
     "+modules/utility/include/process_thread.h",
@@ -39,8 +36,5 @@ specific_include_rules = {
   ],
   "create_frame_generator\.h": [
     "+system_wrappers/include/clock.h",
-  ],
-  "videocodec_test_fixture\.h": [
-    "+media/base/h264_profile_level_id.h"
   ],
 }

@@ -18,6 +18,7 @@
 
 #include "api/array_view.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/numerics/safe_compare.h"
 
 namespace webrtc {
 namespace rnn_vad {
@@ -29,7 +30,7 @@ namespace rnn_vad {
 // removed when one of the two corresponding items that have been compared is
 // removed from the ring buffer. It is assumed that the comparison is symmetric
 // and that comparing an item with itself is not needed.
-template <typename T, size_t S>
+template <typename T, int S>
 class SymmetricMatrixBuffer {
   static_assert(S > 2, "");
 
@@ -45,9 +46,9 @@ class SymmetricMatrixBuffer {
     buf_.fill(0);
   }
   // Pushes the results from the comparison between the most recent item and
-  // those that are still in the ring buffer. The first element in |values| must
+  // those that are still in the ring buffer. The first element in `values` must
   // correspond to the comparison between the most recent item and the second
-  // most recent one in the ring buffer, whereas the last element in |values|
+  // most recent one in the ring buffer, whereas the last element in `values`
   // must correspond to the comparison between the most recent item and the
   // oldest one in the ring buffer.
   void Push(rtc::ArrayView<T, S - 1> values) {
@@ -55,19 +56,19 @@ class SymmetricMatrixBuffer {
     // column left.
     std::memmove(buf_.data(), buf_.data() + S, (buf_.size() - S) * sizeof(T));
     // Copy new values in the last column in the right order.
-    for (size_t i = 0; i < values.size(); ++i) {
-      const size_t index = (S - 1 - i) * (S - 1) - 1;
-      RTC_DCHECK_LE(static_cast<size_t>(0), index);
+    for (int i = 0; rtc::SafeLt(i, values.size()); ++i) {
+      const int index = (S - 1 - i) * (S - 1) - 1;
+      RTC_DCHECK_GE(index, 0);
       RTC_DCHECK_LT(index, buf_.size());
       buf_[index] = values[i];
     }
   }
   // Reads the value that corresponds to comparison of two items in the ring
-  // buffer having delay |delay1| and |delay2|. The two arguments must not be
+  // buffer having delay `delay1` and `delay2`. The two arguments must not be
   // equal and both must be in {0, ..., S - 1}.
-  T GetValue(size_t delay1, size_t delay2) const {
-    int row = S - 1 - static_cast<int>(delay1);
-    int col = S - 1 - static_cast<int>(delay2);
+  T GetValue(int delay1, int delay2) const {
+    int row = S - 1 - delay1;
+    int col = S - 1 - delay2;
     RTC_DCHECK_NE(row, col) << "The diagonal cannot be accessed.";
     if (row > col)
       std::swap(row, col);  // Swap to access the upper-right triangular part.

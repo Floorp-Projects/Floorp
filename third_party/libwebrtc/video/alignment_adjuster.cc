@@ -19,8 +19,8 @@
 namespace webrtc {
 namespace {
 // Round each scale factor to the closest rational in form alignment/i where i
-// is a multiple of |requested_alignment|. Each resolution divisible by
-// |alignment| will be divisible by |requested_alignment| after the scale factor
+// is a multiple of `requested_alignment`. Each resolution divisible by
+// `alignment` will be divisible by `requested_alignment` after the scale factor
 // is applied.
 double RoundToMultiple(int alignment,
                        int requested_alignment,
@@ -56,7 +56,7 @@ double RoundToMultiple(int alignment,
 // Output:
 // If B is false, returns K and does not adjust scaling factors.
 // Otherwise, returns adjusted alignment (A), adjusted scaling factors (S'[i])
-// are written in |config| such that:
+// are written in `config` such that:
 //
 // A / S'[i] are integers divisible by K
 // sum abs(S'[i] - S[i]) -> min
@@ -66,7 +66,8 @@ double RoundToMultiple(int alignment,
 
 int AlignmentAdjuster::GetAlignmentAndMaybeAdjustScaleFactors(
     const VideoEncoder::EncoderInfo& encoder_info,
-    VideoEncoderConfig* config) {
+    VideoEncoderConfig* config,
+    absl::optional<size_t> max_layers) {
   const int requested_alignment = encoder_info.requested_resolution_alignment;
   if (!encoder_info.apply_alignment_to_all_simulcast_layers) {
     return requested_alignment;
@@ -85,11 +86,15 @@ int AlignmentAdjuster::GetAlignmentAndMaybeAdjustScaleFactors(
 
   if (!has_scale_resolution_down_by) {
     // Default resolution downscaling used (scale factors: 1, 2, 4, ...).
-    return requested_alignment * (1 << (config->simulcast_layers.size() - 1));
+    size_t size = config->simulcast_layers.size();
+    if (max_layers && *max_layers > 0 && *max_layers < size) {
+      size = *max_layers;
+    }
+    return requested_alignment * (1 << (size - 1));
   }
 
   // Get alignment for downscaled layers.
-  // Adjust |scale_resolution_down_by| to a common multiple to limit the
+  // Adjust `scale_resolution_down_by` to a common multiple to limit the
   // alignment value (to avoid largely cropped frames and possibly with an
   // aspect ratio far from the original).
   const int kMaxAlignment = 16;

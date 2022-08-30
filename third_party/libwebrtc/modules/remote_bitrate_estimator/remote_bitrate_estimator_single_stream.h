@@ -21,7 +21,6 @@
 #include "api/transport/field_trial_based_config.h"
 #include "modules/remote_bitrate_estimator/aimd_rate_control.h"
 #include "modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/rate_statistics.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
@@ -35,6 +34,13 @@ class RemoteBitrateEstimatorSingleStream : public RemoteBitrateEstimator {
  public:
   RemoteBitrateEstimatorSingleStream(RemoteBitrateObserver* observer,
                                      Clock* clock);
+
+  RemoteBitrateEstimatorSingleStream() = delete;
+  RemoteBitrateEstimatorSingleStream(
+      const RemoteBitrateEstimatorSingleStream&) = delete;
+  RemoteBitrateEstimatorSingleStream& operator=(
+      const RemoteBitrateEstimatorSingleStream&) = delete;
+
   ~RemoteBitrateEstimatorSingleStream() override;
 
   void IncomingPacket(int64_t arrival_time_ms,
@@ -59,7 +65,7 @@ class RemoteBitrateEstimatorSingleStream : public RemoteBitrateEstimator {
   void GetSsrcs(std::vector<uint32_t>* ssrcs) const
       RTC_SHARED_LOCKS_REQUIRED(mutex_);
 
-  // Returns |remote_rate_| if the pointed to object exists,
+  // Returns `remote_rate_` if the pointed to object exists,
   // otherwise creates it.
   AimdRateControl* GetRemoteRate() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
@@ -74,8 +80,6 @@ class RemoteBitrateEstimatorSingleStream : public RemoteBitrateEstimator {
   int64_t last_process_time_;
   int64_t process_interval_ms_ RTC_GUARDED_BY(mutex_);
   bool uma_recorded_;
-
-  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(RemoteBitrateEstimatorSingleStream);
 };
 
 }  // namespace webrtc

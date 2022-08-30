@@ -40,6 +40,11 @@ extern "C" {
 #include <spa/pod/iter.h>
 #include <spa/pod/builder.h>
 
+/**
+ * \addtogroup spa_pod
+ * \{
+ */
+
 static inline int spa_pod_compare_value(uint32_t type, const void *r1, const void *r2, uint32_t size)
 {
 	switch (type) {
@@ -173,6 +178,10 @@ static inline int spa_pod_compare(const struct spa_pod *pod1,
 	}
 	return res;
 }
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }

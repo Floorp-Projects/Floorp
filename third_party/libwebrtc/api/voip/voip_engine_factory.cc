@@ -24,21 +24,14 @@ std::unique_ptr<VoipEngine> CreateVoipEngine(VoipEngineConfig config) {
   RTC_CHECK(config.audio_device_module);
 
   if (!config.audio_processing) {
-    RTC_DLOG(INFO) << "No audio processing functionality provided.";
+    RTC_DLOG(LS_INFO) << "No audio processing functionality provided.";
   }
 
-  auto voip_core = std::make_unique<VoipCore>();
-
-  if (!voip_core->Init(std::move(config.encoder_factory),
-                       std::move(config.decoder_factory),
-                       std::move(config.task_queue_factory),
-                       std::move(config.audio_device_module),
-                       std::move(config.audio_processing))) {
-    RTC_DLOG(LS_ERROR) << "Failed to initialize VoIP core.";
-    return nullptr;
-  }
-
-  return voip_core;
+  return std::make_unique<VoipCore>(std::move(config.encoder_factory),
+                                    std::move(config.decoder_factory),
+                                    std::move(config.task_queue_factory),
+                                    std::move(config.audio_device_module),
+                                    std::move(config.audio_processing));
 }
 
 }  // namespace webrtc

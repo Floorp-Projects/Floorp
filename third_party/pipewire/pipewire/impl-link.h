@@ -29,25 +29,19 @@
 extern "C" {
 #endif
 
-/** \class pw_impl_link
+/** \defgroup pw_impl_link Link Impl
  *
- * PipeWire link object.
+ * \brief PipeWire link object.
+ */
+
+/**
+ * \addtogroup pw_impl_link
+ * \{
  */
 struct pw_impl_link;
 struct pw_impl_port;
 
 #include <pipewire/impl.h>
-
-/** \page page_link Link
- *
- * \section page_link_overview Overview
- *
- * A link is the connection between 2 nodes (\ref page_node). Nodes are
- * linked together on ports.
- *
- * The link is responsible for negotiating the format and buffers for
- * the nodes.
- */
 
 /** link events added with \ref pw_impl_link_add_listener */
 struct pw_impl_link_events {
@@ -76,7 +70,7 @@ struct pw_impl_link_events {
 };
 
 
-/** Make a new link between two ports \memberof pw_impl_link
+/** Make a new link between two ports
  * \return a newly allocated link */
 struct pw_impl_link *
 pw_context_create_link(struct pw_context *context,		/**< the context object */
@@ -86,7 +80,7 @@ pw_context_create_link(struct pw_context *context,		/**< the context object */
 	    struct pw_properties *properties	/**< extra properties */,
 	    size_t user_data_size		/**< extra user data size */);
 
-/** Destroy a link \memberof pw_impl_link */
+/** Destroy a link */
 void pw_impl_link_destroy(struct pw_impl_link *link);
 
 /** Add an event listener to \a link */
@@ -118,8 +112,12 @@ struct pw_impl_port *pw_impl_link_get_output(struct pw_impl_link *link);
 /** Get the input port of the link */
 struct pw_impl_port *pw_impl_link_get_input(struct pw_impl_link *link);
 
-/** Find the link between 2 ports \memberof pw_impl_link */
+/** Find the link between 2 ports */
 struct pw_impl_link *pw_impl_link_find(struct pw_impl_port *output, struct pw_impl_port *input);
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }

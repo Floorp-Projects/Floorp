@@ -21,7 +21,7 @@ namespace webrtc {
 namespace rnn_vad {
 
 // Ring buffer for N arrays of type T each one with size S.
-template <typename T, size_t S, size_t N>
+template <typename T, int S, int N>
 class RingBuffer {
   static_assert(S > 0, "");
   static_assert(N > 0, "");
@@ -35,7 +35,7 @@ class RingBuffer {
   ~RingBuffer() = default;
   // Set the ring buffer values to zero.
   void Reset() { buffer_.fill(0); }
-  // Replace the least recently pushed array in the buffer with |new_values|.
+  // Replace the least recently pushed array in the buffer with `new_values`.
   void Push(rtc::ArrayView<const T, S> new_values) {
     std::memcpy(buffer_.data() + S * tail_, new_values.data(), S * sizeof(T));
     tail_ += 1;
@@ -43,13 +43,12 @@ class RingBuffer {
       tail_ = 0;
   }
   // Return an array view onto the array with a given delay. A view on the last
-  // and least recently push array is returned when |delay| is 0 and N - 1
+  // and least recently push array is returned when `delay` is 0 and N - 1
   // respectively.
-  rtc::ArrayView<const T, S> GetArrayView(size_t delay) const {
-    const int delay_int = static_cast<int>(delay);
-    RTC_DCHECK_LE(0, delay_int);
-    RTC_DCHECK_LT(delay_int, N);
-    int offset = tail_ - 1 - delay_int;
+  rtc::ArrayView<const T, S> GetArrayView(int delay) const {
+    RTC_DCHECK_LE(0, delay);
+    RTC_DCHECK_LT(delay, N);
+    int offset = tail_ - 1 - delay;
     if (offset < 0)
       offset += N;
     return {buffer_.data() + S * offset, S};

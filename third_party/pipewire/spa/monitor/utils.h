@@ -32,6 +32,11 @@ extern "C" {
 #include <spa/pod/builder.h>
 #include <spa/monitor/device.h>
 
+/**
+ * \addtogroup spa_device
+ * \{
+ */
+
 struct spa_result_device_params_data {
 	struct spa_pod_builder *builder;
 	struct spa_result_device_params data;
@@ -45,9 +50,10 @@ static inline void spa_result_func_device_params(void *data, int seq, int res,
 	const struct spa_result_device_params *r =
 		(const struct spa_result_device_params *)result;
 	uint32_t offset = d->builder->state.offset;
-	spa_pod_builder_raw_padded(d->builder, r->param, SPA_POD_SIZE(r->param));
+	if (spa_pod_builder_raw_padded(d->builder, r->param, SPA_POD_SIZE(r->param)) < 0)
+		return;
 	d->data.next = r->next;
-	d->data.param = SPA_MEMBER(d->builder->data, offset, struct spa_pod);
+	d->data.param = spa_pod_builder_deref(d->builder, offset);
 }
 
 static inline int spa_device_enum_params_sync(struct spa_device *device,
@@ -57,9 +63,10 @@ static inline int spa_device_enum_params_sync(struct spa_device *device,
 			struct spa_pod_builder *builder)
 {
 	struct spa_result_device_params_data data = { builder, };
-	struct spa_hook listener = { 0 };
+	struct spa_hook listener = {{0}};
 	static const struct spa_device_events device_events = {
-		SPA_VERSION_DEVICE_EVENTS,
+		.version = SPA_VERSION_DEVICE_EVENTS,
+		.info = NULL,
 		.result = spa_result_func_device_params,
 	};
 	int res;
@@ -87,6 +94,10 @@ static inline int spa_device_enum_params_sync(struct spa_device *device,
 #define spa_device_emit_result(hooks,s,r,t,res)	spa_device_emit(hooks,result, 0, s, r, t, res)
 #define spa_device_emit_event(hooks,e)		spa_device_emit(hooks,event, 0, e)
 #define spa_device_emit_object_info(hooks,id,i)	spa_device_emit(hooks,object_info, 0, id, i)
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

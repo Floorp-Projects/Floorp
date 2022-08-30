@@ -10,7 +10,6 @@
 
 #include "modules/video_coding/frame_buffer.h"
 
-#include <assert.h>
 #include <string.h>
 
 #include "api/video/encoded_image.h"
@@ -70,17 +69,12 @@ void VCMFrameBuffer::SetGofInfo(const GofInfoVP9& gof_info, size_t idx) {
       gof_info.temporal_up_switch[idx];
 }
 
-bool VCMFrameBuffer::IsSessionComplete() const {
-  TRACE_EVENT0("webrtc", "VCMFrameBuffer::IsSessionComplete");
-  return _sessionInfo.complete();
-}
-
 // Insert packet
 VCMFrameBufferEnum VCMFrameBuffer::InsertPacket(const VCMPacket& packet,
                                                 int64_t timeInMs,
                                                 const FrameData& frame_data) {
   TRACE_EVENT0("webrtc", "VCMFrameBuffer::InsertPacket");
-  assert(!(NULL == packet.dataPtr && packet.sizeBytes > 0));
+  RTC_DCHECK(!(NULL == packet.dataPtr && packet.sizeBytes > 0));
   if (packet.dataPtr != NULL) {
     _payloadType = packet.payloadType;
   }
@@ -98,17 +92,16 @@ VCMFrameBufferEnum VCMFrameBuffer::InsertPacket(const VCMPacket& packet,
     }
   }
 
-  // add safety margin because STAP-A packets can cause it to expand by
-  // ~two bytes per NAL
+  size_t oldSize = encoded_image_buffer_ ? encoded_image_buffer_->size() : 0;
   uint32_t requiredSizeBytes =
       size() + packet.sizeBytes +
       (packet.insertStartCode ? kH264StartCodeLengthBytes : 0);
-  if (requiredSizeBytes > capacity()) {
+  if (requiredSizeBytes > oldSize) {
     const uint8_t* prevBuffer = data();
     const uint32_t increments =
         requiredSizeBytes / kBufferIncStepSizeBytes +
         (requiredSizeBytes % kBufferIncStepSizeBytes > 0);
-    const uint32_t newSize = capacity() + increments * kBufferIncStepSizeBytes;
+    const uint32_t newSize = oldSize + increments * kBufferIncStepSizeBytes;
     if (newSize > kMaxJBFrameSizeBytes) {
       RTC_LOG(LS_ERROR) << "Failed to insert packet due to frame being too "
                            "big.";
@@ -135,7 +128,9 @@ VCMFrameBufferEnum VCMFrameBuffer::InsertPacket(const VCMPacket& packet,
   if (packet.sizeBytes > 0)
     CopyCodecSpecific(&packet.video_header);
 
-  int retVal = _sessionInfo.InsertPacket(packet, data(), frame_data);
+  int retVal = _sessionInfo.InsertPacket(
+      packet, encoded_image_buffer_ ? encoded_image_buffer_->data() : nullptr,
+      frame_data);
   if (retVal == -1) {
     return kSizeError;
   } else if (retVal == -2) {
@@ -234,19 +229,19 @@ void VCMFrameBuffer::SetState(VCMFrameBufferStateEnum state) {
   switch (state) {
     case kStateIncomplete:
       // we can go to this state from state kStateEmpty
-      assert(_state == kStateEmpty);
+      RTC_DCHECK_EQ(_state, kStateEmpty);
 
       // Do nothing, we received a packet
       break;
 
     case kStateComplete:
-      assert(_state == kStateEmpty || _state == kStateIncomplete);
+      RTC_DCHECK(_state == kStateEmpty || _state == kStateIncomplete);
 
       break;
 
     case kStateEmpty:
       // Should only be set to empty through Reset().
-      assert(false);
+      RTC_DCHECK_NOTREACHED();
       break;
   }
   _state = state;
@@ -264,7 +259,6 @@ void VCMFrameBuffer::PrepareForDecode(bool continuous) {
   // Transfer frame information to EncodedFrame and create any codec
   // specific information.
   _frameType = _sessionInfo.FrameType();
-  _completeFrame = _sessionInfo.complete();
   _missingFrame = !continuous;
 }
 

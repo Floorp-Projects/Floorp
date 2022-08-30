@@ -27,7 +27,7 @@ namespace webrtc {
 rtc::scoped_refptr<AudioDeviceModule> CreateWindowsCoreAudioAudioDeviceModule(
     TaskQueueFactory* task_queue_factory,
     bool automatic_restart) {
-  RTC_DLOG(INFO) << __FUNCTION__;
+  RTC_DLOG(LS_INFO) << __FUNCTION__;
   return CreateWindowsCoreAudioAudioDeviceModuleForTest(task_queue_factory,
                                                         automatic_restart);
 }
@@ -36,9 +36,9 @@ rtc::scoped_refptr<AudioDeviceModuleForTest>
 CreateWindowsCoreAudioAudioDeviceModuleForTest(
     TaskQueueFactory* task_queue_factory,
     bool automatic_restart) {
-  RTC_DLOG(INFO) << __FUNCTION__;
+  RTC_DLOG(LS_INFO) << __FUNCTION__;
   // Returns NULL if Core Audio is not supported or if COM has not been
-  // initialized correctly using webrtc_win::ScopedCOMInitializer.
+  // initialized correctly using ScopedCOMInitializer.
   if (!webrtc_win::core_audio_utility::IsSupported()) {
     RTC_LOG(LS_ERROR)
         << "Unable to create ADM since Core Audio is not supported";

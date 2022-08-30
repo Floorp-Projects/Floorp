@@ -11,13 +11,14 @@
 
 #include <algorithm>
 
+#include "absl/strings/string_view.h"
 #include "rtc_base/logging.h"
 
 namespace webrtc {
 namespace {
 size_t FindOrEnd(absl::string_view str, size_t start, char delimiter) {
   size_t pos = str.find(delimiter, start);
-  pos = (pos == std::string::npos) ? str.length() : pos;
+  pos = (pos == absl::string_view::npos) ? str.length() : pos;
   return pos;
 }
 }  // namespace
@@ -107,7 +108,10 @@ void StructParametersParser::Parse(absl::string_view src) {
         break;
       }
     }
-    if (!found) {
+    // "_" is be used to prefix keys that are part of the string for
+    // debugging purposes but not neccessarily used.
+    // e.g. WebRTC-Experiment/param: value, _DebuggingString
+    if (!found && (key.empty() || key[0] != '_')) {
       RTC_LOG(LS_INFO) << "No field with key: '" << key
                        << "' (found in trial: \"" << src << "\")";
     }

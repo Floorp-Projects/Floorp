@@ -51,12 +51,12 @@ void DefaultNetEqTestErrorCallback::OnInsertPacketError(
     const NetEqInput::PacketData& packet) {
   std::cerr << "InsertPacket returned an error." << std::endl;
   std::cerr << "Packet data: " << packet.ToString() << std::endl;
-  FATAL();
+  RTC_FATAL();
 }
 
 void DefaultNetEqTestErrorCallback::OnGetAudioError() {
   std::cerr << "GetAudio returned an error." << std::endl;
-  FATAL();
+  RTC_FATAL();
 }
 
 NetEqTest::NetEqTest(const NetEq::Config& config,
@@ -91,8 +91,7 @@ int64_t NetEqTest::Run() {
     simulation_time += step_result.simulation_step_ms;
   } while (!step_result.is_simulation_finished);
   if (callbacks_.simulation_ended_callback) {
-    callbacks_.simulation_ended_callback->SimulationEnded(simulation_time,
-                                                          neteq_.get());
+    callbacks_.simulation_ended_callback->SimulationEnded(simulation_time);
   }
   return simulation_time;
 }
@@ -172,7 +171,7 @@ NetEqTest::SimulationStepResult NetEqTest::RunToNextGetAudio() {
       }
       AudioFrame out_frame;
       bool muted;
-      int error = neteq_->GetAudio(&out_frame, &muted,
+      int error = neteq_->GetAudio(&out_frame, &muted, nullptr,
                                    ActionToOperations(next_action_));
       next_action_ = absl::nullopt;
       RTC_CHECK(!muted) << "The code does not handle enable_muted_state";
@@ -270,6 +269,11 @@ NetEqTest::SimulationStepResult NetEqTest::RunToNextGetAudio() {
       // End the simulation if the gap is too large. This indicates an issue
       // with the event log file.
       const bool simulation_step_too_large = result.simulation_step_ms > 1000;
+      if (simulation_step_too_large) {
+        // If we don't reset the step time, the large gap will be included in
+        // the simulation time, which can be a large distortion.
+        result.simulation_step_ms = 10;
+      }
       result.is_simulation_finished = simulation_step_too_large ||
                                       no_more_packets_to_decode ||
                                       input_->ended();

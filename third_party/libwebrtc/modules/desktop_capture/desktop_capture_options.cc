@@ -14,6 +14,11 @@
 #elif defined(WEBRTC_WIN)
 #include "modules/desktop_capture/win/full_screen_win_application_handler.h"
 #endif
+#if defined(WEBRTC_USE_PIPEWIRE) && !defined(WEBRTC_MOZILLA_BUILD)
+#include "modules/desktop_capture/linux/wayland/shared_screencast_stream.h"
+#endif
+
+#include "rtc_base/ref_counted_object.h"
 
 namespace webrtc {
 
@@ -35,13 +40,19 @@ DesktopCaptureOptions DesktopCaptureOptions::CreateDefault() {
 #if defined(WEBRTC_USE_X11)
   result.set_x_display(SharedXDisplay::CreateDefault());
 #endif
+#if defined(WEBRTC_USE_PIPEWIRE) && !defined(WEBRTC_MOZILLA_BUILD)
+  result.set_screencast_stream(SharedScreenCastStream::CreateDefault());
+#endif
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
-  result.set_configuration_monitor(new DesktopConfigurationMonitor());
+  result.set_configuration_monitor(
+      rtc::make_ref_counted<DesktopConfigurationMonitor>());
   result.set_full_screen_window_detector(
-      new FullScreenWindowDetector(CreateFullScreenMacApplicationHandler));
+      rtc::make_ref_counted<FullScreenWindowDetector>(
+          CreateFullScreenMacApplicationHandler));
 #elif defined(WEBRTC_WIN)
   result.set_full_screen_window_detector(
-      new FullScreenWindowDetector(CreateFullScreenWinApplicationHandler));
+      rtc::make_ref_counted<FullScreenWindowDetector>(
+          CreateFullScreenWinApplicationHandler));
 #endif
   return result;
 }

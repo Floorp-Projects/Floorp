@@ -18,13 +18,14 @@
 
 #include "absl/types/optional.h"
 #include "api/scoped_refptr.h"
+#include "api/video_codecs/scalability_mode.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_codec.h"
 #include "rtc_base/ref_count.h"
 
 namespace webrtc {
 
-// The |VideoStream| struct describes a simulcast layer, or "stream".
+// The `VideoStream` struct describes a simulcast layer, or "stream".
 struct VideoStream {
   VideoStream();
   ~VideoStream();
@@ -46,7 +47,7 @@ struct VideoStream {
   int max_bitrate_bps;
 
   // Scaling factor applied to the stream size.
-  // |width| and |height| values are already scaled down.
+  // `width` and `height` values are already scaled down.
   double scale_resolution_down_by;
 
   // Maximum Quantization Parameter to use when encoding the stream.
@@ -63,6 +64,8 @@ struct VideoStream {
   // The priority of this stream, to be used when allocating resources
   // between multiple streams.
   absl::optional<double> bitrate_priority;
+
+  absl::optional<ScalabilityMode> scalability_mode;
 
   // If this stream is enabled by the user, or not.
   bool active;
@@ -127,7 +130,7 @@ class VideoEncoderConfig {
     // An implementation should return a std::vector<VideoStream> with the
     // wanted VideoStream settings for the given video resolution.
     // The size of the vector may not be larger than
-    // |encoder_config.number_of_streams|.
+    // `encoder_config.number_of_streams`.
     virtual std::vector<VideoStream> CreateEncoderStreams(
         int width,
         int height,
@@ -169,7 +172,7 @@ class VideoEncoderConfig {
   // The simulcast layer's configurations set by the application for this video
   // sender. These are modified by the video_stream_factory before being passed
   // down to lower layers for the video encoding.
-  // |simulcast_layers| is also used for configuring non-simulcast (when there
+  // `simulcast_layers` is also used for configuring non-simulcast (when there
   // is a single VideoStream).
   std::vector<VideoStream> simulcast_layers;
 
@@ -178,6 +181,9 @@ class VideoEncoderConfig {
 
   // Legacy Google conference mode flag for simulcast screenshare
   bool legacy_conference_mode;
+
+  // Indicates whether quality scaling can be used or not.
+  bool is_quality_scaling_allowed;
 
  private:
   // Access to the copy constructor is private to force use of the Copy()

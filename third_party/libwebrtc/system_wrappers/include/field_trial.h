@@ -13,6 +13,8 @@
 
 #include <string>
 
+#include "absl/strings/string_view.h"
+
 // Field trials allow webrtc clients (such as Chrome) to turn on feature code
 // in binaries out in the field and gather information with that.
 //
@@ -61,7 +63,7 @@ namespace field_trial {
 // if the trial does not exists.
 //
 // Note: To keep things tidy append all the trial names with WebRTC.
-std::string FindFullName(const std::string& name);
+std::string FindFullName(absl::string_view name);
 
 // Convenience method, returns true iff FindFullName(name) return a string that
 // starts with "Enabled".
@@ -84,7 +86,6 @@ void InitFieldTrialsFromString(const char* trials_string);
 
 const char* GetFieldTrialString();
 
-#ifndef WEBRTC_EXCLUDE_FIELD_TRIAL_DEFAULT
 // Validates the given field trial string.
 bool FieldTrialsStringIsValid(const char* trials_string);
 
@@ -94,7 +95,6 @@ bool FieldTrialsStringIsValid(const char* trials_string);
 // in 'second' takes precedence.
 // Shall only be called with valid FieldTrial strings.
 std::string MergeFieldTrialsStrings(const char* first, const char* second);
-#endif  // WEBRTC_EXCLUDE_FIELD_TRIAL_DEFAULT
 
 }  // namespace field_trial
 }  // namespace webrtc

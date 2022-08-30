@@ -29,13 +29,19 @@
 extern "C" {
 #endif
 
+/** \defgroup spa_debug Debug
+ * Debugging utilities
+ */
+
+/**
+ * \addtogroup spa_debug
+ * \{
+ */
+
+#include <spa/debug/log.h>
 #include <spa/debug/mem.h>
 #include <spa/debug/types.h>
 #include <spa/buffer/type-info.h>
-
-#ifndef spa_debug
-#define spa_debug(...)	({ fprintf(stderr, __VA_ARGS__);fputc('\n', stderr); })
-#endif
 
 static inline int spa_debug_buffer(int indent, const struct spa_buffer *buffer)
 {
@@ -111,6 +117,10 @@ static inline int spa_debug_buffer(int indent, const struct spa_buffer *buffer)
 	}
 	return 0;
 }
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 }  /* extern "C" */

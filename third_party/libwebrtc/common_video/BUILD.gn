@@ -15,19 +15,19 @@ rtc_library("common_video") {
     "bitrate_adjuster.cc",
     "frame_rate_estimator.cc",
     "frame_rate_estimator.h",
+    "framerate_controller.cc",
+    "framerate_controller.h",
     "h264/h264_bitstream_parser.cc",
     "h264/h264_bitstream_parser.h",
     "h264/h264_common.cc",
     "h264/h264_common.h",
     "h264/pps_parser.cc",
     "h264/pps_parser.h",
-    "h264/profile_level_id.h",
     "h264/sps_parser.cc",
     "h264/sps_parser.h",
     "h264/sps_vui_rewriter.cc",
     "h264/sps_vui_rewriter.h",
     "include/bitrate_adjuster.h",
-    "include/i420_buffer_pool.h",
     "include/incoming_video_stream.h",
     "include/quality_limitation_reason.h",
     "include/video_frame_buffer.h",
@@ -42,7 +42,9 @@ rtc_library("common_video") {
   ]
 
   deps = [
+    "../api:array_view",
     "../api:scoped_refptr",
+    "../api:sequence_checker",
     "../api/task_queue",
     "../api/units:time_delta",
     "../api/units:timestamp",
@@ -50,21 +52,32 @@ rtc_library("common_video") {
     "../api/video:video_bitrate_allocation",
     "../api/video:video_bitrate_allocator",
     "../api/video:video_frame",
-    "../api/video:video_frame_i420",
-    "../api/video:video_frame_nv12",
     "../api/video:video_rtp_headers",
     "../api/video_codecs:bitstream_parser_api",
-    "../media:rtc_h264_profile_id",
+    "../api/video_codecs:video_codecs_api",
     "../rtc_base",
+    "../rtc_base:bit_buffer",
+    "../rtc_base:bitstream_reader",
+    "../rtc_base:buffer",
     "../rtc_base:checks",
+    "../rtc_base:event_tracer",
+    "../rtc_base:logging",
+    "../rtc_base:macromagic",
+    "../rtc_base:race_checker",
+    "../rtc_base:rate_statistics",
+    "../rtc_base:refcount",
     "../rtc_base:rtc_task_queue",
     "../rtc_base:safe_minmax",
+    "../rtc_base:timeutils",
     "../rtc_base/synchronization:mutex",
     "../rtc_base/system:rtc_export",
     "../system_wrappers:metrics",
     #"//third_party/libyuv",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/numeric:bits",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
   include_dirs = [
     "/media/libyuv",
     "/media/libyuv/libyuv/include",
@@ -77,7 +90,7 @@ rtc_source_set("frame_counts") {
   sources = [ "frame_counts.h" ]
 }
 
-if (rtc_include_tests) {
+if (rtc_include_tests && !build_with_chromium) {
   common_video_resources = [ "../resources/foreman_cif.yuv" ]
 
   if (is_ios) {
@@ -94,9 +107,9 @@ if (rtc_include_tests) {
     sources = [
       "bitrate_adjuster_unittest.cc",
       "frame_rate_estimator_unittest.cc",
+      "framerate_controller_unittest.cc",
       "h264/h264_bitstream_parser_unittest.cc",
       "h264/pps_parser_unittest.cc",
-      "h264/profile_level_id_unittest.cc",
       "h264/sps_parser_unittest.cc",
       "h264/sps_vui_rewriter_unittest.cc",
       "libyuv/libyuv_unittest.cc",
@@ -110,13 +123,16 @@ if (rtc_include_tests) {
       "../api/units:time_delta",
       "../api/video:video_frame",
       "../api/video:video_frame_i010",
-      "../api/video:video_frame_i420",
       "../api/video:video_rtp_headers",
-      "../media:rtc_h264_profile_id",
+      "../api/video_codecs:video_codecs_api",
       "../rtc_base",
+      "../rtc_base:bit_buffer",
+      "../rtc_base:buffer",
       "../rtc_base:checks",
-      "../rtc_base:rtc_base_approved",
+      "../rtc_base:logging",
+      "../rtc_base:macromagic",
       "../rtc_base:rtc_base_tests_utils",
+      "../rtc_base:timeutils",
       "../system_wrappers:system_wrappers",
       "../test:fileutils",
       "../test:frame_utils",
@@ -124,9 +140,10 @@ if (rtc_include_tests) {
       "../test:test_support",
       "../test:video_test_common",
       "//testing/gtest",
-      "//third_party/abseil-cpp/absl/types:optional",
       "//third_party/libyuv",
     ]
+
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 
     data = common_video_resources
     if (is_android) {

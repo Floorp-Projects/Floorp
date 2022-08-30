@@ -14,7 +14,11 @@
 #include "rtc_base/system/rtc_export.h"
 
 #if defined(WEBRTC_USE_X11)
-#include "modules/desktop_capture/linux/shared_x_display.h"
+#include "modules/desktop_capture/linux/x11/shared_x_display.h"
+#endif
+
+#if defined(WEBRTC_USE_PIPEWIRE) && !defined(WEBRTC_MOZILLA_BUILD)
+#include "modules/desktop_capture/linux/wayland/shared_screencast_stream.h"
 #endif
 
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
@@ -43,7 +47,9 @@ class RTC_EXPORT DesktopCaptureOptions {
   DesktopCaptureOptions& operator=(DesktopCaptureOptions&& options);
 
 #if defined(WEBRTC_USE_X11)
-  SharedXDisplay* x_display() const { return x_display_; }
+  const rtc::scoped_refptr<SharedXDisplay>& x_display() const {
+    return x_display_;
+  }
   void set_x_display(rtc::scoped_refptr<SharedXDisplay> x_display) {
     x_display_ = x_display;
   }
@@ -53,7 +59,8 @@ class RTC_EXPORT DesktopCaptureOptions {
   // TODO(zijiehe): Remove both DesktopConfigurationMonitor and
   // FullScreenChromeWindowDetector out of DesktopCaptureOptions. It's not
   // reasonable for external consumers to set these two parameters.
-  DesktopConfigurationMonitor* configuration_monitor() const {
+  const rtc::scoped_refptr<DesktopConfigurationMonitor>& configuration_monitor()
+      const {
     return configuration_monitor_;
   }
   // If nullptr is set, ScreenCapturer won't work and WindowCapturer may return
@@ -67,7 +74,8 @@ class RTC_EXPORT DesktopCaptureOptions {
   void set_allow_iosurface(bool allow) { allow_iosurface_ = allow; }
 #endif
 
-  FullScreenWindowDetector* full_screen_window_detector() const {
+  const rtc::scoped_refptr<FullScreenWindowDetector>&
+  full_screen_window_detector() const {
     return full_screen_window_detector_;
   }
   void set_full_screen_window_detector(
@@ -100,13 +108,13 @@ class RTC_EXPORT DesktopCaptureOptions {
 #if defined(WEBRTC_WIN)
   // Enumerating windows owned by the current process on Windows has some
   // complications due to |GetWindowText*()| APIs potentially causing a
-  // deadlock (see the comments in the |GetWindowListHandler()| function in
+  // deadlock (see the comments in the `GetWindowListHandler()` function in
   // window_capture_utils.cc for more details on the deadlock).
   // To avoid this issue, consumers can either ensure that the thread that runs
-  // their message loop never waits on |GetSourceList()|, or they can set this
+  // their message loop never waits on `GetSourceList()`, or they can set this
   // flag to false which will prevent windows running in the current process
   // from being enumerated and included in the results. Consumers can still
-  // provide the WindowId for their own windows to |SelectSource()| and capture
+  // provide the WindowId for their own windows to `SelectSource()` and capture
   // them.
   bool enumerate_current_process_windows() const {
     return enumerate_current_process_windows_;
@@ -144,18 +152,56 @@ class RTC_EXPORT DesktopCaptureOptions {
   void set_allow_cropping_window_capturer(bool allow) {
     allow_cropping_window_capturer_ = allow;
   }
-#endif
+
+#if defined(RTC_ENABLE_WIN_WGC)
+  // This flag enables the WGC capturer for both window and screen capture.
+  // This capturer should offer similar or better performance than the cropping
+  // capturer without the disadvantages listed above. However, the WGC capturer
+  // is only available on Windows 10 version 1809 (Redstone 5) and up. This flag
+  // will have no affect on older versions.
+  // If set, and running a supported version of Win10, this flag will take
+  // precedence over the cropping, directx, and magnification flags.
+  bool allow_wgc_capturer() const { return allow_wgc_capturer_; }
+  void set_allow_wgc_capturer(bool allow) { allow_wgc_capturer_ = allow; }
+
+  // This flag enables the WGC capturer for fallback capturer.
+  // The flag is useful when the first capturer (eg. WindowCapturerWinGdi) is
+  // unreliable in certain devices where WGC is supported, but not used by
+  // default.
+  bool allow_wgc_capturer_fallback() const {
+    return allow_wgc_capturer_fallback_;
+  }
+  void set_allow_wgc_capturer_fallback(bool allow) {
+    allow_wgc_capturer_fallback_ = allow;
+  }
+#endif  // defined(RTC_ENABLE_WIN_WGC)
+#endif  // defined(WEBRTC_WIN)
 
 #if defined(WEBRTC_USE_PIPEWIRE)
   bool allow_pipewire() const { return allow_pipewire_; }
   void set_allow_pipewire(bool allow) { allow_pipewire_ = allow; }
+
+#if !defined(WEBRTC_MOZILLA_BUILD)
+  const rtc::scoped_refptr<SharedScreenCastStream>& screencast_stream() const {
+    return screencast_stream_;
+  }
+  void set_screencast_stream(
+      rtc::scoped_refptr<SharedScreenCastStream> stream) {
+    screencast_stream_ = stream;
+  }
+#endif
 #endif
 
  private:
 #if defined(WEBRTC_USE_X11)
   rtc::scoped_refptr<SharedXDisplay> x_display_;
 #endif
-
+#if defined(WEBRTC_USE_PIPEWIRE) && !defined(WEBRTC_MOZILLA_BUILD)
+  // An instance of shared PipeWire ScreenCast stream we share between
+  // BaseCapturerPipeWire and MouseCursorMonitorPipeWire as cursor information
+  // is sent together with screen content.
+  rtc::scoped_refptr<SharedScreenCastStream> screencast_stream_;
+#endif
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
   rtc::scoped_refptr<DesktopConfigurationMonitor> configuration_monitor_;
   bool allow_iosurface_ = false;
@@ -168,6 +214,10 @@ class RTC_EXPORT DesktopCaptureOptions {
   bool allow_use_magnification_api_ = false;
   bool allow_directx_capturer_ = false;
   bool allow_cropping_window_capturer_ = false;
+#if defined(RTC_ENABLE_WIN_WGC)
+  bool allow_wgc_capturer_ = false;
+  bool allow_wgc_capturer_fallback_ = false;
+#endif
 #endif
 #if defined(WEBRTC_USE_X11)
   bool use_update_notifications_ = false;

@@ -13,41 +13,63 @@
 
 #include <stddef.h>
 
-#include "modules/audio_processing/agc2/agc2_common.h"  // kFullBufferSizeMs...
-#include "modules/audio_processing/agc2/saturation_protector.h"
-#include "modules/audio_processing/agc2/vad_with_level.h"
+#include <type_traits>
+
+#include "modules/audio_processing/agc2/agc2_common.h"
+#include "modules/audio_processing/agc2/vad_wrapper.h"
 #include "modules/audio_processing/include/audio_processing.h"
 
 namespace webrtc {
 class ApmDataDumper;
 
+// Level estimator for the digital adaptive gain controller.
 class AdaptiveModeLevelEstimator {
  public:
-  explicit AdaptiveModeLevelEstimator(ApmDataDumper* apm_data_dumper);
   AdaptiveModeLevelEstimator(
       ApmDataDumper* apm_data_dumper,
-      AudioProcessing::Config::GainController2::LevelEstimator level_estimator,
-      bool use_saturation_protector,
-      float extra_saturation_margin_db);
-  void UpdateEstimation(const VadWithLevel::LevelAndProbability& vad_data);
-  float LatestLevelEstimate() const;
+      const AudioProcessing::Config::GainController2::AdaptiveDigital& config);
+  AdaptiveModeLevelEstimator(const AdaptiveModeLevelEstimator&) = delete;
+  AdaptiveModeLevelEstimator& operator=(const AdaptiveModeLevelEstimator&) =
+      delete;
+
+  // Updates the level estimation.
+  void Update(float rms_dbfs, float peak_dbfs, float speech_probability);
+  // Returns the estimated speech plus noise level.
+  float level_dbfs() const { return level_dbfs_; }
+  // Returns true if the estimator is confident on its current estimate.
+  bool IsConfident() const;
+
   void Reset();
-  bool LevelEstimationIsConfident() const {
-    return buffer_size_ms_ >= kFullBufferSizeMs;
-  }
 
  private:
-  void DebugDumpEstimate();
+  // Part of the level estimator state used for check-pointing and restore ops.
+  struct LevelEstimatorState {
+    bool operator==(const LevelEstimatorState& s) const;
+    inline bool operator!=(const LevelEstimatorState& s) const {
+      return !(*this == s);
+    }
+    // TODO(bugs.webrtc.org/7494): Remove `time_to_confidence_ms` if redundant.
+    int time_to_confidence_ms;
+    struct Ratio {
+      float numerator;
+      float denominator;
+      float GetRatio() const;
+    } level_dbfs;
+  };
+  static_assert(std::is_trivially_copyable<LevelEstimatorState>::value, "");
 
-  const AudioProcessing::Config::GainController2::LevelEstimator
-      level_estimator_;
-  const bool use_saturation_protector_;
-  size_t buffer_size_ms_ = 0;
-  float last_estimate_with_offset_dbfs_ = kInitialSpeechLevelEstimateDbfs;
-  float estimate_numerator_ = 0.f;
-  float estimate_denominator_ = 0.f;
-  SaturationProtector saturation_protector_;
+  void ResetLevelEstimatorState(LevelEstimatorState& state) const;
+
+  void DumpDebugData() const;
+
   ApmDataDumper* const apm_data_dumper_;
+
+  const float initial_speech_level_dbfs_;
+  const int adjacent_speech_frames_threshold_;
+  LevelEstimatorState preliminary_state_;
+  LevelEstimatorState reliable_state_;
+  float level_dbfs_;
+  int num_adjacent_speech_frames_;
 };
 
 }  // namespace webrtc

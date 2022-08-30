@@ -32,80 +32,80 @@ static_library("pffft") {
 
 # Fuzzing.
 if (false) {
-  group("fuzzers") {
-    testonly = true
-    deps = [
-      ":pffft_complex_fuzzer",
-      ":pffft_real_fuzzer",
-    ]
-  }
+group("fuzzers") {
+  testonly = true
+  deps = [
+    ":pffft_complex_fuzzer",
+    ":pffft_real_fuzzer",
+  ]
+}
 
-  fuzzer_testdata_dir = "$target_gen_dir/testdata"
+fuzzer_testdata_dir = "$target_gen_dir/testdata"
 
-  action("generate_pffft_fuzzer_corpus") {
-    script = "generate_seed_corpus.py"
-    sources = [ "generate_seed_corpus.py" ]
-    args = [ rebase_path(fuzzer_testdata_dir, root_build_dir) ]
-    outputs = [ fuzzer_testdata_dir ]
-  }
+action("generate_pffft_fuzzer_corpus") {
+  script = "generate_seed_corpus.py"
+  sources = [ "generate_seed_corpus.py" ]
+  args = [ rebase_path(fuzzer_testdata_dir, root_build_dir) ]
+  outputs = [ fuzzer_testdata_dir ]
+}
 
-  fuzzer_test("pffft_complex_fuzzer") {
-    sources = [ "pffft_fuzzer.cc" ]
-    cflags = [ "-DTRANSFORM_COMPLEX" ]
-    deps = [ ":pffft" ]
-    seed_corpus = fuzzer_testdata_dir
-    seed_corpus_deps = [ ":generate_pffft_fuzzer_corpus" ]
-  }
+fuzzer_test("pffft_complex_fuzzer") {
+  sources = [ "pffft_fuzzer.cc" ]
+  cflags = [ "-DTRANSFORM_COMPLEX" ]
+  deps = [ ":pffft" ]
+  seed_corpus = fuzzer_testdata_dir
+  seed_corpus_deps = [ ":generate_pffft_fuzzer_corpus" ]
+}
 
-  fuzzer_test("pffft_real_fuzzer") {
-    sources = [ "pffft_fuzzer.cc" ]
-    cflags = [ "-DTRANSFORM_REAL" ]
-    deps = [ ":pffft" ]
-    seed_corpus = fuzzer_testdata_dir
-    seed_corpus_deps = [ ":generate_pffft_fuzzer_corpus" ]
-  }
+fuzzer_test("pffft_real_fuzzer") {
+  sources = [ "pffft_fuzzer.cc" ]
+  cflags = [ "-DTRANSFORM_REAL" ]
+  deps = [ ":pffft" ]
+  seed_corpus = fuzzer_testdata_dir
+  seed_corpus_deps = [ ":generate_pffft_fuzzer_corpus" ]
+}
 
-  # Unit tests and benchmark.
+# Unit tests and benchmark.
 
-  # This target must be used only for testing and benchmark purposes.
-  static_library("fftpack") {
-    testonly = true
-    configs += [ ":common_config" ]
-    sources = [
-      "src/fftpack.c",
-      "src/fftpack.h",
-    ]
-    visibility = [ ":*" ]
-  }
+# This target must be used only for testing and benchmark purposes.
+static_library("fftpack") {
+  testonly = true
+  configs += [ ":common_config" ]
+  sources = [
+    "src/fftpack.c",
+    "src/fftpack.h",
+  ]
+  visibility = [ ":*" ]
+}
 
-  config("pffft_benchmark_internal_config") {
-    cflags = [
-      # test_pffft.c contains an `exit(1)` following a `break` statement.
-      "-Wno-unreachable-code",
-    ]
-  }
+config("pffft_benchmark_internal_config") {
+  cflags = [
+    # test_pffft.c contains an `exit(1)` following a `break` statement.
+    "-Wno-unreachable-code",
+  ]
+}
 
-  executable("pffft_benchmark") {
-    testonly = true
-    configs += [
-      ":common_config",
-      ":pffft_benchmark_internal_config",
-    ]
-    sources = [ "src/test_pffft.c" ]
-    deps = [
-      ":fftpack",
-      ":pffft",
-    ]
-  }
+executable("pffft_benchmark") {
+  testonly = true
+  configs += [
+    ":common_config",
+    ":pffft_benchmark_internal_config",
+  ]
+  sources = [ "src/test_pffft.c" ]
+  deps = [
+    ":fftpack",
+    ":pffft",
+  ]
+}
 
-  test("pffft_unittest") {
-    testonly = true
-    sources = [ "pffft_unittest.cc" ]
-    deps = [
-      ":fftpack",
-      ":pffft",
-      "//testing/gtest",
-      "//testing/gtest:gtest_main",
-    ]
-  }
+test("pffft_unittest") {
+  testonly = true
+  sources = [ "pffft_unittest.cc" ]
+  deps = [
+    ":fftpack",
+    ":pffft",
+    "//testing/gtest",
+    "//testing/gtest:gtest_main",
+  ]
+}
 }

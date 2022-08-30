@@ -29,7 +29,14 @@ std::string WantsToString(const rtc::VideoSinkWants& wants) {
      << " max_pixel_count=" << wants.max_pixel_count << " target_pixel_count="
      << (wants.target_pixel_count.has_value()
              ? std::to_string(wants.target_pixel_count.value())
-             : "null");
+             : "null")
+     << " resolutions={";
+  for (size_t i = 0; i < wants.resolutions.size(); ++i) {
+    if (i != 0)
+      ss << ",";
+    ss << wants.resolutions[i].width << "x" << wants.resolutions[i].height;
+  }
+  ss << "}";
 
   return ss.Release();
 }
@@ -68,12 +75,19 @@ bool VideoSourceSinkController::HasSource() const {
   return source_ != nullptr;
 }
 
+void VideoSourceSinkController::RequestRefreshFrame() {
+  RTC_DCHECK_RUN_ON(&sequence_checker_);
+  if (source_)
+    source_->RequestRefreshFrame();
+}
+
 void VideoSourceSinkController::PushSourceSinkSettings() {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   if (!source_)
     return;
   rtc::VideoSinkWants wants = CurrentSettingsToSinkWants();
-  RTC_LOG(INFO) << "Pushing SourceSink restrictions: " << WantsToString(wants);
+  RTC_LOG(LS_INFO) << "Pushing SourceSink restrictions: "
+                   << WantsToString(wants);
   source_->AddOrUpdateSink(sink_, wants);
 }
 
@@ -102,6 +116,12 @@ bool VideoSourceSinkController::rotation_applied() const {
 int VideoSourceSinkController::resolution_alignment() const {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   return resolution_alignment_;
+}
+
+const std::vector<rtc::VideoSinkWants::FrameSize>&
+VideoSourceSinkController::resolutions() const {
+  RTC_DCHECK_RUN_ON(&sequence_checker_);
+  return resolutions_;
 }
 
 void VideoSourceSinkController::SetRestrictions(
@@ -133,12 +153,18 @@ void VideoSourceSinkController::SetResolutionAlignment(
   resolution_alignment_ = resolution_alignment;
 }
 
+void VideoSourceSinkController::SetResolutions(
+    std::vector<rtc::VideoSinkWants::FrameSize> resolutions) {
+  RTC_DCHECK_RUN_ON(&sequence_checker_);
+  resolutions_ = std::move(resolutions);
+}
+
 // RTC_EXCLUSIVE_LOCKS_REQUIRED(sequence_checker_)
 rtc::VideoSinkWants VideoSourceSinkController::CurrentSettingsToSinkWants()
     const {
   rtc::VideoSinkWants wants;
   wants.rotation_applied = rotation_applied_;
-  // |wants.black_frames| is not used, it always has its default value false.
+  // `wants.black_frames` is not used, it always has its default value false.
   wants.max_pixel_count =
       rtc::dchecked_cast<int>(restrictions_.max_pixels_per_frame().value_or(
           std::numeric_limits<int>::max()));
@@ -161,6 +187,7 @@ rtc::VideoSinkWants VideoSourceSinkController::CurrentSettingsToSinkWants()
                frame_rate_upper_limit_.has_value()
                    ? static_cast<int>(frame_rate_upper_limit_.value())
                    : std::numeric_limits<int>::max());
+  wants.resolutions = resolutions_;
   return wants;
 }
 

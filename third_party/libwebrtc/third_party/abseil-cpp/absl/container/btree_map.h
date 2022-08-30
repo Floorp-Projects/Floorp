@@ -185,7 +185,7 @@ class btree_map
   // template <typename K> size_type erase(const K& key):
   //
   //   Erases the element with the matching key, if it exists, returning the
-  //   number of elements erased.
+  //   number of elements erased (0 or 1).
   using Base::erase;
 
   // btree_map::insert()
@@ -384,9 +384,8 @@ class btree_map
 
   // btree_map::equal_range()
   //
-  // Returns a closed range [first, last], defined by a `std::pair` of two
-  // iterators, containing all elements with the passed key in the
-  // `btree_map`.
+  // Returns a half-open range [first, last), defined by a `std::pair` of two
+  // iterators, containing all elements with the passed key in the `btree_map`.
   using Base::equal_range;
 
   // btree_map::find()
@@ -709,7 +708,7 @@ class btree_multimap
 
   // btree_multimap::equal_range()
   //
-  // Returns a closed range [first, last], defined by a `std::pair` of two
+  // Returns a half-open range [first, last), defined by a `std::pair` of two
   // iterators, containing all elements with the passed key in the
   // `btree_multimap`.
   using Base::equal_range;

@@ -97,6 +97,15 @@ class NetEqController {
     size_t sync_buffer_samples;
   };
 
+  struct PacketArrivedInfo {
+    size_t packet_length_samples;
+    uint32_t main_timestamp;
+    uint16_t main_sequence_number;
+    bool is_cng_or_dtmf;
+    bool is_dtx;
+    bool buffer_flush;
+  };
+
   virtual ~NetEqController() = default;
 
   // Resets object to a clean state.
@@ -106,13 +115,13 @@ class NetEqController {
   virtual void SoftReset() = 0;
 
   // Given info about the latest received packet, and current jitter buffer
-  // status, returns the operation. |target_timestamp| and |expand_mutefactor|
-  // are provided for reference. |last_packet_samples| is the number of samples
+  // status, returns the operation. `target_timestamp` and `expand_mutefactor`
+  // are provided for reference. `last_packet_samples` is the number of samples
   // obtained from the last decoded frame. If there is a packet available, it
-  // should be supplied in |packet|. The mode resulting from the last call to
-  // NetEqImpl::GetAudio is supplied in |last_mode|. If there is a DTMF event to
-  // play, |play_dtmf| should be set to true. The output variable
-  // |reset_decoder| will be set to true if a reset is required; otherwise it is
+  // should be supplied in `packet`. The mode resulting from the last call to
+  // NetEqImpl::GetAudio is supplied in `last_mode`. If there is a DTMF event to
+  // play, `play_dtmf` should be set to true. The output variable
+  // `reset_decoder` will be set to true if a reset is required; otherwise it is
   // left unchanged (i.e., it can remain true if it was true before the call).
   virtual NetEq::Operation GetDecision(const NetEqStatus& status,
                                        bool* reset_decoder) = 0;
@@ -135,11 +144,11 @@ class NetEqController {
   virtual bool SetBaseMinimumDelay(int delay_ms) = 0;
   virtual int GetBaseMinimumDelay() const = 0;
 
-  // These methods test the |cng_state_| for different conditions.
+  // These methods test the `cng_state_` for different conditions.
   virtual bool CngRfc3389On() const = 0;
   virtual bool CngOff() const = 0;
 
-  // Resets the |cng_state_| to kCngOff.
+  // Resets the `cng_state_` to kCngOff.
   virtual void SetCngOff() = 0;
 
   // Reports back to DecisionLogic whether the decision to do expand remains or
@@ -148,7 +157,7 @@ class NetEqController {
   // sync buffer.
   virtual void ExpandDecision(NetEq::Operation operation) = 0;
 
-  // Adds |value| to |sample_memory_|.
+  // Adds `value` to `sample_memory_`.
   virtual void AddSampleMemory(int32_t value) = 0;
 
   // Returns the target buffer level in ms.
@@ -156,12 +165,13 @@ class NetEqController {
 
   // Notify the NetEqController that a packet has arrived. Returns the relative
   // arrival delay, if it can be computed.
-  virtual absl::optional<int> PacketArrived(bool last_cng_or_dtmf,
-                                            size_t packet_length_samples,
+  virtual absl::optional<int> PacketArrived(int fs_hz,
                                             bool should_update_stats,
-                                            uint16_t main_sequence_number,
-                                            uint32_t main_timestamp,
-                                            int fs_hz) = 0;
+                                            const PacketArrivedInfo& info) = 0;
+
+  // Notify the NetEqController that we are currently in muted state.
+  // TODO(ivoc): Make pure virtual when downstream is updated.
+  virtual void NotifyMutedState() {}
 
   // Returns true if a peak was found.
   virtual bool PeakFound() const = 0;

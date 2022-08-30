@@ -11,6 +11,8 @@
 #if defined(WEBRTC_POSIX)
 #include <netinet/in.h>
 #include <sys/socket.h>
+
+#include "absl/strings/string_view.h"
 #ifdef OPENBSD
 #include <netinet/in_systm.h>
 #endif
@@ -20,8 +22,9 @@
 #include <netdb.h>
 #endif
 
-#include "rtc_base/byte_order.h"
 #include "rtc_base/ip_address.h"
+
+#include "rtc_base/byte_order.h"
 #include "rtc_base/net_helpers.h"
 #include "rtc_base/string_utils.h"
 
@@ -148,10 +151,6 @@ std::string IPAddress::ToString() const {
 }
 
 std::string IPAddress::ToSensitiveString() const {
-#if !defined(NDEBUG)
-  // Return non-stripped in debug.
-  return ToString();
-#else
   switch (family_) {
     case AF_INET: {
       std::string address = ToString();
@@ -175,7 +174,6 @@ std::string IPAddress::ToSensitiveString() const {
     }
   }
   return std::string();
-#endif
 }
 
 IPAddress IPAddress::Normalized() const {
@@ -280,14 +278,14 @@ bool IPFromAddrInfo(struct addrinfo* info, IPAddress* out) {
   return false;
 }
 
-bool IPFromString(const std::string& str, IPAddress* out) {
+bool IPFromString(absl::string_view str, IPAddress* out) {
   if (!out) {
     return false;
   }
   in_addr addr;
-  if (rtc::inet_pton(AF_INET, str.c_str(), &addr) == 0) {
+  if (rtc::inet_pton(AF_INET, str, &addr) == 0) {
     in6_addr addr6;
-    if (rtc::inet_pton(AF_INET6, str.c_str(), &addr6) == 0) {
+    if (rtc::inet_pton(AF_INET6, str, &addr6) == 0) {
       *out = IPAddress();
       return false;
     }
@@ -298,7 +296,7 @@ bool IPFromString(const std::string& str, IPAddress* out) {
   return true;
 }
 
-bool IPFromString(const std::string& str, int flags, InterfaceAddress* out) {
+bool IPFromString(absl::string_view str, int flags, InterfaceAddress* out) {
   IPAddress ip;
   if (!IPFromString(str, &ip)) {
     return false;

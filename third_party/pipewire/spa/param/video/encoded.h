@@ -29,6 +29,11 @@
 extern "C" {
 #endif
 
+/**
+ * \addtogroup spa_param
+ * \{
+ */
+
 #include <spa/param/format.h>
 
 enum spa_h264_stream_format {
@@ -57,6 +62,10 @@ struct spa_video_info_mjpg {
 	struct spa_fraction framerate;
 	struct spa_fraction max_framerate;
 };
+
+/**
+ * \}
+ */
 
 #ifdef __cplusplus
 } /* extern "C" */

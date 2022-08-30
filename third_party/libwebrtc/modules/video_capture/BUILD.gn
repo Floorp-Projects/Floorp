@@ -27,17 +27,18 @@ rtc_library("video_capture_module") {
   ]
 
   deps = [
-    "..:module_api",
     "../../api:scoped_refptr",
     "../../api/video:video_frame",
-    "../../api/video:video_frame_i420",
     "../../api/video:video_rtp_headers",
     "../../common_video",
     "../../media:rtc_media_base",
-    "../../rtc_base:rtc_base_approved",
+    "../../rtc_base:event_tracer",
+    "../../rtc_base:logging",
+    "../../rtc_base:macromagic",
+    "../../rtc_base:refcount",
     "../../rtc_base:stringutils",
+    "../../rtc_base:timeutils",
     "../../rtc_base/synchronization:mutex",
-    "../../rtc_base/synchronization:rw_lock_wrapper",
     "../../system_wrappers",
     #"//third_party/libyuv",
   ]
@@ -54,8 +55,13 @@ if (!build_with_chromium) {
     deps = [
       ":video_capture_module",
       "../../api:scoped_refptr",
+      "../../api:sequence_checker",
       "../../rtc_base:checks",
-      "../../rtc_base:rtc_base_approved",
+      "../../rtc_base:logging",
+      "../../rtc_base:macromagic",
+      "../../rtc_base:platform_thread",
+      "../../rtc_base:refcount",
+      "../../rtc_base:stringutils",
       "../../rtc_base/synchronization:mutex",
       "../../system_wrappers",
     ]
@@ -63,9 +69,11 @@ if (!build_with_chromium) {
     if (is_linux || is_bsd || is_chromeos) {
       sources = [
         "linux/device_info_linux.cc",
-        "linux/device_info_linux.h",
+        "linux/device_info_v4l2.cc",
+        "linux/device_info_v4l2.h",
         "linux/video_capture_linux.cc",
-        "linux/video_capture_linux.h",
+        "linux/video_capture_v4l2.cc",
+        "linux/video_capture_v4l2.h",
       ]
       deps += [ "../../media:rtc_media_base" ]
     }
@@ -127,17 +135,15 @@ if (!build_with_chromium) {
         ":video_capture_module",
         "../../api:scoped_refptr",
         "../../api/video:video_frame",
-        "../../api/video:video_frame_i420",
         "../../api/video:video_rtp_headers",
         "../../common_video",
-        "../../rtc_base:rtc_base_approved",
+        "../../rtc_base:timeutils",
         "../../rtc_base/synchronization:mutex",
         "../../system_wrappers",
         "../../test:frame_utils",
         "../../test:test_main",
         "../../test:test_support",
         "../../test:video_test_common",
-        "../utility",
         "//testing/gtest",
         "//third_party/abseil-cpp/absl/memory",
       ]

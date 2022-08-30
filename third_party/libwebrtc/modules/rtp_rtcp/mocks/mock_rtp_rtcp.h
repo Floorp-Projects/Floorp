@@ -19,7 +19,6 @@
 
 #include "absl/types/optional.h"
 #include "api/video/video_bitrate_allocation.h"
-#include "modules/include/module.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_interface.h"
@@ -34,6 +33,7 @@ class MockRtpRtcpInterface : public RtpRtcpInterface {
               (const uint8_t* incoming_packet, size_t packet_length),
               (override));
   MOCK_METHOD(void, SetRemoteSSRC, (uint32_t ssrc), (override));
+  MOCK_METHOD(void, SetLocalSsrc, (uint32_t ssrc), (override));
   MOCK_METHOD(void, SetMaxRtpPacketSize, (size_t size), (override));
   MOCK_METHOD(size_t, MaxRtpPacketSize, (), (const, override));
   MOCK_METHOD(void,
@@ -49,10 +49,6 @@ class MockRtpRtcpInterface : public RtpRtcpInterface {
               RegisterRtpHeaderExtension,
               (absl::string_view uri, int id),
               (override));
-  MOCK_METHOD(int32_t,
-              DeregisterSendRtpHeaderExtension,
-              (RTPExtensionType type),
-              (override));
   MOCK_METHOD(void,
               DeregisterSendRtpHeaderExtension,
               (absl::string_view uri),
@@ -65,6 +61,7 @@ class MockRtpRtcpInterface : public RtpRtcpInterface {
   MOCK_METHOD(void, SetSequenceNumber, (uint16_t seq), (override));
   MOCK_METHOD(void, SetRtpState, (const RtpState& rtp_state), (override));
   MOCK_METHOD(void, SetRtxState, (const RtpState& rtp_state), (override));
+  MOCK_METHOD(void, SetNonSenderRttMeasurement, (bool enabled), (override));
   MOCK_METHOD(RtpState, GetRtpState, (), (const, override));
   MOCK_METHOD(RtpState, GetRtxState, (), (const, override));
   MOCK_METHOD(uint32_t, SSRC, (), (const, override));
@@ -82,13 +79,6 @@ class MockRtpRtcpInterface : public RtpRtcpInterface {
   MOCK_METHOD(bool, SendingMedia, (), (const, override));
   MOCK_METHOD(bool, IsAudioConfigured, (), (const, override));
   MOCK_METHOD(void, SetAsPartOfAllocation, (bool), (override));
-  MOCK_METHOD(void,
-              BitrateSent,
-              (uint32_t * total_rate,
-               uint32_t* video_rate,
-               uint32_t* fec_rate,
-               uint32_t* nack_rate),
-              (const, override));
   MOCK_METHOD(RtpSendRates, GetSendRates, (), (const, override));
   MOCK_METHOD(bool,
               OnSendingRtpFrame,
@@ -120,6 +110,7 @@ class MockRtpRtcpInterface : public RtpRtcpInterface {
               (rtc::ArrayView<const uint16_t> sequence_numbers),
               (const, override));
   MOCK_METHOD(size_t, ExpectedPerPacketOverhead, (), (const, override));
+  MOCK_METHOD(void, OnPacketSendingThreadSwitched, (), (override));
   MOCK_METHOD(RtcpMode, RTCP, (), (const, override));
   MOCK_METHOD(void, SetRTCPStatus, (RtcpMode method), (override));
   MOCK_METHOD(int32_t,
@@ -148,10 +139,6 @@ class MockRtpRtcpInterface : public RtpRtcpInterface {
               GetSendStreamDataCounters,
               (StreamDataCounters*, StreamDataCounters*),
               (const, override));
-  MOCK_METHOD(int32_t,
-              RemoteRTCPStat,
-              (std::vector<RTCPReportBlock> * receive_blocks),
-              (const, override));
   MOCK_METHOD(std::vector<ReportBlockData>,
               GetLatestReportBlockData,
               (),
@@ -160,8 +147,10 @@ class MockRtpRtcpInterface : public RtpRtcpInterface {
               GetSenderReportStats,
               (),
               (const, override));
-  MOCK_METHOD(void, SetRtcpXrRrtrStatus, (bool enable), (override));
-  MOCK_METHOD(bool, RtcpXrRrtrStatus, (), (const, override));
+  MOCK_METHOD(absl::optional<NonSenderRttStats>,
+              GetNonSenderRttStats,
+              (),
+              (const, override));
   MOCK_METHOD(void,
               SetRemb,
               (int64_t bitrate, std::vector<uint32_t> ssrcs),
@@ -179,7 +168,6 @@ class MockRtpRtcpInterface : public RtpRtcpInterface {
               SetStorePacketsStatus,
               (bool enable, uint16_t number_to_store),
               (override));
-  MOCK_METHOD(bool, StorePackets, (), (const, override));
   MOCK_METHOD(void,
               SendCombinedRtcpPacket,
               (std::vector<std::unique_ptr<rtcp::RtcpPacket>> rtcp_packets),

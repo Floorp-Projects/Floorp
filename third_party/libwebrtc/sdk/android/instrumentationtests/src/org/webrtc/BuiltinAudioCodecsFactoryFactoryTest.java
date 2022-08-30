@@ -12,14 +12,10 @@ package org.webrtc;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.support.test.filters.SmallTest;
-
+import androidx.test.filters.SmallTest;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
-@RunWith(JUnit4.class)
 public final class BuiltinAudioCodecsFactoryFactoryTest {
   @Before
   public void setUp() {

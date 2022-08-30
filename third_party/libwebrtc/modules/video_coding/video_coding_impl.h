@@ -16,6 +16,8 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
+#include "api/sequence_checker.h"
 #include "modules/video_coding/decoder_database.h"
 #include "modules/video_coding/frame_buffer.h"
 #include "modules/video_coding/generic_decoder.h"
@@ -25,9 +27,7 @@
 #include "modules/video_coding/timing.h"
 #include "rtc_base/one_time_event.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread_annotations.h"
-#include "rtc_base/thread_checker.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {
@@ -57,12 +57,13 @@ class VCMProcessTimer {
 
 class VideoReceiver : public Module {
  public:
-  VideoReceiver(Clock* clock, VCMTiming* timing);
+  VideoReceiver(Clock* clock,
+                VCMTiming* timing,
+                const FieldTrialsView& field_trials);
   ~VideoReceiver() override;
 
-  int32_t RegisterReceiveCodec(uint8_t payload_type,
-                               const VideoCodec* receiveCodec,
-                               int32_t numberOfCores);
+  void RegisterReceiveCodec(uint8_t payload_type,
+                            const VideoDecoder::Settings& settings);
 
   void RegisterExternalDecoder(VideoDecoder* externalDecoder,
                                uint8_t payloadType);
@@ -97,9 +98,9 @@ class VideoReceiver : public Module {
   // In builds where DCHECKs aren't enabled, it will return true.
   bool IsDecoderThreadRunning();
 
-  rtc::ThreadChecker construction_thread_checker_;
-  rtc::ThreadChecker decoder_thread_checker_;
-  rtc::ThreadChecker module_thread_checker_;
+  SequenceChecker construction_thread_checker_;
+  SequenceChecker decoder_thread_checker_;
+  SequenceChecker module_thread_checker_;
   Clock* const clock_;
   Mutex process_mutex_;
   VCMTiming* _timing;
@@ -121,7 +122,7 @@ class VideoReceiver : public Module {
   size_t max_nack_list_size_;
 
   // Callbacks are set before the decoder thread starts.
-  // Once the decoder thread has been started, usage of |_codecDataBase| moves
+  // Once the decoder thread has been started, usage of `_codecDataBase` moves
   // over to the decoder thread.
   VCMDecoderDataBase _codecDataBase;
 

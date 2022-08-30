@@ -11,6 +11,8 @@
 #ifndef RTC_BASE_UNTYPED_FUNCTION_H_
 #define RTC_BASE_UNTYPED_FUNCTION_H_
 
+#include <cstddef>
+#include <cstring>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -22,11 +24,23 @@ namespace webrtc_function_impl {
 
 using FunVoid = void();
 
+// Inline storage size is this many machine words.
+enum : size_t { kInlineStorageWords = 4 };
+
 union VoidUnion {
   void* void_ptr;
   FunVoid* fun_ptr;
-  typename std::aligned_storage<16>::type inline_storage;
+  typename std::aligned_storage<kInlineStorageWords * sizeof(uintptr_t)>::type
+      inline_storage;
 };
+
+// Returns the number of elements of the `inline_storage` array required to
+// store an object of type T.
+template <typename T>
+constexpr size_t InlineStorageSize() {
+  // sizeof(T) / sizeof(uintptr_t), but rounded up.
+  return (sizeof(T) + sizeof(uintptr_t) - 1) / sizeof(uintptr_t);
+}
 
 template <typename T>
 struct CallHelpers;
@@ -64,76 +78,163 @@ struct CallHelpers<RetT(ArgT...)> {
 // size.
 class UntypedFunction final {
  public:
-  // Create function for lambdas and other callables; it accepts every type of
-  // argument except those noted in its enable_if call.
+  // Callables of at most this size can be stored inline, if they are trivial.
+  // (Useful in tests and benchmarks; avoid using this in production code.)
+  enum : size_t {
+    kInlineStorageSize = sizeof(webrtc_function_impl::VoidUnion::inline_storage)
+  };
+  static_assert(kInlineStorageSize ==
+                    webrtc_function_impl::kInlineStorageWords *
+                        sizeof(uintptr_t),
+                "");
+
+  // The *UntypedFunctionArgs structs are used to transfer arguments from
+  // PrepareArgs() to Create(). They are trivial, but may own heap allocations,
+  // so make sure to pass them to Create() exactly once!
+  //
+  // The point of doing Create(PrepareArgs(foo)) instead of just Create(foo) is
+  // to separate the code that has to be inlined (PrepareArgs) from the code
+  // that can be noninlined (Create); the *UntypedFunctionArgs types are
+  // designed to efficiently carry the required information from one to the
+  // other.
+  template <size_t N>
+  struct TrivialUntypedFunctionArgs {
+    static_assert(N >= 1, "");
+    static_assert(N <= webrtc_function_impl::kInlineStorageWords, "");
+    // We use an uintptr_t array here instead of std::aligned_storage, because
+    // the former can be efficiently passed in registers when using
+    // TrivialUntypedFunctionArgs as a function argument. (We can't do the same
+    // in VoidUnion, because std::aligned_storage but not uintptr_t can be
+    // legally reinterpret_casted to arbitrary types.
+    // TrivialUntypedFunctionArgs, on the other hand, only needs to handle
+    // placement new and memcpy.)
+    alignas(std::max_align_t) uintptr_t inline_storage[N];
+    webrtc_function_impl::FunVoid* call;
+  };
+  struct NontrivialUntypedFunctionArgs {
+    void* void_ptr;
+    webrtc_function_impl::FunVoid* call;
+    void (*del)(webrtc_function_impl::VoidUnion*);
+  };
+  struct FunctionPointerUntypedFunctionArgs {
+    webrtc_function_impl::FunVoid* fun_ptr;
+    webrtc_function_impl::FunVoid* call;
+  };
+
+  // Create function for lambdas and other callables that are trivial and small;
+  // it accepts every type of argument except those noted in its enable_if call.
   template <
       typename Signature,
       typename F,
+      typename F_deref = typename std::remove_reference<F>::type,
       typename std::enable_if<
           // Not for function pointers; we have another overload for that below.
-          !std::is_function<typename std::remove_pointer<
-              typename std::remove_reference<F>::type>::type>::value &&
+          !std::is_function<
+              typename std::remove_pointer<F_deref>::type>::value &&
 
-          // Not for nullptr; we have another overload for that below.
+          // Not for nullptr; we have a constructor for that below.
           !std::is_same<std::nullptr_t,
                         typename std::remove_cv<F>::type>::value &&
 
-          // Not for UntypedFunction objects; we have another overload for that.
+          // Not for UntypedFunction objects; use move construction or
+          // assignment.
           !std::is_same<UntypedFunction,
-                        typename std::remove_cv<typename std::remove_reference<
-                            F>::type>::type>::value>::type* = nullptr>
-  static UntypedFunction Create(F&& f) {
-    using F_deref = typename std::remove_reference<F>::type;
-    // TODO(C++17): Use `constexpr if` here. The compiler appears to do the
-    // right thing anyway w.r.t. resolving the branch statically and
-    // eliminating dead code, but it would be good for readability.
-    if (std::is_trivially_move_constructible<F_deref>::value &&
-        std::is_trivially_destructible<F_deref>::value &&
-        sizeof(F_deref) <=
-            sizeof(webrtc_function_impl::VoidUnion::inline_storage)) {
-      // The callable is trivial and small enough, so we just store its bytes
-      // in the inline storage.
-      webrtc_function_impl::VoidUnion vu;
-      new (&vu.inline_storage) F_deref(std::forward<F>(f));
-      return UntypedFunction(
-          vu,
-          reinterpret_cast<webrtc_function_impl::FunVoid*>(
-              webrtc_function_impl::CallHelpers<
-                  Signature>::template CallInlineStorage<F_deref>),
-          nullptr);
-    } else {
-      // The callable is either nontrivial or too large, so we can't keep it
-      // in the inline storage; use the heap instead.
-      webrtc_function_impl::VoidUnion vu;
-      vu.void_ptr = new F_deref(std::forward<F>(f));
-      return UntypedFunction(
-          vu,
-          reinterpret_cast<webrtc_function_impl::FunVoid*>(
-              webrtc_function_impl::CallHelpers<
-                  Signature>::template CallVoidPtr<F_deref>),
-          static_cast<void (*)(webrtc_function_impl::VoidUnion*)>(
-              [](webrtc_function_impl::VoidUnion* vu) {
-                // Assuming that this pointer isn't null allows the
-                // compiler to eliminate a null check in the (inlined)
-                // delete operation.
-                RTC_ASSUME(vu->void_ptr != nullptr);
-                delete reinterpret_cast<F_deref*>(vu->void_ptr);
-              }));
-    }
+                        typename std::remove_cv<F_deref>::type>::value &&
+
+          // Only for trivial callables that will fit in inline storage.
+          std::is_trivially_move_constructible<F_deref>::value &&
+          std::is_trivially_destructible<F_deref>::value &&
+          sizeof(F_deref) <= kInlineStorageSize>::type* = nullptr,
+      size_t InlineSize = webrtc_function_impl::InlineStorageSize<F_deref>()>
+  static TrivialUntypedFunctionArgs<InlineSize> PrepareArgs(F&& f) {
+    // The callable is trivial and small enough, so we just store its bytes
+    // in the inline storage.
+    TrivialUntypedFunctionArgs<InlineSize> args;
+    new (&args.inline_storage) F_deref(std::forward<F>(f));
+    args.call = reinterpret_cast<webrtc_function_impl::FunVoid*>(
+        webrtc_function_impl::CallHelpers<
+            Signature>::template CallInlineStorage<F_deref>);
+    return args;
+  }
+  template <size_t InlineSize>
+  static UntypedFunction Create(TrivialUntypedFunctionArgs<InlineSize> args) {
+    webrtc_function_impl::VoidUnion vu;
+    std::memcpy(&vu.inline_storage, args.inline_storage,
+                sizeof(args.inline_storage));
+    return UntypedFunction(vu, args.call, nullptr);
+  }
+
+  // Create function for lambdas and other callables that are nontrivial or
+  // large; it accepts every type of argument except those noted in its
+  // enable_if call.
+  template <typename Signature,
+            typename F,
+            typename F_deref = typename std::remove_reference<F>::type,
+            typename std::enable_if<
+                // Not for function pointers; we have another overload for that
+                // below.
+                !std::is_function<
+                    typename std::remove_pointer<F_deref>::type>::value &&
+
+                // Not for nullptr; we have a constructor for that below.
+                !std::is_same<std::nullptr_t,
+                              typename std::remove_cv<F>::type>::value &&
+
+                // Not for UntypedFunction objects; use move construction or
+                // assignment.
+                !std::is_same<UntypedFunction,
+                              typename std::remove_cv<F_deref>::type>::value &&
+
+                // Only for nontrivial callables, or callables that won't fit in
+                // inline storage.
+                !(std::is_trivially_move_constructible<F_deref>::value &&
+                  std::is_trivially_destructible<F_deref>::value &&
+                  sizeof(F_deref) <= kInlineStorageSize)>::type* = nullptr>
+  static NontrivialUntypedFunctionArgs PrepareArgs(F&& f) {
+    // The callable is either nontrivial or too large, so we can't keep it
+    // in the inline storage; use the heap instead.
+    NontrivialUntypedFunctionArgs args;
+    args.void_ptr = new F_deref(std::forward<F>(f));
+    args.call = reinterpret_cast<webrtc_function_impl::FunVoid*>(
+        webrtc_function_impl::CallHelpers<Signature>::template CallVoidPtr<
+            F_deref>);
+    args.del = static_cast<void (*)(webrtc_function_impl::VoidUnion*)>(
+        [](webrtc_function_impl::VoidUnion* vu) {
+          // Assuming that this pointer isn't null allows the
+          // compiler to eliminate a null check in the (inlined)
+          // delete operation.
+          RTC_ASSUME(vu->void_ptr != nullptr);
+          delete reinterpret_cast<F_deref*>(vu->void_ptr);
+        });
+    return args;
+  }
+  static UntypedFunction Create(NontrivialUntypedFunctionArgs args) {
+    webrtc_function_impl::VoidUnion vu;
+    vu.void_ptr = args.void_ptr;
+    return UntypedFunction(vu, args.call, args.del);
   }
 
   // Create function that accepts function pointers. If the argument is null,
   // the result is an empty UntypedFunction.
   template <typename Signature>
-  static UntypedFunction Create(Signature* f) {
+  static FunctionPointerUntypedFunctionArgs PrepareArgs(Signature* f) {
+    FunctionPointerUntypedFunctionArgs args;
+    args.fun_ptr = reinterpret_cast<webrtc_function_impl::FunVoid*>(f);
+    args.call = reinterpret_cast<webrtc_function_impl::FunVoid*>(
+        webrtc_function_impl::CallHelpers<Signature>::CallFunPtr);
+    return args;
+  }
+  static UntypedFunction Create(FunctionPointerUntypedFunctionArgs args) {
     webrtc_function_impl::VoidUnion vu;
-    vu.fun_ptr = reinterpret_cast<webrtc_function_impl::FunVoid*>(f);
-    return UntypedFunction(
-        vu,
-        f ? reinterpret_cast<webrtc_function_impl::FunVoid*>(
-                webrtc_function_impl::CallHelpers<Signature>::CallFunPtr)
-          : nullptr,
-        nullptr);
+    vu.fun_ptr = args.fun_ptr;
+    return UntypedFunction(vu, args.fun_ptr == nullptr ? nullptr : args.call,
+                           nullptr);
+  }
+
+  // Prepares arguments and creates an UntypedFunction in one go.
+  template <typename Signature, typename F>
+  static UntypedFunction Create(F&& f) {
+    return Create(PrepareArgs<Signature>(std::forward<F>(f)));
   }
 
   // Default constructor. Creates an empty UntypedFunction.

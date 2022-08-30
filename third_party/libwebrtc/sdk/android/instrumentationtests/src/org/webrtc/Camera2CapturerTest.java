@@ -12,27 +12,22 @@ package org.webrtc;
 
 import static org.junit.Assert.fail;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.os.Handler;
 import android.os.Looper;
-import androidx.annotation.Nullable;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.filters.LargeTest;
-import android.support.test.filters.MediumTest;
-import android.support.test.filters.SmallTest;
+import androidx.annotation.Nullable;
+import androidx.test.filters.LargeTest;
+import androidx.test.filters.MediumTest;
+import androidx.test.filters.SmallTest;
 import java.util.concurrent.CountDownLatch;
-import org.chromium.base.test.BaseJUnit4ClassRunner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@TargetApi(21)
-@RunWith(BaseJUnit4ClassRunner.class)
 public class Camera2CapturerTest {
   static final String TAG = "Camera2CapturerTest";
 

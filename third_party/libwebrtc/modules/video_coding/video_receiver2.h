@@ -11,11 +11,13 @@
 #ifndef MODULES_VIDEO_CODING_VIDEO_RECEIVER2_H_
 #define MODULES_VIDEO_CODING_VIDEO_RECEIVER2_H_
 
+#include "api/field_trials_view.h"
+#include "api/sequence_checker.h"
+#include "api/video_codecs/video_decoder.h"
 #include "modules/video_coding/decoder_database.h"
 #include "modules/video_coding/encoded_frame.h"
 #include "modules/video_coding/generic_decoder.h"
 #include "modules/video_coding/timing.h"
-#include "rtc_base/thread_checker.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {
@@ -27,22 +29,24 @@ namespace webrtc {
 // VideoCodingModule api.
 class VideoReceiver2 {
  public:
-  VideoReceiver2(Clock* clock, VCMTiming* timing);
+  VideoReceiver2(Clock* clock,
+                 VCMTiming* timing,
+                 const FieldTrialsView& field_trials);
   ~VideoReceiver2();
 
-  int32_t RegisterReceiveCodec(uint8_t payload_type,
-                               const VideoCodec* receiveCodec,
-                               int32_t numberOfCores);
+  void RegisterReceiveCodec(uint8_t payload_type,
+                            const VideoDecoder::Settings& decoder_settings);
 
   void RegisterExternalDecoder(VideoDecoder* externalDecoder,
                                uint8_t payloadType);
+  bool IsExternalDecoderRegistered(uint8_t payloadType) const;
   int32_t RegisterReceiveCallback(VCMReceiveCallback* receiveCallback);
 
   int32_t Decode(const webrtc::VCMEncodedFrame* frame);
 
   // Notification methods that are used to check our internal state and validate
   // threading assumptions. These are called by VideoReceiveStream.
-  // See |IsDecoderThreadRunning()| for more details.
+  // See `IsDecoderThreadRunning()` for more details.
   void DecoderThreadStarting();
   void DecoderThreadStopped();
 
@@ -54,14 +58,14 @@ class VideoReceiver2 {
   // In builds where DCHECKs aren't enabled, it will return true.
   bool IsDecoderThreadRunning();
 
-  rtc::ThreadChecker construction_thread_checker_;
-  rtc::ThreadChecker decoder_thread_checker_;
+  SequenceChecker construction_sequence_checker_;
+  SequenceChecker decoder_sequence_checker_;
   Clock* const clock_;
   VCMTiming* timing_;
   VCMDecodedFrameCallback decodedFrameCallback_;
 
   // Callbacks are set before the decoder thread starts.
-  // Once the decoder thread has been started, usage of |_codecDataBase| moves
+  // Once the decoder thread has been started, usage of `_codecDataBase` moves
   // over to the decoder thread.
   VCMDecoderDataBase codecDataBase_;
 

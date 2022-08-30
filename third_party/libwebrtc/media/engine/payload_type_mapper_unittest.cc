@@ -46,13 +46,8 @@ TEST_F(PayloadTypeMapperTest, StaticPayloadTypes) {
 }
 
 TEST_F(PayloadTypeMapperTest, WebRTCPayloadTypes) {
-  // Tests that the payload mapper knows about the audio and data formats we've
+  // Tests that the payload mapper knows about the audio formats we've
   // been using in WebRTC, with their hard coded values.
-  auto data_mapping = [this](const char* name) {
-    return mapper_.FindMappingFor({name, 0, 0});
-  };
-  EXPECT_EQ(kGoogleRtpDataCodecPlType, data_mapping(kGoogleRtpDataCodecName));
-
   EXPECT_EQ(102, mapper_.FindMappingFor({kIlbcCodecName, 8000, 1}));
   EXPECT_EQ(103, mapper_.FindMappingFor({kIsacCodecName, 16000, 1}));
   EXPECT_EQ(104, mapper_.FindMappingFor({kIsacCodecName, 32000, 1}));
@@ -63,6 +58,8 @@ TEST_F(PayloadTypeMapperTest, WebRTCPayloadTypes) {
                       48000,
                       2,
                       {{"minptime", "10"}, {"useinbandfec", "1"}}}));
+  EXPECT_EQ(
+      63, mapper_.FindMappingFor({kRedCodecName, 48000, 2, {{"", "111/111"}}}));
   // TODO(solenberg): Remove 16k, 32k, 48k DTMF checks once these payload types
   // are dynamically assigned.
   EXPECT_EQ(110, mapper_.FindMappingFor({kDtmfCodecName, 48000, 1}));

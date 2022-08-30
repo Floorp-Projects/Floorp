@@ -15,7 +15,6 @@
 
 #include <string>
 
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
@@ -24,11 +23,14 @@ class RTC_EXPORT Desktop {
  public:
   ~Desktop();
 
+  Desktop(const Desktop&) = delete;
+  Desktop& operator=(const Desktop&) = delete;
+
   // Returns the name of the desktop represented by the object. Return false if
   // quering the name failed for any reason.
   bool GetName(std::wstring* desktop_name_out) const;
 
-  // Returns true if |other| has the same name as this desktop. Returns false
+  // Returns true if `other` has the same name as this desktop. Returns false
   // in any other case including failing Win32 APIs and uninitialized desktop
   // handles.
   bool IsSame(const Desktop& other) const;
@@ -54,10 +56,8 @@ class RTC_EXPORT Desktop {
   // The desktop handle.
   HDESK desktop_;
 
-  // True if |desktop_| must be closed on teardown.
+  // True if `desktop_` must be closed on teardown.
   bool own_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(Desktop);
 };
 
 }  // namespace webrtc

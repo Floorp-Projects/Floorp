@@ -15,7 +15,6 @@
 #include "modules/desktop_capture/desktop_frame.h"
 #include "modules/desktop_capture/desktop_region.h"
 #include "modules/desktop_capture/mock_desktop_capturer_callback.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/logging.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -76,9 +75,11 @@ class FakeSharedMemory : public SharedMemory {
       : SharedMemory(buffer, size, 0, kTestSharedMemoryId), buffer_(buffer) {}
   ~FakeSharedMemory() override { delete[] buffer_; }
 
+  FakeSharedMemory(const FakeSharedMemory&) = delete;
+  FakeSharedMemory& operator=(const FakeSharedMemory&) = delete;
+
  private:
   char* buffer_;
-  RTC_DISALLOW_COPY_AND_ASSIGN(FakeSharedMemory);
 };
 
 class FakeSharedMemoryFactory : public SharedMemoryFactory {
@@ -86,20 +87,26 @@ class FakeSharedMemoryFactory : public SharedMemoryFactory {
   FakeSharedMemoryFactory() {}
   ~FakeSharedMemoryFactory() override {}
 
+  FakeSharedMemoryFactory(const FakeSharedMemoryFactory&) = delete;
+  FakeSharedMemoryFactory& operator=(const FakeSharedMemoryFactory&) = delete;
+
   std::unique_ptr<SharedMemory> CreateSharedMemory(size_t size) override {
     return std::unique_ptr<SharedMemory>(
         new FakeSharedMemory(new char[size], size));
   }
-
- private:
-  RTC_DISALLOW_COPY_AND_ASSIGN(FakeSharedMemoryFactory);
 };
 
 ACTION_P(SaveUniquePtrArg, dest) {
   *dest = std::move(*arg1);
 }
 
-TEST_F(ScreenCapturerTest, GetScreenListAndSelectScreen) {
+// TODO(bugs.webrtc.org/12950): Re-enable when libc++ issue is fixed.
+#if defined(WEBRTC_LINUX) && defined(MEMORY_SANITIZER)
+#define MAYBE_GetScreenListAndSelectScreen DISABLED_GetScreenListAndSelectScreen
+#else
+#define MAYBE_GetScreenListAndSelectScreen GetScreenListAndSelectScreen
+#endif
+TEST_F(ScreenCapturerTest, MAYBE_GetScreenListAndSelectScreen) {
   webrtc::DesktopCapturer::SourceList screens;
   EXPECT_TRUE(capturer_->GetSourceList(&screens));
   for (const auto& screen : screens) {

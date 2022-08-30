@@ -15,7 +15,6 @@
 #include <utility>
 
 #include "absl/algorithm/container.h"
-#include "modules/utility/include/process_thread.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/location.h"
 #include "rtc_base/task_utils/to_queued_task.h"
@@ -76,16 +75,11 @@ CallStats::CallStats(Clock* clock, TaskQueueBase* task_queue)
       time_of_first_rtt_ms_(-1),
       task_queue_(task_queue) {
   RTC_DCHECK(task_queue_);
-  process_thread_checker_.Detach();
-  repeating_task_ =
-      RepeatingTaskHandle::DelayedStart(task_queue_, kUpdateInterval, [this]() {
-        UpdateAndReport();
-        return kUpdateInterval;
-      });
+  RTC_DCHECK_RUN_ON(task_queue_);
 }
 
 CallStats::~CallStats() {
-  RTC_DCHECK_RUN_ON(&construction_thread_checker_);
+  RTC_DCHECK_RUN_ON(task_queue_);
   RTC_DCHECK(observers_.empty());
 
   repeating_task_.Stop();
@@ -93,8 +87,17 @@ CallStats::~CallStats() {
   UpdateHistograms();
 }
 
+void CallStats::EnsureStarted() {
+  RTC_DCHECK_RUN_ON(task_queue_);
+  repeating_task_ =
+      RepeatingTaskHandle::DelayedStart(task_queue_, kUpdateInterval, [this]() {
+        UpdateAndReport();
+        return kUpdateInterval;
+      });
+}
+
 void CallStats::UpdateAndReport() {
-  RTC_DCHECK_RUN_ON(&construction_thread_checker_);
+  RTC_DCHECK_RUN_ON(task_queue_);
 
   RemoveOldReports(clock_->CurrentTime().ms(), &reports_);
   max_rtt_ms_ = GetMaxRttMs(reports_);
@@ -112,18 +115,18 @@ void CallStats::UpdateAndReport() {
 }
 
 void CallStats::RegisterStatsObserver(CallStatsObserver* observer) {
-  RTC_DCHECK_RUN_ON(&construction_thread_checker_);
+  RTC_DCHECK_RUN_ON(task_queue_);
   if (!absl::c_linear_search(observers_, observer))
     observers_.push_back(observer);
 }
 
 void CallStats::DeregisterStatsObserver(CallStatsObserver* observer) {
-  RTC_DCHECK_RUN_ON(&construction_thread_checker_);
+  RTC_DCHECK_RUN_ON(task_queue_);
   observers_.remove(observer);
 }
 
 int64_t CallStats::LastProcessedRtt() const {
-  RTC_DCHECK_RUN_ON(&construction_thread_checker_);
+  RTC_DCHECK_RUN_ON(task_queue_);
   // No need for locking since we're on the construction thread.
   return avg_rtt_ms_;
 }
@@ -134,7 +137,7 @@ void CallStats::OnRttUpdate(int64_t rtt) {
   // on the correct TQ.
   int64_t now_ms = clock_->TimeInMilliseconds();
   auto update = [this, rtt, now_ms]() {
-    RTC_DCHECK_RUN_ON(&construction_thread_checker_);
+    RTC_DCHECK_RUN_ON(task_queue_);
     reports_.push_back(RttTime(rtt, now_ms));
     if (time_of_first_rtt_ms_ == -1)
       time_of_first_rtt_ms_ = now_ms;
@@ -149,7 +152,7 @@ void CallStats::OnRttUpdate(int64_t rtt) {
 }
 
 void CallStats::UpdateHistograms() {
-  RTC_DCHECK_RUN_ON(&construction_thread_checker_);
+  RTC_DCHECK_RUN_ON(task_queue_);
 
   if (time_of_first_rtt_ms_ == -1 || num_avg_rtt_ < 1)
     return;

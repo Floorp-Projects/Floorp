@@ -17,8 +17,8 @@
 #include <map>
 #include <memory>
 
+#include "api/sequence_checker.h"
 #include "modules/desktop_capture/shared_desktop_frame.h"
-#include "rtc_base/thread_checker.h"
 #include "sdk/objc/helpers/scoped_cftyperef.h"
 
 namespace webrtc {
@@ -28,8 +28,11 @@ class DesktopFrameProvider {
   explicit DesktopFrameProvider(bool allow_iosurface);
   ~DesktopFrameProvider();
 
+  DesktopFrameProvider(const DesktopFrameProvider&) = delete;
+  DesktopFrameProvider& operator=(const DesktopFrameProvider&) = delete;
+
   // The caller takes ownership of the returned desktop frame. Otherwise
-  // returns null if |display_id| is invalid or not ready. Note that this
+  // returns null if `display_id` is invalid or not ready. Note that this
   // function does not remove the frame from the internal container. Caller
   // has to call the Release function.
   std::unique_ptr<DesktopFrame> TakeLatestFrameForDisplay(
@@ -44,13 +47,11 @@ class DesktopFrameProvider {
   void Release();
 
  private:
-  rtc::ThreadChecker thread_checker_;
+  SequenceChecker thread_checker_;
   const bool allow_iosurface_;
 
   // Most recent IOSurface that contains a capture of matching display.
   std::map<CGDirectDisplayID, std::unique_ptr<SharedDesktopFrame>> io_surfaces_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(DesktopFrameProvider);
 };
 
 }  // namespace webrtc

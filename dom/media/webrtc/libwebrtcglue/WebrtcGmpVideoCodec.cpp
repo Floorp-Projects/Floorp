@@ -20,7 +20,7 @@
 #include "transport/runnable_utils.h"
 #include "api/video/video_frame_type.h"
 #include "common_video/include/video_frame_buffer.h"
-#include "rtc_base/bind.h"
+// #include "rtc_base/bind.h"
 
 namespace mozilla {
 
@@ -617,18 +617,18 @@ void WebrtcGmpVideoEncoder::Encoded(
                   aEncodedFrame->Size() - unitOffset);
   }
 
-  webrtc::EncodedImage unit(aEncodedFrame->Buffer(), aEncodedFrame->Size(),
-                            aEncodedFrame->Size());
+  webrtc::EncodedImage unit;
+  unit.SetEncodedData(webrtc::EncodedImageBuffer::Create(
+      aEncodedFrame->Buffer(), aEncodedFrame->Size()));
   unit._frameType = ft;
   unit.SetTimestamp(timestamp);
   unit.capture_time_ms_ = capture_time.ms();
-  unit._completeFrame = true;
   unit._encodedWidth = aEncodedFrame->EncodedWidth();
   unit._encodedHeight = aEncodedFrame->EncodedHeight();
 
   // Parse QP.
-  mH264BitstreamParser.ParseBitstream(unit.data(), unit.size());
-  mH264BitstreamParser.GetLastSliceQp(&unit.qp_);
+  mH264BitstreamParser.ParseBitstream(unit);
+  unit.qp_ = mH264BitstreamParser.GetLastSliceQp().value_or(-1);
 
   // TODO: Currently the OpenH264 codec does not preserve any codec
   //       specific info passed into it and just returns default values.
@@ -654,8 +654,8 @@ WebrtcGmpVideoDecoder::~WebrtcGmpVideoDecoder() {
   MOZ_ASSERT(!mGMP);
 }
 
-int32_t WebrtcGmpVideoDecoder::InitDecode(
-    const webrtc::VideoCodec* aCodecSettings, int32_t aNumberOfCores) {
+bool WebrtcGmpVideoDecoder::Configure(
+    const webrtc::VideoDecoder::Settings& settings) {
   if (!mMPS) {
     mMPS = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   }
@@ -663,23 +663,23 @@ int32_t WebrtcGmpVideoDecoder::InitDecode(
 
   if (!mGMPThread) {
     if (NS_WARN_IF(NS_FAILED(mMPS->GetThread(getter_AddRefs(mGMPThread))))) {
-      return WEBRTC_VIDEO_CODEC_ERROR;
+      return false;
     }
   }
 
   RefPtr<GmpInitDoneRunnable> initDone(new GmpInitDoneRunnable(mPCHandle));
-  mGMPThread->Dispatch(WrapRunnableNM(&WebrtcGmpVideoDecoder::InitDecode_g,
-                                      RefPtr<WebrtcGmpVideoDecoder>(this),
-                                      aCodecSettings, aNumberOfCores, initDone),
-                       NS_DISPATCH_NORMAL);
+  mGMPThread->Dispatch(
+      WrapRunnableNM(&WebrtcGmpVideoDecoder::Configure_g,
+                     RefPtr<WebrtcGmpVideoDecoder>(this), settings, initDone),
+      NS_DISPATCH_NORMAL);
 
-  return WEBRTC_VIDEO_CODEC_OK;
+  return true;
 }
 
 /* static */
-void WebrtcGmpVideoDecoder::InitDecode_g(
+void WebrtcGmpVideoDecoder::Configure_g(
     const RefPtr<WebrtcGmpVideoDecoder>& aThis,
-    const webrtc::VideoCodec* aCodecSettings, int32_t aNumberOfCores,
+    const webrtc::VideoDecoder::Settings& settings,  // unused
     const RefPtr<GmpInitDoneRunnable>& aInitDone) {
   nsTArray<nsCString> tags;
   tags.AppendElement("h264"_ns);
@@ -860,7 +860,8 @@ void WebrtcGmpVideoDecoder::Decode_g(const RefPtr<WebrtcGmpVideoDecoder>& aThis,
   frame->SetEncodedHeight(aDecodeData->mImage._encodedHeight);
   frame->SetTimeStamp((aDecodeData->mImage.Timestamp() * 1000ll) /
                       90);  // rounds down
-  frame->SetCompleteFrame(aDecodeData->mImage._completeFrame);
+  frame->SetCompleteFrame(
+      true);  // upstream no longer deals with incomplete frames
   frame->SetBufferType(GMP_BufferLength32);
 
   GMPVideoFrameType ft;
@@ -935,8 +936,6 @@ void WebrtcGmpVideoDecoder::Terminated() {
   // Could now notify that it's dead
 }
 
-static void DeleteBuffer(uint8_t* data) { delete[] data; }
-
 void WebrtcGmpVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
   // we have two choices here: wrap the frame with a callback that frees
   // the data later (risking running out of shmems), or copy the data out
@@ -950,8 +949,15 @@ void WebrtcGmpVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
           ((aDecodedFrame->Height() + 1) / 2);
   int32_t size = length.value();
   MOZ_RELEASE_ASSERT(length.isValid() && size > 0);
-  auto buffer = MakeUniqueFallible<uint8_t[]>(size);
-  if (buffer) {
+
+  // Don't use MakeUniqueFallible here, because UniquePtr isn't copyable, and
+  // the closure below in WrapI420Buffer uses std::function which _is_ copyable.
+  // We'll alloc the buffer here, so we preserve the "fallible" nature, and
+  // then hand a shared_ptr, which is copyable, to WrapI420Buffer.
+  auto falliblebuffer = new (std::nothrow) uint8_t[size];
+  if (falliblebuffer) {
+    auto buffer = std::shared_ptr<uint8_t>(falliblebuffer);
+
     // This is 3 separate buffers currently anyways, no use in trying to
     // see if we can use a single memcpy.
     uint8_t* buffer_y = buffer.get();
@@ -972,13 +978,15 @@ void WebrtcGmpVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
 
     MutexAutoLock lock(mCallbackMutex);
     if (mCallback) {
+      // Note: the last parameter to WrapI420Buffer is named no_longer_used,
+      // but is currently called in the destructor of WrappedYuvBuffer when
+      // the buffer is "no_longer_used".
       rtc::scoped_refptr<webrtc::I420BufferInterface> video_frame_buffer =
-          webrtc::WrapI420Buffer(aDecodedFrame->Width(),
-                                 aDecodedFrame->Height(), buffer_y,
-                                 aDecodedFrame->Stride(kGMPYPlane), buffer_u,
-                                 aDecodedFrame->Stride(kGMPUPlane), buffer_v,
-                                 aDecodedFrame->Stride(kGMPVPlane),
-                                 rtc::Bind(&DeleteBuffer, buffer.release()));
+          webrtc::WrapI420Buffer(
+              aDecodedFrame->Width(), aDecodedFrame->Height(), buffer_y,
+              aDecodedFrame->Stride(kGMPYPlane), buffer_u,
+              aDecodedFrame->Stride(kGMPUPlane), buffer_v,
+              aDecodedFrame->Stride(kGMPVPlane), [buffer] {});
 
       GMP_LOG_DEBUG("GMP Decoded: %" PRIu64, aDecodedFrame->Timestamp());
       auto videoFrame =

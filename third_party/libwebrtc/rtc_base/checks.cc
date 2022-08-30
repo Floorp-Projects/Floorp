@@ -15,6 +15,8 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "absl/strings/string_view.h"
+
 #if defined(WEBRTC_ANDROID)
 #define RTC_LOG_TAG_ANDROID "rtc"
 #include <android/log.h>  // NOLINT
@@ -36,6 +38,22 @@
 #include "rtc_base/checks.h"
 
 namespace {
+
+RTC_NORETURN void WriteFatalLogAndAbort(absl::string_view output) {
+#if defined(WEBRTC_ANDROID)
+  std::string output_str = std::string(output);
+  __android_log_print(ANDROID_LOG_ERROR, RTC_LOG_TAG_ANDROID, "%s\n",
+                      output_str.c_str());
+#endif
+  fflush(stdout);
+  fwrite(output.data(), output.size(), 1, stderr);
+  fflush(stderr);
+#if defined(WEBRTC_WIN)
+  DebugBreak();
+#endif
+  abort();
+}
+
 #if defined(__GNUC__)
 __attribute__((__format__(__printf__, 2, 3)))
 #endif
@@ -149,19 +167,7 @@ RTC_NORETURN void FatalLog(const char* file,
 
   va_end(args);
 
-  const char* output = s.c_str();
-
-#if defined(WEBRTC_ANDROID)
-  __android_log_print(ANDROID_LOG_ERROR, RTC_LOG_TAG_ANDROID, "%s\n", output);
-#endif
-
-  fflush(stdout);
-  fprintf(stderr, "%s", output);
-  fflush(stderr);
-#if defined(WEBRTC_WIN)
-  DebugBreak();
-#endif
-  abort();
+  WriteFatalLogAndAbort(s);
 }
 #else  // RTC_CHECK_MSG_ENABLED
 RTC_NORETURN void FatalLog(const char* file, int line) {
@@ -174,21 +180,39 @@ RTC_NORETURN void FatalLog(const char* file, int line) {
                "# Check failed.\n"
                "# ",
                file, line, LAST_SYSTEM_ERROR);
-  const char* output = s.c_str();
-
-#if defined(WEBRTC_ANDROID)
-  __android_log_print(ANDROID_LOG_ERROR, RTC_LOG_TAG_ANDROID, "%s\n", output);
-#endif
-
-  fflush(stdout);
-  fprintf(stderr, "%s", output);
-  fflush(stderr);
-#if defined(WEBRTC_WIN)
-  DebugBreak();
-#endif
-  abort();
+  WriteFatalLogAndAbort(s);
 }
 #endif  // RTC_CHECK_MSG_ENABLED
+
+#if RTC_DCHECK_IS_ON
+
+RTC_NORETURN void UnreachableCodeReached(const char* file, int line) {
+  std::string s;
+  AppendFormat(&s,
+               "\n\n"
+               "#\n"
+               "# Unreachable code reached: %s, line %d\n"
+               "# last system error: %u\n"
+               "# ",
+               file, line, LAST_SYSTEM_ERROR);
+  WriteFatalLogAndAbort(s);
+}
+
+#else  // !RTC_DCHECK_IS_ON
+
+RTC_NORETURN void UnreachableCodeReached() {
+  std::string s;
+  AppendFormat(&s,
+               "\n\n"
+               "#\n"
+               "# Unreachable code reached (file and line unknown)\n"
+               "# last system error: %u\n"
+               "# ",
+               LAST_SYSTEM_ERROR);
+  WriteFatalLogAndAbort(s);
+}
+
+#endif  // !RTC_DCHECK_IS_ON
 
 }  // namespace webrtc_checks_impl
 }  // namespace rtc

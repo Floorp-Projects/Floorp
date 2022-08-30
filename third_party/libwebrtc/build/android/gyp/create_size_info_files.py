@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright 2018 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -7,6 +7,7 @@
 """Creates size-info/*.info files used by SuperSize."""
 
 import argparse
+import collections
 import os
 import re
 import sys
@@ -17,6 +18,10 @@ from util import jar_info_utils
 
 
 _AAR_VERSION_PATTERN = re.compile(r'/[^/]*?(\.aar/|\.jar/)')
+
+
+def _RemoveDuplicatesFromList(source_list):
+  return collections.OrderedDict.fromkeys(source_list).keys()
 
 
 def _TransformAarPaths(path):
@@ -36,7 +41,8 @@ def _TransformAarPaths(path):
 def _MergeResInfoFiles(res_info_path, info_paths):
   # Concatenate them all.
   # only_if_changed=False since no build rules depend on this as an input.
-  with build_utils.AtomicOutput(res_info_path, only_if_changed=False) as dst:
+  with build_utils.AtomicOutput(res_info_path, only_if_changed=False,
+                                mode='w+') as dst:
     for p in info_paths:
       with open(p) as src:
         dst.writelines(_TransformAarPaths(l) for l in src)
@@ -52,7 +58,8 @@ def _MergePakInfoFiles(merged_path, pak_infos):
     with open(pak_info_path, 'r') as src_info_file:
       info_lines.update(_TransformAarPaths(x) for x in src_info_file)
   # only_if_changed=False since no build rules depend on this as an input.
-  with build_utils.AtomicOutput(merged_path, only_if_changed=False) as f:
+  with build_utils.AtomicOutput(merged_path, only_if_changed=False,
+                                mode='w+') as f:
     f.writelines(sorted(info_lines))
 
 
@@ -168,7 +175,7 @@ def main(args):
   options.uncompressed_assets = build_utils.ParseGnList(
       options.uncompressed_assets)
 
-  jar_inputs = _FindJarInputs(set(options.jar_files))
+  jar_inputs = _FindJarInputs(_RemoveDuplicatesFromList(options.jar_files))
   pak_inputs = _PakInfoPathsForAssets(options.assets +
                                       options.uncompressed_assets)
   res_inputs = options.in_res_info_path

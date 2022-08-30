@@ -19,7 +19,6 @@
 #include "modules/desktop_capture/desktop_geometry.h"
 #include "modules/desktop_capture/desktop_region.h"
 #include "modules/desktop_capture/shared_memory.h"
-#include "rtc_base/constructor_magic.h"
 #include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
@@ -29,10 +28,13 @@ const float kStandardDPI = 96.0f;
 // DesktopFrame represents a video frame captured from the screen.
 class RTC_EXPORT DesktopFrame {
  public:
-  // DesktopFrame objects always hold RGBA data.
+  // DesktopFrame objects always hold BGRA data.
   static const int kBytesPerPixel = 4;
 
   virtual ~DesktopFrame();
+
+  DesktopFrame(const DesktopFrame&) = delete;
+  DesktopFrame& operator=(const DesktopFrame&) = delete;
 
   // Returns the rectangle in full desktop coordinates to indicate it covers
   // the area of top_left() to top_letf() + size() / scale_factor().
@@ -72,11 +74,20 @@ class RTC_EXPORT DesktopFrame {
   const DesktopVector& dpi() const { return dpi_; }
   void set_dpi(const DesktopVector& dpi) { dpi_ = dpi; }
 
+  // Indicates if this frame may have the mouse cursor in it. Capturers that
+  // support cursor capture may set this to true. If the cursor was
+  // outside of the captured area, this may be true even though the cursor is
+  // not in the image.
+  bool may_contain_cursor() const { return may_contain_cursor_; }
+  void set_may_contain_cursor(bool may_contain_cursor) {
+    may_contain_cursor_ = may_contain_cursor;
+  }
+
   // Time taken to capture the frame in milliseconds.
   int64_t capture_time_ms() const { return capture_time_ms_; }
   void set_capture_time_ms(int64_t time_ms) { capture_time_ms_ = time_ms; }
 
-  // Copies pixels from a buffer or another frame. |dest_rect| rect must lay
+  // Copies pixels from a buffer or another frame. `dest_rect` rect must lay
   // within bounds of this frame.
   void CopyPixelsFrom(const uint8_t* src_buffer,
                       int src_stride,
@@ -104,21 +115,21 @@ class RTC_EXPORT DesktopFrame {
   uint32_t capturer_id() const { return capturer_id_; }
   void set_capturer_id(uint32_t capturer_id) { capturer_id_ = capturer_id; }
 
-  // Copies various information from |other|. Anything initialized in
+  // Copies various information from `other`. Anything initialized in
   // constructor are not copied.
   // This function is usually used when sharing a source DesktopFrame with
   // several clients: the original DesktopFrame should be kept unchanged. For
   // example, BasicDesktopFrame::CopyOf() and SharedDesktopFrame::Share().
   void CopyFrameInfoFrom(const DesktopFrame& other);
 
-  // Copies various information from |other|. Anything initialized in
+  // Copies various information from `other`. Anything initialized in
   // constructor are not copied. Not like CopyFrameInfoFrom() function, this
   // function uses swap or move constructor to avoid data copy. It won't break
-  // the |other|, but some of its information may be missing after this
+  // the `other`, but some of its information may be missing after this
   // operation. E.g. other->updated_region_;
   // This function is usually used when wrapping a DesktopFrame: the wrapper
-  // instance takes the ownership of |other|, so other components cannot access
-  // |other| anymore. For example, CroppedDesktopFrame and
+  // instance takes the ownership of `other`, so other components cannot access
+  // `other` anymore. For example, CroppedDesktopFrame and
   // DesktopFrameWithCursor.
   void MoveFrameInfoFrom(DesktopFrame* other);
 
@@ -150,11 +161,10 @@ class RTC_EXPORT DesktopFrame {
   DesktopRegion updated_region_;
   DesktopVector top_left_;
   DesktopVector dpi_;
+  bool may_contain_cursor_ = false;
   int64_t capture_time_ms_;
   uint32_t capturer_id_;
   std::vector<uint8_t> icc_profile_;
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(DesktopFrame);
 };
 
 // A DesktopFrame that stores data in the heap.
@@ -165,25 +175,25 @@ class RTC_EXPORT BasicDesktopFrame : public DesktopFrame {
 
   ~BasicDesktopFrame() override;
 
-  // Creates a BasicDesktopFrame that contains copy of |frame|.
+  BasicDesktopFrame(const BasicDesktopFrame&) = delete;
+  BasicDesktopFrame& operator=(const BasicDesktopFrame&) = delete;
+
+  // Creates a BasicDesktopFrame that contains copy of `frame`.
   // TODO(zijiehe): Return std::unique_ptr<DesktopFrame>
   static DesktopFrame* CopyOf(const DesktopFrame& frame);
-
- private:
-  RTC_DISALLOW_COPY_AND_ASSIGN(BasicDesktopFrame);
 };
 
 // A DesktopFrame that stores data in shared memory.
 class RTC_EXPORT SharedMemoryDesktopFrame : public DesktopFrame {
  public:
-  // May return nullptr if |shared_memory_factory| failed to create a
+  // May return nullptr if `shared_memory_factory` failed to create a
   // SharedMemory instance.
-  // |shared_memory_factory| should not be nullptr.
+  // `shared_memory_factory` should not be nullptr.
   static std::unique_ptr<DesktopFrame> Create(
       DesktopSize size,
       SharedMemoryFactory* shared_memory_factory);
 
-  // Takes ownership of |shared_memory|.
+  // Takes ownership of `shared_memory`.
   // Deprecated, use the next constructor.
   SharedMemoryDesktopFrame(DesktopSize size,
                            int stride,
@@ -196,6 +206,9 @@ class RTC_EXPORT SharedMemoryDesktopFrame : public DesktopFrame {
 
   ~SharedMemoryDesktopFrame() override;
 
+  SharedMemoryDesktopFrame(const SharedMemoryDesktopFrame&) = delete;
+  SharedMemoryDesktopFrame& operator=(const SharedMemoryDesktopFrame&) = delete;
+
  private:
   // Avoid unexpected order of parameter evaluation.
   // Executing both std::unique_ptr<T>::operator->() and
@@ -207,8 +220,6 @@ class RTC_EXPORT SharedMemoryDesktopFrame : public DesktopFrame {
   SharedMemoryDesktopFrame(DesktopRect rect,
                            int stride,
                            SharedMemory* shared_memory);
-
-  RTC_DISALLOW_COPY_AND_ASSIGN(SharedMemoryDesktopFrame);
 };
 
 }  // namespace webrtc

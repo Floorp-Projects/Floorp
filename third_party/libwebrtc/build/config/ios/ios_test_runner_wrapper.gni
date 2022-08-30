@@ -61,6 +61,8 @@ template("ios_test_runner_wrapper") {
 
     _rebased_mac_toolchain = rebase_path("//mac_toolchain", root_build_dir)
     _rebased_xcode_path = rebase_path("//Xcode.app", root_build_dir)
+    _rebased_ios_runtime_cache_prefix =
+        rebase_path("//Runtime-ios-", root_build_dir)
 
     # --out-dir argument is specified in gn_isolate_map.pyl because
     # ${ISOLATED_OUTDIR} doesn't get resolved through this wrapper.
@@ -69,6 +71,8 @@ template("ios_test_runner_wrapper") {
       "@WrappedPath(${_rebased_xcode_path})",
       "--mac-toolchain-cmd",
       "@WrappedPath(${_rebased_mac_toolchain})",
+      "--runtime-cache-prefix",
+      "@WrappedPath(${_rebased_ios_runtime_cache_prefix})",
     ]
 
     # Default retries to 3
@@ -89,13 +93,13 @@ template("ios_test_runner_wrapper") {
       "${shards}",
     ]
 
-    data_deps = []
+    data_deps = [ "//testing:test_scripts_shared" ]
     if (defined(invoker.data_deps)) {
       data_deps += invoker.data_deps
     }
 
-    # test runner relies on iossim if use_ios_simulator (defined in ios_sdk.gni)
-    if (use_ios_simulator) {
+    # test runner relies on iossim for simulator builds.
+    if (target_environment == "simulator") {
       _rebased_root_build_dir = rebase_path("${root_build_dir}", root_build_dir)
       data_deps += [ "//testing/iossim" ]
 
@@ -131,7 +135,6 @@ template("ios_test_runner_wrapper") {
       data += invoker.data
     }
     data += [
-      "//testing/test_env.py",
       "//.vpython",
       "//ios/build/bots/scripts/",
       "//testing/test_env.py",
