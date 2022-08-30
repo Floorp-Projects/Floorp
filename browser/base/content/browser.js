@@ -649,7 +649,6 @@ var gInitialPages = [
   "about:sessionrestore",
   "about:welcome",
   "about:welcomeback",
-  "chrome://browser/content/blanktab.html",
 ];
 
 function isInitialPage(url) {
@@ -6744,9 +6743,7 @@ function setToolbarVisibility(
           }
         }
         isVisible =
-          !!currentURI &&
-          (BookmarkingUI.isOnNewTabPage({ currentURI }) ||
-            currentURI?.spec == "chrome://browser/content/blanktab.html");
+          !!currentURI && BookmarkingUI.isOnNewTabPage({ currentURI });
         break;
     }
   }
