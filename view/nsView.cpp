@@ -919,10 +919,12 @@ static bool IsPopupWidget(nsIWidget* aWidget) {
 
 PresShell* nsView::GetPresShell() { return GetViewManager()->GetPresShell(); }
 
-bool nsView::WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) {
+bool nsView::WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y,
+                         ByMoveToRect aByMoveToRect) {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm && IsPopupWidget(aWidget)) {
-    pm->PopupMoved(mFrame, nsIntPoint(x, y));
+    pm->PopupMoved(mFrame, nsIntPoint(x, y),
+                   aByMoveToRect == ByMoveToRect::Yes);
     return true;
   }
 
