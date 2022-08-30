@@ -18,7 +18,6 @@ browser.jar:
   content/pocket/panels/style-guide.html (content/panels/style-guide.html)
   content/pocket/panels/js/vendor.bundle.js (content/panels/js/vendor.bundle.js)
   content/pocket/panels/js/main.bundle.js (content/panels/js/main.bundle.js)
-  content/pocket/panels/js/tmpl.js (content/panels/js/tmpl.js)
   content/pocket/panels/js/vendor (content/panels/js/vendor/*)
   content/pocket/panels/js/home/entry.js (content/panels/js/home/entry.js)
   content/pocket/panels/js/saved/entry.js (content/panels/js/saved/entry.js)
