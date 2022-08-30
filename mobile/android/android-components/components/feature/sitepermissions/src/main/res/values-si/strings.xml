@@ -11,7 +11,7 @@
     <string name="mozac_feature_sitepermissions_option_microphone_one">ශබ්දවාහිනිය 1</string>
     <!-- Text for a positive button in a permission request dialog, this button will give
         access to this permission-->
-    <string name="mozac_feature_sitepermissions_allow">ඉඩදෙන්න</string>
+    <string name="mozac_feature_sitepermissions_allow">ඉඩ දෙන්න</string>
     <!-- Text for a negative button in a permission request dialog, this button will do not give
     access to this permission-->
     <string name="mozac_feature_sitepermissions_not_allow">ඉඩ නොදෙන්න</string>

@@ -36,6 +36,8 @@
     <string name="mozac_feature_contextmenu_copy_email_address">වි-තැපෑලෙහි පිටපතක්</string>
     <!-- Text for confirmation "snackbar" shown after copying a email address to the clipboard. -->
     <string name="mozac_feature_contextmenu_snackbar_email_address_copied">වි-තැපෑල පසුරු පුවරුවට පිටපත් විය</string>
+    <!-- Text for context menu item to add to a contact. -->
+    <string name="mozac_feature_contextmenu_add_to_contact">සබඳතාවයට යොදන්න</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
     <string name="mozac_selection_context_menu_search_2">සොයන්න</string>
     <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text-->

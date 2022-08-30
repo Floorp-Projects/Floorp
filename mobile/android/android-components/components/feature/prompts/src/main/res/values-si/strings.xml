@@ -34,6 +34,8 @@
     <string name="mozac_feature_prompt_error_unknown_cause">පිවිසුම සුරැකීමට නොහැකිය</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
     <string name="mozac_feature_prompt_login_save_headline">මෙම පිවිසුම සුරකින්නද?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
+    <string name="mozac_feature_prompt_login_update_headline">පිවිසුම සංශෝධනයක්ද?</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">සුරැකි මුරපදයට පරි. නාමය එක් කරන්නද?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
@@ -42,12 +44,14 @@
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">වර්ණයක් තෝරන්න</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
-    <string name="mozac_feature_prompts_allow">ඉඩදෙන්න</string>
+    <string name="mozac_feature_prompts_allow">ඉඩ දෙන්න</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">ප්‍රතික්‍ෂේප</string>
     <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
     <string name="mozac_feature_prompt_before_unload_dialog_title">ඔබට විශ්වාස ද?</string>
 
+    <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_body">ඔබට මෙම අඩවිය හැර යාමට අවශ්‍යද? ඔබ ඇතුල් කළ දත්ත නොසුරැකෙනු ඇත</string>
     <!-- Stay button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to stay in the website. -->
     <string name="mozac_feature_prompts_before_unload_stay">රැඳෙන්න</string>
     <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
