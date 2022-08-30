@@ -247,6 +247,10 @@ add_task(async function test_with_newtabpage_disabled() {
     visible: true,
     message: "Toolbar is visible with NTP enabled",
   });
+  let firstid = await SpecialPowers.spawn(newtab.linkedBrowser, [], () => {
+    return content.document.body.firstElementChild?.id;
+  });
+  is(firstid, "root", "new tab page contains content");
   await BrowserTestUtils.removeTab(newtab);
 
   await SpecialPowers.pushPrefEnv({
@@ -256,11 +260,22 @@ add_task(async function test_with_newtabpage_disabled() {
   document.getElementById("cmd_newNavigatorTab").doCommand();
   await TestUtils.waitForCondition(() => gBrowser.tabs.length == tabCount + 1);
   newtab = gBrowser.selectedTab;
-  is(newtab.linkedBrowser.currentURI.spec, "about:blank", "blank is loaded");
+
   await waitForBookmarksToolbarVisibility({
-    visible: false,
-    message: "Toolbar is not visible with NTP disabled",
+    visible: true,
+    message: "Toolbar is visible with NTP disabled",
   });
+
+  is(
+    newtab.linkedBrowser.currentURI.spec,
+    "about:newtab",
+    "blank new tab is loaded"
+  );
+  firstid = await SpecialPowers.spawn(newtab.linkedBrowser, [], () => {
+    return content.document.body.firstElementChild;
+  });
+  ok(!firstid, "blank new tab page contains no content");
+
   await BrowserTestUtils.removeTab(newtab);
 
   await SpecialPowers.pushPrefEnv({
