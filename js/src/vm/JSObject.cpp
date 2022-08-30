@@ -2998,9 +2998,6 @@ void JSObject::dump(js::GenericPrinter& out) const {
   if (obj->maybeHasInterestingSymbolProperty()) {
     out.put(" maybe_has_interesting_symbol");
   }
-  if (obj->isBoundFunction()) {
-    out.put(" bound_function");
-  }
   if (obj->isQualifiedVarObj()) {
     out.put(" varobj");
   }

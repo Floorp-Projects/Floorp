@@ -151,10 +151,6 @@ class JSObject
     setHeaderPtr(shape);
   }
 
-  static JSObject* fromShapeFieldPointer(uintptr_t p) {
-    return reinterpret_cast<JSObject*>(p - JSObject::offsetOfShape());
-  }
-
   static bool setFlag(JSContext* cx, JS::HandleObject obj, js::ObjectFlag flag);
 
   bool hasFlag(js::ObjectFlag flag) const {
@@ -197,8 +193,6 @@ class JSObject
                                               JS::HandleObject obj) {
     return setFlag(cx, obj, js::ObjectFlag::UseWatchtowerTestingCallback);
   }
-
-  inline bool isBoundFunction() const;
 
   // A "qualified" varobj is the object on which "qualified" variable
   // declarations (i.e., those defined with "var") are kept.
