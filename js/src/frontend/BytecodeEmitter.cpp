@@ -3811,26 +3811,24 @@ bool BytecodeEmitter::emitDestructuringObjRestExclusionSet(ListNode* pattern) {
     }
   }
 
-  TaggedParserAtomIndex pnatom;
   for (ParseNode* member : pattern->contents()) {
     if (member->isKind(ParseNodeKind::Spread)) {
       MOZ_ASSERT(!member->pn_next, "unexpected trailing element after spread");
       break;
     }
 
-    bool isIndex = false;
+    TaggedParserAtomIndex pnatom;
     if (member->isKind(ParseNodeKind::MutateProto)) {
       pnatom = TaggedParserAtomIndex::WellKnown::proto();
     } else {
       ParseNode* key = member->as<BinaryNode>().left();
-      if (key->isKind(ParseNodeKind::NumberExpr)) {
+      if (key->isKind(ParseNodeKind::ObjectPropertyName) ||
+          key->isKind(ParseNodeKind::StringExpr)) {
+        pnatom = key->as<NameNode>().atom();
+      } else if (key->isKind(ParseNodeKind::NumberExpr)) {
         if (!emitNumberOp(key->as<NumericLiteral>().value())) {
           return false;
         }
-        isIndex = true;
-      } else if (key->isKind(ParseNodeKind::ObjectPropertyName) ||
-                 key->isKind(ParseNodeKind::StringExpr)) {
-        pnatom = key->as<NameNode>().atom();
       } else {
         // Otherwise this is a computed property name which needs to be added
         // dynamically. BigInt keys are parsed as (synthetic) computed property
@@ -3845,7 +3843,7 @@ bool BytecodeEmitter::emitDestructuringObjRestExclusionSet(ListNode* pattern) {
       return false;
     }
 
-    if (isIndex) {
+    if (!pnatom) {
       if (!emit1(JSOp::InitElem)) {
         return false;
       }
@@ -8876,10 +8874,18 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
       //            [stack] CTOR? OBJ CTOR? KEY?
 
       if (propVal->isDirectRHSAnonFunction()) {
-        // The following branches except for the last `else` clause
-        // emit emits the cases handled in
-        // NameResolver::resolveFun (see NameFunctions.cpp)
-        if (key->isKind(ParseNodeKind::NumberExpr)) {
+        // The following branches except for the last `else` clause emit the
+        // cases handled in NameResolver::resolveFun (see NameFunctions.cpp)
+        if (key->isKind(ParseNodeKind::ObjectPropertyName) ||
+            key->isKind(ParseNodeKind::StringExpr)) {
+          MOZ_ASSERT(accessorType == AccessorType::None);
+
+          auto keyAtom = key->as<NameNode>().atom();
+          if (!emitAnonymousFunctionWithName(propVal, keyAtom)) {
+            //      [stack] CTOR? OBJ CTOR? VAL
+            return false;
+          }
+        } else if (key->isKind(ParseNodeKind::NumberExpr)) {
           MOZ_ASSERT(accessorType == AccessorType::None);
 
           auto keyAtom = key->as<NumericLiteral>().toAtom(ec, parserAtoms());
@@ -8888,15 +8894,6 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
           }
           if (!emitAnonymousFunctionWithName(propVal, keyAtom)) {
             //      [stack] CTOR? OBJ CTOR? KEY VAL
-            return false;
-          }
-        } else if (key->isKind(ParseNodeKind::ObjectPropertyName) ||
-                   key->isKind(ParseNodeKind::StringExpr)) {
-          MOZ_ASSERT(accessorType == AccessorType::None);
-
-          auto keyAtom = key->as<NameNode>().atom();
-          if (!emitAnonymousFunctionWithName(propVal, keyAtom)) {
-            //      [stack] CTOR? OBJ CTOR? VAL
             return false;
           }
         } else if (key->isKind(ParseNodeKind::ComputedName) &&
@@ -8960,33 +8957,6 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         (type == ClassBody && propdef->as<ClassMethod>().isStatic())
             ? PropertyEmitter::Kind::Static
             : PropertyEmitter::Kind::Prototype;
-    if (key->isKind(ParseNodeKind::NumberExpr)) {
-      //            [stack] CTOR? OBJ
-      if (!pe.prepareForIndexPropKey(propdef->pn_pos.begin, kind)) {
-        //          [stack] CTOR? OBJ CTOR?
-        return false;
-      }
-      if (!emitNumberOp(key->as<NumericLiteral>().value())) {
-        //        [stack] CTOR? OBJ CTOR? KEY
-        return false;
-      }
-      if (!pe.prepareForIndexPropValue()) {
-        //          [stack] CTOR? OBJ CTOR? KEY
-        return false;
-      }
-      if (!emitValue()) {
-        //          [stack] CTOR? OBJ CTOR? KEY VAL
-        return false;
-      }
-
-      if (!pe.emitInitIndexOrComputed(accessorType)) {
-        //          [stack] CTOR? OBJ
-        return false;
-      }
-
-      continue;
-    }
-
     if (key->isKind(ParseNodeKind::ObjectPropertyName) ||
         key->isKind(ParseNodeKind::StringExpr)) {
       //            [stack] CTOR? OBJ
@@ -9011,6 +8981,33 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
       }
 
       if (!pe.emitInit(accessorType, keyAtom)) {
+        //          [stack] CTOR? OBJ
+        return false;
+      }
+
+      continue;
+    }
+
+    if (key->isKind(ParseNodeKind::NumberExpr)) {
+      //            [stack] CTOR? OBJ
+      if (!pe.prepareForIndexPropKey(propdef->pn_pos.begin, kind)) {
+        //          [stack] CTOR? OBJ CTOR?
+        return false;
+      }
+      if (!emitNumberOp(key->as<NumericLiteral>().value())) {
+        //        [stack] CTOR? OBJ CTOR? KEY
+        return false;
+      }
+      if (!pe.prepareForIndexPropValue()) {
+        //          [stack] CTOR? OBJ CTOR? KEY
+        return false;
+      }
+      if (!emitValue()) {
+        //          [stack] CTOR? OBJ CTOR? KEY VAL
+        return false;
+      }
+
+      if (!pe.emitInitIndexOrComputed(accessorType)) {
         //          [stack] CTOR? OBJ
         return false;
       }
