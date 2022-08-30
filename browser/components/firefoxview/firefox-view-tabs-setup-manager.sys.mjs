@@ -43,7 +43,7 @@ const TOPIC_DEVICELIST_UPDATED = "fxaccounts:devicelist_updated";
 const NETWORK_STATUS_CHANGED = "network:offline-status-changed";
 const SYNC_SERVICE_ERROR = "weave:service:sync:error";
 const FXA_ENABLED = "identity.fxaccounts.enabled";
-const SYNC_SERVICE_FINISHED = "weave:service:sync:finished";
+const SYNC_SERVICE_FINISHED = "weave:service:sync:finish";
 
 function openTabInWindow(window, url) {
   const {
