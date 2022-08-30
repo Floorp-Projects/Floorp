@@ -365,6 +365,8 @@ body {
                 background: url('chrome://browser/skin/forward.svg') no-repeat right 8px center;
                 background-size: 12px;
                 padding-inline-end: 24px;
+                -moz-context-properties: fill;
+                fill: currentColor;
 
                 &:dir(rtl) {
                   background-image: url('chrome://browser/skin/back.svg');
