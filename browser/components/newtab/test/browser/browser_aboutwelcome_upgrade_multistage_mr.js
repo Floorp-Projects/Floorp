@@ -32,6 +32,8 @@ add_setup(async () => {
     .stub(OnboardingMessageProvider, "_doesAppNeedDefault")
     .resolves(false);
 
+  sandbox.stub(SpecialMessageActions, "pinFirefoxToTaskbar").resolves();
+
   registerCleanupFunction(async () => {
     await popPrefs();
     sandbox.restore();
@@ -238,5 +240,111 @@ add_task(
     );
 
     await popPrefs();
+  }
+);
+
+/*
+ *Test checkbox if needPrivatePin is true
+ */
+add_task(async function test_aboutwelcome_upgrade_mr_private_pin() {
+  OnboardingMessageProvider._doesAppNeedPin.resolves(true);
+  let browser = await openMRUpgradeWelcome(["UPGRADE_PIN_FIREFOX"]);
+
+  await test_upgrade_screen_content(
+    browser,
+    //Expected selectors:
+    ["main.UPGRADE_PIN_FIREFOX", "input#action-checkbox"],
+    //Unexpected selectors:
+    ["main.UPGRADE_COLORWAY"]
+  );
+  await clickVisibleButton(browser, ".action-buttons button.primary");
+  await BrowserTestUtils.waitForDialogClose(
+    browser.top.document.getElementById("window-modal-dialog")
+  );
+
+  const pinStub = SpecialMessageActions.pinFirefoxToTaskbar;
+  Assert.equal(
+    pinStub.callCount,
+    2,
+    "pinFirefoxToTaskbar should have been called twice"
+  );
+  Assert.ok(
+    // eslint-disable-next-line eqeqeq
+    pinStub.firstCall.lastArg != pinStub.secondCall.lastArg,
+    "pinFirefoxToTaskbar should have been called once for private, once not"
+  );
+});
+
+/*
+ *Test checkbox shouldn't be shown in get started screen
+ */
+
+add_task(async function test_aboutwelcome_upgrade_mr_private_pin_get_started() {
+  OnboardingMessageProvider._doesAppNeedPin.resolves(false);
+
+  let browser = await openMRUpgradeWelcome(["UPGRADE_GET_STARTED"]);
+
+  await test_upgrade_screen_content(
+    browser,
+    //Expected selectors
+    ["main.UPGRADE_GET_STARTED"],
+    //Unexpected selectors:
+    ["input#action-checkbox"]
+  );
+
+  await clickVisibleButton(browser, ".action-buttons button.secondary");
+
+  await BrowserTestUtils.waitForDialogClose(
+    browser.top.document.getElementById("window-modal-dialog")
+  );
+});
+
+/*
+ *Test checkbox shouldn't be shown if needPrivatePin is false
+ */
+add_task(async function test_aboutwelcome_upgrade_mr_private_pin_not_needed() {
+  OnboardingMessageProvider._doesAppNeedPin
+    .resolves(true)
+    .withArgs(true)
+    .resolves(false);
+
+  let browser = await openMRUpgradeWelcome(["UPGRADE_PIN_FIREFOX"]);
+
+  await test_upgrade_screen_content(
+    browser,
+    //Expected selectors
+    ["main.UPGRADE_PIN_FIREFOX"],
+    //Unexpected selectors:
+    ["input#action-checkbox"]
+  );
+
+  await clickVisibleButton(browser, ".action-buttons button.secondary");
+  await BrowserTestUtils.waitForDialogClose(
+    browser.top.document.getElementById("window-modal-dialog")
+  );
+});
+
+/*
+ * Make sure we don't get an extraneous checkbox here.
+ */
+add_task(
+  async function test_aboutwelcome_upgrade_mr_pin_not_needed_default_needed() {
+    OnboardingMessageProvider._doesAppNeedPin.resolves(false);
+    OnboardingMessageProvider._doesAppNeedDefault.resolves(false);
+
+    let browser = await openMRUpgradeWelcome(["UPGRADE_GET_STARTED"]);
+
+    await test_upgrade_screen_content(
+      browser,
+      //Expected selectors
+      ["main.UPGRADE_GET_STARTED"],
+      //Unexpected selectors:
+      ["input#action-checkbox"]
+    );
+
+    await clickVisibleButton(browser, ".action-buttons button.secondary");
+    await BrowserTestUtils.waitForDialogClose(
+      browser.top.document.getElementById("window-modal-dialog")
+    );
   }
 );

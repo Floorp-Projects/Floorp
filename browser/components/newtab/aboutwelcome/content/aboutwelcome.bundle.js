@@ -671,12 +671,13 @@ const MultiStageProtonScreen = props => {
   });
 };
 const ProtonScreenActionButtons = props => {
-  var _content$primary_butt, _content$primary_butt2;
+  var _content$checkbox, _content$primary_butt, _content$primary_butt2;
 
   const {
     content
   } = props;
-  const [isChecked, setIsChecked] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+  const defaultValue = (_content$checkbox = content.checkbox) === null || _content$checkbox === void 0 ? void 0 : _content$checkbox.defaultValue;
+  const [isChecked, setIsChecked] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(defaultValue || false);
 
   if (!content.primary_button && !content.secondary_button) {
     return null;
@@ -700,6 +701,7 @@ const ProtonScreenActionButtons = props => {
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", {
     type: "checkbox",
     id: "action-checkbox",
+    checked: isChecked,
     onChange: () => {
       setIsChecked(!isChecked);
     }
