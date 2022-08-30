@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Touch Drag on the viewport's scrollbar</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    .content {
+      width: 1000px;
+      height: 5000px;
+    }
+  </style>
+  <script type="text/javascript">
+
+async function test() {
+  let transformEndPromise = promiseTransformEnd();
+  let scrollbarPresent = await promiseVerticalScrollbarTouchDrag(window, 20);
+  if (!scrollbarPresent) {
+    ok(true, "No scrollbar, can't do this test");
+    return;
+  }
+
+  await transformEndPromise;
+
+  // Flush everything just to be safe
+  await promiseOnlyApzControllerFlushed();
+
+  // After dragging the scrollbar 20px on a 1000px-high viewport, we should
+  // have scrolled approx 2% of the 5000px high content. There might have been
+  // scroll arrows and such so let's just have a minimum bound of 50px to be safe.
+  ok(window.scrollY > 50, "Scrollbar drag resulted in a vertical scroll position of " + window.scrollY);
+
+  // Check that we did not get spurious horizontal scrolling, as we might if the
+  // drag gesture is mishandled by content as a select-drag rather than a scrollbar
+  // drag.
+  is(window.scrollX, 0, "Scrollbar drag resulted in a horizontal scroll position of " + window.scrollX);
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body>
+  <div class="content">Some content to ensure the root scrollframe is scrollable</div>
+</body>
+</html>
