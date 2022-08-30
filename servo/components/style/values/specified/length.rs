@@ -164,7 +164,8 @@ impl FontRelativeLength {
         ) -> FontMetrics {
             context
                 .font_metrics_provider
-                .query(context, base_size, orientation)
+                .query(context, base_size, orientation,
+                       false /* retrieve_math_scales */)
         }
 
         let reference_font_size = base_size.resolve(context);

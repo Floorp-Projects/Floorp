@@ -24,6 +24,12 @@ pub struct FontMetrics {
     pub ic_width: Option<Length>,
     /// The ascent of the font (a value is always available for this).
     pub ascent: Length,
+    /// Script scale down factor for math-depth 1.
+    /// https://w3c.github.io/mathml-core/#dfn-scriptpercentscaledown
+    pub script_percent_scale_down: Option<f32>,
+    /// Script scale down factor for math-depth 2.
+    /// https://w3c.github.io/mathml-core/#dfn-scriptscriptpercentscaledown
+    pub script_script_percent_scale_down: Option<f32>,
 }
 
 impl Default for FontMetrics {
@@ -34,6 +40,8 @@ impl Default for FontMetrics {
             cap_height: None,
             ic_width: None,
             ascent: Length::new(0.0),
+            script_percent_scale_down: None,
+            script_script_percent_scale_down: None,
         }
     }
 }
@@ -59,6 +67,7 @@ pub trait FontMetricsProvider {
         _context: &crate::values::computed::Context,
         _base_size: crate::values::specified::length::FontBaseSize,
         _orientation: FontMetricsOrientation,
+        _retrieve_math_scales: bool,
     ) -> FontMetrics {
         Default::default()
     }
