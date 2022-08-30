@@ -5,6 +5,7 @@
 package org.mozilla.fenix
 
 import android.annotation.SuppressLint
+import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.StrictMode
@@ -44,7 +45,6 @@ import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
-import mozilla.components.support.rusterrors.initializeRustErrors
 import mozilla.components.support.base.facts.register
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.logger.Logger
@@ -52,6 +52,7 @@ import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.ktx.android.content.isMainProcess
 import mozilla.components.support.ktx.android.content.runOnlyInMainProcess
 import mozilla.components.support.locale.LocaleAwareApplication
+import mozilla.components.support.rusterrors.initializeRustErrors
 import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
 import mozilla.components.support.utils.logElapsedTime
@@ -275,7 +276,10 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                             totalSites = components.settings.topSitesMaxLimit,
                             frecencyConfig = TopSitesFrecencyConfig(
                                 FrecencyThresholdOption.SKIP_ONE_TIME_PAGES
-                            ) { !it.containsQueryParameters(components.settings.frecencyFilterQuery) },
+                            ) {
+                                !Uri.parse(it.url)
+                                    .containsQueryParameters(components.settings.frecencyFilterQuery)
+                            },
                             providerConfig = TopSitesProviderConfig(
                                 showProviderTopSites = components.settings.showContileFeature,
                                 maxThreshold = TOP_SITES_PROVIDER_MAX_THRESHOLD
