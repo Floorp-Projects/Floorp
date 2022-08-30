@@ -7,24 +7,24 @@
 <style>
   div {
     background: red;
-    height: 12.5px;
+    height: 10px;
     width: 100px;
   }
-  /* assume all browsers support at least feature-opentype and color-COLRv0 */
-  @supports font-tech(feature-opentype) {
+  /* assume all browsers support at least features-opentype and color-COLRv0 */
+  @supports font-tech(features-opentype) {
     #test1 { background: green };
   }
   @supports font-tech(color-COLRv0) {
     #test2 { background: green };
   }
   /* forms that should NOT be recognized as supported */
-  @supports not font-tech(feature-opentype color-COLRv1) {
+  @supports not font-tech(features-opentype color-COLRv1) {
     #test3 { background: green };
   }
-  @supports not font-tech(feature-opentype, color-COLRv0) {
+  @supports not font-tech(features-opentype, color-COLRv0) {
     #test4 { background: green };
   }
-  @supports not font-tech(feature-opentype, feature-opentype) {
+  @supports not font-tech(features-opentype, features-opentype) {
     #test5 { background: green };
   }
   @supports not font-tech() {
@@ -33,8 +33,14 @@
   @supports not font-tech(xyzzy) {
     #test7 { background: green };
   }
-  @supports not font-tech("feature-opentype") {
+  @supports not font-tech("features-opentype") {
     #test8 { background: green };
+  }
+  @supports not font-tech(feature-opentype) {
+    #test9 { background: green };
+  }
+  @supports not font-tech(colors-COLRv0) {
+    #test10 { background: green };
   }
 </style>
 <p>Test passes if there is a <strong>filled green square</strong> and <strong>no red</strong>.</p>
@@ -46,3 +52,5 @@
 <div id=test6></div>
 <div id=test7></div>
 <div id=test8></div>
+<div id=test9></div>
+<div id=test10></div>
