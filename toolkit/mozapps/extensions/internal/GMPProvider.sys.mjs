@@ -4,11 +4,8 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["GMPTestUtils"];
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -880,7 +877,7 @@ var GMPProvider = {
 GMPProvider.addObserver();
 
 // For test use only.
-const GMPTestUtils = {
+export const GMPTestUtils = {
   /**
    * Used to override the GMP service with a mock.
    *

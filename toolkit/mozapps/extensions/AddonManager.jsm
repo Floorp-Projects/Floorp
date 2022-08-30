@@ -708,7 +708,7 @@ var AddonManagerInternal = {
         CATEGORY_PROVIDER_MODULE
       )) {
         try {
-          ChromeUtils.import(url);
+          ChromeUtils.importESModule(url);
           logger.debug(`Loaded provider scope for ${url}`);
         } catch (e) {
           AddonManagerPrivate.recordException(

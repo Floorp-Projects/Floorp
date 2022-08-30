@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { GMPTestUtils } = ChromeUtils.import(
-  "resource://gre/modules/addons/GMPProvider.jsm"
+const { GMPTestUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/addons/GMPProvider.sys.mjs"
 );
 const { GMPInstallManager } = ChromeUtils.import(
   "resource://gre/modules/GMPInstallManager.jsm"

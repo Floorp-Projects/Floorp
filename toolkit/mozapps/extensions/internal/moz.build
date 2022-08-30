@@ -16,7 +16,7 @@ EXTRA_JS_MODULES.addons += [
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
     EXTRA_JS_MODULES.addons += [
-        "GMPProvider.jsm",
+        "GMPProvider.sys.mjs",
     ]
 
 TESTING_JS_MODULES += [
