@@ -376,6 +376,35 @@ Primary storage:
   Cleanups:           16
     """
 
+    STAT13 = """
+Summary:
+  Cache directory:         /Users/leebc/.ccache
+  Primary config:          /Users/leebc/.ccache/ccache.conf
+  Secondary config:        /etc/opt/homebrew/Cellar/ccache/4.6.1_1/ccache.conf
+  Stats updated:           {timestamp}
+  Hits:                    280542 / 668195 (41.99 %)
+    Direct:                280542 / 669860 (41.88 %)
+    Preprocessed:               0 /      0
+  Misses:                  387653
+    Direct:                389318
+    Preprocessed:               0
+  Errors:                       1
+  Uncacheable:               1667
+Primary storage:
+  Hits:                    588807 / 950404 (61.95 %)
+  Misses:                  361597
+  Cache size (GB):          17.38 /  20.00 (86.92 %)
+  Files:                   335104
+  Cleanups:                   364
+Errors:
+  Could not find compiler:      1
+Uncacheable:
+  Compilation failed:        1665
+  No input file:                2
+""".format(
+        timestamp=time.strftime("%c")
+    )
+
     def test_parse_garbage_stats_message(self):
         self.assertRaises(ValueError, CCacheStats, self.STAT_GARBAGE)
 
@@ -460,6 +489,9 @@ Primary storage:
 
         stat12 = CCacheStats(self.STAT12, True)
         self.assertTrue(stat12)
+
+        stat13 = CCacheStats(self.STAT13, True)
+        self.assertTrue(stat13)
 
 
 if __name__ == "__main__":
