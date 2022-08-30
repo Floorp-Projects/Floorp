@@ -1528,18 +1528,10 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 /*
  * In High Contrast Mode, this prevents a dialog from visually bleeding into
  * the window behind it, which looks jarring.
- *
- * In some ideal world, we would also put a transparent border in the general
- * case for .dialogBox, so that everything would layout the same either way,
- * which would presumably make it easier for prefers-contrast renderings to
- * Just Work. Doing that _would_ change the layout for any existing subdialog
- * in the tree which doesn't already have a border of some sort, but we could
- * choose to bite the bullet at some point, as it may turn out to not cause
- * any real problems.
  */
 @media (prefers-contrast) {
 .dialogBox {
-  border: 1px solid WindowText;
+  outline: 1px solid WindowText;
 }
 }
 
