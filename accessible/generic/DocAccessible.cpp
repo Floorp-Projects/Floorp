@@ -1324,7 +1324,7 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
       if (table && table->IsTable()) {
         FireDelayedEvent(nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED,
                          table);
-        QueueCacheUpdate(acc, CacheDomain::Table);
+        QueueCacheUpdate(table, CacheDomain::Table);
       }
     }
 
