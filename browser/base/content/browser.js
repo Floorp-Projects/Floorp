@@ -6753,7 +6753,9 @@ function setToolbarVisibility(
           }
         }
         isVisible =
-          !!currentURI && BookmarkingUI.isOnNewTabPage({ currentURI });
+          !!currentURI &&
+          (BookmarkingUI.isOnNewTabPage({ currentURI }) ||
+            currentURI?.spec == "chrome://browser/content/blanktab.html");
         break;
     }
   }
