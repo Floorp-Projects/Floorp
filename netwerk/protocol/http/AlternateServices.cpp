@@ -566,9 +566,8 @@ bool AltSvcTransaction<Validator>::MaybeValidate(nsresult reason) {
     return false;
   }
 
-  nsCOMPtr<nsISupports> secInfo;
-  mConnection->GetSecurityInfo(getter_AddRefs(secInfo));
-  nsCOMPtr<nsISSLSocketControl> socketControl = do_QueryInterface(secInfo);
+  nsCOMPtr<nsISSLSocketControl> socketControl;
+  mConnection->GetTLSSocketControl(getter_AddRefs(socketControl));
 
   LOG(("AltSvcTransaction::MaybeValidate() %p socketControl=%p\n", this,
        socketControl.get()));
