@@ -227,10 +227,6 @@ inline bool JSObject::nonProxyIsExtensible() const {
   return !hasFlag(js::ObjectFlag::NotExtensible);
 }
 
-inline bool JSObject::isBoundFunction() const {
-  return is<JSFunction>() && as<JSFunction>().isBoundFunction();
-}
-
 inline bool JSObject::hasInvalidatedTeleporting() const {
   return hasFlag(js::ObjectFlag::InvalidatedTeleporting);
 }

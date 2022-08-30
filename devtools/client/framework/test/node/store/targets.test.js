@@ -7,7 +7,8 @@
  * Unit tests for targets management on the toolbox store.
  */
 
-const { createToolboxStore } = require("devtools/client/framework/store");
+const createStore = require("devtools/client/shared/redux/create-store");
+const reducer = require("devtools/shared/commands/target/reducers/targets");
 const actions = require("devtools/shared/commands/target/actions/targets");
 const {
   getSelectedTarget,
@@ -17,7 +18,7 @@ const {
 describe("Toolbox store - targets", () => {
   describe("registerTarget", () => {
     it("adds the target to the list", () => {
-      const store = createToolboxStore();
+      const store = createStore(reducer);
 
       const targetFront1 = {
         actorID: "target/1",
@@ -44,7 +45,7 @@ describe("Toolbox store - targets", () => {
 
   describe("selectTarget", () => {
     it("updates the selected property when the target is known", () => {
-      const store = createToolboxStore();
+      const store = createStore(reducer);
       const targetFront1 = {
         actorID: "target/1",
       };
@@ -54,7 +55,7 @@ describe("Toolbox store - targets", () => {
     });
 
     it("does not update the selected property when the target is unknown", () => {
-      const store = createToolboxStore();
+      const store = createStore(reducer);
       const targetFront1 = {
         actorID: "target/1",
       };
@@ -67,7 +68,7 @@ describe("Toolbox store - targets", () => {
     });
 
     it("does not update the state when the target is already selected", () => {
-      const store = createToolboxStore();
+      const store = createStore(reducer);
       const targetFront1 = {
         actorID: "target/1",
       };
@@ -82,7 +83,7 @@ describe("Toolbox store - targets", () => {
 
   describe("unregisterTarget", () => {
     it("removes the target from the list", () => {
-      const store = createToolboxStore();
+      const store = createStore(reducer);
 
       const targetFront1 = {
         actorID: "target/1",
@@ -107,7 +108,7 @@ describe("Toolbox store - targets", () => {
     });
 
     it("does not update the state when the target is unknown", () => {
-      const store = createToolboxStore();
+      const store = createStore(reducer);
 
       const targetFront1 = {
         actorID: "target/1",
@@ -124,7 +125,7 @@ describe("Toolbox store - targets", () => {
     });
 
     it("resets the selected property when it was the selected target", () => {
-      const store = createToolboxStore();
+      const store = createStore(reducer);
 
       const targetFront1 = {
         actorID: "target/1",

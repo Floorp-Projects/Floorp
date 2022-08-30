@@ -31,8 +31,10 @@ class FileSystemDataManagerBase {};
 
 class OriginPrivateFileSystemParent : public POriginPrivateFileSystemParent {
  public:
-  explicit OriginPrivateFileSystemParent(TaskQueue* aTaskQueue)
-      : mTaskQueue(aTaskQueue), mData() {}
+  OriginPrivateFileSystemParent(TaskQueue* aTaskQueue,
+                                const EntryId& aRootEntry);
+
+  mozilla::ipc::IPCResult RecvGetRootHandle(GetRootHandleResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvGetDirectoryHandle(
       FileSystemGetHandleRequest&& aRequest,
@@ -73,6 +75,8 @@ class OriginPrivateFileSystemParent : public POriginPrivateFileSystemParent {
   RefPtr<TaskQueue> mTaskQueue;
 
   UniquePtr<fs::data::FileSystemDataManagerBase> mData;
+
+  const EntryId mRootEntry;
 };
 
 }  // namespace mozilla::dom

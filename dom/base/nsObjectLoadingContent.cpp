@@ -2409,7 +2409,7 @@ void nsObjectLoadingContent::SubdocumentImageLoadComplete(nsresult aResult) {
     return;
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(mType == eType_Document);
+  MOZ_DIAGNOSTIC_ASSERT_IF(mChannelLoaded, mType == eType_Document);
 
   NotifyStateChanged(oldType, oldState, true, true);
 }

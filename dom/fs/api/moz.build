@@ -9,6 +9,7 @@ EXPORTS.mozilla.dom += [
     "FileSystemDirectoryIterator.h",
     "FileSystemFileHandle.h",
     "FileSystemHandle.h",
+    "FileSystemManager.h",
     "FileSystemSyncAccessHandle.h",
     "FileSystemWritableFileStream.h",
 ]
@@ -18,11 +19,13 @@ UNIFIED_SOURCES += [
     "FileSystemDirectoryIterator.cpp",
     "FileSystemFileHandle.cpp",
     "FileSystemHandle.cpp",
+    "FileSystemManager.cpp",
     "FileSystemSyncAccessHandle.cpp",
     "FileSystemWritableFileStream.cpp",
 ]
 
 LOCAL_INCLUDES += [
+    "/dom/fs/child",
     "/dom/fs/include",
 ]
 

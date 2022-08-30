@@ -4479,6 +4479,7 @@ bool nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
                                   int16_t aButton, uint16_t aInputSource,
                                   WinPointerInfo* aPointerInfo,
                                   bool aIgnoreAPZ) {
+  ContextMenuPreventer contextMenuPreventer(this);
   bool result = false;
 
   UserActivity();
@@ -4695,12 +4696,10 @@ bool nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
       }
     }
 
-    result = ConvertStatus(DispatchInputEvent(&event).mContentStatus);
-
-    // Release the widget with NS_IF_RELEASE() just in case
-    // the context menu key code in EventListenerManager::HandleEvent()
-    // released it already.
-    return result;
+    nsIWidget::ContentAndAPZEventStatus eventStatus =
+        DispatchInputEvent(&event);
+    contextMenuPreventer.Update(event, eventStatus);
+    return ConvertStatus(eventStatus.mContentStatus);
   }
 
   return result;
@@ -5788,6 +5787,14 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
       if (mTouchWindow &&
           MOUSE_INPUT_SOURCE() == MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
         MOZ_ASSERT(mAPZC);  // since mTouchWindow is true, APZ must be enabled
+        result = true;
+        break;
+      }
+
+      // If this WM_CONTEXTMENU is triggered by a mouse's secondary button up
+      // event in overscroll gutter, we shouldn't open context menu.
+      if (MOUSE_INPUT_SOURCE() == MouseEvent_Binding::MOZ_SOURCE_MOUSE &&
+          mNeedsToPreventContextMenu) {
         result = true;
         break;
       }
@@ -9439,4 +9446,14 @@ void nsWindow::FrameState::SetSizeModeInternal(nsSizeMode aMode) {
       (aMode == nsSizeMode_Maximized || aMode == nsSizeMode_Fullscreen)) {
     mWindow->DispatchFocusToTopLevelWindow(true);
   }
+}
+
+void nsWindow::ContextMenuPreventer::Update(
+    const WidgetMouseEvent& aEvent,
+    const nsIWidget::ContentAndAPZEventStatus& aEventStatus) {
+  mNeedsToPreventContextMenu =
+      aEvent.mMessage == eMouseUp &&
+      aEvent.mButton == MouseButton::eSecondary &&
+      aEvent.mInputSource == MouseEvent_Binding::MOZ_SOURCE_MOUSE &&
+      aEventStatus.mApzStatus == nsEventStatus_eConsumeNoDefault;
 }

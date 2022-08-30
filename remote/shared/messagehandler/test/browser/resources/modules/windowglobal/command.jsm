@@ -14,6 +14,7 @@ class CommandModule extends Module {
   constructor(messageHandler) {
     super(messageHandler);
     this._testCategorySessionData = [];
+    this._lastSessionDataUpdate = {};
 
     this._createdByMessageHandlerConstructor = this._isCreatedByMessageHandlerConstructor();
   }
@@ -32,7 +33,7 @@ class CommandModule extends Module {
         .concat(added)
         .filter(value => !removed.includes(value));
 
-      return {
+      this._lastSessionDataUpdate = {
         addedData: added.join(", "),
         removedData: removed.join(", "),
         sessionData: this._testCategorySessionData.join(", "),
@@ -47,6 +48,16 @@ class CommandModule extends Module {
     }
 
     return {};
+  }
+
+  _getSessionDataUpdate(params) {
+    const lastUpdate = this._lastSessionDataUpdate;
+
+    // Each "lastUpdate" should only be returned once, so that the caller can
+    // assert when a SessionData update had no impact.
+    this._lastSessionDataUpdate = null;
+
+    return lastUpdate;
   }
 
   testWindowGlobalModule() {

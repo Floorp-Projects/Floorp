@@ -2623,7 +2623,6 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
     FunctionNodeType funNode) {
   FunctionBox* funbox = pc_->functionBox();
 
-  bool parenFreeArrow = false;
   // Modifier for the following tokens.
   // TokenStream::SlashIsDiv for the following cases:
   //   async a => 1
@@ -2641,76 +2640,66 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
   // TokenStream::SlashIsRegExp for the following case:
   //   a => 1
   //   ^
-  Modifier firstTokenModifier = TokenStream::SlashIsDiv;
-
-  // Modifier for the the first token in each argument.
-  // can be changed to TokenStream::SlashIsDiv for the following case:
-  //   async a => 1
-  //         ^
-  Modifier argModifier = TokenStream::SlashIsRegExp;
-  if (kind == FunctionSyntaxKind::Arrow) {
-    TokenKind tt;
-    // In async function, the first token after `async` is already gotten
-    // with TokenStream::SlashIsDiv.
-    // In sync function, the first token is already gotten with
-    // TokenStream::SlashIsRegExp.
-    firstTokenModifier = funbox->isAsync() ? TokenStream::SlashIsDiv
-                                           : TokenStream::SlashIsRegExp;
-    if (!tokenStream.peekToken(&tt, firstTokenModifier)) {
-      return false;
-    }
-    if (TokenKindIsPossibleIdentifier(tt)) {
-      parenFreeArrow = true;
-      argModifier = firstTokenModifier;
-    }
+  Modifier firstTokenModifier =
+      kind != FunctionSyntaxKind::Arrow || funbox->isAsync()
+          ? TokenStream::SlashIsDiv
+          : TokenStream::SlashIsRegExp;
+  TokenKind tt;
+  if (!tokenStream.getToken(&tt, firstTokenModifier)) {
+    return false;
   }
 
-  TokenPos firstTokenPos;
-  if (!parenFreeArrow) {
-    TokenKind tt;
-    if (!tokenStream.getToken(&tt, firstTokenModifier)) {
-      return false;
-    }
-    if (tt != TokenKind::LeftParen) {
-      error(kind == FunctionSyntaxKind::Arrow ? JSMSG_BAD_ARROW_ARGS
-                                              : JSMSG_PAREN_BEFORE_FORMAL);
-      return false;
-    }
-
-    firstTokenPos = pos();
-
-    // Record the start of function source (for FunctionToString). If we
-    // are parenFreeArrow, we will set this below, after consuming the NAME.
+  if (kind == FunctionSyntaxKind::Arrow && TokenKindIsPossibleIdentifier(tt)) {
+    // Record the start of function source (for FunctionToString).
     setFunctionStartAtCurrentToken(funbox);
-  } else {
-    // When delazifying, we may not have a current token and pos() is
-    // garbage. In that case, substitute the first token's position.
-    if (!tokenStream.peekTokenPos(&firstTokenPos, firstTokenModifier)) {
+
+    ListNodeType argsbody = handler_.newList(ParseNodeKind::ParamsBody, pos());
+    if (!argsbody) {
       return false;
     }
+    handler_.setFunctionFormalParametersAndBody(funNode, argsbody);
+
+    TaggedParserAtomIndex name = bindingIdentifier(yieldHandling);
+    if (!name) {
+      return false;
+    }
+
+    constexpr bool disallowDuplicateParams = true;
+    bool duplicatedParam = false;
+    if (!notePositionalFormalParameter(funNode, name, pos().begin,
+                                       disallowDuplicateParams,
+                                       &duplicatedParam)) {
+      return false;
+    }
+    MOZ_ASSERT(!duplicatedParam);
+    MOZ_ASSERT(pc_->positionalFormalParameterNames().length() == 1);
+
+    funbox->setLength(1);
+    funbox->setArgCount(1);
+    return true;
   }
 
-  ListNodeType argsbody =
-      handler_.newList(ParseNodeKind::ParamsBody, firstTokenPos);
+  if (tt != TokenKind::LeftParen) {
+    error(kind == FunctionSyntaxKind::Arrow ? JSMSG_BAD_ARROW_ARGS
+                                            : JSMSG_PAREN_BEFORE_FORMAL);
+    return false;
+  }
+
+  // Record the start of function source (for FunctionToString).
+  setFunctionStartAtCurrentToken(funbox);
+
+  ListNodeType argsbody = handler_.newList(ParseNodeKind::ParamsBody, pos());
   if (!argsbody) {
     return false;
   }
   handler_.setFunctionFormalParametersAndBody(funNode, argsbody);
 
-  bool hasArguments = false;
-  if (parenFreeArrow) {
-    hasArguments = true;
-  } else {
-    bool matched;
-    if (!tokenStream.matchToken(&matched, TokenKind::RightParen,
-                                TokenStream::SlashIsRegExp)) {
-      return false;
-    }
-    if (!matched) {
-      hasArguments = true;
-    }
+  bool matched;
+  if (!tokenStream.matchToken(&matched, TokenKind::RightParen,
+                              TokenStream::SlashIsRegExp)) {
+    return false;
   }
-  if (hasArguments) {
+  if (!matched) {
     bool hasRest = false;
     bool hasDefault = false;
     bool duplicatedParam = false;
@@ -2733,11 +2722,9 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
       }
 
       TokenKind tt;
-      if (!tokenStream.getToken(&tt, argModifier)) {
+      if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
         return false;
       }
-      argModifier = TokenStream::SlashIsRegExp;
-      MOZ_ASSERT_IF(parenFreeArrow, TokenKindIsPossibleIdentifier(tt));
 
       if (tt == TokenKind::TripleDot) {
         if (kind == FunctionSyntaxKind::Setter) {
@@ -2797,10 +2784,6 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
             return false;
           }
 
-          if (parenFreeArrow) {
-            setFunctionStartAtCurrentToken(funbox);
-          }
-
           TaggedParserAtomIndex name = bindingIdentifier(yieldHandling);
           if (!name) {
             return false;
@@ -2824,28 +2807,12 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
         return false;
       }
 
-      // The next step is to detect arguments with default expressions,
-      // e.g. |function parseInt(str, radix = 10) {}|.  But if we have a
-      // parentheses-free arrow function, |a => ...|, the '=' necessary
-      // for a default expression would really be an assignment operator:
-      // that is, |a = b => 42;| would parse as |a = (b => 42);|.  So we
-      // should stop parsing arguments here.
-      if (parenFreeArrow) {
-        break;
-      }
-
       bool matched;
       if (!tokenStream.matchToken(&matched, TokenKind::Assign,
                                   TokenStream::SlashIsRegExp)) {
         return false;
       }
       if (matched) {
-        // A default argument without parentheses would look like:
-        // a = expr => body, but both operators are right-associative, so
-        // that would have been parsed as a = (expr => body) instead.
-        // Therefore it's impossible to get here with parenFreeArrow.
-        MOZ_ASSERT(!parenFreeArrow);
-
         if (hasRest) {
           error(JSMSG_REST_WITH_DEFAULT);
           return false;
@@ -2898,20 +2865,18 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
       }
     }
 
-    if (!parenFreeArrow) {
-      TokenKind tt;
-      if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
+    TokenKind tt;
+    if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
+      return false;
+    }
+    if (tt != TokenKind::RightParen) {
+      if (kind == FunctionSyntaxKind::Setter) {
+        error(JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
         return false;
       }
-      if (tt != TokenKind::RightParen) {
-        if (kind == FunctionSyntaxKind::Setter) {
-          error(JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
-          return false;
-        }
 
-        error(JSMSG_PAREN_AFTER_FORMAL);
-        return false;
-      }
+      error(JSMSG_PAREN_AFTER_FORMAL);
+      return false;
     }
 
     if (!hasDefault) {

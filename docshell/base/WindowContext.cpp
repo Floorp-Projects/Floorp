@@ -284,11 +284,6 @@ bool WindowContext::CanSet(FieldIndex<IDX_IsLocalIP>, const bool& aValue,
   return CheckOnlyOwningProcessCanSet(aSource);
 }
 
-bool WindowContext::CanSet(FieldIndex<IDX_HadLazyLoadImage>, const bool& aValue,
-                           ContentParent* aSource) {
-  return IsTop();
-}
-
 bool WindowContext::CanSet(FieldIndex<IDX_AllowJavascript>, bool aValue,
                            ContentParent* aSource) {
   return (XRE_IsParentProcess() && !aSource) ||

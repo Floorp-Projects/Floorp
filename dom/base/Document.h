@@ -3747,14 +3747,6 @@ class Document : public nsINode,
     return mLazyLoadImageObserverViewport;
   }
   DOMIntersectionObserver& EnsureLazyLoadImageObserver();
-  DOMIntersectionObserver& EnsureLazyLoadImageObserverViewport();
-  void IncLazyLoadImageCount();
-  void DecLazyLoadImageCount() {
-    MOZ_DIAGNOSTIC_ASSERT(mLazyLoadImageCount > 0);
-    --mLazyLoadImageCount;
-  }
-  void IncLazyLoadImageStarted() { ++mLazyLoadImageStarted; }
-  void IncLazyLoadImageReachViewport(bool aLoading);
 
   ResizeObserver* GetLastRememberedSizeObserver() {
     return mLastRememberedSizeObserver;
@@ -4832,19 +4824,6 @@ class Document : public nsINode,
   // would block the parser, then mWriteLevel will be incorrect until the parser
   // finishes processing that script.
   uint32_t mWriteLevel;
-
-  // The amount of images that have `loading="lazy"` on the page or have loaded
-  // lazily already.
-  uint32_t mLazyLoadImageCount;
-  // Number of lazy-loaded images that we've started loading as a result of
-  // triggering the lazy-load observer threshold.
-  uint32_t mLazyLoadImageStarted;
-  // Number of lazy-loaded images that reached the viewport which were not done
-  // loading when they did so.
-  uint32_t mLazyLoadImageReachViewportLoading;
-  // Number of lazy-loaded images that reached the viewport and were done
-  // loading when they did so.
-  uint32_t mLazyLoadImageReachViewportLoaded;
 
   uint32_t mContentEditableCount;
   EditingState mEditingState;

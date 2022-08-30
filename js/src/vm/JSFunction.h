@@ -847,9 +847,6 @@ class FunctionExtended : public JSFunction {
   friend class JSFunction;
 };
 
-extern bool CanReuseScriptForClone(JS::Realm* realm, HandleFunction fun,
-                                   HandleObject newEnclosingEnv);
-
 extern JSFunction* CloneFunctionReuseScript(JSContext* cx, HandleFunction fun,
                                             HandleObject enclosingEnv,
                                             HandleObject proto);

@@ -43,7 +43,7 @@ const TOPIC_DEVICELIST_UPDATED = "fxaccounts:devicelist_updated";
 const NETWORK_STATUS_CHANGED = "network:offline-status-changed";
 const SYNC_SERVICE_ERROR = "weave:service:sync:error";
 const FXA_ENABLED = "identity.fxaccounts.enabled";
-const SYNC_SERVICE_FINISHED = "weave:service:sync:finished";
+const SYNC_SERVICE_FINISHED = "weave:service:sync:finish";
 
 function openTabInWindow(window, url) {
   const {
@@ -71,7 +71,7 @@ export const TabsSetupFlowManager = new (class {
       exitConditions: () => {
         return (
           this.networkIsOnline &&
-          this.syncIsWorking &&
+          (this.syncIsWorking || this.syncHasWorked) &&
           !Services.prefs.prefIsLocked(FXA_ENABLED) &&
           // its only an error for sync to not be connected if we are signed-in.
           (this.syncIsConnected || !this.fxaSignedIn)
@@ -172,6 +172,8 @@ export const TabsSetupFlowManager = new (class {
     this._didShowMobilePromo = false;
     this._uiUpdateNeeded = true;
 
+    this.syncHasWorked = false;
+
     // keep track of what is connected so we can respond to changes
     this._deviceStateSnapshot = {
       mobileDeviceConnected: this.mobileDeviceConnected,
@@ -183,7 +185,7 @@ export const TabsSetupFlowManager = new (class {
     // this ordering is important for dealing with multiple errors at once
     const errorStates = {
       "network-offline": !this.networkIsOnline,
-      "sync-error": !this.syncIsWorking,
+      "sync-error": !this.syncIsWorking && !this.syncHasWorked,
       "fxa-admin-disabled": Services.prefs.prefIsLocked(FXA_ENABLED),
       "sync-disconnected": !this.syncIsConnected,
     };
@@ -298,6 +300,7 @@ export const TabsSetupFlowManager = new (class {
       case SYNC_SERVICE_FINISHED:
         if (!this.syncIsWorking) {
           this.syncIsWorking = true;
+          this.syncHasWorked = true;
           this.maybeUpdateUI();
         }
     }
@@ -340,6 +343,12 @@ export const TabsSetupFlowManager = new (class {
       this.logger.debug(
         "refreshDevices: device state did change, call maybeUpdateUI"
       );
+      if (!secondaryDeviceConnected) {
+        this.logger.debug(
+          "We lost a device, now claim sync hasn't worked before."
+        );
+        this.syncHasWorked = false;
+      }
       this._uiUpdateNeeded = true;
     } else {
       this.logger.debug("refreshDevices: no device state change");

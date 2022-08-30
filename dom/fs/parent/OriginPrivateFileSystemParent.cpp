@@ -22,6 +22,18 @@ extern LazyLogModule gOPFSLog;
 
 namespace mozilla::dom {
 
+OriginPrivateFileSystemParent::OriginPrivateFileSystemParent(
+    TaskQueue* aTaskQueue, const EntryId& aRootEntry)
+    : mTaskQueue(aTaskQueue), mData(), mRootEntry(aRootEntry) {}
+
+IPCResult OriginPrivateFileSystemParent::RecvGetRootHandle(
+    GetRootHandleResolver&& aResolver) {
+  FileSystemGetHandleResponse response(mRootEntry);
+  aResolver(response);
+
+  return IPC_OK();
+}
+
 IPCResult OriginPrivateFileSystemParent::RecvGetDirectoryHandle(
     FileSystemGetHandleRequest&& /* aRequest */,
     GetDirectoryHandleResolver&& aResolver) {

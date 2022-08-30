@@ -819,6 +819,7 @@ void nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
   mHFlip = false;
   mAlignmentOffset = 0;
   mPositionedOffset = 0;
+  mPositionedByMoveToRect = false;
 
   mAnchorType = aAnchorType;
 
@@ -1537,12 +1538,16 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
       // tell us which axis the popup is flush against in case we have to move
       // it around later. The AdjustPositionForAnchorAlign method accounts for
       // the popup's margin.
-      mUntransformedAnchorRect = anchorRect;
+      if (!mPositionedByMoveToRect) {
+        mUntransformedAnchorRect = anchorRect;
+      }
       screenPoint = AdjustPositionForAnchorAlign(anchorRect, hFlip, vFlip);
     } else {
       // with no anchor, the popup is positioned relative to the root frame
       anchorRect = rootScreenRect;
-      mUntransformedAnchorRect = anchorRect;
+      if (!mPositionedByMoveToRect) {
+        mUntransformedAnchorRect = anchorRect;
+      }
       screenPoint = anchorRect.TopLeft() + nsPoint(margin.left, margin.top);
     }
 
@@ -1579,7 +1584,9 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
   } else {
     screenPoint = mScreenRect.TopLeft();
     anchorRect = nsRect(screenPoint, nsSize());
-    mUntransformedAnchorRect = anchorRect;
+    if (!mPositionedByMoveToRect) {
+      mUntransformedAnchorRect = anchorRect;
+    }
 
     // Right-align RTL context menus, and apply margin and offsets as per the
     // platform conventions.
@@ -2408,7 +2415,8 @@ nsMargin nsMenuPopupFrame::GetMargin() const {
   return margin;
 }
 
-void nsMenuPopupFrame::MoveTo(const CSSPoint& aPos, bool aUpdateAttrs) {
+void nsMenuPopupFrame::MoveTo(const CSSPoint& aPos, bool aUpdateAttrs,
+                              bool aByMoveToRect) {
   nsIWidget* widget = GetWidget();
   nsPoint appUnitsPos = CSSPixel::ToAppUnits(aPos);
 
@@ -2433,6 +2441,7 @@ void nsMenuPopupFrame::MoveTo(const CSSPoint& aPos, bool aUpdateAttrs) {
     return;
   }
 
+  mPositionedByMoveToRect = aByMoveToRect;
   mScreenRect.MoveTo(appUnitsPos);
   if (mAnchorType == MenuPopupAnchorType_Rect) {
     // This ensures that the anchor width is still honored, to prevent it from

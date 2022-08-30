@@ -1,5 +1,7 @@
-#ifndef MOZ_FFVPX_CONFIG_COMMON_H
-#define MOZ_FFVPX_CONFIG_COMMON_H
+#ifndef MOZ_FFVPX_CONFIG_OVERRIDE_H
+#define MOZ_FFVPX_CONFIG_OVERRIDE_H
+
+// This file contains overrides for config.h, that can be platform-specific.
 
 #ifdef MOZ_LIBAV_FFT
 #undef CONFIG_FFT

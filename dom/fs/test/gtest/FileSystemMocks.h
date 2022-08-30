@@ -43,7 +43,10 @@ nsIGlobalObject* GetGlobal();
 
 class MockFileSystemRequestHandler : public FileSystemRequestHandler {
  public:
-  MOCK_METHOD(void, GetRoot, (RefPtr<Promise> aPromise), (override));
+  MOCK_METHOD(void, GetRootHandle,
+              (RefPtr<FileSystemActorHolder> & aActor,
+               RefPtr<Promise> aPromise),
+              (override));
 
   MOCK_METHOD(void, GetDirectoryHandle,
               (RefPtr<FileSystemActorHolder> & aActor,
@@ -189,7 +192,14 @@ class TestPromiseListener : public PromiseNativeHandler,
 
 class TestOriginPrivateFileSystemChild : public OriginPrivateFileSystemChild {
  public:
-  NS_INLINE_DECL_REFCOUNTING(TestOriginPrivateFileSystemChild, override)
+  NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(TestOriginPrivateFileSystemChild,
+                                          Destroy(), override)
+
+  MOCK_METHOD(void, SendGetRootHandle,
+              (mozilla::ipc::ResolveCallback<FileSystemGetHandleResponse> &&
+                   aResolve,
+               mozilla::ipc::RejectCallback&& aReject),
+              (override));
 
   MOCK_METHOD(
       void, SendGetDirectoryHandle,
@@ -239,6 +249,11 @@ class TestOriginPrivateFileSystemChild : public OriginPrivateFileSystemChild {
 
  protected:
   virtual ~TestOriginPrivateFileSystemChild() = default;
+
+  void Destroy() {
+    Close();
+    delete this;
+  }
 };
 
 class TestFileSystemChildFactory final : public FileSystemChildFactory {
