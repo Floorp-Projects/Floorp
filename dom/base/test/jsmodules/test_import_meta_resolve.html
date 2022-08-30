@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<head>
+  <meta charset=utf-8>
+  <title>Test import.meta.resolve</title>
+</head>
+<body onload='testLoaded()'>
+
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  function assertThrowsTypeError(fn, msg) {
+    let hasThrown = false;
+    try {
+      fn();
+    } catch (error) {
+      hasThrown = true;
+      ok(error instanceof TypeError, "Thrown error should be TypeError.");
+    }
+    ok(hasThrown, msg);
+  }
+
+  function testLoaded() {
+    SimpleTest.finish();
+  }
+</script>
+
+<script type="module">
+  is(typeof import.meta.resolve, "function", "resolve should be a function.");
+  is(import.meta.resolve.name, "resolve", "resolve.name should be 'resolve'.");
+  is(import.meta.resolve.length, 1, "resolve.length should be 1.");
+  is(Object.getPrototypeOf(import.meta.resolve), Function.prototype,
+     "prototype of resolve should be Function.prototype.");
+</script>
+
+<script type="module">
+  is(import.meta.resolve("http://example.com/"), "http://example.com/",
+     "resolve specifiers with absolute path.");
+</script>
+
+<script type="module">
+  is(import.meta.resolve("./x"), (new URL("./x", import.meta.url)).href,
+     "resolve specifiers with relative path.");
+</script>
+
+<script type="module">
+  assertThrowsTypeError(() => new import.meta.resolve("./x"),
+                        "import.meta.resolve is not a constructor.");
+</script>
+
+<script type="module">
+  // Fails to resolve the specifier should throw a TypeError.
+  assertThrowsTypeError(() => import.meta.resolve("failed"),
+                        "import.meta.resolve should throw if fails to resolve");
+</script>
+
+<script type="module">
+  for (const name of Reflect.ownKeys(import.meta)) {
+    const desc = Object.getOwnPropertyDescriptor(import.meta, name);
+    is(desc.writable, true, name + ".writable should be true.");
+    is(desc.enumerable, true, name + ".enumerable should be true.");
+    is(desc.configurable, true, name + ".configurable should be true.");
+  }
+</script>
+</body>
