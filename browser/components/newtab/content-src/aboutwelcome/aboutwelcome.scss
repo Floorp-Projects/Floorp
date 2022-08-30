@@ -321,6 +321,25 @@ body {
               }
             }
 
+            &.dual-action-buttons {
+
+              button {
+                padding: 8px 16px;
+              }
+
+              .secondary-cta {
+                display: block;
+                position: relative;
+                bottom: unset;
+                margin-block: 5px 0;
+
+                .secondary {
+                  margin-inline: 0;
+                  font-size: 13px;
+                }
+              }
+            }
+
             .secondary-cta {
               position: absolute;
               bottom: -30px;

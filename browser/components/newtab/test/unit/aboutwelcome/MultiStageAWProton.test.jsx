@@ -103,6 +103,25 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.equal(wrapper.find(".welcome-text h1").text(), "test title");
       assert.equal(wrapper.find("main").prop("pos"), "center");
     });
+
+    it("should render action buttons container with dual-action-buttons class", () => {
+      const SCREEN_PROPS = {
+        content: {
+          position: "split",
+          title: "test title",
+          dual_action_buttons: true,
+          primary_button: {
+            label: "test primary button",
+          },
+          secondary_button: {
+            label: "test secondary button",
+          },
+        },
+      };
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+      assert.ok(wrapper.find(".dual-action-buttons").text());
+    });
   });
 
   describe("AboutWelcomeDefaults for proton", () => {
