@@ -956,6 +956,7 @@ class CCacheStats(object):
         "Summary/Misses/Preprocessed",
         "Primary storage/Hits",
         "Primary storage/Misses",
+        "Errors/Could not find compiler",
     ]
 
     DIRECTORY_DESCRIPTION_4_4 = "Summary/Cache directory"
