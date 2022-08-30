@@ -15,7 +15,7 @@ Mochitest
 ---------
 :Location: ``t/c/t/t/browser/``
 :Language: Javascript
-  (`mochitest <https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Mochitest>`__)
+  (`mochitest <https://firefox-source-docs.mozilla.org/testing/mochitest-plain>`__)
 
 This test harness runs nearly the entire Firefox and gives access to multiple tabs and browser chrome APIs.
 It requires window focus to complete correctly,
@@ -68,7 +68,7 @@ xpcshell
 --------
 :Location: ``t/c/t/t/unit``
 :Language: Javascript
-  (`xpcshell <https://developer.mozilla.org/en-US/docs/Mozilla/QA/Writing_xpcshell-based_unit_tests>`__)
+  (`xpcshell <https://firefox-source-docs.mozilla.org/testing/xpcshell>`__)
 
 This test harness uses a stripped-down shell of the Firefox browser to run privileged Javascript.
 It should be used to write unit tests for the Javascript API and app-level logic of Firefox Telemetry.
@@ -86,8 +86,8 @@ Instrumentation Tests
 ---------------------
 :Location: Various
 :Language: Usually Javascript
-  (`xpcshell <https://developer.mozilla.org/en-US/docs/Mozilla/QA/Writing_xpcshell-based_unit_tests>`__ or
-  `mochitest <https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Mochitest>`__)
+  (`xpcshell <https://firefox-source-docs.mozilla.org/testing/xpcshell>`__ or
+  `mochitest <https://firefox-source-docs.mozilla.org/testing/mochitest-plain>`__)
 
 In addition to the tests of Firefox Telemetry,
 other code owners have written tests that ensure that their code records appropriate values to Telemetry.
