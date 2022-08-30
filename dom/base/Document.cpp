@@ -1404,10 +1404,6 @@ Document::Document(const char* aContentType)
       mXMLDeclarationBits(0),
       mOnloadBlockCount(0),
       mWriteLevel(0),
-      mLazyLoadImageCount(0),
-      mLazyLoadImageStarted(0),
-      mLazyLoadImageReachViewportLoading(0),
-      mLazyLoadImageReachViewportLoaded(0),
       mContentEditableCount(0),
       mEditingState(EditingState::eOff),
       mCompatMode(eCompatibility_FullStandards),
@@ -15617,25 +15613,6 @@ void Document::ReportDocumentUseCounters() {
             (" > %s\n", Telemetry::GetHistogramName(id)));
     Telemetry::Accumulate(id, 1);
   }
-
-  ReportDocumentLazyLoadCounters();
-}
-
-void Document::ReportDocumentLazyLoadCounters() {
-  if (!mLazyLoadImageCount) {
-    return;
-  }
-  Telemetry::Accumulate(Telemetry::LAZYLOAD_IMAGE_TOTAL, mLazyLoadImageCount);
-  Telemetry::Accumulate(Telemetry::LAZYLOAD_IMAGE_STARTED,
-                        mLazyLoadImageStarted);
-  Telemetry::Accumulate(Telemetry::LAZYLOAD_IMAGE_NOT_VIEWPORT,
-                        mLazyLoadImageStarted -
-                            mLazyLoadImageReachViewportLoading -
-                            mLazyLoadImageReachViewportLoaded);
-  Telemetry::Accumulate(Telemetry::LAZYLOAD_IMAGE_VIEWPORT_LOADING,
-                        mLazyLoadImageReachViewportLoading);
-  Telemetry::Accumulate(Telemetry::LAZYLOAD_IMAGE_VIEWPORT_LOADED,
-                        mLazyLoadImageReachViewportLoaded);
 }
 
 void Document::SendPageUseCounters() {
@@ -15750,22 +15727,6 @@ DOMIntersectionObserver& Document::EnsureLazyLoadImageObserver() {
         DOMIntersectionObserver::CreateLazyLoadObserver(*this);
   }
   return *mLazyLoadImageObserver;
-}
-
-DOMIntersectionObserver& Document::EnsureLazyLoadImageObserverViewport() {
-  if (!mLazyLoadImageObserverViewport) {
-    mLazyLoadImageObserverViewport =
-        DOMIntersectionObserver::CreateLazyLoadObserverViewport(*this);
-  }
-  return *mLazyLoadImageObserverViewport;
-}
-
-void Document::IncLazyLoadImageReachViewport(bool aLoading) {
-  if (aLoading) {
-    ++mLazyLoadImageReachViewportLoading;
-  } else {
-    ++mLazyLoadImageReachViewportLoaded;
-  }
 }
 
 ResizeObserver& Document::EnsureLastRememberedSizeObserver() {
@@ -16156,17 +16117,6 @@ bool Document::HasValidTransientUserGestureActivation() const {
 bool Document::ConsumeTransientUserGestureActivation() {
   RefPtr<WindowContext> wc = GetWindowContext();
   return wc && wc->ConsumeTransientUserGestureActivation();
-}
-
-void Document::IncLazyLoadImageCount() {
-  if (!mLazyLoadImageCount) {
-    if (WindowContext* wc = GetTopLevelWindowContext()) {
-      if (!wc->HadLazyLoadImage()) {
-        Unused << wc->SetHadLazyLoadImage(true);
-      }
-    }
-  }
-  ++mLazyLoadImageCount;
 }
 
 void Document::SetDocTreeHadMedia() {
