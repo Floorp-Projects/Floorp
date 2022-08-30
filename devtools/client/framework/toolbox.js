@@ -396,7 +396,6 @@ Toolbox.prototype = {
 
   _prefs: {
     LAST_TOOL: "devtools.toolbox.selectedTool",
-    SIDE_ENABLED: "devtools.toolbox.sideEnabled",
   },
 
   get nodePicker() {
@@ -1827,17 +1826,12 @@ Toolbox.prototype = {
       this.hostType !== Toolbox.HostType.WINDOW
     );
 
-    const sideEnabled = Services.prefs.getBoolPref(this._prefs.SIDE_ENABLED);
-
     const hostTypes = [];
     for (const type in Toolbox.HostType) {
       const position = Toolbox.HostType[type];
       if (
         position == Toolbox.HostType.BROWSERTOOLBOX ||
-        position == Toolbox.HostType.PAGE ||
-        (!sideEnabled &&
-          (position == Toolbox.HostType.LEFT ||
-            position == Toolbox.HostType.RIGHT))
+        position == Toolbox.HostType.PAGE
       ) {
         continue;
       }
