@@ -94,7 +94,7 @@ add_task(async function test_browser_settings() {
   });
   await extension.startup();
 
-  await extension.terminateBackground();
+  await extension.terminateBackground({ disableResetIdleForTest: true });
   assertPersistentListeners(extension, "browserSettings", "cacheEnabled", {
     primed: true,
   });
@@ -104,7 +104,7 @@ add_task(async function test_browser_settings() {
   await extension.awaitMessage("cacheEnabled");
   ok(true, "cacheEnabled.onChange fired");
 
-  await extension.terminateBackground();
+  await extension.terminateBackground({ disableResetIdleForTest: true });
   assertPersistentListeners(extension, "browserSettings", "homepageOverride", {
     primed: true,
   });
@@ -118,7 +118,7 @@ add_task(async function test_browser_settings() {
     AppConstants.platform !== "android" &&
     AppConstants.MOZ_APP_NAME !== "thunderbird"
   ) {
-    await extension.terminateBackground();
+    await extension.terminateBackground({ disableResetIdleForTest: true });
     assertPersistentListeners(
       extension,
       "browserSettings",
@@ -134,7 +134,7 @@ add_task(async function test_browser_settings() {
     ok(true, "newTabPageOverride.onChange fired");
   }
 
-  await extension.terminateBackground();
+  await extension.terminateBackground({ disableResetIdleForTest: true });
   assertPersistentListeners(
     extension,
     "privacy",
