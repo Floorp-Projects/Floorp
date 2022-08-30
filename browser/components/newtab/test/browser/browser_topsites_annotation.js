@@ -862,3 +862,85 @@ add_task(async function timeout() {
     await clearHistoryAndBookmarks();
   });
 });
+
+add_task(async function fixup() {
+  await BrowserTestUtils.withNewTab("about:home", async () => {
+    const destinationURL = "http://example.com/?a";
+    const link = {
+      label: "test",
+      url: "http://example.com?a",
+      sponsored_position: 1,
+      sponsored_tile_id: 12345,
+      sponsored_impression_url: "http://impression.example.com/",
+      sponsored_click_url: "http://click.example.com/",
+    };
+
+    info("Setup pin");
+    await pin(link);
+
+    info("Click sponsored tile");
+    const onLoad = BrowserTestUtils.browserLoaded(
+      gBrowser.selectedBrowser,
+      false,
+      destinationURL
+    );
+    const onLocationChanged = waitForLocationChanged(destinationURL);
+    await BrowserTestUtils.synthesizeMouseAtCenter(
+      ".top-site-button",
+      {},
+      gBrowser.selectedBrowser
+    );
+    await onLoad;
+    await onLocationChanged;
+
+    info("Check the DB");
+    await assertDatabase({
+      targetURL: destinationURL,
+      expected: {
+        source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
+      },
+    });
+
+    info("Clean up");
+    unpin(link);
+    await clearHistoryAndBookmarks();
+  });
+});
+
+add_task(async function noTriggeringURL() {
+  await BrowserTestUtils.withNewTab("about:home", async browser => {
+    const dummyTriggeringSponsoredURL =
+      "http://example.com/dummyTriggeringSponsoredURL";
+    const targetURL = "http://example.com/";
+
+    info("Setup dummy triggering sponsored URL");
+    browser.setAttribute("triggeringSponsoredURL", dummyTriggeringSponsoredURL);
+    browser.setAttribute("triggeringSponsoredURLVisitTimeMS", Date.now());
+
+    info("Open URL whose host is the same as dummy triggering sponsored URL");
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: targetURL,
+      waitForFocus: SimpleTest.waitForFocus,
+    });
+    const onLoad = BrowserTestUtils.browserLoaded(
+      gBrowser.selectedBrowser,
+      false,
+      targetURL
+    );
+    EventUtils.synthesizeKey("KEY_Enter");
+    await onLoad;
+
+    info("Check DB");
+    await assertDatabase({
+      targetURL,
+      expected: {
+        source: VISIT_SOURCE_SPONSORED,
+        frecency: FRECENCY.SPONSORED,
+      },
+    });
+
+    await clearHistoryAndBookmarks();
+  });
+});
