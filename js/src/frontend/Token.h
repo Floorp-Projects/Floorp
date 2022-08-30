@@ -129,6 +129,10 @@ struct Token {
   friend class TokenStreamShared;
 
  public:
+  // WARNING: TokenStreamPosition assumes that the only GC things a Token
+  //          includes are atoms.  DON'T ADD NON-ATOM GC THING POINTERS HERE
+  //          UNLESS YOU ADD ADDITIONAL ROOTING TO THAT CLASS.
+
   /** The type of this token. */
   TokenKind type;
 
