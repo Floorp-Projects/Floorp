@@ -449,6 +449,8 @@ body[lwt-newtab-brighttext] {
   background: url("chrome://browser/skin/forward.svg") no-repeat right 8px center;
   background-size: 12px;
   padding-inline-end: 24px;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .arrow-icon:dir(rtl) {
   background-image: url("chrome://browser/skin/back.svg");
