@@ -48,15 +48,24 @@ set.
 Each variant must conform to the
 :py:data:`~gecko_taskgraph.transforms.test.variant_description_schema`:
 
-* **description** (required) - A description explaining what the variant is for
-* **suffix** (required) - A suffix to apply to the task label and treeherder symbol
-* **contact** - Person to contact with questions around cost / capacity planning or
-  relative priority.
+* **description** (required) - A description explaining what the variant is for.
+* **component** (required) - The name of the component that owns the variant. It
+  should be formatted as ``PRODUCT``::``COMPONENT``.
+* **expiration** (required) - The date when the variant will be expired (maximum
+  6 months).
+* **suffix** (required) - A suffix to apply to the task label and treeherder symbol.
 * **when** - A `json-e`_ expression that must evaluate to ``true`` for the variant
-  to be applied. The ``task`` definition is passed in as context
-* **replace** - A dictionary that will overwrite keys in the task definition
+  to be applied. The ``task`` definition is passed in as context.
+* **replace** - A dictionary that will overwrite keys in the task definition.
 * **merge** - A dictionary that will be merged into the task definition using
   the :py:func:`~gecko_taskgraph.util.templates.merge` function.
+
+.. note::
+
+  Exceptions can be requested to have a variant without expiration (using
+  "never") if this is a shipped mode we support. Teams should contact the CI
+  team to discuss this before submitting a patch if they think their variant
+  qualifies.  All exceptions will require director approval.
 
 
 Defining Variants
@@ -93,6 +102,23 @@ we wanted to run both the ``foo`` and ``bar`` variants together, we could do:
 This will first merge or replace the config of ``foo`` into the task, followed
 by the config of ``bar``. Care should be taken if both variants are replacing
 the same keys. The last variant's configuration will be the one that gets used.
+
+
+Expired Variants
+~~~~~~~~~~~~~~~~
+Ideally, when a variant is not needed anymore, it should be dropped (even if it
+has not expired). If you need to extend the expiration date, you can submit a
+patch to modify the expiration date in the `variants.yml`_ file. Variants will
+not be scheduled to run after the expiration date.
+
+If an expired variant is not dropped, the triage owner of the component will be
+notified. If the expired variant persists for an extended period, the autonag
+bot will escalate to notify the manager and director of the triage owner. Once
+at that point, we will submit a patch to remove the variant from Taskcluster and
+manifest conditions pending the triage owner / manager to review.
+
+Please subscribe to alerts from `firefox-ci <https://groups.google.com/a/mozilla.com/g/firefox-ci>`
+group in order to be aware of changes to the CI, scheduling, or the policy.
 
 .. _variants.yml: https://searchfox.org/mozilla-central/source/taskcluster/ci/test/variants.yml
 .. _json-e: https://json-e.js.org/
