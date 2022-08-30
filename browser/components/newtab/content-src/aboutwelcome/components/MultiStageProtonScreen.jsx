@@ -54,8 +54,9 @@ export const MultiStageProtonScreen = props => {
 
 export const ProtonScreenActionButtons = props => {
   const { content } = props;
+  const defaultValue = content.checkbox?.defaultValue;
 
-  const [isChecked, setIsChecked] = useState(false);
+  const [isChecked, setIsChecked] = useState(defaultValue || false);
 
   if (!content.primary_button && !content.secondary_button) {
     return null;
@@ -84,6 +85,7 @@ export const ProtonScreenActionButtons = props => {
           <input
             type="checkbox"
             id="action-checkbox"
+            checked={isChecked}
             onChange={() => {
               setIsChecked(!isChecked);
             }}
