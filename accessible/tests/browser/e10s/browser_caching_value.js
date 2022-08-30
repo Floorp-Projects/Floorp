@@ -212,3 +212,37 @@ addAccessibleTask(
   },
   { iframe: true, remoteIframe: true }
 );
+
+/**
+ * Test caching of link URL values.
+ */
+addAccessibleTask(
+  `<a id="link" href="https://example.com/">Test</a>`,
+  async function(browser, docAcc) {
+    const link = findAccessibleChildByID(docAcc, "link");
+    is(link.value, "https://example.com/", "link initial value correct");
+    const textLeaf = link.firstChild;
+    is(textLeaf.value, "https://example.com/", "link initial value correct");
+
+    info("Changing link href");
+    await invokeSetAttribute(browser, "link", "href", "https://example.net/");
+    await untilCacheIs(
+      () => link.value,
+      "https://example.net/",
+      "link value correct after change"
+    );
+
+    info("Removing link href");
+    await invokeSetAttribute(browser, "link", "href");
+    await untilCacheIs(() => link.value, "", "link value empty after removal");
+
+    info("Setting link href");
+    await invokeSetAttribute(browser, "link", "href", "https://example.com/");
+    await untilCacheIs(
+      () => link.value,
+      "https://example.com/",
+      "link value correct after change"
+    );
+  },
+  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);
