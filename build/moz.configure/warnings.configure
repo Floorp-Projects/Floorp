@@ -160,9 +160,6 @@ check_and_add_warning("-Wno-error=deprecated-declarations")
 # false positives depending on optimization
 check_and_add_warning("-Wno-error=array-bounds")
 
-# can't get rid of those PGO warnings
-check_and_add_warning("-Wno-error=coverage-mismatch")
-
 # false positives depending on optimizations
 check_and_add_warning("-Wno-error=free-nonheap-object")
 
