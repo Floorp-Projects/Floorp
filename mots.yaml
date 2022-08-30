@@ -2,7 +2,7 @@
 ---
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2022-08-23T09:56:25.482550'
+updated_at: '2022-08-30T16:18:51.573864'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -387,7 +387,7 @@ people:
     nick: janv
   - &jaws
     bmo_id: 409754
-    name: Jared Wein
+    name: ''
     nick: jaws
   - &jchen
     bmo_id: 281508
@@ -423,7 +423,7 @@ people:
     nick: jhlin
   - &jib
     bmo_id: 456498
-    name: Jan-Ivar Bruaroey
+    name: On PTO back Aug 29
     nick: jib
   - &jimm
     bmo_id: 279663
@@ -777,6 +777,10 @@ people:
     bmo_id: 468136
     name: Dan Gohman
     nick: sunfish
+  - &Sylvestre
+    bmo_id: 495955
+    name: Sylvestre Ledru
+    nick: Sylvestre
   - &tantek
     bmo_id: 164722
     name: Tantek Çelik
@@ -1415,6 +1419,21 @@ modules:
       - *edgar
     machine_name: core_event_handling
 
+  - machine_name: core_firefox_source_documentation
+    name: 'Core: Firefox Source Documentation'
+    description: The infrastructure platform used to generate Firefox's source documentation,
+      excluding editorial control over the content.
+    includes:
+      - docs/
+      - tools/moztreedocs/
+    owners:
+      - *ahal
+    peers:
+      - *Sylvestre
+    meta:
+      components:
+        - Developer Infrastructure::Source Documentation
+      url: https://firefox-source-docs.mozilla.org/
   - name: 'Core: Gecko Profiler'
     description: Gecko's built-in profiler
     includes:
@@ -3607,5 +3626,5 @@ modules:
         machine_name: webextensions
     machine_name: toolkit
 hashes:
-  config: af03e70e8268def4ba57af0191a85cbb5e0a61f4
-  export: fd5ea331ea6cac903498a00597a06f4a7af73adf
+  config: 7955ecb66aa84ff17a6e9ea50a1a51bb01da451a
+  export: f4dffa58efe06fe3150855587b0cedd039fd983e
