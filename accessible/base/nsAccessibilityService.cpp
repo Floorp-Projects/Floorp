@@ -571,6 +571,7 @@ void nsAccessibilityService::TableLayoutGuessMaybeChanged(
       LocalAccessible* table = nsAccUtils::TableFor(acc);
       document->FireDelayedEvent(
           nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED, table);
+      document->QueueCacheUpdate(table, CacheDomain::Table);
     }
   }
 }
