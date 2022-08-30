@@ -4,6 +4,12 @@
 
 @namespace html "http://www.w3.org/1999/xhtml";
 
+  #trackingGroup[hidden="true"] {
+  display: none !important;
+  }
+  #trackingGroup{
+    display: unset;
+  }
 .profiles-icon {
   list-style-image: url("chrome://browser/skin/lepton/mail-inbox-all.svg");
 }
@@ -291,14 +297,13 @@ line-height: 1.4em !important;
   /* Cards For Certain Sections */
   #fxaGroup,
   .sync-group,
-  #trackingGroup,
   #searchbarGroup,
   #homeContentsGroup,
   #permissionsGroup,
   #httpsOnlyBox,
   #applicationsGroup,
   #oneClickSearchProvidersGroup {
-    padding: 12px 16px !important;
+    padding: 12px 16px;
     background: var(--card-background) !important;
     box-shadow: var(--card-shadow) !important;
     border-radius: 4px !important;
