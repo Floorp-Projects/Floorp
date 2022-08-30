@@ -375,16 +375,8 @@ def copy_cargo_toml():
 def generate_configure():
     """Generate configure files to avoid build dependency on autoconf-2.13"""
 
-    src_configure_in_file = topsrc_dir / "js" / "src" / "configure.in"
     src_old_configure_in_file = topsrc_dir / "js" / "src" / "old-configure.in"
-    dest_configure_file = target_dir / "js" / "src" / "configure"
     dest_old_configure_file = target_dir / "js" / "src" / "old-configure"
-
-    shutil.copy2(
-        str(src_configure_in_file), str(dest_configure_file), follow_symlinks=False
-    )
-    st = dest_configure_file.stat()
-    dest_configure_file.chmod(st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
     js_src_dir = topsrc_dir / "js" / "src"
 
