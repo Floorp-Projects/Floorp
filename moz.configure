@@ -1042,8 +1042,8 @@ def config_status_deps(build_env, build_project):
         + extra_deps
         + [
             os.path.join(topsrcdir, "CLOBBER"),
-            os.path.join(topsrcdir, "configure.in"),
-            os.path.join(topsrcdir, "js", "src", "configure.in"),
+            os.path.join(topsrcdir, "configure"),
+            os.path.join(topsrcdir, "js", "src", "configure"),
             os.path.join(topsrcdir, "nsprpub", "configure"),
             os.path.join(topsrcdir, "config", "milestone.txt"),
             os.path.join(topsrcdir, "browser", "config", "version.txt"),
