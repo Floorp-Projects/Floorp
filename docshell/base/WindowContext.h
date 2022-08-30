@@ -85,9 +85,6 @@ class BrowsingContextGroup;
   /* Whether the principal of this window is for a local                 \
    * IP address */                                                       \
   FIELD(IsLocalIP, bool)                                                 \
-  /* Whether the corresponding document has `loading='lazy'`             \
-   * images; It won't become false if the image becomes non-lazy */      \
-  FIELD(HadLazyLoadImage, bool)                                          \
   /* Whether any of the windows in the subtree rooted at this window has \
    * active peer connections or not (only set on the top window). */     \
   FIELD(HasActivePeerConnections, bool)                                  \
@@ -205,8 +202,6 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   bool CanShowPopup();
 
-  bool HadLazyLoadImage() const { return GetHadLazyLoadImage(); }
-
   bool AllowJavascript() const { return GetAllowJavascript(); }
   bool CanExecuteScripts() const { return mCanExecuteScripts; }
 
@@ -300,9 +295,6 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   }
 
   bool CanSet(FieldIndex<IDX_IsLocalIP>, const bool& aValue,
-              ContentParent* aSource);
-
-  bool CanSet(FieldIndex<IDX_HadLazyLoadImage>, const bool& aValue,
               ContentParent* aSource);
 
   bool CanSet(FieldIndex<IDX_AllowJavascript>, bool aValue,
