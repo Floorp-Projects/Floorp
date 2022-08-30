@@ -42,7 +42,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">ਸੱਜਰੇ ਬੁੱਕਮਾਰਕ</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">ਸੱਜਰੇ ਬੁੱਕਮਾਰਕ</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">ਤਾਜ਼ਾ ਸੰਭਾਲੇ</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">ਸਾਰੇ ਸੰਭਾਲੇ ਬੁੱਕਮਾਰਕਾਂ ਨੂੰ ਵੇਖੋ</string>
 
@@ -80,6 +82,12 @@
 
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">ਖ਼ਾਰਜ ਕਰੋ</string>
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">ਸਾਡਾ ਹਾਲੇ ਤੱਕ ਦਾ ਸਭ ਤੋਂ ਜ਼ਿਆਦਾ ਮਜ਼ਬੂਤ ਪਰਦੇਦਾਰੀ ਫ਼ੀਚਰ ਅੰਤਰ-ਸਾਈਟ ਟਰੈਕਰਾਂ ਨੂੰ ਨਿਖੇੜਦਾ ਹੈ।</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">ਪੂਰੀ ਕੂਕੀ ਸੁਰੱਖਿਆ ਬਾਰੇ ਜਾਣੋ</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">ਕੈਮਰੇ ਲਈ ਪਹੁੰਚ ਚਾਹੀਦੀ ਹੈ। Android ਸੈਟਿੰਗਾਂ ਉੱਤੇ ਜਾਓ, ਇਜਾਜ਼ਤਾਂ ਨੂੰ
@@ -129,16 +137,18 @@
     <string name="recent_tabs_show_all_content_description_2">ਸਾਰੀਆਂ ਸੱਜਰੀਆਂ ਟੈਬਾਂ ਬਟਨ ਨੂੰ ਵੇਖਾਓ</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">\&quot;%1$s\&quot; ਲਈ ਤੁਹਾਡੀ ਖੋਜ</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">\&quot;%1$s\&quot; ਲਈ ਤੁਹਾਡੀ ਖੋਜ</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d ਸਾਈਟਾਂ</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d ਸਾਈਟਾਂ</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">ਸਾਰੀਆਂ ਸਿੰਕ ਕੀਤੀਆਂ ਟੈਬਾਂ ਵੇਖੋ।</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">ਡਿਵਾਈਸ ਸਿੰਕ ਕੀਤਾ</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">ਹਟਾਓ</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">ਹਟਾਓ</string>
@@ -257,24 +267,44 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">%1$s ਵਿੱਚ ਨਵਾਂ ਕੀ ਹੈ</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">%1$s ਵਿੱਚ ਨਵਾਂ ਕੀ ਹੈ</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">ਜਿੱਥੇ ਤੁਸੀਂ ਛੱਡ ਕੇ ਗਈ ਸੀ, ਉਥੋਂ ਹੀ ਮੁੜ ਸ਼ੁਰੂ ਕਰਨਾ ਸੌਖਾ ਹੈ।</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">ਜਿੱਥੇ ਤੁਸੀਂ ਛੱਡ ਕੇ ਗਈ ਸੀ, ਉਥੋਂ ਹੀ ਮੁੜ ਸ਼ੁਰੂ ਕਰਨਾ ਸੌਖਾ ਹੈ।</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">ਆਪਣੇ ਮੁਤਾਬਕ ਢਾਲਿਆ %1$s ਦਾ ਮੁੱਖ-ਸਫ਼ਾ</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">ਆਪਣੇ ਮੁਤਾਬਕ ਢਾਲਿਆ %1$s ਦਾ ਮੁੱਖ-ਸਫ਼ਾ</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">ਆਪਣੀਆਂ ਖੋਲ੍ਹੀਆ ਟੈਬਾਂ, ਬੁੱਕਮਾਰਕਾਂ ਅਤੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਅਤੀਤ ਉੱਤੇ ਜਾਓ।</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">ਆਪਣੀਆਂ ਖੋਲ੍ਹੀਆ ਟੈਬਾਂ, ਬੁੱਕਮਾਰਕਾਂ ਅਤੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਅਤੀਤ ਉੱਤੇ ਜਾਓ।</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">ਸਾਫ਼, ਸਜਾਈਆਂ ਟੈਬਾਂ</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">ਸਾਫ਼, ਸਜਾਈਆਂ ਟੈਬਾਂ</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">ਸੁਧਾਰੇ ਖਾਕੇ ਤੇ ਆਪਣੇ-ਬੰਦ ਹੋਣ ਵਾਲੀਆਂ ਟੈਬਾਂ ਨਾਲ ਟੈਬਾਂ ਦੇ ਖਿਲਾਰੇ ਨੂੰ ਸਾਫ਼ ਕਰੋ।</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">ਸੁਧਾਰੇ ਖਾਕੇ ਤੇ ਆਪਣੇ-ਬੰਦ ਹੋਣ ਵਾਲੀਆਂ ਟੈਬਾਂ ਨਾਲ ਟੈਬਾਂ ਦੇ ਖਿਲਾਰੇ ਨੂੰ ਸਾਫ਼ ਕਰੋ।</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">ਸੱਜਰੀਆਂ ਖੋਜਾਂ</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">ਸੱਜਰੀਆਂ ਖੋਜਾਂ</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">ਆਪਣੇ ਮੁੱਖ-ਸਫ਼ੇ ਅਤੇ ਟੈਬਾਂ ਤੋਂ ਆਪਣੀਆਂ ਸੱਜਰੀਆਂ ਖੋਜਾਂ ਨੂੰ ਮੁੜ-ਖੋਲ੍ਹੋ।</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">ਆਪਣੇ ਮੁੱਖ-ਸਫ਼ੇ ਅਤੇ ਟੈਬਾਂ ਤੋਂ ਆਪਣੀਆਂ ਸੱਜਰੀਆਂ ਖੋਜਾਂ ਨੂੰ ਮੁੜ-ਖੋਲ੍ਹੋ।</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">ਤੁਹਾਡੇ ਆਪਣੇ ਬਣਾਏ Firefox ਮੁੱਖ-ਸਫ਼ੇ ਨੇ ਹੁਣ ਜਿੱਥੇ ਤੁਸੀਂ ਛੱਡ ਕੇ ਗਏ ਸੀ, ਉਥੋਂ ਹੀ ਸ਼ੁਰੂ ਕਰਨਾ ਸੌਖਾ ਬਣਾ ਦਿੱਤਾ ਹੈ। ਆਪਣੀਆਂ ਸੱਜਰੀਆਂ ਟੈਬਾਂ, ਬੁੱਕਮਾਰਕ ਅਤੇ ਖੋਜ ਨਤੀਜੇ ਲੱਭੋ।</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">ਤੁਹਾਡੇ ਆਪਣੇ ਬਣਾਏ Firefox ਮੁੱਖ-ਸਫ਼ੇ ਨੇ ਹੁਣ ਜਿੱਥੇ ਤੁਸੀਂ ਛੱਡ ਕੇ ਗਏ ਸੀ, ਉਥੋਂ ਹੀ ਸ਼ੁਰੂ ਕਰਨਾ ਸੌਖਾ ਬਣਾ ਦਿੱਤਾ ਹੈ। ਆਪਣੀਆਂ ਸੱਜਰੀਆਂ ਟੈਬਾਂ, ਬੁੱਕਮਾਰਕ ਅਤੇ ਖੋਜ ਨਤੀਜੇ ਲੱਭੋ।</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">ਤੁਹਾਡੇ ਆਪਣੇ ਬਣਾਏ ਮੁੱਖ-ਸਫ਼ੇ ਨੂੰ ਸਮਝੋ। ਸੱਜਰੀਆਂ ਟੈਬਾਂ, ਬੁੱਕਮਾਰਕ ਅਤੇ ਖੋਜ ਨਤੀਜੇ ਇੱਥੇ ਦਿਖਾਈ ਦੇਣਗੇ।</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title">ਆਜ਼ਾਦ ਇੰਟਰਨੈੱਟ ਲਈ ਜੀ ਆਇਆਂ ਨੂੰ</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">ਵੱਧ ਰੰਗ। ਵੱਧ ਪਰਦੇਦਾਰੀ। ਫਾਇਦੇ ਨਾਲੋਂ ਲੋਕਾਂ ਨੂੰ ਪਹਿਲ ਦੇਣ ਦਾ ਉਹੀ ਵਾਅਦਾ।</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_2">ਫ਼ੋਨ ਤੋਂ ਲੈਪਟਾਪ ਉੱਤੇ ਜਾਓ ਤੇ ਵਾਪਸ ਆਓ</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">ਹੋਰ ਡਿਵਾਈਸਾਂ ਤੋਂ ਜਿੱਥੇ ਤੁਸੀਂ ਟੈਬਾਂ ਨੂੰ ਛੱਡਿਆ ਹੈ, ਉਥੋਂ ਹੀ ਹੁਣ ਆਪਣੀ ਮੁੱਖ ਸਕਰੀਨ ਤੋਂ ਲਵੋ।</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">ਸ਼ੁਰੂ ਕਰੀਏ</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">ਸਾਇਨ ਇਨ</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">ਛੱਡੋ</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">ਤੁਹਾਡੀਆਂ ਟੈਬਾਂ ਸਿੰਕ ਹੋ ਰਹੀਆਂ ਹਨ! ਆਪਣੇ ਹੋਰ ਡਿਵਾਈਸ ਉੱਤੇ ਜਿੱਥੇ ਤੁਸੀਂ ਛੱਡੋ, ਉਥੋਂ ਹੀ ਤੁਸੀਂ ਹੀ ਸ਼ੁਰੂ ਕਰੋ।</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -453,11 +483,11 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">ਵੇਖੋ</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Firefox ਮੁੱਖ-ਸਫ਼ੇ ਲੋਗੋ ਨੂੰ ਛੂਹ ਕੇ ਵਾਲਪੇਪਰ ਬਦਲੋ</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Firefox ਮੁੱਖ-ਸਫ਼ੇ ਲੋਗੋ ਨੂੰ ਛੂਹ ਕੇ ਵਾਲਪੇਪਰ ਬਦਲੋ</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Firefox ਲੋਗੋ - ਵਾਲਪੇਪਰ ,ਬਟਨ ਬਦਲੋ</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Firefox ਲੋਗੋ - ਵਾਲਪੇਪਰ ,ਬਟਨ ਬਦਲੋ</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -638,9 +668,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">ਗਰਿੱਡ</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">ਗਰੁੱਪ ਲੱਭੋ</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">ਗਰੁੱਪ ਲੱਭੋ</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">ਮਿਲਦੀਆਂ ਸਾਈਟਾਂ ਨੂੰ ਇਕੱਠੀਆਂ ਕਰਕੇ ਗਰੁੱਪ ਬਣਾਓ</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">ਮਿਲਦੀਆਂ ਸਾਈਟਾਂ ਨੂੰ ਇਕੱਠੀਆਂ ਕਰਕੇ ਗਰੁੱਪ ਬਣਾਓ</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">ਟੈਬਾਂ ਨੂੰ ਬੰਦ ਕਰੋ</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -744,8 +774,6 @@
     <string name="open_tabs_menu">ਟੈਬ ਮੇਨੂ ਖੋਲ੍ਹੋ</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">ਟੈਬਾਂ ਨੂੰ ਭੰਡਾਰ ਵਿੱਚ ਸੰਭਾਲੋ</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">ਟੈਬ ਮੇਨੂ</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">ਭੰਡਾਰ ਹਟਾਓ</string>
     <!-- Text for the menu button to rename a collection -->
@@ -798,16 +826,16 @@
     <string name="history_empty_message">ਇ਼ੱਥੇ ਕੋਈ ਅਤੀਤ ਨਹੀਂ ਹੈ</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">ਹੋਰ ਡਿਵਾਈਸਾਂ ਤੋਂ ਸਿੰਕ ਕੀਤੇ</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">ਹੋਰ ਡਿਵਾਈਸਾਂ ਤੋਂ ਸਿੰਕ ਕੀਤੇ</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">ਹੋਰ ਡਿਵਾਈਸਾਂ ਤੋਂ</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">ਹੋਰ ਡਿਵਾਈਸਾਂ ਤੋਂ</string>
 
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">ਆਪਣੇ ਹੋਰ ਡਿਵਾਈਸਾਂ ਤੋਂ ਸਿੰਕ ਕੀਤੀ ਅਤੀਤ ਵੇਖਣ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ।</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">ਆਪਣੇ ਹੋਰ ਡਿਵਾਈਸਾਂ ਤੋਂ ਸਿੰਕ ਕੀਤੀ ਅਤੀਤ ਵੇਖਣ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ।</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">ਸਾਇਨ ਇਨ</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">ਸਾਇਨ ਇਨ</string>
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>ਜਾਂ ਸਿੰਕ ਕਰਨ ਨੂੰ ਸ਼ੁਰੂ ਕਰਨ ਲਈ Firefox ਖਾਤਾ ਬਣਾਓ</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>ਜਾਂ ਸਿੰਕ ਕਰਨ ਨੂੰ ਸ਼ੁਰੂ ਕਰਨ ਲਈ Firefox ਖਾਤਾ ਬਣਾਓ</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1337,6 +1365,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">ਸਾਰੇ ਤੀਜੀ-ਧਿਰ ਕੂਕੀਜ਼ (ਵੈੱਬਸਾਈਟ ਦੇ ਕੰਮ ਨਾ ਕਰਨ ਦਾ ਕਾਰਨ ਹੋ ਸਕਦਾ)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">ਸਾਰੇ ਕੂਕੀਜ਼ (ਵੈੱਬਸਾਈਟਾਂ ਦੇ ਕੰਮ ਨਾ ਕਰਨ ਦਾ ਕਾਰਨ ਹੋਵੇਗਾ)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">ਅੰਤਰ-ਸਾਈਟ ਕੂਕੀਜ਼ ਨਿਖੇੜੋ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">ਟਰੈਕਿੰਗ ਸਮੱਗਰੀ</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1359,8 +1389,12 @@
     <string name="etp_social_media_trackers_description">ਵੈੱਬ ‘ਤੇ ਸਮਾਜਿਕ ਨੈੱਟਵਰਕਾਂ ਨੂੰ ਤੁਹਾਡੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੀ ਸਰਗਰਮ ਨੂੰ ਟਰੈਕ ਕਰਨ ਦੀ ਸਮਰੱਥਾ ਦੀ ਸੀਮਿਤ ਕਰਦਾ ਹੈ।</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">ਅੰਤਰ-ਸਾਈਟ ਟਰੈਕ ਕਰਨ ਵਾਲੇ ਕੂਕੀਜ਼</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">ਅੰਤਰ-ਸਾਈਟ ਕੂਕੀਜ਼</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">ਕੂਕੀਜ਼ ਉੱਤੇ ਪਾਬੰਦੀ ਲਗਾਉਂਦਾ ਹੈ, ਜੋ ਕਿ ਇਸ਼ਤਿਹਾਰ ਨੈੱਟਵਰਕ ਤੇ ਵਿਸ਼ਲੇਸ਼ਣ ਕਰਨ ਵਾਲੀਆਂ ਕੰਪਨੀਆਂ ਕਈ ਸਾਈਟਾਂ ‘ਤੇ ਤੁਹਾਡੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਡਾਟੇ ਨੂੰ ਇਕੱਤਰ ਕਰਨ ਲਈ ਵਰਤਦੀਆਂ ਹਨ।</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">ਪੂਰੀ ਕੂਕੀ ਸੁਰੱਖਿਆ ਵਿੱਚ ਜਿਸ ਸਾਈਟ ਉੱਤੇ ਤੁਸੀਂ ਹੋ, ਉਸ ਲਈ ਕੂਕੀਜ਼ ਹੁੰਦੇ ਹਨ ਤਾਂ ਕਿ ਤੁਹਾਡੇ ਵਲੋਂ ਹੋਰ ਸਾਈਟਾਂ ਵਰਤੇ ਜਾਣ ਦੌਰਾਨ ਟਰੈਕਰ ਉਹਨਾਂ ਦੀ ਵਰਤੋਂ ਨਾ ਕਰ ਸਕਣ।</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">ਕ੍ਰਿਪਟੋਮਾਈਨਰ</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

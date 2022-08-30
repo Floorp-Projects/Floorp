@@ -283,14 +283,16 @@
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Rufen Sie Ihre letzten Suchanfragen von Ihrer Startseite und Ihren Tabs aus erneut auf.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint">Ihre personalisierte Firefox-Startseite macht es jetzt einfacher, dort weiterzumachen, wo Sie aufgehört haben. Finden Sie Ihre letzten Tabs, Lesezeichen und Suchergebnisse.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Ihre personalisierte Firefox-Startseite macht es jetzt einfacher, dort weiterzumachen, wo Sie aufgehört haben. Finden Sie Ihre letzten Tabs, Lesezeichen und Suchergebnisse.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Lernen Sie Ihre personalisierte Startseite kennen. Hier werden zuletzt verwendete Tabs, Lesezeichen und Suchergebnisse angezeigt.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">Willkommen in einem unabhängigen Internet</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Mehr Farben. Bessere Privatsphäre. Gleiches Engagement für Menschen über Gewinne.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title">Das Wechseln zwischen Bildschirmen ist einfacher als je zuvor</string>
+    <string name="onboarding_home_sync_title_2">Wechseln Sie vom Handy zum Laptop und zurück</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">Machen Sie da weiter, wo Sie aufgehört haben – ab sofort finden Sie Tabs von anderen Geräten auf Ihrer Startseite.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -299,6 +301,9 @@
     <string name="onboarding_home_sign_in_button">Anmelden</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Überspringen</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Ihre Tabs werden synchronisiert! Machen Sie dort weiter, wo Sie auf Ihrem anderen Gerät aufgehört haben.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->

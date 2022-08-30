@@ -40,7 +40,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">Nedávno pridané medzi záložky</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Nedávno pridané medzi záložky</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Nedávno uložené</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Zobraziť všetky uložené záložky</string>
 
@@ -76,6 +78,12 @@
 
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">Zavrieť</string>
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Naša doteraz najvýkonnejšia funkcia ochrany osobných údajov izoluje sledovacie prvky tretích strán.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Prečítajte si o Úplnej ochrane súborov cookie</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Vyžaduje sa prístup ku fotoaparátu. Prejdite do nastavení Androidu a udeľte aplikácii dané povolenie.</string>
@@ -124,16 +132,18 @@
     <string name="recent_tabs_show_all_content_description_2">Tlačidlo Zobraziť všetky nedávne karty</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">Vaše hľadanie výrazu \&quot;%1$s\&quot;</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Vaše hľadanie výrazu \&quot;%1$s\&quot;</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">Stránky: %d</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">Stránky: %d</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Zobraziť všetky synchronizované karty</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">Synchronizované zariadenie</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Odstrániť</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Odstrániť</string>
@@ -253,24 +263,45 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">Novinky v aplikácii %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Novinky v aplikácii %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">Teraz je jednoduchšie pokračovať tam, kde ste prestali.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Teraz je jednoduchšie pokračovať tam, kde ste prestali.</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">Prispôsobená domovská stránka %1$su</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Prispôsobená domovská stránka %1$su</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">Prejdite na otvorené karty, záložky a históriu prehliadania.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Prejdite na otvorené karty, záložky a históriu prehliadania.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Čisté a usporiadané karty</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Čisté a usporiadané karty</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Odstráňte neporiadok zo záložiek vďaka vylepšenému rozloženiu a automatickému zatváraniu kariet.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Odstráňte neporiadok zo záložiek vďaka vylepšenému rozloženiu a automatickému zatváraniu kariet.</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">Nedávne vyhľadávania</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Nedávne vyhľadávania</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">Zopakujte svoje najnovšie vyhľadávania z domovskej stránky a kariet.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Zopakujte svoje najnovšie vyhľadávania z domovskej stránky a kariet.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Vaša prispôsobená domovská stránka Firefoxu teraz uľahčuje pokračovať tam, kde ste prestali. Nájdite svoje najnovšie karty, záložky a výsledky vyhľadávania.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Vaša prispôsobená domovská stránka Firefoxu teraz uľahčuje pokračovať tam, kde ste prestali. Nájdite svoje najnovšie karty, záložky a výsledky vyhľadávania.</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Zoznámte sa so svojou prispôsobenou domovskou stránkou. Tu sa zobrazia nedávne karty, záložky a výsledky vyhľadávania.</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title">Vitajte na nezávislom internete</string>
+
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Viac farieb. Lepšie súkromie. Rovnaký záväzok voči ľuďom nadradený ziskom.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_2">Preskočte z telefónu na laptop a späť</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Pokračujte tam, kde ste prestali, pomocou kariet z iných zariadení teraz na vašej domovskej stránke.</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Začíname</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Prihlásiť sa</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Preskočiť</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Vaše karty sa synchronizujú! Na druhom zariadení pokračujte tam, kde ste tu prestali.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -451,11 +482,11 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Zobraziť</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Tapetu domovskej stránky zmeniť ťuknutím na logo Firefoxu</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Tapetu domovskej stránky zmeniť ťuknutím na logo Firefoxu</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Logo Firefoxu - zmena tapety, tlačidlo</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Logo Firefoxu - zmena tapety, tlačidlo</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -631,9 +662,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Mriežka</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Hľadať v skupinách</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Hľadať v skupinách</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Zoskupovať súvisiace stránky</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Zoskupovať súvisiace stránky</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Zavrieť karty</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -737,8 +768,6 @@
     <string name="open_tabs_menu">Ponuka otvorených kariet</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Uložiť karty do kolekcie</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Ponuka kariet</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Odstrániť kolekciu</string>
     <!-- Text for the menu button to rename a collection -->
@@ -791,16 +820,16 @@
     <string name="history_empty_message">Nemáte žiadnu históriu prehliadania</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">Synchronizované z iných zariadení</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Synchronizované z iných zariadení</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">Z iných zariadení</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">Z iných zariadení</string>
 
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">Ak chcete zobraziť históriu synchronizovanú z vašich ostatných zariadení, prihláste sa.</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Ak chcete zobraziť históriu synchronizovanú z vašich ostatných zariadení, prihláste sa.</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">Prihlásiť sa</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Prihlásiť sa</string>
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>Alebo si vytvorte účet Firefox a spustite synchronizáciu</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>Alebo si vytvorte účet Firefox a spustite synchronizáciu</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1326,6 +1355,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Všetky cookies tretích strán (môže obmedziť fungovanie niektorých stránok)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Všetky cookies (obmedzí fungovanie niektorých stránok)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Izolovať súbory cookie tretích strán</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Sledovací obsah</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1348,8 +1379,12 @@
     <string name="etp_social_media_trackers_description">Obmedzuje schopnosť sociálnych sietí sledovať vašu aktivitu na internete.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Sledovacie cookies</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Cookies tretích strán</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Blokuje cookies, ktoré používajú reklamné siete a firmy na zber údajov z mnohých stránok.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Úplná ochrana súborov cookie izoluje súbory cookie na webe, na ktorom sa nachádzate, takže sledovacie prvky, ako sú reklamné siete, ich nemôžu použiť na to, aby vás sledovali na iných weboch.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Ťažba kryptomien</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

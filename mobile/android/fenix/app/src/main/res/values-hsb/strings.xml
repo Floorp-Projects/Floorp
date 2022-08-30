@@ -39,7 +39,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">Najnowše zapołožki</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Najnowše zapołožki</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Njedawno składowane</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Wšě składowane zapołožki pokazać</string>
 
@@ -124,16 +126,18 @@
     <string name="recent_tabs_show_all_content_description_2">Tłóčatko „Njedawno wočinjene rajtarki“ pokazać</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">Waše pytanje za \&quot;%1$s\&quot;</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">Waše pytanje za \&quot;%1$s\&quot;</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">Sydła: %d</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">Sydła: %d</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Wšě synchronizowane rajtarki pokazać</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">Synchronizowany grat</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Wotstronić</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Wotstronić</string>
@@ -249,25 +253,42 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">Nowe funkcije a změny w %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Nowe funkcije a změny w %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">Je nětko lóšo tam pokročować, hdźež sće přestał.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Je nětko lóšo tam pokročować, hdźež sće přestał.</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">Personalizowana startowa strona %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Personalizowana startowa strona %1$s</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">Přeńdźće k swojim wočinjenym rajtarkam, zapołožkam a přehladowanskej historiji.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Přeńdźće k swojim wočinjenym rajtarkam, zapołožkam a přehladowanskej historiji.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Přehladne, organizowane rajtarki</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Přehladne, organizowane rajtarki</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Wotstrońće rajtarkowu šmjatańcu přez polěpšene wuhotowanje a awtomatisce začinjace rajtarki.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Wotstrońće rajtarkowu šmjatańcu přez polěpšene wuhotowanje a awtomatisce začinjace rajtarki.</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">Najnowše pytanja</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Najnowše pytanja</string>
 
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">Wotwołće znowa swoje najnowše pytanja ze swojeje startoweje strony a rajtarkow.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Wotwołće znowa swoje najnowše pytanja ze swojeje startoweje strony a rajtarkow.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Waša personalizowana startowa strona Firefox nětko wosnadnja tam pokročować, hdźež sće přestał. Namakajće swoje najnowše rajtarki, zapołožki a pytanske wuslědki.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Waša personalizowana startowa strona Firefox nětko wosnadnja tam pokročować, hdźež sće přestał. Namakajće swoje najnowše rajtarki, zapołožki a pytanske wuslědki.</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Zeznajće so ze swojej personalizowanej startowej stronu. Najnowše rajtarki, zapołožki a pytanske wuslědki so tu zjewja.</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title">Witajće k njewotwisnemu internetej</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_2">Skočće wot smóratka do laptopa a wróćo</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Pokročujće, hdźež sće přestał – nětko z rajtarkami druhich gratow na swojej startowej stronje.</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Prěnje kroki</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Přizjewić</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Přeskočić</string>
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Waše rajtarki so synchronizuja! Pokročujće, hdźež sće na druhim graće přestał.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -445,11 +466,11 @@
     <string name="wallpaper_updated_snackbar_action">Pokazać</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Podótkńće so loga startoweje strony Firefox, zo byšće pozadkowy wobraz změnił</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Podótkńće so loga startoweje strony Firefox, zo byšće pozadkowy wobraz změnił</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Logo Firefox - pozadkowy wobraz změnić, tłóčatko</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Logo Firefox - pozadkowy wobraz změnić, tłóčatko</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -626,9 +647,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Lěsyca</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Pytanske skupiny</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">Pytanske skupiny</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">Přiwuzne sydła zeskupić</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">Přiwuzne sydła zeskupić</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Rajtarki začinić</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -736,8 +757,6 @@
     <string name="open_tabs_menu">Meni wočinjenych rajtarkow</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Rajtarki do zběrki składować</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Rajtarkowy meni</string>
 
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Zběrku zhašeć</string>
@@ -789,16 +808,16 @@
     <string name="history_empty_message">Tu žana historija njeje</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">Z druhich gratow synchronizowane</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Z druhich gratow synchronizowane</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">Z druhich gratow</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">Z druhich gratow</string>
 
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">Přizjewće so, zo byšće historiju widźał, kotruž sće ze swojich druhich gratow synchronizował.</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Přizjewće so, zo byšće historiju widźał, kotruž sće ze swojich druhich gratow synchronizował.</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">Přizjewić</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Přizjewić</string>
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>Abo załožće konto Firefox, zo byšće synchronizowanje započał</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>Abo załožće konto Firefox, zo byšće synchronizowanje započał</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1323,6 +1342,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Wšě placki třećich (móže zawinować, zo websydła njefunguja)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Wšě placki (budźe zawinować, zo websydła njefunguja)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Sydła přesahowace placki izolować</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Slědowacy wobsah</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1345,6 +1366,8 @@
     <string name="etp_social_media_trackers_description">Wobmjezuje móžnosće socialnych syćow, wašej přehladowanskej aktiwiće po webje slědować.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Slědowace placki mjez sydłami</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Sydła přesahowace placki</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Blokuje placki, kotrež wabjenske syće a analyzowe předewzaća wužiwaja, zo bychu waše přehladowanske daty na wjele websydłach zestajili.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->

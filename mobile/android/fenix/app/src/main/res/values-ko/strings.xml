@@ -284,14 +284,16 @@
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">홈페이지와 탭에서 최근 검색을 다시 방문하세요.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint">이제 개인화된 Firefox 홈페이지에서 이전에 사용하던 부분을 쉽게 찾을 수 있습니다. 최근 탭, 북마크 및 검색 결과를 찾으세요.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">이제 개인화된 Firefox 홈페이지에서 이전에 사용하던 부분을 쉽게 찾을 수 있습니다. 최근 탭, 북마크 및 검색 결과를 찾으세요.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">개인화된 홈페이지를 만나보세요. 최근 탭, 북마크 및 검색 결과가 여기에 표시됩니다.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">독립 인터넷에 오신 것을 환영합니다</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">더 많은 색상. 더 나은 개인 정보 보호. 이익보다는 사람들에 대한 헌신.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title">더 쉬워진 화면 전환</string>
+    <string name="onboarding_home_sync_title_2">휴대전화에서 노트북으로 왔다가 다시 돌아가기</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">이제 홈페이지에서 다른 기기의 탭을 가져와서 중단한 부분부터 다시 시작하세요.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -300,6 +302,9 @@
     <string name="onboarding_home_sign_in_button">로그인</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">건너뛰기</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">탭이 동기화 중입니다! 다른 기기에서 중단한 부분부터 다시 시작하세요.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->

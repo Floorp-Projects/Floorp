@@ -43,7 +43,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">最近加入的書籤</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">最近加入的書籤</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">最近儲存</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">顯示所有儲存書籤</string>
 
@@ -77,6 +79,12 @@
 
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">知道了！</string>
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">我們最強大的隱私功能，會隔離跨網站追蹤器。</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">了解「全方位 Cookie 保護」功能的更多資訊</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">需要相機使用權限。請到 Android 系統設定點擊「權限」，然後點擊「允許」。</string>
@@ -125,16 +133,18 @@
     <string name="recent_tabs_show_all_content_description_2">顯示所有近期分頁按鈕</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
-    <string name="recent_tabs_search_term">「%1$s」的搜尋結果</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term" tools:ignore="UnusedResources">「%1$s」的搜尋結果</string>
 
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d 個網站</string>
+    <string moz:RemovedIn="105" name="recent_tabs_search_term_count_2" tools:ignore="UnusedResources">%d 個網站</string>
 
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">檢視所有同步的分頁</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">已同步的裝置</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">移除</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">移除</string>
@@ -254,24 +264,39 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">%1$s 有什麼新鮮事</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">%1$s 有什麼新鮮事</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">更簡單就能回到上次中斷的地方繼續上網。</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">更簡單就能回到上次中斷的地方繼續上網。</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">個人化的 %1$s 首頁</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">個人化的 %1$s 首頁</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">跳到您開啟的分頁、書籤、上網紀錄等。</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">跳到您開啟的分頁、書籤、上網紀錄等。</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">精簡有條理的分頁標籤</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">精簡有條理的分頁標籤</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">透過改善過的版面設計與自動關閉閒置分頁功能，解決分頁雜亂的問題。</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">透過改善過的版面設計與自動關閉閒置分頁功能，解決分頁雜亂的問題。</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">最近搜尋內容</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">最近搜尋內容</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">從首頁與分頁快速重新造訪先前的搜尋結果。</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">從首頁與分頁快速重新造訪先前的搜尋結果。</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">現在起，有您的風格的 Firefox 首頁，可讓您更簡單就從上次結束瀏覽的地方繼續上網。快速找到您最近開啟的分頁、書籤、搜尋結果等分頁。</string>
+    <string name="onboarding_home_screen_jump_back_contextual_hint">現在起，有您的風格的 Firefox 首頁，可讓您更簡單就從上次結束瀏覽的地方繼續上網。快速找到您最近開啟的分頁、書籤、搜尋結果等分頁。</string>
+
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title">歡迎來到一個更加獨立的網路環境</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">更多色彩、更加保護您的隱私，依然承諾把人們看得比利益更重要。</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title">切換畫面變得更容易</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">現在起，直接從首頁就可以繼續瀏覽其他裝置上開啟的分頁。</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">開始使用</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">登入</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">略過</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -451,11 +476,11 @@
     <string name="wallpaper_updated_snackbar_action">檢視</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">點擊 Firefox 首頁的圖示即可更改背景圖</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">點擊 Firefox 首頁的圖示即可更改背景圖</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Firefox 圖示，點擊此圖示變更背景圖</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Firefox 圖示，點擊此圖示變更背景圖</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -633,9 +658,9 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">格線</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">搜尋分頁群組</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups" tools:ignore="UnusedResources">搜尋分頁群組</string>
     <!-- Summary text for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups_summary">將相關的網站放在一起</string>
+    <string moz:RemovedIn="105" name="tab_view_search_term_tab_groups_summary" tools:ignore="UnusedResources">將相關的網站放在一起</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">自動關閉分頁</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -741,8 +766,6 @@
     <string name="open_tabs_menu">開啟分頁選單</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">將分頁儲存至收藏集</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">分頁選單</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">刪除收藏集</string>
     <!-- Text for the menu button to rename a collection -->
@@ -795,17 +818,17 @@
     <string name="history_empty_message">沒有紀錄</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">從其他裝置同步過來</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">從其他裝置同步過來</string>
 
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">來自其他裝置</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">來自其他裝置</string>
 
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">登入以檢視您其他裝置中的瀏覽紀錄。</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">登入以檢視您其他裝置中的瀏覽紀錄。</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">登入</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">登入</string>
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>或註冊 Firefox 帳號進行同步</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>或註冊 Firefox 帳號進行同步</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1352,6 +1375,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">所有第三方 Cookie（可能造成某些網站不正常）</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">所有 Cookie（會造成網站不正常）</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">隔離跨網站 Cookie</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">追蹤用內容</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1374,8 +1399,12 @@
     <string name="etp_social_media_trackers_description">限制社群網站能在網路上追蹤您上網行為的能力。</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">跨網站追蹤 Cookie</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">跨網站 Cookie</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">封鎖廣告網與分析公司用來在各個網站中收集您的上網資料的 Cookie。</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">全方位 Cookie 保護功能會將 Cookie 隔離於您所在的網站當中，這樣廣告網所送出的追蹤器就無法透過 Cookie 在不同網站間追蹤您。</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">加密貨幣採礦程式</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

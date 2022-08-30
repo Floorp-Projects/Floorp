@@ -1344,7 +1344,7 @@
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Куки</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Стеження між сайтами і соціальні мережі</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Стеження сторонніх сайтів та соціальних мереж</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_2">Куки з невідвіданих сайтів</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->

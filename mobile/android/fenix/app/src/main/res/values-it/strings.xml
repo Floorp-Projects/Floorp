@@ -282,14 +282,16 @@
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Rivedi le tue ultime ricerche effettuate dalla pagina iniziale e dalle schede.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint">La pagina iniziale personalizzata di Firefox rende più semplice riprendere da dove avevi interrotto. Puoi trovare le schede recenti, i segnalibri e i risultati delle ricerche.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">La pagina iniziale personalizzata di Firefox rende più semplice riprendere da dove avevi interrotto. Puoi trovare le schede recenti, i segnalibri e i risultati delle ricerche.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Scopri la tua pagina iniziale personalizzata. Le schede recenti, i segnalibri e i risultati di ricerca verranno visualizzati qui.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">Benvenuti nell’Internet indipendente</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Più colori. Ancora più protezione per la privacy. Stesso impegno nell’anteporre le persone ai profitti.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title">Passare da uno schermo all’altro è più facile che mai</string>
+    <string name="onboarding_home_sync_title_2">Passa dal computer al telefono, e viceversa</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">Riprendi da dove avevi interrotto con le schede di altri dispositivi, ora disponibili direttamente dalla pagina iniziale.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -298,6 +300,9 @@
     <string name="onboarding_home_sign_in_button">Accedi</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Salta</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">La sincronizzazione delle tue schede è in corso. Riprendi da dove avevi interrotto sull’altro dispositivo.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
