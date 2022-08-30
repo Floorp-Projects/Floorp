@@ -14,15 +14,18 @@ import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabState
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.utils.Settings
 
+@RunWith(FenixRobolectricTestRunner::class)
 class BlocklistMiddlewareTest {
     private val mockSettings: Settings = mockk()
     private val blocklistHandler = BlocklistHandler(mockSettings)
@@ -178,6 +181,7 @@ class BlocklistMiddlewareTest {
             listOf(RecentTab.Tab(createTab(url = blockedUrl)), unblockedRecentTab)
 
         every { mockSettings.homescreenBlocklist } returns setOf(blockedUrl.stripAndHash())
+        every { mockSettings.frecencyFilterQuery } returns ""
         val middleware = BlocklistMiddleware(blocklistHandler)
         val store = AppStore(
             AppState(),
@@ -328,6 +332,7 @@ class BlocklistMiddlewareTest {
         )
 
         every { mockSettings.homescreenBlocklist } returns setOf(blockedHost.stripAndHash())
+        every { mockSettings.frecencyFilterQuery } returns ""
         val middleware = BlocklistMiddleware(blocklistHandler)
         val store = AppStore(
             AppState(),
@@ -435,6 +440,7 @@ class BlocklistMiddlewareTest {
         val updateSlot = slot<Set<String>>()
         every { mockSettings.homescreenBlocklist = capture(updateSlot) } returns Unit
         every { mockSettings.homescreenBlocklist } returns setOf(tabUrls[0].stripAndHash())
+        every { mockSettings.frecencyFilterQuery } returns ""
 
         store.dispatch(
             AppAction.RemoveRecentSyncedTab(

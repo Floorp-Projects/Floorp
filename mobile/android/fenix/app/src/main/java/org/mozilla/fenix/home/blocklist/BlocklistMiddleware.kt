@@ -41,14 +41,14 @@ class BlocklistMiddleware(
             is AppAction.Change -> {
                 action.copy(
                     recentBookmarks = action.recentBookmarks.filteredByBlocklist(),
-                    recentTabs = action.recentTabs.filteredByBlocklist(),
-                    recentHistory = action.recentHistory.filteredByBlocklist(),
-                    recentSyncedTabState = action.recentSyncedTabState.filteredByBlocklist()
+                    recentTabs = action.recentTabs.filteredByBlocklist().filterContile(),
+                    recentHistory = action.recentHistory.filteredByBlocklist().filterContile(),
+                    recentSyncedTabState = action.recentSyncedTabState.filteredByBlocklist().filterContile()
                 )
             }
             is AppAction.RecentTabsChange -> {
                 action.copy(
-                    recentTabs = action.recentTabs.filteredByBlocklist()
+                    recentTabs = action.recentTabs.filteredByBlocklist().filterContile()
                 )
             }
             is AppAction.RecentBookmarksChange -> {
@@ -57,11 +57,11 @@ class BlocklistMiddleware(
                 )
             }
             is AppAction.RecentHistoryChange -> {
-                action.copy(recentHistory = action.recentHistory.filteredByBlocklist())
+                action.copy(recentHistory = action.recentHistory.filteredByBlocklist().filterContile())
             }
             is AppAction.RecentSyncedTabStateChange -> {
                 action.copy(
-                    state = action.state.filteredByBlocklist()
+                    state = action.state.filteredByBlocklist().filterContile()
                 )
             }
             is AppAction.RemoveRecentTab -> {
@@ -97,14 +97,14 @@ class BlocklistMiddleware(
     private fun AppState.toActionFilteringAllState(blocklistHandler: BlocklistHandler) =
         with(blocklistHandler) {
             AppAction.Change(
-                recentTabs = recentTabs.filteredByBlocklist(),
+                recentTabs = recentTabs.filteredByBlocklist().filterContile(),
                 recentBookmarks = recentBookmarks.filteredByBlocklist(),
-                recentHistory = recentHistory.filteredByBlocklist(),
+                recentHistory = recentHistory.filteredByBlocklist().filterContile(),
                 topSites = topSites,
                 mode = mode,
                 collections = collections,
                 showCollectionPlaceholder = showCollectionPlaceholder,
-                recentSyncedTabState = recentSyncedTabState.filteredByBlocklist()
+                recentSyncedTabState = recentSyncedTabState.filteredByBlocklist().filterContile()
             )
         }
 }

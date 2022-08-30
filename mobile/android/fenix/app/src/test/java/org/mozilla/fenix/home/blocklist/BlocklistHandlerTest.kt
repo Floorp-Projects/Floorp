@@ -5,14 +5,20 @@ import io.mockk.mockk
 import io.mockk.slot
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.concept.sync.DeviceType
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
+import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
+import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabState
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.utils.Settings
 
+@RunWith(FenixRobolectricTestRunner::class)
 class BlocklistHandlerTest {
     private val mockSettings: Settings = mockk()
 
@@ -113,6 +119,67 @@ class BlocklistHandlerTest {
 
         val filtered = with(blocklistHandler) {
             tabs.filteredByBlocklist()
+        }
+
+        assertEquals(listOf<String>(), filtered)
+    }
+
+    @Test
+    fun `GIVEN recently synced tab is a sponsored url WHEN the tabs are filtered THEN the sponsored url be filtered`() {
+        val blockedUrl = "test.com/?query=value"
+        val mockSessionState: TabSessionState = mockk()
+        val mockContent: ContentState = mockk()
+        val tabs = RecentSyncedTabState.Success(
+            listOf(
+                RecentSyncedTab(
+                    "",
+                    DeviceType.DESKTOP,
+                    "title",
+                    blockedUrl,
+                    null
+                )
+            )
+        )
+        every { mockSessionState.content } returns mockContent
+        every { mockContent.url } returns blockedUrl
+        every { mockSettings.frecencyFilterQuery } returns "query=value"
+
+        val filtered = with(blocklistHandler) {
+            tabs.filterContile()
+        }
+
+        assertEquals(RecentSyncedTabState.None, filtered)
+    }
+
+    @Test
+    fun `GIVEN recently visited item is a sponsored url WHEN the tabs are filtered THEN the sponsored url be filtered`() {
+        val blockedUrl = "test.com/?query=value"
+        val mockSessionState: TabSessionState = mockk()
+        val mockContent: ContentState = mockk()
+        val tabs = listOf(RecentlyVisitedItem.RecentHistoryHighlight("title", blockedUrl))
+        every { mockSessionState.content } returns mockContent
+        every { mockContent.url } returns blockedUrl
+        every { mockSettings.frecencyFilterQuery } returns "query=value"
+
+        val filtered = with(blocklistHandler) {
+            tabs.filterContile()
+        }
+
+        assertEquals(listOf<String>(), filtered)
+    }
+
+    @Test
+    fun `GIVEN recent tab is a sponsored url WHEN the tabs are filtered THEN the sponsored url be filtered`() {
+        val blockedUrl = "test.com/?query=value"
+        val mockSessionState: TabSessionState = mockk()
+        val mockContent: ContentState = mockk()
+        val tabs = listOf(RecentTab.Tab(mockSessionState))
+        every { mockSessionState.content } returns mockContent
+        every { mockContent.url } returns blockedUrl
+        every { mockSettings.frecencyFilterQuery } returns "query=value"
+
+        val filtered = with(blocklistHandler) {
+            tabs.filterContile()
         }
 
         assertEquals(listOf<String>(), filtered)
