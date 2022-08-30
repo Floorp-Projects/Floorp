@@ -18,6 +18,7 @@
     "enzyme-adapter-react-16": "^1.13.2",
     "enzyme-to-json": "^3.3.5",
     "jest": "^24.6.0",
+    "jsdom": "20.0.0",
     "react": "16.4.1",
     "react-dom": "16.4.1",
     "react-dom-factories": "1.0.2",
