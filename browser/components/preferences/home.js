@@ -32,8 +32,6 @@ const HOMEPAGE_OVERRIDE_KEY = "homepage_override";
 const URL_OVERRIDES_TYPE = "url_overrides";
 const NEW_TAB_KEY = "newTabURL";
 
-const BLANK_HOMEPAGE_URL = "chrome://browser/content/blanktab.html";
-
 var gHomePane = {
   HOME_MODE_FIREFOX_HOME: "0",
   HOME_MODE_BLANK: "1",
@@ -102,8 +100,7 @@ var gHomePane = {
     // If the new tab url was changed to about:blank or about:newtab
     if (
       AboutNewTab.newTabURL === "about:newtab" ||
-      AboutNewTab.newTabURL === "about:blank" ||
-      AboutNewTab.newTabURL === BLANK_HOMEPAGE_URL
+      AboutNewTab.newTabURL === "about:blank"
     ) {
       let newtabEnabledPref = Services.prefs.getBoolPref(
         this.NEWTAB_ENABLED_PREF,
@@ -308,7 +305,7 @@ var gHomePane = {
     // (and it makes existing tests happy).
     let newValue;
     if (
-      this._isBlankPage(homePage) ||
+      homePage === "about:blank" ||
       (HomePage.isDefault && !HomePage.locked)
     ) {
       newValue = "";
@@ -338,7 +335,7 @@ var gHomePane = {
   isHomePageBlank() {
     const startupPref = Preferences.get("browser.startup.page");
     return (
-      ["about:blank", BLANK_HOMEPAGE_URL, ""].includes(HomePage.get()) ||
+      ["about:blank", ""].includes(HomePage.get()) ||
       startupPref.value === gMainPane.STARTUP_PREF_BLANK
     );
   },
@@ -475,8 +472,8 @@ var gHomePane = {
         }
         break;
       case this.HOME_MODE_BLANK:
-        if (!this._isBlankPage(HomePage.get())) {
-          HomePage.safeSet(BLANK_HOMEPAGE_URL);
+        if (HomePage.get() !== "about:blank") {
+          HomePage.safeSet("about:blank");
         } else {
           this._renderCustomSettings({ shouldShow: false });
         }
@@ -622,10 +619,6 @@ var gHomePane = {
       AboutNewTab.newTabURLOverridden ||
       extensionControlled
     );
-  },
-
-  _isBlankPage(url) {
-    return url == "about:blank" || url == BLANK_HOMEPAGE_URL;
   },
 
   /**
