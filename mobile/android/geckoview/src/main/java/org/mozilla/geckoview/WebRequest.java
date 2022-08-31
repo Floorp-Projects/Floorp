@@ -235,7 +235,9 @@ public class WebRequest extends WebMessage {
       return this;
     }
 
-    /** @return A {@link WebRequest} constructed with the values from this Builder instance. */
+    /**
+     * @return A {@link WebRequest} constructed with the values from this Builder instance.
+     */
     public @NonNull WebRequest build() {
       if (mUri == null) {
         throw new IllegalStateException("Must set URI");

@@ -140,7 +140,7 @@ public class GeckoAppShell {
       }
       return false;
     }
-  };
+  }
 
   private static String sAppNotes;
   private static CrashHandler sCrashHandler;

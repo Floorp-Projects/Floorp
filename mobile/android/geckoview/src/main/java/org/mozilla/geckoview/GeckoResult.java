@@ -257,14 +257,18 @@ public class GeckoResult<T> {
     }
   }
 
-  /** @return a {@link GeckoResult} that resolves to {@link AllowOrDeny#DENY} */
+  /**
+   * @return a {@link GeckoResult} that resolves to {@link AllowOrDeny#DENY}
+   */
   @AnyThread
   @NonNull
   public static GeckoResult<AllowOrDeny> deny() {
     return GeckoResult.fromValue(AllowOrDeny.DENY);
   }
 
-  /** @return a {@link GeckoResult} that resolves to {@link AllowOrDeny#ALLOW} */
+  /**
+   * @return a {@link GeckoResult} that resolves to {@link AllowOrDeny#ALLOW}
+   */
   @AnyThread
   @NonNull
   public static GeckoResult<AllowOrDeny> allow() {

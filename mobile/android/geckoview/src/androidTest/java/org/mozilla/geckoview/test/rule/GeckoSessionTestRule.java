@@ -363,7 +363,9 @@ public class GeckoSessionTestRule implements TestRule {
   @Target(ElementType.METHOD)
   @Retention(RetentionPolicy.RUNTIME)
   public @interface IgnoreCrash {
-    /** @return True if content crashes should be ignored, false otherwise. Default is true. */
+    /**
+     * @return True if content crashes should be ignored, false otherwise. Default is true.
+     */
     boolean value() default true;
   }
 
@@ -2702,7 +2704,9 @@ public class GeckoSessionTestRule implements TestRule {
     }
   }
 
-  /** @see #addExternalDelegateUntilTestEnd(Class, DelegateRegistrar, DelegateRegistrar, Object) */
+  /**
+   * @see #addExternalDelegateUntilTestEnd(Class, DelegateRegistrar, DelegateRegistrar, Object)
+   */
   public <T> void addExternalDelegateUntilTestEnd(
       @NonNull final KClass<T> delegate,
       @NonNull final DelegateRegistrar<T> register,

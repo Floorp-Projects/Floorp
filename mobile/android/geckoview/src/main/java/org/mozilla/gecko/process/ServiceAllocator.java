@@ -390,7 +390,9 @@ import org.mozilla.gecko.util.XPCOMEventTarget;
   }
 
   private interface ContentAllocationPolicy {
-    /** @return BindServiceDelegate that will be used for binding a new content service. */
+    /**
+     * @return BindServiceDelegate that will be used for binding a new content service.
+     */
     BindServiceDelegate getBindServiceDelegate(InstanceInfo info);
 
     /**
@@ -459,7 +461,9 @@ import org.mozilla.gecko.util.XPCOMEventTarget;
       mAllocator.clear(id);
     }
 
-    /** @return The number of content services defined in our manifest. */
+    /**
+     * @return The number of content services defined in our manifest.
+     */
     private static int getContentServiceCount() {
       return ServiceUtils.getServiceCount(
           GeckoAppShell.getApplicationContext(), GeckoProcessType.CONTENT);
