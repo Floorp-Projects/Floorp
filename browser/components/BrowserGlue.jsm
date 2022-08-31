@@ -4298,7 +4298,7 @@ BrowserGlue.prototype = {
   async _maybeShowDefaultBrowserPrompt() {
     // Highest priority is the upgrade dialog, which can include a "primary
     // browser" request and is limited in various ways, e.g., major upgrades.
-    const dialogVersion = 100;
+    const dialogVersion = 106;
     const dialogVersionPref = "browser.startup.upgradeDialog.version";
     const dialogReason = await (async () => {
       if (!lazy.BrowserHandler.majorUpgrade) {

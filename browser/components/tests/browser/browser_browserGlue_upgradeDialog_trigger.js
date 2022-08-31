@@ -9,6 +9,9 @@ const { ExperimentFakes } = ChromeUtils.import(
 const { NimbusFeatures, ExperimentAPI } = ChromeUtils.import(
   "resource://nimbus/ExperimentAPI.jsm"
 );
+const { OnboardingMessageProvider } = ChromeUtils.import(
+  "resource://activity-stream/lib/OnboardingMessageProvider.jsm"
+);
 
 add_task(async function not_major_upgrade() {
   Services.telemetry.clearEvents();
@@ -72,6 +75,8 @@ add_task(async function show_major_upgrade() {
 
   await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
   const [win] = await TestUtils.topicObserved("subdialog-loaded");
+  const data = await OnboardingMessageProvider.getUpgradeMessage();
+  Assert.equal(data.id, "FX_MR_106_UPGRADE", "MR 106 Upgrade Dialog Shown");
   win.close();
 
   AssertEvents("Upgrade dialog opened from major upgrade", [
