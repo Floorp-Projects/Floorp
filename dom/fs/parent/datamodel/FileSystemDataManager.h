@@ -32,7 +32,7 @@ namespace fs::data {
 class FileSystemDataManager
     : public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
  public:
-  enum struct State : uint8_t { Initial = 0, Closing, Closed };
+  enum struct State : uint8_t { Initial = 0, Opening, Open, Closing, Closed };
 
   FileSystemDataManager(const Origin& aOrigin,
                         MovingNotNull<RefPtr<TaskQueue>> aIOTaskQueue);
@@ -60,6 +60,8 @@ class FileSystemDataManager
 
   void UnregisterActor(NotNull<FileSystemManagerParent*> aActor);
 
+  RefPtr<BoolPromise> OnOpen();
+
   RefPtr<BoolPromise> OnClose();
 
  protected:
@@ -67,12 +69,15 @@ class FileSystemDataManager
 
   bool IsInactive() const;
 
+  RefPtr<BoolPromise> BeginOpen();
+
   RefPtr<BoolPromise> BeginClose();
 
   nsTHashSet<FileSystemManagerParent*> mActors;
   const Origin mOrigin;
   const NotNull<nsCOMPtr<nsISerialEventTarget>> mBackgroundTarget;
   const NotNull<RefPtr<TaskQueue>> mIOTaskQueue;
+  MozPromiseHolder<BoolPromise> mOpenPromiseHolder;
   MozPromiseHolder<BoolPromise> mClosePromiseHolder;
   uint32_t mRegCount;
   State mState;

@@ -13,6 +13,7 @@
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
 #include "nsNetCID.h"
+#include "nsProxyRelease.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 
@@ -98,6 +99,8 @@ RefPtr<FileSystemDataManager::CreatePromise>
 FileSystemDataManager::GetOrCreateFileSystemDataManager(const Origin& aOrigin) {
   if (RefPtr<FileSystemDataManager> dataManager =
           GetFileSystemDataManager(aOrigin)) {
+    // XXX Handle the case when the manager is asynchronouslly opening!
+
     // XXX Handle the case when the manager is asynchronouslly closing!
 
     return CreatePromise::CreateAndResolve(
@@ -120,8 +123,12 @@ FileSystemDataManager::GetOrCreateFileSystemDataManager(const Origin& aOrigin) {
 
   AddFileSystemDataManager(aOrigin, dataManager);
 
-  return CreatePromise::CreateAndResolve(
-      Registered<FileSystemDataManager>(std::move(dataManager)), __func__);
+  return dataManager->BeginOpen()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [dataManager = Registered<FileSystemDataManager>(dataManager)](
+          const BoolPromise::ResolveOrRejectValue&) {
+        return CreatePromise::CreateAndResolve(dataManager, __func__);
+      });
 }
 
 void FileSystemDataManager::Register() { mRegCount++; }
@@ -154,6 +161,12 @@ void FileSystemDataManager::UnregisterActor(
   }
 }
 
+RefPtr<BoolPromise> FileSystemDataManager::OnOpen() {
+  MOZ_ASSERT(mState == State::Opening);
+
+  return mOpenPromiseHolder.Ensure(__func__);
+}
+
 RefPtr<BoolPromise> FileSystemDataManager::OnClose() {
   MOZ_ASSERT(mState == State::Closing);
 
@@ -164,8 +177,42 @@ bool FileSystemDataManager::IsInactive() const {
   return !mRegCount && !mActors.Count();
 }
 
-RefPtr<BoolPromise> FileSystemDataManager::BeginClose() {
+RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
   MOZ_ASSERT(mState == State::Initial);
+
+  mState = State::Opening;
+
+  InvokeAsync(MutableIOTargetPtr(), __func__,
+              [self = RefPtr<FileSystemDataManager>(this)]() mutable {
+                nsCOMPtr<nsISerialEventTarget> target =
+                    self->MutableBackgroundTargetPtr();
+
+                NS_ProxyRelease("ReleaseFileSystemDataManager", target,
+                                self.forget());
+
+                return BoolPromise::CreateAndResolve(true, __func__);
+              })
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [self = RefPtr<FileSystemDataManager>(this)](
+                 const BoolPromise::ResolveOrRejectValue& value) {
+               if (value.IsReject()) {
+                 self->mState = State::Initial;
+
+                 self->mOpenPromiseHolder.RejectIfExists(value.RejectValue(),
+                                                         __func__);
+
+               } else {
+                 self->mState = State::Open;
+
+                 self->mOpenPromiseHolder.ResolveIfExists(true, __func__);
+               }
+             });
+
+  return OnOpen();
+}
+
+RefPtr<BoolPromise> FileSystemDataManager::BeginClose() {
+  MOZ_ASSERT(mState == State::Open);
   MOZ_ASSERT(IsInactive());
 
   mState = State::Closing;
