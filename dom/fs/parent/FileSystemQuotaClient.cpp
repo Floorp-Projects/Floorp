@@ -6,6 +6,7 @@
 
 #include "FileSystemQuotaClient.h"
 
+#include "mozilla/dom/FileSystemDataManager.h"
 #include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/UsageInfo.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -125,12 +126,14 @@ void QuotaClient::StopIdleMaintenance() {
 
 void QuotaClient::InitiateShutdown() {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
+
+  data::FileSystemDataManager::InitiateShutdown();
 }
 
 bool QuotaClient::IsShutdownCompleted() const {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
 
-  return true;
+  return data::FileSystemDataManager::IsShutdownCompleted();
 }
 
 nsCString QuotaClient::GetShutdownStatus() const {

@@ -8,7 +8,9 @@
 
 #include "mozilla/Result.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/dom/FileSystemManagerParent.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
@@ -62,6 +64,8 @@ RefPtr<FileSystemDataManager> GetFileSystemDataManager(const Origin& aOrigin) {
 
 void AddFileSystemDataManager(
     const Origin& aOrigin, const RefPtr<FileSystemDataManager>& aDataManager) {
+  MOZ_ASSERT(!quota::QuotaManager::IsShuttingDown());
+
   if (!gDataManagers) {
     gDataManagers = new FileSystemDataManagerHashtable();
   }
@@ -97,6 +101,10 @@ FileSystemDataManager::~FileSystemDataManager() {
 
 RefPtr<FileSystemDataManager::CreatePromise>
 FileSystemDataManager::GetOrCreateFileSystemDataManager(const Origin& aOrigin) {
+  if (quota::QuotaManager::IsShuttingDown()) {
+    return CreatePromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+
   if (RefPtr<FileSystemDataManager> dataManager =
           GetFileSystemDataManager(aOrigin)) {
     if (dataManager->IsOpening()) {
@@ -154,6 +162,32 @@ FileSystemDataManager::GetOrCreateFileSystemDataManager(const Origin& aOrigin) {
       });
 }
 
+// static
+void FileSystemDataManager::InitiateShutdown() {
+  if (!gDataManagers) {
+    return;
+  }
+
+  for (const auto& dataManager : gDataManagers->Values()) {
+    InvokeAsync(dataManager->MutableIOTargetPtr(), __func__,
+                [dataManager = RefPtr<FileSystemDataManager>(
+                     dataManager.get())]() mutable {
+                  dataManager->RequestAllowToClose();
+
+                  nsCOMPtr<nsISerialEventTarget> target =
+                      dataManager->MutableBackgroundTargetPtr();
+
+                  NS_ProxyRelease("ReleaseFileSystemDataManager", target,
+                                  dataManager.forget());
+
+                  return BoolPromise::CreateAndResolve(true, __func__);
+                });
+  }
+}
+
+// static
+bool FileSystemDataManager::IsShutdownCompleted() { return !gDataManagers; }
+
 void FileSystemDataManager::Register() { mRegCount++; }
 
 void FileSystemDataManager::Unregister() {
@@ -198,6 +232,12 @@ RefPtr<BoolPromise> FileSystemDataManager::OnClose() {
 
 bool FileSystemDataManager::IsInactive() const {
   return !mRegCount && !mActors.Count();
+}
+
+void FileSystemDataManager::RequestAllowToClose() {
+  for (const auto& actor : mActors) {
+    actor->RequestAllowToClose();
+  }
 }
 
 RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {

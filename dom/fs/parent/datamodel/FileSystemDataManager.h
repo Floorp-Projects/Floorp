@@ -42,6 +42,10 @@ class FileSystemDataManager
   static RefPtr<CreatePromise> GetOrCreateFileSystemDataManager(
       const Origin& aOrigin);
 
+  static void InitiateShutdown();
+
+  static bool IsShutdownCompleted();
+
   NS_INLINE_DECL_REFCOUNTING(FileSystemDataManager)
 
   nsISerialEventTarget* MutableBackgroundTargetPtr() const {
@@ -74,6 +78,8 @@ class FileSystemDataManager
   bool IsOpening() const { return mState == State::Opening; }
 
   bool IsClosing() const { return mState == State::Closing; }
+
+  void RequestAllowToClose();
 
   RefPtr<BoolPromise> BeginOpen();
 

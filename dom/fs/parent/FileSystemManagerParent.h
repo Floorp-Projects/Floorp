@@ -70,6 +70,8 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
   mozilla::ipc::IPCResult RecvNeedQuota(FileSystemQuotaRequest&& aRequest,
                                         NeedQuotaResolver&& aResolver);
 
+  void RequestAllowToClose();
+
   void OnChannelClose() override;
 
   void OnChannelError() override;
@@ -84,6 +86,7 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
 
   const EntryId mRootEntry;
 
+  FlippedOnce<false> mRequestedAllowToClose;
   FlippedOnce<false> mAllowedToClose;
 };
 

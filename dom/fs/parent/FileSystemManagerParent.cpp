@@ -122,6 +122,18 @@ IPCResult FileSystemManagerParent::RecvNeedQuota(
   return IPC_OK();
 }
 
+void FileSystemManagerParent::RequestAllowToClose() {
+  if (mRequestedAllowToClose) {
+    return;
+  }
+
+  mRequestedAllowToClose.Flip();
+
+  // XXX Send a message to the child and wait for a response before closing!
+
+  Close();
+}
+
 void FileSystemManagerParent::OnChannelClose() {
   if (!mAllowedToClose) {
     AllowToClose();
