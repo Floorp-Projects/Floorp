@@ -161,7 +161,7 @@ private fun RecentBookmarkImage(bookmark: RecentBookmark) {
                     Box(
                         modifier = imageModifier.background(
                             color = when (isSystemInDarkTheme()) {
-                                true -> PhotonColors.DarkGrey30
+                                true -> PhotonColors.DarkGrey60
                                 false -> PhotonColors.LightGrey30
                             }
                         ),
@@ -190,7 +190,7 @@ private fun PlaceholderBookmarkImage() {
     Box(
         modifier = imageModifier.background(
             color = when (isSystemInDarkTheme()) {
-                true -> PhotonColors.DarkGrey30
+                true -> PhotonColors.DarkGrey60
                 false -> PhotonColors.LightGrey30
             }
         )

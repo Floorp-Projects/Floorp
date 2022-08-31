@@ -328,7 +328,7 @@ private fun PlaceHolderTabIcon(modifier: Modifier) {
     Box(
         modifier = modifier.background(
             color = when (isSystemInDarkTheme()) {
-                true -> PhotonColors.DarkGrey30
+                true -> PhotonColors.DarkGrey60
                 false -> PhotonColors.LightGrey30
             }
         )
