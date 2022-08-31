@@ -77,10 +77,9 @@ const ONBOARDING_MESSAGES = () => [
           id: "UPGRADE_PIN_FIREFOX",
           content: {
             position: "split",
-            split_narrow_bkg_position: "-155px",
             progress_bar: "true",
             background:
-              "url('chrome://activity-stream/content/data/content/assets/mr-pintaskbar.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+              "url('chrome://activity-stream/content/data/content/assets/mr-pintaskbar.svg') var(--mr-secondary-position) no-repeat, var(--in-content-page-background) radial-gradient(83.12% 83.12% at 80.59% 16.88%, rgba(103, 51, 205, 0.75) 0%, rgba(0, 108, 207, 0.75) 54.51%, rgba(128, 199, 247, 0.75) 100%)",
             logo: {},
             title: {
               string_id: "mr2022-onboarding-existing-pin-header",
@@ -135,10 +134,9 @@ const ONBOARDING_MESSAGES = () => [
           id: "UPGRADE_SET_DEFAULT",
           content: {
             position: "split",
-            split_narrow_bkg_position: "-60px",
             progress_bar: "true",
             background:
-              "url('chrome://activity-stream/content/data/content/assets/mr-settodefault.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+              "url('chrome://activity-stream/content/data/content/assets/mr-settodefault.svg') var(--mr-secondary-position) no-repeat, var(--in-content-page-background) radial-gradient(113% 87.18% at 93.5% 73.82%, rgba(103, 51, 205, 0.75) 0%, rgba(0, 108, 207, 0.75) 54.51%, rgba(128, 199, 247, 0.75) 100%)",
             logo: {},
             title: {
               string_id: "mr2022-onboarding-set-default-title",
@@ -170,10 +168,9 @@ const ONBOARDING_MESSAGES = () => [
           id: "UPGRADE_IMPORT_SETTINGS",
           content: {
             position: "split",
-            split_narrow_bkg_position: "-42px",
             progress_bar: "true",
             background:
-              "url('chrome://activity-stream/content/data/content/assets/mr-import.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+              "url('chrome://activity-stream/content/data/content/assets/mr-import.svg') var(--mr-secondary-position) no-repeat, var(--in-content-page-background) radial-gradient(120.14% 108.82% at 69.5% 100%, rgba(103, 51, 205, 0.75) 0%, rgba(0, 108, 207, 0.75) 54.51%, rgba(128, 199, 247, 0.75) 100%)",
             logo: {},
             title: {
               string_id: "mr2022-onboarding-import-header",
@@ -207,9 +204,9 @@ const ONBOARDING_MESSAGES = () => [
           id: "UPGRADE_COLORWAY",
           content: {
             position: "split",
-            split_narrow_bkg_position: "-65px",
+            split_narrow_bkg_position: "-100px",
             background:
-              "url('chrome://activity-stream/content/data/content/assets/mr-colorways.avif') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+              "url('chrome://browser/content/colorways/assets/independent-voices-collection.avif') var(--mr-secondary-position) no-repeat, var(--in-content-page-background) radial-gradient(83.12% 83.12% at 80.59% 16.88%, #9059FF 0%, #3A8EE6 54.51%, #A0C4EA 100%)",
             progress_bar: true,
             logo: {},
             title: {
@@ -359,9 +356,8 @@ const ONBOARDING_MESSAGES = () => [
           id: "UPGRADE_MOBILE_DOWNLOAD",
           content: {
             position: "split",
-            split_narrow_bkg_position: "-160px",
             background:
-              "url('chrome://activity-stream/content/data/content/assets/mr-mobilecrosspromo.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+              "url('chrome://activity-stream/content/data/content/assets/mr-mobilecrosspromo.svg') var(--mr-secondary-position) no-repeat, var(--in-content-page-background) radial-gradient(109.62% 64.62% at 9.75% 62.91%, rgba(103, 51, 205, 0.75) 0%, rgba(0, 108, 207, 0.75) 54.51%, rgba(128, 199, 247, 0.75) 100%)",
             progress_bar: true,
             logo: {},
             title: {
@@ -403,10 +399,9 @@ const ONBOARDING_MESSAGES = () => [
           id: "UPGRADE_PIN_PRIVATE_WINDOW",
           content: {
             position: "split",
-            split_narrow_bkg_position: "-100px",
             progress_bar: "true",
             background:
-              "url('chrome://activity-stream/content/data/content/assets/mr-pinprivate.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+              "url('chrome://activity-stream/content/data/content/assets/mr-pintaskbar.svg') var(--mr-secondary-position) no-repeat, var(--in-content-page-background) radial-gradient(83.12% 83.12% at 80.59% 16.88%, rgba(103, 51, 205, 0.75) 0%, rgba(0, 108, 207, 0.75) 54.51%, rgba(128, 199, 247, 0.75) 100%)",
             logo: {},
             title: {
               string_id: "mr2022-upgrade-onboarding-pin-private-window-header",
@@ -443,11 +438,10 @@ const ONBOARDING_MESSAGES = () => [
           id: "UPGRADE_PRIVACY_SEGMENTATION",
           content: {
             position: "split",
-            split_narrow_bkg_position: "-80px",
             progress_bar: "true",
             dual_action_buttons: true,
             background:
-              "url('chrome://activity-stream/content/data/content/assets/mr-privacysegmentation.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+              "url('chrome://activity-stream/content/data/content/assets/mr-pintaskbar.svg') var(--mr-secondary-position) no-repeat, var(--in-content-page-background) radial-gradient(83.12% 83.12% at 80.59% 16.88%, rgba(103, 51, 205, 0.75) 0%, rgba(0, 108, 207, 0.75) 54.51%, rgba(128, 199, 247, 0.75) 100%)",
             logo: {},
             title: {
               string_id: "mr2022-onboarding-privacy-segmentation-title",
@@ -499,9 +493,9 @@ const ONBOARDING_MESSAGES = () => [
           content: {
             position: "split",
             progress_bar: "true",
-            split_narrow_bkg_position: "-228px",
+            split_narrow_bkg_position: "-60px",
             background:
-              "url('chrome://activity-stream/content/data/content/assets/mr-gratitude.svg') var(--mr-secondary-position) no-repeat, var(--mr-screen-background-color)",
+              "url('chrome://activity-stream/content/data/content/assets/mr-gratitude.svg') var(--mr-secondary-position) no-repeat, var(--in-content-page-background) radial-gradient(124% 67.28% at 0% 39.91%, rgba(103, 51, 205, 0.75) 0%, rgba(0, 108, 207, 0.75) 54.51%, rgba(128, 199, 247, 0.75) 100%)",
             logo: {},
             title: {
               string_id: "mr2022-onboarding-gratitude-title",
