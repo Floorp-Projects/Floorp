@@ -512,5 +512,5 @@ nsresult nsEffectiveTLDService::NormalizeHostname(nsCString& aHostname) {
 NS_IMETHODIMP
 nsEffectiveTLDService::HasRootDomain(const nsACString& aInput,
                                      const nsACString& aHost, bool* aResult) {
-  return NS_HasRootDomain(aInput, aHost, aResult);
+  return net::HasRootDomain(aInput, aHost, aResult);
 }
