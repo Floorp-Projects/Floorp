@@ -184,6 +184,10 @@ class TextLeafPoint final {
 
   bool IsSpace() const;
 
+  bool IsParagraphStart() const {
+    return mOffset == 0 && FindParagraphSameAcc(eDirPrevious, true);
+  }
+
  private:
   bool IsEmptyLastLine() const;
 
