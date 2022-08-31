@@ -30,6 +30,13 @@ FileSystemBackgroundRequestHandler::FileSystemBackgroundRequestHandler()
 FileSystemBackgroundRequestHandler::~FileSystemBackgroundRequestHandler() =
     default;
 
+void FileSystemBackgroundRequestHandler::Shutdown() {
+  if (mFileSystemManagerChild) {
+    mFileSystemManagerChild->Shutdown();
+    mFileSystemManagerChild = nullptr;
+  }
+}
+
 FileSystemManagerChild*
 FileSystemBackgroundRequestHandler::GetFileSystemManagerChild() const {
   return mFileSystemManagerChild;

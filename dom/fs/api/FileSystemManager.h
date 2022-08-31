@@ -45,6 +45,8 @@ class FileSystemManager : public nsISupports {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(FileSystemManager)
 
+  void Shutdown();
+
   FileSystemManagerChild* Actor() const;
 
   already_AddRefed<Promise> GetDirectory(ErrorResult& aRv);

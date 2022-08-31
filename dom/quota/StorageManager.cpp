@@ -765,7 +765,12 @@ already_AddRefed<Promise> StorageManager::GetDirectory(ErrorResult& aRv) {
   return mFileSystemManager->GetDirectory(aRv);
 }
 
-void StorageManager::Shutdown() {}
+void StorageManager::Shutdown() {
+  if (mFileSystemManager) {
+    mFileSystemManager->Shutdown();
+    mFileSystemManager = nullptr;
+  }
+}
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(StorageManager, mOwner,
                                       mFileSystemManager)
