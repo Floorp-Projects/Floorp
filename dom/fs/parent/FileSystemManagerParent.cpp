@@ -24,11 +24,9 @@ extern LazyLogModule gOPFSLog;
 namespace mozilla::dom {
 
 FileSystemManagerParent::FileSystemManagerParent(
-    TaskQueue* aTaskQueue, RefPtr<fs::data::FileSystemDataManager> aDataManager,
+    RefPtr<fs::data::FileSystemDataManager> aDataManager,
     const EntryId& aRootEntry)
-    : mTaskQueue(aTaskQueue),
-      mDataManager(std::move(aDataManager)),
-      mRootEntry(aRootEntry) {}
+    : mDataManager(std::move(aDataManager)), mRootEntry(aRootEntry) {}
 
 IPCResult FileSystemManagerParent::RecvGetRootHandleMsg(
     GetRootHandleMsgResolver&& aResolver) {
@@ -121,9 +119,6 @@ IPCResult FileSystemManagerParent::RecvNeedQuota(
 
 FileSystemManagerParent::~FileSystemManagerParent() {
   LOG(("Destroying FileSystemManagerParent %p", this));
-  if (mTaskQueue) {
-    mTaskQueue->BeginShutdown();
-  }
 
   nsCOMPtr<nsISerialEventTarget> target =
       mDataManager->MutableBackgroundTargetPtr();
