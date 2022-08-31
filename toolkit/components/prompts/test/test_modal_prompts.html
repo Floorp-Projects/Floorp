@@ -1057,7 +1057,8 @@ async function runTests(util) {
     passValue: "",
     checkMsg: "",
     checked: false,
-    focused: "button1",
+    focused: null, // nothing focused until after delay fires
+    defButton: "button0",
     butt0Label: "OK",
     butt1Label: "Cancel",
     butt0Disabled: true,

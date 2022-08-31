@@ -2488,6 +2488,16 @@ class nsContentUtils {
   static void GetModifierSeparatorText(nsAString& text);
 
   /**
+   * Returns if aContent has a tabbable subdocument.
+   * A sub document isn't tabbable when it's a zombie document.
+   *
+   * @param aElement element to test.
+   *
+   * @return Whether the subdocument is tabbable.
+   */
+  static bool IsSubDocumentTabbable(nsIContent* aContent);
+
+  /**
    * Returns if aContent has the 'scrollgrab' property.
    * aContent may be null (in this case false is returned).
    */

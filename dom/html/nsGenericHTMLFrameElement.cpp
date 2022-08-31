@@ -329,7 +329,12 @@ bool nsGenericHTMLFrameElement::IsHTMLFocusable(bool aWithMouse,
     return true;
   }
 
-  *aIsFocusable = true;
+  *aIsFocusable = nsContentUtils::IsSubDocumentTabbable(this);
+
+  if (!*aIsFocusable && aTabIndex) {
+    *aTabIndex = -1;
+  }
+
   return false;
 }
 
