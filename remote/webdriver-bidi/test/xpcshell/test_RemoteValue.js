@@ -468,7 +468,7 @@ add_test(function test_deserializeDateLocalValueInvalidValues() {
 
     Assert.throws(
       () => deserialize({ type: "date", value: dateString }),
-      /InvalidArgument/,
+      /InvalidArgumentError:/,
       `Got expected error for date string: ${dateString}`
     );
   }
@@ -484,13 +484,13 @@ add_test(function test_deserializeLocalValuesInvalidType() {
 
     Assert.throws(
       () => deserialize({ type: invalidType }),
-      /InvalidArgument/,
+      /InvalidArgumentError:/,
       `Got expected error for type ${invalidType}`
     );
 
     Assert.throws(
       () => deserialize({ type: "array", value: [{ type: invalidType }] }),
-      /InvalidArgument/,
+      /InvalidArgumentError:/,
       `Got expected error for nested type ${invalidType}`
     );
   }
@@ -601,7 +601,7 @@ add_test(function test_deserializeLocalValuesInvalidValues() {
 
       Assert.throws(
         () => deserialize({ type, value }),
-        /InvalidArgument/,
+        /InvalidArgumentError:/,
         `Got expected error for type ${type} and value ${value}`
       );
     }
