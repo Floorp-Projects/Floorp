@@ -9,8 +9,10 @@
 
 #include "mozilla/NotNull.h"
 #include "mozilla/dom/FileSystemTypes.h"
+#include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsUtils.h"
+#include "nsString.h"
 
 namespace mozilla {
 
@@ -19,13 +21,14 @@ class Result;
 
 namespace dom::fs::data {
 
-class FileSystemDataManager {
+class FileSystemDataManager
+    : public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
  public:
-  FileSystemDataManager();
+  explicit FileSystemDataManager(const Origin& aOrigin);
 
   using result_t = Result<RefPtr<FileSystemDataManager>, nsresult>;
-  static FileSystemDataManager::result_t CreateFileSystemDataManager(
-      const fs::Origin& aOrigin);
+  static FileSystemDataManager::result_t GetOrCreateFileSystemDataManager(
+      const Origin& aOrigin);
 
   NS_INLINE_DECL_REFCOUNTING(FileSystemDataManager)
 
@@ -34,8 +37,9 @@ class FileSystemDataManager {
   }
 
  protected:
-  ~FileSystemDataManager() = default;
+  ~FileSystemDataManager();
 
+  const Origin mOrigin;
   const NotNull<nsCOMPtr<nsISerialEventTarget>> mBackgroundTarget;
 };
 

@@ -55,7 +55,7 @@ mozilla::ipc::IPCResult CreateFileSystemManagerParent(
   // This opens the quota manager, which has to be done on PBackground
   QM_TRY_UNWRAP(
       RefPtr<fs::data::FileSystemDataManager> dataManager,
-      fs::data::FileSystemDataManager::CreateFileSystemDataManager(origin),
+      fs::data::FileSystemDataManager::GetOrCreateFileSystemDataManager(origin),
       IPC_OK(), sendBackError);
 
   nsCOMPtr<nsIThread> pbackground = NS_GetCurrentThread();
