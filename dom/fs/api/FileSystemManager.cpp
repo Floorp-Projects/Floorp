@@ -68,6 +68,8 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(FileSystemManager);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(FileSystemManager);
 NS_IMPL_CYCLE_COLLECTION(FileSystemManager, mGlobal);
 
+void FileSystemManager::Shutdown() { mBackgroundRequestHandler->Shutdown(); }
+
 FileSystemManagerChild* FileSystemManager::Actor() const {
   return mBackgroundRequestHandler->GetFileSystemManagerChild();
 }

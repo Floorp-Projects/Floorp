@@ -40,6 +40,8 @@ class FileSystemBackgroundRequestHandler {
 
   NS_INLINE_DECL_REFCOUNTING(FileSystemBackgroundRequestHandler)
 
+  void Shutdown();
+
   FileSystemManagerChild* GetFileSystemManagerChild() const;
 
   virtual RefPtr<mozilla::BoolPromise> CreateFileSystemManagerChild(
