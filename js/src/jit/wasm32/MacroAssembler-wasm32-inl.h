@@ -633,6 +633,11 @@ void MacroAssembler::branch8(Condition cond, const Address& lhs, Imm32 rhs,
   MOZ_CRASH();
 }
 
+void MacroAssembler::branch8(Condition cond, const BaseIndex& lhs, Register rhs,
+                             Label* label) {
+  MOZ_CRASH();
+}
+
 void MacroAssembler::branch16(Condition cond, const Address& lhs, Imm32 rhs,
                               Label* label) {
   MOZ_CRASH();

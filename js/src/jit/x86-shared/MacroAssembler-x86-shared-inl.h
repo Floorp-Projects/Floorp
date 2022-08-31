@@ -466,6 +466,12 @@ void MacroAssembler::branch8(Condition cond, const Address& lhs, Imm32 rhs,
   j(cond, label);
 }
 
+void MacroAssembler::branch8(Condition cond, const BaseIndex& lhs, Register rhs,
+                             Label* label) {
+  cmp8(Operand(lhs), rhs);
+  j(cond, label);
+}
+
 void MacroAssembler::branch16(Condition cond, const Address& lhs, Imm32 rhs,
                               Label* label) {
   cmp16(lhs, rhs);
