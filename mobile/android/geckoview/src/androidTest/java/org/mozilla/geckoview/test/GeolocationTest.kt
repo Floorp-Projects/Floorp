@@ -4,7 +4,6 @@
 
 package org.mozilla.geckoview.test
 import android.content.Context
-import android.content.Intent
 import android.location.LocationManager
 import android.os.Handler
 import android.os.Looper
@@ -14,6 +13,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
 import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.core.IsNot.not
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
@@ -32,6 +32,7 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
  class GeolocationTest : BaseSessionTest() {
     private val activityRule = ActivityScenarioRule(GeckoViewTestActivity::class.java)
     private val locProvider = "mockTestLocationProvider";
+    private val inaccurateLocProvider = "inaccurateMockTestLocationProvider";
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
     private lateinit var locManager : LocationManager
     @get:Rule
@@ -45,6 +46,7 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
             sessionRule.setPrefsUntilTestEnd(mapOf("geo.provider.testing" to false))
             locManager = activity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
             sessionRule.addMockLocationProvider(locManager, locProvider)
+            sessionRule.addMockLocationProvider(locManager, inaccurateLocProvider)
         }
     }
 
@@ -72,13 +74,18 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
         })
     }
 
-    private fun getCurrentPositionJS(): JSONObject {
+    private fun getCurrentPositionJS(maximumAge: Number = 0, timeout: Number = 3000, enableHighAccuracy: Boolean = false ): JSONObject {
          return mainSession.evaluatePromiseJS("""
                     new Promise((resolve, reject) =>
                     window.navigator.geolocation.getCurrentPosition(
                         position => resolve(
-                            {latitude: position.coords.latitude, longitude:  position.coords.longitude})),
-                        error => reject(error.code))""").value as JSONObject
+                            {latitude: position.coords.latitude, 
+                            longitude:  position.coords.longitude, 
+                            accuracy:  position.coords.accuracy}),
+                        error => reject(error.code),
+                        {maximumAge: ${maximumAge},
+                         timeout: ${timeout},
+                         enableHighAccuracy: ${enableHighAccuracy} }))""").value as JSONObject
     }
 
     private fun getCurrentPositionJSWithWait(): JSONObject {
@@ -109,6 +116,61 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
     }
 
     @GeckoSessionTestRule.NullDelegate(Autofill.Delegate::class)
+    // Testing that more accurate location providers are selected without high accuracy enabled
+    @Test fun accurateProviderSelected() {
+        val highAccuracy = .000001f
+        val highMockLat = 1.1111
+        val highMockLon = 2.2222
+
+        // Lower accuracy should still be better than device provider ~20m
+        val lowAccuracy = 10.01f
+        val lowMockLat = 3.3333
+        val lowMockLon = 4.4444
+
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+        setEnableLocationPermissions()
+
+        // Test when lower accuracy is more recent
+        sessionRule.setMockLocation(locManager, locProvider, highMockLat, highMockLon, highAccuracy)
+        // Sleep ensures the mocked locations have different clock times
+        Thread.sleep(10)
+        // Set inaccurate second, so that it is the most recent location
+        sessionRule.setMockLocation(locManager, inaccurateLocProvider, lowMockLat, lowMockLon, lowAccuracy)
+        val position = getCurrentPositionJS(0, 3000, false);
+        assertThat("Higher accuracy latitude is expected.", position["latitude"] as Number, equalTo(highMockLat))
+        assertThat("Higher accuracy longitude is expected.", position["longitude"] as Number, equalTo(highMockLon))
+
+        // Test that higher accuracy becomes stale after 6 seconds
+        sessionRule.setMockLocation(locManager, locProvider, highMockLat, highMockLon, highAccuracy)
+        Thread.sleep(6001)
+        sessionRule.setMockLocation(locManager, inaccurateLocProvider, lowMockLat, lowMockLon, lowAccuracy)
+        val inaccuratePosition = getCurrentPositionJS(0, 3000, false);
+        assertThat("Lower accuracy latitude is expected.", inaccuratePosition["latitude"] as Number, equalTo(lowMockLat))
+        assertThat("Lower accuracy longitude is expected.", inaccuratePosition["longitude"] as Number, equalTo(lowMockLon))
+    }
+
+    @GeckoSessionTestRule.NullDelegate(Autofill.Delegate::class)
+    // Testing that high accuracy requests a fresh location
+    @Test fun highAccuracyTest() {
+        val highAccuracy = .000001f
+        val latitude = 1.1111
+        val longitude = 2.2222
+
+        // High accuracy usage requires HTTPS
+        mainSession.loadUri("https://example.com/")
+        mainSession.waitForPageStop()
+        setEnableLocationPermissions()
+
+        sessionRule.setMockLocation(locManager, locProvider, latitude, longitude, highAccuracy)
+
+        val highAccuracyPosition = getCurrentPositionJS(0, 3000, true);
+        // JS enableHighAccuracy requires it asks the device for a new location and not used a cached location
+        assertThat("New device latitude is expected.", highAccuracyPosition["latitude"] as Number, not(equalTo(latitude)))
+        assertThat("New device longitude is expected.", highAccuracyPosition["longitude"] as Number, not(equalTo(longitude)))
+    }
+
+    @GeckoSessionTestRule.NullDelegate(Autofill.Delegate::class)
     // Checks that location services is reenabled after going to background
      @Test fun locationOnBackground() {
         val beforePauseLat = 1.1111
@@ -116,7 +178,6 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
         val afterPauseLat = 3.3333
         val afterPauseLon = 4.4444
 
-        sessionRule.setMockLocation(locManager, locProvider, beforePauseLat, beforePauseLon)
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
         setEnableLocationPermissions()
@@ -153,6 +214,12 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
                 super.onPause(owner)
                 try {
                     sessionRule.setMockLocation(locManager, locProvider, afterPauseLat, afterPauseLon)
+                    // Ensures the location does not go stale before onResume occurs
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        try {
+                            sessionRule.setMockLocation(locManager, locProvider, afterPauseLat, afterPauseLon)
+                        } catch (e: Exception) { }
+                    }, 5000)
                 } catch (e: Exception) {
                     // Potential situation where onPause is called too late
                 }
@@ -160,6 +227,7 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
         })
 
         // Before onPause Event
+        sessionRule.setMockLocation(locManager, locProvider, beforePauseLat, beforePauseLon)
         val beforeOnPausePosition = getCurrentPositionJS()
         assertThat("Latitude before onPause matches.", beforeOnPausePosition["latitude"] as Number, equalTo(beforePauseLat))
         assertThat("Longitude before onPause matches.", beforeOnPausePosition["longitude"] as Number, equalTo(beforePauseLon))
