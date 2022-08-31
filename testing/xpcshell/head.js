@@ -690,6 +690,13 @@ function _execute_test() {
   // Restore idle service to avoid leaks.
   _fakeIdleService.deactivate();
 
+  if (
+    globalThis.hasOwnProperty("storage") &&
+    StorageManager.isInstance(globalThis.storage)
+  ) {
+    globalThis.storage.shutdown();
+  }
+
   if (_profileInitialized) {
     // Since we have a profile, we will notify profile shutdown topics at
     // the end of the current test, to ensure correct cleanup on shutdown.
