@@ -124,7 +124,7 @@ class Registered {
     if (oldObject) {
       oldObject->Unregister();
     }
-    return std::move(oldObject);
+    return oldObject;
   }
 
   T* get() const { return mObject; }
