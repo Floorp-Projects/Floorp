@@ -1211,7 +1211,7 @@ extern const nsLiteralCString kQuotaExternalError;
 
 class BackgroundThreadObject {
  protected:
-  nsCOMPtr<nsIEventTarget> mOwningThread;
+  nsCOMPtr<nsISerialEventTarget> mOwningThread;
 
  public:
   void AssertIsOnOwningThread() const
@@ -1222,12 +1222,12 @@ class BackgroundThreadObject {
   }
 #endif
 
-  nsIEventTarget* OwningThread() const;
+  nsISerialEventTarget* OwningThread() const;
 
  protected:
   BackgroundThreadObject();
 
-  explicit BackgroundThreadObject(nsIEventTarget* aOwningThread);
+  explicit BackgroundThreadObject(nsISerialEventTarget* aOwningThread);
 };
 
 void AssertIsOnIOThread();
