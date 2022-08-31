@@ -194,7 +194,7 @@ async protocol POriginPrivateFileSystem
   /**
    * TODO: documentation
    */
-  async GetRootHandle()
+  async GetRootHandleMsg()
       returns(FileSystemGetHandleResponse response);
 
   /**
@@ -213,7 +213,7 @@ async protocol POriginPrivateFileSystem
    *
    * @returns error or entry handle
    */
-  async GetDirectoryHandle(FileSystemGetHandleRequest request)
+  async GetDirectoryHandleMsg(FileSystemGetHandleRequest request)
       returns(FileSystemGetHandleResponse handle);
 
   /**
@@ -232,7 +232,7 @@ async protocol POriginPrivateFileSystem
    *
    * @returns error or entry handle
    */
-  async GetFileHandle(FileSystemGetHandleRequest request)
+  async GetFileHandleMsg(FileSystemGetHandleRequest request)
       returns(FileSystemGetHandleResponse handle);
 
   /**
@@ -250,7 +250,7 @@ async protocol POriginPrivateFileSystem
    *
    * @returns error or file object
    */
-  async GetFile(FileSystemGetFileRequest request)
+  async GetFileMsg(FileSystemGetFileRequest request)
       returns(FileSystemGetFileResponse response);
 
   /**
@@ -273,7 +273,7 @@ async protocol POriginPrivateFileSystem
    *
    * @returns error or file system path
    */
-  async Resolve(FileSystemResolveRequest request)
+  async ResolveMsg(FileSystemResolveRequest request)
       returns(FileSystemResolveResponse response);
 
   /**
@@ -292,7 +292,7 @@ async protocol POriginPrivateFileSystem
    *
    * @returns error or iterator
    */
-  async GetEntries(FileSystemGetEntriesRequest request)
+  async GetEntriesMsg(FileSystemGetEntriesRequest request)
       returns(FileSystemGetEntriesResponse entries);
 
   /**
@@ -309,7 +309,7 @@ async protocol POriginPrivateFileSystem
    *
    * @returns error information
    */
-  async RemoveEntry(FileSystemRemoveEntryRequest request)
+  async RemoveEntryMsg(FileSystemRemoveEntryRequest request)
       returns(FileSystemRemoveEntryResponse response);
 
   /**

@@ -192,9 +192,6 @@ class TestPromiseListener : public PromiseNativeHandler,
 
 class TestOriginPrivateFileSystemChild : public OriginPrivateFileSystemChild {
  public:
-  NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(TestOriginPrivateFileSystemChild,
-                                          Destroy(), override)
-
   MOCK_METHOD(void, SendGetRootHandle,
               (mozilla::ipc::ResolveCallback<FileSystemGetHandleResponse> &&
                    aResolve,
@@ -243,17 +240,10 @@ class TestOriginPrivateFileSystemChild : public OriginPrivateFileSystemChild {
        mozilla::ipc::RejectCallback&& aReject),
       (override));
 
-  MOCK_METHOD(void, Close, (), (override));
-
-  MOCK_METHOD(POriginPrivateFileSystemChild*, AsBindable, (), (override));
+  MOCK_METHOD(void, Shutdown, (), (override));
 
  protected:
   virtual ~TestOriginPrivateFileSystemChild() = default;
-
-  void Destroy() {
-    Close();
-    delete this;
-  }
 };
 
 class TestFileSystemChildFactory final : public FileSystemChildFactory {
