@@ -149,18 +149,7 @@ function storeCertOverride(port, cert) {
   let certOverrideService = Cc[
     "@mozilla.org/security/certoverride;1"
   ].getService(Ci.nsICertOverrideService);
-  let overrideBits =
-    Ci.nsICertOverrideService.ERROR_UNTRUSTED |
-    Ci.nsICertOverrideService.ERROR_TIME |
-    Ci.nsICertOverrideService.ERROR_MISMATCH;
-  certOverrideService.rememberValidityOverride(
-    hostname,
-    port,
-    {},
-    cert,
-    overrideBits,
-    true
-  );
+  certOverrideService.rememberValidityOverride(hostname, port, {}, cert, true);
 }
 
 function startClient(port, useGREASE, beConservative) {
