@@ -6,6 +6,7 @@
 
 #include "FileSystemManagerParent.h"
 #include "nsNetCID.h"
+#include "mozilla/dom/FileSystemDataManager.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/ipc/Endpoint.h"
 
@@ -24,7 +25,7 @@ namespace mozilla::dom {
 
 FileSystemManagerParent::FileSystemManagerParent(TaskQueue* aTaskQueue,
                                                  const EntryId& aRootEntry)
-    : mTaskQueue(aTaskQueue), mData(), mRootEntry(aRootEntry) {}
+    : mTaskQueue(aTaskQueue), mRootEntry(aRootEntry) {}
 
 IPCResult FileSystemManagerParent::RecvGetRootHandleMsg(
     GetRootHandleMsgResolver&& aResolver) {
