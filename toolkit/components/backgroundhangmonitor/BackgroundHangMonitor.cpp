@@ -66,11 +66,27 @@ namespace mozilla {
  */
 class BackgroundHangManager : public nsIObserver {
  private:
+  // Background hang monitor thread function
+  static void MonitorThread(void* aData) {
+    AUTO_PROFILER_REGISTER_THREAD("BHMgr Monitor");
+    NS_SetCurrentThreadName("BHMgr Monitor");
+
+    /* We do not hold a reference to BackgroundHangManager here
+       because the monitor thread only exists as long as the
+       BackgroundHangManager instance exists. We stop the monitor
+       thread in the BackgroundHangManager destructor, and we can
+       only get to the destructor if we don't hold a reference here. */
+    static_cast<BackgroundHangManager*>(aData)->RunMonitorThread();
+  }
+
+  // Hang monitor thread
+  PRThread* mHangMonitorThread;
   // Stop hang monitoring
   bool mShutdown;
 
   BackgroundHangManager(const BackgroundHangManager&);
   BackgroundHangManager& operator=(const BackgroundHangManager&);
+  void RunMonitorThread();
 
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -80,20 +96,15 @@ class BackgroundHangManager : public nsIObserver {
 
   // Lock for access to members of this class
   Monitor mLock MOZ_UNANNOTATED;
+  // Current time as seen by hang monitors
+  TimeStamp mNow;
   // List of BackgroundHangThread instances associated with each thread
   LinkedList<BackgroundHangThread> mHangThreads;
 
   // Unwinding and reporting of hangs is despatched to this thread.
   nsCOMPtr<nsIThread> mHangProcessingThread;
 
-  // Hang monitor thread
-  nsCOMPtr<nsIThread> mHangMonitorThread;
-
   ProfilerThreadId mHangMonitorProfilerThreadId;
-
-  void SetMonitorThreadId() {
-    mHangMonitorProfilerThreadId = profiler_current_thread_id();
-  }
 
   // Used for recording a permahang in case we don't ever make it back to
   // the main thread to record/send it.
@@ -103,20 +114,16 @@ class BackgroundHangManager : public nsIObserver {
   // under high external load.
   CPUUsageWatcher mCPUUsageWatcher;
 
-  TimeStamp mLastCheckedCPUUsage;
-
-  void CollectCPUUsage(TimeStamp aNow, bool aForce = false) {
-    if (aForce ||
-        aNow - mLastCheckedCPUUsage >
-            TimeDuration::FromMilliseconds(kCheckCPUIntervalMilliseconds)) {
-      Unused << NS_WARN_IF(mCPUUsageWatcher.CollectCPUUsage().isErr());
-      mLastCheckedCPUUsage = aNow;
-    }
-  }
-
   void Shutdown() {
     MonitorAutoLock autoLock(mLock);
     mShutdown = true;
+    autoLock.Notify();
+  }
+
+  // Attempt to wakeup the hang monitor thread.
+  void Wakeup() {
+    mLock.AssertCurrentThreadOwns();
+    mLock.NotifyAll();
   }
 
   BackgroundHangManager();
@@ -168,10 +175,7 @@ BackgroundHangManager::Observe(nsISupports* aSubject, const char* aTopic,
  * BackgroundHangThread is a per-thread object that is used
  * by all instances of BackgroundHangMonitor to monitor hangs.
  */
-class BackgroundHangThread final
-    : public LinkedListElement<BackgroundHangThread>,
-      public nsITimerCallback,
-      public nsINamed {
+class BackgroundHangThread : public LinkedListElement<BackgroundHangThread> {
  private:
   static MOZ_THREAD_LOCAL(BackgroundHangThread*) sTlsKey;
   static bool sTlsKeyInitialized;
@@ -185,14 +189,11 @@ class BackgroundHangThread final
   const RefPtr<BackgroundHangManager> mManager;
   // Unique thread ID for identification
   const PRThread* mThreadID;
-  RefPtr<nsITimer> mTimer;
-  TimeStamp mExpectedTimerNotification;
+
+  void Update();
 
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSITIMERCALLBACK
-  NS_DECL_NSINAMED
-
+  NS_INLINE_DECL_REFCOUNTING(BackgroundHangThread)
   /**
    * Returns the BackgroundHangThread associated with the
    * running thread. Note that this will not find private
@@ -250,37 +251,14 @@ class BackgroundHangThread final
   void ReportPermaHang();
   // Called by BackgroundHangMonitor::NotifyActivity
   void NotifyActivity() {
-    if (MOZ_UNLIKELY(!mTimer)) {
-      return;
-    }
-
     MonitorAutoLock autoLock(mManager->mLock);
     PROFILER_MARKER_UNTYPED(
         "NotifyActivity", OTHER,
         MarkerThreadId(mManager->mHangMonitorProfilerThreadId));
-
-    TimeStamp now = TimeStamp::Now();
-    if (mWaiting) {
-      mWaiting = false;
-    } else if (mHanging) {
-      // A hang ended.
-      ReportHang(now - mHangStart);
-      mHanging = false;
-    }
-    mLastActivity = now;
-    BackgroundHangManager::sInstance->CollectCPUUsage(now);
-
-    // Set or reset the timer.
-    mExpectedTimerNotification = now + mTimeout;
-    mTimer->InitHighResolutionWithCallback(this, mTimeout,
-                                           nsITimer::TYPE_ONE_SHOT);
+    Update();
   }
   // Called by BackgroundHangMonitor::NotifyWait
   void NotifyWait() {
-    if (MOZ_UNLIKELY(!mTimer)) {
-      return;
-    }
-
     MonitorAutoLock autoLock(mManager->mLock);
     PROFILER_MARKER_UNTYPED(
         "NotifyWait", OTHER,
@@ -290,10 +268,7 @@ class BackgroundHangThread final
       return;
     }
 
-    mTimer->Cancel();
-
-    mLastActivity = TimeStamp::Now();
-
+    Update();
     if (mHanging) {
       // We were hanging! We're done with that now, so let's report it.
       // ReportHang() doesn't do much work on the current thread, and is
@@ -311,14 +286,6 @@ class BackgroundHangThread final
   }
 };
 
-NS_IMPL_ISUPPORTS(BackgroundHangThread, nsITimerCallback, nsINamed)
-
-NS_IMETHODIMP
-BackgroundHangThread::GetName(nsACString& aName) {
-  aName.AssignLiteral("BackgroundHangThread_timer");
-  return NS_OK;
-}
-
 StaticRefPtr<BackgroundHangManager> BackgroundHangManager::sInstance;
 bool BackgroundHangManager::sDisabled = false;
 
@@ -327,21 +294,17 @@ bool BackgroundHangThread::sTlsKeyInitialized;
 
 BackgroundHangManager::BackgroundHangManager()
     : mShutdown(false), mLock("BackgroundHangManager") {
-  // Save a reference to sInstance now so that the destructor is not triggered
-  // if the SetMonitorThreadId RunnableMethod is released before we are done.
-  sInstance = this;
+  // Lock so we don't race against the new monitor thread
+  MonitorAutoLock autoLock(mLock);
 
-  DebugOnly<nsresult> rv =
-      NS_NewNamedThread("BHMgr Monitor", getter_AddRefs(mHangMonitorThread),
-                        mozilla::NewRunnableMethod(
-                            "BackgroundHangManager::SetMonitorThreadId", this,
-                            &BackgroundHangManager::SetMonitorThreadId));
+  mHangMonitorThread = PR_CreateThread(
+      PR_USER_THREAD, MonitorThread, this, PR_PRIORITY_LOW, PR_GLOBAL_THREAD,
+      PR_JOINABLE_THREAD, nsIThreadManager::DEFAULT_STACK_SIZE);
 
-  MOZ_ASSERT(NS_SUCCEEDED(rv) && mHangMonitorThread,
-             "Failed to create BHR processing thread");
+  MOZ_ASSERT(mHangMonitorThread, "Failed to create BHR monitor thread");
 
-  rv = NS_NewNamedThread("BHMgr Processor",
-                         getter_AddRefs(mHangProcessingThread));
+  DebugOnly<nsresult> rv = NS_NewNamedThread(
+      "BHMgr Processor", getter_AddRefs(mHangProcessingThread));
   MOZ_ASSERT(NS_SUCCEEDED(rv) && mHangProcessingThread,
              "Failed to create BHR processing thread");
 }
@@ -352,15 +315,152 @@ BackgroundHangManager::~BackgroundHangManager() {
   MOZ_ASSERT(mHangMonitorThread, "No monitor thread");
   MOZ_ASSERT(mHangProcessingThread, "No processing thread");
 
-  // NS_NewNamedThread could have failed above due to resource limitation
+  // PR_CreateThread could have failed above due to resource limitation
   if (mHangMonitorThread) {
     // The monitor thread can only live as long as the instance lives
-    mHangMonitorThread->Shutdown();
+    PR_JoinThread(mHangMonitorThread);
   }
 
   // Similarly, NS_NewNamedThread above could have failed.
   if (mHangProcessingThread) {
     mHangProcessingThread->Shutdown();
+  }
+}
+
+void BackgroundHangManager::RunMonitorThread() {
+  // Keep us locked except when waiting
+  MonitorAutoLock autoLock(mLock);
+
+  mHangMonitorProfilerThreadId = profiler_current_thread_id();
+
+  /* mNow is updated at various intervals determined by waitTime.
+     However, if an update latency is too long (due to CPU scheduling, system
+     sleep, etc.), we don't update mNow at all. This is done so that
+     long latencies in our timing are not detected as hangs. systemTime is
+     used to track TimeStamp::Now() and determine our latency. */
+
+  TimeStamp systemTime = TimeStamp::Now();
+  // Default values for the first iteration of thread loop
+  TimeDuration waitTime;
+  TimeDuration recheckTimeout;
+  TimeStamp lastCheckedCPUUsage = systemTime;
+  TimeDuration checkCPUUsageInterval =
+      TimeDuration::FromMilliseconds(kCheckCPUIntervalMilliseconds);
+
+  while (!mShutdown) {
+    autoLock.Wait(waitTime);
+
+    TimeStamp newTime = TimeStamp::Now();
+    TimeDuration systemInterval = newTime - systemTime;
+    systemTime = newTime;
+
+    if (systemTime - lastCheckedCPUUsage > checkCPUUsageInterval) {
+      Unused << NS_WARN_IF(mCPUUsageWatcher.CollectCPUUsage().isErr());
+      lastCheckedCPUUsage = systemTime;
+    }
+
+    /* waitTime is a quarter of the shortest timeout value; If our timing
+       latency is low enough (less than half the shortest timeout value),
+       we can update mNow. */
+    if (MOZ_LIKELY(waitTime != TimeDuration::Forever() &&
+                   systemInterval < waitTime * 2)) {
+      mNow += systemInterval;
+    }
+
+    /* If it's before the next recheck timeout, and our wait did not get
+       interrupted, we can keep the current waitTime and skip iterating
+       through hang monitors. */
+    if (MOZ_LIKELY(systemInterval < recheckTimeout &&
+                   systemInterval >= waitTime)) {
+      recheckTimeout -= systemInterval;
+      continue;
+    }
+
+    /* We are in one of the following scenarios,
+     - Hang or permahang recheck timeout
+     - Thread added/removed
+     - Thread wait or hang ended
+       In all cases, we want to go through our list of hang
+       monitors and update waitTime and recheckTimeout. */
+    waitTime = TimeDuration::Forever();
+    recheckTimeout = TimeDuration::Forever();
+
+    // Locally hold mNow
+    TimeStamp now = mNow;
+
+    // iterate through hang monitors
+    for (BackgroundHangThread* currentThread = mHangThreads.getFirst();
+         currentThread; currentThread = currentThread->getNext()) {
+      if (currentThread->mWaiting) {
+        // Thread is waiting, not hanging
+        continue;
+      }
+      TimeStamp lastActivity = currentThread->mLastActivity;
+      TimeDuration hangTime = now - lastActivity;
+      if (MOZ_UNLIKELY(hangTime >= currentThread->mMaxTimeout)) {
+        // A permahang started
+        // Skip subsequent iterations and tolerate a race on mWaiting here
+        currentThread->mWaiting = true;
+        currentThread->mHanging = false;
+        currentThread->ReportPermaHang();
+        continue;
+      }
+
+      if (MOZ_LIKELY(!currentThread->mHanging)) {
+        if (MOZ_UNLIKELY(hangTime >= currentThread->mTimeout)) {
+#ifdef MOZ_GECKO_PROFILER
+          // A hang started, collect a stack
+          currentThread->mStackHelper.GetStack(
+              currentThread->mHangStack, currentThread->mRunnableName, true);
+#endif
+
+          // If we hang immediately on waking, then the most recently collected
+          // CPU usage is going to be an average across the whole time we were
+          // sleeping. Accordingly, we want to make sure that when we hang, we
+          // collect a fresh value.
+          if (systemTime != lastCheckedCPUUsage) {
+            Unused << NS_WARN_IF(mCPUUsageWatcher.CollectCPUUsage().isErr());
+            lastCheckedCPUUsage = systemTime;
+          }
+
+          currentThread->mHangStart = lastActivity;
+          currentThread->mHanging = true;
+          currentThread->mAnnotations =
+              currentThread->mAnnotators.GatherAnnotations();
+        }
+      } else {
+        if (MOZ_LIKELY(lastActivity != currentThread->mHangStart)) {
+          // A hang ended
+          currentThread->ReportHang(now - currentThread->mHangStart);
+          currentThread->mHanging = false;
+        }
+      }
+
+      /* If we are hanging, the next time we check for hang status is when
+         the hang turns into a permahang. If we're not hanging, the next
+         recheck timeout is when we may be entering a hang. */
+      TimeDuration nextRecheck;
+      if (currentThread->mHanging) {
+        nextRecheck = currentThread->mMaxTimeout;
+      } else {
+        nextRecheck = currentThread->mTimeout;
+      }
+      recheckTimeout =
+          TimeDuration::Min(recheckTimeout, nextRecheck - hangTime);
+
+      if (currentThread->mTimeout != TimeDuration::Forever()) {
+        /* We wait for a quarter of the shortest timeout
+           value to give mNow enough granularity. */
+        waitTime =
+            TimeDuration::Min(waitTime, currentThread->mTimeout / (int64_t)4);
+      }
+    }
+  }
+
+  /* We are shutting down now.
+     Wait for all outstanding monitors to unregister. */
+  while (!mHangThreads.isEmpty()) {
+    autoLock.Wait();
   }
 }
 
@@ -375,6 +475,8 @@ BackgroundHangThread::BackgroundHangThread(
       mMaxTimeout(aMaxTimeoutMs == BackgroundHangMonitor::kNoTimeout
                       ? TimeDuration::Forever()
                       : TimeDuration::FromMilliseconds(aMaxTimeoutMs)),
+      mLastActivity(mManager->mNow),
+      mHangStart(mLastActivity),
       mHanging(false),
       mWaiting(true),
       mThreadType(aThreadType),
@@ -382,13 +484,12 @@ BackgroundHangThread::BackgroundHangThread(
   if (sTlsKeyInitialized && IsShared()) {
     sTlsKey.set(this);
   }
-  if (mManager->mHangMonitorThread) {
-    mTimer = NS_NewTimer(mManager->mHangMonitorThread);
-  }
   // Lock here because LinkedList is not thread-safe
   MonitorAutoLock autoLock(mManager->mLock);
   // Add to thread list
   mManager->mHangThreads.insertBack(this);
+  // Wake up monitor thread to process new thread
+  autoLock.Notify();
 }
 
 BackgroundHangThread::~BackgroundHangThread() {
@@ -396,6 +497,8 @@ BackgroundHangThread::~BackgroundHangThread() {
   MonitorAutoLock autoLock(mManager->mLock);
   // Remove from thread list
   remove();
+  // Wake up monitor thread to process removed thread
+  autoLock.Notify();
 
   // We no longer have a thread
   if (sTlsKeyInitialized && IsShared()) {
@@ -473,55 +576,22 @@ void BackgroundHangThread::ReportPermaHang() {
   ReportHang(mMaxTimeout, PersistedToDisk::Yes);
 }
 
-NS_IMETHODIMP BackgroundHangThread::Notify(nsITimer* aTimer) {
-  MOZ_ASSERT(profiler_current_thread_id() ==
-             mManager->mHangMonitorProfilerThreadId);
-
-  MonitorAutoLock autoLock(mManager->mLock);
-  PROFILER_MARKER_UNTYPED("TimerNotify", OTHER, {});
-
-  TimeStamp now = TimeStamp::Now();
-  if (MOZ_UNLIKELY((now - mExpectedTimerNotification) * 2 > mTimeout)) {
-    // If the timer notification has been delayed by more than half the timeout
-    // time, assume the machine is not scheduling tasks correctly and ignore
-    // this hang.
-    mWaiting = true;
-    mHanging = false;
-    return NS_OK;
+MOZ_ALWAYS_INLINE void BackgroundHangThread::Update() {
+  TimeStamp now = mManager->mNow;
+  if (mWaiting) {
+    mLastActivity = now;
+    mWaiting = false;
+    /* We have to wake up the manager thread because when all threads
+       are waiting, the manager thread waits indefinitely as well. */
+    mManager->Wakeup();
+  } else {
+    TimeDuration duration = now - mLastActivity;
+    if (MOZ_UNLIKELY(duration >= mTimeout)) {
+      /* Wake up the manager thread to tell it that a hang ended */
+      mManager->Wakeup();
+    }
+    mLastActivity = now;
   }
-
-  TimeDuration hangTime = now - mLastActivity;
-  if (MOZ_UNLIKELY(hangTime >= mMaxTimeout)) {
-    // A permahang started.  No point in trying to find its exact
-    // duration, so avoid restarting the timer until there is new
-    // activity.
-    mWaiting = true;
-    mHanging = false;
-    ReportPermaHang();
-    return NS_OK;
-  }
-
-  if (MOZ_LIKELY(!mHanging && hangTime >= mTimeout)) {
-#ifdef MOZ_GECKO_PROFILER
-    // A hang started, collect a stack
-    mStackHelper.GetStack(mHangStack, mRunnableName, true);
-#endif
-
-    // If we hang immediately on waking, then the most recently collected
-    // CPU usage is going to be an average across the whole time we were
-    // sleeping. Accordingly, we want to make sure that when we hang, we
-    // collect a fresh value.
-    BackgroundHangManager::sInstance->CollectCPUUsage(now, true);
-
-    mHangStart = mLastActivity;
-    mHanging = true;
-    mAnnotations = mAnnotators.GatherAnnotations();
-  }
-
-  TimeDuration nextRecheck = mMaxTimeout - hangTime;
-  mExpectedTimerNotification = now + nextRecheck;
-  return mTimer->InitHighResolutionWithCallback(this, nextRecheck,
-                                                nsITimer::TYPE_ONE_SHOT);
 }
 
 BackgroundHangThread* BackgroundHangThread::FindThread() {
@@ -597,7 +667,7 @@ void BackgroundHangMonitor::Startup() {
   if (!strcmp(MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL), "beta")) {
     if (XRE_IsParentProcess()) {  // cached ClientID hasn't been read yet
       BackgroundHangThread::Startup();
-      new BackgroundHangManager();
+      BackgroundHangManager::sInstance = new BackgroundHangManager();
       Unused << NS_WARN_IF(
           BackgroundHangManager::sInstance->mCPUUsageWatcher.Init().isErr());
       observerService->AddObserver(BackgroundHangManager::sInstance,
@@ -609,7 +679,7 @@ void BackgroundHangMonitor::Startup() {
   }
 
   BackgroundHangThread::Startup();
-  new BackgroundHangManager();
+  BackgroundHangManager::sInstance = new BackgroundHangManager();
   Unused << NS_WARN_IF(
       BackgroundHangManager::sInstance->mCPUUsageWatcher.Init().isErr());
   if (XRE_IsParentProcess()) {
