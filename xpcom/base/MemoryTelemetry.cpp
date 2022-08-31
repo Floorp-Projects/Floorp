@@ -216,9 +216,11 @@ nsresult MemoryTelemetry::GatherReports(
 
   // If we're running in the parent process, collect data from all processes for
   // the MEMORY_TOTAL histogram.
+#ifndef XP_MACOSX
   if (XRE_IsParentProcess() && !mGatheringTotalMemory) {
     GatherTotalMemory();
   }
+#endif
 
   if (!Telemetry::CanRecordReleaseData()) {
     return NS_OK;
