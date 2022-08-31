@@ -376,6 +376,13 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         ):
             return True
 
+        # This specific AND combination has been reviewed for unicode-ident.
+        if (
+            license_string == "(MIT OR Apache-2.0) AND Unicode-DFS-2016"
+            and package == "unicode-ident"
+        ):
+            return True
+
         if re.search(r"\s+AND", license_string):
             return False
 
