@@ -12,6 +12,7 @@
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
+#include "mozilla/ipc/BackgroundParent.h"
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
 #include "nsNetCID.h"
@@ -47,9 +48,13 @@ using FileSystemDataManagerHashtable =
                     NotNull<CheckedUnsafePtr<FileSystemDataManager>>,
                     MovingNotNull<CheckedUnsafePtr<FileSystemDataManager>>>;
 
+// This hashtable isn't protected by any mutex but it is only ever touched on
+// the PBackground thread.
 StaticAutoPtr<FileSystemDataManagerHashtable> gDataManagers;
 
 RefPtr<FileSystemDataManager> GetFileSystemDataManager(const Origin& aOrigin) {
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
+
   if (gDataManagers) {
     auto maybeDataManager = gDataManagers->MaybeGet(aOrigin);
     if (maybeDataManager) {
@@ -64,6 +69,7 @@ RefPtr<FileSystemDataManager> GetFileSystemDataManager(const Origin& aOrigin) {
 
 void AddFileSystemDataManager(
     const Origin& aOrigin, const RefPtr<FileSystemDataManager>& aDataManager) {
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
   MOZ_ASSERT(!quota::QuotaManager::IsShuttingDown());
 
   if (!gDataManagers) {
@@ -76,6 +82,8 @@ void AddFileSystemDataManager(
 }
 
 void RemoveFileSystemDataManager(const Origin& aOrigin) {
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
+
   MOZ_ASSERT(gDataManagers);
   const DebugOnly<bool> removed = gDataManagers->Remove(aOrigin);
   MOZ_ASSERT(removed);
@@ -164,6 +172,8 @@ FileSystemDataManager::GetOrCreateFileSystemDataManager(const Origin& aOrigin) {
 
 // static
 void FileSystemDataManager::InitiateShutdown() {
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
+
   if (!gDataManagers) {
     return;
   }
@@ -186,7 +196,11 @@ void FileSystemDataManager::InitiateShutdown() {
 }
 
 // static
-bool FileSystemDataManager::IsShutdownCompleted() { return !gDataManagers; }
+bool FileSystemDataManager::IsShutdownCompleted() {
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
+
+  return !gDataManagers;
+}
 
 void FileSystemDataManager::Register() { mRegCount++; }
 
