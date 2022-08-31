@@ -24,8 +24,7 @@ extern LazyLogModule gOPFSLog;
 namespace mozilla::dom {
 
 namespace fs::data {
-// TODO: Replace dummy with real FileSystemDataManager
-class FileSystemDataManagerBase {};
+class FileSystemDataManager;
 }  // namespace fs::data
 
 class FileSystemManagerParent : public PFileSystemManagerParent {
@@ -76,7 +75,7 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
  private:
   RefPtr<TaskQueue> mTaskQueue;
 
-  UniquePtr<fs::data::FileSystemDataManagerBase> mData;
+  UniquePtr<fs::data::FileSystemDataManager> mDataManager;
 
   const EntryId mRootEntry;
 };
