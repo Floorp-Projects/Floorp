@@ -28,10 +28,6 @@ class BackgroundParentImpl : public PBackgroundParent {
 
   bool DeallocPBackgroundTestParent(PBackgroundTestParent* aActor) override;
 
-  already_AddRefed<PBackgroundFileSystemParent>
-  AllocPBackgroundFileSystemParent(
-      const PrincipalInfo& aPrincipalInfo) override;
-
   already_AddRefed<PBackgroundIDBFactoryParent>
   AllocPBackgroundIDBFactoryParent(const LoggingInfo& aLoggingInfo) override;
 
@@ -135,6 +131,11 @@ class BackgroundParentImpl : public PBackgroundParent {
 
   already_AddRefed<PBackgroundSessionStorageServiceParent>
   AllocPBackgroundSessionStorageServiceParent() override;
+
+  mozilla::ipc::IPCResult RecvCreateFileSystemManagerParent(
+      const PrincipalInfo& aPrincipalInfo,
+      Endpoint<mozilla::dom::POriginPrivateFileSystemParent>&& aParentEndpoint,
+      CreateFileSystemManagerParentResolver&& aResolver) override;
 
   already_AddRefed<PIdleSchedulerParent> AllocPIdleSchedulerParent() override;
 

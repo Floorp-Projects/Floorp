@@ -26,4 +26,8 @@ nsIGlobalObject* GetGlobal() {
   return global.get();
 }
 
+mozilla::ipc::PrincipalInfo GetPrincipalInfo() {
+  return mozilla::ipc::PrincipalInfo{mozilla::ipc::SystemPrincipalInfo{}};
+}
+
 }  // namespace mozilla::dom::fs::test

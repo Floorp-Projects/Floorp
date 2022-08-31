@@ -14,13 +14,13 @@
 #include "mozilla/RDDProcessManager.h"
 #include "mozilla/ipc/UtilityProcessManager.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/dom/BackgroundFileSystemParent.h"
 #include "mozilla/dom/BackgroundSessionStorageServiceParent.h"
 #include "mozilla/dom/ClientManagerActors.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/EndpointForReportParent.h"
 #include "mozilla/dom/FileCreatorParent.h"
+#include "mozilla/dom/FileSystemManagerParentFactory.h"
 #include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/GamepadEventChannelParent.h"
 #include "mozilla/dom/GamepadTestChannelParent.h"
@@ -183,16 +183,6 @@ auto BackgroundParentImpl::AllocPBackgroundIDBFactoryParent(
   AssertIsOnBackgroundThread();
 
   return AllocPBackgroundIDBFactoryParent(aLoggingInfo);
-}
-
-auto BackgroundParentImpl::AllocPBackgroundFileSystemParent(
-    const PrincipalInfo& aPrincipalInfo)
-    -> already_AddRefed<PBackgroundFileSystemParent> {
-  AssertIsInMainProcess();
-  AssertIsOnBackgroundThread();
-
-  return MakeAndAddRef<mozilla::dom::BackgroundFileSystemParent>(
-      aPrincipalInfo);
 }
 
 mozilla::ipc::IPCResult
@@ -497,6 +487,17 @@ BackgroundParentImpl::AllocPBackgroundSessionStorageServiceParent() {
   AssertIsOnBackgroundThread();
 
   return MakeAndAddRef<mozilla::dom::BackgroundSessionStorageServiceParent>();
+}
+
+mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateFileSystemManagerParent(
+    const PrincipalInfo& aPrincipalInfo,
+    Endpoint<POriginPrivateFileSystemParent>&& aParentEndpoint,
+    CreateFileSystemManagerParentResolver&& aResolver) {
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return mozilla::dom::CreateFileSystemManagerParent(
+      aPrincipalInfo, std::move(aParentEndpoint), std::move(aResolver));
 }
 
 already_AddRefed<PIdleSchedulerParent>
