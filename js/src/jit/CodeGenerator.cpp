@@ -11139,15 +11139,164 @@ void CodeGenerator::visitStringEndsWithInline(LStringEndsWithInline* lir) {
   masm.bind(ool->rejoin());
 }
 
-void CodeGenerator::visitStringConvertCase(LStringConvertCase* lir) {
+void CodeGenerator::visitStringToLowerCase(LStringToLowerCase* lir) {
+  Register string = ToRegister(lir->string());
+  Register output = ToRegister(lir->output());
+  Register temp0 = ToRegister(lir->temp0());
+  Register temp1 = ToRegister(lir->temp1());
+  Register temp2 = ToRegister(lir->temp2());
+
+  // On x86 there are not enough registers. In that case reuse the string
+  // register as a temporary.
+  Register temp3 =
+      lir->temp3()->isBogusTemp() ? string : ToRegister(lir->temp3());
+  Register temp4 = ToRegister(lir->temp4());
+
+  using Fn = JSString* (*)(JSContext*, HandleString);
+  OutOfLineCode* ool = oolCallVM<Fn, js::StringToLowerCase>(
+      lir, ArgList(string), StoreRegisterTo(output));
+
+  // Take the slow path if the string isn't a linear Latin-1 string.
+  Imm32 linearLatin1Bits(JSString::LINEAR_BIT | JSString::LATIN1_CHARS_BIT);
+  Register flags = temp0;
+  masm.load32(Address(string, JSString::offsetOfFlags()), flags);
+  masm.and32(linearLatin1Bits, flags);
+  masm.branch32(Assembler::NotEqual, flags, linearLatin1Bits, ool->entry());
+
+  Register length = temp0;
+  masm.loadStringLength(string, length);
+
+  // Return the input if it's the empty string.
+  Label notEmptyString;
+  masm.branch32(Assembler::NotEqual, length, Imm32(0), &notEmptyString);
+  {
+    masm.movePtr(string, output);
+    masm.jump(ool->rejoin());
+  }
+  masm.bind(&notEmptyString);
+
+  Register inputChars = temp1;
+  masm.loadStringChars(string, inputChars, CharEncoding::Latin1);
+
+  Register toLowerCaseTable = temp2;
+  masm.movePtr(ImmPtr(unicode::latin1ToLowerCaseTable), toLowerCaseTable);
+
+  // Single element strings can be directly retrieved from static strings cache.
+  Label notSingleElementString;
+  masm.branch32(Assembler::NotEqual, length, Imm32(1), &notSingleElementString);
+  {
+    Register current = temp4;
+
+    masm.loadChar(Address(inputChars, 0), current, CharEncoding::Latin1);
+    masm.load8ZeroExtend(BaseIndex(toLowerCaseTable, current, TimesOne),
+                         current);
+    masm.movePtr(ImmPtr(&gen->runtime->staticStrings().unitStaticTable),
+                 output);
+    masm.loadPtr(BaseIndex(output, current, ScalePointer), output);
+
+    masm.jump(ool->rejoin());
+  }
+  masm.bind(&notSingleElementString);
+
+  // Use the OOL-path when the string is too long. This prevents scanning long
+  // strings which have upper case characters only near the end a second time in
+  // the VM.
+  constexpr int32_t MaxInlineLength = 64;
+  masm.branch32(Assembler::Above, length, Imm32(MaxInlineLength), ool->entry());
+
+  {
+    // Check if there are any characters which need to be converted.
+    //
+    // This extra loop gives a small performance improvement for strings which
+    // are already lower cased and lets us avoid calling into the runtime for
+    // non-inline, all lower case strings. But more importantly it avoids
+    // repeated inline allocation failures:
+    // |AllocateThinOrFatInlineString| below takes the OOL-path and calls the
+    // |js::StringToLowerCase| runtime function when the result string can't be
+    // allocated inline. And |js::StringToLowerCase| directly returns the input
+    // string when no characters need to be converted. That means it won't
+    // trigger GC to clear up the free nursery space, so the next toLowerCase()
+    // call will again fail to inline allocate the result string.
+    Label hasUpper;
+    {
+      if (temp3 == string) {
+        masm.push(string);
+      }
+
+      Register checkInputChars = temp3;
+      masm.movePtr(inputChars, checkInputChars);
+
+      Register current = temp4;
+      Register currentLowercase = output;
+
+      Label start;
+      masm.bind(&start);
+      masm.loadChar(Address(checkInputChars, 0), current, CharEncoding::Latin1);
+      masm.load8ZeroExtend(BaseIndex(toLowerCaseTable, current, TimesOne),
+                           currentLowercase);
+      masm.branch32(Assembler::NotEqual, current, currentLowercase, &hasUpper);
+      masm.addPtr(Imm32(sizeof(Latin1Char)), checkInputChars);
+      masm.branchSub32(Assembler::NonZero, Imm32(1), length, &start);
+
+      if (temp3 == string) {
+        masm.pop(string);
+      }
+
+      // Input is already in lower case.
+      masm.movePtr(string, output);
+      masm.jump(ool->rejoin());
+    }
+    masm.bind(&hasUpper);
+
+    if (temp3 == string) {
+      masm.pop(string);
+    }
+
+    // |length| was clobbered above, reload.
+    masm.loadStringLength(string, length);
+
+    // Call into the runtime when we can't create an inline string.
+    masm.branch32(Assembler::Above, length,
+                  Imm32(JSFatInlineString::MAX_LENGTH_LATIN1), ool->entry());
+
+    AllocateThinOrFatInlineString(masm, output, length, temp4,
+                                  initialStringHeap(), ool->entry(),
+                                  CharEncoding::Latin1);
+
+    if (temp3 == string) {
+      masm.push(string);
+    }
+
+    Register outputChars = temp3;
+    masm.loadInlineStringCharsForStore(output, outputChars);
+
+    {
+      Register current = temp4;
+
+      Label start;
+      masm.bind(&start);
+      masm.loadChar(Address(inputChars, 0), current, CharEncoding::Latin1);
+      masm.load8ZeroExtend(BaseIndex(toLowerCaseTable, current, TimesOne),
+                           current);
+      masm.storeChar(current, Address(outputChars, 0), CharEncoding::Latin1);
+      masm.addPtr(Imm32(sizeof(Latin1Char)), inputChars);
+      masm.addPtr(Imm32(sizeof(Latin1Char)), outputChars);
+      masm.branchSub32(Assembler::NonZero, Imm32(1), length, &start);
+    }
+
+    if (temp3 == string) {
+      masm.pop(string);
+    }
+  }
+
+  masm.bind(ool->rejoin());
+}
+
+void CodeGenerator::visitStringToUpperCase(LStringToUpperCase* lir) {
   pushArg(ToRegister(lir->string()));
 
   using Fn = JSString* (*)(JSContext*, HandleString);
-  if (lir->mir()->mode() == MStringConvertCase::LowerCase) {
-    callVM<Fn, js::StringToLowerCase>(lir);
-  } else {
-    callVM<Fn, js::StringToUpperCase>(lir);
-  }
+  callVM<Fn, js::StringToUpperCase>(lir);
 }
 
 void CodeGenerator::visitStringSplit(LStringSplit* lir) {

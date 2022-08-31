@@ -1145,13 +1145,22 @@
     searchString: JSLinearString*
   num_temps: 1
 
-# Calls the ToLowerCase or ToUpperCase case conversion function.
-- name: StringConvertCase
+# Calls the ToLowerCase case conversion function. Inlines the case conversion
+# when possible.
+- name: StringToLowerCase
+  result_type: WordSized
+  operands:
+    string: WordSized
+  num_temps: 5
+  mir_op: StringConvertCase
+
+# Calls the ToUpperCase case conversion function.
+- name: StringToUpperCase
   result_type: WordSized
   operands:
     string: WordSized
   call_instruction: true
-  mir_op: true
+  mir_op: StringConvertCase
 
 - name: StringSplit
   result_type: WordSized
