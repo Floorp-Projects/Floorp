@@ -81,7 +81,16 @@ class WMFVideoMFTManager : public MFTManager {
   const VideoInfo mVideoInfo;
   const gfx::IntSize mImageSize;
   const WMFStreamType mStreamType;
-  gfx::IntSize mDecodedImageSize;
+
+  // The size we update from the IMFMediaType which might include paddings when
+  // the stream format changes. This is only used for software decoding.
+  gfx::IntSize mSoftwareImageSize;
+
+  // The picture size we update from the IMFMediaType when the stream format
+  // changes. We assume it's equal to the image size by default (no cropping).
+  // This is only used for software decoding.
+  gfx::IntSize mSoftwarePictureSize;
+
   uint32_t mVideoStride;
   Maybe<gfx::YUVColorSpace> mColorSpace;
   gfx::ColorRange mColorRange;
