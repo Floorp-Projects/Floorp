@@ -52,7 +52,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
@@ -119,9 +118,9 @@ fun PocketStory(
             Text(
                 text = story.title,
                 color = FirefoxTheme.colors.textPrimary,
-                fontSize = 14.sp,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 2,
+                style = FirefoxTheme.typography.body2,
             )
         },
         subtitle = {
@@ -131,17 +130,17 @@ fun PocketStory(
                 Text(
                     text = story.publisher,
                     color = FirefoxTheme.colors.textSecondary,
-                    fontSize = 12.sp,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
+                    style = FirefoxTheme.typography.caption,
                 )
             } else if (isValidTimeToRead) {
                 Text(
                     text = "${story.timeToRead} min",
                     color = FirefoxTheme.colors.textSecondary,
-                    fontSize = 12.sp,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
+                    style = FirefoxTheme.typography.caption,
                 )
             }
         },
@@ -174,9 +173,9 @@ fun PocketSponsoredStory(
         Text(
             text = story.title,
             color = FirefoxTheme.colors.textPrimary,
-            fontSize = 14.sp,
             overflow = TextOverflow.Ellipsis,
             maxLines = 2,
+            style = FirefoxTheme.typography.body2,
         )
 
         Spacer(Modifier.height(9.dp))
@@ -184,9 +183,9 @@ fun PocketSponsoredStory(
         Text(
             text = stringResource(R.string.pocket_stories_sponsor_indication),
             color = FirefoxTheme.colors.textSecondary,
-            fontSize = 12.sp,
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,
+            style = FirefoxTheme.typography.caption,
         )
 
         Spacer(Modifier.height(7.dp))
@@ -194,9 +193,9 @@ fun PocketSponsoredStory(
         Text(
             text = story.sponsor,
             color = FirefoxTheme.colors.textSecondary,
-            fontSize = 12.sp,
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,
+            style = FirefoxTheme.typography.caption,
         )
     }
 }
@@ -429,8 +428,7 @@ fun PoweredByPocketHeader(
                 Text(
                     text = stringResource(R.string.pocket_stories_feature_title),
                     color = textColor,
-                    fontSize = 12.sp,
-                    lineHeight = 16.sp,
+                    style = FirefoxTheme.typography.caption,
                 )
 
                 ClickableSubstringLink(
