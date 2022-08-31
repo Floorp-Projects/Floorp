@@ -20,6 +20,7 @@ class ErrorResult;
 
 namespace dom {
 
+class FileSystemManagerChild;
 class FileSystemBackgroundRequestHandler;
 
 namespace fs {
@@ -35,10 +36,16 @@ class FileSystemRequestHandler;
 // unlink phase.
 class FileSystemManager : public nsISupports {
  public:
+  FileSystemManager(
+      nsIGlobalObject* aGlobal,
+      RefPtr<FileSystemBackgroundRequestHandler> aBackgroundRequestHandler);
+
   explicit FileSystemManager(nsIGlobalObject* aGlobal);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(FileSystemManager)
+
+  FileSystemManagerChild* Actor() const;
 
   already_AddRefed<Promise> GetDirectory(ErrorResult& aRv);
 
@@ -47,7 +54,7 @@ class FileSystemManager : public nsISupports {
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
 
-  const UniquePtr<FileSystemBackgroundRequestHandler> mBackgroundRequestHandler;
+  const RefPtr<FileSystemBackgroundRequestHandler> mBackgroundRequestHandler;
   const UniquePtr<fs::FileSystemRequestHandler> mRequestHandler;
 };
 

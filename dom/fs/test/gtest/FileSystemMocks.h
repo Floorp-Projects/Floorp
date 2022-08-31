@@ -47,35 +47,34 @@ mozilla::ipc::PrincipalInfo GetPrincipalInfo();
 class MockFileSystemRequestHandler : public FileSystemRequestHandler {
  public:
   MOCK_METHOD(void, GetRootHandle,
-              (RefPtr<FileSystemActorHolder> & aActor,
-               RefPtr<Promise> aPromise),
+              (RefPtr<FileSystemManager> aManager, RefPtr<Promise> aPromise),
               (override));
 
   MOCK_METHOD(void, GetDirectoryHandle,
-              (RefPtr<FileSystemActorHolder> & aActor,
+              (RefPtr<FileSystemManager> & aManager,
                const FileSystemChildMetadata& aDirectory, bool aCreate,
                RefPtr<Promise> aPromise),
               (override));
 
   MOCK_METHOD(void, GetFileHandle,
-              (RefPtr<FileSystemActorHolder> & aActor,
+              (RefPtr<FileSystemManager> & aManager,
                const FileSystemChildMetadata& aFile, bool aCreate,
                RefPtr<Promise> aPromise),
               (override));
 
   MOCK_METHOD(void, GetFile,
-              (RefPtr<FileSystemActorHolder> & aActor,
+              (RefPtr<FileSystemManager> & aManager,
                const FileSystemEntryMetadata& aFile, RefPtr<Promise> aPromise),
               (override));
 
   MOCK_METHOD(void, GetEntries,
-              (RefPtr<FileSystemActorHolder> & aActor,
-               const EntryId& aDirectory, PageNumber aPage,
-               RefPtr<Promise> aPromise, ArrayAppendable& aSink),
+              (RefPtr<FileSystemManager> & aManager, const EntryId& aDirectory,
+               PageNumber aPage, RefPtr<Promise> aPromise,
+               ArrayAppendable& aSink),
               (override));
 
   MOCK_METHOD(void, RemoveEntry,
-              (RefPtr<FileSystemActorHolder> & aActor,
+              (RefPtr<FileSystemManager> & aManager,
                const FileSystemChildMetadata& aEntry, bool aRecursive,
                RefPtr<Promise> aPromise),
               (override));

@@ -9,6 +9,7 @@
 #include "gtest/gtest.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/FileSystemManagerChild.h"
 #include "mozilla/dom/PFileSystemManager.h"
 
@@ -20,9 +21,9 @@ class TestFileSystemBackgroundRequestHandler : public ::testing::Test {
     mFileSystemManagerChild = MakeAndAddRef<TestFileSystemManagerChild>();
   }
 
-  UniquePtr<FileSystemBackgroundRequestHandler>
+  RefPtr<FileSystemBackgroundRequestHandler>
   GetFileSystemBackgroundRequestHandler() {
-    return MakeUnique<FileSystemBackgroundRequestHandler>(
+    return MakeRefPtr<FileSystemBackgroundRequestHandler>(
         new TestFileSystemChildFactory(mFileSystemManagerChild));
   }
 
@@ -41,8 +42,7 @@ TEST_F(TestFileSystemBackgroundRequestHandler,
   testable->CreateFileSystemManagerChild(mPrincipalInfo)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [&done](const RefPtr<FileSystemManagerChild>& child) { done = true; },
-          [&done](nsresult) { done = true; });
+          [&done](bool) { done = true; }, [&done](nsresult) { done = true; });
   // MozPromise should be rejected
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,
                      [&done]() { return done; });

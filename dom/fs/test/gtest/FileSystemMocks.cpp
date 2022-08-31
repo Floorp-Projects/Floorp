@@ -7,6 +7,7 @@
 #include "FileSystemMocks.h"
 
 #include "jsapi.h"
+#include "mozilla/dom/FileSystemManager.h"
 #include "nsISupports.h"
 #include "js/RootingAPI.h"
 

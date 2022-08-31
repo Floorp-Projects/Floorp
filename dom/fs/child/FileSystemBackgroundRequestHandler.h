@@ -9,6 +9,7 @@
 
 #include "mozilla/MozPromise.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/quota/ForwardDecls.h"
 
 template <class T>
 class RefPtr;
@@ -32,19 +33,28 @@ class FileSystemBackgroundRequestHandler {
   explicit FileSystemBackgroundRequestHandler(
       fs::FileSystemChildFactory* aChildFactory);
 
+  explicit FileSystemBackgroundRequestHandler(
+      RefPtr<FileSystemManagerChild> aFileSystemManagerChild);
+
   FileSystemBackgroundRequestHandler();
 
-  using CreateFileSystemManagerChildPromise =
-      MozPromise<RefPtr<FileSystemManagerChild>, nsresult, false>;
+  NS_INLINE_DECL_REFCOUNTING(FileSystemBackgroundRequestHandler)
 
-  virtual RefPtr<CreateFileSystemManagerChildPromise>
-  CreateFileSystemManagerChild(
+  FileSystemManagerChild* GetFileSystemManagerChild() const;
+
+  virtual RefPtr<mozilla::BoolPromise> CreateFileSystemManagerChild(
       const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
+ protected:
   virtual ~FileSystemBackgroundRequestHandler();
 
- protected:
   const UniquePtr<fs::FileSystemChildFactory> mChildFactory;
+
+  MozPromiseHolder<BoolPromise> mCreateFileSystemManagerChildPromiseHolder;
+
+  RefPtr<FileSystemManagerChild> mFileSystemManagerChild;
+
+  bool mCreatingFileSystemManagerChild;
 };  // class FileSystemBackgroundRequestHandler
 
 }  // namespace dom
