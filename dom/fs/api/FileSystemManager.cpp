@@ -9,6 +9,7 @@
 #include "FileSystemBackgroundRequestHandler.h"
 #include "fs/FileSystemRequestHandler.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/FileSystemManagerChild.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
@@ -49,10 +50,16 @@ Result<mozilla::ipc::PrincipalInfo, nsresult> GetPrincipalInfo(
 
 }  // namespace
 
-FileSystemManager::FileSystemManager(nsIGlobalObject* aGlobal)
+FileSystemManager::FileSystemManager(
+    nsIGlobalObject* aGlobal,
+    RefPtr<FileSystemBackgroundRequestHandler> aBackgroundRequestHandler)
     : mGlobal(aGlobal),
-      mBackgroundRequestHandler(new FileSystemBackgroundRequestHandler()),
+      mBackgroundRequestHandler(std::move(aBackgroundRequestHandler)),
       mRequestHandler(new fs::FileSystemRequestHandler()) {}
+
+FileSystemManager::FileSystemManager(nsIGlobalObject* aGlobal)
+    : FileSystemManager(aGlobal,
+                        MakeRefPtr<FileSystemBackgroundRequestHandler>()) {}
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileSystemManager)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -60,6 +67,10 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FileSystemManager);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(FileSystemManager);
 NS_IMPL_CYCLE_COLLECTION(FileSystemManager, mGlobal);
+
+FileSystemManagerChild* FileSystemManager::Actor() const {
+  return mBackgroundRequestHandler->GetFileSystemManagerChild();
+}
 
 already_AddRefed<Promise> FileSystemManager::GetDirectory(ErrorResult& aRv) {
   MOZ_ASSERT(mGlobal);
@@ -74,14 +85,16 @@ already_AddRefed<Promise> FileSystemManager::GetDirectory(ErrorResult& aRv) {
 
   MOZ_ASSERT(promise);
 
+  if (Actor()) {
+    mRequestHandler->GetRootHandle(this, promise);
+    return promise.forget();
+  }
+
   mBackgroundRequestHandler->CreateFileSystemManagerChild(principalInfo)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [self = RefPtr<FileSystemManager>(this),
-           promise](const RefPtr<FileSystemManagerChild>& child) {
-            RefPtr<FileSystemActorHolder> actorHolder =
-                MakeAndAddRef<FileSystemActorHolder>(child);
-            self->mRequestHandler->GetRootHandle(actorHolder, promise);
+          [self = RefPtr<FileSystemManager>(this), promise](bool) {
+            self->mRequestHandler->GetRootHandle(self, promise);
           },
           [promise](nsresult) {
             promise->MaybeRejectWithUnknownError(

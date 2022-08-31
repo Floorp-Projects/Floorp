@@ -17,7 +17,12 @@ namespace mozilla::dom {
 
 FileSystemBackgroundRequestHandler::FileSystemBackgroundRequestHandler(
     fs::FileSystemChildFactory* aChildFactory)
-    : mChildFactory(aChildFactory) {}
+    : mChildFactory(aChildFactory), mCreatingFileSystemManagerChild(false) {}
+
+FileSystemBackgroundRequestHandler::FileSystemBackgroundRequestHandler(
+    RefPtr<FileSystemManagerChild> aFileSystemManagerChild)
+    : mFileSystemManagerChild(std::move(aFileSystemManagerChild)),
+      mCreatingFileSystemManagerChild(false) {}
 
 FileSystemBackgroundRequestHandler::FileSystemBackgroundRequestHandler()
     : FileSystemBackgroundRequestHandler(new fs::FileSystemChildFactory()) {}
@@ -25,53 +30,72 @@ FileSystemBackgroundRequestHandler::FileSystemBackgroundRequestHandler()
 FileSystemBackgroundRequestHandler::~FileSystemBackgroundRequestHandler() =
     default;
 
-RefPtr<FileSystemBackgroundRequestHandler::CreateFileSystemManagerChildPromise>
+FileSystemManagerChild*
+FileSystemBackgroundRequestHandler::GetFileSystemManagerChild() const {
+  return mFileSystemManagerChild;
+}
+
+RefPtr<BoolPromise>
 FileSystemBackgroundRequestHandler::CreateFileSystemManagerChild(
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
+  MOZ_ASSERT(!mFileSystemManagerChild);
+
   using mozilla::ipc::BackgroundChild;
   using mozilla::ipc::Endpoint;
   using mozilla::ipc::PBackgroundChild;
 
-  PBackgroundChild* backgroundChild =
-      BackgroundChild::GetOrCreateForCurrentThread();
-  if (NS_WARN_IF(!backgroundChild)) {
-    return CreateFileSystemManagerChildPromise::CreateAndReject(
-        NS_ERROR_FAILURE, __func__);
+  if (!mCreatingFileSystemManagerChild) {
+    PBackgroundChild* backgroundChild =
+        BackgroundChild::GetOrCreateForCurrentThread();
+    if (NS_WARN_IF(!backgroundChild)) {
+      return BoolPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+    }
+
+    // Create a new IPC connection
+    Endpoint<PFileSystemManagerParent> parentEndpoint;
+    Endpoint<PFileSystemManagerChild> childEndpoint;
+    MOZ_ALWAYS_SUCCEEDS(
+        PFileSystemManager::CreateEndpoints(&parentEndpoint, &childEndpoint));
+
+    RefPtr<FileSystemManagerChild> child = mChildFactory->Create();
+    if (!childEndpoint.Bind(child)) {
+      return BoolPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+    }
+
+    mCreatingFileSystemManagerChild = true;
+
+    // XXX do something (register with global?) so that we can Close() the actor
+    // before the event queue starts to shut down.  That will cancel all
+    // outstanding async requests (returns lambdas with errors).
+    backgroundChild
+        ->SendCreateFileSystemManagerParent(aPrincipalInfo,
+                                            std::move(parentEndpoint))
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [self = RefPtr<FileSystemBackgroundRequestHandler>(this),
+             child](nsresult rv) {
+              self->mCreatingFileSystemManagerChild = false;
+
+              if (NS_FAILED(rv)) {
+                self->mCreateFileSystemManagerChildPromiseHolder.RejectIfExists(
+                    rv, __func__);
+              } else {
+                self->mFileSystemManagerChild = child;
+
+                self->mCreateFileSystemManagerChildPromiseHolder
+                    .ResolveIfExists(true, __func__);
+              }
+            },
+            [self = RefPtr<FileSystemBackgroundRequestHandler>(this)](
+                const mozilla::ipc::ResponseRejectReason&) {
+              self->mCreatingFileSystemManagerChild = false;
+
+              self->mCreateFileSystemManagerChildPromiseHolder.RejectIfExists(
+                  NS_ERROR_FAILURE, __func__);
+            });
   }
 
-  // Create a new IPC connection
-  Endpoint<PFileSystemManagerParent> parentEndpoint;
-  Endpoint<PFileSystemManagerChild> childEndpoint;
-  MOZ_ALWAYS_SUCCEEDS(
-      PFileSystemManager::CreateEndpoints(&parentEndpoint, &childEndpoint));
-
-  RefPtr<FileSystemManagerChild> child = mChildFactory->Create();
-  if (!childEndpoint.Bind(child)) {
-    return CreateFileSystemManagerChildPromise::CreateAndReject(
-        NS_ERROR_FAILURE, __func__);
-  }
-
-  // XXX do something (register with global?) so that we can Close() the actor
-  // before the event queue starts to shut down.  That will cancel all
-  // outstanding async requests (returns lambdas with errors).
-  return backgroundChild
-      ->SendCreateFileSystemManagerParent(aPrincipalInfo,
-                                          std::move(parentEndpoint))
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [child](nsresult rv) {
-            if (NS_FAILED(rv)) {
-              return CreateFileSystemManagerChildPromise::CreateAndReject(
-                  rv, __func__);
-            }
-
-            return CreateFileSystemManagerChildPromise::CreateAndResolve(
-                child, __func__);
-          },
-          [](const mozilla::ipc::ResponseRejectReason&) {
-            return CreateFileSystemManagerChildPromise::CreateAndReject(
-                NS_ERROR_FAILURE, __func__);
-          });
+  return mCreateFileSystemManagerChildPromiseHolder.Ensure(__func__);
 }
 
 }  // namespace mozilla::dom
