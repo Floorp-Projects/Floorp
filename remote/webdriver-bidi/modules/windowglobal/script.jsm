@@ -62,7 +62,7 @@ class ScriptModule extends Module {
     this.#realms = null;
   }
 
-  #buildExceptionDetails(exception, stack) {
+  #buildExceptionDetails(exception, stack, realm, resultOwnership) {
     exception = this.#toRawObject(exception);
     const frames = lazy.getFramesFromStack(stack) || [];
 
@@ -82,14 +82,20 @@ class ScriptModule extends Module {
 
     return {
       columnNumber: stack.column,
-      exception: lazy.serialize(exception, 1),
+      exception: lazy.serialize(
+        exception,
+        1,
+        resultOwnership,
+        new Map(),
+        realm
+      ),
       lineNumber: stack.line - 1,
       stackTrace: { callFrames },
       text: lazy.stringify(exception),
     };
   }
 
-  async #buildReturnValue(rv, realm, awaitPromise) {
+  async #buildReturnValue(rv, realm, awaitPromise, resultOwnership) {
     let evaluationStatus, exception, result, stack;
 
     if ("return" in rv) {
@@ -128,13 +134,24 @@ class ScriptModule extends Module {
       case EvaluationStatus.Normal:
         return {
           evaluationStatus,
-          result: lazy.serialize(this.#toRawObject(result), 1),
+          result: lazy.serialize(
+            this.#toRawObject(result),
+            1,
+            resultOwnership,
+            new Map(),
+            realm
+          ),
           realmId: realm.id,
         };
       case EvaluationStatus.Throw:
         return {
           evaluationStatus,
-          exceptionDetails: this.#buildExceptionDetails(exception, stack),
+          exceptionDetails: this.#buildExceptionDetails(
+            exception,
+            stack,
+            realm,
+            resultOwnership
+          ),
           realmId: realm.id,
         };
       default:
@@ -192,6 +209,8 @@ class ScriptModule extends Module {
    *     The arguments to pass to the function call.
    * @param {string} functionDeclaration
    *     The body of the function to call.
+   * @param {OwnershipModel} resultOwnership
+   *     The ownership model to use for the results of this evaluation.
    * @param {string=} sandbox
    *     The name of the sandbox.
    * @param {RemoteValue=} thisParameter
@@ -209,6 +228,7 @@ class ScriptModule extends Module {
       awaitPromise,
       commandArguments = null,
       functionDeclaration,
+      resultOwnership,
       sandbox: sandboxName = null,
       thisParameter = null,
     } = options;
@@ -229,7 +249,7 @@ class ScriptModule extends Module {
       deserializedThis
     );
 
-    return this.#buildReturnValue(rv, realm, awaitPromise);
+    return this.#buildReturnValue(rv, realm, awaitPromise, resultOwnership);
   }
 
   /**
@@ -241,6 +261,8 @@ class ScriptModule extends Module {
    *     expression to resolve, if this return value is a Promise.
    * @param {string} expression
    *     The expression to evaluate.
+   * @param {OwnershipModel} resultOwnership
+   *     The ownership model to use for the results of this evaluation.
    * @param {string=} sandbox
    *     The name of the sandbox.
    *
@@ -252,12 +274,17 @@ class ScriptModule extends Module {
    *     RemoteValue if the evaluation status was "normal".
    */
   async evaluateExpression(options) {
-    const { awaitPromise, expression, sandbox: sandboxName = null } = options;
+    const {
+      awaitPromise,
+      expression,
+      resultOwnership,
+      sandbox: sandboxName = null,
+    } = options;
 
     const realm = this.#getRealmFromSandboxName(sandboxName);
     const rv = realm.executeInGlobal(expression);
 
-    return this.#buildReturnValue(rv, realm, awaitPromise);
+    return this.#buildReturnValue(rv, realm, awaitPromise, resultOwnership);
   }
 }
 
