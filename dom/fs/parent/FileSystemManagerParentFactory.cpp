@@ -46,31 +46,24 @@ mozilla::ipc::IPCResult CreateFileSystemManagerParent(
   nsAutoCString origin =
       quota::QuotaManager::GetOriginFromValidatedPrincipalInfo(aPrincipalInfo);
 
-  auto sendBackError = [aResolver](const auto& aRv) { aResolver(aRv); };
-
-  fs::EntryId rootId = fs::data::GetRootHandle(origin);
-
-  // This opens the quota manager, which has to be done on PBackground
+  // This creates the file system data manager, which has to be done on
+  // PBackground
   QM_TRY_UNWRAP(
       RefPtr<fs::data::FileSystemDataManager> dataManager,
       fs::data::FileSystemDataManager::GetOrCreateFileSystemDataManager(origin),
-      IPC_OK(), sendBackError);
+      IPC_OK(), [aResolver](const auto& aRv) { aResolver(aRv); });
 
-  nsCOMPtr<nsIThread> pbackground = NS_GetCurrentThread();
+  fs::EntryId rootId = fs::data::GetRootHandle(origin);
 
-  // We'll have to thread-hop back to this thread to respond.  We could
-  // just have the create be one-way, then send the actual request on the
-  // new channel, but that's an extra IPC instead.
   InvokeAsync(dataManager->MutableIOTargetPtr(), __func__,
-              [origin, parentEp = std::move(aParentEndpoint), aResolver, rootId,
-               dataManager = dataManager, pbackground]() mutable {
+              [dataManager = dataManager, rootId,
+               parentEndpoint = std::move(aParentEndpoint)]() mutable {
                 RefPtr<FileSystemManagerParent> parent =
                     new FileSystemManagerParent(std::move(dataManager), rootId);
-                if (!parentEp.Bind(parent)) {
+                if (!parentEndpoint.Bind(parent)) {
                   return BoolPromise::CreateAndReject(NS_ERROR_FAILURE,
                                                       __func__);
                 }
-                // Send response back to pbackground to send to child
                 return BoolPromise::CreateAndResolve(true, __func__);
               })
       ->Then(GetCurrentSerialEventTarget(), __func__,
