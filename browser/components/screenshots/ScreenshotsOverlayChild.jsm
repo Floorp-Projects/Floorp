@@ -326,7 +326,7 @@ class AnonymousContentOverlay {
     </div>`;
 
     const parser = new this.contentDocument.ownerGlobal.DOMParser();
-    const tmpDoc = parser.parseFromString(htmlString, "text/html");
+    const tmpDoc = parser.parseFromSafeString(htmlString, "text/html");
     const fragment = this.contentDocument.createDocumentFragment();
 
     fragment.appendChild(tmpDoc.body.children[0]);

@@ -22,19 +22,19 @@ const PanelOffsetX = -33;
 const PanelOffsetY = -8;
 
 class ScreenshotsComponentParent extends JSWindowActorParent {
-  receiveMessage(message) {
+  async receiveMessage(message) {
     let browser = message.target.browsingContext.topFrameElement;
     switch (message.name) {
       case "Screenshots:CancelScreenshot":
-        ScreenshotsUtils.closePanel(browser);
+        await ScreenshotsUtils.closePanel(browser);
         break;
       case "Screenshots:CopyScreenshot":
-        ScreenshotsUtils.closePanel(browser, true);
+        await ScreenshotsUtils.closePanel(browser, true);
         let copyBox = message.data;
         ScreenshotsUtils.copyToClipboard(copyBox, browser);
         break;
       case "Screenshots:DownloadScreenshot":
-        ScreenshotsUtils.closePanel(browser, true);
+        await ScreenshotsUtils.closePanel(browser, true);
         let { title, downloadBox } = message.data;
         ScreenshotsUtils.download(title, downloadBox, browser);
         break;
@@ -155,7 +155,7 @@ var ScreenshotsUtils = {
    * send a message to the child to close the overly.
    * Defaults to true. Will be false when called from didDestroy.
    */
-  closePanel(browser, closeOverlay = true) {
+  async closePanel(browser, closeOverlay = true) {
     let buttonsPanel = browser.ownerDocument.querySelector(
       "#screenshotsPagePanel"
     );
@@ -164,7 +164,7 @@ var ScreenshotsUtils = {
     }
     if (closeOverlay) {
       let actor = this.getActor(browser);
-      actor.sendQuery("Screenshots:HideOverlay");
+      await actor.sendQuery("Screenshots:HideOverlay");
     }
   },
   /**
