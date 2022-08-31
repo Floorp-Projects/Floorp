@@ -1293,25 +1293,6 @@ function promiseMoveMouseAndScrollWheelOver(
   return p;
 }
 
-function scrollbarDragStart(aTarget, aScaleFactor) {
-  var targetElement = elementForTarget(aTarget);
-  var w = {},
-    h = {};
-  utilsForTarget(aTarget).getScrollbarSizes(targetElement, w, h);
-  var verticalScrollbarWidth = w.value;
-  if (verticalScrollbarWidth == 0) {
-    return null;
-  }
-
-  var upArrowHeight = verticalScrollbarWidth; // assume square scrollbar buttons
-  var startX = targetElement.clientWidth + verticalScrollbarWidth / 2;
-  var startY = upArrowHeight + 5; // start dragging somewhere in the thumb
-  startX *= aScaleFactor;
-  startY *= aScaleFactor;
-
-  return { x: startX, y: startY };
-}
-
 // Synthesizes events to drag |target|'s vertical scrollbar by the distance
 // specified, synthesizing a mousemove for each increment as specified.
 // Returns null if the element doesn't have a vertical scrollbar. Otherwise,
@@ -1320,7 +1301,7 @@ function scrollbarDragStart(aTarget, aScaleFactor) {
 // processed by the widget code can be detected by listening for the mousemove
 // events in the caller, or for some other event that is triggered by the
 // mousemove, such as the scroll event resulting from the scrollbar drag.
-// The aScaleFactor argument should be provided if the scrollframe has been
+// The scaleFactor argument should be provided if the scrollframe has been
 // scaled by an enclosing CSS transform. (TODO: this is a workaround for the
 // fact that coordinatesRelativeToScreen is supposed to do this automatically
 // but it currently does not).
@@ -1328,22 +1309,31 @@ function scrollbarDragStart(aTarget, aScaleFactor) {
 // with modifications. Fixes here should be copied there if appropriate.
 // |target| can be an element (for subframes) or a window (for root frames).
 async function promiseVerticalScrollbarDrag(
-  aTarget,
-  aDistance = 20,
-  aIncrement = 5,
-  aScaleFactor = 1
+  target,
+  distance = 20,
+  increment = 5,
+  scaleFactor = 1
 ) {
-  var startPoint = scrollbarDragStart(aTarget, aScaleFactor);
-  var targetElement = elementForTarget(aTarget);
-  if (startPoint == null) {
+  var targetElement = elementForTarget(target);
+  var w = {},
+    h = {};
+  utilsForTarget(target).getScrollbarSizes(targetElement, w, h);
+  var verticalScrollbarWidth = w.value;
+  if (verticalScrollbarWidth == 0) {
     return null;
   }
 
+  var upArrowHeight = verticalScrollbarWidth; // assume square scrollbar buttons
+  var mouseX = targetElement.clientWidth + verticalScrollbarWidth / 2;
+  var mouseY = upArrowHeight + 5; // start dragging somewhere in the thumb
+  mouseX *= scaleFactor;
+  mouseY *= scaleFactor;
+
   dump(
     "Starting drag at " +
-      startPoint.x +
+      mouseX +
       ", " +
-      startPoint.y +
+      mouseY +
       " from top-left of #" +
       targetElement.id +
       "\n"
@@ -1351,31 +1341,31 @@ async function promiseVerticalScrollbarDrag(
 
   // Move the mouse to the scrollbar thumb and drag it down
   await promiseNativeMouseEventWithAPZ({
-    aTarget,
-    offsetX: startPoint.x,
-    offsetY: startPoint.y,
+    target,
+    offsetX: mouseX,
+    offsetY: mouseY,
     type: "mousemove",
   });
   // mouse down
   await promiseNativeMouseEventWithAPZ({
-    aTarget,
-    offsetX: startPoint.x,
-    offsetY: startPoint.y,
+    target,
+    offsetX: mouseX,
+    offsetY: mouseY,
     type: "mousedown",
   });
-  // drag vertically by |aIncrement| until we reach the specified distance
-  for (var y = aIncrement; y < aDistance; y += aIncrement) {
+  // drag vertically by |increment| until we reach the specified distance
+  for (var y = increment; y < distance; y += increment) {
     await promiseNativeMouseEventWithAPZ({
-      aTarget,
-      offsetX: startPoint.x,
-      offsetY: startPoint.y + y,
+      target,
+      offsetX: mouseX,
+      offsetY: mouseY + y,
       type: "mousemove",
     });
   }
   await promiseNativeMouseEventWithAPZ({
-    aTarget,
-    offsetX: startPoint.x,
-    offsetY: startPoint.y + aDistance,
+    target,
+    offsetX: mouseX,
+    offsetY: mouseY + distance,
     type: "mousemove",
   });
 
@@ -1383,48 +1373,12 @@ async function promiseVerticalScrollbarDrag(
   return async function() {
     dump("Finishing drag of #" + targetElement.id + "\n");
     await promiseNativeMouseEventWithAPZ({
-      aTarget,
-      offsetX: startPoint.x,
-      offsetY: startPoint.y + aDistance,
+      target,
+      offsetX: mouseX,
+      offsetY: mouseY + distance,
       type: "mouseup",
     });
   };
-}
-
-// This is similar to promiseVerticalScrollbarDrag except this triggers
-// the vertical scrollbar drag with a touch drag input. This function
-// returns true if a scrollbar was present and false if no scrollbar
-// was found for the given element.
-async function promiseVerticalScrollbarTouchDrag(
-  aTarget,
-  aDistance = 20,
-  aScaleFactor = 1
-) {
-  var startPoint = scrollbarDragStart(aTarget, aScaleFactor);
-  var targetElement = elementForTarget(aTarget);
-  if (startPoint == null) {
-    return false;
-  }
-
-  dump(
-    "Starting touch drag at " +
-      startPoint.x +
-      ", " +
-      startPoint.y +
-      " from top-left of #" +
-      targetElement.id +
-      "\n"
-  );
-
-  await promiseNativeTouchDrag(
-    aTarget,
-    startPoint.x,
-    startPoint.y,
-    0,
-    aDistance
-  );
-
-  return true;
 }
 
 // Synthesizes a native mouse drag, starting at offset (mouseX, mouseY) from
