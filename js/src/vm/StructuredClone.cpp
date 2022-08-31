@@ -1917,7 +1917,16 @@ bool JSStructuredCloneWriter::traverseError(HandleObject obj) {
 
   // Non-standard: Serialize |cause|. Because this property
   // might be missing we also write "hasCause" later.
-  Rooted<Maybe<Value>> cause(cx, unwrapped->getCause());
+  RootedId causeId(cx, NameToId(cx->names().cause));
+  Rooted<Maybe<PropertyDescriptor>> causeDesc(cx);
+  if (!GetOwnPropertyDescriptor(cx, obj, causeId, &causeDesc)) {
+    return false;
+  }
+
+  Rooted<Maybe<Value>> cause(cx);
+  if (causeDesc.isSome() && causeDesc->isDataDescriptor()) {
+    cause = mozilla::Some(causeDesc->value());
+  }
   if (!cx->compartment()->wrap(cx, &cause)) {
     return false;
   }
