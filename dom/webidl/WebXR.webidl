@@ -43,12 +43,16 @@ interface XRSession : EventTarget {
   readonly attribute XRVisibilityState visibilityState;
   [SameObject] readonly attribute XRRenderState renderState;
   [SameObject] readonly attribute XRInputSourceArray inputSources;
+  readonly attribute float? frameRate;
+  readonly attribute Float32Array? supportedFrameRates;
 
   // Methods
   [Throws]
   void updateRenderState(optional XRRenderStateInit state = {});
   [NewObject]
   Promise<XRReferenceSpace> requestReferenceSpace(XRReferenceSpaceType type);
+  [NewObject]
+  Promise<void> updateTargetFrameRate(float rate);
 
   [Throws]
   long requestAnimationFrame(XRFrameRequestCallback callback);

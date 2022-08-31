@@ -231,6 +231,13 @@ XRRenderState* XRSession::RenderState() { return mActiveRenderState; }
 
 XRInputSourceArray* XRSession::InputSources() { return mInputSources; }
 
+Nullable<float> XRSession::GetFrameRate() { return {}; }
+
+void XRSession::GetSupportedFrameRates(JSContext*,
+                                       JS::MutableHandle<JSObject*> aRetVal) {
+  aRetVal.set(nullptr);
+}
+
 // https://immersive-web.github.io/webxr/#apply-the-pending-render-state
 void XRSession::ApplyPendingRenderState() {
   if (mPendingRenderState == nullptr) {
@@ -390,6 +397,31 @@ already_AddRefed<Promise> XRSession::RequestReferenceSpace(
   }
 
   promise->MaybeResolve(space);
+  return promise.forget();
+}
+
+already_AddRefed<Promise> XRSession::UpdateTargetFrameRate(float aRate,
+                                                           ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = GetParentObject();
+  NS_ENSURE_TRUE(global, nullptr);
+
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  if (mEnded) {
+    promise->MaybeRejectWithInvalidStateError(
+        "UpdateTargetFrameRate can not be called on an XRSession that has "
+        "ended.");
+    return promise.forget();
+  }
+
+  // https://immersive-web.github.io/webxr/#dom-xrsession-updatetargetframerate
+  // TODO: Validate the rate with the frame rates supported from the device.
+  // We add a no op for now to avoid JS exceptions related to undefined method.
+  // The spec states that user agent MAY use rate to calculate a new display
+  // frame rate, so it's fine to let the default frame rate for now.
+
+  promise->MaybeResolve(JS::UndefinedHandleValue);
   return promise.forget();
 }
 
