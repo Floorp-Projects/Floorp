@@ -8257,7 +8257,7 @@ class _CardGrid extends (external_React_default()).PureComponent {
         context_type: rec.context_type,
         bookmarkGuid: rec.bookmarkGuid,
         is_collection: this.props.is_collection,
-        saveToPocketCard: saveToPocketCard
+        saveToPocketCard: saveToPocketCard && !rec.flight_id
       }));
     }
 

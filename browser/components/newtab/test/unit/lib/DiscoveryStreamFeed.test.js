@@ -1790,6 +1790,66 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
+  describe("#setupPrefs", () => {
+    it("should call setupPrefs", async () => {
+      sandbox.spy(feed, "setupPrefs");
+      feed.onAction({
+        type: at.INIT,
+      });
+      assert.calledOnce(feed.setupPrefs);
+    });
+    it("should dispatch to at.DISCOVERY_STREAM_PREFS_SETUP with proper data", async () => {
+      sandbox.spy(feed.store, "dispatch");
+      globals.set("ExperimentAPI", {
+        getExperiment: () => ({
+          slug: "experimentId",
+          branch: {
+            slug: "branchId",
+          },
+        }),
+      });
+      global.Services.prefs.getBoolPref
+        .withArgs("extensions.pocket.enabled")
+        .returns(true);
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            region: "CA",
+            pocketConfig: {
+              recentSavesEnabled: true,
+              hideDescriptions: true,
+              compactImages: true,
+              imageGradient: true,
+              newSponsoredLabel: true,
+              titleLines: "1",
+              descLines: "1",
+              readTime: true,
+              saveToPocketCardRegions: "US,CA,GB",
+            },
+          },
+        },
+      });
+      feed.setupPrefs();
+      assert.deepEqual(feed.store.dispatch.firstCall.args[0].data, {
+        utmSource: "pocket-newtab",
+        utmCampaign: "experimentId",
+        utmContent: "branchId",
+      });
+      assert.deepEqual(feed.store.dispatch.secondCall.args[0].data, {
+        recentSavesEnabled: true,
+        pocketButtonEnabled: true,
+        saveToPocketCard: true,
+        hideDescriptions: true,
+        compactImages: true,
+        imageGradient: true,
+        newSponsoredLabel: true,
+        titleLines: "1",
+        descLines: "1",
+        readTime: true,
+      });
+    });
+  });
+
   describe("#onAction: DISCOVERY_STREAM_IMPRESSION_STATS", () => {
     it("should call recordTopRecImpressions from DISCOVERY_STREAM_IMPRESSION_STATS", async () => {
       sandbox.stub(feed, "recordTopRecImpressions").returns();
