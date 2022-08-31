@@ -8,7 +8,7 @@
 # It is referred to by the following page, so if this file moves, that page must
 # be modified accordingly:
 #
-# https://developer.mozilla.org/en/docs/Mochitest#How_do_I_test_issues_which_only_show_up_when_tests_are_run_across_domains.3F
+# https://firefox-source-docs.mozilla.org/testing/mochitest-plain/faq.html
 #
 # Empty lines and lines which begin with "#" are ignored and may be used for
 # storing comments.  All other lines consist of an origin followed by whitespace

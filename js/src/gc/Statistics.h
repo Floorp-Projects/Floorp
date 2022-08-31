@@ -47,6 +47,10 @@ enum Count {
   // Number of arenas relocated by compacting GC.
   COUNT_ARENA_RELOCATED,
 
+  // Number of cells marked during the marking phase. Excludes atoms marked when
+  // not collecting the atoms zone.
+  COUNT_CELLS_MARKED,
+
   COUNT_LIMIT
 };
 
@@ -207,6 +211,7 @@ struct Statistics {
   }
 
   void count(Count s) { counts[s]++; }
+  void addCount(Count s, uint32_t count) { counts[s] += count; }
 
   uint32_t getCount(Count s) const { return uint32_t(counts[s]); }
 

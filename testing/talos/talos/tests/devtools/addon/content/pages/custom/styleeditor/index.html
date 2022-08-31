@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>iframe wrapper for the style editor custom page</title>
+  <style type="text/css">
+    html, body {
+      height: 100%;
+      width: 100%;
+    }
+    iframe {
+      border-style: none;
+      height: 100%;
+      position: absolute;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <!-- For now we load the iframe in the same site as the damp top frame.
+       We will switch to a different-site URL (eg http://damp.iframe.com) when
+       DevTools work against remote frames. -->
+  <iframe
+    src="http://damp.top.com/tests/devtools/addon/content/pages/custom/styleeditor/iframe.html"
+  ></iframe>
+</body>
+</html>
