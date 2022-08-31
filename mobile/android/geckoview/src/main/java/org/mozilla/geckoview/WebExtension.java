@@ -1944,6 +1944,7 @@ public class WebExtension {
 
   // TODO: make public bug 1595822
 
+  @Retention(RetentionPolicy.SOURCE)
   @IntDef(
       flag = true,
       value = {
@@ -2052,6 +2053,7 @@ public class WebExtension {
    */
   static class MenuItem {
 
+    @Retention(RetentionPolicy.SOURCE)
     @IntDef(
         flag = false,
         value = {MenuType.NORMAL, MenuType.CHECKBOX, MenuType.RADIO, MenuType.SEPARATOR})
@@ -2320,6 +2322,7 @@ public class WebExtension {
      * Represents a download in progress where the app is currently receiving data from the server.
      * See also {@link Info#state()}.
      */
+    @Retention(RetentionPolicy.SOURCE)
     @IntDef({STATE_IN_PROGRESS, STATE_INTERRUPTED, STATE_COMPLETE})
     public @interface DownloadState {}
 
@@ -2335,6 +2338,7 @@ public class WebExtension {
     /**
      * Represents a possible reason why a download was interrupted. See also {@link Info#error()}.
      */
+    @Retention(RetentionPolicy.SOURCE)
     @IntDef({
       INTERRUPT_REASON_NO_INTERRUPT,
       INTERRUPT_REASON_FILE_FAILED,
@@ -2596,6 +2600,7 @@ public class WebExtension {
      */
     public final boolean allowHttpErrors;
 
+    @Retention(RetentionPolicy.SOURCE)
     @IntDef(
         flag = true,
         value = {CONFLICT_ACTION_UNIQUIFY, CONFLICT_ACTION_OVERWRITE, CONFLICT_ACTION_PROMPT})
