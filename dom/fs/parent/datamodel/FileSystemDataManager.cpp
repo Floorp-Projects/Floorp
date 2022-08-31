@@ -7,17 +7,97 @@
 #include "FileSystemDataManager.h"
 
 #include "mozilla/Result.h"
+#include "mozilla/StaticPtr.h"
+#include "nsBaseHashtable.h"
+#include "nsHashKeys.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla::dom::fs::data {
 
-FileSystemDataManager::FileSystemDataManager()
-    : mBackgroundTarget(WrapNotNull(GetCurrentSerialEventTarget())) {}
+namespace {
+
+// nsCStringHashKey with disabled memmove
+class nsCStringHashKeyDM : public nsCStringHashKey {
+ public:
+  explicit nsCStringHashKeyDM(const nsCStringHashKey::KeyTypePointer aKey)
+      : nsCStringHashKey(aKey) {}
+  enum { ALLOW_MEMMOVE = false };
+};
+
+// When CheckedUnsafePtr's checking is enabled, it's necessary to ensure that
+// the hashtable uses the copy constructor instead of memmove for moving entries
+// since memmove will break CheckedUnsafePtr in a memory-corrupting way.
+using FileSystemDataManagerHashKey =
+    std::conditional<DiagnosticAssertEnabled::value, nsCStringHashKeyDM,
+                     nsCStringHashKey>::type;
+
+// Raw (but checked when the diagnostic assert is enabled) references as we
+// don't want to keep FileSystemDataManager objects alive forever. When a
+// FileSystemDataManager is destroyed it calls RemoveFileSystemDataManager
+// to clear itself.
+using FileSystemDataManagerHashtable =
+    nsBaseHashtable<FileSystemDataManagerHashKey,
+                    NotNull<CheckedUnsafePtr<FileSystemDataManager>>,
+                    MovingNotNull<CheckedUnsafePtr<FileSystemDataManager>>>;
+
+StaticAutoPtr<FileSystemDataManagerHashtable> gDataManagers;
+
+RefPtr<FileSystemDataManager> GetFileSystemDataManager(const Origin& aOrigin) {
+  if (gDataManagers) {
+    auto maybeDataManager = gDataManagers->MaybeGet(aOrigin);
+    if (maybeDataManager) {
+      RefPtr<FileSystemDataManager> result(
+          std::move(*maybeDataManager).unwrapBasePtr());
+      return result;
+    }
+  }
+
+  return nullptr;
+}
+
+void AddFileSystemDataManager(
+    const Origin& aOrigin, const RefPtr<FileSystemDataManager>& aDataManager) {
+  if (!gDataManagers) {
+    gDataManagers = new FileSystemDataManagerHashtable();
+  }
+
+  MOZ_ASSERT(!gDataManagers->Contains(aOrigin));
+  gDataManagers->InsertOrUpdate(aOrigin,
+                                WrapMovingNotNullUnchecked(aDataManager));
+}
+
+void RemoveFileSystemDataManager(const Origin& aOrigin) {
+  MOZ_ASSERT(gDataManagers);
+  const DebugOnly<bool> removed = gDataManagers->Remove(aOrigin);
+  MOZ_ASSERT(removed);
+
+  if (!gDataManagers->Count()) {
+    gDataManagers = nullptr;
+  }
+}
+
+}  // namespace
+
+FileSystemDataManager::FileSystemDataManager(const Origin& aOrigin)
+    : mOrigin(aOrigin),
+      mBackgroundTarget(WrapNotNull(GetCurrentSerialEventTarget())) {}
+
+FileSystemDataManager::~FileSystemDataManager() {
+  RemoveFileSystemDataManager(mOrigin);
+}
 
 FileSystemDataManager::result_t
-FileSystemDataManager::CreateFileSystemDataManager(
-    const fs::Origin& /*aOrigin*/) {
-  return MakeRefPtr<FileSystemDataManager>();
+FileSystemDataManager::GetOrCreateFileSystemDataManager(const Origin& aOrigin) {
+  if (RefPtr<FileSystemDataManager> dataManager =
+          GetFileSystemDataManager(aOrigin)) {
+    return dataManager;
+  }
+
+  auto dataManager = MakeRefPtr<FileSystemDataManager>(aOrigin);
+
+  AddFileSystemDataManager(aOrigin, dataManager);
+
+  return dataManager;
 }
 
 }  // namespace mozilla::dom::fs::data
