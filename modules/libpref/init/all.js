@@ -4434,3 +4434,9 @@ pref("cookiebanners.listService.logLevel", "Error");
 
 // Contorls the log level for Cookie Banner Auto Clicking.
 pref("cookiebanners.bannerClicking.logLevel", "Error");
+
+// Array of test rules for cookie banner handling as a JSON string. They will be
+// inserted in addition to regular rules and may override them when setting the
+// same domain. Every array item should be a valid CookieBannerRule. See
+// CookieBannerRule.schema.json.
+pref("cookiebanners.listService.testRules", "[]");
