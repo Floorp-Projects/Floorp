@@ -39,6 +39,8 @@ LAllocation LIRGeneratorARM64::useByteOpRegisterOrNonDoubleConstant(
   return useRegisterOrNonDoubleConstant(mir);
 }
 
+LDefinition LIRGeneratorARM64::tempByteOpRegister() { return temp(); }
+
 LDefinition LIRGeneratorARM64::tempToUnbox() { return temp(); }
 
 void LIRGenerator::visitBox(MBox* box) {

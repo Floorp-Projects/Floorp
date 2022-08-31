@@ -2366,10 +2366,26 @@ void LIRGenerator::visitStringEndsWith(MStringEndsWith* ins) {
 void LIRGenerator::visitStringConvertCase(MStringConvertCase* ins) {
   MOZ_ASSERT(ins->string()->type() == MIRType::String);
 
-  auto* lir =
-      new (alloc()) LStringConvertCase(useRegisterAtStart(ins->string()));
-  defineReturn(lir, ins);
-  assignSafepoint(lir, ins);
+  if (ins->mode() == MStringConvertCase::LowerCase) {
+#ifdef JS_CODEGEN_X86
+    // Due to lack of registers on x86, we reuse the string register as
+    // temporary. As a result we only need four temporary registers and take a
+    // bogus temporary as the fifth argument.
+    LDefinition temp4 = LDefinition::BogusTemp();
+#else
+    LDefinition temp4 = temp();
+#endif
+    auto* lir = new (alloc())
+        LStringToLowerCase(useRegister(ins->string()), temp(), temp(), temp(),
+                           temp4, tempByteOpRegister());
+    define(lir, ins);
+    assignSafepoint(lir, ins);
+  } else {
+    auto* lir =
+        new (alloc()) LStringToUpperCase(useRegisterAtStart(ins->string()));
+    defineReturn(lir, ins);
+    assignSafepoint(lir, ins);
+  }
 }
 
 void LIRGenerator::visitStart(MStart* start) {}

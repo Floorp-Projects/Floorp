@@ -753,7 +753,7 @@ void LIRGeneratorX86::lowerBigIntMod(MBigIntMod* ins) {
 void LIRGenerator::visitSubstr(MSubstr* ins) {
   // Due to lack of registers on x86, we reuse the string register as
   // temporary. As a result we only need two temporary registers and take a
-  // bugos temporary as fifth argument.
+  // bogus temporary as fifth argument.
   LSubstr* lir = new (alloc())
       LSubstr(useRegister(ins->string()), useRegister(ins->begin()),
               useRegister(ins->length()), temp(), LDefinition::BogusTemp(),
