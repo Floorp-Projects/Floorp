@@ -1135,10 +1135,6 @@ criteria = "safe-to-deploy"
 version = "0.8.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.qcms]]
-version = "0.2.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.qlog]]
 version = "0.4.0"
 criteria = "safe-to-deploy"
