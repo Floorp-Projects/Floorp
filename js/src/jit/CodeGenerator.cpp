@@ -10386,6 +10386,58 @@ static void CopyStringCharsMaybeInflate(MacroAssembler& masm, Register input,
   masm.bind(&done);
 }
 
+static void AllocateThinOrFatInlineString(MacroAssembler& masm, Register output,
+                                          Register length, Register temp,
+                                          gc::InitialHeap initialStringHeap,
+                                          Label* failure,
+                                          CharEncoding encoding) {
+#ifdef DEBUG
+  size_t maxInlineLength;
+  if (encoding == CharEncoding::Latin1) {
+    maxInlineLength = JSFatInlineString::MAX_LENGTH_LATIN1;
+  } else {
+    maxInlineLength = JSFatInlineString::MAX_LENGTH_TWO_BYTE;
+  }
+
+  Label ok;
+  masm.branch32(Assembler::BelowOrEqual, length, Imm32(maxInlineLength), &ok);
+  masm.assumeUnreachable("string length too large to be allocated as inline");
+  masm.bind(&ok);
+#endif
+
+  size_t maxThinInlineLength;
+  if (encoding == CharEncoding::Latin1) {
+    maxThinInlineLength = JSThinInlineString::MAX_LENGTH_LATIN1;
+  } else {
+    maxThinInlineLength = JSThinInlineString::MAX_LENGTH_TWO_BYTE;
+  }
+
+  Label isFat, allocDone;
+  masm.branch32(Assembler::Above, length, Imm32(maxThinInlineLength), &isFat);
+  {
+    uint32_t flags = JSString::INIT_THIN_INLINE_FLAGS;
+    if (encoding == CharEncoding::Latin1) {
+      flags |= JSString::LATIN1_CHARS_BIT;
+    }
+    masm.newGCString(output, temp, initialStringHeap, failure);
+    masm.store32(Imm32(flags), Address(output, JSString::offsetOfFlags()));
+    masm.jump(&allocDone);
+  }
+  masm.bind(&isFat);
+  {
+    uint32_t flags = JSString::INIT_FAT_INLINE_FLAGS;
+    if (encoding == CharEncoding::Latin1) {
+      flags |= JSString::LATIN1_CHARS_BIT;
+    }
+    masm.newGCFatInlineString(output, temp, initialStringHeap, failure);
+    masm.store32(Imm32(flags), Address(output, JSString::offsetOfFlags()));
+  }
+  masm.bind(&allocDone);
+
+  // Store length.
+  masm.store32(length, Address(output, JSString::offsetOfLength()));
+}
+
 static void ConcatInlineString(MacroAssembler& masm, Register lhs, Register rhs,
                                Register output, Register temp1, Register temp2,
                                Register temp3,
@@ -10401,37 +10453,8 @@ static void ConcatInlineString(MacroAssembler& masm, Register lhs, Register rhs,
   masm.branchIfRope(rhs, failure);
 
   // Allocate a JSThinInlineString or JSFatInlineString.
-  size_t maxThinInlineLength;
-  if (encoding == CharEncoding::Latin1) {
-    maxThinInlineLength = JSThinInlineString::MAX_LENGTH_LATIN1;
-  } else {
-    maxThinInlineLength = JSThinInlineString::MAX_LENGTH_TWO_BYTE;
-  }
-
-  Label isFat, allocDone;
-  masm.branch32(Assembler::Above, temp2, Imm32(maxThinInlineLength), &isFat);
-  {
-    uint32_t flags = JSString::INIT_THIN_INLINE_FLAGS;
-    if (encoding == CharEncoding::Latin1) {
-      flags |= JSString::LATIN1_CHARS_BIT;
-    }
-    masm.newGCString(output, temp1, initialStringHeap, failure);
-    masm.store32(Imm32(flags), Address(output, JSString::offsetOfFlags()));
-    masm.jump(&allocDone);
-  }
-  masm.bind(&isFat);
-  {
-    uint32_t flags = JSString::INIT_FAT_INLINE_FLAGS;
-    if (encoding == CharEncoding::Latin1) {
-      flags |= JSString::LATIN1_CHARS_BIT;
-    }
-    masm.newGCFatInlineString(output, temp1, initialStringHeap, failure);
-    masm.store32(Imm32(flags), Address(output, JSString::offsetOfFlags()));
-  }
-  masm.bind(&allocDone);
-
-  // Store length.
-  masm.store32(temp2, Address(output, JSString::offsetOfLength()));
+  AllocateThinOrFatInlineString(masm, output, temp2, temp1, initialStringHeap,
+                                failure, encoding);
 
   // Load chars pointer in temp2.
   masm.loadInlineStringCharsForStore(output, temp2);
@@ -10638,9 +10661,9 @@ JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
 
   masm.add32(temp1, temp2);
 
-  // Check if we can use a JSFatInlineString. The result is a Latin1 string if
+  // Check if we can use a JSInlineString. The result is a Latin1 string if
   // lhs and rhs are both Latin1, so we AND the flags.
-  Label isFatInlineTwoByte, isFatInlineLatin1;
+  Label isInlineTwoByte, isInlineLatin1;
   masm.load32(Address(lhs, JSString::offsetOfFlags()), temp1);
   masm.and32(Address(rhs, JSString::offsetOfFlags()), temp1);
 
@@ -10650,14 +10673,13 @@ JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
   {
     masm.branch32(Assembler::BelowOrEqual, temp2,
                   Imm32(JSFatInlineString::MAX_LENGTH_TWO_BYTE),
-                  &isFatInlineTwoByte);
+                  &isInlineTwoByte);
     masm.jump(&notInline);
   }
   masm.bind(&isLatin1);
   {
     masm.branch32(Assembler::BelowOrEqual, temp2,
-                  Imm32(JSFatInlineString::MAX_LENGTH_LATIN1),
-                  &isFatInlineLatin1);
+                  Imm32(JSFatInlineString::MAX_LENGTH_LATIN1), &isInlineLatin1);
   }
   masm.bind(&notInline);
 
@@ -10691,11 +10713,11 @@ JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
   masm.mov(lhs, output);
   masm.ret();
 
-  masm.bind(&isFatInlineTwoByte);
+  masm.bind(&isInlineTwoByte);
   ConcatInlineString(masm, lhs, rhs, output, temp1, temp2, temp3,
                      initialStringHeap, &failure, CharEncoding::TwoByte);
 
-  masm.bind(&isFatInlineLatin1);
+  masm.bind(&isInlineLatin1);
   ConcatInlineString(masm, lhs, rhs, output, temp1, temp2, temp3,
                      initialStringHeap, &failure, CharEncoding::Latin1);
 
