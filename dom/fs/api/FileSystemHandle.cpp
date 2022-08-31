@@ -9,7 +9,7 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FileSystemHandleBinding.h"
-#include "mozilla/dom/OriginPrivateFileSystemChild.h"
+#include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/Promise.h"
 
 namespace mozilla::dom {
@@ -18,16 +18,28 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileSystemHandle)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
-NS_IMPL_CYCLE_COLLECTING_ADDREF(FileSystemHandle);
-NS_IMPL_CYCLE_COLLECTING_RELEASE(FileSystemHandle);
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FileSystemHandle, mGlobal);
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(FileSystemHandle)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(FileSystemHandle)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(FileSystemHandle)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FileSystemHandle)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
+  // Don't unlink mManager!
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(FileSystemHandle)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mManager)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(FileSystemHandle)
 
 FileSystemHandle::FileSystemHandle(
-    nsIGlobalObject* aGlobal, RefPtr<FileSystemActorHolder>& aActor,
+    nsIGlobalObject* aGlobal, RefPtr<FileSystemManager>& aManager,
     const fs::FileSystemEntryMetadata& aMetadata,
     fs::FileSystemRequestHandler* aRequestHandler)
     : mGlobal(aGlobal),
-      mActor(aActor),
+      mManager(aManager),
       mMetadata(aMetadata),
       mRequestHandler(aRequestHandler) {
   MOZ_ASSERT(!mMetadata.entryId().IsEmpty());
@@ -58,10 +70,6 @@ already_AddRefed<Promise> FileSystemHandle::IsSameEntry(
   promise->MaybeReject(NS_ERROR_NOT_IMPLEMENTED);
 
   return promise.forget();
-}
-
-OriginPrivateFileSystemChild* FileSystemHandle::Actor() const {
-  return mActor->Actor();
 }
 
 }  // namespace mozilla::dom

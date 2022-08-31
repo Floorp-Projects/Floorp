@@ -1488,7 +1488,7 @@ var TESTS = [
         XPI: TESTROOT2 + "webmidi_permission.xpi",
       })
     );
-    BrowserTestUtils.openNewForegroundTab(
+    await BrowserTestUtils.openNewForegroundTab(
       win.gBrowser,
       TESTROOT + "installtrigger.html?" + triggers
     );

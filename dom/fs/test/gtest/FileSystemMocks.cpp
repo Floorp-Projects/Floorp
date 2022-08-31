@@ -7,6 +7,7 @@
 #include "FileSystemMocks.h"
 
 #include "jsapi.h"
+#include "mozilla/dom/FileSystemManager.h"
 #include "nsISupports.h"
 #include "js/RootingAPI.h"
 
@@ -24,6 +25,10 @@ nsIGlobalObject* GetGlobal() {
   MOZ_ASSERT(global);
 
   return global.get();
+}
+
+mozilla::ipc::PrincipalInfo GetPrincipalInfo() {
+  return mozilla::ipc::PrincipalInfo{mozilla::ipc::SystemPrincipalInfo{}};
 }
 
 }  // namespace mozilla::dom::fs::test

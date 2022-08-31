@@ -8,6 +8,7 @@ TEST_DIRS += [
     "api",
     "child",
     "parent",
+    "shared",
 ]
 
 UNIFIED_SOURCES = [

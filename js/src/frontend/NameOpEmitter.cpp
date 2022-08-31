@@ -11,6 +11,7 @@
 #include "frontend/ParserAtom.h"  // ParserAtom
 #include "frontend/SharedContext.h"
 #include "frontend/TDZCheckCache.h"
+#include "frontend/ValueUsage.h"
 #include "vm/Opcodes.h"
 
 using namespace js;
@@ -412,7 +413,7 @@ bool NameOpEmitter::emitAssignment() {
   return true;
 }
 
-bool NameOpEmitter::emitIncDec() {
+bool NameOpEmitter::emitIncDec(ValueUsage valueUsage) {
   MOZ_ASSERT(state_ == State::Start);
 
   JSOp incOp = isInc() ? JSOp::Inc : JSOp::Dec;
@@ -424,9 +425,9 @@ bool NameOpEmitter::emitIncDec() {
     //              [stack] ENV? N
     return false;
   }
-  if (isPostIncDec()) {
+  if (isPostIncDec() && valueUsage == ValueUsage::WantValue) {
     if (!bce_->emit1(JSOp::Dup)) {
-      //            [stack] ENV? N? N
+      //            [stack] ENV? N N
       return false;
     }
   }
@@ -434,13 +435,14 @@ bool NameOpEmitter::emitIncDec() {
     //              [stack] ENV? N? N+1
     return false;
   }
-  if (isPostIncDec() && emittedBindOp()) {
+  if (isPostIncDec() && emittedBindOp() &&
+      valueUsage == ValueUsage::WantValue) {
     if (!bce_->emit2(JSOp::Pick, 2)) {
-      //            [stack] N? N+1 ENV?
+      //            [stack] N N+1 ENV
       return false;
     }
     if (!bce_->emit1(JSOp::Swap)) {
-      //            [stack] N? ENV? N+1
+      //            [stack] N ENV N+1
       return false;
     }
   }
@@ -448,7 +450,7 @@ bool NameOpEmitter::emitIncDec() {
     //              [stack] N? N+1
     return false;
   }
-  if (isPostIncDec()) {
+  if (isPostIncDec() && valueUsage == ValueUsage::WantValue) {
     if (!bce_->emit1(JSOp::Pop)) {
       //            [stack] N
       return false;

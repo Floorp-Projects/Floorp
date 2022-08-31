@@ -1,6 +1,6 @@
 # Performance
 
-This page explains how optimize the performance the Firefox code base
+This page explains how to optimize the performance of the Firefox code base.
 
 The [test documentation](/testing/perfdocs/index.rst)
 explains how to test for performance in Firefox.

@@ -1345,17 +1345,25 @@ nsresult CacheFileIOManager::OnProfile() {
 
 // static
 nsresult CacheFileIOManager::OnDelayedStartupFinished() {
-  if (NS_WARN_IF(!gInstance)) {
+  if (!StaticPrefs::network_cache_shutdown_purge_in_background_task()) {
+    return NS_OK;
+  }
+
+  RefPtr<CacheFileIOManager> ioMan = gInstance;
+  nsCOMPtr<nsIEventTarget> target = IOTarget();
+  if (NS_WARN_IF(!ioMan || !target)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (StaticPrefs::network_cache_shutdown_purge_in_background_task()) {
-    // TODO: run on another thread: Check if there are any old cache dirs.
-    // Report telemetry.
-    gInstance->DispatchPurgeTask(""_ns, "0"_ns, kPurgeExtension);
-  }
-
-  return NS_OK;
+  return target->Dispatch(
+      NS_NewRunnableFunction("CacheFileIOManager::OnDelayedStartupFinished",
+                             [ioMan = RefPtr{ioMan}] {
+                               // TODO: Check if there are any old cache dirs.
+                               // Report telemetry.
+                               gInstance->DispatchPurgeTask(""_ns, "0"_ns,
+                                                            kPurgeExtension);
+                             }),
+      nsIEventTarget::DISPATCH_NORMAL);
 }
 
 // static
@@ -3159,7 +3167,7 @@ nsresult CacheFileIOManager::EvictByContextInternal(
 
         // Clear entry if the host belongs to the given base domain.
         bool hasRootDomain = false;
-        rv = NS_HasRootDomain(host, baseDomain, &hasRootDomain);
+        rv = HasRootDomain(host, baseDomain, &hasRootDomain);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return false;
         }
@@ -4051,8 +4059,12 @@ nsresult CacheFileIOManager::DispatchPurgeTask(
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
 
+  nsCOMPtr<nsIFile> cacheDir;
+  rv = mCacheDirectory->Clone(getter_AddRefs(cacheDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIFile> profileDir;
-  rv = mCacheDirectory->GetParent(getter_AddRefs(profileDir));
+  rv = cacheDir->GetParent(getter_AddRefs(profileDir));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIFile> lf;

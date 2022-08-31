@@ -12,8 +12,13 @@ const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.jsm",
+  ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
 });
 
+// When expanding the use of Feature Callout
+// to new about: pages, make `progressPref` a
+// configurable field on callout messages and
+// use it to determine which pref to observe
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "featureTourProgress",
@@ -36,7 +41,7 @@ async function _handlePrefChange() {
     container?.classList.add("hidden");
     // wait for fade out transition
     setTimeout(async () => {
-      _loadConfig(lazy.featureTourProgress.message);
+      await _loadConfig();
       container?.remove();
       await _renderCallout();
     }, TRANSITION_MS);
@@ -78,170 +83,6 @@ let READY = false;
 
 const TRANSITION_MS = 500;
 const CONTAINER_ID = "root";
-const MESSAGES = [
-  {
-    id: "FIREFOX_VIEW_FEATURE_TOUR",
-    template: "multistage",
-    backdrop: "transparent",
-    transitions: false,
-    disableHistoryUpdates: true,
-    screens: [
-      {
-        id: "FEATURE_CALLOUT_1",
-        parent_selector: "#tab-pickup-container",
-        content: {
-          position: "callout",
-          arrow_position: "top",
-          title: {
-            string_id: "callout-firefox-view-tab-pickup-title",
-          },
-          subtitle: {
-            string_id: "callout-firefox-view-tab-pickup-subtitle",
-          },
-          logo: {
-            imageURL: "chrome://browser/content/callout-tab-pickup.svg",
-            darkModeImageURL:
-              "chrome://browser/content/callout-tab-pickup-dark.svg",
-            height: "128px",
-          },
-          primary_button: {
-            label: {
-              string_id: "callout-primary-advance-button-label",
-            },
-            action: {
-              type: "SET_PREF",
-              data: {
-                pref: {
-                  name: "browser.firefox-view.feature-tour",
-                  value: JSON.stringify({
-                    message: "FIREFOX_VIEW_FEATURE_TOUR",
-                    screen: "FEATURE_CALLOUT_2",
-                    complete: false,
-                  }),
-                },
-              },
-            },
-          },
-          dismiss_button: {
-            action: {
-              type: "SET_PREF",
-              data: {
-                pref: {
-                  name: "browser.firefox-view.feature-tour",
-                  value: JSON.stringify({
-                    message: "FIREFOX_VIEW_FEATURE_TOUR",
-                    screen: "FEATURE_CALLOUT_1",
-                    complete: true,
-                  }),
-                },
-              },
-            },
-          },
-        },
-      },
-      {
-        id: "FEATURE_CALLOUT_2",
-        parent_selector: "#recently-closed-tabs-container",
-        content: {
-          position: "callout",
-          arrow_position: "bottom",
-          title: {
-            string_id: "callout-firefox-view-recently-closed-title",
-          },
-          subtitle: {
-            string_id: "callout-firefox-view-recently-closed-subtitle",
-          },
-          primary_button: {
-            label: {
-              string_id: "callout-primary-advance-button-label",
-            },
-            action: {
-              type: "SET_PREF",
-              data: {
-                pref: {
-                  name: "browser.firefox-view.feature-tour",
-                  value: JSON.stringify({
-                    message: "FIREFOX_VIEW_FEATURE_TOUR",
-                    screen: "FEATURE_CALLOUT_3",
-                    complete: false,
-                  }),
-                },
-              },
-            },
-          },
-          dismiss_button: {
-            action: {
-              type: "SET_PREF",
-              data: {
-                pref: {
-                  name: "browser.firefox-view.feature-tour",
-                  value: JSON.stringify({
-                    message: "FIREFOX_VIEW_FEATURE_TOUR",
-                    screen: "FEATURE_CALLOUT_2",
-                    complete: true,
-                  }),
-                },
-              },
-            },
-          },
-        },
-      },
-      {
-        id: "FEATURE_CALLOUT_3",
-        parent_selector: "#colorways.content-container",
-        content: {
-          position: "callout",
-          arrow_position: "end",
-          title: {
-            string_id: "callout-firefox-view-colorways-title",
-          },
-          subtitle: {
-            string_id: "callout-firefox-view-colorways-subtitle",
-          },
-          logo: {
-            imageURL: "chrome://browser/content/callout-colorways.svg",
-            darkModeImageURL:
-              "chrome://browser/content/callout-colorways-dark.svg",
-            height: "128px",
-          },
-          primary_button: {
-            label: {
-              string_id: "callout-primary-complete-button-label",
-            },
-            action: {
-              type: "SET_PREF",
-              data: {
-                pref: {
-                  name: "browser.firefox-view.feature-tour",
-                  value: JSON.stringify({
-                    message: "FIREFOX_VIEW_FEATURE_TOUR",
-                    screen: "",
-                    complete: true,
-                  }),
-                },
-              },
-            },
-          },
-          dismiss_button: {
-            action: {
-              type: "SET_PREF",
-              data: {
-                pref: {
-                  name: "browser.firefox-view.feature-tour",
-                  value: JSON.stringify({
-                    message: "FIREFOX_VIEW_FEATURE_TOUR",
-                    screen: "FEATURE_CALLOUT_3",
-                    complete: true,
-                  }),
-                },
-              },
-            },
-          },
-        },
-      },
-    ],
-  },
-];
 
 function _createContainer() {
   let parent = document.querySelector(CURRENT_SCREEN?.parent_selector);
@@ -511,31 +352,15 @@ function _observeRender(container) {
   RENDER_OBSERVER?.observe(container, { childList: true });
 }
 
-function _loadConfig(messageId) {
-  // If the parent element a screen describes doesn't exist, remove screen
-  // and ensure last screen displays the final primary CTA
-  // (for example, when there are no active colorways in about:firefoxview)
-  function _getRelevantScreens(screens) {
-    const finalCTA = screens[screens.length - 1].content.primary_button;
-    screens = screens.filter((s, i) => {
-      return document.querySelector(s.parent_selector);
-    });
-    if (screens.length) {
-      screens[screens.length - 1].content.primary_button = finalCTA;
-    }
-    return screens;
-  }
-
-  let content = MESSAGES.find(m => m.id === messageId);
-  const screenId = lazy.featureTourProgress.screen;
-  let screenIndex;
-  if (content?.screens?.length && screenId) {
-    content.screens = _getRelevantScreens(content.screens);
-    screenIndex = content.screens.findIndex(s => s.id === screenId);
-    content.startScreen = screenIndex;
-  }
-  CURRENT_SCREEN = content?.screens?.[screenIndex || 0];
-  CONFIG = content;
+async function _loadConfig() {
+  await lazy.ASRouter.waitForInitialized;
+  let result = await lazy.ASRouter.sendTriggerMessage({
+    // triggerId and triggerContext
+    id: "featureCalloutCheck",
+    context: { source: document.location.pathname.toLowerCase() },
+  });
+  CONFIG = result.message.content;
+  CURRENT_SCREEN = CONFIG?.screens?.[CONFIG?.startScreen || 0];
 }
 
 async function _renderCallout() {
@@ -555,9 +380,9 @@ async function showFeatureCallout(messageId) {
     return;
   }
 
-  _loadConfig(messageId);
+  await _loadConfig();
 
-  if (!CONFIG) {
+  if (!CONFIG?.screens?.length) {
     return;
   }
 

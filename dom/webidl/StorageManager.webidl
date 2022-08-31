@@ -32,3 +32,14 @@ partial interface StorageManager {
   [Pref="dom.fs.enabled", NewObject]
   Promise<FileSystemDirectoryHandle> getDirectory();
 };
+
+/**
+ * Testing methods that exist only for the benefit of automated glass-box
+ * testing.  Will never be exposed to content at large and unlikely to be useful
+ * in a WebDriver context.
+ */
+[SecureContext]
+partial interface StorageManager {
+  [ChromeOnly]
+  void shutdown();
+};

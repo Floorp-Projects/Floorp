@@ -1269,6 +1269,25 @@ class AssemblerX86Shared : public AssemblerShared {
         MOZ_CRASH("unexpected operand kind");
     }
   }
+  void cmpb(Register rhs, const Operand& lhs) {
+    switch (lhs.kind()) {
+      case Operand::REG:
+        masm.cmpb_rr(rhs.encoding(), lhs.reg());
+        break;
+      case Operand::MEM_REG_DISP:
+        masm.cmpb_rm(rhs.encoding(), lhs.disp(), lhs.base());
+        break;
+      case Operand::MEM_SCALE:
+        masm.cmpb_rm(rhs.encoding(), lhs.disp(), lhs.base(), lhs.index(),
+                     lhs.scale());
+        break;
+      case Operand::MEM_ADDRESS32:
+        masm.cmpb_rm(rhs.encoding(), lhs.address());
+        break;
+      default:
+        MOZ_CRASH("unexpected operand kind");
+    }
+  }
   void cmpb(Imm32 rhs, const Operand& lhs) {
     switch (lhs.kind()) {
       case Operand::REG:

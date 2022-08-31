@@ -61,7 +61,7 @@ export function selectThread(cx, thread) {
 export function command(type) {
   return async ({ dispatch, getState, client }) => {
     if (!type) {
-      return;
+      return null;
     }
     // For now, all commands are by default against the currently selected thread
     const thread = getCurrentThread(getState());
@@ -85,9 +85,10 @@ export function command(type) {
  */
 export function stepIn() {
   return ({ dispatch, getState }) => {
-    if (getIsCurrentThreadPaused(getState())) {
-      return dispatch(command("stepIn"));
+    if (!getIsCurrentThreadPaused(getState())) {
+      return null;
     }
+    return dispatch(command("stepIn"));
   };
 }
 
@@ -99,9 +100,10 @@ export function stepIn() {
  */
 export function stepOver() {
   return ({ dispatch, getState }) => {
-    if (getIsCurrentThreadPaused(getState())) {
-      return dispatch(command("stepOver"));
+    if (!getIsCurrentThreadPaused(getState())) {
+      return null;
     }
+    return dispatch(command("stepOver"));
   };
 }
 
@@ -113,9 +115,10 @@ export function stepOver() {
  */
 export function stepOut() {
   return ({ dispatch, getState }) => {
-    if (getIsCurrentThreadPaused(getState())) {
-      return dispatch(command("stepOut"));
+    if (!getIsCurrentThreadPaused(getState())) {
+      return null;
     }
+    return dispatch(command("stepOut"));
   };
 }
 
@@ -127,10 +130,11 @@ export function stepOut() {
  */
 export function resume() {
   return ({ dispatch, getState }) => {
-    if (getIsCurrentThreadPaused(getState())) {
-      recordEvent("continue");
-      return dispatch(command("resume"));
+    if (!getIsCurrentThreadPaused(getState())) {
+      return null;
     }
+    recordEvent("continue");
+    return dispatch(command("resume"));
   };
 }
 
@@ -141,13 +145,14 @@ export function resume() {
  */
 export function restart(cx, frame) {
   return async ({ dispatch, getState, client }) => {
-    if (getIsCurrentThreadPaused(getState())) {
-      return dispatch({
-        type: "COMMAND",
-        command: "restart",
-        thread: cx.thread,
-        [PROMISE]: client.restart(cx.thread, frame.id),
-      });
+    if (!getIsCurrentThreadPaused(getState())) {
+      return null;
     }
+    return dispatch({
+      type: "COMMAND",
+      command: "restart",
+      thread: cx.thread,
+      [PROMISE]: client.restart(cx.thread, frame.id),
+    });
   };
 }

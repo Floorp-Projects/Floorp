@@ -411,6 +411,19 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(WorkerGlobalScope,
 
 WorkerGlobalScope::~WorkerGlobalScope() = default;
 
+void WorkerGlobalScope::NoteTerminating() {
+  if (IsDying()) {
+    return;
+  }
+
+  StartDying();
+
+  if (mNavigator) {
+    mNavigator->Invalidate();
+    mNavigator = nullptr;
+  }
+}
+
 Crypto* WorkerGlobalScope::GetCrypto(ErrorResult& aError) {
   AssertIsOnWorkerThread();
 

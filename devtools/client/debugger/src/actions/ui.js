@@ -165,7 +165,7 @@ export function clearHighlightLineRange() {
 
 export function openConditionalPanel(location, log = false) {
   if (!location) {
-    return;
+    return null;
   }
 
   return {

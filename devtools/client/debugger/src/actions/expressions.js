@@ -30,7 +30,7 @@ import { features } from "../utils/prefs";
 export function addExpression(cx, input) {
   return async ({ dispatch, getState, evaluationsParser }) => {
     if (!input) {
-      return;
+      return null;
     }
 
     const expressionError = await evaluationsParser.hasSyntaxError(input);
@@ -46,6 +46,8 @@ export function addExpression(cx, input) {
     if (newExpression) {
       return dispatch(evaluateExpression(cx, newExpression));
     }
+
+    return null;
   };
 }
 
@@ -126,7 +128,7 @@ function evaluateExpression(cx, expression) {
   return async function({ dispatch, getState, client, sourceMaps }) {
     if (!expression.input) {
       console.warn("Expressions should not be empty");
-      return;
+      return null;
     }
 
     let { input } = expression;

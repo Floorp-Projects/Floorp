@@ -5,111 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "fs/FileSystemChildFactory.h"
-#include "mozilla/dom/POriginPrivateFileSystemChild.h"
-#include "mozilla/dom/OriginPrivateFileSystemChild.h"
+
 #include "mozilla/RefPtr.h"
-#include "nsISupportsImpl.h"
+#include "mozilla/dom/FileSystemManagerChild.h"
 
 namespace mozilla::dom::fs {
 
-namespace {
-
-using ResolveGetHandle =
-    mozilla::ipc::ResolveCallback<fs::FileSystemGetHandleResponse>;
-using ResolveGetFile =
-    mozilla::ipc::ResolveCallback<fs::FileSystemGetFileResponse>;
-using ResolveResolve =
-    mozilla::ipc::ResolveCallback<fs::FileSystemResolveResponse>;
-using ResolveGetEntries =
-    mozilla::ipc::ResolveCallback<fs::FileSystemGetEntriesResponse>;
-using ResolveRemoveEntry =
-    mozilla::ipc::ResolveCallback<fs::FileSystemRemoveEntryResponse>;
-using DoReject = mozilla::ipc::RejectCallback;
-
-class OriginPrivateFileSystemChildImpl final
-    : public OriginPrivateFileSystemChild {
- public:
-  class TOriginPrivateFileSystem final : public POriginPrivateFileSystemChild {
-    NS_INLINE_DECL_REFCOUNTING(TOriginPrivateFileSystem);
-
-   protected:
-    ~TOriginPrivateFileSystem() = default;
-  };
-
-  OriginPrivateFileSystemChildImpl() : mImpl(new TOriginPrivateFileSystem()) {}
-
-  NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(OriginPrivateFileSystemChildImpl,
-                                          Destroy(), override)
-
-  void SendGetRootHandle(ResolveGetHandle&& aResolve,
-                         DoReject&& aReject) override {
-    mImpl->SendGetRootHandle(std::forward<ResolveGetHandle>(aResolve),
-                             std::forward<DoReject>(aReject));
-  }
-
-  void SendGetDirectoryHandle(const fs::FileSystemGetHandleRequest& aRequest,
-                              ResolveGetHandle&& aResolve,
-                              DoReject&& aReject) override {
-    mImpl->SendGetDirectoryHandle(aRequest,
-                                  std::forward<ResolveGetHandle>(aResolve),
-                                  std::forward<DoReject>(aReject));
-  }
-
-  void SendGetFileHandle(const fs::FileSystemGetHandleRequest& aRequest,
-                         ResolveGetHandle&& aResolve,
-                         DoReject&& aReject) override {
-    mImpl->SendGetFileHandle(aRequest, std::forward<ResolveGetHandle>(aResolve),
-                             std::forward<DoReject>(aReject));
-  }
-
-  void SendGetFile(const fs::FileSystemGetFileRequest& aRequest,
-                   ResolveGetFile&& aResolve, DoReject&& aReject) override {
-    mImpl->SendGetFile(aRequest, std::forward<ResolveGetFile>(aResolve),
-                       std::forward<DoReject>(aReject));
-  }
-
-  void SendResolve(const fs::FileSystemResolveRequest& aRequest,
-                   ResolveResolve&& aResolve, DoReject&& aReject) override {
-    mImpl->SendResolve(aRequest, std::forward<ResolveResolve>(aResolve),
-                       std::forward<DoReject>(aReject));
-  }
-
-  void SendGetEntries(const fs::FileSystemGetEntriesRequest& aRequest,
-                      ResolveGetEntries&& aResolve,
-                      DoReject&& aReject) override {
-    mImpl->SendGetEntries(aRequest, std::forward<ResolveGetEntries>(aResolve),
-                          std::forward<DoReject>(aReject));
-  }
-
-  void SendRemoveEntry(const fs::FileSystemRemoveEntryRequest& aRequest,
-                       ResolveRemoveEntry&& aResolve,
-                       DoReject&& aReject) override {
-    mImpl->SendRemoveEntry(aRequest, std::forward<ResolveRemoveEntry>(aResolve),
-                           std::forward<DoReject>(aReject));
-  }
-
-  void Close() override { mImpl->Close(); }
-
-  POriginPrivateFileSystemChild* AsBindable() override { return mImpl.get(); };
-
- protected:
-  ~OriginPrivateFileSystemChildImpl() = default;
-
-  void Destroy() {
-    if (mImpl->CanSend()) {
-      Close();
-    }
-    delete this;
-  }
-
-  const RefPtr<TOriginPrivateFileSystem> mImpl;
-};  // class OriginPrivateFileSystemChildImpl
-
-}  // namespace
-
-already_AddRefed<OriginPrivateFileSystemChild> FileSystemChildFactory::Create()
+already_AddRefed<FileSystemManagerChild> FileSystemChildFactory::Create()
     const {
-  return MakeAndAddRef<OriginPrivateFileSystemChildImpl>();
+  return MakeAndAddRef<FileSystemManagerChild>();
 }
 
 }  // namespace mozilla::dom::fs

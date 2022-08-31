@@ -4697,7 +4697,7 @@ nsDOMWindowUtils::IsCoepCredentialless(bool* aResult) {
     return NS_ERROR_FAILURE;
   }
 
-  *aResult = IsCoepCredentiallessEnabled(
+  *aResult = net::IsCoepCredentiallessEnabled(
       doc->Trials().IsEnabled(OriginTrial::CoepCredentialless));
   return NS_OK;
 }

@@ -216,6 +216,29 @@
           },
           "additionalProperties": false,
           "required": ["id", "params"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "enum": ["featureCalloutCheck"]
+            },
+            "context": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string",
+                  "enum": ["firefoxview"],
+                  "description": "Which about page is the source of the trigger"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false,
+          "required": ["id"],
+          "description": "Happens when navigating to about:firefoxview or other about pages with Feature Callout tours enabled"
         }
       ]
     }

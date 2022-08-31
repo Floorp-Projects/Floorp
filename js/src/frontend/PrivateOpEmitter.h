@@ -19,6 +19,7 @@ namespace js {
 namespace frontend {
 
 struct BytecodeEmitter;
+enum class ValueUsage;
 
 // Class for emitting bytecode for operations on private members of objects.
 //
@@ -219,7 +220,7 @@ class MOZ_STACK_CLASS PrivateOpEmitter {
   [[nodiscard]] bool emitGet();
   [[nodiscard]] bool emitGetForCallOrNew();
   [[nodiscard]] bool emitAssignment();
-  [[nodiscard]] bool emitIncDec();
+  [[nodiscard]] bool emitIncDec(ValueUsage valueUsage);
 
   [[nodiscard]] size_t numReferenceSlots() { return 2; }
 };

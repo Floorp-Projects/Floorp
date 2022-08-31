@@ -9,13 +9,11 @@
 
 #include "mozilla/AlreadyAddRefed.h"
 
-class nsIGlobalObject;
-
 namespace mozilla {
 class ErrorResult;
 
 namespace dom {
-class OriginPrivateFileSystemChild;
+class FileSystemManagerChild;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -23,7 +21,7 @@ namespace mozilla::dom::fs {
 
 class FileSystemChildFactory {
  public:
-  virtual already_AddRefed<OriginPrivateFileSystemChild> Create() const;
+  virtual already_AddRefed<FileSystemManagerChild> Create() const;
 
   virtual ~FileSystemChildFactory() = default;
 };

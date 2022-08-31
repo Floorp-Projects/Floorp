@@ -9,53 +9,40 @@
 #include "gtest/gtest.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/dom/OriginPrivateFileSystemChild.h"
-#include "mozilla/dom/POriginPrivateFileSystem.h"
-
-using ::testing::Invoke;
+#include "mozilla/dom/FileSystemManager.h"
+#include "mozilla/dom/FileSystemManagerChild.h"
+#include "mozilla/dom/PFileSystemManager.h"
 
 namespace mozilla::dom::fs::test {
 
 class TestFileSystemBackgroundRequestHandler : public ::testing::Test {
  protected:
   void SetUp() override {
-    mOPFSChild = MakeAndAddRef<TestOriginPrivateFileSystemChild>();
+    mFileSystemManagerChild = MakeAndAddRef<TestFileSystemManagerChild>();
   }
 
-  UniquePtr<FileSystemBackgroundRequestHandler>
+  RefPtr<FileSystemBackgroundRequestHandler>
   GetFileSystemBackgroundRequestHandler() {
-    return MakeUnique<FileSystemBackgroundRequestHandler>(
-        new TestFileSystemChildFactory(mOPFSChild));
+    return MakeRefPtr<FileSystemBackgroundRequestHandler>(
+        new TestFileSystemChildFactory(mFileSystemManagerChild));
   }
 
-  nsIGlobalObject* mGlobal = GetGlobal();
-  RefPtr<TestOriginPrivateFileSystemChild> mOPFSChild;
-};
-
-class TestOPFSChild : public POriginPrivateFileSystemChild {
- public:
-  NS_INLINE_DECL_REFCOUNTING(TestOPFSChild)
-
- protected:
-  ~TestOPFSChild() = default;
+  mozilla::ipc::PrincipalInfo mPrincipalInfo = GetPrincipalInfo();
+  RefPtr<TestFileSystemManagerChild> mFileSystemManagerChild;
 };
 
 TEST_F(TestFileSystemBackgroundRequestHandler,
        isCreateFileSystemManagerChildSuccessful) {
-  EXPECT_CALL(*mOPFSChild, AsBindable())
-      .WillOnce(Invoke([]() -> POriginPrivateFileSystemChild* {
-        return new TestOPFSChild();
-      }));
-  EXPECT_CALL(*mOPFSChild, Close()).Times(1);
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown()).WillOnce([this]() {
+    mFileSystemManagerChild->FileSystemManagerChild::Shutdown();
+  });
 
   bool done = false;
   auto testable = GetFileSystemBackgroundRequestHandler();
-  testable->CreateFileSystemManagerChild(mGlobal)->Then(
-      GetCurrentSerialEventTarget(), __func__,
-      [&done](const RefPtr<OriginPrivateFileSystemChild>& child) {
-        done = true;
-      },
-      [&done](nsresult) { done = true; });
+  testable->CreateFileSystemManagerChild(mPrincipalInfo)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [&done](bool) { done = true; }, [&done](nsresult) { done = true; });
   // MozPromise should be rejected
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,
                      [&done]() { return done; });

@@ -7,8 +7,7 @@
 #ifndef DOM_FS_FILESYSTEMHANDLE_H_
 #define DOM_FS_FILESYSTEMHANDLE_H_
 
-#include "mozilla/dom/FileSystemActorHolder.h"
-#include "mozilla/dom/POriginPrivateFileSystem.h"
+#include "mozilla/dom/PFileSystemManager.h"
 #include "mozilla/Logging.h"
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
@@ -31,7 +30,8 @@ namespace dom {
 
 class DOMString;
 enum class FileSystemHandleKind : uint8_t;
-class OriginPrivateFileSystemChild;
+class FileSystemManager;
+class FileSystemManagerChild;
 class Promise;
 
 namespace fs {
@@ -41,7 +41,7 @@ class FileSystemRequestHandler;
 class FileSystemHandle : public nsISupports, public nsWrapperCache {
  public:
   FileSystemHandle(nsIGlobalObject* aGlobal,
-                   RefPtr<FileSystemActorHolder>& aActor,
+                   RefPtr<FileSystemManager>& aManager,
                    const fs::FileSystemEntryMetadata& aMetadata,
                    fs::FileSystemRequestHandler* aRequestHandler);
 
@@ -62,14 +62,12 @@ class FileSystemHandle : public nsISupports, public nsWrapperCache {
   already_AddRefed<Promise> IsSameEntry(FileSystemHandle& aOther,
                                         ErrorResult& aError) const;
 
-  OriginPrivateFileSystemChild* Actor() const;
-
  protected:
   virtual ~FileSystemHandle() = default;
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
 
-  RefPtr<FileSystemActorHolder> mActor;
+  RefPtr<FileSystemManager> mManager;
 
   const fs::FileSystemEntryMetadata mMetadata;
 

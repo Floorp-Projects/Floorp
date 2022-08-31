@@ -11,7 +11,8 @@
 #include "mozilla/dom/FileSystemDirectoryHandle.h"
 #include "mozilla/dom/FileSystemFileHandle.h"
 #include "mozilla/dom/FileSystemHandle.h"
-#include "mozilla/dom/OriginPrivateFileSystemChild.h"
+#include "mozilla/dom/FileSystemManager.h"
+#include "mozilla/dom/FileSystemManagerChild.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 
@@ -26,7 +27,7 @@ RefPtr<File> MakeGetFileResult(nsIGlobalObject* aGlobal, const nsString& aName,
                                const nsString& aType,
                                int64_t aLastModifiedMilliSeconds,
                                nsTArray<Name>&& aPath, IPCBlob&& /* aFile */,
-                               RefPtr<FileSystemActorHolder>& aActor) {
+                               RefPtr<FileSystemManager>& aManager) {
   // TODO: Replace with a real implementation
   RefPtr<File> result = File::CreateMemoryFileWithCustomLastModified(
       aGlobal, static_cast<void*>(new uint8_t[1]), sizeof(uint8_t), aName,
@@ -35,21 +36,22 @@ RefPtr<File> MakeGetFileResult(nsIGlobalObject* aGlobal, const nsString& aName,
   return result;
 }
 
-void GetDirectoryContentsResponseHandler(
-    nsIGlobalObject* aGlobal, FileSystemDirectoryListing&& aResponse,
-    ArrayAppendable& /* aSink */, RefPtr<FileSystemActorHolder>& aActor) {
+void GetDirectoryContentsResponseHandler(nsIGlobalObject* aGlobal,
+                                         FileSystemDirectoryListing&& aResponse,
+                                         ArrayAppendable& /* aSink */,
+                                         RefPtr<FileSystemManager>& aManager) {
   // TODO: Add page size to FileSystemConstants, preallocate and handle overflow
   nsTArray<RefPtr<FileSystemHandle>> batch;
 
   for (const auto& it : aResponse.files()) {
     RefPtr<FileSystemHandle> handle =
-        new FileSystemFileHandle(aGlobal, aActor, it);
+        new FileSystemFileHandle(aGlobal, aManager, it);
     batch.AppendElement(handle);
   }
 
   for (const auto& it : aResponse.directories()) {
     RefPtr<FileSystemHandle> handle =
-        new FileSystemDirectoryHandle(aGlobal, aActor, it);
+        new FileSystemDirectoryHandle(aGlobal, aManager, it);
     batch.AppendElement(handle);
   }
 }
@@ -57,9 +59,9 @@ void GetDirectoryContentsResponseHandler(
 RefPtr<FileSystemDirectoryHandle> MakeResolution(
     nsIGlobalObject* aGlobal, FileSystemGetHandleResponse&& aResponse,
     const RefPtr<FileSystemDirectoryHandle>& /* aResolution */,
-    RefPtr<FileSystemActorHolder>& aActor) {
+    RefPtr<FileSystemManager>& aManager) {
   RefPtr<FileSystemDirectoryHandle> result = new FileSystemDirectoryHandle(
-      aGlobal, aActor,
+      aGlobal, aManager,
       FileSystemEntryMetadata(aResponse.get_EntryId(), kRootName));
   return result;
 }
@@ -67,9 +69,10 @@ RefPtr<FileSystemDirectoryHandle> MakeResolution(
 RefPtr<FileSystemDirectoryHandle> MakeResolution(
     nsIGlobalObject* aGlobal, FileSystemGetHandleResponse&& aResponse,
     const RefPtr<FileSystemDirectoryHandle>& /* aResolution */,
-    const Name& aName, RefPtr<FileSystemActorHolder>& aActor) {
+    const Name& aName, RefPtr<FileSystemManager>& aManager) {
   RefPtr<FileSystemDirectoryHandle> result = new FileSystemDirectoryHandle(
-      aGlobal, aActor, FileSystemEntryMetadata(aResponse.get_EntryId(), aName));
+      aGlobal, aManager,
+      FileSystemEntryMetadata(aResponse.get_EntryId(), aName));
 
   return result;
 }
@@ -77,9 +80,10 @@ RefPtr<FileSystemDirectoryHandle> MakeResolution(
 RefPtr<FileSystemFileHandle> MakeResolution(
     nsIGlobalObject* aGlobal, FileSystemGetHandleResponse&& aResponse,
     const RefPtr<FileSystemFileHandle>& /* aResolution */, const Name& aName,
-    RefPtr<FileSystemActorHolder>& aActor) {
+    RefPtr<FileSystemManager>& aManager) {
   RefPtr<FileSystemFileHandle> result = new FileSystemFileHandle(
-      aGlobal, aActor, FileSystemEntryMetadata(aResponse.get_EntryId(), aName));
+      aGlobal, aManager,
+      FileSystemEntryMetadata(aResponse.get_EntryId(), aName));
   return result;
 }
 
@@ -87,12 +91,12 @@ RefPtr<File> MakeResolution(nsIGlobalObject* aGlobal,
                             FileSystemGetFileResponse&& aResponse,
                             const RefPtr<File>& /* aResolution */,
                             const Name& aName,
-                            RefPtr<FileSystemActorHolder>& aActor) {
+                            RefPtr<FileSystemManager>& aManager) {
   auto& fileProperties = aResponse.get_FileSystemFileProperties();
   return MakeGetFileResult(aGlobal, aName, fileProperties.type(),
                            fileProperties.last_modified_ms(),
                            std::move(fileProperties.path()),
-                           std::move(fileProperties.file()), aActor);
+                           std::move(fileProperties.file()), aManager);
 }
 
 template <class TResponse, class... Args>
@@ -143,7 +147,7 @@ template <>
 void ResolveCallback(FileSystemGetEntriesResponse&& aResponse,
                      // NOLINTNEXTLINE(performance-unnecessary-value-param)
                      RefPtr<Promise> aPromise, ArrayAppendable& aSink,
-                     RefPtr<FileSystemActorHolder>& aActor) {
+                     RefPtr<FileSystemManager>& aManager) {
   // NOLINTEND(readability-inconsistent-declaration-parameter-name)
   MOZ_ASSERT(aPromise);
   QM_TRY(OkIf(Promise::PromiseState::Pending == aPromise->State()), QM_VOID);
@@ -157,7 +161,7 @@ void ResolveCallback(FileSystemGetEntriesResponse&& aResponse,
       aPromise->GetParentObject(),
       std::forward<FileSystemDirectoryListing>(
           aResponse.get_FileSystemDirectoryListing()),
-      aSink, aActor);
+      aSink, aManager);
 
   // TODO: Remove this when sink is ready
   aPromise->MaybeReject(NS_ERROR_NOT_IMPLEMENTED);
@@ -230,26 +234,30 @@ mozilla::ipc::RejectCallback GetRejectCallback(
 }  // namespace
 
 void FileSystemRequestHandler::GetRootHandle(
-    RefPtr<FileSystemActorHolder>& aActor,
+    RefPtr<FileSystemManager>
+        aManager,                // NOLINT(performance-unnecessary-value-param)
     RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+  MOZ_ASSERT(aManager);
   MOZ_ASSERT(aPromise);
 
   auto&& onResolve = SelectResolveCallback<FileSystemGetHandleResponse,
                                            RefPtr<FileSystemDirectoryHandle>>(
-      aPromise, aActor);
+      aPromise, aManager);
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  QM_TRY(OkIf(aActor && aActor->Actor()), QM_VOID, [aPromise](const auto&) {
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
     aPromise->MaybeRejectWithUnknownError("Invalid actor");
   });
-  aActor->Actor()->SendGetRootHandle(std::move(onResolve), std::move(onReject));
+  aManager->Actor()->SendGetRootHandle(std::move(onResolve),
+                                       std::move(onReject));
 }
 
 void FileSystemRequestHandler::GetDirectoryHandle(
-    RefPtr<FileSystemActorHolder>& aActor,
+    RefPtr<FileSystemManager>& aManager,
     const FileSystemChildMetadata& aDirectory, bool aCreate,
     RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+  MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aDirectory.parentId().IsEmpty());
   MOZ_ASSERT(aPromise);
 
@@ -257,21 +265,22 @@ void FileSystemRequestHandler::GetDirectoryHandle(
 
   auto&& onResolve = SelectResolveCallback<FileSystemGetHandleResponse,
                                            RefPtr<FileSystemDirectoryHandle>>(
-      aPromise, aDirectory.childName(), aActor);
+      aPromise, aDirectory.childName(), aManager);
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  QM_TRY(OkIf(aActor && aActor->Actor()), QM_VOID, [aPromise](const auto&) {
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
     aPromise->MaybeRejectWithUnknownError("Invalid actor");
   });
-  aActor->Actor()->SendGetDirectoryHandle(request, std::move(onResolve),
-                                          std::move(onReject));
+  aManager->Actor()->SendGetDirectoryHandle(request, std::move(onResolve),
+                                            std::move(onReject));
 }
 
 void FileSystemRequestHandler::GetFileHandle(
-    RefPtr<FileSystemActorHolder>& aActor, const FileSystemChildMetadata& aFile,
+    RefPtr<FileSystemManager>& aManager, const FileSystemChildMetadata& aFile,
     bool aCreate,
     RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+  MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aFile.parentId().IsEmpty());
   MOZ_ASSERT(aPromise);
 
@@ -279,20 +288,21 @@ void FileSystemRequestHandler::GetFileHandle(
 
   auto&& onResolve = SelectResolveCallback<FileSystemGetHandleResponse,
                                            RefPtr<FileSystemFileHandle>>(
-      aPromise, aFile.childName(), aActor);
+      aPromise, aFile.childName(), aManager);
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  QM_TRY(OkIf(aActor && aActor->Actor()), QM_VOID, [aPromise](const auto&) {
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
     aPromise->MaybeRejectWithUnknownError("Invalid actor");
   });
-  aActor->Actor()->SendGetFileHandle(request, std::move(onResolve),
-                                     std::move(onReject));
+  aManager->Actor()->SendGetFileHandle(request, std::move(onResolve),
+                                       std::move(onReject));
 }
 
 void FileSystemRequestHandler::GetFile(
-    RefPtr<FileSystemActorHolder>& aActor, const FileSystemEntryMetadata& aFile,
+    RefPtr<FileSystemManager>& aManager, const FileSystemEntryMetadata& aFile,
     RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+  MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aFile.entryId().IsEmpty());
   MOZ_ASSERT(aPromise);
 
@@ -300,50 +310,53 @@ void FileSystemRequestHandler::GetFile(
 
   auto&& onResolve =
       SelectResolveCallback<FileSystemGetFileResponse, RefPtr<File>>(
-          aPromise, aFile.entryName(), aActor);
+          aPromise, aFile.entryName(), aManager);
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  QM_TRY(OkIf(aActor && aActor->Actor()), QM_VOID, [aPromise](const auto&) {
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
     aPromise->MaybeRejectWithUnknownError("Invalid actor");
   });
-  aActor->Actor()->SendGetFile(request, std::move(onResolve),
-                               std::move(onReject));
+  aManager->Actor()->SendGetFile(request, std::move(onResolve),
+                                 std::move(onReject));
 }
 
 void FileSystemRequestHandler::GetEntries(
-    RefPtr<FileSystemActorHolder>& aActor, const EntryId& aDirectory,
+    RefPtr<FileSystemManager>& aManager, const EntryId& aDirectory,
     PageNumber aPage,
     RefPtr<Promise> aPromise,  // NOLINT(performance-unnecessary-value-param)
     ArrayAppendable& aSink) {
+  MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aDirectory.IsEmpty());
   MOZ_ASSERT(aPromise);
 
   FileSystemGetEntriesRequest request(aDirectory, aPage);
 
   using TOverload = void (*)(FileSystemGetEntriesResponse&&, RefPtr<Promise>,
-                             ArrayAppendable&, RefPtr<FileSystemActorHolder>&);
+                             ArrayAppendable&, RefPtr<FileSystemManager>&);
 
   // We are not allowed to pass a promise to an external function in a lambda
   auto&& onResolve =
       static_cast<std::function<void(FileSystemGetEntriesResponse &&)>>(
           // NOLINTNEXTLINE(modernize-avoid-bind)
           std::bind(static_cast<TOverload>(ResolveCallback),
-                    std::placeholders::_1, aPromise, std::ref(aSink), aActor));
+                    std::placeholders::_1, aPromise, std::ref(aSink),
+                    aManager));
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  QM_TRY(OkIf(aActor && aActor->Actor()), QM_VOID, [aPromise](const auto&) {
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
     aPromise->MaybeRejectWithUnknownError("Invalid actor");
   });
-  aActor->Actor()->SendGetEntries(request, std::move(onResolve),
-                                  std::move(onReject));
+  aManager->Actor()->SendGetEntries(request, std::move(onResolve),
+                                    std::move(onReject));
 }
 
 void FileSystemRequestHandler::RemoveEntry(
-    RefPtr<FileSystemActorHolder>& aActor,
-    const FileSystemChildMetadata& aEntry, bool aRecursive,
+    RefPtr<FileSystemManager>& aManager, const FileSystemChildMetadata& aEntry,
+    bool aRecursive,
     RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+  MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aEntry.parentId().IsEmpty());
   MOZ_ASSERT(aPromise);
 
@@ -354,11 +367,11 @@ void FileSystemRequestHandler::RemoveEntry(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  QM_TRY(OkIf(aActor && aActor->Actor()), QM_VOID, [aPromise](const auto&) {
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
     aPromise->MaybeRejectWithUnknownError("Invalid actor");
   });
-  aActor->Actor()->SendRemoveEntry(request, std::move(onResolve),
-                                   std::move(onReject));
+  aManager->Actor()->SendRemoveEntry(request, std::move(onResolve),
+                                     std::move(onReject));
 }
 
 }  // namespace mozilla::dom::fs
