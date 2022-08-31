@@ -94,19 +94,21 @@ FileSystemDataManager::~FileSystemDataManager() {
   MOZ_ASSERT(mState == State::Closed);
 }
 
-FileSystemDataManager::result_t
+RefPtr<FileSystemDataManager::CreatePromise>
 FileSystemDataManager::GetOrCreateFileSystemDataManager(const Origin& aOrigin) {
   if (RefPtr<FileSystemDataManager> dataManager =
           GetFileSystemDataManager(aOrigin)) {
     // XXX Handle the case when the manager is asynchronouslly closing!
 
-    return Registered<FileSystemDataManager>(std::move(dataManager));
+    return CreatePromise::CreateAndResolve(
+        Registered<FileSystemDataManager>(std::move(dataManager)), __func__);
   }
 
   QM_TRY_UNWRAP(auto streamTransportService,
                 MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsIEventTarget>,
                                         MOZ_SELECT_OVERLOAD(do_GetService),
-                                        NS_STREAMTRANSPORTSERVICE_CONTRACTID));
+                                        NS_STREAMTRANSPORTSERVICE_CONTRACTID),
+                CreatePromise::CreateAndReject(NS_ERROR_FAILURE, __func__));
 
   nsCString taskQueueName("OPFS "_ns + aOrigin);
 
@@ -118,7 +120,8 @@ FileSystemDataManager::GetOrCreateFileSystemDataManager(const Origin& aOrigin) {
 
   AddFileSystemDataManager(aOrigin, dataManager);
 
-  return Registered<FileSystemDataManager>(std::move(dataManager));
+  return CreatePromise::CreateAndResolve(
+      Registered<FileSystemDataManager>(std::move(dataManager)), __func__);
 }
 
 void FileSystemDataManager::Register() { mRegCount++; }
