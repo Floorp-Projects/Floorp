@@ -1229,12 +1229,7 @@ bool js::GCMarker::mark(T* thing) {
 
   MarkColor color =
       TraceKindCanBeGray<T>::value ? markColor() : MarkColor::Black;
-  bool marked = thing->asTenured().markIfUnmarked(color);
-  if (marked) {
-    markCount++;
-  }
-
-  return marked;
+  return thing->asTenured().markIfUnmarked(color);
 }
 
 /*** Inline, Eager GC Marking ***********************************************/

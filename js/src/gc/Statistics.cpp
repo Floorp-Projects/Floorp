@@ -1019,7 +1019,7 @@ void Statistics::sendGCTelemetry() {
                                phaseTimes[Phase::SWEEP_MARK_GRAY_WEAK];
   TimeDuration markGrayTotal = phaseTimes[Phase::SWEEP_MARK_GRAY] +
                                phaseTimes[Phase::SWEEP_MARK_GRAY_WEAK];
-  size_t markCount = gc->marker.getMarkCount();
+  size_t markCount = getCount(COUNT_CELLS_MARKED);
   runtime->metrics().GC_PREPARE_MS(prepareTotal);
   runtime->metrics().GC_MARK_MS(markTotal);
   if (markTotal >= TimeDuration::FromMilliseconds(1)) {

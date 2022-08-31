@@ -2708,7 +2708,6 @@ void GCRuntime::beginMarkPhase(AutoGCSession& session) {
   incMajorGcNumber();
 
   marker.start();
-  marker.clearMarkCount();
   MOZ_ASSERT(marker.isDrained());
 
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
@@ -3047,6 +3046,8 @@ AutoMajorGCProfilerEntry::AutoMajorGCProfilerEntry(GCRuntime* gc)
 
 GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
     GCAbortReason reason) {
+  MOZ_ASSERT(reason != GCAbortReason::None);
+
   // Drop as much work as possible from an ongoing incremental GC so
   // we can start a new GC after it has finished.
   if (incrementalState == State::NotActive) {
