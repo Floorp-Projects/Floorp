@@ -52,6 +52,7 @@ job_description_schema = Schema(
         Optional("if-dependencies"): task_description_schema["if-dependencies"],
         Optional("requires"): task_description_schema["requires"],
         Optional("expires-after"): task_description_schema["expires-after"],
+        Optional("expiration-policy"): task_description_schema["expiration-policy"],
         Optional("routes"): task_description_schema["routes"],
         Optional("scopes"): task_description_schema["scopes"],
         Optional("tags"): task_description_schema["tags"],

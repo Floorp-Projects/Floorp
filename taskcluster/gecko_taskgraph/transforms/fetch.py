@@ -123,13 +123,13 @@ def make_task(config, jobs):
         if alias:
             attributes["fetch-alias"] = alias
 
+        task_expires = "2 days" if attributes.get("cached_task") is False else expires
+
         task = {
             "attributes": attributes,
             "name": name,
             "description": job["description"],
-            "expires-after": "2 days"
-            if attributes.get("cached_task") is False
-            else expires,
+            "expires-after": task_expires,
             "label": "fetch-%s" % name,
             "run-on-projects": [],
             "treeherder": {
@@ -154,6 +154,7 @@ def make_task(config, jobs):
                         "type": "directory",
                         "name": artifact_prefix,
                         "path": "/builds/worker/artifacts",
+                        "expires-after": task_expires,
                     }
                 ],
             },
