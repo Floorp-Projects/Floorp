@@ -129,7 +129,8 @@ WMFVideoMFTManager::WMFVideoMFTManager(
     : mVideoInfo(aConfig),
       mImageSize(aConfig.mImage),
       mStreamType(GetStreamTypeFromMimeType(aConfig.mMimeType)),
-      mDecodedImageSize(aConfig.mImage),
+      mSoftwareImageSize(aConfig.mImage),
+      mSoftwarePictureSize(aConfig.mImage),
       mVideoStride(0),
       mColorSpace(aConfig.mColorSpace),
       mColorRange(aConfig.mColorRange),
@@ -149,8 +150,8 @@ WMFVideoMFTManager::WMFVideoMFTManager(
   // The V and U planes are stored 16-row-aligned, so we need to add padding
   // to the row heights to ensure the Y'CbCr planes are referenced properly.
   // This value is only used with software decoder.
-  if (mDecodedImageSize.height % 16 != 0) {
-    mDecodedImageSize.height += 16 - (mDecodedImageSize.height % 16);
+  if (mSoftwareImageSize.height % 16 != 0) {
+    mSoftwareImageSize.height += 16 - (mSoftwareImageSize.height % 16);
   }
 }
 
@@ -664,8 +665,8 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   // https://docs.microsoft.com/en-us/windows/desktop/medfound/10-bit-and-16-bit-yuv-video-formats
   VideoData::YCbCrBuffer b;
 
-  uint32_t videoWidth = mImageSize.width;
-  uint32_t videoHeight = mImageSize.height;
+  const uint32_t videoWidth = mSoftwareImageSize.width;
+  const uint32_t videoHeight = mSoftwareImageSize.height;
 
   // Y (Y') plane
   b.mPlanes[0].mData = data;
@@ -674,13 +675,13 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   b.mPlanes[0].mWidth = videoWidth;
   b.mPlanes[0].mSkip = 0;
 
-  MOZ_DIAGNOSTIC_ASSERT(mDecodedImageSize.height % 16 == 0,
+  MOZ_DIAGNOSTIC_ASSERT(mSoftwareImageSize.height % 16 == 0,
                         "decoded height must be 16 bytes aligned");
-  uint32_t y_size = stride * mDecodedImageSize.height;
-  uint32_t v_size = stride * mDecodedImageSize.height / 4;
-  uint32_t halfStride = (stride + 1) / 2;
-  uint32_t halfHeight = (videoHeight + 1) / 2;
-  uint32_t halfWidth = (videoWidth + 1) / 2;
+  const uint32_t y_size = stride * mSoftwareImageSize.height;
+  const uint32_t v_size = stride * mSoftwareImageSize.height / 4;
+  const uint32_t halfStride = (stride + 1) / 2;
+  const uint32_t halfHeight = (videoHeight + 1) / 2;
+  const uint32_t halfWidth = (videoWidth + 1) / 2;
 
   if (subType == MFVideoFormat_YV12) {
     // U plane (Cb)
@@ -724,8 +725,8 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   NS_ENSURE_TRUE(pts.IsValid(), E_FAIL);
   TimeUnit duration = GetSampleDurationOrLastKnownDuration(aSample);
   NS_ENSURE_TRUE(duration.IsValid(), E_FAIL);
-  gfx::IntRect pictureRegion =
-      mVideoInfo.ScaledImageRect(videoWidth, videoHeight);
+  gfx::IntRect pictureRegion = mVideoInfo.ScaledImageRect(
+      mSoftwarePictureSize.width, mSoftwarePictureSize.height);
 
   if (colorDepth != gfx::ColorDepth::COLOR_8 || !mKnowsCompositor ||
       !mKnowsCompositor->SupportsD3D11() || !mIMFUsable) {
@@ -852,7 +853,16 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
         NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
         NS_ENSURE_TRUE(width <= MAX_VIDEO_WIDTH, E_FAIL);
         NS_ENSURE_TRUE(height <= MAX_VIDEO_HEIGHT, E_FAIL);
-        mDecodedImageSize = gfx::IntSize(width, height);
+        mSoftwareImageSize = gfx::IntSize(width, height);
+
+        gfx::IntRect picture;
+        hr = GetPictureRegion(outputType, picture);
+        NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+        MOZ_ASSERT(picture.width != 0 && picture.height != 0);
+        mSoftwarePictureSize = gfx::IntSize(picture.width, picture.height);
+        LOG("Output stream change, image size=[%ux%u], picture=[%u,%u]",
+            mSoftwareImageSize.width, mSoftwareImageSize.height,
+            mSoftwarePictureSize.width, mSoftwarePictureSize.height);
       }
       // Catch infinite loops, but some decoders perform at least 2 stream
       // changes on consecutive calls, so be permissive.
