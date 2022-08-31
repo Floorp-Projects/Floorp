@@ -11,12 +11,14 @@ DIRS += [
 EXPORTS.mozilla.dom += [
     "FileSystemManagerParent.h",
     "FileSystemManagerParentFactory.h",
+    "FileSystemQuotaClient.h",
 ]
 
 UNIFIED_SOURCES += [
     "FileSystemHashSource.cpp",
     "FileSystemManagerParent.cpp",
     "FileSystemManagerParentFactory.cpp",
+    "FileSystemQuotaClient.cpp",
 ]
 
 FINAL_LIBRARY = "xul"

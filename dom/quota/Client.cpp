@@ -21,6 +21,7 @@ namespace {
 const char kIDBPrefix = 'I';
 const char kDOMCachePrefix = 'C';
 const char kSDBPrefix = 'S';
+const char kFILESYSTEMPrefix = 'F';
 const char kLSPrefix = 'L';
 
 template <Client::Type type>
@@ -78,6 +79,23 @@ struct ClientTypeTraits<Client::Type::SDB> {
 };
 
 template <>
+struct ClientTypeTraits<Client::Type::FILESYSTEM> {
+  template <typename T>
+  static void To(T& aData) {
+    aData.AssignLiteral(FILESYSTEM_DIRECTORY_NAME);
+  }
+
+  static void To(char& aData) { aData = kFILESYSTEMPrefix; }
+
+  template <typename T>
+  static bool From(const T& aData) {
+    return aData.EqualsLiteral(FILESYSTEM_DIRECTORY_NAME);
+  }
+
+  static bool From(char aData) { return aData == kFILESYSTEMPrefix; }
+};
+
+template <>
 struct ClientTypeTraits<Client::Type::LS> {
   template <typename T>
   static void To(T& aData) {
@@ -109,6 +127,10 @@ bool TypeTo_impl(Client::Type aType, T& aData) {
       ClientTypeTraits<Client::Type::SDB>::To(aData);
       return true;
 
+    case Client::FILESYSTEM:
+      ClientTypeTraits<Client::Type::FILESYSTEM>::To(aData);
+      return true;
+
     case Client::LS:
       if (CachedNextGenLocalStorageEnabled()) {
         ClientTypeTraits<Client::Type::LS>::To(aData);
@@ -138,6 +160,11 @@ bool TypeFrom_impl(const T& aData, Client::Type& aType) {
 
   if (ClientTypeTraits<Client::Type::SDB>::From(aData)) {
     aType = Client::SDB;
+    return true;
+  }
+
+  if (ClientTypeTraits<Client::Type::FILESYSTEM>::From(aData)) {
+    aType = Client::FILESYSTEM;
     return true;
   }
 
