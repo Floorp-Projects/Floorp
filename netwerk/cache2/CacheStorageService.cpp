@@ -789,7 +789,7 @@ NS_IMETHODIMP CacheStorageService::ClearBaseDomain(
         }
 
         bool hasRootDomain = false;
-        rv = NS_HasRootDomain(host, cBaseDomain, &hasRootDomain);
+        rv = HasRootDomain(host, cBaseDomain, &hasRootDomain);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           continue;
         }

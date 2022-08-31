@@ -1423,7 +1423,7 @@ bool MatchBaseDomain(nsIFile* aPath, const nsACString& aBaseDomain) {
       return false;
     }
     bool success;
-    rv = NS_HasRootDomain(originHostname, aBaseDomain, &success);
+    rv = net::HasRootDomain(originHostname, aBaseDomain, &success);
     if (NS_SUCCEEDED(rv) && success) {
       return true;
     }

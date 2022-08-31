@@ -3167,7 +3167,7 @@ nsresult CacheFileIOManager::EvictByContextInternal(
 
         // Clear entry if the host belongs to the given base domain.
         bool hasRootDomain = false;
-        rv = NS_HasRootDomain(host, baseDomain, &hasRootDomain);
+        rv = HasRootDomain(host, baseDomain, &hasRootDomain);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return false;
         }
