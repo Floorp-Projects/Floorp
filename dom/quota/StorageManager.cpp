@@ -731,8 +731,6 @@ StorageManager::StorageManager(nsIGlobalObject* aGlobal) : mOwner(aGlobal) {
 
 StorageManager::~StorageManager() = default;
 
-void StorageManager::Shutdown() {}
-
 already_AddRefed<Promise> StorageManager::Persisted(ErrorResult& aRv) {
   MOZ_ASSERT(mOwner);
 
@@ -766,6 +764,8 @@ already_AddRefed<Promise> StorageManager::GetDirectory(ErrorResult& aRv) {
 
   return mFileSystemManager->GetDirectory(aRv);
 }
+
+void StorageManager::Shutdown() {}
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(StorageManager, mOwner,
                                       mFileSystemManager)
