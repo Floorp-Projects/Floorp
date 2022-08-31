@@ -279,14 +279,16 @@
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Besjoch jo lêste sykopdrachten opnij fan jo startside en ljepblêden ôf.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint">Jo personalisearre Firefox-startside makket it no ienfâldiger om fierder te gean wêr’t jo bleaun wiene. Fyn jo resinte ljepblêden, blêdwizers, en sykresultaten.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Jo personalisearre Firefox-startside makket it no ienfâldiger om fierder te gean wêr’t jo bleaun wiene. Fyn jo resinte ljepblêden, blêdwizers, en sykresultaten.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Kom yn de kunde mei jo personalisearre startside. Resinte ljepblêden, blêdwizers en sykresultaten wurde hjir werjûn.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">Wolkom by in ûnôfhinklik ynternet</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Mear kleuren. Bettere privacy. Deselde ynset foar minsken boppe winst.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title">It wikseljen fan skermen is makliker as ea</string>
+    <string name="onboarding_home_sync_title_2">Ljep fan telefoan nei laptop en tebek</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">Gean fan jo startside ôf fierder wêr’t jo stoppe binne mei ljepblêden fan oare apparaten.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -295,6 +297,9 @@
     <string name="onboarding_home_sign_in_button">Oanmelde</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Oerslaan</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Jo ljepblêden wurde syngronisearre! Gean fierder wêr’t jo bleaun wiene op jo oare apparaat.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->

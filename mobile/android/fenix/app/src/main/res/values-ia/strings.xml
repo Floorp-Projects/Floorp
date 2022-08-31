@@ -280,14 +280,16 @@
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Revisita tu ultime recercas ab tu pagina principal e schedas.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint">Tu pagina principal personalisate de Firefox ora simplifica reprender de ubi tu lassava. Trova tu recente schedas, marcapaginas e resultatos del recerca.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Tu pagina principal personalisate de Firefox ora simplifica reprender de ubi tu lassava. Trova tu recente schedas, marcapaginas e resultatos del recerca.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Incontra tu pagina principal personalisate. Le schedas recente, le marcapaginas e le resultatos del recerca apparera ci.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">Benvenite in un internet independente</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Plus de colores. Melior confidentialitate. Mesme dedication al personas super le profitos.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title">Cambiar le paginas es plus facile que mais</string>
+    <string name="onboarding_home_sync_title_2">Passa ab le telephono al portabile e retro</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">Reprende de ubi tu exiva con le schedas de altere apparatos ora sur tu pagina principal.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -296,6 +298,9 @@
     <string name="onboarding_home_sign_in_button">Aperir session</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Saltar</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Tu schedas es synchronisate! Reprende de ubi tu exiva sur un tu altere apparato.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->

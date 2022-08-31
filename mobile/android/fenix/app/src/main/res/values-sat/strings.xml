@@ -37,8 +37,10 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">ᱱᱤᱛᱚᱜᱼᱟᱜ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜᱼᱟᱜ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
 
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">ᱱᱤᱛ ᱥᱟᱺᱪᱟᱣᱟᱜ</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">ᱡᱷᱚᱛᱚ ᱥᱟᱺᱪᱟᱣ ᱠᱟᱱ ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
 
@@ -66,7 +68,7 @@
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. The first parameter is the name of the application.-->
-    <string name="open_in_app_cfr_info_message_2">ᱟᱢ ᱮᱯᱯ ᱠᱚ ᱮᱢᱟᱱ ᱨᱮ ᱟᱡ ᱛᱮᱜᱮ ᱞᱤᱝᱠ ᱠᱚ ᱮᱢᱟᱱ ᱚᱰᱚᱠ ᱨᱮᱭᱟᱜ %1$s ᱨᱮ ᱥᱮᱴ ᱫᱟᱲᱮᱟᱜᱼᱟᱢ ᱾</string>
+    <string name="open_in_app_cfr_info_message_2">ᱟᱢ ᱮᱯ ᱠᱚ ᱮᱢᱟᱱ ᱨᱮ ᱟᱡ ᱛᱮᱜᱮ ᱞᱤᱝᱠ ᱠᱚ ᱮᱢᱟᱱ ᱚᱰᱚᱠ ᱨᱮᱭᱟᱜ %1$s ᱨᱮ ᱥᱮᱴ ᱫᱟᱲᱮᱟᱜᱼᱟᱢ ᱾</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">ᱥᱟᱡᱟᱣ ᱠᱚ ᱨᱮ ᱪᱟᱞᱟᱜ ᱢᱮ</string>
 
@@ -135,6 +137,8 @@
     <string name="recent_tabs_see_all_synced_tabs_button_text">ᱤᱧᱟᱜ ᱡᱷᱚᱛᱚ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">ᱟᱹᱭᱩᱨᱢᱤᱫ ᱠᱟᱱ ᱥᱟᱫᱷᱚᱱ ᱠᱚ</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">ᱚᱪᱚᱜᱽ ᱢᱮ</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">ᱚᱪᱚᱜᱽ ᱢᱮ</string>
@@ -252,25 +256,30 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">%1$s ᱨᱮ ᱪᱮᱫ ᱱᱟᱶᱟ ᱢᱮᱱᱟ-ᱟ</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">%1$s ᱨᱮ ᱪᱮᱫ ᱱᱟᱶᱟ ᱢᱮᱱᱟ-ᱟ</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">ᱱᱤᱛᱚᱜ ᱫᱚ ᱡᱟᱦᱟᱸ ᱨᱮ ᱢᱟᱲᱟᱝ ᱛᱟᱦᱮᱸ ᱠᱟᱱᱟᱢ ᱱᱚᱰᱮ ᱠᱷᱚᱱ ᱥᱟᱵ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱢ᱾</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜ ᱫᱚ ᱡᱟᱦᱟᱸ ᱨᱮ ᱢᱟᱲᱟᱝ ᱛᱟᱦᱮᱸ ᱠᱟᱱᱟᱢ ᱱᱚᱰᱮ ᱠᱷᱚᱱ ᱥᱟᱵ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱢ᱾</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">ᱱᱤᱡᱮ ᱛᱮ ᱛᱮᱭᱟᱨ %1$s ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">ᱱᱤᱡᱮ ᱛᱮ ᱛᱮᱭᱟᱨ %1$s ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">ᱠᱷᱩᱞᱟᱹ ᱠᱟᱱ ᱴᱮᱵᱽ, ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ, ᱟᱨ ᱦᱤᱛᱟᱹᱞ ᱵᱨᱟᱩᱡᱽ ᱛᱮ ᱪᱟᱞᱟᱜ ᱢᱮ᱾</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">ᱠᱷᱩᱞᱟᱹ ᱠᱟᱱ ᱴᱮᱵᱽ, ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ, ᱟᱨ ᱦᱤᱛᱟᱹᱞ ᱵᱽᱨᱟᱣᱩᱡᱽ ᱛᱮ ᱪᱟᱞᱟᱜ ᱢᱮ᱾</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">ᱥᱟᱯᱷᱟ, ᱴᱮᱵᱽ ᱠᱚ ᱵᱮᱵᱚᱥᱛᱷᱟᱭ ᱢᱮ</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">ᱥᱟᱯᱷᱟ, ᱴᱮᱵᱽ ᱠᱚ ᱵᱮᱵᱚᱥᱛᱷᱟᱭ ᱢᱮ</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">ᱴᱮᱵᱽ ᱵᱷᱤᱲ ᱠᱚ ᱥᱩᱫᱷᱨᱟᱹᱣ ᱠᱟᱱ ᱞᱮᱭᱟᱩᱴ ᱟᱨ ᱟᱡ ᱛᱮ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ ᱢᱮᱴᱟᱣᱟᱭ᱾</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">ᱴᱮᱵᱽ ᱵᱷᱤᱲ ᱠᱚ ᱥᱩᱫᱷᱨᱟᱹᱣ ᱠᱟᱱ ᱞᱮᱭᱟᱩᱴ ᱟᱨ ᱟᱡ ᱛᱮ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ ᱢᱮᱴᱟᱣᱟᱭ᱾</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">ᱱᱤᱛᱚᱜᱟᱜ ᱥᱮᱸᱫᱽᱨᱟ ᱠᱚ</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜᱟᱜ ᱥᱮᱸᱫᱽᱨᱟ ᱠᱚ</string>
 
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">ᱟᱢᱟᱜ ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ ᱟᱨ ᱴᱮᱵᱽ ᱠᱷᱚᱱ ᱱᱤᱛᱚᱜᱟᱜ ᱥᱮᱸᱫᱽᱨᱟ ᱛᱮ ᱫᱩᱦᱲᱟᱹ ᱪᱟᱞᱟᱜ ᱞᱟᱹᱜᱤᱫ ᱾</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ ᱟᱨ ᱴᱮᱵᱽ ᱠᱷᱚᱱ ᱱᱤᱛᱚᱜᱟᱜ ᱥᱮᱸᱫᱽᱨᱟ ᱛᱮ ᱫᱩᱦᱲᱟᱹ ᱪᱟᱞᱟᱜ ᱞᱟᱹᱜᱤᱫ ᱾</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱢᱚᱱᱮᱛᱮᱭᱟᱜ Firefox ᱚᱲᱟᱜᱥᱟᱦᱴᱟ ᱫᱚ ᱱᱤᱛᱚᱜ ᱡᱟᱦᱟᱸ ᱨᱮ ᱟᱲᱟᱜ ᱠᱟᱜᱼᱟᱢ ᱚᱱᱰᱮ ᱜᱮ ᱤᱫᱤ ᱢᱮᱭᱟᱭ ᱾ ᱟᱢᱟᱜ ᱱᱤᱛᱚᱜᱟᱜ ᱴᱮᱵᱽ ᱠᱚ, ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ ᱟᱨ ᱥᱮᱸᱫᱽᱨᱟ ᱠᱚ ᱯᱟᱱᱛᱮ ᱛᱟᱢ ᱾</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱢᱚᱱᱮᱛᱮᱭᱟᱜ Firefox ᱚᱲᱟᱜᱥᱟᱦᱴᱟ ᱫᱚ ᱱᱤᱛᱚᱜ ᱡᱟᱦᱟᱸ ᱨᱮ ᱟᱲᱟᱜ ᱠᱟᱜᱼᱟᱢ ᱚᱱᱰᱮ ᱜᱮ ᱤᱫᱤ ᱢᱮᱭᱟᱭ ᱾ ᱟᱢᱟᱜ ᱱᱤᱛᱚᱜᱟᱜ ᱴᱮᱵᱽ ᱠᱚ, ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ ᱟᱨ ᱥᱮᱸᱫᱽᱨᱟ ᱠᱚ ᱯᱟᱱᱛᱮ ᱛᱟᱢ ᱾</string>
+
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">ᱟᱲᱟᱜ</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -301,7 +310,7 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">%1$s ᱵᱟᱵᱚᱛ</string>
     <!-- Preference for settings related to changing the default browser -->
-    <string name="preferences_set_as_default_browser">ᱢᱩᱞ ᱵᱨᱟᱩᱡᱟᱹᱨ ᱞᱮᱠᱷᱟ ᱥᱟᱡᱟᱣ ᱢᱮ</string>
+    <string name="preferences_set_as_default_browser">ᱢᱩᱞ ᱵᱽᱨᱟᱣᱩᱡᱟᱹᱨ ᱞᱮᱠᱷᱟ ᱥᱟᱡᱟᱣ ᱢᱮ</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">ᱞᱟᱦᱟᱱᱛᱤ</string>
     <!-- Preference category for privacy and security settings -->
@@ -315,9 +324,9 @@
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">ᱱᱤᱡᱮᱨᱟᱜ ᱵᱽᱨᱟᱣᱡᱤᱝ ᱨᱮ ᱥᱠᱨᱤᱱᱥᱚᱴ ᱠᱚ ᱦᱮᱥᱟᱨᱤᱭᱟᱹ ᱢᱮ</string>
     <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-    <string name="preferences_screenshots_in_private_mode_disclaimer">ᱡᱩᱫᱤ ᱢᱟᱸᱡᱩᱨ ᱮᱱᱟ, ᱯᱨᱟᱭᱣᱮᱴ ᱴᱮᱵᱽ ᱠᱚ ᱫᱚ ᱧᱮᱞᱚᱜ ᱜᱮᱭᱟ ᱡᱩᱫᱤ ᱢᱟᱹᱞᱴᱤᱯᱟᱹᱞ ᱮᱯᱯ ᱠᱚ ᱠᱷᱩᱞᱟᱹ ᱛᱟᱦᱮᱸᱱᱟ</string>
+    <string name="preferences_screenshots_in_private_mode_disclaimer">ᱡᱩᱫᱤ ᱢᱟᱸᱡᱩᱨ ᱮᱱᱟ, ᱯᱨᱟᱭᱣᱮᱴ ᱴᱮᱵᱽ ᱠᱚ ᱫᱚ ᱧᱮᱞᱚᱜ ᱜᱮᱭᱟ ᱡᱩᱫᱤ ᱢᱟᱹᱞᱴᱤᱯᱟᱹᱞ ᱮᱯ ᱠᱚ ᱠᱷᱩᱞᱟᱹ ᱛᱟᱦᱮᱸᱱᱟ</string>
     <!-- Preference for adding private browsing shortcut -->
-    <string name="preferences_add_private_browsing_shortcut">ᱱᱤᱡᱮᱨᱟᱜ ᱵᱨᱟᱩᱡᱤᱝ ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
+    <string name="preferences_add_private_browsing_shortcut">ᱱᱤᱡᱮᱨᱟᱜ ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">ᱠᱷᱟᱹᱞᱤᱼHTTPS ᱢᱳᱰ</string>
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
@@ -345,7 +354,7 @@
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">ᱠᱩᱥᱤᱭᱟᱜ ᱥᱭᱝᱠ ᱥᱟᱹᱨᱣᱟᱹᱨ</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Firefox ᱠᱷᱟᱛᱟ/ ᱥᱭᱝᱠ ᱠᱟᱹᱨᱣᱟᱹᱨ ᱵᱚᱫᱚᱞᱮᱱᱟ ᱾ ᱵᱚᱫᱚᱞ ᱠᱚ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱮᱯᱯᱞᱤᱠᱮᱥᱚᱱ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱᱟ…</string>
+    <string name="toast_override_fxa_sync_server_done">Firefox ᱠᱷᱟᱛᱟ/ ᱥᱭᱝᱠ ᱠᱟᱹᱨᱣᱟᱹᱨ ᱵᱚᱫᱚᱞᱮᱱᱟ ᱾ ᱵᱚᱫᱚᱞ ᱠᱚ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱮᱯᱞᱤᱠᱮᱥᱚᱱ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱᱟ…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">ᱠᱷᱟᱛᱟ</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -385,7 +394,7 @@
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
     <string name="preferences_show_clipboard_suggestions">ᱨᱮᱴᱚᱯᱵᱚᱰ ᱦᱩᱫᱤᱥ ᱠᱚ ᱩᱫᱩᱜ</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
-    <string name="preferences_search_browsing_history">ᱵᱨᱟᱩᱡᱤᱝ ᱦᱤᱛᱟᱹᱞ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
+    <string name="preferences_search_browsing_history">ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱦᱤᱛᱟᱹᱞ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
     <!-- Preference title for switch preference to suggest synced tabs when searching -->
@@ -416,7 +425,7 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">ᱛᱩᱢᱟᱹᱞ ᱢᱟᱞᱤᱠ (ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ ID)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">ᱮᱰᱼᱚᱱ ᱛᱩᱢᱟᱹᱞ ᱵᱚᱫᱚᱞᱮᱱᱟ ᱾ ᱵᱚᱫᱚᱞ ᱠᱚ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱮᱯᱯᱞᱤᱠᱮᱥᱚᱱ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱᱟ…</string>
+    <string name="toast_customize_addon_collection_done">ᱮᱰᱼᱚᱱ ᱛᱩᱢᱟᱹᱞ ᱵᱚᱫᱚᱞᱮᱱᱟ ᱾ ᱵᱚᱫᱚᱞ ᱠᱚ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱮᱯᱞᱤᱠᱮᱥᱚᱱ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱᱟ…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -513,7 +522,7 @@
     <string name="preferences_tracking_protection_exceptions">ᱪᱷᱟᱰᱟ ᱠᱚ</string>
 
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
-    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">ᱡᱷᱚᱛᱚ ᱠᱚ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱛ ᱛᱮ ᱚᱱ ᱢᱮ</string>
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">ᱡᱷᱚᱛᱚ ᱠᱚ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱚᱱ ᱢᱮ</string>
     <!-- Text displayed when there are no exceptions -->
     <string name="exceptions_empty_message_description">ᱵᱟᱪᱷᱟᱣᱟᱠᱟᱱ ᱫᱟᱭᱤᱴ ᱠᱚᱨᱮ ᱟᱢ ᱤᱪᱷᱟᱹ ᱚᱱᱩᱥᱟᱨ ᱜᱷᱮᱨ ᱮᱥᱮᱫ ᱵᱚᱸᱫᱚ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱢ ᱾</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
@@ -538,7 +547,7 @@
     <!-- Header of the Sync and save your data preference view -->
     <string name="preferences_sync_2">ᱥᱭᱝᱠᱢᱮ ᱟᱨ ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱥᱟᱺᱪᱟᱣ ᱛᱟᱢ</string>
     <!-- Preference for reconnecting to FxA sync -->
-    <string name="preferences_sync_sign_in_to_reconnect">ᱫᱩᱲᱟᱹ ᱡᱚᱲᱟᱣ ᱞᱟᱹᱜᱤᱛ ᱛᱮ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱢᱮ</string>
+    <string name="preferences_sync_sign_in_to_reconnect">ᱫᱩᱲᱟᱹ ᱡᱚᱲᱟᱣ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱢᱮ</string>
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">ᱠᱷᱟᱛᱟ ᱚᱪᱚᱜ ᱢᱮ</string>
 
@@ -565,7 +574,7 @@
 
     <!-- Gestures Preferences-->
     <!-- Preferences for using pull to refresh in a webpage -->
-    <string name="preference_gestures_website_pull_to_refresh">ᱱᱟᱶᱟ ᱟᱹᱨᱩ ᱞᱟᱹᱜᱤᱛ ᱛᱮ ᱚᱨ ᱢᱮ</string>
+    <string name="preference_gestures_website_pull_to_refresh">ᱱᱟᱶᱟ ᱟᱹᱨᱩ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱚᱨ ᱢᱮ</string>
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">ᱴᱩᱞᱵᱟᱨ ᱩᱠᱩ ᱞᱟᱹᱜᱤᱫᱛᱮ ᱛᱚᱛᱨᱚᱭ ᱢᱮ</string>
 
@@ -989,7 +998,7 @@
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_deselect_all">ᱡᱚᱛᱚ ᱠᱚ ᱵᱟᱝ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
     <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
-    <string name="create_collection_save_to_collection_empty">ᱥᱟᱺᱪᱟᱣ ᱞᱟᱹᱜᱤᱛ ᱛᱮ ᱴᱮᱵᱽ ᱠᱚ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
+    <string name="create_collection_save_to_collection_empty">ᱥᱟᱺᱪᱟᱣ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱴᱮᱵᱽ ᱠᱚ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
     <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
      %d is a placeholder for the number of tabs selected. -->
     <string name="create_collection_save_to_collection_tabs_selected">%d ᱴᱮᱵᱽ ᱠᱚ ᱵᱟᱪᱷᱟᱣ ᱟᱠᱟᱱᱟ</string>
@@ -1051,7 +1060,7 @@
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">ᱵᱩᱡᱷᱟᱹᱣ ᱠᱮᱫᱟ</string>
     <!-- Share error message -->
-    <string name="share_error_snackbar">ᱱᱚᱶᱟ ᱮᱯᱯ ᱵᱷᱮᱡᱟ ᱵᱟᱝ ᱜᱟᱱᱚᱜᱼᱟ</string>
+    <string name="share_error_snackbar">ᱱᱚᱶᱟ ᱮᱯ ᱵᱷᱮᱡᱟ ᱵᱟᱝ ᱜᱟᱱᱚᱜᱼᱟ</string>
     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">ᱥᱟᱫᱷᱚᱱ ᱨᱮ ᱠᱩᱞ ᱢᱮ</string>
 
@@ -1098,7 +1107,7 @@
     <string name="snackbar_top_site_removed">ᱥᱟᱭᱤᱴ ᱚᱪᱚᱜ ᱦᱩᱭ ᱮᱱᱟ</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
-    <string name="qr_scanner_confirmation_dialog_message">%1$s ᱵᱟᱛᱟᱣ ᱮᱢᱟᱭ ᱢᱮ %2$s ᱡᱷᱤᱡᱽ ᱞᱟᱹᱜᱤᱛ ᱛᱮ</string>
+    <string name="qr_scanner_confirmation_dialog_message">%1$s ᱵᱟᱛᱟᱣ ᱮᱢᱟᱭ ᱢᱮ %2$s ᱡᱷᱤᱡᱽ ᱞᱟᱹᱜᱤᱫ ᱛᱮ</string>
     <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
     <string name="qr_scanner_dialog_positive">ᱢᱟᱹᱱᱡᱩᱨ</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
@@ -1108,7 +1117,7 @@
     <!-- QR code scanner prompt dialog positive option when there is an error -->
     <string name="qr_scanner_dialog_invalid_ok">ᱴᱷᱤᱠ</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
-    <string name="tab_collection_dialog_message">%1$s ᱢᱮᱴᱟᱣ ᱞᱟᱹᱜᱤᱛ ᱛᱮ ᱪᱮᱫ ᱟᱢ ᱜᱚᱴᱟ ᱛᱮ ᱢᱮᱱᱟᱢ-ᱟ?</string>
+    <string name="tab_collection_dialog_message">%1$s ᱢᱮᱴᱟᱣ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱪᱮᱫ ᱟᱢ ᱜᱚᱴᱟ ᱛᱮ ᱢᱮᱱᱟᱢ-ᱟ?</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
     <string name="delete_tab_and_collection_dialog_message">ᱱᱚᱶᱟ ᱴᱮᱵᱽ ᱢᱮᱴᱟᱣ ᱞᱮᱠᱷᱟᱭ ᱥᱟᱱᱟᱢ ᱛᱩᱢᱟᱹᱞ ᱢᱮᱴᱟᱣ ᱪᱟᱵᱟᱜ-ᱟ ᱾ ᱚᱠᱟ ᱥᱚᱢᱚᱭ ᱨᱮ ᱦᱚᱸ ᱟᱢ ᱱᱟᱶᱟ ᱛᱩᱢᱟᱹᱞ ᱠᱚ ᱛᱮᱭᱟᱨ ᱫᱟᱲᱮᱼᱟᱜ ᱟᱢ ᱾</string>
     <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
@@ -1140,7 +1149,7 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d ᱴᱮᱵᱽ ᱠᱚ</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">ᱵᱨᱟᱩᱡᱤᱝ ᱱᱟᱜᱟᱢ ᱟᱨ ᱥᱟᱭᱤᱴ ᱰᱟᱴᱟ</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title">ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱱᱟᱜᱟᱢ ᱟᱨ ᱥᱟᱭᱤᱴ ᱰᱟᱴᱟ</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d ᱴᱷᱤᱠᱬᱟᱹ ᱠᱚ</string>
@@ -1161,12 +1170,12 @@
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">ᱵᱽᱨᱟᱣᱡᱤᱝ ᱰᱟᱴᱟ ᱢᱮᱴᱟᱣ ᱢᱮ ᱟᱲᱟᱜ ᱜᱷᱚᱲᱤ</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit_2">ᱵᱨᱟᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱟᱡ ᱛᱮ ᱢᱮᱴᱟᱣ ᱛᱟᱦᱮᱱᱟᱭ ᱡᱚᱠᱷᱚᱱ ᱟᱢ \&quot;ᱟᱲᱟᱹᱜ\&quot; ᱵᱟᱪᱷᱟᱣ ᱛᱟᱦᱮᱱᱟᱢ ᱢᱩᱞ ᱢᱮᱱᱩ ᱠᱷᱚᱱ</string>
+    <string name="preference_summary_delete_browsing_data_on_quit_2">ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱟᱡ ᱛᱮ ᱢᱮᱴᱟᱣ ᱛᱟᱦᱮᱱᱟᱭ ᱡᱚᱠᱷᱚᱱ ᱟᱢ \&quot;ᱟᱲᱟᱹᱜ\&quot; ᱵᱟᱪᱷᱟᱣ ᱛᱟᱦᱮᱱᱟᱢ ᱢᱩᱞ ᱢᱮᱱᱩ ᱠᱷᱚᱱ</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">ᱟᱲᱟᱹᱜ ᱢᱮ</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">ᱱᱚᱶᱟ ᱫᱚ ᱟᱢᱟᱜ ᱥᱟᱱᱟᱢ ᱵᱨᱟᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱢᱮᱴᱟᱣ ᱛᱟᱢᱟᱭ ᱾</string>
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">ᱱᱚᱶᱟ ᱫᱚ ᱟᱢᱟᱜ ᱥᱟᱱᱟᱢ ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱢᱮᱴᱟᱣ ᱛᱟᱢᱟᱭ ᱾</string>
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">ᱢᱮᱴᱟᱣ ᱞᱟᱹᱜᱤᱫ ᱚᱠᱛᱚ ᱨᱮᱭᱟᱜ ᱨᱮᱧᱡᱽ</string>
     <!-- Body text of a delete browsing data dialog. -->
@@ -1179,15 +1188,15 @@
     <string name="delete_history_prompt_button_everything">ᱡᱷᱚᱛᱚᱣᱟᱜ</string>
 
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
-    <string name="delete_browsing_data_prompt_message_3">%s ᱵᱟᱪᱷᱟᱣᱟᱜ ᱵᱨᱟᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱢᱮᱴᱟᱣ ᱟᱭ ᱾</string>
+    <string name="delete_browsing_data_prompt_message_3">%s ᱵᱟᱪᱷᱟᱣᱟᱜ ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱢᱮᱴᱟᱣ ᱟᱭ ᱾</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">ᱵᱟᱹᱰᱨᱟᱹ</string>
     <!-- Text for the allow button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_allow">ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
-    <string name="preferences_delete_browsing_data_snackbar">ᱵᱨᱟᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱢᱮᱴᱟᱣᱮᱱᱟ</string>
+    <string name="preferences_delete_browsing_data_snackbar">ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱢᱮᱴᱟᱣᱮᱱᱟ</string>
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
-    <string name="deleting_browsing_data_in_progress">ᱵᱨᱟᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱢᱮᱴᱟᱣ ᱦᱩᱭᱩ ᱠᱟᱱᱟ…</string>
+    <string name="deleting_browsing_data_in_progress">ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱢᱮᱴᱟᱣ ᱦᱩᱭᱩ ᱠᱟᱱᱟ…</string>
 
     <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
     <string name="delete_all_history_group_prompt_message">“%s” ᱨᱮ ᱡᱷᱚᱛᱚ ᱥᱟᱭᱤᱴ ᱠᱚ ᱢᱮᱴᱟᱣ ᱢᱮ ᱾</string>
@@ -1236,7 +1245,7 @@
     <string name="onboarding_privacy_notice_read_button">ᱟᱞᱮᱭᱟᱜ ᱱᱤᱥᱚᱱ ᱱᱚᱴᱤᱥ ᱯᱟᱲᱦᱟᱣ ᱯᱮ</string>
 
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">ᱵᱨᱟᱩᱡᱤᱝ ᱮᱦᱚᱵᱽ ᱢᱮ</string>
+    <string name="onboarding_finish">ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱮᱦᱚᱵᱽ ᱢᱮ</string>
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
@@ -1273,7 +1282,7 @@
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[ᱠᱷᱟᱛᱟ ᱵᱟᱹᱱᱩᱜᱼᱟ? <u>ᱢᱤᱫᱴᱟᱹᱝ ᱛᱮᱭᱟᱨ ᱢᱮ</u> ᱰᱥᱫᱷᱚᱱ ᱠᱚ ᱵᱷᱤᱛᱨᱤ ᱨᱮ Firefox ᱥᱭᱝᱠ ᱞᱟᱹᱜᱤᱫ ᱾]]></string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="sign_out_confirmation_message_2">%s ᱫᱚ ᱟᱢᱟᱜ ᱠᱷᱟᱛᱟ ᱥᱟᱞᱟᱜ ᱥᱭᱝᱠ ᱵᱚᱸᱫᱽᱚᱭ ᱟ , ᱦᱮᱞᱮ ᱟᱢᱟᱜ ᱚᱠᱟ ᱵᱨᱟᱩᱡᱤᱸᱝ ᱰᱟᱴᱟ ᱦᱚᱸ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮ ᱵᱟᱭ ᱢᱮᱴᱟᱣᱜᱼᱟ ᱾</string>
+    <string name="sign_out_confirmation_message_2">%s ᱫᱚ ᱟᱢᱟᱜ ᱠᱷᱟᱛᱟ ᱥᱟᱞᱟᱜ ᱥᱭᱝᱠ ᱵᱚᱸᱫᱽᱚᱭ ᱟ , ᱦᱮᱞᱮ ᱟᱢᱟᱜ ᱚᱠᱟ ᱵᱽᱨᱟᱣᱩᱡᱤᱸᱝ ᱰᱟᱴᱟ ᱦᱚᱸ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱨᱮ ᱵᱟᱭ ᱢᱮᱴᱟᱣᱜᱼᱟ ᱾</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">ᱡᱚᱱᱚᱲᱟᱣ ᱚᱪᱚᱜ</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -1287,7 +1296,7 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">ᱵᱟᱲᱦᱟᱣᱟᱠᱟᱱ ᱯᱟᱸᱡᱟ ᱨᱚᱯᱷᱟ</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">ᱯᱟᱸᱡᱟ ᱵᱮᱜᱚᱨ ᱵᱨᱟᱩᱡ ᱢᱮ</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title">ᱯᱟᱸᱡᱟ ᱵᱮᱜᱚᱨ ᱵᱽᱨᱟᱣᱩᱡ ᱢᱮ</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">ᱟᱢᱟᱜᱽ ᱰᱟᱴᱟ ᱟᱢ ᱴᱷᱮᱱ ᱜᱮ ᱫᱚᱦᱚᱭ ᱢᱮ ᱾ %s ᱫᱚ ᱟᱭᱢᱟ ᱥᱚᱢᱟᱱ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱴᱷᱮᱱ ᱠᱷᱚᱱ ᱚᱱᱞᱟᱭᱤᱱ ᱨᱩᱠᱷᱤᱭᱟᱹᱭ ᱢᱮᱟᱭ ᱾</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -1340,11 +1349,13 @@
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">ᱥᱟᱸᱣᱛᱟ ᱢᱤᱰᱤᱭᱟ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_social_media_trackers_description">ᱵᱨᱟᱩᱡᱤᱝ ᱠᱟᱹᱢᱤ ᱠᱚ ᱮᱢᱟᱱ ᱥᱚᱥᱤᱭᱟᱹᱢ ᱢᱮᱰᱤᱭᱟ ᱱᱮᱴᱣᱟᱨᱠ ᱨᱮ ᱜᱷᱮᱨ ᱮᱥᱮᱫ ᱠᱚ ᱣᱮᱵᱽ ᱨᱮ ᱞᱤᱢᱤᱴ ᱛᱟᱢᱟᱭ ᱾ </string>
+    <string name="etp_social_media_trackers_description">ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱠᱟᱹᱢᱤ ᱠᱚ ᱮᱢᱟᱱ ᱥᱚᱥᱤᱭᱟᱹᱢ ᱢᱮᱰᱤᱭᱟ ᱱᱮᱴᱣᱟᱨᱠ ᱨᱮ ᱜᱷᱮᱨ ᱮᱥᱮᱫ ᱠᱚ ᱣᱮᱵᱽ ᱨᱮ ᱞᱤᱢᱤᱴ ᱛᱟᱢᱟᱭ ᱾ </string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">ᱠᱨᱚᱥᱼᱥᱟᱭᱤᱴ ᱜᱷᱮᱨ ᱮᱥᱮᱫ ᱠᱩᱠᱤ ᱠᱚ</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">ᱥᱟᱭᱤᱨᱼᱵᱟᱨᱯᱟᱦᱴᱟ ᱠᱩᱠᱤᱡᱽ ᱠᱚ</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">ᱮᱰ ᱱᱮᱴᱣᱳᱨᱠ ᱠᱚ ᱟᱨ ᱮᱱᱟᱞᱭᱴᱤᱠ ᱠᱚᱢᱯᱟᱱᱤ ᱠᱚ ᱮᱢᱟᱱ ᱠᱩᱻᱠᱤᱡ ᱠᱚ, ᱚᱠᱟ ᱫᱚ ᱟᱭᱢᱟ ᱵᱨᱟᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱠᱚ ᱠᱚᱢᱯᱟᱭᱤᱞ ᱞᱟᱹᱜᱤᱫᱽ ᱵᱮᱵᱷᱟᱨᱚᱜᱼᱟ ᱚᱱᱟ ᱠᱚ ᱵᱞᱚᱠ ᱟᱭ ᱾</string>
+    <string name="etp_cookies_description">ᱮᱰ ᱱᱮᱴᱣᱳᱨᱠ ᱠᱚ ᱟᱨ ᱮᱱᱟᱞᱭᱴᱤᱠ ᱠᱚᱢᱯᱟᱱᱤ ᱠᱚ ᱮᱢᱟᱱ ᱠᱩᱻᱠᱤᱡ ᱠᱚ, ᱚᱠᱟ ᱫᱚ ᱟᱭᱢᱟ ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱠᱚ ᱠᱚᱢᱯᱟᱭᱤᱞ ᱞᱟᱹᱜᱤᱫᱽ ᱵᱮᱵᱷᱟᱨᱚᱜᱼᱟ ᱚᱱᱟ ᱠᱚ ᱵᱞᱚᱠ ᱟᱭ ᱾</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">ᱠᱨᱭᱯᱴᱚᱢᱟᱭᱱᱟᱹᱨ ᱠᱚ</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
@@ -1358,11 +1369,11 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">ᱵᱟᱦᱨᱮ ᱮᱰ, ᱣᱤᱰᱤᱭᱚ, ᱟᱨ ᱚᱞᱜᱟ ᱡᱤᱱᱤᱥ ᱠᱚ ᱮᱢᱟᱱ ᱜᱷᱮᱨ ᱮᱥᱮᱫ ᱠᱳᱰ ᱠᱚ ᱞᱟᱹᱜᱤᱫᱽ ᱵᱟᱭ ᱞᱟᱫᱮ ᱪᱷᱚᱭ ᱟ ᱾ ᱚᱞᱜᱟ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱠᱟᱹᱢᱤ ᱠᱚ ᱨᱮᱭᱟᱜ ᱫᱷᱚᱸᱜ ᱠᱚᱫᱚᱞ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱭ ᱾</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
-    <string name="etp_panel_on">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱛ ᱯᱨᱚᱴᱮᱠᱥᱚᱱ ᱠᱚ ᱪᱚᱞᱩ ᱢᱮᱱᱟᱜ-ᱟ</string>
+    <string name="etp_panel_on">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱯᱨᱚᱴᱮᱠᱥᱚᱱ ᱠᱚ ᱪᱚᱞᱩ ᱢᱮᱱᱟᱜ-ᱟ</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
-    <string name="etp_panel_off">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱛ ᱯᱨᱚᱴᱮᱠᱥᱚᱱ ᱠᱚ ᱵᱚᱸᱫᱚ ᱢᱮᱱᱟᱜ-ᱟ</string>
+    <string name="etp_panel_off">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱯᱨᱚᱴᱮᱠᱥᱚᱱ ᱠᱚ ᱵᱚᱸᱫᱚ ᱢᱮᱱᱟᱜ-ᱟ</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
-    <string name="enhanced_tracking_protection_exceptions">ᱱᱚᱶᱟ ᱠᱚ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱛ ᱵᱟᱲᱦᱟᱣᱟᱠᱟᱱ ᱯᱟᱸᱡᱟ ᱨᱚᱯᱷᱟ ᱵᱚᱸᱫᱚ ᱢᱮᱱᱟᱜ-ᱟ</string>
+    <string name="enhanced_tracking_protection_exceptions">ᱱᱚᱶᱟ ᱠᱚ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱵᱟᱲᱦᱟᱣᱟᱠᱟᱱ ᱯᱟᱸᱡᱟ ᱨᱚᱯᱷᱟ ᱵᱚᱸᱫᱚ ᱢᱮᱱᱟᱜ-ᱟ</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">ᱯᱟᱹᱪᱷᱞᱟᱹᱥᱮᱱ ᱪᱟᱞᱟᱜ ᱢᱮ</string>
@@ -1424,7 +1435,7 @@
     <string name="add_to_homescreen_text_placeholder">ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱧᱩᱛᱩᱢ</string>
 
     <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description_2">ᱟᱢ ᱞᱚᱜᱚᱱ ᱵᱨᱟᱩᱡ ᱟᱨ ᱮᱯᱯ ᱞᱮᱠᱷᱟᱱ ᱚᱱᱩᱵᱷᱟᱹᱵ ᱤᱫᱤ ᱞᱟᱹᱜᱤᱫ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱫᱚ ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱚᱲᱟᱜ ᱥᱠᱨᱭᱤᱱ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱫᱟᱲᱮᱟᱜᱼᱟᱢ ᱾</string>
+    <string name="add_to_homescreen_description_2">ᱟᱢ ᱞᱚᱜᱚᱱ ᱵᱽᱨᱟᱣᱩᱡᱽ ᱟᱨ ᱮᱯ ᱞᱮᱠᱷᱟᱱ ᱢᱟᱨᱠᱷᱤ ᱤᱫᱤ ᱞᱟᱹᱜᱤᱫ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱫᱚ ᱥᱟᱫᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱚᱲᱟᱜ ᱥᱠᱨᱤᱱ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱫᱟᱲᱮᱟᱜᱼᱟᱢ ᱾</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">ᱵᱚᱞᱚᱱ ᱠᱚ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ</string>
@@ -1488,13 +1499,13 @@
     <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
     <string name="saved_login_clear_hostname">ᱦᱚᱥᱴᱧᱩᱛᱩᱢ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
-    <string name="saved_login_open_site">ᱥᱟᱭᱤᱴ ᱵᱨᱟᱩᱡᱚᱨ ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
+    <string name="saved_login_open_site">ᱥᱟᱭᱤᱴ ᱵᱽᱨᱟᱣᱩᱡᱚᱨ ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱫᱮᱠᱷᱟᱣ</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱩᱠᱩ</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">ᱥᱟᱺᱪᱟᱣᱠᱟᱱ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱠᱚ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱛ ᱛᱮ ᱚᱱᱞᱚᱠ ᱢᱮ</string>
+    <string name="logins_biometric_prompt_message">ᱥᱟᱺᱪᱟᱣᱠᱟᱱ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱠᱚ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱚᱱᱞᱚᱠ ᱢᱮ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">ᱟᱢᱟᱜ ᱞᱚᱜᱤᱱ ᱠᱚ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱡᱟᱯᱛᱤ ᱢᱮ</string>
     <!-- Message of warning dialog if users have no device authentication set up -->

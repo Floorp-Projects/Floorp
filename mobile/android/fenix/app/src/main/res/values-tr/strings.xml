@@ -279,14 +279,16 @@
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Son aramalarınıza giriş sayfasından ve sekmelerden tekrar ulaşın.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint">Kişisel Firefox giriş sayfanız, kaldığınız yerden devam etmeyi kolaylaştırıyor. Son sekmeleriniz, yer imleriniz ve arama sonuçlarınız artık giriş sayfanızda.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Kişisel Firefox giriş sayfanız, kaldığınız yerden devam etmeyi kolaylaştırıyor. Son sekmeleriniz, yer imleriniz ve arama sonuçlarınız artık giriş sayfanızda.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Size özel giriş sayfanızla tanışın. Son sekmeleriniz, yer imleriniz ve arama sonuçlarınız burada görünecek.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">Bağımsız bir internete hoş geldiniz</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Daha renkli. Daha gizli. Para için değil, insanlık için.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title">Cihazdan cihaza geçmek artık daha kolay</string>
+    <string name="onboarding_home_sync_title_2">Telefondan bilgisayara, bilgisayardan telefona geçin</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">Diğer cihazlardaki sekmeleriniz artık giriş sayfanızda.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -295,6 +297,9 @@
     <string name="onboarding_home_sign_in_button">Giriş yap</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Geç</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Sekmeleriniz eşitleniyor! Diğer cihazınızda kaldığınız yerden devam edin.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->

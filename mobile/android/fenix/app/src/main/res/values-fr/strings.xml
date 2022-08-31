@@ -80,6 +80,9 @@
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">Ignorer</string>
 
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Notre fonctionnalité de confidentialité la plus puissante à ce jour isole les traqueurs intersites.</string>
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">En savoir plus sur la protection totale contre les cookies</string>
 
@@ -278,16 +281,27 @@
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Consultez vos dernières recherches depuis votre page d’accueil et vos onglets.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint">L’accueil personnalisé de Firefox permet désormais de reprendre plus facilement là où vous en étiez. Retrouvez vos onglets, marque-pages et résultats de recherche récents.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">L’accueil personnalisé de Firefox permet désormais de reprendre plus facilement là où vous en étiez. Retrouvez vos onglets, marque-pages et résultats de recherche récents.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Découvrez votre page d’accueil personnalisée. Onglets récents, marque-pages et résultats de recherche y apparaissent.</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title">Bienvenue sur un Internet indépendant</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Plus de couleurs. Une confidentialité améliorée. Mais toujours le même engagement pour les gens plutôt que pour les profits.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title">Passer d’un écran à l’autre est plus facile que jamais</string>
+    <string name="onboarding_home_sync_title_2">Passez du téléphone à l’ordinateur portable et vice-versa</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Reprenez là où vous en étiez avec des onglets d’autres appareils qui figurent désormais sur votre page d’accueil.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Lancez-vous</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
     <string name="onboarding_home_sign_in_button">Connexion</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Ignorer</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Vos onglets sont synchronisés ! Reprenez là vous en étiez sur votre autre appareil.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1392,6 +1406,8 @@
     <string name="etp_cookies_title_2">Cookies intersites</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Bloque les cookies que les réseaux publicitaires et les sociétés d’analyse des données utilisent pour compiler vos données de navigation sur de nombreux sites.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">La protection totale contre les cookies isole les cookies au site sur lequel vous vous trouvez et les traqueurs publicitaires ne peuvent donc pas s’en servir pour vous pister de site en site.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Mineurs de cryptomonnaies</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

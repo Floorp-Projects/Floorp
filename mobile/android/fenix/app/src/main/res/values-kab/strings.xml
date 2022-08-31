@@ -278,18 +278,25 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Ales rzu ɣer yinadiyen ineggura seg usebtar-inek•inem d waccaren.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint">Asebter-inek•inem n Firefox udmawan yettarra tura fessus ugar akemmel seg wanda akken i tḥebseḍ. Af accaren-ik•im n melmi kan, ticraḍ n yisebtar, d yigmaḍ n unadi.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Asebter-inek•inem n Firefox udmawan yettarra tura fessus ugar akemmel seg wanda akken i tḥebseḍ. Af accaren-ik•im n melmi kan, ticraḍ n yisebtar, d yigmaḍ n unadi.</string>
 
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">Ansuf ɣer internet ilelli</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Ugar n yiniten. Tudert tabaḍnit igerrzen ugar. Tuṭṭfa deg tbaḍnit n yimdanen mačči d anadi ɣef tedrimt.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title">Abeddel seg ugdil ɣer wayeḍ fessus ugar ɣef wayen iɛeddan</string>
+    <string name="onboarding_home_sync_title_2">Ɛeddi seg tiliɣri ɣer uselkim, neɣ seg uselkim ɣer tiliɣri</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Kemmel seg wanda i tḥebseḍ s useqdec n waccaren ɣef yibenkan-nniḍen ara d-ibanen akka tura ɣef usebter-ik·im agejdan.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Aha bdu</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
     <string name="onboarding_home_sign_in_button">Qqen</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Suref</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Accaren-ik·im mtawan! Kemmel seg wanda i tḥebseḍ ɣef yibenk-ik·im-nniḍen.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1377,6 +1384,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="etp_cookies_title_2">Inagan n tuqqna gar yismal</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Ad isewḥel inagan n tuqqna i seqdacen iberraḥen n udellel akked tkebbaniyin n tesledt i ulqaḍ n yisefka-ik n tunigin deg ddeqs n yismal.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Ammesten asemday mgal inagan n tuqqna iɛezzel inagan n tuqqna ɣef usmel ideg telliḍ, ineḍfaren n udellel ur ssawaḍen ara ad ak·akem-ḍefren seg usmel ɣer wayeḍ.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Ikripṭuminaren</string>
 

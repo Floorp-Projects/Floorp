@@ -282,15 +282,17 @@
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Revisá tus últimas búsquedas desde tu página de inicio y pestañas.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint">Tu página de inicio de Firefox personalizada hace que ahora sea más fácil continuar donde lo habías dejado. Encontrá tus pestañas, marcadores y resultados de búsqueda recientes.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Tu página de inicio de Firefox personalizada hace que ahora sea más fácil continuar donde lo habías dejado. Encontrá tus pestañas, marcadores y resultados de búsqueda recientes.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Conocé tu página de inicio personalizada. Las pestañas recientes, los marcadores y los resultados de búsqueda aparecerán aquí.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">Bienvenido a una Internet independiente</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Más colores. Mejor privacidad. Mismo compromiso con las personas por encima de los beneficios.</string>
 
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title">Cambiar de pantallas es más fácil que nunca</string>
+    <string name="onboarding_home_sync_title_2">Cambiá de teléfono a computadora y viceversa</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">Continuá donde lo dejaste con las pestañas de otros dispositivos ahora en tu página de inicio.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -299,6 +301,9 @@
     <string name="onboarding_home_sign_in_button">Iniciar sesión</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Omitir</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">¡Tus pestañas se están sincronizando! Continuá donde lo dejaste en tu otro dispositivo.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->

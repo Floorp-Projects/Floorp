@@ -279,14 +279,16 @@
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Перегляньте останні пошукові запити зі своєї сторінки домівки та вкладок.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint">Відтепер ваша персоналізована сторінка домівки Firefox полегшує продовження роботи з місця, де ви зупинилися. Знайдіть останні вкладки, закладки та результати пошуку.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Відтепер ваша персоналізована сторінка домівки Firefox полегшує продовження роботи з місця, де ви зупинилися. Знайдіть останні вкладки, закладки та результати пошуку.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Зустрічайте свою персоналізовану домівку. Тут з’являтимуться останні вкладки, закладки та результати пошуку.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">Вітаємо у незалежному інтернеті</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Більше кольорів. Краща приватність. Та ж сама відданість людям, а не прибутку.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title">Перемикати екрани стало простіше, ніж будь-коли</string>
+    <string name="onboarding_home_sync_title_2">Перемикайтеся між телефоном і комп’ютером</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">Продовжуйте з того ж місця, де зупинилися, завдяки вкладкам з інших пристроїв, які відтепер доступні на вашій домашній сторінці.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -295,6 +297,9 @@
     <string name="onboarding_home_sign_in_button">Увійти</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Пропустити</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Ваші вкладки синхронізуються! Продовжте з того ж місця, де зупинилися на іншому пристрої.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->

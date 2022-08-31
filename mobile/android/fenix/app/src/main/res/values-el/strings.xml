@@ -276,7 +276,7 @@
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Επισκεφθείτε ξανά τις τελευταίες αναζητήσεις σας από την αρχική σελίδα και τις καρτέλες σας.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint">Η εξατομικευμένη αρχική σελίδα του Firefox διευκολύνει την επιστροφή στο σημείο που σταματήσατε. Βρείτε τις πρόσφατες καρτέλες, τους σελιδοδείκτες και τα αποτελέσματα αναζήτησής σας.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Η εξατομικευμένη αρχική σελίδα του Firefox διευκολύνει την επιστροφή στο σημείο που σταματήσατε. Βρείτε τις πρόσφατες καρτέλες, τους σελιδοδείκτες και τα αποτελέσματα αναζήτησής σας.</string>
 
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">Καλώς ορίσατε σε ένα ανεξάρτητο διαδίκτυο</string>
@@ -1360,6 +1360,8 @@
     <string name="etp_social_media_trackers_description">Περιορίζει την ικανότητα των κοινωνικών δικτύων να παρακολουθούν τη δραστηριότητά σας στο διαδίκτυο.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Cookies καταγραφής μεταξύ ιστοτόπων</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Cookies μεταξύ ιστοτόπων</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Αποκλείει τα cookies που χρησιμοποιούν οι εταιρείες διαφημίσεων και ανάλυσης για τη συλλογή δεδομένων περιήγησης σε πολλαπλούς ιστοτόπους.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
