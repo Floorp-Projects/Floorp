@@ -8,6 +8,7 @@
 #define DOM_FS_PARENT_FILESYSTEMMANAGERPARENT_H_
 
 #include "ErrorList.h"
+#include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/PFileSystemManagerParent.h"
 #include "nsISupports.h"
 
@@ -30,6 +31,8 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
  public:
   FileSystemManagerParent(RefPtr<fs::data::FileSystemDataManager> aDataManager,
                           const EntryId& aRootEntry);
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileSystemManagerParent, override)
 
   mozilla::ipc::IPCResult RecvGetRootHandleMsg(
       GetRootHandleMsgResolver&& aResolver);
@@ -67,15 +70,21 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
   mozilla::ipc::IPCResult RecvNeedQuota(FileSystemQuotaRequest&& aRequest,
                                         NeedQuotaResolver&& aResolver);
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileSystemManagerParent)
+  void OnChannelClose() override;
+
+  void OnChannelError() override;
 
  protected:
   virtual ~FileSystemManagerParent();
+
+  void AllowToClose();
 
  private:
   RefPtr<fs::data::FileSystemDataManager> mDataManager;
 
   const EntryId mRootEntry;
+
+  FlippedOnce<false> mAllowedToClose;
 };
 
 }  // namespace mozilla::dom
