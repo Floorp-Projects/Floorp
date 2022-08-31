@@ -12,6 +12,7 @@
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/FileSystemHelpers.h"
 #include "mozilla/dom/quota/CheckedUnsafePtr.h"
+#include "mozilla/dom/quota/ForwardDecls.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsUtils.h"
 #include "nsString.h"
@@ -31,7 +32,7 @@ namespace fs::data {
 class FileSystemDataManager
     : public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
  public:
-  enum struct State : uint8_t { Initial = 0, Closed };
+  enum struct State : uint8_t { Initial = 0, Closing, Closed };
 
   FileSystemDataManager(const Origin& aOrigin,
                         MovingNotNull<RefPtr<TaskQueue>> aIOTaskQueue);
@@ -58,17 +59,20 @@ class FileSystemDataManager
 
   void UnregisterActor(NotNull<FileSystemManagerParent*> aActor);
 
+  RefPtr<BoolPromise> OnClose();
+
  protected:
   ~FileSystemDataManager();
 
   bool IsInactive() const;
 
-  void Close();
+  RefPtr<BoolPromise> BeginClose();
 
   nsTHashSet<FileSystemManagerParent*> mActors;
   const Origin mOrigin;
   const NotNull<nsCOMPtr<nsISerialEventTarget>> mBackgroundTarget;
   const NotNull<RefPtr<TaskQueue>> mIOTaskQueue;
+  MozPromiseHolder<BoolPromise> mClosePromiseHolder;
   uint32_t mRegCount;
   State mState;
 };

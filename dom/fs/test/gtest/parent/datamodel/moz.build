@@ -4,10 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, you can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ["datamodel"]
-
 UNIFIED_SOURCES = [
-    "TestFileSystemHashSource.cpp",
+    "TestFileSystemDataManager.cpp",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
@@ -15,6 +13,6 @@ include("/ipc/chromium/chromium-config.mozbuild")
 FINAL_LIBRARY = "xul-gtest"
 
 LOCAL_INCLUDES += [
-    "/dom/fs/parent",
+    "/dom/fs/parent/datamodel",
     "/dom/fs/test/gtest",
 ]
