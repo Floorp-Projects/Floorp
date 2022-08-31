@@ -228,15 +228,70 @@ class TextLeafRange final {
       : mStart(aStart), mEnd(aEnd) {}
   explicit TextLeafRange(const TextLeafPoint& aStart)
       : mStart(aStart), mEnd(aStart) {}
+  explicit TextLeafRange() {}
 
-  TextLeafPoint Start() { return mStart; }
+  /**
+   * A valid TextLeafRange evaluates to true. An invalid TextLeafRange
+   * evaluates to false.
+   */
+  explicit operator bool() const { return !!mStart && !!mEnd; }
+
+  bool operator!=(const TextLeafRange& aOther) const {
+    return mEnd != aOther.mEnd || mStart != aOther.mStart;
+  }
+
+  TextLeafPoint Start() const { return mStart; }
   void SetStart(const TextLeafPoint& aStart) { mStart = aStart; }
-  TextLeafPoint End() { return mEnd; }
+  TextLeafPoint End() const { return mEnd; }
   void SetEnd(const TextLeafPoint& aEnd) { mEnd = aEnd; }
 
  private:
   TextLeafPoint mStart;
   TextLeafPoint mEnd;
+
+ public:
+  /**
+   * A TextLeafRange iterator will iterate through single leaf segments of the
+   * given range.
+   */
+
+  class Iterator {
+   public:
+    Iterator(Iterator&& aOther)
+        : mRange(aOther.mRange),
+          mSegmentStart(aOther.mSegmentStart),
+          mSegmentEnd(aOther.mSegmentEnd) {}
+
+    static Iterator BeginIterator(const TextLeafRange& aRange);
+
+    static Iterator EndIterator(const TextLeafRange& aRange);
+
+    Iterator& operator++();
+
+    bool operator!=(const Iterator& aOther) const {
+      return mRange != aOther.mRange || mSegmentStart != aOther.mSegmentStart ||
+             mSegmentEnd != aOther.mSegmentEnd;
+    }
+
+    TextLeafRange operator*() {
+      return TextLeafRange(mSegmentStart, mSegmentEnd);
+    }
+
+   private:
+    explicit Iterator(const TextLeafRange& aRange) : mRange(aRange) {}
+
+    Iterator() = delete;
+    Iterator(const Iterator&) = delete;
+    Iterator& operator=(const Iterator&) = delete;
+    Iterator& operator=(const Iterator&&) = delete;
+
+    const TextLeafRange& mRange;
+    TextLeafPoint mSegmentStart;
+    TextLeafPoint mSegmentEnd;
+  };
+
+  Iterator begin() const { return Iterator::BeginIterator(*this); }
+  Iterator end() const { return Iterator::EndIterator(*this); }
 };
 
 }  // namespace a11y
