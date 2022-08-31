@@ -2755,8 +2755,8 @@ static void _PR_InitIOV(void)
     _md_iovector._mmap64 = mmap64;
 #if (defined(ANDROID) && __ANDROID_API__ < 21)
     /* Same as the open64 case for Android. */
-    _md_iovector._fstat64 = fstat;
-    _md_iovector._stat64 = stat;
+    _md_iovector._fstat64 = (_MD_Fstat64)fstat;
+    _md_iovector._stat64 = (_MD_Stat64)stat;
 #else
     _md_iovector._fstat64 = fstat64;
     _md_iovector._stat64 = stat64;

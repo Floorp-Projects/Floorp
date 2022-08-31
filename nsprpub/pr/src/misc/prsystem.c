@@ -206,7 +206,11 @@ PR_IMPLEMENT(PRInt32) PR_GetNumberOfProcessors( void )
     size_t len = sizeof(numCpus);
 
     mib[0] = CTL_HW;
+#ifdef HW_NCPUONLINE
+    mib[1] = HW_NCPUONLINE;
+#else
     mib[1] = HW_NCPU;
+#endif
     rc = sysctl( mib, 2, &numCpus, &len, NULL, 0 );
     if ( -1 == rc )  {
         numCpus = -1; /* set to -1 for return value on error */

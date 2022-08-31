@@ -491,7 +491,7 @@ _PR_MD_TCPSENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
             if ( rv < 0 ) {
                 return -1;
             }
-            rv = GetOverlappedResult(osfd, &fd->secret->ol, &rvSent, FALSE);
+            rv = GetOverlappedResult((HANDLE)osfd, &fd->secret->ol, &rvSent, FALSE);
             if ( rv == TRUE ) {
                 return rvSent;
             } else {
