@@ -78,7 +78,10 @@ already_AddRefed<WorkerNavigator> WorkerNavigator::Create(bool aOnLine) {
 }
 
 void WorkerNavigator::Invalidate() {
-  mStorageManager = nullptr;
+  if (mStorageManager) {
+    mStorageManager->Shutdown();
+    mStorageManager = nullptr;
+  }
 
   mConnection = nullptr;
 
