@@ -506,7 +506,6 @@ void MacroAssembler::branch8(Condition cond, const BaseIndex& lhs, Register rhs,
   }
 }
 
-
 void MacroAssembler::branch16(Condition cond, const Address& lhs, Imm32 rhs,
                               Label* label) {
   SecondScratchRegisterScope scratch2(*this);
