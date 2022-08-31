@@ -19,6 +19,7 @@ import mozilla.components.feature.top.sites.TopSite
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -155,5 +156,15 @@ class HomeFragmentTest {
         every { homeFragment.activity } returns activity
 
         assertFalse(homeFragment.shouldEnableWallpaper())
+    }
+
+    @Test
+    fun `GIVEN the wallpaper feature is active WHEN the fragment view is destroyed THEN cleanup the wallpaper observer`() {
+        homeFragment.bundleArgs = mockk(relaxed = true)
+        homeFragment.wallpapersObserver = mockk()
+
+        homeFragment.onDestroyView()
+
+        assertNull(homeFragment.wallpapersObserver)
     }
 }
