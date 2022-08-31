@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.home.recentbookmarks.view
 
+import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -27,8 +29,8 @@ import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -38,16 +40,24 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import mozilla.components.browser.icons.compose.Loader
 import mozilla.components.browser.icons.compose.Placeholder
 import mozilla.components.browser.icons.compose.WithIcon
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.Image
+import org.mozilla.fenix.compose.inComposePreview
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
+
+private val cardShape = RoundedCornerShape(8.dp)
+
+private val imageWidth = 126.dp
+
+private val imageModifier = Modifier
+    .size(width = imageWidth, height = 82.dp)
+    .clip(cardShape)
 
 /**
  * A list of recent bookmarks.
@@ -91,40 +101,42 @@ private fun RecentBookmarkItem(
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
 
-    Column(
+    Card(
         modifier = Modifier
-            .width(156.dp)
+            .width(158.dp)
             .combinedClickable(
                 enabled = true,
                 onClick = { onRecentBookmarkClick(bookmark) },
                 onLongClick = { isMenuExpanded = true }
-            )
+            ),
+        shape = cardShape,
+        backgroundColor = FirefoxTheme.colors.layer2,
+        elevation = 6.dp,
     ) {
-        Card(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(96.dp),
-            elevation = 6.dp
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
         ) {
             RecentBookmarkImage(bookmark)
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = bookmark.title ?: bookmark.url ?: "",
+                color = FirefoxTheme.colors.textPrimary,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+                style = FirefoxTheme.typography.caption,
+            )
+
+            RecentBookmarksMenu(
+                showMenu = isMenuExpanded,
+                menuItems = menuItems,
+                recentBookmark = bookmark,
+                onDismissRequest = { isMenuExpanded = false }
+            )
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = bookmark.title ?: bookmark.url ?: "",
-            color = FirefoxTheme.colors.textPrimary,
-            fontSize = 12.sp,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1
-        )
-
-        RecentBookmarksMenu(
-            showMenu = isMenuExpanded,
-            menuItems = menuItems,
-            recentBookmark = bookmark,
-            onDismissRequest = { isMenuExpanded = false }
-        )
     }
 }
 
@@ -134,43 +146,55 @@ private fun RecentBookmarkImage(bookmark: RecentBookmark) {
         !bookmark.previewImageUrl.isNullOrEmpty() -> {
             Image(
                 url = bookmark.previewImageUrl,
-                modifier = Modifier
-                    .size(156.dp, 96.dp),
-                targetSize = 156.dp,
+                modifier = imageModifier,
+                targetSize = imageWidth,
                 contentScale = ContentScale.Crop
             )
         }
-        !bookmark.url.isNullOrEmpty() -> {
+        !bookmark.url.isNullOrEmpty() && !inComposePreview -> {
             components.core.icons.Loader(bookmark.url) {
                 Placeholder {
-                    Box(
-                        modifier = Modifier.background(
-                            color = when (isSystemInDarkTheme()) {
-                                true -> PhotonColors.DarkGrey30
-                                false -> PhotonColors.LightGrey30
-                            }
-                        )
-                    )
+                    PlaceholderBookmarkImage()
                 }
 
                 WithIcon { icon ->
                     Box(
-                        modifier = Modifier.size(36.dp),
-                        contentAlignment = Alignment.Center
+                        modifier = imageModifier.background(
+                            color = when (isSystemInDarkTheme()) {
+                                true -> PhotonColors.DarkGrey30
+                                false -> PhotonColors.LightGrey30
+                            }
+                        ),
+                        contentAlignment = Alignment.Center,
                     ) {
                         Image(
                             painter = icon.painter,
                             contentDescription = null,
                             modifier = Modifier
                                 .size(36.dp)
-                                .clip(RoundedCornerShape(8.dp)),
+                                .clip(cardShape),
                             contentScale = ContentScale.Crop,
                         )
                     }
                 }
             }
         }
+        inComposePreview -> {
+            PlaceholderBookmarkImage()
+        }
     }
+}
+
+@Composable
+private fun PlaceholderBookmarkImage() {
+    Box(
+        modifier = imageModifier.background(
+            color = when (isSystemInDarkTheme()) {
+                true -> PhotonColors.DarkGrey30
+                false -> PhotonColors.LightGrey30
+            }
+        )
+    )
 }
 
 /**
@@ -217,7 +241,8 @@ private fun RecentBookmarksMenu(
 }
 
 @Composable
-@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun RecentBookmarksPreview() {
     FirefoxTheme(theme = Theme.getTheme()) {
         RecentBookmarks(
