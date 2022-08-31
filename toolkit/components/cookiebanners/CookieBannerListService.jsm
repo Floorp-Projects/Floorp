@@ -23,6 +23,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "cookiebanners.cookieInjector.defaultExpiryRelative"
 );
 
+const PREF_TEST_RULES = "cookiebanners.listService.testRules";
+XPCOMUtils.defineLazyPreferenceGetter(lazy, "testRulesPref", PREF_TEST_RULES);
+
 // Name of the RemoteSettings collection containing the rules.
 const COLLECTION_NAME = "cookie-banner-rules-list";
 
@@ -65,6 +68,8 @@ class CookieBannerListService {
       this.#rs.on("sync", this.#onSyncCallback);
     }
 
+    Services.prefs.addObserver(PREF_TEST_RULES, this);
+
     return this.importAllRules();
   }
 
@@ -73,6 +78,7 @@ class CookieBannerListService {
 
     let rules = await this.#rs.get();
     this.#importRules(rules);
+    this.#importTestRules();
   }
 
   shutdown() {
@@ -83,6 +89,8 @@ class CookieBannerListService {
       this.#rs.off("sync", this.#onSyncCallback);
       this.#onSyncCallback = null;
     }
+
+    Services.prefs.removeObserver(PREF_TEST_RULES, this);
   }
 
   /**
@@ -92,13 +100,29 @@ class CookieBannerListService {
     log("onSync", { created, updated, deleted });
 
     // Remove deleted rules.
-    this.removeRules(deleted);
+    this.#removeRules(deleted);
 
     // Import new rules and override updated rules.
     this.#importRules(created.concat(updated.map(u => u.new)));
+
+    // Re-import test rules in case they need to overwrite existing rules or a test rule was deleted above.
+    this.#importTestRules();
   }
 
-  removeRules(rules = []) {
+  observe(subject, topic, prefName) {
+    if (prefName != PREF_TEST_RULES) {
+      return;
+    }
+
+    // When the test rules update we need to clear all rules and import them
+    // again. This is required because we don't have a mechanism for deleting specific
+    // test rules.
+    // Passing `doImport = false` since we trigger the import ourselves.
+    Services.cookieBanners.resetRules(false);
+    this.importAllRules();
+  }
+
+  #removeRules(rules = []) {
     log("removeRules", rules);
 
     rules
@@ -123,6 +147,29 @@ class CookieBannerListService {
 
       Services.cookieBanners.insertRule(rule);
     });
+  }
+
+  #importTestRules() {
+    log("importTestRules");
+
+    if (!Services.prefs.prefHasUserValue(PREF_TEST_RULES)) {
+      log("Skip importing test rules: Pref has default value.");
+      return;
+    }
+
+    let testRules;
+    try {
+      testRules = JSON.parse(lazy.testRulesPref);
+    } catch (error) {
+      log("Failed to parse test rules JSON string.", error);
+      Cu.reportError(
+        `Failed to parse test rules JSON string. Make sure ${PREF_TEST_RULES} contains valid JSON. ${error?.name}`
+      );
+
+      return;
+    }
+
+    this.#importRules(testRules);
   }
 
   #importCookieRule(rule, cookies) {
