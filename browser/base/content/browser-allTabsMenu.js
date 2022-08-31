@@ -16,6 +16,7 @@ var gTabsPanel = {
     allTabsButton: "alltabs-button",
     allTabsView: "allTabsMenu-allTabsView",
     allTabsViewTabs: "allTabsMenu-allTabsViewTabs",
+    dropIndicator: "allTabsMenu-dropIndicator",
     containerTabsView: "allTabsMenu-containerTabsView",
     hiddenTabsButton: "allTabsMenu-hiddenTabsButton",
     hiddenTabsView: "allTabsMenu-hiddenTabsView",
@@ -56,6 +57,7 @@ var gTabsPanel = {
       containerNode: this.allTabsViewTabs,
       filterFn: tab =>
         !tab.hidden && (!tab.pinned || (showPinnedTabs && tab.pinned)),
+      dropIndicator: this.dropIndicator,
     });
 
     this.allTabsView.addEventListener("ViewShowing", e => {
