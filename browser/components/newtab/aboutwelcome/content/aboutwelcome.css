@@ -182,19 +182,23 @@ body {
   --newtab-button-secondary-color: #0060DF;
   --mr-welcome-background-color: #F8F6F4;
   --mr-welcome-background-gradient: linear-gradient(0deg, rgba(144, 89, 255, 0.2) 0%, rgba(2, 144, 238, 0.2) 100%);
+  --mr-screen-background-color: #F8F6F4;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Ubuntu", "Helvetica Neue", sans-serif;
   font-size: 16px;
   position: relative;
 }
-body[lwt-newtab-brighttext] {
-  --grey-subtitle-1: #FFF;
-  --newtab-button-secondary-color: #FFF;
-  --mr-welcome-background-color: #333336;
-  --mr-welcome-background-gradient: linear-gradient(0deg, rgba(144, 89, 255, 0.3) 0%, rgba(2, 144, 238, 0.3) 100%);
+@media (prefers-color-scheme: dark) {
+  body {
+    --grey-subtitle-1: #FFF;
+    --newtab-button-secondary-color: #FFF;
+    --mr-welcome-background-color: #333336;
+    --mr-welcome-background-gradient: linear-gradient(0deg, rgba(144, 89, 255, 0.3) 0%, rgba(2, 144, 238, 0.3) 100%);
+    --mr-screen-background-color: #62697A;
+  }
 }
 
 .dummy {
-  background: var(--mr-welcome-background-color) var(--mr-welcome-background-gradient) var(--mr-secondary-position);
+  background: var(--mr-welcome-background-color) var(--mr-welcome-background-gradient) var(--mr-secondary-position) var(--mr-screen-background-color);
 }
 
 :root[dialogroot] {
@@ -385,6 +389,7 @@ body[lwt-newtab-brighttext] {
   overflow: hidden;
   padding-inline: 35px 20px;
   padding-block: 120px 0;
+  box-shadow: none;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content:dir(rtl) {
   border-radius: 8px 0 0 8px;
@@ -498,7 +503,7 @@ body[lwt-newtab-brighttext] {
   margin-inline: 0;
 }
 .onboardingContainer .screen[pos=split] .section-secondary {
-  --mr-secondary-position: center center / contain;
+  --mr-secondary-position: center center / auto 350px;
   border-radius: 8px 0 0 8px;
   box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
   margin: auto 0 auto auto;
@@ -529,8 +534,14 @@ body[lwt-newtab-brighttext] {
 }
 .onboardingContainer .screen[pos=split] .section-secondary .hero-image img {
   width: 100%;
-  max-width: 150px;
+  max-width: 180px;
   margin: 25px 0;
+  padding-bottom: 30px;
+}
+@media only screen and (max-width: 800px) {
+  .onboardingContainer .screen[pos=split] .section-secondary .hero-image img {
+    padding-bottom: unset;
+  }
 }
 .onboardingContainer .screen[pos=split] .tiles-theme-container {
   margin-block: -20px auto;
@@ -569,7 +580,7 @@ body[lwt-newtab-brighttext] {
   }
   .onboardingContainer .screen[pos=split] .section-secondary {
     --mr-secondary-background-position-y: top;
-    --mr-secondary-position: center var(--mr-secondary-background-position-y) / cover;
+    --mr-secondary-position: center var(--mr-secondary-background-position-y) / 75%;
     border-radius: 8px 8px 0 0;
     margin: auto auto 0;
     height: 100px;
