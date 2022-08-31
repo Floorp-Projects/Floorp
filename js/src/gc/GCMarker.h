@@ -370,9 +370,6 @@ class GCMarker final : public JSTracer {
   void markEphemeronEdges(gc::EphemeronEdgeVector& edges,
                           gc::CellColor srcColor);
 
-  size_t getMarkCount() const { return markCount; }
-  void clearMarkCount() { markCount = 0; }
-
   static GCMarker* fromTracer(JSTracer* trc) {
     MOZ_ASSERT(trc->isMarkingTracer());
     return static_cast<GCMarker*>(trc);
@@ -483,9 +480,6 @@ class GCMarker final : public JSTracer {
 
   /* Whether more work has been added to the delayed marking list. */
   MainThreadOrGCTaskData<bool> delayedMarkingWorkAdded;
-
-  /* The count of marked objects during GC. */
-  size_t markCount;
 
   /* Track the state of marking. */
   MainThreadOrGCTaskData<MarkingState> state;

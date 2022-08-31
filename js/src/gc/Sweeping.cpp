@@ -192,10 +192,18 @@ static inline bool FinalizeTypedArenas(JS::GCContext* gcx, ArenaList& src,
 
   size_t thingSize = Arena::thingSize(thingKind);
   size_t thingsPerArena = Arena::thingsPerArena(thingKind);
+  size_t markCount = 0;
+
+  auto updateMarkCount = mozilla::MakeScopeExit([&] {
+    GCRuntime* gc = &gcx->runtimeFromAnyThread()->gc;
+    gc->stats().addCount(gcstats::COUNT_CELLS_MARKED, markCount);
+  });
 
   while (Arena* arena = src.takeFirstArena()) {
     size_t nmarked = arena->finalize<T>(gcx, thingKind, thingSize);
     size_t nfree = thingsPerArena - nmarked;
+
+    markCount += nmarked;
 
     if (nmarked) {
       dest.insertAt(arena, nfree);
