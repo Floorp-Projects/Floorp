@@ -82,19 +82,21 @@ def init_placeholder_wpt_data(fvonly=False, invalid_results=False):
     return placeholder_data
 
 
-def init_mocked_request(status_code, **kwargs):
+def init_mocked_request(status_code, WPT_test_status_code=200, **kwargs):
     mock_data = {
         "data": {
             "ec2-us-east-1": {"PendingTests": {"Queued": 3}, "Label": "California"},
             "jsonUrl": "mock_test.com",
             "summary": "Just a pageload test",
             "url": "testurl.ca",
+            "remaining": 2000,
         },
-        "statusCode": status_code,
+        "statusCode": WPT_test_status_code,
     }
     for key, value in kwargs.items():
         mock_data["data"][key] = value
     mock_request = requests.Response()
+    mock_request.status_code = status_code
     mock_request._content = json.dumps(mock_data).encode("utf-8")
     return mock_request
 
@@ -107,6 +109,8 @@ def init_mocked_request(status_code, **kwargs):
 @mock.patch(
     "mozperftest.test.webpagetest.WebPageTest.location_queue", return_value=None
 )
+@mock.patch("requests.get", return_value=init_mocked_request(200))
+@mock.patch("mozperftest.test.webpagetest.WPT_KEY_FILE", "tests/data/WPT_fakekey.txt")
 def test_webpagetest_no_issues_mocked_results(*mocked):
     mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_WPT_TEST)])
     test = webpagetest.WebPageTest(env, mach_cmd)
@@ -120,6 +124,8 @@ def test_webpagetest_no_issues_mocked_results(*mocked):
 @mock.patch(
     "mozperftest.test.webpagetest.WebPageTest.location_queue", return_value=None
 )
+@mock.patch("requests.get", return_value=init_mocked_request(200))
+@mock.patch("mozperftest.test.webpagetest.WPT_KEY_FILE", "tests/data/WPT_fakekey.txt")
 def test_webpagetest_test_invalid_browser(*mocked):
     mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_WPT_TEST)])
     metadata.script["options"]["test_parameters"]["browser"] = "Invalid Browser"
@@ -132,6 +138,8 @@ def test_webpagetest_test_invalid_browser(*mocked):
 @mock.patch(
     "mozperftest.test.webpagetest.WebPageTest.location_queue", return_value=None
 )
+@mock.patch("requests.get", return_value=init_mocked_request(200))
+@mock.patch("mozperftest.test.webpagetest.WPT_KEY_FILE", "tests/data/WPT_fakekey.txt")
 def test_webpagetest_test_invalid_connection(*mocked):
     mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_WPT_TEST)])
     test = webpagetest.WebPageTest(env, mach_cmd)
@@ -144,6 +152,8 @@ def test_webpagetest_test_invalid_connection(*mocked):
 @mock.patch(
     "mozperftest.test.webpagetest.WebPageTest.location_queue", return_value=None
 )
+@mock.patch("requests.get", return_value=init_mocked_request(200))
+@mock.patch("mozperftest.test.webpagetest.WPT_KEY_FILE", "tests/data/WPT_fakekey.txt")
 def test_webpagetest_test_invalid_url(*mocked):
     mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_WPT_TEST)])
     test = webpagetest.WebPageTest(env, mach_cmd)
@@ -156,6 +166,8 @@ def test_webpagetest_test_invalid_url(*mocked):
 @mock.patch(
     "mozperftest.test.webpagetest.WebPageTest.location_queue", return_value=None
 )
+@mock.patch("requests.get", return_value=init_mocked_request(200))
+@mock.patch("mozperftest.test.webpagetest.WPT_KEY_FILE", "tests/data/WPT_fakekey.txt")
 def test_webpagetest_test_invalid_statistic(*mocked):
     mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_WPT_TEST)])
     test = webpagetest.WebPageTest(env, mach_cmd)
@@ -171,6 +183,7 @@ def test_webpagetest_test_invalid_statistic(*mocked):
     "mozperftest.test.webpagetest.WebPageTest.request_with_timeout",
     return_value={"data": {}},
 )
+@mock.patch("mozperftest.test.webpagetest.WPT_KEY_FILE", "tests/data/WPT_fakekey.txt")
 def test_webpagetest_test_invalid_location(*mocked):
     mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_WPT_TEST)])
     test = webpagetest.WebPageTest(env, mach_cmd)
@@ -179,11 +192,12 @@ def test_webpagetest_test_invalid_location(*mocked):
         test.run(metadata)
 
 
-@mock.patch("requests.get", return_value=init_mocked_request(400))
+@mock.patch("requests.get", return_value=init_mocked_request(200, 101))
 @mock.patch("mozperftest.utils.get_tc_secret", return_value={"wpt_key": "fake_key"})
 @mock.patch(
     "mozperftest.test.webpagetest.WebPageTest.location_queue", return_value=None
 )
+@mock.patch("mozperftest.test.webpagetest.WPT_KEY_FILE", "tests/data/WPT_fakekey.txt")
 def test_webpagetest_test_timeout(*mocked):
     mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_WPT_TEST)])
     test = webpagetest.WebPageTest(env, mach_cmd)
@@ -204,6 +218,7 @@ def test_webpagetest_test_timeout(*mocked):
 @mock.patch(
     "mozperftest.test.webpagetest.WebPageTest.location_queue", return_value=None
 )
+@mock.patch("mozperftest.test.webpagetest.WPT_KEY_FILE", "tests/data/WPT_fakekey.txt")
 def test_webpagetest_test_wrong_browserlocation(*mocked):
     mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_WPT_TEST)])
     metadata.script["options"]["test_list"] = ["google.ca"]
@@ -221,6 +236,8 @@ def test_webpagetest_test_wrong_browserlocation(*mocked):
 @mock.patch(
     "mozperftest.test.webpagetest.WebPageTest.location_queue", return_value=None
 )
+@mock.patch("requests.get", return_value=init_mocked_request(200))
+@mock.patch("mozperftest.test.webpagetest.WPT_KEY_FILE", "tests/data/WPT_fakekey.txt")
 def test_webpagetest_test_metric_not_found(*mocked):
     mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_WPT_TEST)])
     metadata.script["options"]["test_list"] = ["google.ca"]
