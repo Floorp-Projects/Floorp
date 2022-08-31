@@ -239,10 +239,6 @@ criteria = "safe-to-deploy"
 version = "0.3.1"
 criteria = "safe-to-deploy"
 
-[[exemptions.autocfg]]
-version = "1.1.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.base64]]
 version = "0.13.0"
 criteria = "safe-to-deploy"
@@ -967,22 +963,6 @@ criteria = "safe-to-deploy"
 version = "0.3.7"
 criteria = "safe-to-deploy"
 
-[[exemptions.num-bigint]]
-version = "0.2.6"
-criteria = "safe-to-deploy"
-
-[[exemptions.num-derive]]
-version = "0.3.3"
-criteria = "safe-to-deploy"
-
-[[exemptions.num-integer]]
-version = "0.1.45"
-criteria = "safe-to-deploy"
-
-[[exemptions.num-traits]]
-version = "0.2.15"
-criteria = "safe-to-deploy"
-
 [[exemptions.num_cpus]]
 version = "1.13.1"
 criteria = "safe-to-deploy"
@@ -1169,14 +1149,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.raw-window-handle]]
 version = "0.4.3"
-criteria = "safe-to-deploy"
-
-[[exemptions.rayon]]
-version = "1.5.3"
-criteria = "safe-to-deploy"
-
-[[exemptions.rayon-core]]
-version = "1.9.3"
 criteria = "safe-to-deploy"
 
 [[exemptions.redox_syscall]]
