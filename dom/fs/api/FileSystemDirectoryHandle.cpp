@@ -14,6 +14,7 @@
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/PFileSystemManager.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/StorageManager.h"
 
 namespace mozilla::dom {
 

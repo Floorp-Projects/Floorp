@@ -16,7 +16,7 @@
 #include "mozilla/dom/FileSystemHandleBinding.h"
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/Promise.h"
-
+#include "mozilla/dom/StorageManager.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIGlobalObject.h"
 
@@ -27,7 +27,7 @@ class TestFileSystemFileHandle : public ::testing::Test {
   void SetUp() override {
     mRequestHandler = MakeUnique<MockFileSystemRequestHandler>();
     mMetadata = FileSystemEntryMetadata("file"_ns, u"File"_ns);
-    mManager = MakeAndAddRef<FileSystemManager>(mGlobal);
+    mManager = MakeAndAddRef<FileSystemManager>(mGlobal, nullptr);
   }
 
   nsIGlobalObject* mGlobal = GetGlobal();

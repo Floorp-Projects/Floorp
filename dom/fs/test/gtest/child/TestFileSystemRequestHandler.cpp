@@ -14,6 +14,7 @@
 #include "mozilla/dom/FileSystemManager.h"
 #include "mozilla/dom/FileSystemManagerChild.h"
 #include "mozilla/dom/PFileSystemManager.h"
+#include "mozilla/dom/StorageManager.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ipc/IPCCore.h"
 #include "mozilla/SpinEventLoopUntil.h"
@@ -36,8 +37,9 @@ class TestFileSystemRequestHandler : public ::testing::Test {
     mName = u"testDir"_ns;
     mFileSystemManagerChild = MakeAndAddRef<TestFileSystemManagerChild>();
     mManager = MakeAndAddRef<FileSystemManager>(
-        mGlobal, MakeRefPtr<FileSystemBackgroundRequestHandler>(
-                     mFileSystemManagerChild));
+        mGlobal, nullptr,
+        MakeRefPtr<FileSystemBackgroundRequestHandler>(
+            mFileSystemManagerChild));
   }
 
   already_AddRefed<Promise> GetDefaultPromise() {

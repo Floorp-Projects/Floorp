@@ -11,6 +11,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FileSystemManagerChild.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/StorageManager.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
@@ -51,22 +52,26 @@ Result<mozilla::ipc::PrincipalInfo, nsresult> GetPrincipalInfo(
 }  // namespace
 
 FileSystemManager::FileSystemManager(
-    nsIGlobalObject* aGlobal,
+    nsIGlobalObject* aGlobal, RefPtr<StorageManager> aStorageManager,
     RefPtr<FileSystemBackgroundRequestHandler> aBackgroundRequestHandler)
     : mGlobal(aGlobal),
+      mStorageManager(std::move(aStorageManager)),
       mBackgroundRequestHandler(std::move(aBackgroundRequestHandler)),
       mRequestHandler(new fs::FileSystemRequestHandler()) {}
 
-FileSystemManager::FileSystemManager(nsIGlobalObject* aGlobal)
-    : FileSystemManager(aGlobal,
+FileSystemManager::FileSystemManager(nsIGlobalObject* aGlobal,
+                                     RefPtr<StorageManager> aStorageManager)
+    : FileSystemManager(aGlobal, std::move(aStorageManager),
                         MakeRefPtr<FileSystemBackgroundRequestHandler>()) {}
+
+FileSystemManager::~FileSystemManager() = default;
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileSystemManager)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FileSystemManager);
 NS_IMPL_CYCLE_COLLECTING_RELEASE(FileSystemManager);
-NS_IMPL_CYCLE_COLLECTION(FileSystemManager, mGlobal);
+NS_IMPL_CYCLE_COLLECTION(FileSystemManager, mGlobal, mStorageManager);
 
 void FileSystemManager::Shutdown() { mBackgroundRequestHandler->Shutdown(); }
 
