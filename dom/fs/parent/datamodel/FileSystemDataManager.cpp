@@ -99,9 +99,32 @@ RefPtr<FileSystemDataManager::CreatePromise>
 FileSystemDataManager::GetOrCreateFileSystemDataManager(const Origin& aOrigin) {
   if (RefPtr<FileSystemDataManager> dataManager =
           GetFileSystemDataManager(aOrigin)) {
-    // XXX Handle the case when the manager is asynchronouslly opening!
+    if (dataManager->IsOpening()) {
+      // We have to wait for the open to be finished before resolving the
+      // promise. The manager can't close itself in the meantime because we
+      // add a new registration in the lambda capture list.
+      return dataManager->OnOpen()->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [dataManager = Registered<FileSystemDataManager>(dataManager)](
+              const BoolPromise::ResolveOrRejectValue&) {
+            return CreatePromise::CreateAndResolve(dataManager, __func__);
+          });
+    }
 
-    // XXX Handle the case when the manager is asynchronouslly closing!
+    if (dataManager->IsClosing()) {
+      // First, we need to wait for the close to be finished. After that the
+      // manager is closed and it can't be opened again. The only option is
+      // to create a new manager and open it. However, all this stuff is
+      // asynchronous, so it can happen that something else called
+      // `GetOrCreateFileSystemManager` in the meantime. For that reason, we
+      // shouldn't try to create a new manager and open it here, a "recursive"
+      // call to `GetOrCreateFileSystemManager` will handle any new situation.
+      return dataManager->OnClose()->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [aOrigin](const BoolPromise::ResolveOrRejectValue&) {
+            return GetOrCreateFileSystemDataManager(aOrigin);
+          });
+    }
 
     return CreatePromise::CreateAndResolve(
         Registered<FileSystemDataManager>(std::move(dataManager)), __func__);
