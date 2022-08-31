@@ -325,13 +325,6 @@ async protocol PFileSystemManager
    */
   async NeedQuota(FileSystemQuotaRequest aRequest)
       returns (uint64_t aQuotaGranted);
-
- child:
-
-   /**
-   * Mandatory IPC managed lifecycle request.
-   */
-  async __delete__();
 };
 
 } // namespace dom
