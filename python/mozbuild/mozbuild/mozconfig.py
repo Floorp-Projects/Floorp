@@ -164,6 +164,7 @@ class MozconfigLoader(object):
                     cwd=self.topsrcdir,
                     env=env,
                     universal_newlines=True,
+                    encoding="utf-8",
                 )
             )
         except subprocess.CalledProcessError as e:
