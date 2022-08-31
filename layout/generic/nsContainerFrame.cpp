@@ -2343,13 +2343,15 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
 
   // Handle intrinsic sizes and their interaction with
   // {min-,max-,}{width,height} according to the rules in
-  // http://www.w3.org/TR/CSS21/visudet.html#min-max-widths
+  // https://www.w3.org/TR/CSS22/visudet.html#min-max-widths and
+  // https://drafts.csswg.org/css-sizing-3/#intrinsic-sizes
 
   // Note: throughout the following section of the function, I avoid
   // a * (b / c) because of its reduced accuracy relative to a * b / c
   // or (a * b) / c (which are equivalent).
 
-  const bool isAutoISize = styleISize.IsAuto();
+  const bool isAutoOrMaxContentISize =
+      styleISize.IsAuto() || styleISize.IsMaxContent();
   const bool isAutoBSize =
       nsLayoutUtils::IsAutoBSize(styleBSize, aCBSize.BSize(aWM));
 
@@ -2390,7 +2392,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   const bool hasIntrinsicBSize = bsizeCoord.isSome();
   nscoord intrinsicBSize = std::max(0, bsizeCoord.valueOr(0));
 
-  if (!isAutoISize) {
+  if (!isAutoOrMaxContentISize) {
     iSize = ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
                               boxSizingToMarginEdgeISize, styleISize,
                               aSizeOverrides, aFlags)
@@ -2510,7 +2512,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
                "Our containing block must not have unconstrained inline-size!");
 
   // Now calculate the used values for iSize and bSize:
-  if (isAutoISize) {
+  if (isAutoOrMaxContentISize) {
     if (isAutoBSize) {
       // 'auto' iSize, 'auto' bSize
 

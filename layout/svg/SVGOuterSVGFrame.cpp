@@ -178,24 +178,16 @@ nscoord SVGOuterSVGFrame::GetPrefISize(gfxContext* aRenderingContext) {
           ContainSizeAxesIfApplicable(this).ContainIntrinsicISize(*this)) {
     result = *containISize;
   } else if (isize.IsPercentage()) {
-    // It looks like our containing block's isize may depend on our isize. In
-    // that case our behavior is undefined according to CSS 2.1 section 10.3.2.
-    // As a last resort, we'll fall back to returning zero.
-    result = nscoord(0);
-
-    // Returning zero may be unhelpful, however, as it leads to unexpected
-    // disappearance of %-sized SVGs in orthogonal contexts, where our
-    // containing block wants to shrink-wrap. So let's look for an ancestor
-    // with non-zero size in this dimension, and use that as a (somewhat
-    // arbitrary) result instead.
-    nsIFrame* parent = GetParent();
-    while (parent) {
-      nscoord parentISize = parent->GetLogicalSize(wm).ISize(wm);
-      if (parentISize > 0 && parentISize != NS_UNCONSTRAINEDSIZE) {
-        result = parentISize;
-        break;
-      }
-      parent = parent->GetParent();
+    if (isize.IsExplicitlySet()) {
+      // Our containing block's inline-size depends on our inline-size. In this
+      // case, return the fallback intrinsic size per
+      // https://drafts.csswg.org/css-sizing-3/#intrinsic-sizes
+      result = wm.IsVertical() ? kFallbackIntrinsicSize.height
+                               : kFallbackIntrinsicSize.width;
+    } else {
+      // If the width/height attribute in the inline axis is not set, return
+      // size 0 to match blink and webkit's behavior.
+      result = nscoord(0);
     }
   } else {
     result = nsPresContext::CSSPixelsToAppUnits(isize.GetAnimValue(svg));
