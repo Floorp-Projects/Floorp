@@ -94,6 +94,8 @@ addAccessibleTask(
   <hr id="hr" />
   <ins id="insertion">Inserted text</ins>
   <meter id="meter" min="0" max="100" value="24">meter text here</meter>
+  <sub id="sub">sub text here</sub>
+  <sup id="sup">sup text here</sup>
 
   <!-- Some SVG stuff -->
   <svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="svg"
@@ -211,6 +213,8 @@ addAccessibleTask(
       null,
       "level indicator"
     );
+    testRoleAndSubRole(accDoc, "sub", "AXGroup", "AXSubscriptStyleGroup");
+    testRoleAndSubRole(accDoc, "sup", "AXGroup", "AXSuperscriptStyleGroup");
 
     // Some SVG stuff
     testRoleAndSubRole(accDoc, "svg", "AXImage");
