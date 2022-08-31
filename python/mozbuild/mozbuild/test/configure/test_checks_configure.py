@@ -596,7 +596,7 @@ class TestChecksConfigure(unittest.TestCase):
         javac = mozpath.abspath("/usr/bin/javac")
         paths = {java: None, javac: None}
         expected_error_message = (
-            "ERROR: Could not locate Java at /mozbuild/jdk/jdk-17.0.1+12/bin, "
+            "ERROR: Could not locate Java at /mozbuild/jdk/jdk-17.0.4.1+1/bin, "
             "please run ./mach bootstrap --no-system-changes\n"
         )
 
