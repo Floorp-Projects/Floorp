@@ -83,7 +83,7 @@ export function enableBreakpoint(cx, initialBreakpoint) {
     const { dispatch, getState, client } = thunkArgs;
     const breakpoint = getBreakpoint(getState(), initialBreakpoint.location);
     if (!breakpoint || !breakpoint.disabled) {
-      return;
+      return null;
     }
 
     dispatch(setSkipPausing(false));
@@ -121,7 +121,7 @@ export function addBreakpoint(
     // No position is found if the `initialLocation` is on a non-breakable line or
     // the line no longer exists.
     if (!position) {
-      return;
+      return null;
     }
 
     const { location, generatedLocation } = position;
@@ -130,7 +130,7 @@ export function addBreakpoint(
     const generatedSource = getLocationSource(getState(), generatedLocation);
 
     if (!source || !generatedSource) {
-      return;
+      return null;
     }
 
     const originalContent = getSourceContent(getState(), source.id);
@@ -160,7 +160,7 @@ export function addBreakpoint(
     });
 
     if (shouldCancel()) {
-      return;
+      return null;
     }
 
     dispatch(setSkipPausing(false));
@@ -189,7 +189,7 @@ export function removeBreakpoint(cx, initialBreakpoint) {
 
     const breakpoint = getBreakpoint(getState(), initialBreakpoint.location);
     if (!breakpoint) {
-      return;
+      return null;
     }
 
     dispatch(setSkipPausing(false));
@@ -270,7 +270,7 @@ export function disableBreakpoint(cx, initialBreakpoint) {
   return ({ dispatch, getState, client }) => {
     const breakpoint = getBreakpoint(getState(), initialBreakpoint.location);
     if (!breakpoint || breakpoint.disabled) {
-      return;
+      return null;
     }
 
     dispatch(setSkipPausing(false));

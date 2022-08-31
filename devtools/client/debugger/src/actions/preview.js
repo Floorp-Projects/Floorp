@@ -25,7 +25,7 @@ import { getMappedExpression } from "./expressions";
 function findExpressionMatch(state, codeMirror, tokenPos) {
   const source = getSelectedSource(state);
   if (!source) {
-    return;
+    return null;
   }
 
   const symbols = getSymbols(state, source);
@@ -167,7 +167,7 @@ export function clearPreview(cx) {
   return ({ dispatch, getState, client }) => {
     const currentSelection = getPreview(getState());
     if (!currentSelection) {
-      return;
+      return null;
     }
 
     return dispatch({

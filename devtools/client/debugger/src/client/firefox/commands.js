@@ -50,13 +50,15 @@ async function loadObjectProperties(root, threadActorID) {
 
 function releaseActor(actor) {
   if (!actor) {
-    return;
+    return Promise.resolve();
   }
   const objFront = commands.client.getFrontByID(actor);
 
-  if (objFront) {
-    return objFront.release().catch(() => {});
+  if (!objFront) {
+    return Promise.resolve();
   }
+
+  return objFront.release().catch(() => {});
 }
 
 function lookupTarget(thread) {
@@ -133,7 +135,8 @@ async function setXHRBreakpoint(path, method) {
   const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport();
   if (!hasWatcherSupport) {
     // Without watcher support, forward setXHRBreakpoint to all threads.
-    return forEachThread(thread => thread.setXHRBreakpoint(path, method));
+    await forEachThread(thread => thread.setXHRBreakpoint(path, method));
+    return;
   }
   const breakpointsFront = await commands.targetCommand.watcherFront.getBreakpointListActor();
   await breakpointsFront.setXHRBreakpoint(path, method);
@@ -143,7 +146,8 @@ async function removeXHRBreakpoint(path, method) {
   const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport();
   if (!hasWatcherSupport) {
     // Without watcher support, forward removeXHRBreakpoint to all threads.
-    return forEachThread(thread => thread.removeXHRBreakpoint(path, method));
+    await forEachThread(thread => thread.removeXHRBreakpoint(path, method));
+    return;
   }
   const breakpointsFront = await commands.targetCommand.watcherFront.getBreakpointListActor();
   await breakpointsFront.removeXHRBreakpoint(path, method);
@@ -155,18 +159,20 @@ export function toggleJavaScriptEnabled(enabled) {
   });
 }
 
-function addWatchpoint(object, property, label, watchpointType) {
-  if (currentTarget().getTrait("watchpoints")) {
-    const objectFront = createObjectFront(object);
-    return objectFront.addWatchpoint(property, label, watchpointType);
+async function addWatchpoint(object, property, label, watchpointType) {
+  if (!currentTarget().getTrait("watchpoints")) {
+    return;
   }
+  const objectFront = createObjectFront(object);
+  await objectFront.addWatchpoint(property, label, watchpointType);
 }
 
 async function removeWatchpoint(object, property) {
-  if (currentTarget().getTrait("watchpoints")) {
-    const objectFront = createObjectFront(object);
-    await objectFront.removeWatchpoint(property);
+  if (!currentTarget().getTrait("watchpoints")) {
+    return;
   }
+  const objectFront = createObjectFront(object);
+  await objectFront.removeWatchpoint(property);
 }
 
 function hasBreakpoint(location) {
@@ -183,7 +189,7 @@ async function setBreakpoint(location, options) {
     breakpoint &&
     JSON.stringify(breakpoint.options) == JSON.stringify(options)
   ) {
-    return;
+    return null;
   }
   breakpoints[makePendingLocationId(location)] = { location, options };
 
@@ -216,6 +222,8 @@ async function setBreakpoint(location, options) {
     ) {
       return thread.setBreakpoint(location, serverOptions);
     }
+
+    return Promise.resolve();
   });
 }
 
@@ -240,6 +248,8 @@ async function removeBreakpoint(location) {
     ) {
       return thread.removeBreakpoint(location);
     }
+
+    return Promise.resolve();
   });
 }
 
@@ -358,7 +368,8 @@ async function setSkipPausing(shouldSkip) {
 async function setEventListenerBreakpoints(ids) {
   const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport();
   if (!hasWatcherSupport) {
-    return forEachThread(thread => thread.setActiveEventBreakpoints(ids));
+    await forEachThread(thread => thread.setActiveEventBreakpoints(ids));
+    return;
   }
   const breakpointListFront = await commands.targetCommand.watcherFront.getBreakpointListActor();
   await breakpointListFront.setActiveEventBreakpoints(ids);

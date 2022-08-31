@@ -27,7 +27,7 @@ function inHouseContainsPosition(a, b) {
 export function highlightCalls(cx) {
   return async function({ dispatch, getState, parser, client }) {
     if (!cx) {
-      return;
+      return null;
     }
 
     const frame = await getSelectedFrame(
@@ -36,29 +36,29 @@ export function highlightCalls(cx) {
     );
 
     if (!frame) {
-      return;
+      return null;
     }
 
     const { thread } = cx;
 
     const originalAstScopes = await parser.getScopes(frame.location);
     if (!originalAstScopes) {
-      return;
+      return null;
     }
 
     const source = getLocationSource(getState(), frame.location);
     if (!source) {
-      return;
+      return null;
     }
 
     const symbols = getSymbols(getState(), source);
 
     if (!symbols) {
-      return;
+      return null;
     }
 
     if (!symbols.callExpressions) {
-      return;
+      return null;
     }
 
     const localAstScope = originalAstScopes[0];

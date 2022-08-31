@@ -18,7 +18,8 @@ export function selectFrame(cx, frame) {
     // Frames that aren't on-stack do not support evalling and may not
     // have live inspectable scopes, so we do not allow selecting them.
     if (frame.state !== "on-stack") {
-      return dispatch(selectLocation(cx, frame.location));
+      dispatch(selectLocation(cx, frame.location));
+      return;
     }
 
     dispatch({

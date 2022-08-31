@@ -84,7 +84,8 @@ export async function buildOriginalScopes(
 export function toggleMapScopes() {
   return async function({ dispatch, getState, client, sourceMaps }) {
     if (isMapScopesEnabled(getState())) {
-      return dispatch({ type: "TOGGLE_MAP_SCOPES", mapScopes: false });
+      dispatch({ type: "TOGGLE_MAP_SCOPES", mapScopes: false });
+      return;
     }
 
     dispatch({ type: "TOGGLE_MAP_SCOPES", mapScopes: true });
