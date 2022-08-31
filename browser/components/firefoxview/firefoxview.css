@@ -759,7 +759,7 @@ button.close {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  height: 2.5em;
+  align-self: start;
 }
 
 .synced-tab-li-device {
