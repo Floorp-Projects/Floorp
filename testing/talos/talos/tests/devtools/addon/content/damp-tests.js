@@ -88,6 +88,10 @@ module.exports = {
       name: "custom.inspector",
       path: "inspector/custom.js",
     },
+    {
+      name: "custom.styleeditor",
+      path: "styleeditor/custom.js",
+    },
     // Run individual tests covering a very precise tool feature.
     {
       name: "inspector.mutations",
