@@ -233,15 +233,15 @@ class ScriptModule extends Module {
       thisParameter = null,
     } = options;
 
+    const realm = this.#getRealmFromSandboxName(sandboxName);
+
     const deserializedArguments =
       commandArguments !== null
-        ? commandArguments.map(arg => lazy.deserialize(arg))
+        ? commandArguments.map(arg => lazy.deserialize(realm, arg))
         : [];
 
     const deserializedThis =
-      thisParameter !== null ? lazy.deserialize(thisParameter) : null;
-
-    const realm = this.#getRealmFromSandboxName(sandboxName);
+      thisParameter !== null ? lazy.deserialize(realm, thisParameter) : null;
 
     const rv = realm.executeInGlobalWithBindings(
       functionDeclaration,
