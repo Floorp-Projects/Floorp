@@ -2096,34 +2096,21 @@ Element* nsFocusManager::FlushAndCheckIfFocusable(Element* aElement,
 
   // If this is an iframe that doesn't have an in-process subdocument, it is
   // either an OOP iframe or an in-process iframe without lazy about:blank
-  // creation having taken place. In the OOP case, treat the frame as
-  // focusable for consistency with Chrome. In the in-process case, create
-  // the initial about:blank for in-process BrowsingContexts in order to
-  // have the `GetSubDocumentFor` call after this block return something.
+  // creation having taken place. In the OOP case, iframe is always focusable.
+  // In the in-process case, create the initial about:blank for in-process
+  // BrowsingContexts in order to have the `GetSubDocumentFor` call after this
+  // block return something.
+  //
+  // TODO(emilio): This block can probably go after bug 543435 lands.
   if (RefPtr<nsFrameLoaderOwner> flo = do_QueryObject(aElement)) {
-    // dom/webauthn/tests/browser/browser_abort_visibility.js fails without
-    // the exclusion of XUL.
-    if (aElement->NodeInfo()->NamespaceID() != kNameSpaceID_XUL) {
+    if (!aElement->IsXULElement()) {
       // Only look at pre-existing browsing contexts. If this function is
       // called during reflow, calling GetBrowsingContext() could cause frame
       // loader initialization at a time when it isn't safe.
       if (BrowsingContext* bc = flo->GetExtantBrowsingContext()) {
         // This call may create a contentViewer-created about:blank.
         // That's intentional, so we can move focus there.
-        Document* subdoc = bc->GetDocument();
-        if (!subdoc) {
-          return aElement;
-        }
-        nsIPrincipal* framerPrincipal = doc->GetPrincipal();
-        nsIPrincipal* frameePrincipal = subdoc->GetPrincipal();
-        if (framerPrincipal && frameePrincipal &&
-            !framerPrincipal->Equals(frameePrincipal)) {
-          // Assume focusability of different-origin iframes even in the
-          // in-process case for consistency with the OOP case.
-          // This is likely already the case anyway, but in case not,
-          // this makes it explicitly so.
-          return aElement;
-        }
+        Unused << bc->GetDocument();
       }
     }
   }
