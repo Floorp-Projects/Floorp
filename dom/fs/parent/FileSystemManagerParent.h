@@ -75,7 +75,7 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
  private:
   RefPtr<TaskQueue> mTaskQueue;
 
-  UniquePtr<fs::data::FileSystemDataManager> mDataManager;
+  RefPtr<fs::data::FileSystemDataManager> mDataManager;
 
   const EntryId mRootEntry;
 };

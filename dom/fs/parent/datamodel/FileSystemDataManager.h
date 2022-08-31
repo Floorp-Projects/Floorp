@@ -8,6 +8,7 @@
 #define DOM_FS_PARENT_DATAMODEL_FILESYSTEMDATAMANAGER_H_
 
 #include "mozilla/dom/FileSystemTypes.h"
+#include "nsISupportsUtils.h"
 
 namespace mozilla {
 
@@ -18,9 +19,14 @@ namespace dom::fs::data {
 
 class FileSystemDataManager {
  public:
-  using result_t = Result<FileSystemDataManager*, nsresult>;
+  using result_t = Result<RefPtr<FileSystemDataManager>, nsresult>;
   static FileSystemDataManager::result_t CreateFileSystemDataManager(
       const fs::Origin& aOrigin);
+
+  NS_INLINE_DECL_REFCOUNTING(FileSystemDataManager)
+
+ protected:
+  ~FileSystemDataManager() = default;
 };
 
 }  // namespace dom::fs::data
