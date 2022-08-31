@@ -30,6 +30,23 @@ class TestClass {
 class DOM_Quota_ResultExtensions_ToResult : public DOM_Quota_Test {};
 class DOM_Quota_ResultExtensions_GenericErrorResult : public DOM_Quota_Test {};
 
+TEST_F(DOM_Quota_ResultExtensions_ToResult, FromBool) {
+  // success
+  {
+    auto res = ToResult(true);
+    static_assert(std::is_same_v<decltype(res), Result<Ok, nsresult>>);
+    EXPECT_TRUE(res.isOk());
+  }
+
+  // failure
+  {
+    auto res = ToResult(false);
+    static_assert(std::is_same_v<decltype(res), Result<Ok, nsresult>>);
+    EXPECT_TRUE(res.isErr());
+    EXPECT_EQ(res.unwrapErr(), NS_ERROR_FAILURE);
+  }
+}
+
 TEST_F(DOM_Quota_ResultExtensions_ToResult, FromQMResult_Failure) {
   // copy
   {
