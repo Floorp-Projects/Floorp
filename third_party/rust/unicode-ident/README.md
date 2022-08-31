@@ -263,15 +263,21 @@ is_xid_start:
 
 ## License
 
-<sup>
-Licensed under either of <a href="LICENSE-APACHE">Apache License, Version
-2.0</a> or <a href="LICENSE-MIT">MIT license</a> at your option.
-</sup>
+Use of the Unicode Character Database, as this crate does, is governed by the <a
+href="LICENSE-UNICODE">Unicode License Agreement &ndash; Data Files and Software
+(2016)</a>.
 
-<br>
+All intellectual property within this crate that is **not generated** using the
+Unicode Character Database as input is licensed under either of <a
+href="LICENSE-APACHE">Apache License, Version 2.0</a> or <a
+href="LICENSE-MIT">MIT license</a> at your option.
 
-<sub>
+The **generated** files incorporate tabular data derived from the Unicode
+Character Database, together with intellectual property from the original source
+code content of the crate. One must comply with the terms of both the Unicode
+License Agreement and either of the Apache license or MIT license when those
+generated files are involved.
+
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in this crate by you, as defined in the Apache-2.0 license, shall
-be dual licensed as above, without any additional terms or conditions.
-</sub>
+be licensed as just described, without any additional terms or conditions.
