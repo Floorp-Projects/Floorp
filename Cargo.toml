@@ -176,8 +176,8 @@ neqo-common = { path = "third_party/rust/neqo-common" }
 # duplicate crates.
 
 [patch."https://github.com/mozilla/uniffi-rs.git"]
-uniffi = "0.19.3"
-uniffi_bindgen = "0.19.3"
-uniffi_build = "0.19.3"
-uniffi_macros = "0.19.3"
-weedle2 = "3.0.0"
+uniffi = "=0.19.3"
+uniffi_bindgen = "=0.19.3"
+uniffi_build = "=0.19.3"
+uniffi_macros = "=0.19.3"
+weedle2 = "=3.0.0"
