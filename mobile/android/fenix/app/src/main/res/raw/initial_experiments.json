@@ -11,7 +11,7 @@
       "channel": "beta",
       "userFacingName": "Fenix First Run Validation A/A 2 weeks",
       "userFacingDescription": "This is an internal test of new functionality.",
-      "isEnrollmentPaused": false,
+      "isEnrollmentPaused": true,
       "isRollout": false,
       "bucketConfig": {
         "randomizationUnit": "nimbus_id",
@@ -64,7 +64,7 @@
       "channel": "beta",
       "userFacingName": "Fenix First Run Validation A/A 4 weeks",
       "userFacingDescription": "This is an internal test of new functionality.",
-      "isEnrollmentPaused": false,
+      "isEnrollmentPaused": true,
       "isRollout": false,
       "bucketConfig": {
         "randomizationUnit": "nimbus_id",
