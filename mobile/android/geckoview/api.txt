@@ -1993,7 +1993,7 @@ package org.mozilla.geckoview {
   @Retention(value=RetentionPolicy.SOURCE) public static interface WebExtension.BrowsingDataTypes {
   }
 
-  public static interface WebExtension.ContextFlags {
+  @Retention(value=RetentionPolicy.SOURCE) public static interface WebExtension.ContextFlags {
   }
 
   public static class WebExtension.CreateTabDetails {
@@ -2048,10 +2048,10 @@ package org.mozilla.geckoview {
     field public final int id;
   }
 
-  public static interface WebExtension.Download.DownloadInterruptReason {
+  @Retention(value=RetentionPolicy.SOURCE) public static interface WebExtension.Download.DownloadInterruptReason {
   }
 
-  public static interface WebExtension.Download.DownloadState {
+  @Retention(value=RetentionPolicy.SOURCE) public static interface WebExtension.Download.DownloadState {
   }
 
   public static interface WebExtension.Download.Info {
@@ -2094,7 +2094,7 @@ package org.mozilla.geckoview {
     field public final boolean saveAs;
   }
 
-  public static interface WebExtension.DownloadRequest.ConflictActionFlags {
+  @Retention(value=RetentionPolicy.SOURCE) public static interface WebExtension.DownloadRequest.ConflictActionFlags {
   }
 
   @Retention(value=RetentionPolicy.SOURCE) public static interface WebExtension.EnabledFlags {
