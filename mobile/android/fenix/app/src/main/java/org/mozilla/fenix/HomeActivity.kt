@@ -101,6 +101,7 @@ import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentDirections
 import org.mozilla.fenix.library.recentlyclosed.RecentlyClosedFragmentDirections
 import org.mozilla.fenix.onboarding.DefaultBrowserNotificationWorker
+import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.perf.MarkersActivityLifecycleCallbacks
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
 import org.mozilla.fenix.perf.Performance
@@ -170,6 +171,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     private val navHost by lazy {
         supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
     }
+
+    private val onboarding by lazy { FenixOnboarding(applicationContext) }
 
     private val externalSourceIntentProcessors by lazy {
         listOf(
@@ -250,6 +253,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             navigateToBrowserOnColdStart()
         } else {
             StartOnHome.enterHomeScreen.record(NoExtras())
+        }
+
+        if (settings().showHomeOnboardingDialog && onboarding.userHasBeenOnboarded()) {
+            navHost.navController.navigate(NavGraphDirections.actionGlobalHomeOnboardingDialog())
         }
 
         Performance.processIntentIfPerformanceTest(intent, this)

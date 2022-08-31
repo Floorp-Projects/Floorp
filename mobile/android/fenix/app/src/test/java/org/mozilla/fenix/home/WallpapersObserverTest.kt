@@ -19,6 +19,7 @@ import kotlinx.coroutines.cancel
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.components.AppStore
@@ -84,6 +85,7 @@ class WallpapersObserverTest {
     }
 
     @Test
+    @Ignore("Intermittent test: https://github.com/mozilla-mobile/fenix/issues/26760")
     fun `WHEN the wallpaper is updated to a new one THEN show the wallpaper`() {
         val appStore = AppStore()
         val wallpapersUseCases: WallpapersUseCases = mockk {

@@ -198,11 +198,6 @@ interface SessionControlController {
     fun handleCustomizeHomeTapped()
 
     /**
-     * @see [OnboardingInteractor.showOnboardingDialog]
-     */
-    fun handleShowOnboardingDialog()
-
-    /**
      * @see [SessionControlInteractor.reportSessionMetrics]
      */
     fun handleReportSessionMetrics(state: AppState)
@@ -504,13 +499,6 @@ class DefaultSessionControlController(
         val directions = HomeFragmentDirections.actionGlobalHomeSettingsFragment()
         navController.nav(navController.currentDestination?.id, directions)
         HomeScreen.customizeHomeClicked.record(NoExtras())
-    }
-
-    override fun handleShowOnboardingDialog() {
-        navController.nav(
-            R.id.homeFragment,
-            HomeFragmentDirections.actionGlobalHomeOnboardingDialog()
-        )
     }
 
     override fun handleReadPrivacyNoticeClicked() {

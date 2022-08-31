@@ -23,7 +23,6 @@ import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
-import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.onboarding.JumpBackInCFRDialog
 import org.mozilla.fenix.onboarding.SyncCFRPresenter
 import org.mozilla.fenix.utils.Settings
@@ -192,14 +191,11 @@ private fun collectionTabItems(collection: TabCollection) =
  * @param viewLifecycleOwner [LifecycleOwner] for the view.
  * @property interactor [SessionControlInteractor] which will have delegated to all user
  * interactions.
- * @property onboarding [FenixOnboarding] that is used to determine whether or not the user has
- * been onboarded.
  */
 class SessionControlView(
     containerView: View,
     viewLifecycleOwner: LifecycleOwner,
     private val interactor: SessionControlInteractor,
-    private val onboarding: FenixOnboarding,
 ) {
 
     val view: RecyclerView = containerView as RecyclerView
@@ -242,10 +238,6 @@ class SessionControlView(
     }
 
     fun update(state: AppState, shouldReportMetrics: Boolean = false) {
-        if (view.context.settings().showHomeOnboardingDialog && onboarding.userHasBeenOnboarded()) {
-            interactor.showOnboardingDialog()
-        }
-
         if (shouldReportMetrics) interactor.reportSessionMetrics(state)
 
         sessionControlAdapter.submitList(state.toAdapterList(view.context.settings()))

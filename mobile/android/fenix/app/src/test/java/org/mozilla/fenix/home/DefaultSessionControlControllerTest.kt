@@ -193,21 +193,6 @@ class DefaultSessionControlControllerTest {
     }
 
     @Test
-    @Ignore("Until the feature is enabled again")
-    fun handleShowOnboardingDialog() {
-        createController().handleShowOnboardingDialog()
-
-        verify {
-            navController.navigate(
-                match<NavDirections> {
-                    it.actionId == R.id.action_global_home_onboarding_dialog
-                },
-                null
-            )
-        }
-    }
-
-    @Test
     fun `handleCollectionOpenTabClicked onFailure`() {
         val tab = mockk<ComponentTab> {
             every { url } returns "https://mozilla.org"

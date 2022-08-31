@@ -389,7 +389,6 @@ class HomeFragment : Fragment() {
             containerView = binding.sessionControlRecyclerView,
             viewLifecycleOwner = viewLifecycleOwner,
             interactor = sessionControlInteractor,
-            onboarding = onboarding,
         )
 
         updateSessionControlView()

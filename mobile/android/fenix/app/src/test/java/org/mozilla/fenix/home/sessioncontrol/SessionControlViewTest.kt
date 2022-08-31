@@ -4,21 +4,16 @@
 
 package org.mozilla.fenix.home.sessioncontrol
 
-import androidx.recyclerview.widget.RecyclerView
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
-import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.components.appstate.AppState
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.gleanplumb.Message
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
@@ -27,27 +22,6 @@ import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
 class SessionControlViewTest {
-
-    @Test
-    fun `GIVENs updates WHEN sections recentTabs, recentBookmarks, historyMetadata or pocketArticles are NOT available THEN DO NOT show the dialog`() {
-        every { testContext.components.settings } returns mockk(relaxed = true)
-        val interactor = mockk<SessionControlInteractor>(relaxed = true)
-        val view = RecyclerView(testContext)
-        val controller = SessionControlView(
-            view,
-            mockk(relaxed = true),
-            interactor,
-            mockk(relaxed = true),
-        )
-
-        val state = AppState()
-
-        controller.update(state)
-
-        verify(exactly = 0) {
-            interactor.showOnboardingDialog()
-        }
-    }
 
     @Test
     fun `GIVEN recent Bookmarks WHEN normalModeAdapterItems is called THEN add a customize home button`() {

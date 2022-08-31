@@ -162,12 +162,6 @@ interface OnboardingInteractor {
      * Opens a custom tab to privacy notice url. Called when a user clicks on the "read our privacy notice" button.
      */
     fun onReadPrivacyNoticeClicked()
-
-    /**
-     * Show the onboarding dialog to onboard users about recentTabs,recentBookmarks,
-     * historyMetadata and pocketArticles sections.
-     */
-    fun showOnboardingDialog()
 }
 
 interface CustomizeHomeIteractor {
@@ -326,10 +320,6 @@ class SessionControlInteractor(
 
     override fun onReadPrivacyNoticeClicked() {
         controller.handleReadPrivacyNoticeClicked()
-    }
-
-    override fun showOnboardingDialog() {
-        controller.handleShowOnboardingDialog()
     }
 
     override fun onToggleCollectionExpanded(collection: TabCollection, expand: Boolean) {

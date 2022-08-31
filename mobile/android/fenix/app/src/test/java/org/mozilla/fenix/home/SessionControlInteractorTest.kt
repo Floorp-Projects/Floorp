@@ -198,12 +198,6 @@ class SessionControlInteractorTest {
     }
 
     @Test
-    fun `WHEN calling showOnboardingDialog THEN handleShowOnboardingDialog`() {
-        interactor.showOnboardingDialog()
-        verify { controller.handleShowOnboardingDialog() }
-    }
-
-    @Test
     fun `WHEN Show All recently saved bookmarks button is clicked THEN the click is handled`() {
         interactor.onShowAllBookmarksClicked()
         verify { recentBookmarksController.handleShowAllBookmarksClicked() }
