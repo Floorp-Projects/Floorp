@@ -2115,22 +2115,40 @@ public class GeckoSessionTestRule implements TestRule {
    * location providers, accuracy determines preference.
    *
    * @param locationManager location manager to accept the locations
-   * @param mockproviderName location provider that will use this location
+   * @param mockProviderName location provider that will use this location
    * @param latitude latitude in degrees to mock
    * @param longitude longitude in degrees to mock
    */
   public void setMockLocation(
-      LocationManager locationManager, String mockproviderName, double latitude, double longitude) {
-    Location location = new Location(mockproviderName);
+      LocationManager locationManager, String mockProviderName, double latitude, double longitude) {
     // Closer accuracy helps ensure the mock location provider is prioritized
-    location.setAccuracy(.000001f);
+    setMockLocation(locationManager, mockProviderName, latitude, longitude, .000001f);
+  }
+
+  /**
+   * Sets the mock location on a given location provider. Use when accuracy needs to be specified.
+   * NB: The system may still prioritize other location providers, accuracy determines preference.
+   *
+   * @param locationManager location manager to accept the locations
+   * @param mockProviderName location provider that will use this location
+   * @param latitude latitude in degrees to mock
+   * @param longitude longitude in degrees to mock
+   * @param accuracy horizontal accuracy in meters to mock
+   */
+  public void setMockLocation(
+      LocationManager locationManager,
+      String mockProviderName,
+      double latitude,
+      double longitude,
+      float accuracy) {
+    Location location = new Location(mockProviderName);
+    location.setAccuracy(accuracy);
     location.setLatitude(latitude);
     location.setLongitude(longitude);
     location.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
     location.setTime(System.currentTimeMillis());
-    locationManager.setTestProviderLocation(mockproviderName, location);
+    locationManager.setTestProviderLocation(mockProviderName, location);
   }
-
   /**
    * Simulates a press to the Home button, causing the application to go to onPause. NB: Some time
    * must elapse for the event to fully occur.
