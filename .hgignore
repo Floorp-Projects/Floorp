@@ -34,7 +34,6 @@ compile_commands\.json
 ^\.clang-tidy
 ^\.mozconfig
 ^mozconfig*
-^configure$
 ^old-configure$
 ^config\.cache$
 ^config\.log$
@@ -65,7 +64,6 @@ _OPT\.OBJ/
 ^js/src/obj-.*/
 
 # SpiderMonkey configury
-^js/src/configure$
 ^js/src/old-configure$
 ^js/src/autom4te.cache$
 # SpiderMonkey test result logs
