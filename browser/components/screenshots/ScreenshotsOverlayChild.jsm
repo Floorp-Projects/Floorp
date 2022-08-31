@@ -55,6 +55,25 @@ XPCOMUtils.defineLazyGetter(lazy, "overlayLocalization", () => {
 const STYLESHEET_URL =
   "chrome://browser/content/screenshots/overlay/overlay.css";
 
+// An autoselection smaller than these will be ignored entirely:
+const MIN_DETECT_ABSOLUTE_HEIGHT = 10;
+const MIN_DETECT_ABSOLUTE_WIDTH = 30;
+// An autoselection smaller than these will not be preferred:
+const MIN_DETECT_HEIGHT = 30;
+const MIN_DETECT_WIDTH = 100;
+// An autoselection bigger than either of these will be ignored:
+let MAX_DETECT_HEIGHT = 700;
+let MAX_DETECT_WIDTH = 1000;
+
+const doNotAutoselectTags = {
+  H1: true,
+  H2: true,
+  H3: true,
+  H4: true,
+  H5: true,
+  H6: true,
+};
+
 class AnonymousContentOverlay {
   constructor(contentDocument, screenshotsChild) {
     this.listeners = new Map();
@@ -71,6 +90,7 @@ class AnonymousContentOverlay {
     this.overlayId = "screenshots-overlay-container";
     this.previewId = "preview-container";
     this.selectionId = "selection-container";
+    this.hoverBoxId = "hover-highlight";
 
     this._initialized = false;
 
@@ -119,8 +139,18 @@ class AnonymousContentOverlay {
 
     this.addEventListeners();
 
+    this.hoverElementBox = new HoverElementBox(
+      this.hoverBoxId,
+      this.content,
+      document
+    );
+
     this.previewLayer = new PreviewLayer(this.previewId, this.content);
-    this.selectionLayer = new SelectionLayer(this.selectionId, this.content);
+    this.selectionLayer = new SelectionLayer(
+      this.selectionId,
+      this.content,
+      this.hoverElementBox
+    );
 
     this.screenshotsContainer = new ScreenshotsContainerLayer(
       this.overlayId,
@@ -285,6 +315,7 @@ class AnonymousContentOverlay {
             <div class="cancel-shot" id="screenshots-cancel-button" data-l10n-id="screenshots-overlay-cancel-button">${cancel.value}</div>
           </div>
         </div>
+        <div id="${this.hoverBoxId}"></div>
         <div id="${this.selectionId}" style="display:none;">
           <div id="bgTop" class="bghighlight" style="display:none;"></div>
           <div id="bgBottom" class="bghighlight" style="display:none;"></div>
@@ -477,7 +508,7 @@ class AnonymousContentOverlay {
    * @param targetId The target element id
    */
   drag(event, targetId) {
-    this.stateHandler.drag(event);
+    this.stateHandler.drag(event, targetId);
   }
 
   /**
@@ -551,10 +582,12 @@ class StateHandler {
    * @returns object containing the x and y coordinates of the mouse
    */
   getCoordinates(event) {
-    let clientX = event.pageX;
-    let clientY = event.pageY;
+    const { clientX: viewX, clientY: viewY, pageX, pageY } = event;
 
-    return { clientX, clientY };
+    MAX_DETECT_HEIGHT = Math.max(event.target.clientHeight + 100, 700);
+    MAX_DETECT_WIDTH = Math.max(event.target.clientWidth + 100, 1000);
+
+    return { viewX, viewY, pageX, pageY };
   }
 
   /**
@@ -563,15 +596,15 @@ class StateHandler {
    * @param targetId The id of the event target
    */
   dragStart(event, targetId) {
-    let { clientX, clientY } = this.getCoordinates(event);
+    const { pageX, pageY } = this.getCoordinates(event);
 
     switch (this.#state) {
       case "crosshairs": {
-        this.crosshairsDragStart(clientX, clientY);
+        this.crosshairsDragStart(pageX, pageY);
         break;
       }
       case "selected": {
-        this.selectedDragStart(clientX, clientY, targetId);
+        this.selectedDragStart(pageX, pageY, targetId);
         break;
       }
     }
@@ -583,23 +616,23 @@ class StateHandler {
    * @param targetId The id of the event target
    */
   drag(event, targetId) {
-    let { clientX, clientY } = this.getCoordinates(event);
+    const { pageX, pageY, viewX, viewY } = this.getCoordinates(event);
 
     switch (this.#state) {
       case "crosshairs": {
-        this.crosshairsMove(clientX, clientY);
+        this.crosshairsMove(pageX, pageY, viewX, viewY, targetId);
         break;
       }
       case "draggingReady": {
-        this.draggingReadyDrag(clientX, clientY);
+        this.draggingReadyDrag(pageX, pageY);
         break;
       }
       case "dragging": {
-        this.draggingDrag(clientX, clientY);
+        this.draggingDrag(pageX, pageY);
         break;
       }
       case "resizing": {
-        this.resizingDrag(clientX, clientY);
+        this.resizingDrag(pageX, pageY);
         break;
       }
     }
@@ -611,19 +644,19 @@ class StateHandler {
    * @param targetId The id of the event target
    */
   dragEnd(event, targetId) {
-    let { clientX, clientY } = this.getCoordinates(event);
+    const { pageX, pageY, viewX, viewY } = this.getCoordinates(event);
 
     switch (this.#state) {
       case "draggingReady": {
-        this.draggingReadyDragEnd();
+        this.draggingReadyDragEnd(pageX - viewX, pageY - viewY);
         break;
       }
       case "dragging": {
-        this.draggingDragEnd(clientX, clientY, targetId);
+        this.draggingDragEnd(pageX, pageY, targetId);
         break;
       }
       case "resizing": {
-        this.resizingDragEnd(clientX, clientY, targetId);
+        this.resizingDragEnd(pageX, pageY, targetId);
         break;
       }
     }
@@ -705,11 +738,16 @@ class StateHandler {
 
   /**
    * Handles the pointer move for the crosshairs state
-   * @param clientX x pointer position
-   * @param clientY y pointer position
+   * @param pageX x pointer position
+   * @param pageY y pointer position
+   * @param viewX x pointer position in viewport
+   * @param viewY y pointer position in viewport
+   * @param targetId The id of the target element
    */
-  crosshairsMove(clientX, clientY) {
-    this.#screenshotsContainer.drawPreviewEyes(clientX, clientY);
+  crosshairsMove(pageX, pageY, viewX, viewY, targetId) {
+    this.#screenshotsContainer.drawPreviewEyes(pageX, pageY);
+
+    this.#screenshotsContainer.handleElementHover(viewX, viewY, targetId);
   }
 
   /**
@@ -860,10 +898,18 @@ class StateHandler {
   }
 
   /**
-   * Set the state to "crosshairs"
+   * Draw the selection box from the hover element box if it exists
+   * Else set the state to "crosshairs"
    */
-  draggingReadyDragEnd() {
-    this.setState("crosshairs");
+  draggingReadyDragEnd(scrollX, scrollY) {
+    if (this.#screenshotsContainer.hoverElementBoxRect) {
+      this.#screenshotsContainer.hidePreviewLayer();
+      this.#screenshotsContainer.updateSelectionBoxFromRect(scrollX, scrollY);
+      this.#screenshotsContainer.drawSelectionBox();
+      this.setState("selected");
+    } else {
+      this.setState("crosshairs");
+    }
   }
 
   /**
@@ -906,6 +952,9 @@ class StateHandler {
       this.#screenshotsContainer.shiftSelectionLayerBox();
     } else if (this.#state && eventType === "scroll") {
       this.#screenshotsContainer.drawButtonsLayer();
+      if (this.#state === "crosshairs") {
+        this.#screenshotsContainer.handleElementScroll();
+      }
     }
   }
 }
@@ -934,8 +983,286 @@ class AnonLayer {
   }
 }
 
+class HoverElementBox extends AnonLayer {
+  #document;
+  #rect;
+  #lastX;
+  #lastY;
+
+  constructor(id, content, document) {
+    super(id, content);
+
+    this.#document = document;
+  }
+
+  get rect() {
+    return this.#rect;
+  }
+
+  /**
+   * Draws the hover box over an element from the given rect
+   * @param rect The rect to draw the hover element box
+   */
+  drawHoverBox(rect) {
+    if (!rect) {
+      this.hide();
+    } else {
+      let maxHeight = this.selectionLayer.scrollHeight;
+      let maxWidth = this.selectionLayer.scrollWidth;
+      let top = this.#document.documentElement.scrollTop + rect.top;
+      top = top > 0 ? top : 0;
+      let left = this.#document.documentElement.scrollLeft + rect.left;
+      left = left > 0 ? left : 0;
+      let height =
+        rect.top + rect.height > maxHeight ? maxHeight - rect.top : rect.height;
+      let width =
+        rect.left + rect.width > maxWidth ? maxWidth - rect.left : rect.width;
+
+      this.content.setAttributeForElement(
+        this.id,
+        "style",
+        `top:${top}px;left:${left}px;height:${height}px;width:${width}px;`
+      );
+    }
+  }
+
+  /**
+   * Handles when the user moves the mouse over an element
+   * @param viewX The viewport x coordinate
+   * @param viewY The viewport y coordinate
+   * @param targetId The target element id
+   */
+  handleElementHover(viewX, viewY, targetId) {
+    if (targetId === "screenshots-overlay-container") {
+      let ele = this.getElementFromPoint(viewX, viewY);
+
+      if (this.cachedEle && this.cachedEle === ele) {
+        // Still hovering over the same element
+        return;
+      }
+      this.cachedEle = ele;
+
+      this.getBestRectForElement(ele);
+
+      this.#lastX = viewX;
+      this.#lastY = viewY;
+    }
+  }
+
+  /**
+   * Handles moving the rect when the user has scrolled but not moved the mouse
+   * It uses the last x and y viewport coordinates to find the new element at the mouse position
+   */
+  handleElementScroll() {
+    if (this.#lastX && this.#lastY) {
+      this.cachedEle = null;
+      this.handleElementHover(
+        this.#lastX,
+        this.#lastY,
+        "screenshots-overlay-container"
+      );
+    }
+  }
+
+  /**
+   * Finds an element for the given coordinates within the viewport
+   * @param x The viewport x coordinate
+   * @param y The viewport y coordinate
+   * @returns An element location at the given coordinates
+   */
+  getElementFromPoint(x, y) {
+    this.setPointerEventsNone();
+    let ele;
+    try {
+      ele = this.#document.elementFromPoint(x, y);
+    } finally {
+      this.resetPointerEvents();
+    }
+
+    return ele;
+  }
+
+  /**
+   * Gets the rect for an element if getBoundingClientRect exists
+   * @param ele The element to get the rect from
+   * @returns The bounding client rect of the element or null
+   */
+  getBoundingClientRect(ele) {
+    if (!ele.getBoundingClientRect) {
+      return null;
+    }
+
+    return ele.getBoundingClientRect();
+  }
+
+  /**
+   * This function takes an element and finds a suitable rect to draw the hover box on
+   * @param ele The element to find a suitale rect of
+   */
+  getBestRectForElement(ele) {
+    let lastRect;
+    let lastNode;
+    let rect;
+    let attemptExtend = false;
+    let node = ele;
+    while (node) {
+      rect = this.getBoundingClientRect(node);
+      if (!rect) {
+        rect = lastRect;
+        break;
+      }
+      if (rect.width < MIN_DETECT_WIDTH || rect.height < MIN_DETECT_HEIGHT) {
+        // Avoid infinite loop for elements with zero or nearly zero height,
+        // like non-clearfixed float parents with or without borders.
+        break;
+      }
+      if (rect.width > MAX_DETECT_WIDTH || rect.height > MAX_DETECT_HEIGHT) {
+        // Then the last rectangle is better
+        rect = lastRect;
+        attemptExtend = true;
+        break;
+      }
+      if (rect.width >= MIN_DETECT_WIDTH && rect.height >= MIN_DETECT_HEIGHT) {
+        if (!doNotAutoselectTags[node.tagName]) {
+          break;
+        }
+      }
+      lastRect = rect;
+      lastNode = node;
+      node = node.parentNode;
+    }
+    if (rect && node) {
+      const evenBetter = this.evenBetterElement(node);
+      if (evenBetter) {
+        node = lastNode = evenBetter;
+        rect = this.getBoundingClientRect(evenBetter);
+        attemptExtend = false;
+      }
+    }
+    if (rect && attemptExtend) {
+      let extendNode = lastNode.nextSibling;
+      while (extendNode) {
+        if (extendNode.nodeType === this.#document.ELEMENT_NODE) {
+          break;
+        }
+        extendNode = extendNode.nextSibling;
+        if (!extendNode) {
+          const parent = lastNode.parentNode;
+          for (let i = 0; i < parent.childNodes.length; i++) {
+            if (parent.childNodes[i] === lastNode) {
+              extendNode = parent.childNodes[i + 1];
+            }
+          }
+        }
+      }
+      if (extendNode) {
+        const extendRect = this.getBoundingClientRect(extendNode);
+        let x = Math.min(rect.x, extendRect.x);
+        let y = Math.min(rect.y, extendRect.y);
+        let width = Math.max(rect.right, extendRect.right) - x;
+        let height = Math.max(rect.bottom, extendRect.bottom) - y;
+        const combinedRect = new DOMRect(x, y, width, height);
+        if (
+          combinedRect.width <= MAX_DETECT_WIDTH &&
+          combinedRect.height <= MAX_DETECT_HEIGHT
+        ) {
+          rect = combinedRect;
+        }
+      }
+    }
+
+    if (
+      rect &&
+      (rect.width < MIN_DETECT_ABSOLUTE_WIDTH ||
+        rect.height < MIN_DETECT_ABSOLUTE_HEIGHT)
+    ) {
+      rect = null;
+    }
+
+    if (!rect) {
+      this.hide();
+    } else {
+      this.drawHoverBox(rect);
+    }
+
+    this.#rect = rect;
+  }
+
+  /**
+   * This finds a better element by looking for elements with role article
+   * @param node The currently hovered node
+   * @returns A better node or null
+   */
+  evenBetterElement(node) {
+    let el = node.parentNode;
+    const ELEMENT_NODE = this.#document.ELEMENT_NODE;
+    while (el && el.nodeType === ELEMENT_NODE) {
+      if (!el.getAttribute) {
+        return null;
+      }
+      if (el.getAttribute("role") === "article") {
+        const rect = this.getBoundingClientRect(el);
+        if (!rect) {
+          return null;
+        }
+        if (
+          rect.width <= MAX_DETECT_WIDTH &&
+          rect.height <= MAX_DETECT_HEIGHT
+        ) {
+          return el;
+        }
+        return null;
+      }
+      el = el.parentNode;
+    }
+    return null;
+  }
+
+  /**
+   * The pointer events need to be removed temporarily so we can find the
+   * correct element from document.elementFromPoint()
+   * If the pointer events are on for the screenshots elements, then we will always
+   * get the screenshots elements as the elements from a given point
+   */
+  setPointerEventsNone() {
+    this.content.setAttributeForElement(
+      "screenshots-component",
+      "style",
+      "pointer-events:none;"
+    );
+
+    let temp = this.content.getAttributeForElement(
+      "screenshots-overlay-container",
+      "style"
+    );
+    this.content.setAttributeForElement(
+      "screenshots-overlay-container",
+      "style",
+      temp + "pointer-events:none;"
+    );
+  }
+
+  /**
+   * Return the pointer events to the original state because we found the element
+   */
+  resetPointerEvents() {
+    this.content.setAttributeForElement("screenshots-component", "style", "");
+
+    let temp = this.content.getAttributeForElement(
+      "screenshots-overlay-container",
+      "style"
+    );
+    this.content.setAttributeForElement(
+      "screenshots-overlay-container",
+      "style",
+      temp.replace("pointer-events:none;", "")
+    );
+  }
+}
+
 class SelectionLayer extends AnonLayer {
   #selectionBox;
+  #hoverElementBox;
   #buttons;
   #hidden;
   /**
@@ -951,10 +1278,12 @@ class SelectionLayer extends AnonLayer {
    */
   #documentDimensions;
 
-  constructor(id, content) {
+  constructor(id, content, hoverElementBox) {
     super(id, content);
     this.#selectionBox = new SelectionBox(content, this);
     this.#buttons = new ButtonsLayer("buttons", content, this);
+    this.#hoverElementBox = hoverElementBox;
+    this.#hoverElementBox.selectionLayer = this;
 
     this.#hidden = true;
     this.#documentDimensions = {};
@@ -1082,6 +1411,43 @@ class SelectionLayer extends AnonLayer {
     this.#selectionBox.shiftBox();
   }
 
+  /**
+   * Update the box coordinates from the hover element rect
+   */
+  updateSelectionBoxFromRect(scrollX, scrollY) {
+    this.#selectionBox.updateBoxFromRect(
+      this.#hoverElementBox.rect,
+      scrollX,
+      scrollY
+    );
+  }
+
+  /**
+   * Handles when the user moves the mouse over an element
+   * @param viewX The viewport x coordinate
+   * @param viewY The viewport y coordinate
+   * @param targetId The target element id
+   */
+  handleElementHover(viewX, viewY, targetId) {
+    this.#hoverElementBox.handleElementHover(viewX, viewY, targetId);
+  }
+
+  /**
+   * Handles moving the rect when the user has scrolled but not moved the mouse
+   * It uses the last x and y viewport coordinates to find the new element at the mouse position
+   */
+  handleElementScroll() {
+    this.#hoverElementBox.handleElementScroll();
+  }
+
+  hideHoverElementSelection() {
+    this.#hoverElementBox.hide();
+  }
+
+  get hoverElementBoxRect() {
+    return this.#hoverElementBox.rect;
+  }
+
   get scrollWidth() {
     return this.#documentDimensions.scrollWidth;
   }
@@ -1183,6 +1549,19 @@ class SelectionBox extends AnonLayer {
       "style",
       `top:${this.top}px;height:${this.height}px;left:${this.right}px;width:calc(100% - ${this.right}px);`
     );
+  }
+
+  /**
+   * Update the box coordinates from the rect
+   * @param rect The hover element box
+   * @param scrollX The x offset the page is scrolled
+   * @param scrollY The y offset the page is scrolled
+   */
+  updateBoxFromRect(rect, scrollX, scrollY) {
+    this.top = rect.top + scrollY;
+    this.left = rect.left + scrollX;
+    this.right = rect.right + scrollX;
+    this.bottom = rect.bottom + scrollY;
   }
 
   /**
@@ -1429,6 +1808,7 @@ class ScreenshotsContainerLayer extends AnonLayer {
    */
   hidePreviewLayer() {
     this.#previewLayer.hide();
+    this.#selectionLayer.hideHoverElementSelection();
   }
 
   /**
@@ -1450,6 +1830,31 @@ class ScreenshotsContainerLayer extends AnonLayer {
    */
   drawSelectionBox() {
     this.#selectionLayer.drawSelectionBox();
+  }
+
+  /**
+   * Update the box coordinates from the hover element rect
+   */
+  updateSelectionBoxFromRect(scrollX, scrollY) {
+    this.#selectionLayer.updateSelectionBoxFromRect(scrollX, scrollY);
+  }
+
+  /**
+   * Handles when the user moves the mouse over an element
+   * @param viewX The viewport x coordinate
+   * @param viewY The viewport y coordinate
+   * @param targetId The target element id
+   */
+  handleElementHover(viewX, viewY, targetId) {
+    this.#selectionLayer.handleElementHover(viewX, viewY, targetId);
+  }
+
+  /**
+   * Handles moving the rect when the user has scrolled but not moved the mouse
+   * It uses the last x and y viewport coordinates to find the new element at the mouse position
+   */
+  handleElementScroll() {
+    this.#selectionLayer.handleElementScroll();
   }
 
   /**
@@ -1602,5 +2007,9 @@ class ScreenshotsContainerLayer extends AnonLayer {
       "style",
       `top:0;left:0;width:${this.#width}px;height:${this.#height}px;`
     );
+  }
+
+  get hoverElementBoxRect() {
+    return this.#selectionLayer.hoverElementBoxRect;
   }
 }
