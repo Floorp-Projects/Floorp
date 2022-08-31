@@ -23,6 +23,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/UniquePtr.h"
@@ -40,6 +41,8 @@
 namespace mozilla::dom::fs::test {
 
 nsIGlobalObject* GetGlobal();
+
+mozilla::ipc::PrincipalInfo GetPrincipalInfo();
 
 class MockFileSystemRequestHandler : public FileSystemRequestHandler {
  public:

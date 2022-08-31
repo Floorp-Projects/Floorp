@@ -26,7 +26,7 @@ class TestFileSystemBackgroundRequestHandler : public ::testing::Test {
         new TestFileSystemChildFactory(mOPFSChild));
   }
 
-  nsIGlobalObject* mGlobal = GetGlobal();
+  mozilla::ipc::PrincipalInfo mPrincipalInfo = GetPrincipalInfo();
   RefPtr<TestOriginPrivateFileSystemChild> mOPFSChild;
 };
 
@@ -38,12 +38,13 @@ TEST_F(TestFileSystemBackgroundRequestHandler,
 
   bool done = false;
   auto testable = GetFileSystemBackgroundRequestHandler();
-  testable->CreateFileSystemManagerChild(mGlobal)->Then(
-      GetCurrentSerialEventTarget(), __func__,
-      [&done](const RefPtr<OriginPrivateFileSystemChild>& child) {
-        done = true;
-      },
-      [&done](nsresult) { done = true; });
+  testable->CreateFileSystemManagerChild(mPrincipalInfo)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [&done](const RefPtr<OriginPrivateFileSystemChild>& child) {
+            done = true;
+          },
+          [&done](nsresult) { done = true; });
   // MozPromise should be rejected
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,
                      [&done]() { return done; });

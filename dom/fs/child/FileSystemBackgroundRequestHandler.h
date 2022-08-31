@@ -10,12 +10,16 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/UniquePtr.h"
 
-class nsIGlobalObject;
-
 template <class T>
 class RefPtr;
 
-namespace mozilla::dom {
+namespace mozilla {
+
+namespace ipc {
+class PrincipalInfo;
+}  // namespace ipc
+
+namespace dom {
 
 class OriginPrivateFileSystemChild;
 
@@ -34,7 +38,8 @@ class FileSystemBackgroundRequestHandler {
       MozPromise<RefPtr<OriginPrivateFileSystemChild>, nsresult, false>;
 
   virtual RefPtr<CreateFileSystemManagerChildPromise>
-  CreateFileSystemManagerChild(nsIGlobalObject* aGlobal);
+  CreateFileSystemManagerChild(
+      const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
   virtual ~FileSystemBackgroundRequestHandler();
 
@@ -42,6 +47,7 @@ class FileSystemBackgroundRequestHandler {
   const UniquePtr<fs::FileSystemChildFactory> mChildFactory;
 };  // class FileSystemBackgroundRequestHandler
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 #endif  // DOM_FS_CHILD_FILESYSTEMBACKGROUNDREQUESTHANDLER_H_

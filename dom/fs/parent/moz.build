@@ -5,13 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
-    "BackgroundFileSystemParent.h",
+    "FileSystemManagerParentFactory.h",
     "OriginPrivateFileSystemParent.h",
 ]
 
 UNIFIED_SOURCES += [
-    "BackgroundFileSystemParent.cpp",
     "FileSystemHashSource.cpp",
+    "FileSystemManagerParentFactory.cpp",
     "OriginPrivateFileSystemParent.cpp",
 ]
 

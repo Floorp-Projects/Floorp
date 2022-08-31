@@ -12,7 +12,6 @@ EXPORTS.mozilla.dom += [
 FINAL_LIBRARY = "xul"
 
 IPDL_SOURCES += [
-    "PBackgroundFileSystem.ipdl",
     "POriginPrivateFileSystem.ipdl",
 ]
 

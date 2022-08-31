@@ -8,7 +8,6 @@
 #define DOM_FS_PARENT_ORIGINPRIVATEFILESYSTEMPARENT_H_
 
 #include "ErrorList.h"
-#include "mozilla/dom/PBackgroundFileSystemParent.h"
 #include "mozilla/dom/POriginPrivateFileSystemParent.h"
 #include "mozilla/TaskQueue.h"
 #include "nsISupports.h"

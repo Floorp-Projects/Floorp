@@ -4,19 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BackgroundFileSystemParent.h"
-#include "OriginPrivateFileSystemParent.h"
+#include "FileSystemManagerParentFactory.h"
 
-#include "nsNetCID.h"
-#include "mozilla/dom/FileSystemTypes.h"
-#include "mozilla/dom/quota/QuotaCommon.h"
-#include "mozilla/ipc/Endpoint.h"
-#include "mozilla/ipc/FileDescriptorUtils.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/MozPromise.h"
-#include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/dom/FileSystemTypes.h"
+#include "mozilla/dom/OriginPrivateFileSystemParent.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/dom/quota/QuotaManager.h"
+#include "mozilla/ipc/Endpoint.h"
+#include "nsIScriptObjectPrincipal.h"
+#include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
+#include "nsString.h"
 
 namespace mozilla {
 LazyLogModule gOPFSLog("OPFS");
@@ -49,18 +48,18 @@ FileSystemDataManager::CreateFileSystemDataManager(
 
 }  // namespace fs::data
 
-mozilla::ipc::IPCResult
-BackgroundFileSystemParent::RecvCreateFileSystemManagerParent(
-    Endpoint<POriginPrivateFileSystemParent>&& aParentEp,
-    CreateFileSystemManagerParentResolver&& aResolver) {
+mozilla::ipc::IPCResult CreateFileSystemManagerParent(
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+    mozilla::ipc::Endpoint<POriginPrivateFileSystemParent>&& aParentEndpoint,
+    std::function<void(const nsresult&)>&& aResolver) {
   QM_TRY(OkIf(StaticPrefs::dom_fs_enabled()), IPC_OK(),
          [aResolver](const auto&) { aResolver(NS_ERROR_DOM_NOT_ALLOWED_ERR); });
 
-  QM_TRY(OkIf(aParentEp.IsValid()), IPC_OK(),
+  QM_TRY(OkIf(aParentEndpoint.IsValid()), IPC_OK(),
          [aResolver](const auto&) { aResolver(NS_ERROR_INVALID_ARG); });
 
   nsAutoCString origin =
-      quota::QuotaManager::GetOriginFromValidatedPrincipalInfo(mPrincipalInfo);
+      quota::QuotaManager::GetOriginFromValidatedPrincipalInfo(aPrincipalInfo);
 
   auto sendBackError = [aResolver](const auto& aRv) { aResolver(aRv); };
 
@@ -87,7 +86,7 @@ BackgroundFileSystemParent::RecvCreateFileSystemManagerParent(
   // just have the create be one-way, then send the actual request on the
   // new channel, but that's an extra IPC instead.
   InvokeAsync(taskqueue, __func__,
-              [origin, parentEp = std::move(aParentEp), aResolver, rootId,
+              [origin, parentEp = std::move(aParentEndpoint), aResolver, rootId,
                data = std::move(data), taskqueue, pbackground]() mutable {
                 RefPtr<OriginPrivateFileSystemParent> parent =
                     new OriginPrivateFileSystemParent(taskqueue, rootId);
