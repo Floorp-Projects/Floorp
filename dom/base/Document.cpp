@@ -6490,8 +6490,7 @@ Nullable<WindowProxyHolder> Document::GetDefaultView() const {
   return WindowProxyHolder(win->GetBrowsingContext());
 }
 
-nsIContent* Document::GetUnretargetedFocusedContent(
-    IncludeChromeOnly aIncludeChromeOnly) const {
+nsIContent* Document::GetUnretargetedFocusedContent() const {
   nsCOMPtr<nsPIDOMWindowOuter> window = GetWindow();
   if (!window) {
     return nullptr;
@@ -6507,8 +6506,8 @@ nsIContent* Document::GetUnretargetedFocusedContent(
   if (focusedContent->OwnerDoc() != this) {
     return nullptr;
   }
-  if (focusedContent->ChromeOnlyAccess() &&
-      aIncludeChromeOnly == IncludeChromeOnly::No) {
+
+  if (focusedContent->ChromeOnlyAccess()) {
     return focusedContent->FindFirstNonChromeOnlyAccessContent();
   }
   return focusedContent;

@@ -88,23 +88,10 @@ button,
 checkbox,
 menulist,
 radiogroup,
-richlistbox,
 tree,
 browser,
 editor,
-iframe,
-label:is(.text-link, [onclick]),
-tab[selected="true"]:not([ignorefocus="true"]) {
-  -moz-user-focus: normal;
-}
-
-/* Avoid losing focus on tabs by keeping them focusable, since some browser
- * tests rely on this.
- *
- * TODO(emilio): Remove this and fix the tests / front-end code:
- *  * browser/base/content/test/general/browser_tabfocus.js
- */
-tab:focus {
+iframe {
   -moz-user-focus: normal;
 }
 
@@ -129,6 +116,10 @@ label {
 
 description {
   display: flow-root;
+}
+
+label.text-link, label[onclick] {
+  -moz-user-focus: normal;
 }
 
 label html|span.accesskey {
@@ -486,6 +477,10 @@ tab {
   -moz-box-pack: center;
 }
 
+tab[selected="true"]:not([ignorefocus="true"]) {
+  -moz-user-focus: normal;
+}
+
 tabpanels {
   display: -moz-deck;
 }
@@ -632,6 +627,7 @@ wizardpage {
 /********** Rich Listbox ********/
 
 richlistbox {
+  -moz-user-focus: normal;
   -moz-box-orient: vertical;
 }
 

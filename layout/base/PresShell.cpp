@@ -1595,39 +1595,6 @@ void PresShell::AddAuthorSheet(StyleSheet* aSheet) {
   mDocument->ApplicableStylesChanged();
 }
 
-bool PresShell::FixUpFocus() {
-  if (!StaticPrefs::dom_focus_fixup()) {
-    return false;
-  }
-  if (NS_WARN_IF(!mDocument)) {
-    return false;
-  }
-
-  nsIContent* currentFocus = mDocument->GetUnretargetedFocusedContent(
-      Document::IncludeChromeOnly::Yes);
-  if (!currentFocus) {
-    return false;
-  }
-
-  nsIFrame* f = currentFocus->GetPrimaryFrame();
-  if (f && f->IsFocusable()) {
-    return false;
-  }
-
-  if (currentFocus == mDocument->GetBody() ||
-      currentFocus == mDocument->GetRootElement()) {
-    return false;
-  }
-
-  RefPtr fm = nsFocusManager::GetFocusManager();
-  nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow();
-  if (NS_WARN_IF(!window)) {
-    return false;
-  }
-  fm->ClearFocus(window);
-  return true;
-}
-
 void PresShell::SelectionWillTakeFocus() {
   if (mSelection) {
     FrameSelectionWillTakeFocus(*mSelection);
