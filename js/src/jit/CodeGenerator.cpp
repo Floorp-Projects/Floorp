@@ -11219,38 +11219,25 @@ void CodeGenerator::visitStringToLowerCase(LStringToLowerCase* lir) {
     // call will again fail to inline allocate the result string.
     Label hasUpper;
     {
-      if (temp3 == string) {
-        masm.push(string);
-      }
-
-      Register checkInputChars = temp3;
+      Register checkInputChars = output;
       masm.movePtr(inputChars, checkInputChars);
 
       Register current = temp4;
-      Register currentLowercase = output;
 
       Label start;
       masm.bind(&start);
       masm.loadChar(Address(checkInputChars, 0), current, CharEncoding::Latin1);
-      masm.load8ZeroExtend(BaseIndex(toLowerCaseTable, current, TimesOne),
-                           currentLowercase);
-      masm.branch32(Assembler::NotEqual, current, currentLowercase, &hasUpper);
+      masm.branch8(Assembler::NotEqual,
+                   BaseIndex(toLowerCaseTable, current, TimesOne), current,
+                   &hasUpper);
       masm.addPtr(Imm32(sizeof(Latin1Char)), checkInputChars);
       masm.branchSub32(Assembler::NonZero, Imm32(1), length, &start);
-
-      if (temp3 == string) {
-        masm.pop(string);
-      }
 
       // Input is already in lower case.
       masm.movePtr(string, output);
       masm.jump(ool->rejoin());
     }
     masm.bind(&hasUpper);
-
-    if (temp3 == string) {
-      masm.pop(string);
-    }
 
     // |length| was clobbered above, reload.
     masm.loadStringLength(string, length);
