@@ -86,6 +86,15 @@ async function setupWithDesktopDevices() {
   await SpecialPowers.pushPrefEnv({
     set: [["services.sync.engine.tabs", true]],
   });
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "browser.firefox-view.feature-tour",
+        '{"message":"FIREFOX_VIEW_FEATURE_TOUR","screen":"","complete":true}',
+      ],
+    ],
+  });
   return sandbox;
 }
 
