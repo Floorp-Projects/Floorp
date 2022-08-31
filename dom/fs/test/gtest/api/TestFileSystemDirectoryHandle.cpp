@@ -14,7 +14,7 @@
 #include "mozilla/dom/FileSystemDirectoryIterator.h"
 #include "mozilla/dom/FileSystemHandle.h"
 #include "mozilla/dom/FileSystemHandleBinding.h"
-#include "mozilla/dom/OriginPrivateFileSystemChild.h"
+#include "mozilla/dom/FileSystemManagerChild.h"
 
 #include "mozilla/UniquePtr.h"
 #include "nsIGlobalObject.h"

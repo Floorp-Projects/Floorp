@@ -78,7 +78,7 @@ already_AddRefed<Promise> FileSystemManager::GetDirectory(ErrorResult& aRv) {
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self = RefPtr<FileSystemManager>(this),
-           promise](const RefPtr<OriginPrivateFileSystemChild>& child) {
+           promise](const RefPtr<FileSystemManagerChild>& child) {
             RefPtr<FileSystemActorHolder> actorHolder =
                 MakeAndAddRef<FileSystemActorHolder>(child);
             self->mRequestHandler->GetRootHandle(actorHolder, promise);

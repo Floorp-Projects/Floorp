@@ -9,31 +9,31 @@
 #include "gtest/gtest.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/dom/OriginPrivateFileSystemChild.h"
-#include "mozilla/dom/POriginPrivateFileSystem.h"
+#include "mozilla/dom/FileSystemManagerChild.h"
+#include "mozilla/dom/PFileSystemManager.h"
 
 namespace mozilla::dom::fs::test {
 
 class TestFileSystemBackgroundRequestHandler : public ::testing::Test {
  protected:
   void SetUp() override {
-    mOPFSChild = MakeAndAddRef<TestOriginPrivateFileSystemChild>();
+    mFileSystemManagerChild = MakeAndAddRef<TestFileSystemManagerChild>();
   }
 
   UniquePtr<FileSystemBackgroundRequestHandler>
   GetFileSystemBackgroundRequestHandler() {
     return MakeUnique<FileSystemBackgroundRequestHandler>(
-        new TestFileSystemChildFactory(mOPFSChild));
+        new TestFileSystemChildFactory(mFileSystemManagerChild));
   }
 
   mozilla::ipc::PrincipalInfo mPrincipalInfo = GetPrincipalInfo();
-  RefPtr<TestOriginPrivateFileSystemChild> mOPFSChild;
+  RefPtr<TestFileSystemManagerChild> mFileSystemManagerChild;
 };
 
 TEST_F(TestFileSystemBackgroundRequestHandler,
        isCreateFileSystemManagerChildSuccessful) {
-  EXPECT_CALL(*mOPFSChild, Shutdown()).WillOnce([this]() {
-    mOPFSChild->OriginPrivateFileSystemChild::Shutdown();
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown()).WillOnce([this]() {
+    mFileSystemManagerChild->FileSystemManagerChild::Shutdown();
   });
 
   bool done = false;
@@ -41,9 +41,7 @@ TEST_F(TestFileSystemBackgroundRequestHandler,
   testable->CreateFileSystemManagerChild(mPrincipalInfo)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [&done](const RefPtr<OriginPrivateFileSystemChild>& child) {
-            done = true;
-          },
+          [&done](const RefPtr<FileSystemManagerChild>& child) { done = true; },
           [&done](nsresult) { done = true; });
   // MozPromise should be rejected
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,

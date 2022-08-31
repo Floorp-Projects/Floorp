@@ -12,7 +12,7 @@ EXPORTS.mozilla.dom += [
 FINAL_LIBRARY = "xul"
 
 IPDL_SOURCES += [
-    "POriginPrivateFileSystem.ipdl",
+    "PFileSystemManager.ipdl",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

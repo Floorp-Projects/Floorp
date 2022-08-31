@@ -11,7 +11,7 @@
 #include "mozilla/dom/FileSystemDirectoryHandleBinding.h"
 #include "mozilla/dom/FileSystemDirectoryIterator.h"
 #include "mozilla/dom/FileSystemHandleBinding.h"
-#include "mozilla/dom/POriginPrivateFileSystem.h"
+#include "mozilla/dom/PFileSystemManager.h"
 #include "mozilla/dom/Promise.h"
 
 namespace mozilla::dom {

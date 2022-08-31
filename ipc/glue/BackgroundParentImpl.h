@@ -134,7 +134,7 @@ class BackgroundParentImpl : public PBackgroundParent {
 
   mozilla::ipc::IPCResult RecvCreateFileSystemManagerParent(
       const PrincipalInfo& aPrincipalInfo,
-      Endpoint<mozilla::dom::POriginPrivateFileSystemParent>&& aParentEndpoint,
+      Endpoint<mozilla::dom::PFileSystemManagerParent>&& aParentEndpoint,
       CreateFileSystemManagerParentResolver&& aResolver) override;
 
   already_AddRefed<PIdleSchedulerParent> AllocPIdleSchedulerParent() override;

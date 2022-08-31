@@ -5,14 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
+    "FileSystemManagerParent.h",
     "FileSystemManagerParentFactory.h",
-    "OriginPrivateFileSystemParent.h",
 ]
 
 UNIFIED_SOURCES += [
     "FileSystemHashSource.cpp",
+    "FileSystemManagerParent.cpp",
     "FileSystemManagerParentFactory.cpp",
-    "OriginPrivateFileSystemParent.cpp",
 ]
 
 FINAL_LIBRARY = "xul"

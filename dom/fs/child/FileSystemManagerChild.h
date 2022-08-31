@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DOM_FS_CHILD_ORIGINPRIVATEFILESYSTEMCHILD_H_
-#define DOM_FS_CHILD_ORIGINPRIVATEFILESYSTEMCHILD_H_
+#ifndef DOM_FS_CHILD_FILESYSTEMMANAGERCHILD_H_
+#define DOM_FS_CHILD_FILESYSTEMMANAGERCHILD_H_
 
-#include "mozilla/dom/POriginPrivateFileSystemChild.h"
+#include "mozilla/dom/PFileSystemManagerChild.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla::dom {
@@ -16,15 +16,14 @@ namespace mozilla::dom {
 // See: https://phabricator.services.mozilla.com/D155351
 //      https://phabricator.services.mozilla.com/D155352
 
-class OriginPrivateFileSystemChild : public POriginPrivateFileSystemChild {
+class FileSystemManagerChild : public PFileSystemManagerChild {
  public:
-  NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(OriginPrivateFileSystemChild,
-                                          Destroy())
+  NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(FileSystemManagerChild, Destroy())
 
   virtual void SendGetRootHandle(
       mozilla::ipc::ResolveCallback<FileSystemGetHandleResponse>&& aResolve,
       mozilla::ipc::RejectCallback&& aReject) {
-    POriginPrivateFileSystemChild::SendGetRootHandleMsg(
+    PFileSystemManagerChild::SendGetRootHandleMsg(
         std::forward<
             mozilla::ipc::ResolveCallback<FileSystemGetHandleResponse>>(
             aResolve),
@@ -35,7 +34,7 @@ class OriginPrivateFileSystemChild : public POriginPrivateFileSystemChild {
       const FileSystemGetHandleRequest& aRequest,
       mozilla::ipc::ResolveCallback<FileSystemGetHandleResponse>&& aResolve,
       mozilla::ipc::RejectCallback&& aReject) {
-    POriginPrivateFileSystemChild::SendGetDirectoryHandleMsg(
+    PFileSystemManagerChild::SendGetDirectoryHandleMsg(
         aRequest,
         std::forward<
             mozilla::ipc::ResolveCallback<FileSystemGetHandleResponse>>(
@@ -47,7 +46,7 @@ class OriginPrivateFileSystemChild : public POriginPrivateFileSystemChild {
       const FileSystemGetHandleRequest& aRequest,
       mozilla::ipc::ResolveCallback<FileSystemGetHandleResponse>&& aResolve,
       mozilla::ipc::RejectCallback&& aReject) {
-    POriginPrivateFileSystemChild::SendGetFileHandleMsg(
+    PFileSystemManagerChild::SendGetFileHandleMsg(
         aRequest,
         std::forward<
             mozilla::ipc::ResolveCallback<FileSystemGetHandleResponse>>(
@@ -59,7 +58,7 @@ class OriginPrivateFileSystemChild : public POriginPrivateFileSystemChild {
       const FileSystemGetFileRequest& aRequest,
       mozilla::ipc::ResolveCallback<FileSystemGetFileResponse>&& aResolve,
       mozilla::ipc::RejectCallback&& aReject) {
-    POriginPrivateFileSystemChild::SendGetFileMsg(
+    PFileSystemManagerChild::SendGetFileMsg(
         aRequest,
         std::forward<mozilla::ipc::ResolveCallback<FileSystemGetFileResponse>>(
             aResolve),
@@ -70,7 +69,7 @@ class OriginPrivateFileSystemChild : public POriginPrivateFileSystemChild {
       const FileSystemResolveRequest& aRequest,
       mozilla::ipc::ResolveCallback<FileSystemResolveResponse>&& aResolve,
       mozilla::ipc::RejectCallback&& aReject) {
-    POriginPrivateFileSystemChild::SendResolveMsg(
+    PFileSystemManagerChild::SendResolveMsg(
         aRequest,
         std::forward<mozilla::ipc::ResolveCallback<FileSystemResolveResponse>>(
             aResolve),
@@ -81,7 +80,7 @@ class OriginPrivateFileSystemChild : public POriginPrivateFileSystemChild {
       const FileSystemGetEntriesRequest& aRequest,
       mozilla::ipc::ResolveCallback<FileSystemGetEntriesResponse>&& aResolve,
       mozilla::ipc::RejectCallback&& aReject) {
-    POriginPrivateFileSystemChild::SendGetEntriesMsg(
+    PFileSystemManagerChild::SendGetEntriesMsg(
         aRequest,
         std::forward<
             mozilla::ipc::ResolveCallback<FileSystemGetEntriesResponse>>(
@@ -93,7 +92,7 @@ class OriginPrivateFileSystemChild : public POriginPrivateFileSystemChild {
       const FileSystemRemoveEntryRequest& aRequest,
       mozilla::ipc::ResolveCallback<FileSystemRemoveEntryResponse>&& aResolve,
       mozilla::ipc::RejectCallback&& aReject) {
-    POriginPrivateFileSystemChild::SendRemoveEntryMsg(
+    PFileSystemManagerChild::SendRemoveEntryMsg(
         aRequest,
         std::forward<
             mozilla::ipc::ResolveCallback<FileSystemRemoveEntryResponse>>(
@@ -108,7 +107,7 @@ class OriginPrivateFileSystemChild : public POriginPrivateFileSystemChild {
   }
 
  protected:
-  virtual ~OriginPrivateFileSystemChild() = default;
+  virtual ~FileSystemManagerChild() = default;
 
   virtual void Destroy() {
     Shutdown();
@@ -116,21 +115,21 @@ class OriginPrivateFileSystemChild : public POriginPrivateFileSystemChild {
   }
 
  private:
-  using POriginPrivateFileSystemChild::SendGetRootHandleMsg;
+  using PFileSystemManagerChild::SendGetRootHandleMsg;
 
-  using POriginPrivateFileSystemChild::SendGetDirectoryHandleMsg;
+  using PFileSystemManagerChild::SendGetDirectoryHandleMsg;
 
-  using POriginPrivateFileSystemChild::SendGetFileHandleMsg;
+  using PFileSystemManagerChild::SendGetFileHandleMsg;
 
-  using POriginPrivateFileSystemChild::SendGetFileMsg;
+  using PFileSystemManagerChild::SendGetFileMsg;
 
-  using POriginPrivateFileSystemChild::SendResolveMsg;
+  using PFileSystemManagerChild::SendResolveMsg;
 
-  using POriginPrivateFileSystemChild::SendGetEntriesMsg;
+  using PFileSystemManagerChild::SendGetEntriesMsg;
 
-  using POriginPrivateFileSystemChild::SendRemoveEntryMsg;
+  using PFileSystemManagerChild::SendRemoveEntryMsg;
 };
 
 }  // namespace mozilla::dom
 
-#endif  // DOM_FS_CHILD_ORIGINPRIVATEFILESYSTEMCHILD_H_
+#endif  // DOM_FS_CHILD_FILESYSTEMMANAGERCHILD_H_

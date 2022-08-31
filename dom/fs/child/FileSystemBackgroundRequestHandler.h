@@ -21,7 +21,7 @@ class PrincipalInfo;
 
 namespace dom {
 
-class OriginPrivateFileSystemChild;
+class FileSystemManagerChild;
 
 namespace fs {
 class FileSystemChildFactory;
@@ -35,7 +35,7 @@ class FileSystemBackgroundRequestHandler {
   FileSystemBackgroundRequestHandler();
 
   using CreateFileSystemManagerChildPromise =
-      MozPromise<RefPtr<OriginPrivateFileSystemChild>, nsresult, false>;
+      MozPromise<RefPtr<FileSystemManagerChild>, nsresult, false>;
 
   virtual RefPtr<CreateFileSystemManagerChildPromise>
   CreateFileSystemManagerChild(

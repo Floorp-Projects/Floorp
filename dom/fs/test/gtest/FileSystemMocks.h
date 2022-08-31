@@ -19,7 +19,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
-#include "mozilla/dom/OriginPrivateFileSystemChild.h"
+#include "mozilla/dom/FileSystemManagerChild.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -193,7 +193,7 @@ class TestPromiseListener : public PromiseNativeHandler,
   ErrorHandler mOnError;
 };
 
-class TestOriginPrivateFileSystemChild : public OriginPrivateFileSystemChild {
+class TestFileSystemManagerChild : public FileSystemManagerChild {
  public:
   MOCK_METHOD(void, SendGetRootHandle,
               (mozilla::ipc::ResolveCallback<FileSystemGetHandleResponse> &&
@@ -246,22 +246,22 @@ class TestOriginPrivateFileSystemChild : public OriginPrivateFileSystemChild {
   MOCK_METHOD(void, Shutdown, (), (override));
 
  protected:
-  virtual ~TestOriginPrivateFileSystemChild() = default;
+  virtual ~TestFileSystemManagerChild() = default;
 };
 
 class TestFileSystemChildFactory final : public FileSystemChildFactory {
  public:
-  explicit TestFileSystemChildFactory(TestOriginPrivateFileSystemChild* aChild)
+  explicit TestFileSystemChildFactory(TestFileSystemManagerChild* aChild)
       : mChild(aChild) {}
 
-  already_AddRefed<OriginPrivateFileSystemChild> Create() const override {
-    return RefPtr<TestOriginPrivateFileSystemChild>(mChild).forget();
+  already_AddRefed<FileSystemManagerChild> Create() const override {
+    return RefPtr<TestFileSystemManagerChild>(mChild).forget();
   }
 
   ~TestFileSystemChildFactory() = default;
 
  private:
-  TestOriginPrivateFileSystemChild* mChild;
+  TestFileSystemManagerChild* mChild;
 };
 
 struct MockExpectMe {

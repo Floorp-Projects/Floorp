@@ -491,7 +491,7 @@ BackgroundParentImpl::AllocPBackgroundSessionStorageServiceParent() {
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvCreateFileSystemManagerParent(
     const PrincipalInfo& aPrincipalInfo,
-    Endpoint<POriginPrivateFileSystemParent>&& aParentEndpoint,
+    Endpoint<PFileSystemManagerParent>&& aParentEndpoint,
     CreateFileSystemManagerParentResolver&& aResolver) {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();

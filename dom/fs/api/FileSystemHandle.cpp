@@ -9,7 +9,7 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FileSystemHandleBinding.h"
-#include "mozilla/dom/OriginPrivateFileSystemChild.h"
+#include "mozilla/dom/FileSystemManagerChild.h"
 #include "mozilla/dom/Promise.h"
 
 namespace mozilla::dom {
@@ -60,7 +60,7 @@ already_AddRefed<Promise> FileSystemHandle::IsSameEntry(
   return promise.forget();
 }
 
-OriginPrivateFileSystemChild* FileSystemHandle::Actor() const {
+FileSystemManagerChild* FileSystemHandle::Actor() const {
   return mActor->Actor();
 }
 
