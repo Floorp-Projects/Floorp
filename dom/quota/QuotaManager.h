@@ -113,16 +113,10 @@ class QuotaManager final : public BackgroundThreadObject {
   // Returns a non-owning reference.
   static QuotaManager* Get();
 
-  // Use only in gtests!
-  static nsIObserver* GetObserver();
-
   // Returns true if we've begun the shutdown process.
   static bool IsShuttingDown();
 
   static void ShutdownInstance();
-
-  // Use only in gtests!
-  static void Reset();
 
   static bool IsOSMetadata(const nsAString& aFileName);
 
