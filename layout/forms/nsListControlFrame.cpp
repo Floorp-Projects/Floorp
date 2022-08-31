@@ -238,9 +238,9 @@ nscoord nsListControlFrame::GetPrefISize(gfxContext* aRenderingContext) {
   // dropdown, and standalone listboxes are overflow:scroll so they need
   // it too.
   WritingMode wm = GetWritingMode();
-  result = StyleDisplay()->GetContainSizeAxes().mIContained
-               ? 0
-               : GetScrolledFrame()->GetPrefISize(aRenderingContext);
+  Maybe<nscoord> containISize = ContainIntrinsicISize();
+  result = containISize ? *containISize
+                        : GetScrolledFrame()->GetPrefISize(aRenderingContext);
   LogicalMargin scrollbarSize(
       wm, GetDesiredScrollbarSizes(PresContext(), aRenderingContext));
   result = NSCoordSaturatingAdd(result, scrollbarSize.IStartEnd(wm));
@@ -256,9 +256,9 @@ nscoord nsListControlFrame::GetMinISize(gfxContext* aRenderingContext) {
   // dropdown, and standalone listboxes are overflow:scroll so they need
   // it too.
   WritingMode wm = GetWritingMode();
-  result = StyleDisplay()->GetContainSizeAxes().mIContained
-               ? 0
-               : GetScrolledFrame()->GetMinISize(aRenderingContext);
+  Maybe<nscoord> containISize = ContainIntrinsicISize();
+  result = containISize ? *containISize
+                        : GetScrolledFrame()->GetMinISize(aRenderingContext);
   LogicalMargin scrollbarSize(
       wm, GetDesiredScrollbarSizes(PresContext(), aRenderingContext));
   result += scrollbarSize.IStartEnd(wm);
@@ -290,32 +290,43 @@ void nsListControlFrame::Reflow(nsPresContext* aPresContext,
   }
 
   MarkInReflow();
-  /*
-   * Due to the fact that our intrinsic block size depends on the block
-   * sizes of our kids, we end up having to do two-pass reflow, in
-   * general -- the first pass to find the intrinsic block size and a
-   * second pass to reflow the scrollframe at that block size (which
-   * will size the scrollbars correctly, etc).
-   *
-   * Naturally, we want to avoid doing the second reflow as much as
-   * possible.
-   * We can skip it in the following cases (in all of which the first
-   * reflow is already happening at the right block size):
-   *
-   * - We're reflowing with a constrained computed block size -- just
-   *   use that block size.
-   * - We're not dirty and have no dirty kids and shouldn't be reflowing
-   *   all kids.  In this case, our cached max block size of a child is
-   *   not going to change.
-   * - We do our first reflow using our cached max block size of a
-   *   child, then compute the new max block size and it's the same as
-   *   the old one.
-   */
-
+  // Due to the fact that our intrinsic block size depends on the block
+  // sizes of our kids, we end up having to do two-pass reflow, in
+  // general -- the first pass to find the intrinsic block size and a
+  // second pass to reflow the scrollframe at that block size (which
+  // will size the scrollbars correctly, etc).
+  //
+  // Naturally, we want to avoid doing the second reflow as much as
+  // possible. We can skip it in the following cases (in all of which the first
+  // reflow is already happening at the right block size):
   bool autoBSize = (aReflowInput.ComputedBSize() == NS_UNCONSTRAINEDSIZE);
+  Maybe<nscoord> containBSize = ContainIntrinsicBSize(NS_UNCONSTRAINEDSIZE);
+  bool usingContainBSize =
+      autoBSize && containBSize && *containBSize != NS_UNCONSTRAINEDSIZE;
 
-  mMightNeedSecondPass =
-      autoBSize && (IsSubtreeDirty() || aReflowInput.ShouldReflowAllKids());
+  mMightNeedSecondPass = [&] {
+    if (!autoBSize) {
+      // We're reflowing with a constrained computed block size -- just use that
+      // block size.
+      return false;
+    }
+    if (!IsSubtreeDirty() && !aReflowInput.ShouldReflowAllKids()) {
+      // We're not dirty and have no dirty kids and shouldn't be reflowing all
+      // kids. In this case, our cached max block size of a child is not going
+      // to change.
+      return false;
+    }
+    if (usingContainBSize) {
+      // We're size-contained in the block axis. In this case the size of a row
+      // doesn't depend on our children (it's the "fallback" size).
+      return false;
+    }
+    // We might need to do a second pass. If we do our first reflow using our
+    // cached max block size of a child, then compute the new max block size,
+    // and it's the same as the old one, we might still skip it (see the
+    // IsScrollbarUpdateSuppressed() check).
+    return true;
+  }();
 
   ReflowInput state(aReflowInput);
   int32_t length = GetNumberOfRows();
@@ -331,17 +342,22 @@ void nsListControlFrame::Reflow(nsPresContext* aPresContext,
     state.SetComputedBSize(computedBSize);
   }
 
+  if (usingContainBSize) {
+    state.SetComputedBSize(*containBSize);
+  }
+
   nsHTMLScrollFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
 
   if (!mMightNeedSecondPass) {
     NS_ASSERTION(!autoBSize || BSizeOfARow() == oldBSizeOfARow,
                  "How did our BSize of a row change if nothing was dirty?");
-    NS_ASSERTION(!autoBSize || !HasAnyStateBits(NS_FRAME_FIRST_REFLOW),
+    NS_ASSERTION(!autoBSize || !HasAnyStateBits(NS_FRAME_FIRST_REFLOW) ||
+                     usingContainBSize,
                  "How do we not need a second pass during initial reflow at "
                  "auto BSize?");
     NS_ASSERTION(!IsScrollbarUpdateSuppressed(),
                  "Shouldn't be suppressing if we don't need a second pass!");
-    if (!autoBSize) {
+    if (!autoBSize || usingContainBSize) {
       // Update our mNumDisplayRows based on our new row block size now
       // that we know it.  Note that if autoBSize and we landed in this
       // code then we already set mNumDisplayRows in CalcIntrinsicBSize.
