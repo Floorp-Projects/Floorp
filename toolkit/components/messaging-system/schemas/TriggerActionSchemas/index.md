@@ -130,3 +130,7 @@ Watch for changes on any number of preferences. Runs when a pref is added, remov
   params: ["pref name"]
 }
 ```
+
+### `featureCalloutCheck`
+
+Happens when navigating to about:firefoxview or other about pages with Feature Callout tours enabled

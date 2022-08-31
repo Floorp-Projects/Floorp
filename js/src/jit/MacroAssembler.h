@@ -1407,6 +1407,13 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void branch8(Condition cond, const Address& lhs, Imm32 rhs,
                       Label* label) PER_SHARED_ARCH;
 
+  // Compares the byte in |lhs| against |rhs| using a 8-bit comparison on
+  // x86/x64 or a 32-bit comparison (all other platforms). The caller should
+  // ensure |rhs| is a zero- resp. sign-extended byte value for cross-platform
+  // compatible code.
+  inline void branch8(Condition cond, const BaseIndex& lhs, Register rhs,
+                      Label* label) PER_SHARED_ARCH;
+
   inline void branch16(Condition cond, const Address& lhs, Imm32 rhs,
                        Label* label) PER_SHARED_ARCH;
 

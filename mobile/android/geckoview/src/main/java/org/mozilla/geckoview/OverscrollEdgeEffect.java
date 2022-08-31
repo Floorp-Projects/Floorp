@@ -8,6 +8,9 @@ package org.mozilla.geckoview;
 import android.content.Context;
 import android.graphics.BlendMode;
 import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.os.Build;
 import android.widget.EdgeEffect;
@@ -43,6 +46,25 @@ public final class OverscrollEdgeEffect {
   private void setBlendMode(final EdgeEffect edgeEffect) {
     if (Build.VERSION.SDK_INT < 29) {
       // setBlendMode is only supported on SDK_INT >= 29 and above.
+
+      if (sPaintField == null) {
+        try {
+          sPaintField = EdgeEffect.class.getDeclaredField("mPaint");
+          sPaintField.setAccessible(true);
+        } catch (final NoSuchFieldException e) {
+          // Cannot get the field, nothing we can do here
+          return;
+        }
+      }
+
+      try {
+        final Paint paint = (Paint) sPaintField.get(edgeEffect);
+        final PorterDuffXfermode mode = new PorterDuffXfermode(PorterDuff.Mode.SRC);
+        paint.setXfermode(mode);
+      } catch (final IllegalAccessException ex) {
+        // Nothing we can do
+      }
+
       return;
     }
 

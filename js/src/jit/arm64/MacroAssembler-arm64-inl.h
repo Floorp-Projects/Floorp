@@ -963,6 +963,36 @@ void MacroAssembler::branch8(Condition cond, const Address& lhs, Imm32 rhs,
   }
 }
 
+void MacroAssembler::branch8(Condition cond, const BaseIndex& lhs, Register rhs,
+                             Label* label) {
+  vixl::UseScratchRegisterScope temps(this);
+  Register scratch = temps.AcquireX().asUnsized();
+  MOZ_ASSERT(scratch != lhs.base);
+
+  switch (cond) {
+    case Assembler::Equal:
+    case Assembler::NotEqual:
+    case Assembler::Above:
+    case Assembler::AboveOrEqual:
+    case Assembler::Below:
+    case Assembler::BelowOrEqual:
+      load8ZeroExtend(lhs, scratch);
+      branch32(cond, scratch, rhs, label);
+      break;
+
+    case Assembler::GreaterThan:
+    case Assembler::GreaterThanOrEqual:
+    case Assembler::LessThan:
+    case Assembler::LessThanOrEqual:
+      load8SignExtend(lhs, scratch);
+      branch32(cond, scratch, rhs, label);
+      break;
+
+    default:
+      MOZ_CRASH("unexpected condition");
+  }
+}
+
 void MacroAssembler::branch16(Condition cond, const Address& lhs, Imm32 rhs,
                               Label* label) {
   vixl::UseScratchRegisterScope temps(this);

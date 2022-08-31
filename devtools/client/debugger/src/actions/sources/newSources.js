@@ -65,6 +65,8 @@ function loadSourceMaps(cx, sources) {
         throw error;
       }
     }
+
+    return [];
   };
 }
 
@@ -136,7 +138,8 @@ function checkSelectedSource(cx, sourceId) {
     if (rawPendingUrl === source.url) {
       if (isPrettyURL(pendingUrl)) {
         const prettySource = await dispatch(togglePrettyPrint(cx, source.id));
-        return dispatch(checkPendingBreakpoints(cx, prettySource.id));
+        dispatch(checkPendingBreakpoints(cx, prettySource.id));
+        return;
       }
 
       await dispatch(

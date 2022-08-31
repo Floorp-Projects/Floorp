@@ -19,10 +19,11 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
-#include "mozilla/dom/OriginPrivateFileSystemChild.h"
+#include "mozilla/dom/FileSystemManagerChild.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/UniquePtr.h"
@@ -41,38 +42,39 @@ namespace mozilla::dom::fs::test {
 
 nsIGlobalObject* GetGlobal();
 
+mozilla::ipc::PrincipalInfo GetPrincipalInfo();
+
 class MockFileSystemRequestHandler : public FileSystemRequestHandler {
  public:
   MOCK_METHOD(void, GetRootHandle,
-              (RefPtr<FileSystemActorHolder> & aActor,
-               RefPtr<Promise> aPromise),
+              (RefPtr<FileSystemManager> aManager, RefPtr<Promise> aPromise),
               (override));
 
   MOCK_METHOD(void, GetDirectoryHandle,
-              (RefPtr<FileSystemActorHolder> & aActor,
+              (RefPtr<FileSystemManager> & aManager,
                const FileSystemChildMetadata& aDirectory, bool aCreate,
                RefPtr<Promise> aPromise),
               (override));
 
   MOCK_METHOD(void, GetFileHandle,
-              (RefPtr<FileSystemActorHolder> & aActor,
+              (RefPtr<FileSystemManager> & aManager,
                const FileSystemChildMetadata& aFile, bool aCreate,
                RefPtr<Promise> aPromise),
               (override));
 
   MOCK_METHOD(void, GetFile,
-              (RefPtr<FileSystemActorHolder> & aActor,
+              (RefPtr<FileSystemManager> & aManager,
                const FileSystemEntryMetadata& aFile, RefPtr<Promise> aPromise),
               (override));
 
   MOCK_METHOD(void, GetEntries,
-              (RefPtr<FileSystemActorHolder> & aActor,
-               const EntryId& aDirectory, PageNumber aPage,
-               RefPtr<Promise> aPromise, ArrayAppendable& aSink),
+              (RefPtr<FileSystemManager> & aManager, const EntryId& aDirectory,
+               PageNumber aPage, RefPtr<Promise> aPromise,
+               ArrayAppendable& aSink),
               (override));
 
   MOCK_METHOD(void, RemoveEntry,
-              (RefPtr<FileSystemActorHolder> & aActor,
+              (RefPtr<FileSystemManager> & aManager,
                const FileSystemChildMetadata& aEntry, bool aRecursive,
                RefPtr<Promise> aPromise),
               (override));
@@ -190,11 +192,8 @@ class TestPromiseListener : public PromiseNativeHandler,
   ErrorHandler mOnError;
 };
 
-class TestOriginPrivateFileSystemChild : public OriginPrivateFileSystemChild {
+class TestFileSystemManagerChild : public FileSystemManagerChild {
  public:
-  NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(TestOriginPrivateFileSystemChild,
-                                          Destroy(), override)
-
   MOCK_METHOD(void, SendGetRootHandle,
               (mozilla::ipc::ResolveCallback<FileSystemGetHandleResponse> &&
                    aResolve,
@@ -243,32 +242,25 @@ class TestOriginPrivateFileSystemChild : public OriginPrivateFileSystemChild {
        mozilla::ipc::RejectCallback&& aReject),
       (override));
 
-  MOCK_METHOD(void, Close, (), (override));
-
-  MOCK_METHOD(POriginPrivateFileSystemChild*, AsBindable, (), (override));
+  MOCK_METHOD(void, Shutdown, (), (override));
 
  protected:
-  virtual ~TestOriginPrivateFileSystemChild() = default;
-
-  void Destroy() {
-    Close();
-    delete this;
-  }
+  virtual ~TestFileSystemManagerChild() = default;
 };
 
 class TestFileSystemChildFactory final : public FileSystemChildFactory {
  public:
-  explicit TestFileSystemChildFactory(TestOriginPrivateFileSystemChild* aChild)
+  explicit TestFileSystemChildFactory(TestFileSystemManagerChild* aChild)
       : mChild(aChild) {}
 
-  already_AddRefed<OriginPrivateFileSystemChild> Create() const override {
-    return RefPtr<TestOriginPrivateFileSystemChild>(mChild).forget();
+  already_AddRefed<FileSystemManagerChild> Create() const override {
+    return RefPtr<TestFileSystemManagerChild>(mChild).forget();
   }
 
   ~TestFileSystemChildFactory() = default;
 
  private:
-  TestOriginPrivateFileSystemChild* mChild;
+  TestFileSystemManagerChild* mChild;
 };
 
 struct MockExpectMe {

@@ -4,15 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+DIRS += [
+    "datamodel",
+]
+
 EXPORTS.mozilla.dom += [
-    "BackgroundFileSystemParent.h",
-    "OriginPrivateFileSystemParent.h",
+    "FileSystemManagerParent.h",
+    "FileSystemManagerParentFactory.h",
+    "FileSystemQuotaClient.h",
 ]
 
 UNIFIED_SOURCES += [
-    "BackgroundFileSystemParent.cpp",
     "FileSystemHashSource.cpp",
-    "OriginPrivateFileSystemParent.cpp",
+    "FileSystemManagerParent.cpp",
+    "FileSystemManagerParentFactory.cpp",
+    "FileSystemQuotaClient.cpp",
 ]
 
 FINAL_LIBRARY = "xul"

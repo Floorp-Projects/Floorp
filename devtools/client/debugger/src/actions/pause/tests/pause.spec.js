@@ -64,6 +64,8 @@ const mockCommandClient = {
             contentType: "text/rust",
           });
       }
+
+      return resolve();
     });
   },
   getSourceActorBreakpointPositions: async () => ({}),

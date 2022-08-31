@@ -10386,6 +10386,58 @@ static void CopyStringCharsMaybeInflate(MacroAssembler& masm, Register input,
   masm.bind(&done);
 }
 
+static void AllocateThinOrFatInlineString(MacroAssembler& masm, Register output,
+                                          Register length, Register temp,
+                                          gc::InitialHeap initialStringHeap,
+                                          Label* failure,
+                                          CharEncoding encoding) {
+#ifdef DEBUG
+  size_t maxInlineLength;
+  if (encoding == CharEncoding::Latin1) {
+    maxInlineLength = JSFatInlineString::MAX_LENGTH_LATIN1;
+  } else {
+    maxInlineLength = JSFatInlineString::MAX_LENGTH_TWO_BYTE;
+  }
+
+  Label ok;
+  masm.branch32(Assembler::BelowOrEqual, length, Imm32(maxInlineLength), &ok);
+  masm.assumeUnreachable("string length too large to be allocated as inline");
+  masm.bind(&ok);
+#endif
+
+  size_t maxThinInlineLength;
+  if (encoding == CharEncoding::Latin1) {
+    maxThinInlineLength = JSThinInlineString::MAX_LENGTH_LATIN1;
+  } else {
+    maxThinInlineLength = JSThinInlineString::MAX_LENGTH_TWO_BYTE;
+  }
+
+  Label isFat, allocDone;
+  masm.branch32(Assembler::Above, length, Imm32(maxThinInlineLength), &isFat);
+  {
+    uint32_t flags = JSString::INIT_THIN_INLINE_FLAGS;
+    if (encoding == CharEncoding::Latin1) {
+      flags |= JSString::LATIN1_CHARS_BIT;
+    }
+    masm.newGCString(output, temp, initialStringHeap, failure);
+    masm.store32(Imm32(flags), Address(output, JSString::offsetOfFlags()));
+    masm.jump(&allocDone);
+  }
+  masm.bind(&isFat);
+  {
+    uint32_t flags = JSString::INIT_FAT_INLINE_FLAGS;
+    if (encoding == CharEncoding::Latin1) {
+      flags |= JSString::LATIN1_CHARS_BIT;
+    }
+    masm.newGCFatInlineString(output, temp, initialStringHeap, failure);
+    masm.store32(Imm32(flags), Address(output, JSString::offsetOfFlags()));
+  }
+  masm.bind(&allocDone);
+
+  // Store length.
+  masm.store32(length, Address(output, JSString::offsetOfLength()));
+}
+
 static void ConcatInlineString(MacroAssembler& masm, Register lhs, Register rhs,
                                Register output, Register temp1, Register temp2,
                                Register temp3,
@@ -10401,37 +10453,8 @@ static void ConcatInlineString(MacroAssembler& masm, Register lhs, Register rhs,
   masm.branchIfRope(rhs, failure);
 
   // Allocate a JSThinInlineString or JSFatInlineString.
-  size_t maxThinInlineLength;
-  if (encoding == CharEncoding::Latin1) {
-    maxThinInlineLength = JSThinInlineString::MAX_LENGTH_LATIN1;
-  } else {
-    maxThinInlineLength = JSThinInlineString::MAX_LENGTH_TWO_BYTE;
-  }
-
-  Label isFat, allocDone;
-  masm.branch32(Assembler::Above, temp2, Imm32(maxThinInlineLength), &isFat);
-  {
-    uint32_t flags = JSString::INIT_THIN_INLINE_FLAGS;
-    if (encoding == CharEncoding::Latin1) {
-      flags |= JSString::LATIN1_CHARS_BIT;
-    }
-    masm.newGCString(output, temp1, initialStringHeap, failure);
-    masm.store32(Imm32(flags), Address(output, JSString::offsetOfFlags()));
-    masm.jump(&allocDone);
-  }
-  masm.bind(&isFat);
-  {
-    uint32_t flags = JSString::INIT_FAT_INLINE_FLAGS;
-    if (encoding == CharEncoding::Latin1) {
-      flags |= JSString::LATIN1_CHARS_BIT;
-    }
-    masm.newGCFatInlineString(output, temp1, initialStringHeap, failure);
-    masm.store32(Imm32(flags), Address(output, JSString::offsetOfFlags()));
-  }
-  masm.bind(&allocDone);
-
-  // Store length.
-  masm.store32(temp2, Address(output, JSString::offsetOfLength()));
+  AllocateThinOrFatInlineString(masm, output, temp2, temp1, initialStringHeap,
+                                failure, encoding);
 
   // Load chars pointer in temp2.
   masm.loadInlineStringCharsForStore(output, temp2);
@@ -10638,9 +10661,9 @@ JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
 
   masm.add32(temp1, temp2);
 
-  // Check if we can use a JSFatInlineString. The result is a Latin1 string if
+  // Check if we can use a JSInlineString. The result is a Latin1 string if
   // lhs and rhs are both Latin1, so we AND the flags.
-  Label isFatInlineTwoByte, isFatInlineLatin1;
+  Label isInlineTwoByte, isInlineLatin1;
   masm.load32(Address(lhs, JSString::offsetOfFlags()), temp1);
   masm.and32(Address(rhs, JSString::offsetOfFlags()), temp1);
 
@@ -10650,14 +10673,13 @@ JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
   {
     masm.branch32(Assembler::BelowOrEqual, temp2,
                   Imm32(JSFatInlineString::MAX_LENGTH_TWO_BYTE),
-                  &isFatInlineTwoByte);
+                  &isInlineTwoByte);
     masm.jump(&notInline);
   }
   masm.bind(&isLatin1);
   {
     masm.branch32(Assembler::BelowOrEqual, temp2,
-                  Imm32(JSFatInlineString::MAX_LENGTH_LATIN1),
-                  &isFatInlineLatin1);
+                  Imm32(JSFatInlineString::MAX_LENGTH_LATIN1), &isInlineLatin1);
   }
   masm.bind(&notInline);
 
@@ -10691,11 +10713,11 @@ JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
   masm.mov(lhs, output);
   masm.ret();
 
-  masm.bind(&isFatInlineTwoByte);
+  masm.bind(&isInlineTwoByte);
   ConcatInlineString(masm, lhs, rhs, output, temp1, temp2, temp3,
                      initialStringHeap, &failure, CharEncoding::TwoByte);
 
-  masm.bind(&isFatInlineLatin1);
+  masm.bind(&isInlineLatin1);
   ConcatInlineString(masm, lhs, rhs, output, temp1, temp2, temp3,
                      initialStringHeap, &failure, CharEncoding::Latin1);
 
@@ -11117,15 +11139,151 @@ void CodeGenerator::visitStringEndsWithInline(LStringEndsWithInline* lir) {
   masm.bind(ool->rejoin());
 }
 
-void CodeGenerator::visitStringConvertCase(LStringConvertCase* lir) {
+void CodeGenerator::visitStringToLowerCase(LStringToLowerCase* lir) {
+  Register string = ToRegister(lir->string());
+  Register output = ToRegister(lir->output());
+  Register temp0 = ToRegister(lir->temp0());
+  Register temp1 = ToRegister(lir->temp1());
+  Register temp2 = ToRegister(lir->temp2());
+
+  // On x86 there are not enough registers. In that case reuse the string
+  // register as a temporary.
+  Register temp3 =
+      lir->temp3()->isBogusTemp() ? string : ToRegister(lir->temp3());
+  Register temp4 = ToRegister(lir->temp4());
+
+  using Fn = JSString* (*)(JSContext*, HandleString);
+  OutOfLineCode* ool = oolCallVM<Fn, js::StringToLowerCase>(
+      lir, ArgList(string), StoreRegisterTo(output));
+
+  // Take the slow path if the string isn't a linear Latin-1 string.
+  Imm32 linearLatin1Bits(JSString::LINEAR_BIT | JSString::LATIN1_CHARS_BIT);
+  Register flags = temp0;
+  masm.load32(Address(string, JSString::offsetOfFlags()), flags);
+  masm.and32(linearLatin1Bits, flags);
+  masm.branch32(Assembler::NotEqual, flags, linearLatin1Bits, ool->entry());
+
+  Register length = temp0;
+  masm.loadStringLength(string, length);
+
+  // Return the input if it's the empty string.
+  Label notEmptyString;
+  masm.branch32(Assembler::NotEqual, length, Imm32(0), &notEmptyString);
+  {
+    masm.movePtr(string, output);
+    masm.jump(ool->rejoin());
+  }
+  masm.bind(&notEmptyString);
+
+  Register inputChars = temp1;
+  masm.loadStringChars(string, inputChars, CharEncoding::Latin1);
+
+  Register toLowerCaseTable = temp2;
+  masm.movePtr(ImmPtr(unicode::latin1ToLowerCaseTable), toLowerCaseTable);
+
+  // Single element strings can be directly retrieved from static strings cache.
+  Label notSingleElementString;
+  masm.branch32(Assembler::NotEqual, length, Imm32(1), &notSingleElementString);
+  {
+    Register current = temp4;
+
+    masm.loadChar(Address(inputChars, 0), current, CharEncoding::Latin1);
+    masm.load8ZeroExtend(BaseIndex(toLowerCaseTable, current, TimesOne),
+                         current);
+    masm.movePtr(ImmPtr(&gen->runtime->staticStrings().unitStaticTable),
+                 output);
+    masm.loadPtr(BaseIndex(output, current, ScalePointer), output);
+
+    masm.jump(ool->rejoin());
+  }
+  masm.bind(&notSingleElementString);
+
+  // Use the OOL-path when the string is too long. This prevents scanning long
+  // strings which have upper case characters only near the end a second time in
+  // the VM.
+  constexpr int32_t MaxInlineLength = 64;
+  masm.branch32(Assembler::Above, length, Imm32(MaxInlineLength), ool->entry());
+
+  {
+    // Check if there are any characters which need to be converted.
+    //
+    // This extra loop gives a small performance improvement for strings which
+    // are already lower cased and lets us avoid calling into the runtime for
+    // non-inline, all lower case strings. But more importantly it avoids
+    // repeated inline allocation failures:
+    // |AllocateThinOrFatInlineString| below takes the OOL-path and calls the
+    // |js::StringToLowerCase| runtime function when the result string can't be
+    // allocated inline. And |js::StringToLowerCase| directly returns the input
+    // string when no characters need to be converted. That means it won't
+    // trigger GC to clear up the free nursery space, so the next toLowerCase()
+    // call will again fail to inline allocate the result string.
+    Label hasUpper;
+    {
+      Register checkInputChars = output;
+      masm.movePtr(inputChars, checkInputChars);
+
+      Register current = temp4;
+
+      Label start;
+      masm.bind(&start);
+      masm.loadChar(Address(checkInputChars, 0), current, CharEncoding::Latin1);
+      masm.branch8(Assembler::NotEqual,
+                   BaseIndex(toLowerCaseTable, current, TimesOne), current,
+                   &hasUpper);
+      masm.addPtr(Imm32(sizeof(Latin1Char)), checkInputChars);
+      masm.branchSub32(Assembler::NonZero, Imm32(1), length, &start);
+
+      // Input is already in lower case.
+      masm.movePtr(string, output);
+      masm.jump(ool->rejoin());
+    }
+    masm.bind(&hasUpper);
+
+    // |length| was clobbered above, reload.
+    masm.loadStringLength(string, length);
+
+    // Call into the runtime when we can't create an inline string.
+    masm.branch32(Assembler::Above, length,
+                  Imm32(JSFatInlineString::MAX_LENGTH_LATIN1), ool->entry());
+
+    AllocateThinOrFatInlineString(masm, output, length, temp4,
+                                  initialStringHeap(), ool->entry(),
+                                  CharEncoding::Latin1);
+
+    if (temp3 == string) {
+      masm.push(string);
+    }
+
+    Register outputChars = temp3;
+    masm.loadInlineStringCharsForStore(output, outputChars);
+
+    {
+      Register current = temp4;
+
+      Label start;
+      masm.bind(&start);
+      masm.loadChar(Address(inputChars, 0), current, CharEncoding::Latin1);
+      masm.load8ZeroExtend(BaseIndex(toLowerCaseTable, current, TimesOne),
+                           current);
+      masm.storeChar(current, Address(outputChars, 0), CharEncoding::Latin1);
+      masm.addPtr(Imm32(sizeof(Latin1Char)), inputChars);
+      masm.addPtr(Imm32(sizeof(Latin1Char)), outputChars);
+      masm.branchSub32(Assembler::NonZero, Imm32(1), length, &start);
+    }
+
+    if (temp3 == string) {
+      masm.pop(string);
+    }
+  }
+
+  masm.bind(ool->rejoin());
+}
+
+void CodeGenerator::visitStringToUpperCase(LStringToUpperCase* lir) {
   pushArg(ToRegister(lir->string()));
 
   using Fn = JSString* (*)(JSContext*, HandleString);
-  if (lir->mir()->mode() == MStringConvertCase::LowerCase) {
-    callVM<Fn, js::StringToLowerCase>(lir);
-  } else {
-    callVM<Fn, js::StringToUpperCase>(lir);
-  }
+  callVM<Fn, js::StringToUpperCase>(lir);
 }
 
 void CodeGenerator::visitStringSplit(LStringSplit* lir) {

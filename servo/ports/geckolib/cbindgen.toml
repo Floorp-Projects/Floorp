@@ -148,6 +148,7 @@ include = [
   "ZIndex",
   "TransformOrigin",
   "LineBreak",
+  "LineClamp",
   "WordBreak",
   "Contain",
   "ContainerType",

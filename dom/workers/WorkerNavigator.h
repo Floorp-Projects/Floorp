@@ -56,6 +56,8 @@ class WorkerNavigator final : public nsWrapperCache {
 
   static already_AddRefed<WorkerNavigator> Create(bool aOnLine);
 
+  void Invalidate();
+
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 

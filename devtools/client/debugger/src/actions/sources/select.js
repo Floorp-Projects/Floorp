@@ -131,7 +131,8 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
 
     if (!source) {
       // If there is no source we deselect the current selected source
-      return dispatch(clearSelectedLocation(cx));
+      dispatch(clearSelectedLocation(cx));
+      return;
     }
 
     const activeSearch = getActiveSearch(getState());
@@ -228,7 +229,7 @@ export function selectSpecificLocation(cx, location) {
 export function jumpToMappedLocation(cx, location) {
   return async function({ dispatch, getState, client, sourceMaps }) {
     if (!client) {
-      return;
+      return null;
     }
 
     // Map to either an original or a generated source location

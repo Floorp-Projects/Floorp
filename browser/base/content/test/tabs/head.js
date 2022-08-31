@@ -26,10 +26,18 @@ function triggerClickOn(target, options) {
   return promise;
 }
 
-async function addTab(url = "http://mochi.test:8888/", params = {}) {
+async function addTab(url = "http://mochi.test:8888/", params) {
+  return addTabTo(gBrowser, url, params);
+}
+
+async function addTabTo(
+  targetBrowser,
+  url = "http://mochi.test:8888/",
+  params = {}
+) {
   params.skipAnimation = true;
-  const tab = BrowserTestUtils.addTab(gBrowser, url, params);
-  const browser = gBrowser.getBrowserForTab(tab);
+  const tab = BrowserTestUtils.addTab(targetBrowser, url, params);
+  const browser = targetBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
   return tab;
 }

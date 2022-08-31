@@ -4,12 +4,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/OriginPrivateFileSystemChild.h"
-#include "mozilla/ipc/ToplevelActorHolder.h"
+#ifndef DOM_FS_PARENT_FILESYSTEMQUOTACLIENT_H_
+#define DOM_FS_PARENT_FILESYSTEMQUOTACLIENT_H_
+
+template <class T>
+struct already_AddRefed;
 
 namespace mozilla::dom {
 
-using FileSystemActorHolder =
-    mozilla::ipc::ToplevelActorHolder<OriginPrivateFileSystemChild>;
+namespace quota {
+class Client;
+}  // namespace quota
 
+namespace fs {
+
+already_AddRefed<mozilla::dom::quota::Client> CreateQuotaClient();
+
+}  // namespace fs
 }  // namespace mozilla::dom
+
+#endif  // DOM_FS_PARENT_FILESYSTEMQUOTACLIENT_H_

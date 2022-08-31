@@ -8,13 +8,13 @@
 
 #include "FileSystemMocks.h"
 
-#include "mozilla/dom/FileSystemActorHolder.h"
 #include "mozilla/dom/FileSystemDirectoryHandle.h"
 #include "mozilla/dom/FileSystemDirectoryHandleBinding.h"
 #include "mozilla/dom/FileSystemDirectoryIterator.h"
 #include "mozilla/dom/FileSystemHandle.h"
 #include "mozilla/dom/FileSystemHandleBinding.h"
-#include "mozilla/dom/OriginPrivateFileSystemChild.h"
+#include "mozilla/dom/FileSystemManager.h"
+#include "mozilla/dom/StorageManager.h"
 
 #include "mozilla/UniquePtr.h"
 #include "nsIGlobalObject.h"
@@ -27,29 +27,26 @@ class TestFileSystemDirectoryHandle : public ::testing::Test {
     mRequestHandler = MakeUnique<MockFileSystemRequestHandler>();
     mMetadata = FileSystemEntryMetadata("dir"_ns, u"Directory"_ns);
     mName = u"testDir"_ns;
-    mActor = MakeAndAddRef<FileSystemActorHolder>(
-        MakeUnique<FileSystemChildFactory>()->Create().take());
+    mManager = MakeAndAddRef<FileSystemManager>(mGlobal, nullptr);
   }
-
-  void TearDown() override { mActor->RemoveActor(); }
 
   nsIGlobalObject* mGlobal = GetGlobal();
   UniquePtr<MockFileSystemRequestHandler> mRequestHandler;
   FileSystemEntryMetadata mMetadata;
   nsString mName;
-  RefPtr<FileSystemActorHolder> mActor;
+  RefPtr<FileSystemManager> mManager;
 };
 
 TEST_F(TestFileSystemDirectoryHandle, constructDirectoryHandleRefPointer) {
   RefPtr<FileSystemDirectoryHandle> dirHandle =
-      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mActor, mMetadata);
+      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata);
 
   ASSERT_TRUE(dirHandle);
 }
 
 TEST_F(TestFileSystemDirectoryHandle, areEntriesReturned) {
   RefPtr<FileSystemDirectoryHandle> dirHandle =
-      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mActor, mMetadata,
+      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata,
                                                mRequestHandler.release());
 
   ASSERT_TRUE(dirHandle);
@@ -60,7 +57,7 @@ TEST_F(TestFileSystemDirectoryHandle, areEntriesReturned) {
 
 TEST_F(TestFileSystemDirectoryHandle, areKeysReturned) {
   RefPtr<FileSystemDirectoryHandle> dirHandle =
-      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mActor, mMetadata,
+      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata,
                                                mRequestHandler.release());
 
   ASSERT_TRUE(dirHandle);
@@ -71,7 +68,7 @@ TEST_F(TestFileSystemDirectoryHandle, areKeysReturned) {
 
 TEST_F(TestFileSystemDirectoryHandle, areValuesReturned) {
   RefPtr<FileSystemDirectoryHandle> dirHandle =
-      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mActor, mMetadata,
+      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata,
                                                mRequestHandler.release());
 
   ASSERT_TRUE(dirHandle);
@@ -82,7 +79,7 @@ TEST_F(TestFileSystemDirectoryHandle, areValuesReturned) {
 
 TEST_F(TestFileSystemDirectoryHandle, isHandleKindDirectory) {
   RefPtr<FileSystemDirectoryHandle> dirHandle =
-      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mActor, mMetadata,
+      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata,
                                                mRequestHandler.release());
 
   ASSERT_TRUE(dirHandle);
@@ -92,7 +89,7 @@ TEST_F(TestFileSystemDirectoryHandle, isHandleKindDirectory) {
 
 TEST_F(TestFileSystemDirectoryHandle, isFileHandleReturned) {
   RefPtr<FileSystemDirectoryHandle> dirHandle =
-      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mActor, mMetadata,
+      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata,
                                                mRequestHandler.release());
 
   ASSERT_TRUE(dirHandle);
@@ -107,7 +104,7 @@ TEST_F(TestFileSystemDirectoryHandle, isFileHandleReturned) {
 TEST_F(TestFileSystemDirectoryHandle, doesGetFileHandleFailOnNullGlobal) {
   mGlobal = nullptr;
   RefPtr<FileSystemDirectoryHandle> dirHandle =
-      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mActor, mMetadata);
+      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata);
 
   ASSERT_TRUE(dirHandle);
 
@@ -120,7 +117,7 @@ TEST_F(TestFileSystemDirectoryHandle, doesGetFileHandleFailOnNullGlobal) {
 
 TEST_F(TestFileSystemDirectoryHandle, isDirectoryHandleReturned) {
   RefPtr<FileSystemDirectoryHandle> dirHandle =
-      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mActor, mMetadata,
+      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata,
                                                mRequestHandler.release());
 
   ASSERT_TRUE(dirHandle);
@@ -135,7 +132,7 @@ TEST_F(TestFileSystemDirectoryHandle, isDirectoryHandleReturned) {
 TEST_F(TestFileSystemDirectoryHandle, doesGetDirectoryHandleFailOnNullGlobal) {
   mGlobal = nullptr;
   RefPtr<FileSystemDirectoryHandle> dirHandle =
-      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mActor, mMetadata);
+      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata);
 
   ASSERT_TRUE(dirHandle);
 
@@ -148,7 +145,7 @@ TEST_F(TestFileSystemDirectoryHandle, doesGetDirectoryHandleFailOnNullGlobal) {
 
 TEST_F(TestFileSystemDirectoryHandle, isRemoveEntrySuccessful) {
   RefPtr<FileSystemDirectoryHandle> dirHandle =
-      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mActor, mMetadata,
+      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata,
                                                mRequestHandler.release());
 
   ASSERT_TRUE(dirHandle);
@@ -163,7 +160,7 @@ TEST_F(TestFileSystemDirectoryHandle, isRemoveEntrySuccessful) {
 TEST_F(TestFileSystemDirectoryHandle, doesRemoveEntryFailOnNullGlobal) {
   mGlobal = nullptr;
   RefPtr<FileSystemDirectoryHandle> dirHandle =
-      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mActor, mMetadata);
+      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata);
 
   ASSERT_TRUE(dirHandle);
 
@@ -176,7 +173,7 @@ TEST_F(TestFileSystemDirectoryHandle, doesRemoveEntryFailOnNullGlobal) {
 
 TEST_F(TestFileSystemDirectoryHandle, isResolveSuccessful) {
   RefPtr<FileSystemDirectoryHandle> dirHandle =
-      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mActor, mMetadata,
+      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata,
                                                mRequestHandler.release());
 
   ASSERT_TRUE(dirHandle);
@@ -190,7 +187,7 @@ TEST_F(TestFileSystemDirectoryHandle, isResolveSuccessful) {
 TEST_F(TestFileSystemDirectoryHandle, doesResolveFailOnNullGlobal) {
   mGlobal = nullptr;
   RefPtr<FileSystemDirectoryHandle> dirHandle =
-      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mActor, mMetadata);
+      MakeAndAddRef<FileSystemDirectoryHandle>(mGlobal, mManager, mMetadata);
 
   ASSERT_TRUE(dirHandle);
 

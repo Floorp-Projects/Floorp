@@ -8,11 +8,10 @@ use crate::custom_properties::Name as CustomPropertyName;
 use crate::parser::{Parse, ParserContext};
 use crate::properties::{LonghandId, PropertyDeclarationId};
 use crate::properties::{PropertyId, ShorthandId};
-use crate::values::generics::box_::AnimationIterationCount as GenericAnimationIterationCount;
-use crate::values::generics::box_::Perspective as GenericPerspective;
+use crate::values::generics::box_::{GenericAnimationIterationCount, GenericPerspective, GenericLineClamp};
 use crate::values::generics::box_::{GenericContainIntrinsicSize, GenericVerticalAlign, VerticalAlignKeyword};
 use crate::values::specified::length::{LengthPercentage, NonNegativeLength};
-use crate::values::specified::{AllowQuirks, Number};
+use crate::values::specified::{AllowQuirks, Number, Integer};
 use crate::values::{CustomIdent, KeyframesName, TimelineName};
 use crate::Atom;
 use cssparser::Parser;
@@ -645,6 +644,9 @@ impl SpecifiedValueInfo for Display {
 
 /// A specified value for the `contain-intrinsic-size` property.
 pub type ContainIntrinsicSize = GenericContainIntrinsicSize<NonNegativeLength>;
+
+/// A specified value for the `line-clamp` property.
+pub type LineClamp = GenericLineClamp<Integer>;
 
 /// A specified value for the `vertical-align` property.
 pub type VerticalAlign = GenericVerticalAlign<LengthPercentage>;
@@ -1468,6 +1470,21 @@ impl Parse for ContainIntrinsicSize {
 
         input.expect_ident_matching("none")?;
         Ok(Self::None)
+    }
+}
+
+impl Parse for LineClamp {
+    /// none | <positive-integer>
+    fn parse<'i, 't>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
+        if let Ok(i) = input.try_parse(|i| crate::values::specified::PositiveInteger::parse(context, i))
+        {
+            return Ok(Self(i.0))
+        }
+        input.expect_ident_matching("none")?;
+        Ok(Self::none())
     }
 }
 

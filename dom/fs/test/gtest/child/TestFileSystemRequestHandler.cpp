@@ -6,12 +6,15 @@
 
 #include "gtest/gtest.h"
 
+#include "FileSystemBackgroundRequestHandler.h"
 #include "FileSystemMocks.h"
 #include "fs/FileSystemRequestHandler.h"
 
 #include "mozilla/dom/IPCBlob.h"
-#include "mozilla/dom/OriginPrivateFileSystemChild.h"
-#include "mozilla/dom/POriginPrivateFileSystem.h"
+#include "mozilla/dom/FileSystemManager.h"
+#include "mozilla/dom/FileSystemManagerChild.h"
+#include "mozilla/dom/PFileSystemManager.h"
+#include "mozilla/dom/StorageManager.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ipc/IPCCore.h"
 #include "mozilla/SpinEventLoopUntil.h"
@@ -32,11 +35,12 @@ class TestFileSystemRequestHandler : public ::testing::Test {
     mChild = FileSystemChildMetadata("parent"_ns, u"ChildName"_ns);
     mEntry = FileSystemEntryMetadata("myid"_ns, u"EntryName"_ns);
     mName = u"testDir"_ns;
-    mOPFSChild = MakeAndAddRef<TestOriginPrivateFileSystemChild>();
-    mActor = MakeAndAddRef<FileSystemActorHolder>(mOPFSChild.get());
+    mFileSystemManagerChild = MakeAndAddRef<TestFileSystemManagerChild>();
+    mManager = MakeAndAddRef<FileSystemManager>(
+        mGlobal, nullptr,
+        MakeRefPtr<FileSystemBackgroundRequestHandler>(
+            mFileSystemManagerChild));
   }
-
-  void TearDown() override { mActor->RemoveActor(); }
 
   already_AddRefed<Promise> GetDefaultPromise() {
     IgnoredErrorResult rv;
@@ -57,8 +61,8 @@ class TestFileSystemRequestHandler : public ::testing::Test {
   FileSystemChildMetadata mChild;
   FileSystemEntryMetadata mEntry;
   nsString mName;
-  RefPtr<TestOriginPrivateFileSystemChild> mOPFSChild;
-  RefPtr<FileSystemActorHolder> mActor;
+  RefPtr<TestFileSystemManagerChild> mFileSystemManagerChild;
+  RefPtr<FileSystemManager> mManager;
 };
 
 TEST_F(TestFileSystemRequestHandler, isGetRootHandleSuccessful) {
@@ -69,13 +73,18 @@ TEST_F(TestFileSystemRequestHandler, isGetRootHandleSuccessful) {
   };
 
   EXPECT_CALL(mListener->GetSuccessHandler(), InvokeMe());
-  EXPECT_CALL(*mOPFSChild, SendGetRootHandle(_, _))
+  EXPECT_CALL(*mFileSystemManagerChild, SendGetRootHandle(_, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mOPFSChild, Close()).Times(1);
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
+      .WillOnce([fileSystemManagerChild =
+                     static_cast<void*>(mFileSystemManagerChild.get())]() {
+        static_cast<TestFileSystemManagerChild*>(fileSystemManagerChild)
+            ->FileSystemManagerChild::Shutdown();
+      });
 
   RefPtr<Promise> promise = GetDefaultPromise();
   auto testable = GetFileSystemRequestHandler();
-  testable->GetRootHandle(mActor, promise);
+  testable->GetRootHandle(mManager, promise);
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,
                      [this]() { return mListener->IsDone(); });
 }
@@ -89,13 +98,18 @@ TEST_F(TestFileSystemRequestHandler, isGetDirectoryHandleSuccessful) {
   };
 
   EXPECT_CALL(mListener->GetSuccessHandler(), InvokeMe());
-  EXPECT_CALL(*mOPFSChild, SendGetDirectoryHandle(_, _, _))
+  EXPECT_CALL(*mFileSystemManagerChild, SendGetDirectoryHandle(_, _, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mOPFSChild, Close()).Times(1);
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
+      .WillOnce([fileSystemManagerChild =
+                     static_cast<void*>(mFileSystemManagerChild.get())]() {
+        static_cast<TestFileSystemManagerChild*>(fileSystemManagerChild)
+            ->FileSystemManagerChild::Shutdown();
+      });
 
   RefPtr<Promise> promise = GetDefaultPromise();
   auto testable = GetFileSystemRequestHandler();
-  testable->GetDirectoryHandle(mActor, mChild,
+  testable->GetDirectoryHandle(mManager, mChild,
                                /* create */ true, promise);
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,
                      [this]() { return mListener->IsDone(); });
@@ -110,13 +124,18 @@ TEST_F(TestFileSystemRequestHandler, isGetFileHandleSuccessful) {
   };
 
   EXPECT_CALL(mListener->GetSuccessHandler(), InvokeMe());
-  EXPECT_CALL(*mOPFSChild, SendGetFileHandle(_, _, _))
+  EXPECT_CALL(*mFileSystemManagerChild, SendGetFileHandle(_, _, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mOPFSChild, Close()).Times(1);
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
+      .WillOnce([fileSystemManagerChild =
+                     static_cast<void*>(mFileSystemManagerChild.get())]() {
+        static_cast<TestFileSystemManagerChild*>(fileSystemManagerChild)
+            ->FileSystemManagerChild::Shutdown();
+      });
 
   RefPtr<Promise> promise = GetDefaultPromise();
   auto testable = GetFileSystemRequestHandler();
-  testable->GetFileHandle(mActor, mChild, /* create */ true, promise);
+  testable->GetFileHandle(mManager, mChild, /* create */ true, promise);
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,
                      [this]() { return mListener->IsDone(); });
 }
@@ -138,12 +157,18 @@ TEST_F(TestFileSystemRequestHandler, isGetFileSuccessful) {
   };
 
   EXPECT_CALL(mListener->GetSuccessHandler(), InvokeMe());
-  EXPECT_CALL(*mOPFSChild, SendGetFile(_, _, _)).WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mOPFSChild, Close()).Times(1);
+  EXPECT_CALL(*mFileSystemManagerChild, SendGetFile(_, _, _))
+      .WillOnce(Invoke(fakeResponse));
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
+      .WillOnce([fileSystemManagerChild =
+                     static_cast<void*>(mFileSystemManagerChild.get())]() {
+        static_cast<TestFileSystemManagerChild*>(fileSystemManagerChild)
+            ->FileSystemManagerChild::Shutdown();
+      });
 
   RefPtr<Promise> promise = GetDefaultPromise();
   auto testable = GetFileSystemRequestHandler();
-  testable->GetFile(mActor, mEntry, promise);
+  testable->GetFile(mManager, mEntry, promise);
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,
                      [this]() { return mListener->IsDone(); });
 }
@@ -164,13 +189,18 @@ TEST_F(TestFileSystemRequestHandler, isGetEntriesSuccessful) {
   RefPtr<Promise> promise = Promise::Create(mGlobal, rv);
   promise->AppendNativeHandler(listener);
 
-  EXPECT_CALL(*mOPFSChild, SendGetEntries(_, _, _))
+  EXPECT_CALL(*mFileSystemManagerChild, SendGetEntries(_, _, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mOPFSChild, Close()).Times(1);
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
+      .WillOnce([fileSystemManagerChild =
+                     static_cast<void*>(mFileSystemManagerChild.get())]() {
+        static_cast<TestFileSystemManagerChild*>(fileSystemManagerChild)
+            ->FileSystemManagerChild::Shutdown();
+      });
 
   auto testable = GetFileSystemRequestHandler();
   ArrayAppendable sink;
-  testable->GetEntries(mActor, mEntry.entryId(), /* page */ 0, promise, sink);
+  testable->GetEntries(mManager, mEntry.entryId(), /* page */ 0, promise, sink);
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,
                      [listener]() { return listener->IsDone(); });
 }
@@ -183,13 +213,18 @@ TEST_F(TestFileSystemRequestHandler, isRemoveEntrySuccessful) {
   };
 
   EXPECT_CALL(mListener->GetSuccessHandler(), InvokeMe());
-  EXPECT_CALL(*mOPFSChild, SendRemoveEntry(_, _, _))
+  EXPECT_CALL(*mFileSystemManagerChild, SendRemoveEntry(_, _, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mOPFSChild, Close()).Times(1);
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown())
+      .WillOnce([fileSystemManagerChild =
+                     static_cast<void*>(mFileSystemManagerChild.get())]() {
+        static_cast<TestFileSystemManagerChild*>(fileSystemManagerChild)
+            ->FileSystemManagerChild::Shutdown();
+      });
 
   auto testable = GetFileSystemRequestHandler();
   RefPtr<Promise> promise = GetDefaultPromise();
-  testable->RemoveEntry(mActor, mChild, /* recursive */ true, promise);
+  testable->RemoveEntry(mManager, mChild, /* recursive */ true, promise);
   SpinEventLoopUntil("Promise is fulfilled or timeout"_ns,
                      [this]() { return mListener->IsDone(); });
 }
