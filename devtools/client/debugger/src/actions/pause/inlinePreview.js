@@ -27,14 +27,14 @@ function getLocalScopeLevels(originalAstScopes) {
 export function generateInlinePreview(cx, frame) {
   return async function({ dispatch, getState, parser, client }) {
     if (!frame || !features.inlinePreview) {
-      return;
+      return null;
     }
 
     const { thread } = cx;
 
     // Avoid regenerating inline previews when we already have preview data
     if (getInlinePreviews(getState(), thread, frame.id)) {
-      return;
+      return null;
     }
 
     const originalFrameScopes = getOriginalFrameScope(
@@ -53,20 +53,20 @@ export function generateInlinePreview(cx, frame) {
     let scopes = originalFrameScopes?.scope || generatedFrameScopes?.scope;
 
     if (!scopes || !scopes.bindings) {
-      return;
+      return null;
     }
 
     // It's important to use selectedLocation, because we don't know
     // if we'll be viewing the original or generated frame location
     const selectedLocation = getSelectedLocation(getState());
     if (!selectedLocation) {
-      return;
+      return null;
     }
 
     const originalAstScopes = await parser.getScopes(selectedLocation);
     validateThreadContext(getState(), cx);
     if (!originalAstScopes) {
-      return;
+      return null;
     }
 
     const allPreviews = [];

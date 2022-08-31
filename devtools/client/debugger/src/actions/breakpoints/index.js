@@ -215,7 +215,7 @@ export function toggleBreakpointAtLine(cx, line) {
     const selectedSource = getSelectedSource(state);
 
     if (!selectedSource) {
-      return;
+      return null;
     }
 
     const bp = getBreakpointAtLocation(state, { line, column: undefined });
@@ -243,7 +243,7 @@ export function addBreakpointAtLine(
     const source = getSelectedSource(state);
 
     if (!source) {
-      return;
+      return null;
     }
     const breakpointLocation = {
       sourceId: source.id,

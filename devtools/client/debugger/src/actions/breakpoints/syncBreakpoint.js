@@ -56,7 +56,7 @@ export function syncBreakpoint(cx, sourceId, pendingBreakpoint) {
     const generatedSource = getSource(getState(), generatedSourceId);
 
     if (!source || !generatedSource) {
-      return;
+      return null;
     }
 
     const { location, generatedLocation } = pendingBreakpoint;
@@ -110,7 +110,7 @@ export function syncBreakpoint(cx, sourceId, pendingBreakpoint) {
           removeBreakpointAtGeneratedLocation(cx, sourceGeneratedLocation)
         );
       }
-      return;
+      return null;
     }
 
     const isSameLocation = comparePosition(
