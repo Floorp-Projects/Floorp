@@ -36,8 +36,6 @@ class StorageManager final : public nsISupports, public nsWrapperCache {
 
   nsIGlobalObject* GetParentObject() const { return mOwner; }
 
-  void Shutdown();
-
   // WebIDL
   already_AddRefed<Promise> Persisted(ErrorResult& aRv);
 
@@ -46,6 +44,8 @@ class StorageManager final : public nsISupports, public nsWrapperCache {
   already_AddRefed<Promise> Estimate(ErrorResult& aRv);
 
   already_AddRefed<Promise> GetDirectory(ErrorResult& aRv);
+
+  void Shutdown();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(StorageManager)
