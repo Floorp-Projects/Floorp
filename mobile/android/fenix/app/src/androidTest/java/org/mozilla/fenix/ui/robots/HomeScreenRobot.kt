@@ -222,6 +222,74 @@ class HomeScreenRobot {
 
     fun clickFirefoxLogo() = homepageWordmark.click()
 
+    fun verifyThoughtProvokingStories(enabled: Boolean) {
+        if (enabled) {
+            scrollToElementByText(getStringResource(R.string.pocket_stories_header_1))
+            assertTrue(
+                mDevice.findObject(
+                    UiSelector()
+                        .textContains(
+                            getStringResource(R.string.pocket_stories_header_1)
+                        )
+                ).waitForExists(waitingTime)
+            )
+        } else {
+            homeScreenList().scrollToEnd(LISTS_MAXSWIPES)
+            assertFalse(
+                mDevice.findObject(
+                    UiSelector()
+                        .textContains(
+                            getStringResource(R.string.pocket_stories_header_1)
+                        )
+                ).waitForExists(waitingTime)
+            )
+        }
+    }
+
+    fun verifyStoriesByTopic(enabled: Boolean) {
+        if (enabled) {
+            scrollToElementByText(getStringResource(R.string.pocket_stories_categories_header))
+            assertTrue(
+                mDevice.findObject(
+                    UiSelector()
+                        .textContains(
+                            getStringResource(R.string.pocket_stories_categories_header)
+                        )
+                ).waitForExists(waitingTime)
+            )
+        } else {
+            homeScreenList().scrollToEnd(LISTS_MAXSWIPES)
+            assertFalse(
+                mDevice.findObject(
+                    UiSelector()
+                        .textContains(
+                            getStringResource(R.string.pocket_stories_categories_header)
+                        )
+                ).waitForExists(waitingTime)
+            )
+        }
+    }
+
+    fun verifyCustomizeHomepageButton(enabled: Boolean) {
+        if (enabled) {
+            scrollToElementByText(getStringResource(R.string.browser_menu_customize_home_1))
+            assertTrue(
+                mDevice.findObject(
+                    UiSelector()
+                        .textContains("Customize homepage")
+                ).waitForExists(waitingTime)
+            )
+        } else {
+            homeScreenList().scrollToEnd(LISTS_MAXSWIPES)
+            assertFalse(
+                mDevice.findObject(
+                    UiSelector()
+                        .textContains("Customize homepage")
+                ).waitForExists(waitingTime)
+            )
+        }
+    }
+
     class Transition {
 
         fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
@@ -415,6 +483,19 @@ class HomeScreenRobot {
 
             HistoryRobot().interact()
             return HistoryRobot.Transition()
+        }
+
+        fun openCustomizeHomepage(interact: SettingsSubMenuHomepageRobot.() -> Unit): SettingsSubMenuHomepageRobot.Transition {
+            homeScreenList().scrollToEnd(LISTS_MAXSWIPES)
+            mDevice.findObject(
+                UiSelector()
+                    .textContains(
+                        "Customize homepage"
+                    )
+            ).clickAndWaitForNewWindow(waitingTime)
+
+            SettingsSubMenuHomepageRobot().interact()
+            return SettingsSubMenuHomepageRobot.Transition()
         }
     }
 }

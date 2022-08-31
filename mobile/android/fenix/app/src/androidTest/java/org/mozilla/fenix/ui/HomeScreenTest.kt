@@ -8,15 +8,20 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
+import okhttp3.mockwebserver.MockWebServer
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
+import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.ui.robots.homeScreen
+import org.mozilla.fenix.ui.robots.navigationToolbar
 
 /**
  *  Tests for verifying the presence of home screen and first-run homescreen elements
@@ -29,6 +34,8 @@ class HomeScreenTest {
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
 
     private lateinit var mDevice: UiDevice
+    private lateinit var mockWebServer: MockWebServer
+    private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
@@ -40,6 +47,19 @@ class HomeScreenTest {
     @Before
     fun setUp() {
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+        mockWebServer = MockWebServer().apply {
+            dispatcher = AndroidAssetDispatcher()
+            start()
+        }
+
+        featureSettingsHelper.setTCPCFREnabled(false)
+    }
+
+    @After
+    fun tearDown() {
+        mockWebServer.shutdown()
+        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     @Test
@@ -129,8 +149,8 @@ class HomeScreenTest {
 
     @Test
     fun dismissOnboardingUsingHelpTest() {
-        val settings = activityTestRule.activity.applicationContext.settings()
-        settings.shouldShowJumpBackInCFR = false
+        featureSettingsHelper.setJumpBackCFREnabled(false)
+
         homeScreen {
             verifyWelcomeHeader()
         }.openThreeDotMenu {
@@ -151,6 +171,49 @@ class HomeScreenTest {
             verifyKeyboardVisibility()
         }.dismissSearchBar {
             verifyWelcomeHeader()
+        }
+    }
+
+    @Test
+    fun verifyPocketHomepageStoriesTest() {
+        featureSettingsHelper.setRecentTabsFeatureEnabled(false)
+        featureSettingsHelper.setRecentlyVisitedFeatureEnabled(false)
+
+        homeScreen {
+        }.dismissOnboarding()
+
+        homeScreen {
+            verifyThoughtProvokingStories(true)
+            verifyStoriesByTopic(true)
+        }.openThreeDotMenu {
+        }.openCustomizeHome {
+            clickPocketButton()
+        }.goBack {
+            verifyThoughtProvokingStories(false)
+            verifyStoriesByTopic(false)
+        }
+    }
+
+    @Test
+    fun verifyCustomizeHomepageTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        featureSettingsHelper.setJumpBackCFREnabled(false)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.goToHomescreen {
+        }.openCustomizeHomepage {
+            clickJumpBackInButton()
+            clickRecentBookmarksButton()
+            clickRecentSearchesButton()
+            clickPocketButton()
+        }.goBack {
+            verifyCustomizeHomepageButton(false)
+        }.openThreeDotMenu {
+        }.openCustomizeHome {
+            clickJumpBackInButton()
+        }.goBack {
+            verifyCustomizeHomepageButton(true)
         }
     }
 }

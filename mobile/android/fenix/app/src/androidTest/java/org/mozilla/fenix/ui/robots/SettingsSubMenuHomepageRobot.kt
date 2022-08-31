@@ -48,6 +48,10 @@ class SettingsSubMenuHomepageRobot {
 
     fun clickRecentBookmarksButton() = recentBookmarksButton().click()
 
+    fun clickRecentSearchesButton() = recentSearchesButton().click()
+
+    fun clickPocketButton() = pocketButton().click()
+
     fun clickStartOnHomepageButton() = homepageButton().click()
 
     fun clickStartOnLastTabButton() = lastTabButton().click()
