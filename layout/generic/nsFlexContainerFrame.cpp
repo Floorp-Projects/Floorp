@@ -5865,5 +5865,5 @@ uint32_t nsFlexContainerFrame::GetLineClampValue() const {
     return 0;
   }
 
-  return StyleDisplay()->mLineClamp;
+  return StyleDisplay()->mWebkitLineClamp;
 }
