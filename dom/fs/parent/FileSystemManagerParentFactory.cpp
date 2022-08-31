@@ -54,10 +54,9 @@ mozilla::ipc::IPCResult CreateFileSystemManagerParent(
 
   // This opens the quota manager, which has to be done on PBackground
   QM_TRY_UNWRAP(
-      fs::data::FileSystemDataManager * dataManagerRaw,
+      RefPtr<fs::data::FileSystemDataManager> dataManager,
       fs::data::FileSystemDataManager::CreateFileSystemDataManager(origin),
       IPC_OK(), sendBackError);
-  UniquePtr<fs::data::FileSystemDataManager> dataManager(dataManagerRaw);
 
   nsCOMPtr<nsIThread> pbackground = NS_GetCurrentThread();
 
@@ -76,6 +75,9 @@ mozilla::ipc::IPCResult CreateFileSystemManagerParent(
       taskqueue, __func__,
       [origin, parentEp = std::move(aParentEndpoint), aResolver, rootId,
        dataManager = std::move(dataManager), taskqueue, pbackground]() mutable {
+        NS_ProxyRelease("ReleaseFileSystemDataManager", pbackground,
+                        dataManager.forget());
+
         RefPtr<FileSystemManagerParent> parent =
             new FileSystemManagerParent(taskqueue, rootId);
         if (!parentEp.Bind(parent)) {
