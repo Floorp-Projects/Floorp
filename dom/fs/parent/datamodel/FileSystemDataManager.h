@@ -60,6 +60,8 @@ class FileSystemDataManager
 
   void UnregisterActor(NotNull<FileSystemManagerParent*> aActor);
 
+  bool IsOpen() const { return mState == State::Open; }
+
   RefPtr<BoolPromise> OnOpen();
 
   RefPtr<BoolPromise> OnClose();
@@ -68,6 +70,10 @@ class FileSystemDataManager
   ~FileSystemDataManager();
 
   bool IsInactive() const;
+
+  bool IsOpening() const { return mState == State::Opening; }
+
+  bool IsClosing() const { return mState == State::Closing; }
 
   RefPtr<BoolPromise> BeginOpen();
 
