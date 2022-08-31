@@ -297,6 +297,10 @@ const REMOTE_COMPLEX_VALUES = [
   },
 ];
 
+const { Realm } = ChromeUtils.import(
+  "chrome://remote/content/webdriver-bidi/Realm.jsm"
+);
+
 const { deserialize, serialize, stringify } = ChromeUtils.import(
   "chrome://remote/content/webdriver-bidi/RemoteValue.jsm"
 );
@@ -611,45 +615,88 @@ add_test(function test_deserializeLocalValuesInvalidValues() {
 });
 
 add_test(function test_serializePrimitiveTypes() {
+  const realm = new Realm();
+
   for (const type of PRIMITIVE_TYPES) {
     const { value, serialized } = type;
 
-    const serializedValue = serialize(value);
-    for (const prop in serialized) {
-      info(`Checking '${serialized.type}'`);
+    const serializedValue = serialize(value, 0, "none", new Map(), realm);
+    Assert.deepEqual(serialized, serializedValue, "Got expected structure");
 
-      Assert.strictEqual(
-        serializedValue[prop],
-        serialized[prop],
-        `Got expected value for property ${prop}`
-      );
-    }
+    // For primitive values, the serialization with ownershipType=root should
+    // be exactly identical to the one with ownershipType=none.
+    const serializedWithRoot = serialize(value, 0, "root", new Map(), realm);
+    Assert.deepEqual(serialized, serializedWithRoot, "Got expected structure");
   }
 
   run_next_test();
 });
 
 add_test(function test_serializeRemoteSimpleValues() {
+  const realm = new Realm();
+
   for (const type of REMOTE_SIMPLE_VALUES) {
     const { value, serialized } = type;
 
-    info(`Checking '${serialized.type}'`);
-    const serializedValue = serialize(value);
+    info(`Checking '${serialized.type}' with none ownershipType`);
+    const serializedValue = serialize(value, 0, "none", new Map(), realm);
 
     Assert.deepEqual(serialized, serializedValue, "Got expected structure");
+
+    info(`Checking '${serialized.type}' with root ownershipType`);
+    const serializedWithRoot = serialize(value, 0, "root", new Map(), realm);
+
+    Assert.equal(
+      typeof serializedWithRoot.handle,
+      "string",
+      "Got a handle property"
+    );
+    Assert.deepEqual(
+      Object.assign({}, serialized, { handle: serializedWithRoot.handle }),
+      serializedWithRoot,
+      "Got expected structure, plus a generated handle id"
+    );
   }
 
   run_next_test();
 });
 
 add_test(function test_serializeRemoteComplexValues() {
+  const realm = new Realm();
+
   for (const type of REMOTE_COMPLEX_VALUES) {
     const { value, serialized, maxDepth } = type;
 
-    info(`Checking '${serialized.type}'`);
-    const serializedValue = serialize(value, maxDepth);
+    info(`Checking '${serialized.type}' with none ownershipType`);
+    const serializedValue = serialize(
+      value,
+      maxDepth,
+      "none",
+      new Map(),
+      realm
+    );
 
     Assert.deepEqual(serialized, serializedValue, "Got expected structure");
+
+    info(`Checking '${serialized.type}' with root ownershipType`);
+    const serializedWithRoot = serialize(
+      value,
+      maxDepth,
+      "root",
+      new Map(),
+      realm
+    );
+
+    Assert.equal(
+      typeof serializedWithRoot.handle,
+      "string",
+      "Got a handle property"
+    );
+    Assert.deepEqual(
+      Object.assign({}, serialized, { handle: serializedWithRoot.handle }),
+      serializedWithRoot,
+      "Got expected structure, plus a generated handle id"
+    );
   }
 
   run_next_test();
