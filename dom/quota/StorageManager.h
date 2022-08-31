@@ -36,6 +36,8 @@ class StorageManager final : public nsISupports, public nsWrapperCache {
 
   nsIGlobalObject* GetParentObject() const { return mOwner; }
 
+  void Shutdown();
+
   // WebIDL
   already_AddRefed<Promise> Persisted(ErrorResult& aRv);
 
