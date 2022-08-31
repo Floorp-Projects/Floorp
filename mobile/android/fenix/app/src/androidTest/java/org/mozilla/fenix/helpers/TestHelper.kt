@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:Suppress("DEPRECATION")
+
 package org.mozilla.fenix.helpers
 
 import android.app.ActivityManager
@@ -10,6 +12,7 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -31,6 +34,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject
@@ -38,6 +42,8 @@ import androidx.test.uiautomator.UiObjectNotFoundException
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
+import java.util.Locale
+import java.util.regex.Pattern
 import junit.framework.AssertionFailedError
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.support.ktx.android.content.appName
@@ -46,6 +52,7 @@ import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Matcher
 import org.junit.Assert
 import org.junit.Assert.assertTrue
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.ext.components
@@ -56,7 +63,7 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.helpers.idlingresource.NetworkConnectionIdlingResource
 import org.mozilla.fenix.ui.robots.BrowserRobot
 import org.mozilla.fenix.utils.IntentUtils
-import java.util.regex.Pattern
+import org.mozilla.gecko.util.ThreadUtils
 
 object TestHelper {
 
@@ -329,4 +336,39 @@ object TestHelper {
             .map { kotlin.random.Random.nextInt(0, charPool.size) }
             .map(charPool::get)
             .joinToString("")
+
+    /**
+     * Changes the default language of the entire device, not just the app.
+     * Runs the test in its testBlock.
+     * Cleans up and sets the default locale after it's are done.
+     */
+    fun runWithSystemLocaleChanged(locale: Locale, testRule: ActivityTestRule<HomeActivity>, testBlock: () -> Unit) {
+        val defaultLocale = Locale.getDefault()
+
+        try {
+            setSystemLocale(locale)
+            testBlock()
+            ThreadUtils.runOnUiThread { testRule.activity.recreate() }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            setSystemLocale(defaultLocale)
+        }
+    }
+
+    /**
+     * Changes the default language of the entire device, not just the app.
+     */
+    private fun setSystemLocale(locale: Locale) {
+        val activityManagerNative = Class.forName("android.app.ActivityManagerNative")
+        val am = activityManagerNative.getMethod("getDefault", *arrayOfNulls(0))
+            .invoke(activityManagerNative, *arrayOfNulls(0))
+        val config = InstrumentationRegistry.getInstrumentation().context.resources.configuration
+        config.javaClass.getDeclaredField("locale")[config] = locale
+        config.javaClass.getDeclaredField("userSetLocale").setBoolean(config, true)
+        am.javaClass.getMethod(
+            "updateConfiguration",
+            Configuration::class.java
+        ).invoke(am, config)
+    }
 }

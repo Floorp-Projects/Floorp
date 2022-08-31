@@ -5,27 +5,40 @@
 package org.mozilla.fenix.ui
 
 import android.content.res.Configuration
+import androidx.test.espresso.IdlingRegistry
+import java.time.LocalDate
+import java.util.Locale
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.FenixApplication
+import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.getLoremIpsumAsset
-import org.mozilla.fenix.ui.SettingsBasicsTest.creditCard.MOCK_CREDIT_CARD_NUMBER
-import org.mozilla.fenix.ui.SettingsBasicsTest.creditCard.MOCK_EXPIRATION_MONTH
-import org.mozilla.fenix.ui.SettingsBasicsTest.creditCard.MOCK_EXPIRATION_YEAR
-import org.mozilla.fenix.ui.SettingsBasicsTest.creditCard.MOCK_LAST_CARD_DIGITS
-import org.mozilla.fenix.ui.SettingsBasicsTest.creditCard.MOCK_NAME_ON_CARD
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
+import org.mozilla.fenix.helpers.TestHelper.runWithSystemLocaleChanged
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
+import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.ui.SettingsBasicsTest.CreditCard.MOCK_CREDIT_CARD_NUMBER
+import org.mozilla.fenix.ui.SettingsBasicsTest.CreditCard.MOCK_EXPIRATION_MONTH
+import org.mozilla.fenix.ui.SettingsBasicsTest.CreditCard.MOCK_EXPIRATION_YEAR
+import org.mozilla.fenix.ui.SettingsBasicsTest.CreditCard.MOCK_LAST_CARD_DIGITS
+import org.mozilla.fenix.ui.SettingsBasicsTest.CreditCard.MOCK_NAME_ON_CARD
 import org.mozilla.fenix.ui.robots.checkTextSizeOnWebsite
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
-import java.time.LocalDate
+import org.mozilla.fenix.ui.util.FRENCH_LANGUAGE_HEADER
+import org.mozilla.fenix.ui.util.FRENCH_SYSTEM_LOCALE_OPTION
+import org.mozilla.fenix.ui.util.FR_SETTINGS
+import org.mozilla.fenix.ui.util.ROMANIAN_LANGUAGE_HEADER
 
 /**
  *  Tests for verifying the General section of the Settings menu
@@ -35,8 +48,9 @@ class SettingsBasicsTest {
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
     private lateinit var mockWebServer: MockWebServer
     private val featureSettingsHelper = FeatureSettingsHelper()
+    private var localeListIdlingResource: RecyclerViewIdlingResource? = null
 
-    object creditCard {
+    object CreditCard {
         const val MOCK_CREDIT_CARD_NUMBER = "5555555555554444"
         const val MOCK_LAST_CARD_DIGITS = "4444"
         const val MOCK_NAME_ON_CARD = "Mastercard"
@@ -64,6 +78,10 @@ class SettingsBasicsTest {
 
         // resetting modified features enabled setting to default
         featureSettingsHelper.resetAllFeatureFlags()
+
+        if (localeListIdlingResource != null) {
+            IdlingRegistry.getInstance().unregister(localeListIdlingResource)
+        }
     }
 
     private fun getUiTheme(): Boolean {
@@ -248,6 +266,70 @@ class SettingsBasicsTest {
             clickDeleteCreditCardButton()
             clickConfirmDeleteCreditCardButton()
             verifyAddCreditCardsButton()
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun switchLanguageTest() {
+        val enLanguageHeaderText = getStringResource(R.string.preferences_language)
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openLanguageSubMenu {
+            localeListIdlingResource =
+                RecyclerViewIdlingResource(
+                    activityIntentTestRule.activity.findViewById(R.id.locale_list),
+                    2
+                )
+            IdlingRegistry.getInstance().register(localeListIdlingResource)
+            selectLanguage("Romanian")
+            verifyLanguageHeaderIsTranslated(ROMANIAN_LANGUAGE_HEADER)
+            selectLanguage("Français")
+            verifyLanguageHeaderIsTranslated(FRENCH_LANGUAGE_HEADER)
+            selectLanguage(FRENCH_SYSTEM_LOCALE_OPTION)
+            verifyLanguageHeaderIsTranslated(enLanguageHeaderText)
+            IdlingRegistry.getInstance().unregister(localeListIdlingResource)
+        }
+    }
+
+    @Test
+    fun searchInLanguagesListTest() {
+        val systemLocaleDefault = getStringResource(R.string.default_locale_text)
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openLanguageSubMenu {
+            verifyLanguageListIsDisplayed()
+            openSearchBar()
+            typeInSearchBar("French")
+            verifySearchResultsContains(systemLocaleDefault)
+            clearSearchBar()
+            typeInSearchBar("French")
+            selectLanguageSearchResult("Français")
+            verifyLanguageHeaderIsTranslated(FRENCH_LANGUAGE_HEADER)
+            // Add this step when https://github.com/mozilla-mobile/fenix/issues/26733 is fixed
+            // verifyLanguageListIsDisplayed()
+        }
+    }
+
+    @Ignore("Failing due to app translation bug, see: https://github.com/mozilla-mobile/fenix/issues/26729")
+    @Test
+    fun frenchSystemLocaleTest() {
+        val frenchLocale = Locale("fr", "FR")
+
+        runWithSystemLocaleChanged(frenchLocale, activityIntentTestRule) {
+            mDevice.waitForIdle(waitingTimeLong)
+
+            homeScreen {
+            }.openThreeDotMenu {
+            }.openSettings(localizedText = FR_SETTINGS) {
+            }.openLanguageSubMenu(localizedText = FRENCH_LANGUAGE_HEADER) {
+                verifyLanguageHeaderIsTranslated(FRENCH_LANGUAGE_HEADER)
+                verifySelectedLanguage(FRENCH_SYSTEM_LOCALE_OPTION)
+            }
         }
     }
 }

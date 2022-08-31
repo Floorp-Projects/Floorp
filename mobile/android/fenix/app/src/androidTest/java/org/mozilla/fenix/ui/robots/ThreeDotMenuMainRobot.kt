@@ -33,6 +33,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
@@ -145,13 +146,16 @@ class ThreeDotMenuMainRobot {
     }
 
     class Transition {
-        fun openSettings(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
+        fun openSettings(
+            localizedText: String = getStringResource(R.string.browser_menu_settings),
+            interact: SettingsRobot.() -> Unit
+        ): SettingsRobot.Transition {
             // We require one swipe to display the full size 3-dot menu. On smaller devices
             // such as the Pixel 2, we require two swipes to display the "Settings" menu item
             // at the bottom. On larger devices, the second swipe is a no-op.
             threeDotMenuRecyclerView().perform(swipeUp())
             threeDotMenuRecyclerView().perform(swipeUp())
-            settingsButton().click()
+            settingsButton(localizedText).click()
 
             SettingsRobot().interact()
             return SettingsRobot.Transition()
@@ -405,7 +409,9 @@ private fun threeDotMenuRecyclerViewExists() {
     threeDotMenuRecyclerView().check(matches(isDisplayed()))
 }
 
-private fun settingsButton() = mDevice.findObject(UiSelector().text("Settings"))
+private fun settingsButton(localizedText: String = getStringResource(R.string.browser_menu_settings)) =
+    mDevice.findObject(UiSelector().text(localizedText))
+
 private fun assertSettingsButton() = assertTrue(settingsButton().waitForExists(waitingTime))
 
 private fun customizeHomeButton() =

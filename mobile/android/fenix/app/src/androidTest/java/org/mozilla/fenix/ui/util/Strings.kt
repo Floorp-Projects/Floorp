@@ -8,5 +8,6 @@ const val STRING_ONBOARDING_ACCOUNT_SIGN_IN_HEADER = "Sync Firefox between devic
 const val STRING_ONBOARDING_TRACKING_PROTECTION_HEADER = "Always-on privacy"
 const val STRING_ONBOARDING_TOOLBAR_PLACEMENT_HEADER = "Pick your toolbar placement"
 const val FRENCH_LANGUAGE_HEADER = "Langues"
-const val ROMANIAN_LANGUAGE_HEADER = "Limbă"
+const val FR_SETTINGS = "Paramètres"
 const val FRENCH_SYSTEM_LOCALE_OPTION = "Utiliser la langue de l’appareil"
+const val ROMANIAN_LANGUAGE_HEADER = "Limbă"

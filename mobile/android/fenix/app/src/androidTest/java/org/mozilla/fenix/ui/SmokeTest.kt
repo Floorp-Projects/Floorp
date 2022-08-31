@@ -47,9 +47,6 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.notificationShade
 import org.mozilla.fenix.ui.robots.openEditURLView
 import org.mozilla.fenix.ui.robots.searchScreen
-import org.mozilla.fenix.ui.util.FRENCH_LANGUAGE_HEADER
-import org.mozilla.fenix.ui.util.FRENCH_SYSTEM_LOCALE_OPTION
-import org.mozilla.fenix.ui.util.ROMANIAN_LANGUAGE_HEADER
 import org.mozilla.fenix.ui.util.STRING_ONBOARDING_TRACKING_PROTECTION_HEADER
 
 /**
@@ -68,7 +65,6 @@ class SmokeTest {
     private var recentlyClosedTabsListIdlingResource: RecyclerViewIdlingResource? = null
     private var readerViewNotification: ViewVisibilityIdlingResource? = null
     private var bookmarksListIdlingResource: RecyclerViewIdlingResource? = null
-    private var localeListIdlingResource: RecyclerViewIdlingResource? = null
     private val customMenuItem = "TestMenuItem"
     private lateinit var browserStore: BrowserStore
     private val featureSettingsHelper = FeatureSettingsHelper()
@@ -127,10 +123,6 @@ class SmokeTest {
 
         if (readerViewNotification != null) {
             IdlingRegistry.getInstance().unregister(readerViewNotification)
-        }
-
-        if (localeListIdlingResource != null) {
-            IdlingRegistry.getInstance().unregister(localeListIdlingResource)
         }
 
         // resetting modified features enabled setting to default
@@ -950,28 +942,6 @@ class SmokeTest {
             longClickToolbar()
             clickPasteText()
             verifyPastedToolbarText("Page content: 1")
-        }
-    }
-
-    @Test
-    fun switchLanguageTest() {
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openLanguageSubMenu {
-            localeListIdlingResource =
-                RecyclerViewIdlingResource(
-                    activityTestRule.activity.findViewById(R.id.locale_list),
-                    2
-                )
-            IdlingRegistry.getInstance().register(localeListIdlingResource)
-            selectLanguage("Romanian")
-            verifyLanguageHeaderIsTranslated(ROMANIAN_LANGUAGE_HEADER)
-            selectLanguage("Français")
-            verifyLanguageHeaderIsTranslated(FRENCH_LANGUAGE_HEADER)
-            selectLanguage(FRENCH_SYSTEM_LOCALE_OPTION)
-            verifyLanguageHeaderIsTranslated("Language")
-            IdlingRegistry.getInstance().unregister(localeListIdlingResource)
         }
     }
 

@@ -192,12 +192,15 @@ class SettingsRobot {
             return SettingsSubMenuAccessibilityRobot.Transition()
         }
 
-        fun openLanguageSubMenu(interact: SettingsSubMenuLanguageRobot.() -> Unit): SettingsSubMenuLanguageRobot.Transition {
+        fun openLanguageSubMenu(
+            localizedText: String = getStringResource(R.string.preferences_language),
+            interact: SettingsSubMenuLanguageRobot.() -> Unit
+        ): SettingsSubMenuLanguageRobot.Transition {
             onView(withId(R.id.recycler_view))
                 .perform(
                     RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(
                         hasDescendant(
-                            withText(R.string.preferences_language)
+                            withText(localizedText)
                         ),
                         ViewActions.click()
                     )
