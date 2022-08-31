@@ -409,10 +409,6 @@
         return;
       }
 
-      this.startTabDrag(event, tab);
-    }
-
-    startTabDrag(event, tab, { fromTabList = false } = {}) {
       let selectedTabs = gBrowser.selectedTabs;
       let otherSelectedTabs = selectedTabs.filter(
         selectedTab => selectedTab != tab
@@ -533,14 +529,13 @@
         movingTabs: (tab.multiselected ? gBrowser.selectedTabs : [tab]).filter(
           t => t.pinned == tab.pinned
         ),
-        fromTabList,
       };
 
       event.stopPropagation();
     }
 
     on_dragover(event) {
-      var effects = this.getDropEffectForTabDrag(event);
+      var effects = this._getDropEffectForTabDrag(event);
 
       var ind = this._tabDropIndicator;
       if (effects == "" || effects == "none") {
@@ -576,8 +571,7 @@
       let draggedTab = event.dataTransfer.mozGetDataAt(TAB_DROP_TYPE, 0);
       if (
         (effects == "move" || effects == "copy") &&
-        this == draggedTab.container &&
-        !draggedTab._dragData.fromTabList
+        this == draggedTab.container
       ) {
         ind.hidden = true;
 
@@ -698,14 +692,9 @@
           newTranslateX -= tabWidth;
         }
 
-        let dropIndex;
-        if (draggedTab._dragData.fromTabList) {
-          dropIndex = this._getDropIndex(event, false);
-        } else {
-          dropIndex =
-            "animDropIndex" in draggedTab._dragData &&
-            draggedTab._dragData.animDropIndex;
-        }
+        let dropIndex =
+          "animDropIndex" in draggedTab._dragData &&
+          draggedTab._dragData.animDropIndex;
         let incrementDropIndex = true;
         if (dropIndex && dropIndex > movingTabs[0]._tPos) {
           dropIndex--;
@@ -1993,7 +1982,7 @@
       return tabs.length;
     }
 
-    getDropEffectForTabDrag(event) {
+    _getDropEffectForTabDrag(event) {
       var dt = event.dataTransfer;
 
       let isMovingTabs = dt.mozItemCount > 0;

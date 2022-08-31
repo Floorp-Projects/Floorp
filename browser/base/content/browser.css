@@ -511,22 +511,6 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-b
   position: absolute;
 }
 
-#allTabsMenu-dropIndicatorHolder {
-  display: block;
-  position: relative;
-}
-
-#allTabsMenu-dropIndicator {
-  background: url(chrome://browser/skin/tabbrowser/tab-drag-indicator.svg) no-repeat center;
-  display: block;
-  position: absolute;
-  transform: rotate(-90deg);
-  width: 12px;
-  height: 29px;
-  left: 8px;
-  top: 0;
-}
-
 #nav-bar-customization-target > #personal-bookmarks,
 toolbar:not(#TabsToolbar) > #wrapper-personal-bookmarks,
 toolbar:not(#TabsToolbar) > #personal-bookmarks {
