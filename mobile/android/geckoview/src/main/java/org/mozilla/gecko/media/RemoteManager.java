@@ -114,7 +114,7 @@ public final class RemoteManager implements IBinder.DeathRecipient {
       mRemote = null;
       notify();
     }
-  };
+  }
 
   RemoteConnection mConnection = new RemoteConnection();
 

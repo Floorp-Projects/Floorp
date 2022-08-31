@@ -939,7 +939,9 @@ public class GeckoView extends FrameLayout {
     }
   }
 
-  /** @return Whether or not Android autofill is enabled for this view. */
+  /**
+   * @return Whether or not Android autofill is enabled for this view.
+   */
   @TargetApi(26)
   public boolean getAutofillEnabled() {
     return mAutofillEnabled;

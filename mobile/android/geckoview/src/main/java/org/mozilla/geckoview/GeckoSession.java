@@ -2822,7 +2822,9 @@ public class GeckoSession {
     mHistoryHandler.setDelegate(delegate, this);
   }
 
-  /** @return The history tracking delegate for this session. */
+  /**
+   * @return The history tracking delegate for this session.
+   */
   @AnyThread
   public @Nullable HistoryDelegate getHistoryDelegate() {
     return mHistoryHandler.getDelegate();
@@ -6496,7 +6498,9 @@ public class GeckoSession {
     getAutofillSupport().setDelegate(delegate);
   }
 
-  /** @return The current {@link Autofill.Delegate} for this session, if any. */
+  /**
+   * @return The current {@link Autofill.Delegate} for this session, if any.
+   */
   @UiThread
   public @Nullable Autofill.Delegate getAutofillDelegate() {
     return getAutofillSupport().getDelegate();

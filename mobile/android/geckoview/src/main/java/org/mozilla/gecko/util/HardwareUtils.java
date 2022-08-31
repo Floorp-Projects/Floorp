@@ -103,7 +103,9 @@ public final class HardwareUtils {
     sMachineType = readElfMachineType(new File(sLibDir, System.mapLibraryName("mozglue")));
   }
 
-  /** @return The ABI of the libraries installed for this app. */
+  /**
+   * @return The ABI of the libraries installed for this app.
+   */
   public static String getLibrariesABI() {
     initMachineType();
 

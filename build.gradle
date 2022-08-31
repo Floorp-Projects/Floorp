@@ -359,7 +359,7 @@ subprojects {
                 include '**/*.java'
                 exclude '**/thirdparty/**'
             }
-            googleJavaFormat('1.7')
+            googleJavaFormat('1.15.0')
         }
     }
 }

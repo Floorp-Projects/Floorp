@@ -80,7 +80,9 @@ import java.security.spec.InvalidKeySpecException;
         keyToBytes(key), Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING);
   }
 
-  /** @return A {@link ECParameterSpec} for P-256 (secp256r1). */
+  /**
+   * @return A {@link ECParameterSpec} for P-256 (secp256r1).
+   */
   public static ECParameterSpec getP256Spec() {
     if (sSpec == null) {
       try {

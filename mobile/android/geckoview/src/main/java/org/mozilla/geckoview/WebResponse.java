@@ -136,7 +136,9 @@ public class WebResponse extends WebMessage {
       return this;
     }
 
-    /** @param encodedCert The certificate used, encoded via DER. Only used via JNI. */
+    /**
+     * @param encodedCert The certificate used, encoded via DER. Only used via JNI.
+     */
     @WrapForJNI(exceptionMode = "nsresult")
     private void certificateBytes(final @NonNull byte[] encodedCert) {
       try {
@@ -171,7 +173,9 @@ public class WebResponse extends WebMessage {
       return this;
     }
 
-    /** @return A {@link WebResponse} constructed with the values from this Builder instance. */
+    /**
+     * @return A {@link WebResponse} constructed with the values from this Builder instance.
+     */
     public @NonNull WebResponse build() {
       return new WebResponse(this);
     }

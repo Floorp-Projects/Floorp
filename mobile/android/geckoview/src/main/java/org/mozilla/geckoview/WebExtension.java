@@ -1349,7 +1349,9 @@ public class WebExtension {
       return new Action(this, defaultValue);
     }
 
-    /** @see Action#withDefault */
+    /**
+     * @see Action#withDefault
+     */
     private Action(final Action source, final Action defaultValue) {
       if (source.type != defaultValue.type) {
         throw new IllegalArgumentException("defaultValue must be of the same type.");
@@ -2448,13 +2450,17 @@ public class WebExtension {
         return null;
       }
 
-      /** @return boolean indicating whether a downloaded file still exists */
+      /**
+       * @return boolean indicating whether a downloaded file still exists
+       */
       @UiThread
       default boolean fileExists() {
         return false;
       }
 
-      /** @return the filename. */
+      /**
+       * @return the filename.
+       */
       @NonNull
       @UiThread
       default String filename() {
@@ -2470,7 +2476,9 @@ public class WebExtension {
         return -1;
       }
 
-      /** @return the downloaded file's MIME type */
+      /**
+       * @return the downloaded file's MIME type
+       */
       @NonNull
       @UiThread
       default String mime() {
@@ -2486,14 +2494,18 @@ public class WebExtension {
         return false;
       }
 
-      /** @return String representing the downloaded file's referrer */
+      /**
+       * @return String representing the downloaded file's referrer
+       */
       @NonNull
       @UiThread
       default String referrer() {
         return "";
       }
 
-      /** @return the number of milliseconds between the UNIX epoch and when this download began */
+      /**
+       * @return the number of milliseconds between the UNIX epoch and when this download began
+       */
       @UiThread
       default long startTime() {
         return -1;
