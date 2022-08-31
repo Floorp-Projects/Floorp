@@ -16,6 +16,12 @@ interface nsICookieBannerListService : nsISupports {
     void init();
 
     /**
+     * Same as init but returns a promise which resolves once init is done. Used
+     * for testing when we need to wait for all rules to be imported.
+     */
+    Promise initForTest();
+
+    /**
      * Shutdown the service. This disables any rule updates.
      */
     void shutdown();
