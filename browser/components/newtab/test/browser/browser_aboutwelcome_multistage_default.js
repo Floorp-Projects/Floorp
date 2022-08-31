@@ -1,6 +1,7 @@
 "use strict";
 
 const DID_SEE_ABOUT_WELCOME_PREF = "trailhead.firstrun.didSeeAboutWelcome";
+const MR_TEMPLATE_PREF = "browser.aboutwelcome.templateMR";
 
 const TEST_PROTON_CONTENT = [
   {
@@ -105,6 +106,7 @@ const TEST_PROTON_CONTENT = [
 const TEST_PROTON_JSON = JSON.stringify(TEST_PROTON_CONTENT);
 
 async function openAboutWelcome() {
+  await pushPrefs([MR_TEMPLATE_PREF, false]);
   await setAboutWelcomePref(true);
   await setAboutWelcomeMultiStage(TEST_PROTON_JSON);
 

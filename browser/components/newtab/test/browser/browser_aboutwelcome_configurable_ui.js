@@ -635,8 +635,7 @@ add_task(async function test_aboutwelcome_start_screen_configured() {
 
   Assert.equal(
     stub.secondCall.args[0].message_id,
-    `DEFAULT_ABOUTWELCOME_PROTON_${startScreen}_TEST_START_STEP_${startScreen +
-      1}`,
+    `MR_WELCOME_DEFAULT_${startScreen}_TEST_START_STEP_${startScreen + 1}`,
     "Impression events have the correct message id with start screen configured"
   );
 

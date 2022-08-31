@@ -38,9 +38,10 @@ async function spyOnTelemetryButtonClicks(browser) {
   };
 }
 
-async function openAboutWelcome() {
+async function openAboutWelcome(templateMR = false) {
   await pushPrefs(
     // Speed up the tests by disabling transitions.
+    ["browser.aboutwelcome.templateMR", templateMR],
     ["browser.aboutwelcome.transitions", false],
     ["intl.multilingual.aboutWelcome.languageMismatchEnabled", true]
   );
@@ -747,14 +748,13 @@ add_task(async function test_aboutwelcome_languageSwitcher_cancelWaiting() {
  */
 add_task(async function test_aboutwelcome_languageSwitcher_MR() {
   sandbox.restore();
-  await pushPrefs(["browser.aboutwelcome.templateMR", true]);
 
   const { resolveLangPacks, resolveInstaller } = mockAddonAndLocaleAPIs({
     systemLocale: "es-ES",
     appLocale: "en-US",
   });
 
-  const { browser } = await openAboutWelcome();
+  const { browser } = await openAboutWelcome(true);
 
   info("Clicking the primary button to view language switching screen.");
   await clickVisibleButton(browser, "button.primary");
