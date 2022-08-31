@@ -10,7 +10,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FileSystemFileHandleBinding.h"
 #include "mozilla/dom/FileSystemHandleBinding.h"
-#include "mozilla/dom/POriginPrivateFileSystem.h"
+#include "mozilla/dom/PFileSystemManager.h"
 #include "mozilla/dom/Promise.h"
 
 namespace mozilla::dom {

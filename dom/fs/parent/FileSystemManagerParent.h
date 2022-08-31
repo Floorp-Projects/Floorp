@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DOM_FS_PARENT_ORIGINPRIVATEFILESYSTEMPARENT_H_
-#define DOM_FS_PARENT_ORIGINPRIVATEFILESYSTEMPARENT_H_
+#ifndef DOM_FS_PARENT_FILESYSTEMMANAGERPARENT_H_
+#define DOM_FS_PARENT_FILESYSTEMMANAGERPARENT_H_
 
 #include "ErrorList.h"
-#include "mozilla/dom/POriginPrivateFileSystemParent.h"
+#include "mozilla/dom/PFileSystemManagerParent.h"
 #include "mozilla/TaskQueue.h"
 #include "nsISupports.h"
 
@@ -28,10 +28,9 @@ namespace fs::data {
 class FileSystemDataManagerBase {};
 }  // namespace fs::data
 
-class OriginPrivateFileSystemParent : public POriginPrivateFileSystemParent {
+class FileSystemManagerParent : public PFileSystemManagerParent {
  public:
-  OriginPrivateFileSystemParent(TaskQueue* aTaskQueue,
-                                const EntryId& aRootEntry);
+  FileSystemManagerParent(TaskQueue* aTaskQueue, const EntryId& aRootEntry);
 
   mozilla::ipc::IPCResult RecvGetRootHandleMsg(
       GetRootHandleMsgResolver&& aResolver);
@@ -69,10 +68,10 @@ class OriginPrivateFileSystemParent : public POriginPrivateFileSystemParent {
   mozilla::ipc::IPCResult RecvNeedQuota(FileSystemQuotaRequest&& aRequest,
                                         NeedQuotaResolver&& aResolver);
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OriginPrivateFileSystemParent)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileSystemManagerParent)
 
  protected:
-  virtual ~OriginPrivateFileSystemParent();
+  virtual ~FileSystemManagerParent();
 
  private:
   RefPtr<TaskQueue> mTaskQueue;
@@ -84,4 +83,4 @@ class OriginPrivateFileSystemParent : public POriginPrivateFileSystemParent {
 
 }  // namespace mozilla::dom
 
-#endif  // DOM_FS_PARENT_ORIGINPRIVATEFILESYSTEMPARENT_H_
+#endif  // DOM_FS_PARENT_FILESYSTEMMANAGERPARENT_H_

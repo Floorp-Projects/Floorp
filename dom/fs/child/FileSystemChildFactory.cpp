@@ -7,13 +7,13 @@
 #include "fs/FileSystemChildFactory.h"
 
 #include "mozilla/RefPtr.h"
-#include "mozilla/dom/OriginPrivateFileSystemChild.h"
+#include "mozilla/dom/FileSystemManagerChild.h"
 
 namespace mozilla::dom::fs {
 
-already_AddRefed<OriginPrivateFileSystemChild> FileSystemChildFactory::Create()
+already_AddRefed<FileSystemManagerChild> FileSystemChildFactory::Create()
     const {
-  return MakeAndAddRef<OriginPrivateFileSystemChild>();
+  return MakeAndAddRef<FileSystemManagerChild>();
 }
 
 }  // namespace mozilla::dom::fs

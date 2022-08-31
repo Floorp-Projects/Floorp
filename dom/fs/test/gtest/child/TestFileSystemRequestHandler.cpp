@@ -10,8 +10,8 @@
 #include "fs/FileSystemRequestHandler.h"
 
 #include "mozilla/dom/IPCBlob.h"
-#include "mozilla/dom/OriginPrivateFileSystemChild.h"
-#include "mozilla/dom/POriginPrivateFileSystem.h"
+#include "mozilla/dom/FileSystemManagerChild.h"
+#include "mozilla/dom/PFileSystemManager.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ipc/IPCCore.h"
 #include "mozilla/SpinEventLoopUntil.h"
@@ -32,8 +32,9 @@ class TestFileSystemRequestHandler : public ::testing::Test {
     mChild = FileSystemChildMetadata("parent"_ns, u"ChildName"_ns);
     mEntry = FileSystemEntryMetadata("myid"_ns, u"EntryName"_ns);
     mName = u"testDir"_ns;
-    mOPFSChild = MakeAndAddRef<TestOriginPrivateFileSystemChild>();
-    mActor = MakeAndAddRef<FileSystemActorHolder>(mOPFSChild.get());
+    mFileSystemManagerChild = MakeAndAddRef<TestFileSystemManagerChild>();
+    mActor =
+        MakeAndAddRef<FileSystemActorHolder>(mFileSystemManagerChild.get());
   }
 
   void TearDown() override { mActor->RemoveActor(); }
@@ -57,7 +58,7 @@ class TestFileSystemRequestHandler : public ::testing::Test {
   FileSystemChildMetadata mChild;
   FileSystemEntryMetadata mEntry;
   nsString mName;
-  RefPtr<TestOriginPrivateFileSystemChild> mOPFSChild;
+  RefPtr<TestFileSystemManagerChild> mFileSystemManagerChild;
   RefPtr<FileSystemActorHolder> mActor;
 };
 
@@ -69,10 +70,10 @@ TEST_F(TestFileSystemRequestHandler, isGetRootHandleSuccessful) {
   };
 
   EXPECT_CALL(mListener->GetSuccessHandler(), InvokeMe());
-  EXPECT_CALL(*mOPFSChild, SendGetRootHandle(_, _))
+  EXPECT_CALL(*mFileSystemManagerChild, SendGetRootHandle(_, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mOPFSChild, Shutdown()).WillOnce([this]() {
-    mOPFSChild->OriginPrivateFileSystemChild::Shutdown();
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown()).WillOnce([this]() {
+    mFileSystemManagerChild->FileSystemManagerChild::Shutdown();
   });
 
   RefPtr<Promise> promise = GetDefaultPromise();
@@ -91,10 +92,10 @@ TEST_F(TestFileSystemRequestHandler, isGetDirectoryHandleSuccessful) {
   };
 
   EXPECT_CALL(mListener->GetSuccessHandler(), InvokeMe());
-  EXPECT_CALL(*mOPFSChild, SendGetDirectoryHandle(_, _, _))
+  EXPECT_CALL(*mFileSystemManagerChild, SendGetDirectoryHandle(_, _, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mOPFSChild, Shutdown()).WillOnce([this]() {
-    mOPFSChild->OriginPrivateFileSystemChild::Shutdown();
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown()).WillOnce([this]() {
+    mFileSystemManagerChild->FileSystemManagerChild::Shutdown();
   });
 
   RefPtr<Promise> promise = GetDefaultPromise();
@@ -114,10 +115,10 @@ TEST_F(TestFileSystemRequestHandler, isGetFileHandleSuccessful) {
   };
 
   EXPECT_CALL(mListener->GetSuccessHandler(), InvokeMe());
-  EXPECT_CALL(*mOPFSChild, SendGetFileHandle(_, _, _))
+  EXPECT_CALL(*mFileSystemManagerChild, SendGetFileHandle(_, _, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mOPFSChild, Shutdown()).WillOnce([this]() {
-    mOPFSChild->OriginPrivateFileSystemChild::Shutdown();
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown()).WillOnce([this]() {
+    mFileSystemManagerChild->FileSystemManagerChild::Shutdown();
   });
 
   RefPtr<Promise> promise = GetDefaultPromise();
@@ -144,9 +145,10 @@ TEST_F(TestFileSystemRequestHandler, isGetFileSuccessful) {
   };
 
   EXPECT_CALL(mListener->GetSuccessHandler(), InvokeMe());
-  EXPECT_CALL(*mOPFSChild, SendGetFile(_, _, _)).WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mOPFSChild, Shutdown()).WillOnce([this]() {
-    mOPFSChild->OriginPrivateFileSystemChild::Shutdown();
+  EXPECT_CALL(*mFileSystemManagerChild, SendGetFile(_, _, _))
+      .WillOnce(Invoke(fakeResponse));
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown()).WillOnce([this]() {
+    mFileSystemManagerChild->FileSystemManagerChild::Shutdown();
   });
 
   RefPtr<Promise> promise = GetDefaultPromise();
@@ -172,10 +174,10 @@ TEST_F(TestFileSystemRequestHandler, isGetEntriesSuccessful) {
   RefPtr<Promise> promise = Promise::Create(mGlobal, rv);
   promise->AppendNativeHandler(listener);
 
-  EXPECT_CALL(*mOPFSChild, SendGetEntries(_, _, _))
+  EXPECT_CALL(*mFileSystemManagerChild, SendGetEntries(_, _, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mOPFSChild, Shutdown()).WillOnce([this]() {
-    mOPFSChild->OriginPrivateFileSystemChild::Shutdown();
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown()).WillOnce([this]() {
+    mFileSystemManagerChild->FileSystemManagerChild::Shutdown();
   });
 
   auto testable = GetFileSystemRequestHandler();
@@ -193,10 +195,10 @@ TEST_F(TestFileSystemRequestHandler, isRemoveEntrySuccessful) {
   };
 
   EXPECT_CALL(mListener->GetSuccessHandler(), InvokeMe());
-  EXPECT_CALL(*mOPFSChild, SendRemoveEntry(_, _, _))
+  EXPECT_CALL(*mFileSystemManagerChild, SendRemoveEntry(_, _, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mOPFSChild, Shutdown()).WillOnce([this]() {
-    mOPFSChild->OriginPrivateFileSystemChild::Shutdown();
+  EXPECT_CALL(*mFileSystemManagerChild, Shutdown()).WillOnce([this]() {
+    mFileSystemManagerChild->FileSystemManagerChild::Shutdown();
   });
 
   auto testable = GetFileSystemRequestHandler();

@@ -25,11 +25,11 @@ class PrincipalInfo;
 
 namespace dom {
 
-class POriginPrivateFileSystemParent;
+class PFileSystemManagerParent;
 
 mozilla::ipc::IPCResult CreateFileSystemManagerParent(
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-    mozilla::ipc::Endpoint<mozilla::dom::POriginPrivateFileSystemParent>&&
+    mozilla::ipc::Endpoint<mozilla::dom::PFileSystemManagerParent>&&
         aParentEndpoint,
     std::function<void(const nsresult&)>&& aResolver);
 

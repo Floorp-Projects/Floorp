@@ -188,7 +188,7 @@ struct FileSystemQuotaRequest
 
 }  // namespace fs
 
-async protocol POriginPrivateFileSystem
+async protocol PFileSystemManager
 {
  parent:
   /**

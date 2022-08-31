@@ -21,7 +21,7 @@ include protocol PCacheStorage;
 include protocol PCacheStreamControl;
 include protocol PClientManager;
 include protocol PEndpointForReport;
-include protocol POriginPrivateFileSystem;
+include protocol PFileSystemManager;
 include protocol PFileSystemRequest;
 include protocol PGamepadEventChannel;
 include protocol PGamepadTestChannel;
@@ -188,11 +188,11 @@ parent:
   async PBackgroundStorage(nsString profilePath, uint32_t privateBrowsingId);
 
   /**
-   * Finish the setup of a new POriginPrivateFileSystem top level protocol.
+   * Finish the setup of a new PFileSystemManager top level protocol.
    */
   async CreateFileSystemManagerParent(
       PrincipalInfo principalInfo,
-      Endpoint<POriginPrivateFileSystemParent> aParentEndpoint)
+      Endpoint<PFileSystemManagerParent> aParentEndpoint)
       returns(nsresult rv);
 
   async PVsync();

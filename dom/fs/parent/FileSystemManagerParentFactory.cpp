@@ -7,8 +7,8 @@
 #include "FileSystemManagerParentFactory.h"
 
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/dom/FileSystemManagerParent.h"
 #include "mozilla/dom/FileSystemTypes.h"
-#include "mozilla/dom/OriginPrivateFileSystemParent.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/ipc/Endpoint.h"
@@ -50,7 +50,7 @@ FileSystemDataManager::CreateFileSystemDataManager(
 
 mozilla::ipc::IPCResult CreateFileSystemManagerParent(
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
-    mozilla::ipc::Endpoint<POriginPrivateFileSystemParent>&& aParentEndpoint,
+    mozilla::ipc::Endpoint<PFileSystemManagerParent>&& aParentEndpoint,
     std::function<void(const nsresult&)>&& aResolver) {
   QM_TRY(OkIf(StaticPrefs::dom_fs_enabled()), IPC_OK(),
          [aResolver](const auto&) { aResolver(NS_ERROR_DOM_NOT_ALLOWED_ERR); });
@@ -88,8 +88,8 @@ mozilla::ipc::IPCResult CreateFileSystemManagerParent(
   InvokeAsync(taskqueue, __func__,
               [origin, parentEp = std::move(aParentEndpoint), aResolver, rootId,
                data = std::move(data), taskqueue, pbackground]() mutable {
-                RefPtr<OriginPrivateFileSystemParent> parent =
-                    new OriginPrivateFileSystemParent(taskqueue, rootId);
+                RefPtr<FileSystemManagerParent> parent =
+                    new FileSystemManagerParent(taskqueue, rootId);
                 if (!parentEp.Bind(parent)) {
                   return BoolPromise::CreateAndReject(NS_ERROR_FAILURE,
                                                       __func__);

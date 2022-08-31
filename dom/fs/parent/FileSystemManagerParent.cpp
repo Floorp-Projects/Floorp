@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "OriginPrivateFileSystemParent.h"
+#include "FileSystemManagerParent.h"
 #include "nsNetCID.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/ipc/Endpoint.h"
@@ -22,11 +22,11 @@ extern LazyLogModule gOPFSLog;
 
 namespace mozilla::dom {
 
-OriginPrivateFileSystemParent::OriginPrivateFileSystemParent(
-    TaskQueue* aTaskQueue, const EntryId& aRootEntry)
+FileSystemManagerParent::FileSystemManagerParent(TaskQueue* aTaskQueue,
+                                                 const EntryId& aRootEntry)
     : mTaskQueue(aTaskQueue), mData(), mRootEntry(aRootEntry) {}
 
-IPCResult OriginPrivateFileSystemParent::RecvGetRootHandleMsg(
+IPCResult FileSystemManagerParent::RecvGetRootHandleMsg(
     GetRootHandleMsgResolver&& aResolver) {
   FileSystemGetHandleResponse response(mRootEntry);
   aResolver(response);
@@ -34,7 +34,7 @@ IPCResult OriginPrivateFileSystemParent::RecvGetRootHandleMsg(
   return IPC_OK();
 }
 
-IPCResult OriginPrivateFileSystemParent::RecvGetDirectoryHandleMsg(
+IPCResult FileSystemManagerParent::RecvGetDirectoryHandleMsg(
     FileSystemGetHandleRequest&& /* aRequest */,
     GetDirectoryHandleMsgResolver&& aResolver) {
   FileSystemGetHandleResponse response(NS_ERROR_NOT_IMPLEMENTED);
@@ -43,7 +43,7 @@ IPCResult OriginPrivateFileSystemParent::RecvGetDirectoryHandleMsg(
   return IPC_OK();
 }
 
-IPCResult OriginPrivateFileSystemParent::RecvGetFileHandleMsg(
+IPCResult FileSystemManagerParent::RecvGetFileHandleMsg(
     FileSystemGetHandleRequest&& aRequest,
     GetFileHandleMsgResolver&& aResolver) {
   FileSystemGetHandleResponse response(NS_ERROR_NOT_IMPLEMENTED);
@@ -52,7 +52,7 @@ IPCResult OriginPrivateFileSystemParent::RecvGetFileHandleMsg(
   return IPC_OK();
 }
 
-IPCResult OriginPrivateFileSystemParent::RecvGetFileMsg(
+IPCResult FileSystemManagerParent::RecvGetFileMsg(
     FileSystemGetFileRequest&& aRequest, GetFileMsgResolver&& aResolver) {
   FileSystemGetFileResponse response(NS_ERROR_NOT_IMPLEMENTED);
   aResolver(response);
@@ -60,7 +60,7 @@ IPCResult OriginPrivateFileSystemParent::RecvGetFileMsg(
   return IPC_OK();
 }
 
-IPCResult OriginPrivateFileSystemParent::RecvResolveMsg(
+IPCResult FileSystemManagerParent::RecvResolveMsg(
     FileSystemResolveRequest&& aRequest, ResolveMsgResolver&& aResolver) {
   FileSystemResolveResponse response(NS_ERROR_NOT_IMPLEMENTED);
   aResolver(response);
@@ -68,7 +68,7 @@ IPCResult OriginPrivateFileSystemParent::RecvResolveMsg(
   return IPC_OK();
 }
 
-IPCResult OriginPrivateFileSystemParent::RecvGetEntriesMsg(
+IPCResult FileSystemManagerParent::RecvGetEntriesMsg(
     FileSystemGetEntriesRequest&& aRequest, GetEntriesMsgResolver&& aResolver) {
   FileSystemGetEntriesResponse response(NS_ERROR_NOT_IMPLEMENTED);
   aResolver(response);
@@ -76,7 +76,7 @@ IPCResult OriginPrivateFileSystemParent::RecvGetEntriesMsg(
   return IPC_OK();
 }
 
-IPCResult OriginPrivateFileSystemParent::RecvRemoveEntryMsg(
+IPCResult FileSystemManagerParent::RecvRemoveEntryMsg(
     FileSystemRemoveEntryRequest&& aRequest,
     RemoveEntryMsgResolver&& aResolver) {
   FileSystemRemoveEntryResponse response(NS_ERROR_NOT_IMPLEMENTED);
@@ -85,14 +85,14 @@ IPCResult OriginPrivateFileSystemParent::RecvRemoveEntryMsg(
   return IPC_OK();
 }
 
-IPCResult OriginPrivateFileSystemParent::RecvCloseFile(
+IPCResult FileSystemManagerParent::RecvCloseFile(
     FileSystemGetFileRequest&& aRequest) {
   LOG(("Closing file"));  // painful to print out the id
 
   return IPC_OK();
 }
 
-IPCResult OriginPrivateFileSystemParent::RecvGetAccessHandle(
+IPCResult FileSystemManagerParent::RecvGetAccessHandle(
     FileSystemGetFileRequest&& aRequest, GetAccessHandleResolver&& aResolver) {
   FileSystemGetAccessHandleResponse response(NS_ERROR_NOT_IMPLEMENTED);
   aResolver(response);
@@ -100,7 +100,7 @@ IPCResult OriginPrivateFileSystemParent::RecvGetAccessHandle(
   return IPC_OK();
 }
 
-IPCResult OriginPrivateFileSystemParent::RecvGetWritable(
+IPCResult FileSystemManagerParent::RecvGetWritable(
     FileSystemGetFileRequest&& aRequest, GetWritableResolver&& aResolver) {
   FileSystemGetAccessHandleResponse response(NS_ERROR_NOT_IMPLEMENTED);
   aResolver(response);
@@ -108,15 +108,15 @@ IPCResult OriginPrivateFileSystemParent::RecvGetWritable(
   return IPC_OK();
 }
 
-IPCResult OriginPrivateFileSystemParent::RecvNeedQuota(
+IPCResult FileSystemManagerParent::RecvNeedQuota(
     FileSystemQuotaRequest&& aRequest, NeedQuotaResolver&& aResolver) {
   aResolver(0u);
 
   return IPC_OK();
 }
 
-OriginPrivateFileSystemParent::~OriginPrivateFileSystemParent() {
-  LOG(("Destroying OPFS Parent %p", this));
+FileSystemManagerParent::~FileSystemManagerParent() {
+  LOG(("Destroying FileSystemManagerParent %p", this));
   if (mTaskQueue) {
     mTaskQueue->BeginShutdown();
   }

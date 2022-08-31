@@ -7,8 +7,8 @@
 #include "FileSystemBackgroundRequestHandler.h"
 
 #include "fs/FileSystemChildFactory.h"
-#include "mozilla/dom/OriginPrivateFileSystemChild.h"
-#include "mozilla/dom/POriginPrivateFileSystem.h"
+#include "mozilla/dom/FileSystemManagerChild.h"
+#include "mozilla/dom/PFileSystemManager.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/PBackgroundChild.h"
@@ -40,12 +40,12 @@ FileSystemBackgroundRequestHandler::CreateFileSystemManagerChild(
   }
 
   // Create a new IPC connection
-  Endpoint<POriginPrivateFileSystemParent> parentEndpoint;
-  Endpoint<POriginPrivateFileSystemChild> childEndpoint;
-  MOZ_ALWAYS_SUCCEEDS(POriginPrivateFileSystem::CreateEndpoints(
-      &parentEndpoint, &childEndpoint));
+  Endpoint<PFileSystemManagerParent> parentEndpoint;
+  Endpoint<PFileSystemManagerChild> childEndpoint;
+  MOZ_ALWAYS_SUCCEEDS(
+      PFileSystemManager::CreateEndpoints(&parentEndpoint, &childEndpoint));
 
-  RefPtr<OriginPrivateFileSystemChild> child = mChildFactory->Create();
+  RefPtr<FileSystemManagerChild> child = mChildFactory->Create();
   if (!childEndpoint.Bind(child)) {
     return CreateFileSystemManagerChildPromise::CreateAndReject(
         NS_ERROR_FAILURE, __func__);
