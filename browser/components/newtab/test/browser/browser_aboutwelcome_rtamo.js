@@ -30,6 +30,7 @@ const TEST_ADDON_INFO_THEME = [
 ];
 
 async function openRTAMOWelcomePage() {
+  await pushPrefs(["browser.aboutwelcome.templateMR", false]);
   // Can't properly stub the child/parent actors so instead
   // we stub the modules they depend on for the RTAMO flow
   // to ensure the right thing is rendered.

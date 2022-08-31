@@ -1636,7 +1636,7 @@ pref("browser.aboutwelcome.enabled", true);
 pref("browser.aboutwelcome.screens", "");
 pref("browser.aboutwelcome.skipFocus", true);
 // Used to enable template for MR 2022 Onboarding
-pref("browser.aboutwelcome.templateMR", false);
+pref("browser.aboutwelcome.templateMR", true);
 
 // The pref that controls if the What's New panel is enabled.
 pref("browser.messaging-system.whatsNewPanel.enabled", true);
