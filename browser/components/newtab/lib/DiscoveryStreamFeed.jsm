@@ -245,6 +245,12 @@ class DiscoveryStreamFeed {
     const pocketButtonEnabled = Services.prefs.getBoolPref(PREF_POCKET_BUTTON);
 
     const nimbusConfig = this.store.getState().Prefs.values?.pocketConfig || {};
+    const { region } = this.store.getState().Prefs.values;
+    const saveToPocketCardRegions = nimbusConfig.saveToPocketCardRegions
+      ?.split(",")
+      .map(s => s.trim());
+    const saveToPocketCard =
+      pocketButtonEnabled && saveToPocketCardRegions?.includes(region);
     // We don't BroadcastToContent for this, as the changes may
     // shift around elements on an open newtab the user is currently reading.
     // So instead we AlsoToPreloaded so the next tab is updated.
@@ -255,8 +261,7 @@ class DiscoveryStreamFeed {
         data: {
           recentSavesEnabled: nimbusConfig.recentSavesEnabled,
           pocketButtonEnabled,
-          saveToPocketCard:
-            pocketButtonEnabled && nimbusConfig.saveToPocketCard,
+          saveToPocketCard,
           hideDescriptions: nimbusConfig.hideDescriptions,
           compactImages: nimbusConfig.compactImages,
           imageGradient: nimbusConfig.imageGradient,

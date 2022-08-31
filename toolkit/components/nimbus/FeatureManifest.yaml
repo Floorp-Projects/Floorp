@@ -290,13 +290,12 @@ pocketNewtab:
       fallbackPref: >-
         browser.newtabpage.activity-stream.discoverystream.newFooterSection.enabled
       description: Enable an updated Pocket section topics footer
-    saveToPocketCard:
-      type: boolean
+    saveToPocketCardRegions:
+      type: string
       fallbackPref: >-
-        browser.newtabpage.activity-stream.discoverystream.saveToPocketCard.enabled
+        browser.newtabpage.activity-stream.discoverystream.saveToPocketCardRegions
       description: >-
-        A save to Pocket button inside the card, shown on the card thumbnail, on
-        hover.
+        CSV string of regions that support the save to Pocket button inside the card.
     hideDescriptions:
       type: boolean
       fallbackPref: >-
