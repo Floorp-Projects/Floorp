@@ -51,42 +51,47 @@ mozilla::ipc::IPCResult CreateFileSystemManagerParent(
 
   // This creates the file system data manager, which has to be done on
   // PBackground
-  QM_TRY_UNWRAP(
-      fs::Registered<fs::data::FileSystemDataManager> dataManager,
-      fs::data::FileSystemDataManager::GetOrCreateFileSystemDataManager(origin),
-      IPC_OK(), [aResolver](const auto& aRv) { aResolver(aRv); });
+  fs::data::FileSystemDataManager::GetOrCreateFileSystemDataManager(origin)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [origin, parentEndpoint = std::move(aParentEndpoint),
+           aResolver](const fs::Registered<fs::data::FileSystemDataManager>&
+                          dataManager) mutable {
+            fs::EntryId rootId = fs::data::GetRootHandle(origin);
 
-  fs::EntryId rootId = fs::data::GetRootHandle(origin);
+            InvokeAsync(
+                dataManager->MutableIOTargetPtr(), __func__,
+                [dataManager =
+                     RefPtr<fs::data::FileSystemDataManager>(dataManager),
+                 rootId, parentEndpoint = std::move(parentEndpoint)]() mutable {
+                  RefPtr<FileSystemManagerParent> parent =
+                      new FileSystemManagerParent(std::move(dataManager),
+                                                  rootId);
 
-  InvokeAsync(
-      dataManager->MutableIOTargetPtr(), __func__,
-      [dataManager = RefPtr<fs::data::FileSystemDataManager>(dataManager),
-       rootId, parentEndpoint = std::move(aParentEndpoint)]() mutable {
-        RefPtr<FileSystemManagerParent> parent =
-            new FileSystemManagerParent(std::move(dataManager), rootId);
+                  if (!parentEndpoint.Bind(parent)) {
+                    return CreateActorPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                               __func__);
+                  }
 
-        if (!parentEndpoint.Bind(parent)) {
-          return CreateActorPromise::CreateAndReject(NS_ERROR_FAILURE,
-                                                     __func__);
-        }
+                  return CreateActorPromise::CreateAndResolve(std::move(parent),
+                                                              __func__);
+                })
+                ->Then(GetCurrentSerialEventTarget(), __func__,
+                       [dataManager = dataManager, aResolver](
+                           CreateActorPromise::ResolveOrRejectValue&& aValue) {
+                         if (aValue.IsReject()) {
+                           aResolver(aValue.RejectValue());
+                         } else {
+                           RefPtr<FileSystemManagerParent> parent =
+                               std::move(aValue.ResolveValue());
 
-        return CreateActorPromise::CreateAndResolve(std::move(parent),
-                                                    __func__);
-      })
-      ->Then(GetCurrentSerialEventTarget(), __func__,
-             [dataManager = dataManager,
-              aResolver](CreateActorPromise::ResolveOrRejectValue&& aValue) {
-               if (aValue.IsReject()) {
-                 aResolver(aValue.RejectValue());
-               } else {
-                 RefPtr<FileSystemManagerParent> parent =
-                     std::move(aValue.ResolveValue());
+                           dataManager->RegisterActor(WrapNotNull(parent));
 
-                 dataManager->RegisterActor(WrapNotNull(parent));
-
-                 aResolver(NS_OK);
-               }
-             });
+                           aResolver(NS_OK);
+                         }
+                       });
+          },
+          [aResolver](nsresult aRejectValue) { aResolver(aRejectValue); });
 
   return IPC_OK();
 }

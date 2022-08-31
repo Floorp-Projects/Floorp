@@ -7,7 +7,6 @@
 #include "FileSystemDataManager.h"
 #include "gtest/gtest.h"
 #include "mozilla/SpinEventLoopUntil.h"
-#include "TestHelpers.h"
 
 namespace mozilla::dom::fs::test {
 
@@ -19,19 +18,26 @@ constexpr auto kTestOriginName = "http:://example.com"_ns;
 
 TEST(TestFileSystemDataManager, GetOrCreateFileSystemDataManager)
 {
-  TEST_TRY_UNWRAP(Registered<data::FileSystemDataManager> registeredDataManager,
-                  data::FileSystemDataManager::GetOrCreateFileSystemDataManager(
-                      Origin(kTestOriginName)));
-
-  RefPtr<data::FileSystemDataManager> dataManager = registeredDataManager.get();
-
-  registeredDataManager = nullptr;
-
   bool done = false;
 
-  dataManager->OnClose()->Then(
-      GetCurrentSerialEventTarget(), __func__,
-      [&done](const BoolPromise::ResolveOrRejectValue&) { done = true; });
+  data::FileSystemDataManager::GetOrCreateFileSystemDataManager(
+      Origin(kTestOriginName))
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [](Registered<data::FileSystemDataManager> registeredDataManager) {
+            RefPtr<data::FileSystemDataManager> dataManager =
+                registeredDataManager.get();
+
+            registeredDataManager = nullptr;
+
+            return dataManager->OnClose();
+          },
+          [](nsresult rejectValue) {
+            return BoolPromise::CreateAndReject(rejectValue, __func__);
+          })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [&done](const BoolPromise::ResolveOrRejectValue&) { done = true; });
 
   SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
 }

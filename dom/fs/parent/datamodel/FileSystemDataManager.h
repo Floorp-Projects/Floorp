@@ -37,8 +37,9 @@ class FileSystemDataManager
   FileSystemDataManager(const Origin& aOrigin,
                         MovingNotNull<RefPtr<TaskQueue>> aIOTaskQueue);
 
-  using result_t = Result<Registered<FileSystemDataManager>, nsresult>;
-  static FileSystemDataManager::result_t GetOrCreateFileSystemDataManager(
+  using CreatePromise = MozPromise<Registered<FileSystemDataManager>, nsresult,
+                                   /* IsExclusive */ true>;
+  static RefPtr<CreatePromise> GetOrCreateFileSystemDataManager(
       const Origin& aOrigin);
 
   NS_INLINE_DECL_REFCOUNTING(FileSystemDataManager)
