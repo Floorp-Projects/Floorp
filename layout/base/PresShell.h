@@ -1269,6 +1269,11 @@ class PresShell final : public nsStubDocumentObserver,
   void SelectionWillTakeFocus() override;
   void SelectionWillLoseFocus() override;
 
+  // Implements the "focus fix-up rule". Returns true if the focus moved (in
+  // which case we might need to update layout again).
+  // See https://github.com/whatwg/html/issues/8225
+  MOZ_CAN_RUN_SCRIPT bool FixUpFocus();
+
   /**
    * Set a "resolution" for the document, which if not 1.0 will
    * allocate more or fewer pixels for rescalable content by a factor

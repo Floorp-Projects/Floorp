@@ -6654,49 +6654,6 @@ bool nsContentUtils::IsFocusedContent(const nsIContent* aContent) {
   return fm && fm->GetFocusedElement() == aContent;
 }
 
-bool nsContentUtils::IsSubDocumentTabbable(nsIContent* aContent) {
-  Document* doc = aContent->GetComposedDoc();
-  if (!doc) {
-    return false;
-  }
-
-  // If the subdocument lives in another process, the frame is
-  // tabbable.
-  if (EventStateManager::IsRemoteTarget(aContent)) {
-    return true;
-  }
-
-  // XXXbz should this use OwnerDoc() for GetSubDocumentFor?
-  // sXBL/XBL2 issue!
-  Document* subDoc = doc->GetSubDocumentFor(aContent);
-  if (!subDoc) {
-    return false;
-  }
-
-  nsCOMPtr<nsIDocShell> docShell = subDoc->GetDocShell();
-  if (!docShell) {
-    return false;
-  }
-
-  nsCOMPtr<nsIContentViewer> contentViewer;
-  docShell->GetContentViewer(getter_AddRefs(contentViewer));
-  if (!contentViewer) {
-    return false;
-  }
-
-  // If there are 2 viewers for the current docshell, that
-  // means the current document may be a zombie document.
-  // While load and pageshow events are dispatched, zombie viewer is the old,
-  // to be hidden document.
-  if (contentViewer->GetPreviousViewer()) {
-    bool inOnLoad = false;
-    docShell->GetIsExecutingOnLoadHandler(&inOnLoad);
-    return inOnLoad;
-  }
-
-  return true;
-}
-
 bool nsContentUtils::HasScrollgrab(nsIContent* aContent) {
   // If we ever standardize this feature we'll want to hook this up properly
   // again. For now we're removing all the DOM-side code related to it but

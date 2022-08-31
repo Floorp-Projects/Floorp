@@ -44,10 +44,17 @@ async function runTests()
 
   async function resetScroll()
   {
+    var oldFocus = document.activeElement;
+    var oldFrameFocus = iframe.contentDocument.activeElement;
+
     // Cancel any scroll animation on the target scroll elements to make sure
     // setting scrollTop or scrolLeft works as expected.
+    // cancelScrollAnimation clears focus, so make sure to restore it.
     await cancelScrollAnimation(document.documentElement);
     await cancelScrollAnimation(iframe.contentDocument.documentElement);
+
+    oldFocus.focus();
+    oldFrameFocus.focus();
 
     return new Promise(resolve => {
       var scrollParent = document.documentElement.scrollTop || document.documentElement.scrollLeft;
