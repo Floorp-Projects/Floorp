@@ -29,7 +29,9 @@ class FileSystemDataManager;
 
 class FileSystemManagerParent : public PFileSystemManagerParent {
  public:
-  FileSystemManagerParent(TaskQueue* aTaskQueue, const EntryId& aRootEntry);
+  FileSystemManagerParent(TaskQueue* aTaskQueue,
+                          RefPtr<fs::data::FileSystemDataManager> aDataManager,
+                          const EntryId& aRootEntry);
 
   mozilla::ipc::IPCResult RecvGetRootHandleMsg(
       GetRootHandleMsgResolver&& aResolver);

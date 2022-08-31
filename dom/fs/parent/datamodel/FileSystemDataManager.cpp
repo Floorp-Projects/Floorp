@@ -7,13 +7,17 @@
 #include "FileSystemDataManager.h"
 
 #include "mozilla/Result.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla::dom::fs::data {
+
+FileSystemDataManager::FileSystemDataManager()
+    : mBackgroundTarget(WrapNotNull(GetCurrentSerialEventTarget())) {}
 
 FileSystemDataManager::result_t
 FileSystemDataManager::CreateFileSystemDataManager(
     const fs::Origin& /*aOrigin*/) {
-  return RefPtr<FileSystemDataManager>();
+  return MakeRefPtr<FileSystemDataManager>();
 }
 
 }  // namespace mozilla::dom::fs::data
