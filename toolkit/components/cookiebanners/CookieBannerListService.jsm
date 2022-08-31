@@ -11,11 +11,10 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "RemoteSettings",
-  "resource://services-settings/remote-settings.js"
-);
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  RemoteSettings: "resource://services-settings/remote-settings.js",
+  JsonSchema: "resource://gre/modules/JsonSchema.jsm",
+});
 
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
@@ -25,7 +24,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 const PREF_TEST_RULES = "cookiebanners.listService.testRules";
 XPCOMUtils.defineLazyPreferenceGetter(lazy, "testRulesPref", PREF_TEST_RULES);
-
 // Name of the RemoteSettings collection containing the rules.
 const COLLECTION_NAME = "cookie-banner-rules-list";
 
@@ -40,6 +38,19 @@ function log(...args) {
 
   logConsole.log(...args);
 }
+
+// Lazy getter for the JSON schema of cookie banner rules. It is used for
+// validation of rules defined by pref.
+XPCOMUtils.defineLazyGetter(lazy, "CookieBannerRuleSchema", async () => {
+  let response = await fetch(
+    "chrome://global/content/cookiebanners/CookieBannerRule.schema.json"
+  );
+  if (!response.ok) {
+    log("Fetch for CookieBannerRuleSchema failed", response);
+    throw new Error("Failed to fetch CookieBannerRuleSchema.");
+  }
+  return response.json();
+});
 
 /**
  * See nsICookieBannerListService
@@ -78,7 +89,7 @@ class CookieBannerListService {
 
     let rules = await this.#rs.get();
     this.#importRules(rules);
-    this.#importTestRules();
+    return this.#importTestRules();
   }
 
   shutdown() {
@@ -149,7 +160,7 @@ class CookieBannerListService {
     });
   }
 
-  #importTestRules() {
+  async #importTestRules() {
     log("importTestRules");
 
     if (!Services.prefs.prefHasUserValue(PREF_TEST_RULES)) {
@@ -157,6 +168,7 @@ class CookieBannerListService {
       return;
     }
 
+    // Parse array of rules from pref value string as JSON.
     let testRules;
     try {
       testRules = JSON.parse(lazy.testRulesPref);
@@ -165,11 +177,46 @@ class CookieBannerListService {
       Cu.reportError(
         `Failed to parse test rules JSON string. Make sure ${PREF_TEST_RULES} contains valid JSON. ${error?.name}`
       );
-
       return;
     }
 
-    this.#importRules(testRules);
+    // Ensure we have an array we can iterate over and not an object.
+    if (!Array.isArray(testRules)) {
+      Cu.reportError("Failed to parse test rules JSON String: Not an array.");
+      return;
+    }
+
+    // Validate individual array elements (rules) via the schema defined in
+    // CookieBannerRule.schema.json.
+    // Allow extra properties. They will be discarded.
+    let schema = await lazy.CookieBannerRuleSchema;
+    let validator = new lazy.JsonSchema.Validator(schema);
+    let validatedTestRules = [];
+
+    let i = 0;
+    for (let rule of testRules) {
+      let { valid, errors } = validator.validate(rule);
+
+      if (!valid) {
+        Cu.reportError(
+          `Skipping invalid test rule at index ${i}. Errors: ${JSON.stringify(
+            errors,
+            null,
+            2
+          )}`
+        );
+        log("Test rule validation error", rule, errors);
+
+        i += 1;
+        continue;
+      }
+
+      // Only import rules if they are valid.
+      validatedTestRules.push(rule);
+      i += 1;
+    }
+
+    this.#importRules(validatedTestRules);
   }
 
   #importCookieRule(rule, cookies) {
