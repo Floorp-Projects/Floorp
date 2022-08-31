@@ -245,6 +245,8 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
 
   mState = State::Opening;
 
+  // XXX Add storage initialization to the chain.
+
   InvokeAsync(MutableIOTargetPtr(), __func__,
               [self = RefPtr<FileSystemDataManager>(this)]() mutable {
                 nsCOMPtr<nsISerialEventTarget> target =
