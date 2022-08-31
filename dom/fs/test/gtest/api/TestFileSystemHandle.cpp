@@ -16,6 +16,7 @@
 #include "mozilla/dom/FileSystemHandle.h"
 #include "mozilla/dom/FileSystemHandleBinding.h"
 #include "mozilla/dom/FileSystemManager.h"
+#include "mozilla/dom/StorageManager.h"
 #include "nsIGlobalObject.h"
 
 namespace mozilla::dom::fs::test {
@@ -25,7 +26,7 @@ class TestFileSystemHandle : public ::testing::Test {
   void SetUp() override {
     mDirMetadata = FileSystemEntryMetadata("dir"_ns, u"Directory"_ns);
     mFileMetadata = FileSystemEntryMetadata("file"_ns, u"File"_ns);
-    mManager = MakeAndAddRef<FileSystemManager>(mGlobal);
+    mManager = MakeAndAddRef<FileSystemManager>(mGlobal, nullptr);
   }
 
   nsIGlobalObject* mGlobal = GetGlobal();
