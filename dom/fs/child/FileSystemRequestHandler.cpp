@@ -237,6 +237,7 @@ void FileSystemRequestHandler::GetRootHandle(
     RefPtr<FileSystemManager>
         aManager,                // NOLINT(performance-unnecessary-value-param)
     RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+  MOZ_ASSERT(aManager);
   MOZ_ASSERT(aPromise);
 
   auto&& onResolve = SelectResolveCallback<FileSystemGetHandleResponse,
@@ -245,7 +246,7 @@ void FileSystemRequestHandler::GetRootHandle(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  QM_TRY(OkIf(aManager && aManager->Actor()), QM_VOID, [aPromise](const auto&) {
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
     aPromise->MaybeRejectWithUnknownError("Invalid actor");
   });
   aManager->Actor()->SendGetRootHandle(std::move(onResolve),
@@ -256,6 +257,7 @@ void FileSystemRequestHandler::GetDirectoryHandle(
     RefPtr<FileSystemManager>& aManager,
     const FileSystemChildMetadata& aDirectory, bool aCreate,
     RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+  MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aDirectory.parentId().IsEmpty());
   MOZ_ASSERT(aPromise);
 
@@ -267,7 +269,7 @@ void FileSystemRequestHandler::GetDirectoryHandle(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  QM_TRY(OkIf(aManager && aManager->Actor()), QM_VOID, [aPromise](const auto&) {
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
     aPromise->MaybeRejectWithUnknownError("Invalid actor");
   });
   aManager->Actor()->SendGetDirectoryHandle(request, std::move(onResolve),
@@ -278,6 +280,7 @@ void FileSystemRequestHandler::GetFileHandle(
     RefPtr<FileSystemManager>& aManager, const FileSystemChildMetadata& aFile,
     bool aCreate,
     RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+  MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aFile.parentId().IsEmpty());
   MOZ_ASSERT(aPromise);
 
@@ -289,7 +292,7 @@ void FileSystemRequestHandler::GetFileHandle(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  QM_TRY(OkIf(aManager && aManager->Actor()), QM_VOID, [aPromise](const auto&) {
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
     aPromise->MaybeRejectWithUnknownError("Invalid actor");
   });
   aManager->Actor()->SendGetFileHandle(request, std::move(onResolve),
@@ -299,6 +302,7 @@ void FileSystemRequestHandler::GetFileHandle(
 void FileSystemRequestHandler::GetFile(
     RefPtr<FileSystemManager>& aManager, const FileSystemEntryMetadata& aFile,
     RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+  MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aFile.entryId().IsEmpty());
   MOZ_ASSERT(aPromise);
 
@@ -310,7 +314,7 @@ void FileSystemRequestHandler::GetFile(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  QM_TRY(OkIf(aManager && aManager->Actor()), QM_VOID, [aPromise](const auto&) {
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
     aPromise->MaybeRejectWithUnknownError("Invalid actor");
   });
   aManager->Actor()->SendGetFile(request, std::move(onResolve),
@@ -322,6 +326,7 @@ void FileSystemRequestHandler::GetEntries(
     PageNumber aPage,
     RefPtr<Promise> aPromise,  // NOLINT(performance-unnecessary-value-param)
     ArrayAppendable& aSink) {
+  MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aDirectory.IsEmpty());
   MOZ_ASSERT(aPromise);
 
@@ -340,7 +345,7 @@ void FileSystemRequestHandler::GetEntries(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  QM_TRY(OkIf(aManager && aManager->Actor()), QM_VOID, [aPromise](const auto&) {
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
     aPromise->MaybeRejectWithUnknownError("Invalid actor");
   });
   aManager->Actor()->SendGetEntries(request, std::move(onResolve),
@@ -351,6 +356,7 @@ void FileSystemRequestHandler::RemoveEntry(
     RefPtr<FileSystemManager>& aManager, const FileSystemChildMetadata& aEntry,
     bool aRecursive,
     RefPtr<Promise> aPromise) {  // NOLINT(performance-unnecessary-value-param)
+  MOZ_ASSERT(aManager);
   MOZ_ASSERT(!aEntry.parentId().IsEmpty());
   MOZ_ASSERT(aPromise);
 
@@ -361,7 +367,7 @@ void FileSystemRequestHandler::RemoveEntry(
 
   auto&& onReject = GetRejectCallback(aPromise);
 
-  QM_TRY(OkIf(aManager && aManager->Actor()), QM_VOID, [aPromise](const auto&) {
+  QM_TRY(OkIf(aManager->Actor()), QM_VOID, [aPromise](const auto&) {
     aPromise->MaybeRejectWithUnknownError("Invalid actor");
   });
   aManager->Actor()->SendRemoveEntry(request, std::move(onResolve),
