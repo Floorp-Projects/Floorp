@@ -14,7 +14,7 @@ const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
-  InvalidArgumentError: "chrome://remote/content/shared/webdriver/Errors.jsm",
+  error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
 });
 
@@ -51,7 +51,7 @@ function checkDateTimeString(dateString) {
 
   // Check also if a date string is a valid date.
   if (Number.isNaN(Date.parse(dateString)) || !iso8601Format.test(dateString)) {
-    throw new lazy.InvalidArgumentError(
+    throw new lazy.error.InvalidArgumentError(
       `Expected "value" for Date to be a Date Time string, got ${dateString}`
     );
   }
@@ -109,7 +109,7 @@ function deserializeKeyValueList(/* realm, */ serializedKeyValueList) {
 
   for (const serializedKeyValue of serializedKeyValueList) {
     if (!Array.isArray(serializedKeyValue) || serializedKeyValue.length != 2) {
-      throw new lazy.InvalidArgumentError(
+      throw new lazy.error.InvalidArgumentError(
         `Expected key-value pair to be an array with 2 elements, got ${serializedKeyValue}`
       );
     }
@@ -174,7 +174,11 @@ function deserialize(/* realm, */ serializedValue) {
       }
 
       // Otherwise it has to be one of the special strings
-      lazy.assert.in(value, ["NaN", "-0", "Infinity", "-Infinity"]);
+      lazy.assert.in(
+        value,
+        ["NaN", "-0", "Infinity", "-Infinity"],
+        `Expected "value" to be one of "NaN", "-0", "Infinity", "-Infinity", got ${value}`
+      );
       return Number(value);
     case "boolean":
       lazy.assert.boolean(
@@ -190,7 +194,7 @@ function deserialize(/* realm, */ serializedValue) {
       try {
         return BigInt(value);
       } catch (e) {
-        throw new lazy.InvalidArgumentError(
+        throw new lazy.error.InvalidArgumentError(
           `Failed to deserialize value as BigInt: ${value}`
         );
       }
@@ -227,7 +231,7 @@ function deserialize(/* realm, */ serializedValue) {
       try {
         return new RegExp(pattern, flags);
       } catch (e) {
-        throw new lazy.InvalidArgumentError(
+        throw new lazy.error.InvalidArgumentError(
           `Failed to deserialize value as RegExp: ${value}`
         );
       }
