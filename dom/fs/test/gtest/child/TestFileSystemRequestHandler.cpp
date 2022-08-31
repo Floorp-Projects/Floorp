@@ -71,7 +71,9 @@ TEST_F(TestFileSystemRequestHandler, isGetRootHandleSuccessful) {
   EXPECT_CALL(mListener->GetSuccessHandler(), InvokeMe());
   EXPECT_CALL(*mOPFSChild, SendGetRootHandle(_, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mOPFSChild, Close()).Times(1);
+  EXPECT_CALL(*mOPFSChild, Shutdown()).WillOnce([this]() {
+    mOPFSChild->OriginPrivateFileSystemChild::Shutdown();
+  });
 
   RefPtr<Promise> promise = GetDefaultPromise();
   auto testable = GetFileSystemRequestHandler();
@@ -91,7 +93,9 @@ TEST_F(TestFileSystemRequestHandler, isGetDirectoryHandleSuccessful) {
   EXPECT_CALL(mListener->GetSuccessHandler(), InvokeMe());
   EXPECT_CALL(*mOPFSChild, SendGetDirectoryHandle(_, _, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mOPFSChild, Close()).Times(1);
+  EXPECT_CALL(*mOPFSChild, Shutdown()).WillOnce([this]() {
+    mOPFSChild->OriginPrivateFileSystemChild::Shutdown();
+  });
 
   RefPtr<Promise> promise = GetDefaultPromise();
   auto testable = GetFileSystemRequestHandler();
@@ -112,7 +116,9 @@ TEST_F(TestFileSystemRequestHandler, isGetFileHandleSuccessful) {
   EXPECT_CALL(mListener->GetSuccessHandler(), InvokeMe());
   EXPECT_CALL(*mOPFSChild, SendGetFileHandle(_, _, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mOPFSChild, Close()).Times(1);
+  EXPECT_CALL(*mOPFSChild, Shutdown()).WillOnce([this]() {
+    mOPFSChild->OriginPrivateFileSystemChild::Shutdown();
+  });
 
   RefPtr<Promise> promise = GetDefaultPromise();
   auto testable = GetFileSystemRequestHandler();
@@ -139,7 +145,9 @@ TEST_F(TestFileSystemRequestHandler, isGetFileSuccessful) {
 
   EXPECT_CALL(mListener->GetSuccessHandler(), InvokeMe());
   EXPECT_CALL(*mOPFSChild, SendGetFile(_, _, _)).WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mOPFSChild, Close()).Times(1);
+  EXPECT_CALL(*mOPFSChild, Shutdown()).WillOnce([this]() {
+    mOPFSChild->OriginPrivateFileSystemChild::Shutdown();
+  });
 
   RefPtr<Promise> promise = GetDefaultPromise();
   auto testable = GetFileSystemRequestHandler();
@@ -166,7 +174,9 @@ TEST_F(TestFileSystemRequestHandler, isGetEntriesSuccessful) {
 
   EXPECT_CALL(*mOPFSChild, SendGetEntries(_, _, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mOPFSChild, Close()).Times(1);
+  EXPECT_CALL(*mOPFSChild, Shutdown()).WillOnce([this]() {
+    mOPFSChild->OriginPrivateFileSystemChild::Shutdown();
+  });
 
   auto testable = GetFileSystemRequestHandler();
   ArrayAppendable sink;
@@ -185,7 +195,9 @@ TEST_F(TestFileSystemRequestHandler, isRemoveEntrySuccessful) {
   EXPECT_CALL(mListener->GetSuccessHandler(), InvokeMe());
   EXPECT_CALL(*mOPFSChild, SendRemoveEntry(_, _, _))
       .WillOnce(Invoke(fakeResponse));
-  EXPECT_CALL(*mOPFSChild, Close()).Times(1);
+  EXPECT_CALL(*mOPFSChild, Shutdown()).WillOnce([this]() {
+    mOPFSChild->OriginPrivateFileSystemChild::Shutdown();
+  });
 
   auto testable = GetFileSystemRequestHandler();
   RefPtr<Promise> promise = GetDefaultPromise();

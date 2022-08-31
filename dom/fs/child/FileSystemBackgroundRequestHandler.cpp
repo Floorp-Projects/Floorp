@@ -113,7 +113,7 @@ FileSystemBackgroundRequestHandler::CreateFileSystemManagerChild(
       &parentEndpoint, &childEndpoint));
 
   RefPtr<OriginPrivateFileSystemChild> child = mChildFactory->Create();
-  if (!childEndpoint.Bind(child->AsBindable())) {
+  if (!childEndpoint.Bind(child)) {
     return CreateFileSystemManagerChildPromise::CreateAndReject(
         NS_ERROR_FAILURE, __func__);
   }

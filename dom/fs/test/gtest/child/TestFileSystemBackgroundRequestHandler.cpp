@@ -12,8 +12,6 @@
 #include "mozilla/dom/OriginPrivateFileSystemChild.h"
 #include "mozilla/dom/POriginPrivateFileSystem.h"
 
-using ::testing::Invoke;
-
 namespace mozilla::dom::fs::test {
 
 class TestFileSystemBackgroundRequestHandler : public ::testing::Test {
@@ -32,21 +30,11 @@ class TestFileSystemBackgroundRequestHandler : public ::testing::Test {
   RefPtr<TestOriginPrivateFileSystemChild> mOPFSChild;
 };
 
-class TestOPFSChild : public POriginPrivateFileSystemChild {
- public:
-  NS_INLINE_DECL_REFCOUNTING(TestOPFSChild)
-
- protected:
-  ~TestOPFSChild() = default;
-};
-
 TEST_F(TestFileSystemBackgroundRequestHandler,
        isCreateFileSystemManagerChildSuccessful) {
-  EXPECT_CALL(*mOPFSChild, AsBindable())
-      .WillOnce(Invoke([]() -> POriginPrivateFileSystemChild* {
-        return new TestOPFSChild();
-      }));
-  EXPECT_CALL(*mOPFSChild, Close()).Times(1);
+  EXPECT_CALL(*mOPFSChild, Shutdown()).WillOnce([this]() {
+    mOPFSChild->OriginPrivateFileSystemChild::Shutdown();
+  });
 
   bool done = false;
   auto testable = GetFileSystemBackgroundRequestHandler();

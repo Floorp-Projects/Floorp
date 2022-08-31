@@ -26,57 +26,59 @@ OriginPrivateFileSystemParent::OriginPrivateFileSystemParent(
     TaskQueue* aTaskQueue, const EntryId& aRootEntry)
     : mTaskQueue(aTaskQueue), mData(), mRootEntry(aRootEntry) {}
 
-IPCResult OriginPrivateFileSystemParent::RecvGetRootHandle(
-    GetRootHandleResolver&& aResolver) {
+IPCResult OriginPrivateFileSystemParent::RecvGetRootHandleMsg(
+    GetRootHandleMsgResolver&& aResolver) {
   FileSystemGetHandleResponse response(mRootEntry);
   aResolver(response);
 
   return IPC_OK();
 }
 
-IPCResult OriginPrivateFileSystemParent::RecvGetDirectoryHandle(
+IPCResult OriginPrivateFileSystemParent::RecvGetDirectoryHandleMsg(
     FileSystemGetHandleRequest&& /* aRequest */,
-    GetDirectoryHandleResolver&& aResolver) {
+    GetDirectoryHandleMsgResolver&& aResolver) {
   FileSystemGetHandleResponse response(NS_ERROR_NOT_IMPLEMENTED);
   aResolver(response);
 
   return IPC_OK();
 }
 
-IPCResult OriginPrivateFileSystemParent::RecvGetFileHandle(
-    FileSystemGetHandleRequest&& aRequest, GetFileHandleResolver&& aResolver) {
+IPCResult OriginPrivateFileSystemParent::RecvGetFileHandleMsg(
+    FileSystemGetHandleRequest&& aRequest,
+    GetFileHandleMsgResolver&& aResolver) {
   FileSystemGetHandleResponse response(NS_ERROR_NOT_IMPLEMENTED);
   aResolver(response);
 
   return IPC_OK();
 }
 
-IPCResult OriginPrivateFileSystemParent::RecvGetFile(
-    FileSystemGetFileRequest&& aRequest, GetFileResolver&& aResolver) {
+IPCResult OriginPrivateFileSystemParent::RecvGetFileMsg(
+    FileSystemGetFileRequest&& aRequest, GetFileMsgResolver&& aResolver) {
   FileSystemGetFileResponse response(NS_ERROR_NOT_IMPLEMENTED);
   aResolver(response);
 
   return IPC_OK();
 }
 
-IPCResult OriginPrivateFileSystemParent::RecvResolve(
-    FileSystemResolveRequest&& aRequest, ResolveResolver&& aResolver) {
+IPCResult OriginPrivateFileSystemParent::RecvResolveMsg(
+    FileSystemResolveRequest&& aRequest, ResolveMsgResolver&& aResolver) {
   FileSystemResolveResponse response(NS_ERROR_NOT_IMPLEMENTED);
   aResolver(response);
 
   return IPC_OK();
 }
 
-IPCResult OriginPrivateFileSystemParent::RecvGetEntries(
-    FileSystemGetEntriesRequest&& aRequest, GetEntriesResolver&& aResolver) {
+IPCResult OriginPrivateFileSystemParent::RecvGetEntriesMsg(
+    FileSystemGetEntriesRequest&& aRequest, GetEntriesMsgResolver&& aResolver) {
   FileSystemGetEntriesResponse response(NS_ERROR_NOT_IMPLEMENTED);
   aResolver(response);
 
   return IPC_OK();
 }
 
-IPCResult OriginPrivateFileSystemParent::RecvRemoveEntry(
-    FileSystemRemoveEntryRequest&& aRequest, RemoveEntryResolver&& aResolver) {
+IPCResult OriginPrivateFileSystemParent::RecvRemoveEntryMsg(
+    FileSystemRemoveEntryRequest&& aRequest,
+    RemoveEntryMsgResolver&& aResolver) {
   FileSystemRemoveEntryResponse response(NS_ERROR_NOT_IMPLEMENTED);
   aResolver(response);
 

@@ -8,57 +8,127 @@
 #define DOM_FS_CHILD_ORIGINPRIVATEFILESYSTEMCHILD_H_
 
 #include "mozilla/dom/POriginPrivateFileSystemChild.h"
-#include "mozilla/UniquePtr.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla::dom {
 
-class OriginPrivateFileSystemChild {
+// XXX This can be greatly simplified if bug 1786484 gets fixed.
+// See: https://phabricator.services.mozilla.com/D155351
+//      https://phabricator.services.mozilla.com/D155352
+
+class OriginPrivateFileSystemChild : public POriginPrivateFileSystemChild {
  public:
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+  NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(OriginPrivateFileSystemChild,
+                                          Destroy())
 
   virtual void SendGetRootHandle(
-      mozilla::ipc::ResolveCallback<fs::FileSystemGetHandleResponse>&& aResolve,
-      mozilla::ipc::RejectCallback&& aReject) = 0;
+      mozilla::ipc::ResolveCallback<FileSystemGetHandleResponse>&& aResolve,
+      mozilla::ipc::RejectCallback&& aReject) {
+    POriginPrivateFileSystemChild::SendGetRootHandleMsg(
+        std::forward<
+            mozilla::ipc::ResolveCallback<FileSystemGetHandleResponse>>(
+            aResolve),
+        std::forward<mozilla::ipc::RejectCallback>(aReject));
+  }
 
   virtual void SendGetDirectoryHandle(
-      const fs::FileSystemGetHandleRequest& request,
-      mozilla::ipc::ResolveCallback<fs::FileSystemGetHandleResponse>&& aResolve,
-      mozilla::ipc::RejectCallback&& aReject) = 0;
+      const FileSystemGetHandleRequest& aRequest,
+      mozilla::ipc::ResolveCallback<FileSystemGetHandleResponse>&& aResolve,
+      mozilla::ipc::RejectCallback&& aReject) {
+    POriginPrivateFileSystemChild::SendGetDirectoryHandleMsg(
+        aRequest,
+        std::forward<
+            mozilla::ipc::ResolveCallback<FileSystemGetHandleResponse>>(
+            aResolve),
+        std::forward<mozilla::ipc::RejectCallback>(aReject));
+  }
 
   virtual void SendGetFileHandle(
-      const fs::FileSystemGetHandleRequest& request,
-      mozilla::ipc::ResolveCallback<fs::FileSystemGetHandleResponse>&& aResolve,
-      mozilla::ipc::RejectCallback&& aReject) = 0;
+      const FileSystemGetHandleRequest& aRequest,
+      mozilla::ipc::ResolveCallback<FileSystemGetHandleResponse>&& aResolve,
+      mozilla::ipc::RejectCallback&& aReject) {
+    POriginPrivateFileSystemChild::SendGetFileHandleMsg(
+        aRequest,
+        std::forward<
+            mozilla::ipc::ResolveCallback<FileSystemGetHandleResponse>>(
+            aResolve),
+        std::forward<mozilla::ipc::RejectCallback>(aReject));
+  }
 
   virtual void SendGetFile(
-      const fs::FileSystemGetFileRequest& request,
-      mozilla::ipc::ResolveCallback<fs::FileSystemGetFileResponse>&& aResolve,
-      mozilla::ipc::RejectCallback&& aReject) = 0;
+      const FileSystemGetFileRequest& aRequest,
+      mozilla::ipc::ResolveCallback<FileSystemGetFileResponse>&& aResolve,
+      mozilla::ipc::RejectCallback&& aReject) {
+    POriginPrivateFileSystemChild::SendGetFileMsg(
+        aRequest,
+        std::forward<mozilla::ipc::ResolveCallback<FileSystemGetFileResponse>>(
+            aResolve),
+        std::forward<mozilla::ipc::RejectCallback>(aReject));
+  }
 
   virtual void SendResolve(
-      const fs::FileSystemResolveRequest& request,
-      mozilla::ipc::ResolveCallback<fs::FileSystemResolveResponse>&& aResolve,
-      mozilla::ipc::RejectCallback&& aReject) = 0;
+      const FileSystemResolveRequest& aRequest,
+      mozilla::ipc::ResolveCallback<FileSystemResolveResponse>&& aResolve,
+      mozilla::ipc::RejectCallback&& aReject) {
+    POriginPrivateFileSystemChild::SendResolveMsg(
+        aRequest,
+        std::forward<mozilla::ipc::ResolveCallback<FileSystemResolveResponse>>(
+            aResolve),
+        std::forward<mozilla::ipc::RejectCallback>(aReject));
+  }
 
   virtual void SendGetEntries(
-      const fs::FileSystemGetEntriesRequest& request,
-      mozilla::ipc::ResolveCallback<fs::FileSystemGetEntriesResponse>&&
-          aResolve,
-      mozilla::ipc::RejectCallback&& aReject) = 0;
+      const FileSystemGetEntriesRequest& aRequest,
+      mozilla::ipc::ResolveCallback<FileSystemGetEntriesResponse>&& aResolve,
+      mozilla::ipc::RejectCallback&& aReject) {
+    POriginPrivateFileSystemChild::SendGetEntriesMsg(
+        aRequest,
+        std::forward<
+            mozilla::ipc::ResolveCallback<FileSystemGetEntriesResponse>>(
+            aResolve),
+        std::forward<mozilla::ipc::RejectCallback>(aReject));
+  }
 
   virtual void SendRemoveEntry(
-      const fs::FileSystemRemoveEntryRequest& request,
-      mozilla::ipc::ResolveCallback<fs::FileSystemRemoveEntryResponse>&&
-          aResolve,
-      mozilla::ipc::RejectCallback&& aReject) = 0;
+      const FileSystemRemoveEntryRequest& aRequest,
+      mozilla::ipc::ResolveCallback<FileSystemRemoveEntryResponse>&& aResolve,
+      mozilla::ipc::RejectCallback&& aReject) {
+    POriginPrivateFileSystemChild::SendRemoveEntryMsg(
+        aRequest,
+        std::forward<
+            mozilla::ipc::ResolveCallback<FileSystemRemoveEntryResponse>>(
+            aResolve),
+        std::forward<mozilla::ipc::RejectCallback>(aReject));
+  }
 
-  virtual void Close() = 0;
-
-  virtual POriginPrivateFileSystemChild* AsBindable() = 0;
+  virtual void Shutdown() {
+    if (CanSend()) {
+      Close();
+    }
+  }
 
  protected:
   virtual ~OriginPrivateFileSystemChild() = default;
+
+  virtual void Destroy() {
+    Shutdown();
+    delete this;
+  }
+
+ private:
+  using POriginPrivateFileSystemChild::SendGetRootHandleMsg;
+
+  using POriginPrivateFileSystemChild::SendGetDirectoryHandleMsg;
+
+  using POriginPrivateFileSystemChild::SendGetFileHandleMsg;
+
+  using POriginPrivateFileSystemChild::SendGetFileMsg;
+
+  using POriginPrivateFileSystemChild::SendResolveMsg;
+
+  using POriginPrivateFileSystemChild::SendGetEntriesMsg;
+
+  using POriginPrivateFileSystemChild::SendRemoveEntryMsg;
 };
 
 }  // namespace mozilla::dom

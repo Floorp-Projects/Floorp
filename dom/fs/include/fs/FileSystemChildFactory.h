@@ -9,8 +9,6 @@
 
 #include "mozilla/AlreadyAddRefed.h"
 
-class nsIGlobalObject;
-
 namespace mozilla {
 class ErrorResult;
 
