@@ -98,6 +98,8 @@ FileSystemDataManager::result_t
 FileSystemDataManager::GetOrCreateFileSystemDataManager(const Origin& aOrigin) {
   if (RefPtr<FileSystemDataManager> dataManager =
           GetFileSystemDataManager(aOrigin)) {
+    // XXX Handle the case when the manager is asynchronouslly closing!
+
     return Registered<FileSystemDataManager>(std::move(dataManager));
   }
 
@@ -127,7 +129,7 @@ void FileSystemDataManager::Unregister() {
   mRegCount--;
 
   if (IsInactive()) {
-    Close();
+    BeginClose();
   }
 }
 
@@ -145,23 +147,44 @@ void FileSystemDataManager::UnregisterActor(
   mActors.Remove(aActor);
 
   if (IsInactive()) {
-    Close();
+    BeginClose();
   }
+}
+
+RefPtr<BoolPromise> FileSystemDataManager::OnClose() {
+  MOZ_ASSERT(mState == State::Closing);
+
+  return mClosePromiseHolder.Ensure(__func__);
 }
 
 bool FileSystemDataManager::IsInactive() const {
   return !mRegCount && !mActors.Count();
 }
 
-void FileSystemDataManager::Close() {
+RefPtr<BoolPromise> FileSystemDataManager::BeginClose() {
   MOZ_ASSERT(mState == State::Initial);
   MOZ_ASSERT(IsInactive());
 
-  mState = State::Closed;
+  mState = State::Closing;
 
-  mIOTaskQueue->BeginShutdown();
+  InvokeAsync(MutableIOTargetPtr(), __func__,
+              []() { return BoolPromise::CreateAndResolve(true, __func__); })
+      ->Then(MutableBackgroundTargetPtr(), __func__,
+             [self = RefPtr<FileSystemDataManager>(this)](
+                 const BoolPromise::ResolveOrRejectValue&) {
+               return self->mIOTaskQueue->BeginShutdown();
+             })
+      ->Then(MutableBackgroundTargetPtr(), __func__,
+             [self = RefPtr<FileSystemDataManager>(this)](
+                 const ShutdownPromise::ResolveOrRejectValue&) {
+               RemoveFileSystemDataManager(self->mOrigin);
 
-  RemoveFileSystemDataManager(mOrigin);
+               self->mState = State::Closed;
+
+               self->mClosePromiseHolder.ResolveIfExists(true, __func__);
+             });
+
+  return OnClose();
 }
 
 }  // namespace mozilla::dom::fs::data
