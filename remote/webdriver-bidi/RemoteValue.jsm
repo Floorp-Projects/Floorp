@@ -145,7 +145,7 @@ function checkDateTimeString(dateString) {
  * @throws {InvalidArgumentError}
  *     If <var>serializedValueList</var> is not an array.
  */
-function deserializeValueList(/* realm, */ serializedValueList) {
+function deserializeValueList(realm, serializedValueList) {
   lazy.assert.array(
     serializedValueList,
     `Expected "serializedValueList" to be an array, got ${serializedValueList}`
@@ -154,7 +154,7 @@ function deserializeValueList(/* realm, */ serializedValueList) {
   const deserializedValues = [];
 
   for (const item of serializedValueList) {
-    deserializedValues.push(deserialize(/*realm, */ item));
+    deserializedValues.push(deserialize(realm, item));
   }
 
   return deserializedValues;
@@ -174,7 +174,7 @@ function deserializeValueList(/* realm, */ serializedValueList) {
  *     If <var>serializedKeyValueList</var> is not an array or
  *     not an array of key-value arrays.
  */
-function deserializeKeyValueList(/* realm, */ serializedKeyValueList) {
+function deserializeKeyValueList(realm, serializedKeyValueList) {
   lazy.assert.array(
     serializedKeyValueList,
     `Expected "serializedKeyValueList" to be an array, got ${serializedKeyValueList}`
@@ -192,8 +192,8 @@ function deserializeKeyValueList(/* realm, */ serializedKeyValueList) {
     const deserializedKey =
       typeof serializedKey == "string"
         ? serializedKey
-        : deserialize(/* realm, */ serializedKey);
-    const deserializedValue = deserialize(/* realm, */ serializedValue);
+        : deserialize(realm, serializedKey);
+    const deserializedValue = deserialize(realm, serializedValue);
 
     deserializedKeyValueList.push([deserializedKey, deserializedValue]);
   }
@@ -211,21 +211,24 @@ function deserializeKeyValueList(/* realm, */ serializedKeyValueList) {
  *
  * @return {Object} Deserialized representation of the value.
  */
-function deserialize(/* realm, */ serializedValue) {
-  const { objectId, type, value } = serializedValue;
+function deserialize(realm, serializedValue) {
+  const { handle, type, value } = serializedValue;
 
-  // With an objectId present deserialize as remote reference.
-  if (objectId !== undefined) {
+  // With a handle present deserialize as remote reference.
+  if (handle !== undefined) {
     lazy.assert.string(
-      objectId,
-      `Expected "objectId" to be a string, got ${objectId}`
+      handle,
+      `Expected "handle" to be a string, got ${handle}`
     );
 
-    // TODO: Implement deserialization of remote references (bug 1693838)
-    lazy.logger.warn(
-      `Unsupported type remote reference with objectId ${objectId}`
-    );
-    return undefined;
+    const object = realm.getObjectForHandle(handle);
+    if (!object) {
+      throw new lazy.error.InvalidArgumentError(
+        `Unable to find an object reference for "handle" ${handle}`
+      );
+    }
+
+    return object;
   }
 
   lazy.assert.string(type, `Expected "type" to be a string, got ${type}`);
@@ -276,7 +279,7 @@ function deserialize(/* realm, */ serializedValue) {
 
     // Non-primitive protocol values
     case "array":
-      return deserializeValueList(/* realm, */ value);
+      return deserializeValueList(realm, value);
     case "date":
       // We want to support only Date Time String format,
       // check if the value follows it.
@@ -284,9 +287,9 @@ function deserialize(/* realm, */ serializedValue) {
 
       return new Date(value);
     case "map":
-      return new Map(deserializeKeyValueList(value));
+      return new Map(deserializeKeyValueList(realm, value));
     case "object":
-      return Object.fromEntries(deserializeKeyValueList(value));
+      return Object.fromEntries(deserializeKeyValueList(realm, value));
     case "regexp":
       lazy.assert.object(
         value,
@@ -311,7 +314,7 @@ function deserialize(/* realm, */ serializedValue) {
         );
       }
     case "set":
-      return new Set(deserializeValueList(/* realm, */ value));
+      return new Set(deserializeValueList(realm, value));
   }
 
   lazy.logger.warn(`Unsupported type for local value ${type}`);
