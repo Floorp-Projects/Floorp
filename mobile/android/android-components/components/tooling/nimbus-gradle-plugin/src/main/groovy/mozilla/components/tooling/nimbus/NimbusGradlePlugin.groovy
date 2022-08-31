@@ -173,15 +173,6 @@ class NimbusPlugin implements Plugin<Project> {
         }
     }
 
-    static def getApplicationServiceVersion() {
-        // We would get this from the plugin itself but we don't know this vital piece of information
-        // We don't spend much time looking it up now because:
-        // a) this plugin is going to live in the AS repo (eventually)
-        // See https://github.com/mozilla-mobile/android-components/issues/11422 for tying this
-        // to a version that is specified in buildSrc/src/main/java/Dependencies.kt
-        return "94.2.0"
-    }
-
     // Try one or more hosts to download the given file.
     // Return the hostname that successfully downloaded, or null if none succeeded.
     static def tryDownload(File directory, String filename, String[] urlPrefixes) {
@@ -215,9 +206,12 @@ class NimbusPlugin implements Plugin<Project> {
 
         if (!archive.exists()) {
             println("Downloading archive to $archive")
-            // See https://github.com/mozilla-mobile/android-components/issues/11422 for tying this
-            // to a version that is specified in buildSrc/src/main/java/Dependencies.kt
-            def asVersion = getApplicationServiceVersion()
+
+            Properties props = new Properties()
+            props.load(getClass().getResourceAsStream("/plugin.properties"))
+
+            def asVersion = props.get("mozilla_appservices")
+            println("Using application-services v$asVersion")
             def successfulHost = tryDownload(archive.getParentFile(), archive.getName(),
                     // …the latest one from github.
                     "https://github.com/mozilla/application-services/releases/download/v$asVersion",

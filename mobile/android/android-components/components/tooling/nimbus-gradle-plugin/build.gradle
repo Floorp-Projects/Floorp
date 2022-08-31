@@ -1,3 +1,5 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16,6 +18,15 @@ gradlePlugin {
             implementationClass = "mozilla.components.tooling.nimbus.NimbusPlugin"
         }
     }
+}
+
+// This processes the files in the resources folder and moves them into the target folder. This
+// happens automatically, but has been updated to replace tokens in the resource files. It replaces
+// any tokens (values wrapped in `@`s) with the value for that key in the tokens object.
+processResources {
+    filter ReplaceTokens, tokens: [
+            'Versions.mozilla_appservices': Versions.mozilla_appservices
+    ]
 }
 
 dependencies {
