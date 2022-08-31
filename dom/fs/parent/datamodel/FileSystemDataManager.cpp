@@ -86,19 +86,19 @@ FileSystemDataManager::FileSystemDataManager(
     const Origin& aOrigin, MovingNotNull<RefPtr<TaskQueue>> aIOTaskQueue)
     : mOrigin(aOrigin),
       mBackgroundTarget(WrapNotNull(GetCurrentSerialEventTarget())),
-      mIOTaskQueue(std::move(aIOTaskQueue)) {}
+      mIOTaskQueue(std::move(aIOTaskQueue)),
+      mRegCount(0),
+      mState(State::Initial) {}
 
 FileSystemDataManager::~FileSystemDataManager() {
-  mIOTaskQueue->BeginShutdown();
-
-  RemoveFileSystemDataManager(mOrigin);
+  MOZ_ASSERT(mState == State::Closed);
 }
 
 FileSystemDataManager::result_t
 FileSystemDataManager::GetOrCreateFileSystemDataManager(const Origin& aOrigin) {
   if (RefPtr<FileSystemDataManager> dataManager =
           GetFileSystemDataManager(aOrigin)) {
-    return dataManager;
+    return Registered<FileSystemDataManager>(std::move(dataManager));
   }
 
   QM_TRY_UNWRAP(auto streamTransportService,
@@ -116,7 +116,52 @@ FileSystemDataManager::GetOrCreateFileSystemDataManager(const Origin& aOrigin) {
 
   AddFileSystemDataManager(aOrigin, dataManager);
 
-  return dataManager;
+  return Registered<FileSystemDataManager>(std::move(dataManager));
+}
+
+void FileSystemDataManager::Register() { mRegCount++; }
+
+void FileSystemDataManager::Unregister() {
+  MOZ_ASSERT(mRegCount > 0);
+
+  mRegCount--;
+
+  if (IsInactive()) {
+    Close();
+  }
+}
+
+void FileSystemDataManager::RegisterActor(
+    NotNull<FileSystemManagerParent*> aActor) {
+  MOZ_ASSERT(!mActors.Contains(aActor));
+
+  mActors.Insert(aActor);
+}
+
+void FileSystemDataManager::UnregisterActor(
+    NotNull<FileSystemManagerParent*> aActor) {
+  MOZ_ASSERT(mActors.Contains(aActor));
+
+  mActors.Remove(aActor);
+
+  if (IsInactive()) {
+    Close();
+  }
+}
+
+bool FileSystemDataManager::IsInactive() const {
+  return !mRegCount && !mActors.Count();
+}
+
+void FileSystemDataManager::Close() {
+  MOZ_ASSERT(mState == State::Initial);
+  MOZ_ASSERT(IsInactive());
+
+  mState = State::Closed;
+
+  mIOTaskQueue->BeginShutdown();
+
+  RemoveFileSystemDataManager(mOrigin);
 }
 
 }  // namespace mozilla::dom::fs::data

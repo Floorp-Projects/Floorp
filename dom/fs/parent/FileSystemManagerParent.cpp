@@ -8,6 +8,7 @@
 #include "nsNetCID.h"
 #include "mozilla/dom/FileSystemDataManager.h"
 #include "mozilla/dom/FileSystemTypes.h"
+#include "mozilla/dom/quota/ForwardDecls.h"
 #include "mozilla/ipc/Endpoint.h"
 
 using IPCResult = mozilla::ipc::IPCResult;
@@ -27,6 +28,10 @@ FileSystemManagerParent::FileSystemManagerParent(
     RefPtr<fs::data::FileSystemDataManager> aDataManager,
     const EntryId& aRootEntry)
     : mDataManager(std::move(aDataManager)), mRootEntry(aRootEntry) {}
+
+FileSystemManagerParent::~FileSystemManagerParent() {
+  LOG(("Destroying FileSystemManagerParent %p", this));
+}
 
 IPCResult FileSystemManagerParent::RecvGetRootHandleMsg(
     GetRootHandleMsgResolver&& aResolver) {
@@ -117,14 +122,33 @@ IPCResult FileSystemManagerParent::RecvNeedQuota(
   return IPC_OK();
 }
 
-FileSystemManagerParent::~FileSystemManagerParent() {
-  LOG(("Destroying FileSystemManagerParent %p", this));
+void FileSystemManagerParent::OnChannelClose() {
+  if (!mAllowedToClose) {
+    AllowToClose();
+  }
 
-  nsCOMPtr<nsISerialEventTarget> target =
-      mDataManager->MutableBackgroundTargetPtr();
+  PFileSystemManagerParent::OnChannelClose();
+}
 
-  NS_ProxyRelease("ReleaseFileSystemDataManager", target,
-                  mDataManager.forget());
+void FileSystemManagerParent::OnChannelError() {
+  if (!mAllowedToClose) {
+    AllowToClose();
+  }
+
+  PFileSystemManagerParent::OnChannelError();
+}
+
+void FileSystemManagerParent::AllowToClose() {
+  mAllowedToClose.Flip();
+
+  InvokeAsync(mDataManager->MutableBackgroundTargetPtr(), __func__,
+              [self = RefPtr<FileSystemManagerParent>(this)]() {
+                self->mDataManager->UnregisterActor(WrapNotNull(self));
+
+                self->mDataManager = nullptr;
+
+                return BoolPromise::CreateAndResolve(true, __func__);
+              });
 }
 
 }  // namespace mozilla::dom
