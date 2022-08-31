@@ -23,9 +23,12 @@ extern LazyLogModule gOPFSLog;
 
 namespace mozilla::dom {
 
-FileSystemManagerParent::FileSystemManagerParent(TaskQueue* aTaskQueue,
-                                                 const EntryId& aRootEntry)
-    : mTaskQueue(aTaskQueue), mRootEntry(aRootEntry) {}
+FileSystemManagerParent::FileSystemManagerParent(
+    TaskQueue* aTaskQueue, RefPtr<fs::data::FileSystemDataManager> aDataManager,
+    const EntryId& aRootEntry)
+    : mTaskQueue(aTaskQueue),
+      mDataManager(std::move(aDataManager)),
+      mRootEntry(aRootEntry) {}
 
 IPCResult FileSystemManagerParent::RecvGetRootHandleMsg(
     GetRootHandleMsgResolver&& aResolver) {
@@ -121,6 +124,12 @@ FileSystemManagerParent::~FileSystemManagerParent() {
   if (mTaskQueue) {
     mTaskQueue->BeginShutdown();
   }
+
+  nsCOMPtr<nsISerialEventTarget> target =
+      mDataManager->MutableBackgroundTargetPtr();
+
+  NS_ProxyRelease("ReleaseFileSystemDataManager", target,
+                  mDataManager.forget());
 }
 
 }  // namespace mozilla::dom

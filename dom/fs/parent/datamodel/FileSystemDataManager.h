@@ -7,7 +7,9 @@
 #ifndef DOM_FS_PARENT_DATAMODEL_FILESYSTEMDATAMANAGER_H_
 #define DOM_FS_PARENT_DATAMODEL_FILESYSTEMDATAMANAGER_H_
 
+#include "mozilla/NotNull.h"
 #include "mozilla/dom/FileSystemTypes.h"
+#include "nsCOMPtr.h"
 #include "nsISupportsUtils.h"
 
 namespace mozilla {
@@ -19,14 +21,22 @@ namespace dom::fs::data {
 
 class FileSystemDataManager {
  public:
+  FileSystemDataManager();
+
   using result_t = Result<RefPtr<FileSystemDataManager>, nsresult>;
   static FileSystemDataManager::result_t CreateFileSystemDataManager(
       const fs::Origin& aOrigin);
 
   NS_INLINE_DECL_REFCOUNTING(FileSystemDataManager)
 
+  nsISerialEventTarget* MutableBackgroundTargetPtr() const {
+    return mBackgroundTarget.get();
+  }
+
  protected:
   ~FileSystemDataManager() = default;
+
+  const NotNull<nsCOMPtr<nsISerialEventTarget>> mBackgroundTarget;
 };
 
 }  // namespace dom::fs::data

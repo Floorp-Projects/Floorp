@@ -75,11 +75,8 @@ mozilla::ipc::IPCResult CreateFileSystemManagerParent(
       taskqueue, __func__,
       [origin, parentEp = std::move(aParentEndpoint), aResolver, rootId,
        dataManager = std::move(dataManager), taskqueue, pbackground]() mutable {
-        NS_ProxyRelease("ReleaseFileSystemDataManager", pbackground,
-                        dataManager.forget());
-
-        RefPtr<FileSystemManagerParent> parent =
-            new FileSystemManagerParent(taskqueue, rootId);
+        RefPtr<FileSystemManagerParent> parent = new FileSystemManagerParent(
+            taskqueue, std::move(dataManager), rootId);
         if (!parentEp.Bind(parent)) {
           return BoolPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
         }
