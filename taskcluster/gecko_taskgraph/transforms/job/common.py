@@ -9,6 +9,7 @@ consistency.
 
 
 from taskgraph.util.taskcluster import get_artifact_prefix
+from taskgraph.util.keyed_by import evaluate_keyed_by
 
 SECRET_SCOPE = "secrets:get:project/releng/{trust_domain}/{kind}/level-{level}/{secret}"
 
@@ -257,3 +258,12 @@ def add_tooltool(config, job, taskdesc, internal=False):
                 "project:releng:services/tooltool/api/download/internal",
             ]
         )
+
+
+def get_expiration(config, policy="default"):
+    expires = evaluate_keyed_by(
+        config.graph_config["expiration-policy"],
+        "artifact expiration",
+        {"project": config.params["project"]},
+    )[policy]
+    return expires

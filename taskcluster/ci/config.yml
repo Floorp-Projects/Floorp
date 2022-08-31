@@ -681,3 +681,19 @@ mac-notarization:
         by-platform:
             macosx64.*: build/package/mac_osx/requirements.plist
             default: ''
+
+expiration-policy:
+    by-project:
+        try:
+            default: 1 month
+            medium: 1 month
+            long: 1 month
+        autoland:
+            default: 1 year
+            medium: 1 year
+            # To avoid keeping shippable builds for over a year
+            long: 1 year
+        default:
+            default: 3 months
+            medium: 1 year
+            long: 3 years
