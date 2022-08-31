@@ -14,8 +14,6 @@
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "nsNetCID.h"
-#include "nsServiceManagerUtils.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -60,29 +58,21 @@ mozilla::ipc::IPCResult CreateFileSystemManagerParent(
 
   nsCOMPtr<nsIThread> pbackground = NS_GetCurrentThread();
 
-  nsCOMPtr<nsIEventTarget> target =
-      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-  MOZ_ASSERT(target);
-
-  nsCString name("OPFS ");
-  name += origin;
-  RefPtr<TaskQueue> taskqueue =
-      TaskQueue::Create(target.forget(), PromiseFlatCString(name).get());
   // We'll have to thread-hop back to this thread to respond.  We could
   // just have the create be one-way, then send the actual request on the
   // new channel, but that's an extra IPC instead.
-  InvokeAsync(
-      taskqueue, __func__,
-      [origin, parentEp = std::move(aParentEndpoint), aResolver, rootId,
-       dataManager = std::move(dataManager), taskqueue, pbackground]() mutable {
-        RefPtr<FileSystemManagerParent> parent = new FileSystemManagerParent(
-            taskqueue, std::move(dataManager), rootId);
-        if (!parentEp.Bind(parent)) {
-          return BoolPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-        }
-        // Send response back to pbackground to send to child
-        return BoolPromise::CreateAndResolve(true, __func__);
-      })
+  InvokeAsync(dataManager->MutableIOTargetPtr(), __func__,
+              [origin, parentEp = std::move(aParentEndpoint), aResolver, rootId,
+               dataManager = dataManager, pbackground]() mutable {
+                RefPtr<FileSystemManagerParent> parent =
+                    new FileSystemManagerParent(std::move(dataManager), rootId);
+                if (!parentEp.Bind(parent)) {
+                  return BoolPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                      __func__);
+                }
+                // Send response back to pbackground to send to child
+                return BoolPromise::CreateAndResolve(true, __func__);
+              })
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [aResolver](const BoolPromise::ResolveOrRejectValue& aValue) {
                if (aValue.IsReject()) {

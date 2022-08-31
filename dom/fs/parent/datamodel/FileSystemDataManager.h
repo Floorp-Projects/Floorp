@@ -8,6 +8,7 @@
 #define DOM_FS_PARENT_DATAMODEL_FILESYSTEMDATAMANAGER_H_
 
 #include "mozilla/NotNull.h"
+#include "mozilla/TaskQueue.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "nsCOMPtr.h"
@@ -24,7 +25,8 @@ namespace dom::fs::data {
 class FileSystemDataManager
     : public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
  public:
-  explicit FileSystemDataManager(const Origin& aOrigin);
+  FileSystemDataManager(const Origin& aOrigin,
+                        MovingNotNull<RefPtr<TaskQueue>> aIOTaskQueue);
 
   using result_t = Result<RefPtr<FileSystemDataManager>, nsresult>;
   static FileSystemDataManager::result_t GetOrCreateFileSystemDataManager(
@@ -36,11 +38,16 @@ class FileSystemDataManager
     return mBackgroundTarget.get();
   }
 
+  nsISerialEventTarget* MutableIOTargetPtr() const {
+    return mIOTaskQueue.get();
+  }
+
  protected:
   ~FileSystemDataManager();
 
   const Origin mOrigin;
   const NotNull<nsCOMPtr<nsISerialEventTarget>> mBackgroundTarget;
+  const NotNull<RefPtr<TaskQueue>> mIOTaskQueue;
 };
 
 }  // namespace dom::fs::data

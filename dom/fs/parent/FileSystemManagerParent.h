@@ -9,7 +9,6 @@
 
 #include "ErrorList.h"
 #include "mozilla/dom/PFileSystemManagerParent.h"
-#include "mozilla/TaskQueue.h"
 #include "nsISupports.h"
 
 namespace mozilla {
@@ -29,8 +28,7 @@ class FileSystemDataManager;
 
 class FileSystemManagerParent : public PFileSystemManagerParent {
  public:
-  FileSystemManagerParent(TaskQueue* aTaskQueue,
-                          RefPtr<fs::data::FileSystemDataManager> aDataManager,
+  FileSystemManagerParent(RefPtr<fs::data::FileSystemDataManager> aDataManager,
                           const EntryId& aRootEntry);
 
   mozilla::ipc::IPCResult RecvGetRootHandleMsg(
@@ -75,8 +73,6 @@ class FileSystemManagerParent : public PFileSystemManagerParent {
   virtual ~FileSystemManagerParent();
 
  private:
-  RefPtr<TaskQueue> mTaskQueue;
-
   RefPtr<fs::data::FileSystemDataManager> mDataManager;
 
   const EntryId mRootEntry;

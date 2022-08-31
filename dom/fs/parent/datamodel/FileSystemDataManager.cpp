@@ -8,8 +8,12 @@
 
 #include "mozilla/Result.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
+#include "nsNetCID.h"
+#include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla::dom::fs::data {
@@ -78,11 +82,15 @@ void RemoveFileSystemDataManager(const Origin& aOrigin) {
 
 }  // namespace
 
-FileSystemDataManager::FileSystemDataManager(const Origin& aOrigin)
+FileSystemDataManager::FileSystemDataManager(
+    const Origin& aOrigin, MovingNotNull<RefPtr<TaskQueue>> aIOTaskQueue)
     : mOrigin(aOrigin),
-      mBackgroundTarget(WrapNotNull(GetCurrentSerialEventTarget())) {}
+      mBackgroundTarget(WrapNotNull(GetCurrentSerialEventTarget())),
+      mIOTaskQueue(std::move(aIOTaskQueue)) {}
 
 FileSystemDataManager::~FileSystemDataManager() {
+  mIOTaskQueue->BeginShutdown();
+
   RemoveFileSystemDataManager(mOrigin);
 }
 
@@ -93,7 +101,18 @@ FileSystemDataManager::GetOrCreateFileSystemDataManager(const Origin& aOrigin) {
     return dataManager;
   }
 
-  auto dataManager = MakeRefPtr<FileSystemDataManager>(aOrigin);
+  QM_TRY_UNWRAP(auto streamTransportService,
+                MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsIEventTarget>,
+                                        MOZ_SELECT_OVERLOAD(do_GetService),
+                                        NS_STREAMTRANSPORTSERVICE_CONTRACTID));
+
+  nsCString taskQueueName("OPFS "_ns + aOrigin);
+
+  RefPtr<TaskQueue> ioTaskQueue =
+      TaskQueue::Create(streamTransportService.forget(), taskQueueName.get());
+
+  auto dataManager = MakeRefPtr<FileSystemDataManager>(
+      aOrigin, WrapMovingNotNull(ioTaskQueue));
 
   AddFileSystemDataManager(aOrigin, dataManager);
 
