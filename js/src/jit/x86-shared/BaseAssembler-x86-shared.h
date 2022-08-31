@@ -1830,6 +1830,28 @@ class BaseAssembler : public GenericAssembler {
     }
   }
 
+  void cmpb_rr(RegisterID rhs, RegisterID lhs) {
+    spew("cmpb       %s, %s", GPReg8Name(rhs), GPReg8Name(lhs));
+    m_formatter.oneByteOp(OP_CMP_GbEb, rhs, lhs);
+  }
+
+  void cmpb_rm(RegisterID rhs, int32_t offset, RegisterID base) {
+    spew("cmpb       %s, " MEM_ob, GPReg8Name(rhs), ADDR_ob(offset, base));
+    m_formatter.oneByteOp(OP_CMP_EbGb, offset, base, rhs);
+  }
+
+  void cmpb_rm(RegisterID rhs, int32_t offset, RegisterID base,
+               RegisterID index, int scale) {
+    spew("cmpb       %s, " MEM_obs, GPReg8Name(rhs),
+         ADDR_obs(offset, base, index, scale));
+    m_formatter.oneByteOp(OP_CMP_EbGb, offset, base, index, scale, rhs);
+  }
+
+  void cmpb_rm(RegisterID rhs, const void* addr) {
+    spew("cmpb       %s, %p", GPReg8Name(rhs), addr);
+    m_formatter.oneByteOp(OP_CMP_EbGb, addr, rhs);
+  }
+
   void cmpb_ir(int32_t rhs, RegisterID lhs) {
     if (rhs == 0) {
       testb_rr(lhs, lhs);
