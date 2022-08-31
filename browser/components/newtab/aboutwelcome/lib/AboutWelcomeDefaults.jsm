@@ -347,7 +347,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
             string_id: "onboarding-live-language-secondary-cancel-download",
           },
           waiting: { string_id: "onboarding-live-language-waiting-button" },
-          skip: { string_id: "onboarding-live-language-skip-button-label" },
+          skip: { string_id: "mr2022-onboarding-secondary-skip-button-label" },
           action: {
             navigate: true,
           },
