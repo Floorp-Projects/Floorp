@@ -12,11 +12,15 @@ let { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 // Name of the RemoteSettings collection containing the rules.
 const COLLECTION_NAME = "cookie-banner-rules-list";
 
+// Name of pref used to import test rules.
+const PREF_TEST_RULES = "cookiebanners.listService.testRules";
+
 let rulesInserted = [];
 let rulesRemoved = [];
 let insertCallback = null;
 
 const RULE_A_ORIGINAL = {
+  id: "example.com",
   click: {
     optOut: "#fooOut",
     presence: "#foobar",
@@ -35,6 +39,7 @@ const RULE_A_ORIGINAL = {
 };
 
 const RULE_B = {
+  id: "example.org",
   click: {
     optOut: "#fooOutB",
     presence: "#foobarB",
@@ -52,6 +57,7 @@ const RULE_B = {
 };
 
 const RULE_C = {
+  id: "example.net",
   click: {
     optOut: "#fooOutC",
     presence: "#foobarC",
@@ -70,6 +76,7 @@ const RULE_C = {
 };
 
 const RULE_A_UPDATED = {
+  id: "example.com",
   click: {
     optOut: "#fooOut",
     optIn: "#barIn",
@@ -91,10 +98,24 @@ const RULE_A_UPDATED = {
   },
 };
 
+const INVALID_RULE_CLICK = {
+  id: "foobar.com",
+  domain: "foobar.com",
+  click: {
+    presence: 1,
+    optIn: "#foo",
+  },
+};
+
+const INVALID_RULE_EMPTY = {};
+
 // Testing with RemoteSettings requires a profile.
 do_get_profile();
 
 add_setup(async () => {
+  // Enable debug logging.
+  Services.prefs.setStringPref("cookiebanners.listService.logLevel", "Debug");
+
   // Stub some nsICookieBannerService methods for easy testing.
   let removeRuleForDomain = sinon.stub().callsFake(domain => {
     rulesRemoved.push(domain);
@@ -106,11 +127,12 @@ add_setup(async () => {
   });
 
   let oldCookieBanners = Services.cookieBanners;
-  Services.cookieBanners = { insertRule, removeRuleForDomain };
+  Services.cookieBanners = { insertRule, removeRuleForDomain, resetRules() {} };
 
   // Remove stubs on test end.
   registerCleanupFunction(() => {
     Services.cookieBanners = oldCookieBanners;
+    Services.prefs.clearUserPref("cookiebanners.listService.logLevel");
   });
 });
 
@@ -156,7 +178,7 @@ add_task(async function test_initial_import() {
   let cookieBannerListService = Cc[
     "@mozilla.org/cookie-banner-list-service;1"
   ].getService(Ci.nsICookieBannerListService);
-  cookieBannerListService.init();
+  await cookieBannerListService.initForTest();
 
   await insertPromise;
 
@@ -206,10 +228,11 @@ add_task(async function test_initial_import() {
 
   // Cleanup
   cookieBannerListService.shutdown();
-  db.clear();
-  await db.importChanges({}, Date.now());
   rulesInserted = [];
   rulesRemoved = [];
+
+  db.clear();
+  await db.importChanges({}, Date.now());
 });
 
 /**
@@ -221,7 +244,7 @@ add_task(async function test_remotesettings_sync() {
   let cookieBannerListService = Cc[
     "@mozilla.org/cookie-banner-list-service;1"
   ].getService(Ci.nsICookieBannerListService);
-  cookieBannerListService.init();
+  await cookieBannerListService.initForTest();
 
   const payload = {
     current: [RULE_A_ORIGINAL, RULE_C],
@@ -276,4 +299,90 @@ add_task(async function test_remotesettings_sync() {
   cookieBannerListService.shutdown();
   rulesInserted = [];
   rulesRemoved = [];
+
+  let { db } = RemoteSettings(COLLECTION_NAME);
+  db.clear();
+  await db.importChanges({}, Date.now());
+});
+
+/**
+ * Tests the cookie banner rule test pref.
+ */
+add_task(async function test_rule_test_pref() {
+  Services.prefs.setStringPref(
+    PREF_TEST_RULES,
+    JSON.stringify([RULE_A_ORIGINAL, RULE_B])
+  );
+
+  Assert.equal(rulesInserted.length, 0, "No inserted rules initially.");
+  Assert.equal(rulesRemoved.length, 0, "No removed rules initially.");
+
+  let insertPromise = waitForInsert(() => rulesInserted.length >= 2);
+
+  // Initialize the cookie banner list service so it imports test rules and listens for pref changes.
+  let cookieBannerListService = Cc[
+    "@mozilla.org/cookie-banner-list-service;1"
+  ].getService(Ci.nsICookieBannerListService);
+  await cookieBannerListService.initForTest();
+
+  info("Wait for rules to be inserted");
+  await insertPromise;
+
+  Assert.equal(rulesInserted.length, 2, "Should have inserted two rules.");
+  Assert.equal(rulesRemoved.length, 0, "Should not have removed any rules.");
+
+  Assert.ok(
+    rulesInserted.some(rule => rule.domain == RULE_A_ORIGINAL.domain),
+    "Should have inserted RULE_A"
+  );
+  Assert.ok(
+    rulesInserted.some(rule => rule.domain == RULE_B.domain),
+    "Should have inserted RULE_B"
+  );
+
+  rulesInserted = [];
+  rulesRemoved = [];
+
+  let insertPromise2 = waitForInsert(() => rulesInserted.length >= 3);
+
+  info(
+    "Updating test rules via pref. The list service should detect the pref change."
+  );
+  // This includes some invalid rules, they should be skipped.
+  Services.prefs.setStringPref(
+    PREF_TEST_RULES,
+    JSON.stringify([
+      RULE_A_ORIGINAL,
+      RULE_B,
+      INVALID_RULE_EMPTY,
+      RULE_C,
+      INVALID_RULE_CLICK,
+    ])
+  );
+
+  info("Wait for rules to be inserted");
+  await insertPromise2;
+
+  Assert.equal(rulesInserted.length, 3, "Should have inserted three rules.");
+  Assert.equal(rulesRemoved.length, 0, "Should not have removed any rules.");
+
+  Assert.ok(
+    rulesInserted.some(rule => rule.domain == RULE_A_ORIGINAL.domain),
+    "Should have inserted RULE_A"
+  );
+  Assert.ok(
+    rulesInserted.some(rule => rule.domain == RULE_B.domain),
+    "Should have inserted RULE_B"
+  );
+  Assert.ok(
+    rulesInserted.some(rule => rule.domain == RULE_C.domain),
+    "Should have inserted RULE_C"
+  );
+
+  // Cleanup
+  cookieBannerListService.shutdown();
+  rulesInserted = [];
+  rulesRemoved = [];
+
+  Services.prefs.clearUserPref(PREF_TEST_RULES);
 });
