@@ -4,8 +4,8 @@
 
 package org.mozilla.fenix.ui.util
 
-const val STRING_ONBOARDING_ACCOUNT_SIGN_IN_HEADER = "Sync Firefox between devices"
-const val STRING_ONBOARDING_TRACKING_PROTECTION_HEADER = "Always-on privacy"
+const val STRING_ONBOARDING_ACCOUNT_SIGN_IN_HEADER = "Pick up where you left off"
+const val STRING_ONBOARDING_TRACKING_PROTECTION_HEADER = "Privacy protection by default"
 const val STRING_ONBOARDING_TOOLBAR_PLACEMENT_HEADER = "Pick your toolbar placement"
 const val FRENCH_LANGUAGE_HEADER = "Langues"
 const val FR_SETTINGS = "Paramètres"

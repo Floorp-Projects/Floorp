@@ -593,14 +593,14 @@ private fun assertWelcomeHeader() =
     assertTrue(
         mDevice.findObject(
             UiSelector().textContains(
-                getStringResource(R.string.onboarding_header)
+                getStringResource(R.string.onboarding_header_2)
             )
         ).waitForExists(waitingTime)
     )
 
 private fun assertStartSyncHeader() {
     scrollToElementByText(STRING_ONBOARDING_ACCOUNT_SIGN_IN_HEADER)
-    onView(allOf(withText(R.string.onboarding_account_sign_in_header_1)))
+    onView(allOf(withText(R.string.onboarding_account_sign_in_header)))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 private fun assertAccountsSignInButton() =
@@ -664,7 +664,7 @@ private fun assertAlwaysPrivacyText() {
     onView(
         allOf(
             withText(
-                "$appName automatically stops companies from secretly following you around the web."
+                "Featuring Total Cookie Protection to stop trackers from using cookies to stalk you across sites."
             )
         )
     )
@@ -672,17 +672,17 @@ private fun assertAlwaysPrivacyText() {
 }
 
 private fun assertYourPrivacyHeader() {
-    scrollToElementByText("Your privacy")
-    onView(allOf(withText("Your privacy")))
+    scrollToElementByText("You control your data")
+    onView(allOf(withText("You control your data")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun assertYourPrivacyText() {
-    scrollToElementByText("Your privacy")
+    scrollToElementByText("You control your data")
     onView(
         allOf(
             withText(
-                "We’ve designed $appName to give you control over what you share online and what you share with us."
+                "Firefox gives you control over what you share online and what you share with us."
             )
         )
     )
@@ -690,7 +690,7 @@ private fun assertYourPrivacyText() {
 }
 
 private fun assertPrivacyNoticeButton() {
-    scrollToElementByText("Your privacy")
+    scrollToElementByText("You control your data")
     onView(allOf(withText("Read our privacy notice")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }

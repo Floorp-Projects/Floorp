@@ -23,7 +23,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Onboarding
-import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.OnboardingManualSigninBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -53,16 +52,6 @@ class OnboardingManualSignInViewHolderTest {
     @After
     fun teardown() {
         unmockkStatic(Navigation::class)
-    }
-
-    @Test
-    fun `bind header text`() {
-        OnboardingManualSignInViewHolder(binding.root).bind()
-        val string = testContext.getString(R.string.onboarding_account_sign_in_header_1)
-        assertEquals(
-            string,
-            binding.headerText.text
-        )
     }
 
     @Test

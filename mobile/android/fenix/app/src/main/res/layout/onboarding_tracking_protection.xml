@@ -19,7 +19,7 @@
         android:drawablePadding="12dp"
         android:gravity="center_vertical"
         android:lines="1"
-        android:text="@string/onboarding_tracking_protection_header_3"
+        android:text="@string/onboarding_tracking_protection_header"
         android:textAppearance="@style/HeaderTextStyle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -35,7 +35,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/header_text"
-        tools:text="@string/onboarding_tracking_protection_description_4" />
+        android:text="@string/onboarding_tracking_protection_description" />
 
 
     <org.mozilla.fenix.onboarding.OnboardingRadioButton

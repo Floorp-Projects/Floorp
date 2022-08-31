@@ -1181,19 +1181,33 @@
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">Welcome to %s!</string>
+    <string name="onboarding_header" moz:RemovedIn="106" tools:ignore="UnusedResources">Welcome to %s!</string>
+    <!-- Text for onboarding welcome header. -->
+    <string name="onboarding_header_2">Welcome to a better internet</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">A browser built for people, not profits.</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">Sync Firefox between devices</string>
+    <string name="onboarding_account_sign_in_header_1" moz:removedIn="106" tools:ignore="UnusedResources">Sync Firefox between devices</string>
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">Pick up where you left off</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string name="onboarding_manual_sign_in_description_2">Bring bookmarks, history, and passwords to %1$s on this device.</string>
+    <string name="onboarding_manual_sign_in_description_2" moz:removedIn="106" tools:ignore="UnusedResources">Bring bookmarks, history, and passwords to %1$s on this device.</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">Sync tabs and passwords across devices for seamless screen-switching.</string>
     <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">Sign up</string>
+    <string name="onboarding_firefox_account_sign_in_1" moz:removedIn="106" tools:ignore="UnusedResources">Sign up</string>
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">Sign in</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync is on</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_3">Always-on privacy</string>
+    <string name="onboarding_tracking_protection_header_3" moz:removedIn="106" tools:ignore="UnusedResources">Always-on privacy</string>
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Privacy protection by default</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_4">%1$s automatically stops companies from secretly following you around the web.</string>
+    <string name="onboarding_tracking_protection_description_4" moz:removedIn="106" tools:ignore="UnusedResources">%1$s automatically stops companies from secretly following you around the web.</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">Featuring Total Cookie Protection to stop trackers from using cookies to stalk you across sites.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standard (default)</string>
     <!-- text for standard blocking option button description -->
@@ -1205,15 +1219,22 @@
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Pick your toolbar placement</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description_1">Put the toolbar within easy reach. Keep it on the bottom, or move it to the top.</string>
+    <string name="onboarding_toolbar_placement_description_1" moz:removedIn="106" tools:ignore="UnusedResources">Put the toolbar within easy reach. Keep it on the bottom, or move it to the top.</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">Keep it on the bottom, or move it to the top.</string>
     <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">Your privacy</string>
+    <string name="onboarding_privacy_notice_header" moz:removedIn="106" tools:ignore="UnusedResources">Your privacy</string>
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">You control your data</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string name="onboarding_privacy_notice_description2">We’ve designed %s to give you control over what you share online and what you share with us.</string>
+    <string name="onboarding_privacy_notice_description2" moz:removedIn="106" tools:ignore="UnusedResources">We’ve designed %s to give you control over what you share online and what you share with us.</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">Firefox gives you control over what you share online and what you share with us.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Read our privacy notice</string>
-
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">Ready to open up an amazing internet?</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Start browsing</string>
 

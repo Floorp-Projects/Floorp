@@ -134,7 +134,6 @@ private fun onboardingAdapterItems(onboardingState: OnboardingState): List<Adapt
         listOf(
             AdapterItem.OnboardingThemePicker,
             AdapterItem.OnboardingToolbarPositionPicker,
-            AdapterItem.OnboardingTrackingProtection
         )
     )
     // Customize FxA items based on where we are with the account state:
@@ -151,6 +150,7 @@ private fun onboardingAdapterItems(onboardingState: OnboardingState): List<Adapt
 
     items.addAll(
         listOf(
+            AdapterItem.OnboardingTrackingProtection,
             AdapterItem.OnboardingPrivacyNotice,
             AdapterItem.OnboardingFinish,
             AdapterItem.BottomSpacer

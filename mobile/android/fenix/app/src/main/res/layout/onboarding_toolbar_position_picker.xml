@@ -30,7 +30,7 @@
         android:layout_height="wrap_content"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:text="@string/onboarding_toolbar_placement_description_1"
+        android:text="@string/onboarding_toolbar_placement_description"
         android:textAppearance="@style/Body14TextStyle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/header_text" />
