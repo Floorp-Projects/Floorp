@@ -1484,4 +1484,52 @@ bool TextLeafPoint::ContainsPoint(int32_t aX, int32_t aY) {
   return CharBounds().Contains(aX, aY);
 }
 
+TextLeafRange::Iterator TextLeafRange::Iterator::BeginIterator(
+    const TextLeafRange& aRange) {
+  Iterator result(aRange);
+
+  result.mSegmentStart = aRange.mStart;
+  if (aRange.mStart.mAcc == aRange.mEnd.mAcc) {
+    result.mSegmentEnd = aRange.mEnd;
+  } else {
+    result.mSegmentEnd = TextLeafPoint(
+        aRange.mStart.mAcc, nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT);
+  }
+
+  return result;
+}
+
+TextLeafRange::Iterator TextLeafRange::Iterator::EndIterator(
+    const TextLeafRange& aRange) {
+  Iterator result(aRange);
+
+  result.mSegmentEnd = TextLeafPoint();
+  result.mSegmentStart = TextLeafPoint();
+
+  return result;
+}
+
+TextLeafRange::Iterator& TextLeafRange::Iterator::operator++() {
+  if (mSegmentEnd.mAcc == mRange.mEnd.mAcc) {
+    mSegmentEnd = TextLeafPoint();
+    mSegmentStart = TextLeafPoint();
+    return *this;
+  }
+
+  if (Accessible* nextLeaf = NextLeaf(mSegmentEnd.mAcc)) {
+    mSegmentStart = TextLeafPoint(nextLeaf, 0);
+    if (nextLeaf == mRange.mEnd.mAcc) {
+      mSegmentEnd = TextLeafPoint(nextLeaf, mRange.mEnd.mOffset);
+    } else {
+      mSegmentEnd =
+          TextLeafPoint(nextLeaf, nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT);
+    }
+  } else {
+    mSegmentEnd = TextLeafPoint();
+    mSegmentStart = TextLeafPoint();
+  }
+
+  return *this;
+}
+
 }  // namespace mozilla::a11y
