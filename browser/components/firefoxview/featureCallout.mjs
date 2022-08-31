@@ -116,15 +116,10 @@ function _positionCallout() {
   // All possible arrow positions
   const arrowPositions = ["top", "bottom", "end", "start"];
   const arrowPosition = CURRENT_SCREEN?.content?.arrow_position || "top";
-  // Length of arrow pointer in pixels
-  const arrowLength = 12;
-  // Callout should overlap the parent element by
-  // 15% of the latter's width or height
-  const overlap = 0.15;
-  // Number of pixels that the callout should overlap the element it describes,
-  // including the length of the element's arrow pointer
-  const parentHeightOverlap = parentEl.offsetHeight * overlap - arrowLength;
-  const parentWidthOverlap = parentEl.offsetWidth * overlap - arrowLength;
+  // Callout should overlap the parent element by 17px (so the box, not
+  // including the arrow, will overlap by 5px)
+  const arrowWidth = 12;
+  const overlap = 17 - arrowWidth;
   // Is the document layout right to left?
   const RTL = document.dir === "rtl";
 
@@ -162,14 +157,14 @@ function _positionCallout() {
         document.body.offsetHeight -
         getOffset(parentEl).top -
         parentEl.offsetHeight +
-        parentHeightOverlap,
-      neededSpace: container.offsetHeight - parentHeightOverlap,
+        overlap,
+      neededSpace: container.offsetHeight - overlap,
       position() {
         // Point to an element above the callout
         let containerTop =
-          getOffset(parentEl).top + parentEl.offsetHeight - parentHeightOverlap;
+          getOffset(parentEl).top + parentEl.offsetHeight - overlap;
         container.style.top = `${Math.max(
-          container.offsetHeight - parentHeightOverlap,
+          container.offsetHeight - overlap,
           containerTop
         )}px`;
         centerHorizontally(container, parentEl);
@@ -177,26 +172,24 @@ function _positionCallout() {
       },
     },
     bottom: {
-      availableSpace: getOffset(parentEl).top + parentHeightOverlap,
-      neededSpace: container.offsetHeight - parentHeightOverlap,
+      availableSpace: getOffset(parentEl).top + overlap,
+      neededSpace: container.offsetHeight - overlap,
       position() {
         // Point to an element below the callout
         let containerTop =
-          getOffset(parentEl).top -
-          container.offsetHeight +
-          parentHeightOverlap;
+          getOffset(parentEl).top - container.offsetHeight + overlap;
         container.style.top = `${Math.max(0, containerTop)}px`;
         centerHorizontally(container, parentEl);
         container.classList.add("arrow-bottom");
       },
     },
     right: {
-      availableSpace: getOffset(parentEl).left + parentHeightOverlap,
-      neededSpace: container.offsetWidth - parentWidthOverlap,
+      availableSpace: getOffset(parentEl).left + overlap,
+      neededSpace: container.offsetWidth - overlap,
       position() {
         // Point to an element to the right of the callout
         let containerLeft =
-          getOffset(parentEl).left - container.offsetWidth + parentWidthOverlap;
+          getOffset(parentEl).left - container.offsetWidth + overlap;
         if (RTL) {
           // Account for cases where the document body may be narrow than the window
           containerLeft -= window.innerWidth - document.body.offsetWidth;
@@ -208,19 +201,17 @@ function _positionCallout() {
     },
     left: {
       availableSpace:
-        document.body.offsetWidth -
-        getOffset(parentEl).right +
-        parentWidthOverlap,
-      neededSpace: container.offsetWidth - parentWidthOverlap,
+        document.body.offsetWidth - getOffset(parentEl).right + overlap,
+      neededSpace: container.offsetWidth - overlap,
       position() {
         // Point to an element to the left of the callout
         let containerLeft =
-          getOffset(parentEl).left + parentEl.offsetWidth - parentWidthOverlap;
+          getOffset(parentEl).left + parentEl.offsetWidth - overlap;
         if (RTL) {
           // Account for cases where the document body may be narrow than the window
           containerLeft -= window.innerWidth - document.body.offsetWidth;
         }
-        container.style.left = `${(container.offsetWidth - parentWidthOverlap,
+        container.style.left = `${(container.offsetWidth - overlap,
         containerLeft)}px`;
         container.style.top = `${getOffset(parentEl).top}px`;
         container.classList.add("arrow-inline-start");
