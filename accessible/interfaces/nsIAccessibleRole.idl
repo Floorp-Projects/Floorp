@@ -12,7 +12,7 @@
 interface nsIAccessibleRole : nsISupports
 {
   /**
-   * Used when accessible hans't strong defined role.
+   * Used when the accessible has no strongly-defined role.
    */
   const unsigned long ROLE_NOTHING = 0;
 
@@ -1076,5 +1076,19 @@ interface nsIAccessibleRole : nsISupports
    * scale, ex. the strength of a password entered in an input.
    */
   const unsigned long ROLE_METER = 185;
+
+  /**
+   * Represents phrasing content that is presented with vertical alignment
+   * lower than the baseline and a smaller font size. For example, the "2" in
+   * the chemical formula H2O.
+   */
+  const unsigned long ROLE_SUBSCRIPT = 186;
+
+  /**
+   * Represents phrasing content that is presented with vertical alignment
+   * higher than the baseline and a smaller font size. For example, the
+   * exponent in a math expression.
+   */
+  const unsigned long ROLE_SUPERSCRIPT = 187;
 
 };

@@ -151,50 +151,50 @@
       attrs = {};
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 5);
 
-      attrs = { "text-position": "super", "font-size": "10pt" };
-      testTextAttrs(ID, 5, attrs, defAttrs, 5, 13);
+      // Embedded object (sup) has no attributes but takes up one character.
+      testTextAttrs(ID, 5, {}, {}, 5, 6);
 
       attrs = {};
-      testTextAttrs(ID, 13, attrs, defAttrs, 13, 27);
+      testTextAttrs(ID, 6, attrs, defAttrs, 6, 20);
 
       attrs = { "text-position": "super" };
-      testTextAttrs(ID, 27, attrs, defAttrs, 27, 35);
+      testTextAttrs(ID, 20, attrs, defAttrs, 20, 28);
 
       attrs = {};
-      testTextAttrs(ID, 35, attrs, defAttrs, 35, 39);
+      testTextAttrs(ID, 28, attrs, defAttrs, 28, 32);
 
-      attrs = { "text-position": "sub", "font-size": "10pt" };
-      testTextAttrs(ID, 39, attrs, defAttrs, 39, 50);
+      // Embedded object (sub) has no attributes but takes up one character.
+      testTextAttrs(ID, 32, {}, {}, 32, 33);
 
       attrs = {};
-      testTextAttrs(ID, 50, attrs, defAttrs, 50, 55);
+      testTextAttrs(ID, 33, attrs, defAttrs, 33, 38);
 
       attrs = { "text-position": "sub" };
-      testTextAttrs(ID, 55, attrs, defAttrs, 55, 64);
+      testTextAttrs(ID, 38, attrs, defAttrs, 38, 47);
 
       attrs = {};
-      testTextAttrs(ID, 64, attrs, defAttrs, 64, 69);
+      testTextAttrs(ID, 47, attrs, defAttrs, 47, 52);
 
       attrs = { "text-position": "super" };
-      testTextAttrs(ID, 69, attrs, defAttrs, 69, 84);
+      testTextAttrs(ID, 52, attrs, defAttrs, 52, 67);
 
       attrs = {};
-      testTextAttrs(ID, 84, attrs, defAttrs, 84, 89);
+      testTextAttrs(ID, 67, attrs, defAttrs, 67, 72);
 
       attrs = { "text-position": "sub" };
-      testTextAttrs(ID, 89, attrs, defAttrs, 89, 102);
+      testTextAttrs(ID, 72, attrs, defAttrs, 72, 85);
 
       attrs = {};
-      testTextAttrs(ID, 102, attrs, defAttrs, 102, 107);
+      testTextAttrs(ID, 85, attrs, defAttrs, 85, 90);
 
       attrs = { "text-position": "super" };
-      testTextAttrs(ID, 107, attrs, defAttrs, 107, 123);
+      testTextAttrs(ID, 90, attrs, defAttrs, 90, 106);
 
       attrs = {};
-      testTextAttrs(ID, 123, attrs, defAttrs, 123, 128);
+      testTextAttrs(ID, 106, attrs, defAttrs, 106, 111);
 
       attrs = { "text-position": "sub" };
-      testTextAttrs(ID, 128, attrs, defAttrs, 128, 142);
+      testTextAttrs(ID, 111, attrs, defAttrs, 111, 125);
 
       // ////////////////////////////////////////////////////////////////////////
       // area7
@@ -573,6 +573,75 @@
       testDefaultTextAttrs(ID, defAttrs);
 
       testTextAttrs(ID, -1, {}, defAttrs, 0, 11);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // HTML sub tag offset test - verify attributes
+      ID = "sub_tag";
+      defAttrs = buildDefaultTextAttrs(ID, "10pt");
+      defAttrs["text-position"] = "sub";
+      testDefaultTextAttrs(ID, defAttrs);
+      testTextAttrs(ID, 0, {}, defAttrs, 0, 11, true);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // HTML sup tag offset test - verify attributes
+      ID = "sup_tag";
+      defAttrs = buildDefaultTextAttrs(ID, "10pt");
+      defAttrs["text-position"] = "super";
+      testDefaultTextAttrs(ID, defAttrs);
+      testTextAttrs(ID, 0, {}, defAttrs, 0, 11, true);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // ARIA subscript role - verify text-position attribute
+      ID = "subscript_role";
+      defAttrs = { "text-position": "sub" };
+      testDefaultTextAttrs(ID, defAttrs, true);
+      testTextAttrs(ID, 0, {}, defAttrs, 0, 11, true);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // ARIA superscript role - verify text-position attribute
+      ID = "superscript_role";
+      defAttrs = { "text-position": "super" };
+      testDefaultTextAttrs(ID, defAttrs, true);
+      testTextAttrs(ID, 0, {}, defAttrs, 0, 11, true);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // test text-position attributes in various situations
+      ID = "superscript_role_in_div";
+      defAttrs = { "text-position": "super" };
+      testTextAttrs(ID, 0, {}, defAttrs, 0, 11, true);
+
+      ID = "sub_within_superscript_role";
+      defAttrs = { "text-position": "sub" };
+      testTextAttrs(ID, 0, {}, defAttrs, 0, 11, true);
+
+      ID = "sup_within_subscript_role";
+      defAttrs = { "text-position": "super" };
+      testTextAttrs(ID, 0, {}, defAttrs, 0, 11, true);
+
+      ID = "sub_within_sup";
+      defAttrs = { "text-position": "sub" };
+      testTextAttrs(ID, 0, {}, defAttrs, 0, 11, true);
+
+      ID = "sup_within_sub";
+      defAttrs = { "text-position": "super" };
+      testTextAttrs(ID, 0, {}, defAttrs, 0, 11, true);
+
+      ID = "css_sub_within_superscript_role";
+      attrs = { "text-position": "sub" };
+      testTextAttrs(ID, 0, attrs, {}, 0, 11, true);
+
+      ID = "css_super_within_subscript_role";
+      attrs = { "text-position": "super" };
+      testTextAttrs(ID, 0, attrs, {}, 0, 11, true);
+
+      ID = "sub_with_superscript_role";
+      defAttrs = { "text-position": "super" };
+      testTextAttrs(ID, 0, {}, defAttrs, 0, 11, true);
+
+      ID = "sup_with_subscript_role";
+      defAttrs = { "text-position": "sub" };
+      testTextAttrs(ID, 0, {}, defAttrs, 0, 11, true);
+
       SimpleTest.finish();
     }
 
@@ -733,6 +802,22 @@
   </p>
 
   <p id="area20" style="font-size: 15pt;">offset test</p>
+
+  <!-- subscript, superscript tests -->
+  <sub id="sub_tag">offset test</sub>
+  <sup id="sup_tag">offset test</sup>
+  <p id="subscript_role" role="subscript">offset test</p>
+  <p id="superscript_role" role="superscript">offset test</p>
+
+  <div><span id="superscript_role_in_div" role="superscript">offset test</span></div>
+  <p role="superscript"><sub id="sub_within_superscript_role">offset test</sub></p>
+  <p role="subscript"><sup id="sup_within_subscript_role">offset test</sup></p>
+  <sup><sub id="sub_within_sup">offset test</sub></sup>
+  <sub><sup id="sup_within_sub">offset test</sup></sub>
+  <p id="css_sub_within_superscript_role" role="superscript"><span style="vertical-align: sub">offset test</span></p>
+  <p id="css_super_within_subscript_role" role="subscript"><span style="vertical-align: super">offset test</span></p>
+  <sub id="sub_with_superscript_role" role="superscript">offset test</sub>
+  <sup id="sup_with_subscript_role" role="subscript">offset test</sup>
 
 </body>
 </html>

@@ -120,7 +120,7 @@ void TextAttrsMgr::GetAttributes(AccAttributes* aAttributes,
   TextDecorTextAttr textDecorTextAttr(rootFrame, frame);
 
   // "text-position" text attribute
-  TextPosTextAttr textPosTextAttr(rootFrame, frame);
+  TextPosTextAttr textPosTextAttr(rootFrame, frame, hyperTextElm, offsetNode);
 
   TextAttr* attrArray[] = {
       &langTextAttr,      &invalidTextAttr,    &bgColorTextAttr,
@@ -664,34 +664,67 @@ void TextAttrsMgr::TextDecorTextAttr::ExposeValue(
 ////////////////////////////////////////////////////////////////////////////////
 
 TextAttrsMgr::TextPosTextAttr::TextPosTextAttr(nsIFrame* aRootFrame,
-                                               nsIFrame* aFrame)
-    : TTextAttr<TextPosValue>(!aFrame) {
-  mRootNativeValue = GetTextPosValue(aRootFrame);
-  mIsRootDefined = mRootNativeValue != eTextPosNone;
-
+                                               nsIFrame* aFrame,
+                                               nsIContent* aRootElm,
+                                               nsIContent* aElm)
+    : TTextAttr<Maybe<TextPosValue>>(!aFrame && !aElm), mRootElm(aRootElm) {
+  // Get the text-position values for the roots and children.
+  // If we find an ARIA text-position value on a DOM element - searching up
+  // from the supplied root DOM element - use the associated frame as the root
+  // frame. This ensures that we're using the proper root frame for comparison.
+  nsIFrame* ariaFrame = nullptr;
+  Maybe<TextPosValue> rootAria = GetAriaTextPosValue(aRootElm, ariaFrame);
+  if (rootAria && ariaFrame) {
+    aRootFrame = ariaFrame;
+  }
+  Maybe<TextPosValue> rootLayout = GetLayoutTextPosValue(aRootFrame);
+  Maybe<TextPosValue> childLayout;
+  Maybe<TextPosValue> childAria;
   if (aFrame) {
-    mNativeValue = GetTextPosValue(aFrame);
-    mIsDefined = mNativeValue != eTextPosNone;
+    childLayout = GetLayoutTextPosValue(aFrame);
+  }
+  if (aElm) {
+    childAria = GetAriaTextPosValue(aElm);
+  }
+
+  // Aria values take precedence over layout values.
+  mIsRootDefined = rootAria || rootLayout;
+  mRootNativeValue = rootAria ? rootAria : rootLayout;
+  mIsDefined = childAria || childLayout;
+  mNativeValue = childAria ? childAria : childLayout;
+
+  // If there's no child text-position information from ARIA, and the child
+  // layout info is equivalent to the root layout info (i.e., it's inherited),
+  // then we should prefer the root information.
+  if (!childAria && childLayout == rootLayout) {
+    mIsDefined = false;
   }
 }
 
 bool TextAttrsMgr::TextPosTextAttr::GetValueFor(LocalAccessible* aAccessible,
-                                                TextPosValue* aValue) {
+                                                Maybe<TextPosValue>* aValue) {
   nsIContent* elm = nsCoreUtils::GetDOMElementFor(aAccessible->GetContent());
   if (elm) {
     nsIFrame* frame = elm->GetPrimaryFrame();
     if (frame) {
-      *aValue = GetTextPosValue(frame);
-      return *aValue != eTextPosNone;
+      Maybe<TextPosValue> layoutValue = GetLayoutTextPosValue(frame);
+      Maybe<TextPosValue> ariaValue = GetAriaTextPosValue(elm);
+
+      *aValue = ariaValue ? ariaValue : layoutValue;
+      return aValue->isSome();
     }
   }
   return false;
 }
 
-void TextAttrsMgr::TextPosTextAttr::ExposeValue(AccAttributes* aAttributes,
-                                                const TextPosValue& aValue) {
+void TextAttrsMgr::TextPosTextAttr::ExposeValue(
+    AccAttributes* aAttributes, const Maybe<TextPosValue>& aValue) {
+  if (aValue.isNothing()) {
+    return;
+  }
+
   RefPtr<nsAtom> atom = nullptr;
-  switch (aValue) {
+  switch (*aValue) {
     case eTextPosBaseline:
       atom = nsGkAtoms::baseline;
       break;
@@ -703,9 +736,6 @@ void TextAttrsMgr::TextPosTextAttr::ExposeValue(AccAttributes* aAttributes,
     case eTextPosSuper:
       atom = NS_Atomize("super");
       break;
-
-    case eTextPosNone:
-      break;
   }
 
   if (atom) {
@@ -713,42 +743,75 @@ void TextAttrsMgr::TextPosTextAttr::ExposeValue(AccAttributes* aAttributes,
   }
 }
 
-TextAttrsMgr::TextPosValue TextAttrsMgr::TextPosTextAttr::GetTextPosValue(
-    nsIFrame* aFrame) const {
+Maybe<TextAttrsMgr::TextPosValue>
+TextAttrsMgr::TextPosTextAttr::GetAriaTextPosValue(nsIContent* aElm) const {
+  nsIFrame* ariaFrame = nullptr;
+  return GetAriaTextPosValue(aElm, ariaFrame);
+}
+
+Maybe<TextAttrsMgr::TextPosValue>
+TextAttrsMgr::TextPosTextAttr::GetAriaTextPosValue(nsIContent* aElm,
+                                                   nsIFrame*& ariaFrame) const {
+  // Search for the superscript and subscript roles that imply text-position.
+  const nsIContent* elm = aElm;
+  do {
+    if (elm->IsElement()) {
+      const mozilla::dom::Element* domElm = elm->AsElement();
+      static const dom::Element::AttrValuesArray tokens[] = {
+          nsGkAtoms::subscript, nsGkAtoms::superscript, nullptr};
+      const int32_t valueIdx = domElm->FindAttrValueIn(
+          kNameSpaceID_None, nsGkAtoms::role, tokens, eCaseMatters);
+      ariaFrame = domElm->GetPrimaryFrame();
+      if (valueIdx == 0) {
+        return Some(eTextPosSub);
+      }
+      if (valueIdx == 1) {
+        return Some(eTextPosSuper);
+      }
+    }
+  } while ((elm = elm->GetParent()) && elm != mRootElm);
+
+  ariaFrame = nullptr;
+  return Nothing{};
+}
+
+Maybe<TextAttrsMgr::TextPosValue>
+TextAttrsMgr::TextPosTextAttr::GetLayoutTextPosValue(nsIFrame* aFrame) const {
   const auto& verticalAlign = aFrame->StyleDisplay()->mVerticalAlign;
   if (verticalAlign.IsKeyword()) {
     switch (verticalAlign.AsKeyword()) {
       case StyleVerticalAlignKeyword::Baseline:
-        return eTextPosBaseline;
+        return Some(eTextPosBaseline);
       case StyleVerticalAlignKeyword::Sub:
-        return eTextPosSub;
+        return Some(eTextPosSub);
       case StyleVerticalAlignKeyword::Super:
-        return eTextPosSuper;
+        return Some(eTextPosSuper);
       // No good guess for the rest, so do not expose value of text-position
       // attribute.
       default:
-        return eTextPosNone;
+        return Nothing{};
     }
   }
 
   const auto& length = verticalAlign.AsLength();
   if (length.ConvertsToPercentage()) {
-    float percentValue = length.ToPercentage();
-    return percentValue > 0
-               ? eTextPosSuper
-               : (percentValue < 0 ? eTextPosSub : eTextPosBaseline);
+    const float percentValue = length.ToPercentage();
+    return percentValue > 0 ? Some(eTextPosSuper)
+                            : (percentValue < 0 ? Some(eTextPosSub)
+                                                : Some(eTextPosBaseline));
   }
 
   if (length.ConvertsToLength()) {
-    nscoord coordValue = length.ToLength();
-    return coordValue > 0 ? eTextPosSuper
-                          : (coordValue < 0 ? eTextPosSub : eTextPosBaseline);
+    const nscoord coordValue = length.ToLength();
+    return coordValue > 0
+               ? Some(eTextPosSuper)
+               : (coordValue < 0 ? Some(eTextPosSub) : Some(eTextPosBaseline));
   }
 
   if (const nsIContent* content = aFrame->GetContent()) {
-    if (content->IsHTMLElement(nsGkAtoms::sup)) return eTextPosSuper;
-    if (content->IsHTMLElement(nsGkAtoms::sub)) return eTextPosSub;
+    if (content->IsHTMLElement(nsGkAtoms::sup)) return Some(eTextPosSuper);
+    if (content->IsHTMLElement(nsGkAtoms::sub)) return Some(eTextPosSub);
   }
 
-  return eTextPosNone;
+  return Nothing{};
 }

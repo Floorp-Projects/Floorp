@@ -1886,4 +1886,24 @@ ROLE(METER,
      ROLE_SYSTEM_PROGRESSBAR,
      java::SessionAccessibility::CLASSNAME_VIEW,
      eNameFromValueRule)
+
+ROLE(SUBSCRIPT,
+     "subscript",
+     ATK_ROLE_SUBSCRIPT,
+     NSAccessibilityGroupRole,
+     @"AXSubscriptStyleGroup",
+     ROLE_SYSTEM_GROUPING,
+     IA2_ROLE_TEXT_FRAME,
+     java::SessionAccessibility::CLASSNAME_VIEW,
+     eNoNameRule)
+
+ROLE(SUPERSCRIPT,
+     "superscript",
+     ATK_ROLE_SUPERSCRIPT,
+     NSAccessibilityGroupRole,
+     @"AXSuperscriptStyleGroup",
+     ROLE_SYSTEM_GROUPING,
+     IA2_ROLE_TEXT_FRAME,
+     java::SessionAccessibility::CLASSNAME_VIEW,
+     eNoNameRule)
 // clang-format on

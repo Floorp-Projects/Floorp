@@ -407,27 +407,27 @@ class TextAttrsMgr {
    * Class is used for the work with "text-position" text attribute.
    */
 
-  enum TextPosValue {
-    eTextPosNone = 0,
-    eTextPosBaseline,
-    eTextPosSub,
-    eTextPosSuper
-  };
+  enum TextPosValue { eTextPosBaseline, eTextPosSub, eTextPosSuper };
 
-  class TextPosTextAttr : public TTextAttr<TextPosValue> {
+  class TextPosTextAttr : public TTextAttr<Maybe<TextPosValue>> {
    public:
-    TextPosTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame);
+    TextPosTextAttr(nsIFrame* aRootFrame, nsIFrame* aFrame,
+                    nsIContent* aRootElm, nsIContent* aElm);
     virtual ~TextPosTextAttr() {}
 
    protected:
     // TextAttr
     virtual bool GetValueFor(LocalAccessible* aAccessible,
-                             TextPosValue* aValue) override;
+                             Maybe<TextPosValue>* aValue) override;
     virtual void ExposeValue(AccAttributes* aAttributes,
-                             const TextPosValue& aValue) override;
+                             const Maybe<TextPosValue>& aValue) override;
 
    private:
-    TextPosValue GetTextPosValue(nsIFrame* aFrame) const;
+    Maybe<TextPosValue> GetAriaTextPosValue(nsIContent* aElm) const;
+    Maybe<TextPosValue> GetAriaTextPosValue(nsIContent* aElm,
+                                            nsIFrame*& ariaFrame) const;
+    Maybe<TextPosValue> GetLayoutTextPosValue(nsIFrame* aFrame) const;
+    nsIContent* mRootElm;
   };
 
 };  // TextAttrMgr

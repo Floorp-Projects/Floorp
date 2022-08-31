@@ -1376,17 +1376,32 @@
       testElm("strong_container", obj);
 
       // ////////////////////////////////////////////////////////////////////////
+      // HTML:sub
+      obj = {
+        role: ROLE_SUBSCRIPT
+      };
+      testElm("sub", obj);
+
+      // ////////////////////////////////////////////////////////////////////////
+      // HTML:sup
+      obj = {
+        role: ROLE_SUPERSCRIPT
+      };
+      testElm("sup", obj);
+
+      // ////////////////////////////////////////////////////////////////////////
       // HTML:sub contained by paragraph
 
       obj = {
         role: ROLE_PARAGRAPH,
-        textAttrs: {
-          0: { },
-          6: { "text-position": "sub" },
-        },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF }, // HTML:sub text
+          {
+            role: ROLE_SUBSCRIPT, // HTML:sub
+            children: [
+              { role: ROLE_TEXT_LEAF } // HTML:sub text
+            ]
+          }
         ],
       };
       testElm("sub_container", obj);
@@ -1396,13 +1411,14 @@
 
       obj = {
         role: ROLE_PARAGRAPH,
-        textAttrs: {
-          0: { },
-          6: { "text-position": "super" },
-        },
         children: [
           { role: ROLE_TEXT_LEAF }, // plain text
-          { role: ROLE_TEXT_LEAF }, // HTML:sup text
+          {
+            role: ROLE_SUPERSCRIPT, // HTML:sup
+            children: [
+              { role: ROLE_TEXT_LEAF } // HTML:sup text
+            ]
+          }
         ],
       };
       testElm("sup_container", obj);
@@ -1961,6 +1977,8 @@
   <span id="span"></span>
   <span id="span_explicit" title="explicit"></span>
   <p id="strong_container">normal<strong>strong</strong></p>
+  <sub id="sub"></sub>
+  <sup id="sup"></sup>
   <p id="sub_container">normal<sub>sub</sub></p>
   <p id="sup_container">normal<sup>sup</sup></p>
 

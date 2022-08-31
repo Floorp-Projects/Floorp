@@ -333,12 +333,16 @@ MARKUPMAP(
     },
     0)
 
+MARKUPMAP(sub, New_HyperText, roles::SUBSCRIPT)
+
 MARKUPMAP(
     summary,
     [](Element* aElement, LocalAccessible* aContext) -> LocalAccessible* {
       return new HTMLSummaryAccessible(aElement, aContext->Document());
     },
     roles::SUMMARY)
+
+MARKUPMAP(sup, New_HyperText, roles::SUPERSCRIPT)
 
 MARKUPMAP(
     table,
