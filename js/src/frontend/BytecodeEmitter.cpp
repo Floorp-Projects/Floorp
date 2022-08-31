@@ -1684,7 +1684,7 @@ bool BytecodeEmitter::emitPropLHS(PropertyAccess* prop) {
   return true;
 }
 
-bool BytecodeEmitter::emitPropIncDec(UnaryNode* incDec) {
+bool BytecodeEmitter::emitPropIncDec(UnaryNode* incDec, ValueUsage valueUsage) {
   PropertyAccess* prop = &incDec->kid()->as<PropertyAccess>();
   bool isSuper = prop->isSuper();
   ParseNodeKind kind = incDec->getKind();
@@ -1713,7 +1713,7 @@ bool BytecodeEmitter::emitPropIncDec(UnaryNode* incDec) {
       return false;
     }
   }
-  if (!poe.emitIncDec(prop->key().atom())) {
+  if (!poe.emitIncDec(prop->key().atom(), valueUsage)) {
     //              [stack] RESULT
     return false;
   }
@@ -1721,7 +1721,7 @@ bool BytecodeEmitter::emitPropIncDec(UnaryNode* incDec) {
   return true;
 }
 
-bool BytecodeEmitter::emitNameIncDec(UnaryNode* incDec) {
+bool BytecodeEmitter::emitNameIncDec(UnaryNode* incDec, ValueUsage valueUsage) {
   MOZ_ASSERT(incDec->kid()->isKind(ParseNodeKind::Name));
 
   ParseNodeKind kind = incDec->getKind();
@@ -1734,7 +1734,7 @@ bool BytecodeEmitter::emitNameIncDec(UnaryNode* incDec) {
                     : kind == ParseNodeKind::PostDecrementExpr
                         ? NameOpEmitter::Kind::PostDecrement
                         : NameOpEmitter::Kind::PreDecrement);
-  if (!noe.emitIncDec()) {
+  if (!noe.emitIncDec(valueUsage)) {
     return false;
   }
 
@@ -1829,7 +1829,7 @@ static PrivateOpEmitter::Kind PrivateConvertIncDecKind(ParseNodeKind kind) {
   }
 }
 
-bool BytecodeEmitter::emitElemIncDec(UnaryNode* incDec) {
+bool BytecodeEmitter::emitElemIncDec(UnaryNode* incDec, ValueUsage valueUsage) {
   PropertyByValue* elemExpr = &incDec->kid()->as<PropertyByValue>();
   bool isSuper = elemExpr->isSuper();
   MOZ_ASSERT(!elemExpr->key().isKind(ParseNodeKind::PrivateName));
@@ -1844,7 +1844,7 @@ bool BytecodeEmitter::emitElemIncDec(UnaryNode* incDec) {
     //              [stack] OBJ KEY
     return false;
   }
-  if (!eoe.emitIncDec()) {
+  if (!eoe.emitIncDec(valueUsage)) {
     //              [stack] RESULT
     return false;
   }
@@ -1874,7 +1874,8 @@ bool BytecodeEmitter::emitCallIncDec(UnaryNode* incDec) {
   return emit2(JSOp::ThrowMsg, uint8_t(ThrowMsgKind::AssignToCall));
 }
 
-bool BytecodeEmitter::emitPrivateIncDec(UnaryNode* incDec) {
+bool BytecodeEmitter::emitPrivateIncDec(UnaryNode* incDec,
+                                        ValueUsage valueUsage) {
   PrivateMemberAccess* privateExpr = &incDec->kid()->as<PrivateMemberAccess>();
   ParseNodeKind kind = incDec->getKind();
   PrivateOpEmitter xoe(this, PrivateConvertIncDecKind(kind),
@@ -1887,7 +1888,7 @@ bool BytecodeEmitter::emitPrivateIncDec(UnaryNode* incDec) {
     //              [stack] OBJ NAME
     return false;
   }
-  if (!xoe.emitIncDec()) {
+  if (!xoe.emitIncDec(valueUsage)) {
     //              [stack] RESULT
     return false;
   }
@@ -8570,18 +8571,19 @@ bool BytecodeEmitter::emitSequenceExpr(
 
 // Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr14047. See
 // the comment on emitSwitch.
-MOZ_NEVER_INLINE bool BytecodeEmitter::emitIncOrDec(UnaryNode* incDec) {
+MOZ_NEVER_INLINE bool BytecodeEmitter::emitIncOrDec(UnaryNode* incDec,
+                                                    ValueUsage valueUsage) {
   switch (incDec->kid()->getKind()) {
     case ParseNodeKind::DotExpr:
-      return emitPropIncDec(incDec);
+      return emitPropIncDec(incDec, valueUsage);
     case ParseNodeKind::ElemExpr:
-      return emitElemIncDec(incDec);
+      return emitElemIncDec(incDec, valueUsage);
     case ParseNodeKind::PrivateMemberExpr:
-      return emitPrivateIncDec(incDec);
+      return emitPrivateIncDec(incDec, valueUsage);
     case ParseNodeKind::CallExpr:
       return emitCallIncDec(incDec);
     default:
-      return emitNameIncDec(incDec);
+      return emitNameIncDec(incDec, valueUsage);
   }
 }
 
@@ -11245,7 +11247,7 @@ bool BytecodeEmitter::emitTree(
     case ParseNodeKind::PreDecrementExpr:
     case ParseNodeKind::PostIncrementExpr:
     case ParseNodeKind::PostDecrementExpr:
-      if (!emitIncOrDec(&pn->as<UnaryNode>())) {
+      if (!emitIncOrDec(&pn->as<UnaryNode>(), valueUsage)) {
         return false;
       }
       break;

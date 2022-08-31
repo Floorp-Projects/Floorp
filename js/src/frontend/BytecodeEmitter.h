@@ -692,7 +692,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                           const NameLocation& loc,
                                           ValueIsOnStack isOnStack);
 
-  [[nodiscard]] bool emitNameIncDec(UnaryNode* incDec);
+  [[nodiscard]] bool emitNameIncDec(UnaryNode* incDec, ValueUsage valueUsage);
 
   [[nodiscard]] bool emitDeclarationList(ListNode* declList);
   [[nodiscard]] bool emitSingleDeclaration(ListNode* declList, NameNode* decl,
@@ -733,7 +733,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool emitPushResumeKind(GeneratorResumeKind kind);
 
   [[nodiscard]] bool emitPropLHS(PropertyAccess* prop);
-  [[nodiscard]] bool emitPropIncDec(UnaryNode* incDec);
+  [[nodiscard]] bool emitPropIncDec(UnaryNode* incDec, ValueUsage valueUsage);
 
   [[nodiscard]] bool emitComputedPropertyName(UnaryNode* computedPropName);
 
@@ -751,10 +751,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                        ElemOpEmitter& eoe);
   [[nodiscard]] bool emitElemOpBase(JSOp op);
 
-  [[nodiscard]] bool emitElemIncDec(UnaryNode* incDec);
+  [[nodiscard]] bool emitElemIncDec(UnaryNode* incDec, ValueUsage valueUsage);
   [[nodiscard]] bool emitObjAndPrivateName(PrivateMemberAccess* elem,
                                            ElemOpEmitter& eoe);
-  [[nodiscard]] bool emitPrivateIncDec(UnaryNode* incDec);
+  [[nodiscard]] bool emitPrivateIncDec(UnaryNode* incDec,
+                                       ValueUsage valueUsage);
 
   [[nodiscard]] bool emitCatch(BinaryNode* catchClause);
   [[nodiscard]] bool emitIf(TernaryNode* ifNode);
@@ -915,7 +916,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool emitSequenceExpr(
       ListNode* node, ValueUsage valueUsage = ValueUsage::WantValue);
 
-  [[nodiscard]] MOZ_NEVER_INLINE bool emitIncOrDec(UnaryNode* incDec);
+  [[nodiscard]] MOZ_NEVER_INLINE bool emitIncOrDec(UnaryNode* incDec,
+                                                   ValueUsage valueUsage);
 
   [[nodiscard]] bool emitConditionalExpression(
       ConditionalExpression& conditional,
