@@ -4,7 +4,12 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["deserialize", "serialize", "stringify"];
+var EXPORTED_SYMBOLS = [
+  "deserialize",
+  "OwnershipModel",
+  "serialize",
+  "stringify",
+];
 
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
@@ -21,6 +26,39 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
   lazy.Log.get(lazy.Log.TYPES.WEBDRIVER_BIDI)
 );
+
+/**
+ * @typedef {Object} OwnershipModel
+ **/
+
+/**
+ * Enum of ownership models supported by the serialization.
+ *
+ * @readonly
+ * @enum {OwnershipModel}
+ **/
+const OwnershipModel = {
+  None: "none",
+  Root: "root",
+};
+
+/**
+ * Create a remote value with the provided type, and set the handle property if
+ * needed.
+ *
+ * @param {string} type
+ *     Type for the remote value.
+ * @param {String=} handleId
+ *     Optional unique handle id generated for the current serialization.
+ * @return {Object} Minimal RemoteValue representation
+ */
+function createRemoteValue(type, handleId) {
+  const remoteValue = { type };
+  if (handleId !== null) {
+    remoteValue.handle = handleId;
+  }
+  return remoteValue;
+}
 
 /**
  * Helper to validate if a date string follows Date Time String format.
@@ -134,7 +172,7 @@ function deserializeKeyValueList(/* realm, */ serializedKeyValueList) {
  * @param {Object} serializedValue
  *     Value of any type to be deserialized.
  *
- * @returns {Object} Deserialized representation of the value.
+ * @return {Object} Deserialized representation of the value.
  */
 function deserialize(/* realm, */ serializedValue) {
   const { objectId, type, value } = serializedValue;
@@ -244,24 +282,52 @@ function deserialize(/* realm, */ serializedValue) {
 }
 
 /**
+ * Helper to retrieve the handle id for a given object, for the provided realm
+ * and ownership type.
+ *
+ * See https://w3c.github.io/webdriver-bidi/#handle-for-an-object
+ *
+ * @param {Realm} realm
+ *     The Realm from which comes the value being serialized.
+ * @param {OwnershipModel} ownershipType
+ *     The ownership model to use for this serialization.
+ * @param {Object} object
+ *     The object being serialized.
+ *
+ * @return {string} The unique handle id for the object. Will be null if the
+ *     Ownership type is "none".
+ */
+function getHandleForObject(realm, ownershipType, object) {
+  if (ownershipType === OwnershipModel.None) {
+    return null;
+  }
+  return realm.getHandleForObject(object);
+}
+
+/**
  * Helper to serialize as a list.
  *
  * @see https://w3c.github.io/webdriver-bidi/#serialize-as-a-list
  *
  * @param {Iterable} iterable
  *     List of values to be serialized.
- *
- * @param {number=} maxDepth
+ * @param {number|null} maxDepth
  *     Depth of a serialization.
+ * @param {OwnershipModel} childOwnership
+ *     The ownership model to use for this serialization.
+ * @param {Map} serializationInternalMap
+ *     Map of internal ids.
+ * @param {Realm} realm
+ *     The Realm from which comes the value being serialized.
  *
  * @return {Array} List of serialized values.
  */
 function serializeList(
   iterable,
-  maxDepth /*,
+  maxDepth,
   childOwnership,
   serializationInternalMap,
-  realm*/
+  realm
 ) {
   const serialized = [];
   const childDepth = maxDepth !== null ? maxDepth - 1 : null;
@@ -270,7 +336,10 @@ function serializeList(
     serialized.push(
       serialize(
         item,
-        childDepth /*, childOwnership, serializationInternalMap, realm*/
+        childDepth,
+        childOwnership,
+        serializationInternalMap,
+        realm
       )
     );
   }
@@ -285,18 +354,23 @@ function serializeList(
  *
  * @param {Iterable} iterable
  *     List of values to be serialized.
- *
- * @param {number=} maxDepth
+ * @param {number|null} maxDepth
  *     Depth of a serialization.
+ * @param {OwnershipModel} childOwnership
+ *     The ownership model to use for this serialization.
+ * @param {Map} serializationInternalMap
+ *     Map of internal ids.
+ * @param {Realm} realm
+ *     The Realm from which comes the value being serialized.
  *
  * @return {Array} List of serialized values.
  */
 function serializeMapping(
   iterable,
-  maxDepth /*,
+  maxDepth,
   childOwnership,
   serializationInternalMap,
-  realm*/
+  realm
 ) {
   const serialized = [];
   const childDepth = maxDepth !== null ? maxDepth - 1 : null;
@@ -307,17 +381,17 @@ function serializeMapping(
         ? key
         : serialize(
             key,
-            childDepth /*,
+            childDepth,
             childOwnership,
             serializationInternalMap,
-            realm*/
+            realm
           );
     const serializedValue = serialize(
       item,
-      childDepth /*,
+      childDepth,
       childOwnership,
       serializationInternalMap,
-      realm*/
+      realm
     );
 
     serialized.push([serializedKey, serializedValue]);
@@ -333,18 +407,23 @@ function serializeMapping(
  *
  * @param {Object} value
  *     Value of any type to be serialized.
- *
- * @param {number=} maxDepth
+ * @param {number|null} maxDepth
  *     Depth of a serialization.
+ * @param {OwnershipModel} ownershipType
+ *     The ownership model to use for this serialization.
+ * @param {Map} serializationInternalMap
+ *     Map of internal ids.
+ * @param {Realm} realm
+ *     The Realm from which comes the value being serialized.
  *
- * @returns {Object} Serialized representation of the value.
+ * @return {Object} Serialized representation of the value.
  */
 function serialize(
   value,
-  maxDepth /*,
+  maxDepth,
   ownershipType,
   serializationInternalMap,
-  realm */
+  realm
 ) {
   const type = typeof value;
 
@@ -369,72 +448,74 @@ function serialize(
 
   const className = ChromeUtils.getClassName(value);
 
+  const handleId = getHandleForObject(realm, ownershipType, value);
+
+  // Set the OwnershipModel to use for all complex object serializations.
+  const childOwnership = OwnershipModel.None;
+
   // Remote values
   if (className == "Array") {
-    const remoteValue = { type: "array" };
+    const remoteValue = createRemoteValue("array", handleId);
 
     if (maxDepth !== null && maxDepth > 0) {
       remoteValue.value = serializeList(
         value,
-        maxDepth /*,
-        ownershipType,
+        maxDepth,
+        childOwnership,
         serializationInternalMap,
-        realm */
+        realm
       );
     }
-
     return remoteValue;
   } else if (className == "RegExp") {
-    return {
-      type: "regexp",
-      value: { pattern: value.source, flags: value.flags },
-    };
+    const remoteValue = createRemoteValue("regexp", handleId);
+    remoteValue.value = { pattern: value.source, flags: value.flags };
+    return remoteValue;
   } else if (className == "Date") {
-    return { type: "date", value: value.toISOString() };
+    const remoteValue = createRemoteValue("date", handleId);
+    remoteValue.value = value.toISOString();
+    return remoteValue;
   } else if (className == "Map") {
-    const remoteValue = { type: "map" };
+    const remoteValue = createRemoteValue("map", handleId);
 
     if (maxDepth !== null && maxDepth > 0) {
       remoteValue.value = serializeMapping(
         value.entries(),
-        maxDepth /*,
-          ownershipType,
-          serializationInternalMap,
-          realm */
+        maxDepth,
+        childOwnership,
+        serializationInternalMap,
+        realm
       );
     }
-
     return remoteValue;
   } else if (className == "Set") {
-    const remoteValue = { type: "set" };
+    const remoteValue = createRemoteValue("set", handleId);
 
     if (maxDepth !== null && maxDepth > 0) {
       remoteValue.value = serializeList(
         value.values(),
-        maxDepth /*,
-        ownershipType,
+        maxDepth,
+        childOwnership,
         serializationInternalMap,
-        realm */
+        realm
       );
     }
-
     return remoteValue;
   }
   // TODO: Bug 1770754. Remove the if condition when the serialization of all the other types is implemented,
   // since then the serialization of plain objects should be the fallback.
   else if (className == "Object") {
-    const remoteValue = { type: "object" };
+    const remoteValue = createRemoteValue("object", handleId);
 
     if (maxDepth !== null && maxDepth > 0) {
       remoteValue.value = serializeMapping(
         Object.entries(value),
-        maxDepth /*,
-          ownershipType,
-          serializationInternalMap,
-          realm */
+        maxDepth,
+        childOwnership,
+        serializationInternalMap,
+        realm
       );
     }
-
     return remoteValue;
   }
 
@@ -451,7 +532,7 @@ function serialize(
  * @param {Object} value
  *     Value of any type to be stringified.
  *
- * @returns {String} String representation of the value.
+ * @return {string} String representation of the value.
  */
 function stringify(obj) {
   let text;
