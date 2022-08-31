@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["WindowRealm"];
+var EXPORTED_SYMBOLS = ["Realm", "WindowRealm"];
 
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
@@ -42,17 +42,29 @@ const RealmType = {
   Worklet: "worklet",
 };
 
+function getUUID() {
+  return Services.uuid
+    .generateUUID()
+    .toString()
+    .slice(1, -1);
+}
+
 /**
  * Base class that wraps any kind of WebDriver BiDi realm.
  */
 class Realm {
+  #handleObjectMap;
   #id;
 
   constructor() {
-    this.#id = Services.uuid
-      .generateUUID()
-      .toString()
-      .slice(1, -1);
+    this.#id = getUUID();
+
+    // Map of unique handles (UUIDs) to objects belonging to this realm.
+    this.#handleObjectMap = new Map();
+  }
+
+  destroy() {
+    this.#handleObjectMap = null;
   }
 
   /**
@@ -62,6 +74,42 @@ class Realm {
    */
   get id() {
     return this.#id;
+  }
+
+  /**
+   * Remove the reference corresponding to the provided unique handle.
+   *
+   * @param {string} handle
+   *     The unique handle of an object reference tracked in this realm.
+   */
+  removeObjectHandle(handle) {
+    this.#handleObjectMap.delete(handle);
+  }
+
+  /**
+   * Get a new unique handle for the provided object, creating a strong
+   * reference on the object.
+   *
+   * @param {Object} object
+   *     Any non-primitive object.
+   * @return {string} The unique handle created for this strong reference.
+   */
+  getHandleForObject(object) {
+    const handle = getUUID();
+    this.#handleObjectMap.set(handle, object);
+    return handle;
+  }
+
+  /**
+   * Retrieve the object corresponding to the provided unique handle.
+   *
+   * @param {string} handle
+   *     The unique handle of an object reference tracked in this realm.
+   * @return {Object} object
+   *     Any non-primitive object.
+   */
+  getObjectForHandle(handle) {
+    return this.#handleObjectMap.get(handle);
   }
 }
 
@@ -104,6 +152,8 @@ class WindowRealm extends Realm {
     this.#globalObjectReference = null;
     this.#globalObject = null;
     this.#window = null;
+
+    super.destroy();
   }
 
   get globalObjectReference() {
