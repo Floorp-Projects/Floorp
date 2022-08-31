@@ -20,6 +20,35 @@
 
 namespace mozilla {
 
+// Allow bool errors to automatically convert to bool values, so MOZ_TRY/QM_TRY
+// can be used in bool returning methods with Result<T, bool> results.
+template <>
+class [[nodiscard]] GenericErrorResult<bool> {
+  bool mErrorValue;
+
+  template <typename V, typename E2>
+  friend class Result;
+
+ public:
+  explicit GenericErrorResult(bool aErrorValue) : mErrorValue(aErrorValue) {
+    MOZ_ASSERT(!aErrorValue);
+  }
+
+  GenericErrorResult(bool aErrorValue, const ErrorPropagationTag&)
+      : GenericErrorResult(aErrorValue) {}
+
+  MOZ_IMPLICIT operator bool() const { return mErrorValue; }
+};
+
+// Allow MOZ_TRY/QM_TRY to handle `bool` values.
+template <typename E = nsresult>
+inline Result<Ok, E> ToResult(bool aValue) {
+  if (aValue) {
+    return Ok();
+  }
+  return Err(ResultTypeTraits<E>::From(NS_ERROR_FAILURE));
+}
+
 #ifdef QM_ERROR_STACKS_ENABLED
 // Allow QMResult errors to use existing stack id and to increase the frame id
 // during error propagation.
