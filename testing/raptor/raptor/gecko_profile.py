@@ -109,7 +109,9 @@ class GeckoProfile(object):
             raise
         except Exception:
             LOG.critical("Encountered an exception during profile symbolication")
-            raise
+            # Do not raise an exception and return the profile so we won't block
+            # the profile capturing pipeline if symbolication fails.
+            return profile
 
     def collect_profiles(self):
         """Returns all profiles files."""
