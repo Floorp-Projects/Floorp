@@ -32,6 +32,10 @@ namespace fs {
 class FileSystemChildMetadata;
 }  // namespace fs
 
+namespace quota {
+class DirectoryLock;
+}  // namespace quota
+
 namespace fs::data {
 
 class FileSystemDatabaseManager;
@@ -56,6 +60,9 @@ class FileSystemDataManager
   static RefPtr<CreatePromise> GetOrCreateFileSystemDataManager(
       const quota::OriginMetadata& aOriginMetadata);
 
+  static void AbortOperationsForLocks(
+      const quota::Client::DirectoryLockIdTable& aDirectoryLockIds);
+
   static void InitiateShutdown();
 
   static bool IsShutdownCompleted();
@@ -68,6 +75,10 @@ class FileSystemDataManager
 
   nsISerialEventTarget* MutableIOTargetPtr() const {
     return mIOTaskQueue.get();
+  }
+
+  Maybe<quota::DirectoryLock&> MaybeDirectoryLockRef() const {
+    return ToMaybeRef(mDirectoryLock.get());
   }
 
   FileSystemDatabaseManager* MutableDatabaseManagerPtr() const {
@@ -109,6 +120,7 @@ class FileSystemDataManager
   const quota::OriginMetadata mOriginMetadata;
   const NotNull<nsCOMPtr<nsISerialEventTarget>> mBackgroundTarget;
   const NotNull<RefPtr<TaskQueue>> mIOTaskQueue;
+  RefPtr<quota::DirectoryLock> mDirectoryLock;
   UniquePtr<FileSystemDatabaseManager> mDatabaseManager;
   MozPromiseHolder<BoolPromise> mOpenPromiseHolder;
   MozPromiseHolder<BoolPromise> mClosePromiseHolder;

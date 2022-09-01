@@ -106,6 +106,8 @@ void QuotaClient::ReleaseIOThreadObjects() { quota::AssertIsOnIOThread(); }
 void QuotaClient::AbortOperationsForLocks(
     const DirectoryLockIdTable& aDirectoryLockIds) {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
+
+  data::FileSystemDataManager::AbortOperationsForLocks(aDirectoryLockIds);
 }
 
 void QuotaClient::AbortOperationsForProcess(ContentParentId aContentParentId) {
