@@ -1046,7 +1046,7 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
   }
 
  protected:
-  explicit OriginOperationBase(nsIEventTarget* aOwningThread,
+  explicit OriginOperationBase(nsISerialEventTarget* aOwningThread,
                                const char* aRunnableName)
       : BackgroundThreadObject(aOwningThread),
         Runnable(aRunnableName),
@@ -1119,7 +1119,7 @@ class FinalizeOriginEvictionOp : public OriginOperationBase {
   nsTArray<RefPtr<OriginDirectoryLock>> mLocks;
 
  public:
-  FinalizeOriginEvictionOp(nsIEventTarget* aBackgroundThread,
+  FinalizeOriginEvictionOp(nsISerialEventTarget* aBackgroundThread,
                            nsTArray<RefPtr<OriginDirectoryLock>>&& aLocks)
       : OriginOperationBase(aBackgroundThread,
                             "dom::quota::FinalizeOriginEvictionOp"),
@@ -1164,7 +1164,7 @@ class NormalOriginOperationBase
   NormalOriginOperationBase(const char* aRunnableName,
                             const Nullable<PersistenceType>& aPersistenceType,
                             const OriginScope& aOriginScope, bool aExclusive)
-      : OriginOperationBase(GetCurrentEventTarget(), aRunnableName),
+      : OriginOperationBase(GetCurrentSerialEventTarget(), aRunnableName),
         mOriginScope(aOriginScope),
         mPersistenceType(aPersistenceType),
         mExclusive(aExclusive) {
@@ -1935,11 +1935,12 @@ Result<bool, nsresult> MaybeUpdateLastAccessTimeForOrigin(
 }  // namespace
 
 BackgroundThreadObject::BackgroundThreadObject()
-    : mOwningThread(GetCurrentEventTarget()) {
+    : mOwningThread(GetCurrentSerialEventTarget()) {
   AssertIsOnOwningThread();
 }
 
-BackgroundThreadObject::BackgroundThreadObject(nsIEventTarget* aOwningThread)
+BackgroundThreadObject::BackgroundThreadObject(
+    nsISerialEventTarget* aOwningThread)
     : mOwningThread(aOwningThread) {}
 
 #ifdef DEBUG
@@ -1954,7 +1955,7 @@ void BackgroundThreadObject::AssertIsOnOwningThread() const {
 
 #endif  // DEBUG
 
-nsIEventTarget* BackgroundThreadObject::OwningThread() const {
+nsISerialEventTarget* BackgroundThreadObject::OwningThread() const {
   MOZ_ASSERT(mOwningThread);
   return mOwningThread;
 }
