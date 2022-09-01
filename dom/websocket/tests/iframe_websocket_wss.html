@@ -15,9 +15,11 @@ try{
     }
     socket.onerror = function(e) {
       parent.postMessage('WS onerror', '*');
+      close();
     };
     socket.onopen = function(event) {
       parent.postMessage('WS onopen', '*');
+      close();
     };
   } catch(e) {
     if (e.name == 'SecurityError') {
