@@ -289,7 +289,11 @@
               focusedElt.hasAttribute("dlgtype") &&
               focusedElt != defaultButton
             ) {
+              // If the default button is not focusable, then return focus.
               defaultButton.focus();
+              if (document.commandDispatcher.focusedElement != defaultButton) {
+                initialFocusedElt.focus();
+              }
             }
           }
         }

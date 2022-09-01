@@ -1057,16 +1057,12 @@ async function runTests(util) {
     passValue: "",
     checkMsg: "",
     checked: false,
-    focused: null, // nothing focused until after delay fires
+    focused: "infoBody",
     defButton: "button0",
     butt0Label: "OK",
     butt1Label: "Cancel",
     butt0Disabled: true,
   };
-
-  // OS X doesn't initially focus the button, but rather the infoBody.
-  // The focus stays there even after the button-enable delay has fired.
-  if (isOSX) state.focused = "infoBody";
 
   action = {
     buttonClick: "pollOK",
