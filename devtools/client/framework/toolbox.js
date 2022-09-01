@@ -1878,15 +1878,24 @@ Toolbox.prototype = {
   },
 
   async _setInitialMeatballState() {
-    // Do async lookups for the target browser's state.
-    if (this.isBrowserChromeTarget) {
-      // Parallelize the asynchronous calls, so that the DOM is only updated once when
-      // updating the React components.
-      const [disableAutohide, pseudoLocale] = await Promise.all([
-        this._isDisableAutohideEnabled(),
-        this.getPseudoLocale(),
-      ]);
+    let disableAutohide, pseudoLocale;
+    // Popup auto-hide disabling is only available in browser toolbox and webextension toolboxes.
+    if (
+      this.isBrowserToolbox ||
+      this.descriptorFront.isWebExtensionDescriptor
+    ) {
+      disableAutohide = await this._isDisableAutohideEnabled();
+    }
+    // Pseudo locale items are only displayed in the browser toolbox
+    if (this.isBrowserToolbox) {
+      pseudoLocale = await this.getPseudoLocale();
+    }
+    // Parallelize the asynchronous calls, so that the DOM is only updated once when
+    // updating the React components.
+    if (typeof disableAutohide == "boolean") {
       this.component.setDisableAutohide(disableAutohide);
+    }
+    if (typeof pseudoLocale == "string") {
       this.component.setPseudoLocale(pseudoLocale);
     }
   },
@@ -3269,12 +3278,6 @@ Toolbox.prototype = {
     return this._preferenceFrontRequest;
   },
 
-  // The auto-hide of pop-ups feature and pseudo-localization require targeting
-  // browser chrome.
-  get isBrowserChromeTarget() {
-    return this.target.chrome;
-  },
-
   /**
    * See: https://firefox-source-docs.mozilla.org/l10n/fluent/tutorial.html#manually-testing-ui-with-pseudolocalization
    *
@@ -3298,7 +3301,7 @@ Toolbox.prototype = {
    * @returns {"bidi" | "accented" | "none" | undefined}
    */
   async getPseudoLocale() {
-    if (!this.isBrowserChromeTarget) {
+    if (!this.isBrowserToolbox) {
       return undefined;
     }
 
@@ -3321,14 +3324,20 @@ Toolbox.prototype = {
 
     front.setBoolPref(DISABLE_AUTOHIDE_PREF, toggledValue);
 
-    if (this.isBrowserChromeTarget) {
+    if (
+      this.isBrowserToolbox ||
+      this.descriptorFront.isWebExtensionDescriptor
+    ) {
       this.component.setDisableAutohide(toggledValue);
     }
     this._autohideHasBeenToggled = true;
   },
 
   async _isDisableAutohideEnabled() {
-    if (!this.isBrowserChromeTarget) {
+    if (
+      !this.isBrowserToolbox &&
+      !this.descriptorFront.isWebExtensionDescriptor
+    ) {
       return false;
     }
 
