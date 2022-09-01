@@ -17,29 +17,35 @@ const ADDRESS_REFERENCES_EXT = "addressReferencesExt.js";
 
 const ADDRESSES_COLLECTION_NAME = "addresses";
 const CREDITCARDS_COLLECTION_NAME = "creditCards";
-const MANAGE_ADDRESSES_KEYWORDS = ["addNewAddressTitle"];
-const EDIT_ADDRESS_KEYWORDS = [
-  "givenName",
-  "additionalName",
-  "familyName",
-  "organization2",
-  "streetAddress",
-  "state",
-  "province",
-  "city",
-  "country",
-  "zip",
-  "postalCode",
-  "email",
-  "tel",
+const MANAGE_ADDRESSES_L10N_IDS = [
+  "autofill-add-new-address-title",
+  "autofill-manage-addresses-title",
 ];
-const MANAGE_CREDITCARDS_KEYWORDS = ["addNewCreditCardTitle"];
-const EDIT_CREDITCARD_KEYWORDS = [
-  "cardNumber",
-  "nameOnCard",
-  "cardExpiresMonth",
-  "cardExpiresYear",
-  "cardNetwork",
+const EDIT_ADDRESS_L10N_IDS = [
+  "autofill-address-given-name",
+  "autofill-address-additional-name",
+  "autofill-address-family-name",
+  "autofill-address-organization",
+  "autofill-address-street",
+  "autofill-address-state",
+  "autofill-address-province",
+  "autofill-address-city",
+  "autofill-address-country",
+  "autofill-address-zip",
+  "autofill-address-postal-code",
+  "autofill-address-email",
+  "autofill-address-tel",
+];
+const MANAGE_CREDITCARDS_L10N_IDS = [
+  "autofill-add-new-card-title",
+  "autofill-manage-credit-cards-title",
+];
+const EDIT_CREDITCARD_L10N_IDS = [
+  "autofill-card-number",
+  "autofill-card-name-on-card",
+  "autofill-card-expires-month",
+  "autofill-card-expires-year",
+  "autofill-card-network",
 ];
 const FIELD_STATES = {
   NORMAL: "NORMAL",
@@ -215,10 +221,10 @@ FormAutofillUtils = {
 
   ADDRESSES_COLLECTION_NAME,
   CREDITCARDS_COLLECTION_NAME,
-  MANAGE_ADDRESSES_KEYWORDS,
-  EDIT_ADDRESS_KEYWORDS,
-  MANAGE_CREDITCARDS_KEYWORDS,
-  EDIT_CREDITCARD_KEYWORDS,
+  MANAGE_ADDRESSES_L10N_IDS,
+  EDIT_ADDRESS_L10N_IDS,
+  MANAGE_CREDITCARDS_L10N_IDS,
+  EDIT_CREDITCARD_L10N_IDS,
   MAX_FIELD_VALUE_LENGTH,
   FIELD_STATES,
   SECTION_TYPES,
@@ -1061,10 +1067,10 @@ FormAutofillUtils = {
    * @param   {string} country
    * @returns {object}
    *         {
-   *           {string} addressLevel3Label
-   *           {string} addressLevel2Label
-   *           {string} addressLevel1Label
-   *           {string} postalCodeLabel
+   *           {string} addressLevel3L10nId
+   *           {string} addressLevel2L10nId
+   *           {string} addressLevel1L10nId
+   *           {string} postalCodeL10nId
    *           {object} fieldsOrder
    *           {string} postalCodePattern
    *         }
@@ -1088,9 +1094,15 @@ FormAutofillUtils = {
       // When particular values are missing for a country, the
       // data/ZZ value should be used instead:
       // https://chromium-i18n.appspot.com/ssl-aggregate-address/data/ZZ
-      addressLevel3Label: dataset.sublocality_name_type || "suburb",
-      addressLevel2Label: dataset.locality_name_type || "city",
-      addressLevel1Label: dataset.state_name_type || "province",
+      addressLevel3L10nId: this.getAddressFieldL10nId(
+        dataset.sublocality_name_type || "suburb"
+      ),
+      addressLevel2L10nId: this.getAddressFieldL10nId(
+        dataset.locality_name_type || "city"
+      ),
+      addressLevel1L10nId: this.getAddressFieldL10nId(
+        dataset.state_name_type || "province"
+      ),
       addressLevel1Options: this.buildRegionMapIfAvailable(
         dataset.sub_keys,
         dataset.sub_isoids,
@@ -1099,52 +1111,15 @@ FormAutofillUtils = {
       ),
       countryRequiredFields: this.parseRequireString(dataset.require || "AC"),
       fieldsOrder: this.parseAddressFormat(dataset.fmt || "%N%n%O%n%A%n%C"),
-      postalCodeLabel: dataset.zip_name_type || "postalCode",
+      postalCodeL10nId: this.getAddressFieldL10nId(
+        dataset.zip_name_type || "postal-code"
+      ),
       postalCodePattern: dataset.zip,
     };
   },
 
-  /**
-   * Localize "data-localization" or "data-localization-region" attributes.
-   * @param {Element} element
-   * @param {string} attributeName
-   */
-  localizeAttributeForElement(element, attributeName) {
-    switch (attributeName) {
-      case "data-localization": {
-        element.textContent = this.stringBundle.GetStringFromName(
-          element.getAttribute(attributeName)
-        );
-        element.removeAttribute(attributeName);
-        break;
-      }
-      case "data-localization-region": {
-        let regionCode = element.getAttribute(attributeName);
-        element.textContent = Services.intl.getRegionDisplayNames(undefined, [
-          regionCode,
-        ]);
-        element.removeAttribute(attributeName);
-        return;
-      }
-      default:
-        throw new Error("Unexpected attributeName");
-    }
-  },
-
-  /**
-   * Localize elements with "data-localization" or "data-localization-region" attributes.
-   * @param {Element} root
-   */
-  localizeMarkup(root) {
-    let elements = root.querySelectorAll("[data-localization]");
-    for (let element of elements) {
-      this.localizeAttributeForElement(element, "data-localization");
-    }
-
-    elements = root.querySelectorAll("[data-localization-region]");
-    for (let element of elements) {
-      this.localizeAttributeForElement(element, "data-localization-region");
-    }
+  getAddressFieldL10nId(type) {
+    return "autofill-address-" + type.replace(/_/g, "-");
   },
 
   CC_FATHOM_NONE: 0,

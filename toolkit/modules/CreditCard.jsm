@@ -518,4 +518,14 @@ class CreditCard {
   static getSupportedNetworks() {
     return SUPPORTED_NETWORKS;
   }
+
+  /**
+   * Localised names for supported networks are available in
+   * `browser/preferences/formAutofill.ftl`.
+   */
+  static getNetworkL10nId(network) {
+    return this.isValidNetwork(network)
+      ? `autofill-card-network-${network}`
+      : null;
+  }
 }
