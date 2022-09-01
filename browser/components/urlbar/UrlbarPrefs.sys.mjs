@@ -200,6 +200,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether to show search suggestions before general results.
   ["showSearchSuggestionsFirst", true],
 
+  // Whether to show search term in the URL bar for the users default engine.
+  ["showSearchTerms", false],
+
   // Whether speculative connections should be enabled.
   ["speculativeConnect.enabled", true],
 

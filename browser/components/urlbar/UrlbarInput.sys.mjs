@@ -328,8 +328,28 @@ export class UrlbarInput {
    * @param {boolean} [dueToSessionRestore]
    *        True if this is being called due to session restore and false
    *        otherwise.
+   * @param {nsIURI} [originalUri]
+   *        The uri may have been re-directed, so if originalUri exists,
+   *        we can recover the uri used to make a request. This is also used
+   *        as a means of knowing if the caller is a GET request.
    */
-  setURI(uri = null, dueToTabSwitch = false, dueToSessionRestore = false) {
+  setURI(
+    uri = null,
+    dueToTabSwitch = false,
+    dueToSessionRestore = false,
+    originalUri = null
+  ) {
+    if (
+      lazy.UrlbarPrefs.get("showSearchTerms") &&
+      this.window.gBrowser.userTypedValue == null &&
+      !dueToTabSwitch
+    ) {
+      let term = this._getSearchTermIfDefaultSerpUrl(originalUri ?? uri);
+      if (term) {
+        this.window.gBrowser.userTypedValue = term;
+      }
+    }
+
     let value = this.window.gBrowser.userTypedValue;
     let valid = false;
 
@@ -1140,6 +1160,7 @@ export class UrlbarInput {
       {
         source: result.source,
         type: result.type,
+        searchTerm: result.payload.suggestion ?? result.payload.query,
       },
       browser
     );
@@ -2177,6 +2198,50 @@ export class UrlbarInput {
   }
 
   /**
+   * Checks if the given uri is constructed by the default search engine.
+   * When passing URI's to check against, it's best to use the "original" URI
+   * that was requested, as the server may re-direct the URIs.
+   *
+   * @param {nsIURI} uri
+   *   The uri to check against
+   * @param {boolean} mustBeEqual
+   *   The uri to check against
+   * @returns {string}
+   *   The search terms use.
+   *   Will return an empty string if it's not a default SERP
+   *   or if the default engine hasn't been initialized.
+   */
+  _getSearchTermIfDefaultSerpUrl(uri) {
+    try {
+      // nsIURI.host can throw for non-standard URI's
+      if (
+        Services.search.isInitialized &&
+        Services.io.newURI(Services.search.defaultEngine.searchForm).host ==
+          uri.host
+      ) {
+        let { engine, terms } = Services.search.parseSubmissionURL(uri.spec);
+        if (engine && terms) {
+          let [expectedSearchUrl] = lazy.UrlbarUtils.getSearchQueryUrl(
+            engine,
+            terms
+          );
+          if (
+            lazy.UrlbarSearchUtils.serpsAreEquivalent(
+              expectedSearchUrl,
+              uri.spec
+            )
+          ) {
+            return terms;
+          }
+        }
+      }
+    } catch (ex) {
+      return "";
+    }
+    return "";
+  }
+
+  /**
    * Invoked on overflow/underflow/scrollend events to update attributes
    * related to the input text directionality. Overflow fade masks use these
    * attributes to appear at the proper side of the urlbar.
@@ -2528,6 +2593,8 @@ export class UrlbarInput {
    *   Details of the selected result, if any.
    * @param {UrlbarUtils.RESULT_TYPE} [result.type]
    *   Details of the result type, if any.
+   * @param {string} [result.searchTerm]
+   *   Search term of the result source, if any.
    * @param {UrlbarUtils.RESULT_SOURCE} [result.source]
    *   Details of the result source, if any.
    * @param {object} browser [optional] the browser to use for the load.
@@ -2542,8 +2609,11 @@ export class UrlbarInput {
   ) {
     // No point in setting these because we'll handleRevert() a few rows below.
     if (openUILinkWhere == "current") {
-      this.value = url;
-      browser.userTypedValue = url;
+      this.value =
+        lazy.UrlbarPrefs.get("showSearchTerms") && resultDetails.searchTerm
+          ? resultDetails.searchTerm
+          : url;
+      browser.userTypedValue = this.value;
     }
 
     // No point in setting this if we are loading in a new window.
