@@ -109,6 +109,60 @@ function testAlert(serverEnabled) {
     "action2"
   )}"/></actions></toast>`;
   Assert.equal(expected, alertsService.getXmlStringForWindowsAlert(alert));
+
+  // Chrome privileged alerts can use `windowsSystemActivationType`.
+  let systemActions = [
+    {
+      action: "dismiss",
+      title: "dismissTitle",
+      windowsSystemActivationType: true,
+    },
+    {
+      action: "snooze",
+      title: "snoozeTitle",
+      windowsSystemActivationType: true,
+    },
+  ];
+  let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+  alert = makeAlert({
+    name,
+    title,
+    text,
+    imageURL,
+    principal: systemPrincipal,
+    actions: systemActions,
+  });
+  expected = `<toast launch="${argumentString()}"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions><action content="Notification settings" arguments="${argumentString(
+    "settings"
+  )}" placement="contextmenu"/><action content="dismissTitle" arguments="dismiss" activationType="system"/><action content="snoozeTitle" arguments="snooze" activationType="system"/></actions></toast>`;
+  Assert.equal(expected, alertsService.getXmlStringForWindowsAlert(alert));
+
+  // But content unprivileged alerts can't use `windowsSystemActivationType`.
+  let launchUrl = "https://example.com/foo/bar.html";
+  const principaluri = Services.io.newURI(launchUrl);
+  const principal = Services.scriptSecurityManager.createContentPrincipal(
+    principaluri,
+    {}
+  );
+
+  alert = makeAlert({
+    name,
+    title,
+    text,
+    imageURL,
+    actions: systemActions,
+    principal,
+  });
+  expected = `<toast launch="${argumentString()}"><visual><binding template="ToastImageAndText04"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text><text id="3" placement="attribution">via example.com</text></binding></visual><actions><action content="Disable notifications from example.com" arguments="${argumentString(
+    "snooze"
+  )}" placement="contextmenu"/><action content="Notification settings" arguments="${argumentString(
+    "settings"
+  )}" placement="contextmenu"/><action content="dismissTitle" arguments="${argumentString(
+    "dismiss"
+  )}"/><action content="snoozeTitle" arguments="${argumentString(
+    "snooze"
+  )}"/></actions></toast>`;
+  Assert.equal(expected, alertsService.getXmlStringForWindowsAlert(alert));
 }
 
 add_task(async () => {

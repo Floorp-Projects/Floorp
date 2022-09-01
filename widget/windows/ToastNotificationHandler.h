@@ -31,7 +31,8 @@ class ToastNotificationHandler final
                            const nsAString& aCookie, const nsAString& aTitle,
                            const nsAString& aMsg, const nsAString& aHostPort,
                            bool aClickable, bool aRequireInteraction,
-                           const nsTArray<RefPtr<nsIAlertAction>>& aActions)
+                           const nsTArray<RefPtr<nsIAlertAction>>& aActions,
+                           bool aIsSystemPrincipal)
       : mBackend(backend),
         mAumid(aumid),
         mHasImage(false),
@@ -44,6 +45,7 @@ class ToastNotificationHandler final
         mClickable(aClickable),
         mRequireInteraction(aRequireInteraction),
         mActions(aActions.Clone()),
+        mIsSystemPrincipal(aIsSystemPrincipal),
         mSentFinished(!aAlertListener) {}
 
   nsresult InitAlertAsync(nsIAlertNotification* aAlert);
@@ -94,6 +96,7 @@ class ToastNotificationHandler final
   bool mClickable;
   bool mRequireInteraction;
   nsTArray<RefPtr<nsIAlertAction>> mActions;
+  bool mIsSystemPrincipal;
   bool mSentFinished;
 
   nsresult TryShowAlert();
