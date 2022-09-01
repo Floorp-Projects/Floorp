@@ -7,6 +7,11 @@
 
 "use strict";
 
+// eslint-disable-next-line no-unused-vars
+const { FormAutofill } = ChromeUtils.import(
+  "resource://autofill/FormAutofill.jsm"
+);
+
 ChromeUtils.defineModuleGetter(
   this,
   "formAutofillStorage",
@@ -155,10 +160,7 @@ class EditAddressDialog extends AutofillEditDialog {
 
   localizeDocument() {
     if (this._record?.guid) {
-      document.l10n.setAttributes(
-        this._elements.title,
-        "autofill-edit-address-title"
-      );
+      this._elements.title.dataset.localization = "editAddressTitle";
     }
   }
 
@@ -191,10 +193,7 @@ class EditCreditCardDialog extends AutofillEditDialog {
 
   localizeDocument() {
     if (this._record?.guid) {
-      document.l10n.setAttributes(
-        this._elements.title,
-        "autofill-edit-card-title"
-      );
+      this._elements.title.dataset.localization = "editCreditCardTitle";
     }
   }
 
