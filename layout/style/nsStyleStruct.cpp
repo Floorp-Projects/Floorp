@@ -3594,21 +3594,6 @@ nscoord StyleCalcNode::Resolve(nscoord aBasis,
   return ResolveInternal(aBasis, aRounder);
 }
 
-static bool CanUseLastRememberedSize(const nsIFrame& aFrame) {
-  switch (aFrame.StyleDisplay()->mContentVisibility) {
-    case StyleContentVisibility::Visible:
-      return false;
-    case StyleContentVisibility::Auto:
-      // TODO: return true if the element skips its contents, i.e. if it's not
-      // relevant to the user.
-      return false;
-    case StyleContentVisibility::Hidden:
-      return true;
-  }
-  MOZ_ASSERT_UNREACHABLE("Unknown content-visibility value");
-  return false;
-}
-
 static nscoord Resolve(const StyleContainIntrinsicSize& aSize,
                        nscoord aNoneValue, const nsIFrame& aFrame,
                        LogicalAxis aAxis) {
@@ -3623,7 +3608,7 @@ static nscoord Resolve(const StyleContainIntrinsicSize& aSize,
     Maybe<float> lastSize = aAxis == eLogicalAxisBlock
                                 ? element->GetLastRememberedBSize()
                                 : element->GetLastRememberedISize();
-    if (lastSize && CanUseLastRememberedSize(aFrame)) {
+    if (lastSize && aFrame.IsContentHidden()) {
       return CSSPixel::ToAppUnits(*lastSize);
     }
   }
