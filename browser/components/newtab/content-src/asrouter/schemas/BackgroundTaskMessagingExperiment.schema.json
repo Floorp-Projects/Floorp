@@ -70,6 +70,11 @@
               "type": "string",
               "format": "moz-url-format"
             },
+            "launch_url": {
+              "description": "The URL to launch when the notification or an action button is clicked.",
+              "type": "string",
+              "format": "moz-url-format"
+            },
             "requireInteraction": {
               "type": "boolean",
               "description": "Whether the toast notification should remain active until the user clicks or dismisses it, rather than closing automatically."

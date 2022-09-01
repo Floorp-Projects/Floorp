@@ -749,6 +749,21 @@ const MESSAGES = () => [
       body: "Body",
       image_url:
         "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/a3c640c8-7594-4bb2-bc18-8b4744f3aaf2.gif",
+      launch_url: "https://mozilla.org",
+      requireInteraction: true,
+      actions: [
+        {
+          action: "dismiss",
+          title: "Dismiss",
+          windowsSystemActivationType: true,
+        },
+        {
+          action: "snooze",
+          title: "Snooze",
+          windowsSystemActivationType: true,
+        },
+        { action: "callback", title: "Callback" },
+      ],
     },
     groups: ["panel-test-provider"],
     targeting: "!hasActiveEnterprisePolicies",
