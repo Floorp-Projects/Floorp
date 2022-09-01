@@ -420,7 +420,11 @@ function checkPayload(payload, reason, successfulPings) {
   // Telemetry doesn't touch a memory reporter with these units that's
   // available on all platforms.
 
-  Assert.ok("MEMORY_TOTAL" in payload.histograms); // UNITS_BYTES
+  if (AppConstants.platform != "macosx") {
+    // This is not present on MacOS for now as it relied on calculating unique
+    // memory which is slow on MacOS.
+    Assert.ok("MEMORY_TOTAL" in payload.histograms); // UNITS_BYTES
+  }
   Assert.ok("MEMORY_JS_GC_HEAP" in payload.histograms); // UNITS_BYTES
   Assert.ok("MEMORY_JS_COMPARTMENTS_SYSTEM" in payload.histograms); // UNITS_COUNT
 
