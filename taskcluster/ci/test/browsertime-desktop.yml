@@ -56,9 +56,11 @@ browsertime-tp6:
                         - --chimera
                         - --browsertime-no-ffwindowrecorder
                         - --conditioned-profile=settled
+                        - --extra-profiler-run
                     default:
                         - --chimera
                         - --conditioned-profile=settled
+                        - --extra-profiler-run
         run-on-projects:
             by-subtest:
                 netflix:  # Bug 1756212 - Disable temporarily due to perma on mac
@@ -132,9 +134,11 @@ browsertime-responsiveness:
                     - --cold
                     - --browsertime-no-ffwindowrecorder
                     - --conditioned-profile=settled
+                    - --extra-profiler-run
                 default:
                     - --cold
                     - --conditioned-profile=settled
+                    - --extra-profiler-run
     run-on-projects:
         by-app:
             firefox:
@@ -159,9 +163,11 @@ browsertime-tp6-essential:
                         - --browsertime-no-ffwindowrecorder
                         - --conditioned-profile=settled
                         - --collect-perfstats
+                        - --extra-profiler-run
                     default:
                         - --chimera
                         - --conditioned-profile=settled
+                        - --extra-profiler-run
         raptor:
             apps: [firefox, chrome, chromium]
             test: tp6
@@ -219,11 +225,13 @@ browsertime-tp6-bytecode:
                     - --browsertime-no-ffwindowrecorder
                     - --conditioned-profile=settled
                     - --test-bytecode-cache
+                    - --extra-profiler-run
                 default:
                     - --chimera
                     - --browsertime
                     - --conditioned-profile=settled
                     - --test-bytecode-cache
+                    - --extra-profiler-run
     tier:
         by-app:
             firefox: 2
@@ -317,6 +325,9 @@ browsertime-benchmark:
             - matrix-react-bench
             - twitch-animation
             - unity-webgl
+    mozharness:
+        extra-options:
+            - --extra-profiler-run
 
 browsertime-benchmark-wasm:
     description: Raptor (browsertime) WASM benchmarks
@@ -352,6 +363,9 @@ browsertime-benchmark-wasm:
     fetches:
         fetch:
             - wasm-misc
+    mozharness:
+        extra-options:
+            - --extra-profiler-run
 
 browsertime-youtube-playback:
     description: Browsertime YouTube Playback on Firefox
@@ -396,6 +410,7 @@ browsertime-tp6-live:
             - --browser-cycles=15
             - --chimera
             - --live-sites
+            - --extra-profiler-run
     raptor:
         apps: [firefox, chrome, chromium]
         test: tp6
@@ -445,6 +460,7 @@ browsertime-tp6-live-sheriffed:
             - --browser-cycles=5
             - --chimera
             - --live-sites
+            - --extra-profiler-run
     run-on-projects:
         by-test-platform:
             (linux|windows10-64|macos)(?!.*shippable).*: []
@@ -483,6 +499,7 @@ browsertime-custom:
     mozharness:
         extra-options:
             - --chimera
+            - --extra-profiler-run
     run-on-projects:
         by-test-platform:
             windows.*-32.*: []
@@ -501,6 +518,7 @@ browsertime-first-install:
     mozharness:
         extra-options:
             - --chimera
+            - --extra-profiler-run
     run-on-projects:
         by-test-platform:
             windows.*-32.*: []
