@@ -12,6 +12,7 @@
 #include "mozilla/EnumTypeTraits.h"
 #include "mozilla/PRemoteDecoderManagerChild.h"
 #include "mozilla/layers/VideoBridgeUtils.h"
+#include "mozilla/ipc/UtilityProcessSandboxing.h"
 
 namespace mozilla {
 
@@ -22,7 +23,9 @@ enum class RemoteDecodeIn {
   Unspecified,
   RddProcess,
   GpuProcess,
-  UtilityProcess,
+  UtilityProcess_Generic,
+  UtilityProcess_AppleMedia,
+  UtilityProcess_WMF,
 
   SENTINEL,
 };
@@ -127,7 +130,8 @@ class RemoteDecoderManagerChild final
   static void OpenRemoteDecoderManagerChildForProcess(
       Endpoint<PRemoteDecoderManagerChild>&& aEndpoint,
       RemoteDecodeIn aLocation);
-  static RefPtr<GenericNonExclusivePromise> LaunchUtilityProcessIfNeeded();
+  static RefPtr<GenericNonExclusivePromise> LaunchUtilityProcessIfNeeded(
+      RemoteDecodeIn aLocation);
 
   RefPtr<RemoteDecoderManagerChild> mIPDLSelfRef;
   // The location for decoding, Rdd or Gpu process.

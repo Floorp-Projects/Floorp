@@ -38,8 +38,12 @@ bool UtilityProcessImpl::Init(int aArgc, char* aArgv[]) {
   // lower the sandbox in processes where the policy will prevent loading.
   ::LoadLibraryW(L"winmm.dll");
 
-  if (*sandboxingKind == SandboxingKind::UTILITY_AUDIO_DECODING) {
-    UtilityAudioDecoderParent::PreloadForSandbox();
+  if (*sandboxingKind == SandboxingKind::UTILITY_AUDIO_DECODING_GENERIC) {
+    UtilityAudioDecoderParent::GenericPreloadForSandbox();
+  }
+
+  if (*sandboxingKind == SandboxingKind::UTILITY_AUDIO_DECODING_WMF) {
+    UtilityAudioDecoderParent::WMFPreloadForSandbox();
   }
 
   // Go for it

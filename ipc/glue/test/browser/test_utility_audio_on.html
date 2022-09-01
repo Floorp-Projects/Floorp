@@ -12,13 +12,15 @@
 SimpleTest.waitForExplicitFinish();
 
 (async function() {
-  for (let src of [
-    "small-shot.ogg",
-    "small-shot.mp3",
-    "small-shot.flac"
-  ]) {
+  const platform = SpecialPowers.Services.appinfo.OS;
+  for (let {src, expectations} of audioTestData()) {
+    if (!(platform in expectations)) {
+      info(`Skipping ${src} for ${platform}`);
+      continue;
+    }
+
     try {
-      await runMochitestUtilityAudio(src, { expectUtility: true, expectContent: false });
+      await runMochitestUtilityAudio(src, { expectUtility: expectations[platform], expectContent: false, expectJava: false });
     } catch (ex) {
       ok(false, "Failure");
     }
@@ -29,7 +31,7 @@ SimpleTest.waitForExplicitFinish();
     "small-shot.m4a",
   ]) {
     try {
-      await runMochitestUtilityAudio(src, { expectUtility: false, expectContent: true });
+      await runMochitestUtilityAudio(src, { expectUtility: "", expectContent: false, expectJava: true });
     } catch (ex) {
       ok(false, "Failure");
     }

@@ -3,22 +3,25 @@
 
 "use strict";
 
-async function getAudioDecoderPid() {
+async function getAudioDecoderPid(expectation) {
   info("Finding a running AudioDecoder");
+
+  const actor = expectation.replace("Utility ", "");
+
   let audioDecoderProcess = (await ChromeUtils.requestProcInfo()).children.find(
     p =>
       p.type === "utility" &&
-      p.utilityActors.find(a => a.actorName === "audioDecoder")
+      p.utilityActors.find(a => a.actorName === `audioDecoder_${actor}`)
   );
   ok(
     audioDecoderProcess,
-    `Found the AudioDecoder process at ${audioDecoderProcess.pid}`
+    `Found the AudioDecoder ${actor} process at ${audioDecoderProcess.pid}`
   );
   return audioDecoderProcess.pid;
 }
 
-async function crashDecoder() {
-  const audioPid = await getAudioDecoderPid();
+async function crashDecoder(expectation) {
+  const audioPid = await getAudioDecoderPid(expectation);
   ok(audioPid > 0, `Found an audio decoder ${audioPid}`);
 
   const ProcessTools = Cc["@mozilla.org/processtools-service;1"].getService(
@@ -27,15 +30,15 @@ async function crashDecoder() {
   ProcessTools.kill(audioPid);
 }
 
-async function runTest(src, withClose) {
+async function runTest(src, withClose, expectation) {
   info(`Add media tabs: ${src}`);
   let tab = await addMediaTab(src);
 
   info("Play tab");
-  await play(tab, true /* expectUtility */);
+  await play(tab, expectation);
 
   info("Crash decoder");
-  await crashDecoder();
+  await crashDecoder(expectation);
 
   if (withClose) {
     info("Stop tab");
@@ -49,7 +52,7 @@ async function runTest(src, withClose) {
   }
 
   info("Play tab again");
-  await play(tab, true);
+  await play(tab, expectation);
 
   info("Stop tab");
   await stop(tab);
@@ -69,13 +72,15 @@ async function testAudioCrash(withClose) {
 
   SimpleTest.expectChildProcessCrash();
 
-  for (let src of [
-    "small-shot.ogg",
-    "small-shot.mp3",
-    "small-shot.m4a",
-    "small-shot.flac",
-  ]) {
-    await runTest(src, withClose);
+  const platform = Services.appinfo.OS;
+
+  for (let { src, expectations } of audioTestData()) {
+    if (!(platform in expectations)) {
+      info(`Skipping ${src} for ${platform}`);
+      continue;
+    }
+
+    await runTest(src, withClose, expectations[platform]);
   }
 }
 

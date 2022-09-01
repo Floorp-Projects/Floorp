@@ -263,18 +263,18 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::StartUtility(
 }
 
 RefPtr<UtilityProcessManager::AudioDecodingPromise>
-UtilityProcessManager::StartAudioDecoding(base::ProcessId aOtherProcess) {
+UtilityProcessManager::StartAudioDecoding(base::ProcessId aOtherProcess,
+                                          SandboxingKind aSandbox) {
   RefPtr<UtilityProcessManager> self = this;
   RefPtr<UtilityAudioDecoderChild> uadc =
-      UtilityAudioDecoderChild::GetSingleton();
+      UtilityAudioDecoderChild::GetSingleton(aSandbox);
   MOZ_ASSERT(uadc, "Unable to get a singleton for UtilityAudioDecoderChild");
-  return StartUtility(uadc, SandboxingKind::UTILITY_AUDIO_DECODING)
+  return StartUtility(uadc, aSandbox)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [self, uadc, aOtherProcess]() {
+          [self, uadc, aOtherProcess, aSandbox]() {
             base::ProcessId process =
-                self->GetProcessParent(SandboxingKind::UTILITY_AUDIO_DECODING)
-                    ->OtherPid();
+                self->GetProcessParent(aSandbox)->OtherPid();
 
             if (!uadc->CanSend()) {
               MOZ_ASSERT(false, "UtilityAudioDecoderChild lost in the middle");

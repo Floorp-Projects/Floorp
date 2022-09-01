@@ -40,6 +40,49 @@ async function cleanUtilityProcessShutdown(utilityPid) {
   ok(!subject.hasKey("dumpID"), "There should be no dumpID");
 }
 
+function audioTestData() {
+  return [
+    {
+      src: "small-shot.ogg",
+      expectations: {
+        Android: "Utility Generic",
+        Linux: "Utility Generic",
+        WINNT: "Utility Generic",
+        Darwin: "Utility Generic",
+      },
+    },
+    {
+      src: "small-shot.mp3",
+      expectations: {
+        Android: "Utility Generic",
+        Linux: "Utility Generic",
+        WINNT: SpecialPowers.getBoolPref("media.ffvpx.mp3.enabled")
+          ? "Utility Generic"
+          : "Utility WMF",
+        Darwin: "Utility Generic",
+      },
+    },
+    {
+      src: "small-shot.m4a",
+      expectations: {
+        // Add Android after Bug 1771196
+        Linux: "Utility Generic",
+        WINNT: "Utility WMF",
+        Darwin: "Utility AppleMedia",
+      },
+    },
+    {
+      src: "small-shot.flac",
+      expectations: {
+        Android: "Utility Generic",
+        Linux: "Utility Generic",
+        WINNT: "Utility Generic",
+        Darwin: "Utility Generic",
+      },
+    },
+  ];
+}
+
 async function addMediaTab(src) {
   const tab = BrowserTestUtils.addTab(gBrowser, "about:blank", {
     forceNewProcess: true,
@@ -50,11 +93,16 @@ async function addMediaTab(src) {
   return tab;
 }
 
-async function play(tab, expectUtility, expectContent = false) {
+async function play(
+  tab,
+  expectUtility,
+  expectContent = false,
+  expectJava = false
+) {
   let browser = tab.linkedBrowser;
   return SpecialPowers.spawn(
     browser,
-    [expectUtility, expectContent],
+    [expectUtility, expectContent, expectJava],
     checkAudioDecoder
   );
 }
@@ -77,25 +125,28 @@ async function createAudioElement(src) {
   doc.body.appendChild(audio);
 }
 
-async function checkAudioDecoder(expectUtility, expectContent = false) {
+async function checkAudioDecoder(
+  expectedProcess,
+  expectContent = false,
+  expectJava = false
+) {
   const doc = typeof content !== "undefined" ? content.document : document;
   let audio = doc.querySelector("audio");
   const checkPromise = new Promise((resolve, reject) => {
     const timeUpdateHandler = async ev => {
       const debugInfo = await SpecialPowers.wrap(audio).mozRequestDebugInfo();
       const audioDecoderName = debugInfo.decoder.reader.audioDecoderName;
-      const isUtility = audioDecoderName.indexOf("(Utility remote)") > 0;
-      const isRDD = audioDecoderName.indexOf("(RDD remote)") > 0;
+      const isExpected =
+        audioDecoderName.indexOf(`(${expectedProcess} remote)`) > 0;
       const isJavaRemote = audioDecoderName.indexOf("(remote)") > 0;
-      const isContent = !isUtility && !isRDD;
       const isOk =
-        (expectUtility === true && isUtility && !isJavaRemote) ||
-        (expectUtility === false && isRDD && !isJavaRemote) ||
-        (expectContent === true && isContent);
+        (isExpected && !isJavaRemote && !expectContent && !expectJava) || // Running in Utility/RDD
+        (expectJava && !isExpected && isJavaRemote) || // Running in Java remote
+        (expectContent && !isExpected && !isJavaRemote); // Running in Content
 
       ok(
         isOk,
-        `playback ${audio.src} was from expected decoder ${audioDecoderName}`
+        `playback ${audio.src} was from decoder '${audioDecoderName}', expected '${expectedProcess}'`
       );
 
       if (isOk) {
@@ -120,7 +171,7 @@ async function checkAudioDecoder(expectUtility, expectContent = false) {
 
 async function runMochitestUtilityAudio(
   src,
-  { expectUtility, expectContent = false } = {}
+  { expectUtility, expectContent = false, expectJava = false } = {}
 ) {
   info(`Add media: ${src}`);
   await createAudioElement(src);
@@ -128,7 +179,7 @@ async function runMochitestUtilityAudio(
   ok(audio, "Found an audio element created");
 
   info(`Play media: ${src}`);
-  await checkAudioDecoder(expectUtility, expectContent);
+  await checkAudioDecoder(expectUtility, expectContent, expectJava);
 
   info(`Pause media: ${src}`);
   await audio.pause();

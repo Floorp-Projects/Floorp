@@ -7,6 +7,8 @@
 
 #include "RemoteDecoderManagerChild.h"
 
+#include "mozilla/RemoteDecodeUtils.h"
+
 namespace mozilla {
 
 RemoteDecoderChild::RemoteDecoderChild(RemoteDecodeIn aLocation)
@@ -99,13 +101,11 @@ RefPtr<MediaDataDecoder::InitPromise> RemoteDecoderChild::Init() {
               return;
             }
             const auto& initResponse = aResponse.get_InitCompletionIPDL();
-            mDescription =
-                initResponse.decoderDescription() +
-                (GetManager()->Location() == RemoteDecodeIn::UtilityProcess
-                     ? " (Utility remote)"_ns
-                 : GetManager()->Location() == RemoteDecodeIn::RddProcess
-                     ? " (RDD remote)"_ns
-                     : " (GPU remote)"_ns);
+            mDescription = initResponse.decoderDescription();
+            mDescription.Append(" (");
+            mDescription.Append(RemoteDecodeInToStr(GetManager()->Location()));
+            mDescription.Append(" remote)");
+
             mIsHardwareAccelerated = initResponse.hardware();
             mHardwareAcceleratedReason = initResponse.hardwareReason();
             mConversion = initResponse.conversion();

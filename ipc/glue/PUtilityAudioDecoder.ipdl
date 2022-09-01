@@ -6,6 +6,7 @@
 include protocol PRemoteDecoderManager;
 
 using mozilla::media::MediaCodecsSupported from "MediaCodecsSupport.h";
+using mozilla::RemoteDecodeIn from "mozilla/RemoteDecoderManagerChild.h";
 
 namespace mozilla {
 
@@ -20,7 +21,7 @@ parent:
             Endpoint<PRemoteDecoderManagerParent> endpoint);
 
 child:
-  async UpdateMediaCodecsSupported(MediaCodecsSupported aSupported);
+  async UpdateMediaCodecsSupported(RemoteDecodeIn aLocation, MediaCodecsSupported aSupported);
 
 };
 
