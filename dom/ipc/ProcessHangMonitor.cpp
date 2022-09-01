@@ -513,11 +513,17 @@ mozilla::ipc::IPCResult HangMonitorChild::RecvTerminateScript() {
 mozilla::ipc::IPCResult HangMonitorChild::RecvRequestContentJSInterrupt() {
   MOZ_RELEASE_ASSERT(IsOnThread());
 
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::IPCShutdownState,
-      "HangMonitorChild::RecvRequestContentJSInterrupt"_ns);
   // In order to cancel JS execution on shutdown, we expect that
   // ProcessChild::NotifiedImpendingShutdown has been called before.
+  if (mozilla::ipc::ProcessChild::ExpectingShutdown()) {
+    CrashReporter::AppendToCrashReportAnnotation(
+        CrashReporter::Annotation::IPCShutdownState,
+        "HangMonitorChild::RecvRequestContentJSInterrupt (expected)"_ns);
+  } else {
+    CrashReporter::AppendToCrashReportAnnotation(
+        CrashReporter::Annotation::IPCShutdownState,
+        "HangMonitorChild::RecvRequestContentJSInterrupt (unexpected)"_ns);
+  }
   JS_RequestInterruptCallback(mContext);
   return IPC_OK();
 }

@@ -2933,7 +2933,7 @@ void ContentChild::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure) {
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvShutdownConfirmedHP() {
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::AppendToCrashReportAnnotation(
       CrashReporter::Annotation::IPCShutdownState,
       "RecvShutdownConfirmedHP entry"_ns);
 
@@ -2945,7 +2945,7 @@ mozilla::ipc::IPCResult ContentChild::RecvShutdownConfirmedHP() {
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvShutdown() {
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::AppendToCrashReportAnnotation(
       CrashReporter::Annotation::IPCShutdownState, "RecvShutdown entry"_ns);
 
   // Signal the ongoing shutdown to AppShutdown, this
@@ -2955,7 +2955,7 @@ mozilla::ipc::IPCResult ContentChild::RecvShutdown() {
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
-    CrashReporter::AnnotateCrashReport(
+    CrashReporter::AppendToCrashReportAnnotation(
         CrashReporter::Annotation::IPCShutdownState,
         "content-child-will-shutdown started"_ns);
 
@@ -2968,7 +2968,7 @@ mozilla::ipc::IPCResult ContentChild::RecvShutdown() {
 }
 
 void ContentChild::ShutdownInternal() {
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::AppendToCrashReportAnnotation(
       CrashReporter::Annotation::IPCShutdownState, "ShutdownInternal entry"_ns);
 
   // If we receive the shutdown message from within a nested event loop, we want
@@ -3007,7 +3007,7 @@ void ContentChild::ShutdownInternal() {
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
-    CrashReporter::AnnotateCrashReport(
+    CrashReporter::AppendToCrashReportAnnotation(
         CrashReporter::Annotation::IPCShutdownState,
         "content-child-shutdown started"_ns);
     os->NotifyObservers(ToSupports(this), "content-child-shutdown", nullptr);
@@ -3058,15 +3058,15 @@ void ContentChild::ShutdownInternal() {
   // Start a timer that will insure we quickly exit after a reasonable
   // period of time. Prevents shutdown hangs after our connection to the
   // parent closes.
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::AppendToCrashReportAnnotation(
       CrashReporter::Annotation::IPCShutdownState, "StartForceKillTimer"_ns);
   StartForceKillTimer();
 
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::AppendToCrashReportAnnotation(
       CrashReporter::Annotation::IPCShutdownState,
       "SendFinishShutdown (sending)"_ns);
   bool sent = SendFinishShutdown();
-  CrashReporter::AnnotateCrashReport(
+  CrashReporter::AppendToCrashReportAnnotation(
       CrashReporter::Annotation::IPCShutdownState,
       sent ? "SendFinishShutdown (sent)"_ns : "SendFinishShutdown (failed)"_ns);
 }
@@ -3148,7 +3148,8 @@ mozilla::ipc::IPCResult ContentChild::RecvInvokeDragSession(
       for (uint32_t i = 0; i < aTransfers.Length() && !hasFiles; ++i) {
         auto& items = aTransfers[i].items();
         for (uint32_t j = 0; j < items.Length() && !hasFiles; ++j) {
-          if (items[j].data().type() == IPCDataTransferData::TIPCDataTransferBlob) {
+          if (items[j].data().type() ==
+              IPCDataTransferData::TIPCDataTransferBlob) {
             hasFiles = true;
           }
         }
@@ -3171,7 +3172,8 @@ mozilla::ipc::IPCResult ContentChild::RecvInvokeDragSession(
           // We should hide this data from content if we have a file, and we
           // aren't a file.
           bool hidden =
-              hasFiles && item.data().type() != IPCDataTransferData::TIPCDataTransferBlob;
+              hasFiles &&
+              item.data().type() != IPCDataTransferData::TIPCDataTransferBlob;
           dataTransfer->SetDataWithPrincipalFromOtherProcess(
               NS_ConvertUTF8toUTF16(item.flavor()), variant, i,
               nsContentUtils::GetSystemPrincipal(), hidden);
