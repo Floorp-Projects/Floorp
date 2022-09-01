@@ -73,6 +73,7 @@ add_setup(async function() {
     set: [
       ["browser.urlbar.suggest.topsites", true],
       ["browser.newtabpage.activity-stream.default.sites", EN_US_TOPSITES],
+      ["browser.urlbar.suggest.quickactions", false],
     ],
   });
   await updateTopSites(
