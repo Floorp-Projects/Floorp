@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include "Types.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/Mutex.h"
 
 namespace mozilla {
 namespace gfx {
@@ -20,14 +22,14 @@ struct UserDataKey {
 
 /* this class is basically a clone of the user data concept from cairo */
 class UserData {
-  typedef void (*destroyFunc)(void* data);
-
  public:
+  typedef void (*DestroyFunc)(void* data);
+
   UserData() : count(0), entries(nullptr) {}
 
   /* Attaches untyped userData associated with key. destroy is called on
    * destruction */
-  void Add(UserDataKey* key, void* userData, destroyFunc destroy) {
+  void Add(UserDataKey* key, void* userData, DestroyFunc destroy) {
     for (int i = 0; i < count; i++) {
       if (key == entries[i].key) {
         if (entries[i].destroy) {
@@ -109,6 +111,9 @@ class UserData {
   }
 
   void Destroy() {
+    if (!entries) {
+      return;
+    }
     for (int i = 0; i < count; i++) {
       if (entries[i].destroy) {
         entries[i].destroy(entries[i].userData);
@@ -125,11 +130,82 @@ class UserData {
   struct Entry {
     const UserDataKey* key;
     void* userData;
-    destroyFunc destroy;
+    DestroyFunc destroy;
   };
 
   int count;
   Entry* entries;
+};
+
+class ThreadSafeUserData {
+ protected:
+  struct LockedUserData : public UserData {
+    Mutex mLock;
+
+    LockedUserData() : mLock("LockedUserData::mLock") {}
+  };
+
+ public:
+  ~ThreadSafeUserData() {
+    if (LockedUserData* userData = mUserData.exchange(nullptr)) {
+      {
+        MutexAutoLock lock(userData->mLock);
+        userData->Destroy();
+      }
+      delete userData;
+    }
+  }
+
+  void Add(UserDataKey* key, void* value, UserData::DestroyFunc destroy) {
+    LockedUserData* userData = GetUserData();
+    MutexAutoLock lock(userData->mLock);
+    userData->Add(key, value, destroy);
+  }
+
+  void* Remove(UserDataKey* key) {
+    LockedUserData* userData = GetUserData();
+    MutexAutoLock lock(userData->mLock);
+    return userData->Remove(key);
+  }
+
+  void RemoveAndDestroy(UserDataKey* key) {
+    LockedUserData* userData = GetUserData();
+    MutexAutoLock lock(userData->mLock);
+    userData->RemoveAndDestroy(key);
+  }
+
+  void* Get(UserDataKey* key) const {
+    LockedUserData* userData = GetUserData();
+    MutexAutoLock lock(userData->mLock);
+    return userData->Get(key);
+  }
+
+  bool Has(UserDataKey* key) {
+    LockedUserData* userData = GetUserData();
+    MutexAutoLock lock(userData->mLock);
+    return userData->Has(key);
+  }
+
+ private:
+  LockedUserData* GetUserData() const {
+    LockedUserData* userData = mUserData;
+    if (!userData) {
+      userData = new LockedUserData;
+      if (!mUserData.compareExchange(nullptr, userData)) {
+        delete userData;
+        userData = mUserData;
+        MOZ_ASSERT(userData);
+      }
+    }
+    return userData;
+  }
+
+  // The Mutex class is quite large. For small, frequent classes (ScaledFont,
+  // SourceSurface, etc.) this can add a lot of memory overhead, especially if
+  // UserData is only infrequently used. To avoid this, we only allocate the
+  // LockedUserData if it is actually used. If unused, it only adds a single
+  // pointer as overhead.
+  mutable Atomic<LockedUserData*> mUserData;
 };
 
 }  // namespace gfx
