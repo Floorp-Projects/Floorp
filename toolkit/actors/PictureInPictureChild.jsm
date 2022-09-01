@@ -1782,6 +1782,22 @@ class PictureInPictureChild extends JSWindowActorChild {
         this.unmute();
         break;
       }
+      case "PictureInPicture:SeekForward":
+      case "PictureInPicture:SeekBackward": {
+        let selectedTime;
+        let video = this.getWeakVideo();
+        let currentTime = this.videoWrapper.getCurrentTime(video);
+        if (message.name == "PictureInPicture:SeekBackward") {
+          selectedTime = currentTime - SEEK_TIME_SECS;
+          selectedTime = selectedTime >= 0 ? selectedTime : 0;
+        } else {
+          const maxtime = this.videoWrapper.getDuration(video);
+          selectedTime = currentTime + SEEK_TIME_SECS;
+          selectedTime = selectedTime <= maxtime ? selectedTime : maxtime;
+        }
+        this.videoWrapper.setCurrentTime(video, selectedTime);
+        break;
+      }
       case "PictureInPicture:KeyDown": {
         this.keyDown(message.data);
         break;

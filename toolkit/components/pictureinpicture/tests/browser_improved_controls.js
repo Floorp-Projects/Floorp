@@ -4,8 +4,8 @@
 "use strict";
 
 /**
- * Tests that the Picture-In-Picture fullscreen button appears
- * when pref is enabled
+ * Tests the functionality of improved Picture-in-picture
+ * playback controls.
  */
 add_task(async () => {
   let videoID = "with-controls";
@@ -16,6 +16,10 @@ add_task(async () => {
       gBrowser,
     },
     async browser => {
+      let waitForVideoEvent = eventType => {
+        return BrowserTestUtils.waitForContentEvent(browser, eventType, true);
+      };
+
       await ensureVideosReady(browser);
       await SpecialPowers.spawn(browser, [videoID], async videoID => {
         await content.document.getElementById(videoID).play();
@@ -33,9 +37,27 @@ add_task(async () => {
       ok(pipWin, "Got Picture-in-Picture window.");
 
       let fullscreenButton = pipWin.document.getElementById("fullscreen");
+      let seekForwardButton = pipWin.document.getElementById("seekForward");
+      let seekBackwardButton = pipWin.document.getElementById("seekBackward");
+
+      // Try seek forward button
+      let seekedForwardPromise = waitForVideoEvent("seeked");
+      EventUtils.synthesizeMouseAtCenter(seekForwardButton, {}, pipWin);
+      ok(await seekedForwardPromise, "The Forward button triggers");
+
+      // Try seek backward button
+      let seekedBackwardPromise = waitForVideoEvent("seeked");
+      EventUtils.synthesizeMouseAtCenter(seekBackwardButton, {}, pipWin);
+      ok(await seekedBackwardPromise, "The Backward button triggers");
 
       // The Fullsreen button appears when the pref is enabled and the fullscreen hidden property is set to false
       Assert.ok(!fullscreenButton.hidden, "The Fullscreen button is visible");
+
+      // The seek Forward button appears when the pref is enabled and the seek forward button hidden property is set to false
+      Assert.ok(!seekForwardButton.hidden, "The Forward button is visible");
+
+      // The seek Backward button appears when the pref is enabled and the seek backward button hidden property is set to false
+      Assert.ok(!seekBackwardButton.hidden, "The Backward button is visible");
 
       // CLose the PIP window
       let pipClosed = BrowserTestUtils.domWindowClosed(pipWin);
@@ -52,11 +74,22 @@ add_task(async () => {
       ok(pipWin, "Got Picture-in-Picture window.");
 
       fullscreenButton = pipWin.document.getElementById("fullscreen");
+      seekForwardButton = pipWin.document.getElementById("seekForward");
+      seekBackwardButton = pipWin.document.getElementById("seekBackward");
 
       // The Fullsreen button disappears when the pref is disabled and the fullscreen hidden property is set to true
       Assert.ok(
         fullscreenButton.hidden,
         "The Fullscreen button is not visible"
+      );
+
+      // The seek Forward button disappears when the pref is disabled and the seek forward button hidden property is set to true
+      Assert.ok(seekForwardButton.hidden, "The Forward button is not visible");
+
+      // The seek Backward button disappears when the pref is disabled and the seek backward button hidden property is set to true
+      Assert.ok(
+        seekBackwardButton.hidden,
+        "The Backward button is not visible"
       );
     }
   );

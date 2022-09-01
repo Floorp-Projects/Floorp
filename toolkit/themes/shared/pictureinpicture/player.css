@@ -163,6 +163,16 @@ body:not(:fullscreen) #fullscreen {
   background-size: auto;
 }
 
+#seekBackward {
+  background-image: url("chrome://global/skin/media/picture-in-picture-seekBackward-button.svg");
+  background-size: auto;
+}
+
+#seekForward {
+  background-image: url("chrome://global/skin/media/picture-in-picture-seekForward-button.svg");
+  background-size: auto;
+}
+
 #unpip:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
 }

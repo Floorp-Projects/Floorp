@@ -228,6 +228,14 @@ let Player = {
       const fullscreenButton = document.getElementById("fullscreen");
       fullscreenButton.hidden = false;
       fullscreenButton.previousElementSibling.hidden = false;
+
+      const seekBackwardButton = document.getElementById("seekBackward");
+      seekBackwardButton.hidden = false;
+      seekBackwardButton.nextElementSibling.hidden = false;
+
+      const seekForwardButton = document.getElementById("seekForward");
+      seekForwardButton.hidden = false;
+      seekForwardButton.previousElementSibling.hidden = false;
     }
 
     this.resizeDebouncer = new DeferredTask(() => {
@@ -451,6 +459,16 @@ let Player = {
           this.revealControls(true);
         }
 
+        break;
+      }
+
+      case "seekBackward": {
+        this.actor.sendAsyncMessage("PictureInPicture:SeekBackward");
+        break;
+      }
+
+      case "seekForward": {
+        this.actor.sendAsyncMessage("PictureInPicture:SeekForward");
         break;
       }
 
