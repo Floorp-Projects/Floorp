@@ -8464,7 +8464,7 @@ function clearASTs() {
 function traverseAst(sourceId, visitor, state) {
   const ast = getAst(sourceId);
 
-  if (!ast || Object.keys(ast).length == 0) {
+  if (!ast || !Object.keys(ast).length) {
     return null;
   }
 
@@ -46412,7 +46412,7 @@ function isGeneratedId(id) {
 function parseSourceScopes(sourceId) {
   const ast = (0, _ast.getAst)(sourceId);
 
-  if (!ast || Object.keys(ast).length == 0) {
+  if (!ast || !Object.keys(ast).length) {
     return null;
   }
 
@@ -46712,7 +46712,7 @@ const scopeCollectionVisitor = {
         // instead.
         let declStart = node.loc.start;
 
-        if (node.decorators && node.decorators.length > 0) {
+        if (node.decorators && node.decorators.length) {
           // Estimate the location of the "class" keyword since it
           // is unlikely to be a different line than the class name.
           declStart = {
@@ -47093,7 +47093,7 @@ function buildMetaBindings(sourceId, node, ancestors, parentIndex = ancestors.le
 
   if (t.isCallExpression(parent, {
     callee: node
-  }) && parent.arguments.length == 0) {
+  }) && !parent.arguments.length) {
     return {
       type: "call",
       start: fromBabelLocation(parent.loc.start, sourceId),
@@ -47106,7 +47106,7 @@ function buildMetaBindings(sourceId, node, ancestors, parentIndex = ancestors.le
 }
 
 function looksLikeCommonJS(rootScope) {
-  const hasRefs = name => rootScope.bindings[name] && rootScope.bindings[name].refs.length > 0;
+  const hasRefs = name => rootScope.bindings[name] && !!rootScope.bindings[name].refs.length;
 
   return hasRefs("__dirname") || hasRefs("__filename") || hasRefs("require") || hasRefs("exports") || hasRefs("module");
 }
@@ -47240,7 +47240,7 @@ function getInnerLocations(locations, position) {
 
 
 function removeOverlaps(locations) {
-  if (locations.length == 0) {
+  if (!locations.length) {
     return [];
   }
 
@@ -47564,7 +47564,7 @@ function replaceNode(ancestors, node) {
 function getFirstExpression(ast) {
   const statements = ast.program.body;
 
-  if (statements.length == 0) {
+  if (!statements.length) {
     return null;
   }
 
