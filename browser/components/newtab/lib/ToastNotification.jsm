@@ -53,23 +53,30 @@ const ToastNotification = {
     let alert = Cc["@mozilla.org/alert-notification;1"].createInstance(
       Ci.nsIAlertNotification
     );
+    let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
     alert.init(
-      null,
-      content.image_url,
+      content.tag,
+      content.image_url
+        ? Services.urlFormatter.formatURL(content.image_url)
+        : content.image_url,
       title,
       body,
       true /* aTextClickable */,
-      content.tag /* aCookie */,
+      content.data,
       null /* aDir */,
       null /* aLang */,
-      content.data,
-      null /* aPrincipal */,
+      null /* aData */,
+      systemPrincipal,
       null /* aInPrivateBrowsing */,
       content.requireInteraction
     );
 
     if (content.actions) {
       alert.actions = content.actions;
+    }
+
+    if (content.launch_url) {
+      alert.launchURL = Services.urlFormatter.formatURL(content.launch_url);
     }
 
     this.AlertsService.showAlert(alert);
