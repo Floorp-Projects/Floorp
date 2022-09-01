@@ -23,17 +23,7 @@
   </vbox>
   <splitter id="sidebar-splitter" class="chromeclass-extrachrome sidebar-splitter" hidden="true"/>
 
-  <splitter id="sidebar-splitter2" class="browser-sidebar2 chromeclass-extrachrome" hidden="false"/>
-    <vbox id="sidebar2-box" class="browser-sidebar2 chromeclass-extrachrome" >
-      <box id="sidebar2-header" style="min-width: 0em; min-height: 2.5em" align="center">
-        <toolbarbutton class="close-icon tabbable" style="margin-left: 1em;" data-l10n-id="sidebar-close-button"  oncommand="changeSidebarVisibility();" id="sidebar-icon"/>
-        <image id="sidebar-throbber"/>
-        <spacer flex="1000"/>
-        </box>
-    <browser id="sidebar2"  flex="1" autoscroll="false" disablehistory="true" disablefullscreen="true" 
-               style="width: 18em;" tooltip="aHTMLTooltip"/> 
-    </vbox>
-    <splitter id="sidebar-splitter3" class="browser-sidebar2 chromeclass-extrachrome"  hidden="false"/>
+  #include browser-manager-sidebar.inc.xhtml
 
   <vbox id="appcontent" flex="1">
     <!-- gNotificationBox will be added here lazily. -->
