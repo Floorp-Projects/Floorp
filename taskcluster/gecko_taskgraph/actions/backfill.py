@@ -370,6 +370,9 @@ def filter_raptor_jobs(full_task_graph, label_to_taskid):
             continue
         if not entry.attributes.get("test_platform", "").endswith("shippable-qr/opt"):
             continue
+        if "android" in entry.attributes.get("test_platform", ""):
+            # Bug 1786254 - The backfill bot is scheduling too many tests atm
+            continue
         exceptions = ("live", "profiling", "youtube-playback")
         if any(e in entry.attributes.get("raptor_try_name", "") for e in exceptions):
             continue
