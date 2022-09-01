@@ -141,7 +141,7 @@ export const TabsSetupFlowManager = new (class {
       this,
       "lastTabFetch",
       RECENT_TABS_SYNC,
-      false,
+      0,
       () => {
         this._uiUpdateNeeded = true;
         this.maybeUpdateUI();
