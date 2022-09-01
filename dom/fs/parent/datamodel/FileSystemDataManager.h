@@ -49,6 +49,8 @@ class FileSystemDataManager
   FileSystemDataManager(const quota::OriginMetadata& aOriginMetadata,
                         MovingNotNull<RefPtr<TaskQueue>> aIOTaskQueue);
 
+  // IsExclusive is true because we want to allow the move operations. There's
+  // always just one consumer anyway.
   using CreatePromise = MozPromise<Registered<FileSystemDataManager>, nsresult,
                                    /* IsExclusive */ true>;
   static RefPtr<CreatePromise> GetOrCreateFileSystemDataManager(
