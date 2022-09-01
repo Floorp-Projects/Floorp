@@ -165,8 +165,7 @@ void nsViewManager::GetWindowDimensions(nscoord* aWidth, nscoord* aHeight) {
   }
 }
 
-void nsViewManager::DoSetWindowDimensions(nscoord aWidth, nscoord aHeight,
-                                          bool aDoReflow) {
+void nsViewManager::DoSetWindowDimensions(nscoord aWidth, nscoord aHeight) {
   nsRect oldDim = mRootView->GetDimensions();
   nsRect newDim(0, 0, aWidth, aHeight);
   // We care about resizes even when one dimension is already zero.
@@ -176,11 +175,7 @@ void nsViewManager::DoSetWindowDimensions(nscoord aWidth, nscoord aHeight,
   // Don't resize the widget. It is already being set elsewhere.
   mRootView->SetDimensions(newDim, true, false);
   if (RefPtr<PresShell> presShell = mPresShell) {
-    auto options = ResizeReflowOptions::NoOption;
-    if (!aDoReflow) {
-      options |= ResizeReflowOptions::SuppressReflow;
-    }
-    presShell->ResizeReflow(aWidth, aHeight, options);
+    presShell->ResizeReflow(aWidth, aHeight);
   }
 }
 
@@ -210,10 +205,10 @@ void nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight,
         // root view's current size then DoSetWindowDimensions will not
         // request a resize reflow (which would correct it). See bug 617076.
         mDelayedResize = nsSize(aWidth, aHeight);
-        FlushDelayedResize(false);
+        FlushDelayedResize();
       }
       mDelayedResize.SizeTo(NSCOORD_NONE, NSCOORD_NONE);
-      DoSetWindowDimensions(aWidth, aHeight, /* aDoReflow = */ true);
+      DoSetWindowDimensions(aWidth, aHeight);
     } else {
       mDelayedResize.SizeTo(aWidth, aHeight);
       if (mPresShell) {
@@ -224,10 +219,9 @@ void nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight,
   }
 }
 
-void nsViewManager::FlushDelayedResize(bool aDoReflow) {
+void nsViewManager::FlushDelayedResize() {
   if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE)) {
-    DoSetWindowDimensions(mDelayedResize.width, mDelayedResize.height,
-                          aDoReflow);
+    DoSetWindowDimensions(mDelayedResize.width, mDelayedResize.height);
     mDelayedResize.SizeTo(NSCOORD_NONE, NSCOORD_NONE);
   }
 }
@@ -410,7 +404,7 @@ void nsViewManager::ProcessPendingUpdatesPaint(nsIWidget* aWidget) {
       if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
           vm->mRootView->IsEffectivelyVisible() && vm->mPresShell &&
           vm->mPresShell->IsVisible()) {
-        vm->FlushDelayedResize(true);
+        vm->FlushDelayedResize();
       }
     }
     nsView* view = nsView::GetViewFor(aWidget);

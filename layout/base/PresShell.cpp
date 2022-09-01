@@ -1967,8 +1967,8 @@ void PresShell::RefreshZoomConstraintsForScreenSizeChange() {
   }
 }
 
-nsresult PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight,
-                                 ResizeReflowOptions aOptions) {
+void PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight,
+                             ResizeReflowOptions aOptions) {
   if (mZoomConstraintsClient) {
     // If we have a ZoomConstraintsClient and the available screen area
     // changed, then we might need to disable double-tap-to-zoom, so notify
@@ -1983,21 +1983,19 @@ nsresult PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight,
     // the MVM.
     MOZ_ASSERT(mMobileViewportManager);
     mMobileViewportManager->RequestReflow(false);
-    return NS_OK;
+    return;
   }
-
-  return ResizeReflowIgnoreOverride(aWidth, aHeight, aOptions);
+  ResizeReflowIgnoreOverride(aWidth, aHeight, aOptions);
 }
 
-void PresShell::SimpleResizeReflow(nscoord aWidth, nscoord aHeight,
-                                   ResizeReflowOptions aOptions) {
+bool PresShell::SimpleResizeReflow(nscoord aWidth, nscoord aHeight) {
   MOZ_ASSERT(aWidth != NS_UNCONSTRAINEDSIZE);
   MOZ_ASSERT(aHeight != NS_UNCONSTRAINEDSIZE);
   nsSize oldSize = mPresContext->GetVisibleArea().Size();
   mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
   nsIFrame* rootFrame = GetRootFrame();
   if (!rootFrame) {
-    return;
+    return false;
   }
   WritingMode wm = rootFrame->GetWritingMode();
   bool isBSizeChanging =
@@ -2011,14 +2009,7 @@ void PresShell::SimpleResizeReflow(nscoord aWidth, nscoord aHeight,
   if (mMobileViewportManager) {
     mMobileViewportManager->UpdateSizesBeforeReflow();
   }
-
-  // For compat with the old code path which always reflowed as long as there
-  // was a root frame.
-  bool suppressReflow = (aOptions & ResizeReflowOptions::SuppressReflow) ||
-                        mPresContext->SuppressingResizeReflow();
-  if (!suppressReflow) {
-    mDocument->FlushPendingNotifications(FlushType::InterruptibleLayout);
-  }
+  return true;
 }
 
 void PresShell::AddResizeEventFlushObserverIfNeeded() {
@@ -2029,8 +2020,8 @@ void PresShell::AddResizeEventFlushObserverIfNeeded() {
   }
 }
 
-nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
-                                               ResizeReflowOptions aOptions) {
+bool PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
+                                           ResizeReflowOptions aOptions) {
   MOZ_ASSERT(!mIsReflowing, "Shouldn't be in reflow here!");
 
   // Historically we never fired resize events if there was no root frame by the
@@ -2047,17 +2038,13 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
   if (!(aOptions & ResizeReflowOptions::BSizeLimit)) {
     nsSize oldSize = mPresContext->GetVisibleArea().Size();
     if (oldSize == nsSize(aWidth, aHeight)) {
-      return NS_OK;
+      return false;
     }
 
-    SimpleResizeReflow(aWidth, aHeight, aOptions);
+    bool changed = SimpleResizeReflow(aWidth, aHeight);
     postResizeEventIfNeeded();
-    return NS_OK;
+    return changed;
   }
-
-  MOZ_ASSERT(!mPresContext->SuppressingResizeReflow() &&
-                 !(aOptions & ResizeReflowOptions::SuppressReflow),
-             "Can't suppress resize reflow and shrink-wrap at the same time");
 
   // Make sure that style is flushed before setting the pres context
   // VisibleArea.
@@ -2075,13 +2062,13 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
     if (aHeight == NS_UNCONSTRAINEDSIZE || aWidth == NS_UNCONSTRAINEDSIZE) {
       // We can't do the work needed for SizeToContent without a root
       // frame, and we want to return before setting the visible area.
-      return NS_ERROR_NOT_AVAILABLE;
+      return false;
     }
 
     mPresContext->SetVisibleArea(nsRect(0, 0, aWidth, aHeight));
     // There isn't anything useful we can do if the initial reflow hasn't
     // happened.
-    return NS_OK;
+    return true;
   }
 
   WritingMode wm = rootFrame->GetWritingMode();
@@ -2141,7 +2128,7 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
       "height should not be NS_UNCONSTRAINEDSIZE after reflow");
 
   postResizeEventIfNeeded();
-  return NS_OK;  // XXX this needs to be real. MMP
+  return true;
 }
 
 void PresShell::FireResizeEvent() {
@@ -4329,7 +4316,7 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
     // Process pending restyles, since any flush of the presshell wants
     // up-to-date style data.
     if (MOZ_LIKELY(!mIsDestroying)) {
-      viewManager->FlushDelayedResize(false);
+      viewManager->FlushDelayedResize();
       mPresContext->FlushPendingMediaFeatureValuesChanged();
     }
 
