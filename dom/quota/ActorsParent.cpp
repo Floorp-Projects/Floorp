@@ -730,6 +730,8 @@ class QuotaManager::Observer final : public nsIObserver {
  public:
   static nsresult Initialize();
 
+  static nsIObserver* GetInstance();
+
   static void ShutdownCompleted();
 
  private:
@@ -2798,6 +2800,13 @@ nsresult QuotaManager::Observer::Initialize() {
 }
 
 // static
+nsIObserver* QuotaManager::Observer::GetInstance() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  return sInstance;
+}
+
+// static
 void QuotaManager::Observer::ShutdownCompleted() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sInstance);
@@ -3381,6 +3390,13 @@ QuotaManager* QuotaManager::Get() {
 }
 
 // static
+nsIObserver* QuotaManager::GetObserver() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  return Observer::GetInstance();
+}
+
+// static
 bool QuotaManager::IsShuttingDown() { return gShutdown; }
 
 // static
@@ -3399,6 +3415,15 @@ void QuotaManager::ShutdownInstance() {
   MOZ_ASSERT(runnable);
 
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable.forget()));
+}
+
+// static
+void QuotaManager::Reset() {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!gInstance);
+  MOZ_ASSERT(gShutdown);
+
+  gShutdown = false;
 }
 
 // static
