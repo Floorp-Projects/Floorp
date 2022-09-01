@@ -281,8 +281,7 @@ const CSSEditUtils::CSSEquivTable hrAlignEquivTable[] = {
 #undef CSS_EQUIV_TABLE_NONE
 
 CSSEditUtils::CSSEditUtils(HTMLEditor* aHTMLEditor)
-    : mHTMLEditor(aHTMLEditor),
-      mIsCSSPrefChecked(StaticPrefs::editor_use_css()) {}
+    : mHTMLEditor(aHTMLEditor) {}
 
 // Answers true if we have some CSS equivalence for the HTML style defined
 // by aProperty and/or aAttribute for the node aNode
@@ -1189,12 +1188,6 @@ Result<bool, nsresult> CSSEditUtils::HaveCSSEquivalentStylesInternal(
 
   return false;
 }
-
-void CSSEditUtils::SetCSSEnabled(bool aIsCSSPrefChecked) {
-  mIsCSSPrefChecked = aIsCSSPrefChecked;
-}
-
-bool CSSEditUtils::IsCSSPrefChecked() const { return mIsCSSPrefChecked; }
 
 // ElementsSameStyle compares two elements and checks if they have the same
 // specified CSS declarations in the STYLE attribute

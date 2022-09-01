@@ -316,22 +316,6 @@ class CSSEditUtils final {
                           nsAtom** aUnit);
 
   /**
-   * Sets the mIsCSSPrefChecked private member; used as callback from observer
-   *  when the CSS pref state is changed.
-   *
-   * @param aIsCSSPrefChecked [IN] The new boolean state for the pref.
-   */
-  void SetCSSEnabled(bool aIsCSSPrefChecked);
-
-  /**
-   * Retrieves the mIsCSSPrefChecked private member, true if the CSS pref is
-   * checked, false if it is not.
-   *
-   * @return                 the boolean value of the CSS pref.
-   */
-  bool IsCSSPrefChecked() const;
-
-  /**
    * DoStyledElementsHaveSameStyle compares two elements and checks if they have
    * the same specified CSS declarations in the STYLE attribute. The answer is
    * always false if at least one of them carries an ID or a class.
@@ -459,7 +443,6 @@ class CSSEditUtils final {
 
  private:
   HTMLEditor* mHTMLEditor;
-  bool mIsCSSPrefChecked;
 };
 
 #define NS_EDITOR_INDENT_INCREMENT_IN 0.4134f

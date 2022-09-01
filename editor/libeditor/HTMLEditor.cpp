@@ -170,6 +170,7 @@ HTMLEditor::HTMLEditor()
       mSnapToGridEnabled(false),
       mIsInlineTableEditingEnabled(
           StaticPrefs::editor_inline_table_editing_enabled_by_default()),
+      mIsCSSPrefChecked(StaticPrefs::editor_use_css()),
       mOriginalX(0),
       mOriginalY(0),
       mResizedObjectX(0),
@@ -5609,17 +5610,13 @@ nsresult HTMLEditor::RemoveAttributeOrEquivalent(Element* aElement,
 }
 
 NS_IMETHODIMP HTMLEditor::SetIsCSSEnabled(bool aIsCSSPrefChecked) {
-  if (!mCSSEditUtils) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
   AutoEditActionDataSetter editActionData(*this,
                                           EditAction::eEnableOrDisableCSS);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  mCSSEditUtils->SetCSSEnabled(aIsCSSPrefChecked);
+  mIsCSSPrefChecked = aIsCSSPrefChecked;
   return NS_OK;
 }
 
