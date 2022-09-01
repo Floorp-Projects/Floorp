@@ -16,7 +16,7 @@ import android.net.Uri
  * - "key=value" - Search param named "key" with value "value"
  */
 fun Uri.containsQueryParameters(searchParameters: String): Boolean {
-    if (searchParameters.isBlank()) {
+    if (searchParameters.isBlank() || this.isOpaque) {
         return false
     }
     val params = searchParameters.split("=")

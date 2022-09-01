@@ -43,4 +43,14 @@ class UriTest {
         assertTrue(querySite.containsQueryParameters(searchParameters))
         assertFalse(blankQuerySite.containsQueryParameters(searchParameters))
     }
+
+    @Test
+    fun `WHEN an opaque url is checked for query parameters THEN then the result should be false`() {
+        val searchParameters = "q"
+        val opaqueUrl = Uri.parse("about:config")
+        val mailToUrl = Uri.parse("mailto:a@b.com")
+
+        assertFalse(opaqueUrl.containsQueryParameters(searchParameters))
+        assertFalse(mailToUrl.containsQueryParameters(searchParameters))
+    }
 }
