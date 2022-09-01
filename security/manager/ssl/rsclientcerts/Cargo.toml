@@ -6,4 +6,4 @@ edition = "2018"
 
 [dependencies]
 byteorder = "1.3"
-pkcs11 = "0.4"
+pkcs11-bindings = "0.1"

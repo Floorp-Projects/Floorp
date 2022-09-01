@@ -5,7 +5,7 @@
 
 #![allow(non_camel_case_types)]
 
-use pkcs11::types::*;
+use pkcs11_bindings::*;
 use rsclientcerts::error::{Error, ErrorType};
 use rsclientcerts::manager::{ClientCertsBackend, CryptokiObject, Sign, SlotType};
 use rsclientcerts::util::*;

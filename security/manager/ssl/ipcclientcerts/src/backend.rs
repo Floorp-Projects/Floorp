@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use pkcs11::types::*;
+use pkcs11_bindings::*;
 use rsclientcerts::error::{Error, ErrorType};
 use rsclientcerts::manager::{ClientCertsBackend, CryptokiObject, Sign, SlotType};
 use rsclientcerts::util::*;

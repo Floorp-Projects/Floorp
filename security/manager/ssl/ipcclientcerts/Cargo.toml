@@ -7,7 +7,7 @@ edition = "2018"
 [dependencies]
 byteorder = "1.3"
 once_cell = "1"
-pkcs11 = "0.4"
+pkcs11-bindings = "0.1"
 rsclientcerts = { path = "../rsclientcerts" }
 sha2 = "0.10.2"
 

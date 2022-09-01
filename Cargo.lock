@@ -2689,7 +2689,7 @@ version = "0.1.0"
 dependencies = [
  "byteorder",
  "once_cell",
- "pkcs11",
+ "pkcs11-bindings",
  "rsclientcerts",
  "sha2",
 ]
@@ -3753,17 +3753,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "num-bigint"
-version = "0.2.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "090c7f9998ee0ff65aa5b723e4009f7b217707f1fb5ea551329cc4d6231fb304"
-dependencies = [
- "autocfg",
- "num-integer",
- "num-traits",
-]
-
-[[package]]
 name = "num-derive"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3889,7 +3878,7 @@ dependencies = [
  "libloading 0.5.2",
  "log",
  "mozilla-central-workspace-hack",
- "pkcs11",
+ "pkcs11-bindings",
  "rsclientcerts",
  "sha2",
  "winapi",
@@ -4079,13 +4068,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
-name = "pkcs11"
-version = "0.4.2"
+name = "pkcs11-bindings"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45712272d3a9d9a26471f6bee1596574d38df0136dd7eb163ed736913dc1f6bf"
+checksum = "054f65db435bb7cf99db2f38bbcf568dfa66c342201df54e700c772b178e2f20"
 dependencies = [
- "libloading 0.5.2",
- "num-bigint",
+ "bindgen 0.59.2",
 ]
 
 [[package]]
@@ -4479,7 +4467,7 @@ name = "rsclientcerts"
 version = "0.1.0"
 dependencies = [
  "byteorder",
- "pkcs11",
+ "pkcs11-bindings",
 ]
 
 [[package]]

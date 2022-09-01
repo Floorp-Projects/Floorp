@@ -7,13 +7,13 @@
 
 extern crate byteorder;
 extern crate once_cell;
-extern crate pkcs11;
+extern crate pkcs11_bindings;
 #[macro_use]
 extern crate rsclientcerts;
 extern crate sha2;
 
 use once_cell::sync::OnceCell;
-use pkcs11::types::*;
+use pkcs11_bindings::*;
 use rsclientcerts::manager::{Manager, SlotType};
 use std::ffi::{c_void, CStr};
 use std::sync::Mutex;
@@ -83,14 +83,14 @@ macro_rules! manager_guard_to_manager {
 
 /// This gets called to initialize the module. For this implementation, this consists of
 /// instantiating the `Manager`.
-extern "C" fn C_Initialize(pInitArgs: CK_C_INITIALIZE_ARGS_PTR) -> CK_RV {
+extern "C" fn C_Initialize(pInitArgs: CK_VOID_PTR) -> CK_RV {
     // pInitArgs.pReserved will be a c-string containing the base-16
     // stringification of the addresses of the functions to call to communicate
     // with the main process.
     if pInitArgs.is_null() {
         return CKR_DEVICE_ERROR;
     }
-    let serialized_addresses_ptr = unsafe { (*pInitArgs).pReserved };
+    let serialized_addresses_ptr = unsafe { (*(pInitArgs as CK_C_INITIALIZE_ARGS_PTR)).pReserved };
     if serialized_addresses_ptr.is_null() {
         return CKR_DEVICE_ERROR;
     }
@@ -444,7 +444,7 @@ extern "C" fn C_GetAttributeValue(
     let mut attr_types = Vec::with_capacity(ulCount as usize);
     for i in 0..ulCount {
         let attr = unsafe { &*pTemplate.offset(i as isize) };
-        attr_types.push(attr.attrType);
+        attr_types.push(attr.type_);
     }
     let mut manager_guard = try_to_get_manager_guard!();
     let manager = manager_guard_to_manager!(manager_guard);
@@ -503,7 +503,7 @@ extern "C" fn C_FindObjectsInit(
         let slice = unsafe {
             std::slice::from_raw_parts(attr.pValue as *const u8, attr.ulValueLen as usize)
         };
-        attrs.push((attr.attrType, slice.to_owned()));
+        attrs.push((attr.type_, slice.to_owned()));
     }
     let mut manager_guard = try_to_get_manager_guard!();
     let manager = manager_guard_to_manager!(manager_guard);
