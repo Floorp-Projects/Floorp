@@ -25,7 +25,6 @@ use crate::yaml_frame_reader::YamlFrameReader;
 
 const OPTION_DISABLE_SUBPX: &str = "disable-subpixel";
 const OPTION_DISABLE_AA: &str = "disable-aa";
-const OPTION_DISABLE_DUAL_SOURCE_BLENDING: &str = "disable-dual-source-blending";
 const OPTION_ALLOW_MIPMAPS: &str = "allow-mipmaps";
 
 pub struct ReftestOptions {
@@ -102,7 +101,6 @@ pub struct Reftest {
     font_render_mode: Option<FontRenderMode>,
     fuzziness: Vec<RefTestFuzzy>,
     extra_checks: Vec<ExtraCheck>,
-    disable_dual_source_blending: bool,
     allow_mipmaps: bool,
     force_subpixel_aa_where_possible: Option<bool>,
     max_surface_override: Option<usize>,
@@ -360,7 +358,6 @@ impl ReftestManifest {
             let mut op = None;
             let mut font_render_mode = None;
             let mut extra_checks = vec![];
-            let mut disable_dual_source_blending = false;
             let mut allow_mipmaps = false;
             let mut force_subpixel_aa_where_possible = None;
             let mut max_surface_override = None;
@@ -432,9 +429,6 @@ impl ReftestManifest {
                         }
                         if args.iter().any(|arg| arg == &OPTION_DISABLE_AA) {
                             font_render_mode = Some(FontRenderMode::Mono);
-                        }
-                        if args.iter().any(|arg| arg == &OPTION_DISABLE_DUAL_SOURCE_BLENDING) {
-                            disable_dual_source_blending = true;
                         }
                         if args.iter().any(|arg| arg == &OPTION_ALLOW_MIPMAPS) {
                             allow_mipmaps = true;
@@ -544,7 +538,6 @@ impl ReftestManifest {
                 font_render_mode,
                 fuzziness,
                 extra_checks,
-                disable_dual_source_blending,
                 allow_mipmaps,
                 force_subpixel_aa_where_possible,
                 max_surface_override,
@@ -746,13 +739,6 @@ impl<'a> ReftestHarness<'a> {
 
         self.wrench.set_quality_settings(quality_settings);
 
-        if t.disable_dual_source_blending {
-            self.wrench
-                .api
-                .send_debug_cmd(
-                    DebugCommand::EnableDualSourceBlending(false)
-                );
-        }
         if let Some(max_surface_override) = t.max_surface_override {
             self.wrench
                 .api
@@ -844,13 +830,6 @@ impl<'a> ReftestHarness<'a> {
             output.image
         };
 
-        if t.disable_dual_source_blending {
-            self.wrench
-                .api
-                .send_debug_cmd(
-                    DebugCommand::EnableDualSourceBlending(true)
-                );
-        }
         if let Some(_) = t.max_surface_override {
             self.wrench
                 .api

@@ -253,7 +253,6 @@ void main() {
             v_mask_swizzle = vec3(1.0, 0.0, 0.0);
             v_color = text.color;
             break;
-        case COLOR_MODE_SUBPX_CONST_COLOR:
         case COLOR_MODE_SUBPX_BG_PASS0:
         case COLOR_MODE_COLOR_BITMAP:
             v_mask_swizzle = vec3(1.0, 0.0, 0.0);

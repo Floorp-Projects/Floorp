@@ -287,15 +287,14 @@ fn flag_changed(before: DebugFlags, after: DebugFlags, select: DebugFlags) -> Op
 pub enum ShaderColorMode {
     FromRenderPassMode = 0,
     Alpha = 1,
-    SubpixelConstantTextColor = 2,
-    SubpixelWithBgColorPass0 = 3,
-    SubpixelWithBgColorPass1 = 4,
-    SubpixelWithBgColorPass2 = 5,
-    SubpixelDualSource = 6,
-    BitmapShadow = 7,
-    ColorBitmap = 8,
-    Image = 9,
-    MultiplyDualSource = 10,
+    SubpixelWithBgColorPass0 = 2,
+    SubpixelWithBgColorPass1 = 3,
+    SubpixelWithBgColorPass2 = 4,
+    SubpixelDualSource = 5,
+    BitmapShadow = 6,
+    ColorBitmap = 7,
+    Image = 8,
+    MultiplyDualSource = 9,
 }
 
 impl From<GlyphFormat> for ShaderColorMode {
@@ -627,7 +626,6 @@ pub enum BlendMode {
     PremultipliedAlpha,
     PremultipliedDestOut,
     SubpixelDualSource,
-    SubpixelConstantTextColor(ColorF),
     SubpixelWithBgColor,
     Advanced(MixBlendMode),
     MultiplyDualSource,
@@ -1126,7 +1124,6 @@ impl Renderer {
 
     fn handle_debug_command(&mut self, command: DebugCommand) {
         match command {
-            DebugCommand::EnableDualSourceBlending(_) |
             DebugCommand::SetPictureTileSize(_) |
             DebugCommand::SetMaximumSurfaceSize(_) => {
                 panic!("Should be handled by render backend");
@@ -2564,9 +2561,6 @@ impl Renderer {
                         }
                         BlendMode::SubpixelDualSource => {
                             self.device.set_blend_mode_subpixel_dual_source();
-                        }
-                        BlendMode::SubpixelConstantTextColor(color) => {
-                            self.device.set_blend_mode_subpixel_constant_text_color(color);
                         }
                         BlendMode::SubpixelWithBgColor => {
                             // Using the three pass "component alpha with font smoothing

@@ -708,7 +708,6 @@ impl AlphaBatchBuilder {
             BlendMode::Alpha |
             BlendMode::PremultipliedAlpha |
             BlendMode::PremultipliedDestOut |
-            BlendMode::SubpixelConstantTextColor(..) |
             BlendMode::SubpixelWithBgColor |
             BlendMode::SubpixelDualSource |
             BlendMode::Advanced(_) |
@@ -1103,15 +1102,11 @@ impl BatchBuilder {
                                         BlendMode::SubpixelWithBgColor,
                                         ShaderColorMode::FromRenderPassMode,
                                     )
-                                } else if ctx.use_dual_source_blending {
+                                } else {
+                                    debug_assert!(ctx.use_dual_source_blending);
                                     (
                                         BlendMode::SubpixelDualSource,
                                         ShaderColorMode::SubpixelDualSource,
-                                    )
-                                } else {
-                                    (
-                                        BlendMode::SubpixelConstantTextColor(run.used_font.color.into()),
-                                        ShaderColorMode::SubpixelConstantTextColor,
                                     )
                                 }
                             }
