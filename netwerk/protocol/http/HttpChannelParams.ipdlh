@@ -11,12 +11,14 @@ include NeckoChannelParams;
 include IPCStream;
 
 include "mozilla/dom/ReferrerInfoUtils.h";
+include "mozilla/ipc/TransportSecurityInfoUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
 
 using class mozilla::net::nsHttpHeaderArray from "nsHttpHeaderArray.h";
 using mozilla::net::NetAddr from "mozilla/net/DNS.h";
 using nsILoadInfo::CrossOriginOpenerPolicy from "nsILoadInfo.h";
 [RefCounted] using class nsIReferrerInfo from "nsIReferrerInfo.h";
+[RefCounted] using class nsITransportSecurityInfo from "nsITransportSecurityInfo.h";
 
 namespace mozilla {
 namespace net {
@@ -31,7 +33,7 @@ struct HttpChannelOnStartRequestArgs
   uint64_t cacheEntryId;
   uint32_t cacheFetchCount;
   uint32_t cacheExpirationTime;
-  nsCString securityInfoSerialization;
+  nsITransportSecurityInfo securityInfo;
   NetAddr selfAddr;
   NetAddr peerAddr;
   uint8_t redirectCount;
