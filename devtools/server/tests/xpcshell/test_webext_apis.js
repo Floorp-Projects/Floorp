@@ -62,6 +62,7 @@ add_task(async function test_webext_run_apis() {
     to: getRootResponse.addonsActor,
     type: "installTemporaryAddon",
     addonPath,
+    openDevTools: false,
   });
   await promiseStarted;
 

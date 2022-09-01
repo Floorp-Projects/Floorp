@@ -30,7 +30,7 @@ add_task(async function testSuccessfulInstall() {
     allowMissing,
     usePlatformSeparator
   );
-  const installedAddon = await addons.installTemporaryAddon(addonPath);
+  const installedAddon = await addons.installTemporaryAddon(addonPath, false);
   equal(installedAddon.id, "test-addons-actor@mozilla.org");
   // The returned object is currently not a proper actor.
   equal(installedAddon.actor, false);
@@ -47,7 +47,7 @@ add_task(async function testNonExistantPath() {
   const [client, addons] = await connect();
 
   await Assert.rejects(
-    addons.installTemporaryAddon("some-non-existant-path"),
+    addons.installTemporaryAddon("some-non-existant-path", false),
     /Could not install add-on.*Component returned failure/
   );
 

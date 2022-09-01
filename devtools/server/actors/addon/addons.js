@@ -17,7 +17,7 @@ const AddonsActor = protocol.ActorClassWithSpec(addonsSpec, {
     protocol.Actor.prototype.initialize.call(this, conn);
   },
 
-  async installTemporaryAddon(addonPath) {
+  async installTemporaryAddon(addonPath, openDevTools) {
     let addonFile;
     let addon;
     try {
@@ -28,6 +28,17 @@ const AddonsActor = protocol.ActorClassWithSpec(addonsSpec, {
     }
 
     Services.obs.notifyObservers(null, "devtools-installed-addon", addon.id);
+
+    // Try to open DevTools for the installed add-on.
+    // Note that it will only work on Firefox Desktop.
+    // On Android, we don't ship DevTools UI.
+    // about:debugging is only using this API when debugging its own firefox instance,
+    // so for now, there is no chance of calling this on Android.
+    if (openDevTools) {
+      // eslint-disable-next-line mozilla/reject-some-requires
+      const { gDevTools } = require("devtools/client/framework/devtools");
+      gDevTools.showToolboxForWebExtension(addon.id);
+    }
 
     // TODO: once the add-on actor has been refactored to use
     // protocol.js, we could return it directly.
