@@ -10,6 +10,8 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/quota/QuotaManager.h"
+#include "mozIStorageService.h"
+#include "mozStorageCID.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIQuotaCallbacks.h"
@@ -19,7 +21,10 @@ namespace mozilla::dom::fs::test {
 
 namespace {
 
-constexpr auto kTestOriginName = "http:://example.com"_ns;
+quota::OriginMetadata GetTestOriginMetadata() {
+  return quota::OriginMetadata{""_ns, "example.com"_ns, "http://example.com"_ns,
+                               quota::PERSISTENCE_TYPE_DEFAULT};
+}
 
 }  // namespace
 
@@ -46,6 +51,12 @@ class TestFileSystemDataManager : public ::testing::Test {
   };
 
   static void SetUpTestCase() {
+    // The first initialization of storage service must be done on the main
+    // thread.
+    nsCOMPtr<mozIStorageService> storageService =
+        do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
+    ASSERT_TRUE(storageService);
+
     nsIObserver* observer = quota::QuotaManager::GetObserver();
     ASSERT_TRUE(observer);
 
@@ -131,7 +142,7 @@ TEST_F(TestFileSystemDataManager, GetOrCreateFileSystemDataManager) {
     bool done = false;
 
     data::FileSystemDataManager::GetOrCreateFileSystemDataManager(
-        Origin(kTestOriginName))
+        GetTestOriginMetadata())
         ->Then(
             GetCurrentSerialEventTarget(), __func__,
             [](Registered<data::FileSystemDataManager> registeredDataManager) {
@@ -176,7 +187,7 @@ TEST_F(TestFileSystemDataManager,
       bool done1 = false;
 
       data::FileSystemDataManager::GetOrCreateFileSystemDataManager(
-          Origin(kTestOriginName))
+          GetTestOriginMetadata())
           ->Then(
               GetCurrentSerialEventTarget(), __func__,
               [&rdm1, &done1](Registered<data::FileSystemDataManager>
@@ -192,7 +203,7 @@ TEST_F(TestFileSystemDataManager,
       bool done2 = false;
 
       data::FileSystemDataManager::GetOrCreateFileSystemDataManager(
-          Origin(kTestOriginName))
+          GetTestOriginMetadata())
           ->Then(
               GetCurrentSerialEventTarget(), __func__,
               [&rdm2, &done2](Registered<data::FileSystemDataManager>
@@ -253,7 +264,7 @@ TEST_F(TestFileSystemDataManager,
       bool done = false;
 
       data::FileSystemDataManager::GetOrCreateFileSystemDataManager(
-          Origin(kTestOriginName))
+          GetTestOriginMetadata())
           ->Then(
               GetCurrentSerialEventTarget(), __func__,
               [&rdm, &done](Registered<data::FileSystemDataManager>
@@ -277,7 +288,7 @@ TEST_F(TestFileSystemDataManager,
       bool done = false;
 
       data::FileSystemDataManager::GetOrCreateFileSystemDataManager(
-          Origin(kTestOriginName))
+          GetTestOriginMetadata())
           ->Then(
               GetCurrentSerialEventTarget(), __func__,
               [](Registered<data::FileSystemDataManager>

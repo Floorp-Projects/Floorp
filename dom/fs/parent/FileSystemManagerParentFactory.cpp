@@ -12,6 +12,7 @@
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/QuotaManager.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsString.h"
@@ -27,12 +28,6 @@ LazyLogModule gOPFSLog("OPFS");
 
 namespace mozilla::dom {
 
-namespace fs::data {
-
-EntryId GetRootHandle(const Origin& aOrigin) { return "not implemented"_ns; }
-
-}  // namespace fs::data
-
 mozilla::ipc::IPCResult CreateFileSystemManagerParent(
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
     mozilla::ipc::Endpoint<PFileSystemManagerParent>&& aParentEndpoint,
@@ -46,18 +41,26 @@ mozilla::ipc::IPCResult CreateFileSystemManagerParent(
   QM_TRY(OkIf(aParentEndpoint.IsValid()), IPC_OK(),
          [aResolver](const auto&) { aResolver(NS_ERROR_INVALID_ARG); });
 
-  nsAutoCString origin =
-      quota::QuotaManager::GetOriginFromValidatedPrincipalInfo(aPrincipalInfo);
+  quota::OriginMetadata originMetadata(
+      quota::QuotaManager::GetInfoFromValidatedPrincipalInfo(aPrincipalInfo),
+      quota::PERSISTENCE_TYPE_DEFAULT);
+
+  LOG(("CreateFileSystemManagerParent, origin: %s",
+       originMetadata.mOrigin.get()));
 
   // This creates the file system data manager, which has to be done on
   // PBackground
-  fs::data::FileSystemDataManager::GetOrCreateFileSystemDataManager(origin)
+  fs::data::FileSystemDataManager::GetOrCreateFileSystemDataManager(
+      originMetadata)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [origin, parentEndpoint = std::move(aParentEndpoint),
+          [origin = originMetadata.mOrigin,
+           parentEndpoint = std::move(aParentEndpoint),
            aResolver](const fs::Registered<fs::data::FileSystemDataManager>&
                           dataManager) mutable {
-            fs::EntryId rootId = fs::data::GetRootHandle(origin);
+            QM_TRY_UNWRAP(
+                fs::EntryId rootId, fs::data::GetRootHandle(origin), QM_VOID,
+                [aResolver](const auto& aRv) { aResolver(aRv.NSResult()); });
 
             InvokeAsync(
                 dataManager->MutableIOTargetPtr(), __func__,

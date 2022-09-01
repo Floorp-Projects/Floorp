@@ -5,11 +5,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FileSystemManagerParent.h"
-#include "nsNetCID.h"
+
+#include "FileSystemDatabaseManager.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/dom/FileSystemDataManager.h"
 #include "mozilla/dom/FileSystemTypes.h"
+#include "mozilla/dom/QMResult.h"
 #include "mozilla/dom/quota/ForwardDecls.h"
-#include "mozilla/ipc/Endpoint.h"
+#include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
+#include "nsString.h"
+#include "nsTArray.h"
 
 using IPCResult = mozilla::ipc::IPCResult;
 
@@ -42,9 +48,23 @@ IPCResult FileSystemManagerParent::RecvGetRootHandleMsg(
 }
 
 IPCResult FileSystemManagerParent::RecvGetDirectoryHandleMsg(
-    FileSystemGetHandleRequest&& /* aRequest */,
+    FileSystemGetHandleRequest&& aRequest,
     GetDirectoryHandleMsgResolver&& aResolver) {
-  FileSystemGetHandleResponse response(NS_ERROR_NOT_IMPLEMENTED);
+  MOZ_ASSERT(!aRequest.handle().parentId().IsEmpty());
+  MOZ_ASSERT(mDataManager);
+
+  auto reportError = [&aResolver](const QMResult& aRv) {
+    FileSystemGetHandleResponse response(aRv.NSResult());
+    aResolver(response);
+  };
+
+  QM_TRY_UNWRAP(fs::EntryId entryId,
+                mDataManager->MutableDatabaseManagerPtr()->GetOrCreateDirectory(
+                    aRequest.handle(), aRequest.create()),
+                IPC_OK(), reportError);
+  MOZ_ASSERT(!entryId.IsEmpty());
+
+  FileSystemGetHandleResponse response(entryId);
   aResolver(response);
 
   return IPC_OK();
@@ -53,7 +73,21 @@ IPCResult FileSystemManagerParent::RecvGetDirectoryHandleMsg(
 IPCResult FileSystemManagerParent::RecvGetFileHandleMsg(
     FileSystemGetHandleRequest&& aRequest,
     GetFileHandleMsgResolver&& aResolver) {
-  FileSystemGetHandleResponse response(NS_ERROR_NOT_IMPLEMENTED);
+  MOZ_ASSERT(!aRequest.handle().parentId().IsEmpty());
+  MOZ_ASSERT(mDataManager);
+
+  auto reportError = [&aResolver](const QMResult& aRv) {
+    FileSystemGetHandleResponse response(aRv.NSResult());
+    aResolver(response);
+  };
+
+  QM_TRY_UNWRAP(fs::EntryId entryId,
+                mDataManager->MutableDatabaseManagerPtr()->GetOrCreateFile(
+                    aRequest.handle(), aRequest.create()),
+                IPC_OK(), reportError);
+  MOZ_ASSERT(!entryId.IsEmpty());
+
+  FileSystemGetHandleResponse response(entryId);
   aResolver(response);
 
   return IPC_OK();
@@ -69,7 +103,36 @@ IPCResult FileSystemManagerParent::RecvGetFileMsg(
 
 IPCResult FileSystemManagerParent::RecvResolveMsg(
     FileSystemResolveRequest&& aRequest, ResolveMsgResolver&& aResolver) {
-  FileSystemResolveResponse response(NS_ERROR_NOT_IMPLEMENTED);
+  MOZ_ASSERT(!aRequest.endpoints().parentId().IsEmpty());
+  MOZ_ASSERT(!aRequest.endpoints().childId().IsEmpty());
+  MOZ_ASSERT(mDataManager);
+
+  fs::Path filePath;
+  if (aRequest.endpoints().parentId() == aRequest.endpoints().childId()) {
+    FileSystemResolveResponse response(Some(FileSystemPath(filePath)));
+    aResolver(response);
+
+    return IPC_OK();
+  }
+
+  auto reportError = [&aResolver](const QMResult& aRv) {
+    FileSystemResolveResponse response(aRv.NSResult());
+    aResolver(response);
+  };
+
+  QM_TRY_UNWRAP(
+      filePath,
+      mDataManager->MutableDatabaseManagerPtr()->Resolve(aRequest.endpoints()),
+      IPC_OK(), reportError);
+
+  if (filePath.IsEmpty()) {
+    FileSystemResolveResponse response(Nothing{});
+    aResolver(response);
+
+    return IPC_OK();
+  }
+
+  FileSystemResolveResponse response(Some(FileSystemPath(filePath)));
   aResolver(response);
 
   return IPC_OK();
@@ -86,7 +149,39 @@ IPCResult FileSystemManagerParent::RecvGetEntriesMsg(
 IPCResult FileSystemManagerParent::RecvRemoveEntryMsg(
     FileSystemRemoveEntryRequest&& aRequest,
     RemoveEntryMsgResolver&& aResolver) {
-  FileSystemRemoveEntryResponse response(NS_ERROR_NOT_IMPLEMENTED);
+  MOZ_ASSERT(!aRequest.handle().parentId().IsEmpty());
+  MOZ_ASSERT(mDataManager);
+
+  auto reportError = [&aResolver](const QMResult& aRv) {
+    FileSystemRemoveEntryResponse response(aRv.NSResult());
+    aResolver(response);
+  };
+
+  QM_TRY_UNWRAP(
+      bool isDeleted,
+      mDataManager->MutableDatabaseManagerPtr()->RemoveFile(aRequest.handle()),
+      IPC_OK(), reportError);
+
+  if (isDeleted) {
+    FileSystemRemoveEntryResponse response(NS_OK);
+    aResolver(response);
+
+    return IPC_OK();
+  }
+
+  QM_TRY_UNWRAP(isDeleted,
+                mDataManager->MutableDatabaseManagerPtr()->RemoveDirectory(
+                    aRequest.handle(), aRequest.recursive()),
+                IPC_OK(), reportError);
+
+  if (!isDeleted) {
+    FileSystemRemoveEntryResponse response(NS_ERROR_UNEXPECTED);
+    aResolver(response);
+
+    return IPC_OK();
+  }
+
+  FileSystemRemoveEntryResponse response(NS_OK);
   aResolver(response);
 
   return IPC_OK();

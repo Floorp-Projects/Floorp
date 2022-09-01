@@ -14,14 +14,20 @@ class RefPtr;
 
 namespace mozilla::dom {
 
+class FileSystemHandle;
 class FileSystemManager;
 class Promise;
 
 namespace fs {
 
-class ArrayAppendable {};
 class FileSystemChildMetadata;
 class FileSystemEntryMetadata;
+class FileSystemEntryPair;
+
+class ArrayAppendable {
+ public:
+  void append(const nsTArray<RefPtr<FileSystemHandle>>& /* aBatch */) {}
+};
 
 class FileSystemRequestHandler {
  public:
@@ -47,6 +53,10 @@ class FileSystemRequestHandler {
   virtual void RemoveEntry(RefPtr<FileSystemManager>& aManager,
                            const FileSystemChildMetadata& aEntry,
                            bool aRecursive, RefPtr<Promise> aPromise);
+
+  virtual void Resolve(RefPtr<FileSystemManager>& aManager,
+                       const FileSystemEntryPair& aEndpoints,
+                       RefPtr<Promise> aPromise);
 
   virtual ~FileSystemRequestHandler() = default;
 };  // class FileSystemRequestHandler

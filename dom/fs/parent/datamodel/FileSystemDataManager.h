@@ -12,6 +12,7 @@
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/FileSystemHelpers.h"
 #include "mozilla/dom/quota/CheckedUnsafePtr.h"
+#include "mozilla/dom/quota/CommonMetadata.h"
 #include "mozilla/dom/quota/ForwardDecls.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsUtils.h"
@@ -27,20 +28,31 @@ namespace dom {
 
 class FileSystemManagerParent;
 
+namespace fs {
+class FileSystemChildMetadata;
+}  // namespace fs
+
 namespace fs::data {
+
+class FileSystemDatabaseManager;
+
+Result<EntryId, QMResult> GetRootHandle(const Origin& origin);
+
+Result<EntryId, QMResult> GetEntryHandle(
+    const FileSystemChildMetadata& aHandle);
 
 class FileSystemDataManager
     : public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
  public:
   enum struct State : uint8_t { Initial = 0, Opening, Open, Closing, Closed };
 
-  FileSystemDataManager(const Origin& aOrigin,
+  FileSystemDataManager(const quota::OriginMetadata& aOriginMetadata,
                         MovingNotNull<RefPtr<TaskQueue>> aIOTaskQueue);
 
   using CreatePromise = MozPromise<Registered<FileSystemDataManager>, nsresult,
                                    /* IsExclusive */ true>;
   static RefPtr<CreatePromise> GetOrCreateFileSystemDataManager(
-      const Origin& aOrigin);
+      const quota::OriginMetadata& aOriginMetadata);
 
   static void InitiateShutdown();
 
@@ -54,6 +66,12 @@ class FileSystemDataManager
 
   nsISerialEventTarget* MutableIOTargetPtr() const {
     return mIOTaskQueue.get();
+  }
+
+  FileSystemDatabaseManager* MutableDatabaseManagerPtr() const {
+    MOZ_ASSERT(mDatabaseManager);
+
+    return mDatabaseManager.get();
   }
 
   void Register();
@@ -86,9 +104,10 @@ class FileSystemDataManager
   RefPtr<BoolPromise> BeginClose();
 
   nsTHashSet<FileSystemManagerParent*> mActors;
-  const Origin mOrigin;
+  const quota::OriginMetadata mOriginMetadata;
   const NotNull<nsCOMPtr<nsISerialEventTarget>> mBackgroundTarget;
   const NotNull<RefPtr<TaskQueue>> mIOTaskQueue;
+  UniquePtr<FileSystemDatabaseManager> mDatabaseManager;
   MozPromiseHolder<BoolPromise> mOpenPromiseHolder;
   MozPromiseHolder<BoolPromise> mClosePromiseHolder;
   uint32_t mRegCount;
