@@ -1131,7 +1131,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   args.altDataLength() = chan->GetAltDataLength();
   args.deliveringAltData() = chan->IsDeliveringAltData();
 
-  UpdateAndSerializeSecurityInfo(args.securityInfoSerialization());
+  args.securityInfo() = SecurityInfo();
 
   chan->GetRedirectCount(&args.redirectCount());
   chan->GetHasHTTPSRR(&args.hasHTTPSRR());
@@ -1709,8 +1709,7 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
   uint32_t newLoadFlags = nsIRequest::LOAD_NORMAL;
   MOZ_ALWAYS_SUCCEEDS(newChannel->GetLoadFlags(&newLoadFlags));
 
-  nsCString secInfoSerialization;
-  UpdateAndSerializeSecurityInfo(secInfoSerialization);
+  nsCOMPtr<nsITransportSecurityInfo> securityInfo(SecurityInfo());
 
   // If the channel is a HTTP channel, we also want to inform the child
   // about the parent's channelId attribute, so that both parent and child
@@ -1745,7 +1744,7 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
   if (!mIPCClosed) {
     result = SendRedirect1Begin(
         mRedirectChannelId, newOriginalURI, newLoadFlags, redirectFlags,
-        loadInfoForwarderArg, *responseHead, secInfoSerialization, channelId,
+        loadInfoForwarderArg, *responseHead, securityInfo, channelId,
         mChannel->GetPeerAddr(), GetTimingAttributes(mChannel));
   }
   if (!result) {
@@ -1798,16 +1797,15 @@ nsresult HttpChannelParent::OpenAlternativeOutputStream(
   return rv;
 }
 
-void HttpChannelParent::UpdateAndSerializeSecurityInfo(
-    nsACString& aSerializedSecurityInfoOut) {
+already_AddRefed<nsITransportSecurityInfo> HttpChannelParent::SecurityInfo() {
   nsCOMPtr<nsISupports> secInfoSupp;
   mChannel->GetSecurityInfo(getter_AddRefs(secInfoSupp));
-  if (secInfoSupp) {
-    nsCOMPtr<nsISerializable> secInfoSer = do_QueryInterface(secInfoSupp);
-    if (secInfoSer) {
-      NS_SerializeToString(secInfoSer, aSerializedSecurityInfoOut);
-    }
+  if (!secInfoSupp) {
+    return nullptr;
   }
+  nsCOMPtr<nsITransportSecurityInfo> securityInfo(
+      do_QueryInterface(secInfoSupp));
+  return securityInfo.forget();
 }
 
 bool HttpChannelParent::DoSendDeleteSelf() {

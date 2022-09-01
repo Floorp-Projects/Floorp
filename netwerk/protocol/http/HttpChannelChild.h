@@ -35,9 +35,10 @@
 using mozilla::Telemetry::LABELS_HTTP_CHILD_OMT_STATS;
 
 class nsIEventTarget;
-class nsInputStreamPump;
-class nsISerialEventTarget;
 class nsIInterceptedBodyCallback;
+class nsISerialEventTarget;
+class nsITransportSecurityInfo;
+class nsInputStreamPump;
 
 #define HTTP_CHANNEL_CHILD_IID                       \
   {                                                  \
@@ -128,7 +129,7 @@ class HttpChannelChild final : public PHttpChannelChild,
       const uint32_t& newLoadFlags, const uint32_t& redirectFlags,
       const ParentLoadInfoForwarderArgs& loadInfoForwarder,
       const nsHttpResponseHead& responseHead,
-      const nsACString& securityInfoSerialization, const uint64_t& channelId,
+      nsITransportSecurityInfo* securityInfo, const uint64_t& channelId,
       const NetAddr& oldPeerAddr,
       const ResourceTimingStructArgs& aTiming) override;
   mozilla::ipc::IPCResult RecvRedirect3Complete() override;
@@ -402,7 +403,7 @@ class HttpChannelChild final : public PHttpChannelChild,
                       const uint32_t& redirectFlags,
                       const ParentLoadInfoForwarderArgs& loadInfoForwarder,
                       const nsHttpResponseHead& responseHead,
-                      const nsACString& securityInfoSerialization,
+                      nsITransportSecurityInfo* securityInfo,
                       const uint64_t& channelId,
                       const ResourceTimingStructArgs& timing);
   void Redirect3Complete();

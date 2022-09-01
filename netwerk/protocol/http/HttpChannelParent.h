@@ -204,7 +204,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   virtual mozilla::ipc::IPCResult RecvDeletingChannel() override;
 
  private:
-  void UpdateAndSerializeSecurityInfo(nsACString& aSerializedSecurityInfoOut);
+  already_AddRefed<nsITransportSecurityInfo> SecurityInfo();
 
   // final step for Redirect2Verify procedure, will be invoked while both
   // redirecting and redirected channel are ready or any error happened.

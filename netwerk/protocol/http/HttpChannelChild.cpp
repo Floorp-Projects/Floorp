@@ -413,12 +413,7 @@ void HttpChannelChild::OnStartRequest(
     mResponseHead = MakeUnique<nsHttpResponseHead>(aResponseHead);
   }
 
-  if (!aArgs.securityInfoSerialization().IsEmpty()) {
-    [[maybe_unused]] nsresult rv = NS_DeserializeObject(
-        aArgs.securityInfoSerialization(), getter_AddRefs(mSecurityInfo));
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
-                          "Deserializing security info should not fail");
-  }
+  mSecurityInfo = aArgs.securityInfo();
 
   ipc::MergeParentLoadInfoForwarder(aArgs.loadInfoForwarder(), mLoadInfo);
 
@@ -1278,7 +1273,7 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvRedirect1Begin(
     const uint32_t& aNewLoadFlags, const uint32_t& aRedirectFlags,
     const ParentLoadInfoForwarderArgs& aLoadInfoForwarder,
     const nsHttpResponseHead& aResponseHead,
-    const nsACString& aSecurityInfoSerialization, const uint64_t& aChannelId,
+    nsITransportSecurityInfo* aSecurityInfo, const uint64_t& aChannelId,
     const NetAddr& aOldPeerAddr, const ResourceTimingStructArgs& aTiming) {
   // TODO: handle security info
   LOG(("HttpChannelChild::RecvRedirect1Begin [this=%p]\n", this));
@@ -1293,11 +1288,10 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvRedirect1Begin(
       this, [self = UnsafePtr<HttpChannelChild>(this), aRegistrarId,
              newUri = RefPtr{aNewUri}, aNewLoadFlags, aRedirectFlags,
              aLoadInfoForwarder, aResponseHead,
-             aSecurityInfoSerialization = nsCString(aSecurityInfoSerialization),
-             aChannelId, aTiming]() {
+             aSecurityInfo = nsCOMPtr{aSecurityInfo}, aChannelId, aTiming]() {
         self->Redirect1Begin(aRegistrarId, newUri, aNewLoadFlags,
                              aRedirectFlags, aLoadInfoForwarder, aResponseHead,
-                             aSecurityInfoSerialization, aChannelId, aTiming);
+                             aSecurityInfo, aChannelId, aTiming);
       }));
   return IPC_OK();
 }
@@ -1347,7 +1341,7 @@ void HttpChannelChild::Redirect1Begin(
     const uint32_t& newLoadFlags, const uint32_t& redirectFlags,
     const ParentLoadInfoForwarderArgs& loadInfoForwarder,
     const nsHttpResponseHead& responseHead,
-    const nsACString& securityInfoSerialization, const uint64_t& channelId,
+    nsITransportSecurityInfo* securityInfo, const uint64_t& channelId,
     const ResourceTimingStructArgs& timing) {
   nsresult rv;
 
@@ -1374,12 +1368,7 @@ void HttpChannelChild::Redirect1Begin(
         redirectFlags, channelId);
   }
 
-  if (!securityInfoSerialization.IsEmpty()) {
-    rv = NS_DeserializeObject(securityInfoSerialization,
-                              getter_AddRefs(mSecurityInfo));
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
-                          "Deserializing security info should not fail");
-  }
+  mSecurityInfo = securityInfo;
 
   nsCOMPtr<nsIChannel> newChannel;
   rv = SetupRedirect(newOriginalURI, &responseHead, redirectFlags,

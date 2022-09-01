@@ -94,7 +94,7 @@ child:
                        uint32_t           redirectFlags,
                        ParentLoadInfoForwarderArgs loadInfoForwarder,
                        nsHttpResponseHead responseHead,
-                       nsCString          securityInfoSerialization,
+                       nsITransportSecurityInfo securityInfo,
                        uint64_t           channelId,
                        NetAddr            oldPeerAddr,
                        ResourceTimingStructArgs timing);
