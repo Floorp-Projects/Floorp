@@ -274,7 +274,7 @@ Example:
 
 .. code-block:: javascript
 
-  let regs = getLanguageDisplayNames(["pl"], ["US", "CA", "MX"]);
+  let regs = getRegionDisplayNames(["pl"], ["US", "CA", "MX"]);
   regs === ["Stany Zjednoczone", "Kanada", "Meksyk"];
 
 mozIntl.getLocaleDisplayNames(locales, localeCodes)
@@ -286,7 +286,7 @@ Example:
 
 .. code-block:: javascript
 
-  let locs = getLanguageDisplayNames(["pl"], ["sr-RU", "es-MX", "fr-CA"]);
+  let locs = getLocaleDisplayNames(["pl"], ["sr-RU", "es-MX", "fr-CA"]);
   locs === ["Serbski (Rosja)", "Hiszpański (Meksyk)", "Francuski (Kanada)"];
 
 mozIntl.getAvailableLocaleDisplayNames(type)
