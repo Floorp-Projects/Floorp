@@ -528,38 +528,34 @@ add_task(async function test_countryAndStateFieldLabels() {
         continue;
       }
 
-      // Clear L10N attributes and textContent to not leave leftovers between country tests
+      // Clear L10N textContent to not leave leftovers between country tests
       for (let labelEl of mutableLabels) {
+        doc.l10n.setAttributes(labelEl, "");
         labelEl.textContent = "";
-        delete labelEl.dataset.localization;
       }
 
       info(`Selecting '${countryOption.label}' (${countryOption.value})`);
       EventUtils.synthesizeKey(countryOption.label, {}, win);
 
+      let l10nResolve;
+      let l10nReady = new Promise(resolve => {
+        l10nResolve = resolve;
+      });
+      let verifyL10n = () => {
+        if (mutableLabels.every(labelEl => labelEl.textContent)) {
+          win.removeEventListener("MozAfterPaint", verifyL10n);
+          l10nResolve();
+        }
+      };
+      win.addEventListener("MozAfterPaint", verifyL10n);
+      await l10nReady;
+
       // Check that the labels were filled
       for (let labelEl of mutableLabels) {
-        if (!labelEl.textContent) {
-          // This test used to rely on the implied initial timer of
-          // TestUtils.waitForCondition. See bug 1700685.
-          // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-          await new Promise(resolve => setTimeout(resolve, 10));
-
-          await TestUtils.waitForCondition(
-            () => labelEl.textContent,
-            "Wait for label to be populated by the mutation observer",
-            10
-          );
-        }
         isnot(
           labelEl.textContent,
           "",
           "Ensure textContent is non-empty for: " + countryOption.value
-        );
-        is(
-          labelEl.dataset.localization,
-          undefined,
-          "Ensure data-localization was removed: " + countryOption.value
         );
       }
 
