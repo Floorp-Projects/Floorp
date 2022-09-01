@@ -525,6 +525,12 @@ void MFMediaEngineParent::EnsureDcompSurfaceHandle() {
 
 void MFMediaEngineParent::UpdateStatisticsData() {
   AssertOnManagerThread();
+
+  // Statistic data is only for video.
+  if (!mMediaEngine->HasVideo()) {
+    return;
+  }
+
   ComPtr<IMFMediaEngineEx> mediaEngineEx;
   RETURN_VOID_IF_FAILED(mMediaEngine.As(&mediaEngineEx));
 
