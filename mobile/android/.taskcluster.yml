@@ -207,21 +207,20 @@ tasks:
                                             - index.mobile.v2.${project}.branch.${head_ref}.revision.${head_sha}.taskgraph.decision-${cron.job_name}
                                             - index.mobile.v2.${project}.branch.${head_ref}.revision.${head_sha}.taskgraph.cron.${ownTaskId}
                         scopes:
-                            # `https://` is 8 characters so, ${repoUrl[8:]} is the repository without the protocol.
                             $if: 'tasks_for == "github-push"'
                             then:
                                 - 'assume:repo:github.com/${repoFullName}:branch:${short_head_ref}'
                             else:
                                 $if: 'tasks_for == "github-pull-request"'
                                 then:
-                                    - 'assume:repo:github.com/${event.pull_request.base.repo.full_name}:pull-request'
+                                    - 'assume:repo:github.com/${repoFullName}:pull-request'
                                 else:
                                     $if: 'tasks_for == "action"'
                                     then:
                                         # when all actions are hooks, we can calculate this directly rather than using a variable
                                         - '${action.repo_scope}'
                                     else:
-                                        - 'assume:repo:${repoUrl[8:]}:cron:${cron.job_name}'
+                                        - 'assume:repo:github.com/${repoFullName}:cron:${cron.job_name}'
 
                         requires: all-completed
                         priority: lowest
