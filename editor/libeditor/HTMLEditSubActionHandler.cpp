@@ -6321,8 +6321,8 @@ CreateElementResult HTMLEditor::AlignNodesAndDescendants(
           // MOZ_KnownLive(*styledListOrListItemElement): An element of
           // aArrayOfContents which is array of OwningNonNull.
           Result<int32_t, nsresult> result =
-              mCSSEditUtils->SetCSSEquivalentToHTMLStyleWithTransaction(
-                  MOZ_KnownLive(*styledListOrListItemElement), nullptr,
+              CSSEditUtils::SetCSSEquivalentToHTMLStyleWithTransaction(
+                  *this, MOZ_KnownLive(*styledListOrListItemElement), nullptr,
                   nsGkAtoms::align, &aAlignType);
           if (result.isErr()) {
             if (result.inspectErr() == NS_ERROR_EDITOR_DESTROYED) {
@@ -8680,8 +8680,9 @@ nsresult HTMLEditor::GetInlineStyles(
           aContent, *tag, attribute, nullptr, &value);
     } else {
       Result<bool, nsresult> isComputedCSSEquivalentToHTMLInlineStyleOrError =
-          mCSSEditUtils->IsComputedCSSEquivalentToHTMLInlineStyleSet(
-              aContent, MOZ_KnownLive(tag), MOZ_KnownLive(attribute), value);
+          CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet(
+              *this, aContent, MOZ_KnownLive(tag), MOZ_KnownLive(attribute),
+              value);
       if (isComputedCSSEquivalentToHTMLInlineStyleOrError.isErr()) {
         NS_WARNING(
             "CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet failed");
@@ -8743,8 +8744,8 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
       // MOZ_KnownLive(styleCacheBeforeEdit.*) because they are nsStaticAtom
       // and its instances are alive until shutting down.
       Result<bool, nsresult> isComputedCSSEquivalentToHTMLInlineStyleOrError =
-          mCSSEditUtils->IsComputedCSSEquivalentToHTMLInlineStyleSet(
-              *startContainerContent,
+          CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet(
+              *this, *startContainerContent,
               MOZ_KnownLive(&styleCacheBeforeEdit.TagRef()),
               MOZ_KnownLive(styleCacheBeforeEdit.GetAttribute()), currentValue);
       if (isComputedCSSEquivalentToHTMLInlineStyleOrError.isErr()) {
@@ -9816,9 +9817,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::RemoveAlignFromDescendants(
         // which is OwningNonNull.
         nsAutoString dummyCssValue;
         Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
-            mCSSEditUtils->RemoveCSSInlineStyleWithTransaction(
-                MOZ_KnownLive(*styledBlockOrHRElement), nsGkAtoms::textAlign,
-                dummyCssValue);
+            CSSEditUtils::RemoveCSSInlineStyleWithTransaction(
+                *this, MOZ_KnownLive(*styledBlockOrHRElement),
+                nsGkAtoms::textAlign, dummyCssValue);
         if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
           NS_WARNING(
               "CSSEditUtils::RemoveCSSInlineStyleWithTransaction(nsGkAtoms::"
@@ -10005,8 +10006,8 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ChangeMarginStart(
       // MOZ_KnownLive(*styledElement): It's aElement and its lifetime must
       // be guaranteed by caller because of MOZ_CAN_RUN_SCRIPT method.
       // MOZ_KnownLive(merginProperty): It's nsStaticAtom.
-      nsresult rv = mCSSEditUtils->SetCSSPropertyWithTransaction(
-          MOZ_KnownLive(*styledElement), MOZ_KnownLive(marginProperty),
+      nsresult rv = CSSEditUtils::SetCSSPropertyWithTransaction(
+          *this, MOZ_KnownLive(*styledElement), MOZ_KnownLive(marginProperty),
           newValue);
       if (rv == NS_ERROR_EDITOR_DESTROYED) {
         NS_WARNING(
@@ -10025,8 +10026,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ChangeMarginStart(
     // MOZ_KnownLive(*styledElement): It's aElement and its lifetime must
     // be guaranteed by caller because of MOZ_CAN_RUN_SCRIPT method.
     // MOZ_KnownLive(merginProperty): It's nsStaticAtom.
-    nsresult rv = mCSSEditUtils->RemoveCSSPropertyWithTransaction(
-        MOZ_KnownLive(*styledElement), MOZ_KnownLive(marginProperty), value);
+    nsresult rv = CSSEditUtils::RemoveCSSPropertyWithTransaction(
+        *this, MOZ_KnownLive(*styledElement), MOZ_KnownLive(marginProperty),
+        value);
     if (rv == NS_ERROR_EDITOR_DESTROYED) {
       NS_WARNING(
           "CSSEditUtils::RemoveCSSPropertyWithTransaction() destroyed the "

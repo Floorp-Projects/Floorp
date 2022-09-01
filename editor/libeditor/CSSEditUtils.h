@@ -33,9 +33,10 @@ typedef void (*nsProcessValueFunc)(const nsAString* aInputString,
                                    const char* aAppendString);
 
 class CSSEditUtils final {
- public:
-  explicit CSSEditUtils(HTMLEditor* aEditor);
+  // To prevent the class being instantiated
+  CSSEditUtils() = delete;
 
+ public:
   enum nsCSSEditableProperty {
     eCSSEditableProperty_NONE = 0,
     eCSSEditableProperty_background_color,
@@ -88,27 +89,34 @@ class CSSEditUtils final {
    * Adds/remove a CSS declaration to the STYLE attribute carried by a given
    * element.
    *
+   * @param aHTMLEditor    [IN] An HTMLEditor instance
    * @param aStyledElement [IN] A DOM styled element.
    * @param aProperty      [IN] An atom containing the CSS property to set.
    * @param aValue         [IN] A string containing the value of the CSS
    *                            property.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  SetCSSPropertyWithTransaction(nsStyledElement& aStyledElement,
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
+  SetCSSPropertyWithTransaction(HTMLEditor& aHTMLEditor,
+                                nsStyledElement& aStyledElement,
                                 nsAtom& aProperty, const nsAString& aValue) {
-    return SetCSSPropertyInternal(aStyledElement, aProperty, aValue, false);
+    return SetCSSPropertyInternal(aHTMLEditor, aStyledElement, aProperty,
+                                  aValue, false);
   }
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SetCSSPropertyPixelsWithTransaction(
-      nsStyledElement& aStyledElement, nsAtom& aProperty, int32_t aIntValue);
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
+  SetCSSPropertyPixelsWithTransaction(HTMLEditor& aHTMLEditor,
+                                      nsStyledElement& aStyledElement,
+                                      nsAtom& aProperty, int32_t aIntValue);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
   SetCSSPropertyPixelsWithoutTransaction(nsStyledElement& aStyledElement,
                                          const nsAtom& aProperty,
                                          int32_t aIntValue);
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RemoveCSSPropertyWithTransaction(
-      nsStyledElement& aStyledElement, nsAtom& aProperty,
-      const nsAString& aPropertyValue) {
-    return RemoveCSSPropertyInternal(aStyledElement, aProperty, aPropertyValue,
-                                     false);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
+  RemoveCSSPropertyWithTransaction(HTMLEditor& aHTMLEditor,
+                                   nsStyledElement& aStyledElement,
+                                   nsAtom& aProperty,
+                                   const nsAString& aPropertyValue) {
+    return RemoveCSSPropertyInternal(aHTMLEditor, aStyledElement, aProperty,
+                                     aPropertyValue, false);
   }
 
   /**
@@ -129,6 +137,7 @@ class CSSEditUtils final {
    * Removes a CSS property from the specified declarations in STYLE attribute
    * and removes the node if it is an useless span.
    *
+   * @param aHTMLEditor    [IN] An HTMLEditor instance
    * @param aStyledElement  [IN] The styled element we want to remove a style
    *                             from.
    * @param aProperty       [IN] The CSS property atom to remove.
@@ -136,8 +145,9 @@ class CSSEditUtils final {
    *                             if the property accepts more than one value.
    * @return                A candidate point to put caret.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
-  RemoveCSSInlineStyleWithTransaction(nsStyledElement& aStyledElement,
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<EditorDOMPoint, nsresult>
+  RemoveCSSInlineStyleWithTransaction(HTMLEditor& aHTMLEditor,
+                                      nsStyledElement& aStyledElement,
                                       nsAtom* aProperty,
                                       const nsAString& aPropertyValue);
 
@@ -192,6 +202,7 @@ class CSSEditUtils final {
    * Does the node aNode (or his parent if it is not an element node) carries
    * the CSS equivalent styles to the HTML style for this node ?
    *
+   * @param aHTMLEditor    [IN] An HTMLEditor instance
    * @param aContent       [IN] A DOM node.
    * @param aHTMLProperty  [IN] An atom containing an HTML property.
    * @param aAttribute     [IN] A pointer/atom to an attribute name or nullptr
@@ -201,23 +212,27 @@ class CSSEditUtils final {
    * @return               A boolean being true if the css properties are
    *                       not same as initial value.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<bool, nsresult>
-  IsComputedCSSEquivalentToHTMLInlineStyleSet(nsIContent& aContent,
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<bool, nsresult>
+  IsComputedCSSEquivalentToHTMLInlineStyleSet(const HTMLEditor& aHTMLEditor,
+                                              nsIContent& aContent,
                                               nsAtom* aHTMLProperty,
                                               nsAtom* aAttribute,
                                               nsAString& aValue) {
     MOZ_ASSERT(aHTMLProperty || aAttribute);
     return IsCSSEquivalentToHTMLInlineStyleSetInternal(
-        aContent, aHTMLProperty, aAttribute, aValue, StyleType::Computed);
+        aHTMLEditor, aContent, aHTMLProperty, aAttribute, aValue,
+        StyleType::Computed);
   }
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT_BOUNDARY Result<bool, nsresult>
-  IsSpecifiedCSSEquivalentToHTMLInlineStyleSet(nsIContent& aContent,
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT_BOUNDARY static Result<bool, nsresult>
+  IsSpecifiedCSSEquivalentToHTMLInlineStyleSet(const HTMLEditor& aHTMLEditor,
+                                               nsIContent& aContent,
                                                nsAtom* aHTMLProperty,
                                                nsAtom* aAttribute,
                                                nsAString& aValue) {
     MOZ_ASSERT(aHTMLProperty || aAttribute);
     return IsCSSEquivalentToHTMLInlineStyleSetInternal(
-        aContent, aHTMLProperty, aAttribute, aValue, StyleType::Specified);
+        aHTMLEditor, aContent, aHTMLProperty, aAttribute, aValue,
+        StyleType::Specified);
   }
 
   /**
@@ -229,6 +244,7 @@ class CSSEditUtils final {
    *  - Is(Computed|Specified)CSSEquivalentToHTMLInlineStyleSet returns false.
    *  - Have(Computed|Specified)CSSEquivalentStyles returns true.
    *
+   * @param aHTMLEditor    [IN] An HTMLEditor instance
    * @param aContent       [IN] A DOM node.
    * @param aHTMLProperty  [IN] An atom containing an HTML property.
    * @param aAttribute     [IN] An atom to an attribute name or nullptr
@@ -236,25 +252,28 @@ class CSSEditUtils final {
    * @return               A boolean being true if the css properties are
    *                       not set.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<bool, nsresult>
-  HaveComputedCSSEquivalentStyles(nsIContent& aContent, nsAtom* aHTMLProperty,
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<bool, nsresult>
+  HaveComputedCSSEquivalentStyles(const HTMLEditor& aHTMLEditor,
+                                  nsIContent& aContent, nsAtom* aHTMLProperty,
                                   nsAtom* aAttribute) {
     MOZ_ASSERT(aHTMLProperty || aAttribute);
-    return HaveCSSEquivalentStylesInternal(aContent, aHTMLProperty, aAttribute,
-                                           StyleType::Computed);
+    return HaveCSSEquivalentStylesInternal(aHTMLEditor, aContent, aHTMLProperty,
+                                           aAttribute, StyleType::Computed);
   }
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT_BOUNDARY Result<bool, nsresult>
-  HaveSpecifiedCSSEquivalentStyles(nsIContent& aContent, nsAtom* aHTMLProperty,
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT_BOUNDARY static Result<bool, nsresult>
+  HaveSpecifiedCSSEquivalentStyles(const HTMLEditor& aHTMLEditor,
+                                   nsIContent& aContent, nsAtom* aHTMLProperty,
                                    nsAtom* aAttribute) {
     MOZ_ASSERT(aHTMLProperty || aAttribute);
-    return HaveCSSEquivalentStylesInternal(aContent, aHTMLProperty, aAttribute,
-                                           StyleType::Specified);
+    return HaveCSSEquivalentStylesInternal(aHTMLEditor, aContent, aHTMLProperty,
+                                           aAttribute, StyleType::Specified);
   }
 
   /**
    * Adds to the node the CSS inline styles equivalent to the HTML style
    * and return the number of CSS properties set by the call.
    *
+   * @param aHTMLEditor    [IN} An HTMLEditor instance
    * @param aNode          [IN] A DOM node.
    * @param aHTMLProperty  [IN] An atom containing an HTML property.
    * @param aAttribute     [IN] An atom to an attribute name or nullptr
@@ -263,46 +282,50 @@ class CSSEditUtils final {
    *
    * @return               The number of CSS properties set by the call.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<int32_t, nsresult>
-  SetCSSEquivalentToHTMLStyleWithTransaction(nsStyledElement& aStyledElement,
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<int32_t, nsresult>
+  SetCSSEquivalentToHTMLStyleWithTransaction(HTMLEditor& aHTMLEditor,
+                                             nsStyledElement& aStyledElement,
                                              nsAtom* aProperty,
                                              nsAtom* aAttribute,
                                              const nsAString* aValue) {
-    return SetCSSEquivalentToHTMLStyleInternal(aStyledElement, aProperty,
-                                               aAttribute, aValue, false);
+    return SetCSSEquivalentToHTMLStyleInternal(
+        aHTMLEditor, aStyledElement, aProperty, aAttribute, aValue, false);
   }
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<int32_t, nsresult>
-  SetCSSEquivalentToHTMLStyleWithoutTransaction(nsStyledElement& aStyledElement,
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<int32_t, nsresult>
+  SetCSSEquivalentToHTMLStyleWithoutTransaction(HTMLEditor& aHTMLEditor,
+                                                nsStyledElement& aStyledElement,
                                                 nsAtom* aProperty,
                                                 nsAtom* aAttribute,
                                                 const nsAString* aValue) {
-    return SetCSSEquivalentToHTMLStyleInternal(aStyledElement, aProperty,
-                                               aAttribute, aValue, true);
+    return SetCSSEquivalentToHTMLStyleInternal(
+        aHTMLEditor, aStyledElement, aProperty, aAttribute, aValue, true);
   }
 
   /**
    * Removes from the node the CSS inline styles equivalent to the HTML style.
    *
+   * @param aHTMLEditor    [IN} An HTMLEditor instance
    * @param aStyledElement [IN] A DOM Element (must not be null).
    * @param aHTMLProperty  [IN] An atom containing an HTML property.
    * @param aAttribute     [IN] An atom to an attribute name or nullptr if
    *                            irrelevant.
    * @param aValue         [IN] The attribute value.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  RemoveCSSEquivalentToHTMLStyleWithTransaction(nsStyledElement& aStyledElement,
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
+  RemoveCSSEquivalentToHTMLStyleWithTransaction(HTMLEditor& aHTMLEditor,
+                                                nsStyledElement& aStyledElement,
                                                 nsAtom* aHTMLProperty,
                                                 nsAtom* aAttribute,
                                                 const nsAString* aValue) {
-    return RemoveCSSEquivalentToHTMLStyleInternal(aStyledElement, aHTMLProperty,
-                                                  aAttribute, aValue, false);
+    return RemoveCSSEquivalentToHTMLStyleInternal(
+        aHTMLEditor, aStyledElement, aHTMLProperty, aAttribute, aValue, false);
   }
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
   RemoveCSSEquivalentToHTMLStyleWithoutTransaction(
-      nsStyledElement& aStyledElement, nsAtom* aHTMLProperty,
-      nsAtom* aAttribute, const nsAString* aValue) {
-    return RemoveCSSEquivalentToHTMLStyleInternal(aStyledElement, aHTMLProperty,
-                                                  aAttribute, aValue, true);
+      HTMLEditor& aHTMLEditor, nsStyledElement& aStyledElement,
+      nsAtom* aHTMLProperty, nsAtom* aAttribute, const nsAString* aValue) {
+    return RemoveCSSEquivalentToHTMLStyleInternal(
+        aHTMLEditor, aStyledElement, aHTMLProperty, aAttribute, aValue, true);
   }
 
   /**
@@ -413,36 +436,38 @@ class CSSEditUtils final {
                                                nsAtom* aAttribute,
                                                nsAString& aValue,
                                                StyleType aStyleType);
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<bool, nsresult>
-  IsCSSEquivalentToHTMLInlineStyleSetInternal(nsIContent& aContent,
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<bool, nsresult>
+  IsCSSEquivalentToHTMLInlineStyleSetInternal(const HTMLEditor& aHTMLEditor,
+                                              nsIContent& aContent,
                                               nsAtom* aHTMLProperty,
                                               nsAtom* aAttribute,
                                               nsAString& aValue,
                                               StyleType aStyleType);
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<bool, nsresult>
-  HaveCSSEquivalentStylesInternal(nsIContent& aContent, nsAtom* aHTMLProperty,
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<bool, nsresult>
+  HaveCSSEquivalentStylesInternal(const HTMLEditor& aHTMLEditor,
+                                  nsIContent& aContent, nsAtom* aHTMLProperty,
                                   nsAtom* aAttribute, StyleType aStyleType);
 
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult RemoveCSSPropertyInternal(
-      nsStyledElement& aStyledElement, nsAtom& aProperty,
-      const nsAString& aPropertyValue, bool aSuppressTxn = false);
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  RemoveCSSEquivalentToHTMLStyleInternal(nsStyledElement& aStyledElement,
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult RemoveCSSPropertyInternal(
+      HTMLEditor& aHTMLEditor, nsStyledElement& aStyledElement,
+      nsAtom& aProperty, const nsAString& aPropertyValue,
+      bool aSuppressTxn = false);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
+  RemoveCSSEquivalentToHTMLStyleInternal(HTMLEditor& aHTMLEditor,
+                                         nsStyledElement& aStyledElement,
                                          nsAtom* aHTMLProperty,
                                          nsAtom* aAttribute,
                                          const nsAString* aValue,
                                          bool aSuppressTransaction);
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  SetCSSPropertyInternal(nsStyledElement& aStyledElement, nsAtom& aProperty,
-                         const nsAString& aValue, bool aSuppressTxn = false);
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<int32_t, nsresult>
-  SetCSSEquivalentToHTMLStyleInternal(nsStyledElement& aStyledElement,
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult SetCSSPropertyInternal(
+      HTMLEditor& aHTMLEditor, nsStyledElement& aStyledElement,
+      nsAtom& aProperty, const nsAString& aValue, bool aSuppressTxn = false);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<int32_t, nsresult>
+  SetCSSEquivalentToHTMLStyleInternal(HTMLEditor& aHTMLEditor,
+                                      nsStyledElement& aStyledElement,
                                       nsAtom* aProperty, nsAtom* aAttribute,
                                       const nsAString* aValue,
                                       bool aSuppressTransaction);
-
- private:
-  HTMLEditor* mHTMLEditor;
 };
 
 #define NS_EDITOR_INDENT_INCREMENT_IN 0.4134f

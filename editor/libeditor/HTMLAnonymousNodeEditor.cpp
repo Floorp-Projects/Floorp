@@ -570,7 +570,7 @@ nsresult HTMLEditor::GetPositionAndDimensions(Element& aElement, int32_t& aX,
 nsresult HTMLEditor::SetAnonymousElementPositionWithoutTransaction(
     nsStyledElement& aStyledElement, int32_t aX, int32_t aY) {
   nsresult rv;
-  rv = mCSSEditUtils->SetCSSPropertyPixelsWithoutTransaction(
+  rv = CSSEditUtils::SetCSSPropertyPixelsWithoutTransaction(
       aStyledElement, *nsGkAtoms::left, aX);
   if (rv == NS_ERROR_EDITOR_DESTROYED) {
     NS_WARNING(
@@ -582,7 +582,7 @@ nsresult HTMLEditor::SetAnonymousElementPositionWithoutTransaction(
       NS_SUCCEEDED(rv),
       "CSSEditUtils::SetCSSPropertyPixelsWithoutTransaction(nsGkAtoms::left) "
       "failed, but ignored");
-  rv = mCSSEditUtils->SetCSSPropertyPixelsWithoutTransaction(
+  rv = CSSEditUtils::SetCSSPropertyPixelsWithoutTransaction(
       aStyledElement, *nsGkAtoms::top, aY);
   if (rv == NS_ERROR_EDITOR_DESTROYED) {
     NS_WARNING(
