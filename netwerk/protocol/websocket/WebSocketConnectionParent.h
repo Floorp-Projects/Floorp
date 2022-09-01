@@ -33,7 +33,7 @@ class WebSocketConnectionParent final : public PWebSocketConnectionParent,
   explicit WebSocketConnectionParent(nsIHttpUpgradeListener* aListener);
 
   mozilla::ipc::IPCResult RecvOnTransportAvailable(
-      const nsCString& aSecurityInfoSerialization);
+      nsITransportSecurityInfo* aSecurityInfo);
   mozilla::ipc::IPCResult RecvOnError(const nsresult& aStatus);
   mozilla::ipc::IPCResult RecvOnTCPClosed();
   mozilla::ipc::IPCResult RecvOnDataReceived(nsTArray<uint8_t>&& aData);
@@ -49,7 +49,7 @@ class WebSocketConnectionParent final : public PWebSocketConnectionParent,
                            uint32_t aPayloadBufLength) override;
   nsresult StartReading() override;
   void DrainSocketData() override;
-  nsresult GetSecurityInfo(nsISupports** aSecurityInfo) override;
+  nsresult GetSecurityInfo(nsITransportSecurityInfo** aSecurityInfo) override;
 
  private:
   virtual ~WebSocketConnectionParent();
@@ -57,7 +57,7 @@ class WebSocketConnectionParent final : public PWebSocketConnectionParent,
   nsCOMPtr<nsIHttpUpgradeListener> mUpgradeListener;
   RefPtr<WebSocketConnectionListener> mListener;
   nsCOMPtr<nsIEventTarget> mBackgroundThread;
-  nsCOMPtr<nsISupports> mSecurityInfo;
+  nsCOMPtr<nsITransportSecurityInfo> mSecurityInfo;
   Atomic<bool> mClosed{false};
   Mutex mMutex MOZ_UNANNOTATED{"WebSocketConnectionParent::mMutex"};
 };
