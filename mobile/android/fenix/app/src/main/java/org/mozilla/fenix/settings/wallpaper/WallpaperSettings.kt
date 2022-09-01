@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.wallpaper
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -63,6 +64,7 @@ import org.mozilla.fenix.wallpapers.Wallpaper
  * @param onSelectWallpaper Callback for when a new wallpaper is selected.
  * @param onViewWallpaper Callback for when the view action is clicked from snackbar.
  */
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 @Suppress("LongParameterList")
 fun WallpaperSettings(
