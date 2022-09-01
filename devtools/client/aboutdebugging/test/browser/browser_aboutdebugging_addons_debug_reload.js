@@ -47,6 +47,33 @@ add_task(async function testWebExtensionToolboxReload() {
   } = await openAboutDevtoolsToolbox(document, tab, window, ADDON_NAME);
   const toolbox = getToolbox(devtoolsWindow);
 
+  ok(
+    devtoolsDocument.querySelector(".qa-reload-button"),
+    "Reload button is visible"
+  );
+  ok(
+    !devtoolsDocument.querySelector(".qa-back-button"),
+    "Back button is hidden"
+  );
+  ok(
+    !devtoolsDocument.querySelector(".qa-forward-button"),
+    "Forward button is hidden"
+  );
+  ok(
+    !devtoolsDocument.querySelector(".debug-target-url-form"),
+    "URL form is hidden"
+  );
+  ok(
+    devtoolsDocument.getElementById("toolbox-meatball-menu-noautohide"),
+    "Disable popup autohide button is displayed"
+  );
+  ok(
+    !devtoolsDocument.getElementById(
+      "toolbox-meatball-menu-pseudo-locale-accented"
+    ),
+    "Accented locale is not displayed (only on browser toolbox)"
+  );
+
   const webconsole = await toolbox.selectTool("webconsole");
   const { hud } = webconsole;
 
