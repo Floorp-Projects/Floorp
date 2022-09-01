@@ -217,6 +217,13 @@ def create_parser(mach_interface=False):
         help="What features to enable in the profiler",
     )
     add_arg(
+        "--extra-profiler-run",
+        dest="extra_profiler_run",
+        action="store_true",
+        default=False,
+        help="Run the tests again with profiler enabled after the main run.",
+    )
+    add_arg(
         "--symbolsPath",
         dest="symbols_path",
         help="Path to the symbols for the build we are testing",
