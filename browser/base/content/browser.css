@@ -523,8 +523,12 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-b
   transform: rotate(-90deg);
   width: 12px;
   height: 29px;
-  left: 8px;
+  inset-inline-start: 8px;
   top: 0;
+}
+
+#allTabsMenu-dropIndicator:-moz-locale-dir(rtl) {
+  transform: rotate(90deg);
 }
 
 #nav-bar-customization-target > #personal-bookmarks,
