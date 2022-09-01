@@ -50,7 +50,9 @@ function makeAlert(options) {
     options.silent,
     options.vibrate || []
   );
-  alert.initActions(options.actions || []);
+  if (options.actions) {
+    alert.actions = options.actions;
+  }
   return alert;
 }
 

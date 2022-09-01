@@ -53,7 +53,7 @@ AlertNotification::Init(const nsAString& aName, const nsAString& aImageURL,
 }
 
 NS_IMETHODIMP
-AlertNotification::InitActions(
+AlertNotification::SetActions(
     const nsTArray<RefPtr<nsIAlertAction>>& aActions) {
   mActions = aActions.Clone();
   return NS_OK;
@@ -168,6 +168,18 @@ AlertNotification::GetActions(nsTArray<RefPtr<nsIAlertAction>>& aActions) {
 NS_IMETHODIMP
 AlertNotification::GetSource(nsAString& aSource) {
   nsAlertsUtils::GetSourceHostPort(mPrincipal, aSource);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AlertNotification::GetLaunchURL(nsAString& aLaunchURL) {
+  aLaunchURL = mLaunchURL;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AlertNotification::SetLaunchURL(const nsAString& aLaunchURL) {
+  mLaunchURL = aLaunchURL;
   return NS_OK;
 }
 

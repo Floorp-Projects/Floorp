@@ -91,9 +91,6 @@ interface nsIAlertNotification : nsISupports
             [optional] in boolean aSilent,
             [optional] in Array<uint32_t> aVibrate);
 
-  /** Initializes an alert notification with actions. */
-  void initActions([optional] in Array<nsIAlertAction> aActions);
-
   /**
    * The name of the notification. On Android, the name is hashed and used as
    * a notification ID. Notifications will replace previous notifications with
@@ -190,7 +187,7 @@ interface nsIAlertNotification : nsISupports
    *
    * Implemented only for the system backend on Windows.
    */
-  readonly attribute Array<nsIAlertAction> actions;
+  attribute Array<nsIAlertAction> actions;
 
   /**
    * Indicates whether this alert should show the source string and action
@@ -204,6 +201,12 @@ interface nsIAlertNotification : nsISupports
    * is not actionable.
    */
   readonly attribute AString source;
+
+  /**
+   * A URL to navigate to if the application is relaunched in to complete
+   * interaction with this alert.
+   */
+  attribute AString launchURL;
 
   /**
    * Loads the image associated with this alert.
