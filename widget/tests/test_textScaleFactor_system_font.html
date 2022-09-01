@@ -1,0 +1,142 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test that system font sizing is independent from ui.textScaleFactor</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <style>
+    p { width: max-content }
+    #menu { font: menu }
+  </style>
+</head>
+<body>
+  <p id="menu">"menu" text.</p>
+  <p id="default">Default text.</p>
+</body>
+<script>
+"use strict";
+
+const { AppConstants } = SpecialPowers.ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+
+// Returns a Number for the font size in CSS pixels.
+function elementFontSize(element) {
+  return parseFloat(getComputedStyle(element).getPropertyValue("font-size"));
+}
+
+// "look-and-feel-changed" may be dispatched twice: once for the pref
+// change and once after receiving the new values from
+// ContentChild::RecvThemeChanged().
+// pushPrefEnv() resolves after the former. This resolves after the latter.
+function promiseNewFontSizeOnThemeChange(element) {
+  return new Promise(resolve => {
+    const lastSize = elementFontSize(element);
+
+    function ThemeChanged() {
+      const size = elementFontSize(element);
+      if (size != lastSize) {
+        resolve(size);
+      }
+    }
+    // "look-and-feel-changed" is dispatched before the style system is flushed,
+    // https://searchfox.org/mozilla-central/rev/380fc5571b039fd453b45bbb64ed13146fe9b066/layout/base/nsPresContext.cpp#1684,1703-1705
+    // so use an async observer to get a notification after style changes.
+    SpecialPowers.addAsyncObserver(ThemeChanged, "look-and-feel-changed");
+    SimpleTest.registerCleanupFunction(function() {
+      SpecialPowers.removeAsyncObserver(ThemeChanged, "look-and-feel-changed");
+    });
+  });
+}
+
+function fuzzyCompareLength(actual, expected, message, tolerance, expectFn) {
+  expectFn(Math.abs(actual-expected) <= tolerance,
+           `${message} - got ${actual}, expected ${expected} +/- ${tolerance}`);
+}
+
+add_task(async () => {
+  // MOZ_HEADLESS is set in content processes with GTK regardless of the
+  // headless state of the parent process.  Check the parent state.
+  const headless = await SpecialPowers.spawnChrome([], function get_headless() {
+    const env = Cc["@mozilla.org/process/environment;1"].getService(
+      Ci.nsIEnvironment
+    );
+    return env.get("MOZ_HEADLESS");
+  });
+  // LookAndFeel::TextScaleFactor::FloatID is implemented only for WINNT and
+  // GTK.  ui.textScaleFactor happens to scale CSS pixels on other platforms
+  // but system font integration has not been implemented.
+  const expectSuccess = AppConstants.MOZ_WIDGET_TOOLKIT == "windows" ||
+         (AppConstants.MOZ_WIDGET_TOOLKIT == "gtk" &&
+          // Headless GTK doesn't get system font sizes from the system, but
+          // uses sizes fixed in CSS pixels.
+          !headless);
+
+  async function setScaleAndPromiseFontSize(scale, element) {
+    const prefPromise = SpecialPowers.pushPrefEnv({
+      set: [["ui.textScaleFactor", scale]],
+    });
+    if (!expectSuccess) {
+      // The size is not expected to change but get it afresh to check our
+      // assumption.
+      await prefPromise;
+      return elementFontSize(element);
+    }
+    const [size] = await Promise.all([
+      promiseNewFontSizeOnThemeChange(element),
+      prefPromise,
+    ]);
+    return size;
+  }
+
+  const menu = document.getElementById("menu");
+  const def = document.getElementById("default");
+  // Choose a scaleFactor value different enough from possible default values
+  // that app unit rounding does not prevent a change in devicePixelRatio.
+  // A scaleFactor of 120 also has no rounding of app units per dev pixel.
+  const referenceScale = 120;
+  const menuSize1 = await setScaleAndPromiseFontSize(referenceScale, menu);
+  const menuRect1 = menu.getBoundingClientRect();
+  const defSize1 = elementFontSize(def);
+  const defRect1 = def.getBoundingClientRect();
+
+  const expectFn = expectSuccess ? ok : todo;
+  const menuSize2 = await setScaleAndPromiseFontSize(2*referenceScale, menu);
+  {
+    const singlePrecisionULP = Math.pow(2, -23);
+    // Precision seems to be lost in the conversion to decimal string for the
+    // property value.
+    const reltolerance = 30 * singlePrecisionULP;
+    fuzzyCompareLength(menuSize2, menuSize1/2, "size of menu font",
+                       reltolerance*menuSize1/2, expectFn);
+  }
+  {
+    const menuRect2 = menu.getBoundingClientRect();
+    // The menu font text renders exactly the same and app-unit rects are
+    // equal, but the DOMRect conversion is rounded to 1/65536 CSS pixels.
+    // https://searchfox.org/mozilla-central/rev/380fc5571b039fd453b45bbb64ed13146fe9b066/dom/base/DOMRect.cpp#151-159
+    // See also https://bugzilla.mozilla.org/show_bug.cgi?id=1640441#c28
+    const absTolerance = 1/65536
+    fuzzyCompareLength(menuRect2.width, menuRect1.width/2,
+                       "width of menu font <p> in px", absTolerance, expectFn);
+    fuzzyCompareLength(menuRect2.height, menuRect1.height/2,
+                       "height of menu font <p> in px", absTolerance, expectFn);
+  }
+
+  const defSize2 = elementFontSize(def);
+  is(defSize2, defSize1, "size of default font");
+  {
+    const defRect2 = def.getBoundingClientRect();
+    // Wider tolerance for hinting and snapping
+    const relTolerance = 1/12;
+    fuzzyCompareLength(defRect2.width, defRect1.width,
+                       "width of default font <p> in px",
+                       relTolerance*defRect1.width, ok);
+    fuzzyCompareLength(defRect2.height, defRect1.height,
+                       "height of default font <p> in px",
+                       relTolerance*defRect1.height, ok);
+  }
+});
+</script>
+</html>
