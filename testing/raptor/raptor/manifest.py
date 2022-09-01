@@ -428,6 +428,11 @@ def get_raptor_test_list(args, oskey):
         if args.extra_profiler_run is True:
             next_test["extra_profiler_run"] = True
             LOG.info("extra-profiler-run enabled")
+            next_test["extra_profiler_run_browser_cycles"] = 1
+            if args.chimera:
+                next_test["extra_profiler_run_page_cycles"] = 2
+            else:
+                next_test["extra_profiler_run_page_cycles"] = 1
 
         if args.debug_mode is True:
             next_test["debug_mode"] = True
