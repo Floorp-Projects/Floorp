@@ -15,7 +15,7 @@ import {
   formatURIForDisplay,
   convertTimestamp,
   createFaviconElement,
-  toggleContainer,
+  onToggleContainer,
   NOW_THRESHOLD_MS,
 } from "./helpers.mjs";
 
@@ -244,7 +244,7 @@ class RecentlyClosedTabsList extends HTMLElement {
 }
 customElements.define("recently-closed-tabs-list", RecentlyClosedTabsList);
 
-class RecentlyClosedTabsContainer extends HTMLElement {
+class RecentlyClosedTabsContainer extends HTMLDetailsElement {
   constructor() {
     super();
     this.observerAdded = false;
@@ -259,9 +259,7 @@ class RecentlyClosedTabsContainer extends HTMLElement {
     this.collapsibleContainer = this.querySelector(
       "#collapsible-tabs-container"
     );
-    this.collapsibleButton = this.querySelector("#collapsible-tabs-button");
-    this.collapsibleButton.addEventListener("click", this);
-
+    this.addEventListener("toggle", this);
     getWindow().gBrowser.tabContainer.addEventListener("TabSelect", this);
   }
 
@@ -316,8 +314,8 @@ class RecentlyClosedTabsContainer extends HTMLElement {
   }
 
   handleEvent(event) {
-    if (event.type == "click" && event.target == this.collapsibleButton) {
-      toggleContainer(this.collapsibleButton, this.collapsibleContainer);
+    if (event.type == "toggle") {
+      onToggleContainer(this);
     } else if (event.type == "TabSelect") {
       this.handleObservers(event.target.linkedBrowser.contentDocument);
     }
@@ -338,5 +336,8 @@ class RecentlyClosedTabsContainer extends HTMLElement {
 }
 customElements.define(
   "recently-closed-tabs-container",
-  RecentlyClosedTabsContainer
+  RecentlyClosedTabsContainer,
+  {
+    extends: "details",
+  }
 );

@@ -112,12 +112,12 @@
         </div>
       </template>
 
-      <section class="content-container" is="tab-pickup-container" id="tab-pickup-container">
-        <header class="page-section-header">
+      <details class="content-container" is="tab-pickup-container" id="tab-pickup-container" open>
+        <summary class="page-section-header">
           <h1 id="collapsible-synced-tabs-header" data-l10n-id="firefoxview-tabpickup-header"></h1>
-          <button aria-expanded=true aria-controls="synced-tabs" id="collapsible-synced-tabs-button" class="ghost-button twisty icon arrow-up" data-l10n-id="firefoxview-collapse-button-hide" hidden></button>
+          <span class="twisty icon" data-l10n-id="firefoxview-collapse-button-hide" aria-role="presentation"></span>
           <p class="section-description" data-l10n-id="firefoxview-tabpickup-description"></p>
-        </header>
+        </summary>
 
         <div class="confirmation-message-box message-box card card-no-hover" hidden>
           <div class="message-content">
@@ -138,8 +138,7 @@
           </div>
           <button data-action="mobile-promo-dismiss" class="close icon-button ghost-button" data-l10n-id="firefoxview-close-button"></button>
         </div>
-
-      </section>
+      </details>
 
       <aside class="content-container" is="colorways-card">
         <template id="colorways-no-collection-template">
@@ -161,12 +160,12 @@
         <section id="colorways"></section>
       </aside>
 
-      <section class="content-container" is="recently-closed-tabs-container" id="recently-closed-tabs-container">
-        <header class="page-section-header">
+      <details class="content-container" is="recently-closed-tabs-container" id="recently-closed-tabs-container" open>
+        <summary class="page-section-header" data-l10n-id="firefoxview-collapse-button-hide">
           <h1 id="recently-closed-tabs-header" data-l10n-id="firefoxview-closed-tabs-title"></h1>
-          <button aria-expanded="true" aria-controls="recently-closed-tabs" data-l10n-id="firefoxview-collapse-button-hide" id="collapsible-tabs-button" class="ghost-button twisty icon arrow-up"></button>
+          <span class="twisty icon" aria-role="presentation"></span>
           <p class="section-description" data-l10n-id="firefoxview-closed-tabs-description"></p>
-        </header>
+        </summary>
         <div id="collapsible-tabs-container" id="recently-closed-tabs" role="region" aria-labelledby="recently-closed-tabs-header">
           <recently-closed-tabs-list>
             <ol hidden="true" class="closed-tabs-list"></ol>
@@ -176,7 +175,7 @@
             <p data-l10n-id="firefoxview-closed-tabs-placeholder" class="placeholder-text"></p>
           </div>
         </div>
-      </section>
+      </details>
     </main>
   </body>
 </html>

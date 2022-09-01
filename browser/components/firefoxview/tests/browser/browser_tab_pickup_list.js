@@ -378,8 +378,8 @@ add_task(async function test_time_updates_correctly() {
 
       await clearAllParentTelemetryEvents();
 
-      await waitForElementVisible(browser, "#collapsible-synced-tabs-button");
-      document.getElementById("collapsible-synced-tabs-button").click();
+      await waitForElementVisible(browser, "#tab-pickup-container > summary");
+      document.querySelector("#tab-pickup-container > summary").click();
 
       await TestUtils.waitForCondition(
         () => {
