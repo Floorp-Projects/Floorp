@@ -276,7 +276,9 @@ async function runBackgroundTask(commandLine) {
       Glean.backgroundUpdate.clientId.set(telemetryClientID);
 
       try {
-        defaultProfileTargetingSnapshot = await lazy.BackgroundTasksUtils.readFirefoxMessagingSystemTargetingSnapshot();
+        defaultProfileTargetingSnapshot = await lazy.BackgroundTasksUtils.readFirefoxMessagingSystemTargetingSnapshot(
+          lock
+        );
       } catch (f) {
         if (DOMException.isInstance(f) && f.name === "NotFoundError") {
           lazy.log.info(
