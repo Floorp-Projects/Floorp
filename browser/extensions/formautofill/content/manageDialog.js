@@ -41,17 +41,16 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/OSKeyStore.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(this, "reauthPasswordPromptMessage", () => {
-  const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName(
-    "brandShortName"
-  );
-  // The string name for Mac is changed because the value needed updating.
-  const platform = AppConstants.platform.replace("macosx", "macos");
-  return FormAutofillUtils.stringBundle.formatStringFromName(
-    `editCreditCardPasswordPrompt.${platform}`,
-    [brandShortName]
-  );
-});
+const lazy = {};
+XPCOMUtils.defineLazyGetter(
+  lazy,
+  "l10n",
+  () =>
+    new Localization([
+      "browser/preferences/formAutofill.ftl",
+      "branding/brand.ftl",
+    ])
+);
 
 this.log = null;
 XPCOMUtils.defineLazyGetter(this, "log", () =>
@@ -66,7 +65,6 @@ class ManageRecords {
     this._newRequest = false;
     this._isLoadingRecords = false;
     this.prefWin = window.opener;
-    this.localizeDocument();
     window.addEventListener("DOMContentLoaded", this, { once: true });
   }
 
@@ -81,13 +79,6 @@ class ManageRecords {
     log.debug("uninit");
     this.detachEventListeners();
     this._elements = null;
-  }
-
-  localizeDocument() {
-    document.documentElement.style.minWidth = FormAutofillUtils.stringBundle.GetStringFromName(
-      "manageDialogsWidth"
-    );
-    FormAutofillUtils.localizeMarkup(document);
   }
 
   /**
@@ -380,43 +371,45 @@ class ManageCreditCards extends ManageRecords {
    */
   async openEditDialog(creditCard) {
     // Ask for reauth if user is trying to edit an existing credit card.
-    if (
-      !creditCard ||
-      (await FormAutofillUtils.ensureLoggedIn(reauthPasswordPromptMessage))
-        .authenticated
-    ) {
-      let decryptedCCNumObj = {};
-      if (creditCard && creditCard["cc-number-encrypted"]) {
-        try {
-          decryptedCCNumObj["cc-number"] = await OSKeyStore.decrypt(
-            creditCard["cc-number-encrypted"]
-          );
-        } catch (ex) {
-          if (ex.result == Cr.NS_ERROR_ABORT) {
-            // User shouldn't be ask to reauth here, but it could happen.
-            // Return here and skip opening the dialog.
-            return;
-          }
-          // We've got ourselves a real error.
-          // Recover from encryption error so the user gets a chance to re-enter
-          // unencrypted credit card number.
-          decryptedCCNumObj["cc-number"] = "";
-          Cu.reportError(ex);
-        }
+    if (creditCard) {
+      const reauthPasswordPromptMessage = await lazy.l10n.formatValue(
+        "autofill-edit-card-password-prompt"
+      );
+      const loggedIn = await FormAutofillUtils.ensureLoggedIn(
+        reauthPasswordPromptMessage
+      );
+      if (!loggedIn.authenticated) {
+        return;
       }
-      let decryptedCreditCard = Object.assign(
-        {},
-        creditCard,
-        decryptedCCNumObj
-      );
-      this.prefWin.gSubDialog.open(
-        EDIT_CREDIT_CARD_URL,
-        { features: "resizable=no" },
-        {
-          record: decryptedCreditCard,
-        }
-      );
     }
+
+    let decryptedCCNumObj = {};
+    if (creditCard && creditCard["cc-number-encrypted"]) {
+      try {
+        decryptedCCNumObj["cc-number"] = await OSKeyStore.decrypt(
+          creditCard["cc-number-encrypted"]
+        );
+      } catch (ex) {
+        if (ex.result == Cr.NS_ERROR_ABORT) {
+          // User shouldn't be ask to reauth here, but it could happen.
+          // Return here and skip opening the dialog.
+          return;
+        }
+        // We've got ourselves a real error.
+        // Recover from encryption error so the user gets a chance to re-enter
+        // unencrypted credit card number.
+        decryptedCCNumObj["cc-number"] = "";
+        Cu.reportError(ex);
+      }
+    }
+    let decryptedCreditCard = Object.assign({}, creditCard, decryptedCCNumObj);
+    this.prefWin.gSubDialog.open(
+      EDIT_CREDIT_CARD_URL,
+      { features: "resizable=no" },
+      {
+        record: decryptedCreditCard,
+      }
+    );
   }
 
   /**
