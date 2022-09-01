@@ -129,8 +129,8 @@ More Examples
 
 `Browsertime docs <https://github.com/mozilla/browsertime/tree/master/docs/examples>`_
 
-Passing Additional Arguments to Browertime
-------------------------------------------
+Passing Additional Arguments to Browsertime
+-------------------------------------------
 
 Browsertime has many command line flags to configure its usage, see `Browsertime configuration <https://www.sitespeed.io/documentation/browsertime/configuration/>`_.
 
