@@ -366,6 +366,14 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
 
   mState = State::Opening;
 
+  // XXX The connection should be initialized after we create and acquire a
+  // directory lock.
+
+  // XXX The connection should be initialized after we ensure that the storage
+  // is initialized.
+
+  // XXX The connection should be initialized off the PBackground thread.
+
   // These have to be done on the PBackground thread
   auto connectionRes = fs::data::GetStorageConnection(mOriginMetadata.mOrigin);
   if (NS_WARN_IF(connectionRes.isErr())) {
