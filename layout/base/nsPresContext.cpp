@@ -1883,6 +1883,11 @@ void nsPresContext::MediaFeatureValuesChanged(
     };
     mDocument->EnumerateSubDocuments(recurse);
   }
+
+  // We notify the media feature values changed for the responsive content of
+  // HTMLImageElements synchronously, so their image sources are always
+  // up-to-date when running the image load tasks in the microtasks.
+  mDocument->NotifyMediaFeatureValuesChanged();
 }
 
 bool nsPresContext::FlushPendingMediaFeatureValuesChanged() {
@@ -1908,8 +1913,6 @@ bool nsPresContext::FlushPendingMediaFeatureValuesChanged() {
     MOZ_ASSERT(mDocument->MediaQueryLists().isEmpty());
     return changedStyle;
   }
-
-  mDocument->NotifyMediaFeatureValuesChanged();
 
   // https://drafts.csswg.org/cssom-view/#evaluate-media-queries-and-report-changes
   //
