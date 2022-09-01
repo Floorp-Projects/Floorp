@@ -815,7 +815,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 raw_btresults[0] = cold_data
                 raw_btresults[1] = warm_data
 
-                # Overwrite the contents of the browertime.json file
+                # Overwrite the contents of the browsertime.json file
                 # to update it with the new file paths
                 try:
                     with open(bt_res_json, "w", encoding="utf8") as f:
