@@ -144,7 +144,7 @@ allprojects {
         kotlinOptions.jvmTarget = "1.8"
         kotlinOptions.allWarningsAsErrors = true
         kotlinOptions.freeCompilerArgs += [
-            "-Xopt-in=kotlin.RequiresOptIn"
+            "-Xopt-in=kotlin.RequiresOptIn", "-Xjvm-default=enable"
         ]
     }
 }
