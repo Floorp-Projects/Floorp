@@ -978,16 +978,6 @@ impl RenderBackend {
             }
             ApiMsg::DebugCommand(option) => {
                 let msg = match option {
-                    DebugCommand::EnableDualSourceBlending(enable) => {
-                        // Set in the config used for any future documents
-                        // that are created.
-                        self.frame_config
-                            .dual_source_blending_is_enabled = enable;
-                        self.update_frame_builder_config();
-
-                        // We don't want to forward this message to the renderer.
-                        return RenderBackendStatus::Continue;
-                    }
                     DebugCommand::SetPictureTileSize(tile_size) => {
                         self.frame_config.tile_size_override = tile_size;
                         self.update_frame_builder_config();

@@ -121,8 +121,6 @@ pub struct WebRenderOptions {
     pub precache_flags: ShaderPrecacheFlags,
     /// Enable sub-pixel anti-aliasing if a fast implementation is available.
     pub enable_subpixel_aa: bool,
-    /// Enable sub-pixel anti-aliasing if it requires a slow implementation.
-    pub force_subpixel_aa: bool,
     pub clear_color: ColorF,
     pub enable_clear_scissor: bool,
     pub max_internal_texture_size: Option<i32>,
@@ -219,7 +217,6 @@ impl Default for WebRenderOptions {
             max_recorded_profiles: 0,
             precache_flags: ShaderPrecacheFlags::empty(),
             enable_subpixel_aa: false,
-            force_subpixel_aa: false,
             clear_color: ColorF::new(1.0, 1.0, 1.0, 1.0),
             enable_clear_scissor: true,
             max_internal_texture_size: None,
@@ -492,7 +489,7 @@ pub fn create_webrender_instance(
 
     let clear_alpha_targets_with_quads = !device.get_capabilities().supports_alpha_target_clears;
 
-    let prefer_subpixel_aa = options.force_subpixel_aa || (options.enable_subpixel_aa && use_dual_source_blending);
+    let prefer_subpixel_aa = options.enable_subpixel_aa && use_dual_source_blending;
     let default_font_render_mode = match (options.enable_aa, prefer_subpixel_aa) {
         (true, true) => FontRenderMode::Subpixel,
         (true, false) => FontRenderMode::Alpha,
@@ -514,7 +511,6 @@ pub fn create_webrender_instance(
 
     let config = FrameBuilderConfig {
         default_font_render_mode,
-        dual_source_blending_is_enabled: true,
         dual_source_blending_is_supported: use_dual_source_blending,
         testing: options.testing,
         gpu_supports_fast_clears: options.gpu_supports_fast_clears,

@@ -888,8 +888,6 @@ pub struct CapturedDocument {
 pub enum DebugCommand {
     /// Sets the provided debug flags.
     SetFlags(DebugFlags),
-    /// Configure if dual-source blending is used, if available.
-    EnableDualSourceBlending(bool),
     /// Save a capture of all the documents state.
     SaveCapture(PathBuf, CaptureBits),
     /// Load a capture of all the documents state.

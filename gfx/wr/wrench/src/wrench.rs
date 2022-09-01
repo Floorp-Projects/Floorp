@@ -226,7 +226,6 @@ impl Wrench {
         no_scissor: bool,
         no_batch: bool,
         precache_shaders: bool,
-        disable_dual_source_blending: bool,
         dump_shader_source: Option<String>,
         notifier: Option<Box<dyn RenderNotifier>>,
     ) -> Self {
@@ -253,7 +252,6 @@ impl Wrench {
             blob_image_handler: Some(Box::new(blob::CheckerboardRenderer::new(callbacks.clone()))),
             testing: true,
             max_internal_texture_size: Some(8196), // Needed for rawtest::test_resize_image.
-            allow_dual_source_blending: !disable_dual_source_blending,
             allow_advanced_blend_equation: window.is_software(),
             dump_shader_source,
             // SWGL doesn't support the GL_ALWAYS depth comparison function used by

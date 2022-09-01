@@ -314,7 +314,6 @@ impl BuiltScene {
             clip_tree: ClipTree::new(),
             config: FrameBuilderConfig {
                 default_font_render_mode: FontRenderMode::Mono,
-                dual_source_blending_is_enabled: true,
                 dual_source_blending_is_supported: false,
                 testing: false,
                 gpu_supports_fast_clears: false,
