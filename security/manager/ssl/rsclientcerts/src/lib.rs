@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 extern crate byteorder;
-extern crate pkcs11;
+extern crate pkcs11_bindings;
 
 pub mod error;
 pub mod manager;
