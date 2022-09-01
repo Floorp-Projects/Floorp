@@ -176,9 +176,9 @@ window.setTimeout(function(){
     let sidebarURL = option.replace("options/options.html", "sidebar/sidebar.html")
     window.setTimeout(() => {
       sidebar2elem.setAttribute("src", sidebarURL);
-     resolve(sidebarURL);
     }, 500);
-  }     
+  }
+
 
   const pref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined)
   const sidebar2elem = document.getElementById("sidebar2");
@@ -197,6 +197,10 @@ window.setTimeout(function(){
       break;
     case 4:
       getTreeStyleTabURL();
+      break;
+    case 5:
+      sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl", undefined));
+      break;
     }
   }, 1000);
   
@@ -209,27 +213,30 @@ window.setTimeout(function(){
       let sidebarURL = option.replace("options/options.html", "sidebar/sidebar.html")
       window.setTimeout(() => {
         sidebar2elem.setAttribute("src", sidebarURL);
-       resolve(sidebarURL);
       }, 500);
     }
-    
+
     const pref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
     const sidebar2elem = document.getElementById("sidebar2");
     switch (pref) {
      default:
-       sidebar2elem.setAttribute("src", "chrome://browser/content/places/places.xhtml");
+        sidebar2elem.setAttribute("src", "chrome://browser/content/places/places.xhtml");
       break;
      case 1:
-       sidebar2elem.setAttribute("src", "chrome://browser/content/places/bookmarksSidebar.xhtml");
+        sidebar2elem.setAttribute("src", "chrome://browser/content/places/bookmarksSidebar.xhtml");
        break;
      case 2:
-       sidebar2elem.setAttribute("src", "chrome://browser/content/places/historySidebar.xhtml");
+        sidebar2elem.setAttribute("src", "chrome://browser/content/places/historySidebar.xhtml");
        break;
      case 3:
-       sidebar2elem.setAttribute("src", "about:downloads");
+        sidebar2elem.setAttribute("src", "about:downloads");
        break;
      case 4:
-      getTreeStyleTabURL();
+        getTreeStyleTabURL();
+       break;
+     case 5:
+        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl", undefined));
+       break;  
     }
   });
   }, 1000);

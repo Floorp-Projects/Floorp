@@ -50,6 +50,7 @@ pref("floorp.browser.rest.mode", false);// 休止モード
 pref("floorp.browser.sidebar.right", true);// サイドバーの右側を表示
 pref("floorp.browser.sidebar.enable", false);// サイドバーを表示
 pref("floorp.browser.sidebar2.mode", 0);// サイドバーのモード
+pref("floorp.browser.sidebar2.customurl", "");// サイドバーのカスタムURL
 
 pref("contentblocking.cryptomining_blocking_enabled", true);
 pref("contentblocking.cryptomining_blocking_enabled",true);
