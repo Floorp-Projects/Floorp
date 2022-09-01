@@ -55,6 +55,21 @@ interface nsIAlertAction : nsISupports
    * Returns a string containing the URL of an icon to display with the action.
    */
   readonly attribute AString iconURL;
+
+  /**
+   * On Windows, chrome-privileged notifications -- i.e., those with a
+   * non-actionable principal -- can have actions that are activated by Windows
+   * and not processed by Firefox.  When `windowsSystemActivationType` is true,
+   * we request Windows to process `action`.  At the time of writing, Windows
+   * recognizes the following actions:
+   *
+   * - `action="dismiss"` dismisses the alert entirely;
+   * - "action="snooze"` snoozes the alert, generally making it disappear before
+   *   reappearing a Windows-determined amount of time later.
+   *
+   * On non-Windows, this field is ignored.
+   */
+  readonly attribute boolean windowsSystemActivationType;
 };
 
 [scriptable, uuid(cf2e4cb6-4b8f-4eca-aea9-d51a8f9f7a50)]

@@ -10,6 +10,7 @@
 #include <appmodel.h>
 #include <ktmw32.h>
 
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/Buffer.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/mscom/COMWrappers.h"
@@ -415,12 +416,16 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
   nsTArray<RefPtr<nsIAlertAction>> actions;
   MOZ_TRY(aAlert->GetActions(actions));
 
+  nsCOMPtr<nsIPrincipal> principal;
+  MOZ_TRY(aAlert->GetPrincipal(getter_AddRefs(principal)));
+  bool isSystemPrincipal = principal && principal->IsSystemPrincipal();
+
   RefPtr<ToastNotificationHandler> oldHandler = mActiveHandlers.Get(name);
 
   NS_ENSURE_TRUE(mAumid.isSome(), NS_ERROR_UNEXPECTED);
   RefPtr<ToastNotificationHandler> handler = new ToastNotificationHandler(
       this, mAumid.ref(), aAlertListener, name, cookie, title, text, hostPort,
-      textClickable, requireInteraction, actions);
+      textClickable, requireInteraction, actions, isSystemPrincipal);
   mActiveHandlers.InsertOrUpdate(name, RefPtr{handler});
 
   nsresult rv = handler->InitAlertAsync(aAlert);
@@ -467,10 +472,15 @@ ToastNotification::GetXmlStringForWindowsAlert(nsIAlertNotification* aAlert,
   nsTArray<RefPtr<nsIAlertAction>> actions;
   MOZ_TRY(aAlert->GetActions(actions));
 
+  nsCOMPtr<nsIPrincipal> principal;
+  MOZ_TRY(aAlert->GetPrincipal(getter_AddRefs(principal)));
+  bool isSystemPrincipal = principal && principal->IsSystemPrincipal();
+
   NS_ENSURE_TRUE(mAumid.isSome(), NS_ERROR_UNEXPECTED);
   RefPtr<ToastNotificationHandler> handler = new ToastNotificationHandler(
       this, mAumid.ref(), nullptr /* aAlertListener */, name, cookie, title,
-      text, hostPort, textClickable, requireInteraction, actions);
+      text, hostPort, textClickable, requireInteraction, actions,
+      isSystemPrincipal);
 
   nsAutoString imageURL;
   MOZ_TRY(aAlert->GetImageURL(imageURL));

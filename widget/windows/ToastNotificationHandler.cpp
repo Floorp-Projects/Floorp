@@ -89,7 +89,8 @@ static bool AddActionNode(ComPtr<IXmlDocument>& toastXml,
                           const nsAString& actionTitle,
                           const nsAString& launchArg,
                           const nsAString& actionArgs,
-                          const nsAString& actionPlacement = u""_ns) {
+                          const nsAString& actionPlacement = u""_ns,
+                          const nsAString& activationType = u""_ns) {
   ComPtr<IXmlElement> action;
   HRESULT hr =
       toastXml->CreateElement(HStringReference(L"action").Get(), &action);
@@ -113,6 +114,17 @@ static bool AddActionNode(ComPtr<IXmlDocument>& toastXml,
   if (!actionPlacement.IsEmpty()) {
     success =
         SetAttribute(action, HStringReference(L"placement"), actionPlacement);
+    NS_ENSURE_TRUE(success, false);
+  }
+
+  if (!activationType.IsEmpty()) {
+    success = SetAttribute(action, HStringReference(L"activationType"),
+                           activationType);
+    NS_ENSURE_TRUE(success, false);
+
+    // No special argument handling: when `activationType="system"`, `action` is
+    // a Windows-specific keyword, generally "dismiss" or "snooze".
+    success = SetAttribute(action, HStringReference(L"arguments"), actionArgs);
     NS_ENSURE_TRUE(success, false);
   }
 
@@ -373,8 +385,16 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
     ns = action->GetAction(actionString);
     NS_ENSURE_SUCCESS(ns, nullptr);
 
-    success =
-        AddActionNode(toastXml, actionsNode, title, launchArg, actionString);
+    // Privileged/chrome alerts can have actions that are activated by Windows.
+    // Recognize these actions and enable these activations.
+    bool activationType(false);
+    ns = action->GetWindowsSystemActivationType(&activationType);
+    NS_ENSURE_SUCCESS(ns, nullptr);
+
+    nsString activationTypeString(
+        (mIsSystemPrincipal && activationType) ? u"system"_ns : u""_ns);
+    success = AddActionNode(toastXml, actionsNode, title, launchArg,
+                            actionString, u""_ns, activationTypeString);
     NS_ENSURE_TRUE(success, nullptr);
   }
 
