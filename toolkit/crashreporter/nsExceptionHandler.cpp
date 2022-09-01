@@ -2400,18 +2400,6 @@ nsresult AnnotateCrashReport(Annotation key, const nsACString& data) {
   return NS_OK;
 }
 
-nsresult AppendToCrashReportAnnotation(Annotation key, const nsACString& data) {
-  if (!GetEnabled()) return NS_ERROR_NOT_INITIALIZED;
-
-  MutexAutoLock lock(*crashReporterAPILock);
-  nsAutoCString newString(crashReporterAPIData_Table[key]);
-  newString.Append(" - "_ns);
-  newString.Append(data);
-  crashReporterAPIData_Table[key] = newString;
-
-  return NS_OK;
-}
-
 nsresult RemoveCrashReportAnnotation(Annotation key) {
   return AnnotateCrashReport(key, ""_ns);
 }
