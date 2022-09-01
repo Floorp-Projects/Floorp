@@ -963,6 +963,7 @@ void nsMenuPopupFrame::InitializePopupAtScreen(nsIContent* aTriggerContent,
   mIsNativeMenu = false;
   mAnchorType = MenuPopupAnchorType_Point;
   mPositionedOffset = 0;
+  mPositionedByMoveToRect = false;
 }
 
 void nsMenuPopupFrame::InitializePopupAsNativeContextMenu(
@@ -983,6 +984,7 @@ void nsMenuPopupFrame::InitializePopupAsNativeContextMenu(
   mIsNativeMenu = true;
   mAnchorType = MenuPopupAnchorType_Point;
   mPositionedOffset = 0;
+  mPositionedByMoveToRect = false;
 }
 
 void nsMenuPopupFrame::InitializePopupAtRect(nsIContent* aTriggerContent,
