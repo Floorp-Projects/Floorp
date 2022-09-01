@@ -2,29 +2,27 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<!DOCTYPE html [
-  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-  %globalDTD;
-]>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" data-l10n-id="autofill-manage-dialog" data-l10n-attrs="style">
 <head>
-  <title data-localization="manageAddressesTitle"/>
+  <title data-l10n-id="autofill-manage-addresses-title"></title>
+  <link rel="localization" href="browser/preferences/formAutofill.ftl"/>
   <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" />
   <link rel="stylesheet" href="chrome://formautofill/content/manageDialog.css" />
   <script src="chrome://formautofill/content/manageDialog.js"></script>
 </head>
-<body dir="&locale.dir;">
+<body>
   <fieldset>
-    <legend data-localization="addressesListHeader"/>
+    <legend data-l10n-id="autofill-manage-addresses-list-header"/>
     <select id="addresses" size="9" multiple="multiple"/>
   </fieldset>
   <div id="controls-container">
-    <button id="remove" disabled="disabled" data-localization="removeBtnLabel"/>
+    <button id="remove" disabled="disabled" data-l10n-id="autofill-manage-remove-button"/>
     <!-- Wrapper is used to properly compute the search tooltip position -->
     <div>
-      <button id="add" data-localization="addBtnLabel"/>
+      <button id="add" data-l10n-id="autofill-manage-add-button"/>
     </div>
-    <button id="edit" disabled="disabled" data-localization="editBtnLabel"/>
+    <button id="edit" disabled="disabled" data-l10n-id="autofill-manage-edit-button"/>
   </div>
   <script>
     "use strict";
