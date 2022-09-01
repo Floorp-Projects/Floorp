@@ -318,6 +318,15 @@ class Raptor(
                 },
             ],
             [
+                ["--extra-profiler-run"],
+                {
+                    "dest": "extra_profiler_run",
+                    "action": "store_true",
+                    "default": False,
+                    "help": "Run the tests again with profiler enabled after the main run.",
+                },
+            ],
+            [
                 ["--page-cycles"],
                 {
                     "dest": "page_cycles",
@@ -686,6 +695,7 @@ class Raptor(
         self.gecko_profile_entries = self.config.get("gecko_profile_entries")
         self.gecko_profile_threads = self.config.get("gecko_profile_threads")
         self.gecko_profile_features = self.config.get("gecko_profile_features")
+        self.extra_profiler_run = self.config.get("extra_profiler_run")
         self.test_packages_url = self.config.get("test_packages_url")
         self.test_url_params = self.config.get("test_url_params")
         self.host = self.config.get("host")
@@ -743,6 +753,9 @@ class Raptor(
                 gecko_results.extend(
                     ["--gecko-profile-threads", self.gecko_profile_threads]
                 )
+        else:
+            if self.extra_profiler_run:
+                gecko_results.append("--extra-profiler-run")
         return gecko_results
 
     def query_abs_dirs(self):

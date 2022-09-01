@@ -269,6 +269,9 @@ def write_test_settings_json(args, test_details, oskey):
         if features:
             test_settings["raptor-options"]["gecko_profile_features"] = features
 
+    if test_details.get("extra_profiler_run", False):
+        test_settings["raptor-options"]["extra_profiler_run"] = True
+
     if test_details.get("newtab_per_cycle", None) is not None:
         test_settings["raptor-options"]["newtab_per_cycle"] = bool(
             test_details["newtab_per_cycle"]
@@ -421,6 +424,10 @@ def get_raptor_test_list(args, oskey):
             next_test.pop("gecko_profile_interval", None)
             next_test.pop("gecko_profile_threads", None)
             next_test.pop("gecko_profile_features", None)
+
+        if args.extra_profiler_run is True:
+            next_test["extra_profiler_run"] = True
+            LOG.info("extra-profiler-run enabled")
 
         if args.debug_mode is True:
             next_test["debug_mode"] = True
