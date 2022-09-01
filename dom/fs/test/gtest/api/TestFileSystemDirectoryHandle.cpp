@@ -19,6 +19,8 @@
 #include "mozilla/UniquePtr.h"
 #include "nsIGlobalObject.h"
 
+using ::testing::_;
+
 namespace mozilla::dom::fs::test {
 
 class TestFileSystemDirectoryHandle : public ::testing::Test {

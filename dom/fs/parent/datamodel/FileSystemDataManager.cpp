@@ -6,6 +6,11 @@
 
 #include "FileSystemDataManager.h"
 
+#include "FileSystemDatabaseManager.h"
+#include "FileSystemDatabaseManagerVersion001.h"
+#include "FileSystemHashSource.h"
+#include "fs/FileSystemConstants.h"
+#include "GetDirectoryForOrigin.h"
 #include "mozilla/Result.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/FileSystemManagerParent.h"
@@ -13,12 +18,18 @@
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozIStorageService.h"
+#include "mozStorageCID.h"
 #include "nsBaseHashtable.h"
+#include "nsCOMPtr.h"
 #include "nsHashKeys.h"
+#include "nsIFile.h"
 #include "nsNetCID.h"
 #include "nsProxyRelease.h"
 #include "nsServiceManagerUtils.h"
+#include "nsString.h"
 #include "nsThreadUtils.h"
+#include "SchemaVersion001.h"
 
 namespace mozilla::dom::fs::data {
 
@@ -93,11 +104,106 @@ void RemoveFileSystemDataManager(const Origin& aOrigin) {
   }
 }
 
+nsresult GetOrCreateEntry(const nsAString& aDesiredFilePath, bool& aExists,
+                          nsCOMPtr<nsIFile>& aFile,
+                          decltype(nsIFile::NORMAL_FILE_TYPE) aKind,
+                          uint32_t aPermissions) {
+  MOZ_ASSERT(!aDesiredFilePath.IsEmpty());
+
+  QM_TRY(MOZ_TO_RESULT(NS_NewLocalFile(aDesiredFilePath,
+                                       /* aFollowLinks */ false,
+                                       getter_AddRefs(aFile))));
+
+  QM_TRY(MOZ_TO_RESULT(aFile->Exists(&aExists)));
+  if (aExists) {
+    return NS_OK;
+  }
+
+  QM_TRY(MOZ_TO_RESULT(aFile->Create(aKind, aPermissions)));
+
+  return NS_OK;
+}
+
+nsresult GetFileSystemDirectory(const Origin& aOrigin,
+                                nsCOMPtr<nsIFile>& aDirectory) {
+  QM_TRY_UNWRAP(RefPtr<quota::QuotaManager> quotaManager,
+                quota::QuotaManager::GetOrCreate());
+
+#if 0
+  QM_TRY_UNWRAP(aDirectory, quotaManager->GetDirectoryForOrigin(
+                                quota::PERSISTENCE_TYPE_DEFAULT, aOrigin));
+#else
+  QM_TRY_UNWRAP(aDirectory, GetDirectoryForOrigin(*quotaManager, aOrigin));
+#endif
+
+  QM_TRY(MOZ_TO_RESULT(aDirectory->AppendRelativePath(u"fs"_ns)));
+
+  return NS_OK;
+}
+
+nsresult GetFileSystemDatabaseFile(const Origin& aOrigin,
+                                   nsString& aDatabaseFile) {
+  nsCOMPtr<nsIFile> directoryPath;
+  QM_TRY(MOZ_TO_RESULT(GetFileSystemDirectory(aOrigin, directoryPath)));
+
+  QM_TRY(
+      MOZ_TO_RESULT(directoryPath->AppendRelativePath(u"metadata.sqlite"_ns)));
+
+  QM_TRY(MOZ_TO_RESULT(directoryPath->GetPath(aDatabaseFile)));
+
+  return NS_OK;
+}
+
+nsresult GetDatabasePath(const Origin& aOrigin, bool& aExists,
+                         nsCOMPtr<nsIFile>& aFile) {
+  nsString databaseFilePath;
+  QM_TRY(MOZ_TO_RESULT(GetFileSystemDatabaseFile(aOrigin, databaseFilePath)));
+
+  MOZ_ASSERT(!databaseFilePath.IsEmpty());
+
+  return GetOrCreateEntry(databaseFilePath, aExists, aFile,
+                          nsIFile::NORMAL_FILE_TYPE, 0644);
+}
+
+Result<ResultConnection, QMResult> GetStorageConnection(const Origin& aOrigin) {
+  bool exists = false;
+  nsCOMPtr<nsIFile> databaseFile;
+  QM_TRY(QM_TO_RESULT(GetDatabasePath(aOrigin, exists, databaseFile)));
+
+  QM_TRY_INSPECT(
+      const auto& storageService,
+      QM_TO_RESULT_TRANSFORM(MOZ_TO_RESULT_GET_TYPED(
+          nsCOMPtr<mozIStorageService>, MOZ_SELECT_OVERLOAD(do_GetService),
+          MOZ_STORAGE_SERVICE_CONTRACTID)));
+
+  const auto flags = mozIStorageService::CONNECTION_DEFAULT;
+  ResultConnection connection;
+  QM_TRY(QM_TO_RESULT(storageService->OpenDatabase(
+      databaseFile, flags, getter_AddRefs(connection))));
+
+  return connection;
+}
+
 }  // namespace
 
+Result<EntryId, QMResult> GetRootHandle(const Origin& origin) {
+  MOZ_ASSERT(!origin.IsEmpty());
+
+  return FileSystemHashSource::GenerateHash(origin, kRootName);
+}
+
+Result<EntryId, QMResult> GetEntryHandle(
+    const FileSystemChildMetadata& aHandle) {
+  MOZ_ASSERT(!aHandle.parentId().IsEmpty());
+
+  return FileSystemHashSource::GenerateHash(aHandle.parentId(),
+                                            aHandle.childName());
+}
+
 FileSystemDataManager::FileSystemDataManager(
-    const Origin& aOrigin, MovingNotNull<RefPtr<TaskQueue>> aIOTaskQueue)
-    : mOrigin(aOrigin),
+    const quota::OriginMetadata& aOriginMetadata,
+    MovingNotNull<RefPtr<TaskQueue>> aIOTaskQueue)
+    : mOriginMetadata(aOriginMetadata),
       mBackgroundTarget(WrapNotNull(GetCurrentSerialEventTarget())),
       mIOTaskQueue(std::move(aIOTaskQueue)),
       mRegCount(0),
@@ -108,13 +214,14 @@ FileSystemDataManager::~FileSystemDataManager() {
 }
 
 RefPtr<FileSystemDataManager::CreatePromise>
-FileSystemDataManager::GetOrCreateFileSystemDataManager(const Origin& aOrigin) {
+FileSystemDataManager::GetOrCreateFileSystemDataManager(
+    const quota::OriginMetadata& aOriginMetadata) {
   if (quota::QuotaManager::IsShuttingDown()) {
     return CreatePromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
   if (RefPtr<FileSystemDataManager> dataManager =
-          GetFileSystemDataManager(aOrigin)) {
+          GetFileSystemDataManager(aOriginMetadata.mOrigin)) {
     if (dataManager->IsOpening()) {
       // We have to wait for the open to be finished before resolving the
       // promise. The manager can't close itself in the meantime because we
@@ -137,8 +244,8 @@ FileSystemDataManager::GetOrCreateFileSystemDataManager(const Origin& aOrigin) {
       // call to `GetOrCreateFileSystemManager` will handle any new situation.
       return dataManager->OnClose()->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [aOrigin](const BoolPromise::ResolveOrRejectValue&) {
-            return GetOrCreateFileSystemDataManager(aOrigin);
+          [aOriginMetadata](const BoolPromise::ResolveOrRejectValue&) {
+            return GetOrCreateFileSystemDataManager(aOriginMetadata);
           });
     }
 
@@ -152,15 +259,15 @@ FileSystemDataManager::GetOrCreateFileSystemDataManager(const Origin& aOrigin) {
                                         NS_STREAMTRANSPORTSERVICE_CONTRACTID),
                 CreatePromise::CreateAndReject(NS_ERROR_FAILURE, __func__));
 
-  nsCString taskQueueName("OPFS "_ns + aOrigin);
+  nsCString taskQueueName("OPFS "_ns + aOriginMetadata.mOrigin);
 
   RefPtr<TaskQueue> ioTaskQueue =
       TaskQueue::Create(streamTransportService.forget(), taskQueueName.get());
 
   auto dataManager = MakeRefPtr<FileSystemDataManager>(
-      aOrigin, WrapMovingNotNull(ioTaskQueue));
+      aOriginMetadata, WrapMovingNotNull(ioTaskQueue));
 
-  AddFileSystemDataManager(aOrigin, dataManager);
+  AddFileSystemDataManager(aOriginMetadata.mOrigin, dataManager);
 
   return dataManager->BeginOpen()->Then(
       GetCurrentSerialEventTarget(), __func__,
@@ -259,18 +366,79 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
 
   mState = State::Opening;
 
-  // XXX Add storage initialization to the chain.
+  // These have to be done on the PBackground thread
+  auto connectionRes = fs::data::GetStorageConnection(mOriginMetadata.mOrigin);
+  if (NS_WARN_IF(connectionRes.isErr())) {
+    return BoolPromise::CreateAndReject(connectionRes.unwrapErr().NSResult(),
+                                        __func__);
+  }
+  auto connection = connectionRes.unwrap();
+  QM_TRY_UNWRAP(DatabaseVersion version,
+                SchemaVersion001::InitializeConnection(connection,
+                                                       mOriginMetadata.mOrigin),
+                BoolPromise::CreateAndReject(NS_ERROR_FAILURE, __func__));
 
-  InvokeAsync(MutableIOTargetPtr(), __func__,
-              [self = RefPtr<FileSystemDataManager>(this)]() mutable {
-                nsCOMPtr<nsISerialEventTarget> target =
-                    self->MutableBackgroundTargetPtr();
+  auto quotaManagerRes = quota::QuotaManager::GetOrCreate();
+  if (NS_WARN_IF(quotaManagerRes.isErr())) {
+    return BoolPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+  RefPtr<quota::QuotaManager> quotamanager = quotaManagerRes.unwrap();
 
-                NS_ProxyRelease("ReleaseFileSystemDataManager", target,
-                                self.forget());
+  if (1 == version) {
+    mDatabaseManager =
+        MakeUnique<FileSystemDatabaseManagerVersion001>(std::move(connection));
+  }
 
-                return BoolPromise::CreateAndResolve(true, __func__);
-              })
+  // XXX Take a directory lock here so our origin isn't evicted
+
+  InvokeAsync(
+      quotamanager->IOThread(), __func__,
+      [self = RefPtr<FileSystemDataManager>(this)]() mutable {
+        auto autoProxyReleaseManager = MakeScopeExit([&self] {
+          nsCOMPtr<nsISerialEventTarget> target =
+              self->MutableBackgroundTargetPtr();
+
+          NS_ProxyRelease("ReleaseFileSystemDataManager", target,
+                          self.forget());
+        });
+
+        quota::QuotaManager* quotamanager = quota::QuotaManager::Get();
+        if (NS_WARN_IF(!quotamanager)) {
+          return BoolPromise::CreateAndReject(NS_ERROR_UNEXPECTED, __func__);
+        }
+        nsresult rv = quotamanager->EnsureStorageIsInitialized();
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return BoolPromise::CreateAndReject(rv, __func__);
+        }
+        rv = quotamanager->EnsureTemporaryStorageIsInitialized();
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return BoolPromise::CreateAndReject(rv, __func__);
+        }
+        auto result = quotamanager->EnsureTemporaryOriginIsInitialized(
+            quota::PERSISTENCE_TYPE_DEFAULT, self->mOriginMetadata);
+        if (result.isOk()) {
+          return BoolPromise::CreateAndResolve(true, __func__);
+        }
+        return BoolPromise::CreateAndReject(result.unwrapErr(), __func__);
+      })
+      ->Then(MutableIOTargetPtr(), __func__,
+             [self = RefPtr<FileSystemDataManager>(this)](
+                 const BoolPromise::ResolveOrRejectValue& value) mutable {
+               auto autoProxyReleaseManager = MakeScopeExit([&self] {
+                 nsCOMPtr<nsISerialEventTarget> target =
+                     self->MutableBackgroundTargetPtr();
+
+                 NS_ProxyRelease("ReleaseFileSystemDataManager", target,
+                                 self.forget());
+               });
+
+               if (value.IsReject()) {
+                 return BoolPromise::CreateAndReject(value.RejectValue(),
+                                                     __func__);
+               }
+
+               return BoolPromise::CreateAndResolve(true, __func__);
+             })
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [self = RefPtr<FileSystemDataManager>(this)](
                  const BoolPromise::ResolveOrRejectValue& value) {
@@ -306,7 +474,7 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginClose() {
       ->Then(MutableBackgroundTargetPtr(), __func__,
              [self = RefPtr<FileSystemDataManager>(this)](
                  const ShutdownPromise::ResolveOrRejectValue&) {
-               RemoveFileSystemDataManager(self->mOrigin);
+               RemoveFileSystemDataManager(self->mOriginMetadata.mOrigin);
 
                self->mState = State::Closed;
 

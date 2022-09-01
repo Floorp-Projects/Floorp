@@ -19,6 +19,13 @@ UNIFIED_SOURCES += [
     "FileSystemManagerParent.cpp",
     "FileSystemManagerParentFactory.cpp",
     "FileSystemQuotaClient.cpp",
+    "GetDirectoryForOrigin.cpp",
+    "ResultStatement.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "/dom/fs/include",
+    "/dom/fs/parent/datamodel",
 ]
 
 FINAL_LIBRARY = "xul"

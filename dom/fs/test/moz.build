@@ -25,6 +25,7 @@ TEST_HARNESS_FILES.testing.mochitest.tests.dom.fs.test.mochitest.worker += [
 TEST_HARNESS_FILES.xpcshell.dom.fs.test.common += [
     "common/nsresult.js",
     "common/test_basics.js",
+    "common/test_fileSystemDirectoryHandle.js",
 ]
 
 TEST_DIRS += [

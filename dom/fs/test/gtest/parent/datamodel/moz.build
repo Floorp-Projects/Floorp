@@ -6,6 +6,7 @@
 
 UNIFIED_SOURCES = [
     "TestFileSystemDataManager.cpp",
+    "TestFileSystemDataManagerVersion001.cpp",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
@@ -13,6 +14,8 @@ include("/ipc/chromium/chromium-config.mozbuild")
 FINAL_LIBRARY = "xul-gtest"
 
 LOCAL_INCLUDES += [
+    "/dom/fs/include",
+    "/dom/fs/parent",
     "/dom/fs/parent/datamodel",
     "/dom/fs/test/gtest",
 ]
