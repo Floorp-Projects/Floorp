@@ -375,32 +375,28 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
   // XXX The connection should be initialized off the PBackground thread.
 
   // These have to be done on the PBackground thread
-  auto connectionRes = fs::data::GetStorageConnection(mOriginMetadata.mOrigin);
-  if (NS_WARN_IF(connectionRes.isErr())) {
-    return BoolPromise::CreateAndReject(connectionRes.unwrapErr().NSResult(),
-                                        __func__);
-  }
-  auto connection = connectionRes.unwrap();
+
+  QM_TRY_UNWRAP(auto connection,
+                fs::data::GetStorageConnection(mOriginMetadata.mOrigin),
+                CreateAndRejectBoolPromiseFromQMResult);
+
   QM_TRY_UNWRAP(DatabaseVersion version,
                 SchemaVersion001::InitializeConnection(connection,
                                                        mOriginMetadata.mOrigin),
-                BoolPromise::CreateAndReject(NS_ERROR_FAILURE, __func__));
-
-  auto quotaManagerRes = quota::QuotaManager::GetOrCreate();
-  if (NS_WARN_IF(quotaManagerRes.isErr())) {
-    return BoolPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-  }
-  RefPtr<quota::QuotaManager> quotamanager = quotaManagerRes.unwrap();
+                CreateAndRejectBoolPromiseFromQMResult);
 
   if (1 == version) {
     mDatabaseManager =
         MakeUnique<FileSystemDatabaseManagerVersion001>(std::move(connection));
   }
 
+  QM_TRY_UNWRAP(const NotNull<RefPtr<quota::QuotaManager>> quotaManager,
+                quota::QuotaManager::GetOrCreate(), CreateAndRejectBoolPromise);
+
   // XXX Take a directory lock here so our origin isn't evicted
 
   InvokeAsync(
-      quotamanager->IOThread(), __func__,
+      quotaManager->IOThread(), __func__,
       [self = RefPtr<FileSystemDataManager>(this)]() mutable {
         auto autoProxyReleaseManager = MakeScopeExit([&self] {
           nsCOMPtr<nsISerialEventTarget> target =
@@ -410,24 +406,25 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
                           self.forget());
         });
 
-        quota::QuotaManager* quotamanager = quota::QuotaManager::Get();
-        if (NS_WARN_IF(!quotamanager)) {
-          return BoolPromise::CreateAndReject(NS_ERROR_UNEXPECTED, __func__);
-        }
-        nsresult rv = quotamanager->EnsureStorageIsInitialized();
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return BoolPromise::CreateAndReject(rv, __func__);
-        }
-        rv = quotamanager->EnsureTemporaryStorageIsInitialized();
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return BoolPromise::CreateAndReject(rv, __func__);
-        }
-        auto result = quotamanager->EnsureTemporaryOriginIsInitialized(
-            quota::PERSISTENCE_TYPE_DEFAULT, self->mOriginMetadata);
-        if (result.isOk()) {
-          return BoolPromise::CreateAndResolve(true, __func__);
-        }
-        return BoolPromise::CreateAndReject(result.unwrapErr(), __func__);
+        quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
+        QM_TRY(MOZ_TO_RESULT(quotaManager), CreateAndRejectBoolPromise)
+
+        QM_TRY(MOZ_TO_RESULT(quotaManager->EnsureStorageIsInitialized()),
+               CreateAndRejectBoolPromise);
+
+        QM_TRY(
+            MOZ_TO_RESULT(quotaManager->EnsureTemporaryStorageIsInitialized()),
+            CreateAndRejectBoolPromise);
+
+        QM_TRY_INSPECT(
+            const auto& dirInfo,
+            quotaManager->EnsureTemporaryOriginIsInitialized(
+                quota::PERSISTENCE_TYPE_DEFAULT, self->mOriginMetadata),
+            CreateAndRejectBoolPromise);
+
+        Unused << dirInfo;
+
+        return BoolPromise::CreateAndResolve(true, __func__);
       })
       ->Then(MutableIOTargetPtr(), __func__,
              [self = RefPtr<FileSystemDataManager>(this)](

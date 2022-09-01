@@ -12,6 +12,7 @@
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "mozilla/ErrorNames.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryComms.h"
@@ -35,7 +36,19 @@
 #  include "nsILocalFileWin.h"
 #endif
 
-namespace mozilla::dom::quota {
+namespace mozilla {
+
+RefPtr<BoolPromise> CreateAndRejectBoolPromise(const char* aFunc,
+                                               nsresult aRv) {
+  return CreateAndRejectMozPromise<BoolPromise>(aFunc, aRv);
+}
+
+RefPtr<BoolPromise> CreateAndRejectBoolPromiseFromQMResult(
+    const char* aFunc, const QMResult& aRv) {
+  return CreateAndRejectMozPromise<BoolPromise>(aFunc, aRv);
+}
+
+namespace dom::quota {
 
 using namespace mozilla::Telemetry;
 
@@ -617,4 +630,5 @@ Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
 }
 #endif
 
-}  // namespace mozilla::dom::quota
+}  // namespace dom::quota
+}  // namespace mozilla

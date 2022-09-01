@@ -1075,6 +1075,21 @@ auto ErrToDefaultOk(const nsresult aValue) -> Result<V, nsresult> {
   return V{};
 }
 
+template <typename MozPromiseType, typename RejectValueT = nsresult>
+auto CreateAndRejectMozPromise(const char* aFunc, const RejectValueT& aRv)
+    -> decltype(auto) {
+  if constexpr (std::is_same_v<RejectValueT, nsresult>) {
+    return MozPromiseType::CreateAndReject(aRv, aFunc);
+  } else if constexpr (std::is_same_v<RejectValueT, QMResult>) {
+    return MozPromiseType::CreateAndReject(aRv.NSResult(), aFunc);
+  }
+}
+
+RefPtr<BoolPromise> CreateAndRejectBoolPromise(const char* aFunc, nsresult aRv);
+
+RefPtr<BoolPromise> CreateAndRejectBoolPromiseFromQMResult(const char* aFunc,
+                                                           const QMResult& aRv);
+
 // Like Rust's collect with a step function, not a generic iterator/range.
 //
 // Cond must be a function type with a return type to Result<V, E>, where
