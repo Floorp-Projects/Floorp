@@ -287,9 +287,7 @@ void JSContext::onOutOfMemory() {
   MOZ_ASSERT(status == JS::ExceptionStatus::Throwing);
   status = JS::ExceptionStatus::OutOfMemory;
 
-#ifdef DEBUG
-  hadNondeterministicException_ = true;
-#endif
+  reportResourceExhaustion();
 }
 
 JS_PUBLIC_API void js::ReportOutOfMemory(JSContext* cx) {
@@ -338,9 +336,7 @@ void JSContext::onOverRecursed() {
     }
   }
 
-#ifdef DEBUG
-  hadNondeterministicException_ = true;
-#endif
+  reportResourceExhaustion();
 }
 
 JS_PUBLIC_API void js::ReportOverRecursed(JSContext* maybecx) {
@@ -373,9 +369,7 @@ void js::ReportOversizedAllocation(JSContext* cx, const unsigned errorNumber) {
   gc::AutoSuppressGC suppressGC(cx);
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errorNumber);
 
-#ifdef DEBUG
-  cx->hadNondeterministicException_ = true;
-#endif
+  cx->reportResourceExhaustion();
 }
 
 void js::ReportAllocationOverflow(JSContext* cx) {
@@ -1024,7 +1018,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       unwrappedException_(this),
       unwrappedExceptionStack_(this),
 #ifdef DEBUG
-      hadNondeterministicException_(this, false),
+      hadResourceExhaustion_(this, false),
 #endif
       reportGranularity(this, JS_DEFAULT_JITREPORT_GRANULARITY),
       resolvingList(this, nullptr),

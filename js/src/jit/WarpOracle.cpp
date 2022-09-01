@@ -182,12 +182,12 @@ AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
   //
   // Note: this assertion catches potential performance issues.
   // Failing this assertion is not a correctness/security problem.
-  // We therefore ignore cases involving OOM, stack overflow, or
-  // stubs purged by GC.
+  // We therefore ignore cases involving resource exhaustion (OOM,
+  // stack overflow, etc), or stubs purged by GC.
   HashNumber hash = icScript->hash();
   if (outerScript_->jitScript()->hasFailedICHash()) {
     HashNumber oldHash = outerScript_->jitScript()->getFailedICHash();
-    MOZ_ASSERT_IF(hash == oldHash, cx_->hadNondeterministicException());
+    MOZ_ASSERT_IF(hash == oldHash, cx_->hadResourceExhaustion());
   }
   snapshot->setICHash(hash);
 #endif

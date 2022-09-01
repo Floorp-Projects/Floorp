@@ -641,18 +641,26 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   }
 
 #ifdef DEBUG
-  // True if this context has ever called ReportOverRecursed,
-  // ReportOutOfMemory, or ReportOversizedAllocation.
-  js::ContextData<bool> hadNondeterministicException_;
+  // True if this context has ever thrown an exception because of an exceeded
+  // limit: stack space (ReportOverRecursed), memory (ReportOutOfMemory), or
+  // some other self-imposed limit (eg ReportOversizedAllocation). Used when
+  // detecting bailout loops in WarpOracle: bailout loops involving resource
+  // exhaustion are generally not interesting.
+  js::ContextData<bool> hadResourceExhaustion_;
 
  public:
-  bool hadNondeterministicException() const {
-    return hadNondeterministicException_ ||
-           js::oom::simulator.isThreadSimulatingAny();
+  bool hadResourceExhaustion() const {
+    return hadResourceExhaustion_ || js::oom::simulator.isThreadSimulatingAny();
   }
 #endif
 
  public:
+  void reportResourceExhaustion() {
+#ifdef DEBUG
+    hadResourceExhaustion_ = true;
+#endif
+  }
+
   js::ContextData<int32_t> reportGranularity; /* see vm/Probes.h */
 
   js::ContextData<js::AutoResolving*> resolvingList;
