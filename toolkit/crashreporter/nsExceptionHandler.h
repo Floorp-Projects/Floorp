@@ -95,6 +95,7 @@ nsresult AnnotateCrashReport(Annotation key, bool data);
 nsresult AnnotateCrashReport(Annotation key, int data);
 nsresult AnnotateCrashReport(Annotation key, unsigned int data);
 nsresult AnnotateCrashReport(Annotation key, const nsACString& data);
+nsresult AppendToCrashReportAnnotation(Annotation key, const nsACString& data);
 nsresult RemoveCrashReportAnnotation(Annotation key);
 nsresult AppendAppNotesToCrashReport(const nsACString& data);
 
