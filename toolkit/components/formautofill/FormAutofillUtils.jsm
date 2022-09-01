@@ -17,10 +17,7 @@ const ADDRESS_REFERENCES_EXT = "addressReferencesExt.js";
 
 const ADDRESSES_COLLECTION_NAME = "addresses";
 const CREDITCARDS_COLLECTION_NAME = "creditCards";
-const MANAGE_ADDRESSES_KEYWORDS = [
-  "manageAddressesTitle",
-  "addNewAddressTitle",
-];
+const MANAGE_ADDRESSES_KEYWORDS = ["addNewAddressTitle"];
 const EDIT_ADDRESS_KEYWORDS = [
   "givenName",
   "additionalName",
@@ -36,10 +33,7 @@ const EDIT_ADDRESS_KEYWORDS = [
   "email",
   "tel",
 ];
-const MANAGE_CREDITCARDS_KEYWORDS = [
-  "manageCreditCardsTitle",
-  "addNewCreditCardTitle",
-];
+const MANAGE_CREDITCARDS_KEYWORDS = ["addNewCreditCardTitle"];
 const EDIT_CREDITCARD_KEYWORDS = [
   "cardNumber",
   "nameOnCard",
