@@ -39,6 +39,8 @@ toolkit.jar:
   skin/classic/global/media/closed-caption-settings-button.svg (../../shared/media/closed-caption-settings-button.svg)
   skin/classic/global/media/picture-in-picture-enter-fullscreen-button.svg (../../shared/media/picture-in-picture-enter-fullscreen-button.svg)
   skin/classic/global/media/picture-in-picture-exit-fullscreen-button.svg (../../shared/media/picture-in-picture-exit-fullscreen-button.svg)
+  skin/classic/global/media/picture-in-picture-seekForward-button.svg (../../shared/media/picture-in-picture-seekForward-button.svg)
+  skin/classic/global/media/picture-in-picture-seekBackward-button.svg (../../shared/media/picture-in-picture-seekBackward-button.svg)
 # Text recognition widget
 
   skin/classic/global/media/textrecognition.css            (../../shared/media/textrecognition.css)
