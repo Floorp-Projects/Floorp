@@ -497,8 +497,11 @@ class Perftest(object):
         self.config["page_count"] = self.page_count
         res = self.results_handler.summarize_and_output(self.config, tests, test_names)
 
-        # gecko profiling symbolication
-        if self.config["gecko_profile"]:
+        # Gecko profiling symbolication
+        # We enable the gecko profiler either when the profiler is enabled with
+        # gecko_profile flag form the command line or when an extra profiler-enabled
+        # run is added with extra_profiler_run flag.
+        if self.config["gecko_profile"] or self.config.get("extra_profiler_run"):
             self.gecko_profiler.symbolicate()
             # clean up the temp gecko profiling folders
             LOG.info("cleaning up after gecko profiling")
