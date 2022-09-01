@@ -155,9 +155,16 @@ class GeckoProfile(object):
                     break
 
             if not any(results.values()):
-                raise Exception(
-                    "Could not find any browsertime result JSONs in the artifacts"
-                )
+                if is_extra_profiler_run:
+                    LOG.info(
+                        "Could not find any browsertime result JSONs in the artifacts "
+                        " for the extra profiler run"
+                    )
+                    return []
+                else:
+                    raise Exception(
+                        "Could not find any browsertime result JSONs in the artifacts"
+                    )
 
             profile_locations = []
             if self.raptor_config.get("chimera", False) and not is_extra_profiler_run:
