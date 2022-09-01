@@ -7,6 +7,7 @@
 #include "ErrorList.h"
 #include "FileSystemDataManager.h"
 #include "FileSystemDatabaseManagerVersion001.h"
+#include "FileSystemFileManager.h"
 #include "FileSystemHashSource.h"
 #include "gtest/gtest.h"
 #include "mozilla/dom/FileSystemTypes.h"
@@ -34,6 +35,7 @@
 namespace mozilla::dom::fs::test {
 
 using data::FileSystemDatabaseManagerVersion001;
+using data::FileSystemFileManager;
 
 static const Origin& getTestOrigin() {
   static const Origin orig = "testOrigin"_ns;
@@ -62,7 +64,17 @@ static void MakeDatabaseManagerVersion001(
       SchemaVersion001::InitializeConnection(connection, testOrigin));
   ASSERT_EQ(1, version);
 
-  aResult = new FileSystemDatabaseManagerVersion001(std::move(connection));
+  nsCOMPtr<nsIFile> testPath;
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                              getter_AddRefs(testPath));
+  ASSERT_NSEQ(NS_OK, rv);
+
+  auto fmRes =
+      FileSystemFileManager::CreateFileSystemFileManager(std::move(testPath));
+  ASSERT_FALSE(fmRes.isErr());
+
+  aResult = new FileSystemDatabaseManagerVersion001(
+      std::move(connection), MakeUnique<FileSystemFileManager>(fmRes.unwrap()));
 }
 
 TEST(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveDirectories)

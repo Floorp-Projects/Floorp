@@ -8,6 +8,7 @@
 
 #include "FileSystemDatabaseManager.h"
 #include "FileSystemDatabaseManagerVersion001.h"
+#include "FileSystemFileManager.h"
 #include "FileSystemHashSource.h"
 #include "fs/FileSystemConstants.h"
 #include "GetDirectoryForOrigin.h"
@@ -466,40 +467,47 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
 
                return BoolPromise::CreateAndResolve(true, __func__);
              })
-      ->Then(MutableIOTargetPtr(), __func__,
-             [self = RefPtr<FileSystemDataManager>(this)](
-                 const BoolPromise::ResolveOrRejectValue& value) mutable {
-               auto autoProxyReleaseManager = MakeScopeExit([&self] {
-                 nsCOMPtr<nsISerialEventTarget> target =
-                     self->MutableBackgroundTargetPtr();
+      ->Then(
+          MutableIOTargetPtr(), __func__,
+          [self = RefPtr<FileSystemDataManager>(this)](
+              const BoolPromise::ResolveOrRejectValue& value) mutable {
+            auto autoProxyReleaseManager = MakeScopeExit([&self] {
+              nsCOMPtr<nsISerialEventTarget> target =
+                  self->MutableBackgroundTargetPtr();
 
-                 NS_ProxyRelease("ReleaseFileSystemDataManager", target,
-                                 self.forget());
-               });
+              NS_ProxyRelease("ReleaseFileSystemDataManager", target,
+                              self.forget());
+            });
 
-               if (value.IsReject()) {
-                 return BoolPromise::CreateAndReject(value.RejectValue(),
-                                                     __func__);
-               }
+            if (value.IsReject()) {
+              return BoolPromise::CreateAndReject(value.RejectValue(),
+                                                  __func__);
+            }
 
-               QM_TRY_UNWRAP(auto connection,
-                             fs::data::GetStorageConnection(
-                                 self->mOriginMetadata.mOrigin),
-                             CreateAndRejectBoolPromiseFromQMResult);
+            QM_TRY_UNWRAP(
+                auto connection,
+                fs::data::GetStorageConnection(self->mOriginMetadata.mOrigin),
+                CreateAndRejectBoolPromiseFromQMResult);
 
-               QM_TRY_UNWRAP(DatabaseVersion version,
-                             SchemaVersion001::InitializeConnection(
-                                 connection, self->mOriginMetadata.mOrigin),
-                             CreateAndRejectBoolPromiseFromQMResult);
+            QM_TRY_UNWRAP(DatabaseVersion version,
+                          SchemaVersion001::InitializeConnection(
+                              connection, self->mOriginMetadata.mOrigin),
+                          CreateAndRejectBoolPromiseFromQMResult);
 
-               if (1 == version) {
-                 self->mDatabaseManager =
-                     MakeUnique<FileSystemDatabaseManagerVersion001>(
-                         std::move(connection));
-               }
+            if (1 == version) {
+              QM_TRY_UNWRAP(FileSystemFileManager fmRes,
+                            FileSystemFileManager::CreateFileSystemFileManager(
+                                self->mOriginMetadata.mOrigin),
+                            CreateAndRejectBoolPromiseFromQMResult);
 
-               return BoolPromise::CreateAndResolve(true, __func__);
-             })
+              self->mDatabaseManager =
+                  MakeUnique<FileSystemDatabaseManagerVersion001>(
+                      std::move(connection),
+                      MakeUnique<FileSystemFileManager>(std::move(fmRes)));
+            }
+
+            return BoolPromise::CreateAndResolve(true, __func__);
+          })
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [self = RefPtr<FileSystemDataManager>(this)](
                  const BoolPromise::ResolveOrRejectValue& value) {

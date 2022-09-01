@@ -11,6 +11,7 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     "FileSystemDatabaseManagerVersion001.cpp",
     "FileSystemDataManager.cpp",
+    "FileSystemFileManager.cpp",
     "SchemaVersion001.cpp",
 ]
 
