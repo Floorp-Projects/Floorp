@@ -99,7 +99,7 @@ class nsViewManager final {
   /**
    * Do any resizes that are pending.
    */
-  void FlushDelayedResize(bool aDoReflow);
+  void FlushDelayedResize();
 
   /**
    * Called to inform the view manager that the entire area of a view
@@ -365,7 +365,7 @@ class nsViewManager final {
   LayoutDeviceIntRect ViewToWidget(nsView* aView, const nsRect& aRect) const;
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void DoSetWindowDimensions(nscoord aWidth, nscoord aHeight, bool aDoReflow);
+  void DoSetWindowDimensions(nscoord aWidth, nscoord aHeight);
   bool ShouldDelayResize() const;
 
   bool IsPainting() const { return RootViewManager()->mPainting; }

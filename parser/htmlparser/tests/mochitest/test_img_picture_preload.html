@@ -9,8 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1067345
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-
-  <script type="text/javascript">
+  <script>
     // Ensure srcset/picture are enabled, re-run the test at different DPI
     // levels to ensure preload step does the right responsive image selection
 
@@ -67,6 +66,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1067345
         iframe.addEventListener("load", function() {
           SpecialPowers.pushPrefEnv({"set": [ [ "layout.css.devPixelsPerPx", currentDPI ]] },
                                     function() {
+            // Make sure we trigger a layout flush so that the frame is sized
+            // appropriately after the DPI changes.
+            iframe.getBoundingClientRect();
             // Clear image cache for next run (we don't try to validate cached items
             // in preload).
             SpecialPowers.Cc["@mozilla.org/image/tools;1"]

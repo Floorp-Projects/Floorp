@@ -3496,9 +3496,8 @@ nsresult nsGlobalWindowOuter::GetInnerSize(CSSSize& aSize) {
 
   // Whether or not the css viewport has been overridden, we can get the
   // correct value by looking at the visible area of the presContext.
-  RefPtr<nsViewManager> viewManager = presShell->GetViewManager();
-  if (viewManager) {
-    viewManager->FlushDelayedResize(false);
+  if (RefPtr<nsViewManager> viewManager = presShell->GetViewManager()) {
+    viewManager->FlushDelayedResize();
   }
 
   // FIXME: Bug 1598487 - Return the layout viewport instead of the ICB.
