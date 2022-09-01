@@ -691,6 +691,7 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
   RegExpDepthCheck depthCheck(cx);
   if (!depthCheck.check(data.tree)) {
     JS_ReportErrorASCII(cx, "regexp too big");
+    cx->reportResourceExhaustion();
     return false;
   }
 
@@ -752,6 +753,7 @@ bool CompilePattern(JSContext* cx, MutableHandleRegExpShared re,
                    isLatin1)) {
     case AssembleResult::TooLarge:
       JS_ReportErrorASCII(cx, "regexp too big");
+      cx->reportResourceExhaustion();
       return false;
     case AssembleResult::OutOfMemory:
       MOZ_ASSERT(cx->isThrowingOutOfMemory());
