@@ -4,9 +4,6 @@
 const { TabsSetupFlowManager } = ChromeUtils.importESModule(
   "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs"
 );
-const { SyncedTabs } = ChromeUtils.import(
-  "resource://services-sync/SyncedTabs.jsm"
-);
 
 const MOBILE_PROMO_DISMISSED_PREF =
   "browser.tabs.firefox-view.mobilePromo.dismissed";
@@ -857,7 +854,7 @@ add_task(async function test_network_offline() {
 
 add_task(async function test_sync_error() {
   const sandbox = await setupWithDesktopDevices();
-  sandbox.spy(SyncedTabs, "syncTabs");
+  sandbox.spy(TabsSetupFlowManager, "forceSyncTabs");
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
 
@@ -890,10 +887,13 @@ add_task(async function test_sync_error() {
     );
 
     await BrowserTestUtils.waitForCondition(() => {
-      return SyncedTabs.syncTabs.calledOnce;
+      return TabsSetupFlowManager.forceSyncTabs.calledOnce;
     });
 
-    ok(SyncedTabs.syncTabs.calledOnce, "SyncedTabs.syncTabs() was called once");
+    ok(
+      TabsSetupFlowManager.forceSyncTabs.calledOnce,
+      "TabsSetupFlowManager.forceSyncTabs() was called once"
+    );
 
     // Clear the error.
     Services.obs.notifyObservers(null, "weave:service:sync:finish");

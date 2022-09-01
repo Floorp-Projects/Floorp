@@ -9886,6 +9886,9 @@ var FirefoxViewHandler = {
         FirefoxViewNotificationManager.shouldNotificationDotBeShowing()
       );
     }
+    XPCOMUtils.defineLazyModuleGetters(this, {
+      SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
+    });
     Services.obs.addObserver(this, "firefoxview-notification-dot-update");
   },
   uninit() {
@@ -9922,8 +9925,8 @@ var FirefoxViewHandler = {
       case "TabSelect":
         this.button?.toggleAttribute("open", e.target == this.tab);
         this.button?.setAttribute("aria-selected", e.target == this.tab);
-        this._removeNotificationDotIfTabSelected();
         this._recordViewIfTabSelected();
+        this.handleFirefoxViewSelect();
         break;
       case "TabClose":
         this.tab = null;
@@ -9931,7 +9934,7 @@ var FirefoxViewHandler = {
         this.button?.removeAttribute("aria-controls");
         break;
       case "activate":
-        this._removeNotificationDotIfTabSelected();
+        this.handleFirefoxViewSelect();
         break;
     }
   },
@@ -9946,8 +9949,9 @@ var FirefoxViewHandler = {
         break;
     }
   },
-  _removeNotificationDotIfTabSelected() {
+  handleFirefoxViewSelect() {
     if (this.tab?.selected) {
+      this.SyncedTabs.syncTabs();
       Services.obs.notifyObservers(
         null,
         "firefoxview-notification-dot-update",

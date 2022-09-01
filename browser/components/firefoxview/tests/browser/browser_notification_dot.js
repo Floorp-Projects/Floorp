@@ -80,6 +80,7 @@ async function initTabSync() {
 add_task(async function testNotificationDot() {
   const sandbox = setupRecentDeviceListMocks();
   const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
+  sandbox.spy(SyncedTabs, "syncTabs");
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
   let fxViewBtn = win.document.getElementById("firefox-view-button");
@@ -115,6 +116,12 @@ add_task(async function testNotificationDot() {
     await waitForNotificationBadgeToBeHidden(fxViewBtn),
     "The notification badge is not showing after going to Firefox View"
   );
+
+  await BrowserTestUtils.waitForCondition(() => {
+    return SyncedTabs.syncTabs.calledOnce;
+  });
+
+  ok(SyncedTabs.syncTabs.calledOnce, "SyncedTabs.syncTabs() was called once");
 
   syncedTabsMock.returns(tabsList1);
   // Initiate a synced tabs update  with new tabs
