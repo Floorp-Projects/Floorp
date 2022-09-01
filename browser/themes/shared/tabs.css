@@ -742,28 +742,24 @@ toolbar:not(#TabsToolbar) #firefox-view-button:-moz-locale-dir(rtl) {
   min-height: 12px;
 }
 
-#allTabsMenu-allTabsView {
-  --blue-40: #45a1ff;
-  max-width: 42em;
-}
-
 /* The list of tabs is in its own panel-subview-body which will scroll. We don't
-   want any padding above/below the scrollbars, so remove the padding/margin
-   from the separator and outer panel-subview-body. */
+   want any padding below the scrollbar, so remove the bottom padding
+   from the outer panel-subview-body. */
 #allTabsMenu-allTabsView > .panel-subview-body {
   padding-bottom: 0;
 }
 
-.all-tabs-item > .all-tabs-secondary-button {
-  padding: 0;
-  padding-inline-start: 6px;
-  opacity: .8;
-  -moz-context-properties: fill;
-  fill: currentColor;
+#allTabsMenu-allTabsView-tabs {
+  padding-top: 0;
 }
 
-.all-tabs-secondary-button:hover {
-  opacity: 1;
+#allTabsMenu-hiddenTabsView-tabs {
+  padding-bottom: var(--panel-subview-body-padding-block);
+}
+
+.all-tabs-item {
+  margin-inline: var(--arrowpanel-menuitem-margin-inline);
+  border-radius: var(--arrowpanel-menuitem-border-radius);
 }
 
 .all-tabs-item:hover {
@@ -774,23 +770,24 @@ toolbar:not(#TabsToolbar) #firefox-view-button:-moz-locale-dir(rtl) {
   background-color: var(--panel-item-active-bgcolor);
 }
 
-.all-tabs-item:hover > .all-tabs-button,
-.all-tabs-item:hover > .all-tabs-secondary-button {
-  /* Since the background is set on the item, don't set it on the children. */
-  background-color: transparent !important;
-}
-
 .all-tabs-item[selected] {
   font-weight: bold;
+}
+
+.all-tabs-item > toolbarbutton {
+  margin: 0;
+  /* Since the background is set on the item, don't set it on the children. */
+  background-color: transparent !important;
 }
 
 .all-tabs-button {
   list-style-image: url("chrome://global/skin/icons/defaultFavicon.svg");
 }
 
-.all-tabs-secondary-button > label {
-  display: none;
-  margin: 0 5.5px;
+.all-tabs-secondary-button {
+  opacity: .8;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 .all-tabs-secondary-button[soundplaying] {
@@ -801,15 +798,10 @@ toolbar:not(#TabsToolbar) #firefox-view-button:-moz-locale-dir(rtl) {
   list-style-image: url(chrome://global/skin/media/audio-muted.svg);
 }
 
-#allTabsMenu-allTabsViewTabs {
-  padding-bottom: 8px;
+.all-tabs-secondary-button:hover {
+  opacity: 1;
 }
 
-#allTabsMenu-allTabsViewTabs > .all-tabs-item {
-  margin-inline: 8px;
-  border-radius: 4px;
-}
-
-.all-tabs-item > toolbarbutton {
-  margin-inline-start: 0;
+.all-tabs-secondary-button > label {
+  display: none !important; /* override panelUI-shared.css */
 }
