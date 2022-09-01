@@ -78,7 +78,7 @@ async function testWithNewWindow(func) {
 add_task(async function test_reorder() {
   await testWithNewWindow(async function(newWindow) {
     const list = newWindow.document.getElementById(
-      "allTabsMenu-allTabsViewTabs"
+      "allTabsMenu-allTabsView-tabs"
     );
 
     assertOrder(getOrderOfList(list), [0, 1, 2, 3, 4, 5], "before reorder");
@@ -136,7 +136,7 @@ function tabOf(row) {
 add_task(async function test_move_to_tab_bar() {
   await testWithNewWindow(async function(newWindow) {
     const list = newWindow.document.getElementById(
-      "allTabsMenu-allTabsViewTabs"
+      "allTabsMenu-allTabsView-tabs"
     );
 
     assertOrder(getOrderOfList(list), [0, 1, 2, 3, 4, 5], "before reorder");
@@ -183,7 +183,7 @@ add_task(async function test_move_to_different_tab_bar() {
 
   await testWithNewWindow(async function(newWindow) {
     const list = newWindow.document.getElementById(
-      "allTabsMenu-allTabsViewTabs"
+      "allTabsMenu-allTabsView-tabs"
     );
 
     assertOrder(

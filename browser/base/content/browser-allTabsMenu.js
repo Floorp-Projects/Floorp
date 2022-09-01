@@ -15,7 +15,7 @@ var gTabsPanel = {
   kElements: {
     allTabsButton: "alltabs-button",
     allTabsView: "allTabsMenu-allTabsView",
-    allTabsViewTabs: "allTabsMenu-allTabsViewTabs",
+    allTabsViewTabs: "allTabsMenu-allTabsView-tabs",
     dropIndicator: "allTabsMenu-dropIndicator",
     containerTabsView: "allTabsMenu-containerTabsView",
     hiddenTabsButton: "allTabsMenu-hiddenTabsButton",
