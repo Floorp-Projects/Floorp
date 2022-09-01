@@ -142,10 +142,6 @@ class MFMediaEngineStream
   // Modify on MF thread pool, access from any threads.
   Atomic<bool> mIsSelected;
 
-  // True if the stream has received the last data.
-  // Modify on the task queue, access from any threads.
-  Atomic<bool> mReceivedEOS;
-
   // A thread-safe queue storing input sample.
   MediaQueue<MediaRawData> mRawDataQueue;
 
@@ -157,6 +153,13 @@ class MFMediaEngineStream
 
   // Notify when playback reachs the end for this track.
   MediaEventProducer<TrackInfo::TrackType> mEndedEvent;
+
+  // True if the stream has received the last data, but it could be reset if the
+  // stream starts delivering more data. Used on the task queue only.
+  bool mReceivedEOS;
+
+  // Used on the task queue only.
+  bool mHasDispatchedEndEvent;
 };
 
 /**
