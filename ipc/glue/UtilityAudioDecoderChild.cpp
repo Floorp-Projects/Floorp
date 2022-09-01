@@ -6,20 +6,24 @@
 
 #include "UtilityAudioDecoderChild.h"
 
+#include "base/basictypes.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/dom/ContentParent.h"
 
 namespace mozilla::ipc {
 
-static StaticRefPtr<UtilityAudioDecoderChild> sAudioDecoderChild;
+static EnumeratedArray<SandboxingKind, SandboxingKind::COUNT,
+                       StaticRefPtr<UtilityAudioDecoderChild>>
+    sAudioDecoderChilds;
 
-UtilityAudioDecoderChild::UtilityAudioDecoderChild() {
+UtilityAudioDecoderChild::UtilityAudioDecoderChild(SandboxingKind aKind)
+    : mSandbox(aKind) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
 void UtilityAudioDecoderChild::ActorDestroy(ActorDestroyReason aReason) {
   MOZ_ASSERT(NS_IsMainThread());
-  sAudioDecoderChild = nullptr;
+  sAudioDecoderChilds[mSandbox] = nullptr;
 }
 
 void UtilityAudioDecoderChild::Bind(
@@ -29,20 +33,22 @@ void UtilityAudioDecoderChild::Bind(
 }
 
 /* static */
-RefPtr<UtilityAudioDecoderChild> UtilityAudioDecoderChild::GetSingleton() {
+RefPtr<UtilityAudioDecoderChild> UtilityAudioDecoderChild::GetSingleton(
+    SandboxingKind aKind) {
   MOZ_ASSERT(NS_IsMainThread());
   bool shutdown = AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMWillShutdown);
-  if (!sAudioDecoderChild && !shutdown) {
-    sAudioDecoderChild = new UtilityAudioDecoderChild();
+  if (!sAudioDecoderChilds[aKind] && !shutdown) {
+    sAudioDecoderChilds[aKind] = new UtilityAudioDecoderChild(aKind);
   }
-  return sAudioDecoderChild;
+  return sAudioDecoderChilds[aKind];
 }
 
 mozilla::ipc::IPCResult
 UtilityAudioDecoderChild::RecvUpdateMediaCodecsSupported(
+    const RemoteDecodeIn& aLocation,
     const media::MediaCodecsSupported& aSupported) {
-  dom::ContentParent::BroadcastMediaCodecsSupportedUpdate(
-      RemoteDecodeIn::UtilityProcess, aSupported);
+  dom::ContentParent::BroadcastMediaCodecsSupportedUpdate(aLocation,
+                                                          aSupported);
   return IPC_OK();
 }
 

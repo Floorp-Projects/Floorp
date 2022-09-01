@@ -864,8 +864,16 @@ var View = {
     let fluentName;
     let fluentArgs = {};
     switch (data.actorName) {
-      case "audioDecoder":
-        fluentName = "about-processes-utility-actor-audio-decoder";
+      case "audioDecoder_Generic":
+        fluentName = "about-processes-utility-actor-audio-decoder-generic";
+        break;
+
+      case "audioDecoder_AppleMedia":
+        fluentName = "about-processes-utility-actor-audio-decoder-applemedia";
+        break;
+
+      case "audioDecoder_WMF":
+        fluentName = "about-processes-utility-actor-audio-decoder-wmf";
         break;
 
       default:

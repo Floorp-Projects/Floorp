@@ -46,8 +46,8 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
   RefPtr<GenericNonExclusivePromise> StartUtility(RefPtr<Actor> aActor,
                                                   SandboxingKind aSandbox);
 
-  RefPtr<AudioDecodingPromise> StartAudioDecoding(
-      base::ProcessId aOtherProcess);
+  RefPtr<AudioDecodingPromise> StartAudioDecoding(base::ProcessId aOtherProcess,
+                                                  SandboxingKind aSandbox);
 
   void OnProcessUnexpectedShutdown(UtilityProcessHost* aHost);
 

@@ -76,6 +76,8 @@ using mozilla::dom::cache::Namespace
 
 using class mozilla::dom::SSCacheCopy from "mozilla/dom/PBackgroundSessionStorageCache.h";
 
+using mozilla::RemoteDecodeIn from "mozilla/RemoteDecoderManagerChild.h";
+
 namespace mozilla {
 namespace ipc {
 
@@ -297,7 +299,7 @@ parent:
   async EnsureRDDProcessAndCreateBridge()
       returns (nsresult rv, Endpoint<PRemoteDecoderManagerChild> aEndpoint);
 
-  async EnsureUtilityProcessAndCreateBridge()
+  async EnsureUtilityProcessAndCreateBridge(RemoteDecodeIn aLocation)
       returns (nsresult rv, Endpoint<PRemoteDecoderManagerChild> aEndpoint);
 
   async PWebSocketConnection(uint32_t aListenerId);

@@ -14,6 +14,7 @@
 #  include "mozilla/EnumSet.h"
 #  include "mozilla/MozPromise.h"
 #  include "mozilla/RefPtr.h"
+#  include "mozilla/ipc/UtilityProcessSandboxing.h"
 #  include "nsISupports.h"
 #  include "nsStringFwd.h"
 #  include "nsTArray.h"

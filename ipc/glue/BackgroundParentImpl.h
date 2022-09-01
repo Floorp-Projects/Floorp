@@ -386,6 +386,7 @@ class BackgroundParentImpl : public PBackgroundParent {
       EnsureRDDProcessAndCreateBridgeResolver&& aResolver) override;
 
   mozilla::ipc::IPCResult RecvEnsureUtilityProcessAndCreateBridge(
+      const RemoteDecodeIn& aLocation,
       EnsureUtilityProcessAndCreateBridgeResolver&& aResolver) override;
 
   bool DeallocPEndpointForReportParent(

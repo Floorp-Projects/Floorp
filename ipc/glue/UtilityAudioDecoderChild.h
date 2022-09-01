@@ -11,6 +11,7 @@
 
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/UtilityProcessParent.h"
+#include "mozilla/ipc/UtilityProcessSandboxing.h"
 #include "mozilla/ipc/PUtilityAudioDecoderChild.h"
 
 #include "PDMFactory.h"
@@ -24,9 +25,25 @@ class UtilityAudioDecoderChild final : public PUtilityAudioDecoderChild {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UtilityAudioDecoderChild, override);
 
   mozilla::ipc::IPCResult RecvUpdateMediaCodecsSupported(
+      const RemoteDecodeIn& aLocation,
       const media::MediaCodecsSupported& aSupported);
 
-  UtilityActorName GetActorName() { return UtilityActorName::AudioDecoder; }
+  UtilityActorName GetActorName() {
+    switch (mSandbox) {
+      case UTILITY_AUDIO_DECODING_GENERIC:
+        return UtilityActorName::AudioDecoder_Generic;
+#ifdef MOZ_APPLEMEDIA
+      case UTILITY_AUDIO_DECODING_APPLE_MEDIA:
+        return UtilityActorName::AudioDecoder_AppleMedia;
+#endif
+#ifdef XP_WIN
+      case UTILITY_AUDIO_DECODING_WMF:
+        return UtilityActorName::AudioDecoder_WMF;
+#endif
+      default:
+        MOZ_CRASH("Unexpected mSandbox for GetActorName()");
+    }
+  }
 
   nsresult BindToUtilityProcess(RefPtr<UtilityProcessParent> aUtilityParent) {
     Endpoint<PUtilityAudioDecoderChild> utilityAudioDecoderChildEnd;
@@ -54,11 +71,13 @@ class UtilityAudioDecoderChild final : public PUtilityAudioDecoderChild {
 
   void Bind(Endpoint<PUtilityAudioDecoderChild>&& aEndpoint);
 
-  static RefPtr<UtilityAudioDecoderChild> GetSingleton();
+  static RefPtr<UtilityAudioDecoderChild> GetSingleton(SandboxingKind aKind);
 
  private:
-  UtilityAudioDecoderChild();
+  explicit UtilityAudioDecoderChild(SandboxingKind aKind);
   ~UtilityAudioDecoderChild() = default;
+
+  const SandboxingKind mSandbox;
 };
 
 }  // namespace mozilla::ipc

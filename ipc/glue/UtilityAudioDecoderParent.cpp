@@ -25,6 +25,9 @@
 #  include "AndroidDecoderModule.h"
 #endif
 
+#include "mozilla/ipc/UtilityProcessChild.h"
+#include "mozilla/RemoteDecodeUtils.h"
+
 namespace mozilla::ipc {
 
 UtilityAudioDecoderParent::UtilityAudioDecoderParent() {
@@ -33,14 +36,18 @@ UtilityAudioDecoderParent::UtilityAudioDecoderParent() {
 }
 
 /* static */
-void UtilityAudioDecoderParent::PreloadForSandbox() {
+void UtilityAudioDecoderParent::GenericPreloadForSandbox() {
 #if defined(MOZ_SANDBOX) && defined(OS_WIN)
   // Preload AV dlls so we can enable Binary Signature Policy
   // to restrict further dll loads.
   ::LoadLibraryW(L"mozavcodec.dll");
   ::LoadLibraryW(L"mozavutil.dll");
+#endif  // defined(MOZ_SANDBOX) && defined(OS_WIN)
+}
 
-  // WMF
+/* static */
+void UtilityAudioDecoderParent::WMFPreloadForSandbox() {
+#if defined(MOZ_SANDBOX) && defined(OS_WIN)
   ::LoadLibraryW(L"mfplat.dll");
   ::LoadLibraryW(L"mf.dll");
 
@@ -54,6 +61,15 @@ void UtilityAudioDecoderParent::PreloadForSandbox() {
     NS_WARNING("Failed to init Media Foundation in the Utility process");
   }
 #endif  // defined(MOZ_SANDBOX) && defined(OS_WIN)
+}
+
+/* static */
+SandboxingKind UtilityAudioDecoderParent::GetSandboxingKind() {
+  RefPtr<UtilityProcessChild> me = UtilityProcessChild::GetSingleton();
+  if (!me) {
+    MOZ_CRASH("I cant find myself");
+  }
+  return me->mSandbox;
 }
 
 void UtilityAudioDecoderParent::Start(
@@ -71,7 +87,8 @@ void UtilityAudioDecoderParent::Start(
 #endif
 
   auto supported = PDMFactory::Supported();
-  Unused << SendUpdateMediaCodecsSupported(std::move(supported));
+  Unused << SendUpdateMediaCodecsSupported(
+      GetRemoteDecodeInFromKind(GetSandboxingKind()), supported);
 }
 
 mozilla::ipc::IPCResult
