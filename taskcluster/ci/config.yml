@@ -696,4 +696,4 @@ expiration-policy:
         default:
             default: 3 months
             medium: 1 year
-            long: 3 years
+            long: 1 year
