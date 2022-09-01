@@ -68,7 +68,9 @@ const ToastNotification = {
       content.requireInteraction
     );
 
-    alert.initActions(content.actions || []);
+    if (content.actions) {
+      alert.actions = content.actions;
+    }
 
     this.AlertsService.showAlert(alert);
 
