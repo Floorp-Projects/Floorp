@@ -8,7 +8,7 @@
   <script type="text/javascript" src="websocket_helpers.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="testWebSockets()">
+<body>
 <div id="container"></div>
 <iframe id="frame" sandbox="allow-scripts"></iframe>
 <script class="testbody" type="text/javascript">
@@ -17,6 +17,7 @@ let iFrameTests = [testSameOriginSandboxInsecure, testSameOriginSandboxSecure, t
 
 function nextIFrameTest() {
   if(iFrameTests.length == 0) {
+    document.getElementById("frame").remove();
     SimpleTest.finish();
   }
   else {
@@ -25,9 +26,7 @@ function nextIFrameTest() {
   }
 }
 
-async function testWebSockets () {
-  SimpleTest.waitForExplicitFinish();
-
+function testWebSockets () {
   testWebSocketSecure();
   testWebSocketInsecure();
 
@@ -35,7 +34,7 @@ async function testWebSockets () {
 }
 
 function testWebSocketSecure () {
-  var ws = CreateTestWS("wss://example.com/tests/dom/websocket/tests/file_websocket_hello");
+  let ws = CreateTestWS("wss://example.com/tests/dom/websocket/tests/file_websocket_hello");
   ws.onopen = function(e) {
     ws.send("data");
   }
@@ -48,7 +47,7 @@ function testWebSocketSecure () {
 // Negative test: this should fail as the page was loaded over https
 function testWebSocketInsecure () {
   try {
-    ws = new WebSocket("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_hello");
+    let ws = new WebSocket("ws://mochi.test:8888/tests/dom/websocket/tests/file_websocket_hello");
     ok(false, "Should throw DOMException");
   } catch (e) {
     ok(e instanceof DOMException, "DOMException thrown ");
@@ -89,8 +88,9 @@ function testCrossOriginSandboxSecure() {
     nextIFrameTest();
   }
 }
-SimpleTest.waitForExplicitFinish();
 
+SimpleTest.waitForExplicitFinish();
+testWebSockets();
 </script>
 </body>
 </html>
