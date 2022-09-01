@@ -126,8 +126,8 @@ nsresult GetOrCreateEntry(const nsAString& aDesiredFilePath, bool& aExists,
 
 nsresult GetFileSystemDirectory(const Origin& aOrigin,
                                 nsCOMPtr<nsIFile>& aDirectory) {
-  QM_TRY_UNWRAP(RefPtr<quota::QuotaManager> quotaManager,
-                quota::QuotaManager::GetOrCreate());
+  quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
 
 #if 0
   QM_TRY_UNWRAP(aDirectory, quotaManager->GetDirectoryForOrigin(
@@ -211,6 +211,7 @@ FileSystemDataManager::FileSystemDataManager(
 
 FileSystemDataManager::~FileSystemDataManager() {
   MOZ_ASSERT(mState == State::Closed);
+  MOZ_ASSERT(!mDatabaseManager);
 }
 
 RefPtr<FileSystemDataManager::CreatePromise>
@@ -366,30 +367,6 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
 
   mState = State::Opening;
 
-  // XXX The connection should be initialized after we create and acquire a
-  // directory lock.
-
-  // XXX The connection should be initialized after we ensure that the storage
-  // is initialized.
-
-  // XXX The connection should be initialized off the PBackground thread.
-
-  // These have to be done on the PBackground thread
-
-  QM_TRY_UNWRAP(auto connection,
-                fs::data::GetStorageConnection(mOriginMetadata.mOrigin),
-                CreateAndRejectBoolPromiseFromQMResult);
-
-  QM_TRY_UNWRAP(DatabaseVersion version,
-                SchemaVersion001::InitializeConnection(connection,
-                                                       mOriginMetadata.mOrigin),
-                CreateAndRejectBoolPromiseFromQMResult);
-
-  if (1 == version) {
-    mDatabaseManager =
-        MakeUnique<FileSystemDatabaseManagerVersion001>(std::move(connection));
-  }
-
   QM_TRY_UNWRAP(const NotNull<RefPtr<quota::QuotaManager>> quotaManager,
                 quota::QuotaManager::GetOrCreate(), CreateAndRejectBoolPromise);
 
@@ -442,6 +419,25 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
                                                      __func__);
                }
 
+               // XXX The connection should be initialized after we create and
+               // acquire a directory lock.
+
+               QM_TRY_UNWRAP(auto connection,
+                             fs::data::GetStorageConnection(
+                                 self->mOriginMetadata.mOrigin),
+                             CreateAndRejectBoolPromiseFromQMResult);
+
+               QM_TRY_UNWRAP(DatabaseVersion version,
+                             SchemaVersion001::InitializeConnection(
+                                 connection, self->mOriginMetadata.mOrigin),
+                             CreateAndRejectBoolPromiseFromQMResult);
+
+               if (1 == version) {
+                 self->mDatabaseManager =
+                     MakeUnique<FileSystemDatabaseManagerVersion001>(
+                         std::move(connection));
+               }
+
                return BoolPromise::CreateAndResolve(true, __func__);
              })
       ->Then(GetCurrentSerialEventTarget(), __func__,
@@ -470,7 +466,19 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginClose() {
   mState = State::Closing;
 
   InvokeAsync(MutableIOTargetPtr(), __func__,
-              []() { return BoolPromise::CreateAndResolve(true, __func__); })
+              [self = RefPtr<FileSystemDataManager>(this)]() mutable {
+                auto autoProxyReleaseManager = MakeScopeExit([&self] {
+                  nsCOMPtr<nsISerialEventTarget> target =
+                      self->MutableBackgroundTargetPtr();
+
+                  NS_ProxyRelease("ReleaseFileSystemDataManager", target,
+                                  self.forget());
+                });
+
+                self->mDatabaseManager = nullptr;
+
+                return BoolPromise::CreateAndResolve(true, __func__);
+              })
       ->Then(MutableBackgroundTargetPtr(), __func__,
              [self = RefPtr<FileSystemDataManager>(this)](
                  const BoolPromise::ResolveOrRejectValue&) {
