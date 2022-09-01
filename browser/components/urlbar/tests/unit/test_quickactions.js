@@ -85,4 +85,23 @@ add_task(async function duplicate_matches() {
     context,
     matches: [expectedMatch("testaction")],
   });
+
+  UrlbarProviderQuickActions.removeAction("testaction");
+});
+
+add_task(async function remove_action() {
+  UrlbarProviderQuickActions.addAction("testaction", {
+    commands: ["testaction"],
+  });
+  UrlbarProviderQuickActions.removeAction("testaction");
+
+  let context = createContext("test", {
+    providers: [UrlbarProviderQuickActions.name],
+    isPrivate: false,
+  });
+
+  await check_results({
+    context,
+    matches: [],
+  });
 });

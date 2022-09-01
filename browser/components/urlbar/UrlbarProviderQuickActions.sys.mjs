@@ -256,7 +256,7 @@ class ProviderQuickActions extends UrlbarProvider {
     this.#loopOverPrefixes(definition.commands, prefix => {
       let result = this.#prefixes.get(prefix);
       if (result) {
-        result = result.filter(val => val == key);
+        result = result.filter(val => val != key);
       }
       this.#prefixes.set(prefix, result);
     });
