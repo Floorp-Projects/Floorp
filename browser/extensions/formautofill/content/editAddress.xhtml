@@ -2,21 +2,18 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<!DOCTYPE html [
-  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-  %globalDTD;
-]>
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title data-localization="addNewAddressTitle"/>
+  <title data-l10n-id="autofill-add-new-address-title"></title>
+  <link rel="localization" href="browser/preferences/formAutofill.ftl"/>
   <link rel="stylesheet" href="chrome://formautofill/content/skin/editDialog-shared.css"/>
   <link rel="stylesheet" href="chrome://formautofill/content/skin/editAddress.css"/>
   <link rel="stylesheet" href="chrome://formautofill/content/skin/editDialog.css"/>
-  <script src="chrome://formautofill/content/l10n.js"></script>
   <script src="chrome://formautofill/content/editDialog.js"></script>
   <script src="chrome://formautofill/content/autofillEditForms.js"></script>
 </head>
-<body dir="&locale.dir;">
+<body>
   <form id="form" class="editAddressForm" autocomplete="off">
     <!--
         The <span class="label-text" …/> needs to be after the form field in the same element in
@@ -25,24 +22,24 @@
     <div id="name-container" class="container">
       <label id="given-name-container">
         <input id="given-name" type="text" required="required"/>
-        <span data-localization="givenName" class="label-text"/>
+        <span data-l10n-id="autofill-address-given-name" class="label-text"/>
       </label>
       <label id="additional-name-container">
         <input id="additional-name" type="text"/>
-        <span data-localization="additionalName" class="label-text"/>
+        <span data-l10n-id="autofill-address-additional-name" class="label-text"/>
       </label>
       <label id="family-name-container">
         <input id="family-name" type="text" required="required"/>
-        <span data-localization="familyName" class="label-text"/>
+        <span data-l10n-id="autofill-address-family-name" class="label-text"/>
       </label>
     </div>
     <label id="organization-container" class="container">
       <input id="organization" type="text"/>
-      <span data-localization="organization2" class="label-text"/>
+      <span data-l10n-id="autofill-address-organization" class="label-text"/>
     </label>
     <label id="street-address-container" class="container">
       <textarea id="street-address" rows="3"/>
-      <span data-localization="streetAddress" class="label-text"/>
+      <span data-l10n-id="autofill-address-street" class="label-text"/>
     </label>
     <label id="address-level3-container" class="container">
       <input id="address-level3" type="text"/>
@@ -67,49 +64,34 @@
       <select id="country" required="required">
         <option/>
       </select>
-      <span data-localization="country" class="label-text"/>
+      <span data-l10n-id="autofill-address-country" class="label-text"/>
     </label>
     <label id="tel-container" class="container">
       <input id="tel" type="tel" dir="auto"/>
-      <span data-localization="tel" class="label-text"/>
+      <span data-l10n-id="autofill-address-tel" class="label-text"/>
     </label>
     <label id="email-container" class="container">
       <input id="email" type="email" required="required"/>
-      <span data-localization="email" class="label-text"/>
+      <span data-l10n-id="autofill-address-email" class="label-text"/>
     </label>
   </form>
   <div id="controls-container">
-    <span id="country-warning-message" data-localization="countryWarningMessage2"/>
-    <button id="cancel" data-localization="cancelBtnLabel"/>
-    <button id="save" class="primary" data-localization="saveBtnLabel"/>
+    <span id="country-warning-message" data-l10n-id="autofill-country-warning-message"/>
+    <button id="cancel" data-l10n-id="autofill-cancel-button"/>
+    <button id="save" class="primary" data-l10n-id="autofill-save-button"/>
   </div>
   <script><![CDATA[
     "use strict";
 
-    /* import-globals-from l10n.js */
-
-    let {
-      DEFAULT_REGION,
-      countries,
-    } = FormAutofill;
-    let {
-      getFormFormat,
-      findAddressSelectOption,
-    } = FormAutofillUtils;
-    let args = window.arguments || [];
-    let {
+    const {
       record,
       noValidate,
-    } = args[0] || {};
+    } = window.arguments?.[0] ?? {};
 
     /* import-globals-from autofillEditForms.js */
-    var fieldContainer = new EditAddress({
+    const fieldContainer = new EditAddress({
       form: document.getElementById("form"),
     }, record, {
-      DEFAULT_REGION,
-      getFormFormat: getFormFormat.bind(FormAutofillUtils),
-      findAddressSelectOption: findAddressSelectOption.bind(FormAutofillUtils),
-      countries,
       noValidate,
     });
 

@@ -2,55 +2,52 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<!DOCTYPE html [
-  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
-  %globalDTD;
-]>
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title data-localization="addNewCreditCardTitle"/>
+  <title data-l10n-id="autofill-add-new-card-title"></title>
+  <link rel="localization" href="browser/preferences/formAutofill.ftl"/>
   <link rel="stylesheet" href="chrome://formautofill/content/skin/editDialog-shared.css"/>
   <link rel="stylesheet" href="chrome://formautofill/content/skin/editCreditCard.css"/>
   <link rel="stylesheet" href="chrome://formautofill/content/skin/editDialog.css"/>
-  <script src="chrome://formautofill/content/l10n.js"></script>
   <script src="chrome://formautofill/content/editDialog.js"></script>
   <script src="chrome://formautofill/content/autofillEditForms.js"></script>
 </head>
-<body dir="&locale.dir;">
+<body>
   <form id="form" class="editCreditCardForm contentPane" autocomplete="off">
     <!--
         The <span class="label-text" …/> needs to be after the form field in the same element in
         order to get proper label styling with :focus and :moz-ui-invalid.
       -->
     <label id="cc-number-container" class="container" role="none">
-      <span id="invalidCardNumberString" hidden="hidden" data-localization="invalidCardNumber"></span>
+      <span id="invalidCardNumberString" hidden="hidden" data-l10n-id="autofill-card-invalid-number"></span>
       <!-- Because there is text both before and after the input, a11y will
           include the value of the input in the label. Therefore, we override
           with aria-labelledby.
         -->
       <input id="cc-number" type="text" required="required" minlength="14" pattern="[- 0-9]+" aria-labelledby="cc-number-label"/>
-      <span id="cc-number-label" data-localization="cardNumber" class="label-text"/>
+      <span id="cc-number-label" data-l10n-id="autofill-card-number" class="label-text"/>
     </label>
     <label id="cc-exp-month-container" class="container">
       <select id="cc-exp-month" required="required">
         <option/>
       </select>
-      <span data-localization="cardExpiresMonth" class="label-text"/>
+      <span data-l10n-id="autofill-card-expires-month" class="label-text"/>
     </label>
     <label id="cc-exp-year-container" class="container">
       <select id="cc-exp-year" required="required">
         <option/>
       </select>
-      <span data-localization="cardExpiresYear" class="label-text"/>
+      <span data-l10n-id="autofill-card-expires-year" class="label-text"/>
     </label>
     <label id="cc-name-container" class="container">
       <input id="cc-name" type="text" required="required"/>
-      <span data-localization="nameOnCard" class="label-text"/>
+      <span data-l10n-id="autofill-card-name-on-card" class="label-text"/>
     </label>
     <label id="cc-type-container" class="container">
       <select id="cc-type" required="required">
       </select>
-      <span data-localization="cardNetwork" class="label-text"/>
+      <span data-l10n-id="autofill-card-network" class="label-text"/>
     </label>
     <label id="cc-csc-container" class="container" hidden="hidden">
       <!-- The CSC container will get filled in by forms that need a CSC (using csc-input.js) -->
@@ -58,45 +55,33 @@
     <div id="billingAddressGUID-container" class="billingAddressRow container rich-picker">
       <select id="billingAddressGUID" required="required">
       </select>
-      <label for="billingAddressGUID" data-localization="billingAddress" class="label-text"/>
+      <label for="billingAddressGUID" data-l10n-id="autofill-card-billing-address" class="label-text"/>
     </div>
   </form>
   <div id="controls-container">
-    <button id="cancel" data-localization="cancelBtnLabel"/>
-    <button id="save" class="primary" data-localization="saveBtnLabel"/>
+    <button id="cancel" data-l10n-id="autofill-cancel-button"/>
+    <button id="save" class="primary" data-l10n-id="autofill-save-button"/>
   </div>
   <script><![CDATA[
     "use strict";
 
-    /* import-globals-from l10n.js */
+    /* import-globals-from editDialog.js */
 
     (async () => {
-      let {
-        getAddressLabel,
-        isCCNumber,
-        getCreditCardNetworks,
-      } = FormAutofillUtils;
-      let args = window.arguments || [];
-      let {
+      const {
         record,
-      } = args[0] || {};
+      } = window.arguments?.[0] ?? {};
 
-      let addresses = {};
+      const addresses = {};
       for (let address of await formAutofillStorage.addresses.getAll()) {
         addresses[address.guid] = address;
       }
 
       /* import-globals-from autofillEditForms.js */
-      let fieldContainer = new EditCreditCard({
+      const fieldContainer = new EditCreditCard({
         form: document.getElementById("form"),
-      }, record, addresses,
-        {
-          getAddressLabel: getAddressLabel.bind(FormAutofillUtils),
-          isCCNumber: isCCNumber.bind(FormAutofillUtils),
-          getSupportedNetworks: getCreditCardNetworks.bind(FormAutofillUtils),
-        });
+      }, record, addresses);
 
-      /* import-globals-from editDialog.js */
       new EditCreditCardDialog({
         title: document.querySelector("title"),
         fieldContainer,
