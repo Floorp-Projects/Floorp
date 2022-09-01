@@ -6,6 +6,7 @@
 
 #include "FileSystemDatabaseManagerVersion001.h"
 
+#include "FileSystemFileManager.h"
 #include "mozilla/dom/FileSystemDataManager.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
@@ -440,6 +441,9 @@ nsresult FileSystemDatabaseManagerVersion001::GetFile(
 
   aPath.Reverse();
 
+  QM_TRY_UNWRAP(aFile,
+                mFileManager->GetOrCreateFile(entryId));  // Timestamp from here
+
   return NS_OK;
 }
 
@@ -518,7 +522,9 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveDirectory(
 
   QM_TRY(QM_TO_RESULT(transaction.Commit()));
 
-  /* TODO: Delete descendants here */
+  for (const auto& child : descendants) {
+    QM_WARNONLY_TRY(MOZ_TO_RESULT(mFileManager->RemoveFile(child)));
+  }
 
   return true;
 }
@@ -561,7 +567,7 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveFile(
 
   QM_TRY(QM_TO_RESULT(transaction.Commit()));
 
-  /* TODO: Delete file from the disk */
+  QM_WARNONLY_TRY(MOZ_TO_RESULT(mFileManager->RemoveFile(entryId)));
 
   return true;
 }

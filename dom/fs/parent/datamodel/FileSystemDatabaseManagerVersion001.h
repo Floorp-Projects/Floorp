@@ -11,6 +11,8 @@
 
 namespace mozilla::dom::fs::data {
 
+class FileSystemFileManager;
+
 /**
  * @brief Versioned implementation of database interface enables backwards
  * support after the schema has changed. Version number 0 refers to
@@ -32,8 +34,9 @@ namespace mozilla::dom::fs::data {
 class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
  public:
   explicit FileSystemDatabaseManagerVersion001(
-      fs::data::FileSystemConnection&& aConnection)
-      : mConnection(aConnection) {}
+      fs::data::FileSystemConnection&& aConnection,
+      UniquePtr<FileSystemFileManager>&& aFileManager)
+      : mConnection(aConnection), mFileManager(std::move(aFileManager)) {}
 
   virtual Result<int64_t, QMResult> GetUsage() const override;
 
@@ -68,6 +71,8 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
   nsresult UpdateUsage(int64_t aDelta);
 
   FileSystemConnection mConnection;
+
+  UniquePtr<FileSystemFileManager> mFileManager;
 };
 
 }  // namespace mozilla::dom::fs::data
