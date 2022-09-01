@@ -55,6 +55,10 @@ nsresult AnnotateCrashReport(Annotation key, const nsACString& data) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+nsresult AppendToCrashReportAnnotation(Annotation key, const nsACString& data) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsresult RemoveCrashReportAnnotation(Annotation key) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
