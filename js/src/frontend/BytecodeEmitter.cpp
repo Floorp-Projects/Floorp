@@ -3592,7 +3592,8 @@ bool BytecodeEmitter::emitDestructuringOpsObject(ListNode* pattern,
         member->isKind(ParseNodeKind::Spread)) {
       subpattern = member->as<UnaryNode>().kid();
 
-      MOZ_ASSERT(!subpattern->isKind(ParseNodeKind::AssignExpr));
+      MOZ_ASSERT_IF(member->isKind(ParseNodeKind::Spread),
+                    !subpattern->isKind(ParseNodeKind::AssignExpr));
     } else {
       MOZ_ASSERT(member->isKind(ParseNodeKind::PropertyDefinition) ||
                  member->isKind(ParseNodeKind::Shorthand));
