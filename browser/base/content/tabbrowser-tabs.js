@@ -87,8 +87,7 @@
         this._updateCloseButtons();
         this._handleTabSelect(true);
       };
-      this._resizeObserver = new ResizeObserver(handleResize);
-      this._resizeObserver.observe(document.documentElement);
+      window.addEventListener("resize", handleResize);
       this._fullscreenMutationObserver = new MutationObserver(handleResize);
       this._fullscreenMutationObserver.observe(document.documentElement, {
         attributeFilter: ["inFullscreen", "inDOMFullscreen"],
@@ -2183,7 +2182,6 @@
           "intl:app-locales-changed"
         );
       }
-
       CustomizableUI.removeListener(this);
     }
 
