@@ -10,7 +10,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewTreeLifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import androidx.savedstate.SavedStateRegistryOwner
-import androidx.savedstate.ViewTreeSavedStateRegistryOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.SelectableTabViewHolder
 import org.mozilla.fenix.compose.ComposeViewHolder
@@ -45,8 +45,7 @@ abstract class ComposeAbstractTabViewHolder(
         }
 
         ViewTreeLifecycleOwner.set(composeView, viewLifecycleOwner)
-        ViewTreeSavedStateRegistryOwner.set(
-            composeView,
+        composeView.setViewTreeSavedStateRegistryOwner(
             viewLifecycleOwner as SavedStateRegistryOwner
         )
     }

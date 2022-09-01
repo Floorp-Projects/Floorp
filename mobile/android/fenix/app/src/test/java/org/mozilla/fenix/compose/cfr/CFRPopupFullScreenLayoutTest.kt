@@ -12,8 +12,8 @@ import android.view.WindowManager
 import android.view.WindowManager.LayoutParams
 import androidx.lifecycle.ViewTreeLifecycleOwner
 import androidx.lifecycle.findViewTreeLifecycleOwner
-import androidx.savedstate.ViewTreeSavedStateRegistryOwner
 import androidx.savedstate.findViewTreeSavedStateRegistryOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -33,7 +33,7 @@ class CFRPopupFullScreenLayoutTest {
     fun `WHEN the popup is constructed THEN setup lifecycle owners`() {
         val anchor = View(testContext).apply {
             ViewTreeLifecycleOwner.set(this, mockk())
-            ViewTreeSavedStateRegistryOwner.set(this, mockk())
+            this.setViewTreeSavedStateRegistryOwner(mockk())
         }
 
         val popupView = spyk(CFRPopupFullScreenLayout("", anchor, mockk(), mockk()) {})
@@ -55,7 +55,7 @@ class CFRPopupFullScreenLayoutTest {
         val context = spyk(testContext)
         val anchor = View(context).apply {
             ViewTreeLifecycleOwner.set(this, mockk())
-            ViewTreeSavedStateRegistryOwner.set(this, mockk())
+            this.setViewTreeSavedStateRegistryOwner(mockk())
         }
         val windowManager = spyk(context.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
         every { context.getSystemService(Context.WINDOW_SERVICE) } returns windowManager

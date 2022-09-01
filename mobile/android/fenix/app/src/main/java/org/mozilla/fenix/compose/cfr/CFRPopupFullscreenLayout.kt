@@ -30,7 +30,8 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.marginStart
 import androidx.lifecycle.ViewTreeLifecycleOwner
-import androidx.savedstate.ViewTreeSavedStateRegistryOwner
+import androidx.savedstate.findViewTreeSavedStateRegistryOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.compose.cfr.CFRPopup.IndicatorDirection.DOWN
 import org.mozilla.fenix.compose.cfr.CFRPopup.IndicatorDirection.UP
@@ -106,7 +107,7 @@ internal class CFRPopupFullScreenLayout(
 
     init {
         ViewTreeLifecycleOwner.set(this, ViewTreeLifecycleOwner.get(anchor))
-        ViewTreeSavedStateRegistryOwner.set(this, ViewTreeSavedStateRegistryOwner.get(anchor))
+        this.setViewTreeSavedStateRegistryOwner(anchor.findViewTreeSavedStateRegistryOwner())
         GeckoScreenOrientation.getInstance().addListener(orientationChangeListener)
         anchor.addOnAttachStateChangeListener(anchorDetachedListener)
     }
@@ -337,7 +338,7 @@ internal class CFRPopupFullScreenLayout(
         GeckoScreenOrientation.getInstance().removeListener(orientationChangeListener)
         disposeComposition()
         ViewTreeLifecycleOwner.set(this, null)
-        ViewTreeSavedStateRegistryOwner.set(this, null)
+        this.setViewTreeSavedStateRegistryOwner(null)
         windowManager.removeViewImmediate(this)
     }
 
