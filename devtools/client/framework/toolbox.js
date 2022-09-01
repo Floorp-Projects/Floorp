@@ -4602,7 +4602,12 @@ Toolbox.prototype = {
    * Sets basic information on the DebugTargetInfo component
    */
   _setDebugTargetData() {
-    if (this.hostType === Toolbox.HostType.PAGE) {
+    // Note that local WebExtension are debugged via WINDOW host,
+    // but we still want to display target data.
+    if (
+      this.hostType === Toolbox.HostType.PAGE ||
+      this.descriptorFront.isWebExtensionDescriptor
+    ) {
       // Displays DebugTargetInfo which shows the basic information of debug target,
       // if `about:devtools-toolbox` URL opens directly.
       // DebugTargetInfo requires this._debugTargetData to be populated
