@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.core.net.toUri
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
@@ -15,6 +16,7 @@ import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
 /**
@@ -45,6 +47,7 @@ class NavigationToolbarTest {
         }
         featureSettingsHelper.setJumpBackCFREnabled(false)
         featureSettingsHelper.setTCPCFREnabled(false)
+        featureSettingsHelper.disablePwaCFR(true)
     }
 
     @After
@@ -137,5 +140,45 @@ class NavigationToolbarTest {
             enterFindInPageQuery("3")
             verifyFindNextInPageResult("1/1")
         }.closeFindInPage { }
+    }
+
+    @Test
+    fun verifySecurePageSecuritySubMenuTest() {
+        val defaultWebPage = "https://mozilla-mobile.github.io/testapp/loginForm"
+        val defaultWebPageTitle = "Login_form"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.toUri()) {
+        }.openSiteSecuritySheet {
+            verifyQuickActionSheet(defaultWebPage, true)
+            openSecureConnectionSubMenu(true)
+            verifySecureConnectionSubMenu(defaultWebPageTitle, defaultWebPage, true)
+        }
+    }
+
+    @Test
+    fun verifyInsecurePageSecuritySubMenuTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openSiteSecuritySheet {
+            verifyQuickActionSheet(defaultWebPage.url.toString(), false)
+            openSecureConnectionSubMenu(false)
+            verifySecureConnectionSubMenu(defaultWebPage.title, defaultWebPage.url.toString(), false)
+        }
+    }
+
+    @Test
+    fun verifyClearCookiesFromQuickSettingsTest() {
+        val helpPageUrl = "mozilla.org"
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openHelp {
+        }.openSiteSecuritySheet {
+            clickQuickActionSheetClearSiteData()
+            verifyClearSiteDataPrompt(helpPageUrl)
+        }
     }
 }

@@ -945,6 +945,14 @@ class BrowserRobot {
             SitePermissionsRobot().interact()
             return SitePermissionsRobot.Transition()
         }
+
+        fun openSiteSecuritySheet(interact: SiteSecurityRobot.() -> Unit): SiteSecurityRobot.Transition {
+            siteSecurityToolbarButton().waitForExists(waitingTime)
+            siteSecurityToolbarButton().clickAndWaitForNewWindow(waitingTime)
+
+            SiteSecurityRobot().interact()
+            return SiteSecurityRobot.Transition()
+        }
     }
 }
 
@@ -1029,6 +1037,9 @@ private fun creditCardSuggestion(creditCardNumber: String) =
             .resourceId("$packageName:id/credit_card_number")
             .textContains(creditCardNumber),
     )
+
+private fun siteSecurityToolbarButton() =
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_security_indicator"))
 
 // Permissions test page elements & prompts
 // Test page used located at https://mozilla-mobile.github.io/testapp/permissions
