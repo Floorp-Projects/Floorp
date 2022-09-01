@@ -3,12 +3,6 @@
 
 "use strict";
 
-/* import-globals-from helper_addons.js */
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/shared/test/helper_addons.js",
-  this
-);
-
 var { DevToolsServer } = require("devtools/server/devtools-server");
 var { DevToolsClient } = require("devtools/client/devtools-client");
 
@@ -32,13 +26,22 @@ add_task(async function() {
 
   let addonListChangedEvents = 0;
   client.mainRoot.on("addonListChanged", () => addonListChangedEvents++);
+  const addons = await client.mainRoot.getFront("addons");
 
-  const addon1 = await addTemporaryAddon(ADDON1_PATH);
+  const addon1 = await addTemporaryAddon({
+    addons,
+    path: ADDON1_PATH,
+    openDevTools: false,
+  });
   const addonFront1 = await client.mainRoot.getAddon({ id: ADDON1_ID });
   is(addonListChangedEvents, 0, "Should not receive addonListChanged yet.");
   ok(addonFront1, "Should find an addon actor for addon1.");
 
-  const addon2 = await addTemporaryAddon(ADDON2_PATH);
+  const addon2 = await addTemporaryAddon({
+    addons,
+    path: ADDON2_PATH,
+    openDevTools: true,
+  });
   const front1AfterAddingAddon2 = await client.mainRoot.getAddon({
     id: ADDON1_ID,
   });
@@ -76,3 +79,47 @@ add_task(async function() {
 
   await client.close();
 });
+
+const { AddonManager } = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
+
+async function addTemporaryAddon({ addons, path, openDevTools }) {
+  const addonFilePath = getTestFilePath(path);
+  info("Installing addon: " + addonFilePath);
+
+  const onToolboxReady = gDevTools.once("toolbox-ready");
+  const { id } = await addons.installTemporaryAddon(
+    addonFilePath,
+    openDevTools
+  );
+
+  if (openDevTools) {
+    info("Wait for toolbox to be opened");
+    const toolbox = await onToolboxReady;
+    ok(true, "Toolbox was opened when openDevTools option was true");
+    info("Destroying this toolbox");
+    await toolbox.destroy();
+  }
+
+  return AddonManager.getAddonByID(id);
+}
+
+function removeAddon(addon) {
+  return new Promise(resolve => {
+    info("Removing addon.");
+
+    const listener = {
+      onUninstalled(uninstalledAddon) {
+        if (uninstalledAddon != addon) {
+          return;
+        }
+        AddonManager.removeAddonListener(listener);
+        resolve();
+      },
+    };
+
+    AddonManager.addAddonListener(listener);
+    addon.uninstall();
+  });
+}
