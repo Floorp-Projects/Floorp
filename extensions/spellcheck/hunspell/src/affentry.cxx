@@ -1,7 +1,7 @@
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (C) 2002-2017 Németh László
+ * Copyright (C) 2002-2022 Németh László
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
@@ -146,7 +146,7 @@ inline int PfxEntry::test_condition(const char* st) {
         break;
       }
       case ']': {
-        if ((neg && ingroup) || (!neg && !ingroup))
+        if (bool(neg) == bool(ingroup))
           return 0;
         pos = NULL;
         p = nextchar(p);
@@ -224,7 +224,7 @@ struct hentry* PfxEntry::checkword(const char* word,
     // back any characters that would have been stripped
 
     std::string tmpword(strip);
-    tmpword.append(word + appnd.size());
+    tmpword.append(word + appnd.size(), tmpl);
 
     // now make sure all of the conditions on characters
     // are met.  Please see the appendix at the end of
