@@ -273,14 +273,16 @@
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">آپݨے مکھ پنے تے ٹیباں نال آپݨیاں تازہ ترین ڳولاں تے ولدا ون٘جو۔</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint">جتھوں تساں چھوڑیا ہائی تہاݙا ذاتی تھیا فائرفوکس مُکھ پناں ہݨ اُتھوں شروع کرݨ سوکھا بݨیندا ہے۔ آپݨے حالیہ ٹیب، کتاب نشانیاں تے ڳولݨ نتیجے لبھو۔</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">جتھوں تساں چھوڑیا ہائی تہاݙا ذاتی تھیا فائرفوکس مُکھ پناں ہݨ اُتھوں شروع کرݨ سوکھا بݨیندا ہے۔ آپݨے حالیہ ٹیب، کتاب نشانیاں تے ڳولݨ نتیجے لبھو۔</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">آپݨے ذاتی تھئے مکھ پنّے نال ملو۔ حالیہ ٹیباں، نشانیاں تے ڳولݨ نتیجے اتھ ظاہر تھیسن۔</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">آزاد انٹرنیٹ وچ ست بسم اللہ</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">ٻئے رنگ۔ چنگی رازداری۔ نفعے کنوں ودھ لوکاں نال پریت پالݨ۔</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title">سکریناں سوئچ کرݨ ہݨ پہلے کنوں ٻہوں سوکھا ہے</string>
+    <string name="onboarding_home_sync_title_2">فون سیٹ کنوں لیپ ٹاپ تے ہاپ کرو تے ولدا واپس وی</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">آپݨے مکھ پنّے تے ٻئی ڈیوائساں دے  ٹیباں نال  اُتھاؤں شروع کرو جتھوں تساں چھوڑیا ہائی۔</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -289,6 +291,9 @@
     <string name="onboarding_home_sign_in_button">سائن ان</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">چھوڑو</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">تہاݙے ٹیب ہم وقت تھیندے پئے ہن۔ آپݨی ݙوجھی ڈیوائس تے اتھاہوں شروع کرو جتھ تساں چھوڑیا ہائی۔</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->

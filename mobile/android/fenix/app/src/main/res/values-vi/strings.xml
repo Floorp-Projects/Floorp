@@ -276,14 +276,16 @@
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Xem lại các tìm kiếm mới nhất của bạn từ trang chủ và các thẻ của bạn.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint">Trang chủ Firefox được cá nhân hóa của bạn giờ đây giúp bạn tiếp tục lại nơi bạn đã dừng lại dễ dàng hơn. Tìm các thẻ, dấu trang và kết quả tìm kiếm gần đây của bạn.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Trang chủ Firefox được cá nhân hóa của bạn giờ đây giúp bạn tiếp tục lại nơi bạn đã dừng lại dễ dàng hơn. Tìm các thẻ, dấu trang và kết quả tìm kiếm gần đây của bạn.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Gặp gỡ trang chủ được cá nhân hóa của bạn. Các thẻ, dấu trang và kết quả tìm kiếm gần đây sẽ xuất hiện ở đây.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">Chào mừng bạn đến với internet độc lập</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Màu sắc mới. Riêng tư hơn. Cùng cam kết với mọi người vì lợi nhuận.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title">Chuyển đổi màn hình dễ dàng hơn bao giờ hết</string>
+    <string name="onboarding_home_sync_title_2">Chuyển từ điện thoại sang máy tính xách tay và ngược lại</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">Tiếp tục nơi bạn đã dừng lại với các thẻ từ các thiết bị khác ngay bây giờ trên trang chủ của bạn.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -292,6 +294,9 @@
     <string name="onboarding_home_sign_in_button">Đăng nhập</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Bỏ qua</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Các thẻ của bạn đang đồng bộ hóa! Tiếp tục nơi bạn đã dừng lại trên thiết bị khác của mình.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->

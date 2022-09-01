@@ -278,20 +278,27 @@
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Revisitatz vòstras darrièras recèrcas a partir de la pagina d’acuèlh e vòstres onglets.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint">L’acuèlh personalizat de Firefox permet ara de tornar mai facilament ont èretz. Trapatz vòstres onglets, marcapaginas e recèrcas recentas.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">L’acuèlh personalizat de Firefox permet ara de tornar mai facilament ont èretz. Trapatz vòstres onglets, marcapaginas e recèrcas recentas.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Fasètz coneissença amb vòstra pagina d’acuèlh personalizada. Onglets recents, marcapaginas e resultats de recèrca apreissaràn aicí.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">La benvenguda a Internet independent</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Mai de colors. Melhora confidencialitat. Meteis engatjament per las personas abans lo profièch.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title">Bascular d’ecran es mai facil que jamai</string>
+    <string name="onboarding_home_sync_title_2">Basculatz del mobil a l’ordenador e invèrsament</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Tornatz ont èretz amb los onglets d’autres aparelhs que figuran ara per la pagina d’acuèlh.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Per començar</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
     <string name="onboarding_home_sign_in_button">Connexion</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Passar</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Vòstre onglets son sincronizatz ! Tornatz ont èretz sus vòstre autre aparelh.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1384,6 +1391,8 @@
     <string name="etp_cookies_title_2">Cookies intersites</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Bloca los cookies que los malhums publicitaris e las societats d’analisi de donadas utilizan per compilar vòstras donadas de navegacion sus mantun site.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">La proteccion totala contra los cookies los isola al site ont vos trobatz, doncas los traçadors los pòdon pas utilizar per vos pistar entres sites.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Minaires de criptomonedas</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

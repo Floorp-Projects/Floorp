@@ -280,6 +280,8 @@
 
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">Καλώς ορίσατε σε ένα ανεξάρτητο διαδίκτυο</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Έναρξη</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
     <string name="onboarding_home_sign_in_button">Σύνδεση</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
