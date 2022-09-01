@@ -22,55 +22,11 @@
     <issue
         id="UnusedAttribute"
         message="Attribute `android:foreground` has no effect on API levels lower than 23 (current min is 21)"
-        errorLine1="    android:foreground=&quot;?android:attr/selectableItemBackground&quot;>"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/collection_home_list_row.xml"
-            line="17"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="UnusedAttribute"
-        message="Attribute `android:foreground` has no effect on API levels lower than 23 (current min is 21)"
         errorLine1="        android:foreground=&quot;@drawable/rounded_ripple&quot;"
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/component_collection_creation.xml"
             line="144"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="UnusedAttribute"
-        message="Attribute `android:foreground` has no effect on API levels lower than 23 (current min is 21)"
-        errorLine1="        android:foreground=&quot;?android:attr/selectableItemBackground&quot;"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/inactive_header_item.xml"
-            line="27"
-            column="9"/>
-    </issue>
-
-    <issue
-        id="UnusedAttribute"
-        message="Attribute `android:foreground` has no effect on API levels lower than 23 (current min is 21)"
-        errorLine1="            android:foreground=&quot;?android:attr/selectableItemBackground&quot;"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/inactive_header_item.xml"
-            line="63"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UnusedAttribute"
-        message="Attribute `android:foreground` has no effect on API levels lower than 23 (current min is 21)"
-        errorLine1="        android:foreground=&quot;?android:attr/selectableItemBackground&quot;"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/inactive_tab_list_item.xml"
-            line="20"
             column="9"/>
     </issue>
 
@@ -295,6 +251,28 @@
     </issue>
 
     <issue
+        id="InflateParams"
+        message="Avoid passing `null` as the view root (needed to resolve layout parameters on the inflated layout&apos;s root element)"
+        errorLine1="                    .inflate(R.layout.delete_history_time_range_dialog, null)"
+        errorLine2="                                                                        ~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/library/history/HistoryFragment.kt"
+            line="379"
+            column="73"/>
+    </issue>
+
+    <issue
+        id="MissingLicense"
+        message="The file must start with a comment containing the license"
+        errorLine1="package org.mozilla.fenix.ext"
+        errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/ext/Bitmap.kt"
+            line="1"
+            column="1"/>
+    </issue>
+
+    <issue
         id="VectorRaster"
         message="Limit vector icons sizes to 200×200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more"
         errorLine1="    android:width=&quot;1889dp&quot;"
@@ -306,13 +284,46 @@
     </issue>
 
     <issue
+        id="VectorRaster"
+        message="Limit vector icons sizes to 200×200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more"
+        errorLine1="&lt;vector xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot; xmlns:aapt=&quot;http://schemas.android.com/aapt&quot; android:width=&quot;235dp&quot; android:height=&quot;298dp&quot; android:viewportWidth=&quot;235&quot; android:viewportHeight=&quot;298&quot;>"
+        errorLine2="                                                                                                                               ~~~~~">
+        <location
+            file="src/main/res/drawable/ic_onboarding_sync.xml"
+            line="1"
+            column="128"/>
+    </issue>
+
+    <issue
+        id="VectorRaster"
+        message="Limit vector icons sizes to 200×200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more"
+        errorLine1="&lt;vector xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot; xmlns:aapt=&quot;http://schemas.android.com/aapt&quot; android:width=&quot;223dp&quot; android:height=&quot;345dp&quot; android:viewportWidth=&quot;223&quot; android:viewportHeight=&quot;345&quot;>"
+        errorLine2="                                                                                                                               ~~~~~">
+        <location
+            file="src/main/res/drawable/ic_onboarding_welcome.xml"
+            line="1"
+            column="128"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                recentTabs = state.recentTabs.filterOutTab(action.recentTab)"
+        errorLine2="                                              ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/components/appstate/AppStoreReducer.kt"
+            line="74"
+            column="47"/>
+    </issue>
+
+    <issue
         id="VisibleForTests"
         message="This method should only be accessed from tests or within private scope"
         errorLine1="                isInPrimaryState = { getCurrentTab()?.content?.canGoBack ?: false },"
         errorLine2="                                     ~~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/fenix/browser/BrowserFragment.kt"
-            line="96"
+            line="97"
             column="38"/>
     </issue>
 
@@ -323,7 +334,7 @@
         errorLine2="                                     ~~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/fenix/browser/BrowserFragment.kt"
-            line="118"
+            line="119"
             column="38"/>
     </issue>
 
@@ -334,7 +345,7 @@
         errorLine2="                    ~~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/fenix/browser/BrowserFragment.kt"
-            line="141"
+            line="142"
             column="21"/>
     </issue>
 
@@ -345,7 +356,7 @@
         errorLine2="                        ~~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/fenix/browser/BrowserFragment.kt"
-            line="155"
+            line="156"
             column="25"/>
     </issue>
 
@@ -356,7 +367,7 @@
         errorLine2="                           ~~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/fenix/browser/BrowserFragment.kt"
-            line="183"
+            line="184"
             column="28"/>
     </issue>
 
@@ -367,8 +378,19 @@
         errorLine2="        ~~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/fenix/browser/BrowserFragment.kt"
-            line="273"
+            line="274"
             column="9"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="            } + searchSelectorMenu.menuItems()"
+        errorLine2="                                   ~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
+            line="725"
+            column="36"/>
     </issue>
 
     <issue
@@ -378,7 +400,7 @@
         errorLine2="                   ~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/fenix/components/toolbar/ToolbarIntegration.kt"
-            line="138"
+            line="148"
             column="20"/>
     </issue>
 
@@ -390,6 +412,17 @@
         <location
             file="src/main/java/org/mozilla/fenix/compose/LazyListEagerFlingBehavior.kt"
             line="21"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier,"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/compose/ThumbnailCard.kt"
+            line="59"
             column="5"/>
     </issue>
 
@@ -411,74 +444,19 @@
         errorLine2="                                                                                                                                                                                                                                      ^">
         <location
             file="src/main/res/values-nb-rNO/strings.xml"
-            line="71"
+            line="56"
             column="231"/>
     </issue>
 
     <issue
         id="Typos"
         message="Repeated word &quot;zaman&quot; in message: possible typo"
-        errorLine1="    &lt;string name=&quot;studies_description&quot;>Firefox zaman zaman araştırmalar yükleyip çalıştırabilir.&lt;/string>"
-        errorLine2="                                               ^">
+        errorLine1="    &lt;string name=&quot;studies_description_2&quot;>%1$s zaman zaman araştırmalar yükleyip çalıştırabilir.&lt;/string>"
+        errorLine2="                                              ^">
         <location
             file="src/main/res/values-tr/strings.xml"
-            line="749"
-            column="48"/>
-    </issue>
-
-    <issue
-        id="IntentFilterExportedReceiver"
-        message="When using intent filters, please specify `android:exported` as well"
-        errorLine1="        &lt;activity-alias"
-        errorLine2="         ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/AndroidManifest.xml"
-            line="48"
-            column="10"/>
-    </issue>
-
-    <issue
-        id="IntentFilterExportedReceiver"
-        message="When using intent filters, please specify `android:exported` as well"
-        errorLine1="        &lt;activity-alias"
-        errorLine2="         ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/AndroidManifest.xml"
-            line="72"
-            column="10"/>
-    </issue>
-
-    <issue
-        id="IntentFilterExportedReceiver"
-        message="When using intent filters, please specify `android:exported` as well"
-        errorLine1="        &lt;activity"
-        errorLine2="         ~~~~~~~~">
-        <location
-            file="src/main/AndroidManifest.xml"
-            line="80"
-            column="10"/>
-    </issue>
-
-    <issue
-        id="IntentFilterExportedReceiver"
-        message="When using intent filters, please specify `android:exported` as well"
-        errorLine1="        &lt;service"
-        errorLine2="         ~~~~~~~">
-        <location
-            file="src/main/AndroidManifest.xml"
-            line="273"
-            column="10"/>
-    </issue>
-
-    <issue
-        id="IntentFilterExportedReceiver"
-        message="When using intent filters, please specify `android:exported` as well"
-        errorLine1="        &lt;receiver"
-        errorLine2="         ~~~~~~~~">
-        <location
-            file="src/main/AndroidManifest.xml"
-            line="299"
-            column="10"/>
+            line="705"
+            column="47"/>
     </issue>
 
     <issue
@@ -532,7 +510,7 @@
         errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/component_tracking_protection_panel.xml"
-            line="199"
+            line="198"
             column="6"/>
     </issue>
 
@@ -576,7 +554,7 @@
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/fenix/collections/SaveCollectionListAdapter.kt"
-            line="50"
+            line="49"
             column="9"/>
     </issue>
 
@@ -587,7 +565,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/org/mozilla/fenix/tabstray/TabsTrayFragment.kt"
-            line="384"
+            line="421"
             column="13"/>
     </issue>
 
@@ -620,7 +598,7 @@
         errorLine2="         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/fragment_browser.xml"
-            line="73"
+            line="87"
             column="10"/>
     </issue>
 
@@ -757,28 +735,6 @@
     </issue>
 
     <issue
-        id="UseCompoundDrawables"
-        message="This tag and its children can be replaced by one `&lt;TextView/>` and a compound drawable"
-        errorLine1="&lt;LinearLayout xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
-        errorLine2=" ~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/view_synced_tabs_title.xml"
-            line="5"
-            column="2"/>
-    </issue>
-
-    <issue
-        id="LogConditional"
-        message="The log call Log.i(...) should be conditional: surround with `if (Log.isLoggable(...))` or `if (BuildConfig.DEBUG) { ... }`"
-        errorLine1="        Log.i(&quot;Crash Reporter&quot;, &quot;Report submitted: $didSubmitReport&quot;)"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/org/mozilla/fenix/crashes/CrashReporterController.kt"
-            line="81"
-            column="9"/>
-    </issue>
-
-    <issue
         id="Overdraw"
         message="Possible overdraw: Root element paints background `@color/sync_error_background_color` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
         errorLine1="        android:background=&quot;@color/sync_error_background_color&quot;"
@@ -787,17 +743,6 @@
             file="src/main/res/layout/account_auth_error_preference.xml"
             line="13"
             column="9"/>
-    </issue>
-
-    <issue
-        id="Overdraw"
-        message="Possible overdraw: Root element paints background `@color/white_color` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
-        errorLine1="    android:background=&quot;@color/white_color&quot;>"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/activity_migration.xml"
-            line="9"
-            column="5"/>
     </issue>
 
     <issue
@@ -835,9 +780,9 @@
 
     <issue
         id="Overdraw"
-        message="Possible overdraw: Root element paints background `?foundation` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
-        errorLine1="    android:background=&quot;?foundation&quot;>"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Possible overdraw: Root element paints background `?attr/layer1` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/layer1&quot;>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/component_tracking_protection_panel.xml"
             line="13"
@@ -846,9 +791,9 @@
 
     <issue
         id="Overdraw"
-        message="Possible overdraw: Root element paints background `?foundation` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
-        errorLine1="    android:background=&quot;?foundation&quot;"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Possible overdraw: Root element paints background `?attr/layer1` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/layer1&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/connection_details_website_info.xml"
             line="13"
@@ -868,9 +813,9 @@
 
     <issue
         id="Overdraw"
-        message="Possible overdraw: Root element paints background `?foundation` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
-        errorLine1="    android:background=&quot;?foundation&quot;"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Possible overdraw: Root element paints background `?attr/layer1` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/layer1&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/download_dialog_layout.xml"
             line="10"
@@ -879,11 +824,33 @@
 
     <issue
         id="Overdraw"
-        message="Possible overdraw: Root element paints background `?above` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
-        errorLine1="    android:background=&quot;?above&quot;>"
+        message="Possible overdraw: Root element paints background `?attr/scrimBackground` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/scrimBackground&quot;>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_bookmark_search_dialog.xml"
+            line="13"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?scrim` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?scrim&quot;"
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/res/layout/fragment_crash_reporter.xml"
+            file="src/main/res/layout/fragment_create_collection.xml"
+            line="11"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?scrim` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?scrim&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_create_shortcut.xml"
             line="11"
             column="5"/>
     </issue>
@@ -912,6 +879,17 @@
 
     <issue
         id="Overdraw"
+        message="Possible overdraw: Root element paints background `?scrim` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?scrim&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_pwa_onboarding.xml"
+            line="11"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
         message="Possible overdraw: Root element paints background `?attr/scrimBackground` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
         errorLine1="    android:background=&quot;?attr/scrimBackground&quot;>"
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
@@ -923,9 +901,9 @@
 
     <issue
         id="Overdraw"
-        message="Possible overdraw: Root element paints background `?foundation` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
-        errorLine1="    android:background=&quot;?foundation&quot;"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Possible overdraw: Root element paints background `?attr/layer1` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/layer1&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/fragment_sign_out.xml"
             line="10"
@@ -934,20 +912,9 @@
 
     <issue
         id="Overdraw"
-        message="Possible overdraw: Root element paints background `@color/photonLightGrey30` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
-        errorLine1="    android:background=&quot;@color/photonLightGrey30&quot;>"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/inactive_tabs_auto_close.xml"
-            line="11"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="Overdraw"
-        message="Possible overdraw: Root element paints background `?foundation` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
-        errorLine1="    android:background=&quot;?foundation&quot;"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Possible overdraw: Root element paints background `?attr/layer1` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/layer1&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/info_banner.xml"
             line="11"
@@ -978,9 +945,9 @@
 
     <issue
         id="Overdraw"
-        message="Possible overdraw: Root element paints background `?foundation` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
-        errorLine1="    android:background=&quot;?foundation&quot;"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Possible overdraw: Root element paints background `?attr/layer1` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/layer1&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/navigation_toolbar.xml"
             line="14"
@@ -1011,9 +978,9 @@
 
     <issue
         id="Overdraw"
-        message="Possible overdraw: Root element paints background `?foundation` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
-        errorLine1="    android:background=&quot;?foundation&quot;"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Possible overdraw: Root element paints background `?attr/layer1` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/layer1&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/stub_find_in_page.xml"
             line="11"
@@ -1032,13 +999,24 @@
     </issue>
 
     <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?attr/layer2` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/layer2&quot;>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/view_crash_reporter.xml"
+            line="11"
+            column="5"/>
+    </issue>
+
+    <issue
         id="UnusedResources"
         message="The resource `R.string.resource_scheme` appears to be unused"
         errorLine1="    &lt;string name=&quot;resource_scheme&quot;>&quot;resource://&quot;&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/arrays.xml"
-            line="36"
+            line="39"
             column="13"/>
     </issue>
 
@@ -1049,7 +1027,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/arrays.xml"
-            line="37"
+            line="40"
             column="13"/>
     </issue>
 
@@ -1060,7 +1038,7 @@
         errorLine2="            ~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/arrays.xml"
-            line="38"
+            line="41"
             column="13"/>
     </issue>
 
@@ -1071,7 +1049,7 @@
         errorLine2="                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/arrays.xml"
-            line="39"
+            line="42"
             column="19"/>
     </issue>
 
@@ -1099,6 +1077,17 @@
 
     <issue
         id="UnusedResources"
+        message="The resource `R.drawable.ic_firefox` appears to be unused"
+        errorLine1="&lt;vector android:height=&quot;112.7dp&quot; android:viewportHeight=&quot;54.28&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/drawable/ic_firefox.xml"
+            line="1"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
         message="The resource `R.mipmap.ic_launcher_private` appears to be unused"
         errorLine1="&lt;adaptive-icon xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;>"
         errorLine2="^">
@@ -1110,7 +1099,7 @@
 
     <issue
         id="IconXmlAndPng"
-        message="The following images appear both as density independent `.xml` files and as bitmap files: /Users/oracle/Projects/fenix/app/src/main/res/drawable-hdpi/ic_logo_wordmark_normal.png, /Users/rotbolt/AndroidStudioProjects/fenix/app/src/main/res/drawable-night/ic_logo_wordmark_normal.xml">
+        message="The following images appear both as density independent `.xml` files and as bitmap files: /Users/oracle/Projects/fenix/app/src/main/res/drawable-hdpi/ic_logo_wordmark_normal.png, /Users/oracle/Projects/fenix/app/src/main/res/drawable-night/ic_logo_wordmark_normal.xml">
         <location
             file="src/main/res/drawable-xxxhdpi/ic_logo_wordmark_normal.png"/>
         <location
@@ -1137,6 +1126,24 @@
         message="One or more images in this project can be converted to the WebP format which typically results in smaller file sizes, even for lossless conversion">
         <location
             file="src/main/res/drawable-land-xxhdpi/sunrise.jpg"/>
+    </issue>
+
+    <issue
+        id="IconDuplicatesConfig"
+        message="The `amethyst.png` icon has identical contents in the following configuration folders: drawable-port-xhdpi, drawable-xhdpi">
+        <location
+            file="src/main/res/drawable-xhdpi/amethyst.png"/>
+        <location
+            file="src/main/res/drawable-port-xhdpi/amethyst.png"/>
+    </issue>
+
+    <issue
+        id="IconDuplicatesConfig"
+        message="The `amethyst.png` icon has identical contents in the following configuration folders: drawable-port-xxhdpi, drawable-xxhdpi">
+        <location
+            file="src/main/res/drawable-xxhdpi/amethyst.png"/>
+        <location
+            file="src/main/res/drawable-port-xxhdpi/amethyst.png"/>
     </issue>
 
     <issue
@@ -1183,14 +1190,14 @@
 
     <issue
         id="IconDensities"
-        message="Missing the following drawables in `drawable-xhdpi`: amethyst.png, cerulean.png, fenix_search_widget.png, sunrise.jpg">
+        message="Missing the following drawables in `drawable-xhdpi`: cerulean.png, fenix_search_widget.png, sunrise.jpg">
         <location
             file="src/main/res/drawable-xhdpi"/>
     </issue>
 
     <issue
         id="IconDensities"
-        message="Missing the following drawables in `drawable-xxhdpi`: amethyst.png, cerulean.png, fenix_search_widget.png, sunrise.jpg">
+        message="Missing the following drawables in `drawable-xxhdpi`: cerulean.png, fenix_search_widget.png, sunrise.jpg">
         <location
             file="src/main/res/drawable-xxhdpi"/>
     </issue>
@@ -1224,7 +1231,7 @@
         errorLine2="        ^">
         <location
             file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
-            line="213"
+            line="244"
             column="9"/>
     </issue>
 
@@ -1235,19 +1242,19 @@
         errorLine2="                                              ^">
         <location
             file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
-            line="213"
+            line="244"
             column="47"/>
     </issue>
 
     <issue
         id="ClickableViewAccessibility"
         message="`onTouch` lambda should call `View#performClick` when a click is detected"
-        errorLine1="            dialog?.window?.decorView?.setOnTouchListener { _, event ->"
-        errorLine2="                                                          ^">
+        errorLine1="                dialog?.window?.decorView?.setOnTouchListener { _, event ->"
+        errorLine2="                                                              ^">
         <location
             file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
-            line="227"
-            column="59"/>
+            line="259"
+            column="63"/>
     </issue>
 
     <issue
@@ -1257,7 +1264,7 @@
         errorLine2="                ^">
         <location
             file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
-            line="253"
+            line="306"
             column="17"/>
     </issue>
 
@@ -1268,7 +1275,29 @@
         errorLine2="                                                         ^">
         <location
             file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
-            line="253"
+            line="306"
+            column="58"/>
+    </issue>
+
+    <issue
+        id="ClickableViewAccessibility"
+        message="Custom view ``SearchDialogFragmentConstraintLayout`` has `setOnTouchListener` called on it but does not override `performClick`"
+        errorLine1="                binding.searchWrapper.setOnTouchListener { _, _ ->"
+        errorLine2="                ^">
+        <location
+            file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
+            line="312"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="ClickableViewAccessibility"
+        message="`onTouch` lambda should call `View#performClick` when a click is detected"
+        errorLine1="                binding.searchWrapper.setOnTouchListener { _, _ ->"
+        errorLine2="                                                         ^">
+        <location
+            file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
+            line="312"
             column="58"/>
     </issue>
 
@@ -1290,7 +1319,7 @@
         errorLine2="         ~~~~~~~~~">
         <location
             file="src/main/res/layout/library_site_item.xml"
-            line="29"
+            line="30"
             column="10"/>
     </issue>
 
@@ -1314,17 +1343,6 @@
             file="src/main/res/layout/checkbox_left_sub_preference.xml"
             line="15"
             column="5"/>
-    </issue>
-
-    <issue
-        id="RtlSymmetry"
-        message="When you define `paddingStart` you should probably also define `paddingEnd` for right-to-left symmetry"
-        errorLine1="        android:paddingStart=&quot;16dp&quot;>"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/layout/inactive_header_item.xml"
-            line="28"
-            column="9"/>
     </issue>
 
     <issue

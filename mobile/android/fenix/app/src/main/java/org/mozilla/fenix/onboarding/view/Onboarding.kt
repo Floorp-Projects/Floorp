@@ -32,7 +32,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -169,9 +168,8 @@ private fun OnboardingWelcomeContent() {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Image(
-            painter = painterResource(id = R.drawable.ic_firefox),
+            painter = painterResource(id = R.drawable.ic_onboarding_welcome),
             contentDescription = null,
-            modifier = Modifier.size(109.dp),
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -201,10 +199,8 @@ private fun OnboardingSyncSignInContent() {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Image(
-            painter = painterResource(id = R.drawable.ic_scan),
+            painter = painterResource(id = R.drawable.ic_onboarding_sync),
             contentDescription = null,
-            modifier = Modifier.size(320.dp, 166.dp),
-            contentScale = ContentScale.FillBounds,
         )
 
         Spacer(modifier = Modifier.height(32.dp))

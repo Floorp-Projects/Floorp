@@ -30,8 +30,8 @@
 
         <ImageView
             android:id="@+id/sign_in_image"
-            android:layout_width="320dp"
-            android:layout_height="166dp"
+            android:layout_width="187dp"
+            android:layout_height="171dp"
             android:layout_marginTop="16dp"
             android:adjustViewBounds="true"
             android:importantForAccessibility="no"
