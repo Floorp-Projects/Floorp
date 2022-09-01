@@ -721,7 +721,8 @@ WebSocketChannelChild::SendBinaryStream(nsIInputStream* aStream,
 }
 
 NS_IMETHODIMP
-WebSocketChannelChild::GetSecurityInfo(nsISupports** aSecurityInfo) {
+WebSocketChannelChild::GetSecurityInfo(
+    nsITransportSecurityInfo** aSecurityInfo) {
   LOG(("WebSocketChannelChild::GetSecurityInfo() %p\n", this));
   return NS_ERROR_NOT_AVAILABLE;
 }

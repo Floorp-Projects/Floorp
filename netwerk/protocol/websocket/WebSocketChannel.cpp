@@ -38,6 +38,7 @@
 #include "nsISocketTransport.h"
 #include "nsISSLSocketControl.h"
 #include "nsThreadUtils.h"
+#include "nsITransportSecurityInfo.h"
 #include "nsINetworkLinkService.h"
 #include "nsIObserverService.h"
 #include "nsCharSeparatedTokenizer.h"
@@ -3324,24 +3325,31 @@ WebSocketChannel::GetName(nsACString& aName) {
 // nsIWebSocketChannel
 
 NS_IMETHODIMP
-WebSocketChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
+WebSocketChannel::GetSecurityInfo(nsITransportSecurityInfo** aSecurityInfo) {
   LOG(("WebSocketChannel::GetSecurityInfo() %p\n", this));
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
 
+  *aSecurityInfo = nullptr;
+
   if (mConnection) {
-    if (NS_FAILED(mConnection->GetSecurityInfo(aSecurityInfo))) {
-      *aSecurityInfo = nullptr;
+    nsresult rv = mConnection->GetSecurityInfo(aSecurityInfo);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
     return NS_OK;
   }
 
   if (mTransport) {
     nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
-    if (NS_SUCCEEDED(mTransport->GetTlsSocketControl(
-            getter_AddRefs(tlsSocketControl)))) {
-      tlsSocketControl.forget(aSecurityInfo);
-    } else {
-      *aSecurityInfo = nullptr;
+    nsresult rv =
+        mTransport->GetTlsSocketControl(getter_AddRefs(tlsSocketControl));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    nsCOMPtr<nsITransportSecurityInfo> securityInfo(
+        do_QueryInterface(tlsSocketControl));
+    if (securityInfo) {
+      securityInfo.forget(aSecurityInfo);
     }
   }
   return NS_OK;

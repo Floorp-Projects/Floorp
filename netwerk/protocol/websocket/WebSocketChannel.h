@@ -108,7 +108,7 @@ class WebSocketChannel : public BaseWebSocketChannel,
   NS_IMETHOD SendBinaryMsg(const nsACString& aMsg) override;
   NS_IMETHOD SendBinaryStream(nsIInputStream* aStream,
                               uint32_t length) override;
-  NS_IMETHOD GetSecurityInfo(nsISupports** aSecurityInfo) override;
+  NS_IMETHOD GetSecurityInfo(nsITransportSecurityInfo** aSecurityInfo) override;
 
   WebSocketChannel();
   static void Shutdown();

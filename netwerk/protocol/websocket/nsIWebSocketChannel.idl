@@ -5,14 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 interface nsICookieJarSettings;
-interface nsIURI;
+interface nsIInputStream;
 interface nsIInterfaceRequestor;
 interface nsILoadGroup;
-interface nsIWebSocketListener;
-interface nsIInputStream;
 interface nsILoadInfo;
 interface nsIPrincipal;
 interface nsITransportProvider;
+interface nsITransportSecurityInfo;
+interface nsIURI;
+interface nsIWebSocketListener;
 
 webidl Node;
 
@@ -55,7 +56,7 @@ interface nsIWebSocketChannel : nsISupports
     /**
      * Transport-level security information (if any)
      */
-    [must_use] readonly attribute nsISupports securityInfo;
+    [must_use] readonly attribute nsITransportSecurityInfo securityInfo;
 
     /**
      * The load group of of the websocket

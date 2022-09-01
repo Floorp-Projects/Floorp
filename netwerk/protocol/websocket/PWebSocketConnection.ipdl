@@ -4,7 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include "mozilla/ipc/TransportSecurityInfoUtils.h";
+
 include protocol PBackground;
+
+[RefCounted] using class nsITransportSecurityInfo from "nsITransportSecurityInfo.h";
 
 namespace mozilla {
 namespace net {
@@ -14,7 +18,7 @@ protocol PWebSocketConnection
   manager PBackground;
 
 parent:
-  async OnTransportAvailable(nsCString securityInfoSerialization);
+  async OnTransportAvailable(nsITransportSecurityInfo aSecurityInfo);
   async OnError(nsresult aStatus);
   async OnTCPClosed();
   async OnDataReceived(uint8_t[] aData);

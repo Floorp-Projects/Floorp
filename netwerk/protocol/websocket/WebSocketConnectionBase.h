@@ -58,6 +58,8 @@
 // - WebSocketConnectionParent::RecvOnTransportAvailable
 // - WebSocketChannel::OnWebSocketConnectionAvailable
 
+class nsITransportSecurityInfo;
+
 namespace mozilla {
 namespace net {
 
@@ -74,7 +76,8 @@ class WebSocketConnectionBase : public nsISupports {
                                    uint32_t aPayloadBufLength) = 0;
   virtual nsresult StartReading() = 0;
   virtual void DrainSocketData() = 0;
-  virtual nsresult GetSecurityInfo(nsISupports** aSecurityInfo) = 0;
+  virtual nsresult GetSecurityInfo(
+      nsITransportSecurityInfo** aSecurityInfo) = 0;
 };
 
 }  // namespace net

@@ -12,6 +12,7 @@
 #include "nsIOService.h"
 #include "nsISSLSocketControl.h"
 #include "nsISocketTransport.h"
+#include "nsITransportSecurityInfo.h"
 #include "nsSocketTransportService2.h"
 
 namespace mozilla::net {
@@ -141,16 +142,23 @@ void WebSocketConnection::DrainSocketData() {
   } while (NS_SUCCEEDED(rv) && count > 0 && total < 32000);
 }
 
-nsresult WebSocketConnection::GetSecurityInfo(nsISupports** aSecurityInfo) {
+nsresult WebSocketConnection::GetSecurityInfo(
+    nsITransportSecurityInfo** aSecurityInfo) {
   LOG(("WebSocketConnection::GetSecurityInfo() %p\n", this));
   MOZ_ASSERT(OnSocketThread());
   *aSecurityInfo = nullptr;
 
   if (mTransport) {
     nsCOMPtr<nsISSLSocketControl> tlsSocketControl;
-    if (NS_SUCCEEDED(mTransport->GetTlsSocketControl(
-            getter_AddRefs(tlsSocketControl)))) {
-      tlsSocketControl.forget(aSecurityInfo);
+    nsresult rv =
+        mTransport->GetTlsSocketControl(getter_AddRefs(tlsSocketControl));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    nsCOMPtr<nsITransportSecurityInfo> securityInfo(
+        do_QueryInterface(tlsSocketControl));
+    if (securityInfo) {
+      securityInfo.forget(aSecurityInfo);
     }
   }
   return NS_OK;

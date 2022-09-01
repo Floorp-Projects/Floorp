@@ -8,6 +8,7 @@
 #include "WebSocketConnectionParent.h"
 
 #include "nsIHttpChannelInternal.h"
+#include "nsITransportSecurityInfo.h"
 #include "nsSerializationHelper.h"
 #include "nsThreadUtils.h"
 #include "WebSocketConnectionListener.h"
@@ -29,17 +30,13 @@ WebSocketConnectionParent::~WebSocketConnectionParent() {
 }
 
 mozilla::ipc::IPCResult WebSocketConnectionParent::RecvOnTransportAvailable(
-    const nsCString& aSecurityInfoSerialization) {
+    nsITransportSecurityInfo* aSecurityInfo) {
   LOG(("WebSocketConnectionParent::RecvOnTransportAvailable %p\n", this));
   MOZ_ASSERT(mBackgroundThread->IsOnCurrentThread());
 
-  if (!aSecurityInfoSerialization.IsEmpty()) {
+  if (aSecurityInfo) {
     MutexAutoLock lock(mMutex);
-    nsresult rv = NS_DeserializeObject(aSecurityInfoSerialization,
-                                       getter_AddRefs(mSecurityInfo));
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
-                          "Deserializing security info should not fail");
-    Unused << rv;  // So we don't get an unused error in release builds.
+    mSecurityInfo = aSecurityInfo;
   }
 
   if (mUpgradeListener) {
@@ -197,15 +194,14 @@ void WebSocketConnectionParent::DrainSocketData() {
 }
 
 nsresult WebSocketConnectionParent::GetSecurityInfo(
-    nsISupports** aSecurityInfo) {
+    nsITransportSecurityInfo** aSecurityInfo) {
   LOG(("WebSocketConnectionParent::GetSecurityInfo() %p\n", this));
   MOZ_ASSERT(NS_IsMainThread());
 
   NS_ENSURE_ARG_POINTER(aSecurityInfo);
 
   MutexAutoLock lock(mMutex);
-  nsCOMPtr<nsISupports> info = mSecurityInfo;
-  info.forget(aSecurityInfo);
+  NS_IF_ADDREF(*aSecurityInfo = mSecurityInfo);
   return NS_OK;
 }
 
