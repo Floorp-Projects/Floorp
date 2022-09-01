@@ -168,6 +168,18 @@ Services.prefs.addObserver("floorp.browser.sidebar.right", function(){
 
 
 window.setTimeout(function(){
+
+  async function getTreeStyleTabURL() {
+    const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+    let addon = await AddonManager.getAddonByID("treestyletab@piro.sakura.ne.jp");
+    let option = await addon.optionsURL;
+    let sidebarURL = option.replace("options/options.html", "sidebar/sidebar.html")
+    window.setTimeout(() => {
+      sidebar2elem.setAttribute("src", sidebarURL);
+     resolve(sidebarURL);
+    }, 500);
+  }     
+
   const pref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined)
   const sidebar2elem = document.getElementById("sidebar2");
   switch (pref) {
@@ -184,12 +196,23 @@ window.setTimeout(function(){
       sidebar2elem.setAttribute("src", "about:downloads");
       break;
     case 4:
-      sidebar2elem.setAttribute("src", "chrome://browser/content/syncedtabs/sidebar.xhtml");
-  }
+      getTreeStyleTabURL();
+    }
   }, 1000);
   
   window.setTimeout(function(){
   Services.prefs.addObserver("floorp.browser.sidebar2.mode", function(){
+    async function getTreeStyleTabURL() {
+      const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+      let addon = await AddonManager.getAddonByID("treestyletab@piro.sakura.ne.jp");
+      let option = await addon.optionsURL;
+      let sidebarURL = option.replace("options/options.html", "sidebar/sidebar.html")
+      window.setTimeout(() => {
+        sidebar2elem.setAttribute("src", sidebarURL);
+       resolve(sidebarURL);
+      }, 500);
+    }
+    
     const pref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
     const sidebar2elem = document.getElementById("sidebar2");
     switch (pref) {
@@ -206,7 +229,7 @@ window.setTimeout(function(){
        sidebar2elem.setAttribute("src", "about:downloads");
        break;
      case 4:
-       sidebar2elem.setAttribute("src", "chrome://browser/content/syncedtabs/sidebar.xhtml");
+      getTreeStyleTabURL();
     }
   });
   }, 1000);

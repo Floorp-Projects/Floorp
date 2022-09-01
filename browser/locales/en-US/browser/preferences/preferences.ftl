@@ -1627,5 +1627,5 @@ history-mode =
  .label = History Mode
 downloads-mode =
  .label = Download Mode
-syncedtabs-mode =
- .label = Synced Tabs Mode
+treestyletab-mode =
+ .label = Tree Style Tab Mode
