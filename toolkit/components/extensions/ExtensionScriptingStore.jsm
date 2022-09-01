@@ -243,6 +243,24 @@ const ExtensionScriptingStore = {
   async initExtension(extension) {
     let scripts;
 
+    // On downgrades/upgrades (and re-installation on top of an existing one),
+    // we do clear any previously stored scripts and return earlier.
+    switch (extension.startupReason) {
+      case "ADDON_INSTALL":
+      case "ADDON_UPGRADE":
+      case "ADDON_DOWNGRADE":
+        // On extension upgrades/downgrades the StartupCache data for the
+        // extension would already be cleared, and so we set the hasPersistedScripts
+        // flag here just to avoid having to check that (by loading the rkv store data)
+        // on the next startup.
+        StartupCache.general.set(
+          [extension.id, extension.version, "scripting", "hasPersistedScripts"],
+          false
+        );
+        store.deleteAll(extension.id);
+        return;
+    }
+
     const hasPersistedScripts = await StartupCache.get(
       extension,
       ["scripting", "hasPersistedScripts"],

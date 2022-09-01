@@ -12,10 +12,6 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
-const { ExtensionParent } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionParent.jsm"
-);
-
 const { ExtensionScriptingStore } = ChromeUtils.import(
   "resource://gre/modules/ExtensionScriptingStore.jsm"
 );
@@ -23,14 +19,16 @@ const { ExtensionScriptingStore } = ChromeUtils.import(
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 add_task(async function test_hasPersistedScripts_startup_cache() {
-  await AddonTestUtils.promiseStartupManager();
-
   let extension1 = ExtensionTestUtils.loadExtension({
     manifest: {
       manifest_version: 2,
       permissions: ["scripting"],
     },
-    useAddonManager: "permanent",
+    // Set the startup reason to "APP_STARTUP", used to be able to simulate
+    // the behavior expected on calls to `ExtensionScriptingStore.init(extension)`
+    // when the addon has not been just installed, but it is being loaded as part
+    // of the browser application starting up.
+    startupReason: "APP_STARTUP",
     background() {
       browser.test.onMessage.addListener(async (msg, ...args) => {
         switch (msg) {
@@ -50,34 +48,6 @@ add_task(async function test_hasPersistedScripts_startup_cache() {
       "script-1.js": "",
     },
   });
-
-  const { StartupCache } = ExtensionParent;
-
-  async function assertHasPersistedScriptsCachedFlag(ext) {
-    let allCachedGeneral = StartupCache._data.get("general");
-    equal(
-      allCachedGeneral
-        .get(ext.id)
-        ?.get(ext.version)
-        ?.get("scripting")
-        ?.has("hasPersistedScripts"),
-      true,
-      "Expect the StartupCache to include hasPersistedScripts flag"
-    );
-  }
-
-  async function assertIsPersistentScriptsCachedFlag(ext, expectedValue) {
-    let allCachedGeneral = StartupCache._data.get("general");
-    equal(
-      allCachedGeneral
-        .get(ext.id)
-        ?.get(ext.version)
-        ?.get("scripting")
-        ?.get("hasPersistedScripts"),
-      expectedValue,
-      "Expected cached value set on hasPersistedScripts flag"
-    );
-  }
 
   await extension1.startup();
 
@@ -119,6 +89,11 @@ add_task(async function test_hasPersistedScripts_startup_cache() {
   // that store.getAll isn't going to be called more than once internally
   // when the hasPersistedScripts boolean flag wasn't in the StartupCache
   // and had to be recomputed.
+  equal(
+    extension1.extension.startupReason,
+    "APP_STARTUP",
+    "Got the expected extension.startupReason"
+  );
   await ExtensionScriptingStore.initExtension(extension1.extension);
   equal(storeGetAllSpy.callCount, 0, "Expect store.getAll to not be called");
 
@@ -158,12 +133,12 @@ add_task(async function test_hasPersistedScripts_startup_cache() {
     { id: extId, version: extVersion },
     undefined
   );
-  let allCachedGeneral = StartupCache._data.get("general");
+
+  const { StartupCache } = ExtensionParent;
+  const allCachedGeneral = StartupCache._data.get("general");
   equal(
     allCachedGeneral.has(extId),
     false,
     "Expect the extension to have been removed from the StartupCache"
   );
-
-  await AddonTestUtils.promiseShutdownManager();
 });

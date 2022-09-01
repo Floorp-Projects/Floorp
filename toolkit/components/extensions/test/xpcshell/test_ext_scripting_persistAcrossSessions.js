@@ -565,3 +565,181 @@ add_task(async function test_multiple_extensions_and_scripts() {
   await assertNumScriptsInStore(extension1, 0);
   await assertNumScriptsInStore(extension2, 0);
 });
+
+add_task(async function test_persisted_scripts_cleared_on_addon_updates() {
+  await AddonTestUtils.promiseStartupManager();
+
+  function background() {
+    browser.test.onMessage.addListener(async (msg, ...args) => {
+      switch (msg) {
+        case "registerContentScripts":
+          await browser.scripting.registerContentScripts(...args);
+          break;
+        case "unregisterContentScripts":
+          await browser.scripting.unregisterContentScripts(...args);
+          break;
+        default:
+          browser.test.fail(`Unexpected test message: ${msg}`);
+      }
+      browser.test.sendMessage(`${msg}:done`);
+    });
+  }
+
+  async function registerContentScript(ext, scriptFileName) {
+    ext.sendMessage("registerContentScripts", [
+      {
+        id: scriptFileName,
+        js: [scriptFileName],
+        matches: ["http://*/*/file_sample.html"],
+        persistAcrossSessions: true,
+      },
+    ]);
+    await ext.awaitMessage("registerContentScripts:done");
+  }
+
+  let extension1Data = {
+    manifest: {
+      manifest_version: 2,
+      permissions: ["scripting"],
+      version: "1.0",
+      browser_specific_settings: {
+        // Set an explicit extension id so that extension.upgrade
+        // will trigger the extension to be started with the expected
+        // "ADDON_UPGRADE" / "ADDON_DOWNGRADE" extension.startupReason.
+        gecko: { id: "extension1@mochi.test" },
+      },
+    },
+    useAddonManager: "permanent",
+    background,
+    files: {
+      "script-1.js": "",
+    },
+  };
+
+  let extension1 = ExtensionTestUtils.loadExtension(extension1Data);
+
+  let extension2 = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 2,
+      permissions: ["scripting"],
+      browser_specific_settings: {
+        gecko: { id: "extension2@mochi.test" },
+      },
+    },
+    useAddonManager: "permanent",
+    background,
+    files: {
+      "script-2.js": "",
+    },
+  });
+
+  await extension1.startup();
+  await assertIsPersistentScriptsCachedFlag(extension1, false);
+  await assertNumScriptsInStore(extension1, 0);
+
+  await extension2.startup();
+  await assertIsPersistentScriptsCachedFlag(extension2, false);
+  await assertNumScriptsInStore(extension2, 0);
+
+  await registerContentScript(extension1, "script-1.js");
+  await assertIsPersistentScriptsCachedFlag(extension1, true);
+  await assertNumScriptsInStore(extension1, 1);
+
+  await registerContentScript(extension2, "script-2.js");
+  await assertIsPersistentScriptsCachedFlag(extension2, true);
+  await assertNumScriptsInStore(extension2, 1);
+
+  info("Verify that scripts are still registered on a browser startup");
+  await AddonTestUtils.promiseRestartManager();
+  await extension1.awaitStartup();
+  await extension2.awaitStartup();
+  equal(
+    extension1.extension.startupReason,
+    "APP_STARTUP",
+    "Got the expected startupReason on AOM restart"
+  );
+
+  await assertIsPersistentScriptsCachedFlag(extension1, true);
+  await assertIsPersistentScriptsCachedFlag(extension2, true);
+  await assertNumScriptsInStore(extension2, 1);
+  await assertNumScriptsInStore(extension2, 1);
+
+  async function testOnAddonUpdates(
+    extensionUpdateData,
+    expectedStartupReason
+  ) {
+    await extension1.upgrade(extensionUpdateData);
+    equal(
+      extension1.extension.startupReason,
+      expectedStartupReason,
+      "Got the expected startupReason on upgrade"
+    );
+
+    await assertNumScriptsInStore(extension1, 0);
+    await assertIsPersistentScriptsCachedFlag(extension1, false);
+    await assertNumScriptsInStore(extension2, 1);
+    await assertIsPersistentScriptsCachedFlag(extension2, true);
+  }
+
+  info("Verify that scripts are cleared on upgrade");
+  await testOnAddonUpdates(
+    {
+      ...extension1Data,
+      manifest: {
+        ...extension1Data.manifest,
+        version: "2.0",
+      },
+    },
+    "ADDON_UPGRADE"
+  );
+
+  await registerContentScript(extension1, "script-1.js");
+  await assertNumScriptsInStore(extension1, 1);
+
+  info("Verify that scripts are cleared on downgrade");
+  await testOnAddonUpdates(extension1Data, "ADDON_DOWNGRADE");
+
+  await registerContentScript(extension1, "script-1.js");
+  await assertNumScriptsInStore(extension1, 1);
+
+  info("Verify that scripts are cleared on upgrade to same version");
+  await testOnAddonUpdates(extension1Data, "ADDON_UPGRADE");
+
+  await extension1.unload();
+  await extension2.unload();
+
+  await assertNumScriptsInStore(extension1, 0);
+  await assertIsPersistentScriptsCachedFlag(extension1, undefined);
+  await assertNumScriptsInStore(extension2, 0);
+  await assertIsPersistentScriptsCachedFlag(extension2, undefined);
+
+  info("Verify stale persisted scripts cleared on re-install");
+  // Inject a stale persisted script into the store.
+  await ExtensionScriptingStore._getStoreForTesting().writeMany(extension1.id, [
+    {
+      id: "script-1.js",
+      allFrames: false,
+      matches: ["http://*/*/file_sample.html"],
+      runAt: "document_idle",
+      persistAcrossSessions: true,
+      js: ["script-1.js"],
+    },
+  ]);
+  await assertNumScriptsInStore(extension1, 1);
+  const extension1Reinstalled = ExtensionTestUtils.loadExtension(
+    extension1Data
+  );
+  await extension1Reinstalled.startup();
+  equal(
+    extension1Reinstalled.extension.startupReason,
+    "ADDON_INSTALL",
+    "Got the expected startupReason on re-install"
+  );
+  await assertNumScriptsInStore(extension1Reinstalled, 0);
+  await assertIsPersistentScriptsCachedFlag(extension1Reinstalled, false);
+  await extension1Reinstalled.unload();
+  await assertNumScriptsInStore(extension1Reinstalled, 0);
+  await assertIsPersistentScriptsCachedFlag(extension1Reinstalled, undefined);
+
+  await AddonTestUtils.promiseShutdownManager();
+});

@@ -2,7 +2,9 @@
 /* exported createHttpServer, cleanupDir, clearCache, optionalPermissionsPromptHandler, promiseConsoleOutput,
             promiseQuotaManagerServiceReset, promiseQuotaManagerServiceClear,
             runWithPrefs, testEnv, withHandlingUserInput, resetHandlingUserInput,
-            assertPersistentListeners, promiseExtensionEvent */
+            assertPersistentListeners, promiseExtensionEvent, assertHasPersistedScriptsCachedFlag,
+            assertIsPersistedScriptsCachedFlag
+*/
 
 var { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
@@ -318,4 +320,32 @@ function promiseExtensionEvent(wrapper, event) {
   return new Promise(resolve => {
     wrapper.extension.once(event, (...args) => resolve(args));
   });
+}
+
+async function assertHasPersistedScriptsCachedFlag(ext) {
+  const { StartupCache } = ExtensionParent;
+  const allCachedGeneral = StartupCache._data.get("general");
+  equal(
+    allCachedGeneral
+      .get(ext.id)
+      ?.get(ext.version)
+      ?.get("scripting")
+      ?.has("hasPersistedScripts"),
+    true,
+    "Expect the StartupCache to include hasPersistedScripts flag"
+  );
+}
+
+async function assertIsPersistentScriptsCachedFlag(ext, expectedValue) {
+  const { StartupCache } = ExtensionParent;
+  const allCachedGeneral = StartupCache._data.get("general");
+  equal(
+    allCachedGeneral
+      .get(ext.id)
+      ?.get(ext.version)
+      ?.get("scripting")
+      ?.get("hasPersistedScripts"),
+    expectedValue,
+    "Expected cached value set on hasPersistedScripts flag"
+  );
 }
