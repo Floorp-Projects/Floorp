@@ -23,6 +23,7 @@ import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.focus.Components
 import org.mozilla.focus.GleanMetrics.Shortcuts
 import org.mozilla.focus.components
+import org.mozilla.focus.state.AppAction
 
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
@@ -42,16 +43,7 @@ fun TopSitesOverlay(modifier: Modifier = Modifier) {
 
             TopSites(
                 topSites = topSites,
-                onTopSiteClicked = { item ->
-                    Shortcuts.shortcutOpenedCounter.add()
-
-                    components.tabsUseCases.addTab(
-                        url = item.url,
-                        source = SessionState.Source.Internal.HomeScreen,
-                        selectTab = true,
-                        private = true,
-                    )
-                },
+                onTopSiteClicked = { item -> openTopSite(item, components) },
                 onRemoveTopSiteClicked = { item ->
                     removeTopSite(item, components)
                 },
@@ -80,6 +72,23 @@ fun TopSitesOverlay(modifier: Modifier = Modifier) {
             }
         }
     }
+}
+
+private fun openTopSite(item: TopSite, components: Components) {
+    val currentTabId = components.store.state.selectedTabId
+    if (currentTabId.isNullOrEmpty()) {
+        components.tabsUseCases.addTab(
+            url = item.url,
+            source = SessionState.Source.Internal.HomeScreen,
+            selectTab = true,
+            private = true,
+        )
+    } else {
+        components.sessionUseCases.loadUrl(item.url, currentTabId)
+        components.appStore.dispatch(AppAction.FinishEdit(currentTabId))
+    }
+
+    Shortcuts.shortcutOpenedCounter.add()
 }
 
 @OptIn(DelicateCoroutinesApi::class)
