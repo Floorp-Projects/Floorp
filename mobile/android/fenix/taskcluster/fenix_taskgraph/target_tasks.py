@@ -77,6 +77,14 @@ def target_tasks_nightly(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
 
+@_target_task("nightly-test")
+def target_tasks_nightly_test(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required for a nightly build."""
+    def filter(task, parameters):
+        return task.attributes.get("nightly-test", False)
+    return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
+
+
 def _filter_fennec(fennec_type, task, parameters):
     return task.attributes.get("build-type", "") == "fennec-{}".format(fennec_type)
 

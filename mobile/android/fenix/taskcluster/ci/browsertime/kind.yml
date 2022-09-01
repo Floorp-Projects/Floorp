@@ -13,7 +13,7 @@ kind-dependencies:
 primary-dependency: signing
 
 only-for-build-types:
-    - nightly
+    - nightly-simulation
 
 only-for-abis:
     - armeabi-v7a
@@ -22,7 +22,7 @@ only-for-abis:
 task-defaults:
     attributes:
         artifact_prefix: public/test_info
-        nightly: true
+        nightly-test: true
     dependencies:
         geckoview-nightly: geckoview-nightly
     notify:
