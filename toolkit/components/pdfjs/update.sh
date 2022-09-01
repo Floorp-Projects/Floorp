@@ -27,7 +27,7 @@ pushd "$ROOT" || exit
 git fetch origin
 git checkout "$1"
 
-npm install --ignore-scripts
+npm install --legacy-peer-deps --ignore-scripts
 
 gulp mozcentral
 

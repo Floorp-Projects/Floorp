@@ -3,6 +3,9 @@ MAINTAINER Tom Ritter <tom@mozilla.com>
 
 VOLUME /builds/worker/checkouts
 
+# %include taskcluster/docker/recipes/install-node.sh
+ADD topsrcdir/taskcluster/docker/recipes/install-node.sh /setup/install-node.sh
+
 COPY    privileged-setup.sh     /setup/privileged-setup.sh
 COPY    updatebot-version.sh    /setup/updatebot-version.sh
 COPY    setup.sh                /builds/worker/setup.sh
