@@ -130,7 +130,10 @@ MFMediaEngineStreamWrapper::FakeDecodedDataCreator::FakeDecodedDataCreator(
 }
 
 MFMediaEngineStream::MFMediaEngineStream()
-    : mIsShutdown(false), mIsSelected(false), mReceivedEOS(false) {}
+    : mIsShutdown(false),
+      mIsSelected(false),
+      mReceivedEOS(false),
+      mHasDispatchedEndEvent(false) {}
 
 MFMediaEngineStream::~MFMediaEngineStream() { MOZ_ASSERT(IsShutdown()); }
 
@@ -263,15 +266,6 @@ IFACEMETHODIMP MFMediaEngineStream::RequestSample(IUnknown* aToken) {
     return MF_E_SHUTDOWN;
   }
 
-  if (IsEnded()) {
-    SLOG("RequestSample, EOS");
-    MOZ_ASSERT(mRawDataQueue.GetSize() == 0);
-    RETURN_IF_FAILED(mMediaEventQueue->QueueEventParamUnk(
-        MEEndOfStream, GUID_NULL, S_OK, nullptr));
-    mEndedEvent.Notify(TrackType());
-    return S_OK;
-  }
-
   ComPtr<IUnknown> token = aToken;
   ComPtr<MFMediaEngineStream> self = this;
   Unused << mTaskQueue->Dispatch(NS_NewRunnableFunction(
@@ -280,7 +274,7 @@ IFACEMETHODIMP MFMediaEngineStream::RequestSample(IUnknown* aToken) {
         mSampleRequestTokens.push(token);
         SLOGV("RequestSample, token amount=%zu", mSampleRequestTokens.size());
         ReplySampleRequestIfPossible();
-        if (!HasEnoughRawData() && mParentSource) {
+        if (!HasEnoughRawData() && mParentSource && !IsEnded()) {
           SLOGV("Dispatch a sample request, queue duration=%" PRId64,
                 mRawDataQueue.Duration());
           mParentSource->mRequestSampleEvent.Notify(
@@ -292,6 +286,16 @@ IFACEMETHODIMP MFMediaEngineStream::RequestSample(IUnknown* aToken) {
 
 void MFMediaEngineStream::ReplySampleRequestIfPossible() {
   AssertOnTaskQueue();
+  if (IsEnded() && !mHasDispatchedEndEvent) {
+    mHasDispatchedEndEvent = true;
+    SLOG("Notify end events");
+    MOZ_ASSERT(mRawDataQueue.GetSize() == 0);
+    RETURN_VOID_IF_FAILED(mMediaEventQueue->QueueEventParamUnk(
+        MEEndOfStream, GUID_NULL, S_OK, nullptr));
+    mEndedEvent.Notify(TrackType());
+    return;
+  }
+
   if (mSampleRequestTokens.empty() || mRawDataQueue.GetSize() == 0) {
     return;
   }
@@ -419,6 +423,7 @@ void MFMediaEngineStream::NotifyNewData(MediaRawData* aSample) {
   if (mReceivedEOS) {
     SLOG("Receive a new data, cancel old EOS flag");
     mReceivedEOS = false;
+    mHasDispatchedEndEvent = false;
   }
   ReplySampleRequestIfPossible();
   if (!wasEnough && HasEnoughRawData()) {
@@ -435,6 +440,7 @@ void MFMediaEngineStream::NotifyEndOfStream() {
   }
   SLOG("EOS");
   mReceivedEOS = true;
+  ReplySampleRequestIfPossible();
 }
 
 bool MFMediaEngineStream::IsEnded() const {
