@@ -35,8 +35,6 @@ apt-get install -y --no-install-recommends \
     python3-requests \
     python3-requests-unixsocket \
     python3-setuptools \
-    nodejs \
-    npm \
     openssh-client \
     rsync \
     wget
@@ -44,6 +42,9 @@ apt-get install -y --no-install-recommends \
 mkdir -p /builds/worker/.mozbuild
 chown -R worker:worker /builds/worker/
 export GOPATH=/builds/worker/go
+
+# nodejs 16 for pdfjs
+. install-node.sh
 
 # pdf.js setup
 # We want to aviod downloading a ton of packages all the time, so
@@ -54,7 +55,8 @@ npm install -g gulp-cli
 cd /builds/worker/
 git clone https://github.com/mozilla/pdf.js.git
 cd /builds/worker/pdf.js
-npm ci
+npm ci --legacy-peer-deps
+
 
 # Build Google's Cloud SQL Proxy from source
 cd /builds/worker/
