@@ -1,7 +1,7 @@
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (C) 2002-2017 Németh László
+ * Copyright (C) 2002-2022 Németh László
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
@@ -78,7 +78,10 @@
 
 #define SPELL_XML "<?xml?>"
 
+#ifndef MAXSUGGESTION
 #define MAXSUGGESTION 15
+#endif
+
 #define MAXSHARPS 5
 
 #ifndef MAXWORDLEN
