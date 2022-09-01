@@ -50,7 +50,8 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewTreeLifecycleOwner
-import androidx.savedstate.ViewTreeSavedStateRegistryOwner
+import androidx.savedstate.findViewTreeSavedStateRegistryOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.focus.R
 import org.mozilla.focus.R.color
@@ -188,7 +189,7 @@ internal class CFRPopupFullScreenLayout(
 
     init {
         ViewTreeLifecycleOwner.set(this, ViewTreeLifecycleOwner.get(container))
-        ViewTreeSavedStateRegistryOwner.set(this, ViewTreeSavedStateRegistryOwner.get(container))
+        this.setViewTreeSavedStateRegistryOwner(container.findViewTreeSavedStateRegistryOwner())
         GeckoScreenOrientation.getInstance().addListener(orientationChangeListener)
         anchor.addOnAttachStateChangeListener(anchorDetachedListener)
     }
@@ -370,7 +371,7 @@ internal class CFRPopupFullScreenLayout(
         GeckoScreenOrientation.getInstance().removeListener(orientationChangeListener)
         disposeComposition()
         ViewTreeLifecycleOwner.set(this, null)
-        ViewTreeSavedStateRegistryOwner.set(this, null)
+        this.setViewTreeSavedStateRegistryOwner(null)
         windowManager.removeViewImmediate(this)
     }
 

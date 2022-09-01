@@ -10,7 +10,7 @@ import android.view.View
 import android.view.ViewManager
 import android.view.WindowManager
 import androidx.lifecycle.ViewTreeLifecycleOwner
-import androidx.savedstate.ViewTreeSavedStateRegistryOwner
+import androidx.savedstate.findViewTreeSavedStateRegistryOwner
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -32,7 +32,7 @@ class CFRPopupTest {
         val popupView = spy(CFRPopupFullScreenLayout(container, mock(), "", mock(), mock()))
 
         assertEquals(ViewTreeLifecycleOwner.get(container), ViewTreeLifecycleOwner.get(popupView))
-        assertEquals(ViewTreeSavedStateRegistryOwner.get(container), ViewTreeSavedStateRegistryOwner.get(popupView))
+        assertEquals(container.findViewTreeSavedStateRegistryOwner(), popupView.findViewTreeSavedStateRegistryOwner())
     }
 
     @Test
@@ -47,7 +47,7 @@ class CFRPopupTest {
         popupView.dismiss()
 
         assertEquals(null, ViewTreeLifecycleOwner.get(popupView))
-        assertEquals(null, ViewTreeSavedStateRegistryOwner.get(popupView))
+        assertEquals(null, popupView.findViewTreeSavedStateRegistryOwner())
         verify(popupView).disposeComposition()
         verify(windowManager).removeViewImmediate(popupView)
     }
