@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 object Versions {
-    const val compose_version = "1.1.1"
+    const val compose_version = "1.2.1"
+    const val compose_compiler = "1.1.1"
     const val leakcanary = "2.8.1"
     const val sentry = "5.7.3"
 
