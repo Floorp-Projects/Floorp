@@ -17,7 +17,6 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
@@ -29,7 +28,6 @@ import com.google.accompanist.insets.rememberInsetsPaddingValues
 import com.google.accompanist.insets.ui.TopAppBar
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
-import org.mozilla.focus.compose.autoMirror
 import org.mozilla.focus.ext.hideToolbar
 import org.mozilla.focus.ui.theme.FocusTheme
 import org.mozilla.focus.ui.theme.focusColors
@@ -103,7 +101,6 @@ abstract class BaseComposeFragment : Fragment() {
                                                 Icon(
                                                     painterResource(id = R.drawable.mozac_ic_back),
                                                     stringResource(R.string.go_back),
-                                                    modifier = Modifier.autoMirror(),
                                                     tint = focusColors.toolbarColor
                                                 )
                                             }
