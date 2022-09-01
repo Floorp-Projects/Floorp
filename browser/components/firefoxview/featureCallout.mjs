@@ -235,9 +235,9 @@ function _positionCallout() {
     }
     if (["start", "end"].includes(position)) {
       if (RTL) {
-        position = "start" ? "right" : "left";
+        position = position === "start" ? "right" : "left";
       } else {
-        position = "start" ? "left" : "right";
+        position = position === "start" ? "left" : "right";
       }
     }
     if (calloutFits(position)) {
@@ -380,12 +380,19 @@ async function showFeatureCallout(messageId) {
   RENDER_OBSERVER = new MutationObserver(function() {
     // Check if the Feature Callout screen has loaded for the first time
     if (!READY && document.querySelector(`#${CONTAINER_ID} .screen`)) {
-      READY = true;
-      _positionCallout();
-      let container = document.getElementById(CONTAINER_ID);
-      container.focus();
-      // Alert screen readers to the presence of the callout
-      container.setAttribute("role", "alert");
+      // Once the screen element is added to the DOM, wait for the
+      // animation frame after next to ensure that _positionCallout
+      // has access to the rendered screen with the correct height
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          READY = true;
+          _positionCallout();
+          let container = document.getElementById(CONTAINER_ID);
+          container.focus();
+          // Alert screen readers to the presence of the callout
+          container.setAttribute("role", "alert");
+        });
+      });
     }
   });
 
