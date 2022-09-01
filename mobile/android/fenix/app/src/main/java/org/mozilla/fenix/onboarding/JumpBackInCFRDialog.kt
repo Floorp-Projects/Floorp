@@ -14,6 +14,7 @@ import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.databinding.OnboardingJumpBackInCfrBinding
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.home.recentsyncedtabs.view.RecentSyncedTabViewHolder
 import org.mozilla.fenix.home.recenttabs.view.RecentTabsHeaderViewHolder
 
 /**
@@ -48,14 +49,30 @@ class JumpBackInCFRDialog(val recyclerView: RecyclerView) {
         return null
     }
 
+    private fun hasSyncTabsView(): Boolean {
+        val count = recyclerView.adapter?.itemCount ?: return false
+
+        for (index in count downTo 0) {
+            val viewHolder = recyclerView.findViewHolderForAdapterPosition(index)
+            if (viewHolder is RecentSyncedTabViewHolder) {
+                return true
+            }
+        }
+
+        return false
+    }
+
     private fun createJumpCRF(anchor: View): Dialog? {
         val context: Context = recyclerView.context
-        if (!context.settings().showSyncCFR) {
+
+        if (context.settings().showSyncCFR && hasSyncTabsView()) {
             context.settings().shouldShowJumpBackInCFR = false
         }
+
         if (!context.settings().shouldShowJumpBackInCFR) {
             return null
         }
+
         val anchorPosition = IntArray(2)
         val popupBinding = OnboardingJumpBackInCfrBinding.inflate(LayoutInflater.from(context))
         val popup = Dialog(context)

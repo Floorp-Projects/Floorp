@@ -13,6 +13,7 @@ import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.cfr.CFRPopup
 import org.mozilla.fenix.compose.cfr.CFRPopupProperties
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.recentsyncedtabs.view.RecentSyncedTabViewHolder
 
 /**
@@ -21,10 +22,10 @@ import org.mozilla.fenix.home.recentsyncedtabs.view.RecentSyncedTabViewHolder
 private const val CFR_TO_ANCHOR_VERTICAL_PADDING = -16
 
 /**
- * Delegate for handling sync onboarding CFR.
+ * Delegate for handling synced tab onboarding CFR.
  *
- * @param [Context] used for various Android interactions.
- * @param [RecyclerView] will serve as anchor for the sync CFR.
+ * @param context [Context] used for various Android interactions.
+ * @param recyclerView [RecyclerView] will serve as anchor for the sync CFR.
  */
 class SyncCFRPresenter(
     private val context: Context,
@@ -34,7 +35,7 @@ class SyncCFRPresenter(
     private var syncCFR: CFRPopup? = null
 
     /**
-     * Check if [view] is available to show sync CFR.
+     * Find the synced view and if it is available, then show the synced tab CFR.
      */
     fun showSyncCFR() {
         findSyncTabsView()?.let {
@@ -51,12 +52,15 @@ class SyncCFRPresenter(
                         false -> Onboarding.syncCfrImplicitDismissal.record(NoExtras())
                     }
                 }
-            ) {
-            }.apply {
+            ).apply {
                 syncCFR = this
                 show()
-                Onboarding.synCfrShown.record(NoExtras())
             }
+
+            context.settings().showSyncCFR = false
+            context.settings().shouldShowJumpBackInCFR = false
+
+            Onboarding.synCfrShown.record(NoExtras())
         }
     }
 

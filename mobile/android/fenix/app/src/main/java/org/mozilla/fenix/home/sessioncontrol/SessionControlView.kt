@@ -218,14 +218,13 @@ class SessionControlView(
                     super.onLayoutCompleted(state)
 
                     if (!context.settings().showHomeOnboardingDialog) {
-                        JumpBackInCFRDialog(view).showIfNeeded()
-
-                        if (context.settings().showSyncCFR) {
+                        if (context.settings().shouldShowJumpBackInCFR) {
+                            JumpBackInCFRDialog(view).showIfNeeded()
+                        } else if (context.settings().showSyncCFR) {
                             SyncCFRPresenter(
                                 context = context,
                                 recyclerView = view,
                             ).showSyncCFR()
-                            context.settings().showSyncCFR = false
                         }
                     }
 
