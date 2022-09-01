@@ -499,6 +499,9 @@ pref("browser.urlbar.richSuggestions.tail", true);
 // If true, top sites may include sponsored ones.
 pref("browser.urlbar.sponsoredTopSites", false);
 
+// If true, show the search term in the URL bar for the users default engine.
+pref("browser.urlbar.showSearchTerms", false);
+
 // Controls the empty search behavior in Search Mode:
 //  0 - Show nothing
 //  1 - Show search history
