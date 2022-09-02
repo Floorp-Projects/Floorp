@@ -23,45 +23,45 @@ class MozTranslationNotification extends MozElements.Notification {
         </panel>
         <deck anonid="translationStates" selectedIndex="0">
           <hbox class="translate-offer-box" align="center">
-            <label value="&translation.thisPageIsIn.label;"/>
+            <label data-l10n-id="translation-notification-this-page-is-in"/>
             <menulist class="notification-button" anonid="detectedLanguage">
               <menupopup/>
             </menulist>
-            <label value="&translation.translateThisPage.label;"/>
-            <button class="notification-button primary" label="&translation.translate.button;" anonid="translate" oncommand="this.closest('notification').translate();"/>
-            <button class="notification-button" label="&translation.notNow.button;" anonid="notNow" oncommand="this.closest('notification').closeCommand();"/>
+            <label data-l10n-id="translation-notification-translate-this-page"/>
+            <button class="notification-button primary" data-l10n-id="translation-notification-translate-button" anonid="translate" oncommand="this.closest('notification').translate();"/>
+            <button class="notification-button" data-l10n-id="translation-notification-not-now-button" anonid="notNow" oncommand="this.closest('notification').closeCommand();"/>
           </hbox>
           <vbox class="translating-box" pack="center">
-            <label value="&translation.translatingContent.label;"/>
+            <label data-l10n-id="translation-notification-translating-content"/>
           </vbox>
           <hbox class="translated-box" align="center">
-            <label value="&translation.translatedFrom.label;"/>
+            <label data-l10n-id="translation-notification-translated-from"/>
             <menulist class="notification-button" anonid="fromLanguage" oncommand="this.closest('notification').translate();">
               <menupopup/>
             </menulist>
-            <label value="&translation.translatedTo.label;"/>
+            <label data-l10n-id="translation-notification-translated-to"/>
             <menulist class="notification-button" anonid="toLanguage" oncommand="this.closest('notification').translate();">
               <menupopup/>
             </menulist>
-            <label value="&translation.translatedToSuffix.label;"/>
-            <button anonid="showOriginal" class="notification-button" label="&translation.showOriginal.button;" oncommand="this.closest('notification').showOriginal();"/>
-            <button anonid="showTranslation" class="notification-button" label="&translation.showTranslation.button;" oncommand="this.closest('notification').showTranslation();"/>
+            <label data-l10n-id="translation-notification-translated-to-suffix"/>
+            <button anonid="showOriginal" class="notification-button" data-l10n-id="translation-notification-show-original-button" oncommand="this.closest('notification').showOriginal();"/>
+            <button anonid="showTranslation" class="notification-button" data-l10n-id="translation-notification-show-translation-button" oncommand="this.closest('notification').showTranslation();"/>
           </hbox>
           <hbox class="translation-error" align="center">
-            <label value="&translation.errorTranslating.label;"/>
-            <button class="notification-button" label="&translation.tryAgain.button;" anonid="tryAgain" oncommand="this.closest('notification').translate();"/>
+            <label data-l10n-id="translation-notification-error-translating"/>
+            <button class="notification-button" data-l10n-id="translation-notification-try-again-button" anonid="tryAgain" oncommand="this.closest('notification').translate();"/>
           </hbox>
           <vbox class="translation-unavailable" pack="center">
-            <label value="&translation.serviceUnavailable.label;"/>
+            <label data-l10n-id="translation-notification-service-unavailable"/>
           </vbox>
         </deck>
         <spacer flex="1"/>
-        <button type="menu" class="notification-button" anonid="options" label="&translation.options.menu;">
+        <button type="menu" class="notification-button" anonid="options" data-l10n-id="translation-notification-options-menu">
           <menupopup class="translation-menupopup" onpopupshowing="this.closest('notification').optionsShowing();">
             <menuitem anonid="neverForLanguage" oncommand="this.closest('notification').neverForLanguage();"/>
-            <menuitem anonid="neverForSite" oncommand="this.closest('notification').neverForSite();" label="&translation.options.neverForSite.label;" accesskey="&translation.options.neverForSite.accesskey;"/>
+            <menuitem anonid="neverForSite" oncommand="this.closest('notification').neverForSite();" data-l10n-id="translation-notification-options-never-for-site"/>
             <menuseparator/>
-            <menuitem oncommand="openPreferences('paneGeneral');" label="&translation.options.preferences.label;" accesskey="&translation.options.preferences.accesskey;"/>
+            <menuitem oncommand="openPreferences('paneGeneral');" data-l10n-id="translation-notification-options-preferences"/>
             <menuitem oncommand="this.closest('notification').openProviderAttribution();">
               <deck anonid="translationEngine" selectedIndex="0">
                 <hbox class="translation-attribution">
@@ -82,11 +82,8 @@ class MozTranslationNotification extends MozElements.Notification {
     `;
   }
 
-  static get entities() {
-    return ["chrome://browser/locale/translation.dtd"];
-  }
-
   connectedCallback() {
+    MozXULElement.insertFTLIfNeeded("browser/translationNotification.ftl");
     MozXULElement.insertFTLIfNeeded("toolkit/global/notification.ftl");
     this.appendChild(this.constructor.fragment);
 
@@ -324,18 +321,11 @@ class MozTranslationNotification extends MozElements.Notification {
     let langName = Services.intl.getLanguageDisplayNames(undefined, [lang])[0];
 
     // Set the label and accesskey on the menuitem.
-    let bundle = Services.strings.createBundle(
-      "chrome://browser/locale/translation.properties"
-    );
     let item = this._getAnonElt("neverForLanguage");
-    const kStrId = "translation.options.neverForLanguage";
-    item.setAttribute(
-      "label",
-      bundle.formatStringFromName(kStrId + ".label", [langName])
-    );
-    item.setAttribute(
-      "accesskey",
-      bundle.GetStringFromName(kStrId + ".accesskey")
+    document.l10n.setAttributes(
+      item,
+      "translation-notification-options-never-for-language",
+      { langName }
     );
     item.langCode = lang;
 
