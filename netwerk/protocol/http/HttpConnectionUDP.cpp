@@ -141,6 +141,10 @@ nsresult HttpConnectionUDP::Init(nsHttpConnectionInfo* info,
     controlFlags |= nsISocketProvider::BE_CONSERVATIVE;
   }
 
+  if (mResolvedByTRR) {
+    controlFlags |= nsISocketProvider::USED_PRIVATE_DNS;
+  }
+
   mPeerAddr = new nsNetAddr(&peerAddr);
   mHttp3Session = new Http3Session();
   rv = mHttp3Session->Init(mConnInfo, mSelfAddr, mPeerAddr, this, controlFlags,
