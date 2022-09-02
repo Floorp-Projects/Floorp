@@ -6,12 +6,10 @@
 
 const BUNDLE_URL = "chrome://global/locale/viewSource.properties";
 
-var EXPORTED_SYMBOLS = ["ViewSourcePageParent"];
-
 /**
  * ViewSourcePageParent manages the view source <browser> from the chrome side.
  */
-class ViewSourcePageParent extends JSWindowActorParent {
+export class ViewSourcePageParent extends JSWindowActorParent {
   constructor() {
     super();
 

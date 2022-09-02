@@ -3,17 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["ViewSourceChild"];
-
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ViewSourcePageChild",
-  "resource://gre/actors/ViewSourcePageChild.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  ViewSourcePageChild: "resource://gre/actors/ViewSourcePageChild.sys.mjs",
+});
 
-class ViewSourceChild extends JSWindowActorChild {
+export class ViewSourceChild extends JSWindowActorChild {
   receiveMessage(message) {
     let data = message.data;
     switch (message.name) {
