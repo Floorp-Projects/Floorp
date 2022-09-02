@@ -344,7 +344,7 @@ var BrowserPageActions = {
 
     let anchorNode = this.panelAnchorNodeForAction(action);
     PanelMultiView.openPopup(panelNode, anchorNode, {
-      position: "bottomcenter topright",
+      position: "bottomright topright",
       triggerEvent: event,
     }).catch(Cu.reportError);
   },
@@ -921,7 +921,7 @@ var BrowserPageActions = {
   showPanel(event = null) {
     this.panelNode.hidden = false;
     PanelMultiView.openPopup(this.panelNode, this.mainButtonNode, {
-      position: "bottomcenter topright",
+      position: "bottomright topright",
       triggerEvent: event,
     }).catch(Cu.reportError);
   },

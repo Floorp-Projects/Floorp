@@ -85,7 +85,7 @@ async function openPopup(panelIndex, viewIndex) {
   PanelMultiView.openPopup(
     gPanels[panelIndex],
     gPanelAnchors[panelIndex],
-    "bottomcenter topright"
+    "bottomright topright"
   );
   await promiseShown;
 
@@ -440,7 +440,7 @@ add_task(async function test_cancel_mainview_event_sequence() {
   PanelMultiView.openPopup(
     gPanels[0],
     gPanelAnchors[0],
-    "bottomcenter topright"
+    "bottomright topright"
   );
   await promiseHidden;
 
@@ -519,7 +519,7 @@ add_task(async function test_close_while_showing_mainview_event_sequence() {
   PanelMultiView.openPopup(
     gPanels[0],
     gPanelAnchors[0],
-    "bottomcenter topright"
+    "bottomright topright"
   );
   await promiseHiding;
   await promiseHidden;
