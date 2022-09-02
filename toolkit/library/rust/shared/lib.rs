@@ -108,6 +108,7 @@ mod uniffi_fixtures {
     extern crate uniffi_todolist;
 
     arithmetical::uniffi_reexport_scaffolding!();
+    uniffi_custom_types::uniffi_reexport_scaffolding!();
     uniffi_geometry::uniffi_reexport_scaffolding!();
     uniffi_rondpoint::uniffi_reexport_scaffolding!();
     uniffi_sprites::uniffi_reexport_scaffolding!();

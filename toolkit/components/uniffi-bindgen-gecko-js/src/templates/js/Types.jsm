@@ -59,6 +59,9 @@
 {% when Type::Object with (name) %}
 {% include "Object.jsm" %}
 
+{%- when Type::Custom with { name, builtin } %}
+{% include "CustomType.jsm" %}
+
 {%- else %}
 {# TODO implement the other types #}
 

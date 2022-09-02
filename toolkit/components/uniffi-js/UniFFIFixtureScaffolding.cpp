@@ -111,6 +111,7 @@ extern "C" {
   RustBuffer todolist_9473_get_default_list(RustCallStatus*);
   void todolist_9473_set_default_list(void *, RustCallStatus*);
   RustBuffer todolist_9473_create_entry_with(RustBuffer, RustCallStatus*);
+  RustBuffer customtypes_8b94_get_custom_types_demo(RustBuffer, RustCallStatus*);
 }
 
 // Define pointer types
@@ -484,6 +485,10 @@ Maybe<already_AddRefed<Promise>> UniFFIFixturesCallAsync(const GlobalObject& aGl
     case 86: { // todolist:todolist_9473_create_entry_with
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
       return Some(CallHandler::CallAsync(todolist_9473_create_entry_with, aGlobal, aArgs, "todolist_9473_create_entry_with: "_ns, aError));
+    }
+    case 87: { // customtypes:customtypes_8b94_get_custom_types_demo
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(customtypes_8b94_get_custom_types_demo, aGlobal, aArgs, "customtypes_8b94_get_custom_types_demo: "_ns, aError));
     }
   }
   return Nothing();
@@ -924,6 +929,11 @@ bool UniFFIFixturesCallSync(const GlobalObject& aGlobal, uint64_t aId, const Seq
     case 86: { // todolist:todolist_9473_create_entry_with
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
       CallHandler::CallSync(todolist_9473_create_entry_with, aGlobal, aArgs, aReturnValue, "todolist_9473_create_entry_with: "_ns, aError);
+      return true;
+    }
+    case 87: { // customtypes:customtypes_8b94_get_custom_types_demo
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(customtypes_8b94_get_custom_types_demo, aGlobal, aArgs, aReturnValue, "customtypes_8b94_get_custom_types_demo: "_ns, aError);
       return true;
     }
   }

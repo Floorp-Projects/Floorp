@@ -1,0 +1,22 @@
+[package]
+name = "uniffi-example-custom-types"
+edition = "2021"
+version = "0.19.6"
+authors = ["Firefox Sync Team <sync-team@mozilla.com>"]
+license = "MPL-2.0"
+publish = false
+
+[lib]
+crate-type = ["lib", "cdylib"]
+name = "uniffi_custom_types"
+
+[dependencies]
+anyhow = "1"
+bytes = "1.0"
+serde_json = "1"
+uniffi_macros = "0.19"
+uniffi = "0.19"
+url = "2.1"
+
+[build-dependencies]
+uniffi_build = "0.19"

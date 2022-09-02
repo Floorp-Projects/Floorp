@@ -1,0 +1,14 @@
+[Custom]
+typedef string Url;
+
+[Custom]
+typedef i64 Handle;
+
+dictionary CustomTypesDemo {
+    Url url;
+    Handle handle;
+};
+
+namespace customtypes {
+    CustomTypesDemo get_custom_types_demo(CustomTypesDemo? demo);
+};
