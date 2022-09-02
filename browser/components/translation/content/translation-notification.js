@@ -77,19 +77,17 @@ class MozTranslationNotification extends MozElements.Notification {
       </hbox>
       <toolbarbutton anonid="closeButton" ondblclick="event.stopPropagation();"
                      class="messageCloseButton close-icon tabbable"
-                     tooltiptext="&closeNotification.tooltip;"
+                     data-l10n-id="close-notification-message"
                      oncommand="this.parentNode.closeCommand();"/>
     `;
   }
 
   static get entities() {
-    return [
-      "chrome://global/locale/notification.dtd",
-      "chrome://browser/locale/translation.dtd",
-    ];
+    return ["chrome://browser/locale/translation.dtd"];
   }
 
   connectedCallback() {
+    MozXULElement.insertFTLIfNeeded("toolkit/global/notification.ftl");
     this.appendChild(this.constructor.fragment);
 
     for (let [propertyName, selector] of [

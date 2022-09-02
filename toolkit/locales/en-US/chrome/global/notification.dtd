@@ -2,6 +2,10 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+<!-- This file is only used by the Firefox Translations extension,
+   - and should be removed once possible.
+   - See: https://bugzilla.mozilla.org/show_bug.cgi?id=1788595 -->
+
 <!ENTITY closeNotification.tooltip "Close this message">
 
 <!ENTITY learnMoreNoEllipsis "Learn more">
