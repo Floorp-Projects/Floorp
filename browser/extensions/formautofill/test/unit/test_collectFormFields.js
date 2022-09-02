@@ -504,6 +504,24 @@ const TESTCASES = [
   },
   {
     description:
+      "A invalid credit card form with non-autocomplete-attr cc-number + another input field",
+    document: `<form>
+               <input id="cc-number" name="cc-number">
+               <input id="password" type="password">
+               </form>`,
+    sections: [[]],
+    validFieldDetails: [],
+    ids: [],
+    prefs: [
+      [
+        "extensions.formautofill.creditCards.heuristics.numberOnly.confidenceThreshold",
+        "0.95",
+      ],
+      ["extensions.formautofill.creditCards.heuristics.testConfidence", "0.96"],
+    ],
+  },
+  {
+    description:
       "A valid credit card form with non-autocomplete-attr cc-number only (low confidence).",
     document: `<form>
                <input id="cc-number" name="cc-number">
