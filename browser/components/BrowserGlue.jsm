@@ -2256,7 +2256,7 @@ BrowserGlue.prototype = {
   },
 
   _monitorPrivacySegmentationPref() {
-    const PREF_ENABLED = "browser.privacySegmentation.enabled";
+    const PREF_ENABLED = "browser.dataFeatureRecommendations.enabled";
     const EVENT_CATEGORY = "privacy_segmentation";
 
     let checkPrivacySegmentationPref = () => {

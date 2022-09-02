@@ -9,9 +9,7 @@ const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
-const PREF = "browser.privacySegmentation.enabled";
-const SCALAR_KEY = "browser.privacySegmentation.enabled";
-
+const PREF = "browser.dataFeatureRecommendations.enabled";
 const PREF_VISIBILITY = "browser.privacySegmentation.preferences.show";
 
 add_task(async function test_telemetry() {
@@ -107,9 +105,15 @@ add_task(async function test_preferences_section() {
   let section = doc.getElementById("privacySegmentationSection");
   let sectionHeader = section.querySelector("h2");
   let sectionDescription = section.querySelector("label");
-  let radioGroup = section.querySelector("#privacySegmentationRadioGroup");
-  let radioEnabled = radioGroup.querySelector("#privacySegmentationEnabled");
-  let radioDisabled = radioGroup.querySelector("#privacySegmentationDisabled");
+  let radioGroup = section.querySelector(
+    "#privacyDataFeatureRecommendationRadioGroup"
+  );
+  let radioEnabled = radioGroup.querySelector(
+    "#privacyDataFeatureRecommendationEnabled"
+  );
+  let radioDisabled = radioGroup.querySelector(
+    "#privacyDataFeatureRecommendationDisabled"
+  );
 
   for (let show of [false, true]) {
     Services.prefs.setBoolPref(PREF_VISIBILITY, show);

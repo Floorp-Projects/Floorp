@@ -3302,7 +3302,7 @@ service_request:
 privacy_segmentation:
   status:
     description: >
-      Records value changes of the browser.privacySegmentation.enabled pref.
+      Records value changes of the browser.dataFeatureRecommendations.enabled pref.
       Does not record an event for the initial pref state at startup.
     objects: ["pref"]
     methods: ["enable", "disable"]

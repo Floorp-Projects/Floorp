@@ -653,8 +653,8 @@ pref("browser.privatebrowsing.enable-new-indicator", true);
 // Enables the new about:privatebrowsing logo.
 pref("browser.privatebrowsing.enable-new-logo", true);
 
-// Whether the user is opted-in to privacy segmentation.
-pref("browser.privacySegmentation.enabled", false);
+// Whether the user has opted-in to recommended settings for data features.
+pref("browser.dataFeatureRecommendations.enabled", false);
 
 // Temporary pref to control whether or not Private Browsing windows show up
 // as separate icons in the Windows taskbar. This will be removed and become

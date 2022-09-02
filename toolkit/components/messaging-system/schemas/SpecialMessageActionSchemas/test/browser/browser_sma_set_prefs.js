@@ -4,7 +4,7 @@
 "use strict";
 
 const HOMEPAGE_PREF = "browser.startup.homepage";
-const PRIVACY_SEGMENTATION_PREF = "browser.privacySegmentation.enabled";
+const PRIVACY_SEGMENTATION_PREF = "browser.dataFeatureRecommendations.enabled";
 
 const PREFS = [HOMEPAGE_PREF, PRIVACY_SEGMENTATION_PREF];
 
