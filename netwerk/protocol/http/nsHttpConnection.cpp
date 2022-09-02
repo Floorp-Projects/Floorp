@@ -1005,7 +1005,6 @@ void nsHttpConnection::HandleTunnelResponse(uint16_t responseStatus,
     LOG(("proxy CONNECT failed! endtoendssl=%d onlyconnect=%d\n", isHttps,
          onlyConnect));
     mTransaction->SetProxyConnectFailed();
-    mDontReuse = true;
   }
 }
 
