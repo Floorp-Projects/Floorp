@@ -209,6 +209,7 @@ class SmokeTest {
         }
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/26711")
     @Test
     // Verifies the list of items in a tab's 3 dot menu
     fun verifyPageMainMenuItemsTest() {
