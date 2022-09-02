@@ -647,8 +647,12 @@ hr[size="1"] {
   border-style: solid none none none;
 }
 
-input:-moz-broken::before,
-img:-moz-broken::before {
+/* Note that we only intend for the alt content to show up if the image is
+ * broken. But non-broken images/inputs will have a replaced box, and thus we
+ * won't we don't generate the pseudo-element anyways. This prevents
+ * unnecessary reframing when images become broken / non-broken. */
+input[type=image]::before,
+img::before {
   content: -moz-alt-content !important;
   unicode-bidi: isolate;
 }

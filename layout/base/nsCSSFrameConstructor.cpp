@@ -3515,7 +3515,9 @@ nsCSSFrameConstructor::FindGeneratedImageData(const Element& aElement,
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindImgData(const Element& aElement,
                                    ComputedStyle& aStyle) {
-  if (!nsImageFrame::ShouldCreateImageFrameFor(aElement, aStyle)) {
+  if (nsImageFrame::ImageFrameTypeFor(aElement, aStyle) !=
+      nsImageFrame::ImageFrameType::ForElementRequest) {
+    // content: url gets handled by the generic code-path.
     return nullptr;
   }
 
@@ -3527,7 +3529,8 @@ nsCSSFrameConstructor::FindImgData(const Element& aElement,
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindImgControlData(const Element& aElement,
                                           ComputedStyle& aStyle) {
-  if (!nsImageFrame::ShouldCreateImageFrameFor(aElement, aStyle)) {
+  if (nsImageFrame::ImageFrameTypeFor(aElement, aStyle) !=
+      nsImageFrame::ImageFrameType::ForElementRequest) {
     return nullptr;
   }
 
@@ -5356,7 +5359,8 @@ nsCSSFrameConstructor::FindElementData(const Element& aElement,
 
   // Check for 'content: <image-url>' on the element (which makes us ignore
   // 'display' values other than 'none' or 'contents').
-  if (nsImageFrame::ShouldCreateImageFrameForContent(aElement, aStyle)) {
+  if (nsImageFrame::ShouldCreateImageFrameForContentProperty(aElement,
+                                                             aStyle)) {
     static constexpr FrameConstructionData sImgData(
         NS_NewImageFrameForContentProperty);
     return &sImgData;

@@ -7852,6 +7852,11 @@ bool nsIFrame::IsBlockFrameOrSubclass() const {
   return !!thisAsBlock;
 }
 
+bool nsIFrame::IsImageFrameOrSubclass() const {
+  const nsImageFrame* asImage = do_QueryFrame(this);
+  return !!asImage;
+}
+
 static nsIFrame* GetNearestBlockContainer(nsIFrame* frame) {
   // The block wrappers we use to wrap blocks inside inlines aren't
   // described in the CSS spec.  We need to make them not be containing
