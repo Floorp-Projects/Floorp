@@ -55,6 +55,7 @@ TransportSecurityInfo::TransportSecurityInfo()
       mIsAcceptedEch(false),
       mIsDelegatedCredential(false),
       mMadeOCSPRequests(false),
+      mUsedPrivateDNS(false),
       mNPNCompleted(false),
       mResumed(false),
       mIsBuiltCertChainRootBuiltInRoot(false),
@@ -294,6 +295,11 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* aStream) {
   }
 
   rv = aStream->WriteBoolean(mMadeOCSPRequests);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = aStream->WriteBoolean(mUsedPrivateDNS);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -803,6 +809,13 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
     if (NS_FAILED(rv)) {
       return rv;
     }
+
+    rv = aStream->ReadBoolean(&mUsedPrivateDNS);
+    CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
+                            "Deserialization should not fail");
+    if (NS_FAILED(rv)) {
+      return rv;
+    };
   }
 
   return NS_OK;
@@ -838,6 +851,7 @@ void TransportSecurityInfo::SerializeToIPC(IPC::MessageWriter* aWriter) {
   WriteParam(aWriter, mIsAcceptedEch);
   WriteParam(aWriter, mPeerId);
   WriteParam(aWriter, mMadeOCSPRequests);
+  WriteParam(aWriter, mUsedPrivateDNS);
 }
 
 bool TransportSecurityInfo::DeserializeFromIPC(IPC::MessageReader* aReader) {
@@ -865,7 +879,8 @@ bool TransportSecurityInfo::DeserializeFromIPC(IPC::MessageReader* aReader) {
       !ReadParam(aReader, &mNegotiatedNPN) || !ReadParam(aReader, &mResumed) ||
       !ReadParam(aReader, &mIsBuiltCertChainRootBuiltInRoot) ||
       !ReadParam(aReader, &mIsAcceptedEch) || !ReadParam(aReader, &mPeerId) ||
-      !ReadParam(aReader, &mMadeOCSPRequests)) {
+      !ReadParam(aReader, &mMadeOCSPRequests) ||
+      !ReadParam(aReader, &mUsedPrivateDNS)) {
     return false;
   }
 
@@ -1201,6 +1216,13 @@ TransportSecurityInfo::GetMadeOCSPRequests(bool* aMadeOCSPRequests) {
   MutexAutoLock lock(mMutex);
 
   *aMadeOCSPRequests = mMadeOCSPRequests;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetUsedPrivateDNS(bool* aUsedPrivateDNS) {
+  MutexAutoLock lock(mMutex);
+  *aUsedPrivateDNS = mUsedPrivateDNS;
   return NS_OK;
 }
 

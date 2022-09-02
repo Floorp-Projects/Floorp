@@ -131,4 +131,11 @@ interface nsISocketProvider : nsISupports
      */ 
     const unsigned long IS_RETRY = (1 << 11); 
 
+    /**
+     * If set, indicates that the connection used a privacy-preserving DNS
+     * transport such as DoH, DoQ, ODOH or similar. Currently this field is
+     * set only when DoH is used via the TRR.
+     */
+    const unsigned long USED_PRIVATE_DNS = (1 << 12);
+
 };
