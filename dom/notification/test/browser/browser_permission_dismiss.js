@@ -22,7 +22,7 @@ const TEST_URL =
 function clickDoorhangerButton(aButtonIndex) {
   let popup = PopupNotifications.getNotification("web-notifications");
   let notifications = popup.owner.panel.childNodes;
-  ok(notifications.length > 0, "at least one notification displayed");
+  ok(notifications.length, "at least one notification displayed");
   ok(true, notifications.length + " notification(s)");
   let notification = notifications[0];
 

@@ -29,7 +29,7 @@ createIframe()
         is(actual[i], expected[i], msg + " at " + i);
       }
 
-      if (0 < actual.length) {
+      if (actual.length) {
         var chain = els.getEventTargetChainFor(actual[0], false); // Events should be dispatched on actual[0].
         ok(expected.length < chain.length, "There should be additional chrome event targets.");
       }

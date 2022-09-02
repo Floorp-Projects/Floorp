@@ -56,7 +56,7 @@ function startTest()
 
   function onStorageChanged(e) {
     if (e.storageArea == localStorageCopy) {
-      ok(expectedEvents.length > 0, "Not more then expected events encountered");
+      ok(expectedEvents.length, "Not more then expected events encountered");
       var receivedEvent = e.key + "," + e.oldValue + "," + e.newValue;
       is(receivedEvent, expectedEvents.shift(), "Expected event data: " + receivedEvent);
     }

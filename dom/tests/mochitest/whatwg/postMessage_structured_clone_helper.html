@@ -14,7 +14,7 @@
         var memory = new WeakMap();
         var rmemory = new WeakMap();
 
-        while (stack.length > 0) {
+        while (stack.length) {
             var pair = stack.pop();
             var x = pair[0], y = pair[1];
             if (typeof x !== "object" || x === null) {

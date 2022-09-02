@@ -28,7 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990812
         mm.addMessageListener("test", function onMessage(msg) {
           is(msg.data, order.shift(), "correct message " + msg.data);
 
-          if (order.length == 0) {
+          if (!order.length) {
             mm.removeMessageListener("test", onMessage);
             resolve();
           }

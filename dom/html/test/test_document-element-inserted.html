@@ -34,7 +34,7 @@ var tests = [
 ]
 
 function next() {
-    if (tests.length > 0) {
+    if (tests.length) {
         var t = tests.shift();
         loc = t.substring(t.indexOf("test"));
         media.setAttribute("src",t);

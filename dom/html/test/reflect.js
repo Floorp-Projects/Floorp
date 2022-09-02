@@ -596,7 +596,7 @@ function reflectLimitedEnumerated(aParameters) {
       null,
       "Missing default value should be null for nullable attributes"
     );
-    ok(validValues.length > 0, "We better have at least one valid value");
+    ok(validValues.length, "We better have at least one valid value");
     element.setAttribute(contentAttr, validValues[0]);
     ok(
       element.hasAttribute(contentAttr),

@@ -39,7 +39,7 @@ var tests = [
 ];
 
 async function nextTest() {
-  if (tests.length == 0) {
+  if (!tests.length) {
     opener.nextTest();
     return;
   }

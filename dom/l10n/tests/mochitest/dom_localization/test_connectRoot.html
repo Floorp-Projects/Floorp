@@ -29,11 +29,11 @@ key1 = Value for Key 1
     );
 
     await domLoc.translateRoots();
-    is(p1.textContent.length == 0, true);
+    is(!p1.textContent.length, true);
     const body = document.body;
     domLoc.connectRoot(body);
     await domLoc.translateRoots();
-    is(p1.textContent.length > 0, true);
+    is(!!p1.textContent.length, true);
 
     SimpleTest.finish();
   };

@@ -118,7 +118,7 @@
        "Getting @items twice should return the same object");
     var haveFiles = false;
     ok(items instanceof DataTransferItemList, "@items implements DataTransferItemList");
-    ok(items.length > 0, "@items is not empty");
+    ok(items.length, "@items is not empty");
     for (var i = 0; i < items.length; i++) {
       var item = items[i];
       ok(item instanceof DataTransferItem, "each element of @items must implement DataTransferItem");
@@ -136,7 +136,7 @@
 
     is(files, e.clipboardData.files,
        "Getting the files array twice should return the same array");
-    ok(files.length > 0, "There should be at least one file in the clipboard");
+    ok(files.length, "There should be at least one file in the clipboard");
     for (var i = 0; i < files.length; i++) {
       var file = files[i];
       ok(file instanceof File, ".files should contain only File objects");

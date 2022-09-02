@@ -17,7 +17,7 @@
     }
 
     function weak_ref_dead(r) {
-      return SpecialPowers.nondeterministicGetWeakMapKeys(r).length == 0;
+      return !SpecialPowers.nondeterministicGetWeakMapKeys(r).length;
     }
 
     function setupTarget1() {

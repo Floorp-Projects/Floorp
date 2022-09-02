@@ -54,7 +54,7 @@ testProcessor.onaudioprocess = function(event) {
       SpecialPowers.removeObserver(observer, "webaudio-node-demise");
       observer = null;
       event.target.onaudioprocess = null;
-      ok(ids.length == 0, "All expected nodes should be collected");
+      ok(!ids.length, "All expected nodes should be collected");
       SimpleTest.finish();
     });
     break;

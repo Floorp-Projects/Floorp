@@ -567,7 +567,7 @@ async function checkReportedTelemetry(media, reportExpected, hasVideo, hasAudio,
        * }
        */
       const items = Object.entries(hist.snapshot());
-      if (items.length > 0) {
+      if (items.length) {
         for (const [key, value] of items) {
           const entriesNums = Object.entries(value.values).length;
           ok(reportExpected && entriesNums > 0, `Reported ${key} for ${name}`);
@@ -590,7 +590,7 @@ async function checkReportedTelemetry(media, reportExpected, hasVideo, hasAudio,
     const hist =
       SpecialPowers.Services.telemetry.getKeyedHistogramById("MEDIA_PLAY_TIME_MS");
     const items = Object.entries(hist.snapshot());
-    if (items.length > 0) {
+    if (items.length) {
       for (const item of items) {
         ok(item[0].includes("V") != -1 || !hasVideo, "Video time is reported if video was present");
       }
@@ -604,7 +604,7 @@ async function checkReportedTelemetry(media, reportExpected, hasVideo, hasAudio,
     try {
       const hist = SpecialPowers.Services.telemetry.getKeyedHistogramById(name);
       const items = Object.entries(hist.snapshot());
-      if (items.length > 0) {
+      if (items.length) {
         for (const [key, value] of items) {
           const entriesNums = Object.entries(value.values).length;
           ok(reportExpected && entriesNums > 0, `Reported ${key} for ${name}`);

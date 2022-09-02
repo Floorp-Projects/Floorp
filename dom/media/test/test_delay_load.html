@@ -96,7 +96,7 @@ v.onloadstart = function(e) {
 v.load(); // load started while in this document, this doc's load will block until
           // the video's finished loading (in the other document).
 
-if (gRegisteredElements.length > 0) {
+if (gRegisteredElements.length) {
   SimpleTest.waitForExplicitFinish();
 } else {
   todo(false, "No types supported");

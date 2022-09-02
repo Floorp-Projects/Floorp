@@ -56,7 +56,7 @@ function unregisterAllPopupEventHandlers(win) {
 function triggerMainCommand(popup) {
   info("triggering main command");
   let notifications = popup.childNodes;
-  ok(notifications.length > 0, "at least one notification displayed");
+  ok(notifications.length, "at least one notification displayed");
   let notification = notifications[0];
   info("triggering command: " + notification.getAttribute("buttonlabel"));
 
@@ -69,7 +69,7 @@ function triggerSecondaryCommand(popup, win) {
   }
   info("triggering secondary command");
   let notifications = popup.childNodes;
-  ok(notifications.length > 0, "at least one notification displayed");
+  ok(notifications.length, "at least one notification displayed");
   let notification = notifications[0];
   EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {}, win);
 }

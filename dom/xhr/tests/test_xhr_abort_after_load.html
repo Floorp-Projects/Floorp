@@ -23,7 +23,7 @@ function runTest() {
   ];
 
   function nextTest() {
-    if (testFunctions.length == 0) {
+    if (!testFunctions.length) {
       SimpleTest.finish();
       return;
     }

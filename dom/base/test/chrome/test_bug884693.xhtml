@@ -41,7 +41,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=884693
               msg.category.includes("chrome javascript") &&
               msg.message.includes("Unknown event")));
 
-          if (messages.length > 0) {
+          if (messages.length) {
             info(`Got console messages ${messages}`);
           }
           is(messages.length, expectedMessages.length, "Got expected message count");

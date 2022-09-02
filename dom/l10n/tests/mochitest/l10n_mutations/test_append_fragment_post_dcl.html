@@ -24,7 +24,7 @@
     is(elem2.textContent.length, 0);
 
     let verifyL10n = () => {
-      if (elem.textContent.length > 0 && elem2.textContent.length > 0) {
+      if (elem.textContent.length && elem2.textContent.length) {
         window.removeEventListener("MozAfterPaint", verifyL10n);
         SimpleTest.finish();
       }

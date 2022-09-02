@@ -84,7 +84,7 @@ async function startTest(test, token) {
     `${token} checking readyState`);
   ok(vout.ended, `${token} checking playback has ended`);
   isnot(stream.getTracks().length, 0, `${token} results in some tracks`);
-  if (stream.getVideoTracks().length > 0) {
+  if (stream.getVideoTracks().length) {
     ok(test.type.match(/^video/), `${token} is a video resource`);
     checkDrawImage(vout, `${token} checking video frame pixel has been drawn`);
   }

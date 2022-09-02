@@ -1626,9 +1626,9 @@ PeerConnectionWrapper.prototype = {
       info(
         this.label + ": iceCandidate = " + JSON.stringify(anEvent.candidate)
       );
-      ok(anEvent.candidate.sdpMid.length > 0, "SDP mid not empty");
+      ok(anEvent.candidate.sdpMid.length, "SDP mid not empty");
       ok(
-        anEvent.candidate.usernameFragment.length > 0,
+        anEvent.candidate.usernameFragment.length,
         "usernameFragment not empty"
       );
 

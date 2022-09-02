@@ -14,7 +14,7 @@
           navigator.serviceWorker.getRegistrations().then(function(a) {
             window.parent.postMessage({ type: "check", status: Array.isArray(a),
                                         msg: "getRegistrations returns an array" }, "*");
-            window.parent.postMessage({ type: "check", status: a.length > 0,
+            window.parent.postMessage({ type: "check", status: !!a.length,
                                         msg: "getRegistrations returns an array with 1 item" }, "*");
             for (var i = 0; i < a.length; ++i) {
               window.parent.postMessage({ type: "check", status: a[i] instanceof ServiceWorkerRegistration,

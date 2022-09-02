@@ -732,7 +732,7 @@ class RTCPeerConnection {
           "Missing required 'urls' member of RTCIceServer"
         );
       }
-      if (urls.length == 0) {
+      if (!urls.length) {
         throw new this._win.DOMException(
           `${msg} - urls is empty`,
           "SyntaxError"
@@ -1524,7 +1524,7 @@ class RTCPeerConnection {
   get currentLocalDescription() {
     this._checkClosed();
     const sdp = this._pc.currentLocalDescription;
-    if (sdp.length == 0) {
+    if (!sdp.length) {
       return null;
     }
     const type = this._pc.currentOfferer ? "offer" : "answer";
@@ -1534,7 +1534,7 @@ class RTCPeerConnection {
   get pendingLocalDescription() {
     this._checkClosed();
     const sdp = this._pc.pendingLocalDescription;
-    if (sdp.length == 0) {
+    if (!sdp.length) {
       return null;
     }
     const type = this._pc.pendingOfferer ? "offer" : "answer";
@@ -1548,7 +1548,7 @@ class RTCPeerConnection {
   get currentRemoteDescription() {
     this._checkClosed();
     const sdp = this._pc.currentRemoteDescription;
-    if (sdp.length == 0) {
+    if (!sdp.length) {
       return null;
     }
     const type = this._pc.currentOfferer ? "answer" : "offer";
@@ -1558,7 +1558,7 @@ class RTCPeerConnection {
   get pendingRemoteDescription() {
     this._checkClosed();
     const sdp = this._pc.pendingRemoteDescription;
-    if (sdp.length == 0) {
+    if (!sdp.length) {
       return null;
     }
     const type = this._pc.pendingOfferer ? "answer" : "offer";

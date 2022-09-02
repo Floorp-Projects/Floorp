@@ -200,8 +200,8 @@ let currentTest = null;
 let testCounter = 0;
 
 function runTests() {
-  if (!currentTest || currentTest[2].length == 0) {
-    if (testData.length == 0) {
+  if (!currentTest || !currentTest[2].length) {
+    if (!testData.length) {
       SimpleTest.finish();
       return;
     }

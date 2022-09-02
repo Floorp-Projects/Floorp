@@ -38,7 +38,7 @@ function popupLoad(win)
 
 function next()
 {
-  if (TESTS.length == 0) {
+  if (!TESTS.length) {
     SimpleTest.finish();
   } else {
     var test = TESTS.shift();

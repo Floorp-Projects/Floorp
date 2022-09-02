@@ -20,7 +20,7 @@
     document.body.appendChild(clone);
 
     let verifyL10n = () => {
-      if (span.textContent.length > 0) {
+      if (span.textContent.length) {
         window.removeEventListener("MozAfterPaint", verifyL10n);
         SimpleTest.finish();
       }

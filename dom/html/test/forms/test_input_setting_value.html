@@ -471,7 +471,7 @@ SimpleTest.waitForFocus(() => {
       is(input.value, "hig",
          `${description}The value should be set to the specified value in "beforeinput" event listener since the event target was already modified`);
       is(inputEvents.length, 1, `${description}"input" event should be fired`);
-      if (inputEvents.length > 0) {
+      if (inputEvents.length) {
         is(inputEvents[0].inputType,
            "insertReplacementText", `${description}inputType of "input" event should be "insertReplacementText"`);
         is(inputEvents[0].data, "def",
@@ -550,7 +550,7 @@ SimpleTest.waitForFocus(() => {
       // Different from Chrome
       is(inputEvents.length, 1,
          `${description}"input" event should be fired even if the frame of target is destroyed`);
-      if (inputEvents.length > 0) {
+      if (inputEvents.length) {
         is(inputEvents[0].inputType,
            "insertReplacementText", `${description}inputType of "input" event should be "insertReplacementText"`);
         is(inputEvents[0].data, "def",
@@ -597,7 +597,7 @@ SimpleTest.waitForFocus(() => {
       is(input.value, "hig",
          `${description}The value should be set to the specified value in "beforeinput" event listener since the event target was already modified`);
       is(inputEvents.length, 1, `${description}"input" event should be fired`);
-      if (inputEvents.length > 0) {
+      if (inputEvents.length) {
         is(inputEvents[0].inputType,
            "insertReplacementText", `${description}inputType of "input" event should be "insertReplacementText"`);
         is(inputEvents[0].data, "def",

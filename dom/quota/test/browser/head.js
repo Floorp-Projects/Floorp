@@ -59,7 +59,7 @@ function triggerMainCommand(popup, win) {
   }
   info("triggering main command");
   let notifications = popup.childNodes;
-  ok(notifications.length > 0, "at least one notification displayed");
+  ok(notifications.length, "at least one notification displayed");
   let notification = notifications[0];
   info("triggering command: " + notification.getAttribute("buttonlabel"));
 
@@ -69,7 +69,7 @@ function triggerMainCommand(popup, win) {
 async function triggerSecondaryCommand(popup, remember = false, win = window) {
   info("triggering secondary command");
   let notifications = popup.childNodes;
-  ok(notifications.length > 0, "at least one notification displayed");
+  ok(notifications.length, "at least one notification displayed");
   let notification = notifications[0];
 
   if (remember) {

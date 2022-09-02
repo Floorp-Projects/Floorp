@@ -57,24 +57,21 @@ function MutationEventChecker() {
     }
 
     ok(
-      this.expectedEvents.length == 0,
+      !this.expectedEvents.length,
       "Expecting new events for " +
         this.attr +
         " but the following previously expected events have still not been " +
         "received: " +
         this._stillExpecting()
     );
-    if (this.expectedEvents.length != 0) {
+    if (this.expectedEvents.length) {
       this.giveUp = true;
       return;
     }
 
     this.ignore = false;
 
-    if (
-      arguments.length == 0 ||
-      (arguments.length == 1 && arguments[0] == "")
-    ) {
+    if (!arguments.length || (arguments.length == 1 && arguments[0] == "")) {
       return;
     }
 
@@ -96,7 +93,7 @@ function MutationEventChecker() {
   this.ignoreEvents = function() {
     // Check all events have been received
     ok(
-      this.giveUp || this.expectedEvents.length == 0,
+      this.giveUp || !this.expectedEvents.length,
       "Going to ignore subsequent events on " +
         this.attr +
         " attribute, but we're still expecting the following events: " +
@@ -109,7 +106,7 @@ function MutationEventChecker() {
   this.finish = function() {
     // Check all events have been received
     ok(
-      this.giveUp || this.expectedEvents.length == 0,
+      this.giveUp || !this.expectedEvents.length,
       "Finishing listening to " +
         this.attr +
         " attribute, but we're still expecting the following events: " +
@@ -127,7 +124,7 @@ function MutationEventChecker() {
     }
 
     // Make sure we're expecting something at all
-    if (this.expectedEvents.length == 0) {
+    if (!this.expectedEvents.length) {
       ok(
         false,
         "Unexpected " +
@@ -227,7 +224,7 @@ function MutationEventChecker() {
   this._listener = this._receiveEvent.bind(this);
 
   this._stillExpecting = function() {
-    if (this.expectedEvents.length == 0) {
+    if (!this.expectedEvents.length) {
       return "(nothing)";
     }
     var eventNames = [];

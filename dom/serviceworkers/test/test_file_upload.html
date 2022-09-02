@@ -36,7 +36,7 @@ async function onOpened(message) {
   });
 
   let data = await res.clone().text();
-  ok(data.length > 0, "We have data for an uncloned request!");
+  ok(data.length, "We have data for an uncloned request!");
 
   res = await fetch('server_file_upload.sjs?clone=1', {
     method: 'POST',
@@ -45,7 +45,7 @@ async function onOpened(message) {
   });
 
   data = await res.clone().text();
-  ok(data.length > 0, "We have data for a file-stream-backed cloned request!");
+  ok(data.length, "We have data for a file-stream-backed cloned request!");
 
   await reg.unregister();
   SimpleTest.finish();

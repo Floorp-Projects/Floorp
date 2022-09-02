@@ -49,7 +49,7 @@ function doTest()
   SimpleTest.finish();
 }
 
-if (iframes.length == 0) {
+if (!iframes.length) {
   todo(false, "No types supported");
 } else {
   SimpleTest.waitForExplicitFinish();

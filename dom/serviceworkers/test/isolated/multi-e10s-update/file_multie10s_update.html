@@ -13,7 +13,7 @@ bc.onmessage = function(e) {
   // timeout.
   function proceed() {
     return navigator.serviceWorker.getRegistrations().then(regs => {
-      if (regs.length == 0) {
+      if (!regs.length) {
         setTimeout(proceed, 200);
         return;
       }

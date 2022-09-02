@@ -138,7 +138,7 @@ var sdputils = {
     ).filter(hasOwnTransport);
 
     ok(
-      msectionsWithOwnTransports.length > 0,
+      msectionsWithOwnTransports.length,
       "SDP should contain at least one msection with a transport"
     );
     msectionsWithOwnTransports.forEach(checkForTransportAttributes);

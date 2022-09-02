@@ -410,7 +410,7 @@ waitForAllPaints(() => {
         now = document.timeline.currentTime;
         elapsed = (now - timeAtStart);
         markers = await observeStyling(1);
-        if (markers.length > 0) {
+        if (markers.length) {
           break;
         }
       }
@@ -437,7 +437,7 @@ waitForAllPaints(() => {
       else if (elapsed.toPrecision(10) > 200)
         expectedMarkersLengthValid = markers.length == 1;
       else
-        expectedMarkersLengthValid = markers.length == 0;
+        expectedMarkersLengthValid = !markers.length;
       ok(expectedMarkersLengthValid,
          'Transform animation running on the element which is scrolled out ' +
          'should be unthrottled after around 200ms have elapsed. now: ' +
@@ -472,7 +472,7 @@ waitForAllPaints(() => {
         now = document.timeline.currentTime;
         elapsed = (now - timeAtStart);
         markers = await observeStyling(1);
-        if (markers.length > 0) {
+        if (markers.length) {
           break;
         }
       }
@@ -495,7 +495,7 @@ waitForAllPaints(() => {
       else if (elapsed.toPrecision(10) > 200)
         expectedMarkersLengthValid = markers.length == 1;
       else
-        expectedMarkersLengthValid = markers.length == 0;
+        expectedMarkersLengthValid = !markers.length;
       ok(expectedMarkersLengthValid,
          'Transform animation running on out of view element ' +
          'should be unthrottled after around 200ms have elapsed. now: ' +

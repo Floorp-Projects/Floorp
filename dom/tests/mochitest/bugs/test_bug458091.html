@@ -28,7 +28,7 @@ var gRunningTests = 0;
 
 function runNextTest()
 {
-  if (gTests.length > 0) {
+  if (gTests.length) {
     var test = gTests.shift();
     test();
   } else {

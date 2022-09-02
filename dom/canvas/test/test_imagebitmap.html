@@ -152,7 +152,7 @@ function testExceptions() {
         tempWorker.postMessage(imageData.data.buffer, [imageData.data.buffer]);
         tempWorker.terminate();
 
-        ok(imageData.data.length == 0, "Get a neutured ImageData.");
+        ok(!imageData.data.length, "Get a neutured ImageData.");
         resolve(createImageBitmap(imageData));
       }
     });

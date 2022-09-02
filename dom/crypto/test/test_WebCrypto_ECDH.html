@@ -35,7 +35,7 @@ TestArray.addTest(
                (x.publicKey.algorithm.namedCurve == alg.namedCurve) &&
                (x.publicKey.type == "public") &&
                x.publicKey.extractable &&
-               (x.publicKey.usages.length == 0) &&
+               (!x.publicKey.usages.length) &&
                exists(x.privateKey) &&
                (x.privateKey.algorithm.name == alg.name) &&
                (x.privateKey.algorithm.namedCurve == alg.namedCurve) &&

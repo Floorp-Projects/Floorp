@@ -125,7 +125,7 @@ function waitForEnterLeaveEvents(aEnterTarget, aLeaveTarget) {
         return;
       }
 
-      if (expectedEvents.length == 0) {
+      if (!expectedEvents.length) {
         // Trigger a reflow which will generate synthesized mouse move event.
         reflow();
         // Now wait a bit to see if there is any unexpected event fired.

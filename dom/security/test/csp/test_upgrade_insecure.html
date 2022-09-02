@@ -144,7 +144,7 @@ function checkResults(result) {
     curTest.results.splice(index, 1);
   }
   // lets check if we are expecting more results to bubble up
-  if (curTest.results.length > 0) {
+  if (curTest.results.length) {
     return;
   }
   // lets see if we ran all the tests

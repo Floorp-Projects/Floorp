@@ -17,8 +17,8 @@
     is(receivers.length, 2, "Expected number of receivers");
     // Wait for sync sources
     while (true) {
-        if (receivers[0].getSynchronizationSources().length > 0 &&
-            receivers[1].getSynchronizationSources().length > 0) {
+        if (receivers[0].getSynchronizationSources().length &&
+            receivers[1].getSynchronizationSources().length) {
         break;
       }
       await wait(250);

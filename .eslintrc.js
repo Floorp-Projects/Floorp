@@ -477,7 +477,7 @@ module.exports = {
       },
     },
     {
-      files: ["dom/**", "netwerk/**"],
+      files: ["netwerk/**"],
       rules: {
         "mozilla/prefer-boolean-length-check": "off",
       },

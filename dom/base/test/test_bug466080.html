@@ -103,7 +103,7 @@ async function onWindowLoad() {
     async function runTest(test) {
         if (test.cleanEnableCertOnPreflight) {
             await SpecialPowers.pushPrefEnv({"set": [["network.cors_preflight.allow_client_cert", false]]});
-            if (alltests.length == 0) {
+            if (!alltests.length) {
                 SimpleTest.finish();
             } else {
                 runTest(alltests.shift());
@@ -131,7 +131,7 @@ async function onWindowLoad() {
                 var success = eval(xhr.status + test.status_check);
                 ok(success, test.error);
 
-                if (alltests.length == 0) {
+                if (!alltests.length) {
                     SimpleTest.finish();
                 } else {
                     runTest(alltests.shift());

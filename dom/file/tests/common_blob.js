@@ -206,7 +206,7 @@ function testSlice(file, size, type, contents, fileType, range) {
   }
 
   function runNextTest() {
-    if (indexes.length == 0) {
+    if (!indexes.length) {
       return Promise.resolve(true);
     }
 

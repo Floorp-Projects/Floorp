@@ -33,7 +33,7 @@
     if (index != -1) {
       info("Dropping id " + id + " at index " + index);
       ids.splice(index, 1);
-      if (ids.length == 0) {
+      if (!ids.length) {
         SimpleTest.executeSoon(function() {
           is(weak.get(), null, "The weak reference must be dropped now");
           SpecialPowers.removeObserver(observer, "webaudio-node-demise");

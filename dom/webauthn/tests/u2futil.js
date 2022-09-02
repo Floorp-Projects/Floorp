@@ -178,7 +178,7 @@ function webAuthnDecodeCBORAttestation(aCborAttBuf) {
   if (attObj.fmt == "fido-u2f" && !hasOnlyKeys(attObj.attStmt, "sig", "x5c")) {
     return Promise.reject("Invalid CBOR Attestation Statement");
   }
-  if (attObj.fmt == "none" && Object.keys(attObj.attStmt).length > 0) {
+  if (attObj.fmt == "none" && Object.keys(attObj.attStmt).length) {
     return Promise.reject("Invalid CBOR Attestation Statement");
   }
 

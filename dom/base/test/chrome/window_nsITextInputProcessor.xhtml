@@ -4134,7 +4134,7 @@ async function runCallbackTests(aForTests)
   function waitUntilNotificationsReceived()
   {
     return new Promise(resolve => {
-      if (notifications.length > 0) {
+      if (notifications.length) {
         SimpleTest.executeSoon(resolve);
       } else {
         waitingNextNotification = resolve;
@@ -4167,8 +4167,8 @@ async function runCallbackTests(aForTests)
       is(aNotification.reversed, aExpected.reversed || false,
         `${aDescription} should cause selection change notification whose reversed is ${aExpected.reversed || false}`);
     }
-    is(aNotification.collapsed, aExpected.hasRange === false || aExpected.text.length == 0,
-      `${aDescription} should cause selection change notification whose collapsed is ${aExpected.hasRange === false || aExpected.text.length == 0}`);
+    is(aNotification.collapsed, aExpected.hasRange === false || !aExpected.text.length,
+      `${aDescription} should cause selection change notification whose collapsed is ${aExpected.hasRange === false || !aExpected.text.length}`);
     is(aNotification.writingMode, aExpected.writingMode || "horizontal-tb",
       `${aDescription} should cause selection change notification whose writingMode is ${aExpected.writingMode || "horizontal-tb"}`);
     is(aNotification.causedByComposition, aExpected.causedByComposition || false,
@@ -4391,7 +4391,7 @@ async function runFocusNotificationTestAfterDrop() {
     notifications.length > 1,
     "runFocusNotificationTestAfterDrop: At least two notifications should be fired"
   );
-  if (notifications.length > 0) {
+  if (notifications.length) {
     is(
       notifications[notifications.length - 1],
       "notify-focus",

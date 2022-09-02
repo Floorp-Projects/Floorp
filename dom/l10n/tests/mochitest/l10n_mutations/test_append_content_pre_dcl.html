@@ -16,7 +16,7 @@
   document.l10n.setAttributes(elem, "crash-reports-title");
   is(elem.textContent.length, 0);
   let verifyL10n = () => {
-    if (elem.textContent.length > 0) {
+    if (elem.textContent.length) {
       window.removeEventListener("MozAfterPaint", verifyL10n);
       SimpleTest.finish();
     }

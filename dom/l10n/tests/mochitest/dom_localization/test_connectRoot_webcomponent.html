@@ -24,7 +24,7 @@
 
         // Test for mutations applied.
         let verifyL10n = () => {
-          if (label.textContent.length > 0) {
+          if (label.textContent.length) {
             window.removeEventListener("MozAfterPaint", verifyL10n);
             // Notice: In normal tests we do not want to test against any particular
             // value as per https://firefox-source-docs.mozilla.org/intl/l10n/l10n/fluent_tutorial.html#testing

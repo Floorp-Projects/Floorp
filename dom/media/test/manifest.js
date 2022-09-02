@@ -2168,7 +2168,7 @@ function checkMetadata(msg, e, test) {
 // installed video backends.
 function getPlayableVideo(candidates) {
   var resources = getPlayableVideos(candidates);
-  if (resources.length > 0) {
+  if (resources.length) {
     return resources[0];
   }
   return null;
@@ -2186,7 +2186,7 @@ function getPlayableAudio(candidates) {
   var resources = candidates.filter(function(x) {
     return /^audio/.test(x.type) && v.canPlayType(x.type);
   });
-  if (resources.length > 0) {
+  if (resources.length) {
     return resources[0];
   }
   return null;
@@ -2341,7 +2341,7 @@ function MediaTestManager() {
     });
 
     SimpleTest.registerCleanupFunction(() => {
-      if (this.tokens.length > 0) {
+      if (this.tokens.length) {
         info("Test timed out. Remaining tests=" + this.tokens);
       }
       for (var token of this.tokens) {
@@ -2448,7 +2448,7 @@ function MediaTestManager() {
     if (
       this.testNum == this.tests.length &&
       !DEBUG_TEST_LOOP_FOREVER &&
-      this.tokens.length == 0 &&
+      !this.tokens.length &&
       !this.isShutdown
     ) {
       this.isShutdown = true;

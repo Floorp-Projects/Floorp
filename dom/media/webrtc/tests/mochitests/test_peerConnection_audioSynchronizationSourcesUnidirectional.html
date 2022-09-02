@@ -15,7 +15,7 @@
     let receiver = test.pcRemote.getReceivers()[0];
     ok(receiver, "Remote has a receiver");
     // Wait for remote sync source
-    while (receiver.getSynchronizationSources().length == 0) {
+    while (!receiver.getSynchronizationSources().length) {
       await wait(250);
     }
     is(receiver.getSynchronizationSources().length, 1,
@@ -32,7 +32,7 @@
     await waitForSyncSources(test);
     let receiver = test.pcRemote.getReceivers()[0];
     let syncSources = receiver.getSynchronizationSources();
-    ok(syncSources.length > 0,
+    ok(syncSources.length,
        "Receiver has Synchronization sources " + JSON.stringify(syncSources));
     is(syncSources.length, 1, "Receiver has only a single sync source");
     let syncSource = syncSources[0];

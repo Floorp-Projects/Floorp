@@ -41,13 +41,13 @@ function* Tests()
   is(localStorage.length, 0, "Local storage is empty [1]");
 
   function onSessionStorageChanged(e) {
-    ok(expectedTypes.length > 0, "Not more then expected events encountered");
+    ok(expectedTypes.length, "Not more then expected events encountered");
     is("sessionStorage", expectedTypes.shift(), "Expected session type of the storage notification");
     tests.next();
   }
 
   function onLocalStorageChanged(e) {
-    ok(expectedTypes.length > 0, "Not more then expected events encountered");
+    ok(expectedTypes.length, "Not more then expected events encountered");
     is("localStorage", expectedTypes.shift(), "Expected session type of the storage notification");
     tests.next();
   }

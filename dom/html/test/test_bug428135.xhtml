@@ -66,12 +66,12 @@ function testSubmitResetEvents() {
 
   expectedCurrentTargets = new Array(document, outerForm, outerForm, document);
   outerSubmit.click();
-  ok(expectedCurrentTargets.length == 0,
+  ok(!expectedCurrentTargets.length,
      "(1) expectedCurrentTargets isn't empty!");
 
   expectedCurrentTargets = new Array(document, outerForm, outerForm, document);
   outerReset.click();
-  ok(expectedCurrentTargets.length == 0,
+  ok(!expectedCurrentTargets.length,
      "(2) expectedCurrentTargets isn't empty!");
 
   // Because of bug 428135, submit shouldn't propagate
@@ -79,7 +79,7 @@ function testSubmitResetEvents() {
   expectedCurrentTargets = 
     new Array(document, outerForm, outerSubmitDispatcher, outerSubmitDispatcher);
   outerSubmitDispatcher.click();
-  ok(expectedCurrentTargets.length == 0,
+  ok(!expectedCurrentTargets.length,
      "(3) expectedCurrentTargets isn't empty!");
 
   // Because of bug 428135, reset shouldn't propagate
@@ -87,7 +87,7 @@ function testSubmitResetEvents() {
   expectedCurrentTargets =
     new Array(document, outerForm, outerResetDispatcher, outerResetDispatcher);
   outerResetDispatcher.click();
-  ok(expectedCurrentTargets.length == 0,
+  ok(!expectedCurrentTargets.length,
      "(4) expectedCurrentTargets isn't empty!");
 
   // Because of bug 428135, submit shouldn't propagate
@@ -95,7 +95,7 @@ function testSubmitResetEvents() {
   expectedCurrentTargets = 
     new Array(document, outerForm, outerChild, innerForm, innerForm, outerChild);
   innerSubmit.click();
-  ok(expectedCurrentTargets.length == 0,
+  ok(!expectedCurrentTargets.length,
      "(5) expectedCurrentTargets isn't empty!");
 
   // Because of bug 428135, reset shouldn't propagate
@@ -103,7 +103,7 @@ function testSubmitResetEvents() {
   expectedCurrentTargets = 
     new Array(document, outerForm, outerChild, innerForm, innerForm, outerChild);
   innerReset.click();
-  ok(expectedCurrentTargets.length == 0,
+  ok(!expectedCurrentTargets.length,
      "(6) expectedCurrentTargets isn't empty!");
 
   // Because of bug 428135, submit shouldn't propagate
@@ -112,7 +112,7 @@ function testSubmitResetEvents() {
     new Array(document, outerForm, outerChild, innerForm, innerSubmitDispatcher,
               innerSubmitDispatcher);
   innerSubmitDispatcher.click();
-  ok(expectedCurrentTargets.length == 0,
+  ok(!expectedCurrentTargets.length,
      "(7) expectedCurrentTargets isn't empty!");
 
   // Because of bug 428135, reset shouldn't propagate
@@ -121,7 +121,7 @@ function testSubmitResetEvents() {
     new Array(document, outerForm, outerChild, innerForm, innerResetDispatcher,
               innerResetDispatcher);
   innerResetDispatcher.click();
-  ok(expectedCurrentTargets.length == 0,
+  ok(!expectedCurrentTargets.length,
      "(8) expectedCurrentTargets isn't empty!");
 }
 

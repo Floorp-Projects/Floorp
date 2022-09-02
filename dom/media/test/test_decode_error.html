@@ -32,7 +32,7 @@ function startTest(test, token) {
       is(el.error.code, MediaError.MEDIA_ERR_DECODE, "Expected a decode error");
     }
     ok(typeof el.error.message === 'string' || el.error.message instanceof String, "Element 'message' attr expected to be a string");
-    ok(el.error.message.length > 0, "Element 'message' attr has content");
+    ok(el.error.message.length, "Element 'message' attr has content");
     el._sawError = true;
     manager.finished(token);
   });

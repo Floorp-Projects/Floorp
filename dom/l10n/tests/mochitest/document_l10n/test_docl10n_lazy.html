@@ -26,7 +26,7 @@
     await document.l10n.ready;
 
     // Lazy initialized localization should translate the document.
-    is(desc.textContent.length > 0, true, "main-desc is translated");
+    is(!!desc.textContent.length, true, "main-desc is translated");
 
     document.head.removeChild(link);
 

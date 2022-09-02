@@ -131,7 +131,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=889335
 
         is(navigator.language, data.language);
         is(navigator.languages.length, data.languages.length);
-        if (navigator.languages.length > 0) {
+        if (navigator.languages.length) {
           is(navigator.languages[0], navigator.language)
         }
         for (var j = 0; j < navigator.languages.length; ++j) {

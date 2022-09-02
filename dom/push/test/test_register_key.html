@@ -40,7 +40,7 @@ http://creativecommons.org/licenses/publicdomain/
   add_task(async function start() {
     await setupPrefsAndReplaceService({
       register(pageRecord) {
-        ok(pageRecord.appServerKey.length > 0,
+        ok(pageRecord.appServerKey.length,
           "App server key should not be empty");
         if (pageRecord.appServerKey.length != 65) {
           // eslint-disable-next-line no-throw-literal

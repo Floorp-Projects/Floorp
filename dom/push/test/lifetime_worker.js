@@ -74,7 +74,7 @@ self.onpush = function(event) {
   // FIXME(catalinb): push message carry no data. So we assume the only
   // push message we get is "wait"
   self.clients.matchAll().then(function(client) {
-    if (client.length == 0) {
+    if (!client.length) {
       dump("ERROR: no clients to send the response to.\n");
     }
 

@@ -15,7 +15,7 @@ createHTML({
 let getOutputDeviceId = async () => {
   let devices = await navigator.mediaDevices.enumerateDevices();
   let audios = devices.filter(d => d.kind == "audiooutput");
-  ok(audios.length > 0, "One or more output devices found.");
+  ok(audios.length, "One or more output devices found.");
   return audios[0].deviceId;
 }
 

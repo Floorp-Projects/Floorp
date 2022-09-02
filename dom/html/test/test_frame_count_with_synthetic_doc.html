@@ -9,7 +9,7 @@
     SimpleTest.waitForExplicitFinish();
     function getWindowLength() {
       setTimeout(function() {
-        if (window.length > 0) {
+        if (window.length) {
           ok(false, "Synthetic document shouldn't be exposed");
         }
 

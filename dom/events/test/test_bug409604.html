@@ -130,7 +130,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
       var accessChar = String.fromCharCode(code).toUpperCase();
       pressAccessKey({key: accessChar});
     }
-    ok(focusArray.length == 0, "(focus) unhandled elements remaining: " + focusArray.join(","));
+    ok(!focusArray.length, "(focus) unhandled elements remaining: " + focusArray.join(","));
   }
 
   function createUnfocusableElement(elem, accesskey) {

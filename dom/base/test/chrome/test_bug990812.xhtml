@@ -28,7 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990812
   ];
 
   function next() {
-    if (tests.length > 0) {
+    if (tests.length) {
       var file = tests.shift();
       info("-- running " + file);
       window.openDialog(file, "_blank", "chrome,noopener", window);

@@ -58,7 +58,7 @@ if (dprAtZoom1 == 1) {
   ];
 }
 
-if (zoomsAndDPRsToTest.length == 0) {
+if (!zoomsAndDPRsToTest.length) {
   // Need to run at least one test function to keep mochitest harness happy.
   ok(true, `No table of data for devicePixelRatio of ${dprAtZoom1} at zoom level 100%.`);
 }

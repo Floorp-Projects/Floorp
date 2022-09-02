@@ -60,7 +60,7 @@ let tests = [
 ];
 
 function next() {
-  if (tests.length == 0) {
+  if (!tests.length) {
     SimpleTest.finish();
     return;
   }

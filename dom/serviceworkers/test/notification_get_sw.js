@@ -1,6 +1,6 @@
 function postAll(data) {
   self.clients.matchAll().then(function(clients) {
-    if (clients.length == 0) {
+    if (!clients.length) {
       dump(
         "***************** NO CLIENTS FOUND! Test messages are being lost *******************\n"
       );
