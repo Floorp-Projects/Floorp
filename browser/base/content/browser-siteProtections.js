@@ -757,14 +757,23 @@ let ThirdPartyCookies = new (class ThirdPartyCookies extends ProtectionCategory 
       case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
         title = titleStringPrefix + "3rdParty.title";
         this.subViewHeading.hidden = true;
+        if (this.subViewHeading.nextSibling.nodeName == "toolbarseparator") {
+          this.subViewHeading.nextSibling.hidden = true;
+        }
         break;
       case Ci.nsICookieService.BEHAVIOR_REJECT:
         title = titleStringPrefix + "all.title";
         this.subViewHeading.hidden = true;
+        if (this.subViewHeading.nextSibling.nodeName == "toolbarseparator") {
+          this.subViewHeading.nextSibling.hidden = true;
+        }
         break;
       case Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN:
         title = "protections.blocking.cookies.unvisited.title";
         this.subViewHeading.hidden = true;
+        if (this.subViewHeading.nextSibling.nodeName == "toolbarseparator") {
+          this.subViewHeading.nextSibling.hidden = true;
+        }
         break;
       case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
       case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN:
