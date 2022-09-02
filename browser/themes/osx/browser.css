@@ -246,18 +246,7 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   border-top: 1px solid #C7C7C7;
 }
 
-#BMB_bookmarksPopup[side="top"],
-#BMB_bookmarksPopup[side="bottom"] {
-  margin-inline: -17px;
-}
-
-#BMB_bookmarksPopup[side="left"],
-#BMB_bookmarksPopup[side="right"] {
-  margin-block: -17px;
-}
-
 /* Bookmarking panel */
-
 
 /* The following elements come from editBookmarkPanel.inc.xhtml. Styling that's
    specific to the editBookmarkPanel should be in browser.css. Styling that

@@ -594,7 +594,7 @@
 
       this.setAttribute("flip", "both");
       this.setAttribute("side", "top");
-      this.setAttribute("position", "bottomcenter topright");
+      this.setAttribute("position", "bottomright topright");
     }
 
     _setSideAttribute(event) {

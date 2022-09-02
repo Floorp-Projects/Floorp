@@ -210,16 +210,6 @@ toolbar .toolbarbutton-1:focus-visible {
 
 /* bookmarks menu button */
 
-#BMB_bookmarksPopup[side="top"],
-#BMB_bookmarksPopup[side="bottom"] {
-  margin-inline: -20px;
-}
-
-#BMB_bookmarksPopup[side="left"],
-#BMB_bookmarksPopup[side="right"] {
-  margin-block: -20px;
-}
-
 /* ::::: bookmark buttons ::::: */
 
 #personal-toolbar-empty-description,

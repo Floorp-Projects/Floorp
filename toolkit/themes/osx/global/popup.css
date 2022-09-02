@@ -38,16 +38,6 @@ panel[type="arrow"] {
   background: transparent;
 }
 
-panel[type="arrow"][side="top"],
-panel[type="arrow"][side="bottom"] {
-  margin-inline: -16px;
-}
-
-panel[type="arrow"][side="left"],
-panel[type="arrow"][side="right"] {
-  margin-block: -16px;
-}
-
 :is(panel, menupopup)::part(content) {
   display: -moz-box;
   -moz-box-flex: 1;

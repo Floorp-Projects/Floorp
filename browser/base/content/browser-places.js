@@ -284,7 +284,7 @@ var StarUI = {
       isNewBookmark: this._isNewBookmark,
     });
 
-    this.panel.openPopup(BookmarkingUI.anchor, "bottomcenter topright");
+    this.panel.openPopup(BookmarkingUI.anchor, "bottomright topright");
   },
 
   _createPanelIfNeeded() {

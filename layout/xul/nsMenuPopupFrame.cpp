@@ -2497,18 +2497,23 @@ int8_t nsMenuPopupFrame::GetAlignmentPosition() const {
 
   if (mPosition == POPUPPOSITION_OVERLAP ||
       mPosition == POPUPPOSITION_AFTERPOINTER ||
-      mPosition == POPUPPOSITION_SELECTION)
+      mPosition == POPUPPOSITION_SELECTION) {
     return mPosition;
+  }
 
   int8_t position = mPosition;
 
   if (position == POPUPPOSITION_UNKNOWN) {
     switch (mPopupAnchor) {
+      case POPUPALIGNMENT_BOTTOMRIGHT:
+      case POPUPALIGNMENT_BOTTOMLEFT:
       case POPUPALIGNMENT_BOTTOMCENTER:
         position = mPopupAlignment == POPUPALIGNMENT_TOPRIGHT
                        ? POPUPPOSITION_AFTEREND
                        : POPUPPOSITION_AFTERSTART;
         break;
+      case POPUPALIGNMENT_TOPRIGHT:
+      case POPUPALIGNMENT_TOPLEFT:
       case POPUPALIGNMENT_TOPCENTER:
         position = mPopupAlignment == POPUPALIGNMENT_BOTTOMRIGHT
                        ? POPUPPOSITION_BEFOREEND

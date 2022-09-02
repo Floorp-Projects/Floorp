@@ -56,7 +56,7 @@ var gSharedTabWarning = {
     );
     allowForSessionCheckbox.checked = false;
 
-    panel.openPopup(tab, "bottomcenter topleft", 0, 0);
+    panel.openPopup(tab, "bottomleft topleft", 0, 0);
 
     return true;
   },
