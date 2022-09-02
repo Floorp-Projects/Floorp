@@ -367,10 +367,10 @@ RadialGradientEffectD2D1::CreateGradientTexture() {
                          prevColor.a + (nextColor.a - prevColor.a) * interp);
 
     // Note D2D expects RGBA here!!
-    texData[i * 4] = (char)(255.0f * newColor.r);
-    texData[i * 4 + 1] = (char)(255.0f * newColor.g);
-    texData[i * 4 + 2] = (char)(255.0f * newColor.b);
-    texData[i * 4 + 3] = (char)(255.0f * newColor.a);
+    texData[i * 4] = (unsigned char)(255.0f * newColor.r);
+    texData[i * 4 + 1] = (unsigned char)(255.0f * newColor.g);
+    texData[i * 4 + 2] = (unsigned char)(255.0f * newColor.b);
+    texData[i * 4 + 3] = (unsigned char)(255.0f * newColor.a);
   }
 
   RefPtr<ID2D1ResourceTexture> tex;
