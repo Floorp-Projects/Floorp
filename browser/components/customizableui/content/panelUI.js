@@ -489,7 +489,7 @@ const PanelUI = {
 
       try {
         viewShown = await PanelMultiView.openPopup(tempPanel, anchor, {
-          position: "bottomright topright",
+          position: "bottomcenter topright",
           triggerEvent: aEvent,
         });
       } catch (ex) {
@@ -855,7 +855,7 @@ const PanelUI = {
         el.removeAttribute("data-lazy-l10n-id");
       });
 
-    this.notificationPanel.openPopup(anchor, "bottomright topright");
+    this.notificationPanel.openPopup(anchor, "bottomcenter topright");
   },
 
   _clearNotificationPanel() {

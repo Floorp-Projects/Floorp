@@ -279,7 +279,7 @@ var gXPInstallObserver = {
 
     if (gUnifiedExtensions.isEnabled) {
       options.popupOptions = {
-        position: "bottomright topright",
+        position: "bottomcenter topright",
         x: 2,
         y: 0,
       };
@@ -516,7 +516,7 @@ var gXPInstallObserver = {
 
     if (gUnifiedExtensions.isEnabled) {
       options.popupOptions = {
-        position: "bottomright topright",
+        position: "bottomcenter topright",
         x: 2,
         y: 0,
       };

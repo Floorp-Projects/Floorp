@@ -80,6 +80,16 @@ panel[type="arrow"] {
   border: none;
 }
 
+panel[type="arrow"][side="top"],
+panel[type="arrow"][side="bottom"] {
+  margin-inline: -20px;
+}
+
+panel[type="arrow"][side="left"],
+panel[type="arrow"][side="right"] {
+  margin-block: -20px;
+}
+
 :is(panel, menupopup)::part(content) {
   display: -moz-box;
   -moz-box-flex: 1;

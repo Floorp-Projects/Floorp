@@ -4,6 +4,16 @@
 
 @import "chrome://browser/skin/customizableui/panelUI-shared.css";
 
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="top"],
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="bottom"] {
+  margin-inline: -8px;
+}
+
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="left"],
+#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="right"] {
+  margin-block: -8px;
+}
+
 #downloadsPanel,
 #widget-overflow,
 #appMenu-popup,
