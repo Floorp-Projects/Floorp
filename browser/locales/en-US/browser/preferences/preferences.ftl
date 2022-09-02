@@ -1631,4 +1631,12 @@ treestyletab-mode =
  .label = Tree Style Tab Mode
 CustomURL-mode =
  .label = Custom URL Mode
-about-customurl = To change the URL to refer to, edit about:config pref "floorp.browser.sidebar2.customurl".
+ 
+set-customurl = Please write custom URL (exsample: https://www.mozilla.org)
+seted-url = Set URL to
+## seted-url + "" + URL 
+
+custom-URL-option = Set Custom URL
+set-custom-URL-button = 
+    .label = Set Custom URL...
+    .accesskey = S
