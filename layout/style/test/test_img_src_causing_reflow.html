@@ -1,0 +1,36 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Test for bug 1787072</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+img {
+  width: 100px;
+  height: 100px;
+  background-color: blue;
+}
+</style>
+<img> <!-- Initially broken -->
+<script>
+add_task(async function() {
+  const utils = SpecialPowers.DOMWindowUtils;
+  const img = document.querySelector("img");
+  img.getBoundingClientRect();
+
+  let origFramesConstructed = utils.framesConstructed;
+  let origFramesReflowed = utils.framesReflowed;
+
+  let error = new Promise(r => img.addEventListener("error", r, { once: true }));
+
+  // Doesn't need to be an actual image.
+  img.src = "/some-valid-url";
+
+  img.getBoundingClientRect();
+  is(origFramesReflowed, utils.framesReflowed, "Shouldn't have reflowed when going broken -> loading");
+  is(origFramesConstructed, utils.framesConstructed, "Shouldn't have reflowed when going broken -> loading");
+
+  await error;
+
+  is(origFramesReflowed, utils.framesReflowed, "Shouldn't have reflowed when going loading -> broken");
+  is(origFramesConstructed, utils.framesConstructed, "Shouldn't have reflowed when going loading -> broken");
+});
+</script>

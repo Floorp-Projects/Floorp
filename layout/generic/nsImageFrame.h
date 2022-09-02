@@ -99,6 +99,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
       const Maybe<OnNonvisible>& aNonvisibleAction = Nothing()) final;
 
   void ResponsiveContentDensityChanged();
+  void ElementStateChanged(mozilla::dom::ElementState) override;
   void SetupForContentURLRequest();
   bool ShouldShowBrokenImageIcon() const;
 
@@ -140,16 +141,21 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
    * Returns whether we should replace an element with an image corresponding to
    * its 'content' CSS property.
    */
-  static bool ShouldCreateImageFrameForContent(const mozilla::dom::Element&,
-                                               const ComputedStyle&);
+  static bool ShouldCreateImageFrameForContentProperty(
+      const mozilla::dom::Element&, const ComputedStyle&);
 
   /**
    * Function to test whether given an element and its style, that element
-   * should get an image frame.  Note that this method is only used by the
-   * frame constructor; it's only here because it uses gIconLoad for now.
+   * should get an image frame, and if so, which kind of image frame (for
+   * `content`, or for the element itself).
    */
-  static bool ShouldCreateImageFrameFor(const mozilla::dom::Element&,
-                                        const ComputedStyle&);
+  enum class ImageFrameType {
+    ForContentProperty,
+    ForElementRequest,
+    None,
+  };
+  static ImageFrameType ImageFrameTypeFor(const mozilla::dom::Element&,
+                                          const ComputedStyle&);
 
   ImgDrawResult DisplayAltFeedback(gfxContext& aRenderingContext,
                                    const nsRect& aDirtyRect, nsPoint aPt,
@@ -217,6 +223,8 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
 
   void ReflowChildren(nsPresContext*, const ReflowInput&,
                       const mozilla::LogicalSize& aImageSize);
+
+  void UpdateIntrinsicSizeAndRatio();
 
  protected:
   nsImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext, ClassID aID)
@@ -354,8 +362,8 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   bool IsPendingLoad(imgIRequest*) const;
 
   /**
-   * Updates mImage based on the current image request (cannot be null), and the
-   * image passed in (can be null), and invalidate layout and paint as needed.
+   * Updates mImage based on the current image request, and the image passed in
+   * (both can be null), and invalidate layout and paint as needed.
    */
   void UpdateImage(imgIRequest*, imgIContainer*);
 

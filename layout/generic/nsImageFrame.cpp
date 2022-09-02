@@ -188,8 +188,8 @@ bool nsDisplayGradient::CreateWebRenderCommands(
 StaticRefPtr<nsImageFrame::IconLoad> nsImageFrame::gIconLoad;
 
 // test if the width and height are fixed, looking at the style data
-// This is used by nsImageFrame::ShouldCreateImageFrameFor and should
-// not be used for layout decisions.
+// This is used by nsImageFrame::ImageFrameTypeFor and should not be used for
+// layout decisions.
 static bool HaveSpecifiedSize(const nsStylePosition* aStylePosition) {
   // check the width and height values in the reflow input's style struct
   // - if width and height are specified as either coord or percentage, then
@@ -834,7 +834,7 @@ static bool HasAltText(const Element& aElement) {
   return aElement.HasNonEmptyAttr(nsGkAtoms::alt);
 }
 
-bool nsImageFrame::ShouldCreateImageFrameForContent(
+bool nsImageFrame::ShouldCreateImageFrameForContentProperty(
     const Element& aElement, const ComputedStyle& aStyle) {
   if (aElement.IsRootOfNativeAnonymousSubtree()) {
     return false;
@@ -848,39 +848,42 @@ bool nsImageFrame::ShouldCreateImageFrameForContent(
 }
 
 // Check if we want to use an image frame or just let the frame constructor make
-// us into an inline.
+// us into an inline, and if so, which kind of image frame should we create.
 /* static */
-bool nsImageFrame::ShouldCreateImageFrameFor(const Element& aElement,
-                                             const ComputedStyle& aStyle) {
-  if (ShouldCreateImageFrameForContent(aElement, aStyle)) {
+auto nsImageFrame::ImageFrameTypeFor(const Element& aElement,
+                                     const ComputedStyle& aStyle)
+    -> ImageFrameType {
+  if (ShouldCreateImageFrameForContentProperty(aElement, aStyle)) {
     // Prefer the content property, for compat reasons, see bug 1484928.
-    return false;
+    return ImageFrameType::ForContentProperty;
   }
 
   if (ImageOk(aElement.State())) {
     // Image is fine or loading; do the image frame thing
-    return true;
+    return ImageFrameType::ForElementRequest;
   }
 
   if (aStyle.StyleUIReset()->mMozForceBrokenImageIcon) {
-    return true;
+    return ImageFrameType::ForElementRequest;
   }
 
   // if our "do not show placeholders" pref is set, skip the icon
   if (gIconLoad && gIconLoad->mPrefForceInlineAltText) {
-    return false;
+    return ImageFrameType::None;
   }
 
   if (!HasAltText(aElement)) {
-    return true;
+    return ImageFrameType::ForElementRequest;
   }
 
-  if (aElement.OwnerDoc()->GetCompatibilityMode() == eCompatibility_NavQuirks) {
-    // FIXME(emilio): We definitely don't reframe when this changes...
-    return HaveSpecifiedSize(aStyle.StylePosition());
+  // FIXME(emilio, bug 1788767): We definitely don't reframe when
+  // HaveSpecifiedSize changes...
+  if (aElement.OwnerDoc()->GetCompatibilityMode() == eCompatibility_NavQuirks &&
+      HaveSpecifiedSize(aStyle.StylePosition())) {
+    return ImageFrameType::ForElementRequest;
   }
 
-  return false;
+  return ImageFrameType::None;
 }
 
 void nsImageFrame::Notify(imgIRequest* aRequest, int32_t aType,
@@ -936,7 +939,6 @@ void nsImageFrame::OnSizeAvailable(imgIRequest* aRequest,
 }
 
 void nsImageFrame::UpdateImage(imgIRequest* aRequest, imgIContainer* aImage) {
-  MOZ_ASSERT(aRequest);
   if (SizeIsAvailable(aRequest)) {
     // This is valid and for the current request, so update our stored image
     // container, orienting according to our style.
@@ -954,19 +956,8 @@ void nsImageFrame::UpdateImage(imgIRequest* aRequest, imgIContainer* aImage) {
       return;
     }
   }
-  bool intrinsicSizeOrRatioChanged = [&] {
-    // NOTE(emilio): We intentionally want to call both functions and avoid
-    // short-circuiting.
-    bool intrinsicSizeChanged = UpdateIntrinsicSize();
-    bool intrinsicRatioChanged = UpdateIntrinsicRatio();
-    return intrinsicSizeChanged || intrinsicRatioChanged;
-  }();
 
-  if (intrinsicSizeOrRatioChanged) {
-    // Our aspect-ratio property value changed, and an embedding <object> or
-    // <embed> might care about that.
-    MaybeSendIntrinsicSizeAndRatioToEmbedder();
-  }
+  UpdateIntrinsicSizeAndRatio();
 
   if (!GotInitialReflow()) {
     return;
@@ -974,19 +965,6 @@ void nsImageFrame::UpdateImage(imgIRequest* aRequest, imgIContainer* aImage) {
 
   // We're going to need to repaint now either way.
   InvalidateFrame();
-
-  if (intrinsicSizeOrRatioChanged) {
-    // Now we need to reflow if we have an unconstrained size and have
-    // already gotten the initial reflow.
-    if (!(mState & IMAGE_SIZECONSTRAINED)) {
-      PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
-                                    NS_FRAME_IS_DIRTY);
-    } else if (PresShell()->IsActive()) {
-      // We've already gotten the initial reflow, and our size hasn't changed,
-      // so we're ready to request a decode.
-      MaybeDecodeForPredictedSize();
-    }
-  }
 }
 
 void nsImageFrame::OnFrameUpdate(imgIRequest* aRequest,
@@ -1085,16 +1063,32 @@ void nsImageFrame::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus) {
   NotifyNewCurrentRequest(aRequest, aStatus);
 }
 
+void nsImageFrame::ElementStateChanged(ElementState aStates) {
+  if (!(aStates & ElementState::BROKEN)) {
+    return;
+  }
+  if (mKind != Kind::ImageElement) {
+    return;
+  }
+  if (!ImageOk(mContent->AsElement()->State())) {
+    UpdateImage(nullptr, nullptr);
+  }
+}
+
 void nsImageFrame::ResponsiveContentDensityChanged() {
-  if (!GotInitialReflow()) {
-    return;
-  }
+  UpdateIntrinsicSizeAndRatio();
+}
 
-  if (!mImage) {
-    return;
-  }
+void nsImageFrame::UpdateIntrinsicSizeAndRatio() {
+  bool intrinsicSizeOrRatioChanged = [&] {
+    // NOTE(emilio): We intentionally want to call both functions and avoid
+    // short-circuiting.
+    bool intrinsicSizeChanged = UpdateIntrinsicSize();
+    bool intrinsicRatioChanged = UpdateIntrinsicRatio();
+    return intrinsicSizeChanged || intrinsicRatioChanged;
+  }();
 
-  if (!UpdateIntrinsicSize() && !UpdateIntrinsicRatio()) {
+  if (!intrinsicSizeOrRatioChanged) {
     return;
   }
 
@@ -1102,8 +1096,20 @@ void nsImageFrame::ResponsiveContentDensityChanged() {
   // <embed> might care about that.
   MaybeSendIntrinsicSizeAndRatioToEmbedder();
 
-  PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
-                                NS_FRAME_IS_DIRTY);
+  if (!GotInitialReflow()) {
+    return;
+  }
+
+  // Now we need to reflow if we have an unconstrained size and have
+  // already gotten the initial reflow.
+  if (!HasAnyStateBits(IMAGE_SIZECONSTRAINED)) {
+    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::StyleChange,
+                                  NS_FRAME_IS_DIRTY);
+  } else if (PresShell()->IsActive()) {
+    // We've already gotten the initial reflow, and our size hasn't changed,
+    // so we're ready to request a decode.
+    MaybeDecodeForPredictedSize();
+  }
 }
 
 void nsImageFrame::NotifyNewCurrentRequest(imgIRequest* aRequest,
