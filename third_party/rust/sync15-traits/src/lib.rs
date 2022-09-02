@@ -15,17 +15,28 @@
 
 #![warn(rust_2018_idioms)]
 pub mod bridged_engine;
+#[cfg(feature = "crypto")]
+mod bso_record;
 mod changeset;
 pub mod client;
 mod engine;
+mod error;
+#[cfg(feature = "crypto")]
+mod key_bundle;
 mod payload;
 pub mod request;
 mod server_timestamp;
 pub mod telemetry;
 
 pub use bridged_engine::{ApplyResults, BridgedEngine, IncomingEnvelope, OutgoingEnvelope};
+#[cfg(feature = "crypto")]
+pub use bso_record::{BsoRecord, CleartextBso, EncryptedBso, EncryptedPayload};
 pub use changeset::{IncomingChangeset, OutgoingChangeset, RecordChangeset};
+pub use client::DeviceType;
 pub use engine::{CollSyncIds, EngineSyncAssociation, SyncEngine, SyncEngineId};
+pub use error::SyncTraitsError;
+#[cfg(feature = "crypto")]
+pub use key_bundle::KeyBundle;
 pub use payload::Payload;
 pub use request::{CollectionRequest, RequestOrder};
 pub use server_timestamp::ServerTimestamp;

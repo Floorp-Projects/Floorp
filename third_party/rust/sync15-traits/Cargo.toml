@@ -7,12 +7,24 @@ edition = "2021"
 
 [features]
 random-guid = ["sync-guid/random"]
+# Some consumers of this - notably things which just use the "bridged engine",
+# don't actually need to encrypt and decrypt payloads, so we put all
+# crypto behind a feature so they don't pointlessly link the crypto libs.
+crypto = ["rc_crypto", "base16", "base64"]
 
 [dependencies]
+anyhow = "1.0"
+base16 = { version = "0.2", optional = true }
+base64 = { version = "0.13", optional = true }
+error-support = { path = "../error" }
+interrupt-support = { path = "../interrupt" }
+rc_crypto = { path = "../rc_crypto", features = ["hawk"], optional = true }
 sync-guid = { path = "../guid" }
 serde = { version = "1", features = ["derive"] }
+serde_derive = "1"
 serde_json = "1"
+lazy_static = "1.4"
 log = "0.4"
 ffi-support = "0.4"
+thiserror = "1.0"
 url = "2.1" # mozilla-central can't yet take 2.2 (see bug 1734538)
-anyhow = "1.0"

@@ -223,6 +223,15 @@ pub trait ConnExt {
     fn unchecked_transaction_imm(&self) -> SqlResult<UncheckedTransaction<'_>> {
         UncheckedTransaction::new(self.conn(), TransactionBehavior::Immediate)
     }
+
+    /// Get the DB size in bytes
+    fn get_db_size(&self) -> Result<u32, rusqlite::Error> {
+        let page_count: u32 = self.query_one("SELECT * from pragma_page_count()")?;
+        let page_size: u32 = self.query_one("SELECT * from pragma_page_size()")?;
+        let freelist_count: u32 = self.query_one("SELECT * from pragma_freelist_count()")?;
+
+        Ok((page_count - freelist_count) * page_size)
+    }
 }
 
 impl ConnExt for Connection {

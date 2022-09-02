@@ -57,7 +57,7 @@ pub trait BridgedEngine {
     /// times per sync, once for each batch. Implementations can use the
     /// signal to check if the operation was aborted, and cancel any
     /// pending work.
-    fn store_incoming(&self, incoming_cleartexts: &[IncomingEnvelope]) -> Result<(), Self::Error>;
+    fn store_incoming(&self, incoming_payloads: &[IncomingEnvelope]) -> Result<(), Self::Error>;
 
     /// Applies all staged records, reconciling changes on both sides and
     /// resolving conflicts. Returns a list of records to upload.
@@ -125,12 +125,12 @@ impl From<Vec<OutgoingEnvelope>> for ApplyResults {
 /// A BSO is a JSON object with metadata fields (`id`, `modifed`, `sortindex`),
 /// and a BSO payload that is itself a JSON string. For encrypted records, the
 /// BSO payload has a ciphertext, which must be decrypted to yield a cleartext.
-/// The cleartext is a JSON string (that's three levels of JSON wrapping, if
-/// you're keeping score: the BSO itself, BSO payload, and cleartext) with the
-/// actual record payload.
+/// The payload is a cleartext JSON string (that's three levels of JSON wrapping, if
+/// you're keeping score: the BSO itself, BSO payload, and our sub-payload) with the
+/// actual content payload.
 ///
 /// An envelope combines the metadata fields from the BSO, and the cleartext
-/// from the encrypted BSO payload.
+/// BSO payload.
 #[derive(Clone, Debug, Deserialize)]
 pub struct IncomingEnvelope {
     pub id: Guid,
@@ -139,17 +139,16 @@ pub struct IncomingEnvelope {
     pub sortindex: Option<i32>,
     #[serde(default)]
     pub ttl: Option<u32>,
-    // Don't provide access to the cleartext directly. We want all callers to
-    // use `IncomingEnvelope::payload`, so that we can validate the cleartext.
-    cleartext: String,
+    // Don't provide access to the cleartext payload directly. We want all
+    // callers to use `payload()` to convert/validate the string.
+    payload: String,
 }
 
 impl IncomingEnvelope {
     /// Parses and returns the record payload from this envelope. Returns an
-    /// error if the envelope's cleartext isn't valid JSON, or the payload is
-    /// invalid.
+    /// error if the envelope's payload isn't valid.
     pub fn payload(&self) -> Result<Payload, PayloadError> {
-        let payload: Payload = serde_json::from_str(&self.cleartext)?;
+        let payload: Payload = serde_json::from_str(&self.payload)?;
         if payload.id != self.id {
             return Err(PayloadError::MismatchedId {
                 envelope: self.id.clone(),
@@ -169,7 +168,7 @@ impl IncomingEnvelope {
 #[derive(Clone, Debug, Serialize)]
 pub struct OutgoingEnvelope {
     id: Guid,
-    cleartext: String,
+    payload: String,
     sortindex: Option<i32>,
     ttl: Option<u32>,
 }
@@ -182,7 +181,7 @@ impl From<Payload> for OutgoingEnvelope {
         let sortindex = payload.take_auto_field("sortindex");
         OutgoingEnvelope {
             id,
-            cleartext: payload.into_json_string(),
+            payload: payload.into_json_string(),
             sortindex,
             ttl,
         }

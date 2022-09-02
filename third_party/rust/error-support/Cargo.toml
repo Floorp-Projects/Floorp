@@ -9,8 +9,8 @@ license = "MPL-2.0"
 log = "0.4"
 lazy_static = { version = "1.4", optional = true }
 parking_lot = { version = ">=0.11,<=0.12", optional = true }
-uniffi = { version = "^0.18", optional = true }
-uniffi_macros = { version = "^0.18", optional = true }
+uniffi = { version = "^0.19", optional = true }
+uniffi_macros = { version = "^0.19", optional = true }
 
 [dependencies.backtrace]
 optional = true
@@ -21,4 +21,4 @@ default = []
 reporting = ["lazy_static", "parking_lot", "uniffi", "uniffi_macros", "uniffi_build"]
 
 [build-dependencies]
-uniffi_build = { version = "^0.18", features=["builtin-bindgen"], optional = true }
+uniffi_build = { version = "^0.19", features=["builtin-bindgen"], optional = true }

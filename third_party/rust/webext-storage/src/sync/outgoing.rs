@@ -157,4 +157,23 @@ mod tests {
         assert_eq!(counter, 0);
         Ok(())
     }
+
+    #[test]
+    fn test_payload_serialization() {
+        let payload = Payload::from_record(Record {
+            guid: SyncGuid::new("guid"),
+            data: RecordData::Data {
+                ext_id: "ext-id".to_string(),
+                data: "{}".to_string(),
+            },
+        })
+        .unwrap();
+        // The payload should have the ID.
+        assert_eq!(payload.id.to_string(), "guid");
+        // The data in the payload should have only `data` and `extId` - not the guid.
+        assert!(!payload.data.contains_key("id"));
+        assert!(payload.data.contains_key("data"));
+        assert!(payload.data.contains_key("extId"));
+        assert_eq!(payload.data.len(), 2);
+    }
 }

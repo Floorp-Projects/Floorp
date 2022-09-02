@@ -31,6 +31,12 @@ pub use reporting::{
     report_breadcrumb, report_error, set_application_error_reporter, ApplicationErrorReporter,
 };
 
+mod handling;
+pub use handling::{convert_log_report_error, ErrorHandling, ErrorReporting, GetErrorHandling};
+
+/// XXX - Most of this is now considered deprecated - only FxA uses it, and
+/// should be replaced with the facilities in the `handling` module.
+
 /// Define a wrapper around the the provided ErrorKind type.
 /// See also `define_error` which is more likely to be what you want.
 #[macro_export]
