@@ -23,68 +23,76 @@ function createEventPageExtension(eventPage) {
   });
 }
 
-add_task(async function test_eventpages() {
-  let testCases = [
-    {
-      message: "testing event page running as a background page",
-      eventPage: {
-        page: "event-page.html",
-        persistent: false,
-      },
-    },
-    {
-      message: "testing event page scripts running as a background page",
-      eventPage: {
-        scripts: ["event_page_script.js"],
-        persistent: false,
-      },
-    },
-    {
-      message: "testing additional unrecognized properties on background page",
-      eventPage: {
-        scripts: ["event_page_script.js"],
-        nonExistentProp: true,
-      },
-    },
-    {
-      message: "testing persistent background page",
-      eventPage: {
-        page: "event-page.html",
-        persistent: true,
-      },
-    },
-    {
-      message:
-        "testing scripts with persistent background running as a background page",
-      eventPage: {
-        scripts: ["event_page_script.js"],
-        persistent: true,
-      },
-    },
-  ];
-
-  let { messages } = await promiseConsoleOutput(async () => {
-    for (let test of testCases) {
-      info(test.message);
-
-      let extension = createEventPageExtension(test.eventPage);
-      await extension.startup();
-      let x = await extension.awaitMessage("running");
-      equal(x, 1, "got correct value from extension");
-      await extension.unload();
-    }
-  });
-  AddonTestUtils.checkMessages(
-    messages,
-    {
-      expected: [
-        { message: /Event pages are not currently supported./ },
-        { message: /Event pages are not currently supported./ },
-        {
-          message: /Reading manifest: Warning processing background.nonExistentProp: An unexpected property was found/,
+add_task(
+  {
+    // This test case covers expected warnings emitted when the
+    // event page support is disabled by prefs.
+    pref_set: [["extensions.eventPages.enabled", false]],
+  },
+  async function test_eventpages() {
+    let testCases = [
+      {
+        message: "testing event page running as a background page",
+        eventPage: {
+          page: "event-page.html",
+          persistent: false,
         },
-      ],
-    },
-    true
-  );
-});
+      },
+      {
+        message: "testing event page scripts running as a background page",
+        eventPage: {
+          scripts: ["event_page_script.js"],
+          persistent: false,
+        },
+      },
+      {
+        message:
+          "testing additional unrecognized properties on background page",
+        eventPage: {
+          scripts: ["event_page_script.js"],
+          nonExistentProp: true,
+        },
+      },
+      {
+        message: "testing persistent background page",
+        eventPage: {
+          page: "event-page.html",
+          persistent: true,
+        },
+      },
+      {
+        message:
+          "testing scripts with persistent background running as a background page",
+        eventPage: {
+          scripts: ["event_page_script.js"],
+          persistent: true,
+        },
+      },
+    ];
+
+    let { messages } = await promiseConsoleOutput(async () => {
+      for (let test of testCases) {
+        info(test.message);
+
+        let extension = createEventPageExtension(test.eventPage);
+        await extension.startup();
+        let x = await extension.awaitMessage("running");
+        equal(x, 1, "got correct value from extension");
+        await extension.unload();
+      }
+    });
+    AddonTestUtils.checkMessages(
+      messages,
+      {
+        expected: [
+          { message: /Event pages are not currently supported./ },
+          { message: /Event pages are not currently supported./ },
+          {
+            message: /Reading manifest: Warning processing background.nonExistentProp: An unexpected property was found/,
+          },
+        ],
+      },
+      true
+    );
+  }
+);
