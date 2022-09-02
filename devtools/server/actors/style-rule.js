@@ -318,30 +318,32 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     // Go through all ancestor so we can build an array of all the media queries and
     // layers this rule is in.
     for (const ancestorRule of this.ancestorRules) {
+      const ruleClassName = ChromeUtils.getClassName(ancestorRule.rawRule);
       if (
-        ancestorRule.type === CSSRule.MEDIA_RULE &&
+        ruleClassName === "CSSMediaRule" &&
         ancestorRule.rawRule.media?.length
       ) {
         form.ancestorData.push({
           type: "media",
           value: Array.from(ancestorRule.rawRule.media).join(", "),
         });
-      } else if (
-        ChromeUtils.getClassName(ancestorRule.rawRule) === "CSSLayerBlockRule"
-      ) {
+      } else if (ruleClassName === "CSSLayerBlockRule") {
         form.ancestorData.push({
           type: "layer",
           value: ancestorRule.rawRule.name,
         });
-      } else if (
-        ChromeUtils.getClassName(ancestorRule.rawRule) === "CSSContainerRule"
-      ) {
+      } else if (ruleClassName === "CSSContainerRule") {
         form.ancestorData.push({
           type: "container",
           // Send containerName and containerQuery separately (instead of conditionText)
           // so the client has more flexibility to display the information.
           containerName: ancestorRule.rawRule.containerName,
           containerQuery: ancestorRule.rawRule.containerQuery,
+        });
+      } else if (ruleClassName === "CSSSupportsRule") {
+        form.ancestorData.push({
+          type: "supports",
+          conditionText: ancestorRule.rawRule.conditionText,
         });
       }
     }
