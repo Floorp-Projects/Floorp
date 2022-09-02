@@ -6,7 +6,7 @@ import sys
 from functools import partial
 import json
 
-from mach.decorators import Command, CommandArgument
+from mach.decorators import Command, CommandArgument, SubCommand
 from mozbuild.base import MachCommandConditions as conditions
 
 
@@ -28,6 +28,16 @@ def get_perftest_parser():
     from mozperftest import PerftestArgumentParser
 
     return PerftestArgumentParser
+
+
+def get_perftest_tools_parser(tool):
+    def tools_parser_func():
+        from mozperftest import PerftestToolsArgumentParser
+
+        PerftestToolsArgumentParser.tool = tool
+        return PerftestToolsArgumentParser
+
+    return tools_parser_func
 
 
 def get_parser():
@@ -249,3 +259,32 @@ def _run_tests(command_context, **kwargs):
         venv, "coverage", ["report"], display=True
     ):
         raise ValueError("Coverage is too low!")
+
+
+@Command(
+    "perftest-tools",
+    category="testing",
+    description="Run perftest tools",
+)
+def run_tools(command_context, **kwargs):
+    """
+    Runs various perftest tools such as the side-by-side generator.
+    """
+    print("Runs various perftest tools such as the side-by-side generator.")
+
+
+@SubCommand(
+    "perftest-tools",
+    "side-by-side",
+    description="This tool can be used to generate a side-by-side visualization of two videos. "
+    "When using this tool, make sure that the `--test-name` is an exact match, i.e. if you are "
+    "comparing  the task `test-linux64-shippable-qr/opt-browsertime-tp6-firefox-linkedin-e10s` "
+    "between two revisions, then use `browsertime-tp6-firefox-linkedin-e10s` as the suite name "
+    "and `test-linux64-shippable-qr/opt` as the platform.",
+    virtualenv_name="perftest-side-by-side",
+    parser=get_perftest_tools_parser("side-by-side"),
+)
+def run_side_by_side(command_context, **kwargs):
+    from mozperftest.runner import run_tools
+
+    run_tools(command_context, kwargs, {})

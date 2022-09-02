@@ -1,12 +1,28 @@
 import json
 import os
 import pathlib
+import sys
+from unittest import mock
+
 import pytest
 
 from mozperftest.metrics.notebook.perftestetl import PerftestETL
 from mozperftest.tests.support import get_running_env, HERE
 from mozperftest.metrics.notebook.perftestnotebook import PerftestNotebook
 from mozperftest.utils import temp_dir
+
+
+@pytest.fixture
+def patched_mozperftest_tools():
+    tools_mock = mock.MagicMock(name="tools-mock")
+    _module = mock.MagicMock(name="mozperftest_tools")
+    _module.SideBySide.return_value = tools_mock
+
+    try:
+        sys.modules["mozperftest_tools.side_by_side"] = _module
+        yield tools_mock
+    finally:
+        del sys.modules["mozperftest_tools.side_by_side"]
 
 
 @pytest.fixture(scope="session", autouse=True)

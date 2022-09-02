@@ -2,6 +2,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 import mozunit
 import os
 import sys
@@ -48,7 +49,9 @@ class _TestMachEnvironment(MachEnvironment):
 @contextmanager
 def _get_command(command=mozperftest.mach_commands.run_perftest):
     from mozbuild.base import MozbuildObject
-    from mozperftest.argparser import PerftestArgumentParser
+    from mozperftest.argparser import (
+        PerftestArgumentParser,
+    )
 
     config = MozbuildObject.from_environment()
 
@@ -70,12 +73,48 @@ def _get_command(command=mozperftest.mach_commands.run_perftest):
 
     try:
         command_context = MachCommandBase(context())
-        parser = PerftestArgumentParser()
 
         if command == mozperftest.mach_commands.run_perftest:
+            parser = PerftestArgumentParser()
             command = _run_perftest(command)
 
         with mock.patch("mozperftest.mach_commands.get_parser", new=lambda: parser):
+            yield command, command_context
+    finally:
+        shutil.rmtree(context.state_dir)
+
+
+@contextmanager
+def _get_tools_command(tool="side-by-side"):
+    from mozbuild.base import MozbuildObject
+
+    config = MozbuildObject.from_environment()
+
+    class context:
+        topdir = config.topobjdir
+        cwd = os.getcwd()
+        settings = {}
+        log_manager = mock.Mock()
+        state_dir = tempfile.mkdtemp()
+
+    # used to make arguments passed by the test as
+    # being set by the user.
+    def _run_tool(func):
+        def _run(command_context, **kwargs):
+            parser.set_by_user = list(kwargs.keys())
+            return func(command_context, **kwargs)
+
+        return _run
+
+    try:
+        command_context = MachCommandBase(context())
+
+        command = _run_tool(mozperftest.mach_commands.run_side_by_side)
+        parser = mozperftest.mach_commands.get_perftest_tools_parser(tool)
+
+        with mock.patch(
+            "mozperftest.mach_commands.get_perftest_tools_parser", new=lambda: parser
+        ):
             yield command, command_context
     finally:
         shutil.rmtree(context.state_dir)
@@ -251,6 +290,19 @@ def test_fzf_flavor(*mocked):
 def test_fzf_nothing_selected(*mocked):
     with running_on_try(False), _get_command() as (cmd, command_context), silence():
         cmd(command_context, flavor="desktop-browser")
+
+
+@mock.patch("mozperftest.MachEnvironment", new=_TestMachEnvironment)
+@mock.patch("mozbuild.base.MachCommandBase.activate_virtualenv")
+@mock.patch("mozperftest.utils.run_python_script")
+@mock.patch("mozperftest.utils.install_package")
+def test_side_by_side(mock1, mock2, mock3, patched_mozperftest_tools):
+    with mock.patch(
+        "mozperftest.runner._create_artifacts_dir", return_value="fake_path"
+    ) as _:
+        with _get_tools_command() as (cmd, command_context), silence(command_context):
+            cmd(command_context)
+    patched_mozperftest_tools.run.assert_called()
 
 
 if __name__ == "__main__":

@@ -448,6 +448,9 @@ class CommandAction(argparse.Action):
         subcommand = subcommand.pop()
         subhandler = handler.subcommand_handlers[subcommand]
 
+        # Initialize the parser if necessary
+        subhandler.parser
+
         c_parser = subhandler.parser or argparse.ArgumentParser(add_help=False)
         c_parser.formatter_class = CommandFormatter
 
