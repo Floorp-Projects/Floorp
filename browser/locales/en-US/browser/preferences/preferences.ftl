@@ -1632,7 +1632,7 @@ treestyletab-mode =
 CustomURL-mode =
  .label = Custom URL Mode
  
-set-customurl = Please write custom URL (exsample: https://www.mozilla.org)
+set-customurl = Please write custom URL (example: https://www.mozilla.org)
 seted-url = Set URL to
 ## seted-url + "" + URL 
 
