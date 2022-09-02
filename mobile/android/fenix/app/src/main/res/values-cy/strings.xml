@@ -40,7 +40,9 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">Nodau tudalen diweddar</string>
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Nodau tudalen diweddar</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Cadwyd yn ddiweddar</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Dangos pob nod tudalen wedi’u cadw</string>
 
@@ -76,6 +78,12 @@
 
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">Cau</string>
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Mae ein nodwedd preifatrwydd mwyaf pwerus eto yn ynysu tracwyr traws-wefan.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Dysgwch am Ddiogelwch Cyflawn Cwcis</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Mae angen mynediad i’r camera. Ewch i osodiadau Android, tapiwch Permissions, a thapio Allow.</string>
@@ -134,6 +142,8 @@
     <string name="recent_tabs_see_all_synced_tabs_button_text">Gweld pob tab wedi’i gydweddu</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">Dyfais cydweddwyd</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Tynnu</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Tynnu</string>
@@ -249,24 +259,43 @@
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_title_3">Beth sy’n newydd yn %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Beth sy’n newydd yn %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">Mae nawr yn haws ailgychwyn o’r lle y gwnaethoch chi adael.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Mae nawr yn haws ailgychwyn o’r lle y gwnaethoch chi adael.</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string name="onboarding_home_screen_section_home_title_3">Tudalen cartref personoledig %1$s</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Tudalen cartref personoledig %1$s</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
-    <string name="onboarding_home_screen_section_home_description_2">Symudwch i’ch tabiau agored, nodau tudalen, a’ch hanes pori.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Symudwch i’ch tabiau agored, nodau tudalen, a’ch hanes pori.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Tabiau glân, trefnus</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Tabiau glân, trefnus</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Cliriwch annibendod tabiau gyda gwell cynllun a thabiau cau awtomatig.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Cliriwch annibendod tabiau gyda gwell cynllun a thabiau cau awtomatig.</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_title_2">Chwilio diweddar</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Chwilio diweddar</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
-    <string name="onboarding_home_screen_section_useful_history_description_2">Ailedrych ar eich chwilio diweddaraf o’ch tudalen cartref a’ch tabiau.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Ailedrych ar eich chwilio diweddaraf o’ch tudalen cartref a’ch tabiau.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Mae eich cartref personoledig Firefox bellach yn ei gwneud hi’n haws i fynd yn ôl i le wnaethoch chi adael. Dewch o hyd i’ch tabiau, nodau tudalen a’ch canlyniadau chwilio diweddar.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Mae eich cartref personoledig Firefox bellach yn ei gwneud hi’n haws i fynd yn ôl i le wnaethoch chi adael. Dewch o hyd i’ch tabiau, nodau tudalen a’ch canlyniadau chwilio diweddar.</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Dyma’ch gwefan cartref personol. Bydd tabiau diweddar, nodau tudalen, a chanlyniadau chwilio yn ymddangos yma.</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title">Croeso i ryngrwyd annibynnol</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Rhagor o liwiau. Gwell preifatrwydd. Yr un ymrwymiad i bobl ac nid elw.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_2">Ewch o’r ffôn i’r gliniadur ac yn ôl</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Ewch ymlaen o’r lle roeddech chi nawr gyda thabiau o ddyfeisiau eraill ar eich tudalen cartref.</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Cychwyn arni</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Mewngofnodi</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Hepgor</string>
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Mae eich tabiau’n cydweddu! Ewch ymlaen o’r lle roeddech chi ar eich dyfais arall.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -444,11 +473,11 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Golwg</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string name="wallpaper_tap_to_change_switch_label_1">Newidiwch y papur wal trwy dapio logo tudalen hafan Firefox</string>
+    <string moz:removedIn="105" name="wallpaper_tap_to_change_switch_label_1" tools:ignore="UnusedResources">Newidiwch y papur wal trwy dapio logo tudalen hafan Firefox</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
-    <string name="wallpaper_logo_content_description">Logo Firefox - newid y papur wal, pwyso’r botwm</string>
+    <string moz:removedIn="105" name="wallpaper_logo_content_description" tools:ignore="UnusedResources">Logo Firefox - newid y papur wal, pwyso’r botwm</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -730,8 +759,6 @@
     <string name="open_tabs_menu">Dewislen tabiau agored</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Cadw tabiau i Gasgliad</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string moz:RemovedIn="103" name="tab_menu" tools:ignore="UnusedResources">Dewislen tabiau</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Dileu casgliad</string>
     <!-- Text for the menu button to rename a collection -->
@@ -782,16 +809,16 @@
     <string name="history_empty_message">Dim hanes yma</string>
 
     <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
-    <string name="history_synced_from_other_devices">Cydweddwyd o ddyfeisiau eraill</string>
+    <string moz:removedIn="105" name="history_synced_from_other_devices" tools:ignore="UnusedResources">Cydweddwyd o ddyfeisiau eraill</string>
     <!-- The page title for browsing history coming from other devices. -->
-    <string name="history_from_other_devices">O ddyfeisiau eraill</string>
+    <string moz:removedIn="105" name="history_from_other_devices" tools:ignore="UnusedResources">O ddyfeisiau eraill</string>
 
     <!-- The synced history sign in dialog message -->
-    <string name="history_sign_in_message">Mewngofnodwch i weld hanes wedi’i gydweddu o’ch dyfeisiau eraill.</string>
+    <string moz:removedIn="105" name="history_sign_in_message" tools:ignore="UnusedResources">Mewngofnodwch i weld hanes wedi’i gydweddu o’ch dyfeisiau eraill.</string>
     <!-- The synced history sign in dialog button text -->
-    <string name="history_sign_in_button">Mewngofnodi</string>
+    <string moz:removedIn="105" name="history_sign_in_button" tools:ignore="UnusedResources">Mewngofnodi</string>
     <!-- The synced history sign in dialog create a new account link -->
-    <string name="history_sign_in_create_account"><![CDATA[<u>Neu creu cyfrif Firefox i ddechrau cydweddu</u>]]></string>
+    <string moz:removedIn="105" name="history_sign_in_create_account" tools:ignore="UnusedResources"><![CDATA[<u>Neu creu cyfrif Firefox i ddechrau cydweddu</u>]]></string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1315,6 +1342,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Pob cwci trydydd parti (gall achosi i wefannau dorri)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Pob cwci (bydd yn achosi i wefannau dorri)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Ynyswch cwcis traws-wefan</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Cynnwys tracio</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1337,8 +1366,12 @@
     <string name="etp_social_media_trackers_description">Yn cyfyngu ar allu rhwydweithiau cymdeithasol i dracio eich gweithgaredd pori o amgylch y we.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Cwcis Tracio Traws-Gwefan</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Cwcis traws-wefan</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Yn rhwystro cwcis y mae rhwydweithiau hysbysebu a chwmnïau dadansoddeg yn eu defnyddio i gasglu eich data pori ar draws llawer o wefannau.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Mae Diogelwch Cyflawn Cwcis yn cyfyngu cwcis i’r wefan rydych chi arni, felly nid yw tracwyr yn gallu eu defnyddio i’ch dilyn rhwng gwefannau.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Cryptogloddwyr</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

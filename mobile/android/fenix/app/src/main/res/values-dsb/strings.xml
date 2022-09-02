@@ -79,6 +79,12 @@
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">Zachyśiś</string>
 
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Naša nejmóčnjejša funkcija priwatnosći sedła pśesegujuce pśeslědowaki izolěrujo.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Zgóńśo wěcej wó dopołnem šćiśe pśed cookiejami</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Pśistup ku kamerje trjebny. Wócyńśo nastajenja Android, pótusniśo zapisk Pšawa a pótusniśo zapisk Dowóliś.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -1366,6 +1372,8 @@
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Blokěrujo cookieje, kótarež wabjeńske seśi a analyzowe pśedewześa wužywaju, aby waše pśeglědowańske daty na wjele websedłach zestajali.</string>
 
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Dopołny šćit pśed cookiejami cookieje k sedłoju, na kótaremž sćo, izolěrujo, až njeby pśeslědowaki a wabjeńske seśi mógli je wužywaś, aby was na rozdźělnych sedłach slědowali.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Kryptokopaki</string>
 

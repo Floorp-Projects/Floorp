@@ -79,6 +79,12 @@
     <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
     <string name="cfr_dismiss_button_default_content_description">Zaćisnyć</string>
 
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Naša najmóčniša funkcija priwatnosće sydła přesahowace přesćěhowaki izoluje.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Zhońće wjace wo dospołnym škiće před plackami</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Přistup ke kamerje trěbny. Wočińće nastajenja Android, podótkńće so zapiska Prawa a podótkńće so zapiska Dowolić.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -277,6 +283,8 @@
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Zeznajće so ze swojej personalizowanej startowej stronu. Najnowše rajtarki, zapołožki a pytanske wuslědki so tu zjewja.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">Witajće k njewotwisnemu internetej</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Wjace barbow. Lěpša priwatnosć. Samsna angažěrowanosć za ludźi njedźiwajo na dobytki.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_2">Skočće wot smóratka do laptopa a wróćo</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -1370,6 +1378,8 @@
     <string name="etp_cookies_title_2">Sydła přesahowace placki</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Blokuje placki, kotrež wabjenske syće a analyzowe předewzaća wužiwaja, zo bychu waše přehladowanske daty na wjele websydłach zestajili.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Dospołny plackowy škit placki k sydłu, na kotrymž sće, izoluje, zo njebychu přesćěhowaki a wabjenske syće móhli je wužiwać, zo bychu was na rozdźělnych sydłach slědowali.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Kryptokopaki</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->

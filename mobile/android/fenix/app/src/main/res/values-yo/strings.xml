@@ -280,10 +280,14 @@
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
     <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Ojú-ìwé akọ́ọ́kàn Firefox rẹ ti jẹ́ kí ó rọrùn láti bẹ̀rẹ̀ ní ibití ó parí rẹ̀ sí. Wá àwọn táàbù àìpẹ́ rẹ, àwọn búkúmaakì, àti àwọn èsì ìwádìí.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Ṣe alábapàdé ojú-ìwé àkọ́kọ́ rẹ tí ó jẹ́ tara ẹni. Àwọn táàbù àìpẹ́, búkúmaàkì, at́í pé àwọn èsì wíwá yóò hàn níbí.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">Káàbọ̀ sí ayélujára tó ti ní òmìnira</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Ọ̀pọ̀ àwọn àwọ̀. Ìkọ̀kọ̀ tó dára. Irúfẹ́ ìfarafún bẹ̀ẹ́ sí àwọn ènìyàn lóri àwọn èrè.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_2">Lọ láti orí fóònù sí orí lápútọọ̀pù kí o sì padà</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
     <string name="onboarding_home_sync_description">Lọ mú níbi tí o ti kúrò pẹ̀lú àwọn táàbù láti inú àwọn ẹ̀rọ tí ó kù tí ó wà lóri ojúùwé àkọ́ọ́kàn rẹ lọ́wọ́lọ́wọ́.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
@@ -292,6 +296,9 @@
     <string name="onboarding_home_sign_in_button">Wọlé</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Fò</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Àwọn táàbù rẹ ti ń ṣiṣẹ́ pọ̀! Mú u sókè níbi tí o ti kúrò lóri ẹ̀rọ rẹ mìíràn. </string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1358,6 +1365,8 @@
     <string name="enhanced_tracking_protection_blocked">Ti dènà</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Ti fàyègbàá</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Olùtọpasẹ̀ Ìkànnì Ayélujára</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_description">Ṣe ìdíkù sí agbára nẹ́tíwọọ̀kì àwùjọ láti tọpasẹ̀ àwọn iṣẹ́-ǹ-ṣe bíráwúsínnì ní àyíká wẹ́ẹ̀bù.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->

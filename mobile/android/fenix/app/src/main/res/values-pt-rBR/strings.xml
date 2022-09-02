@@ -1235,7 +1235,7 @@
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">Traga favoritos, histórico e senhas para o %1$s neste dispositivo.</string>
     <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">Conectar Conta Firefox</string>
+    <string name="onboarding_firefox_account_sign_in_1">Criar uma conta</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">A sincronização está ativada</string>
     <!-- text for the tracking protection onboarding card header -->

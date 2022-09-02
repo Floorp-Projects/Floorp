@@ -56,7 +56,7 @@
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">
-        %1$s نجی ٹیب نال تہاݙے ڳولݨ تے براؤزنگ دی تاریخ کوں صاف کریندے جہڑے ویلے تساں انہاں کوں بند کریندے ہو یا ایپ کوں چھوڑ ݙیندے ہو۔ جڈاں جو ایہ تہاکوں ویب سائٹاں یا انٹرنیٹ سروس فراہم کرݨ آلیاں کیتے گمنام کائنی بݨیندا، تساں ایندے نال جو کجھ وی آن لائن کریندے ہو، اوں کوں ایہ ڈیوائس ورتݨ آلے کہیں وی ٻئے کنوں نجی رکھݨ سوکھا بݨیندے۔</string>
+        %1$s نجی ٹیب نال تہاݙے ڳولݨ تے براؤزنگ دی تاریخ کوں صاف کریندے جہڑے ویلے تساں انہاں کوں بند کریندے ہو یا ایپ کوں چھوڑ ݙیندے ہو۔ ڄݙاں جو ایہ تہاکوں ویب سائٹاں یا انٹرنیٹ سروس فراہم کرݨ آلیاں کیتے گمنام کائنی بݨیندا، تساں ایندے نال جو کجھ وی آن لائن کریندے ہو، اوں کوں ایہ ڈیوائس ورتݨ آلے کہیں وی ٻئے کنوں نجی رکھݨ سوکھا بݨیندے۔</string>
     <string name="private_browsing_common_myths">
         نجی براؤزنگ بارے عام فرضی قصے
     </string>
@@ -1872,7 +1872,7 @@
     <string name="inactive_tabs_auto_close_message_snackbar">آپݨے آپ  بند تھیوݨ فعال تھی ڳیا</string>
 
     <!-- Default browser experiment -->
-    <string name="default_browser_experiment_card_text">فائرفوکس وچ خودکار کھولݨ کیتے سنہیے، ای میلاں تے ویب سائٹاں کنوں لنک مقرر کرو۔</string>
+    <string name="default_browser_experiment_card_text">فائرفوکس وچ خودکار کھولݨ کیتے سنیہے، ای میلاں تے ویب سائٹاں کنوں لنک مقرر کرو۔</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">ہٹاؤ</string>
