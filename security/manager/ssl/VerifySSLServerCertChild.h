@@ -33,12 +33,10 @@ class VerifySSLServerCertChild : public PVerifySSLServerCertChild {
   ipc::IPCResult RecvOnVerifiedSSLServerCertSuccess(
       nsTArray<ByteArray>&& aBuiltCertChain,
       const uint16_t& aCertTransparencyStatus, const uint8_t& aEVStatus,
-      const bool& aIsBuiltCertChainRootBuiltInRoot,
-      const bool& aMadeOCSPRequests);
+      const bool& aIsBuiltCertChainRootBuiltInRoot);
 
   ipc::IPCResult RecvOnVerifiedSSLServerCertFailure(
-      const int32_t& aFinalError, const uint32_t& aOverridableErrorCategory,
-      const bool& aMadeOCSPRequests);
+      const int32_t& aFinalError, const uint32_t& aOverridableErrorCategory);
 
  private:
   ~VerifySSLServerCertChild() = default;

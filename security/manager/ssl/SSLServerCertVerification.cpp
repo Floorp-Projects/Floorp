@@ -594,8 +594,7 @@ Result AuthCertificate(
     /*out*/ nsTArray<nsTArray<uint8_t>>& builtCertChain,
     /*out*/ EVStatus& evStatus,
     /*out*/ CertificateTransparencyInfo& certificateTransparencyInfo,
-    /*out*/ bool& aIsBuiltCertChainRootBuiltInRoot,
-    /*out*/ bool& aMadeOCSPRequests) {
+    /*out*/ bool& aIsBuiltCertChainRootBuiltInRoot) {
   CertVerifier::OCSPStaplingStatus ocspStaplingStatus =
       CertVerifier::OCSP_STAPLING_NEVER_CHECKED;
   KeySizeStatus keySizeStatus = KeySizeStatus::NeverChecked;
@@ -615,8 +614,7 @@ Result AuthCertificate(
       Some(std::move(peerCertsBytes)), stapledOCSPResponse,
       sctsFromTLSExtension, dcInfo, aOriginAttributes, &evStatus,
       &ocspStaplingStatus, &keySizeStatus, &pinningTelemetryInfo,
-      &certificateTransparencyInfo, &aIsBuiltCertChainRootBuiltInRoot,
-      &aMadeOCSPRequests);
+      &certificateTransparencyInfo, &aIsBuiltCertChainRootBuiltInRoot);
 
   CollectCertTelemetry(rv, evStatus, ocspStaplingStatus, keySizeStatus,
                        pinningTelemetryInfo, builtCertChain,
@@ -763,15 +761,13 @@ SSLServerCertVerificationJob::Run() {
   EVStatus evStatus;
   CertificateTransparencyInfo certificateTransparencyInfo;
   bool isCertChainRootBuiltInRoot = false;
-  bool madeOCSPRequests = false;
   nsTArray<nsTArray<uint8_t>> builtChainBytesArray;
   nsTArray<uint8_t> certBytes(mPeerCertChain.ElementAt(0).Clone());
   Result rv = AuthCertificate(
       *certVerifier, mPinArg, certBytes, mPeerCertChain, mHostName,
       mOriginAttributes, mStapledOCSPResponse, mSCTsFromTLSExtension, mDCInfo,
       mProviderFlags, mTime, mCertVerifierFlags, builtChainBytesArray, evStatus,
-      certificateTransparencyInfo, isCertChainRootBuiltInRoot,
-      madeOCSPRequests);
+      certificateTransparencyInfo, isCertChainRootBuiltInRoot);
 
   if (rv == Success) {
     Telemetry::AccumulateTimeDelta(
@@ -785,7 +781,7 @@ SSLServerCertVerificationJob::Run() {
             certificateTransparencyInfo),
         evStatus, true, 0,
         nsITransportSecurityInfo::OverridableErrorCategory::ERROR_UNSET,
-        isCertChainRootBuiltInRoot, mProviderFlags, madeOCSPRequests);
+        isCertChainRootBuiltInRoot, mProviderFlags);
     return NS_OK;
   }
 
@@ -806,7 +802,7 @@ SSLServerCertVerificationJob::Run() {
       std::move(builtChainBytesArray), std::move(mPeerCertChain),
       nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE,
       EVStatus::NotEV, false, finalError, overridableErrorCategory, false,
-      mProviderFlags, madeOCSPRequests);
+      mProviderFlags);
   return NS_OK;
 }
 
@@ -1037,8 +1033,7 @@ void SSLServerCertVerificationResult::Dispatch(
     bool aSucceeded, PRErrorCode aFinalError,
     nsITransportSecurityInfo::OverridableErrorCategory
         aOverridableErrorCategory,
-    bool aIsBuiltCertChainRootBuiltInRoot, uint32_t aProviderFlags,
-    bool aMadeOCSPRequests) {
+    bool aIsBuiltCertChainRootBuiltInRoot, uint32_t aProviderFlags) {
   mBuiltChain = std::move(aBuiltChain);
   mPeerCertChain = std::move(aPeerCertChain);
   mCertificateTransparencyStatus = aCertificateTransparencyStatus;
@@ -1048,7 +1043,6 @@ void SSLServerCertVerificationResult::Dispatch(
   mOverridableErrorCategory = aOverridableErrorCategory;
   mIsBuiltCertChainRootBuiltInRoot = aIsBuiltCertChainRootBuiltInRoot;
   mProviderFlags = aProviderFlags;
-  mMadeOCSPRequests = aMadeOCSPRequests;
 
   if (mSucceeded && mBuiltChain.IsEmpty()) {
     MOZ_ASSERT_UNREACHABLE(
@@ -1090,8 +1084,6 @@ SSLServerCertVerificationResult::Run() {
     // This dispatches an event that will run when the socket thread is idle.
     SaveIntermediateCerts(mBuiltChain);
   }
-
-  mInfoObject->SetMadeOCSPRequest(mMadeOCSPRequests);
 
   if (mSucceeded) {
     // Certificate verification succeeded. Delete any potential record of

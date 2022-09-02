@@ -27,20 +27,12 @@ function shouldBeAcceptedEch(aTransportSecurityInfo) {
     aTransportSecurityInfo.isAcceptedEch,
     "This host should have accepted ECH"
   );
-  Assert.ok(
-    !aTransportSecurityInfo.usedPrivateDNS,
-    "This connection does not use DoH"
-  );
 }
 
 function shouldBeRejectedEch(aTransportSecurityInfo) {
   Assert.ok(
     !aTransportSecurityInfo.isAcceptedEch,
     "This host should have rejected ECH"
-  );
-  Assert.ok(
-    !aTransportSecurityInfo.usedPrivateDNS,
-    "This connection does not use DoH"
   );
 }
 

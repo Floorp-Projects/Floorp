@@ -18,22 +18,6 @@ const certOverrideService = Cc[
   "@mozilla.org/security/certoverride;1"
 ].getService(Ci.nsICertOverrideService);
 
-function checkSecurityInfo(chan, expectPrivateDNS, expectAcceptedECH) {
-  let securityInfo = chan.securityInfo.QueryInterface(
-    Ci.nsITransportSecurityInfo
-  );
-  Assert.equal(
-    securityInfo.isAcceptedEch,
-    expectAcceptedECH,
-    "ECH Status == Expected Status"
-  );
-  Assert.equal(
-    securityInfo.usedPrivateDNS,
-    expectPrivateDNS,
-    "Private DNS Status == Expected Status"
-  );
-}
-
 function setup() {
   // Allow telemetry probes which may otherwise be disabled for some
   // applications (e.g. Thunderbird).
@@ -232,7 +216,11 @@ add_task(async function testConnectWithECH() {
   HandshakeTelemetryHelpers.resetHistograms();
   let chan = makeChan(`https://ech-private.example.com`);
   await channelOpenPromise(chan, CL_ALLOW_UNKNOWN_CL);
-  checkSecurityInfo(chan, true, true);
+  let securityInfo = chan.securityInfo.QueryInterface(
+    Ci.nsITransportSecurityInfo
+  );
+  Assert.ok(securityInfo.isAcceptedEch, "This host should have accepted ECH");
+
   // Only check telemetry if network process is disabled.
   if (!mozinfo.socketprocess_networking) {
     HandshakeTelemetryHelpers.checkSuccess(["", "_ECH", "_FIRST_TRY"]);
@@ -313,7 +301,9 @@ add_task(async function testEchRetry() {
   HandshakeTelemetryHelpers.resetHistograms();
   let chan = makeChan(`https://ech-private.example.com`);
   await channelOpenPromise(chan, CL_ALLOW_UNKNOWN_CL);
-  checkSecurityInfo(chan, true, true);
+  let securityInfo = chan.securityInfo.QueryInterface(
+    Ci.nsITransportSecurityInfo
+  );
   // Only check telemetry if network process is disabled.
   if (!mozinfo.socketprocess_networking) {
     for (let hName of ["SSL_HANDSHAKE_RESULT", "SSL_HANDSHAKE_RESULT_ECH"]) {
@@ -329,6 +319,7 @@ add_task(async function testEchRetry() {
     HandshakeTelemetryHelpers.checkEntry(["_FIRST_TRY"], 188, 1);
     HandshakeTelemetryHelpers.checkEmpty(["_CONSERVATIVE", "_ECH_GREASE"]);
   }
+  Assert.ok(securityInfo.isAcceptedEch, "This host should have accepted ECH");
 
   await trrServer.stop();
 });
@@ -397,7 +388,10 @@ async function H3ECHTest(echConfig) {
   let [req] = await channelOpenPromise(chan, CL_ALLOW_UNKNOWN_CL);
   req.QueryInterface(Ci.nsIHttpChannel);
   Assert.equal(req.protocolVersion, "h3-29");
-  checkSecurityInfo(chan, true, true);
+  let securityInfo = chan.securityInfo.QueryInterface(
+    Ci.nsITransportSecurityInfo
+  );
+  Assert.ok(securityInfo.isAcceptedEch, "This host should have accepted ECH");
 
   await trrServer.stop();
 

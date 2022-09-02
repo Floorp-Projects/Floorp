@@ -33,8 +33,6 @@ QuicSocketControl::QuicSocketControl(uint32_t aProviderFlags,
 }
 
 void QuicSocketControl::SetCertVerificationResult(PRErrorCode errorCode) {
-  SetUsedPrivateDNS(GetProviderFlags() & nsISocketProvider::USED_PRIVATE_DNS);
-
   if (errorCode) {
     mFailedVerification = true;
     SetCanceled(errorCode);

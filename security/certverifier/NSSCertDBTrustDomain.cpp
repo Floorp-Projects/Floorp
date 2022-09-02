@@ -103,8 +103,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
       mOCSPStaplingStatus(CertVerifier::OCSP_STAPLING_NEVER_CHECKED),
       mSCTListFromCertificate(),
       mSCTListFromOCSPStapling(),
-      mBuiltInRootsModule(SECMOD_FindModule(kRootModuleName)),
-      mOCSPFetchStatus(OCSPFetchStatus::NotFetched) {}
+      mBuiltInRootsModule(SECMOD_FindModule(kRootModuleName)) {}
 
 static void FindRootsWithSubject(UniqueSECMODModule& rootsModule,
                                  SECItem subject,
@@ -1013,7 +1012,6 @@ Result NSSCertDBTrustDomain::SynchronousCheckRevocationWithServer(
 
   Vector<uint8_t> ocspResponse;
   Input response;
-  mOCSPFetchStatus = OCSPFetchStatus::Fetched;
   rv = DoOCSPRequest(aiaLocation, mOriginAttributes, ocspRequestBytes,
                      ocspRequestLength, GetOCSPTimeout(), ocspResponse);
   if (rv == Success &&
