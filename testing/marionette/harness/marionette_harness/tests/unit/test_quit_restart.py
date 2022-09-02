@@ -328,8 +328,8 @@ class TestQuitRestart(MarionetteTestCase):
 
     def test_in_app_quit(self):
         details = self.marionette.quit(in_app=True)
-
         self.assertFalse(details["forced"], "Expected non-forced shutdown")
+        self.assertEqual(self.marionette.instance.runner.returncode, 0)
 
         self.assertEqual(self.marionette.session, None)
         with self.assertRaisesRegexp(
@@ -344,20 +344,20 @@ class TestQuitRestart(MarionetteTestCase):
             self.marionette.get_pref("startup.homepage_welcome_url"), "about:about"
         )
 
-    def test_in_app_quit_component_prevents_shutdown(self):
+    def test_in_app_quit_forced_because_component_prevents_shutdown(self):
         with self.marionette.using_context("chrome"):
             self.marionette.execute_script(
                 """
                 Services.obs.addObserver(subject => {
-                  let cancelQuit = subject.QueryInterface(Ci.nsISupportsPRBool);
-                  cancelQuit.data = true;
+                    let cancelQuit = subject.QueryInterface(Ci.nsISupportsPRBool);
+                    cancelQuit.data = true;
                 }, "quit-application-requested");
                 """
             )
 
         details = self.marionette.quit(in_app=True)
-
         self.assertTrue(details["forced"], "Expected forced shutdown")
+        self.assertEqual(self.marionette.instance.runner.returncode, 0)
 
         self.assertEqual(self.marionette.session, None)
         with self.assertRaisesRegexp(
@@ -373,7 +373,11 @@ class TestQuitRestart(MarionetteTestCase):
         )
 
     def test_in_app_quit_with_callback(self):
-        self.marionette.quit(in_app=True, callback=self.shutdown)
+        details = self.marionette.quit(in_app=True, callback=self.shutdown)
+        self.assertEqual(self.marionette.instance.runner.returncode, 0)
+        self.assertEqual(self.marionette.is_shutting_down, False)
+        self.assertFalse(details["forced"], "Expected non-forced shutdown")
+
         self.assertEqual(self.marionette.session, None)
         with self.assertRaisesRegexp(
             errors.InvalidSessionIdException, "Please start a session"
@@ -387,19 +391,38 @@ class TestQuitRestart(MarionetteTestCase):
             self.marionette.get_pref("startup.homepage_welcome_url"), "about:about"
         )
 
-    def test_in_app_quit_with_callback_missing_shutdown(self):
+    def tet_in_app_quit_with_callback_not_callable(self):
+        with self.assertRaisesRegexp(ValueError, "is not callable"):
+            self.marionette.quit(in_app=True, callback=4)
+        self.assertEqual(self.marionette.instance.runner.returncode, None)
+        self.assertEqual(self.marionette.is_shutting_down, False)
+
+    def test_in_app_quit_forced_because_callback_does_not_shutdown(self):
         try:
             timeout = self.marionette.shutdown_timeout
             self.marionette.shutdown_timeout = 5
 
             with self.assertRaisesRegexp(IOError, "Process still running"):
                 self.marionette.quit(in_app=True, callback=lambda: False)
+
+            self.assertNotEqual(self.marionette.instance.runner.returncode, None)
+            self.assertEqual(self.marionette.is_shutting_down, False)
         finally:
             self.marionette.shutdown_timeout = timeout
 
-    def test_in_app_quit_with_callback_not_callable(self):
-        with self.assertRaisesRegexp(ValueError, "is not callable"):
-            self.marionette.restart(in_app=True, callback=4)
+        self.marionette.start_session()
+
+    def test_in_app_quit_with_callback_that_raises_an_exception(self):
+        def errorneous_callback():
+            raise Exception("foo")
+
+        with self.assertRaisesRegexp(Exception, "foo"):
+            self.marionette.quit(in_app=True, callback=errorneous_callback)
+        self.assertEqual(self.marionette.instance.runner.returncode, None)
+        self.assertEqual(self.marionette.is_shutting_down, False)
+
+        self.assertIsNotNone(self.marionette.session)
+        self.marionette.current_window_handle
 
     def test_in_app_quit_with_dismissed_beforeunload_prompt(self):
         self.marionette.navigate(
@@ -417,6 +440,7 @@ class TestQuitRestart(MarionetteTestCase):
 
         self.marionette.find_element(By.TAG_NAME, "input").send_keys("foo")
         self.marionette.quit(in_app=True)
+        self.assertNotEqual(self.marionette.instance.runner.returncode, None)
         self.marionette.start_session()
 
     def test_reset_context_after_quit_by_set_context(self):
