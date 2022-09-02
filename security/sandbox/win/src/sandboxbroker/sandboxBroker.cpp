@@ -1336,11 +1336,15 @@ bool SandboxBroker::SetSecurityLevelForUtilityProcess(
                 sandbox::MITIGATION_DLL_SEARCH_ORDER;
   // TODO: Bug 1766432 - Investigate why this crashes in MSAudDecMFT.dll during
   // Utility AudioDecoder process startup only on 32-bits systems.
+  //
   // Investigate also why it crashes (no idea where exactly) for MinGW64 builds
+  // on 32 and 64 archs
   //
   // TODO: Bug 1773005 - AAC seems to not work on Windows < 1703
   if (aSandbox != mozilla::ipc::SandboxingKind::UTILITY_AUDIO_DECODING_WMF) {
+#if !defined(__MINGW32__) && !defined(__MINGW64__)
     mitigations |= sandbox::MITIGATION_DYNAMIC_CODE_DISABLE;
+#endif  // !defined(__MINGW32__) && !defined(__MINGW64__)
   } else {
     if (IsWin10CreatorsUpdateOrLater()) {
 #if defined(_M_X64) && !defined(__MINGW64__)
