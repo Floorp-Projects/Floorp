@@ -67,12 +67,6 @@ add_task(
 add_task(
   async function test_ExperimentFeature_getAllVariables_experimentOverPref() {
     const { sandbox, manager } = await setupForExperimentFeature();
-    const { doExperimentCleanup } = ExperimentFakes.enrollmentHelper(
-      undefined,
-      {
-        manager,
-      }
-    );
     const recipe = ExperimentFakes.experiment("awexperiment", {
       branch: {
         slug: "treatment",
@@ -112,7 +106,7 @@ add_task(
       "should return the AW experiment value"
     );
 
-    await doExperimentCleanup();
+    await ExperimentFakes.cleanupAll([recipe.slug], { manager });
     Assert.deepEqual(
       featureInstance.getAllVariables().screens.length,
       0,
@@ -128,12 +122,6 @@ add_task(
   async function test_ExperimentFeature_getAllVariables_experimentOverRemote() {
     Services.prefs.clearUserPref(TEST_FALLBACK_PREF);
     const { manager } = await setupForExperimentFeature();
-    const { doExperimentCleanup } = ExperimentFakes.enrollmentHelper(
-      undefined,
-      {
-        manager,
-      }
-    );
     const featureInstance = new ExperimentFeature(
       FEATURE_ID,
       FAKE_FEATURE_MANIFEST
@@ -184,7 +172,7 @@ add_task(
     Assert.equal(allVariables.screens.length, 1, "Returns experiment value");
     Assert.ok(!allVariables.source, "Does not include rollout value");
 
-    await doExperimentCleanup();
+    await ExperimentFakes.cleanupAll([recipe.slug], { manager });
     cleanupStorePrefCache();
   }
 );

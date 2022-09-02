@@ -269,7 +269,11 @@ const ExperimentFakes = {
 
     return doExperimentCleanup;
   },
-  enrollmentHelper(recipe = {}, { manager = lazy.ExperimentManager } = {}) {
+  enrollmentHelper(recipe, { manager = lazy.ExperimentManager } = {}) {
+    if (!recipe?.slug) {
+      throw new Error("Enrollment helper expects a recipe");
+    }
+
     let enrollmentPromise = new Promise(resolve =>
       manager.store.on(`update:${recipe.slug}`, (event, experiment) => {
         if (experiment.active) {
@@ -290,24 +294,42 @@ const ExperimentFakes = {
         })
       );
     let doExperimentCleanup = async () => {
-      for (let experiment of manager.store.getAllActive()) {
-        let promise = unenrollCompleted(experiment.slug);
-        manager.unenroll(experiment.slug, "cleanup");
-        await promise;
-      }
-      if (manager.store.getAllActive().length) {
-        throw new Error("Cleanup failed");
-      }
+      const experiment = manager.store.get(recipe.slug);
+      let promise = unenrollCompleted(experiment.slug);
+      manager.unenroll(experiment.slug, "cleanup");
+      await promise;
     };
 
-    if (recipe.slug) {
-      if (!manager.store._isReady) {
-        throw new Error("Manager store not ready, call `manager.onStartup`");
-      }
-      manager.enroll(recipe, "enrollmentHelper");
+    if (!manager.store._isReady) {
+      throw new Error("Manager store not ready, call `manager.onStartup`");
     }
+    manager.enroll(recipe, "enrollmentHelper");
 
     return { enrollmentPromise, doExperimentCleanup };
+  },
+  async cleanupAll(slugs, { manager = lazy.ExperimentManager } = {}) {
+    function unenrollCompleted(slug) {
+      return new Promise(resolve =>
+        manager.store.on(`update:${slug}`, (event, experiment) => {
+          if (!experiment.active) {
+            // Removes recipe from file storage which
+            // (normally the users archive of past experiments)
+            manager.store._deleteForTests(slug);
+            resolve();
+          }
+        })
+      );
+    }
+
+    for (const slug of slugs) {
+      let promise = unenrollCompleted(slug);
+      manager.unenroll(slug, "cleanup");
+      await promise;
+    }
+
+    if (manager.store.getAllActive().length) {
+      throw new Error("Cleanup failed");
+    }
   },
   // Experiment store caches in prefs Enrollments for fast sync access
   cleanupStorePrefCache() {
