@@ -384,6 +384,15 @@ void PathUtils::GetOSTempDirSync(const GlobalObject&, nsString& aResult,
       .GetDirectorySync(aResult, aErr, DirectoryCache::Directory::OSTemp);
 }
 
+void PathUtils::GetXulLibraryPathSync(const GlobalObject&, nsString& aResult,
+                                      ErrorResult& aErr) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  auto guard = sDirCache.Lock();
+  DirectoryCache::Ensure(guard.ref())
+      .GetDirectorySync(aResult, aErr, DirectoryCache::Directory::XulLibrary);
+}
+
 already_AddRefed<Promise> PathUtils::GetProfileDirAsync(
     const GlobalObject& aGlobal, ErrorResult& aErr) {
   MOZ_ASSERT(!NS_IsMainThread());
@@ -419,6 +428,15 @@ already_AddRefed<Promise> PathUtils::GetOSTempDirAsync(
   auto guard = sDirCache.Lock();
   return DirectoryCache::Ensure(guard.ref())
       .GetDirectoryAsync(aGlobal, aErr, DirectoryCache::Directory::OSTemp);
+}
+
+already_AddRefed<Promise> PathUtils::GetXulLibraryPathAsync(
+    const GlobalObject& aGlobal, ErrorResult& aErr) {
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  auto guard = sDirCache.Lock();
+  return DirectoryCache::Ensure(guard.ref())
+      .GetDirectoryAsync(aGlobal, aErr, DirectoryCache::Directory::XulLibrary);
 }
 
 PathUtils::DirectoryCache::DirectoryCache() {

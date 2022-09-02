@@ -126,6 +126,12 @@ partial namespace PathUtils {
    */
   [Throws, BinaryName="OSTempDirSync"]
   readonly attribute DOMString osTempDir;
+
+  /**
+   * The libxul path.
+   */
+  [Throws, BinaryName="XulLibraryPathSync"]
+  readonly attribute DOMString xulLibraryPath;
 };
 
 [Exposed=Worker]
@@ -153,4 +159,10 @@ partial namespace PathUtils {
    */
   [NewObject, BinaryName="GetOSTempDirAsync"]
   Promise<DOMString> getOSTempDir();
+
+  /**
+   * The libxul path.
+   */
+  [NewObject, BinaryName="GetXulLibraryPathAsync"]
+  Promise<DOMString> getXulLibraryPath();
 };
