@@ -2488,6 +2488,25 @@ bool nsWindow::WaylandPopupCheckAndGetAnchor(GdkRectangle* aPopupAnchor) {
   return true;
 }
 
+void nsWindow::WaylandPopupPrepareForMove() {
+  // Visible widgets can't be positioned.
+  if (gtk_widget_is_visible(mShell)) {
+    HideWaylandPopupWindow(/* aTemporaryHide */ true,
+                           /* aRemoveFromPopupList */ false);
+  }
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1785185#c8
+  // gtk_window_move() needs GDK_WINDOW_TYPE_HINT_UTILITY popup type.
+  // move-to-rect requires GDK_WINDOW_TYPE_HINT_POPUP_MENU popups type.
+  // GDK_WINDOW_TYPE_HINT_TOOLTIP works for both
+  // We need to set it before map event when popup is hidden.
+  if (mPopupHint != ePopupTypeTooltip) {
+    gtk_window_set_type_hint(GTK_WINDOW(mShell),
+                             mPopupUseMoveToRect
+                                 ? GDK_WINDOW_TYPE_HINT_POPUP_MENU
+                                 : GDK_WINDOW_TYPE_HINT_UTILITY);
+  }
+}
+
 void nsWindow::WaylandPopupMove() {
   // Available as of GTK 3.24+
   static auto sGdkWindowMoveToRect = (void (*)(
@@ -2535,11 +2554,7 @@ void nsWindow::WaylandPopupMove() {
       return;
     }
 
-    // Visible widgets can't be positioned.
-    if (gtk_widget_is_visible(mShell)) {
-      HideWaylandPopupWindow(/* aTemporaryHide */ true,
-                             /* aRemoveFromPopupList */ false);
-    }
+    WaylandPopupPrepareForMove();
 
     if (useRelativeCoordinates) {
       LOG("  use relative gtk_window_move(%d, %d) for utility/tooltips",
@@ -2556,12 +2571,7 @@ void nsWindow::WaylandPopupMove() {
     return;
   }
 
-  // See https://gitlab.gnome.org/GNOME/gtk/-/issues/1986
-  // We're likely fail to reposition already visible widget.
-  if (gtk_widget_is_visible(mShell)) {
-    HideWaylandPopupWindow(/* aTemporaryHide */ true,
-                           /* aRemoveFromPopupList */ false);
-  }
+  WaylandPopupPrepareForMove();
 
   // Correct popup position now. It will be updated by gdk_window_move_to_rect()
   // anyway but we need to set it now to avoid a race condition here.
