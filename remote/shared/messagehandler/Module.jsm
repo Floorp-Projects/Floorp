@@ -169,10 +169,7 @@ class Module {
   }
 
   static supportsEvent(event) {
-    return (
-      this.supportsMethod("_subscribeEvent") &&
-      this.supportedEvents.includes(event)
-    );
+    return this.supportedEvents.includes(event);
   }
 
   static supportsMethod(methodName) {
