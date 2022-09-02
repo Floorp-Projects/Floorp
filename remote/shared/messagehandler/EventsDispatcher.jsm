@@ -6,6 +6,18 @@
 
 const EXPORTED_SYMBOLS = ["EventsDispatcher"];
 
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+
+const lazy = {};
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  Log: "chrome://remote/content/shared/Log.jsm",
+});
+
+XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
+
 /**
  * Helper to listen to events which rely on SessionData.
  * In order to support the EventsDispatcher, a module emitting events should
@@ -66,14 +78,17 @@ class EventsDispatcher {
     if (callbacks.has(callback)) {
       callbacks.delete(callback);
       if (callbacks.size === 0) {
+        listeners.delete(key);
+        if (listeners.size === 0) {
+          this.#messageHandler.off(event, this.#onMessageHandlerEvent);
+          this.#eventListeners.delete(event);
+        }
+
         await this.#messageHandler.removeSessionData(
           this.#getSessionDataItem(event, contextDescriptor)
         );
-        listeners.delete(key);
       }
     }
-
-    this.#messageHandler.off(event, callback);
   }
 
   /**
@@ -93,6 +108,7 @@ class EventsDispatcher {
   async on(event, contextDescriptor, callback) {
     if (!this.#eventListeners.has(event)) {
       this.#eventListeners.set(event, new Map());
+      this.#messageHandler.on(event, this.#onMessageHandlerEvent);
     }
 
     const key = this.#getContextKey(contextDescriptor);
@@ -106,8 +122,6 @@ class EventsDispatcher {
         this.#getSessionDataItem(event, contextDescriptor)
       );
     }
-
-    this.#messageHandler.on(event, callback);
   }
 
   #getContextKey(contextDescriptor) {
@@ -124,4 +138,19 @@ class EventsDispatcher {
       values: [event],
     };
   }
+
+  #onMessageHandlerEvent = (name, event) => {
+    const listeners = this.#eventListeners.get(name);
+    for (const [, callbacks] of listeners) {
+      for (const callback of callbacks) {
+        try {
+          callback(name, event);
+        } catch (e) {
+          lazy.logger.debug(
+            `Error while executing callback for ${name}: ${e.message}`
+          );
+        }
+      }
+    }
+  };
 }
