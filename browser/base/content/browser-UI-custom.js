@@ -168,7 +168,7 @@ Services.prefs.addObserver("floorp.browser.sidebar.right", function(){
 
 
 window.setTimeout(function(){
-
+  if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
   async function getTreeStyleTabURL() {
     const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
     let addon = await AddonManager.getAddonByID("treestyletab@piro.sakura.ne.jp");
@@ -182,7 +182,7 @@ window.setTimeout(function(){
 
   const pref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined)
   const sidebar2elem = document.getElementById("sidebar2");
-  switch (pref) {
+   switch (pref) {
     default:
       sidebar2elem.setAttribute("src", "chrome://browser/content/places/places.xhtml");
      break;
@@ -202,10 +202,12 @@ window.setTimeout(function(){
       sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl", undefined));
       break;
     }
+   }
   }, 1000);
+
   
-  window.setTimeout(function(){
-  Services.prefs.addObserver("floorp.browser.sidebar2.mode", function(){
+   if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
+     Services.prefs.addObserver("floorp.browser.sidebar2.mode", function(){
     async function getTreeStyleTabURL() {
       const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
       let addon = await AddonManager.getAddonByID("treestyletab@piro.sakura.ne.jp");
@@ -238,5 +240,4 @@ window.setTimeout(function(){
         sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl", undefined));
        break;  
     }
-  });
-  }, 1000);
+  })};
