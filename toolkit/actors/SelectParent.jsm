@@ -82,6 +82,7 @@ var SelectParentHelper = {
    * @param {Array<Object>}  uniqueItemStyles
    * @param {Number}         selectedIndex
    * @param {Number}         zoom
+   * @param {Boolean}        custom
    * @param {Object}         uaStyle
    * @param {Object}         selectStyle
    */
@@ -91,6 +92,7 @@ var SelectParentHelper = {
     uniqueItemStyles,
     selectedIndex,
     zoom,
+    custom,
     uaStyle,
     selectStyle
   ) {
@@ -110,7 +112,7 @@ var SelectParentHelper = {
 
     let sheet = stylesheet.sheet;
 
-    if (!CUSTOM_STYLING_ENABLED) {
+    if (!custom) {
       selectStyle = uaStyle;
     }
 
@@ -128,7 +130,7 @@ var SelectParentHelper = {
       selectStyle["background-color"] != uaStyle["background-color"] ||
       selectStyle.color != uaStyle.color;
 
-    if (CUSTOM_STYLING_ENABLED) {
+    if (custom) {
       if (selectStyle["text-shadow"] != "none") {
         sheet.insertRule(
           `#ContentSelectDropdown > menupopup > :is(menuitem, menucaption)[_moz-menuactive="true"] {
@@ -212,7 +214,7 @@ var SelectParentHelper = {
       rule.direction = style.direction;
       rule.fontSize = zoom * parseFloat(style["font-size"], 10) + "px";
 
-      if (CUSTOM_STYLING_ENABLED) {
+      if (custom) {
         let optionBackgroundIsTransparent =
           style["background-color"] == "rgba(0, 0, 0, 0)";
         let optionBackgroundSet =
@@ -265,7 +267,7 @@ var SelectParentHelper = {
     // We only set the `customoptionstyling` if the background has been
     // manually set. This prevents the overlap between moz-appearance and
     // background-color. `color` and `text-shadow` do not interfere with it.
-    if (CUSTOM_STYLING_ENABLED && selectBackgroundSet) {
+    if (custom && selectBackgroundSet) {
       menulist.menupopup.setAttribute("customoptionstyling", "true");
     } else {
       menulist.menupopup.removeAttribute("customoptionstyling");
@@ -434,6 +436,7 @@ var SelectParentHelper = {
         options.uniqueStyles,
         selectedIndex,
         this._currentZoom,
+        msg.data.custom && CUSTOM_STYLING_ENABLED,
         msg.data.defaultStyle,
         msg.data.style
       );
@@ -783,6 +786,7 @@ class SelectParent extends JSWindowActorParent {
           // We only want to apply the full zoom. The text zoom is already
           // applied in the font-size.
           this.manager.browsingContext.fullZoom,
+          data.custom && CUSTOM_STYLING_ENABLED,
           data.defaultStyle,
           data.style
         );
