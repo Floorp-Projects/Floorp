@@ -472,7 +472,7 @@ const BASE_MESSAGES = () => [
                 type: "SET_PREF",
                 data: {
                   pref: {
-                    name: "browser.privacySegmentation.enabled",
+                    name: "browser.dataFeatureRecommendations.enabled",
                     value: true,
                   },
                 },
@@ -488,7 +488,7 @@ const BASE_MESSAGES = () => [
                 type: "SET_PREF",
                 data: {
                   pref: {
-                    name: "browser.privacySegmentation.enabled",
+                    name: "browser.dataFeatureRecommendations.enabled",
                     value: false,
                   },
                 },
