@@ -77,6 +77,7 @@ class ToastNotificationHandler final
   RefPtr<ToastNotification> mBackend;
 
   nsString mAumid;
+  nsString mWindowsTag;
 
   nsCOMPtr<nsICancelable> mImageRequest;
   nsCOMPtr<nsIFile> mImageFile;
@@ -105,6 +106,7 @@ class ToastNotificationHandler final
   nsresult OnWriteBitmapSuccess();
   void SendFinished();
 
+  nsresult InitWindowsTag();
   bool CreateWindowsNotificationFromXml(ComPtr<IXmlDocument>& aToastXml);
   ComPtr<IXmlDocument> CreateToastXmlDocument();
 
