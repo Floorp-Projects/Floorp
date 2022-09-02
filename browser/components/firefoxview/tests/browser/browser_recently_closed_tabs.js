@@ -64,9 +64,14 @@ add_task(async function test_empty_list() {
     },
     async browser => {
       const { document } = browser.contentWindow;
-      let container = document.querySelector("#collapsible-tabs-container");
+      const closedObjectsChanged = TestUtils.topicObserved(
+        "sessionstore-closed-objects-changed"
+      );
+
       ok(
-        container.classList.contains("empty-container"),
+        document
+          .querySelector("#collapsible-tabs-container")
+          .classList.contains("empty-container"),
         "collapsible container should have correct styling when the list is empty"
       );
 
@@ -80,15 +85,12 @@ add_task(async function test_empty_list() {
       const tab1 = await add_new_tab(URLs[0]);
 
       await close_tab(tab1);
+      await closedObjectsChanged;
 
-      // The UI update happens asynchronously as we learn of the new closed tab.
-      await BrowserTestUtils.waitForMutationCondition(
-        container,
-        { attributeFilter: ["class"] },
-        () => !container.classList.contains("empty-container")
-      );
       ok(
-        !container.classList.contains("empty-container"),
+        !document
+          .querySelector("#collapsible-tabs-container")
+          .classList.contains("empty-container"),
         "collapsible container should have correct styling when the list is not empty"
       );
 
@@ -384,56 +386,4 @@ add_task(async function test_arrow_keys() {
       ok(list[0].matches(":focus"), "The first link is still focused");
     }
   );
-});
-
-add_task(async function test_switch_before_closing() {
-  clearHistory();
-
-  const INITIAL_URL = "https://example.org/iwilldisappear";
-  const FINAL_URL = "https://example.com/ishouldappear";
-  await withFirefoxView({}, async function(browser) {
-    let gBrowser = browser.getTabBrowser();
-    let newTab = await BrowserTestUtils.openNewForegroundTab(
-      gBrowser,
-      INITIAL_URL
-    );
-
-    // Switch back to FxView:
-    await BrowserTestUtils.switchTab(
-      gBrowser,
-      gBrowser.getTabForBrowser(browser)
-    );
-
-    // Update the tab we opened to a different site:
-    let loadPromise = BrowserTestUtils.browserLoaded(
-      newTab.linkedBrowser,
-      null,
-      FINAL_URL
-    );
-    BrowserTestUtils.loadURI(newTab.linkedBrowser, FINAL_URL);
-    await loadPromise;
-
-    // Close the added tab
-    BrowserTestUtils.removeTab(newTab);
-
-    const { document } = browser.contentWindow;
-    const tabsList = document.querySelector("ol.closed-tabs-list");
-    await BrowserTestUtils.waitForMutationCondition(
-      tabsList,
-      { childList: true },
-      () => !!tabsList.children.length
-    );
-    info("A tab appeared in the list, ensure it has the right URL.");
-    let urlBit = tabsList.firstElementChild.querySelector(".closed-tab-li-url");
-    await BrowserTestUtils.waitForMutationCondition(
-      urlBit,
-      { characterData: true, attributeFilter: ["title"] },
-      () => urlBit.textContent.includes(".com")
-    );
-    is(
-      urlBit.textContent,
-      "example.com",
-      "Item should end up with the correct URL."
-    );
-  });
 });

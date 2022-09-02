@@ -1304,8 +1304,6 @@ var SessionStoreInternal = {
       // Update the closed tab's state. This will be reflected in its
       // window's list of closed tabs as that refers to the same object.
       lazy.TabState.copyFromCache(permanentKey, closedTab.tabData.state);
-      this._closedObjectsChanged = true;
-      this._notifyOfClosedObjectsChange();
     }
   },
 
