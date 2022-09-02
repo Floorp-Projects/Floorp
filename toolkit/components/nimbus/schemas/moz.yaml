@@ -1,0 +1,31 @@
+schema: 1
+
+bugzilla:
+  product: "Toolkit"
+  component: "Nimbus Desktop Client"
+
+origin:
+  name: "nimbus-shared"
+  description: "Shared data and schemas for Project Nimbus"
+  url: "https://github.com/mozilla/nimbus-shared"
+  license: "MPL-2.0"
+  release: "version 1.8.0"
+  revision: "v1.8.0"
+
+vendoring:
+  url: "https://github.com/mozilla/nimbus-shared"
+  source-hosting: "github"
+  tracking: "tag"
+  skip-vendoring-steps:
+    - "fetch"
+    - "update-moz-build"
+
+  keep:
+   - "*.schema.json"
+   - "vendor.sh"
+
+  update-actions:
+    - action: "run-script"
+      script: "vendor.sh"
+      cwd: "{yaml_dir}"
+      args: ["{revision}"]
