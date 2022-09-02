@@ -33,6 +33,8 @@ class RenderMacIOSurfaceTextureHost;
 class RenderBufferTextureHost;
 class RenderTextureHostSWGL;
 
+GLenum ToGlTexFilter(wr::ImageRendering);
+
 void ActivateBindAndTexParameteri(gl::GLContext* aGL, GLenum aActiveTexture,
                                   GLenum aBindTarget, GLuint aBindTexture,
                                   wr::ImageRendering aRendering);

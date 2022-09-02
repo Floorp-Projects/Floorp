@@ -25,19 +25,19 @@ using namespace gfx;
 
 D3D11ShareHandleImage::D3D11ShareHandleImage(const gfx::IntSize& aSize,
                                              const gfx::IntRect& aRect,
-                                             gfx::YUVColorSpace aColorSpace,
+                                             gfx::ColorSpace2 aColorSpace,
                                              gfx::ColorRange aColorRange)
     : Image(nullptr, ImageFormat::D3D11_SHARE_HANDLE_TEXTURE),
       mSize(aSize),
       mPictureRect(aRect),
-      mYUVColorSpace(aColorSpace),
+      mColorSpace(aColorSpace),
       mColorRange(aColorRange) {}
 
 bool D3D11ShareHandleImage::AllocateTexture(D3D11RecycleAllocator* aAllocator,
                                             ID3D11Device* aDevice) {
   if (aAllocator) {
     mTextureClient =
-        aAllocator->CreateOrRecycleClient(mYUVColorSpace, mColorRange, mSize);
+        aAllocator->CreateOrRecycleClient(mColorSpace, mColorRange, mSize);
     if (mTextureClient) {
       D3D11TextureData* textureData = GetData();
       MOZ_DIAGNOSTIC_ASSERT(textureData, "Wrong TextureDataType");
@@ -83,7 +83,7 @@ class MOZ_RAII D3D11TextureClientAllocationHelper
     : public ITextureClientAllocationHelper {
  public:
   D3D11TextureClientAllocationHelper(gfx::SurfaceFormat aFormat,
-                                     gfx::YUVColorSpace aColorSpace,
+                                     gfx::ColorSpace2 aColorSpace,
                                      gfx::ColorRange aColorRange,
                                      const gfx::IntSize& aSize,
                                      TextureAllocationFlags aAllocFlags,
@@ -91,7 +91,7 @@ class MOZ_RAII D3D11TextureClientAllocationHelper
                                      TextureFlags aTextureFlags)
       : ITextureClientAllocationHelper(aFormat, aSize, BackendSelector::Content,
                                        aTextureFlags, aAllocFlags),
-        mYUVColorSpace(aColorSpace),
+        mColorSpace(aColorSpace),
         mColorRange(aColorRange),
         mDevice(aDevice) {}
 
@@ -106,7 +106,7 @@ class MOZ_RAII D3D11TextureClientAllocationHelper
     return (aTextureClient->GetFormat() != gfx::SurfaceFormat::NV12 &&
             aTextureClient->GetFormat() != gfx::SurfaceFormat::P010 &&
             aTextureClient->GetFormat() != gfx::SurfaceFormat::P016) ||
-           (textureData->GetYUVColorSpace() == mYUVColorSpace &&
+           (textureData->mColorSpace == mColorSpace &&
             textureData->GetColorRange() == mColorRange &&
             textureData->GetTextureAllocationFlags() == mAllocationFlags);
   }
@@ -118,14 +118,14 @@ class MOZ_RAII D3D11TextureClientAllocationHelper
     if (!data) {
       return nullptr;
     }
-    data->SetYUVColorSpace(mYUVColorSpace);
+    data->mColorSpace = mColorSpace;
     data->SetColorRange(mColorRange);
     return MakeAndAddRef<TextureClient>(data, mTextureFlags,
                                         aAllocator->GetTextureForwarder());
   }
 
  private:
-  const gfx::YUVColorSpace mYUVColorSpace;
+  const gfx::ColorSpace2 mColorSpace;
   const gfx::ColorRange mColorRange;
   const RefPtr<ID3D11Device> mDevice;
 };
@@ -158,7 +158,7 @@ void D3D11RecycleAllocator::SetPreferredSurfaceFormat(
 }
 
 already_AddRefed<TextureClient> D3D11RecycleAllocator::CreateOrRecycleClient(
-    gfx::YUVColorSpace aColorSpace, gfx::ColorRange aColorRange,
+    gfx::ColorSpace2 aColorSpace, gfx::ColorRange aColorRange,
     const gfx::IntSize& aSize) {
   // When CompositorDevice or ContentDevice is updated,
   // we could not reuse old D3D11Textures. It could cause video flickering.
