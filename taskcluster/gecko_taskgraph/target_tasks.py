@@ -1157,10 +1157,10 @@ def target_tasks_nothing(full_task_graph, parameters, graph_config):
     return []
 
 
-@_target_task("nightly_beta_perf")
-def target_tasks_nightly_beta_perf(full_task_graph, parameters, graph_config):
+@_target_task("daily_beta_perf")
+def target_tasks_daily_beta_perf(full_task_graph, parameters, graph_config):
     """
-    Select performance tests on the beta branch to be run nightly
+    Select performance tests on the beta branch to be run daily
     """
 
     def filter(task):
