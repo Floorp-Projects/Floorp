@@ -666,7 +666,7 @@ pref("browser.privacySegmentation.windowSeparation.enabled", false);
 pref("browser.theme.dark-private-windows", true);
 
 // Controls visibility of the privacy segmentation preferences section.
-pref("browser.privacySegmentation.preferences.show", true);
+pref("browser.privacySegmentation.preferences.show", false);
 
 pref("browser.sessionhistory.max_entries", 50);
 
