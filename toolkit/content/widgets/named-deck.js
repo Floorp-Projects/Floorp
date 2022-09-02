@@ -307,6 +307,10 @@
    * deck.selectedViewName == "dogs"; // Dog stuff is shown.
    * deck.setAttribute("selected-view", "cats");
    * deck.selectedViewName == "cats"; // Cat info is shown.
+   *
+   * Add the is-tabbed attribute to <named-deck> if you want
+   * each of its children to have a tabpanel role and aria-labelledby
+   * referencing the NamedDeckButton component.
    */
   class NamedDeck extends HTMLElement {
     static get observedAttributes() {
@@ -372,8 +376,11 @@
       let { selectedViewName } = this;
       for (let view of this.children) {
         let name = view.getAttribute("name");
-        view.setAttribute("aria-labelledby", `${this.id}-button-${name}`);
-        view.setAttribute("role", "tabpanel");
+
+        if (this.hasAttribute("is-tabbed")) {
+          view.setAttribute("aria-labelledby", `${this.id}-button-${name}`);
+          view.setAttribute("role", "tabpanel");
+        }
 
         if (name === selectedViewName) {
           view.slot = "selected";

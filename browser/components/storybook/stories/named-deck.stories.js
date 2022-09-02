@@ -20,7 +20,7 @@ export const Tabs = () => html`
     <button is="named-deck-button" deck="tabs-deck" name="tab-2">Tab 2</button>
     <button is="named-deck-button" deck="tabs-deck" name="tab-3">Tab 3</button>
   </button-group>
-  <named-deck id="tabs-deck">
+  <named-deck id="tabs-deck" is-tabbed>
     <p name="tab-1">This is tab 1</p>
     <p name="tab-2">This is tab 2</p>
     <p name="tab-3">This is tab 3</p>
@@ -65,7 +65,7 @@ export const ListMenu = () => html`
       width: 200px;
     }
   </style>
-  <named-deck id="list-deck">
+  <named-deck id="list-deck" is-tabbed>
     <section name="list">
       <button-group orientation="vertical" class="vertical-group">
         <button is="named-deck-button" deck="list-deck" name="tab-1">
