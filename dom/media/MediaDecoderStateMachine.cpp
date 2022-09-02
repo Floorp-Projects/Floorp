@@ -2847,27 +2847,25 @@ MediaSink* MediaDecoderStateMachine::CreateAudioSink() {
             ? mOutputDummyTrack.Ref()
             : nullptr,
         mOutputTracks, mVolume, mPlaybackRate, mPreservesPitch, mAudioQueue,
-        mVideoQueue);
+        mVideoQueue, mSinkDevice.Ref());
     mAudibleListener.DisconnectIfExists();
     mAudibleListener = stream->AudibleEvent().Connect(
         OwnerThread(), this, &MediaDecoderStateMachine::AudioAudibleChanged);
     return stream;
   }
 
-  RefPtr<MediaDecoderStateMachine> self = this;
-  auto audioSinkCreator = [self]() {
-    MOZ_ASSERT(self->OnTaskQueue());
+  auto audioSinkCreator = [s = RefPtr<MediaDecoderStateMachine>(this), this]() {
+    MOZ_ASSERT(OnTaskQueue());
     AudioSink* audioSink =
-        new AudioSink(self->mTaskQueue, self->mAudioQueue, self->Info().mAudio,
-                      self->mSinkDevice.Ref());
-    self->mAudibleListener.DisconnectIfExists();
-    self->mAudibleListener = audioSink->AudibleEvent().Connect(
-        self->mTaskQueue, self.get(),
-        &MediaDecoderStateMachine::AudioAudibleChanged);
+        new AudioSink(mTaskQueue, mAudioQueue, Info().mAudio);
+    mAudibleListener.DisconnectIfExists();
+    mAudibleListener = audioSink->AudibleEvent().Connect(
+        mTaskQueue, this, &MediaDecoderStateMachine::AudioAudibleChanged);
     return audioSink;
   };
   return new AudioSinkWrapper(mTaskQueue, mAudioQueue, audioSinkCreator,
-                              mVolume, mPlaybackRate, mPreservesPitch);
+                              mVolume, mPlaybackRate, mPreservesPitch,
+                              mSinkDevice.Ref());
 }
 
 already_AddRefed<MediaSink> MediaDecoderStateMachine::CreateMediaSink() {
