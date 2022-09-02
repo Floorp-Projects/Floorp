@@ -298,13 +298,20 @@ describe("CFRPageActions", () => {
     });
 
     describe("#_popupStateChange", () => {
-      it("should collapse the notification on 'dismissed'", () => {
+      it("should collapse the notification and send dismiss telemetry on 'dismissed'", () => {
         pageAction._expand();
+
+        sandbox.spy(pageAction, "_sendTelemetry");
 
         pageAction._popupStateChange("dismissed");
         assert.equal(
           pageAction.urlbarinput.getAttribute("cfr-recommendation-state"),
           "collapsed"
+        );
+
+        assert.equal(
+          pageAction._sendTelemetry.lastCall.args[0].event,
+          "DISMISS"
         );
       });
       it("should remove the notification on 'removed'", () => {

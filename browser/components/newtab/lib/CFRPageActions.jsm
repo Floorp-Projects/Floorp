@@ -251,6 +251,12 @@ class PageAction {
         this.currentNotification = null;
       }
     } else if (state === "dismissed") {
+      const message = RecommendationMap.get(this.currentNotification?.browser);
+      this._sendTelemetry({
+        message_id: message?.id,
+        bucket_id: message?.content.bucket_id,
+        event: "DISMISS",
+      });
       this._collapse();
     }
   }
