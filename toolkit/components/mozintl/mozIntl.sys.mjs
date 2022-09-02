@@ -941,7 +941,17 @@ export class MozIntl {
       }
       let lcRegionCode = regionCode.toLowerCase();
       if (availableLocaleDisplayNames.region.has(lcRegionCode)) {
-        const value = loc.formatValueSync(`region-name-${lcRegionCode}`);
+        let regionID;
+        // Allow changing names over time for specific regions
+        switch (lcRegionCode) {
+          case "mk":
+            regionID = "region-name-mk-2019";
+            break;
+          default:
+            regionID = `region-name-${lcRegionCode}`;
+        }
+
+        const value = loc.formatValueSync(regionID);
         if (value !== null) {
           return value;
         }
