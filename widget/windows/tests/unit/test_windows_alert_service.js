@@ -71,6 +71,9 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     if (serverEnabled && launchUrl) {
       s += `&#xA;launchUrl&#xA;${launchUrl}`;
     }
+    if (serverEnabled) {
+      s += "&#xA;windowsTag&#xA;";
+    }
     if (argument) {
       s += `&#xA;action&#xA;${argument}`;
     }
@@ -205,7 +208,10 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
         "settings",
         launchUrl
       )}" placement="contextmenu"/>`;
-  expected = `<toast launch="${argumentString(null, launchUrl)}"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsActionWithLaunchUrl}</actions></toast>`;
+  expected = `<toast launch="${argumentString(
+    null,
+    launchUrl
+  )}"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsActionWithLaunchUrl}</actions></toast>`;
   Assert.equal(
     expected.replace("<actions></actions>", "<actions/>"),
     alertsService.getXmlStringForWindowsAlert(alert),

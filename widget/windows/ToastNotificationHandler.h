@@ -58,6 +58,14 @@ class ToastNotificationHandler final
 
   nsresult CreateToastXmlString(const nsAString& aImageURL, nsAString& aString);
 
+  nsresult GetWindowsTag(nsAString& aWindowsTag);
+  nsresult SetWindowsTag(const nsAString& aWindowsTag);
+
+  // Exposed for consumption by `ToastNotification.cpp`.
+  static nsresult FindLaunchURLForWindowsTag(const nsAString& aWindowsTag,
+                                             const nsAString& aAumid,
+                                             nsAString& aLaunchUrl);
+
  protected:
   virtual ~ToastNotificationHandler();
 
@@ -121,6 +129,12 @@ class ToastNotificationHandler final
                     const ComPtr<IToastDismissedEventArgs>& aArgs);
   HRESULT OnFail(const ComPtr<IToastNotification>& notification,
                  const ComPtr<IToastFailedEventArgs>& aArgs);
+
+  static HRESULT GetLaunchArgumentValueForKey(
+      const ComPtr<IToastNotification> toast, const nsAString& key,
+      nsAString& value);
+  static ComPtr<IToastNotification> FindNotificationByTag(
+      const nsAString& aWindowsTag, const nsAString& nsAumid);
 };
 
 }  // namespace widget

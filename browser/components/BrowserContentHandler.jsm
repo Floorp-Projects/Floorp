@@ -1016,6 +1016,37 @@ nsDefaultCommandLineHandler.prototype = {
   handle: function dch_handle(cmdLine) {
     var urilist = [];
 
+    if (AppConstants.platform == "win") {
+      let windowsAlertsService = Cc["@mozilla.org/system-alerts-service;1"]
+        .getService(Ci.nsIAlertsService)
+        .QueryInterface(Ci.nsIWindowsAlertsService);
+      var tag;
+      while (
+        (tag = cmdLine.handleFlagWithParam("notification-windowsTag", false))
+      ) {
+        let onUnknownWindowsTag = (unknownTag, launchUrl) => {
+          let uri = resolveURIInternal(cmdLine, launchUrl);
+          console.info(
+            `Opening ${uri.spec} to complete Windows notification with tag '${unknownTag}'`
+          );
+          urilist.push(uri);
+        };
+
+        try {
+          if (
+            windowsAlertsService?.handleWindowsTag(tag, onUnknownWindowsTag)
+          ) {
+            // Don't pop open a new window.
+            cmdLine.preventDefault = true;
+          }
+        } catch (e) {
+          Cu.reportError(
+            `Error handling Windows notification with tag '${tag}': ${e}`
+          );
+        }
+      }
+    }
+
     if (
       cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH &&
       Services.startup.wasSilentlyStarted

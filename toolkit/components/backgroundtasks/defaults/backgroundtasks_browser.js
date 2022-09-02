@@ -9,6 +9,7 @@
 // XUL notifications make no sense in background tasks.  This is only applies to
 // Windows for now.
 pref("alerts.useSystemBackend", true);
+pref("alerts.useSystemBackend.windows.notificationserver.enabled", true);
 
 // Configure Messaging Experiments for background tasks, with
 // background task-specific feature ID.  The regular Firefox Desktop
