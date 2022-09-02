@@ -127,6 +127,7 @@ enum class SymbolicAddress {
   ExceptionNew,
   ThrowException,
   ArrayNew,
+  ArrayNewData,
   InlineTypedObjectClass,
 #define DECL_INTRINSIC_SA(op, export, sa_name, abitype, entry, idx) sa_name,
   FOR_EACH_INTRINSIC(DECL_INTRINSIC_SA)
@@ -248,6 +249,7 @@ extern const SymbolicAddressSignature SASigStructNew;
 extern const SymbolicAddressSignature SASigExceptionNew;
 extern const SymbolicAddressSignature SASigThrowException;
 extern const SymbolicAddressSignature SASigArrayNew;
+extern const SymbolicAddressSignature SASigArrayNewData;
 extern const SymbolicAddressSignature SASigRefTest;
 #define EXT_INTR_SA_DECL(op, export, sa_name, abitype, entry, idx) \
   extern const SymbolicAddressSignature SASig##sa_name;

@@ -289,8 +289,15 @@ const SymbolicAddressSignature SASigArrayNew = {SymbolicAddress::ArrayNew,
                                                 _FailOnNullPtr,
                                                 3,
                                                 {_PTR, _I32, _RoN, _END}};
+const SymbolicAddressSignature SASigArrayNewData = {
+    SymbolicAddress::ArrayNewData,
+    _RoN,
+    _FailOnNullPtr,
+    5,
+    {_PTR, _I32, _I32, _RoN, _I32, _END}};
 const SymbolicAddressSignature SASigRefTest = {
     SymbolicAddress::RefTest, _I32, _Infallible, 3, {_PTR, _RoN, _RoN, _END}};
+
 #define DECL_SAS_FOR_INTRINSIC(op, export, sa_name, abitype, entry, idx) \
   const SymbolicAddressSignature SASig##sa_name = {                      \
       SymbolicAddress::sa_name, _VOID, _FailOnNegI32,                    \
@@ -1258,10 +1265,16 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_General2;
       MOZ_ASSERT(*abiType == ToABIType(SASigStructNew));
       return FuncCast(Instance::structNew, *abiType);
+
     case SymbolicAddress::ArrayNew:
       *abiType = Args_General_GeneralInt32General;
       MOZ_ASSERT(*abiType == ToABIType(SASigArrayNew));
       return FuncCast(Instance::arrayNew, *abiType);
+    case SymbolicAddress::ArrayNewData:
+      *abiType = Args_General_GeneralInt32Int32GeneralInt32;
+      MOZ_ASSERT(*abiType == ToABIType(SASigArrayNewData));
+      return FuncCast(Instance::arrayNewData, *abiType);
+
     case SymbolicAddress::RefTest:
       *abiType = Args_Int32_GeneralGeneralGeneral;
       MOZ_ASSERT(*abiType == ToABIType(SASigRefTest));
@@ -1447,6 +1460,7 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::ExceptionNew:
     case SymbolicAddress::ThrowException:
     case SymbolicAddress::ArrayNew:
+    case SymbolicAddress::ArrayNewData:
     case SymbolicAddress::RefTest:
 #define OP(op, export, sa_name, abitype, entry, idx) \
   case SymbolicAddress::sa_name:

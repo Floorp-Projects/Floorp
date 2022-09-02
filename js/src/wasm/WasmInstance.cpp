@@ -1198,6 +1198,87 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   return TypedObject::createArray(cx, rttValue, numElements);
 }
 
+// Creates an (OutlineTypedObject) array containing `numElements` of type
+// described by `arrayDescr`.  Initialises it with data copied from the data
+// segment whose index is `segIndex`, starting at byte offset `segByteOffset`
+// in the segment.  Traps if the segment doesn't hold enough bytes to fill the
+// array.
+/* static */ void* Instance::arrayNewData(Instance* instance,
+                                          uint32_t segByteOffset,
+                                          uint32_t numElements,
+                                          void* arrayDescr, uint32_t segIndex) {
+  MOZ_ASSERT(SASigArrayNewData.failureMode == FailureMode::FailOnNullPtr);
+  JSContext* cx = instance->cx();
+
+  // Check that the data segment is valid for use.
+  MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveDataSegments_.length(),
+                     "ensured by validation");
+  const DataSegment* seg = instance->passiveDataSegments_[segIndex];
+
+  // `seg` will be nullptr if the segment has already been 'data.drop'ed
+  // (either implicitly in the case of 'active' segments during instantiation,
+  // or explicitly by the data.drop instruction.)  In that case we can
+  // continue only if there's no need to copy any data out of it.
+  if (!seg && (numElements != 0 || segByteOffset != 0)) {
+    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    return nullptr;
+  }
+  // At this point, if `seg` is null then `numElements` and `segByteOffset`
+  // are both zero.
+
+  Rooted<RttValue*> rttValue(cx, (RttValue*)arrayDescr);
+  MOZ_ASSERT(rttValue);
+
+  Rooted<TypedObject*> objTO(
+      cx, TypedObject::createArray(cx, rttValue, numElements));
+  if (!objTO) {
+    // TypedObject::createArray will have reported OOM.
+    return nullptr;
+  }
+  MOZ_RELEASE_ASSERT(objTO->is<OutlineTypedObject>());
+
+  Rooted<OutlineTypedObject*> objOTO(
+      cx, static_cast<OutlineTypedObject*>(objTO.get()));
+  MOZ_ASSERT(objOTO->numElements() == numElements);
+
+  if (!seg) {
+    // A zero-length array was requested and has been created, so we're done.
+    return objOTO;
+  }
+
+  // Compute the number of bytes to copy, ensuring it's below 2^32.
+  CheckedUint32 numBytesToCopy =
+      CheckedUint32(numElements) *
+      CheckedUint32(rttValue->typeDef().arrayType().elementType_.size());
+  if (!numBytesToCopy.isValid()) {
+    // Because the request implies that 2^32 or more bytes are to be copied.
+    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    return nullptr;
+  }
+
+  // Range-check the copy.  The obvious thing to do is to compute the offset
+  // of the last byte to copy, but that would cause underflow in the
+  // zero-length-and-zero-offset case.  Instead, compute that value plus one;
+  // in other words the offset of the first byte *not* to copy.
+  CheckedUint32 lastByteOffsetPlus1 =
+      CheckedUint32(segByteOffset) + numBytesToCopy;
+
+  CheckedUint32 numBytesAvailable(seg->bytes.length());
+  if (!lastByteOffsetPlus1.isValid() || !numBytesAvailable.isValid() ||
+      lastByteOffsetPlus1.value() > numBytesAvailable.value()) {
+    // Because the last byte to copy doesn't exist inside `seg->bytes`.
+    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    return nullptr;
+  }
+
+  // Because `numBytesToCopy` is an in-range `CheckedUint32`, the cast to
+  // `size_t` is safe even on a 32-bit target.
+  memcpy(objOTO->addressOfElementZero(), &seg->bytes[segByteOffset],
+         size_t(numBytesToCopy.value()));
+
+  return objOTO;
+}
+
 /* static */ void* Instance::exceptionNew(Instance* instance, JSObject* tag) {
   MOZ_ASSERT(SASigExceptionNew.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();

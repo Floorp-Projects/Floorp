@@ -188,6 +188,7 @@ enum class OpKind {
   ArrayNew,
   ArrayNewFixed,
   ArrayNewDefault,
+  ArrayNewData,
   ArrayGet,
   ArraySet,
   ArrayLen,
@@ -693,6 +694,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                        uint32_t* numElements);
   [[nodiscard]] bool readArrayNewDefault(uint32_t* typeIndex,
                                          Value* numElements);
+  [[nodiscard]] bool readArrayNewData(uint32_t* typeIndex, uint32_t* segIndex,
+                                      Value* offset, Value* numElements);
   [[nodiscard]] bool readArrayGet(uint32_t* typeIndex, FieldExtension extension,
                                   Value* index, Value* ptr);
   [[nodiscard]] bool readArraySet(uint32_t* typeIndex, Value* val, Value* index,
@@ -3257,6 +3260,42 @@ inline bool OpIter<Policy>::readArrayNewDefault(uint32_t* typeIndex,
 
   if (!arr.elementType_.isDefaultable()) {
     return fail("array must be defaultable");
+  }
+
+  return push(RefType::fromTypeIndex(*typeIndex, false));
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readArrayNewData(uint32_t* typeIndex,
+                                             uint32_t* segIndex, Value* offset,
+                                             Value* numElements) {
+  MOZ_ASSERT(Classify(op_) == OpKind::ArrayNewData);
+
+  if (!readArrayTypeIndex(typeIndex)) {
+    return false;
+  }
+
+  if (!readVarU32(segIndex)) {
+    return fail("unable to read segment index");
+  }
+
+  const ArrayType& arrayType = env_.types->arrayType(*typeIndex);
+  FieldType elemType = arrayType.elementType_;
+  if (!elemType.isNumber() && !elemType.isPacked() && !elemType.isVector()) {
+    return fail("element type must be i8/i16/i32/i64/f32/f64/v128");
+  }
+  if (env_.dataCount.isNothing()) {
+    return fail("datacount section missing");
+  }
+  if (*segIndex >= *env_.dataCount) {
+    return fail("segment index is out of range");
+  }
+
+  if (!popWithType(ValType::I32, offset)) {
+    return false;
+  }
+  if (!popWithType(ValType::I32, numElements)) {
+    return false;
   }
 
   return push(RefType::fromTypeIndex(*typeIndex, false));
