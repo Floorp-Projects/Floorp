@@ -848,8 +848,10 @@ nsUrlClassifierStreamUpdater::Notify(nsITimer* timer) {
 
   if (updateFailed) {
     // Cancelling the channel will trigger OnStopRequest.
-    mozilla::Unused << mChannel->Cancel(NS_ERROR_ABORT);
-    mChannel = nullptr;
+    if (mChannel) {
+      mozilla::Unused << mChannel->Cancel(NS_ERROR_ABORT);
+      mChannel = nullptr;
+    }
     mTelemetryClockStart = 0;
 
     if (mFetchIndirectUpdatesTimer) {
