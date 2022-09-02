@@ -6377,8 +6377,8 @@ class RestartOnLastWindowClosed {
       case "quit-application":
         this.shutdown();
         break;
-      case "browser-lastwindow-close-granted":
-        this.#onLastWindowClose();
+      case "domwindowclosed":
+        this.#onWindowClose();
         break;
       case "domwindowopened":
         this.#onWindowOpen();
@@ -6413,7 +6413,7 @@ class RestartOnLastWindowClosed {
       }
       LOG("RestartOnLastWindowClosed.#maybeEnableOrDisable - Enabling");
 
-      Services.obs.addObserver(this, "browser-lastwindow-close-granted");
+      Services.obs.addObserver(this, "domwindowclosed");
       Services.obs.addObserver(this, "domwindowopened");
 
       // Reset internal state, except for #updateReady (see its definition for
@@ -6424,16 +6424,14 @@ class RestartOnLastWindowClosed {
       this.#enabled = true;
 
       // Synchronize with external state.
-      if (!this.#windowsAreOpen()) {
-        this.#onLastWindowClose();
-      }
+      this.#onWindowClose();
     } else {
       if (!this.#enabled) {
         return;
       }
       LOG("RestartOnLastWindowClosed.#maybeEnableOrDisable - Disabling");
 
-      Services.obs.removeObserver(this, "browser-lastwindow-close-granted");
+      Services.obs.removeObserver(this, "domwindowclosed");
       Services.obs.removeObserver(this, "domwindowopened");
 
       this.#enabled = false;
@@ -6484,6 +6482,12 @@ class RestartOnLastWindowClosed {
     }
 
     this.#updateReady = false;
+  }
+
+  #onWindowClose() {
+    if (!this.#windowsAreOpen()) {
+      this.#onLastWindowClose();
+    }
   }
 
   #onLastWindowClose() {
