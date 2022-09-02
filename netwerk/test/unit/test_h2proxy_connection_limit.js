@@ -37,12 +37,6 @@ add_task(async function test_connection_limit() {
     await proxy.stop();
   });
 
-  let nodeServer = new NodeHTTP2Server();
-  await nodeServer.start();
-  registerCleanupFunction(async () => {
-    await nodeServer.stop();
-  });
-
   const maxConnections = 6;
   Services.prefs.setIntPref(
     "network.http.max-persistent-connections-per-server",
@@ -55,7 +49,6 @@ add_task(async function test_connection_limit() {
   });
 
   await with_node_servers([NodeHTTP2Server], async server => {
-    await server.execute(`global.server_name = "${server.constructor.name}";`);
     await server.registerPathHandler("/test", (req, resp) => {
       resp.writeHead(200);
       resp.end("All good");
@@ -74,9 +67,9 @@ add_task(async function test_connection_limit() {
     }
     await Promise.all(promises);
     let count = await proxy.socketCount(server.port());
-    info(`socket count is ${count}\n`);
-    Assert.ok(
-      count <= maxConnections,
+    Assert.lessOrEqual(
+      count,
+      maxConnections,
       "socket count should be less than maxConnections"
     );
   });

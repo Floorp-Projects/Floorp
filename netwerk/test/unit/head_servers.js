@@ -462,15 +462,15 @@ class HTTP2ProxyCode {
               protocol: url.protocol,
             },
             proxyresp => {
-              let headers = Object.assign({}, proxyresp.headers);
+              let proxyheaders = Object.assign({}, proxyresp.headers);
               // Filter out some prohibited headers.
               ["connection", "transfer-encoding", "keep-alive"].forEach(
                 prop => {
-                  delete headers[prop];
+                  delete proxyheaders[prop];
                 }
               );
               stream.respond(
-                Object.assign({ ":status": proxyresp.statusCode }, headers)
+                Object.assign({ ":status": proxyresp.statusCode }, proxyheaders)
               );
               proxyresp.on("data", chunk => {
                 stream.write(chunk);
@@ -517,13 +517,19 @@ class HTTP2ProxyCode {
       const http2 = require("http2");
       socket.on("error", error => {
         const status = error.errno == "ENOTFOUND" ? 404 : 502;
-        console.log(`responsing with http_code='${status}'`);
         try {
-          stream.respond({ ":status": status });
+          // If we already sent headers when the socket connected
+          // then sending the status again would throw.
+          if (!stream.sentHeaders) {
+            stream.respond({ ":status": status });
+          }
           stream.end();
         } catch (exception) {
           stream.close(http2.constants.NGHTTP2_CONNECT_ERROR);
         }
+      });
+      stream.on("close", () => {
+        socket.end();
       });
       socket.on("close", () => {
         stream.close();
