@@ -57,7 +57,7 @@ function makeAlert(options) {
 }
 
 function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
-  let argumentString = argument => {
+  let argumentString = (argument, launchUrl) => {
     // &#xA; is "\n".
     let s = ``;
     if (serverEnabled) {
@@ -67,6 +67,9 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     }
     if (serverEnabled && profD) {
       s += `&#xA;profile&#xA;${profD.path}`;
+    }
+    if (serverEnabled && launchUrl) {
+      s += `&#xA;launchUrl&#xA;${launchUrl}`;
     }
     if (argument) {
       s += `&#xA;action&#xA;${argument}`;
@@ -183,6 +186,28 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
   )}"/></actions></toast>`;
   Assert.equal(
     expected,
+    alertsService.getXmlStringForWindowsAlert(alert),
+    when
+  );
+
+  // Chrome privileged alerts can set a launch URL.
+  alert = makeAlert({
+    name,
+    title,
+    text,
+    imageURL,
+    principal: systemPrincipal,
+  });
+  alert.launchURL = launchUrl;
+  let settingsActionWithLaunchUrl = isBackgroundTaskMode
+    ? ""
+    : `<action content="Notification settings" arguments="${argumentString(
+        "settings",
+        launchUrl
+      )}" placement="contextmenu"/>`;
+  expected = `<toast launch="${argumentString(null, launchUrl)}"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsActionWithLaunchUrl}</actions></toast>`;
+  Assert.equal(
+    expected.replace("<actions></actions>", "<actions/>"),
     alertsService.getXmlStringForWindowsAlert(alert),
     when
   );
