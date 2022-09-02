@@ -421,6 +421,156 @@ assertErrorMessage(() => wasmEvalText(`(module
     assertEq(a.length, 0);
 }
 
+//////////////////////////////////////////////////////////////////////////////
+//
+// array.new_data
+/*
+  validation:
+    array-type imm-operand needs to be "in range"
+    array-type imm-operand must refer to an array type
+    array-type imm-operand must refer to an array of numeric elements
+    segment index must be "in range"
+  run:
+    if segment is "already used" (active, or passive that has subsequently
+      been dropped), then only a zero length array can be created
+    range to copy would require OOB read on data segment
+    resulting array is as expected
+*/
+
+// validation: array-type imm-operand needs to be "in range"
+assertErrorMessage(() => wasmEvalText(`(module
+        (type $a (array i8))
+        (data $d "1337")
+        (func (export "newData") (result eqref)
+                (; offset=0 into data ;) i32.const 0
+                (; size=4 into data ;) i32.const 4
+                array.new_data 2 $d
+        )
+)`), WebAssembly.CompileError, /type index out of range/);
+
+// validation: array-type imm-operand must refer to an array type
+assertErrorMessage(() => wasmEvalText(`(module
+        (type $a (func (param f32) (result f32)))
+        (data $d "1337")
+        (func (export "newData") (result eqref)
+                (; offset=0 into data ;) i32.const 0
+                (; size=4 into data ;) i32.const 4
+                array.new_data $a $d
+        )
+)`), WebAssembly.CompileError, /not an array type/);
+
+// validation: array-type imm-operand must refer to an array of numeric elements
+assertErrorMessage(() => wasmEvalText(`(module
+        (type $a (array eqref))
+        (data $d "1337")
+        (func (export "newData") (result eqref)
+                (; offset=0 into data ;) i32.const 0
+                (; size=4 into data ;) i32.const 4
+                array.new_data $a $d
+        )
+)`), WebAssembly.CompileError,
+                   /element type must be i8\/i16\/i32\/i64\/f32\/f64\/v128/);
+
+// validation: segment index must be "in range"
+assertErrorMessage(() => wasmEvalText(`(module
+        (type $a (array i8))
+        (data $d "1337")
+        (func (export "newData") (result eqref)
+                (; offset=0 into data ;) i32.const 0
+                (; size=4 into data ;) i32.const 4
+                array.new_data $a 1  ;; 1 is the lowest invalid dseg index
+        )
+)`), WebAssembly.CompileError, /segment index is out of range/);
+
+// run: if segment is "already used" (active, or passive that has subsequently
+//        been dropped), then only a zero length array can be created #1
+{
+    let { newData } = wasmEvalText(`(module
+        (memory 1)
+        (type $a (array i8))
+        (data $d (offset (i32.const 0)) "1337")
+        (func (export "newData") (result eqref)
+                (; offset=0 into data ;) i32.const 0
+                (; size=4 into data ;) i32.const 4
+                array.new_data $a $d
+        )
+        )`).exports;
+    assertErrorMessage(() => {
+        newData();
+    },WebAssembly.RuntimeError, /index out of bounds/);
+}
+
+// run: if segment is "already used" (active, or passive that has subsequently
+//        been dropped), then only a zero length array can be created #2
+{
+    let { newData } = wasmEvalText(`(module
+        (memory 1)
+        (type $a (array i8))
+        (data $d (offset (i32.const 0)) "1337")
+        (func (export "newData") (result eqref)
+                (; offset=4 into data ;) i32.const 4
+                (; size=0 into data ;) i32.const 0
+                array.new_data $a $d
+        )
+        )`).exports;
+    assertErrorMessage(() => {
+        newData();
+    },WebAssembly.RuntimeError, /index out of bounds/);
+}
+
+// run: if segment is "already used" (active, or passive that has subsequently
+//        been dropped), then only a zero length array can be created #3
+{
+    let { newData } = wasmEvalText(`(module
+        (memory 1)
+        (type $a (array i8))
+        (data $d (offset (i32.const 0)) "1337")
+        (func (export "newData") (result eqref)
+                (; offset=0 into data ;) i32.const 0
+                (; size=0 into data ;) i32.const 0
+                array.new_data $a $d
+        )
+        )`).exports;
+    let arr = newData();
+    assertEq(arr.length, 0);
+}
+
+// run: range to copy would require OOB read on data segment
+{
+    let { newData } = wasmEvalText(`(module
+        (type $a (array i8))
+        (data $d "1337")
+        (func (export "newData") (result eqref)
+                (; offset=0 into data ;) i32.const 1
+                (; size=4 into data ;) i32.const 4
+                array.new_data $a $d
+        )
+        )`).exports;
+    assertErrorMessage(() => {
+        newData();
+    },WebAssembly.RuntimeError, /index out of bounds/);
+}
+
+// run: resulting array is as expected
+{
+    let { newData } = wasmEvalText(`(module
+        (type $a (array i8))
+        (data $other "\\\\9")
+        (data $d "1337")
+        (func (export "newData") (result eqref)
+                (; offset=0 into data ;) i32.const 0
+                (; size=4 into data ;) i32.const 4
+                array.new_data $a $d
+        )
+        )`).exports;
+    let arr = newData();
+    assertEq(arr.length, 4);
+    assertEq(arr[0], 48+1);
+    assertEq(arr[1], 48+3);
+    assertEq(arr[2], 48+3);
+    assertEq(arr[3], 48+7);
+}
+
 // run: resulting 30-element array is as expected
 {
     let { newFixed } = wasmEvalText(`(module

@@ -1628,6 +1628,7 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitArrayNew();
   [[nodiscard]] bool emitArrayNewFixed();
   [[nodiscard]] bool emitArrayNewDefault();
+  [[nodiscard]] bool emitArrayNewData();
   [[nodiscard]] bool emitArrayGet(FieldExtension extension);
   [[nodiscard]] bool emitArraySet();
   [[nodiscard]] bool emitArrayLen();
