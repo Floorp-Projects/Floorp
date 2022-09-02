@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Bug 1779846: Test enableSelectionChecking=true on nsIEditorSpellCheck.InitSpellChecker</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+
+<div contenteditable lang="en-US">missspelled</div>
+
+<script>
+add_task(async function() {
+  await new Promise(resolve => SimpleTest.waitForFocus(resolve));
+
+  let { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+  );
+
+  let editingHost = document.querySelector("div[contenteditable][lang=en-US]");
+  editingHost.focus();
+
+  await new Promise(resolve => maybeOnSpellCheck(editingHost, resolve));
+
+  let editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  let editor = editingSession.getEditorForWindow(window);
+  let spellchecker = SpecialPowers.Cu.createSpellChecker();
+  spellchecker.setFilterType(spellchecker.FILTERTYPE_NORMAL);
+
+  /* Select "missspelled" in the <div>. */
+  window.getSelection().selectAllChildren(editingHost);
+
+  /* Pass true to InitSpellChecker to spellcheck the current selection of the editor.*/
+  await new Promise(resolve => spellchecker.InitSpellChecker(editor, true, resolve));
+
+  /* InitSpellChecker with enableSelectionChecking=true shouldn't throw any errors. */
+  ok(spellchecker.canSpellCheck());
+});
+</script>
