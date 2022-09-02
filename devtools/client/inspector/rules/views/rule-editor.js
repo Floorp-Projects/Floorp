@@ -151,7 +151,12 @@ RuleEditor.prototype = {
         if (ancestorData.type == "media") {
           return `@media ${ancestorData.value}`;
         }
-        // We shouldn't get here as `type` can only be set to "container", "layer" or "media",
+
+        if (ancestorData.type == "supports") {
+          return `@supports ${ancestorData.conditionText}`;
+        }
+        // We shouldn't get here as `type` can only be set to "container", "layer", "media"
+        // or "supports" (see devtools/server/actors/style-rule form()),
         // but just in case, let's return an empty string.
         console.warn("Unknown ancestor data type:", ancestorData.type);
         return ``;

@@ -3,32 +3,28 @@
 
 "use strict";
 
-// Test that the rule-view content is correct when the page defines container queries.
+// Test that the rule-view content is correct when the page defines nested at-rules (@media, @layer, @supports, …)
 const TEST_URI = `
   <style type="text/css">
     body {
       container: mycontainer / inline-size;
     }
 
-    @container (width > 0px) {
-      h1, [test-hint="nocontainername"]{
-        outline-color: chartreuse;
-      }
-    }
-
-    @container unknowncontainer (min-width: 2vw) {
-      h1, [test-hint="unknowncontainer"] {
-        border-color: salmon;
-      }
-    }
-
-    @container mycontainer (1px < width < 10000px) {
-      h1, [test-hint="container"] {
-        color: tomato;
+    @layer mylayer {
+      @supports (container-name: mycontainer) {
+        @container mycontainer (min-width: 1px) {
+          @media screen {
+            @container mycontainer (min-width: 2rem) {
+              h1, [test-hint="nested"] {
+                background: gold;
+              }
+            }
+          }
+        }
       }
     }
   </style>
-  <h1>Hello @container!</h1>
+  <h1>Hello nested at-rules!</h1>
 `;
 
 add_task(async function() {
@@ -45,16 +41,14 @@ add_task(async function() {
   const expectedRules = [
     { selector: "element", ancestorRulesData: null },
     {
-      selector: `h1, [test-hint="container"]`,
-      ancestorRulesData: ["@container mycontainer (1px < width < 10000px)"],
-    },
-    {
-      selector: `h1, [test-hint="unknowncontainer"]`,
-      ancestorRulesData: ["@container unknowncontainer (min-width: 2vw)"],
-    },
-    {
-      selector: `h1, [test-hint="nocontainername"]`,
-      ancestorRulesData: ["@container (width > 0px)"],
+      selector: `h1, [test-hint="nested"]`,
+      ancestorRulesData: [
+        `@layer mylayer`,
+        `@supports (container-name: mycontainer)`,
+        `@container mycontainer (min-width: 1px)`,
+        `@media screen`,
+        `@container mycontainer (min-width: 2rem)`,
+      ],
     },
   ];
 
