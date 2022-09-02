@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-var EXPORTED_SYMBOLS = ["ViewSourcePageChild"];
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const BUNDLE_URL = "chrome://global/locale/viewSource.properties";
 
@@ -30,7 +26,7 @@ let gNeedsDrawSelection = false;
  */
 let gInitialLineNumber = -1;
 
-class ViewSourcePageChild extends JSWindowActorChild {
+export class ViewSourcePageChild extends JSWindowActorChild {
   constructor() {
     super();
 
