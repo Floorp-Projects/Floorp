@@ -113,6 +113,17 @@ export function Colorways(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.activeTheme]);
 
+  //select a random colorway
+  useEffect(() => {
+    //We don't want the default theme to be selected
+    const randomIndex = Math.floor(Math.random() * (colorways.length - 1)) + 1;
+    const randomColorwayId = colorways[randomIndex].id;
+    const value = `${randomColorwayId}-${variations[variationIndex]}`;
+
+    props.handleAction({ currentTarget: { value } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="tiles-theme-container">
       <div>

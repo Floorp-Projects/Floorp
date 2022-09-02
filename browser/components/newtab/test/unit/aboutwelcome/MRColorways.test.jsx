@@ -10,15 +10,10 @@ import { WelcomeScreen } from "content-src/aboutwelcome/components/MultiStageAbo
 
 describe("Multistage AboutWelcome module", () => {
   let sandbox;
+  let COLORWAY_SCREEN_PROPS;
   beforeEach(() => {
     sandbox = sinon.createSandbox();
-  });
-  afterEach(() => {
-    sandbox.restore();
-  });
-
-  describe("MRColorway component", () => {
-    const COLORWAY_SCREEN_PROPS = {
+    COLORWAY_SCREEN_PROPS = {
       id: "test-colorway-screen",
       totalNumberofScreens: 1,
       content: {
@@ -51,7 +46,12 @@ describe("Multistage AboutWelcome module", () => {
       messageId: "test-mr-colorway-screen",
       activeTheme: "automatic",
     };
+  });
+  afterEach(() => {
+    sandbox.restore();
+  });
 
+  describe("MRColorway component", () => {
     it("should render WelcomeScreen", () => {
       const wrapper = shallow(<WelcomeScreen {...COLORWAY_SCREEN_PROPS} />);
 
@@ -293,6 +293,23 @@ describe("Multistage AboutWelcome module", () => {
         TEST_COLORWAY_PROPS.content.tiles.defaultVariationIndex
       );
       assert.strictEqual(variationIndex, 1);
+    });
+
+    it("should select a random colorway", () => {
+      sandbox.stub(React, "useEffect").callsFake((fn, vals) => {
+        if (vals?.length === 0) {
+          fn();
+        }
+      });
+
+      const handleAction = sandbox.stub();
+      shallow(
+        <Colorways {...COLORWAY_SCREEN_PROPS} handleAction={handleAction} />
+      );
+      const { value } = handleAction.firstCall.firstArg.currentTarget;
+
+      assert.strictEqual(value, "abstract-soft");
+      assert.calledThrice(React.useEffect);
     });
   });
 });
