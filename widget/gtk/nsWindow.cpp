@@ -7855,7 +7855,7 @@ static gboolean motion_notify_event_cb(GtkWidget* widget,
                                        GdkEventMotion* event) {
   UpdateLastInputEventTime(event);
 
-  nsWindow* window = GetFirstNSWindowForGDKWindow(event->window);
+  RefPtr<nsWindow> window = GetFirstNSWindowForGDKWindow(event->window);
   if (!window) return FALSE;
 
   window->OnMotionNotifyEvent(event);
@@ -7867,7 +7867,7 @@ static gboolean button_press_event_cb(GtkWidget* widget,
                                       GdkEventButton* event) {
   UpdateLastInputEventTime(event);
 
-  nsWindow* window = GetFirstNSWindowForGDKWindow(event->window);
+  RefPtr<nsWindow> window = GetFirstNSWindowForGDKWindow(event->window);
   if (!window) return FALSE;
 
   window->OnButtonPressEvent(event);
@@ -7883,7 +7883,7 @@ static gboolean button_release_event_cb(GtkWidget* widget,
                                         GdkEventButton* event) {
   UpdateLastInputEventTime(event);
 
-  nsWindow* window = GetFirstNSWindowForGDKWindow(event->window);
+  RefPtr<nsWindow> window = GetFirstNSWindowForGDKWindow(event->window);
   if (!window) return FALSE;
 
   window->OnButtonReleaseEvent(event);
@@ -8036,7 +8036,7 @@ static gboolean property_notify_event_cb(GtkWidget* aWidget,
 }
 
 static gboolean scroll_event_cb(GtkWidget* widget, GdkEventScroll* event) {
-  nsWindow* window = GetFirstNSWindowForGDKWindow(event->window);
+  RefPtr<nsWindow> window = GetFirstNSWindowForGDKWindow(event->window);
   if (!window) return FALSE;
 
   window->OnScrollEvent(event);
@@ -8142,7 +8142,7 @@ static void scale_changed_cb(GtkWidget* widget, GParamSpec* aPSpec,
 static gboolean touch_event_cb(GtkWidget* aWidget, GdkEventTouch* aEvent) {
   UpdateLastInputEventTime(aEvent);
 
-  nsWindow* window = GetFirstNSWindowForGDKWindow(aEvent->window);
+  RefPtr<nsWindow> window = GetFirstNSWindowForGDKWindow(aEvent->window);
   if (!window) {
     return FALSE;
   }
@@ -8161,7 +8161,7 @@ static gboolean generic_event_cb(GtkWidget* widget, GdkEvent* aEvent) {
   GdkEventTouchpadPinch* event =
       reinterpret_cast<GdkEventTouchpadPinch*>(aEvent);
 
-  nsWindow* window = GetFirstNSWindowForGDKWindow(event->window);
+  RefPtr<nsWindow> window = GetFirstNSWindowForGDKWindow(event->window);
 
   if (!window) {
     return FALSE;
