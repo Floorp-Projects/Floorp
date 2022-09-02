@@ -32,13 +32,11 @@ function getRecipe(slug) {
 
 add_task(async function test_double_feature_enrollment() {
   let sandbox = sinon.createSandbox();
-  let { doExperimentCleanup } = ExperimentFakes.enrollmentHelper();
   let sendFailureTelemetryStub = sandbox.stub(
     ExperimentManager,
     "sendFailureTelemetry"
   );
   await ExperimentAPI.ready();
-  await doExperimentCleanup();
 
   Assert.ok(ExperimentManager.store.getAllActive().length === 0, "Clean state");
 
@@ -80,6 +78,6 @@ add_task(async function test_double_feature_enrollment() {
     "Check expected reason"
   );
 
-  await doExperimentCleanup();
+  await ExperimentFakes.cleanupAll([recipe1.slug]);
   sandbox.restore();
 });
