@@ -159,4 +159,66 @@ add_task(async function validate_filename_method() {
     checkFilename("test_ﾃｽﾄ_T\x83E\\S\x83T.pﾃ\x83ng", 0),
     "test_ﾃｽﾄ_T E_S T.png"
   );
+
+  // Now check some media types
+  Assert.equal(
+    mimeService.validateFileNameForSaving("video.ogg", "video/ogg", 0),
+    "video.ogg",
+    "video.ogg"
+  );
+  Assert.equal(
+    mimeService.validateFileNameForSaving("video.ogv", "video/ogg", 0),
+    "video.ogv",
+    "video.ogv"
+  );
+  Assert.equal(
+    mimeService.validateFileNameForSaving("video.ogt", "video/ogg", 0),
+    "video.ogv",
+    "video.ogt"
+  );
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving("audio.mp3", "audio/mpeg", 0),
+    "audio.mp3",
+    "audio.mp3"
+  );
+  Assert.equal(
+    mimeService.validateFileNameForSaving("audio.mpega", "audio/mpeg", 0),
+    "audio.mpega",
+    "audio.mpega"
+  );
+  Assert.equal(
+    mimeService.validateFileNameForSaving("audio.mp2", "audio/mpeg", 0),
+    "audio.mp2",
+    "audio.mp2"
+  );
+
+  let expected = "audio.mp3";
+  if (AppConstants.platform == "linux") {
+    expected = "audio.mpga";
+  } else if (AppConstants.platform == "android") {
+    expected = "audio.mp4";
+  }
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving("audio.mp4", "audio/mpeg", 0),
+    expected,
+    "audio.mp4"
+  );
+
+  Assert.equal(
+    mimeService.validateFileNameForSaving("sound.m4a", "audio/mp4", 0),
+    "sound.m4a",
+    "sound.m4a"
+  );
+  Assert.equal(
+    mimeService.validateFileNameForSaving("sound.m4b", "audio/mp4", 0),
+    AppConstants.platform == "android" ? "sound.m4a" : "sound.m4b",
+    "sound.m4b"
+  );
+  Assert.equal(
+    mimeService.validateFileNameForSaving("sound.m4c", "audio/mp4", 0),
+    AppConstants.platform == "macosx" ? "sound.mp4" : "sound.m4a",
+    "sound.mpc"
+  );
 });
