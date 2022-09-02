@@ -35,7 +35,7 @@ class MessageHandlerFrameParent extends JSWindowActorParent {
   async receiveMessage(message) {
     switch (message.name) {
       case "MessageHandlerFrameChild:messageHandlerEvent":
-        const { name, data, sessionId } = message.data;
+        const { name, contextInfo, data, sessionId } = message.data;
         const [moduleName] = name.split(".");
 
         // Re-emit the event on the RootMessageHandler.
@@ -62,7 +62,7 @@ class MessageHandlerFrameParent extends JSWindowActorParent {
             );
           }
         }
-        messageHandler.emitEvent(name, eventPayload);
+        messageHandler.emitEvent(name, eventPayload, contextInfo);
 
         break;
       default:
