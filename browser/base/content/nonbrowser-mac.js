@@ -5,6 +5,10 @@
 
 /* eslint-env mozilla/browser-window */
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+});
+
 let delayedStartupTimeoutId = null;
 
 function OpenBrowserWindowFromDockMenu(options) {
@@ -129,7 +133,7 @@ function nonBrowserWindowDelayedStartup() {
   // initialize the private browsing UI
   gPrivateBrowsingUI.init();
 
-  if (!Services.prefs.getBoolPref("browser.tabs.firefox-view")) {
+  if (!NimbusFeatures.majorRelease2022.getVariable("firefoxView")) {
     document.getElementById("menu_openFirefoxView").hidden = true;
   }
 }

@@ -9883,8 +9883,9 @@ var FirefoxViewHandler = {
     return document.getElementById("firefox-view-button");
   },
   init() {
+    this._updateEnabledState = this._updateEnabledState.bind(this);
     this._updateEnabledState();
-    Services.prefs.addObserver("browser.tabs.firefox-view", this);
+    NimbusFeatures.majorRelease2022.onUpdate(this._updateEnabledState);
 
     if (this._enabled) {
       this._toggleNotificationDot(
@@ -9899,10 +9900,10 @@ var FirefoxViewHandler = {
   },
   uninit() {
     Services.obs.removeObserver(this, "firefoxview-notification-dot-update");
-    Services.prefs.removeObserver("browser.tabs.firefox-view", this);
+    NimbusFeatures.majorRelease2022.off(this._updateEnabledState);
   },
   _updateEnabledState() {
-    this._enabled = Services.prefs.getBoolPref("browser.tabs.firefox-view");
+    this._enabled = NimbusFeatures.majorRelease2022.getVariable("firefoxView");
     // We use a root attribute because there's no guarantee the button is in the
     // DOM, and visibility changes need to take effect even if it isn't in the DOM
     // right now.
@@ -9960,9 +9961,6 @@ var FirefoxViewHandler = {
       case "firefoxview-notification-dot-update":
         let shouldShow = data === "true";
         this._toggleNotificationDot(shouldShow);
-        break;
-      case "nsPref:changed":
-        this._updateEnabledState();
         break;
     }
   },
