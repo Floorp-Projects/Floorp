@@ -392,6 +392,10 @@ class SessionControlInteractor(
         recentSyncedTabController.handleRecentSyncedTabClick(tab)
     }
 
+    override fun onRecentSyncedTabLongClick() {
+        recentSyncedTabController.handleRecentSyncedTabLongClick()
+    }
+
     override fun onSyncedTabShowAllClicked() {
         recentSyncedTabController.handleSyncedTabShowAllClicked()
     }
