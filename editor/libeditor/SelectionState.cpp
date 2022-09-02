@@ -327,7 +327,7 @@ nsresult RangeUpdater::SelAdjSplitNode(nsIContent& aOriginalContent,
 
 nsresult RangeUpdater::SelAdjJoinNodes(
     const EditorRawDOMPoint& aStartOfRightContent,
-    const nsIContent& aRemovedContent, uint32_t aOffsetOfRemovedContent,
+    const nsIContent& aRemovedContent, uint32_t aOffsetOfJoinedContent,
     JoinNodesDirection aJoinNodesDirection) {
   MOZ_ASSERT(aStartOfRightContent.IsSetAndValid());
 
@@ -343,14 +343,14 @@ nsresult RangeUpdater::SelAdjJoinNodes(
   auto AdjustDOMPoint = [&](nsCOMPtr<nsINode>& aContainer,
                             uint32_t& aOffset) -> void {
     if (aContainer == aStartOfRightContent.GetContainerParent()) {
-      // If the point is in common parent of joined content nodes and the
-      // point is after the removed point, decrease the offset.
-      if (aOffset > aOffsetOfRemovedContent) {
+      // If the point is in common parent of joined content nodes and it pointed
+      // after the right content node, decrease the offset.
+      if (aOffset > aOffsetOfJoinedContent) {
         aOffset--;
       }
-      // If it pointed the removed content node, move to start of right content
-      // which was moved from the removed content.
-      else if (aOffset == aOffsetOfRemovedContent) {
+      // If it pointed the right content node, adjust it to point ex-first
+      // content of the right node.
+      else if (aOffset == aOffsetOfJoinedContent) {
         aContainer = aStartOfRightContent.GetContainer();
         aOffset = aStartOfRightContent.Offset();
       }
