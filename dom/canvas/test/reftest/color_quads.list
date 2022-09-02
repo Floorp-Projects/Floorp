@@ -1,0 +1,19 @@
+defaults pref(webgl.force-enabled,true)
+
+# Android&&swgl doesn't support (snapshotting?) webgl, so skip there.
+
+==  color_quads.html?=  color_quads.html?e_img=color_quads.png
+skip-if(Android&&swgl) ==  color_quads.html?e_context=webgl  color_quads.html?=
+
+# Test odd width and height
+==  color_quads.html?e_width=401&e_height=401  color_quads.html?e_img=color_quads_401.png
+skip-if(Android&&swgl) ==  color_quads.html?e_context=webgl&e_width=401&e_height=401  color_quads.html?e_width=401&e_height=401
+
+# Test various alpha values for webgl.
+skip-if(Android&&swgl) fuzzy-if(gtkWidget&&useDrawSnapshot,255-255,30000-30000) ==  color_quads.html?desc=premult-alpha_&e_context=webgl&e_color_o1=rgb(0,0,0,0.95)&e_color_o2=rgb(16,16,16,0.95)&e_color_o3=rgb(235,235,235,0.95)&e_color_o4=rgb(255,255,255,0.95)&e_color_i4=rgb(0,0,0,0)    color_quads.html?e_color_o1=rgb(13,13,13)&e_color_o2=rgb(29,29,29)&e_color_o3=rgb(248,248,248)&e_color_i4=rgb(255,255,255)
+
+skip-if(Android&&swgl) ==  color_quads.html?desc=no-alpha______&e_context=webgl&e_options={alpha:false}&e_color_o1=rgb(0,0,0,0.95)&e_color_o2=rgb(16,16,16,0.95)&e_color_o3=rgb(235,235,235,0.95)&e_color_o4=rgb(255,255,255,0.95)&e_color_i4=rgb(0,0,0,0)    color_quads.html?e_color_i4=rgb(0,0,0)
+
+skip-if(Android&&swgl) skip-if(swgl)  skip-if(gtkWidget&&useDrawSnapshot)  fuzzy-if(Android&&!swgl,255-255,120000-120000)  ==  color_quads.html?desc=straight-alpha&e_context=webgl&e_options={premultipliedAlpha:false}&e_color_o1=rgb(0,0,0,0.95)&e_color_o2=rgb(16,16,16,0.95)&e_color_o3=rgb(235,235,235,0.95)&e_color_o4=rgb(255,255,255,0.95)&e_color_i4=rgb(0,0,0,0)    color_quads.html?e_color_o1=rgb(13,13,13)&e_color_o2=rgb(28,28,28)&e_color_o3=rgb(236,236,236)&e_color_i4=rgb(255,255,255)
+skip-if(Android&&swgl) skip-if(!swgl) ==  color_quads.html?desc=straight-alpha&e_context=webgl&e_options={premultipliedAlpha:false}&e_color_o1=rgb(0,0,0,0.95)&e_color_o2=rgb(16,16,16,0.95)&e_color_o3=rgb(235,235,235,0.95)&e_color_o4=rgb(255,255,255,0.95)&e_color_i4=rgb(0,0,0,0)    color_quads.html?e_color_o1=rgb(14,14,14)&e_color_o2=rgb(30,30,30)&e_color_o3=rgb(237,237,237)&e_color_i1=rgb(128,1,1)&e_color_i2=rgb(1,128,1)&e_color_i3=rgb(1,1,128)&e_color_i4=rgb(255,255,255)
+skip-if(Android&&swgl) skip-if(!(gtkWidget&&useDrawSnapshot)) ==  color_quads.html?desc=straight-alpha&e_context=webgl&e_options={premultipliedAlpha:false}&e_color_o1=rgb(0,0,0,0.95)&e_color_o2=rgb(16,16,16,0.95)&e_color_o3=rgb(235,235,235,0.95)&e_color_o4=rgb(255,255,255,0.95)&e_color_i4=rgb(0,0,0,0)    color_quads.html?e_color_o1=rgb(13,13,13)&e_color_o2=rgb(29,29,29)&e_color_o3=rgb(237,237,237)&e_color_i4=rgb(255,255,255)
