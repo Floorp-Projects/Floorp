@@ -1297,7 +1297,7 @@ var UITour = {
 
       tooltip.setAttribute("targetName", aAnchor.targetName);
 
-      let alignment = "bottomcenter topright";
+      let alignment = "bottomright topright";
       if (aAnchor.infoPanelPosition) {
         alignment = aAnchor.infoPanelPosition;
       }
