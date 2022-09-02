@@ -56,28 +56,20 @@ export function createFaviconElement(image) {
   return favicon;
 }
 
-export function toggleContainer(collapsibleButton, collapsibleContainer) {
-  const arrowDown = "arrow-down";
-  collapsibleButton.classList.toggle(arrowDown);
-  let isHidden = collapsibleButton.classList.contains(arrowDown);
+export function onToggleContainer(detailsContainer) {
+  const newFluentString = detailsContainer.open
+    ? "firefoxview-collapse-button-hide"
+    : "firefoxview-collapse-button-show";
 
-  const newFluentString = `${
-    !isHidden
-      ? "firefoxview-collapse-button-hide"
-      : "firefoxview-collapse-button-show"
-  }`;
-  collapsibleButton.setAttribute("data-l10n-id", newFluentString);
-
-  collapsibleButton.setAttribute("aria-expanded", !isHidden);
-  collapsibleButton.setAttribute("data-l10n-id", newFluentString);
-  collapsibleContainer.hidden = isHidden;
-
+  detailsContainer
+    .querySelector(".twisty")
+    .setAttribute("data-l10n-id", newFluentString);
   Services.telemetry.recordEvent(
     "firefoxview",
-    collapsibleButton.id === "collapsible-synced-tabs-button"
+    detailsContainer.id === "tab-pickup-container"
       ? "tab_pickup_open"
       : "closed_tabs_open",
     "tabs",
-    (!isHidden).toString()
+    detailsContainer.open.toString()
   );
 }

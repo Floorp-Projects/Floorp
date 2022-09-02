@@ -4,7 +4,7 @@
 
 /* eslint-env mozilla/remote-page */
 
-import { toggleContainer } from "./helpers.mjs";
+import { onToggleContainer } from "./helpers.mjs";
 
 const { TabsSetupFlowManager } = ChromeUtils.importESModule(
   "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs"
@@ -12,7 +12,7 @@ const { TabsSetupFlowManager } = ChromeUtils.importESModule(
 
 const TOPIC_SETUPSTATE_CHANGED = "firefox-view.setupstate.changed";
 
-class TabPickupContainer extends HTMLElement {
+class TabPickupContainer extends HTMLDetailsElement {
   constructor() {
     super();
     this.boundObserve = (...args) => this.observe(...args);
@@ -27,10 +27,6 @@ class TabPickupContainer extends HTMLElement {
     return this.querySelector(".synced-tabs-container");
   }
 
-  get collapsibleButton() {
-    return this.querySelector("#collapsible-synced-tabs-button");
-  }
-
   getWindow() {
     return this.ownerGlobal.browsingContext.embedderWindowGlobal.browsingContext
       .window;
@@ -38,6 +34,7 @@ class TabPickupContainer extends HTMLElement {
 
   connectedCallback() {
     this.addEventListener("click", this);
+    this.addEventListener("toggle", this);
     this.addEventListener("visibilitychange", this);
     Services.obs.addObserver(this.boundObserve, TOPIC_SETUPSTATE_CHANGED);
     this.update();
@@ -52,8 +49,8 @@ class TabPickupContainer extends HTMLElement {
   }
 
   handleEvent(event) {
-    if (event.type == "click" && event.target == this.collapsibleButton) {
-      toggleContainer(this.collapsibleButton, this.tabsContainerElem);
+    if (event.type == "toggle") {
+      onToggleContainer(this);
       return;
     }
     if (event.type == "click" && event.target.dataset.action) {
@@ -252,12 +249,10 @@ class TabPickupContainer extends HTMLElement {
     }
     tabsElem.hidden = false;
     tabsElem.classList.toggle("loading", isLoading);
-
-    if (stateIndex == 5) {
-      this.collapsibleButton.hidden = false;
-    }
   }
 }
-customElements.define("tab-pickup-container", TabPickupContainer);
+customElements.define("tab-pickup-container", TabPickupContainer, {
+  extends: "details",
+});
 
 export { TabPickupContainer };
