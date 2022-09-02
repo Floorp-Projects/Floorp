@@ -200,13 +200,8 @@ add_task(async function test_list_ordering() {
 
       await clearAllParentTelemetryEvents();
 
-      await waitForElementVisible(
-        browser,
-        "#recently-closed-tabs-container > summary"
-      );
-      document
-        .querySelector("#recently-closed-tabs-container > summary")
-        .click();
+      await waitForElementVisible(browser, "#collapsible-tabs-button");
+      document.getElementById("collapsible-tabs-button").click();
 
       await TestUtils.waitForCondition(
         () => {

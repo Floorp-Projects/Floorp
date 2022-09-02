@@ -102,7 +102,7 @@ body > main {
   grid-template-rows: masonry;
 }
 
-body > main > details {
+body > main > section {
   grid-column: 1;
 }
 
@@ -126,7 +126,7 @@ body > main > aside {
   body {
     --colorways-no-collection-notice-bg-color: var(--newtab-background-color-secondary);
   }
-  body > main > details,
+  body > main > section,
   body > main > aside {
     grid-column: 1 / -1;
     grid-row: auto;
@@ -364,16 +364,14 @@ button.close {
 }
 
 .page-section-header {
-  column-gap: 16px;
-  cursor: pointer;
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: 1fr auto;
+  column-gap: 16px;
+
   grid-template-areas:
       "head head head head head head head twisty"
       "desc desc desc desc desc desc desc desc";
-  list-style-type: none;
-  padding-inline-start: 8px;
 }
 
 .page-section-header > h1 {
@@ -382,37 +380,12 @@ button.close {
   padding-block: 4px;
 }
 
-/* the twisty is just an ornament; the whole summary parent node is clickable */
 .page-section-header > .twisty {
-  background-image: url("chrome://global/skin/icons/arrow-down.svg");
-  display: inline-block;
   grid-area: twisty;
-  align-self: center;
   justify-self: end;
-  padding-block: 4px;
-  padding-inline: 8px;
-  fill: currentColor;
-  border-radius: 4px;
   margin-block: 0;
-  margin-inline-end: 4px;
-}
-
-@media (prefers-contrast) {
-  .page-section-header > .twisty {
-    border: 1px solid currentColor;
-  }
-}
-
-details[open] > .page-section-header > .twisty {
-  background-image: url("chrome://global/skin/icons/arrow-up.svg");
-}
-
-.page-section-header:hover > .twisty {
-  background-color: var(--fxview-element-hover-color);
-}
-
-.page-section-header:hover:active > .twisty {
-  background-color: var(--fxview-element-active-color);
+  min-width: 32px;
+  padding-inline: 7px;
 }
 
 .page-section-header > .section-description {
@@ -445,7 +418,7 @@ details[open] > .page-section-header > .twisty {
 .zap-card {
   border: none;
   position: relative;
-  z-index: -1;
+  z-index: 0;
 }
 .zap-card::before {
   content: "";
@@ -822,6 +795,15 @@ details[open] > .page-section-header > .twisty {
   display: inline-block;
   -moz-context-properties: fill;
   fill: currentColor;
+}
+
+/* the ordering of these two arrow icons is important for the toggleContainer to work correctly */
+.arrow-up {
+  background-image: url("chrome://global/skin/icons/arrow-up.svg");
+}
+
+.arrow-down {
+  background-image: url("chrome://global/skin/icons/arrow-down.svg");
 }
 
 .history {
