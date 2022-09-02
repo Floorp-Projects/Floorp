@@ -638,7 +638,7 @@ var DownloadsPanel = {
       PanelMultiView.openPopup(
         this.panel,
         anchor,
-        "bottomright topright",
+        "bottomcenter topright",
         0,
         0,
         false,

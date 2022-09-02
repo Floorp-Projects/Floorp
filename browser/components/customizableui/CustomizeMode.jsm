@@ -2670,12 +2670,12 @@ CustomizeMode.prototype = {
     if (panelOnTheLeft) {
       // Tested in RTL, these get inverted automatically, so this does the
       // right thing without taking RTL into account explicitly.
-      position = "topleft topright";
+      position = "leftcenter topright";
       if (toolbarContainer) {
         offsetX = 8;
       }
     } else {
-      position = "topright topleft";
+      position = "rightcenter topleft";
       if (toolbarContainer) {
         offsetX = -8;
       }

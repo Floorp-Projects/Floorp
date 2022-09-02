@@ -41,7 +41,7 @@
           this.setAttribute("side", "top");
         }
         if (!this.hasAttribute("position")) {
-          this.setAttribute("position", "bottomleft topleft");
+          this.setAttribute("position", "bottomcenter topleft");
         }
         if (!this.hasAttribute("consumeoutsideclicks")) {
           this.setAttribute("consumeoutsideclicks", "false");
