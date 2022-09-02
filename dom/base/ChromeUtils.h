@@ -278,6 +278,8 @@ class ChromeUtils {
       nsTArray<FormAutofillConfidences>& aResults, ErrorResult& aRv);
 
   static bool IsDarkBackground(GlobalObject&, Element&);
+
+  static double DateNow(GlobalObject&);
 };
 
 }  // namespace dom
