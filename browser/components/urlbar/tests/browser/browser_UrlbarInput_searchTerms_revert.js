@@ -97,6 +97,24 @@ add_task(async function revert() {
   BrowserTestUtils.removeTab(tab);
 });
 
+// Users should be able to revert the URL bar,
+// and go to the same page.
+add_task(async function revert_and_press_enter() {
+  let { tab, expectedSearchUrl } = await searchWithTab(SEARCH_STRING);
+  let browserLoadedPromise = BrowserTestUtils.browserLoaded(
+    tab.linkedBrowser,
+    false,
+    expectedSearchUrl
+  );
+
+  synthesizeRevert();
+  gURLBar.focus();
+  EventUtils.synthesizeKey("KEY_Enter");
+  await browserLoadedPromise;
+
+  BrowserTestUtils.removeTab(tab);
+});
+
 // Users should be able to revert the URL, and then if they navigate
 // to another tab, the tab that was reverted should remain reverted.
 add_task(async function revert_and_change_tab() {
