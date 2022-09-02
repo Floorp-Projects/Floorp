@@ -287,6 +287,7 @@ var whitelist = [
 
   // Bug 1788595 - used by Firefox Translations extension
   // see also https://github.com/mozilla/firefox-translations/issues/496
+  { file: "chrome://browser/locale/translation.dtd" },
   { file: "chrome://global/locale/notification.dtd" },
 ];
 
