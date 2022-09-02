@@ -163,6 +163,11 @@ using mozilla::DebugOnly;
 #      define RSP_sig(p) ((p)->uc_mcontext.gregs[3])
 #      define RFP_sig(p) ((p)->uc_mcontext.gregs[22])
 #    endif
+#    if defined(__sun__) && defined(__sparc__)
+#      define PC_sig(p) ((p)->uc_mcontext.gregs[REG_PC])
+#      define FP_sig(p) ((p)->uc_mcontext.gregs[REG_FPRS])
+#      define SP_sig(p) ((p)->uc_mcontext.gregs[REG_SP])
+#    endif
 #  elif defined(__NetBSD__)
 #    define EIP_sig(p) ((p)->uc_mcontext.__gregs[_REG_EIP])
 #    define EBP_sig(p) ((p)->uc_mcontext.__gregs[_REG_EBP])
