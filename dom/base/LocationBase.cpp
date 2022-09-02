@@ -235,13 +235,6 @@ void LocationBase::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
     return;
   }
 
-  if (result == NS_ERROR_MALFORMED_URI) {
-    nsAutoCString url;
-    CopyUTF16toUTF8(aHref, url);
-    aRv.ThrowTypeError<MSG_INVALID_URL>(url);
-    return;
-  }
-
   aRv.Throw(result);
 }
 
