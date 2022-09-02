@@ -283,12 +283,11 @@ StyleSheetEditor.prototype = {
 
   /**
    * A helper function that fetches the source text from the style
-   * sheet.  The text is possibly prettified using prettifyCSS.  This
-   * also sets |this._state.text| to the new text.
+   * sheet.
    *
-   * @return {Promise} a promise that resolves to the new text
+   * This will set |this._state.text| to the new text.
    */
-  async _getSourceTextAndPrettify() {
+  async _fetchSourceText(options = {}) {
     const styleSheetsFront = await this._getStyleSheetsFront();
 
     let longStr = null;
@@ -300,52 +299,50 @@ StyleSheetEditor.prototype = {
       longStr = await styleSheetsFront.getText(this.resourceId);
     }
 
-    let source = await longStr.string();
-    const ruleCount = this.styleSheet.ruleCount;
+    this._state.text = await longStr.string();
+  },
+
+  /**
+   * Attempt to prettify the current text if the corresponding stylesheet is not
+   * an original source. The text will be read from |this._state.text|.
+   *
+   * This will set |this._state.text| to the prettified text if needed.
+   */
+  _prettifySourceTextIfNeeded() {
     if (!this.styleSheet.isOriginalSource) {
-      const { result, mappings } = prettifyCSS(source, ruleCount);
-      source = result;
+      const ruleCount = this.styleSheet.ruleCount;
+      const { result, mappings } = prettifyCSS(this._state.text, ruleCount);
       // Store the list of objects with mappings between CSS token positions from the
       // original source to the prettified source. These will be used when requested to
       // jump to a specific position within the editor.
       this._mappings = mappings;
+      this._state.text = result;
     }
-
-    this._state.text = source;
-    return source;
   },
 
   /**
    * Start fetching the full text source for this editor's sheet.
-   *
-   * @return {Promise}
-   *         A promise that'll resolve with the source text once the source
-   *         has been loaded or reject on unexpected error.
    */
-  fetchSource() {
-    return this._getSourceTextAndPrettify()
-      .then(source => {
-        this.sourceLoaded = true;
-        return source;
-      })
-      .catch(e => {
-        if (this._isDestroyed) {
-          console.warn(
-            "Could not fetch the source for " +
-              this.styleSheet.href +
-              ", the editor was destroyed"
-          );
-          console.error(e);
-        } else {
-          console.error(e);
-          this.emit("error", {
-            key: LOAD_ERROR,
-            append: this.styleSheet.href,
-            level: "warning",
-          });
-          throw e;
-        }
-      });
+  async fetchSource() {
+    try {
+      await this._fetchSourceText();
+      this.sourceLoaded = true;
+    } catch (e) {
+      if (this._isDestroyed) {
+        console.warn(
+          `Could not fetch the source for ${this.styleSheet.href}, the editor was destroyed`
+        );
+        console.error(e);
+      } else {
+        console.error(e);
+        this.emit("error", {
+          key: LOAD_ERROR,
+          append: this.styleSheet.href,
+          level: "warning",
+        });
+        throw e;
+      }
+    }
   },
 
   /**
@@ -406,7 +403,7 @@ StyleSheetEditor.prototype = {
    * Called when the stylesheet text changes.
    * @param {Object} update: The stylesheet resource update packet.
    */
-  onStyleApplied(update) {
+  async onStyleApplied(update) {
     const updateIsFromSyleSheetEditor =
       update?.event?.cause === STYLE_SHEET_UPDATE_CAUSED_BY_STYLE_EDITOR;
 
@@ -417,15 +414,22 @@ StyleSheetEditor.prototype = {
     }
 
     if (this.sourceEditor) {
-      this._getSourceTextAndPrettify().then(newText => {
-        this._justSetText = true;
-        const firstLine = this.sourceEditor.getFirstVisibleLine();
-        const pos = this.sourceEditor.getCursor();
-        this.sourceEditor.setText(newText);
-        this.sourceEditor.setFirstVisibleLine(firstLine);
-        this.sourceEditor.setCursor(pos);
-        this.emit("style-applied");
-      });
+      await this._fetchSourceText();
+
+      // sourceEditor is already loaded, so we can prettify immediately.
+      this._prettifySourceTextIfNeeded();
+
+      // The updated stylesheet text should have been set in this._state.text
+      // by _fetchSourceText and _prettifySourceTextIfNeeded.
+      const sourceText = this._state.text;
+
+      this._justSetText = true;
+      const firstLine = this.sourceEditor.getFirstVisibleLine();
+      const pos = this.sourceEditor.getCursor();
+      this.sourceEditor.setText(sourceText);
+      this.sourceEditor.setFirstVisibleLine(firstLine);
+      this.sourceEditor.setCursor(pos);
+      this.emit("style-applied");
     }
   },
 
@@ -471,6 +475,9 @@ StyleSheetEditor.prototype = {
     }
 
     this._inputElement = inputElement;
+
+    // Attempt to prettify the source before loading the source editor.
+    this._prettifySourceTextIfNeeded();
 
     const walker = await this.getWalker();
     const config = {
