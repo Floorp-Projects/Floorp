@@ -1475,7 +1475,8 @@ set_config("CXX_IS_ICECREAM", cxx_is_icecream)
 # - the linker is picked via the LINKER environment variable per windows.configure,
 #   but ought to be llvm-lld in any case.
 # For macOS:
-# - the linker is lld on local developer builds if the clang used is >= 13 (per LLVM
+# - the linker is lld if the clang used is >= 14 (per LLVM version, not Xcode version).
+# - the linker is also lld on local developer builds if the clang used is >= 13 (per LLVM
 #   version, not Xcode version)
 # - otherwise the linker is ld64, either from XCode on macOS, or from cctools-ports when
 #   cross-compiling.
@@ -1618,10 +1619,12 @@ def select_linker(linker, c_compiler, developer_options, toolchain_flags, target
 
     if (
         linker is None
-        and developer_options
         and target.kernel == "Darwin"
         and c_compiler.type == "clang"
-        and c_compiler.version >= "13.0"
+        and (
+            (developer_options and c_compiler.version >= "13.0")
+            or c_compiler.version >= "14.0"
+        )
     ):
         result = try_linker("lld")
     elif (
