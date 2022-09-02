@@ -17,6 +17,7 @@ XPIDL_SOURCES += [
 ]
 
 TEST_DIRS += ["tests"]
+MARIONETTE_UNIT_MANIFESTS += ["tests/marionette/marionette.ini"]
 
 EXTRA_COMPONENTS += [
     "nsUpdateService.manifest",

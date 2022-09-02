@@ -94,6 +94,26 @@ def slow_coop_handler(request, response):
     )
 
 
+@handlers.handler
+def update_xml_handler(request, response):
+    response.headers.set("Content-Type", "text/xml")
+    mar_digest = (
+        "75cd68e6c98c84c435cd27e353f5b4f6a3f2c50f6802aa9bf62b47e47138757306769fd9befa08793635ee649"
+        "2319253480860b4aa8ed9ee1caaa4c83ebc90b9"
+    )
+    response.content = """
+    <updates>
+        <update type="minor" displayVersion="9999.0" appVersion="9999.0" platformVersion="9999.0"
+                buildID="20220627075547">
+            <patch type="complete" URL="{}://{}/update/complete.mar" size="86612"
+                   hashFunction="sha512" hashValue="{}"/>
+        </update>
+    </updates>
+    """.format(
+        request.url_parts.scheme, request.url_parts.netloc, mar_digest
+    )
+
+
 class NotAliveError(Exception):
     """Occurs when attempting to run a function that requires the HTTPD
     to have been started, and it has not.
@@ -130,6 +150,7 @@ class FixtureServer(object):
             ("GET", "/http_auth", http_auth_handler),
             ("GET", "/slow", slow_loading_handler),
             ("GET", "/slow-coop", slow_coop_handler),
+            ("GET", "/update.xml", update_xml_handler),
         ]
         routes.extend(default_routes.routes)
 
