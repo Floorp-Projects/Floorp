@@ -204,7 +204,7 @@ const DEFAULT_ACTIONS = {
     l10nCommands: ["quickactions-cmd-update", "quickactions-update"],
     label: "quickactions-update",
     isActive: () => !!lazy.BrowserUpdater?.isReadyForRestart,
-    onPick: () => restartBrowser,
+    onPick: restartBrowser,
   },
   viewsource: {
     l10nCommands: ["quickactions-cmd-viewsource", "quickactions-viewsource"],
