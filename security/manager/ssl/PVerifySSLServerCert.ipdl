@@ -19,10 +19,10 @@ child:
   async OnVerifiedSSLServerCertSuccess(ByteArray[] aBuiltCertChain,
                                        uint16_t aCertTransparencyStatus,
                                        uint8_t aEVStatus,
-                                       bool isBuiltCertChainRootBuiltInRoot);
+                                       bool isBuiltCertChainRootBuiltInRoot, bool aMadeOCSPRequests);
 
   async OnVerifiedSSLServerCertFailure(int32_t aFinalError,
-                                       uint32_t aOverridableErrorCategory);
+                                       uint32_t aOverridableErrorCategory, bool aMadeOCSPRequests);
 
   async __delete__();
 };

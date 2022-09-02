@@ -32,7 +32,7 @@ void VerifySSLServerCertParent::OnVerifiedSSLServerCert(
     const nsTArray<ByteArray>& aBuiltCertChain,
     uint16_t aCertificateTransparencyStatus, uint8_t aEVStatus, bool aSucceeded,
     PRErrorCode aFinalError, uint32_t aOverridableErrorCategory,
-    bool aIsBuiltCertChainRootBuiltInRoot) {
+    bool aIsBuiltCertChainRootBuiltInRoot, bool aMadeOCSPRequests) {
   AssertIsOnBackgroundThread();
 
   if (!CanSend()) {
@@ -42,10 +42,10 @@ void VerifySSLServerCertParent::OnVerifiedSSLServerCert(
   if (aSucceeded) {
     Unused << SendOnVerifiedSSLServerCertSuccess(
         aBuiltCertChain, aCertificateTransparencyStatus, aEVStatus,
-        aIsBuiltCertChainRootBuiltInRoot);
+        aIsBuiltCertChainRootBuiltInRoot, aMadeOCSPRequests);
   } else {
-    Unused << SendOnVerifiedSSLServerCertFailure(aFinalError,
-                                                 aOverridableErrorCategory);
+    Unused << SendOnVerifiedSSLServerCertFailure(
+        aFinalError, aOverridableErrorCategory, aMadeOCSPRequests);
   }
   Unused << Send__delete__(this);
 }
@@ -68,8 +68,8 @@ class IPCServerCertVerificationResult final
                 bool aSucceeded, PRErrorCode aFinalError,
                 nsITransportSecurityInfo::OverridableErrorCategory
                     aOverridableErrorCategory,
-                bool aIsBuiltCertChainRootBuiltInRoot,
-                uint32_t aProviderFlags) override;
+                bool aIsBuiltCertChainRootBuiltInRoot, uint32_t aProviderFlags,
+                bool aMadeOCSPRequests) override;
 
  private:
   ~IPCServerCertVerificationResult() = default;
@@ -85,7 +85,8 @@ void IPCServerCertVerificationResult::Dispatch(
     bool aSucceeded, PRErrorCode aFinalError,
     nsITransportSecurityInfo::OverridableErrorCategory
         aOverridableErrorCategory,
-    bool aIsBuiltCertChainRootBuiltInRoot, uint32_t aProviderFlags) {
+    bool aIsBuiltCertChainRootBuiltInRoot, uint32_t aProviderFlags,
+    bool aMadeOCSPRequests) {
   nsTArray<ByteArray> builtCertChain;
   if (aSucceeded) {
     for (auto& cert : aBuiltChain) {
@@ -99,7 +100,7 @@ void IPCServerCertVerificationResult::Dispatch(
           [parent(mParent), builtCertChain{std::move(builtCertChain)},
            aCertificateTransparencyStatus, aEVStatus, aSucceeded, aFinalError,
            aOverridableErrorCategory, aIsBuiltCertChainRootBuiltInRoot,
-           aProviderFlags]() {
+           aMadeOCSPRequests, aProviderFlags]() {
             if (aSucceeded &&
                 !(aProviderFlags & nsISocketProvider::NO_PERMANENT_STORAGE)) {
               nsTArray<nsTArray<uint8_t>> certBytesArray;
@@ -114,7 +115,7 @@ void IPCServerCertVerificationResult::Dispatch(
                 builtCertChain, aCertificateTransparencyStatus,
                 static_cast<uint8_t>(aEVStatus), aSucceeded, aFinalError,
                 static_cast<uint32_t>(aOverridableErrorCategory),
-                aIsBuiltCertChainRootBuiltInRoot);
+                aIsBuiltCertChainRootBuiltInRoot, aMadeOCSPRequests);
           }),
       NS_DISPATCH_NORMAL);
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(nrv));

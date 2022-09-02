@@ -459,7 +459,8 @@ Result CertVerifier::VerifyCert(
     /*optional out*/ KeySizeStatus* keySizeStatus,
     /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo,
     /*optional out*/ CertificateTransparencyInfo* ctInfo,
-    /*optional out*/ bool* isBuiltChainRootBuiltInRoot) {
+    /*optional out*/ bool* isBuiltChainRootBuiltInRoot,
+    /*optional out*/ bool* madeOCSPRequests) {
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("Top of VerifyCert\n"));
 
   MOZ_ASSERT(usage == certificateUsageSSLServer || !(flags & FLAG_MUST_BE_EV));
@@ -495,6 +496,10 @@ Result CertVerifier::VerifyCert(
 
   if (isBuiltChainRootBuiltInRoot) {
     *isBuiltChainRootBuiltInRoot = false;
+  }
+
+  if (madeOCSPRequests) {
+    *madeOCSPRequests = false;
   }
 
   Input certDER;
@@ -547,6 +552,10 @@ Result CertVerifier::VerifyCert(
           trustDomain, certDER, time, EndEntityOrCA::MustBeEndEntity,
           KeyUsage::digitalSignature, KeyPurposeId::id_kp_clientAuth,
           CertPolicyId::anyPolicy, stapledOCSPResponse);
+      if (madeOCSPRequests) {
+        *madeOCSPRequests |=
+            trustDomain.GetOCSPFetchStatus() == OCSPFetchStatus::Fetched;
+      }
       break;
     }
 
@@ -579,6 +588,10 @@ Result CertVerifier::VerifyCert(
             KeyUsage::keyAgreement,      // (EC)DH
             KeyPurposeId::id_kp_serverAuth, evPolicy, stapledOCSPResponse,
             ocspStaplingStatus);
+        if (madeOCSPRequests) {
+          *madeOCSPRequests |=
+              trustDomain.GetOCSPFetchStatus() == OCSPFetchStatus::Fetched;
+        }
         if (rv == Success) {
           rv = VerifyCertificateTransparencyPolicy(
               trustDomain, builtChain, sctsFromTLSInput, time, ctInfo);
@@ -634,6 +647,10 @@ Result CertVerifier::VerifyCert(
             KeyUsage::keyAgreement,      //(EC)DH
             KeyPurposeId::id_kp_serverAuth, CertPolicyId::anyPolicy,
             stapledOCSPResponse, ocspStaplingStatus);
+        if (madeOCSPRequests) {
+          *madeOCSPRequests |=
+              trustDomain.GetOCSPFetchStatus() == OCSPFetchStatus::Fetched;
+        }
         if (rv != Success && !IsFatalError(rv) &&
             rv != Result::ERROR_REVOKED_CERTIFICATE &&
             trustDomain.GetIsErrorDueToDistrustedCAPolicy()) {
@@ -677,6 +694,10 @@ Result CertVerifier::VerifyCert(
       rv = BuildCertChain(trustDomain, certDER, time, EndEntityOrCA::MustBeCA,
                           KeyUsage::keyCertSign, KeyPurposeId::id_kp_serverAuth,
                           CertPolicyId::anyPolicy, stapledOCSPResponse);
+      if (madeOCSPRequests) {
+        *madeOCSPRequests |=
+            trustDomain.GetOCSPFetchStatus() == OCSPFetchStatus::Fetched;
+      }
       break;
     }
 
@@ -697,6 +718,10 @@ Result CertVerifier::VerifyCert(
             trustDomain, certDER, time, EndEntityOrCA::MustBeEndEntity,
             KeyUsage::nonRepudiation, KeyPurposeId::id_kp_emailProtection,
             CertPolicyId::anyPolicy, stapledOCSPResponse);
+      }
+      if (madeOCSPRequests) {
+        *madeOCSPRequests |=
+            trustDomain.GetOCSPFetchStatus() == OCSPFetchStatus::Fetched;
       }
       break;
     }
@@ -723,6 +748,10 @@ Result CertVerifier::VerifyCert(
                             KeyUsage::keyAgreement,  // ECDH/DH
                             KeyPurposeId::id_kp_emailProtection,
                             CertPolicyId::anyPolicy, stapledOCSPResponse);
+      }
+      if (madeOCSPRequests) {
+        *madeOCSPRequests |=
+            trustDomain.GetOCSPFetchStatus() == OCSPFetchStatus::Fetched;
       }
       break;
     }
@@ -785,7 +814,8 @@ Result CertVerifier::VerifySSLServerCert(
     /*optional out*/ KeySizeStatus* keySizeStatus,
     /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo,
     /*optional out*/ CertificateTransparencyInfo* ctInfo,
-    /*optional out*/ bool* isBuiltChainRootBuiltInRoot) {
+    /*optional out*/ bool* isBuiltChainRootBuiltInRoot,
+    /*optional out*/ bool* madeOCSPRequests) {
   // XXX: MOZ_ASSERT(pinarg);
   MOZ_ASSERT(!hostname.IsEmpty());
 
@@ -815,7 +845,7 @@ Result CertVerifier::VerifySSLServerCert(
                   extraCertificates, stapledOCSPResponse, sctsFromTLS,
                   originAttributes, evStatus, ocspStaplingStatus, keySizeStatus,
                   pinningTelemetryInfo, ctInfo,
-                  &isBuiltChainRootBuiltInRootLocal);
+                  &isBuiltChainRootBuiltInRootLocal, madeOCSPRequests);
   if (rv != Success) {
     // we don't use the certificate for path building, so this parameter doesn't
     // matter

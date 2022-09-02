@@ -52,7 +52,7 @@ class BaseSSLServerCertVerificationResult {
                         nsITransportSecurityInfo::OverridableErrorCategory
                             aOverridableErrorCategory,
                         bool aIsBuiltCertChainRootBuiltInRoot,
-                        uint32_t aProviderFlags) = 0;
+                        uint32_t aProviderFlags, bool aMadeOCSPRequests) = 0;
 };
 
 // Dispatched to the STS thread to notify the infoObject of the verification
@@ -76,8 +76,8 @@ class SSLServerCertVerificationResult final
                 bool aSucceeded, PRErrorCode aFinalError,
                 nsITransportSecurityInfo::OverridableErrorCategory
                     aOverridableErrorCategory,
-                bool aIsBuiltCertChainRootBuiltInRoot,
-                uint32_t aProviderFlags) override;
+                bool aIsBuiltCertChainRootBuiltInRoot, uint32_t aProviderFlags,
+                bool aMadeOCSPRequests) override;
 
  private:
   ~SSLServerCertVerificationResult() = default;
@@ -92,6 +92,7 @@ class SSLServerCertVerificationResult final
   nsITransportSecurityInfo::OverridableErrorCategory mOverridableErrorCategory;
   bool mIsBuiltCertChainRootBuiltInRoot;
   uint32_t mProviderFlags;
+  bool mMadeOCSPRequests;
 };
 
 class SSLServerCertVerificationJob : public Runnable {
