@@ -3120,6 +3120,17 @@
     "n_values": 16,
     "description": "Negotiated SSL Version (1=tls1, 2=tls1.1, 3=tls1.2, 4=tls1.3)"
   },
+  "SSL_HANDSHAKE_PRIVACY": {
+    "record_in_processes": ["main", "socket"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1788290],
+    "releaseChannelCollection": "opt-out",
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 16,
+    "description": "0th bit - TLS13 used? 1th bit - Revocation Privacy, 2nd bit - DNS Privacy, 3rd bit - ECH Privacy"
+  },
   "SSL_HANDSHAKE_RESULT": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
