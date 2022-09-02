@@ -297,6 +297,10 @@ bool VideoSink::IsPlaying() const {
   return mAudioSink->IsPlaying();
 }
 
+const AudioDeviceInfo* VideoSink::AudioDevice() const {
+  return mAudioSink->AudioDevice();
+}
+
 void VideoSink::Shutdown() {
   AssertOwnerThread();
   MOZ_ASSERT(!mAudioSink->IsStarted(), "must be called after playback stops.");

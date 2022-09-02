@@ -451,7 +451,8 @@ DecodedStream::DecodedStream(
     nsMainThreadPtrHandle<SharedDummyTrack> aDummyTrack,
     CopyableTArray<RefPtr<ProcessedMediaTrack>> aOutputTracks, double aVolume,
     double aPlaybackRate, bool aPreservesPitch,
-    MediaQueue<AudioData>& aAudioQueue, MediaQueue<VideoData>& aVideoQueue)
+    MediaQueue<AudioData>& aAudioQueue, MediaQueue<VideoData>& aVideoQueue,
+    RefPtr<AudioDeviceInfo> aAudioDevice)
     : mOwnerThread(aStateMachine->OwnerThread()),
       mDummyTrack(std::move(aDummyTrack)),
       mWatchManager(this, mOwnerThread),
@@ -464,7 +465,8 @@ DecodedStream::DecodedStream(
       mPlaybackRate(aPlaybackRate),
       mPreservesPitch(aPreservesPitch),
       mAudioQueue(aAudioQueue),
-      mVideoQueue(aVideoQueue) {}
+      mVideoQueue(aVideoQueue),
+      mAudioDevice(std::move(aAudioDevice)) {}
 
 DecodedStream::~DecodedStream() {
   MOZ_ASSERT(mStartTime.isNothing(), "playback should've ended.");

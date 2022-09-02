@@ -120,7 +120,7 @@ class MediaSink {
 
   // The audio output device this MediaSink is playing audio data to. The
   // default device is used if this returns null.
-  virtual const AudioDeviceInfo* AudioDevice() { return nullptr; }
+  virtual const AudioDeviceInfo* AudioDevice() const = 0;
 
   // Called on the state machine thread to shut down the sink. All resources
   // allocated by this sink should be released.

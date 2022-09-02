@@ -34,11 +34,8 @@ static const int64_t AUDIO_FUZZ_FRAMES = 1;
 using media::TimeUnit;
 
 AudioSink::AudioSink(AbstractThread* aThread,
-                     MediaQueue<AudioData>& aAudioQueue, const AudioInfo& aInfo,
-                     AudioDeviceInfo* aAudioDevice)
-    : mInfo(aInfo),
-      mAudioDevice(aAudioDevice),
-      mPlaying(true),
+                     MediaQueue<AudioData>& aAudioQueue, const AudioInfo& aInfo)
+    : mPlaying(true),
       mWritten(0),
       mErrored(false),
       mOwnerThread(aThread),
@@ -90,7 +87,7 @@ AudioSink::~AudioSink() {
 }
 
 nsresult AudioSink::InitializeAudioStream(
-    const PlaybackParams& aParams,
+    const PlaybackParams& aParams, const RefPtr<AudioDeviceInfo>& aAudioDevice,
     AudioSink::InitializationType aInitializationType) {
   if (aInitializationType == AudioSink::InitializationType::UNMUTING) {
     // Consider the stream to be audible immediately, before initialization
@@ -118,7 +115,7 @@ nsresult AudioSink::InitializeAudioStream(
   MOZ_ASSERT(!mAudioStream);
   mAudioStream =
       new AudioStream(*this, mOutputRate, mOutputChannels, channelMap);
-  nsresult rv = mAudioStream->Init(mAudioDevice);
+  nsresult rv = mAudioStream->Init(aAudioDevice);
   if (NS_FAILED(rv)) {
     mAudioStream->Shutdown();
     mAudioStream = nullptr;
