@@ -4190,7 +4190,18 @@ var SessionStoreInternal = {
       tabMap.set(tab, tabData);
       tabsData.push(tabData);
     }
-    winData.selected = tabbrowser.tabbox.selectedIndex + 1;
+
+    // The FxView tab isn't recorded in the session state and because of this the
+    // selected tab can be off by 1 when we restore the previous state.
+    // To open the correct selected tab on restore we adjust the selected tab before saving.
+    let selectedIndex = tabbrowser.tabbox.selectedIndex + 1;
+    if (
+      aWindow.FirefoxViewHandler.tab &&
+      !aWindow.FirefoxViewHandler.tab.selected
+    ) {
+      selectedIndex -= 1;
+    }
+    winData.selected = selectedIndex;
 
     this._updateWindowFeatures(aWindow);
 
