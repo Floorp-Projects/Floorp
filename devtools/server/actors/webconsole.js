@@ -11,6 +11,7 @@ const { webconsoleSpec } = require("devtools/shared/specs/webconsole");
 
 const Services = require("Services");
 const { Cc, Ci, Cu } = require("chrome");
+const ChromeUtils = require("ChromeUtils");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 const { ThreadActor } = require("devtools/server/actors/thread");
 const { ObjectActor } = require("devtools/server/actors/object");
@@ -992,11 +993,11 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    *         `resultID` field.
    */
   async evaluateJSAsync(request) {
-    const startTime = Date.now();
-    // Use Date instead of UUID as this code is used by workers, which
+    const startTime = ChromeUtils.dateNow();
+    // Use  a timestamp instead of a UUID as this code is used by workers, which
     // don't have access to the UUID XPCOM component.
     // Also use a counter in order to prevent mixing up response when calling
-    // evaluateJSAsync during the same millisecond.
+    // at the exact same time.
     const resultID = startTime + "-" + this._evalCounter++;
 
     // Execute the evaluation in the next event loop in order to immediately
@@ -1010,12 +1011,13 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
         let response = await this.evaluateJS(request);
         // Wait for any potential returned Promise.
         response = await this._maybeWaitForResponseResult(response);
-        // Set the timestamp only now, so any messages logged in the expression will come
-        // before the result. Add an extra millisecond so the result has a different timestamp
-        // than the console message it might have emitted (unlike the evaluation result,
-        // console api messages are throttled before being handled by the webconsole client,
+
+        // Set the timestamp only now, so any messages logged in the expression (e.g. console.log)
+        // can be appended before the result message (unlike the evaluation result, other
+        // console resources are throttled before being handled by the webconsole client,
         // which might cause some ordering issue).
-        response.timestamp = Date.now() + 1;
+        // Use ChromeUtils.dateNow() as it gives us a higher precision than Date.now().
+        response.timestamp = ChromeUtils.dateNow();
         // Finally, emit an unsolicited evaluationResult packet with the evaluation result.
         this.emit("evaluationResult", {
           type: "evaluationResult",
