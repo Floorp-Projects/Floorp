@@ -51,7 +51,7 @@ class PlatformMessageWatcher extends nsIConsoleListenerWatcher {
   buildResource(targetActor, message) {
     return {
       message: createStringGrip(targetActor, message.message),
-      timeStamp: message.timeStamp,
+      timeStamp: message.microSecondTimeStamp / 1000,
       resourceType: PLATFORM_MESSAGE,
     };
   }

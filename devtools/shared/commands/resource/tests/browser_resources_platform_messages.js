@@ -60,9 +60,12 @@ async function testPlatformMessagesResources() {
         `Received the expected «${resource.message}» message, in the expected order`
       );
 
+      // timeStamp are the result of a number in microsecond divided by 1000.
+      // so we can't expect a precise number of decimals, or even if there would
+      // be decimals at all.
       ok(
-        resource.timeStamp.toString().match(/^\d+$/),
-        "The resource has a timeStamp property"
+        resource.timeStamp.toString().match(/^\d+(\.\d{1,3})?$/),
+        `The resource has a timeStamp property ${resource.timeStamp}`
       );
 
       const isCachedMessage = receivedMessages.length <= cachedMessages.length;
