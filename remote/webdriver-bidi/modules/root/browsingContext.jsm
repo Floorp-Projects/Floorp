@@ -551,14 +551,6 @@ class BrowsingContextModule extends Module {
     }
   }
 
-  _subscribeEvent(params) {
-    return this.addEventSessionData("browsingContext", params.event);
-  }
-
-  _unsubscribeEvent(params) {
-    return this.removeEventSessionData("browsingContext", params.event);
-  }
-
   static get supportedEvents() {
     return ["browsingContext.contextCreated"];
   }

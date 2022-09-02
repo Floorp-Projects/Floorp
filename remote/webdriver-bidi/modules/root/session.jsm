@@ -91,16 +91,7 @@ class SessionModule extends Module {
         this.#globalEventSet.add(event);
         this.messageHandler.on(event, this.#onMessageHandlerEvent);
 
-        return this.messageHandler.handleCommand({
-          moduleName,
-          commandName: "_subscribeEvent",
-          params: {
-            event,
-          },
-          destination: {
-            type: lazy.RootMessageHandler.type,
-          },
-        });
+        return this.addEventSessionData(moduleName, event);
       })
     );
   }
@@ -148,23 +139,14 @@ class SessionModule extends Module {
         this.#globalEventSet.delete(event);
         this.messageHandler.off(event, this.#onMessageHandlerEvent);
 
-        return this.messageHandler.handleCommand({
-          moduleName,
-          commandName: "_unsubscribeEvent",
-          params: {
-            event,
-          },
-          destination: {
-            type: lazy.RootMessageHandler.type,
-          },
-        });
+        return this.removeEventSessionData(moduleName, event);
       })
     );
   }
 
   #assertModuleSupportsEventSubscription(moduleName) {
     const rootModuleClass = this.#getRootModuleClass(moduleName);
-    const supportsEvents = rootModuleClass?.supportsCommand("_subscribeEvent");
+    const supportsEvents = rootModuleClass?.supportedEvents().length > 0;
     if (!supportsEvents) {
       throw new lazy.error.InvalidArgumentError(
         `Module ${moduleName} does not support event subscriptions`

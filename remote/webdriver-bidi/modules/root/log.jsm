@@ -13,18 +13,6 @@ const { Module } = ChromeUtils.import(
 class LogModule extends Module {
   destroy() {}
 
-  /**
-   * Internal commands
-   */
-
-  _subscribeEvent(params) {
-    return this.addEventSessionData("log", params.event);
-  }
-
-  _unsubscribeEvent(params) {
-    return this.removeEventSessionData("log", params.event);
-  }
-
   static get supportedEvents() {
     return ["log.entryAdded"];
   }
