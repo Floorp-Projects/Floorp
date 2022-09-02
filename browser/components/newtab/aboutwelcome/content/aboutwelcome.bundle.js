@@ -1027,7 +1027,19 @@ function Colorways(props) {
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     setState(computeColorWay(props.activeTheme, systemVariations));
     setVariationIndex(computeVariationIndex(props.activeTheme, systemVariations, variations, defaultVariationIndex)); // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.activeTheme]);
+  }, [props.activeTheme]); //select a random colorway
+
+  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    //We don't want the default theme to be selected
+    const randomIndex = Math.floor(Math.random() * (colorways.length - 1)) + 1;
+    const randomColorwayId = colorways[randomIndex].id;
+    const value = `${randomColorwayId}-${variations[variationIndex]}`;
+    props.handleAction({
+      currentTarget: {
+        value
+      }
+    }); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "tiles-theme-container"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("fieldset", {
