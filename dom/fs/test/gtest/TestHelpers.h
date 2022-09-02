@@ -13,27 +13,21 @@
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/ErrorNames.h"
 
-namespace mozilla::dom::fs::test::gtest::detail {
-constexpr nsresult ToNSError(nsresult aError) { return aError; }
-
-inline nsresult ToNSError(const QMResult& aError) { return aError.NSResult(); }
-}  // namespace mozilla::dom::fs::test::gtest::detail
-
 #define ASSERT_NSEQ(lhs, rhs) \
   ASSERT_STREQ(GetStaticErrorName((lhs)), GetStaticErrorName((rhs)))
 
-#define TEST_TRY_UNWRAP_META(tempVar, target, expr)                       \
-  auto MOZ_REMOVE_PAREN(tempVar) = (expr);                                \
-  ASSERT_TRUE(MOZ_REMOVE_PAREN(tempVar).isOk())                           \
-  << GetStaticErrorName(mozilla::dom::fs::test::gtest::detail::ToNSError( \
-      MOZ_REMOVE_PAREN(tempVar).unwrapErr()));                            \
+#define TEST_TRY_UNWRAP_META(tempVar, target, expr)                \
+  auto MOZ_REMOVE_PAREN(tempVar) = (expr);                         \
+  ASSERT_TRUE(MOZ_REMOVE_PAREN(tempVar).isOk())                    \
+  << GetStaticErrorName(                                           \
+      mozilla::ToNSResult(MOZ_REMOVE_PAREN(tempVar).unwrapErr())); \
   MOZ_REMOVE_PAREN(target) = MOZ_REMOVE_PAREN(tempVar).unwrap();
 
-#define TEST_TRY_UNWRAP_ERR_META(tempVar, target, expr)                        \
-  auto MOZ_REMOVE_PAREN(tempVar) = (expr);                                     \
-  ASSERT_TRUE(MOZ_REMOVE_PAREN(tempVar).isErr());                              \
-  MOZ_REMOVE_PAREN(target) = mozilla::dom::fs::test::gtest::detail::ToNSError( \
-      MOZ_REMOVE_PAREN(tempVar).unwrapErr());
+#define TEST_TRY_UNWRAP_ERR_META(tempVar, target, expr) \
+  auto MOZ_REMOVE_PAREN(tempVar) = (expr);              \
+  ASSERT_TRUE(MOZ_REMOVE_PAREN(tempVar).isErr());       \
+  MOZ_REMOVE_PAREN(target) =                            \
+      mozilla::ToNSResult(MOZ_REMOVE_PAREN(tempVar).unwrapErr());
 
 #define TEST_TRY_UNWRAP(target, expr) \
   TEST_TRY_UNWRAP_META(MOZ_UNIQUE_VAR(testVar), target, expr)
