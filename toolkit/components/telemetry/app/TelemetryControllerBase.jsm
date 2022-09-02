@@ -93,7 +93,13 @@ var TelemetryControllerBase = Object.freeze({
   setTelemetryRecordingFlags() {
     // Enable extended Telemetry on pre-release channels and disable it
     // on Release/ESR.
-    let prereleaseChannels = ["nightly", "aurora", "beta"];
+    let prereleaseChannels = [
+      "nightly",
+      "nightly-autoland",
+      "nightly-try",
+      "aurora",
+      "beta",
+    ];
     if (!AppConstants.MOZILLA_OFFICIAL) {
       // Turn extended telemetry for local developer builds.
       prereleaseChannels.push("default");
