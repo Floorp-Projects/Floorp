@@ -54,7 +54,7 @@ IPCResult FileSystemManagerParent::RecvGetDirectoryHandleMsg(
   MOZ_ASSERT(mDataManager);
 
   auto reportError = [&aResolver](const QMResult& aRv) {
-    FileSystemGetHandleResponse response(aRv.NSResult());
+    FileSystemGetHandleResponse response(ToNSResult(aRv));
     aResolver(response);
   };
 
@@ -77,7 +77,7 @@ IPCResult FileSystemManagerParent::RecvGetFileHandleMsg(
   MOZ_ASSERT(mDataManager);
 
   auto reportError = [&aResolver](const QMResult& aRv) {
-    FileSystemGetHandleResponse response(aRv.NSResult());
+    FileSystemGetHandleResponse response(ToNSResult(aRv));
     aResolver(response);
   };
 
@@ -116,7 +116,7 @@ IPCResult FileSystemManagerParent::RecvResolveMsg(
   }
 
   auto reportError = [&aResolver](const QMResult& aRv) {
-    FileSystemResolveResponse response(aRv.NSResult());
+    FileSystemResolveResponse response(ToNSResult(aRv));
     aResolver(response);
   };
 
@@ -153,7 +153,7 @@ IPCResult FileSystemManagerParent::RecvRemoveEntryMsg(
   MOZ_ASSERT(mDataManager);
 
   auto reportError = [&aResolver](const QMResult& aRv) {
-    FileSystemRemoveEntryResponse response(aRv.NSResult());
+    FileSystemRemoveEntryResponse response(ToNSResult(aRv));
     aResolver(response);
   };
 

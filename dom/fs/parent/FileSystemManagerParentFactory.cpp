@@ -60,7 +60,7 @@ mozilla::ipc::IPCResult CreateFileSystemManagerParent(
                           dataManager) mutable {
             QM_TRY_UNWRAP(
                 fs::EntryId rootId, fs::data::GetRootHandle(origin), QM_VOID,
-                [aResolver](const auto& aRv) { aResolver(aRv.NSResult()); });
+                [aResolver](const auto& aRv) { aResolver(ToNSResult(aRv)); });
 
             InvokeAsync(
                 dataManager->MutableIOTargetPtr(), __func__,

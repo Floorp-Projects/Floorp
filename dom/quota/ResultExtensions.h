@@ -49,7 +49,12 @@ inline Result<Ok, E> ToResult(bool aValue) {
   return Err(ResultTypeTraits<E>::From(NS_ERROR_FAILURE));
 }
 
+constexpr nsresult ToNSResult(nsresult aError) { return aError; }
+
 #ifdef QM_ERROR_STACKS_ENABLED
+
+inline nsresult ToNSResult(const QMResult& aError) { return aError.NSResult(); }
+
 // Allow QMResult errors to use existing stack id and to increase the frame id
 // during error propagation.
 template <>
