@@ -64,6 +64,8 @@ interface nsIPrincipal;
 
 #define kCustomTypesMime "application/x-moz-custom-clipdata"
 
+#define kPDFJSMime "application/pdfjs"
+
 %}
 
 
