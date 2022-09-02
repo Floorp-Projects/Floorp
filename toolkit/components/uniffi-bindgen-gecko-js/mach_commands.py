@@ -21,6 +21,7 @@ FIXTURE_UDL_FILES = [
     "third_party/rust/uniffi-example-rondpoint/src/rondpoint.udl",
     "third_party/rust/uniffi-example-sprites/src/sprites.udl",
     "third_party/rust/uniffi-example-todolist/src/todolist.udl",
+    "toolkit/components/uniffi-example-custom-types/src/custom-types.udl",
 ]
 CPP_PATH = "toolkit/components/uniffi-js/UniFFIGeneratedScaffolding.cpp"
 JS_DIR = "toolkit/components/uniffi-bindgen-gecko-js/components/generated"

@@ -2178,6 +2178,7 @@ dependencies = [
  "unic-langid",
  "unic-langid-ffi",
  "uniffi-example-arithmetic",
+ "uniffi-example-custom-types",
  "uniffi-example-geometry",
  "uniffi-example-rondpoint",
  "uniffi-example-sprites",
@@ -5657,6 +5658,19 @@ dependencies = [
  "uniffi",
  "uniffi_build",
  "uniffi_macros",
+]
+
+[[package]]
+name = "uniffi-example-custom-types"
+version = "0.19.6"
+dependencies = [
+ "anyhow",
+ "bytes 1.2.1",
+ "serde_json",
+ "uniffi",
+ "uniffi_build",
+ "uniffi_macros",
+ "url",
 ]
 
 [[package]]
