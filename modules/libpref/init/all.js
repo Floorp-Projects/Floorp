@@ -2078,7 +2078,7 @@ pref("extensions.blocklist.addonItemURL", "https://addons.mozilla.org/%LOCALE%/%
 // blocking them.
 pref("extensions.blocklist.level", 2);
 // Whether event pages should be enabled for "manifest_version: 2" extensions.
-pref("extensions.eventPages.enabled", false);
+pref("extensions.eventPages.enabled", true);
 // Whether MV3 restrictions for actions popup urls should be extended to MV2 extensions
 // (only allowing same extension urls to be used as action popup urls).
 pref("extensions.manifestV2.actionsPopupURLRestricted", false);
