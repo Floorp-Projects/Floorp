@@ -10,6 +10,9 @@ const { BuiltInThemes } = ChromeUtils.import(
 const { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
+const { NimbusFeatures } = ChromeUtils.import(
+  "resource://nimbus/ExperimentAPI.jsm"
+);
 
 class ColorwaysCard extends HTMLElement {
   constructor() {
@@ -41,7 +44,9 @@ class ColorwaysCard extends HTMLElement {
     this.noCollectionTemplate = this.querySelector(
       "#colorways-no-collection-template"
     );
-    const colorwaysCollection = BuiltInThemes.findActiveColorwayCollection();
+    const colorwaysCollection =
+      NimbusFeatures.majorRelease2022.getVariable("colorwayCloset") &&
+      BuiltInThemes.findActiveColorwayCollection();
     this.container.classList.toggle("no-collection", !colorwaysCollection);
     this.container.classList.toggle("content-container", colorwaysCollection);
     const template = colorwaysCollection

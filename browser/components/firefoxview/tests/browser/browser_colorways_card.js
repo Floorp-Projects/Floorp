@@ -138,6 +138,35 @@ add_task(async function no_collection_test() {
   }
 });
 
+add_task(async function colorway_closet_disabled() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.theme.colorway-closet", false]],
+  });
+  try {
+    await BrowserTestUtils.withNewTab(
+      {
+        gBrowser,
+        url: "about:firefoxview",
+      },
+      async browser => {
+        const { document } = browser.contentWindow;
+        const { noCollectionNotice, description } = getTestElements(document);
+        ok(
+          BrowserTestUtils.is_visible(noCollectionNotice),
+          "No Active Colorway Collection Notice should be visible when Colorway Closet is disabled"
+        );
+        is(
+          description,
+          null,
+          "Colorway description should be hidden when Colorway Closet is disabled"
+        );
+      }
+    );
+  } finally {
+    await SpecialPowers.popPrefEnv();
+  }
+});
+
 add_task(async function no_active_colorway_test() {
   // Set to default theme to unapply any enabled colorways
   const theme = await AddonManager.getAddonByID("default-theme@mozilla.org");
