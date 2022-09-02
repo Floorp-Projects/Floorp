@@ -941,6 +941,12 @@ bool WebGLContext::PresentInto(gl::SwapChain& swapChain) {
 #ifdef DEBUG
     if (!mOptions.alpha) {
       gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, destFb);
+      gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
+      if (IsWebGL2()) {
+        gl->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, 0);
+        gl->fPixelStorei(LOCAL_GL_PACK_SKIP_PIXELS, 0);
+        gl->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, 0);
+      }
       uint32_t pixel = 0xffbadbad;
       gl->fReadPixels(0, 0, 1, 1, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE,
                       &pixel);
