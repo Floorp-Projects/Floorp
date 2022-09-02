@@ -173,11 +173,6 @@ loader.lazyGetter(this, "domNodeConstants", () => {
   return require("devtools/shared/dom-node-constants");
 });
 
-loader.lazyGetter(this, "DEBUG_TARGET_TYPES", () => {
-  return require("devtools/client/shared/remote-debugging/constants")
-    .DEBUG_TARGET_TYPES;
-});
-
 loader.lazyRequireGetter(
   this,
   "NodeFront",
@@ -1323,11 +1318,7 @@ Toolbox.prototype = {
 
   _getDebugTargetData() {
     const url = new URL(this.win.location);
-    const searchParams = new this.win.URLSearchParams(url.search);
-
-    const targetType = searchParams.get("type") || DEBUG_TARGET_TYPES.TAB;
-
-    const remoteId = searchParams.get("remoteId");
+    const remoteId = url.searchParams.get("remoteId");
     const runtimeInfo = remoteClientManager.getRuntimeInfoByRemoteId(remoteId);
     const connectionType = remoteClientManager.getConnectionTypeByRemoteId(
       remoteId
@@ -1336,7 +1327,7 @@ Toolbox.prototype = {
     return {
       connectionType,
       runtimeInfo,
-      targetType,
+      descriptorType: this.descriptorFront.descriptorType,
     };
   },
 
