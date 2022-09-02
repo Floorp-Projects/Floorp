@@ -47,3 +47,14 @@
   color: var(--theme-comment);
   margin-inline-start: 4px;
 }
+
+@media (prefers-contrast) {
+  .chrome-debug-toolbar {
+    background-color: Window;
+    color: WindowText;
+  }
+
+  .mode_sublabel {
+    color: GrayText;
+  }
+}
