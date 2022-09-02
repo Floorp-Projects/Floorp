@@ -1767,7 +1767,7 @@ void MaybeLogBlockShutdownDiagnostics(ContentParent* aSelf, const char* aMsg,
 #if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
   if (aSelf->IsBlockingShutdown()) {
     nsAutoCString logmsg;
-    logmsg.AppendPrintf("ContentParent: id=%p pid=%d - ", aSelf, aSelf->Pid());
+    logmsg.AppendPrintf("ContentParent: id=%p - ", aSelf);
     logmsg.Append(aMsg);
     NS_DebugBreak(NS_DEBUG_WARNING, logmsg.get(), nullptr, aFile, aLine);
   }
