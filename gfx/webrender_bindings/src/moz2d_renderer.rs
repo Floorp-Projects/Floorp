@@ -12,6 +12,7 @@
 use bindings::{
     gecko_profiler_end_marker, gecko_profiler_start_marker, wr_moz2d_render_cb, ArcVecU8, ByteSlice, MutByteSlice,
 };
+use gecko_profiler::gecko_profiler_label;
 use rayon::prelude::*;
 use rayon::ThreadPool;
 use webrender::api::units::{BlobDirtyRect, BlobToDeviceTranslation, DeviceIntRect};
@@ -531,6 +532,7 @@ impl AsyncBlobImageRasterizer for Moz2dBlobRasterizer {
         low_priority: bool,
     ) -> Vec<(BlobImageRequest, BlobImageResult)> {
         // All we do here is spin up our workers to callback into gecko to replay the drawing commands.
+        gecko_profiler_label!(Graphics, Rasterization);
         let _marker = GeckoProfilerMarker::new("BlobRasterization");
 
         let requests: Vec<Job> = requests
@@ -596,6 +598,7 @@ fn autoreleasepool<T, F: FnOnce() -> T>(f: F) -> T {
 }
 
 fn rasterize_blob(job: Job) -> (BlobImageRequest, BlobImageResult) {
+    gecko_profiler_label!(Graphics, Rasterization);
     let descriptor = job.descriptor;
     let buf_size = (descriptor.rect.area() * descriptor.format.bytes_per_pixel()) as usize;
 
