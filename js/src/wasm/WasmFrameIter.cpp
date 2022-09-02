@@ -1622,6 +1622,8 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native array.new (in wasm)";
     case SymbolicAddress::ArrayNewData:
       return "call to native array.new_data function";
+    case SymbolicAddress::ArrayNewElem:
+      return "call to native array.new_elem function";
     case SymbolicAddress::RefTest:
       return "call to native ref.test (in wasm)";
     case SymbolicAddress::InlineTypedObjectClass:

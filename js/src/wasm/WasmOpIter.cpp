@@ -316,6 +316,7 @@ OpKind wasm::Classify(OpBytes op) {
         case GcOp::ArrayNewDefault:
           WASM_GC_OP(OpKind::ArrayNewDefault);
         case GcOp::ArrayNewData:
+        case GcOp::ArrayNewElem:
           WASM_GC_OP(OpKind::ArrayNewData);
         case GcOp::ArrayGet:
         case GcOp::ArrayGetS:

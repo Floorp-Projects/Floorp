@@ -6983,6 +6983,28 @@ bool BaseCompiler::emitArrayNewData() {
   return emitInstanceCall(lineOrBytecode, SASigArrayNewData);
 }
 
+bool BaseCompiler::emitArrayNewElem() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
+  uint32_t typeIndex, segIndex;
+  Nothing nothing;
+  if (!iter_.readArrayNewElem(&typeIndex, &segIndex, &nothing, &nothing)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  emitGcCanon(typeIndex);
+  pushI32(int32_t(segIndex));
+
+  // The call removes 4 items from the stack: the segment element offset and
+  // number of elements (operands to array.new_elem), and the type index and
+  // seg index as pushed above.
+  return emitInstanceCall(lineOrBytecode, SASigArrayNewElem);
+}
+
 bool BaseCompiler::emitArrayGet(FieldExtension extension) {
   uint32_t typeIndex;
   Nothing nothing;
@@ -9340,6 +9362,8 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitArrayNewDefault());
           case uint32_t(GcOp::ArrayNewData):
             CHECK_NEXT(emitArrayNewData());
+          case uint32_t(GcOp::ArrayNewElem):
+            CHECK_NEXT(emitArrayNewElem());
           case uint32_t(GcOp::ArrayGet):
             CHECK_NEXT(emitArrayGet(FieldExtension::None));
           case uint32_t(GcOp::ArrayGetS):

@@ -295,6 +295,12 @@ const SymbolicAddressSignature SASigArrayNewData = {
     _FailOnNullPtr,
     5,
     {_PTR, _I32, _I32, _RoN, _I32, _END}};
+const SymbolicAddressSignature SASigArrayNewElem = {
+    SymbolicAddress::ArrayNewElem,
+    _RoN,
+    _FailOnNullPtr,
+    5,
+    {_PTR, _I32, _I32, _RoN, _I32, _END}};
 const SymbolicAddressSignature SASigRefTest = {
     SymbolicAddress::RefTest, _I32, _Infallible, 3, {_PTR, _RoN, _RoN, _END}};
 
@@ -1274,6 +1280,10 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_General_GeneralInt32Int32GeneralInt32;
       MOZ_ASSERT(*abiType == ToABIType(SASigArrayNewData));
       return FuncCast(Instance::arrayNewData, *abiType);
+    case SymbolicAddress::ArrayNewElem:
+      *abiType = Args_General_GeneralInt32Int32GeneralInt32;
+      MOZ_ASSERT(*abiType == ToABIType(SASigArrayNewElem));
+      return FuncCast(Instance::arrayNewElem, *abiType);
 
     case SymbolicAddress::RefTest:
       *abiType = Args_Int32_GeneralGeneralGeneral;
@@ -1461,6 +1471,7 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::ThrowException:
     case SymbolicAddress::ArrayNew:
     case SymbolicAddress::ArrayNewData:
+    case SymbolicAddress::ArrayNewElem:
     case SymbolicAddress::RefTest:
 #define OP(op, export, sa_name, abitype, entry, idx) \
   case SymbolicAddress::sa_name:

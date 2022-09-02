@@ -1279,6 +1279,97 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   return objOTO;
 }
 
+// This is almost identical to ::arrayNewData, apart from the final part that
+// actually copies the data.  It creates an (OutlineTypedObject) array
+// containg `numElements` of type described by `arrayDescr`.  Initialises it
+// with data copied from the element segment whose index is `segIndex`,
+// starting at element number `segElemIndex` in the segment.  Traps if the
+// segment doesn't hold enough elements to fill the array.
+/* static */ void* Instance::arrayNewElem(Instance* instance,
+                                          uint32_t segElemIndex,
+                                          uint32_t numElements,
+                                          void* arrayDescr, uint32_t segIndex) {
+  MOZ_ASSERT(SASigArrayNewElem.failureMode == FailureMode::FailOnNullPtr);
+  JSContext* cx = instance->cx();
+
+  // Check that the element segment is valid for use.
+  MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveElemSegments_.length(),
+                     "ensured by validation");
+  const ElemSegment* seg = instance->passiveElemSegments_[segIndex];
+
+  // As with ::arrayNewData, if `seg` is nullptr then we can only safely copy
+  // zero elements from it.
+  if (!seg && (numElements != 0 || segElemIndex != 0)) {
+    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    return nullptr;
+  }
+  // At this point, if `seg` is null then `numElements` and `segElemIndex`
+  // are both zero.
+
+  Rooted<RttValue*> rttValue(cx, (RttValue*)arrayDescr);
+  MOZ_ASSERT(rttValue);
+  // The element segment is an array of uint32_t indicating function indices,
+  // which we'll have to dereference (to produce real function pointers)
+  // before parking them in the array.  Hence each array element must be a
+  // machine word.
+  MOZ_RELEASE_ASSERT(rttValue->typeDef().arrayType().elementType_.size() ==
+                     sizeof(void*));
+
+  Rooted<TypedObject*> objTO(
+      cx, TypedObject::createArray(cx, rttValue, numElements));
+  if (!objTO) {
+    // TypedObject::createArray will have reported OOM.
+    return nullptr;
+  }
+  MOZ_RELEASE_ASSERT(objTO->is<OutlineTypedObject>());
+
+  Rooted<OutlineTypedObject*> objOTO(
+      cx, static_cast<OutlineTypedObject*>(objTO.get()));
+  MOZ_ASSERT(objOTO->numElements() == numElements);
+
+  if (!seg) {
+    // A zero-length array was requested and has been created, so we're done.
+    return objOTO;
+  }
+
+  // Range-check the copy.  As in ::arrayNewData, compute the index of the
+  // last element to copy, plus one.
+  CheckedUint32 lastIndexPlus1 =
+      CheckedUint32(segElemIndex) + CheckedUint32(numElements);
+
+  CheckedUint32 numElemsAvailable(seg->elemFuncIndices.length());
+  if (!lastIndexPlus1.isValid() || !numElemsAvailable.isValid() ||
+      lastIndexPlus1.value() > numElemsAvailable.value()) {
+    // Because the last element to copy doesn't exist inside
+    // `seg->elemFuncIndices`.
+    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    return nullptr;
+  }
+
+  // Do the initialisation, converting function indices into code pointers as
+  // we go.
+  void** dst = (void**)objOTO->addressOfElementZero();
+  const uint32_t* src = &seg->elemFuncIndices[segElemIndex];
+  for (uint32_t i = 0; i < numElements; i++) {
+    uint32_t funcIndex = src[i];
+    FieldType elemType = rttValue->typeDef().arrayType().elementType_;
+    MOZ_RELEASE_ASSERT(elemType.isRefType());
+    RootedVal value(cx, elemType.refType());
+    if (funcIndex == NullFuncIndex) {
+      // value remains null
+    } else {
+      void* funcRef = Instance::refFunc(instance, funcIndex);
+      if (funcRef == AnyRef::invalid().forCompiledCode()) {
+        return nullptr;  // OOM, which has already been reported.
+      }
+      value = Val(elemType.refType(), FuncRef::fromCompiledCode(funcRef));
+    }
+    value.get().writeToHeapLocation(&dst[i]);
+  }
+
+  return objOTO;
+}
+
 /* static */ void* Instance::exceptionNew(Instance* instance, JSObject* tag) {
   MOZ_ASSERT(SASigExceptionNew.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();
