@@ -18,6 +18,8 @@ const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
+  ContextDescriptorType:
+    "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   RootMessageHandler:
     "chrome://remote/content/shared/messagehandler/RootMessageHandler.jsm",
@@ -32,10 +34,6 @@ class SessionModule extends Module {
     // Set of event names which are strings of the form [moduleName].[eventName]
     // We should only add an actual event listener on the MessageHandler the
     // first time an event is subscribed to.
-    // TODO: This should completely be handled by the EventsDispatcher, however
-    // at the moment the EventsDispatcher can only be used for content process
-    // events which rely only on SessionData and not on an explicit call to
-    // _subscribeEvent.
     this.#globalEventSet = new Set();
   }
 
@@ -87,11 +85,15 @@ class SessionModule extends Module {
         if (this.#globalEventSet.has(event)) {
           return Promise.resolve();
         }
-
         this.#globalEventSet.add(event);
-        this.messageHandler.on(event, this.#onMessageHandlerEvent);
 
-        return this.addEventSessionData(moduleName, event);
+        return this.messageHandler.eventsDispatcher.on(
+          event,
+          {
+            type: lazy.ContextDescriptorType.All,
+          },
+          this.#onMessageHandlerEvent
+        );
       })
     );
   }
@@ -137,9 +139,14 @@ class SessionModule extends Module {
           return Promise.resolve();
         }
         this.#globalEventSet.delete(event);
-        this.messageHandler.off(event, this.#onMessageHandlerEvent);
 
-        return this.removeEventSessionData(moduleName, event);
+        return this.messageHandler.eventsDispatcher.off(
+          event,
+          {
+            type: lazy.ContextDescriptorType.All,
+          },
+          this.#onMessageHandlerEvent
+        );
       })
     );
   }
