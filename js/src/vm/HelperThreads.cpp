@@ -794,7 +794,8 @@ void DecodeStencilTask::parse(JSContext* cx, ErrorContext* ec) {
   }
 
   bool succeeded = false;
-  (void)stencil_->deserializeStencils(cx, *stencilInput_, range, &succeeded);
+  (void)stencil_->deserializeStencils(cx, ec, *stencilInput_, range,
+                                      &succeeded);
   if (!succeeded) {
     stencil_ = nullptr;
     return;
@@ -818,24 +819,30 @@ void MultiStencilsDecodeTask::parse(JSContext* cx, ErrorContext* ec) {
   MOZ_ASSERT(cx->isHelperThreadContext());
 
   if (!stencils.reserve(sources->length())) {
-    ReportOutOfMemory(cx);  // This sets |outOfMemory|.
+    ReportOutOfMemory(ec);  // This sets |outOfMemory|.
     return;
   }
 
   for (auto& source : *sources) {
-    JS::DecodeOptions decodeOptions(options);
-    RefPtr<JS::Stencil> stencil;
-    if (JS::DecodeStencil(cx, decodeOptions, source.range,
-                          getter_AddRefs(stencil)) != JS::TranscodeResult::Ok) {
+    frontend::CompilationInput stencilInput(options);
+    if (!stencilInput.initForGlobal(cx, ec)) {
       break;
     }
 
-    if (stencil) {
-      stencils.infallibleEmplaceBack(stencil.forget());
-    } else {
+    RefPtr<frontend::CompilationStencil> stencil =
+        ec->getAllocator()->new_<frontend::CompilationStencil>(
+            stencilInput.source);
+    if (!stencil) {
+      break;
+    }
+    bool succeeded = false;
+    (void)stencil->deserializeStencils(cx, ec, stencilInput, source.range,
+                                       &succeeded);
+    if (!succeeded) {
       // If any decodes fail, don't process the rest. We likely are hitting OOM.
       break;
     }
+    stencils.infallibleEmplaceBack(stencil.forget());
   }
 }
 

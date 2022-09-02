@@ -504,16 +504,16 @@ bool ParserAtomsTable::isEqualToExternalParserAtomIndex(
   return externalAtom->equalsSeq(hash, seq);
 }
 
-bool ParserAtomSpanBuilder::allocate(JSContext* cx, LifoAlloc& alloc,
+bool ParserAtomSpanBuilder::allocate(ErrorContext* ec, LifoAlloc& alloc,
                                      size_t count) {
   if (count >= TaggedParserAtomIndex::IndexLimit) {
-    ReportAllocationOverflow(cx);
+    ReportAllocationOverflow(ec);
     return false;
   }
 
   auto* p = alloc.newArrayUninitialized<ParserAtom*>(count);
   if (!p) {
-    js::ReportOutOfMemory(cx);
+    js::ReportOutOfMemory(ec);
     return false;
   }
   std::uninitialized_fill_n(p, count, nullptr);
