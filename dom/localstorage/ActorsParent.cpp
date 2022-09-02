@@ -6527,7 +6527,7 @@ mozilla::ipc::IPCResult LSRequestBase::RecvCancel() {
   }
 
   IProtocol* mgr = Manager();
-  if (!PBackgroundLSRequestParent::Send__delete__(this, NS_ERROR_FAILURE)) {
+  if (!PBackgroundLSRequestParent::Send__delete__(this, NS_ERROR_ABORT)) {
     return IPC_FAIL(mgr, "Send__delete__ failed!");
   }
 

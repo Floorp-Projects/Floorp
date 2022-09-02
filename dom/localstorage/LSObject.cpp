@@ -34,6 +34,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/ipc/ProcessChild.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
@@ -1082,38 +1083,50 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
 
       MOZ_ALWAYS_SUCCEEDS(timer->SetTarget(domFileThread));
 
+      auto cancelRequest = [](nsITimer* aTimer, void* aClosure) {
+        // The request is taking too much time. At this point we don't care
+        // about the result anymore so we can cancel the request.
+
+        // However, we don't abort the event loop spinning before the
+        // request is actually finished because that would cause races
+        // between the current thread and DOM File thread. Instead, we send
+        // the cancel message to the parent and wait for the request to
+        // finish like in the normal case when the request is successfully
+        // finished on time. OnResponse is called as the final step in both
+        // cases.
+
+        auto helper = static_cast<RequestHelper*>(aClosure);
+
+        LSRequestChild* actor = helper->mActor;
+
+        // Start() could fail or OnResponse was already called, so we need
+        // to check if actor is not null. The actor can also be in the
+        // final (finishing) state, in that case we are not allowed to send
+        // the cancel message and it wouldn't make any sense because the
+        // request is about to be destroyed anyway.
+        if (actor && !actor->Finishing()) {
+          actor->SendCancel();
+        }
+      };
+
       MOZ_ALWAYS_SUCCEEDS(timer->InitWithNamedFuncCallback(
-          [](nsITimer* aTimer, void* aClosure) {
-            // The request is taking too much time. At this point we don't care
-            // about the result anymore so we can cancel the request.
-
-            // However, we don't abort the event loop spinning before the
-            // request is actually finished because that would cause races
-            // between the current thread and DOM File thread. Instead, we send
-            // the cancel message to the parent and wait for the request to
-            // finish like in the normal case when the request is successfully
-            // finished on time. OnResponse is called as the final step in both
-            // cases.
-
-            auto helper = static_cast<RequestHelper*>(aClosure);
-
-            LSRequestChild* actor = helper->mActor;
-
-            // Start() could fail or OnResponse was already called, so we need
-            // to check if actor is not null. The actor can also be in the
-            // final (finishing) state, in that case we are not allowed to send
-            // the cancel message and it wouldn't make any sense because the
-            // request is about to be destroyed anyway.
-            if (actor && !actor->Finishing()) {
-              actor->SendCancel();
-            }
-          },
-          this, FAILSAFE_CANCEL_SYNC_OP_MS, nsITimer::TYPE_ONE_SHOT,
+          cancelRequest, this, FAILSAFE_CANCEL_SYNC_OP_MS,
+          nsITimer::TYPE_ONE_SHOT,
           "RequestHelper::StartAndReturnResponse::SpinEventLoopTimer"));
 
       MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
           "RequestHelper::StartAndReturnResponse"_ns,
-          [&]() { return !mWaiting; }, thread));
+          [&]() {
+            if (mozilla::ipc::ProcessChild::ExpectingShutdown()) {
+              MOZ_ALWAYS_SUCCEEDS(timer->Cancel());
+              MOZ_ALWAYS_SUCCEEDS(timer->InitWithNamedFuncCallback(
+                  cancelRequest, this, 0, nsITimer::TYPE_ONE_SHOT,
+                  "RequestHelper::StartAndReturnResponse::SpinEventLoopAbort"));
+            }
+
+            return !mWaiting;
+          },
+          thread));
 
       MOZ_ALWAYS_SUCCEEDS(timer->Cancel());
     }
