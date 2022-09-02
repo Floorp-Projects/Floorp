@@ -105,10 +105,17 @@ browsertime-tp6m:
     run-on-projects:
         by-app:
             geckoview:
-                by-test-platform:
-                    android-hw-(g5|a51).*shippable-qr.*: [trunk]
-                    android-hw-p2.*aarch64-shippable-qr.*: [trunk]
-                    default: []
+                by-variant:
+                    geckoview-no-fission:
+                        by-test-platform:
+                            android-hw-(g5|a51).*shippable-qr.*: [trunk]
+                            android-hw-p2.*aarch64-shippable-qr.*: [trunk]
+                            default: []
+                    default:
+                        by-test-platform:
+                            android-hw-(g5|a51).*shippable-qr.*: [mozilla-central]
+                            android-hw-p2.*aarch64-shippable-qr.*: [mozilla-central]
+                            default: []
             default: []
 
 browsertime-tp6m-essential:
