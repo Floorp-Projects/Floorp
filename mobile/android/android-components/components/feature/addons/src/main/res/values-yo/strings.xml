@@ -38,6 +38,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Gba dátà láti inú kílípúbọọ̀dù</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Fi dátà sí inú kílípúbọọ̀dù</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Dìnà àwọn àkóónú lóri èyíkéyìí ojú ìwé</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Ṣé ìgbàsílẹ̀ àwọn fáìlì kí o kà á kí o sì ṣàtúnṣe àwọn ìtàn bíráwúsà </string>
     <!-- Description for downloads_open permission. -->
