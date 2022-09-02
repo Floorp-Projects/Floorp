@@ -299,7 +299,7 @@ async function isGivenTabUsingDefaultMetadata(tab, options = {}) {
   const fallbackTitle = await localization.formatValue(
     "mediastatus-fallback-title"
   );
-  ok(fallbackTitle.length > 0, "l10n fallback title is not empty");
+  ok(fallbackTitle.length, "l10n fallback title is not empty");
 
   const metadata = tab.linkedBrowser.browsingContext.mediaController.getMetadata();
 

@@ -26,7 +26,7 @@
     let inputElem = document.getElementById("search-input");
 
     // Test for initial localization applied.
-    is(inputElem.getAttribute("placeholder").length > 0, true);
+    is(!!inputElem.getAttribute("placeholder").length, true);
 
     let observer = new MutationObserver((mutations) => {
       for (let mutation of mutations) {

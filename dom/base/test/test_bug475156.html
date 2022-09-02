@@ -285,7 +285,7 @@ function drive(test)
       }
       if (this.readyState == 4) {
         test.done(this);
-        if (tests.length == 0)
+        if (!tests.length)
           SimpleTest.finish();
         else
           drive(tests.shift());

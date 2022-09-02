@@ -45,7 +45,7 @@ const parser = getParser();
  */
 function evalXPathInDocumentFragment(aContextNode, aPath) {
   Assert.equal(ChromeUtils.getClassName(aContextNode), "DocumentFragment");
-  Assert.ok(aContextNode.childNodes.length > 0);
+  Assert.ok(aContextNode.childNodes.length);
   if (aPath == ".") {
     return aContextNode;
   }

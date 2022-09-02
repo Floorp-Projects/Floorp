@@ -39,7 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990812
         var next = order.shift();
         window.arguments[0].is(msg.data, next, "received test:" + next);
 
-        if (order.length == 0) {
+        if (!order.length) {
           window.arguments[0].setTimeout(function() { this.next(); });
           window.close();
         }

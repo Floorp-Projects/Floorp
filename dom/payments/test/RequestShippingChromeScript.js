@@ -66,7 +66,7 @@ const NormalUIService = {
     let payRequest = paymentSrv.getPaymentRequestById(requestId);
 
     const shippingOptions = payRequest.paymentDetails.shippingOptions;
-    if (shippingOptions.length != 0) {
+    if (shippingOptions.length) {
       emitTestFail("Wrong length for shippingOptions.");
     }
 

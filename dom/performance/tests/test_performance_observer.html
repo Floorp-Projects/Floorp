@@ -47,7 +47,7 @@ let test = promise_test = fn => {
 }
 
 function runNextTest() {
-  if (_tests.length == 0) {
+  if (!_tests.length) {
     SimpleTest.finish()
     return;
   }

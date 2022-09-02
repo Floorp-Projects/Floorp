@@ -43,7 +43,7 @@ window.onload = function() {
             var scripts = dbg.findScripts({
                 url: "http://mochi.test:8888/tests/dom/base/test/chrome/nochrome_bug765993.js",
             });
-            ok(scripts.length > 0, "Should be able to find script");
+            ok(scripts.length, "Should be able to find script");
 
             is(scripts[0].source.sourceMapURL, "foo.js.map");
             SimpleTest.finish();

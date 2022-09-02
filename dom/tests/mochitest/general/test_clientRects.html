@@ -32,7 +32,7 @@ function checkElement(id, list, eps, doc) {
   ok(!(clientRects instanceof e.ownerDocument.defaultView.Array),
      "getClientRects retval should not have Array.prototype on its proto chain");
   is(clientRects.length, list.length, "getClientRects().length for element '" + id + "'");
-  var bounds = list.length > 0 ? list[0] : [0,0,0,0];
+  var bounds = list.length ? list[0] : [0,0,0,0];
   for (var i = 0; i < clientRects.length && i < list.length; ++i) {
     var r = list[i];
     r[2] += r[0];

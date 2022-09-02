@@ -44,7 +44,7 @@
   ];
 
   function runTests() {
-    if (tests.length == 0) {
+    if (!tests.length) {
       SimpleTest.finish();
       return;
     }

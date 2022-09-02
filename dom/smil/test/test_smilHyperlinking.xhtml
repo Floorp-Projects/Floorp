@@ -34,7 +34,7 @@ SimpleTest.waitForExplicitFinish();
 
 function continueTest()
 {
-  if (gTestStages.length == 0) {
+  if (!gTestStages.length) {
     SimpleTest.finish();
     return;
   }

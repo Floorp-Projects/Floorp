@@ -21,7 +21,7 @@
     elem2.setAttribute("data-l10n-args", JSON.stringify({bug: "New string"}));
 
     let verifyL10n = () => {
-      if (elem.textContent.length > 0 && elem2.textContent.includes("New string")) {
+      if (elem.textContent.length && elem2.textContent.includes("New string")) {
         window.removeEventListener("MozAfterPaint", verifyL10n);
         SimpleTest.finish();
       }

@@ -14,7 +14,7 @@ add_task(async function testSteps() {
 
   const requestList = await cache.keys();
 
-  ok(requestList.length > 0, "should have at least one request in cache");
+  ok(requestList.length, "should have at least one request in cache");
   for (const request of requestList) {
     ok(request, "each request in list should be non-null");
     ok(
@@ -41,7 +41,7 @@ add_task(async function testSteps() {
     })
   );
 
-  ok(responseList.length > 0, "should have at least one response in cache");
+  ok(responseList.length, "should have at least one response in cache");
   for (const response of responseList) {
     ok(response, "each response should be non-null");
     // reponse.url is a empty string in current test file. It should test for

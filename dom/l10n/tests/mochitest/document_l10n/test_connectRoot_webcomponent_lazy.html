@@ -39,7 +39,7 @@
         let label = this.shadowRoot.getElementById("label");
 
         let verifyL10n = () => {
-          if (label.textContent.length > 0) {
+          if (label.textContent.length) {
             window.removeEventListener("MozAfterPaint", verifyL10n);
             is(label.textContent, "Learn more", "localization content applied to element");
             firstWidgetTranslated = true;

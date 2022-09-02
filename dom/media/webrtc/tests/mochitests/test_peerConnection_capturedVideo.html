@@ -55,8 +55,8 @@
         offerToReceiveAudio: false,
       }
     );
-    const hasVideo = stream.getVideoTracks().length > 0;
-    const hasAudio = stream.getAudioTracks().length > 0;
+    const hasVideo = !!stream.getVideoTracks().length;
+    const hasAudio = !!stream.getAudioTracks().length;
     test.setMediaConstraints([{ video: hasVideo, audio: hasAudio }], []);
     test.chain.replace("PC_LOCAL_GUM", [
       function PC_LOCAL_CAPTUREVIDEO(test) {

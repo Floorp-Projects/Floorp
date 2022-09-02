@@ -122,7 +122,7 @@ var testFunctions = [
 ];
 
 function runNextTest() {
-  if (testFunctions.length > 0) {
+  if (testFunctions.length) {
     var nextTestFunction = testFunctions.shift();
     info(`Start ${nextTestFunction.name} ...`);
     nextTestFunction();

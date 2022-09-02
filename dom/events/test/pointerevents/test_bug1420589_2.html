@@ -66,7 +66,7 @@ function withoutImplicitlyPointerCaptureForTouch() {
     ok(expectedEvents.includes(e.data), " don't expect " + e.data);
     expectedEvents = expectedEvents.filter(item => item !== e.data);
     if (e.data == "div1 touchend") {
-      ok(expectedEvents.length == 0, " expect " + expectedEvents);
+      ok(!expectedEvents.length, " expect " + expectedEvents);
       SimpleTest.finish();
     }
   })

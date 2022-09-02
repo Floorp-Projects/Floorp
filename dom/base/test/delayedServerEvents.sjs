@@ -16,7 +16,7 @@ var strings_to_send = [
 var resp = null;
 
 function sendNextString() {
-  if (strings_to_send.length == 0) {
+  if (!strings_to_send.length) {
     timer.cancel();
     resp.finish();
     timer = null;

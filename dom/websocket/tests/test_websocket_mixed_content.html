@@ -16,7 +16,7 @@
 let iFrameTests = [testSameOriginSandboxInsecure, testSameOriginSandboxSecure, testCrossOriginSandboxInsecure, testCrossOriginSandboxSecure];
 
 function nextIFrameTest() {
-  if(iFrameTests.length == 0) {
+  if(!iFrameTests.length) {
     document.getElementById("frame").remove();
     SimpleTest.finish();
   }

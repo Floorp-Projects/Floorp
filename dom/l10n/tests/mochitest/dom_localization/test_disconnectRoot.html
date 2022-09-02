@@ -30,7 +30,7 @@ key2 = Value for Key 2
     );
 
     await domLoc.translateRoots();
-    is(p1.textContent.length == 0, true);
+    is(!p1.textContent.length, true);
 
     const body = document.body;
 

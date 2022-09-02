@@ -437,7 +437,7 @@
           try {
             var single = root.querySelector(query);
 
-            var pass = found.length == 0 && single === null ||
+            var pass = !found.length && single === null ||
               found.length && found[0] == single;
 
             assert(expect, type + ".querySelector: " + query);

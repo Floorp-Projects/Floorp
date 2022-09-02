@@ -54,7 +54,7 @@ function runTests() {
     );
 
     // test that the grid has cols and rows properties
-    if (gridFragments.length > 0) {
+    if (gridFragments.length) {
       let grid = gridFragments[0];
       isnot(typeof(grid.cols), "undefined", id + ": Grid.cols property exists.");
       isnot(typeof(grid.rows), "undefined", id + ": Grid.rows property exists.");

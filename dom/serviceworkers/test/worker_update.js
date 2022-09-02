@@ -12,7 +12,7 @@ onmessage = function(e) {
     })
     .then(function(result) {
       clients.matchAll().then(function(c) {
-        if (c.length == 0) {
+        if (!c.length) {
           dump(
             "!!!!!!!!!!! WORKER HAS NO CLIENTS TO FINISH TEST !!!!!!!!!!!!\n"
           );

@@ -56,7 +56,7 @@ add_task(async function testMozDebugReaderData() {
     "Audio track should have demuxed some samples"
   );
   ok(
-    debugData.demuxer.audioTrack.ranges.length > 0,
+    debugData.demuxer.audioTrack.ranges.length,
     "Audio track should have some buffered range"
   );
   ok(
@@ -64,7 +64,7 @@ add_task(async function testMozDebugReaderData() {
     "Video track should have demuxed some samples"
   );
   ok(
-    debugData.demuxer.videoTrack.ranges.length > 0,
+    debugData.demuxer.videoTrack.ranges.length,
     "Video track should have some buffered range"
   );
   removeNodeAndSource(video);

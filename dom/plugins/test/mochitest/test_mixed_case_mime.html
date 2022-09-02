@@ -10,8 +10,8 @@
 
   function frameLoaded() {
     var contentDocument = document.getElementById("testframe").contentDocument;
-    ok(contentDocument.body.innerHTML.length > 0, "Frame content shouldn't be empty.");
-    ok(contentDocument.images.length > 0, "Frame content should have an image.");
+    ok(contentDocument.body.innerHTML.length, "Frame content shouldn't be empty.");
+    ok(contentDocument.images.length, "Frame content should have an image.");
     SimpleTest.finish();
   }
 </script>

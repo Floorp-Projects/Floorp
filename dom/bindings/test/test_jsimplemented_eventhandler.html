@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1186696
   function doTest() {
     var values = [ function() {}, 5, null, undefined, "some string", {} ];
 
-    while (values.length != 0) {
+    while (values.length) {
       var value = values.pop();
       var t = new TestInterfaceJS();
       t.onsomething = value;

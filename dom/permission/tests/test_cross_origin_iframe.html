@@ -228,7 +228,7 @@
   SimpleTest.waitForExplicitFinish();
 
   async function nextTest() {
-    if (tests.length == 0) {
+    if (!tests.length) {
       SimpleTest.finish();
       return;
     }

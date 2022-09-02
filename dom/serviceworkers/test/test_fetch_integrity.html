@@ -71,7 +71,7 @@ function waitForMessages() {
         }
       }
 
-      if (messages.length == 0) {
+      if (!messages.length) {
         resolve();
         return false;
       }

@@ -76,7 +76,7 @@ for (var i=0; i<gSmallTests.length; ++i) {
   media.push(v);
 }
 
-if (media.length == 0) {
+if (!media.length) {
   todo(false, "No types supported");
 } else {
   SimpleTest.waitForExplicitFinish();

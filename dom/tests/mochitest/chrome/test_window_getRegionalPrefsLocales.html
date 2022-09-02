@@ -20,7 +20,7 @@ const localeService =
 let rpLocales = localeService.negotiateLanguages(window.getRegionalPrefsLocales(),
                                                  localeService.availableLocales);
 
-ok(rpLocales.length > 0, "getRegionalPrefsLocales returns at least one locale.");
+ok(rpLocales.length, "getRegionalPrefsLocales returns at least one locale.");
 is(rpLocales[0], "en-US", "The first regional prefs locale should resolve to en-US.");
 
 </script>

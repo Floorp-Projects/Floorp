@@ -1182,7 +1182,7 @@ var PushService = {
     lazy.console.debug("register()", aPageRecord);
 
     let keyPromise;
-    if (aPageRecord.appServerKey && aPageRecord.appServerKey.length != 0) {
+    if (aPageRecord.appServerKey && aPageRecord.appServerKey.length) {
       let keyView = new Uint8Array(aPageRecord.appServerKey);
       keyPromise = lazy.PushCrypto.validateAppServerKey(keyView).catch(
         error => {

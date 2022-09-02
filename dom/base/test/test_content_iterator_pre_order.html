@@ -456,7 +456,7 @@ SimpleTest.waitForFocus(function () {
    * Basic tests with complicated tree.
    */
   function check(aIter, aExpectedResult, aDescription) {
-    if (aExpectedResult.length > 0) {
+    if (aExpectedResult.length) {
       is(SpecialPowers.unwrap(aIter.currentNode), aExpectedResult[0],
         `${aDescription}: currentNode should be the text node immediately after initialization (got: ${getNodeDescription(aIter.currentNode)}, expected: ${getNodeDescription(aExpectedResult[0])})`);
       ok(!aIter.isDone, `${aDescription}: isDone shouldn't be true immediately after initialization`);

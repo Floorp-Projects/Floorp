@@ -17,7 +17,7 @@
     {
       // 1. An example message from aboutAddons should be available.
       let value = await document.l10n.formatValue("shortcuts-browserAction2");
-      is(value.length > 0, true, "localized value retrieved");
+      is(!!value.length, true, "localized value retrieved");
     }
 
     {
@@ -29,7 +29,7 @@
     {
       // 3. An example message from aboutSupport should still be available.
       let value = await document.l10n.formatValue("features-version");
-      is(value.length > 0, true, "localized value retrieved");
+      is(!!value.length, true, "localized value retrieved");
 
       // 4. An example message from aboutAddons should not be available.
       await document.l10n.formatValue("shortcuts-browserAction").then(

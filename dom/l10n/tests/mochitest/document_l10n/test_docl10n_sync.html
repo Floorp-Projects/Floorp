@@ -15,15 +15,15 @@
 
     // Test for initial localization applied.
     let desc = document.getElementById("main-desc");
-    is(desc.textContent.length > 0, true);
+    is(!!desc.textContent.length, true);
 
     // Test for manual value formatting.
     let msg = await document.l10n.formatValue("id-heading");
-    is(msg.length > 0, true);
+    is(!!msg.length, true);
 
     // Test for mutations applied.
     let verifyL10n = () => {
-      if (label.textContent.length > 0) {
+      if (label.textContent.length) {
         window.removeEventListener("MozAfterPaint", verifyL10n);
         SimpleTest.finish();
       }

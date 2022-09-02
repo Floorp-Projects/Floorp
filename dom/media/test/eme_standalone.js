@@ -241,10 +241,7 @@ var EmeHelper = class EmeHelper {
     if (!this._initDataTypes) {
       throw new Error("EmeHelper needs _initDataTypes to configure media");
     }
-    if (
-      this._audioCapabilities.length == 0 &&
-      this._videoCapabilities.length == 0
-    ) {
+    if (!this._audioCapabilities.length && !this._videoCapabilities.length) {
       throw new Error(
         "EmeHelper needs _audioCapabilities or _videoCapabilities to configure media"
       );

@@ -48,17 +48,17 @@
     document.body.appendChild(elem3);
 
     // 1. `elem` should be localized since it is in DOM.
-    await SimpleTest.waitForCondition(() => elem.textContent.length > 0);
+    await SimpleTest.waitForCondition(() => elem.textContent.length);
     // 2. `elem2` was removed before l10n frame, so it should remain not localized.
     is(elem2.textContent.length, 0);
     // 3. `elem3` was added/removed/re-added so it should become localized.
-    await SimpleTest.waitForCondition(() => elem3.textContent.length > 0);
+    await SimpleTest.waitForCondition(() => elem3.textContent.length);
     // 4. `elem4` was not re-added, so it shouldn't be localized.
     is(elem4.textContent.length, 0);
 
     document.body.appendChild(elem4);
     // 5. Now we re-added `elem4` to DOM so it should get localized.
-    await SimpleTest.waitForCondition(() => elem4.textContent.length > 0);
+    await SimpleTest.waitForCondition(() => elem4.textContent.length);
     SimpleTest.finish();
   });
   </script>

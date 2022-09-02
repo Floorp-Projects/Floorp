@@ -253,7 +253,7 @@ function runTest() {
           var expectedBuffer = expectedBuffers.shift();
           testLength += expectedBuffer.length;
           compareBuffers(e.inputBuffer, expectedBuffer);
-          if (expectedBuffers.length == 0) {
+          if (!expectedBuffers.length) {
             sp.onaudioprocess = null;
             callback();
           }

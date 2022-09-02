@@ -47,7 +47,7 @@ runTest(async () => {
   // Validate enumerated devices.
 
   let devices = await navigator.mediaDevices.enumerateDevices();
-  ok(devices.length > 0, "At least one device found");
+  ok(devices.length, "At least one device found");
   let jsoned = JSON.parse(JSON.stringify(devices));
   is(jsoned[0].kind, devices[0].kind, "kind survived serializer");
   is(jsoned[0].deviceId, devices[0].deviceId, "deviceId survived serializer");

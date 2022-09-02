@@ -50,7 +50,7 @@ window.examiner = new examiner();
 
 
 function loadTest() {
-  if (testFiles.length == 0) {
+  if (!testFiles.length) {
     removeAndFinish();
     return;
   }

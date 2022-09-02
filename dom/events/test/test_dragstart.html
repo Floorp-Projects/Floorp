@@ -560,7 +560,7 @@ function doDragOverSynthetic(event)
 function onDragStartDraggable(event)
 {
   var dt = event.dataTransfer;
-  ok(SpecialPowers.wrap(dt).mozItemCount == 0 && dt.types.length == 0 && event.originalTarget == gDragInfo.target, gDragInfo.testid);
+  ok(SpecialPowers.wrap(dt).mozItemCount == 0 && !dt.types.length && event.originalTarget == gDragInfo.target, gDragInfo.testid);
 
   event.preventDefault();
   gExtraDragTests++;

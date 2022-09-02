@@ -85,7 +85,7 @@ function startTest(test, token) {
 function canPlay(candidates) {
   var v = document.createElement("video");  
   var resources = candidates.filter(function(x){return v.canPlayType(x.type);});
-  return (resources.length > 0);
+  return (resources.length);
 }
 
 if (canPlay(gUnseekableTests)) {

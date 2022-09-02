@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=476731
 var videos = [];
 
 function FinishedLoads() {
-  if (videos.length == 0)
+  if (!videos.length)
     return false;
   for (var i=0; i<videos.length; ++i) {
     if (videos[i]._loadedData) {
@@ -73,7 +73,7 @@ for (var i=0; i<g404Tests.length; ++i) {
    videos.push(v);
 }
 
-if (videos.length == 0) {
+if (!videos.length) {
   todo(false, "No types supported");
 } else {
   SimpleTest.waitForExplicitFinish();

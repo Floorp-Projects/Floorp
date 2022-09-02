@@ -106,7 +106,7 @@
       is(result, 'ok', `Upgrade all requests on toplevel http for '${key}' came back with: '${result}'`)
 
       // If we're not expecting any more resulsts, finish the test
-      if (testConfig.results.length == 0) {
+      if (!testConfig.results.length) {
         finishTest();
       }
     }

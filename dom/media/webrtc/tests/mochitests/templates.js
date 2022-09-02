@@ -131,7 +131,7 @@ function dumpSdp(test) {
 // We need to verify that at least one candidate has been (or will be) gathered.
 function waitForAnIceCandidate(pc) {
   return new Promise(resolve => {
-    if (!pc.localRequiresTrickleIce || pc._local_ice_candidates.length > 0) {
+    if (!pc.localRequiresTrickleIce || pc._local_ice_candidates.length) {
       resolve();
     } else {
       // In some circumstances, especially when both PCs are on the same
@@ -142,7 +142,7 @@ function waitForAnIceCandidate(pc) {
     }
   }).then(() => {
     ok(
-      pc._local_ice_candidates.length > 0,
+      pc._local_ice_candidates.length,
       pc + " received local trickle ICE candidates"
     );
     isnot(

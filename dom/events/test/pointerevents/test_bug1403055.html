@@ -43,8 +43,8 @@ function withoutImplicitlyPointerCaptureForTouch() {
   });
 
   done.addEventListener("mouseup", () => {
-    ok(target0_events.length == 0, " should receive " + target0_events + " on target0");
-    ok(target1_events.length == 0, " should receive " + target1_events + " on target1");
+    ok(!target0_events.length, " should receive " + target0_events + " on target0");
+    ok(!target1_events.length, " should receive " + target1_events + " on target1");
     SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.implicit_capture", true]]},
                               withImplicitlyPointerCaptureForTouch);
   }, {once : true});
@@ -68,7 +68,7 @@ function withImplicitlyPointerCaptureForTouch() {
   });
 
   done.addEventListener("mouseup", () => {
-    ok(target0_events.length == 0, " should receive " + target0_events + " on target0");
+    ok(!target0_events.length, " should receive " + target0_events + " on target0");
     SimpleTest.finish();
   }, {once : true});
 

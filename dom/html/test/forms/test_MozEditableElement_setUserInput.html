@@ -172,13 +172,13 @@ SimpleTest.waitForFocus(async () => {
            `Only one "input" event should be dispatched when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
       }
     }
-    if (inputEvents.length > 0) {
+    if (inputEvents.length) {
       if (SpecialPowers.wrap(target).isInputEventTarget) {
         if (test.type === "time") {
           todo(inputEvents[0] instanceof InputEvent,
                `"input" event should be dispatched with InputEvent interface when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
         } else {
-          if (beforeInputEvents.length > 0 && test.result.fireBeforeInputEvent) {
+          if (beforeInputEvents.length && test.result.fireBeforeInputEvent) {
             is(beforeInputEvents[0].cancelable, kSetUserInputCancelable,
                `"beforeinput" event for "insertReplacementText" should be cancelable when setUserInput("${test.input.before}") is called before ${tag} gets focus unless it's suppressed by the pref`);
             is(beforeInputEvents[0].inputType, "insertReplacementText",
@@ -258,13 +258,13 @@ SimpleTest.waitForFocus(async () => {
            `Only one "input" event should be dispatched when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
       }
     }
-    if (inputEvents.length > 0) {
+    if (inputEvents.length) {
       if (SpecialPowers.wrap(target).isInputEventTarget) {
         if (test.type === "time") {
           todo(inputEvents[0] instanceof InputEvent,
                `"input" event should be dispatched with InputEvent interface when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
         } else {
-          if (beforeInputEvents.length > 0 && test.result.fireBeforeInputEvent) {
+          if (beforeInputEvents.length && test.result.fireBeforeInputEvent) {
             is(beforeInputEvents[0].cancelable, kSetUserInputCancelable,
                `"beforeinput" event should be cancelable when setUserInput("${test.input.after}") is called after ${tag} gets focus unless it's suppressed by the pref`);
             is(beforeInputEvents[0].inputType, "insertReplacementText",
@@ -407,12 +407,12 @@ SimpleTest.waitForFocus(async () => {
     reset();
     SpecialPowers.wrap(target).setUserInput(aValidValue);
     is(beforeInputEvents.length, 1, `Calling  ${tag}.setUserInput(${aValidValue}) should cause a "beforeinput" event (before gets focus)`);
-    if (beforeInputEvents.length > 0) {
+    if (beforeInputEvents.length) {
       is(beforeInputEvents[0].validity, false,
          `The ${tag} should be invalid at "beforeinput" event (before gets focus)`);
     }
     is(inputEvents.length, 1, `Calling  ${tag}.setUserInput(${aValidValue}) should cause a "input" event (before gets focus)`);
-    if (inputEvents.length > 0) {
+    if (inputEvents.length) {
       is(inputEvents[0].validity, true,
          `The ${tag} should be valid at "input" event (before gets focus)`);
     }
@@ -433,12 +433,12 @@ SimpleTest.waitForFocus(async () => {
     reset();
     SpecialPowers.wrap(target).setUserInput(aValidValue);
     is(beforeInputEvents.length, 1, `Calling  ${tag}.setUserInput(${aValidValue}) should cause a "beforeinput" event (after gets focus)`);
-    if (beforeInputEvents.length > 0) {
+    if (beforeInputEvents.length) {
       is(beforeInputEvents[0].validity, false,
          `The ${tag} should be invalid at "beforeinput" event (after gets focus)`);
     }
     is(inputEvents.length, 1, `Calling  ${tag}.setUserInput(${aValidValue}) should cause a "input" event (after gets focus)`);
-    if (inputEvents.length > 0) {
+    if (inputEvents.length) {
       is(inputEvents[0].validity, true,
          `The ${tag} should be valid at "input" event (after gets focus)`);
     }

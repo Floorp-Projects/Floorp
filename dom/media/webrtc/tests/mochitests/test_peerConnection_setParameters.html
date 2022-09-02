@@ -13,7 +13,7 @@ createHTML({
 });
 
 function parameterstest(pc) {
-  ok(pc.getSenders().length > 0, "have senders");
+  ok(pc.getSenders().length, "have senders");
   var sender = pc.getSenders()[0];
 
   var testParameters = (params, errorName, errorMsg) => {

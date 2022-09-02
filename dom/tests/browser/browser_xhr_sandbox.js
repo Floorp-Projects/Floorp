@@ -11,7 +11,7 @@ var sandboxCode =
         let result;
         if (req.status != 200) {
           result = "ERROR: got request status of " + req.status;
-        } else if (req.responseText.length == 0) {
+        } else if (!req.responseText.length) {
           result = "ERROR: got zero byte response text";
         } else {
           result = "ok";

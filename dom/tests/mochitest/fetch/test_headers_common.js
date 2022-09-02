@@ -95,7 +95,7 @@ function TestCoreBehavior(headers, name) {
 
   const value_bam = "boom";
   let testHTTPWhitespace = ["\t", "\n", "\r", " "];
-  while (testHTTPWhitespace.length != 0) {
+  while (testHTTPWhitespace.length) {
     headers.delete(name);
 
     let char = testHTTPWhitespace.shift();

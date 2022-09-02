@@ -35,6 +35,7 @@ dom/media/platforms/ffmpeg/libav53/
 dom/media/platforms/ffmpeg/libav54/
 dom/media/platforms/ffmpeg/libav55/
 dom/media/webaudio/test/blink/
+dom/media/webrtc/tests/mochitests/helpers_from_wpt/sdp.js
 dom/media/webrtc/transport/third_party/
 dom/media/webspeech/recognition/endpointer.cc
 dom/media/webspeech/recognition/endpointer.h

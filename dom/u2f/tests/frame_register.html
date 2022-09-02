@@ -20,8 +20,8 @@ async function doTests() {
     challenge: bytesToBase64UrlSafe(challenge),
   }], [], function(res){
     local_is(res.version, version, "Version should be set correctly");
-    local_ok(res.clientData.length > 0, "ClientData must be set");
-    local_ok(res.registrationData.length > 0, "RegistrationData must be set");
+    local_ok(res.clientData.length, "ClientData must be set");
+    local_ok(res.registrationData.length, "RegistrationData must be set");
     local_is(res.errorCode, 0, "AppID should work from the domain");
   });
 

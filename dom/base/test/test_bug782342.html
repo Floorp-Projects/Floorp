@@ -45,9 +45,9 @@ function checkHeaders(xhrInner) {
   ok(contentType == true, "Content-type is part of the headers!");
 
   var ct = xhrInner.getResponseHeader('content-type');
-  ok(ct.length > 0, 'Get Response Header - content type: ' + ct);
+  ok(ct.length, 'Get Response Header - content type: ' + ct);
   var cl = xhrInner.getResponseHeader('content-length');
-  ok(cl.length > 0, 'Get Response Header - content length: ' + cl);
+  ok(cl.length, 'Get Response Header - content length: ' + cl);
 }
 
 xhr.addEventListener("load", function () {

@@ -1376,7 +1376,7 @@ function doFrameSwitchingTests()
                      [framec.contentWindow, "focus", null, framec.contentWindow, window, framea],
                      [inputc, "focus", inputc, framec.contentWindow, window, framea]];
   inputc.focus();
-  ok(gEventMatched && gExpectedEvents.length == 0, "frame switch from parent input to child input" + gExpectedEvents);
+  ok(gEventMatched && !gExpectedEvents.length, "frame switch from parent input to child input" + gExpectedEvents);
 
   // An element in a child is focused. Focus an element in the immediate
   // parent.
@@ -1388,7 +1388,7 @@ function doFrameSwitchingTests()
                      [framea.contentWindow, "focus", null, framea.contentWindow, window, framea],
                      [inputa, "focus", inputa, framea.contentWindow, window, framea]];
   inputa.focus();
-  ok(gEventMatched && gExpectedEvents.length == 0, "frame switch from child input to parent input");
+  ok(gEventMatched && !gExpectedEvents.length, "frame switch from child input to parent input");
 
   // An element in a frame is focused. Focus an element in a sibling frame.
   // The common ancestor of the two frames should have its focused node
@@ -1403,7 +1403,7 @@ function doFrameSwitchingTests()
                      [frameb.contentWindow, "focus", null, frameb.contentWindow, window, frameb],
                      [inputb, "focus", inputb, frameb.contentWindow, window, frameb]];
   inputb.focus();
-  ok(gEventMatched && gExpectedEvents.length == 0, "frame switch from input to sibling frame");
+  ok(gEventMatched && !gExpectedEvents.length, "frame switch from input to sibling frame");
   is(fm.getFocusedElementForWindow(framea.contentWindow, false, {}), inputa,
      "blurred frame still has input as focus");
 
@@ -1417,7 +1417,7 @@ function doFrameSwitchingTests()
                      [framed.contentWindow, "focus", null, framed.contentWindow, window, framea],
                      [inputd, "focus", inputd, framed.contentWindow, window, framea]];
   inputd.focus();
-  ok(gEventMatched && gExpectedEvents.length == 0, "frame switch from input to sibling descendant");
+  ok(gEventMatched && !gExpectedEvents.length, "frame switch from input to sibling descendant");
   is(fm.getFocusedElementForWindow(framea.contentWindow, false, {}), framec,
      "sibling parent focus has shifted to frame");
 
@@ -1430,7 +1430,7 @@ function doFrameSwitchingTests()
                      [framea.contentWindow, "focus", null, framea.contentWindow, window, framea],
                      [inputa, "focus", inputa, framea.contentWindow, window, framea]];
   inputa.focus();
-  ok(gEventMatched && gExpectedEvents.length == 0, "frame switch from child input to ancestor");
+  ok(gEventMatched && !gExpectedEvents.length, "frame switch from child input to ancestor");
 
   // focus a descendant
   gEventMatched = true;
@@ -1441,7 +1441,7 @@ function doFrameSwitchingTests()
                      [framed.contentWindow, "focus", null, framed.contentWindow, window, framea],
                      [inputd, "focus", inputd, framed.contentWindow, window, framea]];
   inputd.focus();
-  ok(gEventMatched && gExpectedEvents.length == 0, "frame switch from child input to ancestor");
+  ok(gEventMatched && !gExpectedEvents.length, "frame switch from child input to ancestor");
   is(fm.getFocusedElementForWindow(framea.contentWindow, false, {}), framec,
      "parent focus has shifted to frame");
 
@@ -1453,13 +1453,13 @@ function doFrameSwitchingTests()
                      [frameb.contentDocument, "focus", null, frameb.contentWindow, window, frameb],
                      [frameb.contentWindow, "focus", null, frameb.contentWindow, window, frameb]];
   fm.focusedWindow = frameb.contentWindow;
-  ok(gEventMatched && gExpectedEvents.length == 0, "frame switch using focusedWindow");
+  ok(gEventMatched && !gExpectedEvents.length, "frame switch using focusedWindow");
 
   // clear the focus in an unfocused frame
   gEventMatched = true;
   gExpectedEvents = [];
   fm.clearFocus(framec.contentWindow);
-  ok(gEventMatched && gExpectedEvents.length == 0, "clearFocus in unfocused frame");
+  ok(gEventMatched && !gExpectedEvents.length, "clearFocus in unfocused frame");
 
   // focus a sibling frame by setting focusedWindow when no element is focused in that frame
   gEventMatched = true;
@@ -1468,7 +1468,7 @@ function doFrameSwitchingTests()
                      [framec.contentDocument, "focus", null, framec.contentWindow, window, framea],
                      [framec.contentWindow, "focus", null, framec.contentWindow, window, framea]];
   fm.focusedWindow = framec.contentWindow;
-  ok(gEventMatched && gExpectedEvents.length == 0, "frame switch using focusedWindow with no element focused");
+  ok(gEventMatched && !gExpectedEvents.length, "frame switch using focusedWindow with no element focused");
   is(fm.getFocusedElementForWindow(framea.contentWindow, false, {}), framec,
      "parent focus has shifted to frame using focusedWindow");
 
@@ -1476,7 +1476,7 @@ function doFrameSwitchingTests()
   gEventMatched = true;
   gExpectedEvents = [];
   fm.focusedWindow = framea.contentWindow;
-  ok(gEventMatched && gExpectedEvents.length == 0, "frame switch to parent using focusedWindow");
+  ok(gEventMatched && !gExpectedEvents.length, "frame switch to parent using focusedWindow");
 
   // clear the focus in the parent frame
   gEventMatched = true;
@@ -1485,13 +1485,13 @@ function doFrameSwitchingTests()
                      [framea.contentDocument, "focus", null, framea.contentWindow, window, framea],
                      [framea.contentWindow, "focus", null, framea.contentWindow, window, framea]];
   fm.clearFocus(framea.contentWindow);
-  ok(gEventMatched && gExpectedEvents.length == 0, "clearFocus in parent frame");
+  ok(gEventMatched && !gExpectedEvents.length, "clearFocus in parent frame");
 
   // clear the focus in an unfocused child frame
   gEventMatched = true;
   gExpectedEvents = [];
   fm.clearFocus(framed.contentWindow);
-  ok(gEventMatched && gExpectedEvents.length == 0, "clearFocus in unfocused child frame");
+  ok(gEventMatched && !gExpectedEvents.length, "clearFocus in unfocused child frame");
 
   var exh = false;
   try {

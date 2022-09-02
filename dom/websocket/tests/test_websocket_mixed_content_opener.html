@@ -17,7 +17,7 @@ let tests = [ testSecureWindowWSS, testSecureWindowWS, testInsecureWindowWSS, te
               testInsecureWindowSecureIframeWSS, testInsecureWindowSecureIframeWS, testInsecureWindowInsecureIframeWSS, testInsecureWindowInsecureIframeWS]
 
 function nextTest() {
-  if(tests.length == 0) {
+  if(!tests.length) {
    SimpleTest.finish();
   }
   else {

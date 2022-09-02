@@ -72,7 +72,7 @@ function startTest() {
   synthesizeMouseAtCenter(div2, {type: "mousemove"}, iframe.contentWindow);
   synthesizeMouseAtCenter(div2, {type: "mouseup"}, iframe.contentWindow);
 
-  ok(divEvents.length == 0, " expect " + divEvents);
+  ok(!divEvents.length, " expect " + divEvents);
 
   divEvents = [
     "pointerdown",
@@ -113,7 +113,7 @@ function startTest() {
   synthesizeTouch(div2, 5, 5, { type: "touchmove" }, iframe.contentWindow);
   synthesizeTouch(div2, 5, 5, { type: "touchend" }, iframe.contentWindow);
 
-  ok(divEvents.length == 0, " expect " + divEvents);
+  ok(!divEvents.length, " expect " + divEvents);
 
   divEvents = [
     "pointerdown",
@@ -154,7 +154,7 @@ function startTest() {
   synthesizeTouch(div2, 5, 5, { type: "touchmove" }, iframe.contentWindow);
   synthesizeTouch(div2, 5, 5, { type: "touchcancel" }, iframe.contentWindow);
 
-  ok(divEvents.length == 0, " expect " + divEvents);
+  ok(!divEvents.length, " expect " + divEvents);
 
   SimpleTest.finish();
 }

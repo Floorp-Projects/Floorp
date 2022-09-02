@@ -13,7 +13,7 @@ function addAsyncTest(fn) {
 }
 
 function runNextTest() {
-  if (_tests.length == 0) {
+  if (!_tests.length) {
     SimpleTest.finish();
     return;
   }

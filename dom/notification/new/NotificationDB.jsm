@@ -133,7 +133,7 @@ var NotificationDB = {
       await IOUtils.remove(oldStore);
     }
 
-    if (data.length > 0) {
+    if (data.length) {
       // Preprocessing phase intends to cleanly separate any migration-related
       // tasks.
       //
