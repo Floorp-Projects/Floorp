@@ -203,19 +203,13 @@ add_task(async function test_two_contexts() {
   is(await isSubscribed(root, browsingContext1), true);
   is(await isSubscribed(root, browsingContext2), true);
 
-  // Note that events are not filtered by context at the moment, even though
-  // a context descriptor is provided to on/off.
-  // Consumers are still responsible for checking that the event matches the
-  // correct context.
-  // Consequently, emitting an event on browsingContext1 will trigger both
-  // callbacks.
-  // TODO: This should be handled by the framework in Bug 1763137.
   await emitTestEvent(root, browsingContext1, monitoringEvents);
   is(events1.length, 1);
-  is(events2.length, 1);
+  is(events2.length, 0);
+
   await emitTestEvent(root, browsingContext2, monitoringEvents);
-  is(events1.length, 2);
-  is(events2.length, 2);
+  is(events1.length, 1);
+  is(events2.length, 1);
 
   await root.eventsDispatcher.off(
     "eventemitter.testEvent",
@@ -228,13 +222,13 @@ add_task(async function test_two_contexts() {
   // No event expected here since the module for browsingContext1 is no longer
   // subscribed
   await emitTestEvent(root, browsingContext1, monitoringEvents);
-  is(events1.length, 2);
-  is(events2.length, 2);
+  is(events1.length, 1);
+  is(events2.length, 1);
 
   // Whereas the module for browsingContext2 is still subscribed
   await emitTestEvent(root, browsingContext2, monitoringEvents);
-  is(events1.length, 2);
-  is(events2.length, 3);
+  is(events1.length, 1);
+  is(events2.length, 2);
 
   await root.eventsDispatcher.off(
     "eventemitter.testEvent",
@@ -246,8 +240,8 @@ add_task(async function test_two_contexts() {
 
   await emitTestEvent(root, browsingContext1, monitoringEvents);
   await emitTestEvent(root, browsingContext2, monitoringEvents);
-  is(events1.length, 2);
-  is(events2.length, 3);
+  is(events1.length, 1);
+  is(events2.length, 2);
 
   root.destroy();
   gBrowser.removeTab(tab2);

@@ -13,7 +13,10 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
+  ContextDescriptorType:
+    "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
+  TabManager: "chrome://remote/content/shared/TabManager.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
@@ -28,10 +31,17 @@ class EventsDispatcher {
   // The MessageHandler owning this EventsDispatcher.
   #messageHandler;
 
-  // Map from event name to event listener callbacks map.
-  // A listener callbacks map is a map from a string context id (eg browser id,
-  // may depend on the event) to a Set of functions.
-  #eventListeners;
+  /**
+   * @typedef {Object} EventListenerInfo
+   * @property {ContextDescriptor} contextDescriptor
+   *     The ContextDescriptor to which those callbacks are associated
+   * @property {Set<Function>} callbacks
+   *     The callbacks to trigger when an event matching the ContextDescriptor
+   *     is received.
+   */
+
+  // Map from event name to map of strings (context keys) to EventListenerInfo.
+  #listenersByEventName;
 
   /**
    * Create a new EventsDispatcher instance.
@@ -42,11 +52,15 @@ class EventsDispatcher {
   constructor(messageHandler) {
     this.#messageHandler = messageHandler;
 
-    this.#eventListeners = new Map();
+    this.#listenersByEventName = new Map();
   }
 
   destroy() {
-    this.#eventListeners.clear();
+    for (const event of this.#listenersByEventName.keys()) {
+      this.#messageHandler.off(event, this.#onMessageHandlerEvent);
+    }
+
+    this.#listenersByEventName = null;
   }
 
   /**
@@ -64,24 +78,24 @@ class EventsDispatcher {
    *     propagating the necessary session data.
    */
   async off(event, contextDescriptor, callback) {
-    const listeners = this.#eventListeners.get(event);
+    const listeners = this.#listenersByEventName.get(event);
     if (!listeners) {
       return;
     }
 
     const key = this.#getContextKey(contextDescriptor);
-    const callbacks = listeners.get(key);
-    if (!callbacks) {
+    if (!listeners.has(key)) {
       return;
     }
 
+    const { callbacks } = listeners.get(key);
     if (callbacks.has(callback)) {
       callbacks.delete(callback);
       if (callbacks.size === 0) {
         listeners.delete(key);
         if (listeners.size === 0) {
           this.#messageHandler.off(event, this.#onMessageHandlerEvent);
-          this.#eventListeners.delete(event);
+          this.#listenersByEventName.delete(event);
         }
 
         await this.#messageHandler.removeSessionData(
@@ -106,18 +120,19 @@ class EventsDispatcher {
    *     propagating the necessary session data.
    */
   async on(event, contextDescriptor, callback) {
-    if (!this.#eventListeners.has(event)) {
-      this.#eventListeners.set(event, new Map());
+    if (!this.#listenersByEventName.has(event)) {
+      this.#listenersByEventName.set(event, new Map());
       this.#messageHandler.on(event, this.#onMessageHandlerEvent);
     }
 
     const key = this.#getContextKey(contextDescriptor);
-    const listeners = this.#eventListeners.get(event);
+    const listeners = this.#listenersByEventName.get(event);
     if (listeners.has(key)) {
-      const callbacks = listeners.get(key);
+      const { callbacks } = listeners.get(key);
       callbacks.add(callback);
     } else {
-      listeners.set(key, new Set([callback]));
+      const callbacks = new Set([callback]);
+      listeners.set(key, { callbacks, contextDescriptor });
       await this.#messageHandler.addSessionData(
         this.#getSessionDataItem(event, contextDescriptor)
       );
@@ -139,9 +154,30 @@ class EventsDispatcher {
     };
   }
 
-  #onMessageHandlerEvent = (name, event) => {
-    const listeners = this.#eventListeners.get(name);
-    for (const [, callbacks] of listeners) {
+  #matchesContext(contextInfo, contextDescriptor) {
+    if (contextDescriptor.type === lazy.ContextDescriptorType.All) {
+      return true;
+    }
+
+    if (
+      contextDescriptor.type === lazy.ContextDescriptorType.TopBrowsingContext
+    ) {
+      const eventBrowsingContext = lazy.TabManager.getBrowsingContextById(
+        contextInfo.contextId
+      );
+      return eventBrowsingContext?.browserId === contextDescriptor.id;
+    }
+
+    return false;
+  }
+
+  #onMessageHandlerEvent = (name, event, contextInfo) => {
+    const listeners = this.#listenersByEventName.get(name);
+    for (const { callbacks, contextDescriptor } of listeners.values()) {
+      if (!this.#matchesContext(contextInfo, contextDescriptor)) {
+        continue;
+      }
+
       for (const callback of callbacks) {
         try {
           callback(name, event);

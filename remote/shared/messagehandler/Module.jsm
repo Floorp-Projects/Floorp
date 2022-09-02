@@ -73,9 +73,11 @@ class Module {
    *     form [module name].[event name].
    * @param {Object} data
    *     The event's data.
+   * @param {ContextInfo=} contextInfo
+   *     The event's context info, see MessageHandler:emitEvent. Optional.
    */
-  emitEvent(name, data) {
-    this.messageHandler.emitEvent(name, data);
+  emitEvent(name, data, contextInfo) {
+    this.messageHandler.emitEvent(name, data, contextInfo);
   }
 
   /**
