@@ -2429,6 +2429,7 @@ bool JSRuntime::initSelfHostingStencil(JSContext* cx,
 
   // Try initializing from Stencil XDR.
   bool decodeOk = false;
+  MainThreadErrorContext ec(cx);
   if (xdrCache.Length() > 0) {
     // Allow the VM to directly use bytecode from the XDR buffer without
     // copying it. The buffer must outlive all runtimes (including workers).
@@ -2449,7 +2450,7 @@ bool JSRuntime::initSelfHostingStencil(JSContext* cx,
     if (!stencil) {
       return false;
     }
-    if (!stencil->deserializeStencils(cx, *input, xdrCache, &decodeOk)) {
+    if (!stencil->deserializeStencils(cx, &ec, *input, xdrCache, &decodeOk)) {
       return false;
     }
 
@@ -2489,7 +2490,6 @@ bool JSRuntime::initSelfHostingStencil(JSContext* cx,
   if (!input) {
     return false;
   }
-  MainThreadErrorContext ec(cx);
   frontend::NoScopeBindingCache scopeCache;
   RefPtr<frontend::CompilationStencil> stencil =
       frontend::CompileGlobalScriptToStencil(

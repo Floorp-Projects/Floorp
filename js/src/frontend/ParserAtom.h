@@ -822,7 +822,7 @@ class ParserAtomSpanBuilder {
  public:
   explicit ParserAtomSpanBuilder(ParserAtomSpan& entries) : entries_(entries) {}
 
-  bool allocate(JSContext* cx, LifoAlloc& alloc, size_t count);
+  bool allocate(ErrorContext* ec, LifoAlloc& alloc, size_t count);
 
   void set(ParserAtomIndex index, const ParserAtom* atom) {
     entries_[index] = const_cast<ParserAtom*>(atom);

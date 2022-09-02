@@ -1180,7 +1180,8 @@ struct CompilationStencil {
   [[nodiscard]] bool serializeStencils(JSContext* cx, CompilationInput& input,
                                        JS::TranscodeBuffer& buf,
                                        bool* succeededOut = nullptr) const;
-  [[nodiscard]] bool deserializeStencils(JSContext* cx, CompilationInput& input,
+  [[nodiscard]] bool deserializeStencils(JSContext* cx, ErrorContext* ec,
+                                         CompilationInput& input,
                                          const JS::TranscodeRange& range,
                                          bool* succeededOut = nullptr);
 
