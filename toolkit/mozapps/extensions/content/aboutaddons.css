@@ -4,6 +4,7 @@
 
 :root {
   --addon-icon-size: 32px;
+  --card-border-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
   --main-margin-start: 28px;
   --section-width: 664px;
   --sidebar-width: var(--in-content-sidebar-width);
@@ -854,7 +855,7 @@ section:not(:empty) ~ #empty-addons-message {
 
 #colorways-expiry-date {
   display: inline-block;
-  background: linear-gradient(to right, purple, pink, orange);
+  background-image: var(--card-border-zap-gradient);
   background-origin: border-box;
   border-radius: 1.5em;
   padding: 1px;
@@ -903,10 +904,4 @@ section:not(:empty) ~ #empty-addons-message {
 
 #colorways-preview-text-container + .card-heading-image {
   background-color: var(--in-content-box-background-odd);
-}
-
-@media (prefers-color-scheme: dark) {
-  #colorways-preview-text-container + .card-heading-image {
-    background-color: var(--in-content-page-background);
-  }
 }
