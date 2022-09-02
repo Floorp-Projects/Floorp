@@ -290,6 +290,13 @@ pocketNewtab:
       fallbackPref: >-
         browser.newtabpage.activity-stream.discoverystream.newFooterSection.enabled
       description: Enable an updated Pocket section topics footer
+    saveToPocketCard:
+      type: boolean
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.saveToPocketCard.enabled
+      description: >-
+        A save to Pocket button inside the card, shown on the card thumbnail, on
+        hover.
     saveToPocketCardRegions:
       type: string
       fallbackPref: >-
@@ -302,6 +309,12 @@ pocketNewtab:
         browser.newtabpage.activity-stream.discoverystream.hideDescriptions.enabled
       description: >-
         Hide or display descriptions for Pocket stories on newtab.
+    hideDescriptionsRegions:
+      type: string
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.hideDescriptionsRegions
+      description: >-
+        CSV string of regions that hide descriptions for Pocket stories on newtab.
     compactGrid:
       type: boolean
       fallbackPref: >-

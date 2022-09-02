@@ -246,11 +246,22 @@ class DiscoveryStreamFeed {
 
     const nimbusConfig = this.store.getState().Prefs.values?.pocketConfig || {};
     const { region } = this.store.getState().Prefs.values;
+
     const saveToPocketCardRegions = nimbusConfig.saveToPocketCardRegions
       ?.split(",")
       .map(s => s.trim());
     const saveToPocketCard =
-      pocketButtonEnabled && saveToPocketCardRegions?.includes(region);
+      pocketButtonEnabled &&
+      (nimbusConfig.saveToPocketCard ||
+        saveToPocketCardRegions?.includes(region));
+
+    const hideDescriptionsRegions = nimbusConfig.hideDescriptionsRegions
+      ?.split(",")
+      .map(s => s.trim());
+    const hideDescriptions =
+      nimbusConfig.hideDescriptions ||
+      hideDescriptionsRegions?.includes(region);
+
     // We don't BroadcastToContent for this, as the changes may
     // shift around elements on an open newtab the user is currently reading.
     // So instead we AlsoToPreloaded so the next tab is updated.
@@ -262,7 +273,7 @@ class DiscoveryStreamFeed {
           recentSavesEnabled: nimbusConfig.recentSavesEnabled,
           pocketButtonEnabled,
           saveToPocketCard,
-          hideDescriptions: nimbusConfig.hideDescriptions,
+          hideDescriptions,
           compactImages: nimbusConfig.compactImages,
           imageGradient: nimbusConfig.imageGradient,
           newSponsoredLabel: nimbusConfig.newSponsoredLabel,
