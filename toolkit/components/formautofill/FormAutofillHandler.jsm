@@ -1017,14 +1017,18 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
   }
 
   isValidSection() {
-    let ccNumberDetail = null;
+    let ccNumberReason = "";
+    let ccNumberConfidence = 0;
+    let hasCCNumber = false;
     let hasExpiryDate = false;
     let hasCCName = false;
 
     for (let detail of this.fieldDetails) {
       switch (detail.fieldName) {
         case "cc-number":
-          ccNumberDetail = detail;
+          hasCCNumber = true;
+          ccNumberReason = detail._reason;
+          ccNumberConfidence = detail.confidence;
           break;
         case "cc-name":
         case "cc-given-name":
@@ -1040,33 +1044,17 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
       }
     }
 
-    if (ccNumberDetail) {
-      if (
-        ccNumberDetail._reason == "autocomplete" ||
-        hasExpiryDate ||
-        hasCCName
-      ) {
+    if (hasCCNumber) {
+      if (ccNumberReason == "autocomplete" || hasExpiryDate || hasCCName) {
         return true;
       }
 
-      // There are cases where sites use a separate form/iframe for a cc-number field
-      // (either cc-number in one form, other cc-* in another form, OR each cc-* is in its
-      // own form). For thoses, we don't have cc-name or cc-exp to help us determine
-      // whether this is a cc form. To support those use cases, we add two
-      // extra rules to identify valid credit card section:
-      // 1. Use a higher confidence threshold.
-      // 2. Check whether the <input> is the only non-hidden input field of its
-      //    form (or ownerDocument).
+      // This form has only one credit card number field. Treat this
+      // form as a valid credit card section only if we are confident enough.
       if (
-        ccNumberDetail.confidence >=
-        FormAutofillUtils.ccHeuristicsNumberOnlyThreshold
+        ccNumberConfidence >= FormAutofillUtils.ccHeuristicsNumberOnlyThreshold
       ) {
-        const element = ccNumberDetail.elementWeakRef.get();
-        const root = element.form || element.ownerDocument;
-        const inputs = root.querySelectorAll("input:not([type=hidden])");
-        if (inputs.length == 1 && inputs[0] == element) {
-          return true;
-        }
+        return true;
       }
     }
     return false;

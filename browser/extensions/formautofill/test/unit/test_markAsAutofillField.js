@@ -1,5 +1,9 @@
 "use strict";
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+
 const TESTCASES = [
   {
     description: "Form containing 8 fields with autocomplete attribute.",
@@ -86,21 +90,21 @@ const TESTCASES = [
   },
   {
     description:
-      "Invalid form containing three consecutive cc-number fields without autocomplete attributes.",
+      "Valid form containing three consecutive cc-number fields without autocomplete attributes.",
     document: `<form>
                 <input id="cc-number1" maxlength="4">
                 <input id="cc-number2" maxlength="4">
                 <input id="cc-number3" maxlength="4">
                </form>`,
     targetElementId: "cc-number1",
-    expectedResult: [],
+    expectedResult: ["cc-number1", "cc-number2", "cc-number3"],
     prefs: [
       ["extensions.formautofill.creditCards.heuristics.testConfidence", "1.0"],
     ],
   },
   {
     description:
-      "Invalid form containing five consecutive cc-number fields without autocomplete attributes.",
+      "Valid form containing five consecutive cc-number fields without autocomplete attributes.",
     document: `<form>
                 <input id="cc-number1" maxlength="4">
                 <input id="cc-number2" maxlength="4">
@@ -109,7 +113,13 @@ const TESTCASES = [
                 <input id="cc-number5" maxlength="4">
                </form>`,
     targetElementId: "cc-number1",
-    expectedResult: [],
+    expectedResult: [
+      "cc-number1",
+      "cc-number2",
+      "cc-number3",
+      "cc-number4",
+      "cc-number5",
+    ],
     prefs: [
       ["extensions.formautofill.creditCards.heuristics.testConfidence", "1.0"],
     ],
@@ -126,7 +136,14 @@ const TESTCASES = [
                 <input id="cc-exp-year">
                </form>`,
     targetElementId: "cc-number1",
-    expectedResult: ["cc-number3", "cc-name", "cc-exp-month", "cc-exp-year"],
+    expectedResult: [
+      "cc-number1",
+      "cc-number2",
+      "cc-number3",
+      "cc-name",
+      "cc-exp-month",
+      "cc-exp-year",
+    ],
     prefs: [
       ["extensions.formautofill.creditCards.heuristics.testConfidence", "1.0"],
     ],
@@ -145,7 +162,18 @@ const TESTCASES = [
                 <input id="cc-exp-year">
                </form>`,
     targetElementId: "cc-number1",
-    expectedResult: ["cc-number5", "cc-name", "cc-exp-month", "cc-exp-year"],
+    expectedResult: AppConstants.EARLY_BETA_OR_EARLIER
+      ? [
+          "cc-number1",
+          "cc-number2",
+          "cc-number3",
+          "cc-number4",
+          "cc-number5",
+          "cc-name",
+          "cc-exp-month",
+          "cc-exp-year",
+        ]
+      : ["cc-number5", "cc-name", "cc-exp-month", "cc-exp-year"],
   },
 ];
 
