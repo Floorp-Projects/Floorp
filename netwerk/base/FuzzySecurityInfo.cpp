@@ -339,6 +339,18 @@ NS_IMETHODIMP FuzzySecurityInfo::GetIsBuiltCertChainRootBuiltInRoot(
   return NS_OK;
 }
 
+NS_IMETHODIMP
+FuzzySecurityInfo::GetUsedPrivateDNS(bool* aUsedPrivateDNS) {
+  *aUsedPrivateDNS = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FuzzySecurityInfo::GetMadeOCSPRequests(bool* aMadeOCSPRequests) {
+  *aMadeOCSPRequests = false;
+  return NS_OK;
+}
+
 NS_IMETHODIMP FuzzySecurityInfo::DisableEarlyData(void) { return NS_OK; }
 
 NS_IMETHODIMP FuzzySecurityInfo::SetHandshakeCallbackListener(
