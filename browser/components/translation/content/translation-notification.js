@@ -249,10 +249,7 @@ class MozTranslationNotification extends MozElements.Notification {
         this._getAnonElt("thanksButton").setAttribute("label", strings[3]);
 
         let panel = this._getAnonElt("welcomePanel");
-        panel.openPopup(
-          this._getAnonElt("messageImage"),
-          "bottomcenter topleft"
-        );
+        panel.openPopup(this._getAnonElt("messageImage"), "bottomleft topleft");
 
         Services.prefs.setBoolPref(kWelcomePref, true);
       },

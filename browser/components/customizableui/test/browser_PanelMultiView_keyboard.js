@@ -37,7 +37,7 @@ let gIframeIframe;
 
 async function openPopup() {
   let shown = BrowserTestUtils.waitForEvent(gMainView, "ViewShown");
-  PanelMultiView.openPopup(gPanel, gAnchor, "bottomcenter topright");
+  PanelMultiView.openPopup(gPanel, gAnchor, "bottomright topright");
   await shown;
 }
 

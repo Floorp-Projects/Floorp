@@ -1345,7 +1345,7 @@ PopupNotifications.prototype = {
       if (popupOptions) {
         this.panel.openPopup(anchorElement, popupOptions);
       } else {
-        this.panel.openPopup(anchorElement, "bottomcenter topleft", 0, 0);
+        this.panel.openPopup(anchorElement, "bottomleft topleft", 0, 0);
       }
     });
   },

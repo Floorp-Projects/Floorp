@@ -2175,7 +2175,7 @@ var gProtectionsHandler = {
       this._protectionsPopup,
       this._trackingProtectionIconContainer,
       {
-        position: "bottomcenter topleft",
+        position: "bottomleft topleft",
         triggerEvent: event,
       }
     ).catch(Cu.reportError);

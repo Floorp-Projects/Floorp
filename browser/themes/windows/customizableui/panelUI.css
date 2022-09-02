@@ -4,16 +4,6 @@
 
 @import "chrome://browser/skin/customizableui/panelUI-shared.css";
 
-#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="top"],
-#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="bottom"] {
-  margin-inline: -13px;
-}
-
-#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="left"],
-#customizationui-widget-panel[viewId="PanelUI-profiler"][type="arrow"][side="right"] {
-  margin-block: -13px;
-}
-
 #notification-popup {
   margin-block: -4px;
 }
