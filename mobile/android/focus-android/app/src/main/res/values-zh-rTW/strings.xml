@@ -295,12 +295,11 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">使用指紋解鎖程式</string>
+
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
         %s will be replaced by the app name (e.g. Firefox Focus)
         Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
-    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">若已在程式中開啟網頁，可使用您的指紋直接解鎖 %1$s。也會開啟秘密行動模式。</string>
-
     <string name="preference_security_biometric_summary2">若已用 %s 開啟網站或加入捷徑，可使用指紋直接解鎖。</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
@@ -366,7 +365,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">在主畫面顯示小秘訣</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">在主畫面顯示小秘訣</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">新增搜尋引擎</string>
@@ -512,8 +511,6 @@
     <string name="onboarding_history_title">讓瀏覽紀錄彷彿沒發生過</string>
 
     <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">只要點一下，即可清除您的上網紀錄與 Cookie，防止廣告四處追蹤。</string>
-
     <string name="onboarding_history_description2">只要點一下，即可清除您的上網紀錄與 Cookie，防止廣告四處追蹤。</string>
 
     <!-- Onboarding: Protection Title -->
@@ -822,7 +819,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">網站有內容不見，或行為怪怪的？\n
+    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">網站有內容不見，或行為怪怪的？\n
     試試關閉加強型追蹤保護功能</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
@@ -850,7 +847,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
       %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">想看到完整網站嗎？\n
+    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">想看到完整網站嗎？\n
         到 %1$s 選單切換成桌面版</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
@@ -858,17 +855,17 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">想要對您信任的網站關閉加強型追蹤保護嗎？\n
+    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">想要對您信任的網站關閉加強型追蹤保護嗎？\n
         到設定當中加入允許清單
     </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">當然，我們有全新設計！\n 了解更多 %1$s 的新鮮事。</string>
+    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">當然，我們有全新設計！\n 了解更多 %1$s 的新鮮事。</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">對您常造訪的網站建立捷徑:\n
+    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">對您常造訪的網站建立捷徑:\n
     選擇 %1$s 選單的「新增捷徑」</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
@@ -1002,6 +999,7 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">知道了！</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_delete_icon">只要點一下垃圾桶按鈕，馬上就能清除您的個人資料、上網紀錄與更多在這次瀏覽階段中產生的資料，快試試看！</string>
+    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">只要點一下垃圾桶按鈕，馬上就能清除您的個人資料、上網紀錄與更多在這次瀏覽階段中產生的資料，快試試看！</string>
+    <string name="cfr_for_toolbar_delete_icon2">點擊此處即可清除上網紀錄、Cookie 等所有資料，然後重新開啟一個乾乾淨淨的分頁。</string>
 
 </resources>

@@ -295,12 +295,11 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Wužywajśo palcowy wótśišć, aby nałoženje wótwórił</string>
+
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
         %s will be replaced by the app name (e.g. Firefox Focus)
         Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
-    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">Waš palcowy wótśišć móž0 %1$s wówtwóriś, jolic URL jo južo w nałoženju wócynjony. Tarnowański modus se zašaltujo.</string>
-
     <string name="preference_security_biometric_summary2">Wótwóŕśo z pomocu palcowego wóśišća, jolic sćo pśidał zwězanja abo gaž websedło jo južo w %s wócynjone.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
@@ -366,7 +365,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">Pokazki na startowej wobrazowce pokazaś</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Pokazki na startowej wobrazowce pokazaś</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Pytnicu pśidaś</string>
@@ -512,8 +511,6 @@
     <string name="onboarding_history_title">Pśeglědowaś, ako njeby se nigda stało</string>
 
     <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Jadno dotyknjenje wašu pśeglědowańsku historiju a waše cookije lašujo – a blokěrujo wabjenje, kótarež wam slědujo.</string>
-
     <string name="onboarding_history_description2">Jadno dotyknjenje wašu pśeglědowańsku historiju a waše cookije lašujo – a blokěrujo wabjenje, kótarež wam slědujo.</string>
 
     <!-- Onboarding: Protection Title -->
@@ -821,7 +818,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">Sedłoju wopśimjeśe felujo abo sedło se źiwnje zaźaržy?\n
+    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">Sedłoju wopśimjeśe felujo abo sedło se źiwnje zaźaržy?\n
     Wopytajśo pólěpšony slědowański šćit znjemóžniś</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
@@ -843,7 +840,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
       %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">Cośo dopołnu wersiju sedła wiźeś?\n
+    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">Cośo dopołnu wersiju sedła wiźeś?\n
         Pśejźćo k desktopowemu sedłoju z menija %1$s</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
@@ -851,17 +848,17 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">Cośo pólěpšony slědowański šćit za sedło, kótaremuž dowěriśo znjemóžniś?\n
+    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">Cośo pólěpšony slědowański šćit za sedło, kótaremuž dowěriśo znjemóžniś?\n
         Pśidajśo jo do běłeje lisćiny w nastajenjach
     </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">To se wě, něnto modernjej wuglědamy!\n Cytajśo wěcej wó tom a drugich aktualizacijach za %1$s.</string>
+    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">To se wě, něnto modernjej wuglědamy!\n Cytajśo wěcej wó tom a drugich aktualizacijach za %1$s.</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">Napórajśo zwězanja ze sedłami, ku kótarymž se nejcesćej woglědujośo:\n
+    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">Napórajśo zwězanja ze sedłami, ku kótarymž se nejcesćej woglědujośo:\n
     Wubjeŕśo Zwězanjam pśidaś z menija %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
@@ -995,6 +992,7 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">Zachyśiś</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_delete_icon">Pótusniśo tłocašk papjernika, aby swóje wósobinske daty, pśeglědowańsku historiju a wěcej z toś togo pósejźenja wulašował. Wopytajśo!</string>
+    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Pótusniśo tłocašk papjernika, aby swóje wósobinske daty, pśeglědowańsku historiju a wěcej z toś togo pósejźenja wulašował. Wopytajśo!</string>
+    <string name="cfr_for_toolbar_delete_icon2">Pótusniśo how, aby wšykno do papjernika pśesunuł – historiju, cookieje, wšykno – a startujśo znowego na nowem rejtariku.</string>
 
 </resources>

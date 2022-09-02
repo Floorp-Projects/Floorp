@@ -295,12 +295,11 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Usa le impression digital pro disblocar le application</string>
+
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
         %s will be replaced by the app name (e.g. Firefox Focus)
         Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
-    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">Tu impression digital pote disblocar %1$s si un URL es ja aperte in le application. Le modo furtive sera activate.</string>
-
     <string name="preference_security_biometric_summary2">Disbloca per le dactylogramma si tu addeva le vias breve o quando un sito web jam es aperte in %s.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
@@ -366,7 +365,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">Monstrar le suggestiones del pagina principal</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Monstrar le suggestiones del pagina principal</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Adder le motor de recerca</string>
@@ -512,8 +511,6 @@
     <string name="onboarding_history_title">Naviga como il eveniva jammais</string>
 
     <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Un tocco cancella tu chronologia de navigation e le cookies, e impedi le avisos publicitari de sequer te.</string>
-
     <string name="onboarding_history_description2">Un tocco cancella tu chronologia de navigation e le cookies, e impedi le avisos publicitari de sequer te.</string>
 
     <!-- Onboarding: Protection Title -->
@@ -821,7 +818,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">Sito que care de contento o age estranie?\n
+    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">Sito que care de contento o age estranie?\n
     Proba disactivar le Protection antitraciamento reinfortiate</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
@@ -843,7 +840,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
       %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">Vole vider le version complete de un sito?\n
+    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">Vole vider le version complete de un sito?\n
         Activa &quot;Sito de scriptorio&quot; in le menu de %1$s.</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
@@ -851,17 +848,17 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">Vole tu disactivar le Protection antitraciamento reinfortiate pro un sito cuje te fide?\n
+    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">Vole tu disactivar le Protection antitraciamento reinfortiate pro un sito cuje te fide?\n
         Adde lo al lista permittite in Parametros
     </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">Perque si, nos ha un fresc nove apparentia!\n Lege plus re iste e altere actualisationes a %1$s.</string>
+    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">Perque si, nos ha un fresc nove apparentia!\n Lege plus re iste e altere actualisationes a %1$s.</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">Crea vias breve pro le sitos que tu plus visita:\n
+    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">Crea vias breve pro le sitos que tu plus visita:\n
     Selige \'Adder al vias breve\' in le menu de %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
@@ -996,6 +993,7 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">Ignorar</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_delete_icon">Libera te de tu datos personal, chronologia de navigation e altero ancora de iste session, toccante le button immunditia. Prova lo!</string>
+    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Libera te de tu datos personal, chronologia de navigation e altero ancora de iste session, toccante le button immunditia. Prova lo!</string>
+    <string name="cfr_for_toolbar_delete_icon2">Tocca ci pro eliminar tote le datos, chronologia, cookies, toto, e recomenciar con un scheda tote nove.</string>
 
 </resources>

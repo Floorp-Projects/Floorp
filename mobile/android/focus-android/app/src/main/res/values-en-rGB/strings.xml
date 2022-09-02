@@ -294,13 +294,11 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Use fingerprint to unlock app</string>
+
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
         %s will be replaced by the app name (e.g. Firefox Focus)
         Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
-    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">Your fingerprint can unlock %1$s if a URL is already opened in the app.
-    Stealth will be turned on.</string>
-
     <string name="preference_security_biometric_summary2">Unlock using fingerprint if you’ve added Shortcuts or when a web site is already open in %s.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
@@ -365,7 +363,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">Show home screen tips</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Show home screen tips</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Add search engine</string>
@@ -485,8 +483,6 @@
     <string name="onboarding_history_title">Browse like it never happened</string>
 
     <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">One tap erases your browsing history and cookies — and stops ads from following your around.</string>
-
     <string name="onboarding_history_description2">One tap erases your browsing history and cookies — and stops ads from following you around.</string>
 
     <!-- Onboarding: Protection Title -->
@@ -789,7 +785,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">Site missing content or acting strange?\n
+    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">Site missing content or acting strange?\n
     Try turning off Enhanced Tracking Protection</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
@@ -817,7 +813,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
       %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">Want to see the full version of a site?\n
+    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">Want to see the full version of a site?\n
         Switch on Desktop Site from the %1$s menu</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
@@ -825,17 +821,17 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">Want to keep Enhanced Tracking Protection off for a site you trust?\n
+    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">Want to keep Enhanced Tracking Protection off for a site you trust?\n
         Add it to the Allowlist in Settings
     </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">Why yes, we do have a fresh new look!\n Read more about this and other updates to %1$s.</string>
+    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">Why yes, we do have a fresh new look!\n Read more about this and other updates to %1$s.</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">Create shortcuts to the sites you visit most:\n
+    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">Create shortcuts to the sites you visit most:\n
     Select Add to Shortcuts from the %1$s menu</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
@@ -966,6 +962,7 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">Dismiss</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_delete_icon">Get rid of your personal data, browsing history and more from this session by tapping the trash button. Give it a try!</string>
+    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Get rid of your personal data, browsing history and more from this session by tapping the trash button. Give it a try!</string>
+    <string name="cfr_for_toolbar_delete_icon2">Tap here to trash it all — history, cookies, everything — and start fresh on a new tab.</string>
 
 </resources>

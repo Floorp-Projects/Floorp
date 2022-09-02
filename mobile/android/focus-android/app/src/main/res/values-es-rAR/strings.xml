@@ -295,12 +295,11 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Usar la huella digital de para desbloquear la aplicación</string>
+
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
         %s will be replaced by the app name (e.g. Firefox Focus)
         Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
-    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">Tu huella digital puede liberar %1$s si ya hay una URL abierta. Se activará el modo invisible.</string>
-
     <string name="preference_security_biometric_summary2">Desbloqueá usando la huella digital si agregaste accesos directos o cuando un sitio web ya está abierto en %s.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
@@ -366,7 +365,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">Mostrar consejos para la página de inicio</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Mostrar consejos para la página de inicio</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Agregar buscador</string>
@@ -512,8 +511,6 @@
     <string name="onboarding_history_title">Navegá como si nunca hubiera pasado</string>
 
     <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Un toque borra tu historial de navegación y cookies — y evita que los anuncios te sigan.</string>
-
     <string name="onboarding_history_description2">Un toque borra tu historial de navegación y cookies — y evita que los anuncios te sigan.</string>
 
     <!-- Onboarding: Protection Title -->
@@ -821,7 +818,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">¿Al sitio le falta contenido o actúa raro?\n
+    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">¿Al sitio le falta contenido o actúa raro?\n
     Probá desactivar la protección contra rastreo aumentada</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
@@ -843,7 +840,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
       %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">¿Querés ver la versión completa de un sitio?\n
+    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">¿Querés ver la versión completa de un sitio?\n
         Cambiá a Sitio de escritorio desde el menú de %1$s</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
@@ -851,17 +848,17 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">¿Querés mantener la protección contra rastreo aumentada desactivada para un sitio en el que confiás?\n
+    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">¿Querés mantener la protección contra rastreo aumentada desactivada para un sitio en el que confiás?\n
         Agregalo a la lista de permitidos en configuración
     </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">¡Sí, tenemos un nuevo look!\n Leé más sobre esto y otras actualizaciones de %1$s.</string>
+    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">¡Sí, tenemos un nuevo look!\n Leé más sobre esto y otras actualizaciones de %1$s.</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">Creá accesos directos a los sitios que más visitás:\n
+    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">Creá accesos directos a los sitios que más visitás:\n
     Seleccioná Agregar a accesos directos en el menú de %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
@@ -997,6 +994,7 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">Descartar</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_delete_icon">Deshacete de tus datos personales, historial de navegación y más de esta sesión tocando el botón de la papelera. ¡Dale una oportunidad!</string>
+    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Deshacete de tus datos personales, historial de navegación y más de esta sesión tocando el botón de la papelera. ¡Dale una oportunidad!</string>
+    <string name="cfr_for_toolbar_delete_icon2">Tocá aquí para eliminarlo todo: historial, cookies, absolutamente todo y empezá de cero en una nueva pestaña.</string>
 
 </resources>

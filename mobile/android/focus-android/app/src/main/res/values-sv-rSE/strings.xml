@@ -295,12 +295,11 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Använd fingeravtryck för att låsa upp appen</string>
+
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
         %s will be replaced by the app name (e.g. Firefox Focus)
         Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
-    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">Ditt fingeravtryck kan låsa upp %1$s om en webbadress redan har öppnats i appen. Dolt läge kommer att slås på.</string>
-
     <string name="preference_security_biometric_summary2">Lås upp med fingeravtryck om du har lagt till genvägar eller när en webbplats redan är öppen i %s.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
@@ -366,7 +365,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">Visa startskärmstips</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Visa startskärmstips</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Lägg till sökmotor</string>
@@ -819,7 +818,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">Saknar webbplatsen innehåll eller beter den sig konstigt?\n
+    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">Saknar webbplatsen innehåll eller beter den sig konstigt?\n
     Testa att stänga av förbättrat spårningsskydd</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
@@ -841,7 +840,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
       %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">Vill du se den fullständiga versionen av en webbplats?\n
+    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">Vill du se den fullständiga versionen av en webbplats?\n
         Aktivera datorwebbplats från %1$s-menyn</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
@@ -849,17 +848,17 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">Vill du behålla spårningsskyddet avstängt för en webbplats du litar på?\n
+    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">Vill du behålla spårningsskyddet avstängt för en webbplats du litar på?\n
         Lägg till den i listan över tillåtna i inställningar
     </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">Ja, vi har ett nytt utseende!\n Läs mer om detta och andra uppdateringar till %1$s.</string>
+    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">Ja, vi har ett nytt utseende!\n Läs mer om detta och andra uppdateringar till %1$s.</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">Skapa genvägar till de webbplatser du besöker mest:\n
+    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">Skapa genvägar till de webbplatser du besöker mest:\n
     Välj Lägg till i genvägar på %1$s-menyn</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
@@ -995,6 +994,7 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">Ignorera</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_delete_icon">Bli av med dina personliga uppgifter, webbhistorik och mer från den här sessionen genom att trycka på papperskorgen. Ge det ett försök!</string>
+    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Bli av med dina personliga uppgifter, webbhistorik och mer från den här sessionen genom att trycka på papperskorgen. Ge det ett försök!</string>
+    <string name="cfr_for_toolbar_delete_icon2">Tryck här för att kasta allt — historik, kakor, allt — och börja om på en ny flik.</string>
 
 </resources>

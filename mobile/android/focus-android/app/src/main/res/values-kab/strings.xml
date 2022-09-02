@@ -367,7 +367,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">Sken-d timahaltin n ugdil agejdan</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Sken-d timahaltin n ugdil agejdan</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Rnu amsedday n unadi</string>
@@ -820,7 +820,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">Asmel-a ixuṣṣ-it ugbur neɣ ur iteddu ara akken ilaq?\n
+    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">Asmel-a ixuṣṣ-it ugbur neɣ ur iteddu ara akken ilaq?\n
     Ɛreḍ sens Ammesten mgal aḍfar yettwasǧehden</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
@@ -842,7 +842,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
       %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">Tebɣiḍ ad twaliḍ lqem ummid n usmel?\n
+    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">Tebɣiḍ ad twaliḍ lqem ummid n usmel?\n
         Uɣal ɣer usmel n tnarit seg wumuɣ n %1$s</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
@@ -850,17 +850,17 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">Tebɣiḍ ad tsenseḍ Ammesten mgal aḍfar i usmel iɣef tettekleḍ\n
+    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">Tebɣiḍ ad tsenseḍ Ammesten mgal aḍfar i usmel iɣef tettekleḍ\n
         Rnu-t ɣer Tebdart n Usireg deg Yiɣewwaren
    </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">Ayɣer ihɣur-neɣ udem amaynut n melmi kan!\n Ɣeṛ ugar ɣef waya akked yileqman-nniḍen n %1$s.</string>
+    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">Ayɣer ihɣur-neɣ udem amaynut n melmi kan!\n Ɣeṛ ugar ɣef waya akked yileqman-nniḍen n %1$s.</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">Rnu inegzumen ɣer yismal wuɣur trezzuḍ s waṭas:\n
+    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">Rnu inegzumen ɣer yismal wuɣur trezzuḍ s waṭas:\n
     Fren Rnu ɣer inegzumen seg wumuɣ %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
@@ -995,6 +995,7 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">Zgel</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_delete_icon">Kkes isefka udmawanen, azray n tunigin d wayen-nniḍen seg tɣimit-a s usiti ɣef tqeffalt n tqecwalt. Ɛreḍ!</string>
+    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Kkes isefka udmawanen, azray n tunigin d wayen-nniḍen seg tɣimit-a s usiti ɣef tqeffalt n tqecwalt. Ɛreḍ!</string>
+    <string name="cfr_for_toolbar_delete_icon2">Sit dagi i wakken ad tḍeggreḍ kullec — azray, inagan n tuqqna, kullec — syen bdu seg tazwara qef yiccer amaynut.</string>
 
 </resources>

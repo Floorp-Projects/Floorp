@@ -296,12 +296,11 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Vingerafdruk voor ontgrendelen van app gebruiken</string>
+
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
         %s will be replaced by the app name (e.g. Firefox Focus)
         Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
-    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">Uw vingerafdruk kan %1$s ontgrendelen als er al een URL in de app is geopend. Stealth wordt ingeschakeld.</string>
-
     <string name="preference_security_biometric_summary2">Ontgrendel met vingerafdruk als u snelkoppelingen hebt toegevoegd of als een website al in %s is geopend.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
@@ -367,7 +366,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">Tips op startscherm tonen</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Tips op startscherm tonen</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Zoekmachine toevoegen</string>
@@ -513,8 +512,6 @@
     <string name="onboarding_history_title">Surf alsof het nooit is gebeurd</string>
 
     <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Met één tik worden uw navigatiegeschiedenis en cookies gewist en wordt voorkomen dat advertenties u volgen.</string>
-
     <string name="onboarding_history_description2">Met één tik worden uw navigatiegeschiedenis en cookies gewist en wordt voorkomen dat advertenties u volgen.</string>
 
     <!-- Onboarding: Protection Title -->
@@ -822,7 +819,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">Mist een website inhoud of gedraagt deze zich vreemd?\n
+    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">Mist een website inhoud of gedraagt deze zich vreemd?\n
     Probeer Verbeterde bescherming tegen volgen uit te schakelen</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
@@ -844,7 +841,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
       %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">Wilt u de volledige versie van een website zien?\n
+    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">Wilt u de volledige versie van een website zien?\n
         Schakel de desktopwebsite in vanuit het %1$s-menu</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
@@ -852,17 +849,17 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">Wilt u Verbeterde bescherming tegen volgen uitschakelen voor een website die u vertrouwt?\n
+    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">Wilt u Verbeterde bescherming tegen volgen uitschakelen voor een website die u vertrouwt?\n
         Voeg deze toe aan de Toegestane lijst in de Instellingen
     </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">Inderdaad, we hebben een frisse nieuwe uitstraling!\n Meer info hierover en over andere updates van %1$s.</string>
+    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">Inderdaad, we hebben een frisse nieuwe uitstraling!\n Meer info hierover en over andere updates van %1$s.</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">Maak snelkoppelingen voor websites die u het meest bezoekt:\n
+    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">Maak snelkoppelingen voor websites die u het meest bezoekt:\n
     Selecteer in het %1$s-menu ‘Toevoegen aan snelkoppelingen’</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
@@ -997,6 +994,7 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">Sluiten</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_delete_icon">Verwijder uw persoonlijke gegevens, navigeergeschiedenis en meer uit deze sessie door op de prullenbakknop te tikken. Probeer het eens!</string>
+    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Verwijder uw persoonlijke gegevens, navigeergeschiedenis en meer uit deze sessie door op de prullenbakknop te tikken. Probeer het eens!</string>
+    <string name="cfr_for_toolbar_delete_icon2">Tik hier om alles weg te gooien – geschiedenis, cookies, alles – en een verse start te maken op een nieuw tabblad.</string>
 
 </resources>

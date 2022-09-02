@@ -296,12 +296,11 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Usa l’impronta digitale per sbloccare l’app</string>
+
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
         %s will be replaced by the app name (e.g. Firefox Focus)
         Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
-    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">L’impronta digitale ti permette di sbloccare %1$s se un URL è già stato aperto nell’app. Verrà attivata l’impostazione Invisibile.</string>
-
     <string name="preference_security_biometric_summary2">Sblocca utilizzando l’impronta digitale se hai aggiunto scorciatoie o quando un sito web è già aperto in %s.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
@@ -367,7 +366,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">Visualizza suggerimenti sulla schermata iniziale</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Visualizza suggerimenti sulla schermata iniziale</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Aggiungi motore di ricerca</string>
@@ -513,8 +512,6 @@
     <string name="onboarding_history_title">Naviga come non hai mai fatto</string>
 
     <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Un tocco cancella la cronologia di navigazione e i cookie, impedendo agli annunci pubblicitari di seguirti.</string>
-
     <string name="onboarding_history_description2">Un tocco cancella la cronologia di navigazione e i cookie, impedendo agli annunci pubblicitari di seguirti.</string>
 
     <!-- Onboarding: Protection Title -->
@@ -822,7 +819,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">Nel sito mancano contenuti o si verificano comportamenti anomali?\n Prova a disattivare la Protezione antitracciamento avanzata</string>
+    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">Nel sito mancano contenuti o si verificano comportamenti anomali?\n Prova a disattivare la Protezione antitracciamento avanzata</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
@@ -843,22 +840,22 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
       %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">Vuoi vedere la versione completa di un sito?\n Attiva Sito desktop dal menu di %1$s</string>
+    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">Vuoi vedere la versione completa di un sito?\n Attiva Sito desktop dal menu di %1$s</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Disattiva suggerimenti nella schermata iniziale</string>
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">Vuoi disattivare la Protezione antitracciamento avanzata per un sito di cui ti fidi?\n Aggiungilo all’elenco dei siti consentiti nelle Impostazioni</string>
+    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">Vuoi disattivare la Protezione antitracciamento avanzata per un sito di cui ti fidi?\n Aggiungilo all’elenco dei siti consentiti nelle Impostazioni</string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">Ebbene sì, abbiamo un nuovo look!\n Ulteriori informazioni su questo e altri aggiornamenti di %1$s.</string>
+    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">Ebbene sì, abbiamo un nuovo look!\n Ulteriori informazioni su questo e altri aggiornamenti di %1$s.</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">Crea scorciatoie ai siti che visiti più frequentemente:\n
+    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">Crea scorciatoie ai siti che visiti più frequentemente:\n
    Seleziona Aggiungi alle scorciatoie dal menu di %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
@@ -993,6 +990,7 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">Chiudi</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_delete_icon">Elimina i tuoi dati personali, la cronologia di navigazione e molto altro da questa sessione toccando il pulsante del cestino. Prova!</string>
+    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Elimina i tuoi dati personali, la cronologia di navigazione e molto altro da questa sessione toccando il pulsante del cestino. Prova!</string>
+    <string name="cfr_for_toolbar_delete_icon2">Tocca qui per eliminare tutti i dati — cronologia, cookie, tutto! — e ricominciare da capo con una nuova scheda.</string>
 
 </resources>

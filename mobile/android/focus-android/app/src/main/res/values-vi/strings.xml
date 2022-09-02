@@ -295,12 +295,11 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Sử dụng vân tay để mở khóa ứng dụng</string>
+
     <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
         open when the app was last run to ensure that only the phone's owner can view a previous session.
         %s will be replaced by the app name (e.g. Firefox Focus)
         Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
-    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">Cảm biến vân tay của bạn có thể mở khóa %1$s nếu một URL đã được mở trong ứng dụng. Riêng tư sẽ được kích hoạt.</string>
-
     <string name="preference_security_biometric_summary2">Mở khóa bằng vân tay nếu bạn đã thêm lối tắt hoặc khi một trang web đã mở trong %s.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
@@ -366,7 +365,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">Hiện mẹo trên màn hình chính</string>
+    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">Hiện mẹo trên màn hình chính</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Thêm công cụ tìm kiếm</string>
@@ -512,8 +511,6 @@
     <string name="onboarding_history_title">Duyệt như chưa từng xảy ra</string>
 
     <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Một lần nhấn sẽ xóa lịch sử duyệt web và cookie của bạn — đồng thời ngăn quảng cáo theo dõi bạn.</string>
-
     <string name="onboarding_history_description2">Một lần nhấn sẽ xóa lịch sử duyệt web và cookie của bạn — đồng thời ngăn quảng cáo theo dõi bạn.</string>
 
     <!-- Onboarding: Protection Title -->
@@ -821,7 +818,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">Trang web thiếu nội dung hoặc hoạt động không đúng?\n
+    <string moz:removedIn="105" name="tip_disable_tracking_protection3" tools:ignore="UnusedResources">Trang web thiếu nội dung hoặc hoạt động không đúng?\n
     Thử tắt tính năng Trình chống theo dõi nâng cao</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
@@ -843,7 +840,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
       %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">Muốn xem phiên bản đầy đủ của một trang web?\n
+    <string moz:removedIn="105" name="tip_request_desktop2" tools:ignore="UnusedResources">Muốn xem phiên bản đầy đủ của một trang web?\n
         Bật Trang web trên máy tính để bàn từ menu %1$s</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
@@ -851,17 +848,17 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">Bạn muốn tắt tính năng Trình chống theo dõi nâng cao cho trang web mà bạn tin tưởng?\n
+    <string moz:removedIn="105" name="tip_explain_allowlist3" tools:ignore="UnusedResources">Bạn muốn tắt tính năng Trình chống theo dõi nâng cao cho trang web mà bạn tin tưởng?\n
         Thêm nó vào danh sách cho phép trong Cài đặt
     </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">Tại sao có, chúng tôi có một giao diện mới!\n Đọc thêm về điều này và các cập nhật khác cho %1$s.</string>
+    <string moz:removedIn="105" name="tip_fresh_look" tools:ignore="UnusedResources">Tại sao có, chúng tôi có một giao diện mới!\n Đọc thêm về điều này và các cập nhật khác cho %1$s.</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">Tạo lối tắt đến các trang web bạn truy cập nhiều nhất:\n
+    <string moz:removedIn="105" name="tip_about_shortcuts" tools:ignore="UnusedResources">Tạo lối tắt đến các trang web bạn truy cập nhiều nhất:\n
     Chọn Thêm vào lối tắt từ menu %1$s</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
@@ -996,6 +993,7 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="tool_tip_dismiss_button_content_description">Bỏ qua</string>
 
     <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_delete_icon">Loại bỏ dữ liệu cá nhân, lịch sử duyệt web của bạn và hơn thế nữa khỏi phiên này bằng cách nhấn vào nút thùng rác. Hãy thử một lần!</string>
+    <string moz:removedIn="105" name="cfr_for_toolbar_delete_icon" tools:ignore="UnusedResources">Loại bỏ dữ liệu cá nhân, lịch sử duyệt web của bạn và hơn thế nữa khỏi phiên này bằng cách nhấn vào nút thùng rác. Hãy thử một lần!</string>
+    <string name="cfr_for_toolbar_delete_icon2">Nhấn vào đây để xóa tất cả — lịch sử, cookie, mọi thứ — và bắt đầu làm mới trên một thẻ mới.</string>
 
 </resources>
