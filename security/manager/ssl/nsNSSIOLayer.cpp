@@ -429,7 +429,6 @@ void nsNSSSocketInfo::SetCertVerificationWaiting() {
 // attempt to acquire locks that are already held by libssl when it calls
 // callbacks.
 void nsNSSSocketInfo::SetCertVerificationResult(PRErrorCode errorCode) {
-  SetUsedPrivateDNS(GetProviderFlags() & nsISocketProvider::USED_PRIVATE_DNS);
   MOZ_ASSERT(mCertVerificationState == waiting_for_cert_verification,
              "Invalid state transition to cert_verification_finished");
 
@@ -1201,39 +1200,6 @@ static void reportHandshakeResult(int32_t bytesTransferred, bool wasReading,
       break;
   }
   Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_RESULT, bucket);
-
-  if (bucket == 0) {
-    // Web Privacy Telemetry for successful connections.
-    // Discard errors from these function calls in release.
-    bool success = true;
-
-    bool usedPrivateDNS = false;
-    success &= socketInfo->GetUsedPrivateDNS(&usedPrivateDNS) == NS_OK;
-    MOZ_ASSERT(success, "Transport Security Getters should not fail.");
-
-    bool madeOCSPRequest = false;
-    success &= socketInfo->GetMadeOCSPRequests(&madeOCSPRequest) == NS_OK;
-    MOZ_ASSERT(success, "Transport Security Getters should not fail.");
-
-    uint16_t protocolVersion = 0;
-    success &= socketInfo->GetProtocolVersion(&protocolVersion) == NS_OK;
-    MOZ_ASSERT(success, "Transport Security Getters should not fail.");
-    bool usedTLS13 = protocolVersion == 4;
-
-    bool usedECH = false;
-    success &= socketInfo->GetIsAcceptedEch(&usedECH) == NS_OK;
-    MOZ_ASSERT(success, "Transport Security Getters should not fail.");
-
-    if (success) {
-      uint8_t TLSPrivacyResult = 0;
-      TLSPrivacyResult |= usedTLS13 << 0;
-      TLSPrivacyResult |= !madeOCSPRequest << 1;
-      TLSPrivacyResult |= usedPrivateDNS << 2;
-      TLSPrivacyResult |= usedECH << 3;
-
-      Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_PRIVACY, TLSPrivacyResult);
-    }
-  }
 }
 
 int32_t checkHandshake(int32_t bytesTransfered, bool wasReading,

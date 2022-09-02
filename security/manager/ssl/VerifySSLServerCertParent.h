@@ -44,8 +44,7 @@ class VerifySSLServerCertParent : public PVerifySSLServerCertParent {
                                uint8_t aEVStatus, bool aSucceeded,
                                PRErrorCode aFinalError,
                                uint32_t aOverridableErrorCategory,
-                               bool aIsBuiltCertChainRootBuiltInRoot,
-                               bool aMadeOCSPRequests);
+                               bool aIsBuiltCertChainRootBuiltInRoot);
 
  private:
   virtual ~VerifySSLServerCertParent();

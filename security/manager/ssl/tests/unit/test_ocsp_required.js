@@ -48,25 +48,11 @@ function run_test() {
 function add_tests() {
   add_connection_test(
     "ocsp-stapling-none.example.com",
-    SEC_ERROR_OCSP_BAD_SIGNATURE,
-    function() {},
-    function(aTransportSecurityInfo) {
-      Assert.ok(
-        aTransportSecurityInfo.madeOCSPRequests,
-        "An OCSP Request should have been made."
-      );
-    }
+    SEC_ERROR_OCSP_BAD_SIGNATURE
   );
   add_connection_test(
     "ocsp-stapling-none.example.com",
-    SEC_ERROR_OCSP_BAD_SIGNATURE,
-    function() {},
-    function(aTransportSecurityInfo) {
-      Assert.ok(
-        !aTransportSecurityInfo.madeOCSPRequests,
-        "An OCSP Request should not have been made."
-      );
-    }
+    SEC_ERROR_OCSP_BAD_SIGNATURE
   );
   add_test(function() {
     equal(
@@ -83,13 +69,6 @@ function add_tests() {
 
   add_connection_test(
     "ocsp-stapling-none.example.com",
-    SEC_ERROR_OCSP_MALFORMED_RESPONSE,
-    function() {},
-    function(aTransportSecurityInfo) {
-      Assert.ok(
-        aTransportSecurityInfo.madeOCSPRequests,
-        "An OCSP Request should have been made."
-      );
-    }
+    SEC_ERROR_OCSP_MALFORMED_RESPONSE
   );
 }
