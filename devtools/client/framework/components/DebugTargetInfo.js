@@ -9,8 +9,8 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   CONNECTION_TYPES,
-  DEBUG_TARGET_TYPES,
 } = require("devtools/client/shared/remote-debugging/constants");
+const DESCRIPTOR_TYPES = require("devtools/client/fronts/descriptors/descriptor-types");
 
 /**
  * This is header that should be displayed on top of the toolbox when using
@@ -28,7 +28,7 @@ class DebugTargetInfo extends PureComponent {
           name: PropTypes.string.isRequired,
           version: PropTypes.string.isRequired,
         }).isRequired,
-        targetType: PropTypes.oneOf(Object.values(DEBUG_TARGET_TYPES))
+        descriptorType: PropTypes.oneOf(Object.values(DESCRIPTOR_TYPES))
           .isRequired,
       }).isRequired,
       L10N: PropTypes.object.isRequired,
@@ -53,15 +53,15 @@ class DebugTargetInfo extends PureComponent {
   updateTitle() {
     const { L10N, debugTargetData, toolbox } = this.props;
     const title = toolbox.target.name;
-    const targetTypeStr = L10N.getStr(
-      this.getAssetsForDebugTargetType().l10nId
+    const descriptorTypeStr = L10N.getStr(
+      this.getAssetsForDebugDescriptorType().l10nId
     );
 
     const { connectionType } = debugTargetData;
     if (connectionType === CONNECTION_TYPES.THIS_FIREFOX) {
       toolbox.doc.title = L10N.getFormatStr(
         "toolbox.debugTargetInfo.tabTitleLocal",
-        targetTypeStr,
+        descriptorTypeStr,
         title
       );
     } else {
@@ -71,7 +71,7 @@ class DebugTargetInfo extends PureComponent {
       toolbox.doc.title = L10N.getFormatStr(
         "toolbox.debugTargetInfo.tabTitleRemote",
         connectionTypeStr,
-        targetTypeStr,
+        descriptorTypeStr,
         title
       );
     }
@@ -115,31 +115,31 @@ class DebugTargetInfo extends PureComponent {
     }
   }
 
-  getAssetsForDebugTargetType() {
-    const { targetType } = this.props.debugTargetData;
+  getAssetsForDebugDescriptorType() {
+    const { descriptorType } = this.props.debugTargetData;
 
     // TODO: https://bugzilla.mozilla.org/show_bug.cgi?id=1520723
     //       Show actual favicon (currently toolbox.target.activeTab.favicon
     //       is unpopulated)
     const favicon = "chrome://devtools/skin/images/globe.svg";
 
-    switch (targetType) {
-      case DEBUG_TARGET_TYPES.EXTENSION:
+    switch (descriptorType) {
+      case DESCRIPTOR_TYPES.EXTENSION:
         return {
           image: "chrome://devtools/skin/images/debugging-addons.svg",
           l10nId: "toolbox.debugTargetInfo.targetType.extension",
         };
-      case DEBUG_TARGET_TYPES.PROCESS:
+      case DESCRIPTOR_TYPES.PROCESS:
         return {
           image: "chrome://devtools/skin/images/settings.svg",
           l10nId: "toolbox.debugTargetInfo.targetType.process",
         };
-      case DEBUG_TARGET_TYPES.TAB:
+      case DESCRIPTOR_TYPES.TAB:
         return {
           image: favicon,
           l10nId: "toolbox.debugTargetInfo.targetType.tab",
         };
-      case DEBUG_TARGET_TYPES.WORKER:
+      case DESCRIPTOR_TYPES.WORKER:
         return {
           image: "chrome://devtools/skin/images/debugging-workers.svg",
           l10nId: "toolbox.debugTargetInfo.targetType.worker",
@@ -222,7 +222,7 @@ class DebugTargetInfo extends PureComponent {
   renderTargetTitle() {
     const title = this.props.toolbox.target.name;
 
-    const { image, l10nId } = this.getAssetsForDebugTargetType();
+    const { image, l10nId } = this.getAssetsForDebugDescriptorType();
 
     return dom.span(
       {
@@ -237,8 +237,8 @@ class DebugTargetInfo extends PureComponent {
 
   renderTargetURI() {
     const url = this.props.toolbox.target.url;
-    const { targetType } = this.props.debugTargetData;
-    const isURLEditable = targetType === DEBUG_TARGET_TYPES.TAB;
+    const { descriptorType } = this.props.debugTargetData;
+    const isURLEditable = descriptorType === DESCRIPTOR_TYPES.TAB;
 
     return dom.span(
       {
@@ -287,11 +287,11 @@ class DebugTargetInfo extends PureComponent {
 
   renderNavigation() {
     const { debugTargetData } = this.props;
-    const { targetType } = debugTargetData;
+    const { descriptorType } = debugTargetData;
 
     if (
-      targetType !== DEBUG_TARGET_TYPES.TAB &&
-      targetType !== DEBUG_TARGET_TYPES.EXTENSION
+      descriptorType !== DESCRIPTOR_TYPES.TAB &&
+      descriptorType !== DESCRIPTOR_TYPES.EXTENSION
     ) {
       return null;
     }
@@ -301,7 +301,7 @@ class DebugTargetInfo extends PureComponent {
     // There is little value in exposing back/forward for WebExtensions
     if (
       this.props.toolbox.target.getTrait("navigation") &&
-      targetType === DEBUG_TARGET_TYPES.TAB
+      descriptorType === DESCRIPTOR_TYPES.TAB
     ) {
       items.push(
         this.renderNavigationButton({

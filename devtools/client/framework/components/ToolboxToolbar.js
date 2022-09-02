@@ -125,7 +125,7 @@ class ToolboxToolbar extends Component {
       // Data to show debug target info, if needed
       debugTargetData: PropTypes.shape({
         runtimeInfo: PropTypes.object.isRequired,
-        targetType: PropTypes.string.isRequired,
+        descriptorType: PropTypes.string.isRequired,
       }),
       // The loaded Fluent localization bundles.
       fluentBundles: PropTypes.array.isRequired,

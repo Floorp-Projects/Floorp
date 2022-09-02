@@ -14,8 +14,8 @@ const DebugTargetInfo = React.createFactory(
 );
 const {
   CONNECTION_TYPES,
-  DEBUG_TARGET_TYPES,
 } = require("devtools/client/shared/remote-debugging/constants");
+const DESCRIPTOR_TYPES = require("devtools/client/fronts/descriptors/descriptor-types");
 
 /**
  * Stub for the L10N property expected by the DebugTargetInfo component.
@@ -79,7 +79,7 @@ const USB_TARGET_INFO = {
   debugTargetData: {
     connectionType: CONNECTION_TYPES.USB,
     runtimeInfo: USB_DEVICE_DESCRIPTION,
-    targetType: DEBUG_TARGET_TYPES.TAB,
+    descriptorType: DESCRIPTOR_TYPES.TAB,
   },
   toolbox: TEST_TOOLBOX,
   L10N: stubL10N,
@@ -89,7 +89,7 @@ const THIS_FIREFOX_TARGET_INFO = {
   debugTargetData: {
     connectionType: CONNECTION_TYPES.THIS_FIREFOX,
     runtimeInfo: THIS_FIREFOX_DEVICE_DESCRIPTION,
-    targetType: DEBUG_TARGET_TYPES.TAB,
+    descriptorType: DESCRIPTOR_TYPES.TAB,
   },
   toolbox: TEST_TOOLBOX,
   L10N: stubL10N,
@@ -99,7 +99,7 @@ const THIS_FIREFOX_NO_NAME_TARGET_INFO = {
   debugTargetData: {
     connectionType: CONNECTION_TYPES.THIS_FIREFOX,
     runtimeInfo: THIS_FIREFOX_DEVICE_DESCRIPTION,
-    targetType: DEBUG_TARGET_TYPES.TAB,
+    descriptorType: DESCRIPTOR_TYPES.TAB,
   },
   toolbox: TEST_TOOLBOX_NO_NAME,
   L10N: stubL10N,
@@ -172,7 +172,7 @@ describe("DebugTargetInfo component", () => {
 
     it("renders the expected snapshot for a tab target", () => {
       const props = buildProps(USB_TARGET_INFO, {
-        targetType: DEBUG_TARGET_TYPES.TAB,
+        descriptorType: DESCRIPTOR_TYPES.TAB,
       });
       const component = renderer.create(DebugTargetInfo(props));
       expect(component.toJSON()).toMatchSnapshot();
@@ -180,7 +180,7 @@ describe("DebugTargetInfo component", () => {
 
     it("renders the expected snapshot for a worker target", () => {
       const props = buildProps(USB_TARGET_INFO, {
-        targetType: DEBUG_TARGET_TYPES.WORKER,
+        descriptorType: DESCRIPTOR_TYPES.WORKER,
       });
       const component = renderer.create(DebugTargetInfo(props));
       expect(component.toJSON()).toMatchSnapshot();
@@ -188,7 +188,7 @@ describe("DebugTargetInfo component", () => {
 
     it("renders the expected snapshot for an extension target", () => {
       const props = buildProps(USB_TARGET_INFO, {
-        targetType: DEBUG_TARGET_TYPES.EXTENSION,
+        descriptorType: DESCRIPTOR_TYPES.EXTENSION,
       });
       const component = renderer.create(DebugTargetInfo(props));
       expect(component.toJSON()).toMatchSnapshot();
@@ -196,7 +196,7 @@ describe("DebugTargetInfo component", () => {
 
     it("renders the expected snapshot for a process target", () => {
       const props = buildProps(USB_TARGET_INFO, {
-        targetType: DEBUG_TARGET_TYPES.PROCESS,
+        descriptorType: DESCRIPTOR_TYPES.PROCESS,
       });
       const component = renderer.create(DebugTargetInfo(props));
       expect(component.toJSON()).toMatchSnapshot();
