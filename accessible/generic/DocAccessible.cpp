@@ -1442,7 +1442,7 @@ void DocAccessible::ProcessQueuedCacheUpdates() {
   for (auto iter = mQueuedCacheUpdates.Iter(); !iter.Done(); iter.Next()) {
     LocalAccessible* acc = iter.Key();
     uint64_t domain = iter.UserData();
-    if (acc->IsInDocument() && !acc->IsDefunct()) {
+    if (acc && acc->IsInDocument() && !acc->IsDefunct()) {
       RefPtr<AccAttributes> fields =
           acc->BundleFieldsForCache(domain, CacheUpdateType::Update);
 
