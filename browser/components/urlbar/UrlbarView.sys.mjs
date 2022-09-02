@@ -69,7 +69,6 @@ export class UrlbarView {
     this._rows = this.panel.querySelector(".urlbarView-results");
 
     this._rows.addEventListener("mousedown", this);
-    this._rows.addEventListener("mouseup", this);
 
     // For the horizontal fade-out effect, set the overflow attribute on result
     // rows when they overflow.
@@ -2626,12 +2625,16 @@ export class UrlbarView {
       // Ignore right clicks.
       return;
     }
+
     let element = this.getClosestSelectableElement(event.target);
     if (!element) {
       // Ignore clicks on elements that can't be selected/picked.
       return;
     }
+
+    this.window.top.addEventListener("mouseup", this);
     this._selectElement(element, { updateInput: false });
+
     this.controller.speculativeConnect(
       this.selectedResult,
       this._queryContext,
@@ -2644,6 +2647,15 @@ export class UrlbarView {
       // Ignore right clicks.
       return;
     }
+
+    this.window.top.removeEventListener("mouseup", this);
+    this._selectElement(null);
+
+    if (event.target.nodeType !== event.target.ELEMENT_NODE) {
+      // When mouseup out side of browser, the target will be document.
+      return;
+    }
+
     let element = this.getClosestSelectableElement(event.target);
     if (!element) {
       // Ignore clicks on elements that can't be selected/picked.
