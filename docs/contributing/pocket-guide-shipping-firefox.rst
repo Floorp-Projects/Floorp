@@ -25,13 +25,12 @@ to learn more if interested.
 Repositories & Channels
 -----------------------
 
-Shipping Firefox follows a software release :ref:`train model <train model>` along 3 primary code
-:ref:`repositories <repositories>`; mozilla-central (aka “m-c”),
-mozilla-beta, and mozilla-release. Each of these repositories are
+Shipping Firefox follows a software release :ref:`train model <train model>`
+along 3 primary code :ref:`repositories <repositories>`; mozilla-central
+(aka “m-c”), mozilla-beta, and mozilla-release. Each of these repositories are
 updated within a defined cadence and built into one of our Firefox
 products which are released through what is commonly referred to as
-:ref:`Channels <channels>`: Firefox Nightly, Firefox Beta, and Firefox
-Release.
+:ref:`Channels <channels>`: Firefox Nightly, Firefox Beta, and Firefox Release.
 
 **Firefox Nightly** offers access to the latest cutting edge features
 still under active development. Released every 12 hours with all the
@@ -39,9 +38,9 @@ changes that have :ref:`landed <landing>` on mozilla-central.
 
 Every `4 weeks <https://wiki.mozilla.org/RapidRelease/Calendar>`__, we
 :ref:`merge <merge>` the code from mozilla-central to our
-mozilla-beta branch. New code or Features can be added to mozilla-beta
+mozilla-beta branch. New code or features can be added to mozilla-beta
 outside of this 4 week cadence but will be required to land in
-mozilla-central and then be :ref:`uplift <uplift>`\ed into
+mozilla-central and then be :ref:`uplifted <uplift>` into
 mozilla-beta.
 
 **Firefox Beta** is for developers and early adopters who want to see
@@ -63,19 +62,24 @@ branch.
   **Firefox Developer Edition** *is a separate product based on
   the mozilla-beta repo and is specifically tailored for Web Developers.*
 
-**Firefox Release** is released every 4 weeks and is the final product
-of our Beta cycle. As our primary product shipping to hundreds of
-millions of users, interim updates and
-:ref:`ride-alongs <ride alongs>` are only shipped to Release if
-they contain :ref:`dot release drivers <dot release drivers>`.
+**Firefox Release** is released every 4 weeks and is the end result
+of our Beta cycle. This is our primary product shipping to hundreds of
+millions of users. While a release is live, interim updates (dot releases)
+are used to ship important bug fixes to users prior to the next major release.
+These can happen on an as-needed basis when there is an important-enough
+:ref:`driver <dot release drivers>` to do so (such as a critical bug severely
+impairing the usability of the product for some users). In order to provide
+better predictability, there is also a planned dot release scheduled for two
+weeks after the initial go-live for less-critical fixes and other
+:ref:`ride-along fixes <ride alongs>` deemed low-risk enough to include.
 
 .. note::
   **Firefox ESR (Extended Support Release)** *is a separate
-  product intended for Enterprise use. Major updates are rolled out 1-2
-  times per year to maintain stability and predictability. ESR also
+  product intended for Enterprise use. Major updates are rolled out once
+  per year to maintain stability and predictability. ESR also
   contains a number of policy options not available in the standard
   Firefox Release. Minor updates are shipped in sync with the Firefox
-  Release schedule for security and stability fixes only.*
+  Release schedule for security and select quality fixes only.*
 
 Further Reading/Useful links:
 
