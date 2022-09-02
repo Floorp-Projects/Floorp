@@ -20,8 +20,7 @@
     prompts.alert(null, l10n.formatValueSync("rest-mode"),
     l10n.formatValueSync("rest-mode-description"));
   
-    const none =document.getElementById("none");
-    none.remove();
+    document.getElementById("none").remove();
    }
   }
   
@@ -33,7 +32,6 @@
         if (tab == ourTab) {
           continue;
         }
-  
         if (tab.pinned || tab.selected) {
           otherGBrowser.reloadTab(tab);
         } else {
@@ -41,7 +39,6 @@
         }
       }
     });
-  
     for (let notification of document.querySelectorAll(".reload-tabs")) {
       notification.hidden = true;
     }
@@ -67,6 +64,47 @@
     );
   }
 
+/*---------------------------------------------------------------- browser manager sidebar ----------------------------------------------------------------*/
+
+   async function setTreeStyleTabURL() {
+     const sidebar2elem = document.getElementById("sidebar2");
+
+     const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
+     let addon = await AddonManager.getAddonByID("treestyletab@piro.sakura.ne.jp");
+     let option = await addon.optionsURL;
+     let sidebarURL = option.replace("options/options.html", "sidebar/sidebar.html")
+     window.setTimeout(() => {
+       sidebar2elem.setAttribute("src", sidebarURL);
+     }, 500);
+   }
+
+   function setSidebarMode() {
+    if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
+      const pref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined)
+      const sidebar2elem = document.getElementById("sidebar2");
+      switch (pref) {
+      default:
+        sidebar2elem.setAttribute("src", "chrome://browser/content/places/places.xhtml");
+       break;
+      case 1:
+        sidebar2elem.setAttribute("src", "chrome://browser/content/places/bookmarksSidebar.xhtml");
+       break;
+      case 2:
+        sidebar2elem.setAttribute("src", "chrome://browser/content/places/historySidebar.xhtml");
+       break;
+      case 3:
+        sidebar2elem.setAttribute("src", "about:downloads");
+       break;
+      case 4:
+        setTreeStyleTabURL();
+       break;
+      case 5:
+       sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl", undefined));
+       break;
+    }
+  }
+}
+
  function changeSidebarVisibility() {
     let sidebar2 = document.getElementById("sidebar2-box");
     let siderbar2header = document.getElementById("sidebar2-header");
@@ -86,4 +124,145 @@
       sidebarsplit2.setAttribute("hidden", "true");
       sidebarsplit3.setAttribute("hidden", "true");
     }
-}
+  }
+
+
+/*---------------------------------------------------------------- design ----------------------------------------------------------------*/
+
+function setBrowserDesign() {
+  let floorpinterfacenum = Services.prefs.getIntPref("floorp.browser.user.interface")
+  let ThemeCSS = {
+       ProtonfixUI : `@import url(chrome://browser/skin/protonfix/protonfix.css);`,
+       PhotonUI : `@import url(chrome://browser/skin/photon/photonChrome.css);
+                   @import url(chrome://browser/skin/photon/photonContent.css);`,
+       PhotonUIMultitab : `@import url(chrome://browser/skin/photon/photonChrome-multitab.css);
+                    @import url(chrome://browser/skin/photon/photonContent-multitab.css);`,
+       MaterialUI : `@import url(chrome://browser/skin/floorplegacy/floorplegacy.css);`,
+       fluentUI : `@import url(chrome://browser/skin/fluentUI/fluentUI.css);`,
+       gnomeUI :`@import url(chrome://browser/skin/gnomeUI/gnomeUI.css);`,
+       leptonUI: `@import url(chrome://browser/skin/lepton/userChrome.css);
+                  @import url(chrome://browser/skin/lepton/userContent.css);`,
+  }
+ switch(floorpinterfacenum){
+  //ProtonUI 
+   case 1: 
+     var Tag = document.createElement("style");
+     Tag.setAttribute("id", "browserdesgin");
+     document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+     Services.prefs.setIntPref("browser.uidensity", 0);
+    break;
+   case 2 : 
+     var Tag = document.createElement('style');
+     Tag.setAttribute("id", "browserdesgin");
+     Tag.innerText = ThemeCSS.ProtonfixUI;
+     document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+     Services.prefs.setIntPref("browser.uidensity", 1);
+    break;
+   case 3:
+    if(!Services.prefs.getBoolPref("floorp.enable.multitab", false)){
+     var Tag = document.createElement('style');
+     Tag.setAttribute("id", "browserdesgin");
+     Tag.innerText = ThemeCSS.PhotonUI;
+     document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+    }
+    else {
+       var Tag = document.createElement('style')
+       Tag.setAttribute("id", "browserdesgin");
+       Tag.innerText = ThemeCSS.PhotonUIMultitab;
+       document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+    }
+    break;
+   case 4:
+     var Tag = document.createElement('style');
+     Tag.setAttribute("id", "browserdesgin");
+     Tag.innerText = ThemeCSS.MaterialUI;
+     document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+
+      if (Services.prefs.getBoolPref("floorp.enable.multitab", false)) {
+       var Tag = document.createElement('style');
+       Tag.innerText =`
+      .tabbrowser-tab {
+        margin-top: 0.7em !important;
+        position: relative !important;
+        top: -0.34em !important;
+     }
+     `
+       document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+      }
+     break;
+    case 5:
+      if (AppConstants.platform != "linux") {
+      var Tag = document.createElement('style');
+      Tag.setAttribute("id", "browserdesgin");
+      Tag.innerText = ThemeCSS.fluentUI;
+      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+    }
+      break;
+
+    case 6:
+      if (AppConstants.platform == "linux"){
+      var Tag = document.createElement('style');
+      Tag.setAttribute("id", "browserdesgin");
+      Tag.innerText = ThemeCSS.gnomeUI;
+      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+     }
+     break;
+    case 7:
+      var Tag = document.createElement('style');
+      Tag.setAttribute("id", "browserdesgin");
+      Tag.innerText = ThemeCSS.leptonUI;
+      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+     break;
+   }
+ }
+
+ /*---------------------------------------------------------------- URLbar recalculation ----------------------------------------------------------------*/
+
+ function URLbarrecalculation(){
+  setTimeout(function() {
+      gURLBar._updateLayoutBreakoutDimensions();
+    }, 100);
+    setTimeout(function() {
+      gURLBar._updateLayoutBreakoutDimensions();
+    }, 500);
+ } 
+
+ /*---------------------------------------------------------------- Tabbar ----------------------------------------------------------------*/
+ function setTabbarMode(){
+   const CustomCssPref = Services.prefs.getIntPref("floorp.browser.tabbar.settings");
+   //hide tabbrowser
+    switch(CustomCssPref){
+      case 2:
+          var Tag = document.createElement("style");
+          Tag.setAttribute("id", "tabbardesgin");
+          Tag.innerText = `@import url(chrome://browser/skin/customcss/hide-tabbrowser.css);`
+          document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+       break;
+   // vertical tab CSS
+       case 3:
+         var Tag = document.createElement("style");
+         Tag.setAttribute("id", "tabbardesgin");
+         Tag.innerText = `@import url(chrome://browser/skin/customcss/verticaltab.css);`
+         document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+         window.setTimeout(function(){document.getElementById("titlebar").before(document.getElementById("toolbar-menubar"));}, 2000);
+        break;
+   //tabs_on_bottom
+       case 4:
+         var Tag = document.createElement("style");
+         Tag.setAttribute("id", "tabbardesgin");
+         Tag.innerText = `@import url(chrome://browser/skin/customcss/tabs_on_bottom.css);`
+         document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+        break;
+    // 5 has been removed. v10.3.0
+       case 6:
+        var Tag = document.createElement("style");
+        Tag.setAttribute("id", "tabbardesgin");
+        Tag.innerText = `@import url(chrome://browser/skin/customcss/tabbar_on_window_bottom.css);`
+        document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag); 
+        var script = document.createElement("script");
+        script.setAttribute("id", "tabbar-script");
+        script.src = "chrome://browser/skin/customcss/tabbar_on_window_bottom.js"; 
+        document.head.appendChild(script);
+       break;
+    }
+  }

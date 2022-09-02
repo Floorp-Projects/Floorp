@@ -12,6 +12,7 @@ if (Services.prefs.getBoolPref("floorp.material.effect.enable", false)) {
   document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
   Tag.setAttribute("id", "micaforeveryone");
 }
+
 Services.prefs.addObserver("floorp.material.effect.enable", function(){
  if (Services.prefs.getBoolPref("floorp.material.effect.enable", false)) {
    var Tag = document.createElement("style");
@@ -28,16 +29,17 @@ Services.prefs.addObserver("floorp.material.effect.enable", function(){
     Tag.innerText = `@import url(chrome://browser/skin/optioncss/treestyletab.css)`
     document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
     Tag.setAttribute("id", "treestyletabopti");
- }
- Services.prefs.addObserver("floorp.Tree-type.verticaltab.optimization", function(){
-   if (Services.prefs.getBoolPref("floorp.Tree-type.verticaltab.optimization", false)) {
-     var Tag = document.createElement("style");
-     Tag.innerText = `@import url(chrome://browser/skin/optioncss/treestyletab.css)`
-     document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
-     Tag.setAttribute("id", "treestyletabopti");
-   }
-   else {
-    document.getElementById("treestyletabopti").remove();
+  }
+
+  Services.prefs.addObserver("floorp.Tree-type.verticaltab.optimization", function(){
+    if (Services.prefs.getBoolPref("floorp.Tree-type.verticaltab.optimization", false)) {
+      var Tag = document.createElement("style");
+      Tag.innerText = `@import url(chrome://browser/skin/optioncss/treestyletab.css)`
+      document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
+      Tag.setAttribute("id", "treestyletabopti");
+    }
+    else {
+      document.getElementById("treestyletabopti").remove();
   }});
 
   if (Services.prefs.getBoolPref("floorp.optimized.msbutton.ope", false)) {    
@@ -54,27 +56,25 @@ Services.prefs.addObserver("floorp.material.effect.enable", function(){
      Tag.setAttribute("id", "optimizedmsbuttonope");
    }
    else {
-     const menuid =document.getElementById("optimizedmsbuttonope");
-     menuid.remove();
+    document.getElementById("optimizedmsbuttonope").remove();
   }});
 
-if (Services.prefs.getBoolPref("floorp.bookmarks.bar.focus.mode", false)) {    
-  var Tag = document.createElement("style");
-  Tag.innerText = `@import url(chrome://browser/skin/optioncss/bookmarkbar_autohide.css)`
-  document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
-  Tag.setAttribute("id", "bookmarkbarfocus");
-}
-
-Services.prefs.addObserver("floorp.bookmarks.bar.focus.mode", function(){
- if (Services.prefs.getBoolPref("floorp.bookmarks.bar.focus.mode", false)) {
-   var Tag = document.createElement("style");
-   Tag.innerText = `@import url(chrome://browser/skin/optioncss/bookmarkbar_autohide.css)`
-   document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
-   Tag.setAttribute("id", "bookmarkbarfocus");
- }
- else {
+  if (Services.prefs.getBoolPref("floorp.bookmarks.bar.focus.mode", false)) {    
+    var Tag = document.createElement("style");
+    Tag.innerText = `@import url(chrome://browser/skin/optioncss/bookmarkbar_autohide.css)`
+    document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
+    Tag.setAttribute("id", "bookmarkbarfocus");
+  }
+   Services.prefs.addObserver("floorp.bookmarks.bar.focus.mode", function(){
+     if (Services.prefs.getBoolPref("floorp.bookmarks.bar.focus.mode", false)) {
+     var Tag = document.createElement("style");
+     Tag.innerText = `@import url(chrome://browser/skin/optioncss/bookmarkbar_autohide.css)`
+     document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag);
+     Tag.setAttribute("id", "bookmarkbarfocus");
+    }
+  else {
    document.getElementById("bookmarkbarfocus").remove();
- }});
+  }});
 
 
 if (Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", false)) {
@@ -104,8 +104,7 @@ if (Services.prefs.getBoolPref("floorp.bookmarks.fakestatus.mode", false)) {
       Tag.setAttribute("id", "searchbartop");
     }
     else {
-      const menuid =document.getElementById("searchbartop");
-      menuid.remove();
+      document.getElementById("searchbartop").remove();
     }
    }
  )
@@ -166,78 +165,16 @@ Services.prefs.addObserver("floorp.browser.sidebar.right", function(){
       document.getElementsByTagName("head")[0].insertAdjacentElement("beforeend",Tag)
   }
 
-
-window.setTimeout(function(){
-  if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
-  async function getTreeStyleTabURL() {
-    const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-    let addon = await AddonManager.getAddonByID("treestyletab@piro.sakura.ne.jp");
-    let option = await addon.optionsURL;
-    let sidebarURL = option.replace("options/options.html", "sidebar/sidebar.html")
-    window.setTimeout(() => {
-      sidebar2elem.setAttribute("src", sidebarURL);
-    }, 500);
-  }
-
-
-  const pref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined)
-  const sidebar2elem = document.getElementById("sidebar2");
-   switch (pref) {
-    default:
-      sidebar2elem.setAttribute("src", "chrome://browser/content/places/places.xhtml");
-     break;
-    case 1:
-      sidebar2elem.setAttribute("src", "chrome://browser/content/places/bookmarksSidebar.xhtml");
-      break;
-    case 2:
-      sidebar2elem.setAttribute("src", "chrome://browser/content/places/historySidebar.xhtml");
-      break;
-    case 3:
-      sidebar2elem.setAttribute("src", "about:downloads");
-      break;
-    case 4:
-      getTreeStyleTabURL();
-      break;
-    case 5:
-      sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl", undefined));
-      break;
-    }
-   }
+  window.setTimeout(function(){
+    setSidebarMode();
   }, 1000);
-
   
    if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
      Services.prefs.addObserver("floorp.browser.sidebar2.mode", function(){
-    async function getTreeStyleTabURL() {
-      const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-      let addon = await AddonManager.getAddonByID("treestyletab@piro.sakura.ne.jp");
-      let option = await addon.optionsURL;
-      let sidebarURL = option.replace("options/options.html", "sidebar/sidebar.html")
-      window.setTimeout(() => {
-        sidebar2elem.setAttribute("src", sidebarURL);
-      }, 500);
-    }
+      setSidebarMode();
+  })};
 
-    const pref = Services.prefs.getIntPref("floorp.browser.sidebar2.mode", undefined);
-    const sidebar2elem = document.getElementById("sidebar2");
-    switch (pref) {
-     default:
-        sidebar2elem.setAttribute("src", "chrome://browser/content/places/places.xhtml");
-      break;
-     case 1:
-        sidebar2elem.setAttribute("src", "chrome://browser/content/places/bookmarksSidebar.xhtml");
-       break;
-     case 2:
-        sidebar2elem.setAttribute("src", "chrome://browser/content/places/historySidebar.xhtml");
-       break;
-     case 3:
-        sidebar2elem.setAttribute("src", "about:downloads");
-       break;
-     case 4:
-        getTreeStyleTabURL();
-       break;
-     case 5:
-        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl", undefined));
-       break;  
-    }
+  if (Services.prefs.getBoolPref("floorp.browser.sidebar.enable", false)) {
+    Services.prefs.addObserver("floorp.browser.sidebar2.customurl", function(){
+     setSidebarMode();
   })};

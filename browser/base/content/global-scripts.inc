@@ -22,12 +22,12 @@ Services.scriptloader.loadSubScript("chrome://browser/content/browser-places.js"
 Services.scriptloader.loadSubScript("chrome://browser/content/utilityOverlay.js", this);
 
 //Floorp JavaScript
+Services.scriptloader.loadSubScript("chrome://browser/content/browser-command.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-UI-custom.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-design.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-startup.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-tabbar.js", this);
 Services.scriptloader.loadSubScript("chrome://browser/content/browser-userChrome.js", this);
-Services.scriptloader.loadSubScript("chrome://browser/content/browser-command.js", this);
 
 if (AppConstants.platform == "macosx") {
   Services.scriptloader.loadSubScript("chrome://global/content/macWindowMenu.js", this);
