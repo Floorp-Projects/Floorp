@@ -229,6 +229,17 @@ jobs:
           - {weekday: 'Monday', hour: 8, minute: 0}
           - {weekday: 'Thursday', hour: 8, minute: 0}
 
+    - name: nightly-beta-perf
+      job:
+          type: decision-task
+          treeherder-symbol: n-perf
+          target-tasks-method: nightly_beta_perf
+          include-push-tasks: true
+      run-on-projects:
+          - mozilla-beta
+      when:
+          - {hour: 16, minute: 0}
+
     - name: raptor-tp6m
       job:
           type: decision-task
