@@ -5,9 +5,11 @@
 
 const TEST_DOMAIN_A = "example.com";
 const TEST_DOMAIN_B = "example.org";
+const TEST_DOMAIN_C = "example.net";
 
 const TEST_ORIGIN_A = "https://" + TEST_DOMAIN_A;
 const TEST_ORIGIN_B = "https://" + TEST_DOMAIN_B;
+const TEST_ORIGIN_C = "https://" + TEST_DOMAIN_C;
 
 const TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
@@ -19,11 +21,17 @@ const TEST_PAGE_B = TEST_ORIGIN_B + TEST_PATH + "file_banner.html";
 
 /**
  * A helper function returns a promise which resolves when the banner clicking
- * is finished.
+ * is finished for the given domain.
+ *
+ * @param {String} domain the domain that should run the banner clicking.
  */
-function promiseBannerClickingFinish() {
+function promiseBannerClickingFinish(domain) {
   return new Promise(resolve => {
-    Services.obs.addObserver(function observer() {
+    Services.obs.addObserver(function observer(subject, topic, data) {
+      if (data != domain) {
+        return;
+      }
+
       Services.obs.removeObserver(
         observer,
         "cookie-banner-test-clicking-finish"
@@ -34,42 +42,94 @@ function promiseBannerClickingFinish() {
 }
 
 /**
+ * A helper function to verify the banner state of the given browsingContext.
+ *
+ * @param {BrowsingContext} bc - the browsing context
+ * @param {boolean} visible - if the banner should be visible.
+ * @param {boolean} expected - the expected banner click state.
+ */
+async function verifyBannerState(bc, visible, expected) {
+  info("Verify the cookie banner state.");
+
+  await SpecialPowers.spawn(bc, [visible, expected], (visible, expected) => {
+    let banner = content.document.getElementById("banner");
+
+    is(
+      banner.checkVisibility({
+        checkOpacity: true,
+        checkVisibilityCSS: true,
+      }),
+      visible,
+      `The banner element should be ${visible ? "visible" : "hidden"}`
+    );
+
+    let result = content.document.getElementById("result");
+
+    is(result.textContent, expected, "The build click state is correct.");
+  });
+}
+
+/**
  * A helper function to open the test page and verify the banner state.
  *
- * @param {Window} win the window object.
- * @param {String} page the url of the testing page.
- * @param {boolean} visible if the banner should be visible.
- * @param {boolean} expected the expected banner click state.
+ * @param {Window} win - the chrome window object.
+ * @param {String} domain - the domain of the testing page.
+ * @param {String} testURL - the url of the testing page.
+ * @param {boolean} visible - if the banner should be visible.
+ * @param {boolean} expected - the expected banner click state.
  */
-async function openPageAndVerify(win, page, visible, expected) {
-  info(`Opening ${page}`);
-  let promise = promiseBannerClickingFinish();
+async function openPageAndVerify({ win, domain, testURL, visible, expected }) {
+  info(`Opening ${testURL}`);
+  let promise = promiseBannerClickingFinish(domain);
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, page);
+  let tab = await BrowserTestUtils.openNewForegroundTab(win.gBrowser, testURL);
 
   await promise;
 
-  info("Verify the cookie banner state.");
-  await SpecialPowers.spawn(
+  await verifyBannerState(tab.linkedBrowser, visible, expected);
+
+  BrowserTestUtils.removeTab(tab);
+}
+
+/**
+ * A helper function to open the test page in an iframe and verify the banner
+ * state in the iframe.
+ *
+ * @param {Window} win - the chrome window object.
+ * @param {String} domain - the domain of the testing iframe page.
+ * @param {String} testURL - the url of the testing iframe page.
+ * @param {boolean} visible - if the banner should be visible.
+ * @param {boolean} expected - the expected banner click state.
+ */
+async function openIframeAndVerify({
+  win,
+  domain,
+  testURL,
+  visible,
+  expected,
+}) {
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    win.gBrowser,
+    TEST_ORIGIN_C
+  );
+
+  let promise = promiseBannerClickingFinish(domain);
+
+  let iframeBC = await SpecialPowers.spawn(
     tab.linkedBrowser,
-    [visible, expected],
-    (visible, expected) => {
-      let banner = content.document.getElementById("banner");
+    [testURL],
+    async testURL => {
+      let iframe = content.document.createElement("iframe");
+      iframe.src = testURL;
+      content.document.body.appendChild(iframe);
+      await ContentTaskUtils.waitForEvent(iframe, "load");
 
-      is(
-        banner.checkVisibility({
-          checkOpacity: true,
-          checkVisibilityCSS: true,
-        }),
-        visible,
-        `The banner element should be ${visible ? "visible" : "hidden"}`
-      );
-
-      let result = content.document.getElementById("result");
-
-      is(result.textContent, expected, "The build click state is correct.");
+      return iframe.browsingContext;
     }
   );
+
+  await promise;
+  await verifyBannerState(iframeBC, visible, expected);
 
   BrowserTestUtils.removeTab(tab);
 }
@@ -132,7 +192,13 @@ add_task(async function test_cookie_banner_service_disabled() {
     ],
   });
 
-  await openPageAndVerify(window, TEST_PAGE_A, true, "NoClick");
+  await openPageAndVerify({
+    win: window,
+    domain: TEST_DOMAIN_A,
+    testURL: TEST_PAGE_A,
+    visible: true,
+    expected: "NoClick",
+  });
 });
 
 /**
@@ -148,7 +214,13 @@ add_task(async function test_no_rules() {
   info("Clearing existing rules");
   Services.cookieBanners.resetRules(false);
 
-  await openPageAndVerify(window, TEST_PAGE_A, true, "NoClick");
+  await openPageAndVerify({
+    win: window,
+    domain: TEST_DOMAIN_A,
+    testURL: TEST_PAGE_A,
+    visible: true,
+    expected: "NoClick",
+  });
 });
 
 /**
@@ -163,10 +235,22 @@ add_task(async function test_clicking_mode_reject() {
 
   insertTestRules();
 
-  await openPageAndVerify(window, TEST_PAGE_A, false, "OptOut");
+  await openPageAndVerify({
+    win: window,
+    domain: TEST_DOMAIN_A,
+    testURL: TEST_PAGE_A,
+    visible: false,
+    expected: "OptOut",
+  });
 
   // No opt out rule for the example.org, the banner shouldn't be clicked.
-  await openPageAndVerify(window, TEST_PAGE_B, true, "NoClick");
+  await openPageAndVerify({
+    win: window,
+    domain: TEST_DOMAIN_B,
+    testURL: TEST_PAGE_B,
+    visible: true,
+    expected: "NoClick",
+  });
 });
 
 /**
@@ -184,9 +268,21 @@ add_task(async function test_clicking_mode_reject_or_accept() {
 
   insertTestRules();
 
-  await openPageAndVerify(window, TEST_PAGE_A, false, "OptOut");
+  await openPageAndVerify({
+    win: window,
+    domain: TEST_DOMAIN_A,
+    testURL: TEST_PAGE_A,
+    visible: false,
+    expected: "OptOut",
+  });
 
-  await openPageAndVerify(window, TEST_PAGE_B, false, "OptIn");
+  await openPageAndVerify({
+    win: window,
+    domain: TEST_DOMAIN_B,
+    testURL: TEST_PAGE_B,
+    visible: false,
+    expected: "OptIn",
+  });
 });
 
 /**
@@ -204,11 +300,17 @@ add_task(async function test_clicking_with_delayed_banner() {
 
   let TEST_PAGE =
     TEST_ORIGIN_A + TEST_PATH + "file_delayed_banner.html?delay=100";
-  await openPageAndVerify(window, TEST_PAGE, false, "OptOut");
+  await openPageAndVerify({
+    win: window,
+    domain: TEST_DOMAIN_A,
+    testURL: TEST_PAGE,
+    visible: false,
+    expected: "OptOut",
+  });
 });
 
 /**
- * Test that the banner clicking doesn't apply to iframe.
+ * Test that the banner clicking in an iframe.
  */
 add_task(async function test_embedded_iframe() {
   await SpecialPowers.pushPrefEnv({
@@ -219,28 +321,12 @@ add_task(async function test_embedded_iframe() {
 
   insertTestRules();
 
-  await BrowserTestUtils.withNewTab(TEST_ORIGIN_A, async browser => {
-    let bc = await SpecialPowers.spawn(browser, [TEST_PAGE_A], async page => {
-      let iframe = content.document.createElement("iframe");
-      iframe.src = page;
-      content.document.body.appendChild(iframe);
-      await ContentTaskUtils.waitForEvent(iframe, "load");
-
-      return iframe.browsingContext;
-    });
-
-    await SpecialPowers.spawn(bc, [], async () => {
-      let banner = content.document.getElementById("banner");
-
-      ok(
-        ContentTaskUtils.is_visible(banner),
-        "The banner element should be visible"
-      );
-
-      let result = content.document.getElementById("result");
-
-      is(result.textContent, "NoClick", "No button has been clicked.");
-    });
+  await openIframeAndVerify({
+    win: window,
+    domain: TEST_DOMAIN_A,
+    testURL: TEST_PAGE_A,
+    visible: false,
+    expected: "OptOut",
   });
 });
 
@@ -260,7 +346,40 @@ add_task(async function test_pbm() {
     private: true,
   });
 
-  await openPageAndVerify(pbmWindow, TEST_PAGE_A, false, "OptOut");
+  await openPageAndVerify({
+    win: pbmWindow,
+    domain: TEST_DOMAIN_A,
+    testURL: TEST_PAGE_A,
+    visible: false,
+    expected: "OptOut",
+  });
+
+  await BrowserTestUtils.closeWindow(pbmWindow);
+});
+
+/**
+ * Test that the banner clicking in an iframe with the private browsing window.
+ */
+add_task(async function test_embedded_iframe_pbm() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["cookiebanners.service.mode", Ci.nsICookieBannerService.MODE_REJECT],
+    ],
+  });
+
+  insertTestRules();
+
+  let pbmWindow = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+
+  await openIframeAndVerify({
+    win: pbmWindow,
+    domain: TEST_DOMAIN_A,
+    testURL: TEST_PAGE_A,
+    visible: false,
+    expected: "OptOut",
+  });
 
   await BrowserTestUtils.closeWindow(pbmWindow);
 });

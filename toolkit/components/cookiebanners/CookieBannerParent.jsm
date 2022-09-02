@@ -22,7 +22,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
 class CookieBannerParent extends JSWindowActorParent {
   async receiveMessage(message) {
     if (message.name == "CookieBanner::Test-FinishClicking") {
-      Services.obs.notifyObservers(null, "cookie-banner-test-clicking-finish");
+      Services.obs.notifyObservers(
+        null,
+        "cookie-banner-test-clicking-finish",
+        this.manager.documentPrincipal?.baseDomain
+      );
       return undefined;
     }
 

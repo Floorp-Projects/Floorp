@@ -214,6 +214,7 @@ let JSWINDOWACTORS = {
       },
     },
 
+    allFrames: true,
     enablePreference: "cookiebanners.bannerClicking.enabled",
   },
 
