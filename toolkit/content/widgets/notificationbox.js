@@ -414,13 +414,9 @@
       </hbox>
       <toolbarbutton ondblclick="event.stopPropagation();"
                      class="messageCloseButton close-icon tabbable"
-                     tooltiptext="&closeNotification.tooltip;"
+                     data-l10n-id="close-notification-message"
                      oncommand="this.parentNode.dismiss();"/>
       `;
-    }
-
-    static get entities() {
-      return ["chrome://global/locale/notification.dtd"];
     }
 
     constructor() {
@@ -433,6 +429,7 @@
     }
 
     connectedCallback() {
+      MozXULElement.insertFTLIfNeeded("toolkit/global/notification.ftl");
       this.appendChild(this.constructor.fragment);
 
       for (let [propertyName, selector] of [

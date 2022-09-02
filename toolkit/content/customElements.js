@@ -480,11 +480,6 @@
        *      return `<hbox class="example"`;
        *    }
        *
-       *    static get entities() {
-       *      // Optional field for parseXULToFragment
-       *      return `["chrome://global/locale/notification.dtd"]`;
-       *    }
-       *
        *    connectedCallback() {
        *      this.appendChild(this.constructor.fragment);
        *    }

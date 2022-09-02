@@ -9,3 +9,6 @@ notification-learnmore-default-label =
 # "infobar" (message shown when for example a popup is blocked).
 close-button-label =
   .aria-label = Close
+
+close-notification-message =
+    .tooltiptext = Close this message
