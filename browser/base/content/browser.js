@@ -9895,6 +9895,7 @@ var FirefoxViewHandler = {
       SyncedTabs: "resource://services-sync/SyncedTabs.jsm",
     });
     Services.obs.addObserver(this, "firefoxview-notification-dot-update");
+    gNavToolbox.addEventListener("customizationchange", this);
   },
   uninit() {
     Services.obs.removeObserver(this, "firefoxview-notification-dot-update");
@@ -9910,6 +9911,14 @@ var FirefoxViewHandler = {
       !this._enabled
     );
     document.getElementById("menu_openFirefoxView").hidden = !this._enabled;
+  },
+  _maybeRemoveTab() {
+    if (
+      this.tab &&
+      !CustomizableUI.getPlacementOfWidget("firefox-view-button")
+    ) {
+      gBrowser.removeTab(this.tab);
+    }
   },
   openTab(event) {
     if (event?.type == "mousedown" && event?.button != 0) {
@@ -9940,6 +9949,9 @@ var FirefoxViewHandler = {
         break;
       case "activate":
         this.handleFirefoxViewSelect();
+        break;
+      case "customizationchange":
+        this._maybeRemoveTab();
         break;
     }
   },
