@@ -28,6 +28,7 @@ import os
 import shutil
 import sys
 import logging
+import tempfile
 from pathlib import Path
 
 
@@ -81,6 +82,18 @@ def _activate_mach_virtualenv():
         # In CI, the directory structure is different: xpcshell code is in
         # "$topsrcdir/xpcshell/" rather than "$topsrcdir/testing/xpcshell".
         sys.path.append("xpcshell")
+
+
+def _create_artifacts_dir(kwargs):
+    artifacts = SRC_ROOT / "artifacts"
+
+    artifacts = artifacts / "side-by-side"
+    artifacts.mkdir(exist_ok=True)
+
+    artifacts = artifacts / kwargs["test_name"]
+    artifacts.mkdir(exist_ok=True)
+
+    return artifacts
 
 
 def run_tests(mach_cmd, kwargs, client_args):
@@ -164,13 +177,55 @@ def run_tests(mach_cmd, kwargs, client_args):
         hooks.cleanup()
 
 
+def run_tools(mach_cmd, kwargs, client_args):
+    """This tools runner can be used directly via main or via Mach.
+
+    **TODO**: Before adding any more tools, we need to split this logic out
+    into a separate file that runs the tools and sets them up dynamically
+    in a similar way to how we use layers.
+    """
+    from mozperftest.utils import install_package
+
+    mach_cmd.activate_virtualenv()
+    install_package(mach_cmd.virtualenv_manager, "opencv-python==4.5.4.60")
+    install_package(
+        mach_cmd.virtualenv_manager,
+        "mozperftest-tools==0.1.11",
+    )
+
+    log_level = logging.INFO
+    if mach_cmd.log_manager.terminal_handler is not None:
+        mach_cmd.log_manager.terminal_handler.level = log_level
+    else:
+        mach_cmd.log_manager.add_terminal_logging(level=log_level)
+        mach_cmd.log_manager.enable_all_structured_loggers()
+        mach_cmd.log_manager.enable_unstructured()
+
+    from mozperftest_tools.side_by_side import SideBySide
+
+    artifacts = _create_artifacts_dir(kwargs)
+
+    tempdir = tempfile.mkdtemp()
+
+    s = SideBySide(str(tempdir))
+    s.run(**kwargs)
+
+    try:
+        for file in os.listdir(tempdir):
+            if file.startswith("cold-") or file.startswith("warm-"):
+                print(f"Copying from {tempdir}/{file} to {artifacts}/{file}")
+                shutil.copy(Path(tempdir, file), artifacts)
+    finally:
+        shutil.rmtree(tempdir)
+
+
 def main(argv=sys.argv[1:]):
     """Used when the runner is directly called from the shell"""
     _activate_mach_virtualenv()
 
     from mozbuild.mozconfig import MozconfigLoader
     from mozbuild.base import MachCommandBase, MozbuildObject
-    from mozperftest import PerftestArgumentParser
+    from mozperftest import PerftestArgumentParser, PerftestToolsArgumentParser
     from mach.logging import LoggingManager
     from mach.util import get_state_dir
 
@@ -204,10 +259,20 @@ def main(argv=sys.argv[1:]):
     MozbuildObject.from_environment = _here
 
     mach_cmd = MachCommandBase(config)
-    parser = PerftestArgumentParser(description="vanilla perftest")
-    args = dict(vars(parser.parse_args(args=argv)))
-    user_args = parser.get_user_args(args)
-    run_tests(mach_cmd, args, user_args)
+
+    if "tools" in argv[0]:
+        if len(argv) == 1:
+            raise SystemExit("No tool specified, cannot continue parsing")
+        PerftestToolsArgumentParser.tool = argv[1]
+        perftools_parser = PerftestToolsArgumentParser()
+        args = dict(vars(perftools_parser.parse_args(args=argv[2:])))
+        user_args = perftools_parser.get_user_args(args)
+        run_tools(mach_cmd, args, user_args)
+    else:
+        perftest_parser = PerftestArgumentParser(description="vanilla perftest")
+        args = dict(vars(perftest_parser.parse_args(args=argv)))
+        user_args = perftest_parser.get_user_args(args)
+        run_tests(mach_cmd, args, user_args)
 
 
 if __name__ == "__main__":

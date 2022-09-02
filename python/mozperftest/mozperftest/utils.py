@@ -138,13 +138,24 @@ def install_package(virtualenv_manager, package, ignore_failure=False):
     """
     from pip._internal.req.constructors import install_req_from_line
 
+    # Ensure that we are looking in the right places for packages. This
+    # is required in CI because pip installs in an area that is not in
+    # the search path.
+    venv_site_lib = str(Path(virtualenv_manager.bin_path, "..", "lib").resolve())
+    venv_site_packages = str(
+        Path(
+            venv_site_lib,
+            f"python{sys.version_info.major}.{sys.version_info.minor}",
+            "site-packages",
+        )
+    )
+    if venv_site_packages not in sys.path and ON_TRY:
+        sys.path.insert(0, venv_site_packages)
+
     req = install_req_from_line(package)
     req.check_if_exists(use_user_site=False)
     # already installed, check if it's in our venv
     if req.satisfied_by is not None:
-        venv_site_lib = os.path.abspath(
-            os.path.join(virtualenv_manager.bin_path, "..", "lib")
-        )
         site_packages = os.path.abspath(req.satisfied_by.location)
         if site_packages.startswith(venv_site_lib):
             # already installed in this venv, we can skip

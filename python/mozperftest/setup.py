@@ -18,6 +18,7 @@ deps = [
     "mozproxy",
     "mozinfo",
     "mozfile",
+    "mozperftest-tools",
 ]
 
 setup(

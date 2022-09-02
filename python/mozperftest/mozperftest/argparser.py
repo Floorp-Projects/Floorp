@@ -167,3 +167,190 @@ class PerftestArgumentParser(ArgumentParser):
     def parse_known_args(self, args=None, namespace=None):
         self.parse_helper(args)
         return super().parse_known_args(args, namespace)
+
+
+class SideBySideOptions:
+    args = [
+        [
+            ["-t", "--test-name"],
+            {
+                "type": str,
+                "required": True,
+                "dest": "test_name",
+                "help": "The name of the test task to get videos from.",
+            },
+        ],
+        [
+            ["--new-test-name"],
+            {
+                "type": str,
+                "default": None,
+                "help": "The name of the test task to get videos from in the new revision.",
+            },
+        ],
+        [
+            ["--base-revision"],
+            {
+                "type": str,
+                "required": True,
+                "help": "The base revision to compare a new revision to.",
+            },
+        ],
+        [
+            ["--new-revision"],
+            {
+                "type": str,
+                "required": True,
+                "help": "The base revision to compare a new revision to.",
+            },
+        ],
+        [
+            ["--base-branch"],
+            {
+                "type": str,
+                "default": "autoland",
+                "help": "Branch to search for the base revision.",
+            },
+        ],
+        [
+            ["--new-branch"],
+            {
+                "type": str,
+                "default": "autoland",
+                "help": "Branch to search for the new revision.",
+            },
+        ],
+        [
+            ["--base-platform"],
+            {
+                "type": str,
+                "required": True,
+                "dest": "platform",
+                "help": "Platform to return results for.",
+            },
+        ],
+        [
+            ["--new-platform"],
+            {
+                "type": str,
+                "default": None,
+                "help": "Platform to return results for in the new revision.",
+            },
+        ],
+        [
+            ["-o", "--overwrite"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "If set, the downloaded task group data will be deleted before "
+                + "it gets re-downloaded.",
+            },
+        ],
+        [
+            ["--cold"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "If set, we'll only look at cold pageload tests.",
+            },
+        ],
+        [
+            ["--warm"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "If set, we'll only look at warm pageload tests.",
+            },
+        ],
+        [
+            ["--most-similar"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "If set, we'll search for a video pairing that is the most similar.",
+            },
+        ],
+        [
+            ["--search-crons"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "If set, we will search for the tasks within the cron jobs as well. ",
+            },
+        ],
+        [
+            ["--skip-download"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "If set, we won't try to download artifacts again and we'll "
+                + "try using what already exists in the output folder.",
+            },
+        ],
+        [
+            ["--output"],
+            {
+                "type": str,
+                "default": None,
+                "help": "This is where the data will be saved. Defaults to CWD. "
+                + "You can include a name for the file here, otherwise it will "
+                + "default to side-by-side.mp4.",
+            },
+        ],
+        [
+            ["--metric"],
+            {
+                "type": str,
+                "default": "speedindex",
+                "help": "Metric to use for side-by-side comparison.",
+            },
+        ],
+        [
+            ["--vismetPath"],
+            {
+                "type": str,
+                "default": False,
+                "help": "Paths to visualmetrics.py for step chart generation.",
+            },
+        ],
+        [
+            ["--original"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "If set, use the original videos in the side-by-side instead "
+                + "of the postprocessed videos.",
+            },
+        ],
+        [
+            ["--skip-slow-gif"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "If set, the slow-motion GIFs won't be produced.",
+            },
+        ],
+    ]
+
+
+class ToolingOptions:
+    args = {
+        "side-by-side": SideBySideOptions.args,
+    }
+
+
+class PerftestToolsArgumentParser(ArgumentParser):
+    """%(prog)s [options] [test paths]"""
+
+    tool = None
+
+    def __init__(self, *args, **kwargs):
+        ArgumentParser.__init__(
+            self, usage=self.__doc__, conflict_handler="resolve", **kwargs
+        )
+
+        if PerftestToolsArgumentParser.tool is None:
+            raise SystemExit("No tool specified, cannot continue parsing")
+        else:
+            for name, options in ToolingOptions.args[PerftestToolsArgumentParser.tool]:
+                self.add_argument(*name, **options)
