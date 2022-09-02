@@ -4,10 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "EventLog.h"
 #include "NotificationCallback.h"
 
 #include <sstream>
 #include <string>
+#include <vector>
+
+#include "nsWindowsHelpers.h"
+#include "mozilla/CmdLineAndEnvUtils.h"
+#include "mozilla/UniquePtr.h"
 
 HRESULT STDMETHODCALLTYPE
 NotificationCallback::QueryInterface(REFIID riid, void** ppvObject) {
@@ -34,6 +40,8 @@ HRESULT STDMETHODCALLTYPE NotificationCallback::Activate(
   std::wstring program;
   std::wstring profile;
 
+  LOG_ERROR_MESSAGE((L"Invoked with arguments: '%s'"), invokedArgs);
+
   std::wistringstream args(invokedArgs);
   for (std::wstring key, value;
        std::getline(args, key) && std::getline(args, value);) {
@@ -51,24 +59,37 @@ HRESULT STDMETHODCALLTYPE NotificationCallback::Activate(
     }
   }
 
-  if (!program.empty()) {
-    path programPath = installDir / program;
-    programPath += L".exe";
-
-    std::wostringstream runArgs;
-    if (!profile.empty()) {
-      runArgs << L" --profile \"" << profile << L"\"";
-    }
-
-    STARTUPINFOW si = {0};
-    si.cb = sizeof(STARTUPINFOW);
-    PROCESS_INFORMATION pi = {0};
-
-    // Runs `{program path} [--profile {profile path}]`.
-    CreateProcessW(programPath.c_str(), runArgs.str().data(), nullptr, nullptr,
-                   false, DETACHED_PROCESS | NORMAL_PRIORITY_CLASS, nullptr,
-                   nullptr, &si, &pi);
+  if (program.empty()) {
+    LOG_ERROR_MESSAGE((L"No program; not invoking!"));
+    return S_OK;
   }
+
+  path programPath = installDir / program;
+  programPath += L".exe";
+
+  std::vector<const wchar_t*> childArgv;
+  childArgv.push_back(programPath.c_str());
+
+  if (!profile.empty()) {
+    childArgv.push_back(L"--profile");
+    childArgv.push_back(profile.c_str());
+  } else {
+    LOG_ERROR_MESSAGE((L"No profile; invocation will choose default profile"));
+  }
+
+  mozilla::UniquePtr<wchar_t[]> cmdLine(
+      mozilla::MakeCommandLine(childArgv.size(), childArgv.data()));
+
+  STARTUPINFOW si = {0};
+  si.cb = sizeof(STARTUPINFOW);
+  PROCESS_INFORMATION pi = {0};
+
+  // Runs `{program path} [--profile {profile path}]`.
+  CreateProcessW(programPath.c_str(), cmdLine.get(), nullptr, nullptr, false,
+                 DETACHED_PROCESS | NORMAL_PRIORITY_CLASS, nullptr, nullptr,
+                 &si, &pi);
+
+  LOG_ERROR_MESSAGE((L"Invoked %s"), cmdLine.get());
 
   return S_OK;
 }
