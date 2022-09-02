@@ -105,6 +105,11 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
     mCertificateTransparencyStatus = aCertificateTransparencyStatus;
   }
 
+  void SetMadeOCSPRequest(bool aMadeOCSPRequests) {
+    MutexAutoLock lock(mMutex);
+    mMadeOCSPRequests = aMadeOCSPRequests;
+  }
+
   void SetResumed(bool aResumed);
 
   Atomic<OverridableErrorCategory> mOverridableErrorCategory;
@@ -134,6 +139,7 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
 
   bool mIsAcceptedEch MOZ_GUARDED_BY(mMutex);
   bool mIsDelegatedCredential MOZ_GUARDED_BY(mMutex);
+  bool mMadeOCSPRequests MOZ_GUARDED_BY(mMutex);
 
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks MOZ_GUARDED_BY(mMutex);
   nsTArray<RefPtr<nsIX509Cert>> mSucceededCertChain MOZ_GUARDED_BY(mMutex);

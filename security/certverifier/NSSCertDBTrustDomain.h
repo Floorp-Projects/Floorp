@@ -49,6 +49,11 @@ enum class NetscapeStepUpPolicy : uint32_t {
   NeverMatch = 3,
 };
 
+enum class OCSPFetchStatus : uint16_t {
+  NotFetched = 0,
+  Fetched = 1,
+};
+
 SECStatus InitializeNSS(const nsACString& dir, NSSDBConfig nssDbConfig,
                         PKCS11DBConfig pkcs11DbConfig);
 
@@ -239,6 +244,8 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
 
   bool GetIsErrorDueToDistrustedCAPolicy() const;
 
+  OCSPFetchStatus GetOCSPFetchStatus() { return mOCSPFetchStatus; }
+
  private:
   Result CheckCRLiteStash(
       const nsTArray<uint8_t>& issuerSubjectPublicKeyInfoBytes,
@@ -311,6 +318,8 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
 
   // The built-in roots module, if available.
   UniqueSECMODModule mBuiltInRootsModule;
+
+  OCSPFetchStatus mOCSPFetchStatus;
 };
 
 }  // namespace psm
