@@ -13,6 +13,7 @@ const {
 const {
   DescriptorMixin,
 } = require("devtools/client/fronts/descriptors/descriptor-mixin");
+const DESCRIPTOR_TYPES = require("devtools/client/fronts/descriptors/descriptor-types");
 loader.lazyRequireGetter(
   this,
   "WindowGlobalTargetFront",
@@ -27,6 +28,8 @@ class WebExtensionDescriptorFront extends DescriptorMixin(
     super(client, targetFront, parentFront);
     this.traits = {};
   }
+
+  descriptorType = DESCRIPTOR_TYPES.EXTENSION;
 
   form(json) {
     this.actorID = json.actor;

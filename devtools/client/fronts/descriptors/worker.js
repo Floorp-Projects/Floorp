@@ -15,6 +15,7 @@ const { TargetMixin } = require("devtools/client/fronts/targets/target-mixin");
 const {
   DescriptorMixin,
 } = require("devtools/client/fronts/descriptors/descriptor-mixin");
+const DESCRIPTOR_TYPES = require("devtools/client/fronts/descriptors/descriptor-types");
 
 class WorkerDescriptorFront extends DescriptorMixin(
   TargetMixin(FrontClassWithSpec(workerDescriptorSpec))
@@ -24,6 +25,8 @@ class WorkerDescriptorFront extends DescriptorMixin(
 
     this.traits = {};
   }
+
+  descriptorType = DESCRIPTOR_TYPES.WORKER;
 
   form(json) {
     this.actorID = json.actor;

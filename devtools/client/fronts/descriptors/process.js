@@ -20,6 +20,7 @@ const {
 const {
   DescriptorMixin,
 } = require("devtools/client/fronts/descriptors/descriptor-mixin");
+const DESCRIPTOR_TYPES = require("devtools/client/fronts/descriptors/descriptor-types");
 
 class ProcessDescriptorFront extends DescriptorMixin(
   FrontClassWithSpec(processDescriptorSpec)
@@ -30,6 +31,8 @@ class ProcessDescriptorFront extends DescriptorMixin(
     this._processTargetFront = null;
     this._targetFrontPromise = null;
   }
+
+  descriptorType = DESCRIPTOR_TYPES.PROCESS;
 
   form(json) {
     this.id = json.id;
