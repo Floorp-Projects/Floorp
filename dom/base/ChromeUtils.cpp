@@ -1720,4 +1720,6 @@ bool ChromeUtils::IsDarkBackground(GlobalObject&, Element& aElement) {
   return nsNativeTheme::IsDarkBackground(f);
 }
 
+double ChromeUtils::DateNow(GlobalObject&) { return JS_Now() / 1000.0; }
+
 }  // namespace mozilla::dom

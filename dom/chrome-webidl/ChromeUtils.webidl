@@ -248,6 +248,12 @@ namespace ChromeUtils {
   UTF8String getXPCOMErrorName(unsigned long aErrorCode);
 
   /**
+   * Return a fractional number representing the current time (in milliseconds from the Epoch).
+   * Should be JS_Now()/1000 so that it can be compared to Date.now in Javascript.
+   */
+  double dateNow();
+
+  /**
    * IF YOU ADD NEW METHODS HERE, MAKE SURE THEY ARE THREAD-SAFE.
    */
 };
