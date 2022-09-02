@@ -108,6 +108,7 @@ void ConsoleUtils::ReportForServiceWorkerScopeInternal(
   event.mLineNumber = aLineNumber;
   event.mColumnNumber = aColumnNumber;
   event.mTimeStamp = JS_Now() / PR_USEC_PER_MSEC;
+  event.mMicroSecondTimeStamp = JS_Now();
 
   JS::Rooted<JS::Value> messageValue(cx);
   if (!dom::ToJSValue(cx, aMessage, &messageValue)) {

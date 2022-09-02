@@ -95,6 +95,7 @@ dictionary ConsoleEvent {
   unsigned long columnNumber = 0;
   DOMString functionName = "";
   double timeStamp = 0;
+  double microSecondTimeStamp = 0;
   sequence<any> arguments;
   sequence<DOMString?> styles;
   boolean private = false;

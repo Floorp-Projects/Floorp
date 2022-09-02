@@ -113,7 +113,7 @@ class ConsoleCallData final {
       : mConsoleID(aConsole->mConsoleID),
         mPrefix(aConsole->mPrefix),
         mMethodName(aName),
-        mTimeStamp(JS_Now() / PR_USEC_PER_MSEC),
+        mMicroSecondTimeStamp(JS_Now()),
         mStartTimerValue(0),
         mStartTimerStatus(Console::eTimerUnknown),
         mLogTimerDuration(0),
@@ -159,7 +159,7 @@ class ConsoleCallData final {
   const nsString mPrefix;
 
   const Console::MethodName mMethodName;
-  int64_t mTimeStamp;
+  int64_t mMicroSecondTimeStamp;
 
   // These values are set in the owning thread and they contain the timestamp of
   // when the new timer has started, the name of it and the status of the
@@ -1613,7 +1613,8 @@ bool Console::PopulateConsoleNotificationInTheTargetScope(
   event.mLineNumber = frame.mLineNumber;
   event.mColumnNumber = frame.mColumnNumber;
   event.mFunctionName = frame.mFunctionName;
-  event.mTimeStamp = aData->mTimeStamp;
+  event.mTimeStamp = aData->mMicroSecondTimeStamp / PR_USEC_PER_MSEC;
+  event.mMicroSecondTimeStamp = aData->mMicroSecondTimeStamp;
   event.mPrivate = !!aData->mOriginAttributes.mPrivateBrowsingId;
 
   switch (aData->mMethodName) {
