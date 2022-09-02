@@ -560,6 +560,7 @@ class Marionette(object):
                 # hit an exception/died or the connection died. We can
                 # do no further server-side cleanup in this case.
                 pass
+
         if self.instance:
             # stop application and, if applicable, stop emulator
             self.instance.close(clean=True)
@@ -567,6 +568,7 @@ class Marionette(object):
                 raise errors.UnresponsiveInstanceException(
                     "Application clean-up has failed >2 consecutive times."
                 )
+
         self.cleanup_ran = True
 
     def __del__(self):
@@ -1023,16 +1025,26 @@ class Marionette(object):
                 # which wants to reset the context but fails sending the message.
                 pass
 
-            returncode = self.instance.runner.wait(timeout=self.shutdown_timeout)
-            if returncode is None:
-                # The process did not shutdown itself, so force-closing it.
-                self.cleanup()
+            except Exception:
+                # For any other error assume the application is not going to shutdown.
+                # As such allow Marionette to accept new connections again.
+                self.is_shutting_down = False
+                self._send_message("Marionette:AcceptConnections", {"value": True})
+                raise
 
-                message = "Process still running {}s after quit request"
-                raise IOError(message.format(self.shutdown_timeout))
+            try:
+                self.delete_session(send_request=False)
 
-            self.is_shutting_down = False
-            self.delete_session(send_request=False)
+                # Try to wait for the process to end itself before force-closing it.
+                returncode = self.instance.runner.wait(timeout=self.shutdown_timeout)
+                if returncode is None:
+                    self.cleanup()
+
+                    message = "Process still running {}s after quit request"
+                    raise IOError(message.format(self.shutdown_timeout))
+
+            finally:
+                self.is_shutting_down = False
 
         else:
             self.delete_session(send_request=False)
