@@ -34,7 +34,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   Log: "resource://gre/modules/Log.jsm",
 });
 
-var EXPORTED_SYMBOLS = ["BridgedEngine", "LogAdapter"];
+var EXPORTED_SYMBOLS = ["BridgeWrapperXPCOM", "BridgedEngine", "LogAdapter"];
 
 /**
  * A stub store that converts between raw decrypted incoming records and
@@ -64,17 +64,14 @@ class BridgedStore {
         JSON.stringify(record.toIncomingEnvelope())
       );
       this._log.trace("incoming envelopes", incomingEnvelopesAsJSON);
-      await promisify(
-        this.engine._bridge.storeIncoming,
-        incomingEnvelopesAsJSON
-      );
+      await this.engine._bridge.storeIncoming(incomingEnvelopesAsJSON);
     }
     // Array of failed records.
     return [];
   }
 
   async wipe() {
-    await promisify(this.engine._bridge.wipe);
+    await this.engine._bridge.wipe();
   }
 }
 
@@ -100,11 +97,11 @@ class BridgedRecord extends RawCryptoWrapper {
     if (typeof envelope.id != "string") {
       throw new TypeError("Outgoing envelope missing ID");
     }
-    if (typeof envelope.cleartext != "string") {
-      throw new TypeError("Outgoing envelope missing cleartext");
+    if (typeof envelope.payload != "string") {
+      throw new TypeError("Outgoing envelope missing payload");
     }
     let record = new BridgedRecord(collection, envelope.id);
-    record.cleartext = envelope.cleartext;
+    record.cleartext = envelope.payload;
     return record;
   }
 
@@ -133,7 +130,7 @@ class BridgedRecord extends RawCryptoWrapper {
     return {
       id: this.data.id,
       modified: this.data.modified,
-      cleartext: this.cleartext,
+      payload: this.cleartext,
     };
   }
 }
@@ -200,11 +197,114 @@ class LogAdapter {
   }
 }
 
+// This converts the XPCOM-defined, callback-based mozIBridgedSyncEngine to
+// a promise-based implementation.
+class BridgeWrapperXPCOM {
+  constructor(component) {
+    this.comp = component;
+  }
+
+  // A few sync, non-callback based attributes.
+  get storageVersion() {
+    return this.comp.storageVersion;
+  }
+
+  get allowSkippedRecord() {
+    return this.comp.allowSkippedRecord;
+  }
+
+  get logger() {
+    return this.comp.logger;
+  }
+
+  // And the async functions we promisify.
+  // Note this is `lastSync` via uniffi but `getLastSync` via xpcom
+  lastSync() {
+    return BridgeWrapperXPCOM.#promisify(this.comp.getLastSync);
+  }
+
+  setLastSync(lastSyncMillis) {
+    return BridgeWrapperXPCOM.#promisify(this.comp.setLastSync, lastSyncMillis);
+  }
+
+  getSyncId() {
+    return BridgeWrapperXPCOM.#promisify(this.comp.getSyncId);
+  }
+
+  resetSyncId() {
+    return BridgeWrapperXPCOM.#promisify(this.comp.resetSyncId);
+  }
+
+  ensureCurrentSyncId(newSyncId) {
+    return BridgeWrapperXPCOM.#promisify(
+      this.comp.ensureCurrentSyncId,
+      newSyncId
+    );
+  }
+
+  syncStarted() {
+    return BridgeWrapperXPCOM.#promisify(this.comp.syncStarted);
+  }
+
+  storeIncoming(incomingEnvelopesAsJSON) {
+    return BridgeWrapperXPCOM.#promisify(
+      this.comp.storeIncoming,
+      incomingEnvelopesAsJSON
+    );
+  }
+
+  apply() {
+    return BridgeWrapperXPCOM.#promisify(this.comp.apply);
+  }
+
+  setUploaded(newTimestampMillis, uploadedIds) {
+    return BridgeWrapperXPCOM.#promisify(
+      this.comp.setUploaded,
+      newTimestampMillis,
+      uploadedIds
+    );
+  }
+
+  syncFinished() {
+    return BridgeWrapperXPCOM.#promisify(this.comp.syncFinished);
+  }
+
+  reset() {
+    return BridgeWrapperXPCOM.#promisify(this.comp.reset);
+  }
+
+  wipe() {
+    return BridgeWrapperXPCOM.#promisify(this.comp.wipe);
+  }
+
+  // Converts a XPCOM bridged function that takes a callback into one that returns a
+  // promise.
+  static #promisify(func, ...params) {
+    return new Promise((resolve, reject) => {
+      func(...params, {
+        // This object implicitly implements all three callback interfaces
+        // (`mozIBridgedSyncEngine{Apply, Result}Callback`), because they have
+        // the same methods. The only difference is the type of the argument
+        // passed to `handleSuccess`, which doesn't matter in JS.
+        handleSuccess: resolve,
+        handleError(code, message) {
+          reject(transformError(code, message));
+        },
+      });
+    });
+  }
+}
+
 /**
  * A base class used to plug a Rust engine into Sync, and have it work like any
  * other engine. The constructor takes a bridge as its first argument, which is
- * an instance of an XPCOM component class that implements
- * `mozIBridgedSyncEngine`.
+ * a "bridged sync engine", as defined by UniFFI in the application-services
+ * crate.
+ * For backwards compatibility, this can also be an instance of an XPCOM
+ * component class that implements `mozIBridgedSyncEngine`, wrapped in
+ * a `BridgeWrapperXPCOM` wrapper.
+ * (Note that at time of writing, the above is slightly aspirational; the
+ * actual definition of the UniFFI shared bridged engine is still in flux.)
  *
  * This class inherits from `SyncEngine`, which has a lot of machinery that we
  * don't need, but that's fairly easy to override. It would be harder to
@@ -217,15 +317,17 @@ class LogAdapter {
  * tracker is fine, because the shape of the `Tracker` interface may not make
  * sense for all engines.
  */
-function BridgedEngine(bridge, name, service) {
+function BridgedEngine(name, service) {
   SyncEngine.call(this, name, service);
-
-  this._bridge = bridge;
 }
 
 BridgedEngine.prototype = {
   __proto__: SyncEngine.prototype,
 
+  /**
+   * The Rust implemented bridge. Must be set by the engine which subclasses us.
+   */
+  _bridge: null,
   /**
    * The tracker class for this engine. Subclasses may want to override this
    * with their own tracker, though using the default `Tracker` is fine.
@@ -282,7 +384,7 @@ BridgedEngine.prototype = {
   async getSyncID() {
     // Note that all methods on an XPCOM class instance are automatically bound,
     // so we don't need to write `this._bridge.getSyncId.bind(this._bridge)`.
-    let syncID = await promisify(this._bridge.getSyncId);
+    let syncID = await this._bridge.getSyncId();
     return syncID;
   },
 
@@ -293,30 +395,24 @@ BridgedEngine.prototype = {
   },
 
   async resetLocalSyncID() {
-    let newSyncID = await promisify(this._bridge.resetSyncId);
+    let newSyncID = await this._bridge.resetSyncId();
     return newSyncID;
   },
 
   async ensureCurrentSyncID(newSyncID) {
-    let assignedSyncID = await promisify(
-      this._bridge.ensureCurrentSyncId,
-      newSyncID
-    );
+    let assignedSyncID = await this._bridge.ensureCurrentSyncId(newSyncID);
     return assignedSyncID;
   },
 
   async getLastSync() {
     // The bridge defines lastSync as integer ms, but sync itself wants to work
     // in a float seconds with 2 decimal places.
-    let lastSyncMS = await promisify(this._bridge.getLastSync);
+    let lastSyncMS = await this._bridge.lastSync();
     return Math.round(lastSyncMS / 10) / 100;
   },
 
   async setLastSync(lastSyncSeconds) {
-    await promisify(
-      this._bridge.setLastSync,
-      Math.round(lastSyncSeconds * 1000)
-    );
+    await this._bridge.setLastSync(Math.round(lastSyncSeconds * 1000));
   },
 
   /**
@@ -330,7 +426,7 @@ BridgedEngine.prototype = {
   },
 
   async trackRemainingChanges() {
-    await promisify(this._bridge.syncFinished);
+    await this._bridge.syncFinished();
   },
 
   /**
@@ -352,13 +448,13 @@ BridgedEngine.prototype = {
 
   async _syncStartup() {
     await super._syncStartup();
-    await promisify(this._bridge.syncStarted);
+    await this._bridge.syncStarted();
   },
 
   async _processIncoming(newitems) {
     await super._processIncoming(newitems);
 
-    let outgoingEnvelopesAsJSON = await promisify(this._bridge.apply);
+    let outgoingEnvelopesAsJSON = await this._bridge.apply();
     let changeset = {};
     for (let envelopeAsJSON of outgoingEnvelopesAsJSON) {
       this._log.trace("outgoing envelope", envelopeAsJSON);
@@ -381,7 +477,7 @@ BridgedEngine.prototype = {
    * records from the outgoing table back to the mirror.
    */
   async _onRecordsWritten(succeeded, failed, serverModifiedTime) {
-    await promisify(this._bridge.setUploaded, serverModifiedTime, succeeded);
+    await this._bridge.setUploaded(serverModifiedTime, succeeded);
   },
 
   async _createTombstone() {
@@ -398,7 +494,7 @@ BridgedEngine.prototype = {
 
   async _resetClient() {
     await super._resetClient();
-    await promisify(this._bridge.reset);
+    await this._bridge.reset();
   },
 };
 
@@ -410,23 +506,6 @@ function transformError(code, message) {
     default:
       return new BridgeError(code, message);
   }
-}
-
-// Converts a bridged function that takes a callback into one that returns a
-// promise.
-function promisify(func, ...params) {
-  return new Promise((resolve, reject) => {
-    func(...params, {
-      // This object implicitly implements all three callback interfaces
-      // (`mozIBridgedSyncEngine{Apply, Result}Callback`), because they have
-      // the same methods. The only difference is the type of the argument
-      // passed to `handleSuccess`, which doesn't matter in JS.
-      handleSuccess: resolve,
-      handleError(code, message) {
-        reject(transformError(code, message));
-      },
-    });
-  });
 }
 
 class BridgedChangeset extends Changeset {
