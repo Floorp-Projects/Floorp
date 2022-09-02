@@ -32,6 +32,13 @@ interface nsIConsoleMessage : nsISupports
      */
     readonly attribute long long timeStamp;
 
+    /**
+     * The time (in microseconds from the Epoch) that the message instance
+     * was initialised.
+     * The timestamp is initialized as JS_now.
+     */
+    readonly attribute long long microSecondTimeStamp;
+
     [binaryname(MessageMoz)] readonly attribute AString message;
 
     attribute boolean isForwardedFromContentProcess;

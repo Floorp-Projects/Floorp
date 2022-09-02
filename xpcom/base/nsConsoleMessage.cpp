@@ -13,10 +13,10 @@
 
 NS_IMPL_ISUPPORTS(nsConsoleMessage, nsIConsoleMessage)
 
-nsConsoleMessage::nsConsoleMessage() : mTimeStamp(0), mMessage() {}
+nsConsoleMessage::nsConsoleMessage() : mMicroSecondTimeStamp(0), mMessage() {}
 
 nsConsoleMessage::nsConsoleMessage(const nsAString& aMessage) {
-  mTimeStamp = JS_Now() / 1000;
+  mMicroSecondTimeStamp = JS_Now();
   mMessage.Assign(aMessage);
   mIsForwardedFromContentProcess = false;
 }
@@ -35,7 +35,13 @@ nsConsoleMessage::GetLogLevel(uint32_t* aLogLevel) {
 
 NS_IMETHODIMP
 nsConsoleMessage::GetTimeStamp(int64_t* aTimeStamp) {
-  *aTimeStamp = mTimeStamp;
+  *aTimeStamp = mMicroSecondTimeStamp / 1000;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsConsoleMessage::GetMicroSecondTimeStamp(int64_t* aTimeStamp) {
+  *aTimeStamp = mMicroSecondTimeStamp;
   return NS_OK;
 }
 

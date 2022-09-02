@@ -82,7 +82,7 @@ class nsScriptErrorBase : public nsIScriptError {
   // mOuterWindowID is set on the main thread from InitializeOnMainThread().
   uint64_t mOuterWindowID;
   uint64_t mInnerWindowID;
-  int64_t mTimeStamp;
+  int64_t mMicroSecondTimeStamp;
   // mInitializedOnMainThread, mIsFromPrivateWindow and mIsFromChromeContext are
   // set on the main thread from InitializeOnMainThread().
   mozilla::Atomic<bool> mInitializedOnMainThread;
