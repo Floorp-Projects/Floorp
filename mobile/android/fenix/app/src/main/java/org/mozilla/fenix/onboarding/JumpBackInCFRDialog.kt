@@ -111,6 +111,7 @@ class JumpBackInCFRDialog(val recyclerView: RecyclerView) {
             attr.y = y - popupBinding.root.measuredHeight
             attributes = attr
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            setDimAmount(0f)
         }
         return popup
     }
