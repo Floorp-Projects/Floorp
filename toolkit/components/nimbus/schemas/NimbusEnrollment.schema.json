@@ -101,10 +101,6 @@
                         "type": "string",
                         "description": "The identifier for the feature flag"
                       },
-                      "enabled": {
-                        "type": "boolean",
-                        "description": "This can be used to turn the whole feature on/off"
-                      },
                       "value": {
                         "type": "object",
                         "additionalProperties": {},
@@ -140,10 +136,6 @@
                       "featureId": {
                         "type": "string",
                         "description": "The identifier for the feature flag"
-                      },
-                      "enabled": {
-                        "type": "boolean",
-                        "description": "This can be used to turn the whole feature on/off"
                       },
                       "value": {
                         "type": "object",

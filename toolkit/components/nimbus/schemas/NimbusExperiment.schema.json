@@ -130,10 +130,6 @@
                         "type": "string",
                         "description": "The identifier for the feature flag"
                       },
-                      "enabled": {
-                        "type": "boolean",
-                        "description": "This can be used to turn the whole feature on/off"
-                      },
                       "value": {
                         "type": "object",
                         "additionalProperties": {},
@@ -200,10 +196,6 @@
                           "type": "string",
                           "description": "The identifier for the feature flag"
                         },
-                        "enabled": {
-                          "type": "boolean",
-                          "description": "This can be used to turn the whole feature on/off"
-                        },
                         "value": {
                           "type": "object",
                           "additionalProperties": {},
@@ -248,10 +240,6 @@
                         "featureId": {
                           "type": "string",
                           "description": "The identifier for the feature flag"
-                        },
-                        "enabled": {
-                          "type": "boolean",
-                          "description": "This can be used to turn the whole feature on/off"
                         },
                         "value": {
                           "type": "object",
@@ -322,10 +310,6 @@
             "null"
           ],
           "description": "The slug of the reference branch (that is, which branch we consider \"control\")"
-        },
-        "filter_expression": {
-          "type": "string",
-          "description": "This is NOT used by Nimbus, but has special functionality in Remote Settings. See https://remote-settings.readthedocs.io/en/latest/target-filters.html#how"
         }
       },
       "required": [
