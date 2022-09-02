@@ -964,7 +964,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
 
             messages.push({
               message: this._createStringGrip(cachedMessage.message),
-              timeStamp: cachedMessage.timeStamp,
+              timeStamp: cachedMessage.microSecondTimeStamp / 1000,
               type: "logMessage",
             });
           }
@@ -1645,7 +1645,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     } else {
       this.emit("logMessage", {
         message: this._createStringGrip(message.message),
-        timeStamp: message.timeStamp,
+        timeStamp: message.microSecondTimeStamp / 1000,
       });
     }
   },
@@ -1747,7 +1747,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       columnNumber,
       category: pageError.category,
       innerWindowID: pageError.innerWindowID,
-      timeStamp: pageError.timeStamp,
+      timeStamp: pageError.microSecondTimeStamp / 1000,
       warning: !!(pageError.flags & pageError.warningFlag),
       error: !(pageError.flags & (pageError.warningFlag | pageError.infoFlag)),
       info: !!(pageError.flags & pageError.infoFlag),
@@ -2064,7 +2064,10 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       filename: message.filename,
       level: message.level,
       lineNumber: message.lineNumber,
-      timeStamp: message.timeStamp,
+      // messages emitted from Console.jsm don't have a microSecondTimeStamp property
+      timeStamp: message.microSecondTimeStamp
+        ? message.microSecondTimeStamp / 1000
+        : message.timeStamp,
       sourceId: this.getActorIdForInternalSourceId(message.sourceId),
       category: message.category || "webdev",
       innerWindowID: message.innerID,

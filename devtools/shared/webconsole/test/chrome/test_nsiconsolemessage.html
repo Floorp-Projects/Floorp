@@ -31,7 +31,7 @@ function onAttach(aState)
 
   expectedMessages = [{
     message: "hello world! bug859756",
-    timeStamp: /^\d+$/,
+    timeStamp: FRACTIONAL_NUMBER_REGEX,
   }];
 
   Services.console.logStringMessage("hello world! bug859756");

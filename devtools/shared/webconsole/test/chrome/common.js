@@ -6,7 +6,7 @@
 
 /* exported attachConsole, attachConsoleToTab, attachConsoleToWorker,
    closeDebugger, checkConsoleAPICalls, checkRawHeaders, runTests, nextTest, Ci, Cc,
-   withActiveServiceWorker, Services, consoleAPICall, createCommandsForTab */
+   withActiveServiceWorker, Services, consoleAPICall, createCommandsForTab, FRACTIONAL_NUMBER_REGEX */
 
 const { require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
@@ -19,6 +19,11 @@ const {
 } = require("devtools/shared/commands/commands-factory");
 
 const Services = require("Services");
+
+// timeStamp are the result of a number in microsecond divided by 1000.
+// so we can't expect a precise number of decimals, or even if there would
+// be decimals at all.
+const FRACTIONAL_NUMBER_REGEX = /^\d+(\.\d{1,3})?$/;
 
 function initCommon() {
   // Services.prefs.setBoolPref("devtools.debugger.log", true);

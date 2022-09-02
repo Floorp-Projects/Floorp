@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Webconsole order test test page</title>
+  </head>
+  <body>
+    <button>dispatched event target</button>
+    <script>
+      "use strict";
+      const btn = document.querySelector("button");
+      btn.addEventListener("click", () => {
+        console.log("First");
+        // Don't throw an error as its stacktrace  (whose rendering is delayed)
+        // might show up in the console message body and mess with the test.
+        // eslint-disable-next-line no-throw-literal
+        throw "Second";
+      });
+
+      // Use dispatchEvent as the event listener callback will be called directly,
+      // before the next lines are executed, which gives us a higher chance of
+      // having all the messages being emitted within the same millisecond.
+      btn.dispatchEvent(new MouseEvent("click"));
+
+      console.log("Third");
+      // Don't throw an error as its stacktrace  (whose rendering is delayed)
+      // might show up in the console message body and mess with the test.
+      // eslint-disable-next-line no-throw-literal
+      throw "Fourth";
+    </script>
+  </body>
+</html>

@@ -155,7 +155,7 @@ class ErrorMessageWatcher extends nsIConsoleListenerWatcher {
       columnNumber,
       category: error.category,
       innerWindowID: error.innerWindowID,
-      timeStamp: error.timeStamp,
+      timeStamp: error.microSecondTimeStamp / 1000,
       warning: !!(error.flags & error.warningFlag),
       error: !(error.flags & (error.warningFlag | error.infoFlag)),
       info: !!(error.flags & error.infoFlag),
