@@ -188,7 +188,7 @@ class GeckoProfile(object):
                 )
 
             for testtype, results_json in profile_locations:
-                with open(results_json) as f:
+                with open(results_json, encoding="utf-8") as f:
                     data = json.load(f)
                 results_dir = os.path.dirname(results_json)
                 for entry in data:
