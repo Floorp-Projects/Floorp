@@ -49,6 +49,11 @@ media::DecodeSupportSet RemoteDecoderModule::Supports(
     DecoderDoctorDiagnostics* aDiagnostics) const {
   bool supports =
       RemoteDecoderManagerChild::Supports(mLocation, aParams, aDiagnostics);
+  // This should only be supported by mf media engine cdm process.
+  if (aParams.mMediaEngineId &&
+      mLocation != RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM) {
+    supports = false;
+  }
   MOZ_LOG(sPDMLog, LogLevel::Debug,
           ("Sandbox %s decoder %s requested type %s",
            RemoteDecodeInToStr(mLocation), supports ? "supports" : "rejects",

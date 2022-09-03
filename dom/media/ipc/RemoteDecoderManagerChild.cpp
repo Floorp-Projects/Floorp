@@ -607,16 +607,7 @@ TrackSupportSet RemoteDecoderManagerChild::GetTrackSupport(
     RemoteDecodeIn aLocation) {
   switch (aLocation) {
     case RemoteDecodeIn::GpuProcess: {
-      TrackSupportSet s{TrackSupport::Video};
-#ifdef MOZ_WMF_MEDIA_ENGINE
-      // Force to use RDD for video decoding in order to use media engine.
-      // TODO : this should be only enabled for encrypted video, need to find a
-      // way to use GPU for non-encrypted video still.
-      if (StaticPrefs::media_wmf_media_engine_enabled()) {
-        s -= TrackSupport::Video;
-      }
-#endif
-      return s;
+      return TrackSupportSet{TrackSupport::Video};
     }
     case RemoteDecodeIn::RddProcess: {
       TrackSupportSet s{TrackSupport::Video};
