@@ -94,6 +94,10 @@ def test_update(tmp_path, metadata_file):
     os.makedirs(metadata_path)
     wptreport_paths = [path_firefox, path_chrome]
 
+    update_properties = {"properties": ["product"]}
+    with open(os.path.join(metadata_path, "update_properties.json"), "w") as f:
+        json.dump(update_properties, f)
+
     args = ["update-expectations",
             "--manifest", os.path.join(repo_root, "MANIFEST.json"),
             "--metadata", metadata_path,
