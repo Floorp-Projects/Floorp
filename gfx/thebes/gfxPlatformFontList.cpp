@@ -2632,6 +2632,11 @@ void gfxPlatformFontList::CleanupLoader() {
 }
 
 void gfxPlatformFontList::GetPrefsAndStartLoader() {
+  // If we're already in shutdown, there's no point in starting this, and it
+  // could trigger an assertion if we try to use the Thread Manager too late.
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+    return;
+  }
   uint32_t delay = std::max(1u, StaticPrefs::gfx_font_loader_delay_AtStartup());
   if (NS_IsMainThread()) {
     StartLoader(delay);
