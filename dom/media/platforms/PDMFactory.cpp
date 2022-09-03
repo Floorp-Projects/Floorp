@@ -602,6 +602,13 @@ void PDMFactory::CreateUtilityPDMs() {
 #endif
     CreateAndStartupPDM<AgnosticDecoderModule>();
   }
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  if (aKind == ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM) {
+    if (IsWin8OrLater() && StaticPrefs::media_wmf_media_engine_enabled()) {
+      CreateAndStartupPDM<MFMediaEngineDecoderModule>();
+    }
+  }
+#endif
 }
 
 void PDMFactory::CreateContentPDMs() {

@@ -196,6 +196,7 @@ RemoteDecoderManagerChild* RemoteDecoderManagerChild::GetSingleton(
     case RemoteDecodeIn::UtilityProcess_Generic:
     case RemoteDecodeIn::UtilityProcess_AppleMedia:
     case RemoteDecodeIn::UtilityProcess_WMF:
+    case RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM:
       return sRemoteDecoderManagerChildForProcesses[aLocation];
     default:
       MOZ_CRASH("Unexpected RemoteDecode variant");
@@ -219,7 +220,8 @@ bool RemoteDecoderManagerChild::Supports(
     case RemoteDecodeIn::RddProcess:
     case RemoteDecodeIn::UtilityProcess_AppleMedia:
     case RemoteDecodeIn::UtilityProcess_Generic:
-    case RemoteDecodeIn::UtilityProcess_WMF: {
+    case RemoteDecodeIn::UtilityProcess_WMF:
+    case RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM: {
       StaticMutexAutoLock lock(sProcessSupportedMutex);
       supported = sProcessSupported[aLocation];
       break;
@@ -232,7 +234,8 @@ bool RemoteDecoderManagerChild::Supports(
     // the RDD process nor the Utility process.
     if (aLocation == RemoteDecodeIn::UtilityProcess_Generic ||
         aLocation == RemoteDecodeIn::UtilityProcess_AppleMedia ||
-        aLocation == RemoteDecodeIn::UtilityProcess_WMF) {
+        aLocation == RemoteDecodeIn::UtilityProcess_WMF ||
+        aLocation == RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM) {
       LaunchUtilityProcessIfNeeded(aLocation);
     }
     if (aLocation == RemoteDecodeIn::RddProcess) {
@@ -504,6 +507,10 @@ RemoteDecoderManagerChild::LaunchUtilityProcessIfNeeded(
                                                        __func__);
   }
 
+  MOZ_ASSERT(aLocation == RemoteDecodeIn::UtilityProcess_Generic ||
+             aLocation == RemoteDecodeIn::UtilityProcess_AppleMedia ||
+             aLocation == RemoteDecodeIn::UtilityProcess_WMF ||
+             aLocation == RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM);
   StaticMutexAutoLock lock(sLaunchMutex);
   auto& utilityLaunchPromise = sLaunchPromises[aLocation];
 
@@ -617,6 +624,17 @@ TrackSupportSet RemoteDecoderManagerChild::GetTrackSupport(
       return StaticPrefs::media_utility_process_enabled()
                  ? TrackSupportSet{TrackSupport::Audio}
                  : TrackSupportSet{TrackSupport::None};
+    case RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM: {
+      TrackSupportSet s{TrackSupport::None};
+#ifdef MOZ_WMF_MEDIA_ENGINE
+      // When we enable the media engine, it would need both tracks to
+      // synchronize the a/v playback.
+      if (StaticPrefs::media_wmf_media_engine_enabled()) {
+        s += TrackSupportSet{TrackSupport::Audio, TrackSupport::Video};
+      }
+#endif
+      return s;
+    }
     default:
       MOZ_ASSERT_UNREACHABLE("Undefined location!");
   }
@@ -664,7 +682,8 @@ RemoteDecoderManagerChild::RemoteDecoderManagerChild(RemoteDecodeIn aLocation)
              mLocation == RemoteDecodeIn::RddProcess ||
              mLocation == RemoteDecodeIn::UtilityProcess_Generic ||
              mLocation == RemoteDecodeIn::UtilityProcess_AppleMedia ||
-             mLocation == RemoteDecodeIn::UtilityProcess_WMF);
+             mLocation == RemoteDecodeIn::UtilityProcess_WMF ||
+             mLocation == RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM);
 }
 
 /* static */
@@ -828,7 +847,8 @@ void RemoteDecoderManagerChild::SetSupported(
     case RemoteDecodeIn::RddProcess:
     case RemoteDecodeIn::UtilityProcess_AppleMedia:
     case RemoteDecodeIn::UtilityProcess_Generic:
-    case RemoteDecodeIn::UtilityProcess_WMF: {
+    case RemoteDecodeIn::UtilityProcess_WMF:
+    case RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM: {
       StaticMutexAutoLock lock(sProcessSupportedMutex);
       sProcessSupported[aLocation] = Some(aSupported);
       break;
