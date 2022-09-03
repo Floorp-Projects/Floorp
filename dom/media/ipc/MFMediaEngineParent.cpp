@@ -120,10 +120,8 @@ void MFMediaEngineParent::CreateMediaEngine() {
     return;
   }
 
-  if (StaticPrefs::media_wmf_media_engine_video_output_enabled()) {
-    InitializeDXGIDeviceManager();
-    InitializeVirtualVideoWindow();
-  }
+  InitializeDXGIDeviceManager();
+  InitializeVirtualVideoWindow();
 
   // Create an attribute and set mandatory information that are required for
   // a media engine creation.
@@ -312,16 +310,10 @@ MFMediaEngineStreamWrapper* MFMediaEngineParent::GetMediaEngineStream(
                                           aParam);
   }
   MOZ_ASSERT(aType == TrackType::kVideoTrack);
-  // TODO : This is for testing. Remove this pref after finishing the video
-  // output implementation. Our first step is to make audio playback work.
-  if (StaticPrefs::media_wmf_media_engine_video_output_enabled()) {
-    auto* stream = mMediaSource->GetVideoStream();
-    stream->AsVideoStream()->SetKnowsCompositor(aParam.mKnowsCompositor);
-    stream->AsVideoStream()->SetConfig(aParam.mConfig);
-    return new MFMediaEngineStreamWrapper(stream, stream->GetTaskQueue(),
-                                          aParam);
-  }
-  return nullptr;
+  auto* stream = mMediaSource->GetVideoStream();
+  stream->AsVideoStream()->SetKnowsCompositor(aParam.mKnowsCompositor);
+  stream->AsVideoStream()->SetConfig(aParam.mConfig);
+  return new MFMediaEngineStreamWrapper(stream, stream->GetTaskQueue(), aParam);
 }
 
 mozilla::ipc::IPCResult MFMediaEngineParent::RecvInitMediaEngine(
