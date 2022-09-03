@@ -84,6 +84,9 @@
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
     <string name="tcp_cfr_message">Tehokkain yksityisyysominaisuutemme eristää sivustojen väliset seuraimet.</string>
 
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Lue lisää totaalisesta evästesuojasta</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Kameran käyttöoikeus vaaditaan. Siirry Androidin asetuksiin, napauta käyttöoikeudet ja napauta salli.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -279,20 +282,27 @@
     <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Palaa viimeisimpiin hakuihin etusivultasi ja välilehdiltäsi.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint">Sinulle mukautetun Firefox-kotisivun avulla on helpompi jatkaa siitä, mihin jäit. Löydä viimeisimmät välilehdet, kirjanmerkit ja hakutulokset.</string>
+    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Sinulle mukautetun Firefox-kotisivun avulla on helpompi jatkaa siitä, mihin jäit. Löydä viimeisimmät välilehdet, kirjanmerkit ja hakutulokset.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Tutustu henkilökohtaiseen kotisivuusi. Viimeisimmät välilehdet, kirjanmerkit ja hakutulokset näkyvät tässä.</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title">Tervetuloa itsenäiseen internetiin</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Lisää värejä. Parempi yksityisyys. Ihmisiin sitoutumisen priorisointi liikevoittojen edelle.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string name="onboarding_home_sync_title">Näyttöjen vaihtaminen on helpompaa kuin koskaan</string>
+    <string name="onboarding_home_sync_title_2">Hyppää puhelimelta kannettavalle tietokoneelle ja takaisin</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Jatka siitä, mihin jäit muiden laitteidesi välilehdillä.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Aloitetaan</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
     <string name="onboarding_home_sign_in_button">Kirjaudu sisään</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Ohita</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Välilehtiäsi synkronoidaan! Jatka siitä, mihin jäit toisella laitteellasi.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -1382,6 +1392,8 @@
     <string name="etp_cookies_title_2">Sivustorajat ylittävät evästeet</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Estää evästeet, joita mainosverkot ja analytiikkayritykset käyttävät kerätäksesi selaustietojasi yli sivustorajojen.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Totaalinen evästesuoja eristää evästeet sivustolle, jolla olet, joten seuraimet kuten mainosverkostot eivät voi käyttää evästeitä seurantaan sivustojen välillä.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Kryptolouhijat</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
