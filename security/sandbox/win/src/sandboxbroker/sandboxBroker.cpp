@@ -1292,7 +1292,13 @@ bool SandboxBroker::SetSecurityLevelForUtilityProcess(
       result,
       "SetTokenLevel should never fail with these arguments, what happened?");
 
-  result = mPolicy->SetAlternateDesktop(true);
+  bool useAlternateWindowStation = true;
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  if (aSandbox == mozilla::ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM) {
+    useAlternateWindowStation = false;
+  }
+#endif
+  result = mPolicy->SetAlternateDesktop(useAlternateWindowStation);
   if (NS_WARN_IF(result != sandbox::SBOX_ALL_OK)) {
     LOG_W("SetAlternateDesktop failed, result: %i, last error: %lx", result,
           ::GetLastError());
