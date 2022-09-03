@@ -1,14 +1,29 @@
-from typing import Any
+from typing import Any, Callable, Mapping
 
-from .. import any_int, any_string
+from .. import any_int, any_string, recursive_compare
 
 
-def assert_handle(obj, should_contain_handle):
+def assert_handle(obj: Mapping[str, Any], should_contain_handle: bool) -> None:
     if should_contain_handle:
         assert "handle" in obj, f"Result should contain `handle`. Actual: {obj}"
         assert isinstance(obj["handle"], str), f"`handle` should be a string, but was {type(obj['handle'])}"
     else:
         assert "handle" not in obj, f"Result should not contain `handle`. Actual: {obj}"
+
+
+def specific_error_response(expected_error: Mapping[str, Any]) -> Callable[[Any], None]:
+    return lambda actual: recursive_compare(
+        {
+            "realm": any_string,
+            "exceptionDetails": {
+                "columnNumber": any_int,
+                "exception": expected_error,
+                "lineNumber": any_int,
+                "stackTrace": any_stack_trace,
+                "text": any_string,
+            },
+        },
+        actual)
 
 
 def any_stack_trace(actual: Any) -> None:
