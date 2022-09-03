@@ -737,17 +737,6 @@ void RemoteDecoderManagerChild::InitIPDL() { mIPDLSelfRef = this; }
 
 void RemoteDecoderManagerChild::ActorDealloc() { mIPDLSelfRef = nullptr; }
 
-VideoBridgeSource RemoteDecoderManagerChild::GetSource() const {
-  switch (mLocation) {
-    case RemoteDecodeIn::RddProcess:
-      return VideoBridgeSource::RddProcess;
-    case RemoteDecodeIn::GpuProcess:
-      return VideoBridgeSource::GpuProcess;
-    default:
-      MOZ_CRASH("Unexpected RemoteDecode variant");
-  }
-}
-
 bool RemoteDecoderManagerChild::DeallocShmem(mozilla::ipc::Shmem& aShmem) {
   nsCOMPtr<nsISerialEventTarget> managerThread = GetManagerThread();
   if (!managerThread) {
