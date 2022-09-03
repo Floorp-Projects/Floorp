@@ -496,3 +496,42 @@ toolbarbutton.bookmark-item {
   background: var(--toolbar-bgcolor);
   border: var(--win-sidebar-bgcolor) 0.1px solid;
 } 
+
+.sidebar2-icon {
+  appearance: none;
+  -moz-context-properties: fill, fill-opacity;
+  border-radius: 4px;
+  color: inherit;
+  fill: currentColor;
+  padding: 2px;
+  width: 20px;
+  height: auto;
+}
+
+@media not (prefers-contrast) {
+  .sidebar2-icon:hover {
+    background-color: color-mix(in srgb, currentColor 10%, transparent);
+  }
+}
+
+@media (prefers-contrast) {
+  .sidebar2-icon:hover {
+    outline: 1px solid currentColor;
+  }
+}
+
+.sidebar2-icon:hover:active {
+  background-color: color-mix(in srgb, currentColor 20%, transparent);
+}
+
+#sidebar2-back {
+  list-style-image: url("chrome://browser/skin/back.svg");
+}
+
+#sidebar2-forward {
+  list-style-image: url("chrome://browser/skin/forward.svg");
+}
+
+#sidebar2-reload {
+  list-style-image: url("chrome://global/skin/icons/reload.svg");
+}

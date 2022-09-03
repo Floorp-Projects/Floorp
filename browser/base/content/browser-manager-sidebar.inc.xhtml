@@ -5,14 +5,16 @@
 <splitter id="sidebar-splitter2" class="browser-sidebar2 chromeclass-extrachrome" hidden="false"/>
     <vbox id="sidebar2-box" class="browser-sidebar2 chromeclass-extrachrome" >
       <box id="sidebar2-header" style="min-width: 0em; min-height: 2.5em" align="center">
-        <toolbarbutton class="close-icon tabbable" style="margin-left: 1em;" data-l10n-id="sidebar-close-button"  oncommand="changeSidebarVisibility();" id="sidebar-icon"/>
-        <image id="sidebar-throbber"/>
+        <toolbarbutton id="sidebar2-back" class="close-icon" style="margin-left: 0.5em;" data-l10n-id="sidebar-back-button"  oncommand="backSidebarSite();"/>
+        <toolbarbutton id="sidebar2-forward" class="sidebar2-icon" style="margin-left: 1em;" data-l10n-id="sidebar-forward-button"  oncommand="forwardSidebarSite();"/>
+        <toolbarbutton id="sidebar2-reload" class="sidebar2-icon" style="margin-left: 1em;" data-l10n-id="sidebar-reload-button"  oncommand="reloadSidebarSite();"/>
         <spacer flex="1000"/>
+        <toolbarbutton class="close-icon" style="margin-right: 0.5em;" data-l10n-id="sidebar-close-button"  oncommand="changeSidebarVisibility();" id="sidebar-icon"/>
         </box>
         <browser id="sidebar2"  flex="1" autoscroll="false" disablehistory="true" disablefullscreen="true"
                  type="content" disableglobalhistory="true" messagemanagergroup="webext-browsers"
                  webextension-view-type="sidebar" context="contentAreaContextMenu"
                  autocompletepopup="PopupAutoComplete" initialBrowsingContextGroupId="51" remote="true" maychangeremoteness="true" 
-                 style="width: 18em; max-width: 50em;" tooltip="aHTMLTooltip"/> 
+                 style="width: 18em; max-width: none; min-width: 10em;" tooltip="aHTMLTooltip"/> 
     </vbox>
 <splitter id="sidebar-splitter3" class="browser-sidebar2 chromeclass-extrachrome"  hidden="false"/>

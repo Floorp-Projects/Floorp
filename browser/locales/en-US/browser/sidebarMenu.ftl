@@ -16,3 +16,12 @@ sidebar-menu-close =
 
 sidebar-close-button =
   .tooltiptext = Close sidebar
+
+sidebar-back-button =
+  .tooltiptext = Back
+
+sidebar-forward-button =
+  .tooltiptext = Forward
+
+sidebar-reload-button = 
+  .tooltiptext = Reload

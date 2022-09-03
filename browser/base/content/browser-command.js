@@ -66,6 +66,17 @@
 
 /*---------------------------------------------------------------- browser manager sidebar ----------------------------------------------------------------*/
 
+   function displayIcons() {
+     document.getElementById("sidebar2-back").hidden = false;
+     document.getElementById("sidebar2-forward").hidden = false;
+     document.getElementById("sidebar2-reload").hidden = false;
+   }
+   function hideIcons() {
+     document.getElementById("sidebar2-back").hidden = true;
+     document.getElementById("sidebar2-forward").hidden = true;
+     document.getElementById("sidebar2-reload").hidden = true;
+   }
+
    async function setTreeStyleTabURL() {
      const sidebar2elem = document.getElementById("sidebar2");
 
@@ -85,21 +96,27 @@
       switch (pref) {
       default:
         sidebar2elem.setAttribute("src", "chrome://browser/content/places/places.xhtml");
+        hideIcons();
        break;
       case 1:
         sidebar2elem.setAttribute("src", "chrome://browser/content/places/bookmarksSidebar.xhtml");
+        hideIcons();
        break;
       case 2:
         sidebar2elem.setAttribute("src", "chrome://browser/content/places/historySidebar.xhtml");
+        hideIcons();
        break;
       case 3:
         sidebar2elem.setAttribute("src", "about:downloads");
+        hideIcons();
        break;
       case 4:
         setTreeStyleTabURL();
+        hideIcons();
        break;
       case 5:
        sidebar2elem.setAttribute("src", Services.prefs.getStringPref("floorp.browser.sidebar2.customurl", undefined));
+        displayIcons();
        break;
     }
   }
@@ -117,13 +134,31 @@
       siderbar2header.style.display = "";
       sidebarsplit2.setAttribute("hidden", "false");
       sidebarsplit3.setAttribute("hidden", "false");
+      displayIcons();
     } else {
       sidebar2.style.minWidth = "0"; 
       sidebar2.style.maxWidth = "0"; 
       siderbar2header.style.display = "none";
       sidebarsplit2.setAttribute("hidden", "true");
       sidebarsplit3.setAttribute("hidden", "true");
+      hideIcons();
     }
+  }
+
+  function backSidebarSite() {
+    document.getElementById("sidebar2").goBack();  //戻る
+  }
+  function forwardSidebarSite() {
+    document.getElementById("sidebar2").goForward();  //進む
+  }
+  function reloadSidebarSite() {
+  document.getElementById("sidebar2").reload();  //リロード
+  }
+  function muteSidebarSite() {
+    document.getElementById("sidebar2").mute();  //ミュート
+  }
+  function unmuteSidebarSite() {
+    document.getElementById("sidebar2").unmute();  //ミュート解除
   }
 
 
