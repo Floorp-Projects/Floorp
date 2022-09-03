@@ -29,12 +29,16 @@ void RemoteLazyInputStreamChild::StreamConsumed() {
 
   // When the count reaches zero, close the underlying actor.
   if (count == 0) {
-    RemoteLazyInputStreamThread::Get()->Dispatch(NS_NewRunnableFunction(
-        "RemoteLazyInputStreamChild::StreamConsumed", [self = RefPtr{this}]() {
-          if (self->CanSend()) {
-            self->SendGoodbye();
-          }
-        }));
+    auto* t = RemoteLazyInputStreamThread::Get();
+    if (t) {
+      t->Dispatch(
+          NS_NewRunnableFunction("RemoteLazyInputStreamChild::StreamConsumed",
+                                 [self = RefPtr{this}]() {
+                                   if (self->CanSend()) {
+                                     self->SendGoodbye();
+                                   }
+                                 }));
+    }  // else the xpcom thread shutdown has already started.
   }
 }
 
