@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title><!-- TODO: insert title here --></title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <style>
+  #anim {
+    width: 100px;
+    height: 100px;
+    background: red;
+    position: relative;
+    animation: mymove 1s 1;
+    animation-iteration-count: infinite;
+  }
+
+  @keyframes mymove {
+    from {left: 0px;}
+    to {left: 200px;}
+  }
+  </style>
+  <script>
+  SimpleTest.waitForExplicitFinish();
+
+  var animCount = 0;
+  var didRunXHR = false;
+
+  async function start() {
+    await SpecialPowers.pushPrefEnv({"set": [["layout.skip_ticks_while_page_suspended", true]]});
+
+    window.addEventListener("animationiteration", function l() {
+      ++animCount;
+      info(animCount);
+      if (didRunXHR) {
+        window.removeEventListener("animationiteration", l);
+        document.getElementById("anim").id = "";
+        SimpleTest.finish();
+      }
+    });
+
+    let startCount = animCount;
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", "slow.sjs", false);
+    xhr.send(null);
+    didRunXHR = true;
+    is(animCount, startCount, "Shouldn't have triggered animation events during the sync XHRs");
+  }
+
+
+  </script>
+</head>
+<body onload="start()">
+<div id="anim"></div>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>
