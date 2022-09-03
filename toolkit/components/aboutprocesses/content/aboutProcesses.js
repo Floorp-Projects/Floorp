@@ -876,6 +876,10 @@ var View = {
         fluentName = "about-processes-utility-actor-audio-decoder-wmf";
         break;
 
+      case "mfMediaEngineCDM":
+        fluentName = "about-processes-utility-actor-mf-media-engine";
+        break;
+
       default:
         fluentName = "about-processes-utility-actor-unknown";
         break;

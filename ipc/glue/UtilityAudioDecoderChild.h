@@ -40,6 +40,10 @@ class UtilityAudioDecoderChild final : public PUtilityAudioDecoderChild {
       case UTILITY_AUDIO_DECODING_WMF:
         return UtilityActorName::AudioDecoder_WMF;
 #endif
+#ifdef MOZ_WMF_MEDIA_ENGINE
+      case MF_MEDIA_ENGINE_CDM:
+        return UtilityActorName::MfMediaEngineCDM;
+#endif
       default:
         MOZ_CRASH("Unexpected mSandbox for GetActorName()");
     }
