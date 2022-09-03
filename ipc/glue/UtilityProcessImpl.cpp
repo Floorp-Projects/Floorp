@@ -42,7 +42,11 @@ bool UtilityProcessImpl::Init(int aArgc, char* aArgv[]) {
     UtilityAudioDecoderParent::GenericPreloadForSandbox();
   }
 
-  if (*sandboxingKind == SandboxingKind::UTILITY_AUDIO_DECODING_WMF) {
+  if (*sandboxingKind == SandboxingKind::UTILITY_AUDIO_DECODING_WMF
+#  ifdef MOZ_WMF_MEDIA_ENGINE
+      || *sandboxingKind == SandboxingKind::MF_MEDIA_ENGINE_CDM
+#  endif
+  ) {
     UtilityAudioDecoderParent::WMFPreloadForSandbox();
   }
 

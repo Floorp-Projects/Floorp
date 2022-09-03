@@ -25,7 +25,9 @@ enum SandboxingKind : uint64_t {
 #ifdef XP_WIN
   UTILITY_AUDIO_DECODING_WMF = 3,
 #endif
-
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  MF_MEDIA_ENGINE_CDM = 4,
+#endif
   COUNT,
 
 };

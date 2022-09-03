@@ -715,6 +715,7 @@ enum WebIDLUtilityActorName {
   "audioDecoder_Generic",
   "audioDecoder_AppleMedia",
   "audioDecoder_WMF",
+  "mfMediaEngineCDM",
 };
 
 dictionary UtilityActorsDictionary {
