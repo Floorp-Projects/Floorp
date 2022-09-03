@@ -29,7 +29,7 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
   friend class UtilityProcessParent;
 
  public:
-  using AudioDecodingPromise =
+  using StartRemoteDecodingUtilityPromise =
       MozPromise<Endpoint<PRemoteDecoderManagerChild>, nsresult, true>;
 
   static void Initialize();
@@ -46,8 +46,8 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
   RefPtr<GenericNonExclusivePromise> StartUtility(RefPtr<Actor> aActor,
                                                   SandboxingKind aSandbox);
 
-  RefPtr<AudioDecodingPromise> StartAudioDecoding(base::ProcessId aOtherProcess,
-                                                  SandboxingKind aSandbox);
+  RefPtr<StartRemoteDecodingUtilityPromise> StartProcessForRemoteMediaDecoding(
+      base::ProcessId aOtherProcess, SandboxingKind aSandbox);
 
   void OnProcessUnexpectedShutdown(UtilityProcessHost* aHost);
 
