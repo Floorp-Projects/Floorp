@@ -4,6 +4,7 @@ import argparse
 import base64
 import logging
 import subprocess
+import sys
 
 
 logger = logging.getLogger(__name__)
@@ -53,7 +54,7 @@ def check_cert(certificate, checkend_seconds):
 def regen_certs():
     """Regenerate the wpt openssl certificates, by delegating to wptserve."""
     cmd = [
-        "python", "wpt", "serve",
+        sys.executable, "wpt", "serve",
         "--config", "tools/certs/config.json",
         "--exit-after-start",
     ]
