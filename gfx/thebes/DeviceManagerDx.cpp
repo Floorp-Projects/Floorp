@@ -961,8 +961,7 @@ static HRESULT SetDebugName(T* d3d11Object, const char* debugString) {
 }
 
 RefPtr<ID3D11Device> DeviceManagerDx::CreateMediaEngineDevice() {
-  if (!sD3D11CreateDeviceFn) {
-    // We should just be on Windows Vista or XP in this case.
+  if (!LoadD3D11()) {
     return nullptr;
   }
 

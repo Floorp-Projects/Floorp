@@ -38,6 +38,7 @@ using mozilla::gfx::Fallback from "gfxFallback.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::OverlayInfo from "mozilla/layers/OverlayInfo.h";
 using mozilla::media::MediaCodecsSupported from "MediaCodecsSupport.h";
+using mozilla::layers::VideoBridgeSource from "mozilla/layers/VideoBridgeUtils.h";
 
 namespace mozilla {
 namespace gfx {
@@ -64,7 +65,7 @@ parent:
   async InitCompositorManager(Endpoint<PCompositorManagerParent> endpoint);
   async InitVsyncBridge(Endpoint<PVsyncBridgeParent> endpoint);
   async InitImageBridge(Endpoint<PImageBridgeParent> endpoint);
-  async InitVideoBridge(Endpoint<PVideoBridgeParent> endpoint);
+  async InitVideoBridge(Endpoint<PVideoBridgeParent> endpoint, VideoBridgeSource aSource);
   async InitVRManager(Endpoint<PVRManagerParent> endpoint);
   async InitUiCompositorController(LayersId rootLayerTreeId, Endpoint<PUiCompositorControllerParent> endpoint);
   async InitAPZInputBridge(LayersId layersId,

@@ -224,6 +224,7 @@ LOCAL_INCLUDES += [
 ]
 
 PREPROCESSED_IPDL_SOURCES = [
+    "PUtilityAudioDecoder.ipdl",
     "PUtilityProcess.ipdl",
 ]
 
@@ -236,7 +237,6 @@ IPDL_SOURCES = [
     "PBackgroundTest.ipdl",
     "PIdleScheduler.ipdl",
     "ProtocolTypes.ipdlh",
-    "PUtilityAudioDecoder.ipdl",
     "URIParams.ipdlh",
 ]
 

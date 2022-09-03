@@ -1215,9 +1215,10 @@ void GPUProcessManager::CreateContentRemoteDecoderManager(
 }
 
 void GPUProcessManager::InitVideoBridge(
-    ipc::Endpoint<PVideoBridgeParent>&& aVideoBridge) {
+    ipc::Endpoint<PVideoBridgeParent>&& aVideoBridge,
+    layers::VideoBridgeSource aSource) {
   if (EnsureGPUReady()) {
-    mGPUChild->SendInitVideoBridge(std::move(aVideoBridge));
+    mGPUChild->SendInitVideoBridge(std::move(aVideoBridge), aSource);
   }
 }
 

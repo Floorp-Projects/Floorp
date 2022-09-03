@@ -8,6 +8,7 @@
 
 #include "GPUVideoImage.h"
 #include "mozilla/PRemoteDecoderChild.h"
+#include "mozilla/RemoteDecodeUtils.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/VideoBridgeUtils.h"
@@ -152,11 +153,10 @@ RemoteImageHolder::~RemoteImageHolder() {
       !ReadIPDLParam(aReader, aActor, &aResult->mSD)) {
     return false;
   }
+
   if (!aResult->IsEmpty()) {
     aResult->mManager = RemoteDecoderManagerChild::GetSingleton(
-        aResult->mSource == VideoBridgeSource::GpuProcess
-            ? RemoteDecodeIn::GpuProcess
-            : RemoteDecodeIn::RddProcess);
+        GetRemoteDecodeInFromVideoBridgeSource(aResult->mSource));
   }
   return true;
 }

@@ -34,6 +34,15 @@ class UtilityAudioDecoderParent final : public PUtilityAudioDecoderParent {
   mozilla::ipc::IPCResult RecvNewContentRemoteDecoderManager(
       Endpoint<PRemoteDecoderManagerParent>&& aEndpoint);
 
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  mozilla::ipc::IPCResult RecvInitVideoBridge(
+      Endpoint<PVideoBridgeChild>&& aEndpoint,
+      nsTArray<mozilla::gfx::GfxVarUpdate>&& aUpdates,
+      const ContentDeviceData& aContentDeviceData);
+
+  IPCResult RecvUpdateVar(const mozilla::gfx::GfxVarUpdate& aUpdate);
+#endif
+
   static SandboxingKind GetSandboxingKind();
 
  private:

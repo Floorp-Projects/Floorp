@@ -3,7 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include GraphicsMessages;
 include protocol PRemoteDecoderManager;
+include protocol PVideoBridge;
 
 using mozilla::media::MediaCodecsSupported from "MediaCodecsSupport.h";
 using mozilla::RemoteDecodeIn from "mozilla/RemoteDecoderManagerChild.h";
@@ -20,8 +22,21 @@ parent:
   async NewContentRemoteDecoderManager(
             Endpoint<PRemoteDecoderManagerParent> endpoint);
 
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  async InitVideoBridge(Endpoint<PVideoBridgeChild> endpoint,
+                        GfxVarUpdate[] updates,
+                        ContentDeviceData contentDeviceData);
+
+  async UpdateVar(GfxVarUpdate var);
+#endif
+
 child:
-  async UpdateMediaCodecsSupported(RemoteDecodeIn aLocation, MediaCodecsSupported aSupported);
+  async UpdateMediaCodecsSupported(RemoteDecodeIn aLocation,
+                                   MediaCodecsSupported aSupported);
+
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  async CompleteCreatedVideoBridge();
+#endif
 
 };
 

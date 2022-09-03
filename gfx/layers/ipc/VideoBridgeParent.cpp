@@ -16,31 +16,30 @@ namespace layers {
 using namespace mozilla::ipc;
 using namespace mozilla::gfx;
 
-static VideoBridgeParent* sVideoBridgeFromRddProcess;
-static VideoBridgeParent* sVideoBridgeFromGpuProcess;
+static EnumeratedArray<VideoBridgeSource, VideoBridgeSource::_Count,
+                       VideoBridgeParent*>
+    sVideoBridgeFromProcess;
 
 VideoBridgeParent::VideoBridgeParent(VideoBridgeSource aSource)
     : mCompositorThreadHolder(CompositorThreadHolder::GetSingleton()),
       mClosed(false) {
   mSelfRef = this;
   switch (aSource) {
+    case VideoBridgeSource::RddProcess:
+    case VideoBridgeSource::GpuProcess:
+    case VideoBridgeSource::MFMediaEngineCDMProcess:
+      sVideoBridgeFromProcess[aSource] = this;
+      break;
     default:
       MOZ_CRASH("Unhandled case");
-    case VideoBridgeSource::RddProcess:
-      sVideoBridgeFromRddProcess = this;
-      break;
-    case VideoBridgeSource::GpuProcess:
-      sVideoBridgeFromGpuProcess = this;
-      break;
   }
 }
 
 VideoBridgeParent::~VideoBridgeParent() {
-  if (sVideoBridgeFromRddProcess == this) {
-    sVideoBridgeFromRddProcess = nullptr;
-  }
-  if (sVideoBridgeFromGpuProcess == this) {
-    sVideoBridgeFromGpuProcess = nullptr;
+  for (auto& bridgeParent : sVideoBridgeFromProcess) {
+    if (bridgeParent == this) {
+      bridgeParent = nullptr;
+    }
   }
 }
 
@@ -67,14 +66,13 @@ VideoBridgeParent* VideoBridgeParent::GetSingleton(
     const Maybe<VideoBridgeSource>& aSource) {
   MOZ_ASSERT(aSource.isSome());
   switch (aSource.value()) {
+    case VideoBridgeSource::RddProcess:
+    case VideoBridgeSource::GpuProcess:
+    case VideoBridgeSource::MFMediaEngineCDMProcess:
+      MOZ_ASSERT(sVideoBridgeFromProcess[aSource.value()]);
+      return sVideoBridgeFromProcess[aSource.value()];
     default:
       MOZ_CRASH("Unhandled case");
-    case VideoBridgeSource::RddProcess:
-      MOZ_ASSERT(sVideoBridgeFromRddProcess);
-      return sVideoBridgeFromRddProcess;
-    case VideoBridgeSource::GpuProcess:
-      MOZ_ASSERT(sVideoBridgeFromGpuProcess);
-      return sVideoBridgeFromGpuProcess;
   }
 }
 
@@ -91,10 +89,10 @@ void VideoBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
 
 /* static */
 void VideoBridgeParent::Shutdown() {
-  if (sVideoBridgeFromRddProcess) {
-    sVideoBridgeFromRddProcess->ReleaseCompositorThread();
-  } else if (sVideoBridgeFromGpuProcess) {
-    sVideoBridgeFromGpuProcess->ReleaseCompositorThread();
+  for (auto& bridgeParent : sVideoBridgeFromProcess) {
+    if (bridgeParent) {
+      bridgeParent->ReleaseCompositorThread();
+    }
   }
 }
 

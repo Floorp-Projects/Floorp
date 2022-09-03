@@ -59,6 +59,21 @@ RemoteDecodeIn GetRemoteDecodeInFromKind(SandboxingKind aKind) {
   }
 }
 
+RemoteDecodeIn GetRemoteDecodeInFromVideoBridgeSource(
+    layers::VideoBridgeSource aSource) {
+  switch (aSource) {
+    case layers::VideoBridgeSource::RddProcess:
+      return RemoteDecodeIn::RddProcess;
+    case layers::VideoBridgeSource::GpuProcess:
+      return RemoteDecodeIn::GpuProcess;
+    case layers::VideoBridgeSource::MFMediaEngineCDMProcess:
+      return RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unsupported VideoBridgeSource");
+      return RemoteDecodeIn::Unspecified;
+  }
+}
+
 const char* RemoteDecodeInToStr(RemoteDecodeIn aLocation) {
   switch (aLocation) {
     case RemoteDecodeIn::RddProcess:
