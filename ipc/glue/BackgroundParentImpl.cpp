@@ -1392,12 +1392,12 @@ BackgroundParentImpl::RecvEnsureUtilityProcessAndCreateBridge(
                          Endpoint<PRemoteDecoderManagerChild>()));
         } else {
           SandboxingKind sbKind = GetSandboxingKindFromLocation(aLocation);
-          upm->StartAudioDecoding(otherPid, sbKind)
+          upm->StartProcessForRemoteMediaDecoding(otherPid, sbKind)
               ->Then(managerThread, __func__,
                      [resolver = aResolver](
                          mozilla::ipc::UtilityProcessManager::
-                             AudioDecodingPromise::ResolveOrRejectValue&&
-                                 aValue) mutable {
+                             StartRemoteDecodingUtilityPromise::
+                                 ResolveOrRejectValue&& aValue) mutable {
                        if (aValue.IsReject()) {
                          resolver(Type(aValue.RejectValue(),
                                        Endpoint<PRemoteDecoderManagerChild>()));

@@ -262,9 +262,24 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::StartUtility(
       });
 }
 
-RefPtr<UtilityProcessManager::AudioDecodingPromise>
-UtilityProcessManager::StartAudioDecoding(base::ProcessId aOtherProcess,
-                                          SandboxingKind aSandbox) {
+RefPtr<UtilityProcessManager::StartRemoteDecodingUtilityPromise>
+UtilityProcessManager::StartProcessForRemoteMediaDecoding(
+    base::ProcessId aOtherProcess, SandboxingKind aSandbox) {
+  // Not supported kinds.
+  if (aSandbox != SandboxingKind::UTILITY_AUDIO_DECODING_GENERIC
+#ifdef MOZ_APPLEMEDIA
+      && aSandbox != SandboxingKind::UTILITY_AUDIO_DECODING_APPLE_MEDIA
+#endif
+#ifdef XP_WIN
+      && aSandbox != SandboxingKind::UTILITY_AUDIO_DECODING_WMF
+#endif
+#ifdef MOZ_WMF_MEDIA_ENGINE
+      && aSandbox != SandboxingKind::MF_MEDIA_ENGINE_CDM
+#endif
+  ) {
+    return StartRemoteDecodingUtilityPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                              __func__);
+  }
   RefPtr<UtilityProcessManager> self = this;
   RefPtr<UtilityAudioDecoderChild> uadc =
       UtilityAudioDecoderChild::GetSingleton(aSandbox);
@@ -278,8 +293,8 @@ UtilityProcessManager::StartAudioDecoding(base::ProcessId aOtherProcess,
 
             if (!uadc->CanSend()) {
               MOZ_ASSERT(false, "UtilityAudioDecoderChild lost in the middle");
-              return AudioDecodingPromise::CreateAndReject(NS_ERROR_FAILURE,
-                                                           __func__);
+              return StartRemoteDecodingUtilityPromise::CreateAndReject(
+                  NS_ERROR_FAILURE, __func__);
             }
 
             Endpoint<PRemoteDecoderManagerChild> childPipe;
@@ -288,18 +303,19 @@ UtilityProcessManager::StartAudioDecoding(base::ProcessId aOtherProcess,
                 process, aOtherProcess, &parentPipe, &childPipe);
             if (NS_FAILED(rv)) {
               MOZ_ASSERT(false, "Could not create content remote decoder");
-              return AudioDecodingPromise::CreateAndReject(rv, __func__);
+              return StartRemoteDecodingUtilityPromise::CreateAndReject(
+                  rv, __func__);
             }
 
             if (!uadc->SendNewContentRemoteDecoderManager(
                     std::move(parentPipe))) {
               MOZ_ASSERT(false, "SendNewContentRemoteDecoderManager failure");
-              return AudioDecodingPromise::CreateAndReject(NS_ERROR_FAILURE,
-                                                           __func__);
+              return StartRemoteDecodingUtilityPromise::CreateAndReject(
+                  NS_ERROR_FAILURE, __func__);
             }
 
-            return AudioDecodingPromise::CreateAndResolve(std::move(childPipe),
-                                                          __func__);
+            return StartRemoteDecodingUtilityPromise::CreateAndResolve(
+                std::move(childPipe), __func__);
           },
           [self](nsresult aError) {
             if (!self->IsShutdown()) {
@@ -307,8 +323,10 @@ UtilityProcessManager::StartAudioDecoding(base::ProcessId aOtherProcess,
                   "PUtilityAudioDecoder: failure when starting actor");
             }
             NS_WARNING(
-                "Reject StartAudioDecoding() for StartUtility() rejection");
-            return AudioDecodingPromise::CreateAndReject(aError, __func__);
+                "Reject StartProcessForRemoteMediaDecoding() for "
+                "StartUtility() rejection");
+            return StartRemoteDecodingUtilityPromise::CreateAndReject(aError,
+                                                                      __func__);
           });
 }
 
