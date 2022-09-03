@@ -410,6 +410,9 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
   nsAutoString hostPort;
   MOZ_TRY(aAlert->GetSource(hostPort));
 
+  nsAutoString launchUrl;
+  MOZ_TRY(aAlert->GetLaunchURL(launchUrl));
+
   bool requireInteraction;
   MOZ_TRY(aAlert->GetRequireInteraction(&requireInteraction));
 
@@ -425,7 +428,7 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
   NS_ENSURE_TRUE(mAumid.isSome(), NS_ERROR_UNEXPECTED);
   RefPtr<ToastNotificationHandler> handler = new ToastNotificationHandler(
       this, mAumid.ref(), aAlertListener, name, cookie, title, text, hostPort,
-      textClickable, requireInteraction, actions, isSystemPrincipal);
+      textClickable, requireInteraction, actions, isSystemPrincipal, launchUrl);
   mActiveHandlers.InsertOrUpdate(name, RefPtr{handler});
 
   nsresult rv = handler->InitAlertAsync(aAlert);
@@ -466,6 +469,9 @@ ToastNotification::GetXmlStringForWindowsAlert(nsIAlertNotification* aAlert,
   nsAutoString hostPort;
   MOZ_TRY(aAlert->GetSource(hostPort));
 
+  nsAutoString launchUrl;
+  MOZ_TRY(aAlert->GetLaunchURL(launchUrl));
+
   bool requireInteraction;
   MOZ_TRY(aAlert->GetRequireInteraction(&requireInteraction));
 
@@ -480,7 +486,7 @@ ToastNotification::GetXmlStringForWindowsAlert(nsIAlertNotification* aAlert,
   RefPtr<ToastNotificationHandler> handler = new ToastNotificationHandler(
       this, mAumid.ref(), nullptr /* aAlertListener */, name, cookie, title,
       text, hostPort, textClickable, requireInteraction, actions,
-      isSystemPrincipal);
+      isSystemPrincipal, launchUrl);
 
   nsAutoString imageURL;
   MOZ_TRY(aAlert->GetImageURL(imageURL));

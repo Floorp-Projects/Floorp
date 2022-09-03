@@ -14,6 +14,7 @@
 #include "nsICancelable.h"
 #include "nsIFile.h"
 #include "nsString.h"
+#include "mozilla/Result.h"
 
 namespace mozilla {
 namespace widget {
@@ -32,7 +33,7 @@ class ToastNotificationHandler final
                            const nsAString& aMsg, const nsAString& aHostPort,
                            bool aClickable, bool aRequireInteraction,
                            const nsTArray<RefPtr<nsIAlertAction>>& aActions,
-                           bool aIsSystemPrincipal)
+                           bool aIsSystemPrincipal, const nsAString& aLaunchUrl)
       : mBackend(backend),
         mAumid(aumid),
         mHasImage(false),
@@ -46,6 +47,7 @@ class ToastNotificationHandler final
         mRequireInteraction(aRequireInteraction),
         mActions(aActions.Clone()),
         mIsSystemPrincipal(aIsSystemPrincipal),
+        mLaunchUrl(aLaunchUrl),
         mSentFinished(!aAlertListener) {}
 
   nsresult InitAlertAsync(nsIAlertNotification* aAlert);
@@ -70,6 +72,8 @@ class ToastNotificationHandler final
   using ToastTemplateType = ABI::Windows::UI::Notifications::ToastTemplateType;
   template <typename T>
   using ComPtr = Microsoft::WRL::ComPtr<T>;
+
+  Result<nsString, nsresult> GetLaunchArgument();
 
   ComPtr<IToastNotification> mNotification;
   ComPtr<IToastNotifier> mNotifier;
@@ -98,6 +102,7 @@ class ToastNotificationHandler final
   bool mRequireInteraction;
   nsTArray<RefPtr<nsIAlertAction>> mActions;
   bool mIsSystemPrincipal;
+  nsString mLaunchUrl;
   bool mSentFinished;
 
   nsresult TryShowAlert();
