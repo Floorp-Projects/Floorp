@@ -11,6 +11,9 @@
 #include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "mozilla/gfx/2D.h"
+#ifdef MOZ_BACKGROUNDTASKS
+#  include "mozilla/BackgroundTasks.h"
+#endif
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Result.h"
 #include "mozilla/Tokenizer.h"
@@ -21,6 +24,8 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsIDUtils.h"
 #include "nsIStringBundle.h"
+#include "nsIToolkitProfile.h"
+#include "nsIToolkitProfileService.h"
 #include "nsIURI.h"
 #include "nsIWidget.h"
 #include "nsIWindowMediator.h"
@@ -171,13 +176,42 @@ static Result<nsString, nsresult> GetLaunchArgument() {
   // `program` argument.
   launchArg += u"program\n"_ns MOZ_APP_NAME;
 
-  // `profile` argument
+  // `profile` argument.
   nsCOMPtr<nsIFile> profDir;
-  MOZ_TRY(NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                 getter_AddRefs(profDir)));
-  nsAutoString profilePath;
-  MOZ_TRY(profDir->GetPath(profilePath));
-  launchArg += u"\nprofile\n"_ns + profilePath;
+  bool wantCurrentProfile = true;
+#ifdef MOZ_BACKGROUNDTASKS
+  if (BackgroundTasks::IsBackgroundTaskMode()) {
+    // Notifications popped from a background task want to invoke Firefox with a
+    // different profile -- the default browsing profile.  We'd prefer to not
+    // specify a profile, so that the Firefox invoked by the notification server
+    // chooses its default profile, but this might pop the profile chooser in
+    // some configurations.
+    wantCurrentProfile = false;
+
+    nsCOMPtr<nsIToolkitProfileService> profileSvc =
+        do_GetService(NS_PROFILESERVICE_CONTRACTID);
+    if (profileSvc) {
+      nsCOMPtr<nsIToolkitProfile> defaultProfile;
+      nsresult rv =
+          profileSvc->GetDefaultProfile(getter_AddRefs(defaultProfile));
+      if (NS_SUCCEEDED(rv) && defaultProfile) {
+        // Not all installations have a default profile.  But if one is set,
+        // then it should have a profile directory.
+        MOZ_TRY(defaultProfile->GetRootDir(getter_AddRefs(profDir)));
+      }
+    }
+  }
+#endif
+  if (wantCurrentProfile) {
+    MOZ_TRY(NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                   getter_AddRefs(profDir)));
+  }
+
+  if (profDir) {
+    nsAutoString profilePath;
+    MOZ_TRY(profDir->GetPath(profilePath));
+    launchArg += u"\nprofile\n"_ns + profilePath;
+  }
 
   return launchArg;
 }
@@ -426,11 +460,23 @@ ComPtr<IXmlDocument> ToastNotificationHandler::CreateToastXmlDocument() {
                   u"snooze"_ns, u"contextmenu"_ns);
   }
 
-  nsAutoString settingsButtonTitle;
-  bundle->GetStringFromName("webActions.settings.label", settingsButtonTitle);
-  success = AddActionNode(toastXml, actionsNode, settingsButtonTitle, launchArg,
-                          u"settings"_ns, u"contextmenu"_ns);
-  NS_ENSURE_TRUE(success, nullptr);
+  bool wantSettings = true;
+#ifdef MOZ_BACKGROUNDTASKS
+  if (BackgroundTasks::IsBackgroundTaskMode()) {
+    // Notifications popped from a background task want to invoke Firefox with a
+    // different profile -- the default browsing profile.  Don't link to Firefox
+    // settings in some different profile: the relevant Firefox settings won't
+    // take effect.
+    wantSettings = false;
+  }
+#endif
+  if (MOZ_LIKELY(wantSettings)) {
+    nsAutoString settingsButtonTitle;
+    bundle->GetStringFromName("webActions.settings.label", settingsButtonTitle);
+    success = AddActionNode(toastXml, actionsNode, settingsButtonTitle,
+                            launchArg, u"settings"_ns, u"contextmenu"_ns);
+    NS_ENSURE_TRUE(success, nullptr);
+  }
 
   for (const auto& action : mActions) {
     // Bug 1778596: include per-action icon from image URL.
