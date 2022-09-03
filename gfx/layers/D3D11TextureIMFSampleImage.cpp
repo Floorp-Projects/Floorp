@@ -35,14 +35,14 @@ void IMFSampleWrapper::ClearVideoSample() { mVideoSample = nullptr; }
 D3D11TextureIMFSampleImage::D3D11TextureIMFSampleImage(
     IMFSample* aVideoSample, ID3D11Texture2D* aTexture, uint32_t aArrayIndex,
     const gfx::IntSize& aSize, const gfx::IntRect& aRect,
-    gfx::ColorSpace2 aColorSpace, gfx::ColorRange aColorRange)
+    gfx::YUVColorSpace aColorSpace, gfx::ColorRange aColorRange)
     : Image(nullptr, ImageFormat::D3D11_TEXTURE_IMF_SAMPLE),
       mVideoSample(IMFSampleWrapper::Create(aVideoSample)),
       mTexture(aTexture),
       mArrayIndex(aArrayIndex),
       mSize(aSize),
       mPictureRect(aRect),
-      mColorSpace(aColorSpace),
+      mYUVColorSpace(aColorSpace),
       mColorRange(aColorRange) {
   MOZ_ASSERT(XRE_IsGPUProcess());
 }
@@ -50,7 +50,7 @@ D3D11TextureIMFSampleImage::D3D11TextureIMFSampleImage(
 void D3D11TextureIMFSampleImage::AllocateTextureClient(
     KnowsCompositor* aKnowsCompositor, RefPtr<IMFSampleUsageInfo> aUsageInfo) {
   mTextureClient = D3D11TextureData::CreateTextureClient(
-      mTexture, mArrayIndex, mSize, gfx::SurfaceFormat::NV12, mColorSpace,
+      mTexture, mArrayIndex, mSize, gfx::SurfaceFormat::NV12, mYUVColorSpace,
       mColorRange, aKnowsCompositor, aUsageInfo);
   MOZ_ASSERT(mTextureClient);
 }
