@@ -6,14 +6,14 @@ import pytest
 from .. import metadata
 
 
-def write_properties(tmp_path, data):
+def write_properties(tmp_path, data):  # type: ignore
     path = os.path.join(tmp_path, "update_properties.json")
     with open(path, "w") as f:
         json.dump(data, f)
     return path
 
 @pytest.mark.parametrize("data",
-                         [{"properties": ["prop1"]},
+                         [{"properties": ["prop1"]},  # type: ignore
                           {"properties": ["prop1"], "dependents": {"prop1": ["prop2"]}},
                           ])
 def test_get_properties_file_valid(tmp_path, data):
@@ -23,7 +23,7 @@ def test_get_properties_file_valid(tmp_path, data):
     assert actual == expected
 
 @pytest.mark.parametrize("data",
-                         [{},
+                         [{},  # type: ignore
                           {"properties": "prop1"},
                           {"properties": None},
                           {"properties": ["prop1", 1]},
@@ -39,7 +39,7 @@ def test_get_properties_file_invalid(tmp_path, data):
         metadata.get_properties(properties_file=path)
 
 
-def test_extra_properties(tmp_path):
+def test_extra_properties(tmp_path):  # type: ignore
     data = {"properties": ["prop1"], "dependents": {"prop1": ["prop2"]}}
     path = write_properties(tmp_path, data)
     actual = metadata.get_properties(properties_file=path, extra_properties=["prop4"])
