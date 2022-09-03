@@ -310,6 +310,10 @@ bool WMFDecoderModule::SupportsColorDepth(
 media::DecodeSupportSet WMFDecoderModule::Supports(
     const SupportDecoderParams& aParams,
     DecoderDoctorDiagnostics* aDiagnostics) const {
+  // This should only be supported by MFMediaEngineDecoderModule.
+  if (aParams.mMediaEngineId) {
+    return media::DecodeSupport::Unsupported;
+  }
   // In GPU process, only support decoding if video. This only gives a hint of
   // what the GPU decoder *may* support. The actual check will occur in
   // CreateVideoDecoder.

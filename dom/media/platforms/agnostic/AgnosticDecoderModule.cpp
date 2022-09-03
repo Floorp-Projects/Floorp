@@ -127,6 +127,11 @@ media::DecodeSupportSet AgnosticDecoderModule::SupportsMimeType(
 media::DecodeSupportSet AgnosticDecoderModule::Supports(
     const SupportDecoderParams& aParams,
     DecoderDoctorDiagnostics* aDiagnostics) const {
+  // This should only be supported by MFMediaEngineDecoderModule.
+  if (aParams.mMediaEngineId) {
+    return media::DecodeSupport::Unsupported;
+  }
+
   const auto& trackInfo = aParams.mConfig;
   const nsACString& mimeType = trackInfo.mMimeType;
 

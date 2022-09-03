@@ -16,6 +16,7 @@
 #include "RemoteDecoderManagerParent.h"
 #include "WMF.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/RemoteDecodeUtils.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_media.h"
@@ -68,7 +69,9 @@ MFMediaEngineParent::MFMediaEngineParent(RemoteDecoderManagerParent* aManager,
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aManagerThread);
   MOZ_ASSERT(mMediaEngineId != 0);
-  MOZ_ASSERT(XRE_IsRDDProcess());
+  MOZ_ASSERT(XRE_IsUtilityProcess());
+  MOZ_ASSERT(GetCurrentSandboxingKind() ==
+             ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM);
   LOG("Created MFMediaEngineParent");
   RegisterMediaEngine(this);
   mIPDLSelfRef = this;

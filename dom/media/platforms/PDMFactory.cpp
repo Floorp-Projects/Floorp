@@ -99,11 +99,6 @@ class PDMInitializer final {
     if (!IsWin7AndPre2000Compatible()) {
       WMFDecoderModule::Init();
     }
-#  ifdef MOZ_WMF_MEDIA_ENGINE
-    if (IsWin8OrLater() && StaticPrefs::media_wmf_media_engine_enabled()) {
-      MFMediaEngineDecoderModule::Init();
-    }
-#  endif
 #endif
 #ifdef MOZ_APPLEMEDIA
     AppleDecoderModule::Init();
@@ -123,6 +118,11 @@ class PDMInitializer final {
     if (!IsWin7AndPre2000Compatible()) {
       WMFDecoderModule::Init();
     }
+#  ifdef MOZ_WMF_MEDIA_ENGINE
+    if (IsWin8OrLater() && StaticPrefs::media_wmf_media_engine_enabled()) {
+      MFMediaEngineDecoderModule::Init();
+    }
+#  endif
 #endif
 #ifdef MOZ_APPLEMEDIA
     AppleDecoderModule::Init();
@@ -531,11 +531,6 @@ static DecoderDoctorDiagnostics::Flags GetFailureFlagBasedOnFFmpegStatus(
 
 void PDMFactory::CreateRddPDMs() {
 #ifdef XP_WIN
-#  ifdef MOZ_WMF_MEDIA_ENGINE
-  if (IsWin8OrLater() && StaticPrefs::media_wmf_media_engine_enabled()) {
-    CreateAndStartupPDM<MFMediaEngineDecoderModule>();
-  }
-#  endif
   if (StaticPrefs::media_wmf_enabled() &&
       StaticPrefs::media_rdd_wmf_enabled()) {
     CreateAndStartupPDM<WMFDecoderModule>();
@@ -634,6 +629,12 @@ void PDMFactory::CreateContentPDMs() {
     CreateAndStartupPDM<RemoteDecoderModule>(
         RemoteDecodeIn::UtilityProcess_Generic);
   }
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  if (StaticPrefs::media_wmf_media_engine_enabled()) {
+    CreateAndStartupPDM<RemoteDecoderModule>(
+        RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM);
+  }
+#endif
 
 #ifdef XP_WIN
   if (StaticPrefs::media_wmf_enabled() && !IsWin7AndPre2000Compatible()) {

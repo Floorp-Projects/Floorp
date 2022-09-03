@@ -101,8 +101,10 @@ class RemoteDecoderManagerChild final
   RemoteDecodeIn Location() const { return mLocation; }
   layers::VideoBridgeSource GetSource() const;
 
-  // A thread-safe method to launch the RDD process if it hasn't launched yet.
-  static RefPtr<GenericNonExclusivePromise> LaunchRDDProcessIfNeeded();
+  // A thread-safe method to launch the utility process if it hasn't launched
+  // yet.
+  static RefPtr<GenericNonExclusivePromise> LaunchUtilityProcessIfNeeded(
+      RemoteDecodeIn aLocation);
 
  protected:
   void InitIPDL();
@@ -130,8 +132,9 @@ class RemoteDecoderManagerChild final
   static void OpenRemoteDecoderManagerChildForProcess(
       Endpoint<PRemoteDecoderManagerChild>&& aEndpoint,
       RemoteDecodeIn aLocation);
-  static RefPtr<GenericNonExclusivePromise> LaunchUtilityProcessIfNeeded(
-      RemoteDecodeIn aLocation);
+
+  // A thread-safe method to launch the RDD process if it hasn't launched yet.
+  static RefPtr<GenericNonExclusivePromise> LaunchRDDProcessIfNeeded();
 
   RefPtr<RemoteDecoderManagerChild> mIPDLSelfRef;
   // The location for decoding, Rdd or Gpu process.

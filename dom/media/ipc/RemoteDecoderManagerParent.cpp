@@ -15,6 +15,7 @@
 #include "RemoteVideoDecoder.h"
 #include "VideoUtils.h"  // for MediaThreadType
 #include "mozilla/RDDParent.h"
+#include "mozilla/RemoteDecodeUtils.h"
 #include "mozilla/ipc/UtilityProcessChild.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/gfx/GPUParent.h"
@@ -28,6 +29,9 @@
 #endif
 
 namespace mozilla {
+
+#define LOG(msg, ...) \
+  MOZ_LOG(gRemoteDecodeLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
 
 using namespace ipc;
 using namespace layers;
@@ -144,9 +148,16 @@ bool RemoteDecoderManagerParent::CreateForContent(
 
 bool RemoteDecoderManagerParent::CreateVideoBridgeToOtherProcess(
     Endpoint<PVideoBridgeChild>&& aEndpoint) {
+  LOG("Create video bridge");
   // We never want to decode in the GPU process, but output
   // frames to the parent process.
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_RDD);
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_RDD ||
+             XRE_GetProcessType() == GeckoProcessType_Utility);
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  MOZ_ASSERT_IF(
+      XRE_GetProcessType() == GeckoProcessType_Utility,
+      GetCurrentSandboxingKind() == SandboxingKind::MF_MEDIA_ENGINE_CDM);
+#endif
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!StartupThreads()) {
@@ -317,5 +328,7 @@ void RemoteDecoderManagerParent::DeallocateSurfaceDescriptor(
     RecvDeallocateSurfaceDescriptorGPUVideo(aSD);
   }
 }
+
+#undef LOG
 
 }  // namespace mozilla

@@ -21,6 +21,9 @@ ipc::SandboxingKind GetSandboxingKindFromLocation(RemoteDecodeIn aLocation);
 
 RemoteDecodeIn GetRemoteDecodeInFromKind(ipc::SandboxingKind aKind);
 
+RemoteDecodeIn GetRemoteDecodeInFromVideoBridgeSource(
+    layers::VideoBridgeSource aSource);
+
 const char* RemoteDecodeInToStr(RemoteDecodeIn aLocation);
 
 }  // namespace mozilla

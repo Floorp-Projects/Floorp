@@ -330,7 +330,8 @@ bool RDDProcessManager::CreateVideoBridge() {
   mRDDChild->SendInitVideoBridge(std::move(childPipe),
                                  mNumUnexpectedCrashes == 0, contentDeviceData);
   if (gpuProcessPid != base::kInvalidProcessId) {
-    gpuManager->InitVideoBridge(std::move(parentPipe));
+    gpuManager->InitVideoBridge(std::move(parentPipe),
+                                VideoBridgeSource::RddProcess);
   } else {
     VideoBridgeParent::Open(std::move(parentPipe),
                             VideoBridgeSource::RddProcess);

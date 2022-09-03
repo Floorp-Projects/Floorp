@@ -11,6 +11,7 @@
 #include "RemoteVideoDecoder.h"
 #include "VideoUtils.h"
 #include "mozilla/DataMutex.h"
+#include "mozilla/RemoteDecodeUtils.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/dom/ContentChild.h"  // for launching RDD w/ ContentChild
 #include "mozilla/gfx/2D.h"
@@ -29,6 +30,9 @@
 #endif
 
 namespace mozilla {
+
+#define LOG(msg, ...) \
+  MOZ_LOG(gRemoteDecodeLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
 
 using namespace layers;
 using namespace gfx;
@@ -280,18 +284,24 @@ RemoteDecoderManagerChild::CreateAudioDecoder(
   if (!GetTrackSupport(aLocation).contains(TrackSupport::Audio)) {
     return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_CANCELED,
-                    "Remote location doesn't support audio decoding"),
+                    nsPrintfCString("%s doesn't support audio decoding",
+                                    RemoteDecodeInToStr(aLocation))
+                        .get()),
         __func__);
   }
 
-  bool useUtilityAudioDecoding =
-      StaticPrefs::media_utility_process_enabled() &&
+  RefPtr<GenericNonExclusivePromise> launchPromise;
+  if (StaticPrefs::media_utility_process_enabled() &&
       (aLocation == RemoteDecodeIn::UtilityProcess_Generic ||
        aLocation == RemoteDecodeIn::UtilityProcess_AppleMedia ||
-       aLocation == RemoteDecodeIn::UtilityProcess_WMF);
-  RefPtr<GenericNonExclusivePromise> launchPromise =
-      useUtilityAudioDecoding ? LaunchUtilityProcessIfNeeded(aLocation)
-                              : LaunchRDDProcessIfNeeded();
+       aLocation == RemoteDecodeIn::UtilityProcess_WMF)) {
+    launchPromise = LaunchUtilityProcessIfNeeded(aLocation);
+  } else if (aLocation == RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM) {
+    launchPromise = LaunchUtilityProcessIfNeeded(aLocation);
+  } else {
+    launchPromise = LaunchRDDProcessIfNeeded();
+  }
+  LOG("Create audio decoder in %s", RemoteDecodeInToStr(aLocation));
 
   return launchPromise->Then(
       managerThread, __func__,
@@ -338,16 +348,23 @@ RemoteDecoderManagerChild::CreateVideoDecoder(
   if (!GetTrackSupport(aLocation).contains(TrackSupport::Video)) {
     return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_CANCELED,
-                    "Remote location doesn't support video decoding"),
+                    nsPrintfCString("%s doesn't support video decoding",
+                                    RemoteDecodeInToStr(aLocation))
+                        .get()),
         __func__);
   }
 
   MOZ_ASSERT(aLocation != RemoteDecodeIn::Unspecified);
 
-  RefPtr<GenericNonExclusivePromise> p =
-      aLocation == RemoteDecodeIn::GpuProcess
-          ? GenericNonExclusivePromise::CreateAndResolve(true, __func__)
-          : LaunchRDDProcessIfNeeded();
+  RefPtr<GenericNonExclusivePromise> p;
+  if (aLocation == RemoteDecodeIn::GpuProcess) {
+    p = GenericNonExclusivePromise::CreateAndResolve(true, __func__);
+  } else if (aLocation == RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM) {
+    p = LaunchUtilityProcessIfNeeded(aLocation);
+  } else {
+    p = LaunchRDDProcessIfNeeded();
+  }
+  LOG("Create video decoder in %s", RemoteDecodeInToStr(aLocation));
 
   return p->Then(
       managerThread, __func__,
@@ -607,15 +624,6 @@ TrackSupportSet RemoteDecoderManagerChild::GetTrackSupport(
       if (!StaticPrefs::media_utility_process_enabled()) {
         s += TrackSupport::Audio;
       }
-#ifdef MOZ_WMF_MEDIA_ENGINE
-      // An exception is when we enable the media engine, because it would need
-      // both tracks to synchronize the a/v playback.
-      // TODO : this should be only enabled for encrypted audio, need to find a
-      // way to use the utility for non-encrypted audio still.
-      if (StaticPrefs::media_wmf_media_engine_enabled()) {
-        s += TrackSupport::Audio;
-      }
-#endif
       return s;
     }
     case RemoteDecodeIn::UtilityProcess_Generic:
@@ -857,5 +865,7 @@ void RemoteDecoderManagerChild::SetSupported(
       MOZ_CRASH("Not to be used for any other process");
   }
 }
+
+#undef LOG
 
 }  // namespace mozilla

@@ -314,6 +314,14 @@ UtilityProcessManager::StartProcessForRemoteMediaDecoding(
                   NS_ERROR_FAILURE, __func__);
             }
 
+#ifdef MOZ_WMF_MEDIA_ENGINE
+            if (aSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM &&
+                !uadc->CreateVideoBridge()) {
+              MOZ_ASSERT(false, "Failed to create video bridge");
+              return StartRemoteDecodingUtilityPromise::CreateAndReject(
+                  NS_ERROR_FAILURE, __func__);
+            }
+#endif
             return StartRemoteDecodingUtilityPromise::CreateAndResolve(
                 std::move(childPipe), __func__);
           },
