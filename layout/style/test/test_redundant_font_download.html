@@ -50,7 +50,7 @@
   </div>
 
   <script type="application/javascript">
-    // helper to retrieve the server's request log as text
+    // helper to retrieve the server's request log as text, synchronously
     function getRequestLog() {
       var xmlHttp = new XMLHttpRequest();
       xmlHttp.open("GET", "redundant_font_download.sjs?q=report", false);
@@ -63,17 +63,18 @@
       return getRequestLog().split(";").pop();
     }
 
-    // poll the server at intervals of 'delay' ms until it has seen a specific request,
-    // or until maxTime ms have passed
-    function waitForRequest(request, delay, maxTime, func) {
+    // poll the server at intervals of animation frame callback until it has
+    // seen a specific request, or until maxTime ms have passed
+    function waitForRequest(request, maxTime, func) {
       timeLimit = Date.now() + maxTime;
-      var intervalId = window.setInterval(() => {
+      requestAnimationFrame(function rAF() {
         var req = getLastRequest();
         if (req == request || Date.now() > timeLimit) {
-          window.clearInterval(intervalId);
           func();
+          return;
         }
-      }, delay);
+        requestAnimationFrame(rAF);
+      });
     }
 
     // initially disable the second of the <style> elements,
@@ -92,7 +93,7 @@
       document.getElementById("test").className = "test";
 
       // wait to confirm that the server has received the request
-      waitForRequest("font", 10, 5000, continueTest1);
+      waitForRequest("font", 5000, continueTest1);
     }
 
     function continueTest1() {
@@ -102,7 +103,7 @@
       // delimiter in the log before we enable the second @font-face rule
       document.getElementById("image2").src = "redundant_font_download.sjs?q=image";
 
-      waitForRequest("image", 10, 5000, continueTest2);
+      waitForRequest("image", 5000, continueTest2);
     }
 
     function continueTest2() {
@@ -112,7 +113,7 @@
       // we expect waitForRequest to time out instead
       document.getElementsByTagName("style")[1].disabled = false;
 
-      waitForRequest("font", 10, 1000, continueTest3);
+      waitForRequest("font", 1000, continueTest3);
     }
 
     function continueTest3() {
@@ -121,7 +122,7 @@
       SimpleTest.finish();
     }
 
-    waitForRequest("init", 10, 5000, startTest);
+    waitForRequest("init", 5000, startTest);
 
   </script>
 

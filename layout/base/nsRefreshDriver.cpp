@@ -2411,6 +2411,18 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
     return;
   }
 
+  if (StaticPrefs::layout_skip_ticks_while_page_suspended()) {
+    Document* doc = mPresContext->Document();
+    nsPIDOMWindowInner* win = doc ? doc->GetInnerWindow() : nullptr;
+    // Synchronous DOM operations mark the document being in such. Window's
+    // suspend can be used also by external code. So we check here them both
+    // in order to limit rAF skipping to only those synchronous DOM APIs which
+    // also suspend window.
+    if (win && win->IsSuspended() && doc->IsInSyncOperation()) {
+      return;
+    }
+  }
+
   // Potentially go back to throttled after the grace period is done.
   if (MOZ_UNLIKELY(mIsGrantingActivityGracePeriod) &&
       ShouldStopActivityGracePeriod()) {
