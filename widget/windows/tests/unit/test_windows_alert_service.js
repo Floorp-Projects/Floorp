@@ -71,6 +71,9 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     if (serverEnabled && launchUrl) {
       s += `&#xA;launchUrl&#xA;${launchUrl}`;
     }
+    if (serverEnabled) {
+      s += "&#xA;windowsTag&#xA;";
+    }
     if (argument) {
       s += `&#xA;action&#xA;${argument}`;
     }
